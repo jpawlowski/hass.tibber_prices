@@ -12,11 +12,12 @@ from typing import TYPE_CHECKING
 
 from homeassistant.const import CONF_ACCESS_TOKEN, Platform
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.storage import Store
 from homeassistant.loader import async_get_loaded_integration
 
 from .api import TibberPricesApiClient
 from .const import DOMAIN, LOGGER
-from .coordinator import TibberPricesDataUpdateCoordinator
+from .coordinator import STORAGE_VERSION, TibberPricesDataUpdateCoordinator
 from .data import TibberPricesData
 
 if TYPE_CHECKING:
@@ -39,6 +40,7 @@ async def async_setup_entry(
     """Set up this integration using UI."""
     coordinator = TibberPricesDataUpdateCoordinator(
         hass=hass,
+        entry=entry,
         logger=LOGGER,
         name=DOMAIN,
         update_interval=timedelta(hours=1),
@@ -65,8 +67,17 @@ async def async_unload_entry(
     hass: HomeAssistant,
     entry: TibberPricesConfigEntry,
 ) -> bool:
-    """Handle removal of an entry."""
+    """Handle unload of an entry."""
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+
+
+async def async_remove_entry(
+    hass: HomeAssistant,
+    entry: TibberPricesConfigEntry,
+) -> None:
+    """Handle removal of an entry."""
+    if storage := Store(hass, STORAGE_VERSION, f"{DOMAIN}.{entry.entry_id}"):
+        await storage.async_remove()
 
 
 async def async_reload_entry(

@@ -33,7 +33,6 @@ PRICE_UPDATE_INTERVAL = timedelta(days=1)
 RATING_UPDATE_INTERVAL = timedelta(hours=1)
 NO_DATA_ERROR_MSG = "No data available"
 STORAGE_VERSION = 1
-STORAGE_KEY = f"{DOMAIN}.coordinator"
 
 
 def _raise_no_data() -> None:
@@ -45,17 +44,18 @@ def _raise_no_data() -> None:
 class TibberPricesDataUpdateCoordinator(DataUpdateCoordinator):
     """Class to manage fetching data from the API."""
 
-    config_entry: TibberPricesConfigEntry
-
     def __init__(
         self,
         hass: HomeAssistant,
+        entry: TibberPricesConfigEntry,
         *args: Any,
         **kwargs: Any,
     ) -> None:
         """Initialize coordinator with cache."""
         super().__init__(hass, *args, **kwargs)
-        self._store = Store(hass, STORAGE_VERSION, STORAGE_KEY)
+        self._entry = entry
+        storage_key = f"{DOMAIN}.{entry.entry_id}"
+        self._store = Store(hass, STORAGE_VERSION, storage_key)
         self._cached_price_data: dict | None = None
         self._cached_rating_data: dict | None = None
         self._last_price_update: datetime | None = None
@@ -189,7 +189,7 @@ class TibberPricesDataUpdateCoordinator(DataUpdateCoordinator):
 
     async def _fetch_price_data(self) -> dict:
         """Fetch fresh price data from API."""
-        client = self.config_entry.runtime_data.client
+        client = self._entry.runtime_data.client
         return await client.async_get_price_info()
 
     def _extract_price_data(self, data: dict) -> dict:
@@ -239,7 +239,7 @@ class TibberPricesDataUpdateCoordinator(DataUpdateCoordinator):
 
     async def _get_rating_data(self) -> dict:
         """Get fresh rating data from API."""
-        client = self.config_entry.runtime_data.client
+        client = self._entry.runtime_data.client
         daily = await client.async_get_daily_price_rating()
         hourly = await client.async_get_hourly_price_rating()
         monthly = await client.async_get_monthly_price_rating()
