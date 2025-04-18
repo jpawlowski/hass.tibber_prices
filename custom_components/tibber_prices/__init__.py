@@ -10,13 +10,13 @@ from __future__ import annotations
 from datetime import timedelta
 from typing import TYPE_CHECKING
 
-from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, Platform
+from homeassistant.const import CONF_ACCESS_TOKEN, Platform
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.loader import async_get_loaded_integration
 
 from .api import TibberPricesApiClient
 from .const import DOMAIN, LOGGER
-from .coordinator import BlueprintDataUpdateCoordinator
+from .coordinator import TibberPricesDataUpdateCoordinator
 from .data import TibberPricesData
 
 if TYPE_CHECKING:
@@ -37,7 +37,7 @@ async def async_setup_entry(
     entry: TibberPricesConfigEntry,
 ) -> bool:
     """Set up this integration using UI."""
-    coordinator = BlueprintDataUpdateCoordinator(
+    coordinator = TibberPricesDataUpdateCoordinator(
         hass=hass,
         logger=LOGGER,
         name=DOMAIN,
@@ -45,8 +45,7 @@ async def async_setup_entry(
     )
     entry.runtime_data = TibberPricesData(
         client=TibberPricesApiClient(
-            username=entry.data[CONF_USERNAME],
-            password=entry.data[CONF_PASSWORD],
+            access_token=entry.data[CONF_ACCESS_TOKEN],
             session=async_get_clientsession(hass),
         ),
         integration=async_get_loaded_integration(hass, entry.domain),

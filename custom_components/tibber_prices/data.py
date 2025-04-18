@@ -10,7 +10,7 @@ if TYPE_CHECKING:
     from homeassistant.loader import Integration
 
     from .api import TibberPricesApiClient
-    from .coordinator import BlueprintDataUpdateCoordinator
+    from .coordinator import TibberPricesDataUpdateCoordinator
 
 
 type TibberPricesConfigEntry = ConfigEntry[TibberPricesData]
@@ -21,5 +21,5 @@ class TibberPricesData:
     """Data for the Blueprint integration."""
 
     client: TibberPricesApiClient
-    coordinator: BlueprintDataUpdateCoordinator
+    coordinator: TibberPricesDataUpdateCoordinator
     integration: Integration

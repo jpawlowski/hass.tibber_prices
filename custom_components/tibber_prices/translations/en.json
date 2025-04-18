@@ -4,13 +4,12 @@
             "user": {
                 "description": "If you need help with the configuration have a look here: https://github.com/jpawlowski/hass.tibber_prices",
                 "data": {
-                    "username": "Username",
-                    "password": "Password"
+                    "access_token": "Tibber Access Token"
                 }
             }
         },
         "error": {
-            "auth": "Username/Password is wrong.",
+            "auth": "Tibber Access Token is wrong.",
             "connection": "Unable to connect to the server.",
             "unknown": "Unknown error occurred."
         },
