@@ -53,7 +53,7 @@ class TibberPricesDataUpdateCoordinator(DataUpdateCoordinator):
     ) -> None:
         """Initialize coordinator with cache."""
         super().__init__(hass, *args, **kwargs)
-        self._entry = entry
+        self.config_entry = entry
         storage_key = f"{DOMAIN}.{entry.entry_id}"
         self._store = Store(hass, STORAGE_VERSION, storage_key)
         self._cached_price_data: dict | None = None
@@ -200,7 +200,7 @@ class TibberPricesDataUpdateCoordinator(DataUpdateCoordinator):
 
     async def _fetch_price_data(self) -> dict:
         """Fetch fresh price data from API."""
-        client = self._entry.runtime_data.client
+        client = self.config_entry.runtime_data.client
         return await client.async_get_price_info()
 
     def _extract_price_data(self, data: dict) -> dict:
@@ -250,7 +250,7 @@ class TibberPricesDataUpdateCoordinator(DataUpdateCoordinator):
 
     async def _get_rating_data(self) -> dict:
         """Get fresh rating data from API."""
-        client = self._entry.runtime_data.client
+        client = self.config_entry.runtime_data.client
         daily = await client.async_get_daily_price_rating()
         hourly = await client.async_get_hourly_price_rating()
         monthly = await client.async_get_monthly_price_rating()
