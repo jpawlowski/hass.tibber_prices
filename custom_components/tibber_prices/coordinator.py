@@ -61,6 +61,17 @@ class TibberPricesDataUpdateCoordinator(DataUpdateCoordinator):
         self._last_price_update: datetime | None = None
         self._last_rating_update: datetime | None = None
         self._scheduled_price_update: asyncio.Task | None = None
+        self._remove_update_listener = None
+
+        # Schedule additional updates at the start of every hour
+        self._remove_update_listener = hass.helpers.event.async_track_time_change(
+            self.async_request_refresh, minute=0, second=0
+        )
+
+    async def shutdown(self) -> None:
+        """Clean up coordinator on shutdown."""
+        if self._remove_update_listener:
+            self._remove_update_listener()
 
     async def _async_initialize(self) -> None:
         """Load stored data."""

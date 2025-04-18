@@ -43,7 +43,7 @@ async def async_setup_entry(
         entry=entry,
         logger=LOGGER,
         name=DOMAIN,
-        update_interval=timedelta(hours=1),
+        update_interval=timedelta(minutes=5),
     )
     entry.runtime_data = TibberPricesData(
         client=TibberPricesApiClient(
@@ -68,6 +68,7 @@ async def async_unload_entry(
     entry: TibberPricesConfigEntry,
 ) -> bool:
     """Handle unload of an entry."""
+    await entry.runtime_data.coordinator.shutdown()
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
 
