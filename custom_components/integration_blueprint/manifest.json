@@ -1,12 +1,12 @@
 {
-  "domain": "integration_blueprint",
-  "name": "Integration blueprint",
+  "domain": "tibber_prices",
+  "name": "Tibber Price Information & Ratings",
   "codeowners": [
-    "@ludeeus"
+    "@jpawlowski"
   ],
   "config_flow": true,
-  "documentation": "https://github.com/ludeeus/integration_blueprint",
+  "documentation": "https://github.com/jpawlowski/hass.tibber_prices",
   "iot_class": "cloud_polling",
-  "issue_tracker": "https://github.com/ludeeus/integration_blueprint/issues",
+  "issue_tracker": "https://github.com/jpawlowski/hass.tibber_prices/issues",
   "version": "0.1.0"
 }
