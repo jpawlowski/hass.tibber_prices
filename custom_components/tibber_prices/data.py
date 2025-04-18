@@ -18,7 +18,7 @@ type TibberPricesConfigEntry = ConfigEntry[TibberPricesData]
 
 @dataclass
 class TibberPricesData:
-    """Data for the Blueprint integration."""
+    """Data for the tibber_prices integration."""
 
     client: TibberPricesApiClient
     coordinator: TibberPricesDataUpdateCoordinator

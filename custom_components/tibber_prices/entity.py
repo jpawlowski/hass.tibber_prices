@@ -1,4 +1,4 @@
-"""BlueprintEntity class."""
+"""TibberPricesEntity class."""
 
 from __future__ import annotations
 
@@ -10,7 +10,7 @@ from .coordinator import TibberPricesDataUpdateCoordinator
 
 
 class TibberPricesEntity(CoordinatorEntity[TibberPricesDataUpdateCoordinator]):
-    """BlueprintEntity class."""
+    """TibberPricesEntity class."""
 
     _attr_attribution = ATTRIBUTION
 

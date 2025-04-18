@@ -60,30 +60,35 @@ async def _verify_graphql_response(response_json: dict) -> None:
         }]
     }
     """
-    if "errors" not in response_json:
-        return
+    if "errors" in response_json:
+        errors = response_json["errors"]
+        if not errors:
+            raise TibberPricesApiClientError(TibberPricesApiClientError.UNKNOWN_ERROR)
 
-    errors = response_json["errors"]
-    if not errors:
-        raise TibberPricesApiClientError(TibberPricesApiClientError.UNKNOWN_ERROR)
+        error = errors[0]  # Take first error
+        if not isinstance(error, dict):
+            raise TibberPricesApiClientError(
+                TibberPricesApiClientError.MALFORMED_ERROR.format(error=error)
+            )
 
-    error = errors[0]  # Take first error
-    if not isinstance(error, dict):
+        message = error.get("message", "Unknown error")
+        extensions = error.get("extensions", {})
+
+        # Check for authentication errors first
+        if extensions.get("code") == "UNAUTHENTICATED":
+            raise TibberPricesApiClientAuthenticationError(message)
+
+        # Handle all other GraphQL errors
         raise TibberPricesApiClientError(
-            TibberPricesApiClientError.MALFORMED_ERROR.format(error=error)
+            TibberPricesApiClientError.GRAPHQL_ERROR.format(message=message)
         )
 
-    message = error.get("message", "Unknown error")
-    extensions = error.get("extensions", {})
-
-    # Check for authentication errors first
-    if extensions.get("code") == "UNAUTHENTICATED":
-        raise TibberPricesApiClientAuthenticationError(message)
-
-    # Handle all other GraphQL errors
-    raise TibberPricesApiClientError(
-        TibberPricesApiClientError.GRAPHQL_ERROR.format(message=message)
-    )
+    if "data" not in response_json or response_json["data"] is None:
+        raise TibberPricesApiClientError(
+            TibberPricesApiClientError.GRAPHQL_ERROR.format(
+                message="Response missing data object"
+            )
+        )
 
 
 class TibberPricesApiClient:
@@ -108,8 +113,8 @@ class TibberPricesApiClient:
                             name
                         }
                     }
-                """,
-            },
+                """
+            }
         )
 
     async def async_get_data(self) -> Any:
@@ -142,7 +147,12 @@ class TibberPricesApiClient:
         data: dict | None = None,
         headers: dict | None = None,
     ) -> Any:
-        """Get information from the API."""
+        """
+        Get information from the API.
+
+        Returns the contents of the 'data' object from the GraphQL response.
+        Raises an error if the response doesn't contain a 'data' object.
+        """
         try:
             async with async_timeout.timeout(10):
                 headers = headers or {}
@@ -163,11 +173,11 @@ class TibberPricesApiClient:
                 _verify_response_or_raise(response)
                 response_json = await response.json()
                 await _verify_graphql_response(response_json)
-                return response_json
+                return response_json["data"]
 
         except TimeoutError as exception:
             raise TibberPricesApiClientCommunicationError(
-                TibberPricesApiClientCommunicationError.TIMEOUT_ERROR.format(
+                TibberPricesApiClientCommunicationError.CONNECTION_ERROR.format(
                     exception=exception
                 )
             ) from exception
