@@ -31,7 +31,9 @@ class TibberPricesFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         _errors = {}
         if user_input is not None:
             try:
-                await self._test_credentials(access_token=user_input[CONF_ACCESS_TOKEN])
+                name = await self._test_credentials(
+                    access_token=user_input[CONF_ACCESS_TOKEN]
+                )
             except TibberPricesApiClientAuthenticationError as exception:
                 LOGGER.warning(exception)
                 _errors["base"] = "auth"
@@ -42,15 +44,10 @@ class TibberPricesFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 LOGGER.exception(exception)
                 _errors["base"] = "unknown"
             else:
-                await self.async_set_unique_id(
-                    ## Do NOT use this in production code
-                    ## The unique_id should never be something that can change
-                    ## https://developers.home-assistant.io/docs/config_entries_config_flow_handler#unique-ids
-                    unique_id=slugify(user_input[CONF_ACCESS_TOKEN])
-                )
+                await self.async_set_unique_id(unique_id=slugify(name))
                 self._abort_if_unique_id_configured()
                 return self.async_create_entry(
-                    title=user_input[CONF_ACCESS_TOKEN],
+                    title=name,
                     data=user_input,
                 )
 
@@ -73,10 +70,11 @@ class TibberPricesFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             errors=_errors,
         )
 
-    async def _test_credentials(self, access_token: str) -> None:
-        """Validate credentials."""
+    async def _test_credentials(self, access_token: str) -> str:
+        """Validate credentials and return the user's name."""
         client = TibberPricesApiClient(
             access_token=access_token,
             session=async_create_clientsession(self.hass),
         )
-        await client.async_test_connection()
+        result = await client.async_test_connection()
+        return result["viewer"]["name"]
