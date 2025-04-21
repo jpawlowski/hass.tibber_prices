@@ -9,6 +9,7 @@ from typing import TYPE_CHECKING, Any, Final, TypedDict, cast
 
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed
+from homeassistant.helpers.event import async_track_time_change
 from homeassistant.helpers.storage import Store
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 import homeassistant.util.dt as dt_util
@@ -162,15 +163,15 @@ class TibberPricesDataUpdateCoordinator(DataUpdateCoordinator[TibberPricesData])
 
         # Schedule updates at the start of every hour
         self._remove_update_listeners.append(
-            hass.helpers.event.async_track_time_change(
-                self._async_refresh_hourly, minute=0, second=0
+            async_track_time_change(
+                hass, self._async_refresh_hourly, minute=0, second=0
             )
         )
 
         # Schedule data rotation at midnight
         self._remove_update_listeners.append(
-            hass.helpers.event.async_track_time_change(
-                self._async_handle_midnight_rotation, hour=0, minute=0, second=0
+            async_track_time_change(
+                hass, self._async_handle_midnight_rotation, hour=0, minute=0, second=0
             )
         )
 

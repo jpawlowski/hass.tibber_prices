@@ -1,0 +1,103 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "description": "Wenn Sie Hilfe bei der Konfiguration benötigen, schauen Sie hier: https://github.com/jpawlowski/hass.tibber_prices",
+                "data": {
+                    "access_token": "Tibber Zugangstoken"
+                }
+            }
+        },
+        "error": {
+            "auth": "Der Tibber Zugangstoken ist ungültig.",
+            "connection": "Keine Verbindung zu Tibber möglich. Bitte überprüfen Sie Ihre Internetverbindung.",
+            "unknown": "Ein unerwarteter Fehler ist aufgetreten. Bitte prüfen Sie die Logs für Details."
+        },
+        "abort": {
+            "already_configured": "Dieser Eintrag ist bereits konfiguriert.",
+            "entry_not_found": "Tibber-Konfigurationseintrag nicht gefunden."
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "title": "Tibber-Konfiguration aktualisieren",
+                "description": "Aktualisieren Sie Ihren Tibber-API-Zugangstoken. Wenn Sie einen neuen Token benötigen, können Sie diesen unter https://developer.tibber.com/settings/access-token generieren",
+                "data": {
+                    "access_token": "Tibber Zugangstoken"
+                }
+            }
+        },
+        "error": {
+            "auth": "Der Tibber Zugangstoken ist ungültig.",
+            "connection": "Keine Verbindung zu Tibber möglich. Bitte überprüfen Sie Ihre Internetverbindung.",
+            "unknown": "Ein unerwarteter Fehler ist aufgetreten. Bitte prüfen Sie die Logs für Details.",
+            "different_account": "Der neue Zugangstoken gehört zu einem anderen Tibber-Konto. Bitte verwenden Sie einen Token desselben Kontos oder erstellen Sie eine neue Konfiguration für das andere Konto."
+        },
+        "abort": {
+            "entry_not_found": "Tibber-Konfigurationseintrag nicht gefunden."
+        }
+    },
+    "entity": {
+        "sensor": {
+            "current_price": {
+                "name": "Aktueller Preis",
+                "description": "Der aktuelle Strompreis dieser Stunde inklusive Steuern"
+            },
+            "next_hour_price": {
+                "name": "Preis nächste Stunde",
+                "description": "Der Strompreis der nächsten Stunde inklusive Steuern"
+            },
+            "price_level": {
+                "name": "Preisniveau",
+                "description": "Aktueller Preisindikator (SEHR_GÜNSTIG, GÜNSTIG, NORMAL, TEUER, SEHR_TEUER)"
+            },
+            "lowest_price_today": {
+                "name": "Niedrigster Preis heute",
+                "description": "Der niedrigste Strompreis des aktuellen Tages"
+            },
+            "highest_price_today": {
+                "name": "Höchster Preis heute",
+                "description": "Der höchste Strompreis des aktuellen Tages"
+            },
+            "average_price_today": {
+                "name": "Durchschnittspreis heute",
+                "description": "Der durchschnittliche Strompreis des aktuellen Tages"
+            },
+            "hourly_rating": {
+                "name": "Stündliche Preisbewertung",
+                "description": "Preisvergleich mit historischen Daten für die aktuelle Stunde (prozentuale Abweichung)"
+            },
+            "daily_rating": {
+                "name": "Tägliche Preisbewertung",
+                "description": "Preisvergleich mit historischen Daten für den aktuellen Tag (prozentuale Abweichung)"
+            },
+            "monthly_rating": {
+                "name": "Monatliche Preisbewertung",
+                "description": "Preisvergleich mit historischen Daten für den aktuellen Monat (prozentuale Abweichung)"
+            },
+            "data_timestamp": {
+                "name": "Letzte Datenaktualisierung",
+                "description": "Zeitstempel der zuletzt von Tibber empfangenen Preisdaten"
+            },
+            "tomorrow_data_available": {
+                "name": "Daten für morgen verfügbar",
+                "description": "Zeigt an, ob Preisdaten für morgen verfügbar sind (Ja/Nein/Teilweise)"
+            }
+        },
+        "binary_sensor": {
+            "peak_hour": {
+                "name": "Spitzenstunde",
+                "description": "Zeigt an, ob die aktuelle Stunde zu den 20% teuersten Stunden des Tages gehört"
+            },
+            "best_price_hour": {
+                "name": "Beste Preisstunde",
+                "description": "Zeigt an, ob die aktuelle Stunde zu den 20% günstigsten Stunden des Tages gehört"
+            },
+            "connection": {
+                "name": "Verbindungsstatus",
+                "description": "Zeigt an, ob aktuelle gültige Preisdaten von Tibber vorliegen"
+            }
+        }
+    }
+}
