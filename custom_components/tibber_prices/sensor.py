@@ -11,7 +11,7 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.const import CURRENCY_EURO, EntityCategory
+from homeassistant.const import EntityCategory
 from homeassistant.util import dt as dt_util
 
 from .const import DOMAIN
@@ -24,25 +24,44 @@ if TYPE_CHECKING:
     from .coordinator import TibberPricesDataUpdateCoordinator
     from .data import TibberPricesConfigEntry
 
+PRICE_UNIT = "ct/kWh"
+CURRENCY_EURO = "EUR/kWh"
+
 # Main price sensors that users will typically use in automations
 PRICE_SENSORS = (
     SensorEntityDescription(
-        key="current_price",
+        key="current_price_eur",
         translation_key="current_price",
         name="Current Electricity Price",
         icon="mdi:currency-eur",
         device_class=SensorDeviceClass.MONETARY,
-        state_class=SensorStateClass.TOTAL,
         native_unit_of_measurement=CURRENCY_EURO,
+        entity_registry_enabled_default=False,  # Hidden by default as it's mainly for the Energy Dashboard
     ),
     SensorEntityDescription(
-        key="next_hour_price",
+        key="current_price",
+        translation_key="current_price_cents",
+        name="Current Electricity Price",
+        icon="mdi:currency-eur",
+        device_class=SensorDeviceClass.MONETARY,
+        native_unit_of_measurement="ct/kWh",
+    ),
+    SensorEntityDescription(
+        key="next_hour_price_eur",
         translation_key="next_hour_price",
         name="Next Hour Electricity Price",
         icon="mdi:currency-eur-off",
         device_class=SensorDeviceClass.MONETARY,
-        state_class=SensorStateClass.TOTAL,
         native_unit_of_measurement=CURRENCY_EURO,
+        entity_registry_enabled_default=False,  # Hidden by default as it's mainly for the Energy Dashboard
+    ),
+    SensorEntityDescription(
+        key="next_hour_price",
+        translation_key="next_hour_price_cents",
+        name="Next Hour Electricity Price",
+        icon="mdi:currency-eur-off",
+        device_class=SensorDeviceClass.MONETARY,
+        native_unit_of_measurement="ct/kWh",
     ),
     SensorEntityDescription(
         key="price_level",
@@ -55,34 +74,55 @@ PRICE_SENSORS = (
 # Statistical price sensors
 STATISTICS_SENSORS = (
     SensorEntityDescription(
-        key="lowest_price_today",
+        key="lowest_price_today_eur",
         translation_key="lowest_price_today",
         name="Today's Lowest Price",
         icon="mdi:currency-eur",
         device_class=SensorDeviceClass.MONETARY,
-        state_class=SensorStateClass.TOTAL,
         native_unit_of_measurement=CURRENCY_EURO,
-        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,  # Hidden by default as it's mainly for the Energy Dashboard
     ),
     SensorEntityDescription(
-        key="highest_price_today",
+        key="lowest_price_today",
+        translation_key="lowest_price_today_cents",
+        name="Today's Lowest Price",
+        icon="mdi:currency-eur",
+        device_class=SensorDeviceClass.MONETARY,
+        native_unit_of_measurement="ct/kWh",
+    ),
+    SensorEntityDescription(
+        key="highest_price_today_eur",
         translation_key="highest_price_today",
         name="Today's Highest Price",
         icon="mdi:currency-eur",
         device_class=SensorDeviceClass.MONETARY,
-        state_class=SensorStateClass.TOTAL,
         native_unit_of_measurement=CURRENCY_EURO,
-        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,  # Hidden by default as it's mainly for the Energy Dashboard
     ),
     SensorEntityDescription(
-        key="average_price_today",
+        key="highest_price_today",
+        translation_key="highest_price_today_cents",
+        name="Today's Highest Price",
+        icon="mdi:currency-eur",
+        device_class=SensorDeviceClass.MONETARY,
+        native_unit_of_measurement="ct/kWh",
+    ),
+    SensorEntityDescription(
+        key="average_price_today_eur",
         translation_key="average_price_today",
         name="Today's Average Price",
         icon="mdi:currency-eur",
         device_class=SensorDeviceClass.MONETARY,
-        state_class=SensorStateClass.TOTAL,
         native_unit_of_measurement=CURRENCY_EURO,
-        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,  # Hidden by default as it's mainly for the Energy Dashboard
+    ),
+    SensorEntityDescription(
+        key="average_price_today",
+        translation_key="average_price_today_cents",
+        name="Today's Average Price",
+        icon="mdi:currency-eur",
+        device_class=SensorDeviceClass.MONETARY,
+        native_unit_of_measurement="ct/kWh",
     ),
 )
 
@@ -94,7 +134,6 @@ RATING_SENSORS = (
         name="Hourly Price Rating",
         icon="mdi:clock-outline",
         native_unit_of_measurement="%",
-        entity_category=EntityCategory.DIAGNOSTIC,
     ),
     SensorEntityDescription(
         key="daily_rating",
@@ -102,7 +141,6 @@ RATING_SENSORS = (
         name="Daily Price Rating",
         icon="mdi:calendar-today",
         native_unit_of_measurement="%",
-        entity_category=EntityCategory.DIAGNOSTIC,
     ),
     SensorEntityDescription(
         key="monthly_rating",
@@ -110,7 +148,6 @@ RATING_SENSORS = (
         name="Monthly Price Rating",
         icon="mdi:calendar-month",
         native_unit_of_measurement="%",
-        entity_category=EntityCategory.DIAGNOSTIC,
     ),
 )
 
@@ -191,10 +228,25 @@ class TibberPricesSensor(TibberPricesEntity, SensorEntity):
                     current_hour_data = price_data
                     break
 
+            # Helper function to convert price based on unit
+            def get_price_value(price: float) -> float:
+                if self.entity_description.native_unit_of_measurement == "ct/kWh":
+                    return price * 100
+                return price
+
             if self.entity_description.key == "current_price":
+                return get_price_value(float(current_hour_data["total"])) if current_hour_data else None
+            elif self.entity_description.key == "current_price_eur":
                 return float(current_hour_data["total"]) if current_hour_data else None
 
             elif self.entity_description.key == "next_hour_price":
+                next_hour = (now.hour + 1) % 24
+                for price_data in price_info.get("today", []):
+                    starts_at = datetime.fromisoformat(price_data["startsAt"])
+                    if starts_at.hour == next_hour:
+                        return get_price_value(float(price_data["total"]))
+                return None
+            elif self.entity_description.key == "next_hour_price_eur":
                 next_hour = (now.hour + 1) % 24
                 for price_data in price_info.get("today", []):
                     starts_at = datetime.fromisoformat(price_data["startsAt"])
@@ -206,15 +258,31 @@ class TibberPricesSensor(TibberPricesEntity, SensorEntity):
                 today_prices = price_info.get("today", [])
                 if not today_prices:
                     return None
+                return get_price_value(min(float(price["total"]) for price in today_prices))
+            elif self.entity_description.key == "lowest_price_today_eur":
+                today_prices = price_info.get("today", [])
+                if not today_prices:
+                    return None
                 return min(float(price["total"]) for price in today_prices)
 
             elif self.entity_description.key == "highest_price_today":
                 today_prices = price_info.get("today", [])
                 if not today_prices:
                     return None
+                return get_price_value(max(float(price["total"]) for price in today_prices))
+            elif self.entity_description.key == "highest_price_today_eur":
+                today_prices = price_info.get("today", [])
+                if not today_prices:
+                    return None
                 return max(float(price["total"]) for price in today_prices)
 
             elif self.entity_description.key == "average_price_today":
+                today_prices = price_info.get("today", [])
+                if not today_prices:
+                    return None
+                avg = sum(float(price["total"]) for price in today_prices) / len(today_prices)
+                return get_price_value(avg)
+            elif self.entity_description.key == "average_price_today_eur":
                 today_prices = price_info.get("today", [])
                 if not today_prices:
                     return None
@@ -305,12 +373,26 @@ class TibberPricesSensor(TibberPricesEntity, SensorEntity):
 
             attributes = {}
 
-            if self.entity_description.key == "current_price":
-                attributes["timestamp"] = price_info.get("current", {}).get("startsAt")
-            elif self.entity_description.key == "next_hour_price":
-                attributes["timestamp"] = price_info.get("current", {}).get("startsAt")
+            # Get current hour's data for timestamp
+            now = datetime.now()
+            current_hour_data = None
+            for price_data in price_info.get("today", []):
+                starts_at = datetime.fromisoformat(price_data["startsAt"])
+                if starts_at.hour == now.hour:
+                    current_hour_data = price_data
+                    break
+
+            if self.entity_description.key in ["current_price", "current_price_eur"]:
+                attributes["timestamp"] = current_hour_data["startsAt"] if current_hour_data else None
+            elif self.entity_description.key in ["next_hour_price", "next_hour_price_eur"]:
+                next_hour = (now.hour + 1) % 24
+                for price_data in price_info.get("today", []):
+                    starts_at = datetime.fromisoformat(price_data["startsAt"])
+                    if starts_at.hour == next_hour:
+                        attributes["timestamp"] = price_data["startsAt"]
+                        break
             elif self.entity_description.key == "price_level":
-                attributes["timestamp"] = price_info.get("current", {}).get("startsAt")
+                attributes["timestamp"] = current_hour_data["startsAt"] if current_hour_data else None
             elif self.entity_description.key == "lowest_price_today":
                 attributes["timestamp"] = price_info.get("today", [{}])[0].get("startsAt")
             elif self.entity_description.key == "highest_price_today":
@@ -318,7 +400,7 @@ class TibberPricesSensor(TibberPricesEntity, SensorEntity):
             elif self.entity_description.key == "average_price_today":
                 attributes["timestamp"] = price_info.get("today", [{}])[0].get("startsAt")
             elif self.entity_description.key == "hourly_rating":
-                attributes["timestamp"] = price_info.get("current", {}).get("startsAt")
+                attributes["timestamp"] = current_hour_data["startsAt"] if current_hour_data else None
             elif self.entity_description.key == "daily_rating":
                 attributes["timestamp"] = price_info.get("today", [{}])[0].get("startsAt")
             elif self.entity_description.key == "monthly_rating":

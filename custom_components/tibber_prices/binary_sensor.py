@@ -10,8 +10,9 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
     BinarySensorEntityDescription,
 )
+from homeassistant.const import EntityCategory
 
-from .const import NAME
+from .const import NAME, DOMAIN
 from .entity import TibberPricesEntity
 
 if TYPE_CHECKING:
@@ -25,22 +26,21 @@ ENTITY_DESCRIPTIONS = (
     BinarySensorEntityDescription(
         key="peak_hour",
         translation_key="peak_hour",
-        name="Electricity Peak Hour",
-        device_class=BinarySensorDeviceClass.POWER,
-        icon="mdi:flash-alert",
+        name="Peak Hour",
+        icon="mdi:clock-alert",
     ),
     BinarySensorEntityDescription(
         key="best_price_hour",
         translation_key="best_price_hour",
-        name="Best Electricity Price Hour",
-        device_class=BinarySensorDeviceClass.POWER,
-        icon="mdi:flash-outline",
+        name="Best Price Hour",
+        icon="mdi:clock-check",
     ),
     BinarySensorEntityDescription(
         key="connection",
         translation_key="connection",
         name="Tibber API Connection",
         device_class=BinarySensorDeviceClass.CONNECTIVITY,
+        entity_category=EntityCategory.DIAGNOSTIC,
     ),
 )
 
