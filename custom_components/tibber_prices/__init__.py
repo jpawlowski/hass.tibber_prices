@@ -67,9 +67,13 @@ async def async_unload_entry(
     hass: HomeAssistant,
     entry: TibberPricesConfigEntry,
 ) -> bool:
-    """Handle unload of an entry."""
-    await entry.runtime_data.coordinator.shutdown()
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    """Unload a config entry."""
+    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+
+    if unload_ok and entry.runtime_data is not None:
+        await entry.runtime_data.coordinator.async_shutdown()
+
+    return unload_ok
 
 
 async def async_remove_entry(

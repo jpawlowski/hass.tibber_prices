@@ -108,7 +108,19 @@ async def _verify_graphql_response(response_json: dict) -> None:
 
 
 def _is_data_empty(data: dict, query_type: str) -> bool:
-    """Check if the response data is empty or incomplete."""
+    """Check if the response data is empty or incomplete.
+
+    For price info:
+    - Must have either range/edges or yesterday data
+    - Must have today data
+    - If neither range/edges nor yesterday data exists, data is considered empty
+    - If today data is empty, data is considered empty
+    - tomorrow can be empty if we have valid historical and today data
+
+    For rating data:
+    - Must have thresholdPercentages
+    - Must have non-empty entries for the specific rating type
+    """
     _LOGGER.debug("Checking if data is empty for query_type %s", query_type)
 
     try:
@@ -116,30 +128,69 @@ def _is_data_empty(data: dict, query_type: str) -> bool:
 
         if query_type == "price_info":
             price_info = subscription["priceInfo"]
-            # Check either range or yesterday, since we transform range into yesterday
-            has_range = "range" in price_info and price_info["range"]["edges"]
-            has_yesterday = "yesterday" in price_info and price_info["yesterday"]
+
+            # Check historical data (either range or yesterday)
+            has_range = (
+                "range" in price_info
+                and price_info["range"] is not None
+                and "edges" in price_info["range"]
+                and price_info["range"]["edges"]
+            )
+            has_yesterday = (
+                "yesterday" in price_info
+                and price_info["yesterday"] is not None
+                and len(price_info["yesterday"]) > 0
+            )
             has_historical = has_range or has_yesterday
-            is_empty = not has_historical or not price_info["today"]
+
+            # Check today's data
+            has_today = (
+                "today" in price_info
+                and price_info["today"] is not None
+                and len(price_info["today"]) > 0
+            )
+
+            # Data is empty if we don't have historical data or today's data
+            is_empty = not has_historical or not has_today
+
             _LOGGER.debug(
-                "Price info check - historical data: %s, today: %s, is_empty: %s",
-                bool(has_historical),
-                bool(price_info["today"]),
+                "Price info check - historical data (range: %s, yesterday: %s), today: %s, is_empty: %s",
+                bool(has_range),
+                bool(has_yesterday),
+                bool(has_today),
                 is_empty,
             )
             return is_empty
 
         if query_type in ["daily", "hourly", "monthly"]:
             rating = subscription["priceRating"]
-            if not rating["thresholdPercentages"]:
-                _LOGGER.debug("Missing threshold percentages for %s rating", query_type)
+
+            # Check threshold percentages
+            has_thresholds = (
+                "thresholdPercentages" in rating
+                and rating["thresholdPercentages"] is not None
+                and "low" in rating["thresholdPercentages"]
+                and "high" in rating["thresholdPercentages"]
+            )
+            if not has_thresholds:
+                _LOGGER.debug("Missing or invalid threshold percentages for %s rating", query_type)
                 return True
-            entries = rating[query_type]["entries"]
-            is_empty = not entries or len(entries) == 0
+
+            # Check rating entries
+            has_entries = (
+                query_type in rating
+                and rating[query_type] is not None
+                and "entries" in rating[query_type]
+                and rating[query_type]["entries"] is not None
+                and len(rating[query_type]["entries"]) > 0
+            )
+
+            is_empty = not has_entries
             _LOGGER.debug(
-                "%s rating check - entries count: %d, is_empty: %s",
+                "%s rating check - has_thresholds: %s, entries count: %d, is_empty: %s",
                 query_type,
-                len(entries) if entries else 0,
+                has_thresholds,
+                len(rating[query_type]["entries"]) if has_entries else 0,
                 is_empty,
             )
             return is_empty
@@ -149,8 +200,6 @@ def _is_data_empty(data: dict, query_type: str) -> bool:
     except (KeyError, IndexError, TypeError) as error:
         _LOGGER.debug("Error checking data emptiness: %s", error)
         return True
-    else:
-        return False
 
 
 def _prepare_headers(access_token: str) -> dict[str, str]:
