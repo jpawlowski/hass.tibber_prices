@@ -5,7 +5,7 @@ from __future__ import annotations
 import asyncio
 import logging
 import socket
-from datetime import UTC, datetime, timedelta
+from datetime import timedelta
 from enum import Enum, auto
 from typing import Any
 
@@ -13,6 +13,7 @@ import aiohttp
 import async_timeout
 
 from homeassistant.const import __version__ as ha_version
+from homeassistant.util import dt as dt_util
 
 from .const import VERSION
 
@@ -67,9 +68,7 @@ class TibberPricesApiClientAuthenticationError(TibberPricesApiClientError):
 def _verify_response_or_raise(response: aiohttp.ClientResponse) -> None:
     """Verify that the response is valid."""
     if response.status in (HTTP_UNAUTHORIZED, HTTP_FORBIDDEN):
-        raise TibberPricesApiClientAuthenticationError(
-            TibberPricesApiClientAuthenticationError.INVALID_CREDENTIALS
-        )
+        raise TibberPricesApiClientAuthenticationError(TibberPricesApiClientAuthenticationError.INVALID_CREDENTIALS)
     if response.status == HTTP_TOO_MANY_REQUESTS:
         raise TibberPricesApiClientError(TibberPricesApiClientError.RATE_LIMIT_ERROR)
     response.raise_for_status()
@@ -84,27 +83,19 @@ async def _verify_graphql_response(response_json: dict) -> None:
 
         error = errors[0]  # Take first error
         if not isinstance(error, dict):
-            raise TibberPricesApiClientError(
-                TibberPricesApiClientError.MALFORMED_ERROR.format(error=error)
-            )
+            raise TibberPricesApiClientError(TibberPricesApiClientError.MALFORMED_ERROR.format(error=error))
 
         message = error.get("message", "Unknown error")
         extensions = error.get("extensions", {})
 
         if extensions.get("code") == "UNAUTHENTICATED":
-            raise TibberPricesApiClientAuthenticationError(
-                TibberPricesApiClientAuthenticationError.INVALID_CREDENTIALS
-            )
+            raise TibberPricesApiClientAuthenticationError(TibberPricesApiClientAuthenticationError.INVALID_CREDENTIALS)
 
-        raise TibberPricesApiClientError(
-            TibberPricesApiClientError.GRAPHQL_ERROR.format(message=message)
-        )
+        raise TibberPricesApiClientError(TibberPricesApiClientError.GRAPHQL_ERROR.format(message=message))
 
     if "data" not in response_json or response_json["data"] is None:
         raise TibberPricesApiClientError(
-            TibberPricesApiClientError.GRAPHQL_ERROR.format(
-                message="Response missing data object"
-            )
+            TibberPricesApiClientError.GRAPHQL_ERROR.format(message="Response missing data object")
         )
 
 
@@ -139,25 +130,18 @@ def _is_data_empty(data: dict, query_type: str) -> bool:
                 and price_info["range"]["edges"]
             )
             has_yesterday = (
-                "yesterday" in price_info
-                and price_info["yesterday"] is not None
-                and len(price_info["yesterday"]) > 0
+                "yesterday" in price_info and price_info["yesterday"] is not None and len(price_info["yesterday"]) > 0
             )
             has_historical = has_range or has_yesterday
 
             # Check today's data
-            has_today = (
-                "today" in price_info
-                and price_info["today"] is not None
-                and len(price_info["today"]) > 0
-            )
+            has_today = "today" in price_info and price_info["today"] is not None and len(price_info["today"]) > 0
 
             # Data is empty if we don't have historical data or today's data
             is_empty = not has_historical or not has_today
 
             _LOGGER.debug(
-                "Price info check - historical data "
-                "(range: %s, yesterday: %s), today: %s, is_empty: %s",
+                "Price info check - historical data (range: %s, yesterday: %s), today: %s, is_empty: %s",
                 bool(has_range),
                 bool(has_yesterday),
                 bool(has_today),
@@ -176,9 +160,7 @@ def _is_data_empty(data: dict, query_type: str) -> bool:
                 and "high" in rating["thresholdPercentages"]
             )
             if not has_thresholds:
-                _LOGGER.debug(
-                    "Missing or invalid threshold percentages for %s rating", query_type
-                )
+                _LOGGER.debug("Missing or invalid threshold percentages for %s rating", query_type)
                 return True
 
             # Check rating entries
@@ -249,9 +231,8 @@ def _transform_price_info(data: dict) -> dict:
     _LOGGER.debug("Starting price info transformation")
     price_info = data["viewer"]["homes"][0]["currentSubscription"]["priceInfo"]
 
-    # Get yesterday's date in UTC first, then convert to local for comparison
-    today_utc = datetime.now(tz=UTC)
-    today_local = today_utc.astimezone().date()
+    # Get today and yesterday dates using Home Assistant's dt_util
+    today_local = dt_util.now().date()
     yesterday_local = today_local - timedelta(days=1)
     _LOGGER.debug("Processing data for yesterday's date: %s", yesterday_local)
 
@@ -266,16 +247,14 @@ def _transform_price_info(data: dict) -> dict:
                 continue
 
             price_data = edge["node"]
-            # First parse startsAt time, then handle timezone conversion
-            starts_at = datetime.fromisoformat(price_data["startsAt"])
-            if starts_at.tzinfo is None:
-                _LOGGER.debug(
-                    "Found naive timestamp, treating as local time: %s", starts_at
-                )
-                starts_at = starts_at.astimezone()
-            else:
-                starts_at = starts_at.astimezone()
+            # Parse timestamp using dt_util for proper timezone handling
+            starts_at = dt_util.parse_datetime(price_data["startsAt"])
+            if starts_at is None:
+                _LOGGER.debug("Could not parse timestamp: %s", price_data["startsAt"])
+                continue
 
+            # Convert to local timezone
+            starts_at = dt_util.as_local(starts_at)
             price_date = starts_at.date()
 
             # Only include prices from yesterday
@@ -302,7 +281,7 @@ class TibberPricesApiClient:
         self._access_token = access_token
         self._session = session
         self._request_semaphore = asyncio.Semaphore(2)
-        self._last_request_time = datetime.now(tz=UTC)
+        self._last_request_time = dt_util.now()
         self._min_request_interval = timedelta(seconds=1)
         self._max_retries = 3
         self._retry_delay = 2
@@ -408,14 +387,10 @@ class TibberPricesApiClient:
                             "currentSubscription": {
                                 "priceInfo": price_info_data,
                                 "priceRating": {
-                                    "thresholdPercentages": get_rating_data(
-                                        daily_rating
-                                    )["thresholdPercentages"],
+                                    "thresholdPercentages": get_rating_data(daily_rating)["thresholdPercentages"],
                                     "daily": get_rating_data(daily_rating)["daily"],
                                     "hourly": get_rating_data(hourly_rating)["hourly"],
-                                    "monthly": get_rating_data(monthly_rating)[
-                                        "monthly"
-                                    ],
+                                    "monthly": get_rating_data(monthly_rating)["monthly"],
                                 },
                             }
                         }
@@ -462,12 +437,10 @@ class TibberPricesApiClient:
     ) -> Any:
         """Handle a single API request with rate limiting."""
         async with self._request_semaphore:
-            now = datetime.now(tz=UTC)
+            now = dt_util.now()
             time_since_last_request = now - self._last_request_time
             if time_since_last_request < self._min_request_interval:
-                sleep_time = (
-                    self._min_request_interval - time_since_last_request
-                ).total_seconds()
+                sleep_time = (self._min_request_interval - time_since_last_request).total_seconds()
                 _LOGGER.debug(
                     "Rate limiting: waiting %s seconds before next request",
                     sleep_time,
@@ -475,21 +448,17 @@ class TibberPricesApiClient:
                 await asyncio.sleep(sleep_time)
 
             async with async_timeout.timeout(10):
-                self._last_request_time = datetime.now(tz=UTC)
+                self._last_request_time = dt_util.now()
                 response_data = await self._make_request(
                     headers,
                     data or {},
                     query_type,
                 )
 
-                if query_type != QueryType.TEST and _is_data_empty(
-                    response_data, query_type.value
-                ):
+                if query_type != QueryType.TEST and _is_data_empty(response_data, query_type.value):
                     _LOGGER.debug("Empty data detected for query_type: %s", query_type)
                     raise TibberPricesApiClientError(
-                        TibberPricesApiClientError.EMPTY_DATA_ERROR.format(
-                            query_type=query_type.value
-                        )
+                        TibberPricesApiClientError.EMPTY_DATA_ERROR.format(query_type=query_type.value)
                     )
 
                 return response_data
@@ -524,9 +493,7 @@ class TibberPricesApiClient:
                     error
                     if isinstance(error, TibberPricesApiClientError)
                     else TibberPricesApiClientError(
-                        TibberPricesApiClientError.GENERIC_ERROR.format(
-                            exception=str(error)
-                        )
+                        TibberPricesApiClientError.GENERIC_ERROR.format(exception=str(error))
                     )
                 )
 
@@ -545,17 +512,11 @@ class TibberPricesApiClient:
         # Handle final error state
         if isinstance(last_error, TimeoutError):
             raise TibberPricesApiClientCommunicationError(
-                TibberPricesApiClientCommunicationError.TIMEOUT_ERROR.format(
-                    exception=last_error
-                )
+                TibberPricesApiClientCommunicationError.TIMEOUT_ERROR.format(exception=last_error)
             ) from last_error
         if isinstance(last_error, (aiohttp.ClientError, socket.gaierror)):
             raise TibberPricesApiClientCommunicationError(
-                TibberPricesApiClientCommunicationError.CONNECTION_ERROR.format(
-                    exception=last_error
-                )
+                TibberPricesApiClientCommunicationError.CONNECTION_ERROR.format(exception=last_error)
             ) from last_error
 
-        raise last_error or TibberPricesApiClientError(
-            TibberPricesApiClientError.UNKNOWN_ERROR
-        )
+        raise last_error or TibberPricesApiClientError(TibberPricesApiClientError.UNKNOWN_ERROR)

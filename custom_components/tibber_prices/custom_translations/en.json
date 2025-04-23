@@ -72,10 +72,5 @@
             "long_description": "Indicates whether the component is successfully connecting to the Tibber API",
             "usage_tips": "Monitor this to ensure your price data is being updated correctly"
         }
-    },
-    "metadata": {
-        "author": "Julian Pawlowski",
-        "version": "1.0.0",
-        "last_updated": "2025-04-23"
     }
 }

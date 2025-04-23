@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 import logging
 from datetime import datetime, timedelta
 from typing import TYPE_CHECKING, Any, Final, TypedDict, cast
@@ -21,8 +22,6 @@ from .api import (
 from .const import DOMAIN, LOGGER
 
 if TYPE_CHECKING:
-    import asyncio
-
     from .data import TibberPricesConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
@@ -162,6 +161,7 @@ class TibberPricesDataUpdateCoordinator(DataUpdateCoordinator[TibberPricesData])
         self._scheduled_price_update: asyncio.Task | None = None
         self._remove_update_listeners: list[Any] = []
         self._force_update = False
+        self._rotation_lock = asyncio.Lock()  # Add lock for data rotation operations
 
         # Schedule updates at the start of every hour
         self._remove_update_listeners.append(
@@ -182,33 +182,40 @@ class TibberPricesDataUpdateCoordinator(DataUpdateCoordinator[TibberPricesData])
     async def _async_handle_midnight_rotation(self, _now: datetime | None = None) -> None:
         """Handle data rotation at midnight."""
         if not self._cached_price_data:
+            LOGGER.debug("No cached price data available for midnight rotation")
             return
 
-        try:
-            LOGGER.debug("Starting midnight data rotation")
-            subscription = self._cached_price_data["data"]["viewer"]["homes"][0]["currentSubscription"]
-            price_info = subscription["priceInfo"]
+        async with self._rotation_lock:  # Ensure rotation operations are protected
+            try:
+                LOGGER.debug("Starting midnight data rotation")
+                subscription = self._cached_price_data["data"]["viewer"]["homes"][0]["currentSubscription"]
+                price_info = subscription["priceInfo"]
 
-            # Move today's data to yesterday
-            if today_data := price_info.get("today"):
-                price_info["yesterday"] = today_data
+                # Move today's data to yesterday
+                if today_data := price_info.get("today"):
+                    LOGGER.debug("Moving today's data (%d entries) to yesterday", len(today_data))
+                    price_info["yesterday"] = today_data
+                else:
+                    LOGGER.debug("No today's data available to move to yesterday")
 
-            # Move tomorrow's data to today
-            if tomorrow_data := price_info.get("tomorrow"):
-                price_info["today"] = tomorrow_data
-                price_info["tomorrow"] = []
-            else:
-                price_info["today"] = []
+                # Move tomorrow's data to today
+                if tomorrow_data := price_info.get("tomorrow"):
+                    LOGGER.debug("Moving tomorrow's data (%d entries) to today", len(tomorrow_data))
+                    price_info["today"] = tomorrow_data
+                    price_info["tomorrow"] = []
+                else:
+                    LOGGER.warning("No tomorrow's data available to move to today, clearing today's data")
+                    price_info["today"] = []
 
-            # Store the rotated data
-            await self._store_cache()
-            LOGGER.debug("Completed midnight data rotation")
+                # Store the rotated data
+                await self._store_cache()
+                LOGGER.debug("Completed midnight data rotation")
 
-            # Trigger an update to refresh the entities
-            await self.async_request_refresh()
+                # No need to schedule immediate refresh - tomorrow's data won't be available yet
+                # We'll wait for the regular update cycle between 13:00-15:00
 
-        except (KeyError, TypeError, ValueError) as ex:
-            LOGGER.error("Error during midnight data rotation: %s", ex)
+            except (KeyError, TypeError, ValueError) as ex:
+                LOGGER.error("Error during midnight data rotation: %s", ex)
 
     @callback
     def _recover_timestamp(
@@ -278,8 +285,19 @@ class TibberPricesDataUpdateCoordinator(DataUpdateCoordinator[TibberPricesData])
                 self._last_rating_update_monthly,
             )
 
-    async def _async_refresh_hourly(self, *_: Any) -> None:
-        """Handle the hourly refresh - don't force update."""
+    async def _async_refresh_hourly(self, now: datetime | None = None) -> None:
+        """
+        Handle the hourly refresh.
+
+        This will:
+        1. Check if it's midnight and handle rotation if needed
+        2. Then perform a regular refresh
+        """
+        # If this is a midnight update (hour=0), handle data rotation first
+        if now and now.hour == 0 and now.minute == 0:
+            await self._perform_midnight_rotation()
+
+        # Then do a regular refresh
         await self.async_refresh()
 
     async def _async_update_data(self) -> TibberPricesData:
@@ -839,3 +857,66 @@ class TibberPricesDataUpdateCoordinator(DataUpdateCoordinator[TibberPricesData])
     def _transform_api_response(self, data: dict[str, Any]) -> TibberPricesData:
         """Transform API response to coordinator data format."""
         return cast("TibberPricesData", data)
+
+    async def _perform_midnight_rotation(self) -> None:
+        """
+        Perform the data rotation at midnight within the hourly update process.
+
+        This ensures that data rotation completes before any regular updates run,
+        avoiding race conditions between midnight rotation and regular updates.
+        """
+        LOGGER.info("Performing midnight data rotation as part of hourly update cycle")
+
+        if not self._cached_price_data:
+            LOGGER.debug("No cached price data available for midnight rotation")
+            return
+
+        async with self._rotation_lock:
+            try:
+                subscription = self._cached_price_data["data"]["viewer"]["homes"][0]["currentSubscription"]
+                price_info = subscription["priceInfo"]
+
+                # Save current data state for logging
+                today_count = len(price_info.get("today", []))
+                tomorrow_count = len(price_info.get("tomorrow", []))
+                yesterday_count = len(price_info.get("yesterday", []))
+
+                LOGGER.debug(
+                    "Before rotation - Yesterday: %d, Today: %d, Tomorrow: %d items",
+                    yesterday_count,
+                    today_count,
+                    tomorrow_count,
+                )
+
+                # Move today's data to yesterday
+                if today_data := price_info.get("today"):
+                    price_info["yesterday"] = today_data
+                else:
+                    LOGGER.warning("No today's data available to move to yesterday")
+
+                # Move tomorrow's data to today
+                if tomorrow_data := price_info.get("tomorrow"):
+                    price_info["today"] = tomorrow_data
+                    price_info["tomorrow"] = []
+                else:
+                    LOGGER.warning("No tomorrow's data available to move to today")
+                    # We don't clear today's data here to avoid potential data loss
+                    # If somehow tomorrow's data isn't available, keep today's data
+                    # This is different from the separate midnight rotation handler
+
+                # Store the rotated data
+                await self._store_cache()
+
+                # Log the new state
+                LOGGER.info(
+                    "Completed midnight rotation - Yesterday: %d, Today: %d, Tomorrow: %d items",
+                    len(price_info.get("yesterday", [])),
+                    len(price_info.get("today", [])),
+                    len(price_info.get("tomorrow", [])),
+                )
+
+                # Flag that we need to fetch new tomorrow's data
+                self._force_update = True
+
+            except (KeyError, TypeError, ValueError) as ex:
+                LOGGER.error("Error during midnight data rotation in hourly update: %s", ex)

@@ -3,7 +3,7 @@
         "current_price": {
             "description": "Der aktuelle Strompreis inklusive Steuern",
             "long_description": "Zeigt den Strompreis für die aktuelle Stunde, einschließlich aller Steuern und Gebühren",
-            "usage_tips": "Verwenden Sie diesen Sensor für Automatisierungen, die auf den aktuellen Preis reagieren sollen"
+            "usage_tips": "Verwende diesen Sensor für Automatisierungen, die auf den aktuellen Preis reagieren sollen"
         },
         "next_hour_price": {
             "description": "Der Strompreis für die nächste Stunde inklusive Steuern",
@@ -13,7 +13,7 @@
         "price_level": {
             "description": "Aktueller Preisstandanzeige (SEHR_GÜNSTIG bis SEHR_TEUER)",
             "long_description": "Zeigt das aktuelle Preisniveau auf einer Skala von sehr günstig bis sehr teuer an",
-            "usage_tips": "Verwenden Sie dies für visuelle Anzeigen oder einfache Automatisierungen ohne Schwellenwertberechnung"
+            "usage_tips": "Verwende dies für visuelle Anzeigen oder einfache Automatisierungen ohne Schwellenwertberechnung"
         },
         "lowest_price_today": {
             "description": "Der niedrigste Strompreis für den aktuellen Tag",
@@ -48,12 +48,12 @@
         "data_timestamp": {
             "description": "Zeitstempel der neuesten Preisdaten von Tibber",
             "long_description": "Zeigt an, wann die Preisdaten zuletzt von der Tibber API aktualisiert wurden",
-            "usage_tips": "Überwachen Sie dies, um sicherzustellen, dass Ihre Preisdaten aktuell sind"
+            "usage_tips": "Überwache dies, um sicherzustellen, dass Ihre Preisdaten aktuell sind"
         },
         "tomorrow_data_available": {
             "description": "Zeigt an, ob Preisdaten für morgen verfügbar sind",
             "long_description": "Zeigt an, ob vollständige, teilweise oder keine Preisdaten für morgen verfügbar sind",
-            "usage_tips": "Verwenden Sie dies, um zu prüfen, ob Sie Geräte für morgen zuverlässig planen können"
+            "usage_tips": "Verwende dies, um zu prüfen, ob Geräte für morgen zuverlässig geplant werden können"
         }
     },
     "binary_sensor": {
@@ -70,12 +70,7 @@
         "connection": {
             "description": "Zeigt den Verbindungsstatus zur Tibber API an",
             "long_description": "Zeigt an, ob die Komponente erfolgreich eine Verbindung zur Tibber API herstellt",
-            "usage_tips": "Überwachen Sie dies, um sicherzustellen, dass Ihre Preisdaten korrekt aktualisiert werden"
+            "usage_tips": "Überwache dies, um sicherzustellen, dass die Preisdaten korrekt aktualisiert werden"
         }
-    },
-    "metadata": {
-        "author": "Julian Pawlowski",
-        "version": "1.0.0",
-        "last_updated": "2025-04-23"
     }
 }

@@ -68,7 +68,7 @@
                 "name": "Monthly Price Rating"
             },
             "data_timestamp": {
-                "name": "Last Data Available"
+                "name": "Price Forecast Horizon"
             },
             "tomorrow_data_available": {
                 "name": "Tomorrow's Data Available"

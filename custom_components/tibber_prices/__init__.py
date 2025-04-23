@@ -16,7 +16,7 @@ from homeassistant.helpers.storage import Store
 from homeassistant.loader import async_get_loaded_integration
 
 from .api import TibberPricesApiClient
-from .const import DOMAIN, LOGGER, async_load_translations
+from .const import DOMAIN, LOGGER, SCAN_INTERVAL, async_load_translations
 from .coordinator import STORAGE_VERSION, TibberPricesDataUpdateCoordinator
 from .data import TibberPricesData
 
@@ -44,12 +44,13 @@ async def async_setup_entry(
     if hass.config.language and hass.config.language != "en":
         await async_load_translations(hass, hass.config.language)
 
+    # Use the defined SCAN_INTERVAL constant for consistent polling
     coordinator = TibberPricesDataUpdateCoordinator(
         hass=hass,
         entry=entry,
         logger=LOGGER,
         name=DOMAIN,
-        update_interval=timedelta(minutes=5),
+        update_interval=timedelta(seconds=SCAN_INTERVAL),
     )
     entry.runtime_data = TibberPricesData(
         client=TibberPricesApiClient(

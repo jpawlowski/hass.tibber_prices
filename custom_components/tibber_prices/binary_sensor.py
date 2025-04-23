@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import UTC, datetime
+from datetime import datetime
 from typing import TYPE_CHECKING
 
 from homeassistant.components.binary_sensor import (
@@ -11,6 +11,7 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntityDescription,
 )
 from homeassistant.const import EntityCategory
+from homeassistant.util import dt as dt_util
 
 from .entity import TibberPricesEntity
 
@@ -112,15 +113,20 @@ class TibberPricesBinarySensor(TibberPricesEntity, BinarySensorEntity):
         ):
             return None
 
-        now = datetime.now(tz=UTC).astimezone()
-        current_hour_data = next(
-            (
-                price_data
-                for price_data in today_prices
-                if datetime.fromisoformat(price_data["startsAt"]).hour == now.hour
-            ),
-            None,
-        )
+        now = dt_util.now()
+
+        # Find price data for current hour
+        current_hour_data = None
+        for price_data in today_prices:
+            starts_at = dt_util.parse_datetime(price_data["startsAt"])
+            if starts_at is None:
+                continue
+
+            starts_at = dt_util.as_local(starts_at)
+            if starts_at.hour == now.hour and starts_at.date() == now.date():
+                current_hour_data = price_data
+                break
+
         if not current_hour_data:
             return None
 

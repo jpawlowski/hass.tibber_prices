@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import UTC, datetime
+from datetime import date, datetime
 from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
@@ -16,6 +16,15 @@ from homeassistant.components.sensor import (
 from homeassistant.const import CURRENCY_EURO, EntityCategory
 from homeassistant.util import dt as dt_util
 
+from .const import (
+    PRICE_LEVEL_CHEAP,
+    PRICE_LEVEL_EXPENSIVE,
+    PRICE_LEVEL_MAPPING,
+    PRICE_LEVEL_NORMAL,
+    PRICE_LEVEL_VERY_CHEAP,
+    PRICE_LEVEL_VERY_EXPENSIVE,
+    SENSOR_TYPE_PRICE_LEVEL,
+)
 from .entity import TibberPricesEntity
 
 if TYPE_CHECKING:
@@ -29,6 +38,7 @@ if TYPE_CHECKING:
 
 PRICE_UNIT = "ct/kWh"
 HOURS_IN_DAY = 24
+LAST_HOUR_OF_DAY = 23
 
 # Main price sensors that users will typically use in automations
 PRICE_SENSORS = (
@@ -71,7 +81,7 @@ PRICE_SENSORS = (
         suggested_display_precision=2,
     ),
     SensorEntityDescription(
-        key="price_level",
+        key=SENSOR_TYPE_PRICE_LEVEL,
         translation_key="price_level",
         name="Current Price Level",
         icon="mdi:meter-electric",
@@ -147,6 +157,7 @@ RATING_SENSORS = (
         name="Hourly Price Rating",
         icon="mdi:clock-outline",
         native_unit_of_measurement="%",
+        suggested_display_precision=1,
     ),
     SensorEntityDescription(
         key="daily_rating",
@@ -154,6 +165,7 @@ RATING_SENSORS = (
         name="Daily Price Rating",
         icon="mdi:calendar-today",
         native_unit_of_measurement="%",
+        suggested_display_precision=1,
     ),
     SensorEntityDescription(
         key="monthly_rating",
@@ -161,6 +173,7 @@ RATING_SENSORS = (
         name="Monthly Price Rating",
         icon="mdi:calendar-month",
         native_unit_of_measurement="%",
+        suggested_display_precision=1,
     ),
 )
 
@@ -229,7 +242,7 @@ class TibberPricesSensor(TibberPricesEntity, SensorEntity):
         # Map sensor keys to their handler methods
         handlers = {
             # Price level
-            "price_level": self._get_price_level_value,
+            SENSOR_TYPE_PRICE_LEVEL: self._get_price_level_value,
             # Price sensors
             "current_price": lambda: self._get_hourly_price_value(hour_offset=0, in_euro=False),
             "current_price_eur": lambda: self._get_hourly_price_value(hour_offset=0, in_euro=True),
@@ -261,12 +274,23 @@ class TibberPricesSensor(TibberPricesEntity, SensorEntity):
         """Get the price data for the current hour."""
         if not self.coordinator.data:
             return None
-        now = datetime.now(tz=UTC).astimezone()
+
+        # Use HomeAssistant's dt_util to get the current time in the user's timezone
+        now = dt_util.now()
         price_info = self.coordinator.data["data"]["viewer"]["homes"][0]["currentSubscription"]["priceInfo"]
+
         for price_data in price_info.get("today", []):
-            starts_at = datetime.fromisoformat(price_data["startsAt"])
-            if starts_at.hour == now.hour:
+            # Parse the timestamp and convert to local time
+            starts_at = dt_util.parse_datetime(price_data["startsAt"])
+            if starts_at is None:
+                continue
+
+            # Make sure it's in the local timezone for proper comparison
+            starts_at = dt_util.as_local(starts_at)
+
+            if starts_at.hour == now.hour and starts_at.date() == now.date():
                 return price_data
+
         return None
 
     def _get_price_level_value(self) -> str | None:
@@ -284,12 +308,44 @@ class TibberPricesSensor(TibberPricesEntity, SensorEntity):
             return None
 
         price_info = self.coordinator.data["data"]["viewer"]["homes"][0]["currentSubscription"]["priceInfo"]
-        now = datetime.now(tz=UTC).astimezone()
-        target_hour = (now.hour + hour_offset) % 24
 
-        for price_data in price_info.get("today", []):
-            starts_at = datetime.fromisoformat(price_data["startsAt"])
-            if starts_at.hour == target_hour:
+        # Use HomeAssistant's dt_util to get the current time in the user's timezone
+        now = dt_util.now()
+
+        # Calculate the exact target datetime (not just the hour)
+        # This properly handles day boundaries
+        from datetime import timedelta
+
+        target_datetime = now.replace(microsecond=0) + timedelta(hours=hour_offset)
+        target_hour = target_datetime.hour
+        target_date = target_datetime.date()
+
+        # Determine which day's data we need
+        day_key = "tomorrow" if target_date > now.date() else "today"
+
+        for price_data in price_info.get(day_key, []):
+            # Parse the timestamp and convert to local time
+            starts_at = dt_util.parse_datetime(price_data["startsAt"])
+            if starts_at is None:
+                continue
+
+            # Make sure it's in the local timezone for proper comparison
+            starts_at = dt_util.as_local(starts_at)
+
+            # Compare using both hour and date for accuracy
+            if starts_at.hour == target_hour and starts_at.date() == target_date:
+                return self._get_price_value(float(price_data["total"]), in_euro=in_euro)
+
+        # If we didn't find the price in the expected day's data, check the other day
+        # This is a fallback for potential edge cases
+        other_day_key = "today" if day_key == "tomorrow" else "tomorrow"
+        for price_data in price_info.get(other_day_key, []):
+            starts_at = dt_util.parse_datetime(price_data["startsAt"])
+            if starts_at is None:
+                continue
+
+            starts_at = dt_util.as_local(starts_at)
+            if starts_at.hour == target_hour and starts_at.date() == target_date:
                 return self._get_price_value(float(price_data["total"]), in_euro=in_euro)
 
         return None
@@ -324,26 +380,29 @@ class TibberPricesSensor(TibberPricesEntity, SensorEntity):
 
         subscription = self.coordinator.data["data"]["viewer"]["homes"][0]["currentSubscription"]
         price_rating = subscription.get("priceRating", {}) or {}
-        now = datetime.now(tz=UTC).astimezone()
+        now = dt_util.now()
 
         rating_data = price_rating.get(rating_type, {})
         entries = rating_data.get("entries", []) if rating_data else []
 
-        if rating_type == "hourly":
-            for entry in entries:
-                entry_time = datetime.fromisoformat(entry["time"])
-                if entry_time.hour == now.hour:
-                    return round(float(entry["difference"]) * 100, 1)
-        elif rating_type == "daily":
-            for entry in entries:
-                entry_time = datetime.fromisoformat(entry["time"])
-                if entry_time.date() == now.date():
-                    return round(float(entry["difference"]) * 100, 1)
-        elif rating_type == "monthly":
-            for entry in entries:
-                entry_time = datetime.fromisoformat(entry["time"])
-                if entry_time.month == now.month and entry_time.year == now.year:
-                    return round(float(entry["difference"]) * 100, 1)
+        match_conditions = {
+            "hourly": lambda et: et.hour == now.hour and et.date() == now.date(),
+            "daily": lambda et: et.date() == now.date(),
+            "monthly": lambda et: et.month == now.month and et.year == now.year,
+        }
+
+        match_func = match_conditions.get(rating_type)
+        if not match_func:
+            return None
+
+        for entry in entries:
+            entry_time = dt_util.parse_datetime(entry["time"])
+            if entry_time is None:
+                continue
+
+            entry_time = dt_util.as_local(entry_time)
+            if match_func(entry_time):
+                return float(entry["difference"])
 
         return None
 
@@ -502,32 +561,21 @@ class TibberPricesSensor(TibberPricesEntity, SensorEntity):
     def _get_sensor_attributes(self) -> dict | None:
         """Get attributes based on sensor type."""
         try:
+            if not self.coordinator.data:
+                return None
+
             key = self.entity_description.key
-            attributes: dict[str, Any] = {}
+            attributes = {}
 
-            # Get the timestamp attribute for different sensor types
-            price_info = self.coordinator.data["data"]["viewer"]["homes"][0]["currentSubscription"]["priceInfo"]
-
-            current_hour_data = self._get_current_hour_data()
-            now = datetime.now(tz=UTC).astimezone()
-
-            # Price sensors timestamps
-            if key in ["current_price", "current_price_eur", "price_level"]:
-                attributes["timestamp"] = current_hour_data["startsAt"] if current_hour_data else None
+            # Group sensors by type and delegate to specific handlers
+            if key in ["current_price", "current_price_eur", SENSOR_TYPE_PRICE_LEVEL]:
+                self._add_current_price_attributes(attributes)
             elif key in ["next_hour_price", "next_hour_price_eur"]:
-                next_hour = (now.hour + 1) % 24
-                for price_data in price_info.get("today", []):
-                    starts_at = datetime.fromisoformat(price_data["startsAt"])
-                    if starts_at.hour == next_hour:
-                        attributes["timestamp"] = price_data["startsAt"]
-                        break
-            # Statistics, rating, and diagnostic sensors
+                self._add_next_hour_attributes(attributes)
             elif any(
                 pattern in key for pattern in ["_price_today", "rating", "data_timestamp", "tomorrow_data_available"]
             ):
-                first_timestamp = price_info.get("today", [{}])[0].get("startsAt")
-                attributes["timestamp"] = first_timestamp
-
+                self._add_statistics_attributes(attributes)
         except (KeyError, ValueError, TypeError) as ex:
             self.coordinator.logger.exception(
                 "Error getting sensor attributes",
@@ -539,3 +587,73 @@ class TibberPricesSensor(TibberPricesEntity, SensorEntity):
             return None
         else:
             return attributes if attributes else None
+
+    def _add_current_price_attributes(self, attributes: dict) -> None:
+        """Add attributes for current price sensors."""
+        current_hour_data = self._get_current_hour_data()
+        attributes["timestamp"] = current_hour_data["startsAt"] if current_hour_data else None
+
+        # Add price level info for the price level sensor
+        if (
+            self.entity_description.key == SENSOR_TYPE_PRICE_LEVEL
+            and current_hour_data
+            and "level" in current_hour_data
+        ):
+            self._add_price_level_attributes(attributes, current_hour_data["level"])
+
+    def _add_price_level_attributes(self, attributes: dict, level: str) -> None:
+        """Add price level specific attributes."""
+        if level in PRICE_LEVEL_MAPPING:
+            attributes["level_value"] = PRICE_LEVEL_MAPPING[level]
+
+            # Add human-readable level descriptions
+            level_descriptions = {
+                PRICE_LEVEL_VERY_CHEAP: "Very low price compared to average",
+                PRICE_LEVEL_CHEAP: "Lower than average price",
+                PRICE_LEVEL_NORMAL: "Average price level",
+                PRICE_LEVEL_EXPENSIVE: "Higher than average price",
+                PRICE_LEVEL_VERY_EXPENSIVE: "Very high price compared to average",
+            }
+            if level in level_descriptions:
+                attributes["description"] = level_descriptions[level]
+
+    def _add_next_hour_attributes(self, attributes: dict) -> None:
+        """Add attributes for next hour price sensors."""
+        from datetime import timedelta
+
+        price_info = self.coordinator.data["data"]["viewer"]["homes"][0]["currentSubscription"]["priceInfo"]
+        now = dt_util.now()
+
+        target_datetime = now.replace(microsecond=0) + timedelta(hours=1)
+        target_hour = target_datetime.hour
+        target_date = target_datetime.date()
+
+        # Determine which day's data we need
+        day_key = "tomorrow" if target_date > now.date() else "today"
+
+        # Try to find the timestamp in either day's data
+        self._find_price_timestamp(attributes, price_info, day_key, target_hour, target_date)
+
+        if "timestamp" not in attributes:
+            other_day_key = "today" if day_key == "tomorrow" else "tomorrow"
+            self._find_price_timestamp(attributes, price_info, other_day_key, target_hour, target_date)
+
+    def _find_price_timestamp(
+        self, attributes: dict, price_info: Any, day_key: str, target_hour: int, target_date: date
+    ) -> None:
+        """Find a price timestamp for a specific hour and date."""
+        for price_data in price_info.get(day_key, []):
+            starts_at = dt_util.parse_datetime(price_data["startsAt"])
+            if starts_at is None:
+                continue
+
+            starts_at = dt_util.as_local(starts_at)
+            if starts_at.hour == target_hour and starts_at.date() == target_date:
+                attributes["timestamp"] = price_data["startsAt"]
+                break
+
+    def _add_statistics_attributes(self, attributes: dict) -> None:
+        """Add attributes for statistics, rating, and diagnostic sensors."""
+        price_info = self.coordinator.data["data"]["viewer"]["homes"][0]["currentSubscription"]["priceInfo"]
+        first_timestamp = price_info.get("today", [{}])[0].get("startsAt")
+        attributes["timestamp"] = first_timestamp

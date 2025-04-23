@@ -1,0 +1,89 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "description": "Wenn du Hilfe bei der Konfiguration benötigst, schau hier nach: https://github.com/jpawlowski/hass.tibber_prices",
+                "data": {
+                    "access_token": "Tibber Zugangstoken"
+                }
+            }
+        },
+        "error": {
+            "auth": "Der Tibber Zugangstoken ist ungültig.",
+            "connection": "Verbindung zu Tibber nicht möglich. Bitte überprüfe deine Internetverbindung.",
+            "unknown": "Ein unerwarteter Fehler ist aufgetreten. Bitte überprüfe die Logs für Details."
+        },
+        "abort": {
+            "already_configured": "Dieser Eintrag ist bereits konfiguriert.",
+            "entry_not_found": "Tibber Konfigurationseintrag nicht gefunden."
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "title": "Tibber Konfiguration aktualisieren",
+                "description": "Aktualisiere deinen Tibber API Zugangstoken. Wenn du einen neuen Token benötigst, kannst du einen unter https://developer.tibber.com/settings/access-token generieren",
+                "data": {
+                    "access_token": "Tibber Zugangstoken"
+                }
+            }
+        },
+        "error": {
+            "auth": "Der Tibber Zugangstoken ist ungültig.",
+            "connection": "Verbindung zu Tibber nicht möglich. Bitte überprüfe deine Internetverbindung.",
+            "unknown": "Ein unerwarteter Fehler ist aufgetreten. Bitte überprüfe die Logs für Details.",
+            "different_account": "Der neue Zugangstoken gehört zu einem anderen Tibber-Konto. Bitte verwende einen Token vom selben Konto oder erstelle eine neue Konfiguration für das andere Konto."
+        },
+        "abort": {
+            "entry_not_found": "Tibber Konfigurationseintrag nicht gefunden."
+        }
+    },
+    "entity": {
+        "sensor": {
+            "current_price": {
+                "name": "Aktueller Preis"
+            },
+            "next_hour_price": {
+                "name": "Preis nächste Stunde"
+            },
+            "price_level": {
+                "name": "Preisniveau"
+            },
+            "lowest_price_today": {
+                "name": "Niedrigster Preis heute"
+            },
+            "highest_price_today": {
+                "name": "Höchster Preis heute"
+            },
+            "average_price_today": {
+                "name": "Durchschnittspreis heute"
+            },
+            "hourly_rating": {
+                "name": "Stündliche Preisbewertung"
+            },
+            "daily_rating": {
+                "name": "Tägliche Preisbewertung"
+            },
+            "monthly_rating": {
+                "name": "Monatliche Preisbewertung"
+            },
+            "data_timestamp": {
+                "name": "Preisprognose-Horizont"
+            },
+            "tomorrow_data_available": {
+                "name": "Daten für morgen verfügbar"
+            }
+        },
+        "binary_sensor": {
+            "peak_hour": {
+                "name": "Spitzenstunde"
+            },
+            "best_price_hour": {
+                "name": "Beste Preisstunde"
+            },
+            "connection": {
+                "name": "Verbindungsstatus"
+            }
+        }
+    }
+}

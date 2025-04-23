@@ -8,8 +8,8 @@ import aiofiles
 
 from homeassistant.core import HomeAssistant
 
-# Version of the integration
-VERSION = "1.0.0"
+# Version should match manifest.json
+VERSION = "0.1.0"
 
 DOMAIN = "tibber_prices"
 CONF_ACCESS_TOKEN = "access_token"  # noqa: S105
@@ -17,17 +17,21 @@ CONF_EXTENDED_DESCRIPTIONS = "extended_descriptions"
 
 ATTRIBUTION = "Data provided by Tibber"
 
+# Update interval in seconds
 SCAN_INTERVAL = 60 * 5  # 5 minutes
 
-DEFAULT_NAME = "Tibber Price Analytics"
+# Integration name should match manifest.json
+DEFAULT_NAME = "Tibber Price Information & Ratings"
 DEFAULT_EXTENDED_DESCRIPTIONS = False
 
+# Price level constants
 PRICE_LEVEL_NORMAL = "NORMAL"
 PRICE_LEVEL_CHEAP = "CHEAP"
 PRICE_LEVEL_VERY_CHEAP = "VERY_CHEAP"
 PRICE_LEVEL_EXPENSIVE = "EXPENSIVE"
 PRICE_LEVEL_VERY_EXPENSIVE = "VERY_EXPENSIVE"
 
+# Mapping for comparing price levels (used for sorting)
 PRICE_LEVEL_MAPPING = {
     PRICE_LEVEL_VERY_CHEAP: -2,
     PRICE_LEVEL_CHEAP: -1,
@@ -36,6 +40,7 @@ PRICE_LEVEL_MAPPING = {
     PRICE_LEVEL_VERY_EXPENSIVE: 2,
 }
 
+# Sensor type constants
 SENSOR_TYPE_PRICE_LEVEL = "price_level"
 
 LOGGER = logging.getLogger(__package__)
