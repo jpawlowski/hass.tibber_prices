@@ -29,8 +29,8 @@
       ],
       "settings": {
         "editor.tabSize": 4,
-        "editor.formatOnPaste": false,
-        "editor.formatOnSave": false,
+        "editor.formatOnPaste": true,
+        "editor.formatOnSave": true,
         "editor.formatOnType": false,
         "files.eol": "\n",
         "files.trimTrailingWhitespace": true,
