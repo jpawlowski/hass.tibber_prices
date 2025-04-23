@@ -1,0 +1,16 @@
+# Ignore Python files – handled by Ruff/Black
+*.py
+*.pyi
+
+# Ignore Home Assistant compiled files
+__pycache__/
+*.pyc
+
+# Ignore virtual environments or dependencies
+.venv/
+env/
+venv/
+
+# Ignore compiled YAML or generated docs
+*.yaml
+*.yml
