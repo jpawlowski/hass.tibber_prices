@@ -40,6 +40,7 @@ PRICE_SENSORS = (
         device_class=SensorDeviceClass.MONETARY,
         native_unit_of_measurement=CURRENCY_EURO,
         entity_registry_enabled_default=False,
+        suggested_display_precision=2,
     ),
     SensorEntityDescription(
         key="current_price",
@@ -48,6 +49,7 @@ PRICE_SENSORS = (
         icon="mdi:currency-eur",
         device_class=SensorDeviceClass.MONETARY,
         native_unit_of_measurement="ct/kWh",
+        suggested_display_precision=2,
     ),
     SensorEntityDescription(
         key="next_hour_price_eur",
@@ -57,6 +59,7 @@ PRICE_SENSORS = (
         device_class=SensorDeviceClass.MONETARY,
         native_unit_of_measurement=CURRENCY_EURO,
         entity_registry_enabled_default=False,
+        suggested_display_precision=2,
     ),
     SensorEntityDescription(
         key="next_hour_price",
@@ -65,6 +68,7 @@ PRICE_SENSORS = (
         icon="mdi:currency-eur-off",
         device_class=SensorDeviceClass.MONETARY,
         native_unit_of_measurement="ct/kWh",
+        suggested_display_precision=2,
     ),
     SensorEntityDescription(
         key="price_level",
@@ -84,6 +88,7 @@ STATISTICS_SENSORS = (
         device_class=SensorDeviceClass.MONETARY,
         native_unit_of_measurement=CURRENCY_EURO,
         entity_registry_enabled_default=False,
+        suggested_display_precision=2,
     ),
     SensorEntityDescription(
         key="lowest_price_today",
@@ -92,6 +97,7 @@ STATISTICS_SENSORS = (
         icon="mdi:currency-eur",
         device_class=SensorDeviceClass.MONETARY,
         native_unit_of_measurement="ct/kWh",
+        suggested_display_precision=2,
     ),
     SensorEntityDescription(
         key="highest_price_today_eur",
@@ -101,6 +107,7 @@ STATISTICS_SENSORS = (
         device_class=SensorDeviceClass.MONETARY,
         native_unit_of_measurement=CURRENCY_EURO,
         entity_registry_enabled_default=False,
+        suggested_display_precision=2,
     ),
     SensorEntityDescription(
         key="highest_price_today",
@@ -109,6 +116,7 @@ STATISTICS_SENSORS = (
         icon="mdi:currency-eur",
         device_class=SensorDeviceClass.MONETARY,
         native_unit_of_measurement="ct/kWh",
+        suggested_display_precision=2,
     ),
     SensorEntityDescription(
         key="average_price_today_eur",
@@ -118,6 +126,7 @@ STATISTICS_SENSORS = (
         device_class=SensorDeviceClass.MONETARY,
         native_unit_of_measurement=CURRENCY_EURO,
         entity_registry_enabled_default=False,
+        suggested_display_precision=2,
     ),
     SensorEntityDescription(
         key="average_price_today",
@@ -126,6 +135,7 @@ STATISTICS_SENSORS = (
         icon="mdi:currency-eur",
         device_class=SensorDeviceClass.MONETARY,
         native_unit_of_measurement="ct/kWh",
+        suggested_display_precision=2,
     ),
 )
 
@@ -159,7 +169,7 @@ DIAGNOSTIC_SENSORS = (
     SensorEntityDescription(
         key="data_timestamp",
         translation_key="data_timestamp",
-        name="Last Data Update",
+        name="Latest Data Available",
         icon="mdi:clock-check",
         device_class=SensorDeviceClass.TIMESTAMP,
         entity_category=EntityCategory.DIAGNOSTIC,
@@ -226,15 +236,15 @@ class TibberPricesSensor(TibberPricesEntity, SensorEntity):
             "next_hour_price": lambda: self._get_hourly_price_value(hour_offset=1, in_euro=False),
             "next_hour_price_eur": lambda: self._get_hourly_price_value(hour_offset=1, in_euro=True),
             # Statistics sensors
-            "lowest_price_today": lambda: self._get_statistics_value(stat_func=min, in_euro=False),
-            "lowest_price_today_eur": lambda: self._get_statistics_value(stat_func=min, in_euro=True),
-            "highest_price_today": lambda: self._get_statistics_value(stat_func=max, in_euro=False),
-            "highest_price_today_eur": lambda: self._get_statistics_value(stat_func=max, in_euro=True),
+            "lowest_price_today": lambda: self._get_statistics_value(stat_func=min, in_euro=False, decimals=2),
+            "lowest_price_today_eur": lambda: self._get_statistics_value(stat_func=min, in_euro=True, decimals=4),
+            "highest_price_today": lambda: self._get_statistics_value(stat_func=max, in_euro=False, decimals=2),
+            "highest_price_today_eur": lambda: self._get_statistics_value(stat_func=max, in_euro=True, decimals=4),
             "average_price_today": lambda: self._get_statistics_value(
-                stat_func=lambda prices: sum(prices) / len(prices), in_euro=False
+                stat_func=lambda prices: sum(prices) / len(prices), in_euro=False, decimals=2
             ),
             "average_price_today_eur": lambda: self._get_statistics_value(
-                stat_func=lambda prices: sum(prices) / len(prices), in_euro=True
+                stat_func=lambda prices: sum(prices) / len(prices), in_euro=True, decimals=4
             ),
             # Rating sensors
             "hourly_rating": lambda: self._get_rating_value(rating_type="hourly"),
@@ -266,7 +276,7 @@ class TibberPricesSensor(TibberPricesEntity, SensorEntity):
 
     def _get_price_value(self, price: float, *, in_euro: bool) -> float:
         """Convert price based on unit."""
-        return price if in_euro else price * 100
+        return price if in_euro else round((price * 100), 2)
 
     def _get_hourly_price_value(self, *, hour_offset: int, in_euro: bool) -> float | None:
         """Get price for current hour or with offset."""
@@ -284,7 +294,9 @@ class TibberPricesSensor(TibberPricesEntity, SensorEntity):
 
         return None
 
-    def _get_statistics_value(self, *, stat_func: Callable[[list[float]], float], in_euro: bool) -> float | None:
+    def _get_statistics_value(
+        self, *, stat_func: Callable[[list[float]], float], in_euro: bool, decimals: int | None = None
+    ) -> float | None:
         """Handle statistics sensor values using the provided statistical function."""
         if not self.coordinator.data:
             return None
@@ -299,7 +311,11 @@ class TibberPricesSensor(TibberPricesEntity, SensorEntity):
             return None
 
         value = stat_func(prices)
-        return self._get_price_value(value, in_euro=in_euro)
+        result = self._get_price_value(value, in_euro=in_euro)
+
+        if decimals is not None:
+            result = round(result, decimals)
+        return result
 
     def _get_rating_value(self, *, rating_type: str) -> float | None:
         """Handle rating sensor values."""

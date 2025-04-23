@@ -1,89 +1,89 @@
 {
-  "config": {
-    "step": {
-      "user": {
-        "description": "If you need help with the configuration have a look here: https://github.com/jpawlowski/hass.tibber_prices",
-        "data": {
-          "access_token": "Tibber Access Token"
+    "config": {
+        "step": {
+            "user": {
+                "description": "If you need help with the configuration have a look here: https://github.com/jpawlowski/hass.tibber_prices",
+                "data": {
+                    "access_token": "Tibber Access Token"
+                }
+            }
+        },
+        "error": {
+            "auth": "The Tibber Access Token is invalid.",
+            "connection": "Unable to connect to Tibber. Please check your internet connection.",
+            "unknown": "An unexpected error occurred. Please check the logs for details."
+        },
+        "abort": {
+            "already_configured": "This entry is already configured.",
+            "entry_not_found": "Tibber configuration entry not found."
         }
-      }
     },
-    "error": {
-      "auth": "The Tibber Access Token is invalid.",
-      "connection": "Unable to connect to Tibber. Please check your internet connection.",
-      "unknown": "An unexpected error occurred. Please check the logs for details."
-    },
-    "abort": {
-      "already_configured": "This entry is already configured.",
-      "entry_not_found": "Tibber configuration entry not found."
-    }
-  },
-  "options": {
-    "step": {
-      "init": {
-        "title": "Update Tibber Configuration",
-        "description": "Update your Tibber API access token. If you need a new token, you can generate one at https://developer.tibber.com/settings/access-token",
-        "data": {
-          "access_token": "Tibber Access Token"
+    "options": {
+        "step": {
+            "init": {
+                "title": "Update Tibber Configuration",
+                "description": "Update your Tibber API access token. If you need a new token, you can generate one at https://developer.tibber.com/settings/access-token",
+                "data": {
+                    "access_token": "Tibber Access Token"
+                }
+            }
+        },
+        "error": {
+            "auth": "The Tibber Access Token is invalid.",
+            "connection": "Unable to connect to Tibber. Please check your internet connection.",
+            "unknown": "An unexpected error occurred. Please check the logs for details.",
+            "different_account": "The new access token belongs to a different Tibber account. Please use a token from the same account or create a new configuration for the other account."
+        },
+        "abort": {
+            "entry_not_found": "Tibber configuration entry not found."
         }
-      }
     },
-    "error": {
-      "auth": "The Tibber Access Token is invalid.",
-      "connection": "Unable to connect to Tibber. Please check your internet connection.",
-      "unknown": "An unexpected error occurred. Please check the logs for details.",
-      "different_account": "The new access token belongs to a different Tibber account. Please use a token from the same account or create a new configuration for the other account."
-    },
-    "abort": {
-      "entry_not_found": "Tibber configuration entry not found."
+    "entity": {
+        "sensor": {
+            "current_price": {
+                "name": "Current Price"
+            },
+            "next_hour_price": {
+                "name": "Next Hour Price"
+            },
+            "price_level": {
+                "name": "Price Level"
+            },
+            "lowest_price_today": {
+                "name": "Lowest Price Today"
+            },
+            "highest_price_today": {
+                "name": "Highest Price Today"
+            },
+            "average_price_today": {
+                "name": "Average Price Today"
+            },
+            "hourly_rating": {
+                "name": "Hourly Price Rating"
+            },
+            "daily_rating": {
+                "name": "Daily Price Rating"
+            },
+            "monthly_rating": {
+                "name": "Monthly Price Rating"
+            },
+            "data_timestamp": {
+                "name": "Last Data Available"
+            },
+            "tomorrow_data_available": {
+                "name": "Tomorrow's Data Available"
+            }
+        },
+        "binary_sensor": {
+            "peak_hour": {
+                "name": "Peak Hour"
+            },
+            "best_price_hour": {
+                "name": "Best Price Hour"
+            },
+            "connection": {
+                "name": "Connection Status"
+            }
+        }
     }
-  },
-  "entity": {
-    "sensor": {
-      "current_price": {
-        "name": "Current Price"
-      },
-      "next_hour_price": {
-        "name": "Next Hour Price"
-      },
-      "price_level": {
-        "name": "Price Level"
-      },
-      "lowest_price_today": {
-        "name": "Lowest Price Today"
-      },
-      "highest_price_today": {
-        "name": "Highest Price Today"
-      },
-      "average_price_today": {
-        "name": "Average Price Today"
-      },
-      "hourly_rating": {
-        "name": "Hourly Price Rating"
-      },
-      "daily_rating": {
-        "name": "Daily Price Rating"
-      },
-      "monthly_rating": {
-        "name": "Monthly Price Rating"
-      },
-      "data_timestamp": {
-        "name": "Last Data Update"
-      },
-      "tomorrow_data_available": {
-        "name": "Tomorrow's Data Available"
-      }
-    },
-    "binary_sensor": {
-      "peak_hour": {
-        "name": "Peak Hour"
-      },
-      "best_price_hour": {
-        "name": "Best Price Hour"
-      },
-      "connection": {
-        "name": "Connection Status"
-      }
-    }
-  }
 }
