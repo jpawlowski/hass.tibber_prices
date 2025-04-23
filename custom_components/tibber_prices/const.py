@@ -2,7 +2,9 @@
 
 import json
 import logging
+from collections.abc import Sequence
 from pathlib import Path
+from typing import Any
 
 import aiofiles
 
@@ -114,6 +116,75 @@ async def async_load_translations(hass: HomeAssistant, language: str) -> dict:
         return empty_cache
 
 
+async def async_get_translation(
+    hass: HomeAssistant,
+    path: Sequence[str],
+    language: str = "en",
+) -> Any:
+    """
+    Get a translation value by path asynchronously.
+
+    Args:
+        hass: HomeAssistant instance
+        path: A sequence of keys defining the path to the translation value
+        language: The language code (defaults to English)
+
+    Returns:
+        The translation value if found, None otherwise
+
+    """
+    translations = await async_load_translations(hass, language)
+
+    # Navigate to the requested path
+    current = translations
+    for key in path:
+        if not isinstance(current, dict) or key not in current:
+            return None
+        current = current[key]
+
+    return current
+
+
+def get_translation(
+    path: Sequence[str],
+    language: str = "en",
+) -> Any:
+    """
+    Get a translation value by path synchronously from the cache.
+
+    This function only accesses the cached translations to avoid blocking I/O.
+
+    Args:
+        path: A sequence of keys defining the path to the translation value
+        language: The language code (defaults to English)
+
+    Returns:
+        The translation value if found in cache, None otherwise
+
+    """
+    # Only return from cache to avoid blocking I/O
+    if language not in _TRANSLATIONS_CACHE:
+        # Fall back to English if the requested language is not available
+        if language != "en" and "en" in _TRANSLATIONS_CACHE:
+            language = "en"
+        else:
+            return None
+
+    # Navigate to the requested path
+    current = _TRANSLATIONS_CACHE[language]
+    for key in path:
+        if not isinstance(current, dict):
+            return None
+        if key not in current:
+            # Log the missing key for debugging
+            LOGGER.debug("Translation key '%s' not found in path %s for language %s", key, path, language)
+            return None
+        current = current[key]
+
+    return current
+
+
+# Convenience functions for backward compatibility and common usage patterns
 async def async_get_entity_description(
     hass: HomeAssistant,
     entity_type: str,
@@ -135,26 +206,24 @@ async def async_get_entity_description(
         The requested field's value if found, None otherwise
 
     """
-    translations = await async_load_translations(hass, language)
+    entity_data = await async_get_translation(hass, [entity_type, entity_key], language)
 
-    # Check if entity exists in translations
-    if entity_type in translations and entity_key in translations[entity_type]:
-        # Get the entity data
-        entity_data = translations[entity_type][entity_key]
+    # Handle the case where entity_data is a string (for description field)
+    if isinstance(entity_data, str) and field == "description":
+        return entity_data
 
-        # If entity_data is a string, return it only for description field
-        if isinstance(entity_data, str) and field == "description":
-            return entity_data
-
-        # If entity_data is a dict, look for the requested field
-        if isinstance(entity_data, dict) and field in entity_data:
-            return entity_data[field]
+    # Handle the case where entity_data is a dict
+    if isinstance(entity_data, dict) and field in entity_data:
+        return entity_data[field]
 
     return None
 
 
 def get_entity_description(
-    entity_type: str, entity_key: str, language: str = "en", field: str = "description"
+    entity_type: str,
+    entity_key: str,
+    language: str = "en",
+    field: str = "description",
 ) -> str | None:
     """
     Get entity description synchronously from the cache.
@@ -171,16 +240,54 @@ def get_entity_description(
         The requested field's value if found in cache, None otherwise
 
     """
-    # Only return from cache to avoid blocking I/O
-    if language in _TRANSLATIONS_CACHE:
-        translations = _TRANSLATIONS_CACHE[language]
-        if entity_type in translations and entity_key in translations[entity_type]:
-            entity_data = translations[entity_type][entity_key]
+    entity_data = get_translation([entity_type, entity_key], language)
 
-            if isinstance(entity_data, str) and field == "description":
-                return entity_data
+    # Handle the case where entity_data is a string (for description field)
+    if isinstance(entity_data, str) and field == "description":
+        return entity_data
 
-            if isinstance(entity_data, dict) and field in entity_data:
-                return entity_data[field]
+    # Handle the case where entity_data is a dict
+    if isinstance(entity_data, dict) and field in entity_data:
+        return entity_data[field]
 
     return None
+
+
+async def async_get_price_level_translation(
+    hass: HomeAssistant,
+    level: str,
+    language: str = "en",
+) -> str | None:
+    """
+    Get a localized translation for a price level asynchronously.
+
+    Args:
+        hass: HomeAssistant instance
+        level: The price level (e.g., VERY_CHEAP, NORMAL, etc.)
+        language: The language code (defaults to English)
+
+    Returns:
+        The localized price level if found, None otherwise
+
+    """
+    return await async_get_translation(hass, ["sensor", "price_level", "price_levels", level], language)
+
+
+def get_price_level_translation(
+    level: str,
+    language: str = "en",
+) -> str | None:
+    """
+    Get a localized translation for a price level synchronously from the cache.
+
+    This function only accesses the cached translations to avoid blocking I/O.
+
+    Args:
+        level: The price level (e.g., VERY_CHEAP, NORMAL, etc.)
+        language: The language code (defaults to English)
+
+    Returns:
+        The localized price level if found in cache, None otherwise
+
+    """
+    return get_translation(["sensor", "price_level", "price_levels", level], language)

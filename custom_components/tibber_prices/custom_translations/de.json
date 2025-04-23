@@ -13,7 +13,14 @@
         "price_level": {
             "description": "Aktueller Preisstandanzeige (SEHR_GÜNSTIG bis SEHR_TEUER)",
             "long_description": "Zeigt das aktuelle Preisniveau auf einer Skala von sehr günstig bis sehr teuer an",
-            "usage_tips": "Verwende dies für visuelle Anzeigen oder einfache Automatisierungen ohne Schwellenwertberechnung"
+            "usage_tips": "Verwende dies für visuelle Anzeigen oder einfache Automatisierungen ohne Schwellenwertberechnung",
+            "price_levels": {
+                "VERY_CHEAP": "Sehr Günstig",
+                "CHEAP": "Günstig",
+                "NORMAL": "Normal",
+                "EXPENSIVE": "Teuer",
+                "VERY_EXPENSIVE": "Sehr Teuer"
+            }
         },
         "lowest_price_today": {
             "description": "Der niedrigste Strompreis für den aktuellen Tag",

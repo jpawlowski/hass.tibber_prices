@@ -13,7 +13,14 @@
         "price_level": {
             "description": "Current price level indicator (VERY_CHEAP to VERY_EXPENSIVE)",
             "long_description": "Indicates the current price level on a scale from very cheap to very expensive",
-            "usage_tips": "Use this for visual indicators or simple automations without needing to calculate thresholds"
+            "usage_tips": "Use this for visual indicators or simple automations without needing to calculate thresholds",
+            "price_levels": {
+                "VERY_CHEAP": "Very Cheap",
+                "CHEAP": "Cheap",
+                "NORMAL": "Normal",
+                "EXPENSIVE": "Expensive",
+                "VERY_EXPENSIVE": "Very Expensive"
+            }
         },
         "lowest_price_today": {
             "description": "The lowest electricity price for the current day",

@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import date, datetime
+from datetime import date, datetime, timedelta
 from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
@@ -17,13 +17,13 @@ from homeassistant.const import CURRENCY_EURO, EntityCategory
 from homeassistant.util import dt as dt_util
 
 from .const import (
-    PRICE_LEVEL_CHEAP,
-    PRICE_LEVEL_EXPENSIVE,
+    CONF_EXTENDED_DESCRIPTIONS,
+    DEFAULT_EXTENDED_DESCRIPTIONS,
+    DOMAIN,
     PRICE_LEVEL_MAPPING,
-    PRICE_LEVEL_NORMAL,
-    PRICE_LEVEL_VERY_CHEAP,
-    PRICE_LEVEL_VERY_EXPENSIVE,
     SENSOR_TYPE_PRICE_LEVEL,
+    async_get_entity_description,
+    get_entity_description,
 )
 from .entity import TibberPricesEntity
 
@@ -314,8 +314,6 @@ class TibberPricesSensor(TibberPricesEntity, SensorEntity):
 
         # Calculate the exact target datetime (not just the hour)
         # This properly handles day boundaries
-        from datetime import timedelta
-
         target_datetime = now.replace(microsecond=0) + timedelta(hours=hour_offset)
         target_hour = target_datetime.hour
         target_date = target_datetime.date()
@@ -468,13 +466,6 @@ class TibberPricesSensor(TibberPricesEntity, SensorEntity):
             # Get user's language preference
             language = self.hass.config.language if self.hass.config.language else "en"
 
-            # Import only within the method to avoid circular imports
-            from .const import (
-                CONF_EXTENDED_DESCRIPTIONS,
-                DEFAULT_EXTENDED_DESCRIPTIONS,
-                async_get_entity_description,
-            )
-
             # Add basic description
             description = await async_get_entity_description(self.hass, "sensor", base_key, language, "description")
             if description:
@@ -525,13 +516,6 @@ class TibberPricesSensor(TibberPricesEntity, SensorEntity):
 
             # Get user's language preference
             language = self.hass.config.language if self.hass.config.language else "en"
-
-            # Import synchronous function to get cached descriptions
-            from .const import (
-                CONF_EXTENDED_DESCRIPTIONS,
-                DEFAULT_EXTENDED_DESCRIPTIONS,
-                get_entity_description,
-            )
 
             # Add basic description from cache
             description = get_entity_description("sensor", base_key, language, "description")
@@ -602,25 +586,66 @@ class TibberPricesSensor(TibberPricesEntity, SensorEntity):
             self._add_price_level_attributes(attributes, current_hour_data["level"])
 
     def _add_price_level_attributes(self, attributes: dict, level: str) -> None:
-        """Add price level specific attributes."""
-        if level in PRICE_LEVEL_MAPPING:
-            attributes["level_value"] = PRICE_LEVEL_MAPPING[level]
+        """
+        Add price level specific attributes.
 
-            # Add human-readable level descriptions
-            level_descriptions = {
-                PRICE_LEVEL_VERY_CHEAP: "Very low price compared to average",
-                PRICE_LEVEL_CHEAP: "Lower than average price",
-                PRICE_LEVEL_NORMAL: "Average price level",
-                PRICE_LEVEL_EXPENSIVE: "Higher than average price",
-                PRICE_LEVEL_VERY_EXPENSIVE: "Very high price compared to average",
-            }
-            if level in level_descriptions:
-                attributes["description"] = level_descriptions[level]
+        Args:
+            attributes: Dictionary to add attributes to
+            level: The price level value (e.g., VERY_CHEAP, NORMAL, etc.)
+
+        """
+        if level not in PRICE_LEVEL_MAPPING:
+            return
+
+        # Add numeric value for sorting/comparison
+        attributes["level_value"] = PRICE_LEVEL_MAPPING[level]
+
+        # Add the original English level as a reliable identifier for automations
+        attributes["level_id"] = level
+
+        # Default to the original level value if no translation is found
+        friendly_name = level
+
+        # Try to get localized friendly name from translations if Home Assistant is available
+        if self.hass:
+            # Get user's language preference (default to English)
+            language = self.hass.config.language or "en"
+
+            # Use direct dictionary lookup for better performance and reliability
+            # This matches how async_get_entity_description works
+            cache_key = f"{DOMAIN}_translations_{language}"
+            if cache_key in self.hass.data:
+                translations = self.hass.data[cache_key]
+
+                # Navigate through the translation dictionary
+                if (
+                    "sensor" in translations
+                    and "price_level" in translations["sensor"]
+                    and "price_levels" in translations["sensor"]["price_level"]
+                    and level in translations["sensor"]["price_level"]["price_levels"]
+                ):
+                    friendly_name = translations["sensor"]["price_level"]["price_levels"][level]
+
+            # If we didn't find a translation in the current language, try English
+            if friendly_name == level and language != "en":
+                en_cache_key = f"{DOMAIN}_translations_en"
+                if en_cache_key in self.hass.data:
+                    en_translations = self.hass.data[en_cache_key]
+
+                    # Try using English translation as fallback
+                    if (
+                        "sensor" in en_translations
+                        and "price_level" in en_translations["sensor"]
+                        and "price_levels" in en_translations["sensor"]["price_level"]
+                        and level in en_translations["sensor"]["price_level"]["price_levels"]
+                    ):
+                        friendly_name = en_translations["sensor"]["price_level"]["price_levels"][level]
+
+        # Add the friendly name to attributes
+        attributes["friendly_name"] = friendly_name
 
     def _add_next_hour_attributes(self, attributes: dict) -> None:
         """Add attributes for next hour price sensors."""
-        from datetime import timedelta
-
         price_info = self.coordinator.data["data"]["viewer"]["homes"][0]["currentSubscription"]["priceInfo"]
         now = dt_util.now()
 
