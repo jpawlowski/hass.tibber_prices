@@ -13,9 +13,6 @@ if TYPE_CHECKING:
     from .coordinator import TibberPricesDataUpdateCoordinator
 
 
-type TibberPricesConfigEntry = ConfigEntry[TibberPricesData]
-
-
 @dataclass
 class TibberPricesData:
     """Data for the tibber_prices integration."""
@@ -23,3 +20,7 @@ class TibberPricesData:
     client: TibberPricesApiClient
     coordinator: TibberPricesDataUpdateCoordinator
     integration: Integration
+
+
+if TYPE_CHECKING:
+    type TibberPricesConfigEntry = ConfigEntry[TibberPricesData]

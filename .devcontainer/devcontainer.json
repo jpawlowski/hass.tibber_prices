@@ -1,72 +1,74 @@
 {
-    "name": "jpawlowski/hass.tibber_prices",
-    "image": "mcr.microsoft.com/devcontainers/python:3.13",
-    "postCreateCommand": "scripts/setup",
-    "containerEnv": {
-        "PYTHONASYNCIODEBUG": "1"
-    },
-    "forwardPorts": [
-        8123
-    ],
-    "portsAttributes": {
-        "8123": {
-            "label": "Home Assistant",
-            "onAutoForward": "notify"
-        }
-    },
-    "customizations": {
-        "vscode": {
-            "extensions": [
-                "charliermarsh.ruff",
-                "github.vscode-pull-request-github",
-                "ms-python.python",
-                "ms-python.pylint",
-                "ms-python.vscode-pylance",
-                "ryanluker.vscode-coverage-gutters",
-                "visualstudioexptteam.vscodeintellicode",
-                "redhat.vscode-yaml",
-                "esbenp.prettier-vscode",
-                "github.copilot",
-                "ms-vscode-remote.remote-containers"
-            ],
-            "settings": {
-                "editor.tabSize": 4,
-                "editor.formatOnPaste": false,
-                "editor.formatOnSave": true,
-                "editor.formatOnType": true,
-                "files.eol": "\n",
-                "files.trimTrailingWhitespace": true,
-                "python.analysis.typeCheckingMode": "basic",
-                "python.analysis.autoImportCompletions": true,
-                "python.defaultInterpreterPath": "/usr/local/bin/python",
-                "pylint.importStrategy": "fromEnvironment",
-                "python.terminal.activateEnvInCurrentTerminal": true,
-                "python.testing.pytestArgs": [
-                    "--no-cov"
-                ],
-                "yaml.customTags": [
-                    "!input scalar",
-                    "!secret scalar",
-                    "!include_dir_named scalar",
-                    "!include_dir_list scalar",
-                    "!include_dir_merge_list scalar",
-                    "!include_dir_merge_named scalar"
-                ],
-                "[python]": {
-                    "editor.defaultFormatter": "charliermarsh.ruff"
-                }
-            }
-        }
-    },
-    "remoteUser": "vscode",
-    "features": {
-        "ghcr.io/devcontainers/features/github-cli:1": {},
-        "ghcr.io/devcontainers-extra/features/apt-packages:1": {
-            "packages": [
-                "ffmpeg",
-                "libturbojpeg0",
-                "libpcap-dev"
-            ]
-        }
+  "name": "jpawlowski/hass.tibber_prices",
+  "image": "mcr.microsoft.com/devcontainers/python:3.13",
+  "postCreateCommand": "scripts/setup",
+  "containerEnv": {
+    "PYTHONASYNCIODEBUG": "1"
+  },
+  "forwardPorts": [8123],
+  "portsAttributes": {
+    "8123": {
+      "label": "Home Assistant",
+      "onAutoForward": "notify"
     }
+  },
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "charliermarsh.ruff",
+        "github.vscode-pull-request-github",
+        "ms-python.python",
+        "ms-python.pylint",
+        "ms-python.vscode-pylance",
+        "ryanluker.vscode-coverage-gutters",
+        "visualstudioexptteam.vscodeintellicode",
+        "redhat.vscode-yaml",
+        "esbenp.prettier-vscode",
+        "github.copilot",
+        "ms-vscode-remote.remote-containers"
+      ],
+      "settings": {
+        "editor.tabSize": 4,
+        "editor.formatOnPaste": false,
+        "editor.formatOnSave": false,
+        "editor.formatOnType": false,
+        "files.eol": "\n",
+        "files.trimTrailingWhitespace": true,
+        "python.analysis.typeCheckingMode": "basic",
+        "python.analysis.autoImportCompletions": true,
+        "python.defaultInterpreterPath": "/usr/local/bin/python",
+        "pylint.importStrategy": "fromEnvironment",
+        "python.terminal.activateEnvInCurrentTerminal": true,
+        "python.testing.pytestArgs": ["--no-cov"],
+        "yaml.customTags": [
+          "!input scalar",
+          "!secret scalar",
+          "!include_dir_named scalar",
+          "!include_dir_list scalar",
+          "!include_dir_merge_list scalar",
+          "!include_dir_merge_named scalar"
+        ],
+        "[python]": {
+          "editor.defaultFormatter": "charliermarsh.ruff"
+        },
+        "json.schemas": [
+          {
+            "fileMatch": ["homeassistant/components/*/manifest.json"],
+            "url": "${containerWorkspaceFolder}/scripts/json_schemas/manifest_schema.json"
+          },
+          {
+            "fileMatch": ["homeassistant/components/*/translations/*.json"],
+            "url": "${containerWorkspaceFolder}/scripts/json_schemas/translation_schema.json"
+          }
+        ]
+      }
+    }
+  },
+  "remoteUser": "vscode",
+  "features": {
+    "ghcr.io/devcontainers/features/github-cli:1": {},
+    "ghcr.io/devcontainers-extra/features/apt-packages:1": {
+      "packages": ["ffmpeg", "libturbojpeg0", "libpcap-dev"]
+    }
+  }
 }

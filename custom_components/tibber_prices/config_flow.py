@@ -35,6 +35,10 @@ class TibberPricesFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         """Get the options flow for this handler."""
         return TibberPricesOptionsFlowHandler(config_entry)
 
+    def is_matching(self, other_flow: dict) -> bool:
+        """Return True if match_dict matches this flow."""
+        return bool(other_flow.get("domain") == DOMAIN)
+
     async def async_step_user(
         self,
         user_input: dict | None = None,

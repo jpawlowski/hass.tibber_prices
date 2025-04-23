@@ -108,7 +108,8 @@ async def _verify_graphql_response(response_json: dict) -> None:
 
 
 def _is_data_empty(data: dict, query_type: str) -> bool:
-    """Check if the response data is empty or incomplete.
+    """
+    Check if the response data is empty or incomplete.
 
     For price info:
     - Must have either range/edges or yesterday data
@@ -154,7 +155,8 @@ def _is_data_empty(data: dict, query_type: str) -> bool:
             is_empty = not has_historical or not has_today
 
             _LOGGER.debug(
-                "Price info check - historical data (range: %s, yesterday: %s), today: %s, is_empty: %s",
+                "Price info check - historical data "
+                "(range: %s, yesterday: %s), today: %s, is_empty: %s",
                 bool(has_range),
                 bool(has_yesterday),
                 bool(has_today),
@@ -173,7 +175,9 @@ def _is_data_empty(data: dict, query_type: str) -> bool:
                 and "high" in rating["thresholdPercentages"]
             )
             if not has_thresholds:
-                _LOGGER.debug("Missing or invalid threshold percentages for %s rating", query_type)
+                _LOGGER.debug(
+                    "Missing or invalid threshold percentages for %s rating", query_type
+                )
                 return True
 
             # Check rating entries
@@ -196,10 +200,11 @@ def _is_data_empty(data: dict, query_type: str) -> bool:
             return is_empty
 
         _LOGGER.debug("Unknown query type %s, treating as non-empty", query_type)
-        return False
     except (KeyError, IndexError, TypeError) as error:
         _LOGGER.debug("Error checking data emptiness: %s", error)
         return True
+    else:
+        return False
 
 
 def _prepare_headers(access_token: str) -> dict[str, str]:

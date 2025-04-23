@@ -2,19 +2,17 @@
 
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import UTC, datetime
 from typing import TYPE_CHECKING
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
-    SensorStateClass,
 )
-from homeassistant.const import EntityCategory
+from homeassistant.const import CURRENCY_EURO, EntityCategory
 from homeassistant.util import dt as dt_util
 
-from .const import DOMAIN
 from .entity import TibberPricesEntity
 
 if TYPE_CHECKING:
@@ -25,7 +23,7 @@ if TYPE_CHECKING:
     from .data import TibberPricesConfigEntry
 
 PRICE_UNIT = "ct/kWh"
-CURRENCY_EURO = "EUR/kWh"
+HOURS_IN_DAY = 24
 
 # Main price sensors that users will typically use in automations
 PRICE_SENSORS = (
@@ -36,7 +34,7 @@ PRICE_SENSORS = (
         icon="mdi:currency-eur",
         device_class=SensorDeviceClass.MONETARY,
         native_unit_of_measurement=CURRENCY_EURO,
-        entity_registry_enabled_default=False,  # Hidden by default as it's mainly for the Energy Dashboard
+        entity_registry_enabled_default=False,
     ),
     SensorEntityDescription(
         key="current_price",
@@ -53,7 +51,7 @@ PRICE_SENSORS = (
         icon="mdi:currency-eur-off",
         device_class=SensorDeviceClass.MONETARY,
         native_unit_of_measurement=CURRENCY_EURO,
-        entity_registry_enabled_default=False,  # Hidden by default as it's mainly for the Energy Dashboard
+        entity_registry_enabled_default=False,
     ),
     SensorEntityDescription(
         key="next_hour_price",
@@ -80,7 +78,7 @@ STATISTICS_SENSORS = (
         icon="mdi:currency-eur",
         device_class=SensorDeviceClass.MONETARY,
         native_unit_of_measurement=CURRENCY_EURO,
-        entity_registry_enabled_default=False,  # Hidden by default as it's mainly for the Energy Dashboard
+        entity_registry_enabled_default=False,
     ),
     SensorEntityDescription(
         key="lowest_price_today",
@@ -97,7 +95,7 @@ STATISTICS_SENSORS = (
         icon="mdi:currency-eur",
         device_class=SensorDeviceClass.MONETARY,
         native_unit_of_measurement=CURRENCY_EURO,
-        entity_registry_enabled_default=False,  # Hidden by default as it's mainly for the Energy Dashboard
+        entity_registry_enabled_default=False,
     ),
     SensorEntityDescription(
         key="highest_price_today",
@@ -114,7 +112,7 @@ STATISTICS_SENSORS = (
         icon="mdi:currency-eur",
         device_class=SensorDeviceClass.MONETARY,
         native_unit_of_measurement=CURRENCY_EURO,
-        entity_registry_enabled_default=False,  # Hidden by default as it's mainly for the Energy Dashboard
+        entity_registry_enabled_default=False,
     ),
     SensorEntityDescription(
         key="average_price_today",
@@ -180,7 +178,7 @@ ENTITY_DESCRIPTIONS = (
 
 
 async def async_setup_entry(
-    hass: HomeAssistant,
+    _hass: HomeAssistant,
     entry: TibberPricesConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
@@ -205,224 +203,298 @@ class TibberPricesSensor(TibberPricesEntity, SensorEntity):
         """Initialize the sensor class."""
         super().__init__(coordinator)
         self.entity_description = entity_description
-        self._attr_unique_id = f"{coordinator.config_entry.entry_id}_{entity_description.key}"
+        self._attr_unique_id = (
+            f"{coordinator.config_entry.entry_id}_{entity_description.key}"
+        )
         self._attr_has_entity_name = True
+
+    def _get_current_hour_data(self) -> dict | None:
+        """Get the price data for the current hour."""
+        if not self.coordinator.data:
+            return None
+        now = datetime.now(tz=UTC).astimezone()
+        price_info = self.coordinator.data["data"]["viewer"]["homes"][0][
+            "currentSubscription"
+        ]["priceInfo"]
+        for price_data in price_info.get("today", []):
+            starts_at = datetime.fromisoformat(price_data["startsAt"])
+            if starts_at.hour == now.hour:
+                return price_data
+        return None
+
+    def _get_price_value(self, price: float) -> float:
+        """Convert price based on unit."""
+        return (
+            price * 100
+            if self.entity_description.native_unit_of_measurement == "ct/kWh"
+            else price
+        )
+
+    def _get_price_sensor_value(self) -> float | None:
+        """Handle price sensor values."""
+        if not self.coordinator.data:
+            return None
+
+        subscription = self.coordinator.data["data"]["viewer"]["homes"][0][
+            "currentSubscription"
+        ]
+        price_info = subscription["priceInfo"]
+        now = datetime.now(tz=UTC).astimezone()
+        current_hour_data = self._get_current_hour_data()
+
+        key = self.entity_description.key
+        if key in ["current_price", "current_price_eur"]:
+            if not current_hour_data:
+                return None
+            return (
+                self._get_price_value(float(current_hour_data["total"]))
+                if key == "current_price"
+                else float(current_hour_data["total"])
+            )
+
+        if key in ["next_hour_price", "next_hour_price_eur"]:
+            next_hour = (now.hour + 1) % 24
+            for price_data in price_info.get("today", []):
+                starts_at = datetime.fromisoformat(price_data["startsAt"])
+                if starts_at.hour == next_hour:
+                    return (
+                        self._get_price_value(float(price_data["total"]))
+                        if key == "next_hour_price"
+                        else float(price_data["total"])
+                    )
+            return None
+
+        return None
+
+    def _get_statistics_value(self) -> float | None:
+        """Handle statistics sensor values."""
+        if not self.coordinator.data:
+            return None
+
+        price_info = self.coordinator.data["data"]["viewer"]["homes"][0][
+            "currentSubscription"
+        ]["priceInfo"]
+        today_prices = price_info.get("today", [])
+        if not today_prices:
+            return None
+
+        key = self.entity_description.key
+        prices = [float(price["total"]) for price in today_prices]
+
+        if key in ["lowest_price_today", "lowest_price_today_eur"]:
+            value = min(prices)
+        elif key in ["highest_price_today", "highest_price_today_eur"]:
+            value = max(prices)
+        elif key in ["average_price_today", "average_price_today_eur"]:
+            value = sum(prices) / len(prices)
+        else:
+            return None
+
+        return self._get_price_value(value) if key.endswith("today") else value
+
+    def _get_rating_value(self) -> float | None:
+        """Handle rating sensor values."""
+        if not self.coordinator.data:
+            return None
+
+        def check_hourly(entry: dict) -> bool:
+            return datetime.fromisoformat(entry["time"]).hour == now.hour
+
+        def check_daily(entry: dict) -> bool:
+            return datetime.fromisoformat(entry["time"]).date() == now.date()
+
+        def check_monthly(entry: dict) -> bool:
+            dt = datetime.fromisoformat(entry["time"])
+            return dt.month == now.month and dt.year == now.year
+
+        subscription = self.coordinator.data["data"]["viewer"]["homes"][0][
+            "currentSubscription"
+        ]
+        price_rating = subscription.get("priceRating", {}) or {}
+        now = datetime.now(tz=UTC).astimezone()
+
+        key = self.entity_description.key
+        if key == "hourly_rating":
+            rating_data = price_rating.get("hourly", {})
+            entries = rating_data.get("entries", []) if rating_data else []
+            time_match = check_hourly
+        elif key == "daily_rating":
+            rating_data = price_rating.get("daily", {})
+            entries = rating_data.get("entries", []) if rating_data else []
+            time_match = check_daily
+        elif key == "monthly_rating":
+            rating_data = price_rating.get("monthly", {})
+            entries = rating_data.get("entries", []) if rating_data else []
+            time_match = check_monthly
+        else:
+            return None
+
+        for entry in entries:
+            if time_match(entry):
+                return round(float(entry["difference"]) * 100, 1)
+        return None
+
+    def _get_diagnostic_value(self) -> datetime | str | None:
+        """Handle diagnostic sensor values."""
+        if not self.coordinator.data:
+            return None
+
+        price_info = self.coordinator.data["data"]["viewer"]["homes"][0][
+            "currentSubscription"
+        ]["priceInfo"]
+        key = self.entity_description.key
+
+        if key == "data_timestamp":
+            latest_timestamp = None
+            for day in ["today", "tomorrow"]:
+                for price_data in price_info.get(day, []):
+                    timestamp = datetime.fromisoformat(price_data["startsAt"])
+                    if not latest_timestamp or timestamp > latest_timestamp:
+                        latest_timestamp = timestamp
+            return dt_util.as_utc(latest_timestamp) if latest_timestamp else None
+
+        if key == "tomorrow_data_available":
+            tomorrow_prices = price_info.get("tomorrow", [])
+            if not tomorrow_prices:
+                return "No"
+            return "Yes" if len(tomorrow_prices) == HOURS_IN_DAY else "Partial"
+
+        return None
 
     @property
     def native_value(self) -> float | str | datetime | None:
         """Return the native value of the sensor."""
+        result = None
         try:
-            if not self.coordinator.data:
-                return None
+            if self.coordinator.data:
+                key = self.entity_description.key
+                current_hour_data = self._get_current_hour_data()
 
-            subscription = self.coordinator.data["data"]["viewer"]["homes"][0]["currentSubscription"]
-            price_info = subscription["priceInfo"]
-            price_rating = subscription.get("priceRating") or {}
-
-            # Get current hour's data
-            now = datetime.now()
-            current_hour_data = None
-            for price_data in price_info.get("today", []):
-                starts_at = datetime.fromisoformat(price_data["startsAt"])
-                if starts_at.hour == now.hour:
-                    current_hour_data = price_data
-                    break
-
-            # Helper function to convert price based on unit
-            def get_price_value(price: float) -> float:
-                if self.entity_description.native_unit_of_measurement == "ct/kWh":
-                    return price * 100
-                return price
-
-            if self.entity_description.key == "current_price":
-                return get_price_value(float(current_hour_data["total"])) if current_hour_data else None
-            elif self.entity_description.key == "current_price_eur":
-                return float(current_hour_data["total"]) if current_hour_data else None
-
-            elif self.entity_description.key == "next_hour_price":
-                next_hour = (now.hour + 1) % 24
-                for price_data in price_info.get("today", []):
-                    starts_at = datetime.fromisoformat(price_data["startsAt"])
-                    if starts_at.hour == next_hour:
-                        return get_price_value(float(price_data["total"]))
-                return None
-            elif self.entity_description.key == "next_hour_price_eur":
-                next_hour = (now.hour + 1) % 24
-                for price_data in price_info.get("today", []):
-                    starts_at = datetime.fromisoformat(price_data["startsAt"])
-                    if starts_at.hour == next_hour:
-                        return float(price_data["total"])
-                return None
-
-            elif self.entity_description.key == "lowest_price_today":
-                today_prices = price_info.get("today", [])
-                if not today_prices:
-                    return None
-                return get_price_value(min(float(price["total"]) for price in today_prices))
-            elif self.entity_description.key == "lowest_price_today_eur":
-                today_prices = price_info.get("today", [])
-                if not today_prices:
-                    return None
-                return min(float(price["total"]) for price in today_prices)
-
-            elif self.entity_description.key == "highest_price_today":
-                today_prices = price_info.get("today", [])
-                if not today_prices:
-                    return None
-                return get_price_value(max(float(price["total"]) for price in today_prices))
-            elif self.entity_description.key == "highest_price_today_eur":
-                today_prices = price_info.get("today", [])
-                if not today_prices:
-                    return None
-                return max(float(price["total"]) for price in today_prices)
-
-            elif self.entity_description.key == "average_price_today":
-                today_prices = price_info.get("today", [])
-                if not today_prices:
-                    return None
-                avg = sum(float(price["total"]) for price in today_prices) / len(today_prices)
-                return get_price_value(avg)
-            elif self.entity_description.key == "average_price_today_eur":
-                today_prices = price_info.get("today", [])
-                if not today_prices:
-                    return None
-                return sum(float(price["total"]) for price in today_prices) / len(today_prices)
-
-            elif self.entity_description.key == "price_level":
-                return current_hour_data["level"] if current_hour_data else None
-
-            elif self.entity_description.key == "hourly_rating":
-                hourly = price_rating.get("hourly", {})
-                entries = hourly.get("entries", []) if hourly else []
-                if not entries:
-                    return None
-                for entry in entries:
-                    starts_at = datetime.fromisoformat(entry["time"])
-                    if starts_at.hour == now.hour:
-                        return round(float(entry["difference"]) * 100, 1)
-                return None
-
-            elif self.entity_description.key == "daily_rating":
-                daily = price_rating.get("daily", {})
-                entries = daily.get("entries", []) if daily else []
-                if not entries:
-                    return None
-                for entry in entries:
-                    starts_at = datetime.fromisoformat(entry["time"])
-                    if starts_at.date() == now.date():
-                        return round(float(entry["difference"]) * 100, 1)
-                return None
-
-            elif self.entity_description.key == "monthly_rating":
-                monthly = price_rating.get("monthly", {})
-                entries = monthly.get("entries", []) if monthly else []
-                if not entries:
-                    return None
-                for entry in entries:
-                    starts_at = datetime.fromisoformat(entry["time"])
-                    if starts_at.month == now.month and starts_at.year == now.year:
-                        return round(float(entry["difference"]) * 100, 1)
-                return None
-
-            elif self.entity_description.key == "data_timestamp":
-                # Return the latest timestamp from any data we have
-                latest_timestamp = None
-
-                # Check today's data
-                for price_data in price_info.get("today", []):
-                    timestamp = datetime.fromisoformat(price_data["startsAt"])
-                    if not latest_timestamp or timestamp > latest_timestamp:
-                        latest_timestamp = timestamp
-
-                # Check tomorrow's data
-                for price_data in price_info.get("tomorrow", []):
-                    timestamp = datetime.fromisoformat(price_data["startsAt"])
-                    if not latest_timestamp or timestamp > latest_timestamp:
-                        latest_timestamp = timestamp
-
-                return dt_util.as_utc(latest_timestamp) if latest_timestamp else None
-
-            elif self.entity_description.key == "tomorrow_data_available":
-                tomorrow_prices = price_info.get("tomorrow", [])
-                if not tomorrow_prices:
-                    return "No"
-                # Check if we have a full day of data (24 hours)
-                return "Yes" if len(tomorrow_prices) == 24 else "Partial"
-
-            return None
-
+                if key == "price_level":
+                    result = current_hour_data["level"] if current_hour_data else None
+                elif key in [
+                    "current_price",
+                    "current_price_eur",
+                    "next_hour_price",
+                    "next_hour_price_eur",
+                ]:
+                    result = self._get_price_sensor_value()
+                elif "price_today" in key:
+                    result = self._get_statistics_value()
+                elif "rating" in key:
+                    result = self._get_rating_value()
+                elif key in ["data_timestamp", "tomorrow_data_available"]:
+                    result = self._get_diagnostic_value()
+                else:
+                    result = None
+            else:
+                result = None
         except (KeyError, ValueError, TypeError) as ex:
-            self.coordinator.logger.error(
+            self.coordinator.logger.exception(
                 "Error getting sensor value",
                 extra={
                     "error": str(ex),
                     "entity": self.entity_description.key,
                 },
             )
-            return None
+            result = None
+        return result
 
     @property
-    def extra_state_attributes(self) -> dict | None:
+    def extra_state_attributes(self) -> dict | None:  # noqa: PLR0912
         """Return additional state attributes."""
         try:
             if not self.coordinator.data:
                 return None
 
-            subscription = self.coordinator.data["data"]["viewer"]["homes"][0]["currentSubscription"]
+            subscription = self.coordinator.data["data"]["viewer"]["homes"][0][
+                "currentSubscription"
+            ]
             price_info = subscription["priceInfo"]
 
             attributes = {}
 
             # Get current hour's data for timestamp
-            now = datetime.now()
-            current_hour_data = None
-            for price_data in price_info.get("today", []):
-                starts_at = datetime.fromisoformat(price_data["startsAt"])
-                if starts_at.hour == now.hour:
-                    current_hour_data = price_data
-                    break
+            now = datetime.now(tz=UTC).astimezone()
+            current_hour_data = self._get_current_hour_data()
 
             if self.entity_description.key in ["current_price", "current_price_eur"]:
-                attributes["timestamp"] = current_hour_data["startsAt"] if current_hour_data else None
-            elif self.entity_description.key in ["next_hour_price", "next_hour_price_eur"]:
+                attributes["timestamp"] = (
+                    current_hour_data["startsAt"] if current_hour_data else None
+                )
+
+            if self.entity_description.key in [
+                "next_hour_price",
+                "next_hour_price_eur",
+            ]:
                 next_hour = (now.hour + 1) % 24
                 for price_data in price_info.get("today", []):
                     starts_at = datetime.fromisoformat(price_data["startsAt"])
                     if starts_at.hour == next_hour:
                         attributes["timestamp"] = price_data["startsAt"]
                         break
-            elif self.entity_description.key == "price_level":
-                attributes["timestamp"] = current_hour_data["startsAt"] if current_hour_data else None
-            elif self.entity_description.key == "lowest_price_today":
-                attributes["timestamp"] = price_info.get("today", [{}])[0].get("startsAt")
-            elif self.entity_description.key == "highest_price_today":
-                attributes["timestamp"] = price_info.get("today", [{}])[0].get("startsAt")
-            elif self.entity_description.key == "average_price_today":
-                attributes["timestamp"] = price_info.get("today", [{}])[0].get("startsAt")
-            elif self.entity_description.key == "hourly_rating":
-                attributes["timestamp"] = current_hour_data["startsAt"] if current_hour_data else None
-            elif self.entity_description.key == "daily_rating":
-                attributes["timestamp"] = price_info.get("today", [{}])[0].get("startsAt")
-            elif self.entity_description.key == "monthly_rating":
-                attributes["timestamp"] = price_info.get("today", [{}])[0].get("startsAt")
-            elif self.entity_description.key == "data_timestamp":
-                attributes["timestamp"] = price_info.get("today", [{}])[0].get("startsAt")
-            elif self.entity_description.key == "tomorrow_data_available":
-                attributes["timestamp"] = price_info.get("today", [{}])[0].get("startsAt")
+
+            if self.entity_description.key == "price_level":
+                attributes["timestamp"] = (
+                    current_hour_data["startsAt"] if current_hour_data else None
+                )
+
+            if self.entity_description.key == "lowest_price_today":
+                attributes["timestamp"] = price_info.get("today", [{}])[0].get(
+                    "startsAt"
+                )
+
+            if self.entity_description.key == "highest_price_today":
+                attributes["timestamp"] = price_info.get("today", [{}])[0].get(
+                    "startsAt"
+                )
+
+            if self.entity_description.key == "average_price_today":
+                attributes["timestamp"] = price_info.get("today", [{}])[0].get(
+                    "startsAt"
+                )
+
+            if self.entity_description.key == "hourly_rating":
+                attributes["timestamp"] = (
+                    current_hour_data["startsAt"] if current_hour_data else None
+                )
+
+            if self.entity_description.key == "daily_rating":
+                attributes["timestamp"] = price_info.get("today", [{}])[0].get(
+                    "startsAt"
+                )
+
+            if self.entity_description.key == "monthly_rating":
+                attributes["timestamp"] = price_info.get("today", [{}])[0].get(
+                    "startsAt"
+                )
+
+            if self.entity_description.key == "data_timestamp":
+                attributes["timestamp"] = price_info.get("today", [{}])[0].get(
+                    "startsAt"
+                )
+
+            if self.entity_description.key == "tomorrow_data_available":
+                attributes["timestamp"] = price_info.get("today", [{}])[0].get(
+                    "startsAt"
+                )
 
             # Add translated description
             if self.hass is not None:
-                key = f"entity.sensor.{self.entity_description.translation_key}.description"
-                language_config = getattr(self.hass.config, 'language', None)
+                base_key = "entity.sensor"
+                key = (
+                    f"{base_key}.{self.entity_description.translation_key}.description"
+                )
+                language_config = getattr(self.hass.config, "language", None)
                 if isinstance(language_config, dict):
                     description = language_config.get(key)
                     if description is not None:
                         attributes["description"] = description
 
-            return attributes if attributes else None
+            return attributes if attributes else None  # noqa: TRY300
 
         except (KeyError, ValueError, TypeError) as ex:
-            self.coordinator.logger.error(
+            self.coordinator.logger.exception(
                 "Error getting sensor attributes",
                 extra={
                     "error": str(ex),

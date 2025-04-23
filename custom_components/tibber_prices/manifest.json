@@ -6,7 +6,6 @@
   ],
   "config_flow": true,
   "documentation": "https://github.com/jpawlowski/hass.tibber_prices",
-  "icon": "mdi:chart-line",
   "iot_class": "cloud_polling",
   "issue_tracker": "https://github.com/jpawlowski/hass.tibber_prices/issues",
   "version": "0.1.0"

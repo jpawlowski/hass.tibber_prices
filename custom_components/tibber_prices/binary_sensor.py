@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import UTC, datetime
 from typing import TYPE_CHECKING
 
 from homeassistant.components.binary_sensor import (
@@ -12,7 +12,6 @@ from homeassistant.components.binary_sensor import (
 )
 from homeassistant.const import EntityCategory
 
-from .const import NAME, DOMAIN
 from .entity import TibberPricesEntity
 
 if TYPE_CHECKING:
@@ -46,7 +45,7 @@ ENTITY_DESCRIPTIONS = (
 
 
 async def async_setup_entry(
-    hass: HomeAssistant,
+    _hass: HomeAssistant,
     entry: TibberPricesConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
@@ -71,59 +70,61 @@ class TibberPricesBinarySensor(TibberPricesEntity, BinarySensorEntity):
         """Initialize the binary_sensor class."""
         super().__init__(coordinator)
         self.entity_description = entity_description
-        self._attr_unique_id = f"{coordinator.config_entry.entry_id}_{entity_description.key}"
+        self._attr_unique_id = (
+            f"{coordinator.config_entry.entry_id}_{entity_description.key}"
+        )
+
+    def _get_current_price_data(self) -> tuple[list[float], float] | None:
+        """Get current price data if available."""
+        if not (
+            self.coordinator.data
+            and (
+                today_prices := self.coordinator.data["data"]["viewer"]["homes"][0][
+                    "currentSubscription"
+                ]["priceInfo"].get("today", [])
+            )
+        ):
+            return None
+
+        now = datetime.now(tz=UTC).astimezone()
+        current_hour_data = next(
+            (
+                price_data
+                for price_data in today_prices
+                if datetime.fromisoformat(price_data["startsAt"]).hour == now.hour
+            ),
+            None,
+        )
+        if not current_hour_data:
+            return None
+
+        prices = [float(price["total"]) for price in today_prices]
+        prices.sort()
+        return prices, float(current_hour_data["total"])
 
     @property
     def is_on(self) -> bool | None:
         """Return true if the binary_sensor is on."""
         try:
-            if not self.coordinator.data:
+            price_data = self._get_current_price_data()
+            if not price_data:
                 return None
 
-            subscription = self.coordinator.data["data"]["viewer"]["homes"][0]["currentSubscription"]
-            price_info = subscription["priceInfo"]
-
-            now = datetime.now()
-            current_hour_data = None
-            today_prices = price_info.get("today", [])
-
-            if not today_prices:
-                return None
-
-            # Find current hour's data
-            for price_data in today_prices:
-                starts_at = datetime.fromisoformat(price_data["startsAt"])
-                if starts_at.hour == now.hour:
-                    current_hour_data = price_data
-                    break
-
-            if not current_hour_data:
-                return None
-
-            if self.entity_description.key == "peak_hour":
-                # Consider it a peak hour if the price is in the top 20% of today's prices
-                prices = [float(price["total"]) for price in today_prices]
-                prices.sort()
-                threshold_index = int(len(prices) * 0.8)
-                peak_threshold = prices[threshold_index]
-                return float(current_hour_data["total"]) >= peak_threshold
-
-            elif self.entity_description.key == "best_price_hour":
-                # Consider it a best price hour if the price is in the bottom 20% of today's prices
-                prices = [float(price["total"]) for price in today_prices]
-                prices.sort()
-                threshold_index = int(len(prices) * 0.2)
-                best_threshold = prices[threshold_index]
-                return float(current_hour_data["total"]) <= best_threshold
-
-            elif self.entity_description.key == "connection":
-                # Check if we have valid current data
-                return bool(current_hour_data)
-
-            return None
+            prices, current_price = price_data
+            match self.entity_description.key:
+                case "peak_hour":
+                    threshold_index = int(len(prices) * 0.8)
+                    return current_price >= prices[threshold_index]
+                case "best_price_hour":
+                    threshold_index = int(len(prices) * 0.2)
+                    return current_price <= prices[threshold_index]
+                case "connection":
+                    return True
+                case _:
+                    return None
 
         except (KeyError, ValueError, TypeError) as ex:
-            self.coordinator.logger.error(
+            self.coordinator.logger.exception(
                 "Error getting binary sensor state",
                 extra={
                     "error": str(ex),
@@ -139,20 +140,28 @@ class TibberPricesBinarySensor(TibberPricesEntity, BinarySensorEntity):
             if not self.coordinator.data:
                 return None
 
-            subscription = self.coordinator.data["data"]["viewer"]["homes"][0]["currentSubscription"]
+            subscription = self.coordinator.data["data"]["viewer"]["homes"][0][
+                "currentSubscription"
+            ]
             price_info = subscription["priceInfo"]
-
             attributes = {}
 
             if self.entity_description.key in ["peak_hour", "best_price_hour"]:
                 today_prices = price_info.get("today", [])
                 if today_prices:
-                    prices = [(datetime.fromisoformat(price["startsAt"]).hour, float(price["total"]))
-                             for price in today_prices]
+                    prices = [
+                        (
+                            datetime.fromisoformat(price["startsAt"]).hour,
+                            float(price["total"]),
+                        )
+                        for price in today_prices
+                    ]
 
                     if self.entity_description.key == "peak_hour":
                         # Get top 5 peak hours
-                        peak_hours = sorted(prices, key=lambda x: x[1], reverse=True)[:5]
+                        peak_hours = sorted(prices, key=lambda x: x[1], reverse=True)[
+                            :5
+                        ]
                         attributes["peak_hours"] = [
                             {"hour": hour, "price": price} for hour, price in peak_hours
                         ]
@@ -162,11 +171,12 @@ class TibberPricesBinarySensor(TibberPricesEntity, BinarySensorEntity):
                         attributes["best_price_hours"] = [
                             {"hour": hour, "price": price} for hour, price in best_hours
                         ]
-
-            return attributes if attributes else None
+                    return attributes
+            else:
+                return None
 
         except (KeyError, ValueError, TypeError) as ex:
-            self.coordinator.logger.error(
+            self.coordinator.logger.exception(
                 "Error getting binary sensor attributes",
                 extra={
                     "error": str(ex),

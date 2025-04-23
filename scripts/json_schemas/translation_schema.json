@@ -1,0 +1,51 @@
+{
+  "title": "Component Title",
+  "config": {
+    "step": {
+      "user": {
+        "title": "Step Title",
+        "description": "Step Description",
+        "data": {
+          "field_name": "Field Label"
+        }
+      }
+    },
+    "error": {
+      "error_key": "Error Message"
+    },
+    "abort": {
+      "abort_key": "Abort Message"
+    }
+  },
+  "entity": {
+    "sensor": {
+      "sensor_key": {
+        "name": "Sensor Name",
+        "state": {
+          "state_key": "State Translation"
+        }
+      }
+    },
+    "binary_sensor": {
+      "sensor_key": {
+        "name": "Binary Sensor Name",
+        "state": {
+          "on": "On State Translation",
+          "off": "Off State Translation"
+        }
+      }
+    }
+  },
+  "services": {
+    "service_name": {
+      "name": "Service Name",
+      "description": "Service Description",
+      "fields": {
+        "field_name": {
+          "name": "Field Name",
+          "description": "Field Description"
+        }
+      }
+    }
+  }
+}
