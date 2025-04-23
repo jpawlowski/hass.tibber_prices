@@ -5,9 +5,6 @@ from __future__ import annotations
 from datetime import UTC, datetime
 from typing import TYPE_CHECKING
 
-if TYPE_CHECKING:
-    from collections.abc import Callable
-
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
     BinarySensorEntity,
@@ -18,6 +15,8 @@ from homeassistant.const import EntityCategory
 from .entity import TibberPricesEntity
 
 if TYPE_CHECKING:
+    from collections.abc import Callable
+
     from homeassistant.core import HomeAssistant
     from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -194,13 +193,63 @@ class TibberPricesBinarySensor(TibberPricesEntity, BinarySensorEntity):
             return None
 
     @property
-    def extra_state_attributes(self) -> dict | None:
-        """Return additional state attributes."""
+    async def async_extra_state_attributes(self) -> dict | None:
+        """Return additional state attributes asynchronously."""
         try:
-            if not self.coordinator.data or not self._attribute_getter:
+            # Get the dynamic attributes if the getter is available
+            if not self.coordinator.data:
                 return None
 
-            return self._attribute_getter()
+            attributes = {}
+            if self._attribute_getter:
+                dynamic_attrs = self._attribute_getter()
+                if dynamic_attrs:
+                    attributes.update(dynamic_attrs)
+
+            # Add descriptions from the custom translations file
+            if self.entity_description.translation_key and self.hass is not None:
+                # Get user's language preference
+                language = self.hass.config.language if self.hass.config.language else "en"
+
+                # Import async function to get descriptions
+                from .const import (
+                    CONF_EXTENDED_DESCRIPTIONS,
+                    DEFAULT_EXTENDED_DESCRIPTIONS,
+                    async_get_entity_description,
+                )
+
+                # Add basic description
+                description = await async_get_entity_description(
+                    self.hass, "binary_sensor", self.entity_description.translation_key, language, "description"
+                )
+                if description:
+                    attributes["description"] = description
+
+                # Check if extended descriptions are enabled in the config
+                extended_descriptions = self.coordinator.config_entry.options.get(
+                    CONF_EXTENDED_DESCRIPTIONS,
+                    self.coordinator.config_entry.data.get(CONF_EXTENDED_DESCRIPTIONS, DEFAULT_EXTENDED_DESCRIPTIONS),
+                )
+
+                # Add extended descriptions if enabled
+                if extended_descriptions:
+                    # Add long description if available
+                    long_desc = await async_get_entity_description(
+                        self.hass,
+                        "binary_sensor",
+                        self.entity_description.translation_key,
+                        language,
+                        "long_description",
+                    )
+                    if long_desc:
+                        attributes["long_description"] = long_desc
+
+                    # Add usage tips if available
+                    usage_tips = await async_get_entity_description(
+                        self.hass, "binary_sensor", self.entity_description.translation_key, language, "usage_tips"
+                    )
+                    if usage_tips:
+                        attributes["usage_tips"] = usage_tips
 
         except (KeyError, ValueError, TypeError) as ex:
             self.coordinator.logger.exception(
@@ -211,3 +260,72 @@ class TibberPricesBinarySensor(TibberPricesEntity, BinarySensorEntity):
                 },
             )
             return None
+        else:
+            return attributes if attributes else None
+
+    @property
+    def extra_state_attributes(self) -> dict | None:
+        """Return additional state attributes synchronously."""
+        try:
+            # Start with dynamic attributes if available
+            if not self.coordinator.data:
+                return None
+
+            attributes = {}
+            if self._attribute_getter:
+                dynamic_attrs = self._attribute_getter()
+                if dynamic_attrs:
+                    attributes.update(dynamic_attrs)
+
+            # Add descriptions from the cache (non-blocking)
+            if self.entity_description.translation_key and self.hass is not None:
+                # Get user's language preference
+                language = self.hass.config.language if self.hass.config.language else "en"
+
+                # Import synchronous function to get cached descriptions
+                from .const import (
+                    CONF_EXTENDED_DESCRIPTIONS,
+                    DEFAULT_EXTENDED_DESCRIPTIONS,
+                    get_entity_description,
+                )
+
+                # Add basic description from cache
+                description = get_entity_description(
+                    "binary_sensor", self.entity_description.translation_key, language, "description"
+                )
+                if description:
+                    attributes["description"] = description
+
+                # Check if extended descriptions are enabled in the config
+                extended_descriptions = self.coordinator.config_entry.options.get(
+                    CONF_EXTENDED_DESCRIPTIONS,
+                    self.coordinator.config_entry.data.get(CONF_EXTENDED_DESCRIPTIONS, DEFAULT_EXTENDED_DESCRIPTIONS),
+                )
+
+                # Add extended descriptions if enabled (from cache only)
+                if extended_descriptions:
+                    # Add long description if available in cache
+                    long_desc = get_entity_description(
+                        "binary_sensor", self.entity_description.translation_key, language, "long_description"
+                    )
+                    if long_desc:
+                        attributes["long_description"] = long_desc
+
+                    # Add usage tips if available in cache
+                    usage_tips = get_entity_description(
+                        "binary_sensor", self.entity_description.translation_key, language, "usage_tips"
+                    )
+                    if usage_tips:
+                        attributes["usage_tips"] = usage_tips
+
+        except (KeyError, ValueError, TypeError) as ex:
+            self.coordinator.logger.exception(
+                "Error getting binary sensor attributes",
+                extra={
+                    "error": str(ex),
+                    "entity": self.entity_description.key,
+                },
+            )
+            return None
+        else:
+            return attributes if attributes else None

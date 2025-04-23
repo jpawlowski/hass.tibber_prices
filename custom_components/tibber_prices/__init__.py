@@ -16,7 +16,7 @@ from homeassistant.helpers.storage import Store
 from homeassistant.loader import async_get_loaded_integration
 
 from .api import TibberPricesApiClient
-from .const import DOMAIN, LOGGER
+from .const import DOMAIN, LOGGER, async_load_translations
 from .coordinator import STORAGE_VERSION, TibberPricesDataUpdateCoordinator
 from .data import TibberPricesData
 
@@ -37,6 +37,13 @@ async def async_setup_entry(
     entry: TibberPricesConfigEntry,
 ) -> bool:
     """Set up this integration using UI."""
+    # Preload translations to populate the cache
+    await async_load_translations(hass, "en")
+
+    # Try to load translations for the user's configured language if not English
+    if hass.config.language and hass.config.language != "en":
+        await async_load_translations(hass, hass.config.language)
+
     coordinator = TibberPricesDataUpdateCoordinator(
         hass=hass,
         entry=entry,

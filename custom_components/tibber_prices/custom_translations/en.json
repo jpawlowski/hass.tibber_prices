@@ -1,0 +1,81 @@
+{
+    "sensor": {
+        "current_price": {
+            "description": "The current hour's electricity price including taxes",
+            "long_description": "Shows the electricity price for the current hour, including all taxes and fees",
+            "usage_tips": "Use this sensor for automations that should react to the current price"
+        },
+        "next_hour_price": {
+            "description": "The next hour's electricity price including taxes",
+            "long_description": "Shows the electricity price for the upcoming hour, including all taxes and fees",
+            "usage_tips": "Perfect for scheduling devices to run in the next hour based on price"
+        },
+        "price_level": {
+            "description": "Current price level indicator (VERY_CHEAP to VERY_EXPENSIVE)",
+            "long_description": "Indicates the current price level on a scale from very cheap to very expensive",
+            "usage_tips": "Use this for visual indicators or simple automations without needing to calculate thresholds"
+        },
+        "lowest_price_today": {
+            "description": "The lowest electricity price for the current day",
+            "long_description": "Shows the lowest price point available during the current day",
+            "usage_tips": "Useful to find the optimal time to run energy-intensive appliances"
+        },
+        "highest_price_today": {
+            "description": "The highest electricity price for the current day",
+            "long_description": "Shows the highest price point during the current day",
+            "usage_tips": "Helpful for avoiding peak price periods"
+        },
+        "average_price_today": {
+            "description": "The average electricity price for the current day",
+            "long_description": "Calculates the average price across all hours of the current day",
+            "usage_tips": "Use as a baseline for price comparison"
+        },
+        "hourly_rating": {
+            "description": "Price comparison with historical data for the current hour",
+            "long_description": "Shows how the current hour's price compares to historical data as a percentage difference",
+            "usage_tips": "Helps understand if current prices are higher or lower than usual for this time"
+        },
+        "daily_rating": {
+            "description": "Price comparison with historical data for the current day",
+            "long_description": "Shows how today's average price compares to historical data as a percentage difference",
+            "usage_tips": "Useful to understand if today is generally expensive or cheap"
+        },
+        "monthly_rating": {
+            "description": "Price comparison with historical data for the current month",
+            "long_description": "Shows how this month's average price compares to historical data as a percentage difference",
+            "usage_tips": "Helpful for long-term energy budget planning"
+        },
+        "data_timestamp": {
+            "description": "Timestamp of the most recent price data received from Tibber",
+            "long_description": "Shows when the price data was last updated from the Tibber API",
+            "usage_tips": "Monitor this to ensure your price data is current"
+        },
+        "tomorrow_data_available": {
+            "description": "Indicates if price data for tomorrow is available",
+            "long_description": "Shows whether complete, partial, or no price data is available for tomorrow",
+            "usage_tips": "Use this to check if you can schedule appliances for tomorrow reliably"
+        }
+    },
+    "binary_sensor": {
+        "peak_hour": {
+            "description": "Indicates whether the current hour has the highest price of the day",
+            "long_description": "Becomes active during hours that are among the most expensive of the day",
+            "usage_tips": "Use in automations to avoid running high-consumption devices during peak hours"
+        },
+        "best_price_hour": {
+            "description": "Indicates whether the current hour has the lowest price of the day",
+            "long_description": "Becomes active during hours that are among the cheapest of the day",
+            "usage_tips": "Perfect for triggering energy-intensive appliances during optimal times"
+        },
+        "connection": {
+            "description": "Shows connection status to the Tibber API",
+            "long_description": "Indicates whether the component is successfully connecting to the Tibber API",
+            "usage_tips": "Monitor this to ensure your price data is being updated correctly"
+        }
+    },
+    "metadata": {
+        "author": "Julian Pawlowski",
+        "version": "1.0.0",
+        "last_updated": "2025-04-23"
+    }
+}

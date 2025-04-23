@@ -1,10 +1,6 @@
 {
-  "name": "Tibber Price Information & Ratings",
-  "homeassistant": "2025.4.2",
-  "hacs": "2.0.1",
-  "render_readme": true,
-  "domains": [
-    "sensor",
-    "binary_sensor"
-  ]
+    "name": "Tibber Price Information & Ratings",
+    "homeassistant": "2025.4.2",
+    "hacs": "2.0.1",
+    "render_readme": true
 }

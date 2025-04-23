@@ -1,0 +1,81 @@
+{
+    "sensor": {
+        "current_price": {
+            "description": "Der aktuelle Strompreis inklusive Steuern",
+            "long_description": "Zeigt den Strompreis für die aktuelle Stunde, einschließlich aller Steuern und Gebühren",
+            "usage_tips": "Verwenden Sie diesen Sensor für Automatisierungen, die auf den aktuellen Preis reagieren sollen"
+        },
+        "next_hour_price": {
+            "description": "Der Strompreis für die nächste Stunde inklusive Steuern",
+            "long_description": "Zeigt den Strompreis für die kommende Stunde, einschließlich aller Steuern und Gebühren",
+            "usage_tips": "Perfekt für die Planung von Geräten, die in der nächsten Stunde basierend auf dem Preis laufen sollen"
+        },
+        "price_level": {
+            "description": "Aktueller Preisstandanzeige (SEHR_GÜNSTIG bis SEHR_TEUER)",
+            "long_description": "Zeigt das aktuelle Preisniveau auf einer Skala von sehr günstig bis sehr teuer an",
+            "usage_tips": "Verwenden Sie dies für visuelle Anzeigen oder einfache Automatisierungen ohne Schwellenwertberechnung"
+        },
+        "lowest_price_today": {
+            "description": "Der niedrigste Strompreis für den aktuellen Tag",
+            "long_description": "Zeigt den niedrigsten Preis des aktuellen Tages an",
+            "usage_tips": "Nützlich, um die optimale Zeit für den Betrieb energieintensiver Geräte zu finden"
+        },
+        "highest_price_today": {
+            "description": "Der höchste Strompreis für den aktuellen Tag",
+            "long_description": "Zeigt den höchsten Preis während des aktuellen Tages an",
+            "usage_tips": "Hilfreich, um Spitzenpreiszeiten zu vermeiden"
+        },
+        "average_price_today": {
+            "description": "Der durchschnittliche Strompreis für den aktuellen Tag",
+            "long_description": "Berechnet den durchschnittlichen Preis über alle Stunden des aktuellen Tages",
+            "usage_tips": "Als Grundlage für Preisvergleiche verwenden"
+        },
+        "hourly_rating": {
+            "description": "Preisvergleich mit historischen Daten für die aktuelle Stunde",
+            "long_description": "Zeigt, wie der Preis der aktuellen Stunde im Vergleich zu historischen Daten als prozentuale Differenz abschneidet",
+            "usage_tips": "Hilft zu verstehen, ob die aktuellen Preise höher oder niedriger als üblich für diese Zeit sind"
+        },
+        "daily_rating": {
+            "description": "Preisvergleich mit historischen Daten für den aktuellen Tag",
+            "long_description": "Zeigt, wie der heutige Durchschnittspreis im Vergleich zu historischen Daten als prozentuale Differenz abschneidet",
+            "usage_tips": "Nützlich, um zu verstehen, ob heute generell teuer oder günstig ist"
+        },
+        "monthly_rating": {
+            "description": "Preisvergleich mit historischen Daten für den aktuellen Monat",
+            "long_description": "Zeigt, wie der durchschnittliche Preis dieses Monats im Vergleich zu historischen Daten als prozentuale Differenz abschneidet",
+            "usage_tips": "Hilfreich für die langfristige Energiebudgetplanung"
+        },
+        "data_timestamp": {
+            "description": "Zeitstempel der neuesten Preisdaten von Tibber",
+            "long_description": "Zeigt an, wann die Preisdaten zuletzt von der Tibber API aktualisiert wurden",
+            "usage_tips": "Überwachen Sie dies, um sicherzustellen, dass Ihre Preisdaten aktuell sind"
+        },
+        "tomorrow_data_available": {
+            "description": "Zeigt an, ob Preisdaten für morgen verfügbar sind",
+            "long_description": "Zeigt an, ob vollständige, teilweise oder keine Preisdaten für morgen verfügbar sind",
+            "usage_tips": "Verwenden Sie dies, um zu prüfen, ob Sie Geräte für morgen zuverlässig planen können"
+        }
+    },
+    "binary_sensor": {
+        "peak_hour": {
+            "description": "Zeigt an, ob die aktuelle Stunde den höchsten Preis des Tages hat",
+            "long_description": "Wird während Stunden aktiv, die zu den teuersten des Tages gehören",
+            "usage_tips": "In Automatisierungen verwenden, um den Betrieb von Geräten mit hohem Verbrauch während Spitzenzeiten zu vermeiden"
+        },
+        "best_price_hour": {
+            "description": "Zeigt an, ob die aktuelle Stunde den niedrigsten Preis des Tages hat",
+            "long_description": "Wird während Stunden aktiv, die zu den günstigsten des Tages gehören",
+            "usage_tips": "Perfekt, um energieintensive Geräte zu optimalen Zeiten zu aktivieren"
+        },
+        "connection": {
+            "description": "Zeigt den Verbindungsstatus zur Tibber API an",
+            "long_description": "Zeigt an, ob die Komponente erfolgreich eine Verbindung zur Tibber API herstellt",
+            "usage_tips": "Überwachen Sie dies, um sicherzustellen, dass Ihre Preisdaten korrekt aktualisiert werden"
+        }
+    },
+    "metadata": {
+        "author": "Julian Pawlowski",
+        "version": "1.0.0",
+        "last_updated": "2025-04-23"
+    }
+}

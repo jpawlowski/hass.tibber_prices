@@ -16,7 +16,12 @@ from .api import (
     TibberPricesApiClientCommunicationError,
     TibberPricesApiClientError,
 )
-from .const import DOMAIN, LOGGER
+from .const import (
+    CONF_EXTENDED_DESCRIPTIONS,
+    DEFAULT_EXTENDED_DESCRIPTIONS,
+    DOMAIN,
+    LOGGER,
+)
 
 
 class TibberPricesFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
@@ -48,9 +53,7 @@ class TibberPricesFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         _errors = {}
         if user_input is not None:
             try:
-                name = await self._test_credentials(
-                    access_token=user_input[CONF_ACCESS_TOKEN]
-                )
+                name = await self._test_credentials(access_token=user_input[CONF_ACCESS_TOKEN])
             except TibberPricesApiClientAuthenticationError as exception:
                 LOGGER.warning(exception)
                 _errors["base"] = "auth"
@@ -74,14 +77,16 @@ class TibberPricesFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 {
                     vol.Required(
                         CONF_ACCESS_TOKEN,
-                        default=(user_input or {}).get(
-                            CONF_ACCESS_TOKEN, vol.UNDEFINED
-                        ),
+                        default=(user_input or {}).get(CONF_ACCESS_TOKEN, vol.UNDEFINED),
                     ): selector.TextSelector(
                         selector.TextSelectorConfig(
                             type=selector.TextSelectorType.TEXT,
                         ),
                     ),
+                    vol.Optional(
+                        CONF_EXTENDED_DESCRIPTIONS,
+                        default=(user_input or {}).get(CONF_EXTENDED_DESCRIPTIONS, DEFAULT_EXTENDED_DESCRIPTIONS),
+                    ): selector.BooleanSelector(),
                 },
             ),
             errors=_errors,
@@ -103,12 +108,9 @@ class TibberPricesOptionsFlowHandler(config_entries.OptionsFlow):
     def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
         """Initialize options flow."""
         super().__init__()
-        # Store the entry_id instead of the whole config_entry
-        self._entry_id = config_entry.entry_id
+        self.config_entry = config_entry
 
-    async def async_step_init(
-        self, user_input: dict | None = None
-    ) -> config_entries.ConfigFlowResult:
+    async def async_step_init(self, user_input: dict | None = None) -> config_entries.ConfigFlowResult:
         """Manage the options."""
         errors: dict[str, str] = {}
 
@@ -122,20 +124,15 @@ class TibberPricesOptionsFlowHandler(config_entries.OptionsFlow):
                 result = await client.async_test_connection()
                 new_account_name = result["viewer"]["name"]
 
-                # Get the config entry using the entry_id
-                config_entry = self.hass.config_entries.async_get_entry(self._entry_id)
-                if not config_entry:
-                    return self.async_abort(reason="entry_not_found")
-
                 # Check if this token is for the same account
-                current_unique_id = config_entry.unique_id
+                current_unique_id = self.config_entry.unique_id
                 new_unique_id = slugify(new_account_name)
 
                 if current_unique_id != new_unique_id:
                     # Token is for a different account
                     errors["base"] = "different_account"
                 else:
-                    # Update the config entry with the new access token
+                    # Update the config entry with the new access token and options
                     return self.async_create_entry(title="", data=user_input)
 
             except TibberPricesApiClientAuthenticationError as exception:
@@ -148,25 +145,27 @@ class TibberPricesOptionsFlowHandler(config_entries.OptionsFlow):
                 LOGGER.exception(exception)
                 errors["base"] = "unknown"
 
-        # Get current config entry to get the current access token
-        config_entry = self.hass.config_entries.async_get_entry(self._entry_id)
-        if not config_entry:
-            return self.async_abort(reason="entry_not_found")
-
-        # If there's no user input or if there were errors, show the form
-        schema = {
+        # Build options schema
+        options = {
             vol.Required(
                 CONF_ACCESS_TOKEN,
-                default=config_entry.data.get(CONF_ACCESS_TOKEN, ""),
+                default=self.config_entry.data.get(CONF_ACCESS_TOKEN, ""),
             ): selector.TextSelector(
                 selector.TextSelectorConfig(
                     type=selector.TextSelectorType.TEXT,
                 ),
             ),
+            vol.Optional(
+                CONF_EXTENDED_DESCRIPTIONS,
+                default=self.config_entry.options.get(
+                    CONF_EXTENDED_DESCRIPTIONS,
+                    self.config_entry.data.get(CONF_EXTENDED_DESCRIPTIONS, DEFAULT_EXTENDED_DESCRIPTIONS),
+                ),
+            ): selector.BooleanSelector(),
         }
 
         return self.async_show_form(
             step_id="init",
-            data_schema=vol.Schema(schema),
+            data_schema=vol.Schema(options),
             errors=errors,
         )

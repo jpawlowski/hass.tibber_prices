@@ -41,48 +41,37 @@
     "entity": {
         "sensor": {
             "current_price": {
-                "name": "Current Price",
-                "description": "The current hour's electricity price including taxes"
+                "name": "Current Price"
             },
             "next_hour_price": {
-                "name": "Next Hour Price",
-                "description": "The next hour's electricity price including taxes"
+                "name": "Next Hour Price"
             },
             "price_level": {
-                "name": "Price Level",
-                "description": "Current price level indicator (VERY_CHEAP, CHEAP, NORMAL, EXPENSIVE, VERY_EXPENSIVE)"
+                "name": "Price Level"
             },
             "lowest_price_today": {
-                "name": "Lowest Price Today",
-                "description": "The lowest electricity price for the current day"
+                "name": "Lowest Price Today"
             },
             "highest_price_today": {
-                "name": "Highest Price Today",
-                "description": "The highest electricity price for the current day"
+                "name": "Highest Price Today"
             },
             "average_price_today": {
-                "name": "Average Price Today",
-                "description": "The average electricity price for the current day"
+                "name": "Average Price Today"
             },
             "hourly_rating": {
-                "name": "Hourly Price Rating",
-                "description": "Price comparison with historical data for the current hour (percentage difference)"
+                "name": "Hourly Price Rating"
             },
             "daily_rating": {
-                "name": "Daily Price Rating",
-                "description": "Price comparison with historical data for the current day (percentage difference)"
+                "name": "Daily Price Rating"
             },
             "monthly_rating": {
-                "name": "Monthly Price Rating",
-                "description": "Price comparison with historical data for the current month (percentage difference)"
+                "name": "Monthly Price Rating"
             },
             "data_timestamp": {
-                "name": "Last Data Available",
-                "description": "Timestamp of the most recent price data received from Tibber"
+                "name": "Last Data Available"
             },
             "tomorrow_data_available": {
-                "name": "Tomorrow's Data Available",
-                "description": "Indicates if price data for tomorrow is available (Yes/No/Partial)"
+                "name": "Tomorrow's Data Available"
             }
         },
         "binary_sensor": {

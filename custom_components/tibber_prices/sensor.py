@@ -393,25 +393,111 @@ class TibberPricesSensor(TibberPricesEntity, SensorEntity):
             return None
 
     @property
-    def extra_state_attributes(self) -> dict | None:
-        """Return additional state attributes."""
+    async def async_extra_state_attributes(self) -> dict | None:
+        """Return additional state attributes asynchronously."""
         if not self.coordinator.data:
             return None
 
-        attributes = self._get_sensor_attributes()
+        attributes = self._get_sensor_attributes() or {}
 
-        # Add translated description
-        if attributes and self.hass is not None:
-            base_key = "entity.sensor"
-            key = f"{base_key}.{self.entity_description.translation_key}.description"
-            language_config = getattr(self.hass.config, "language", None)
-            if isinstance(language_config, dict):
-                description = language_config.get(key)
-                if description is not None:
-                    attributes = dict(attributes)  # Make a copy before modifying
-                    attributes["description"] = description
+        # Add description from the custom translations file
+        if self.entity_description.translation_key and self.hass is not None:
+            # Extract the base key (without _cents suffix if present)
+            base_key = self.entity_description.translation_key
+            base_key = base_key.removesuffix("_cents")
 
-        return attributes
+            # Get user's language preference
+            language = self.hass.config.language if self.hass.config.language else "en"
+
+            # Import only within the method to avoid circular imports
+            from .const import (
+                CONF_EXTENDED_DESCRIPTIONS,
+                DEFAULT_EXTENDED_DESCRIPTIONS,
+                async_get_entity_description,
+            )
+
+            # Add basic description
+            description = await async_get_entity_description(self.hass, "sensor", base_key, language, "description")
+            if description:
+                attributes["description"] = description
+
+            # Check if extended descriptions are enabled in the config
+            extended_descriptions = self.coordinator.config_entry.options.get(
+                CONF_EXTENDED_DESCRIPTIONS,
+                self.coordinator.config_entry.data.get(CONF_EXTENDED_DESCRIPTIONS, DEFAULT_EXTENDED_DESCRIPTIONS),
+            )
+
+            # Add extended descriptions if enabled
+            if extended_descriptions:
+                # Add long description if available
+                long_desc = await async_get_entity_description(
+                    self.hass, "sensor", base_key, language, "long_description"
+                )
+                if long_desc:
+                    attributes["long_description"] = long_desc
+
+                # Add usage tips if available
+                usage_tips = await async_get_entity_description(self.hass, "sensor", base_key, language, "usage_tips")
+                if usage_tips:
+                    attributes["usage_tips"] = usage_tips
+
+        return attributes if attributes else None
+
+    @property
+    def extra_state_attributes(self) -> dict | None:
+        """
+        Return additional state attributes (synchronous version).
+
+        This synchronous method is required by Home Assistant and will
+        first return basic attributes, then add cached descriptions
+        without any blocking I/O operations.
+        """
+        if not self.coordinator.data:
+            return None
+
+        # Start with the basic attributes
+        attributes = self._get_sensor_attributes() or {}
+
+        # Add descriptions from the cache if available (non-blocking)
+        if self.entity_description.translation_key and self.hass is not None:
+            # Extract the base key (without _cents suffix if present)
+            base_key = self.entity_description.translation_key
+            base_key = base_key.removesuffix("_cents")
+
+            # Get user's language preference
+            language = self.hass.config.language if self.hass.config.language else "en"
+
+            # Import synchronous function to get cached descriptions
+            from .const import (
+                CONF_EXTENDED_DESCRIPTIONS,
+                DEFAULT_EXTENDED_DESCRIPTIONS,
+                get_entity_description,
+            )
+
+            # Add basic description from cache
+            description = get_entity_description("sensor", base_key, language, "description")
+            if description:
+                attributes["description"] = description
+
+            # Check if extended descriptions are enabled in the config
+            extended_descriptions = self.coordinator.config_entry.options.get(
+                CONF_EXTENDED_DESCRIPTIONS,
+                self.coordinator.config_entry.data.get(CONF_EXTENDED_DESCRIPTIONS, DEFAULT_EXTENDED_DESCRIPTIONS),
+            )
+
+            # Add extended descriptions if enabled (from cache only)
+            if extended_descriptions:
+                # Add long description if available in cache
+                long_desc = get_entity_description("sensor", base_key, language, "long_description")
+                if long_desc:
+                    attributes["long_description"] = long_desc
+
+                # Add usage tips if available in cache
+                usage_tips = get_entity_description("sensor", base_key, language, "usage_tips")
+                if usage_tips:
+                    attributes["usage_tips"] = usage_tips
+
+        return attributes if attributes else None
 
     def _get_sensor_attributes(self) -> dict | None:
         """Get attributes based on sensor type."""
