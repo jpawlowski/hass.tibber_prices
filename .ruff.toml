@@ -1,6 +1,7 @@
 # The contents of this file is based on https://github.com/home-assistant/core/blob/dev/pyproject.toml
 
 target-version = "py313"
+line-length = 120
 
 [lint]
 select = [
@@ -18,6 +19,10 @@ ignore = [
 
 [lint.flake8-pytest-style]
 fixture-parentheses = false
+
+[lint.isort]
+force-single-line = false
+known-first-party = ["custom_components", "homeassistant"]
 
 [lint.pyupgrade]
 keep-runtime-typing = true

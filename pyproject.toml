@@ -1,0 +1,10 @@
+# pyproject.toml
+
+[tool.black]
+line-length = 120
+target-version = ['py313']
+skip-string-normalization = false
+
+[tool.isort]
+profile = "black"
+line_length = 120

@@ -11,6 +11,7 @@ from typing import Any
 
 import aiohttp
 import async_timeout
+
 from homeassistant.const import __version__ as ha_version
 
 from .const import VERSION
