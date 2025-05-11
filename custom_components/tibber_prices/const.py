@@ -42,8 +42,17 @@ PRICE_LEVEL_MAPPING = {
     PRICE_LEVEL_VERY_EXPENSIVE: 2,
 }
 
-# Sensor type constants
-SENSOR_TYPE_PRICE_LEVEL = "price_level"
+# Price rating constants
+PRICE_RATING_NORMAL = "NORMAL"
+PRICE_RATING_LOW = "LOW"
+PRICE_RATING_HIGH = "HIGH"
+
+# Mapping for comparing price ratings (used for sorting)
+PRICE_RATING_MAPPING = {
+    PRICE_RATING_LOW: -1,
+    PRICE_RATING_NORMAL: 0,
+    PRICE_RATING_HIGH: 1,
+}
 
 LOGGER = logging.getLogger(__package__)
 

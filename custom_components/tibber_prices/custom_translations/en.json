@@ -1,19 +1,34 @@
 {
     "sensor": {
         "current_price": {
-            "description": "The current hour's electricity price including taxes",
-            "long_description": "Shows the electricity price for the current hour, including all taxes and fees",
-            "usage_tips": "Use this sensor for automations that should react to the current price"
+            "name": "Current Electricity Price",
+            "description": "The current electricity price in Euro",
+            "long_description": "Shows the current price per kWh (in Euro) from your Tibber subscription",
+            "usage_tips": "Use this to track prices or to create automations that run when electricity is cheap"
         },
-        "next_hour_price": {
-            "description": "The next hour's electricity price including taxes",
-            "long_description": "Shows the electricity price for the upcoming hour, including all taxes and fees",
-            "usage_tips": "Perfect for scheduling devices to run in the next hour based on price"
+        "current_price_cents": {
+            "name": "Current Electricity Price",
+            "description": "The current electricity price in cents per kWh",
+            "long_description": "Shows the current price per kWh (in cents) from your Tibber subscription",
+            "usage_tips": "Use this to track prices or to create automations that run when electricity is cheap"
+        },
+        "next_interval_price": {
+            "name": "Next Interval Electricity Price",
+            "description": "The next interval electricity price in Euro",
+            "long_description": "Shows the price for the next 15-minute interval (in Euro) from your Tibber subscription",
+            "usage_tips": "Use this to prepare for upcoming price changes or to schedule devices to run during cheaper intervals"
+        },
+        "next_interval_price_cents": {
+            "name": "Next Interval Electricity Price",
+            "description": "The next interval electricity price in cents per kWh",
+            "long_description": "Shows the price for the next 15-minute interval (in cents) from your Tibber subscription",
+            "usage_tips": "Use this to prepare for upcoming price changes or to schedule devices to run during cheaper intervals"
         },
         "price_level": {
-            "description": "Current price level indicator (VERY_CHEAP to VERY_EXPENSIVE)",
-            "long_description": "Indicates the current price level on a scale from very cheap to very expensive",
-            "usage_tips": "Use this for visual indicators or simple automations without needing to calculate thresholds",
+            "name": "Current Price Level",
+            "description": "The current price level classification",
+            "long_description": "Shows Tibber's classification of the current price compared to historical prices",
+            "usage_tips": "Use this to create automations based on relative price levels rather than absolute prices",
             "price_levels": {
                 "VERY_CHEAP": "Very Cheap",
                 "CHEAP": "Cheap",
@@ -23,61 +38,113 @@
             }
         },
         "lowest_price_today": {
-            "description": "The lowest electricity price for the current day",
-            "long_description": "Shows the lowest price point available during the current day",
-            "usage_tips": "Useful to find the optimal time to run energy-intensive appliances"
+            "name": "Today's Lowest Price",
+            "description": "The lowest electricity price for today in Euro",
+            "long_description": "Shows the lowest price per kWh (in Euro) for the current day from your Tibber subscription",
+            "usage_tips": "Use this to compare current prices to the cheapest time of the day"
+        },
+        "lowest_price_today_cents": {
+            "name": "Today's Lowest Price",
+            "description": "The lowest electricity price for today in cents per kWh",
+            "long_description": "Shows the lowest price per kWh (in cents) for the current day from your Tibber subscription",
+            "usage_tips": "Use this to compare current prices to the cheapest time of the day"
         },
         "highest_price_today": {
-            "description": "The highest electricity price for the current day",
-            "long_description": "Shows the highest price point during the current day",
-            "usage_tips": "Helpful for avoiding peak price periods"
+            "name": "Today's Highest Price",
+            "description": "The highest electricity price for today in Euro",
+            "long_description": "Shows the highest price per kWh (in Euro) for the current day from your Tibber subscription",
+            "usage_tips": "Use this to avoid running appliances during peak price times"
+        },
+        "highest_price_today_cents": {
+            "name": "Today's Highest Price",
+            "description": "The highest electricity price for today in cents per kWh",
+            "long_description": "Shows the highest price per kWh (in cents) for the current day from your Tibber subscription",
+            "usage_tips": "Use this to avoid running appliances during peak price times"
         },
         "average_price_today": {
-            "description": "The average electricity price for the current day",
-            "long_description": "Calculates the average price across all hours of the current day",
-            "usage_tips": "Use as a baseline for price comparison"
+            "name": "Today's Average Price",
+            "description": "The average electricity price for today in Euro",
+            "long_description": "Shows the average price per kWh (in Euro) for the current day from your Tibber subscription",
+            "usage_tips": "Use this as a baseline for comparing current prices"
         },
-        "hourly_rating": {
-            "description": "Price comparison with historical data for the current hour",
-            "long_description": "Shows how the current hour's price compares to historical data as a percentage difference",
-            "usage_tips": "Helps understand if current prices are higher or lower than usual for this time"
+        "average_price_today_cents": {
+            "name": "Today's Average Price",
+            "description": "The average electricity price for today in cents per kWh",
+            "long_description": "Shows the average price per kWh (in cents) for the current day from your Tibber subscription",
+            "usage_tips": "Use this as a baseline for comparing current prices"
+        },
+        "price_rating": {
+            "name": "Current Price Rating",
+            "description": "How the current interval's price compares to historical data",
+            "long_description": "Shows how the current interval's price compares to historical price data as a percentage",
+            "usage_tips": "A positive percentage means the current price is above average, negative means below average",
+            "price_levels": {
+                "LOW": "Low",
+                "NORMAL": "Normal",
+                "HIGH": "High"
+            }
         },
         "daily_rating": {
-            "description": "Price comparison with historical data for the current day",
-            "long_description": "Shows how today's average price compares to historical data as a percentage difference",
-            "usage_tips": "Useful to understand if today is generally expensive or cheap"
+            "name": "Daily Price Rating",
+            "description": "How today's prices compare to historical data",
+            "long_description": "Shows how today's prices compare to historical price data as a percentage",
+            "usage_tips": "A positive percentage means today's prices are above average, negative means below average"
         },
         "monthly_rating": {
-            "description": "Price comparison with historical data for the current month",
-            "long_description": "Shows how this month's average price compares to historical data as a percentage difference",
-            "usage_tips": "Helpful for long-term energy budget planning"
+            "name": "Monthly Price Rating",
+            "description": "How this month's prices compare to historical data",
+            "long_description": "Shows how this month's prices compare to historical price data as a percentage",
+            "usage_tips": "A positive percentage means this month's prices are above average, negative means below average"
         },
         "data_timestamp": {
-            "description": "Timestamp of the most recent price data received from Tibber",
-            "long_description": "Shows when the price data was last updated from the Tibber API",
-            "usage_tips": "Monitor this to ensure your price data is current"
+            "name": "Latest Data Timestamp",
+            "description": "When the latest price data was received",
+            "long_description": "Shows the timestamp of the most recent price data update from Tibber",
+            "usage_tips": "Use this to check when price information was last updated"
         },
         "tomorrow_data_available": {
-            "description": "Indicates if price data for tomorrow is available",
-            "long_description": "Shows whether complete, partial, or no price data is available for tomorrow",
-            "usage_tips": "Use this to check if you can schedule appliances for tomorrow reliably"
+            "name": "Tomorrow's Data Status",
+            "description": "Whether price data for tomorrow is available",
+            "long_description": "Indicates if price data for the following day has been received from Tibber",
+            "usage_tips": "Use this to check if tomorrow's prices are available for planning"
+        },
+        "price_forecast": {
+            "name": "Price Forecast",
+            "description": "Forecast of upcoming electricity prices",
+            "long_description": "Shows upcoming electricity prices for future intervals in a format that's easy to use in dashboards",
+            "usage_tips": "Use this entity's attributes to display upcoming prices in charts or custom cards. Access either 'intervals' for all future intervals or 'hours' for hourly summaries."
         }
     },
     "binary_sensor": {
+        "peak_interval": {
+            "name": "Peak Price Interval",
+            "description": "Whether the current interval is among the most expensive of the day",
+            "long_description": "Turns on when the current price is in the top 20% of today's prices",
+            "usage_tips": "Use this to avoid running high-consumption appliances during expensive intervals"
+        },
+        "best_price_interval": {
+            "name": "Best Price Interval",
+            "description": "Whether the current interval is among the cheapest of the day",
+            "long_description": "Turns on when the current price is in the bottom 20% of today's prices",
+            "usage_tips": "Use this to run high-consumption appliances during the cheapest intervals"
+        },
         "peak_hour": {
-            "description": "Indicates whether the current hour has the highest price of the day",
-            "long_description": "Becomes active during hours that are among the most expensive of the day",
-            "usage_tips": "Use in automations to avoid running high-consumption devices during peak hours"
+            "name": "Peak Hour",
+            "description": "Whether the current hour is among the most expensive of the day",
+            "long_description": "Turns on when the current price is in the top 20% of today's prices",
+            "usage_tips": "Use this to avoid running high-consumption appliances during expensive hours"
         },
         "best_price_hour": {
-            "description": "Indicates whether the current hour has the lowest price of the day",
-            "long_description": "Becomes active during hours that are among the cheapest of the day",
-            "usage_tips": "Perfect for triggering energy-intensive appliances during optimal times"
+            "name": "Best Price Hour",
+            "description": "Whether the current hour is among the cheapest of the day",
+            "long_description": "Turns on when the current price is in the bottom 20% of today's prices",
+            "usage_tips": "Use this to run high-consumption appliances during the cheapest hours"
         },
         "connection": {
-            "description": "Shows connection status to the Tibber API",
-            "long_description": "Indicates whether the component is successfully connecting to the Tibber API",
-            "usage_tips": "Monitor this to ensure your price data is being updated correctly"
+            "name": "Tibber API Connection",
+            "description": "Whether the connection to the Tibber API is working",
+            "long_description": "Indicates if the integration can successfully connect to the Tibber API",
+            "usage_tips": "Use this to monitor the connection status to the Tibber API"
         }
     }
 }

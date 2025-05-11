@@ -1,83 +1,150 @@
 {
     "sensor": {
         "current_price": {
-            "description": "Der aktuelle Strompreis inklusive Steuern",
-            "long_description": "Zeigt den Strompreis für die aktuelle Stunde, einschließlich aller Steuern und Gebühren",
-            "usage_tips": "Verwende diesen Sensor für Automatisierungen, die auf den aktuellen Preis reagieren sollen"
+            "name": "Aktueller Strompreis",
+            "description": "Der aktuelle Strompreis in Euro",
+            "long_description": "Zeigt den aktuellen Preis pro kWh (in Euro) von deinem Tibber-Abonnement an",
+            "usage_tips": "Nutze dies, um Preise zu verfolgen oder Automatisierungen zu erstellen, die bei günstigem Strom ausgeführt werden"
         },
-        "next_hour_price": {
-            "description": "Der Strompreis für die nächste Stunde inklusive Steuern",
-            "long_description": "Zeigt den Strompreis für die kommende Stunde, einschließlich aller Steuern und Gebühren",
-            "usage_tips": "Perfekt für die Planung von Geräten, die in der nächsten Stunde basierend auf dem Preis laufen sollen"
+        "current_price_cents": {
+            "name": "Aktueller Strompreis",
+            "description": "Der aktuelle Strompreis in Cent pro kWh",
+            "long_description": "Zeigt den aktuellen Preis pro kWh (in Cent) von deinem Tibber-Abonnement an",
+            "usage_tips": "Nutze dies, um Preise zu verfolgen oder Automatisierungen zu erstellen, die bei günstigem Strom ausgeführt werden"
+        },
+        "next_interval_price": {
+            "name": "Strompreis nächstes Intervall",
+            "description": "Der Strompreis für das nächste 15-Minuten-Intervall in Euro",
+            "long_description": "Zeigt den Preis für das nächste 15-Minuten-Intervall (in Euro) von deinem Tibber-Abonnement an",
+            "usage_tips": "Nutze dies, um dich auf kommende Preisänderungen vorzubereiten oder Geräte während günstigerer Intervalle zu planen"
+        },
+        "next_interval_price_cents": {
+            "name": "Strompreis nächstes Intervall",
+            "description": "Der Strompreis für das nächste 15-Minuten-Intervall in Cent pro kWh",
+            "long_description": "Zeigt den Preis für das nächste 15-Minuten-Intervall (in Cent) von deinem Tibber-Abonnement an",
+            "usage_tips": "Nutze dies, um dich auf kommende Preisänderungen vorzubereiten oder Geräte während günstigerer Intervalle zu planen"
         },
         "price_level": {
-            "description": "Aktueller Preisstandanzeige (SEHR_GÜNSTIG bis SEHR_TEUER)",
-            "long_description": "Zeigt das aktuelle Preisniveau auf einer Skala von sehr günstig bis sehr teuer an",
-            "usage_tips": "Verwende dies für visuelle Anzeigen oder einfache Automatisierungen ohne Schwellenwertberechnung",
+            "name": "Aktuelles Preisniveau",
+            "description": "Die aktuelle Preislevelklassifikation",
+            "long_description": "Zeigt die Klassifizierung von Tibber für den aktuellen Preis im Vergleich zu historischen Preisen an",
+            "usage_tips": "Nutze dies, um Automatisierungen auf Basis des relativen Preisniveaus anstelle der absoluten Preise zu erstellen",
             "price_levels": {
-                "VERY_CHEAP": "Sehr Günstig",
+                "VERY_CHEAP": "Sehr günstig",
                 "CHEAP": "Günstig",
                 "NORMAL": "Normal",
                 "EXPENSIVE": "Teuer",
-                "VERY_EXPENSIVE": "Sehr Teuer"
+                "VERY_EXPENSIVE": "Sehr teuer"
             }
         },
         "lowest_price_today": {
-            "description": "Der niedrigste Strompreis für den aktuellen Tag",
-            "long_description": "Zeigt den niedrigsten Preis des aktuellen Tages an",
-            "usage_tips": "Nützlich, um die optimale Zeit für den Betrieb energieintensiver Geräte zu finden"
+            "name": "Niedrigster Preis heute",
+            "description": "Der niedrigste Strompreis für heute in Euro",
+            "long_description": "Zeigt den niedrigsten Preis pro kWh (in Euro) für den aktuellen Tag von deinem Tibber-Abonnement an",
+            "usage_tips": "Nutze dies, um aktuelle Preise mit der günstigsten Zeit des Tages zu vergleichen"
+        },
+        "lowest_price_today_cents": {
+            "name": "Niedrigster Preis heute",
+            "description": "Der niedrigste Strompreis für heute in Cent pro kWh",
+            "long_description": "Zeigt den niedrigsten Preis pro kWh (in Cent) für den aktuellen Tag von deinem Tibber-Abonnement an",
+            "usage_tips": "Nutze dies, um aktuelle Preise mit der günstigsten Zeit des Tages zu vergleichen"
         },
         "highest_price_today": {
-            "description": "Der höchste Strompreis für den aktuellen Tag",
-            "long_description": "Zeigt den höchsten Preis während des aktuellen Tages an",
-            "usage_tips": "Hilfreich, um Spitzenpreiszeiten zu vermeiden"
+            "name": "Höchster Preis heute",
+            "description": "Der höchste Strompreis für heute in Euro",
+            "long_description": "Zeigt den höchsten Preis pro kWh (in Euro) für den aktuellen Tag von deinem Tibber-Abonnement an",
+            "usage_tips": "Nutze dies, um den Betrieb von Geräten während Spitzenpreiszeiten zu vermeiden"
+        },
+        "highest_price_today_cents": {
+            "name": "Höchster Preis heute",
+            "description": "Der höchste Strompreis für heute in Cent pro kWh",
+            "long_description": "Zeigt den höchsten Preis pro kWh (in Cent) für den aktuellen Tag von deinem Tibber-Abonnement an",
+            "usage_tips": "Nutze dies, um den Betrieb von Geräten während Spitzenpreiszeiten zu vermeiden"
         },
         "average_price_today": {
-            "description": "Der durchschnittliche Strompreis für den aktuellen Tag",
-            "long_description": "Berechnet den durchschnittlichen Preis über alle Stunden des aktuellen Tages",
-            "usage_tips": "Als Grundlage für Preisvergleiche verwenden"
+            "name": "Durchschnittspreis heute",
+            "description": "Der durchschnittliche Strompreis für heute in Euro",
+            "long_description": "Zeigt den durchschnittlichen Preis pro kWh (in Euro) für den aktuellen Tag von deinem Tibber-Abonnement an",
+            "usage_tips": "Nutze dies als Grundlage für den Vergleich mit aktuellen Preisen"
         },
-        "hourly_rating": {
-            "description": "Preisvergleich mit historischen Daten für die aktuelle Stunde",
-            "long_description": "Zeigt, wie der Preis der aktuellen Stunde im Vergleich zu historischen Daten als prozentuale Differenz abschneidet",
-            "usage_tips": "Hilft zu verstehen, ob die aktuellen Preise höher oder niedriger als üblich für diese Zeit sind"
+        "average_price_today_cents": {
+            "name": "Durchschnittspreis heute",
+            "description": "Der durchschnittliche Strompreis für heute in Cent pro kWh",
+            "long_description": "Zeigt den durchschnittlichen Preis pro kWh (in Cent) für den aktuellen Tag von deinem Tibber-Abonnement an",
+            "usage_tips": "Nutze dies als Grundlage für den Vergleich mit aktuellen Preisen"
+        },
+        "price_rating": {
+            "name": "Aktuelle Preisbewertung",
+            "description": "Wie sich der Preis des aktuellen Intervalls mit historischen Daten vergleicht",
+            "long_description": "Zeigt, wie sich der Preis des aktuellen Intervalls im Vergleich zu historischen Preisdaten als Prozentsatz verhält",
+            "usage_tips": "Ein positiver Prozentsatz bedeutet, dass der aktuelle Preis überdurchschnittlich ist, negativ bedeutet unterdurchschnittlich",
+            "price_levels": {
+                "LOW": "Niedrig",
+                "NORMAL": "Normal",
+                "HIGH": "Hoch"
+            }
         },
         "daily_rating": {
-            "description": "Preisvergleich mit historischen Daten für den aktuellen Tag",
-            "long_description": "Zeigt, wie der heutige Durchschnittspreis im Vergleich zu historischen Daten als prozentuale Differenz abschneidet",
-            "usage_tips": "Nützlich, um zu verstehen, ob heute generell teuer oder günstig ist"
+            "name": "Tägliche Preisbewertung",
+            "description": "Wie sich die heutigen Preise mit historischen Daten vergleichen",
+            "long_description": "Zeigt, wie sich die heutigen Preise im Vergleich zu historischen Preisdaten als Prozentsatz verhällt",
+            "usage_tips": "Ein positiver Prozentsatz bedeutet, dass die heutigen Preise überdurchschnittlich sind, negativ bedeutet unterdurchschnittlich"
         },
         "monthly_rating": {
-            "description": "Preisvergleich mit historischen Daten für den aktuellen Monat",
-            "long_description": "Zeigt, wie der durchschnittliche Preis dieses Monats im Vergleich zu historischen Daten als prozentuale Differenz abschneidet",
-            "usage_tips": "Hilfreich für die langfristige Energiebudgetplanung"
+            "name": "Monatliche Preisbewertung",
+            "description": "Wie sich die Preise dieses Monats mit historischen Daten vergleichen",
+            "long_description": "Zeigt, wie sich die Preise dieses Monats im Vergleich zu historischen Preisdaten als Prozentsatz verhällt",
+            "usage_tips": "Ein positiver Prozentsatz bedeutet, dass die Preise dieses Monats überdurchschnittlich sind, negativ bedeutet unterdurchschnittlich"
         },
         "data_timestamp": {
-            "description": "Zeitstempel der neuesten Preisdaten von Tibber",
-            "long_description": "Zeigt an, wann die Preisdaten zuletzt von der Tibber API aktualisiert wurden",
-            "usage_tips": "Überwache dies, um sicherzustellen, dass Ihre Preisdaten aktuell sind"
+            "name": "Zeitstempel der neuesten Daten",
+            "description": "Wann die neuesten Preisdaten empfangen wurden",
+            "long_description": "Zeigt den Zeitstempel des letzten Preisaktualisierung von Tibber",
+            "usage_tips": "Nutze dies, um zu überprüfen, wann die Preisinformationen zuletzt aktualisiert wurden"
         },
         "tomorrow_data_available": {
-            "description": "Zeigt an, ob Preisdaten für morgen verfügbar sind",
-            "long_description": "Zeigt an, ob vollständige, teilweise oder keine Preisdaten für morgen verfügbar sind",
-            "usage_tips": "Verwende dies, um zu prüfen, ob Geräte für morgen zuverlässig geplant werden können"
+            "name": "Datenstatus für morgen",
+            "description": "Ob Preisdaten für morgen verfügbar sind",
+            "long_description": "Gibt an, ob Preisdaten für den folgenden Tag von Tibber empfangen wurden",
+            "usage_tips": "Nutze dies, um zu überprüfen, ob die Preise für morgen für die Planung verfügbar sind"
+        },
+        "price_forecast": {
+            "name": "Preisprognose",
+            "description": "Prognose der kommenden Strompreise",
+            "long_description": "Zeigt kommende Strompreise für zukünftige Intervalle in einem Format an, das leicht in Dashboards verwendet werden kann",
+            "usage_tips": "Verwende die Attribute dieser Entität, um bevorstehende Preise in Diagrammen oder benutzerdefinierten Karten anzuzeigen. Greife entweder auf 'intervals' für alle zukünftigen Intervalle oder auf 'hours' für stündliche Zusammenfassungen zu."
         }
     },
     "binary_sensor": {
+        "peak_interval": {
+            "name": "Spitzenpreis-Intervall",
+            "description": "Ob das aktuelle Intervall zu den teuersten des Tages gehört",
+            "long_description": "Wird aktiviert, wenn der aktuelle Preis in den oberen 20% der heutigen Preise liegt",
+            "usage_tips": "Nutze dies, um den Betrieb von Geräten mit hohem Verbrauch während teurer Intervalle zu vermeiden"
+        },
+        "best_price_interval": {
+            "name": "Bestpreis-Intervall",
+            "description": "Ob das aktuelle Intervall zu den günstigsten des Tages gehört",
+            "long_description": "Wird aktiviert, wenn der aktuelle Preis in den unteren 20% der heutigen Preise liegt",
+            "usage_tips": "Nutze dies, um Geräte mit hohem Verbrauch während der günstigsten Intervalle zu betreiben"
+        },
         "peak_hour": {
-            "description": "Zeigt an, ob die aktuelle Stunde den höchsten Preis des Tages hat",
-            "long_description": "Wird während Stunden aktiv, die zu den teuersten des Tages gehören",
-            "usage_tips": "In Automatisierungen verwenden, um den Betrieb von Geräten mit hohem Verbrauch während Spitzenzeiten zu vermeiden"
+            "name": "Spitzenstunde",
+            "description": "Ob die aktuelle Stunde zu den teuersten des Tages gehört",
+            "long_description": "Wird aktiviert, wenn der aktuelle Preis in den oberen 20% der heutigen Preise liegt",
+            "usage_tips": "Nutze dies, um den Betrieb von Geräten mit hohem Verbrauch während teurer Stunden zu vermeiden"
         },
         "best_price_hour": {
-            "description": "Zeigt an, ob die aktuelle Stunde den niedrigsten Preis des Tages hat",
-            "long_description": "Wird während Stunden aktiv, die zu den günstigsten des Tages gehören",
-            "usage_tips": "Perfekt, um energieintensive Geräte zu optimalen Zeiten zu aktivieren"
+            "name": "Beste-Preis-Stunde",
+            "description": "Ob die aktuelle Stunde zu den günstigsten des Tages gehört",
+            "long_description": "Wird aktiviert, wenn der aktuelle Preis in den unteren 20% der heutigen Preise liegt",
+            "usage_tips": "Nutze dies, um Geräte mit hohem Verbrauch während der günstigsten Stunden zu betreiben"
         },
         "connection": {
-            "description": "Zeigt den Verbindungsstatus zur Tibber API an",
-            "long_description": "Zeigt an, ob die Komponente erfolgreich eine Verbindung zur Tibber API herstellt",
-            "usage_tips": "Überwache dies, um sicherzustellen, dass die Preisdaten korrekt aktualisiert werden"
+            "name": "Tibber API-Verbindung",
+            "description": "Ob die Verbindung zur Tibber API funktioniert",
+            "long_description": "Zeigt an, ob die Integration erfolgreich eine Verbindung zur Tibber API herstellen kann",
+            "usage_tips": "Nutze dies, um den Verbindungsstatus zur Tibber API zu überwachen"
         }
     }
 }

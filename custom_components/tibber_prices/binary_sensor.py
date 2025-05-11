@@ -14,6 +14,7 @@ from homeassistant.const import EntityCategory
 from homeassistant.util import dt as dt_util
 
 from .entity import TibberPricesEntity
+from .sensor import detect_interval_granularity, find_price_data_for_interval
 
 if TYPE_CHECKING:
     from collections.abc import Callable
@@ -26,15 +27,15 @@ if TYPE_CHECKING:
 
 ENTITY_DESCRIPTIONS = (
     BinarySensorEntityDescription(
-        key="peak_hour",
-        translation_key="peak_hour",
-        name="Peak Hour",
+        key="peak_interval",
+        translation_key="peak_interval",
+        name="Peak Price Interval",
         icon="mdi:clock-alert",
     ),
     BinarySensorEntityDescription(
-        key="best_price_hour",
-        translation_key="best_price_hour",
-        name="Best Price Hour",
+        key="best_price_interval",
+        translation_key="best_price_interval",
+        name="Best Price Interval",
         icon="mdi:clock-check",
     ),
     BinarySensorEntityDescription(
@@ -81,9 +82,9 @@ class TibberPricesBinarySensor(TibberPricesEntity, BinarySensorEntity):
         """Return the appropriate state getter method based on the sensor type."""
         key = self.entity_description.key
 
-        if key == "peak_hour":
+        if key == "peak_interval":
             return lambda: self._get_price_threshold_state(threshold_percentage=0.8, high_is_active=True)
-        if key == "best_price_hour":
+        if key == "best_price_interval":
             return lambda: self._get_price_threshold_state(threshold_percentage=0.2, high_is_active=False)
         if key == "connection":
             return lambda: True if self.coordinator.data else None
@@ -94,45 +95,40 @@ class TibberPricesBinarySensor(TibberPricesEntity, BinarySensorEntity):
         """Return the appropriate attribute getter method based on the sensor type."""
         key = self.entity_description.key
 
-        if key == "peak_hour":
-            return lambda: self._get_price_hours_attributes(attribute_name="peak_hours", reverse_sort=True)
-        if key == "best_price_hour":
-            return lambda: self._get_price_hours_attributes(attribute_name="best_price_hours", reverse_sort=False)
+        if key == "peak_interval":
+            return lambda: self._get_price_intervals_attributes(attribute_name="peak_intervals", reverse_sort=True)
+        if key == "best_price_interval":
+            return lambda: self._get_price_intervals_attributes(
+                attribute_name="best_price_intervals", reverse_sort=False
+            )
 
         return None
 
     def _get_current_price_data(self) -> tuple[list[float], float] | None:
         """Get current price data if available."""
-        if not (
-            self.coordinator.data
-            and (
-                today_prices := self.coordinator.data["data"]["viewer"]["homes"][0]["currentSubscription"][
-                    "priceInfo"
-                ].get("today", [])
-            )
-        ):
+        if not self.coordinator.data:
+            return None
+
+        price_info = self.coordinator.data["data"]["viewer"]["homes"][0]["currentSubscription"]["priceInfo"]
+        today_prices = price_info.get("today", [])
+
+        if not today_prices:
             return None
 
         now = dt_util.now()
 
-        # Find price data for current hour
-        current_hour_data = None
-        for price_data in today_prices:
-            starts_at = dt_util.parse_datetime(price_data["startsAt"])
-            if starts_at is None:
-                continue
+        # Detect interval granularity
+        interval_minutes = detect_interval_granularity(today_prices)
 
-            starts_at = dt_util.as_local(starts_at)
-            if starts_at.hour == now.hour and starts_at.date() == now.date():
-                current_hour_data = price_data
-                break
+        # Find price data for current interval
+        current_interval_data = find_price_data_for_interval({"today": today_prices}, now, interval_minutes)
 
-        if not current_hour_data:
+        if not current_interval_data:
             return None
 
         prices = [float(price["total"]) for price in today_prices]
         prices.sort()
-        return prices, float(current_hour_data["total"])
+        return prices, float(current_interval_data["total"])
 
     def _get_price_threshold_state(self, *, threshold_percentage: float, high_is_active: bool) -> bool | None:
         """
@@ -154,6 +150,73 @@ class TibberPricesBinarySensor(TibberPricesEntity, BinarySensorEntity):
             return current_price >= prices[threshold_index]
 
         return current_price <= prices[threshold_index]
+
+    def _get_price_intervals_attributes(self, *, attribute_name: str, reverse_sort: bool) -> dict | None:
+        """
+        Get price interval attributes with support for 15-minute intervals.
+
+        Args:
+            attribute_name: The attribute name to use in the result dictionary
+            reverse_sort: Whether to sort prices in reverse (high to low)
+
+        Returns:
+            Dictionary with interval data or None if not available
+
+        """
+        if not self.coordinator.data:
+            return None
+
+        price_info = self.coordinator.data["data"]["viewer"]["homes"][0]["currentSubscription"]["priceInfo"]
+        today_prices = price_info.get("today", [])
+
+        if not today_prices:
+            return None
+
+        # Detect the granularity of the data
+        interval_minutes = detect_interval_granularity(today_prices)
+
+        # Build a list of price data with timestamps and values
+        price_intervals = []
+        for price_data in today_prices:
+            starts_at = dt_util.parse_datetime(price_data["startsAt"])
+            if starts_at is None:
+                continue
+
+            starts_at = dt_util.as_local(starts_at)
+            price_intervals.append(
+                {
+                    "starts_at": starts_at,
+                    "price": float(price_data["total"]),
+                    "hour": starts_at.hour,
+                    "minute": starts_at.minute,
+                }
+            )
+
+        # Sort by price (high to low for peak, low to high for best)
+        sorted_intervals = sorted(price_intervals, key=lambda x: x["price"], reverse=reverse_sort)[:5]
+
+        # Format the result based on granularity
+        hourly_interval_minutes = 60
+        result = []
+        for interval in sorted_intervals:
+            if interval_minutes < hourly_interval_minutes:  # More granular than hourly
+                result.append(
+                    {
+                        "hour": interval["hour"],
+                        "minute": interval["minute"],
+                        "time": f"{interval['hour']:02d}:{interval['minute']:02d}",
+                        "price": interval["price"],
+                    }
+                )
+            else:  # Hourly data (for backward compatibility)
+                result.append(
+                    {
+                        "hour": interval["hour"],
+                        "price": interval["price"],
+                    }
+                )
+
+        return {attribute_name: result}
 
     def _get_price_hours_attributes(self, *, attribute_name: str, reverse_sort: bool) -> dict | None:
         """Get price hours attributes."""

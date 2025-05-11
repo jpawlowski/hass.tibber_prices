@@ -2,29 +2,34 @@
     "config": {
         "step": {
             "user": {
-                "description": "Wenn du Hilfe bei der Konfiguration benötigst, schau hier nach: https://github.com/jpawlowski/hass.tibber_prices",
+                "description": "Richte Tibber Preisinformationen & Bewertungen ein. Um ein API-Zugriffstoken zu generieren, besuche developer.tibber.com.",
                 "data": {
-                    "access_token": "Tibber Zugangstoken"
-                }
+                    "access_token": "API-Zugriffstoken",
+                    "extended_descriptions": "Erweiterte Beschreibungen in Entitätsattributen anzeigen"
+                },
+                "title": "Tibber Preisinformationen & Bewertungen"
             }
         },
         "error": {
             "auth": "Der Tibber Zugangstoken ist ungültig.",
             "connection": "Verbindung zu Tibber nicht möglich. Bitte überprüfe deine Internetverbindung.",
-            "unknown": "Ein unerwarteter Fehler ist aufgetreten. Bitte überprüfe die Logs für Details."
+            "unknown": "Ein unerwarteter Fehler ist aufgetreten. Bitte überprüfe die Logs für Details.",
+            "cannot_connect": "Verbindung fehlgeschlagen",
+            "invalid_access_token": "Ungültiges Zugriffstoken"
         },
         "abort": {
-            "already_configured": "Dieser Eintrag ist bereits konfiguriert.",
+            "already_configured": "Integration ist bereits konfiguriert",
             "entry_not_found": "Tibber Konfigurationseintrag nicht gefunden."
         }
     },
     "options": {
         "step": {
             "init": {
-                "title": "Tibber Konfiguration aktualisieren",
-                "description": "Aktualisiere deinen Tibber API Zugangstoken. Wenn du einen neuen Token benötigst, kannst du einen unter https://developer.tibber.com/settings/access-token generieren",
+                "title": "Optionen für Tibber Preisinformationen & Bewertungen",
+                "description": "Konfiguriere Optionen für Tibber Preisinformationen & Bewertungen",
                 "data": {
-                    "access_token": "Tibber Zugangstoken"
+                    "access_token": "Tibber Zugangstoken",
+                    "extended_descriptions": "Erweiterte Beschreibungen in Entitätsattributen anzeigen"
                 }
             }
         },
@@ -41,13 +46,10 @@
     "entity": {
         "sensor": {
             "current_price": {
-                "name": "Aktueller Preis"
-            },
-            "next_hour_price": {
-                "name": "Preis nächste Stunde"
+                "name": "Aktueller Strompreis"
             },
             "price_level": {
-                "name": "Preisniveau"
+                "name": "Aktuelles Preisniveau"
             },
             "lowest_price_today": {
                 "name": "Niedrigster Preis heute"
@@ -58,8 +60,8 @@
             "average_price_today": {
                 "name": "Durchschnittspreis heute"
             },
-            "hourly_rating": {
-                "name": "Stündliche Preisbewertung"
+            "price_rating": {
+                "name": "Aktuelle Preisbewertung"
             },
             "daily_rating": {
                 "name": "Tägliche Preisbewertung"
@@ -68,10 +70,16 @@
                 "name": "Monatliche Preisbewertung"
             },
             "data_timestamp": {
-                "name": "Preisprognose-Horizont"
+                "name": "Zeitstempel der neuesten Daten"
             },
             "tomorrow_data_available": {
-                "name": "Daten für morgen verfügbar"
+                "name": "Datenstatus für morgen"
+            },
+            "next_interval_price": {
+                "name": "Strompreis nächstes Intervall"
+            },
+            "price_forecast": {
+                "name": "Preisprognose"
             }
         },
         "binary_sensor": {
@@ -79,10 +87,10 @@
                 "name": "Spitzenstunde"
             },
             "best_price_hour": {
-                "name": "Beste Preisstunde"
+                "name": "Beste-Preis-Stunde"
             },
             "connection": {
-                "name": "Verbindungsstatus"
+                "name": "Tibber API-Verbindung"
             }
         }
     }

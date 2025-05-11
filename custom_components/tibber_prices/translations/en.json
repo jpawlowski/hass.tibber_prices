@@ -2,29 +2,34 @@
     "config": {
         "step": {
             "user": {
-                "description": "If you need help with the configuration have a look here: https://github.com/jpawlowski/hass.tibber_prices",
+                "description": "Set up Tibber Price Information & Ratings. To generate an API access token, visit developer.tibber.com.",
                 "data": {
-                    "access_token": "Tibber Access Token"
-                }
+                    "access_token": "API access token",
+                    "extended_descriptions": "Show extended descriptions in entity attributes"
+                },
+                "title": "Tibber Price Information & Ratings"
             }
         },
         "error": {
             "auth": "The Tibber Access Token is invalid.",
             "connection": "Unable to connect to Tibber. Please check your internet connection.",
-            "unknown": "An unexpected error occurred. Please check the logs for details."
+            "unknown": "Unexpected error",
+            "cannot_connect": "Failed to connect",
+            "invalid_access_token": "Invalid access token"
         },
         "abort": {
-            "already_configured": "This entry is already configured.",
+            "already_configured": "Integration is already configured",
             "entry_not_found": "Tibber configuration entry not found."
         }
     },
     "options": {
         "step": {
             "init": {
-                "title": "Update Tibber Configuration",
-                "description": "Update your Tibber API access token. If you need a new token, you can generate one at https://developer.tibber.com/settings/access-token",
+                "title": "Options for Tibber Price Information & Ratings",
+                "description": "Configure options for Tibber Price Information & Ratings",
                 "data": {
-                    "access_token": "Tibber Access Token"
+                    "access_token": "Tibber Access Token",
+                    "extended_descriptions": "Show extended descriptions in entity attributes"
                 }
             }
         },
@@ -41,25 +46,40 @@
     "entity": {
         "sensor": {
             "current_price": {
-                "name": "Current Price"
+                "name": "Current Electricity Price"
             },
-            "next_hour_price": {
-                "name": "Next Hour Price"
+            "current_price_cents": {
+                "name": "Current Electricity Price"
+            },
+            "next_interval_price": {
+                "name": "Next Interval Electricity Price"
+            },
+            "next_interval_price_cents": {
+                "name": "Next Interval Electricity Price"
             },
             "price_level": {
-                "name": "Price Level"
+                "name": "Current Price Level"
             },
             "lowest_price_today": {
-                "name": "Lowest Price Today"
+                "name": "Today's Lowest Price"
+            },
+            "lowest_price_today_cents": {
+                "name": "Today's Lowest Price"
             },
             "highest_price_today": {
-                "name": "Highest Price Today"
+                "name": "Today's Highest Price"
+            },
+            "highest_price_today_cents": {
+                "name": "Today's Highest Price"
             },
             "average_price_today": {
-                "name": "Average Price Today"
+                "name": "Today's Average Price"
             },
-            "hourly_rating": {
-                "name": "Hourly Price Rating"
+            "average_price_today_cents": {
+                "name": "Today's Average Price"
+            },
+            "price_rating": {
+                "name": "Current Price Rating"
             },
             "daily_rating": {
                 "name": "Daily Price Rating"
@@ -68,10 +88,13 @@
                 "name": "Monthly Price Rating"
             },
             "data_timestamp": {
-                "name": "Price Forecast Horizon"
+                "name": "Latest Data Available"
             },
             "tomorrow_data_available": {
-                "name": "Tomorrow's Data Available"
+                "name": "Tomorrow's Data Status"
+            },
+            "price_forecast": {
+                "name": "Price Forecast"
             }
         },
         "binary_sensor": {
@@ -82,7 +105,7 @@
                 "name": "Best Price Hour"
             },
             "connection": {
-                "name": "Connection Status"
+                "name": "Tibber API Connection"
             }
         }
     }

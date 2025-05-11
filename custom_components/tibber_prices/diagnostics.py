@@ -15,9 +15,7 @@ if TYPE_CHECKING:
 TO_REDACT = {"access_token"}
 
 
-async def async_get_config_entry_diagnostics(
-    hass: HomeAssistant, entry: ConfigEntry
-) -> dict[str, Any]:
+async def async_get_config_entry_diagnostics(hass: HomeAssistant, entry: ConfigEntry) -> dict[str, Any]:
     """Return diagnostics for a config entry."""
     coordinator = hass.data[DOMAIN][entry.entry_id].coordinator
 
@@ -26,9 +24,7 @@ async def async_get_config_entry_diagnostics(
         "coordinator_data": coordinator.data,
         "last_update_success": coordinator.last_update_success,
         "update_timestamps": {
-            "price": coordinator.last_price_update.isoformat()
-            if coordinator.last_price_update
-            else None,
+            "price": coordinator.last_price_update.isoformat() if coordinator.last_price_update else None,
             "hourly_rating": coordinator.last_rating_update_hourly.isoformat()
             if coordinator.last_rating_update_hourly
             else None,
