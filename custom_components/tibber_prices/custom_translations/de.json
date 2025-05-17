@@ -116,29 +116,17 @@
         }
     },
     "binary_sensor": {
-        "peak_interval": {
-            "name": "Spitzenpreis-Intervall",
+        "peak_price_period": {
+            "name": "Spitzenpreis-Periode",
             "description": "Ob das aktuelle Intervall zu den teuersten des Tages gehört",
             "long_description": "Wird aktiviert, wenn der aktuelle Preis in den oberen 20% der heutigen Preise liegt",
             "usage_tips": "Nutze dies, um den Betrieb von Geräten mit hohem Verbrauch während teurer Intervalle zu vermeiden"
         },
-        "best_price_interval": {
-            "name": "Bestpreis-Intervall",
+        "best_price_period": {
+            "name": "Bestpreis-Periode",
             "description": "Ob das aktuelle Intervall zu den günstigsten des Tages gehört",
             "long_description": "Wird aktiviert, wenn der aktuelle Preis in den unteren 20% der heutigen Preise liegt",
             "usage_tips": "Nutze dies, um Geräte mit hohem Verbrauch während der günstigsten Intervalle zu betreiben"
-        },
-        "peak_hour": {
-            "name": "Spitzenstunde",
-            "description": "Ob die aktuelle Stunde zu den teuersten des Tages gehört",
-            "long_description": "Wird aktiviert, wenn der aktuelle Preis in den oberen 20% der heutigen Preise liegt",
-            "usage_tips": "Nutze dies, um den Betrieb von Geräten mit hohem Verbrauch während teurer Stunden zu vermeiden"
-        },
-        "best_price_hour": {
-            "name": "Beste-Preis-Stunde",
-            "description": "Ob die aktuelle Stunde zu den günstigsten des Tages gehört",
-            "long_description": "Wird aktiviert, wenn der aktuelle Preis in den unteren 20% der heutigen Preise liegt",
-            "usage_tips": "Nutze dies, um Geräte mit hohem Verbrauch während der günstigsten Stunden zu betreiben"
         },
         "connection": {
             "name": "Tibber API-Verbindung",

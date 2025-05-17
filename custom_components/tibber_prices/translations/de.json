@@ -5,7 +5,9 @@
                 "description": "Richte Tibber Preisinformationen & Bewertungen ein. Um ein API-Zugriffstoken zu generieren, besuche developer.tibber.com.",
                 "data": {
                     "access_token": "API-Zugriffstoken",
-                    "extended_descriptions": "Erweiterte Beschreibungen in Entitätsattributen anzeigen"
+                    "extended_descriptions": "Erweiterte Beschreibungen in Entitätsattributen anzeigen",
+                    "best_price_flex": "Flexibilität für Bestpreis (%)",
+                    "peak_price_flex": "Flexibilität für Spitzenpreis (%)"
                 },
                 "title": "Tibber Preisinformationen & Bewertungen"
             }
@@ -29,7 +31,9 @@
                 "description": "Konfiguriere Optionen für Tibber Preisinformationen & Bewertungen",
                 "data": {
                     "access_token": "Tibber Zugangstoken",
-                    "extended_descriptions": "Erweiterte Beschreibungen in Entitätsattributen anzeigen"
+                    "extended_descriptions": "Erweiterte Beschreibungen in Entitätsattributen anzeigen",
+                    "best_price_flex": "Flexibilität für Bestpreis (%)",
+                    "peak_price_flex": "Flexibilität für Spitzenpreis (%)"
                 }
             }
         },
@@ -83,11 +87,11 @@
             }
         },
         "binary_sensor": {
-            "peak_hour": {
-                "name": "Spitzenstunde"
+            "peak_price_period": {
+                "name": "Spitzenperiode"
             },
-            "best_price_hour": {
-                "name": "Beste-Preis-Stunde"
+            "best_price_period": {
+                "name": "Best-Preis-Periode"
             },
             "connection": {
                 "name": "Tibber API-Verbindung"

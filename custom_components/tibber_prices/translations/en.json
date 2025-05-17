@@ -5,7 +5,9 @@
                 "description": "Set up Tibber Price Information & Ratings. To generate an API access token, visit developer.tibber.com.",
                 "data": {
                     "access_token": "API access token",
-                    "extended_descriptions": "Show extended descriptions in entity attributes"
+                    "extended_descriptions": "Show extended descriptions in entity attributes",
+                    "best_price_flex": "Best Price Flexibility (%)",
+                    "peak_price_flex": "Peak Price Flexibility (%)"
                 },
                 "title": "Tibber Price Information & Ratings"
             }
@@ -20,7 +22,9 @@
         "abort": {
             "already_configured": "Integration is already configured",
             "entry_not_found": "Tibber configuration entry not found."
-        }
+        },
+        "best_price_flex": "Best Price Flexibility (%)",
+        "peak_price_flex": "Peak Price Flexibility (%)"
     },
     "options": {
         "step": {
@@ -29,7 +33,9 @@
                 "description": "Configure options for Tibber Price Information & Ratings",
                 "data": {
                     "access_token": "Tibber Access Token",
-                    "extended_descriptions": "Show extended descriptions in entity attributes"
+                    "extended_descriptions": "Show extended descriptions in entity attributes",
+                    "best_price_flex": "Best Price Flexibility (%)",
+                    "peak_price_flex": "Peak Price Flexibility (%)"
                 }
             }
         },
@@ -41,7 +47,9 @@
         },
         "abort": {
             "entry_not_found": "Tibber configuration entry not found."
-        }
+        },
+        "best_price_flex": "Best Price Flexibility (%)",
+        "peak_price_flex": "Peak Price Flexibility (%)"
     },
     "entity": {
         "sensor": {
@@ -98,11 +106,11 @@
             }
         },
         "binary_sensor": {
-            "peak_hour": {
-                "name": "Peak Hour"
+            "peak_price_period": {
+                "name": "Peak Price Period"
             },
-            "best_price_hour": {
-                "name": "Best Price Hour"
+            "best_price_period": {
+                "name": "Best Price Period"
             },
             "connection": {
                 "name": "Tibber API Connection"

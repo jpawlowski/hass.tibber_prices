@@ -17,8 +17,12 @@ from .api import (
     TibberPricesApiClientError,
 )
 from .const import (
+    CONF_BEST_PRICE_FLEX,
     CONF_EXTENDED_DESCRIPTIONS,
+    CONF_PEAK_PRICE_FLEX,
+    DEFAULT_BEST_PRICE_FLEX,
     DEFAULT_EXTENDED_DESCRIPTIONS,
+    DEFAULT_PEAK_PRICE_FLEX,
     DOMAIN,
     LOGGER,
 )
@@ -87,6 +91,28 @@ class TibberPricesFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                         CONF_EXTENDED_DESCRIPTIONS,
                         default=(user_input or {}).get(CONF_EXTENDED_DESCRIPTIONS, DEFAULT_EXTENDED_DESCRIPTIONS),
                     ): selector.BooleanSelector(),
+                    vol.Optional(
+                        CONF_BEST_PRICE_FLEX,
+                        default=(user_input or {}).get(CONF_BEST_PRICE_FLEX, DEFAULT_BEST_PRICE_FLEX),
+                    ): selector.NumberSelector(
+                        selector.NumberSelectorConfig(
+                            min=0,
+                            max=20,
+                            step=1,
+                            mode=selector.NumberSelectorMode.SLIDER,
+                        ),
+                    ),
+                    vol.Optional(
+                        CONF_PEAK_PRICE_FLEX,
+                        default=(user_input or {}).get(CONF_PEAK_PRICE_FLEX, DEFAULT_PEAK_PRICE_FLEX),
+                    ): selector.NumberSelector(
+                        selector.NumberSelectorConfig(
+                            min=0,
+                            max=20,
+                            step=1,
+                            mode=selector.NumberSelectorMode.SLIDER,
+                        ),
+                    ),
                 },
             ),
             errors=_errors,
@@ -105,10 +131,9 @@ class TibberPricesFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 class TibberPricesOptionsFlowHandler(config_entries.OptionsFlow):
     """Tibber Prices config flow options handler."""
 
-    def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
+    def __init__(self, _: config_entries.ConfigEntry) -> None:
         """Initialize options flow."""
         super().__init__()
-        self.config_entry = config_entry
 
     async def async_step_init(self, user_input: dict | None = None) -> config_entries.ConfigFlowResult:
         """Manage the options."""
@@ -162,6 +187,38 @@ class TibberPricesOptionsFlowHandler(config_entries.OptionsFlow):
                     self.config_entry.data.get(CONF_EXTENDED_DESCRIPTIONS, DEFAULT_EXTENDED_DESCRIPTIONS),
                 ),
             ): selector.BooleanSelector(),
+            vol.Optional(
+                CONF_BEST_PRICE_FLEX,
+                default=int(
+                    self.config_entry.options.get(
+                        CONF_BEST_PRICE_FLEX,
+                        self.config_entry.data.get(CONF_BEST_PRICE_FLEX, DEFAULT_BEST_PRICE_FLEX),
+                    )
+                ),
+            ): selector.NumberSelector(
+                selector.NumberSelectorConfig(
+                    min=0,
+                    max=100,
+                    step=1,
+                    mode=selector.NumberSelectorMode.SLIDER,
+                ),
+            ),
+            vol.Optional(
+                CONF_PEAK_PRICE_FLEX,
+                default=int(
+                    self.config_entry.options.get(
+                        CONF_PEAK_PRICE_FLEX,
+                        self.config_entry.data.get(CONF_PEAK_PRICE_FLEX, DEFAULT_PEAK_PRICE_FLEX),
+                    )
+                ),
+            ): selector.NumberSelector(
+                selector.NumberSelectorConfig(
+                    min=0,
+                    max=100,
+                    step=1,
+                    mode=selector.NumberSelectorMode.SLIDER,
+                ),
+            ),
         }
 
         return self.async_show_form(

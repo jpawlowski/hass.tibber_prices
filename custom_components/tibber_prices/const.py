@@ -16,6 +16,8 @@ VERSION = "0.1.0"
 DOMAIN = "tibber_prices"
 CONF_ACCESS_TOKEN = "access_token"  # noqa: S105
 CONF_EXTENDED_DESCRIPTIONS = "extended_descriptions"
+CONF_BEST_PRICE_FLEX = "best_price_flex"
+CONF_PEAK_PRICE_FLEX = "peak_price_flex"
 
 ATTRIBUTION = "Data provided by Tibber"
 
@@ -25,6 +27,8 @@ SCAN_INTERVAL = 60 * 5  # 5 minutes
 # Integration name should match manifest.json
 DEFAULT_NAME = "Tibber Price Information & Ratings"
 DEFAULT_EXTENDED_DESCRIPTIONS = False
+DEFAULT_BEST_PRICE_FLEX = 5  # 5% flexibility for best price (user-facing, percent)
+DEFAULT_PEAK_PRICE_FLEX = 5  # 5% flexibility for peak price (user-facing, percent)
 
 # Price level constants
 PRICE_LEVEL_NORMAL = "NORMAL"

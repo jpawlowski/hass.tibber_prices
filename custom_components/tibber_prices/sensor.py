@@ -13,7 +13,7 @@ from homeassistant.components.sensor import (
     SensorEntity,
     SensorEntityDescription,
 )
-from homeassistant.const import CURRENCY_CENT, CURRENCY_EURO, PERCENTAGE, EntityCategory, UnitOfPower, UnitOfTime
+from homeassistant.const import CURRENCY_EURO, PERCENTAGE, EntityCategory, UnitOfPower, UnitOfTime
 from homeassistant.util import dt as dt_util
 
 from .const import (
@@ -36,7 +36,7 @@ if TYPE_CHECKING:
     from .coordinator import TibberPricesDataUpdateCoordinator
     from .data import TibberPricesConfigEntry
 
-PRICE_UNIT_CENT = CURRENCY_CENT + "/" + UnitOfPower.KILO_WATT + UnitOfTime.HOURS
+PRICE_UNIT_CENT = "ct/" + UnitOfPower.KILO_WATT + UnitOfTime.HOURS
 PRICE_UNIT_EURO = CURRENCY_EURO + "/" + UnitOfPower.KILO_WATT + UnitOfTime.HOURS
 HOURS_IN_DAY = 24
 LAST_HOUR_OF_DAY = 23

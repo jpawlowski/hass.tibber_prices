@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import datetime, timedelta
 from typing import TYPE_CHECKING
 
 from homeassistant.components.binary_sensor import (
@@ -10,7 +10,7 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
     BinarySensorEntityDescription,
 )
-from homeassistant.const import EntityCategory
+from homeassistant.const import PERCENTAGE, EntityCategory
 from homeassistant.util import dt as dt_util
 
 from .entity import TibberPricesEntity
@@ -25,16 +25,23 @@ if TYPE_CHECKING:
     from .coordinator import TibberPricesDataUpdateCoordinator
     from .data import TibberPricesConfigEntry
 
+from .const import (
+    CONF_BEST_PRICE_FLEX,
+    CONF_PEAK_PRICE_FLEX,
+    DEFAULT_BEST_PRICE_FLEX,
+    DEFAULT_PEAK_PRICE_FLEX,
+)
+
 ENTITY_DESCRIPTIONS = (
     BinarySensorEntityDescription(
-        key="peak_interval",
-        translation_key="peak_interval",
+        key="peak_price_period",
+        translation_key="peak_price_period",
         name="Peak Price Interval",
         icon="mdi:clock-alert",
     ),
     BinarySensorEntityDescription(
-        key="best_price_interval",
-        translation_key="best_price_interval",
+        key="best_price_period",
+        translation_key="best_price_period",
         name="Best Price Interval",
         icon="mdi:clock-check",
     ),
@@ -82,25 +89,70 @@ class TibberPricesBinarySensor(TibberPricesEntity, BinarySensorEntity):
         """Return the appropriate state getter method based on the sensor type."""
         key = self.entity_description.key
 
-        if key == "peak_interval":
-            return lambda: self._get_price_threshold_state(threshold_percentage=0.8, high_is_active=True)
-        if key == "best_price_interval":
-            return lambda: self._get_price_threshold_state(threshold_percentage=0.2, high_is_active=False)
+        if key == "peak_price_period":
+            return self._peak_price_state
+        if key == "best_price_period":
+            return self._best_price_state
         if key == "connection":
             return lambda: True if self.coordinator.data else None
 
         return None
 
+    def _get_flex_option(self, option_key: str, default: float) -> float:
+        """Get a float option from config entry options or fallback to default. Accepts 0-100."""
+        options = self.coordinator.config_entry.options
+        data = self.coordinator.config_entry.data
+        value = options.get(option_key, data.get(option_key, default))
+        try:
+            value = float(value) / 100
+        except (TypeError, ValueError):
+            value = default
+        return value
+
+    def _best_price_state(self) -> bool | None:
+        """Return True if current price is within +flex% of the day's minimum price."""
+        price_data = self._get_current_price_data()
+        if not price_data:
+            return None
+        prices, current_price = price_data
+        min_price = min(prices)
+        flex = self._get_flex_option(CONF_BEST_PRICE_FLEX, DEFAULT_BEST_PRICE_FLEX)
+        threshold = min_price * (1 + flex)
+        return current_price <= threshold
+
+    def _peak_price_state(self) -> bool | None:
+        """Return True if current price is within -flex% of the day's maximum price."""
+        price_data = self._get_current_price_data()
+        if not price_data:
+            return None
+        prices, current_price = price_data
+        max_price = max(prices)
+        flex = self._get_flex_option(CONF_PEAK_PRICE_FLEX, DEFAULT_PEAK_PRICE_FLEX)
+        threshold = max_price * (1 - flex)
+        return current_price >= threshold
+
+    def _get_price_threshold_state(self, *, threshold_percentage: float, high_is_active: bool) -> bool | None:
+        """Deprecate: use _best_price_state or _peak_price_state for those sensors."""
+        price_data = self._get_current_price_data()
+        if not price_data:
+            return None
+
+        prices, current_price = price_data
+        threshold_index = int(len(prices) * threshold_percentage)
+
+        if high_is_active:
+            return current_price >= prices[threshold_index]
+
+        return current_price <= prices[threshold_index]
+
     def _get_attribute_getter(self) -> Callable | None:
         """Return the appropriate attribute getter method based on the sensor type."""
         key = self.entity_description.key
 
-        if key == "peak_interval":
-            return lambda: self._get_price_intervals_attributes(attribute_name="peak_intervals", reverse_sort=True)
-        if key == "best_price_interval":
-            return lambda: self._get_price_intervals_attributes(
-                attribute_name="best_price_intervals", reverse_sort=False
-            )
+        if key == "peak_price_period":
+            return lambda: self._get_price_intervals_attributes(reverse_sort=True)
+        if key == "best_price_period":
+            return lambda: self._get_price_intervals_attributes(reverse_sort=False)
 
         return None
 
@@ -130,33 +182,93 @@ class TibberPricesBinarySensor(TibberPricesEntity, BinarySensorEntity):
         prices.sort()
         return prices, float(current_interval_data["total"])
 
-    def _get_price_threshold_state(self, *, threshold_percentage: float, high_is_active: bool) -> bool | None:
+    def _annotate_period_intervals(
+        self,
+        periods: list[list[dict]],
+        ref_price: float,
+        avg_price: float,
+        interval_minutes: int,
+    ) -> list[dict]:
+        """Return flattened and annotated intervals with period info and requested properties."""
+        # Determine reference type for naming
+        reference_type = None
+        if self.entity_description.key == "best_price_period":
+            reference_type = "min"
+        elif self.entity_description.key == "peak_price_period":
+            reference_type = "max"
+        else:
+            reference_type = "ref"
+        # Set attribute name suffixes
+        if reference_type == "min":
+            diff_key = "price_diff_from_min"
+            diff_ct_key = "price_diff_from_min_ct"
+            diff_pct_key = "price_diff_from_min_" + PERCENTAGE
+        elif reference_type == "max":
+            diff_key = "price_diff_from_max"
+            diff_ct_key = "price_diff_from_max_ct"
+            diff_pct_key = "price_diff_from_max_" + PERCENTAGE
+        else:
+            diff_key = "price_diff"
+            diff_ct_key = "price_diff_ct"
+            diff_pct_key = "price_diff_" + PERCENTAGE
+        result = []
+        period_count = len(periods)
+        for idx, period in enumerate(periods, 1):
+            period_start = period[0]["interval_start"] if period else None
+            period_start_hour = period_start.hour if period_start else None
+            period_start_minute = period_start.minute if period_start else None
+            period_start_time = f"{period_start_hour:02d}:{period_start_minute:02d}" if period_start else None
+            period_end = period[-1]["interval_end"] if period else None
+            interval_count = len(period)
+            period_length = interval_count * interval_minutes
+            periods_remaining = len(periods) - idx
+            for interval_idx, interval in enumerate(period, 1):
+                interval_copy = interval.copy()
+                interval_remaining = interval_count - interval_idx
+                # Compose new dict with period-related keys first, then interval timing, then price info
+                new_interval = {
+                    "period_start": period_start,
+                    "period_end": period_end,
+                    "hour": period_start_hour,
+                    "minute": period_start_minute,
+                    "time": period_start_time,
+                    "period_length_minute": period_length,
+                    "period_remaining_minute_after_interval": interval_remaining * interval_minutes,
+                    "periods_total": period_count,
+                    "periods_remaining": periods_remaining,
+                    "interval_total": interval_count,
+                    "interval_remaining": interval_remaining,
+                    "interval_position": interval_idx,
+                }
+                # Add interval timing
+                new_interval["interval_start"] = interval_copy.pop("interval_start", None)
+                new_interval["interval_end"] = interval_copy.pop("interval_end", None)
+                # Add hour, minute, time, price if present in interval_copy
+                for k in ("interval_hour", "interval_minute", "interval_time", "price"):
+                    if k in interval_copy:
+                        new_interval[k] = interval_copy.pop(k)
+                # Add the rest of the interval info (e.g. price_ct, price_difference_*, etc.)
+                new_interval.update(interval_copy)
+                new_interval["price_ct"] = round(new_interval["price"] * 100, 2)
+                price_diff = new_interval["price"] - ref_price
+                new_interval[diff_key] = round(price_diff, 4)
+                new_interval[diff_ct_key] = round(price_diff * 100, 2)
+                price_diff_percent = ((new_interval["price"] - ref_price) / ref_price) * 100 if ref_price != 0 else 0.0
+                new_interval[diff_pct_key] = round(price_diff_percent, 2)
+                # Add difference to average price of the day (avg_price is now passed in)
+                avg_diff = new_interval["price"] - avg_price
+                new_interval["price_diff_from_avg"] = round(avg_diff, 4)
+                new_interval["price_diff_from_avg_ct"] = round(avg_diff * 100, 2)
+                avg_diff_percent = ((new_interval["price"] - avg_price) / avg_price) * 100 if avg_price != 0 else 0.0
+                new_interval["price_diff_from_avg_" + PERCENTAGE] = round(avg_diff_percent, 2)
+                result.append(new_interval)
+        return result
+
+    def _get_price_intervals_attributes(self, *, reverse_sort: bool) -> dict | None:
         """
-        Determine if current price is above/below threshold.
+        Get price interval attributes with support for 15-minute intervals and period grouping.
 
         Args:
-            threshold_percentage: The percentage point in the sorted list (0.0-1.0)
-            high_is_active: If True, value >= threshold is active, otherwise value <= threshold is active
-
-        """
-        price_data = self._get_current_price_data()
-        if not price_data:
-            return None
-
-        prices, current_price = price_data
-        threshold_index = int(len(prices) * threshold_percentage)
-
-        if high_is_active:
-            return current_price >= prices[threshold_index]
-
-        return current_price <= prices[threshold_index]
-
-    def _get_price_intervals_attributes(self, *, attribute_name: str, reverse_sort: bool) -> dict | None:
-        """
-        Get price interval attributes with support for 15-minute intervals.
-
-        Args:
-            attribute_name: The attribute name to use in the result dictionary
             reverse_sort: Whether to sort prices in reverse (high to low)
 
         Returns:
@@ -172,51 +284,91 @@ class TibberPricesBinarySensor(TibberPricesEntity, BinarySensorEntity):
         if not today_prices:
             return None
 
-        # Detect the granularity of the data
         interval_minutes = detect_interval_granularity(today_prices)
 
-        # Build a list of price data with timestamps and values
-        price_intervals = []
+        # Use entity type to determine flex and logic, but always use 'price_intervals' as attribute name
+        if reverse_sort is False:  # best_price_period entity
+            flex = self._get_flex_option(CONF_BEST_PRICE_FLEX, DEFAULT_BEST_PRICE_FLEX)
+            prices = [float(p["total"]) for p in today_prices]
+            min_price = min(prices)
+
+            def in_range(price: float) -> bool:
+                return price <= min_price * (1 + flex)
+
+            ref_price = min_price
+        elif reverse_sort is True:  # peak_price_period entity
+            flex = self._get_flex_option(CONF_PEAK_PRICE_FLEX, DEFAULT_PEAK_PRICE_FLEX)
+            prices = [float(p["total"]) for p in today_prices]
+            max_price = max(prices)
+
+            def in_range(price: float) -> bool:
+                return price >= max_price * (1 - flex)
+
+            ref_price = max_price
+        else:
+            return None
+
+        # Calculate average price for the day (all intervals, not just periods)
+        all_prices = [float(p["total"]) for p in today_prices]
+        avg_price = sum(all_prices) / len(all_prices) if all_prices else 0.0
+
+        # Build intervals with period grouping
+        periods = []
+        current_period = []
         for price_data in today_prices:
             starts_at = dt_util.parse_datetime(price_data["startsAt"])
             if starts_at is None:
                 continue
-
             starts_at = dt_util.as_local(starts_at)
-            price_intervals.append(
-                {
-                    "starts_at": starts_at,
-                    "price": float(price_data["total"]),
-                    "hour": starts_at.hour,
-                    "minute": starts_at.minute,
-                }
-            )
-
-        # Sort by price (high to low for peak, low to high for best)
-        sorted_intervals = sorted(price_intervals, key=lambda x: x["price"], reverse=reverse_sort)[:5]
-
-        # Format the result based on granularity
-        hourly_interval_minutes = 60
-        result = []
-        for interval in sorted_intervals:
-            if interval_minutes < hourly_interval_minutes:  # More granular than hourly
-                result.append(
+            price = float(price_data["total"])
+            if in_range(price):
+                current_period.append(
                     {
-                        "hour": interval["hour"],
-                        "minute": interval["minute"],
-                        "time": f"{interval['hour']:02d}:{interval['minute']:02d}",
-                        "price": interval["price"],
+                        "interval_hour": starts_at.hour,
+                        "interval_minute": starts_at.minute,
+                        "interval_time": f"{starts_at.hour:02d}:{starts_at.minute:02d}",
+                        "price": price,
+                        "interval_start": starts_at,
+                        # interval_end will be filled later
                     }
                 )
-            else:  # Hourly data (for backward compatibility)
-                result.append(
-                    {
-                        "hour": interval["hour"],
-                        "price": interval["price"],
-                    }
-                )
+            elif current_period:
+                periods.append(current_period)
+                current_period = []
+        if current_period:
+            periods.append(current_period)
 
-        return {attribute_name: result}
+        # Add interval_end to each interval (next interval's start or None)
+        for period in periods:
+            for idx, interval in enumerate(period):
+                if idx + 1 < len(period):
+                    interval["interval_end"] = period[idx + 1]["interval_start"]
+                else:
+                    # Try to estimate end as start + interval_minutes
+                    interval["interval_end"] = interval["interval_start"] + timedelta(minutes=interval_minutes)
+
+        result = self._annotate_period_intervals(periods, ref_price, avg_price, interval_minutes)
+
+        # Find the current or next interval (by time) from the annotated result
+        now = dt_util.now()
+        current_interval = None
+        for interval in result:
+            start = interval.get("interval_start")
+            end = interval.get("interval_end")
+            if start and end and start <= now < end:
+                current_interval = interval.copy()
+                break
+        else:
+            # If no current interval, show the next period's first interval (if available)
+            for interval in result:
+                start = interval.get("interval_start")
+                if start and start > now:
+                    current_interval = interval.copy()
+                    break
+
+        attributes = {**current_interval} if current_interval else {}
+        attributes["intervals"] = result
+        return attributes
 
     def _get_price_hours_attributes(self, *, attribute_name: str, reverse_sort: bool) -> dict | None:
         """Get price hours attributes."""
