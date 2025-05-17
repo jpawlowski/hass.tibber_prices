@@ -170,133 +170,11 @@ class TibberPricesDataUpdateCoordinator(DataUpdateCoordinator[TibberPricesData])
             async_track_time_change(hass, self._async_refresh_hourly, minute=0, second=0)
         )
 
-        # Schedule data rotation at midnight
-        self._remove_update_listeners.append(
-            async_track_time_change(hass, self._async_handle_midnight_rotation, hour=0, minute=0, second=0)
-        )
-
     async def async_shutdown(self) -> None:
         """Clean up coordinator on shutdown."""
         await super().async_shutdown()
         for listener in self._remove_update_listeners:
             listener()
-
-    async def _async_handle_midnight_rotation(self, _now: datetime | None = None) -> None:
-        """Handle data rotation at midnight."""
-        if not self._cached_price_data:
-            LOGGER.debug("No cached price data available for midnight rotation")
-            return
-
-        async with self._rotation_lock:  # Ensure rotation operations are protected
-            try:
-                LOGGER.debug("Starting midnight data rotation")
-                subscription = self._cached_price_data["data"]["viewer"]["homes"][0]["currentSubscription"]
-                price_info = subscription["priceInfo"]
-
-                # Move today's data to yesterday
-                if today_data := price_info.get("today"):
-                    LOGGER.debug("Moving today's data (%d entries) to yesterday", len(today_data))
-                    price_info["yesterday"] = today_data
-                else:
-                    LOGGER.debug("No today's data available to move to yesterday")
-
-                # Move tomorrow's data to today
-                if tomorrow_data := price_info.get("tomorrow"):
-                    LOGGER.debug("Moving tomorrow's data (%d entries) to today", len(tomorrow_data))
-                    price_info["today"] = tomorrow_data
-                    price_info["tomorrow"] = []
-                else:
-                    LOGGER.warning("No tomorrow's data available to move to today, clearing today's data")
-                    price_info["today"] = []
-
-                # Store the rotated data
-                await self._store_cache()
-                LOGGER.debug("Completed midnight data rotation")
-
-                # No need to schedule immediate refresh - tomorrow's data won't be available yet
-                # We'll wait for the regular update cycle between 13:00-15:00
-
-            except (KeyError, TypeError, ValueError) as ex:
-                LOGGER.error("Error during midnight data rotation: %s", ex)
-
-    @callback
-    def _recover_timestamp(
-        self,
-        data: TibberPricesData | None,
-        stored_timestamp: str | None,
-        rating_type: str | None = None,
-    ) -> datetime | None:
-        """Recover timestamp from data or stored value."""
-        if stored_timestamp:
-            return dt_util.parse_datetime(stored_timestamp)
-
-        if not data:
-            return None
-
-        if rating_type:
-            timestamp = self._get_latest_timestamp_from_rating_type(data, rating_type)
-        else:
-            timestamp = _get_latest_timestamp_from_prices(data)
-
-        if timestamp:
-            LOGGER.debug(
-                "Recovered %s timestamp from data: %s",
-                rating_type or "price",
-                timestamp,
-            )
-        else:
-            return None
-
-        return timestamp
-
-    async def _async_initialize(self) -> None:
-        """Load stored data."""
-        stored = await self._store.async_load()
-        if stored is None:
-            LOGGER.warning("No cache file found or cache is empty on startup.")
-        else:
-            LOGGER.debug("Loading stored data: %s", stored)
-
-        if stored:
-            # Load cached data
-            self._cached_price_data = cast("TibberPricesData", stored.get("price_data"))
-            self._cached_rating_data_hourly = cast("TibberPricesData", stored.get("rating_data_hourly"))
-            self._cached_rating_data_daily = cast("TibberPricesData", stored.get("rating_data_daily"))
-            self._cached_rating_data_monthly = cast("TibberPricesData", stored.get("rating_data_monthly"))
-
-            # Recover timestamps
-            self._last_price_update = self._recover_timestamp(self._cached_price_data, stored.get("last_price_update"))
-            self._last_rating_update_hourly = self._recover_timestamp(
-                self._cached_rating_data_hourly,
-                stored.get("last_rating_update_hourly"),
-                "hourly",
-            )
-            self._last_rating_update_daily = self._recover_timestamp(
-                self._cached_rating_data_daily,
-                stored.get("last_rating_update_daily"),
-                "daily",
-            )
-            self._last_rating_update_monthly = self._recover_timestamp(
-                self._cached_rating_data_monthly,
-                stored.get("last_rating_update_monthly"),
-                "monthly",
-            )
-
-            LOGGER.debug(
-                "Loaded stored cache data - Price update: %s, Rating hourly: %s, daily: %s, monthly: %s",
-                self._last_price_update,
-                self._last_rating_update_hourly,
-                self._last_rating_update_daily,
-                self._last_rating_update_monthly,
-            )
-
-            # Defensive: warn if any required data is missing
-            if self._cached_price_data is None:
-                LOGGER.warning("Cached price data missing after cache load!")
-            if self._last_price_update is None:
-                LOGGER.warning("Price update timestamp missing after cache load!")
-        else:
-            LOGGER.info("No cache loaded; will fetch fresh data on first update.")
 
     async def _async_refresh_hourly(self, now: datetime | None = None) -> None:
         """
@@ -990,3 +868,82 @@ class TibberPricesDataUpdateCoordinator(DataUpdateCoordinator[TibberPricesData])
         min_tomorrow_intervals_15min = 96
         tomorrow_interval_counts = {min_tomorrow_intervals_hourly, min_tomorrow_intervals_15min}
         return interval_count in tomorrow_interval_counts
+
+    async def _async_initialize(self) -> None:
+        """Load stored data."""
+        stored = await self._store.async_load()
+        if stored is None:
+            LOGGER.warning("No cache file found or cache is empty on startup.")
+        else:
+            LOGGER.debug("Loading stored data: %s", stored)
+
+        if stored:
+            # Load cached data
+            self._cached_price_data = cast("TibberPricesData", stored.get("price_data"))
+            self._cached_rating_data_hourly = cast("TibberPricesData", stored.get("rating_data_hourly"))
+            self._cached_rating_data_daily = cast("TibberPricesData", stored.get("rating_data_daily"))
+            self._cached_rating_data_monthly = cast("TibberPricesData", stored.get("rating_data_monthly"))
+
+            # Recover timestamps
+            self._last_price_update = self._recover_timestamp(self._cached_price_data, stored.get("last_price_update"))
+            self._last_rating_update_hourly = self._recover_timestamp(
+                self._cached_rating_data_hourly,
+                stored.get("last_rating_update_hourly"),
+                "hourly",
+            )
+            self._last_rating_update_daily = self._recover_timestamp(
+                self._cached_rating_data_daily,
+                stored.get("last_rating_update_daily"),
+                "daily",
+            )
+            self._last_rating_update_monthly = self._recover_timestamp(
+                self._cached_rating_data_monthly,
+                stored.get("last_rating_update_monthly"),
+                "monthly",
+            )
+
+            LOGGER.debug(
+                "Loaded stored cache data - Price update: %s, Rating hourly: %s, daily: %s, monthly: %s",
+                self._last_price_update,
+                self._last_rating_update_hourly,
+                self._last_rating_update_daily,
+                self._last_rating_update_monthly,
+            )
+
+            # Defensive: warn if any required data is missing
+            if self._cached_price_data is None:
+                LOGGER.warning("Cached price data missing after cache load!")
+            if self._last_price_update is None:
+                LOGGER.warning("Price update timestamp missing after cache load!")
+        else:
+            LOGGER.info("No cache loaded; will fetch fresh data on first update.")
+
+    @callback
+    def _recover_timestamp(
+        self,
+        data: TibberPricesData | None,
+        stored_timestamp: str | None,
+        rating_type: str | None = None,
+    ) -> datetime | None:
+        """Recover timestamp from data or stored value."""
+        if stored_timestamp:
+            return dt_util.parse_datetime(stored_timestamp)
+
+        if not data:
+            return None
+
+        if rating_type:
+            timestamp = self._get_latest_timestamp_from_rating_type(data, rating_type)
+        else:
+            timestamp = _get_latest_timestamp_from_prices(data)
+
+        if timestamp:
+            LOGGER.debug(
+                "Recovered %s timestamp from data: %s",
+                rating_type or "price",
+                timestamp,
+            )
+        else:
+            return None
+
+        return timestamp
