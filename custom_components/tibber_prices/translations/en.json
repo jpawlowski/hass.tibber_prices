@@ -98,9 +98,6 @@
             "data_timestamp": {
                 "name": "Latest Data Available"
             },
-            "tomorrow_data_available": {
-                "name": "Tomorrow's Data Status"
-            },
             "price_forecast": {
                 "name": "Price Forecast"
             }
@@ -114,6 +111,9 @@
             },
             "connection": {
                 "name": "Tibber API Connection"
+            },
+            "tomorrow_data_available": {
+                "name": "Tomorrow's Data Available"
             }
         }
     }

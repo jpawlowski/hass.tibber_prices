@@ -186,13 +186,6 @@ DIAGNOSTIC_SENSORS = (
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     SensorEntityDescription(
-        key="tomorrow_data_available",
-        translation_key="tomorrow_data_available",
-        name="Tomorrow's Data Status",
-        icon="mdi:calendar-check",
-        entity_category=EntityCategory.DIAGNOSTIC,
-    ),
-    SensorEntityDescription(
         key="price_forecast",
         translation_key="price_forecast",
         name="Price Forecast",
@@ -270,7 +263,6 @@ class TibberPricesSensor(TibberPricesEntity, SensorEntity):
             "monthly_rating": lambda: self._get_rating_value(rating_type="monthly"),
             # Diagnostic sensors
             "data_timestamp": self._get_data_timestamp,
-            "tomorrow_data_available": self._get_tomorrow_data_status,
             # Price forecast sensor
             "price_forecast": self._get_price_forecast_value,
         }
@@ -278,16 +270,8 @@ class TibberPricesSensor(TibberPricesEntity, SensorEntity):
         return handlers.get(key)
 
     def _get_current_interval_data(self) -> dict | None:
-        """Get the price data for the current interval using adaptive interval detection."""
-        if not self.coordinator.data:
-            return None
-
-        # Get the current time and price info
-        now = dt_util.now()
-        price_info = self.coordinator.data["data"]["viewer"]["homes"][0]["currentSubscription"]["priceInfo"]
-
-        # Use our adaptive price data finder
-        return find_price_data_for_interval(price_info, now)
+        """Get the price data for the current interval using coordinator utility."""
+        return self.coordinator.get_current_interval_data()
 
     def _get_price_level_value(self) -> str | None:
         """
@@ -301,7 +285,6 @@ class TibberPricesSensor(TibberPricesEntity, SensorEntity):
         """
         current_interval_data = self._get_current_interval_data()
         if not current_interval_data or "level" not in current_interval_data:
-            self._last_price_level = None
             return None
         level = current_interval_data["level"]
         self._last_price_level = level
@@ -384,23 +367,31 @@ class TibberPricesSensor(TibberPricesEntity, SensorEntity):
         if not self.coordinator.data:
             return None
 
-        price_info = self.coordinator.data["data"]["viewer"]["homes"][0]["currentSubscription"]["priceInfo"]
+        # Use coordinator utility for all intervals and granularity
+        all_intervals = self.coordinator.get_all_intervals()
+        granularity = self.coordinator.get_interval_granularity()
+        if not all_intervals or granularity is None:
+            return None
 
-        # Determine data granularity
-        today_prices = price_info.get("today", [])
-        data_granularity = detect_interval_granularity(today_prices) if today_prices else MINUTES_PER_INTERVAL
-
-        # Use HomeAssistant's dt_util to get the current time in the user's timezone
         now = dt_util.now()
 
-        # Calculate the target time based on detected granularity
-        target_datetime = now + timedelta(minutes=interval_offset * data_granularity)
+        # Find the current interval index
+        current_idx = None
+        for idx, interval in enumerate(all_intervals):
+            starts_at = interval.get("startsAt")
+            if starts_at:
+                ts = dt_util.parse_datetime(starts_at)
+                if ts and ts <= now < ts + timedelta(minutes=granularity):
+                    current_idx = idx
+                    break
 
-        # Find appropriate price data
-        price_data = find_price_data_for_interval(price_info, target_datetime, data_granularity)
+        if current_idx is None:
+            return None
 
-        if price_data:
-            return self._get_price_value(float(price_data["total"]), in_euro=in_euro)
+        target_idx = current_idx + interval_offset
+        if 0 <= target_idx < len(all_intervals):
+            price = float(all_intervals[target_idx]["total"])
+            return price if in_euro else round(price * 100, 2)
 
         return None
 
@@ -549,18 +540,6 @@ class TibberPricesSensor(TibberPricesEntity, SensorEntity):
                     latest_timestamp = timestamp
 
         return dt_util.as_utc(latest_timestamp) if latest_timestamp else None
-
-    def _get_tomorrow_data_status(self) -> str | None:
-        """Get tomorrow's data availability status."""
-        if not self.coordinator.data:
-            return None
-
-        price_info = self.coordinator.data["data"]["viewer"]["homes"][0]["currentSubscription"]["priceInfo"]
-        tomorrow_prices = price_info.get("tomorrow", [])
-
-        if not tomorrow_prices:
-            return "No"
-        return "Yes" if len(tomorrow_prices) == HOURS_IN_DAY else "Partial"
 
     # Add method to get future price intervals
     def _get_price_forecast_value(self) -> str | None:
@@ -869,9 +848,7 @@ class TibberPricesSensor(TibberPricesEntity, SensorEntity):
             # Group sensors by type and delegate to specific handlers
             if key in ["current_price", "current_price_eur", "price_level"]:
                 self._add_current_price_attributes(attributes)
-            elif any(
-                pattern in key for pattern in ["_price_today", "rating", "data_timestamp", "tomorrow_data_available"]
-            ):
+            elif any(pattern in key for pattern in ["_price_today", "rating", "data_timestamp"]):
                 self._add_statistics_attributes(attributes)
             elif key == "price_forecast":
                 self._add_price_forecast_attributes(attributes)

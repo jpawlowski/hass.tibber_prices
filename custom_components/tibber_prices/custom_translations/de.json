@@ -102,12 +102,6 @@
             "long_description": "Zeigt den Zeitstempel des letzten Preisaktualisierung von Tibber",
             "usage_tips": "Nutze dies, um zu überprüfen, wann die Preisinformationen zuletzt aktualisiert wurden"
         },
-        "tomorrow_data_available": {
-            "name": "Datenstatus für morgen",
-            "description": "Ob Preisdaten für morgen verfügbar sind",
-            "long_description": "Gibt an, ob Preisdaten für den folgenden Tag von Tibber empfangen wurden",
-            "usage_tips": "Nutze dies, um zu überprüfen, ob die Preise für morgen für die Planung verfügbar sind"
-        },
         "price_forecast": {
             "name": "Preisprognose",
             "description": "Prognose der kommenden Strompreise",
@@ -116,6 +110,12 @@
         }
     },
     "binary_sensor": {
+        "tomorrow_data_available": {
+            "name": "Datenstatus für morgen",
+            "description": "Ob Preisdaten für morgen verfügbar sind",
+            "long_description": "Gibt an, ob Preisdaten für den folgenden Tag von Tibber empfangen wurden",
+            "usage_tips": "Nutze dies, um zu überprüfen, ob die Preise für morgen für die Planung verfügbar sind"
+        },
         "peak_price_period": {
             "name": "Spitzenpreis-Periode",
             "description": "Ob das aktuelle Intervall zu den teuersten des Tages gehört",

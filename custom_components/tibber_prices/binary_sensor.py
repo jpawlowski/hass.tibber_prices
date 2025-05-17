@@ -32,6 +32,10 @@ from .const import (
     DEFAULT_PEAK_PRICE_FLEX,
 )
 
+MIN_TOMORROW_INTERVALS_HOURLY = 24
+MIN_TOMORROW_INTERVALS_15MIN = 96
+TOMORROW_INTERVAL_COUNTS = {MIN_TOMORROW_INTERVALS_HOURLY, MIN_TOMORROW_INTERVALS_15MIN}
+
 ENTITY_DESCRIPTIONS = (
     BinarySensorEntityDescription(
         key="peak_price_period",
@@ -50,6 +54,13 @@ ENTITY_DESCRIPTIONS = (
         translation_key="connection",
         name="Tibber API Connection",
         device_class=BinarySensorDeviceClass.CONNECTIVITY,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    BinarySensorEntityDescription(
+        key="tomorrow_data_available",
+        translation_key="tomorrow_data_available",
+        name="Tomorrow's Data Available",
+        icon="mdi:calendar-check",
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
 )
@@ -95,6 +106,8 @@ class TibberPricesBinarySensor(TibberPricesEntity, BinarySensorEntity):
             return self._best_price_state
         if key == "connection":
             return lambda: True if self.coordinator.data else None
+        if key == "tomorrow_data_available":
+            return self._tomorrow_data_available_state
 
         return None
 
@@ -131,19 +144,32 @@ class TibberPricesBinarySensor(TibberPricesEntity, BinarySensorEntity):
         threshold = max_price * (1 - flex)
         return current_price >= threshold
 
-    def _get_price_threshold_state(self, *, threshold_percentage: float, high_is_active: bool) -> bool | None:
-        """Deprecate: use _best_price_state or _peak_price_state for those sensors."""
-        price_data = self._get_current_price_data()
-        if not price_data:
+    def _tomorrow_data_available_state(self) -> bool | None:
+        """Return True if tomorrow's data is fully available, False if not, None if unknown."""
+        if not self.coordinator.data:
             return None
+        price_info = self.coordinator.data["data"]["viewer"]["homes"][0]["currentSubscription"]["priceInfo"]
+        tomorrow_prices = price_info.get("tomorrow", [])
+        interval_count = len(tomorrow_prices)
+        return interval_count in TOMORROW_INTERVAL_COUNTS
 
-        prices, current_price = price_data
-        threshold_index = int(len(prices) * threshold_percentage)
-
-        if high_is_active:
-            return current_price >= prices[threshold_index]
-
-        return current_price <= prices[threshold_index]
+    def _get_tomorrow_data_available_attributes(self) -> dict | None:
+        """Return attributes for tomorrow_data_available binary sensor."""
+        if not self.coordinator.data:
+            return None
+        price_info = self.coordinator.data["data"]["viewer"]["homes"][0]["currentSubscription"]["priceInfo"]
+        tomorrow_prices = price_info.get("tomorrow", [])
+        interval_count = len(tomorrow_prices)
+        if interval_count == 0:
+            status = "none"
+        elif interval_count in TOMORROW_INTERVAL_COUNTS:
+            status = "full"
+        else:
+            status = "partial"
+        return {
+            "intervals_available": interval_count,
+            "status": status,
+        }
 
     def _get_attribute_getter(self) -> Callable | None:
         """Return the appropriate attribute getter method based on the sensor type."""
@@ -153,6 +179,8 @@ class TibberPricesBinarySensor(TibberPricesEntity, BinarySensorEntity):
             return lambda: self._get_price_intervals_attributes(reverse_sort=True)
         if key == "best_price_period":
             return lambda: self._get_price_intervals_attributes(reverse_sort=False)
+        if key == "tomorrow_data_available":
+            return self._get_tomorrow_data_available_attributes
 
         return None
 
@@ -187,17 +215,16 @@ class TibberPricesBinarySensor(TibberPricesEntity, BinarySensorEntity):
         interval: dict,
         annotation_ctx: dict,
     ) -> dict:
-        """Annotate a single interval with all required attributes."""
+        """Annotate a single interval with all required attributes for Home Assistant UI and automations."""
         interval_copy = interval.copy()
         interval_remaining = annotation_ctx["interval_count"] - annotation_ctx["interval_idx"]
-        # Extract all interval-related fields first
+        # Extract interval-related fields for attribute ordering and clarity
         interval_start = interval_copy.pop("interval_start", None)
         interval_end = interval_copy.pop("interval_end", None)
         interval_hour = interval_copy.pop("interval_hour", None)
         interval_minute = interval_copy.pop("interval_minute", None)
         interval_time = interval_copy.pop("interval_time", None)
         interval_length_minute = interval_copy.pop("interval_length_minute", annotation_ctx["interval_length"])
-        # Extract price
         price = interval_copy.pop("price", None)
         new_interval = {
             "period_start": annotation_ctx["period_start"],
@@ -221,18 +248,20 @@ class TibberPricesBinarySensor(TibberPricesEntity, BinarySensorEntity):
             "interval_length_minute": interval_length_minute,
             "price": price,
         }
-        # Add any remaining fields (should be only extra/unknowns)
+        # Merge any extra fields from the original interval (future-proofing)
         new_interval.update(interval_copy)
         new_interval["price_ct"] = round(new_interval["price"] * 100, 2)
         price_diff = new_interval["price"] - annotation_ctx["ref_price"]
         new_interval[annotation_ctx["diff_key"]] = round(price_diff, 4)
         new_interval[annotation_ctx["diff_ct_key"]] = round(price_diff * 100, 2)
+        # Calculate percent difference from reference price (min or max)
         price_diff_percent = (
             ((new_interval["price"] - annotation_ctx["ref_price"]) / annotation_ctx["ref_price"]) * 100
             if annotation_ctx["ref_price"] != 0
             else 0.0
         )
         new_interval[annotation_ctx["diff_pct_key"]] = round(price_diff_percent, 2)
+        # Calculate difference from average price for the day
         avg_diff = new_interval["price"] - annotation_ctx["avg_price"]
         new_interval["price_diff_from_avg"] = round(avg_diff, 4)
         new_interval["price_diff_from_avg_ct"] = round(avg_diff * 100, 2)

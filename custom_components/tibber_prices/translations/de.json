@@ -76,9 +76,6 @@
             "data_timestamp": {
                 "name": "Zeitstempel der neuesten Daten"
             },
-            "tomorrow_data_available": {
-                "name": "Datenstatus für morgen"
-            },
             "next_interval_price": {
                 "name": "Strompreis nächstes Intervall"
             },
@@ -95,6 +92,9 @@
             },
             "connection": {
                 "name": "Tibber API-Verbindung"
+            },
+            "tomorrow_data_available": {
+                "name": "Daten für morgen verfügbar"
             }
         }
     }

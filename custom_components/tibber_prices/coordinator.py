@@ -22,6 +22,8 @@ from .api import (
 from .const import DOMAIN, LOGGER
 
 if TYPE_CHECKING:
+    from collections.abc import Callable
+
     from .data import TibberPricesConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
@@ -250,7 +252,10 @@ class TibberPricesDataUpdateCoordinator(DataUpdateCoordinator[TibberPricesData])
     async def _async_initialize(self) -> None:
         """Load stored data."""
         stored = await self._store.async_load()
-        LOGGER.debug("Loading stored data: %s", stored)
+        if stored is None:
+            LOGGER.warning("No cache file found or cache is empty on startup.")
+        else:
+            LOGGER.debug("Loading stored data: %s", stored)
 
         if stored:
             # Load cached data
@@ -284,6 +289,14 @@ class TibberPricesDataUpdateCoordinator(DataUpdateCoordinator[TibberPricesData])
                 self._last_rating_update_daily,
                 self._last_rating_update_monthly,
             )
+
+            # Defensive: warn if any required data is missing
+            if self._cached_price_data is None:
+                LOGGER.warning("Cached price data missing after cache load!")
+            if self._last_price_update is None:
+                LOGGER.warning("Price update timestamp missing after cache load!")
+        else:
+            LOGGER.info("No cache loaded; will fetch fresh data on first update.")
 
     async def _async_refresh_hourly(self, now: datetime | None = None) -> None:
         """
@@ -495,65 +508,76 @@ class TibberPricesDataUpdateCoordinator(DataUpdateCoordinator[TibberPricesData])
 
     async def _store_cache(self) -> None:
         """Store cache data."""
-        # Recover any missing timestamps from the data
-        if self._cached_price_data and not self._last_price_update:
-            latest_timestamp = _get_latest_timestamp_from_prices(self._cached_price_data)
-            if latest_timestamp:
-                self._last_price_update = latest_timestamp
-                LOGGER.debug(
-                    "Setting missing price update timestamp to: %s",
-                    self._last_price_update,
-                )
 
-        rating_types = {
-            "hourly": (
-                self._cached_rating_data_hourly,
-                self._last_rating_update_hourly,
-            ),
-            "daily": (self._cached_rating_data_daily, self._last_rating_update_daily),
-            "monthly": (
-                self._cached_rating_data_monthly,
-                self._last_rating_update_monthly,
-            ),
-        }
-
-        for rating_type, (cached_data, last_update) in rating_types.items():
-            if cached_data and not last_update:
-                latest_timestamp = self._get_latest_timestamp_from_rating_type(cached_data, rating_type)
+        def _recover_and_log_timestamp(
+            data: TibberPricesData | None,
+            last_update: datetime | None,
+            get_latest_fn: Callable[[TibberPricesData], datetime | None],
+            label: str,
+        ) -> datetime | None:
+            if data and not last_update:
+                latest_timestamp = get_latest_fn(data)
                 if latest_timestamp:
-                    if rating_type == "hourly":
-                        self._last_rating_update_hourly = latest_timestamp
-                    elif rating_type == "daily":
-                        self._last_rating_update_daily = latest_timestamp
-                    else:  # monthly
-                        self._last_rating_update_monthly = latest_timestamp
-                    LOGGER.debug(
-                        "Setting missing %s rating timestamp to: %s",
-                        rating_type,
-                        latest_timestamp,
-                    )
+                    LOGGER.debug("Setting missing %s timestamp to: %s", label, latest_timestamp)
+                    return latest_timestamp
+                LOGGER.warning("Could not recover %s timestamp from data!", label)
+            return last_update
+
+        self._last_price_update = _recover_and_log_timestamp(
+            self._cached_price_data,
+            self._last_price_update,
+            _get_latest_timestamp_from_prices,
+            "price update",
+        )
+        self._last_rating_update_hourly = _recover_and_log_timestamp(
+            self._cached_rating_data_hourly,
+            self._last_rating_update_hourly,
+            lambda d: self._get_latest_timestamp_from_rating_type(d, "hourly"),
+            "hourly rating",
+        )
+        self._last_rating_update_daily = _recover_and_log_timestamp(
+            self._cached_rating_data_daily,
+            self._last_rating_update_daily,
+            lambda d: self._get_latest_timestamp_from_rating_type(d, "daily"),
+            "daily rating",
+        )
+        self._last_rating_update_monthly = _recover_and_log_timestamp(
+            self._cached_rating_data_monthly,
+            self._last_rating_update_monthly,
+            lambda d: self._get_latest_timestamp_from_rating_type(d, "monthly"),
+            "monthly rating",
+        )
 
         data = {
             "price_data": self._cached_price_data,
             "rating_data_hourly": self._cached_rating_data_hourly,
             "rating_data_daily": self._cached_rating_data_daily,
             "rating_data_monthly": self._cached_rating_data_monthly,
-            "last_price_update": self._last_price_update.isoformat() if self._last_price_update else None,
-            "last_rating_update_hourly": self._last_rating_update_hourly.isoformat()
-            if self._last_rating_update_hourly
-            else None,
-            "last_rating_update_daily": self._last_rating_update_daily.isoformat()
-            if self._last_rating_update_daily
-            else None,
-            "last_rating_update_monthly": self._last_rating_update_monthly.isoformat()
-            if self._last_rating_update_monthly
-            else None,
+            "last_price_update": (self._last_price_update.isoformat() if self._last_price_update else None),
+            "last_rating_update_hourly": (
+                self._last_rating_update_hourly.isoformat() if self._last_rating_update_hourly else None
+            ),
+            "last_rating_update_daily": (
+                self._last_rating_update_daily.isoformat() if self._last_rating_update_daily else None
+            ),
+            "last_rating_update_monthly": (
+                self._last_rating_update_monthly.isoformat() if self._last_rating_update_monthly else None
+            ),
         }
         LOGGER.debug(
             "Storing cache data with timestamps: %s",
             {k: v for k, v in data.items() if k.startswith("last_")},
         )
-        await self._store.async_save(data)
+        # Defensive: warn if any required data is missing before saving
+        if data["price_data"] is None:
+            LOGGER.warning("Attempting to store cache with missing price_data!")
+        if data["last_price_update"] is None:
+            LOGGER.warning("Attempting to store cache with missing last_price_update!")
+        try:
+            await self._store.async_save(data)
+            LOGGER.debug("Cache successfully written to disk.")
+        except OSError as ex:
+            LOGGER.error("Failed to write cache to disk: %s", ex)
 
     @callback
     def _should_update_price_data(self, current_time: datetime) -> bool:
@@ -920,3 +944,49 @@ class TibberPricesDataUpdateCoordinator(DataUpdateCoordinator[TibberPricesData])
 
             except (KeyError, TypeError, ValueError) as ex:
                 LOGGER.error("Error during midnight data rotation in hourly update: %s", ex)
+
+    def get_all_intervals(self) -> list[dict]:
+        """Return a combined, sorted list of all price intervals for yesterday, today, and tomorrow."""
+        if not self.data:
+            return []
+        price_info = self.data["data"]["viewer"]["homes"][0]["currentSubscription"]["priceInfo"]
+        all_prices = price_info.get("yesterday", []) + price_info.get("today", []) + price_info.get("tomorrow", [])
+        return sorted(all_prices, key=lambda p: p["startsAt"])
+
+    def get_interval_granularity(self) -> int | None:
+        """Return the interval granularity in minutes (e.g., 15 or 60) for today's data."""
+        if not self.data:
+            return None
+        price_info = self.data["data"]["viewer"]["homes"][0]["currentSubscription"]["priceInfo"]
+        today_prices = price_info.get("today", [])
+        from .sensor import detect_interval_granularity
+
+        return detect_interval_granularity(today_prices) if today_prices else None
+
+    def get_current_interval_data(self) -> dict | None:
+        """Return the price data for the current interval."""
+        if not self.data:
+            return None
+        price_info = self.data["data"]["viewer"]["homes"][0]["currentSubscription"]["priceInfo"]
+        now = dt_util.now()
+        interval_length = self.get_interval_granularity()
+        from .sensor import find_price_data_for_interval
+
+        return find_price_data_for_interval(price_info, now, interval_length)
+
+    def get_combined_price_info(self) -> dict:
+        """Return a dict with all intervals under a single key 'all'."""
+        return {"all": self.get_all_intervals()}
+
+    def is_tomorrow_data_available(self) -> bool | None:
+        """Return True if tomorrow's data is fully available, False if not, None if unknown."""
+        if not self.data:
+            return None
+        price_info = self.data["data"]["viewer"]["homes"][0]["currentSubscription"]["priceInfo"]
+        tomorrow_prices = price_info.get("tomorrow", [])
+        interval_count = len(tomorrow_prices)
+        # Use the same logic as in binary_sensor.py
+        min_tomorrow_intervals_hourly = 24
+        min_tomorrow_intervals_15min = 96
+        tomorrow_interval_counts = {min_tomorrow_intervals_hourly, min_tomorrow_intervals_15min}
+        return interval_count in tomorrow_interval_counts

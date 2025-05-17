@@ -102,12 +102,6 @@
             "long_description": "Shows the timestamp of the most recent price data update from Tibber",
             "usage_tips": "Use this to check when price information was last updated"
         },
-        "tomorrow_data_available": {
-            "name": "Tomorrow's Data Status",
-            "description": "Whether price data for tomorrow is available",
-            "long_description": "Indicates if price data for the following day has been received from Tibber",
-            "usage_tips": "Use this to check if tomorrow's prices are available for planning"
-        },
         "price_forecast": {
             "name": "Price Forecast",
             "description": "Forecast of upcoming electricity prices",
@@ -116,6 +110,12 @@
         }
     },
     "binary_sensor": {
+        "tomorrow_data_available": {
+            "name": "Tomorrow's Data Status",
+            "description": "Whether price data for tomorrow is available",
+            "long_description": "Indicates if price data for the following day has been received from Tibber",
+            "usage_tips": "Use this to check if tomorrow's prices are available for planning"
+        },
         "peak_price_period": {
             "name": "Peak Price Periode",
             "description": "Whether the current interval is among the most expensive of the day",
