@@ -2,14 +2,20 @@
     "config": {
         "step": {
             "user": {
-                "description": "Richte Tibber Preisinformationen & Bewertungen ein. Um ein API-Zugriffstoken zu generieren, besuche developer.tibber.com.",
+                "description": "Richte Tibber Preisinformationen & Bewertungen ein.\n\nUm einen API-Zugriffstoken zu generieren, besuche https://developer.tibber.com.",
                 "data": {
-                    "access_token": "API-Zugriffstoken",
-                    "extended_descriptions": "Erweiterte Beschreibungen in Entitätsattributen anzeigen",
-                    "best_price_flex": "Flexibilität für Bestpreis (%)",
-                    "peak_price_flex": "Flexibilität für Spitzenpreis (%)"
+                    "access_token": "API-Zugriffstoken"
                 },
-                "title": "Tibber Preisinformationen & Bewertungen"
+                "title": "Tibber Preisinformationen & Bewertungen",
+                "submit": "Token validieren"
+            },
+            "finish": {
+                "description": "Wähle ein Zuhause, um Preisinformationen und Bewertungen abzurufen.",
+                "data": {
+                    "home_id": "Home ID"
+                },
+                "title": "Wähle ein Zuhause",
+                "submit": "Zuhause auswählen"
             }
         },
         "error": {
@@ -21,31 +27,37 @@
         },
         "abort": {
             "already_configured": "Integration ist bereits konfiguriert",
-            "entry_not_found": "Tibber Konfigurationseintrag nicht gefunden."
+            "entry_not_found": "Tibber Konfigurationseintrag nicht gefunden.",
+            "setup_complete": "Einrichtung abgeschlossen! Du kannst zusätzliche Optionen für Tibber Preise in den Integrationsoptionen ändern, nachdem du diesen Dialog geschlossen hast."
         }
     },
     "options": {
         "step": {
             "init": {
-                "title": "Optionen für Tibber Preisinformationen & Bewertungen",
-                "description": "Konfiguriere Optionen für Tibber Preisinformationen & Bewertungen",
+                "description": "Home ID: {unique_id}",
                 "data": {
-                    "access_token": "Tibber Zugangstoken",
+                    "access_token": "API-Zugriffstoken",
                     "extended_descriptions": "Erweiterte Beschreibungen in Entitätsattributen anzeigen",
                     "best_price_flex": "Flexibilität für Bestpreis (%)",
                     "peak_price_flex": "Flexibilität für Spitzenpreis (%)"
-                }
+                },
+                "title": "Optionen für Tibber Preisinformationen & Bewertungen",
+                "submit": "Optionen speichern"
             }
         },
         "error": {
             "auth": "Der Tibber Zugangstoken ist ungültig.",
             "connection": "Verbindung zu Tibber nicht möglich. Bitte überprüfe deine Internetverbindung.",
             "unknown": "Ein unerwarteter Fehler ist aufgetreten. Bitte überprüfe die Logs für Details.",
-            "different_account": "Der neue Zugangstoken gehört zu einem anderen Tibber-Konto. Bitte verwende einen Token vom selben Konto oder erstelle eine neue Konfiguration für das andere Konto."
+            "cannot_connect": "Verbindung fehlgeschlagen",
+            "invalid_access_token": "Ungültiges Zugriffstoken",
+            "different_home": "Der Zugriffstoken ist nicht gültig für die Home ID, für die diese Integration konfiguriert ist."
         },
         "abort": {
             "entry_not_found": "Tibber Konfigurationseintrag nicht gefunden."
-        }
+        },
+        "best_price_flex": "Bestpreis Flexibilität (%)",
+        "peak_price_flex": "Spitzenpreis Flexibilität (%)"
     },
     "entity": {
         "sensor": {

@@ -38,7 +38,7 @@ class QueryType(Enum):
     DAILY_RATING = "daily"
     HOURLY_RATING = "hourly"
     MONTHLY_RATING = "monthly"
-    TEST = "test"
+    VIEWER = "viewer"
 
 
 class TibberPricesApiClientError(Exception):
@@ -215,7 +215,7 @@ def _transform_data(data: dict, query_type: QueryType) -> dict:
         QueryType.MONTHLY_RATING,
     ):
         return data
-    if query_type == QueryType.TEST:
+    if query_type == QueryType.VIEWER:
         return data
 
     _LOGGER.warning("Unknown query type %s, returning raw data", query_type)
@@ -286,19 +286,32 @@ class TibberPricesApiClient:
         self._max_retries = 3
         self._retry_delay = 2
 
-    async def async_test_connection(self) -> Any:
+    async def async_get_viewer_details(self) -> Any:
         """Test connection to the API."""
         return await self._api_wrapper(
             data={
                 "query": """
-                    query {
+                    {
                         viewer {
+                            userId
                             name
+                            login
+                            homes {
+                                id
+                                type
+                                appNickname
+                                address {
+                                    address1
+                                    postalCode
+                                    city
+                                    country
+                                }
+                            }
                         }
                     }
                 """
             },
-            query_type=QueryType.TEST,
+            query_type=QueryType.VIEWER,
         )
 
     async def async_get_price_info(self) -> Any:
@@ -306,7 +319,7 @@ class TibberPricesApiClient:
         return await self._api_wrapper(
             data={
                 "query": """
-                    {viewer{homes{currentSubscription{priceInfo{
+                    {viewer{homes{id,currentSubscription{priceInfo{
                         range(resolution:HOURLY,last:48){edges{node{
                             startsAt total energy tax level
                         }}}
@@ -322,7 +335,7 @@ class TibberPricesApiClient:
         return await self._api_wrapper(
             data={
                 "query": """
-                    {viewer{homes{currentSubscription{priceRating{
+                    {viewer{homes{id,currentSubscription{priceRating{
                         thresholdPercentages{low high}
                         daily{entries{time total energy tax difference level}}
                     }}}}}"""
@@ -335,7 +348,7 @@ class TibberPricesApiClient:
         return await self._api_wrapper(
             data={
                 "query": """
-                    {viewer{homes{currentSubscription{priceRating{
+                    {viewer{homes{id,currentSubscription{priceRating{
                         thresholdPercentages{low high}
                         hourly{entries{time total energy tax difference level}}
                     }}}}}"""
@@ -348,7 +361,7 @@ class TibberPricesApiClient:
         return await self._api_wrapper(
             data={
                 "query": """
-                    {viewer{homes{currentSubscription{priceRating{
+                    {viewer{homes{id,currentSubscription{priceRating{
                         thresholdPercentages{low high}
                         monthly{
                             currency
@@ -455,7 +468,7 @@ class TibberPricesApiClient:
                     query_type,
                 )
 
-                if query_type != QueryType.TEST and _is_data_empty(response_data, query_type.value):
+                if query_type != QueryType.VIEWER and _is_data_empty(response_data, query_type.value):
                     _LOGGER.debug("Empty data detected for query_type: %s", query_type)
                     raise TibberPricesApiClientError(
                         TibberPricesApiClientError.EMPTY_DATA_ERROR.format(query_type=query_type.value)
@@ -467,7 +480,7 @@ class TibberPricesApiClient:
         self,
         data: dict | None = None,
         headers: dict | None = None,
-        query_type: QueryType = QueryType.TEST,
+        query_type: QueryType = QueryType.VIEWER,
     ) -> Any:
         """Get information from the API with rate limiting and retry logic."""
         headers = headers or _prepare_headers(self._access_token)

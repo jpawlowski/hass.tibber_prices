@@ -2,14 +2,20 @@
     "config": {
         "step": {
             "user": {
-                "description": "Set up Tibber Price Information & Ratings. To generate an API access token, visit developer.tibber.com.",
+                "description": "Set up Tibber Price Information & Ratings.\n\nTo generate an API access token, visit https://developer.tibber.com.",
                 "data": {
-                    "access_token": "API access token",
-                    "extended_descriptions": "Show extended descriptions in entity attributes",
-                    "best_price_flex": "Best Price Flexibility (%)",
-                    "peak_price_flex": "Peak Price Flexibility (%)"
+                    "access_token": "API access token"
                 },
-                "title": "Tibber Price Information & Ratings"
+                "title": "Tibber Price Information & Ratings",
+                "submit": "Validate Token"
+            },
+            "finish": {
+                "description": "Select a home to fetch price information and ratings.",
+                "data": {
+                    "home_id": "Home ID"
+                },
+                "title": "Pick a home",
+                "submit": "Select Home"
             }
         },
         "error": {
@@ -21,29 +27,31 @@
         },
         "abort": {
             "already_configured": "Integration is already configured",
-            "entry_not_found": "Tibber configuration entry not found."
-        },
-        "best_price_flex": "Best Price Flexibility (%)",
-        "peak_price_flex": "Peak Price Flexibility (%)"
+            "entry_not_found": "Tibber configuration entry not found.",
+            "setup_complete": "Setup complete! You can change additional options for Tibber Prices in the integration's options after closing this dialog."
+        }
     },
     "options": {
         "step": {
             "init": {
-                "title": "Options for Tibber Price Information & Ratings",
-                "description": "Configure options for Tibber Price Information & Ratings",
+                "description": "Home ID: {unique_id}",
                 "data": {
-                    "access_token": "Tibber Access Token",
+                    "access_token": "API access token",
                     "extended_descriptions": "Show extended descriptions in entity attributes",
                     "best_price_flex": "Best Price Flexibility (%)",
                     "peak_price_flex": "Peak Price Flexibility (%)"
-                }
+                },
+                "title": "Options for Tibber Price Information & Ratings",
+                "submit": "Save Options"
             }
         },
         "error": {
             "auth": "The Tibber Access Token is invalid.",
             "connection": "Unable to connect to Tibber. Please check your internet connection.",
             "unknown": "An unexpected error occurred. Please check the logs for details.",
-            "different_account": "The new access token belongs to a different Tibber account. Please use a token from the same account or create a new configuration for the other account."
+            "cannot_connect": "Failed to connect",
+            "invalid_access_token": "Invalid access token",
+            "different_home": "The access token is not valid for the home ID this integration is configured for."
         },
         "abort": {
             "entry_not_found": "Tibber configuration entry not found."
