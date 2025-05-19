@@ -337,7 +337,10 @@ class TibberPricesApiClient:
                 "query": """
                     {viewer{homes{id,currentSubscription{priceRating{
                         thresholdPercentages{low high}
-                        daily{entries{time total energy tax difference level}}
+                        daily{
+                            currency
+                            entries{time total energy tax difference level}
+                        }
                     }}}}}"""
             },
             query_type=QueryType.DAILY_RATING,
@@ -350,7 +353,10 @@ class TibberPricesApiClient:
                 "query": """
                     {viewer{homes{id,currentSubscription{priceRating{
                         thresholdPercentages{low high}
-                        hourly{entries{time total energy tax difference level}}
+                        hourly{
+                            currency
+                            entries{time total energy tax difference level}
+                        }
                     }}}}}"""
             },
             query_type=QueryType.HOURLY_RATING,
