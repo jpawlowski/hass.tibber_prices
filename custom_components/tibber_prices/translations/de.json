@@ -86,7 +86,7 @@
                 "name": "Monatliche Preisbewertung"
             },
             "data_timestamp": {
-                "name": "Zeitstempel der neuesten Daten"
+                "name": "Ablauf der Preisdaten"
             },
             "next_interval_price": {
                 "name": "Strompreis nächstes Intervall"

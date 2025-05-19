@@ -123,26 +123,28 @@ class TibberPricesBinarySensor(TibberPricesEntity, BinarySensorEntity):
         return value
 
     def _best_price_state(self) -> bool | None:
-        """Return True if current price is within +flex% of the day's minimum price."""
-        price_data = self._get_current_price_data()
-        if not price_data:
+        """Return True if the current time is within a best price period."""
+        if not self.coordinator.data:
             return None
-        prices, current_price = price_data
-        min_price = min(prices)
-        flex = self._get_flex_option(CONF_BEST_PRICE_FLEX, DEFAULT_BEST_PRICE_FLEX)
-        threshold = min_price * (1 + flex)
-        return current_price <= threshold
+        attrs = self._get_price_intervals_attributes(reverse_sort=False)
+        if not attrs or "interval_start" not in attrs or "interval_end" not in attrs:
+            return None
+        now = dt_util.now()
+        start = attrs.get("interval_start")
+        end = attrs.get("interval_end")
+        return start <= now < end if start and end else None
 
     def _peak_price_state(self) -> bool | None:
-        """Return True if current price is within -flex% of the day's maximum price."""
-        price_data = self._get_current_price_data()
-        if not price_data:
+        """Return True if the current time is within a peak price period."""
+        if not self.coordinator.data:
             return None
-        prices, current_price = price_data
-        max_price = max(prices)
-        flex = self._get_flex_option(CONF_PEAK_PRICE_FLEX, DEFAULT_PEAK_PRICE_FLEX)
-        threshold = max_price * (1 - flex)
-        return current_price >= threshold
+        attrs = self._get_price_intervals_attributes(reverse_sort=True)
+        if not attrs or "interval_start" not in attrs or "interval_end" not in attrs:
+            return None
+        now = dt_util.now()
+        start = attrs.get("interval_start")
+        end = attrs.get("interval_end")
+        return start <= now < end if start and end else None
 
     def _tomorrow_data_available_state(self) -> bool | None:
         """Return True if tomorrow's data is fully available, False if not, None if unknown."""
@@ -151,7 +153,11 @@ class TibberPricesBinarySensor(TibberPricesEntity, BinarySensorEntity):
         price_info = self.coordinator.data["data"]["viewer"]["homes"][0]["currentSubscription"]["priceInfo"]
         tomorrow_prices = price_info.get("tomorrow", [])
         interval_count = len(tomorrow_prices)
-        return interval_count in TOMORROW_INTERVAL_COUNTS
+        if interval_count in TOMORROW_INTERVAL_COUNTS:
+            return True
+        if interval_count == 0:
+            return False
+        return False
 
     def _get_tomorrow_data_available_attributes(self) -> dict | None:
         """Return attributes for tomorrow_data_available binary sensor."""

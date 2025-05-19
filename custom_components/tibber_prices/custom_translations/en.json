@@ -97,10 +97,9 @@
             "usage_tips": "A positive percentage means this month's prices are above average, negative means below average"
         },
         "data_timestamp": {
-            "name": "Latest Data Timestamp",
-            "description": "When the latest price data was received",
-            "long_description": "Shows the timestamp of the most recent price data update from Tibber",
-            "usage_tips": "Use this to check when price information was last updated"
+            "name": "Price Data Expiration",
+            "description": "Timestamp of the latest available price data interval",
+            "long_description": "Shows the timestamp of the latest available price data interval from your Tibber subscription"
         },
         "price_forecast": {
             "name": "Price Forecast",

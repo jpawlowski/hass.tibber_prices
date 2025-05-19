@@ -104,7 +104,7 @@
                 "name": "Monthly Price Rating"
             },
             "data_timestamp": {
-                "name": "Latest Data Available"
+                "name": "Price Data Expiration"
             },
             "price_forecast": {
                 "name": "Price Forecast"

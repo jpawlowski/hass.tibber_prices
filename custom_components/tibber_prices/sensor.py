@@ -180,7 +180,7 @@ DIAGNOSTIC_SENSORS = (
     SensorEntityDescription(
         key="data_timestamp",
         translation_key="data_timestamp",
-        name="Latest Data Available",
+        name="Data Expiration",
         icon="mdi:clock-check",
         device_class=SensorDeviceClass.TIMESTAMP,
         entity_category=EntityCategory.DIAGNOSTIC,

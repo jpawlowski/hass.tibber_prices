@@ -97,10 +97,9 @@
             "usage_tips": "Ein positiver Prozentsatz bedeutet, dass die Preise dieses Monats überdurchschnittlich sind, negativ bedeutet unterdurchschnittlich"
         },
         "data_timestamp": {
-            "name": "Zeitstempel der neuesten Daten",
-            "description": "Wann die neuesten Preisdaten empfangen wurden",
-            "long_description": "Zeigt den Zeitstempel des letzten Preisaktualisierung von Tibber",
-            "usage_tips": "Nutze dies, um zu überprüfen, wann die Preisinformationen zuletzt aktualisiert wurden"
+            "name": "Ablauf der Preisdaten",
+            "description": "Zeitstempel des letzten verfügbaren Preisintervalls",
+            "long_description": "Zeigt den Zeitstempel des letzten verfügbaren Preisintervalls von deinem Tibber-Abonnement an"
         },
         "price_forecast": {
             "name": "Preisprognose",
