@@ -280,13 +280,25 @@ def _flatten_price_info(subscription: dict) -> dict:
 
 
 def _flatten_price_rating(subscription: dict) -> dict:
-    """Extract and flatten priceRating from subscription."""
+    """Extract and flatten priceRating from subscription, including currency."""
     price_rating = subscription.get("priceRating", {})
+
+    def extract_entries_and_currency(rating: dict) -> tuple[list, str | None]:
+        if rating is None:
+            return [], None
+        return rating.get("entries", []), rating.get("currency")
+
+    hourly_entries, hourly_currency = extract_entries_and_currency(price_rating.get("hourly"))
+    daily_entries, daily_currency = extract_entries_and_currency(price_rating.get("daily"))
+    monthly_entries, monthly_currency = extract_entries_and_currency(price_rating.get("monthly"))
+    # Prefer hourly, then daily, then monthly for top-level currency
+    currency = hourly_currency or daily_currency or monthly_currency
     return {
-        "hourly": price_rating.get("hourly", {}).get("entries", []),
-        "daily": price_rating.get("daily", {}).get("entries", []),
-        "monthly": price_rating.get("monthly", {}).get("entries", []),
+        "hourly": hourly_entries,
+        "daily": daily_entries,
+        "monthly": monthly_entries,
         "thresholdPercentages": price_rating.get("thresholdPercentages"),
+        "currency": currency,
     }
 
 
@@ -380,6 +392,7 @@ class TibberPricesApiClient:
             "priceRating": {
                 "daily": _flatten_price_rating(subscription)["daily"],
                 "thresholdPercentages": _flatten_price_rating(subscription)["thresholdPercentages"],
+                "currency": _flatten_price_rating(subscription)["currency"],
             }
         }
 
@@ -406,6 +419,7 @@ class TibberPricesApiClient:
             "priceRating": {
                 "hourly": _flatten_price_rating(subscription)["hourly"],
                 "thresholdPercentages": _flatten_price_rating(subscription)["thresholdPercentages"],
+                "currency": _flatten_price_rating(subscription)["currency"],
             }
         }
 
@@ -432,6 +446,7 @@ class TibberPricesApiClient:
             "priceRating": {
                 "monthly": _flatten_price_rating(subscription)["monthly"],
                 "thresholdPercentages": _flatten_price_rating(subscription)["thresholdPercentages"],
+                "currency": _flatten_price_rating(subscription)["currency"],
             }
         }
 

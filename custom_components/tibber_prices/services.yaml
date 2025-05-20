@@ -1,0 +1,32 @@
+get_price:
+  name: Get Tibber Price Info
+  description: >-
+    Returns merged priceInfo and priceRating for the requested day and config entry. Optionally, you can simulate the response as if it were a specific time-of-day (time, format HH:mm or HH:mm:ss), which only affects the previous/current/next fields, not the prices list. The simulated time is always combined with the selected day.
+  fields:
+    entry_id:
+      name: Entry ID
+      description: The config entry ID for the Tibber integration.
+      required: true
+      example: "1234567890abcdef"
+      selector:
+        config_entry:
+          integration: tibber_prices
+    day:
+      name: Day
+      description: Which day to fetch prices for (yesterday, today, or tomorrow).
+      required: false
+      default: today
+      example: today
+      selector:
+        select:
+          options:
+            - yesterday
+            - today
+            - tomorrow
+    time:
+      name: Time
+      description: >-
+        Time-of-day in HH:mm or HH:mm:ss format. If provided, simulates the response as if this were the current time for interval selection (previous/current/next) for the selected day. Does not filter the prices list. Example: "15:00" or "15:00:00".
+      required: false
+      selector:
+        time:

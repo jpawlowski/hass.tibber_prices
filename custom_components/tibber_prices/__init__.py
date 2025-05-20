@@ -19,6 +19,7 @@ from .api import TibberPricesApiClient
 from .const import DOMAIN, LOGGER, SCAN_INTERVAL, async_load_translations
 from .coordinator import STORAGE_VERSION, TibberPricesDataUpdateCoordinator
 from .data import TibberPricesData
+from .services import async_setup_services
 
 if TYPE_CHECKING:
     from homeassistant.core import HomeAssistant
@@ -43,6 +44,9 @@ async def async_setup_entry(
     # Try to load translations for the user's configured language if not English
     if hass.config.language and hass.config.language != "en":
         await async_load_translations(hass, hass.config.language)
+
+    # Register services when a config entry is loaded
+    async_setup_services(hass)
 
     # Use the defined SCAN_INTERVAL constant for consistent polling
     coordinator = TibberPricesDataUpdateCoordinator(
@@ -79,6 +83,12 @@ async def async_unload_entry(
 
     if unload_ok and entry.runtime_data is not None:
         await entry.runtime_data.coordinator.async_shutdown()
+
+    # Unregister services if this was the last config entry
+    if not hass.config_entries.async_entries(DOMAIN):
+        for service in ("get_priceinfo", "get_pricerating"):
+            if hass.services.has_service(DOMAIN, service):
+                hass.services.async_remove(DOMAIN, service)
 
     return unload_ok
 

@@ -566,12 +566,13 @@ class TibberPricesDataUpdateCoordinator(DataUpdateCoordinator[dict]):
             price_rating = data.get("priceRating", data)
             threshold = price_rating.get("thresholdPercentages")
             entries = price_rating.get(rating_type, [])
+            currency = price_rating.get("currency")
         except KeyError as ex:
             LOGGER.error("Failed to extract rating data (flat format): %s", ex)
             raise TibberPricesApiClientError(
                 TibberPricesApiClientError.EMPTY_DATA_ERROR.format(query_type=rating_type)
             ) from ex
-        return {"priceRating": {rating_type: entries, "thresholdPercentages": threshold}}
+        return {"priceRating": {rating_type: entries, "thresholdPercentages": threshold, "currency": currency}}
 
     @callback
     def _merge_all_cached_data(self) -> dict:
@@ -583,7 +584,7 @@ class TibberPricesDataUpdateCoordinator(DataUpdateCoordinator[dict]):
             merged = {"priceInfo": self._cached_price_data["priceInfo"]}
         else:
             merged = {"priceInfo": self._cached_price_data}
-        price_rating = {"hourly": [], "daily": [], "monthly": [], "thresholdPercentages": None}
+        price_rating = {"hourly": [], "daily": [], "monthly": [], "thresholdPercentages": None, "currency": None}
         for rating_type, cached in zip(
             ["hourly", "daily", "monthly"],
             [self._cached_rating_data_hourly, self._cached_rating_data_daily, self._cached_rating_data_monthly],
@@ -594,7 +595,10 @@ class TibberPricesDataUpdateCoordinator(DataUpdateCoordinator[dict]):
                 price_rating[rating_type] = entries
                 if not price_rating["thresholdPercentages"]:
                     price_rating["thresholdPercentages"] = cached["priceRating"].get("thresholdPercentages")
+                if not price_rating["currency"]:
+                    price_rating["currency"] = cached["priceRating"].get("currency")
         merged["priceRating"] = price_rating
+        merged["currency"] = price_rating["currency"]
         return merged
 
     async def _async_initialize(self) -> None:
