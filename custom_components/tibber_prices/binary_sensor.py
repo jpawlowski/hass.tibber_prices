@@ -705,3 +705,7 @@ class TibberPricesBinarySensor(TibberPricesEntity, BinarySensorEntity):
             return None
         else:
             return attributes if attributes else None
+
+    async def async_update(self) -> None:
+        """Force a refresh when homeassistant.update_entity is called."""
+        await self.coordinator.async_request_refresh()

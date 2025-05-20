@@ -7,7 +7,6 @@ https://github.com/jpawlowski/hass.tibber_prices
 
 from __future__ import annotations
 
-from datetime import timedelta
 from typing import TYPE_CHECKING
 
 from homeassistant.const import CONF_ACCESS_TOKEN, Platform
@@ -16,7 +15,7 @@ from homeassistant.helpers.storage import Store
 from homeassistant.loader import async_get_loaded_integration
 
 from .api import TibberPricesApiClient
-from .const import DOMAIN, LOGGER, SCAN_INTERVAL, async_load_translations
+from .const import DOMAIN, LOGGER, async_load_translations
 from .coordinator import STORAGE_VERSION, TibberPricesDataUpdateCoordinator
 from .data import TibberPricesData
 from .services import async_setup_services
@@ -48,13 +47,11 @@ async def async_setup_entry(
     # Register services when a config entry is loaded
     async_setup_services(hass)
 
-    # Use the defined SCAN_INTERVAL constant for consistent polling
     coordinator = TibberPricesDataUpdateCoordinator(
         hass=hass,
         entry=entry,
         logger=LOGGER,
         name=DOMAIN,
-        update_interval=timedelta(seconds=SCAN_INTERVAL),
     )
     entry.runtime_data = TibberPricesData(
         client=TibberPricesApiClient(

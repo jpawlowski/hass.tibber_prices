@@ -21,9 +21,6 @@ CONF_PEAK_PRICE_FLEX = "peak_price_flex"
 
 ATTRIBUTION = "Data provided by Tibber"
 
-# Update interval in seconds
-SCAN_INTERVAL = 60 * 5  # 5 minutes
-
 # Integration name should match manifest.json
 DEFAULT_NAME = "Tibber Price Information & Ratings"
 DEFAULT_EXTENDED_DESCRIPTIONS = False

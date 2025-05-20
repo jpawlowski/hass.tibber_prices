@@ -274,15 +274,7 @@ class TibberPricesSensor(TibberPricesEntity, SensorEntity):
         return self.coordinator.get_current_interval_data()
 
     def _get_price_level_value(self) -> str | None:
-        """
-        Get the current price level value as a translated string for the state.
-
-        The original (raw) value is stored for use as an attribute.
-
-        Returns:
-            The translated price level value for the state, or None if unavailable.
-
-        """
+        """Get the current price level value as a translated string for the state."""
         current_interval_data = self._get_current_interval_data()
         if not current_interval_data or "level" not in current_interval_data:
             return None
@@ -310,7 +302,7 @@ class TibberPricesSensor(TibberPricesEntity, SensorEntity):
         """Get price for current hour or with offset."""
         if not self.coordinator.data:
             return None
-        price_info = self.coordinator.data["priceInfo"]
+        price_info = self.coordinator.data.get("priceInfo", {})
 
         # Use HomeAssistant's dt_util to get the current time in the user's timezone
         now = dt_util.now()
@@ -352,21 +344,10 @@ class TibberPricesSensor(TibberPricesEntity, SensorEntity):
         return None
 
     def _get_interval_price_value(self, *, interval_offset: int, in_euro: bool) -> float | None:
-        """
-        Get price for the current interval or with offset, handling different interval granularities.
-
-        Args:
-            interval_offset: Number of intervals to offset from current time
-            in_euro: Whether to return value in EUR (True) or cents/kWh (False)
-
-        Returns:
-            Price value in the requested unit or None if not available
-
-        """
+        """Get price for the current interval or with offset, handling different interval granularities."""
         if not self.coordinator.data:
             return None
 
-        # Use coordinator utility for all intervals and granularity
         all_intervals = self.coordinator.get_all_intervals()
         granularity = self.coordinator.get_interval_granularity()
         if not all_intervals or granularity is None:
@@ -374,7 +355,6 @@ class TibberPricesSensor(TibberPricesEntity, SensorEntity):
 
         now = dt_util.now()
 
-        # Find the current interval index
         current_idx = None
         for idx, interval in enumerate(all_intervals):
             starts_at = interval.get("startsAt")
@@ -407,7 +387,7 @@ class TibberPricesSensor(TibberPricesEntity, SensorEntity):
         if not self.coordinator.data:
             return None
 
-        price_info = self.coordinator.data["priceInfo"]
+        price_info = self.coordinator.data.get("priceInfo", {})
         today_prices = price_info.get("today", [])
         if not today_prices:
             return None
@@ -445,22 +425,20 @@ class TibberPricesSensor(TibberPricesEntity, SensorEntity):
             if (
                 en_translations
                 and "sensor" in en_translations
-                and "price_rating" in en_translations["sensor"]
+                and "price_rating" in en_translations
                 and "price_levels" in en_translations["sensor"]["price_rating"]
                 and level in en_translations["sensor"]["price_rating"]["price_levels"]
             ):
                 return en_translations["sensor"]["price_rating"]["price_levels"][level]
         return level
 
-    def _find_rating_entry(
-        self, entries: list[dict], now: datetime, rating_type: str, subscription: dict
-    ) -> dict | None:
+    def _find_rating_entry(self, entries: list[dict], now: datetime, rating_type: str) -> dict | None:
         """Find the correct rating entry for the given type and time."""
         if not entries:
             return None
         predicate = None
         if rating_type == "hourly":
-            price_info = subscription.get("priceInfo", {})
+            price_info = self.coordinator.data.get("priceInfo", {})
             today_prices = price_info.get("today", [])
             data_granularity = detect_interval_granularity(today_prices) if today_prices else MINUTES_PER_INTERVAL
 
@@ -512,7 +490,7 @@ class TibberPricesSensor(TibberPricesEntity, SensorEntity):
         now = dt_util.now()
         # In the new flat format, price_rating[rating_type] is a list of entries
         entries = price_rating.get(rating_type, [])
-        entry = self._find_rating_entry(entries, now, rating_type, dict(self.coordinator.data))
+        entry = self._find_rating_entry(entries, now, rating_type)
         if entry:
             difference = entry.get("difference")
             level = entry.get("level")
@@ -528,7 +506,7 @@ class TibberPricesSensor(TibberPricesEntity, SensorEntity):
         if not self.coordinator.data:
             return None
 
-        price_info = self.coordinator.data["priceInfo"]
+        price_info = self.coordinator.data.get("priceInfo", {})
         latest_timestamp = None
 
         for day in ["today", "tomorrow"]:
@@ -563,7 +541,7 @@ class TibberPricesSensor(TibberPricesEntity, SensorEntity):
         if not self.coordinator.data:
             return None
 
-        price_info = self.coordinator.data["priceInfo"]
+        price_info = self.coordinator.data.get("priceInfo", {})
         price_rating = self.coordinator.data.get("priceRating", {})
 
         # Determine data granularity from the current price data
@@ -874,7 +852,7 @@ class TibberPricesSensor(TibberPricesEntity, SensorEntity):
         # Add timestamp for next interval price sensors
         if self.entity_description.key in ["next_interval_price", "next_interval_price_eur"]:
             # Get the next interval's data
-            price_info = self.coordinator.data["priceInfo"]
+            price_info = self.coordinator.data.get("priceInfo", {})
             today_prices = price_info.get("today", [])
             data_granularity = detect_interval_granularity(today_prices) if today_prices else MINUTES_PER_INTERVAL
             now = dt_util.now()
@@ -912,7 +890,7 @@ class TibberPricesSensor(TibberPricesEntity, SensorEntity):
     def _add_statistics_attributes(self, attributes: dict) -> None:
         """Add attributes for statistics, rating, and diagnostic sensors."""
         key = self.entity_description.key
-        price_info = self.coordinator.data["priceInfo"]
+        price_info = self.coordinator.data.get("priceInfo", {})
         now = dt_util.now()
         if key == "price_rating":
             today_prices = price_info.get("today", [])
@@ -943,6 +921,10 @@ class TibberPricesSensor(TibberPricesEntity, SensorEntity):
             # Fallback: use the first timestamp of today
             first_timestamp = price_info.get("today", [{}])[0].get("startsAt")
             attributes["timestamp"] = first_timestamp
+
+    async def async_update(self) -> None:
+        """Force a refresh when homeassistant.update_entity is called."""
+        await self.coordinator.async_request_refresh()
 
 
 def detect_interval_granularity(price_data: list[dict]) -> int:
