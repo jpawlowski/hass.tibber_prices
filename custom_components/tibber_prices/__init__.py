@@ -86,7 +86,7 @@ async def async_unload_entry(
 
     # Unregister services if this was the last config entry
     if not hass.config_entries.async_entries(DOMAIN):
-        for service in ("get_priceinfo", "get_pricerating"):
+        for service in "get_price":
             if hass.services.has_service(DOMAIN, service):
                 hass.services.async_remove(DOMAIN, service)
 
