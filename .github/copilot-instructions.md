@@ -53,23 +53,44 @@ Use the following order inside Python modules:
     - Use only for stateless, reusable logic
     - Prefix with `_` if internal only (e.g., `_parse_price()`)
     - Do not place Home Assistant lifecycle logic here
+    - **Sort and group top-level functions for maximum readability:**
+        - Place public API/entry point functions (e.g., service handlers, async setup) at the top of the function section.
+        - Direct helpers (called by entry points) immediately after, in the order they are called.
+        - Pure/stateless utility functions that are not tightly coupled to entry points at the end.
+        - Where possible, order functions so that a function appears before any function that calls it (call hierarchy order).
+        - Group related functions by logical purpose or data handled, and use `#region`/`#endregion` folding comments for large files if needed.
 
 4. **Main classes**
 
     - Define main classes (Home Assistant Entity classes, DataUpdateCoordinators, and ConfigFlow handlers)
     - Order inside class:
-
         - Special methods (`__init__`, `__repr__`)
         - Public methods (no `_`)
         - Private methods (`_prefix`)
-
     - All I/O or lifecycle methods must be `async def`
 
 5. **Helper classes**
 
     - If helper classes become complex, move them to separate modules (e.g., `helpers.py`, `models.py`)
 
-> ✅ Copilot tip: Use top-level functions for pure helpers only. Prefer structured classes where Home Assistant expects them.
+> ✅ Copilot tip:
+>
+> -   Use top-level functions for pure helpers only.
+> -   Prefer structured classes where Home Assistant expects them.
+> -   Sort and group functions for maximum readability and maintainability, following call flow from entry points to helpers to utilities.
+
+## Code Comments Policy
+
+-   Do **not** add comments in the code to explain automated changes, such as reordering, renaming, or compliance with coding standards or prompts.
+-   Comments in code should be reserved **only** for documenting the actual logic, purpose, or usage of code elements (e.g., classes, methods, functions, or complex logic blocks).
+-   If any explanations of automated actions are needed, provide them **outside the code file** (such as in your chat response, PR description, or commit message), not within the Python files themselves.
+-   Do **not** insert comments like `# moved function`, `# renamed`, `# for compliance`, or similar into code files.
+
+## Backwards Compatibility Policy
+
+-   Do **not** implement or suggest backward compatibility features, workarounds, deprecated function support, or compatibility layers unless **explicitly requested** in the prompt or project documentation.
+-   All code should assume a clean, modern codebase and should target the latest stable Home Assistant version only, unless otherwise specified.
+-   If you believe backward compatibility might be required, **ask for clarification first** before adding any related code.
 
 ## Data Structures
 
