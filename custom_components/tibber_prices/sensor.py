@@ -36,8 +36,8 @@ if TYPE_CHECKING:
     from .coordinator import TibberPricesDataUpdateCoordinator
     from .data import TibberPricesConfigEntry
 
-PRICE_UNIT_CENT = "ct/" + UnitOfPower.KILO_WATT + UnitOfTime.HOURS
-PRICE_UNIT_EURO = CURRENCY_EURO + "/" + UnitOfPower.KILO_WATT + UnitOfTime.HOURS
+PRICE_UNIT = CURRENCY_EURO + "/" + UnitOfPower.KILO_WATT + UnitOfTime.HOURS
+PRICE_UNIT_MINOR = "ct/" + UnitOfPower.KILO_WATT + UnitOfTime.HOURS
 HOURS_IN_DAY = 24
 LAST_HOUR_OF_DAY = 23
 INTERVALS_PER_HOUR = 4  # 15-minute intervals
@@ -52,7 +52,7 @@ PRICE_SENSORS = (
         name="Current Electricity Price",
         icon="mdi:currency-eur",
         device_class=SensorDeviceClass.MONETARY,
-        native_unit_of_measurement=PRICE_UNIT_CENT,
+        native_unit_of_measurement=PRICE_UNIT_MINOR,
         suggested_display_precision=1,
     ),
     SensorEntityDescription(
@@ -61,7 +61,7 @@ PRICE_SENSORS = (
         name="Current Electricity Price",
         icon="mdi:currency-eur",
         device_class=SensorDeviceClass.MONETARY,
-        native_unit_of_measurement=PRICE_UNIT_EURO,
+        native_unit_of_measurement=PRICE_UNIT,
         entity_registry_enabled_default=False,
         suggested_display_precision=2,
     ),
@@ -71,7 +71,7 @@ PRICE_SENSORS = (
         name="Next Interval Electricity Price",
         icon="mdi:currency-eur-off",
         device_class=SensorDeviceClass.MONETARY,
-        native_unit_of_measurement=PRICE_UNIT_CENT,
+        native_unit_of_measurement=PRICE_UNIT_MINOR,
         suggested_display_precision=1,
     ),
     SensorEntityDescription(
@@ -80,7 +80,7 @@ PRICE_SENSORS = (
         name="Next Interval Electricity Price",
         icon="mdi:currency-eur-off",
         device_class=SensorDeviceClass.MONETARY,
-        native_unit_of_measurement=PRICE_UNIT_EURO,
+        native_unit_of_measurement=PRICE_UNIT,
         entity_registry_enabled_default=False,
         suggested_display_precision=2,
     ),
@@ -100,7 +100,7 @@ STATISTICS_SENSORS = (
         name="Today's Lowest Price",
         icon="mdi:currency-eur",
         device_class=SensorDeviceClass.MONETARY,
-        native_unit_of_measurement=PRICE_UNIT_CENT,
+        native_unit_of_measurement=PRICE_UNIT_MINOR,
         suggested_display_precision=1,
     ),
     SensorEntityDescription(
@@ -109,7 +109,7 @@ STATISTICS_SENSORS = (
         name="Today's Lowest Price",
         icon="mdi:currency-eur",
         device_class=SensorDeviceClass.MONETARY,
-        native_unit_of_measurement=PRICE_UNIT_EURO,
+        native_unit_of_measurement=PRICE_UNIT,
         entity_registry_enabled_default=False,
         suggested_display_precision=2,
     ),
@@ -119,7 +119,7 @@ STATISTICS_SENSORS = (
         name="Today's Highest Price",
         icon="mdi:currency-eur",
         device_class=SensorDeviceClass.MONETARY,
-        native_unit_of_measurement=PRICE_UNIT_CENT,
+        native_unit_of_measurement=PRICE_UNIT_MINOR,
         suggested_display_precision=1,
     ),
     SensorEntityDescription(
@@ -128,7 +128,7 @@ STATISTICS_SENSORS = (
         name="Today's Highest Price",
         icon="mdi:currency-eur",
         device_class=SensorDeviceClass.MONETARY,
-        native_unit_of_measurement=PRICE_UNIT_EURO,
+        native_unit_of_measurement=PRICE_UNIT,
         entity_registry_enabled_default=False,
         suggested_display_precision=2,
     ),
@@ -138,7 +138,7 @@ STATISTICS_SENSORS = (
         name="Today's Average Price",
         icon="mdi:currency-eur",
         device_class=SensorDeviceClass.MONETARY,
-        native_unit_of_measurement=PRICE_UNIT_CENT,
+        native_unit_of_measurement=PRICE_UNIT_MINOR,
         suggested_display_precision=1,
     ),
     SensorEntityDescription(
@@ -147,7 +147,7 @@ STATISTICS_SENSORS = (
         name="Today's Average Price",
         icon="mdi:currency-eur",
         device_class=SensorDeviceClass.MONETARY,
-        native_unit_of_measurement=PRICE_UNIT_EURO,
+        native_unit_of_measurement=PRICE_UNIT,
         entity_registry_enabled_default=False,
         suggested_display_precision=2,
     ),

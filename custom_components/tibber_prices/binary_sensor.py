@@ -256,7 +256,7 @@ class TibberPricesBinarySensor(TibberPricesEntity, BinarySensorEntity):
         }
         # Merge any extra fields from the original interval (future-proofing)
         new_interval.update(interval_copy)
-        new_interval["price_ct"] = round(new_interval["price"] * 100, 2)
+        new_interval["price_minor"] = round(new_interval["price"] * 100, 2)
         price_diff = new_interval["price"] - annotation_ctx["ref_price"]
         new_interval[annotation_ctx["diff_key"]] = round(price_diff, 4)
         new_interval[annotation_ctx["diff_ct_key"]] = round(price_diff * 100, 2)
