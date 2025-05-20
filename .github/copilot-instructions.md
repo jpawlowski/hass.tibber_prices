@@ -92,6 +92,20 @@ Use the following order inside Python modules:
 -   All code should assume a clean, modern codebase and should target the latest stable Home Assistant version only, unless otherwise specified.
 -   If you believe backward compatibility might be required, **ask for clarification first** before adding any related code.
 
+## Translations Policy
+
+-   All user-facing strings supported by Home Assistant's translation system **must** be defined in `/translations/en.json` and (if present) in other `/translations/*.json` language files.
+-   When adding or updating a translation key in `/translations/en.json`, **ensure that all other language files in `/translations/` are updated to match the same set of keys**. Non-English files may use placeholder values if no translation is available, but **must** not miss any keys present in `en.json`.
+-   Do **not** remove or rename translation keys without updating all language files accordingly.
+-   Never duplicate translation keys between `/translations/` and `/custom_translations/`.
+-   The `/custom_translations/` directory contains **supplemental translation files** for UI strings or other content not handled by the standard Home Assistant translation format.
+    -   Only add strings to `/custom_translations/` if they are not supported by the standard Home Assistant translation system.
+    -   Do **not** duplicate any string or translation key that could be handled in `/translations/`.
+-   When both exist, the standard Home Assistant translation in `/translations/` **always takes priority** over any supplemental entry in `/custom_translations/`.
+-   All translation files (both standard and custom) **must remain in sync** with the English base file (`en.json`) in their respective directory.
+
+> ✅ Copilot tip: Whenever adding or changing user-facing strings, update both the main translation files in `/translations/` and the supplemental files in `/custom_translations/`, keeping them in sync and avoiding duplication.
+
 ## Data Structures
 
 Use `@dataclass` for plain data containers where appropriate:
