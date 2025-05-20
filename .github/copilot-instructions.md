@@ -24,7 +24,7 @@ This repository contains a **custom component for Home Assistant**, intended to 
 -   Avoid third-party or custom libraries unless absolutely necessary
 -   Never assume static local file paths — use config options and relative paths
 
-## Coding Style
+## Coding Style Policy
 
 -   Follow **PEP8**, enforced by **Black**, **isort**, and **Ruff**
 -   Use **type hints** on all function and method signatures
@@ -33,7 +33,7 @@ This repository contains a **custom component for Home Assistant**, intended to 
 -   Do not use `print()` — use `_LOGGER` for logging
 -   YAML examples must be **valid**, **minimal**, and **Home Assistant compliant**
 
-## Code Structure and Ordering
+## Code Structure and Ordering Policy
 
 Use the following order inside Python modules:
 
@@ -137,7 +137,7 @@ Only create these files if explicitly required by your integration features. Not
 
 > ⚠️ **Copilot tip**: Avoid Core-only files (`device_action.py`, `device_trigger.py`, `device_condition.py`, `strings.json`) for Custom Integrations. These are typically not supported or rarely used.
 
-## Linting and Code Quality
+## Linting and Code Quality Policy
 
 -   Enforced by **Ruff**, which runs:
 
