@@ -4,92 +4,144 @@ This repository contains a **custom component for Home Assistant**, intended to 
 
 ## Development Guidelines
 
--   Follow the **latest official practices** from Home Assistant and HACS.
+-   Follow the **official Home Assistant development guidelines** at [developers.home-assistant.io](https://developers.home-assistant.io).
 -   Ensure compatibility with the **latest Home Assistant release**.
--   Always use the **current real-world date** when working with times or schedules — do not use hardcoded or outdated values.
--   Use **async functions**, **non-blocking I/O**, and **config flows** when applicable.
--   Structure the component using standard files: `__init__.py`, `manifest.json`, `config_flow.py` (if needed), and proper versioning.
--   Use **Home Assistant built-in libraries and helpers** whenever possible:
-    -   For dates: use `homeassistant.util.dt` (`dt_util`)
-    -   For configs: use `homeassistant.helpers.config_validation`
-    -   For state handling: use `homeassistant.helpers.entity`
--   **Avoid wrapping built-in utilities** (e.g., do not wrap `dt_util.parse_datetime`)
--   **Avoid using custom libraries** unless absolutely necessary and justified
+-   Use **async functions**, **non-blocking I/O**, and **config flows** where applicable.
+-   Structure the component using these standard files:
+
+    -   `__init__.py` – setup and teardown
+    -   `manifest.json` – metadata and dependencies
+    -   `config_flow.py` – if the integration supports UI configuration
+    -   `sensor.py`, `switch.py`, etc. – for platforms
+    -   `const.py` – constants (`DOMAIN`, `CONF_*`, etc.)
+
+-   Use Home Assistant's built-in helpers and utility modules:
+
+    -   `homeassistant.helpers.entity`, `device_registry`, `config_validation`
+    -   `homeassistant.util.dt` (`dt_util`) for time/date handling
+
+-   Do not wrap built-in functions (e.g., don’t wrap `dt_util.parse_datetime`)
+-   Avoid third-party or custom libraries unless absolutely necessary
+-   Never assume static local file paths — use config options and relative paths
 
 ## Coding Style
 
--   Follow **PEP8** and Home Assistant's coding conventions
--   Use **type hints** for all function and method signatures
--   Add **docstrings** to all public classes and public methods
--   Use **f-strings** for formatting, not `%` or `.format()`
--   Use **relative paths** and **configurable options**, not hardcoded values
--   Provide valid and clean YAML examples when needed (e.g., for `configuration.yaml`)
+-   Follow **PEP8**, enforced by **Black**, **isort**, and **Ruff**
+-   Use **type hints** on all function and method signatures
+-   Add **docstrings** for all public classes and methods
+-   Use **f-strings** for string formatting
+-   Do not use `print()` — use `_LOGGER` for logging
+-   YAML examples must be **valid**, **minimal**, and **Home Assistant compliant**
 
 ## Code Structure and Ordering
 
-Follow this standard order within Python modules:
+Use the following order inside Python modules:
 
 1. **Imports**
 
-    - Python standard library imports
-    - Third-party libraries (`homeassistant.*`)
-    - Local imports (`from . import xyz`)
-    - Use `isort` to enforce order
+    - Python standard library imports first
+    - Third-party imports (e.g., `homeassistant.*`)
+    - Local imports within this component (`from . import xyz`)
+    - Enforced automatically by `isort`
 
 2. **Module-level constants and globals**
 
-    - Example: `DOMAIN`, `_LOGGER`, `CONF_*`, `DEFAULT_*`
+    - Define constants and globals at module-level (e.g., `DOMAIN`, `_LOGGER`, `CONF_*`, `DEFAULT_*`)
 
 3. **Top-level functions**
 
-    - Only define if they are not part of a class
+    - Use only for stateless, reusable logic
+    - Prefix with `_` if internal only (e.g., `_parse_price()`)
+    - Do not place Home Assistant lifecycle logic here
 
 4. **Main classes**
 
-    - Core classes first: entity classes, coordinators, config flows
-    - Method order within each class:
-        - Special methods (`__init__`, `__str__`) first
-        - Public methods (no `_` prefix), in logical order of usage
-        - Private methods (prefix `_`), grouped below public ones
+    - Define main classes (Home Assistant Entity classes, DataUpdateCoordinators, and ConfigFlow handlers)
+    - Order inside class:
+
+        - Special methods (`__init__`, `__repr__`)
+        - Public methods (no `_`)
+        - Private methods (`_prefix`)
+
+    - All I/O or lifecycle methods must be `async def`
 
 5. **Helper classes**
-    - Place after main classes, or move to separate modules if complex
 
--   Use `async def` for I/O or Home Assistant lifecycle methods
--   Split large files into multiple modules if needed
+    - If helper classes become complex, move them to separate modules (e.g., `helpers.py`, `models.py`)
 
-> ✅ Copilot tip: Use public methods first, private methods after. Avoid mixing. Keep file structure consistent.
+> ✅ Copilot tip: Use top-level functions for pure helpers only. Prefer structured classes where Home Assistant expects them.
 
-### Optional: Code Folding Regions
+## Data Structures
 
-You may use `#region` and `#endregion` comments to group related logic. Only apply in large files and where folding improves clarity.
+Use `@dataclass` for plain data containers where appropriate:
+
+```python
+from dataclasses import dataclass
+
+@dataclass
+class PriceSlot:
+    start: datetime
+    end: datetime
+    price: float
+```
+
+## Visual File Layout
+
+Split component logic into multiple Python modules for improved clarity and maintainability:
+
+```
+/custom_components/your_component/
+├── __init__.py
+├── manifest.json
+├── const.py
+├── sensor.py
+├── config_flow.py
+├── models.py       # dataclasses
+├── helpers.py      # pure utility functions
+```
+
+Use `#region` / `#endregion` optionally to improve readability in large files.
+
+## Optional Files (Custom Integration via HACS)
+
+Only create these files if explicitly required by your integration features. Not all files used in Core integrations apply to Custom Integrations:
+
+-   `services.yaml` – Define custom Home Assistant services
+-   `translations/*.json` (e.g., `en.json`, `de.json`) – Provide translations for UI elements
+-   Additional platform files (e.g., `binary_sensor.py`, `switch.py`, `number.py`, `button.py`, `select.py`) – Support for additional entity types
+-   `websocket_api.py` – Define custom WebSocket API endpoints
+-   `diagnostics.py` – Provide diagnostic data to users and maintainers
+-   `repair.py` – Offer built-in repair hints or troubleshooting guidance
+-   `issue_registry.py` – Communicate integration-specific issues or important changes to users clearly
+
+> ⚠️ **Copilot tip**: Avoid Core-only files (`device_action.py`, `device_trigger.py`, `device_condition.py`, `strings.json`) for Custom Integrations. These are typically not supported or rarely used.
 
 ## Linting and Code Quality
 
--   Use **Ruff**, which runs:
+-   Enforced by **Ruff**, which runs:
 
-    -   Locally in the devcontainer (VS Code or Cursor)
+    -   Locally via VS Code devcontainer
     -   Remotely via GitHub Actions
 
--   Required Ruff rules:
+Key Ruff linter rules that must be followed:
 
-    -   `F401`, `F841` – No unused imports or variables
-    -   `E402`, `E501` – Imports at top, lines ≤88 characters
-    -   `C901`, `PLR0912`, `PLR0915` – Keep functions small and simple
-    -   `PLR0911`, `RET504` – Avoid unnecessary `else` after `return`
-    -   `B008` – No mutable default arguments
-    -   `T201` – Use `_LOGGER`, not `print()`
-    -   `SIM102` – Use `if x`, not `if x == True`
+-   `F401`, `F841` – No unused imports or variables
+-   `E402`, `E501` – Imports at top, lines ≤88 chars
+-   `C901`, `PLR0912`, `PLR0915` – Functions must be small and simple
+-   `PLR0911`, `RET504` – No redundant `else` after `return`
+-   `B008` – No mutable default arguments
+-   `T201` – Do not use `print()`
+-   `SIM102` – Prefer `if x` over `if x == True`
 
--   Prefer a **single return statement** at the end of functions
--   Avoid early returns unless they improve clarity
--   Use **Black** for formatting and **isort** for sorting imports
--   Refer to `.ruff.toml` for configuration details
+Also:
 
-> ✅ Copilot tip: Generate clean, single-pass functions with clear returns. Don’t leave unused code.
+-   Use **Black** for formatting
+-   Use **isort** for import sorting
+-   See `.ruff.toml` for custom settings
+-   Prefer **one return statement per function** unless early returns improve clarity
 
 ## Tests
 
-This project does **not include automated tests**.
+This integration does **not include automated tests** by default.
 
-> ⚠️ If generating tests, keep them minimal and avoid introducing test frameworks not already present.
+> ⚠️ If Copilot generates tests, keep them minimal and **do not introduce new test frameworks** not already present.
