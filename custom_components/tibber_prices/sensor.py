@@ -310,8 +310,7 @@ class TibberPricesSensor(TibberPricesEntity, SensorEntity):
         """Get price for current hour or with offset."""
         if not self.coordinator.data:
             return None
-
-        price_info = self.coordinator.data["data"]["viewer"]["homes"][0]["currentSubscription"]["priceInfo"]
+        price_info = self.coordinator.data["priceInfo"]
 
         # Use HomeAssistant's dt_util to get the current time in the user's timezone
         now = dt_util.now()
@@ -408,7 +407,7 @@ class TibberPricesSensor(TibberPricesEntity, SensorEntity):
         if not self.coordinator.data:
             return None
 
-        price_info = self.coordinator.data["data"]["viewer"]["homes"][0]["currentSubscription"]["priceInfo"]
+        price_info = self.coordinator.data["priceInfo"]
         today_prices = price_info.get("today", [])
         if not today_prices:
             return None
@@ -509,12 +508,11 @@ class TibberPricesSensor(TibberPricesEntity, SensorEntity):
             self._last_rating_difference = None
             self._last_rating_level = None
             return None
-        subscription = self.coordinator.data["data"]["viewer"]["homes"][0]["currentSubscription"]
-        price_rating = subscription.get("priceRating", {}) or {}
+        price_rating = self.coordinator.data.get("priceRating", {})
         now = dt_util.now()
-        rating_data = price_rating.get(rating_type, {})
-        entries = rating_data.get("entries", []) if rating_data else []
-        entry = self._find_rating_entry(entries, now, rating_type, dict(subscription))
+        # In the new flat format, price_rating[rating_type] is a list of entries
+        entries = price_rating.get(rating_type, [])
+        entry = self._find_rating_entry(entries, now, rating_type, dict(self.coordinator.data))
         if entry:
             difference = entry.get("difference")
             level = entry.get("level")
@@ -530,7 +528,7 @@ class TibberPricesSensor(TibberPricesEntity, SensorEntity):
         if not self.coordinator.data:
             return None
 
-        price_info = self.coordinator.data["data"]["viewer"]["homes"][0]["currentSubscription"]["priceInfo"]
+        price_info = self.coordinator.data["priceInfo"]
         latest_timestamp = None
 
         for day in ["today", "tomorrow"]:
@@ -565,10 +563,8 @@ class TibberPricesSensor(TibberPricesEntity, SensorEntity):
         if not self.coordinator.data:
             return None
 
-        price_info = self.coordinator.data["data"]["viewer"]["homes"][0]["currentSubscription"]["priceInfo"]
-        price_rating = (
-            self.coordinator.data["data"]["viewer"]["homes"][0]["currentSubscription"].get("priceRating", {}) or {}
-        )
+        price_info = self.coordinator.data["priceInfo"]
+        price_rating = self.coordinator.data.get("priceRating", {})
 
         # Determine data granularity from the current price data
         today_prices = price_info.get("today", [])
@@ -878,7 +874,7 @@ class TibberPricesSensor(TibberPricesEntity, SensorEntity):
         # Add timestamp for next interval price sensors
         if self.entity_description.key in ["next_interval_price", "next_interval_price_eur"]:
             # Get the next interval's data
-            price_info = self.coordinator.data["data"]["viewer"]["homes"][0]["currentSubscription"]["priceInfo"]
+            price_info = self.coordinator.data["priceInfo"]
             today_prices = price_info.get("today", [])
             data_granularity = detect_interval_granularity(today_prices) if today_prices else MINUTES_PER_INTERVAL
             now = dt_util.now()
@@ -916,7 +912,7 @@ class TibberPricesSensor(TibberPricesEntity, SensorEntity):
     def _add_statistics_attributes(self, attributes: dict) -> None:
         """Add attributes for statistics, rating, and diagnostic sensors."""
         key = self.entity_description.key
-        price_info = self.coordinator.data["data"]["viewer"]["homes"][0]["currentSubscription"]["priceInfo"]
+        price_info = self.coordinator.data["priceInfo"]
         now = dt_util.now()
         if key == "price_rating":
             today_prices = price_info.get("today", [])

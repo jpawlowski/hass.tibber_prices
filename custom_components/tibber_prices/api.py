@@ -269,6 +269,27 @@ def _transform_price_info(data: dict) -> dict:
     return data
 
 
+def _flatten_price_info(subscription: dict) -> dict:
+    """Extract and flatten priceInfo from subscription."""
+    price_info = subscription.get("priceInfo", {})
+    return {
+        "yesterday": price_info.get("yesterday", []),
+        "today": price_info.get("today", []),
+        "tomorrow": price_info.get("tomorrow", []),
+    }
+
+
+def _flatten_price_rating(subscription: dict) -> dict:
+    """Extract and flatten priceRating from subscription."""
+    price_rating = subscription.get("priceRating", {})
+    return {
+        "hourly": price_rating.get("hourly", {}).get("entries", []),
+        "daily": price_rating.get("daily", {}).get("entries", []),
+        "monthly": price_rating.get("monthly", {}).get("entries", []),
+        "thresholdPercentages": price_rating.get("thresholdPercentages"),
+    }
+
+
 class TibberPricesApiClient:
     """Tibber API Client."""
 
@@ -314,9 +335,9 @@ class TibberPricesApiClient:
             query_type=QueryType.VIEWER,
         )
 
-    async def async_get_price_info(self) -> Any:
-        """Get price info data including today, tomorrow and last 48 hours."""
-        return await self._api_wrapper(
+    async def async_get_price_info(self) -> dict:
+        """Get price info data in flat format."""
+        response = await self._api_wrapper(
             data={
                 "query": """
                     {viewer{homes{id,currentSubscription{priceInfo{
@@ -329,10 +350,16 @@ class TibberPricesApiClient:
             },
             query_type=QueryType.PRICE_INFO,
         )
+        # response is already transformed, but we want flat
+        try:
+            subscription = response["viewer"]["homes"][0]["currentSubscription"]
+        except KeyError:
+            subscription = response["data"]["viewer"]["homes"][0]["currentSubscription"]
+        return {"priceInfo": _flatten_price_info(subscription)}
 
-    async def async_get_daily_price_rating(self) -> Any:
-        """Get daily price rating data."""
-        return await self._api_wrapper(
+    async def async_get_daily_price_rating(self) -> dict:
+        """Get daily price rating data in flat format."""
+        response = await self._api_wrapper(
             data={
                 "query": """
                     {viewer{homes{id,currentSubscription{priceRating{
@@ -345,10 +372,20 @@ class TibberPricesApiClient:
             },
             query_type=QueryType.DAILY_RATING,
         )
+        try:
+            subscription = response["viewer"]["homes"][0]["currentSubscription"]
+        except KeyError:
+            subscription = response["data"]["viewer"]["homes"][0]["currentSubscription"]
+        return {
+            "priceRating": {
+                "daily": _flatten_price_rating(subscription)["daily"],
+                "thresholdPercentages": _flatten_price_rating(subscription)["thresholdPercentages"],
+            }
+        }
 
-    async def async_get_hourly_price_rating(self) -> Any:
-        """Get hourly price rating data."""
-        return await self._api_wrapper(
+    async def async_get_hourly_price_rating(self) -> dict:
+        """Get hourly price rating data in flat format."""
+        response = await self._api_wrapper(
             data={
                 "query": """
                     {viewer{homes{id,currentSubscription{priceRating{
@@ -361,10 +398,20 @@ class TibberPricesApiClient:
             },
             query_type=QueryType.HOURLY_RATING,
         )
+        try:
+            subscription = response["viewer"]["homes"][0]["currentSubscription"]
+        except KeyError:
+            subscription = response["data"]["viewer"]["homes"][0]["currentSubscription"]
+        return {
+            "priceRating": {
+                "hourly": _flatten_price_rating(subscription)["hourly"],
+                "thresholdPercentages": _flatten_price_rating(subscription)["thresholdPercentages"],
+            }
+        }
 
-    async def async_get_monthly_price_rating(self) -> Any:
-        """Get monthly price rating data."""
-        return await self._api_wrapper(
+    async def async_get_monthly_price_rating(self) -> dict:
+        """Get monthly price rating data in flat format."""
+        response = await self._api_wrapper(
             data={
                 "query": """
                     {viewer{homes{id,currentSubscription{priceRating{
@@ -377,45 +424,33 @@ class TibberPricesApiClient:
             },
             query_type=QueryType.MONTHLY_RATING,
         )
+        try:
+            subscription = response["viewer"]["homes"][0]["currentSubscription"]
+        except KeyError:
+            subscription = response["data"]["viewer"]["homes"][0]["currentSubscription"]
+        return {
+            "priceRating": {
+                "monthly": _flatten_price_rating(subscription)["monthly"],
+                "thresholdPercentages": _flatten_price_rating(subscription)["thresholdPercentages"],
+            }
+        }
 
-    async def async_get_data(self) -> Any:
-        """Get all data from the API by combining multiple queries."""
-        # Get all data concurrently
+    async def async_get_data(self) -> dict:
+        """Get all data from the API by combining multiple queries in flat format."""
         price_info = await self.async_get_price_info()
         daily_rating = await self.async_get_daily_price_rating()
         hourly_rating = await self.async_get_hourly_price_rating()
         monthly_rating = await self.async_get_monthly_price_rating()
-
-        # Extract the base paths to make the code more readable
-        def get_base_path(response: dict) -> dict:
-            """Get the base subscription path from the response."""
-            return response["viewer"]["homes"][0]["currentSubscription"]
-
-        def get_rating_data(response: dict) -> dict:
-            """Get the price rating data from the response."""
-            return get_base_path(response)["priceRating"]
-
-        price_info_data = get_base_path(price_info)["priceInfo"]
-
-        # Combine the results
+        # Merge all into one flat dict
+        price_rating = {
+            "thresholdPercentages": daily_rating["priceRating"].get("thresholdPercentages"),
+            "daily": daily_rating["priceRating"].get("daily", []),
+            "hourly": hourly_rating["priceRating"].get("hourly", []),
+            "monthly": monthly_rating["priceRating"].get("monthly", []),
+        }
         return {
-            "data": {
-                "viewer": {
-                    "homes": [
-                        {
-                            "currentSubscription": {
-                                "priceInfo": price_info_data,
-                                "priceRating": {
-                                    "thresholdPercentages": get_rating_data(daily_rating)["thresholdPercentages"],
-                                    "daily": get_rating_data(daily_rating)["daily"],
-                                    "hourly": get_rating_data(hourly_rating)["hourly"],
-                                    "monthly": get_rating_data(monthly_rating)["monthly"],
-                                },
-                            }
-                        }
-                    ]
-                }
-            }
+            "priceInfo": price_info["priceInfo"],
+            "priceRating": price_rating,
         }
 
     async def async_set_title(self, value: str) -> Any:
