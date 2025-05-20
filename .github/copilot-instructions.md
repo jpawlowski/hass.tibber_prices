@@ -9,6 +9,9 @@ This repository contains a **custom component for Home Assistant**, intended to 
 -   When working with dates or time references, always use the **current real-world date** and assume it is fetched from the internet — never use outdated or static values from training data.
 -   Use **async functions**, **non-blocking I/O**, and **config flows** where applicable.
 -   Structure the component with the expected files: `__init__.py`, `manifest.json`, `config_flow.py` (if needed), and versioning compatible with HACS.
+-   Make use of **Home Assistant's built-in libraries** for common tasks (e.g., `asyncio`, `aiohttp`, `homeassistant.helpers`, `homeassistant.util`).
+-   Do not create redundant wrapper functions around Home Assistant's built-in utilities or standard Python libraries. Use Home Assistant utilities directly (e.g., use `dt_util.parse_datetime` instead of wrapping it).
+-   Avoid using **custom libraries** unless absolutely necessary.
 
 ## Coding Style
 
