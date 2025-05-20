@@ -345,10 +345,10 @@ def _determine_now_and_simulation(
     is_simulated = False
     if time_value:
         if not interval_selection_merged or not interval_selection_merged[0].get("start_time"):
-            raise ServiceValidationError(
-                translation_domain=DOMAIN,
-                translation_key="no_data_for_day",
-            )
+            # Instead of raising, return a simulated now for the requested day (structure will be empty)
+            now = dt_util.now().replace(second=0, microsecond=0)
+            is_simulated = True
+            return now, is_simulated
         day_prefix = interval_selection_merged[0]["start_time"].split("T")[0]
         dt_str = f"{day_prefix}T{time_value}"
         try:
@@ -370,6 +370,7 @@ def _determine_now_and_simulation(
             now = datetime.fromisoformat(dt_str)
         except ValueError:
             now = dt_util.now().replace(second=0, microsecond=0)
+        is_simulated = True
     return now, is_simulated
 
 
