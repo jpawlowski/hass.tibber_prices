@@ -9,6 +9,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_ACCESS_TOKEN, Platform
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.storage import Store
@@ -37,6 +38,7 @@ async def async_setup_entry(
     entry: TibberPricesConfigEntry,
 ) -> bool:
     """Set up this integration using UI."""
+    LOGGER.debug(f"[tibber_prices] async_setup_entry called for entry_id={entry.entry_id}")
     # Preload translations to populate the cache
     await async_load_translations(hass, "en")
 
@@ -63,10 +65,13 @@ async def async_setup_entry(
     )
 
     # https://developers.home-assistant.io/docs/integration_fetching_data#coordinated-single-api-poll-for-data-for-all-entities
-    await coordinator.async_config_entry_first_refresh()
+    if entry.state == ConfigEntryState.SETUP_IN_PROGRESS:
+        await coordinator.async_config_entry_first_refresh()
+        entry.async_on_unload(entry.add_update_listener(async_reload_entry))
+    else:
+        await coordinator.async_refresh()
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-    entry.async_on_unload(entry.add_update_listener(async_reload_entry))
 
     return True
 
@@ -83,7 +88,7 @@ async def async_unload_entry(
 
     # Unregister services if this was the last config entry
     if not hass.config_entries.async_entries(DOMAIN):
-        for service in "get_price":
+        for service in ["get_price", "get_apexcharts_data", "get_apexcharts_yaml"]:
             if hass.services.has_service(DOMAIN, service):
                 hass.services.async_remove(DOMAIN, service)
 
@@ -96,6 +101,7 @@ async def async_remove_entry(
 ) -> None:
     """Handle removal of an entry."""
     if storage := Store(hass, STORAGE_VERSION, f"{DOMAIN}.{entry.entry_id}"):
+        LOGGER.debug(f"[tibber_prices] async_remove_entry removing cache store for entry_id={entry.entry_id}")
         await storage.async_remove()
 
 
@@ -104,5 +110,6 @@ async def async_reload_entry(
     entry: TibberPricesConfigEntry,
 ) -> None:
     """Reload config entry."""
+    LOGGER.debug(f"[tibber_prices] async_reload_entry called for entry_id={entry.entry_id}")
     await async_unload_entry(hass, entry)
     await async_setup_entry(hass, entry)

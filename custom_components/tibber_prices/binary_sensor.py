@@ -150,7 +150,7 @@ class TibberPricesBinarySensor(TibberPricesEntity, BinarySensorEntity):
         """Return True if tomorrow's data is fully available, False if not, None if unknown."""
         if not self.coordinator.data:
             return None
-        price_info = self.coordinator.data["priceInfo"]
+        price_info = self.coordinator.data.get("priceInfo", {})
         tomorrow_prices = price_info.get("tomorrow", [])
         interval_count = len(tomorrow_prices)
         if interval_count in TOMORROW_INTERVAL_COUNTS:
@@ -163,7 +163,7 @@ class TibberPricesBinarySensor(TibberPricesEntity, BinarySensorEntity):
         """Return attributes for tomorrow_data_available binary sensor."""
         if not self.coordinator.data:
             return None
-        price_info = self.coordinator.data["priceInfo"]
+        price_info = self.coordinator.data.get("priceInfo", {})
         tomorrow_prices = price_info.get("tomorrow", [])
         interval_count = len(tomorrow_prices)
         if interval_count == 0:
@@ -195,7 +195,7 @@ class TibberPricesBinarySensor(TibberPricesEntity, BinarySensorEntity):
         if not self.coordinator.data:
             return None
 
-        price_info = self.coordinator.data["priceInfo"]
+        price_info = self.coordinator.data.get("priceInfo", {})
         today_prices = price_info.get("today", [])
 
         if not today_prices:
@@ -488,7 +488,7 @@ class TibberPricesBinarySensor(TibberPricesEntity, BinarySensorEntity):
         """Get price interval attributes with support for 15-minute intervals and period grouping."""
         if not self.coordinator.data:
             return None
-        price_info = self.coordinator.data["priceInfo"]
+        price_info = self.coordinator.data.get("priceInfo", {})
         yesterday_prices = price_info.get("yesterday", [])
         today_prices = price_info.get("today", [])
         tomorrow_prices = price_info.get("tomorrow", [])
@@ -530,7 +530,7 @@ class TibberPricesBinarySensor(TibberPricesEntity, BinarySensorEntity):
         if not self.coordinator.data:
             return None
 
-        price_info = self.coordinator.data["priceInfo"]
+        price_info = self.coordinator.data.get("priceInfo", {})
 
         today_prices = price_info.get("today", [])
         if not today_prices:

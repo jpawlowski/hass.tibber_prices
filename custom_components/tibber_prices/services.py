@@ -407,7 +407,7 @@ def _find_previous_interval(
 ) -> Any:
     """Find previous interval from previous day if needed."""
     if merged and day == "today":
-        yday_info = coordinator.data["priceInfo"].get("yesterday") or []
+        yday_info = coordinator.data.get("priceInfo", {}).get("yesterday", [])
         if yday_info:
             yday_ratings = [
                 r
@@ -428,7 +428,7 @@ def _find_next_interval(
 ) -> Any:
     """Find next interval from next day if needed."""
     if merged and day == "today":
-        tmrw_info = coordinator.data["priceInfo"].get("tomorrow") or []
+        tmrw_info = coordinator.data.get("priceInfo", {}).get("tomorrow", [])
         if tmrw_info:
             tmrw_ratings = [
                 r
