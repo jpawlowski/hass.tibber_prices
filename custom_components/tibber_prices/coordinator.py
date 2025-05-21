@@ -165,9 +165,34 @@ class TibberPricesDataUpdateCoordinator(DataUpdateCoordinator[dict]):
         await self.async_refresh()
 
     async def _async_update_data(self) -> dict:
-        """Fetch new state data for the coordinator."""
+        """Fetch new state data for the coordinator. Handles expired credentials by raising ConfigEntryAuthFailed."""
         if self._cached_price_data is None:
-            await self._async_initialize()
+            try:
+                await self._async_initialize()
+            except TimeoutError as exception:
+                msg = "Timeout during initialization"
+                LOGGER.error(
+                    "%s: %s",
+                    msg,
+                    exception,
+                    extra={"error_type": "timeout_init"},
+                )
+                raise UpdateFailed(msg) from exception
+            except TibberPricesApiClientAuthenticationError as exception:
+                msg = "Authentication failed: credentials expired or invalid"
+                LOGGER.error(
+                    "Authentication failed (likely expired credentials) during initialization",
+                    extra={"error": str(exception), "error_type": "auth_failed_init"},
+                )
+                raise ConfigEntryAuthFailed(msg) from exception
+            except Exception as exception:
+                msg = "Unexpected error during initialization"
+                LOGGER.exception(
+                    "%s",
+                    msg,
+                    extra={"error": str(exception), "error_type": "unexpected_init"},
+                )
+                raise UpdateFailed(msg) from exception
         try:
             current_time = dt_util.now()
             result = None
@@ -190,11 +215,24 @@ class TibberPricesDataUpdateCoordinator(DataUpdateCoordinator[dict]):
             else:
                 result = await self._handle_conditional_update(current_time)
         except TibberPricesApiClientAuthenticationError as exception:
+            msg = "Authentication failed: credentials expired or invalid"
             LOGGER.error(
-                "Authentication failed",
+                "Authentication failed (likely expired credentials)",
                 extra={"error": str(exception), "error_type": "auth_failed"},
             )
-            raise ConfigEntryAuthFailed(AUTH_FAILED_MSG) from exception
+            raise ConfigEntryAuthFailed(msg) from exception
+        except TimeoutError as exception:
+            msg = "Timeout during data update"
+            LOGGER.warning(
+                "%s: %s",
+                msg,
+                exception,
+                extra={"error_type": "timeout_runtime"},
+            )
+            if self._cached_price_data is not None:
+                LOGGER.info("Using cached data as fallback after timeout")
+                return self._merge_all_cached_data()
+            raise UpdateFailed(msg) from exception
         except (
             TibberPricesApiClientCommunicationError,
             TibberPricesApiClientError,
@@ -278,9 +316,44 @@ class TibberPricesDataUpdateCoordinator(DataUpdateCoordinator[dict]):
         return self._merge_all_cached_data()
 
     async def _fetch_price_data(self) -> dict:
-        """Fetch fresh price data from API."""
+        """Fetch fresh price data from API and check for GraphQL errors."""
         client = self.config_entry.runtime_data.client
-        return await client.async_get_price_info()
+        data = await client.async_get_price_info()
+        # Check for GraphQL errors at the top level
+        if isinstance(data, dict) and "errors" in data and data["errors"]:
+            errors = data["errors"]
+            # Look for authentication-related errors (extensions.code == 'UNAUTHENTICATED')
+            for err in errors:
+                code = err.get("extensions", {}).get("code")
+                msg = str(err.get("message", ""))
+                if code == "UNAUTHENTICATED":
+                    LOGGER.error(
+                        "GraphQL authentication error (UNAUTHENTICATED): %s",
+                        msg,
+                        extra={"error": msg, "error_type": "graphql_auth_failed", "code": code},
+                    )
+                    raise TibberPricesApiClientAuthenticationError(msg)
+                # Fallback: also check for other auth-related keywords in message/type
+                err_type = str(err.get("type", ""))
+                if any(
+                    s in msg.lower() or s in err_type.lower()
+                    for s in ("auth", "token", "credential", "unauth", "expired")
+                ):
+                    LOGGER.error(
+                        "GraphQL authentication error: %s",
+                        msg,
+                        extra={"error": msg, "error_type": "graphql_auth_failed_fallback"},
+                    )
+                    raise TibberPricesApiClientAuthenticationError(msg)
+            # If errors exist but not auth-related, log and raise generic error
+            msg = f"GraphQL error(s): {errors}"
+            LOGGER.error(
+                "GraphQL error(s) in response: %s",
+                errors,
+                extra={"error_type": "graphql_error"},
+            )
+            raise TibberPricesApiClientError(msg)
+        return data
 
     async def _get_rating_data_for_type(self, rating_type: str) -> dict:
         """Get fresh rating data for a specific type in flat format."""

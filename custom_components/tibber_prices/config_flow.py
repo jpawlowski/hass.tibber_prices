@@ -45,6 +45,11 @@ class TibberPricesFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         """Get the options flow for this handler."""
         return TibberPricesOptionsFlowHandler(config_entry)
 
+    @staticmethod
+    def async_get_reauth_flow(entry: config_entries.ConfigEntry) -> config_entries.ConfigFlow:
+        """Return the reauth flow handler for this integration."""
+        return TibberPricesReauthFlowHandler(entry)
+
     def is_matching(self, other_flow: dict) -> bool:
         """Return True if match_dict matches this flow."""
         return bool(other_flow.get("domain") == DOMAIN)
@@ -153,6 +158,86 @@ class TibberPricesFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         return result["viewer"]
 
 
+class TibberPricesReauthFlowHandler(config_entries.ConfigFlow):
+    """Handle a reauthentication flow for tibber_prices."""
+
+    def __init__(self, entry: config_entries.ConfigEntry) -> None:
+        """Initialize the reauth flow handler."""
+        self._entry = entry
+        self._errors: dict[str, str] = {}
+        self._pending_user_input: dict | None = None
+
+    async def async_step_user(self, user_input: dict | None = None) -> config_entries.ConfigFlowResult:
+        """Prompt for a new access token, then go to finish for home selection."""
+        if user_input is not None:
+            try:
+                viewer = await TibberPricesApiClient(
+                    access_token=user_input[CONF_ACCESS_TOKEN],
+                    session=async_create_clientsession(self.hass),
+                ).async_get_viewer_details()
+            except TibberPricesApiClientAuthenticationError as exception:
+                LOGGER.warning(exception)
+                self._errors["base"] = "auth"
+            except TibberPricesApiClientCommunicationError as exception:
+                LOGGER.error(exception)
+                self._errors["base"] = "connection"
+            except TibberPricesApiClientError as exception:
+                LOGGER.exception(exception)
+                self._errors["base"] = "unknown"
+            else:
+                self._pending_user_input = {
+                    "access_token": user_input[CONF_ACCESS_TOKEN],
+                    "viewer": viewer.get("viewer", viewer),
+                }
+                return await self.async_step_finish()
+
+        return self.async_show_form(
+            step_id="user",
+            data_schema=vol.Schema(
+                {
+                    vol.Required(CONF_ACCESS_TOKEN): selector.TextSelector(
+                        selector.TextSelectorConfig(type=selector.TextSelectorType.TEXT)
+                    ),
+                }
+            ),
+            errors=self._errors,
+        )
+
+    async def async_step_finish(self, user_input: dict | None = None) -> config_entries.ConfigFlowResult:
+        """Show home selection, then update config entry."""
+        if self._pending_user_input is not None and user_input is None:
+            viewer = self._pending_user_input["viewer"]
+            homes = viewer.get("homes", [])
+            home_choices = {}
+            for home in homes:
+                label = home.get("appNickname") or home.get("address", {}).get("address1") or home["id"]
+                if home.get("address", {}).get("city"):
+                    label += f", {home['address']['city']}"
+                home_choices[home["id"]] = label
+            schema = vol.Schema({vol.Required("home_id"): vol.In(home_choices)})
+            return self.async_show_form(
+                step_id="finish",
+                data_schema=schema,
+                description_placeholders={},
+                errors={},
+                last_step=True,
+            )
+        if self._pending_user_input is not None and user_input is not None:
+            home_id = user_input["home_id"]
+            # Update the config entry with new token and home_id
+            self.hass.config_entries.async_update_entry(
+                self._entry,
+                data={
+                    **self._entry.data,
+                    CONF_ACCESS_TOKEN: self._pending_user_input["access_token"],
+                    "home_id": home_id,
+                },
+            )
+            self._pending_user_input = None
+            return self.async_abort(reason="reauth_successful")
+        return self.async_abort(reason="setup_complete")
+
+
 class TibberPricesOptionsFlowHandler(config_entries.OptionsFlow):
     """Tibber Prices config flow options handler."""
 
@@ -166,14 +251,6 @@ class TibberPricesOptionsFlowHandler(config_entries.OptionsFlow):
 
         # Build options schema
         options = {
-            vol.Required(
-                CONF_ACCESS_TOKEN,
-                default=self.config_entry.data.get(CONF_ACCESS_TOKEN, ""),
-            ): selector.TextSelector(
-                selector.TextSelectorConfig(
-                    type=selector.TextSelectorType.TEXT,
-                ),
-            ),
             vol.Optional(
                 CONF_EXTENDED_DESCRIPTIONS,
                 default=self.config_entry.options.get(
@@ -216,47 +293,10 @@ class TibberPricesOptionsFlowHandler(config_entries.OptionsFlow):
         }
 
         if user_input is not None:
-            # Validate new access token if changed
-            new_token = user_input.get(CONF_ACCESS_TOKEN, self.config_entry.data.get(CONF_ACCESS_TOKEN, "")) or ""
-            current_home_id = self.config_entry.data.get("home_id", "")
-            errors = {}
-            if new_token != self.config_entry.data.get(CONF_ACCESS_TOKEN, ""):
-                try:
-                    client = TibberPricesApiClient(
-                        access_token=new_token,
-                        session=async_create_clientsession(self.hass),
-                    )
-                    result = await client.async_get_viewer_details()
-                    homes = result["viewer"].get("homes", [])
-                    if not any(home["id"] == current_home_id for home in homes):
-                        errors[CONF_ACCESS_TOKEN] = "different_home"
-                except TibberPricesApiClientAuthenticationError as exception:
-                    LOGGER.warning(exception)
-                    errors[CONF_ACCESS_TOKEN] = "auth"
-                except TibberPricesApiClientCommunicationError as exception:
-                    LOGGER.error(exception)
-                    errors[CONF_ACCESS_TOKEN] = "connection"
-                except TibberPricesApiClientError as exception:
-                    LOGGER.exception(exception)
-                    errors[CONF_ACCESS_TOKEN] = "unknown"
-            if errors:
-                # Show form again with errors
-                description_placeholders = {
-                    "access_token": new_token,
-                    "home_id": current_home_id,
-                }
-                return self.async_show_form(
-                    step_id="init",
-                    data_schema=vol.Schema(options),
-                    errors=errors,
-                    description_placeholders=description_placeholders,
-                )
-            # Only update options and access token if valid
             return self.async_create_entry(title="", data=user_input)
 
         # Prepare read-only info for description placeholders
         description_placeholders = {
-            "access_token": self.config_entry.data.get(CONF_ACCESS_TOKEN, ""),
             "unique_id": self.config_entry.unique_id or "",
         }
 
