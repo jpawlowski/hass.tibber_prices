@@ -156,10 +156,9 @@ class TibberPricesFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 class TibberPricesOptionsFlowHandler(config_entries.OptionsFlow):
     """Tibber Prices config flow options handler."""
 
-    def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
+    def __init__(self, config_entry: config_entries.ConfigEntry) -> None:  # noqa: ARG002
         """Initialize options flow."""
         super().__init__()
-        self.config_entry = config_entry
 
     async def async_step_init(self, user_input: dict | None = None) -> config_entries.ConfigFlowResult:
         """Manage the options."""
