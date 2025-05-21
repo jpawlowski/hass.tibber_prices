@@ -10,20 +10,61 @@ import voluptuous as vol
 
 from homeassistant.core import HomeAssistant, ServiceCall, SupportsResponse, callback
 from homeassistant.exceptions import ServiceValidationError
+from homeassistant.helpers.entity_registry import async_get as async_get_entity_registry
 from homeassistant.util import dt as dt_util
 
-from .const import DOMAIN
+from .const import (
+    DOMAIN,
+    PRICE_LEVEL_CHEAP,
+    PRICE_LEVEL_EXPENSIVE,
+    PRICE_LEVEL_NORMAL,
+    PRICE_LEVEL_VERY_CHEAP,
+    PRICE_LEVEL_VERY_EXPENSIVE,
+    PRICE_RATING_HIGH,
+    PRICE_RATING_LOW,
+    PRICE_RATING_NORMAL,
+    get_price_level_translation,
+)
 
 PRICE_SERVICE_NAME = "get_price"
+APEXCHARTS_DATA_SERVICE_NAME = "get_apexcharts_data"
+APEXCHARTS_YAML_SERVICE_NAME = "get_apexcharts_yaml"
 ATTR_DAY: Final = "day"
 ATTR_ENTRY_ID: Final = "entry_id"
 ATTR_TIME: Final = "time"
 
-SERVICE_SCHEMA: Final = vol.Schema(
+PRICE_SERVICE_SCHEMA: Final = vol.Schema(
     {
         vol.Required(ATTR_ENTRY_ID): str,
         vol.Optional(ATTR_DAY): vol.In(["yesterday", "today", "tomorrow"]),
         vol.Optional(ATTR_TIME): vol.Match(r"^(\d{2}:\d{2}(:\d{2})?)$"),  # HH:mm or HH:mm:ss
+    }
+)
+
+APEXCHARTS_DATA_SERVICE_SCHEMA: Final = vol.Schema(
+    {
+        vol.Required("entity_id"): str,
+        vol.Required("day"): vol.In(["yesterday", "today", "tomorrow"]),
+        vol.Required("level_type"): vol.In(["level", "rating_level"]),
+        vol.Required("level_key"): vol.In(
+            [
+                PRICE_LEVEL_CHEAP,
+                PRICE_LEVEL_EXPENSIVE,
+                PRICE_LEVEL_NORMAL,
+                PRICE_LEVEL_VERY_CHEAP,
+                PRICE_LEVEL_VERY_EXPENSIVE,
+                PRICE_RATING_HIGH,
+                PRICE_RATING_LOW,
+                PRICE_RATING_NORMAL,
+            ]
+        ),
+    }
+)
+
+APEXCHARTS_SERVICE_SCHEMA: Final = vol.Schema(
+    {
+        vol.Required("entity_id"): str,
+        vol.Optional("day", default="today"): vol.In(["yesterday", "today", "tomorrow"]),
     }
 )
 
@@ -106,6 +147,122 @@ async def _get_price(call: ServiceCall) -> dict[str, Any]:
     )
 
     return _build_price_response(response_ctx)
+
+
+async def _get_entry_id_from_entity_id(hass: HomeAssistant, entity_id: str) -> str | None:
+    """Return the config entry_id for a given entity_id."""
+    entity_registry = async_get_entity_registry(hass)
+    entry = entity_registry.async_get(entity_id)
+    if entry is not None:
+        return entry.config_entry_id
+    return None
+
+
+async def _get_apexcharts_data(call: ServiceCall) -> dict[str, Any]:
+    """Return points for ApexCharts for a single level type (e.g., LOW, NORMAL, HIGH, etc)."""
+    entity_id = call.data.get("entity_id", "sensor.tibber_price_today")
+    day = call.data.get("day", "today")
+    level_type = call.data.get("level_type", "rating_level")
+    level_key = call.data.get("level_key")
+    hass = call.hass
+    entry_id = await _get_entry_id_from_entity_id(hass, entity_id)
+    if not entry_id:
+        raise ServiceValidationError(translation_domain=DOMAIN, translation_key="invalid_entity_id")
+    entry, coordinator, data = _get_entry_and_data(hass, entry_id)
+    points = []
+    if level_type == "rating_level":
+        entries = coordinator.data.get("priceRating", {}).get("hourly", [])
+        price_info = coordinator.data.get("priceInfo", {})
+        if day == "today":
+            prefixes = _get_day_prefixes(price_info.get("today", []))
+            if not prefixes:
+                return {"points": []}
+            entries = [e for e in entries if e.get("time", e.get("startsAt", "")).startswith(prefixes[0])]
+        elif day == "tomorrow":
+            prefixes = _get_day_prefixes(price_info.get("tomorrow", []))
+            if not prefixes:
+                return {"points": []}
+            entries = [e for e in entries if e.get("time", e.get("startsAt", "")).startswith(prefixes[0])]
+        elif day == "yesterday":
+            prefixes = _get_day_prefixes(price_info.get("yesterday", []))
+            if not prefixes:
+                return {"points": []}
+            entries = [e for e in entries if e.get("time", e.get("startsAt", "")).startswith(prefixes[0])]
+    else:
+        entries = coordinator.data.get("priceInfo", {}).get(day, [])
+        if not entries:
+            return {"points": []}
+    for i in range(len(entries) - 1):
+        p = entries[i]
+        if p.get("level") != level_key:
+            continue
+        points.append([p.get("time") or p.get("startsAt"), round((p.get("total") or 0) * 100, 2)])
+    if points:
+        points.append([points[-1][0], None])
+    return {"points": points}
+
+
+async def _get_apexcharts_yaml(call: ServiceCall) -> dict[str, Any]:
+    """Return a YAML snippet for an ApexCharts card using the get_apexcharts_data service for each level."""
+    entity_id = call.data.get("entity_id", "sensor.tibber_price_today")
+    day = call.data.get("day", "today")
+    level_type = call.data.get("level_type", "rating_level")
+    if level_type == "rating_level":
+        series_levels = [
+            (PRICE_RATING_LOW, "#2ecc71"),
+            (PRICE_RATING_NORMAL, "#f1c40f"),
+            (PRICE_RATING_HIGH, "#e74c3c"),
+        ]
+    else:
+        series_levels = [
+            (PRICE_LEVEL_VERY_CHEAP, "#2ecc71"),
+            (PRICE_LEVEL_CHEAP, "#27ae60"),
+            (PRICE_LEVEL_NORMAL, "#f1c40f"),
+            (PRICE_LEVEL_EXPENSIVE, "#e67e22"),
+            (PRICE_LEVEL_VERY_EXPENSIVE, "#e74c3c"),
+        ]
+    series = []
+    for level_key, color in series_levels:
+        name = get_price_level_translation(level_key, "en") or level_key
+        data_generator = (
+            f"const data = await hass.callService('tibber_prices', 'get_apexcharts_data', "
+            f"{{ entity_id: '{entity_id}', day: '{day}', level_type: '{level_type}', level_key: '{level_key}' }});\n"
+            f"return data.points;"
+        )
+        series.append(
+            {
+                "entity": entity_id,
+                "name": name,
+                "type": "area",
+                "color": color,
+                "yaxis_id": "price",
+                "show": {"extremas": level_key != "NORMAL"},
+                "data_generator": data_generator,
+            }
+        )
+    title = "Preisphasen Tagesverlauf" if level_type == "rating" else "Preisniveau"
+    return {
+        "type": "custom:apexcharts-card",
+        "update_interval": "5m",
+        "span": {"start": "day"},
+        "header": {
+            "show": True,
+            "title": title,
+            "show_states": False,
+        },
+        "apex_config": {
+            "stroke": {"curve": "stepline"},
+            "fill": {"opacity": 0.4},
+            "tooltip": {"x": {"format": "HH:mm"}},
+            "legend": {"show": True},
+        },
+        "yaxis": [
+            {"id": "price", "decimals": 0, "min": 0},
+        ],
+        "now": {"show": True, "color": "#8e24aa", "label": "🕒 LIVE"},
+        "all_series_config": {"stroke_width": 1, "show": {"legend_value": False}},
+        "series": series,
+    }
 
 
 # --- Direct helpers (called by service handler or each other) ---
@@ -232,6 +389,8 @@ def _merge_priceinfo_and_pricerating(price_info: list[dict], price_rating: list[
                     continue
                 if k == "difference":
                     merged_interval["rating_difference_%"] = v
+                elif k == "rating":
+                    merged_interval["rating"] = v
                 else:
                     merged_interval[f"rating_{k}"] = v
         merged.append(merged_interval)
@@ -536,7 +695,21 @@ def async_setup_services(hass: HomeAssistant) -> None:
         DOMAIN,
         PRICE_SERVICE_NAME,
         _get_price,
-        schema=SERVICE_SCHEMA,
+        schema=PRICE_SERVICE_SCHEMA,
+        supports_response=SupportsResponse.ONLY,
+    )
+    hass.services.async_register(
+        DOMAIN,
+        APEXCHARTS_DATA_SERVICE_NAME,
+        _get_apexcharts_data,
+        schema=APEXCHARTS_DATA_SERVICE_SCHEMA,
+        supports_response=SupportsResponse.ONLY,
+    )
+    hass.services.async_register(
+        DOMAIN,
+        APEXCHARTS_YAML_SERVICE_NAME,
+        _get_apexcharts_yaml,
+        schema=APEXCHARTS_SERVICE_SCHEMA,
         supports_response=SupportsResponse.ONLY,
     )
 

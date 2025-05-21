@@ -30,3 +30,84 @@ get_price:
       required: false
       selector:
         time:
+get_apexcharts_data:
+  name: Get ApexCharts Data
+  description: >-
+    Returns data for an ApexCharts card visualizing Tibber Prices for the selected day.
+  fields:
+    entity_id:
+      name: Entity ID
+      description: The entity_id for the Tibber price sensor to determine the config entry ID.
+      required: true
+      example: sensor.tibber_price_today
+      selector:
+        entity:
+          domain: sensor
+          integration: tibber_prices
+    day:
+      name: Day
+      description: Which day to visualize (yesterday, today, or tomorrow).
+      required: true
+      default: today
+      example: today
+      selector:
+        select:
+          options:
+            - yesterday
+            - today
+            - tomorrow
+    level_type:
+      name: Level Type
+      description: >-
+        Select what data to return: 'rating_level' (the current official Tibber integration price level: LOW/NORMAL/HIGH) or 'level' (the original Tibber API price level: VERY_CHEAP, CHEAP, NORMAL, EXPENSIVE, VERY_EXPENSIVE).
+      required: true
+      default: rating_level
+      example: rating_level
+      selector:
+        select:
+          options:
+            - level
+            - rating_level
+    level_key:
+      name: Level Key
+      description: >-
+        Select the key to use for the level type: For 'rating_level', use LOW/NORMAL/HIGH. For 'level', use VERY_CHEAP/CHEAP/LOW/NORMAL/HIGH/EXPENSIVE/VERY_EXPENSIVE.
+      required: true
+      default: NORMAL
+      example: NORMAL
+      selector:
+        select:
+          options:
+            - VERY_CHEAP
+            - CHEAP
+            - LOW
+            - NORMAL
+            - HIGH
+            - EXPENSIVE
+            - VERY_EXPENSIVE
+get_apexcharts_yaml:
+  name: Get ApexCharts Card YAML
+  description: >-
+    Returns a ready-to-copy YAML snippet for an ApexCharts card visualizing Tibber Prices for the selected day. Use this to easily add a pre-configured chart to your dashboard. The YAML will use the get_price service for data.
+  fields:
+    entity_id:
+      name: Entity ID
+      description: The entity_id for the Tibber price sensor (used for context, but the chart fetches data via the service).
+      required: true
+      example: sensor.tibber_price_today
+      selector:
+        entity:
+          domain: sensor
+          integration: tibber_prices
+    day:
+      name: Day
+      description: Which day to visualize (yesterday, today, or tomorrow).
+      required: false
+      default: today
+      example: today
+      selector:
+        select:
+          options:
+            - yesterday
+            - today
+            - tomorrow
