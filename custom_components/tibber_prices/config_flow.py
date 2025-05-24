@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import voluptuous as vol
 
-from homeassistant import config_entries
+from homeassistant.config_entries import ConfigEntry, ConfigFlow, ConfigFlowResult, OptionsFlow
 from homeassistant.const import CONF_ACCESS_TOKEN
 from homeassistant.helpers import selector
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
@@ -27,7 +27,7 @@ from .const import (
 )
 
 
-class TibberPricesFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
+class TibberPricesFlowHandler(ConfigFlow, domain=DOMAIN):
     """Config flow for tibber_prices."""
 
     VERSION = 1
@@ -35,18 +35,18 @@ class TibberPricesFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     def __init__(self) -> None:
         """Initialize the config flow."""
         super().__init__()
-        self._reauth_entry: config_entries.ConfigEntry | None = None
+        self._reauth_entry: ConfigEntry | None = None
         self._pending_user_input: dict | None = None
 
     @staticmethod
     def async_get_options_flow(
-        config_entry: config_entries.ConfigEntry,
-    ) -> config_entries.OptionsFlow:
+        config_entry: ConfigEntry,
+    ) -> OptionsFlow:
         """Get the options flow for this handler."""
         return TibberPricesOptionsFlowHandler(config_entry)
 
     @staticmethod
-    def async_get_reauth_flow(entry: config_entries.ConfigEntry) -> config_entries.ConfigFlow:
+    def async_get_reauth_flow(entry: ConfigEntry) -> ConfigFlow:
         """Return the reauth flow handler for this integration."""
         return TibberPricesReauthFlowHandler(entry)
 
@@ -57,7 +57,7 @@ class TibberPricesFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_step_user(
         self,
         user_input: dict | None = None,
-    ) -> config_entries.ConfigFlowResult:
+    ) -> ConfigFlowResult:
         """Handle a flow initialized by the user. Only ask for access token."""
         _errors = {}
         if user_input is not None:
@@ -97,7 +97,7 @@ class TibberPricesFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             errors=_errors,
         )
 
-    async def async_step_finish(self, user_input: dict | None = None) -> config_entries.ConfigFlowResult:
+    async def async_step_finish(self, user_input: dict | None = None) -> ConfigFlowResult:
         """Show a finish screen after successful setup, then create entry on submit."""
         if self._pending_user_input is not None and user_input is None:
             # First visit: show home selection
@@ -158,16 +158,16 @@ class TibberPricesFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         return result["viewer"]
 
 
-class TibberPricesReauthFlowHandler(config_entries.ConfigFlow):
+class TibberPricesReauthFlowHandler(ConfigFlow):
     """Handle a reauthentication flow for tibber_prices."""
 
-    def __init__(self, entry: config_entries.ConfigEntry) -> None:
+    def __init__(self, entry: ConfigEntry) -> None:
         """Initialize the reauth flow handler."""
         self._entry = entry
         self._errors: dict[str, str] = {}
         self._pending_user_input: dict | None = None
 
-    async def async_step_user(self, user_input: dict | None = None) -> config_entries.ConfigFlowResult:
+    async def async_step_user(self, user_input: dict | None = None) -> ConfigFlowResult:
         """Prompt for a new access token, then go to finish for home selection."""
         if user_input is not None:
             try:
@@ -203,7 +203,7 @@ class TibberPricesReauthFlowHandler(config_entries.ConfigFlow):
             errors=self._errors,
         )
 
-    async def async_step_finish(self, user_input: dict | None = None) -> config_entries.ConfigFlowResult:
+    async def async_step_finish(self, user_input: dict | None = None) -> ConfigFlowResult:
         """Show home selection, then update config entry."""
         if self._pending_user_input is not None and user_input is None:
             viewer = self._pending_user_input["viewer"]
@@ -238,14 +238,14 @@ class TibberPricesReauthFlowHandler(config_entries.ConfigFlow):
         return self.async_abort(reason="setup_complete")
 
 
-class TibberPricesOptionsFlowHandler(config_entries.OptionsFlow):
+class TibberPricesOptionsFlowHandler(OptionsFlow):
     """Tibber Prices config flow options handler."""
 
-    def __init__(self, config_entry: config_entries.ConfigEntry) -> None:  # noqa: ARG002
+    def __init__(self, config_entry: ConfigEntry) -> None:  # noqa: ARG002
         """Initialize options flow."""
         super().__init__()
 
-    async def async_step_init(self, user_input: dict | None = None) -> config_entries.ConfigFlowResult:
+    async def async_step_init(self, user_input: dict | None = None) -> ConfigFlowResult:
         """Manage the options."""
         errors: dict[str, str] = {}
 
