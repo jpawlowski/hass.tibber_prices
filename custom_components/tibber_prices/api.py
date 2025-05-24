@@ -74,8 +74,8 @@ def _verify_response_or_raise(response: aiohttp.ClientResponse) -> None:
     response.raise_for_status()
 
 
-async def _verify_graphql_response(response_json: dict) -> None:
-    """Verify the GraphQL response for errors and data completeness."""
+async def _verify_graphql_response(response_json: dict, query_type: QueryType) -> None:
+    """Verify the GraphQL response for errors and data completeness, including empty data."""
     if "errors" in response_json:
         errors = response_json["errors"]
         if not errors:
@@ -98,16 +98,27 @@ async def _verify_graphql_response(response_json: dict) -> None:
             TibberPricesApiClientError.GRAPHQL_ERROR.format(message="Response missing data object")
         )
 
+    # Empty data check (for retry logic) - always check, regardless of query_type
+    if _is_data_empty(response_json["data"], query_type.value):
+        _LOGGER.debug("Empty data detected for query_type: %s", query_type)
+        raise TibberPricesApiClientError(
+            TibberPricesApiClientError.EMPTY_DATA_ERROR.format(query_type=query_type.value)
+        )
+
 
 def _is_data_empty(data: dict, query_type: str) -> bool:
     """
     Check if the response data is empty or incomplete.
 
+    For viewer data:
+    - Must have userId and homes
+    - If either is missing, data is considered empty
+    - If homes is empty, data is considered empty
+    - If userId is None, data is considered empty
+
     For price info:
-    - Must have either range/edges or yesterday data
+    - Must have range data
     - Must have today data
-    - If neither range/edges nor yesterday data exists, data is considered empty
-    - If today data is empty, data is considered empty
     - tomorrow can be empty if we have valid historical and today data
 
     For rating data:
@@ -116,78 +127,116 @@ def _is_data_empty(data: dict, query_type: str) -> bool:
     """
     _LOGGER.debug("Checking if data is empty for query_type %s", query_type)
 
+    is_empty = False
     try:
-        subscription = data["viewer"]["homes"][0]["currentSubscription"]
-
-        if query_type == "price_info":
-            price_info = subscription["priceInfo"]
-
-            # Check historical data (either range or yesterday)
-            has_range = (
-                "range" in price_info
-                and price_info["range"] is not None
-                and "edges" in price_info["range"]
-                and price_info["range"]["edges"]
+        if query_type == "viewer":
+            has_user_id = (
+                "viewer" in data
+                and isinstance(data["viewer"], dict)
+                and "userId" in data["viewer"]
+                and data["viewer"]["userId"] is not None
             )
-            has_yesterday = (
-                "yesterday" in price_info and price_info["yesterday"] is not None and len(price_info["yesterday"]) > 0
+            has_homes = (
+                "viewer" in data
+                and isinstance(data["viewer"], dict)
+                and "homes" in data["viewer"]
+                and isinstance(data["viewer"]["homes"], list)
+                and len(data["viewer"]["homes"]) > 0
             )
-            has_historical = has_range or has_yesterday
-
-            # Check today's data
-            has_today = "today" in price_info and price_info["today"] is not None and len(price_info["today"]) > 0
-
-            # Data is empty if we don't have historical data or today's data
-            is_empty = not has_historical or not has_today
-
+            is_empty = not has_user_id or not has_homes
             _LOGGER.debug(
-                "Price info check - historical data (range: %s, yesterday: %s), today: %s, is_empty: %s",
-                bool(has_range),
-                bool(has_yesterday),
-                bool(has_today),
-                is_empty,
-            )
-            return is_empty
-
-        if query_type in ["daily", "hourly", "monthly"]:
-            rating = subscription["priceRating"]
-
-            # Check threshold percentages
-            has_thresholds = (
-                "thresholdPercentages" in rating
-                and rating["thresholdPercentages"] is not None
-                and "low" in rating["thresholdPercentages"]
-                and "high" in rating["thresholdPercentages"]
-            )
-            if not has_thresholds:
-                _LOGGER.debug("Missing or invalid threshold percentages for %s rating", query_type)
-                return True
-
-            # Check rating entries
-            has_entries = (
-                query_type in rating
-                and rating[query_type] is not None
-                and "entries" in rating[query_type]
-                and rating[query_type]["entries"] is not None
-                and len(rating[query_type]["entries"]) > 0
+                "Viewer check - has_user_id: %s, has_homes: %s, is_empty: %s", has_user_id, has_homes, is_empty
             )
 
-            is_empty = not has_entries
-            _LOGGER.debug(
-                "%s rating check - has_thresholds: %s, entries count: %d, is_empty: %s",
-                query_type,
-                has_thresholds,
-                len(rating[query_type]["entries"]) if has_entries else 0,
-                is_empty,
-            )
-            return is_empty
+        elif query_type == "price_info":
+            # Check for homes existence and non-emptiness before accessing
+            if (
+                "viewer" not in data
+                or "homes" not in data["viewer"]
+                or not isinstance(data["viewer"]["homes"], list)
+                or len(data["viewer"]["homes"]) == 0
+                or "currentSubscription" not in data["viewer"]["homes"][0]
+                or data["viewer"]["homes"][0]["currentSubscription"] is None
+                or "priceInfo" not in data["viewer"]["homes"][0]["currentSubscription"]
+            ):
+                _LOGGER.debug("Missing homes/currentSubscription/priceInfo in price_info check")
+                is_empty = True
+            else:
+                price_info = data["viewer"]["homes"][0]["currentSubscription"]["priceInfo"]
 
-        _LOGGER.debug("Unknown query type %s, treating as non-empty", query_type)
+                # Check historical data (either range or yesterday)
+                has_historical = (
+                    "range" in price_info
+                    and price_info["range"] is not None
+                    and "edges" in price_info["range"]
+                    and price_info["range"]["edges"]
+                )
+
+                # Check today's data
+                has_today = "today" in price_info and price_info["today"] is not None and len(price_info["today"]) > 0
+
+                # Data is empty if we don't have historical data or today's data
+                is_empty = not has_historical or not has_today
+
+                _LOGGER.debug(
+                    "Price info check - historical data historical: %s, today: %s, is_empty: %s",
+                    bool(has_historical),
+                    bool(has_today),
+                    is_empty,
+                )
+
+        elif query_type in ["daily", "hourly", "monthly"]:
+            # Check for homes existence and non-emptiness before accessing
+            if (
+                "viewer" not in data
+                or "homes" not in data["viewer"]
+                or not isinstance(data["viewer"]["homes"], list)
+                or len(data["viewer"]["homes"]) == 0
+                or "currentSubscription" not in data["viewer"]["homes"][0]
+                or data["viewer"]["homes"][0]["currentSubscription"] is None
+                or "priceRating" not in data["viewer"]["homes"][0]["currentSubscription"]
+            ):
+                _LOGGER.debug("Missing homes/currentSubscription/priceRating in rating check")
+                is_empty = True
+            else:
+                rating = data["viewer"]["homes"][0]["currentSubscription"]["priceRating"]
+
+                # Check threshold percentages
+                has_thresholds = (
+                    "thresholdPercentages" in rating
+                    and rating["thresholdPercentages"] is not None
+                    and "low" in rating["thresholdPercentages"]
+                    and "high" in rating["thresholdPercentages"]
+                )
+                if not has_thresholds:
+                    _LOGGER.debug("Missing or invalid threshold percentages for %s rating", query_type)
+                    is_empty = True
+                else:
+                    # Check rating entries
+                    has_entries = (
+                        query_type in rating
+                        and rating[query_type] is not None
+                        and "entries" in rating[query_type]
+                        and rating[query_type]["entries"] is not None
+                        and len(rating[query_type]["entries"]) > 0
+                    )
+
+                    is_empty = not has_entries
+                    _LOGGER.debug(
+                        "%s rating check - has_thresholds: %s, entries count: %d, is_empty: %s",
+                        query_type,
+                        has_thresholds,
+                        len(rating[query_type]["entries"]) if has_entries else 0,
+                        is_empty,
+                    )
+        else:
+            _LOGGER.debug("Unknown query type %s, treating as non-empty", query_type)
+            is_empty = False
     except (KeyError, IndexError, TypeError) as error:
         _LOGGER.debug("Error checking data emptiness: %s", error)
-        return True
-    else:
-        return False
+        is_empty = True
+
+    return is_empty
 
 
 def _prepare_headers(access_token: str) -> dict[str, str]:
@@ -316,7 +365,7 @@ class TibberPricesApiClient:
         self._request_semaphore = asyncio.Semaphore(2)
         self._last_request_time = dt_util.now()
         self._min_request_interval = timedelta(seconds=1)
-        self._max_retries = 3
+        self._max_retries = 5
         self._retry_delay = 2
 
     async def async_get_viewer_details(self) -> Any:
@@ -347,9 +396,9 @@ class TibberPricesApiClient:
             query_type=QueryType.VIEWER,
         )
 
-    async def async_get_price_info(self) -> dict:
-        """Get price info data in flat format."""
-        response = await self._api_wrapper(
+    async def async_get_price_info(self, home_id: str) -> dict:
+        """Get price info data in flat format for the specified home_id."""
+        data = await self._api_wrapper(
             data={
                 "query": """
                     {viewer{homes{id,currentSubscription{priceInfo{
@@ -362,16 +411,17 @@ class TibberPricesApiClient:
             },
             query_type=QueryType.PRICE_INFO,
         )
-        # response is already transformed, but we want flat
-        try:
-            subscription = response["viewer"]["homes"][0]["currentSubscription"]
-        except KeyError:
-            subscription = response["data"]["viewer"]["homes"][0]["currentSubscription"]
-        return {"priceInfo": _flatten_price_info(subscription)}
+        homes = data.get("viewer", {}).get("homes", [])
+        home = next((h for h in homes if h.get("id") == home_id), None)
+        if home and "currentSubscription" in home:
+            data["priceInfo"] = _flatten_price_info(home["currentSubscription"])
+        else:
+            data["priceInfo"] = {}
+        return data
 
-    async def async_get_daily_price_rating(self) -> dict:
-        """Get daily price rating data in flat format."""
-        response = await self._api_wrapper(
+    async def async_get_daily_price_rating(self, home_id: str) -> dict:
+        """Get daily price rating data in flat format for the specified home_id."""
+        data = await self._api_wrapper(
             data={
                 "query": """
                     {viewer{homes{id,currentSubscription{priceRating{
@@ -384,21 +434,17 @@ class TibberPricesApiClient:
             },
             query_type=QueryType.DAILY_RATING,
         )
-        try:
-            subscription = response["viewer"]["homes"][0]["currentSubscription"]
-        except KeyError:
-            subscription = response["data"]["viewer"]["homes"][0]["currentSubscription"]
-        return {
-            "priceRating": {
-                "daily": _flatten_price_rating(subscription)["daily"],
-                "thresholdPercentages": _flatten_price_rating(subscription)["thresholdPercentages"],
-                "currency": _flatten_price_rating(subscription)["currency"],
-            }
-        }
+        homes = data.get("viewer", {}).get("homes", [])
+        home = next((h for h in homes if h.get("id") == home_id), None)
+        if home and "currentSubscription" in home:
+            data["priceRating"] = _flatten_price_rating(home["currentSubscription"])
+        else:
+            data["priceRating"] = {}
+        return data
 
-    async def async_get_hourly_price_rating(self) -> dict:
-        """Get hourly price rating data in flat format."""
-        response = await self._api_wrapper(
+    async def async_get_hourly_price_rating(self, home_id: str) -> dict:
+        """Get hourly price rating data in flat format for the specified home_id."""
+        data = await self._api_wrapper(
             data={
                 "query": """
                     {viewer{homes{id,currentSubscription{priceRating{
@@ -411,21 +457,17 @@ class TibberPricesApiClient:
             },
             query_type=QueryType.HOURLY_RATING,
         )
-        try:
-            subscription = response["viewer"]["homes"][0]["currentSubscription"]
-        except KeyError:
-            subscription = response["data"]["viewer"]["homes"][0]["currentSubscription"]
-        return {
-            "priceRating": {
-                "hourly": _flatten_price_rating(subscription)["hourly"],
-                "thresholdPercentages": _flatten_price_rating(subscription)["thresholdPercentages"],
-                "currency": _flatten_price_rating(subscription)["currency"],
-            }
-        }
+        homes = data.get("viewer", {}).get("homes", [])
+        home = next((h for h in homes if h.get("id") == home_id), None)
+        if home and "currentSubscription" in home:
+            data["priceRating"] = _flatten_price_rating(home["currentSubscription"])
+        else:
+            data["priceRating"] = {}
+        return data
 
-    async def async_get_monthly_price_rating(self) -> dict:
-        """Get monthly price rating data in flat format."""
-        response = await self._api_wrapper(
+    async def async_get_monthly_price_rating(self, home_id: str) -> dict:
+        """Get monthly price rating data in flat format for the specified home_id."""
+        data = await self._api_wrapper(
             data={
                 "query": """
                     {viewer{homes{id,currentSubscription{priceRating{
@@ -438,30 +480,30 @@ class TibberPricesApiClient:
             },
             query_type=QueryType.MONTHLY_RATING,
         )
-        try:
-            subscription = response["viewer"]["homes"][0]["currentSubscription"]
-        except KeyError:
-            subscription = response["data"]["viewer"]["homes"][0]["currentSubscription"]
-        return {
-            "priceRating": {
-                "monthly": _flatten_price_rating(subscription)["monthly"],
-                "thresholdPercentages": _flatten_price_rating(subscription)["thresholdPercentages"],
-                "currency": _flatten_price_rating(subscription)["currency"],
-            }
-        }
+        homes = data.get("viewer", {}).get("homes", [])
+        home = next((h for h in homes if h.get("id") == home_id), None)
+        if home and "currentSubscription" in home:
+            data["priceRating"] = _flatten_price_rating(home["currentSubscription"])
+        else:
+            data["priceRating"] = {}
+        return data
 
-    async def async_get_data(self) -> dict:
-        """Get all data from the API by combining multiple queries in flat format."""
-        price_info = await self.async_get_price_info()
-        daily_rating = await self.async_get_daily_price_rating()
-        hourly_rating = await self.async_get_hourly_price_rating()
-        monthly_rating = await self.async_get_monthly_price_rating()
-        # Merge all into one flat dict
+    async def async_get_data(self, home_id: str) -> dict:
+        """Get all data from the API by combining multiple queries in flat format for the specified home_id."""
+        price_info = await self.async_get_price_info(home_id)
+        daily_rating = await self.async_get_daily_price_rating(home_id)
+        hourly_rating = await self.async_get_hourly_price_rating(home_id)
+        monthly_rating = await self.async_get_monthly_price_rating(home_id)
         price_rating = {
             "thresholdPercentages": daily_rating["priceRating"].get("thresholdPercentages"),
             "daily": daily_rating["priceRating"].get("daily", []),
             "hourly": hourly_rating["priceRating"].get("hourly", []),
             "monthly": monthly_rating["priceRating"].get("monthly", []),
+            "currency": (
+                daily_rating["priceRating"].get("currency")
+                or hourly_rating["priceRating"].get("currency")
+                or monthly_rating["priceRating"].get("currency")
+            ),
         }
         return {
             "priceInfo": price_info["priceInfo"],
@@ -494,7 +536,7 @@ class TibberPricesApiClient:
         response_json = await response.json()
         _LOGGER.debug("Received API response: %s", response_json)
 
-        await _verify_graphql_response(response_json)
+        await _verify_graphql_response(response_json, query_type)
 
         return _transform_data(response_json["data"], query_type)
 
@@ -518,19 +560,11 @@ class TibberPricesApiClient:
 
             async with async_timeout.timeout(10):
                 self._last_request_time = dt_util.now()
-                response_data = await self._make_request(
+                return await self._make_request(
                     headers,
                     data or {},
                     query_type,
                 )
-
-                if query_type != QueryType.VIEWER and _is_data_empty(response_data, query_type.value):
-                    _LOGGER.debug("Empty data detected for query_type: %s", query_type)
-                    raise TibberPricesApiClientError(
-                        TibberPricesApiClientError.EMPTY_DATA_ERROR.format(query_type=query_type.value)
-                    )
-
-                return response_data
 
     async def _api_wrapper(
         self,

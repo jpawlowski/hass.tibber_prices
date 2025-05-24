@@ -316,48 +316,27 @@ class TibberPricesDataUpdateCoordinator(DataUpdateCoordinator[dict]):
         return self._merge_all_cached_data()
 
     async def _fetch_price_data(self) -> dict:
-        """Fetch fresh price data from API and check for GraphQL errors."""
+        """Fetch fresh price data from API. Assumes errors are handled in api.py."""
         client = self.config_entry.runtime_data.client
-        data = await client.async_get_price_info()
-        # Check for GraphQL errors at the top level
-        if isinstance(data, dict) and "errors" in data and data["errors"]:
-            errors = data["errors"]
-            # Look for authentication-related errors (extensions.code == 'UNAUTHENTICATED')
-            for err in errors:
-                code = err.get("extensions", {}).get("code")
-                msg = str(err.get("message", ""))
-                if code == "UNAUTHENTICATED":
-                    LOGGER.error(
-                        "GraphQL authentication error (UNAUTHENTICATED): %s",
-                        msg,
-                        extra={"error": msg, "error_type": "graphql_auth_failed", "code": code},
-                    )
-                    raise TibberPricesApiClientAuthenticationError(msg)
-                # Fallback: also check for other auth-related keywords in message/type
-                err_type = str(err.get("type", ""))
-                if any(
-                    s in msg.lower() or s in err_type.lower()
-                    for s in ("auth", "token", "credential", "unauth", "expired")
-                ):
-                    LOGGER.error(
-                        "GraphQL authentication error: %s",
-                        msg,
-                        extra={"error": msg, "error_type": "graphql_auth_failed_fallback"},
-                    )
-                    raise TibberPricesApiClientAuthenticationError(msg)
-            # If errors exist but not auth-related, log and raise generic error
-            msg = f"GraphQL error(s): {errors}"
-            LOGGER.error(
-                "GraphQL error(s) in response: %s",
-                errors,
-                extra={"error_type": "graphql_error"},
-            )
-            raise TibberPricesApiClientError(msg)
-        return data
+        home_id = self.config_entry.unique_id
+        if not home_id:
+            LOGGER.error("No home_id (unique_id) set in config entry!")
+            return {}
+        data = await client.async_get_price_info(home_id)
+        if not data:
+            return {}
+        price_info = data.get("priceInfo", {})
+        if not price_info:
+            return {}
+        return price_info
 
     async def _get_rating_data_for_type(self, rating_type: str) -> dict:
-        """Get fresh rating data for a specific type in flat format."""
+        """Get fresh rating data for a specific type in flat format. Assumes errors are handled in api.py."""
         client = self.config_entry.runtime_data.client
+        home_id = self.config_entry.unique_id
+        if not home_id:
+            LOGGER.error("No home_id (unique_id) set in config entry!")
+            return {}
         method_map = {
             "hourly": client.async_get_hourly_price_rating,
             "daily": client.async_get_daily_price_rating,
@@ -367,7 +346,9 @@ class TibberPricesDataUpdateCoordinator(DataUpdateCoordinator[dict]):
         if not fetch_method:
             msg = f"Unknown rating type: {rating_type}"
             raise ValueError(msg)
-        data = await fetch_method()
+        data = await fetch_method(home_id)
+        if not data:
+            return {}
         try:
             price_rating = data.get("priceRating", data)
             threshold = price_rating.get("thresholdPercentages")
