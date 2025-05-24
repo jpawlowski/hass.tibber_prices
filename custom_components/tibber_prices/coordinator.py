@@ -167,35 +167,9 @@ class TibberPricesDataUpdateCoordinator(DataUpdateCoordinator[dict]):
     async def _async_update_data(self) -> dict:
         """Fetch new state data for the coordinator. Handles expired credentials by raising ConfigEntryAuthFailed."""
         if self._cached_price_data is None:
-            try:
-                await self._async_initialize()
-            except TimeoutError as exception:
-                msg = "Timeout during initialization"
-                LOGGER.error(
-                    "%s: %s",
-                    msg,
-                    exception,
-                    extra={"error_type": "timeout_init"},
-                )
-                raise UpdateFailed(msg) from exception
-            except TibberPricesApiClientAuthenticationError as exception:
-                msg = "Authentication failed: credentials expired or invalid"
-                LOGGER.error(
-                    "Authentication failed (likely expired credentials) during initialization",
-                    extra={"error": str(exception), "error_type": "auth_failed_init"},
-                )
-                raise ConfigEntryAuthFailed(msg) from exception
-            except Exception as exception:
-                msg = "Unexpected error during initialization"
-                LOGGER.exception(
-                    "%s",
-                    msg,
-                    extra={"error": str(exception), "error_type": "unexpected_init"},
-                )
-                raise UpdateFailed(msg) from exception
+            await self._handle_initialization()
         try:
             current_time = dt_util.now()
-            result = None
             if self._force_update:
                 LOGGER.debug(
                     "Force updating data",
@@ -211,17 +185,55 @@ class TibberPricesDataUpdateCoordinator(DataUpdateCoordinator[dict]):
                     },
                 )
                 self._force_update = False
-                result = await self._fetch_all_data()
-            else:
-                result = await self._handle_conditional_update(current_time)
+                return await self._fetch_all_data()
+            return await self._handle_conditional_update(current_time)
+        except (
+            TibberPricesApiClientAuthenticationError,
+            TimeoutError,
+            TibberPricesApiClientCommunicationError,
+            TibberPricesApiClientError,
+        ) as exception:
+            return await self._handle_update_exception(exception)
+
+    async def _handle_initialization(self) -> None:
+        """Handle initialization and related errors for cached price data."""
+        try:
+            await self._async_initialize()
+        except TimeoutError as exception:
+            msg = "Timeout during initialization"
+            LOGGER.error(
+                "%s: %s",
+                msg,
+                exception,
+                extra={"error_type": "timeout_init"},
+            )
+            raise UpdateFailed(msg) from exception
         except TibberPricesApiClientAuthenticationError as exception:
+            msg = "Authentication failed: credentials expired or invalid"
+            LOGGER.error(
+                "Authentication failed (likely expired credentials) during initialization",
+                extra={"error": str(exception), "error_type": "auth_failed_init"},
+            )
+            raise ConfigEntryAuthFailed(msg) from exception
+        except Exception as exception:
+            msg = "Unexpected error during initialization"
+            LOGGER.exception(
+                "%s",
+                msg,
+                extra={"error": str(exception), "error_type": "unexpected_init"},
+            )
+            raise UpdateFailed(msg) from exception
+
+    async def _handle_update_exception(self, exception: Exception) -> dict:
+        """Handle exceptions during update and return fallback or raise."""
+        if isinstance(exception, TibberPricesApiClientAuthenticationError):
             msg = "Authentication failed: credentials expired or invalid"
             LOGGER.error(
                 "Authentication failed (likely expired credentials)",
                 extra={"error": str(exception), "error_type": "auth_failed"},
             )
             raise ConfigEntryAuthFailed(msg) from exception
-        except TimeoutError as exception:
+        if isinstance(exception, TimeoutError):
             msg = "Timeout during data update"
             LOGGER.warning(
                 "%s: %s",
@@ -233,35 +245,28 @@ class TibberPricesDataUpdateCoordinator(DataUpdateCoordinator[dict]):
                 LOGGER.info("Using cached data as fallback after timeout")
                 return self._merge_all_cached_data()
             raise UpdateFailed(msg) from exception
-        except (
-            TibberPricesApiClientCommunicationError,
-            TibberPricesApiClientError,
-            Exception,
-        ) as exception:
-            if isinstance(exception, TibberPricesApiClientCommunicationError):
-                LOGGER.error(
-                    "API communication error",
-                    extra={
-                        "error": str(exception),
-                        "error_type": "communication_error",
-                    },
-                )
-            elif isinstance(exception, TibberPricesApiClientError):
-                LOGGER.error(
-                    "API client error",
-                    extra={"error": str(exception), "error_type": "client_error"},
-                )
-            else:
-                LOGGER.exception(
-                    "Unexpected error",
-                    extra={"error": str(exception), "error_type": "unexpected"},
-                )
-            if self._cached_price_data is not None:
-                LOGGER.info("Using cached data as fallback")
-                return self._merge_all_cached_data()
-            raise UpdateFailed(UPDATE_FAILED_MSG) from exception
+        if isinstance(exception, TibberPricesApiClientCommunicationError):
+            LOGGER.error(
+                "API communication error",
+                extra={
+                    "error": str(exception),
+                    "error_type": "communication_error",
+                },
+            )
+        elif isinstance(exception, TibberPricesApiClientError):
+            LOGGER.error(
+                "API client error",
+                extra={"error": str(exception), "error_type": "client_error"},
+            )
         else:
-            return result
+            LOGGER.exception(
+                "Unexpected error",
+                extra={"error": str(exception), "error_type": "unexpected"},
+            )
+        if self._cached_price_data is not None:
+            LOGGER.info("Using cached data as fallback")
+            return self._merge_all_cached_data()
+        raise UpdateFailed(UPDATE_FAILED_MSG) from exception
 
     async def _handle_conditional_update(self, current_time: datetime) -> dict:
         """Handle conditional update based on update conditions."""

@@ -6,7 +6,7 @@ import asyncio
 import logging
 import socket
 from datetime import timedelta
-from enum import Enum, auto
+from enum import Enum
 from typing import Any
 
 import aiohttp
@@ -22,13 +22,6 @@ _LOGGER = logging.getLogger(__name__)
 HTTP_TOO_MANY_REQUESTS = 429
 HTTP_UNAUTHORIZED = 401
 HTTP_FORBIDDEN = 403
-
-
-class TransformMode(Enum):
-    """Data transformation mode."""
-
-    TRANSFORM = auto()  # Transform price info data
-    SKIP = auto()  # Return raw data without transformation
 
 
 class QueryType(Enum):
@@ -248,44 +241,16 @@ def _prepare_headers(access_token: str) -> dict[str, str]:
     }
 
 
-def _transform_data(data: dict, query_type: QueryType) -> dict:
-    """Transform API response data based on query type."""
-    if not data or "viewer" not in data:
-        _LOGGER.debug("No data to transform or missing viewer key")
-        return data
-
-    _LOGGER.debug("Starting data transformation for query type %s", query_type)
-
-    if query_type == QueryType.PRICE_INFO:
-        return _transform_price_info(data)
-    if query_type in (
-        QueryType.DAILY_RATING,
-        QueryType.HOURLY_RATING,
-        QueryType.MONTHLY_RATING,
-    ):
-        return data
-    if query_type == QueryType.VIEWER:
-        return data
-
-    _LOGGER.warning("Unknown query type %s, returning raw data", query_type)
-    return data
-
-
-def _transform_price_info(data: dict) -> dict:
-    """Transform the price info data structure."""
-    if not data or "viewer" not in data:
-        _LOGGER.debug("No data to transform or missing viewer key")
-        return data
-
-    _LOGGER.debug("Starting price info transformation")
-    price_info = data["viewer"]["homes"][0]["currentSubscription"]["priceInfo"]
+def _flatten_price_info(subscription: dict) -> dict:
+    """Transform and flatten priceInfo from full API data structure."""
+    price_info = subscription.get("priceInfo", {})
 
     # Get today and yesterday dates using Home Assistant's dt_util
     today_local = dt_util.now().date()
     yesterday_local = today_local - timedelta(days=1)
     _LOGGER.debug("Processing data for yesterday's date: %s", yesterday_local)
 
-    # Transform edges data
+    # Transform edges data (extract yesterday's prices)
     if "range" in price_info and "edges" in price_info["range"]:
         edges = price_info["range"]["edges"]
         yesterday_prices = []
@@ -315,12 +280,6 @@ def _transform_price_info(data: dict) -> dict:
         price_info["yesterday"] = yesterday_prices
         del price_info["range"]
 
-    return data
-
-
-def _flatten_price_info(subscription: dict) -> dict:
-    """Extract and flatten priceInfo from subscription."""
-    price_info = subscription.get("priceInfo", {})
     return {
         "yesterday": price_info.get("yesterday", []),
         "today": price_info.get("today", []),
@@ -538,7 +497,7 @@ class TibberPricesApiClient:
 
         await _verify_graphql_response(response_json, query_type)
 
-        return _transform_data(response_json["data"], query_type)
+        return response_json["data"]
 
     async def _handle_request(
         self,
