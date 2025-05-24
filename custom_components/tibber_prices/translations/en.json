@@ -31,6 +31,30 @@
             "setup_complete": "Setup complete! You can change additional options for Tibber Prices in the integration's options after closing this dialog."
         }
     },
+    "config_subentries": {
+        "home": {
+            "title": "Home",
+            "step": {
+                "user": {
+                    "title": "Add Tibber Home",
+                    "description": "Select a home to add to your Tibber integration.",
+                    "data": {
+                        "home_id": "Home"
+                    }
+                }
+            },
+            "error": {
+                "api_error": "Failed to fetch homes from Tibber API"
+            },
+            "abort": {
+                "no_parent_entry": "Parent entry not found",
+                "no_access_token": "No access token available",
+                "home_not_found": "Selected home not found",
+                "api_error": "Failed to fetch homes from Tibber API",
+                "no_available_homes": "No additional homes available to add"
+            }
+        }
+    },
     "options": {
         "step": {
             "init": {

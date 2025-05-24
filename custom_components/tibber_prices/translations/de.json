@@ -31,6 +31,30 @@
             "setup_complete": "Einrichtung abgeschlossen! Du kannst zusätzliche Optionen für Tibber Preise in den Integrationsoptionen ändern, nachdem du diesen Dialog geschlossen hast."
         }
     },
+    "config_subentries": {
+        "home": {
+            "title": "Zuhause",
+            "step": {
+                "user": {
+                    "title": "Tibber Zuhause hinzufügen",
+                    "description": "Wähle ein Zuhause aus, das du zu deiner Tibber-Integration hinzufügen möchtest.",
+                    "data": {
+                        "home_id": "Zuhause"
+                    }
+                }
+            },
+            "error": {
+                "api_error": "Fehler beim Abrufen der Zuhause von der Tibber API"
+            },
+            "abort": {
+                "no_parent_entry": "Übergeordneter Eintrag nicht gefunden",
+                "no_access_token": "Kein Zugriffstoken verfügbar",
+                "home_not_found": "Ausgewähltes Zuhause nicht gefunden",
+                "api_error": "Fehler beim Abrufen der Zuhause von der Tibber API",
+                "no_available_homes": "Keine weiteren Zuhause zum Hinzufügen verfügbar"
+            }
+        }
+    },
     "options": {
         "step": {
             "init": {
