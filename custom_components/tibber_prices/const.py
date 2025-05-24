@@ -14,7 +14,6 @@ from homeassistant.core import HomeAssistant
 VERSION = "0.1.0"
 
 DOMAIN = "tibber_prices"
-CONF_ACCESS_TOKEN = "access_token"  # noqa: S105
 CONF_EXTENDED_DESCRIPTIONS = "extended_descriptions"
 CONF_BEST_PRICE_FLEX = "best_price_flex"
 CONF_PEAK_PRICE_FLEX = "peak_price_flex"
@@ -26,6 +25,20 @@ DEFAULT_NAME = "Tibber Price Information & Ratings"
 DEFAULT_EXTENDED_DESCRIPTIONS = False
 DEFAULT_BEST_PRICE_FLEX = 5  # 5% flexibility for best price (user-facing, percent)
 DEFAULT_PEAK_PRICE_FLEX = 5  # 5% flexibility for peak price (user-facing, percent)
+
+# Home types
+HOME_TYPE_APARTMENT = "APARTMENT"
+HOME_TYPE_ROWHOUSE = "ROWHOUSE"
+HOME_TYPE_HOUSE = "HOUSE"
+HOME_TYPE_COTTAGE = "COTTAGE"
+
+# Mapping for home types to their localized names
+HOME_TYPES = {
+    HOME_TYPE_APARTMENT: "Apartment",
+    HOME_TYPE_ROWHOUSE: "Rowhouse",
+    HOME_TYPE_HOUSE: "House",
+    HOME_TYPE_COTTAGE: "Cottage",
+}
 
 # Price level constants
 PRICE_LEVEL_NORMAL = "NORMAL"

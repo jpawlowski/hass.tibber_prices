@@ -2,12 +2,34 @@
 
 from __future__ import annotations
 
+from typing import Any
+
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigEntry, ConfigFlow, ConfigFlowResult, OptionsFlow
+from homeassistant.config_entries import (
+    ConfigEntry,
+    ConfigFlow,
+    ConfigFlowResult,
+    ConfigSubentry,
+    ConfigSubentryFlow,
+    OptionsFlow,
+    SubentryFlowResult,
+)
 from homeassistant.const import CONF_ACCESS_TOKEN
-from homeassistant.helpers import selector
+from homeassistant.core import callback
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
+from homeassistant.helpers.selector import (
+    BooleanSelector,
+    NumberSelector,
+    NumberSelectorConfig,
+    NumberSelectorMode,
+    SelectSelector,
+    SelectSelectorConfig,
+    SelectSelectorMode,
+    TextSelector,
+    TextSelectorConfig,
+    TextSelectorType,
+)
 
 from .api import (
     TibberPricesApiClient,
@@ -31,19 +53,18 @@ class TibberPricesFlowHandler(ConfigFlow, domain=DOMAIN):
     """Config flow for tibber_prices."""
 
     VERSION = 1
+    MINOR_VERSION = 0
 
     def __init__(self) -> None:
         """Initialize the config flow."""
         super().__init__()
         self._reauth_entry: ConfigEntry | None = None
-        self._pending_user_input: dict | None = None
 
-    @staticmethod
-    def async_get_options_flow(
-        config_entry: ConfigEntry,
-    ) -> OptionsFlow:
-        """Get the options flow for this handler."""
-        return TibberPricesOptionsFlowHandler(config_entry)
+    @classmethod
+    @callback
+    def async_get_supported_subentry_types(cls, config_entry: ConfigEntry) -> dict[str, type[ConfigSubentryFlow]]:  # noqa: ARG003
+        """Return subentries supported by this integration."""
+        return {"home": TibberPricesSubentryFlowHandler}
 
     @staticmethod
     def async_get_reauth_flow(entry: ConfigEntry) -> ConfigFlow:
@@ -73,12 +94,36 @@ class TibberPricesFlowHandler(ConfigFlow, domain=DOMAIN):
                 LOGGER.exception(exception)
                 _errors["base"] = "unknown"
             else:
-                # Store viewer for use in finish step
-                self._pending_user_input = {
-                    "access_token": user_input[CONF_ACCESS_TOKEN],
-                    "viewer": viewer,
-                }
-                return await self.async_step_finish()
+                user_id = viewer.get("userId", None)
+                user_name = viewer.get("name") or user_id or "Unknown User"
+                user_login = viewer.get("login", "N/A")
+                homes = viewer.get("homes", [])
+
+                if not user_id:
+                    LOGGER.error("No user ID found: %s", viewer)
+                    return self.async_abort(reason="unknown")
+
+                if not homes:
+                    LOGGER.error("No homes found: %s", viewer)
+                    return self.async_abort(reason="unknown")
+
+                LOGGER.debug("Viewer data received: %s", viewer)
+
+                data = {CONF_ACCESS_TOKEN: user_input[CONF_ACCESS_TOKEN], "homes": homes}
+
+                await self.async_set_unique_id(unique_id=str(user_id))
+                self._abort_if_unique_id_configured()
+
+                return self.async_create_entry(
+                    title=user_name,
+                    data=data,
+                    description=f"{user_login} ({user_id})",
+                    description_placeholders={
+                        "user_id": user_id,
+                        "user_name": user_name,
+                        "user_login": user_login,
+                    },
+                )
 
         return self.async_show_form(
             step_id="user",
@@ -87,66 +132,15 @@ class TibberPricesFlowHandler(ConfigFlow, domain=DOMAIN):
                     vol.Required(
                         CONF_ACCESS_TOKEN,
                         default=(user_input or {}).get(CONF_ACCESS_TOKEN, vol.UNDEFINED),
-                    ): selector.TextSelector(
-                        selector.TextSelectorConfig(
-                            type=selector.TextSelectorType.TEXT,
+                    ): TextSelector(
+                        TextSelectorConfig(
+                            type=TextSelectorType.TEXT,
                         ),
                     ),
                 },
             ),
             errors=_errors,
         )
-
-    async def async_step_finish(self, user_input: dict | None = None) -> ConfigFlowResult:
-        """Show a finish screen after successful setup, then create entry on submit."""
-        if self._pending_user_input is not None and user_input is None:
-            # First visit: show home selection
-            viewer = self._pending_user_input["viewer"]
-            homes = viewer.get("homes", [])
-            # Build choices: label = address or nickname, value = id
-            home_choices = {}
-            for home in homes:
-                label = home.get("appNickname") or home.get("address", {}).get("address1") or home["id"]
-                if home.get("address", {}).get("city"):
-                    label += f", {home['address']['city']}"
-                home_choices[home["id"]] = label
-            schema = vol.Schema({vol.Required("home_id"): vol.In(home_choices)})
-            return self.async_show_form(
-                step_id="finish",
-                data_schema=schema,
-                description_placeholders={},
-                errors={},
-                last_step=True,
-            )
-        if self._pending_user_input is not None and user_input is not None:
-            # User selected home, create entry
-            home_id = user_input["home_id"]
-            viewer = self._pending_user_input["viewer"]
-            # Use the same label as shown to the user for the config entry title
-            home_label = None
-            for home in viewer.get("homes", []):
-                if home["id"] == home_id:
-                    home_label = home.get("appNickname") or home.get("address", {}).get("address1") or home_id
-                    if home.get("address", {}).get("city"):
-                        home_label += f", {home['address']['city']}"
-                    break
-            if not home_label:
-                home_label = viewer.get("name", "Tibber")
-            data = {
-                CONF_ACCESS_TOKEN: self._pending_user_input["access_token"],
-                CONF_EXTENDED_DESCRIPTIONS: DEFAULT_EXTENDED_DESCRIPTIONS,
-                CONF_BEST_PRICE_FLEX: DEFAULT_BEST_PRICE_FLEX,
-                CONF_PEAK_PRICE_FLEX: DEFAULT_PEAK_PRICE_FLEX,
-            }
-            self._pending_user_input = None
-            # Set unique_id to home_id
-            await self.async_set_unique_id(unique_id=home_id)
-            self._abort_if_unique_id_configured()
-            return self.async_create_entry(
-                title=home_label,
-                data=data,
-            )
-        return self.async_abort(reason="setup_complete")
 
     async def _get_viewer_details(self, access_token: str) -> dict:
         """Validate credentials and return information about the account (viewer object)."""
@@ -165,13 +159,12 @@ class TibberPricesReauthFlowHandler(ConfigFlow):
         """Initialize the reauth flow handler."""
         self._entry = entry
         self._errors: dict[str, str] = {}
-        self._pending_user_input: dict | None = None
 
     async def async_step_user(self, user_input: dict | None = None) -> ConfigFlowResult:
-        """Prompt for a new access token, then go to finish for home selection."""
+        """Prompt for a new access token."""
         if user_input is not None:
             try:
-                viewer = await TibberPricesApiClient(
+                await TibberPricesApiClient(
                     access_token=user_input[CONF_ACCESS_TOKEN],
                     session=async_create_clientsession(self.hass),
                 ).async_get_viewer_details()
@@ -185,63 +178,123 @@ class TibberPricesReauthFlowHandler(ConfigFlow):
                 LOGGER.exception(exception)
                 self._errors["base"] = "unknown"
             else:
-                self._pending_user_input = {
-                    "access_token": user_input[CONF_ACCESS_TOKEN],
-                    "viewer": viewer.get("viewer", viewer),
-                }
-                return await self.async_step_finish()
+                self.hass.config_entries.async_update_entry(
+                    self._entry,
+                    data={
+                        **self._entry.data,
+                        CONF_ACCESS_TOKEN: user_input[CONF_ACCESS_TOKEN],
+                    },
+                )
+                return self.async_abort(reason="reauth_successful")
 
         return self.async_show_form(
             step_id="user",
             data_schema=vol.Schema(
                 {
-                    vol.Required(CONF_ACCESS_TOKEN): selector.TextSelector(
-                        selector.TextSelectorConfig(type=selector.TextSelectorType.TEXT)
-                    ),
+                    vol.Required(CONF_ACCESS_TOKEN): TextSelector(TextSelectorConfig(type=TextSelectorType.TEXT)),
                 }
             ),
             errors=self._errors,
         )
 
-    async def async_step_finish(self, user_input: dict | None = None) -> ConfigFlowResult:
-        """Show home selection, then update config entry."""
-        if self._pending_user_input is not None and user_input is None:
-            viewer = self._pending_user_input["viewer"]
-            homes = viewer.get("homes", [])
-            home_choices = {}
-            for home in homes:
-                label = home.get("appNickname") or home.get("address", {}).get("address1") or home["id"]
-                if home.get("address", {}).get("city"):
-                    label += f", {home['address']['city']}"
-                home_choices[home["id"]] = label
-            schema = vol.Schema({vol.Required("home_id"): vol.In(home_choices)})
-            return self.async_show_form(
-                step_id="finish",
-                data_schema=schema,
-                description_placeholders={},
-                errors={},
-                last_step=True,
-            )
-        if self._pending_user_input is not None and user_input is not None:
-            home_id = user_input["home_id"]
-            # Update the config entry with new token and home_id
-            self.hass.config_entries.async_update_entry(
-                self._entry,
+
+class TibberPricesSubentryFlowHandler(ConfigSubentryFlow):
+    """Handle subentry flows for tibber_prices."""
+
+    async def async_step_user(self, user_input: dict[str, Any] | None = None) -> SubentryFlowResult:
+        """User flow to add a new home."""
+        parent_entry = self._get_entry()
+        if not parent_entry:
+            return self.async_abort(reason="no_parent_entry")
+
+        homes = parent_entry.data.get("homes", [])
+        if not homes:
+            return self.async_abort(reason="no_available_homes")
+
+        if user_input is not None:
+            selected_home_id = user_input["home_id"]
+            selected_home = next((home for home in homes if home["id"] == selected_home_id), None)
+
+            if not selected_home:
+                return self.async_abort(reason="home_not_found")
+
+            home_title = self._get_home_title(selected_home)
+            home_id = selected_home["id"]
+
+            return self.async_create_entry(
+                title=home_title,
                 data={
-                    **self._entry.data,
-                    CONF_ACCESS_TOKEN: self._pending_user_input["access_token"],
                     "home_id": home_id,
+                    "home_data": selected_home,
                 },
+                description=f"Subentry for {home_title}",
+                description_placeholders={"home_id": home_id},
+                unique_id=home_id,
             )
-            self._pending_user_input = None
-            return self.async_abort(reason="reauth_successful")
-        return self.async_abort(reason="setup_complete")
+
+        # Get existing home IDs by checking all subentries for this parent
+        existing_home_ids = set()
+        for entry in self.hass.config_entries.async_entries(DOMAIN):
+            # Check if this entry has home_id data (indicating it's a subentry)
+            if entry.data.get("home_id") and entry != parent_entry:
+                existing_home_ids.add(entry.data["home_id"])
+
+        available_homes = [home for home in homes if home["id"] not in existing_home_ids]
+
+        if not available_homes:
+            return self.async_abort(reason="no_available_homes")
+
+        from homeassistant.helpers.selector import SelectOptionDict
+
+        home_options = [
+            SelectOptionDict(
+                value=home["id"],
+                label=self._get_home_title(home),
+            )
+            for home in available_homes
+        ]
+
+        schema = vol.Schema(
+            {
+                vol.Required("home_id"): SelectSelector(
+                    SelectSelectorConfig(
+                        options=home_options,
+                        mode=SelectSelectorMode.DROPDOWN,
+                    )
+                )
+            }
+        )
+
+        return self.async_show_form(
+            step_id="user",
+            data_schema=schema,
+            description_placeholders={},
+            errors={},
+        )
+
+    def _get_home_title(self, home: dict) -> str:
+        """Generate a user-friendly title for a home."""
+        title = home.get("appNickname")
+        if title:
+            return title
+
+        address = home.get("address", {})
+        if address:
+            parts = []
+            if address.get("address1"):
+                parts.append(address["address1"])
+            if address.get("city"):
+                parts.append(address["city"])
+            if parts:
+                return ", ".join(parts)
+
+        return home.get("id", "Unknown Home")
 
 
-class TibberPricesOptionsFlowHandler(OptionsFlow):
+class TibberPricesOptionsSubentryFlowHandler(OptionsFlow):
     """Tibber Prices config flow options handler."""
 
-    def __init__(self, config_entry: ConfigEntry) -> None:  # noqa: ARG002
+    def __init__(self, config_entry: ConfigSubentry) -> None:  # noqa: ARG002
         """Initialize options flow."""
         super().__init__()
 
@@ -249,7 +302,6 @@ class TibberPricesOptionsFlowHandler(OptionsFlow):
         """Manage the options."""
         errors: dict[str, str] = {}
 
-        # Build options schema
         options = {
             vol.Optional(
                 CONF_EXTENDED_DESCRIPTIONS,
@@ -257,7 +309,7 @@ class TibberPricesOptionsFlowHandler(OptionsFlow):
                     CONF_EXTENDED_DESCRIPTIONS,
                     self.config_entry.data.get(CONF_EXTENDED_DESCRIPTIONS, DEFAULT_EXTENDED_DESCRIPTIONS),
                 ),
-            ): selector.BooleanSelector(),
+            ): BooleanSelector(),
             vol.Optional(
                 CONF_BEST_PRICE_FLEX,
                 default=int(
@@ -266,12 +318,12 @@ class TibberPricesOptionsFlowHandler(OptionsFlow):
                         self.config_entry.data.get(CONF_BEST_PRICE_FLEX, DEFAULT_BEST_PRICE_FLEX),
                     )
                 ),
-            ): selector.NumberSelector(
-                selector.NumberSelectorConfig(
+            ): NumberSelector(
+                NumberSelectorConfig(
                     min=0,
                     max=100,
                     step=1,
-                    mode=selector.NumberSelectorMode.SLIDER,
+                    mode=NumberSelectorMode.SLIDER,
                 ),
             ),
             vol.Optional(
@@ -282,12 +334,12 @@ class TibberPricesOptionsFlowHandler(OptionsFlow):
                         self.config_entry.data.get(CONF_PEAK_PRICE_FLEX, DEFAULT_PEAK_PRICE_FLEX),
                     )
                 ),
-            ): selector.NumberSelector(
-                selector.NumberSelectorConfig(
+            ): NumberSelector(
+                NumberSelectorConfig(
                     min=0,
                     max=100,
                     step=1,
-                    mode=selector.NumberSelectorMode.SLIDER,
+                    mode=NumberSelectorMode.SLIDER,
                 ),
             ),
         }
@@ -295,7 +347,6 @@ class TibberPricesOptionsFlowHandler(OptionsFlow):
         if user_input is not None:
             return self.async_create_entry(title="", data=user_input)
 
-        # Prepare read-only info for description placeholders
         description_placeholders = {
             "unique_id": self.config_entry.unique_id or "",
         }
