@@ -1,6 +1,6 @@
 {
     "name": "Tibber Price Information & Ratings",
-    "homeassistant": "2025.4.2",
+    "homeassistant": "2025.5.0",
     "hacs": "2.0.1",
     "render_readme": true
 }

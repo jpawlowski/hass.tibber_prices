@@ -13,6 +13,11 @@ from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.entity_registry import async_get as async_get_entity_registry
 from homeassistant.util import dt as dt_util
 
+from .api import (
+    TibberPricesApiClientAuthenticationError,
+    TibberPricesApiClientCommunicationError,
+    TibberPricesApiClientError,
+)
 from .const import (
     DOMAIN,
     PRICE_LEVEL_CHEAP,
@@ -29,6 +34,7 @@ from .const import (
 PRICE_SERVICE_NAME = "get_price"
 APEXCHARTS_DATA_SERVICE_NAME = "get_apexcharts_data"
 APEXCHARTS_YAML_SERVICE_NAME = "get_apexcharts_yaml"
+REFRESH_USER_DATA_SERVICE_NAME = "refresh_user_data"
 ATTR_DAY: Final = "day"
 ATTR_ENTRY_ID: Final = "entry_id"
 ATTR_TIME: Final = "time"
@@ -65,6 +71,12 @@ APEXCHARTS_SERVICE_SCHEMA: Final = vol.Schema(
     {
         vol.Required("entity_id"): str,
         vol.Optional("day", default="today"): vol.In(["yesterday", "today", "tomorrow"]),
+    }
+)
+
+REFRESH_USER_DATA_SERVICE_SCHEMA: Final = vol.Schema(
+    {
+        vol.Required(ATTR_ENTRY_ID): str,
     }
 )
 
@@ -165,41 +177,59 @@ async def _get_apexcharts_data(call: ServiceCall) -> dict[str, Any]:
     level_type = call.data.get("level_type", "rating_level")
     level_key = call.data.get("level_key")
     hass = call.hass
+
+    # Get entry ID and verify it exists
     entry_id = await _get_entry_id_from_entity_id(hass, entity_id)
     if not entry_id:
         raise ServiceValidationError(translation_domain=DOMAIN, translation_key="invalid_entity_id")
+
     entry, coordinator, data = _get_entry_and_data(hass, entry_id)
-    points = []
+
+    # Get entries based on level_type
+    entries = _get_apexcharts_entries(coordinator, day, level_type)
+    if not entries:
+        return {"points": []}
+
+    # Ensure level_key is a string
+    if level_key is None:
+        raise ServiceValidationError(translation_domain=DOMAIN, translation_key="missing_level_key")
+
+    # Generate points for the chart
+    points = _generate_apexcharts_points(entries, str(level_key))
+    return {"points": points}
+
+
+def _get_apexcharts_entries(coordinator: Any, day: str, level_type: str) -> list[dict]:
+    """Get the appropriate entries for ApexCharts based on level_type and day."""
     if level_type == "rating_level":
         entries = coordinator.data.get("priceRating", {}).get("hourly", [])
         price_info = coordinator.data.get("priceInfo", {})
-        if day == "today":
-            prefixes = _get_day_prefixes(price_info.get("today", []))
-            if not prefixes:
-                return {"points": []}
-            entries = [e for e in entries if e.get("time", e.get("startsAt", "")).startswith(prefixes[0])]
-        elif day == "tomorrow":
-            prefixes = _get_day_prefixes(price_info.get("tomorrow", []))
-            if not prefixes:
-                return {"points": []}
-            entries = [e for e in entries if e.get("time", e.get("startsAt", "")).startswith(prefixes[0])]
-        elif day == "yesterday":
-            prefixes = _get_day_prefixes(price_info.get("yesterday", []))
-            if not prefixes:
-                return {"points": []}
-            entries = [e for e in entries if e.get("time", e.get("startsAt", "")).startswith(prefixes[0])]
-    else:
-        entries = coordinator.data.get("priceInfo", {}).get(day, [])
-        if not entries:
-            return {"points": []}
+        day_info = price_info.get(day, [])
+        prefixes = _get_day_prefixes(day_info)
+
+        if not prefixes:
+            return []
+
+        return [e for e in entries if e.get("time", e.get("startsAt", "")).startswith(prefixes[0])]
+
+    # For non-rating level types, return the price info for the specified day
+    return coordinator.data.get("priceInfo", {}).get(day, [])
+
+
+def _generate_apexcharts_points(entries: list[dict], level_key: str) -> list:
+    """Generate data points for ApexCharts based on the entries and level key."""
+    points = []
     for i in range(len(entries) - 1):
         p = entries[i]
         if p.get("level") != level_key:
             continue
         points.append([p.get("time") or p.get("startsAt"), round((p.get("total") or 0) * 100, 2)])
+
+    # Add a final point with null value if there are any points
     if points:
         points.append([points[-1][0], None])
-    return {"points": points}
+
+    return points
 
 
 async def _get_apexcharts_yaml(call: ServiceCall) -> dict[str, Any]:
@@ -263,6 +293,57 @@ async def _get_apexcharts_yaml(call: ServiceCall) -> dict[str, Any]:
         "all_series_config": {"stroke_width": 1, "show": {"legend_value": False}},
         "series": series,
     }
+
+
+async def _refresh_user_data(call: ServiceCall) -> dict[str, Any]:
+    """Refresh user data for a specific config entry and return updated information."""
+    entry_id = call.data.get(ATTR_ENTRY_ID)
+    hass = call.hass
+
+    if not entry_id:
+        return {
+            "success": False,
+            "message": "Entry ID is required",
+        }
+
+    # Get the entry and coordinator
+    try:
+        entry, coordinator, data = _get_entry_and_data(hass, entry_id)
+    except ServiceValidationError as ex:
+        return {
+            "success": False,
+            "message": f"Invalid entry ID: {ex}",
+        }
+
+    # Force refresh user data using the public method
+    try:
+        updated = await coordinator.refresh_user_data()
+    except (
+        TibberPricesApiClientAuthenticationError,
+        TibberPricesApiClientCommunicationError,
+        TibberPricesApiClientError,
+    ) as ex:
+        return {
+            "success": False,
+            "message": f"API error refreshing user data: {ex!s}",
+        }
+    else:
+        if updated:
+            user_profile = coordinator.get_user_profile()
+            homes = coordinator.get_user_homes()
+
+            return {
+                "success": True,
+                "message": "User data refreshed successfully",
+                "user_profile": user_profile,
+                "homes_count": len(homes),
+                "homes": homes,
+                "last_updated": user_profile.get("last_updated"),
+            }
+        return {
+            "success": False,
+            "message": "User data was already up to date",
+        }
 
 
 # --- Direct helpers (called by service handler or each other) ---
@@ -470,8 +551,6 @@ def _annotate_intervals_with_times(
             elif day == "tomorrow":
                 prev_end = _get_adjacent_start_time(price_info_by_day, "today", first=False)
                 interval["previous_end_time"] = prev_end
-            elif day == "yesterday":
-                interval["previous_end_time"] = None
             else:
                 interval["previous_end_time"] = None
 
@@ -710,6 +789,13 @@ def async_setup_services(hass: HomeAssistant) -> None:
         APEXCHARTS_YAML_SERVICE_NAME,
         _get_apexcharts_yaml,
         schema=APEXCHARTS_SERVICE_SCHEMA,
+        supports_response=SupportsResponse.ONLY,
+    )
+    hass.services.async_register(
+        DOMAIN,
+        REFRESH_USER_DATA_SERVICE_NAME,
+        _refresh_user_data,
+        schema=REFRESH_USER_DATA_SERVICE_SCHEMA,
         supports_response=SupportsResponse.ONLY,
     )
 

@@ -111,3 +111,16 @@ get_apexcharts_yaml:
             - yesterday
             - today
             - tomorrow
+refresh_user_data:
+  name: Refresh User Data
+  description: >-
+    Forces a refresh of the user data (homes, profile information) from the Tibber API. This can be useful after making changes to your Tibber account or when troubleshooting connectivity issues.
+  fields:
+    entry_id:
+      name: Entry ID
+      description: The config entry ID for the Tibber integration.
+      required: true
+      example: "1234567890abcdef"
+      selector:
+        config_entry:
+          integration: tibber_prices

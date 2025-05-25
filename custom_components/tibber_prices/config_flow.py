@@ -204,10 +204,15 @@ class TibberPricesSubentryFlowHandler(ConfigSubentryFlow):
     async def async_step_user(self, user_input: dict[str, Any] | None = None) -> SubentryFlowResult:
         """User flow to add a new home."""
         parent_entry = self._get_entry()
-        if not parent_entry:
+        if not parent_entry or not hasattr(parent_entry, "runtime_data") or not parent_entry.runtime_data:
             return self.async_abort(reason="no_parent_entry")
 
-        homes = parent_entry.data.get("homes", [])
+        coordinator = parent_entry.runtime_data.coordinator
+
+        # Force refresh user data to get latest homes from Tibber API
+        await coordinator.refresh_user_data()
+
+        homes = coordinator.get_user_homes()
         if not homes:
             return self.async_abort(reason="no_available_homes")
 
@@ -233,11 +238,11 @@ class TibberPricesSubentryFlowHandler(ConfigSubentryFlow):
             )
 
         # Get existing home IDs by checking all subentries for this parent
-        existing_home_ids = set()
-        for entry in self.hass.config_entries.async_entries(DOMAIN):
-            # Check if this entry has home_id data (indicating it's a subentry)
-            if entry.data.get("home_id") and entry != parent_entry:
-                existing_home_ids.add(entry.data["home_id"])
+        existing_home_ids = {
+            entry.data["home_id"]
+            for entry in self.hass.config_entries.async_entries(DOMAIN)
+            if entry.data.get("home_id") and entry != parent_entry
+        }
 
         available_homes = [home for home in homes if home["id"] not in existing_home_ids]
 

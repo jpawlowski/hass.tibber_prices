@@ -51,9 +51,7 @@ async def async_setup_entry(
 
     coordinator = TibberPricesDataUpdateCoordinator(
         hass=hass,
-        entry=entry,
-        logger=LOGGER,
-        name=DOMAIN,
+        config_entry=entry,
     )
     entry.runtime_data = TibberPricesData(
         client=TibberPricesApiClient(
@@ -88,7 +86,7 @@ async def async_unload_entry(
 
     # Unregister services if this was the last config entry
     if not hass.config_entries.async_entries(DOMAIN):
-        for service in ["get_price", "get_apexcharts_data", "get_apexcharts_yaml"]:
+        for service in ["get_price", "get_apexcharts_data", "get_apexcharts_yaml", "refresh_user_data"]:
             if hass.services.has_service(DOMAIN, service):
                 hass.services.async_remove(DOMAIN, service)
 

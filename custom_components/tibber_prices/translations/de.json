@@ -133,5 +133,27 @@
                 "name": "Daten für morgen verfügbar"
             }
         }
+    },
+    "issues": {
+        "new_homes_available": {
+            "title": "Neue Tibber-Häuser erkannt",
+            "description": "Wir haben {count} neue(s) Zuhause in deinem Tibber-Konto erkannt: {homes}. Du kannst diese über die Tibber-Integration in Home Assistant hinzufügen."
+        },
+        "homes_removed": {
+            "title": "Tibber-Häuser entfernt",
+            "description": "Wir haben erkannt, dass {count} Zuhause aus deinem Tibber-Konto entfernt wurde(n): {homes}. Bitte überprüfe deine Tibber-Integrationskonfiguration."
+        }
+    },
+    "services": {
+        "refresh_user_data": {
+            "name": "Benutzerdaten aktualisieren",
+            "description": "Erzwingt eine Aktualisierung der Benutzerdaten (Häuser, Profilinformationen) aus der Tibber API. Dies kann nützlich sein, nachdem Änderungen an deinem Tibber-Konto vorgenommen wurden oder bei der Fehlerbehebung von Verbindungsproblemen.",
+            "fields": {
+                "entry_id": {
+                    "name": "Eintrag-ID",
+                    "description": "Die Konfigurationseintrag-ID für die Tibber-Integration."
+                }
+            }
+        }
     }
 }

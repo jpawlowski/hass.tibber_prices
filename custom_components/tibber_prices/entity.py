@@ -27,16 +27,47 @@ class TibberPricesEntity(CoordinatorEntity[TibberPricesDataUpdateCoordinator]):
             "COTTAGE": "Cottage",
         }
 
-        # Get home info from Tibber API if available
+        # Get user profile information from coordinator
+        user_profile = self.coordinator.get_user_profile()
+
+        # Check if this is a main entry or subentry
+        is_subentry = bool(self.coordinator.config_entry.data.get("home_id"))
+
+        # Initialize variables
         home_name = "Tibber Home"
         home_id = self.coordinator.config_entry.unique_id
         home_type = None
-        city = None
-        app_nickname = None
-        address1 = None
-        if coordinator.data:
+
+        if is_subentry:
+            # For subentries, show specific home information
+            home_data = self.coordinator.config_entry.data.get("home_data", {})
+            home_id = self.coordinator.config_entry.data.get("home_id")
+
+            # Get home details
+            address = home_data.get("address", {})
+            address1 = address.get("address1", "")
+            city = address.get("city", "")
+            app_nickname = home_data.get("appNickname", "")
+            home_type = home_data.get("type", "")
+
+            # Compose home name
+            home_name = app_nickname or address1 or f"Tibber Home {home_id}"
+            if city:
+                home_name = f"{home_name}, {city}"
+
+            # Add user information if available
+            if user_profile and user_profile.get("name"):
+                home_name = f"{home_name} ({user_profile['name']})"
+        elif user_profile:
+            # For main entry, show user profile information
+            user_name = user_profile.get("name", "Tibber User")
+            user_email = user_profile.get("email", "")
+            home_name = f"Tibber - {user_name}"
+            if user_email:
+                home_name = f"{home_name} ({user_email})"
+        elif coordinator.data:
+            # Fallback to original logic if user data not available yet
             try:
-                home_id = self.unique_id
                 address1 = str(coordinator.data.get("address", {}).get("address1", ""))
                 city = str(coordinator.data.get("address", {}).get("city", ""))
                 app_nickname = str(coordinator.data.get("appNickname", ""))
@@ -47,8 +78,6 @@ class TibberPricesEntity(CoordinatorEntity[TibberPricesDataUpdateCoordinator]):
                     home_name = f"{home_name}, {city}"
             except (KeyError, IndexError, TypeError):
                 home_name = "Tibber Home"
-        else:
-            home_name = "Tibber Home"
 
         self._attr_device_info = DeviceInfo(
             entry_type=DeviceEntryType.SERVICE,

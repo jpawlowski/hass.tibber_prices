@@ -10,7 +10,6 @@ from enum import Enum
 from typing import Any
 
 import aiohttp
-import async_timeout
 
 from homeassistant.const import __version__ as ha_version
 from homeassistant.util import dt as dt_util
@@ -19,9 +18,10 @@ from .const import VERSION
 
 _LOGGER = logging.getLogger(__name__)
 
-HTTP_TOO_MANY_REQUESTS = 429
+HTTP_BAD_REQUEST = 400
 HTTP_UNAUTHORIZED = 401
 HTTP_FORBIDDEN = 403
+HTTP_TOO_MANY_REQUESTS = 429
 
 
 class QueryType(Enum):
@@ -31,7 +31,7 @@ class QueryType(Enum):
     DAILY_RATING = "daily"
     HOURLY_RATING = "hourly"
     MONTHLY_RATING = "monthly"
-    VIEWER = "viewer"
+    USER = "user"
 
 
 class TibberPricesApiClientError(Exception):
@@ -42,7 +42,8 @@ class TibberPricesApiClientError(Exception):
     GRAPHQL_ERROR = "GraphQL error: {message}"
     EMPTY_DATA_ERROR = "Empty data received for {query_type}"
     GENERIC_ERROR = "Something went wrong! {exception}"
-    RATE_LIMIT_ERROR = "Rate limit exceeded"
+    RATE_LIMIT_ERROR = "Rate limit exceeded. Please wait {retry_after} seconds before retrying"
+    INVALID_QUERY_ERROR = "Invalid GraphQL query: {message}"
 
 
 class TibberPricesApiClientCommunicationError(TibberPricesApiClientError):
@@ -55,15 +56,33 @@ class TibberPricesApiClientCommunicationError(TibberPricesApiClientError):
 class TibberPricesApiClientAuthenticationError(TibberPricesApiClientError):
     """Exception to indicate an authentication error."""
 
-    INVALID_CREDENTIALS = "Invalid credentials"
+    INVALID_CREDENTIALS = "Invalid access token or expired credentials"
+
+
+class TibberPricesApiClientPermissionError(TibberPricesApiClientError):
+    """Exception to indicate insufficient permissions."""
+
+    INSUFFICIENT_PERMISSIONS = "Access forbidden - insufficient permissions for this operation"
 
 
 def _verify_response_or_raise(response: aiohttp.ClientResponse) -> None:
     """Verify that the response is valid."""
-    if response.status in (HTTP_UNAUTHORIZED, HTTP_FORBIDDEN):
+    if response.status == HTTP_UNAUTHORIZED:
+        _LOGGER.error("Tibber API authentication failed - check access token")
         raise TibberPricesApiClientAuthenticationError(TibberPricesApiClientAuthenticationError.INVALID_CREDENTIALS)
+    if response.status == HTTP_FORBIDDEN:
+        _LOGGER.error("Tibber API access forbidden - insufficient permissions")
+        raise TibberPricesApiClientPermissionError(TibberPricesApiClientPermissionError.INSUFFICIENT_PERMISSIONS)
     if response.status == HTTP_TOO_MANY_REQUESTS:
-        raise TibberPricesApiClientError(TibberPricesApiClientError.RATE_LIMIT_ERROR)
+        # Check for Retry-After header that Tibber might send
+        retry_after = response.headers.get("Retry-After", "unknown")
+        _LOGGER.warning("Tibber API rate limit exceeded - retry after %s seconds", retry_after)
+        raise TibberPricesApiClientError(TibberPricesApiClientError.RATE_LIMIT_ERROR.format(retry_after=retry_after))
+    if response.status == HTTP_BAD_REQUEST:
+        _LOGGER.error("Tibber API rejected request - likely invalid GraphQL query")
+        raise TibberPricesApiClientError(
+            TibberPricesApiClientError.INVALID_QUERY_ERROR.format(message="Bad request - likely invalid GraphQL query")
+        )
     response.raise_for_status()
 
 
@@ -72,21 +91,41 @@ async def _verify_graphql_response(response_json: dict, query_type: QueryType) -
     if "errors" in response_json:
         errors = response_json["errors"]
         if not errors:
+            _LOGGER.error("Tibber API returned empty errors array")
             raise TibberPricesApiClientError(TibberPricesApiClientError.UNKNOWN_ERROR)
 
         error = errors[0]  # Take first error
         if not isinstance(error, dict):
+            _LOGGER.error("Tibber API returned malformed error: %s", error)
             raise TibberPricesApiClientError(TibberPricesApiClientError.MALFORMED_ERROR.format(error=error))
 
         message = error.get("message", "Unknown error")
         extensions = error.get("extensions", {})
+        error_code = extensions.get("code")
 
-        if extensions.get("code") == "UNAUTHENTICATED":
+        # Handle specific Tibber API error codes
+        if error_code == "UNAUTHENTICATED":
+            _LOGGER.error("Tibber API authentication error: %s", message)
             raise TibberPricesApiClientAuthenticationError(TibberPricesApiClientAuthenticationError.INVALID_CREDENTIALS)
+        if error_code == "FORBIDDEN":
+            _LOGGER.error("Tibber API permission error: %s", message)
+            raise TibberPricesApiClientPermissionError(TibberPricesApiClientPermissionError.INSUFFICIENT_PERMISSIONS)
+        if error_code in ["RATE_LIMITED", "TOO_MANY_REQUESTS"]:
+            # Some GraphQL APIs return rate limit info in extensions
+            retry_after = extensions.get("retryAfter", "unknown")
+            _LOGGER.warning("Tibber API rate limited via GraphQL: %s (retry after %s)", message, retry_after)
+            raise TibberPricesApiClientError(
+                TibberPricesApiClientError.RATE_LIMIT_ERROR.format(retry_after=retry_after)
+            )
+        if error_code in ["VALIDATION_ERROR", "GRAPHQL_VALIDATION_FAILED"]:
+            _LOGGER.error("Tibber API validation error: %s", message)
+            raise TibberPricesApiClientError(TibberPricesApiClientError.INVALID_QUERY_ERROR.format(message=message))
 
+        _LOGGER.error("Tibber API GraphQL error (code: %s): %s", error_code or "unknown", message)
         raise TibberPricesApiClientError(TibberPricesApiClientError.GRAPHQL_ERROR.format(message=message))
 
     if "data" not in response_json or response_json["data"] is None:
+        _LOGGER.error("Tibber API response missing data object")
         raise TibberPricesApiClientError(
             TibberPricesApiClientError.GRAPHQL_ERROR.format(message="Response missing data object")
         )
@@ -122,7 +161,7 @@ def _is_data_empty(data: dict, query_type: str) -> bool:
 
     is_empty = False
     try:
-        if query_type == "viewer":
+        if query_type == "user":
             has_user_id = (
                 "viewer" in data
                 and isinstance(data["viewer"], dict)
@@ -321,11 +360,16 @@ class TibberPricesApiClient:
         """Tibber API Client."""
         self._access_token = access_token
         self._session = session
-        self._request_semaphore = asyncio.Semaphore(2)
+        self._request_semaphore = asyncio.Semaphore(2)  # Max 2 concurrent requests
         self._last_request_time = dt_util.now()
-        self._min_request_interval = timedelta(seconds=1)
+        self._min_request_interval = timedelta(seconds=1)  # Min 1 second between requests
         self._max_retries = 5
-        self._retry_delay = 2
+        self._retry_delay = 2  # Base retry delay in seconds
+
+        # Timeout configuration - more granular control
+        self._connect_timeout = 10  # Connection timeout in seconds
+        self._request_timeout = 25  # Total request timeout in seconds
+        self._socket_connect_timeout = 5  # Socket connection timeout
 
     async def async_get_viewer_details(self) -> Any:
         """Test connection to the API."""
@@ -352,11 +396,11 @@ class TibberPricesApiClient:
                     }
                 """
             },
-            query_type=QueryType.VIEWER,
+            query_type=QueryType.USER,
         )
 
-    async def async_get_price_info(self, home_id: str) -> dict:
-        """Get price info data in flat format for the specified home_id."""
+    async def async_get_price_info(self) -> dict:
+        """Get price info data in flat format for all homes."""
         data = await self._api_wrapper(
             data={
                 "query": """
@@ -371,15 +415,21 @@ class TibberPricesApiClient:
             query_type=QueryType.PRICE_INFO,
         )
         homes = data.get("viewer", {}).get("homes", [])
-        home = next((h for h in homes if h.get("id") == home_id), None)
-        if home and "currentSubscription" in home:
-            data["priceInfo"] = _flatten_price_info(home["currentSubscription"])
-        else:
-            data["priceInfo"] = {}
+
+        homes_data = {}
+        for home in homes:
+            home_id = home.get("id")
+            if home_id:
+                if "currentSubscription" in home:
+                    homes_data[home_id] = _flatten_price_info(home["currentSubscription"])
+                else:
+                    homes_data[home_id] = {}
+
+        data["homes"] = homes_data
         return data
 
-    async def async_get_daily_price_rating(self, home_id: str) -> dict:
-        """Get daily price rating data in flat format for the specified home_id."""
+    async def async_get_daily_price_rating(self) -> dict:
+        """Get daily price rating data in flat format for all homes."""
         data = await self._api_wrapper(
             data={
                 "query": """
@@ -394,15 +444,21 @@ class TibberPricesApiClient:
             query_type=QueryType.DAILY_RATING,
         )
         homes = data.get("viewer", {}).get("homes", [])
-        home = next((h for h in homes if h.get("id") == home_id), None)
-        if home and "currentSubscription" in home:
-            data["priceRating"] = _flatten_price_rating(home["currentSubscription"])
-        else:
-            data["priceRating"] = {}
+
+        homes_data = {}
+        for home in homes:
+            home_id = home.get("id")
+            if home_id:
+                if "currentSubscription" in home:
+                    homes_data[home_id] = _flatten_price_rating(home["currentSubscription"])
+                else:
+                    homes_data[home_id] = {}
+
+        data["homes"] = homes_data
         return data
 
-    async def async_get_hourly_price_rating(self, home_id: str) -> dict:
-        """Get hourly price rating data in flat format for the specified home_id."""
+    async def async_get_hourly_price_rating(self) -> dict:
+        """Get hourly price rating data in flat format for all homes."""
         data = await self._api_wrapper(
             data={
                 "query": """
@@ -417,15 +473,21 @@ class TibberPricesApiClient:
             query_type=QueryType.HOURLY_RATING,
         )
         homes = data.get("viewer", {}).get("homes", [])
-        home = next((h for h in homes if h.get("id") == home_id), None)
-        if home and "currentSubscription" in home:
-            data["priceRating"] = _flatten_price_rating(home["currentSubscription"])
-        else:
-            data["priceRating"] = {}
+
+        homes_data = {}
+        for home in homes:
+            home_id = home.get("id")
+            if home_id:
+                if "currentSubscription" in home:
+                    homes_data[home_id] = _flatten_price_rating(home["currentSubscription"])
+                else:
+                    homes_data[home_id] = {}
+
+        data["homes"] = homes_data
         return data
 
-    async def async_get_monthly_price_rating(self, home_id: str) -> dict:
-        """Get monthly price rating data in flat format for the specified home_id."""
+    async def async_get_monthly_price_rating(self) -> dict:
+        """Get monthly price rating data in flat format for all homes."""
         data = await self._api_wrapper(
             data={
                 "query": """
@@ -440,40 +502,52 @@ class TibberPricesApiClient:
             query_type=QueryType.MONTHLY_RATING,
         )
         homes = data.get("viewer", {}).get("homes", [])
-        home = next((h for h in homes if h.get("id") == home_id), None)
-        if home and "currentSubscription" in home:
-            data["priceRating"] = _flatten_price_rating(home["currentSubscription"])
-        else:
-            data["priceRating"] = {}
+
+        homes_data = {}
+        for home in homes:
+            home_id = home.get("id")
+            if home_id:
+                if "currentSubscription" in home:
+                    homes_data[home_id] = _flatten_price_rating(home["currentSubscription"])
+                else:
+                    homes_data[home_id] = {}
+
+        data["homes"] = homes_data
         return data
 
-    async def async_get_data(self, home_id: str) -> dict:
-        """Get all data from the API by combining multiple queries in flat format for the specified home_id."""
-        price_info = await self.async_get_price_info(home_id)
-        daily_rating = await self.async_get_daily_price_rating(home_id)
-        hourly_rating = await self.async_get_hourly_price_rating(home_id)
-        monthly_rating = await self.async_get_monthly_price_rating(home_id)
-        price_rating = {
-            "thresholdPercentages": daily_rating["priceRating"].get("thresholdPercentages"),
-            "daily": daily_rating["priceRating"].get("daily", []),
-            "hourly": hourly_rating["priceRating"].get("hourly", []),
-            "monthly": monthly_rating["priceRating"].get("monthly", []),
-            "currency": (
-                daily_rating["priceRating"].get("currency")
-                or hourly_rating["priceRating"].get("currency")
-                or monthly_rating["priceRating"].get("currency")
-            ),
-        }
-        return {
-            "priceInfo": price_info["priceInfo"],
-            "priceRating": price_rating,
-        }
+    async def async_get_data(self) -> dict:
+        """Get all data from the API by combining multiple queries in flat format for all homes."""
+        price_info = await self.async_get_price_info()
+        daily_rating = await self.async_get_daily_price_rating()
+        hourly_rating = await self.async_get_hourly_price_rating()
+        monthly_rating = await self.async_get_monthly_price_rating()
 
-    async def async_set_title(self, value: str) -> Any:
-        """Get data from the API."""
-        return await self._api_wrapper(
-            data={"title": value},
-        )
+        all_home_ids = set()
+        all_home_ids.update(price_info.get("homes", {}).keys())
+        all_home_ids.update(daily_rating.get("homes", {}).keys())
+        all_home_ids.update(hourly_rating.get("homes", {}).keys())
+        all_home_ids.update(monthly_rating.get("homes", {}).keys())
+
+        homes_combined = {}
+        for home_id in all_home_ids:
+            daily_data = daily_rating.get("homes", {}).get(home_id, {})
+            hourly_data = hourly_rating.get("homes", {}).get(home_id, {})
+            monthly_data = monthly_rating.get("homes", {}).get(home_id, {})
+
+            price_rating = {
+                "thresholdPercentages": daily_data.get("thresholdPercentages"),
+                "daily": daily_data.get("daily", []),
+                "hourly": hourly_data.get("hourly", []),
+                "monthly": monthly_data.get("monthly", []),
+                "currency": (daily_data.get("currency") or hourly_data.get("currency") or monthly_data.get("currency")),
+            }
+
+            homes_combined[home_id] = {
+                "priceInfo": price_info.get("homes", {}).get(home_id, {}),
+                "priceRating": price_rating,
+            }
+
+        return {"homes": homes_combined}
 
     async def _make_request(
         self,
@@ -481,23 +555,117 @@ class TibberPricesApiClient:
         data: dict,
         query_type: QueryType,
     ) -> dict:
-        """Make an API request with proper error handling."""
+        """Make an API request with comprehensive error handling for network issues."""
         _LOGGER.debug("Making API request with data: %s", data)
 
-        response = await self._session.request(
-            method="POST",
-            url="https://api.tibber.com/v1-beta/gql",
-            headers=headers,
-            json=data,
-        )
+        try:
+            # More granular timeout configuration for better network failure handling
+            timeout = aiohttp.ClientTimeout(
+                total=self._request_timeout,  # Total request timeout: 25s
+                connect=self._connect_timeout,  # Connection timeout: 10s
+                sock_connect=self._socket_connect_timeout,  # Socket connection: 5s
+            )
 
-        _verify_response_or_raise(response)
-        response_json = await response.json()
-        _LOGGER.debug("Received API response: %s", response_json)
+            response = await self._session.request(
+                method="POST",
+                url="https://api.tibber.com/v1-beta/gql",
+                headers=headers,
+                json=data,
+                timeout=timeout,
+            )
 
-        await _verify_graphql_response(response_json, query_type)
+            _verify_response_or_raise(response)
+            response_json = await response.json()
+            _LOGGER.debug("Received API response: %s", response_json)
 
-        return response_json["data"]
+            await _verify_graphql_response(response_json, query_type)
+
+            return response_json["data"]
+
+        except aiohttp.ClientResponseError as error:
+            _LOGGER.exception("HTTP error during API request")
+            raise TibberPricesApiClientCommunicationError(
+                TibberPricesApiClientCommunicationError.CONNECTION_ERROR.format(exception=str(error))
+            ) from error
+
+        except aiohttp.ClientConnectorError as error:
+            _LOGGER.exception("Connection error - server unreachable or network down")
+            raise TibberPricesApiClientCommunicationError(
+                TibberPricesApiClientCommunicationError.CONNECTION_ERROR.format(exception=str(error))
+            ) from error
+
+        except aiohttp.ServerDisconnectedError as error:
+            _LOGGER.exception("Server disconnected during request")
+            raise TibberPricesApiClientCommunicationError(
+                TibberPricesApiClientCommunicationError.CONNECTION_ERROR.format(exception=str(error))
+            ) from error
+
+        except TimeoutError as error:
+            _LOGGER.exception(
+                "Request timeout after %d seconds - slow network or server overload", self._request_timeout
+            )
+            raise TibberPricesApiClientCommunicationError(
+                TibberPricesApiClientCommunicationError.TIMEOUT_ERROR.format(exception=str(error))
+            ) from error
+
+        except socket.gaierror as error:
+            self._handle_dns_error(error)
+
+        except OSError as error:
+            self._handle_network_error(error)
+
+    def _handle_dns_error(self, error: socket.gaierror) -> None:
+        """Handle DNS resolution errors with IPv4/IPv6 dual stack considerations."""
+        error_msg = str(error)
+
+        if "Name or service not known" in error_msg:
+            _LOGGER.exception("DNS resolution failed - domain name not found")
+        elif "Temporary failure in name resolution" in error_msg:
+            _LOGGER.exception("DNS resolution temporarily failed - network or DNS server issue")
+        elif "Address family for hostname not supported" in error_msg:
+            _LOGGER.exception("DNS resolution failed - IPv4/IPv6 address family not supported")
+        elif "No address associated with hostname" in error_msg:
+            _LOGGER.exception("DNS resolution failed - no IPv4/IPv6 addresses found")
+        else:
+            _LOGGER.exception("DNS resolution failed - check internet connection: %s", error_msg)
+
+        raise TibberPricesApiClientCommunicationError(
+            TibberPricesApiClientCommunicationError.CONNECTION_ERROR.format(exception=str(error))
+        ) from error
+
+    def _handle_network_error(self, error: OSError) -> None:
+        """Handle network-level errors with IPv4/IPv6 dual stack considerations."""
+        error_msg = str(error)
+        errno = getattr(error, "errno", None)
+
+        # Common IPv4/IPv6 dual stack network error codes
+        errno_network_unreachable = 101  # ENETUNREACH
+        errno_host_unreachable = 113  # EHOSTUNREACH
+        errno_connection_refused = 111  # ECONNREFUSED
+        errno_connection_timeout = 110  # ETIMEDOUT
+
+        if errno == errno_network_unreachable:
+            _LOGGER.exception("Network unreachable - check internet connection or IPv4/IPv6 routing")
+        elif errno == errno_host_unreachable:
+            _LOGGER.exception("Host unreachable - routing issue or IPv4/IPv6 connectivity problem")
+        elif errno == errno_connection_refused:
+            _LOGGER.exception("Connection refused - server not accepting connections")
+        elif errno == errno_connection_timeout:
+            _LOGGER.exception("Connection timed out - network latency or server overload")
+        elif "Address family not supported" in error_msg:
+            _LOGGER.exception("Address family not supported - IPv4/IPv6 configuration issue")
+        elif "Protocol not available" in error_msg:
+            _LOGGER.exception("Protocol not available - IPv4/IPv6 stack configuration issue")
+        elif "Network is down" in error_msg:
+            _LOGGER.exception("Network interface is down - check network adapter")
+        elif "Permission denied" in error_msg:
+            _LOGGER.exception("Network permission denied - firewall or security restriction")
+        else:
+            _LOGGER.exception("Network error - internet may be down: %s", error_msg)
+
+        raise TibberPricesApiClientCommunicationError(
+            TibberPricesApiClientCommunicationError.CONNECTION_ERROR.format(exception=str(error))
+        ) from error
 
     async def _handle_request(
         self,
@@ -517,19 +685,90 @@ class TibberPricesApiClient:
                 )
                 await asyncio.sleep(sleep_time)
 
-            async with async_timeout.timeout(10):
-                self._last_request_time = dt_util.now()
-                return await self._make_request(
-                    headers,
-                    data or {},
-                    query_type,
-                )
+            self._last_request_time = dt_util.now()
+            return await self._make_request(
+                headers,
+                data or {},
+                query_type,
+            )
+
+    def _should_retry_error(self, error: Exception, retry: int) -> tuple[bool, int]:
+        """Determine if an error should be retried and calculate delay."""
+        # Check if we've exceeded max retries first
+        if retry >= self._max_retries:
+            return False, 0
+
+        # Non-retryable errors - authentication and permission issues
+        if isinstance(error, (TibberPricesApiClientAuthenticationError, TibberPricesApiClientPermissionError)):
+            return False, 0
+
+        # Handle API-specific errors
+        if isinstance(error, TibberPricesApiClientError):
+            return self._handle_api_error_retry(error, retry)
+
+        # Network and timeout errors - retryable with exponential backoff
+        if isinstance(error, (aiohttp.ClientError, socket.gaierror, TimeoutError)):
+            delay = min(self._retry_delay * (2**retry), 30)  # Cap at 30 seconds
+            return True, delay
+
+        # Unknown errors - not retryable
+        return False, 0
+
+    def _handle_api_error_retry(self, error: TibberPricesApiClientError, retry: int) -> tuple[bool, int]:
+        """Handle retry logic for API-specific errors."""
+        error_msg = str(error)
+
+        # Non-retryable: Invalid queries
+        if "Invalid GraphQL query" in error_msg or "Bad request" in error_msg:
+            return False, 0
+
+        # Rate limits - special handling with extracted delay
+        if "Rate limit exceeded" in error_msg or "rate limited" in error_msg.lower():
+            delay = self._extract_retry_delay(error, retry)
+            return True, delay
+
+        # Empty data - retryable with capped exponential backoff
+        if "Empty data received" in error_msg:
+            delay = min(self._retry_delay * (2**retry), 60)  # Cap at 60 seconds
+            return True, delay
+
+        # Other API errors - retryable with capped exponential backoff
+        delay = min(self._retry_delay * (2**retry), 30)  # Cap at 30 seconds
+        return True, delay
+
+    def _extract_retry_delay(self, error: Exception, retry: int) -> int:
+        """Extract retry delay from rate limit error or use exponential backoff."""
+        import re
+
+        error_msg = str(error)
+
+        # Try to extract Retry-After value from error message
+        retry_after_match = re.search(r"retry after (\d+) seconds", error_msg.lower())
+        if retry_after_match:
+            try:
+                retry_after = int(retry_after_match.group(1))
+                return min(retry_after + 1, 300)  # Add buffer, max 5 minutes
+            except ValueError:
+                pass
+
+        # Try to extract generic seconds value
+        seconds_match = re.search(r"(\d+) seconds", error_msg)
+        if seconds_match:
+            try:
+                seconds = int(seconds_match.group(1))
+                return min(seconds + 1, 300)  # Add buffer, max 5 minutes
+            except ValueError:
+                pass
+
+        # Fall back to exponential backoff with cap
+        base_delay = self._retry_delay * (2**retry)
+        return min(base_delay, 120)  # Cap at 2 minutes for rate limits
 
     async def _api_wrapper(
         self,
         data: dict | None = None,
         headers: dict | None = None,
-        query_type: QueryType = QueryType.VIEWER,
+        query_type: QueryType = QueryType.USER,
     ) -> Any:
         """Get information from the API with rate limiting and retry logic."""
         headers = headers or _prepare_headers(self._access_token)
@@ -537,32 +776,34 @@ class TibberPricesApiClient:
 
         for retry in range(self._max_retries + 1):
             try:
-                return await self._handle_request(
-                    headers,
-                    data or {},
-                    query_type,
-                )
+                return await self._handle_request(headers, data or {}, query_type)
 
-            except TibberPricesApiClientAuthenticationError:
+            except (
+                TibberPricesApiClientAuthenticationError,
+                TibberPricesApiClientPermissionError,
+            ):
+                _LOGGER.exception("Non-retryable error occurred")
                 raise
             except (
+                TibberPricesApiClientError,
                 aiohttp.ClientError,
                 socket.gaierror,
                 TimeoutError,
-                TibberPricesApiClientError,
             ) as error:
                 last_error = (
                     error
                     if isinstance(error, TibberPricesApiClientError)
-                    else TibberPricesApiClientError(
-                        TibberPricesApiClientError.GENERIC_ERROR.format(exception=str(error))
+                    else TibberPricesApiClientCommunicationError(
+                        TibberPricesApiClientCommunicationError.CONNECTION_ERROR.format(exception=str(error))
                     )
                 )
 
-                if retry < self._max_retries:
-                    delay = self._retry_delay * (2**retry)
+                should_retry, delay = self._should_retry_error(error, retry)
+                if should_retry:
+                    error_type = self._get_error_type(error)
                     _LOGGER.warning(
-                        "Request failed, attempt %d/%d. Retrying in %d seconds: %s",
+                        "Tibber %s error, attempt %d/%d. Retrying in %d seconds: %s",
+                        error_type,
                         retry + 1,
                         self._max_retries,
                         delay,
@@ -570,6 +811,10 @@ class TibberPricesApiClient:
                     )
                     await asyncio.sleep(delay)
                     continue
+
+                if "Invalid GraphQL query" in str(error):
+                    _LOGGER.exception("Invalid query - not retrying")
+                raise
 
         # Handle final error state
         if isinstance(last_error, TimeoutError):
@@ -582,3 +827,11 @@ class TibberPricesApiClient:
             ) from last_error
 
         raise last_error or TibberPricesApiClientError(TibberPricesApiClientError.UNKNOWN_ERROR)
+
+    def _get_error_type(self, error: Exception) -> str:
+        """Get a descriptive error type for logging."""
+        if "Rate limit" in str(error):
+            return "rate limit"
+        if isinstance(error, (aiohttp.ClientError, socket.gaierror, TimeoutError)):
+            return "network"
+        return "API"

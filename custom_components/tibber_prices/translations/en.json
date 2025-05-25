@@ -33,11 +33,11 @@
     },
     "config_subentries": {
         "home": {
-            "title": "Home",
+            "title": "Add Home",
             "step": {
                 "user": {
                     "title": "Add Tibber Home",
-                    "description": "Select a home to add to your Tibber integration.",
+                    "description": "Select a home to add to your Tibber integration.\n\n**Note:** After adding this home, you can add additional homes from the integration's context menu by selecting \"Add Home\".",
                     "data": {
                         "home_id": "Home"
                     }
@@ -51,7 +51,7 @@
                 "no_access_token": "No access token available",
                 "home_not_found": "Selected home not found",
                 "api_error": "Failed to fetch homes from Tibber API",
-                "no_available_homes": "No additional homes available to add"
+                "no_available_homes": "No additional homes available to add. All homes from your Tibber account have already been added."
             }
         }
     },
@@ -146,6 +146,28 @@
             },
             "tomorrow_data_available": {
                 "name": "Tomorrow's Data Available"
+            }
+        }
+    },
+    "issues": {
+        "new_homes_available": {
+            "title": "New Tibber homes detected",
+            "description": "We detected {count} new home(s) on your Tibber account: {homes}. You can add them to Home Assistant through the Tibber integration configuration."
+        },
+        "homes_removed": {
+            "title": "Tibber homes removed",
+            "description": "We detected that {count} home(s) have been removed from your Tibber account: {homes}. Please review your Tibber integration configuration."
+        }
+    },
+    "services": {
+        "refresh_user_data": {
+            "name": "Refresh User Data",
+            "description": "Forces a refresh of the user data (homes, profile information) from the Tibber API. This can be useful after making changes to your Tibber account or when troubleshooting connectivity issues.",
+            "fields": {
+                "entry_id": {
+                    "name": "Entry ID",
+                    "description": "The config entry ID for the Tibber integration."
+                }
             }
         }
     }
