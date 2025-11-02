@@ -271,7 +271,7 @@ class TibberPricesSensor(TibberPricesEntity, SensorEntity):
 
     def _get_current_interval_data(self) -> dict | None:
         """Get the price data for the current interval using coordinator utility."""
-        return self.coordinator.get_current_interval_data()
+        return self.coordinator.get_current_interval()
 
     def _get_price_level_value(self) -> str | None:
         """Get the current price level value as a translated string for the state."""
@@ -488,8 +488,12 @@ class TibberPricesSensor(TibberPricesEntity, SensorEntity):
             return None
         price_rating = self.coordinator.data.get("priceRating", {})
         now = dt_util.now()
-        # In the new flat format, price_rating[rating_type] is a list of entries
-        entries = price_rating.get(rating_type, [])
+        # price_rating[rating_type] contains a dict with "entries" key, extract it
+        rating_data = price_rating.get(rating_type, {})
+        if isinstance(rating_data, dict):
+            entries = rating_data.get("entries", [])
+        else:
+            entries = rating_data if isinstance(rating_data, list) else []
         entry = self._find_rating_entry(entries, now, rating_type)
         if entry:
             difference = entry.get("difference")

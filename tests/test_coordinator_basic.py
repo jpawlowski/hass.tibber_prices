@@ -37,14 +37,13 @@ class TestBasicCoordinator:
         with patch(
             "custom_components.tibber_prices.coordinator.aiohttp_client.async_get_clientsession",
             return_value=mock_session,
-        ):
-            with patch("custom_components.tibber_prices.coordinator.Store") as mock_store_class:
-                mock_store = Mock()
-                mock_store.async_load = AsyncMock(return_value=None)
-                mock_store.async_save = AsyncMock()
-                mock_store_class.return_value = mock_store
+        ), patch("custom_components.tibber_prices.coordinator.Store") as mock_store_class:
+            mock_store = Mock()
+            mock_store.async_load = AsyncMock(return_value=None)
+            mock_store.async_save = AsyncMock()
+            mock_store_class.return_value = mock_store
 
-                return TibberPricesDataUpdateCoordinator(mock_hass, mock_config_entry)
+            return TibberPricesDataUpdateCoordinator(mock_hass, mock_config_entry)
 
     def test_coordinator_creation(self, coordinator):
         """Test that coordinator can be created."""

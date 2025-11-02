@@ -15,8 +15,6 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 from homeassistant.util import dt as dt_util
 
 if TYPE_CHECKING:
-    from collections.abc import Callable
-
     from homeassistant.config_entries import ConfigEntry
 
 from .api import (
@@ -338,7 +336,7 @@ class TibberPricesDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         homes_data = self.data.get("homes", {})
         return homes_data.get(home_id)
 
-    def get_current_interval_data(self) -> dict[str, Any] | None:
+    def get_current_interval(self) -> dict[str, Any] | None:
         """Get the price data for the current interval."""
         if not self.data:
             return None
@@ -368,9 +366,9 @@ class TibberPricesDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         if not all_intervals:
             return None
 
-        from .sensor import detect_interval_granularity
+        from .sensor import detect_interval_granularity as detect_granularity
 
-        return detect_interval_granularity(all_intervals)
+        return detect_granularity(all_intervals)
 
     async def refresh_user_data(self) -> bool:
         """Force refresh of user data and return True if data was updated."""
@@ -399,8 +397,3 @@ class TibberPricesDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         if not self._cached_user_data:
             return []
         return self._cached_user_data.get("homes", [])
-
-    @callback
-    def async_add_listener(self, update_callback: Callable[[], None]) -> Callable[[], None]:
-        """Add a listener for updates."""
-        return super().async_add_listener(update_callback)
