@@ -23,6 +23,7 @@ from homeassistant.helpers.selector import (
     NumberSelector,
     NumberSelectorConfig,
     NumberSelectorMode,
+    SelectOptionDict,
     SelectSelector,
     SelectSelectorConfig,
     SelectSelectorMode,
@@ -59,6 +60,11 @@ class TibberPricesFlowHandler(ConfigFlow, domain=DOMAIN):
         """Initialize the config flow."""
         super().__init__()
         self._reauth_entry: ConfigEntry | None = None
+        self._viewer: dict | None = None
+        self._access_token: str | None = None
+        self._user_name: str | None = None
+        self._user_login: str | None = None
+        self._user_id: str | None = None
 
     @classmethod
     @callback
@@ -109,21 +115,18 @@ class TibberPricesFlowHandler(ConfigFlow, domain=DOMAIN):
 
                 LOGGER.debug("Viewer data received: %s", viewer)
 
-                data = {CONF_ACCESS_TOKEN: user_input[CONF_ACCESS_TOKEN], "homes": homes}
-
                 await self.async_set_unique_id(unique_id=str(user_id))
                 self._abort_if_unique_id_configured()
 
-                return self.async_create_entry(
-                    title=user_name,
-                    data=data,
-                    description=f"{user_login} ({user_id})",
-                    description_placeholders={
-                        "user_id": user_id,
-                        "user_name": user_name,
-                        "user_login": user_login,
-                    },
-                )
+                # Store viewer data in the flow for use in the next step
+                self._viewer = viewer
+                self._access_token = user_input[CONF_ACCESS_TOKEN]
+                self._user_name = user_name
+                self._user_login = user_login
+                self._user_id = user_id
+
+                # Move to home selection step
+                return await self.async_step_select_home()
 
         return self.async_show_form(
             step_id="user",
@@ -141,6 +144,74 @@ class TibberPricesFlowHandler(ConfigFlow, domain=DOMAIN):
             ),
             errors=_errors,
         )
+
+    async def async_step_select_home(self, user_input: dict | None = None) -> ConfigFlowResult:
+        """Handle home selection during initial setup."""
+        homes = self._viewer.get("homes", []) if self._viewer else []
+
+        if not homes:
+            return self.async_abort(reason="unknown")
+
+        if user_input is not None:
+            selected_home_id = user_input["home_id"]
+            selected_home = next((home for home in homes if home["id"] == selected_home_id), None)
+
+            if not selected_home:
+                return self.async_abort(reason="unknown")
+
+            data = {
+                CONF_ACCESS_TOKEN: self._access_token or "",
+                "home_id": selected_home_id,
+                "home_data": selected_home,
+                "homes": homes,
+            }
+
+            return self.async_create_entry(
+                title=self._user_name or "Unknown User",
+                data=data,
+                description=f"{self._user_login} ({self._user_id})",
+            )
+
+        home_options = [
+            SelectOptionDict(
+                value=home["id"],
+                label=self._get_home_title(home),
+            )
+            for home in homes
+        ]
+
+        return self.async_show_form(
+            step_id="select_home",
+            data_schema=vol.Schema(
+                {
+                    vol.Required("home_id"): SelectSelector(
+                        SelectSelectorConfig(
+                            options=home_options,
+                            mode=SelectSelectorMode.DROPDOWN,
+                        )
+                    )
+                }
+            ),
+        )
+
+    @staticmethod
+    def _get_home_title(home: dict) -> str:
+        """Generate a user-friendly title for a home."""
+        title = home.get("appNickname")
+        if title:
+            return title
+
+        address = home.get("address", {})
+        if address:
+            parts = []
+            if address.get("address1"):
+                parts.append(address["address1"])
+            if address.get("city"):
+                parts.append(address["city"])
+            if parts:
+                return ", ".join(parts)
+
+        return home.get("id", "Unknown Home")
 
     async def _get_viewer_details(self, access_token: str) -> dict:
         """Validate credentials and return information about the account (viewer object)."""
@@ -248,8 +319,6 @@ class TibberPricesSubentryFlowHandler(ConfigSubentryFlow):
 
         if not available_homes:
             return self.async_abort(reason="no_available_homes")
-
-        from homeassistant.helpers.selector import SelectOptionDict
 
         home_options = [
             SelectOptionDict(

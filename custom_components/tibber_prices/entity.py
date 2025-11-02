@@ -5,7 +5,7 @@ from __future__ import annotations
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import ATTRIBUTION, DOMAIN
+from .const import ATTRIBUTION, DOMAIN, get_home_type_translation
 from .coordinator import TibberPricesDataUpdateCoordinator
 
 
@@ -18,14 +18,6 @@ class TibberPricesEntity(CoordinatorEntity[TibberPricesDataUpdateCoordinator]):
     def __init__(self, coordinator: TibberPricesDataUpdateCoordinator) -> None:
         """Initialize."""
         super().__init__(coordinator)
-
-        # enum of home types
-        home_types = {
-            "APARTMENT": "Apartment",
-            "ROWHOUSE": "Rowhouse",
-            "HOUSE": "House",
-            "COTTAGE": "Cottage",
-        }
 
         # Get user profile information from coordinator
         user_profile = self.coordinator.get_user_profile()
@@ -79,12 +71,16 @@ class TibberPricesEntity(CoordinatorEntity[TibberPricesDataUpdateCoordinator]):
             except (KeyError, IndexError, TypeError):
                 home_name = "Tibber Home"
 
+        # Get translated home type using the configured language
+        language = coordinator.hass.config.language or "en"
+        translated_model = get_home_type_translation(home_type, language) if home_type else "Unknown"
+
         self._attr_device_info = DeviceInfo(
             entry_type=DeviceEntryType.SERVICE,
             identifiers={(DOMAIN, coordinator.config_entry.unique_id or coordinator.config_entry.entry_id)},
             name=home_name,
             manufacturer="Tibber",
-            model=home_types.get(home_type, "Unknown") if home_type else "Unknown",
+            model=translated_model,
             model_id=home_type if home_type else None,
             serial_number=home_id if home_id else None,
         )

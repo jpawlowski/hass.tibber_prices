@@ -34,10 +34,13 @@ class TestBasicCoordinator:
     @pytest.fixture
     def coordinator(self, mock_hass, mock_config_entry, mock_session):
         """Create a coordinator instance."""
-        with patch(
-            "custom_components.tibber_prices.coordinator.aiohttp_client.async_get_clientsession",
-            return_value=mock_session,
-        ), patch("custom_components.tibber_prices.coordinator.Store") as mock_store_class:
+        with (
+            patch(
+                "custom_components.tibber_prices.coordinator.aiohttp_client.async_get_clientsession",
+                return_value=mock_session,
+            ),
+            patch("custom_components.tibber_prices.coordinator.Store") as mock_store_class,
+        ):
             mock_store = Mock()
             mock_store.async_load = AsyncMock(return_value=None)
             mock_store.async_save = AsyncMock()

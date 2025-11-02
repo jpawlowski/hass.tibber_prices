@@ -73,8 +73,14 @@ LOGGER = logging.getLogger(__package__)
 # Path to custom translations directory
 CUSTOM_TRANSLATIONS_DIR = Path(__file__).parent / "custom_translations"
 
+# Path to standard translations directory
+TRANSLATIONS_DIR = Path(__file__).parent / "translations"
+
 # Cache for translations to avoid repeated file reads
 _TRANSLATIONS_CACHE: dict[str, dict] = {}
+
+# Cache for standard translations (config flow, home_types, etc.)
+_STANDARD_TRANSLATIONS_CACHE: dict[str, dict] = {}
 
 
 async def async_load_translations(hass: HomeAssistant, language: str) -> dict:
@@ -139,6 +145,67 @@ async def async_load_translations(hass: HomeAssistant, language: str) -> dict:
         return empty_cache
 
 
+async def async_load_standard_translations(hass: HomeAssistant, language: str) -> dict:
+    """
+    Load standard translations from the translations directory asynchronously.
+
+    These are the config flow and home_types translations used in the UI.
+
+    Args:
+        hass: HomeAssistant instance
+        language: The language code to load
+
+    Returns:
+        The loaded translations as a dictionary
+
+    """
+    cache_key = f"{DOMAIN}_standard_translations_{language}"
+
+    # Check if we have an instance in hass.data
+    if cache_key in hass.data:
+        return hass.data[cache_key]
+
+    # Check the module-level cache
+    if language in _STANDARD_TRANSLATIONS_CACHE:
+        return _STANDARD_TRANSLATIONS_CACHE[language]
+
+    # Determine the file path
+    file_path = TRANSLATIONS_DIR / f"{language}.json"
+    if not file_path.exists():
+        # Fall back to English if requested language not found
+        file_path = TRANSLATIONS_DIR / "en.json"
+        if not file_path.exists():
+            LOGGER.debug("No standard translations found at %s", file_path)
+            empty_cache = {}
+            _STANDARD_TRANSLATIONS_CACHE[language] = empty_cache
+            hass.data[cache_key] = empty_cache
+            return empty_cache
+
+    try:
+        # Read the file asynchronously
+        async with aiofiles.open(file_path, encoding="utf-8") as f:
+            content = await f.read()
+            translations = json.loads(content)
+            # Store in both caches for future calls
+            _STANDARD_TRANSLATIONS_CACHE[language] = translations
+            hass.data[cache_key] = translations
+            return translations
+
+    except (OSError, json.JSONDecodeError) as err:
+        LOGGER.warning("Error loading standard translations file: %s", err)
+        empty_cache = {}
+        _STANDARD_TRANSLATIONS_CACHE[language] = empty_cache
+        hass.data[cache_key] = empty_cache
+        return empty_cache
+
+    except Exception:  # pylint: disable=broad-except
+        LOGGER.exception("Unexpected error loading standard translations")
+        empty_cache = {}
+        _STANDARD_TRANSLATIONS_CACHE[language] = empty_cache
+        hass.data[cache_key] = empty_cache
+        return empty_cache
+
+
 async def async_get_translation(
     hass: HomeAssistant,
     path: Sequence[str],
@@ -146,6 +213,8 @@ async def async_get_translation(
 ) -> Any:
     """
     Get a translation value by path asynchronously.
+
+    Checks standard translations first, then custom translations.
 
     Args:
         hass: HomeAssistant instance
@@ -156,6 +225,20 @@ async def async_get_translation(
         The translation value if found, None otherwise
 
     """
+    # Try standard translations first (config flow, home_types, etc.)
+    translations = await async_load_standard_translations(hass, language)
+
+    # Navigate to the requested path
+    current = translations
+    for key in path:
+        if not isinstance(current, dict) or key not in current:
+            break
+        current = current.get(key)
+    else:
+        # If we successfully navigated to the end, return the value
+        return current
+
+    # Fall back to custom translations if not found in standard translations
     translations = await async_load_translations(hass, language)
 
     # Navigate to the requested path
@@ -176,6 +259,7 @@ def get_translation(
     Get a translation value by path synchronously from the cache.
 
     This function only accesses the cached translations to avoid blocking I/O.
+    Checks standard translations first, then custom translations.
 
     Args:
         path: A sequence of keys defining the path to the translation value
@@ -185,26 +269,42 @@ def get_translation(
         The translation value if found in cache, None otherwise
 
     """
-    # Only return from cache to avoid blocking I/O
-    if language not in _TRANSLATIONS_CACHE:
-        # Fall back to English if the requested language is not available
-        if language != "en" and "en" in _TRANSLATIONS_CACHE:
-            language = "en"
-        else:
-            return None
 
-    # Navigate to the requested path
-    current = _TRANSLATIONS_CACHE[language]
-    for key in path:
-        if not isinstance(current, dict):
-            return None
-        if key not in current:
-            # Log the missing key for debugging
-            LOGGER.debug("Translation key '%s' not found in path %s for language %s", key, path, language)
-            return None
-        current = current[key]
+    def _navigate_dict(d: dict, keys: Sequence[str]) -> Any:
+        """Navigate through nested dict following the keys path."""
+        current = d
+        for key in keys:
+            if not isinstance(current, dict) or key not in current:
+                return None
+            current = current[key]
+        return current
 
-    return current
+    def _get_from_cache(cache: dict[str, dict], lang: str) -> Any:
+        """Get translation from cache with fallback to English."""
+        if lang in cache:
+            result = _navigate_dict(cache[lang], path)
+            if result is not None:
+                return result
+        # Fallback to English if not found in requested language
+        if lang != "en" and "en" in cache:
+            result = _navigate_dict(cache["en"], path)
+            if result is not None:
+                return result
+        return None
+
+    # Try standard translations first
+    result = _get_from_cache(_STANDARD_TRANSLATIONS_CACHE, language)
+    if result is not None:
+        return result
+
+    # Fall back to custom translations
+    result = _get_from_cache(_TRANSLATIONS_CACHE, language)
+    if result is not None:
+        return result
+
+    # Log the missing key for debugging
+    LOGGER.debug("Translation key '%s' not found for language %s", path, language)
+    return None
 
 
 # Convenience functions for backward compatibility and common usage patterns
@@ -314,3 +414,57 @@ def get_price_level_translation(
 
     """
     return get_translation(["sensor", "price_level", "price_levels", level], language)
+
+
+async def async_get_home_type_translation(
+    hass: HomeAssistant,
+    home_type: str,
+    language: str = "en",
+) -> str | None:
+    """
+    Get a localized translation for a home type asynchronously.
+
+    Args:
+        hass: HomeAssistant instance
+        home_type: The home type (e.g., APARTMENT, HOUSE, etc.)
+        language: The language code (defaults to English)
+
+    Returns:
+        The localized home type if found, None otherwise
+
+    """
+    return await async_get_translation(hass, ["home_types", home_type], language)
+
+
+def get_home_type_translation(
+    home_type: str,
+    language: str = "en",
+) -> str | None:
+    """
+    Get a localized translation for a home type synchronously from the cache.
+
+    This function only accesses the cached translations to avoid blocking I/O.
+
+    Args:
+        home_type: The home type (e.g., APARTMENT, HOUSE, etc.)
+        language: The language code (defaults to English)
+
+    Returns:
+        The localized home type if found in cache, fallback to HOME_TYPES dict, or None
+
+    """
+    translated = get_translation(["home_types", home_type], language)
+    if translated:
+        LOGGER.debug("Found translation for home type '%s' in language '%s': %s", home_type, language, translated)
+        return translated
+    fallback = HOME_TYPES.get(home_type)
+    LOGGER.debug(
+        "No translation found for home type '%s' in language '%s', using fallback: %s. "
+        "Available caches: standard=%s, custom=%s",
+        home_type,
+        language,
+        fallback,
+        list(_STANDARD_TRANSLATIONS_CACHE.keys()),
+        list(_TRANSLATIONS_CACHE.keys()),
+    )
+    return fallback

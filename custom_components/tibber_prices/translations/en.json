@@ -9,6 +9,14 @@
                 "title": "Tibber Price Information & Ratings",
                 "submit": "Validate Token"
             },
+            "select_home": {
+                "description": "Select a home to fetch price information and ratings.",
+                "data": {
+                    "home_id": "Home"
+                },
+                "title": "Pick a Home",
+                "submit": "Select Home"
+            },
             "finish": {
                 "description": "Select a home to fetch price information and ratings.",
                 "data": {
@@ -148,6 +156,12 @@
                 "name": "Tomorrow's Data Available"
             }
         }
+    },
+    "home_types": {
+        "APARTMENT": "Apartment",
+        "ROWHOUSE": "Rowhouse",
+        "HOUSE": "House",
+        "COTTAGE": "Cottage"
     },
     "issues": {
         "new_homes_available": {

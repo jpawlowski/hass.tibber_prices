@@ -16,7 +16,7 @@ from homeassistant.helpers.storage import Store
 from homeassistant.loader import async_get_loaded_integration
 
 from .api import TibberPricesApiClient
-from .const import DOMAIN, LOGGER, async_load_translations
+from .const import DOMAIN, LOGGER, async_load_standard_translations, async_load_translations
 from .coordinator import STORAGE_VERSION, TibberPricesDataUpdateCoordinator
 from .data import TibberPricesData
 from .services import async_setup_services
@@ -41,10 +41,12 @@ async def async_setup_entry(
     LOGGER.debug(f"[tibber_prices] async_setup_entry called for entry_id={entry.entry_id}")
     # Preload translations to populate the cache
     await async_load_translations(hass, "en")
+    await async_load_standard_translations(hass, "en")
 
     # Try to load translations for the user's configured language if not English
     if hass.config.language and hass.config.language != "en":
         await async_load_translations(hass, hass.config.language)
+        await async_load_standard_translations(hass, hass.config.language)
 
     # Register services when a config entry is loaded
     async_setup_services(hass)

@@ -9,6 +9,14 @@
                 "title": "Tibber Preisinformationen & Bewertungen",
                 "submit": "Token validieren"
             },
+            "select_home": {
+                "description": "Wähle ein Zuhause, um Preisinformationen und Bewertungen abzurufen.",
+                "data": {
+                    "home_id": "Zuhause"
+                },
+                "title": "Wähle ein Zuhause",
+                "submit": "Zuhause auswählen"
+            },
             "finish": {
                 "description": "Wähle ein Zuhause, um Preisinformationen und Bewertungen abzurufen.",
                 "data": {
@@ -33,7 +41,7 @@
     },
     "config_subentries": {
         "home": {
-            "title": "Zuhause",
+            "title": "Zuhause hinzufügen",
             "step": {
                 "user": {
                     "title": "Tibber Zuhause hinzufügen",
@@ -133,6 +141,12 @@
                 "name": "Daten für morgen verfügbar"
             }
         }
+    },
+    "home_types": {
+        "APARTMENT": "Wohnung",
+        "ROWHOUSE": "Reihenhaus",
+        "HOUSE": "Haus",
+        "COTTAGE": "Ferienhaus"
     },
     "issues": {
         "new_homes_available": {
