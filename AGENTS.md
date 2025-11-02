@@ -357,7 +357,7 @@ Defined in `requirements.txt`:
 
 ```
 colorlog>=6.9.0,<7.0.0
-homeassistant>=2025.5.0,<2025.6.0
+homeassistant>=2025.10.0,<2025.11.0
 pytest-homeassistant-custom-component>=0.13.0,<0.14.0
 pip>=21.3.1
 ruff>=0.11.6,<0.15.0
