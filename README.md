@@ -14,12 +14,12 @@ A Home Assistant integration that provides advanced price information and rating
 
 ## Features
 
-- **Current and Next Hour Prices**: Get real-time price data in both EUR and cents/kWh
-- **Price Level Indicators**: Know when you're in a low, normal, or high price period
-- **Statistical Sensors**: Track lowest, highest, and average prices for the day
-- **Price Ratings**: Hourly, daily, and monthly ratings to understand how current prices compare to historical data
-- **Smart Indicators**: Binary sensors to detect peak hours and best price hours for automations
-- **Diagnostic Sensors**: Monitor data freshness and availability
+-   **Current and Next Hour Prices**: Get real-time price data in both EUR and cents/kWh
+-   **Price Level Indicators**: Know when you're in a low, normal, or high price period
+-   **Statistical Sensors**: Track lowest, highest, and average prices for the day
+-   **Price Ratings**: Quarterly-hour, daily, and monthly ratings to understand how current prices compare to historical data
+-   **Smart Indicators**: Binary sensors to detect peak hours and best price hours for automations
+-   **Diagnostic Sensors**: Monitor data freshness and availability
 
 ## Installation
 
@@ -42,8 +42,8 @@ A Home Assistant integration that provides advanced price information and rating
 
 ### Requirements
 
-- A Tibber account with an active subscription
-- A Tibber API access token (obtain from [developer.tibber.com](https://developer.tibber.com/settings/access-token))
+-   A Tibber account with an active subscription
+-   A Tibber API access token (obtain from [developer.tibber.com](https://developer.tibber.com/settings/access-token))
 
 ### Setup Process
 
@@ -57,47 +57,47 @@ A Home Assistant integration that provides advanced price information and rating
 
 ### Price Sensors
 
-| Entity | Description | Unit | Default Enabled |
-|--------|-------------|------|----------------|
-| Current Electricity Price | The current hourly price | ct/kWh | Yes |
-| Current Electricity Price (EUR) | The current hourly price | € | No |
-| Next Hour Electricity Price | The price for the upcoming hour | ct/kWh | Yes |
-| Next Hour Electricity Price (EUR) | The price for the upcoming hour | € | No |
-| Current Price Level | Tibber's classification of the price (VERY_CHEAP, CHEAP, NORMAL, EXPENSIVE, VERY_EXPENSIVE) | - | Yes |
+| Entity                            | Description                                                                                 | Unit   | Default Enabled |
+| --------------------------------- | ------------------------------------------------------------------------------------------- | ------ | --------------- |
+| Current Electricity Price         | The current hourly price                                                                    | ct/kWh | Yes             |
+| Current Electricity Price (EUR)   | The current hourly price                                                                    | €      | No              |
+| Next Hour Electricity Price       | The price for the upcoming hour                                                             | ct/kWh | Yes             |
+| Next Hour Electricity Price (EUR) | The price for the upcoming hour                                                             | €      | No              |
+| Current Price Level               | Tibber's classification of the price (VERY_CHEAP, CHEAP, NORMAL, EXPENSIVE, VERY_EXPENSIVE) | -      | Yes             |
 
 ### Statistical Sensors
 
-| Entity | Description | Unit | Default Enabled |
-|--------|-------------|------|----------------|
-| Today's Lowest Price | The lowest price for the current day | ct/kWh | Yes |
-| Today's Lowest Price (EUR) | The lowest price for the current day | € | No |
-| Today's Highest Price | The highest price for the current day | ct/kWh | Yes |
-| Today's Highest Price (EUR) | The highest price for the current day | € | No |
-| Today's Average Price | The average price for the current day | ct/kWh | Yes |
-| Today's Average Price (EUR) | The average price for the current day | € | No |
+| Entity                      | Description                           | Unit   | Default Enabled |
+| --------------------------- | ------------------------------------- | ------ | --------------- |
+| Today's Lowest Price        | The lowest price for the current day  | ct/kWh | Yes             |
+| Today's Lowest Price (EUR)  | The lowest price for the current day  | €      | No              |
+| Today's Highest Price       | The highest price for the current day | ct/kWh | Yes             |
+| Today's Highest Price (EUR) | The highest price for the current day | €      | No              |
+| Today's Average Price       | The average price for the current day | ct/kWh | Yes             |
+| Today's Average Price (EUR) | The average price for the current day | €      | No              |
 
 ### Rating Sensors
 
-| Entity | Description | Unit | Default Enabled |
-|--------|-------------|------|----------------|
-| Hourly Price Rating | How the current hour's price compares to historical data | % | Yes |
-| Daily Price Rating | How today's prices compare to historical data | % | Yes |
-| Monthly Price Rating | How this month's prices compare to historical data | % | Yes |
+| Entity               | Description                                              | Unit | Default Enabled |
+| -------------------- | -------------------------------------------------------- | ---- | --------------- |
+| Hourly Price Rating  | How the current hour's price compares to historical data | %    | Yes             |
+| Daily Price Rating   | How today's prices compare to historical data            | %    | Yes             |
+| Monthly Price Rating | How this month's prices compare to historical data       | %    | Yes             |
 
 ### Binary Sensors
 
-| Entity | Description | Default Enabled |
-|--------|-------------|----------------|
-| Peak Hour | Whether the current hour is in the top 20% of prices for the day | Yes |
-| Best Price Hour | Whether the current hour is in the bottom 20% of prices for the day | Yes |
-| Tibber API Connection | Shows connection status to the Tibber API | Yes |
+| Entity                | Description                                                         | Default Enabled |
+| --------------------- | ------------------------------------------------------------------- | --------------- |
+| Peak Hour             | Whether the current hour is in the top 20% of prices for the day    | Yes             |
+| Best Price Hour       | Whether the current hour is in the bottom 20% of prices for the day | Yes             |
+| Tibber API Connection | Shows connection status to the Tibber API                           | Yes             |
 
 ### Diagnostic Sensors
 
-| Entity | Description | Default Enabled |
-|--------|-------------|----------------|
-| Last Data Update | Timestamp of the most recent data update | Yes |
-| Tomorrow's Data Status | Indicates if tomorrow's price data is available (Yes/No/Partial) | Yes |
+| Entity                 | Description                                                      | Default Enabled |
+| ---------------------- | ---------------------------------------------------------------- | --------------- |
+| Last Data Update       | Timestamp of the most recent data update                         | Yes             |
+| Tomorrow's Data Status | Indicates if tomorrow's price data is available (Yes/No/Partial) | Yes             |
 
 ## Automation Examples
 
@@ -105,35 +105,35 @@ A Home Assistant integration that provides advanced price information and rating
 
 ```yaml
 automation:
-  - alias: "Run Dishwasher During Cheap Hours"
-    trigger:
-      - platform: state
-        entity_id: binary_sensor.tibber_best_price_hour
-        to: "on"
-    condition:
-      - condition: time
-        after: "21:00:00"
-        before: "06:00:00"
-    action:
-      - service: switch.turn_on
-        target:
-          entity_id: switch.dishwasher
+    - alias: "Run Dishwasher During Cheap Hours"
+      trigger:
+          - platform: state
+            entity_id: binary_sensor.tibber_best_price_hour
+            to: "on"
+      condition:
+          - condition: time
+            after: "21:00:00"
+            before: "06:00:00"
+      action:
+          - service: switch.turn_on
+            target:
+                entity_id: switch.dishwasher
 ```
 
 ### Notify on Extremely High Prices
 
 ```yaml
 automation:
-  - alias: "Notify on Very Expensive Electricity"
-    trigger:
-      - platform: state
-        entity_id: sensor.tibber_current_price_level
-        to: "VERY_EXPENSIVE"
-    action:
-      - service: notify.mobile_app
-        data:
-          title: "⚠️ High Electricity Prices"
-          message: "Current electricity price is in the VERY EXPENSIVE range. Consider reducing consumption."
+    - alias: "Notify on Very Expensive Electricity"
+      trigger:
+          - platform: state
+            entity_id: sensor.tibber_current_price_level
+            to: "VERY_EXPENSIVE"
+      action:
+          - service: notify.mobile_app
+            data:
+                title: "⚠️ High Electricity Prices"
+                message: "Current electricity price is in the VERY EXPENSIVE range. Consider reducing consumption."
 ```
 
 ## Troubleshooting
@@ -147,8 +147,8 @@ automation:
 
 ### Missing tomorrow's price data
 
-- Tomorrow's price data usually becomes available between 13:00 and 15:00 each day
-- If data is still unavailable after this time, check the Tibber app to see if data is available there
+-   Tomorrow's price data usually becomes available between 13:00 and 15:00 each day
+-   If data is still unavailable after this time, check the Tibber app to see if data is available there
 
 ## Contributing
 

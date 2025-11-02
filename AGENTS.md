@@ -20,7 +20,7 @@ This integration provides advanced price information and ratings from Tibber for
 -   Current and next hour electricity prices (EUR and ct/kWh)
 -   Price level indicators (VERY_CHEAP, CHEAP, NORMAL, EXPENSIVE, VERY_EXPENSIVE)
 -   Statistical sensors (lowest, highest, average prices)
--   Price ratings (hourly, daily, monthly)
+-   Price ratings (quarterly-hour, daily, monthly)
 -   Smart binary sensors (peak hour detection, best price hours)
 -   Diagnostic sensors (data freshness, API connection status)
 
@@ -386,7 +386,7 @@ The integration provides:
 
     - Price sensors (current, next hour)
     - Statistical sensors (min, max, average)
-    - Rating sensors (hourly, daily, monthly)
+    - Rating sensors (quarterly-hour, daily, monthly)
     - Diagnostic sensors (last update, tomorrow's data status)
 
 2. **Binary Sensors** (`binary_sensor.py`):
