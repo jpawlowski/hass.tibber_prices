@@ -41,11 +41,15 @@
     },
     "config_subentries": {
         "home": {
-            "title": "Add Home",
+            "initiate_flow": {
+                "user": "Add Tibber Home"
+            },
+            "title": "Add Tibber Home",
+            "description": "Add another Tibber home to your integration",
             "step": {
                 "user": {
                     "title": "Add Tibber Home",
-                    "description": "Select a home to add to your Tibber integration.\n\n**Note:** After adding this home, you can add additional homes from the integration's context menu by selecting \"Add Home\".",
+                    "description": "Select a home to add to your Tibber integration.\n\n**Note:** After adding this home, you can add additional homes from the integration's context menu by selecting \"Add Tibber Home\".",
                     "data": {
                         "home_id": "Home"
                     }

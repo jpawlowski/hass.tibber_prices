@@ -73,7 +73,7 @@ class TibberPricesFlowHandler(ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
-    def async_get_options_flow() -> OptionsFlow:
+    def async_get_options_flow(config_entry: ConfigEntry) -> OptionsFlow:  # noqa: ARG004
         """Create an options flow for this configentry."""
         return TibberPricesOptionsFlowHandler()
 

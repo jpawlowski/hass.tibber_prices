@@ -41,7 +41,11 @@
     },
     "config_subentries": {
         "home": {
-            "title": "Zuhause hinzufügen",
+            "initiate_flow": {
+                "user": "Tibber Zuhause hinzufügen"
+            },
+            "title": "Tibber Zuhause hinzufügen",
+            "description": "Füge ein weiteres Tibber Zuhause zu deiner Integration hinzu",
             "step": {
                 "user": {
                     "title": "Tibber Zuhause hinzufügen",
@@ -59,7 +63,7 @@
                 "no_access_token": "Kein Zugriffstoken verfügbar",
                 "home_not_found": "Ausgewähltes Zuhause nicht gefunden",
                 "api_error": "Fehler beim Abrufen der Zuhause von der Tibber API",
-                "no_available_homes": "Keine weiteren Zuhause zum Hinzufügen verfügbar"
+                "no_available_homes": "Keine zusätzlichen Zuhause verfügbar. Alle Zuhause von deinem Tibber-Konto wurden bereits hinzugefügt."
             }
         }
     },
