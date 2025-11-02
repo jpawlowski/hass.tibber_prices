@@ -380,16 +380,6 @@ class TibberPricesDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         tomorrow_prices = price_info.get("tomorrow", [])
         return today_prices + tomorrow_prices
 
-    def get_interval_granularity(self) -> int | None:
-        """Get the granularity of price intervals in minutes."""
-        all_intervals = self.get_all_intervals()
-        if not all_intervals:
-            return None
-
-        from .sensor import detect_interval_granularity as detect_granularity
-
-        return detect_granularity(all_intervals)
-
     async def refresh_user_data(self) -> bool:
         """Force refresh of user data and return True if data was updated."""
         try:

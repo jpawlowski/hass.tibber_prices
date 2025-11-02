@@ -147,6 +147,8 @@ async def _get_price(call: ServiceCall) -> dict[str, Any]:
     for interval in merged:
         if "previous_end_time" in interval:
             del interval["previous_end_time"]
+        if "start_dt" in interval:
+            del interval["start_dt"]
 
     response_ctx = PriceResponseContext(
         price_stats=price_stats,

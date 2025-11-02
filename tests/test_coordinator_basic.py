@@ -79,8 +79,3 @@ class TestBasicCoordinator:
         """Test getting all intervals when no data is available."""
         intervals = coordinator.get_all_intervals()
         assert intervals == []
-
-    def test_get_interval_granularity(self, coordinator):
-        """Test getting interval granularity."""
-        granularity = coordinator.get_interval_granularity()
-        assert granularity is None

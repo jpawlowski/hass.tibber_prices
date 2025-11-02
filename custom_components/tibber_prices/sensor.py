@@ -344,13 +344,12 @@ class TibberPricesSensor(TibberPricesEntity, SensorEntity):
         return None
 
     def _get_interval_price_value(self, *, interval_offset: int, in_euro: bool) -> float | None:
-        """Get price for the current interval or with offset, handling different interval granularities."""
+        """Get price for the current interval or with offset, handling 15-minute intervals."""
         if not self.coordinator.data:
             return None
 
         all_intervals = self.coordinator.get_all_intervals()
-        granularity = self.coordinator.get_interval_granularity()
-        if not all_intervals or granularity is None:
+        if not all_intervals:
             return None
 
         now = dt_util.now()
@@ -360,7 +359,7 @@ class TibberPricesSensor(TibberPricesEntity, SensorEntity):
             starts_at = interval.get("startsAt")
             if starts_at:
                 ts = dt_util.parse_datetime(starts_at)
-                if ts and ts <= now < ts + timedelta(minutes=granularity):
+                if ts and ts <= now < ts + timedelta(minutes=MINUTES_PER_INTERVAL):
                     current_idx = idx
                     break
 
@@ -438,12 +437,9 @@ class TibberPricesSensor(TibberPricesEntity, SensorEntity):
             return None
         predicate = None
         if rating_type == "hourly":
-            price_info = self.coordinator.data.get("priceInfo", {})
-            today_prices = price_info.get("today", [])
-            data_granularity = detect_interval_granularity(today_prices) if today_prices else MINUTES_PER_INTERVAL
 
             def interval_predicate(entry_time: datetime) -> bool:
-                interval_end = entry_time + timedelta(minutes=data_granularity)
+                interval_end = entry_time + timedelta(minutes=MINUTES_PER_INTERVAL)
                 return entry_time <= now < interval_end and entry_time.date() == now.date()
 
             predicate = interval_predicate
@@ -548,7 +544,6 @@ class TibberPricesSensor(TibberPricesEntity, SensorEntity):
         price_info = self.coordinator.data.get("priceInfo", {})
         price_rating = self.coordinator.data.get("priceRating", {})
 
-        # Determine data granularity from the current price data
         today_prices = price_info.get("today", [])
         tomorrow_prices = price_info.get("tomorrow", [])
         all_prices = today_prices + tomorrow_prices
@@ -556,7 +551,6 @@ class TibberPricesSensor(TibberPricesEntity, SensorEntity):
         if not all_prices:
             return None
 
-        data_granularity = detect_interval_granularity(all_prices)
         now = dt_util.now()
 
         # Initialize the result list
@@ -581,7 +575,6 @@ class TibberPricesSensor(TibberPricesEntity, SensorEntity):
                             "rating_level": entry.get("level"),
                         }
 
-        # Create a list of all future price data points
         for day_key in ["today", "tomorrow"]:
             for price_data in price_info.get(day_key, []):
                 starts_at = dt_util.parse_datetime(price_data["startsAt"])
@@ -589,19 +582,16 @@ class TibberPricesSensor(TibberPricesEntity, SensorEntity):
                     continue
 
                 starts_at = dt_util.as_local(starts_at)
-                interval_end = starts_at + timedelta(minutes=data_granularity)
+                interval_end = starts_at + timedelta(minutes=MINUTES_PER_INTERVAL)
 
-                # Only include future intervals
                 if starts_at > now:
-                    # Format timestamp for rating lookup
                     starts_at_key = starts_at.replace(second=0, microsecond=0).isoformat()
 
-                    # Try to find rating data for this interval
                     interval_rating = rating_data.get(starts_at_key) or {}
 
                     future_prices.append(
                         {
-                            "interval_start": starts_at.isoformat(),  # Renamed from starts_at to interval_start
+                            "interval_start": starts_at.isoformat(),
                             "interval_end": interval_end.isoformat(),
                             "price": float(price_data["total"]),
                             "price_cents": round(float(price_data["total"]) * 100, 2),
@@ -629,16 +619,6 @@ class TibberPricesSensor(TibberPricesEntity, SensorEntity):
 
         attributes["intervals"] = future_prices
         attributes["data_available"] = True
-
-        # Determine interval granularity for display purposes
-        min_intervals_for_granularity_detection = 2
-        if len(future_prices) >= min_intervals_for_granularity_detection:
-            start1 = datetime.fromisoformat(future_prices[0]["interval_start"])
-            start2 = datetime.fromisoformat(future_prices[1]["interval_start"])
-            minutes_diff = int((start2 - start1).total_seconds() / 60)
-            attributes["interval_minutes"] = minutes_diff
-        else:
-            attributes["interval_minutes"] = MINUTES_PER_INTERVAL
 
         # Group by hour for easier consumption in dashboards
         hours = {}
@@ -853,15 +833,11 @@ class TibberPricesSensor(TibberPricesEntity, SensorEntity):
         if self.entity_description.key == "price_level" and current_interval_data and "level" in current_interval_data:
             self._add_price_level_attributes(attributes, current_interval_data["level"])
 
-        # Add timestamp for next interval price sensors
         if self.entity_description.key in ["next_interval_price", "next_interval_price_eur"]:
-            # Get the next interval's data
             price_info = self.coordinator.data.get("priceInfo", {})
-            today_prices = price_info.get("today", [])
-            data_granularity = detect_interval_granularity(today_prices) if today_prices else MINUTES_PER_INTERVAL
             now = dt_util.now()
-            next_interval_time = now + timedelta(minutes=data_granularity)
-            next_interval_data = find_price_data_for_interval(price_info, next_interval_time, data_granularity)
+            next_interval_time = now + timedelta(minutes=MINUTES_PER_INTERVAL)
+            next_interval_data = find_price_data_for_interval(price_info, next_interval_time)
             attributes["timestamp"] = next_interval_data["startsAt"] if next_interval_data else None
 
     def _add_price_level_attributes(self, attributes: dict, level: str) -> None:
@@ -897,9 +873,7 @@ class TibberPricesSensor(TibberPricesEntity, SensorEntity):
         price_info = self.coordinator.data.get("priceInfo", {})
         now = dt_util.now()
         if key == "price_rating":
-            today_prices = price_info.get("today", [])
-            data_granularity = detect_interval_granularity(today_prices) if today_prices else MINUTES_PER_INTERVAL
-            interval_data = find_price_data_for_interval(price_info, now, data_granularity)
+            interval_data = find_price_data_for_interval(price_info, now)
             attributes["timestamp"] = interval_data["startsAt"] if interval_data else None
             if hasattr(self, "_last_rating_difference") and self._last_rating_difference is not None:
                 attributes["difference_" + PERCENTAGE] = self._last_rating_difference
@@ -931,133 +905,34 @@ class TibberPricesSensor(TibberPricesEntity, SensorEntity):
         await self.coordinator.async_request_refresh()
 
 
-def detect_interval_granularity(price_data: list[dict]) -> int:
+def find_price_data_for_interval(price_info: Any, target_time: datetime) -> dict | None:
     """
-    Detect the granularity of price intervals in minutes.
-
-    Args:
-        price_data: List of price data points with startsAt timestamps
-
-    Returns:
-        Minutes per interval (e.g., 60 for hourly, 15 for 15-minute intervals)
-
-    """
-    min_datapoints_for_granularity = 2
-    if not price_data or len(price_data) < min_datapoints_for_granularity:
-        return MINUTES_PER_INTERVAL  # Default to target value
-
-    # Sort data points by timestamp
-    sorted_data = sorted(price_data, key=lambda x: x["startsAt"])
-
-    # Calculate the time differences between consecutive timestamps
-    intervals = []
-    for i in range(1, min(10, len(sorted_data))):  # Sample up to 10 intervals
-        start_time_1 = dt_util.parse_datetime(sorted_data[i - 1]["startsAt"])
-        start_time_2 = dt_util.parse_datetime(sorted_data[i]["startsAt"])
-
-        if start_time_1 and start_time_2:
-            diff_minutes = (start_time_2 - start_time_1).total_seconds() / 60
-            intervals.append(round(diff_minutes))
-
-    # If no valid intervals found, return default
-    if not intervals:
-        return MINUTES_PER_INTERVAL
-
-    # Return the most common interval (mode)
-    return max(set(intervals), key=intervals.count)
-
-
-def get_interval_for_timestamp(timestamp: datetime, granularity: int) -> int:
-    """
-    Calculate the interval index within an hour for a given timestamp.
-
-    Args:
-        timestamp: The timestamp to calculate interval for
-        granularity: Minutes per interval
-
-    Returns:
-        Interval index (0-based) within the hour
-
-    """
-    # Calculate which interval this timestamp falls into
-    intervals_per_hour = 60 // granularity
-    return (timestamp.minute // granularity) % intervals_per_hour
-
-
-def _match_hourly_price_data(day_prices: list, target_time: datetime) -> dict | None:
-    """Match price data for hourly granularity."""
-    for price_data in day_prices:
-        starts_at = dt_util.parse_datetime(price_data["startsAt"])
-        if starts_at is None:
-            continue
-
-        starts_at = dt_util.as_local(starts_at)
-        if starts_at.hour == target_time.hour and starts_at.date() == target_time.date():
-            return price_data
-    return None
-
-
-def _match_granular_price_data(day_prices: list, target_time: datetime, data_granularity: int) -> dict | None:
-    """Match price data for sub-hourly granularity."""
-    for price_data in day_prices:
-        starts_at = dt_util.parse_datetime(price_data["startsAt"])
-        if starts_at is None:
-            continue
-
-        starts_at = dt_util.as_local(starts_at)
-        interval_end = starts_at + timedelta(minutes=data_granularity)
-        # Check if target time falls within this interval
-        if starts_at <= target_time < interval_end and starts_at.date() == target_time.date():
-            return price_data
-    return None
-
-
-def find_price_data_for_interval(
-    price_info: Any, target_time: datetime, data_granularity: int | None = None
-) -> dict | None:
-    """
-    Find the price data for a specific timestamp, handling different interval granularities.
+    Find the price data for a specific 15-minute interval timestamp.
 
     Args:
         price_info: The price info dictionary from Tibber API
         target_time: The target timestamp to find price data for
-        data_granularity: Override detected granularity with this value (minutes)
 
     Returns:
         Price data dict if found, None otherwise
 
     """
-    # Determine which day's data to search
     day_key = "tomorrow" if target_time.date() > dt_util.now().date() else "today"
     search_days = [day_key, "tomorrow" if day_key == "today" else "today"]
 
-    # Try to find price data in today or tomorrow
     for search_day in search_days:
         day_prices = price_info.get(search_day, [])
         if not day_prices:
             continue
 
-        # Detect the granularity if not provided
-        if data_granularity is None:
-            data_granularity = detect_interval_granularity(day_prices)
+        for price_data in day_prices:
+            starts_at = dt_util.parse_datetime(price_data["startsAt"])
+            if starts_at is None:
+                continue
 
-        # Check for a match with appropriate granularity
-        if data_granularity >= MINUTES_PER_INTERVAL * 4:  # 60 minutes = hourly
-            result = _match_hourly_price_data(day_prices, target_time)
-        else:
-            result = _match_granular_price_data(day_prices, target_time, data_granularity)
-
-        if result:
-            return result
-
-    # If not found and we have sub-hourly granularity, try to fall back to hourly data
-    if data_granularity is not None and data_granularity < MINUTES_PER_INTERVAL * 4:
-        hour_start = target_time.replace(minute=0, second=0, microsecond=0)
-
-        for search_day in search_days:
-            day_prices = price_info.get(search_day, [])
-            result = _match_hourly_price_data(day_prices, hour_start)
-            if result:
-                return result
+            starts_at = dt_util.as_local(starts_at)
+            interval_end = starts_at + timedelta(minutes=MINUTES_PER_INTERVAL)
+            if starts_at <= target_time < interval_end and starts_at.date() == target_time.date():
+                return price_data
 
     return None

@@ -14,7 +14,7 @@ from homeassistant.const import PERCENTAGE, EntityCategory
 from homeassistant.util import dt as dt_util
 
 from .entity import TibberPricesEntity
-from .sensor import detect_interval_granularity, find_price_data_for_interval
+from .sensor import find_price_data_for_interval
 
 if TYPE_CHECKING:
     from collections.abc import Callable
@@ -32,9 +32,8 @@ from .const import (
     DEFAULT_PEAK_PRICE_FLEX,
 )
 
-MIN_TOMORROW_INTERVALS_HOURLY = 24
+MINUTES_PER_INTERVAL = 15
 MIN_TOMORROW_INTERVALS_15MIN = 96
-TOMORROW_INTERVAL_COUNTS = {MIN_TOMORROW_INTERVALS_HOURLY, MIN_TOMORROW_INTERVALS_15MIN}
 
 ENTITY_DESCRIPTIONS = (
     BinarySensorEntityDescription(
@@ -167,7 +166,7 @@ class TibberPricesBinarySensor(TibberPricesEntity, BinarySensorEntity):
         price_info = self.coordinator.data.get("priceInfo", {})
         tomorrow_prices = price_info.get("tomorrow", [])
         interval_count = len(tomorrow_prices)
-        if interval_count in TOMORROW_INTERVAL_COUNTS:
+        if interval_count == MIN_TOMORROW_INTERVALS_15MIN:
             return True
         if interval_count == 0:
             return False
@@ -182,7 +181,7 @@ class TibberPricesBinarySensor(TibberPricesEntity, BinarySensorEntity):
         interval_count = len(tomorrow_prices)
         if interval_count == 0:
             status = "none"
-        elif interval_count in TOMORROW_INTERVAL_COUNTS:
+        elif interval_count == MIN_TOMORROW_INTERVALS_15MIN:
             status = "full"
         else:
             status = "partial"
@@ -217,11 +216,7 @@ class TibberPricesBinarySensor(TibberPricesEntity, BinarySensorEntity):
 
         now = dt_util.now()
 
-        # Detect interval granularity
-        interval_length = detect_interval_granularity(today_prices)
-
-        # Find price data for current interval
-        current_interval_data = find_price_data_for_interval({"today": today_prices}, now, interval_length)
+        current_interval_data = find_price_data_for_interval({"today": today_prices}, now)
 
         if not current_interval_data:
             return None
@@ -238,13 +233,11 @@ class TibberPricesBinarySensor(TibberPricesEntity, BinarySensorEntity):
         """Annotate a single interval with all required attributes for Home Assistant UI and automations."""
         interval_copy = interval.copy()
         interval_remaining = annotation_ctx["interval_count"] - annotation_ctx["interval_idx"]
-        # Extract interval-related fields for attribute ordering and clarity
         interval_start = interval_copy.pop("interval_start", None)
         interval_end = interval_copy.pop("interval_end", None)
         interval_hour = interval_copy.pop("interval_hour", None)
         interval_minute = interval_copy.pop("interval_minute", None)
         interval_time = interval_copy.pop("interval_time", None)
-        interval_length_minute = interval_copy.pop("interval_length_minute", annotation_ctx["interval_length"])
         price = interval_copy.pop("price", None)
         new_interval = {
             "period_start": annotation_ctx["period_start"],
@@ -253,7 +246,7 @@ class TibberPricesBinarySensor(TibberPricesEntity, BinarySensorEntity):
             "minute": annotation_ctx["period_start_minute"],
             "time": annotation_ctx["period_start_time"],
             "period_length_minute": annotation_ctx["period_length"],
-            "period_remaining_minute_after_interval": interval_remaining * annotation_ctx["interval_length"],
+            "period_remaining_minute_after_interval": interval_remaining * MINUTES_PER_INTERVAL,
             "periods_total": annotation_ctx["period_count"],
             "periods_remaining": annotation_ctx["periods_remaining"],
             "period_position": annotation_ctx["period_idx"],
@@ -265,10 +258,8 @@ class TibberPricesBinarySensor(TibberPricesEntity, BinarySensorEntity):
             "interval_hour": interval_hour,
             "interval_minute": interval_minute,
             "interval_time": interval_time,
-            "interval_length_minute": interval_length_minute,
             "price": price,
         }
-        # Merge any extra fields from the original interval (future-proofing)
         new_interval.update(interval_copy)
         new_interval["price_minor"] = round(new_interval["price"] * 100, 2)
         price_diff = new_interval["price"] - annotation_ctx["ref_price"]
@@ -298,7 +289,6 @@ class TibberPricesBinarySensor(TibberPricesEntity, BinarySensorEntity):
         periods: list[list[dict]],
         ref_prices: dict,
         avg_price_by_day: dict,
-        interval_length: int,
     ) -> list[dict]:
         """
         Return flattened and annotated intervals with period info and requested properties.
@@ -333,7 +323,7 @@ class TibberPricesBinarySensor(TibberPricesEntity, BinarySensorEntity):
             period_start_time = f"{period_start_hour:02d}:{period_start_minute:02d}" if period_start else None
             period_end = period[-1]["interval_end"] if period else None
             interval_count = len(period)
-            period_length = interval_count * interval_length
+            period_length = interval_count * MINUTES_PER_INTERVAL
             periods_remaining = len(periods) - period_idx
             for interval_idx, interval in enumerate(period, 1):
                 interval_start = interval.get("interval_start")
@@ -349,7 +339,6 @@ class TibberPricesBinarySensor(TibberPricesEntity, BinarySensorEntity):
                     "period_length": period_length,
                     "interval_count": interval_count,
                     "interval_idx": interval_idx,
-                    "interval_length": interval_length,
                     "period_count": period_count,
                     "periods_remaining": periods_remaining,
                     "period_idx": period_idx,
@@ -366,10 +355,9 @@ class TibberPricesBinarySensor(TibberPricesEntity, BinarySensorEntity):
                 result.append(new_interval)
         return result
 
-    def _split_intervals_by_day(self, all_prices: list[dict]) -> tuple[dict, dict, dict]:
-        """Split intervals by day, calculate interval minutes and average price per day."""
+    def _split_intervals_by_day(self, all_prices: list[dict]) -> tuple[dict, dict]:
+        """Split intervals by day and calculate average price per day."""
         intervals_by_day: dict = {}
-        interval_length_by_day: dict = {}
         avg_price_by_day: dict = {}
         for price_data in all_prices:
             dt = dt_util.parse_datetime(price_data["startsAt"])
@@ -378,9 +366,8 @@ class TibberPricesBinarySensor(TibberPricesEntity, BinarySensorEntity):
             date = dt.date()
             intervals_by_day.setdefault(date, []).append(price_data)
         for date, intervals in intervals_by_day.items():
-            interval_length_by_day[date] = detect_interval_granularity(intervals)
             avg_price_by_day[date] = sum(float(p["total"]) for p in intervals) / len(intervals)
-        return intervals_by_day, interval_length_by_day, avg_price_by_day
+        return intervals_by_day, avg_price_by_day
 
     def _calculate_reference_prices(self, intervals_by_day: dict, *, reverse_sort: bool) -> dict:
         """Calculate reference prices for each day."""
@@ -397,7 +384,6 @@ class TibberPricesBinarySensor(TibberPricesEntity, BinarySensorEntity):
         self,
         all_prices: list[dict],
         ref_prices: dict,
-        interval_length_by_day: dict,
         flex: float,
         *,
         reverse_sort: bool,
@@ -417,19 +403,14 @@ class TibberPricesBinarySensor(TibberPricesEntity, BinarySensorEntity):
             starts_at = dt_util.as_local(starts_at)
             date = starts_at.date()
             ref_price = ref_prices[date]
-            interval_length = interval_length_by_day[date]
             price = float(price_data["total"])
             percent_diff = ((price - ref_price) / ref_price) * 100 if ref_price != 0 else 0.0
             percent_diff = round(percent_diff, 2)
             # For best price (flex >= 0): percent_diff <= flex*100 (prices up to flex% above reference)
-            # For peak price (flex <= 0): percent_diff >= -flex*100 (prices up to |flex|% above reference)
-            in_flex = percent_diff <= flex * 100 if not reverse_sort else percent_diff >= -flex * 100
-            # Split period if day or interval length changes
-            if (
-                last_ref_date is not None
-                and (date != last_ref_date or interval_length != interval_length_by_day[last_ref_date])
-                and current_period
-            ):
+            # For peak price (flex <= 0): percent_diff >= flex*100 (prices down to |flex|% below reference)
+            in_flex = percent_diff <= flex * 100 if not reverse_sort else percent_diff >= flex * 100
+            # Split period if day changes
+            if last_ref_date is not None and date != last_ref_date and current_period:
                 periods.append(current_period)
                 current_period = []
             last_ref_date = date
@@ -439,7 +420,6 @@ class TibberPricesBinarySensor(TibberPricesEntity, BinarySensorEntity):
                         "interval_hour": starts_at.hour,
                         "interval_minute": starts_at.minute,
                         "interval_time": f"{starts_at.hour:02d}:{starts_at.minute:02d}",
-                        "interval_length_minute": interval_length,
                         "price": price,
                         "interval_start": starts_at,
                     }
@@ -458,9 +438,7 @@ class TibberPricesBinarySensor(TibberPricesEntity, BinarySensorEntity):
                 if idx + 1 < len(period):
                     interval["interval_end"] = period[idx + 1]["interval_start"]
                 else:
-                    interval["interval_end"] = interval["interval_start"] + timedelta(
-                        minutes=interval["interval_length_minute"]
-                    )
+                    interval["interval_end"] = interval["interval_start"] + timedelta(minutes=MINUTES_PER_INTERVAL)
 
     def _filter_intervals_today_tomorrow(self, result: list[dict]) -> list[dict]:
         """Filter intervals to only include those from today and tomorrow."""
@@ -511,7 +489,7 @@ class TibberPricesBinarySensor(TibberPricesEntity, BinarySensorEntity):
         if not all_prices:
             return None
         all_prices.sort(key=lambda p: p["startsAt"])
-        intervals_by_day, interval_length_by_day, avg_price_by_day = self._split_intervals_by_day(all_prices)
+        intervals_by_day, avg_price_by_day = self._split_intervals_by_day(all_prices)
         ref_prices = self._calculate_reference_prices(intervals_by_day, reverse_sort=reverse_sort)
         flex = self._get_flex_option(
             CONF_BEST_PRICE_FLEX if not reverse_sort else CONF_PEAK_PRICE_FLEX,
@@ -520,22 +498,21 @@ class TibberPricesBinarySensor(TibberPricesEntity, BinarySensorEntity):
         periods = self._build_periods(
             all_prices,
             ref_prices,
-            interval_length_by_day,
             flex,
             reverse_sort=reverse_sort,
         )
         self._add_interval_ends(periods)
         # Only use periods relevant for today/tomorrow for annotation and attribute calculation
         filtered_periods = self._filter_periods_today_tomorrow(periods)
-        # Use the last interval's interval_length for period annotation (approximate)
         result = self._annotate_period_intervals(
             filtered_periods,
             ref_prices,
             avg_price_by_day,
-            filtered_periods[-1][-1]["interval_length_minute"] if filtered_periods and filtered_periods[-1] else 60,
         )
         filtered_result = self._filter_intervals_today_tomorrow(result)
         current_interval = self._find_current_or_next_interval(filtered_result)
+        if not current_interval and filtered_result:
+            current_interval = filtered_result[0]
         attributes = {**current_interval} if current_interval else {}
         attributes["intervals"] = filtered_result
         return attributes
