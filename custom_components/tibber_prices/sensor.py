@@ -5,9 +5,6 @@ from __future__ import annotations
 from datetime import date, datetime, timedelta
 from typing import TYPE_CHECKING, Any
 
-if TYPE_CHECKING:
-    from collections.abc import Callable
-
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,

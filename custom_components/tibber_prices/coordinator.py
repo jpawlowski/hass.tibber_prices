@@ -134,7 +134,7 @@ class TibberPricesDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     async def async_shutdown(self) -> None:
         """Shut down the coordinator and clean up timers."""
         if self._quarter_hour_timer_handle:
-            self._quarter_hour_timer_handle()
+            self._quarter_hour_timer_handle.cancel()
             self._quarter_hour_timer_handle = None
 
     def _has_existing_main_coordinator(self) -> bool:
