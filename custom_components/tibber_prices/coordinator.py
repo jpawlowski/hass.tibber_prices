@@ -30,6 +30,7 @@ from .const import (
     DEFAULT_PRICE_RATING_THRESHOLD_LOW,
     DOMAIN,
 )
+from .price_utils import enrich_price_info_with_differences
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -157,24 +158,12 @@ class TibberPricesDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         # Get price data for all homes
         price_data = await self.api.async_get_price_info()
 
-        # Get rating data for all homes
-        hourly_rating = await self.api.async_get_hourly_price_rating()
-        daily_rating = await self.api.async_get_daily_price_rating()
-        monthly_rating = await self.api.async_get_monthly_price_rating()
-
         all_homes_data = {}
         homes_list = price_data.get("homes", {})
 
         for home_id, home_price_data in homes_list.items():
-            hourly_data = hourly_rating.get("homes", {}).get(home_id, {})
-            daily_data = daily_rating.get("homes", {}).get(home_id, {})
-            monthly_data = monthly_rating.get("homes", {}).get(home_id, {})
-
             home_data = {
                 "price_info": home_price_data,
-                "hourly_rating": hourly_data.get("hourly", []),
-                "daily_rating": daily_data.get("daily", []),
-                "monthly_rating": monthly_data.get("monthly", []),
             }
             all_homes_data[home_id] = home_data
 
@@ -292,26 +281,26 @@ class TibberPricesDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 "timestamp": raw_data.get("timestamp"),
                 "homes": {},
                 "priceInfo": {},
-                "priceRating": {},
             }
 
         # Use the first home's data as the main entry's data
         first_home_data = next(iter(homes_data.values()))
         price_info = first_home_data.get("price_info", {})
 
-        # Combine rating data - wrap entries in dict for sensor compatibility
-        price_rating = {
-            "hourly": {"entries": first_home_data.get("hourly_rating", [])},
-            "daily": {"entries": first_home_data.get("daily_rating", [])},
-            "monthly": {"entries": first_home_data.get("monthly_rating", [])},
-            "thresholdPercentages": self._get_threshold_percentages(),
-        }
+        # Get threshold percentages for enrichment
+        thresholds = self._get_threshold_percentages()
+
+        # Enrich price info with calculated differences (trailing 24h averages)
+        price_info = enrich_price_info_with_differences(
+            price_info,
+            threshold_low=thresholds["low"],
+            threshold_high=thresholds["high"],
+        )
 
         return {
             "timestamp": raw_data.get("timestamp"),
             "homes": homes_data,
             "priceInfo": price_info,
-            "priceRating": price_rating,
         }
 
     def _transform_data_for_subentry(self, main_data: dict[str, Any]) -> dict[str, Any]:
@@ -327,23 +316,23 @@ class TibberPricesDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             return {
                 "timestamp": main_data.get("timestamp"),
                 "priceInfo": {},
-                "priceRating": {},
             }
 
         price_info = home_data.get("price_info", {})
 
-        # Combine rating data for this specific home - wrap entries in dict for sensor compatibility
-        price_rating = {
-            "hourly": {"entries": home_data.get("hourly_rating", [])},
-            "daily": {"entries": home_data.get("daily_rating", [])},
-            "monthly": {"entries": home_data.get("monthly_rating", [])},
-            "thresholdPercentages": self._get_threshold_percentages(),
-        }
+        # Get threshold percentages for enrichment
+        thresholds = self._get_threshold_percentages()
+
+        # Enrich price info with calculated differences (trailing 24h averages)
+        price_info = enrich_price_info_with_differences(
+            price_info,
+            threshold_low=thresholds["low"],
+            threshold_high=thresholds["high"],
+        )
 
         return {
             "timestamp": main_data.get("timestamp"),
             "priceInfo": price_info,
-            "priceRating": price_rating,
         }
 
     # --- Methods expected by sensors and services ---

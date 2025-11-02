@@ -161,18 +161,6 @@ RATING_SENSORS = (
         name="Current Price Rating",
         icon="mdi:clock-outline",
     ),
-    SensorEntityDescription(
-        key="daily_rating",
-        translation_key="daily_rating",
-        name="Daily Price Rating",
-        icon="mdi:calendar-today",
-    ),
-    SensorEntityDescription(
-        key="monthly_rating",
-        translation_key="monthly_rating",
-        name="Monthly Price Rating",
-        icon="mdi:calendar-month",
-    ),
 )
 
 # Diagnostic sensors for data availability
@@ -258,9 +246,7 @@ class TibberPricesSensor(TibberPricesEntity, SensorEntity):
                 stat_func=lambda prices: sum(prices) / len(prices), in_euro=True, decimals=4
             ),
             # Rating sensors
-            "price_rating": lambda: self._get_rating_value(rating_type="hourly"),
-            "daily_rating": lambda: self._get_rating_value(rating_type="daily"),
-            "monthly_rating": lambda: self._get_rating_value(rating_type="monthly"),
+            "price_rating": lambda: self._get_rating_value(rating_type="current"),
             # Diagnostic sensors
             "data_timestamp": self._get_data_timestamp,
             # Price forecast sensor
@@ -431,72 +417,30 @@ class TibberPricesSensor(TibberPricesEntity, SensorEntity):
                 return en_translations["sensor"]["price_rating"]["price_levels"][level]
         return level
 
-    def _find_rating_entry(self, entries: list[dict], now: datetime, rating_type: str) -> dict | None:
-        """Find the correct rating entry for the given type and time."""
-        if not entries:
-            return None
-        predicate = None
-        if rating_type == "hourly":
-
-            def interval_predicate(entry_time: datetime) -> bool:
-                interval_end = entry_time + timedelta(minutes=MINUTES_PER_INTERVAL)
-                return entry_time <= now < interval_end and entry_time.date() == now.date()
-
-            predicate = interval_predicate
-        elif rating_type == "daily":
-
-            def daily_predicate(entry_time: datetime) -> bool:
-                return dt_util.as_local(entry_time).date() == now.date()
-
-            predicate = daily_predicate
-        elif rating_type == "monthly":
-
-            def monthly_predicate(entry_time: datetime) -> bool:
-                local_time = dt_util.as_local(entry_time)
-                return local_time.month == now.month and local_time.year == now.year
-
-            predicate = monthly_predicate
-        if predicate:
-            for entry in entries:
-                entry_time = dt_util.parse_datetime(entry["time"])
-                if entry_time and predicate(entry_time):
-                    return entry
-            # For hourly, fallback to hour match if not found
-            if rating_type == "hourly":
-                for entry in entries:
-                    entry_time = dt_util.parse_datetime(entry["time"])
-                    if entry_time:
-                        entry_time = dt_util.as_local(entry_time)
-                        if entry_time.hour == now.hour and entry_time.date() == now.date():
-                            return entry
-        return None
-
     def _get_rating_value(self, *, rating_type: str) -> str | None:
         """
-        Handle rating sensor values for hourly, daily, and monthly ratings.
+        Get the price rating level from the current price interval in priceInfo.
 
         Returns the translated rating level as the main status, and stores the original
         level and percentage difference as attributes.
         """
-        if not self.coordinator.data:
+        if not self.coordinator.data or rating_type != "current":
             self._last_rating_difference = None
             self._last_rating_level = None
             return None
-        price_rating = self.coordinator.data.get("priceRating", {})
+
         now = dt_util.now()
-        # price_rating[rating_type] contains a dict with "entries" key, extract it
-        rating_data = price_rating.get(rating_type, {})
-        if isinstance(rating_data, dict):
-            entries = rating_data.get("entries", [])
-        else:
-            entries = rating_data if isinstance(rating_data, list) else []
-        entry = self._find_rating_entry(entries, now, rating_type)
-        if entry:
-            difference = entry.get("difference")
-            level = entry.get("level")
-            self._last_rating_difference = float(difference) if difference is not None else None
-            self._last_rating_level = level if level is not None else None
-            return self._translate_rating_level(level or "")
+        price_info = self.coordinator.data.get("priceInfo", {})
+        current_interval = find_price_data_for_interval(price_info, now)
+
+        if current_interval:
+            rating_level = current_interval.get("rating_level")
+            difference = current_interval.get("difference")
+            if rating_level is not None:
+                self._last_rating_difference = float(difference) if difference is not None else None
+                self._last_rating_level = rating_level
+                return self._translate_rating_level(rating_level)
+
         self._last_rating_difference = None
         self._last_rating_level = None
         return None
@@ -542,7 +486,6 @@ class TibberPricesSensor(TibberPricesEntity, SensorEntity):
             return None
 
         price_info = self.coordinator.data.get("priceInfo", {})
-        price_rating = self.coordinator.data.get("priceRating", {})
 
         today_prices = price_info.get("today", [])
         tomorrow_prices = price_info.get("tomorrow", [])
@@ -559,22 +502,6 @@ class TibberPricesSensor(TibberPricesEntity, SensorEntity):
         # Track the maximum intervals to return
         intervals_to_return = MAX_FORECAST_INTERVALS if max_intervals is None else max_intervals
 
-        # Extract hourly rating data for enriching the forecast
-        rating_data = {}
-        hourly_rating = price_rating.get("hourly", {})
-        if hourly_rating and "entries" in hourly_rating:
-            for entry in hourly_rating.get("entries", []):
-                if entry.get("time"):
-                    timestamp = dt_util.parse_datetime(entry["time"])
-                    if timestamp:
-                        timestamp = dt_util.as_local(timestamp)
-                        # Store with ISO format key for easier lookup
-                        time_key = timestamp.replace(second=0, microsecond=0).isoformat()
-                        rating_data[time_key] = {
-                            "difference": float(entry.get("difference", 0)),
-                            "rating_level": entry.get("level"),
-                        }
-
         for day_key in ["today", "tomorrow"]:
             for price_data in price_info.get(day_key, []):
                 starts_at = dt_util.parse_datetime(price_data["startsAt"])
@@ -585,25 +512,21 @@ class TibberPricesSensor(TibberPricesEntity, SensorEntity):
                 interval_end = starts_at + timedelta(minutes=MINUTES_PER_INTERVAL)
 
                 if starts_at > now:
-                    starts_at_key = starts_at.replace(second=0, microsecond=0).isoformat()
-
-                    interval_rating = rating_data.get(starts_at_key) or {}
-
                     future_prices.append(
                         {
                             "interval_start": starts_at.isoformat(),
                             "interval_end": interval_end.isoformat(),
                             "price": float(price_data["total"]),
                             "price_cents": round(float(price_data["total"]) * 100, 2),
-                            "level": price_data.get("level", "NORMAL"),  # Price level from priceInfo
-                            "rating": interval_rating.get("difference", None),  # Rating from priceRating
-                            "rating_level": interval_rating.get("rating_level"),  # Level from priceRating
+                            "level": price_data.get("level", "NORMAL"),
+                            "rating": price_data.get("difference", None),
+                            "rating_level": price_data.get("rating_level"),
                             "day": day_key,
                         }
                     )
 
         # Sort by start time
-        future_prices.sort(key=lambda x: x["interval_start"])  # Updated sort key
+        future_prices.sort(key=lambda x: x["interval_start"])
 
         # Limit to the requested number of intervals
         return future_prices[:intervals_to_return] if future_prices else None
@@ -868,28 +791,14 @@ class TibberPricesSensor(TibberPricesEntity, SensorEntity):
                 break
 
     def _add_statistics_attributes(self, attributes: dict) -> None:
-        """Add attributes for statistics, rating, and diagnostic sensors."""
+        """Add attributes for statistics and rating sensors."""
         key = self.entity_description.key
         price_info = self.coordinator.data.get("priceInfo", {})
         now = dt_util.now()
+
         if key == "price_rating":
             interval_data = find_price_data_for_interval(price_info, now)
             attributes["timestamp"] = interval_data["startsAt"] if interval_data else None
-            if hasattr(self, "_last_rating_difference") and self._last_rating_difference is not None:
-                attributes["difference_" + PERCENTAGE] = self._last_rating_difference
-            if hasattr(self, "_last_rating_level") and self._last_rating_level is not None:
-                attributes["level_id"] = self._last_rating_level
-                attributes["level_value"] = PRICE_RATING_MAPPING.get(self._last_rating_level, self._last_rating_level)
-        elif key == "daily_rating":
-            attributes["timestamp"] = now.replace(hour=0, minute=0, second=0, microsecond=0).isoformat()
-            if hasattr(self, "_last_rating_difference") and self._last_rating_difference is not None:
-                attributes["difference_" + PERCENTAGE] = self._last_rating_difference
-            if hasattr(self, "_last_rating_level") and self._last_rating_level is not None:
-                attributes["level_id"] = self._last_rating_level
-                attributes["level_value"] = PRICE_RATING_MAPPING.get(self._last_rating_level, self._last_rating_level)
-        elif key == "monthly_rating":
-            first_of_month = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
-            attributes["timestamp"] = first_of_month.isoformat()
             if hasattr(self, "_last_rating_difference") and self._last_rating_difference is not None:
                 attributes["difference_" + PERCENTAGE] = self._last_rating_difference
             if hasattr(self, "_last_rating_level") and self._last_rating_level is not None:

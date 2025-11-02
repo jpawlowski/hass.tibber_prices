@@ -80,11 +80,19 @@ REFRESH_USER_DATA_SERVICE_SCHEMA: Final = vol.Schema(
     }
 )
 
+# region Top-level functions (ordered by call hierarchy)
+
 # --- Entry point: Service handler ---
 
 
 async def _get_price(call: ServiceCall) -> dict[str, Any]:
-    """Return price information for the requested day and config entry."""
+    """
+    Return price information with enriched rating data for the requested day and config entry.
+
+    If 'time' is provided, it must be in HH:mm or HH:mm:ss format and is combined with the selected 'day'.
+    This only affects 'previous', 'current', and 'next' fields, not the 'prices' list.
+    If 'day' is not provided, prices list includes today and tomorrow, stats/interval selection for today.
+    """
     hass = call.hass
     entry_id_raw = call.data.get(ATTR_ENTRY_ID)
     if entry_id_raw is None:
@@ -94,8 +102,8 @@ async def _get_price(call: ServiceCall) -> dict[str, Any]:
     explicit_day = ATTR_DAY in call.data
     day = call.data.get(ATTR_DAY, "today")
 
-    _, coordinator, _ = _get_entry_and_data(hass, entry_id)
-    price_info_data, currency = _extract_price_data(coordinator.data)
+    entry, coordinator, data = _get_entry_and_data(hass, entry_id)
+    price_info_data, currency = _extract_price_data(data)
 
     # Determine which days to include
     if explicit_day:
@@ -114,7 +122,7 @@ async def _get_price(call: ServiceCall) -> dict[str, Any]:
     prices_transformed = _transform_price_intervals(prices_raw)
     stats_transformed = _transform_price_intervals(stats_raw)
 
-    # Calculate stats
+    # Calculate stats only from stats_raw
     price_stats = _get_price_stats(stats_transformed)
 
     # Determine now and simulation flag
@@ -122,24 +130,16 @@ async def _get_price(call: ServiceCall) -> dict[str, Any]:
 
     # Select intervals
     previous_interval, current_interval, next_interval = _select_intervals(
-        stats_transformed, coordinator, day_key, now, simulated=is_simulated
+        stats_transformed, coordinator, day_key, now, is_simulated
     )
 
     # Add end_time to intervals
-    _annotate_end_times(prices_transformed, price_info_data, day_key)
+    _annotate_end_times(prices_transformed, stats_transformed, day_key, price_info_data)
 
-    # Clean up temp fields from all intervals
+    # Clean up temp fields
     for interval in prices_transformed:
         if "start_dt" in interval:
             del interval["start_dt"]
-
-    # Also clean up from selected intervals
-    if previous_interval and "start_dt" in previous_interval:
-        del previous_interval["start_dt"]
-    if current_interval and "start_dt" in current_interval:
-        del current_interval["start_dt"]
-    if next_interval and "start_dt" in next_interval:
-        del next_interval["start_dt"]
 
     response_ctx = PriceResponseContext(
         price_stats=price_stats,
@@ -175,7 +175,7 @@ async def _get_apexcharts_data(call: ServiceCall) -> dict[str, Any]:
     if not entry_id:
         raise ServiceValidationError(translation_domain=DOMAIN, translation_key="invalid_entity_id")
 
-    _, coordinator, _ = _get_entry_and_data(hass, entry_id)
+    entry, coordinator, data = _get_entry_and_data(hass, entry_id)
 
     # Get entries based on level_type
     entries = _get_apexcharts_entries(coordinator, day, level_type)
@@ -191,12 +191,16 @@ async def _get_apexcharts_data(call: ServiceCall) -> dict[str, Any]:
     return {"points": points}
 
 
-def _get_apexcharts_entries(coordinator: Any, day: str, _: str) -> list[dict]:
-    """Get the appropriate entries for ApexCharts based on day."""
-    # Price info is already enriched with difference and rating_level from coordinator
-    price_info = coordinator.data.get("priceInfo", {})
-    day_info = price_info.get(day, [])
-    return day_info if day_info else []
+def _get_apexcharts_entries(coordinator: Any, day: str, level_type: str) -> list[dict]:
+    """Get the appropriate entries for ApexCharts based on level_type and day."""
+    if level_type == "rating_level":
+        # price_info is now enriched with difference and rating_level from the coordinator
+        price_info = coordinator.data.get("priceInfo", {})
+        day_info = price_info.get(day, [])
+        return day_info if day_info else []
+
+    # For non-rating level types, return the price info for the specified day
+    return coordinator.data.get("priceInfo", {}).get(day, [])
 
 
 def _generate_apexcharts_points(entries: list[dict], level_key: str) -> list:
@@ -291,7 +295,7 @@ async def _refresh_user_data(call: ServiceCall) -> dict[str, Any]:
 
     # Get the entry and coordinator
     try:
-        entry, coordinator, _ = _get_entry_and_data(hass, entry_id)
+        entry, coordinator, data = _get_entry_and_data(hass, entry_id)
     except ServiceValidationError as ex:
         return {
             "success": False,
@@ -329,7 +333,7 @@ async def _refresh_user_data(call: ServiceCall) -> dict[str, Any]:
         }
 
 
-# --- Helpers ---
+# --- Direct helpers (called by service handler or each other) ---
 
 
 def _get_entry_and_data(hass: HomeAssistant, entry_id: str) -> tuple[Any, Any, dict]:
@@ -345,10 +349,17 @@ def _get_entry_and_data(hass: HomeAssistant, entry_id: str) -> tuple[Any, Any, d
 
 
 def _extract_price_data(data: dict) -> tuple[dict, Any]:
-    """Extract price info from enriched coordinator data."""
+    """
+    Extract price info from enriched coordinator data.
+
+    The price_info_data returned already includes 'difference' and 'rating_level'
+    enrichment from the coordinator, so no separate rating data extraction is needed.
+    """
     price_info_data = data.get("priceInfo") or {}
     currency = price_info_data.get("currency")
     return price_info_data, currency
+
+
 
 
 def _transform_price_intervals(price_info: list[dict]) -> list[dict]:
@@ -375,41 +386,56 @@ def _transform_price_intervals(price_info: list[dict]) -> list[dict]:
     return result
 
 
-def _annotate_end_times(merged: list[dict], price_info_by_day: dict, day: str) -> None:
-    """Annotate merged intervals with end_time."""
+def _annotate_intervals_with_times(
+    merged: list[dict],
+    price_info_by_day: dict,
+    day: str,
+) -> None:
+    """Annotate merged intervals with end_time and previous_end_time."""
     for idx, interval in enumerate(merged):
         # Default: next interval's start_time
         if idx + 1 < len(merged):
             interval["end_time"] = merged[idx + 1].get("start_time")
-        # Last interval: look into next day's first interval
+        # Last interval: look into tomorrow if today, or None otherwise
+        elif day == "today":
+            next_start = _get_adjacent_start_time(price_info_by_day, "tomorrow", first=True)
+            interval["end_time"] = next_start
+        elif day == "yesterday":
+            next_start = _get_adjacent_start_time(price_info_by_day, "today", first=True)
+            interval["end_time"] = next_start
+        elif day == "tomorrow":
+            interval["end_time"] = None
         else:
-            next_day = "tomorrow" if day == "today" else (day if day == "tomorrow" else None)
-            if next_day and price_info_by_day.get(next_day):
-                first_of_next = price_info_by_day[next_day][0]
-                interval["end_time"] = first_of_next.get("startsAt")
+            interval["end_time"] = None
+        # First interval: look into yesterday if today, or None otherwise
+        if idx == 0:
+            if day == "today":
+                prev_end = _get_adjacent_start_time(price_info_by_day, "yesterday", first=False)
+                interval["previous_end_time"] = prev_end
+            elif day == "tomorrow":
+                prev_end = _get_adjacent_start_time(price_info_by_day, "today", first=False)
+                interval["previous_end_time"] = prev_end
             else:
-                interval["end_time"] = None
+                interval["previous_end_time"] = None
 
 
 def _get_price_stats(merged: list[dict]) -> PriceStats:
-    """Calculate average, min, and max price from merged data."""
+    """Calculate average, min, and max price and their intervals from merged data."""
     if merged:
         price_sum = sum(float(interval.get("price", 0)) for interval in merged if "price" in interval)
         price_avg = round(price_sum / len(merged), 4)
     else:
         price_avg = 0
-    price_min, price_min_interval = _get_price_stat(merged, "min")
-    price_max, price_max_interval = _get_price_stat(merged, "max")
+    price_min, price_min_start_time, price_min_end_time = _get_price_stat(merged, "min")
+    price_max, price_max_start_time, price_max_end_time = _get_price_stat(merged, "max")
     return PriceStats(
         price_avg=price_avg,
         price_min=price_min,
-        price_min_start_time=price_min_interval.get("start_time") if price_min_interval else None,
-        price_min_end_time=price_min_interval.get("end_time") if price_min_interval else None,
+        price_min_start_time=price_min_start_time,
+        price_min_end_time=price_min_end_time,
         price_max=price_max,
-        price_max_start_time=price_max_interval.get("start_time") if price_max_interval else None,
-        price_max_end_time=price_max_interval.get("end_time") if price_max_interval else None,
-        price_min_interval=price_min_interval,
-        price_max_interval=price_max_interval,
+        price_max_start_time=price_max_start_time,
+        price_max_end_time=price_max_end_time,
         stats_merged=merged,
     )
 
@@ -421,6 +447,7 @@ def _determine_now_and_simulation(
     is_simulated = False
     if time_value:
         if not interval_selection_merged or not interval_selection_merged[0].get("start_time"):
+            # Instead of raising, return a simulated now for the requested day (structure will be empty)
             now = dt_util.now().replace(second=0, microsecond=0)
             is_simulated = True
             return now, is_simulated
@@ -449,14 +476,24 @@ def _determine_now_and_simulation(
     return now, is_simulated
 
 
-def _select_intervals(
-    merged: list[dict], coordinator: Any, day: str, now: datetime, *, simulated: bool
-) -> tuple[Any, Any, Any]:
-    """Select previous, current, and next intervals for the given day and time."""
-    if not merged or (not simulated and day in ("yesterday", "tomorrow")):
+def _select_intervals(ctx: IntervalContext) -> tuple[Any, Any, Any]:
+    """
+    Select previous, current, and next intervals for the given day and time.
+
+    If is_simulated is True, always calculate previous/current/next for all days, but:
+    - For 'yesterday', never fetch previous from the day before yesterday.
+    - For 'tomorrow', never fetch next from the day after tomorrow.
+    If is_simulated is False, previous/current/next are None for 'yesterday' and 'tomorrow'.
+    """
+    merged = ctx.merged
+    coordinator = ctx.coordinator
+    day = ctx.day
+    now = ctx.now
+    is_simulated = ctx.is_simulated
+
+    if not merged or (not is_simulated and day in ("yesterday", "tomorrow")):
         return None, None, None
 
-    # Find current interval by time
     idx = None
     cmp_now = dt_util.as_local(now) if now.tzinfo is None else now
     for i, interval in enumerate(merged):
@@ -476,103 +513,86 @@ def _select_intervals(
         merged[idx + 1] if idx is not None and idx + 1 < len(merged) else (merged[0] if idx is None else None)
     )
 
-    # For today, try to fetch adjacent intervals from neighboring days
     if day == "today":
-        if idx == 0 and previous_interval is None:
-            yday_info = coordinator.data.get("priceInfo", {}).get("yesterday", [])
-            if yday_info:
-                yday_transformed = _transform_price_intervals(yday_info)
-                if yday_transformed:
-                    previous_interval = yday_transformed[-1]
-
-        if idx == len(merged) - 1 and next_interval is None:
-            tmrw_info = coordinator.data.get("priceInfo", {}).get("tomorrow", [])
-            if tmrw_info:
-                tmrw_transformed = _transform_price_intervals(tmrw_info)
-                if tmrw_transformed:
-                    next_interval = tmrw_transformed[0]
+        if idx == 0:
+            previous_interval = _find_previous_interval(merged, coordinator, day)
+        if idx == len(merged) - 1:
+            next_interval = _find_next_interval(merged, coordinator, day)
 
     return previous_interval, current_interval, next_interval
+
+
+# --- Indirect helpers (called by helpers above) ---
 
 
 def _build_price_response(ctx: PriceResponseContext) -> dict[str, Any]:
     """Build the response dictionary for the price service."""
     price_stats = ctx.price_stats
-
-    # Helper to clean internal fields from interval
-    def clean_interval(interval: dict | None) -> dict | None:
-        """Remove internal fields like start_dt from interval."""
-        if not interval:
-            return interval
-        return {k: v for k, v in interval.items() if k != "start_dt"}
-
-    # Build average interval (synthetic, using first interval as template)
-    average_interval = {}
-    if price_stats.stats_merged:
-        first = price_stats.stats_merged[0]
-        # Copy all attributes from first interval (excluding internal fields)
-        for k in first:
-            if k not in ("start_time", "end_time", "start_dt", "price", "price_minor"):
-                average_interval[k] = first[k]
-
     return {
         "average": {
-            **average_interval,
             "start_time": price_stats.stats_merged[0].get("start_time") if price_stats.stats_merged else None,
             "end_time": price_stats.stats_merged[0].get("end_time") if price_stats.stats_merged else None,
             "price": price_stats.price_avg,
             "price_minor": round(price_stats.price_avg * 100, 2),
         },
-        "minimum": clean_interval(
-            {
-                **price_stats.price_min_interval,
-                "price": price_stats.price_min,
-                "price_minor": round(price_stats.price_min * 100, 2),
-            }
-        )
-        if price_stats.price_min_interval
-        else {
+        "minimum": {
             "start_time": price_stats.price_min_start_time,
             "end_time": price_stats.price_min_end_time,
             "price": price_stats.price_min,
             "price_minor": round(price_stats.price_min * 100, 2),
         },
-        "maximum": clean_interval(
-            {
-                **price_stats.price_max_interval,
-                "price": price_stats.price_max,
-                "price_minor": round(price_stats.price_max * 100, 2),
-            }
-        )
-        if price_stats.price_max_interval
-        else {
+        "maximum": {
             "start_time": price_stats.price_max_start_time,
             "end_time": price_stats.price_max_end_time,
             "price": price_stats.price_max,
             "price_minor": round(price_stats.price_max * 100, 2),
         },
-        "previous": clean_interval(ctx.previous_interval),
-        "current": clean_interval(ctx.current_interval),
-        "next": clean_interval(ctx.next_interval),
+        "previous": ctx.previous_interval,
+        "current": ctx.current_interval,
+        "next": ctx.next_interval,
         "currency": ctx.currency,
         "interval_count": len(ctx.merged),
         "intervals": ctx.merged,
     }
 
 
-def _get_price_stat(merged: list[dict], stat: str) -> tuple[float, dict | None]:
-    """Return min or max price and its full interval from merged intervals."""
+def _get_price_stat(merged: list[dict], stat: str) -> tuple[float, str | None, str | None]:
+    """Return min or max price and its start and end time from merged intervals."""
     if not merged:
-        return 0, None
+        return 0, None, None
     values = [float(interval.get("price", 0)) for interval in merged if "price" in interval]
     if not values:
-        return 0, None
+        return 0, None, None
     val = min(values) if stat == "min" else max(values)
-    interval = next((interval for interval in merged if interval.get("price") == val), None)
-    return val, interval
+    start_time = next((interval.get("start_time") for interval in merged if interval.get("price") == val), None)
+    end_time = next((interval.get("end_time") for interval in merged if interval.get("price") == val), None)
+    return val, start_time, end_time
 
 
-# --- Dataclasses ---
+# endregion
+
+# region Main classes (dataclasses)
+
+
+@dataclass
+class IntervalContext:
+    """
+    Context for selecting price intervals.
+
+    Attributes:
+        merged: List of merged price and rating intervals for the selected day.
+        coordinator: Data update coordinator for the integration.
+        day: The day being queried ('yesterday', 'today', or 'tomorrow').
+        now: The datetime used for interval selection.
+        is_simulated: Whether the time is simulated (from user input) or real.
+
+    """
+
+    merged: list[dict]
+    coordinator: Any
+    day: str
+    now: datetime
+    is_simulated: bool
 
 
 @dataclass
@@ -583,11 +603,9 @@ class PriceStats:
     price_min: float
     price_min_start_time: str | None
     price_min_end_time: str | None
-    price_min_interval: dict | None
     price_max: float
     price_max_start_time: str | None
     price_max_end_time: str | None
-    price_max_interval: dict | None
     stats_merged: list[dict]
 
 
@@ -603,7 +621,9 @@ class PriceResponseContext:
     merged: list[dict]
 
 
-# --- Service registration ---
+# endregion
+
+# region Service registration
 
 
 @callback
@@ -637,3 +657,6 @@ def async_setup_services(hass: HomeAssistant) -> None:
         schema=REFRESH_USER_DATA_SERVICE_SCHEMA,
         supports_response=SupportsResponse.ONLY,
     )
+
+
+# endregion
