@@ -256,3 +256,36 @@ def enrich_price_info_with_differences(
         _process_price_interval(price_interval, all_prices, threshold_low, threshold_high, "tomorrow")
 
     return price_info
+
+
+def find_price_data_for_interval(price_info: Any, target_time: datetime) -> dict | None:
+    """
+    Find the price data for a specific 15-minute interval timestamp.
+
+    Args:
+        price_info: The price info dictionary from Tibber API
+        target_time: The target timestamp to find price data for
+
+    Returns:
+        Price data dict if found, None otherwise
+
+    """
+    day_key = "tomorrow" if target_time.date() > dt_util.now().date() else "today"
+    search_days = [day_key, "tomorrow" if day_key == "today" else "today"]
+
+    for search_day in search_days:
+        day_prices = price_info.get(search_day, [])
+        if not day_prices:
+            continue
+
+        for price_data in day_prices:
+            starts_at = dt_util.parse_datetime(price_data["startsAt"])
+            if starts_at is None:
+                continue
+
+            starts_at = dt_util.as_local(starts_at)
+            interval_end = starts_at + timedelta(minutes=MINUTES_PER_INTERVAL)
+            if starts_at <= target_time < interval_end and starts_at.date() == target_time.date():
+                return price_data
+
+    return None

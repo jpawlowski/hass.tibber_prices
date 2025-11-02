@@ -24,8 +24,10 @@ from .const import (
     PRICE_RATING_MAPPING,
     async_get_entity_description,
     get_entity_description,
+    get_price_level_translation,
 )
 from .entity import TibberPricesEntity
+from .price_utils import find_price_data_for_interval
 
 if TYPE_CHECKING:
     from collections.abc import Callable
@@ -269,8 +271,6 @@ class TibberPricesSensor(TibberPricesEntity, SensorEntity):
         # Use the translation helper for price level, fallback to English if needed
         if self.hass:
             language = self.hass.config.language or "en"
-            from .const import get_price_level_translation
-
             translated = get_price_level_translation(level, language)
             if translated:
                 return translated
@@ -812,36 +812,3 @@ class TibberPricesSensor(TibberPricesEntity, SensorEntity):
     async def async_update(self) -> None:
         """Force a refresh when homeassistant.update_entity is called."""
         await self.coordinator.async_request_refresh()
-
-
-def find_price_data_for_interval(price_info: Any, target_time: datetime) -> dict | None:
-    """
-    Find the price data for a specific 15-minute interval timestamp.
-
-    Args:
-        price_info: The price info dictionary from Tibber API
-        target_time: The target timestamp to find price data for
-
-    Returns:
-        Price data dict if found, None otherwise
-
-    """
-    day_key = "tomorrow" if target_time.date() > dt_util.now().date() else "today"
-    search_days = [day_key, "tomorrow" if day_key == "today" else "today"]
-
-    for search_day in search_days:
-        day_prices = price_info.get(search_day, [])
-        if not day_prices:
-            continue
-
-        for price_data in day_prices:
-            starts_at = dt_util.parse_datetime(price_data["startsAt"])
-            if starts_at is None:
-                continue
-
-            starts_at = dt_util.as_local(starts_at)
-            interval_end = starts_at + timedelta(minutes=MINUTES_PER_INTERVAL)
-            if starts_at <= target_time < interval_end and starts_at.date() == target_time.date():
-                return price_data
-
-    return None

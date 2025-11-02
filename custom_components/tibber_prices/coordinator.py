@@ -30,7 +30,7 @@ from .const import (
     DEFAULT_PRICE_RATING_THRESHOLD_LOW,
     DOMAIN,
 )
-from .price_utils import enrich_price_info_with_differences
+from .price_utils import enrich_price_info_with_differences, find_price_data_for_interval
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -39,6 +39,9 @@ STORAGE_VERSION = 1
 
 # Update interval - fetch data every 15 minutes
 UPDATE_INTERVAL = timedelta(minutes=15)
+
+# Quarter-hour boundaries for entity state updates (minutes: 00, 15, 30, 45)
+QUARTER_HOUR_BOUNDARIES = (0, 15, 30, 45)
 
 
 class TibberPricesDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
@@ -78,6 +81,61 @@ class TibberPricesDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 
         # Track if this is the main entry (first one created)
         self._is_main_entry = not self._has_existing_main_coordinator()
+
+        # Quarter-hour entity refresh timer
+        self._quarter_hour_timer_handle: Any = None
+        self._schedule_quarter_hour_refresh()
+
+    def _schedule_quarter_hour_refresh(self) -> None:
+        """Schedule the next quarter-hour entity refresh."""
+        now = dt_util.utcnow()
+        current_minute = now.minute
+
+        # Find the next quarter-hour boundary
+        for boundary in QUARTER_HOUR_BOUNDARIES:
+            if boundary > current_minute:
+                minutes_to_wait = boundary - current_minute
+                break
+        else:
+            # All boundaries passed, go to first boundary of next hour
+            minutes_to_wait = (60 - current_minute) + QUARTER_HOUR_BOUNDARIES[0]
+
+        # Calculate the exact time of the next boundary
+        next_refresh = now + timedelta(minutes=minutes_to_wait)
+        next_refresh = next_refresh.replace(second=0, microsecond=0)
+
+        # Cancel any existing timer
+        if self._quarter_hour_timer_handle:
+            self._quarter_hour_timer_handle()
+
+        # Schedule the refresh
+        self._quarter_hour_timer_handle = self.hass.loop.call_at(
+            self.hass.loop.time() + (next_refresh - now).total_seconds(),
+            self._handle_quarter_hour_refresh,
+        )
+
+        _LOGGER.debug(
+            "Scheduled entity refresh at %s (in %d minutes)",
+            next_refresh.isoformat(),
+            minutes_to_wait,
+        )
+
+    def _handle_quarter_hour_refresh(self) -> None:
+        """Handle quarter-hour entity refresh by triggering async state updates."""
+        _LOGGER.debug("Quarter-hour refresh triggered at %s", dt_util.utcnow().isoformat())
+
+        # Notify all listeners that there's new data without fetching fresh data
+        # This causes entity state properties to be re-evaluated with the current time
+        self.async_set_updated_data(self.data)
+
+        # Schedule the next quarter-hour refresh
+        self._schedule_quarter_hour_refresh()
+
+    async def async_shutdown(self) -> None:
+        """Shut down the coordinator and clean up timers."""
+        if self._quarter_hour_timer_handle:
+            self._quarter_hour_timer_handle()
+            self._quarter_hour_timer_handle = None
 
     def _has_existing_main_coordinator(self) -> bool:
         """Check if there's already a main coordinator in hass.data."""
@@ -353,8 +411,6 @@ class TibberPricesDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         price_info = self.data.get("priceInfo", {})
         if not price_info:
             return None
-
-        from .sensor import find_price_data_for_interval
 
         now = dt_util.now()
         return find_price_data_for_interval(price_info, now)
