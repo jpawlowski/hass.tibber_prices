@@ -455,7 +455,6 @@ def get_home_type_translation(
     """
     translated = get_translation(["home_types", home_type], language)
     if translated:
-        LOGGER.debug("Found translation for home type '%s' in language '%s': %s", home_type, language, translated)
         return translated
     fallback = HOME_TYPES.get(home_type)
     LOGGER.debug(

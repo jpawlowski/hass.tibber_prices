@@ -10,7 +10,6 @@ from homeassistant.config_entries import (
     ConfigEntry,
     ConfigFlow,
     ConfigFlowResult,
-    ConfigSubentry,
     ConfigSubentryFlow,
     OptionsFlow,
     SubentryFlowResult,
@@ -71,6 +70,12 @@ class TibberPricesFlowHandler(ConfigFlow, domain=DOMAIN):
     def async_get_supported_subentry_types(cls, config_entry: ConfigEntry) -> dict[str, type[ConfigSubentryFlow]]:  # noqa: ARG003
         """Return subentries supported by this integration."""
         return {"home": TibberPricesSubentryFlowHandler}
+
+    @staticmethod
+    @callback
+    def async_get_options_flow() -> OptionsFlow:
+        """Create an options flow for this configentry."""
+        return TibberPricesOptionsFlowHandler()
 
     @staticmethod
     def async_get_reauth_flow(entry: ConfigEntry) -> ConfigFlow:
@@ -164,6 +169,7 @@ class TibberPricesFlowHandler(ConfigFlow, domain=DOMAIN):
                 "home_id": selected_home_id,
                 "home_data": selected_home,
                 "homes": homes,
+                "user_login": self._user_login or "N/A",
             }
 
             return self.async_create_entry(
@@ -364,32 +370,22 @@ class TibberPricesSubentryFlowHandler(ConfigSubentryFlow):
 
         return home.get("id", "Unknown Home")
 
-
-class TibberPricesOptionsSubentryFlowHandler(OptionsFlow):
-    """Tibber Prices config flow options handler."""
-
-    def __init__(self, config_entry: ConfigSubentry) -> None:  # noqa: ARG002
-        """Initialize options flow."""
-        super().__init__()
-
-    async def async_step_init(self, user_input: dict | None = None) -> ConfigFlowResult:
-        """Manage the options."""
+    async def async_step_init(self, user_input: dict | None = None) -> SubentryFlowResult:
+        """Manage the options for a subentry."""
+        subentry = self._get_reconfigure_subentry()
         errors: dict[str, str] = {}
 
         options = {
             vol.Optional(
                 CONF_EXTENDED_DESCRIPTIONS,
-                default=self.config_entry.options.get(
-                    CONF_EXTENDED_DESCRIPTIONS,
-                    self.config_entry.data.get(CONF_EXTENDED_DESCRIPTIONS, DEFAULT_EXTENDED_DESCRIPTIONS),
-                ),
+                default=subentry.data.get(CONF_EXTENDED_DESCRIPTIONS, DEFAULT_EXTENDED_DESCRIPTIONS),
             ): BooleanSelector(),
             vol.Optional(
                 CONF_BEST_PRICE_FLEX,
                 default=int(
-                    self.config_entry.options.get(
+                    subentry.data.get(
                         CONF_BEST_PRICE_FLEX,
-                        self.config_entry.data.get(CONF_BEST_PRICE_FLEX, DEFAULT_BEST_PRICE_FLEX),
+                        DEFAULT_BEST_PRICE_FLEX,
                     )
                 ),
             ): NumberSelector(
@@ -403,9 +399,9 @@ class TibberPricesOptionsSubentryFlowHandler(OptionsFlow):
             vol.Optional(
                 CONF_PEAK_PRICE_FLEX,
                 default=int(
-                    self.config_entry.options.get(
+                    subentry.data.get(
                         CONF_PEAK_PRICE_FLEX,
-                        self.config_entry.data.get(CONF_PEAK_PRICE_FLEX, DEFAULT_PEAK_PRICE_FLEX),
+                        DEFAULT_PEAK_PRICE_FLEX,
                     )
                 ),
             ): NumberSelector(
@@ -419,15 +415,76 @@ class TibberPricesOptionsSubentryFlowHandler(OptionsFlow):
         }
 
         if user_input is not None:
-            return self.async_create_entry(title="", data=user_input)
-
-        description_placeholders = {
-            "unique_id": self.config_entry.unique_id or "",
-        }
+            return self.async_update_and_abort(
+                self._get_entry(),
+                subentry,
+                data_updates=user_input,
+            )
 
         return self.async_show_form(
             step_id="init",
             data_schema=vol.Schema(options),
             errors=errors,
-            description_placeholders=description_placeholders,
+        )
+
+
+class TibberPricesOptionsFlowHandler(OptionsFlow):
+    """Handle options for tibber_prices entries."""
+
+    async def async_step_init(self, user_input: dict[str, Any] | None = None) -> ConfigFlowResult:
+        """Manage the options."""
+        if user_input is not None:
+            return self.async_create_entry(
+                title="",
+                data=user_input,
+            )
+
+        return self.async_show_form(
+            step_id="init",
+            data_schema=vol.Schema(
+                {
+                    vol.Optional(
+                        CONF_EXTENDED_DESCRIPTIONS,
+                        default=self.config_entry.options.get(
+                            CONF_EXTENDED_DESCRIPTIONS, DEFAULT_EXTENDED_DESCRIPTIONS
+                        ),
+                    ): BooleanSelector(),
+                    vol.Optional(
+                        CONF_BEST_PRICE_FLEX,
+                        default=int(
+                            self.config_entry.options.get(
+                                CONF_BEST_PRICE_FLEX,
+                                DEFAULT_BEST_PRICE_FLEX,
+                            )
+                        ),
+                    ): NumberSelector(
+                        NumberSelectorConfig(
+                            min=0,
+                            max=100,
+                            step=1,
+                            mode=NumberSelectorMode.SLIDER,
+                        ),
+                    ),
+                    vol.Optional(
+                        CONF_PEAK_PRICE_FLEX,
+                        default=int(
+                            self.config_entry.options.get(
+                                CONF_PEAK_PRICE_FLEX,
+                                DEFAULT_PEAK_PRICE_FLEX,
+                            )
+                        ),
+                    ): NumberSelector(
+                        NumberSelectorConfig(
+                            min=0,
+                            max=100,
+                            step=1,
+                            mode=NumberSelectorMode.SLIDER,
+                        ),
+                    ),
+                }
+            ),
+            description_placeholders={
+                "user_login": self.config_entry.data.get("user_login", "N/A"),
+                "unique_id": self.config_entry.unique_id or "unknown",
+            },
         )

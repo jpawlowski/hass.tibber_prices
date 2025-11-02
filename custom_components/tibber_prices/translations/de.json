@@ -66,7 +66,7 @@
     "options": {
         "step": {
             "init": {
-                "description": "Home ID: {unique_id}",
+                "description": "Benutzer: {user_login}",
                 "data": {
                     "access_token": "API-Zugriffstoken",
                     "extended_descriptions": "Erweiterte Beschreibungen in Entitätsattributen anzeigen",

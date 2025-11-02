@@ -83,4 +83,5 @@ class TibberPricesEntity(CoordinatorEntity[TibberPricesDataUpdateCoordinator]):
             model=translated_model,
             model_id=home_type if home_type else None,
             serial_number=home_id if home_id else None,
+            configuration_url="https://developer.tibber.com/explorer",
         )
