@@ -379,7 +379,9 @@ def _prepare_day_structures(price_info_data: dict, hourly_ratings: list) -> tupl
         d: [
             r
             for r in hourly_ratings
-            if day_prefixes[d] and r.get("time", r.get("startsAt", "")).startswith(day_prefixes[d][0])
+            if isinstance(r, dict)
+            and day_prefixes[d]
+            and r.get("time", r.get("startsAt", "")).startswith(day_prefixes[d][0])
         ]
         if price_info_by_day[d] and day_prefixes[d]
         else []
