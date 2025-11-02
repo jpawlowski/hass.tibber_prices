@@ -378,8 +378,8 @@ class TibberPricesSensor(TibberPricesEntity, SensorEntity):
         local_midnight = dt_util.as_local(dt_util.start_of_local_day(dt_util.now()))
         local_midnight_tomorrow = local_midnight + timedelta(days=1)
 
-        # Collect all prices from both today and tomorrow data that fall within local today
-        prices = []
+        # Collect all prices and their intervals from both today and tomorrow data that fall within local today
+        price_intervals = []
         for day_key in ["today", "tomorrow"]:
             for price_data in price_info.get(day_key, []):
                 starts_at_str = price_data.get("startsAt")
@@ -397,12 +397,26 @@ class TibberPricesSensor(TibberPricesEntity, SensorEntity):
                 if local_midnight <= starts_at < local_midnight_tomorrow:
                     total_price = price_data.get("total")
                     if total_price is not None:
-                        prices.append(float(total_price))
+                        price_intervals.append(
+                            {
+                                "price": float(total_price),
+                                "interval": price_data,
+                            }
+                        )
 
-        if not prices:
+        if not price_intervals:
             return None
 
+        # Find the extreme value and store its interval for later use in attributes
+        prices = [pi["price"] for pi in price_intervals]
         value = stat_func(prices)
+
+        # Store the interval with the extreme price for use in attributes
+        for pi in price_intervals:
+            if pi["price"] == value:
+                self._last_extreme_interval = pi["interval"]
+                break
+
         result = self._get_price_value(value, in_euro=in_euro)
 
         if decimals is not None:
@@ -748,7 +762,13 @@ class TibberPricesSensor(TibberPricesEntity, SensorEntity):
             attributes = {}
 
             # Group sensors by type and delegate to specific handlers
-            if key in ["current_price", "current_price_eur", "price_level"]:
+            if key in [
+                "current_price",
+                "current_price_eur",
+                "price_level",
+                "next_interval_price",
+                "next_interval_price_eur",
+            ]:
                 self._add_current_price_attributes(attributes)
             elif any(pattern in key for pattern in ["_price_today", "rating", "data_timestamp"]):
                 self._add_statistics_attributes(attributes)
@@ -825,6 +845,13 @@ class TibberPricesSensor(TibberPricesEntity, SensorEntity):
             if hasattr(self, "_last_rating_level") and self._last_rating_level is not None:
                 attributes["level_id"] = self._last_rating_level
                 attributes["level_value"] = PRICE_RATING_MAPPING.get(self._last_rating_level, self._last_rating_level)
+        elif key in ["lowest_price_today", "lowest_price_today_eur", "highest_price_today", "highest_price_today_eur"]:
+            # Use the timestamp from the interval that has the extreme price (already stored during value calculation)
+            if hasattr(self, "_last_extreme_interval") and self._last_extreme_interval:
+                attributes["timestamp"] = self._last_extreme_interval.get("startsAt")
+            else:
+                # Fallback: use the first timestamp of today
+                attributes["timestamp"] = price_info.get("today", [{}])[0].get("startsAt")
         else:
             # Fallback: use the first timestamp of today
             first_timestamp = price_info.get("today", [{}])[0].get("startsAt")
