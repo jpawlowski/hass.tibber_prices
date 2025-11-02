@@ -106,7 +106,7 @@ class TibberPricesDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 
         # Cancel any existing timer
         if self._quarter_hour_timer_handle:
-            self._quarter_hour_timer_handle()
+            self._quarter_hour_timer_handle.cancel()
 
         # Schedule the refresh
         self._quarter_hour_timer_handle = self.hass.loop.call_at(
