@@ -160,11 +160,15 @@ class TibberPricesDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         homes_list = price_data.get("homes", {})
 
         for home_id, home_price_data in homes_list.items():
+            hourly_data = hourly_rating.get("homes", {}).get(home_id, {})
+            daily_data = daily_rating.get("homes", {}).get(home_id, {})
+            monthly_data = monthly_rating.get("homes", {}).get(home_id, {})
+
             home_data = {
                 "price_info": home_price_data,
-                "hourly_rating": hourly_rating.get("homes", {}).get(home_id, {}),
-                "daily_rating": daily_rating.get("homes", {}).get(home_id, {}),
-                "monthly_rating": monthly_rating.get("homes", {}).get(home_id, {}),
+                "hourly_rating": hourly_data.get("hourly", []),
+                "daily_rating": daily_data.get("daily", []),
+                "monthly_rating": monthly_data.get("monthly", []),
             }
             all_homes_data[home_id] = home_data
 
@@ -281,11 +285,11 @@ class TibberPricesDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         first_home_data = next(iter(homes_data.values()))
         price_info = first_home_data.get("price_info", {})
 
-        # Combine rating data
+        # Combine rating data - wrap entries in dict for sensor compatibility
         price_rating = {
-            "hourly": first_home_data.get("hourly_rating", {}),
-            "daily": first_home_data.get("daily_rating", {}),
-            "monthly": first_home_data.get("monthly_rating", {}),
+            "hourly": {"entries": first_home_data.get("hourly_rating", [])},
+            "daily": {"entries": first_home_data.get("daily_rating", [])},
+            "monthly": {"entries": first_home_data.get("monthly_rating", [])},
         }
 
         return {
@@ -313,11 +317,11 @@ class TibberPricesDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 
         price_info = home_data.get("price_info", {})
 
-        # Combine rating data for this specific home
+        # Combine rating data for this specific home - wrap entries in dict for sensor compatibility
         price_rating = {
-            "hourly": home_data.get("hourly_rating", {}),
-            "daily": home_data.get("daily_rating", {}),
-            "monthly": home_data.get("monthly_rating", {}),
+            "hourly": {"entries": home_data.get("hourly_rating", [])},
+            "daily": {"entries": home_data.get("daily_rating", [])},
+            "monthly": {"entries": home_data.get("monthly_rating", [])},
         }
 
         return {
