@@ -271,11 +271,87 @@ class TibberPricesDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 if last_user_update := stored.get("last_user_update"):
                     self._last_user_update = dt_util.parse_datetime(last_user_update)
 
-                _LOGGER.debug("Cache loaded successfully")
+                # Validate cache: check if price data is from a previous day
+                if not self._is_cache_valid():
+                    _LOGGER.info("Cached price data is from a previous day, clearing cache to fetch fresh data")
+                    self._cached_price_data = None
+                    self._last_price_update = None
+                    await self._store_cache()
+                else:
+                    _LOGGER.debug("Cache loaded successfully")
             else:
                 _LOGGER.debug("No cache found, will fetch fresh data")
         except OSError as ex:
             _LOGGER.warning("Failed to load cache: %s", ex)
+
+    def _is_cache_valid(self) -> bool:
+        """
+        Validate if cached price data is still current.
+
+        Returns False if:
+        - No cached data exists
+        - Cached data is from a different calendar day (in local timezone)
+        - Midnight turnover has occurred since cache was saved
+
+        """
+        if self._cached_price_data is None or self._last_price_update is None:
+            return False
+
+        current_local_date = dt_util.as_local(dt_util.now()).date()
+        last_update_local_date = dt_util.as_local(self._last_price_update).date()
+
+        if current_local_date != last_update_local_date:
+            _LOGGER.debug(
+                "Cache date mismatch: cached=%s, current=%s",
+                last_update_local_date,
+                current_local_date,
+            )
+            return False
+
+        return True
+
+    def _perform_midnight_turnover(self, price_info: dict[str, Any]) -> dict[str, Any]:
+        """
+        Perform midnight turnover on price data.
+
+        Moves: today → yesterday, tomorrow → today, clears tomorrow.
+
+        This handles cases where:
+        - Server was running through midnight
+        - Cache is being refreshed and needs proper day rotation
+
+        Args:
+            price_info: The price info dict with 'today', 'tomorrow', 'yesterday' keys
+
+        Returns:
+            Updated price_info with rotated day data
+
+        """
+        current_local_date = dt_util.as_local(dt_util.now()).date()
+
+        # Extract current data
+        today_prices = price_info.get("today", [])
+        tomorrow_prices = price_info.get("tomorrow", [])
+
+        # Check if any of today's prices are from the previous day
+        prices_need_rotation = False
+        if today_prices:
+            first_today_price_str = today_prices[0].get("startsAt")
+            if first_today_price_str:
+                first_today_price_time = dt_util.parse_datetime(first_today_price_str)
+                if first_today_price_time:
+                    first_today_price_date = dt_util.as_local(first_today_price_time).date()
+                    prices_need_rotation = first_today_price_date < current_local_date
+
+        if prices_need_rotation:
+            _LOGGER.info("Performing midnight turnover: today→yesterday, tomorrow→today")
+            return {
+                "yesterday": today_prices,
+                "today": tomorrow_prices,
+                "tomorrow": [],
+            }
+
+        return price_info
 
     async def _store_cache(self) -> None:
         """Store cache data."""
@@ -345,6 +421,9 @@ class TibberPricesDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         first_home_data = next(iter(homes_data.values()))
         price_info = first_home_data.get("price_info", {})
 
+        # Perform midnight turnover if needed (handles day transitions)
+        price_info = self._perform_midnight_turnover(price_info)
+
         # Get threshold percentages for enrichment
         thresholds = self._get_threshold_percentages()
 
@@ -377,6 +456,9 @@ class TibberPricesDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             }
 
         price_info = home_data.get("price_info", {})
+
+        # Perform midnight turnover if needed (handles day transitions)
+        price_info = self._perform_midnight_turnover(price_info)
 
         # Get threshold percentages for enrichment
         thresholds = self._get_threshold_percentages()

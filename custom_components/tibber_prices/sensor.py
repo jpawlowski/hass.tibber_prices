@@ -373,11 +373,32 @@ class TibberPricesSensor(TibberPricesEntity, SensorEntity):
             return None
 
         price_info = self.coordinator.data.get("priceInfo", {})
-        today_prices = price_info.get("today", [])
-        if not today_prices:
-            return None
 
-        prices = [float(price["total"]) for price in today_prices]
+        # Get local midnight boundaries
+        local_midnight = dt_util.as_local(dt_util.start_of_local_day(dt_util.now()))
+        local_midnight_tomorrow = local_midnight + timedelta(days=1)
+
+        # Collect all prices from both today and tomorrow data that fall within local today
+        prices = []
+        for day_key in ["today", "tomorrow"]:
+            for price_data in price_info.get(day_key, []):
+                starts_at_str = price_data.get("startsAt")
+                if not starts_at_str:
+                    continue
+
+                starts_at = dt_util.parse_datetime(starts_at_str)
+                if starts_at is None:
+                    continue
+
+                # Convert to local timezone for comparison
+                starts_at = dt_util.as_local(starts_at)
+
+                # Include price if it starts within today's local date boundaries
+                if local_midnight <= starts_at < local_midnight_tomorrow:
+                    total_price = price_data.get("total")
+                    if total_price is not None:
+                        prices.append(float(total_price))
+
         if not prices:
             return None
 
