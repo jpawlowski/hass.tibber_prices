@@ -367,7 +367,7 @@ def _extract_price_data(data: dict) -> tuple[dict, dict, list, Any, Any]:
     price_rating_data = data.get("priceRating") or {}
     hourly_ratings = price_rating_data.get("hourly") or []
     rating_threshold_percentages = price_rating_data.get("thresholdPercentages")
-    currency = price_rating_data.get("currency")
+    currency = price_info_data.get("currency")
     return price_info_data, price_rating_data, hourly_ratings, rating_threshold_percentages, currency
 
 

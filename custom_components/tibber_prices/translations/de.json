@@ -75,7 +75,9 @@
                     "access_token": "API-Zugriffstoken",
                     "extended_descriptions": "Erweiterte Beschreibungen in Entitätsattributen anzeigen",
                     "best_price_flex": "Flexibilität für Bestpreis (%)",
-                    "peak_price_flex": "Flexibilität für Spitzenpreis (%)"
+                    "peak_price_flex": "Flexibilität für Spitzenpreis (%)",
+                    "price_rating_threshold_low": "Preisbewertungs-Schwellenwert Niedrig (% vs. Durchschnitt)",
+                    "price_rating_threshold_high": "Preisbewertungs-Schwellenwert Hoch (% vs. Durchschnitt)"
                 },
                 "title": "Optionen für Tibber Preisinformationen & Bewertungen",
                 "submit": "Optionen speichern"
@@ -93,7 +95,9 @@
             "entry_not_found": "Tibber Konfigurationseintrag nicht gefunden."
         },
         "best_price_flex": "Bestpreis Flexibilität (%)",
-        "peak_price_flex": "Spitzenpreis Flexibilität (%)"
+        "peak_price_flex": "Spitzenpreis Flexibilität (%)",
+        "price_rating_threshold_low": "Niedriger Preis Schwellenwert (% zum gleitenden Durchschnitt)",
+        "price_rating_threshold_high": "Hoher Preis Schwellenwert (% zum gleitenden Durchschnitt)"
     },
     "entity": {
         "sensor": {

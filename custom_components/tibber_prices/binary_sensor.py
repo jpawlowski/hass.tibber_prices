@@ -112,7 +112,21 @@ class TibberPricesBinarySensor(TibberPricesEntity, BinarySensorEntity):
         return None
 
     def _get_flex_option(self, option_key: str, default: float) -> float:
-        """Get a float option from config entry options or fallback to default. Accepts 0-100."""
+        """
+        Get a float option from config entry.
+
+        Converts percentage values to decimal fractions.
+        - CONF_BEST_PRICE_FLEX: positive 0-100 → 0.0-1.0
+        - CONF_PEAK_PRICE_FLEX: negative -100 to 0 → -1.0 to 0.0
+
+        Args:
+            option_key: The config key (CONF_BEST_PRICE_FLEX or CONF_PEAK_PRICE_FLEX)
+            default: Default value to use if not found
+
+        Returns:
+            Value converted to decimal fraction (e.g., 5 → 0.05, -5 → -0.05)
+
+        """
         options = self.coordinator.config_entry.options
         data = self.coordinator.config_entry.data
         value = options.get(option_key, data.get(option_key, default))
@@ -407,7 +421,8 @@ class TibberPricesBinarySensor(TibberPricesEntity, BinarySensorEntity):
             price = float(price_data["total"])
             percent_diff = ((price - ref_price) / ref_price) * 100 if ref_price != 0 else 0.0
             percent_diff = round(percent_diff, 2)
-            # For best price: percent_diff <= flex*100; for peak: percent_diff >= -flex*100
+            # For best price (flex >= 0): percent_diff <= flex*100 (prices up to flex% above reference)
+            # For peak price (flex <= 0): percent_diff >= -flex*100 (prices up to |flex|% above reference)
             in_flex = percent_diff <= flex * 100 if not reverse_sort else percent_diff >= -flex * 100
             # Split period if day or interval length changes
             if (

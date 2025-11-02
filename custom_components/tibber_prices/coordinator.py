@@ -23,7 +23,13 @@ from .api import (
     TibberPricesApiClientCommunicationError,
     TibberPricesApiClientError,
 )
-from .const import DOMAIN
+from .const import (
+    CONF_PRICE_RATING_THRESHOLD_HIGH,
+    CONF_PRICE_RATING_THRESHOLD_LOW,
+    DEFAULT_PRICE_RATING_THRESHOLD_HIGH,
+    DEFAULT_PRICE_RATING_THRESHOLD_LOW,
+    DOMAIN,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -268,6 +274,14 @@ class TibberPricesDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             return {}
         return self._transform_data_for_main_entry(self._cached_price_data)
 
+    def _get_threshold_percentages(self) -> dict[str, int]:
+        """Get threshold percentages from config options."""
+        options = self.config_entry.options or {}
+        return {
+            "low": options.get(CONF_PRICE_RATING_THRESHOLD_LOW, DEFAULT_PRICE_RATING_THRESHOLD_LOW),
+            "high": options.get(CONF_PRICE_RATING_THRESHOLD_HIGH, DEFAULT_PRICE_RATING_THRESHOLD_HIGH),
+        }
+
     def _transform_data_for_main_entry(self, raw_data: dict[str, Any]) -> dict[str, Any]:
         """Transform raw data for main entry (aggregated view of all homes)."""
         # For main entry, we can show data from the first home as default
@@ -290,6 +304,7 @@ class TibberPricesDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             "hourly": {"entries": first_home_data.get("hourly_rating", [])},
             "daily": {"entries": first_home_data.get("daily_rating", [])},
             "monthly": {"entries": first_home_data.get("monthly_rating", [])},
+            "thresholdPercentages": self._get_threshold_percentages(),
         }
 
         return {
@@ -322,6 +337,7 @@ class TibberPricesDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             "hourly": {"entries": home_data.get("hourly_rating", [])},
             "daily": {"entries": home_data.get("daily_rating", [])},
             "monthly": {"entries": home_data.get("monthly_rating", [])},
+            "thresholdPercentages": self._get_threshold_percentages(),
         }
 
         return {

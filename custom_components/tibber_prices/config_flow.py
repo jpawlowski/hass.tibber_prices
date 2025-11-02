@@ -41,9 +41,13 @@ from .const import (
     CONF_BEST_PRICE_FLEX,
     CONF_EXTENDED_DESCRIPTIONS,
     CONF_PEAK_PRICE_FLEX,
+    CONF_PRICE_RATING_THRESHOLD_HIGH,
+    CONF_PRICE_RATING_THRESHOLD_LOW,
     DEFAULT_BEST_PRICE_FLEX,
     DEFAULT_EXTENDED_DESCRIPTIONS,
     DEFAULT_PEAK_PRICE_FLEX,
+    DEFAULT_PRICE_RATING_THRESHOLD_HIGH,
+    DEFAULT_PRICE_RATING_THRESHOLD_LOW,
     DOMAIN,
     LOGGER,
 )
@@ -380,38 +384,6 @@ class TibberPricesSubentryFlowHandler(ConfigSubentryFlow):
                 CONF_EXTENDED_DESCRIPTIONS,
                 default=subentry.data.get(CONF_EXTENDED_DESCRIPTIONS, DEFAULT_EXTENDED_DESCRIPTIONS),
             ): BooleanSelector(),
-            vol.Optional(
-                CONF_BEST_PRICE_FLEX,
-                default=int(
-                    subentry.data.get(
-                        CONF_BEST_PRICE_FLEX,
-                        DEFAULT_BEST_PRICE_FLEX,
-                    )
-                ),
-            ): NumberSelector(
-                NumberSelectorConfig(
-                    min=0,
-                    max=100,
-                    step=1,
-                    mode=NumberSelectorMode.SLIDER,
-                ),
-            ),
-            vol.Optional(
-                CONF_PEAK_PRICE_FLEX,
-                default=int(
-                    subentry.data.get(
-                        CONF_PEAK_PRICE_FLEX,
-                        DEFAULT_PEAK_PRICE_FLEX,
-                    )
-                ),
-            ): NumberSelector(
-                NumberSelectorConfig(
-                    min=0,
-                    max=100,
-                    step=1,
-                    mode=NumberSelectorMode.SLIDER,
-                ),
-            ),
         }
 
         if user_input is not None:
@@ -471,6 +443,38 @@ class TibberPricesOptionsFlowHandler(OptionsFlow):
                             self.config_entry.options.get(
                                 CONF_PEAK_PRICE_FLEX,
                                 DEFAULT_PEAK_PRICE_FLEX,
+                            )
+                        ),
+                    ): NumberSelector(
+                        NumberSelectorConfig(
+                            min=-100,
+                            max=0,
+                            step=1,
+                            mode=NumberSelectorMode.SLIDER,
+                        ),
+                    ),
+                    vol.Optional(
+                        CONF_PRICE_RATING_THRESHOLD_LOW,
+                        default=int(
+                            self.config_entry.options.get(
+                                CONF_PRICE_RATING_THRESHOLD_LOW,
+                                DEFAULT_PRICE_RATING_THRESHOLD_LOW,
+                            )
+                        ),
+                    ): NumberSelector(
+                        NumberSelectorConfig(
+                            min=-100,
+                            max=0,
+                            step=1,
+                            mode=NumberSelectorMode.SLIDER,
+                        ),
+                    ),
+                    vol.Optional(
+                        CONF_PRICE_RATING_THRESHOLD_HIGH,
+                        default=int(
+                            self.config_entry.options.get(
+                                CONF_PRICE_RATING_THRESHOLD_HIGH,
+                                DEFAULT_PRICE_RATING_THRESHOLD_HIGH,
                             )
                         ),
                     ): NumberSelector(

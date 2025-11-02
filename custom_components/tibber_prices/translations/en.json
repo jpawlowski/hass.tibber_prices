@@ -75,7 +75,9 @@
                     "access_token": "API access token",
                     "extended_descriptions": "Show extended descriptions in entity attributes",
                     "best_price_flex": "Best Price Flexibility (%)",
-                    "peak_price_flex": "Peak Price Flexibility (%)"
+                    "peak_price_flex": "Peak Price Flexibility (%)",
+                    "price_rating_threshold_low": "Price Rating Threshold Low (% vs trailing average)",
+                    "price_rating_threshold_high": "Price Rating Threshold High (% vs trailing average)"
                 },
                 "title": "Options for Tibber Price Information & Ratings",
                 "submit": "Save Options"
@@ -93,7 +95,9 @@
             "entry_not_found": "Tibber configuration entry not found."
         },
         "best_price_flex": "Best Price Flexibility (%)",
-        "peak_price_flex": "Peak Price Flexibility (%)"
+        "peak_price_flex": "Peak Price Flexibility (%)",
+        "price_rating_threshold_low": "Price Low Threshold (% to trailing average)",
+        "price_rating_threshold_high": "Price High Threshold (% to trailing average)"
     },
     "entity": {
         "sensor": {

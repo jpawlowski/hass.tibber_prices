@@ -182,6 +182,7 @@ def _is_data_empty(data: dict, query_type: str) -> bool:
 
         elif query_type == "price_info":
             # Check for homes existence and non-emptiness before accessing
+            subscription = None
             if (
                 "viewer" not in data
                 or "homes" not in data["viewer"]
@@ -189,29 +190,34 @@ def _is_data_empty(data: dict, query_type: str) -> bool:
                 or len(data["viewer"]["homes"]) == 0
                 or "currentSubscription" not in data["viewer"]["homes"][0]
                 or data["viewer"]["homes"][0]["currentSubscription"] is None
-                or "priceInfo" not in data["viewer"]["homes"][0]["currentSubscription"]
             ):
-                _LOGGER.debug("Missing homes/currentSubscription/priceInfo in price_info check")
+                _LOGGER.debug("Missing homes/currentSubscription in price_info check")
                 is_empty = True
             else:
-                price_info = data["viewer"]["homes"][0]["currentSubscription"]["priceInfo"]
+                subscription = data["viewer"]["homes"][0]["currentSubscription"]
 
-                # Check historical data (either range or yesterday)
+                # Check priceInfoRange (192 quarter-hourly intervals)
                 has_historical = (
-                    "range" in price_info
-                    and price_info["range"] is not None
-                    and "edges" in price_info["range"]
-                    and price_info["range"]["edges"]
+                    "priceInfoRange" in subscription
+                    and subscription["priceInfoRange"] is not None
+                    and "edges" in subscription["priceInfoRange"]
+                    and subscription["priceInfoRange"]["edges"]
                 )
 
-                # Check today's data
-                has_today = "today" in price_info and price_info["today"] is not None and len(price_info["today"]) > 0
+                # Check priceInfo for today's data
+                has_price_info = "priceInfo" in subscription and subscription["priceInfo"] is not None
+                has_today = (
+                    has_price_info
+                    and "today" in subscription["priceInfo"]
+                    and subscription["priceInfo"]["today"] is not None
+                    and len(subscription["priceInfo"]["today"]) > 0
+                )
 
                 # Data is empty if we don't have historical data or today's data
                 is_empty = not has_historical or not has_today
 
                 _LOGGER.debug(
-                    "Price info check - historical data historical: %s, today: %s, is_empty: %s",
+                    "Price info check - priceInfoRange: %s, today: %s, is_empty: %s",
                     bool(has_historical),
                     bool(has_today),
                     is_empty,
@@ -233,34 +239,22 @@ def _is_data_empty(data: dict, query_type: str) -> bool:
             else:
                 rating = data["viewer"]["homes"][0]["currentSubscription"]["priceRating"]
 
-                # Check threshold percentages
-                has_thresholds = (
-                    "thresholdPercentages" in rating
-                    and rating["thresholdPercentages"] is not None
-                    and "low" in rating["thresholdPercentages"]
-                    and "high" in rating["thresholdPercentages"]
+                # Check rating entries
+                has_entries = (
+                    query_type in rating
+                    and rating[query_type] is not None
+                    and "entries" in rating[query_type]
+                    and rating[query_type]["entries"] is not None
+                    and len(rating[query_type]["entries"]) > 0
                 )
-                if not has_thresholds:
-                    _LOGGER.debug("Missing or invalid threshold percentages for %s rating", query_type)
-                    is_empty = True
-                else:
-                    # Check rating entries
-                    has_entries = (
-                        query_type in rating
-                        and rating[query_type] is not None
-                        and "entries" in rating[query_type]
-                        and rating[query_type]["entries"] is not None
-                        and len(rating[query_type]["entries"]) > 0
-                    )
 
-                    is_empty = not has_entries
-                    _LOGGER.debug(
-                        "%s rating check - has_thresholds: %s, entries count: %d, is_empty: %s",
-                        query_type,
-                        has_thresholds,
-                        len(rating[query_type]["entries"]) if has_entries else 0,
-                        is_empty,
-                    )
+                is_empty = not has_entries
+                _LOGGER.debug(
+                    "%s rating check - entries count: %d, is_empty: %s",
+                    query_type,
+                    len(rating[query_type]["entries"]) if has_entries else 0,
+                    is_empty,
+                )
         else:
             _LOGGER.debug("Unknown query type %s, treating as non-empty", query_type)
             is_empty = False
@@ -280,19 +274,25 @@ def _prepare_headers(access_token: str) -> dict[str, str]:
     }
 
 
-def _flatten_price_info(subscription: dict) -> dict:
-    """Transform and flatten priceInfo from full API data structure."""
+def _flatten_price_info(subscription: dict, currency: str | None = None) -> dict:
+    """
+    Transform and flatten priceInfo from full API data structure.
+
+    Now handles priceInfoRange (192 quarter-hourly intervals) separately from
+    priceInfo (today and tomorrow data). Currency is stored as a separate attribute.
+    """
     price_info = subscription.get("priceInfo", {})
+    price_info_range = subscription.get("priceInfoRange", {})
 
     # Get today and yesterday dates using Home Assistant's dt_util
     today_local = dt_util.now().date()
     yesterday_local = today_local - timedelta(days=1)
     _LOGGER.debug("Processing data for yesterday's date: %s", yesterday_local)
 
-    # Transform edges data (extract yesterday's prices)
-    if "range" in price_info and "edges" in price_info["range"]:
-        edges = price_info["range"]["edges"]
-        yesterday_prices = []
+    # Transform priceInfoRange edges data (extract yesterday's quarter-hourly prices)
+    yesterday_prices = []
+    if "edges" in price_info_range:
+        edges = price_info_range["edges"]
 
         for edge in edges:
             if "node" not in edge:
@@ -315,14 +315,12 @@ def _flatten_price_info(subscription: dict) -> dict:
                 yesterday_prices.append(price_data)
 
         _LOGGER.debug("Found %d price entries for yesterday", len(yesterday_prices))
-        # Replace the entire range object with yesterday prices
-        price_info["yesterday"] = yesterday_prices
-        del price_info["range"]
 
     return {
-        "yesterday": price_info.get("yesterday", []),
+        "yesterday": yesterday_prices,
         "today": price_info.get("today", []),
         "tomorrow": price_info.get("tomorrow", []),
+        "currency": currency,
     }
 
 
@@ -344,7 +342,6 @@ def _flatten_price_rating(subscription: dict) -> dict:
         "hourly": hourly_entries,
         "daily": daily_entries,
         "monthly": monthly_entries,
-        "thresholdPercentages": price_rating.get("thresholdPercentages"),
         "currency": currency,
     }
 
@@ -404,13 +401,23 @@ class TibberPricesApiClient:
         data = await self._api_wrapper(
             data={
                 "query": """
-                    {viewer{homes{id,currentSubscription{priceInfo{
-                        range(resolution:HOURLY,last:48){edges{node{
-                            startsAt total energy tax level
-                        }}}
-                        today{startsAt total energy tax level}
-                        tomorrow{startsAt total energy tax level}
-                    }}}}}"""
+                    {viewer{homes{
+                        id
+                        consumption(resolution:DAILY,last:1){
+                            pageInfo{currency}
+                        }
+                        currentSubscription{
+                            priceInfoRange(resolution:QUARTER_HOURLY,last:192){
+                                edges{node{
+                                    startsAt total energy tax level
+                                }}
+                            }
+                            priceInfo(resolution:QUARTER_HOURLY){
+                                today{startsAt total energy tax level}
+                                tomorrow{startsAt total energy tax level}
+                            }
+                        }
+                    }}}"""
             },
             query_type=QueryType.PRICE_INFO,
         )
@@ -421,7 +428,17 @@ class TibberPricesApiClient:
             home_id = home.get("id")
             if home_id:
                 if "currentSubscription" in home:
-                    homes_data[home_id] = _flatten_price_info(home["currentSubscription"])
+                    # Extract currency from consumption data if available
+                    currency = None
+                    if home.get("consumption"):
+                        page_info = home["consumption"].get("pageInfo")
+                        if page_info:
+                            currency = page_info.get("currency")
+
+                    homes_data[home_id] = _flatten_price_info(
+                        home["currentSubscription"],
+                        currency,
+                    )
                 else:
                     homes_data[home_id] = {}
 
@@ -434,7 +451,6 @@ class TibberPricesApiClient:
             data={
                 "query": """
                     {viewer{homes{id,currentSubscription{priceRating{
-                        thresholdPercentages{low high}
                         daily{
                             currency
                             entries{time total energy tax difference level}
@@ -463,7 +479,6 @@ class TibberPricesApiClient:
             data={
                 "query": """
                     {viewer{homes{id,currentSubscription{priceRating{
-                        thresholdPercentages{low high}
                         hourly{
                             currency
                             entries{time total energy tax difference level}
@@ -492,7 +507,6 @@ class TibberPricesApiClient:
             data={
                 "query": """
                     {viewer{homes{id,currentSubscription{priceRating{
-                        thresholdPercentages{low high}
                         monthly{
                             currency
                             entries{time total energy tax difference level}
