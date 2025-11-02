@@ -1,11 +1,17 @@
-# https://www.home-assistant.io/integrations/default_config/
-default_config:
-
+# Development-friendly config that excludes go2rtc which has compatibility issues
 # https://www.home-assistant.io/integrations/homeassistant/
 homeassistant:
   debug: true
 
-# https://www.home-assistant.io/integrations/logger/
+# Core integrations needed for development
+http:
+
+automation:
+
+script:
+
+scene:
+
 logger:
   default: info
   logs:
