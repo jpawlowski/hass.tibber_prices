@@ -1,182 +1,270 @@
 # Copilot Instructions
 
-This repository contains a **custom component for Home Assistant**, intended to be distributed via the **HACS (Home Assistant Community Store)**.
+This is a **Home Assistant custom component** for Tibber electricity price data, distributed via **HACS**. It fetches, caches, and enriches **quarter-hourly** electricity prices with statistical analysis, price levels, and ratings.
 
-## Development Guidelines
+## Architecture Overview
 
--   Follow the **official Home Assistant development guidelines** at [developers.home-assistant.io](https://developers.home-assistant.io).
--   Ensure compatibility with the **latest Home Assistant release**.
--   Use **async functions**, **non-blocking I/O**, and **config flows** where applicable.
--   Structure the component using these standard files:
+**Core Data Flow:**
 
-    -   `__init__.py` – setup and teardown
-    -   `manifest.json` – metadata and dependencies
-    -   `config_flow.py` – if the integration supports UI configuration
-    -   `sensor.py`, `switch.py`, etc. – for platforms
-    -   `const.py` – constants (`DOMAIN`, `CONF_*`, etc.)
+1. `TibberPricesApiClient` (`api.py`) queries Tibber's GraphQL API with `resolution:QUARTER_HOURLY` for user data and prices (yesterday/today/tomorrow - 192 intervals total)
+2. `TibberPricesDataUpdateCoordinator` (`coordinator.py`) orchestrates updates every 15 minutes, manages persistent storage via `Store`, and schedules quarter-hour entity refreshes
+3. Price enrichment functions (`price_utils.py`, `average_utils.py`) calculate trailing/leading 24h averages, price differences, and rating levels for each 15-minute interval
+4. Entity platforms (`sensor.py`, `binary_sensor.py`) expose enriched data as Home Assistant entities
+5. Custom services (`services.py`) provide API endpoints for integrations like ApexCharts
 
--   Use Home Assistant's built-in helpers and utility modules:
+**Key Patterns:**
 
-    -   `homeassistant.helpers.entity`, `device_registry`, `config_validation`
-    -   `homeassistant.util.dt` (`dt_util`) for time/date handling
+-   **Dual translation system**: Standard HA translations in `/translations/` (config flow, UI strings per HA schema), supplemental in `/custom_translations/` (entity descriptions not supported by HA schema). Both must stay in sync. Use `async_load_translations()` and `async_load_standard_translations()` from `const.py`. When to use which: `/translations/` is bound to official HA schema requirements; anything else goes in `/custom_translations/` (requires manual translation loading).
+-   **Price data enrichment**: All quarter-hourly price intervals get augmented with `trailing_avg_24h`, `difference`, and `rating_level` fields via `enrich_price_info_with_differences()` in `price_utils.py`. Enriched structure example:
+    ```python
+    {
+      "startsAt": "2025-11-03T14:00:00+01:00",
+      "total": 0.2534,              # Original from API
+      "level": "NORMAL",            # Original from API
+      "trailing_avg_24h": 0.2312,   # Added: 24h trailing average
+      "difference": 9.6,            # Added: % diff from trailing avg
+      "rating_level": "NORMAL"      # Added: LOW/NORMAL/HIGH based on thresholds
+    }
+    ```
+-   **Quarter-hour precision**: Entities update on 00/15/30/45-minute boundaries via `_schedule_quarter_hour_refresh()` in coordinator, not just on data fetch intervals. This ensures current price sensors update without waiting for the next API poll.
+-   **Currency handling**: Multi-currency support with major/minor units (e.g., EUR/ct, NOK/øre) via `get_currency_info()` and `format_price_unit_*()` in `const.py`.
+-   **Intelligent caching strategy**: Minimizes API calls while ensuring data freshness:
+    -   User data cached for 24h (rarely changes)
+    -   Price data validated against calendar day - cleared on midnight turnover to force fresh fetch
+    -   Cache survives HA restarts via `Store` persistence
+    -   API polling intensifies only when tomorrow's data expected (afternoons)
+    -   Stale cache detection via `_is_cache_valid()` prevents using yesterday's data as today's
 
--   Do not wrap built-in functions (e.g., don’t wrap `dt_util.parse_datetime`)
--   Avoid third-party or custom libraries unless absolutely necessary
--   Never assume static local file paths — use config options and relative paths
+**Component Structure:**
 
-## Coding Style Policy
+```
+custom_components/tibber_prices/
+├── __init__.py           # Entry setup, platform registration
+├── coordinator.py        # DataUpdateCoordinator with caching/scheduling
+├── api.py                # GraphQL client with retry/error handling
+├── price_utils.py        # Price enrichment, level/rating calculations
+├── average_utils.py      # Trailing/leading average utilities
+├── services.py           # Custom services (get_price, ApexCharts, etc.)
+├── sensor.py             # Price/stats/diagnostic sensors
+├── binary_sensor.py      # Peak/best hour binary sensors
+├── entity.py             # Base TibberPricesEntity class
+├── data.py               # @dataclass TibberPricesData
+├── const.py              # Constants, translation loaders, currency helpers
+├── config_flow.py        # UI configuration flow
+└── services.yaml         # Service definitions
+```
 
--   Follow **PEP8**, enforced by **Black**, **isort**, and **Ruff**
--   Use **type hints** on all function and method signatures
--   Add **docstrings** for all public classes and methods
--   Use **f-strings** for string formatting
--   Do not use `print()` — use `_LOGGER` for logging
--   YAML examples must be **valid**, **minimal**, and **Home Assistant compliant**
+## Development Workflow
 
-## Code Structure and Ordering Policy
+**Start dev environment:**
 
-Use the following order inside Python modules:
+```bash
+./scripts/develop  # Starts HA in debug mode with config/ dir, sets PYTHONPATH
+```
 
-1. **Imports**
+**Linting (auto-fix):**
 
-    - Python standard library imports first
-    - Third-party imports (e.g., `homeassistant.*`)
-    - Local imports within this component (`from . import xyz`)
-    - Enforced automatically by `isort`
+```bash
+./scripts/lint     # Runs ruff format + ruff check --fix
+```
 
-2. **Module-level constants and globals**
+**Linting (check-only):**
 
-    - Define constants and globals at module-level (e.g., `DOMAIN`, `_LOGGER`, `CONF_*`, `DEFAULT_*`)
+```bash
+./scripts/lint-check  # CI mode, no modifications
+```
 
-3. **Top-level functions**
+**Testing:**
 
-    - Use only for stateless, reusable logic
-    - Prefix with `_` if internal only (e.g., `_parse_price()`)
-    - Do not place Home Assistant lifecycle logic here
-    - **Sort and group top-level functions for maximum readability:**
-        - Place public API/entry point functions (e.g., service handlers, async setup) at the top of the function section.
-        - Direct helpers (called by entry points) immediately after, in the order they are called.
-        - Pure/stateless utility functions that are not tightly coupled to entry points at the end.
-        - Where possible, order functions so that a function appears before any function that calls it (call hierarchy order).
-        - Group related functions by logical purpose or data handled, and use `#region`/`#endregion` folding comments for large files if needed.
+```bash
+pytest tests/      # Unit tests exist (test_*.py) but no framework enforced
+```
 
-4. **Main classes**
+**Key commands:**
 
-    - Define main classes (Home Assistant Entity classes, DataUpdateCoordinators, and ConfigFlow handlers)
-    - Order inside class:
-        - Special methods (`__init__`, `__repr__`)
-        - Public methods (no `_`)
-        - Private methods (`_prefix`)
-    - All I/O or lifecycle methods must be `async def`
+-   Dev container includes `hass` CLI for manual HA operations
+-   Use `uv run --active` prefix for running Python tools in the venv
+-   `.ruff.toml` enforces max line length 120, complexity ≤25, Python 3.13 target
 
-5. **Helper classes**
+## Critical Project-Specific Patterns
 
-    - If helper classes become complex, move them to separate modules (e.g., `helpers.py`, `models.py`)
-
-> ✅ Copilot tip:
->
-> -   Use top-level functions for pure helpers only.
-> -   Prefer structured classes where Home Assistant expects them.
-> -   Sort and group functions for maximum readability and maintainability, following call flow from entry points to helpers to utilities.
-
-## Code Comments Policy
-
--   Do **not** add comments in the code to explain automated changes, such as reordering, renaming, or compliance with coding standards or prompts.
--   Comments in code should be reserved **only** for documenting the actual logic, purpose, or usage of code elements (e.g., classes, methods, functions, or complex logic blocks).
--   If any explanations of automated actions are needed, provide them **outside the code file** (such as in your chat response, PR description, or commit message), not within the Python files themselves.
--   Do **not** insert comments like `# moved function`, `# renamed`, `# for compliance`, or similar into code files.
-
-## Backwards Compatibility Policy
-
--   Do **not** implement or suggest backward compatibility features, workarounds, deprecated function support, or compatibility layers unless **explicitly requested** in the prompt or project documentation.
--   All code should assume a clean, modern codebase and should target the latest stable Home Assistant version only, unless otherwise specified.
--   If you believe backward compatibility might be required, **ask for clarification first** before adding any related code.
-
-## Translations Policy
-
--   All user-facing strings supported by Home Assistant's translation system **must** be defined in `/translations/en.json` and (if present) in other `/translations/*.json` language files.
--   When adding or updating a translation key in `/translations/en.json`, **ensure that all other language files in `/translations/` are updated to match the same set of keys**. Non-English files may use placeholder values if no translation is available, but **must** not miss any keys present in `en.json`.
--   Do **not** remove or rename translation keys without updating all language files accordingly.
--   Never duplicate translation keys between `/translations/` and `/custom_translations/`.
--   The `/custom_translations/` directory contains **supplemental translation files** for UI strings or other content not handled by the standard Home Assistant translation format.
-    -   Only add strings to `/custom_translations/` if they are not supported by the standard Home Assistant translation system.
-    -   Do **not** duplicate any string or translation key that could be handled in `/translations/`.
--   When both exist, the standard Home Assistant translation in `/translations/` **always takes priority** over any supplemental entry in `/custom_translations/`.
--   All translation files (both standard and custom) **must remain in sync** with the English base file (`en.json`) in their respective directory.
-
-> ✅ Copilot tip: Whenever adding or changing user-facing strings, update both the main translation files in `/translations/` and the supplemental files in `/custom_translations/`, keeping them in sync and avoiding duplication.
-
-## Data Structures
-
-Use `@dataclass` for plain data containers where appropriate:
+**1. Translation Loading (Async-First)**
+Always load translations at integration setup or before first use:
 
 ```python
-from dataclasses import dataclass
-
-@dataclass
-class PriceSlot:
-    start: datetime
-    end: datetime
-    price: float
+# In __init__.py async_setup_entry:
+await async_load_translations(hass, "en")
+await async_load_standard_translations(hass, "en")
 ```
 
-## Visual File Layout
+Access cached translations synchronously later via `get_translation(path, language)`.
 
-Split component logic into multiple Python modules for improved clarity and maintainability:
+**2. Price Data Enrichment**
+Never use raw API price data directly. Always enrich first:
 
+```python
+from .price_utils import enrich_price_info_with_differences
+
+enriched = enrich_price_info_with_differences(
+    price_info_data,  # Raw API response
+    thresholds,       # User-configured rating thresholds
+)
 ```
-/custom_components/your_component/
-├── __init__.py
-├── manifest.json
-├── const.py
-├── sensor.py
-├── config_flow.py
-├── models.py       # dataclasses
-├── helpers.py      # pure utility functions
+
+This adds `trailing_avg_24h`, `difference`, `rating_level` to each interval.
+
+**3. Time Handling**
+Always use `dt_util.as_local()` when comparing API timestamps (UTC) to local time:
+
+```python
+from homeassistant.util import dt as dt_util
+
+price_time = dt_util.parse_datetime(price_data["startsAt"])
+price_time = dt_util.as_local(price_time)  # Convert to local TZ
 ```
 
-Use `#region` / `#endregion` optionally to improve readability in large files.
+**4. Coordinator Data Structure**
+Access coordinator data like:
 
-## Optional Files (Custom Integration via HACS)
+```python
+coordinator.data = {
+    "user_data": {...},      # Cached user info from viewer query
+    "priceInfo": {
+        "yesterday": [...],  # List of enriched price dicts
+        "today": [...],
+        "tomorrow": [...],
+        "currency": "EUR",
+    },
+}
+```
 
-Only create these files if explicitly required by your integration features. Not all files used in Core integrations apply to Custom Integrations:
+**5. Service Response Pattern**
+Services use `SupportsResponse.ONLY` and must return dicts:
 
--   `services.yaml` – Define custom Home Assistant services
--   `translations/*.json` (e.g., `en.json`, `de.json`) – Provide translations for UI elements
--   Additional platform files (e.g., `binary_sensor.py`, `switch.py`, `number.py`, `button.py`, `select.py`) – Support for additional entity types
--   `websocket_api.py` – Define custom WebSocket API endpoints
--   `diagnostics.py` – Provide diagnostic data to users and maintainers
--   `repair.py` – Offer built-in repair hints or troubleshooting guidance
--   `issue_registry.py` – Communicate integration-specific issues or important changes to users clearly
+```python
+@callback
+def async_setup_services(hass: HomeAssistant) -> None:
+    hass.services.async_register(
+        DOMAIN, "get_price", _get_price,
+        schema=PRICE_SERVICE_SCHEMA,
+        supports_response=SupportsResponse.ONLY,
+    )
+```
 
-> ⚠️ **Copilot tip**: Avoid Core-only files (`device_action.py`, `device_trigger.py`, `device_condition.py`, `strings.json`) for Custom Integrations. These are typically not supported or rarely used.
+## Code Quality Rules
 
-## Linting and Code Quality Policy
+**Ruff config (`.ruff.toml`):**
 
--   Enforced by **Ruff**, which runs:
+-   Max line length: **120** chars (not 88 from default Black)
+-   Max complexity: **25** (McCabe)
+-   Target: Python 3.13
+-   No unused imports/variables (`F401`, `F841`)
+-   No mutable default args (`B008`)
+-   Use `_LOGGER` not `print()` (`T201`)
 
-    -   Locally via VS Code devcontainer
-    -   Remotely via GitHub Actions
+**Import order (enforced by isort):**
 
-Key Ruff linter rules that must be followed:
+1. Python stdlib
+2. Third-party (`homeassistant.*`, `aiohttp`, etc.)
+3. Local (`.api`, `.const`, etc.)
 
--   `F401`, `F841` – No unused imports or variables
--   `E402`, `E501` – Imports at top, lines ≤88 chars
--   `C901`, `PLR0912`, `PLR0915` – Functions must be small and simple
--   `PLR0911`, `RET504` – No redundant `else` after `return`
--   `B008` – No mutable default arguments
--   `T201` – Do not use `print()`
--   `SIM102` – Prefer `if x` over `if x == True`
+**Error handling best practices:**
 
-Also:
+-   Keep try blocks minimal - only wrap code that can throw exceptions
+-   Process data **after** the try/except block, not inside
+-   Catch specific exceptions, avoid bare `except Exception:` (allowed only in config flows and background tasks)
+-   Use `ConfigEntryNotReady` for temporary failures (device offline)
+-   Use `ConfigEntryAuthFailed` for auth issues
+-   Use `ServiceValidationError` for user input errors in services
 
--   Use **Black** for formatting
--   Use **isort** for import sorting
--   See `.ruff.toml` for custom settings
--   Prefer **one return statement per function** unless early returns improve clarity
+**Logging guidelines:**
 
-## Tests
+-   Use lazy logging: `_LOGGER.debug("Message with %s", variable)`
+-   No periods at end of log messages
+-   No integration name in messages (added automatically)
+-   Debug level for non-user-facing messages
 
-This integration does **not include automated tests** by default.
+**Function organization:**
+Public entry points → direct helpers (call order) → pure utilities. Prefix private helpers with `_`.
 
-> ⚠️ If Copilot generates tests, keep them minimal and **do not introduce new test frameworks** not already present.
+**No backwards compatibility code** unless explicitly requested. Target latest HA stable only.
+
+**Translation sync:** When updating `/translations/en.json`, update ALL language files (`de.json`, etc.) with same keys (placeholder values OK).
+
+## Common Tasks
+
+**Add a new sensor:**
+
+1. Define entity description in `sensor.py` (add to `SENSOR_TYPES`)
+2. Add translation keys to `/translations/en.json` and `/custom_translations/en.json`
+3. Sync all language files
+4. Implement `@property` methods in `TibberPricesSensor` class
+
+**Modify price calculations:**
+Edit `price_utils.py` or `average_utils.py`. These are stateless pure functions operating on price lists.
+
+**Add a new service:**
+
+1. Define schema in `services.py` (top-level constants)
+2. Add service definition to `services.yaml`
+3. Implement handler function in `services.py`
+4. Register in `async_setup_services()`
+
+**Change update intervals:**
+Edit `UPDATE_INTERVAL` in `coordinator.py` (default: 15 min) or `QUARTER_HOUR_BOUNDARIES` for entity refresh timing.
+
+**Debug GraphQL queries:**
+Check `api.py` → `QueryType` enum and `_build_query()` method. Queries are dynamically constructed based on operation type.
+
+## Anti-Patterns to Avoid
+
+**Never do these:**
+
+```python
+# ❌ Blocking operations in event loop
+data = requests.get(url)  # Use aiohttp with async_get_clientsession(hass)
+time.sleep(5)             # Use await asyncio.sleep(5)
+
+# ❌ Processing data inside try block
+try:
+    data = await api.get_data()
+    processed = data["value"] * 100  # Move outside try
+    self._attr_native_value = processed
+except ApiError:
+    pass
+
+# ❌ Hardcoded strings (not translatable)
+self._attr_name = "Temperature Sensor"  # Use translation_key instead
+
+# ❌ Accessing hass.data directly in tests
+coord = hass.data[DOMAIN][entry.entry_id]  # Use proper fixtures
+
+# ❌ User-configurable polling intervals
+vol.Optional("scan_interval"): cv.positive_int  # Not allowed, integration determines this
+```
+
+**Do these instead:**
+
+```python
+# ✅ Async operations
+data = await session.get(url)
+await asyncio.sleep(5)
+
+# ✅ Process after exception handling
+try:
+    data = await api.get_data()
+except ApiError:
+    return
+processed = data["value"] * 100  # Safe processing after try/except
+
+# ✅ Translatable entities
+_attr_has_entity_name = True
+_attr_translation_key = "temperature_sensor"
+
+# ✅ Proper test setup with fixtures
+@pytest.fixture
+async def init_integration(hass, mock_config_entry):
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    return mock_config_entry
+```
