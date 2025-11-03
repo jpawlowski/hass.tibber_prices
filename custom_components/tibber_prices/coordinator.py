@@ -123,13 +123,16 @@ class TibberPricesDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             minutes_to_wait,
         )
 
+    @callback
     def _handle_quarter_hour_refresh(self) -> None:
         """Handle quarter-hour entity refresh by triggering async state updates."""
         _LOGGER.debug("Quarter-hour refresh triggered at %s", dt_util.utcnow().isoformat())
 
-        # Notify all listeners that there's new data without fetching fresh data
+        # Notify all listeners to update their state without fetching fresh data
         # This causes entity state properties to be re-evaluated with the current time
-        self.async_set_updated_data(self.data)
+        # Using async_update_listeners() instead of async_set_updated_data() to avoid
+        # interfering with the coordinator's update timing
+        self.async_update_listeners()
 
         # Schedule the next quarter-hour refresh
         self._schedule_quarter_hour_refresh()
@@ -390,11 +393,23 @@ class TibberPricesDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     def _should_update_price_data(self, current_time: datetime) -> bool:
         """Check if price data should be updated."""
         if self._cached_price_data is None:
+            _LOGGER.debug("Should update: No cached price data")
             return True
         if self._last_price_update is None:
+            _LOGGER.debug("Should update: No last price update timestamp")
             return True
-        # Update every 15 minutes
-        return (current_time - self._last_price_update) >= UPDATE_INTERVAL
+
+        time_since_update = current_time - self._last_price_update
+        should_update = time_since_update >= UPDATE_INTERVAL
+
+        _LOGGER.debug(
+            "Should update price data: %s (time since last update: %s, interval: %s)",
+            should_update,
+            time_since_update,
+            UPDATE_INTERVAL,
+        )
+
+        return should_update
 
     @callback
     def _merge_cached_data(self) -> dict[str, Any]:
