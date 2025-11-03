@@ -7,7 +7,7 @@ set -e
 cd "$(dirname "$0")/.."
 
 if [ -z "$VIRTUAL_ENV" ]; then
-    . .venv/bin/activate
+    . "$HOME/.venv/bin/activate"
 fi
 
 # Create config dir if not present

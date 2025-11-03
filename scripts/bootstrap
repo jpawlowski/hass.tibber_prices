@@ -10,21 +10,33 @@ echo "==> Updating system packages..."
 sudo apt-get update
 sudo apt-get upgrade -y
 
-rm -rf .venv/
-
 echo "==> Checking for uv..."
 if ! command -v uv >/dev/null 2>&1; then
   echo "UV not found, installing..."
   pipx install uv
 fi
 
-echo "==> Setting up Python environment..."
-uv venv && . .venv/bin/activate
+# if no venv, create one
+if [ ! -d "$HOME/.venv" ]; then
+    echo "==> Creating virtual environment..."
+    uv venv "$HOME/.venv"
+fi
+. "$HOME/.venv/bin/activate"
 
 echo "==> Installing dependencies..."
 uv pip install --requirement requirements.txt
 
 echo "==> Installing pre-commit hooks..."
 pre-commit install
+
+echo "==> Updating shell environment..."
+if ! grep -q "source $HOME/.venv/bin/activate" ~/.bashrc; then
+    echo "source $HOME/.venv/bin/activate" >> ~/.bashrc
+fi
+if [ -f ~/.zshrc ]; then
+    if ! grep -q "source $HOME/.venv/bin/activate" ~/.zshrc; then
+        echo "source $HOME/.venv/bin/activate" >> ~/.zshrc
+    fi
+fi
 
 echo "==> Bootstrap completed!"
