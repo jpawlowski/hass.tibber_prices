@@ -149,12 +149,6 @@
             }
         }
     },
-    "home_types": {
-        "APARTMENT": "Wohnung",
-        "ROWHOUSE": "Reihenhaus",
-        "HOUSE": "Haus",
-        "COTTAGE": "Ferienhaus"
-    },
     "issues": {
         "new_homes_available": {
             "title": "Neue Tibber-Häuser erkannt",

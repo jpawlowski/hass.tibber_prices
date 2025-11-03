@@ -92,11 +92,7 @@
         },
         "abort": {
             "entry_not_found": "Tibber configuration entry not found."
-        },
-        "best_price_flex": "Best Price Flexibility (%)",
-        "peak_price_flex": "Peak Price Flexibility (%)",
-        "price_rating_threshold_low": "Price Low Threshold (% to trailing average)",
-        "price_rating_threshold_high": "Price High Threshold (% to trailing average)"
+        }
     },
     "entity": {
         "sensor": {
@@ -163,12 +159,6 @@
                 "name": "Tomorrow's Data Available"
             }
         }
-    },
-    "home_types": {
-        "APARTMENT": "Apartment",
-        "ROWHOUSE": "Rowhouse",
-        "HOUSE": "House",
-        "COTTAGE": "Cottage"
     },
     "issues": {
         "new_homes_available": {

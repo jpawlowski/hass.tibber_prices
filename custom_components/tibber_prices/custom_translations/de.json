@@ -133,5 +133,11 @@
             "long_description": "Zeigt an, ob die Integration erfolgreich eine Verbindung zur Tibber API herstellen kann",
             "usage_tips": "Nutze dies, um den Verbindungsstatus zur Tibber API zu überwachen"
         }
+    },
+    "home_types": {
+        "APARTMENT": "Wohnung",
+        "ROWHOUSE": "Reihenhaus",
+        "HOUSE": "Haus",
+        "COTTAGE": "Ferienhaus"
     }
 }
