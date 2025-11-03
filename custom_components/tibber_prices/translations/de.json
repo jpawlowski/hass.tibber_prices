@@ -6,7 +6,6 @@
                 "data": {
                     "access_token": "API-Zugriffstoken"
                 },
-                "title": "Tibber Preisinformationen & Bewertungen",
                 "submit": "Token validieren"
             },
             "select_home": {
@@ -170,5 +169,6 @@
                 }
             }
         }
-    }
+    },
+    "title": "Tibber Preisinformationen & Bewertungen"
 }

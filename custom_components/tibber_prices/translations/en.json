@@ -6,7 +6,6 @@
                 "data": {
                     "access_token": "API access token"
                 },
-                "title": "Tibber Price Information & Ratings",
                 "submit": "Validate Token"
             },
             "select_home": {
@@ -181,5 +180,6 @@
                 }
             }
         }
-    }
+    },
+    "title": "Tibber Price Information & Ratings"
 }
