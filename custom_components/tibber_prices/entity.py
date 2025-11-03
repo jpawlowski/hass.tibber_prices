@@ -77,7 +77,12 @@ class TibberPricesEntity(CoordinatorEntity[TibberPricesDataUpdateCoordinator]):
 
         self._attr_device_info = DeviceInfo(
             entry_type=DeviceEntryType.SERVICE,
-            identifiers={(DOMAIN, coordinator.config_entry.unique_id or coordinator.config_entry.entry_id)},
+            identifiers={
+                (
+                    DOMAIN,
+                    coordinator.config_entry.unique_id or coordinator.config_entry.entry_id,
+                )
+            },
             name=home_name,
             manufacturer="Tibber",
             model=translated_model,

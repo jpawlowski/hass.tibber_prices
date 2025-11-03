@@ -114,7 +114,11 @@ async def _verify_graphql_response(response_json: dict, query_type: QueryType) -
         if error_code in ["RATE_LIMITED", "TOO_MANY_REQUESTS"]:
             # Some GraphQL APIs return rate limit info in extensions
             retry_after = extensions.get("retryAfter", "unknown")
-            _LOGGER.warning("Tibber API rate limited via GraphQL: %s (retry after %s)", message, retry_after)
+            _LOGGER.warning(
+                "Tibber API rate limited via GraphQL: %s (retry after %s)",
+                message,
+                retry_after,
+            )
             raise TibberPricesApiClientError(
                 TibberPricesApiClientError.RATE_LIMIT_ERROR.format(retry_after=retry_after)
             )
@@ -178,7 +182,10 @@ def _is_data_empty(data: dict, query_type: str) -> bool:
             )
             is_empty = not has_user_id or not has_homes
             _LOGGER.debug(
-                "Viewer check - has_user_id: %s, has_homes: %s, is_empty: %s", has_user_id, has_homes, is_empty
+                "Viewer check - has_user_id: %s, has_homes: %s, is_empty: %s",
+                has_user_id,
+                has_homes,
+                is_empty,
             )
 
         elif query_type == "price_info":
@@ -617,7 +624,8 @@ class TibberPricesApiClient:
 
         except TimeoutError as error:
             _LOGGER.exception(
-                "Request timeout after %d seconds - slow network or server overload", self._request_timeout
+                "Request timeout after %d seconds - slow network or server overload",
+                self._request_timeout,
             )
             raise TibberPricesApiClientCommunicationError(
                 TibberPricesApiClientCommunicationError.TIMEOUT_ERROR.format(exception=str(error))
@@ -714,7 +722,13 @@ class TibberPricesApiClient:
             return False, 0
 
         # Non-retryable errors - authentication and permission issues
-        if isinstance(error, (TibberPricesApiClientAuthenticationError, TibberPricesApiClientPermissionError)):
+        if isinstance(
+            error,
+            (
+                TibberPricesApiClientAuthenticationError,
+                TibberPricesApiClientPermissionError,
+            ),
+        ):
             return False, 0
 
         # Handle API-specific errors

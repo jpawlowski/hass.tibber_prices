@@ -10,7 +10,13 @@ from homeassistant.components.sensor import (
     SensorEntity,
     SensorEntityDescription,
 )
-from homeassistant.const import CURRENCY_EURO, PERCENTAGE, EntityCategory, UnitOfPower, UnitOfTime
+from homeassistant.const import (
+    CURRENCY_EURO,
+    PERCENTAGE,
+    EntityCategory,
+    UnitOfPower,
+    UnitOfTime,
+)
 from homeassistant.util import dt as dt_util
 
 from .const import (
@@ -239,10 +245,14 @@ class TibberPricesSensor(TibberPricesEntity, SensorEntity):
             "highest_price_today": lambda: self._get_statistics_value(stat_func=max, in_euro=False, decimals=2),
             "highest_price_today_eur": lambda: self._get_statistics_value(stat_func=max, in_euro=True, decimals=4),
             "average_price_today": lambda: self._get_statistics_value(
-                stat_func=lambda prices: sum(prices) / len(prices), in_euro=False, decimals=2
+                stat_func=lambda prices: sum(prices) / len(prices),
+                in_euro=False,
+                decimals=2,
             ),
             "average_price_today_eur": lambda: self._get_statistics_value(
-                stat_func=lambda prices: sum(prices) / len(prices), in_euro=True, decimals=4
+                stat_func=lambda prices: sum(prices) / len(prices),
+                in_euro=True,
+                decimals=4,
             ),
             # Rating sensors
             "price_rating": lambda: self._get_rating_value(rating_type="current"),
@@ -357,7 +367,11 @@ class TibberPricesSensor(TibberPricesEntity, SensorEntity):
         return None
 
     def _get_statistics_value(
-        self, *, stat_func: Callable[[list[float]], float], in_euro: bool, decimals: int | None = None
+        self,
+        *,
+        stat_func: Callable[[list[float]], float],
+        in_euro: bool,
+        decimals: int | None = None,
     ) -> float | None:
         """
         Handle statistics sensor values using the provided statistical function.
@@ -794,7 +808,10 @@ class TibberPricesSensor(TibberPricesEntity, SensorEntity):
         if self.entity_description.key == "price_level" and current_interval_data and "level" in current_interval_data:
             self._add_price_level_attributes(attributes, current_interval_data["level"])
 
-        if self.entity_description.key in ["next_interval_price", "next_interval_price_eur"]:
+        if self.entity_description.key in [
+            "next_interval_price",
+            "next_interval_price_eur",
+        ]:
             price_info = self.coordinator.data.get("priceInfo", {})
             now = dt_util.now()
             next_interval_time = now + timedelta(minutes=MINUTES_PER_INTERVAL)
@@ -815,7 +832,12 @@ class TibberPricesSensor(TibberPricesEntity, SensorEntity):
         attributes["level_id"] = level
 
     def _find_price_timestamp(
-        self, attributes: dict, price_info: Any, day_key: str, target_hour: int, target_date: date
+        self,
+        attributes: dict,
+        price_info: Any,
+        day_key: str,
+        target_hour: int,
+        target_date: date,
     ) -> None:
         """Find a price timestamp for a specific hour and date."""
         for price_data in price_info.get(day_key, []):
@@ -842,7 +864,12 @@ class TibberPricesSensor(TibberPricesEntity, SensorEntity):
             if hasattr(self, "_last_rating_level") and self._last_rating_level is not None:
                 attributes["level_id"] = self._last_rating_level
                 attributes["level_value"] = PRICE_RATING_MAPPING.get(self._last_rating_level, self._last_rating_level)
-        elif key in ["lowest_price_today", "lowest_price_today_eur", "highest_price_today", "highest_price_today_eur"]:
+        elif key in [
+            "lowest_price_today",
+            "lowest_price_today_eur",
+            "highest_price_today",
+            "highest_price_today_eur",
+        ]:
             # Use the timestamp from the interval that has the extreme price (already stored during value calculation)
             if hasattr(self, "_last_extreme_interval") and self._last_extreme_interval:
                 attributes["timestamp"] = self._last_extreme_interval.get("startsAt")

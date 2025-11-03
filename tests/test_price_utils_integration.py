@@ -2,7 +2,9 @@
 
 from datetime import datetime, timedelta
 
-from custom_components.tibber_prices.price_utils import enrich_price_info_with_differences
+from custom_components.tibber_prices.price_utils import (
+    enrich_price_info_with_differences,
+)
 from homeassistant.util import dt as dt_util
 
 # Constants for integration testing

@@ -2,6 +2,7 @@
   "name": "jpawlowski/hass.tibber_prices",
   "image": "mcr.microsoft.com/devcontainers/python:3.13",
   "postCreateCommand": "scripts/setup",
+  "postStartCommand": "scripts/motd",
   "containerEnv": {
     "PYTHONASYNCIODEBUG": "1"
   },

@@ -585,7 +585,11 @@ class TibberPricesBinarySensor(TibberPricesEntity, BinarySensorEntity):
 
                 # Add basic description
                 description = await async_get_entity_description(
-                    self.hass, "binary_sensor", self.entity_description.translation_key, language, "description"
+                    self.hass,
+                    "binary_sensor",
+                    self.entity_description.translation_key,
+                    language,
+                    "description",
                 )
                 if description:
                     attributes["description"] = description
@@ -611,7 +615,11 @@ class TibberPricesBinarySensor(TibberPricesEntity, BinarySensorEntity):
 
                     # Add usage tips if available
                     usage_tips = await async_get_entity_description(
-                        self.hass, "binary_sensor", self.entity_description.translation_key, language, "usage_tips"
+                        self.hass,
+                        "binary_sensor",
+                        self.entity_description.translation_key,
+                        language,
+                        "usage_tips",
                     )
                     if usage_tips:
                         attributes["usage_tips"] = usage_tips
@@ -649,7 +657,10 @@ class TibberPricesBinarySensor(TibberPricesEntity, BinarySensorEntity):
 
                 # Add basic description from cache
                 description = get_entity_description(
-                    "binary_sensor", self.entity_description.translation_key, language, "description"
+                    "binary_sensor",
+                    self.entity_description.translation_key,
+                    language,
+                    "description",
                 )
                 if description:
                     attributes["description"] = description
@@ -664,14 +675,20 @@ class TibberPricesBinarySensor(TibberPricesEntity, BinarySensorEntity):
                 if extended_descriptions:
                     # Add long description if available in cache
                     long_desc = get_entity_description(
-                        "binary_sensor", self.entity_description.translation_key, language, "long_description"
+                        "binary_sensor",
+                        self.entity_description.translation_key,
+                        language,
+                        "long_description",
                     )
                     if long_desc:
                         attributes["long_description"] = long_desc
 
                     # Add usage tips if available in cache
                     usage_tips = get_entity_description(
-                        "binary_sensor", self.entity_description.translation_key, language, "usage_tips"
+                        "binary_sensor",
+                        self.entity_description.translation_key,
+                        language,
+                        "usage_tips",
                     )
                     if usage_tips:
                         attributes["usage_tips"] = usage_tips

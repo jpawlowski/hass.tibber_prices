@@ -4,7 +4,9 @@ from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
 
-from custom_components.tibber_prices.coordinator import TibberPricesDataUpdateCoordinator
+from custom_components.tibber_prices.coordinator import (
+    TibberPricesDataUpdateCoordinator,
+)
 
 
 class TestBasicCoordinator:

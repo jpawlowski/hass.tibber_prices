@@ -1,38 +1,47 @@
-"""Diagnostics support for tibber_prices."""
+"""
+Diagnostics support for tibber_prices.
+
+Learn more about diagnostics:
+https://developers.home-assistant.io/docs/core/integration_diagnostics
+"""
 
 from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any
 
-from homeassistant.components.diagnostics import async_redact_data
-
-from .const import DOMAIN
-
 if TYPE_CHECKING:
-    from homeassistant.config_entries import ConfigEntry
     from homeassistant.core import HomeAssistant
 
-TO_REDACT = {"access_token"}
+    from .data import TibberPricesConfigEntry
 
 
-async def async_get_config_entry_diagnostics(hass: HomeAssistant, entry: ConfigEntry) -> dict[str, Any]:
+async def async_get_config_entry_diagnostics(
+    hass: HomeAssistant,  # noqa: ARG001
+    entry: TibberPricesConfigEntry,
+) -> dict[str, Any]:
     """Return diagnostics for a config entry."""
-    coordinator = hass.data[DOMAIN][entry.entry_id].coordinator
+    coordinator = entry.runtime_data.coordinator
 
     return {
-        "entry": async_redact_data(entry.as_dict(), TO_REDACT),
-        "coordinator_data": coordinator.data,
-        "last_update_success": coordinator.last_update_success,
-        "update_timestamps": {
-            "price": coordinator.last_price_update.isoformat() if coordinator.last_price_update else None,
-            "hourly_rating": coordinator.last_rating_update_hourly.isoformat()
-            if coordinator.last_rating_update_hourly
-            else None,
-            "daily_rating": coordinator.last_rating_update_daily.isoformat()
-            if coordinator.last_rating_update_daily
-            else None,
-            "monthly_rating": coordinator.last_rating_update_monthly.isoformat()
-            if coordinator.last_rating_update_monthly
-            else None,
+        "entry": {
+            "entry_id": entry.entry_id,
+            "version": entry.version,
+            "minor_version": entry.minor_version,
+            "domain": entry.domain,
+            "title": entry.title,
+            "state": str(entry.state),
+        },
+        "coordinator": {
+            "last_update_success": coordinator.last_update_success,
+            "update_interval": str(coordinator.update_interval),
+            "is_main_entry": coordinator.is_main_entry(),
+            "data": coordinator.data,
+            "update_timestamps": {
+                "price": coordinator._last_price_update.isoformat() if coordinator._last_price_update else None,  # noqa: SLF001
+                "user": coordinator._last_user_update.isoformat() if coordinator._last_user_update else None,  # noqa: SLF001
+            },
+        },
+        "error": {
+            "last_exception": str(coordinator.last_exception) if coordinator.last_exception else None,
         },
     }

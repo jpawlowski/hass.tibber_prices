@@ -5,7 +5,9 @@ from __future__ import annotations
 from datetime import UTC, datetime, timedelta
 from unittest.mock import Mock, patch
 
-from custom_components.tibber_prices.coordinator import TibberPricesDataUpdateCoordinator
+from custom_components.tibber_prices.coordinator import (
+    TibberPricesDataUpdateCoordinator,
+)
 
 # Constants for test validation
 INTERVALS_PER_DAY = 96

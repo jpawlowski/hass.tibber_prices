@@ -30,7 +30,10 @@ from .const import (
     DEFAULT_PRICE_RATING_THRESHOLD_LOW,
     DOMAIN,
 )
-from .price_utils import enrich_price_info_with_differences, find_price_data_for_interval
+from .price_utils import (
+    enrich_price_info_with_differences,
+    find_price_data_for_interval,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -377,7 +380,10 @@ class TibberPricesDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 self._cached_user_data = user_data
                 self._last_user_update = current_time
                 _LOGGER.debug("User data updated successfully")
-            except (TibberPricesApiClientError, TibberPricesApiClientCommunicationError) as ex:
+            except (
+                TibberPricesApiClientError,
+                TibberPricesApiClientCommunicationError,
+            ) as ex:
                 _LOGGER.warning("Failed to update user data: %s", ex)
 
     @callback

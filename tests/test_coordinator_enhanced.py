@@ -9,7 +9,9 @@ import pytest
 
 from custom_components.tibber_prices.api import TibberPricesApiClientCommunicationError
 from custom_components.tibber_prices.const import DOMAIN
-from custom_components.tibber_prices.coordinator import TibberPricesDataUpdateCoordinator
+from custom_components.tibber_prices.coordinator import (
+    TibberPricesDataUpdateCoordinator,
+)
 
 
 class TestEnhancedCoordinator:
@@ -63,7 +65,10 @@ class TestEnhancedCoordinator:
                 "custom_components.tibber_prices.coordinator.aiohttp_client.async_get_clientsession",
                 return_value=mock_session,
             ),
-            patch("custom_components.tibber_prices.coordinator.Store", return_value=mock_store),
+            patch(
+                "custom_components.tibber_prices.coordinator.Store",
+                return_value=mock_store,
+            ),
         ):
             coordinator = TibberPricesDataUpdateCoordinator(
                 hass=mock_hass,
@@ -88,7 +93,10 @@ class TestEnhancedCoordinator:
                 "custom_components.tibber_prices.coordinator.aiohttp_client.async_get_clientsession",
                 return_value=mock_session,
             ),
-            patch("custom_components.tibber_prices.coordinator.Store", return_value=mock_store),
+            patch(
+                "custom_components.tibber_prices.coordinator.Store",
+                return_value=mock_store,
+            ),
         ):
             main_coordinator = TibberPricesDataUpdateCoordinator(
                 hass=mock_hass,
@@ -112,7 +120,10 @@ class TestEnhancedCoordinator:
                 "custom_components.tibber_prices.coordinator.aiohttp_client.async_get_clientsession",
                 return_value=mock_session,
             ),
-            patch("custom_components.tibber_prices.coordinator.Store", return_value=mock_store),
+            patch(
+                "custom_components.tibber_prices.coordinator.Store",
+                return_value=mock_store,
+            ),
         ):
             sub_coordinator = TibberPricesDataUpdateCoordinator(
                 hass=mock_hass,

@@ -336,7 +336,10 @@ def _get_entry_and_data(hass: HomeAssistant, entry_id: str) -> tuple[Any, Any, d
     """Validate entry and extract coordinator and data."""
     if not entry_id:
         raise ServiceValidationError(translation_domain=DOMAIN, translation_key="missing_entry_id")
-    entry = next((e for e in hass.config_entries.async_entries(DOMAIN) if e.entry_id == entry_id), None)
+    entry = next(
+        (e for e in hass.config_entries.async_entries(DOMAIN) if e.entry_id == entry_id),
+        None,
+    )
     if not entry or not hasattr(entry, "runtime_data") or not entry.runtime_data:
         raise ServiceValidationError(translation_domain=DOMAIN, translation_key="invalid_entry_id")
     coordinator = entry.runtime_data.coordinator

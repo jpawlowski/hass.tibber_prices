@@ -16,7 +16,12 @@ from homeassistant.helpers.storage import Store
 from homeassistant.loader import async_get_loaded_integration
 
 from .api import TibberPricesApiClient
-from .const import DOMAIN, LOGGER, async_load_standard_translations, async_load_translations
+from .const import (
+    DOMAIN,
+    LOGGER,
+    async_load_standard_translations,
+    async_load_translations,
+)
 from .coordinator import STORAGE_VERSION, TibberPricesDataUpdateCoordinator
 from .data import TibberPricesData
 from .services import async_setup_services
@@ -88,7 +93,12 @@ async def async_unload_entry(
 
     # Unregister services if this was the last config entry
     if not hass.config_entries.async_entries(DOMAIN):
-        for service in ["get_price", "get_apexcharts_data", "get_apexcharts_yaml", "refresh_user_data"]:
+        for service in [
+            "get_price",
+            "get_apexcharts_data",
+            "get_apexcharts_yaml",
+            "refresh_user_data",
+        ]:
             if hass.services.has_service(DOMAIN, service):
                 hass.services.async_remove(DOMAIN, service)
 
