@@ -1,13 +1,19 @@
-#!/usr/bin/env bash
+#!/bin/sh
+
+# script/develop: Start Home Assistant in development mode
 
 set -e
 
 cd "$(dirname "$0")/.."
 
+if [ -z "$VIRTUAL_ENV" ]; then
+    . .venv/bin/activate
+fi
+
 # Create config dir if not present
-if [[ ! -d "${PWD}/config" ]]; then
-    mkdir -p "${PWD}/config"
-    hass --config "${PWD}/config" --script ensure_config
+if [ ! -d "${PWD}/config" ]; then
+        mkdir -p "${PWD}/config"
+        hass --config "${PWD}/config" --script ensure_config
 fi
 
 # Set the path to custom_components

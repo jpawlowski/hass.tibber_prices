@@ -10,14 +10,19 @@ echo "==> Updating system packages..."
 sudo apt-get update
 sudo apt-get upgrade -y
 
+rm -rf .venv/
+
 echo "==> Checking for uv..."
 if ! command -v uv >/dev/null 2>&1; then
   echo "UV not found, installing..."
   pipx install uv
 fi
 
+echo "==> Setting up Python environment..."
+uv venv && . .venv/bin/activate
+
 echo "==> Installing dependencies..."
-python3 -m pip install --requirement requirements.txt
+uv pip install --requirement requirements.txt
 
 echo "==> Installing pre-commit hooks..."
 pre-commit install
