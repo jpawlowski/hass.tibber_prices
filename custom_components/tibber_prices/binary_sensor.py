@@ -27,9 +27,13 @@ if TYPE_CHECKING:
 
 from .const import (
     CONF_BEST_PRICE_FLEX,
+    CONF_EXTENDED_DESCRIPTIONS,
     CONF_PEAK_PRICE_FLEX,
     DEFAULT_BEST_PRICE_FLEX,
+    DEFAULT_EXTENDED_DESCRIPTIONS,
     DEFAULT_PEAK_PRICE_FLEX,
+    async_get_entity_description,
+    get_entity_description,
 )
 
 MINUTES_PER_INTERVAL = 15
@@ -579,13 +583,6 @@ class TibberPricesBinarySensor(TibberPricesEntity, BinarySensorEntity):
                 # Get user's language preference
                 language = self.hass.config.language if self.hass.config.language else "en"
 
-                # Import async function to get descriptions
-                from .const import (
-                    CONF_EXTENDED_DESCRIPTIONS,
-                    DEFAULT_EXTENDED_DESCRIPTIONS,
-                    async_get_entity_description,
-                )
-
                 # Add basic description
                 description = await async_get_entity_description(
                     self.hass, "binary_sensor", self.entity_description.translation_key, language, "description"
@@ -649,13 +646,6 @@ class TibberPricesBinarySensor(TibberPricesEntity, BinarySensorEntity):
             if self.entity_description.translation_key and self.hass is not None:
                 # Get user's language preference
                 language = self.hass.config.language if self.hass.config.language else "en"
-
-                # Import synchronous function to get cached descriptions
-                from .const import (
-                    CONF_EXTENDED_DESCRIPTIONS,
-                    DEFAULT_EXTENDED_DESCRIPTIONS,
-                    get_entity_description,
-                )
 
                 # Add basic description from cache
                 description = get_entity_description(

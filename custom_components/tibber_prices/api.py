@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import asyncio
 import logging
+import re
 import socket
 from datetime import timedelta
 from enum import Enum
@@ -752,8 +753,6 @@ class TibberPricesApiClient:
 
     def _extract_retry_delay(self, error: Exception, retry: int) -> int:
         """Extract retry delay from rate limit error or use exponential backoff."""
-        import re
-
         error_msg = str(error)
 
         # Try to extract Retry-After value from error message

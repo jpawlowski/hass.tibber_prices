@@ -291,7 +291,7 @@ async def _refresh_user_data(call: ServiceCall) -> dict[str, Any]:
 
     # Get the entry and coordinator
     try:
-        entry, coordinator, _ = _get_entry_and_data(hass, entry_id)
+        _, coordinator, _ = _get_entry_and_data(hass, entry_id)
     except ServiceValidationError as ex:
         return {
             "success": False,
@@ -449,7 +449,7 @@ def _determine_now_and_simulation(
     return now, is_simulated
 
 
-def _select_intervals(
+def _select_intervals(  # noqa: PLR0912
     merged: list[dict], coordinator: Any, day: str, now: datetime, *, simulated: bool
 ) -> tuple[Any, Any, Any]:
     """Select previous, current, and next intervals for the given day and time."""

@@ -11,14 +11,14 @@ class TestBasicCoordinator:
     """Test basic coordinator functionality."""
 
     @pytest.fixture
-    def mock_hass(self):
+    def mock_hass(self) -> Mock:
         """Create a mock Home Assistant instance."""
         hass = Mock()
         hass.data = {}
         return hass
 
     @pytest.fixture
-    def mock_config_entry(self):
+    def mock_config_entry(self) -> Mock:
         """Create a mock config entry."""
         config_entry = Mock()
         config_entry.unique_id = "test_home_123"
@@ -27,12 +27,14 @@ class TestBasicCoordinator:
         return config_entry
 
     @pytest.fixture
-    def mock_session(self):
+    def mock_session(self) -> Mock:
         """Create a mock session."""
         return Mock()
 
     @pytest.fixture
-    def coordinator(self, mock_hass, mock_config_entry, mock_session):
+    def coordinator(
+        self, mock_hass: Mock, mock_config_entry: Mock, mock_session: Mock
+    ) -> TibberPricesDataUpdateCoordinator:
         """Create a coordinator instance."""
         with (
             patch(
@@ -48,34 +50,34 @@ class TestBasicCoordinator:
 
             return TibberPricesDataUpdateCoordinator(mock_hass, mock_config_entry)
 
-    def test_coordinator_creation(self, coordinator):
+    def test_coordinator_creation(self, coordinator: TibberPricesDataUpdateCoordinator) -> None:
         """Test that coordinator can be created."""
-        assert coordinator is not None
-        assert hasattr(coordinator, "get_current_interval_data")
-        assert hasattr(coordinator, "get_all_intervals")
-        assert hasattr(coordinator, "get_user_profile")
+        assert coordinator is not None  # noqa: S101
+        assert hasattr(coordinator, "get_current_interval_data")  # noqa: S101
+        assert hasattr(coordinator, "get_all_intervals")  # noqa: S101
+        assert hasattr(coordinator, "get_user_profile")  # noqa: S101
 
-    def test_is_main_entry(self, coordinator):
+    def test_is_main_entry(self, coordinator: TibberPricesDataUpdateCoordinator) -> None:
         """Test main entry detection."""
         # First coordinator should be main entry
-        assert coordinator.is_main_entry() is True
+        assert coordinator.is_main_entry() is True  # noqa: S101
 
-    def test_get_user_profile_no_data(self, coordinator):
+    def test_get_user_profile_no_data(self, coordinator: TibberPricesDataUpdateCoordinator) -> None:
         """Test getting user profile when no data is cached."""
         profile = coordinator.get_user_profile()
-        assert profile == {"last_updated": None, "cached_user_data": False}
+        assert profile == {"last_updated": None, "cached_user_data": False}  # noqa: S101
 
-    def test_get_user_homes_no_data(self, coordinator):
+    def test_get_user_homes_no_data(self, coordinator: TibberPricesDataUpdateCoordinator) -> None:
         """Test getting user homes when no data is cached."""
         homes = coordinator.get_user_homes()
-        assert homes == []
+        assert homes == []  # noqa: S101
 
-    def test_get_current_interval_data_no_data(self, coordinator):
+    def test_get_current_interval_data_no_data(self, coordinator: TibberPricesDataUpdateCoordinator) -> None:
         """Test getting current interval data when no data is available."""
         current_data = coordinator.get_current_interval_data()
-        assert current_data is None
+        assert current_data is None  # noqa: S101
 
-    def test_get_all_intervals_no_data(self, coordinator):
+    def test_get_all_intervals_no_data(self, coordinator: TibberPricesDataUpdateCoordinator) -> None:
         """Test getting all intervals when no data is available."""
         intervals = coordinator.get_all_intervals()
-        assert intervals == []
+        assert intervals == []  # noqa: S101

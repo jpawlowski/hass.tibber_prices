@@ -2,10 +2,12 @@
 
 from __future__ import annotations
 
+import asyncio
 from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
 
+from custom_components.tibber_prices.api import TibberPricesApiClientCommunicationError
 from custom_components.tibber_prices.const import DOMAIN
 from custom_components.tibber_prices.coordinator import TibberPricesDataUpdateCoordinator
 
@@ -25,8 +27,6 @@ class TestEnhancedCoordinator:
     @pytest.fixture
     def mock_hass(self) -> Mock:
         """Create a mock Home Assistant instance."""
-        import asyncio
-
         hass = Mock()
         hass.data = {}
         # Mock the event loop for time tracking
@@ -96,7 +96,7 @@ class TestEnhancedCoordinator:
             )
 
         # Verify main coordinator is marked as main entry
-        assert main_coordinator.is_main_entry()
+        assert main_coordinator.is_main_entry()  # noqa: S101
 
         # Create subentry coordinator
         sub_config_entry = Mock()
@@ -120,7 +120,7 @@ class TestEnhancedCoordinator:
             )
 
         # Verify subentry coordinator is not marked as main entry
-        assert not sub_coordinator.is_main_entry()
+        assert not sub_coordinator.is_main_entry()  # noqa: S101
 
     @pytest.mark.asyncio
     async def test_user_data_functionality(self, coordinator: TibberPricesDataUpdateCoordinator) -> None:
@@ -136,17 +136,17 @@ class TestEnhancedCoordinator:
 
         # Test refresh user data
         result = await coordinator.refresh_user_data()
-        assert result
+        assert result  # noqa: S101
 
         # Test get user profile
         profile = coordinator.get_user_profile()
-        assert isinstance(profile, dict)
-        assert "last_updated" in profile
-        assert "cached_user_data" in profile
+        assert isinstance(profile, dict)  # noqa: S101
+        assert "last_updated" in profile  # noqa: S101
+        assert "cached_user_data" in profile  # noqa: S101
 
         # Test get user homes
         homes = coordinator.get_user_homes()
-        assert isinstance(homes, list)
+        assert isinstance(homes, list)  # noqa: S101
 
     @pytest.mark.asyncio
     async def test_data_update_with_multi_home_response(self, coordinator: TibberPricesDataUpdateCoordinator) -> None:
@@ -185,19 +185,17 @@ class TestEnhancedCoordinator:
         await coordinator.async_refresh()
 
         # Verify coordinator has data
-        assert coordinator.data is not None
-        assert "priceInfo" in coordinator.data
-        assert "priceRating" in coordinator.data
+        assert coordinator.data is not None  # noqa: S101
+        assert "priceInfo" in coordinator.data  # noqa: S101
+        assert "priceRating" in coordinator.data  # noqa: S101
 
         # Test public API methods work
         intervals = coordinator.get_all_intervals()
-        assert isinstance(intervals, list)
+        assert isinstance(intervals, list)  # noqa: S101
 
     @pytest.mark.asyncio
     async def test_error_handling_with_cache_fallback(self, coordinator: TibberPricesDataUpdateCoordinator) -> None:
         """Test error handling with fallback to cached data."""
-        from custom_components.tibber_prices.api import TibberPricesApiClientCommunicationError
-
         # Set up cached data using the store mechanism
         test_cached_data = {
             "timestamp": "2025-05-25T00:00:00Z",
@@ -212,7 +210,7 @@ class TestEnhancedCoordinator:
         }
 
         # Mock store to return cached data
-        coordinator._store.async_load = AsyncMock(
+        coordinator._store.async_load = AsyncMock(  # noqa: SLF001
             return_value={
                 "price_data": test_cached_data,
                 "user_data": None,
@@ -222,7 +220,7 @@ class TestEnhancedCoordinator:
         )
 
         # Load the cache
-        await coordinator._load_cache()
+        await coordinator._load_cache()  # noqa: SLF001
 
         # Mock API to raise communication error
         coordinator.api.async_get_price_info = AsyncMock(
@@ -233,7 +231,7 @@ class TestEnhancedCoordinator:
         await coordinator.async_refresh()
 
         # Verify coordinator has fallback data
-        assert coordinator.data is not None
+        assert coordinator.data is not None  # noqa: S101
 
     @pytest.mark.asyncio
     async def test_cache_persistence(self, coordinator: TibberPricesDataUpdateCoordinator) -> None:
@@ -252,4 +250,4 @@ class TestEnhancedCoordinator:
         await coordinator.async_refresh()
 
         # Verify data was cached (store should have been called)
-        coordinator._store.async_save.assert_called()
+        coordinator._store.async_save.assert_called()  # noqa: SLF001
