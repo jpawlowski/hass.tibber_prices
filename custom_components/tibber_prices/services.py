@@ -18,6 +18,7 @@ from .api import (
     TibberPricesApiClientCommunicationError,
     TibberPricesApiClientError,
 )
+from .average_utils import calculate_leading_24h_avg, calculate_trailing_24h_avg
 from .const import (
     DOMAIN,
     PRICE_LEVEL_CHEAP,
@@ -127,6 +128,9 @@ async def _get_price(call: ServiceCall) -> dict[str, Any]:
 
     # Add end_time to intervals
     _annotate_end_times(prices_transformed, price_info_data, day_key)
+
+    # Enrich intervals with trailing and leading averages
+    _enrich_intervals_with_averages(prices_transformed, price_info_data)
 
     # Clean up temp fields from all intervals
     for interval in prices_transformed:
@@ -392,6 +396,37 @@ def _annotate_end_times(merged: list[dict], price_info_by_day: dict, day: str) -
                 interval["end_time"] = first_of_next.get("startsAt")
             else:
                 interval["end_time"] = None
+
+
+def _enrich_intervals_with_averages(intervals: list[dict], price_info_by_day: dict) -> None:
+    """Enrich intervals with trailing and leading 24-hour average prices."""
+    # Collect all price data from yesterday, today, and tomorrow
+    all_prices = []
+    for day in ["yesterday", "today", "tomorrow"]:
+        all_prices.extend(price_info_by_day.get(day, []))
+
+    if not all_prices:
+        return
+
+    # Enrich each interval with trailing and leading averages
+    for interval in intervals:
+        start_dt = interval.get("start_dt")
+        if not start_dt:
+            continue
+
+        # Ensure start_dt is timezone-aware
+        if start_dt.tzinfo is None:
+            start_dt = dt_util.as_local(start_dt)
+
+        # Calculate trailing and leading averages for this interval
+        trailing_avg = calculate_trailing_24h_avg(all_prices, start_dt)
+        leading_avg = calculate_leading_24h_avg(all_prices, start_dt)
+
+        # Add to interval
+        interval["trailing_price_average"] = round(trailing_avg, 4)
+        interval["trailing_price_average_minor"] = round(trailing_avg * 100, 2)
+        interval["leading_price_average"] = round(leading_avg, 4)
+        interval["leading_price_average_minor"] = round(leading_avg * 100, 2)
 
 
 def _get_price_stats(merged: list[dict]) -> PriceStats:

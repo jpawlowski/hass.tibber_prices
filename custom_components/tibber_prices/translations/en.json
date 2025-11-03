@@ -95,41 +95,86 @@
     },
     "entity": {
         "sensor": {
-            "current_price": {
-                "name": "Current Electricity Price"
-            },
             "current_price_cents": {
                 "name": "Current Electricity Price"
             },
-            "next_interval_price": {
-                "name": "Next Interval Electricity Price"
-            },
             "next_interval_price_cents": {
-                "name": "Next Interval Electricity Price"
+                "name": "Next Price"
+            },
+            "previous_interval_price_cents": {
+                "name": "Previous Electricity Price"
+            },
+            "current_hour_average_cents": {
+                "name": "Current Hour Average Price"
+            },
+            "next_hour_average_cents": {
+                "name": "Next Hour Average Price"
             },
             "price_level": {
                 "name": "Current Price Level"
             },
-            "lowest_price_today": {
-                "name": "Today's Lowest Price"
+            "next_interval_price_level": {
+                "name": "Next Price Level"
+            },
+            "previous_interval_price_level": {
+                "name": "Previous Price Level"
+            },
+            "current_hour_price_level": {
+                "name": "Current Hour Price Level"
+            },
+            "next_hour_price_level": {
+                "name": "Next Hour Price Level"
             },
             "lowest_price_today_cents": {
                 "name": "Today's Lowest Price"
             },
-            "highest_price_today": {
-                "name": "Today's Highest Price"
-            },
             "highest_price_today_cents": {
                 "name": "Today's Highest Price"
-            },
-            "average_price_today": {
-                "name": "Today's Average Price"
             },
             "average_price_today_cents": {
                 "name": "Today's Average Price"
             },
+            "lowest_price_tomorrow_cents": {
+                "name": "Tomorrow's Lowest Price"
+            },
+            "highest_price_tomorrow_cents": {
+                "name": "Tomorrow's Highest Price"
+            },
+            "average_price_tomorrow_cents": {
+                "name": "Tomorrow's Average Price"
+            },
+            "trailing_price_average_cents": {
+                "name": "Trailing 24h Average Price"
+            },
+            "leading_price_average_cents": {
+                "name": "Leading 24h Average Price"
+            },
+            "trailing_price_min_cents": {
+                "name": "Trailing 24h Minimum Price"
+            },
+            "trailing_price_max_cents": {
+                "name": "Trailing 24h Maximum Price"
+            },
+            "leading_price_min_cents": {
+                "name": "Leading 24h Minimum Price"
+            },
+            "leading_price_max_cents": {
+                "name": "Leading 24h Maximum Price"
+            },
             "price_rating": {
                 "name": "Current Price Rating"
+            },
+            "next_interval_price_rating": {
+                "name": "Next Price Rating"
+            },
+            "previous_interval_price_rating": {
+                "name": "Previous Price Rating"
+            },
+            "current_hour_price_rating": {
+                "name": "Current Hour Price Rating"
+            },
+            "next_hour_price_rating": {
+                "name": "Next Hour Price Rating"
             },
             "daily_rating": {
                 "name": "Daily Price Rating"

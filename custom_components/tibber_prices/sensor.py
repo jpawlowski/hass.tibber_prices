@@ -19,9 +19,23 @@ from homeassistant.const import (
 )
 from homeassistant.util import dt as dt_util
 
+from .average_utils import (
+    calculate_current_leading_avg,
+    calculate_current_leading_max,
+    calculate_current_leading_min,
+    calculate_current_rolling_5interval_avg,
+    calculate_current_trailing_avg,
+    calculate_current_trailing_max,
+    calculate_current_trailing_min,
+    calculate_next_hour_rolling_5interval_avg,
+)
 from .const import (
     CONF_EXTENDED_DESCRIPTIONS,
+    CONF_PRICE_RATING_THRESHOLD_HIGH,
+    CONF_PRICE_RATING_THRESHOLD_LOW,
     DEFAULT_EXTENDED_DESCRIPTIONS,
+    DEFAULT_PRICE_RATING_THRESHOLD_HIGH,
+    DEFAULT_PRICE_RATING_THRESHOLD_LOW,
     DOMAIN,
     PRICE_LEVEL_MAPPING,
     PRICE_RATING_MAPPING,
@@ -30,7 +44,12 @@ from .const import (
     get_price_level_translation,
 )
 from .entity import TibberPricesEntity
-from .price_utils import find_price_data_for_interval
+from .price_utils import (
+    MINUTES_PER_INTERVAL,
+    aggregate_price_levels,
+    aggregate_price_rating,
+    find_price_data_for_interval,
+)
 
 if TYPE_CHECKING:
     from collections.abc import Callable
@@ -46,7 +65,6 @@ PRICE_UNIT_MINOR = "ct/" + UnitOfPower.KILO_WATT + UnitOfTime.HOURS
 HOURS_IN_DAY = 24
 LAST_HOUR_OF_DAY = 23
 INTERVALS_PER_HOUR = 4  # 15-minute intervals
-MINUTES_PER_INTERVAL = 15
 MAX_FORECAST_INTERVALS = 8  # Show up to 8 future intervals (2 hours with 15-min intervals)
 
 # Main price sensors that users will typically use in automations
@@ -58,41 +76,74 @@ PRICE_SENSORS = (
         icon="mdi:currency-eur",
         device_class=SensorDeviceClass.MONETARY,
         native_unit_of_measurement=PRICE_UNIT_MINOR,
-        suggested_display_precision=1,
-    ),
-    SensorEntityDescription(
-        key="current_price_eur",
-        translation_key="current_price",
-        name="Current Electricity Price",
-        icon="mdi:currency-eur",
-        device_class=SensorDeviceClass.MONETARY,
-        native_unit_of_measurement=PRICE_UNIT,
-        entity_registry_enabled_default=False,
         suggested_display_precision=2,
     ),
     SensorEntityDescription(
         key="next_interval_price",
         translation_key="next_interval_price_cents",
-        name="Next Interval Electricity Price",
+        name="Next Price",
         icon="mdi:currency-eur-off",
+        device_class=SensorDeviceClass.MONETARY,
+        native_unit_of_measurement=PRICE_UNIT_MINOR,
+        suggested_display_precision=2,
+    ),
+    SensorEntityDescription(
+        key="previous_interval_price",
+        translation_key="previous_interval_price_cents",
+        name="Previous Electricity Price",
+        icon="mdi:currency-eur-off",
+        device_class=SensorDeviceClass.MONETARY,
+        native_unit_of_measurement=PRICE_UNIT_MINOR,
+        entity_registry_enabled_default=False,
+        suggested_display_precision=2,
+    ),
+    SensorEntityDescription(
+        key="current_hour_average",
+        translation_key="current_hour_average_cents",
+        name="Current Hour Average Price",
+        icon="mdi:currency-eur",
         device_class=SensorDeviceClass.MONETARY,
         native_unit_of_measurement=PRICE_UNIT_MINOR,
         suggested_display_precision=1,
     ),
     SensorEntityDescription(
-        key="next_interval_price_eur",
-        translation_key="next_interval_price",
-        name="Next Interval Electricity Price",
-        icon="mdi:currency-eur-off",
+        key="next_hour_average",
+        translation_key="next_hour_average_cents",
+        name="Next Hour Average Price",
+        icon="mdi:cash",
         device_class=SensorDeviceClass.MONETARY,
-        native_unit_of_measurement=PRICE_UNIT,
-        entity_registry_enabled_default=False,
-        suggested_display_precision=2,
+        native_unit_of_measurement=PRICE_UNIT_MINOR,
+        suggested_display_precision=1,
     ),
     SensorEntityDescription(
         key="price_level",
         translation_key="price_level",
         name="Current Price Level",
+        icon="mdi:meter-electric",
+    ),
+    SensorEntityDescription(
+        key="next_interval_price_level",
+        translation_key="next_interval_price_level",
+        name="Next Price Level",
+        icon="mdi:meter-electric",
+    ),
+    SensorEntityDescription(
+        key="previous_interval_price_level",
+        translation_key="previous_interval_price_level",
+        name="Previous Price Level",
+        icon="mdi:meter-electric",
+        entity_registry_enabled_default=False,
+    ),
+    SensorEntityDescription(
+        key="current_hour_price_level",
+        translation_key="current_hour_price_level",
+        name="Current Hour Price Level",
+        icon="mdi:meter-electric",
+    ),
+    SensorEntityDescription(
+        key="next_hour_price_level",
+        translation_key="next_hour_price_level",
+        name="Next Hour Price Level",
         icon="mdi:meter-electric",
     ),
 )
@@ -103,58 +154,112 @@ STATISTICS_SENSORS = (
         key="lowest_price_today",
         translation_key="lowest_price_today_cents",
         name="Today's Lowest Price",
-        icon="mdi:currency-eur",
+        icon="mdi:arrow-collapse-down",
         device_class=SensorDeviceClass.MONETARY,
         native_unit_of_measurement=PRICE_UNIT_MINOR,
         suggested_display_precision=1,
-    ),
-    SensorEntityDescription(
-        key="lowest_price_today_eur",
-        translation_key="lowest_price_today",
-        name="Today's Lowest Price",
-        icon="mdi:currency-eur",
-        device_class=SensorDeviceClass.MONETARY,
-        native_unit_of_measurement=PRICE_UNIT,
-        entity_registry_enabled_default=False,
-        suggested_display_precision=2,
     ),
     SensorEntityDescription(
         key="highest_price_today",
         translation_key="highest_price_today_cents",
         name="Today's Highest Price",
-        icon="mdi:currency-eur",
+        icon="mdi:arrow-collapse-up",
         device_class=SensorDeviceClass.MONETARY,
         native_unit_of_measurement=PRICE_UNIT_MINOR,
         suggested_display_precision=1,
-    ),
-    SensorEntityDescription(
-        key="highest_price_today_eur",
-        translation_key="highest_price_today",
-        name="Today's Highest Price",
-        icon="mdi:currency-eur",
-        device_class=SensorDeviceClass.MONETARY,
-        native_unit_of_measurement=PRICE_UNIT,
-        entity_registry_enabled_default=False,
-        suggested_display_precision=2,
     ),
     SensorEntityDescription(
         key="average_price_today",
         translation_key="average_price_today_cents",
         name="Today's Average Price",
-        icon="mdi:currency-eur",
+        icon="mdi:chart-line",
         device_class=SensorDeviceClass.MONETARY,
         native_unit_of_measurement=PRICE_UNIT_MINOR,
         suggested_display_precision=1,
     ),
     SensorEntityDescription(
-        key="average_price_today_eur",
-        translation_key="average_price_today",
-        name="Today's Average Price",
-        icon="mdi:currency-eur",
+        key="lowest_price_tomorrow",
+        translation_key="lowest_price_tomorrow_cents",
+        name="Tomorrow's Lowest Price",
+        icon="mdi:arrow-collapse-down",
         device_class=SensorDeviceClass.MONETARY,
-        native_unit_of_measurement=PRICE_UNIT,
+        native_unit_of_measurement=PRICE_UNIT_MINOR,
+        suggested_display_precision=1,
+    ),
+    SensorEntityDescription(
+        key="highest_price_tomorrow",
+        translation_key="highest_price_tomorrow_cents",
+        name="Tomorrow's Highest Price",
+        icon="mdi:arrow-collapse-up",
+        device_class=SensorDeviceClass.MONETARY,
+        native_unit_of_measurement=PRICE_UNIT_MINOR,
+        suggested_display_precision=1,
+    ),
+    SensorEntityDescription(
+        key="average_price_tomorrow",
+        translation_key="average_price_tomorrow_cents",
+        name="Tomorrow's Average Price",
+        icon="mdi:chart-line",
+        device_class=SensorDeviceClass.MONETARY,
+        native_unit_of_measurement=PRICE_UNIT_MINOR,
+        suggested_display_precision=1,
+    ),
+    SensorEntityDescription(
+        key="trailing_price_average",
+        translation_key="trailing_price_average_cents",
+        name="Trailing 24h Average Price",
+        icon="mdi:chart-line",
+        device_class=SensorDeviceClass.MONETARY,
+        native_unit_of_measurement=PRICE_UNIT_MINOR,
         entity_registry_enabled_default=False,
-        suggested_display_precision=2,
+        suggested_display_precision=1,
+    ),
+    SensorEntityDescription(
+        key="leading_price_average",
+        translation_key="leading_price_average_cents",
+        name="Leading 24h Average Price",
+        icon="mdi:chart-line-variant",
+        device_class=SensorDeviceClass.MONETARY,
+        native_unit_of_measurement=PRICE_UNIT_MINOR,
+        suggested_display_precision=1,
+    ),
+    SensorEntityDescription(
+        key="trailing_price_min",
+        translation_key="trailing_price_min_cents",
+        name="Trailing 24h Minimum Price",
+        icon="mdi:arrow-collapse-down",
+        device_class=SensorDeviceClass.MONETARY,
+        native_unit_of_measurement=PRICE_UNIT_MINOR,
+        entity_registry_enabled_default=False,
+        suggested_display_precision=1,
+    ),
+    SensorEntityDescription(
+        key="trailing_price_max",
+        translation_key="trailing_price_max_cents",
+        name="Trailing 24h Maximum Price",
+        icon="mdi:arrow-collapse-up",
+        device_class=SensorDeviceClass.MONETARY,
+        native_unit_of_measurement=PRICE_UNIT_MINOR,
+        entity_registry_enabled_default=False,
+        suggested_display_precision=1,
+    ),
+    SensorEntityDescription(
+        key="leading_price_min",
+        translation_key="leading_price_min_cents",
+        name="Leading 24h Minimum Price",
+        icon="mdi:arrow-collapse-down",
+        device_class=SensorDeviceClass.MONETARY,
+        native_unit_of_measurement=PRICE_UNIT_MINOR,
+        suggested_display_precision=1,
+    ),
+    SensorEntityDescription(
+        key="leading_price_max",
+        translation_key="leading_price_max_cents",
+        name="Leading 24h Maximum Price",
+        icon="mdi:arrow-collapse-up",
+        device_class=SensorDeviceClass.MONETARY,
+        native_unit_of_measurement=PRICE_UNIT_MINOR,
+        suggested_display_precision=1,
     ),
 )
 
@@ -164,6 +269,31 @@ RATING_SENSORS = (
         key="price_rating",
         translation_key="price_rating",
         name="Current Price Rating",
+        icon="mdi:clock-outline",
+    ),
+    SensorEntityDescription(
+        key="next_interval_price_rating",
+        translation_key="next_interval_price_rating",
+        name="Next Price Rating",
+        icon="mdi:clock-outline",
+    ),
+    SensorEntityDescription(
+        key="previous_interval_price_rating",
+        translation_key="previous_interval_price_rating",
+        name="Previous Price Rating",
+        icon="mdi:clock-outline",
+        entity_registry_enabled_default=False,
+    ),
+    SensorEntityDescription(
+        key="current_hour_price_rating",
+        translation_key="current_hour_price_rating",
+        name="Current Hour Price Rating",
+        icon="mdi:clock-outline",
+    ),
+    SensorEntityDescription(
+        key="next_hour_price_rating",
+        translation_key="next_hour_price_rating",
+        name="Next Hour Price Rating",
         icon="mdi:clock-outline",
     ),
 )
@@ -232,30 +362,84 @@ class TibberPricesSensor(TibberPricesEntity, SensorEntity):
 
         # Map sensor keys to their handler methods
         handlers = {
-            # Price level
+            # Price level sensors
             "price_level": self._get_price_level_value,
+            "next_interval_price_level": lambda: self._get_interval_level_value(interval_offset=1),
+            "previous_interval_price_level": lambda: self._get_interval_level_value(interval_offset=-1),
+            "current_hour_price_level": lambda: self._get_rolling_hour_level_value(hour_offset=0),
+            "next_hour_price_level": lambda: self._get_rolling_hour_level_value(hour_offset=1),
             # Price sensors
             "current_price": lambda: self._get_interval_price_value(interval_offset=0, in_euro=False),
-            "current_price_eur": lambda: self._get_interval_price_value(interval_offset=0, in_euro=True),
             "next_interval_price": lambda: self._get_interval_price_value(interval_offset=1, in_euro=False),
-            "next_interval_price_eur": lambda: self._get_interval_price_value(interval_offset=1, in_euro=True),
+            "previous_interval_price": lambda: self._get_interval_price_value(interval_offset=-1, in_euro=False),
+            # Rolling hour average (5 intervals: 2 before + current + 2 after)
+            "current_hour_average": lambda: self._get_rolling_hour_average_value(
+                in_euro=False, decimals=2, hour_offset=0
+            ),
+            "next_hour_average": lambda: self._get_rolling_hour_average_value(in_euro=False, decimals=2, hour_offset=1),
             # Statistics sensors
             "lowest_price_today": lambda: self._get_statistics_value(stat_func=min, in_euro=False, decimals=2),
-            "lowest_price_today_eur": lambda: self._get_statistics_value(stat_func=min, in_euro=True, decimals=4),
             "highest_price_today": lambda: self._get_statistics_value(stat_func=max, in_euro=False, decimals=2),
-            "highest_price_today_eur": lambda: self._get_statistics_value(stat_func=max, in_euro=True, decimals=4),
             "average_price_today": lambda: self._get_statistics_value(
                 stat_func=lambda prices: sum(prices) / len(prices),
                 in_euro=False,
                 decimals=2,
             ),
-            "average_price_today_eur": lambda: self._get_statistics_value(
+            # Tomorrow statistics sensors
+            "lowest_price_tomorrow": lambda: self._get_statistics_value(
+                stat_func=min, in_euro=False, decimals=2, day="tomorrow"
+            ),
+            "highest_price_tomorrow": lambda: self._get_statistics_value(
+                stat_func=max, in_euro=False, decimals=2, day="tomorrow"
+            ),
+            "average_price_tomorrow": lambda: self._get_statistics_value(
                 stat_func=lambda prices: sum(prices) / len(prices),
-                in_euro=True,
-                decimals=4,
+                in_euro=False,
+                decimals=2,
+                day="tomorrow",
+            ),
+            # Trailing and leading average sensors
+            "trailing_price_average": lambda: self._get_average_value(
+                average_type="trailing",
+                in_euro=False,
+                decimals=2,
+            ),
+            "leading_price_average": lambda: self._get_average_value(
+                average_type="leading",
+                in_euro=False,
+                decimals=2,
+            ),
+            # Trailing and leading min/max sensors
+            "trailing_price_min": lambda: self._get_minmax_value(
+                stat_type="trailing",
+                func_type="min",
+                in_euro=False,
+                decimals=2,
+            ),
+            "trailing_price_max": lambda: self._get_minmax_value(
+                stat_type="trailing",
+                func_type="max",
+                in_euro=False,
+                decimals=2,
+            ),
+            "leading_price_min": lambda: self._get_minmax_value(
+                stat_type="leading",
+                func_type="min",
+                in_euro=False,
+                decimals=2,
+            ),
+            "leading_price_max": lambda: self._get_minmax_value(
+                stat_type="leading",
+                func_type="max",
+                in_euro=False,
+                decimals=2,
             ),
             # Rating sensors
             "price_rating": lambda: self._get_rating_value(rating_type="current"),
+            "next_interval_price_rating": lambda: self._get_interval_rating_value(interval_offset=1),
+            "previous_interval_price_rating": lambda: self._get_interval_rating_value(interval_offset=-1),
+            "current_hour_price_rating": lambda: self._get_rolling_hour_rating_value(hour_offset=0),
+            "next_hour_price_rating": lambda: self._get_rolling_hour_rating_value(hour_offset=1),
             # Diagnostic sensors
             "data_timestamp": self._get_data_timestamp,
             # Price forecast sensor
@@ -285,6 +469,106 @@ class TibberPricesSensor(TibberPricesEntity, SensorEntity):
                 fallback = get_price_level_translation(level, "en")
                 if fallback:
                     return fallback
+        return level
+
+    def _get_interval_level_value(self, *, interval_offset: int) -> str | None:
+        """Get price level for an interval with offset (e.g., next or previous interval)."""
+        if not self.coordinator.data:
+            return None
+
+        price_info = self.coordinator.data.get("priceInfo", {})
+        now = dt_util.now()
+        target_time = now + timedelta(minutes=MINUTES_PER_INTERVAL * interval_offset)
+
+        interval_data = find_price_data_for_interval(price_info, target_time)
+        if not interval_data or "level" not in interval_data:
+            return None
+
+        level = interval_data["level"]
+        # Translate the level
+        if self.hass:
+            language = self.hass.config.language or "en"
+            translated = get_price_level_translation(level, language)
+            if translated:
+                return translated
+            if language != "en":
+                fallback = get_price_level_translation(level, "en")
+                if fallback:
+                    return fallback
+        return level
+
+    def _get_rolling_hour_level_value(self, *, hour_offset: int) -> str | None:
+        """Get aggregated price level for a 5-interval rolling window."""
+        if not self.coordinator.data:
+            return None
+
+        price_info = self.coordinator.data.get("priceInfo", {})
+        yesterday_prices = price_info.get("yesterday", [])
+        today_prices = price_info.get("today", [])
+        tomorrow_prices = price_info.get("tomorrow", [])
+
+        all_prices = yesterday_prices + today_prices + tomorrow_prices
+        if not all_prices:
+            return None
+
+        center_idx = self._find_rolling_hour_center_index(all_prices, hour_offset)
+        if center_idx is None:
+            return None
+
+        levels = self._collect_rolling_window_levels(all_prices, center_idx)
+        if not levels:
+            return None
+
+        aggregated_level = aggregate_price_levels(levels)
+        return self._translate_level(aggregated_level)
+
+    def _find_rolling_hour_center_index(self, all_prices: list, hour_offset: int) -> int | None:
+        """Find the center index for the rolling hour window."""
+        now = dt_util.now()
+        current_idx = None
+
+        for idx, price_data in enumerate(all_prices):
+            starts_at = dt_util.parse_datetime(price_data["startsAt"])
+            if starts_at is None:
+                continue
+            starts_at = dt_util.as_local(starts_at)
+            interval_end = starts_at + timedelta(minutes=15)
+
+            if starts_at <= now < interval_end:
+                current_idx = idx
+                break
+
+        if current_idx is None:
+            return None
+
+        return current_idx + (hour_offset * 4)
+
+    def _collect_rolling_window_levels(self, all_prices: list, center_idx: int) -> list:
+        """Collect levels from 2 intervals before to 2 intervals after."""
+        levels = []
+        for offset in range(-2, 3):  # -2, -1, 0, 1, 2
+            idx = center_idx + offset
+            if 0 <= idx < len(all_prices):
+                level = all_prices[idx].get("level")
+                if level is not None:
+                    levels.append(level)
+        return levels
+
+    def _translate_level(self, level: str) -> str:
+        """Translate the level to the user's language."""
+        if not self.hass:
+            return level
+
+        language = self.hass.config.language or "en"
+        translated = get_price_level_translation(level, language)
+        if translated:
+            return translated
+
+        if language != "en":
+            fallback = get_price_level_translation(level, "en")
+            if fallback:
+                return fallback
+
         return level
 
     def _get_price_value(self, price: float, *, in_euro: bool) -> float:
@@ -372,9 +656,16 @@ class TibberPricesSensor(TibberPricesEntity, SensorEntity):
         stat_func: Callable[[list[float]], float],
         in_euro: bool,
         decimals: int | None = None,
+        day: str = "today",
     ) -> float | None:
         """
         Handle statistics sensor values using the provided statistical function.
+
+        Args:
+            stat_func: The statistical function to apply (min, max, avg, etc.)
+            in_euro: Whether to return the value in euros (True) or cents (False)
+            decimals: Number of decimal places to round to
+            day: Which day to calculate for - "today" or "tomorrow"
 
         Returns:
             The calculated value for the statistics sensor, or None if unavailable.
@@ -385,11 +676,13 @@ class TibberPricesSensor(TibberPricesEntity, SensorEntity):
 
         price_info = self.coordinator.data.get("priceInfo", {})
 
-        # Get local midnight boundaries
+        # Get local midnight boundaries based on the requested day
         local_midnight = dt_util.as_local(dt_util.start_of_local_day(dt_util.now()))
-        local_midnight_tomorrow = local_midnight + timedelta(days=1)
+        if day == "tomorrow":
+            local_midnight = local_midnight + timedelta(days=1)
+        local_midnight_next_day = local_midnight + timedelta(days=1)
 
-        # Collect all prices and their intervals from both today and tomorrow data that fall within local today
+        # Collect all prices and their intervals from both today and tomorrow data that fall within the target day
         price_intervals = []
         for day_key in ["today", "tomorrow"]:
             for price_data in price_info.get(day_key, []):
@@ -404,8 +697,8 @@ class TibberPricesSensor(TibberPricesEntity, SensorEntity):
                 # Convert to local timezone for comparison
                 starts_at = dt_util.as_local(starts_at)
 
-                # Include price if it starts within today's local date boundaries
-                if local_midnight <= starts_at < local_midnight_tomorrow:
+                # Include price if it starts within the target day's local date boundaries
+                if local_midnight <= starts_at < local_midnight_next_day:
                     total_price = price_data.get("total")
                     if total_price is not None:
                         price_intervals.append(
@@ -427,6 +720,121 @@ class TibberPricesSensor(TibberPricesEntity, SensorEntity):
             if pi["price"] == value:
                 self._last_extreme_interval = pi["interval"]
                 break
+
+        result = self._get_price_value(value, in_euro=in_euro)
+
+        if decimals is not None:
+            result = round(result, decimals)
+        return result
+
+    def _get_average_value(
+        self,
+        *,
+        average_type: str,
+        in_euro: bool,
+        decimals: int | None = None,
+    ) -> float | None:
+        """
+        Get trailing or leading 24-hour average price.
+
+        Args:
+            average_type: Either "trailing" or "leading"
+            in_euro: If True, return value in euros; if False, return in cents
+            decimals: Number of decimal places to round to, or None for no rounding
+
+        Returns:
+            The calculated average value, or None if unavailable
+
+        """
+        if average_type == "trailing":
+            value = calculate_current_trailing_avg(self.coordinator.data)
+        elif average_type == "leading":
+            value = calculate_current_leading_avg(self.coordinator.data)
+        else:
+            return None
+
+        if value is None:
+            return None
+
+        result = self._get_price_value(value, in_euro=in_euro)
+
+        if decimals is not None:
+            result = round(result, decimals)
+        return result
+
+    def _get_rolling_hour_average_value(
+        self,
+        *,
+        in_euro: bool,
+        decimals: int | None = None,
+        hour_offset: int = 0,
+    ) -> float | None:
+        """
+        Get rolling 5-interval average (2 previous + current + 2 next).
+
+        This provides a smoothed "hour price" centered around a specific hour.
+        With hour_offset=0, it's centered on the current interval.
+        With hour_offset=1, it's centered on the interval 1 hour ahead.
+
+        Args:
+            in_euro: If True, return value in euros; if False, return in cents
+            decimals: Number of decimal places to round to, or None for no rounding
+            hour_offset: Number of hours to shift forward (0=current, 1=next hour)
+
+        Returns:
+            The calculated rolling average value, or None if unavailable
+
+        """
+        if hour_offset == 0:
+            value = calculate_current_rolling_5interval_avg(self.coordinator.data)
+        elif hour_offset == 1:
+            value = calculate_next_hour_rolling_5interval_avg(self.coordinator.data)
+        else:
+            return None
+
+        if value is None:
+            return None
+
+        result = self._get_price_value(value, in_euro=in_euro)
+
+        if decimals is not None:
+            result = round(result, decimals)
+        return result
+
+    def _get_minmax_value(
+        self,
+        *,
+        stat_type: str,
+        func_type: str,
+        in_euro: bool,
+        decimals: int | None = None,
+    ) -> float | None:
+        """
+        Get trailing or leading 24-hour minimum or maximum price.
+
+        Args:
+            stat_type: Either "trailing" or "leading"
+            func_type: Either "min" or "max"
+            in_euro: If True, return value in euros; if False, return in cents
+            decimals: Number of decimal places to round to, or None for no rounding
+
+        Returns:
+            The calculated min/max value, or None if unavailable
+
+        """
+        if stat_type == "trailing" and func_type == "min":
+            value = calculate_current_trailing_min(self.coordinator.data)
+        elif stat_type == "trailing" and func_type == "max":
+            value = calculate_current_trailing_max(self.coordinator.data)
+        elif stat_type == "leading" and func_type == "min":
+            value = calculate_current_leading_min(self.coordinator.data)
+        elif stat_type == "leading" and func_type == "max":
+            value = calculate_current_leading_max(self.coordinator.data)
+        else:
+            return None
+
+        if value is None:
+            return None
 
         result = self._get_price_value(value, in_euro=in_euro)
 
@@ -490,6 +898,86 @@ class TibberPricesSensor(TibberPricesEntity, SensorEntity):
         self._last_rating_difference = None
         self._last_rating_level = None
         return None
+
+    def _get_interval_rating_value(self, *, interval_offset: int) -> str | None:
+        """Get price rating for an interval with offset (e.g., next or previous interval)."""
+        if not self.coordinator.data:
+            return None
+
+        price_info = self.coordinator.data.get("priceInfo", {})
+        now = dt_util.now()
+        target_time = now + timedelta(minutes=MINUTES_PER_INTERVAL * interval_offset)
+
+        interval_data = find_price_data_for_interval(price_info, target_time)
+        if not interval_data:
+            return None
+
+        rating_level = interval_data.get("rating_level")
+        if rating_level is not None:
+            return self._translate_rating_level(rating_level)
+        return None
+
+    def _get_rolling_hour_rating_value(self, *, hour_offset: int) -> str | None:
+        """Get aggregated price rating for a 5-interval rolling window."""
+        if not self.coordinator.data:
+            return None
+
+        price_info = self.coordinator.data.get("priceInfo", {})
+        yesterday_prices = price_info.get("yesterday", [])
+        today_prices = price_info.get("today", [])
+        tomorrow_prices = price_info.get("tomorrow", [])
+
+        all_prices = yesterday_prices + today_prices + tomorrow_prices
+        if not all_prices:
+            return None
+
+        now = dt_util.now()
+
+        # Find the current interval
+        current_idx = None
+        for idx, price_data in enumerate(all_prices):
+            starts_at = dt_util.parse_datetime(price_data["startsAt"])
+            if starts_at is None:
+                continue
+            starts_at = dt_util.as_local(starts_at)
+            interval_end = starts_at + timedelta(minutes=15)
+
+            if starts_at <= now < interval_end:
+                current_idx = idx
+                break
+
+        if current_idx is None:
+            return None
+
+        # Shift by hour_offset * 4 intervals (4 intervals = 1 hour)
+        center_idx = current_idx + (hour_offset * 4)
+
+        # Collect differences from 2 intervals before to 2 intervals after (5 total)
+        differences = []
+        for offset in range(-2, 3):  # -2, -1, 0, 1, 2
+            idx = center_idx + offset
+            if 0 <= idx < len(all_prices):
+                difference = all_prices[idx].get("difference")
+                if difference is not None:
+                    differences.append(float(difference))
+
+        if not differences:
+            return None
+
+        # Get thresholds from config
+        threshold_low = self.coordinator.config_entry.options.get(
+            CONF_PRICE_RATING_THRESHOLD_LOW,
+            DEFAULT_PRICE_RATING_THRESHOLD_LOW,
+        )
+        threshold_high = self.coordinator.config_entry.options.get(
+            CONF_PRICE_RATING_THRESHOLD_HIGH,
+            DEFAULT_PRICE_RATING_THRESHOLD_HIGH,
+        )
+
+        # Aggregate using average difference
+        aggregated_rating, _avg_diff = aggregate_price_rating(differences, threshold_low, threshold_high)
+
+        return self._translate_rating_level(aggregated_rating)
 
     def _get_data_timestamp(self) -> datetime | None:
         """Get the latest data timestamp."""
@@ -775,13 +1263,31 @@ class TibberPricesSensor(TibberPricesEntity, SensorEntity):
             # Group sensors by type and delegate to specific handlers
             if key in [
                 "current_price",
-                "current_price_eur",
                 "price_level",
                 "next_interval_price",
-                "next_interval_price_eur",
+                "previous_interval_price",
+                "current_hour_average",
+                "next_hour_average",
+                "next_interval_price_level",
+                "previous_interval_price_level",
+                "current_hour_price_level",
+                "next_hour_price_level",
+                "next_interval_price_rating",
+                "previous_interval_price_rating",
+                "current_hour_price_rating",
+                "next_hour_price_rating",
             ]:
                 self._add_current_price_attributes(attributes)
-            elif any(pattern in key for pattern in ["_price_today", "rating", "data_timestamp"]):
+            elif key in [
+                "trailing_price_average",
+                "leading_price_average",
+                "trailing_price_min",
+                "trailing_price_max",
+                "leading_price_min",
+                "leading_price_max",
+            ]:
+                self._add_average_price_attributes(attributes)
+            elif any(pattern in key for pattern in ["_price_today", "_price_tomorrow", "rating", "data_timestamp"]):
                 self._add_statistics_attributes(attributes)
             elif key == "price_forecast":
                 self._add_price_forecast_attributes(attributes)
@@ -801,22 +1307,59 @@ class TibberPricesSensor(TibberPricesEntity, SensorEntity):
 
     def _add_current_price_attributes(self, attributes: dict) -> None:
         """Add attributes for current price sensors."""
-        current_interval_data = self._get_current_interval_data()
-        attributes["timestamp"] = current_interval_data["startsAt"] if current_interval_data else None
+        key = self.entity_description.key
+        price_info = self.coordinator.data.get("priceInfo", {}) if self.coordinator.data else {}
+        now = dt_util.now()
 
-        # Add price level info for the price level sensor
-        if self.entity_description.key == "price_level" and current_interval_data and "level" in current_interval_data:
-            self._add_price_level_attributes(attributes, current_interval_data["level"])
-
-        if self.entity_description.key in [
+        # Determine which interval to use based on sensor type
+        next_interval_sensors = [
             "next_interval_price",
-            "next_interval_price_eur",
-        ]:
-            price_info = self.coordinator.data.get("priceInfo", {})
-            now = dt_util.now()
-            next_interval_time = now + timedelta(minutes=MINUTES_PER_INTERVAL)
-            next_interval_data = find_price_data_for_interval(price_info, next_interval_time)
-            attributes["timestamp"] = next_interval_data["startsAt"] if next_interval_data else None
+            "next_interval_price_level",
+            "next_interval_price_rating",
+        ]
+        previous_interval_sensors = [
+            "previous_interval_price",
+            "previous_interval_price_level",
+            "previous_interval_price_rating",
+        ]
+        next_hour_sensors = [
+            "next_hour_average",
+            "next_hour_price_level",
+            "next_hour_price_rating",
+        ]
+        current_hour_sensors = [
+            "current_hour_average",
+            "current_hour_price_level",
+            "current_hour_price_rating",
+        ]
+
+        if key in next_interval_sensors:
+            target_time = now + timedelta(minutes=MINUTES_PER_INTERVAL)
+            interval_data = find_price_data_for_interval(price_info, target_time)
+            attributes["timestamp"] = interval_data["startsAt"] if interval_data else None
+        elif key in previous_interval_sensors:
+            target_time = now - timedelta(minutes=MINUTES_PER_INTERVAL)
+            interval_data = find_price_data_for_interval(price_info, target_time)
+            attributes["timestamp"] = interval_data["startsAt"] if interval_data else None
+        elif key in next_hour_sensors:
+            # For next hour sensors, show timestamp 1 hour ahead
+            target_time = now + timedelta(hours=1)
+            interval_data = find_price_data_for_interval(price_info, target_time)
+            attributes["timestamp"] = interval_data["startsAt"] if interval_data else None
+        elif key in current_hour_sensors:
+            # For current hour sensors, use current interval timestamp
+            current_interval_data = self._get_current_interval_data()
+            attributes["timestamp"] = current_interval_data["startsAt"] if current_interval_data else None
+        else:
+            # Default: use current interval timestamp
+            current_interval_data = self._get_current_interval_data()
+            attributes["timestamp"] = current_interval_data["startsAt"] if current_interval_data else None
+
+        # Add price level info for price level sensors
+        if key == "price_level":
+            current_interval_data = self._get_current_interval_data()
+            if current_interval_data and "level" in current_interval_data:
+                self._add_price_level_attributes(attributes, current_interval_data["level"])
 
     def _add_price_level_attributes(self, attributes: dict, level: str) -> None:
         """
@@ -866,20 +1409,63 @@ class TibberPricesSensor(TibberPricesEntity, SensorEntity):
                 attributes["level_value"] = PRICE_RATING_MAPPING.get(self._last_rating_level, self._last_rating_level)
         elif key in [
             "lowest_price_today",
-            "lowest_price_today_eur",
             "highest_price_today",
-            "highest_price_today_eur",
+            "lowest_price_tomorrow",
+            "highest_price_tomorrow",
         ]:
             # Use the timestamp from the interval that has the extreme price (already stored during value calculation)
             if hasattr(self, "_last_extreme_interval") and self._last_extreme_interval:
                 attributes["timestamp"] = self._last_extreme_interval.get("startsAt")
             else:
-                # Fallback: use the first timestamp of today
-                attributes["timestamp"] = price_info.get("today", [{}])[0].get("startsAt")
+                # Fallback: use the first timestamp of the appropriate day
+                day_key = "tomorrow" if "tomorrow" in key else "today"
+                attributes["timestamp"] = price_info.get(day_key, [{}])[0].get("startsAt")
         else:
-            # Fallback: use the first timestamp of today
-            first_timestamp = price_info.get("today", [{}])[0].get("startsAt")
+            # Fallback: use the first timestamp of the appropriate day
+            day_key = "tomorrow" if "tomorrow" in key else "today"
+            first_timestamp = price_info.get(day_key, [{}])[0].get("startsAt")
             attributes["timestamp"] = first_timestamp
+
+    def _add_average_price_attributes(self, attributes: dict) -> None:
+        """Add attributes for trailing and leading average price sensors."""
+        key = self.entity_description.key
+        now = dt_util.now()
+
+        # Determine if this is trailing or leading
+        is_trailing = "trailing" in key
+
+        # Get all price intervals
+        price_info = self.coordinator.data.get("priceInfo", {})
+        yesterday_prices = price_info.get("yesterday", [])
+        today_prices = price_info.get("today", [])
+        tomorrow_prices = price_info.get("tomorrow", [])
+        all_prices = yesterday_prices + today_prices + tomorrow_prices
+
+        if not all_prices:
+            return
+
+        # Calculate the time window
+        if is_trailing:
+            window_start = now - timedelta(hours=24)
+            window_end = now
+        else:
+            window_start = now
+            window_end = now + timedelta(hours=24)
+
+        # Find all intervals in the window and get first/last timestamps
+        intervals_in_window = []
+        for price_data in all_prices:
+            starts_at = dt_util.parse_datetime(price_data["startsAt"])
+            if starts_at is None:
+                continue
+            starts_at = dt_util.as_local(starts_at)
+            if window_start <= starts_at < window_end:
+                intervals_in_window.append(price_data)
+
+        # Add timestamp attribute (first interval in the window)
+        if intervals_in_window:
+            attributes["timestamp"] = intervals_in_window[0].get("startsAt")
+            attributes["interval_count"] = len(intervals_in_window)
 
     async def async_update(self) -> None:
         """Force a refresh when homeassistant.update_entity is called."""

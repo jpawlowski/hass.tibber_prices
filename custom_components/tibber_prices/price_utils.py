@@ -8,6 +8,8 @@ from typing import Any
 
 from homeassistant.util import dt as dt_util
 
+from .const import PRICE_LEVEL_MAPPING, PRICE_LEVEL_NORMAL, PRICE_RATING_NORMAL
+
 _LOGGER = logging.getLogger(__name__)
 
 MINUTES_PER_INTERVAL = 15
@@ -68,14 +70,7 @@ def calculate_trailing_average_for_interval(
         return None
 
     # Calculate and return the average
-    average = sum(matching_prices) / len(matching_prices)
-    _LOGGER.debug(
-        "Calculated trailing 24h average for interval %s: %.6f from %d prices",
-        interval_start,
-        average,
-        len(matching_prices),
-    )
-    return average
+    return sum(matching_prices) / len(matching_prices)
 
 
 def calculate_difference_percentage(
@@ -184,16 +179,6 @@ def _process_price_interval(
         # Calculate rating_level based on difference
         rating_level = calculate_rating_level(difference, threshold_low, threshold_high)
         price_interval["rating_level"] = rating_level
-
-        _LOGGER.debug(
-            "Set difference and rating_level for %s interval %s: difference=%.2f%%, level=%s (price: %.6f, avg: %.6f)",
-            day_label,
-            starts_at,
-            difference if difference is not None else 0,
-            rating_level,
-            float(current_price),
-            trailing_avg,
-        )
     else:
         # Set to None if we couldn't calculate
         price_interval["difference"] = None
@@ -289,3 +274,72 @@ def find_price_data_for_interval(price_info: Any, target_time: datetime) -> dict
                 return price_data
 
     return None
+
+
+def aggregate_price_levels(levels: list[str]) -> str:
+    """
+    Aggregate multiple price levels into a single representative level using median.
+
+    Takes a list of price level strings (e.g., "VERY_CHEAP", "NORMAL", "EXPENSIVE")
+    and returns the median level after sorting by numeric values. This naturally
+    tends toward "NORMAL" when levels are mixed.
+
+    Args:
+        levels: List of price level strings from intervals
+
+    Returns:
+        The median price level string, or "NORMAL" if input is empty
+
+    """
+    if not levels:
+        return PRICE_LEVEL_NORMAL
+
+    # Convert levels to numeric values and sort
+    numeric_values = [PRICE_LEVEL_MAPPING.get(level, 0) for level in levels]
+    numeric_values.sort()
+
+    # Get median (middle value for odd length, lower-middle for even length)
+    median_idx = len(numeric_values) // 2
+    median_value = numeric_values[median_idx]
+
+    # Convert back to level string
+    for level, value in PRICE_LEVEL_MAPPING.items():
+        if value == median_value:
+            return level
+
+    return PRICE_LEVEL_NORMAL
+
+
+def aggregate_price_rating(differences: list[float], threshold_low: float, threshold_high: float) -> tuple[str, float]:
+    """
+    Aggregate multiple price differences into a single rating level.
+
+    Calculates the average difference percentage across multiple intervals
+    and applies thresholds to determine the overall rating level.
+
+    Args:
+        differences: List of difference percentages from intervals
+        threshold_low: The low threshold percentage for LOW rating
+        threshold_high: The high threshold percentage for HIGH rating
+
+    Returns:
+        Tuple of (rating_level, average_difference)
+        rating_level: "LOW", "NORMAL", or "HIGH"
+        average_difference: The averaged difference percentage
+
+    """
+    if not differences:
+        return PRICE_RATING_NORMAL, 0.0
+
+    # Filter out None values
+    valid_differences = [d for d in differences if d is not None]
+    if not valid_differences:
+        return PRICE_RATING_NORMAL, 0.0
+
+    # Calculate average difference
+    avg_difference = sum(valid_differences) / len(valid_differences)
+
+    # Apply thresholds
+    rating_level = calculate_rating_level(avg_difference, threshold_low, threshold_high)
+
+    return rating_level or PRICE_RATING_NORMAL, avg_difference

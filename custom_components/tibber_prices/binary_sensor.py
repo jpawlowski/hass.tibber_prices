@@ -13,6 +13,7 @@ from homeassistant.components.binary_sensor import (
 from homeassistant.const import PERCENTAGE, EntityCategory
 from homeassistant.util import dt as dt_util
 
+from .average_utils import calculate_leading_24h_avg, calculate_trailing_24h_avg
 from .entity import TibberPricesEntity
 from .sensor import find_price_data_for_interval
 
@@ -286,6 +287,26 @@ class TibberPricesBinarySensor(TibberPricesEntity, BinarySensorEntity):
             else 0.0
         )
         new_interval["price_diff_from_avg_" + PERCENTAGE] = round(avg_diff_percent, 2)
+        # Calculate difference from trailing 24-hour average
+        trailing_avg = annotation_ctx.get("trailing_24h_avg", 0.0)
+        trailing_avg_diff = new_interval["price"] - trailing_avg
+        new_interval["price_diff_from_trailing_24h_avg"] = round(trailing_avg_diff, 4)
+        new_interval["price_diff_from_trailing_24h_avg_ct"] = round(trailing_avg_diff * 100, 2)
+        trailing_avg_diff_percent = (
+            ((new_interval["price"] - trailing_avg) / trailing_avg) * 100 if trailing_avg != 0 else 0.0
+        )
+        new_interval["price_diff_from_trailing_24h_avg_" + PERCENTAGE] = round(trailing_avg_diff_percent, 2)
+        new_interval["trailing_24h_avg_price"] = round(trailing_avg, 4)
+        # Calculate difference from leading 24-hour average
+        leading_avg = annotation_ctx.get("leading_24h_avg", 0.0)
+        leading_avg_diff = new_interval["price"] - leading_avg
+        new_interval["price_diff_from_leading_24h_avg"] = round(leading_avg_diff, 4)
+        new_interval["price_diff_from_leading_24h_avg_ct"] = round(leading_avg_diff * 100, 2)
+        leading_avg_diff_percent = (
+            ((new_interval["price"] - leading_avg) / leading_avg) * 100 if leading_avg != 0 else 0.0
+        )
+        new_interval["price_diff_from_leading_24h_avg_" + PERCENTAGE] = round(leading_avg_diff_percent, 2)
+        new_interval["leading_24h_avg_price"] = round(leading_avg, 4)
         return new_interval
 
     def _annotate_period_intervals(
@@ -293,6 +314,7 @@ class TibberPricesBinarySensor(TibberPricesEntity, BinarySensorEntity):
         periods: list[list[dict]],
         ref_prices: dict,
         avg_price_by_day: dict,
+        all_prices: list[dict],
     ) -> list[dict]:
         """
         Return flattened and annotated intervals with period info and requested properties.
@@ -334,6 +356,10 @@ class TibberPricesBinarySensor(TibberPricesEntity, BinarySensorEntity):
                 interval_date = interval_start.date() if interval_start else None
                 avg_price = avg_price_by_day.get(interval_date, 0)
                 ref_price = ref_prices.get(interval_date, 0)
+                # Calculate trailing 24-hour average for this interval
+                trailing_24h_avg = calculate_trailing_24h_avg(all_prices, interval_start) if interval_start else 0.0
+                # Calculate leading 24-hour average for this interval
+                leading_24h_avg = calculate_leading_24h_avg(all_prices, interval_start) if interval_start else 0.0
                 annotation_ctx = {
                     "period_start": period_start,
                     "period_end": period_end,
@@ -348,6 +374,8 @@ class TibberPricesBinarySensor(TibberPricesEntity, BinarySensorEntity):
                     "period_idx": period_idx,
                     "ref_price": ref_price,
                     "avg_price": avg_price,
+                    "trailing_24h_avg": trailing_24h_avg,
+                    "leading_24h_avg": leading_24h_avg,
                     "diff_key": diff_key,
                     "diff_ct_key": diff_ct_key,
                     "diff_pct_key": diff_pct_key,
@@ -512,6 +540,7 @@ class TibberPricesBinarySensor(TibberPricesEntity, BinarySensorEntity):
             filtered_periods,
             ref_prices,
             avg_price_by_day,
+            all_prices,
         )
         filtered_result = self._filter_intervals_today_tomorrow(result)
         current_interval = self._find_current_or_next_interval(filtered_result)

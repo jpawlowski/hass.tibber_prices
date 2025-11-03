@@ -99,41 +99,86 @@
     },
     "entity": {
         "sensor": {
-            "current_price": {
-                "name": "Aktueller Strompreis"
-            },
             "current_price_cents": {
                 "name": "Aktueller Strompreis"
             },
-            "next_interval_price": {
-                "name": "Strompreis nächstes Intervall"
-            },
             "next_interval_price_cents": {
-                "name": "Strompreis nächstes Intervall"
+                "name": "Nächster Preis"
+            },
+            "previous_interval_price_cents": {
+                "name": "Vorheriger Preis"
+            },
+            "current_hour_average_cents": {
+                "name": "Aktueller Stunden-Durchschnittspreis"
+            },
+            "next_hour_average_cents": {
+                "name": "Nächster Stunden-Durchschnittspreis"
             },
             "price_level": {
                 "name": "Aktuelles Preisniveau"
             },
-            "lowest_price_today": {
-                "name": "Niedrigster Preis heute"
+            "next_interval_price_level": {
+                "name": "Nächstes Preisniveau"
+            },
+            "previous_interval_price_level": {
+                "name": "Vorheriges Preisniveau"
+            },
+            "current_hour_price_level": {
+                "name": "Aktuelles Stunden-Preisniveau"
+            },
+            "next_hour_price_level": {
+                "name": "Nächstes Stunden-Preisniveau"
             },
             "lowest_price_today_cents": {
-                "name": "Niedrigster Preis heute"
-            },
-            "highest_price_today": {
-                "name": "Höchster Preis heute"
+                "name": "Mindestpreis heute"
             },
             "highest_price_today_cents": {
-                "name": "Höchster Preis heute"
-            },
-            "average_price_today": {
-                "name": "Durchschnittspreis heute"
+                "name": "Höchstpreis heute"
             },
             "average_price_today_cents": {
                 "name": "Durchschnittspreis heute"
             },
+            "lowest_price_tomorrow_cents": {
+                "name": "Mindestpreis morgen"
+            },
+            "highest_price_tomorrow_cents": {
+                "name": "Höchstpreis morgen"
+            },
+            "average_price_tomorrow_cents": {
+                "name": "Durchschnittspreis morgen"
+            },
+            "trailing_price_average_cents": {
+                "name": "Nachlaufender 24h-Durchschnittspreis"
+            },
+            "leading_price_average_cents": {
+                "name": "Vorlaufender 24h-Durchschnittspreis"
+            },
+            "trailing_price_min_cents": {
+                "name": "Nachlaufender 24h-Mindestpreis"
+            },
+            "trailing_price_max_cents": {
+                "name": "Nachlaufender 24h-Höchstpreis"
+            },
+            "leading_price_min_cents": {
+                "name": "Vorlaufender 24h-Mindestpreis"
+            },
+            "leading_price_max_cents": {
+                "name": "Vorlaufender 24h-Höchstpreis"
+            },
             "price_rating": {
                 "name": "Aktuelle Preisbewertung"
+            },
+            "next_interval_price_rating": {
+                "name": "Nächste Preisbewertung"
+            },
+            "previous_interval_price_rating": {
+                "name": "Vorherige Preisbewertung"
+            },
+            "current_hour_price_rating": {
+                "name": "Aktuelle Stunden-Preisbewertung"
+            },
+            "next_hour_price_rating": {
+                "name": "Nächste Stunden-Preisbewertung"
             },
             "daily_rating": {
                 "name": "Tägliche Preisbewertung"

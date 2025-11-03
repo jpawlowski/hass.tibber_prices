@@ -1,28 +1,34 @@
 {
     "sensor": {
-        "current_price": {
-            "name": "Current Electricity Price",
-            "description": "The current electricity price in Euro",
-            "long_description": "Shows the current price per kWh (in Euro) from your Tibber subscription",
-            "usage_tips": "Use this to track prices or to create automations that run when electricity is cheap"
-        },
         "current_price_cents": {
             "name": "Current Electricity Price",
             "description": "The current electricity price in cents per kWh",
             "long_description": "Shows the current price per kWh (in cents) from your Tibber subscription",
             "usage_tips": "Use this to track prices or to create automations that run when electricity is cheap"
         },
-        "next_interval_price": {
-            "name": "Next Interval Electricity Price",
-            "description": "The next interval electricity price in Euro",
-            "long_description": "Shows the price for the next 15-minute interval (in Euro) from your Tibber subscription",
-            "usage_tips": "Use this to prepare for upcoming price changes or to schedule devices to run during cheaper intervals"
-        },
         "next_interval_price_cents": {
-            "name": "Next Interval Electricity Price",
+            "name": "Next Price",
             "description": "The next interval electricity price in cents per kWh",
             "long_description": "Shows the price for the next 15-minute interval (in cents) from your Tibber subscription",
             "usage_tips": "Use this to prepare for upcoming price changes or to schedule devices to run during cheaper intervals"
+        },
+        "previous_interval_price_cents": {
+            "name": "Previous Electricity Price",
+            "description": "The previous interval electricity price in cents per kWh",
+            "long_description": "Shows the price for the previous 15-minute interval (in cents) from your Tibber subscription",
+            "usage_tips": "Use this to review past price changes or track price history"
+        },
+        "current_hour_average_cents": {
+            "name": "Current Hour Average Price",
+            "description": "Rolling 5-interval average price in cents per kWh",
+            "long_description": "Shows the average price per kWh (in cents) calculated from 5 intervals: 2 previous, current, and 2 next intervals (approximately 75 minutes total). This provides a smoothed 'hour price' that adapts as time moves, rather than being fixed to clock hours.",
+            "usage_tips": "Use this for a more stable price indicator that smooths out short-term fluctuations while still being responsive to price changes. Better than fixed hourly prices for making consumption decisions."
+        },
+        "next_hour_average_cents": {
+            "name": "Next Hour Average Price",
+            "description": "Rolling 5-interval average price for next hour in cents per kWh",
+            "long_description": "Shows the average price per kWh (in cents) calculated from 5 intervals centered one hour ahead: approximately intervals +2 through +6 from now (covering minutes +30 to +105). This provides a forward-looking smoothed 'hour price' for planning consumption.",
+            "usage_tips": "Use this to anticipate price changes in the next hour. Helpful for scheduling high-consumption activities like charging electric vehicles, running dishwashers, or heating systems."
         },
         "price_level": {
             "name": "Current Price Level",
@@ -37,11 +43,29 @@
                 "VERY_EXPENSIVE": "Very Expensive"
             }
         },
-        "lowest_price_today": {
-            "name": "Today's Lowest Price",
-            "description": "The lowest electricity price for today in Euro",
-            "long_description": "Shows the lowest price per kWh (in Euro) for the current day from your Tibber subscription",
-            "usage_tips": "Use this to compare current prices to the cheapest time of the day"
+        "next_interval_price_level": {
+            "name": "Next Price Level",
+            "description": "Price level for the next 15-minute interval",
+            "long_description": "Shows the price level classification for the upcoming interval. Helps anticipate short-term price changes for immediate planning.",
+            "usage_tips": "Use for quick decisions about starting or stopping high-power devices in the next few minutes."
+        },
+        "previous_interval_price_level": {
+            "name": "Previous Price Level",
+            "description": "Price level for the previous 15-minute interval",
+            "long_description": "Shows the price level classification for the last interval. Useful for historical comparison and understanding recent price trends.",
+            "usage_tips": "Use to compare current vs recent price levels or analyze consumption patterns against historical prices."
+        },
+        "current_hour_price_level": {
+            "name": "Current Hour Price Level",
+            "description": "Aggregated price level for current rolling hour (5 intervals)",
+            "long_description": "Shows the median price level across 5 intervals (2 before, current, 2 after) covering approximately 75 minutes. Provides a more stable price level indicator that smooths out short-term fluctuations.",
+            "usage_tips": "Use for medium-term planning decisions where you want to avoid reacting to brief price spikes or dips."
+        },
+        "next_hour_price_level": {
+            "name": "Next Hour Price Level",
+            "description": "Aggregated price level for next rolling hour (5 intervals ahead)",
+            "long_description": "Shows the median price level across 5 intervals centered one hour ahead. Helps plan consumption based on upcoming price trends rather than instantaneous future prices.",
+            "usage_tips": "Use to schedule activities for the next hour based on a smoothed price level forecast."
         },
         "lowest_price_today_cents": {
             "name": "Today's Lowest Price",
@@ -49,29 +73,71 @@
             "long_description": "Shows the lowest price per kWh (in cents) for the current day from your Tibber subscription",
             "usage_tips": "Use this to compare current prices to the cheapest time of the day"
         },
-        "highest_price_today": {
-            "name": "Today's Highest Price",
-            "description": "The highest electricity price for today in Euro",
-            "long_description": "Shows the highest price per kWh (in Euro) for the current day from your Tibber subscription",
-            "usage_tips": "Use this to avoid running appliances during peak price times"
-        },
         "highest_price_today_cents": {
             "name": "Today's Highest Price",
             "description": "The highest electricity price for today in cents per kWh",
             "long_description": "Shows the highest price per kWh (in cents) for the current day from your Tibber subscription",
             "usage_tips": "Use this to avoid running appliances during peak price times"
         },
-        "average_price_today": {
-            "name": "Today's Average Price",
-            "description": "The average electricity price for today in Euro",
-            "long_description": "Shows the average price per kWh (in Euro) for the current day from your Tibber subscription",
-            "usage_tips": "Use this as a baseline for comparing current prices"
-        },
         "average_price_today_cents": {
             "name": "Today's Average Price",
             "description": "The average electricity price for today in cents per kWh",
             "long_description": "Shows the average price per kWh (in cents) for the current day from your Tibber subscription",
             "usage_tips": "Use this as a baseline for comparing current prices"
+        },
+        "lowest_price_tomorrow_cents": {
+            "name": "Tomorrow's Lowest Price",
+            "description": "The lowest electricity price for tomorrow in cents per kWh",
+            "long_description": "Shows the lowest price per kWh (in cents) for tomorrow from your Tibber subscription. This sensor becomes unavailable until tomorrow's data is published by Tibber (typically around 13:00-14:00 CET).",
+            "usage_tips": "Use this to plan energy-intensive activities for tomorrow's cheapest time. Perfect for pre-scheduling heating, EV charging, or appliances."
+        },
+        "highest_price_tomorrow_cents": {
+            "name": "Tomorrow's Highest Price",
+            "description": "The highest electricity price for tomorrow in cents per kWh",
+            "long_description": "Shows the highest price per kWh (in cents) for tomorrow from your Tibber subscription. This sensor becomes unavailable until tomorrow's data is published by Tibber (typically around 13:00-14:00 CET).",
+            "usage_tips": "Use this to avoid running appliances during tomorrow's peak price times. Helpful for planning around expensive periods."
+        },
+        "average_price_tomorrow_cents": {
+            "name": "Tomorrow's Average Price",
+            "description": "The average electricity price for tomorrow in cents per kWh",
+            "long_description": "Shows the average price per kWh (in cents) for tomorrow from your Tibber subscription. This sensor becomes unavailable until tomorrow's data is published by Tibber (typically around 13:00-14:00 CET).",
+            "usage_tips": "Use this as a baseline for comparing tomorrow's prices and planning consumption. Compare with today's average to see if tomorrow will be more or less expensive overall."
+        },
+        "trailing_price_average_cents": {
+            "name": "Trailing 24h Average Price",
+            "description": "The average electricity price for the past 24 hours in cents per kWh",
+            "long_description": "Shows the average price per kWh (in cents) calculated from the past 24 hours (trailing average) from your Tibber subscription. This provides a rolling average that updates every 15 minutes based on historical data.",
+            "usage_tips": "Use this to compare current prices against recent trends. A current price significantly above this average may indicate a good time to reduce consumption."
+        },
+        "leading_price_average_cents": {
+            "name": "Leading 24h Average Price",
+            "description": "The average electricity price for the next 24 hours in cents per kWh",
+            "long_description": "Shows the average price per kWh (in cents) calculated from the next 24 hours (leading average) from your Tibber subscription. This provides a forward-looking average based on available forecast data.",
+            "usage_tips": "Use this to plan energy usage. If the current price is below the leading average, it may be a good time to run energy-intensive appliances."
+        },
+        "trailing_price_min_cents": {
+            "name": "Trailing 24h Minimum Price",
+            "description": "The minimum electricity price for the past 24 hours in cents per kWh",
+            "long_description": "Shows the minimum price per kWh (in cents) from the past 24 hours (trailing minimum) from your Tibber subscription. This provides the lowest price seen in the last 24 hours.",
+            "usage_tips": "Use this to see the best price opportunity you had in the past 24 hours and compare it with current prices."
+        },
+        "trailing_price_max_cents": {
+            "name": "Trailing 24h Maximum Price",
+            "description": "The maximum electricity price for the past 24 hours in cents per kWh",
+            "long_description": "Shows the maximum price per kWh (in cents) from the past 24 hours (trailing maximum) from your Tibber subscription. This provides the highest price seen in the last 24 hours.",
+            "usage_tips": "Use this to see the peak price in the past 24 hours and assess price volatility."
+        },
+        "leading_price_min_cents": {
+            "name": "Leading 24h Minimum Price",
+            "description": "The minimum electricity price for the next 24 hours in cents per kWh",
+            "long_description": "Shows the minimum price per kWh (in cents) from the next 24 hours (leading minimum) from your Tibber subscription. This provides the lowest price expected in the next 24 hours based on forecast data.",
+            "usage_tips": "Use this to identify the best price opportunity coming up and schedule energy-intensive tasks accordingly."
+        },
+        "leading_price_max_cents": {
+            "name": "Leading 24h Maximum Price",
+            "description": "The maximum electricity price for the next 24 hours in cents per kWh",
+            "long_description": "Shows the maximum price per kWh (in cents) from the next 24 hours (leading maximum) from your Tibber subscription. This provides the highest price expected in the next 24 hours based on forecast data.",
+            "usage_tips": "Use this to avoid running appliances during upcoming peak price periods."
         },
         "price_rating": {
             "name": "Current Price Rating",
@@ -83,6 +149,30 @@
                 "NORMAL": "Normal",
                 "HIGH": "High"
             }
+        },
+        "next_interval_price_rating": {
+            "name": "Next Price Rating",
+            "description": "Price rating for the next 15-minute interval",
+            "long_description": "Shows how the next interval's price compares to the rolling 24-hour average. Helps anticipate if upcoming prices are above or below the recent trend.",
+            "usage_tips": "Use to make quick decisions about starting activities in the next interval based on relative price position."
+        },
+        "previous_interval_price_rating": {
+            "name": "Previous Price Rating",
+            "description": "Price rating for the previous 15-minute interval",
+            "long_description": "Shows how the last interval's price compared to the rolling average. Useful for understanding recent price behavior.",
+            "usage_tips": "Use for analyzing how price ratings changed over time or validating past consumption decisions."
+        },
+        "current_hour_price_rating": {
+            "name": "Current Hour Price Rating",
+            "description": "Aggregated price rating for current rolling hour (5 intervals)",
+            "long_description": "Shows the average rating across 5 intervals (2 before, current, 2 after). Based on the average percentage difference from rolling 24h average, providing a smoothed rating indicator.",
+            "usage_tips": "Use for stable medium-term price assessment that doesn't overreact to brief price anomalies."
+        },
+        "next_hour_price_rating": {
+            "name": "Next Hour Price Rating",
+            "description": "Aggregated price rating for next rolling hour (5 intervals ahead)",
+            "long_description": "Shows the averaged rating for 5 intervals centered one hour ahead. Helps understand if the next hour will generally be above or below average pricing.",
+            "usage_tips": "Use to decide if you should wait an hour before starting high-consumption activities."
         },
         "daily_rating": {
             "name": "Daily Price Rating",
