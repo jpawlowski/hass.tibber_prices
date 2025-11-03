@@ -6,6 +6,10 @@ set -e
 
 cd "$(dirname "$0")/.."
 
+if [ -z "$VIRTUAL_ENV" ]; then
+    . "$HOME/.venv/bin/activate"
+fi
+
 echo "==> Checking code format..."
 uv run ruff format . --check
 
