@@ -6,8 +6,8 @@
     ],
     "config_flow": true,
     "documentation": "https://github.com/jpawlowski/hass.tibber_prices",
-    "iot_class": "cloud_polling",
     "integration_type": "hub",
+    "iot_class": "cloud_polling",
     "issue_tracker": "https://github.com/jpawlowski/hass.tibber_prices/issues",
     "requirements": [
         "aiofiles>=23.2.1"
