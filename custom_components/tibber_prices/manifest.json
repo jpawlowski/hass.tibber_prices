@@ -9,7 +9,7 @@
     "iot_class": "cloud_polling",
     "issue_tracker": "https://github.com/jpawlowski/hass.tibber_prices/issues",
     "version": "0.1.0",
-    "minimum_version": "2024.1.0",
+    "integration_type": "hub",
     "requirements": [
         "aiofiles>=23.2.1"
     ]
