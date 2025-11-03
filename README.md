@@ -8,18 +8,23 @@
 [![Project Maintenance][maintenance-shield]][user_profile]
 [![BuyMeCoffee][buymecoffeebadge]][buymecoffee]
 
-A Home Assistant integration that provides advanced price information and ratings from Tibber. This integration allows you to monitor electricity prices, price levels, and rating information to help you optimize your energy consumption and save money.
+A Home Assistant integration that provides advanced price information and ratings from Tibber. This integration fetches **quarter-hourly** electricity prices, enriches them with statistical analysis, and provides smart indicators to help you optimize your energy consumption and save money.
 
 ![Tibber Price Information & Ratings][exampleimg]
 
 ## Features
 
--   **Current and Next Hour Prices**: Get real-time price data in both EUR and cents/kWh
--   **Price Level Indicators**: Know when you're in a low, normal, or high price period
+-   **Quarter-Hourly Price Data**: Access detailed 15-minute interval pricing (192 data points across yesterday/today/tomorrow)
+-   **Current and Next Interval Prices**: Get real-time price data in both major currency (€, kr) and minor units (ct, øre)
+-   **Multi-Currency Support**: Automatic detection and formatting for EUR, NOK, SEK, DKK, USD, and GBP
+-   **Price Level Indicators**: Know when you're in a VERY_CHEAP, CHEAP, NORMAL, EXPENSIVE, or VERY_EXPENSIVE period
 -   **Statistical Sensors**: Track lowest, highest, and average prices for the day
--   **Price Ratings**: Quarterly-hour ratings to understand how current prices compare to historical data
+-   **Price Ratings**: Quarter-hourly ratings comparing current prices to 24-hour trailing averages
 -   **Smart Indicators**: Binary sensors to detect peak hours and best price hours for automations
+-   **Intelligent Caching**: Minimizes API calls while ensuring data freshness across Home Assistant restarts
+-   **Custom Services**: API endpoints for advanced integrations (ApexCharts support included)
 -   **Diagnostic Sensors**: Monitor data freshness and availability
+-   **Reliable API Usage**: Uses only official Tibber `priceInfo` and `priceInfoRange` endpoints - no legacy APIs. Price ratings and statistics are calculated locally for maximum reliability and future-proofing.
 
 ## Installation
 
@@ -55,58 +60,87 @@ A Home Assistant integration that provides advanced price information and rating
 
 ## Available Entities
 
-### Price Sensors
+The integration provides **30+ sensors** across different categories. Key sensors are enabled by default, while advanced sensors can be enabled as needed.
 
-| Entity                            | Description                                                                                 | Unit   | Default Enabled |
-| --------------------------------- | ------------------------------------------------------------------------------------------- | ------ | --------------- |
-| Current Electricity Price         | The current hourly price                                                                    | ct/kWh | Yes             |
-| Current Electricity Price (EUR)   | The current hourly price                                                                    | €      | No              |
-| Next Hour Electricity Price       | The price for the upcoming hour                                                             | ct/kWh | Yes             |
-| Next Hour Electricity Price (EUR) | The price for the upcoming hour                                                             | €      | No              |
-| Current Price Level               | Tibber's classification of the price (VERY_CHEAP, CHEAP, NORMAL, EXPENSIVE, VERY_EXPENSIVE) | -      | Yes             |
+> **Rich Sensor Attributes**: All sensors include extensive attributes with timestamps, context data, and detailed explanations. Enable **Extended Descriptions** in the integration options to add `long_description` and `usage_tips` attributes to every sensor, providing in-context documentation directly in Home Assistant's UI.
 
-### Statistical Sensors
+### Core Price Sensors (Enabled by Default)
 
-| Entity                      | Description                           | Unit   | Default Enabled |
-| --------------------------- | ------------------------------------- | ------ | --------------- |
-| Today's Lowest Price        | The lowest price for the current day  | ct/kWh | Yes             |
-| Today's Lowest Price (EUR)  | The lowest price for the current day  | €      | No              |
-| Today's Highest Price       | The highest price for the current day | ct/kWh | Yes             |
-| Today's Highest Price (EUR) | The highest price for the current day | €      | No              |
-| Today's Average Price       | The average price for the current day | ct/kWh | Yes             |
-| Today's Average Price (EUR) | The average price for the current day | €      | No              |
+| Entity                        | Description                                       |
+| ----------------------------- | ------------------------------------------------- |
+| Current Electricity Price     | Current 15-minute interval price                  |
+| Next Interval Price           | Price for the next 15-minute interval             |
+| Current Hour Average Price    | Average of current hour's 4 intervals             |
+| Next Hour Average Price       | Average of next hour's 4 intervals                |
+| Current Price Level           | API classification (VERY_CHEAP to VERY_EXPENSIVE) |
+| Next Interval Price Level     | Price level for next interval                     |
+| Current Hour Price Level      | Price level for current hour average              |
+| Next Hour Price Level         | Price level for next hour average                 |
 
-### Rating Sensors
+### Statistical Sensors (Enabled by Default)
 
-| Entity                       | Description                                       | Unit | Default Enabled |
-| ---------------------------- | ------------------------------------------------- | ---- | --------------- |
-| Quarter-Hourly Price Rating  | How the quarter price compares to historical data | %    | Yes             |
+| Entity                         | Description                                  |
+| ------------------------------ | -------------------------------------------- |
+| Today's Lowest Price           | Minimum price for today                      |
+| Today's Highest Price          | Maximum price for today                      |
+| Today's Average Price          | Mean price across today's intervals          |
+| Tomorrow's Lowest Price        | Minimum price for tomorrow (when available)  |
+| Tomorrow's Highest Price       | Maximum price for tomorrow (when available)  |
+| Tomorrow's Average Price       | Mean price for tomorrow (when available)     |
+| Leading 24h Average Price      | Average of next 24 hours from now            |
+| Leading 24h Minimum Price      | Lowest price in next 24 hours                |
+| Leading 24h Maximum Price      | Highest price in next 24 hours               |
 
-### Binary Sensors
+### Price Rating Sensors (Enabled by Default)
 
-| Entity                | Description                                                         | Default Enabled |
-| --------------------- | ------------------------------------------------------------------- | --------------- |
-| Peak Hour             | Whether the current hour is in the top 20% of prices for the day    | Yes             |
-| Best Price Hour       | Whether the current hour is in the bottom 20% of prices for the day | Yes             |
-| Tibber API Connection | Shows connection status to the Tibber API                           | Yes             |
+| Entity                      | Description                                                |
+| --------------------------- | ---------------------------------------------------------- |
+| Current Price Rating        | % difference from 24h trailing average (current interval) |
+| Next Interval Price Rating  | % difference from 24h trailing average (next interval)    |
+| Current Hour Price Rating   | % difference for current hour average                     |
+| Next Hour Price Rating      | % difference for next hour average                        |
 
-### Diagnostic Sensors
+> **How ratings work**: Compares each interval to the average of the previous 96 intervals (24 hours). Positive values mean prices are above average, negative means below average.
 
-| Entity                 | Description                                                      | Default Enabled |
-| ---------------------- | ---------------------------------------------------------------- | --------------- |
-| Last Data Update       | Timestamp of the most recent data update                         | Yes             |
-| Tomorrow's Data Status | Indicates if tomorrow's price data is available (Yes/No/Partial) | Yes             |
+### Binary Sensors (Enabled by Default)
+
+| Entity                     | Description                                                    |
+| -------------------------- | -------------------------------------------------------------- |
+| Peak Price Interval        | ON when current interval is in the highest 20% of day's prices |
+| Best Price Interval        | ON when current interval is in the lowest 20% of day's prices  |
+| Tibber API Connection      | Connection status to Tibber API                                |
+| Tomorrow's Data Available  | Whether tomorrow's price data is available                     |
+
+### Diagnostic Sensors (Enabled by Default)
+
+| Entity            | Description                                |
+| ----------------- | ------------------------------------------ |
+| Data Expiration   | Timestamp when current data expires        |
+| Price Forecast    | Formatted list of upcoming price intervals |
+
+### Additional Sensors (Disabled by Default)
+
+The following sensors are available but disabled by default. Enable them in `Settings > Devices & Services > Tibber Price Information & Ratings > Entities`:
+
+- **Previous Interval Price** & **Previous Interval Price Level**: Historical data for the last 15-minute interval
+- **Previous Interval Price Rating**: Rating for the previous interval
+- **Trailing 24h Average Price**: Average of the past 24 hours from now
+- **Trailing 24h Minimum/Maximum Price**: Min/max in the past 24 hours
+
+> **Note**: All monetary sensors use minor currency units (ct/kWh, øre/kWh, ¢/kWh, p/kWh) automatically based on your Tibber account's currency. Supported: EUR, NOK, SEK, DKK, USD, GBP.
 
 ## Automation Examples
 
 ### Run Appliances During Cheap Hours
+
+Use the `binary_sensor.tibber_best_price_interval` to automatically start appliances during the cheapest 15-minute periods:
 
 ```yaml
 automation:
     - alias: "Run Dishwasher During Cheap Hours"
       trigger:
           - platform: state
-            entity_id: binary_sensor.tibber_best_price_hour
+            entity_id: binary_sensor.tibber_best_price_interval
             to: "on"
       condition:
           - condition: time
@@ -119,6 +153,8 @@ automation:
 ```
 
 ### Notify on Extremely High Prices
+
+Get notified when prices reach the VERY_EXPENSIVE level:
 
 ```yaml
 automation:
@@ -134,19 +170,125 @@ automation:
                 message: "Current electricity price is in the VERY EXPENSIVE range. Consider reducing consumption."
 ```
 
+### Temperature Control Based on Price Ratings
+
+Adjust heating/cooling when current prices are significantly above the 24h average:
+
+```yaml
+automation:
+    - alias: "Reduce Heating During High Price Ratings"
+      trigger:
+          - platform: numeric_state
+            entity_id: sensor.tibber_current_price_rating
+            above: 20  # More than 20% above 24h average
+      action:
+          - service: climate.set_temperature
+            target:
+                entity_id: climate.living_room
+            data:
+                temperature: 19  # Lower target temperature
+```
+
+### Smart EV Charging Based on Tomorrow's Prices
+
+Start charging when tomorrow's prices drop below today's average:
+
+```yaml
+automation:
+    - alias: "Smart EV Charging"
+      trigger:
+          - platform: state
+            entity_id: binary_sensor.tibber_best_price_interval
+            to: "on"
+      condition:
+          - condition: numeric_state
+            entity_id: sensor.tibber_current_price_rating
+            below: -15  # At least 15% below average
+          - condition: numeric_state
+            entity_id: sensor.ev_battery_level
+            below: 80
+      action:
+          - service: switch.turn_on
+            target:
+                entity_id: switch.ev_charger
+```
+
 ## Troubleshooting
 
 ### No data appearing
 
 1. Check your API token is valid at [developer.tibber.com](https://developer.tibber.com/settings/access-token)
 2. Verify you have an active Tibber subscription
-3. Check the Home Assistant logs for detailed error messages
-4. Restart the integration by going to Configuration > Integrations > Tibber Price Information & Ratings > Options
+3. Check the Home Assistant logs for detailed error messages (`Settings > System > Logs`)
+4. Restart the integration: `Settings > Devices & Services > Tibber Price Information & Ratings > ⋮ > Reload`
 
 ### Missing tomorrow's price data
 
--   Tomorrow's price data usually becomes available between 13:00 and 15:00 each day
--   If data is still unavailable after this time, check the Tibber app to see if data is available there
+-   Tomorrow's price data typically becomes available between **13:00 and 15:00** each day (Nordic time)
+-   The integration automatically checks more frequently during this window
+-   Check `binary_sensor.tibber_tomorrows_data_available` to see if data is available
+-   If data is unavailable after 15:00, verify it's available in the Tibber app first
+
+### Prices not updating at quarter-hour boundaries
+
+-   Entities automatically refresh at 00/15/30/45-minute marks without waiting for API polls
+-   Check `sensor.tibber_data_expiration` to verify data freshness
+-   The integration caches data intelligently and survives Home Assistant restarts
+
+### Currency or units showing incorrectly
+
+-   Currency is automatically detected from your Tibber account
+-   The integration supports EUR, NOK, SEK, DKK, USD, and GBP with appropriate minor units
+-   Enable/disable major vs. minor unit sensors in `Settings > Devices & Services > Tibber Price Information & Ratings > Entities`
+
+## Advanced Features
+
+### Sensor Attributes
+
+Every sensor includes rich attributes beyond just the state value. These attributes provide context, timestamps, and additional data useful for automations and templates.
+
+**Standard attributes available on most sensors:**
+- `timestamp` - ISO 8601 timestamp for the data point
+- `description` - Brief explanation of what the sensor represents
+- `level_id` and `level_value` - For price level sensors (e.g., `VERY_CHEAP` = -2)
+
+**Extended descriptions** (enable in integration options):
+- `long_description` - Detailed explanation of the sensor's purpose
+- `usage_tips` - Practical suggestions for using the sensor in automations
+
+**Example - Current Price sensor attributes:**
+```yaml
+timestamp: "2025-11-03T14:15:00+01:00"
+description: "The current electricity price per kWh"
+long_description: "Shows the current price per kWh from your Tibber subscription"
+usage_tips: "Use this to track prices or to create automations that run when electricity is cheap"
+```
+
+**Example template using attributes:**
+```yaml
+template:
+  - sensor:
+      - name: "Price Status"
+        state: >
+          {% set price = states('sensor.tibber_current_electricity_price') | float %}
+          {% set timestamp = state_attr('sensor.tibber_current_electricity_price', 'timestamp') %}
+          Price at {{ timestamp }}: {{ price }} ct/kWh
+```
+
+### Custom Services
+
+The integration provides custom services for advanced use cases:
+
+-   `tibber_prices.get_price` - Fetch price data for specific days/times (useful for scripts)
+-   `tibber_prices.get_apexcharts_data` - Get formatted data for ApexCharts cards
+-   `tibber_prices.get_apexcharts_yaml` - Generate complete ApexCharts card configuration
+-   `tibber_prices.refresh_user_data` - Manually refresh account information
+
+See the Services tab in Home Assistant Developer Tools for detailed documentation and parameters.
+
+### ApexCharts Integration
+
+The integration includes built-in support for creating beautiful price visualization cards. Use the `get_apexcharts_yaml` service to generate card configurations automatically.
 
 ## Contributing
 
