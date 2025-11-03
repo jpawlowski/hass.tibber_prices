@@ -31,8 +31,8 @@ ATTRIBUTION = "Data provided by Tibber"
 # Integration name should match manifest.json
 DEFAULT_NAME = "Tibber Price Information & Ratings"
 DEFAULT_EXTENDED_DESCRIPTIONS = False
-DEFAULT_BEST_PRICE_FLEX = 5  # 5% flexibility for best price (user-facing, percent)
-DEFAULT_PEAK_PRICE_FLEX = -5  # 5% flexibility for peak price (user-facing, percent)
+DEFAULT_BEST_PRICE_FLEX = 20  # 20% flexibility for best price (user-facing, percent)
+DEFAULT_PEAK_PRICE_FLEX = -20  # 20% flexibility for peak price (user-facing, percent)
 DEFAULT_PRICE_RATING_THRESHOLD_LOW = -10  # Default rating threshold low percentage
 DEFAULT_PRICE_RATING_THRESHOLD_HIGH = 10  # Default rating threshold high percentage
 
