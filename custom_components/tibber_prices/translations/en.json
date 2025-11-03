@@ -45,7 +45,6 @@
                 "user": "Add Tibber Home"
             },
             "title": "Add Tibber Home",
-            "description": "Add another Tibber home to your integration",
             "step": {
                 "user": {
                     "title": "Add Tibber Home",
