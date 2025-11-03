@@ -1,5 +1,90 @@
 {
     "sensor": {
+        "current_price": {
+            "description": "Der aktuelle Strompreis in Cent pro kWh",
+            "long_description": "Zeigt den aktuellen Preis pro kWh (in Cent) von deinem Tibber-Abonnement an",
+            "usage_tips": "Nutze dies, um Preise zu verfolgen oder Automatisierungen zu erstellen, die bei günstigem Strom ausgeführt werden"
+        },
+        "next_interval_price": {
+            "description": "Der Strompreis für das nächste 15-Minuten-Intervall in Cent pro kWh",
+            "long_description": "Zeigt den Preis für das nächste 15-Minuten-Intervall (in Cent) von deinem Tibber-Abonnement an",
+            "usage_tips": "Nutze dies, um dich auf kommende Preisänderungen vorzubereiten oder Geräte während günstigerer Intervalle zu planen"
+        },
+        "previous_interval_price": {
+            "description": "Der Strompreis für das vorherige 15-Minuten-Intervall in Cent pro kWh",
+            "long_description": "Zeigt den Preis für das vorherige 15-Minuten-Intervall (in Cent) von deinem Tibber-Abonnement an",
+            "usage_tips": "Nutze dies, um vergangene Preisänderungen zu überprüfen oder den Preisverlauf zu verfolgen"
+        },
+        "current_hour_average": {
+            "description": "Gleitender 5-Intervall-Durchschnittspreis in Cent pro kWh",
+            "long_description": "Zeigt den durchschnittlichen Preis pro kWh (in Cent) berechnet aus 5 Intervallen: 2 vorherige, aktuelles und 2 nächste Intervalle (ca. 75 Minuten insgesamt). Dies bietet einen geglätteten 'Stundenpreis', der sich mit der Zeit anpasst, anstatt an feste Uhrzeiten gebunden zu sein.",
+            "usage_tips": "Nutze dies für einen stabileren Preisindikator, der kurzfristige Schwankungen glättet und dennoch auf Preisänderungen reagiert. Besser als feste Stundenpreise für Verbrauchsentscheidungen."
+        },
+        "next_hour_average": {
+            "description": "Gleitender 5-Intervall-Durchschnittspreis für nächste Stunde in Cent pro kWh",
+            "long_description": "Zeigt den durchschnittlichen Preis pro kWh (in Cent) berechnet aus 5 Intervallen, die eine Stunde voraus zentriert sind: ungefähr Intervalle +2 bis +6 von jetzt (Minuten +30 bis +105 abdeckend). Dies bietet einen vorausschauenden geglätteten 'Stundenpreis' zur Verbrauchsplanung.",
+            "usage_tips": "Nutze dies, um Preisänderungen in der nächsten Stunde vorherzusehen. Hilfreich für die Planung von verbrauchsintensiven Aktivitäten wie Elektrofahrzeug-Laden, Geschirrspüler oder Heizsysteme."
+        },
+        "lowest_price_today": {
+            "description": "Der niedrigste Strompreis für heute in Cent pro kWh",
+            "long_description": "Zeigt den niedrigsten Preis pro kWh (in Cent) für den aktuellen Tag von deinem Tibber-Abonnement an",
+            "usage_tips": "Nutze dies, um aktuelle Preise mit der günstigsten Zeit des Tages zu vergleichen"
+        },
+        "highest_price_today": {
+            "description": "Der höchste Strompreis für heute in Cent pro kWh",
+            "long_description": "Zeigt den höchsten Preis pro kWh (in Cent) für den aktuellen Tag von deinem Tibber-Abonnement an",
+            "usage_tips": "Nutze dies, um den Betrieb von Geräten während Spitzenpreiszeiten zu vermeiden"
+        },
+        "average_price_today": {
+            "description": "Der durchschnittliche Strompreis für heute in Cent pro kWh",
+            "long_description": "Zeigt den durchschnittlichen Preis pro kWh (in Cent) für den aktuellen Tag von deinem Tibber-Abonnement an",
+            "usage_tips": "Nutze dies als Grundlage für den Vergleich mit aktuellen Preisen"
+        },
+        "lowest_price_tomorrow": {
+            "description": "Der niedrigste Strompreis für morgen in Cent pro kWh",
+            "long_description": "Zeigt den niedrigsten Preis pro kWh (in Cent) für den morgigen Tag von deinem Tibber-Abonnement an. Dieser Sensor wird nicht verfügbar, bis die Preise für morgen von Tibber veröffentlicht werden (typischerweise zwischen 13:00 und 14:00 Uhr MEZ).",
+            "usage_tips": "Nutze dies zur Planung energieintensiver Aktivitäten wie das Laden von Elektrofahrzeugen oder das Aufheizen von Warmwasserspeichern für morgen. Wenn der morgige Mindestpreis deutlich niedriger ist als der heutige, kannst du den Verbrauch verschieben."
+        },
+        "highest_price_tomorrow": {
+            "description": "Der höchste Strompreis für morgen in Cent pro kWh",
+            "long_description": "Zeigt den höchsten Preis pro kWh (in Cent) für den morgigen Tag von deinem Tibber-Abonnement an. Dieser Sensor wird nicht verfügbar, bis die Preise für morgen von Tibber veröffentlicht werden (typischerweise zwischen 13:00 und 14:00 Uhr MEZ).",
+            "usage_tips": "Nutze dies, um den Betrieb von Geräten während der teuersten Stunden morgen zu vermeiden. Plane nicht-essentielle Lasten außerhalb dieser Spitzenpreiszeiten."
+        },
+        "average_price_tomorrow": {
+            "description": "Der durchschnittliche Strompreis für morgen in Cent pro kWh",
+            "long_description": "Zeigt den durchschnittlichen Preis pro kWh (in Cent) für den morgigen Tag von deinem Tibber-Abonnement an. Dieser Sensor wird nicht verfügbar, bis die Preise für morgen von Tibber veröffentlicht werden (typischerweise zwischen 13:00 und 14:00 Uhr MEZ).",
+            "usage_tips": "Nutze dies als Grundlinie für den Vergleich mit den morgigen Preisen und zur Verbrauchsplanung. Vergleiche mit dem heutigen Durchschnitt, um zu sehen, ob morgen insgesamt teurer oder günstiger wird."
+        },
+        "trailing_price_average": {
+            "description": "Der durchschnittliche Strompreis für die letzten 24 Stunden in Cent pro kWh",
+            "long_description": "Zeigt den durchschnittlichen Preis pro kWh (in Cent) berechnet aus den letzten 24 Stunden (nachlaufender Durchschnitt) von deinem Tibber-Abonnement an. Dies bietet einen gleitenden Durchschnitt, der alle 15 Minuten basierend auf historischen Daten aktualisiert wird.",
+            "usage_tips": "Nutze dies, um aktuelle Preise mit den jüngsten Trends zu vergleichen. Ein aktueller Preis deutlich über diesem Durchschnitt kann ein guter Zeitpunkt sein, um den Verbrauch zu reduzieren."
+        },
+        "leading_price_average": {
+            "description": "Der durchschnittliche Strompreis für die nächsten 24 Stunden in Cent pro kWh",
+            "long_description": "Zeigt den durchschnittlichen Preis pro kWh (in Cent) berechnet aus den nächsten 24 Stunden (vorlaufender Durchschnitt) von deinem Tibber-Abonnement an. Dies bietet einen vorausschauenden Durchschnitt basierend auf verfügbaren Prognosedaten.",
+            "usage_tips": "Nutze dies zur Energieverbrauchsplanung. Wenn der aktuelle Preis unter dem vorlaufenden Durchschnitt liegt, kann es ein guter Zeitpunkt sein, um energieintensive Geräte zu betreiben."
+        },
+        "trailing_price_min": {
+            "description": "Der niedrigste Strompreis für die letzten 24 Stunden in Cent pro kWh",
+            "long_description": "Zeigt den niedrigsten Preis pro kWh (in Cent) aus den letzten 24 Stunden (nachlaufendes Minimum) von deinem Tibber-Abonnement an. Dies bietet den niedrigsten Preis, der in den letzten 24 Stunden gesehen wurde.",
+            "usage_tips": "Nutze dies, um die beste Preisgelegenheit zu sehen, die du in den letzten 24 Stunden hattest, und vergleiche sie mit den aktuellen Preisen."
+        },
+        "trailing_price_max": {
+            "description": "Der höchste Strompreis für die letzten 24 Stunden in Cent pro kWh",
+            "long_description": "Zeigt den höchsten Preis pro kWh (in Cent) aus den letzten 24 Stunden (nachlaufendes Maximum) von deinem Tibber-Abonnement an. Dies bietet den höchsten Preis, der in den letzten 24 Stunden gesehen wurde.",
+            "usage_tips": "Nutze dies, um den Spitzenpreis in den letzten 24 Stunden zu sehen und die Preisvolatilität zu bewerten."
+        },
+        "leading_price_min": {
+            "description": "Der niedrigste Strompreis für die nächsten 24 Stunden in Cent pro kWh",
+            "long_description": "Zeigt den niedrigsten Preis pro kWh (in Cent) für die nächsten 24 Stunden (vorlaufendes Minimum) von deinem Tibber-Abonnement an. Dies bietet den niedrigsten erwarteten Preis in den nächsten 24 Stunden basierend auf Prognosedaten.",
+            "usage_tips": "Nutze dies, um die beste kommende Preisgelegenheit zu identifizieren und energieintensive Aufgaben entsprechend zu planen."
+        },
+        "leading_price_max": {
+            "description": "Der höchste Strompreis für die nächsten 24 Stunden in Cent pro kWh",
+            "long_description": "Zeigt den höchsten Preis pro kWh (in Cent) für die nächsten 24 Stunden (vorlaufendes Maximum) von deinem Tibber-Abonnement an. Dies bietet den höchsten erwarteten Preis in den nächsten 24 Stunden basierend auf Prognosedaten.",
+            "usage_tips": "Nutze dies, um den Betrieb von Geräten während kommender Spitzenpreiszeiten zu vermeiden."
+        },
         "current_price_cents": {
             "name": "Aktueller Strompreis",
             "description": "Der aktuelle Strompreis in Cent pro kWh",
