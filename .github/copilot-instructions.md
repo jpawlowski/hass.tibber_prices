@@ -1,178 +1,182 @@
 # Copilot Instructions
 
-This repository contains a **Home Assistant custom integration** providing Tibber electricity price information and ratings, distributed via **HACS**.
-
-## Repository Overview
-
--   **Type**: Home Assistant Custom Integration (~5,100 lines Python)
--   **Language**: Python 3.13, async/await
--   **Framework**: Home Assistant 2025.10.0+
--   **Main Components**: Sensors, Binary Sensors, Services, Config Flow, Data Coordinator
--   **Testing**: pytest with pytest-homeassistant-custom-component (7 test files)
-
-## Build, Lint, and Test Commands
-
-### Setup (ALWAYS Run First)
-
-```bash
-scripts/setup  # Installs dependencies
-```
-
-**Note**: `homeassistant>=2025.10.0` may not be in PyPI. Use devcontainer for full environment.
-
-### Linting (ALWAYS Run Before Commit)
-
-```bash
-scripts/lint  # Runs: ruff format . && ruff check . --fix
-```
-
--   CI enforces via `.github/workflows/lint.yml` (runs `ruff format --check` and `ruff check`)
--   **CI will fail if linting errors exist**
--   Key rules: F401, F841, E402, E501, C901, PLR0912/15/11, RET504, B008, T201, SIM102
--   Line length: 120 chars (see `.ruff.toml`)
-
-### Testing
-
-```bash
-pytest tests/  # Run all tests
-pytest tests/test_price_utils.py  # Run specific test
-```
-
-Tests in `tests/` directory cover price utilities, coordinator, midnight turnover, services.
-
-### CI Validation
-
-Two workflows run on push/PR:
-
-1. **`validate.yml`**: hassfest (HA manifest validation) + HACS validation
-2. **`lint.yml`**: Ruff format + lint checks
-
-**Replicate CI locally**: Run `scripts/lint` – if it passes, CI will pass.
-
-### Development Environment
-
-Use VS Code devcontainer (`.devcontainer/devcontainer.json`):
-
--   Python 3.13, auto-runs `scripts/setup`
--   Home Assistant on port 8123
--   Start: `scripts/develop` (runs `hass --config ./config --debug`)
+This repository contains a **custom component for Home Assistant**, intended to be distributed via the **HACS (Home Assistant Community Store)**.
 
 ## Development Guidelines
 
--   Follow [developers.home-assistant.io](https://developers.home-assistant.io)
--   Use async functions, non-blocking I/O, config flows
--   Standard files: `__init__.py`, `manifest.json`, `config_flow.py`, `sensor.py`, `const.py`
--   Use HA helpers: `homeassistant.helpers.entity`, `device_registry`, `dt_util`
--   Don't wrap built-ins, avoid third-party libs, no static file paths
+-   Follow the **official Home Assistant development guidelines** at [developers.home-assistant.io](https://developers.home-assistant.io).
+-   Ensure compatibility with the **latest Home Assistant release**.
+-   Use **async functions**, **non-blocking I/O**, and **config flows** where applicable.
+-   Structure the component using these standard files:
 
-## Coding Style
+    -   `__init__.py` – setup and teardown
+    -   `manifest.json` – metadata and dependencies
+    -   `config_flow.py` – if the integration supports UI configuration
+    -   `sensor.py`, `switch.py`, etc. – for platforms
+    -   `const.py` – constants (`DOMAIN`, `CONF_*`, etc.)
 
--   **PEP8** via Black, isort, Ruff
--   Type hints + docstrings on all public methods
--   F-strings for formatting
--   Use `_LOGGER`, not `print()`
+-   Use Home Assistant's built-in helpers and utility modules:
 
-### Module Structure Order
+    -   `homeassistant.helpers.entity`, `device_registry`, `config_validation`
+    -   `homeassistant.util.dt` (`dt_util`) for time/date handling
 
-1. Imports (stdlib → third-party → local)
-2. Module constants/globals
-3. Top-level functions (public → helpers → utilities)
-4. Main classes (Entity, Coordinator, ConfigFlow)
-5. Helper classes (or move to separate modules)
+-   Do not wrap built-in functions (e.g., don’t wrap `dt_util.parse_datetime`)
+-   Avoid third-party or custom libraries unless absolutely necessary
+-   Never assume static local file paths — use config options and relative paths
 
-### Code Comments Policy
+## Coding Style Policy
 
--   **No** comments for automated changes (reordering, renaming, compliance)
--   Comments **only** for logic/purpose/usage
--   Explanations go in PR/commit messages, not code
+-   Follow **PEP8**, enforced by **Black**, **isort**, and **Ruff**
+-   Use **type hints** on all function and method signatures
+-   Add **docstrings** for all public classes and methods
+-   Use **f-strings** for string formatting
+-   Do not use `print()` — use `_LOGGER` for logging
+-   YAML examples must be **valid**, **minimal**, and **Home Assistant compliant**
+
+## Code Structure and Ordering Policy
+
+Use the following order inside Python modules:
+
+1. **Imports**
+
+    - Python standard library imports first
+    - Third-party imports (e.g., `homeassistant.*`)
+    - Local imports within this component (`from . import xyz`)
+    - Enforced automatically by `isort`
+
+2. **Module-level constants and globals**
+
+    - Define constants and globals at module-level (e.g., `DOMAIN`, `_LOGGER`, `CONF_*`, `DEFAULT_*`)
+
+3. **Top-level functions**
+
+    - Use only for stateless, reusable logic
+    - Prefix with `_` if internal only (e.g., `_parse_price()`)
+    - Do not place Home Assistant lifecycle logic here
+    - **Sort and group top-level functions for maximum readability:**
+        - Place public API/entry point functions (e.g., service handlers, async setup) at the top of the function section.
+        - Direct helpers (called by entry points) immediately after, in the order they are called.
+        - Pure/stateless utility functions that are not tightly coupled to entry points at the end.
+        - Where possible, order functions so that a function appears before any function that calls it (call hierarchy order).
+        - Group related functions by logical purpose or data handled, and use `#region`/`#endregion` folding comments for large files if needed.
+
+4. **Main classes**
+
+    - Define main classes (Home Assistant Entity classes, DataUpdateCoordinators, and ConfigFlow handlers)
+    - Order inside class:
+        - Special methods (`__init__`, `__repr__`)
+        - Public methods (no `_`)
+        - Private methods (`_prefix`)
+    - All I/O or lifecycle methods must be `async def`
+
+5. **Helper classes**
+
+    - If helper classes become complex, move them to separate modules (e.g., `helpers.py`, `models.py`)
+
+> ✅ Copilot tip:
+>
+> -   Use top-level functions for pure helpers only.
+> -   Prefer structured classes where Home Assistant expects them.
+> -   Sort and group functions for maximum readability and maintainability, following call flow from entry points to helpers to utilities.
+
+## Code Comments Policy
+
+-   Do **not** add comments in the code to explain automated changes, such as reordering, renaming, or compliance with coding standards or prompts.
+-   Comments in code should be reserved **only** for documenting the actual logic, purpose, or usage of code elements (e.g., classes, methods, functions, or complex logic blocks).
+-   If any explanations of automated actions are needed, provide them **outside the code file** (such as in your chat response, PR description, or commit message), not within the Python files themselves.
+-   Do **not** insert comments like `# moved function`, `# renamed`, `# for compliance`, or similar into code files.
 
 ## Backwards Compatibility Policy
 
--   **Do not** add compatibility layers unless explicitly requested
--   Target latest stable HA version only
+-   Do **not** implement or suggest backward compatibility features, workarounds, deprecated function support, or compatibility layers unless **explicitly requested** in the prompt or project documentation.
+-   All code should assume a clean, modern codebase and should target the latest stable Home Assistant version only, unless otherwise specified.
+-   If you believe backward compatibility might be required, **ask for clarification first** before adding any related code.
 
 ## Translations Policy
 
--   User-facing strings in `translations/en.json` and other `translations/*.json`
--   **All translation files must sync** – update all languages when adding/changing keys
--   `custom_translations/` for supplemental strings not in standard HA format
--   Never duplicate keys between `translations/` and `custom_translations/`
--   Standard translations take priority over custom
+-   All user-facing strings supported by Home Assistant's translation system **must** be defined in `/translations/en.json` and (if present) in other `/translations/*.json` language files.
+-   When adding or updating a translation key in `/translations/en.json`, **ensure that all other language files in `/translations/` are updated to match the same set of keys**. Non-English files may use placeholder values if no translation is available, but **must** not miss any keys present in `en.json`.
+-   Do **not** remove or rename translation keys without updating all language files accordingly.
+-   Never duplicate translation keys between `/translations/` and `/custom_translations/`.
+-   The `/custom_translations/` directory contains **supplemental translation files** for UI strings or other content not handled by the standard Home Assistant translation format.
+    -   Only add strings to `/custom_translations/` if they are not supported by the standard Home Assistant translation system.
+    -   Do **not** duplicate any string or translation key that could be handled in `/translations/`.
+-   When both exist, the standard Home Assistant translation in `/translations/` **always takes priority** over any supplemental entry in `/custom_translations/`.
+-   All translation files (both standard and custom) **must remain in sync** with the English base file (`en.json`) in their respective directory.
 
-## Project Layout
+> ✅ Copilot tip: Whenever adding or changing user-facing strings, update both the main translation files in `/translations/` and the supplemental files in `/custom_translations/`, keeping them in sync and avoiding duplication.
 
-```
-/
-├── .github/workflows/          # CI: lint.yml, validate.yml
-├── .devcontainer/              # VS Code dev container
-├── custom_components/tibber_prices/  # Main code (5,100 lines)
-│   ├── __init__.py (115)       # Entry point
-│   ├── const.py (473)          # Constants
-│   ├── api.py (850)            # Tibber API client
-│   ├── coordinator.py (536)    # Data coordinator
-│   ├── sensor.py (859)         # Sensor platform
-│   ├── binary_sensor.py (693)  # Binary sensors
-│   ├── config_flow.py (494)    # UI config
-│   ├── services.py (639)       # Custom services
-│   ├── price_utils.py (291)    # Price calculations
-│   ├── services.yaml           # Service definitions
-│   ├── translations/           # Standard HA translations (en, de)
-│   └── custom_translations/    # Supplemental translations
-├── config/configuration.yaml   # Dev HA config
-├── scripts/
-│   ├── setup                   # Install deps
-│   ├── lint                    # Ruff format & check
-│   └── develop                 # Start HA
-├── tests/                      # pytest suite (7 files)
-├── .ruff.toml                  # Linting config
-├── pyproject.toml              # Black/isort config
-├── requirements.txt            # Dependencies
-└── hacs.json                   # HACS metadata
+## Data Structures
+
+Use `@dataclass` for plain data containers where appropriate:
+
+```python
+from dataclasses import dataclass
+
+@dataclass
+class PriceSlot:
+    start: datetime
+    end: datetime
+    price: float
 ```
 
-### Configuration Files
+## Visual File Layout
 
--   **`.ruff.toml`**: Python 3.13, line length 120, ALL rules with selective ignores
--   **`pyproject.toml`**: Black/isort (line length 120)
--   **`.editorconfig`**: 4-space indent, LF, UTF-8
--   **`manifest.json`**: domain, version, requirements (`aiofiles>=23.2.1`), IoT class
--   **`hacs.json`**: HA 2025.10.0+, HACS 2.0.1+
+Split component logic into multiple Python modules for improved clarity and maintainability:
 
-### Architecture
+```
+/custom_components/your_component/
+├── __init__.py
+├── manifest.json
+├── const.py
+├── sensor.py
+├── config_flow.py
+├── models.py       # dataclasses
+├── helpers.py      # pure utility functions
+```
 
--   **Data Flow**: API → Coordinator → Sensors/Binary Sensors
--   **Storage**: HA Storage API for caching
--   **Update**: Polling (cloud_polling)
--   **Services**: get_price, get_apexcharts_data, get_apexcharts_yaml, refresh_user_data
+Use `#region` / `#endregion` optionally to improve readability in large files.
 
-### Common Tasks
+## Optional Files (Custom Integration via HACS)
 
--   **Add sensor**: Edit `sensor.py`/`binary_sensor.py` + translation keys
--   **Modify API**: Edit `api.py` (GraphQL queries)
--   **Price calculations**: Edit `price_utils.py`
--   **Translations**: Sync all files in `translations/` and `custom_translations/`
--   **Add service**: Edit `services.py` + `services.yaml`
+Only create these files if explicitly required by your integration features. Not all files used in Core integrations apply to Custom Integrations:
 
-## Linting Rules (Ruff)
+-   `services.yaml` – Define custom Home Assistant services
+-   `translations/*.json` (e.g., `en.json`, `de.json`) – Provide translations for UI elements
+-   Additional platform files (e.g., `binary_sensor.py`, `switch.py`, `number.py`, `button.py`, `select.py`) – Support for additional entity types
+-   `websocket_api.py` – Define custom WebSocket API endpoints
+-   `diagnostics.py` – Provide diagnostic data to users and maintainers
+-   `repair.py` – Offer built-in repair hints or troubleshooting guidance
+-   `issue_registry.py` – Communicate integration-specific issues or important changes to users clearly
 
-Key enforced rules:
+> ⚠️ **Copilot tip**: Avoid Core-only files (`device_action.py`, `device_trigger.py`, `device_condition.py`, `strings.json`) for Custom Integrations. These are typically not supported or rarely used.
 
--   F401, F841: No unused imports/variables
--   E402: Imports at top
--   E501: Lines ≤120 chars
--   C901, PLR0912, PLR0915: Simple functions
--   PLR0911, RET504: No redundant else after return
--   B008: No mutable defaults
--   T201: No print()
--   SIM102: Prefer `if x` over `if x == True`
+## Linting and Code Quality Policy
 
-## Optional Files
+-   Enforced by **Ruff**, which runs:
 
-Only create if needed: `services.yaml`, `translations/*.json`, `binary_sensor.py`, `diagnostics.py`. **Avoid** Core-only files: `device_action.py`, `device_trigger.py`, `strings.json`.
+    -   Locally via VS Code devcontainer
+    -   Remotely via GitHub Actions
 
-## Important Notes
+Key Ruff linter rules that must be followed:
 
--   **Only dependency**: `aiofiles>=23.2.1`
--   **No pip install HA**: Use devcontainer
--   **Git ignore**: `__pycache__`, `.pytest*`, `.ruff_cache`, `config/*` (except `configuration.yaml`)
--   **Trust these instructions**: Only search if incomplete or incorrect
+-   `F401`, `F841` – No unused imports or variables
+-   `E402`, `E501` – Imports at top, lines ≤88 chars
+-   `C901`, `PLR0912`, `PLR0915` – Functions must be small and simple
+-   `PLR0911`, `RET504` – No redundant `else` after `return`
+-   `B008` – No mutable default arguments
+-   `T201` – Do not use `print()`
+-   `SIM102` – Prefer `if x` over `if x == True`
+
+Also:
+
+-   Use **Black** for formatting
+-   Use **isort** for import sorting
+-   See `.ruff.toml` for custom settings
+-   Prefer **one return statement per function** unless early returns improve clarity
+
+## Tests
+
+This integration does **not include automated tests** by default.
+
+> ⚠️ If Copilot generates tests, keep them minimal and **do not introduce new test frameworks** not already present.
