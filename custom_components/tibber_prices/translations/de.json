@@ -102,16 +102,34 @@
             "current_price": {
                 "name": "Aktueller Strompreis"
             },
+            "current_price_cents": {
+                "name": "Aktueller Strompreis"
+            },
+            "next_interval_price": {
+                "name": "Strompreis nächstes Intervall"
+            },
+            "next_interval_price_cents": {
+                "name": "Strompreis nächstes Intervall"
+            },
             "price_level": {
                 "name": "Aktuelles Preisniveau"
             },
             "lowest_price_today": {
                 "name": "Niedrigster Preis heute"
             },
+            "lowest_price_today_cents": {
+                "name": "Niedrigster Preis heute"
+            },
             "highest_price_today": {
                 "name": "Höchster Preis heute"
             },
+            "highest_price_today_cents": {
+                "name": "Höchster Preis heute"
+            },
             "average_price_today": {
+                "name": "Durchschnittspreis heute"
+            },
+            "average_price_today_cents": {
                 "name": "Durchschnittspreis heute"
             },
             "price_rating": {
@@ -125,9 +143,6 @@
             },
             "data_timestamp": {
                 "name": "Ablauf der Preisdaten"
-            },
-            "next_interval_price": {
-                "name": "Strompreis nächstes Intervall"
             },
             "price_forecast": {
                 "name": "Preisprognose"

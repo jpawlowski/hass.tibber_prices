@@ -17,7 +17,7 @@ A Home Assistant integration that provides advanced price information and rating
 -   **Current and Next Hour Prices**: Get real-time price data in both EUR and cents/kWh
 -   **Price Level Indicators**: Know when you're in a low, normal, or high price period
 -   **Statistical Sensors**: Track lowest, highest, and average prices for the day
--   **Price Ratings**: Quarterly-hour, daily, and monthly ratings to understand how current prices compare to historical data
+-   **Price Ratings**: Quarterly-hour ratings to understand how current prices compare to historical data
 -   **Smart Indicators**: Binary sensors to detect peak hours and best price hours for automations
 -   **Diagnostic Sensors**: Monitor data freshness and availability
 
@@ -78,11 +78,9 @@ A Home Assistant integration that provides advanced price information and rating
 
 ### Rating Sensors
 
-| Entity               | Description                                              | Unit | Default Enabled |
-| -------------------- | -------------------------------------------------------- | ---- | --------------- |
-| Hourly Price Rating  | How the current hour's price compares to historical data | %    | Yes             |
-| Daily Price Rating   | How today's prices compare to historical data            | %    | Yes             |
-| Monthly Price Rating | How this month's prices compare to historical data       | %    | Yes             |
+| Entity                       | Description                                       | Unit | Default Enabled |
+| ---------------------------- | ------------------------------------------------- | ---- | --------------- |
+| Quarter-Hourly Price Rating  | How the quarter price compares to historical data | %    | Yes             |
 
 ### Binary Sensors
 
