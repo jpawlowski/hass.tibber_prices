@@ -13,9 +13,9 @@ fi
 echo "==> Running linting tools..."
 
 echo "==> Running Ruff format..."
-uv run ruff format .
+uv run --active ruff format .
 
 echo "==> Running Ruff check..."
-uv run ruff check . --fix
+uv run --active ruff check . --fix
 
 echo "==> Linting completed!"

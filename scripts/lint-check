@@ -11,9 +11,9 @@ if [ -z "$VIRTUAL_ENV" ]; then
 fi
 
 echo "==> Checking code format..."
-uv run ruff format . --check
+uv run --active ruff format . --check
 
 echo "==> Checking code with Ruff..."
-uv run ruff check .
+uv run --active ruff check .
 
 echo "==> Linting check completed!"
