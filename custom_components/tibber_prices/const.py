@@ -8,6 +8,12 @@ from typing import Any
 
 import aiofiles
 
+from homeassistant.const import (
+    CURRENCY_DOLLAR,
+    CURRENCY_EURO,
+    UnitOfPower,
+    UnitOfTime,
+)
 from homeassistant.core import HomeAssistant
 
 # Version should match manifest.json
@@ -43,6 +49,66 @@ HOME_TYPES = {
     HOME_TYPE_HOUSE: "House",
     HOME_TYPE_COTTAGE: "Cottage",
 }
+
+# Currency mapping: ISO code -> (major_symbol, minor_symbol, minor_name)
+# For currencies with Home Assistant constants, use those; otherwise define custom ones
+CURRENCY_INFO = {
+    "EUR": (CURRENCY_EURO, "ct", "cents"),
+    "NOK": ("kr", "øre", "øre"),
+    "SEK": ("kr", "öre", "öre"),
+    "DKK": ("kr", "øre", "øre"),
+    "USD": (CURRENCY_DOLLAR, "¢", "cents"),
+    "GBP": ("£", "p", "pence"),
+}
+
+
+def get_currency_info(currency_code: str | None) -> tuple[str, str, str]:
+    """
+    Get currency information for a given ISO currency code.
+
+    Args:
+        currency_code: ISO 4217 currency code (e.g., 'EUR', 'NOK', 'SEK')
+
+    Returns:
+        Tuple of (major_symbol, minor_symbol, minor_name)
+        Defaults to EUR if currency is not recognized
+
+    """
+    if not currency_code:
+        currency_code = "EUR"
+
+    return CURRENCY_INFO.get(currency_code.upper(), CURRENCY_INFO["EUR"])
+
+
+def format_price_unit_major(currency_code: str | None) -> str:
+    """
+    Format the price unit string with major currency unit (e.g., '€/kWh').
+
+    Args:
+        currency_code: ISO 4217 currency code (e.g., 'EUR', 'NOK', 'SEK')
+
+    Returns:
+        Formatted unit string like '€/kWh' or 'kr/kWh'
+
+    """
+    major_symbol, _, _ = get_currency_info(currency_code)
+    return f"{major_symbol}/{UnitOfPower.KILO_WATT}{UnitOfTime.HOURS}"
+
+
+def format_price_unit_minor(currency_code: str | None) -> str:
+    """
+    Format the price unit string with minor currency unit (e.g., 'ct/kWh').
+
+    Args:
+        currency_code: ISO 4217 currency code (e.g., 'EUR', 'NOK', 'SEK')
+
+    Returns:
+        Formatted unit string like 'ct/kWh' or 'øre/kWh'
+
+    """
+    _, minor_symbol, _ = get_currency_info(currency_code)
+    return f"{minor_symbol}/{UnitOfPower.KILO_WATT}{UnitOfTime.HOURS}"
+
 
 # Price level constants
 PRICE_LEVEL_NORMAL = "NORMAL"

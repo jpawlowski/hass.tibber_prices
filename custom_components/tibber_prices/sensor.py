@@ -10,13 +10,7 @@ from homeassistant.components.sensor import (
     SensorEntity,
     SensorEntityDescription,
 )
-from homeassistant.const import (
-    CURRENCY_EURO,
-    PERCENTAGE,
-    EntityCategory,
-    UnitOfPower,
-    UnitOfTime,
-)
+from homeassistant.const import PERCENTAGE, EntityCategory
 from homeassistant.util import dt as dt_util
 
 from .average_utils import (
@@ -40,6 +34,7 @@ from .const import (
     PRICE_LEVEL_MAPPING,
     PRICE_RATING_MAPPING,
     async_get_entity_description,
+    format_price_unit_minor,
     get_entity_description,
     get_price_level_translation,
 )
@@ -60,8 +55,6 @@ if TYPE_CHECKING:
     from .coordinator import TibberPricesDataUpdateCoordinator
     from .data import TibberPricesConfigEntry
 
-PRICE_UNIT = CURRENCY_EURO + "/" + UnitOfPower.KILO_WATT + UnitOfTime.HOURS
-PRICE_UNIT_MINOR = "ct/" + UnitOfPower.KILO_WATT + UnitOfTime.HOURS
 HOURS_IN_DAY = 24
 LAST_HOUR_OF_DAY = 23
 INTERVALS_PER_HOUR = 4  # 15-minute intervals
@@ -73,9 +66,8 @@ PRICE_SENSORS = (
         key="current_price",
         translation_key="current_price_cents",
         name="Current Electricity Price",
-        icon="mdi:currency-eur",
+        icon="mdi:cash",
         device_class=SensorDeviceClass.MONETARY,
-        native_unit_of_measurement=PRICE_UNIT_MINOR,
         suggested_display_precision=2,
     ),
     SensorEntityDescription(
@@ -84,7 +76,6 @@ PRICE_SENSORS = (
         name="Next Price",
         icon="mdi:clock-fast",
         device_class=SensorDeviceClass.MONETARY,
-        native_unit_of_measurement=PRICE_UNIT_MINOR,
         suggested_display_precision=2,
     ),
     SensorEntityDescription(
@@ -93,7 +84,6 @@ PRICE_SENSORS = (
         name="Previous Electricity Price",
         icon="mdi:history",
         device_class=SensorDeviceClass.MONETARY,
-        native_unit_of_measurement=PRICE_UNIT_MINOR,
         entity_registry_enabled_default=False,
         suggested_display_precision=2,
     ),
@@ -101,9 +91,8 @@ PRICE_SENSORS = (
         key="current_hour_average",
         translation_key="current_hour_average_cents",
         name="Current Hour Average Price",
-        icon="mdi:currency-eur",
+        icon="mdi:cash",
         device_class=SensorDeviceClass.MONETARY,
-        native_unit_of_measurement=PRICE_UNIT_MINOR,
         suggested_display_precision=1,
     ),
     SensorEntityDescription(
@@ -112,7 +101,6 @@ PRICE_SENSORS = (
         name="Next Hour Average Price",
         icon="mdi:clock-fast",
         device_class=SensorDeviceClass.MONETARY,
-        native_unit_of_measurement=PRICE_UNIT_MINOR,
         suggested_display_precision=1,
     ),
     SensorEntityDescription(
@@ -156,7 +144,6 @@ STATISTICS_SENSORS = (
         name="Today's Lowest Price",
         icon="mdi:arrow-collapse-down",
         device_class=SensorDeviceClass.MONETARY,
-        native_unit_of_measurement=PRICE_UNIT_MINOR,
         suggested_display_precision=1,
     ),
     SensorEntityDescription(
@@ -165,7 +152,6 @@ STATISTICS_SENSORS = (
         name="Today's Highest Price",
         icon="mdi:arrow-collapse-up",
         device_class=SensorDeviceClass.MONETARY,
-        native_unit_of_measurement=PRICE_UNIT_MINOR,
         suggested_display_precision=1,
     ),
     SensorEntityDescription(
@@ -174,7 +160,6 @@ STATISTICS_SENSORS = (
         name="Today's Average Price",
         icon="mdi:chart-line",
         device_class=SensorDeviceClass.MONETARY,
-        native_unit_of_measurement=PRICE_UNIT_MINOR,
         suggested_display_precision=1,
     ),
     SensorEntityDescription(
@@ -183,7 +168,6 @@ STATISTICS_SENSORS = (
         name="Tomorrow's Lowest Price",
         icon="mdi:arrow-collapse-down",
         device_class=SensorDeviceClass.MONETARY,
-        native_unit_of_measurement=PRICE_UNIT_MINOR,
         suggested_display_precision=1,
     ),
     SensorEntityDescription(
@@ -192,7 +176,6 @@ STATISTICS_SENSORS = (
         name="Tomorrow's Highest Price",
         icon="mdi:arrow-collapse-up",
         device_class=SensorDeviceClass.MONETARY,
-        native_unit_of_measurement=PRICE_UNIT_MINOR,
         suggested_display_precision=1,
     ),
     SensorEntityDescription(
@@ -201,7 +184,6 @@ STATISTICS_SENSORS = (
         name="Tomorrow's Average Price",
         icon="mdi:chart-line",
         device_class=SensorDeviceClass.MONETARY,
-        native_unit_of_measurement=PRICE_UNIT_MINOR,
         suggested_display_precision=1,
     ),
     SensorEntityDescription(
@@ -210,7 +192,6 @@ STATISTICS_SENSORS = (
         name="Trailing 24h Average Price",
         icon="mdi:chart-line",
         device_class=SensorDeviceClass.MONETARY,
-        native_unit_of_measurement=PRICE_UNIT_MINOR,
         entity_registry_enabled_default=False,
         suggested_display_precision=1,
     ),
@@ -220,7 +201,6 @@ STATISTICS_SENSORS = (
         name="Leading 24h Average Price",
         icon="mdi:chart-line-variant",
         device_class=SensorDeviceClass.MONETARY,
-        native_unit_of_measurement=PRICE_UNIT_MINOR,
         suggested_display_precision=1,
     ),
     SensorEntityDescription(
@@ -229,7 +209,6 @@ STATISTICS_SENSORS = (
         name="Trailing 24h Minimum Price",
         icon="mdi:arrow-collapse-down",
         device_class=SensorDeviceClass.MONETARY,
-        native_unit_of_measurement=PRICE_UNIT_MINOR,
         entity_registry_enabled_default=False,
         suggested_display_precision=1,
     ),
@@ -239,7 +218,6 @@ STATISTICS_SENSORS = (
         name="Trailing 24h Maximum Price",
         icon="mdi:arrow-collapse-up",
         device_class=SensorDeviceClass.MONETARY,
-        native_unit_of_measurement=PRICE_UNIT_MINOR,
         entity_registry_enabled_default=False,
         suggested_display_precision=1,
     ),
@@ -249,7 +227,6 @@ STATISTICS_SENSORS = (
         name="Leading 24h Minimum Price",
         icon="mdi:arrow-collapse-down",
         device_class=SensorDeviceClass.MONETARY,
-        native_unit_of_measurement=PRICE_UNIT_MINOR,
         suggested_display_precision=1,
     ),
     SensorEntityDescription(
@@ -258,7 +235,6 @@ STATISTICS_SENSORS = (
         name="Leading 24h Maximum Price",
         icon="mdi:arrow-collapse-up",
         device_class=SensorDeviceClass.MONETARY,
-        native_unit_of_measurement=PRICE_UNIT_MINOR,
         suggested_display_precision=1,
     ),
 )
@@ -1157,6 +1133,19 @@ class TibberPricesSensor(TibberPricesEntity, SensorEntity):
                 },
             )
             return None
+
+    @property
+    def native_unit_of_measurement(self) -> str | None:
+        """Return the unit of measurement dynamically based on currency."""
+        if self.entity_description.device_class != SensorDeviceClass.MONETARY:
+            return None
+
+        currency = None
+        if self.coordinator.data:
+            price_info = self.coordinator.data.get("priceInfo", {})
+            currency = price_info.get("currency")
+
+        return format_price_unit_minor(currency)
 
     @property
     async def async_extra_state_attributes(self) -> dict | None:
