@@ -489,3 +489,75 @@ def calculate_next_hour_rolling_5interval_avg(coordinator_data: dict) -> float |
     if prices_in_window:
         return sum(prices_in_window) / len(prices_in_window)
     return None
+
+
+def calculate_next_n_hours_avg(coordinator_data: dict, hours: int) -> float | None:
+    """
+    Calculate average price for the next N hours starting from the next interval.
+
+    This function computes the average of all 15-minute intervals starting from
+    the next interval (not current) up to N hours into the future.
+
+    Args:
+        coordinator_data: The coordinator data containing priceInfo
+        hours: Number of hours to look ahead (1, 2, 3, 4, 5, 6, 8, 12, etc.)
+
+    Returns:
+        Average price for the next N hours, or None if insufficient data
+
+    """
+    if not coordinator_data or hours <= 0:
+        return None
+
+    price_info = coordinator_data.get("priceInfo", {})
+    yesterday_prices = price_info.get("yesterday", [])
+    today_prices = price_info.get("today", [])
+    tomorrow_prices = price_info.get("tomorrow", [])
+
+    all_prices = yesterday_prices + today_prices + tomorrow_prices
+    if not all_prices:
+        return None
+
+    now = dt_util.now()
+
+    # Find the current interval index
+    current_idx = None
+    for idx, price_data in enumerate(all_prices):
+        starts_at = dt_util.parse_datetime(price_data["startsAt"])
+        if starts_at is None:
+            continue
+        starts_at = dt_util.as_local(starts_at)
+        interval_end = starts_at + timedelta(minutes=15)
+
+        if starts_at <= now < interval_end:
+            current_idx = idx
+            break
+
+    if current_idx is None:
+        return None
+
+    # Calculate how many 15-minute intervals are in N hours
+    intervals_needed = hours * 4  # 4 intervals per hour
+
+    # Collect prices starting from NEXT interval (current_idx + 1)
+    prices_in_window = []
+    for offset in range(1, intervals_needed + 1):
+        idx = current_idx + offset
+        if idx < len(all_prices):
+            price = all_prices[idx].get("total")
+            if price is not None:
+                prices_in_window.append(float(price))
+        else:
+            # Not enough future data available
+            break
+
+    # Only return average if we have data for the full requested period
+    if len(prices_in_window) >= intervals_needed:
+        return sum(prices_in_window) / len(prices_in_window)
+
+    # If we don't have enough data for full period, return what we have
+    # (allows graceful degradation when tomorrow's data isn't available yet)
+    if prices_in_window:
+        return sum(prices_in_window) / len(prices_in_window)
+
+    return None
