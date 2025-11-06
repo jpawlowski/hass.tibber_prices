@@ -68,17 +68,35 @@
     "options": {
         "step": {
             "init": {
-                "description": "User: {user_login}",
+                "title": "General Settings",
+                "description": "Configure general settings for Tibber Price Information & Ratings.\n\nUser: {user_login}",
                 "data": {
-                    "access_token": "API access token",
-                    "extended_descriptions": "Show extended descriptions in entity attributes",
-                    "best_price_flex": "Best Price Flexibility (%)",
-                    "peak_price_flex": "Peak Price Flexibility (%)",
-                    "price_rating_threshold_low": "Price Rating Threshold Low (% vs trailing average)",
-                    "price_rating_threshold_high": "Price Rating Threshold High (% vs trailing average)"
-                },
-                "title": "Options for Tibber Price Information & Ratings",
-                "submit": "Save Options"
+                    "extended_descriptions": "Show extended descriptions in entity attributes"
+                }
+            },
+            "price_rating": {
+                "title": "Price Rating Thresholds",
+                "description": "Configure thresholds for price rating levels (LOW/NORMAL/HIGH) based on comparison with trailing 24-hour average.",
+                "data": {
+                    "price_rating_threshold_low": "Low Rating Threshold (% below trailing average)",
+                    "price_rating_threshold_high": "High Rating Threshold (% above trailing average)"
+                }
+            },
+            "best_price": {
+                "title": "Best Price Period Settings",
+                "description": "Configure settings for the Best Price Period binary sensor. This sensor is active during periods with the lowest electricity prices.",
+                "data": {
+                    "best_price_flex": "Flexibility: Maximum % above minimum price",
+                    "best_price_min_distance_from_avg": "Minimum Distance: Required % below daily average"
+                }
+            },
+            "peak_price": {
+                "title": "Peak Price Period Settings",
+                "description": "Configure settings for the Peak Price Period binary sensor. This sensor is active during periods with the highest electricity prices.",
+                "data": {
+                    "peak_price_flex": "Flexibility: Maximum % below maximum price (negative value)",
+                    "peak_price_min_distance_from_avg": "Minimum Distance: Required % above daily average"
+                }
             }
         },
         "error": {

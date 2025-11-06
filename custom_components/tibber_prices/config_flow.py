@@ -39,13 +39,17 @@ from .api import (
 )
 from .const import (
     CONF_BEST_PRICE_FLEX,
+    CONF_BEST_PRICE_MIN_DISTANCE_FROM_AVG,
     CONF_EXTENDED_DESCRIPTIONS,
     CONF_PEAK_PRICE_FLEX,
+    CONF_PEAK_PRICE_MIN_DISTANCE_FROM_AVG,
     CONF_PRICE_RATING_THRESHOLD_HIGH,
     CONF_PRICE_RATING_THRESHOLD_LOW,
     DEFAULT_BEST_PRICE_FLEX,
+    DEFAULT_BEST_PRICE_MIN_DISTANCE_FROM_AVG,
     DEFAULT_EXTENDED_DESCRIPTIONS,
     DEFAULT_PEAK_PRICE_FLEX,
+    DEFAULT_PEAK_PRICE_MIN_DISTANCE_FROM_AVG,
     DEFAULT_PRICE_RATING_THRESHOLD_HIGH,
     DEFAULT_PRICE_RATING_THRESHOLD_LOW,
     DOMAIN,
@@ -80,7 +84,7 @@ class TibberPricesFlowHandler(ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
-    def async_get_options_flow(config_entry: ConfigEntry) -> OptionsFlow:  # noqa: ARG004
+    def async_get_options_flow(_config_entry: ConfigEntry) -> OptionsFlow:
         """Create an options flow for this configentry."""
         return TibberPricesOptionsFlowHandler()
 
@@ -211,8 +215,8 @@ class TibberPricesFlowHandler(ConfigFlow, domain=DOMAIN):
     def _get_home_title(home: dict) -> str:
         """Generate a user-friendly title for a home."""
         title = home.get("appNickname")
-        if title:
-            return title
+        if title and title.strip():
+            return title.strip()
 
         address = home.get("address", {})
         if address:
@@ -362,8 +366,8 @@ class TibberPricesSubentryFlowHandler(ConfigSubentryFlow):
     def _get_home_title(self, home: dict) -> str:
         """Generate a user-friendly title for a home."""
         title = home.get("appNickname")
-        if title:
-            return title
+        if title and title.strip():
+            return title.strip()
 
         address = home.get("address", {})
         if address:
@@ -406,13 +410,19 @@ class TibberPricesSubentryFlowHandler(ConfigSubentryFlow):
 class TibberPricesOptionsFlowHandler(OptionsFlow):
     """Handle options for tibber_prices entries."""
 
+    def __init__(self) -> None:
+        """Initialize options flow."""
+        self._options: dict[str, Any] = {}
+
     async def async_step_init(self, user_input: dict[str, Any] | None = None) -> ConfigFlowResult:
-        """Manage the options."""
+        """Manage the options - General Settings."""
+        # Initialize options from config_entry on first call
+        if not self._options:
+            self._options = dict(self.config_entry.options)
+
         if user_input is not None:
-            return self.async_create_entry(
-                title="",
-                data=user_input,
-            )
+            self._options.update(user_input)
+            return await self.async_step_price_rating()
 
         return self.async_show_form(
             step_id="init",
@@ -424,38 +434,23 @@ class TibberPricesOptionsFlowHandler(OptionsFlow):
                             CONF_EXTENDED_DESCRIPTIONS, DEFAULT_EXTENDED_DESCRIPTIONS
                         ),
                     ): BooleanSelector(),
-                    vol.Optional(
-                        CONF_BEST_PRICE_FLEX,
-                        default=int(
-                            self.config_entry.options.get(
-                                CONF_BEST_PRICE_FLEX,
-                                DEFAULT_BEST_PRICE_FLEX,
-                            )
-                        ),
-                    ): NumberSelector(
-                        NumberSelectorConfig(
-                            min=0,
-                            max=100,
-                            step=1,
-                            mode=NumberSelectorMode.SLIDER,
-                        ),
-                    ),
-                    vol.Optional(
-                        CONF_PEAK_PRICE_FLEX,
-                        default=int(
-                            self.config_entry.options.get(
-                                CONF_PEAK_PRICE_FLEX,
-                                DEFAULT_PEAK_PRICE_FLEX,
-                            )
-                        ),
-                    ): NumberSelector(
-                        NumberSelectorConfig(
-                            min=-100,
-                            max=0,
-                            step=1,
-                            mode=NumberSelectorMode.SLIDER,
-                        ),
-                    ),
+                }
+            ),
+            description_placeholders={
+                "user_login": self.config_entry.data.get("user_login", "N/A"),
+            },
+        )
+
+    async def async_step_price_rating(self, user_input: dict[str, Any] | None = None) -> ConfigFlowResult:
+        """Configure price rating thresholds."""
+        if user_input is not None:
+            self._options.update(user_input)
+            return await self.async_step_best_price()
+
+        return self.async_show_form(
+            step_id="price_rating",
+            data_schema=vol.Schema(
+                {
                     vol.Optional(
                         CONF_PRICE_RATING_THRESHOLD_LOW,
                         default=int(
@@ -490,8 +485,96 @@ class TibberPricesOptionsFlowHandler(OptionsFlow):
                     ),
                 }
             ),
-            description_placeholders={
-                "user_login": self.config_entry.data.get("user_login", "N/A"),
-                "unique_id": self.config_entry.unique_id or "unknown",
-            },
+        )
+
+    async def async_step_best_price(self, user_input: dict[str, Any] | None = None) -> ConfigFlowResult:
+        """Configure best price period settings."""
+        if user_input is not None:
+            self._options.update(user_input)
+            return await self.async_step_peak_price()
+
+        return self.async_show_form(
+            step_id="best_price",
+            data_schema=vol.Schema(
+                {
+                    vol.Optional(
+                        CONF_BEST_PRICE_FLEX,
+                        default=int(
+                            self.config_entry.options.get(
+                                CONF_BEST_PRICE_FLEX,
+                                DEFAULT_BEST_PRICE_FLEX,
+                            )
+                        ),
+                    ): NumberSelector(
+                        NumberSelectorConfig(
+                            min=0,
+                            max=100,
+                            step=1,
+                            mode=NumberSelectorMode.SLIDER,
+                        ),
+                    ),
+                    vol.Optional(
+                        CONF_BEST_PRICE_MIN_DISTANCE_FROM_AVG,
+                        default=int(
+                            self.config_entry.options.get(
+                                CONF_BEST_PRICE_MIN_DISTANCE_FROM_AVG,
+                                DEFAULT_BEST_PRICE_MIN_DISTANCE_FROM_AVG,
+                            )
+                        ),
+                    ): NumberSelector(
+                        NumberSelectorConfig(
+                            min=0,
+                            max=50,
+                            step=1,
+                            mode=NumberSelectorMode.SLIDER,
+                        ),
+                    ),
+                }
+            ),
+        )
+
+    async def async_step_peak_price(self, user_input: dict[str, Any] | None = None) -> ConfigFlowResult:
+        """Configure peak price period settings."""
+        if user_input is not None:
+            self._options.update(user_input)
+            return self.async_create_entry(title="", data=self._options)
+
+        return self.async_show_form(
+            step_id="peak_price",
+            data_schema=vol.Schema(
+                {
+                    vol.Optional(
+                        CONF_PEAK_PRICE_FLEX,
+                        default=int(
+                            self.config_entry.options.get(
+                                CONF_PEAK_PRICE_FLEX,
+                                DEFAULT_PEAK_PRICE_FLEX,
+                            )
+                        ),
+                    ): NumberSelector(
+                        NumberSelectorConfig(
+                            min=-100,
+                            max=0,
+                            step=1,
+                            mode=NumberSelectorMode.SLIDER,
+                        ),
+                    ),
+                    vol.Optional(
+                        CONF_PEAK_PRICE_MIN_DISTANCE_FROM_AVG,
+                        default=int(
+                            self.config_entry.options.get(
+                                CONF_PEAK_PRICE_MIN_DISTANCE_FROM_AVG,
+                                DEFAULT_PEAK_PRICE_MIN_DISTANCE_FROM_AVG,
+                            )
+                        ),
+                    ): NumberSelector(
+                        NumberSelectorConfig(
+                            min=0,
+                            max=50,
+                            step=1,
+                            mode=NumberSelectorMode.SLIDER,
+                        ),
+                    ),
+                }
+            ),
         )

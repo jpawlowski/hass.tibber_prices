@@ -1027,7 +1027,7 @@ class TibberPricesSensor(TibberPricesEntity, SensorEntity):
                             "interval_start": starts_at.isoformat(),
                             "interval_end": interval_end.isoformat(),
                             "price": float(price_data["total"]),
-                            "price_cents": round(float(price_data["total"]) * 100, 2),
+                            "price_minor": round(float(price_data["total"]) * 100, 2),
                             "level": price_data.get("level", "NORMAL"),
                             "rating": price_data.get("difference", None),
                             "rating_level": price_data.get("rating_level"),
@@ -1076,7 +1076,7 @@ class TibberPricesSensor(TibberPricesEntity, SensorEntity):
             interval_data = {
                 "minute": starts_at.minute,
                 "price": interval["price"],
-                "price_cents": interval["price_cents"],
+                "price_minor": interval["price_minor"],
                 "level": interval["level"],  # Price level from priceInfo
                 "time": starts_at.strftime("%H:%M"),
             }
@@ -1408,12 +1408,15 @@ class TibberPricesSensor(TibberPricesEntity, SensorEntity):
             else:
                 # Fallback: use the first timestamp of the appropriate day
                 day_key = "tomorrow" if "tomorrow" in key else "today"
-                attributes["timestamp"] = price_info.get(day_key, [{}])[0].get("startsAt")
+                day_data = price_info.get(day_key, [])
+                if day_data:
+                    attributes["timestamp"] = day_data[0].get("startsAt")
         else:
             # Fallback: use the first timestamp of the appropriate day
             day_key = "tomorrow" if "tomorrow" in key else "today"
-            first_timestamp = price_info.get(day_key, [{}])[0].get("startsAt")
-            attributes["timestamp"] = first_timestamp
+            day_data = price_info.get(day_key, [])
+            if day_data:
+                attributes["timestamp"] = day_data[0].get("startsAt")
 
     def _add_average_price_attributes(self, attributes: dict) -> None:
         """Add attributes for trailing and leading average price sensors."""

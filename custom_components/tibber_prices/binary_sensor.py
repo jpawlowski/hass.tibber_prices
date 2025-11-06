@@ -28,11 +28,15 @@ if TYPE_CHECKING:
 
 from .const import (
     CONF_BEST_PRICE_FLEX,
+    CONF_BEST_PRICE_MIN_DISTANCE_FROM_AVG,
     CONF_EXTENDED_DESCRIPTIONS,
     CONF_PEAK_PRICE_FLEX,
+    CONF_PEAK_PRICE_MIN_DISTANCE_FROM_AVG,
     DEFAULT_BEST_PRICE_FLEX,
+    DEFAULT_BEST_PRICE_MIN_DISTANCE_FROM_AVG,
     DEFAULT_EXTENDED_DESCRIPTIONS,
     DEFAULT_PEAK_PRICE_FLEX,
+    DEFAULT_PEAK_PRICE_MIN_DISTANCE_FROM_AVG,
     async_get_entity_description,
     get_entity_description,
 )
@@ -280,7 +284,7 @@ class TibberPricesBinarySensor(TibberPricesEntity, BinarySensorEntity):
         # Calculate difference from average price for the day
         avg_diff = new_interval["price"] - annotation_ctx["avg_price"]
         new_interval["price_diff_from_avg"] = round(avg_diff, 4)
-        new_interval["price_diff_from_avg_ct"] = round(avg_diff * 100, 2)
+        new_interval["price_diff_from_avg_minor"] = round(avg_diff * 100, 2)
         avg_diff_percent = (
             ((new_interval["price"] - annotation_ctx["avg_price"]) / annotation_ctx["avg_price"]) * 100
             if annotation_ctx["avg_price"] != 0
@@ -291,22 +295,24 @@ class TibberPricesBinarySensor(TibberPricesEntity, BinarySensorEntity):
         trailing_avg = annotation_ctx.get("trailing_24h_avg", 0.0)
         trailing_avg_diff = new_interval["price"] - trailing_avg
         new_interval["price_diff_from_trailing_24h_avg"] = round(trailing_avg_diff, 4)
-        new_interval["price_diff_from_trailing_24h_avg_ct"] = round(trailing_avg_diff * 100, 2)
+        new_interval["price_diff_from_trailing_24h_avg_minor"] = round(trailing_avg_diff * 100, 2)
         trailing_avg_diff_percent = (
             ((new_interval["price"] - trailing_avg) / trailing_avg) * 100 if trailing_avg != 0 else 0.0
         )
         new_interval["price_diff_from_trailing_24h_avg_" + PERCENTAGE] = round(trailing_avg_diff_percent, 2)
         new_interval["trailing_24h_avg_price"] = round(trailing_avg, 4)
+        new_interval["trailing_24h_avg_price_minor"] = round(trailing_avg * 100, 2)
         # Calculate difference from leading 24-hour average
         leading_avg = annotation_ctx.get("leading_24h_avg", 0.0)
         leading_avg_diff = new_interval["price"] - leading_avg
         new_interval["price_diff_from_leading_24h_avg"] = round(leading_avg_diff, 4)
-        new_interval["price_diff_from_leading_24h_avg_ct"] = round(leading_avg_diff * 100, 2)
+        new_interval["price_diff_from_leading_24h_avg_minor"] = round(leading_avg_diff * 100, 2)
         leading_avg_diff_percent = (
             ((new_interval["price"] - leading_avg) / leading_avg) * 100 if leading_avg != 0 else 0.0
         )
         new_interval["price_diff_from_leading_24h_avg_" + PERCENTAGE] = round(leading_avg_diff_percent, 2)
         new_interval["leading_24h_avg_price"] = round(leading_avg, 4)
+        new_interval["leading_24h_avg_price_minor"] = round(leading_avg * 100, 2)
         return new_interval
 
     def _annotate_period_intervals(
@@ -330,15 +336,15 @@ class TibberPricesBinarySensor(TibberPricesEntity, BinarySensorEntity):
             reference_type = "ref"
         if reference_type == "min":
             diff_key = "price_diff_from_min"
-            diff_ct_key = "price_diff_from_min_ct"
+            diff_ct_key = "price_diff_from_min_minor"
             diff_pct_key = "price_diff_from_min_" + PERCENTAGE
         elif reference_type == "max":
             diff_key = "price_diff_from_max"
-            diff_ct_key = "price_diff_from_max_ct"
+            diff_ct_key = "price_diff_from_max_minor"
             diff_pct_key = "price_diff_from_max_" + PERCENTAGE
         else:
             diff_key = "price_diff"
-            diff_ct_key = "price_diff_ct"
+            diff_ct_key = "price_diff_minor"
             diff_pct_key = "price_diff_" + PERCENTAGE
         result = []
         period_count = len(periods)
@@ -415,8 +421,7 @@ class TibberPricesBinarySensor(TibberPricesEntity, BinarySensorEntity):
     def _build_periods(
         self,
         all_prices: list[dict],
-        ref_prices: dict,
-        flex: float,
+        price_context: dict,
         *,
         reverse_sort: bool,
     ) -> list[list[dict]]:
@@ -424,7 +429,24 @@ class TibberPricesBinarySensor(TibberPricesEntity, BinarySensorEntity):
         Build periods, allowing periods to cross midnight (day boundary).
 
         Strictly enforce flex threshold by percent diff, matching attribute calculation.
+        Additionally enforces:
+        1. Cap at daily average to prevent overlap between best and peak periods
+        2. Minimum distance from average to ensure meaningful price difference
+
+        Args:
+            all_prices: All price data points
+            price_context: Dict with ref_prices, avg_prices, flex, and min_distance_from_avg
+            reverse_sort: True for peak price (descending), False for best price (ascending)
+
+        Returns:
+            List of periods, each period is a list of interval dicts
+
         """
+        ref_prices = price_context["ref_prices"]
+        avg_prices = price_context["avg_prices"]
+        flex = price_context["flex"]
+        min_distance_from_avg = price_context["min_distance_from_avg"]
+
         periods: list[list[dict]] = []
         current_period: list[dict] = []
         last_ref_date = None
@@ -435,18 +457,34 @@ class TibberPricesBinarySensor(TibberPricesEntity, BinarySensorEntity):
             starts_at = dt_util.as_local(starts_at)
             date = starts_at.date()
             ref_price = ref_prices[date]
+            avg_price = avg_prices[date]
             price = float(price_data["total"])
             percent_diff = ((price - ref_price) / ref_price) * 100 if ref_price != 0 else 0.0
             percent_diff = round(percent_diff, 2)
             # For best price (flex >= 0): percent_diff <= flex*100 (prices up to flex% above reference)
             # For peak price (flex <= 0): percent_diff >= flex*100 (prices down to |flex|% below reference)
             in_flex = percent_diff <= flex * 100 if not reverse_sort else percent_diff >= flex * 100
+            # Cap at daily average to prevent overlap between best and peak periods
+            # Best price: only prices below average
+            # Peak price: only prices above average
+            within_avg_boundary = price <= avg_price if not reverse_sort else price >= avg_price
+            # Enforce minimum distance from average (in percentage terms)
+            # Best price: price must be at least min_distance_from_avg% below average
+            # Peak price: price must be at least min_distance_from_avg% above average
+            if not reverse_sort:
+                # Best price: price <= avg * (1 - min_distance_from_avg/100)
+                min_distance_threshold = avg_price * (1 - min_distance_from_avg / 100)
+                meets_min_distance = price <= min_distance_threshold
+            else:
+                # Peak price: price >= avg * (1 + min_distance_from_avg/100)
+                min_distance_threshold = avg_price * (1 + min_distance_from_avg / 100)
+                meets_min_distance = price >= min_distance_threshold
             # Split period if day changes
             if last_ref_date is not None and date != last_ref_date and current_period:
                 periods.append(current_period)
                 current_period = []
             last_ref_date = date
-            if in_flex:
+            if in_flex and within_avg_boundary and meets_min_distance:
                 current_period.append(
                     {
                         "interval_hour": starts_at.hour,
@@ -527,10 +565,19 @@ class TibberPricesBinarySensor(TibberPricesEntity, BinarySensorEntity):
             CONF_BEST_PRICE_FLEX if not reverse_sort else CONF_PEAK_PRICE_FLEX,
             DEFAULT_BEST_PRICE_FLEX if not reverse_sort else DEFAULT_PEAK_PRICE_FLEX,
         )
+        min_distance_from_avg = self._get_flex_option(
+            CONF_BEST_PRICE_MIN_DISTANCE_FROM_AVG if not reverse_sort else CONF_PEAK_PRICE_MIN_DISTANCE_FROM_AVG,
+            DEFAULT_BEST_PRICE_MIN_DISTANCE_FROM_AVG if not reverse_sort else DEFAULT_PEAK_PRICE_MIN_DISTANCE_FROM_AVG,
+        )
+        price_context = {
+            "ref_prices": ref_prices,
+            "avg_prices": avg_price_by_day,
+            "flex": flex,
+            "min_distance_from_avg": min_distance_from_avg,
+        }
         periods = self._build_periods(
             all_prices,
-            ref_prices,
-            flex,
+            price_context,
             reverse_sort=reverse_sort,
         )
         self._add_interval_ends(periods)

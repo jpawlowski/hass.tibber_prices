@@ -120,6 +120,4 @@ async def async_reload_entry(
     entry: TibberPricesConfigEntry,
 ) -> None:
     """Reload config entry."""
-    LOGGER.debug(f"[tibber_prices] async_reload_entry called for entry_id={entry.entry_id}")
-    await async_unload_entry(hass, entry)
-    await async_setup_entry(hass, entry)
+    await hass.config_entries.async_reload(entry.entry_id)

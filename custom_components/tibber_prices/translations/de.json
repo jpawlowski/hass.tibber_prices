@@ -68,17 +68,35 @@
     "options": {
         "step": {
             "init": {
-                "description": "Benutzer: {user_login}",
+                "title": "Allgemeine Einstellungen",
+                "description": "Konfiguration allgemeiner Einstellungen für Tibber Preisinformationen & Bewertungen.\n\nBenutzer: {user_login}",
                 "data": {
-                    "access_token": "API-Zugriffstoken",
-                    "extended_descriptions": "Erweiterte Beschreibungen in Entitätsattributen anzeigen",
-                    "best_price_flex": "Flexibilität für Bestpreis (%)",
-                    "peak_price_flex": "Flexibilität für Spitzenpreis (%)",
-                    "price_rating_threshold_low": "Preisbewertungs-Schwellenwert Niedrig (% vs. Durchschnitt)",
-                    "price_rating_threshold_high": "Preisbewertungs-Schwellenwert Hoch (% vs. Durchschnitt)"
-                },
-                "title": "Optionen für Tibber Preisinformationen & Bewertungen",
-                "submit": "Optionen speichern"
+                    "extended_descriptions": "Erweiterte Beschreibungen in Entity-Attributen anzeigen"
+                }
+            },
+            "price_rating": {
+                "title": "Preisbewertungs-Schwellwerte",
+                "description": "Konfiguration der Schwellwerte für Preisbewertungsstufen (NIEDRIG/NORMAL/HOCH) basierend auf dem Vergleich mit dem gleitenden 24-Stunden-Durchschnitt.",
+                "data": {
+                    "price_rating_threshold_low": "Schwellwert für niedrige Bewertung (% unter gleitendem Durchschnitt)",
+                    "price_rating_threshold_high": "Schwellwert für hohe Bewertung (% über gleitendem Durchschnitt)"
+                }
+            },
+            "best_price": {
+                "title": "Bestpreis-Periode Einstellungen",
+                "description": "Konfiguration für den Bestpreis-Periode Binärsensor. Dieser Sensor ist während der Zeiträume mit den niedrigsten Strompreisen aktiv.",
+                "data": {
+                    "best_price_flex": "Flexibilität: Maximale % über dem Mindestpreis",
+                    "best_price_min_distance_from_avg": "Mindestabstand: Erforderliche % unter dem Tagesdurchschnitt"
+                }
+            },
+            "peak_price": {
+                "title": "Spitzenpreis-Periode Einstellungen",
+                "description": "Konfiguration für den Spitzenpreis-Periode Binärsensor. Dieser Sensor ist während der Zeiträume mit den höchsten Strompreisen aktiv.",
+                "data": {
+                    "peak_price_flex": "Flexibilität: Maximale % unter dem Höchstpreis (negativer Wert)",
+                    "peak_price_min_distance_from_avg": "Mindestabstand: Erforderliche % über dem Tagesdurchschnitt"
+                }
             }
         },
         "error": {

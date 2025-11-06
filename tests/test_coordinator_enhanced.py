@@ -3,15 +3,20 @@
 from __future__ import annotations
 
 import asyncio
+from typing import TYPE_CHECKING
 from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
+import pytest_asyncio
 
 from custom_components.tibber_prices.api import TibberPricesApiClientCommunicationError
 from custom_components.tibber_prices.const import DOMAIN
 from custom_components.tibber_prices.coordinator import (
     TibberPricesDataUpdateCoordinator,
 )
+
+if TYPE_CHECKING:
+    from collections.abc import AsyncGenerator
 
 
 class TestEnhancedCoordinator:
@@ -24,6 +29,7 @@ class TestEnhancedCoordinator:
         config_entry.unique_id = "test_home_id_123"
         config_entry.entry_id = "test_entry_id"
         config_entry.data = {"access_token": "test_token"}
+        config_entry.options = {}  # Add options dict for threshold lookups
         return config_entry
 
     @pytest.fixture
@@ -54,10 +60,10 @@ class TestEnhancedCoordinator:
         api.async_get_monthly_price_rating = AsyncMock(return_value={"homes": {}})
         return api
 
-    @pytest.fixture
-    def coordinator(
+    @pytest_asyncio.fixture
+    async def coordinator(
         self, mock_hass: Mock, mock_config_entry: Mock, mock_store: Mock, mock_api: Mock
-    ) -> TibberPricesDataUpdateCoordinator:
+    ) -> AsyncGenerator[TibberPricesDataUpdateCoordinator]:
         """Create a coordinator for testing."""
         mock_session = Mock()
         with (
@@ -76,7 +82,12 @@ class TestEnhancedCoordinator:
             )
             # Replace the API instance with our mock
             coordinator.api = mock_api
-            return coordinator
+
+            # Yield for testing
+            yield coordinator
+
+            # Clean up timer on teardown
+            await coordinator.async_shutdown()
 
     @pytest.mark.asyncio
     async def test_main_subentry_pattern(self, mock_hass: Mock, mock_store: Mock) -> None:
@@ -86,6 +97,7 @@ class TestEnhancedCoordinator:
         main_config_entry.unique_id = "main_home_id"
         main_config_entry.entry_id = "main_entry_id"
         main_config_entry.data = {"access_token": "test_token"}
+        main_config_entry.options = {}  # Add options dict for threshold lookups
 
         mock_session = Mock()
         with (
@@ -111,6 +123,7 @@ class TestEnhancedCoordinator:
         sub_config_entry.unique_id = "sub_home_id"
         sub_config_entry.entry_id = "sub_entry_id"
         sub_config_entry.data = {"access_token": "test_token", "home_id": "sub_home_id"}
+        sub_config_entry.options = {}  # Add options dict for threshold lookups
 
         # Set up domain data to simulate main coordinator being already registered
         mock_hass.data[DOMAIN] = {"main_entry_id": main_coordinator}
@@ -132,6 +145,10 @@ class TestEnhancedCoordinator:
 
         # Verify subentry coordinator is not marked as main entry
         assert not sub_coordinator.is_main_entry()  # noqa: S101
+
+        # Clean up coordinators
+        await main_coordinator.async_shutdown()
+        await sub_coordinator.async_shutdown()
 
     @pytest.mark.asyncio
     async def test_user_data_functionality(self, coordinator: TibberPricesDataUpdateCoordinator) -> None:

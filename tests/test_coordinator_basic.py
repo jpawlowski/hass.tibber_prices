@@ -1,22 +1,28 @@
-"""Test basic coordinator functionality with the enhanced coordinator."""
+"""Test basic coordinator functions."""
 
+from __future__ import annotations
+
+import asyncio  # noqa: TC003
+from typing import TYPE_CHECKING
 from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
 
-from custom_components.tibber_prices.coordinator import (
-    TibberPricesDataUpdateCoordinator,
-)
+if TYPE_CHECKING:
+    from collections.abc import Generator
+
+from custom_components.tibber_prices.coordinator import TibberPricesDataUpdateCoordinator
 
 
 class TestBasicCoordinator:
-    """Test basic coordinator functionality."""
+    """Test basic coordinator operations."""
 
     @pytest.fixture
-    def mock_hass(self) -> Mock:
+    def mock_hass(self, event_loop: asyncio.AbstractEventLoop) -> Mock:
         """Create a mock Home Assistant instance."""
         hass = Mock()
         hass.data = {}
+        hass.loop = event_loop
         return hass
 
     @pytest.fixture
@@ -26,6 +32,7 @@ class TestBasicCoordinator:
         config_entry.unique_id = "test_home_123"
         config_entry.entry_id = "test_entry"
         config_entry.data = {"access_token": "test_token"}
+        config_entry.title = "Test Home"
         return config_entry
 
     @pytest.fixture
@@ -36,7 +43,7 @@ class TestBasicCoordinator:
     @pytest.fixture
     def coordinator(
         self, mock_hass: Mock, mock_config_entry: Mock, mock_session: Mock
-    ) -> TibberPricesDataUpdateCoordinator:
+    ) -> Generator[TibberPricesDataUpdateCoordinator]:
         """Create a coordinator instance."""
         with (
             patch(
@@ -50,12 +57,20 @@ class TestBasicCoordinator:
             mock_store.async_save = AsyncMock()
             mock_store_class.return_value = mock_store
 
-            return TibberPricesDataUpdateCoordinator(mock_hass, mock_config_entry)
+            coord = TibberPricesDataUpdateCoordinator(mock_hass, mock_config_entry)
+
+            # Ensure cleanup after test
+            yield coord
+
+            # Clean up the timer
+            if coord._quarter_hour_timer_cancel:  # noqa: SLF001
+                coord._quarter_hour_timer_cancel()  # noqa: SLF001
+                coord._quarter_hour_timer_cancel = None  # noqa: SLF001
 
     def test_coordinator_creation(self, coordinator: TibberPricesDataUpdateCoordinator) -> None:
         """Test that coordinator can be created."""
         assert coordinator is not None  # noqa: S101
-        assert hasattr(coordinator, "get_current_interval_data")  # noqa: S101
+        assert hasattr(coordinator, "get_current_interval")  # noqa: S101
         assert hasattr(coordinator, "get_all_intervals")  # noqa: S101
         assert hasattr(coordinator, "get_user_profile")  # noqa: S101
 
@@ -76,7 +91,7 @@ class TestBasicCoordinator:
 
     def test_get_current_interval_data_no_data(self, coordinator: TibberPricesDataUpdateCoordinator) -> None:
         """Test getting current interval data when no data is available."""
-        current_data = coordinator.get_current_interval_data()
+        current_data = coordinator.get_current_interval()
         assert current_data is None  # noqa: S101
 
     def test_get_all_intervals_no_data(self, coordinator: TibberPricesDataUpdateCoordinator) -> None:

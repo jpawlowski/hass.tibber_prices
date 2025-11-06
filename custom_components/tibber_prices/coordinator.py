@@ -3,13 +3,14 @@
 from __future__ import annotations
 
 import logging
-from datetime import datetime, timedelta
+from datetime import date, datetime, timedelta
 from typing import TYPE_CHECKING, Any
 
 from homeassistant.const import CONF_ACCESS_TOKEN
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers import aiohttp_client
+from homeassistant.helpers.event import async_track_utc_time_change
 from homeassistant.helpers.storage import Store
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import dt as dt_util
@@ -40,11 +41,17 @@ _LOGGER = logging.getLogger(__name__)
 # Storage version for storing data
 STORAGE_VERSION = 1
 
-# Update interval - fetch data every 15 minutes
+# Update interval - fetch data every 15 minutes (when data is incomplete)
 UPDATE_INTERVAL = timedelta(minutes=15)
+
+# Update interval when all data is available - every 4 hours (reduce API calls)
+UPDATE_INTERVAL_COMPLETE = timedelta(hours=4)
 
 # Quarter-hour boundaries for entity state updates (minutes: 00, 15, 30, 45)
 QUARTER_HOUR_BOUNDARIES = (0, 15, 30, 45)
+
+# Hour after which tomorrow's price data is expected (13:00 local time)
+TOMORROW_DATA_CHECK_HOUR = 13
 
 
 class TibberPricesDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
@@ -82,66 +89,131 @@ class TibberPricesDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         self._cached_price_data: dict[str, Any] | None = None
         self._last_price_update: datetime | None = None
 
+        # Track the last date we checked for midnight turnover
+        self._last_midnight_check: datetime | None = None
+
         # Track if this is the main entry (first one created)
         self._is_main_entry = not self._has_existing_main_coordinator()
 
-        # Quarter-hour entity refresh timer
-        self._quarter_hour_timer_handle: Any = None
+        # Log prefix for identifying this coordinator instance
+        self._log_prefix = f"[{config_entry.title}]"
+
+        # Quarter-hour entity refresh timer (runs at :00, :15, :30, :45)
+        self._quarter_hour_timer_cancel: CALLBACK_TYPE | None = None
         self._schedule_quarter_hour_refresh()
 
+    def _log(self, level: str, message: str, *args: Any, **kwargs: Any) -> None:
+        """Log with coordinator-specific prefix."""
+        prefixed_message = f"{self._log_prefix} {message}"
+        getattr(_LOGGER, level)(prefixed_message, *args, **kwargs)
+
     def _schedule_quarter_hour_refresh(self) -> None:
-        """Schedule the next quarter-hour entity refresh."""
-        now = dt_util.utcnow()
-        current_minute = now.minute
-
-        # Find the next quarter-hour boundary
-        for boundary in QUARTER_HOUR_BOUNDARIES:
-            if boundary > current_minute:
-                minutes_to_wait = boundary - current_minute
-                break
-        else:
-            # All boundaries passed, go to first boundary of next hour
-            minutes_to_wait = (60 - current_minute) + QUARTER_HOUR_BOUNDARIES[0]
-
-        # Calculate the exact time of the next boundary
-        next_refresh = now + timedelta(minutes=minutes_to_wait)
-        next_refresh = next_refresh.replace(second=0, microsecond=0)
-
+        """Schedule the next quarter-hour entity refresh using Home Assistant's time tracking."""
         # Cancel any existing timer
-        if self._quarter_hour_timer_handle:
-            self._quarter_hour_timer_handle.cancel()
+        if self._quarter_hour_timer_cancel:
+            self._quarter_hour_timer_cancel()
+            self._quarter_hour_timer_cancel = None
 
-        # Schedule the refresh
-        self._quarter_hour_timer_handle = self.hass.loop.call_at(
-            self.hass.loop.time() + (next_refresh - now).total_seconds(),
+        # Use Home Assistant's async_track_utc_time_change to trigger exactly at quarter-hour boundaries
+        # This ensures we trigger at :00, :15, :30, :45 seconds=1 to avoid triggering too early
+        self._quarter_hour_timer_cancel = async_track_utc_time_change(
+            self.hass,
             self._handle_quarter_hour_refresh,
+            minute=QUARTER_HOUR_BOUNDARIES,
+            second=1,
         )
 
-        _LOGGER.debug(
-            "Scheduled entity refresh at %s (in %d minutes)",
-            next_refresh.isoformat(),
-            minutes_to_wait,
+        self._log(
+            "debug",
+            "Scheduled quarter-hour refresh for boundaries: %s (at second=1)",
+            QUARTER_HOUR_BOUNDARIES,
         )
 
     @callback
-    def _handle_quarter_hour_refresh(self) -> None:
-        """Handle quarter-hour entity refresh by triggering async state updates."""
-        _LOGGER.debug("Quarter-hour refresh triggered at %s", dt_util.utcnow().isoformat())
+    def _handle_quarter_hour_refresh(self, _now: datetime | None = None) -> None:
+        """Handle quarter-hour entity refresh - check for midnight turnover and update entities."""
+        now = dt_util.now()
+        self._log("debug", "Quarter-hour refresh triggered at %s", now.isoformat())
 
-        # Notify all listeners to update their state without fetching fresh data
-        # This causes entity state properties to be re-evaluated with the current time
-        # Using async_update_listeners() instead of async_set_updated_data() to avoid
-        # interfering with the coordinator's update timing
-        self.async_update_listeners()
+        # Check if midnight has passed since last check
+        midnight_turnover_performed = self._check_and_handle_midnight_turnover(now)
 
-        # Schedule the next quarter-hour refresh
-        self._schedule_quarter_hour_refresh()
+        if midnight_turnover_performed:
+            self._log("info", "Midnight turnover detected and performed during quarter-hour refresh")
+            # Schedule cache save asynchronously (we're in a callback)
+            self.hass.async_create_task(self._store_cache())
+            # Entity update already done in _check_and_handle_midnight_turnover
+            # Skip the regular update to avoid double-update
+        else:
+            # Regular quarter-hour refresh - notify listeners to update their state
+            # This causes entity state properties to be re-evaluated with the current time
+            # Using async_update_listeners() instead of async_set_updated_data() to avoid
+            # interfering with the coordinator's update timing
+            self.async_update_listeners()
+
+    @callback
+    def _check_and_handle_midnight_turnover(self, now: datetime) -> bool:
+        """
+        Check if midnight has passed and perform data rotation if needed.
+
+        This is called by the quarter-hour timer to ensure timely rotation
+        without waiting for the next API update cycle.
+
+        Returns:
+            True if midnight turnover was performed, False otherwise
+
+        """
+        current_date = now.date()
+
+        # First time check - initialize
+        if self._last_midnight_check is None:
+            self._last_midnight_check = now
+            return False
+
+        last_check_date = self._last_midnight_check.date()
+
+        # Check if we've crossed into a new day
+        if current_date > last_check_date:
+            self._log(
+                "debug",
+                "Midnight crossed: last_check=%s, current=%s",
+                last_check_date,
+                current_date,
+            )
+
+            # Perform rotation on cached data if available
+            if self._cached_price_data and "homes" in self._cached_price_data:
+                for home_id, home_data in self._cached_price_data["homes"].items():
+                    if "price_info" in home_data:
+                        price_info = home_data["price_info"]
+                        rotated = self._perform_midnight_turnover(price_info)
+                        home_data["price_info"] = rotated
+                        self._log("debug", "Rotated price data for home %s", home_id)
+
+                # Update coordinator's data with enriched rotated data
+                if self.data:
+                    # Re-transform data to ensure enrichment is applied to rotated data
+                    if self.is_main_entry():
+                        self.data = self._transform_data_for_main_entry(self._cached_price_data)
+                    else:
+                        # For subentry, we need to get data from main coordinator
+                        # but we can update the timestamp to trigger entity refresh
+                        self.data["timestamp"] = now
+
+                    # Notify listeners about the updated data after rotation
+                    self.async_update_listeners()
+
+            self._last_midnight_check = now
+            return True
+
+        self._last_midnight_check = now
+        return False
 
     async def async_shutdown(self) -> None:
         """Shut down the coordinator and clean up timers."""
-        if self._quarter_hour_timer_handle:
-            self._quarter_hour_timer_handle.cancel()
-            self._quarter_hour_timer_handle = None
+        if self._quarter_hour_timer_cancel:
+            self._quarter_hour_timer_cancel()
+            self._quarter_hour_timer_cancel = None
 
     def _has_existing_main_coordinator(self) -> bool:
         """Check if there's already a main coordinator in hass.data."""
@@ -179,7 +251,7 @@ class TibberPricesDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         ) as err:
             # Use cached data as fallback if available
             if self._cached_price_data is not None:
-                _LOGGER.warning("API error, using cached data: %s", err)
+                self._log("warning", "API error, using cached data: %s", err)
                 return self._merge_cached_data()
             msg = f"Error communicating with API: {err}"
             raise UpdateFailed(msg) from err
@@ -199,16 +271,17 @@ class TibberPricesDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             # Transform for main entry: provide aggregated view
             return self._transform_data_for_main_entry(raw_data)
 
-        # Use cached data
+        # Use cached data if available
         if self._cached_price_data is not None:
             return self._transform_data_for_main_entry(self._cached_price_data)
 
-        # No cached data, fetch new
-        raw_data = await self._fetch_all_homes_data()
-        self._cached_price_data = raw_data
-        self._last_price_update = current_time
-        await self._store_cache()
-        return self._transform_data_for_main_entry(raw_data)
+        # Fallback: no cache and no update needed (shouldn't happen)
+        self._log("warning", "No cached data available and update not triggered - returning empty data")
+        return {
+            "timestamp": current_time,
+            "homes": {},
+            "priceInfo": {},
+        }
 
     async def _handle_subentry_update(self) -> dict[str, Any]:
         """Handle update for subentry - get data from main coordinator."""
@@ -217,7 +290,7 @@ class TibberPricesDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 
     async def _fetch_all_homes_data(self) -> dict[str, Any]:
         """Fetch data for all homes (main coordinator only)."""
-        _LOGGER.debug("Fetching data for all homes")
+        self._log("debug", "Fetching data for all homes")
 
         # Get price data for all homes
         price_data = await self.api.async_get_price_info()
@@ -226,6 +299,8 @@ class TibberPricesDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         homes_list = price_data.get("homes", {})
 
         for home_id, home_price_data in homes_list.items():
+            # Store raw price data without enrichment
+            # Enrichment will be done dynamically when data is transformed
             home_data = {
                 "price_info": home_price_data,
             }
@@ -276,19 +351,21 @@ class TibberPricesDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                     self._last_price_update = dt_util.parse_datetime(last_price_update)
                 if last_user_update := stored.get("last_user_update"):
                     self._last_user_update = dt_util.parse_datetime(last_user_update)
+                if last_midnight_check := stored.get("last_midnight_check"):
+                    self._last_midnight_check = dt_util.parse_datetime(last_midnight_check)
 
                 # Validate cache: check if price data is from a previous day
                 if not self._is_cache_valid():
-                    _LOGGER.info("Cached price data is from a previous day, clearing cache to fetch fresh data")
+                    self._log("info", "Cached price data is from a previous day, clearing cache to fetch fresh data")
                     self._cached_price_data = None
                     self._last_price_update = None
                     await self._store_cache()
                 else:
-                    _LOGGER.debug("Cache loaded successfully")
+                    self._log("debug", "Cache loaded successfully")
             else:
-                _LOGGER.debug("No cache found, will fetch fresh data")
+                self._log("debug", "No cache found, will fetch fresh data")
         except OSError as ex:
-            _LOGGER.warning("Failed to load cache: %s", ex)
+            self._log("warning", "Failed to load cache: %s", ex)
 
     def _is_cache_valid(self) -> bool:
         """
@@ -307,7 +384,8 @@ class TibberPricesDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         last_update_local_date = dt_util.as_local(self._last_price_update).date()
 
         if current_local_date != last_update_local_date:
-            _LOGGER.debug(
+            self._log(
+                "debug",
                 "Cache date mismatch: cached=%s, current=%s",
                 last_update_local_date,
                 current_local_date,
@@ -350,11 +428,12 @@ class TibberPricesDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                     prices_need_rotation = first_today_price_date < current_local_date
 
         if prices_need_rotation:
-            _LOGGER.info("Performing midnight turnover: today→yesterday, tomorrow→today")
+            self._log("info", "Performing midnight turnover: today→yesterday, tomorrow→today")
             return {
                 "yesterday": today_prices,
                 "today": tomorrow_prices,
                 "tomorrow": [],
+                "currency": price_info.get("currency", "EUR"),
             }
 
         return price_info
@@ -366,11 +445,12 @@ class TibberPricesDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             "user_data": self._cached_user_data,
             "last_price_update": (self._last_price_update.isoformat() if self._last_price_update else None),
             "last_user_update": (self._last_user_update.isoformat() if self._last_user_update else None),
+            "last_midnight_check": (self._last_midnight_check.isoformat() if self._last_midnight_check else None),
         }
 
         try:
             await self._store.async_save(data)
-            _LOGGER.debug("Cache stored successfully")
+            self._log("debug", "Cache stored successfully")
         except OSError:
             _LOGGER.exception("Failed to store cache")
 
@@ -378,38 +458,102 @@ class TibberPricesDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         """Update user data if needed (daily check)."""
         if self._last_user_update is None or current_time - self._last_user_update >= self._user_update_interval:
             try:
-                _LOGGER.debug("Updating user data")
+                self._log("debug", "Updating user data")
                 user_data = await self.api.async_get_viewer_details()
                 self._cached_user_data = user_data
                 self._last_user_update = current_time
-                _LOGGER.debug("User data updated successfully")
+                self._log("debug", "User data updated successfully")
             except (
                 TibberPricesApiClientError,
                 TibberPricesApiClientCommunicationError,
             ) as ex:
-                _LOGGER.warning("Failed to update user data: %s", ex)
+                self._log("warning", "Failed to update user data: %s", ex)
 
     @callback
     def _should_update_price_data(self, current_time: datetime) -> bool:
-        """Check if price data should be updated."""
+        """
+        Check if price data should be updated from the API.
+
+        Updates occur when:
+        1. No cached data exists
+        2. Cache is invalid (from previous day)
+        3. It's after 13:00 local time and tomorrow's data is missing or invalid
+        4. Regular update interval has passed
+
+        """
         if self._cached_price_data is None:
-            _LOGGER.debug("Should update: No cached price data")
+            self._log("debug", "Should update: No cached price data")
             return True
         if self._last_price_update is None:
-            _LOGGER.debug("Should update: No last price update timestamp")
+            self._log("debug", "Should update: No last price update timestamp")
             return True
 
-        time_since_update = current_time - self._last_price_update
-        should_update = time_since_update >= UPDATE_INTERVAL
+        now_local = dt_util.as_local(current_time)
+        tomorrow_date = (now_local + timedelta(days=1)).date()
 
-        _LOGGER.debug(
-            "Should update price data: %s (time since last update: %s, interval: %s)",
-            should_update,
-            time_since_update,
-            UPDATE_INTERVAL,
-        )
+        # Check if after 13:00 and tomorrow data is missing or invalid
+        if (
+            now_local.hour >= TOMORROW_DATA_CHECK_HOUR
+            and self._cached_price_data
+            and "homes" in self._cached_price_data
+            and self._needs_tomorrow_data(tomorrow_date)
+        ):
+            self._log("debug", "Should update: After %s:00 and valid tomorrow data missing", TOMORROW_DATA_CHECK_HOUR)
+            return True
+
+        # Check regular update interval
+        time_since_update = current_time - self._last_price_update
+
+        # Determine appropriate interval based on data completeness
+        has_tomorrow_data = self._has_valid_tomorrow_data(tomorrow_date)
+        interval = UPDATE_INTERVAL_COMPLETE if has_tomorrow_data else UPDATE_INTERVAL
+        should_update = time_since_update >= interval
+
+        if should_update:
+            self._log(
+                "debug",
+                "Should update price data: %s (time since last update: %s, interval: %s, has_tomorrow: %s)",
+                should_update,
+                time_since_update,
+                interval,
+                has_tomorrow_data,
+            )
 
         return should_update
+
+    def _needs_tomorrow_data(self, tomorrow_date: date) -> bool:
+        """Check if tomorrow data is missing or invalid."""
+        if not self._cached_price_data or "homes" not in self._cached_price_data:
+            return False
+
+        for home_data in self._cached_price_data["homes"].values():
+            price_info = home_data.get("price_info", {})
+            tomorrow_prices = price_info.get("tomorrow", [])
+
+            # Check if tomorrow data is missing
+            if not tomorrow_prices:
+                return True
+
+            # Check if tomorrow data is actually for tomorrow (validate date)
+            first_price = tomorrow_prices[0]
+            if starts_at := first_price.get("startsAt"):
+                price_time = dt_util.parse_datetime(starts_at)
+                if price_time:
+                    price_date = dt_util.as_local(price_time).date()
+                    if price_date != tomorrow_date:
+                        self._log(
+                            "debug",
+                            "Tomorrow data has wrong date: expected=%s, actual=%s",
+                            tomorrow_date,
+                            price_date,
+                        )
+                        return True
+
+        return False
+
+    def _has_valid_tomorrow_data(self, tomorrow_date: date) -> bool:
+        """Check if we have valid tomorrow data (inverse of _needs_tomorrow_data)."""
+        return not self._needs_tomorrow_data(tomorrow_date)
 
     @callback
     def _merge_cached_data(self) -> dict[str, Any]:
@@ -445,10 +589,15 @@ class TibberPricesDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         # Perform midnight turnover if needed (handles day transitions)
         price_info = self._perform_midnight_turnover(price_info)
 
-        # Get threshold percentages for enrichment
-        thresholds = self._get_threshold_percentages()
+        # Ensure all required keys exist (API might not return tomorrow data yet)
+        price_info.setdefault("yesterday", [])
+        price_info.setdefault("today", [])
+        price_info.setdefault("tomorrow", [])
+        price_info.setdefault("currency", "EUR")
 
-        # Enrich price info with calculated differences (trailing 24h averages)
+        # Enrich price info dynamically with calculated differences and rating levels
+        # This ensures enrichment is always up-to-date, especially after midnight turnover
+        thresholds = self._get_threshold_percentages()
         price_info = enrich_price_info_with_differences(
             price_info,
             threshold_low=thresholds["low"],
@@ -481,10 +630,15 @@ class TibberPricesDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         # Perform midnight turnover if needed (handles day transitions)
         price_info = self._perform_midnight_turnover(price_info)
 
-        # Get threshold percentages for enrichment
-        thresholds = self._get_threshold_percentages()
+        # Ensure all required keys exist (API might not return tomorrow data yet)
+        price_info.setdefault("yesterday", [])
+        price_info.setdefault("today", [])
+        price_info.setdefault("tomorrow", [])
+        price_info.setdefault("currency", "EUR")
 
-        # Enrich price info with calculated differences (trailing 24h averages)
+        # Enrich price info dynamically with calculated differences and rating levels
+        # This ensures enrichment is always up-to-date, especially after midnight turnover
+        thresholds = self._get_threshold_percentages()
         price_info = enrich_price_info_with_differences(
             price_info,
             threshold_low=thresholds["low"],

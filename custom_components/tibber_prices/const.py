@@ -23,6 +23,8 @@ DOMAIN = "tibber_prices"
 CONF_EXTENDED_DESCRIPTIONS = "extended_descriptions"
 CONF_BEST_PRICE_FLEX = "best_price_flex"
 CONF_PEAK_PRICE_FLEX = "peak_price_flex"
+CONF_BEST_PRICE_MIN_DISTANCE_FROM_AVG = "best_price_min_distance_from_avg"
+CONF_PEAK_PRICE_MIN_DISTANCE_FROM_AVG = "peak_price_min_distance_from_avg"
 CONF_PRICE_RATING_THRESHOLD_LOW = "price_rating_threshold_low"
 CONF_PRICE_RATING_THRESHOLD_HIGH = "price_rating_threshold_high"
 
@@ -31,8 +33,10 @@ ATTRIBUTION = "Data provided by Tibber"
 # Integration name should match manifest.json
 DEFAULT_NAME = "Tibber Price Information & Ratings"
 DEFAULT_EXTENDED_DESCRIPTIONS = False
-DEFAULT_BEST_PRICE_FLEX = 20  # 20% flexibility for best price (user-facing, percent)
-DEFAULT_PEAK_PRICE_FLEX = -20  # 20% flexibility for peak price (user-facing, percent)
+DEFAULT_BEST_PRICE_FLEX = 15  # 15% flexibility for best price (user-facing, percent)
+DEFAULT_PEAK_PRICE_FLEX = -15  # 15% flexibility for peak price (user-facing, percent)
+DEFAULT_BEST_PRICE_MIN_DISTANCE_FROM_AVG = 2  # 2% minimum distance from daily average for best price
+DEFAULT_PEAK_PRICE_MIN_DISTANCE_FROM_AVG = 2  # 2% minimum distance from daily average for peak price
 DEFAULT_PRICE_RATING_THRESHOLD_LOW = -10  # Default rating threshold low percentage
 DEFAULT_PRICE_RATING_THRESHOLD_HIGH = 10  # Default rating threshold high percentage
 

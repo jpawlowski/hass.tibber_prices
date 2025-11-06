@@ -19,57 +19,8 @@ class TibberPricesEntity(CoordinatorEntity[TibberPricesDataUpdateCoordinator]):
         """Initialize."""
         super().__init__(coordinator)
 
-        # Get user profile information from coordinator
-        user_profile = self.coordinator.get_user_profile()
-
-        # Check if this is a main entry or subentry
-        is_subentry = bool(self.coordinator.config_entry.data.get("home_id"))
-
-        # Initialize variables
-        home_name = "Tibber Home"
-        home_id = self.coordinator.config_entry.unique_id
-        home_type = None
-
-        if is_subentry:
-            # For subentries, show specific home information
-            home_data = self.coordinator.config_entry.data.get("home_data", {})
-            home_id = self.coordinator.config_entry.data.get("home_id")
-
-            # Get home details
-            address = home_data.get("address", {})
-            address1 = address.get("address1", "")
-            city = address.get("city", "")
-            app_nickname = home_data.get("appNickname", "")
-            home_type = home_data.get("type", "")
-
-            # Compose home name
-            home_name = app_nickname or address1 or f"Tibber Home {home_id}"
-            if city:
-                home_name = f"{home_name}, {city}"
-
-            # Add user information if available
-            if user_profile and user_profile.get("name"):
-                home_name = f"{home_name} ({user_profile['name']})"
-        elif user_profile:
-            # For main entry, show user profile information
-            user_name = user_profile.get("name", "Tibber User")
-            user_email = user_profile.get("email", "")
-            home_name = f"Tibber - {user_name}"
-            if user_email:
-                home_name = f"{home_name} ({user_email})"
-        elif coordinator.data:
-            # Fallback to original logic if user data not available yet
-            try:
-                address1 = str(coordinator.data.get("address", {}).get("address1", ""))
-                city = str(coordinator.data.get("address", {}).get("city", ""))
-                app_nickname = str(coordinator.data.get("appNickname", ""))
-                home_type = str(coordinator.data.get("type", ""))
-                # Compose a nice name
-                home_name = "Tibber " + (app_nickname or address1 or "Home")
-                if city:
-                    home_name = f"{home_name}, {city}"
-            except (KeyError, IndexError, TypeError):
-                home_name = "Tibber Home"
+        # Get device information
+        home_name, home_id, home_type = self._get_device_info()
 
         # Get translated home type using the configured language
         language = coordinator.hass.config.language or "en"
@@ -90,3 +41,83 @@ class TibberPricesEntity(CoordinatorEntity[TibberPricesDataUpdateCoordinator]):
             serial_number=home_id if home_id else None,
             configuration_url="https://developer.tibber.com/explorer",
         )
+
+    def _get_device_info(self) -> tuple[str, str | None, str | None]:
+        """Get device name, ID and type."""
+        user_profile = self.coordinator.get_user_profile()
+        is_subentry = bool(self.coordinator.config_entry.data.get("home_id"))
+        home_id = self.coordinator.config_entry.unique_id
+        home_type = None
+
+        if is_subentry:
+            home_name, home_id, home_type = self._get_subentry_device_info()
+            # Add user information if available
+            if user_profile and user_profile.get("name"):
+                home_name = f"{home_name} ({user_profile['name']})"
+        elif user_profile:
+            home_name = self._get_main_entry_device_info(user_profile)
+        else:
+            home_name, home_type = self._get_fallback_device_info()
+
+        return home_name, home_id, home_type
+
+    def _get_subentry_device_info(self) -> tuple[str, str | None, str | None]:
+        """Get device info for subentry."""
+        home_data = self.coordinator.config_entry.data.get("home_data", {})
+        home_id = self.coordinator.config_entry.data.get("home_id")
+
+        # Get home details
+        address = home_data.get("address", {})
+        address1 = address.get("address1", "")
+        city = address.get("city", "")
+        app_nickname = home_data.get("appNickname", "")
+        home_type = home_data.get("type", "")
+
+        # Compose home name
+        if app_nickname and app_nickname.strip():
+            # If appNickname is set, use it as-is (don't add city)
+            home_name = app_nickname.strip()
+        elif address1:
+            # If no appNickname, use address and optionally add city
+            home_name = address1
+            if city:
+                home_name = f"{home_name}, {city}"
+        else:
+            # Fallback to home ID
+            home_name = f"Tibber Home {home_id}"
+
+        return home_name, home_id, home_type
+
+    def _get_main_entry_device_info(self, user_profile: dict) -> str:
+        """Get device info for main entry."""
+        user_name = user_profile.get("name", "Tibber User")
+        user_email = user_profile.get("email", "")
+        home_name = f"Tibber - {user_name}"
+        if user_email:
+            home_name = f"{home_name} ({user_email})"
+        return home_name
+
+    def _get_fallback_device_info(self) -> tuple[str, str | None]:
+        """Get fallback device info if user data not available yet."""
+        if not self.coordinator.data:
+            return "Tibber Home", None
+
+        try:
+            address1 = str(self.coordinator.data.get("address", {}).get("address1", ""))
+            city = str(self.coordinator.data.get("address", {}).get("city", ""))
+            app_nickname = str(self.coordinator.data.get("appNickname", ""))
+            home_type = str(self.coordinator.data.get("type", ""))
+
+            # Compose a nice name
+            if app_nickname and app_nickname.strip():
+                home_name = f"Tibber {app_nickname.strip()}"
+            elif address1:
+                home_name = f"Tibber {address1}"
+                if city:
+                    home_name = f"{home_name}, {city}"
+            else:
+                home_name = "Tibber Home"
+        except (KeyError, IndexError, TypeError):
+            return "Tibber Home", None
+        else:
+            return home_name, home_type
