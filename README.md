@@ -10,7 +10,7 @@
 
 A Home Assistant integration that provides advanced price information and ratings from Tibber. This integration fetches **quarter-hourly** electricity prices, enriches them with statistical analysis, and provides smart indicators to help you optimize your energy consumption and save money.
 
-![Tibber Price Information & Ratings][exampleimg]
+![Tibber Price Information & Ratings](images/logo.png)
 
 ## Features
 
