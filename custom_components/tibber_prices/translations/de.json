@@ -23,6 +23,14 @@
                 },
                 "title": "Wähle ein Zuhause",
                 "submit": "Zuhause auswählen"
+            },
+            "reauth_confirm": {
+                "title": "Tibber-Integration erneut authentifizieren",
+                "description": "Der Zugriffstoken für Tibber ist nicht mehr gültig. Bitte gib einen neuen API-Zugriffstoken ein, um diese Integration weiter zu nutzen.\n\nUm einen neuen API-Zugriffstoken zu generieren, besuche https://developer.tibber.com.",
+                "data": {
+                    "access_token": "API-Zugriffstoken"
+                },
+                "submit": "Token aktualisieren"
             }
         },
         "error": {
@@ -30,12 +38,14 @@
             "connection": "Verbindung zu Tibber nicht möglich. Bitte überprüfe deine Internetverbindung.",
             "unknown": "Ein unerwarteter Fehler ist aufgetreten. Bitte überprüfe die Logs für Details.",
             "cannot_connect": "Verbindung fehlgeschlagen",
-            "invalid_access_token": "Ungültiges Zugriffstoken"
+            "invalid_access_token": "Ungültiges Zugriffstoken",
+            "missing_homes": "Der neue Zugriffstoken hat keinen Zugriff auf alle konfigurierten Zuhause. Bitte verwende einen Zugriffstoken, der Zugriff auf die gleichen Tibber-Zuhause hat."
         },
         "abort": {
             "already_configured": "Integration ist bereits konfiguriert",
             "entry_not_found": "Tibber Konfigurationseintrag nicht gefunden.",
-            "setup_complete": "Einrichtung abgeschlossen! Du kannst zusätzliche Optionen für Tibber Preise in den Integrationsoptionen ändern, nachdem du diesen Dialog geschlossen hast."
+            "setup_complete": "Einrichtung abgeschlossen! Du kannst zusätzliche Optionen für Tibber Preise in den Integrationsoptionen ändern, nachdem du diesen Dialog geschlossen hast.",
+            "reauth_successful": "Erneute Authentifizierung erfolgreich. Die Integration wurde mit dem neuen Zugriffstoken aktualisiert."
         }
     },
     "config_subentries": {

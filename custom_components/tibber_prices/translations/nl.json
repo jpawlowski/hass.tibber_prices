@@ -23,6 +23,14 @@
                 },
                 "title": "Kies een woning",
                 "submit": "Selecteer Woning"
+            },
+            "reauth_confirm": {
+                "title": "Tibber-integratie opnieuw authenticeren",
+                "description": "Het toegangstoken voor Tibber is niet langer geldig. Voer een nieuw API-toegangstoken in om deze integratie te blijven gebruiken.\n\nOm een nieuw API-toegangstoken te genereren, bezoek https://developer.tibber.com.",
+                "data": {
+                    "access_token": "API-toegangstoken"
+                },
+                "submit": "Token Bijwerken"
             }
         },
         "error": {
@@ -30,12 +38,14 @@
             "connection": "Kan geen verbinding maken met Tibber. Controleer je internetverbinding.",
             "unknown": "Onverwachte fout",
             "cannot_connect": "Verbinding mislukt",
-            "invalid_access_token": "Ongeldig toegangstoken"
+            "invalid_access_token": "Ongeldig toegangstoken",
+            "missing_homes": "Het nieuwe toegangstoken heeft geen toegang tot alle geconfigureerde woningen. Gebruik een toegangstoken dat toegang heeft tot dezelfde Tibber-woningen."
         },
         "abort": {
             "already_configured": "Integratie is al geconfigureerd",
             "entry_not_found": "Tibber configuratie-invoer niet gevonden.",
-            "setup_complete": "Installatie voltooid! Je kunt extra opties voor Tibber Prijzen wijzigen in de integratie-opties na het sluiten van dit venster."
+            "setup_complete": "Installatie voltooid! Je kunt extra opties voor Tibber Prijzen wijzigen in de integratie-opties na het sluiten van dit venster.",
+            "reauth_successful": "Herauthenticatie succesvol. De integratie is bijgewerkt met het nieuwe toegangstoken."
         }
     },
     "config_subentries": {

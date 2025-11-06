@@ -88,14 +88,74 @@ class TibberPricesFlowHandler(ConfigFlow, domain=DOMAIN):
         """Create an options flow for this configentry."""
         return TibberPricesOptionsFlowHandler()
 
-    @staticmethod
-    def async_get_reauth_flow(entry: ConfigEntry) -> ConfigFlow:
-        """Return the reauth flow handler for this integration."""
-        return TibberPricesReauthFlowHandler(entry)
-
     def is_matching(self, other_flow: dict) -> bool:
         """Return True if match_dict matches this flow."""
         return bool(other_flow.get("domain") == DOMAIN)
+
+    async def async_step_reauth(self, entry_data: dict[str, Any]) -> ConfigFlowResult:  # noqa: ARG002
+        """Handle reauth flow when access token becomes invalid."""
+        self._reauth_entry = self.hass.config_entries.async_get_entry(self.context["entry_id"])
+        return await self.async_step_reauth_confirm()
+
+    async def async_step_reauth_confirm(self, user_input: dict | None = None) -> ConfigFlowResult:
+        """Confirm reauth dialog - prompt for new access token."""
+        _errors = {}
+
+        if user_input is not None:
+            try:
+                viewer = await self._get_viewer_details(access_token=user_input[CONF_ACCESS_TOKEN])
+            except TibberPricesApiClientAuthenticationError as exception:
+                LOGGER.warning(exception)
+                _errors["base"] = "auth"
+            except TibberPricesApiClientCommunicationError as exception:
+                LOGGER.error(exception)
+                _errors["base"] = "connection"
+            except TibberPricesApiClientError as exception:
+                LOGGER.exception(exception)
+                _errors["base"] = "unknown"
+            else:
+                # Validate that the new token has access to all configured homes
+                if self._reauth_entry:
+                    # Get all configured home IDs (main entry + subentries)
+                    configured_home_ids = self._get_all_configured_home_ids(self._reauth_entry)
+
+                    # Get accessible home IDs from the new token
+                    accessible_homes = viewer.get("homes", [])
+                    accessible_home_ids = {home["id"] for home in accessible_homes}
+
+                    # Check if all configured homes are accessible with the new token
+                    missing_home_ids = configured_home_ids - accessible_home_ids
+
+                    if missing_home_ids:
+                        # New token doesn't have access to all configured homes
+                        LOGGER.error(
+                            "New access token missing access to configured homes: %s",
+                            ", ".join(missing_home_ids),
+                        )
+                        _errors["base"] = "missing_homes"
+                    else:
+                        # Update the config entry with the new access token
+                        self.hass.config_entries.async_update_entry(
+                            self._reauth_entry,
+                            data={
+                                **self._reauth_entry.data,
+                                CONF_ACCESS_TOKEN: user_input[CONF_ACCESS_TOKEN],
+                            },
+                        )
+                        await self.hass.config_entries.async_reload(self._reauth_entry.entry_id)
+                        return self.async_abort(reason="reauth_successful")
+
+        return self.async_show_form(
+            step_id="reauth_confirm",
+            data_schema=vol.Schema(
+                {
+                    vol.Required(CONF_ACCESS_TOKEN): TextSelector(
+                        TextSelectorConfig(type=TextSelectorType.TEXT),
+                    ),
+                }
+            ),
+            errors=_errors,
+        )
 
     async def async_step_user(
         self,
@@ -211,6 +271,21 @@ class TibberPricesFlowHandler(ConfigFlow, domain=DOMAIN):
             ),
         )
 
+    def _get_all_configured_home_ids(self, main_entry: ConfigEntry) -> set[str]:
+        """Get all configured home IDs from main entry and all subentries."""
+        home_ids = set()
+
+        # Add home_id from main entry if it exists
+        if main_entry.data.get("home_id"):
+            home_ids.add(main_entry.data["home_id"])
+
+        # Add home_ids from all subentries
+        for entry in self.hass.config_entries.async_entries(DOMAIN):
+            if entry.data.get("home_id") and entry != main_entry:
+                home_ids.add(entry.data["home_id"])
+
+        return home_ids
+
     @staticmethod
     def _get_home_title(home: dict) -> str:
         """Generate a user-friendly title for a home."""
@@ -238,52 +313,6 @@ class TibberPricesFlowHandler(ConfigFlow, domain=DOMAIN):
         )
         result = await client.async_get_viewer_details()
         return result["viewer"]
-
-
-class TibberPricesReauthFlowHandler(ConfigFlow):
-    """Handle a reauthentication flow for tibber_prices."""
-
-    def __init__(self, entry: ConfigEntry) -> None:
-        """Initialize the reauth flow handler."""
-        self._entry = entry
-        self._errors: dict[str, str] = {}
-
-    async def async_step_user(self, user_input: dict | None = None) -> ConfigFlowResult:
-        """Prompt for a new access token."""
-        if user_input is not None:
-            try:
-                await TibberPricesApiClient(
-                    access_token=user_input[CONF_ACCESS_TOKEN],
-                    session=async_create_clientsession(self.hass),
-                ).async_get_viewer_details()
-            except TibberPricesApiClientAuthenticationError as exception:
-                LOGGER.warning(exception)
-                self._errors["base"] = "auth"
-            except TibberPricesApiClientCommunicationError as exception:
-                LOGGER.error(exception)
-                self._errors["base"] = "connection"
-            except TibberPricesApiClientError as exception:
-                LOGGER.exception(exception)
-                self._errors["base"] = "unknown"
-            else:
-                self.hass.config_entries.async_update_entry(
-                    self._entry,
-                    data={
-                        **self._entry.data,
-                        CONF_ACCESS_TOKEN: user_input[CONF_ACCESS_TOKEN],
-                    },
-                )
-                return self.async_abort(reason="reauth_successful")
-
-        return self.async_show_form(
-            step_id="user",
-            data_schema=vol.Schema(
-                {
-                    vol.Required(CONF_ACCESS_TOKEN): TextSelector(TextSelectorConfig(type=TextSelectorType.TEXT)),
-                }
-            ),
-            errors=self._errors,
-        )
 
 
 class TibberPricesSubentryFlowHandler(ConfigSubentryFlow):

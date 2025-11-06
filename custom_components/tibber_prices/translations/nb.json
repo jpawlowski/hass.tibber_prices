@@ -23,6 +23,14 @@
                 },
                 "title": "Velg et hjem",
                 "submit": "Velg Hjem"
+            },
+            "reauth_confirm": {
+                "title": "Autentiser Tibber-integrasjonen på nytt",
+                "description": "Tilgangstokenet for Tibber er ikke lenger gyldig. Vennligst skriv inn et nytt API-tilgangstoken for å fortsette å bruke denne integrasjonen.\n\nFor å generere et nytt API-tilgangstoken, besøk https://developer.tibber.com.",
+                "data": {
+                    "access_token": "API-tilgangstoken"
+                },
+                "submit": "Oppdater Token"
             }
         },
         "error": {
@@ -30,12 +38,14 @@
             "connection": "Kan ikke koble til Tibber. Vennligst sjekk internettforbindelsen din.",
             "unknown": "Uventet feil",
             "cannot_connect": "Tilkobling mislyktes",
-            "invalid_access_token": "Ugyldig tilgangstoken"
+            "invalid_access_token": "Ugyldig tilgangstoken",
+            "missing_homes": "Det nye tilgangstokenet har ikke tilgang til alle konfigurerte hjem. Vennligst bruk et tilgangstoken som har tilgang til de samme Tibber-hjemmene."
         },
         "abort": {
             "already_configured": "Integrasjonen er allerede konfigurert",
             "entry_not_found": "Tibber-konfigurasjonsoppføring ikke funnet.",
-            "setup_complete": "Oppsett fullført! Du kan endre flere alternativer for Tibber Priser i integrasjonens innstillinger etter å ha lukket denne dialogen."
+            "setup_complete": "Oppsett fullført! Du kan endre flere alternativer for Tibber Priser i integrasjonens innstillinger etter å ha lukket denne dialogen.",
+            "reauth_successful": "Autentisering på nytt vellykket. Integrasjonen har blitt oppdatert med det nye tilgangstokenet."
         }
     },
     "config_subentries": {

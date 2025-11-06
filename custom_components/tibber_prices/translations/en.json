@@ -23,6 +23,14 @@
                 },
                 "title": "Pick a home",
                 "submit": "Select Home"
+            },
+            "reauth_confirm": {
+                "title": "Reauthenticate Tibber Integration",
+                "description": "The access token for Tibber is no longer valid. Please enter a new API access token to continue using this integration.\n\nTo generate a new API access token, visit https://developer.tibber.com.",
+                "data": {
+                    "access_token": "API access token"
+                },
+                "submit": "Update Token"
             }
         },
         "error": {
@@ -30,12 +38,14 @@
             "connection": "Unable to connect to Tibber. Please check your internet connection.",
             "unknown": "Unexpected error",
             "cannot_connect": "Failed to connect",
-            "invalid_access_token": "Invalid access token"
+            "invalid_access_token": "Invalid access token",
+            "missing_homes": "The new access token does not have access to all configured homes. Please use an access token that has access to the same Tibber homes."
         },
         "abort": {
             "already_configured": "Integration is already configured",
             "entry_not_found": "Tibber configuration entry not found.",
-            "setup_complete": "Setup complete! You can change additional options for Tibber Prices in the integration's options after closing this dialog."
+            "setup_complete": "Setup complete! You can change additional options for Tibber Prices in the integration's options after closing this dialog.",
+            "reauth_successful": "Reauthentication successful. The integration has been updated with the new access token."
         }
     },
     "config_subentries": {
