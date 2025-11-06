@@ -6,15 +6,15 @@
                 "data": {
                     "access_token": "API-åtkomsttoken"
                 },
-                "submit": "Validera Token"
+                "submit": "Validera token"
             },
             "select_home": {
                 "description": "Välj ett hem för att hämta prisinformation och betyg.",
                 "data": {
                     "home_id": "Hem"
                 },
-                "title": "Välj ett Hem",
-                "submit": "Välj Hem"
+                "title": "Välj ett hem",
+                "submit": "Välj hem"
             },
             "finish": {
                 "description": "Välj ett hem för att hämta prisinformation och betyg.",
@@ -22,30 +22,30 @@
                     "home_id": "Hem-ID"
                 },
                 "title": "Välj ett hem",
-                "submit": "Välj Hem"
+                "submit": "Välj hem"
             },
             "reauth_confirm": {
                 "title": "Autentisera Tibber-integrationen igen",
-                "description": "Åtkomsttoken för Tibber är inte längre giltigt. Vänligen ange en ny API-åtkomsttoken för att fortsätta använda denna integration.\n\nFör att generera en ny API-åtkomsttoken, besök https://developer.tibber.com.",
+                "description": "Åtkomsttoken för Tibber är inte längre giltig. Vänligen ange en ny API-åtkomsttoken för att fortsätta använda denna integration.\n\nFör att generera en ny API-åtkomsttoken, besök https://developer.tibber.com.",
                 "data": {
                     "access_token": "API-åtkomsttoken"
                 },
-                "submit": "Uppdatera Token"
+                "submit": "Uppdatera token"
             }
         },
         "error": {
-            "auth": "Tibber-åtkomsttoken är ogiltigt.",
-            "connection": "Kan inte ansluta till Tibber. Kontrollera din internetanslutning.",
+            "auth": "Tibber-åtkomsttoken är ogiltig.",
+            "connection": "Kunde inte ansluta till Tibber. Vänligen kontrollera din internetanslutning.",
             "unknown": "Oväntat fel",
-            "cannot_connect": "Anslutning misslyckades",
-            "invalid_access_token": "Ogiltigt åtkomsttoken",
-            "missing_homes": "Den nya åtkomsttoken har inte tillgång till alla konfigurerade hem. Använd en åtkomsttoken som har tillgång till samma Tibber-hem."
+            "cannot_connect": "Kunde inte ansluta",
+            "invalid_access_token": "Ogiltig åtkomsttoken",
+            "missing_homes": "Den nya åtkomsttoken har inte åtkomst till alla konfigurerade hem. Vänligen använd en åtkomsttoken som har åtkomst till samma Tibber-hem."
         },
         "abort": {
             "already_configured": "Integrationen är redan konfigurerad",
             "entry_not_found": "Tibber-konfigurationspost hittades inte.",
-            "setup_complete": "Installation klar! Du kan ändra fler alternativ för Tibber Priser i integrationens alternativ efter att ha stängt denna dialog.",
-            "reauth_successful": "Återautentisering lyckades. Integrationen har uppdaterats med den nya åtkomsttoken."
+            "setup_complete": "Konfiguration klar! Du kan ändra ytterligare alternativ för Tibber-priser i integrationens alternativ efter att ha stängt denna dialog.",
+            "reauth_successful": "Omautentisering lyckades. Integrationen har uppdaterats med den nya åtkomsttoken."
         }
     },
     "config_subentries": {
@@ -57,7 +57,7 @@
             "step": {
                 "user": {
                     "title": "Lägg till Tibber-hem",
-                    "description": "Välj ett hem att lägga till i din Tibber-integration.\n\n**Observera:** Efter att ha lagt till detta hem kan du lägga till fler hem från integrationens kontextmeny genom att välja \"Lägg till Tibber-hem\".",
+                    "description": "Välj ett hem att lägga till i din Tibber-integration.\n\n**Obs:** Efter att ha lagt till detta hem kan du lägga till ytterligare hem från integrationens kontextmeny genom att välja \"Lägg till Tibber-hem\".",
                     "data": {
                         "home_id": "Hem"
                     }
@@ -71,51 +71,51 @@
                 "no_access_token": "Ingen åtkomsttoken tillgänglig",
                 "home_not_found": "Valt hem hittades inte",
                 "api_error": "Kunde inte hämta hem från Tibber API",
-                "no_available_homes": "Inga fler hem tillgängliga att lägga till. Alla hem från ditt Tibber-konto har redan lagts till."
+                "no_available_homes": "Inga ytterligare hem tillgängliga att lägga till. Alla hem från ditt Tibber-konto har redan lagts till."
             }
         }
     },
     "options": {
         "step": {
             "init": {
-                "title": "Allmänna Inställningar",
+                "title": "Allmänna inställningar",
                 "description": "Konfigurera allmänna inställningar för Tibber Prisinformation & Betyg.\n\nAnvändare: {user_login}",
                 "data": {
                     "extended_descriptions": "Visa utökade beskrivningar i entitetsattribut"
                 }
             },
             "price_rating": {
-                "title": "Prisbetyggränser",
-                "description": "Konfigurera gränser för prisbetygnivåer (LÅG/NORMAL/HÖG) baserat på jämförelse med rullande 24-timmars genomsnitt.",
+                "title": "Prisvärderingströsklar",
+                "description": "Konfigurera trösklar för prisvärderingsnivåer (LÅG/NORMAL/HÖG) baserat på jämförelse med rullande 24-timmars genomsnitt.",
                 "data": {
-                    "price_rating_threshold_low": "Låg Betygsgräns (% under rullande genomsnitt)",
-                    "price_rating_threshold_high": "Hög Betygsgräns (% över rullande genomsnitt)"
+                    "price_rating_threshold_low": "Låg värderingströskel (% under rullande genomsnitt)",
+                    "price_rating_threshold_high": "Hög värderingströskel (% över rullande genomsnitt)"
                 }
             },
             "best_price": {
-                "title": "Bästa Prisperiod Inställningar",
-                "description": "Konfigurera inställningar för den binära sensorn för bästa prisperiod. Denna sensor är aktiv under perioder med de lägsta elpriserna.",
+                "title": "Inställningar för bästa prisperiod",
+                "description": "Konfigurera inställningar för Bästa Prisperiod binärsensor. Denna sensor är aktiv under perioder med de lägsta elpriserna.",
                 "data": {
-                    "best_price_flex": "Flexibilitet: Maximum % över minimumpris",
-                    "best_price_min_distance_from_avg": "Minimiavstånd: Nödvändig % under dagligt genomsnitt"
+                    "best_price_flex": "Flexibilitet: Maximalt % över minimumpris",
+                    "best_price_min_distance_from_avg": "Minimiavstånd: Krävd % under dagligt genomsnitt"
                 }
             },
             "peak_price": {
-                "title": "Topprisperiod Inställningar",
-                "description": "Konfigurera inställningar för den binära sensorn för topprisperiod. Denna sensor är aktiv under perioder med de högsta elpriserna.",
+                "title": "Inställningar för topprisperiod",
+                "description": "Konfigurera inställningar för Topprisperiod binärsensor. Denna sensor är aktiv under perioder med de högsta elpriserna.",
                 "data": {
-                    "peak_price_flex": "Flexibilitet: Maximum % under maximumpris (negativt värde)",
-                    "peak_price_min_distance_from_avg": "Minimiavstånd: Nödvändig % över dagligt genomsnitt"
+                    "peak_price_flex": "Flexibilitet: Maximalt % under maximumpris (negativt värde)",
+                    "peak_price_min_distance_from_avg": "Minimiavstånd: Krävd % över dagligt genomsnitt"
                 }
             }
         },
         "error": {
-            "auth": "Tibber-åtkomsttoken är ogiltigt.",
-            "connection": "Kan inte ansluta till Tibber. Kontrollera din internetanslutning.",
-            "unknown": "Ett oväntat fel inträffade. Kontrollera loggarna för detaljer.",
-            "cannot_connect": "Anslutning misslyckades",
-            "invalid_access_token": "Ogiltigt åtkomsttoken",
-            "different_home": "Åtkomsttokenet är inte giltigt för hem-ID:t som denna integration är konfigurerad för."
+            "auth": "Tibber-åtkomsttoken är ogiltig.",
+            "connection": "Kunde inte ansluta till Tibber. Vänligen kontrollera din internetanslutning.",
+            "unknown": "Ett oväntat fel inträffade. Vänligen kontrollera loggarna för detaljer.",
+            "cannot_connect": "Kunde inte ansluta",
+            "invalid_access_token": "Ogiltig åtkomsttoken",
+            "different_home": "Åtkomsttoken är inte giltig för hem-ID:t som denna integration är konfigurerad för."
         },
         "abort": {
             "entry_not_found": "Tibber-konfigurationspost hittades inte."
@@ -124,108 +124,108 @@
     "entity": {
         "sensor": {
             "current_price": {
-                "name": "Aktuellt elpris"
+                "name": "Nuvarande elpris"
             },
             "next_interval_price": {
                 "name": "Nästa pris"
             },
             "previous_interval_price": {
-                "name": "Föregående pris"
+                "name": "Föregående elpris"
             },
             "current_hour_average": {
-                "name": "Aktuellt tim-genomsnittspris"
+                "name": "Nuvarande timgenomsnitt pris"
             },
             "next_hour_average": {
-                "name": "Nästa tim-genomsnittspris"
+                "name": "Nästa timgenomsnitt pris"
             },
             "price_level": {
-                "name": "Aktuell Prisnivå",
+                "name": "Nuvarande prisnivå",
                 "state": {
-                    "very_cheap": "Mycket billig",
-                    "cheap": "Billig",
+                    "very_cheap": "Mycket billigt",
+                    "cheap": "Billigt",
                     "normal": "Normal",
-                    "expensive": "Dyr",
-                    "very_expensive": "Mycket dyr"
+                    "expensive": "Dyrt",
+                    "very_expensive": "Mycket dyrt"
                 }
             },
             "next_interval_price_level": {
-                "name": "Nästa Prisnivå",
+                "name": "Nästa prisnivå",
                 "state": {
-                    "very_cheap": "Mycket billig",
-                    "cheap": "Billig",
+                    "very_cheap": "Mycket billigt",
+                    "cheap": "Billigt",
                     "normal": "Normal",
-                    "expensive": "Dyr",
-                    "very_expensive": "Mycket dyr"
+                    "expensive": "Dyrt",
+                    "very_expensive": "Mycket dyrt"
                 }
             },
             "previous_interval_price_level": {
-                "name": "Föregående Prisnivå",
+                "name": "Föregående prisnivå",
                 "state": {
-                    "very_cheap": "Mycket billig",
-                    "cheap": "Billig",
+                    "very_cheap": "Mycket billigt",
+                    "cheap": "Billigt",
                     "normal": "Normal",
-                    "expensive": "Dyr",
-                    "very_expensive": "Mycket dyr"
+                    "expensive": "Dyrt",
+                    "very_expensive": "Mycket dyrt"
                 }
             },
             "current_hour_price_level": {
-                "name": "Aktuell Timme Prisnivå",
+                "name": "Nuvarande timprisnivå",
                 "state": {
-                    "very_cheap": "Mycket billig",
-                    "cheap": "Billig",
+                    "very_cheap": "Mycket billigt",
+                    "cheap": "Billigt",
                     "normal": "Normal",
-                    "expensive": "Dyr",
-                    "very_expensive": "Mycket dyr"
+                    "expensive": "Dyrt",
+                    "very_expensive": "Mycket dyrt"
                 }
             },
             "next_hour_price_level": {
-                "name": "Nästa Timme Prisnivå",
+                "name": "Nästa timprisnivå",
                 "state": {
-                    "very_cheap": "Mycket billig",
-                    "cheap": "Billig",
+                    "very_cheap": "Mycket billigt",
+                    "cheap": "Billigt",
                     "normal": "Normal",
-                    "expensive": "Dyr",
-                    "very_expensive": "Mycket dyr"
+                    "expensive": "Dyrt",
+                    "very_expensive": "Mycket dyrt"
                 }
             },
             "lowest_price_today": {
-                "name": "Lägsta pris idag"
+                "name": "Dagens lägsta pris"
             },
             "highest_price_today": {
-                "name": "Högsta pris idag"
+                "name": "Dagens högsta pris"
             },
             "average_price_today": {
-                "name": "Genomsnittspris idag"
+                "name": "Dagens genomsnittspris"
             },
             "lowest_price_tomorrow": {
-                "name": "Lägsta pris imorgon"
+                "name": "Morgondagens lägsta pris"
             },
             "highest_price_tomorrow": {
-                "name": "Högsta pris imorgon"
+                "name": "Morgondagens högsta pris"
             },
             "average_price_tomorrow": {
-                "name": "Genomsnittspris imorgon"
+                "name": "Morgondagens genomsnittspris"
             },
             "trailing_price_average": {
-                "name": "Efterföljande 24t genomsnittspris"
+                "name": "Rullande 24t genomsnittspris"
             },
             "leading_price_average": {
-                "name": "Framåtriktad 24t genomsnittspris"
+                "name": "Framåtblickande 24t genomsnittspris"
             },
             "trailing_price_min": {
-                "name": "Efterföljande 24t minimumpris"
+                "name": "Rullande 24t minimumpris"
             },
             "trailing_price_max": {
-                "name": "Efterföljande 24t maximumpris"
+                "name": "Rullande 24t maximumpris"
             },
             "leading_price_min": {
-                "name": "Framåtriktad 24t minimumpris"
+                "name": "Framåtblickande 24t minimumpris"
             },
             "leading_price_max": {
-                "name": "Framåtriktad 24t maximumpris"
+                "name": "Framåtblickande 24t maximumpris"
             },
             "price_rating": {
-                "name": "Aktuellt Prisbetyg",
+                "name": "Nuvarande prisvärdering",
                 "state": {
                     "low": "Låg",
                     "normal": "Normal",
@@ -233,7 +233,7 @@
                 }
             },
             "next_interval_price_rating": {
-                "name": "Nästa Prisbetyg",
+                "name": "Nästa prisvärdering",
                 "state": {
                     "low": "Låg",
                     "normal": "Normal",
@@ -241,7 +241,7 @@
                 }
             },
             "previous_interval_price_rating": {
-                "name": "Föregående Prisbetyg",
+                "name": "Föregående prisvärdering",
                 "state": {
                     "low": "Låg",
                     "normal": "Normal",
@@ -249,7 +249,7 @@
                 }
             },
             "current_hour_price_rating": {
-                "name": "Aktuell Timme Prisbetyg",
+                "name": "Nuvarande timpris värdering",
                 "state": {
                     "low": "Låg",
                     "normal": "Normal",
@@ -257,7 +257,7 @@
                 }
             },
             "next_hour_price_rating": {
-                "name": "Nästa Timme Prisbetyg",
+                "name": "Nästa timpris värdering",
                 "state": {
                     "low": "Låg",
                     "normal": "Normal",
@@ -265,31 +265,31 @@
                 }
             },
             "next_avg_1h": {
-                "name": "Genomsnittspris Nästa 1h"
+                "name": "Nästa 1t genomsnittspris"
             },
             "next_avg_2h": {
-                "name": "Genomsnittspris Nästa 2h"
+                "name": "Nästa 2t genomsnittspris"
             },
             "next_avg_3h": {
-                "name": "Genomsnittspris Nästa 3h"
+                "name": "Nästa 3t genomsnittspris"
             },
             "next_avg_4h": {
-                "name": "Genomsnittspris Nästa 4h"
+                "name": "Nästa 4t genomsnittspris"
             },
             "next_avg_5h": {
-                "name": "Genomsnittspris Nästa 5h"
+                "name": "Nästa 5t genomsnittspris"
             },
             "next_avg_6h": {
-                "name": "Genomsnittspris Nästa 6h"
+                "name": "Nästa 6t genomsnittspris"
             },
             "next_avg_8h": {
-                "name": "Genomsnittspris Nästa 8h"
+                "name": "Nästa 8t genomsnittspris"
             },
             "next_avg_12h": {
-                "name": "Genomsnittspris Nästa 12h"
+                "name": "Nästa 12t genomsnittspris"
             },
             "price_trend_1h": {
-                "name": "Pristrend (1h)",
+                "name": "Pristrend (1t)",
                 "state": {
                     "rising": "Stigande",
                     "falling": "Fallande",
@@ -297,7 +297,7 @@
                 }
             },
             "price_trend_2h": {
-                "name": "Pristrend (2h)",
+                "name": "Pristrend (2t)",
                 "state": {
                     "rising": "Stigande",
                     "falling": "Fallande",
@@ -305,7 +305,7 @@
                 }
             },
             "price_trend_3h": {
-                "name": "Pristrend (3h)",
+                "name": "Pristrend (3t)",
                 "state": {
                     "rising": "Stigande",
                     "falling": "Fallande",
@@ -313,7 +313,7 @@
                 }
             },
             "price_trend_4h": {
-                "name": "Pristrend (4h)",
+                "name": "Pristrend (4t)",
                 "state": {
                     "rising": "Stigande",
                     "falling": "Fallande",
@@ -321,7 +321,7 @@
                 }
             },
             "price_trend_5h": {
-                "name": "Pristrend (5h)",
+                "name": "Pristrend (5t)",
                 "state": {
                     "rising": "Stigande",
                     "falling": "Fallande",
@@ -329,7 +329,7 @@
                 }
             },
             "price_trend_6h": {
-                "name": "Pristrend (6h)",
+                "name": "Pristrend (6t)",
                 "state": {
                     "rising": "Stigande",
                     "falling": "Fallande",
@@ -337,7 +337,7 @@
                 }
             },
             "price_trend_8h": {
-                "name": "Pristrend (8h)",
+                "name": "Pristrend (8t)",
                 "state": {
                     "rising": "Stigande",
                     "falling": "Fallande",
@@ -345,7 +345,7 @@
                 }
             },
             "price_trend_12h": {
-                "name": "Pristrend (12h)",
+                "name": "Pristrend (12t)",
                 "state": {
                     "rising": "Stigande",
                     "falling": "Fallande",
@@ -353,13 +353,13 @@
                 }
             },
             "daily_rating": {
-                "name": "Dagligt Prisbetyg"
+                "name": "Daglig prisvärdering"
             },
             "monthly_rating": {
-                "name": "Månatligt Prisbetyg"
+                "name": "Månatlig prisvärdering"
             },
             "data_timestamp": {
-                "name": "Prisdata Utgångsdatum"
+                "name": "Prisdata utgångstid"
             },
             "price_forecast": {
                 "name": "Prisprognos"
@@ -370,29 +370,29 @@
                 "name": "Topprisperiod"
             },
             "best_price_period": {
-                "name": "Bästa Prisperiod"
+                "name": "Bästa prisperiod"
             },
             "connection": {
                 "name": "Tibber API-anslutning"
             },
             "tomorrow_data_available": {
-                "name": "Data för Imorgon Tillgänglig"
+                "name": "Morgondagens data tillgänglig"
             }
         }
     },
     "issues": {
         "new_homes_available": {
             "title": "Nya Tibber-hem upptäckta",
-            "description": "Vi upptäckte {count} nya hem på ditt Tibber-konto: {homes}. Du kan lägga till dem i Home Assistant via Tibber-integrationskonfigurationen."
+            "description": "Vi upptäckte {count} nytt/nya hem på ditt Tibber-konto: {homes}. Du kan lägga till dem i Home Assistant via Tibber-integrationskonfigurationen."
         },
         "homes_removed": {
             "title": "Tibber-hem borttagna",
-            "description": "Vi upptäckte att {count} hem har tagits bort från ditt Tibber-konto: {homes}. Granska din Tibber-integrationskonfiguration."
+            "description": "Vi upptäckte att {count} hem har tagits bort från ditt Tibber-konto: {homes}. Vänligen granska din Tibber-integrationskonfiguration."
         }
     },
     "services": {
         "refresh_user_data": {
-            "name": "Uppdatera Användardata",
+            "name": "Uppdatera användardata",
             "description": "Tvingar en uppdatering av användardata (hem, profilinformation) från Tibber API. Detta kan vara användbart efter att ha gjort ändringar i ditt Tibber-konto eller vid felsökning av anslutningsproblem.",
             "fields": {
                 "entry_id": {

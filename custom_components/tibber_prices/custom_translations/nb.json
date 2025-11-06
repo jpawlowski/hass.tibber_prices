@@ -1,342 +1,260 @@
 {
     "sensor": {
         "current_price": {
-            "description": "Gjeldende strømpris per kWh",
-            "long_description": "Viser gjeldende pris per kWh fra Tibber-abonnementet ditt",
-            "usage_tips": "Bruk dette til å følge priser eller lage automatiseringer som kjører når strømmen er billig"
+            "description": "Den nåværende elektrisitetsprisen per kWh",
+            "long_description": "Viser nåværende pris per kWh fra ditt Tibber-abonnement",
+            "usage_tips": "Bruk dette til å spore priser eller lage automatiseringer som kjører når strøm er billig"
         },
         "next_interval_price": {
-            "description": "Strømpris for neste intervall per kWh",
-            "long_description": "Viser prisen for neste 15-minutters intervall fra Tibber-abonnementet ditt",
-            "usage_tips": "Bruk dette til å forberede deg på kommende prisendringer eller planlegge enheter til å kjøre under billigere intervaller"
+            "description": "Neste intervalls elektrisitetspris per kWh",
+            "long_description": "Viser prisen for det neste 15-minutters intervallet fra ditt Tibber-abonnement",
+            "usage_tips": "Bruk dette til å forberede deg på kommende prisendringer eller planlegge enheter til å kjøre i billigere intervaller"
         },
         "previous_interval_price": {
-            "description": "Strømpris for forrige intervall per kWh",
-            "long_description": "Viser prisen for forrige 15-minutters intervall fra Tibber-abonnementet ditt",
+            "description": "Forrige intervalls elektrisitetspris per kWh",
+            "long_description": "Viser prisen for det forrige 15-minutters intervallet fra ditt Tibber-abonnement",
             "usage_tips": "Bruk dette til å gjennomgå tidligere prisendringer eller spore prishistorikk"
         },
         "current_hour_average": {
-            "description": "Rullerende 5-intervall gjennomsnittspris per kWh",
-            "long_description": "Viser gjennomsnittsprisen per kWh beregnet fra 5 intervaller: 2 tidligere, gjeldende og 2 neste intervaller (omtrent 75 minutter totalt). Dette gir en jevnere 'timepris' som tilpasser seg etter hvert som tiden går, i stedet for å være fast til klokkeslett.",
-            "usage_tips": "Bruk dette for en mer stabil prisindikator som jevner ut kortsiktige svingninger samtidig som den fortsatt responderer på prisendringer. Bedre enn faste timepriser for forbruksbeslutninger."
+            "description": "Rullende 5-intervalls gjennomsnittspris per kWh",
+            "long_description": "Viser gjennomsnittsprisen per kWh beregnet fra 5 intervaller: 2 foregående, nåværende og 2 neste intervaller (omtrent 75 minutter totalt). Dette gir en utjevnet 'timepris' som tilpasser seg etter hvert som tiden går, i stedet for å være fiksert til klokkeslett.",
+            "usage_tips": "Bruk dette for en mer stabil prisindikator som jevner ut kortsiktige svingninger mens den fortsatt er responsiv til prisendringer. Bedre enn faste timepriser for å ta forbruksbeslutninger."
         },
         "next_hour_average": {
-            "description": "Rullerende 5-intervall gjennomsnittspris for neste time per kWh",
-            "long_description": "Viser gjennomsnittsprisen per kWh beregnet fra 5 intervaller sentrert én time frem: omtrent intervaller +2 til +6 fra nå (dekker minutter +30 til +105). Dette gir en fremoverskuende jevnet 'timepris' for forbruksplanlegging.",
+            "description": "Rullende 5-intervalls gjennomsnittspris for neste time per kWh",
+            "long_description": "Viser gjennomsnittsprisen per kWh beregnet fra 5 intervaller sentrert en time frem: omtrent intervallene +2 til +6 fra nå (dekker minutter +30 til +105). Dette gir en fremtidsrettet utjevnet 'timepris' for å planlegge forbruk.",
             "usage_tips": "Bruk dette til å forutse prisendringer i neste time. Nyttig for å planlegge høyforbruksaktiviteter som lading av elbiler, kjøring av oppvaskmaskiner eller varmesystemer."
         },
         "lowest_price_today": {
-            "description": "Laveste strømpris i dag per kWh",
-            "long_description": "Viser laveste pris per kWh for gjeldende dag fra Tibber-abonnementet ditt",
-            "usage_tips": "Bruk dette til å sammenligne gjeldende priser med den billigste tiden på dagen"
+            "description": "Den laveste elektrisitetsprisen i dag per kWh",
+            "long_description": "Viser den laveste prisen per kWh for gjeldende dag fra ditt Tibber-abonnement",
+            "usage_tips": "Bruk dette til å sammenligne nåværende priser med den billigste tiden på dagen"
         },
         "highest_price_today": {
-            "description": "Høyeste strømpris i dag per kWh",
-            "long_description": "Viser høyeste pris per kWh for gjeldende dag fra Tibber-abonnementet ditt",
-            "usage_tips": "Bruk dette til å unngå å kjøre apparater under toppriser"
+            "description": "Den høyeste elektrisitetsprisen i dag per kWh",
+            "long_description": "Viser den høyeste prisen per kWh for gjeldende dag fra ditt Tibber-abonnement",
+            "usage_tips": "Bruk dette til å unngå å kjøre apparater i toppristider"
         },
         "average_price_today": {
-            "description": "Gjennomsnittlig strømpris i dag per kWh",
-            "long_description": "Viser gjennomsnittspris per kWh for gjeldende dag fra Tibber-abonnementet ditt",
-            "usage_tips": "Bruk dette som referanse for å sammenligne gjeldende priser"
+            "description": "Den gjennomsnittlige elektrisitetsprisen i dag per kWh",
+            "long_description": "Viser gjennomsnittsprisen per kWh for gjeldende dag fra ditt Tibber-abonnement",
+            "usage_tips": "Bruk dette som en baseline for å sammenligne nåværende priser"
         },
         "lowest_price_tomorrow": {
-            "description": "Laveste strømpris i morgen per kWh",
-            "long_description": "Viser laveste pris per kWh for i morgen fra Tibber-abonnementet ditt. Denne sensoren blir utilgjengelig til morgendagens data publiseres av Tibber (vanligvis rundt 13:00-14:00 CET).",
-            "usage_tips": "Bruk dette til å planlegge energikrevende aktiviteter for morgendagens billigste tid. Perfekt for forhåndsplanlegging av oppvarming, EV-lading eller apparater."
+            "description": "Den laveste elektrisitetsprisen i morgen per kWh",
+            "long_description": "Viser den laveste prisen per kWh for morgendagen fra ditt Tibber-abonnement. Denne sensoren blir utilgjengelig inntil morgendagens data er publisert av Tibber (vanligvis rundt 13:00-14:00 CET).",
+            "usage_tips": "Bruk dette til å planlegge energikrevende aktiviteter for morgendagens billigste tid. Perfekt for forhåndsplanlegging av oppvarming, elbillading eller apparater."
         },
         "highest_price_tomorrow": {
-            "description": "Høyeste strømpris i morgen per kWh",
-            "long_description": "Viser høyeste pris per kWh for i morgen fra Tibber-abonnementet ditt. Denne sensoren blir utilgjengelig til morgendagens data publiseres av Tibber (vanligvis rundt 13:00-14:00 CET).",
-            "usage_tips": "Bruk dette til å unngå å kjøre apparater under morgendagens toppriser. Nyttig for planlegging rundt dyre perioder."
+            "description": "Den høyeste elektrisitetsprisen i morgen per kWh",
+            "long_description": "Viser den høyeste prisen per kWh for morgendagen fra ditt Tibber-abonnement. Denne sensoren blir utilgjengelig inntil morgendagens data er publisert av Tibber (vanligvis rundt 13:00-14:00 CET).",
+            "usage_tips": "Bruk dette til å unngå å kjøre apparater i morgendagens toppristider. Nyttig for å planlegge rundt dyre perioder."
         },
         "average_price_tomorrow": {
-            "description": "Gjennomsnittlig strømpris i morgen per kWh",
-            "long_description": "Viser gjennomsnittspris per kWh for i morgen fra Tibber-abonnementet ditt. Denne sensoren blir utilgjengelig til morgendagens data publiseres av Tibber (vanligvis rundt 13:00-14:00 CET).",
-            "usage_tips": "Bruk dette som referanse for å sammenligne morgendagens priser og planlegge forbruk. Sammenlign med dagens gjennomsnitt for å se om i morgen vil være dyrere eller billigere totalt sett."
+            "description": "Den gjennomsnittlige elektrisitetsprisen i morgen per kWh",
+            "long_description": "Viser gjennomsnittsprisen per kWh for morgendagen fra ditt Tibber-abonnement. Denne sensoren blir utilgjengelig inntil morgendagens data er publisert av Tibber (vanligvis rundt 13:00-14:00 CET).",
+            "usage_tips": "Bruk dette som en baseline for å sammenligne morgendagens priser og planlegge forbruk. Sammenlign med dagens gjennomsnitt for å se om morgendagen vil være mer eller mindre dyr totalt sett."
         },
         "trailing_price_average": {
-            "description": "Gjennomsnittlig strømpris for de siste 24 timene per kWh",
-            "long_description": "Viser gjennomsnittspris per kWh beregnet fra de siste 24 timene (rullerende gjennomsnitt) fra Tibber-abonnementet ditt. Dette gir et rullerende gjennomsnitt som oppdateres hvert 15. minutt basert på historiske data.",
-            "usage_tips": "Bruk dette til å sammenligne gjeldende priser mot nylige trender. En gjeldende pris betydelig over dette gjennomsnittet kan indikere et godt tidspunkt å redusere forbruket."
+            "description": "Den gjennomsnittlige elektrisitetsprisen for de siste 24 timene per kWh",
+            "long_description": "Viser gjennomsnittsprisen per kWh beregnet fra de siste 24 timene (glidende gjennomsnitt) fra ditt Tibber-abonnement. Dette gir et rullende gjennomsnitt som oppdateres hvert 15. minutt basert på historiske data.",
+            "usage_tips": "Bruk dette til å sammenligne nåværende priser mot nylige trender. En nåværende pris betydelig over dette gjennomsnittet kan indikere et godt tidspunkt å redusere forbruket."
         },
         "leading_price_average": {
-            "description": "Gjennomsnittlig strømpris for de neste 24 timene per kWh",
-            "long_description": "Viser gjennomsnittspris per kWh beregnet fra de neste 24 timene (fremtidig gjennomsnitt) fra Tibber-abonnementet ditt. Dette gir et fremoverskuende gjennomsnitt basert på tilgjengelige prognosedata.",
-            "usage_tips": "Bruk dette til å planlegge energibruk. Hvis gjeldende pris er under det fremtidige gjennomsnittet, kan det være et godt tidspunkt å kjøre energikrevende apparater."
+            "description": "Den gjennomsnittlige elektrisitetsprisen for de neste 24 timene per kWh",
+            "long_description": "Viser gjennomsnittsprisen per kWh beregnet fra de neste 24 timene (fremtidsrettet gjennomsnitt) fra ditt Tibber-abonnement. Dette gir et fremtidsrettet gjennomsnitt basert på tilgjengelige prognosedata.",
+            "usage_tips": "Bruk dette til å planlegge energibruk. Hvis nåværende pris er under det fremtidsrettede gjennomsnittet, kan det være et godt tidspunkt å kjøre energikrevende apparater."
         },
         "trailing_price_min": {
-            "description": "Minimumspris for de siste 24 timene per kWh",
-            "long_description": "Viser minimumspris per kWh fra de siste 24 timene (rullerende minimum) fra Tibber-abonnementet ditt. Dette gir den laveste prisen sett i de siste 24 timene.",
-            "usage_tips": "Bruk dette til å se den beste prismuligheten du hadde de siste 24 timene og sammenlign med gjeldende priser."
+            "description": "Den minste elektrisitetsprisen for de siste 24 timene per kWh",
+            "long_description": "Viser minimumsprisen per kWh fra de siste 24 timene (glidende minimum) fra ditt Tibber-abonnement. Dette gir den laveste prisen sett i de siste 24 timene.",
+            "usage_tips": "Bruk dette til å se den beste prismuligheten du hadde i de siste 24 timene og sammenlign den med nåværende priser."
         },
         "trailing_price_max": {
-            "description": "Maksimumspris for de siste 24 timene per kWh",
-            "long_description": "Viser maksimumspris per kWh fra de siste 24 timene (rullerende maksimum) fra Tibber-abonnementet ditt. Dette gir den høyeste prisen sett i de siste 24 timene.",
-            "usage_tips": "Bruk dette til å se toppprisen de siste 24 timene og vurdere prisvolatilitet."
+            "description": "Den maksimale elektrisitetsprisen for de siste 24 timene per kWh",
+            "long_description": "Viser maksimumsprisen per kWh fra de siste 24 timene (glidende maksimum) fra ditt Tibber-abonnement. Dette gir den høyeste prisen sett i de siste 24 timene.",
+            "usage_tips": "Bruk dette til å se toppprisen i de siste 24 timene og vurdere prisvolatilitet."
         },
         "leading_price_min": {
-            "description": "Minimumspris for de neste 24 timene per kWh",
-            "long_description": "Viser minimumspris per kWh fra de neste 24 timene (fremtidig minimum) fra Tibber-abonnementet ditt. Dette gir den laveste forventede prisen i de neste 24 timene basert på prognosedata.",
+            "description": "Den minste elektrisitetsprisen for de neste 24 timene per kWh",
+            "long_description": "Viser minimumsprisen per kWh fra de neste 24 timene (fremtidsrettet minimum) fra ditt Tibber-abonnement. Dette gir den laveste prisen forventet i de neste 24 timene basert på prognosedata.",
             "usage_tips": "Bruk dette til å identifisere den beste prismuligheten som kommer og planlegge energikrevende oppgaver deretter."
         },
         "leading_price_max": {
-            "description": "Maksimumspris for de neste 24 timene per kWh",
-            "long_description": "Viser maksimumspris per kWh fra de neste 24 timene (fremtidig maksimum) fra Tibber-abonnementet ditt. Dette gir den høyeste forventede prisen i de neste 24 timene basert på prognosedata.",
-            "usage_tips": "Bruk dette til å unngå å kjøre apparater under kommende toppriser."
-        },
-        "current_hour_average_cents": {
-            "description": "Rullerende 5-intervall gjennomsnittspris (bakover + fremover skuende)",
-            "long_description": "Kompatibilitetserstatning for timepriser: Gjennomsnittet av 5 intervaller (2 før, nåværende, 2 etter ≈ 75 min). Oppdateres hvert 15. minutt med rullerende vindu sentrert på nåværende intervall. I motsetning til next_avg_* sensorer som kun ser fremover, gir dette en balansert visning av den omliggende timen.",
-            "usage_tips": "Migrering fra time- til kvarterstimepriser: Bruk som direkte erstatning for gamle timepris-sensorer. Gir stabil prisindikator som endres gradvis hvert 15. minutt i stedet for å hoppe ved hele timer."
-        },
-        "next_hour_average_cents": {
-            "description": "Rullerende 5-intervall gjennomsnitt for neste time (bakover + fremover skuende)",
-            "long_description": "Kompatibilitetserstatning for 'neste timepris': Gjennomsnittet av 5 intervaller sentrert én time frem (intervaller +2 til +6, dekker ~30-105 min frem). I motsetning til next_avg_1h som starter fra neste intervall, gir dette en balansert visning rundt timemerket.",
-            "usage_tips": "Migrering fra timepriser: Bruk som erstatning for 'neste timepris'. Sammenlign med current_hour_average for å avgjøre om det lønner seg å vente én time. Forskjellig fra next_avg_1h som kun ser på den umiddelbare neste timen fremover."
+            "description": "Den maksimale elektrisitetsprisen for de neste 24 timene per kWh",
+            "long_description": "Viser maksimumsprisen per kWh fra de neste 24 timene (fremtidsrettet maksimum) fra ditt Tibber-abonnement. Dette gir den høyeste prisen forventet i de neste 24 timene basert på prognosedata.",
+            "usage_tips": "Bruk dette til å unngå å kjøre apparater i kommende topprisperioder."
         },
         "price_level": {
-            "description": "Gjeldende prisnivåklassifisering",
-            "long_description": "Viser Tibbers klassifisering av gjeldende pris sammenlignet med historiske priser",
-            "usage_tips": "Bruk dette til å lage automatiseringer basert på relative prisnivåer i stedet for absolutte priser",
-            "price_levels": {
-                "VERY_CHEAP": "Veldig Billig",
-                "CHEAP": "Billig",
-                "NORMAL": "Normal",
-                "EXPENSIVE": "Dyr",
-                "VERY_EXPENSIVE": "Veldig Dyr"
-            }
+            "description": "Den nåværende prisnivåklassifiseringen",
+            "long_description": "Viser Tibbers klassifisering av nåværende pris sammenlignet med historiske priser",
+            "usage_tips": "Bruk dette til å lage automatiseringer basert på relative prisnivåer i stedet for absolutte priser"
         },
         "next_interval_price_level": {
-            "description": "Prisnivå for neste 15-minutters intervall",
-            "long_description": "Viser prisnivåklassifiseringen for kommende intervall. Hjelper med å forutse kortsiktige prisendringer for umiddelbar planlegging.",
+            "description": "Prisnivå for det neste 15-minutters intervallet",
+            "long_description": "Viser prisnivåklassifiseringen for det kommende intervallet. Hjelper med å forutse kortsiktige prisendringer for umiddelbar planlegging.",
             "usage_tips": "Bruk for raske beslutninger om å starte eller stoppe høyeffektenheter i de neste få minuttene."
         },
         "previous_interval_price_level": {
-            "description": "Prisnivå for forrige 15-minutters intervall",
-            "long_description": "Viser prisnivåklassifiseringen for siste intervall. Nyttig for historisk sammenligning og forståelse av nylige pristrender.",
-            "usage_tips": "Bruk for å sammenligne gjeldende vs nylige prisnivåer eller analysere forbruksmønstre mot historiske priser."
+            "description": "Prisnivå for det forrige 15-minutters intervallet",
+            "long_description": "Viser prisnivåklassifiseringen for det siste intervallet. Nyttig for historisk sammenligning og forståelse av nylige pristrender.",
+            "usage_tips": "Bruk for å sammenligne nåværende vs nylige prisnivåer eller analysere forbruksmønstre mot historiske priser."
         },
         "current_hour_price_level": {
-            "description": "Aggregert prisnivå for gjeldende rullerende time (5 intervaller)",
-            "long_description": "Viser median prisnivå på tvers av 5 intervaller (2 før, gjeldende, 2 etter) som dekker omtrent 75 minutter. Gir en mer stabil prisnivåindikator som jevner ut kortsiktige svingninger.",
-            "usage_tips": "Bruk for mellomlangsiktige planleggingsbeslutninger hvor du vil unngå å reagere på korte pristopper eller fall."
+            "description": "Aggregert prisnivå for nåværende rullerende time (5 intervaller)",
+            "long_description": "Viser median prisnivå på tvers av 5 intervaller (2 før, nåværende, 2 etter) som dekker omtrent 75 minutter. Gir en mer stabil prisnivåindikator som jevner ut kortsiktige svingninger.",
+            "usage_tips": "Bruk for mellomlangsiktige planleggingsbeslutninger der du ønsker å unngå å reagere på korte pristopper eller fall."
         },
         "next_hour_price_level": {
             "description": "Aggregert prisnivå for neste rullerende time (5 intervaller frem)",
-            "long_description": "Viser median prisnivå på tvers av 5 intervaller sentrert én time frem. Hjelper med å planlegge forbruk basert på kommende pristrender i stedet for øyeblikkelige fremtidige priser.",
-            "usage_tips": "Bruk for å planlegge aktiviteter for neste time basert på en jevnet prisnivåprognose."
-        },
-        "lowest_price_today_cents": {
-            "description": "Laveste strømpris i dag per kWh",
-            "long_description": "Viser laveste pris per kWh for gjeldende dag fra Tibber-abonnementet ditt",
-            "usage_tips": "Bruk dette til å sammenligne gjeldende priser med den billigste tiden på dagen"
-        },
-        "highest_price_today_cents": {
-            "description": "Høyeste strømpris i dag per kWh",
-            "long_description": "Viser høyeste pris per kWh for gjeldende dag fra Tibber-abonnementet ditt",
-            "usage_tips": "Bruk dette til å unngå å kjøre apparater under toppriser"
-        },
-        "average_price_today_cents": {
-            "description": "Gjennomsnittlig strømpris i dag per kWh",
-            "long_description": "Viser gjennomsnittspris per kWh for gjeldende dag fra Tibber-abonnementet ditt",
-            "usage_tips": "Bruk dette som referanse for å sammenligne gjeldende priser"
-        },
-        "lowest_price_tomorrow_cents": {
-            "description": "Laveste strømpris i morgen per kWh",
-            "long_description": "Viser laveste pris per kWh for i morgen fra Tibber-abonnementet ditt. Denne sensoren blir utilgjengelig til morgendagens data publiseres av Tibber (vanligvis rundt 13:00-14:00 CET).",
-            "usage_tips": "Bruk dette til å planlegge energikrevende aktiviteter for morgendagens billigste tid. Perfekt for forhåndsplanlegging av oppvarming, EV-lading eller apparater."
-        },
-        "highest_price_tomorrow_cents": {
-            "description": "Høyeste strømpris i morgen per kWh",
-            "long_description": "Viser høyeste pris per kWh for i morgen fra Tibber-abonnementet ditt. Denne sensoren blir utilgjengelig til morgendagens data publiseres av Tibber (vanligvis rundt 13:00-14:00 CET).",
-            "usage_tips": "Bruk dette til å unngå å kjøre apparater under morgendagens toppriser. Nyttig for planlegging rundt dyre perioder."
-        },
-        "average_price_tomorrow_cents": {
-            "description": "Gjennomsnittlig strømpris i morgen per kWh",
-            "long_description": "Viser gjennomsnittspris per kWh for i morgen fra Tibber-abonnementet ditt. Denne sensoren blir utilgjengelig til morgendagens data publiseres av Tibber (vanligvis rundt 13:00-14:00 CET).",
-            "usage_tips": "Bruk dette som referanse for å sammenligne morgendagens priser og planlegge forbruk. Sammenlign med dagens gjennomsnitt for å se om i morgen vil være dyrere eller billigere totalt sett."
-        },
-        "trailing_price_average_cents": {
-            "description": "Gjennomsnittlig strømpris for de siste 24 timene per kWh",
-            "long_description": "Viser gjennomsnittspris per kWh beregnet fra de siste 24 timene (rullerende gjennomsnitt) fra Tibber-abonnementet ditt. Dette gir et rullerende gjennomsnitt som oppdateres hvert 15. minutt basert på historiske data.",
-            "usage_tips": "Bruk dette til å sammenligne gjeldende priser mot nylige trender. En gjeldende pris betydelig over dette gjennomsnittet kan indikere et godt tidspunkt å redusere forbruket."
-        },
-        "leading_price_average_cents": {
-            "description": "Gjennomsnittlig strømpris for neste 24 timer per kWh (starter fra nåværende intervall)",
-            "long_description": "Rullende 24t fremoverrettet gjennomsnitt: Viser gjennomsnittlig pris fra nåværende intervall gjennom neste 24 timer. Oppdateres hvert 15. minutt ettersom 'nå' beveger seg. Forskjellig fra next_avg_* sensorer som starter fra NESTE intervall (ekskluderer nåværende). Bruk for langsiktig priskontekst.",
-            "usage_tips": "Sammenlign nåværende pris med dette for å vurdere om nå er relativt billig/dyrt i 24t-vinduet. For spesifikke planleggingsvinduer (1-12t), bruk next_avg_*t sensorer som ekskluderer nåværende intervall."
-        },
-        "trailing_price_min_cents": {
-            "description": "Laveste strømpris for de siste 24 timene per kWh",
-            "long_description": "Viser minimumsprisen per kWh fra de siste 24 timene (etterfølgende minimum) fra ditt Tibber-abonnement. Dette gir den laveste prisen sett i de siste 24 timene.",
-            "usage_tips": "Bruk dette for å se den beste prismuligheten du hadde de siste 24 timene og sammenlign med nåværende priser."
-        },
-        "trailing_price_max_cents": {
-            "description": "Høyeste strømpris for de siste 24 timene per kWh",
-            "long_description": "Viser maksimumsprisen per kWh fra de siste 24 timene (etterfølgende maksimum) fra ditt Tibber-abonnement. Dette gir den høyeste prisen sett i de siste 24 timene.",
-            "usage_tips": "Bruk dette for å se toppprisen de siste 24 timene og vurdere prisvolatilitet."
-        },
-        "leading_price_min_cents": {
-            "description": "Laveste strømpris for neste 24 timer per kWh (starter fra nåværende intervall)",
-            "long_description": "Rullende 24t fremoverrettet minimum: Viser laveste pris fra nåværende intervall gjennom neste 24 timer. Oppdateres hvert 15. minutt. Bruk til å identifisere det absolutt billigste øyeblikket neste dag. Forskjellig fra next_avg_* som beregner gjennomsnitt for spesifikke planleggingsvinduer.",
-            "usage_tips": "Bruk dette for å finne den absolutt beste prismuligheten de neste 24t. For planlegging av oppgaver med spesifikke varigheter (1-12t), bruk next_avg_*t sensorer for å sjekke om gjennomsnittet holder seg innenfor prisgrensen din."
-        },
-        "leading_price_max_cents": {
-            "description": "Høyeste strømpris for neste 24 timer per kWh (starter fra nåværende intervall)",
-            "long_description": "Rullende 24t fremoverrettet maksimum: Viser høyeste pris fra nåværende intervall gjennom neste 24 timer. Oppdateres hvert 15. minutt. Bruk til å identifisere topp-prisperioder som bør unngås. Forskjellig fra next_avg_* som beregner gjennomsnitt for spesifikke planleggingsvinduer.",
-            "usage_tips": "Bruk dette for å unngå topp-prisperioder de neste 24t. For planlegging av spesifikke oppgavevarigheter (1-12t) med pristak, bruk next_avg_*t sensorer for å sikre at gjennomsnittet holder seg under maksimalt akseptabel pris."
+            "long_description": "Viser median prisnivå på tvers av 5 intervaller sentrert en time frem. Hjelper med å planlegge forbruk basert på kommende pristrender i stedet for øyeblikkelige fremtidige priser.",
+            "usage_tips": "Bruk for å planlegge aktiviteter for neste time basert på en utjevnet prisnivåprognose."
         },
         "price_rating": {
-            "description": "Hvordan gjeldende intervalls pris sammenlignes med historiske data",
-            "long_description": "Viser hvordan gjeldende intervalls pris sammenlignes med historiske prisdata som en prosentandel",
-            "usage_tips": "En positiv prosentandel betyr at gjeldende pris er over gjennomsnitt, negativ betyr under gjennomsnitt",
-            "price_levels": {
-                "LOW": "Lav",
-                "NORMAL": "Normal",
-                "HIGH": "Høy"
-            }
+            "description": "Hvordan nåværende intervalls pris sammenlignes med historiske data",
+            "long_description": "Viser hvordan nåværende intervalls pris sammenlignes med historiske prisdata som en prosentandel",
+            "usage_tips": "En positiv prosentandel betyr at nåværende pris er over gjennomsnittet, negativ betyr under gjennomsnittet"
         },
         "next_interval_price_rating": {
-            "description": "Prisvurdering for neste 15-minutters intervall",
-            "long_description": "Viser hvordan neste intervalls pris sammenlignes med rullerende 24-timers gjennomsnitt. Hjelper med å forutse om kommende priser er over eller under den nylige trenden.",
+            "description": "Prisvurdering for det neste 15-minutters intervallet",
+            "long_description": "Viser hvordan neste intervalls pris sammenlignes med det rullerende 24-timers gjennomsnittet. Hjelper med å forutse om kommende priser er over eller under den nylige trenden.",
             "usage_tips": "Bruk for å ta raske beslutninger om å starte aktiviteter i neste intervall basert på relativ prisposisjon."
         },
         "previous_interval_price_rating": {
-            "description": "Prisvurdering for forrige 15-minutters intervall",
-            "long_description": "Viser hvordan siste intervalls pris sammenlignet med rullerende gjennomsnitt. Nyttig for å forstå nylig prisatferd.",
+            "description": "Prisvurdering for det forrige 15-minutters intervallet",
+            "long_description": "Viser hvordan siste intervalls pris sammenlignes med det rullerende gjennomsnittet. Nyttig for å forstå nylig prisatferd.",
             "usage_tips": "Bruk for å analysere hvordan prisvurderinger endret seg over tid eller validere tidligere forbruksbeslutninger."
         },
         "current_hour_price_rating": {
-            "description": "Aggregert prisvurdering for gjeldende rullerende time (5 intervaller)",
-            "long_description": "Viser gjennomsnittlig vurdering på tvers av 5 intervaller (2 før, gjeldende, 2 etter). Basert på gjennomsnittlig prosentvis forskjell fra rullerende 24-timers gjennomsnitt, som gir en jevnet vurderingsindikator.",
-            "usage_tips": "Bruk for stabil mellomlangsiktig prisvurdering som ikke overreagerer på korte prisavvik."
+            "description": "Aggregert prisvurdering for nåværende rullerende time (5 intervaller)",
+            "long_description": "Viser gjennomsnittlig vurdering på tvers av 5 intervaller (2 før, nåværende, 2 etter). Basert på gjennomsnittlig prosentvis forskjell fra rullerende 24t gjennomsnitt, som gir en utjevnet vurderingsindikator.",
+            "usage_tips": "Bruk for stabil mellomlangsiktig prisvurdering som ikke overreagerer på kortvarige prisavvik."
         },
         "next_hour_price_rating": {
             "description": "Aggregert prisvurdering for neste rullerende time (5 intervaller frem)",
-            "long_description": "Viser gjennomsnittlig vurdering for 5 intervaller sentrert én time frem. Hjelper med å forstå om neste time generelt vil være over eller under gjennomsnittsprising.",
-            "usage_tips": "Bruk for å bestemme om du bør vente en time før du starter høyforbruksaktiviteter."
+            "long_description": "Viser gjennomsnittlig vurdering for 5 intervaller sentrert en time frem. Hjelper med å forstå om neste time generelt vil være over eller under gjennomsnittlig prising.",
+            "usage_tips": "Bruk for å avgjøre om du bør vente en time før du starter høyforbruksaktiviteter."
         },
         "next_avg_1h": {
-            "description": "Gjennomsnittspris for neste time (kun fremover fra neste intervall)",
-            "long_description": "Fremoverrettet gjennomsnitt: Viser gjennomsnittet av neste 4 intervaller (1 time) fra NESTE 15-minutters intervall (ikke inkludert nåværende). Forskjellig fra current_hour_average som inkluderer tidligere intervaller. Bruk for absolutt pristerskel-planlegging.",
-            "usage_tips": "Absolutt pristerskel: Start kun apparater når gjennomsnittet holder seg under maksimum akseptabel pris (f.eks. under 0,25 EUR/kWh). Kombiner med trendsensor for optimal timing. Merk: Dette er IKKE en erstatning for timepriser - bruk current_hour_average til det."
+            "description": "Gjennomsnittspris for neste 1 time (kun fremover fra neste intervall)",
+            "long_description": "Fremtidsrettet gjennomsnitt: Viser gjennomsnitt av neste 4 intervaller (1 time) fra og med NESTE 15-minutters intervall (ikke inkludert nåværende). Forskjellig fra current_hour_average som inkluderer tidligere intervaller. Bruk for planlegging med absolutt pristerskel.",
+            "usage_tips": "Absolutt pristerskel: Start kun apparater når gjennomsnittet forblir under din maksimalt akseptable pris (f.eks. under 0,25 EUR/kWh). Kombiner med trendsensor for optimal timing. Merk: Dette er IKKE en erstatning for timepriser - bruk current_hour_average for det."
         },
         "next_avg_2h": {
-           "description": "Gjennomsnittspris for neste 2 timer",
-            "long_description": "Viser gjennomsnittsprisen for de neste 8 intervallene (2 timer) fra neste 15-minutters intervall.",
-            "usage_tips": "Absolutt pristerskel: Sett en maksimal akseptabel gjennomsnittspris for standard apparater som vaskemaskiner. Sikrer at du aldri betaler mer enn grensen din."
+            "description": "Gjennomsnittspris for neste 2 timer",
+            "long_description": "Viser gjennomsnittsprisen for de neste 8 intervallene (2 timer) fra og med neste 15-minutters intervall.",
+            "usage_tips": "Absolutt pristerskel: Sett en maksimalt akseptabel gjennomsnittspris for standard apparater som vaskemaskiner. Sikrer at du aldri betaler mer enn din grense."
         },
         "next_avg_3h": {
             "description": "Gjennomsnittspris for neste 3 timer",
-            "long_description": "Viser gjennomsnittsprisen for de neste 12 intervallene (3 timer) fra neste 15-minutters intervall.",
-            "usage_tips": "Absolutt pristerskel: For EU Eco-programmer (oppvaskmaskiner, 3-4t kjøretid). Start kun når 3t-gjennomsnitt er under prisgrensen. Bruk med trendsensor for å finne beste tidspunkt innen akseptabelt prisområde."
+            "long_description": "Viser gjennomsnittsprisen for de neste 12 intervallene (3 timer) fra og med neste 15-minutters intervall.",
+            "usage_tips": "Absolutt pristerskel: For EU Eco-programmer (oppvaskmaskiner, 3-4t kjøretid). Start kun når 3t gjennomsnitt er under din prisgrense. Bruk med trendsensor for å finne beste øyeblikk innenfor akseptabelt prisområde."
         },
         "next_avg_4h": {
             "description": "Gjennomsnittspris for neste 4 timer",
-            "long_description": "Viser gjennomsnittsprisen for de neste 16 intervallene (4 timer) fra neste 15-minutters intervall.",
-            "usage_tips": "Absolutt pristerskel: Sett maksimal akseptabel pris for varmepumper eller varmtvannsberedere. Forhindrer drift i dyre perioder uavhengig av relative trender."
+            "long_description": "Viser gjennomsnittsprisen for de neste 16 intervallene (4 timer) fra og med neste 15-minutters intervall.",
+            "usage_tips": "Absolutt pristerskel: Sett maksimalt akseptabel pris for varmepumper eller varmtvannsberedere. Forhindrer drift i dyre perioder uavhengig av relative trender."
         },
         "next_avg_5h": {
             "description": "Gjennomsnittspris for neste 5 timer",
-            "long_description": "Viser gjennomsnittsprisen for de neste 20 intervallene (5 timer) fra neste 15-minutters intervall.",
+            "long_description": "Viser gjennomsnittsprisen for de neste 20 intervallene (5 timer) fra og med neste 15-minutters intervall.",
             "usage_tips": "Absolutt pristerskel: Bro mellom kort- og langsiktig planlegging. Bruk for utvidede sykluser med harde prisgrenser (f.eks. bassengpumper, utvidede oppvarmingssykluser)."
         },
         "next_avg_6h": {
             "description": "Gjennomsnittspris for neste 6 timer",
-            "long_description": "Viser gjennomsnittsprisen for de neste 24 intervallene (6 timer) fra neste 15-minutters intervall.",
-            "usage_tips": "Absolutt pristerskel: Kveldsplanlegging med pristak. Planlegg kun oppgaver hvis 6t-gjennomsnitt holder seg under maksimum akseptabel kostnad."
+            "long_description": "Viser gjennomsnittsprisen for de neste 24 intervallene (6 timer) fra og med neste 15-minutters intervall.",
+            "usage_tips": "Absolutt pristerskel: Kveldsplanlegging med pristak. Planlegg kun oppgaver hvis 6t gjennomsnitt forblir under din maksimalt akseptable kostnad."
         },
         "next_avg_8h": {
             "description": "Gjennomsnittspris for neste 8 timer",
-            "long_description": "Viser gjennomsnittsprisen for de neste 32 intervallene (8 timer) fra neste 15-minutters intervall.",
-            "usage_tips": "Absolutt pristerskel: Beslutninger om nattdrift. Sett harde prisgrenser for nattlaster (batterilading, varmelager). Overskrid aldri budsjettet ditt."
+            "long_description": "Viser gjennomsnittsprisen for de neste 32 intervallene (8 timer) fra og med neste 15-minutters intervall.",
+            "usage_tips": "Absolutt pristerskel: Nattdriftsbeslutninger. Sett harde prisgrenser for nattbelastninger (batterilading, termolagring). Overskrid aldri budsjettet ditt."
         },
         "next_avg_12h": {
             "description": "Gjennomsnittspris for neste 12 timer",
-            "long_description": "Viser gjennomsnittsprisen for de neste 48 intervallene (12 timer) fra neste 15-minutters intervall.",
-            "usage_tips": "Absolutt pristerskel: Strategiske beslutninger med pristak. Fortsett kun hvis 12t-gjennomsnitt er under maksimum akseptabel pris. Godt for utsettbare store laster."
+            "long_description": "Viser gjennomsnittsprisen for de neste 48 intervallene (12 timer) fra og med neste 15-minutters intervall.",
+            "usage_tips": "Absolutt pristerskel: Strategiske beslutninger med pristak. Fortsett kun hvis 12t gjennomsnitt er under din maksimalt akseptable pris. Bra for utsettbare store belastninger."
         },
         "price_trend_1h": {
             "description": "Pristrend for neste time",
-            "long_description": "Sammenligner nåværende pris med gjennomsnitt for neste time. Viser 'stigende' (+5% eller mer), 'fallende' (-5% eller mindre) eller 'stabil'.",
-            "usage_tips": "Relativ optimalisering: 'fallende' = vent, prisene synker. 'stigende' = handle nå eller betal mer. 'stabil' = pris spiller ingen rolle nå. Fungerer uavhengig av absolutt prisnivå."
+            "long_description": "Sammenligner nåværende intervallpris med gjennomsnitt av neste 1 time (4 intervaller). Stigende hvis fremtiden er >5% høyere, fallende hvis >5% lavere, ellers stabil.",
+            "usage_tips": "Relativ optimalisering: 'fallende' = vent, prisene faller. 'stigende' = handle nå eller du betaler mer. 'stabil' = prisen spiller ikke så stor rolle nå. Fungerer uavhengig av absolutt prisnivå."
         },
         "price_trend_2h": {
             "description": "Pristrend for neste 2 timer",
-            "long_description": "Sammenligner nåværende pris med gjennomsnitt for neste 2 timer. Viser 'stigende' (+5% eller mer), 'fallende' (-5% eller mindre) eller 'stabil'.",
-            "usage_tips": "Relativ optimalisering: Ideelt for apparater. 'fallende' betyr bedre priser om 2t - utsett hvis mulig. Finner beste timing innen tilgjengelig vindu, uavhengig av sesong."
+            "long_description": "Sammenligner nåværende intervallpris med gjennomsnitt av neste 2 timer (8 intervaller). Stigende hvis fremtiden er >5% høyere, fallende hvis >5% lavere, ellers stabil.",
+            "usage_tips": "Relativ optimalisering: Ideelt for apparater. 'fallende' betyr bedre priser kommer om 2t - utsett hvis mulig. Finner beste timing innenfor ditt tilgjengelige vindu, uavhengig av sesong."
         },
         "price_trend_3h": {
             "description": "Pristrend for neste 3 timer",
-            "long_description": "Sammenligner nåværende pris med gjennomsnitt for neste 3 timer. Viser 'stigende' (+5% eller mer), 'fallende' (-5% eller mindre) eller 'stabil'.",
-            "usage_tips": "Relativ optimalisering: For Eco-programmer. 'fallende' betyr prisene faller >5% - verdt å vente. Fungerer i enhver sesong. Kombiner med avg-sensor for pristak: kun når avg < grensen DIN OG trend ikke 'fallende'."
+            "long_description": "Sammenligner nåværende intervallpris med gjennomsnitt av neste 3 timer (12 intervaller). Stigende hvis fremtiden er >5% høyere, fallende hvis >5% lavere, ellers stabil.",
+            "usage_tips": "Relativ optimalisering: For Eco-programmer. 'fallende' betyr priser faller >5% - verdt å vente. Fungerer i enhver sesong. Kombiner med avg-sensor for pristak: kun når avg < din grense OG trend ikke 'fallende'."
         },
         "price_trend_4h": {
             "description": "Pristrend for neste 4 timer",
-            "long_description": "Sammenligner nåværende pris med gjennomsnitt for neste 4 timer. Viser 'stigende' (+5% eller mer), 'fallende' (-5% eller mindre) eller 'stabil'.",
-            "usage_tips": "Relativ optimalisering: Varmepumpe/batteri-beslutninger. 'fallende' betyr bedre ladevindu kommer. Finner alltid relativ beste tid - enten prisene er 10 cent eller 50 cent. Bruk avg-sensor for absolutt grense."
+            "long_description": "Sammenligner nåværende intervallpris med gjennomsnitt av neste 4 timer (16 intervaller). Stigende hvis fremtiden er >5% høyere, fallende hvis >5% lavere, ellers stabil.",
+            "usage_tips": "Relativ optimalisering: Varmepumpe/batteribeslutninger. 'fallende' betyr bedre ladevindu kommer. Finner alltid relativ beste tid - enten prisene er 10 cent eller 50 cent. Bruk avg-sensor for absolutt grense."
         },
         "price_trend_5h": {
             "description": "Pristrend for neste 5 timer",
-            "long_description": "Sammenligner nåværende pris med gjennomsnitt for neste 5 timer. Viser 'stigende' (+5% eller mer), 'fallende' (-5% eller mindre) eller 'stabil'.",
-            "usage_tips": "Relativ optimalisering: Utvidede operasjoner. Tilpasser seg markedet - finner beste relative timing i ethvert prismiljø. 'stabil/stigende' = godt tidspunkt å starte innen planleggingsvinduet."
+            "long_description": "Sammenligner nåværende intervallpris med gjennomsnitt av neste 5 timer (20 intervaller). Stigende hvis fremtiden er >5% høyere, fallende hvis >5% lavere, ellers stabil.",
+            "usage_tips": "Relativ optimalisering: Utvidede operasjoner. Tilpasser seg markedet - finner beste relative timing i ethvert prismiljø. 'stabil/stigende' = godt tidspunkt å starte innenfor ditt planleggingsvindu."
         },
         "price_trend_6h": {
             "description": "Pristrend for neste 6 timer",
-            "long_description": "Sammenligner nåværende pris med gjennomsnitt for neste 6 timer. Viser 'stigende' (+5% eller mer), 'fallende' (-5% eller mindre) eller 'stabil'.",
-            "usage_tips": "Relativ optimalisering: Kveldsbeslutninger. 'fallende' = prisene blir betydelig bedre hvis du venter. Ingen faste terskler nødvendig - justeres automatisk til vinter-/sommerpriser."
+            "long_description": "Sammenligner nåværende intervallpris med gjennomsnitt av neste 6 timer (24 intervaller). Stigende hvis fremtiden er >5% høyere, fallende hvis >5% lavere, ellers stabil.",
+            "usage_tips": "Relativ optimalisering: Kveldsbeslutninger. 'fallende' = prisene forbedres betydelig hvis du venter. Ingen faste terskler nødvendig - justerer automatisk til vinter/sommer prisnivåer."
         },
         "price_trend_8h": {
             "description": "Pristrend for neste 8 timer",
-            "long_description": "Sammenligner nåværende pris med gjennomsnitt for neste 8 timer. Viser 'stigende' (+5% eller mer), 'fallende' (-5% eller mindre) eller 'stabil'.",
-            "usage_tips": "Relativ optimalisering: Nattplanlegging. 'fallende' betyr venting til natten lønner seg (>5% billigere). Fungerer året rundt uten manuelle terskel-justeringer. Start når 'stabil' eller 'stigende'."
+            "long_description": "Sammenligner nåværende intervallpris med gjennomsnitt av neste 8 timer (32 intervaller). Stigende hvis fremtiden er >5% høyere, fallende hvis >5% lavere, ellers stabil.",
+            "usage_tips": "Relativ optimalisering: Nattplanlegging. 'fallende' betyr at å vente til natten lønner seg (>5% billigere). Fungerer hele året uten manuelle terskeljusteringer. Start når 'stabil' eller 'stigende'."
         },
         "price_trend_12h": {
             "description": "Pristrend for neste 12 timer",
-            "long_description": "Sammenligner nåværende pris med gjennomsnitt for neste 12 timer. Viser 'stigende' (+5% eller mer), 'fallende' (-5% eller mindre) eller 'stabil'.",
-            "usage_tips": "Relativ optimalisering: Langsiktige strategiske beslutninger. 'fallende' = betydelig bedre priser kommer i kveld/i morgen. Finner optimal timing i enhver markedstilstand. Best kombinert med avg-sensor pristak."
+            "long_description": "Sammenligner nåværende intervallpris med gjennomsnitt av neste 12 timer (48 intervaller). Stigende hvis fremtiden er >5% høyere, fallende hvis >5% lavere, ellers stabil.",
+            "usage_tips": "Relativ optimalisering: Langsiktige strategiske beslutninger. 'fallende' = betydelig bedre priser kommer i natt/i morgen. Finner optimal timing i enhver markedstilstand. Best kombinert med avg-sensor pristak."
         },
         "daily_rating": {
             "description": "Hvordan dagens priser sammenlignes med historiske data",
             "long_description": "Viser hvordan dagens priser sammenlignes med historiske prisdata som en prosentandel",
-            "usage_tips": "En positiv prosentandel betyr at dagens priser er over gjennomsnitt, negativ betyr under gjennomsnitt"
+            "usage_tips": "En positiv prosentandel betyr at dagens priser er over gjennomsnittet, negativ betyr under gjennomsnittet"
         },
         "monthly_rating": {
             "description": "Hvordan denne månedens priser sammenlignes med historiske data",
             "long_description": "Viser hvordan denne månedens priser sammenlignes med historiske prisdata som en prosentandel",
-            "usage_tips": "En positiv prosentandel betyr at denne månedens priser er over gjennomsnitt, negativ betyr under gjennomsnitt"
+            "usage_tips": "En positiv prosentandel betyr at denne månedens priser er over gjennomsnittet, negativ betyr under gjennomsnittet"
         },
         "data_timestamp": {
             "description": "Tidsstempel for siste tilgjengelige prisdataintervall",
-            "long_description": "Viser tidsstempelet for siste tilgjengelige prisdataintervall fra Tibber-abonnementet ditt"
+            "long_description": "Viser tidsstempelet for siste tilgjengelige prisdataintervall fra ditt Tibber-abonnement"
         },
         "price_forecast": {
-            "description": "Prognose for kommende strømpriser",
-            "long_description": "Viser kommende strømpriser for fremtidige intervaller i et format som er enkelt å bruke i dashbord",
-            "usage_tips": "Bruk denne enhetens attributter for å vise kommende priser i diagrammer eller tilpassede kort. Få tilgang til enten 'intervals' for alle fremtidige intervaller eller 'hours' for timesammendrag."
+            "description": "Prognose for kommende elektrisitetspriser",
+            "long_description": "Viser kommende elektrisitetspriser for fremtidige intervaller i et format som er enkelt å bruke i dashboards",
+            "usage_tips": "Bruk denne entitetens attributter til å vise kommende priser i diagrammer eller tilpassede kort. Få tilgang til enten 'intervals' for alle fremtidige intervaller eller 'hours' for timesammendrag."
         }
     },
     "binary_sensor": {
         "tomorrow_data_available": {
-            "description": "Om prisdata for i morgen er tilgjengelig",
+            "description": "Om prisdata for morgendagen er tilgjengelig",
             "long_description": "Indikerer om prisdata for neste dag er mottatt fra Tibber",
-            "usage_tips": "Bruk dette for å sjekke om morgendagens priser er tilgjengelige for planlegging"
+            "usage_tips": "Bruk dette til å sjekke om morgendagens priser er tilgjengelig for planlegging"
         },
         "peak_price_period": {
-            "description": "Om gjeldende intervall er blant de dyreste på dagen",
-            "long_description": "Slår på når gjeldende pris er i topp 20% av dagens priser",
-            "usage_tips": "Bruk dette for å unngå å kjøre høyforbruksapparater under dyre intervaller"
+            "description": "Om nåværende intervall er blant de dyreste på dagen",
+            "long_description": "Slår seg på når nåværende pris er i topp 20% av dagens priser",
+            "usage_tips": "Bruk dette til å unngå å kjøre høyforbruksapparater i dyre intervaller"
         },
         "best_price_period": {
-            "description": "Om gjeldende intervall er blant de billigste på dagen",
-            "long_description": "Slår på når gjeldende pris er i bunn 20% av dagens priser",
-            "usage_tips": "Bruk dette for å kjøre høyforbruksapparater under de billigste intervallene"
+            "description": "Om nåværende intervall er blant de billigste på dagen",
+            "long_description": "Slår seg på når nåværende pris er i bunn 20% av dagens priser",
+            "usage_tips": "Bruk dette til å kjøre høyforbruksapparater i de billigste intervallene"
         },
         "connection": {
             "description": "Om tilkoblingen til Tibber API fungerer",
             "long_description": "Indikerer om integrasjonen kan koble til Tibber API",
-            "usage_tips": "Bruk dette for å overvåke tilkoblingsstatusen til Tibber API"
+            "usage_tips": "Bruk dette til å overvåke tilkoblingsstatusen til Tibber API"
         }
     },
     "home_types": {

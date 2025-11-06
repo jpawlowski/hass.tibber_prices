@@ -6,23 +6,23 @@
                 "data": {
                     "access_token": "API-toegangstoken"
                 },
-                "submit": "Valideer Token"
+                "submit": "Token valideren"
             },
             "select_home": {
-                "description": "Selecteer een woning om prijsinformatie en beoordelingen op te halen.",
+                "description": "Selecteer een huis om prijsinformatie en beoordelingen op te halen.",
                 "data": {
-                    "home_id": "Woning"
+                    "home_id": "Huis"
                 },
-                "title": "Kies een Woning",
-                "submit": "Selecteer Woning"
+                "title": "Kies een huis",
+                "submit": "Huis selecteren"
             },
             "finish": {
-                "description": "Selecteer een woning om prijsinformatie en beoordelingen op te halen.",
+                "description": "Selecteer een huis om prijsinformatie en beoordelingen op te halen.",
                 "data": {
-                    "home_id": "Woning-ID"
+                    "home_id": "Huis-ID"
                 },
-                "title": "Kies een woning",
-                "submit": "Selecteer Woning"
+                "title": "Kies een huis",
+                "submit": "Huis selecteren"
             },
             "reauth_confirm": {
                 "title": "Tibber-integratie opnieuw authenticeren",
@@ -30,95 +30,95 @@
                 "data": {
                     "access_token": "API-toegangstoken"
                 },
-                "submit": "Token Bijwerken"
+                "submit": "Token bijwerken"
             }
         },
         "error": {
             "auth": "Het Tibber-toegangstoken is ongeldig.",
-            "connection": "Kan geen verbinding maken met Tibber. Controleer je internetverbinding.",
+            "connection": "Kan geen verbinding maken met Tibber. Controleer uw internetverbinding.",
             "unknown": "Onverwachte fout",
             "cannot_connect": "Verbinding mislukt",
             "invalid_access_token": "Ongeldig toegangstoken",
-            "missing_homes": "Het nieuwe toegangstoken heeft geen toegang tot alle geconfigureerde woningen. Gebruik een toegangstoken dat toegang heeft tot dezelfde Tibber-woningen."
+            "missing_homes": "Het nieuwe toegangstoken heeft geen toegang tot alle geconfigureerde huizen. Gebruik een toegangstoken dat toegang heeft tot dezelfde Tibber-huizen."
         },
         "abort": {
             "already_configured": "Integratie is al geconfigureerd",
-            "entry_not_found": "Tibber configuratie-invoer niet gevonden.",
-            "setup_complete": "Installatie voltooid! Je kunt extra opties voor Tibber Prijzen wijzigen in de integratie-opties na het sluiten van dit venster.",
+            "entry_not_found": "Tibber-configuratie-item niet gevonden.",
+            "setup_complete": "Installatie voltooid! U kunt aanvullende opties voor Tibber-prijzen wijzigen in de integratie-opties na het sluiten van dit dialoogvenster.",
             "reauth_successful": "Herauthenticatie succesvol. De integratie is bijgewerkt met het nieuwe toegangstoken."
         }
     },
     "config_subentries": {
         "home": {
             "initiate_flow": {
-                "user": "Tibber Woning Toevoegen"
+                "user": "Tibber-huis toevoegen"
             },
-            "title": "Tibber Woning Toevoegen",
+            "title": "Tibber-huis toevoegen",
             "step": {
                 "user": {
-                    "title": "Tibber Woning Toevoegen",
-                    "description": "Selecteer een woning om toe te voegen aan je Tibber-integratie.\n\n**Let op:** Na het toevoegen van deze woning kun je extra woningen toevoegen via het contextmenu van de integratie door \"Tibber Woning Toevoegen\" te selecteren.",
+                    "title": "Tibber-huis toevoegen",
+                    "description": "Selecteer een huis om toe te voegen aan uw Tibber-integratie.\n\n**Opmerking:** Na het toevoegen van dit huis, kunt u extra huizen toevoegen via het contextmenu van de integratie door \"Tibber-huis toevoegen\" te selecteren.",
                     "data": {
-                        "home_id": "Woning"
+                        "home_id": "Huis"
                     }
                 }
             },
             "error": {
-                "api_error": "Kon woningen niet ophalen van Tibber API"
+                "api_error": "Ophalen van huizen van Tibber API mislukt"
             },
             "abort": {
-                "no_parent_entry": "Bovenliggende invoer niet gevonden",
+                "no_parent_entry": "Bovenliggend item niet gevonden",
                 "no_access_token": "Geen toegangstoken beschikbaar",
-                "home_not_found": "Geselecteerde woning niet gevonden",
-                "api_error": "Kon woningen niet ophalen van Tibber API",
-                "no_available_homes": "Geen extra woningen beschikbaar om toe te voegen. Alle woningen van je Tibber-account zijn al toegevoegd."
+                "home_not_found": "Geselecteerd huis niet gevonden",
+                "api_error": "Ophalen van huizen van Tibber API mislukt",
+                "no_available_homes": "Geen extra huizen beschikbaar om toe te voegen. Alle huizen van uw Tibber-account zijn al toegevoegd."
             }
         }
     },
     "options": {
         "step": {
             "init": {
-                "title": "Algemene Instellingen",
+                "title": "Algemene instellingen",
                 "description": "Configureer algemene instellingen voor Tibber Prijsinformatie & Beoordelingen.\n\nGebruiker: {user_login}",
                 "data": {
-                    "extended_descriptions": "Toon uitgebreide beschrijvingen in entiteitsattributen"
+                    "extended_descriptions": "Uitgebreide beschrijvingen tonen in entiteitsattributen"
                 }
             },
             "price_rating": {
                 "title": "Prijsbeoordelingsdrempels",
                 "description": "Configureer drempels voor prijsbeoordelingsniveaus (LAAG/NORMAAL/HOOG) op basis van vergelijking met het voortschrijdend 24-uurs gemiddelde.",
                 "data": {
-                    "price_rating_threshold_low": "Lage Beoordelingsdrempel (% onder voortschrijdend gemiddelde)",
-                    "price_rating_threshold_high": "Hoge Beoordelingsdrempel (% boven voortschrijdend gemiddelde)"
+                    "price_rating_threshold_low": "Lage beoordelingsdrempel (% onder voortschrijdend gemiddelde)",
+                    "price_rating_threshold_high": "Hoge beoordelingsdrempel (% boven voortschrijdend gemiddelde)"
                 }
             },
             "best_price": {
-                "title": "Beste Prijsperiode Instellingen",
+                "title": "Instellingen beste prijsperiode",
                 "description": "Configureer instellingen voor de Beste Prijsperiode binaire sensor. Deze sensor is actief tijdens perioden met de laagste elektriciteitsprijzen.",
                 "data": {
-                    "best_price_flex": "Flexibiliteit: Maximum % boven minimumprijs",
-                    "best_price_min_distance_from_avg": "Minimale Afstand: Vereiste % onder daggemiddelde"
+                    "best_price_flex": "Flexibiliteit: Maximaal % boven minimumprijs",
+                    "best_price_min_distance_from_avg": "Minimale afstand: Vereist % onder dagelijks gemiddelde"
                 }
             },
             "peak_price": {
-                "title": "Piekprijsperiode Instellingen",
+                "title": "Instellingen piekprijsperiode",
                 "description": "Configureer instellingen voor de Piekprijsperiode binaire sensor. Deze sensor is actief tijdens perioden met de hoogste elektriciteitsprijzen.",
                 "data": {
-                    "peak_price_flex": "Flexibiliteit: Maximum % onder maximumprijs (negatieve waarde)",
-                    "peak_price_min_distance_from_avg": "Minimale Afstand: Vereiste % boven daggemiddelde"
+                    "peak_price_flex": "Flexibiliteit: Maximaal % onder maximumprijs (negatieve waarde)",
+                    "peak_price_min_distance_from_avg": "Minimale afstand: Vereist % boven dagelijks gemiddelde"
                 }
             }
         },
         "error": {
             "auth": "Het Tibber-toegangstoken is ongeldig.",
-            "connection": "Kan geen verbinding maken met Tibber. Controleer je internetverbinding.",
-            "unknown": "Er is een onverwachte fout opgetreden. Controleer de logs voor details.",
+            "connection": "Kan geen verbinding maken met Tibber. Controleer uw internetverbinding.",
+            "unknown": "Er is een onverwachte fout opgetreden. Controleer de logboeken voor details.",
             "cannot_connect": "Verbinding mislukt",
             "invalid_access_token": "Ongeldig toegangstoken",
-            "different_home": "Het toegangstoken is niet geldig voor de woning-ID waarvoor deze integratie is geconfigureerd."
+            "different_home": "Het toegangstoken is niet geldig voor de huis-ID waarvoor deze integratie is geconfigureerd."
         },
         "abort": {
-            "entry_not_found": "Tibber configuratie-invoer niet gevonden."
+            "entry_not_found": "Tibber-configuratie-item niet gevonden."
         }
     },
     "entity": {
@@ -130,16 +130,16 @@
                 "name": "Volgende prijs"
             },
             "previous_interval_price": {
-                "name": "Vorige prijs"
+                "name": "Vorige elektriciteitsprijs"
             },
             "current_hour_average": {
-                "name": "Huidige uur gemiddelde prijs"
+                "name": "Huidig uurgemiddelde prijs"
             },
             "next_hour_average": {
-                "name": "Volgend uur gemiddelde prijs"
+                "name": "Volgend uurgemiddelde prijs"
             },
             "price_level": {
-                "name": "Huidig Prijsniveau",
+                "name": "Huidig prijsniveau",
                 "state": {
                     "very_cheap": "Zeer goedkoop",
                     "cheap": "Goedkoop",
@@ -149,7 +149,7 @@
                 }
             },
             "next_interval_price_level": {
-                "name": "Volgend Prijsniveau",
+                "name": "Volgend prijsniveau",
                 "state": {
                     "very_cheap": "Zeer goedkoop",
                     "cheap": "Goedkoop",
@@ -159,7 +159,7 @@
                 }
             },
             "previous_interval_price_level": {
-                "name": "Vorig Prijsniveau",
+                "name": "Vorig prijsniveau",
                 "state": {
                     "very_cheap": "Zeer goedkoop",
                     "cheap": "Goedkoop",
@@ -169,7 +169,7 @@
                 }
             },
             "current_hour_price_level": {
-                "name": "Huidig Uur Prijsniveau",
+                "name": "Huidig uurprijsniveau",
                 "state": {
                     "very_cheap": "Zeer goedkoop",
                     "cheap": "Goedkoop",
@@ -179,7 +179,7 @@
                 }
             },
             "next_hour_price_level": {
-                "name": "Volgend Uur Prijsniveau",
+                "name": "Volgend uurprijsniveau",
                 "state": {
                     "very_cheap": "Zeer goedkoop",
                     "cheap": "Goedkoop",
@@ -207,25 +207,25 @@
                 "name": "Gemiddelde prijs morgen"
             },
             "trailing_price_average": {
-                "name": "Volgend 24u gemiddelde prijs"
+                "name": "Voortschrijdend 24u gemiddelde prijs"
             },
             "leading_price_average": {
-                "name": "Toonaangevend 24u gemiddelde prijs"
+                "name": "Vooruitlopend 24u gemiddelde prijs"
             },
             "trailing_price_min": {
-                "name": "Volgend 24u minimumprijs"
+                "name": "Voortschrijdend 24u minimumprijs"
             },
             "trailing_price_max": {
-                "name": "Volgend 24u maximumprijs"
+                "name": "Voortschrijdend 24u maximumprijs"
             },
             "leading_price_min": {
-                "name": "Toonaangevend 24u minimumprijs"
+                "name": "Vooruitlopend 24u minimumprijs"
             },
             "leading_price_max": {
-                "name": "Toonaangevend 24u maximumprijs"
+                "name": "Vooruitlopend 24u maximumprijs"
             },
             "price_rating": {
-                "name": "Huidige Prijsbeoordeling",
+                "name": "Huidige prijsbeoordeling",
                 "state": {
                     "low": "Laag",
                     "normal": "Normaal",
@@ -233,7 +233,7 @@
                 }
             },
             "next_interval_price_rating": {
-                "name": "Volgende Prijsbeoordeling",
+                "name": "Volgende prijsbeoordeling",
                 "state": {
                     "low": "Laag",
                     "normal": "Normaal",
@@ -241,7 +241,7 @@
                 }
             },
             "previous_interval_price_rating": {
-                "name": "Vorige Prijsbeoordeling",
+                "name": "Vorige prijsbeoordeling",
                 "state": {
                     "low": "Laag",
                     "normal": "Normaal",
@@ -249,7 +249,7 @@
                 }
             },
             "current_hour_price_rating": {
-                "name": "Huidig Uur Prijsbeoordeling",
+                "name": "Huidig uurprijs beoordeling",
                 "state": {
                     "low": "Laag",
                     "normal": "Normaal",
@@ -257,7 +257,7 @@
                 }
             },
             "next_hour_price_rating": {
-                "name": "Volgend Uur Prijsbeoordeling",
+                "name": "Volgend uurprijs beoordeling",
                 "state": {
                     "low": "Laag",
                     "normal": "Normaal",
@@ -265,28 +265,28 @@
                 }
             },
             "next_avg_1h": {
-                "name": "Gemiddelde Prijs Volgende 1u"
+                "name": "Volgende 1u gemiddelde prijs"
             },
             "next_avg_2h": {
-                "name": "Gemiddelde Prijs Volgende 2u"
+                "name": "Volgende 2u gemiddelde prijs"
             },
             "next_avg_3h": {
-                "name": "Gemiddelde Prijs Volgende 3u"
+                "name": "Volgende 3u gemiddelde prijs"
             },
             "next_avg_4h": {
-                "name": "Gemiddelde Prijs Volgende 4u"
+                "name": "Volgende 4u gemiddelde prijs"
             },
             "next_avg_5h": {
-                "name": "Gemiddelde Prijs Volgende 5u"
+                "name": "Volgende 5u gemiddelde prijs"
             },
             "next_avg_6h": {
-                "name": "Gemiddelde Prijs Volgende 6u"
+                "name": "Volgende 6u gemiddelde prijs"
             },
             "next_avg_8h": {
-                "name": "Gemiddelde Prijs Volgende 8u"
+                "name": "Volgende 8u gemiddelde prijs"
             },
             "next_avg_12h": {
-                "name": "Gemiddelde Prijs Volgende 12u"
+                "name": "Volgende 12u gemiddelde prijs"
             },
             "price_trend_1h": {
                 "name": "Prijstrend (1u)",
@@ -353,16 +353,16 @@
                 }
             },
             "daily_rating": {
-                "name": "Dagelijkse Prijsbeoordeling"
+                "name": "Dagelijkse prijsbeoordeling"
             },
             "monthly_rating": {
-                "name": "Maandelijkse Prijsbeoordeling"
+                "name": "Maandelijkse prijsbeoordeling"
             },
             "data_timestamp": {
-                "name": "Prijsdata Vervaldatum"
+                "name": "Prijsdata vervaltijd"
             },
             "price_forecast": {
-                "name": "Prijsvoorspelling"
+                "name": "Prijsprognose"
             }
         },
         "binary_sensor": {
@@ -370,34 +370,34 @@
                 "name": "Piekprijsperiode"
             },
             "best_price_period": {
-                "name": "Beste Prijsperiode"
+                "name": "Beste prijsperiode"
             },
             "connection": {
-                "name": "Tibber API Verbinding"
+                "name": "Tibber API-verbinding"
             },
             "tomorrow_data_available": {
-                "name": "Data voor Morgen Beschikbaar"
+                "name": "Gegevens van morgen beschikbaar"
             }
         }
     },
     "issues": {
         "new_homes_available": {
-            "title": "Nieuwe Tibber woningen gedetecteerd",
-            "description": "We hebben {count} nieuwe woning(en) gedetecteerd op je Tibber-account: {homes}. Je kunt ze toevoegen aan Home Assistant via de Tibber integratie configuratie."
+            "title": "Nieuwe Tibber-huizen gedetecteerd",
+            "description": "We hebben {count} nieuw(e) huis/huizen op uw Tibber-account gedetecteerd: {homes}. U kunt ze toevoegen aan Home Assistant via de Tibber-integratieconfiguratie."
         },
         "homes_removed": {
-            "title": "Tibber woningen verwijderd",
-            "description": "We hebben gedetecteerd dat {count} woning(en) zijn verwijderd van je Tibber-account: {homes}. Controleer je Tibber integratie configuratie."
+            "title": "Tibber-huizen verwijderd",
+            "description": "We hebben gedetecteerd dat {count} huis/huizen zijn verwijderd van uw Tibber-account: {homes}. Controleer uw Tibber-integratieconfiguratie."
         }
     },
     "services": {
         "refresh_user_data": {
-            "name": "Ververs Gebruikersgegevens",
-            "description": "Forceert een verversing van de gebruikersgegevens (woningen, profielinformatie) van de Tibber API. Dit kan nuttig zijn na het maken van wijzigingen aan je Tibber-account of bij het oplossen van connectiviteitsproblemen.",
+            "name": "Gebruikersgegevens vernieuwen",
+            "description": "Forceert een vernieuwing van de gebruikersgegevens (huizen, profielinformatie) van de Tibber API. Dit kan handig zijn na het maken van wijzigingen in uw Tibber-account of bij het oplossen van verbindingsproblemen.",
             "fields": {
                 "entry_id": {
-                    "name": "Invoer-ID",
-                    "description": "Het config entry ID voor de Tibber integratie."
+                    "name": "Item-ID",
+                    "description": "De config-item-ID voor de Tibber-integratie."
                 }
             }
         }

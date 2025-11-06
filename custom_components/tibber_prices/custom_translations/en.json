@@ -88,14 +88,7 @@
         "price_level": {
             "description": "The current price level classification",
             "long_description": "Shows Tibber's classification of the current price compared to historical prices",
-            "usage_tips": "Use this to create automations based on relative price levels rather than absolute prices",
-            "price_levels": {
-                "VERY_CHEAP": "Very Cheap",
-                "CHEAP": "Cheap",
-                "NORMAL": "Normal",
-                "EXPENSIVE": "Expensive",
-                "VERY_EXPENSIVE": "Very Expensive"
-            }
+            "usage_tips": "Use this to create automations based on relative price levels rather than absolute prices"
         },
         "next_interval_price_level": {
             "description": "Price level for the next 15-minute interval",
@@ -120,12 +113,7 @@
         "price_rating": {
             "description": "How the current interval's price compares to historical data",
             "long_description": "Shows how the current interval's price compares to historical price data as a percentage",
-            "usage_tips": "A positive percentage means the current price is above average, negative means below average",
-            "price_levels": {
-                "LOW": "Low",
-                "NORMAL": "Normal",
-                "HIGH": "High"
-            }
+            "usage_tips": "A positive percentage means the current price is above average, negative means below average"
         },
         "next_interval_price_rating": {
             "description": "Price rating for the next 15-minute interval",
@@ -188,42 +176,42 @@
             "usage_tips": "Absolute price threshold: Strategic decisions with price caps. Only proceed if 12h average is below your maximum acceptable price. Good for postponable large loads."
         },
         "price_trend_1h": {
-            "description": "Price trend for the next hour: rising, falling, or stable",
+            "description": "Price trend for the next hour",
             "long_description": "Compares current interval price with average of next 1 hour (4 intervals). Rising if future is >5% higher, falling if >5% lower, stable otherwise.",
             "usage_tips": "Relative optimization: 'falling' = wait, prices dropping. 'rising' = act now or you'll pay more. 'stable' = price doesn't matter much now. Works independent of absolute price level."
         },
         "price_trend_2h": {
-            "description": "Price trend for the next 2 hours: rising, falling, or stable",
+            "description": "Price trend for the next 2 hours",
             "long_description": "Compares current interval price with average of next 2 hours (8 intervals). Rising if future is >5% higher, falling if >5% lower, stable otherwise.",
             "usage_tips": "Relative optimization: Ideal for appliances. 'falling' means better prices coming in 2h - postpone if possible. Finds best timing within your available window, regardless of season."
         },
         "price_trend_3h": {
-            "description": "Price trend for the next 3 hours: rising, falling, or stable",
+            "description": "Price trend for the next 3 hours",
             "long_description": "Compares current interval price with average of next 3 hours (12 intervals). Rising if future is >5% higher, falling if >5% lower, stable otherwise.",
             "usage_tips": "Relative optimization: For Eco programs. 'falling' means prices dropping >5% - worth waiting. Works in any season. Combine with avg sensor for price cap: only when avg < your limit AND trend not 'falling'."
         },
         "price_trend_4h": {
-            "description": "Price trend for the next 4 hours: rising, falling, or stable",
+            "description": "Price trend for the next 4 hours",
             "long_description": "Compares current interval price with average of next 4 hours (16 intervals). Rising if future is >5% higher, falling if >5% lower, stable otherwise.",
             "usage_tips": "Relative optimization: Heat pump/battery decisions. 'falling' means better charging window coming. Always finds relative best time - whether prices are 10 cents or 50 cents. Use avg sensor for absolute limit."
         },
         "price_trend_5h": {
-            "description": "Price trend for the next 5 hours: rising, falling, or stable",
+            "description": "Price trend for the next 5 hours",
             "long_description": "Compares current interval price with average of next 5 hours (20 intervals). Rising if future is >5% higher, falling if >5% lower, stable otherwise.",
             "usage_tips": "Relative optimization: Extended operations. Adapts to market - finds best relative timing in any price environment. 'stable/rising' = good time to start within your planning window."
         },
         "price_trend_6h": {
-            "description": "Price trend for the next 6 hours: rising, falling, or stable",
+            "description": "Price trend for the next 6 hours",
             "long_description": "Compares current interval price with average of next 6 hours (24 intervals). Rising if future is >5% higher, falling if >5% lower, stable otherwise.",
             "usage_tips": "Relative optimization: Evening decisions. 'falling' = prices improve significantly if you wait. No fixed thresholds needed - automatically adjusts to winter/summer price levels."
         },
         "price_trend_8h": {
-            "description": "Price trend for the next 8 hours: rising, falling, or stable",
+            "description": "Price trend for the next 8 hours",
             "long_description": "Compares current interval price with average of next 8 hours (32 intervals). Rising if future is >5% higher, falling if >5% lower, stable otherwise.",
             "usage_tips": "Relative optimization: Night planning. 'falling' means waiting for night pays off (>5% cheaper). Works year-round without manual threshold adjustments. Start when 'stable' or 'rising'."
         },
         "price_trend_12h": {
-            "description": "Price trend for the next 12 hours: rising, falling, or stable",
+            "description": "Price trend for the next 12 hours",
             "long_description": "Compares current interval price with average of next 12 hours (48 intervals). Rising if future is >5% higher, falling if >5% lower, stable otherwise.",
             "usage_tips": "Relative optimization: Long-term strategic decisions. 'falling' = significantly better prices coming tonight/tomorrow. Finds optimal timing in any market condition. Best combined with avg sensor price cap."
         },
