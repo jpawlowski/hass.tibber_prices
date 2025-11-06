@@ -114,13 +114,33 @@ enriched = enrich_price_info_with_differences(
 This adds `trailing_avg_24h`, `difference`, `rating_level` to each interval.
 
 **3. Time Handling**
-Always use `dt_util.as_local()` when comparing API timestamps (UTC) to local time:
+Always prefer Home Assistant utilities over standard library equivalents. Use `dt_util` from `homeassistant.util` instead of Python's `datetime` module.
+
+**Critical:** Always use `dt_util.as_local()` when comparing API timestamps to local time:
 
 ```python
 from homeassistant.util import dt as dt_util
 
+# ✅ Use dt_util for timezone-aware operations
 price_time = dt_util.parse_datetime(price_data["startsAt"])
-price_time = dt_util.as_local(price_time)  # Convert to local TZ
+price_time = dt_util.as_local(price_time)  # IMPORTANT: Convert to HA's local timezone
+now = dt_util.now()  # Current time in HA's timezone
+
+# ❌ Avoid standard library datetime for timezone operations
+# from datetime import datetime
+# now = datetime.now()  # Don't use this
+```
+
+When you need Python's standard datetime types (e.g., for type annotations), import only specific types:
+
+```python
+from datetime import date, datetime, timedelta  # For type hints
+from homeassistant.util import dt as dt_util    # For operations
+
+def _needs_tomorrow_data(self, tomorrow_date: date) -> bool:
+    """Use date type hint but dt_util for operations."""
+    price_time = dt_util.parse_datetime(starts_at)
+    price_date = dt_util.as_local(price_time).date()  # Convert to local before extracting date
 ```
 
 **4. Coordinator Data Structure**
@@ -164,9 +184,16 @@ def async_setup_services(hass: HomeAssistant) -> None:
 
 **Import order (enforced by isort):**
 
-1. Python stdlib
+1. Python stdlib (only specific types needed, e.g., `from datetime import date, datetime, timedelta`)
 2. Third-party (`homeassistant.*`, `aiohttp`, etc.)
 3. Local (`.api`, `.const`, etc.)
+
+**Import best practices:**
+
+-   Prefer Home Assistant utilities over stdlib equivalents: `from homeassistant.util import dt as dt_util` instead of `import datetime`
+-   Import only specific stdlib types when needed for type hints: `from datetime import date, datetime, timedelta`
+-   Use `dt_util` for all datetime operations (parsing, timezone conversion, current time)
+-   Avoid aliasing stdlib modules with same names as HA utilities (e.g., `import datetime as dt` conflicts with `dt_util`)
 
 **Error handling best practices:**
 
@@ -241,6 +268,10 @@ coord = hass.data[DOMAIN][entry.entry_id]  # Use proper fixtures
 
 # ❌ User-configurable polling intervals
 vol.Optional("scan_interval"): cv.positive_int  # Not allowed, integration determines this
+
+# ❌ Using standard library datetime for timezone operations
+from datetime import datetime
+now = datetime.now()  # Use dt_util.now() instead
 ```
 
 **Do these instead:**
@@ -267,4 +298,8 @@ async def init_integration(hass, mock_config_entry):
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     return mock_config_entry
+
+# ✅ Use Home Assistant datetime utilities
+from homeassistant.util import dt as dt_util
+now = dt_util.now()  # Timezone-aware current time
 ```
