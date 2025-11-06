@@ -24,7 +24,7 @@ A Home Assistant integration that provides advanced price information and rating
 -   **Intelligent Caching**: Minimizes API calls while ensuring data freshness across Home Assistant restarts
 -   **Custom Services**: API endpoints for advanced integrations (ApexCharts support included)
 -   **Diagnostic Sensors**: Monitor data freshness and availability
--   **Reliable API Usage**: Uses only official Tibber `priceInfo` and `priceInfoRange` endpoints - no legacy APIs. Price ratings and statistics are calculated locally for maximum reliability and future-proofing.
+-   **Reliable API Usage**: Uses only official Tibber [`priceInfo`](https://developer.tibber.com/docs/reference#priceinfo) and [`priceInfoRange`](https://developer.tibber.com/docs/reference#subscription) endpoints - no legacy APIs. Price ratings and statistics are calculated locally for maximum reliability and future-proofing.
 
 ## Installation
 
