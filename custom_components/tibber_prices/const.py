@@ -114,12 +114,32 @@ def format_price_unit_minor(currency_code: str | None) -> str:
     return f"{minor_symbol}/{UnitOfPower.KILO_WATT}{UnitOfTime.HOURS}"
 
 
-# Price level constants
-PRICE_LEVEL_NORMAL = "NORMAL"
-PRICE_LEVEL_CHEAP = "CHEAP"
+# Price level constants from Tibber API
 PRICE_LEVEL_VERY_CHEAP = "VERY_CHEAP"
+PRICE_LEVEL_CHEAP = "CHEAP"
+PRICE_LEVEL_NORMAL = "NORMAL"
 PRICE_LEVEL_EXPENSIVE = "EXPENSIVE"
 PRICE_LEVEL_VERY_EXPENSIVE = "VERY_EXPENSIVE"
+
+# Price rating constants (calculated values)
+PRICE_RATING_LOW = "LOW"
+PRICE_RATING_NORMAL = "NORMAL"
+PRICE_RATING_HIGH = "HIGH"
+
+# Sensor options (lowercase versions for ENUM device class)
+PRICE_LEVEL_OPTIONS = [
+    PRICE_LEVEL_VERY_CHEAP.lower(),
+    PRICE_LEVEL_CHEAP.lower(),
+    PRICE_LEVEL_NORMAL.lower(),
+    PRICE_LEVEL_EXPENSIVE.lower(),
+    PRICE_LEVEL_VERY_EXPENSIVE.lower(),
+]
+
+PRICE_RATING_OPTIONS = [
+    PRICE_RATING_LOW.lower(),
+    PRICE_RATING_NORMAL.lower(),
+    PRICE_RATING_HIGH.lower(),
+]
 
 # Mapping for comparing price levels (used for sorting)
 PRICE_LEVEL_MAPPING = {
@@ -129,11 +149,6 @@ PRICE_LEVEL_MAPPING = {
     PRICE_LEVEL_EXPENSIVE: 1,
     PRICE_LEVEL_VERY_EXPENSIVE: 2,
 }
-
-# Price rating constants
-PRICE_RATING_NORMAL = "NORMAL"
-PRICE_RATING_LOW = "LOW"
-PRICE_RATING_HIGH = "HIGH"
 
 # Mapping for comparing price ratings (used for sorting)
 PRICE_RATING_MAPPING = {

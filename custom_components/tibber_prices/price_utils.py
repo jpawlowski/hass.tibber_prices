@@ -124,7 +124,7 @@ def calculate_rating_level(
 
     # If difference falls in both ranges (shouldn't normally happen), return NORMAL
     if difference <= threshold_low and difference >= threshold_high:
-        return "NORMAL"
+        return PRICE_RATING_NORMAL
 
     # Classify based on thresholds
     if difference <= threshold_low:
@@ -133,7 +133,7 @@ def calculate_rating_level(
     if difference >= threshold_high:
         return "HIGH"
 
-    return "NORMAL"
+    return PRICE_RATING_NORMAL
 
 
 def _process_price_interval(
@@ -288,7 +288,7 @@ def aggregate_price_levels(levels: list[str]) -> str:
         levels: List of price level strings from intervals
 
     Returns:
-        The median price level string, or "NORMAL" if input is empty
+        The median price level string, or PRICE_LEVEL_NORMAL if input is empty
 
     """
     if not levels:
@@ -343,3 +343,40 @@ def aggregate_price_rating(differences: list[float], threshold_low: float, thres
     rating_level = calculate_rating_level(avg_difference, threshold_low, threshold_high)
 
     return rating_level or PRICE_RATING_NORMAL, avg_difference
+
+
+def calculate_price_trend(
+    current_price: float,
+    future_average: float,
+    threshold_pct: float = 5.0,
+) -> tuple[str, float]:
+    """
+    Calculate price trend by comparing current price with future average.
+
+    Args:
+        current_price: Current interval price
+        future_average: Average price of future intervals
+        threshold_pct: Percentage threshold for stable vs rising/falling (default 5%)
+
+    Returns:
+        Tuple of (trend_state, difference_percentage)
+        trend_state: "rising" | "falling" | "stable"
+        difference_percentage: % change from current to future ((future - current) / current * 100)
+
+    """
+    if current_price == 0:
+        # Avoid division by zero
+        return "stable", 0.0
+
+    # Calculate percentage difference from current to future
+    diff_pct = ((future_average - current_price) / current_price) * 100
+
+    # Determine trend based on threshold
+    if diff_pct > threshold_pct:
+        trend = "rising"
+    elif diff_pct < -threshold_pct:
+        trend = "falling"
+    else:
+        trend = "stable"
+
+    return trend, diff_pct

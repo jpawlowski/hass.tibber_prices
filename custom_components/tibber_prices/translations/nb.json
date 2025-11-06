@@ -123,86 +123,234 @@
     },
     "entity": {
         "sensor": {
-            "current_price_cents": {
-                "name": "Gjeldende Strømpris"
+            "current_price": {
+                "name": "Gjeldende strømpris"
             },
-            "next_interval_price_cents": {
-                "name": "Neste Pris"
+            "next_interval_price": {
+                "name": "Neste pris"
             },
-            "previous_interval_price_cents": {
-                "name": "Forrige Strømpris"
+            "previous_interval_price": {
+                "name": "Forrige pris"
             },
-            "current_hour_average_cents": {
-                "name": "Gjeldende Time Gjennomsnittspris"
+            "current_hour_average": {
+                "name": "Gjeldende time gjennomsnittspris"
             },
-            "next_hour_average_cents": {
-                "name": "Neste Time Gjennomsnittspris"
+            "next_hour_average": {
+                "name": "Neste time gjennomsnittspris"
             },
             "price_level": {
-                "name": "Gjeldende Prisnivå"
+                "name": "Gjeldende Prisnivå",
+                "state": {
+                    "very_cheap": "Veldig billig",
+                    "cheap": "Billig",
+                    "normal": "Normal",
+                    "expensive": "Dyr",
+                    "very_expensive": "Veldig dyr"
+                }
             },
             "next_interval_price_level": {
-                "name": "Neste Prisnivå"
+                "name": "Neste Prisnivå",
+                "state": {
+                    "very_cheap": "Veldig billig",
+                    "cheap": "Billig",
+                    "normal": "Normal",
+                    "expensive": "Dyr",
+                    "very_expensive": "Veldig dyr"
+                }
             },
             "previous_interval_price_level": {
-                "name": "Forrige Prisnivå"
+                "name": "Forrige Prisnivå",
+                "state": {
+                    "very_cheap": "Veldig billig",
+                    "cheap": "Billig",
+                    "normal": "Normal",
+                    "expensive": "Dyr",
+                    "very_expensive": "Veldig dyr"
+                }
             },
             "current_hour_price_level": {
-                "name": "Gjeldende Time Prisnivå"
+                "name": "Gjeldende Time Prisnivå",
+                "state": {
+                    "very_cheap": "Veldig billig",
+                    "cheap": "Billig",
+                    "normal": "Normal",
+                    "expensive": "Dyr",
+                    "very_expensive": "Veldig dyr"
+                }
             },
             "next_hour_price_level": {
-                "name": "Neste Time Prisnivå"
+                "name": "Neste Time Prisnivå",
+                "state": {
+                    "very_cheap": "Veldig billig",
+                    "cheap": "Billig",
+                    "normal": "Normal",
+                    "expensive": "Dyr",
+                    "very_expensive": "Veldig dyr"
+                }
             },
-            "lowest_price_today_cents": {
-                "name": "Laveste Pris I Dag"
+            "lowest_price_today": {
+                "name": "Laveste pris i dag"
             },
-            "highest_price_today_cents": {
-                "name": "Høyeste Pris I Dag"
+            "highest_price_today": {
+                "name": "Høyeste pris i dag"
             },
-            "average_price_today_cents": {
-                "name": "Gjennomsnittspris I Dag"
+            "average_price_today": {
+                "name": "Gjennomsnittspris i dag"
             },
-            "lowest_price_tomorrow_cents": {
-                "name": "Laveste Pris I Morgen"
+            "lowest_price_tomorrow": {
+                "name": "Laveste pris i morgen"
             },
-            "highest_price_tomorrow_cents": {
-                "name": "Høyeste Pris I Morgen"
+            "highest_price_tomorrow": {
+                "name": "Høyeste pris i morgen"
             },
-            "average_price_tomorrow_cents": {
-                "name": "Gjennomsnittspris I Morgen"
+            "average_price_tomorrow": {
+                "name": "Gjennomsnittspris i morgen"
             },
-            "trailing_price_average_cents": {
-                "name": "Rullerende 24t Gjennomsnittspris"
+            "trailing_price_average": {
+                "name": "Etterfølgende 24t gjennomsnittspris"
             },
-            "leading_price_average_cents": {
-                "name": "Fremtidig 24t Gjennomsnittspris"
+            "leading_price_average": {
+                "name": "Fremadrettede 24t gjennomsnittspris"
             },
-            "trailing_price_min_cents": {
-                "name": "Rullerende 24t Minimumspris"
+            "trailing_price_min": {
+                "name": "Etterfølgende 24t minimumspris"
             },
-            "trailing_price_max_cents": {
-                "name": "Rullerende 24t Maksimumspris"
+            "trailing_price_max": {
+                "name": "Etterfølgende 24t maksimumspris"
             },
-            "leading_price_min_cents": {
-                "name": "Fremtidig 24t Minimumspris"
+            "leading_price_min": {
+                "name": "Fremadrettede 24t minimumspris"
             },
-            "leading_price_max_cents": {
-                "name": "Fremtidig 24t Maksimumspris"
+            "leading_price_max": {
+                "name": "Fremadrettede 24t maksimumspris"
             },
             "price_rating": {
-                "name": "Gjeldende Prisvurdering"
+                "name": "Gjeldende Prisvurdering",
+                "state": {
+                    "low": "Lav",
+                    "normal": "Normal",
+                    "high": "Høy"
+                }
             },
             "next_interval_price_rating": {
-                "name": "Neste Prisvurdering"
+                "name": "Neste Prisvurdering",
+                "state": {
+                    "low": "Lav",
+                    "normal": "Normal",
+                    "high": "Høy"
+                }
             },
             "previous_interval_price_rating": {
-                "name": "Forrige Prisvurdering"
+                "name": "Forrige Prisvurdering",
+                "state": {
+                    "low": "Lav",
+                    "normal": "Normal",
+                    "high": "Høy"
+                }
             },
             "current_hour_price_rating": {
-                "name": "Gjeldende Time Prisvurdering"
+                "name": "Gjeldende Time Prisvurdering",
+                "state": {
+                    "low": "Lav",
+                    "normal": "Normal",
+                    "high": "Høy"
+                }
             },
             "next_hour_price_rating": {
-                "name": "Neste Time Prisvurdering"
+                "name": "Neste Time Prisvurdering",
+                "state": {
+                    "low": "Lav",
+                    "normal": "Normal",
+                    "high": "Høy"
+                }
+            },
+            "next_avg_1h": {
+                "name": "Gjennomsnittspris neste 1t"
+            },
+            "next_avg_2h": {
+                "name": "Gjennomsnittspris neste 2t"
+            },
+            "next_avg_3h": {
+                "name": "Gjennomsnittspris neste 3t"
+            },
+            "next_avg_4h": {
+                "name": "Gjennomsnittspris neste 4t"
+            },
+            "next_avg_5h": {
+                "name": "Gjennomsnittspris neste 5t"
+            },
+            "next_avg_6h": {
+                "name": "Gjennomsnittspris neste 6t"
+            },
+            "next_avg_8h": {
+                "name": "Gjennomsnittspris neste 8t"
+            },
+            "next_avg_12h": {
+                "name": "Gjennomsnittspris neste 12t"
+            },
+            "price_trend_1h": {
+                "name": "Pristrend (1t)",
+                "state": {
+                    "rising": "Stigende",
+                    "falling": "Fallende",
+                    "stable": "Stabil"
+                }
+            },
+            "price_trend_2h": {
+                "name": "Pristrend (2t)",
+                "state": {
+                    "rising": "Stigende",
+                    "falling": "Fallende",
+                    "stable": "Stabil"
+                }
+            },
+            "price_trend_3h": {
+                "name": "Pristrend (3t)",
+                "state": {
+                    "rising": "Stigende",
+                    "falling": "Fallende",
+                    "stable": "Stabil"
+                }
+            },
+            "price_trend_4h": {
+                "name": "Pristrend (4t)",
+                "state": {
+                    "rising": "Stigende",
+                    "falling": "Fallende",
+                    "stable": "Stabil"
+                }
+            },
+            "price_trend_5h": {
+                "name": "Pristrend (5t)",
+                "state": {
+                    "rising": "Stigende",
+                    "falling": "Fallende",
+                    "stable": "Stabil"
+                }
+            },
+            "price_trend_6h": {
+                "name": "Pristrend (6t)",
+                "state": {
+                    "rising": "Stigende",
+                    "falling": "Fallende",
+                    "stable": "Stabil"
+                }
+            },
+            "price_trend_8h": {
+                "name": "Pristrend (8t)",
+                "state": {
+                    "rising": "Stigende",
+                    "falling": "Fallende",
+                    "stable": "Stabil"
+                }
+            },
+            "price_trend_12h": {
+                "name": "Pristrend (12t)",
+                "state": {
+                    "rising": "Stigende",
+                    "falling": "Fallende",
+                    "stable": "Stabil"
+                }
             },
             "daily_rating": {
                 "name": "Daglig Prisvurdering"

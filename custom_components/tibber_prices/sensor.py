@@ -22,6 +22,7 @@ from .average_utils import (
     calculate_current_trailing_max,
     calculate_current_trailing_min,
     calculate_next_hour_rolling_5interval_avg,
+    calculate_next_n_hours_avg,
 )
 from .const import (
     CONF_EXTENDED_DESCRIPTIONS,
@@ -32,7 +33,9 @@ from .const import (
     DEFAULT_PRICE_RATING_THRESHOLD_LOW,
     DOMAIN,
     PRICE_LEVEL_MAPPING,
+    PRICE_LEVEL_OPTIONS,
     PRICE_RATING_MAPPING,
+    PRICE_RATING_OPTIONS,
     async_get_entity_description,
     format_price_unit_minor,
     get_entity_description,
@@ -43,6 +46,7 @@ from .price_utils import (
     MINUTES_PER_INTERVAL,
     aggregate_price_levels,
     aggregate_price_rating,
+    calculate_price_trend,
     find_price_data_for_interval,
 )
 
@@ -59,12 +63,13 @@ HOURS_IN_DAY = 24
 LAST_HOUR_OF_DAY = 23
 INTERVALS_PER_HOUR = 4  # 15-minute intervals
 MAX_FORECAST_INTERVALS = 8  # Show up to 8 future intervals (2 hours with 15-min intervals)
+MIN_HOURS_FOR_LATER_HALF = 3  # Minimum hours needed to calculate later half average
 
 # Main price sensors that users will typically use in automations
 PRICE_SENSORS = (
     SensorEntityDescription(
         key="current_price",
-        translation_key="current_price_cents",
+        translation_key="current_price",
         name="Current Electricity Price",
         icon="mdi:cash",
         device_class=SensorDeviceClass.MONETARY,
@@ -72,7 +77,7 @@ PRICE_SENSORS = (
     ),
     SensorEntityDescription(
         key="next_interval_price",
-        translation_key="next_interval_price_cents",
+        translation_key="next_interval_price",
         name="Next Price",
         icon="mdi:clock-fast",
         device_class=SensorDeviceClass.MONETARY,
@@ -80,7 +85,7 @@ PRICE_SENSORS = (
     ),
     SensorEntityDescription(
         key="previous_interval_price",
-        translation_key="previous_interval_price_cents",
+        translation_key="previous_interval_price",
         name="Previous Electricity Price",
         icon="mdi:history",
         device_class=SensorDeviceClass.MONETARY,
@@ -89,7 +94,7 @@ PRICE_SENSORS = (
     ),
     SensorEntityDescription(
         key="current_hour_average",
-        translation_key="current_hour_average_cents",
+        translation_key="current_hour_average",
         name="Current Hour Average Price",
         icon="mdi:cash",
         device_class=SensorDeviceClass.MONETARY,
@@ -97,7 +102,7 @@ PRICE_SENSORS = (
     ),
     SensorEntityDescription(
         key="next_hour_average",
-        translation_key="next_hour_average_cents",
+        translation_key="next_hour_average",
         name="Next Hour Average Price",
         icon="mdi:clock-fast",
         device_class=SensorDeviceClass.MONETARY,
@@ -108,12 +113,16 @@ PRICE_SENSORS = (
         translation_key="price_level",
         name="Current Price Level",
         icon="mdi:gauge",
+        device_class=SensorDeviceClass.ENUM,
+        options=PRICE_LEVEL_OPTIONS,
     ),
     SensorEntityDescription(
         key="next_interval_price_level",
         translation_key="next_interval_price_level",
         name="Next Price Level",
         icon="mdi:gauge-empty",
+        device_class=SensorDeviceClass.ENUM,
+        options=PRICE_LEVEL_OPTIONS,
     ),
     SensorEntityDescription(
         key="previous_interval_price_level",
@@ -121,18 +130,24 @@ PRICE_SENSORS = (
         name="Previous Price Level",
         icon="mdi:gauge-empty",
         entity_registry_enabled_default=False,
+        device_class=SensorDeviceClass.ENUM,
+        options=PRICE_LEVEL_OPTIONS,
     ),
     SensorEntityDescription(
         key="current_hour_price_level",
         translation_key="current_hour_price_level",
         name="Current Hour Price Level",
         icon="mdi:gauge",
+        device_class=SensorDeviceClass.ENUM,
+        options=PRICE_LEVEL_OPTIONS,
     ),
     SensorEntityDescription(
         key="next_hour_price_level",
         translation_key="next_hour_price_level",
         name="Next Hour Price Level",
         icon="mdi:gauge-empty",
+        device_class=SensorDeviceClass.ENUM,
+        options=PRICE_LEVEL_OPTIONS,
     ),
 )
 
@@ -140,7 +155,7 @@ PRICE_SENSORS = (
 STATISTICS_SENSORS = (
     SensorEntityDescription(
         key="lowest_price_today",
-        translation_key="lowest_price_today_cents",
+        translation_key="lowest_price_today",
         name="Today's Lowest Price",
         icon="mdi:arrow-collapse-down",
         device_class=SensorDeviceClass.MONETARY,
@@ -148,7 +163,7 @@ STATISTICS_SENSORS = (
     ),
     SensorEntityDescription(
         key="highest_price_today",
-        translation_key="highest_price_today_cents",
+        translation_key="highest_price_today",
         name="Today's Highest Price",
         icon="mdi:arrow-collapse-up",
         device_class=SensorDeviceClass.MONETARY,
@@ -156,7 +171,7 @@ STATISTICS_SENSORS = (
     ),
     SensorEntityDescription(
         key="average_price_today",
-        translation_key="average_price_today_cents",
+        translation_key="average_price_today",
         name="Today's Average Price",
         icon="mdi:chart-line",
         device_class=SensorDeviceClass.MONETARY,
@@ -164,7 +179,7 @@ STATISTICS_SENSORS = (
     ),
     SensorEntityDescription(
         key="lowest_price_tomorrow",
-        translation_key="lowest_price_tomorrow_cents",
+        translation_key="lowest_price_tomorrow",
         name="Tomorrow's Lowest Price",
         icon="mdi:arrow-collapse-down",
         device_class=SensorDeviceClass.MONETARY,
@@ -172,7 +187,7 @@ STATISTICS_SENSORS = (
     ),
     SensorEntityDescription(
         key="highest_price_tomorrow",
-        translation_key="highest_price_tomorrow_cents",
+        translation_key="highest_price_tomorrow",
         name="Tomorrow's Highest Price",
         icon="mdi:arrow-collapse-up",
         device_class=SensorDeviceClass.MONETARY,
@@ -180,7 +195,7 @@ STATISTICS_SENSORS = (
     ),
     SensorEntityDescription(
         key="average_price_tomorrow",
-        translation_key="average_price_tomorrow_cents",
+        translation_key="average_price_tomorrow",
         name="Tomorrow's Average Price",
         icon="mdi:chart-line",
         device_class=SensorDeviceClass.MONETARY,
@@ -188,7 +203,7 @@ STATISTICS_SENSORS = (
     ),
     SensorEntityDescription(
         key="trailing_price_average",
-        translation_key="trailing_price_average_cents",
+        translation_key="trailing_price_average",
         name="Trailing 24h Average Price",
         icon="mdi:chart-line",
         device_class=SensorDeviceClass.MONETARY,
@@ -197,7 +212,7 @@ STATISTICS_SENSORS = (
     ),
     SensorEntityDescription(
         key="leading_price_average",
-        translation_key="leading_price_average_cents",
+        translation_key="leading_price_average",
         name="Leading 24h Average Price",
         icon="mdi:chart-line-variant",
         device_class=SensorDeviceClass.MONETARY,
@@ -205,7 +220,7 @@ STATISTICS_SENSORS = (
     ),
     SensorEntityDescription(
         key="trailing_price_min",
-        translation_key="trailing_price_min_cents",
+        translation_key="trailing_price_min",
         name="Trailing 24h Minimum Price",
         icon="mdi:arrow-collapse-down",
         device_class=SensorDeviceClass.MONETARY,
@@ -214,7 +229,7 @@ STATISTICS_SENSORS = (
     ),
     SensorEntityDescription(
         key="trailing_price_max",
-        translation_key="trailing_price_max_cents",
+        translation_key="trailing_price_max",
         name="Trailing 24h Maximum Price",
         icon="mdi:arrow-collapse-up",
         device_class=SensorDeviceClass.MONETARY,
@@ -223,7 +238,7 @@ STATISTICS_SENSORS = (
     ),
     SensorEntityDescription(
         key="leading_price_min",
-        translation_key="leading_price_min_cents",
+        translation_key="leading_price_min",
         name="Leading 24h Minimum Price",
         icon="mdi:arrow-collapse-down",
         device_class=SensorDeviceClass.MONETARY,
@@ -231,7 +246,7 @@ STATISTICS_SENSORS = (
     ),
     SensorEntityDescription(
         key="leading_price_max",
-        translation_key="leading_price_max_cents",
+        translation_key="leading_price_max",
         name="Leading 24h Maximum Price",
         icon="mdi:arrow-collapse-up",
         device_class=SensorDeviceClass.MONETARY,
@@ -246,12 +261,16 @@ RATING_SENSORS = (
         translation_key="price_rating",
         name="Current Price Rating",
         icon="mdi:star-outline",
+        device_class=SensorDeviceClass.ENUM,
+        options=PRICE_RATING_OPTIONS,
     ),
     SensorEntityDescription(
         key="next_interval_price_rating",
         translation_key="next_interval_price_rating",
         name="Next Price Rating",
         icon="mdi:star-half-full",
+        device_class=SensorDeviceClass.ENUM,
+        options=PRICE_RATING_OPTIONS,
     ),
     SensorEntityDescription(
         key="previous_interval_price_rating",
@@ -259,18 +278,180 @@ RATING_SENSORS = (
         name="Previous Price Rating",
         icon="mdi:star-half-full",
         entity_registry_enabled_default=False,
+        device_class=SensorDeviceClass.ENUM,
+        options=PRICE_RATING_OPTIONS,
     ),
     SensorEntityDescription(
         key="current_hour_price_rating",
         translation_key="current_hour_price_rating",
         name="Current Hour Price Rating",
         icon="mdi:star-outline",
+        device_class=SensorDeviceClass.ENUM,
+        options=PRICE_RATING_OPTIONS,
     ),
     SensorEntityDescription(
         key="next_hour_price_rating",
         translation_key="next_hour_price_rating",
         name="Next Hour Price Rating",
         icon="mdi:star-half-full",
+        device_class=SensorDeviceClass.ENUM,
+        options=PRICE_RATING_OPTIONS,
+    ),
+)
+
+# Future average sensors (rolling N-hour windows from next interval)
+FUTURE_AVERAGE_SENSORS = (
+    # Default enabled: 1h-5h
+    SensorEntityDescription(
+        key="next_avg_1h",
+        translation_key="next_avg_1h",
+        name="Next 1h Average Price",
+        icon="mdi:chart-line",
+        device_class=SensorDeviceClass.MONETARY,
+        suggested_display_precision=2,
+        entity_registry_enabled_default=True,
+    ),
+    SensorEntityDescription(
+        key="next_avg_2h",
+        translation_key="next_avg_2h",
+        name="Next 2h Average Price",
+        icon="mdi:chart-line",
+        device_class=SensorDeviceClass.MONETARY,
+        suggested_display_precision=2,
+        entity_registry_enabled_default=True,
+    ),
+    SensorEntityDescription(
+        key="next_avg_3h",
+        translation_key="next_avg_3h",
+        name="Next 3h Average Price",
+        icon="mdi:chart-line",
+        device_class=SensorDeviceClass.MONETARY,
+        suggested_display_precision=2,
+        entity_registry_enabled_default=True,
+    ),
+    SensorEntityDescription(
+        key="next_avg_4h",
+        translation_key="next_avg_4h",
+        name="Next 4h Average Price",
+        icon="mdi:chart-line",
+        device_class=SensorDeviceClass.MONETARY,
+        suggested_display_precision=2,
+        entity_registry_enabled_default=True,
+    ),
+    SensorEntityDescription(
+        key="next_avg_5h",
+        translation_key="next_avg_5h",
+        name="Next 5h Average Price",
+        icon="mdi:chart-line",
+        device_class=SensorDeviceClass.MONETARY,
+        suggested_display_precision=2,
+        entity_registry_enabled_default=True,
+    ),
+    # Disabled by default: 6h, 8h, 12h (advanced use cases)
+    SensorEntityDescription(
+        key="next_avg_6h",
+        translation_key="next_avg_6h",
+        name="Next 6h Average Price",
+        icon="mdi:chart-line",
+        device_class=SensorDeviceClass.MONETARY,
+        suggested_display_precision=2,
+        entity_registry_enabled_default=False,
+    ),
+    SensorEntityDescription(
+        key="next_avg_8h",
+        translation_key="next_avg_8h",
+        name="Next 8h Average Price",
+        icon="mdi:chart-line",
+        device_class=SensorDeviceClass.MONETARY,
+        suggested_display_precision=2,
+        entity_registry_enabled_default=False,
+    ),
+    SensorEntityDescription(
+        key="next_avg_12h",
+        translation_key="next_avg_12h",
+        name="Next 12h Average Price",
+        icon="mdi:chart-line",
+        device_class=SensorDeviceClass.MONETARY,
+        suggested_display_precision=2,
+        entity_registry_enabled_default=False,
+    ),
+)
+
+# Price trend sensors
+TREND_SENSORS = (
+    # Default enabled: 1h-5h
+    SensorEntityDescription(
+        key="price_trend_1h",
+        translation_key="price_trend_1h",
+        name="Price Trend (1h)",
+        icon="mdi:trending-up",
+        device_class=SensorDeviceClass.ENUM,
+        options=["rising", "falling", "stable"],
+        entity_registry_enabled_default=True,
+    ),
+    SensorEntityDescription(
+        key="price_trend_2h",
+        translation_key="price_trend_2h",
+        name="Price Trend (2h)",
+        icon="mdi:trending-up",
+        device_class=SensorDeviceClass.ENUM,
+        options=["rising", "falling", "stable"],
+        entity_registry_enabled_default=True,
+    ),
+    SensorEntityDescription(
+        key="price_trend_3h",
+        translation_key="price_trend_3h",
+        name="Price Trend (3h)",
+        icon="mdi:trending-up",
+        device_class=SensorDeviceClass.ENUM,
+        options=["rising", "falling", "stable"],
+        entity_registry_enabled_default=True,
+    ),
+    SensorEntityDescription(
+        key="price_trend_4h",
+        translation_key="price_trend_4h",
+        name="Price Trend (4h)",
+        icon="mdi:trending-up",
+        device_class=SensorDeviceClass.ENUM,
+        options=["rising", "falling", "stable"],
+        entity_registry_enabled_default=True,
+    ),
+    SensorEntityDescription(
+        key="price_trend_5h",
+        translation_key="price_trend_5h",
+        name="Price Trend (5h)",
+        icon="mdi:trending-up",
+        device_class=SensorDeviceClass.ENUM,
+        options=["rising", "falling", "stable"],
+        entity_registry_enabled_default=True,
+    ),
+    # Disabled by default: 6h, 8h, 12h
+    SensorEntityDescription(
+        key="price_trend_6h",
+        translation_key="price_trend_6h",
+        name="Price Trend (6h)",
+        icon="mdi:trending-up",
+        device_class=SensorDeviceClass.ENUM,
+        options=["rising", "falling", "stable"],
+        entity_registry_enabled_default=False,
+    ),
+    SensorEntityDescription(
+        key="price_trend_8h",
+        translation_key="price_trend_8h",
+        name="Price Trend (8h)",
+        icon="mdi:trending-up",
+        device_class=SensorDeviceClass.ENUM,
+        options=["rising", "falling", "stable"],
+        entity_registry_enabled_default=False,
+    ),
+    SensorEntityDescription(
+        key="price_trend_12h",
+        translation_key="price_trend_12h",
+        name="Price Trend (12h)",
+        icon="mdi:trending-up",
+        device_class=SensorDeviceClass.ENUM,
+        options=["rising", "falling", "stable"],
+        entity_registry_enabled_default=False,
     ),
 )
 
@@ -298,6 +479,8 @@ ENTITY_DESCRIPTIONS = (
     *PRICE_SENSORS,
     *STATISTICS_SENSORS,
     *RATING_SENSORS,
+    *FUTURE_AVERAGE_SENSORS,
+    *TREND_SENSORS,
     *DIAGNOSTIC_SENSORS,
 )
 
@@ -416,6 +599,24 @@ class TibberPricesSensor(TibberPricesEntity, SensorEntity):
             "previous_interval_price_rating": lambda: self._get_interval_rating_value(interval_offset=-1),
             "current_hour_price_rating": lambda: self._get_rolling_hour_rating_value(hour_offset=0),
             "next_hour_price_rating": lambda: self._get_rolling_hour_rating_value(hour_offset=1),
+            # Future average sensors (next N hours from next interval)
+            "next_avg_1h": lambda: self._get_next_avg_n_hours_value(hours=1),
+            "next_avg_2h": lambda: self._get_next_avg_n_hours_value(hours=2),
+            "next_avg_3h": lambda: self._get_next_avg_n_hours_value(hours=3),
+            "next_avg_4h": lambda: self._get_next_avg_n_hours_value(hours=4),
+            "next_avg_5h": lambda: self._get_next_avg_n_hours_value(hours=5),
+            "next_avg_6h": lambda: self._get_next_avg_n_hours_value(hours=6),
+            "next_avg_8h": lambda: self._get_next_avg_n_hours_value(hours=8),
+            "next_avg_12h": lambda: self._get_next_avg_n_hours_value(hours=12),
+            # Price trend sensors
+            "price_trend_1h": lambda: self._get_price_trend_value(hours=1),
+            "price_trend_2h": lambda: self._get_price_trend_value(hours=2),
+            "price_trend_3h": lambda: self._get_price_trend_value(hours=3),
+            "price_trend_4h": lambda: self._get_price_trend_value(hours=4),
+            "price_trend_5h": lambda: self._get_price_trend_value(hours=5),
+            "price_trend_6h": lambda: self._get_price_trend_value(hours=6),
+            "price_trend_8h": lambda: self._get_price_trend_value(hours=8),
+            "price_trend_12h": lambda: self._get_price_trend_value(hours=12),
             # Diagnostic sensors
             "data_timestamp": self._get_data_timestamp,
             # Price forecast sensor
@@ -429,23 +630,14 @@ class TibberPricesSensor(TibberPricesEntity, SensorEntity):
         return self.coordinator.get_current_interval()
 
     def _get_price_level_value(self) -> str | None:
-        """Get the current price level value as a translated string for the state."""
+        """Get the current price level value as enum string for the state."""
         current_interval_data = self._get_current_interval_data()
         if not current_interval_data or "level" not in current_interval_data:
             return None
         level = current_interval_data["level"]
         self._last_price_level = level
-        # Use the translation helper for price level, fallback to English if needed
-        if self.hass:
-            language = self.hass.config.language or "en"
-            translated = get_price_level_translation(level, language)
-            if translated:
-                return translated
-            if language != "en":
-                fallback = get_price_level_translation(level, "en")
-                if fallback:
-                    return fallback
-        return level
+        # Convert API level (e.g., "NORMAL") to lowercase enum value (e.g., "normal")
+        return level.lower() if level else None
 
     def _get_interval_level_value(self, *, interval_offset: int) -> str | None:
         """Get price level for an interval with offset (e.g., next or previous interval)."""
@@ -461,17 +653,8 @@ class TibberPricesSensor(TibberPricesEntity, SensorEntity):
             return None
 
         level = interval_data["level"]
-        # Translate the level
-        if self.hass:
-            language = self.hass.config.language or "en"
-            translated = get_price_level_translation(level, language)
-            if translated:
-                return translated
-            if language != "en":
-                fallback = get_price_level_translation(level, "en")
-                if fallback:
-                    return fallback
-        return level
+        # Convert API level to lowercase enum value
+        return level.lower() if level else None
 
     def _get_rolling_hour_level_value(self, *, hour_offset: int) -> str | None:
         """Get aggregated price level for a 5-interval rolling window."""
@@ -496,7 +679,8 @@ class TibberPricesSensor(TibberPricesEntity, SensorEntity):
             return None
 
         aggregated_level = aggregate_price_levels(levels)
-        return self._translate_level(aggregated_level)
+        # Convert API level to lowercase enum value
+        return aggregated_level.lower() if aggregated_level else None
 
     def _find_rolling_hour_center_index(self, all_prices: list, hour_offset: int) -> int | None:
         """Find the center index for the rolling hour window."""
@@ -851,7 +1035,7 @@ class TibberPricesSensor(TibberPricesEntity, SensorEntity):
         """
         Get the price rating level from the current price interval in priceInfo.
 
-        Returns the translated rating level as the main status, and stores the original
+        Returns the rating level enum value, and stores the original
         level and percentage difference as attributes.
         """
         if not self.coordinator.data or rating_type != "current":
@@ -869,7 +1053,8 @@ class TibberPricesSensor(TibberPricesEntity, SensorEntity):
             if rating_level is not None:
                 self._last_rating_difference = float(difference) if difference is not None else None
                 self._last_rating_level = rating_level
-                return self._translate_rating_level(rating_level)
+                # Convert API rating (e.g., "NORMAL") to lowercase enum value (e.g., "normal")
+                return rating_level.lower() if rating_level else None
 
         self._last_rating_difference = None
         self._last_rating_level = None
@@ -889,9 +1074,8 @@ class TibberPricesSensor(TibberPricesEntity, SensorEntity):
             return None
 
         rating_level = interval_data.get("rating_level")
-        if rating_level is not None:
-            return self._translate_rating_level(rating_level)
-        return None
+        # Convert API rating to lowercase enum value
+        return rating_level.lower() if rating_level else None
 
     def _get_rolling_hour_rating_value(self, *, hour_offset: int) -> str | None:
         """Get aggregated price rating for a 5-interval rolling window."""
@@ -953,7 +1137,136 @@ class TibberPricesSensor(TibberPricesEntity, SensorEntity):
         # Aggregate using average difference
         aggregated_rating, _avg_diff = aggregate_price_rating(differences, threshold_low, threshold_high)
 
-        return self._translate_rating_level(aggregated_rating)
+        # Convert API rating to lowercase enum value
+        return aggregated_rating.lower() if aggregated_rating else None
+
+    def _get_next_avg_n_hours_value(self, *, hours: int) -> float | None:
+        """
+        Get average price for next N hours starting from next interval.
+
+        Args:
+            hours: Number of hours to look ahead (1, 2, 3, 4, 5, 6, 8, 12)
+
+        Returns:
+            Average price in minor currency units (e.g., cents), or None if unavailable
+
+        """
+        avg_price = calculate_next_n_hours_avg(self.coordinator.data, hours)
+        if avg_price is None:
+            return None
+
+        # Convert from major to minor currency units (e.g., EUR to cents)
+        return round(avg_price * 100, 2)
+
+    def _get_price_trend_value(self, *, hours: int) -> str | None:
+        """
+        Calculate price trend comparing current interval vs next N hours average.
+
+        Args:
+            hours: Number of hours to look ahead for trend calculation
+
+        Returns:
+            Trend state: "rising" | "falling" | "stable", or None if unavailable
+
+        """
+        if not self.coordinator.data:
+            return None
+
+        # Get current interval price and timestamp
+        current_interval = self._get_current_interval_data()
+        if not current_interval or "total" not in current_interval:
+            return None
+
+        current_price = float(current_interval["total"])
+        current_starts_at = dt_util.parse_datetime(current_interval["startsAt"])
+        if current_starts_at is None:
+            return None
+        current_starts_at = dt_util.as_local(current_starts_at)
+
+        # Get next interval timestamp (basis for calculation)
+        next_interval_start = current_starts_at + timedelta(minutes=MINUTES_PER_INTERVAL)
+
+        # Get future average price and detailed interval data
+        future_avg = calculate_next_n_hours_avg(self.coordinator.data, hours)
+        if future_avg is None:
+            return None
+
+        # Calculate trend with 5% threshold
+        trend_state, diff_pct = calculate_price_trend(current_price, future_avg, threshold_pct=5.0)
+
+        # Store attributes for extra_state_attributes
+        if not hasattr(self, "_attr_extra_state_attributes") or self._attr_extra_state_attributes is None:
+            self._attr_extra_state_attributes = {}
+
+        # Core attributes
+        self._attr_extra_state_attributes["timestamp"] = next_interval_start.isoformat()
+        self._attr_extra_state_attributes[f"trend_{hours}h_percentage"] = round(diff_pct, 1)
+        self._attr_extra_state_attributes[f"future_avg_{hours}h"] = round(future_avg * 100, 2)
+        self._attr_extra_state_attributes["intervals_analyzed"] = hours * 4
+
+        # Calculate additional attributes for better granularity
+        if hours > MIN_HOURS_FOR_LATER_HALF:
+            # Get second half average for longer periods
+            later_half_avg = self._calculate_later_half_average(hours, next_interval_start)
+            if later_half_avg is not None:
+                self._attr_extra_state_attributes[f"later_half_avg_{hours}h"] = round(later_half_avg * 100, 2)
+
+                # Calculate incremental change: how much does the later half differ from current?
+                if current_price > 0:
+                    incremental_diff = ((later_half_avg - current_price) / current_price) * 100
+                    self._attr_extra_state_attributes["incremental_change"] = round(incremental_diff, 1)
+
+        return trend_state
+
+    def _calculate_later_half_average(self, hours: int, next_interval_start: datetime) -> float | None:
+        """
+        Calculate average price for the later half of the future time window.
+
+        This provides additional granularity by showing what happens in the second half
+        of the prediction window, helping distinguish between near-term and far-term trends.
+
+        Args:
+            hours: Total hours in the prediction window
+            next_interval_start: Start timestamp of the next interval
+
+        Returns:
+            Average price for the later half intervals, or None if insufficient data
+
+        """
+        if not self.coordinator.data:
+            return None
+
+        price_info = self.coordinator.data.get("priceInfo", {})
+        today_prices = price_info.get("today", [])
+        tomorrow_prices = price_info.get("tomorrow", [])
+        all_prices = today_prices + tomorrow_prices
+
+        if not all_prices:
+            return None
+
+        # Calculate which intervals belong to the later half
+        total_intervals = hours * 4
+        first_half_intervals = total_intervals // 2
+        later_half_start = next_interval_start + timedelta(minutes=MINUTES_PER_INTERVAL * first_half_intervals)
+        later_half_end = next_interval_start + timedelta(minutes=MINUTES_PER_INTERVAL * total_intervals)
+
+        # Collect prices in the later half
+        later_prices = []
+        for price_data in all_prices:
+            starts_at = dt_util.parse_datetime(price_data["startsAt"])
+            if starts_at is None:
+                continue
+            starts_at = dt_util.as_local(starts_at)
+
+            if later_half_start <= starts_at < later_half_end:
+                price = price_data.get("total")
+                if price is not None:
+                    later_prices.append(float(price))
+
+        if later_prices:
+            return sum(later_prices) / len(later_prices)
+
+        return None
 
     def _get_data_timestamp(self) -> datetime | None:
         """Get the latest data timestamp."""
@@ -1101,9 +1414,8 @@ class TibberPricesSensor(TibberPricesEntity, SensorEntity):
             prices = [interval["price"] for interval in hour_data["intervals"]]
             if prices:
                 hour_data["avg_price"] = sum(prices) / len(prices)
-                hour_data["avg_price_cents"] = hour_data["avg_price"] * 100
-                hour_data["min_price_cents"] = hour_data["min_price"] * 100
-                hour_data["max_price_cents"] = hour_data["max_price"] * 100
+                hour_data["min_price"] = hour_data["min_price"]
+                hour_data["max_price"] = hour_data["max_price"]
 
                 # Calculate average rating if ratings are available
                 if hour_data["ratings_available"]:
@@ -1157,15 +1469,13 @@ class TibberPricesSensor(TibberPricesEntity, SensorEntity):
 
         # Add description from the custom translations file
         if self.entity_description.translation_key and self.hass is not None:
-            # Extract the base key (without _cents suffix if present)
-            base_key = self.entity_description.translation_key
-            base_key = base_key.removesuffix("_cents")
-
             # Get user's language preference
             language = self.hass.config.language if self.hass.config.language else "en"
 
             # Add basic description
-            description = await async_get_entity_description(self.hass, "sensor", base_key, language, "description")
+            description = await async_get_entity_description(
+                self.hass, "sensor", self.entity_description.translation_key, language, "description"
+            )
             if description:
                 attributes["description"] = description
 
@@ -1179,13 +1489,15 @@ class TibberPricesSensor(TibberPricesEntity, SensorEntity):
             if extended_descriptions:
                 # Add long description if available
                 long_desc = await async_get_entity_description(
-                    self.hass, "sensor", base_key, language, "long_description"
+                    self.hass, "sensor", self.entity_description.translation_key, language, "long_description"
                 )
                 if long_desc:
                     attributes["long_description"] = long_desc
 
                 # Add usage tips if available
-                usage_tips = await async_get_entity_description(self.hass, "sensor", base_key, language, "usage_tips")
+                usage_tips = await async_get_entity_description(
+                    self.hass, "sensor", self.entity_description.translation_key, language, "usage_tips"
+                )
                 if usage_tips:
                     attributes["usage_tips"] = usage_tips
 
@@ -1208,15 +1520,12 @@ class TibberPricesSensor(TibberPricesEntity, SensorEntity):
 
         # Add descriptions from the cache if available (non-blocking)
         if self.entity_description.translation_key and self.hass is not None:
-            # Extract the base key (without _cents suffix if present)
-            base_key = self.entity_description.translation_key
-            base_key = base_key.removesuffix("_cents")
-
             # Get user's language preference
             language = self.hass.config.language if self.hass.config.language else "en"
+            translation_key = self.entity_description.translation_key
 
             # Add basic description from cache
-            description = get_entity_description("sensor", base_key, language, "description")
+            description = get_entity_description("sensor", translation_key, language, "description")
             if description:
                 attributes["description"] = description
 
@@ -1229,12 +1538,12 @@ class TibberPricesSensor(TibberPricesEntity, SensorEntity):
             # Add extended descriptions if enabled (from cache only)
             if extended_descriptions:
                 # Add long description if available in cache
-                long_desc = get_entity_description("sensor", base_key, language, "long_description")
+                long_desc = get_entity_description("sensor", translation_key, language, "long_description")
                 if long_desc:
                     attributes["long_description"] = long_desc
 
                 # Add usage tips if available in cache
-                usage_tips = get_entity_description("sensor", base_key, language, "usage_tips")
+                usage_tips = get_entity_description("sensor", translation_key, language, "usage_tips")
                 if usage_tips:
                     attributes["usage_tips"] = usage_tips
 
@@ -1248,6 +1557,14 @@ class TibberPricesSensor(TibberPricesEntity, SensorEntity):
 
             key = self.entity_description.key
             attributes = {}
+
+            # For trend sensors, merge _attr_extra_state_attributes first
+            if (
+                key.startswith("price_trend_")
+                and hasattr(self, "_attr_extra_state_attributes")
+                and self._attr_extra_state_attributes
+            ):
+                attributes.update(self._attr_extra_state_attributes)
 
             # Group sensors by type and delegate to specific handlers
             if key in [

@@ -85,38 +85,7 @@
             "long_description": "Shows the maximum price per kWh from the next 24 hours (leading maximum) from your Tibber subscription. This provides the highest price expected in the next 24 hours based on forecast data.",
             "usage_tips": "Use this to avoid running appliances during upcoming peak price periods."
         },
-        "current_price_cents": {
-            "name": "Current Electricity Price",
-            "description": "The current electricity price per kWh",
-            "long_description": "Shows the current price per kWh from your Tibber subscription",
-            "usage_tips": "Use this to track prices or to create automations that run when electricity is cheap"
-        },
-        "next_interval_price_cents": {
-            "name": "Next Price",
-            "description": "The next interval electricity price per kWh",
-            "long_description": "Shows the price for the next 15-minute interval from your Tibber subscription",
-            "usage_tips": "Use this to prepare for upcoming price changes or to schedule devices to run during cheaper intervals"
-        },
-        "previous_interval_price_cents": {
-            "name": "Previous Electricity Price",
-            "description": "The previous interval electricity price per kWh",
-            "long_description": "Shows the price for the previous 15-minute interval from your Tibber subscription",
-            "usage_tips": "Use this to review past price changes or track price history"
-        },
-        "current_hour_average_cents": {
-            "name": "Current Hour Average Price",
-            "description": "Rolling 5-interval average price per kWh",
-            "long_description": "Shows the average price per kWh calculated from 5 intervals: 2 previous, current, and 2 next intervals (approximately 75 minutes total). This provides a smoothed 'hour price' that adapts as time moves, rather than being fixed to clock hours.",
-            "usage_tips": "Use this for a more stable price indicator that smooths out short-term fluctuations while still being responsive to price changes. Better than fixed hourly prices for making consumption decisions."
-        },
-        "next_hour_average_cents": {
-            "name": "Next Hour Average Price",
-            "description": "Rolling 5-interval average price for next hour per kWh",
-            "long_description": "Shows the average price per kWh calculated from 5 intervals centered one hour ahead: approximately intervals +2 through +6 from now (covering minutes +30 to +105). This provides a forward-looking smoothed 'hour price' for planning consumption.",
-            "usage_tips": "Use this to anticipate price changes in the next hour. Helpful for scheduling high-consumption activities like charging electric vehicles, running dishwashers, or heating systems."
-        },
         "price_level": {
-            "name": "Current Price Level",
             "description": "The current price level classification",
             "long_description": "Shows Tibber's classification of the current price compared to historical prices",
             "usage_tips": "Use this to create automations based on relative price levels rather than absolute prices",
@@ -129,103 +98,26 @@
             }
         },
         "next_interval_price_level": {
-            "name": "Next Price Level",
             "description": "Price level for the next 15-minute interval",
             "long_description": "Shows the price level classification for the upcoming interval. Helps anticipate short-term price changes for immediate planning.",
             "usage_tips": "Use for quick decisions about starting or stopping high-power devices in the next few minutes."
         },
         "previous_interval_price_level": {
-            "name": "Previous Price Level",
             "description": "Price level for the previous 15-minute interval",
             "long_description": "Shows the price level classification for the last interval. Useful for historical comparison and understanding recent price trends.",
             "usage_tips": "Use to compare current vs recent price levels or analyze consumption patterns against historical prices."
         },
         "current_hour_price_level": {
-            "name": "Current Hour Price Level",
             "description": "Aggregated price level for current rolling hour (5 intervals)",
             "long_description": "Shows the median price level across 5 intervals (2 before, current, 2 after) covering approximately 75 minutes. Provides a more stable price level indicator that smooths out short-term fluctuations.",
             "usage_tips": "Use for medium-term planning decisions where you want to avoid reacting to brief price spikes or dips."
         },
         "next_hour_price_level": {
-            "name": "Next Hour Price Level",
             "description": "Aggregated price level for next rolling hour (5 intervals ahead)",
             "long_description": "Shows the median price level across 5 intervals centered one hour ahead. Helps plan consumption based on upcoming price trends rather than instantaneous future prices.",
             "usage_tips": "Use to schedule activities for the next hour based on a smoothed price level forecast."
         },
-        "lowest_price_today_cents": {
-            "name": "Today's Lowest Price",
-            "description": "The lowest electricity price for today per kWh",
-            "long_description": "Shows the lowest price per kWh for the current day from your Tibber subscription",
-            "usage_tips": "Use this to compare current prices to the cheapest time of the day"
-        },
-        "highest_price_today_cents": {
-            "name": "Today's Highest Price",
-            "description": "The highest electricity price for today per kWh",
-            "long_description": "Shows the highest price per kWh for the current day from your Tibber subscription",
-            "usage_tips": "Use this to avoid running appliances during peak price times"
-        },
-        "average_price_today_cents": {
-            "name": "Today's Average Price",
-            "description": "The average electricity price for today per kWh",
-            "long_description": "Shows the average price per kWh for the current day from your Tibber subscription",
-            "usage_tips": "Use this as a baseline for comparing current prices"
-        },
-        "lowest_price_tomorrow_cents": {
-            "name": "Tomorrow's Lowest Price",
-            "description": "The lowest electricity price for tomorrow per kWh",
-            "long_description": "Shows the lowest price per kWh for tomorrow from your Tibber subscription. This sensor becomes unavailable until tomorrow's data is published by Tibber (typically around 13:00-14:00 CET).",
-            "usage_tips": "Use this to plan energy-intensive activities for tomorrow's cheapest time. Perfect for pre-scheduling heating, EV charging, or appliances."
-        },
-        "highest_price_tomorrow_cents": {
-            "name": "Tomorrow's Highest Price",
-            "description": "The highest electricity price for tomorrow per kWh",
-            "long_description": "Shows the highest price per kWh for tomorrow from your Tibber subscription. This sensor becomes unavailable until tomorrow's data is published by Tibber (typically around 13:00-14:00 CET).",
-            "usage_tips": "Use this to avoid running appliances during tomorrow's peak price times. Helpful for planning around expensive periods."
-        },
-        "average_price_tomorrow_cents": {
-            "name": "Tomorrow's Average Price",
-            "description": "The average electricity price for tomorrow per kWh",
-            "long_description": "Shows the average price per kWh for tomorrow from your Tibber subscription. This sensor becomes unavailable until tomorrow's data is published by Tibber (typically around 13:00-14:00 CET).",
-            "usage_tips": "Use this as a baseline for comparing tomorrow's prices and planning consumption. Compare with today's average to see if tomorrow will be more or less expensive overall."
-        },
-        "trailing_price_average_cents": {
-            "name": "Trailing 24h Average Price",
-            "description": "The average electricity price for the past 24 hours per kWh",
-            "long_description": "Shows the average price per kWh calculated from the past 24 hours (trailing average) from your Tibber subscription. This provides a rolling average that updates every 15 minutes based on historical data.",
-            "usage_tips": "Use this to compare current prices against recent trends. A current price significantly above this average may indicate a good time to reduce consumption."
-        },
-        "leading_price_average_cents": {
-            "name": "Leading 24h Average Price",
-            "description": "The average electricity price for the next 24 hours per kWh",
-            "long_description": "Shows the average price per kWh calculated from the next 24 hours (leading average) from your Tibber subscription. This provides a forward-looking average based on available forecast data.",
-            "usage_tips": "Use this to plan energy usage. If the current price is below the leading average, it may be a good time to run energy-intensive appliances."
-        },
-        "trailing_price_min_cents": {
-            "name": "Trailing 24h Minimum Price",
-            "description": "The minimum electricity price for the past 24 hours per kWh",
-            "long_description": "Shows the minimum price per kWh from the past 24 hours (trailing minimum) from your Tibber subscription. This provides the lowest price seen in the last 24 hours.",
-            "usage_tips": "Use this to see the best price opportunity you had in the past 24 hours and compare it with current prices."
-        },
-        "trailing_price_max_cents": {
-            "name": "Trailing 24h Maximum Price",
-            "description": "The maximum electricity price for the past 24 hours per kWh",
-            "long_description": "Shows the maximum price per kWh from the past 24 hours (trailing maximum) from your Tibber subscription. This provides the highest price seen in the last 24 hours.",
-            "usage_tips": "Use this to see the peak price in the past 24 hours and assess price volatility."
-        },
-        "leading_price_min_cents": {
-            "name": "Leading 24h Minimum Price",
-            "description": "The minimum electricity price for the next 24 hours per kWh",
-            "long_description": "Shows the minimum price per kWh from the next 24 hours (leading minimum) from your Tibber subscription. This provides the lowest price expected in the next 24 hours based on forecast data.",
-            "usage_tips": "Use this to identify the best price opportunity coming up and schedule energy-intensive tasks accordingly."
-        },
-        "leading_price_max_cents": {
-            "name": "Leading 24h Maximum Price",
-            "description": "The maximum electricity price for the next 24 hours per kWh",
-            "long_description": "Shows the maximum price per kWh from the next 24 hours (leading maximum) from your Tibber subscription. This provides the highest price expected in the next 24 hours based on forecast data.",
-            "usage_tips": "Use this to avoid running appliances during upcoming peak price periods."
-        },
         "price_rating": {
-            "name": "Current Price Rating",
             "description": "How the current interval's price compares to historical data",
             "long_description": "Shows how the current interval's price compares to historical price data as a percentage",
             "usage_tips": "A positive percentage means the current price is above average, negative means below average",
@@ -236,48 +128,120 @@
             }
         },
         "next_interval_price_rating": {
-            "name": "Next Price Rating",
             "description": "Price rating for the next 15-minute interval",
             "long_description": "Shows how the next interval's price compares to the rolling 24-hour average. Helps anticipate if upcoming prices are above or below the recent trend.",
             "usage_tips": "Use to make quick decisions about starting activities in the next interval based on relative price position."
         },
         "previous_interval_price_rating": {
-            "name": "Previous Price Rating",
             "description": "Price rating for the previous 15-minute interval",
             "long_description": "Shows how the last interval's price compared to the rolling average. Useful for understanding recent price behavior.",
             "usage_tips": "Use for analyzing how price ratings changed over time or validating past consumption decisions."
         },
         "current_hour_price_rating": {
-            "name": "Current Hour Price Rating",
             "description": "Aggregated price rating for current rolling hour (5 intervals)",
             "long_description": "Shows the average rating across 5 intervals (2 before, current, 2 after). Based on the average percentage difference from rolling 24h average, providing a smoothed rating indicator.",
             "usage_tips": "Use for stable medium-term price assessment that doesn't overreact to brief price anomalies."
         },
         "next_hour_price_rating": {
-            "name": "Next Hour Price Rating",
             "description": "Aggregated price rating for next rolling hour (5 intervals ahead)",
             "long_description": "Shows the averaged rating for 5 intervals centered one hour ahead. Helps understand if the next hour will generally be above or below average pricing.",
             "usage_tips": "Use to decide if you should wait an hour before starting high-consumption activities."
         },
+        "next_avg_1h": {
+            "description": "Average price for the next 1 hour (forward-only from next interval)",
+            "long_description": "Forward-looking average: Shows average of next 4 intervals (1 hour) starting from the NEXT 15-minute interval (not including current). Different from current_hour_average which includes past intervals. Use for absolute price threshold planning.",
+            "usage_tips": "Absolute price threshold: Only start appliances when average stays below your maximum acceptable price (e.g., below 0.25 EUR/kWh). Combine with trend sensor for optimal timing. Note: This is NOT a replacement for hourly prices - use current_hour_average for that."
+        },
+        "next_avg_2h": {
+            "description": "Average price for the next 2 hours",
+            "long_description": "Shows the average price for the next 8 intervals (2 hours) starting from the next 15-minute interval.",
+            "usage_tips": "Absolute price threshold: Set a maximum acceptable average price for standard appliances like washing machines. Ensures you never pay more than your limit."
+        },
+        "next_avg_3h": {
+            "description": "Average price for the next 3 hours",
+            "long_description": "Shows the average price for the next 12 intervals (3 hours) starting from the next 15-minute interval.",
+            "usage_tips": "Absolute price threshold: For EU Eco programs (dishwashers, 3-4h runtime). Only start when 3h average is below your price limit. Use with trend sensor to find best moment within acceptable price range."
+        },
+        "next_avg_4h": {
+            "description": "Average price for the next 4 hours",
+            "long_description": "Shows the average price for the next 16 intervals (4 hours) starting from the next 15-minute interval.",
+            "usage_tips": "Absolute price threshold: Set maximum acceptable price for heat pumps or water heaters. Prevents operation during expensive periods regardless of relative trends."
+        },
+        "next_avg_5h": {
+            "description": "Average price for the next 5 hours",
+            "long_description": "Shows the average price for the next 20 intervals (5 hours) starting from the next 15-minute interval.",
+            "usage_tips": "Absolute price threshold: Bridge between short and long-term planning. Use for extended cycles with hard price limits (e.g., pool pumps, extended heating cycles)."
+        },
+        "next_avg_6h": {
+            "description": "Average price for the next 6 hours",
+            "long_description": "Shows the average price for the next 24 intervals (6 hours) starting from the next 15-minute interval.",
+            "usage_tips": "Absolute price threshold: Evening planning with price caps. Only schedule tasks if 6h average stays below your maximum acceptable cost."
+        },
+        "next_avg_8h": {
+            "description": "Average price for the next 8 hours",
+            "long_description": "Shows the average price for the next 32 intervals (8 hours) starting from the next 15-minute interval.",
+            "usage_tips": "Absolute price threshold: Overnight operation decisions. Set hard price limits for night loads (battery charging, thermal storage). Never exceed your budget."
+        },
+        "next_avg_12h": {
+            "description": "Average price for the next 12 hours",
+            "long_description": "Shows the average price for the next 48 intervals (12 hours) starting from the next 15-minute interval.",
+            "usage_tips": "Absolute price threshold: Strategic decisions with price caps. Only proceed if 12h average is below your maximum acceptable price. Good for postponable large loads."
+        },
+        "price_trend_1h": {
+            "description": "Price trend for the next hour: rising, falling, or stable",
+            "long_description": "Compares current interval price with average of next 1 hour (4 intervals). Rising if future is >5% higher, falling if >5% lower, stable otherwise.",
+            "usage_tips": "Relative optimization: 'falling' = wait, prices dropping. 'rising' = act now or you'll pay more. 'stable' = price doesn't matter much now. Works independent of absolute price level."
+        },
+        "price_trend_2h": {
+            "description": "Price trend for the next 2 hours: rising, falling, or stable",
+            "long_description": "Compares current interval price with average of next 2 hours (8 intervals). Rising if future is >5% higher, falling if >5% lower, stable otherwise.",
+            "usage_tips": "Relative optimization: Ideal for appliances. 'falling' means better prices coming in 2h - postpone if possible. Finds best timing within your available window, regardless of season."
+        },
+        "price_trend_3h": {
+            "description": "Price trend for the next 3 hours: rising, falling, or stable",
+            "long_description": "Compares current interval price with average of next 3 hours (12 intervals). Rising if future is >5% higher, falling if >5% lower, stable otherwise.",
+            "usage_tips": "Relative optimization: For Eco programs. 'falling' means prices dropping >5% - worth waiting. Works in any season. Combine with avg sensor for price cap: only when avg < your limit AND trend not 'falling'."
+        },
+        "price_trend_4h": {
+            "description": "Price trend for the next 4 hours: rising, falling, or stable",
+            "long_description": "Compares current interval price with average of next 4 hours (16 intervals). Rising if future is >5% higher, falling if >5% lower, stable otherwise.",
+            "usage_tips": "Relative optimization: Heat pump/battery decisions. 'falling' means better charging window coming. Always finds relative best time - whether prices are 10 cents or 50 cents. Use avg sensor for absolute limit."
+        },
+        "price_trend_5h": {
+            "description": "Price trend for the next 5 hours: rising, falling, or stable",
+            "long_description": "Compares current interval price with average of next 5 hours (20 intervals). Rising if future is >5% higher, falling if >5% lower, stable otherwise.",
+            "usage_tips": "Relative optimization: Extended operations. Adapts to market - finds best relative timing in any price environment. 'stable/rising' = good time to start within your planning window."
+        },
+        "price_trend_6h": {
+            "description": "Price trend for the next 6 hours: rising, falling, or stable",
+            "long_description": "Compares current interval price with average of next 6 hours (24 intervals). Rising if future is >5% higher, falling if >5% lower, stable otherwise.",
+            "usage_tips": "Relative optimization: Evening decisions. 'falling' = prices improve significantly if you wait. No fixed thresholds needed - automatically adjusts to winter/summer price levels."
+        },
+        "price_trend_8h": {
+            "description": "Price trend for the next 8 hours: rising, falling, or stable",
+            "long_description": "Compares current interval price with average of next 8 hours (32 intervals). Rising if future is >5% higher, falling if >5% lower, stable otherwise.",
+            "usage_tips": "Relative optimization: Night planning. 'falling' means waiting for night pays off (>5% cheaper). Works year-round without manual threshold adjustments. Start when 'stable' or 'rising'."
+        },
+        "price_trend_12h": {
+            "description": "Price trend for the next 12 hours: rising, falling, or stable",
+            "long_description": "Compares current interval price with average of next 12 hours (48 intervals). Rising if future is >5% higher, falling if >5% lower, stable otherwise.",
+            "usage_tips": "Relative optimization: Long-term strategic decisions. 'falling' = significantly better prices coming tonight/tomorrow. Finds optimal timing in any market condition. Best combined with avg sensor price cap."
+        },
         "daily_rating": {
-            "name": "Daily Price Rating",
             "description": "How today's prices compare to historical data",
             "long_description": "Shows how today's prices compare to historical price data as a percentage",
             "usage_tips": "A positive percentage means today's prices are above average, negative means below average"
         },
         "monthly_rating": {
-            "name": "Monthly Price Rating",
             "description": "How this month's prices compare to historical data",
             "long_description": "Shows how this month's prices compare to historical price data as a percentage",
             "usage_tips": "A positive percentage means this month's prices are above average, negative means below average"
         },
         "data_timestamp": {
-            "name": "Price Data Expiration",
             "description": "Timestamp of the latest available price data interval",
             "long_description": "Shows the timestamp of the latest available price data interval from your Tibber subscription"
         },
         "price_forecast": {
-            "name": "Price Forecast",
             "description": "Forecast of upcoming electricity prices",
             "long_description": "Shows upcoming electricity prices for future intervals in a format that's easy to use in dashboards",
             "usage_tips": "Use this entity's attributes to display upcoming prices in charts or custom cards. Access either 'intervals' for all future intervals or 'hours' for hourly summaries."
@@ -285,25 +249,21 @@
     },
     "binary_sensor": {
         "tomorrow_data_available": {
-            "name": "Tomorrow's Data Status",
             "description": "Whether price data for tomorrow is available",
             "long_description": "Indicates if price data for the following day has been received from Tibber",
             "usage_tips": "Use this to check if tomorrow's prices are available for planning"
         },
         "peak_price_period": {
-            "name": "Peak Price Periode",
             "description": "Whether the current interval is among the most expensive of the day",
             "long_description": "Turns on when the current price is in the top 20% of today's prices",
             "usage_tips": "Use this to avoid running high-consumption appliances during expensive intervals"
         },
         "best_price_period": {
-            "name": "Best Price Periode",
             "description": "Whether the current interval is among the cheapest of the day",
             "long_description": "Turns on when the current price is in the bottom 20% of today's prices",
             "usage_tips": "Use this to run high-consumption appliances during the cheapest intervals"
         },
         "connection": {
-            "name": "Tibber API Connection",
             "description": "Whether the connection to the Tibber API is working",
             "long_description": "Indicates if the integration can successfully connect to the Tibber API",
             "usage_tips": "Use this to monitor the connection status to the Tibber API"

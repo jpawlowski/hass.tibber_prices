@@ -123,86 +123,234 @@
     },
     "entity": {
         "sensor": {
-            "current_price_cents": {
-                "name": "Huidige Elektriciteitsprijs"
+            "current_price": {
+                "name": "Huidige elektriciteitsprijs"
             },
-            "next_interval_price_cents": {
-                "name": "Volgende Prijs"
+            "next_interval_price": {
+                "name": "Volgende prijs"
             },
-            "previous_interval_price_cents": {
-                "name": "Vorige Elektriciteitsprijs"
+            "previous_interval_price": {
+                "name": "Vorige prijs"
             },
-            "current_hour_average_cents": {
-                "name": "Huidige Uur Gemiddelde Prijs"
+            "current_hour_average": {
+                "name": "Huidige uur gemiddelde prijs"
             },
-            "next_hour_average_cents": {
-                "name": "Volgende Uur Gemiddelde Prijs"
+            "next_hour_average": {
+                "name": "Volgend uur gemiddelde prijs"
             },
             "price_level": {
-                "name": "Huidig Prijsniveau"
+                "name": "Huidig Prijsniveau",
+                "state": {
+                    "very_cheap": "Zeer goedkoop",
+                    "cheap": "Goedkoop",
+                    "normal": "Normaal",
+                    "expensive": "Duur",
+                    "very_expensive": "Zeer duur"
+                }
             },
             "next_interval_price_level": {
-                "name": "Volgend Prijsniveau"
+                "name": "Volgend Prijsniveau",
+                "state": {
+                    "very_cheap": "Zeer goedkoop",
+                    "cheap": "Goedkoop",
+                    "normal": "Normaal",
+                    "expensive": "Duur",
+                    "very_expensive": "Zeer duur"
+                }
             },
             "previous_interval_price_level": {
-                "name": "Vorig Prijsniveau"
+                "name": "Vorig Prijsniveau",
+                "state": {
+                    "very_cheap": "Zeer goedkoop",
+                    "cheap": "Goedkoop",
+                    "normal": "Normaal",
+                    "expensive": "Duur",
+                    "very_expensive": "Zeer duur"
+                }
             },
             "current_hour_price_level": {
-                "name": "Huidig Uur Prijsniveau"
+                "name": "Huidig Uur Prijsniveau",
+                "state": {
+                    "very_cheap": "Zeer goedkoop",
+                    "cheap": "Goedkoop",
+                    "normal": "Normaal",
+                    "expensive": "Duur",
+                    "very_expensive": "Zeer duur"
+                }
             },
             "next_hour_price_level": {
-                "name": "Volgend Uur Prijsniveau"
+                "name": "Volgend Uur Prijsniveau",
+                "state": {
+                    "very_cheap": "Zeer goedkoop",
+                    "cheap": "Goedkoop",
+                    "normal": "Normaal",
+                    "expensive": "Duur",
+                    "very_expensive": "Zeer duur"
+                }
             },
-            "lowest_price_today_cents": {
-                "name": "Laagste Prijs Vandaag"
+            "lowest_price_today": {
+                "name": "Laagste prijs vandaag"
             },
-            "highest_price_today_cents": {
-                "name": "Hoogste Prijs Vandaag"
+            "highest_price_today": {
+                "name": "Hoogste prijs vandaag"
             },
-            "average_price_today_cents": {
-                "name": "Gemiddelde Prijs Vandaag"
+            "average_price_today": {
+                "name": "Gemiddelde prijs vandaag"
             },
-            "lowest_price_tomorrow_cents": {
-                "name": "Laagste Prijs Morgen"
+            "lowest_price_tomorrow": {
+                "name": "Laagste prijs morgen"
             },
-            "highest_price_tomorrow_cents": {
-                "name": "Hoogste Prijs Morgen"
+            "highest_price_tomorrow": {
+                "name": "Hoogste prijs morgen"
             },
-            "average_price_tomorrow_cents": {
-                "name": "Gemiddelde Prijs Morgen"
+            "average_price_tomorrow": {
+                "name": "Gemiddelde prijs morgen"
             },
-            "trailing_price_average_cents": {
-                "name": "Voortschrijdend 24u Gemiddelde Prijs"
+            "trailing_price_average": {
+                "name": "Volgend 24u gemiddelde prijs"
             },
-            "leading_price_average_cents": {
-                "name": "Vooruitlopend 24u Gemiddelde Prijs"
+            "leading_price_average": {
+                "name": "Toonaangevend 24u gemiddelde prijs"
             },
-            "trailing_price_min_cents": {
-                "name": "Voortschrijdend 24u Minimumprijs"
+            "trailing_price_min": {
+                "name": "Volgend 24u minimumprijs"
             },
-            "trailing_price_max_cents": {
-                "name": "Voortschrijdend 24u Maximumprijs"
+            "trailing_price_max": {
+                "name": "Volgend 24u maximumprijs"
             },
-            "leading_price_min_cents": {
-                "name": "Vooruitlopend 24u Minimumprijs"
+            "leading_price_min": {
+                "name": "Toonaangevend 24u minimumprijs"
             },
-            "leading_price_max_cents": {
-                "name": "Vooruitlopend 24u Maximumprijs"
+            "leading_price_max": {
+                "name": "Toonaangevend 24u maximumprijs"
             },
             "price_rating": {
-                "name": "Huidige Prijsbeoordeling"
+                "name": "Huidige Prijsbeoordeling",
+                "state": {
+                    "low": "Laag",
+                    "normal": "Normaal",
+                    "high": "Hoog"
+                }
             },
             "next_interval_price_rating": {
-                "name": "Volgende Prijsbeoordeling"
+                "name": "Volgende Prijsbeoordeling",
+                "state": {
+                    "low": "Laag",
+                    "normal": "Normaal",
+                    "high": "Hoog"
+                }
             },
             "previous_interval_price_rating": {
-                "name": "Vorige Prijsbeoordeling"
+                "name": "Vorige Prijsbeoordeling",
+                "state": {
+                    "low": "Laag",
+                    "normal": "Normaal",
+                    "high": "Hoog"
+                }
             },
             "current_hour_price_rating": {
-                "name": "Huidig Uur Prijsbeoordeling"
+                "name": "Huidig Uur Prijsbeoordeling",
+                "state": {
+                    "low": "Laag",
+                    "normal": "Normaal",
+                    "high": "Hoog"
+                }
             },
             "next_hour_price_rating": {
-                "name": "Volgend Uur Prijsbeoordeling"
+                "name": "Volgend Uur Prijsbeoordeling",
+                "state": {
+                    "low": "Laag",
+                    "normal": "Normaal",
+                    "high": "Hoog"
+                }
+            },
+            "next_avg_1h": {
+                "name": "Gemiddelde Prijs Volgende 1u"
+            },
+            "next_avg_2h": {
+                "name": "Gemiddelde Prijs Volgende 2u"
+            },
+            "next_avg_3h": {
+                "name": "Gemiddelde Prijs Volgende 3u"
+            },
+            "next_avg_4h": {
+                "name": "Gemiddelde Prijs Volgende 4u"
+            },
+            "next_avg_5h": {
+                "name": "Gemiddelde Prijs Volgende 5u"
+            },
+            "next_avg_6h": {
+                "name": "Gemiddelde Prijs Volgende 6u"
+            },
+            "next_avg_8h": {
+                "name": "Gemiddelde Prijs Volgende 8u"
+            },
+            "next_avg_12h": {
+                "name": "Gemiddelde Prijs Volgende 12u"
+            },
+            "price_trend_1h": {
+                "name": "Prijstrend (1u)",
+                "state": {
+                    "rising": "Stijgend",
+                    "falling": "Dalend",
+                    "stable": "Stabiel"
+                }
+            },
+            "price_trend_2h": {
+                "name": "Prijstrend (2u)",
+                "state": {
+                    "rising": "Stijgend",
+                    "falling": "Dalend",
+                    "stable": "Stabiel"
+                }
+            },
+            "price_trend_3h": {
+                "name": "Prijstrend (3u)",
+                "state": {
+                    "rising": "Stijgend",
+                    "falling": "Dalend",
+                    "stable": "Stabiel"
+                }
+            },
+            "price_trend_4h": {
+                "name": "Prijstrend (4u)",
+                "state": {
+                    "rising": "Stijgend",
+                    "falling": "Dalend",
+                    "stable": "Stabiel"
+                }
+            },
+            "price_trend_5h": {
+                "name": "Prijstrend (5u)",
+                "state": {
+                    "rising": "Stijgend",
+                    "falling": "Dalend",
+                    "stable": "Stabiel"
+                }
+            },
+            "price_trend_6h": {
+                "name": "Prijstrend (6u)",
+                "state": {
+                    "rising": "Stijgend",
+                    "falling": "Dalend",
+                    "stable": "Stabiel"
+                }
+            },
+            "price_trend_8h": {
+                "name": "Prijstrend (8u)",
+                "state": {
+                    "rising": "Stijgend",
+                    "falling": "Dalend",
+                    "stable": "Stabiel"
+                }
+            },
+            "price_trend_12h": {
+                "name": "Prijstrend (12u)",
+                "state": {
+                    "rising": "Stijgend",
+                    "falling": "Dalend",
+                    "stable": "Stabiel"
+                }
             },
             "daily_rating": {
                 "name": "Dagelijkse Prijsbeoordeling"

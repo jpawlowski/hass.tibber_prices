@@ -123,86 +123,234 @@
     },
     "entity": {
         "sensor": {
-            "current_price_cents": {
+            "current_price": {
                 "name": "Current Electricity Price"
             },
-            "next_interval_price_cents": {
+            "next_interval_price": {
                 "name": "Next Price"
             },
-            "previous_interval_price_cents": {
+            "previous_interval_price": {
                 "name": "Previous Electricity Price"
             },
-            "current_hour_average_cents": {
+            "current_hour_average": {
                 "name": "Current Hour Average Price"
             },
-            "next_hour_average_cents": {
+            "next_hour_average": {
                 "name": "Next Hour Average Price"
             },
             "price_level": {
-                "name": "Current Price Level"
+                "name": "Current Price Level",
+                "state": {
+                    "very_cheap": "Very Cheap",
+                    "cheap": "Cheap",
+                    "normal": "Normal",
+                    "expensive": "Expensive",
+                    "very_expensive": "Very Expensive"
+                }
             },
             "next_interval_price_level": {
-                "name": "Next Price Level"
+                "name": "Next Price Level",
+                "state": {
+                    "very_cheap": "Very Cheap",
+                    "cheap": "Cheap",
+                    "normal": "Normal",
+                    "expensive": "Expensive",
+                    "very_expensive": "Very Expensive"
+                }
             },
             "previous_interval_price_level": {
-                "name": "Previous Price Level"
+                "name": "Previous Price Level",
+                "state": {
+                    "very_cheap": "Very Cheap",
+                    "cheap": "Cheap",
+                    "normal": "Normal",
+                    "expensive": "Expensive",
+                    "very_expensive": "Very Expensive"
+                }
             },
             "current_hour_price_level": {
-                "name": "Current Hour Price Level"
+                "name": "Current Hour Price Level",
+                "state": {
+                    "very_cheap": "Very Cheap",
+                    "cheap": "Cheap",
+                    "normal": "Normal",
+                    "expensive": "Expensive",
+                    "very_expensive": "Very Expensive"
+                }
             },
             "next_hour_price_level": {
-                "name": "Next Hour Price Level"
+                "name": "Next Hour Price Level",
+                "state": {
+                    "very_cheap": "Very Cheap",
+                    "cheap": "Cheap",
+                    "normal": "Normal",
+                    "expensive": "Expensive",
+                    "very_expensive": "Very Expensive"
+                }
             },
-            "lowest_price_today_cents": {
+            "lowest_price_today": {
                 "name": "Today's Lowest Price"
             },
-            "highest_price_today_cents": {
+            "highest_price_today": {
                 "name": "Today's Highest Price"
             },
-            "average_price_today_cents": {
+            "average_price_today": {
                 "name": "Today's Average Price"
             },
-            "lowest_price_tomorrow_cents": {
+            "lowest_price_tomorrow": {
                 "name": "Tomorrow's Lowest Price"
             },
-            "highest_price_tomorrow_cents": {
+            "highest_price_tomorrow": {
                 "name": "Tomorrow's Highest Price"
             },
-            "average_price_tomorrow_cents": {
+            "average_price_tomorrow": {
                 "name": "Tomorrow's Average Price"
             },
-            "trailing_price_average_cents": {
+            "trailing_price_average": {
                 "name": "Trailing 24h Average Price"
             },
-            "leading_price_average_cents": {
+            "leading_price_average": {
                 "name": "Leading 24h Average Price"
             },
-            "trailing_price_min_cents": {
+            "trailing_price_min": {
                 "name": "Trailing 24h Minimum Price"
             },
-            "trailing_price_max_cents": {
+            "trailing_price_max": {
                 "name": "Trailing 24h Maximum Price"
             },
-            "leading_price_min_cents": {
+            "leading_price_min": {
                 "name": "Leading 24h Minimum Price"
             },
-            "leading_price_max_cents": {
+            "leading_price_max": {
                 "name": "Leading 24h Maximum Price"
             },
             "price_rating": {
-                "name": "Current Price Rating"
+                "name": "Current Price Rating",
+                "state": {
+                    "low": "Low",
+                    "normal": "Normal",
+                    "high": "High"
+                }
             },
             "next_interval_price_rating": {
-                "name": "Next Price Rating"
+                "name": "Next Price Rating",
+                "state": {
+                    "low": "Low",
+                    "normal": "Normal",
+                    "high": "High"
+                }
             },
             "previous_interval_price_rating": {
-                "name": "Previous Price Rating"
+                "name": "Previous Price Rating",
+                "state": {
+                    "low": "Low",
+                    "normal": "Normal",
+                    "high": "High"
+                }
             },
             "current_hour_price_rating": {
-                "name": "Current Hour Price Rating"
+                "name": "Current Hour Price Rating",
+                "state": {
+                    "low": "Low",
+                    "normal": "Normal",
+                    "high": "High"
+                }
             },
             "next_hour_price_rating": {
-                "name": "Next Hour Price Rating"
+                "name": "Next Hour Price Rating",
+                "state": {
+                    "low": "Low",
+                    "normal": "Normal",
+                    "high": "High"
+                }
+            },
+            "next_avg_1h": {
+                "name": "Next 1h Average Price"
+            },
+            "next_avg_2h": {
+                "name": "Next 2h Average Price"
+            },
+            "next_avg_3h": {
+                "name": "Next 3h Average Price"
+            },
+            "next_avg_4h": {
+                "name": "Next 4h Average Price"
+            },
+            "next_avg_5h": {
+                "name": "Next 5h Average Price"
+            },
+            "next_avg_6h": {
+                "name": "Next 6h Average Price"
+            },
+            "next_avg_8h": {
+                "name": "Next 8h Average Price"
+            },
+            "next_avg_12h": {
+                "name": "Next 12h Average Price"
+            },
+            "price_trend_1h": {
+                "name": "Price Trend (1h)",
+                "state": {
+                    "rising": "Rising",
+                    "falling": "Falling",
+                    "stable": "Stable"
+                }
+            },
+            "price_trend_2h": {
+                "name": "Price Trend (2h)",
+                "state": {
+                    "rising": "Rising",
+                    "falling": "Falling",
+                    "stable": "Stable"
+                }
+            },
+            "price_trend_3h": {
+                "name": "Price Trend (3h)",
+                "state": {
+                    "rising": "Rising",
+                    "falling": "Falling",
+                    "stable": "Stable"
+                }
+            },
+            "price_trend_4h": {
+                "name": "Price Trend (4h)",
+                "state": {
+                    "rising": "Rising",
+                    "falling": "Falling",
+                    "stable": "Stable"
+                }
+            },
+            "price_trend_5h": {
+                "name": "Price Trend (5h)",
+                "state": {
+                    "rising": "Rising",
+                    "falling": "Falling",
+                    "stable": "Stable"
+                }
+            },
+            "price_trend_6h": {
+                "name": "Price Trend (6h)",
+                "state": {
+                    "rising": "Rising",
+                    "falling": "Falling",
+                    "stable": "Stable"
+                }
+            },
+            "price_trend_8h": {
+                "name": "Price Trend (8h)",
+                "state": {
+                    "rising": "Rising",
+                    "falling": "Falling",
+                    "stable": "Stable"
+                }
+            },
+            "price_trend_12h": {
+                "name": "Price Trend (12h)",
+                "state": {
+                    "rising": "Rising",
+                    "falling": "Falling",
+                    "stable": "Stable"
+                }
             },
             "daily_rating": {
                 "name": "Daily Price Rating"

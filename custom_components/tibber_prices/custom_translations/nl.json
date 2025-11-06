@@ -86,37 +86,31 @@
             "usage_tips": "Gebruik dit om te voorkomen dat je apparaten tijdens aankomende piekprijsperioden laat draaien."
         },
         "current_price_cents": {
-            "name": "Huidige Elektriciteitsprijs",
             "description": "De huidige elektriciteitsprijs per kWh",
             "long_description": "Toont de huidige prijs per kWh van je Tibber-abonnement",
             "usage_tips": "Gebruik dit om prijzen te volgen of om automatiseringen te maken die draaien wanneer elektriciteit goedkoop is"
         },
         "next_interval_price_cents": {
-            "name": "Volgende Prijs",
             "description": "De elektriciteitsprijs voor het volgende interval per kWh",
             "long_description": "Toont de prijs voor het volgende 15-minuten interval van je Tibber-abonnement",
             "usage_tips": "Gebruik dit om je voor te bereiden op aankomende prijswijzigingen of om apparaten te plannen tijdens goedkopere intervallen"
         },
         "previous_interval_price_cents": {
-            "name": "Vorige Elektriciteitsprijs",
             "description": "De elektriciteitsprijs voor het vorige interval per kWh",
             "long_description": "Toont de prijs voor het vorige 15-minuten interval van je Tibber-abonnement",
             "usage_tips": "Gebruik dit om prijswijzigingen uit het verleden te bekijken of prijsgeschiedenis te volgen"
         },
         "current_hour_average_cents": {
-            "name": "Huidige Uur Gemiddelde Prijs",
-            "description": "Voortschrijdend 5-interval gemiddelde prijs per kWh",
-            "long_description": "Toont de gemiddelde prijs per kWh berekend over 5 intervallen: 2 vorige, huidige en 2 volgende intervallen (ongeveer 75 minuten totaal). Dit geeft een vloeiende 'uurprijs' die zich aanpast naarmate de tijd verstrijkt, in plaats van vast te zitten aan klokuren.",
-            "usage_tips": "Gebruik dit voor een stabielere prijsindicator die korte-termijn schommelingen afvlakt terwijl het nog steeds reageert op prijswijzigingen. Beter dan vaste uurprijzen voor verbruiksbeslissingen."
+            "description": "Voortschrijdend 5-interval gemiddelde (achteruit + vooruit kijkend)",
+            "long_description": "Compatibiliteitsvervanging voor uurprijzen: Gemiddelde van 5 intervallen (2 ervoor, huidig, 2 erna ≈ 75 min). Werkt elke 15 minuten bij met voortschrijdend venster gecentreerd op huidig interval. Anders dan next_avg_* sensoren die alleen vooruit kijken, biedt dit een gebalanceerde kijk op het omringende uur.",
+            "usage_tips": "Migratie van uurlijkse naar kwartier-prijzen: Gebruik als directe vervanging voor oude uurprijs-sensoren. Biedt stabiele prijsindicator die geleidelijk elke 15 minuten verandert in plaats van te springen bij hele uren."
         },
         "next_hour_average_cents": {
-            "name": "Volgende Uur Gemiddelde Prijs",
-            "description": "Voortschrijdend 5-interval gemiddelde prijs voor volgend uur per kWh",
-            "long_description": "Toont de gemiddelde prijs per kWh berekend over 5 intervallen gecentreerd één uur vooruit: ongeveer intervallen +2 tot en met +6 vanaf nu (omvattend minuten +30 tot +105). Dit geeft een vooruitkijkende vloeiende 'uurprijs' voor verbruiksplanning.",
-            "usage_tips": "Gebruik dit om prijswijzigingen in het volgende uur te anticiperen. Handig voor het plannen van hoogverbruikactiviteiten zoals het opladen van elektrische voertuigen, het draaien van vaatwassers of verwarmingssystemen."
+            "description": "Voortschrijdend 5-interval gemiddelde voor volgend uur (achteruit + vooruit kijkend)",
+            "long_description": "Compatibiliteitsvervanging voor 'volgende uurprijs': Gemiddelde van 5 intervallen gecentreerd één uur vooruit (intervallen +2 t/m +6, omvat ~30-105 min vooruit). Anders dan next_avg_1h die start vanaf volgend interval, biedt dit een gebalanceerde kijk rond het uurmerk.",
+            "usage_tips": "Migratie van uurprijzen: Gebruik als vervanging voor 'volgende uurprijs'. Vergelijk met current_hour_average om te beslissen of een uur wachten loont. Verschilt van next_avg_1h die alleen het direct volgende uur vooruit bekijkt."
         },
         "price_level": {
-            "name": "Huidig Prijsniveau",
             "description": "De huidige classificatie van het prijsniveau",
             "long_description": "Toont Tibber's classificatie van de huidige prijs vergeleken met historische prijzen",
             "usage_tips": "Gebruik dit om automatiseringen te maken op basis van relatieve prijsniveaus in plaats van absolute prijzen",
@@ -129,103 +123,86 @@
             }
         },
         "next_interval_price_level": {
-            "name": "Volgend Prijsniveau",
             "description": "Prijsniveau voor het volgende 15-minuten interval",
             "long_description": "Toont de classificatie van het prijsniveau voor het komende interval. Helpt bij het anticiperen op korte-termijn prijswijzigingen voor directe planning.",
             "usage_tips": "Gebruik voor snelle beslissingen over het starten of stoppen van hoogvermogen apparaten in de volgende paar minuten."
         },
         "previous_interval_price_level": {
-            "name": "Vorig Prijsniveau",
             "description": "Prijsniveau voor het vorige 15-minuten interval",
             "long_description": "Toont de classificatie van het prijsniveau voor het laatste interval. Nuttig voor historische vergelijking en het begrijpen van recente prijstrends.",
             "usage_tips": "Gebruik om huidige versus recente prijsniveaus te vergelijken of verbruikspatronen te analyseren tegen historische prijzen."
         },
         "current_hour_price_level": {
-            "name": "Huidig Uur Prijsniveau",
             "description": "Geaggregeerd prijsniveau voor huidig voortschrijdend uur (5 intervallen)",
             "long_description": "Toont het mediane prijsniveau over 5 intervallen (2 ervoor, huidig, 2 erna) dat ongeveer 75 minuten beslaat. Geeft een stabielere prijsniveauindicator die korte-termijn schommelingen afvlakt.",
             "usage_tips": "Gebruik voor middellange-termijn planningsbeslissingen waarbij je wilt voorkomen dat je reageert op korte prijspieken of dalingen."
         },
         "next_hour_price_level": {
-            "name": "Volgend Uur Prijsniveau",
             "description": "Geaggregeerd prijsniveau voor volgend voortschrijdend uur (5 intervallen vooruit)",
             "long_description": "Toont het mediane prijsniveau over 5 intervallen gecentreerd één uur vooruit. Helpt bij het plannen van verbruik op basis van aankomende prijstrends in plaats van momentane toekomstige prijzen.",
             "usage_tips": "Gebruik om activiteiten voor het volgende uur in te plannen op basis van een vloeiende prijsniveauprognose."
         },
         "lowest_price_today_cents": {
-            "name": "Laagste Prijs Vandaag",
             "description": "De laagste elektriciteitsprijs van vandaag per kWh",
             "long_description": "Toont de laagste prijs per kWh voor de huidige dag van je Tibber-abonnement",
             "usage_tips": "Gebruik dit om huidige prijzen te vergelijken met het goedkoopste moment van de dag"
         },
         "highest_price_today_cents": {
-            "name": "Hoogste Prijs Vandaag",
             "description": "De hoogste elektriciteitsprijs van vandaag per kWh",
             "long_description": "Toont de hoogste prijs per kWh voor de huidige dag van je Tibber-abonnement",
             "usage_tips": "Gebruik dit om te voorkomen dat je apparaten tijdens piekprijstijden laat draaien"
         },
         "average_price_today_cents": {
-            "name": "Gemiddelde Prijs Vandaag",
             "description": "De gemiddelde elektriciteitsprijs van vandaag per kWh",
             "long_description": "Toont de gemiddelde prijs per kWh voor de huidige dag van je Tibber-abonnement",
             "usage_tips": "Gebruik dit als referentie voor het vergelijken van huidige prijzen"
         },
         "lowest_price_tomorrow_cents": {
-            "name": "Laagste Prijs Morgen",
             "description": "De laagste elektriciteitsprijs van morgen per kWh",
             "long_description": "Toont de laagste prijs per kWh voor morgen van je Tibber-abonnement. Deze sensor wordt niet beschikbaar totdat de gegevens voor morgen door Tibber zijn gepubliceerd (meestal rond 13:00-14:00 CET).",
             "usage_tips": "Gebruik dit om energie-intensieve activiteiten te plannen voor het goedkoopste moment van morgen. Perfect voor het vooraf plannen van verwarming, EV-laden of apparaten."
         },
         "highest_price_tomorrow_cents": {
-            "name": "Hoogste Prijs Morgen",
             "description": "De hoogste elektriciteitsprijs van morgen per kWh",
             "long_description": "Toont de hoogste prijs per kWh voor morgen van je Tibber-abonnement. Deze sensor wordt niet beschikbaar totdat de gegevens voor morgen door Tibber zijn gepubliceerd (meestal rond 13:00-14:00 CET).",
             "usage_tips": "Gebruik dit om te voorkomen dat je apparaten tijdens piekprijstijden van morgen laat draaien. Handig voor het plannen rond dure perioden."
         },
         "average_price_tomorrow_cents": {
-            "name": "Gemiddelde Prijs Morgen",
             "description": "De gemiddelde elektriciteitsprijs van morgen per kWh",
             "long_description": "Toont de gemiddelde prijs per kWh voor morgen van je Tibber-abonnement. Deze sensor wordt niet beschikbaar totdat de gegevens voor morgen door Tibber zijn gepubliceerd (meestal rond 13:00-14:00 CET).",
             "usage_tips": "Gebruik dit als referentie voor het vergelijken van prijzen voor morgen en het plannen van verbruik. Vergelijk met het gemiddelde van vandaag om te zien of morgen over het algemeen duurder of goedkoper zal zijn."
         },
         "trailing_price_average_cents": {
-            "name": "Voortschrijdend 24u Gemiddelde Prijs",
             "description": "De gemiddelde elektriciteitsprijs van de afgelopen 24 uur per kWh",
             "long_description": "Toont de gemiddelde prijs per kWh berekend over de afgelopen 24 uur (voortschrijdend gemiddelde) van je Tibber-abonnement. Dit geeft een voortschrijdend gemiddelde dat elke 15 minuten wordt bijgewerkt op basis van historische gegevens.",
             "usage_tips": "Gebruik dit om huidige prijzen te vergelijken met recente trends. Een huidige prijs significant boven dit gemiddelde kan een goed moment zijn om het verbruik te verminderen."
         },
         "leading_price_average_cents": {
-            "name": "Vooruitlopend 24u Gemiddelde Prijs",
-            "description": "De gemiddelde elektriciteitsprijs van de komende 24 uur per kWh",
-            "long_description": "Toont de gemiddelde prijs per kWh berekend over de komende 24 uur (vooruitlopend gemiddelde) van je Tibber-abonnement. Dit geeft een vooruitkijkend gemiddelde op basis van beschikbare prognosegegevens.",
-            "usage_tips": "Gebruik dit om energieverbruik te plannen. Als de huidige prijs onder het vooruitlopende gemiddelde ligt, is het misschien een goed moment om energie-intensieve apparaten te gebruiken."
+            "description": "Gemiddelde elektriciteitsprijs voor de komende 24 uur per kWh (vanaf huidig interval)",
+            "long_description": "Rollend 24u vooruitkijkend gemiddelde: Toont gemiddelde prijs vanaf huidig interval gedurende komende 24 uur. Wordt elke 15 minuten bijgewerkt terwijl 'nu' beweegt. Anders dan next_avg_* sensoren die vanaf VOLGEND interval starten (huidig uitgesloten). Gebruik voor lange-termijn prijscontext.",
+            "usage_tips": "Vergelijk huidige prijs hiermee om te beoordelen of nu relatief goedkoop/duur is in het 24u-venster. Voor specifieke planningsvensters (1-12u) gebruik next_avg_*u sensoren die het huidige interval uitsluiten."
         },
         "trailing_price_min_cents": {
-            "name": "Voortschrijdend 24u Minimumprijs",
-            "description": "De minimale elektriciteitsprijs van de afgelopen 24 uur per kWh",
-            "long_description": "Toont de minimumprijs per kWh van de afgelopen 24 uur (voortschrijdend minimum) van je Tibber-abonnement. Dit geeft de laagste prijs die in de laatste 24 uur werd gezien.",
-            "usage_tips": "Gebruik dit om de beste prijskans te zien die je de afgelopen 24 uur had en vergelijk deze met huidige prijzen."
+            "description": "Laagste elektriciteitsprijs voor de afgelopen 24 uur per kWh",
+            "long_description": "Toont de minimumprijs per kWh van de afgelopen 24 uur (terugkijkend minimum) van je Tibber-abonnement. Dit geeft de laagste prijs gezien in de afgelopen 24 uur.",
+            "usage_tips": "Gebruik dit om de beste prijskans die je had in de afgelopen 24 uur te zien en te vergelijken met huidige prijzen."
         },
         "trailing_price_max_cents": {
-            "name": "Voortschrijdend 24u Maximumprijs",
-            "description": "De maximale elektriciteitsprijs van de afgelopen 24 uur per kWh",
-            "long_description": "Toont de maximumprijs per kWh van de afgelopen 24 uur (voortschrijdend maximum) van je Tibber-abonnement. Dit geeft de hoogste prijs die in de laatste 24 uur werd gezien.",
+            "description": "Hoogste elektriciteitsprijs voor de afgelopen 24 uur per kWh",
+            "long_description": "Toont de maximumprijs per kWh van de afgelopen 24 uur (terugkijkend maximum) van je Tibber-abonnement. Dit geeft de hoogste prijs gezien in de afgelopen 24 uur.",
             "usage_tips": "Gebruik dit om de piekprijs in de afgelopen 24 uur te zien en prijsvolatiliteit te beoordelen."
         },
         "leading_price_min_cents": {
-            "name": "Vooruitlopend 24u Minimumprijs",
-            "description": "De minimale elektriciteitsprijs van de komende 24 uur per kWh",
-            "long_description": "Toont de minimumprijs per kWh van de komende 24 uur (vooruitlopend minimum) van je Tibber-abonnement. Dit geeft de laagste verwachte prijs in de komende 24 uur op basis van prognosegegevens.",
-            "usage_tips": "Gebruik dit om de beste prijskans die eraan komt te identificeren en energie-intensieve taken dienovereenkomstig in te plannen."
+            "description": "Laagste elektriciteitsprijs voor de komende 24 uur per kWh (vanaf huidig interval)",
+            "long_description": "Rollend 24u vooruitkijkend minimum: Toont laagste prijs vanaf huidig interval gedurende komende 24 uur. Wordt elke 15 minuten bijgewerkt. Gebruik om het absoluut goedkoopste moment van de volgende dag te identificeren. Anders dan next_avg_* die gemiddelden berekenen voor specifieke planningsvensters.",
+            "usage_tips": "Gebruik dit om de absoluut beste prijskans in de komende 24u te vinden. Voor planning van taken met specifieke looptijden (1-12u) gebruik next_avg_*u sensoren om te controleren of gemiddelde binnen je prijsdrempel blijft."
         },
         "leading_price_max_cents": {
-            "name": "Vooruitlopend 24u Maximumprijs",
-            "description": "De maximale elektriciteitsprijs van de komende 24 uur per kWh",
-            "long_description": "Toont de maximumprijs per kWh van de komende 24 uur (vooruitlopend maximum) van je Tibber-abonnement. Dit geeft de hoogste verwachte prijs in de komende 24 uur op basis van prognosegegevens.",
-            "usage_tips": "Gebruik dit om te voorkomen dat je apparaten tijdens aankomende piekprijsperioden laat draaien."
+            "description": "Hoogste elektriciteitsprijs voor de komende 24 uur per kWh (vanaf huidig interval)",
+            "long_description": "Rollend 24u vooruitkijkend maximum: Toont hoogste prijs vanaf huidig interval gedurende komende 24 uur. Wordt elke 15 minuten bijgewerkt. Gebruik om piekprijsperiodes te identificeren die vermeden moeten worden. Anders dan next_avg_* die gemiddelden berekenen voor specifieke planningsvensters.",
+            "usage_tips": "Gebruik dit om piekprijsperiodes in de komende 24u te vermijden. Voor planning van specifieke taakduren (1-12u) met prijslimieten gebruik next_avg_*u sensoren om te waarborgen dat gemiddelde onder je maximaal acceptabele prijs blijft."
         },
         "price_rating": {
-            "name": "Huidige Prijsbeoordeling",
             "description": "Hoe de prijs van het huidige interval zich verhoudt tot historische gegevens",
             "long_description": "Toont hoe de prijs van het huidige interval zich verhoudt tot historische prijsgegevens als een percentage",
             "usage_tips": "Een positief percentage betekent dat de huidige prijs boven gemiddeld ligt, negatief betekent onder gemiddeld",
@@ -236,48 +213,120 @@
             }
         },
         "next_interval_price_rating": {
-            "name": "Volgende Prijsbeoordeling",
             "description": "Prijsbeoordeling voor het volgende 15-minuten interval",
             "long_description": "Toont hoe de prijs van het volgende interval zich verhoudt tot het voortschrijdend 24-uurs gemiddelde. Helpt bij het anticiperen of aankomende prijzen boven of onder de recente trend liggen.",
             "usage_tips": "Gebruik om snelle beslissingen te maken over het starten van activiteiten in het volgende interval op basis van relatieve prijspositie."
         },
         "previous_interval_price_rating": {
-            "name": "Vorige Prijsbeoordeling",
             "description": "Prijsbeoordeling voor het vorige 15-minuten interval",
             "long_description": "Toont hoe de prijs van het laatste interval zich verhoudt tot het voortschrijdend gemiddelde. Nuttig voor het begrijpen van recent prijsgedrag.",
             "usage_tips": "Gebruik voor het analyseren hoe prijsbeoordelingen in de loop van de tijd veranderden of het valideren van verbruiksbeslissingen uit het verleden."
         },
         "current_hour_price_rating": {
-            "name": "Huidig Uur Prijsbeoordeling",
             "description": "Geaggregeerde prijsbeoordeling voor huidig voortschrijdend uur (5 intervallen)",
             "long_description": "Toont de gemiddelde beoordeling over 5 intervallen (2 ervoor, huidig, 2 erna). Gebaseerd op het gemiddelde procentuele verschil met het voortschrijdend 24-uurs gemiddelde, wat een vloeiende beoordelingsindicator geeft.",
             "usage_tips": "Gebruik voor stabiele middellange-termijn prijsbeoordeling die niet overreageert op korte prijsafwijkingen."
         },
         "next_hour_price_rating": {
-            "name": "Volgend Uur Prijsbeoordeling",
             "description": "Geaggregeerde prijsbeoordeling voor volgend voortschrijdend uur (5 intervallen vooruit)",
             "long_description": "Toont de gemiddelde beoordeling voor 5 intervallen gecentreerd één uur vooruit. Helpt begrijpen of het volgende uur over het algemeen boven of onder gemiddelde prijzen zal liggen.",
             "usage_tips": "Gebruik om te beslissen of je een uur moet wachten voordat je hoogverbruikactiviteiten start."
         },
+        "next_avg_1h": {
+            "description": "Gemiddelde prijs voor het volgende uur (alleen vooruit vanaf volgend interval)",
+            "long_description": "Vooruitkijkend gemiddelde: Toont gemiddelde van volgende 4 intervallen (1 uur) vanaf het VOLGENDE 15-minuten interval (niet inclusief huidig). Verschilt van current_hour_average dat eerdere intervallen omvat. Gebruik voor absolute prijsdrempel-planning.",
+            "usage_tips": "Absolute prijsdrempel: Start apparaten alleen wanneer gemiddelde onder uw maximum blijft (bijv. onder 0,25 EUR/kWh). Combineer met trendsensor voor optimale timing. Let op: Dit is GEEN vervanging voor uurprijzen - gebruik current_hour_average daarvoor."
+        },
+        "next_avg_2h": {
+            "description": "Gemiddelde prijs voor de volgende 2 uur",
+            "long_description": "Toont de gemiddelde prijs voor de volgende 8 intervallen (2 uur) vanaf het volgende 15-minuten interval.",
+            "usage_tips": "Absolute prijsdrempel: Stel een maximaal acceptabele gemiddelde prijs in voor standaard apparaten zoals wasmachines. Zorgt dat u nooit meer betaalt dan uw limiet."
+        },
+        "next_avg_3h": {
+            "description": "Gemiddelde prijs voor de volgende 3 uur",
+            "long_description": "Toont de gemiddelde prijs voor de volgende 12 intervallen (3 uur) vanaf het volgende 15-minuten interval.",
+            "usage_tips": "Absolute prijsdrempel: Voor EU Eco-programma's (vaatwassers, 3-4u looptijd). Start alleen als 3u-gemiddelde onder prijslimiet ligt. Combineer met trendsensor voor beste moment binnen acceptabel prijsbereik."
+        },
+        "next_avg_4h": {
+            "description": "Gemiddelde prijs voor de volgende 4 uur",
+            "long_description": "Toont de gemiddelde prijs voor de volgende 16 intervallen (4 uur) vanaf het volgende 15-minuten interval.",
+            "usage_tips": "Absolute prijsdrempel: Stel maximale acceptabele prijs in voor warmtepompen of warmwaterboilers. Voorkomt gebruik tijdens dure periodes ongeacht relatieve trends."
+        },
+        "next_avg_5h": {
+            "description": "Gemiddelde prijs voor de volgende 5 uur",
+            "long_description": "Toont de gemiddelde prijs voor de volgende 20 intervallen (5 uur) vanaf het volgende 15-minuten interval.",
+            "usage_tips": "Absolute prijsdrempel: Brug tussen korte- en langetermijnplanning. Voor uitgebreide cycli met harde prijslimieten (bijv. zwembadpompen, uitgebreide verwarmingscycli)."
+        },
+        "next_avg_6h": {
+            "description": "Gemiddelde prijs voor de volgende 6 uur",
+            "long_description": "Toont de gemiddelde prijs voor de volgende 24 intervallen (6 uur) vanaf het volgende 15-minuten interval.",
+            "usage_tips": "Absolute prijsdrempel: Avondplanning met prijsplafond. Plan taken alleen als 6u-gemiddelde onder uw maximaal acceptabele kosten blijft."
+        },
+        "next_avg_8h": {
+            "description": "Gemiddelde prijs voor de volgende 8 uur",
+            "long_description": "Toont de gemiddelde prijs voor de volgende 32 intervallen (8 uur) vanaf het volgende 15-minuten interval.",
+            "usage_tips": "Absolute prijsdrempel: Nachtbedrijf-beslissingen. Stel harde prijslimieten in voor nachtlasten (batterijladen, warmteopslag). Overschrijd nooit uw budget."
+        },
+        "next_avg_12h": {
+            "description": "Gemiddelde prijs voor de volgende 12 uur",
+            "long_description": "Toont de gemiddelde prijs voor de volgende 48 intervallen (12 uur) vanaf het volgende 15-minuten interval.",
+            "usage_tips": "Absolute prijsdrempel: Strategische beslissingen met prijsplafond. Ga alleen door als 12u-gemiddelde onder uw maximaal acceptabele prijs ligt. Goed voor uitstelbaregrotelasting."
+        },
+        "price_trend_1h": {
+            "description": "Prijstrend voor het volgende uur",
+            "long_description": "Vergelijkt huidige prijs met gemiddelde van volgend uur. Toont 'stijgend' (+5% of meer), 'dalend' (-5% of minder) of 'stabiel'.",
+            "usage_tips": "Relatieve optimalisatie: 'dalend' = wachten, prijzen dalen. 'stijgend' = nu handelen of meer betalen. 'stabiel' = prijs maakt nu niet uit. Werkt onafhankelijk van absoluut prijsniveau."
+        },
+        "price_trend_2h": {
+            "description": "Prijstrend voor de volgende 2 uur",
+            "long_description": "Vergelijkt huidige prijs met gemiddelde van volgende 2 uur. Toont 'stijgend' (+5% of meer), 'dalend' (-5% of minder) of 'stabiel'.",
+            "usage_tips": "Relatieve optimalisatie: Ideaal voor apparaten. 'dalend' betekent betere prijzen over 2u - uitstellen indien mogelijk. Vindt beste timing binnen beschikbaar venster, ongeacht seizoen."
+        },
+        "price_trend_3h": {
+            "description": "Prijstrend voor de volgende 3 uur",
+            "long_description": "Vergelijkt huidige prijs met gemiddelde van volgende 3 uur. Toont 'stijgend' (+5% of meer), 'dalend' (-5% of minder) of 'stabiel'.",
+            "usage_tips": "Relatieve optimalisatie: Voor Eco-programma's. 'dalend' betekent prijzen dalen >5% - wachten loont. Werkt elk seizoen. Combineer met avg-sensor voor prijsplafond: alleen wanneer avg < uw limiet EN trend niet 'dalend'."
+        },
+        "price_trend_4h": {
+            "description": "Prijstrend voor de volgende 4 uur",
+            "long_description": "Vergelijkt huidige prijs met gemiddelde van volgende 4 uur. Toont 'stijgend' (+5% of meer), 'dalend' (-5% of minder) of 'stabiel'.",
+            "usage_tips": "Relatieve optimalisatie: Warmtepomp/accu-beslissingen. 'dalend' betekent beter laadvenster komt. Vindt altijd relatief beste tijd - of prijzen 10 of 50 cent zijn. Gebruik avg-sensor voor absolute grens."
+        },
+        "price_trend_5h": {
+            "description": "Prijstrend voor de volgende 5 uur",
+            "long_description": "Vergelijkt huidige prijs met gemiddelde van volgende 5 uur. Toont 'stijgend' (+5% of meer), 'dalend' (-5% of minder) of 'stabiel'.",
+            "usage_tips": "Relatieve optimalisatie: Uitgebreide operaties. Past zich aan markt aan - vindt beste relatieve timing in elk prijsklimaat. 'stabiel/stijgend' = goed moment om te starten binnen planningsvenster."
+        },
+        "price_trend_6h": {
+            "description": "Prijstrend voor de volgende 6 uur",
+            "long_description": "Vergelijkt huidige prijs met gemiddelde van volgende 6 uur. Toont 'stijgend' (+5% of meer), 'dalend' (-5% of minder) of 'stabiel'.",
+            "usage_tips": "Relatieve optimalisatie: Avondbeslissingen. 'dalend' = prijzen verbeteren aanzienlijk bij wachten. Geen vaste drempels nodig - past automatisch aan winter-/zomerprijzen aan."
+        },
+        "price_trend_8h": {
+            "description": "Prijstrend voor de volgende 8 uur",
+            "long_description": "Vergelijkt huidige prijs met gemiddelde van volgende 8 uur. Toont 'stijgend' (+5% of meer), 'dalend' (-5% of minder) of 'stabiel'.",
+            "usage_tips": "Relatieve optimalisatie: Nachtplanning. 'dalend' betekent wachten tot nacht loont (>5% goedkoper). Werkt jaarrond zonder handmatige drempelaanpassingen. Start bij 'stabiel' of 'stijgend'."
+        },
+        "price_trend_12h": {
+            "description": "Prijstrend voor de volgende 12 uur",
+            "long_description": "Vergelijkt huidige prijs met gemiddelde van volgende 12 uur. Toont 'stijgend' (+5% of meer), 'dalend' (-5% of minder) of 'stabiel'.",
+            "usage_tips": "Relatieve optimalisatie: Langetermijn strategische beslissingen. 'dalend' = aanzienlijk betere prijzen komen vanavond/morgen. Vindt optimale timing in elke marktsituatie. Best gecombineerd met avg-sensor prijsplafond."
+        },
         "daily_rating": {
-            "name": "Dagelijkse Prijsbeoordeling",
             "description": "Hoe de prijzen van vandaag zich verhouden tot historische gegevens",
             "long_description": "Toont hoe de prijzen van vandaag zich verhouden tot historische prijsgegevens als een percentage",
             "usage_tips": "Een positief percentage betekent dat de prijzen van vandaag boven gemiddeld liggen, negatief betekent onder gemiddeld"
         },
         "monthly_rating": {
-            "name": "Maandelijkse Prijsbeoordeling",
             "description": "Hoe de prijzen van deze maand zich verhouden tot historische gegevens",
             "long_description": "Toont hoe de prijzen van deze maand zich verhouden tot historische prijsgegevens als een percentage",
             "usage_tips": "Een positief percentage betekent dat de prijzen van deze maand boven gemiddeld liggen, negatief betekent onder gemiddeld"
         },
         "data_timestamp": {
-            "name": "Prijsdata Vervaldatum",
             "description": "Tijdstempel van het laatste beschikbare prijsdata-interval",
             "long_description": "Toont de tijdstempel van het laatste beschikbare prijsdata-interval van je Tibber-abonnement"
         },
         "price_forecast": {
-            "name": "Prijsvoorspelling",
             "description": "Voorspelling van aankomende elektriciteitsprijzen",
             "long_description": "Toont aankomende elektriciteitsprijzen voor toekomstige intervallen in een formaat dat gemakkelijk te gebruiken is in dashboards",
             "usage_tips": "Gebruik de attributen van deze entiteit om aankomende prijzen weer te geven in grafieken of aangepaste kaarten. Toegang tot 'intervals' voor alle toekomstige intervallen of 'hours' voor uur samenvattingen."
@@ -285,25 +334,21 @@
     },
     "binary_sensor": {
         "tomorrow_data_available": {
-            "name": "Status Gegevens Morgen",
             "description": "Of prijsgegevens voor morgen beschikbaar zijn",
             "long_description": "Geeft aan of prijsgegevens voor de volgende dag zijn ontvangen van Tibber",
             "usage_tips": "Gebruik dit om te controleren of prijzen voor morgen beschikbaar zijn voor planning"
         },
         "peak_price_period": {
-            "name": "Piekprijsperiode",
             "description": "Of het huidige interval tot de duurste van de dag behoort",
             "long_description": "Wordt ingeschakeld wanneer de huidige prijs in de top 20% van de prijzen van vandaag valt",
             "usage_tips": "Gebruik dit om hoogverbruik apparaten tijdens dure intervallen te vermijden"
         },
         "best_price_period": {
-            "name": "Beste Prijsperiode",
             "description": "Of het huidige interval tot de goedkoopste van de dag behoort",
             "long_description": "Wordt ingeschakeld wanneer de huidige prijs in de laagste 20% van de prijzen van vandaag valt",
             "usage_tips": "Gebruik dit om hoogverbruik apparaten tijdens de goedkoopste intervallen te laten draaien"
         },
         "connection": {
-            "name": "Tibber API Verbinding",
             "description": "Of de verbinding met de Tibber API werkt",
             "long_description": "Geeft aan of de integratie succesvol verbinding kan maken met de Tibber API",
             "usage_tips": "Gebruik dit om de verbindingsstatus met de Tibber API te monitoren"
