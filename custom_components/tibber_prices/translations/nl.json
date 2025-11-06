@@ -1,0 +1,247 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "description": "Stel Tibber Prijsinformatie & Beoordelingen in.\n\nOm een API-toegangstoken te genereren, bezoek https://developer.tibber.com.",
+                "data": {
+                    "access_token": "API-toegangstoken"
+                },
+                "submit": "Valideer Token"
+            },
+            "select_home": {
+                "description": "Selecteer een woning om prijsinformatie en beoordelingen op te halen.",
+                "data": {
+                    "home_id": "Woning"
+                },
+                "title": "Kies een Woning",
+                "submit": "Selecteer Woning"
+            },
+            "finish": {
+                "description": "Selecteer een woning om prijsinformatie en beoordelingen op te halen.",
+                "data": {
+                    "home_id": "Woning-ID"
+                },
+                "title": "Kies een woning",
+                "submit": "Selecteer Woning"
+            }
+        },
+        "error": {
+            "auth": "Het Tibber-toegangstoken is ongeldig.",
+            "connection": "Kan geen verbinding maken met Tibber. Controleer je internetverbinding.",
+            "unknown": "Onverwachte fout",
+            "cannot_connect": "Verbinding mislukt",
+            "invalid_access_token": "Ongeldig toegangstoken"
+        },
+        "abort": {
+            "already_configured": "Integratie is al geconfigureerd",
+            "entry_not_found": "Tibber configuratie-invoer niet gevonden.",
+            "setup_complete": "Installatie voltooid! Je kunt extra opties voor Tibber Prijzen wijzigen in de integratie-opties na het sluiten van dit venster."
+        }
+    },
+    "config_subentries": {
+        "home": {
+            "initiate_flow": {
+                "user": "Tibber Woning Toevoegen"
+            },
+            "title": "Tibber Woning Toevoegen",
+            "step": {
+                "user": {
+                    "title": "Tibber Woning Toevoegen",
+                    "description": "Selecteer een woning om toe te voegen aan je Tibber-integratie.\n\n**Let op:** Na het toevoegen van deze woning kun je extra woningen toevoegen via het contextmenu van de integratie door \"Tibber Woning Toevoegen\" te selecteren.",
+                    "data": {
+                        "home_id": "Woning"
+                    }
+                }
+            },
+            "error": {
+                "api_error": "Kon woningen niet ophalen van Tibber API"
+            },
+            "abort": {
+                "no_parent_entry": "Bovenliggende invoer niet gevonden",
+                "no_access_token": "Geen toegangstoken beschikbaar",
+                "home_not_found": "Geselecteerde woning niet gevonden",
+                "api_error": "Kon woningen niet ophalen van Tibber API",
+                "no_available_homes": "Geen extra woningen beschikbaar om toe te voegen. Alle woningen van je Tibber-account zijn al toegevoegd."
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "title": "Algemene Instellingen",
+                "description": "Configureer algemene instellingen voor Tibber Prijsinformatie & Beoordelingen.\n\nGebruiker: {user_login}",
+                "data": {
+                    "extended_descriptions": "Toon uitgebreide beschrijvingen in entiteitsattributen"
+                }
+            },
+            "price_rating": {
+                "title": "Prijsbeoordelingsdrempels",
+                "description": "Configureer drempels voor prijsbeoordelingsniveaus (LAAG/NORMAAL/HOOG) op basis van vergelijking met het voortschrijdend 24-uurs gemiddelde.",
+                "data": {
+                    "price_rating_threshold_low": "Lage Beoordelingsdrempel (% onder voortschrijdend gemiddelde)",
+                    "price_rating_threshold_high": "Hoge Beoordelingsdrempel (% boven voortschrijdend gemiddelde)"
+                }
+            },
+            "best_price": {
+                "title": "Beste Prijsperiode Instellingen",
+                "description": "Configureer instellingen voor de Beste Prijsperiode binaire sensor. Deze sensor is actief tijdens perioden met de laagste elektriciteitsprijzen.",
+                "data": {
+                    "best_price_flex": "Flexibiliteit: Maximum % boven minimumprijs",
+                    "best_price_min_distance_from_avg": "Minimale Afstand: Vereiste % onder daggemiddelde"
+                }
+            },
+            "peak_price": {
+                "title": "Piekprijsperiode Instellingen",
+                "description": "Configureer instellingen voor de Piekprijsperiode binaire sensor. Deze sensor is actief tijdens perioden met de hoogste elektriciteitsprijzen.",
+                "data": {
+                    "peak_price_flex": "Flexibiliteit: Maximum % onder maximumprijs (negatieve waarde)",
+                    "peak_price_min_distance_from_avg": "Minimale Afstand: Vereiste % boven daggemiddelde"
+                }
+            }
+        },
+        "error": {
+            "auth": "Het Tibber-toegangstoken is ongeldig.",
+            "connection": "Kan geen verbinding maken met Tibber. Controleer je internetverbinding.",
+            "unknown": "Er is een onverwachte fout opgetreden. Controleer de logs voor details.",
+            "cannot_connect": "Verbinding mislukt",
+            "invalid_access_token": "Ongeldig toegangstoken",
+            "different_home": "Het toegangstoken is niet geldig voor de woning-ID waarvoor deze integratie is geconfigureerd."
+        },
+        "abort": {
+            "entry_not_found": "Tibber configuratie-invoer niet gevonden."
+        }
+    },
+    "entity": {
+        "sensor": {
+            "current_price_cents": {
+                "name": "Huidige Elektriciteitsprijs"
+            },
+            "next_interval_price_cents": {
+                "name": "Volgende Prijs"
+            },
+            "previous_interval_price_cents": {
+                "name": "Vorige Elektriciteitsprijs"
+            },
+            "current_hour_average_cents": {
+                "name": "Huidige Uur Gemiddelde Prijs"
+            },
+            "next_hour_average_cents": {
+                "name": "Volgende Uur Gemiddelde Prijs"
+            },
+            "price_level": {
+                "name": "Huidig Prijsniveau"
+            },
+            "next_interval_price_level": {
+                "name": "Volgend Prijsniveau"
+            },
+            "previous_interval_price_level": {
+                "name": "Vorig Prijsniveau"
+            },
+            "current_hour_price_level": {
+                "name": "Huidig Uur Prijsniveau"
+            },
+            "next_hour_price_level": {
+                "name": "Volgend Uur Prijsniveau"
+            },
+            "lowest_price_today_cents": {
+                "name": "Laagste Prijs Vandaag"
+            },
+            "highest_price_today_cents": {
+                "name": "Hoogste Prijs Vandaag"
+            },
+            "average_price_today_cents": {
+                "name": "Gemiddelde Prijs Vandaag"
+            },
+            "lowest_price_tomorrow_cents": {
+                "name": "Laagste Prijs Morgen"
+            },
+            "highest_price_tomorrow_cents": {
+                "name": "Hoogste Prijs Morgen"
+            },
+            "average_price_tomorrow_cents": {
+                "name": "Gemiddelde Prijs Morgen"
+            },
+            "trailing_price_average_cents": {
+                "name": "Voortschrijdend 24u Gemiddelde Prijs"
+            },
+            "leading_price_average_cents": {
+                "name": "Vooruitlopend 24u Gemiddelde Prijs"
+            },
+            "trailing_price_min_cents": {
+                "name": "Voortschrijdend 24u Minimumprijs"
+            },
+            "trailing_price_max_cents": {
+                "name": "Voortschrijdend 24u Maximumprijs"
+            },
+            "leading_price_min_cents": {
+                "name": "Vooruitlopend 24u Minimumprijs"
+            },
+            "leading_price_max_cents": {
+                "name": "Vooruitlopend 24u Maximumprijs"
+            },
+            "price_rating": {
+                "name": "Huidige Prijsbeoordeling"
+            },
+            "next_interval_price_rating": {
+                "name": "Volgende Prijsbeoordeling"
+            },
+            "previous_interval_price_rating": {
+                "name": "Vorige Prijsbeoordeling"
+            },
+            "current_hour_price_rating": {
+                "name": "Huidig Uur Prijsbeoordeling"
+            },
+            "next_hour_price_rating": {
+                "name": "Volgend Uur Prijsbeoordeling"
+            },
+            "daily_rating": {
+                "name": "Dagelijkse Prijsbeoordeling"
+            },
+            "monthly_rating": {
+                "name": "Maandelijkse Prijsbeoordeling"
+            },
+            "data_timestamp": {
+                "name": "Prijsdata Vervaldatum"
+            },
+            "price_forecast": {
+                "name": "Prijsvoorspelling"
+            }
+        },
+        "binary_sensor": {
+            "peak_price_period": {
+                "name": "Piekprijsperiode"
+            },
+            "best_price_period": {
+                "name": "Beste Prijsperiode"
+            },
+            "connection": {
+                "name": "Tibber API Verbinding"
+            },
+            "tomorrow_data_available": {
+                "name": "Data voor Morgen Beschikbaar"
+            }
+        }
+    },
+    "issues": {
+        "new_homes_available": {
+            "title": "Nieuwe Tibber woningen gedetecteerd",
+            "description": "We hebben {count} nieuwe woning(en) gedetecteerd op je Tibber-account: {homes}. Je kunt ze toevoegen aan Home Assistant via de Tibber integratie configuratie."
+        },
+        "homes_removed": {
+            "title": "Tibber woningen verwijderd",
+            "description": "We hebben gedetecteerd dat {count} woning(en) zijn verwijderd van je Tibber-account: {homes}. Controleer je Tibber integratie configuratie."
+        }
+    },
+    "services": {
+        "refresh_user_data": {
+            "name": "Ververs Gebruikersgegevens",
+            "description": "Forceert een verversing van de gebruikersgegevens (woningen, profielinformatie) van de Tibber API. Dit kan nuttig zijn na het maken van wijzigingen aan je Tibber-account of bij het oplossen van connectiviteitsproblemen.",
+            "fields": {
+                "entry_id": {
+                    "name": "Invoer-ID",
+                    "description": "Het config entry ID voor de Tibber integratie."
+                }
+            }
+        }
+    }
+}

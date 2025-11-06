@@ -1,0 +1,247 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "description": "Konfigurera Tibber Prisinformation & Betyg.\n\nFör att generera en API-åtkomsttoken, besök https://developer.tibber.com.",
+                "data": {
+                    "access_token": "API-åtkomsttoken"
+                },
+                "submit": "Validera Token"
+            },
+            "select_home": {
+                "description": "Välj ett hem för att hämta prisinformation och betyg.",
+                "data": {
+                    "home_id": "Hem"
+                },
+                "title": "Välj ett Hem",
+                "submit": "Välj Hem"
+            },
+            "finish": {
+                "description": "Välj ett hem för att hämta prisinformation och betyg.",
+                "data": {
+                    "home_id": "Hem-ID"
+                },
+                "title": "Välj ett hem",
+                "submit": "Välj Hem"
+            }
+        },
+        "error": {
+            "auth": "Tibber-åtkomsttoken är ogiltigt.",
+            "connection": "Kan inte ansluta till Tibber. Kontrollera din internetanslutning.",
+            "unknown": "Oväntat fel",
+            "cannot_connect": "Anslutning misslyckades",
+            "invalid_access_token": "Ogiltigt åtkomsttoken"
+        },
+        "abort": {
+            "already_configured": "Integrationen är redan konfigurerad",
+            "entry_not_found": "Tibber-konfigurationspost hittades inte.",
+            "setup_complete": "Installation klar! Du kan ändra fler alternativ för Tibber Priser i integrationens alternativ efter att ha stängt denna dialog."
+        }
+    },
+    "config_subentries": {
+        "home": {
+            "initiate_flow": {
+                "user": "Lägg till Tibber-hem"
+            },
+            "title": "Lägg till Tibber-hem",
+            "step": {
+                "user": {
+                    "title": "Lägg till Tibber-hem",
+                    "description": "Välj ett hem att lägga till i din Tibber-integration.\n\n**Observera:** Efter att ha lagt till detta hem kan du lägga till fler hem från integrationens kontextmeny genom att välja \"Lägg till Tibber-hem\".",
+                    "data": {
+                        "home_id": "Hem"
+                    }
+                }
+            },
+            "error": {
+                "api_error": "Kunde inte hämta hem från Tibber API"
+            },
+            "abort": {
+                "no_parent_entry": "Överordnad post hittades inte",
+                "no_access_token": "Ingen åtkomsttoken tillgänglig",
+                "home_not_found": "Valt hem hittades inte",
+                "api_error": "Kunde inte hämta hem från Tibber API",
+                "no_available_homes": "Inga fler hem tillgängliga att lägga till. Alla hem från ditt Tibber-konto har redan lagts till."
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "title": "Allmänna Inställningar",
+                "description": "Konfigurera allmänna inställningar för Tibber Prisinformation & Betyg.\n\nAnvändare: {user_login}",
+                "data": {
+                    "extended_descriptions": "Visa utökade beskrivningar i entitetsattribut"
+                }
+            },
+            "price_rating": {
+                "title": "Prisbetyggränser",
+                "description": "Konfigurera gränser för prisbetygnivåer (LÅG/NORMAL/HÖG) baserat på jämförelse med rullande 24-timmars genomsnitt.",
+                "data": {
+                    "price_rating_threshold_low": "Låg Betygsgräns (% under rullande genomsnitt)",
+                    "price_rating_threshold_high": "Hög Betygsgräns (% över rullande genomsnitt)"
+                }
+            },
+            "best_price": {
+                "title": "Bästa Prisperiod Inställningar",
+                "description": "Konfigurera inställningar för den binära sensorn för bästa prisperiod. Denna sensor är aktiv under perioder med de lägsta elpriserna.",
+                "data": {
+                    "best_price_flex": "Flexibilitet: Maximum % över minimumpris",
+                    "best_price_min_distance_from_avg": "Minimiavstånd: Nödvändig % under dagligt genomsnitt"
+                }
+            },
+            "peak_price": {
+                "title": "Topprisperiod Inställningar",
+                "description": "Konfigurera inställningar för den binära sensorn för topprisperiod. Denna sensor är aktiv under perioder med de högsta elpriserna.",
+                "data": {
+                    "peak_price_flex": "Flexibilitet: Maximum % under maximumpris (negativt värde)",
+                    "peak_price_min_distance_from_avg": "Minimiavstånd: Nödvändig % över dagligt genomsnitt"
+                }
+            }
+        },
+        "error": {
+            "auth": "Tibber-åtkomsttoken är ogiltigt.",
+            "connection": "Kan inte ansluta till Tibber. Kontrollera din internetanslutning.",
+            "unknown": "Ett oväntat fel inträffade. Kontrollera loggarna för detaljer.",
+            "cannot_connect": "Anslutning misslyckades",
+            "invalid_access_token": "Ogiltigt åtkomsttoken",
+            "different_home": "Åtkomsttokenet är inte giltigt för hem-ID:t som denna integration är konfigurerad för."
+        },
+        "abort": {
+            "entry_not_found": "Tibber-konfigurationspost hittades inte."
+        }
+    },
+    "entity": {
+        "sensor": {
+            "current_price_cents": {
+                "name": "Aktuellt Elpris"
+            },
+            "next_interval_price_cents": {
+                "name": "Nästa Pris"
+            },
+            "previous_interval_price_cents": {
+                "name": "Föregående Elpris"
+            },
+            "current_hour_average_cents": {
+                "name": "Aktuell Timme Genomsnittspris"
+            },
+            "next_hour_average_cents": {
+                "name": "Nästa Timme Genomsnittspris"
+            },
+            "price_level": {
+                "name": "Aktuell Prisnivå"
+            },
+            "next_interval_price_level": {
+                "name": "Nästa Prisnivå"
+            },
+            "previous_interval_price_level": {
+                "name": "Föregående Prisnivå"
+            },
+            "current_hour_price_level": {
+                "name": "Aktuell Timme Prisnivå"
+            },
+            "next_hour_price_level": {
+                "name": "Nästa Timme Prisnivå"
+            },
+            "lowest_price_today_cents": {
+                "name": "Lägsta Pris Idag"
+            },
+            "highest_price_today_cents": {
+                "name": "Högsta Pris Idag"
+            },
+            "average_price_today_cents": {
+                "name": "Genomsnittspris Idag"
+            },
+            "lowest_price_tomorrow_cents": {
+                "name": "Lägsta Pris Imorgon"
+            },
+            "highest_price_tomorrow_cents": {
+                "name": "Högsta Pris Imorgon"
+            },
+            "average_price_tomorrow_cents": {
+                "name": "Genomsnittspris Imorgon"
+            },
+            "trailing_price_average_cents": {
+                "name": "Rullande 24t Genomsnittspris"
+            },
+            "leading_price_average_cents": {
+                "name": "Framåtblickande 24t Genomsnittspris"
+            },
+            "trailing_price_min_cents": {
+                "name": "Rullande 24t Minimumpris"
+            },
+            "trailing_price_max_cents": {
+                "name": "Rullande 24t Maximumpris"
+            },
+            "leading_price_min_cents": {
+                "name": "Framåtblickande 24t Minimumpris"
+            },
+            "leading_price_max_cents": {
+                "name": "Framåtblickande 24t Maximumpris"
+            },
+            "price_rating": {
+                "name": "Aktuellt Prisbetyg"
+            },
+            "next_interval_price_rating": {
+                "name": "Nästa Prisbetyg"
+            },
+            "previous_interval_price_rating": {
+                "name": "Föregående Prisbetyg"
+            },
+            "current_hour_price_rating": {
+                "name": "Aktuell Timme Prisbetyg"
+            },
+            "next_hour_price_rating": {
+                "name": "Nästa Timme Prisbetyg"
+            },
+            "daily_rating": {
+                "name": "Dagligt Prisbetyg"
+            },
+            "monthly_rating": {
+                "name": "Månatligt Prisbetyg"
+            },
+            "data_timestamp": {
+                "name": "Prisdata Utgångsdatum"
+            },
+            "price_forecast": {
+                "name": "Prisprognos"
+            }
+        },
+        "binary_sensor": {
+            "peak_price_period": {
+                "name": "Topprisperiod"
+            },
+            "best_price_period": {
+                "name": "Bästa Prisperiod"
+            },
+            "connection": {
+                "name": "Tibber API-anslutning"
+            },
+            "tomorrow_data_available": {
+                "name": "Data för Imorgon Tillgänglig"
+            }
+        }
+    },
+    "issues": {
+        "new_homes_available": {
+            "title": "Nya Tibber-hem upptäckta",
+            "description": "Vi upptäckte {count} nya hem på ditt Tibber-konto: {homes}. Du kan lägga till dem i Home Assistant via Tibber-integrationskonfigurationen."
+        },
+        "homes_removed": {
+            "title": "Tibber-hem borttagna",
+            "description": "Vi upptäckte att {count} hem har tagits bort från ditt Tibber-konto: {homes}. Granska din Tibber-integrationskonfiguration."
+        }
+    },
+    "services": {
+        "refresh_user_data": {
+            "name": "Uppdatera Användardata",
+            "description": "Tvingar en uppdatering av användardata (hem, profilinformation) från Tibber API. Detta kan vara användbart efter att ha gjort ändringar i ditt Tibber-konto eller vid felsökning av anslutningsproblem.",
+            "fields": {
+                "entry_id": {
+                    "name": "Post-ID",
+                    "description": "Konfigurationspost-ID för Tibber-integrationen."
+                }
+            }
+        }
+    }
+}

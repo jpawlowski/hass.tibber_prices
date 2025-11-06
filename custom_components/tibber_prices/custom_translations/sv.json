@@ -1,0 +1,318 @@
+{
+    "sensor": {
+        "current_price": {
+            "description": "Aktuellt elpris per kWh",
+            "long_description": "Visar aktuellt pris per kWh från ditt Tibber-abonnemang",
+            "usage_tips": "Använd detta för att följa priser eller skapa automationer som körs när elen är billig"
+        },
+        "next_interval_price": {
+            "description": "Elpris för nästa intervall per kWh",
+            "long_description": "Visar priset för nästa 15-minutersintervall från ditt Tibber-abonnemang",
+            "usage_tips": "Använd detta för att förbereda dig för kommande prisförändringar eller schemalägga enheter att köra under billigare intervall"
+        },
+        "previous_interval_price": {
+            "description": "Elpris för föregående intervall per kWh",
+            "long_description": "Visar priset för föregående 15-minutersintervall från ditt Tibber-abonnemang",
+            "usage_tips": "Använd detta för att granska tidigare prisförändringar eller spåra prishistorik"
+        },
+        "current_hour_average": {
+            "description": "Rullande 5-intervall genomsnittspris per kWh",
+            "long_description": "Visar genomsnittspriset per kWh beräknat från 5 intervall: 2 föregående, aktuellt och 2 nästa intervall (cirka 75 minuter totalt). Detta ger ett jämnare 'timpris' som anpassar sig allt eftersom tiden går, istället för att vara fast till klocktimmar.",
+            "usage_tips": "Använd detta för en mer stabil prisindikator som jämnar ut kortsiktiga fluktuationer samtidigt som den fortfarande svarar på prisförändringar. Bättre än fasta timpriser för förbrukningsbeslut."
+        },
+        "next_hour_average": {
+            "description": "Rullande 5-intervall genomsnittspris för nästa timme per kWh",
+            "long_description": "Visar genomsnittspriset per kWh beräknat från 5 intervall centrerade en timme framåt: cirka intervall +2 till +6 från nu (täcker minuter +30 till +105). Detta ger ett framåtblickande jämnat 'timpris' för förbruksplanering.",
+            "usage_tips": "Använd detta för att förutse prisförändringar nästa timme. Användbart för att schemalägga högförbruksaktiviteter som laddning av elbilar, körning av diskmaskiner eller värmesystem."
+        },
+        "lowest_price_today": {
+            "description": "Lägsta elpris idag per kWh",
+            "long_description": "Visar lägsta pris per kWh för aktuell dag från ditt Tibber-abonnemang",
+            "usage_tips": "Använd detta för att jämföra aktuella priser med den billigaste tiden på dagen"
+        },
+        "highest_price_today": {
+            "description": "Högsta elpris idag per kWh",
+            "long_description": "Visar högsta pris per kWh för aktuell dag från ditt Tibber-abonnemang",
+            "usage_tips": "Använd detta för att undvika att köra apparater under toppriser"
+        },
+        "average_price_today": {
+            "description": "Genomsnittligt elpris idag per kWh",
+            "long_description": "Visar genomsnittspris per kWh för aktuell dag från ditt Tibber-abonnemang",
+            "usage_tips": "Använd detta som referens för att jämföra aktuella priser"
+        },
+        "lowest_price_tomorrow": {
+            "description": "Lägsta elpris imorgon per kWh",
+            "long_description": "Visar lägsta pris per kWh för imorgon från ditt Tibber-abonnemang. Denna sensor blir otillgänglig tills morgondagens data publiceras av Tibber (vanligtvis runt 13:00-14:00 CET).",
+            "usage_tips": "Använd detta för att planera energikrävande aktiviteter för morgondagens billigaste tid. Perfekt för förhandsplanering av uppvärmning, EV-laddning eller apparater."
+        },
+        "highest_price_tomorrow": {
+            "description": "Högsta elpris imorgon per kWh",
+            "long_description": "Visar högsta pris per kWh för imorgon från ditt Tibber-abonnemang. Denna sensor blir otillgänglig tills morgondagens data publiceras av Tibber (vanligtvis runt 13:00-14:00 CET).",
+            "usage_tips": "Använd detta för att undvika att köra apparater under morgondagens toppriser. Användbart för planering runt dyra perioder."
+        },
+        "average_price_tomorrow": {
+            "description": "Genomsnittligt elpris imorgon per kWh",
+            "long_description": "Visar genomsnittspris per kWh för imorgon från ditt Tibber-abonnemang. Denna sensor blir otillgänglig tills morgondagens data publiceras av Tibber (vanligtvis runt 13:00-14:00 CET).",
+            "usage_tips": "Använd detta som referens för att jämföra morgondagens priser och planera förbrukning. Jämför med dagens genomsnitt för att se om imorgon kommer vara dyrare eller billigare totalt sett."
+        },
+        "trailing_price_average": {
+            "description": "Genomsnittligt elpris för de senaste 24 timmarna per kWh",
+            "long_description": "Visar genomsnittspris per kWh beräknat från de senaste 24 timmarna (rullande genomsnitt) från ditt Tibber-abonnemang. Detta ger ett rullande genomsnitt som uppdateras var 15:e minut baserat på historiska data.",
+            "usage_tips": "Använd detta för att jämföra aktuella priser mot senaste trender. Ett aktuellt pris betydligt över detta genomsnitt kan indikera ett bra tillfälle att minska förbrukningen."
+        },
+        "leading_price_average": {
+            "description": "Genomsnittligt elpris för de nästa 24 timmarna per kWh",
+            "long_description": "Visar genomsnittspris per kWh beräknat från de nästa 24 timmarna (framåtblickande genomsnitt) från ditt Tibber-abonnemang. Detta ger ett framåtblickande genomsnitt baserat på tillgängliga prognosdata.",
+            "usage_tips": "Använd detta för att planera energianvändning. Om aktuellt pris är under det framåtblickande genomsnittet kan det vara ett bra tillfälle att köra energikrävande apparater."
+        },
+        "trailing_price_min": {
+            "description": "Minimumpris för de senaste 24 timmarna per kWh",
+            "long_description": "Visar minimumpris per kWh från de senaste 24 timmarna (rullande minimum) från ditt Tibber-abonnemang. Detta ger det lägsta priset sett under de senaste 24 timmarna.",
+            "usage_tips": "Använd detta för att se den bästa prismöjligheten du hade de senaste 24 timmarna och jämför med aktuella priser."
+        },
+        "trailing_price_max": {
+            "description": "Maximumpris för de senaste 24 timmarna per kWh",
+            "long_description": "Visar maximumpris per kWh från de senaste 24 timmarna (rullande maximum) från ditt Tibber-abonnemang. Detta ger det högsta priset sett under de senaste 24 timmarna.",
+            "usage_tips": "Använd detta för att se topppriset de senaste 24 timmarna och bedöma prisvolatilitet."
+        },
+        "leading_price_min": {
+            "description": "Minimumpris för de nästa 24 timmarna per kWh",
+            "long_description": "Visar minimumpris per kWh från de nästa 24 timmarna (framåtblickande minimum) från ditt Tibber-abonnemang. Detta ger det lägsta förväntade priset under de nästa 24 timmarna baserat på prognosdata.",
+            "usage_tips": "Använd detta för att identifiera den bästa prismöjligheten som kommer och schemalägga energikrävande uppgifter därefter."
+        },
+        "leading_price_max": {
+            "description": "Maximumpris för de nästa 24 timmarna per kWh",
+            "long_description": "Visar maximumpris per kWh från de nästa 24 timmarna (framåtblickande maximum) från ditt Tibber-abonnemang. Detta ger det högsta förväntade priset under de nästa 24 timmarna baserat på prognosdata.",
+            "usage_tips": "Använd detta för att undvika att köra apparater under kommande toppriser."
+        },
+        "current_price_cents": {
+            "name": "Aktuellt Elpris",
+            "description": "Aktuellt elpris per kWh",
+            "long_description": "Visar aktuellt pris per kWh från ditt Tibber-abonnemang",
+            "usage_tips": "Använd detta för att följa priser eller skapa automationer som körs när elen är billig"
+        },
+        "next_interval_price_cents": {
+            "name": "Nästa Pris",
+            "description": "Elpris för nästa intervall per kWh",
+            "long_description": "Visar priset för nästa 15-minutersintervall från ditt Tibber-abonnemang",
+            "usage_tips": "Använd detta för att förbereda dig för kommande prisförändringar eller schemalägga enheter att köra under billigare intervall"
+        },
+        "previous_interval_price_cents": {
+            "name": "Föregående Elpris",
+            "description": "Elpris för föregående intervall per kWh",
+            "long_description": "Visar priset för föregående 15-minutersintervall från ditt Tibber-abonnemang",
+            "usage_tips": "Använd detta för att granska tidigare prisförändringar eller spåra prishistorik"
+        },
+        "current_hour_average_cents": {
+            "name": "Aktuell Timme Genomsnittspris",
+            "description": "Rullande 5-intervall genomsnittspris per kWh",
+            "long_description": "Visar genomsnittspriset per kWh beräknat från 5 intervall: 2 föregående, aktuellt och 2 nästa intervall (cirka 75 minuter totalt). Detta ger ett jämnare 'timpris' som anpassar sig allt eftersom tiden går, istället för att vara fast till klocktimmar.",
+            "usage_tips": "Använd detta för en mer stabil prisindikator som jämnar ut kortsiktiga fluktuationer samtidigt som den fortfarande svarar på prisförändringar. Bättre än fasta timpriser för förbrukningsbeslut."
+        },
+        "next_hour_average_cents": {
+            "name": "Nästa Timme Genomsnittspris",
+            "description": "Rullande 5-intervall genomsnittspris för nästa timme per kWh",
+            "long_description": "Visar genomsnittspriset per kWh beräknat från 5 intervall centrerade en timme framåt: cirka intervall +2 till +6 från nu (täcker minuter +30 till +105). Detta ger ett framåtblickande jämnat 'timpris' för förbruksplanering.",
+            "usage_tips": "Använd detta för att förutse prisförändringar nästa timme. Användbart för att schemalägga högförbruksaktiviteter som laddning av elbilar, körning av diskmaskiner eller värmesystem."
+        },
+        "price_level": {
+            "name": "Aktuell Prisnivå",
+            "description": "Aktuell prisnivåklassificering",
+            "long_description": "Visar Tibbers klassificering av aktuellt pris jämfört med historiska priser",
+            "usage_tips": "Använd detta för att skapa automationer baserade på relativa prisnivåer istället för absoluta priser",
+            "price_levels": {
+                "VERY_CHEAP": "Mycket Billigt",
+                "CHEAP": "Billigt",
+                "NORMAL": "Normalt",
+                "EXPENSIVE": "Dyrt",
+                "VERY_EXPENSIVE": "Mycket Dyrt"
+            }
+        },
+        "next_interval_price_level": {
+            "name": "Nästa Prisnivå",
+            "description": "Prisnivå för nästa 15-minutersintervall",
+            "long_description": "Visar prisnivåklassificeringen för kommande intervall. Hjälper till att förutse kortsiktiga prisförändringar för omedelbar planering.",
+            "usage_tips": "Använd för snabba beslut om att starta eller stoppa högeffektenheter under de närmaste minuterna."
+        },
+        "previous_interval_price_level": {
+            "name": "Föregående Prisnivå",
+            "description": "Prisnivå för föregående 15-minutersintervall",
+            "long_description": "Visar prisnivåklassificeringen för senaste intervallet. Användbart för historisk jämförelse och förståelse av senaste pristrender.",
+            "usage_tips": "Använd för att jämföra aktuell vs senaste prisnivåer eller analysera förbrukningsmönster mot historiska priser."
+        },
+        "current_hour_price_level": {
+            "name": "Aktuell Timme Prisnivå",
+            "description": "Aggregerad prisnivå för aktuell rullande timme (5 intervall)",
+            "long_description": "Visar median prisnivå över 5 intervall (2 före, aktuellt, 2 efter) som täcker cirka 75 minuter. Ger en mer stabil prisnivåindikator som jämnar ut kortsiktiga fluktuationer.",
+            "usage_tips": "Använd för medellångsiktiga planeringsbeslut där du vill undvika att reagera på korta pristoppar eller fall."
+        },
+        "next_hour_price_level": {
+            "name": "Nästa Timme Prisnivå",
+            "description": "Aggregerad prisnivå för nästa rullande timme (5 intervall framåt)",
+            "long_description": "Visar median prisnivå över 5 intervall centrerade en timme framåt. Hjälper till att planera förbrukning baserat på kommande pristrender istället för momentana framtida priser.",
+            "usage_tips": "Använd för att schemalägga aktiviteter för nästa timme baserat på en jämnad prisnivåprognos."
+        },
+        "lowest_price_today_cents": {
+            "name": "Lägsta Pris Idag",
+            "description": "Lägsta elpris idag per kWh",
+            "long_description": "Visar lägsta pris per kWh för aktuell dag från ditt Tibber-abonnemang",
+            "usage_tips": "Använd detta för att jämföra aktuella priser med den billigaste tiden på dagen"
+        },
+        "highest_price_today_cents": {
+            "name": "Högsta Pris Idag",
+            "description": "Högsta elpris idag per kWh",
+            "long_description": "Visar högsta pris per kWh för aktuell dag från ditt Tibber-abonnemang",
+            "usage_tips": "Använd detta för att undvika att köra apparater under toppriser"
+        },
+        "average_price_today_cents": {
+            "name": "Genomsnittspris Idag",
+            "description": "Genomsnittligt elpris idag per kWh",
+            "long_description": "Visar genomsnittspris per kWh för aktuell dag från ditt Tibber-abonnemang",
+            "usage_tips": "Använd detta som referens för att jämföra aktuella priser"
+        },
+        "lowest_price_tomorrow_cents": {
+            "name": "Lägsta Pris Imorgon",
+            "description": "Lägsta elpris imorgon per kWh",
+            "long_description": "Visar lägsta pris per kWh för imorgon från ditt Tibber-abonnemang. Denna sensor blir otillgänglig tills morgondagens data publiceras av Tibber (vanligtvis runt 13:00-14:00 CET).",
+            "usage_tips": "Använd detta för att planera energikrävande aktiviteter för morgondagens billigaste tid. Perfekt för förhandsplanering av uppvärmning, EV-laddning eller apparater."
+        },
+        "highest_price_tomorrow_cents": {
+            "name": "Högsta Pris Imorgon",
+            "description": "Högsta elpris imorgon per kWh",
+            "long_description": "Visar högsta pris per kWh för imorgon från ditt Tibber-abonnemang. Denna sensor blir otillgänglig tills morgondagens data publiceras av Tibber (vanligtvis runt 13:00-14:00 CET).",
+            "usage_tips": "Använd detta för att undvika att köra apparater under morgondagens toppriser. Användbart för planering runt dyra perioder."
+        },
+        "average_price_tomorrow_cents": {
+            "name": "Genomsnittspris Imorgon",
+            "description": "Genomsnittligt elpris imorgon per kWh",
+            "long_description": "Visar genomsnittspris per kWh för imorgon från ditt Tibber-abonnemang. Denna sensor blir otillgänglig tills morgondagens data publiceras av Tibber (vanligtvis runt 13:00-14:00 CET).",
+            "usage_tips": "Använd detta som referens för att jämföra morgondagens priser och planera förbrukning. Jämför med dagens genomsnitt för att se om imorgon kommer vara dyrare eller billigare totalt sett."
+        },
+        "trailing_price_average_cents": {
+            "name": "Rullande 24t Genomsnittspris",
+            "description": "Genomsnittligt elpris för de senaste 24 timmarna per kWh",
+            "long_description": "Visar genomsnittspris per kWh beräknat från de senaste 24 timmarna (rullande genomsnitt) från ditt Tibber-abonnemang. Detta ger ett rullande genomsnitt som uppdateras var 15:e minut baserat på historiska data.",
+            "usage_tips": "Använd detta för att jämföra aktuella priser mot senaste trender. Ett aktuellt pris betydligt över detta genomsnitt kan indikera ett bra tillfälle att minska förbrukningen."
+        },
+        "leading_price_average_cents": {
+            "name": "Framåtblickande 24t Genomsnittspris",
+            "description": "Genomsnittligt elpris för de nästa 24 timmarna per kWh",
+            "long_description": "Visar genomsnittspris per kWh beräknat från de nästa 24 timmarna (framåtblickande genomsnitt) från ditt Tibber-abonnemang. Detta ger ett framåtblickande genomsnitt baserat på tillgängliga prognosdata.",
+            "usage_tips": "Använd detta för att planera energianvändning. Om aktuellt pris är under det framåtblickande genomsnittet kan det vara ett bra tillfälle att köra energikrävande apparater."
+        },
+        "trailing_price_min_cents": {
+            "name": "Rullande 24t Minimumpris",
+            "description": "Minimumpris för de senaste 24 timmarna per kWh",
+            "long_description": "Visar minimumpris per kWh från de senaste 24 timmarna (rullande minimum) från ditt Tibber-abonnemang. Detta ger det lägsta priset sett under de senaste 24 timmarna.",
+            "usage_tips": "Använd detta för att se den bästa prismöjligheten du hade de senaste 24 timmarna och jämför med aktuella priser."
+        },
+        "trailing_price_max_cents": {
+            "name": "Rullande 24t Maximumpris",
+            "description": "Maximumpris för de senaste 24 timmarna per kWh",
+            "long_description": "Visar maximumpris per kWh från de senaste 24 timmarna (rullande maximum) från ditt Tibber-abonnemang. Detta ger det högsta priset sett under de senaste 24 timmarna.",
+            "usage_tips": "Använd detta för att se topppriset de senaste 24 timmarna och bedöma prisvolatilitet."
+        },
+        "leading_price_min_cents": {
+            "name": "Framåtblickande 24t Minimumpris",
+            "description": "Minimumpris för de nästa 24 timmarna per kWh",
+            "long_description": "Visar minimumpris per kWh från de nästa 24 timmarna (framåtblickande minimum) från ditt Tibber-abonnemang. Detta ger det lägsta förväntade priset under de nästa 24 timmarna baserat på prognosdata.",
+            "usage_tips": "Använd detta för att identifiera den bästa prismöjligheten som kommer och schemalägga energikrävande uppgifter därefter."
+        },
+        "leading_price_max_cents": {
+            "name": "Framåtblickande 24t Maximumpris",
+            "description": "Maximumpris för de nästa 24 timmarna per kWh",
+            "long_description": "Visar maximumpris per kWh från de nästa 24 timmarna (framåtblickande maximum) från ditt Tibber-abonnemang. Detta ger det högsta förväntade priset under de nästa 24 timmarna baserat på prognosdata.",
+            "usage_tips": "Använd detta för att undvika att köra apparater under kommande toppriser."
+        },
+        "price_rating": {
+            "name": "Aktuellt Prisbetyg",
+            "description": "Hur aktuellt intervalls pris jämförs med historiska data",
+            "long_description": "Visar hur aktuellt intervalls pris jämförs med historiska prisdata som en procentandel",
+            "usage_tips": "En positiv procentandel betyder att aktuellt pris är över genomsnittet, negativ betyder under genomsnittet",
+            "price_levels": {
+                "LOW": "Lågt",
+                "NORMAL": "Normalt",
+                "HIGH": "Högt"
+            }
+        },
+        "next_interval_price_rating": {
+            "name": "Nästa Prisbetyg",
+            "description": "Prisbetyg för nästa 15-minutersintervall",
+            "long_description": "Visar hur nästa intervalls pris jämförs med rullande 24-timmars genomsnitt. Hjälper till att förutse om kommande priser är över eller under den senaste trenden.",
+            "usage_tips": "Använd för att ta snabba beslut om att starta aktiviteter under nästa intervall baserat på relativ prisposition."
+        },
+        "previous_interval_price_rating": {
+            "name": "Föregående Prisbetyg",
+            "description": "Prisbetyg för föregående 15-minutersintervall",
+            "long_description": "Visar hur senaste intervallets pris jämförde med rullande genomsnitt. Användbart för att förstå senaste prisbeteende.",
+            "usage_tips": "Använd för att analysera hur prisbetyg förändrades över tid eller validera tidigare förbrukningsbeslut."
+        },
+        "current_hour_price_rating": {
+            "name": "Aktuell Timme Prisbetyg",
+            "description": "Aggregerat prisbetyg för aktuell rullande timme (5 intervall)",
+            "long_description": "Visar genomsnittligt betyg över 5 intervall (2 före, aktuellt, 2 efter). Baserat på genomsnittlig procentuell skillnad från rullande 24-timmars genomsnitt, vilket ger en jämnad betygsindikator.",
+            "usage_tips": "Använd för stabil medellångsiktig prisbedömning som inte överreagerar på korta prisavvikelser."
+        },
+        "next_hour_price_rating": {
+            "name": "Nästa Timme Prisbetyg",
+            "description": "Aggregerat prisbetyg för nästa rullande timme (5 intervall framåt)",
+            "long_description": "Visar genomsnittligt betyg för 5 intervall centrerade en timme framåt. Hjälper till att förstå om nästa timme generellt kommer vara över eller under genomsnittlig prissättning.",
+            "usage_tips": "Använd för att bestämma om du ska vänta en timme innan du startar högförbruksaktiviteter."
+        },
+        "daily_rating": {
+            "name": "Dagligt Prisbetyg",
+            "description": "Hur dagens priser jämförs med historiska data",
+            "long_description": "Visar hur dagens priser jämförs med historiska prisdata som en procentandel",
+            "usage_tips": "En positiv procentandel betyder att dagens priser är över genomsnittet, negativ betyder under genomsnittet"
+        },
+        "monthly_rating": {
+            "name": "Månatligt Prisbetyg",
+            "description": "Hur denna månads priser jämförs med historiska data",
+            "long_description": "Visar hur denna månads priser jämförs med historiska prisdata som en procentandel",
+            "usage_tips": "En positiv procentandel betyder att denna månads priser är över genomsnittet, negativ betyder under genomsnittet"
+        },
+        "data_timestamp": {
+            "name": "Prisdata Utgångsdatum",
+            "description": "Tidsstämpel för senaste tillgängliga prisdataintervall",
+            "long_description": "Visar tidsstämpeln för senaste tillgängliga prisdataintervall från ditt Tibber-abonnemang"
+        },
+        "price_forecast": {
+            "name": "Prisprognos",
+            "description": "Prognos för kommande elpriser",
+            "long_description": "Visar kommande elpriser för framtida intervall i ett format som är enkelt att använda i instrumentpaneler",
+            "usage_tips": "Använd denna entitets attribut för att visa kommande priser i diagram eller anpassade kort. Få tillgång till antingen 'intervals' för alla framtida intervall eller 'hours' för timsammanfattningar."
+        }
+    },
+    "binary_sensor": {
+        "tomorrow_data_available": {
+            "name": "Status för Data Imorgon",
+            "description": "Om prisdata för imorgon är tillgänglig",
+            "long_description": "Indikerar om prisdata för nästa dag har mottagits från Tibber",
+            "usage_tips": "Använd detta för att kontrollera om morgondagens priser är tillgängliga för planering"
+        },
+        "peak_price_period": {
+            "name": "Topprisperiod",
+            "description": "Om aktuellt intervall är bland de dyraste på dagen",
+            "long_description": "Slår på när aktuellt pris är i topp 20% av dagens priser",
+            "usage_tips": "Använd detta för att undvika att köra högförbruksapparater under dyra intervall"
+        },
+        "best_price_period": {
+            "name": "Bästa Prisperiod",
+            "description": "Om aktuellt intervall är bland de billigaste på dagen",
+            "long_description": "Slår på när aktuellt pris är i botten 20% av dagens priser",
+            "usage_tips": "Använd detta för att köra högförbruksapparater under de billigaste intervallen"
+        },
+        "connection": {
+            "name": "Tibber API-anslutning",
+            "description": "Om anslutningen till Tibber API fungerar",
+            "long_description": "Indikerar om integrationen kan ansluta till Tibber API",
+            "usage_tips": "Använd detta för att övervaka anslutningsstatusen till Tibber API"
+        }
+    },
+    "home_types": {
+        "APARTMENT": "Lägenhet",
+        "ROWHOUSE": "Radhus",
+        "HOUSE": "Hus",
+        "COTTAGE": "Stuga"
+    }
+}
