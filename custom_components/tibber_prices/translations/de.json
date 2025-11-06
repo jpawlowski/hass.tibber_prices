@@ -213,10 +213,10 @@
         },
         "binary_sensor": {
             "peak_price_period": {
-                "name": "Spitzenperiode"
+                "name": "Spitzenpreis-Periode"
             },
             "best_price_period": {
-                "name": "Best-Preis-Periode"
+                "name": "Bestpreis-Periode"
             },
             "connection": {
                 "name": "Tibber API-Verbindung"
