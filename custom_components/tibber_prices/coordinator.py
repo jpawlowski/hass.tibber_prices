@@ -116,6 +116,7 @@ class TibberPricesDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         self,
         hass: HomeAssistant,
         config_entry: ConfigEntry,
+        version: str,
     ) -> None:
         """Initialize the coordinator."""
         super().__init__(
@@ -129,6 +130,7 @@ class TibberPricesDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         self.api = TibberPricesApiClient(
             access_token=config_entry.data[CONF_ACCESS_TOKEN],
             session=aiohttp_client.async_get_clientsession(hass),
+            version=version,
         )
 
         # Storage for persistence

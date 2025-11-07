@@ -56,16 +56,21 @@ async def async_setup_entry(
     # Register services when a config entry is loaded
     async_setup_services(hass)
 
+    integration = async_get_loaded_integration(hass, entry.domain)
+
     coordinator = TibberPricesDataUpdateCoordinator(
         hass=hass,
         config_entry=entry,
+        version=integration.version,
     )
+
     entry.runtime_data = TibberPricesData(
         client=TibberPricesApiClient(
             access_token=entry.data[CONF_ACCESS_TOKEN],
             session=async_get_clientsession(hass),
+            version=integration.version,
         ),
-        integration=async_get_loaded_integration(hass, entry.domain),
+        integration=integration,
         coordinator=coordinator,
     )
 

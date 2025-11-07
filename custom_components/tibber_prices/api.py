@@ -15,8 +15,6 @@ import aiohttp
 from homeassistant.const import __version__ as ha_version
 from homeassistant.util import dt as dt_util
 
-from .const import VERSION
-
 _LOGGER = logging.getLogger(__name__)
 
 HTTP_BAD_REQUEST = 400
@@ -273,12 +271,12 @@ def _is_data_empty(data: dict, query_type: str) -> bool:
     return is_empty
 
 
-def _prepare_headers(access_token: str) -> dict[str, str]:
+def _prepare_headers(access_token: str, version: str) -> dict[str, str]:
     """Prepare headers for API request."""
     return {
         "Authorization": f"Bearer {access_token}",
         "Accept": "application/json",
-        "User-Agent": f"HomeAssistant/{ha_version} tibber_prices/{VERSION}",
+        "User-Agent": f"HomeAssistant/{ha_version} tibber_prices/{version}",
     }
 
 
@@ -361,10 +359,12 @@ class TibberPricesApiClient:
         self,
         access_token: str,
         session: aiohttp.ClientSession,
+        version: str,
     ) -> None:
         """Tibber API Client."""
         self._access_token = access_token
         self._session = session
+        self._version = version
         self._request_semaphore = asyncio.Semaphore(2)  # Max 2 concurrent requests
         self._last_request_time = dt_util.now()
         self._min_request_interval = timedelta(seconds=1)  # Min 1 second between requests
@@ -798,7 +798,7 @@ class TibberPricesApiClient:
         query_type: QueryType = QueryType.USER,
     ) -> Any:
         """Get information from the API with rate limiting and retry logic."""
-        headers = headers or _prepare_headers(self._access_token)
+        headers = headers or _prepare_headers(self._access_token, self._version)
         last_error: Exception | None = None
 
         for retry in range(self._max_retries + 1):

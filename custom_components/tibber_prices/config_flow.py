@@ -30,6 +30,7 @@ from homeassistant.helpers.selector import (
     TextSelectorConfig,
     TextSelectorType,
 )
+from homeassistant.loader import async_get_integration
 
 from .api import (
     TibberPricesApiClient,
@@ -311,9 +312,11 @@ class TibberPricesFlowHandler(ConfigFlow, domain=DOMAIN):
 
     async def _get_viewer_details(self, access_token: str) -> dict:
         """Validate credentials and return information about the account (viewer object)."""
+        integration = await async_get_integration(self.hass, DOMAIN)
         client = TibberPricesApiClient(
             access_token=access_token,
             session=async_create_clientsession(self.hass),
+            version=integration.version,
         )
         result = await client.async_get_viewer_details()
         return result["viewer"]

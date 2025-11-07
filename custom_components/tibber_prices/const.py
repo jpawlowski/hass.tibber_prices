@@ -16,9 +16,6 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 
-# Version should match manifest.json
-VERSION = "0.1.0"
-
 DOMAIN = "tibber_prices"
 CONF_EXTENDED_DESCRIPTIONS = "extended_descriptions"
 CONF_BEST_PRICE_FLEX = "best_price_flex"
