@@ -96,6 +96,7 @@
                 "title": "Best Price Period Settings",
                 "description": "Configure settings for the Best Price Period binary sensor. This sensor is active during periods with the lowest electricity prices.",
                 "data": {
+                    "best_price_min_period_length": "Minimum Period Length",
                     "best_price_flex": "Flexibility: Maximum % above minimum price",
                     "best_price_min_distance_from_avg": "Minimum Distance: Required % below daily average"
                 }
@@ -104,6 +105,7 @@
                 "title": "Peak Price Period Settings",
                 "description": "Configure settings for the Peak Price Period binary sensor. This sensor is active during periods with the highest electricity prices.",
                 "data": {
+                    "peak_price_min_period_length": "Minimum Period Length",
                     "peak_price_flex": "Flexibility: Maximum % below maximum price (negative value)",
                     "peak_price_min_distance_from_avg": "Minimum Distance: Required % above daily average"
                 }

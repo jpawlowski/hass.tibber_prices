@@ -29,14 +29,18 @@ if TYPE_CHECKING:
 from .const import (
     CONF_BEST_PRICE_FLEX,
     CONF_BEST_PRICE_MIN_DISTANCE_FROM_AVG,
+    CONF_BEST_PRICE_MIN_PERIOD_LENGTH,
     CONF_EXTENDED_DESCRIPTIONS,
     CONF_PEAK_PRICE_FLEX,
     CONF_PEAK_PRICE_MIN_DISTANCE_FROM_AVG,
+    CONF_PEAK_PRICE_MIN_PERIOD_LENGTH,
     DEFAULT_BEST_PRICE_FLEX,
     DEFAULT_BEST_PRICE_MIN_DISTANCE_FROM_AVG,
+    DEFAULT_BEST_PRICE_MIN_PERIOD_LENGTH,
     DEFAULT_EXTENDED_DESCRIPTIONS,
     DEFAULT_PEAK_PRICE_FLEX,
     DEFAULT_PEAK_PRICE_MIN_DISTANCE_FROM_AVG,
+    DEFAULT_PEAK_PRICE_MIN_PERIOD_LENGTH,
     async_get_entity_description,
     get_entity_description,
 )
@@ -501,6 +505,37 @@ class TibberPricesBinarySensor(TibberPricesEntity, BinarySensorEntity):
             periods.append(current_period)
         return periods
 
+    def _filter_periods_by_min_length(self, periods: list[list[dict]], *, reverse_sort: bool) -> list[list[dict]]:
+        """
+        Filter periods to only include those meeting the minimum length requirement.
+
+        Args:
+            periods: List of periods (each period is a list of interval dicts)
+            reverse_sort: True for peak price, False for best price
+
+        Returns:
+            Filtered list of periods that meet minimum length requirement
+
+        """
+        options = self.coordinator.config_entry.options
+        data = self.coordinator.config_entry.data
+
+        # Use appropriate config based on sensor type
+        if reverse_sort:  # Peak price
+            conf_key = CONF_PEAK_PRICE_MIN_PERIOD_LENGTH
+            default = DEFAULT_PEAK_PRICE_MIN_PERIOD_LENGTH
+        else:  # Best price
+            conf_key = CONF_BEST_PRICE_MIN_PERIOD_LENGTH
+            default = DEFAULT_BEST_PRICE_MIN_PERIOD_LENGTH
+
+        min_period_length = options.get(conf_key, data.get(conf_key, default))
+
+        # Convert minutes to number of 15-minute intervals
+        min_intervals = min_period_length // MINUTES_PER_INTERVAL
+
+        # Filter out periods that are too short
+        return [period for period in periods if len(period) >= min_intervals]
+
     def _add_interval_ends(self, periods: list[list[dict]]) -> None:
         """Add interval_end to each interval using per-interval interval_length."""
         for period in periods:
@@ -580,6 +615,8 @@ class TibberPricesBinarySensor(TibberPricesEntity, BinarySensorEntity):
             price_context,
             reverse_sort=reverse_sort,
         )
+        # Filter periods by minimum length requirement
+        periods = self._filter_periods_by_min_length(periods, reverse_sort=reverse_sort)
         self._add_interval_ends(periods)
         # Only use periods relevant for today/tomorrow for annotation and attribute calculation
         filtered_periods = self._filter_periods_today_tomorrow(periods)

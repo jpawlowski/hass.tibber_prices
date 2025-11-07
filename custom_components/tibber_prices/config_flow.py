@@ -40,16 +40,20 @@ from .api import (
 from .const import (
     CONF_BEST_PRICE_FLEX,
     CONF_BEST_PRICE_MIN_DISTANCE_FROM_AVG,
+    CONF_BEST_PRICE_MIN_PERIOD_LENGTH,
     CONF_EXTENDED_DESCRIPTIONS,
     CONF_PEAK_PRICE_FLEX,
     CONF_PEAK_PRICE_MIN_DISTANCE_FROM_AVG,
+    CONF_PEAK_PRICE_MIN_PERIOD_LENGTH,
     CONF_PRICE_RATING_THRESHOLD_HIGH,
     CONF_PRICE_RATING_THRESHOLD_LOW,
     DEFAULT_BEST_PRICE_FLEX,
     DEFAULT_BEST_PRICE_MIN_DISTANCE_FROM_AVG,
+    DEFAULT_BEST_PRICE_MIN_PERIOD_LENGTH,
     DEFAULT_EXTENDED_DESCRIPTIONS,
     DEFAULT_PEAK_PRICE_FLEX,
     DEFAULT_PEAK_PRICE_MIN_DISTANCE_FROM_AVG,
+    DEFAULT_PEAK_PRICE_MIN_PERIOD_LENGTH,
     DEFAULT_PRICE_RATING_THRESHOLD_HIGH,
     DEFAULT_PRICE_RATING_THRESHOLD_LOW,
     DOMAIN,
@@ -527,6 +531,23 @@ class TibberPricesOptionsFlowHandler(OptionsFlow):
             data_schema=vol.Schema(
                 {
                     vol.Optional(
+                        CONF_BEST_PRICE_MIN_PERIOD_LENGTH,
+                        default=int(
+                            self.config_entry.options.get(
+                                CONF_BEST_PRICE_MIN_PERIOD_LENGTH,
+                                DEFAULT_BEST_PRICE_MIN_PERIOD_LENGTH,
+                            )
+                        ),
+                    ): NumberSelector(
+                        NumberSelectorConfig(
+                            min=15,
+                            max=240,
+                            step=15,
+                            unit_of_measurement="min",
+                            mode=NumberSelectorMode.SLIDER,
+                        ),
+                    ),
+                    vol.Optional(
                         CONF_BEST_PRICE_FLEX,
                         default=int(
                             self.config_entry.options.get(
@@ -572,6 +593,23 @@ class TibberPricesOptionsFlowHandler(OptionsFlow):
             step_id="peak_price",
             data_schema=vol.Schema(
                 {
+                    vol.Optional(
+                        CONF_PEAK_PRICE_MIN_PERIOD_LENGTH,
+                        default=int(
+                            self.config_entry.options.get(
+                                CONF_PEAK_PRICE_MIN_PERIOD_LENGTH,
+                                DEFAULT_PEAK_PRICE_MIN_PERIOD_LENGTH,
+                            )
+                        ),
+                    ): NumberSelector(
+                        NumberSelectorConfig(
+                            min=15,
+                            max=240,
+                            step=15,
+                            unit_of_measurement="min",
+                            mode=NumberSelectorMode.SLIDER,
+                        ),
+                    ),
                     vol.Optional(
                         CONF_PEAK_PRICE_FLEX,
                         default=int(

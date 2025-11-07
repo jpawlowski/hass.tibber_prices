@@ -25,6 +25,8 @@ CONF_BEST_PRICE_FLEX = "best_price_flex"
 CONF_PEAK_PRICE_FLEX = "peak_price_flex"
 CONF_BEST_PRICE_MIN_DISTANCE_FROM_AVG = "best_price_min_distance_from_avg"
 CONF_PEAK_PRICE_MIN_DISTANCE_FROM_AVG = "peak_price_min_distance_from_avg"
+CONF_BEST_PRICE_MIN_PERIOD_LENGTH = "best_price_min_period_length"
+CONF_PEAK_PRICE_MIN_PERIOD_LENGTH = "peak_price_min_period_length"
 CONF_PRICE_RATING_THRESHOLD_LOW = "price_rating_threshold_low"
 CONF_PRICE_RATING_THRESHOLD_HIGH = "price_rating_threshold_high"
 
@@ -37,6 +39,8 @@ DEFAULT_BEST_PRICE_FLEX = 15  # 15% flexibility for best price (user-facing, per
 DEFAULT_PEAK_PRICE_FLEX = -15  # 15% flexibility for peak price (user-facing, percent)
 DEFAULT_BEST_PRICE_MIN_DISTANCE_FROM_AVG = 2  # 2% minimum distance from daily average for best price
 DEFAULT_PEAK_PRICE_MIN_DISTANCE_FROM_AVG = 2  # 2% minimum distance from daily average for peak price
+DEFAULT_BEST_PRICE_MIN_PERIOD_LENGTH = 60  # 60 minutes minimum period length for best price (user-facing, minutes)
+DEFAULT_PEAK_PRICE_MIN_PERIOD_LENGTH = 60  # 60 minutes minimum period length for peak price (user-facing, minutes)
 DEFAULT_PRICE_RATING_THRESHOLD_LOW = -10  # Default rating threshold low percentage
 DEFAULT_PRICE_RATING_THRESHOLD_HIGH = 10  # Default rating threshold high percentage
 

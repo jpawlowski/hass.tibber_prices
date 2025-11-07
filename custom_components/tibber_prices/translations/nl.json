@@ -96,6 +96,7 @@
                 "title": "Instellingen beste prijsperiode",
                 "description": "Configureer instellingen voor de Beste Prijsperiode binaire sensor. Deze sensor is actief tijdens perioden met de laagste elektriciteitsprijzen.",
                 "data": {
+                    "best_price_min_period_length": "Minimale periode lengte",
                     "best_price_flex": "Flexibiliteit: Maximaal % boven minimumprijs",
                     "best_price_min_distance_from_avg": "Minimale afstand: Vereist % onder dagelijks gemiddelde"
                 }
@@ -104,6 +105,7 @@
                 "title": "Instellingen piekprijsperiode",
                 "description": "Configureer instellingen voor de Piekprijsperiode binaire sensor. Deze sensor is actief tijdens perioden met de hoogste elektriciteitsprijzen.",
                 "data": {
+                    "peak_price_min_period_length": "Minimale periode lengte",
                     "peak_price_flex": "Flexibiliteit: Maximaal % onder maximumprijs (negatieve waarde)",
                     "peak_price_min_distance_from_avg": "Minimale afstand: Vereist % boven dagelijks gemiddelde"
                 }

@@ -96,6 +96,7 @@
                 "title": "Inställningar för bästa prisperiod",
                 "description": "Konfigurera inställningar för Bästa Prisperiod binärsensor. Denna sensor är aktiv under perioder med de lägsta elpriserna.",
                 "data": {
+                    "best_price_min_period_length": "Minsta periodlängd",
                     "best_price_flex": "Flexibilitet: Maximalt % över minimumpris",
                     "best_price_min_distance_from_avg": "Minimiavstånd: Krävd % under dagligt genomsnitt"
                 }
@@ -104,6 +105,7 @@
                 "title": "Inställningar för topprisperiod",
                 "description": "Konfigurera inställningar för Topprisperiod binärsensor. Denna sensor är aktiv under perioder med de högsta elpriserna.",
                 "data": {
+                    "peak_price_min_period_length": "Minsta periodlängd",
                     "peak_price_flex": "Flexibilitet: Maximalt % under maximumpris (negativt värde)",
                     "peak_price_min_distance_from_avg": "Minimiavstånd: Krävd % över dagligt genomsnitt"
                 }

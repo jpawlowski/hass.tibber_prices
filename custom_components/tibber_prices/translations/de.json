@@ -96,6 +96,7 @@
                 "title": "Bestpreis-Periode Einstellungen",
                 "description": "Konfiguration für den Bestpreis-Periode Binärsensor. Dieser Sensor ist während der Zeiträume mit den niedrigsten Strompreisen aktiv.",
                 "data": {
+                    "best_price_min_period_length": "Minimale Periodenlänge",
                     "best_price_flex": "Flexibilität: Maximale % über dem Mindestpreis",
                     "best_price_min_distance_from_avg": "Mindestabstand: Erforderliche % unter dem Tagesdurchschnitt"
                 }
@@ -104,6 +105,7 @@
                 "title": "Spitzenpreis-Periode Einstellungen",
                 "description": "Konfiguration für den Spitzenpreis-Periode Binärsensor. Dieser Sensor ist während der Zeiträume mit den höchsten Strompreisen aktiv.",
                 "data": {
+                    "peak_price_min_period_length": "Minimale Periodenlänge",
                     "peak_price_flex": "Flexibilität: Maximale % unter dem Höchstpreis (negativer Wert)",
                     "peak_price_min_distance_from_avg": "Mindestabstand: Erforderliche % über dem Tagesdurchschnitt"
                 }
