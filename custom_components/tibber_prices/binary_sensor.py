@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from datetime import datetime, timedelta
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
@@ -11,9 +11,11 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntityDescription,
 )
 from homeassistant.const import PERCENTAGE, EntityCategory
+from homeassistant.core import callback
 from homeassistant.util import dt as dt_util
 
 from .average_utils import calculate_leading_24h_avg, calculate_trailing_24h_avg
+from .coordinator import TIME_SENSITIVE_ENTITY_KEYS
 from .entity import TibberPricesEntity
 from .sensor import find_price_data_for_interval
 
@@ -107,6 +109,39 @@ class TibberPricesBinarySensor(TibberPricesEntity, BinarySensorEntity):
         self._attr_unique_id = f"{coordinator.config_entry.entry_id}_{entity_description.key}"
         self._state_getter: Callable | None = self._get_state_getter()
         self._attribute_getter: Callable | None = self._get_attribute_getter()
+        self._time_sensitive_remove_listener: Callable | None = None
+
+        # Cache for expensive period calculations to avoid recalculating twice
+        # (once for is_on, once for attributes)
+        self._period_cache: dict[str, Any] = {}
+        self._cache_key: str = ""
+
+    async def async_added_to_hass(self) -> None:
+        """When entity is added to hass."""
+        await super().async_added_to_hass()
+
+        # Register with coordinator for time-sensitive updates if applicable
+        if self.entity_description.key in TIME_SENSITIVE_ENTITY_KEYS:
+            self._time_sensitive_remove_listener = self.coordinator.async_add_time_sensitive_listener(
+                self._handle_time_sensitive_update
+            )
+
+    async def async_will_remove_from_hass(self) -> None:
+        """When entity will be removed from hass."""
+        await super().async_will_remove_from_hass()
+
+        # Remove time-sensitive listener if registered
+        if self._time_sensitive_remove_listener:
+            self._time_sensitive_remove_listener()
+            self._time_sensitive_remove_listener = None
+
+    @callback
+    def _handle_time_sensitive_update(self) -> None:
+        """Handle time-sensitive update from coordinator."""
+        # Invalidate cache when data potentially changes
+        self._cache_key = ""
+        self._period_cache = {}
+        self.async_write_ha_state()
 
     def _get_state_getter(self) -> Callable | None:
         """Return the appropriate state getter method based on the sensor type."""
@@ -122,6 +157,46 @@ class TibberPricesBinarySensor(TibberPricesEntity, BinarySensorEntity):
             return self._tomorrow_data_available_state
 
         return None
+
+    def _generate_cache_key(self, *, reverse_sort: bool) -> str:
+        """
+        Generate a cache key based on coordinator data and config options.
+
+        This ensures we recalculate when data or configuration changes,
+        but reuse cached results for multiple property accesses.
+        """
+        if not self.coordinator.data:
+            return ""
+
+        # Include timestamp to invalidate when data changes
+        timestamp = self.coordinator.data.get("timestamp", "")
+
+        # Include relevant config options that affect period calculation
+        options = self.coordinator.config_entry.options
+        data = self.coordinator.config_entry.data
+
+        if reverse_sort:
+            flex = options.get(CONF_PEAK_PRICE_FLEX, data.get(CONF_PEAK_PRICE_FLEX, DEFAULT_PEAK_PRICE_FLEX))
+            min_dist = options.get(
+                CONF_PEAK_PRICE_MIN_DISTANCE_FROM_AVG,
+                data.get(CONF_PEAK_PRICE_MIN_DISTANCE_FROM_AVG, DEFAULT_PEAK_PRICE_MIN_DISTANCE_FROM_AVG),
+            )
+            min_len = options.get(
+                CONF_PEAK_PRICE_MIN_PERIOD_LENGTH,
+                data.get(CONF_PEAK_PRICE_MIN_PERIOD_LENGTH, DEFAULT_PEAK_PRICE_MIN_PERIOD_LENGTH),
+            )
+        else:
+            flex = options.get(CONF_BEST_PRICE_FLEX, data.get(CONF_BEST_PRICE_FLEX, DEFAULT_BEST_PRICE_FLEX))
+            min_dist = options.get(
+                CONF_BEST_PRICE_MIN_DISTANCE_FROM_AVG,
+                data.get(CONF_BEST_PRICE_MIN_DISTANCE_FROM_AVG, DEFAULT_BEST_PRICE_MIN_DISTANCE_FROM_AVG),
+            )
+            min_len = options.get(
+                CONF_BEST_PRICE_MIN_PERIOD_LENGTH,
+                data.get(CONF_BEST_PRICE_MIN_PERIOD_LENGTH, DEFAULT_BEST_PRICE_MIN_PERIOD_LENGTH),
+            )
+
+        return f"{timestamp}_{reverse_sort}_{flex}_{min_dist}_{min_len}"
 
     def _get_flex_option(self, option_key: str, default: float) -> float:
         """
@@ -583,19 +658,34 @@ class TibberPricesBinarySensor(TibberPricesEntity, BinarySensorEntity):
         ]
 
     def _get_price_intervals_attributes(self, *, reverse_sort: bool) -> dict | None:
-        """Get price interval attributes with support for 15-minute intervals and period grouping."""
+        """
+        Get price interval attributes with caching to avoid expensive recalculation.
+
+        Uses a cache key based on coordinator data timestamp and config options.
+        Returns simplified attributes without the full intervals list to reduce payload.
+        """
+        # Check cache first
+        cache_key = self._generate_cache_key(reverse_sort=reverse_sort)
+        if cache_key and cache_key == self._cache_key and self._period_cache:
+            return self._period_cache
+
+        # Cache miss - perform expensive calculation
         if not self.coordinator.data:
             return None
+
         price_info = self.coordinator.data.get("priceInfo", {})
         yesterday_prices = price_info.get("yesterday", [])
         today_prices = price_info.get("today", [])
         tomorrow_prices = price_info.get("tomorrow", [])
         all_prices = yesterday_prices + today_prices + tomorrow_prices
+
         if not all_prices:
             return None
+
         all_prices.sort(key=lambda p: p["startsAt"])
         intervals_by_day, avg_price_by_day = self._split_intervals_by_day(all_prices)
         ref_prices = self._calculate_reference_prices(intervals_by_day, reverse_sort=reverse_sort)
+
         flex = self._get_flex_option(
             CONF_BEST_PRICE_FLEX if not reverse_sort else CONF_PEAK_PRICE_FLEX,
             DEFAULT_BEST_PRICE_FLEX if not reverse_sort else DEFAULT_PEAK_PRICE_FLEX,
@@ -604,35 +694,102 @@ class TibberPricesBinarySensor(TibberPricesEntity, BinarySensorEntity):
             CONF_BEST_PRICE_MIN_DISTANCE_FROM_AVG if not reverse_sort else CONF_PEAK_PRICE_MIN_DISTANCE_FROM_AVG,
             DEFAULT_BEST_PRICE_MIN_DISTANCE_FROM_AVG if not reverse_sort else DEFAULT_PEAK_PRICE_MIN_DISTANCE_FROM_AVG,
         )
+
         price_context = {
             "ref_prices": ref_prices,
             "avg_prices": avg_price_by_day,
             "flex": flex,
             "min_distance_from_avg": min_distance_from_avg,
         }
-        periods = self._build_periods(
-            all_prices,
-            price_context,
-            reverse_sort=reverse_sort,
-        )
-        # Filter periods by minimum length requirement
+
+        periods = self._build_periods(all_prices, price_context, reverse_sort=reverse_sort)
         periods = self._filter_periods_by_min_length(periods, reverse_sort=reverse_sort)
         self._add_interval_ends(periods)
-        # Only use periods relevant for today/tomorrow for annotation and attribute calculation
+
         filtered_periods = self._filter_periods_today_tomorrow(periods)
+
+        # Simplified annotation - only annotate enough to find current interval and provide summary
         result = self._annotate_period_intervals(
             filtered_periods,
             ref_prices,
             avg_price_by_day,
             all_prices,
         )
+
         filtered_result = self._filter_intervals_today_tomorrow(result)
         current_interval = self._find_current_or_next_interval(filtered_result)
+
         if not current_interval and filtered_result:
             current_interval = filtered_result[0]
+
+        # Build attributes with current interval info but simplified period summary
         attributes = {**current_interval} if current_interval else {}
-        attributes["intervals"] = filtered_result
+
+        # Instead of full intervals list, provide period-level summary
+        # This reduces the attribute payload by 90%+
+        if filtered_result:
+            periods_summary = self._build_periods_summary(filtered_result)
+            attributes["periods"] = periods_summary
+            attributes["intervals_count"] = len(filtered_result)
+        else:
+            attributes["periods"] = []
+            attributes["intervals_count"] = 0
+
+        # Cache the result
+        self._cache_key = cache_key
+        self._period_cache = attributes
+
         return attributes
+
+    def _build_periods_summary(self, intervals: list[dict]) -> list[dict]:
+        """
+        Build a summary of periods without including full interval details.
+
+        Returns a list of period summaries with key information for automations:
+        - Period start/end times
+        - Duration
+        - Average/min/max prices
+        - Number of intervals
+        """
+        if not intervals:
+            return []
+
+        # Group intervals by period (they have the same period_start)
+        periods_dict: dict[str, list[dict]] = {}
+        for interval in intervals:
+            period_key = interval.get("period_start")
+            if period_key:
+                key_str = period_key.isoformat() if hasattr(period_key, "isoformat") else str(period_key)
+                if key_str not in periods_dict:
+                    periods_dict[key_str] = []
+                periods_dict[key_str].append(interval)
+
+        # Build summary for each period
+        summaries = []
+        for period_intervals in periods_dict.values():
+            if not period_intervals:
+                continue
+
+            first = period_intervals[0]
+
+            prices = [i["price"] for i in period_intervals if "price" in i]
+
+            summary = {
+                "start": first.get("period_start"),
+                "end": first.get("period_end"),
+                "hour": first.get("hour"),
+                "minute": first.get("minute"),
+                "time": first.get("time"),
+                "duration_minutes": first.get("period_length_minute"),
+                "intervals_count": len(period_intervals),
+                "price_avg": round(sum(prices) / len(prices), 4) if prices else 0,
+                "price_min": round(min(prices), 4) if prices else 0,
+                "price_max": round(max(prices), 4) if prices else 0,
+            }
+
+            summaries.append(summary)
+
+        return summaries
 
     def _get_price_hours_attributes(self, *, attribute_name: str, reverse_sort: bool) -> dict | None:
         """Get price hours attributes."""

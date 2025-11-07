@@ -53,6 +53,61 @@ QUARTER_HOUR_BOUNDARIES = (0, 15, 30, 45)
 # Hour after which tomorrow's price data is expected (13:00 local time)
 TOMORROW_DATA_CHECK_HOUR = 13
 
+# Entity keys that require quarter-hour updates (time-sensitive entities)
+# These entities calculate values based on current time and need updates every 15 minutes
+# All other entities only update when new API data arrives
+TIME_SENSITIVE_ENTITY_KEYS = frozenset(
+    {
+        # Current/next/previous price sensors
+        "current_price",
+        "next_interval_price",
+        "previous_interval_price",
+        # Current/next/previous price levels
+        "price_level",
+        "next_interval_price_level",
+        "previous_interval_price_level",
+        # Rolling hour calculations (5-interval windows)
+        "current_hour_average",
+        "next_hour_average",
+        "current_hour_price_level",
+        "next_hour_price_level",
+        # Current/next/previous price ratings
+        "price_rating",
+        "next_interval_price_rating",
+        "previous_interval_price_rating",
+        "current_hour_price_rating",
+        "next_hour_price_rating",
+        # Future average sensors (rolling N-hour windows from next interval)
+        "next_avg_1h",
+        "next_avg_2h",
+        "next_avg_3h",
+        "next_avg_4h",
+        "next_avg_5h",
+        "next_avg_6h",
+        "next_avg_8h",
+        "next_avg_12h",
+        # Price trend sensors
+        "price_trend_1h",
+        "price_trend_2h",
+        "price_trend_3h",
+        "price_trend_4h",
+        "price_trend_5h",
+        "price_trend_6h",
+        "price_trend_8h",
+        "price_trend_12h",
+        # Trailing/leading 24h calculations (based on current interval)
+        "trailing_price_average",
+        "leading_price_average",
+        "trailing_price_min",
+        "trailing_price_max",
+        "leading_price_min",
+        "leading_price_max",
+        # Binary sensors that check if current time is in a period
+        "peak_price_period",
+        "best_price_period",
+    }
+)
+
 
 class TibberPricesDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     """Enhanced coordinator with main/subentry pattern and comprehensive caching."""
@@ -100,12 +155,50 @@ class TibberPricesDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 
         # Quarter-hour entity refresh timer (runs at :00, :15, :30, :45)
         self._quarter_hour_timer_cancel: CALLBACK_TYPE | None = None
+
+        # Selective listener system for time-sensitive entities
+        # Regular listeners update on API data changes, time-sensitive listeners update every 15 minutes
+        self._time_sensitive_listeners: list[CALLBACK_TYPE] = []
+
         self._schedule_quarter_hour_refresh()
 
     def _log(self, level: str, message: str, *args: Any, **kwargs: Any) -> None:
         """Log with coordinator-specific prefix."""
         prefixed_message = f"{self._log_prefix} {message}"
         getattr(_LOGGER, level)(prefixed_message, *args, **kwargs)
+
+    @callback
+    def async_add_time_sensitive_listener(self, update_callback: CALLBACK_TYPE) -> CALLBACK_TYPE:
+        """
+        Listen for time-sensitive updates that occur every quarter-hour.
+
+        Time-sensitive entities (like current_price, next_interval_price, etc.) should use this
+        method instead of async_add_listener to receive updates at quarter-hour boundaries.
+
+        Returns:
+            Callback that can be used to remove the listener
+
+        """
+        self._time_sensitive_listeners.append(update_callback)
+
+        def remove_listener() -> None:
+            """Remove update listener."""
+            if update_callback in self._time_sensitive_listeners:
+                self._time_sensitive_listeners.remove(update_callback)
+
+        return remove_listener
+
+    @callback
+    def _async_update_time_sensitive_listeners(self) -> None:
+        """Update all time-sensitive entities without triggering a full coordinator update."""
+        for update_callback in self._time_sensitive_listeners:
+            update_callback()
+
+        self._log(
+            "debug",
+            "Updated %d time-sensitive entities at quarter-hour boundary",
+            len(self._time_sensitive_listeners),
+        )
 
     def _schedule_quarter_hour_refresh(self) -> None:
         """Schedule the next quarter-hour entity refresh using Home Assistant's time tracking."""
@@ -145,11 +238,10 @@ class TibberPricesDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             # Entity update already done in _check_and_handle_midnight_turnover
             # Skip the regular update to avoid double-update
         else:
-            # Regular quarter-hour refresh - notify listeners to update their state
-            # This causes entity state properties to be re-evaluated with the current time
-            # Using async_update_listeners() instead of async_set_updated_data() to avoid
-            # interfering with the coordinator's update timing
-            self.async_update_listeners()
+            # Regular quarter-hour refresh - only update time-sensitive entities
+            # This causes time-sensitive entity state properties to be re-evaluated with the current time
+            # Static entities (statistics, diagnostics) only update when new API data arrives
+            self._async_update_time_sensitive_listeners()
 
     @callback
     def _check_and_handle_midnight_turnover(self, now: datetime) -> bool:

@@ -11,6 +11,7 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
 )
 from homeassistant.const import PERCENTAGE, EntityCategory
+from homeassistant.core import callback
 from homeassistant.util import dt as dt_util
 
 from .average_utils import (
@@ -41,6 +42,7 @@ from .const import (
     get_entity_description,
     get_price_level_translation,
 )
+from .coordinator import TIME_SENSITIVE_ENTITY_KEYS
 from .entity import TibberPricesEntity
 from .price_utils import (
     MINUTES_PER_INTERVAL,
@@ -514,6 +516,31 @@ class TibberPricesSensor(TibberPricesEntity, SensorEntity):
         self._attr_unique_id = f"{coordinator.config_entry.entry_id}_{entity_description.key}"
         self._attr_has_entity_name = True
         self._value_getter: Callable | None = self._get_value_getter()
+        self._time_sensitive_remove_listener: Callable | None = None
+
+    async def async_added_to_hass(self) -> None:
+        """When entity is added to hass."""
+        await super().async_added_to_hass()
+
+        # Register with coordinator for time-sensitive updates if applicable
+        if self.entity_description.key in TIME_SENSITIVE_ENTITY_KEYS:
+            self._time_sensitive_remove_listener = self.coordinator.async_add_time_sensitive_listener(
+                self._handle_time_sensitive_update
+            )
+
+    async def async_will_remove_from_hass(self) -> None:
+        """When entity will be removed from hass."""
+        await super().async_will_remove_from_hass()
+
+        # Remove time-sensitive listener if registered
+        if self._time_sensitive_remove_listener:
+            self._time_sensitive_remove_listener()
+            self._time_sensitive_remove_listener = None
+
+    @callback
+    def _handle_time_sensitive_update(self) -> None:
+        """Handle time-sensitive update from coordinator."""
+        self.async_write_ha_state()
 
     def _get_value_getter(self) -> Callable | None:
         """Return the appropriate value getter method based on the sensor type."""
