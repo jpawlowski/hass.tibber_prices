@@ -1200,7 +1200,7 @@ class TibberPricesSensor(TibberPricesEntity, SensorEntity):
 
         # Core attributes
         self._attr_extra_state_attributes["timestamp"] = next_interval_start.isoformat()
-        self._attr_extra_state_attributes[f"trend_{hours}h_percentage"] = round(diff_pct, 1)
+        self._attr_extra_state_attributes[f"trend_{hours}h_%"] = round(diff_pct, 1)
         self._attr_extra_state_attributes[f"future_avg_{hours}h"] = round(future_avg * 100, 2)
         self._attr_extra_state_attributes["intervals_analyzed"] = hours * 4
 
