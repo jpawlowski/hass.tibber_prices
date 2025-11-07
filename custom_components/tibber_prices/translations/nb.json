@@ -25,7 +25,7 @@
                 "submit": "Velg hjem"
             },
             "reauth_confirm": {
-                "title": "Autentiser Tibber-integrasjonen på nytt",
+                "title": "Autentiser Tibber Prisintegrasjonen på nytt",
                 "description": "Tilgangstokenet for Tibber er ikke lenger gyldig. Vennligst oppgi et nytt API-tilgangstoken for å fortsette å bruke denne integrasjonen.\n\nFor å generere et nytt API-tilgangstoken, besøk https://developer.tibber.com.",
                 "data": {
                     "access_token": "API-tilgangstoken"

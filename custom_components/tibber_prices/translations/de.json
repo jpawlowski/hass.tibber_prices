@@ -25,7 +25,7 @@
                 "submit": "Zuhause auswählen"
             },
             "reauth_confirm": {
-                "title": "Tibber-Integration erneut authentifizieren",
+                "title": "Tibber Preis-Integration erneut authentifizieren",
                 "description": "Der Zugriffstoken für Tibber ist nicht mehr gültig. Bitte gib einen neuen API-Zugriffstoken ein, um diese Integration weiter zu nutzen.\n\nUm einen neuen API-Zugriffstoken zu generieren, besuche https://developer.tibber.com.",
                 "data": {
                     "access_token": "API-Zugriffstoken"

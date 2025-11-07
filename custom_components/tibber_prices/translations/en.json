@@ -25,7 +25,7 @@
                 "submit": "Select Home"
             },
             "reauth_confirm": {
-                "title": "Reauthenticate Tibber Integration",
+                "title": "Reauthenticate Tibber Price Integration",
                 "description": "The access token for Tibber is no longer valid. Please enter a new API access token to continue using this integration.\n\nTo generate a new API access token, visit https://developer.tibber.com.",
                 "data": {
                     "access_token": "API access token"

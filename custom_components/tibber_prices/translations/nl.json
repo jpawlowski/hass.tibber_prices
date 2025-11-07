@@ -25,7 +25,7 @@
                 "submit": "Huis selecteren"
             },
             "reauth_confirm": {
-                "title": "Tibber-integratie opnieuw authenticeren",
+                "title": "Tibber Prijs-integratie opnieuw authenticeren",
                 "description": "Het toegangstoken voor Tibber is niet langer geldig. Voer een nieuw API-toegangstoken in om deze integratie te blijven gebruiken.\n\nOm een nieuw API-toegangstoken te genereren, bezoek https://developer.tibber.com.",
                 "data": {
                     "access_token": "API-toegangstoken"
