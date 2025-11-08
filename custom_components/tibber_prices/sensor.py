@@ -318,7 +318,7 @@ FUTURE_AVERAGE_SENSORS = (
         name="Next 1h Average Price",
         icon="mdi:chart-line",
         device_class=SensorDeviceClass.MONETARY,
-        suggested_display_precision=2,
+        suggested_display_precision=1,
         entity_registry_enabled_default=True,
     ),
     SensorEntityDescription(
@@ -327,7 +327,7 @@ FUTURE_AVERAGE_SENSORS = (
         name="Next 2h Average Price",
         icon="mdi:chart-line",
         device_class=SensorDeviceClass.MONETARY,
-        suggested_display_precision=2,
+        suggested_display_precision=1,
         entity_registry_enabled_default=True,
     ),
     SensorEntityDescription(
@@ -336,7 +336,7 @@ FUTURE_AVERAGE_SENSORS = (
         name="Next 3h Average Price",
         icon="mdi:chart-line",
         device_class=SensorDeviceClass.MONETARY,
-        suggested_display_precision=2,
+        suggested_display_precision=1,
         entity_registry_enabled_default=True,
     ),
     SensorEntityDescription(
@@ -345,7 +345,7 @@ FUTURE_AVERAGE_SENSORS = (
         name="Next 4h Average Price",
         icon="mdi:chart-line",
         device_class=SensorDeviceClass.MONETARY,
-        suggested_display_precision=2,
+        suggested_display_precision=1,
         entity_registry_enabled_default=True,
     ),
     SensorEntityDescription(
@@ -354,7 +354,7 @@ FUTURE_AVERAGE_SENSORS = (
         name="Next 5h Average Price",
         icon="mdi:chart-line",
         device_class=SensorDeviceClass.MONETARY,
-        suggested_display_precision=2,
+        suggested_display_precision=1,
         entity_registry_enabled_default=True,
     ),
     # Disabled by default: 6h, 8h, 12h (advanced use cases)
@@ -364,7 +364,7 @@ FUTURE_AVERAGE_SENSORS = (
         name="Next 6h Average Price",
         icon="mdi:chart-line",
         device_class=SensorDeviceClass.MONETARY,
-        suggested_display_precision=2,
+        suggested_display_precision=1,
         entity_registry_enabled_default=False,
     ),
     SensorEntityDescription(
@@ -373,7 +373,7 @@ FUTURE_AVERAGE_SENSORS = (
         name="Next 8h Average Price",
         icon="mdi:chart-line",
         device_class=SensorDeviceClass.MONETARY,
-        suggested_display_precision=2,
+        suggested_display_precision=1,
         entity_registry_enabled_default=False,
     ),
     SensorEntityDescription(
@@ -382,7 +382,7 @@ FUTURE_AVERAGE_SENSORS = (
         name="Next 12h Average Price",
         icon="mdi:chart-line",
         device_class=SensorDeviceClass.MONETARY,
-        suggested_display_precision=2,
+        suggested_display_precision=1,
         entity_registry_enabled_default=False,
     ),
 )
@@ -1433,6 +1433,10 @@ class TibberPricesSensor(TibberPricesEntity, SensorEntity):
             attributes["data_available"] = False
             return
 
+        # Add timestamp attribute (first future interval)
+        if future_prices:
+            attributes["timestamp"] = future_prices[0]["interval_start"]
+
         attributes["intervals"] = future_prices
         attributes["data_available"] = True
 
@@ -1660,6 +1664,8 @@ class TibberPricesSensor(TibberPricesEntity, SensorEntity):
                 "leading_price_max",
             ]:
                 self._add_average_price_attributes(attributes)
+            elif key.startswith("next_avg_"):
+                self._add_next_avg_attributes(attributes)
             elif any(pattern in key for pattern in ["_price_today", "_price_tomorrow", "rating", "data_timestamp"]):
                 self._add_statistics_attributes(attributes)
             elif key == "price_forecast":
@@ -1772,7 +1778,12 @@ class TibberPricesSensor(TibberPricesEntity, SensorEntity):
         price_info = self.coordinator.data.get("priceInfo", {})
         now = dt_util.now()
 
-        if key == "price_rating":
+        if key == "data_timestamp":
+            # For data_timestamp sensor, use the latest timestamp (same as the sensor value)
+            latest_timestamp = self._get_data_timestamp()
+            if latest_timestamp:
+                attributes["timestamp"] = latest_timestamp.isoformat()
+        elif key == "price_rating":
             interval_data = find_price_data_for_interval(price_info, now)
             attributes["timestamp"] = interval_data["startsAt"] if interval_data else None
             if hasattr(self, "_last_rating_difference") and self._last_rating_difference is not None:
@@ -1842,6 +1853,48 @@ class TibberPricesSensor(TibberPricesEntity, SensorEntity):
         if intervals_in_window:
             attributes["timestamp"] = intervals_in_window[0].get("startsAt")
             attributes["interval_count"] = len(intervals_in_window)
+
+    def _add_next_avg_attributes(self, attributes: dict) -> None:
+        """Add attributes for next N hours average price sensors."""
+        key = self.entity_description.key
+        now = dt_util.now()
+
+        # Extract hours from sensor key (e.g., "next_avg_3h" -> 3)
+        try:
+            hours = int(key.replace("next_avg_", "").replace("h", ""))
+        except (ValueError, AttributeError):
+            return
+
+        # Get next interval start time (this is where the calculation begins)
+        next_interval_start = now + timedelta(minutes=MINUTES_PER_INTERVAL)
+
+        # Calculate the end of the time window
+        window_end = next_interval_start + timedelta(hours=hours)
+
+        # Get all price intervals
+        price_info = self.coordinator.data.get("priceInfo", {})
+        today_prices = price_info.get("today", [])
+        tomorrow_prices = price_info.get("tomorrow", [])
+        all_prices = today_prices + tomorrow_prices
+
+        if not all_prices:
+            return
+
+        # Find all intervals in the window
+        intervals_in_window = []
+        for price_data in all_prices:
+            starts_at = dt_util.parse_datetime(price_data["startsAt"])
+            if starts_at is None:
+                continue
+            starts_at = dt_util.as_local(starts_at)
+            if next_interval_start <= starts_at < window_end:
+                intervals_in_window.append(price_data)
+
+        # Add timestamp attribute (start of next interval - where calculation begins)
+        if intervals_in_window:
+            attributes["timestamp"] = intervals_in_window[0].get("startsAt")
+            attributes["interval_count"] = len(intervals_in_window)
+            attributes["hours"] = hours
 
     async def async_update(self) -> None:
         """Force a refresh when homeassistant.update_entity is called."""
