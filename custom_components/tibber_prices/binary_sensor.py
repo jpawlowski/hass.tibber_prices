@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from datetime import datetime, timedelta
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
@@ -16,7 +16,6 @@ from homeassistant.util import dt as dt_util
 
 from .coordinator import TIME_SENSITIVE_ENTITY_KEYS
 from .entity import TibberPricesEntity
-from .sensor import find_price_data_for_interval
 
 if TYPE_CHECKING:
     from collections.abc import Callable
@@ -28,20 +27,8 @@ if TYPE_CHECKING:
     from .data import TibberPricesConfigEntry
 
 from .const import (
-    CONF_BEST_PRICE_FLEX,
-    CONF_BEST_PRICE_MIN_DISTANCE_FROM_AVG,
-    CONF_BEST_PRICE_MIN_PERIOD_LENGTH,
     CONF_EXTENDED_DESCRIPTIONS,
-    CONF_PEAK_PRICE_FLEX,
-    CONF_PEAK_PRICE_MIN_DISTANCE_FROM_AVG,
-    CONF_PEAK_PRICE_MIN_PERIOD_LENGTH,
-    DEFAULT_BEST_PRICE_FLEX,
-    DEFAULT_BEST_PRICE_MIN_DISTANCE_FROM_AVG,
-    DEFAULT_BEST_PRICE_MIN_PERIOD_LENGTH,
     DEFAULT_EXTENDED_DESCRIPTIONS,
-    DEFAULT_PEAK_PRICE_FLEX,
-    DEFAULT_PEAK_PRICE_MIN_DISTANCE_FROM_AVG,
-    DEFAULT_PEAK_PRICE_MIN_PERIOD_LENGTH,
     async_get_entity_description,
     get_entity_description,
 )
@@ -110,11 +97,6 @@ class TibberPricesBinarySensor(TibberPricesEntity, BinarySensorEntity):
         self._attribute_getter: Callable | None = self._get_attribute_getter()
         self._time_sensitive_remove_listener: Callable | None = None
 
-        # Cache for expensive period calculations to avoid recalculating twice
-        # (once for is_on, once for attributes)
-        self._period_cache: dict[str, Any] = {}
-        self._cache_key: str = ""
-
     async def async_added_to_hass(self) -> None:
         """When entity is added to hass."""
         await super().async_added_to_hass()
@@ -137,9 +119,6 @@ class TibberPricesBinarySensor(TibberPricesEntity, BinarySensorEntity):
     @callback
     def _handle_time_sensitive_update(self) -> None:
         """Handle time-sensitive update from coordinator."""
-        # Invalidate cache when data potentially changes
-        self._cache_key = ""
-        self._period_cache = {}
         self.async_write_ha_state()
 
     def _get_state_getter(self) -> Callable | None:
@@ -156,71 +135,6 @@ class TibberPricesBinarySensor(TibberPricesEntity, BinarySensorEntity):
             return self._tomorrow_data_available_state
 
         return None
-
-    def _generate_cache_key(self, *, reverse_sort: bool) -> str:
-        """
-        Generate a cache key based on coordinator data and config options.
-
-        This ensures we recalculate when data or configuration changes,
-        but reuse cached results for multiple property accesses.
-        """
-        if not self.coordinator.data:
-            return ""
-
-        # Include timestamp to invalidate when data changes
-        timestamp = self.coordinator.data.get("timestamp", "")
-
-        # Include relevant config options that affect period calculation
-        options = self.coordinator.config_entry.options
-        data = self.coordinator.config_entry.data
-
-        if reverse_sort:
-            flex = options.get(CONF_PEAK_PRICE_FLEX, data.get(CONF_PEAK_PRICE_FLEX, DEFAULT_PEAK_PRICE_FLEX))
-            min_dist = options.get(
-                CONF_PEAK_PRICE_MIN_DISTANCE_FROM_AVG,
-                data.get(CONF_PEAK_PRICE_MIN_DISTANCE_FROM_AVG, DEFAULT_PEAK_PRICE_MIN_DISTANCE_FROM_AVG),
-            )
-            min_len = options.get(
-                CONF_PEAK_PRICE_MIN_PERIOD_LENGTH,
-                data.get(CONF_PEAK_PRICE_MIN_PERIOD_LENGTH, DEFAULT_PEAK_PRICE_MIN_PERIOD_LENGTH),
-            )
-        else:
-            flex = options.get(CONF_BEST_PRICE_FLEX, data.get(CONF_BEST_PRICE_FLEX, DEFAULT_BEST_PRICE_FLEX))
-            min_dist = options.get(
-                CONF_BEST_PRICE_MIN_DISTANCE_FROM_AVG,
-                data.get(CONF_BEST_PRICE_MIN_DISTANCE_FROM_AVG, DEFAULT_BEST_PRICE_MIN_DISTANCE_FROM_AVG),
-            )
-            min_len = options.get(
-                CONF_BEST_PRICE_MIN_PERIOD_LENGTH,
-                data.get(CONF_BEST_PRICE_MIN_PERIOD_LENGTH, DEFAULT_BEST_PRICE_MIN_PERIOD_LENGTH),
-            )
-
-        return f"{timestamp}_{reverse_sort}_{flex}_{min_dist}_{min_len}"
-
-    def _get_flex_option(self, option_key: str, default: float) -> float:
-        """
-        Get a float option from config entry.
-
-        Converts percentage values to decimal fractions.
-        - CONF_BEST_PRICE_FLEX: positive 0-100 → 0.0-1.0
-        - CONF_PEAK_PRICE_FLEX: negative -100 to 0 → -1.0 to 0.0
-
-        Args:
-            option_key: The config key (CONF_BEST_PRICE_FLEX or CONF_PEAK_PRICE_FLEX)
-            default: Default value to use if not found
-
-        Returns:
-            Value converted to decimal fraction (e.g., 5 → 0.05, -5 → -0.05)
-
-        """
-        options = self.coordinator.config_entry.options
-        data = self.coordinator.config_entry.data
-        value = options.get(option_key, data.get(option_key, default))
-        try:
-            value = float(value) / 100
-        except (TypeError, ValueError):
-            value = default
-        return value
 
     def _best_price_state(self) -> bool | None:
         """Return True if the current time is within a best price period."""
@@ -290,422 +204,223 @@ class TibberPricesBinarySensor(TibberPricesEntity, BinarySensorEntity):
 
         return None
 
-    def _get_current_price_data(self) -> tuple[list[float], float] | None:
-        """Get current price data if available."""
+    def _get_precomputed_period_data(self, *, reverse_sort: bool) -> dict | None:
+        """
+        Get precomputed period data from coordinator.
+
+        Returns lightweight period summaries (no full price data to avoid redundancy).
+        """
         if not self.coordinator.data:
             return None
 
+        periods_data = self.coordinator.data.get("periods", {})
+        period_type = "peak_price" if reverse_sort else "best_price"
+        return periods_data.get(period_type)
+
+    def _get_period_intervals_from_price_info(self, period_summaries: list[dict], *, reverse_sort: bool) -> list[dict]:
+        """
+        Build full interval data from period summaries and priceInfo.
+
+        This avoids storing price data redundantly by fetching it on-demand from priceInfo.
+        """
+        if not self.coordinator.data or not period_summaries:
+            return []
+
         price_info = self.coordinator.data.get("priceInfo", {})
-        today_prices = price_info.get("today", [])
+        yesterday = price_info.get("yesterday", [])
+        today = price_info.get("today", [])
+        tomorrow = price_info.get("tomorrow", [])
 
-        if not today_prices:
-            return None
-
-        now = dt_util.now()
-
-        current_interval_data = find_price_data_for_interval({"today": today_prices}, now)
-
-        if not current_interval_data:
-            return None
-
-        prices = [float(price["total"]) for price in today_prices]
-        prices.sort()
-        return prices, float(current_interval_data["total"])
-
-    def _annotate_single_interval(
-        self,
-        interval: dict,
-        annotation_ctx: dict,
-    ) -> dict:
-        """Annotate a single interval with all required attributes for Home Assistant UI and automations."""
-        interval_copy = interval.copy()
-        interval_remaining = annotation_ctx["interval_count"] - annotation_ctx["interval_idx"]
-        # Extract and keep internal interval fields for logic (with _ prefix)
-        interval_start = interval_copy.pop("interval_start", None)
-        interval_end = interval_copy.pop("interval_end", None)
-        # Remove other interval_* fields that are no longer needed
-        interval_copy.pop("interval_hour", None)
-        interval_copy.pop("interval_minute", None)
-        interval_copy.pop("interval_time", None)
-        # Remove startsAt - not needed anymore
-        interval_copy.pop("startsAt", None)
-        price_raw = interval_copy.pop("price", None)
-        new_interval = {
-            "period_start": annotation_ctx["period_start"],
-            "period_end": annotation_ctx["period_end"],
-            "hour": annotation_ctx["period_start_hour"],
-            "minute": annotation_ctx["period_start_minute"],
-            "time": annotation_ctx["period_start_time"],
-            "duration_minutes": annotation_ctx["period_length"],
-            "remaining_minutes_after_interval": interval_remaining * MINUTES_PER_INTERVAL,
-            "periods_total": annotation_ctx["period_count"],
-            "periods_remaining": annotation_ctx["periods_remaining"],
-            "period_position": annotation_ctx["period_idx"],
-            "price": round(price_raw * 100, 2) if price_raw is not None else None,
-            # Keep internal fields for logic (state checks, filtering)
-            "_interval_start": interval_start,
-            "_interval_end": interval_end,
-        }
-        new_interval.update(interval_copy)
-
-        # Add price_diff_from_min for best_price_period
-        if annotation_ctx.get("diff_key") == "price_diff_from_min":
-            price_diff = price_raw - annotation_ctx["ref_price"]
-            new_interval["price_diff_from_min"] = round(price_diff * 100, 2)
-            # Calculate percent difference from min price
-            price_diff_percent = (
-                ((price_raw - annotation_ctx["ref_price"]) / annotation_ctx["ref_price"]) * 100
-                if annotation_ctx["ref_price"] != 0
-                else 0.0
-            )
-            new_interval["price_diff_from_min_" + PERCENTAGE] = round(price_diff_percent, 2)
-
-        # Add price_diff_from_max for peak_price_period
-        elif annotation_ctx.get("diff_key") == "price_diff_from_max":
-            price_diff = price_raw - annotation_ctx["ref_price"]
-            new_interval["price_diff_from_max"] = round(price_diff * 100, 2)
-            # Calculate percent difference from max price
-            price_diff_percent = (
-                ((price_raw - annotation_ctx["ref_price"]) / annotation_ctx["ref_price"]) * 100
-                if annotation_ctx["ref_price"] != 0
-                else 0.0
-            )
-            new_interval["price_diff_from_max_" + PERCENTAGE] = round(price_diff_percent, 2)
-
-        return new_interval
-
-    def _annotate_period_intervals(
-        self,
-        periods: list[list[dict]],
-        ref_prices: dict,
-        avg_price_by_day: dict,
-    ) -> list[dict]:
-        """
-        Return flattened and annotated intervals with period info and requested properties.
-
-        Uses the correct reference price for each interval's date.
-        """
-        reference_type = None
-        if self.entity_description.key == "best_price_period":
-            reference_type = "min"
-        elif self.entity_description.key == "peak_price_period":
-            reference_type = "max"
-        else:
-            reference_type = "ref"
-        if reference_type == "min":
-            diff_key = "price_diff_from_min"
-            diff_pct_key = "price_diff_from_min_" + PERCENTAGE
-        elif reference_type == "max":
-            diff_key = "price_diff_from_max"
-            diff_pct_key = "price_diff_from_max_" + PERCENTAGE
-        else:
-            diff_key = "price_diff"
-            diff_pct_key = "price_diff_" + PERCENTAGE
-        result = []
-        period_count = len(periods)
-        for period_idx, period in enumerate(periods, 1):
-            period_start = period[0]["interval_start"] if period else None
-            period_start_hour = period_start.hour if period_start else None
-            period_start_minute = period_start.minute if period_start else None
-            period_start_time = f"{period_start_hour:02d}:{period_start_minute:02d}" if period_start else None
-            period_end = period[-1]["interval_end"] if period else None
-            interval_count = len(period)
-            period_length = interval_count * MINUTES_PER_INTERVAL
-            periods_remaining = len(periods) - period_idx
-            for interval_idx, interval in enumerate(period, 1):
-                interval_start = interval.get("interval_start")
-                interval_date = interval_start.date() if interval_start else None
-                avg_price = avg_price_by_day.get(interval_date, 0)
-                ref_price = ref_prices.get(interval_date, 0)
-                annotation_ctx = {
-                    "period_start": period_start,
-                    "period_end": period_end,
-                    "period_start_hour": period_start_hour,
-                    "period_start_minute": period_start_minute,
-                    "period_start_time": period_start_time,
-                    "period_length": period_length,
-                    "interval_count": interval_count,
-                    "interval_idx": interval_idx,
-                    "period_count": period_count,
-                    "periods_remaining": periods_remaining,
-                    "period_idx": period_idx,
-                    "ref_price": ref_price,
-                    "avg_price": avg_price,
-                    "diff_key": diff_key,
-                    "diff_pct_key": diff_pct_key,
-                }
-                new_interval = self._annotate_single_interval(
-                    interval,
-                    annotation_ctx,
-                )
-                result.append(new_interval)
-        return result
-
-    def _split_intervals_by_day(self, all_prices: list[dict]) -> tuple[dict, dict]:
-        """Split intervals by day and calculate average price per day."""
-        intervals_by_day: dict = {}
-        avg_price_by_day: dict = {}
-        for price_data in all_prices:
-            dt = dt_util.parse_datetime(price_data["startsAt"])
-            if dt is None:
-                continue
-            date = dt.date()
-            intervals_by_day.setdefault(date, []).append(price_data)
-        for date, intervals in intervals_by_day.items():
-            avg_price_by_day[date] = sum(float(p["total"]) for p in intervals) / len(intervals)
-        return intervals_by_day, avg_price_by_day
-
-    def _calculate_reference_prices(self, intervals_by_day: dict, *, reverse_sort: bool) -> dict:
-        """Calculate reference prices for each day."""
-        ref_prices: dict = {}
-        for date, intervals in intervals_by_day.items():
-            prices = [float(p["total"]) for p in intervals]
-            if reverse_sort is False:
-                ref_prices[date] = min(prices)
-            else:
-                ref_prices[date] = max(prices)
-        return ref_prices
-
-    def _build_periods(
-        self,
-        all_prices: list[dict],
-        price_context: dict,
-        *,
-        reverse_sort: bool,
-    ) -> list[list[dict]]:
-        """
-        Build periods, allowing periods to cross midnight (day boundary).
-
-        Strictly enforce flex threshold by percent diff, matching attribute calculation.
-        Additionally enforces:
-        1. Cap at daily average to prevent overlap between best and peak periods
-        2. Minimum distance from average to ensure meaningful price difference
-
-        Args:
-            all_prices: All price data points
-            price_context: Dict with ref_prices, avg_prices, flex, and min_distance_from_avg
-            reverse_sort: True for peak price (descending), False for best price (ascending)
-
-        Returns:
-            List of periods, each period is a list of interval dicts
-
-        """
-        ref_prices = price_context["ref_prices"]
-        avg_prices = price_context["avg_prices"]
-        flex = price_context["flex"]
-        min_distance_from_avg = price_context["min_distance_from_avg"]
-
-        periods: list[list[dict]] = []
-        current_period: list[dict] = []
-        last_ref_date = None
+        # Build a quick lookup for prices by timestamp
+        all_prices = yesterday + today + tomorrow
+        price_lookup = {}
         for price_data in all_prices:
             starts_at = dt_util.parse_datetime(price_data["startsAt"])
-            if starts_at is None:
-                continue
-            starts_at = dt_util.as_local(starts_at)
-            date = starts_at.date()
-            ref_price = ref_prices[date]
-            avg_price = avg_prices[date]
-            price = float(price_data["total"])
-            percent_diff = ((price - ref_price) / ref_price) * 100 if ref_price != 0 else 0.0
-            percent_diff = round(percent_diff, 2)
-            # For best price (flex >= 0): percent_diff <= flex*100 (prices up to flex% above reference)
-            # For peak price (flex <= 0): percent_diff >= flex*100 (prices down to |flex|% below reference)
-            in_flex = percent_diff <= flex * 100 if not reverse_sort else percent_diff >= flex * 100
-            # Cap at daily average to prevent overlap between best and peak periods
-            # Best price: only prices below average
-            # Peak price: only prices above average
-            within_avg_boundary = price <= avg_price if not reverse_sort else price >= avg_price
-            # Enforce minimum distance from average (in percentage terms)
-            # Best price: price must be at least min_distance_from_avg% below average
-            # Peak price: price must be at least min_distance_from_avg% above average
-            if not reverse_sort:
-                # Best price: price <= avg * (1 - min_distance_from_avg/100)
-                min_distance_threshold = avg_price * (1 - min_distance_from_avg / 100)
-                meets_min_distance = price <= min_distance_threshold
-            else:
-                # Peak price: price >= avg * (1 + min_distance_from_avg/100)
-                min_distance_threshold = avg_price * (1 + min_distance_from_avg / 100)
-                meets_min_distance = price >= min_distance_threshold
-            # Split period if day changes
-            if last_ref_date is not None and date != last_ref_date and current_period:
-                periods.append(current_period)
-                current_period = []
-            last_ref_date = date
-            if in_flex and within_avg_boundary and meets_min_distance:
-                current_period.append(
-                    {
-                        "interval_hour": starts_at.hour,
-                        "interval_minute": starts_at.minute,
-                        "interval_time": f"{starts_at.hour:02d}:{starts_at.minute:02d}",
-                        "price": price,
-                        "interval_start": starts_at,
-                    }
-                )
-            elif current_period:
-                periods.append(current_period)
-                current_period = []
-        if current_period:
-            periods.append(current_period)
-        return periods
+            if starts_at:
+                starts_at = dt_util.as_local(starts_at)
+                price_lookup[starts_at.isoformat()] = price_data
 
-    def _filter_periods_by_min_length(self, periods: list[list[dict]], *, reverse_sort: bool) -> list[list[dict]]:
-        """
-        Filter periods to only include those meeting the minimum length requirement.
+        # Get reference data for annotations
+        period_data = self._get_precomputed_period_data(reverse_sort=reverse_sort)
+        if not period_data:
+            return []
 
-        Args:
-            periods: List of periods (each period is a list of interval dicts)
-            reverse_sort: True for peak price, False for best price
+        ref_data = period_data.get("reference_data", {})
+        ref_prices = ref_data.get("ref_prices", {})
+        avg_prices = ref_data.get("avg_prices", {})
 
-        Returns:
-            Filtered list of periods that meet minimum length requirement
+        # Build annotated intervals from period summaries
+        intervals = []
+        period_count = len(period_summaries)
 
-        """
-        options = self.coordinator.config_entry.options
-        data = self.coordinator.config_entry.data
+        for period_idx, period_summary in enumerate(period_summaries, 1):
+            period_start = period_summary.get("start")
+            period_end = period_summary.get("end")
+            interval_starts = period_summary.get("interval_starts", [])
+            interval_count = len(interval_starts)
+            duration_minutes = period_summary.get("duration_minutes", 0)
+            periods_remaining = period_count - period_idx
 
-        # Use appropriate config based on sensor type
-        if reverse_sort:  # Peak price
-            conf_key = CONF_PEAK_PRICE_MIN_PERIOD_LENGTH
-            default = DEFAULT_PEAK_PRICE_MIN_PERIOD_LENGTH
-        else:  # Best price
-            conf_key = CONF_BEST_PRICE_MIN_PERIOD_LENGTH
-            default = DEFAULT_BEST_PRICE_MIN_PERIOD_LENGTH
+            for interval_idx, start_iso in enumerate(interval_starts, 1):
+                # Get price data from priceInfo
+                price_data = price_lookup.get(start_iso)
+                if not price_data:
+                    continue
 
-        min_period_length = options.get(conf_key, data.get(conf_key, default))
+                starts_at = dt_util.parse_datetime(price_data["startsAt"])
+                if not starts_at:
+                    continue
+                starts_at = dt_util.as_local(starts_at)
+                date_key = starts_at.date().isoformat()
 
-        # Convert minutes to number of 15-minute intervals
-        min_intervals = min_period_length // MINUTES_PER_INTERVAL
+                price_raw = float(price_data["total"])
+                price_minor = round(price_raw * 100, 2)
 
-        # Filter out periods that are too short
-        return [period for period in periods if len(period) >= min_intervals]
+                # Get reference values for this day
+                ref_price = ref_prices.get(date_key, 0.0)
+                avg_price = avg_prices.get(date_key, 0.0)
 
-    def _merge_adjacent_periods_at_midnight(self, periods: list[list[dict]]) -> list[list[dict]]:
-        """
-        Merge adjacent periods that meet at midnight.
+                # Calculate price difference
+                price_diff = price_raw - ref_price
+                price_diff_minor = round(price_diff * 100, 2)
+                price_diff_pct = (price_diff / ref_price) * 100 if ref_price != 0 else 0.0
 
-        When two periods are detected separately for today and tomorrow due to different
-        daily average prices, but they are directly adjacent at midnight, merge them into
-        a single period for better user experience.
+                interval_remaining = interval_count - interval_idx
+                interval_end = starts_at + timedelta(minutes=MINUTES_PER_INTERVAL)
 
-        Args:
-            periods: List of periods (each period is a list of interval dicts)
+                annotated = {
+                    # Period-level attributes
+                    "period_start": period_start,
+                    "period_end": period_end,
+                    "hour": period_start.hour if period_start else None,
+                    "minute": period_start.minute if period_start else None,
+                    "time": f"{period_start.hour:02d}:{period_start.minute:02d}" if period_start else None,
+                    "duration_minutes": duration_minutes,
+                    "remaining_minutes_after_interval": interval_remaining * MINUTES_PER_INTERVAL,
+                    "periods_total": period_count,
+                    "periods_remaining": periods_remaining,
+                    "period_position": period_idx,
+                    # Interval-level attributes
+                    "price": price_minor,
+                    # Internal fields
+                    "_interval_start": starts_at,
+                    "_interval_end": interval_end,
+                    "_ref_price": ref_price,
+                    "_avg_price": avg_price,
+                }
 
-        Returns:
-            List of periods with adjacent midnight periods merged
-
-        """
-        if not periods:
-            return periods
-
-        merged = []
-        i = 0
-
-        while i < len(periods):
-            current_period = periods[i]
-
-            # Check if there's a next period and if they meet at midnight
-            if i + 1 < len(periods):
-                next_period = periods[i + 1]
-
-                # Get the last interval of current period and first interval of next period
-                last_interval = current_period[-1]
-                first_interval = next_period[0]
-
-                last_start = last_interval.get("interval_start")
-                next_start = first_interval.get("interval_start")
-
-                # Check if they are adjacent (15 minutes apart) and cross midnight
-                if last_start and next_start:
-                    time_diff = next_start - last_start
-                    last_date = last_start.date()
-                    next_date = next_start.date()
-
-                    # If they are 15 minutes apart and on different days (crossing midnight)
-                    if time_diff == timedelta(minutes=MINUTES_PER_INTERVAL) and next_date > last_date:
-                        # Merge the two periods
-                        merged_period = current_period + next_period
-                        merged.append(merged_period)
-                        i += 2  # Skip both periods as we've merged them
-                        continue
-
-            # If no merge happened, just add the current period
-            merged.append(current_period)
-            i += 1
-
-        return merged
-
-    def _add_interval_ends(self, periods: list[list[dict]]) -> None:
-        """Add interval_end to each interval using per-interval interval_length."""
-        for period in periods:
-            for idx, interval in enumerate(period):
-                if idx + 1 < len(period):
-                    interval["interval_end"] = period[idx + 1]["interval_start"]
+                # Add price difference attributes based on sensor type
+                if reverse_sort:
+                    annotated["price_diff_from_max"] = price_diff_minor
+                    annotated[f"price_diff_from_max_{PERCENTAGE}"] = round(price_diff_pct, 2)
                 else:
-                    interval["interval_end"] = interval["interval_start"] + timedelta(minutes=MINUTES_PER_INTERVAL)
+                    annotated["price_diff_from_min"] = price_diff_minor
+                    annotated[f"price_diff_from_min_{PERCENTAGE}"] = round(price_diff_pct, 2)
 
-    def _filter_intervals_today_tomorrow(self, result: list[dict]) -> list[dict]:
-        """Filter intervals to only include those from today and tomorrow."""
-        today = dt_util.now().date()
-        tomorrow = today + timedelta(days=1)
-        return [
-            interval
-            for interval in result
-            if interval.get("_interval_start") and today <= interval["_interval_start"].date() <= tomorrow
-        ]
+                intervals.append(annotated)
 
-    def _find_current_or_next_interval(self, filtered_result: list[dict]) -> dict | None:
+        return intervals
+
+    def _get_price_intervals_attributes(self, *, reverse_sort: bool) -> dict | None:
+        """
+        Get price interval attributes using precomputed data from coordinator.
+
+        This method now:
+        1. Gets lightweight period summaries from coordinator
+        2. Fetches actual price data from priceInfo on-demand
+        3. Builds annotations without storing data redundantly
+        """
+        # Get precomputed period summaries from coordinator
+        period_data = self._get_precomputed_period_data(reverse_sort=reverse_sort)
+        if not period_data:
+            return None
+
+        period_summaries = period_data.get("periods", [])
+        if not period_summaries:
+            return None
+
+        # Build full interval data from summaries + priceInfo
+        intervals = self._get_period_intervals_from_price_info(period_summaries, reverse_sort=reverse_sort)
+        if not intervals:
+            return None
+
+        # Find current or next interval
+        current_interval = self._find_current_or_next_interval(intervals)
+
+        # Build periods summary
+        periods_summary = self._build_periods_summary(intervals)
+
+        # Build final attributes
+        return self._build_final_attributes(current_interval, periods_summary, intervals)
+
+    def _find_current_or_next_interval(self, intervals: list[dict]) -> dict | None:
         """Find the current or next interval from the filtered list."""
         now = dt_util.now()
-        for interval in filtered_result:
+        # First pass: find currently active interval
+        for interval in intervals:
             start = interval.get("_interval_start")
             end = interval.get("_interval_end")
             if start and end and start <= now < end:
                 return interval.copy()
-        for interval in filtered_result:
+        # Second pass: find next future interval
+        for interval in intervals:
             start = interval.get("_interval_start")
             if start and start > now:
                 return interval.copy()
         return None
 
-    def _filter_periods_today_tomorrow(self, periods: list[list[dict]]) -> list[list[dict]]:
+    def _build_periods_summary(self, intervals: list[dict]) -> list[dict]:
         """
-        Filter periods to include those that are currently active or in the future.
+        Build a summary of periods with consistent attribute structure.
 
-        This includes periods that started yesterday but are still active now (crossing midnight),
-        as well as periods happening today or tomorrow. We don't want to show all past periods
-        from yesterday, only those that extend into today.
+        Returns a list of period summaries with the same attributes as top-level,
+        making the structure predictable and easy to use in automations.
         """
-        now = dt_util.now()
-        today = now.date()
-        tomorrow = today + timedelta(days=1)
+        if not intervals:
+            return []
 
-        filtered = []
-        for period in periods:
-            if not period:
+        # Group intervals by period (they have the same period_start)
+        periods_dict: dict[str, list[dict]] = {}
+        for interval in intervals:
+            period_key = interval.get("period_start")
+            if period_key:
+                key_str = period_key.isoformat() if hasattr(period_key, "isoformat") else str(period_key)
+                if key_str not in periods_dict:
+                    periods_dict[key_str] = []
+                periods_dict[key_str].append(interval)
+
+        # Build summary for each period with consistent attribute names
+        summaries = []
+        for period_intervals in periods_dict.values():
+            if not period_intervals:
                 continue
 
-            # Get the period's end time (last interval's end)
-            last_interval = period[-1]
-            period_end = last_interval.get("interval_end")
+            first = period_intervals[0]
+            prices = [i["price"] for i in period_intervals if "price" in i]
 
-            # Get the period's start time (first interval's start)
-            first_interval = period[0]
-            period_start = first_interval.get("interval_start")
+            # Use same attribute names as top-level for consistency
+            summary = {
+                "start": first.get("period_start"),
+                "end": first.get("period_end"),
+                "hour": first.get("hour"),
+                "minute": first.get("minute"),
+                "time": first.get("time"),
+                "duration_minutes": first.get("duration_minutes"),
+                "periods_total": first.get("periods_total"),
+                "periods_remaining": first.get("periods_remaining"),
+                "period_position": first.get("period_position"),
+                "intervals_count": len(period_intervals),
+                "price_avg": round(sum(prices) / len(prices), 2) if prices else 0,
+                "price_min": round(min(prices), 2) if prices else 0,
+                "price_max": round(max(prices), 2) if prices else 0,
+            }
 
-            if not period_end or not period_start:
-                continue
+            # Add price_diff attributes if present
+            self._add_price_diff_for_period(summary, period_intervals, first)
 
-            # Include period if:
-            # 1. It's still active (ends in the future), OR
-            # 2. It has intervals today or tomorrow
-            if period_end > now or any(
-                interval.get("interval_start") and today <= interval["interval_start"].date() <= tomorrow
-                for interval in period
-            ):
-                filtered.append(period)
+            summaries.append(summary)
 
-        return filtered
+        return summaries
 
     def _build_final_attributes(
         self,
@@ -767,136 +482,6 @@ class TibberPricesBinarySensor(TibberPricesEntity, BinarySensorEntity):
             "periods": [],
             "intervals_count": 0,
         }
-
-    def _get_price_intervals_attributes(self, *, reverse_sort: bool) -> dict | None:
-        """
-        Get price interval attributes with caching to avoid expensive recalculation.
-
-        Uses a cache key based on coordinator data timestamp and config options.
-        Returns simplified attributes without the full intervals list to reduce payload.
-        """
-        # Check cache first
-        cache_key = self._generate_cache_key(reverse_sort=reverse_sort)
-        if cache_key and cache_key == self._cache_key and self._period_cache:
-            return self._period_cache
-
-        # Cache miss - perform expensive calculation
-        if not self.coordinator.data:
-            return None
-
-        price_info = self.coordinator.data.get("priceInfo", {})
-        yesterday_prices = price_info.get("yesterday", [])
-        today_prices = price_info.get("today", [])
-        tomorrow_prices = price_info.get("tomorrow", [])
-        all_prices = yesterday_prices + today_prices + tomorrow_prices
-
-        if not all_prices:
-            return None
-
-        all_prices.sort(key=lambda p: p["startsAt"])
-        intervals_by_day, avg_price_by_day = self._split_intervals_by_day(all_prices)
-        ref_prices = self._calculate_reference_prices(intervals_by_day, reverse_sort=reverse_sort)
-
-        flex = self._get_flex_option(
-            CONF_BEST_PRICE_FLEX if not reverse_sort else CONF_PEAK_PRICE_FLEX,
-            DEFAULT_BEST_PRICE_FLEX if not reverse_sort else DEFAULT_PEAK_PRICE_FLEX,
-        )
-        min_distance_from_avg = self._get_flex_option(
-            CONF_BEST_PRICE_MIN_DISTANCE_FROM_AVG if not reverse_sort else CONF_PEAK_PRICE_MIN_DISTANCE_FROM_AVG,
-            DEFAULT_BEST_PRICE_MIN_DISTANCE_FROM_AVG if not reverse_sort else DEFAULT_PEAK_PRICE_MIN_DISTANCE_FROM_AVG,
-        )
-
-        price_context = {
-            "ref_prices": ref_prices,
-            "avg_prices": avg_price_by_day,
-            "flex": flex,
-            "min_distance_from_avg": min_distance_from_avg,
-        }
-
-        periods = self._build_periods(all_prices, price_context, reverse_sort=reverse_sort)
-        periods = self._filter_periods_by_min_length(periods, reverse_sort=reverse_sort)
-        periods = self._merge_adjacent_periods_at_midnight(periods)
-        self._add_interval_ends(periods)
-
-        filtered_periods = self._filter_periods_today_tomorrow(periods)
-
-        # Simplified annotation - only annotate enough to find current interval and provide summary
-        result = self._annotate_period_intervals(
-            filtered_periods,
-            ref_prices,
-            avg_price_by_day,
-        )
-
-        filtered_result = self._filter_intervals_today_tomorrow(result)
-        current_interval = self._find_current_or_next_interval(filtered_result)
-
-        if not current_interval and filtered_result:
-            current_interval = filtered_result[0]
-
-        # Build periods array first
-        periods_summary = self._build_periods_summary(filtered_result) if filtered_result else []
-
-        # Build final attributes using helper method
-        attributes = self._build_final_attributes(current_interval, periods_summary, filtered_result)
-
-        # Cache the result (with internal fields intact)
-        self._cache_key = cache_key
-        self._period_cache = attributes
-
-        return attributes
-
-    def _build_periods_summary(self, intervals: list[dict]) -> list[dict]:
-        """
-        Build a summary of periods with consistent attribute structure.
-
-        Returns a list of period summaries with the same attributes as top-level,
-        making the structure predictable and easy to use in automations.
-        """
-        if not intervals:
-            return []
-
-        # Group intervals by period (they have the same period_start)
-        periods_dict: dict[str, list[dict]] = {}
-        for interval in intervals:
-            period_key = interval.get("period_start")
-            if period_key:
-                key_str = period_key.isoformat() if hasattr(period_key, "isoformat") else str(period_key)
-                if key_str not in periods_dict:
-                    periods_dict[key_str] = []
-                periods_dict[key_str].append(interval)
-
-        # Build summary for each period with consistent attribute names
-        summaries = []
-        for period_intervals in periods_dict.values():
-            if not period_intervals:
-                continue
-
-            first = period_intervals[0]
-            prices = [i["price"] for i in period_intervals if "price" in i]
-
-            # Use same attribute names as top-level for consistency
-            summary = {
-                "start": first.get("period_start"),
-                "end": first.get("period_end"),
-                "hour": first.get("hour"),
-                "minute": first.get("minute"),
-                "time": first.get("time"),
-                "duration_minutes": first.get("duration_minutes"),
-                "periods_total": first.get("periods_total"),
-                "periods_remaining": first.get("periods_remaining"),
-                "period_position": first.get("period_position"),
-                "intervals_count": len(period_intervals),
-                "price_avg": round(sum(prices) / len(prices), 2) if prices else 0,
-                "price_min": round(min(prices), 2) if prices else 0,
-                "price_max": round(max(prices), 2) if prices else 0,
-            }
-
-            # Add price_diff attributes if present
-            self._add_price_diff_for_period(summary, period_intervals, first)
-
-            summaries.append(summary)
-
-        return summaries
 
     def _add_price_diff_for_period(self, summary: dict, period_intervals: list[dict], first: dict) -> None:
         """

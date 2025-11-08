@@ -25,12 +25,25 @@ from .api import (
     TibberPricesApiClientError,
 )
 from .const import (
+    CONF_BEST_PRICE_FLEX,
+    CONF_BEST_PRICE_MIN_DISTANCE_FROM_AVG,
+    CONF_BEST_PRICE_MIN_PERIOD_LENGTH,
+    CONF_PEAK_PRICE_FLEX,
+    CONF_PEAK_PRICE_MIN_DISTANCE_FROM_AVG,
+    CONF_PEAK_PRICE_MIN_PERIOD_LENGTH,
     CONF_PRICE_RATING_THRESHOLD_HIGH,
     CONF_PRICE_RATING_THRESHOLD_LOW,
+    DEFAULT_BEST_PRICE_FLEX,
+    DEFAULT_BEST_PRICE_MIN_DISTANCE_FROM_AVG,
+    DEFAULT_BEST_PRICE_MIN_PERIOD_LENGTH,
+    DEFAULT_PEAK_PRICE_FLEX,
+    DEFAULT_PEAK_PRICE_MIN_DISTANCE_FROM_AVG,
+    DEFAULT_PEAK_PRICE_MIN_PERIOD_LENGTH,
     DEFAULT_PRICE_RATING_THRESHOLD_HIGH,
     DEFAULT_PRICE_RATING_THRESHOLD_LOW,
     DOMAIN,
 )
+from .period_utils import calculate_periods
 from .price_utils import (
     enrich_price_info_with_differences,
     find_price_data_for_interval,
@@ -664,6 +677,92 @@ class TibberPricesDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             "high": options.get(CONF_PRICE_RATING_THRESHOLD_HIGH, DEFAULT_PRICE_RATING_THRESHOLD_HIGH),
         }
 
+    def _get_period_config(self, *, reverse_sort: bool) -> dict[str, Any]:
+        """Get period calculation configuration from config options."""
+        options = self.config_entry.options
+        data = self.config_entry.data
+
+        if reverse_sort:
+            # Peak price configuration
+            flex = options.get(CONF_PEAK_PRICE_FLEX, data.get(CONF_PEAK_PRICE_FLEX, DEFAULT_PEAK_PRICE_FLEX))
+            min_distance_from_avg = options.get(
+                CONF_PEAK_PRICE_MIN_DISTANCE_FROM_AVG,
+                data.get(CONF_PEAK_PRICE_MIN_DISTANCE_FROM_AVG, DEFAULT_PEAK_PRICE_MIN_DISTANCE_FROM_AVG),
+            )
+            min_period_length = options.get(
+                CONF_PEAK_PRICE_MIN_PERIOD_LENGTH,
+                data.get(CONF_PEAK_PRICE_MIN_PERIOD_LENGTH, DEFAULT_PEAK_PRICE_MIN_PERIOD_LENGTH),
+            )
+        else:
+            # Best price configuration
+            flex = options.get(CONF_BEST_PRICE_FLEX, data.get(CONF_BEST_PRICE_FLEX, DEFAULT_BEST_PRICE_FLEX))
+            min_distance_from_avg = options.get(
+                CONF_BEST_PRICE_MIN_DISTANCE_FROM_AVG,
+                data.get(CONF_BEST_PRICE_MIN_DISTANCE_FROM_AVG, DEFAULT_BEST_PRICE_MIN_DISTANCE_FROM_AVG),
+            )
+            min_period_length = options.get(
+                CONF_BEST_PRICE_MIN_PERIOD_LENGTH,
+                data.get(CONF_BEST_PRICE_MIN_PERIOD_LENGTH, DEFAULT_BEST_PRICE_MIN_PERIOD_LENGTH),
+            )
+
+        # Convert flex from percentage to decimal (e.g., 5 -> 0.05)
+        try:
+            flex = float(flex) / 100
+        except (TypeError, ValueError):
+            flex = DEFAULT_BEST_PRICE_FLEX / 100 if not reverse_sort else DEFAULT_PEAK_PRICE_FLEX / 100
+
+        return {
+            "flex": flex,
+            "min_distance_from_avg": float(min_distance_from_avg),
+            "min_period_length": int(min_period_length),
+        }
+
+    def _calculate_periods_for_price_info(self, price_info: dict[str, Any]) -> dict[str, Any]:
+        """Calculate periods (best price and peak price) for the given price info."""
+        yesterday_prices = price_info.get("yesterday", [])
+        today_prices = price_info.get("today", [])
+        tomorrow_prices = price_info.get("tomorrow", [])
+        all_prices = yesterday_prices + today_prices + tomorrow_prices
+
+        if not all_prices:
+            return {
+                "best_price": {
+                    "periods": [],
+                    "intervals": [],
+                    "metadata": {"total_intervals": 0, "total_periods": 0, "config": {}},
+                },
+                "peak_price": {
+                    "periods": [],
+                    "intervals": [],
+                    "metadata": {"total_intervals": 0, "total_periods": 0, "config": {}},
+                },
+            }
+
+        # Calculate best price periods
+        best_config = self._get_period_config(reverse_sort=False)
+        best_periods = calculate_periods(
+            all_prices,
+            reverse_sort=False,
+            flex=best_config["flex"],
+            min_distance_from_avg=best_config["min_distance_from_avg"],
+            min_period_length=best_config["min_period_length"],
+        )
+
+        # Calculate peak price periods
+        peak_config = self._get_period_config(reverse_sort=True)
+        peak_periods = calculate_periods(
+            all_prices,
+            reverse_sort=True,
+            flex=peak_config["flex"],
+            min_distance_from_avg=peak_config["min_distance_from_avg"],
+            min_period_length=peak_config["min_period_length"],
+        )
+
+        return {
+            "best_price": best_periods,
+            "peak_price": peak_periods,
+        }
+
     def _transform_data_for_main_entry(self, raw_data: dict[str, Any]) -> dict[str, Any]:
         """Transform raw data for main entry (aggregated view of all homes)."""
         # For main entry, we can show data from the first home as default
@@ -698,10 +797,14 @@ class TibberPricesDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             threshold_high=thresholds["high"],
         )
 
+        # Calculate periods (best price and peak price)
+        periods = self._calculate_periods_for_price_info(price_info)
+
         return {
             "timestamp": raw_data.get("timestamp"),
             "homes": homes_data,
             "priceInfo": price_info,
+            "periods": periods,
         }
 
     def _transform_data_for_subentry(self, main_data: dict[str, Any]) -> dict[str, Any]:
@@ -739,9 +842,13 @@ class TibberPricesDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             threshold_high=thresholds["high"],
         )
 
+        # Calculate periods (best price and peak price)
+        periods = self._calculate_periods_for_price_info(price_info)
+
         return {
             "timestamp": main_data.get("timestamp"),
             "priceInfo": price_info,
+            "periods": periods,
         }
 
     # --- Methods expected by sensors and services ---
