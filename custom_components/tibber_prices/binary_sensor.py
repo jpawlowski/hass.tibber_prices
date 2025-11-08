@@ -347,8 +347,8 @@ class TibberPricesBinarySensor(TibberPricesEntity, BinarySensorEntity):
         # Find current or next interval
         current_interval = self._find_current_or_next_interval(intervals)
 
-        # Build periods summary
-        periods_summary = self._build_periods_summary(intervals)
+        # Build periods summary (merge with original summaries to include level/rating_level)
+        periods_summary = self._build_periods_summary(intervals, period_summaries)
 
         # Build final attributes
         return self._build_final_attributes(current_interval, periods_summary, intervals)
@@ -369,15 +369,28 @@ class TibberPricesBinarySensor(TibberPricesEntity, BinarySensorEntity):
                 return interval.copy()
         return None
 
-    def _build_periods_summary(self, intervals: list[dict]) -> list[dict]:
+    def _build_periods_summary(self, intervals: list[dict], original_summaries: list[dict]) -> list[dict]:
         """
         Build a summary of periods with consistent attribute structure.
 
         Returns a list of period summaries with the same attributes as top-level,
         making the structure predictable and easy to use in automations.
+
+        Args:
+            intervals: List of interval dictionaries with period information
+            original_summaries: Original period summaries from coordinator (with level/rating_level)
+
         """
         if not intervals:
             return []
+
+        # Build a lookup for original summaries by start time
+        original_lookup: dict[str, dict] = {}
+        for summary in original_summaries:
+            start = summary.get("start")
+            if start:
+                key = start.isoformat() if hasattr(start, "isoformat") else str(start)
+                original_lookup[key] = summary
 
         # Group intervals by period (they have the same period_start)
         periods_dict: dict[str, list[dict]] = {}
@@ -398,24 +411,41 @@ class TibberPricesBinarySensor(TibberPricesEntity, BinarySensorEntity):
             first = period_intervals[0]
             prices = [i["price"] for i in period_intervals if "price" in i]
 
-            # Use same attribute names as top-level for consistency
+            # Get level and rating_level from original summaries first
+            aggregated_level = None
+            aggregated_rating_level = None
+            period_start = first.get("period_start")
+            if period_start:
+                key = period_start.isoformat() if hasattr(period_start, "isoformat") else str(period_start)
+                original = original_lookup.get(key)
+                if original:
+                    aggregated_level = original.get("level")
+                    aggregated_rating_level = original.get("rating_level")
+
+            # Optimized attribute order: time → core decisions → prices → details → meta
             summary = {
+                # Time information
                 "start": first.get("period_start"),
                 "end": first.get("period_end"),
+                "duration_minutes": first.get("duration_minutes"),
+                # Core decision attributes
+                "level": aggregated_level,
+                "rating_level": aggregated_rating_level,
+                # Price statistics
+                "price_avg": round(sum(prices) / len(prices), 2) if prices else 0,
+                "price_min": round(min(prices), 2) if prices else 0,
+                "price_max": round(max(prices), 2) if prices else 0,
+                # Detail information
                 "hour": first.get("hour"),
                 "minute": first.get("minute"),
                 "time": first.get("time"),
-                "duration_minutes": first.get("duration_minutes"),
                 "periods_total": first.get("periods_total"),
                 "periods_remaining": first.get("periods_remaining"),
                 "period_position": first.get("period_position"),
                 "intervals_count": len(period_intervals),
-                "price_avg": round(sum(prices) / len(prices), 2) if prices else 0,
-                "price_min": round(min(prices), 2) if prices else 0,
-                "price_max": round(max(prices), 2) if prices else 0,
             }
 
-            # Add price_diff attributes if present
+            # Add price_diff attributes if present (after details)
             self._add_price_diff_for_period(summary, period_intervals, first)
 
             summaries.append(summary)
@@ -449,9 +479,47 @@ class TibberPricesBinarySensor(TibberPricesEntity, BinarySensorEntity):
                     break
 
             if current_period_summary:
-                # Copy all attributes from the period summary
-                attributes = {"timestamp": timestamp}
-                attributes.update(current_period_summary)
+                # Build attributes with optimized order: time → core decisions → prices → details → meta
+                attributes = {
+                    # Time information
+                    "timestamp": timestamp,
+                    "start": current_period_summary.get("start"),
+                    "end": current_period_summary.get("end"),
+                    "duration_minutes": current_period_summary.get("duration_minutes"),
+                    # Core decision attributes
+                    "level": current_period_summary.get("level"),
+                    "rating_level": current_period_summary.get("rating_level"),
+                    # Price statistics
+                    "price_avg": current_period_summary.get("price_avg"),
+                    "price_min": current_period_summary.get("price_min"),
+                    "price_max": current_period_summary.get("price_max"),
+                    # Detail information
+                    "hour": current_period_summary.get("hour"),
+                    "minute": current_period_summary.get("minute"),
+                    "time": current_period_summary.get("time"),
+                    "periods_total": current_period_summary.get("periods_total"),
+                    "periods_remaining": current_period_summary.get("periods_remaining"),
+                    "period_position": current_period_summary.get("period_position"),
+                    "intervals_count": current_period_summary.get("intervals_count"),
+                }
+
+                # Add period price_diff attributes if present
+                if "period_price_diff_from_daily_min" in current_period_summary:
+                    attributes["period_price_diff_from_daily_min"] = current_period_summary[
+                        "period_price_diff_from_daily_min"
+                    ]
+                    if "period_price_diff_from_daily_min_%" in current_period_summary:
+                        attributes["period_price_diff_from_daily_min_%"] = current_period_summary[
+                            "period_price_diff_from_daily_min_%"
+                        ]
+                elif "period_price_diff_from_daily_max" in current_period_summary:
+                    attributes["period_price_diff_from_daily_max"] = current_period_summary[
+                        "period_price_diff_from_daily_max"
+                    ]
+                    if "period_price_diff_from_daily_max_%" in current_period_summary:
+                        attributes["period_price_diff_from_daily_max_%"] = current_period_summary[
+                            "period_price_diff_from_daily_max_%"
+                        ]
 
                 # Add interval-specific price_diff attributes (separate from period average)
                 # Shows the reference interval's position vs daily min/max:
@@ -465,8 +533,8 @@ class TibberPricesBinarySensor(TibberPricesEntity, BinarySensorEntity):
                     attributes["interval_price_diff_from_daily_max"] = current_interval["price_diff_from_max"]
                     attributes["interval_price_diff_from_daily_max_%"] = current_interval.get("price_diff_from_max_%")
 
+                # Meta information at the end
                 attributes["periods"] = periods_summary
-                attributes["intervals_count"] = len(filtered_result)
                 return attributes
 
             # Fallback if current period not found in summary

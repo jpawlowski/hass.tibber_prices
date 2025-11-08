@@ -43,7 +43,7 @@ from .const import (
     DEFAULT_PRICE_RATING_THRESHOLD_LOW,
     DOMAIN,
 )
-from .period_utils import calculate_periods
+from .period_utils import PeriodConfig, calculate_periods
 from .price_utils import (
     enrich_price_info_with_differences,
     find_price_data_for_interval,
@@ -738,25 +738,39 @@ class TibberPricesDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 },
             }
 
+        # Get rating thresholds from config
+        threshold_low = self.config_entry.options.get(
+            CONF_PRICE_RATING_THRESHOLD_LOW,
+            DEFAULT_PRICE_RATING_THRESHOLD_LOW,
+        )
+        threshold_high = self.config_entry.options.get(
+            CONF_PRICE_RATING_THRESHOLD_HIGH,
+            DEFAULT_PRICE_RATING_THRESHOLD_HIGH,
+        )
+
         # Calculate best price periods
         best_config = self._get_period_config(reverse_sort=False)
-        best_periods = calculate_periods(
-            all_prices,
+        best_period_config = PeriodConfig(
             reverse_sort=False,
             flex=best_config["flex"],
             min_distance_from_avg=best_config["min_distance_from_avg"],
             min_period_length=best_config["min_period_length"],
+            threshold_low=threshold_low,
+            threshold_high=threshold_high,
         )
+        best_periods = calculate_periods(all_prices, config=best_period_config)
 
         # Calculate peak price periods
         peak_config = self._get_period_config(reverse_sort=True)
-        peak_periods = calculate_periods(
-            all_prices,
+        peak_period_config = PeriodConfig(
             reverse_sort=True,
             flex=peak_config["flex"],
             min_distance_from_avg=peak_config["min_distance_from_avg"],
             min_period_length=peak_config["min_period_length"],
+            threshold_low=threshold_low,
+            threshold_high=threshold_high,
         )
+        peak_periods = calculate_periods(all_prices, config=peak_period_config)
 
         return {
             "best_price": best_periods,

@@ -4,22 +4,33 @@ from __future__ import annotations
 
 import logging
 from datetime import date, timedelta
-from typing import Any
+from typing import Any, NamedTuple
 
 from homeassistant.util import dt as dt_util
+
+from .const import DEFAULT_PRICE_RATING_THRESHOLD_HIGH, DEFAULT_PRICE_RATING_THRESHOLD_LOW
+from .price_utils import aggregate_period_levels, aggregate_period_ratings
 
 _LOGGER = logging.getLogger(__name__)
 
 MINUTES_PER_INTERVAL = 15
 
 
+class PeriodConfig(NamedTuple):
+    """Configuration for period calculation."""
+
+    reverse_sort: bool
+    flex: float
+    min_distance_from_avg: float
+    min_period_length: int
+    threshold_low: float = DEFAULT_PRICE_RATING_THRESHOLD_LOW
+    threshold_high: float = DEFAULT_PRICE_RATING_THRESHOLD_HIGH
+
+
 def calculate_periods(
     all_prices: list[dict],
     *,
-    reverse_sort: bool,
-    flex: float,
-    min_distance_from_avg: float,
-    min_period_length: int,
+    config: PeriodConfig,
 ) -> dict[str, Any]:
     """
     Calculate price periods (best or peak) from price data.
@@ -37,10 +48,8 @@ def calculate_periods(
 
     Args:
         all_prices: All price data points from yesterday/today/tomorrow
-        reverse_sort: True for peak price (max reference), False for best price (min reference)
-        flex: Flexibility threshold as decimal (e.g., 0.05 = 5%)
-        min_distance_from_avg: Minimum distance from average as percentage (e.g., 10.0 = 10%)
-        min_period_length: Minimum period length in minutes
+        config: Period configuration containing reverse_sort, flex, min_distance_from_avg,
+                min_period_length, threshold_low, and threshold_high
 
     Returns:
         Dict with:
@@ -49,6 +58,14 @@ def calculate_periods(
         - reference_data: Daily min/max/avg for on-demand annotation
 
     """
+    # Extract config values
+    reverse_sort = config.reverse_sort
+    flex = config.flex
+    min_distance_from_avg = config.min_distance_from_avg
+    min_period_length = config.min_period_length
+    threshold_low = config.threshold_low
+    threshold_high = config.threshold_high
+
     if not all_prices:
         return {
             "periods": [],
@@ -100,7 +117,12 @@ def calculate_periods(
     # Step 8: Extract lightweight period summaries (no full price data)
     # Note: Filtering for current/future is done here based on end date,
     # not start date. This preserves periods that started yesterday but end today.
-    period_summaries = _extract_period_summaries(raw_periods)
+    period_summaries = _extract_period_summaries(
+        raw_periods,
+        all_prices_sorted,
+        threshold_low=threshold_low,
+        threshold_high=threshold_high,
+    )
 
     return {
         "periods": period_summaries,  # Lightweight summaries only
@@ -328,7 +350,13 @@ def _filter_periods_by_end_date(periods: list[list[dict]]) -> list[list[dict]]:
     return filtered
 
 
-def _extract_period_summaries(periods: list[list[dict]]) -> list[dict]:
+def _extract_period_summaries(
+    periods: list[list[dict]],
+    all_prices: list[dict],
+    *,
+    threshold_low: float | None,
+    threshold_high: float | None,
+) -> list[dict]:
     """
     Extract lightweight period summaries without storing full price data.
 
@@ -336,9 +364,26 @@ def _extract_period_summaries(periods: list[list[dict]]) -> list[dict]:
     - start/end timestamps
     - interval count
     - duration
+    - aggregated level (from API's "level" field)
+    - aggregated rating_level (from calculated "rating_level" field)
 
     Sensors can use these summaries to query the actual price data from priceInfo on demand.
+
+    Args:
+        periods: List of periods, where each period is a list of interval dictionaries
+        all_prices: All price data from the API (enriched with level, difference, rating_level)
+        threshold_low: Low threshold for rating level calculation
+        threshold_high: High threshold for rating level calculation
+
     """
+    # Build lookup dictionary for full price data by timestamp
+    price_lookup: dict[str, dict] = {}
+    for price_data in all_prices:
+        starts_at = dt_util.parse_datetime(price_data["startsAt"])
+        if starts_at:
+            starts_at = dt_util.as_local(starts_at)
+            price_lookup[starts_at.isoformat()] = price_data
+
     summaries = []
 
     for period in periods:
@@ -354,15 +399,44 @@ def _extract_period_summaries(periods: list[list[dict]]) -> list[dict]:
         if not start_time or not end_time:
             continue
 
+        # Collect interval timestamps
+        interval_starts = [
+            start.isoformat() for interval in period if (start := interval.get("interval_start")) is not None
+        ]
+
+        # Look up full price data for each interval in the period
+        period_price_data: list[dict] = []
+        for start_iso in interval_starts:
+            price_data = price_lookup.get(start_iso)
+            if price_data:
+                period_price_data.append(price_data)
+
+        # Calculate aggregated level and rating_level
+        aggregated_level = None
+        aggregated_rating = None
+
+        if period_price_data:
+            # Aggregate level (from API's "level" field)
+            aggregated_level = aggregate_period_levels(period_price_data)
+
+            # Aggregate rating_level (from calculated "rating_level" and "difference" fields)
+            if threshold_low is not None and threshold_high is not None:
+                aggregated_rating, _ = aggregate_period_ratings(
+                    period_price_data,
+                    threshold_low,
+                    threshold_high,
+                )
+
         summary = {
             "start": start_time,
             "end": end_time,
             "interval_count": len(period),
             "duration_minutes": len(period) * MINUTES_PER_INTERVAL,
             # Store interval timestamps for reference (minimal data)
-            "interval_starts": [
-                start.isoformat() for interval in period if (start := interval.get("interval_start")) is not None
-            ],
+            "interval_starts": interval_starts,
+            # Aggregated attributes
+            "level": aggregated_level,
+            "rating_level": aggregated_rating,
         }
 
         summaries.append(summary)

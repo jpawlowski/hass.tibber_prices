@@ -345,6 +345,71 @@ def aggregate_price_rating(differences: list[float], threshold_low: float, thres
     return rating_level or PRICE_RATING_NORMAL, avg_difference
 
 
+def aggregate_period_levels(interval_data_list: list[dict[str, Any]]) -> str | None:
+    """
+    Aggregate price levels across multiple intervals in a period.
+
+    Extracts "level" from each interval and uses the same logic as
+    aggregate_price_levels() to determine the overall level for the period.
+
+    Args:
+        interval_data_list: List of price interval dictionaries with "level" keys
+
+    Returns:
+        The aggregated level string in lowercase (e.g., "very_cheap", "normal", "expensive"),
+        or None if no valid levels found
+
+    """
+    levels: list[str] = []
+    for interval in interval_data_list:
+        level = interval.get("level")
+        if level is not None and isinstance(level, str):
+            levels.append(level)
+
+    if not levels:
+        return None
+
+    aggregated = aggregate_price_levels(levels)
+    # Convert to lowercase for consistency with other enum sensors
+    return aggregated.lower() if aggregated else None
+
+
+def aggregate_period_ratings(
+    interval_data_list: list[dict[str, Any]],
+    threshold_low: float,
+    threshold_high: float,
+) -> tuple[str | None, float | None]:
+    """
+    Aggregate price ratings across multiple intervals in a period.
+
+    Extracts "difference" from each interval and uses the same logic as
+    aggregate_price_rating() to determine the overall rating for the period.
+
+    Args:
+        interval_data_list: List of price interval dictionaries with "difference" keys
+        threshold_low: The low threshold percentage for LOW rating
+        threshold_high: The high threshold percentage for HIGH rating
+
+    Returns:
+        Tuple of (rating_level, average_difference)
+        rating_level: "low", "normal", "high" (lowercase), or None if no valid data
+        average_difference: The averaged difference percentage, or None if no valid data
+
+    """
+    differences: list[float] = []
+    for interval in interval_data_list:
+        diff = interval.get("difference")
+        if diff is not None:
+            differences.append(float(diff))
+
+    if not differences:
+        return None, None
+
+    rating_level, avg_diff = aggregate_price_rating(differences, threshold_low, threshold_high)
+    # Convert to lowercase for consistency with other enum sensors
+    return rating_level.lower() if rating_level else None, avg_diff
+
+
 def calculate_price_trend(
     current_price: float,
     future_average: float,
