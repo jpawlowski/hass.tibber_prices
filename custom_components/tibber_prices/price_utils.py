@@ -413,7 +413,8 @@ def aggregate_period_ratings(
 def calculate_price_trend(
     current_price: float,
     future_average: float,
-    threshold_pct: float = 5.0,
+    threshold_rising: float = 5.0,
+    threshold_falling: float = -5.0,
 ) -> tuple[str, float]:
     """
     Calculate price trend by comparing current price with future average.
@@ -421,7 +422,8 @@ def calculate_price_trend(
     Args:
         current_price: Current interval price
         future_average: Average price of future intervals
-        threshold_pct: Percentage threshold for stable vs rising/falling (default 5%)
+        threshold_rising: Percentage threshold for rising trend (positive, default 5%)
+        threshold_falling: Percentage threshold for falling trend (negative, default -5%)
 
     Returns:
         Tuple of (trend_state, difference_percentage)
@@ -436,10 +438,11 @@ def calculate_price_trend(
     # Calculate percentage difference from current to future
     diff_pct = ((future_average - current_price) / current_price) * 100
 
-    # Determine trend based on threshold
-    if diff_pct > threshold_pct:
+    # Determine trend based on thresholds
+    # threshold_falling is negative, so we compare with it directly
+    if diff_pct > threshold_rising:
         trend = "rising"
-    elif diff_pct < -threshold_pct:
+    elif diff_pct < threshold_falling:
         trend = "falling"
     else:
         trend = "stable"

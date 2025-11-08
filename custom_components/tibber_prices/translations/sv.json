@@ -109,6 +109,14 @@
                     "peak_price_flex": "Flexibilitet: Maximalt % under maximumpris (negativt värde)",
                     "peak_price_min_distance_from_avg": "Minimiavstånd: Krävd % över dagligt genomsnitt"
                 }
+            },
+            "price_trend": {
+                "title": "Pristrend tröskelvärden",
+                "description": "Konfigurera tröskelvärden för pristrendsensorer. Dessa sensorer jämför det aktuella priset med genomsnittet av de nästa N timmarna för att avgöra om priserna stiger, faller eller är stabila.",
+                "data": {
+                    "price_trend_threshold_rising": "Stigande tröskelvärde (% över aktuellt pris)",
+                    "price_trend_threshold_falling": "Fallande tröskelvärde (% under aktuellt pris, negativt värde)"
+                }
             }
         },
         "error": {

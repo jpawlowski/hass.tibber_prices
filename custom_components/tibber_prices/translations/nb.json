@@ -109,6 +109,14 @@
                     "peak_price_flex": "Fleksibilitet: Maksimum % under maksimumspris (negativ verdi)",
                     "peak_price_min_distance_from_avg": "Minimumsavstand: Påkrevd % over daglig gjennomsnitt"
                 }
+            },
+            "price_trend": {
+                "title": "Terskelverdier for pristrend",
+                "description": "Konfigurer terskelverdier for pristrendsensorer. Disse sensorene sammenligner gjeldende pris med gjennomsnittet av de neste N timene for å avgjøre om prisene stiger, faller eller er stabile.",
+                "data": {
+                    "price_trend_threshold_rising": "Stigende terskelverdi (% over gjeldende pris)",
+                    "price_trend_threshold_falling": "Fallende terskelverdi (% under gjeldende pris, negativ verdi)"
+                }
             }
         },
         "error": {

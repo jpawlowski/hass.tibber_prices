@@ -48,6 +48,8 @@ from .const import (
     CONF_PEAK_PRICE_MIN_PERIOD_LENGTH,
     CONF_PRICE_RATING_THRESHOLD_HIGH,
     CONF_PRICE_RATING_THRESHOLD_LOW,
+    CONF_PRICE_TREND_THRESHOLD_FALLING,
+    CONF_PRICE_TREND_THRESHOLD_RISING,
     DEFAULT_BEST_PRICE_FLEX,
     DEFAULT_BEST_PRICE_MIN_DISTANCE_FROM_AVG,
     DEFAULT_BEST_PRICE_MIN_PERIOD_LENGTH,
@@ -57,6 +59,8 @@ from .const import (
     DEFAULT_PEAK_PRICE_MIN_PERIOD_LENGTH,
     DEFAULT_PRICE_RATING_THRESHOLD_HIGH,
     DEFAULT_PRICE_RATING_THRESHOLD_LOW,
+    DEFAULT_PRICE_TREND_THRESHOLD_FALLING,
+    DEFAULT_PRICE_TREND_THRESHOLD_RISING,
     DOMAIN,
     LOGGER,
 )
@@ -590,7 +594,7 @@ class TibberPricesOptionsFlowHandler(OptionsFlow):
         """Configure peak price period settings."""
         if user_input is not None:
             self._options.update(user_input)
-            return self.async_create_entry(title="", data=self._options)
+            return await self.async_step_price_trend()
 
         return self.async_show_form(
             step_id="peak_price",
@@ -641,6 +645,52 @@ class TibberPricesOptionsFlowHandler(OptionsFlow):
                         NumberSelectorConfig(
                             min=0,
                             max=50,
+                            step=1,
+                            mode=NumberSelectorMode.SLIDER,
+                        ),
+                    ),
+                }
+            ),
+        )
+
+    async def async_step_price_trend(self, user_input: dict[str, Any] | None = None) -> ConfigFlowResult:
+        """Configure price trend thresholds."""
+        if user_input is not None:
+            self._options.update(user_input)
+            return self.async_create_entry(title="", data=self._options)
+
+        return self.async_show_form(
+            step_id="price_trend",
+            data_schema=vol.Schema(
+                {
+                    vol.Optional(
+                        CONF_PRICE_TREND_THRESHOLD_RISING,
+                        default=int(
+                            self.config_entry.options.get(
+                                CONF_PRICE_TREND_THRESHOLD_RISING,
+                                DEFAULT_PRICE_TREND_THRESHOLD_RISING,
+                            )
+                        ),
+                    ): NumberSelector(
+                        NumberSelectorConfig(
+                            min=1,
+                            max=50,
+                            step=1,
+                            mode=NumberSelectorMode.SLIDER,
+                        ),
+                    ),
+                    vol.Optional(
+                        CONF_PRICE_TREND_THRESHOLD_FALLING,
+                        default=int(
+                            self.config_entry.options.get(
+                                CONF_PRICE_TREND_THRESHOLD_FALLING,
+                                DEFAULT_PRICE_TREND_THRESHOLD_FALLING,
+                            )
+                        ),
+                    ): NumberSelector(
+                        NumberSelectorConfig(
+                            min=-50,
+                            max=-1,
                             step=1,
                             mode=NumberSelectorMode.SLIDER,
                         ),

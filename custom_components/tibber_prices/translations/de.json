@@ -109,6 +109,14 @@
                     "peak_price_flex": "Flexibilität: Maximale % unter dem Höchstpreis (negativer Wert)",
                     "peak_price_min_distance_from_avg": "Mindestabstand: Erforderliche % über dem Tagesdurchschnitt"
                 }
+            },
+            "price_trend": {
+                "title": "Preistrend-Schwellenwerte",
+                "description": "Konfiguration der Schwellenwerte für Preistrend-Sensoren. Diese Sensoren vergleichen den aktuellen Preis mit dem Durchschnitt der nächsten N Stunden, um festzustellen, ob die Preise steigen, fallen oder stabil sind.",
+                "data": {
+                    "price_trend_threshold_rising": "Schwellenwert für Steigen (% über aktuellem Preis)",
+                    "price_trend_threshold_falling": "Schwellenwert für Fallen (% unter aktuellem Preis, negativer Wert)"
+                }
             }
         },
         "error": {

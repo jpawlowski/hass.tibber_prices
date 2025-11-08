@@ -26,6 +26,8 @@ CONF_BEST_PRICE_MIN_PERIOD_LENGTH = "best_price_min_period_length"
 CONF_PEAK_PRICE_MIN_PERIOD_LENGTH = "peak_price_min_period_length"
 CONF_PRICE_RATING_THRESHOLD_LOW = "price_rating_threshold_low"
 CONF_PRICE_RATING_THRESHOLD_HIGH = "price_rating_threshold_high"
+CONF_PRICE_TREND_THRESHOLD_RISING = "price_trend_threshold_rising"
+CONF_PRICE_TREND_THRESHOLD_FALLING = "price_trend_threshold_falling"
 
 ATTRIBUTION = "Data provided by Tibber"
 
@@ -40,6 +42,8 @@ DEFAULT_BEST_PRICE_MIN_PERIOD_LENGTH = 60  # 60 minutes minimum period length fo
 DEFAULT_PEAK_PRICE_MIN_PERIOD_LENGTH = 60  # 60 minutes minimum period length for peak price (user-facing, minutes)
 DEFAULT_PRICE_RATING_THRESHOLD_LOW = -10  # Default rating threshold low percentage
 DEFAULT_PRICE_RATING_THRESHOLD_HIGH = 10  # Default rating threshold high percentage
+DEFAULT_PRICE_TREND_THRESHOLD_RISING = 5  # Default trend threshold for rising prices (%)
+DEFAULT_PRICE_TREND_THRESHOLD_FALLING = -5  # Default trend threshold for falling prices (%, negative value)
 
 # Home types
 HOME_TYPE_APARTMENT = "APARTMENT"

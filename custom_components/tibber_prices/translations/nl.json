@@ -109,6 +109,14 @@
                     "peak_price_flex": "Flexibiliteit: Maximaal % onder maximumprijs (negatieve waarde)",
                     "peak_price_min_distance_from_avg": "Minimale afstand: Vereist % boven dagelijks gemiddelde"
                 }
+            },
+            "price_trend": {
+                "title": "Prijstrend drempelwaarden",
+                "description": "Configureer drempelwaarden voor prijstrendsensoren. Deze sensoren vergelijken de huidige prijs met het gemiddelde van de volgende N uur om te bepalen of de prijzen stijgen, dalen of stabiel zijn.",
+                "data": {
+                    "price_trend_threshold_rising": "Stijgende drempelwaarde (% boven huidige prijs)",
+                    "price_trend_threshold_falling": "Dalende drempelwaarde (% onder huidige prijs, negatieve waarde)"
+                }
             }
         },
         "error": {

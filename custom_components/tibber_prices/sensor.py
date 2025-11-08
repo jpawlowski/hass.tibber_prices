@@ -29,9 +29,13 @@ from .const import (
     CONF_EXTENDED_DESCRIPTIONS,
     CONF_PRICE_RATING_THRESHOLD_HIGH,
     CONF_PRICE_RATING_THRESHOLD_LOW,
+    CONF_PRICE_TREND_THRESHOLD_FALLING,
+    CONF_PRICE_TREND_THRESHOLD_RISING,
     DEFAULT_EXTENDED_DESCRIPTIONS,
     DEFAULT_PRICE_RATING_THRESHOLD_HIGH,
     DEFAULT_PRICE_RATING_THRESHOLD_LOW,
+    DEFAULT_PRICE_TREND_THRESHOLD_FALLING,
+    DEFAULT_PRICE_TREND_THRESHOLD_RISING,
     DOMAIN,
     PRICE_LEVEL_MAPPING,
     PRICE_RATING_MAPPING,
@@ -522,6 +526,7 @@ class TibberPricesSensor(TibberPricesEntity, SensorEntity):
         self._value_getter: Callable | None = self._get_value_getter()
         self._time_sensitive_remove_listener: Callable | None = None
         self._trend_attributes: dict[str, Any] = {}  # Sensor-specific trend attributes
+        self._cached_trend_value: str | None = None  # Cache for trend state
 
     async def async_added_to_hass(self) -> None:
         """When entity is added to hass."""
@@ -545,7 +550,20 @@ class TibberPricesSensor(TibberPricesEntity, SensorEntity):
     @callback
     def _handle_time_sensitive_update(self) -> None:
         """Handle time-sensitive update from coordinator."""
+        # Clear cached trend values on time-sensitive updates
+        if self.entity_description.key.startswith("price_trend_"):
+            self._cached_trend_value = None
+            self._trend_attributes = {}
         self.async_write_ha_state()
+
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        """Handle updated data from the coordinator."""
+        # Clear cached trend values when coordinator data changes
+        if self.entity_description.key.startswith("price_trend_"):
+            self._cached_trend_value = None
+            self._trend_attributes = {}
+        super()._handle_coordinator_update()
 
     def _get_value_getter(self) -> Callable | None:
         """Return the appropriate value getter method based on the sensor type."""
@@ -1201,6 +1219,11 @@ class TibberPricesSensor(TibberPricesEntity, SensorEntity):
             Trend state: "rising" | "falling" | "stable", or None if unavailable
 
         """
+        # Return cached value if available to ensure consistency between
+        # native_value and extra_state_attributes
+        if self._cached_trend_value is not None and self._trend_attributes:
+            return self._cached_trend_value
+
         if not self.coordinator.data:
             return None
 
@@ -1223,15 +1246,29 @@ class TibberPricesSensor(TibberPricesEntity, SensorEntity):
         if future_avg is None:
             return None
 
-        # Calculate trend with 5% threshold
-        trend_state, diff_pct = calculate_price_trend(current_price, future_avg, threshold_pct=5.0)
+        # Get configured thresholds from options
+        threshold_rising = self.coordinator.config_entry.options.get(
+            CONF_PRICE_TREND_THRESHOLD_RISING,
+            DEFAULT_PRICE_TREND_THRESHOLD_RISING,
+        )
+        threshold_falling = self.coordinator.config_entry.options.get(
+            CONF_PRICE_TREND_THRESHOLD_FALLING,
+            DEFAULT_PRICE_TREND_THRESHOLD_FALLING,
+        )
 
-        # Store attributes in sensor-specific dictionary (not shared _attr_extra_state_attributes)
+        # Calculate trend with configured thresholds
+        trend_state, diff_pct = calculate_price_trend(
+            current_price, future_avg, threshold_rising=threshold_rising, threshold_falling=threshold_falling
+        )
+
+        # Store attributes in sensor-specific dictionary AND cache the trend value
         self._trend_attributes = {
             "timestamp": next_interval_start.isoformat(),
             f"trend_{hours}h_%": round(diff_pct, 1),
             f"future_avg_{hours}h": round(future_avg * 100, 2),
-            "intervals_analyzed": hours * 4,
+            "interval_count": hours * 4,
+            "threshold_rising": threshold_rising,
+            "threshold_falling": threshold_falling,
         }
 
         # Calculate additional attributes for better granularity
@@ -1243,8 +1280,11 @@ class TibberPricesSensor(TibberPricesEntity, SensorEntity):
 
                 # Calculate incremental change: how much does the later half differ from current?
                 if current_price > 0:
-                    incremental_diff = ((later_half_avg - current_price) / current_price) * 100
-                    self._trend_attributes["incremental_change"] = round(incremental_diff, 1)
+                    later_half_diff = ((later_half_avg - current_price) / current_price) * 100
+                    self._trend_attributes[f"later_half_diff_{hours}h_%"] = round(later_half_diff, 1)
+
+        # Cache the trend value for consistency
+        self._cached_trend_value = trend_state
 
         return trend_state
 
@@ -1588,7 +1628,8 @@ class TibberPricesSensor(TibberPricesEntity, SensorEntity):
             key = self.entity_description.key
             attributes = {}
 
-            # For trend sensors, merge _trend_attributes (sensor-specific)
+            # For trend sensors, use the cached _trend_attributes
+            # These are populated when native_value is calculated
             if key.startswith("price_trend_") and hasattr(self, "_trend_attributes") and self._trend_attributes:
                 attributes.update(self._trend_attributes)
 

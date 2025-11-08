@@ -109,6 +109,14 @@
                     "peak_price_flex": "Flexibility: Maximum % below maximum price (negative value)",
                     "peak_price_min_distance_from_avg": "Minimum Distance: Required % above daily average"
                 }
+            },
+            "price_trend": {
+                "title": "Price Trend Thresholds",
+                "description": "Configure thresholds for price trend sensors. These sensors compare the current price with the average of the next N hours to determine if prices are rising, falling, or stable.",
+                "data": {
+                    "price_trend_threshold_rising": "Rising Threshold (% above current price)",
+                    "price_trend_threshold_falling": "Falling Threshold (% below current price, negative value)"
+                }
             }
         },
         "error": {
