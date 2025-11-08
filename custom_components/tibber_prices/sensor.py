@@ -1265,7 +1265,7 @@ class TibberPricesSensor(TibberPricesEntity, SensorEntity):
         self._trend_attributes = {
             "timestamp": next_interval_start.isoformat(),
             f"trend_{hours}h_%": round(diff_pct, 1),
-            f"future_avg_{hours}h": round(future_avg * 100, 2),
+            f"next_{hours}h_avg": round(future_avg * 100, 2),
             "interval_count": hours * 4,
             "threshold_rising": threshold_rising,
             "threshold_falling": threshold_falling,
@@ -1276,12 +1276,12 @@ class TibberPricesSensor(TibberPricesEntity, SensorEntity):
             # Get second half average for longer periods
             later_half_avg = self._calculate_later_half_average(hours, next_interval_start)
             if later_half_avg is not None:
-                self._trend_attributes[f"later_half_avg_{hours}h"] = round(later_half_avg * 100, 2)
+                self._trend_attributes[f"second_half_{hours}h_avg"] = round(later_half_avg * 100, 2)
 
                 # Calculate incremental change: how much does the later half differ from current?
                 if current_price > 0:
                     later_half_diff = ((later_half_avg - current_price) / current_price) * 100
-                    self._trend_attributes[f"later_half_diff_{hours}h_%"] = round(later_half_diff, 1)
+                    self._trend_attributes[f"second_half_{hours}h_diff_from_current_%"] = round(later_half_diff, 1)
 
         # Cache the trend value for consistency
         self._cached_trend_value = trend_state
@@ -1429,7 +1429,7 @@ class TibberPricesSensor(TibberPricesEntity, SensorEntity):
         future_prices = self._get_future_prices(max_intervals=MAX_FORECAST_INTERVALS)
         if not future_prices:
             attributes["intervals"] = []
-            attributes["hours"] = []
+            attributes["intervals_by_hour"] = []
             attributes["data_available"] = False
             return
 
@@ -1494,7 +1494,7 @@ class TibberPricesSensor(TibberPricesEntity, SensorEntity):
                         hour_data["avg_rating"] = sum(ratings) / len(ratings)
 
         # Convert to list sorted by hour
-        attributes["hours"] = [hour_data for _, hour_data in sorted(hours.items())]
+        attributes["intervals_by_hour"] = [hour_data for _, hour_data in sorted(hours.items())]
 
     @property
     def native_value(self) -> float | str | datetime | None:
@@ -1776,7 +1776,7 @@ class TibberPricesSensor(TibberPricesEntity, SensorEntity):
             interval_data = find_price_data_for_interval(price_info, now)
             attributes["timestamp"] = interval_data["startsAt"] if interval_data else None
             if hasattr(self, "_last_rating_difference") and self._last_rating_difference is not None:
-                attributes["difference_" + PERCENTAGE] = self._last_rating_difference
+                attributes["diff_" + PERCENTAGE] = self._last_rating_difference
             if hasattr(self, "_last_rating_level") and self._last_rating_level is not None:
                 attributes["level_id"] = self._last_rating_level
                 attributes["level_value"] = PRICE_RATING_MAPPING.get(self._last_rating_level, self._last_rating_level)

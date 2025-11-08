@@ -188,7 +188,7 @@ class TibberPricesBinarySensor(TibberPricesEntity, BinarySensorEntity):
             status = "partial"
         return {
             "intervals_available": interval_count,
-            "status": status,
+            "data_status": status,
         }
 
     def _get_attribute_getter(self) -> Callable | None:
@@ -296,7 +296,7 @@ class TibberPricesBinarySensor(TibberPricesEntity, BinarySensorEntity):
                     "minute": period_start.minute if period_start else None,
                     "time": f"{period_start.hour:02d}:{period_start.minute:02d}" if period_start else None,
                     "duration_minutes": duration_minutes,
-                    "remaining_minutes_after_interval": interval_remaining * MINUTES_PER_INTERVAL,
+                    "remaining_minutes_in_period": interval_remaining * MINUTES_PER_INTERVAL,
                     "periods_total": period_count,
                     "periods_remaining": periods_remaining,
                     "period_position": period_idx,
@@ -422,30 +422,26 @@ class TibberPricesBinarySensor(TibberPricesEntity, BinarySensorEntity):
                     aggregated_level = original.get("level")
                     aggregated_rating_level = original.get("rating_level")
 
-            # Optimized attribute order: time → core decisions → prices → details → meta
+            # Follow attribute ordering from copilot-instructions.md
             summary = {
-                # Time information
                 "start": first.get("period_start"),
                 "end": first.get("period_end"),
                 "duration_minutes": first.get("duration_minutes"),
-                # Core decision attributes
                 "level": aggregated_level,
                 "rating_level": aggregated_rating_level,
-                # Price statistics
                 "price_avg": round(sum(prices) / len(prices), 2) if prices else 0,
                 "price_min": round(min(prices), 2) if prices else 0,
                 "price_max": round(max(prices), 2) if prices else 0,
-                # Detail information
                 "hour": first.get("hour"),
                 "minute": first.get("minute"),
                 "time": first.get("time"),
                 "periods_total": first.get("periods_total"),
                 "periods_remaining": first.get("periods_remaining"),
                 "period_position": first.get("period_position"),
-                "intervals_count": len(period_intervals),
+                "interval_count": len(period_intervals),
             }
 
-            # Add price_diff attributes if present (after details)
+            # Add price_diff attributes if present (price differences step 4)
             self._add_price_diff_for_period(summary, period_intervals, first)
 
             summaries.append(summary)
@@ -479,28 +475,24 @@ class TibberPricesBinarySensor(TibberPricesEntity, BinarySensorEntity):
                     break
 
             if current_period_summary:
-                # Build attributes with optimized order: time → core decisions → prices → details → meta
+                # Follow attribute ordering from copilot-instructions.md
                 attributes = {
-                    # Time information
                     "timestamp": timestamp,
                     "start": current_period_summary.get("start"),
                     "end": current_period_summary.get("end"),
                     "duration_minutes": current_period_summary.get("duration_minutes"),
-                    # Core decision attributes
                     "level": current_period_summary.get("level"),
                     "rating_level": current_period_summary.get("rating_level"),
-                    # Price statistics
                     "price_avg": current_period_summary.get("price_avg"),
                     "price_min": current_period_summary.get("price_min"),
                     "price_max": current_period_summary.get("price_max"),
-                    # Detail information
                     "hour": current_period_summary.get("hour"),
                     "minute": current_period_summary.get("minute"),
                     "time": current_period_summary.get("time"),
                     "periods_total": current_period_summary.get("periods_total"),
                     "periods_remaining": current_period_summary.get("periods_remaining"),
                     "period_position": current_period_summary.get("period_position"),
-                    "intervals_count": current_period_summary.get("intervals_count"),
+                    "interval_count": current_period_summary.get("interval_count"),
                 }
 
                 # Add period price_diff attributes if present
@@ -533,7 +525,7 @@ class TibberPricesBinarySensor(TibberPricesEntity, BinarySensorEntity):
                     attributes["interval_price_diff_from_daily_max"] = current_interval["price_diff_from_max"]
                     attributes["interval_price_diff_from_daily_max_%"] = current_interval.get("price_diff_from_max_%")
 
-                # Meta information at the end
+                # Nested structures last (meta information step 6)
                 attributes["periods"] = periods_summary
                 return attributes
 
@@ -541,14 +533,14 @@ class TibberPricesBinarySensor(TibberPricesEntity, BinarySensorEntity):
             return {
                 "timestamp": timestamp,
                 "periods": periods_summary,
-                "intervals_count": len(filtered_result),
+                "interval_count": len(filtered_result),
             }
 
         # No periods found
         return {
             "timestamp": timestamp,
             "periods": [],
-            "intervals_count": 0,
+            "interval_count": 0,
         }
 
     def _add_price_diff_for_period(self, summary: dict, period_intervals: list[dict], first: dict) -> None:

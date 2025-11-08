@@ -218,6 +218,192 @@ Public entry points → direct helpers (call order) → pure utilities. Prefix p
 
 **Translation sync:** When updating `/translations/en.json`, update ALL language files (`de.json`, etc.) with same keys (placeholder values OK).
 
+## Attribute Naming Conventions
+
+Entity attributes exposed to users must be **self-explanatory and descriptive**. Follow these rules to ensure clarity in automations and dashboards:
+
+### General Principles
+
+1. **Be Explicit About Context**: Attribute names should indicate what the value represents AND how/where it was calculated
+2. **Avoid Ambiguity**: Generic terms like "status", "value", "data" need qualifiers
+3. **Show Relationships**: When comparing/calculating, name must show what is compared to what
+4. **Consistency First**: Follow established patterns in the codebase
+
+### Attribute Ordering
+
+Attributes should follow a **logical priority order** to make the most important information easily accessible in automations and UI:
+
+**Standard Order Pattern:**
+
+```python
+attributes = {
+    # 1. Time information (when does this apply?)
+    "timestamp": ...,          # ALWAYS FIRST: Reference time for state/attributes validity
+    "start": ...,
+    "end": ...,
+    "duration_minutes": ...,
+
+    # 2. Core decision attributes (what should I do?)
+    "level": ...,              # Price level (VERY_CHEAP, CHEAP, NORMAL, etc.)
+    "rating_level": ...,       # Price rating (LOW, NORMAL, HIGH)
+
+    # 3. Price statistics (how much does it cost?)
+    "price_avg": ...,
+    "price_min": ...,
+    "price_max": ...,
+
+    # 4. Price differences (optional - how does it compare?)
+    "price_diff_from_daily_min": ...,
+    "price_diff_from_daily_min_%": ...,
+
+    # 5. Detail information (additional context)
+    "hour": ...,
+    "minute": ...,
+    "time": ...,
+    "period_position": ...,
+    "interval_count": ...,
+
+    # 6. Meta information (technical details)
+    "periods": [...],          # Nested structures last
+    "intervals": [...],
+
+    # 7. Extended descriptions (always last)
+    "description": "...",      # Short description from custom_translations (always shown)
+    "long_description": "...", # Detailed explanation from custom_translations (shown when CONF_EXTENDED_DESCRIPTIONS enabled)
+    "usage_tips": "...",       # Usage examples from custom_translations (shown when CONF_EXTENDED_DESCRIPTIONS enabled)
+}
+```
+
+**Critical: The `timestamp` Attribute**
+
+The `timestamp` attribute **MUST always be first** in every sensor's attributes. It serves as the reference time indicating:
+
+-   **For which interval** the state and attributes are valid
+-   **Current interval sensors**: Contains `startsAt` of the current 15-minute interval
+-   **Future/forecast sensors**: Contains `startsAt` of the future interval being calculated
+-   **Statistical sensors (min/max)**: Contains `startsAt` of the specific interval when the extreme value occurs
+-   **Statistical sensors (avg)**: Contains start of the day (00:00) since average applies to entire day
+
+This allows users to verify data freshness and understand temporal context without parsing other attributes.
+
+**Rationale:**
+
+-   **Time first**: Users need to know when/for which interval the data applies before interpreting values
+-   **Decisions next**: Core attributes for automation logic (is it cheap/expensive?)
+-   **Prices after**: Actual values to display or use in calculations
+-   **Differences optionally**: Contextual comparisons if relevant
+-   **Details follow**: Supplementary information for deeper analysis
+-   **Meta last**: Complex nested data and technical information
+-   **Descriptions always last**: Human-readable help text from `custom_translations/` (must always be defined; `description` always shown, `long_description` and `usage_tips` shown only when user enables `CONF_EXTENDED_DESCRIPTIONS`)
+
+**In Practice:**
+
+```python
+# ✅ Good: Follows priority order
+{
+    "timestamp": "2025-11-08T14:00:00+01:00",  # ALWAYS first
+    "start": "2025-11-08T14:00:00+01:00",
+    "end": "2025-11-08T15:00:00+01:00",
+    "rating_level": "LOW",
+    "price_avg": 18.5,
+    "interval_count": 4,
+    "intervals": [...]
+}
+
+# ❌ Bad: Random order makes it hard to scan
+{
+    "intervals": [...],
+    "interval_count": 4,
+    "rating_level": "LOW",
+    "start": "2025-11-08T14:00:00+01:00",
+    "price_avg": 18.5,
+    "end": "2025-11-08T15:00:00+01:00"
+}
+```
+
+### Naming Patterns
+
+**Time-based Attributes:**
+
+-   Use `next_*` for future calculations starting from the next interval (not "future\_\*")
+-   Use `trailing_*` for backward-looking calculations
+-   Use `leading_*` for forward-looking calculations
+-   Always include the time span: `next_3h_avg`, `trailing_24h_max`
+-   For multi-part periods, be specific: `second_half_6h_avg` (not "later_half")
+
+**Counting Attributes:**
+
+-   Use singular `_count` for counting items: `interval_count`, `period_count`
+-   Exception: `intervals_available` is a status indicator (how many are available), not a count of items being processed
+-   Prefer singular form: `interval_count` over `intervals_count` (the word "count" already implies plurality)
+
+**Difference/Comparison Attributes:**
+
+-   Use `_diff` suffix (not "difference")
+-   Always specify what is being compared: `price_diff_from_daily_min`, `second_half_3h_diff_from_current`
+-   For percentages, use `_diff_%` suffix with underscore: `price_diff_from_max_%`
+
+**Duration Attributes:**
+
+-   Be specific about scope: `remaining_minutes_in_period` (not "after_interval")
+-   Pattern: `{remaining/elapsed}_{unit}_in_{scope}`
+
+**Status/Boolean Attributes:**
+
+-   Use descriptive suffixes: `data_available` (not just "available")
+-   Qualify generic terms: `data_status` (not just "status")
+-   Pattern: `{what}_{status_type}` like `tomorrow_data_status`
+
+**Grouped/Nested Data:**
+
+-   Describe the grouping: `intervals_by_hour` (not just "hours")
+-   Pattern: `{items}_{grouping_method}`
+
+**Price-Related Attributes:**
+
+-   Period averages: `period_price_avg` (average across the period)
+-   Reference comparisons: `period_price_diff_from_daily_min` (period avg vs daily min)
+-   Interval-specific: `interval_price_diff_from_daily_max` (current interval vs daily max)
+
+### Examples
+
+**❌ Bad (Ambiguous):**
+
+```python
+attributes = {
+    "future_avg_3h": 0.25,           # Future when? From when?
+    "later_half_diff_%": 5.2,        # Later than what? Diff from what?
+    "remaining_minutes": 45,          # Remaining in what?
+    "status": "partial",              # Status of what?
+    "hours": [{...}],                 # What about hours?
+    "intervals_count": 12,            # Should be singular: interval_count
+}
+```
+
+**✅ Good (Clear):**
+
+```python
+attributes = {
+    "next_3h_avg": 0.25,                              # Average of next 3 hours from next interval
+    "second_half_3h_diff_from_current_%": 5.2,        # Second half of 3h window vs current price
+    "remaining_minutes_in_period": 45,                # Minutes remaining in the current period
+    "data_status": "partial",                         # Status of data availability
+    "intervals_by_hour": [{...}],                     # Intervals grouped by hour
+    "interval_count": 12,                             # Number of intervals (singular)
+}
+```
+
+### Before Adding New Attributes
+
+Ask yourself:
+
+1. **Would a user understand this without reading documentation?**
+2. **Is it clear what time period/scope this refers to?**
+3. **If it's a calculation, is it obvious what's being compared/calculated?**
+4. **Does it follow existing patterns in the codebase?**
+
+If the answer to any is "no", make the name more explicit.
+
 ## Common Tasks
 
 **Add a new sensor:**
