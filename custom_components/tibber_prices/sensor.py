@@ -521,6 +521,7 @@ class TibberPricesSensor(TibberPricesEntity, SensorEntity):
         self._attr_has_entity_name = True
         self._value_getter: Callable | None = self._get_value_getter()
         self._time_sensitive_remove_listener: Callable | None = None
+        self._trend_attributes: dict[str, Any] = {}  # Sensor-specific trend attributes
 
     async def async_added_to_hass(self) -> None:
         """When entity is added to hass."""
@@ -1225,27 +1226,25 @@ class TibberPricesSensor(TibberPricesEntity, SensorEntity):
         # Calculate trend with 5% threshold
         trend_state, diff_pct = calculate_price_trend(current_price, future_avg, threshold_pct=5.0)
 
-        # Store attributes for extra_state_attributes
-        if not hasattr(self, "_attr_extra_state_attributes") or self._attr_extra_state_attributes is None:
-            self._attr_extra_state_attributes = {}
-
-        # Core attributes
-        self._attr_extra_state_attributes["timestamp"] = next_interval_start.isoformat()
-        self._attr_extra_state_attributes[f"trend_{hours}h_%"] = round(diff_pct, 1)
-        self._attr_extra_state_attributes[f"future_avg_{hours}h"] = round(future_avg * 100, 2)
-        self._attr_extra_state_attributes["intervals_analyzed"] = hours * 4
+        # Store attributes in sensor-specific dictionary (not shared _attr_extra_state_attributes)
+        self._trend_attributes = {
+            "timestamp": next_interval_start.isoformat(),
+            f"trend_{hours}h_%": round(diff_pct, 1),
+            f"future_avg_{hours}h": round(future_avg * 100, 2),
+            "intervals_analyzed": hours * 4,
+        }
 
         # Calculate additional attributes for better granularity
         if hours > MIN_HOURS_FOR_LATER_HALF:
             # Get second half average for longer periods
             later_half_avg = self._calculate_later_half_average(hours, next_interval_start)
             if later_half_avg is not None:
-                self._attr_extra_state_attributes[f"later_half_avg_{hours}h"] = round(later_half_avg * 100, 2)
+                self._trend_attributes[f"later_half_avg_{hours}h"] = round(later_half_avg * 100, 2)
 
                 # Calculate incremental change: how much does the later half differ from current?
                 if current_price > 0:
                     incremental_diff = ((later_half_avg - current_price) / current_price) * 100
-                    self._attr_extra_state_attributes["incremental_change"] = round(incremental_diff, 1)
+                    self._trend_attributes["incremental_change"] = round(incremental_diff, 1)
 
         return trend_state
 
@@ -1589,13 +1588,9 @@ class TibberPricesSensor(TibberPricesEntity, SensorEntity):
             key = self.entity_description.key
             attributes = {}
 
-            # For trend sensors, merge _attr_extra_state_attributes first
-            if (
-                key.startswith("price_trend_")
-                and hasattr(self, "_attr_extra_state_attributes")
-                and self._attr_extra_state_attributes
-            ):
-                attributes.update(self._attr_extra_state_attributes)
+            # For trend sensors, merge _trend_attributes (sensor-specific)
+            if key.startswith("price_trend_") and hasattr(self, "_trend_attributes") and self._trend_attributes:
+                attributes.update(self._trend_attributes)
 
             # Group sensors by type and delegate to specific handlers
             if key in [
