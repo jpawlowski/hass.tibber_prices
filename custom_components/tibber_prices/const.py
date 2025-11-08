@@ -128,6 +128,9 @@ PRICE_RATING_NORMAL = "NORMAL"
 PRICE_RATING_HIGH = "HIGH"
 
 # Sensor options (lowercase versions for ENUM device class)
+# NOTE: These constants define the valid enum options, but they are not used directly
+# in sensor.py due to import timing issues. Instead, the options are defined inline
+# in the SensorEntityDescription objects. Keep these in sync with sensor.py!
 PRICE_LEVEL_OPTIONS = [
     PRICE_LEVEL_VERY_CHEAP.lower(),
     PRICE_LEVEL_CHEAP.lower(),

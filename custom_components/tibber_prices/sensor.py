@@ -34,9 +34,7 @@ from .const import (
     DEFAULT_PRICE_RATING_THRESHOLD_LOW,
     DOMAIN,
     PRICE_LEVEL_MAPPING,
-    PRICE_LEVEL_OPTIONS,
     PRICE_RATING_MAPPING,
-    PRICE_RATING_OPTIONS,
     async_get_entity_description,
     format_price_unit_minor,
     get_entity_description,
@@ -110,13 +108,16 @@ PRICE_SENSORS = (
         device_class=SensorDeviceClass.MONETARY,
         suggested_display_precision=1,
     ),
+    # NOTE: Enum options are defined inline (not imported from const.py) to avoid
+    # import timing issues with Home Assistant's entity platform initialization.
+    # Keep in sync with PRICE_LEVEL_OPTIONS in const.py!
     SensorEntityDescription(
         key="price_level",
         translation_key="price_level",
         name="Current Price Level",
         icon="mdi:gauge",
         device_class=SensorDeviceClass.ENUM,
-        options=PRICE_LEVEL_OPTIONS,
+        options=["very_cheap", "cheap", "normal", "expensive", "very_expensive"],
     ),
     SensorEntityDescription(
         key="next_interval_price_level",
@@ -124,7 +125,7 @@ PRICE_SENSORS = (
         name="Next Price Level",
         icon="mdi:gauge-empty",
         device_class=SensorDeviceClass.ENUM,
-        options=PRICE_LEVEL_OPTIONS,
+        options=["very_cheap", "cheap", "normal", "expensive", "very_expensive"],
     ),
     SensorEntityDescription(
         key="previous_interval_price_level",
@@ -133,7 +134,7 @@ PRICE_SENSORS = (
         icon="mdi:gauge-empty",
         entity_registry_enabled_default=False,
         device_class=SensorDeviceClass.ENUM,
-        options=PRICE_LEVEL_OPTIONS,
+        options=["very_cheap", "cheap", "normal", "expensive", "very_expensive"],
     ),
     SensorEntityDescription(
         key="current_hour_price_level",
@@ -141,7 +142,7 @@ PRICE_SENSORS = (
         name="Current Hour Price Level",
         icon="mdi:gauge",
         device_class=SensorDeviceClass.ENUM,
-        options=PRICE_LEVEL_OPTIONS,
+        options=["very_cheap", "cheap", "normal", "expensive", "very_expensive"],
     ),
     SensorEntityDescription(
         key="next_hour_price_level",
@@ -149,7 +150,7 @@ PRICE_SENSORS = (
         name="Next Hour Price Level",
         icon="mdi:gauge-empty",
         device_class=SensorDeviceClass.ENUM,
-        options=PRICE_LEVEL_OPTIONS,
+        options=["very_cheap", "cheap", "normal", "expensive", "very_expensive"],
     ),
 )
 
@@ -257,6 +258,9 @@ STATISTICS_SENSORS = (
 )
 
 # Rating sensors
+# NOTE: Enum options are defined inline (not imported from const.py) to avoid
+# import timing issues with Home Assistant's entity platform initialization.
+# Keep in sync with PRICE_RATING_OPTIONS in const.py!
 RATING_SENSORS = (
     SensorEntityDescription(
         key="price_rating",
@@ -264,7 +268,7 @@ RATING_SENSORS = (
         name="Current Price Rating",
         icon="mdi:star-outline",
         device_class=SensorDeviceClass.ENUM,
-        options=PRICE_RATING_OPTIONS,
+        options=["low", "normal", "high"],
     ),
     SensorEntityDescription(
         key="next_interval_price_rating",
@@ -272,7 +276,7 @@ RATING_SENSORS = (
         name="Next Price Rating",
         icon="mdi:star-half-full",
         device_class=SensorDeviceClass.ENUM,
-        options=PRICE_RATING_OPTIONS,
+        options=["low", "normal", "high"],
     ),
     SensorEntityDescription(
         key="previous_interval_price_rating",
@@ -281,7 +285,7 @@ RATING_SENSORS = (
         icon="mdi:star-half-full",
         entity_registry_enabled_default=False,
         device_class=SensorDeviceClass.ENUM,
-        options=PRICE_RATING_OPTIONS,
+        options=["low", "normal", "high"],
     ),
     SensorEntityDescription(
         key="current_hour_price_rating",
@@ -289,7 +293,7 @@ RATING_SENSORS = (
         name="Current Hour Price Rating",
         icon="mdi:star-outline",
         device_class=SensorDeviceClass.ENUM,
-        options=PRICE_RATING_OPTIONS,
+        options=["low", "normal", "high"],
     ),
     SensorEntityDescription(
         key="next_hour_price_rating",
@@ -297,7 +301,7 @@ RATING_SENSORS = (
         name="Next Hour Price Rating",
         icon="mdi:star-half-full",
         device_class=SensorDeviceClass.ENUM,
-        options=PRICE_RATING_OPTIONS,
+        options=["low", "normal", "high"],
     ),
 )
 
