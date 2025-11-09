@@ -12,7 +12,13 @@ A Home Assistant integration that provides advanced price information and rating
 
 ![Tibber Price Information & Ratings](images/logo.png)
 
-## Features
+## 📖 Documentation
+
+- **[User Guide](docs/user/)** - Installation, configuration, and usage guides
+- **[Developer Guide](docs/development/)** - Contributing, architecture, and release process
+- **[Changelog](https://github.com/jpawlowski/hass.tibber_prices/releases)** - Release history and notes
+
+## ✨ Features
 
 -   **Quarter-Hourly Price Data**: Access detailed 15-minute interval pricing (192 data points across yesterday/today/tomorrow)
 -   **Current and Next Interval Prices**: Get real-time price data in both major currency (€, kr) and minor units (ct, øre)
@@ -26,39 +32,32 @@ A Home Assistant integration that provides advanced price information and rating
 -   **Diagnostic Sensors**: Monitor data freshness and availability
 -   **Reliable API Usage**: Uses only official Tibber [`priceInfo`](https://developer.tibber.com/docs/reference#priceinfo) and [`priceInfoRange`](https://developer.tibber.com/docs/reference#subscription) endpoints - no legacy APIs. Price ratings and statistics are calculated locally for maximum reliability and future-proofing.
 
-## Installation
+## 🚀 Quick Start
 
-### HACS Installation (Recommended)
+### Installation
 
-1. Ensure [HACS](https://hacs.xyz/) is installed in your Home Assistant instance
-2. Go to HACS > Integrations > Click the three dots in the top right > Custom repositories
-3. Add this repository URL: `https://github.com/jpawlowski/hass.tibber_prices`
-4. Click "Add"
-5. Search for "Tibber Price Information & Ratings" in the Integrations tab
-6. Click "Install"
-7. Restart Home Assistant
+1. **Install via HACS** (recommended)
+   - Add as custom repository: `https://github.com/jpawlowski/hass.tibber_prices`
+   - Search for "Tibber Price Information & Ratings"
+   - Click "Install"
 
-### Manual Installation
+2. **Add Integration**
+   - Go to Settings → Devices & Services
+   - Click "+ Add Integration"
+   - Search for "Tibber Price Information & Ratings"
 
-1. Copy the `custom_components/tibber_prices` directory from this repository into your Home Assistant's `custom_components` directory
-2. Restart Home Assistant
+3. **Configure**
+   - Enter your Tibber API token ([get one here](https://developer.tibber.com/settings/access-token))
+   - Select your Tibber home
+   - Configure price thresholds (optional)
 
-## Configuration
+4. **Start Using!**
+   - 30+ sensors available (key sensors enabled by default)
+   - Use in automations, dashboards, and scripts
 
-### Requirements
+📖 **[Full Installation Guide →](docs/user/installation.md)**
 
--   A Tibber account with an active subscription
--   A Tibber API access token (obtain from [developer.tibber.com](https://developer.tibber.com/settings/access-token))
-
-### Setup Process
-
-1. Go to **Settings** > **Devices & Services** in your Home Assistant UI
-2. Click the **+ ADD INTEGRATION** button in the bottom right
-3. Search for "Tibber Price Information & Ratings"
-4. Enter your Tibber API access token when prompted
-5. Click "Submit"
-
-## Available Entities
+## 📊 Available Entities
 
 The integration provides **30+ sensors** across different categories. Key sensors are enabled by default, while advanced sensors can be enabled as needed.
 
@@ -275,26 +274,42 @@ template:
           Price at {{ timestamp }}: {{ price }} ct/kWh
 ```
 
+📖 **[View all sensors and attributes →](docs/user/sensors.md)**
+
 ### Custom Services
 
 The integration provides custom services for advanced use cases:
 
--   `tibber_prices.get_price` - Fetch price data for specific days/times (useful for scripts)
+-   `tibber_prices.get_price` - Fetch price data for specific days/times
 -   `tibber_prices.get_apexcharts_data` - Get formatted data for ApexCharts cards
--   `tibber_prices.get_apexcharts_yaml` - Generate complete ApexCharts card configuration
+-   `tibber_prices.get_apexcharts_yaml` - Generate complete ApexCharts configurations
 -   `tibber_prices.refresh_user_data` - Manually refresh account information
 
-See the Services tab in Home Assistant Developer Tools for detailed documentation and parameters.
+📖 **[Service documentation and examples →](docs/user/services.md)**
 
 ### ApexCharts Integration
 
 The integration includes built-in support for creating beautiful price visualization cards. Use the `get_apexcharts_yaml` service to generate card configurations automatically.
 
-## Contributing
+📖 **[ApexCharts examples →](docs/user/automation-examples.md#apexcharts-cards)**
 
-If you want to contribute to this project, please read the [Contributing Guidelines](CONTRIBUTING.md).
+## 🤝 Contributing
 
-## License
+Contributions are welcome! Please read the [Contributing Guidelines](CONTRIBUTING.md) and [Developer Guide](docs/development/) before submitting pull requests.
+
+### For Contributors
+
+- **[Developer Setup](docs/development/setup.md)** - Get started with DevContainer
+- **[Architecture Guide](docs/development/architecture.md)** - Understand the codebase
+- **[Release Management](docs/development/release-management.md)** - Release process and versioning
+
+## 🤖 Development Note
+
+This integration is developed with extensive AI assistance (GitHub Copilot, Claude, and other AI tools). While AI enables rapid development and helps implement complex features, it's possible that some edge cases or subtle bugs may exist that haven't been discovered yet. If you encounter any issues, please [open an issue](https://github.com/jpawlowski/hass.tibber_prices/issues/new) - we'll work on fixing them (with AI help, of course! 😊).
+
+The integration is actively maintained and benefits from AI's ability to quickly understand and implement Home Assistant patterns, maintain consistency across the codebase, and handle complex data transformations. Quality is ensured through automated linting (Ruff), Home Assistant's type checking, and real-world testing.
+
+## 📄 License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 

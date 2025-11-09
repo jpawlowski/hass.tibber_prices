@@ -16,7 +16,14 @@ _Note: When proposing significant updates to this file, update the metadata abov
 
 When working with the codebase, Copilot MUST actively maintain consistency between this documentation and the actual code:
 
-**Scope:** "This documentation" and "this file" refer specifically to `.github/copilot-instructions.md`. This does NOT include user-facing documentation like `README.md`, `/docs/`, or comments in code. Those serve different purposes and are maintained separately.
+**Scope:** "This documentation" and "this file" refer specifically to `.github/copilot-instructions.md`. This does NOT include user-facing documentation like `README.md`, `/docs/user/`, or comments in code. Those serve different purposes and are maintained separately.
+
+**Documentation Organization:**
+
+-   **This file** (`.github/copilot-instructions.md`): AI/Developer long-term memory, patterns, conventions
+-   **`docs/user/`**: End-user guides (installation, configuration, usage examples)
+-   **`docs/development/`**: Contributor guides (setup, architecture, release management)
+-   **`README.md`**: Project overview with links to detailed documentation
 
 **Important:** `AGENTS.md` and `CLAUDE.md` in the repository root are **symlinks** to this file (`.github/copilot-instructions.md`). All three files are automatically synchronized through the symlink - do NOT attempt to edit them separately or check if they're in sync. Always edit only `.github/copilot-instructions.md`.
 
@@ -228,6 +235,13 @@ custom_components/tibber_prices/
 -   All scripts in `./scripts/` automatically use the correct `.venv`
 -   No need to manually activate venv or specify Python path
 -   Examples: `./scripts/lint`, `./scripts/develop`, `./scripts/lint-check`
+-   Release management: `./scripts/prepare-release`, `./scripts/generate-release-notes`
+
+**Release Note Backends (auto-installed in DevContainer):**
+
+-   **Rust toolchain**: Minimal Rust installation via DevContainer feature
+-   **git-cliff**: Template-based release notes (fast, reliable, installed via cargo in `scripts/setup`)
+-   Manual grep/awk parsing as fallback (always available)
 
 **When generating shell commands:**
 
@@ -653,6 +667,172 @@ The "Impact:" section bridges technical commits and future release notes:
 -   Structure enables automation (Conventional Commits)
 -   Impact sections provide user context (for release notes)
 -   Future AI translates into user-friendly format
+
+### Release Notes Generation
+
+**Multiple Options Available:**
+
+1. **Helper Script** (recommended, foolproof)
+
+    - Script: `./scripts/prepare-release VERSION`
+    - Bumps manifest.json version → commits → creates tag locally
+    - You review and push when ready
+    - Example: `./scripts/prepare-release 0.3.0`
+
+2. **Auto-Tag Workflow** (safety net)
+
+    - Workflow: `.github/workflows/auto-tag.yml`
+    - Triggers on manifest.json changes
+    - Automatically creates tag if it doesn't exist
+    - Prevents "forgot to tag" mistakes
+
+3. **Local Script** (testing, preview)
+
+    - Script: `./scripts/generate-release-notes [FROM_TAG] [TO_TAG]`
+    - Parses Conventional Commits between tags
+    - Supports multiple backends (auto-detected):
+        - **AI-powered**: GitHub Copilot CLI (best, context-aware)
+        - **Template-based**: git-cliff (fast, reliable)
+        - **Manual**: grep/awk fallback (always works)
+
+4. **GitHub UI Button** (manual, PR-based)
+
+    - Uses `.github/release.yml` configuration
+    - Click "Generate release notes" when creating release
+    - Works best with PRs that have labels
+    - Direct commits appear in "Other Changes" category
+
+5. **CI/CD Automation** (automatic on tag push)
+    - Workflow: `.github/workflows/release.yml`
+    - Triggers on version tags (v1.0.0, v2.1.3, etc.)
+    - Uses git-cliff backend (AI disabled in CI)
+    - Filters out version bump commits automatically
+    - Creates GitHub release automatically
+
+**Recommended Release Workflow:**
+
+```bash
+# Step 1: Prepare release (bumps manifest.json + creates tag)
+./scripts/prepare-release 0.3.0
+
+# Step 2: Review changes
+git log -1 --stat
+git show v0.3.0
+
+# Step 3: Push when ready
+git push origin main v0.3.0
+
+# Done! CI/CD creates release automatically
+```
+
+**Alternative: Manual Bump (with Auto-Tag Safety Net):**
+
+```bash
+# 1. Bump manifest.json manually
+vim custom_components/tibber_prices/manifest.json  # "version": "0.3.0"
+git commit -am "chore(release): bump version to 0.3.0"
+git push
+
+# 2. Auto-Tag workflow detects manifest.json change → creates tag
+# 3. Release workflow creates GitHub release
+```
+
+**Using the Local Script:**
+
+```bash
+# Generate from latest tag to HEAD
+./scripts/generate-release-notes
+
+# Generate between specific tags
+./scripts/generate-release-notes v1.0.0 v1.1.0
+
+# Force specific backend
+RELEASE_NOTES_BACKEND=manual ./scripts/generate-release-notes
+
+# Disable AI (use in CI/CD)
+USE_AI=false ./scripts/generate-release-notes
+```
+
+**Backend Selection Logic:**
+
+1. If `$RELEASE_NOTES_BACKEND` set → use that backend
+2. Else if in CI/CD (`$CI` or `$GITHUB_ACTIONS`) → skip AI, use git-cliff or manual
+3. Else if `USE_AI=false` → skip AI, use git-cliff or manual
+4. Else if GitHub Copilot CLI available (`copilot` command) → use AI (best quality, smart grouping)
+5. Else if git-cliff available → use template-based (fast, reliable, 1:1 commit mapping)
+6. Else → use manual grep/awk parsing (always works)
+
+**Backend Comparison:**
+
+-   **GitHub Copilot CLI** (`copilot`):
+
+    -   ✅ AI-powered semantic understanding
+    -   ✅ Smart grouping of related commits into single release notes
+    -   ✅ Interprets "Impact:" sections for user-friendly descriptions
+    -   ✅ Multiple commits can be combined with all links: ([hash1](url1), [hash2](url2))
+    -   ⚠️ Uses premium request quota
+    -   ⚠️ Output may vary between runs
+
+-   **git-cliff** (template-based):
+
+    -   ✅ Fast and consistent
+    -   ✅ 1:1 commit to release note line mapping
+    -   ✅ Highly configurable via `cliff.toml`
+    -   ❌ No semantic understanding
+    -   ❌ Cannot intelligently group related commits
+
+-   **manual** (grep/awk):
+    -   ✅ Always available (no dependencies)
+    -   ✅ Basic commit categorization
+    -   ❌ No commit grouping
+    -   ❌ Basic formatting only
+
+**Output Format:**
+
+All backends produce GitHub-flavored Markdown with consistent structure:
+
+```markdown
+## 🎉 New Features
+
+-   **scope**: Description ([commit_hash](link))
+    User-visible impact from "Impact:" section
+
+-   **scope**: Combined description ([hash1](link1), [hash2](link2)) # AI backend only
+    Multiple related commits grouped together
+```
+
+## 🐛 Bug Fixes
+
+-   **scope**: Description ([commit_hash](link))
+    User-visible impact
+
+## 📚 Documentation
+
+...
+
+````
+
+**Installing Optional Backends:**
+
+```bash
+# git-cliff (fast, reliable, used in CI/CD)
+# Auto-installed in DevContainer via scripts/setup
+# See: https://git-cliff.org/docs/installation
+cargo install git-cliff  # or download binary from releases
+````
+
+**When to Use Which:**
+
+-   **GitHub Button**: When working with PRs, quick manual releases
+-   **Local Script**: Before committing to test release notes, manual review needed
+-   **CI/CD**: Automatic releases on tag push (production workflow)
+
+**Format Requirements:**
+
+-   **HACS**: No specific format required, uses GitHub releases as-is
+-   **Home Assistant**: No specific format required for custom integrations
+-   **Markdown**: Standard GitHub-flavored Markdown supported
+-   **HTML**: Can include `<ha-alert>` tags for special notices (HA update entities only)
 
 **Validate JSON files:**
 
