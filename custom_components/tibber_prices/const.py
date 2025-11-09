@@ -33,7 +33,6 @@ CONF_VOLATILITY_THRESHOLD_HIGH = "volatility_threshold_high"
 CONF_VOLATILITY_THRESHOLD_VERY_HIGH = "volatility_threshold_very_high"
 CONF_BEST_PRICE_MIN_VOLATILITY = "best_price_min_volatility"
 CONF_PEAK_PRICE_MIN_VOLATILITY = "peak_price_min_volatility"
-CONF_MIN_VOLATILITY_FOR_PERIODS = "min_volatility_for_periods"  # Deprecated: Use CONF_BEST_PRICE_MIN_VOLATILITY
 CONF_BEST_PRICE_MAX_LEVEL = "best_price_max_level"
 CONF_PEAK_PRICE_MIN_LEVEL = "peak_price_min_level"
 
@@ -55,11 +54,10 @@ DEFAULT_PRICE_TREND_THRESHOLD_FALLING = -5  # Default trend threshold for fallin
 DEFAULT_VOLATILITY_THRESHOLD_MODERATE = 5.0  # Default threshold for MODERATE volatility (ct/øre)
 DEFAULT_VOLATILITY_THRESHOLD_HIGH = 15.0  # Default threshold for HIGH volatility (ct/øre)
 DEFAULT_VOLATILITY_THRESHOLD_VERY_HIGH = 30.0  # Default threshold for VERY_HIGH volatility (ct/øre)
-DEFAULT_BEST_PRICE_MIN_VOLATILITY = "LOW"  # Show best price at any volatility (optimization always useful)
-DEFAULT_PEAK_PRICE_MIN_VOLATILITY = "LOW"  # Always show peak price (warning relevant even at low spreads)
-DEFAULT_MIN_VOLATILITY_FOR_PERIODS = "LOW"  # Deprecated: Use DEFAULT_BEST_PRICE_MIN_VOLATILITY
-DEFAULT_BEST_PRICE_MAX_LEVEL = "ANY"  # Default: show best price periods regardless of price level
-DEFAULT_PEAK_PRICE_MIN_LEVEL = "ANY"  # Default: show peak price periods regardless of price level
+DEFAULT_BEST_PRICE_MIN_VOLATILITY = "low"  # Show best price at any volatility (optimization always useful)
+DEFAULT_PEAK_PRICE_MIN_VOLATILITY = "low"  # Always show peak price (warning relevant even at low spreads)
+DEFAULT_BEST_PRICE_MAX_LEVEL = "any"  # Default: show best price periods regardless of price level
+DEFAULT_PEAK_PRICE_MIN_LEVEL = "any"  # Default: show peak price periods regardless of price level
 
 # Home types
 HOME_TYPE_APARTMENT = "APARTMENT"
@@ -227,34 +225,31 @@ VOLATILITY_OPTIONS = [
 
 # Valid options for minimum volatility filter for periods
 MIN_VOLATILITY_FOR_PERIODS_OPTIONS = [
-    VOLATILITY_LOW,  # Show at any volatility (≥0ct spread) - no filter
-    VOLATILITY_MODERATE,  # Only show periods when volatility ≥ MODERATE (≥5ct)
-    VOLATILITY_HIGH,  # Only show periods when volatility ≥ HIGH (≥15ct)
-    VOLATILITY_VERY_HIGH,  # Only show periods when volatility ≥ VERY_HIGH (≥30ct)
+    VOLATILITY_LOW.lower(),  # Show at any volatility (≥0ct spread) - no filter
+    VOLATILITY_MODERATE.lower(),  # Only show periods when volatility ≥ MODERATE (≥5ct)
+    VOLATILITY_HIGH.lower(),  # Only show periods when volatility ≥ HIGH (≥15ct)
+    VOLATILITY_VERY_HIGH.lower(),  # Only show periods when volatility ≥ VERY_HIGH (≥30ct)
 ]
 
 # Valid options for best price maximum level filter (AND-linked with volatility filter)
 # Sorted from cheap to expensive: user selects "up to how expensive"
 BEST_PRICE_MAX_LEVEL_OPTIONS = [
-    "ANY",  # No filter, allow all price levels
-    PRICE_LEVEL_VERY_CHEAP,  # Only show if level ≤ VERY_CHEAP
-    PRICE_LEVEL_CHEAP,  # Only show if level ≤ CHEAP
-    PRICE_LEVEL_NORMAL,  # Only show if level ≤ NORMAL
-    PRICE_LEVEL_EXPENSIVE,  # Only show if level ≤ EXPENSIVE
+    "any",  # No filter, allow all price levels
+    PRICE_LEVEL_VERY_CHEAP.lower(),  # Only show if level ≤ VERY_CHEAP
+    PRICE_LEVEL_CHEAP.lower(),  # Only show if level ≤ CHEAP
+    PRICE_LEVEL_NORMAL.lower(),  # Only show if level ≤ NORMAL
+    PRICE_LEVEL_EXPENSIVE.lower(),  # Only show if level ≤ EXPENSIVE
 ]
 
 # Valid options for peak price minimum level filter (AND-linked with volatility filter)
 # Sorted from expensive to cheap: user selects "starting from how expensive"
 PEAK_PRICE_MIN_LEVEL_OPTIONS = [
-    "ANY",  # No filter, allow all price levels
-    PRICE_LEVEL_EXPENSIVE,  # Only show if level ≥ EXPENSIVE
-    PRICE_LEVEL_NORMAL,  # Only show if level ≥ NORMAL
-    PRICE_LEVEL_CHEAP,  # Only show if level ≥ CHEAP
-    PRICE_LEVEL_VERY_CHEAP,  # Only show if level ≥ VERY_CHEAP
+    "any",  # No filter, allow all price levels
+    PRICE_LEVEL_EXPENSIVE.lower(),  # Only show if level ≥ EXPENSIVE
+    PRICE_LEVEL_NORMAL.lower(),  # Only show if level ≥ NORMAL
+    PRICE_LEVEL_CHEAP.lower(),  # Only show if level ≥ CHEAP
+    PRICE_LEVEL_VERY_CHEAP.lower(),  # Only show if level ≥ VERY_CHEAP
 ]
-
-# Deprecated: Use BEST_PRICE_MAX_LEVEL_OPTIONS or PEAK_PRICE_MIN_LEVEL_OPTIONS instead
-MAX_LEVEL_FOR_PERIODS_OPTIONS = BEST_PRICE_MAX_LEVEL_OPTIONS
 
 # Mapping for comparing price levels (used for sorting)
 PRICE_LEVEL_MAPPING = {

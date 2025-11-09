@@ -475,20 +475,20 @@
     "selector": {
         "volatility": {
             "options": {
-                "LOW": "Låg",
-                "MODERATE": "Måttlig",
-                "HIGH": "Hög",
-                "VERY_HIGH": "Mycket hög"
+                "low": "Låg",
+                "moderate": "Måttlig",
+                "high": "Hög",
+                "very_high": "Mycket hög"
             }
         },
         "price_level": {
             "options": {
-                "ANY": "Alla",
-                "VERY_CHEAP": "Mycket billigt",
-                "CHEAP": "Billigt",
-                "NORMAL": "Normalt",
-                "EXPENSIVE": "Dyrt",
-                "VERY_EXPENSIVE": "Mycket dyrt"
+                "any": "Alla",
+                "very_cheap": "Mycket billigt",
+                "cheap": "Billigt",
+                "normal": "Normalt",
+                "expensive": "Dyrt",
+                "very_expensive": "Mycket dyrt"
             }
         }
     },

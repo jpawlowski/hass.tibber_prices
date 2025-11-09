@@ -475,20 +475,20 @@
     "selector": {
         "volatility": {
             "options": {
-                "LOW": "Lav",
-                "MODERATE": "Moderat",
-                "HIGH": "Høy",
-                "VERY_HIGH": "Svært høy"
+                "low": "Lav",
+                "moderate": "Moderat",
+                "high": "Høy",
+                "very_high": "Svært høy"
             }
         },
         "price_level": {
             "options": {
-                "ANY": "Alle",
-                "VERY_CHEAP": "Svært billig",
-                "CHEAP": "Billig",
-                "NORMAL": "Normal",
-                "EXPENSIVE": "Dyr",
-                "VERY_EXPENSIVE": "Svært dyr"
+                "any": "Alle",
+                "very_cheap": "Svært billig",
+                "cheap": "Billig",
+                "normal": "Normal",
+                "expensive": "Dyr",
+                "very_expensive": "Svært dyr"
             }
         }
     },

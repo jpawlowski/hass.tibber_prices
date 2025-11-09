@@ -30,7 +30,6 @@ from .const import (
     CONF_BEST_PRICE_MAX_LEVEL,
     CONF_BEST_PRICE_MIN_VOLATILITY,
     CONF_EXTENDED_DESCRIPTIONS,
-    CONF_MIN_VOLATILITY_FOR_PERIODS,
     CONF_PEAK_PRICE_MIN_LEVEL,
     CONF_PEAK_PRICE_MIN_VOLATILITY,
     CONF_VOLATILITY_THRESHOLD_HIGH,
@@ -39,7 +38,6 @@ from .const import (
     DEFAULT_BEST_PRICE_MAX_LEVEL,
     DEFAULT_BEST_PRICE_MIN_VOLATILITY,
     DEFAULT_EXTENDED_DESCRIPTIONS,
-    DEFAULT_MIN_VOLATILITY_FOR_PERIODS,
     DEFAULT_PEAK_PRICE_MIN_LEVEL,
     DEFAULT_PEAK_PRICE_MIN_VOLATILITY,
     DEFAULT_VOLATILITY_THRESHOLD_HIGH,
@@ -47,7 +45,6 @@ from .const import (
     DEFAULT_VOLATILITY_THRESHOLD_VERY_HIGH,
     PRICE_LEVEL_MAPPING,
     VOLATILITY_HIGH,
-    VOLATILITY_LOW,
     VOLATILITY_MODERATE,
     VOLATILITY_VERY_HIGH,
     async_get_entity_description,
@@ -420,29 +417,21 @@ class TibberPricesBinarySensor(TibberPricesEntity, BinarySensorEntity):
             # Peak price sensor
             min_volatility = self.coordinator.config_entry.options.get(
                 CONF_PEAK_PRICE_MIN_VOLATILITY,
-                # Migration: fall back to old global filter, then to new default
-                self.coordinator.config_entry.options.get(
-                    CONF_MIN_VOLATILITY_FOR_PERIODS,
-                    DEFAULT_PEAK_PRICE_MIN_VOLATILITY,
-                ),
+                DEFAULT_PEAK_PRICE_MIN_VOLATILITY,
             )
         else:
             # Best price sensor
             min_volatility = self.coordinator.config_entry.options.get(
                 CONF_BEST_PRICE_MIN_VOLATILITY,
-                # Migration: fall back to old global filter, then to new default
-                self.coordinator.config_entry.options.get(
-                    CONF_MIN_VOLATILITY_FOR_PERIODS,
-                    DEFAULT_BEST_PRICE_MIN_VOLATILITY,
-                ),
+                DEFAULT_BEST_PRICE_MIN_VOLATILITY,
             )
 
-        # "LOW" means no filtering (show at any volatility ≥0ct)
-        if min_volatility == VOLATILITY_LOW:
+        # "low" means no filtering (show at any volatility ≥0ct)
+        if min_volatility == "low":
             return True
 
-        # Legacy migration: "ANY" also means no filtering
-        if min_volatility == "ANY":
+        # "any" is legacy alias for "low" (no filtering)
+        if min_volatility == "any":
             return True
 
         # Get today's price data to calculate volatility
@@ -506,8 +495,8 @@ class TibberPricesBinarySensor(TibberPricesEntity, BinarySensorEntity):
                 DEFAULT_BEST_PRICE_MAX_LEVEL,
             )
 
-        # "ANY" means no level filtering
-        if level_config == "ANY":
+        # "any" means no level filtering
+        if level_config == "any":
             return True
 
         # Get today's intervals
@@ -518,7 +507,8 @@ class TibberPricesBinarySensor(TibberPricesEntity, BinarySensorEntity):
             return True  # If no data, don't filter
 
         # Check if ANY interval today meets the level requirement
-        level_order = PRICE_LEVEL_MAPPING.get(level_config, 0)
+        # Note: level_config is lowercase from selector, but PRICE_LEVEL_MAPPING uses uppercase
+        level_order = PRICE_LEVEL_MAPPING.get(level_config.upper(), 0)
 
         if reverse_sort:
             # Peak price: level >= min_level (show if ANY interval is expensive enough)
@@ -563,10 +553,17 @@ class TibberPricesBinarySensor(TibberPricesEntity, BinarySensorEntity):
             A dict with empty periods and a reason attribute explaining why.
 
         """
-        min_volatility = self.coordinator.config_entry.options.get(
-            CONF_MIN_VOLATILITY_FOR_PERIODS,
-            DEFAULT_MIN_VOLATILITY_FOR_PERIODS,
-        )
+        # Get appropriate volatility config based on sensor type
+        if reverse_sort:
+            min_volatility = self.coordinator.config_entry.options.get(
+                CONF_PEAK_PRICE_MIN_VOLATILITY,
+                DEFAULT_PEAK_PRICE_MIN_VOLATILITY,
+            )
+        else:
+            min_volatility = self.coordinator.config_entry.options.get(
+                CONF_BEST_PRICE_MIN_VOLATILITY,
+                DEFAULT_BEST_PRICE_MIN_VOLATILITY,
+            )
 
         # Get appropriate level config based on sensor type
         if reverse_sort:
@@ -584,10 +581,10 @@ class TibberPricesBinarySensor(TibberPricesEntity, BinarySensorEntity):
 
         # Build reason string explaining which filter(s) prevented display
         reasons = []
-        if min_volatility != "ANY" and not self._check_volatility_filter(reverse_sort=reverse_sort):
-            reasons.append(f"volatility_below_{min_volatility.lower()}")
-        if level_config != "ANY" and not self._check_level_filter(reverse_sort=reverse_sort):
-            reasons.append(f"level_{level_filter_type}_{level_config.lower()}")
+        if min_volatility != "any" and not self._check_volatility_filter(reverse_sort=reverse_sort):
+            reasons.append(f"volatility_below_{min_volatility}")
+        if level_config != "any" and not self._check_level_filter(reverse_sort=reverse_sort):
+            reasons.append(f"level_{level_filter_type}_{level_config}")
 
         # Join multiple reasons with "and"
         reason = "_and_".join(reasons) if reasons else "filtered"

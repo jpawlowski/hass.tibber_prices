@@ -475,20 +475,20 @@
     "selector": {
         "volatility": {
             "options": {
-                "LOW": "Low",
-                "MODERATE": "Moderate",
-                "HIGH": "High",
-                "VERY_HIGH": "Very high"
+                "low": "Low",
+                "moderate": "Moderate",
+                "high": "High",
+                "very_high": "Very high"
             }
         },
         "price_level": {
             "options": {
-                "ANY": "Any",
-                "VERY_CHEAP": "Very cheap",
-                "CHEAP": "Cheap",
-                "NORMAL": "Normal",
-                "EXPENSIVE": "Expensive",
-                "VERY_EXPENSIVE": "Very expensive"
+                "any": "Any",
+                "very_cheap": "Very cheap",
+                "cheap": "Cheap",
+                "normal": "Normal",
+                "expensive": "Expensive",
+                "very_expensive": "Very expensive"
             }
         }
     },

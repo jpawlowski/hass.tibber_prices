@@ -475,20 +475,20 @@
     "selector": {
         "volatility": {
             "options": {
-                "LOW": "Laag",
-                "MODERATE": "Matig",
-                "HIGH": "Hoog",
-                "VERY_HIGH": "Zeer hoog"
+                "low": "Laag",
+                "moderate": "Matig",
+                "high": "Hoog",
+                "very_high": "Zeer hoog"
             }
         },
         "price_level": {
             "options": {
-                "ANY": "Alle",
-                "VERY_CHEAP": "Zeer goedkoop",
-                "CHEAP": "Goedkoop",
-                "NORMAL": "Normaal",
-                "EXPENSIVE": "Duur",
-                "VERY_EXPENSIVE": "Zeer duur"
+                "any": "Alle",
+                "very_cheap": "Zeer goedkoop",
+                "cheap": "Goedkoop",
+                "normal": "Normaal",
+                "expensive": "Duur",
+                "very_expensive": "Zeer duur"
             }
         }
     },
