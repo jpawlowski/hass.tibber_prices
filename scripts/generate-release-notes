@@ -5,15 +5,25 @@
 # This script generates release notes by parsing conventional commits between git tags.
 # It supports multiple backends for generation:
 #
-#   1. GitHub Copilot (VS Code Copilot CLI) - Intelligent, context-aware
+#   1. GitHub Copilot CLI - Intelligent, context-aware (uses premium quota)
 #   2. git-cliff - Fast, template-based Rust tool
 #   3. Manual parsing - Simple grep/awk fallback
+#
+# Auto-update feature:
+#   If a GitHub release exists for TO_TAG, the script will automatically offer
+#   to update the release notes on GitHub (interactive prompt, local only).
 #
 # Usage:
 #   ./scripts/generate-release-notes [FROM_TAG] [TO_TAG]
 #   ./scripts/generate-release-notes v1.0.0 v1.1.0
 #   ./scripts/generate-release-notes v1.0.0 HEAD
 #   ./scripts/generate-release-notes               # Uses latest tag to HEAD
+#
+#   # Interactive update of existing release:
+#   ./scripts/generate-release-notes v0.2.0 v0.3.0
+#   # → Generates notes
+#   # → Detects release exists
+#   # → Offers to update: [y/N]
 #
 # Environment variables:
 #   RELEASE_NOTES_BACKEND - Force specific backend: copilot, git-cliff, manual
@@ -104,8 +114,9 @@ generate_with_copilot() {
     log_info "${YELLOW}Note: This will use one premium request from your monthly quota${NC}"
     log_info ""
 
-    # Get commit log for the range
-    COMMITS=$(git log --pretty=format:"%h | %s%n%b%n---" "${FROM_TAG}..${TO_TAG}")
+    # Get commit log for the range with file statistics
+    # This helps the AI understand which commits touched which files
+    COMMITS=$(git log --pretty=format:"%h | %s%n%b%n" --stat --compact-summary "${FROM_TAG}..${TO_TAG}")
 
     if [ -z "$COMMITS" ]; then
         log_info "${YELLOW}No commits found between ${FROM_TAG} and ${TO_TAG}${NC}"
@@ -113,50 +124,132 @@ generate_with_copilot() {
     fi
 
     # Create prompt for Copilot
-    PROMPT="Generate release notes in GitHub-flavored Markdown from these conventional commits.
+    PROMPT="You are tasked with generating professional release notes in GitHub-flavored Markdown from conventional commits.
 
-**Commits between ${FROM_TAG} and ${TO_TAG}:**
+**CRITICAL Format Requirements:**
 
-${COMMITS}
+1. **START with a single-line title using '# ' (H1 heading):**
+   - Analyze ALL commits and create a SHORT, descriptive title (max 5-7 words)
 
-**Format Requirements:**
-1. Parse conventional commit format: type(scope): description
-2. Group by type with emoji headings:
-   - 🎉 New Features (feat)
-   - 🐛 Bug Fixes (fix)
-   - 📚 Documentation (docs)
-   - � Dependencies (chore(deps))
-   - �🔧 Maintenance & Refactoring (refactor, chore)
-   - 🧪 Testing (test)
-3. **Smart grouping**: If multiple commits address the same logical change or feature:
+   **HOW TO CHOOSE THE TITLE:**
+   Step 1: Scan commit scopes and identify USER-FACING changes:
+     - feat(sensors): ✅ User feature (they see new sensors)
+     - feat(config_flow): ✅ User feature (they use config UI)
+     - feat(services): ✅ User feature (they call services)
+     - fix(translations): ✅ User fix (they see corrected text)
+     - feat(release): ❌ Developer tool (users don't see this)
+     - feat(ci): ❌ Infrastructure (users don't care)
+     - docs: ❌ Documentation (nice but not a feature)
+
+   Step 2: Among user-facing changes, prioritize by impact:
+     - New sensor types > Config improvements > Bug fixes > Translations
+     - Multiple related sensors = name the feature domain (e.g., \"Price Volatility Analysis\")
+     - Major config flow changes = \"Enhanced Configuration Experience\"
+
+   Step 3: Ignore developer/internal changes for title selection:
+     - Even if there are 10 release/ci/docs commits, they don't appear in title
+     - Title must reflect what USERS experience when they upgrade
+
+   **EXAMPLE DECISION PROCESS:**
+   Given these commits:
+     - feat(sensors): Add 4 volatility sensors with classification
+     - feat(release): Add automated release notes generation
+     - fix(translations): Fix hassfest validation errors
+     - docs: Restructure documentation
+
+   WRONG title: \"Release Automation & Documentation\" (developer-focused!)
+   RIGHT title: \"Price Volatility Analysis Features\" (user sees new sensors!)
+
+   **GOOD TITLES (user-focused):**
+   - \"# Advanced Price Analysis Features\" (new sensors = user feature)
+   - \"# Enhanced Configuration Experience\" (config flow = user-facing)
+   - \"# Improved Reliability & Performance\" (stability = user benefit)
+
+   **BAD TITLES (avoid these):**
+   - \"# Release Automation\" (developers don't read release notes!)
+   - \"# Developer Experience\" (not user-facing!)
+   - \"# New Features & Bug Fixes\" (boring, says nothing)
+
+   Keep it exciting but professional. Do NOT include version number.
+
+2. **After title, use '### ' (H3 headings) for sections:**
+   - ### 🎉 New Features (for feat commits)
+   - ### 🐛 Bug Fixes (for fix commits)
+   - ### 📚 Documentation (for docs commits)
+   - ### 📦 Dependencies (for chore(deps) commits)
+   - ### 🔧 Maintenance & Refactoring (for refactor/chore commits)
+   - ### 🧪 Testing (for test commits)
+
+3. **Smart grouping**: If multiple commits address the same logical change:
    - Combine them into one release note entry
    - Link all related commits: ([hash1](url1), [hash2](url2))
    - Use a descriptive summary that captures the overall change
+
 4. Extract 'Impact:' sections from commit bodies as user-friendly descriptions
+
 5. Format each item as: - **scope**: Description ([hash](https://github.com/${GITHUB_REPO}/commit/hash))
-6. Keep it concise, focus on user-visible changes
-7. **Exclude from release notes**:
+
+6. **Exclude from release notes (but still consider for context):**
    - Manifest.json version bumps: chore(release): bump version
-   - Development environment: feat/fix/chore(devcontainer), feat/fix/chore(vscode), feat/fix/chore(scripts), feat/fix/chore(dev-env)
-   - CI/CD infrastructure: feat/fix/chore/ci(ci), feat/fix/chore/ci(workflow), feat/fix/chore/ci(actions)
-8. **Include in release notes**:
+   - Development environment: feat/fix/chore(devcontainer), feat/fix/chore(vscode), feat/fix/chore(scripts)
+   - CI/CD infrastructure: feat/fix/chore/ci(ci), feat/fix/chore(workflow), feat/fix/chore(actions)
+   - IMPORTANT: These should NEVER influence the title choice, even if they're the majority!
+
+7. **Include in release notes (these CAN influence title):**
    - Dependency updates: chore(deps) - these ARE relevant for users
-   - Any user-facing changes regardless of scope
-9. Output ONLY the markdown, no explanations
+   - Any user-facing changes regardless of scope (sensors, config, services, binary_sensor, etc.)
+   - Bug fixes that users experience (translations, api, coordinator, etc.)
 
-**Examples of smart grouping:**
-- Multiple commits fixing the same bug → One entry with all commits
-- Commits adding a feature incrementally → One entry describing the complete feature
-- Related refactoring commits → One entry summarizing the improvement
+8. **Understanding the file paths (use this to assess importance):**
+   - custom_components/tibber_prices/sensor.py = User-facing sensors (HIGH priority for title)
+   - custom_components/tibber_prices/binary_sensor.py = User-facing binary sensors (HIGH priority)
+   - custom_components/tibber_prices/config_flow.py = User-facing configuration (HIGH priority)
+   - custom_components/tibber_prices/services.py = User-facing services (HIGH priority)
+   - custom_components/tibber_prices/translations/*.json = User-facing translations (MEDIUM priority)
+   - scripts/ = Developer tools (LOW priority, exclude from title)
+   - .github/workflows/ = CI/CD automation (LOW priority, exclude from title)
+   - docs/ = Documentation (LOW priority, exclude from title)
 
-Generate the release notes now:"
+   **Key insight:** Large changes (100+ lines) in custom_components/tibber_prices/ are usually important user features!
+
+9. **Output structure example:**
+   # Title Here
+
+   ### 🎉 New Features
+
+   - **scope**: description ([abc123](url))
+
+   ### 🐛 Bug Fixes
+   ...
+
+---
+
+**Now, here are the commits to analyze (between ${FROM_TAG} and ${TO_TAG}):**
+
+${COMMITS}
+
+---
+
+**Generate the release notes now. Start with '# ' title, then use '### ' for sections.**
+
+**IMPORTANT: Output ONLY the release notes in Markdown format. Do NOT include:**
+- Explanations or rationale for your choices
+- Meta-commentary about the process
+- Analysis of why you chose the title
+- Any text after the last release note section
+
+End the output after the last release note item. Nothing more."
 
     # Save prompt to temp file for copilot
     TEMP_PROMPT=$(mktemp)
     echo "$PROMPT" > "$TEMP_PROMPT"
 
+    # Use Claude Haiku 4.5 for faster, cheaper generation (same quality for structured tasks)
+    # Can override with: COPILOT_MODEL=claude-sonnet-4.5 ./scripts/generate-release-notes
+    COPILOT_MODEL="${COPILOT_MODEL:-claude-haiku-4.5}"
+
     # Call copilot CLI (it will handle authentication interactively)
-    copilot < "$TEMP_PROMPT" || {
+    copilot --model "$COPILOT_MODEL" < "$TEMP_PROMPT" || {
         echo ""
         log_info "${YELLOW}Warning: GitHub Copilot CLI failed or was not authenticated${NC}"
         log_info "${YELLOW}Falling back to git-cliff${NC}"
@@ -334,34 +427,187 @@ generate_with_manual() {
     rm -rf "$TMPDIR"
 }
 
-# Execute based on backend
+# ============================================================================
+# Check if auto-update is possible (before generation)
+# ============================================================================
+
+AUTO_UPDATE_AVAILABLE=false
+CURRENT_TITLE=""
+CURRENT_URL=""
+
+if [ -z "$CI" ] && [ -z "$GITHUB_ACTIONS" ] && command -v gh >/dev/null 2>&1 && [ "$TO_TAG" != "HEAD" ]; then
+    # Check if TO_TAG is a valid tag and release exists
+    if git rev-parse "$TO_TAG" >/dev/null 2>&1 && gh release view "$TO_TAG" >/dev/null 2>&1; then
+        AUTO_UPDATE_AVAILABLE=true
+        CURRENT_TITLE=$(gh release view "$TO_TAG" --json name --jq '.name' 2>/dev/null || echo "$TO_TAG")
+        CURRENT_URL=$(gh release view "$TO_TAG" --json url --jq '.url' 2>/dev/null || echo "")
+    fi
+fi
+
+# ============================================================================
+# Generate release notes (only once)
+# ============================================================================
+
+# Validate backend availability
 case "$BACKEND" in
     copilot)
         if ! command -v copilot >/dev/null 2>&1; then
-            echo "${RED}Error: GitHub Copilot CLI not found${NC}"
-            echo "Install: npm install -g @github/copilot"
-            echo "See: https://github.com/github/copilot-cli"
+            echo "${RED}Error: GitHub Copilot CLI not found${NC}" >&2
+            echo "Install: npm install -g @github/copilot" >&2
+            echo "See: https://github.com/github/copilot-cli" >&2
             exit 1
         fi
-        generate_with_copilot
         ;;
     git-cliff)
         if ! command -v git-cliff >/dev/null 2>&1; then
-            echo "${RED}Error: git-cliff not found${NC}"
-            echo "Install: https://git-cliff.org/docs/installation"
+            echo "${RED}Error: git-cliff not found${NC}" >&2
+            echo "Install: https://git-cliff.org/docs/installation" >&2
             exit 1
         fi
-        generate_with_gitcliff
-        ;;
-    manual)
-        generate_with_manual
-        ;;
-    *)
-        echo "${RED}Error: Unknown backend: ${BACKEND}${NC}"
-        echo "Valid backends: copilot, git-cliff, manual"
-        exit 1
         ;;
 esac
 
+# Generate to temp file if auto-update is possible, else stdout
+if [ "$AUTO_UPDATE_AVAILABLE" = "true" ]; then
+    TEMP_NOTES=$(mktemp)
+    case "$BACKEND" in
+        copilot)
+            generate_with_copilot > "$TEMP_NOTES"
+            ;;
+        git-cliff)
+            generate_with_gitcliff > "$TEMP_NOTES"
+            ;;
+        manual)
+            generate_with_manual > "$TEMP_NOTES"
+            ;;
+    esac
+else
+    # No auto-update, just output to stdout
+    case "$BACKEND" in
+        copilot)
+            generate_with_copilot
+            ;;
+        git-cliff)
+            generate_with_gitcliff
+            ;;
+        manual)
+            generate_with_manual
+            ;;
+    esac
+
+    echo "" >&2
+    log_info "${GREEN}==> Release notes generated successfully!${NC}"
+    exit 0
+fi
+
+# ============================================================================
+# Auto-update existing GitHub release
+# ============================================================================
+
+# Extract title and body from generated notes
+# Title is the first line starting with '# ' (H1)
+# Body is everything after the first blank line following the title
+EXTRACTED_TITLE=""
+NOTES_BODY=""
+
+# Find the first line that starts with '# ' (skip any metadata before it)
+TITLE_LINE_NUM=$(grep -n '^# ' "$TEMP_NOTES" | head -n 1 | cut -d: -f1)
+
+if [ -n "$TITLE_LINE_NUM" ]; then
+    # Extract title (remove '# ' prefix from that specific line)
+    FIRST_TITLE_LINE=$(sed -n "${TITLE_LINE_NUM}p" "$TEMP_NOTES")
+    EXTRACTED_TITLE=$(echo "$FIRST_TITLE_LINE" | sed 's/^# //')
+    # Body starts from the line after the title
+    BODY_START_LINE=$((TITLE_LINE_NUM + 1))
+    NOTES_BODY=$(tail -n +$BODY_START_LINE "$TEMP_NOTES" | sed '1{/^$/d;}')
+else
+    # No H1 title found, use entire content as body
+    NOTES_BODY=$(cat "$TEMP_NOTES")
+fi
+
+# Generate final title for GitHub release
+if [ -n "$EXTRACTED_TITLE" ]; then
+    # AI provided a title, prepend version tag
+    RELEASE_TITLE="$TO_TAG - $EXTRACTED_TITLE"
+else
+    # Fallback: Keep current title if it looks meaningful
+    # (more than just the tag itself)
+    RELEASE_TITLE="$CURRENT_TITLE"
+    if [ "$RELEASE_TITLE" = "$TO_TAG" ]; then
+        # Current title is just the tag, generate from commit analysis
+        # This is the git-cliff style fallback (simple but functional)
+        FEAT_COUNT=$(echo "$NOTES_BODY" | grep -c "^### 🎉 New Features" || true)
+        FIX_COUNT=$(echo "$NOTES_BODY" | grep -c "^### 🐛 Bug Fixes" || true)
+        DOCS_COUNT=$(echo "$NOTES_BODY" | grep -c "^### 📚 Documentation" || true)
+
+        if [ "$FEAT_COUNT" -gt 0 ] && [ "$FIX_COUNT" -gt 0 ]; then
+            RELEASE_TITLE="$TO_TAG - New Features & Bug Fixes"
+        elif [ "$FEAT_COUNT" -gt 0 ]; then
+            RELEASE_TITLE="$TO_TAG - New Features"
+        elif [ "$FIX_COUNT" -gt 0 ]; then
+            RELEASE_TITLE="$TO_TAG - Bug Fixes"
+        elif [ "$DOCS_COUNT" -gt 0 ]; then
+            RELEASE_TITLE="$TO_TAG - Documentation Updates"
+        else
+            RELEASE_TITLE="$TO_TAG - Updates"
+        fi
+    fi
+fi
+
+# Save body (without H1 title) to temp file for GitHub
+TEMP_BODY=$(mktemp)
+echo "$NOTES_BODY" > "$TEMP_BODY"
+
+# Show the generated notes (with title for preview)
+if [ -n "$EXTRACTED_TITLE" ]; then
+    echo "# $EXTRACTED_TITLE"
+    echo ""
+fi
+cat "$TEMP_BODY"
+
+echo "" >&2
+log_info "${GREEN}==> Release notes generated successfully!${NC}"
+echo "" >&2
+log_info "${BLUE}═══════════════════════════════════════════════════════════════${NC}"
+log_info "A GitHub release exists for ${CYAN}$TO_TAG${NC}"
+log_info "Current title: ${CYAN}$CURRENT_TITLE${NC}"
+log_info "New title: ${CYAN}$RELEASE_TITLE${NC}"
+if [ -n "$CURRENT_URL" ]; then
+    log_info "URL: ${CYAN}$CURRENT_URL${NC}"
+fi
+log_info "${BLUE}═══════════════════════════════════════════════════════════════${NC}"
+echo "" >&2
+
+printf "${YELLOW}Do you want to update the release notes on GitHub? [y/N]:${NC} " >&2
+read -r UPDATE_RELEASE
+
+if [ "$UPDATE_RELEASE" = "y" ] || [ "$UPDATE_RELEASE" = "Y" ]; then
+    log_info "Updating release $TO_TAG on GitHub..."
+    log_info "Title: ${CYAN}$RELEASE_TITLE${NC}"
+
+    # Update release with both title and body
+    if gh release edit "$TO_TAG" --title "$RELEASE_TITLE" --notes-file "$TEMP_BODY" 2>&1 >&2; then
+        echo "" >&2
+        log_info "${GREEN}✓ Release notes updated successfully!${NC}"
+        if [ -n "$CURRENT_URL" ]; then
+            log_info "View at: ${CYAN}$CURRENT_URL${NC}"
+        fi
+    else
+        echo "" >&2
+        log_info "${RED}✗ Failed to update release${NC}"
+        log_info "You can manually update with:"
+        echo "  ${CYAN}gh release edit $TO_TAG --notes-file -${NC} < notes.md" >&2
+    fi
+else
+    log_info "Skipped release update"
+    log_info "You can update manually later with:"
+    echo "  ${CYAN}./scripts/generate-release-notes $FROM_TAG $TO_TAG | gh release edit $TO_TAG --notes-file -${NC}" >&2
+fi
+
+rm -f "$TEMP_NOTES" "$TEMP_BODY"
+    exit 0
+fi
+
+# If no auto-update, just show success message
 echo ""
 log_info "${GREEN}==> Release notes generated successfully!${NC}"

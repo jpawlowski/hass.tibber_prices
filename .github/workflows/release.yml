@@ -223,11 +223,11 @@ jobs:
         run: |
           TAG_VERSION="${GITHUB_REF#refs/tags/}"
           FROM_TAG="${{ steps.previoustag.outputs.previous_tag }}"
-          
+
           # Extract main feature types from commits
           FEAT_COUNT=$(git log ${FROM_TAG}..HEAD --format="%s" --no-merges | grep -cE "^feat(\(.+\))?:" || true)
           FIX_COUNT=$(git log ${FROM_TAG}..HEAD --format="%s" --no-merges | grep -cE "^fix(\(.+\))?:" || true)
-          
+
           # Build title based on what changed
           if [ $FEAT_COUNT -gt 0 ] && [ $FIX_COUNT -gt 0 ]; then
             TITLE="$TAG_VERSION - New Features & Bug Fixes"
@@ -238,7 +238,7 @@ jobs:
           else
             TITLE="$TAG_VERSION"
           fi
-          
+
           echo "title=$TITLE" >> $GITHUB_OUTPUT
           echo "Release title: $TITLE"
 

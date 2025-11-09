@@ -688,7 +688,7 @@ The "Impact:" section bridges technical commits and future release notes:
     - Automatically creates tag if it doesn't exist
     - Prevents "forgot to tag" mistakes
 
-3. **Local Script** (testing, preview)
+3. **Local Script** (testing, preview, and updating releases)
 
     - Script: `./scripts/generate-release-notes [FROM_TAG] [TO_TAG]`
     - Parses Conventional Commits between tags
@@ -696,6 +696,23 @@ The "Impact:" section bridges technical commits and future release notes:
         - **AI-powered**: GitHub Copilot CLI (best, context-aware)
         - **Template-based**: git-cliff (fast, reliable)
         - **Manual**: grep/awk fallback (always works)
+    - **Auto-update feature**: If a GitHub release exists for TO_TAG, automatically offers to update release notes (interactive prompt)
+
+    **Usage examples:**
+
+    ```bash
+    # Generate and preview notes
+    ./scripts/generate-release-notes v0.2.0 v0.3.0
+
+    # If release exists, you'll see:
+    # → Generated release notes
+    # → Detection: "A GitHub release exists for v0.3.0"
+    # → Prompt: "Do you want to update the release notes on GitHub? [y/N]"
+    # → Answer 'y' to auto-update, 'n' to skip
+
+    # Force specific backend
+    RELEASE_NOTES_BACKEND=copilot ./scripts/generate-release-notes v0.2.0 v0.3.0
+    ```
 
 4. **GitHub UI Button** (manual, PR-based)
 
@@ -723,7 +740,7 @@ The "Impact:" section bridges technical commits and future release notes:
 # - Alternative versions (MAJOR/MINOR/PATCH)
 # - Preview and release commands
 
-# Step 2: Preview release notes
+# Step 2: Preview release notes (with AI if available)
 ./scripts/generate-release-notes v0.2.0 HEAD
 
 # Step 3: Prepare release (bumps manifest.json + creates tag)
@@ -738,7 +755,26 @@ git show v0.3.0
 # Step 5: Push when ready
 git push origin main v0.3.0
 
-# Done! CI/CD creates release automatically
+# Done! CI/CD creates release automatically with git-cliff notes
+```
+
+**Alternative: Improve existing release with AI:**
+
+If you want better release notes after the automated release:
+
+```bash
+# Generate AI-powered notes and update existing release
+./scripts/generate-release-notes v0.2.0 v0.3.0
+
+# Script will:
+# 1. Generate notes (uses AI if available locally)
+# 2. Detect existing GitHub release
+# 3. Ask: "Do you want to update the release notes on GitHub? [y/N]"
+# 4. Update release automatically if you confirm
+
+# This allows:
+# - Fast automated releases (CI uses git-cliff)
+# - Manual AI improvement when desired (uses Copilot quota only on request)
 ```
 
 **Semantic Versioning Rules:**
