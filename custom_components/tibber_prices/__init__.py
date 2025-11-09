@@ -61,14 +61,14 @@ async def async_setup_entry(
     coordinator = TibberPricesDataUpdateCoordinator(
         hass=hass,
         config_entry=entry,
-        version=integration.version,
+        version=str(integration.version) if integration.version else "unknown",
     )
 
     entry.runtime_data = TibberPricesData(
         client=TibberPricesApiClient(
             access_token=entry.data[CONF_ACCESS_TOKEN],
             session=async_get_clientsession(hass),
-            version=integration.version,
+            version=str(integration.version) if integration.version else "unknown",
         ),
         integration=integration,
         coordinator=coordinator,
