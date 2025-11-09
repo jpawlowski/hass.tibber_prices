@@ -32,7 +32,6 @@
             ],
             "settings": {
                 "editor.tabSize": 4,
-                "editor.formatOnPaste": true,
                 "editor.formatOnSave": true,
                 "editor.formatOnType": false,
                 "extensions.ignoreRecommendations": false,
@@ -40,13 +39,21 @@
                 "files.trimTrailingWhitespace": true,
                 "python.analysis.typeCheckingMode": "basic",
                 "python.analysis.autoImportCompletions": true,
+                "python.analysis.diagnosticMode": "workspace",
+                "python.analysis.exclude": [
+                    "**/.venv/**",
+                    "**/venv/**",
+                    "**/__pycache__/**",
+                    "**/.git/**",
+                    "**/.github/**",
+                    "**/docs/**",
+                    "**/node_modules/**"
+                ],
                 "python.defaultInterpreterPath": "${workspaceFolder}/.venv/bin/python",
                 "python.analysis.extraPaths": [
                     "${workspaceFolder}/.venv/lib/python3.13/site-packages"
                 ],
                 "python.terminal.activateEnvironment": true,
-                "python.linting.enabled": true,
-                "python.linting.ruffEnabled": true,
                 "python.terminal.activateEnvInCurrentTerminal": true,
                 "python.testing.pytestArgs": [
                     "--no-cov"
@@ -55,18 +62,25 @@
                     "editor.defaultFormatter": "charliermarsh.ruff",
                     "editor.formatOnSave": true,
                     "editor.codeActionsOnSave": {
-                        "source.fixAll": "explicit",
-                        "source.fixAll.ruff": "explicit"
+                        "source.fixAll.ruff": "explicit",
+                        "source.organizeImports.ruff": "explicit"
                     }
                 },
+                "[markdown]": {
+                    "editor.wordWrap": "on"
+                },
                 "yaml.customTags": [
-                    "!input scalar",
                     "!secret scalar",
-                    "!include_dir_named scalar",
+                    "!include scalar",
                     "!include_dir_list scalar",
                     "!include_dir_merge_list scalar",
-                    "!include_dir_merge_named scalar"
+                    "!include_dir_named scalar",
+                    "!include_dir_merge_named scalar",
+                    "!input scalar"
                 ],
+                "markdown.validate.enabled": false,
+                "markdown.validate.fileLinks.enabled": "ignore",
+                "markdown.validate.fragmentLinks.enabled": "ignore",
                 "json.schemas": [
                     {
                         "fileMatch": [
