@@ -137,16 +137,18 @@ This ensures the documentation stays accurate and useful as the codebase evolves
           "selector": {
             "volatility": {
               "options": {
-                "LOW": "Low",
-                "MODERATE": "Moderate",
-                "HIGH": "High"
+                "low": "Low",
+                "moderate": "Moderate",
+                "high": "High"
               }
             }
           }
         }
         ```
 
-        **CRITICAL:** When using `translation_key`, pass options as **plain string list**, NOT `SelectOptionDict`:
+        **CRITICAL:** When using `translation_key`, pass options as **plain string list**, NOT `SelectOptionDict`.
+
+        **VALIDATION:** Selector option keys MUST be lowercase: `[a-z0-9-_]+` pattern (no uppercase, cannot start/end with hyphen/underscore). Hassfest will reject keys like `LOW`, `ANY`, `VERY_HIGH`. Use `low`, `any`, `very_high` instead.
 
         ```python
         # ✅ CORRECT with translation_key
@@ -712,18 +714,43 @@ The "Impact:" section bridges technical commits and future release notes:
 **Recommended Release Workflow:**
 
 ```bash
-# Step 1: Prepare release (bumps manifest.json + creates tag)
-./scripts/prepare-release 0.3.0
+# Step 1: Get version suggestion (analyzes commits since last release)
+./scripts/suggest-version
 
-# Step 2: Review changes
+# Output shows:
+# - Commit analysis (features, fixes, breaking changes)
+# - Suggested version based on Semantic Versioning
+# - Alternative versions (MAJOR/MINOR/PATCH)
+# - Preview and release commands
+
+# Step 2: Preview release notes
+./scripts/generate-release-notes v0.2.0 HEAD
+
+# Step 3: Prepare release (bumps manifest.json + creates tag)
+./scripts/prepare-release 0.3.0
+# Or without argument to show suggestion first:
+./scripts/prepare-release
+
+# Step 4: Review changes
 git log -1 --stat
 git show v0.3.0
 
-# Step 3: Push when ready
+# Step 5: Push when ready
 git push origin main v0.3.0
 
 # Done! CI/CD creates release automatically
 ```
+
+**Semantic Versioning Rules:**
+
+-   **Pre-1.0 (0.x.y)**:
+    -   Breaking changes → bump MINOR (0.x.0)
+    -   New features → bump MINOR (0.x.0)
+    -   Bug fixes → bump PATCH (0.0.x)
+-   **Post-1.0 (x.y.z)**:
+    -   Breaking changes → bump MAJOR (x.0.0)
+    -   New features → bump MINOR (0.x.0)
+    -   Bug fixes → bump PATCH (0.0.x)
 
 **Alternative: Manual Bump (with Auto-Tag Safety Net):**
 
@@ -1094,7 +1121,15 @@ We use **Ruff** (which replaces Black, Flake8, isort, and more) as our sole lint
 **Function organization:**
 Public entry points → direct helpers (call order) → pure utilities. Prefix private helpers with `_`.
 
-**No backwards compatibility code** unless explicitly requested. Target latest HA stable only.
+**Legacy/Backwards compatibility:**
+
+-   **Do NOT add legacy migration code** unless the change was already released in a version tag
+-   **Check if released**: Use `./scripts/check-if-released <commit-hash>` to verify if code is in any `v*.*.*` tag
+-   **Example**: If introducing breaking config change in commit `abc123`, run `./scripts/check-if-released abc123`:
+    -   ✓ NOT RELEASED → No migration needed, just use new code
+    -   ✗ ALREADY RELEASED → Migration may be needed for users upgrading from that version
+-   **Rule**: Only add backwards compatibility for changes that shipped to users via HACS/GitHub releases
+-   **Prefer breaking changes over complexity**: If migration code would be complex or clutter the codebase, prefer documenting the breaking change in release notes (Home Assistant style). Only add simple migrations (e.g., `.lower()` call, key rename) when trivial.
 
 **Translation sync:** When updating `/translations/en.json`, update ALL language files (`de.json`, etc.) with same keys (placeholder values OK).
 
