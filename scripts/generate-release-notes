@@ -30,6 +30,19 @@ YELLOW='\033[1;33m'
 BLUE='\033[0;34m'
 NC='\033[0m' # No Color
 
+# Detect if running in CI (suppress colored output to stdout)
+if [ -n "$CI" ] || [ -n "$GITHUB_ACTIONS" ]; then
+    # In CI, send info messages to stderr to keep release notes clean
+    log_info() {
+        echo "$@" >&2
+    }
+else
+    # Local execution, show colored output
+    log_info() {
+        echo "$@"
+    }
+fi
+
 # Configuration
 BACKEND="${RELEASE_NOTES_BACKEND:-auto}"
 USE_AI="${USE_AI:-true}"
@@ -40,13 +53,13 @@ FROM_TAG="${1:-$(git describe --tags --abbrev=0 2>/dev/null || echo "")}"
 TO_TAG="${2:-HEAD}"
 
 if [ -z "$FROM_TAG" ]; then
-    echo "${RED}Error: No tags found in repository${NC}"
-    echo "Usage: $0 [FROM_TAG] [TO_TAG]"
+    echo "${RED}Error: No tags found in repository${NC}" >&2
+    echo "Usage: $0 [FROM_TAG] [TO_TAG]" >&2
     exit 1
 fi
 
-echo "${BLUE}==> Generating release notes: ${FROM_TAG}..${TO_TAG}${NC}"
-echo ""
+log_info "${BLUE}==> Generating release notes: ${FROM_TAG}..${TO_TAG}${NC}"
+log_info ""
 
 # Detect available backends
 detect_backend() {
@@ -82,20 +95,20 @@ detect_backend() {
 }
 
 BACKEND=$(detect_backend)
-echo "${GREEN}Using backend: ${BACKEND}${NC}"
-echo ""
+log_info "${GREEN}Using backend: ${BACKEND}${NC}"
+log_info ""
 
 # Backend: GitHub Copilot CLI (AI-powered)
 generate_with_copilot() {
-    echo "${BLUE}==> Generating with GitHub Copilot CLI (AI-powered)${NC}"
-    echo "${YELLOW}Note: This will use one premium request from your monthly quota${NC}"
-    echo ""
+    log_info "${BLUE}==> Generating with GitHub Copilot CLI (AI-powered)${NC}"
+    log_info "${YELLOW}Note: This will use one premium request from your monthly quota${NC}"
+    log_info ""
 
     # Get commit log for the range
     COMMITS=$(git log --pretty=format:"%h | %s%n%b%n---" "${FROM_TAG}..${TO_TAG}")
 
     if [ -z "$COMMITS" ]; then
-        echo "${YELLOW}No commits found between ${FROM_TAG} and ${TO_TAG}${NC}"
+        log_info "${YELLOW}No commits found between ${FROM_TAG} and ${TO_TAG}${NC}"
         exit 0
     fi
 
@@ -145,8 +158,8 @@ Generate the release notes now:"
     # Call copilot CLI (it will handle authentication interactively)
     copilot < "$TEMP_PROMPT" || {
         echo ""
-        echo "${YELLOW}Warning: GitHub Copilot CLI failed or was not authenticated${NC}"
-        echo "${YELLOW}Falling back to git-cliff${NC}"
+        log_info "${YELLOW}Warning: GitHub Copilot CLI failed or was not authenticated${NC}"
+        log_info "${YELLOW}Falling back to git-cliff${NC}"
         rm -f "$TEMP_PROMPT"
         if command -v git-cliff >/dev/null 2>&1; then
             generate_with_gitcliff
@@ -159,9 +172,9 @@ Generate the release notes now:"
     rm -f "$TEMP_PROMPT"
 }
 
-# Backend: git-cliff (fast Rust tool)
+# Backend: git-cliff (template-based)
 generate_with_gitcliff() {
-    echo "${BLUE}==> Generating with git-cliff${NC}"
+    log_info "${BLUE}==> Generating with git-cliff${NC}"
 
     # Create temporary cliff.toml if not exists
     if [ ! -f "cliff.toml" ]; then
@@ -210,12 +223,12 @@ EOF
 
 # Backend: Manual parsing (fallback)
 generate_with_manual() {
-    echo "${BLUE}==> Generating with manual parsing${NC}"
+    log_info "${BLUE}==> Generating with manual parsing${NC}"
     echo ""
 
     # Check if we have commits
     if ! git log --oneline "${FROM_TAG}..${TO_TAG}" >/dev/null 2>&1; then
-        echo "${YELLOW}No commits found between ${FROM_TAG} and ${TO_TAG}${NC}"
+        log_info "${YELLOW}No commits found between ${FROM_TAG} and ${TO_TAG}${NC}"
         exit 0
     fi
 
@@ -351,4 +364,4 @@ case "$BACKEND" in
 esac
 
 echo ""
-echo "${GREEN}==> Release notes generated successfully!${NC}"
+log_info "${GREEN}==> Release notes generated successfully!${NC}"
