@@ -85,15 +85,17 @@
                 "description": "{step_progress}\n\nKonfiguration allgemeiner Einstellungen für Tibber Preisinformationen & Bewertungen.\n\nBenutzer: {user_login}",
                 "data": {
                     "extended_descriptions": "Erweiterte Beschreibungen in Entity-Attributen anzeigen"
-                }
+                },
+                "submit": "Weiter zu Schritt 2"
             },
             "price_rating": {
                 "title": "Preisbewertungs-Schwellwerte",
-                "description": "{step_progress}\n\nKonfiguration der Schwellwerte für Preisbewertungsstufen (NIEDRIG/NORMAL/HOCH) basierend auf dem Vergleich mit dem gleitenden 24-Stunden-Durchschnitt.",
+                "description": "{step_progress}\n\nKonfiguration der Schwellwerte für Preisbewertungsstufen (niedrig/normal/hoch) basierend auf dem Vergleich mit dem gleitenden 24-Stunden-Durchschnitt.",
                 "data": {
                     "price_rating_threshold_low": "Schwellwert für niedrige Bewertung (unter gleitendem Durchschnitt)",
                     "price_rating_threshold_high": "Schwellwert für hohe Bewertung (über gleitendem Durchschnitt)"
-                }
+                },
+                "submit": "Weiter zu Schritt 3"
             },
             "best_price": {
                 "title": "Bestpreis-Periode Einstellungen",
@@ -108,7 +110,8 @@
                 "data_description": {
                     "best_price_min_volatility": "Zeigt Bestpreis-Perioden nur an, wenn die heutige Volatilität mindestens diesem Level entspricht. Standard: 'Niedrig' (zeigt unabhängig von Volatilität) - Batterie-Optimierung ist auch bei geringen Preisschwankungen nützlich. Wähle 'Moderat'/'Hoch' um Perioden nur an volatileren Tagen anzuzeigen. UND-Verknüpfung: Volatilität UND Niveaufilter müssen beide erfüllt sein.",
                     "best_price_max_level": "Zeigt Bestpreis-Perioden nur an, wenn mindestens ein Intervall heute ein Preisniveau ≤ dem gewählten Wert hat. UND-Verknüpfung: Volatilitätsfilter (falls gesetzt) UND Niveaufilter müssen beide erfüllt sein. Nützlich um Batterieladen an teuren Tagen zu vermeiden. Wähle 'Beliebig' um diesen Filter zu deaktivieren."
-                }
+                },
+                "submit": "Weiter zu Schritt 5"
             },
             "peak_price": {
                 "title": "Spitzenpreis-Periode Einstellungen",
@@ -123,24 +126,27 @@
                 "data_description": {
                     "peak_price_min_volatility": "Zeigt Spitzenpreis-Perioden nur an, wenn die heutige Volatilität mindestens diesem Level entspricht. Standard: 'Niedrig' (zeigt unabhängig von Volatilität) - Spitzenwarnungen sind auch bei niedrigen Spannen relevant, da teure Stunden vermeiden immer wichtig ist. Wähle 'Moderat'/'Hoch' um Peaks nur an volatilen Tagen anzuzeigen. UND-Verknüpfung: Volatilität UND Niveaufilter müssen beide erfüllt sein.",
                     "peak_price_min_level": "Zeigt Spitzenpreis-Perioden nur an, wenn mindestens ein Intervall heute ein Preisniveau ≥ dem gewählten Wert hat. UND-Verknüpfung: Volatilitätsfilter (falls gesetzt) UND Niveaufilter müssen beide erfüllt sein. Normalerweise auf 'Beliebig' gesetzt, da Spitzenperioden relativ zum Tag sind. Wähle 'Beliebig' um diesen Filter zu deaktivieren."
-                }
+                },
+                "submit": "Weiter zu Schritt 6"
             },
             "price_trend": {
                 "title": "Preistrend-Schwellenwerte",
-                "description": "{step_progress}\n\nKonfigurieren Sie Schwellenwerte für Preistrend-Sensoren. Diese Sensoren vergleichen den aktuellen Preis mit dem Durchschnitt der nächsten N Stunden, um festzustellen, ob die Preise steigen, fallen oder stabil sind.",
+                "description": "{step_progress}\n\nKonfiguriere Schwellenwerte für Preistrend-Sensoren. Diese Sensoren vergleichen den aktuellen Preis mit dem Durchschnitt der nächsten N Stunden, um festzustellen, ob die Preise steigen, fallen oder stabil sind.",
                 "data": {
                     "price_trend_threshold_rising": "Steigender Schwellenwert (über dem aktuellen Preis)",
                     "price_trend_threshold_falling": "Fallender Schwellenwert (unter dem aktuellen Preis, negativer Wert)"
-                }
+                },
+                "submit": "Konfiguration abschließen"
             },
             "volatility": {
                 "title": "Preisvolatilität Schwellenwerte",
-                "description": "{step_progress}\n\nKonfigurieren Sie Schwellenwerte für die Volatilitätsklassifizierung. Volatilität misst Preisschwankungen (Spanne zwischen Min/Max) in kleinster Währungseinheit. Diese Schwellenwerte werden von Volatilitätssensoren und Periodenfiltern verwendet.",
+                "description": "{step_progress}\n\nKonfiguriere Schwellenwerte für die Volatilitätsklassifizierung. Volatilität misst Preisschwankungen (Spanne zwischen Min/Max) in kleinster Währungseinheit. Diese Schwellenwerte werden von Volatilitätssensoren und Periodenfiltern verwendet.",
                 "data": {
                     "volatility_threshold_moderate": "Moderate Schwelle (Spanne ≥ dieser Wert)",
                     "volatility_threshold_high": "Hohe Schwelle (Spanne ≥ dieser Wert)",
                     "volatility_threshold_very_high": "Sehr hohe Schwelle (Spanne ≥ dieser Wert)"
-                }
+                },
+                "submit": "Weiter zu Schritt 4"
             }
         },
         "error": {

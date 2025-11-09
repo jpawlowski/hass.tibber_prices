@@ -35,7 +35,7 @@
         },
         "error": {
             "auth": "Het Tibber-toegangstoken is ongeldig.",
-            "connection": "Kan geen verbinding maken met Tibber. Controleer uw internetverbinding.",
+            "connection": "Kan geen verbinding maken met Tibber. Controleer je internetverbinding.",
             "unknown": "Onverwachte fout",
             "cannot_connect": "Verbinding mislukt",
             "invalid_access_token": "Ongeldig toegangstoken",
@@ -44,7 +44,7 @@
         "abort": {
             "already_configured": "Integratie is al geconfigureerd",
             "entry_not_found": "Tibber-configuratie-item niet gevonden.",
-            "setup_complete": "Installatie voltooid! U kunt aanvullende opties voor Tibber-prijzen wijzigen in de integratie-opties na het sluiten van dit dialoogvenster.",
+            "setup_complete": "Installatie voltooid! Je kunt aanvullende opties voor Tibber-prijzen wijzigen in de integratie-opties na het sluiten van dit dialoogvenster.",
             "reauth_successful": "Herauthenticatie succesvol. De integratie is bijgewerkt met het nieuwe toegangstoken."
         }
     },
@@ -60,7 +60,7 @@
             "step": {
                 "user": {
                     "title": "Tibber-huis toevoegen",
-                    "description": "Selecteer een huis om toe te voegen aan uw Tibber-integratie.\n\n**Opmerking:** Na het toevoegen van dit huis, kunt u extra huizen toevoegen via het contextmenu van de integratie door \"Tibber-huis toevoegen\" te selecteren.",
+                    "description": "Selecteer een huis om toe te voegen aan je Tibber-integratie.\n\n**Opmerking:** Na het toevoegen van dit huis kun je extra huizen toevoegen via het contextmenu van de integratie door \"Tibber-huis toevoegen\" te selecteren.",
                     "data": {
                         "home_id": "Huis"
                     }
@@ -74,7 +74,7 @@
                 "no_access_token": "Geen toegangstoken beschikbaar",
                 "home_not_found": "Geselecteerd huis niet gevonden",
                 "api_error": "Ophalen van huizen van Tibber API mislukt",
-                "no_available_homes": "Geen extra huizen beschikbaar om toe te voegen. Alle huizen van uw Tibber-account zijn al toegevoegd."
+                "no_available_homes": "Geen extra huizen beschikbaar om toe te voegen. Alle huizen van je Tibber-account zijn al toegevoegd."
             }
         }
     },
@@ -85,15 +85,17 @@
                 "description": "{step_progress}\n\nConfigureer algemene instellingen voor Tibber Prijsinformatie & Beoordelingen.\n\nGebruiker: {user_login}",
                 "data": {
                     "extended_descriptions": "Uitgebreide beschrijvingen tonen in entiteitsattributen"
-                }
+                },
+                "submit": "Volgende naar stap 2"
             },
             "price_rating": {
                 "title": "Prijsbeoordelingsdrempels",
-                "description": "{step_progress}\n\nConfigureer drempels voor prijsbeoordelingsniveaus (LAAG/NORMAAL/HOOG) op basis van vergelijking met het voortschrijdend 24-uurs gemiddelde.",
+                "description": "{step_progress}\n\nConfigureer drempels voor prijsbeoordelingsniveaus (laag/normaal/hoog) op basis van vergelijking met het voortschrijdend 24-uurs gemiddelde.",
                 "data": {
                     "price_rating_threshold_low": "Lage beoordelingsdrempel (% onder voortschrijdend gemiddelde)",
                     "price_rating_threshold_high": "Hoge beoordelingsdrempel (% boven voortschrijdend gemiddelde)"
-                }
+                },
+                "submit": "Volgende naar stap 3"
             },
             "best_price": {
                 "title": "Instellingen beste prijsperiode",
@@ -108,7 +110,8 @@
                 "data_description": {
                     "best_price_min_volatility": "Toon alleen beste prijsperiodes wanneer de volatiliteit van vandaag dit niveau bereikt of overschrijdt. Standaard: 'Laag' (toon ongeacht volatiliteit) - batterijoptimalisatie is nuttig zelfs bij kleine prijsvariaties. Selecteer 'Matig'/'Hoog' om periodes alleen op meer volatiele dagen te tonen.",
                     "best_price_max_level": "Toon alleen beste prijsperiodes als minstens één interval vandaag een prijsniveau ≤ geselecteerde waarde heeft. Werkt met EN-logica: volatiliteitsfilter (indien ingesteld) EN niveaufilter moeten beide voldaan zijn. Nuttig om batterij laden op dure dagen te vermijden. Selecteer 'Alle' om dit filter uit te schakelen."
-                }
+                },
+                "submit": "Volgende naar stap 5"
             },
             "peak_price": {
                 "title": "Instellingen piekprijsperiode",
@@ -123,7 +126,8 @@
                 "data_description": {
                     "peak_price_min_volatility": "Toon alleen piekprijsperiodes wanneer de volatiliteit van vandaag dit niveau bereikt of overschrijdt. Standaard: 'Laag' (toon ongeacht volatiliteit) - piekwaarschuwingen zijn relevant zelfs bij lage spreiding omdat vermijding van dure uren altijd belangrijk is. Selecteer 'Matig'/'Hoog' om alleen pieken op volatiele dagen te tonen.",
                     "peak_price_min_level": "Toon alleen piekprijsperiodes als minstens één interval vandaag een prijsniveau ≥ geselecteerde waarde heeft. Werkt met EN-logica: volatiliteitsfilter (indien ingesteld) EN niveaufilter moeten beide voldaan zijn. Meestal ingesteld op 'Alle' omdat piekperiodes relatief zijn aan de dag. Selecteer 'Alle' om dit filter uit te schakelen."
-                }
+                },
+                "submit": "Volgende naar stap 6"
             },
             "price_trend": {
                 "title": "Prijstrenddrempels",
@@ -131,7 +135,8 @@
                 "data": {
                     "price_trend_threshold_rising": "Stijgende drempel (% boven huidige prijs)",
                     "price_trend_threshold_falling": "Dalende drempel (% onder huidige prijs, negatieve waarde)"
-                }
+                },
+                "submit": "Configuratie voltooien"
             },
             "volatility": {
                 "title": "Prijsvolatiliteit Drempels",
@@ -140,12 +145,13 @@
                     "volatility_threshold_moderate": "Matige drempel (ct/øre, spreiding ≥ deze waarde)",
                     "volatility_threshold_high": "Hoge drempel (ct/øre, spreiding ≥ deze waarde)",
                     "volatility_threshold_very_high": "Zeer hoge drempel (ct/øre, spreiding ≥ deze waarde)"
-                }
+                },
+                "submit": "Volgende naar stap 4"
             }
         },
         "error": {
             "auth": "Het Tibber-toegangstoken is ongeldig.",
-            "connection": "Kan geen verbinding maken met Tibber. Controleer uw internetverbinding.",
+            "connection": "Kan geen verbinding maken met Tibber. Controleer je internetverbinding.",
             "unknown": "Er is een onverwachte fout opgetreden. Controleer de logboeken voor details.",
             "cannot_connect": "Verbinding mislukt",
             "invalid_access_token": "Ongeldig toegangstoken",
@@ -453,17 +459,17 @@
     "issues": {
         "new_homes_available": {
             "title": "Nieuwe Tibber-huizen gedetecteerd",
-            "description": "We hebben {count} nieuw(e) huis/huizen op uw Tibber-account gedetecteerd: {homes}. U kunt ze toevoegen aan Home Assistant via de Tibber-integratieconfiguratie."
+            "description": "We hebben {count} nieuw(e) huis/huizen op je Tibber-account gedetecteerd: {homes}. Je kunt ze toevoegen aan Home Assistant via de Tibber-integratieconfiguratie."
         },
         "homes_removed": {
             "title": "Tibber-huizen verwijderd",
-            "description": "We hebben gedetecteerd dat {count} huis/huizen zijn verwijderd van uw Tibber-account: {homes}. Controleer uw Tibber-integratieconfiguratie."
+            "description": "We hebben gedetecteerd dat {count} huis/huizen zijn verwijderd van je Tibber-account: {homes}. Controleer je Tibber-integratieconfiguratie."
         }
     },
     "services": {
         "refresh_user_data": {
             "name": "Gebruikersgegevens vernieuwen",
-            "description": "Forceert een vernieuwing van de gebruikersgegevens (huizen, profielinformatie) van de Tibber API. Dit kan handig zijn na het maken van wijzigingen in uw Tibber-account of bij het oplossen van verbindingsproblemen.",
+            "description": "Forceert een vernieuwing van de gebruikersgegevens (huizen, profielinformatie) van de Tibber API. Dit kan handig zijn na het maken van wijzigingen in je Tibber-account of bij het oplossen van verbindingsproblemen.",
             "fields": {
                 "entry_id": {
                     "name": "Item-ID",

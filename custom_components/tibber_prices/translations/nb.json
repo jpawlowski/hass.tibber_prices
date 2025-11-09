@@ -85,15 +85,17 @@
                 "description": "{step_progress}\n\nKonfigurer generelle innstillinger for Tibber Prisinformasjon & Vurderinger.\n\nBruker: {user_login}",
                 "data": {
                     "extended_descriptions": "Vis utvidede beskrivelser i entitetsattributter"
-                }
+                },
+                "submit": "Neste til steg 2"
             },
             "price_rating": {
                 "title": "Prisvurderingsterskler",
-                "description": "{step_progress}\n\nKonfigurer terskler for prisvurderingsnivåer (LAV/NORMAL/HØY) basert på sammenligning med 24-timers glidende gjennomsnitt.",
+                "description": "{step_progress}\n\nKonfigurer terskler for prisvurderingsnivåer (lav/normal/høy) basert på sammenligning med 24-timers glidende gjennomsnitt.",
                 "data": {
                     "price_rating_threshold_low": "Lav vurderingsterskel (% under glidende gjennomsnitt)",
                     "price_rating_threshold_high": "Høy vurderingsterskel (% over glidende gjennomsnitt)"
-                }
+                },
+                "submit": "Neste til steg 3"
             },
             "best_price": {
                 "title": "Innstillinger for beste prisperiode",
@@ -108,7 +110,8 @@
                 "data_description": {
                     "best_price_min_volatility": "Vis kun beste prisperioder når dagens volatilitet oppfyller eller overskrider dette nivået. Standard: 'Lav' (vis uavhengig av volatilitet) - batterioptimalisering er nyttig selv ved små prisvariasjoner. Velg 'Moderat'/'Høy' for kun å vise perioder på mer volatile dager.",
                     "best_price_max_level": "Vis kun beste prisperioder hvis minst ett intervall i dag har et prisnivå ≤ valgt verdi. Fungerer med OG-logikk: volatilitetsfilter (hvis satt) OG nivåfilter må begge være oppfylt. Nyttig for å unngå batterilading på dyre dager. Velg 'Alle' for å deaktivere dette filteret."
-                }
+                },
+                "submit": "Neste til steg 5"
             },
             "peak_price": {
                 "title": "Innstillinger for topprisperiode",
@@ -123,7 +126,8 @@
                 "data_description": {
                     "peak_price_min_volatility": "Vis kun topprisperioder når dagens volatilitet oppfyller eller overskrider dette nivået. Standard: 'Lav' (vis uavhengig av volatilitet) - toppadvarsler er relevante selv ved lav spredning siden unngåelse av dyre timer alltid er viktig. Velg 'Moderat'/'Høy' for kun å vise topper på volatile dager.",
                     "peak_price_min_level": "Vis kun topprisperioder hvis minst ett intervall i dag har et prisnivå ≥ valgt verdi. Fungerer med OG-logikk: volatilitetsfilter (hvis satt) OG nivåfilter må begge være oppfylt. Vanligvis satt til 'Alle' siden toppperioder er relative til dagen. Velg 'Alle' for å deaktivere dette filteret."
-                }
+                },
+                "submit": "Neste til steg 6"
             },
             "price_trend": {
                 "title": "Pristrendterskler",
@@ -131,7 +135,8 @@
                 "data": {
                     "price_trend_threshold_rising": "Stigende terskel (% over nåværende pris)",
                     "price_trend_threshold_falling": "Fallende terskel (% under nåværende pris, negativ verdi)"
-                }
+                },
+                "submit": "Fullfør konfigurasjon"
             },
             "volatility": {
                 "title": "Prisvolatilitet Terskler",
@@ -140,7 +145,8 @@
                     "volatility_threshold_moderate": "Moderat terskel (ct/øre, spredning ≥ denne verdien)",
                     "volatility_threshold_high": "Høy terskel (ct/øre, spredning ≥ denne verdien)",
                     "volatility_threshold_very_high": "Veldig høy terskel (ct/øre, spredning ≥ denne verdien)"
-                }
+                },
+                "submit": "Neste til steg 4"
             }
         },
         "error": {

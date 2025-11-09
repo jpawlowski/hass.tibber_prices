@@ -1169,6 +1169,18 @@ Public entry points → direct helpers (call order) → pure utilities. Prefix p
 
 **Translation sync:** When updating `/translations/en.json`, update ALL language files (`de.json`, etc.) with same keys (placeholder values OK).
 
+**Language style and tone:**
+
+-   **Informal address**: Always use informal "you" forms (German: "du" not "Sie", Dutch: "je/jouw" not "u/uw"). This applies to all translations.
+-   **Gender-neutral language**: Use gender-neutral formulations where possible, but keep them natural - avoid forced or artificial constructions.
+-   **Documentation tone**: English documentation should use a friendly, approachable tone. Avoid overly formal constructions like "It is recommended that you..." - prefer "We recommend..." or "You can...".
+-   **Imperative mood**: Use direct imperatives for instructions: "Configure the integration" not "You should configure the integration".
+-   **Language-specific notes**:
+    -   German: Use "du" (informal) and gender-neutral imperatives (e.g., "Konfiguriere" instead of "Konfigurieren Sie")
+    -   Dutch: Use "je/jouw" (informal) instead of "u/uw" (formal)
+    -   Swedish/Norwegian: Already use informal address by default (no formal "Ni"/"De" in modern usage)
+    -   English: Already gender-neutral and appropriately informal
+
 ## Ruff Code Style Guidelines
 
 These rules ensure generated code passes `./scripts/lint` on first try. Ruff enforces these automatically.
