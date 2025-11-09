@@ -34,26 +34,47 @@ A Home Assistant integration that provides advanced price information and rating
 
 ## 🚀 Quick Start
 
-### Installation
+### Step 1: Install the Integration
 
-1. **Install via HACS** (recommended)
-   - Add as custom repository: `https://github.com/jpawlowski/hass.tibber_prices`
-   - Search for "Tibber Price Information & Ratings"
-   - Click "Install"
+**Prerequisites:** This integration requires [HACS](https://hacs.xyz/) (Home Assistant Community Store) to be installed.
 
-2. **Add Integration**
-   - Go to Settings → Devices & Services
-   - Click "+ Add Integration"
-   - Search for "Tibber Price Information & Ratings"
+Click the button below to open the integration directly in HACS:
 
-3. **Configure**
-   - Enter your Tibber API token ([get one here](https://developer.tibber.com/settings/access-token))
-   - Select your Tibber home
-   - Configure price thresholds (optional)
+[![Open your Home Assistant instance and open a repository inside the Home Assistant Community Store.](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=jpawlowski&repository=hass.tibber_prices&category=integration)
 
-4. **Start Using!**
-   - 30+ sensors available (key sensors enabled by default)
-   - Use in automations, dashboards, and scripts
+Then:
+1. Click "Download" to install the integration
+2. **Restart Home Assistant** (required after installation)
+
+> **Note:** The My Home Assistant redirect will first take you to a landing page. Click the button there to open your Home Assistant instance. If the repository is not yet in the HACS default store, HACS will ask if you want to add it as a custom repository.
+
+### Step 2: Add and Configure the Integration
+
+**Important:** You must have installed the integration first (see Step 1) and restarted Home Assistant!
+
+#### Option 1: One-Click Setup (Quick)
+
+Click the button below to open the configuration dialog:
+
+[![Open your Home Assistant instance and start setting up a new integration.](https://my.home-assistant.io/badges/config_flow_start.svg)](https://my.home-assistant.io/redirect/config_flow_start/?domain=tibber_prices)
+
+This will guide you through:
+1. Enter your Tibber API token ([get one here](https://developer.tibber.com/settings/access-token))
+2. Select your Tibber home
+3. Configure price thresholds (optional)
+
+#### Option 2: Manual Configuration
+
+1. Go to **Settings** → **Devices & Services**
+2. Click **"+ Add Integration"**
+3. Search for "Tibber Price Information & Ratings"
+4. Follow the configuration steps (same as Option 1)
+
+### Step 3: Start Using!
+
+- 30+ sensors are now available (key sensors enabled by default)
+- Configure additional sensors in **Settings** → **Devices & Services** → **Tibber Price Information & Ratings** → **Entities**
+- Use sensors in automations, dashboards, and scripts
 
 📖 **[Full Installation Guide →](docs/user/installation.md)**
 
