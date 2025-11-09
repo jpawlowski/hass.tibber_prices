@@ -6,6 +6,23 @@ set -e
 
 cd "$(dirname "$0")/.."
 
+# Install optional release note backend: GitHub Copilot CLI (AI-powered)
+if command -v npm >/dev/null 2>&1; then
+    echo "==> Installing GitHub Copilot CLI for AI-powered release notes..."
+    npm install -g @github/copilot 2>/dev/null || {
+        echo "    ⚠️  Warning: GitHub Copilot CLI installation failed (optional)"
+        echo "    ℹ️  You can install it manually: npm install -g @github/copilot"
+    }
+fi
+
+# Install optional release note backend: git-cliff (template-based)
+if command -v cargo >/dev/null 2>&1; then
+    echo "==> Installing git-cliff for template-based release notes..."
+    cargo install git-cliff || {
+        echo "    ⚠️  Warning: git-cliff installation failed (optional)"
+    }
+fi
+
 scripts/bootstrap
 
 echo "==> Project is now ready to go!"

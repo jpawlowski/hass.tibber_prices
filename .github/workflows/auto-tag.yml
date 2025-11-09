@@ -1,0 +1,73 @@
+name: Auto-Tag on Version Bump
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'custom_components/tibber_prices/manifest.json'
+
+permissions:
+  contents: write
+
+jobs:
+  check-and-tag:
+    name: Check and create version tag
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0  # Need full history for git describe
+
+      - name: Extract version from manifest.json
+        id: manifest
+        run: |
+          VERSION=$(jq -r '.version' custom_components/tibber_prices/manifest.json)
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "tag=v$VERSION" >> $GITHUB_OUTPUT
+          echo "Manifest version: $VERSION"
+
+      - name: Check if tag already exists
+        id: tag_check
+        run: |
+          if git rev-parse "v${{ steps.manifest.outputs.version }}" >/dev/null 2>&1; then
+            echo "exists=true" >> $GITHUB_OUTPUT
+            echo "✓ Tag v${{ steps.manifest.outputs.version }} already exists"
+          else
+            echo "exists=false" >> $GITHUB_OUTPUT
+            echo "✗ Tag v${{ steps.manifest.outputs.version }} does not exist yet"
+          fi
+
+      - name: Validate version format
+        if: steps.tag_check.outputs.exists == 'false'
+        run: |
+          VERSION="${{ steps.manifest.outputs.version }}"
+          if ! echo "$VERSION" | grep -qE '^[0-9]+\.[0-9]+\.[0-9]+$'; then
+            echo "❌ Invalid version format: $VERSION"
+            echo "Expected format: X.Y.Z (e.g., 1.0.0)"
+            exit 1
+          fi
+          echo "✓ Version format valid: $VERSION"
+
+      - name: Create and push tag
+        if: steps.tag_check.outputs.exists == 'false'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          TAG="v${{ steps.manifest.outputs.version }}"
+          git tag -a "$TAG" -m "chore(release): version ${{ steps.manifest.outputs.version }}"
+          git push origin "$TAG"
+
+          echo "✅ Created and pushed tag: $TAG"
+
+      - name: Summary
+        run: |
+          if [ "${{ steps.tag_check.outputs.exists }}" = "true" ]; then
+            echo "ℹ️ Tag v${{ steps.manifest.outputs.version }} already exists. Skipping tag creation." >> $GITHUB_STEP_SUMMARY
+          else
+            echo "✅ Successfully created tag v${{ steps.manifest.outputs.version }}" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "**Next step:** Release workflow will now generate release notes and create GitHub release." >> $GITHUB_STEP_SUMMARY
+          fi

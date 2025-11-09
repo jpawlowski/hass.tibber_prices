@@ -1,0 +1,354 @@
+#!/bin/sh
+
+# script/generate-release-notes: Generate release notes from conventional commits
+#
+# This script generates release notes by parsing conventional commits between git tags.
+# It supports multiple backends for generation:
+#
+#   1. GitHub Copilot (VS Code Copilot CLI) - Intelligent, context-aware
+#   2. git-cliff - Fast, template-based Rust tool
+#   3. Manual parsing - Simple grep/awk fallback
+#
+# Usage:
+#   ./scripts/generate-release-notes [FROM_TAG] [TO_TAG]
+#   ./scripts/generate-release-notes v1.0.0 v1.1.0
+#   ./scripts/generate-release-notes v1.0.0 HEAD
+#   ./scripts/generate-release-notes               # Uses latest tag to HEAD
+#
+# Environment variables:
+#   RELEASE_NOTES_BACKEND - Force specific backend: copilot, git-cliff, manual
+#   USE_AI - Set to "false" to skip AI backends (for CI/CD)
+
+set -e
+
+cd "$(dirname "$0")/.."
+
+# Colors for output
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+BLUE='\033[0;34m'
+NC='\033[0m' # No Color
+
+# Configuration
+BACKEND="${RELEASE_NOTES_BACKEND:-auto}"
+USE_AI="${USE_AI:-true}"
+GITHUB_REPO="${GITHUB_REPOSITORY:-jpawlowski/hass.tibber_prices}"
+
+# Parse arguments
+FROM_TAG="${1:-$(git describe --tags --abbrev=0 2>/dev/null || echo "")}"
+TO_TAG="${2:-HEAD}"
+
+if [ -z "$FROM_TAG" ]; then
+    echo "${RED}Error: No tags found in repository${NC}"
+    echo "Usage: $0 [FROM_TAG] [TO_TAG]"
+    exit 1
+fi
+
+echo "${BLUE}==> Generating release notes: ${FROM_TAG}..${TO_TAG}${NC}"
+echo ""
+
+# Detect available backends
+detect_backend() {
+    if [ "$BACKEND" != "auto" ]; then
+        echo "$BACKEND"
+        return
+    fi
+
+    # Skip AI in CI/CD or if disabled
+    if [ "$USE_AI" = "false" ] || [ -n "$CI" ] || [ -n "$GITHUB_ACTIONS" ]; then
+        if command -v git-cliff >/dev/null 2>&1; then
+            echo "git-cliff"
+            return
+        fi
+        echo "manual"
+        return
+    fi
+
+    # Check for GitHub Copilot CLI (AI-powered, best quality)
+    if command -v copilot >/dev/null 2>&1; then
+        echo "copilot"
+        return
+    fi
+
+    # Check for git-cliff (fast and reliable)
+    if command -v git-cliff >/dev/null 2>&1; then
+        echo "git-cliff"
+        return
+    fi
+
+    # Fallback to manual parsing
+    echo "manual"
+}
+
+BACKEND=$(detect_backend)
+echo "${GREEN}Using backend: ${BACKEND}${NC}"
+echo ""
+
+# Backend: GitHub Copilot CLI (AI-powered)
+generate_with_copilot() {
+    echo "${BLUE}==> Generating with GitHub Copilot CLI (AI-powered)${NC}"
+    echo "${YELLOW}Note: This will use one premium request from your monthly quota${NC}"
+    echo ""
+
+    # Get commit log for the range
+    COMMITS=$(git log --pretty=format:"%h | %s%n%b%n---" "${FROM_TAG}..${TO_TAG}")
+
+    if [ -z "$COMMITS" ]; then
+        echo "${YELLOW}No commits found between ${FROM_TAG} and ${TO_TAG}${NC}"
+        exit 0
+    fi
+
+    # Create prompt for Copilot
+    PROMPT="Generate release notes in GitHub-flavored Markdown from these conventional commits.
+
+**Commits between ${FROM_TAG} and ${TO_TAG}:**
+
+${COMMITS}
+
+**Format Requirements:**
+1. Parse conventional commit format: type(scope): description
+2. Group by type with emoji headings:
+   - 🎉 New Features (feat)
+   - 🐛 Bug Fixes (fix)
+   - 📚 Documentation (docs)
+   - � Dependencies (chore(deps))
+   - �🔧 Maintenance & Refactoring (refactor, chore)
+   - 🧪 Testing (test)
+3. **Smart grouping**: If multiple commits address the same logical change or feature:
+   - Combine them into one release note entry
+   - Link all related commits: ([hash1](url1), [hash2](url2))
+   - Use a descriptive summary that captures the overall change
+4. Extract 'Impact:' sections from commit bodies as user-friendly descriptions
+5. Format each item as: - **scope**: Description ([hash](https://github.com/${GITHUB_REPO}/commit/hash))
+6. Keep it concise, focus on user-visible changes
+7. **Exclude from release notes**:
+   - Manifest.json version bumps: chore(release): bump version
+   - Development environment: feat/fix/chore(devcontainer), feat/fix/chore(vscode), feat/fix/chore(scripts), feat/fix/chore(dev-env)
+   - CI/CD infrastructure: feat/fix/chore/ci(ci), feat/fix/chore/ci(workflow), feat/fix/chore/ci(actions)
+8. **Include in release notes**:
+   - Dependency updates: chore(deps) - these ARE relevant for users
+   - Any user-facing changes regardless of scope
+9. Output ONLY the markdown, no explanations
+
+**Examples of smart grouping:**
+- Multiple commits fixing the same bug → One entry with all commits
+- Commits adding a feature incrementally → One entry describing the complete feature
+- Related refactoring commits → One entry summarizing the improvement
+
+Generate the release notes now:"
+
+    # Save prompt to temp file for copilot
+    TEMP_PROMPT=$(mktemp)
+    echo "$PROMPT" > "$TEMP_PROMPT"
+
+    # Call copilot CLI (it will handle authentication interactively)
+    copilot < "$TEMP_PROMPT" || {
+        echo ""
+        echo "${YELLOW}Warning: GitHub Copilot CLI failed or was not authenticated${NC}"
+        echo "${YELLOW}Falling back to git-cliff${NC}"
+        rm -f "$TEMP_PROMPT"
+        if command -v git-cliff >/dev/null 2>&1; then
+            generate_with_gitcliff
+        else
+            generate_with_manual
+        fi
+        return
+    }
+
+    rm -f "$TEMP_PROMPT"
+}
+
+# Backend: git-cliff (fast Rust tool)
+generate_with_gitcliff() {
+    echo "${BLUE}==> Generating with git-cliff${NC}"
+
+    # Create temporary cliff.toml if not exists
+    if [ ! -f "cliff.toml" ]; then
+        cat > /tmp/cliff.toml <<'EOF'
+[changelog]
+header = ""
+body = """
+{% for group, commits in commits | group_by(attribute="group") %}
+    ### {{ group | striptags | trim | upper_first }}
+    {% for commit in commits %}
+        - {% if commit.scope %}**{{ commit.scope }}**: {% endif %}{{ commit.message | upper_first }}\
+          {% if commit.breaking %} [**BREAKING**]{% endif %}
+    {% endfor %}
+{% endfor %}
+"""
+trim = true
+
+[git]
+conventional_commits = true
+filter_unconventional = false
+split_commits = false
+commit_parsers = [
+    { message = "^feat", group = "🎉 New Features" },
+    { message = "^fix", group = "🐛 Bug Fixes" },
+    { message = "^doc", group = "📚 Documentation" },
+    { message = "^perf", group = "⚡ Performance" },
+    { message = "^refactor", group = "🔧 Maintenance & Refactoring" },
+    { message = "^style", group = "🎨 Styling" },
+    { message = "^test", group = "🧪 Testing" },
+    { message = "^chore", group = "🔧 Maintenance & Refactoring" },
+    { message = "^ci", group = "🔄 CI/CD" },
+    { message = "^build", group = "📦 Build" },
+]
+EOF
+        CLIFF_CONFIG="/tmp/cliff.toml"
+    else
+        CLIFF_CONFIG="cliff.toml"
+    fi
+
+    git-cliff --config "$CLIFF_CONFIG" "${FROM_TAG}..${TO_TAG}"
+
+    if [ "$CLIFF_CONFIG" = "/tmp/cliff.toml" ]; then
+        rm -f /tmp/cliff.toml
+    fi
+}
+
+# Backend: Manual parsing (fallback)
+generate_with_manual() {
+    echo "${BLUE}==> Generating with manual parsing${NC}"
+    echo ""
+
+    # Check if we have commits
+    if ! git log --oneline "${FROM_TAG}..${TO_TAG}" >/dev/null 2>&1; then
+        echo "${YELLOW}No commits found between ${FROM_TAG} and ${TO_TAG}${NC}"
+        exit 0
+    fi
+
+    # Create temporary files for each category
+    TMPDIR=$(mktemp -d)
+    FEAT_FILE="${TMPDIR}/feat"
+    FIX_FILE="${TMPDIR}/fix"
+    DOCS_FILE="${TMPDIR}/docs"
+    REFACTOR_FILE="${TMPDIR}/refactor"
+    TEST_FILE="${TMPDIR}/test"
+    OTHER_FILE="${TMPDIR}/other"
+
+    touch "$FEAT_FILE" "$FIX_FILE" "$DOCS_FILE" "$REFACTOR_FILE" "$TEST_FILE" "$OTHER_FILE"
+
+    # Process commits
+    git log --pretty=format:"%h %s" "${FROM_TAG}..${TO_TAG}" | while read -r hash subject; do
+        # Simple type extraction (before colon)
+        TYPE=""
+        if echo "$subject" | grep -q '^feat'; then
+            TYPE="feat"
+        elif echo "$subject" | grep -q '^fix'; then
+            TYPE="fix"
+        elif echo "$subject" | grep -q '^docs'; then
+            TYPE="docs"
+        elif echo "$subject" | grep -q '^refactor\|^chore'; then
+            TYPE="refactor"
+        elif echo "$subject" | grep -q '^test'; then
+            TYPE="test"
+        else
+            TYPE="other"
+        fi
+
+        # Create markdown line
+        LINE="- ${subject} ([${hash}](https://github.com/jpawlowski/hass.tibber_prices/commit/${hash}))"
+
+        # Append to appropriate file
+        case "$TYPE" in
+            feat)
+                echo "$LINE" >> "$FEAT_FILE"
+                ;;
+            fix)
+                echo "$LINE" >> "$FIX_FILE"
+                ;;
+            docs)
+                echo "$LINE" >> "$DOCS_FILE"
+                ;;
+            refactor)
+                echo "$LINE" >> "$REFACTOR_FILE"
+                ;;
+            test)
+                echo "$LINE" >> "$TEST_FILE"
+                ;;
+            *)
+                echo "$LINE" >> "$OTHER_FILE"
+                ;;
+        esac
+    done
+
+    # Output grouped by category
+    if [ -s "$FEAT_FILE" ]; then
+        echo "## 🎉 New Features"
+        echo ""
+        cat "$FEAT_FILE"
+        echo ""
+    fi
+
+    if [ -s "$FIX_FILE" ]; then
+        echo "## 🐛 Bug Fixes"
+        echo ""
+        cat "$FIX_FILE"
+        echo ""
+    fi
+
+    if [ -s "$DOCS_FILE" ]; then
+        echo "## 📚 Documentation"
+        echo ""
+        cat "$DOCS_FILE"
+        echo ""
+    fi
+
+    if [ -s "$REFACTOR_FILE" ]; then
+        echo "## 🔧 Maintenance & Refactoring"
+        echo ""
+        cat "$REFACTOR_FILE"
+        echo ""
+    fi
+
+    if [ -s "$TEST_FILE" ]; then
+        echo "## 🧪 Testing"
+        echo ""
+        cat "$TEST_FILE"
+        echo ""
+    fi
+
+    if [ -s "$OTHER_FILE" ]; then
+        echo "## 📝 Other Changes"
+        echo ""
+        cat "$OTHER_FILE"
+        echo ""
+    fi
+
+    # Cleanup
+    rm -rf "$TMPDIR"
+}
+
+# Execute based on backend
+case "$BACKEND" in
+    copilot)
+        if ! command -v copilot >/dev/null 2>&1; then
+            echo "${RED}Error: GitHub Copilot CLI not found${NC}"
+            echo "Install: npm install -g @github/copilot"
+            echo "See: https://github.com/github/copilot-cli"
+            exit 1
+        fi
+        generate_with_copilot
+        ;;
+    git-cliff)
+        if ! command -v git-cliff >/dev/null 2>&1; then
+            echo "${RED}Error: git-cliff not found${NC}"
+            echo "Install: https://git-cliff.org/docs/installation"
+            exit 1
+        fi
+        generate_with_gitcliff
+        ;;
+    manual)
+        generate_with_manual
+        ;;
+    *)
+        echo "${RED}Error: Unknown backend: ${BACKEND}${NC}"
+        echo "Valid backends: copilot, git-cliff, manual"
+        exit 1
+        ;;
+esac
+
+echo ""
+echo "${GREEN}==> Release notes generated successfully!${NC}"

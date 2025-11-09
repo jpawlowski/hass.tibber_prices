@@ -1,0 +1,54 @@
+# Configuration for git-cliff
+# See: https://git-cliff.org/docs/configuration
+
+[changelog]
+# Template for the changelog body
+header = ""
+body = """
+{% for group, commits in commits | group_by(attribute="group") %}
+    ### {{ group | striptags | trim | upper_first }}
+    {% for commit in commits %}
+        - {% if commit.scope %}**{{ commit.scope }}**: {% endif %}{{ commit.message | upper_first }}\
+          {% if commit.breaking %} [**BREAKING**]{% endif %} \
+          ([{{ commit.id | truncate(length=7, end="") }}](https://github.com/jpawlowski/hass.tibber_prices/commit/{{ commit.id }}))
+    {% endfor %}
+{% endfor %}
+"""
+trim = true
+
+[git]
+# Parse conventional commits
+conventional_commits = true
+# Include all commits (even non-conventional)
+filter_unconventional = false
+split_commits = false
+
+# Commit parsers - map commit types to categories
+commit_parsers = [
+    # Skip manifest.json version bumps (release housekeeping)
+    { message = "^chore\\(release\\): bump version", skip = true },
+    # Skip development environment changes (not user-relevant)
+    { message = "^(feat|fix|chore|refactor)\\((devcontainer|vscode|scripts|dev-env|environment)\\):", skip = true },
+    # Skip CI/CD infrastructure changes (not user-relevant)
+    { message = "^(feat|fix|chore|ci)\\((ci|workflow|actions|github-actions)\\):", skip = true },
+    # Keep dependency updates - these ARE relevant for users
+    { message = "^chore\\(deps\\):", group = "📦 Dependencies" },
+    # Regular commit types
+    { message = "^feat", group = "🎉 New Features" },
+    { message = "^fix", group = "🐛 Bug Fixes" },
+    { message = "^docs?", group = "📚 Documentation" },
+    { message = "^perf", group = "⚡ Performance" },
+    { message = "^refactor", group = "🔧 Maintenance & Refactoring" },
+    { message = "^style", group = "🎨 Styling" },
+    { message = "^test", group = "🧪 Testing" },
+    { message = "^chore", group = "🔧 Maintenance & Refactoring" },
+    { message = "^build", group = "📦 Build" },
+]
+
+# Protect breaking changes
+commit_preprocessors = [
+    { pattern = '\((\w+\s)?#([0-9]+)\)', replace = "([#${2}](https://github.com/jpawlowski/hass.tibber_prices/issues/${2}))" },
+]
+
+# Filter out commits
+filter_commits = false
