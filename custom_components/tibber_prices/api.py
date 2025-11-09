@@ -576,7 +576,7 @@ class TibberPricesApiClient:
         headers: dict[str, str],
         data: dict,
         query_type: QueryType,
-    ) -> dict:
+    ) -> dict[str, Any]:
         """Make an API request with comprehensive error handling for network issues."""
         _LOGGER.debug("Making API request with data: %s", data)
 
@@ -633,9 +633,11 @@ class TibberPricesApiClient:
 
         except socket.gaierror as error:
             self._handle_dns_error(error)
+            raise  # Ensure type checker knows this path always raises
 
         except OSError as error:
             self._handle_network_error(error)
+            raise  # Ensure type checker knows this path always raises
 
     def _handle_dns_error(self, error: socket.gaierror) -> None:
         """Handle DNS resolution errors with IPv4/IPv6 dual stack considerations."""
