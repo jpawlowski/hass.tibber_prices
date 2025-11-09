@@ -1,51 +1,372 @@
 {
-  "title": "Component Title",
-  "config": {
-    "step": {
-      "user": {
-        "title": "Step Title",
-        "description": "Step Description",
-        "data": {
-          "field_name": "Field Label"
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "title": "Home Assistant Translation File Schema",
+    "description": "Schema for Home Assistant custom integration translation files based on https://developers.home-assistant.io/docs/internationalization/core",
+    "type": "object",
+    "properties": {
+        "title": {
+            "type": "string",
+            "description": "Title of the integration (optional, will fallback to integration name if omitted). Only include if not a product brand."
+        },
+        "common": {
+            "type": "object",
+            "description": "Shared strings that can be referenced using [%key:component::domain::common::key_path%]",
+            "additionalProperties": true
+        },
+        "config": {
+            "type": "object",
+            "description": "Translations for the configuration flow",
+            "properties": {
+                "flow_title": {
+                    "type": "string",
+                    "description": "Title shown in list (only rendered if placeholders required), e.g. 'Discovered Device ({host})'"
+                },
+                "entry_type": {
+                    "type": "string",
+                    "description": "Label explaining what an entry represents (optional, only if default translations are misleading)"
+                },
+                "initiate_flow": {
+                    "type": "object",
+                    "description": "Menu or button labels for starting flows",
+                    "properties": {
+                        "reconfigure": {
+                            "type": "string",
+                            "description": "Label for reconfigure flow"
+                        },
+                        "user": {
+                            "type": "string",
+                            "description": "Label for user flow"
+                        }
+                    }
+                },
+                "step": {
+                    "type": "object",
+                    "description": "Translations for each config flow step",
+                    "additionalProperties": {
+                        "type": "object",
+                        "properties": {
+                            "title": {
+                                "type": "string",
+                                "description": "User-visible title of the step (will show integration name if omitted)"
+                            },
+                            "description": {
+                                "type": "string",
+                                "description": "Markdown description shown with the step (optional)"
+                            },
+                            "data": {
+                                "type": "object",
+                                "description": "Labels for input fields",
+                                "additionalProperties": {
+                                    "type": "string"
+                                }
+                            },
+                            "data_description": {
+                                "type": "object",
+                                "description": "Descriptions for input fields",
+                                "additionalProperties": {
+                                    "type": "string"
+                                }
+                            },
+                            "sections": {
+                                "type": "object",
+                                "description": "Labels for form sections (only if form has sections)",
+                                "additionalProperties": {
+                                    "type": "object",
+                                    "properties": {
+                                        "name": {
+                                            "type": "string",
+                                            "description": "Section label"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "error": {
+                    "type": "object",
+                    "description": "Error messages returned by the flow",
+                    "additionalProperties": {
+                        "type": "string"
+                    }
+                },
+                "abort": {
+                    "type": "object",
+                    "description": "Abort messages (supports Markdown)",
+                    "additionalProperties": {
+                        "type": "string"
+                    }
+                },
+                "progress": {
+                    "type": "object",
+                    "description": "Progress messages for async_show_progress (supports Markdown)",
+                    "additionalProperties": {
+                        "type": "string"
+                    }
+                },
+                "create_entry": {
+                    "type": "object",
+                    "description": "Success dialog messages (supports Markdown)",
+                    "properties": {
+                        "default": {
+                            "type": "string",
+                            "description": "Default message if async_create_entry called with description=None"
+                        }
+                    },
+                    "additionalProperties": {
+                        "type": "string",
+                        "description": "Custom messages for specific description keys"
+                    }
+                }
+            }
+        },
+        "options": {
+            "type": "object",
+            "description": "Translations for the options flow (same format as config)"
+        },
+        "config_subentries": {
+            "type": "object",
+            "description": "Translations for config subentry flows (map of subentry types, each with same format as config)",
+            "additionalProperties": {
+                "type": "object"
+            }
+        },
+        "selector": {
+            "type": "object",
+            "description": "Translations for selector options. The key is the translation_key set in SelectSelectorConfig. CRITICAL: Use selector.{translation_key}.options.{value}, NOT selector.select.{translation_key}",
+            "additionalProperties": {
+                "type": "object",
+                "properties": {
+                    "options": {
+                        "type": "object",
+                        "description": "Option label translations for select selectors. Keys must match the values passed in the options list.",
+                        "additionalProperties": {
+                            "type": "string"
+                        }
+                    },
+                    "unit_of_measurement": {
+                        "type": "object",
+                        "description": "Unit translations for number selectors",
+                        "additionalProperties": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "services": {
+            "type": "object",
+            "description": "Translations for service actions",
+            "additionalProperties": {
+                "type": "object",
+                "properties": {
+                    "name": {
+                        "type": "string",
+                        "description": "Service action name"
+                    },
+                    "description": {
+                        "type": "string",
+                        "description": "Service action description"
+                    },
+                    "fields": {
+                        "type": "object",
+                        "description": "Field translations",
+                        "additionalProperties": {
+                            "type": "object",
+                            "properties": {
+                                "name": {
+                                    "type": "string",
+                                    "description": "Field name"
+                                },
+                                "description": {
+                                    "type": "string",
+                                    "description": "Field description"
+                                }
+                            }
+                        }
+                    },
+                    "sections": {
+                        "type": "object",
+                        "description": "Collapsible section labels",
+                        "additionalProperties": {
+                            "type": "object",
+                            "properties": {
+                                "name": {
+                                    "type": "string",
+                                    "description": "Section name"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "entity": {
+            "type": "object",
+            "description": "Translations for entities",
+            "additionalProperties": {
+                "type": "object",
+                "description": "Entity domain (sensor, binary_sensor, etc.)",
+                "additionalProperties": {
+                    "type": "object",
+                    "description": "Entity translation_key",
+                    "properties": {
+                        "name": {
+                            "type": "string",
+                            "description": "Entity name (only for entities with has_entity_name=True)"
+                        },
+                        "state": {
+                            "type": "object",
+                            "description": "State translations",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        },
+                        "state_attributes": {
+                            "type": "object",
+                            "description": "Entity state attribute translations",
+                            "additionalProperties": {
+                                "type": "object",
+                                "properties": {
+                                    "name": {
+                                        "type": "string",
+                                        "description": "Attribute name"
+                                    },
+                                    "state": {
+                                        "type": "object",
+                                        "description": "Attribute state translations",
+                                        "additionalProperties": {
+                                            "type": "string"
+                                        }
+                                    }
+                                }
+                            }
+                        },
+                        "unit_of_measurement": {
+                            "type": "string",
+                            "description": "Unit of measurement translation (for sensor/number entities)"
+                        }
+                    }
+                }
+            }
+        },
+        "entity_component": {
+            "type": "object",
+            "description": "Translations for entity components (if integration provides entities under its domain)",
+            "additionalProperties": {
+                "type": "object",
+                "description": "Device class or '_' for default",
+                "properties": {
+                    "state": {
+                        "type": "object",
+                        "description": "State translations for this device class",
+                        "additionalProperties": {
+                            "type": "string"
+                        }
+                    },
+                    "state_attributes": {
+                        "type": "object",
+                        "description": "Attribute name and state translations",
+                        "additionalProperties": {
+                            "type": "object",
+                            "properties": {
+                                "name": {
+                                    "type": "string",
+                                    "description": "Attribute name"
+                                },
+                                "state": {
+                                    "type": "object",
+                                    "description": "Attribute state values",
+                                    "additionalProperties": {
+                                        "type": "string"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "device": {
+            "type": "object",
+            "description": "Translations for device names",
+            "additionalProperties": {
+                "type": "object",
+                "properties": {
+                    "name": {
+                        "type": "string",
+                        "description": "Device name (set device's translation_key to use this)"
+                    }
+                }
+            }
+        },
+        "device_automation": {
+            "type": "object",
+            "description": "Translations for device automations",
+            "properties": {
+                "action_type": {
+                    "type": "object",
+                    "description": "Device action translations",
+                    "additionalProperties": {
+                        "type": "string"
+                    }
+                },
+                "condition_type": {
+                    "type": "object",
+                    "description": "Device condition translations",
+                    "additionalProperties": {
+                        "type": "string"
+                    }
+                },
+                "trigger_type": {
+                    "type": "object",
+                    "description": "Device trigger translations",
+                    "additionalProperties": {
+                        "type": "string"
+                    }
+                },
+                "trigger_subtype": {
+                    "type": "object",
+                    "description": "Device trigger subtype translations (e.g., button names)",
+                    "additionalProperties": {
+                        "type": "string"
+                    }
+                }
+            }
+        },
+        "exceptions": {
+            "type": "object",
+            "description": "Translations for HomeAssistantError and subclasses",
+            "additionalProperties": {
+                "type": "object",
+                "properties": {
+                    "message": {
+                        "type": "string",
+                        "description": "Exception message (supports placeholders)"
+                    }
+                }
+            }
+        },
+        "issues": {
+            "type": "object",
+            "description": "Translations for repairs issues",
+            "additionalProperties": {
+                "type": "object",
+                "properties": {
+                    "title": {
+                        "type": "string",
+                        "description": "Issue title"
+                    },
+                    "description": {
+                        "type": "string",
+                        "description": "Issue description (exactly one of 'description' or 'fix_flow' must be present)"
+                    },
+                    "fix_flow": {
+                        "type": "object",
+                        "description": "Repair flow translations (same format as config flow, exactly one of 'description' or 'fix_flow' must be present)"
+                    }
+                }
+            }
         }
-      }
-    },
-    "error": {
-      "error_key": "Error Message"
-    },
-    "abort": {
-      "abort_key": "Abort Message"
     }
-  },
-  "entity": {
-    "sensor": {
-      "sensor_key": {
-        "name": "Sensor Name",
-        "state": {
-          "state_key": "State Translation"
-        }
-      }
-    },
-    "binary_sensor": {
-      "sensor_key": {
-        "name": "Binary Sensor Name",
-        "state": {
-          "on": "On State Translation",
-          "off": "Off State Translation"
-        }
-      }
-    }
-  },
-  "services": {
-    "service_name": {
-      "name": "Service Name",
-      "description": "Service Description",
-      "fields": {
-        "field_name": {
-          "name": "Field Name",
-          "description": "Field Description"
-        }
-      }
-    }
-  }
 }
