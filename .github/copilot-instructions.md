@@ -2,6 +2,104 @@
 
 This is a **Home Assistant custom component** for Tibber electricity price data, distributed via **HACS**. It fetches, caches, and enriches **quarter-hourly** electricity prices with statistical analysis, price levels, and ratings.
 
+## Documentation Metadata
+
+-   **Last Major Update**: 2025-11-09
+-   **Last Architecture Review**: 2025-11-09 (Translation system restructured - selector translations now use `selector.{translation_key}.options.{value}` pattern)
+-   **Documentation Status**: ✅ Current (verified against codebase)
+
+_Note: When proposing significant updates to this file, update the metadata above with the new date and brief description of changes._
+
+## Maintaining This Documentation
+
+**CRITICAL: This file is the AI's long-term memory across sessions.**
+
+When working with the codebase, Copilot MUST actively maintain consistency between this documentation and the actual code:
+
+**Scope:** "This documentation" and "this file" refer specifically to `.github/copilot-instructions.md`. This does NOT include user-facing documentation like `README.md`, `/docs/`, or comments in code. Those serve different purposes and are maintained separately.
+
+**Important:** `AGENTS.md` and `CLAUDE.md` in the repository root are **symlinks** to this file (`.github/copilot-instructions.md`). All three files are automatically synchronized through the symlink - do NOT attempt to edit them separately or check if they're in sync. Always edit only `.github/copilot-instructions.md`.
+
+**Automatic Inconsistency Detection:**
+
+-   When code changes affect documented patterns, examples, file paths, function names, or architectural decisions **in this file**, IMMEDIATELY flag the inconsistency
+-   If a documented function is renamed, moved, or deleted → suggest documentation update
+-   If file structure changes (files moved/renamed/deleted) → suggest path updates
+-   If implementation patterns change (e.g., new translation structure, different caching approach) → suggest pattern documentation update
+-   If new learnings emerge during debugging or development → suggest adding to documentation
+
+**Documentation Update Process:**
+
+1. **Detect** inconsistency or valuable new learning during work
+2. **ALWAYS ask first** before modifying this file - propose what should be changed/added and explain WHY
+3. **Wait for approval** from user
+4. **Apply changes** only after confirmation
+5. Keep proposals concise but specific (rough outline acceptable, not full text required)
+
+**When to discuss in chat vs. direct file changes:**
+
+-   **Make direct changes when:**
+
+    -   Clear, straightforward task (fix bug, add function, update config)
+    -   Single approach is obvious
+    -   User request is specific ("add X", "change Y to Z")
+    -   Quick iteration is needed (user can review diff and iterate)
+
+-   **Discuss/show in chat first when:**
+    -   Multiple valid approaches exist (architectural decision)
+    -   Significant refactoring affecting many files
+    -   Unclear requirements need clarification
+    -   Trade-offs need discussion (performance vs. readability, etc.)
+    -   User asks open-ended question ("how should we...", "what's the best way...")
+
+**Goal:** Save time. File edits with VS Code tracking are fast for simple changes. Chat discussion is better for decisions requiring input before committing to an approach.
+
+**When to Propose Updates (with Confidence Levels):**
+
+🔴 **HIGH Confidence** - Factual inconsistencies (flag immediately):
+
+-   ✅ Documented function/class renamed, moved, or deleted
+-   ✅ File paths changed (files moved/renamed/deleted)
+-   ✅ Example code references non-existent code
+-   ✅ Breaking changes to documented APIs or patterns
+
+🟡 **MEDIUM Confidence** - Possible changes (ask for clarification):
+
+-   ✅ Implementation pattern changed (might be intentional refactor)
+-   ✅ New approach observed alongside documented old approach (unclear which is preferred)
+-   ✅ Documented pattern still works but seems outdated
+
+🟢 **LOW Confidence** - Suggestions for additions (propose when valuable):
+
+-   ✅ New architectural pattern discovered during debugging (like the selector translation structure fix)
+-   ✅ Important learnings that would help future sessions
+-   ✅ User expressed wish for documentation
+-   ✅ HA best practice learned that applies to this project
+
+**Do NOT Propose Updates For:**
+
+-   ❌ Temporary debugging code or experimental changes
+-   ❌ Minor implementation details that don't affect understanding
+-   ❌ Private helper function internals (unless part of documented pattern)
+-   ❌ TODO comments (unless they represent architectural decisions)
+-   ❌ Variable names or internal state (unless part of public API)
+
+**Update Proposal Format:**
+Include confidence level and impact in proposals:
+
+> **[🔴 HIGH]** I noticed the translation pattern in copilot-instructions.md references `enrich_price_info_with_differences()` in `price_utils.py`, but this function was renamed to `enrich_prices()`.
+>
+> **Impact:** Future sessions will look for wrong function name.
+>
+> **Proposed change:** Update function name in "Price Data Enrichment" section.
+>
+> Should I update the documentation?
+
+**Batch Updates:**
+If you detect 3+ related minor changes (e.g., multiple constant renames during refactoring), propose them as one batch update instead of asking separately for each.
+
+This ensures the documentation stays accurate and useful as the codebase evolves, while maintaining user control over what gets documented.
+
 ## Architecture Overview
 
 **Core Data Flow:**
@@ -14,7 +112,55 @@ This is a **Home Assistant custom component** for Tibber electricity price data,
 
 **Key Patterns:**
 
--   **Dual translation system**: Standard HA translations in `/translations/` (config flow, UI strings per HA schema), supplemental in `/custom_translations/` (entity descriptions not supported by HA schema). Both must stay in sync. Use `async_load_translations()` and `async_load_standard_translations()` from `const.py`. When to use which: `/translations/` is bound to official HA schema requirements; anything else goes in `/custom_translations/` (requires manual translation loading).
+-   **Dual translation system**: Standard HA translations in `/translations/` (config flow, UI strings per HA schema), supplemental in `/custom_translations/` (entity descriptions not supported by HA schema). Both must stay in sync. Use `async_load_translations()` and `async_load_standard_translations()` from `const.py`. When to use which: `/translations/` is bound to official HA schema requirements; anything else goes in `/custom_translations/` (requires manual translation loading). **Schema reference**: `/scripts/json_schemas/translation_schema.json` provides the structure for `/translations/*.json` files based on [HA's translation documentation](https://developers.home-assistant.io/docs/internationalization/core).
+
+    -   **Select selector translations**: Use `selector.{translation_key}.options.{value}` structure (NOT `selector.select.{translation_key}`). Example:
+
+        ```python
+        # config_flow.py
+        SelectSelector(SelectSelectorConfig(
+            options=["LOW", "MODERATE", "HIGH"],
+            translation_key="volatility"
+        ))
+        ```
+
+        ```json
+        # translations/en.json
+        {
+          "selector": {
+            "volatility": {
+              "options": {
+                "LOW": "Low",
+                "MODERATE": "Moderate",
+                "HIGH": "High"
+              }
+            }
+          }
+        }
+        ```
+
+        **CRITICAL:** When using `translation_key`, pass options as **plain string list**, NOT `SelectOptionDict`:
+
+        ```python
+        # ✅ CORRECT with translation_key
+        SelectSelector(SelectSelectorConfig(
+            options=["LOW", "MODERATE", "HIGH"],  # Plain strings!
+            translation_key="volatility"
+        ))
+
+        # ❌ WRONG - label parameter overrides translations
+        SelectSelector(SelectSelectorConfig(
+            options=[SelectOptionDict(value="LOW", label="Low"), ...],
+            translation_key="volatility"  # translation_key is ignored when label is set!
+        ))
+
+        # ✅ SelectOptionDict ONLY for dynamic/non-translatable options
+        SelectSelector(SelectSelectorConfig(
+            options=[SelectOptionDict(value=home_id, label=home_name) for ...],
+            # No translation_key - labels come from runtime data
+        ))
+        ```
+
 -   **Price data enrichment**: All quarter-hourly price intervals get augmented with `trailing_avg_24h`, `difference`, and `rating_level` fields via `enrich_price_info_with_differences()` in `price_utils.py`. Enriched structure example:
     ```python
     {
@@ -54,7 +200,73 @@ custom_components/tibber_prices/
 └── services.yaml         # Service definitions
 ```
 
+## Development Environment Setup
+
+**Python Virtual Environment:**
+
+-   Project uses `.venv` located at `/home/vscode/.venv/` (outside workspace)
+-   Symlinked into workspace root as `.venv` → `/home/vscode/.venv/`
+-   **Why outside workspace?** Project folder is bind-mounted from host, which doesn't support hardlinks required by `uv`
+
+**Package Manager:**
+
+-   Uses `uv` (modern, fast Python package manager)
+-   **Always use `uv` commands**, not `pip` directly:
+
+    ```bash
+    # ✅ Correct
+    uv pip install <package>
+    uv run pytest
+
+    # ❌ Wrong - uses system Python
+    pip install <package>
+    python -m pytest
+    ```
+
+**Development Scripts:**
+
+-   All scripts in `./scripts/` automatically use the correct `.venv`
+-   No need to manually activate venv or specify Python path
+-   Examples: `./scripts/lint`, `./scripts/develop`, `./scripts/lint-check`
+
+**When generating shell commands:**
+
+1. **Prefer development scripts** (they handle .venv automatically)
+2. **If using Python directly**, use `.venv/bin/python` explicitly:
+    ```bash
+    .venv/bin/python -m pytest tests/
+    .venv/bin/python -c "import homeassistant; print('OK')"
+    ```
+3. **For package management**, always use `uv`:
+    ```bash
+    uv pip list
+    uv pip install --upgrade homeassistant
+    ```
+
+**Debugging Environment Issues:**
+
+-   If `import homeassistant` fails: Check if `.venv` symlink exists and points to correct location
+-   If packages missing: Run `uv sync` to install dependencies from `pyproject.toml`
+-   If wrong Python version: Verify `.venv/bin/python --version` (should be 3.13+)
+
 ## Development Workflow
+
+**IMPORTANT: This project is designed for DevContainer development.**
+
+If you notice commands failing or missing dependencies:
+
+1. **Check if running in DevContainer**: Ask user to run `ls /.dockerenv && echo "In container" || echo "NOT in container"`
+2. **If NOT in container**: Suggest opening project in DevContainer (VS Code: "Reopen in Container")
+3. **Why it matters**:
+    - `.venv` is located outside workspace (hardlink issues on bind-mounts)
+    - Development scripts expect container environment
+    - VS Code Python settings are container-specific
+
+**If user insists on local development without container**, warn that:
+
+-   You'll need to adapt commands for their local setup
+-   Some features (like `.venv` symlink) won't work as documented
+-   Support will be limited (not the intended workflow)
 
 **Start dev environment:**
 
@@ -80,11 +292,422 @@ custom_components/tibber_prices/
 pytest tests/      # Unit tests exist (test_*.py) but no framework enforced
 ```
 
+## Testing Changes
+
+**IMPORTANT: Never start `./scripts/develop` automatically.**
+
+When changes are complete and ready for testing:
+
+1. **Ask user to test**, don't execute `./scripts/develop` yourself
+2. **Provide specific test guidance** based on what changed in this session:
+
+    - Which UI screens to check (e.g., "Open config flow, step 3")
+    - What behavior to verify (e.g., "Dropdown should show translated values")
+    - What errors to watch for (e.g., "Check logs for JSON parsing errors")
+    - What NOT to test (if change is isolated, no need to test everything)
+
+3. **Keep test guidance concise** - 3-5 bullet points max
+4. **Focus on session changes only** - Don't suggest testing unrelated features
+
+**Example:**
+
+> ✅ Changes complete! Please test:
+>
+> 1. Rebuild DevContainer (VS Code: "Reopen and Rebuild")
+> 2. Open a Python file - Pylance should now resolve `homeassistant.*` imports without errors
+> 3. Check that autocomplete works for HA APIs
+>
+> No need to test the integration itself - these are environment-only changes.
+
+**What NOT to do:**
+
+-   ❌ Don't execute `./scripts/develop` automatically
+-   ❌ Don't suggest exhaustive testing of unrelated features
+-   ❌ Don't check `git status` to determine what changed (trust session memory)
+-   ❌ Don't assume user needs reminding to commit (they manage their own workflow)
+
+## Git Workflow Guidance
+
+**Purpose:** Maintain clean, atomic commits that enable future release note generation while preserving technical accuracy.
+
+**Why This Matters:**
+
+-   Commits stay **technical** (for developers, describe what changed and why)
+-   Commits are **structured** (Conventional Commits format with "Impact:" sections)
+-   Release notes are **user-friendly** (AI translates commits into user language later)
+-   Clean history enables automatic release note generation from commit messages
+
+**Critical Principles:**
+
+1. **AI suggests commits, NEVER executes them** - User maintains full control of git operations
+2. **Commits are for developers** - Technical language, implementation details, code changes
+3. **Release notes are for users** - AI will translate commit history into user-friendly format later
+4. **Suggest conservatively** - Only at clear feature boundaries, not after every change
+5. **Trust session memory** - Don't check `git status`, recall what was accomplished this session
+
+### When to Suggest Commits
+
+**Suggest commits at clear feature boundaries:**
+
+| Scenario                                      | Suggest? | Example                                                                                              |
+| --------------------------------------------- | -------- | ---------------------------------------------------------------------------------------------------- |
+| Feature complete and tested                   | ✅ YES   | "Optional: Before we start the next feature, you might want to commit the translation system fixes?" |
+| Bug fixed with verification                   | ✅ YES   | "Optional: This bug fix is complete and verified. Ready to commit before moving on?"                 |
+| Multiple related files changed (logical unit) | ✅ YES   | "Optional: All 5 translation files updated. This forms a logical commit."                            |
+| About to start unrelated work                 | ✅ YES   | "Optional: Before we start refactoring the API client, commit the current sensor changes?"           |
+| User explicitly asks what's uncommitted       | ✅ YES   | Provide summary of changes and suggest commit message                                                |
+| Iterating on same feature                     | ❌ NO    | Don't suggest between attempts/refinements                                                           |
+| Debugging in progress                         | ❌ NO    | Wait until root cause found and fixed                                                                |
+| User declined previous commit suggestion      | ❌ NO    | Respect their workflow preference                                                                    |
+
+**Suggestion Language:**
+
+-   Use "Optional:" prefix to make it clear this is not required
+-   Ask, don't assume: "Want to commit?" not "You should commit"
+-   Accept graceful decline: If user says no or ignores, don't mention again for that boundary
+-   Provide commit message: Include full Conventional Commit format with "Impact:" section
+-   **Specify files to stage**: When suggesting commits, list exact files for `git add`
+-   **Split when logical**: If session has multiple unrelated changes, suggest separate commits with specific file lists
+
+**Commit Splitting Guidelines:**
+
+Split into multiple commits when:
+
+-   Different areas affected (config flow + docs + environment)
+-   Different change types (fix + feat + docs)
+-   Different impact scope (user-facing vs. developer-only)
+-   Changes can work independently
+
+Combine into single commit when:
+
+-   Tightly coupled changes (translations + code using them)
+-   Single feature across files (sensor + translations + service)
+-   Dependency chain (A requires B to function)
+-   Small scope (2-3 related files telling one story)
+
+**Example - Single Commit:**
+
+> Optional: Ruff configuration migration complete. Ready to commit?
+>
+> **Stage these files:**
+>
+> ```bash
+> git add pyproject.toml .github/copilot-instructions.md
+> ```
+>
+> **Commit message:**
+>
+> ```
+> refactor: migrate ruff config from .ruff.toml to pyproject.toml
+>
+> Consolidated ruff configuration into pyproject.toml following modern Python
+> conventions and integration_blueprint pattern.
+>
+> Updated all references in copilot-instructions.md from .ruff.toml to
+> pyproject.toml under [tool.ruff] section.
+>
+> Impact: Aligns with modern Python tooling standards. No user-visible changes.
+> ```
+
+**Example - Multiple Commits:**
+
+> Optional: Two separate improvements ready. Suggest splitting:
+>
+> **Commit 1: Translation Fix**
+>
+> ```bash
+> git add custom_components/tibber_prices/config_flow.py
+> git add custom_components/tibber_prices/translations/*.json
+> ```
+>
+> ```
+> fix(config_flow): use flat selector structure for translation_key
+>
+> SelectOptionDict with label parameter was overriding translation_key,
+> causing config flow to fail at step 4.
+>
+> Changed to plain string lists with translation_key parameter,
+> following HA pattern: selector.{translation_key}.options.{value}
+>
+> Updated all 5 language files (de, en, nb, nl, sv).
+>
+> Impact: Config flow works through all 6 steps with translated options.
+> ```
+>
+> **Commit 2: Documentation**
+>
+> ```bash
+> git add .github/copilot-instructions.md
+> ```
+>
+> ```
+> docs(patterns): document selector translation structure
+>
+> Added correct translation pattern for SelectSelector based on
+> official HA documentation and debugging session.
+>
+> Documents flat selector.{translation_key}.options.{value} structure
+> and common pitfall of SelectOptionDict overriding translations.
+>
+> Impact: Future sessions generate correct selector translations.
+> ```
+>
+> Want to commit separately or combine?
+
+### Conventional Commits Format
+
+**Structure:**
+
+```
+<type>(<scope>): <short summary (max 50-72 chars)>
+
+<detailed description, wrapped at 72 chars>
+
+Impact: <user-visible effects or context for future release notes>
+```
+
+**Best Practices:**
+
+-   **Subject line**: Max 50 chars (hard limit 72), imperative mood ("Add" not "Added")
+-   **Body**: Wrap at 72 chars, explain WHAT and WHY (not HOW - code shows that)
+-   **Blank line**: Required between subject and body
+-   **Impact section**: Our addition for release note generation (optional but recommended)
+
+**Types:**
+
+-   `feat`: New feature (appears in release notes as "New Features")
+-   `fix`: Bug fix (appears in release notes as "Bug Fixes")
+-   `docs`: Documentation only (appears in release notes as "Documentation")
+-   `refactor`: Code restructure without behavior change (may or may not appear in release notes)
+-   `chore`: Maintenance tasks (usually omitted from release notes)
+-   `test`: Test changes only (omitted from release notes)
+-   `style`: Formatting changes (omitted from release notes)
+
+**Scope (optional but recommended):**
+
+-   `translations`: Translation system changes
+-   `config_flow`: Configuration flow changes
+-   `sensors`: Sensor implementation
+-   `api`: API client changes
+-   `coordinator`: Data coordinator changes
+-   `docs`: Documentation files
+
+### Technical Commit Message Examples
+
+**Example 1: Bug Fix**
+
+```
+fix(config_flow): use flat selector structure for translation_key
+
+SelectOptionDict with label parameter was overriding translation_key,
+causing config flow to fail at step 4 with "Unknown error occurred".
+
+Changed to use plain string lists with translation_key parameter,
+following official HA pattern: selector.{translation_key}.options.{value}
+
+Updated all 5 language files (de, en, nb, nl, sv) with correct
+structure.
+
+Impact: Config flow now works through all 6 steps with properly
+translated dropdown options. Users can complete setup without
+encountering errors.
+```
+
+**Example 2: Documentation**
+
+```
+docs(workflow): add git commit guidance for release notes
+
+Added comprehensive "Git Workflow Guidance" section to copilot-instructions.md
+documenting when AI should suggest commits, Conventional Commits format, and
+how to structure technical messages that enable future release note generation.
+
+Key additions:
+- Commit boundary detection decision table
+- When NOT to suggest commits (during iteration/debugging)
+- Conventional Commits format with types and scopes
+- Technical commit message examples with "Impact:" sections
+- Release note generation guidelines for future use
+
+Impact: AI can now help maintain clean, atomic commits structured for
+automatic release note generation while preserving technical accuracy.
+```
+
+**Example 3: Feature**
+
+```
+feat(environment): add VS Code Python environment configuration
+
+Added .vscode/settings.json with universal Python/Ruff settings and updated
+.devcontainer/devcontainer.json to use workspace .venv interpreter.
+
+Changes:
+- .devcontainer/devcontainer.json: Set python.defaultInterpreterPath to .venv
+- .devcontainer/devcontainer.json: Added python.analysis.extraPaths
+- .vscode/settings.json: Created with Pylance and Ruff configuration
+- Removed deprecated ruff.lint.args and ruff.format.args
+
+Impact: Pylance now resolves homeassistant.* imports correctly and provides
+full autocomplete for Home Assistant APIs. Developers get proper IDE support
+without manual interpreter selection.
+```
+
+**Example 4: Refactor**
+
+```
+refactor: migrate ruff config from .ruff.toml to pyproject.toml
+
+Consolidated ruff configuration into pyproject.toml following modern Python
+conventions and integration_blueprint pattern.
+
+Updated all references in copilot-instructions.md from .ruff.toml to
+pyproject.toml under [tool.ruff] section.
+
+Impact: Aligns with modern Python tooling standards. No user-visible changes.
+```
+
+### "Impact:" Section Guidelines
+
+The "Impact:" section bridges technical commits and future release notes:
+
+**What to Include:**
+
+-   **User-visible effects**: What changes for end users of the integration
+-   **Developer benefits**: What improves for contributors/maintainers
+-   **Context for translation**: Information that helps future AI translate this into user-friendly release note
+-   **Omit "Impact:" if**: Internal refactor with zero user/dev impact (e.g., rename private variable)
+
+**Examples:**
+
+✅ **Good Impact Sections:**
+
+-   "Config flow now works through all 6 steps without errors"
+-   "Pylance provides full autocomplete for Home Assistant APIs"
+-   "AI maintains clean commit history for release note generation"
+-   "Aligns with HA 2025.x translation schema requirements"
+-   "Reduces API calls by 70% through intelligent caching"
+
+❌ **Poor Impact Sections:**
+
+-   "Code is better now" (vague, not actionable)
+-   "Fixed the bug" (redundant with commit type)
+-   "Updated file X" (describes action, not impact)
+-   "This should work" (uncertain, commits should be verified)
+
+### Release Note Generation (Future Use)
+
+**When generating release notes from commits:**
+
+1. **Filter by type**:
+    - Include: `feat`, `fix`, `docs` (if significant)
+    - Maybe include: `refactor` (if user-visible)
+    - Exclude: `chore`, `test`, `style`
+2. **Group by type**:
+    - "New Features" (feat)
+    - "Bug Fixes" (fix)
+    - "Documentation" (docs)
+    - "Improvements" (refactor with user impact)
+3. **Translate to user language**:
+    - Technical: "fix(config_flow): use flat selector structure" → User: "Fixed configuration wizard failing at step 4"
+    - Technical: "feat(environment): add VS Code configuration" → User: "Improved developer experience with better IDE support"
+4. **Use "Impact:" as source**:
+    - Extract user-visible effects from Impact sections
+    - Preserve context (why it matters)
+    - Rewrite in present tense, active voice
+5. **Add examples if helpful**:
+    - Show before/after for UI changes
+    - Demonstrate new capabilities with code snippets
+    - Link to documentation for complex features
+
+**Example Release Note (Generated from Commits):**
+
+> **Tibber Prices 2.0.1**
+>
+> **Bug Fixes**
+>
+> -   Fixed configuration wizard failing at step 4 when selecting price thresholds. Dropdown options now appear correctly with proper translations.
+>
+> **Improvements**
+>
+> -   Improved developer environment setup with automatic Python path detection and full Home Assistant API autocomplete in VS Code
+
+### Philosophy
+
+**User Controls Workflow:**
+
+-   User decides when to commit
+-   User writes final commit message (AI provides suggestion)
+-   User manages branches, PRs, and releases
+-   AI is an assistant, not a driver
+
+**AI Suggests at Boundaries:**
+
+-   Suggests when logical unit complete
+-   Provides structured commit message
+-   Accepts decline without repeating
+-   Trusts session memory over `git status`
+
+**Commits Enable Release Notes:**
+
+-   Technical accuracy preserved (for developers)
+-   Structure enables automation (Conventional Commits)
+-   Impact sections provide user context (for release notes)
+-   Future AI translates into user-friendly format
+
+**Validate JSON files:**
+
+```bash
+# After editing translation files, validate syntax (ruff doesn't check JSON)
+python -m json.tool custom_components/tibber_prices/translations/de.json > /dev/null
+
+# Or validate all translation files at once:
+for f in custom_components/tibber_prices/translations/*.json; do
+    python -m json.tool "$f" > /dev/null && echo "✓ $f" || echo "✗ INVALID: $f"
+done
+```
+
+**Why:** `ruff` only formats/lints Python code. JSON syntax errors (trailing commas, missing quotes) will cause HA to fail at runtime with cryptic error messages. Always validate JSON after manual edits.
+
+## Linting Best Practices
+
+**Always use the provided scripts:**
+
+```bash
+./scripts/lint        # Auto-fix mode
+./scripts/lint-check  # Check-only (CI mode)
+```
+
+**Why not call `ruff` directly?**
+
+Calling `ruff` or `uv run ruff` directly can cause unintended side effects:
+
+-   May install the integration as a Python package (creates `__pycache__`, `.egg-info`, etc.)
+-   HA will then load the **installed** version instead of the **development** version from `custom_components/`
+-   Causes confusing behavior where code changes don't take effect
+
+**Exception:** If you need to run `ruff` with custom flags not supported by our scripts:
+
+1. Run your custom `ruff` command
+2. **Immediately after**, clean up any installation artifacts:
+
+    ```bash
+    # Remove any accidentally installed package
+    uv pip uninstall tibber_prices 2>/dev/null || true
+
+    # Clean up cache and build artifacts
+    find . -type d -name "__pycache__" -exec rm -rf {} + 2>/dev/null || true
+    find . -type d -name "*.egg-info" -exec rm -rf {} + 2>/dev/null || true
+    ```
+
+3. Ask user to restart HA: `./scripts/develop`
+
+**When in doubt:** Stick to `./scripts/lint` - it's tested and safe.
+
 **Key commands:**
 
 -   Dev container includes `hass` CLI for manual HA operations
 -   Use `uv run --active` prefix for running Python tools in the venv
--   `.ruff.toml` enforces max line length 120, complexity ≤25, Python 3.13 target
+-   `pyproject.toml` (under `[tool.ruff]`) enforces max line length 120, complexity ≤25, Python 3.13 target
 
 ## Critical Project-Specific Patterns
 
@@ -171,11 +794,88 @@ def async_setup_services(hass: HomeAssistant) -> None:
     )
 ```
 
+## Common Pitfalls (HA-Specific)
+
+**1. Entity State Class Compatibility:**
+
+```python
+# ❌ Wrong - MONETARY with MEASUREMENT state class
+class PriceSensor(SensorEntity):
+    _attr_device_class = SensorDeviceClass.MONETARY
+    _attr_state_class = SensorStateClass.MEASUREMENT  # ← WRONG!
+
+# ✅ Correct - MONETARY with TOTAL or None
+class PriceSensor(SensorEntity):
+    _attr_device_class = SensorDeviceClass.MONETARY
+    _attr_state_class = SensorStateClass.TOTAL  # Or None for snapshots
+```
+
+Rule: Check [HA sensor docs](https://developers.home-assistant.io/docs/core/entity/sensor) for valid `device_class` + `state_class` combinations. Common mistakes: MONETARY requires TOTAL, TIMESTAMP requires None.
+
+**2. Config Flow Input Validation:**
+
+```python
+# ❌ Missing validation - creates broken entries
+async def async_step_user(self, user_input=None):
+    if user_input is not None:
+        return self.async_create_entry(title="Name", data=user_input)
+
+# ✅ Always validate before creating entry
+async def async_step_user(self, user_input=None):
+    if user_input is not None:
+        errors = {}
+        try:
+            await validate_api_connection(self.hass, user_input)
+        except InvalidAuth:
+            errors["base"] = "invalid_auth"
+        except CannotConnect:
+            errors["base"] = "cannot_connect"
+        else:
+            return self.async_create_entry(title="Name", data=user_input)
+        return self.async_show_form(step_id="user", errors=errors, ...)
+```
+
+Rule: ALWAYS test API connection/validate data before `async_create_entry()`. Use specific error keys for proper translation.
+
+**3. Don't Override async_update() with DataUpdateCoordinator:**
+
+```python
+# ❌ Unnecessary - coordinator handles this
+class MySensor(CoordinatorEntity):
+    async def async_update(self):
+        await self.coordinator.async_request_refresh()
+
+# ✅ Only implement properties
+class MySensor(CoordinatorEntity):
+    @property
+    def native_value(self):
+        return self.coordinator.data["value"]
+```
+
+Rule: When using `DataUpdateCoordinator`, entities get updates automatically. Don't implement `async_update()`.
+
+**4. Service Response Declaration:**
+
+```python
+# ❌ Returns data without declaring response support
+hass.services.async_register(DOMAIN, "get_data", handler)
+
+# ✅ Explicit response support declaration
+hass.services.async_register(
+    DOMAIN, "get_data", handler,
+    supports_response=SupportsResponse.ONLY,  # ONLY, OPTIONAL, or NONE
+)
+```
+
+Rule: Services returning data MUST declare `supports_response`. Use `ONLY` for data-only services, `OPTIONAL` for dual-purpose, `NONE` for action-only.
+
 ## Code Quality Rules
 
-**Ruff config (`.ruff.toml`):**
+**Ruff config (`pyproject.toml` under `[tool.ruff]`):**
 
--   Max line length: **120** chars (not 88 from default Black)
+We use **Ruff** (which replaces Black, Flake8, isort, and more) as our sole linter and formatter:
+
+-   Max line length: **120** chars (not 88 from Ruff's default)
 -   Max complexity: **25** (McCabe)
 -   Target: Python 3.13
 -   No unused imports/variables (`F401`, `F841`)
@@ -217,6 +917,188 @@ Public entry points → direct helpers (call order) → pure utilities. Prefix p
 **No backwards compatibility code** unless explicitly requested. Target latest HA stable only.
 
 **Translation sync:** When updating `/translations/en.json`, update ALL language files (`de.json`, etc.) with same keys (placeholder values OK).
+
+## Ruff Code Style Guidelines
+
+These rules ensure generated code passes `./scripts/lint` on first try. Ruff enforces these automatically.
+
+**String Formatting:**
+
+```python
+# ✅ Use f-strings for simple formatting
+message = f"Found {count} items"
+url = f"{base_url}/api/{endpoint}"
+
+# ✅ Use lazy logging (no f-strings in logger calls)
+_LOGGER.debug("Processing %s items", count)
+
+# ❌ Avoid .format() and % formatting
+message = "Found {} items".format(count)  # Ruff will suggest f-string
+```
+
+**String Quotes:**
+
+```python
+# ✅ Use double quotes (Ruff's default)
+name = "tibber_prices"
+message = "Hello world"
+
+# ✅ Use single quotes to avoid escaping
+html = '<div class="container">content</div>'
+
+# ❌ Inconsistent quote usage
+name = 'tibber_prices'  # Ruff will change to double quotes
+```
+
+**Trailing Commas:**
+
+```python
+# ✅ Always use trailing commas in multi-line structures
+SENSOR_TYPES = [
+    "current_price",
+    "min_price",
+    "max_price",  # ← Trailing comma
+]
+
+# ✅ Also for function arguments
+def calculate_average(
+    prices: list[dict],
+    start_time: datetime,
+    end_time: datetime,  # ← Trailing comma
+) -> float:
+    pass
+
+# ❌ Missing trailing comma
+SENSOR_TYPES = [
+    "current_price",
+    "min_price",
+    "max_price"  # Ruff will add trailing comma
+]
+```
+
+**Docstrings:**
+
+```python
+# ✅ Use triple double-quotes, single-line for simple cases
+def get_price() -> float:
+    """Return current electricity price."""
+    return 0.25
+
+# ✅ Multi-line docstrings: summary line, blank, details
+def calculate_average(prices: list[dict]) -> float:
+    """Calculate average price from interval list.
+
+    Args:
+        prices: List of price dictionaries with 'total' key.
+
+    Returns:
+        Average price as float.
+    """
+    return sum(p["total"] for p in prices) / len(prices)
+
+# ❌ Single quotes or missing docstrings on public functions
+def get_price() -> float:
+    '''Return price'''  # Ruff will change to double quotes
+```
+
+**Line Breaking:**
+
+```python
+# ✅ Break long lines at logical points
+result = some_function(
+    argument1=value1,
+    argument2=value2,
+    argument3=value3,
+)
+
+# ✅ Break long conditions
+if (
+    price > threshold
+    and time_of_day == "peak"
+    and day_of_week in ["Monday", "Friday"]
+):
+    do_something()
+
+# ✅ Chain methods with line breaks
+df = (
+    data_frame
+    .filter(lambda x: x > 0)
+    .sort_values()
+    .reset_index()
+)
+```
+
+**Type Annotations:**
+
+```python
+# ✅ Annotate function signatures (public functions)
+def get_current_price(coordinator: DataUpdateCoordinator) -> float:
+    """Get current price from coordinator."""
+    return coordinator.data["priceInfo"]["today"][0]["total"]
+
+# ✅ Use modern type syntax (Python 3.13)
+def process_prices(prices: list[dict[str, Any]]) -> dict[str, float]:
+    pass
+
+# ❌ Avoid old-style typing (List, Dict from typing module)
+from typing import List, Dict
+def process_prices(prices: List[Dict[str, Any]]) -> Dict[str, float]:  # Use list, dict instead
+    pass
+
+# ✅ Optional parameters
+def fetch_data(home_id: str, max_retries: int = 3) -> dict | None:
+    pass
+```
+
+**Import Grouping:**
+
+```python
+# ✅ Correct order with blank lines between groups
+from datetime import date, datetime, timedelta  # Stdlib
+
+from homeassistant.core import HomeAssistant  # Third-party
+from homeassistant.util import dt as dt_util
+
+from .const import DOMAIN  # Local
+from .coordinator import TibberPricesDataUpdateCoordinator
+
+# ❌ Mixed order or missing blank lines
+from .const import DOMAIN
+from datetime import datetime
+from homeassistant.core import HomeAssistant  # Ruff will reorder
+```
+
+**List/Dict Comprehensions:**
+
+```python
+# ✅ Use comprehensions for simple transformations
+prices = [interval["total"] for interval in data]
+price_map = {interval["startsAt"]: interval["total"] for interval in data}
+
+# ✅ Break long comprehensions
+prices = [
+    interval["total"]
+    for interval in data
+    if interval["total"] is not None
+]
+
+# ❌ Don't use comprehensions for complex logic
+result = [  # Use regular loop instead
+    calculate_something_complex(x, y, z)
+    for x in items
+    for y in x.nested
+    if some_complex_condition(y)
+    for z in y.more_nested
+]
+```
+
+**Common Ruff Auto-fixes:**
+
+-   Unused imports → removed automatically
+-   Unused variables → prefixed with `_` if intentional: `_unused = value`
+-   Mutable default args → use `None` with `if x is None: x = []`
+-   `== True` / `== False` → simplified to `if x:` / `if not x:`
+-   Long lines → Ruff suggests breaks but may need manual adjustment
 
 ## Attribute Naming Conventions
 
@@ -428,6 +1310,43 @@ Edit `UPDATE_INTERVAL` in `coordinator.py` (default: 15 min) or `QUARTER_HOUR_BO
 
 **Debug GraphQL queries:**
 Check `api.py` → `QueryType` enum and `_build_query()` method. Queries are dynamically constructed based on operation type.
+
+## Debugging Unknown Home Assistant Patterns
+
+When encountering unfamiliar HA patterns (especially UI/config flow/translation related):
+
+**1. Check Official HA Documentation First:**
+
+-   **Config Flow**: https://developers.home-assistant.io/docs/config_entries_config_flow_handler
+-   **Translations**: https://developers.home-assistant.io/docs/internationalization/core
+-   **Selectors**: https://developers.home-assistant.io/docs/blueprint/selectors
+-   **Data Entry Flow**: https://developers.home-assistant.io/docs/data_entry_flow_index
+
+**2. Search HA Core Codebase:**
+
+-   Repository: https://github.com/home-assistant/core
+-   Look for similar patterns in core integrations (use GitHub search)
+-   Check `homeassistant/helpers/` for utility patterns
+-   Example: Search for `translation_key` usage to see real-world examples
+
+**3. Test Incrementally:**
+
+-   Make small changes, test each one
+-   Don't assume complex solutions work without verification
+-   Ask user to test with `./scripts/develop` when needed
+
+**Real Example from This Project:**
+During translation implementation, we tried several incorrect structures:
+
+-   ❌ `selector.select.options.{field_name}` (didn't work)
+-   ❌ `selector.select.{translation_key}` (didn't work)
+-   ❌ `options.step.{step_id}.data.{field}.options` (overly complex)
+
+Only after consulting the official HA docs did we discover the correct pattern:
+
+-   ✅ `selector.{translation_key}.options.{value}` (simple, flat structure)
+
+**Lesson:** When stuck, consult official docs first - don't guess at complex nested structures.
 
 ## Anti-Patterns to Avoid
 
