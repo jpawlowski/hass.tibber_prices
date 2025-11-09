@@ -120,7 +120,9 @@ class TibberPricesFlowHandler(ConfigFlow, domain=DOMAIN):
 
     async def async_step_reauth(self, entry_data: dict[str, Any]) -> ConfigFlowResult:  # noqa: ARG002
         """Handle reauth flow when access token becomes invalid."""
-        self._reauth_entry = self.hass.config_entries.async_get_entry(self.context["entry_id"])
+        entry_id = self.context.get("entry_id")
+        if entry_id:
+            self._reauth_entry = self.hass.config_entries.async_get_entry(entry_id)
         return await self.async_step_reauth_confirm()
 
     async def async_step_reauth_confirm(self, user_input: dict | None = None) -> ConfigFlowResult:
@@ -337,7 +339,7 @@ class TibberPricesFlowHandler(ConfigFlow, domain=DOMAIN):
         client = TibberPricesApiClient(
             access_token=access_token,
             session=async_create_clientsession(self.hass),
-            version=integration.version,
+            version=str(integration.version) if integration.version else "unknown",
         )
         result = await client.async_get_viewer_details()
         return result["viewer"]
