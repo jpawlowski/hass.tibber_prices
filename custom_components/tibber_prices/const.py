@@ -133,48 +133,6 @@ def format_price_unit_minor(currency_code: str | None) -> str:
     return f"{minor_symbol}/{UnitOfPower.KILO_WATT}{UnitOfTime.HOURS}"
 
 
-def calculate_volatility_level(
-    spread: float,
-    threshold_moderate: float | None = None,
-    threshold_high: float | None = None,
-    threshold_very_high: float | None = None,
-) -> str:
-    """
-    Calculate volatility level from price spread.
-
-    Volatility indicates how much prices fluctuate during a period, which helps
-    determine whether active load shifting is worthwhile.
-
-    Args:
-        spread: Absolute price difference between max and min (in minor currency units, e.g., ct or øre)
-        threshold_moderate: Custom threshold for MODERATE level (default: use VOLATILITY_THRESHOLD_MODERATE)
-        threshold_high: Custom threshold for HIGH level (default: use VOLATILITY_THRESHOLD_HIGH)
-        threshold_very_high: Custom threshold for VERY_HIGH level (default: use VOLATILITY_THRESHOLD_VERY_HIGH)
-
-    Returns:
-        Volatility level: LOW, MODERATE, HIGH, or VERY_HIGH
-
-    Examples:
-        - spread < 5: LOW → minimal optimization potential
-        - 5 ≤ spread < 15: MODERATE → some optimization worthwhile
-        - 15 ≤ spread < 30: HIGH → strong optimization recommended
-        - spread ≥ 30: VERY_HIGH → maximum optimization potential
-
-    """
-    # Use provided thresholds or fall back to constants
-    t_moderate = threshold_moderate if threshold_moderate is not None else VOLATILITY_THRESHOLD_MODERATE
-    t_high = threshold_high if threshold_high is not None else VOLATILITY_THRESHOLD_HIGH
-    t_very_high = threshold_very_high if threshold_very_high is not None else VOLATILITY_THRESHOLD_VERY_HIGH
-
-    if spread < t_moderate:
-        return VOLATILITY_LOW
-    if spread < t_high:
-        return VOLATILITY_MODERATE
-    if spread < t_very_high:
-        return VOLATILITY_HIGH
-    return VOLATILITY_VERY_HIGH
-
-
 # Price level constants from Tibber API
 PRICE_LEVEL_VERY_CHEAP = "VERY_CHEAP"
 PRICE_LEVEL_CHEAP = "CHEAP"
@@ -192,11 +150,6 @@ VOLATILITY_LOW = "LOW"
 VOLATILITY_MODERATE = "MODERATE"
 VOLATILITY_HIGH = "HIGH"
 VOLATILITY_VERY_HIGH = "VERY_HIGH"
-
-# Volatility thresholds (in minor currency units like ct or øre)
-VOLATILITY_THRESHOLD_MODERATE = 5  # Below this: LOW, above: MODERATE
-VOLATILITY_THRESHOLD_HIGH = 15  # Below this: MODERATE, above: HIGH
-VOLATILITY_THRESHOLD_VERY_HIGH = 30  # Below this: HIGH, above: VERY_HIGH
 
 # Sensor options (lowercase versions for ENUM device class)
 # NOTE: These constants define the valid enum options, but they are not used directly

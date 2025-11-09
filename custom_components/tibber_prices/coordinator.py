@@ -26,22 +26,40 @@ from .api import (
 )
 from .const import (
     CONF_BEST_PRICE_FLEX,
+    CONF_BEST_PRICE_MAX_LEVEL,
     CONF_BEST_PRICE_MIN_DISTANCE_FROM_AVG,
     CONF_BEST_PRICE_MIN_PERIOD_LENGTH,
+    CONF_BEST_PRICE_MIN_VOLATILITY,
     CONF_PEAK_PRICE_FLEX,
     CONF_PEAK_PRICE_MIN_DISTANCE_FROM_AVG,
+    CONF_PEAK_PRICE_MIN_LEVEL,
     CONF_PEAK_PRICE_MIN_PERIOD_LENGTH,
+    CONF_PEAK_PRICE_MIN_VOLATILITY,
     CONF_PRICE_RATING_THRESHOLD_HIGH,
     CONF_PRICE_RATING_THRESHOLD_LOW,
+    CONF_VOLATILITY_THRESHOLD_HIGH,
+    CONF_VOLATILITY_THRESHOLD_MODERATE,
+    CONF_VOLATILITY_THRESHOLD_VERY_HIGH,
     DEFAULT_BEST_PRICE_FLEX,
+    DEFAULT_BEST_PRICE_MAX_LEVEL,
     DEFAULT_BEST_PRICE_MIN_DISTANCE_FROM_AVG,
     DEFAULT_BEST_PRICE_MIN_PERIOD_LENGTH,
+    DEFAULT_BEST_PRICE_MIN_VOLATILITY,
     DEFAULT_PEAK_PRICE_FLEX,
     DEFAULT_PEAK_PRICE_MIN_DISTANCE_FROM_AVG,
+    DEFAULT_PEAK_PRICE_MIN_LEVEL,
     DEFAULT_PEAK_PRICE_MIN_PERIOD_LENGTH,
+    DEFAULT_PEAK_PRICE_MIN_VOLATILITY,
     DEFAULT_PRICE_RATING_THRESHOLD_HIGH,
     DEFAULT_PRICE_RATING_THRESHOLD_LOW,
+    DEFAULT_VOLATILITY_THRESHOLD_HIGH,
+    DEFAULT_VOLATILITY_THRESHOLD_MODERATE,
+    DEFAULT_VOLATILITY_THRESHOLD_VERY_HIGH,
     DOMAIN,
+    PRICE_LEVEL_MAPPING,
+    VOLATILITY_HIGH,
+    VOLATILITY_MODERATE,
+    VOLATILITY_VERY_HIGH,
 )
 from .period_utils import PeriodConfig, calculate_periods
 from .price_utils import (
@@ -717,26 +735,159 @@ class TibberPricesDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             "min_period_length": int(min_period_length),
         }
 
+    def _should_show_periods(self, price_info: dict[str, Any], *, reverse_sort: bool) -> bool:
+        """
+        Check if periods should be shown based on volatility AND level filters (UND-Verknüpfung).
+
+        Args:
+            price_info: Price information dict with today/yesterday/tomorrow data
+            reverse_sort: If False (best_price), checks max_level filter.
+                         If True (peak_price), checks min_level filter.
+
+        Returns:
+            True if periods should be displayed, False if they should be filtered out.
+            Both conditions must be met for periods to be shown.
+
+        """
+        # Check volatility filter
+        if not self._check_volatility_filter(price_info, reverse_sort=reverse_sort):
+            return False
+
+        # Check level filter (UND-Verknüpfung)
+        return self._check_level_filter(price_info, reverse_sort=reverse_sort)
+
+    def _check_volatility_filter(self, price_info: dict[str, Any], *, reverse_sort: bool) -> bool:
+        """
+        Check if today's volatility meets the minimum requirement.
+
+        Args:
+            price_info: Price information dict with today data
+            reverse_sort: If False (best_price), uses CONF_BEST_PRICE_MIN_VOLATILITY.
+                         If True (peak_price), uses CONF_PEAK_PRICE_MIN_VOLATILITY.
+
+        Returns:
+            True if volatility requirement met, False if periods should be filtered out.
+
+        """
+        # Get appropriate volatility config based on sensor type
+        if reverse_sort:
+            # Peak price sensor
+            min_volatility = self.config_entry.options.get(
+                CONF_PEAK_PRICE_MIN_VOLATILITY,
+                DEFAULT_PEAK_PRICE_MIN_VOLATILITY,
+            )
+        else:
+            # Best price sensor
+            min_volatility = self.config_entry.options.get(
+                CONF_BEST_PRICE_MIN_VOLATILITY,
+                DEFAULT_BEST_PRICE_MIN_VOLATILITY,
+            )
+
+        # "low" means no filtering (show at any volatility ≥0ct)
+        if min_volatility == "low":
+            return True
+
+        # "any" is legacy alias for "low" (no filtering)
+        if min_volatility == "any":
+            return True
+
+        # Get today's price data to calculate volatility
+        today_prices = price_info.get("today", [])
+        prices = [p.get("total") for p in today_prices if "total" in p] if today_prices else []
+
+        if not prices:
+            return True  # If no prices, don't filter
+
+        # Calculate today's spread (volatility metric) in minor units
+        spread_major = (max(prices) - min(prices)) * 100
+
+        # Get volatility thresholds from config
+        threshold_moderate = self.config_entry.options.get(
+            CONF_VOLATILITY_THRESHOLD_MODERATE,
+            DEFAULT_VOLATILITY_THRESHOLD_MODERATE,
+        )
+        threshold_high = self.config_entry.options.get(
+            CONF_VOLATILITY_THRESHOLD_HIGH,
+            DEFAULT_VOLATILITY_THRESHOLD_HIGH,
+        )
+        threshold_very_high = self.config_entry.options.get(
+            CONF_VOLATILITY_THRESHOLD_VERY_HIGH,
+            DEFAULT_VOLATILITY_THRESHOLD_VERY_HIGH,
+        )
+
+        # Map min_volatility to threshold and check if spread meets requirement
+        threshold_map = {
+            VOLATILITY_MODERATE: threshold_moderate,
+            VOLATILITY_HIGH: threshold_high,
+            VOLATILITY_VERY_HIGH: threshold_very_high,
+        }
+
+        required_threshold = threshold_map.get(min_volatility)
+        return spread_major >= required_threshold if required_threshold is not None else True
+
+    def _check_level_filter(self, price_info: dict[str, Any], *, reverse_sort: bool) -> bool:
+        """
+        Check if today has any intervals that meet the level requirement.
+
+        Args:
+            price_info: Price information dict with today data
+            reverse_sort: If False (best_price), checks max_level (upper bound filter).
+                         If True (peak_price), checks min_level (lower bound filter).
+
+        Returns:
+            True if ANY interval meets the level requirement, False otherwise.
+
+        """
+        # Get appropriate config based on sensor type
+        if reverse_sort:
+            # Peak price: minimum level filter (lower bound)
+            level_config = self.config_entry.options.get(
+                CONF_PEAK_PRICE_MIN_LEVEL,
+                DEFAULT_PEAK_PRICE_MIN_LEVEL,
+            )
+        else:
+            # Best price: maximum level filter (upper bound)
+            level_config = self.config_entry.options.get(
+                CONF_BEST_PRICE_MAX_LEVEL,
+                DEFAULT_BEST_PRICE_MAX_LEVEL,
+            )
+
+        # "any" means no level filtering
+        if level_config == "any":
+            return True
+
+        # Get today's intervals
+        today_intervals = price_info.get("today", [])
+
+        if not today_intervals:
+            return True  # If no data, don't filter
+
+        # Check if ANY interval today meets the level requirement
+        # Note: level_config is lowercase from selector, but PRICE_LEVEL_MAPPING uses uppercase
+        level_order = PRICE_LEVEL_MAPPING.get(level_config.upper(), 0)
+
+        if reverse_sort:
+            # Peak price: level >= min_level (show if ANY interval is expensive enough)
+            return any(
+                PRICE_LEVEL_MAPPING.get(interval.get("level", "NORMAL"), 0) >= level_order
+                for interval in today_intervals
+            )
+        # Best price: level <= max_level (show if ANY interval is cheap enough)
+        return any(
+            PRICE_LEVEL_MAPPING.get(interval.get("level", "NORMAL"), 0) <= level_order for interval in today_intervals
+        )
+
     def _calculate_periods_for_price_info(self, price_info: dict[str, Any]) -> dict[str, Any]:
-        """Calculate periods (best price and peak price) for the given price info."""
+        """
+        Calculate periods (best price and peak price) for the given price info.
+
+        Applies volatility and level filtering based on user configuration.
+        If filters don't match, returns empty period lists.
+        """
         yesterday_prices = price_info.get("yesterday", [])
         today_prices = price_info.get("today", [])
         tomorrow_prices = price_info.get("tomorrow", [])
         all_prices = yesterday_prices + today_prices + tomorrow_prices
-
-        if not all_prices:
-            return {
-                "best_price": {
-                    "periods": [],
-                    "intervals": [],
-                    "metadata": {"total_intervals": 0, "total_periods": 0, "config": {}},
-                },
-                "peak_price": {
-                    "periods": [],
-                    "intervals": [],
-                    "metadata": {"total_intervals": 0, "total_periods": 0, "config": {}},
-                },
-            }
 
         # Get rating thresholds from config
         threshold_low = self.config_entry.options.get(
@@ -748,29 +899,69 @@ class TibberPricesDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             DEFAULT_PRICE_RATING_THRESHOLD_HIGH,
         )
 
-        # Calculate best price periods
-        best_config = self._get_period_config(reverse_sort=False)
-        best_period_config = PeriodConfig(
-            reverse_sort=False,
-            flex=best_config["flex"],
-            min_distance_from_avg=best_config["min_distance_from_avg"],
-            min_period_length=best_config["min_period_length"],
-            threshold_low=threshold_low,
-            threshold_high=threshold_high,
+        # Get volatility thresholds from config
+        threshold_volatility_moderate = self.config_entry.options.get(
+            CONF_VOLATILITY_THRESHOLD_MODERATE,
+            DEFAULT_VOLATILITY_THRESHOLD_MODERATE,
         )
-        best_periods = calculate_periods(all_prices, config=best_period_config)
+        threshold_volatility_high = self.config_entry.options.get(
+            CONF_VOLATILITY_THRESHOLD_HIGH,
+            DEFAULT_VOLATILITY_THRESHOLD_HIGH,
+        )
+        threshold_volatility_very_high = self.config_entry.options.get(
+            CONF_VOLATILITY_THRESHOLD_VERY_HIGH,
+            DEFAULT_VOLATILITY_THRESHOLD_VERY_HIGH,
+        )
 
-        # Calculate peak price periods
-        peak_config = self._get_period_config(reverse_sort=True)
-        peak_period_config = PeriodConfig(
-            reverse_sort=True,
-            flex=peak_config["flex"],
-            min_distance_from_avg=peak_config["min_distance_from_avg"],
-            min_period_length=peak_config["min_period_length"],
-            threshold_low=threshold_low,
-            threshold_high=threshold_high,
-        )
-        peak_periods = calculate_periods(all_prices, config=peak_period_config)
+        # Check if best price periods should be shown (apply filters)
+        show_best_price = self._should_show_periods(price_info, reverse_sort=False) if all_prices else False
+
+        # Calculate best price periods (or return empty if filtered)
+        if show_best_price:
+            best_config = self._get_period_config(reverse_sort=False)
+            best_period_config = PeriodConfig(
+                reverse_sort=False,
+                flex=best_config["flex"],
+                min_distance_from_avg=best_config["min_distance_from_avg"],
+                min_period_length=best_config["min_period_length"],
+                threshold_low=threshold_low,
+                threshold_high=threshold_high,
+                threshold_volatility_moderate=threshold_volatility_moderate,
+                threshold_volatility_high=threshold_volatility_high,
+                threshold_volatility_very_high=threshold_volatility_very_high,
+            )
+            best_periods = calculate_periods(all_prices, config=best_period_config)
+        else:
+            best_periods = {
+                "periods": [],
+                "intervals": [],
+                "metadata": {"total_intervals": 0, "total_periods": 0, "config": {}},
+            }
+
+        # Check if peak price periods should be shown (apply filters)
+        show_peak_price = self._should_show_periods(price_info, reverse_sort=True) if all_prices else False
+
+        # Calculate peak price periods (or return empty if filtered)
+        if show_peak_price:
+            peak_config = self._get_period_config(reverse_sort=True)
+            peak_period_config = PeriodConfig(
+                reverse_sort=True,
+                flex=peak_config["flex"],
+                min_distance_from_avg=peak_config["min_distance_from_avg"],
+                min_period_length=peak_config["min_period_length"],
+                threshold_low=threshold_low,
+                threshold_high=threshold_high,
+                threshold_volatility_moderate=threshold_volatility_moderate,
+                threshold_volatility_high=threshold_volatility_high,
+                threshold_volatility_very_high=threshold_volatility_very_high,
+            )
+            peak_periods = calculate_periods(all_prices, config=peak_period_config)
+        else:
+            peak_periods = {
+                "periods": [],
+                "intervals": [],
+                "metadata": {"total_intervals": 0, "total_periods": 0, "config": {}},
+            }
 
         return {
             "best_price": best_periods,

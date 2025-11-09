@@ -35,9 +35,9 @@ from .const import (
     PRICE_RATING_HIGH,
     PRICE_RATING_LOW,
     PRICE_RATING_NORMAL,
-    calculate_volatility_level,
     get_price_level_translation,
 )
+from .price_utils import calculate_volatility_level
 
 PRICE_SERVICE_NAME = "get_price"
 APEXCHARTS_DATA_SERVICE_NAME = "get_apexcharts_data"

@@ -40,7 +40,6 @@ from .const import (
     PRICE_LEVEL_MAPPING,
     PRICE_RATING_MAPPING,
     async_get_entity_description,
-    calculate_volatility_level,
     format_price_unit_minor,
     get_entity_description,
     get_price_level_translation,
@@ -52,6 +51,7 @@ from .price_utils import (
     aggregate_price_levels,
     aggregate_price_rating,
     calculate_price_trend,
+    calculate_volatility_level,
     find_price_data_for_interval,
 )
 

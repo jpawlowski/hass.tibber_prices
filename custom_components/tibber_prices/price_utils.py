@@ -8,11 +8,64 @@ from typing import Any
 
 from homeassistant.util import dt as dt_util
 
-from .const import PRICE_LEVEL_MAPPING, PRICE_LEVEL_NORMAL, PRICE_RATING_NORMAL
+from .const import (
+    DEFAULT_VOLATILITY_THRESHOLD_HIGH,
+    DEFAULT_VOLATILITY_THRESHOLD_MODERATE,
+    DEFAULT_VOLATILITY_THRESHOLD_VERY_HIGH,
+    PRICE_LEVEL_MAPPING,
+    PRICE_LEVEL_NORMAL,
+    PRICE_RATING_NORMAL,
+    VOLATILITY_HIGH,
+    VOLATILITY_LOW,
+    VOLATILITY_MODERATE,
+    VOLATILITY_VERY_HIGH,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
 MINUTES_PER_INTERVAL = 15
+
+
+def calculate_volatility_level(
+    spread: float,
+    threshold_moderate: float | None = None,
+    threshold_high: float | None = None,
+    threshold_very_high: float | None = None,
+) -> str:
+    """
+    Calculate volatility level from price spread.
+
+    Volatility indicates how much prices fluctuate during a period, which helps
+    determine whether active load shifting is worthwhile.
+
+    Args:
+        spread: Absolute price difference between max and min (in minor currency units, e.g., ct or øre)
+        threshold_moderate: Custom threshold for MODERATE level (default: use DEFAULT_VOLATILITY_THRESHOLD_MODERATE)
+        threshold_high: Custom threshold for HIGH level (default: use DEFAULT_VOLATILITY_THRESHOLD_HIGH)
+        threshold_very_high: Custom threshold for VERY_HIGH level (default: use DEFAULT_VOLATILITY_THRESHOLD_VERY_HIGH)
+
+    Returns:
+        Volatility level: "LOW", "MODERATE", "HIGH", or "VERY_HIGH" (uppercase)
+
+    Examples:
+        - spread < 5: LOW → minimal optimization potential
+        - 5 ≤ spread < 15: MODERATE → some optimization worthwhile
+        - 15 ≤ spread < 30: HIGH → strong optimization recommended
+        - spread ≥ 30: VERY_HIGH → maximum optimization potential
+
+    """
+    # Use provided thresholds or fall back to constants
+    t_moderate = threshold_moderate if threshold_moderate is not None else DEFAULT_VOLATILITY_THRESHOLD_MODERATE
+    t_high = threshold_high if threshold_high is not None else DEFAULT_VOLATILITY_THRESHOLD_HIGH
+    t_very_high = threshold_very_high if threshold_very_high is not None else DEFAULT_VOLATILITY_THRESHOLD_VERY_HIGH
+
+    if spread < t_moderate:
+        return VOLATILITY_LOW
+    if spread < t_high:
+        return VOLATILITY_MODERATE
+    if spread < t_very_high:
+        return VOLATILITY_HIGH
+    return VOLATILITY_VERY_HIGH
 
 
 def calculate_trailing_average_for_interval(

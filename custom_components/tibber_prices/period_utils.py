@@ -3,13 +3,23 @@
 from __future__ import annotations
 
 import logging
-from datetime import date, timedelta
+from datetime import date, datetime, timedelta
 from typing import Any, NamedTuple
 
 from homeassistant.util import dt as dt_util
 
-from .const import DEFAULT_PRICE_RATING_THRESHOLD_HIGH, DEFAULT_PRICE_RATING_THRESHOLD_LOW
-from .price_utils import aggregate_period_levels, aggregate_period_ratings
+from .const import (
+    DEFAULT_PRICE_RATING_THRESHOLD_HIGH,
+    DEFAULT_PRICE_RATING_THRESHOLD_LOW,
+    DEFAULT_VOLATILITY_THRESHOLD_HIGH,
+    DEFAULT_VOLATILITY_THRESHOLD_MODERATE,
+    DEFAULT_VOLATILITY_THRESHOLD_VERY_HIGH,
+)
+from .price_utils import (
+    aggregate_period_levels,
+    aggregate_period_ratings,
+    calculate_volatility_level,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -25,6 +35,45 @@ class PeriodConfig(NamedTuple):
     min_period_length: int
     threshold_low: float = DEFAULT_PRICE_RATING_THRESHOLD_LOW
     threshold_high: float = DEFAULT_PRICE_RATING_THRESHOLD_HIGH
+    threshold_volatility_moderate: float = DEFAULT_VOLATILITY_THRESHOLD_MODERATE
+    threshold_volatility_high: float = DEFAULT_VOLATILITY_THRESHOLD_HIGH
+    threshold_volatility_very_high: float = DEFAULT_VOLATILITY_THRESHOLD_VERY_HIGH
+
+
+class PeriodData(NamedTuple):
+    """Data for building a period summary."""
+
+    start_time: datetime
+    end_time: datetime
+    period_length: int
+    period_idx: int
+    total_periods: int
+
+
+class PeriodStatistics(NamedTuple):
+    """Calculated statistics for a period."""
+
+    aggregated_level: str | None
+    aggregated_rating: str | None
+    rating_difference_pct: float | None
+    price_avg: float
+    price_min: float
+    price_max: float
+    price_spread: float
+    volatility: str
+    period_price_diff: float | None
+    period_price_diff_pct: float | None
+
+
+class ThresholdConfig(NamedTuple):
+    """Threshold configuration for period calculations."""
+
+    threshold_low: float | None
+    threshold_high: float | None
+    threshold_volatility_moderate: float
+    threshold_volatility_high: float
+    threshold_volatility_very_high: float
+    reverse_sort: bool
 
 
 def calculate_periods(
@@ -117,11 +166,19 @@ def calculate_periods(
     # Step 8: Extract lightweight period summaries (no full price data)
     # Note: Filtering for current/future is done here based on end date,
     # not start date. This preserves periods that started yesterday but end today.
+    thresholds = ThresholdConfig(
+        threshold_low=threshold_low,
+        threshold_high=threshold_high,
+        threshold_volatility_moderate=config.threshold_volatility_moderate,
+        threshold_volatility_high=config.threshold_volatility_high,
+        threshold_volatility_very_high=config.threshold_volatility_very_high,
+        reverse_sort=reverse_sort,
+    )
     period_summaries = _extract_period_summaries(
         raw_periods,
         all_prices_sorted,
-        threshold_low=threshold_low,
-        threshold_high=threshold_high,
+        price_context,
+        thresholds,
     )
 
     return {
@@ -350,30 +407,183 @@ def _filter_periods_by_end_date(periods: list[list[dict]]) -> list[list[dict]]:
     return filtered
 
 
+def _calculate_period_price_diff(
+    price_avg: float,
+    start_time: datetime,
+    price_context: dict[str, Any],
+) -> tuple[float | None, float | None]:
+    """
+    Calculate period price difference from daily reference (min or max).
+
+    Uses reference price from start day of the period for consistency.
+
+    Returns:
+        Tuple of (period_price_diff, period_price_diff_pct) or (None, None) if no reference available.
+
+    """
+    if not price_context or not start_time:
+        return None, None
+
+    ref_prices = price_context.get("ref_prices", {})
+    date_key = start_time.date()
+    ref_price = ref_prices.get(date_key)
+
+    if ref_price is None:
+        return None, None
+
+    # Convert reference price to minor units (ct/øre)
+    ref_price_minor = round(ref_price * 100, 2)
+    period_price_diff = round(price_avg - ref_price_minor, 2)
+    period_price_diff_pct = None
+    if ref_price_minor != 0:
+        period_price_diff_pct = round((period_price_diff / ref_price_minor) * 100, 2)
+
+    return period_price_diff, period_price_diff_pct
+
+
+def _calculate_aggregated_rating_difference(period_price_data: list[dict]) -> float | None:
+    """
+    Calculate aggregated rating difference percentage for the period.
+
+    Takes the average of all interval differences (from their respective thresholds).
+
+    Args:
+        period_price_data: List of price data dictionaries with "difference" field
+
+    Returns:
+        Average difference percentage, or None if no valid data
+
+    """
+    differences = []
+    for price_data in period_price_data:
+        diff = price_data.get("difference")
+        if diff is not None:
+            differences.append(float(diff))
+
+    if not differences:
+        return None
+
+    return round(sum(differences) / len(differences), 2)
+
+
+def _calculate_period_price_statistics(period_price_data: list[dict]) -> dict[str, float]:
+    """
+    Calculate price statistics for a period.
+
+    Args:
+        period_price_data: List of price data dictionaries with "total" field
+
+    Returns:
+        Dictionary with price_avg, price_min, price_max, price_spread (all in minor units: ct/øre)
+
+    """
+    prices_minor = [round(float(p["total"]) * 100, 2) for p in period_price_data]
+
+    if not prices_minor:
+        return {
+            "price_avg": 0.0,
+            "price_min": 0.0,
+            "price_max": 0.0,
+            "price_spread": 0.0,
+        }
+
+    price_avg = round(sum(prices_minor) / len(prices_minor), 2)
+    price_min = round(min(prices_minor), 2)
+    price_max = round(max(prices_minor), 2)
+    price_spread = round(price_max - price_min, 2)
+
+    return {
+        "price_avg": price_avg,
+        "price_min": price_min,
+        "price_max": price_max,
+        "price_spread": price_spread,
+    }
+
+
+def _build_period_summary_dict(
+    period_data: PeriodData,
+    stats: PeriodStatistics,
+    *,
+    reverse_sort: bool,
+) -> dict:
+    """
+    Build the complete period summary dictionary.
+
+    Args:
+        period_data: Period timing and position data
+        stats: Calculated period statistics
+        reverse_sort: True for peak price, False for best price (keyword-only)
+
+    Returns:
+        Complete period summary dictionary following attribute ordering
+
+    """
+    # Build complete period summary (following attribute ordering from copilot-instructions.md)
+    summary = {
+        # 1. Time information (when does this apply?)
+        "start": period_data.start_time,
+        "end": period_data.end_time,
+        "duration_minutes": period_data.period_length * MINUTES_PER_INTERVAL,
+        # 2. Core decision attributes (what should I do?)
+        "level": stats.aggregated_level,
+        "rating_level": stats.aggregated_rating,
+        "rating_difference_%": stats.rating_difference_pct,
+        # 3. Price statistics (how much does it cost?)
+        "price_avg": stats.price_avg,
+        "price_min": stats.price_min,
+        "price_max": stats.price_max,
+        "price_spread": stats.price_spread,
+        "volatility": stats.volatility,
+        # 4. Price differences will be added below if available
+        # 5. Detail information (additional context)
+        "period_interval_count": period_data.period_length,
+        "period_position": period_data.period_idx,
+        # 6. Meta information (technical details)
+        "periods_total": period_data.total_periods,
+        "periods_remaining": period_data.total_periods - period_data.period_idx,
+    }
+
+    # Add period price difference attributes based on sensor type (step 4)
+    if stats.period_price_diff is not None:
+        if reverse_sort:
+            # Peak price sensor: compare to daily maximum
+            summary["period_price_diff_from_daily_max"] = stats.period_price_diff
+            if stats.period_price_diff_pct is not None:
+                summary["period_price_diff_from_daily_max_%"] = stats.period_price_diff_pct
+        else:
+            # Best price sensor: compare to daily minimum
+            summary["period_price_diff_from_daily_min"] = stats.period_price_diff
+            if stats.period_price_diff_pct is not None:
+                summary["period_price_diff_from_daily_min_%"] = stats.period_price_diff_pct
+
+    return summary
+
+
 def _extract_period_summaries(
     periods: list[list[dict]],
     all_prices: list[dict],
-    *,
-    threshold_low: float | None,
-    threshold_high: float | None,
+    price_context: dict[str, Any],
+    thresholds: ThresholdConfig,
 ) -> list[dict]:
     """
-    Extract lightweight period summaries without storing full price data.
+    Extract complete period summaries with all aggregated attributes.
 
-    Returns minimal information needed to identify periods:
-    - start/end timestamps
-    - interval count
-    - duration
-    - aggregated level (from API's "level" field)
-    - aggregated rating_level (from calculated "rating_level" field)
+    Returns sensor-ready period summaries with:
+    - Timestamps and positioning (start, end, hour, minute, time)
+    - Aggregated price statistics (price_avg, price_min, price_max, price_spread)
+    - Volatility categorization (low/moderate/high/very_high based on absolute spread)
+    - Rating difference percentage (aggregated from intervals)
+    - Period price differences (period_price_diff_from_daily_min/max)
+    - Aggregated level and rating_level
+    - Interval count (number of 15-min intervals in period)
 
-    Sensors can use these summaries to query the actual price data from priceInfo on demand.
+    All data is pre-calculated and ready for display - no further processing needed.
 
     Args:
         periods: List of periods, where each period is a list of interval dictionaries
         all_prices: All price data from the API (enriched with level, difference, rating_level)
-        threshold_low: Low threshold for rating level calculation
-        threshold_high: High threshold for rating level calculation
+        price_context: Dictionary with ref_prices and avg_prices per day
+        thresholds: Threshold configuration for calculations
 
     """
     # Build lookup dictionary for full price data by timestamp
@@ -385,8 +595,9 @@ def _extract_period_summaries(
             price_lookup[starts_at.isoformat()] = price_data
 
     summaries = []
+    total_periods = len(periods)
 
-    for period in periods:
+    for period_idx, period in enumerate(periods, 1):
         if not period:
             continue
 
@@ -399,14 +610,13 @@ def _extract_period_summaries(
         if not start_time or not end_time:
             continue
 
-        # Collect interval timestamps
-        interval_starts = [
-            start.isoformat() for interval in period if (start := interval.get("interval_start")) is not None
-        ]
-
         # Look up full price data for each interval in the period
         period_price_data: list[dict] = []
-        for start_iso in interval_starts:
+        for interval in period:
+            start = interval.get("interval_start")
+            if not start:
+                continue
+            start_iso = start.isoformat()
             price_data = price_lookup.get(start_iso)
             if price_data:
                 period_price_data.append(price_data)
@@ -420,25 +630,54 @@ def _extract_period_summaries(
             aggregated_level = aggregate_period_levels(period_price_data)
 
             # Aggregate rating_level (from calculated "rating_level" and "difference" fields)
-            if threshold_low is not None and threshold_high is not None:
+            if thresholds.threshold_low is not None and thresholds.threshold_high is not None:
                 aggregated_rating, _ = aggregate_period_ratings(
                     period_price_data,
-                    threshold_low,
-                    threshold_high,
+                    thresholds.threshold_low,
+                    thresholds.threshold_high,
                 )
 
-        summary = {
-            "start": start_time,
-            "end": end_time,
-            "interval_count": len(period),
-            "duration_minutes": len(period) * MINUTES_PER_INTERVAL,
-            # Store interval timestamps for reference (minimal data)
-            "interval_starts": interval_starts,
-            # Aggregated attributes
-            "level": aggregated_level,
-            "rating_level": aggregated_rating,
-        }
+        # Calculate price statistics (in minor units: ct/øre)
+        price_stats = _calculate_period_price_statistics(period_price_data)
 
+        # Calculate period price difference from daily reference
+        period_price_diff, period_price_diff_pct = _calculate_period_price_diff(
+            price_stats["price_avg"], start_time, price_context
+        )
+
+        # Calculate volatility (categorical) and aggregated rating difference (numeric)
+        volatility = calculate_volatility_level(
+            price_stats["price_spread"],
+            threshold_moderate=thresholds.threshold_volatility_moderate,
+            threshold_high=thresholds.threshold_volatility_high,
+            threshold_very_high=thresholds.threshold_volatility_very_high,
+        ).lower()
+        rating_difference_pct = _calculate_aggregated_rating_difference(period_price_data)
+
+        # Build period data and statistics objects
+        period_data = PeriodData(
+            start_time=start_time,
+            end_time=end_time,
+            period_length=len(period),
+            period_idx=period_idx,
+            total_periods=total_periods,
+        )
+
+        stats = PeriodStatistics(
+            aggregated_level=aggregated_level,
+            aggregated_rating=aggregated_rating,
+            rating_difference_pct=rating_difference_pct,
+            price_avg=price_stats["price_avg"],
+            price_min=price_stats["price_min"],
+            price_max=price_stats["price_max"],
+            price_spread=price_stats["price_spread"],
+            volatility=volatility,
+            period_price_diff=period_price_diff,
+            period_price_diff_pct=period_price_diff_pct,
+        )
+
+        # Build complete period summary
+        summary = _build_period_summary_dict(period_data, stats, reverse_sort=thresholds.reverse_sort)
         summaries.append(summary)
 
     return summaries
