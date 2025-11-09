@@ -229,38 +229,60 @@
             "description": "Tidsstempel for siste tilgjengelige prisdataintervall",
             "long_description": "Viser tidsstempelet for siste tilgjengelige prisdataintervall fra ditt Tibber-abonnement"
         },
-        "price_forecast": {
-            "description": "Prognose for kommende elektrisitetspriser",
-            "long_description": "Viser kommende elektrisitetspriser for fremtidige intervaller i et format som er enkelt å bruke i dashboards",
-            "usage_tips": "Bruk denne entitetens attributter til å vise kommende priser i diagrammer eller tilpassede kort. Få tilgang til enten 'intervals' for alle fremtidige intervaller eller 'hours' for timesammendrag."
-        }
+        "long_description": "Viser tidsstemplet for siste tilgjengelige prisdataintervall fra Tibber-abonnementet ditt"
     },
-    "binary_sensor": {
-        "tomorrow_data_available": {
-            "description": "Om prisdata for morgendagen er tilgjengelig",
-            "long_description": "Indikerer om prisdata for neste dag er mottatt fra Tibber",
-            "usage_tips": "Bruk dette til å sjekke om morgendagens priser er tilgjengelig for planlegging"
-        },
-        "peak_price_period": {
-            "description": "Om nåværende intervall er blant de dyreste på dagen",
-            "long_description": "Slår seg på når nåværende pris er i topp 20% av dagens priser",
-            "usage_tips": "Bruk dette til å unngå å kjøre høyforbruksapparater i dyre intervaller"
-        },
-        "best_price_period": {
-            "description": "Om nåværende intervall er blant de billigste på dagen",
-            "long_description": "Slår seg på når nåværende pris er i bunn 20% av dagens priser",
-            "usage_tips": "Bruk dette til å kjøre høyforbruksapparater i de billigste intervallene"
-        },
-        "connection": {
-            "description": "Om tilkoblingen til Tibber API fungerer",
-            "long_description": "Indikerer om integrasjonen kan koble til Tibber API",
-            "usage_tips": "Bruk dette til å overvåke tilkoblingsstatusen til Tibber API"
-        }
+    "today_volatility": {
+        "description": "Prisvolatilitetsklassifisering for i dag",
+        "long_description": "Viser hvor mye strømprisene varierer gjennom dagen basert på spredningen (forskjellen mellom høyeste og laveste pris). Klassifisering: LAV = spredning < 5 øre, MODERAT = 5-15 øre, HØY = 15-30 øre, SVÆRT HØY = >30 øre.",
+        "usage_tips": "Bruk dette for å avgjøre om prisbasert optimalisering er verdt det. For eksempel, med et balkongbatteri som har 15% effektivitetstap, lønner optimalisering seg bare når volatiliteten er minst MODERAT. Lag automatiseringer som sjekker volatilitet før planlegging av lade-/utladingssykluser."
     },
-    "home_types": {
-        "APARTMENT": "Leilighet",
-        "ROWHOUSE": "Rekkehus",
-        "HOUSE": "Hus",
-        "COTTAGE": "Hytte"
+    "tomorrow_volatility": {
+        "description": "Prisvolatilitetsklassifisering for i morgen",
+        "long_description": "Viser hvor mye strømprisene vil variere gjennom morgendagen basert på spredningen (forskjellen mellom høyeste og laveste pris). Blir utilgjengelig til morgendagens data publiseres (typisk 13:00-14:00 CET).",
+        "usage_tips": "Bruk dette for forhåndsplanlegging av morgendagens energibruk. Hvis morgendagen har HØY eller SVÆRT HØY volatilitet, er det verdt å optimalisere energiforbrukstiming. Hvis LAV, kan du kjøre enheter når som helst uten vesentlige kostnadsforskjeller."
+    },
+    "next_24h_volatility": {
+        "description": "Prisvolatilitetsklassifisering for de rullende neste 24 timene",
+        "long_description": "Viser hvor mye strømprisene varierer i de neste 24 timene fra nå (rullerende vindu). Dette krysser daggrenser og oppdateres hvert 15. minutt, og gir en fremadskuende volatilitetsvurdering uavhengig av kalenderdager.",
+        "usage_tips": "Best sensor for sanntidsoptimaliseringsbeslutninger. I motsetning til i dag/i morgen-sensorer som bytter ved midnatt, gir dette en kontinuerlig 24t volatilitetsvurdering. Bruk for batteriladingsstrategier som spenner over daggrenser."
+    },
+    "today_tomorrow_volatility": {
+        "description": "Kombinert prisvolatilitetsklassifisering for i dag og i morgen",
+        "long_description": "Viser volatilitet over både i dag og i morgen kombinert (når morgendagens data er tilgjengelig). Gir et utvidet syn på prisvariasjon som spenner opptil 48 timer. Faller tilbake til bare i dag når morgendagens data ikke er tilgjengelig ennå.",
+        "usage_tips": "Bruk dette for flerdag planlegging og for å forstå om prismuligheter eksisterer over daggrensen. 'today_volatility' og 'tomorrow_volatility' nedbrytningsattributtene viser individuelle dagbidrag. Nyttig for planlegging av ladesesjoner som kan gå over midnatt."
+    },
+    "price_forecast": {
+        "description": "Prognose for kommende strømpriser",
+        "long_description": "Viser kommende strømpriser for fremtidige intervaller i et format som er enkelt å bruke i dashboards",
+        "usage_tips": "Bruk denne enhetens attributter for å vise kommende priser i diagrammer eller tilpassede kort. Få tilgang til enten 'intervals' for alle fremtidige intervaller eller 'hours' for timevise sammendrag."
     }
+},
+"binary_sensor": {
+    "tomorrow_data_available": {
+        "description": "Om prisdata for morgendagen er tilgjengelig",
+        "long_description": "Indikerer om prisdata for neste dag er mottatt fra Tibber",
+        "usage_tips": "Bruk dette til å sjekke om morgendagens priser er tilgjengelig for planlegging"
+    },
+    "peak_price_period": {
+        "description": "Om nåværende intervall er blant de dyreste på dagen",
+        "long_description": "Slår seg på når nåværende pris er i topp 20% av dagens priser",
+        "usage_tips": "Bruk dette til å unngå å kjøre høyforbruksapparater i dyre intervaller"
+    },
+    "best_price_period": {
+        "description": "Om nåværende intervall er blant de billigste på dagen",
+        "long_description": "Slår seg på når nåværende pris er i bunn 20% av dagens priser",
+        "usage_tips": "Bruk dette til å kjøre høyforbruksapparater i de billigste intervallene"
+    },
+    "connection": {
+        "description": "Om tilkoblingen til Tibber API fungerer",
+        "long_description": "Indikerer om integrasjonen kan koble til Tibber API",
+        "usage_tips": "Bruk dette til å overvåke tilkoblingsstatusen til Tibber API"
+    }
+},
+"home_types": {
+    "APARTMENT": "Leilighet",
+    "ROWHOUSE": "Rekkehus",
+    "HOUSE": "Hus",
+    "COTTAGE": "Hytte"
+}
 }

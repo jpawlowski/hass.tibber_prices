@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Any
+from typing import Any, ClassVar
 
 import voluptuous as vol
 
@@ -39,30 +39,47 @@ from .api import (
     TibberPricesApiClientError,
 )
 from .const import (
+    BEST_PRICE_MAX_LEVEL_OPTIONS,
     CONF_BEST_PRICE_FLEX,
+    CONF_BEST_PRICE_MAX_LEVEL,
     CONF_BEST_PRICE_MIN_DISTANCE_FROM_AVG,
     CONF_BEST_PRICE_MIN_PERIOD_LENGTH,
+    CONF_BEST_PRICE_MIN_VOLATILITY,
     CONF_EXTENDED_DESCRIPTIONS,
     CONF_PEAK_PRICE_FLEX,
     CONF_PEAK_PRICE_MIN_DISTANCE_FROM_AVG,
+    CONF_PEAK_PRICE_MIN_LEVEL,
     CONF_PEAK_PRICE_MIN_PERIOD_LENGTH,
+    CONF_PEAK_PRICE_MIN_VOLATILITY,
     CONF_PRICE_RATING_THRESHOLD_HIGH,
     CONF_PRICE_RATING_THRESHOLD_LOW,
     CONF_PRICE_TREND_THRESHOLD_FALLING,
     CONF_PRICE_TREND_THRESHOLD_RISING,
+    CONF_VOLATILITY_THRESHOLD_HIGH,
+    CONF_VOLATILITY_THRESHOLD_MODERATE,
+    CONF_VOLATILITY_THRESHOLD_VERY_HIGH,
     DEFAULT_BEST_PRICE_FLEX,
+    DEFAULT_BEST_PRICE_MAX_LEVEL,
     DEFAULT_BEST_PRICE_MIN_DISTANCE_FROM_AVG,
     DEFAULT_BEST_PRICE_MIN_PERIOD_LENGTH,
+    DEFAULT_BEST_PRICE_MIN_VOLATILITY,
     DEFAULT_EXTENDED_DESCRIPTIONS,
     DEFAULT_PEAK_PRICE_FLEX,
     DEFAULT_PEAK_PRICE_MIN_DISTANCE_FROM_AVG,
+    DEFAULT_PEAK_PRICE_MIN_LEVEL,
     DEFAULT_PEAK_PRICE_MIN_PERIOD_LENGTH,
+    DEFAULT_PEAK_PRICE_MIN_VOLATILITY,
     DEFAULT_PRICE_RATING_THRESHOLD_HIGH,
     DEFAULT_PRICE_RATING_THRESHOLD_LOW,
     DEFAULT_PRICE_TREND_THRESHOLD_FALLING,
     DEFAULT_PRICE_TREND_THRESHOLD_RISING,
+    DEFAULT_VOLATILITY_THRESHOLD_HIGH,
+    DEFAULT_VOLATILITY_THRESHOLD_MODERATE,
+    DEFAULT_VOLATILITY_THRESHOLD_VERY_HIGH,
     DOMAIN,
     LOGGER,
+    MIN_VOLATILITY_FOR_PERIODS_OPTIONS,
+    PEAK_PRICE_MIN_LEVEL_OPTIONS,
 )
 
 
@@ -450,9 +467,39 @@ class TibberPricesSubentryFlowHandler(ConfigSubentryFlow):
 class TibberPricesOptionsFlowHandler(OptionsFlow):
     """Handle options for tibber_prices entries."""
 
+    # Step progress tracking
+    _TOTAL_STEPS: ClassVar[int] = 6
+    _STEP_INFO: ClassVar[dict[str, int]] = {
+        "init": 1,
+        "price_rating": 2,
+        "volatility": 3,
+        "best_price": 4,
+        "peak_price": 5,
+        "price_trend": 6,
+    }
+
     def __init__(self) -> None:
         """Initialize options flow."""
         self._options: dict[str, Any] = {}
+
+    def _get_step_description_placeholders(self, step_id: str) -> dict[str, str]:
+        """Get description placeholders with step progress."""
+        if step_id not in self._STEP_INFO:
+            return {}
+
+        step_num = self._STEP_INFO[step_id]
+
+        # Get translations loaded by Home Assistant
+        standard_translations_key = f"{DOMAIN}_standard_translations_{self.hass.config.language}"
+        translations = self.hass.data.get(standard_translations_key, {})
+
+        # Get step progress text from translations with placeholders
+        step_progress_template = translations.get("common", {}).get("step_progress", "Step {step_num} of {total_steps}")
+        step_progress = step_progress_template.format(step_num=step_num, total_steps=self._TOTAL_STEPS)
+
+        return {
+            "step_progress": step_progress,
+        }
 
     async def async_step_init(self, user_input: dict[str, Any] | None = None) -> ConfigFlowResult:
         """Manage the options - General Settings."""
@@ -477,6 +524,7 @@ class TibberPricesOptionsFlowHandler(OptionsFlow):
                 }
             ),
             description_placeholders={
+                **self._get_step_description_placeholders("init"),
                 "user_login": self.config_entry.data.get("user_login", "N/A"),
             },
         )
@@ -485,7 +533,7 @@ class TibberPricesOptionsFlowHandler(OptionsFlow):
         """Configure price rating thresholds."""
         if user_input is not None:
             self._options.update(user_input)
-            return await self.async_step_best_price()
+            return await self.async_step_volatility()
 
         return self.async_show_form(
             step_id="price_rating",
@@ -503,6 +551,7 @@ class TibberPricesOptionsFlowHandler(OptionsFlow):
                         NumberSelectorConfig(
                             min=-100,
                             max=0,
+                            unit_of_measurement="%",
                             step=1,
                             mode=NumberSelectorMode.SLIDER,
                         ),
@@ -519,12 +568,14 @@ class TibberPricesOptionsFlowHandler(OptionsFlow):
                         NumberSelectorConfig(
                             min=0,
                             max=100,
+                            unit_of_measurement="%",
                             step=1,
                             mode=NumberSelectorMode.SLIDER,
                         ),
                     ),
                 }
             ),
+            description_placeholders=self._get_step_description_placeholders("price_rating"),
         )
 
     async def async_step_best_price(self, user_input: dict[str, Any] | None = None) -> ConfigFlowResult:
@@ -567,6 +618,7 @@ class TibberPricesOptionsFlowHandler(OptionsFlow):
                             min=0,
                             max=100,
                             step=1,
+                            unit_of_measurement="%",
                             mode=NumberSelectorMode.SLIDER,
                         ),
                     ),
@@ -583,11 +635,39 @@ class TibberPricesOptionsFlowHandler(OptionsFlow):
                             min=0,
                             max=50,
                             step=1,
+                            unit_of_measurement="%",
                             mode=NumberSelectorMode.SLIDER,
+                        ),
+                    ),
+                    vol.Optional(
+                        CONF_BEST_PRICE_MIN_VOLATILITY,
+                        default=self.config_entry.options.get(
+                            CONF_BEST_PRICE_MIN_VOLATILITY,
+                            DEFAULT_BEST_PRICE_MIN_VOLATILITY,
+                        ),
+                    ): SelectSelector(
+                        SelectSelectorConfig(
+                            options=MIN_VOLATILITY_FOR_PERIODS_OPTIONS,
+                            mode=SelectSelectorMode.DROPDOWN,
+                            translation_key="volatility",
+                        ),
+                    ),
+                    vol.Optional(
+                        CONF_BEST_PRICE_MAX_LEVEL,
+                        default=self.config_entry.options.get(
+                            CONF_BEST_PRICE_MAX_LEVEL,
+                            DEFAULT_BEST_PRICE_MAX_LEVEL,
+                        ),
+                    ): SelectSelector(
+                        SelectSelectorConfig(
+                            options=BEST_PRICE_MAX_LEVEL_OPTIONS,
+                            mode=SelectSelectorMode.DROPDOWN,
+                            translation_key="price_level",
                         ),
                     ),
                 }
             ),
+            description_placeholders=self._get_step_description_placeholders("best_price"),
         )
 
     async def async_step_peak_price(self, user_input: dict[str, Any] | None = None) -> ConfigFlowResult:
@@ -630,6 +710,7 @@ class TibberPricesOptionsFlowHandler(OptionsFlow):
                             min=-100,
                             max=0,
                             step=1,
+                            unit_of_measurement="%",
                             mode=NumberSelectorMode.SLIDER,
                         ),
                     ),
@@ -646,11 +727,39 @@ class TibberPricesOptionsFlowHandler(OptionsFlow):
                             min=0,
                             max=50,
                             step=1,
+                            unit_of_measurement="%",
                             mode=NumberSelectorMode.SLIDER,
+                        ),
+                    ),
+                    vol.Optional(
+                        CONF_PEAK_PRICE_MIN_VOLATILITY,
+                        default=self.config_entry.options.get(
+                            CONF_PEAK_PRICE_MIN_VOLATILITY,
+                            DEFAULT_PEAK_PRICE_MIN_VOLATILITY,
+                        ),
+                    ): SelectSelector(
+                        SelectSelectorConfig(
+                            options=MIN_VOLATILITY_FOR_PERIODS_OPTIONS,
+                            mode=SelectSelectorMode.DROPDOWN,
+                            translation_key="volatility",
+                        ),
+                    ),
+                    vol.Optional(
+                        CONF_PEAK_PRICE_MIN_LEVEL,
+                        default=self.config_entry.options.get(
+                            CONF_PEAK_PRICE_MIN_LEVEL,
+                            DEFAULT_PEAK_PRICE_MIN_LEVEL,
+                        ),
+                    ): SelectSelector(
+                        SelectSelectorConfig(
+                            options=PEAK_PRICE_MIN_LEVEL_OPTIONS,
+                            mode=SelectSelectorMode.DROPDOWN,
+                            translation_key="price_level",
                         ),
                     ),
                 }
             ),
+            description_placeholders=self._get_step_description_placeholders("peak_price"),
         )
 
     async def async_step_price_trend(self, user_input: dict[str, Any] | None = None) -> ConfigFlowResult:
@@ -676,6 +785,7 @@ class TibberPricesOptionsFlowHandler(OptionsFlow):
                             min=1,
                             max=50,
                             step=1,
+                            unit_of_measurement="%",
                             mode=NumberSelectorMode.SLIDER,
                         ),
                     ),
@@ -692,9 +802,77 @@ class TibberPricesOptionsFlowHandler(OptionsFlow):
                             min=-50,
                             max=-1,
                             step=1,
+                            unit_of_measurement="%",
                             mode=NumberSelectorMode.SLIDER,
                         ),
                     ),
                 }
             ),
+            description_placeholders=self._get_step_description_placeholders("price_trend"),
+        )
+
+    async def async_step_volatility(self, user_input: dict[str, Any] | None = None) -> ConfigFlowResult:
+        """Configure volatility thresholds and period filtering."""
+        if user_input is not None:
+            self._options.update(user_input)
+            return await self.async_step_best_price()
+
+        return self.async_show_form(
+            step_id="volatility",
+            data_schema=vol.Schema(
+                {
+                    vol.Optional(
+                        CONF_VOLATILITY_THRESHOLD_MODERATE,
+                        default=float(
+                            self.config_entry.options.get(
+                                CONF_VOLATILITY_THRESHOLD_MODERATE,
+                                DEFAULT_VOLATILITY_THRESHOLD_MODERATE,
+                            )
+                        ),
+                    ): NumberSelector(
+                        NumberSelectorConfig(
+                            min=0.0,
+                            max=100.0,
+                            step=0.1,
+                            unit_of_measurement="ct",
+                            mode=NumberSelectorMode.BOX,
+                        ),
+                    ),
+                    vol.Optional(
+                        CONF_VOLATILITY_THRESHOLD_HIGH,
+                        default=float(
+                            self.config_entry.options.get(
+                                CONF_VOLATILITY_THRESHOLD_HIGH,
+                                DEFAULT_VOLATILITY_THRESHOLD_HIGH,
+                            )
+                        ),
+                    ): NumberSelector(
+                        NumberSelectorConfig(
+                            min=0.0,
+                            max=100.0,
+                            step=0.1,
+                            unit_of_measurement="ct",
+                            mode=NumberSelectorMode.BOX,
+                        ),
+                    ),
+                    vol.Optional(
+                        CONF_VOLATILITY_THRESHOLD_VERY_HIGH,
+                        default=float(
+                            self.config_entry.options.get(
+                                CONF_VOLATILITY_THRESHOLD_VERY_HIGH,
+                                DEFAULT_VOLATILITY_THRESHOLD_VERY_HIGH,
+                            )
+                        ),
+                    ): NumberSelector(
+                        NumberSelectorConfig(
+                            min=0.0,
+                            max=100.0,
+                            step=0.1,
+                            unit_of_measurement="ct",
+                            mode=NumberSelectorMode.BOX,
+                        ),
+                    ),
+                }
+            ),
+            description_placeholders=self._get_step_description_placeholders("volatility"),
         )

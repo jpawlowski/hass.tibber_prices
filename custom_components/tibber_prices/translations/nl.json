@@ -48,6 +48,9 @@
             "reauth_successful": "Herauthenticatie succesvol. De integratie is bijgewerkt met het nieuwe toegangstoken."
         }
     },
+    "common": {
+        "step_progress": "Stap {step_num} van {total_steps}"
+    },
     "config_subentries": {
         "home": {
             "initiate_flow": {
@@ -79,14 +82,14 @@
         "step": {
             "init": {
                 "title": "Algemene instellingen",
-                "description": "Configureer algemene instellingen voor Tibber Prijsinformatie & Beoordelingen.\n\nGebruiker: {user_login}",
+                "description": "{step_progress}\n\nConfigureer algemene instellingen voor Tibber Prijsinformatie & Beoordelingen.\n\nGebruiker: {user_login}",
                 "data": {
                     "extended_descriptions": "Uitgebreide beschrijvingen tonen in entiteitsattributen"
                 }
             },
             "price_rating": {
                 "title": "Prijsbeoordelingsdrempels",
-                "description": "Configureer drempels voor prijsbeoordelingsniveaus (LAAG/NORMAAL/HOOG) op basis van vergelijking met het voortschrijdend 24-uurs gemiddelde.",
+                "description": "{step_progress}\n\nConfigureer drempels voor prijsbeoordelingsniveaus (LAAG/NORMAAL/HOOG) op basis van vergelijking met het voortschrijdend 24-uurs gemiddelde.",
                 "data": {
                     "price_rating_threshold_low": "Lage beoordelingsdrempel (% onder voortschrijdend gemiddelde)",
                     "price_rating_threshold_high": "Hoge beoordelingsdrempel (% boven voortschrijdend gemiddelde)"
@@ -94,28 +97,49 @@
             },
             "best_price": {
                 "title": "Instellingen beste prijsperiode",
-                "description": "Configureer instellingen voor de Beste Prijsperiode binaire sensor. Deze sensor is actief tijdens perioden met de laagste elektriciteitsprijzen.",
+                "description": "{step_progress}\n\nConfigureer instellingen voor de Beste Prijsperiode binaire sensor. Deze sensor is actief tijdens perioden met de laagste elektriciteitsprijzen.",
                 "data": {
                     "best_price_min_period_length": "Minimale periode lengte",
                     "best_price_flex": "Flexibiliteit: Maximaal % boven minimumprijs",
-                    "best_price_min_distance_from_avg": "Minimale afstand: Vereist % onder dagelijks gemiddelde"
+                    "best_price_min_distance_from_avg": "Minimale afstand: Vereist % onder dagelijks gemiddelde",
+                    "best_price_min_volatility": "Minimum volatiliteitsfilter",
+                    "best_price_max_level": "Prijsniveaufilter (Optioneel)"
+                },
+                "data_description": {
+                    "best_price_min_volatility": "Toon alleen beste prijsperiodes wanneer de volatiliteit van vandaag dit niveau bereikt of overschrijdt. Standaard: 'Laag' (toon ongeacht volatiliteit) - batterijoptimalisatie is nuttig zelfs bij kleine prijsvariaties. Selecteer 'Matig'/'Hoog' om periodes alleen op meer volatiele dagen te tonen.",
+                    "best_price_max_level": "Toon alleen beste prijsperiodes als minstens één interval vandaag een prijsniveau ≤ geselecteerde waarde heeft. Werkt met EN-logica: volatiliteitsfilter (indien ingesteld) EN niveaufilter moeten beide voldaan zijn. Nuttig om batterij laden op dure dagen te vermijden. Selecteer 'Alle' om dit filter uit te schakelen."
                 }
             },
             "peak_price": {
                 "title": "Instellingen piekprijsperiode",
-                "description": "Configureer instellingen voor de Piekprijsperiode binaire sensor. Deze sensor is actief tijdens perioden met de hoogste elektriciteitsprijzen.",
+                "description": "{step_progress}\n\nConfigureer instellingen voor de Piekprijsperiode binaire sensor. Deze sensor is actief tijdens perioden met de hoogste elektriciteitsprijzen.",
                 "data": {
                     "peak_price_min_period_length": "Minimale periode lengte",
                     "peak_price_flex": "Flexibiliteit: Maximaal % onder maximumprijs (negatieve waarde)",
-                    "peak_price_min_distance_from_avg": "Minimale afstand: Vereist % boven dagelijks gemiddelde"
+                    "peak_price_min_distance_from_avg": "Minimale afstand: Vereist % boven dagelijks gemiddelde",
+                    "peak_price_min_volatility": "Minimum volatiliteitsfilter",
+                    "peak_price_min_level": "Prijsniveaufilter (Optioneel)"
+                },
+                "data_description": {
+                    "peak_price_min_volatility": "Toon alleen piekprijsperiodes wanneer de volatiliteit van vandaag dit niveau bereikt of overschrijdt. Standaard: 'Laag' (toon ongeacht volatiliteit) - piekwaarschuwingen zijn relevant zelfs bij lage spreiding omdat vermijding van dure uren altijd belangrijk is. Selecteer 'Matig'/'Hoog' om alleen pieken op volatiele dagen te tonen.",
+                    "peak_price_min_level": "Toon alleen piekprijsperiodes als minstens één interval vandaag een prijsniveau ≥ geselecteerde waarde heeft. Werkt met EN-logica: volatiliteitsfilter (indien ingesteld) EN niveaufilter moeten beide voldaan zijn. Meestal ingesteld op 'Alle' omdat piekperiodes relatief zijn aan de dag. Selecteer 'Alle' om dit filter uit te schakelen."
                 }
             },
             "price_trend": {
-                "title": "Prijstrend drempelwaarden",
-                "description": "Configureer drempelwaarden voor prijstrendsensoren. Deze sensoren vergelijken de huidige prijs met het gemiddelde van de volgende N uur om te bepalen of de prijzen stijgen, dalen of stabiel zijn.",
+                "title": "Prijstrenddrempels",
+                "description": "{step_progress}\n\nConfigureer drempels voor prijstrendsensoren. Deze sensoren vergelijken de huidige prijs met het gemiddelde van de volgende N uur om te bepalen of prijzen stijgen, dalen of stabiel zijn.",
                 "data": {
-                    "price_trend_threshold_rising": "Stijgende drempelwaarde (% boven huidige prijs)",
-                    "price_trend_threshold_falling": "Dalende drempelwaarde (% onder huidige prijs, negatieve waarde)"
+                    "price_trend_threshold_rising": "Stijgende drempel (% boven huidige prijs)",
+                    "price_trend_threshold_falling": "Dalende drempel (% onder huidige prijs, negatieve waarde)"
+                }
+            },
+            "volatility": {
+                "title": "Prijsvolatiliteit Drempels",
+                "description": "{step_progress}\n\nConfigureer drempels voor volatiliteitsclassificatie. Volatiliteit meet prijsschommelingen (spreiding tussen min/max) in kleinste valuta-eenheid (ct/øre). Deze drempels worden gebruikt door volatiliteitssensoren en periodefilters.",
+                "data": {
+                    "volatility_threshold_moderate": "Matige drempel (ct/øre, spreiding ≥ deze waarde)",
+                    "volatility_threshold_high": "Hoge drempel (ct/øre, spreiding ≥ deze waarde)",
+                    "volatility_threshold_very_high": "Zeer hoge drempel (ct/øre, spreiding ≥ deze waarde)"
                 }
             }
         },
@@ -369,7 +393,43 @@
                 "name": "Maandelijkse prijsbeoordeling"
             },
             "data_timestamp": {
-                "name": "Prijsdata vervaltijd"
+                "name": "Prijsgegevens Vervaldatum"
+            },
+            "today_volatility": {
+                "name": "Vandaag Prijsvolatiliteit",
+                "state": {
+                    "low": "Laag",
+                    "moderate": "Gematigd",
+                    "high": "Hoog",
+                    "very_high": "Zeer Hoog"
+                }
+            },
+            "tomorrow_volatility": {
+                "name": "Morgen Prijsvolatiliteit",
+                "state": {
+                    "low": "Laag",
+                    "moderate": "Gematigd",
+                    "high": "Hoog",
+                    "very_high": "Zeer Hoog"
+                }
+            },
+            "next_24h_volatility": {
+                "name": "Volgende 24u Prijsvolatiliteit",
+                "state": {
+                    "low": "Laag",
+                    "moderate": "Gematigd",
+                    "high": "Hoog",
+                    "very_high": "Zeer Hoog"
+                }
+            },
+            "today_tomorrow_volatility": {
+                "name": "Vandaag+Morgen Prijsvolatiliteit",
+                "state": {
+                    "low": "Laag",
+                    "moderate": "Gematigd",
+                    "high": "Hoog",
+                    "very_high": "Zeer Hoog"
+                }
             },
             "price_forecast": {
                 "name": "Prijsprognose"
@@ -411,5 +471,26 @@
                 }
             }
         }
-    }
+    },
+    "selector": {
+        "volatility": {
+            "options": {
+                "LOW": "Laag",
+                "MODERATE": "Matig",
+                "HIGH": "Hoog",
+                "VERY_HIGH": "Zeer hoog"
+            }
+        },
+        "price_level": {
+            "options": {
+                "ANY": "Alle",
+                "VERY_CHEAP": "Zeer goedkoop",
+                "CHEAP": "Goedkoop",
+                "NORMAL": "Normaal",
+                "EXPENSIVE": "Duur",
+                "VERY_EXPENSIVE": "Zeer duur"
+            }
+        }
+    },
+    "title": "Tibber Prijsinformatie & Beoordelingen"
 }

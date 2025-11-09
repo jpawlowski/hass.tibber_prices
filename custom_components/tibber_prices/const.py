@@ -28,6 +28,14 @@ CONF_PRICE_RATING_THRESHOLD_LOW = "price_rating_threshold_low"
 CONF_PRICE_RATING_THRESHOLD_HIGH = "price_rating_threshold_high"
 CONF_PRICE_TREND_THRESHOLD_RISING = "price_trend_threshold_rising"
 CONF_PRICE_TREND_THRESHOLD_FALLING = "price_trend_threshold_falling"
+CONF_VOLATILITY_THRESHOLD_MODERATE = "volatility_threshold_moderate"
+CONF_VOLATILITY_THRESHOLD_HIGH = "volatility_threshold_high"
+CONF_VOLATILITY_THRESHOLD_VERY_HIGH = "volatility_threshold_very_high"
+CONF_BEST_PRICE_MIN_VOLATILITY = "best_price_min_volatility"
+CONF_PEAK_PRICE_MIN_VOLATILITY = "peak_price_min_volatility"
+CONF_MIN_VOLATILITY_FOR_PERIODS = "min_volatility_for_periods"  # Deprecated: Use CONF_BEST_PRICE_MIN_VOLATILITY
+CONF_BEST_PRICE_MAX_LEVEL = "best_price_max_level"
+CONF_PEAK_PRICE_MIN_LEVEL = "peak_price_min_level"
 
 ATTRIBUTION = "Data provided by Tibber"
 
@@ -44,6 +52,14 @@ DEFAULT_PRICE_RATING_THRESHOLD_LOW = -10  # Default rating threshold low percent
 DEFAULT_PRICE_RATING_THRESHOLD_HIGH = 10  # Default rating threshold high percentage
 DEFAULT_PRICE_TREND_THRESHOLD_RISING = 5  # Default trend threshold for rising prices (%)
 DEFAULT_PRICE_TREND_THRESHOLD_FALLING = -5  # Default trend threshold for falling prices (%, negative value)
+DEFAULT_VOLATILITY_THRESHOLD_MODERATE = 5.0  # Default threshold for MODERATE volatility (ct/øre)
+DEFAULT_VOLATILITY_THRESHOLD_HIGH = 15.0  # Default threshold for HIGH volatility (ct/øre)
+DEFAULT_VOLATILITY_THRESHOLD_VERY_HIGH = 30.0  # Default threshold for VERY_HIGH volatility (ct/øre)
+DEFAULT_BEST_PRICE_MIN_VOLATILITY = "LOW"  # Show best price at any volatility (optimization always useful)
+DEFAULT_PEAK_PRICE_MIN_VOLATILITY = "LOW"  # Always show peak price (warning relevant even at low spreads)
+DEFAULT_MIN_VOLATILITY_FOR_PERIODS = "LOW"  # Deprecated: Use DEFAULT_BEST_PRICE_MIN_VOLATILITY
+DEFAULT_BEST_PRICE_MAX_LEVEL = "ANY"  # Default: show best price periods regardless of price level
+DEFAULT_PEAK_PRICE_MIN_LEVEL = "ANY"  # Default: show peak price periods regardless of price level
 
 # Home types
 HOME_TYPE_APARTMENT = "APARTMENT"
@@ -119,6 +135,48 @@ def format_price_unit_minor(currency_code: str | None) -> str:
     return f"{minor_symbol}/{UnitOfPower.KILO_WATT}{UnitOfTime.HOURS}"
 
 
+def calculate_volatility_level(
+    spread: float,
+    threshold_moderate: float | None = None,
+    threshold_high: float | None = None,
+    threshold_very_high: float | None = None,
+) -> str:
+    """
+    Calculate volatility level from price spread.
+
+    Volatility indicates how much prices fluctuate during a period, which helps
+    determine whether active load shifting is worthwhile.
+
+    Args:
+        spread: Absolute price difference between max and min (in minor currency units, e.g., ct or øre)
+        threshold_moderate: Custom threshold for MODERATE level (default: use VOLATILITY_THRESHOLD_MODERATE)
+        threshold_high: Custom threshold for HIGH level (default: use VOLATILITY_THRESHOLD_HIGH)
+        threshold_very_high: Custom threshold for VERY_HIGH level (default: use VOLATILITY_THRESHOLD_VERY_HIGH)
+
+    Returns:
+        Volatility level: LOW, MODERATE, HIGH, or VERY_HIGH
+
+    Examples:
+        - spread < 5: LOW → minimal optimization potential
+        - 5 ≤ spread < 15: MODERATE → some optimization worthwhile
+        - 15 ≤ spread < 30: HIGH → strong optimization recommended
+        - spread ≥ 30: VERY_HIGH → maximum optimization potential
+
+    """
+    # Use provided thresholds or fall back to constants
+    t_moderate = threshold_moderate if threshold_moderate is not None else VOLATILITY_THRESHOLD_MODERATE
+    t_high = threshold_high if threshold_high is not None else VOLATILITY_THRESHOLD_HIGH
+    t_very_high = threshold_very_high if threshold_very_high is not None else VOLATILITY_THRESHOLD_VERY_HIGH
+
+    if spread < t_moderate:
+        return VOLATILITY_LOW
+    if spread < t_high:
+        return VOLATILITY_MODERATE
+    if spread < t_very_high:
+        return VOLATILITY_HIGH
+    return VOLATILITY_VERY_HIGH
+
+
 # Price level constants from Tibber API
 PRICE_LEVEL_VERY_CHEAP = "VERY_CHEAP"
 PRICE_LEVEL_CHEAP = "CHEAP"
@@ -130,6 +188,17 @@ PRICE_LEVEL_VERY_EXPENSIVE = "VERY_EXPENSIVE"
 PRICE_RATING_LOW = "LOW"
 PRICE_RATING_NORMAL = "NORMAL"
 PRICE_RATING_HIGH = "HIGH"
+
+# Price volatility levels (based on spread between min and max)
+VOLATILITY_LOW = "LOW"
+VOLATILITY_MODERATE = "MODERATE"
+VOLATILITY_HIGH = "HIGH"
+VOLATILITY_VERY_HIGH = "VERY_HIGH"
+
+# Volatility thresholds (in minor currency units like ct or øre)
+VOLATILITY_THRESHOLD_MODERATE = 5  # Below this: LOW, above: MODERATE
+VOLATILITY_THRESHOLD_HIGH = 15  # Below this: MODERATE, above: HIGH
+VOLATILITY_THRESHOLD_VERY_HIGH = 30  # Below this: HIGH, above: VERY_HIGH
 
 # Sensor options (lowercase versions for ENUM device class)
 # NOTE: These constants define the valid enum options, but they are not used directly
@@ -149,6 +218,44 @@ PRICE_RATING_OPTIONS = [
     PRICE_RATING_HIGH.lower(),
 ]
 
+VOLATILITY_OPTIONS = [
+    VOLATILITY_LOW.lower(),
+    VOLATILITY_MODERATE.lower(),
+    VOLATILITY_HIGH.lower(),
+    VOLATILITY_VERY_HIGH.lower(),
+]
+
+# Valid options for minimum volatility filter for periods
+MIN_VOLATILITY_FOR_PERIODS_OPTIONS = [
+    VOLATILITY_LOW,  # Show at any volatility (≥0ct spread) - no filter
+    VOLATILITY_MODERATE,  # Only show periods when volatility ≥ MODERATE (≥5ct)
+    VOLATILITY_HIGH,  # Only show periods when volatility ≥ HIGH (≥15ct)
+    VOLATILITY_VERY_HIGH,  # Only show periods when volatility ≥ VERY_HIGH (≥30ct)
+]
+
+# Valid options for best price maximum level filter (AND-linked with volatility filter)
+# Sorted from cheap to expensive: user selects "up to how expensive"
+BEST_PRICE_MAX_LEVEL_OPTIONS = [
+    "ANY",  # No filter, allow all price levels
+    PRICE_LEVEL_VERY_CHEAP,  # Only show if level ≤ VERY_CHEAP
+    PRICE_LEVEL_CHEAP,  # Only show if level ≤ CHEAP
+    PRICE_LEVEL_NORMAL,  # Only show if level ≤ NORMAL
+    PRICE_LEVEL_EXPENSIVE,  # Only show if level ≤ EXPENSIVE
+]
+
+# Valid options for peak price minimum level filter (AND-linked with volatility filter)
+# Sorted from expensive to cheap: user selects "starting from how expensive"
+PEAK_PRICE_MIN_LEVEL_OPTIONS = [
+    "ANY",  # No filter, allow all price levels
+    PRICE_LEVEL_EXPENSIVE,  # Only show if level ≥ EXPENSIVE
+    PRICE_LEVEL_NORMAL,  # Only show if level ≥ NORMAL
+    PRICE_LEVEL_CHEAP,  # Only show if level ≥ CHEAP
+    PRICE_LEVEL_VERY_CHEAP,  # Only show if level ≥ VERY_CHEAP
+]
+
+# Deprecated: Use BEST_PRICE_MAX_LEVEL_OPTIONS or PEAK_PRICE_MIN_LEVEL_OPTIONS instead
+MAX_LEVEL_FOR_PERIODS_OPTIONS = BEST_PRICE_MAX_LEVEL_OPTIONS
+
 # Mapping for comparing price levels (used for sorting)
 PRICE_LEVEL_MAPPING = {
     PRICE_LEVEL_VERY_CHEAP: -2,
@@ -163,6 +270,14 @@ PRICE_RATING_MAPPING = {
     PRICE_RATING_LOW: -1,
     PRICE_RATING_NORMAL: 0,
     PRICE_RATING_HIGH: 1,
+}
+
+# Mapping for comparing volatility levels (used for sorting)
+VOLATILITY_MAPPING = {
+    VOLATILITY_LOW: 0,
+    VOLATILITY_MODERATE: 1,
+    VOLATILITY_HIGH: 2,
+    VOLATILITY_VERY_HIGH: 3,
 }
 
 LOGGER = logging.getLogger(__package__)

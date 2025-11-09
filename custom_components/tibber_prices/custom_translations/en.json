@@ -229,6 +229,26 @@
             "description": "Timestamp of the latest available price data interval",
             "long_description": "Shows the timestamp of the latest available price data interval from your Tibber subscription"
         },
+        "today_volatility": {
+            "description": "Price volatility classification for today",
+            "long_description": "Shows how much electricity prices vary throughout today based on the spread (difference between highest and lowest price). Classification: LOW = spread < 5ct, MODERATE = 5-15ct, HIGH = 15-30ct, VERY HIGH = >30ct.",
+            "usage_tips": "Use this to decide if price-based optimization is worthwhile. For example, with a balcony battery that has 15% efficiency losses, optimization only makes sense when volatility is at least MODERATE. Create automations that check volatility before scheduling charging/discharging cycles."
+        },
+        "tomorrow_volatility": {
+            "description": "Price volatility classification for tomorrow",
+            "long_description": "Shows how much electricity prices will vary throughout tomorrow based on the spread (difference between highest and lowest price). Becomes unavailable until tomorrow's data is published (typically 13:00-14:00 CET).",
+            "usage_tips": "Use this for advance planning of tomorrow's energy usage. If tomorrow has HIGH or VERY HIGH volatility, it's worth optimizing energy consumption timing. If LOW, you can run devices anytime without significant cost differences."
+        },
+        "next_24h_volatility": {
+            "description": "Price volatility classification for the rolling next 24 hours",
+            "long_description": "Shows how much electricity prices vary in the next 24 hours from now (rolling window). This crosses day boundaries and updates every 15 minutes, providing a forward-looking volatility assessment independent of calendar days.",
+            "usage_tips": "Best sensor for real-time optimization decisions. Unlike today/tomorrow sensors that switch at midnight, this provides continuous 24h volatility assessment. Use for battery charging strategies that span across day boundaries."
+        },
+        "today_tomorrow_volatility": {
+            "description": "Combined price volatility classification for today and tomorrow",
+            "long_description": "Shows volatility across both today and tomorrow combined (when tomorrow's data is available). Provides an extended view of price variation spanning up to 48 hours. Falls back to today-only when tomorrow's data isn't available yet.",
+            "usage_tips": "Use this for multi-day planning and to understand if price opportunities exist across the day boundary. The 'today_volatility' and 'tomorrow_volatility' breakdown attributes show individual day contributions. Useful for scheduling charging sessions that might span midnight."
+        },
         "price_forecast": {
             "description": "Forecast of upcoming electricity prices",
             "long_description": "Shows upcoming electricity prices for future intervals in a format that's easy to use in dashboards",

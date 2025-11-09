@@ -227,12 +227,32 @@
         },
         "data_timestamp": {
             "description": "Tidsstämpel för senaste tillgängliga prisdataintervall",
-            "long_description": "Visar tidsstämpeln för senaste tillgängliga prisdataintervall från ditt Tibber-abonnemang"
+            "long_description": "Visar tidsstämpeln för det senaste tillgängliga prisdataintervallet från ditt Tibber-abonnemang"
+        },
+        "today_volatility": {
+            "description": "Prisvolatilitetsklassificering för idag",
+            "long_description": "Visar hur mycket elpriserna varierar under dagen baserat på spridningen (skillnaden mellan högsta och lägsta pris). Klassificering: LÅG = spridning < 5 öre, MÅTTLIG = 5-15 öre, HÖG = 15-30 öre, MYCKET HÖG = >30 öre.",
+            "usage_tips": "Använd detta för att avgöra om prisbaserad optimering är värt besväret. Till exempel, med ett balkongbatteri som har 15% effektivitetsförlust är optimering endast meningsfull när volatiliteten är åtminstone MÅTTLIG. Skapa automationer som kontrollerar volatiliteten innan laddnings-/urladdningscykler planeras."
+        },
+        "tomorrow_volatility": {
+            "description": "Prisvolatilitetsklassificering för imorgon",
+            "long_description": "Visar hur mycket elpriserna kommer att variera under morgondagen baserat på spridningen (skillnaden mellan högsta och lägsta pris). Blir otillgänglig tills morgondagens data publiceras (vanligtvis 13:00-14:00 CET).",
+            "usage_tips": "Använd detta för förhandsplanering av morgondagens energianvändning. Om morgondagen har HÖG eller MYCKET HÖG volatilitet är det värt att optimera energiförbrukningstiming. Vid LÅG volatilitet kan du köra enheter när som helst utan betydande kostnadsskillnader."
+        },
+        "next_24h_volatility": {
+            "description": "Prisvolatilitetsklassificering för rullande nästa 24 timmar",
+            "long_description": "Visar hur mycket elpriserna varierar under de nästa 24 timmarna från nu (rullande fönster). Detta korsar daggränser och uppdateras var 15:e minut, vilket ger en framåtblickande volatilitetsbedömning oberoende av kalenderdagar.",
+            "usage_tips": "Bästa sensorn för realtidsoptimeringsbeslut. Till skillnad från idag/imorgon-sensorer som växlar vid midnatt ger detta en kontinuerlig 24t volatilitetsbedömning. Använd för batteriladningsstrategier som sträcker sig över daggränser."
+        },
+        "today_tomorrow_volatility": {
+            "description": "Kombinerad prisvolatilitetsklassificering för idag och imorgon",
+            "long_description": "Visar volatilitet över både idag och imorgon kombinerat (när morgondagens data är tillgänglig). Ger en utökad vy av prisvariationen som sträcker sig upp till 48 timmar. Faller tillbaka på endast idag när morgondagens data inte är tillgänglig än.",
+            "usage_tips": "Använd detta för flerdagarsplanering och för att förstå om prismöjligheter finns över daggränsen. 'today_volatility' och 'tomorrow_volatility' uppdelningsattributen visar individuella dagsbidrag. Användbart för planering av laddningssessioner som kan sträcka sig över midnatt."
         },
         "price_forecast": {
             "description": "Prognos för kommande elpriser",
-            "long_description": "Visar kommande elpriser för framtida intervaller i ett format som är lätt att använda i instrumentpaneler",
-            "usage_tips": "Använd denna entitets attribut för att visa kommande priser i diagram eller anpassade kort. Få tillgång till antingen 'intervals' för alla framtida intervaller eller 'hours' för timsammanfattningar."
+            "long_description": "Visar kommande elpriser för framtida intervaller i ett format som är enkelt att använda i instrumentpaneler",
+            "usage_tips": "Använd denna enhets attribut för att visa kommande priser i diagram eller anpassade kort. Få åtkomst till antingen 'intervals' för alla framtida intervaller eller 'hours' för timvisa sammanfattningar."
         }
     },
     "binary_sensor": {

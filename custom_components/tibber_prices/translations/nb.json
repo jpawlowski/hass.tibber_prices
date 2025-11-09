@@ -48,6 +48,9 @@
             "reauth_successful": "Autentisering vellykket. Integrasjonen er oppdatert med det nye tilgangstokenet."
         }
     },
+    "common": {
+        "step_progress": "Trinn {step_num} av {total_steps}"
+    },
     "config_subentries": {
         "home": {
             "initiate_flow": {
@@ -79,14 +82,14 @@
         "step": {
             "init": {
                 "title": "Generelle innstillinger",
-                "description": "Konfigurer generelle innstillinger for Tibber Prisinformasjon & Vurderinger.\n\nBruker: {user_login}",
+                "description": "{step_progress}\n\nKonfigurer generelle innstillinger for Tibber Prisinformasjon & Vurderinger.\n\nBruker: {user_login}",
                 "data": {
                     "extended_descriptions": "Vis utvidede beskrivelser i entitetsattributter"
                 }
             },
             "price_rating": {
                 "title": "Prisvurderingsterskler",
-                "description": "Konfigurer terskler for prisvurderingsnivåer (LAV/NORMAL/HØY) basert på sammenligning med 24-timers glidende gjennomsnitt.",
+                "description": "{step_progress}\n\nKonfigurer terskler for prisvurderingsnivåer (LAV/NORMAL/HØY) basert på sammenligning med 24-timers glidende gjennomsnitt.",
                 "data": {
                     "price_rating_threshold_low": "Lav vurderingsterskel (% under glidende gjennomsnitt)",
                     "price_rating_threshold_high": "Høy vurderingsterskel (% over glidende gjennomsnitt)"
@@ -94,28 +97,49 @@
             },
             "best_price": {
                 "title": "Innstillinger for beste prisperiode",
-                "description": "Konfigurer innstillinger for binærsensoren Beste prisperiode. Denne sensoren er aktiv i perioder med de laveste strømprisene.",
+                "description": "{step_progress}\n\nKonfigurer innstillinger for binærsensoren Beste prisperiode. Denne sensoren er aktiv i perioder med de laveste strømprisene.",
                 "data": {
                     "best_price_min_period_length": "Minimum periodelengde",
                     "best_price_flex": "Fleksibilitet: Maksimum % over minimumspris",
-                    "best_price_min_distance_from_avg": "Minimumsavstand: Påkrevd % under daglig gjennomsnitt"
+                    "best_price_min_distance_from_avg": "Minimumsavstand: Påkrevd % under daglig gjennomsnitt",
+                    "best_price_min_volatility": "Minimum volatilitetsfilter",
+                    "best_price_max_level": "Prisnivåfilter (valgfritt)"
+                },
+                "data_description": {
+                    "best_price_min_volatility": "Vis kun beste prisperioder når dagens volatilitet oppfyller eller overskrider dette nivået. Standard: 'Lav' (vis uavhengig av volatilitet) - batterioptimalisering er nyttig selv ved små prisvariasjoner. Velg 'Moderat'/'Høy' for kun å vise perioder på mer volatile dager.",
+                    "best_price_max_level": "Vis kun beste prisperioder hvis minst ett intervall i dag har et prisnivå ≤ valgt verdi. Fungerer med OG-logikk: volatilitetsfilter (hvis satt) OG nivåfilter må begge være oppfylt. Nyttig for å unngå batterilading på dyre dager. Velg 'Alle' for å deaktivere dette filteret."
                 }
             },
             "peak_price": {
                 "title": "Innstillinger for topprisperiode",
-                "description": "Konfigurer innstillinger for binærsensoren Topprisperiode. Denne sensoren er aktiv i perioder med de høyeste strømprisene.",
+                "description": "{step_progress}\n\nKonfigurer innstillinger for binærsensoren Topprisperiode. Denne sensoren er aktiv i perioder med de høyeste strømprisene.",
                 "data": {
                     "peak_price_min_period_length": "Minimum periodelengde",
                     "peak_price_flex": "Fleksibilitet: Maksimum % under maksimumspris (negativ verdi)",
-                    "peak_price_min_distance_from_avg": "Minimumsavstand: Påkrevd % over daglig gjennomsnitt"
+                    "peak_price_min_distance_from_avg": "Minimumsavstand: Påkrevd % over daglig gjennomsnitt",
+                    "peak_price_min_volatility": "Minimum volatilitetsfilter",
+                    "peak_price_min_level": "Prisnivåfilter (valgfritt)"
+                },
+                "data_description": {
+                    "peak_price_min_volatility": "Vis kun topprisperioder når dagens volatilitet oppfyller eller overskrider dette nivået. Standard: 'Lav' (vis uavhengig av volatilitet) - toppadvarsler er relevante selv ved lav spredning siden unngåelse av dyre timer alltid er viktig. Velg 'Moderat'/'Høy' for kun å vise topper på volatile dager.",
+                    "peak_price_min_level": "Vis kun topprisperioder hvis minst ett intervall i dag har et prisnivå ≥ valgt verdi. Fungerer med OG-logikk: volatilitetsfilter (hvis satt) OG nivåfilter må begge være oppfylt. Vanligvis satt til 'Alle' siden toppperioder er relative til dagen. Velg 'Alle' for å deaktivere dette filteret."
                 }
             },
             "price_trend": {
-                "title": "Terskelverdier for pristrend",
-                "description": "Konfigurer terskelverdier for pristrendsensorer. Disse sensorene sammenligner gjeldende pris med gjennomsnittet av de neste N timene for å avgjøre om prisene stiger, faller eller er stabile.",
+                "title": "Pristrendterskler",
+                "description": "{step_progress}\n\nKonfigurer terskler for pristrendsensorer. Disse sensorene sammenligner nåværende pris med gjennomsnittet av de neste N timene for å bestemme om prisene stiger, faller eller er stabile.",
                 "data": {
-                    "price_trend_threshold_rising": "Stigende terskelverdi (% over gjeldende pris)",
-                    "price_trend_threshold_falling": "Fallende terskelverdi (% under gjeldende pris, negativ verdi)"
+                    "price_trend_threshold_rising": "Stigende terskel (% over nåværende pris)",
+                    "price_trend_threshold_falling": "Fallende terskel (% under nåværende pris, negativ verdi)"
+                }
+            },
+            "volatility": {
+                "title": "Prisvolatilitet Terskler",
+                "description": "{step_progress}\n\nKonfigurer terskler for volatilitetsklassifisering. Volatilitet måler prisvariasjoner (spredning mellom min/maks) i minste valutaenhet (ct/øre). Disse tersklene brukes av volatilitetssensorer og periodefiltre.",
+                "data": {
+                    "volatility_threshold_moderate": "Moderat terskel (ct/øre, spredning ≥ denne verdien)",
+                    "volatility_threshold_high": "Høy terskel (ct/øre, spredning ≥ denne verdien)",
+                    "volatility_threshold_very_high": "Veldig høy terskel (ct/øre, spredning ≥ denne verdien)"
                 }
             }
         },
@@ -369,7 +393,43 @@
                 "name": "Månedlig prisvurdering"
             },
             "data_timestamp": {
-                "name": "Prisdata utløpstid"
+                "name": "Prisdata Utløp"
+            },
+            "today_volatility": {
+                "name": "Dagens Prisvolatilitet",
+                "state": {
+                    "low": "Lav",
+                    "moderate": "Moderat",
+                    "high": "Høy",
+                    "very_high": "Svært Høy"
+                }
+            },
+            "tomorrow_volatility": {
+                "name": "Morgendagens Prisvolatilitet",
+                "state": {
+                    "low": "Lav",
+                    "moderate": "Moderat",
+                    "high": "Høy",
+                    "very_high": "Svært Høy"
+                }
+            },
+            "next_24h_volatility": {
+                "name": "Neste 24t Prisvolatilitet",
+                "state": {
+                    "low": "Lav",
+                    "moderate": "Moderat",
+                    "high": "Høy",
+                    "very_high": "Svært Høy"
+                }
+            },
+            "today_tomorrow_volatility": {
+                "name": "I dag+I morgen Prisvolatilitet",
+                "state": {
+                    "low": "Lav",
+                    "moderate": "Moderat",
+                    "high": "Høy",
+                    "very_high": "Svært Høy"
+                }
             },
             "price_forecast": {
                 "name": "Prisprognose"
@@ -411,5 +471,26 @@
                 }
             }
         }
-    }
+    },
+    "selector": {
+        "volatility": {
+            "options": {
+                "LOW": "Lav",
+                "MODERATE": "Moderat",
+                "HIGH": "Høy",
+                "VERY_HIGH": "Svært høy"
+            }
+        },
+        "price_level": {
+            "options": {
+                "ANY": "Alle",
+                "VERY_CHEAP": "Svært billig",
+                "CHEAP": "Billig",
+                "NORMAL": "Normal",
+                "EXPENSIVE": "Dyr",
+                "VERY_EXPENSIVE": "Svært dyr"
+            }
+        }
+    },
+    "title": "Tibber Prisinformasjon & Vurderinger"
 }

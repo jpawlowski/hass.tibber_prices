@@ -27,8 +27,29 @@ if TYPE_CHECKING:
     from .data import TibberPricesConfigEntry
 
 from .const import (
+    CONF_BEST_PRICE_MAX_LEVEL,
+    CONF_BEST_PRICE_MIN_VOLATILITY,
     CONF_EXTENDED_DESCRIPTIONS,
+    CONF_MIN_VOLATILITY_FOR_PERIODS,
+    CONF_PEAK_PRICE_MIN_LEVEL,
+    CONF_PEAK_PRICE_MIN_VOLATILITY,
+    CONF_VOLATILITY_THRESHOLD_HIGH,
+    CONF_VOLATILITY_THRESHOLD_MODERATE,
+    CONF_VOLATILITY_THRESHOLD_VERY_HIGH,
+    DEFAULT_BEST_PRICE_MAX_LEVEL,
+    DEFAULT_BEST_PRICE_MIN_VOLATILITY,
     DEFAULT_EXTENDED_DESCRIPTIONS,
+    DEFAULT_MIN_VOLATILITY_FOR_PERIODS,
+    DEFAULT_PEAK_PRICE_MIN_LEVEL,
+    DEFAULT_PEAK_PRICE_MIN_VOLATILITY,
+    DEFAULT_VOLATILITY_THRESHOLD_HIGH,
+    DEFAULT_VOLATILITY_THRESHOLD_MODERATE,
+    DEFAULT_VOLATILITY_THRESHOLD_VERY_HIGH,
+    PRICE_LEVEL_MAPPING,
+    VOLATILITY_HIGH,
+    VOLATILITY_LOW,
+    VOLATILITY_MODERATE,
+    VOLATILITY_VERY_HIGH,
     async_get_entity_description,
     get_entity_description,
 )
@@ -141,24 +162,28 @@ class TibberPricesBinarySensor(TibberPricesEntity, BinarySensorEntity):
         if not self.coordinator.data:
             return None
         attrs = self._get_price_intervals_attributes(reverse_sort=False)
-        if not attrs or "start" not in attrs or "end" not in attrs:
-            return None
-        now = dt_util.now()
+        if not attrs:
+            return False  # Should not happen, but safety fallback
         start = attrs.get("start")
         end = attrs.get("end")
-        return start <= now < end if start and end else None
+        if not start or not end:
+            return False  # No period found = sensor is off
+        now = dt_util.now()
+        return start <= now < end
 
     def _peak_price_state(self) -> bool | None:
         """Return True if the current time is within a peak price period."""
         if not self.coordinator.data:
             return None
         attrs = self._get_price_intervals_attributes(reverse_sort=True)
-        if not attrs or "start" not in attrs or "end" not in attrs:
-            return None
-        now = dt_util.now()
+        if not attrs:
+            return False  # Should not happen, but safety fallback
         start = attrs.get("start")
         end = attrs.get("end")
-        return start <= now < end if start and end else None
+        if not start or not end:
+            return False  # No period found = sensor is off
+        now = dt_util.now()
+        return start <= now < end
 
     def _tomorrow_data_available_state(self) -> bool | None:
         """Return True if tomorrow's data is fully available, False if not, None if unknown."""
@@ -329,20 +354,25 @@ class TibberPricesBinarySensor(TibberPricesEntity, BinarySensorEntity):
         1. Gets lightweight period summaries from coordinator
         2. Fetches actual price data from priceInfo on-demand
         3. Builds annotations without storing data redundantly
+        4. Filters periods based on volatility and level thresholds if configured
         """
+        # Check if periods should be filtered based on volatility and level
+        if not self._should_show_periods(reverse_sort=reverse_sort):
+            return self._build_empty_periods_result(reverse_sort=reverse_sort)
+
         # Get precomputed period summaries from coordinator
         period_data = self._get_precomputed_period_data(reverse_sort=reverse_sort)
         if not period_data:
-            return None
+            return self._build_no_periods_result()
 
         period_summaries = period_data.get("periods", [])
         if not period_summaries:
-            return None
+            return self._build_no_periods_result()
 
         # Build full interval data from summaries + priceInfo
         intervals = self._get_period_intervals_from_price_info(period_summaries, reverse_sort=reverse_sort)
         if not intervals:
-            return None
+            return self._build_no_periods_result()
 
         # Find current or next interval
         current_interval = self._find_current_or_next_interval(intervals)
@@ -352,6 +382,228 @@ class TibberPricesBinarySensor(TibberPricesEntity, BinarySensorEntity):
 
         # Build final attributes
         return self._build_final_attributes(current_interval, periods_summary, intervals)
+
+    def _should_show_periods(self, *, reverse_sort: bool) -> bool:
+        """
+        Check if periods should be shown based on volatility AND level filters (UND-Verknüpfung).
+
+        Args:
+            reverse_sort: If False (best_price), checks max_level filter.
+                         If True (peak_price), checks min_level filter.
+
+        Returns:
+            True if periods should be displayed, False if they should be filtered out.
+            Both conditions must be met for periods to be shown.
+
+        """
+        if not self.coordinator.data:
+            return True
+
+        # Check volatility filter
+        if not self._check_volatility_filter(reverse_sort=reverse_sort):
+            return False
+
+        # Check level filter (UND-Verknüpfung)
+        return self._check_level_filter(reverse_sort=reverse_sort)
+
+    def _check_volatility_filter(self, *, reverse_sort: bool) -> bool:
+        """
+        Check if today's volatility meets the minimum requirement.
+
+        Args:
+            reverse_sort: If False (best_price), uses CONF_BEST_PRICE_MIN_VOLATILITY.
+                         If True (peak_price), uses CONF_PEAK_PRICE_MIN_VOLATILITY.
+
+        """
+        # Get appropriate volatility config based on sensor type
+        if reverse_sort:
+            # Peak price sensor
+            min_volatility = self.coordinator.config_entry.options.get(
+                CONF_PEAK_PRICE_MIN_VOLATILITY,
+                # Migration: fall back to old global filter, then to new default
+                self.coordinator.config_entry.options.get(
+                    CONF_MIN_VOLATILITY_FOR_PERIODS,
+                    DEFAULT_PEAK_PRICE_MIN_VOLATILITY,
+                ),
+            )
+        else:
+            # Best price sensor
+            min_volatility = self.coordinator.config_entry.options.get(
+                CONF_BEST_PRICE_MIN_VOLATILITY,
+                # Migration: fall back to old global filter, then to new default
+                self.coordinator.config_entry.options.get(
+                    CONF_MIN_VOLATILITY_FOR_PERIODS,
+                    DEFAULT_BEST_PRICE_MIN_VOLATILITY,
+                ),
+            )
+
+        # "LOW" means no filtering (show at any volatility ≥0ct)
+        if min_volatility == VOLATILITY_LOW:
+            return True
+
+        # Legacy migration: "ANY" also means no filtering
+        if min_volatility == "ANY":
+            return True
+
+        # Get today's price data to calculate volatility
+        price_info = self.coordinator.data.get("priceInfo", {})
+        today_prices = price_info.get("today", [])
+        prices = [p.get("total") for p in today_prices if "total" in p] if today_prices else []
+
+        if not prices:
+            return True  # If no prices, don't filter
+
+        # Calculate today's spread (volatility metric) in minor units
+        spread_major = (max(prices) - min(prices)) * 100
+
+        # Get volatility thresholds from config
+        threshold_moderate = self.coordinator.config_entry.options.get(
+            CONF_VOLATILITY_THRESHOLD_MODERATE,
+            DEFAULT_VOLATILITY_THRESHOLD_MODERATE,
+        )
+        threshold_high = self.coordinator.config_entry.options.get(
+            CONF_VOLATILITY_THRESHOLD_HIGH,
+            DEFAULT_VOLATILITY_THRESHOLD_HIGH,
+        )
+        threshold_very_high = self.coordinator.config_entry.options.get(
+            CONF_VOLATILITY_THRESHOLD_VERY_HIGH,
+            DEFAULT_VOLATILITY_THRESHOLD_VERY_HIGH,
+        )
+
+        # Map min_volatility to threshold and check if spread meets requirement
+        threshold_map = {
+            VOLATILITY_MODERATE: threshold_moderate,
+            VOLATILITY_HIGH: threshold_high,
+            VOLATILITY_VERY_HIGH: threshold_very_high,
+        }
+
+        required_threshold = threshold_map.get(min_volatility)
+        return spread_major >= required_threshold if required_threshold is not None else True
+
+    def _check_level_filter(self, *, reverse_sort: bool) -> bool:
+        """
+        Check if today has any intervals that meet the level requirement.
+
+        Args:
+            reverse_sort: If False (best_price), checks max_level (upper bound filter).
+                         If True (peak_price), checks min_level (lower bound filter).
+
+        Returns:
+            True if ANY interval meets the level requirement, False otherwise.
+
+        """
+        # Get appropriate config based on sensor type
+        if reverse_sort:
+            # Peak price: minimum level filter (lower bound)
+            level_config = self.coordinator.config_entry.options.get(
+                CONF_PEAK_PRICE_MIN_LEVEL,
+                DEFAULT_PEAK_PRICE_MIN_LEVEL,
+            )
+        else:
+            # Best price: maximum level filter (upper bound)
+            level_config = self.coordinator.config_entry.options.get(
+                CONF_BEST_PRICE_MAX_LEVEL,
+                DEFAULT_BEST_PRICE_MAX_LEVEL,
+            )
+
+        # "ANY" means no level filtering
+        if level_config == "ANY":
+            return True
+
+        # Get today's intervals
+        price_info = self.coordinator.data.get("priceInfo", {})
+        today_intervals = price_info.get("today", [])
+
+        if not today_intervals:
+            return True  # If no data, don't filter
+
+        # Check if ANY interval today meets the level requirement
+        level_order = PRICE_LEVEL_MAPPING.get(level_config, 0)
+
+        if reverse_sort:
+            # Peak price: level >= min_level (show if ANY interval is expensive enough)
+            return any(
+                PRICE_LEVEL_MAPPING.get(interval.get("level", "NORMAL"), 0) >= level_order
+                for interval in today_intervals
+            )
+        # Best price: level <= max_level (show if ANY interval is cheap enough)
+        return any(
+            PRICE_LEVEL_MAPPING.get(interval.get("level", "NORMAL"), 0) <= level_order for interval in today_intervals
+        )
+
+    def _build_no_periods_result(self) -> dict:
+        """
+        Build result when no periods exist (not filtered, just none available).
+
+        Returns:
+            A dict with empty periods and timestamp.
+
+        """
+        # Calculate timestamp: current time rounded down to last quarter hour
+        now = dt_util.now()
+        current_minute = (now.minute // 15) * 15
+        timestamp = now.replace(minute=current_minute, second=0, microsecond=0)
+
+        return {
+            "timestamp": timestamp,
+            "start": None,
+            "end": None,
+            "periods": [],
+        }
+
+    def _build_empty_periods_result(self, *, reverse_sort: bool) -> dict:
+        """
+        Build result when periods are filtered due to volatility or level constraints.
+
+        Args:
+            reverse_sort: If False (best_price), reports max_level filter.
+                         If True (peak_price), reports min_level filter.
+
+        Returns:
+            A dict with empty periods and a reason attribute explaining why.
+
+        """
+        min_volatility = self.coordinator.config_entry.options.get(
+            CONF_MIN_VOLATILITY_FOR_PERIODS,
+            DEFAULT_MIN_VOLATILITY_FOR_PERIODS,
+        )
+
+        # Get appropriate level config based on sensor type
+        if reverse_sort:
+            level_config = self.coordinator.config_entry.options.get(
+                CONF_PEAK_PRICE_MIN_LEVEL,
+                DEFAULT_PEAK_PRICE_MIN_LEVEL,
+            )
+            level_filter_type = "below"  # Peak price: level below min threshold
+        else:
+            level_config = self.coordinator.config_entry.options.get(
+                CONF_BEST_PRICE_MAX_LEVEL,
+                DEFAULT_BEST_PRICE_MAX_LEVEL,
+            )
+            level_filter_type = "above"  # Best price: level above max threshold
+
+        # Build reason string explaining which filter(s) prevented display
+        reasons = []
+        if min_volatility != "ANY" and not self._check_volatility_filter(reverse_sort=reverse_sort):
+            reasons.append(f"volatility_below_{min_volatility.lower()}")
+        if level_config != "ANY" and not self._check_level_filter(reverse_sort=reverse_sort):
+            reasons.append(f"level_{level_filter_type}_{level_config.lower()}")
+
+        # Join multiple reasons with "and"
+        reason = "_and_".join(reasons) if reasons else "filtered"
+
+        # Calculate timestamp: current time rounded down to last quarter hour
+        now = dt_util.now()
+        current_minute = (now.minute // 15) * 15
+        timestamp = now.replace(minute=current_minute, second=0, microsecond=0)
+
+        return {
+            "timestamp": timestamp,
+            "start": None,
+            "end": None,
+            "periods": [],
+            "reason": reason,
+        }
 
     def _find_current_or_next_interval(self, intervals: list[dict]) -> dict | None:
         """Find the current or next interval from the filtered list."""
@@ -432,6 +684,7 @@ class TibberPricesBinarySensor(TibberPricesEntity, BinarySensorEntity):
                 "price_avg": round(sum(prices) / len(prices), 2) if prices else 0,
                 "price_min": round(min(prices), 2) if prices else 0,
                 "price_max": round(max(prices), 2) if prices else 0,
+                "price_spread": round(max(prices) - min(prices), 2) if prices else 0,
                 "hour": first.get("hour"),
                 "minute": first.get("minute"),
                 "time": first.get("time"),
@@ -486,6 +739,7 @@ class TibberPricesBinarySensor(TibberPricesEntity, BinarySensorEntity):
                     "price_avg": current_period_summary.get("price_avg"),
                     "price_min": current_period_summary.get("price_min"),
                     "price_max": current_period_summary.get("price_max"),
+                    "price_spread": current_period_summary.get("price_spread"),
                     "hour": current_period_summary.get("hour"),
                     "minute": current_period_summary.get("minute"),
                     "time": current_period_summary.get("time"),

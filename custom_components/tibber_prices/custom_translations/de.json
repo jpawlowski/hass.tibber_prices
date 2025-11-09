@@ -227,12 +227,32 @@
         },
         "data_timestamp": {
             "description": "Zeitstempel des letzten verfügbaren Preisintervalls",
-            "long_description": "Zeigt den Zeitstempel des letzten verfügbaren Preisintervalls von deinem Tibber-Abonnement an"
+            "long_description": "Zeigt den Zeitstempel des letzten verfügbaren Preisdatenintervalls von Ihrem Tibber-Abonnement"
+        },
+        "today_volatility": {
+            "description": "Preisvolatilitätsklassifizierung für heute",
+            "long_description": "Zeigt, wie stark die Strompreise im Laufe des heutigen Tages variieren, basierend auf der Spannweite (Differenz zwischen höchstem und niedrigstem Preis). Klassifizierung: NIEDRIG = Spannweite < 5ct, MODERAT = 5-15ct, HOCH = 15-30ct, SEHR HOCH = >30ct.",
+            "usage_tips": "Verwenden Sie dies, um zu entscheiden, ob preisbasierte Optimierung lohnenswert ist. Zum Beispiel lohnt sich bei einer Balkonbatterie mit 15% Effizienzverlusten die Optimierung nur, wenn die Volatilität mindestens MODERAT ist. Erstellen Sie Automatisierungen, die die Volatilität prüfen, bevor Lade-/Entladezyklen geplant werden."
+        },
+        "tomorrow_volatility": {
+            "description": "Preisvolatilitätsklassifizierung für morgen",
+            "long_description": "Zeigt, wie stark die Strompreise im Laufe des morgigen Tages variieren werden, basierend auf der Spannweite (Differenz zwischen höchstem und niedrigstem Preis). Wird nicht verfügbar, bis morgige Daten veröffentlicht sind (typischerweise 13:00-14:00 MEZ).",
+            "usage_tips": "Verwenden Sie dies zur Vorausplanung des morgigen Energieverbrauchs. Bei HOHER oder SEHR HOHER Volatilität morgen lohnt sich die Optimierung des Energieverbrauchs. Bei NIEDRIGER Volatilität können Sie Geräte jederzeit ohne wesentliche Kostenunterschiede betreiben."
+        },
+        "next_24h_volatility": {
+            "description": "Preisvolatilitätsklassifizierung für die rollierenden nächsten 24 Stunden",
+            "long_description": "Zeigt, wie stark die Strompreise in den nächsten 24 Stunden ab jetzt variieren (rollierendes Fenster). Dies überschreitet Tagesgrenzen und aktualisiert sich alle 15 Minuten, wodurch eine vorausschauende Volatilitätsbewertung unabhängig von Kalendertagen bereitgestellt wird.",
+            "usage_tips": "Bester Sensor für Echtzeitoptimierungsentscheidungen. Im Gegensatz zu Heute/Morgen-Sensoren, die um Mitternacht wechseln, bietet dies eine kontinuierliche 24h-Volatilitätsbewertung. Verwenden Sie dies für Batterielade-Strategien, die Tagesgrenzen überschreiten."
+        },
+        "today_tomorrow_volatility": {
+            "description": "Kombinierte Preisvolatilitätsklassifizierung für heute und morgen",
+            "long_description": "Zeigt die Volatilität über heute und morgen zusammen (wenn morgige Daten verfügbar sind). Bietet eine erweiterte Ansicht der Preisvariation über bis zu 48 Stunden. Fällt auf Nur-Heute zurück, wenn morgige Daten noch nicht verfügbar sind.",
+            "usage_tips": "Verwenden Sie dies für Mehrtagsplanung und um zu verstehen, ob Preismöglichkeiten über die Tagesgrenze hinweg bestehen. Die Attribute 'today_volatility' und 'tomorrow_volatility' zeigen individuelle Tagesbeiträge. Nützlich für die Planung von Ladesitzungen, die Mitternacht überschreiten könnten."
         },
         "price_forecast": {
-            "description": "Prognose der kommenden Strompreise",
-            "long_description": "Zeigt kommende Strompreise für zukünftige Intervalle in einem Format an, das leicht in Dashboards verwendet werden kann",
-            "usage_tips": "Verwende die Attribute dieser Entität, um bevorstehende Preise in Diagrammen oder benutzerdefinierten Karten anzuzeigen. Greife entweder auf 'intervals' für alle zukünftigen Intervalle oder auf 'hours' für stündliche Zusammenfassungen zu."
+            "description": "Prognose kommender Strompreise",
+            "long_description": "Zeigt kommende Strompreise für zukünftige Intervalle in einem Format, das einfach in Dashboards verwendet werden kann",
+            "usage_tips": "Verwenden Sie die Attribute dieser Entität, um kommende Preise in Diagrammen oder benutzerdefinierten Karten anzuzeigen. Greifen Sie entweder auf 'intervals' für alle zukünftigen Intervalle oder auf 'hours' für stündliche Zusammenfassungen zu."
         }
     },
     "binary_sensor": {

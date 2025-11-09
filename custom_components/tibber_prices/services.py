@@ -20,6 +20,12 @@ from .api import (
 )
 from .average_utils import calculate_leading_24h_avg, calculate_trailing_24h_avg
 from .const import (
+    CONF_VOLATILITY_THRESHOLD_HIGH,
+    CONF_VOLATILITY_THRESHOLD_MODERATE,
+    CONF_VOLATILITY_THRESHOLD_VERY_HIGH,
+    DEFAULT_VOLATILITY_THRESHOLD_HIGH,
+    DEFAULT_VOLATILITY_THRESHOLD_MODERATE,
+    DEFAULT_VOLATILITY_THRESHOLD_VERY_HIGH,
     DOMAIN,
     PRICE_LEVEL_CHEAP,
     PRICE_LEVEL_EXPENSIVE,
@@ -29,6 +35,7 @@ from .const import (
     PRICE_RATING_HIGH,
     PRICE_RATING_LOW,
     PRICE_RATING_NORMAL,
+    calculate_volatility_level,
     get_price_level_translation,
 )
 
@@ -98,6 +105,19 @@ async def _get_price(call: ServiceCall) -> dict[str, Any]:
     _, coordinator, _ = _get_entry_and_data(hass, entry_id)
     price_info_data, currency = _extract_price_data(coordinator.data)
 
+    # Get volatility thresholds from config
+    thresholds = {
+        "threshold_moderate": coordinator.config_entry.options.get(
+            CONF_VOLATILITY_THRESHOLD_MODERATE, DEFAULT_VOLATILITY_THRESHOLD_MODERATE
+        ),
+        "threshold_high": coordinator.config_entry.options.get(
+            CONF_VOLATILITY_THRESHOLD_HIGH, DEFAULT_VOLATILITY_THRESHOLD_HIGH
+        ),
+        "threshold_very_high": coordinator.config_entry.options.get(
+            CONF_VOLATILITY_THRESHOLD_VERY_HIGH, DEFAULT_VOLATILITY_THRESHOLD_VERY_HIGH
+        ),
+    }
+
     # Determine which days to include
     if explicit_day:
         day_key = day if day in ("yesterday", "today", "tomorrow") else "today"
@@ -116,7 +136,7 @@ async def _get_price(call: ServiceCall) -> dict[str, Any]:
     stats_transformed = _transform_price_intervals(stats_raw)
 
     # Calculate stats
-    price_stats = _get_price_stats(stats_transformed)
+    price_stats = _get_price_stats(stats_transformed, thresholds)
 
     # Determine now and simulation flag
     now, is_simulated = _determine_now_and_simulation(time_value, stats_transformed)
@@ -429,7 +449,7 @@ def _enrich_intervals_with_averages(intervals: list[dict], price_info_by_day: di
         interval["leading_price_average_minor"] = round(leading_avg * 100, 2)
 
 
-def _get_price_stats(merged: list[dict]) -> PriceStats:
+def _get_price_stats(merged: list[dict], thresholds: dict) -> PriceStats:
     """Calculate average, min, and max price from merged data."""
     if merged:
         price_sum = sum(float(interval.get("price", 0)) for interval in merged if "price" in interval)
@@ -438,6 +458,10 @@ def _get_price_stats(merged: list[dict]) -> PriceStats:
         price_avg = 0
     price_min, price_min_interval = _get_price_stat(merged, "min")
     price_max, price_max_interval = _get_price_stat(merged, "max")
+    price_spread = round(price_max - price_min, 4) if price_min is not None and price_max is not None else 0
+    # Convert spread to minor currency units (ct/øre) for volatility calculation
+    price_spread_minor = price_spread * 100
+    price_volatility = calculate_volatility_level(price_spread_minor, **thresholds)
     return PriceStats(
         price_avg=price_avg,
         price_min=price_min,
@@ -448,6 +472,8 @@ def _get_price_stats(merged: list[dict]) -> PriceStats:
         price_max_end_time=price_max_interval.get("end_time") if price_max_interval else None,
         price_min_interval=price_min_interval,
         price_max_interval=price_max_interval,
+        price_spread=price_spread,
+        price_volatility=price_volatility,
         stats_merged=merged,
     )
 
@@ -594,6 +620,8 @@ def _build_price_response(ctx: PriceResponseContext) -> dict[str, Any]:
         "next": clean_interval(ctx.next_interval),
         "currency": ctx.currency,
         "interval_count": len(ctx.merged),
+        "price_spread": round(price_stats.price_spread * 100, 2),  # Convert to minor currency unit
+        "price_volatility": price_stats.price_volatility,
         "intervals": ctx.merged,
     }
 
@@ -626,6 +654,8 @@ class PriceStats:
     price_max_start_time: str | None
     price_max_end_time: str | None
     price_max_interval: dict | None
+    price_spread: float
+    price_volatility: str
     stats_merged: list[dict]
 
 

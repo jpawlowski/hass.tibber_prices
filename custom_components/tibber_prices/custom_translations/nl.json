@@ -229,38 +229,60 @@
             "description": "Tijdstempel van het laatst beschikbare prijsgegevensinterval",
             "long_description": "Toont het tijdstempel van het laatst beschikbare prijsgegevensinterval van uw Tibber-abonnement"
         },
-        "price_forecast": {
-            "description": "Prognose van aanstaande elektriciteitsprijzen",
-            "long_description": "Toont aanstaande elektriciteitsprijzen voor toekomstige intervallen in een formaat dat gemakkelijk te gebruiken is in dashboards",
-            "usage_tips": "Gebruik de attributen van deze entiteit om aanstaande prijzen weer te geven in grafieken of aangepaste kaarten. Toegang tot 'intervals' voor alle toekomstige intervallen of 'hours' voor uuroverzichten."
-        }
+        "long_description": "Toont de tijdstempel van het laatst beschikbare prijsgegevensinterval van uw Tibber-abonnement"
     },
-    "binary_sensor": {
-        "tomorrow_data_available": {
-            "description": "Of prijsgegevens voor morgen beschikbaar zijn",
-            "long_description": "Geeft aan of prijsgegevens voor de volgende dag zijn ontvangen van Tibber",
-            "usage_tips": "Gebruik dit om te controleren of de prijzen van morgen beschikbaar zijn voor planning"
-        },
-        "peak_price_period": {
-            "description": "Of het huidige interval tot de duurste van de dag behoort",
-            "long_description": "Wordt geactiveerd wanneer de huidige prijs in de top 20% van de prijzen van vandaag ligt",
-            "usage_tips": "Gebruik dit om te voorkomen dat u apparaten met hoog verbruik draait tijdens dure intervallen"
-        },
-        "best_price_period": {
-            "description": "Of het huidige interval tot de goedkoopste van de dag behoort",
-            "long_description": "Wordt geactiveerd wanneer de huidige prijs in de onderste 20% van de prijzen van vandaag ligt",
-            "usage_tips": "Gebruik dit om apparaten met hoog verbruik te laten draaien tijdens de goedkoopste intervallen"
-        },
-        "connection": {
-            "description": "Of de verbinding met de Tibber API werkt",
-            "long_description": "Geeft aan of de integratie succesvol verbinding kan maken met de Tibber API",
-            "usage_tips": "Gebruik dit om de verbindingsstatus met de Tibber API te monitoren"
-        }
+    "today_volatility": {
+        "description": "Prijsvolatiliteitsclassificatie voor vandaag",
+        "long_description": "Toont hoeveel elektriciteitsprijzen variëren gedurende vandaag op basis van de spreiding (verschil tussen hoogste en laagste prijs). Classificatie: LAAG = spreiding < 5ct, GEMATIGD = 5-15ct, HOOG = 15-30ct, ZEER HOOG = >30ct.",
+        "usage_tips": "Gebruik dit om te beslissen of prijsgebaseerde optimalisatie de moeite waard is. Bijvoorbeeld, met een balkonbatterij met 15% efficiëntieverlies is optimalisatie alleen zinvol wanneer de volatiliteit ten minste GEMATIGD is. Maak automatiseringen die de volatiliteit controleren voordat laad-/ontlaadcycli worden gepland."
     },
-    "home_types": {
-        "APARTMENT": "Appartement",
-        "ROWHOUSE": "Rijhuis",
-        "HOUSE": "Huis",
-        "COTTAGE": "Huisje"
+    "tomorrow_volatility": {
+        "description": "Prijsvolatiliteitsclassificatie voor morgen",
+        "long_description": "Toont hoeveel elektriciteitsprijzen zullen variëren gedurende morgen op basis van de spreiding (verschil tussen hoogste en laagste prijs). Wordt niet beschikbaar totdat de gegevens van morgen zijn gepubliceerd (doorgaans 13:00-14:00 CET).",
+        "usage_tips": "Gebruik dit voor vooruitplanning van het energieverbruik van morgen. Als morgen EEN HOGE of ZEER HOGE volatiliteit heeft, is het de moeite waard om de timing van het energieverbruik te optimaliseren. Bij LAGE volatiliteit kunt u apparaten op elk moment gebruiken zonder significante kostenverschillen."
+    },
+    "next_24h_volatility": {
+        "description": "Prijsvolatiliteitsclassificatie voor de rollende volgende 24 uur",
+        "long_description": "Toont hoeveel elektriciteitsprijzen variëren in de volgende 24 uur vanaf nu (rollend venster). Dit overschrijdt daggrenzen en wordt elke 15 minuten bijgewerkt, waardoor een vooruitkijkende volatiliteitsbeoordeling wordt geboden onafhankelijk van kalenderdagen.",
+        "usage_tips": "Beste sensor voor realtime optimalisatiebeslissingen. In tegenstelling tot vandaag/morgen-sensoren die bij middernacht omschakelen, biedt dit een continue 24u volatiliteitsbeoordeling. Gebruik voor batterijlaadstrategieën die daggrenzen overschrijden."
+    },
+    "today_tomorrow_volatility": {
+        "description": "Gecombineerde prijsvolatiliteitsclassificatie voor vandaag en morgen",
+        "long_description": "Toont volatiliteit over zowel vandaag als morgen gecombineerd (wanneer gegevens van morgen beschikbaar zijn). Biedt een uitgebreid beeld van prijsvariatie over maximaal 48 uur. Valt terug op alleen vandaag wanneer gegevens van morgen nog niet beschikbaar zijn.",
+        "usage_tips": "Gebruik dit voor meerdaagse planning en om te begrijpen of prijsmogelijkheden bestaan over de daggrens. De 'today_volatility' en 'tomorrow_volatility' uitsplitsingsattributen tonen individuele dagbijdragen. Nuttig voor het plannen van laadsessies die middernacht kunnen overschrijden."
+    },
+    "price_forecast": {
+        "description": "Voorspelling van komende elektriciteitsprijzen",
+        "long_description": "Toont komende elektriciteitsprijzen voor toekomstige intervallen in een formaat dat gemakkelijk te gebruiken is in dashboards",
+        "usage_tips": "Gebruik de attributen van deze entiteit om komende prijzen weer te geven in grafieken of aangepaste kaarten. Toegang tot 'intervals' voor alle toekomstige intervallen of 'hours' voor uurlijkse samenvattingen."
     }
+},
+"binary_sensor": {
+    "tomorrow_data_available": {
+        "description": "Of prijsgegevens voor morgen beschikbaar zijn",
+        "long_description": "Geeft aan of prijsgegevens voor de volgende dag zijn ontvangen van Tibber",
+        "usage_tips": "Gebruik dit om te controleren of de prijzen van morgen beschikbaar zijn voor planning"
+    },
+    "peak_price_period": {
+        "description": "Of het huidige interval tot de duurste van de dag behoort",
+        "long_description": "Wordt geactiveerd wanneer de huidige prijs in de top 20% van de prijzen van vandaag ligt",
+        "usage_tips": "Gebruik dit om te voorkomen dat u apparaten met hoog verbruik draait tijdens dure intervallen"
+    },
+    "best_price_period": {
+        "description": "Of het huidige interval tot de goedkoopste van de dag behoort",
+        "long_description": "Wordt geactiveerd wanneer de huidige prijs in de onderste 20% van de prijzen van vandaag ligt",
+        "usage_tips": "Gebruik dit om apparaten met hoog verbruik te laten draaien tijdens de goedkoopste intervallen"
+    },
+    "connection": {
+        "description": "Of de verbinding met de Tibber API werkt",
+        "long_description": "Geeft aan of de integratie succesvol verbinding kan maken met de Tibber API",
+        "usage_tips": "Gebruik dit om de verbindingsstatus met de Tibber API te monitoren"
+    }
+},
+"home_types": {
+    "APARTMENT": "Appartement",
+    "ROWHOUSE": "Rijhuis",
+    "HOUSE": "Huis",
+    "COTTAGE": "Huisje"
+}
 }

@@ -48,6 +48,9 @@
             "reauth_successful": "Reauthentication successful. The integration has been updated with the new access token."
         }
     },
+    "common": {
+        "step_progress": "Step {step_num} of {total_steps}"
+    },
     "config_subentries": {
         "home": {
             "initiate_flow": {
@@ -79,43 +82,64 @@
         "step": {
             "init": {
                 "title": "General Settings",
-                "description": "Configure general settings for Tibber Price Information & Ratings.\n\nUser: {user_login}",
+                "description": "{step_progress}\n\nConfigure general settings for Tibber Price Information & Ratings.\n\nUser: {user_login}",
                 "data": {
                     "extended_descriptions": "Show extended descriptions in entity attributes"
                 }
             },
             "price_rating": {
                 "title": "Price Rating Thresholds",
-                "description": "Configure thresholds for price rating levels (LOW/NORMAL/HIGH) based on comparison with trailing 24-hour average.",
+                "description": "{step_progress}\n\nConfigure thresholds for price rating levels (LOW/NORMAL/HIGH) based on comparison with trailing 24-hour average.",
                 "data": {
-                    "price_rating_threshold_low": "Low Rating Threshold (% below trailing average)",
-                    "price_rating_threshold_high": "High Rating Threshold (% above trailing average)"
+                    "price_rating_threshold_low": "Low Rating Threshold (below trailing average)",
+                    "price_rating_threshold_high": "High Rating Threshold (above trailing average)"
                 }
             },
             "best_price": {
                 "title": "Best Price Period Settings",
-                "description": "Configure settings for the Best Price Period binary sensor. This sensor is active during periods with the lowest electricity prices.",
+                "description": "{step_progress}\n\nConfigure settings for the Best Price Period binary sensor. This sensor is active during periods with the lowest electricity prices.",
                 "data": {
                     "best_price_min_period_length": "Minimum Period Length",
-                    "best_price_flex": "Flexibility: Maximum % above minimum price",
-                    "best_price_min_distance_from_avg": "Minimum Distance: Required % below daily average"
+                    "best_price_flex": "Flexibility: Maximum above minimum price",
+                    "best_price_min_distance_from_avg": "Minimum Distance: Required below daily average",
+                    "best_price_min_volatility": "Minimum Volatility Filter",
+                    "best_price_max_level": "Price Level Filter (Optional)"
+                },
+                "data_description": {
+                    "best_price_min_volatility": "Only show best price periods when today's volatility meets or exceeds this level. Default: 'Low' (show regardless of volatility) - battery optimization is useful even with small price variations. Select 'Moderate'/'High' to only show periods on more volatile days. Works with AND logic: volatility AND level filter must both pass.",
+                    "best_price_max_level": "Only show best price periods if at least one interval today has a price level ≤ selected value. Works with AND logic: volatility filter (if set) AND level filter must both pass. Useful to avoid battery charging on expensive days. Select 'Any' to disable this filter."
                 }
             },
             "peak_price": {
                 "title": "Peak Price Period Settings",
-                "description": "Configure settings for the Peak Price Period binary sensor. This sensor is active during periods with the highest electricity prices.",
+                "description": "{step_progress}\n\nConfigure settings for the Peak Price Period binary sensor. This sensor is active during periods with the highest electricity prices.",
                 "data": {
                     "peak_price_min_period_length": "Minimum Period Length",
-                    "peak_price_flex": "Flexibility: Maximum % below maximum price (negative value)",
-                    "peak_price_min_distance_from_avg": "Minimum Distance: Required % above daily average"
+                    "peak_price_flex": "Flexibility: Maximum below maximum price (negative value)",
+                    "peak_price_min_distance_from_avg": "Minimum Distance: Required above daily average",
+                    "peak_price_min_volatility": "Minimum Volatility Filter",
+                    "peak_price_min_level": "Price Level Filter (Optional)"
+                },
+                "data_description": {
+                    "peak_price_min_volatility": "Only show peak price periods when today's volatility meets or exceeds this level. Default: 'Low' (show regardless of volatility) - peak warnings are relevant even at low spreads since avoiding expensive hours always matters. Select 'Moderate'/'High' to only show peaks on volatile days. Works with AND logic: volatility AND level filter must both pass.",
+                    "peak_price_min_level": "Only show peak price periods if at least one interval today has a price level ≥ selected value. Works with AND logic: volatility filter (if set) AND level filter must both pass. Typically set to 'Any' since peak periods are relative to the day. Select 'Any' to disable this filter."
                 }
             },
             "price_trend": {
                 "title": "Price Trend Thresholds",
-                "description": "Configure thresholds for price trend sensors. These sensors compare the current price with the average of the next N hours to determine if prices are rising, falling, or stable.",
+                "description": "{step_progress}\n\nConfigure thresholds for price trend sensors. These sensors compare the current price with the average of the next N hours to determine if prices are rising, falling, or stable.",
                 "data": {
-                    "price_trend_threshold_rising": "Rising Threshold (% above current price)",
-                    "price_trend_threshold_falling": "Falling Threshold (% below current price, negative value)"
+                    "price_trend_threshold_rising": "Rising Threshold (above current price)",
+                    "price_trend_threshold_falling": "Falling Threshold (below current price, negative value)"
+                }
+            },
+            "volatility": {
+                "title": "Price Volatility Thresholds",
+                "description": "{step_progress}\n\nConfigure thresholds for volatility classification. Volatility measures price variation (spread between min/max) in minor currency units. These thresholds are used by volatility sensors and period filters.",
+                "data": {
+                    "volatility_threshold_moderate": "Moderate Threshold (spread ≥ this value)",
+                    "volatility_threshold_high": "High Threshold (spread ≥ this value)",
+                    "volatility_threshold_very_high": "Very High Threshold (spread ≥ this value)"
                 }
             }
         },
@@ -371,6 +395,42 @@
             "data_timestamp": {
                 "name": "Price Data Expiration"
             },
+            "today_volatility": {
+                "name": "Today's Price Volatility",
+                "state": {
+                    "low": "Low",
+                    "moderate": "Moderate",
+                    "high": "High",
+                    "very_high": "Very High"
+                }
+            },
+            "tomorrow_volatility": {
+                "name": "Tomorrow's Price Volatility",
+                "state": {
+                    "low": "Low",
+                    "moderate": "Moderate",
+                    "high": "High",
+                    "very_high": "Very High"
+                }
+            },
+            "next_24h_volatility": {
+                "name": "Next 24h Price Volatility",
+                "state": {
+                    "low": "Low",
+                    "moderate": "Moderate",
+                    "high": "High",
+                    "very_high": "Very High"
+                }
+            },
+            "today_tomorrow_volatility": {
+                "name": "Today+Tomorrow Price Volatility",
+                "state": {
+                    "low": "Low",
+                    "moderate": "Moderate",
+                    "high": "High",
+                    "very_high": "Very High"
+                }
+            },
             "price_forecast": {
                 "name": "Price Forecast"
             }
@@ -411,5 +471,26 @@
                 }
             }
         }
-    }
+    },
+    "selector": {
+        "volatility": {
+            "options": {
+                "LOW": "Low",
+                "MODERATE": "Moderate",
+                "HIGH": "High",
+                "VERY_HIGH": "Very high"
+            }
+        },
+        "price_level": {
+            "options": {
+                "ANY": "Any",
+                "VERY_CHEAP": "Very cheap",
+                "CHEAP": "Cheap",
+                "NORMAL": "Normal",
+                "EXPENSIVE": "Expensive",
+                "VERY_EXPENSIVE": "Very expensive"
+            }
+        }
+    },
+    "title": "Tibber Price Information & Ratings"
 }

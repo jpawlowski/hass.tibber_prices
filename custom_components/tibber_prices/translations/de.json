@@ -48,6 +48,9 @@
             "reauth_successful": "Erneute Authentifizierung erfolgreich. Die Integration wurde mit dem neuen Zugriffstoken aktualisiert."
         }
     },
+    "common": {
+        "step_progress": "Schritt {step_num} von {total_steps}"
+    },
     "config_subentries": {
         "home": {
             "initiate_flow": {
@@ -79,43 +82,64 @@
         "step": {
             "init": {
                 "title": "Allgemeine Einstellungen",
-                "description": "Konfiguration allgemeiner Einstellungen für Tibber Preisinformationen & Bewertungen.\n\nBenutzer: {user_login}",
+                "description": "{step_progress}\n\nKonfiguration allgemeiner Einstellungen für Tibber Preisinformationen & Bewertungen.\n\nBenutzer: {user_login}",
                 "data": {
                     "extended_descriptions": "Erweiterte Beschreibungen in Entity-Attributen anzeigen"
                 }
             },
             "price_rating": {
                 "title": "Preisbewertungs-Schwellwerte",
-                "description": "Konfiguration der Schwellwerte für Preisbewertungsstufen (NIEDRIG/NORMAL/HOCH) basierend auf dem Vergleich mit dem gleitenden 24-Stunden-Durchschnitt.",
+                "description": "{step_progress}\n\nKonfiguration der Schwellwerte für Preisbewertungsstufen (NIEDRIG/NORMAL/HOCH) basierend auf dem Vergleich mit dem gleitenden 24-Stunden-Durchschnitt.",
                 "data": {
-                    "price_rating_threshold_low": "Schwellwert für niedrige Bewertung (% unter gleitendem Durchschnitt)",
-                    "price_rating_threshold_high": "Schwellwert für hohe Bewertung (% über gleitendem Durchschnitt)"
+                    "price_rating_threshold_low": "Schwellwert für niedrige Bewertung (unter gleitendem Durchschnitt)",
+                    "price_rating_threshold_high": "Schwellwert für hohe Bewertung (über gleitendem Durchschnitt)"
                 }
             },
             "best_price": {
                 "title": "Bestpreis-Periode Einstellungen",
-                "description": "Konfiguration für den Bestpreis-Periode Binärsensor. Dieser Sensor ist während der Zeiträume mit den niedrigsten Strompreisen aktiv.",
+                "description": "{step_progress}\n\nKonfiguration für den Bestpreis-Periode Binärsensor. Dieser Sensor ist während der Zeiträume mit den niedrigsten Strompreisen aktiv.",
                 "data": {
                     "best_price_min_period_length": "Minimale Periodenlänge",
-                    "best_price_flex": "Flexibilität: Maximale % über dem Mindestpreis",
-                    "best_price_min_distance_from_avg": "Mindestabstand: Erforderliche % unter dem Tagesdurchschnitt"
+                    "best_price_flex": "Flexibilität: Maximal über dem Mindestpreis",
+                    "best_price_min_distance_from_avg": "Mindestabstand: Erforderlich unter dem Tagesdurchschnitt",
+                    "best_price_min_volatility": "Mindest-Volatilitätsfilter",
+                    "best_price_max_level": "Preisniveau-Filter (Optional)"
+                },
+                "data_description": {
+                    "best_price_min_volatility": "Zeigt Bestpreis-Perioden nur an, wenn die heutige Volatilität mindestens diesem Level entspricht. Standard: 'Niedrig' (zeigt unabhängig von Volatilität) - Batterie-Optimierung ist auch bei geringen Preisschwankungen nützlich. Wähle 'Moderat'/'Hoch' um Perioden nur an volatileren Tagen anzuzeigen. UND-Verknüpfung: Volatilität UND Niveaufilter müssen beide erfüllt sein.",
+                    "best_price_max_level": "Zeigt Bestpreis-Perioden nur an, wenn mindestens ein Intervall heute ein Preisniveau ≤ dem gewählten Wert hat. UND-Verknüpfung: Volatilitätsfilter (falls gesetzt) UND Niveaufilter müssen beide erfüllt sein. Nützlich um Batterieladen an teuren Tagen zu vermeiden. Wähle 'Beliebig' um diesen Filter zu deaktivieren."
                 }
             },
             "peak_price": {
                 "title": "Spitzenpreis-Periode Einstellungen",
-                "description": "Konfiguration für den Spitzenpreis-Periode Binärsensor. Dieser Sensor ist während der Zeiträume mit den höchsten Strompreisen aktiv.",
+                "description": "{step_progress}\n\nKonfiguration für den Spitzenpreis-Periode Binärsensor. Dieser Sensor ist während der Zeiträume mit den höchsten Strompreisen aktiv.",
                 "data": {
                     "peak_price_min_period_length": "Minimale Periodenlänge",
-                    "peak_price_flex": "Flexibilität: Maximale % unter dem Höchstpreis (negativer Wert)",
-                    "peak_price_min_distance_from_avg": "Mindestabstand: Erforderliche % über dem Tagesdurchschnitt"
+                    "peak_price_flex": "Flexibilität: Maximal unter dem Höchstpreis (negativer Wert)",
+                    "peak_price_min_distance_from_avg": "Mindestabstand: Erforderlich über dem Tagesdurchschnitt",
+                    "peak_price_min_volatility": "Mindest-Volatilitätsfilter",
+                    "peak_price_min_level": "Preisniveau-Filter (Optional)"
+                },
+                "data_description": {
+                    "peak_price_min_volatility": "Zeigt Spitzenpreis-Perioden nur an, wenn die heutige Volatilität mindestens diesem Level entspricht. Standard: 'Niedrig' (zeigt unabhängig von Volatilität) - Spitzenwarnungen sind auch bei niedrigen Spannen relevant, da teure Stunden vermeiden immer wichtig ist. Wähle 'Moderat'/'Hoch' um Peaks nur an volatilen Tagen anzuzeigen. UND-Verknüpfung: Volatilität UND Niveaufilter müssen beide erfüllt sein.",
+                    "peak_price_min_level": "Zeigt Spitzenpreis-Perioden nur an, wenn mindestens ein Intervall heute ein Preisniveau ≥ dem gewählten Wert hat. UND-Verknüpfung: Volatilitätsfilter (falls gesetzt) UND Niveaufilter müssen beide erfüllt sein. Normalerweise auf 'Beliebig' gesetzt, da Spitzenperioden relativ zum Tag sind. Wähle 'Beliebig' um diesen Filter zu deaktivieren."
                 }
             },
             "price_trend": {
                 "title": "Preistrend-Schwellenwerte",
-                "description": "Konfiguration der Schwellenwerte für Preistrend-Sensoren. Diese Sensoren vergleichen den aktuellen Preis mit dem Durchschnitt der nächsten N Stunden, um festzustellen, ob die Preise steigen, fallen oder stabil sind.",
+                "description": "{step_progress}\n\nKonfigurieren Sie Schwellenwerte für Preistrend-Sensoren. Diese Sensoren vergleichen den aktuellen Preis mit dem Durchschnitt der nächsten N Stunden, um festzustellen, ob die Preise steigen, fallen oder stabil sind.",
                 "data": {
-                    "price_trend_threshold_rising": "Schwellenwert für Steigen (% über aktuellem Preis)",
-                    "price_trend_threshold_falling": "Schwellenwert für Fallen (% unter aktuellem Preis, negativer Wert)"
+                    "price_trend_threshold_rising": "Steigender Schwellenwert (über dem aktuellen Preis)",
+                    "price_trend_threshold_falling": "Fallender Schwellenwert (unter dem aktuellen Preis, negativer Wert)"
+                }
+            },
+            "volatility": {
+                "title": "Preisvolatilität Schwellenwerte",
+                "description": "{step_progress}\n\nKonfigurieren Sie Schwellenwerte für die Volatilitätsklassifizierung. Volatilität misst Preisschwankungen (Spanne zwischen Min/Max) in kleinster Währungseinheit. Diese Schwellenwerte werden von Volatilitätssensoren und Periodenfiltern verwendet.",
+                "data": {
+                    "volatility_threshold_moderate": "Moderate Schwelle (Spanne ≥ dieser Wert)",
+                    "volatility_threshold_high": "Hohe Schwelle (Spanne ≥ dieser Wert)",
+                    "volatility_threshold_very_high": "Sehr hohe Schwelle (Spanne ≥ dieser Wert)"
                 }
             }
         },
@@ -373,7 +397,43 @@
                 "name": "Monatliche Preisbewertung"
             },
             "data_timestamp": {
-                "name": "Ablauf der Preisdaten"
+                "name": "Preisdaten-Ablauf"
+            },
+            "today_volatility": {
+                "name": "Preisvolatilität heute",
+                "state": {
+                    "low": "Niedrig",
+                    "moderate": "Moderat",
+                    "high": "Hoch",
+                    "very_high": "Sehr hoch"
+                }
+            },
+            "tomorrow_volatility": {
+                "name": "Preisvolatilität morgen",
+                "state": {
+                    "low": "Niedrig",
+                    "moderate": "Moderat",
+                    "high": "Hoch",
+                    "very_high": "Sehr hoch"
+                }
+            },
+            "next_24h_volatility": {
+                "name": "Preisvolatilität der nächsten 24h",
+                "state": {
+                    "low": "Niedrig",
+                    "moderate": "Moderat",
+                    "high": "Hoch",
+                    "very_high": "Sehr hoch"
+                }
+            },
+            "today_tomorrow_volatility": {
+                "name": "Preisvolatilität heute+morgen",
+                "state": {
+                    "low": "Niedrig",
+                    "moderate": "Moderat",
+                    "high": "Hoch",
+                    "very_high": "Sehr hoch"
+                }
             },
             "price_forecast": {
                 "name": "Preisprognose"
@@ -413,6 +473,26 @@
                     "name": "Eintrag-ID",
                     "description": "Die Konfigurationseintrag-ID für die Tibber-Integration."
                 }
+            }
+        }
+    },
+    "selector": {
+        "volatility": {
+            "options": {
+                "LOW": "Niedrig",
+                "MODERATE": "Moderat",
+                "HIGH": "Hoch",
+                "VERY_HIGH": "Sehr hoch"
+            }
+        },
+        "price_level": {
+            "options": {
+                "ANY": "Beliebig",
+                "VERY_CHEAP": "Sehr günstig",
+                "CHEAP": "Günstig",
+                "NORMAL": "Normal",
+                "EXPENSIVE": "Teuer",
+                "VERY_EXPENSIVE": "Sehr teuer"
             }
         }
     },

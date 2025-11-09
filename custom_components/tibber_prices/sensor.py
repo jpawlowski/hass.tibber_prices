@@ -40,6 +40,7 @@ from .const import (
     PRICE_LEVEL_MAPPING,
     PRICE_RATING_MAPPING,
     async_get_entity_description,
+    calculate_volatility_level,
     format_price_unit_minor,
     get_entity_description,
     get_price_level_translation,
@@ -258,6 +259,45 @@ STATISTICS_SENSORS = (
         icon="mdi:arrow-collapse-up",
         device_class=SensorDeviceClass.MONETARY,
         suggested_display_precision=1,
+    ),
+)
+
+# Volatility sensors (price spread analysis)
+# NOTE: Enum options are defined inline (not imported from const.py) to avoid
+# import timing issues with Home Assistant's entity platform initialization.
+# Keep in sync with VOLATILITY_OPTIONS in const.py!
+VOLATILITY_SENSORS = (
+    SensorEntityDescription(
+        key="today_volatility",
+        translation_key="today_volatility",
+        name="Today's Price Volatility",
+        icon="mdi:chart-bell-curve-cumulative",
+        device_class=SensorDeviceClass.ENUM,
+        options=["low", "moderate", "high", "very_high"],
+    ),
+    SensorEntityDescription(
+        key="tomorrow_volatility",
+        translation_key="tomorrow_volatility",
+        name="Tomorrow's Price Volatility",
+        icon="mdi:chart-bell-curve-cumulative",
+        device_class=SensorDeviceClass.ENUM,
+        options=["low", "moderate", "high", "very_high"],
+    ),
+    SensorEntityDescription(
+        key="next_24h_volatility",
+        translation_key="next_24h_volatility",
+        name="Next 24h Price Volatility",
+        icon="mdi:chart-bell-curve-cumulative",
+        device_class=SensorDeviceClass.ENUM,
+        options=["low", "moderate", "high", "very_high"],
+    ),
+    SensorEntityDescription(
+        key="today_tomorrow_volatility",
+        translation_key="today_tomorrow_volatility",
+        name="Today + Tomorrow Price Volatility",
+        icon="mdi:chart-bell-curve-cumulative",
+        device_class=SensorDeviceClass.ENUM,
+        options=["low", "moderate", "high", "very_high"],
     ),
 )
 
@@ -488,6 +528,7 @@ DIAGNOSTIC_SENSORS = (
 ENTITY_DESCRIPTIONS = (
     *PRICE_SENSORS,
     *STATISTICS_SENSORS,
+    *VOLATILITY_SENSORS,
     *RATING_SENSORS,
     *FUTURE_AVERAGE_SENSORS,
     *TREND_SENSORS,
@@ -671,6 +712,11 @@ class TibberPricesSensor(TibberPricesEntity, SensorEntity):
             "data_timestamp": self._get_data_timestamp,
             # Price forecast sensor
             "price_forecast": self._get_price_forecast_value,
+            # Volatility sensors
+            "today_volatility": lambda: self._get_volatility_value(volatility_type="today"),
+            "tomorrow_volatility": lambda: self._get_volatility_value(volatility_type="tomorrow"),
+            "next_24h_volatility": lambda: self._get_volatility_value(volatility_type="next_24h"),
+            "today_tomorrow_volatility": lambda: self._get_volatility_value(volatility_type="today_tomorrow"),
         }
 
         return handlers.get(key)
@@ -1354,6 +1400,139 @@ class TibberPricesSensor(TibberPricesEntity, SensorEntity):
 
         return dt_util.as_utc(latest_timestamp) if latest_timestamp else None
 
+    def _get_prices_for_volatility(self, volatility_type: str, price_info: dict) -> list[float]:
+        """
+        Get price list for volatility calculation based on type.
+
+        Args:
+            volatility_type: One of "today", "tomorrow", "next_24h", "today_tomorrow"
+            price_info: Price information dictionary from coordinator data
+
+        Returns:
+            List of prices to analyze
+
+        """
+        if volatility_type == "today":
+            return [float(p["total"]) for p in price_info.get("today", []) if "total" in p]
+
+        if volatility_type == "tomorrow":
+            return [float(p["total"]) for p in price_info.get("tomorrow", []) if "total" in p]
+
+        if volatility_type == "next_24h":
+            # Rolling 24h from now
+            now = dt_util.now()
+            end_time = now + timedelta(hours=24)
+            prices = []
+
+            for day_key in ["today", "tomorrow"]:
+                for price_data in price_info.get(day_key, []):
+                    starts_at = dt_util.parse_datetime(price_data.get("startsAt"))
+                    if starts_at is None:
+                        continue
+                    starts_at = dt_util.as_local(starts_at)
+
+                    if now <= starts_at < end_time and "total" in price_data:
+                        prices.append(float(price_data["total"]))
+            return prices
+
+        if volatility_type == "today_tomorrow":
+            # Combined today + tomorrow
+            prices = []
+            for day_key in ["today", "tomorrow"]:
+                for price_data in price_info.get(day_key, []):
+                    if "total" in price_data:
+                        prices.append(float(price_data["total"]))
+            return prices
+
+        return []
+
+    def _add_volatility_type_attributes(
+        self,
+        volatility_type: str,
+        price_info: dict,
+        thresholds: dict,
+    ) -> None:
+        """Add type-specific attributes for volatility sensors."""
+        if volatility_type == "today_tomorrow":
+            # Add breakdown for today vs tomorrow
+            today_prices = [float(p["total"]) for p in price_info.get("today", []) if "total" in p]
+            tomorrow_prices = [float(p["total"]) for p in price_info.get("tomorrow", []) if "total" in p]
+
+            if today_prices:
+                today_spread = (max(today_prices) - min(today_prices)) * 100
+                today_vol = calculate_volatility_level(today_spread, **thresholds)
+                self._last_volatility_attributes["today_spread"] = round(today_spread, 2)
+                self._last_volatility_attributes["today_volatility"] = today_vol
+                self._last_volatility_attributes["interval_count_today"] = len(today_prices)
+
+            if tomorrow_prices:
+                tomorrow_spread = (max(tomorrow_prices) - min(tomorrow_prices)) * 100
+                tomorrow_vol = calculate_volatility_level(tomorrow_spread, **thresholds)
+                self._last_volatility_attributes["tomorrow_spread"] = round(tomorrow_spread, 2)
+                self._last_volatility_attributes["tomorrow_volatility"] = tomorrow_vol
+                self._last_volatility_attributes["interval_count_tomorrow"] = len(tomorrow_prices)
+
+        elif volatility_type == "next_24h":
+            # Add time window info
+            now = dt_util.now()
+            self._last_volatility_attributes["timestamp"] = now.isoformat()
+
+    def _get_volatility_value(self, *, volatility_type: str) -> str | None:
+        """
+        Calculate price volatility (spread) for different time periods.
+
+        Args:
+            volatility_type: One of "today", "tomorrow", "next_24h", "today_tomorrow"
+
+        Returns:
+            Volatility level: "low", "moderate", "high", "very_high", or None if unavailable
+
+        """
+        if not self.coordinator.data:
+            return None
+
+        price_info = self.coordinator.data.get("priceInfo", {})
+
+        # Get volatility thresholds from config
+        thresholds = {
+            "threshold_moderate": self.coordinator.config_entry.options.get("volatility_threshold_moderate", 5.0),
+            "threshold_high": self.coordinator.config_entry.options.get("volatility_threshold_high", 15.0),
+            "threshold_very_high": self.coordinator.config_entry.options.get("volatility_threshold_very_high", 30.0),
+        }
+
+        # Get prices based on volatility type
+        prices_to_analyze = self._get_prices_for_volatility(volatility_type, price_info)
+
+        if not prices_to_analyze:
+            return None
+
+        # Calculate spread
+        price_min = min(prices_to_analyze)
+        price_max = max(prices_to_analyze)
+        spread = price_max - price_min
+
+        # Convert to minor currency units (ct/øre) for volatility calculation
+        spread_minor = spread * 100
+
+        # Calculate volatility level with custom thresholds
+        volatility = calculate_volatility_level(spread_minor, **thresholds)
+
+        # Store attributes for this sensor
+        self._last_volatility_attributes = {
+            "price_spread": round(spread_minor, 2),
+            "price_volatility": volatility,
+            "price_min": round(price_min * 100, 2),
+            "price_max": round(price_max * 100, 2),
+            "price_avg": round((sum(prices_to_analyze) / len(prices_to_analyze)) * 100, 2),
+            "interval_count": len(prices_to_analyze),
+        }
+
+        # Add type-specific attributes
+        self._add_volatility_type_attributes(volatility_type, price_info, thresholds)
+
+        # Return lowercase for ENUM device class
+        return volatility.lower()
+
     # Add method to get future price intervals
     def _get_price_forecast_value(self) -> str | None:
         """Get the highest or lowest price status for the price forecast entity."""
@@ -1499,6 +1678,11 @@ class TibberPricesSensor(TibberPricesEntity, SensorEntity):
 
         # Convert to list sorted by hour
         attributes["intervals_by_hour"] = [hour_data for _, hour_data in sorted(hours.items())]
+
+    def _add_volatility_attributes(self, attributes: dict) -> None:
+        """Add attributes for volatility sensors."""
+        if hasattr(self, "_last_volatility_attributes") and self._last_volatility_attributes:
+            attributes.update(self._last_volatility_attributes)
 
     @property
     def native_value(self) -> float | str | datetime | None:
@@ -1670,6 +1854,8 @@ class TibberPricesSensor(TibberPricesEntity, SensorEntity):
                 self._add_statistics_attributes(attributes)
             elif key == "price_forecast":
                 self._add_price_forecast_attributes(attributes)
+            elif key.endswith("_volatility"):
+                self._add_volatility_attributes(attributes)
             # For price_level, add the original level as attribute
             if key == "price_level" and hasattr(self, "_last_price_level") and self._last_price_level is not None:
                 attributes["level_id"] = self._last_price_level
