@@ -1,6 +1,6 @@
 # Coding Guidelines
 
-> **Note:** For complete coding standards, see `AGENTS.md`.
+> **Note:** For complete coding standards, see [`AGENTS.md`](../../AGENTS.md).
 
 ## Code Style
 
