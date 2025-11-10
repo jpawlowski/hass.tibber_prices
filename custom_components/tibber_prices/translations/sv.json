@@ -106,6 +106,7 @@
                     "best_price_min_distance_from_avg": "Minimiavstånd: Krävd % under dagligt genomsnitt",
                     "best_price_min_volatility": "Minimum volatilitetsfilter",
                     "best_price_max_level": "Prisnivåfilter (Valfritt)",
+                    "best_price_max_level_gap_count": "Gaptolerens för nivåfilter",
                     "enable_min_periods_best": "Försök uppnå minsta antal perioder",
                     "min_periods_best": "Minsta antal perioder",
                     "relaxation_step_best": "Avslappningssteg"
@@ -115,7 +116,8 @@
                     "best_price_max_level": "Visa endast bästa prisperioder om de innehåller intervall med prisnivåer ≤ valt värde. Till exempel: att välja 'Billigt' betyder att perioden måste ha minst ett 'MYCKET_BILLIGT' eller 'BILLIGT' intervall. Detta säkerställer att 'bästa pris'-perioder inte bara är relativt billiga för dagen, utan faktiskt billiga i absoluta tal. Välj 'Alla' för att visa bästa priser oavsett deras absoluta prisnivå.",
                     "enable_min_periods_best": "När aktiverad kommer filtren att gradvis luckras upp om inte tillräckligt många perioder hittas. Detta försöker uppnå det önskade minsta antalet perioder för att säkerställa att du har möjligheter att dra nytta av låga priser även på dagar med ovanliga prismönster.",
                     "min_periods_best": "Minsta antal bästa prisperioder att sträva efter per dag. Filtren kommer att luckras upp steg för steg för att försöka uppnå detta antal. Endast aktiv när 'Försök uppnå minsta antal perioder' är aktiverad. Standard: 1",
-                    "relaxation_step_best": "Procentandel av den ursprungliga flexibilitetströskeln att lägga till per avslappningssteg. Till exempel: med 15% flexibilitet och 25% stegstorlek kommer filtren att prova 15%, 18,75%, 22,5%, osv. Högre värden innebär snabbare avslappning men mindre precision."
+                    "relaxation_step_best": "Procentandel av den ursprungliga flexibilitetströskeln att lägga till per avslappningssteg. Till exempel: med 15% flexibilitet och 25% stegstorlek kommer filtren att prova 15%, 18,75%, 22,5%, osv. Högre värden innebär snabbare avslappning men mindre precision.",
+                    "best_price_max_level_gap_count": "Maximalt antal på varandra följande intervaller som får avvika med exakt ett nivåsteg från det erforderliga nivået. Till exempel: med 'Billigt' filter och gapantal 1 accepteras sekvensen 'BILLIGT, BILLIGT, NORMALT, BILLIGT' (NORMALT är ett steg över BILLIGT). Detta förhindrar att perioder delas upp av tillfälliga nivåavvikelser. Standard: 0 (strikt filtrering, ingen tolerans)."
                 },
                 "submit": "Nästa till steg 5"
             },
@@ -128,6 +130,7 @@
                     "peak_price_min_distance_from_avg": "Minimiavstånd: Krävd % över dagligt genomsnitt",
                     "peak_price_min_volatility": "Minimum volatilitetsfilter",
                     "peak_price_min_level": "Prisnivåfilter (Valfritt)",
+                    "peak_price_max_level_gap_count": "Gaptolerens för nivåfilter",
                     "enable_min_periods_peak": "Försök uppnå minsta antal perioder",
                     "min_periods_peak": "Minsta antal perioder",
                     "relaxation_step_peak": "Avslappningssteg"
@@ -137,7 +140,8 @@
                     "peak_price_min_level": "Visa endast topprisperioder om de innehåller intervall med prisnivåer ≥ valt värde. Till exempel måste perioden om du väljer 'Dyr' ha minst ett 'DYR' eller 'MYCKET_DYR' intervall. Detta säkerställer att 'toppris'-perioder inte bara är relativt dyra för dagen, utan faktiskt dyra i absoluta termer (inte bara 'lite dyrare än genomsnittet på en billig dag').",
                     "enable_min_periods_peak": "När aktiverad kommer filtren att gradvis luckras upp om inte tillräckligt många perioder hittas. Detta försöker uppnå det önskade minsta antalet perioder för att säkerställa att du blir varnad för dyra perioder även på dagar med ovanliga prismönster.",
                     "min_periods_peak": "Minsta antal topprisperioder att sträva efter per dag. Filtren kommer att luckras upp steg för steg för att försöka uppnå detta antal. Endast aktiv när 'Försök uppnå minsta antal perioder' är aktiverad. Standard: 1",
-                    "relaxation_step_peak": "Procentandel av den ursprungliga flexibilitetströskeln att lägga till per avslappningssteg. Till exempel: med -15% flexibilitet och 25% stegstorlek kommer filtren att prova -15%, -18,75%, -22,5%, osv. Högre värden innebär snabbare avslappning men mindre precision."
+                    "relaxation_step_peak": "Procentandel av den ursprungliga flexibilitetströskeln att lägga till per avslappningssteg. Till exempel: med -15% flexibilitet och 25% stegstorlek kommer filtren att prova -15%, -18,75%, -22,5%, osv. Högre värden innebär snabbare avslappning men mindre precision.",
+                    "peak_price_max_level_gap_count": "Maximalt antal på varandra följande intervaller som får avvika med exakt ett nivåsteg från det erforderliga nivået. Till exempel: med 'Dyrt' filter och gapantal 2 accepteras sekvensen 'DYRT, NORMALT, NORMALT, DYRT' (NORMALT är ett steg under DYRT). Detta förhindrar att perioder delas upp av tillfälliga nivåavvikelser. Standard: 0 (strikt filtrering, ingen tolerans)."
                 },
                 "submit": "Nästa till steg 6"
             },

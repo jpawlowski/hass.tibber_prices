@@ -27,6 +27,7 @@ from .api import (
 from .const import (
     CONF_BEST_PRICE_FLEX,
     CONF_BEST_PRICE_MAX_LEVEL,
+    CONF_BEST_PRICE_MAX_LEVEL_GAP_COUNT,
     CONF_BEST_PRICE_MIN_DISTANCE_FROM_AVG,
     CONF_BEST_PRICE_MIN_PERIOD_LENGTH,
     CONF_BEST_PRICE_MIN_VOLATILITY,
@@ -35,6 +36,7 @@ from .const import (
     CONF_MIN_PERIODS_BEST,
     CONF_MIN_PERIODS_PEAK,
     CONF_PEAK_PRICE_FLEX,
+    CONF_PEAK_PRICE_MAX_LEVEL_GAP_COUNT,
     CONF_PEAK_PRICE_MIN_DISTANCE_FROM_AVG,
     CONF_PEAK_PRICE_MIN_LEVEL,
     CONF_PEAK_PRICE_MIN_PERIOD_LENGTH,
@@ -48,6 +50,7 @@ from .const import (
     CONF_VOLATILITY_THRESHOLD_VERY_HIGH,
     DEFAULT_BEST_PRICE_FLEX,
     DEFAULT_BEST_PRICE_MAX_LEVEL,
+    DEFAULT_BEST_PRICE_MAX_LEVEL_GAP_COUNT,
     DEFAULT_BEST_PRICE_MIN_DISTANCE_FROM_AVG,
     DEFAULT_BEST_PRICE_MIN_PERIOD_LENGTH,
     DEFAULT_BEST_PRICE_MIN_VOLATILITY,
@@ -56,6 +59,7 @@ from .const import (
     DEFAULT_MIN_PERIODS_BEST,
     DEFAULT_MIN_PERIODS_PEAK,
     DEFAULT_PEAK_PRICE_FLEX,
+    DEFAULT_PEAK_PRICE_MAX_LEVEL_GAP_COUNT,
     DEFAULT_PEAK_PRICE_MIN_DISTANCE_FROM_AVG,
     DEFAULT_PEAK_PRICE_MIN_LEVEL,
     DEFAULT_PEAK_PRICE_MIN_PERIOD_LENGTH,
@@ -68,6 +72,7 @@ from .const import (
     DEFAULT_VOLATILITY_THRESHOLD_MODERATE,
     DEFAULT_VOLATILITY_THRESHOLD_VERY_HIGH,
     DOMAIN,
+    MIN_INTERVALS_FOR_GAP_TOLERANCE,
     PRICE_LEVEL_MAPPING,
 )
 from .period_utils import (
@@ -778,6 +783,242 @@ class TibberPricesDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             override=level_override,
         )
 
+    def _split_at_gap_clusters(
+        self,
+        today_intervals: list[dict[str, Any]],
+        level_order: int,
+        min_period_length: int,
+        *,
+        reverse_sort: bool,
+    ) -> list[list[dict[str, Any]]]:
+        """
+        Split intervals into sub-sequences at gap clusters.
+
+        A gap cluster is 2+ consecutive intervals that don't meet the level requirement.
+        This allows recovering usable periods from sequences that would otherwise be rejected.
+
+        Args:
+            today_intervals: List of price intervals for today
+            level_order: Required level order from PRICE_LEVEL_MAPPING
+            min_period_length: Minimum number of intervals required for a valid sub-sequence
+            reverse_sort: True for peak price, False for best price
+
+        Returns:
+            List of sub-sequences, each at least min_period_length long.
+
+        """
+        sub_sequences = []
+        current_sequence = []
+        consecutive_non_qualifying = 0
+
+        for interval in today_intervals:
+            interval_level = PRICE_LEVEL_MAPPING.get(interval.get("level", "NORMAL"), 0)
+            meets_requirement = interval_level >= level_order if reverse_sort else interval_level <= level_order
+
+            if meets_requirement:
+                # Qualifying interval - add to current sequence
+                current_sequence.append(interval)
+                consecutive_non_qualifying = 0
+            elif consecutive_non_qualifying == 0:
+                # First non-qualifying interval (single gap) - add to current sequence
+                current_sequence.append(interval)
+                consecutive_non_qualifying = 1
+            else:
+                # Second+ consecutive non-qualifying interval = gap cluster starts
+                # Save current sequence if long enough (excluding the first gap we just added)
+                if len(current_sequence) - 1 >= min_period_length:
+                    sub_sequences.append(current_sequence[:-1])  # Exclude the first gap
+                current_sequence = []
+                consecutive_non_qualifying = 0
+
+        # Don't forget last sequence
+        if len(current_sequence) >= min_period_length:
+            sub_sequences.append(current_sequence)
+
+        return sub_sequences
+
+    def _check_short_period_strict(
+        self,
+        today_intervals: list[dict[str, Any]],
+        level_order: int,
+        *,
+        reverse_sort: bool,
+    ) -> bool:
+        """
+        Strict filtering for short periods (< 1.5h) without gap tolerance.
+
+        All intervals must meet the requirement perfectly, or at least one does
+        and all others are exact matches.
+
+        Args:
+            today_intervals: List of price intervals for today
+            level_order: Required level order from PRICE_LEVEL_MAPPING
+            reverse_sort: True for peak price, False for best price
+
+        Returns:
+            True if all intervals meet requirement (with at least one qualifying), False otherwise.
+
+        """
+        has_qualifying = False
+        for interval in today_intervals:
+            interval_level = PRICE_LEVEL_MAPPING.get(interval.get("level", "NORMAL"), 0)
+            meets_requirement = interval_level >= level_order if reverse_sort else interval_level <= level_order
+            if meets_requirement:
+                has_qualifying = True
+            elif interval_level != level_order:
+                # Any deviation in short periods disqualifies the entire sequence
+                return False
+        return has_qualifying
+
+    def _check_level_filter_with_gaps(
+        self,
+        today_intervals: list[dict[str, Any]],
+        level_order: int,
+        max_gap_count: int,
+        *,
+        reverse_sort: bool,
+    ) -> bool:
+        """
+        Check if intervals meet level requirements with gap tolerance and minimum distance.
+
+        A "gap" is an interval that deviates by exactly 1 level step.
+        For best price: CHEAP allows NORMAL as gap (but not EXPENSIVE).
+        For peak price: EXPENSIVE allows NORMAL as gap (but not CHEAP).
+
+        Gap tolerance is only applied to periods with at least MIN_INTERVALS_FOR_GAP_TOLERANCE
+        intervals (1.5h). Shorter periods use strict filtering (zero tolerance).
+
+        Between gaps, there must be a minimum number of "good" intervals to prevent
+        periods that are mostly interrupted by gaps.
+
+        Args:
+            today_intervals: List of price intervals for today
+            level_order: Required level order from PRICE_LEVEL_MAPPING
+            max_gap_count: Maximum total gaps allowed
+            reverse_sort: True for peak price, False for best price
+
+        Returns:
+            True if any qualifying sequence exists, False otherwise.
+
+        """
+        if not today_intervals:
+            return False
+
+        interval_count = len(today_intervals)
+
+        # Periods shorter than MIN_INTERVALS_FOR_GAP_TOLERANCE (1.5h) use strict filtering
+        if interval_count < MIN_INTERVALS_FOR_GAP_TOLERANCE:
+            return self._check_short_period_strict(today_intervals, level_order, reverse_sort=reverse_sort)
+
+        # Try normal gap tolerance check first
+        if self._check_sequence_with_gap_tolerance(
+            today_intervals, level_order, max_gap_count, reverse_sort=reverse_sort
+        ):
+            return True
+
+        # Normal check failed - try splitting at gap clusters as fallback
+        # Get minimum period length from config (convert minutes to intervals)
+        if reverse_sort:
+            min_period_minutes = self.config_entry.options.get(
+                CONF_PEAK_PRICE_MIN_PERIOD_LENGTH,
+                DEFAULT_PEAK_PRICE_MIN_PERIOD_LENGTH,
+            )
+        else:
+            min_period_minutes = self.config_entry.options.get(
+                CONF_BEST_PRICE_MIN_PERIOD_LENGTH,
+                DEFAULT_BEST_PRICE_MIN_PERIOD_LENGTH,
+            )
+
+        min_period_intervals = min_period_minutes // 15
+
+        sub_sequences = self._split_at_gap_clusters(
+            today_intervals,
+            level_order,
+            min_period_intervals,
+            reverse_sort=reverse_sort,
+        )
+
+        # Check if ANY sub-sequence passes gap tolerance
+        for sub_seq in sub_sequences:
+            if self._check_sequence_with_gap_tolerance(sub_seq, level_order, max_gap_count, reverse_sort=reverse_sort):
+                return True
+
+        return False
+
+    def _check_sequence_with_gap_tolerance(
+        self,
+        intervals: list[dict[str, Any]],
+        level_order: int,
+        max_gap_count: int,
+        *,
+        reverse_sort: bool,
+    ) -> bool:
+        """
+        Check if a single interval sequence passes gap tolerance requirements.
+
+        This is the core gap tolerance logic extracted for reuse with sub-sequences.
+
+        Args:
+            intervals: List of price intervals to check
+            level_order: Required level order from PRICE_LEVEL_MAPPING
+            max_gap_count: Maximum total gaps allowed
+            reverse_sort: True for peak price, False for best price
+
+        Returns:
+            True if sequence meets all gap tolerance requirements, False otherwise.
+
+        """
+        if not intervals:
+            return False
+
+        interval_count = len(intervals)
+
+        # Calculate minimum distance between gaps dynamically.
+        # Shorter periods require relatively larger distances.
+        # Longer periods allow gaps closer together.
+        # Distance is never less than 2 intervals between gaps.
+        min_distance_between_gaps = max(2, (interval_count // max_gap_count) // 2)
+
+        # Limit total gaps to max 25% of period length to prevent too many outliers.
+        # This ensures periods remain predominantly "good" even when long.
+        effective_max_gaps = min(max_gap_count, interval_count // 4)
+
+        gap_count = 0
+        consecutive_good_count = 0
+        has_qualifying_interval = False
+
+        for interval in intervals:
+            interval_level = PRICE_LEVEL_MAPPING.get(interval.get("level", "NORMAL"), 0)
+
+            # Check if interval meets the strict requirement
+            meets_requirement = interval_level >= level_order if reverse_sort else interval_level <= level_order
+
+            if meets_requirement:
+                has_qualifying_interval = True
+                consecutive_good_count += 1
+                continue
+
+            # Check if this is a tolerable gap (exactly 1 step deviation)
+            is_tolerable_gap = interval_level == level_order - 1 if reverse_sort else interval_level == level_order + 1
+
+            if is_tolerable_gap:
+                # If we already had gaps, check minimum distance
+                if gap_count > 0 and consecutive_good_count < min_distance_between_gaps:
+                    # Not enough "good" intervals between gaps
+                    return False
+
+                gap_count += 1
+                if gap_count > effective_max_gaps:
+                    return False
+
+                # Reset counter for next gap
+                consecutive_good_count = 0
+            else:
+                # Too far from required level (more than 1 step deviation)
+                return False
+
+        return has_qualifying_interval
+
     def _check_level_filter(
         self,
         price_info: dict[str, Any],
@@ -786,7 +1027,10 @@ class TibberPricesDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         override: str | None = None,
     ) -> bool:
         """
-        Check if today has any intervals that meet the level requirement.
+        Check if today has any intervals that meet the level requirement with gap tolerance.
+
+        Gap tolerance allows a configurable number of intervals within a qualifying sequence
+        to deviate by one level step (e.g., CHEAP allows NORMAL, but not EXPENSIVE).
 
         Args:
             price_info: Price information dict with today data
@@ -795,7 +1039,8 @@ class TibberPricesDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             override: Optional override value (e.g., "any" to disable filter)
 
         Returns:
-            True if ANY interval meets the level requirement, False otherwise.
+            True if ANY sequence of intervals meets the level requirement
+            (considering gap tolerance), False otherwise.
 
         """
         # Use override if provided
@@ -825,19 +1070,41 @@ class TibberPricesDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         if not today_intervals:
             return True  # If no data, don't filter
 
-        # Check if ANY interval today meets the level requirement
+        # Get gap tolerance configuration
+        if reverse_sort:
+            max_gap_count = self.config_entry.options.get(
+                CONF_PEAK_PRICE_MAX_LEVEL_GAP_COUNT,
+                DEFAULT_PEAK_PRICE_MAX_LEVEL_GAP_COUNT,
+            )
+        else:
+            max_gap_count = self.config_entry.options.get(
+                CONF_BEST_PRICE_MAX_LEVEL_GAP_COUNT,
+                DEFAULT_BEST_PRICE_MAX_LEVEL_GAP_COUNT,
+            )
+
         # Note: level_config is lowercase from selector, but PRICE_LEVEL_MAPPING uses uppercase
         level_order = PRICE_LEVEL_MAPPING.get(level_config.upper(), 0)
 
-        if reverse_sort:
-            # Peak price: level >= min_level (show if ANY interval is expensive enough)
+        # If gap tolerance is 0, use simple ANY check (backwards compatible)
+        if max_gap_count == 0:
+            if reverse_sort:
+                # Peak price: level >= min_level (show if ANY interval is expensive enough)
+                return any(
+                    PRICE_LEVEL_MAPPING.get(interval.get("level", "NORMAL"), 0) >= level_order
+                    for interval in today_intervals
+                )
+            # Best price: level <= max_level (show if ANY interval is cheap enough)
             return any(
-                PRICE_LEVEL_MAPPING.get(interval.get("level", "NORMAL"), 0) >= level_order
+                PRICE_LEVEL_MAPPING.get(interval.get("level", "NORMAL"), 0) <= level_order
                 for interval in today_intervals
             )
-        # Best price: level <= max_level (show if ANY interval is cheap enough)
-        return any(
-            PRICE_LEVEL_MAPPING.get(interval.get("level", "NORMAL"), 0) <= level_order for interval in today_intervals
+
+        # Use gap-tolerant check
+        return self._check_level_filter_with_gaps(
+            today_intervals,
+            level_order,
+            max_gap_count,
+            reverse_sort=reverse_sort,
         )
 
     def _calculate_periods_for_price_info(self, price_info: dict[str, Any]) -> dict[str, Any]:

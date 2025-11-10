@@ -42,6 +42,7 @@ from .const import (
     BEST_PRICE_MAX_LEVEL_OPTIONS,
     CONF_BEST_PRICE_FLEX,
     CONF_BEST_PRICE_MAX_LEVEL,
+    CONF_BEST_PRICE_MAX_LEVEL_GAP_COUNT,
     CONF_BEST_PRICE_MIN_DISTANCE_FROM_AVG,
     CONF_BEST_PRICE_MIN_PERIOD_LENGTH,
     CONF_BEST_PRICE_MIN_VOLATILITY,
@@ -51,6 +52,7 @@ from .const import (
     CONF_MIN_PERIODS_BEST,
     CONF_MIN_PERIODS_PEAK,
     CONF_PEAK_PRICE_FLEX,
+    CONF_PEAK_PRICE_MAX_LEVEL_GAP_COUNT,
     CONF_PEAK_PRICE_MIN_DISTANCE_FROM_AVG,
     CONF_PEAK_PRICE_MIN_LEVEL,
     CONF_PEAK_PRICE_MIN_PERIOD_LENGTH,
@@ -66,6 +68,7 @@ from .const import (
     CONF_VOLATILITY_THRESHOLD_VERY_HIGH,
     DEFAULT_BEST_PRICE_FLEX,
     DEFAULT_BEST_PRICE_MAX_LEVEL,
+    DEFAULT_BEST_PRICE_MAX_LEVEL_GAP_COUNT,
     DEFAULT_BEST_PRICE_MIN_DISTANCE_FROM_AVG,
     DEFAULT_BEST_PRICE_MIN_PERIOD_LENGTH,
     DEFAULT_BEST_PRICE_MIN_VOLATILITY,
@@ -75,6 +78,7 @@ from .const import (
     DEFAULT_MIN_PERIODS_BEST,
     DEFAULT_MIN_PERIODS_PEAK,
     DEFAULT_PEAK_PRICE_FLEX,
+    DEFAULT_PEAK_PRICE_MAX_LEVEL_GAP_COUNT,
     DEFAULT_PEAK_PRICE_MIN_DISTANCE_FROM_AVG,
     DEFAULT_PEAK_PRICE_MIN_LEVEL,
     DEFAULT_PEAK_PRICE_MIN_PERIOD_LENGTH,
@@ -680,6 +684,22 @@ class TibberPricesOptionsFlowHandler(OptionsFlow):
                         ),
                     ),
                     vol.Optional(
+                        CONF_BEST_PRICE_MAX_LEVEL_GAP_COUNT,
+                        default=int(
+                            self.config_entry.options.get(
+                                CONF_BEST_PRICE_MAX_LEVEL_GAP_COUNT,
+                                DEFAULT_BEST_PRICE_MAX_LEVEL_GAP_COUNT,
+                            )
+                        ),
+                    ): NumberSelector(
+                        NumberSelectorConfig(
+                            min=0,
+                            max=8,
+                            step=1,
+                            mode=NumberSelectorMode.SLIDER,
+                        ),
+                    ),
+                    vol.Optional(
                         CONF_ENABLE_MIN_PERIODS_BEST,
                         default=self.config_entry.options.get(
                             CONF_ENABLE_MIN_PERIODS_BEST,
@@ -809,6 +829,22 @@ class TibberPricesOptionsFlowHandler(OptionsFlow):
                             options=PEAK_PRICE_MIN_LEVEL_OPTIONS,
                             mode=SelectSelectorMode.DROPDOWN,
                             translation_key="price_level",
+                        ),
+                    ),
+                    vol.Optional(
+                        CONF_PEAK_PRICE_MAX_LEVEL_GAP_COUNT,
+                        default=int(
+                            self.config_entry.options.get(
+                                CONF_PEAK_PRICE_MAX_LEVEL_GAP_COUNT,
+                                DEFAULT_PEAK_PRICE_MAX_LEVEL_GAP_COUNT,
+                            )
+                        ),
+                    ): NumberSelector(
+                        NumberSelectorConfig(
+                            min=0,
+                            max=8,
+                            step=1,
+                            mode=NumberSelectorMode.SLIDER,
                         ),
                     ),
                     vol.Optional(

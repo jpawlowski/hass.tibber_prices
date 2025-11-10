@@ -106,6 +106,7 @@
                     "best_price_min_distance_from_avg": "Mindestabstand: Erforderlich unter dem Tagesdurchschnitt",
                     "best_price_min_volatility": "Mindest-Volatilitätsfilter",
                     "best_price_max_level": "Preisniveau-Filter (Optional)",
+                    "best_price_max_level_gap_count": "Lückentoleranz für Niveaufilter",
                     "enable_min_periods_best": "Mindestanzahl Perioden anstreben",
                     "min_periods_best": "Mindestanzahl Perioden",
                     "relaxation_step_best": "Lockerungsschritt"
@@ -113,6 +114,7 @@
                 "data_description": {
                     "best_price_min_volatility": "Zeigt Bestpreis-Perioden nur an, wenn die interne Preisvolatilität der Periode (Preisspanne innerhalb der Periode) mindestens diesem Level entspricht. Standard: 'Niedrig' (zeigt Perioden mit beliebigem Volatilitätslevel) - ermöglicht das Finden günstiger Perioden auch wenn die Preise stabil sind. Wähle 'Moderat'/'Hoch' um nur Perioden mit signifikanten Preisschwankungen anzuzeigen, was auf dynamischere Preismöglichkeiten hinweisen kann.",
                     "best_price_max_level": "Zeigt Bestpreis-Perioden nur an, wenn sie Intervalle mit Preisniveaus ≤ dem gewählten Wert enthalten. Beispiel: Wahl von 'Günstig' bedeutet, dass die Periode mindestens ein 'SEHR_GÜNSTIG' oder 'GÜNSTIG' Intervall haben muss. Dies stellt sicher, dass 'Bestpreis'-Perioden nicht nur relativ günstig für den Tag sind, sondern tatsächlich günstig in absoluten Zahlen. Wähle 'Beliebig' um Bestpreise unabhängig vom absoluten Preisniveau anzuzeigen.",
+                    "best_price_max_level_gap_count": "Maximale Anzahl aufeinanderfolgender Intervalle, die exakt um eine Niveaustufe vom geforderten Level abweichen dürfen. Beispiel: Bei Filter 'Günstig' und Lückentoleranz 1 wird die Sequenz 'GÜNSTIG, GÜNSTIG, NORMAL, GÜNSTIG' akzeptiert (NORMAL ist eine Stufe über GÜNSTIG). Dies verhindert, dass Perioden durch gelegentliche Niveau-Abweichungen aufgespalten werden. Standard: 0 (strenge Filterung, keine Toleranz).",
                     "enable_min_periods_best": "Wenn aktiviert, werden Filter schrittweise gelockert, falls nicht genug Perioden gefunden wurden. Dies versucht die gewünschte Mindestanzahl zu erreichen, was dazu führen kann, dass auch weniger optimale Zeiträume als Bestpreis-Perioden markiert werden.",
                     "min_periods_best": "Mindestanzahl an Bestpreis-Perioden, die pro Tag angestrebt werden. Filter werden schrittweise gelockert, um diese Anzahl zu erreichen. Nur aktiv, wenn 'Mindestanzahl Perioden anstreben' aktiviert ist. Standard: 1",
                     "relaxation_step_best": "Prozentsatz des ursprünglichen Flexibilitätsschwellwerts, der pro Lockerungsschritt addiert wird. Beispiel: Bei 15% Flexibilität und 25% Schrittgröße werden 15%, 18,75%, 22,5% usw. versucht. Höhere Werte bedeuten schnellere Lockerung, aber geringere Präzision."
@@ -128,6 +130,7 @@
                     "peak_price_min_distance_from_avg": "Mindestabstand: Erforderlich über dem Tagesdurchschnitt",
                     "peak_price_min_volatility": "Mindest-Volatilitätsfilter",
                     "peak_price_min_level": "Preisniveau-Filter (Optional)",
+                    "peak_price_max_level_gap_count": "Lückentoleranz für Niveaufilter",
                     "enable_min_periods_peak": "Mindestanzahl Perioden anstreben",
                     "min_periods_peak": "Mindestanzahl Perioden",
                     "relaxation_step_peak": "Lockerungsschritt"
@@ -135,6 +138,7 @@
                 "data_description": {
                     "peak_price_min_volatility": "Zeigt Spitzenpreis-Perioden nur an, wenn die interne Preisvolatilität der Periode (Preisspanne innerhalb der Periode) mindestens diesem Level entspricht. Standard: 'Niedrig' (zeigt Perioden mit beliebigem Volatilitätslevel) - ermöglicht das Identifizieren teurer Perioden auch wenn die Preise stabil sind. Wähle 'Moderat'/'Hoch' um nur Perioden mit signifikanten Preisschwankungen anzuzeigen, was auf dringenderen Bedarf hinweisen kann, diese Zeiten zu vermeiden.",
                     "peak_price_min_level": "Zeigt Spitzenpreis-Perioden nur an, wenn sie Intervalle mit Preisniveaus ≥ dem gewählten Wert enthalten. Beispiel: Wahl von 'Teuer' bedeutet, dass die Periode mindestens ein 'TEUER' oder 'SEHR_TEUER' Intervall haben muss. Dies stellt sicher, dass 'Spitzenpreis'-Perioden nicht nur relativ teuer für den Tag sind, sondern tatsächlich teuer in absoluten Zahlen. Wähle 'Beliebig' um Spitzenpreise unabhängig vom absoluten Preisniveau anzuzeigen.",
+                    "peak_price_max_level_gap_count": "Maximale Anzahl aufeinanderfolgender Intervalle, die exakt um eine Niveaustufe vom geforderten Level abweichen dürfen. Beispiel: Bei Filter 'Teuer' und Lückentoleranz 2 wird die Sequenz 'TEUER, NORMAL, NORMAL, TEUER' akzeptiert (NORMAL ist eine Stufe unter TEUER). Dies verhindert, dass Perioden durch gelegentliche Niveau-Abweichungen aufgespalten werden. Standard: 0 (strenge Filterung, keine Toleranz).",
                     "enable_min_periods_peak": "Wenn aktiviert, werden Filter schrittweise gelockert, falls nicht genug Perioden gefunden wurden. Dies versucht die gewünschte Mindestanzahl zu erreichen, um sicherzustellen, dass du auch an Tagen mit ungewöhnlichen Preismustern vor teuren Perioden gewarnt wirst.",
                     "min_periods_peak": "Mindestanzahl an Spitzenpreis-Perioden, die pro Tag angestrebt werden. Filter werden schrittweise gelockert, um diese Anzahl zu erreichen. Nur aktiv, wenn 'Mindestanzahl Perioden anstreben' aktiviert ist. Standard: 1",
                     "relaxation_step_peak": "Prozentsatz des ursprünglichen Flexibilitätsschwellwerts, der pro Lockerungsschritt addiert wird. Beispiel: Bei -15% Flexibilität und 25% Schrittgröße werden -15%, -18,75%, -22,5% usw. versucht. Höhere Werte bedeuten schnellere Lockerung, aber geringere Präzision."

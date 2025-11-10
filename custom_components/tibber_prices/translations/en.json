@@ -106,6 +106,7 @@
                     "best_price_min_distance_from_avg": "Minimum Distance: Required below daily average",
                     "best_price_min_volatility": "Minimum Volatility Filter",
                     "best_price_max_level": "Price Level Filter (Optional)",
+                    "best_price_max_level_gap_count": "Level Filter Gap Tolerance",
                     "enable_min_periods_best": "Try to Achieve Minimum Period Count",
                     "min_periods_best": "Minimum Periods Required",
                     "relaxation_step_best": "Filter Relaxation Step Size"
@@ -113,6 +114,7 @@
                 "data_description": {
                     "best_price_min_volatility": "Only show best price periods when the period's internal price volatility (spread within the period) meets or exceeds this level. Default: 'Low' (show periods with any volatility level) - allows finding cheap periods even if prices are stable. Select 'Moderate'/'High' to only show periods with significant price variations, which may indicate more dynamic pricing opportunities.",
                     "best_price_max_level": "Only show best price periods if they contain intervals with price levels ≤ selected value. For example, selecting 'Cheap' means the period must have at least one 'VERY_CHEAP' or 'CHEAP' interval. This ensures 'best price' periods are not just relatively cheap for the day, but actually cheap in absolute terms. Select 'Any' to show best prices regardless of their absolute price level.",
+                    "best_price_max_level_gap_count": "Maximum number of consecutive intervals allowed that deviate by exactly one level step from the required level. For example: with 'Cheap' filter and gap count 1, a sequence 'CHEAP, CHEAP, NORMAL, CHEAP' is accepted (NORMAL is one step above CHEAP). This prevents periods from being split by occasional level deviations. Default: 0 (strict filtering, no tolerance).",
                     "enable_min_periods_best": "When enabled, filters will be gradually relaxed if not enough periods are found. This attempts to reach the desired minimum number of periods, which may include less optimal time windows as best-price periods.",
                     "min_periods_best": "Minimum number of best price periods to aim for per day. Filters will be relaxed step-by-step to try achieving this count. Only active when 'Try to Achieve Minimum Period Count' is enabled. Default: 1",
                     "relaxation_step_best": "Percentage of the original flexibility threshold to add per relaxation step. For example: with 15% flexibility and 25% step size, filters will try 15%, 18.75%, 22.5%, etc. Higher values mean faster relaxation but less precision."
@@ -128,6 +130,7 @@
                     "peak_price_min_distance_from_avg": "Minimum Distance: Required above daily average",
                     "peak_price_min_volatility": "Minimum Volatility Filter",
                     "peak_price_min_level": "Price Level Filter (Optional)",
+                    "peak_price_max_level_gap_count": "Level Filter Gap Tolerance",
                     "enable_min_periods_peak": "Try to Achieve Minimum Period Count",
                     "min_periods_peak": "Minimum Periods Required",
                     "relaxation_step_peak": "Filter Relaxation Step Size"
@@ -135,6 +138,7 @@
                 "data_description": {
                     "peak_price_min_volatility": "Only show peak price periods when the period's internal price volatility (spread within the period) meets or exceeds this level. Default: 'Low' (show periods with any volatility level) - allows identifying expensive periods even if prices are stable. Select 'Moderate'/'High' to only show periods with significant price variations, which may indicate more urgent need to avoid these times.",
                     "peak_price_min_level": "Only show peak price periods if they contain intervals with price levels ≥ selected value. For example, selecting 'Expensive' means the period must have at least one 'EXPENSIVE' or 'VERY_EXPENSIVE' interval. This ensures 'peak price' periods are not just relatively expensive for the day, but actually expensive in absolute terms. Select 'Any' to show peak prices regardless of their absolute price level.",
+                    "peak_price_max_level_gap_count": "Maximum number of consecutive intervals allowed that deviate by exactly one level step from the required level. For example: with 'Expensive' filter and gap count 2, a sequence 'EXPENSIVE, NORMAL, NORMAL, EXPENSIVE' is accepted (NORMAL is one step below EXPENSIVE). This prevents periods from being split by occasional level deviations. Default: 0 (strict filtering, no tolerance).",
                     "enable_min_periods_peak": "When enabled, filters will be gradually relaxed if not enough periods are found. This attempts to reach the desired minimum number of periods to ensure you're warned about expensive periods even on days with unusual price patterns.",
                     "min_periods_peak": "Minimum number of peak price periods to aim for per day. Filters will be relaxed step-by-step to try achieving this count. Only active when 'Try to Achieve Minimum Period Count' is enabled. Default: 1",
                     "relaxation_step_peak": "Percentage of the original flexibility threshold to add per relaxation step. For example: with -15% flexibility and 25% step size, filters will try -15%, -18.75%, -22.5%, etc. Higher values mean faster relaxation but less precision."
