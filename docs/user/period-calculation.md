@@ -26,12 +26,15 @@ The integration automatically calculates **Best Price Periods** (cheap time wind
 
 ### Basic Principle
 
-The calculation happens in **two main steps**:
+The calculation happens in **multiple steps**:
 
-1. **Period Identification**: Find contiguous time ranges that differ significantly from the daily average
-2. **Filter Application**: Apply various filters to keep only relevant periods
+1. **Period Identification**: Find contiguous time ranges within a **flexibility range** of the daily MIN/MAX prices
+2. **Hard Filters**: Apply non-configurable filters (periods must be below/above average)
+3. **Length Filter**: Remove periods that are too short
+4. **Quality Filter**: Ensure meaningful distance from average
+5. **Optional Filters**: Apply volatility and level filters if configured
 
-Both steps can be influenced by configuration options.
+All steps except #2 can be influenced by configuration options.
 
 ---
 
@@ -41,38 +44,49 @@ Both steps can be influenced by configuration options.
 
 **What happens:**
 - Fetch all price intervals for today (96 x 15-minute intervals = 24 hours)
-- Calculate daily average price
+- Calculate daily **MIN, MAX, and AVG** prices
 - Calculate trailing 24h average for each interval
 
 **Example:**
 ```
 Today: 96 intervals from 00:00 to 23:59
-Average price today: 25.5 ct/kWh
+Daily MIN: 18.0 ct/kWh
+Daily MAX: 35.0 ct/kWh
+Daily AVG: 26.5 ct/kWh
 ```
 
 ### Step 2: Period Identification (Flexibility)
 
 **What happens:**
-- Search for contiguous intervals that are **significantly cheaper** (Best Price) or **more expensive** (Peak Price) than the average
-- "Significant" is defined by the **flexibility** setting
+- Search for contiguous intervals within a **flexibility range** of the daily extreme prices
+- **Best Price**: Includes intervals within flexibility range of the day's **MINIMUM** price
+- **Peak Price**: Includes intervals within flexibility range of the day's **MAXIMUM** price
 
 **Configuration:**
-- `best_price_flex` (default: 15%) - How much cheaper than average?
-- `peak_price_flex` (default: -15%) - How much more expensive than average?
+- `best_price_flex` (default: 15%) - How much more expensive than the daily MIN can an interval be?
+- `peak_price_flex` (default: -15%) - How much less expensive than the daily MAX can an interval be?
 
 **Example (Best Price with 15% flexibility):**
 ```
-Average price: 25.0 ct/kWh
-Flexibility: -15%
-Threshold: 25.0 - (25.0 × 0.15) = 21.25 ct/kWh
+Daily prices: 18.0 ct (min), 35.0 ct (max), 26.5 ct (avg)
+Flexibility: 15%
+Reference: Daily MIN = 18.0 ct (not average!)
+Threshold: 18.0 + (18.0 × 0.15) = 20.7 ct/kWh
 
-Intervals that cost ≤ 21.25 ct/kWh are grouped into periods:
-00:00-00:15: 20.5 ct ✓ │
-00:15-00:30: 19.8 ct ✓ ├─ Period 1 (1h)
-00:30-00:45: 21.0 ct ✓ │
+Intervals that cost ≤ 20.7 ct/kWh are grouped into periods:
+00:00-00:15: 18.5 ct ✓ │
+00:15-00:30: 18.0 ct ✓ ├─ Period 1 (1h)
+00:30-00:45: 19.8 ct ✓ │
 00:45-01:00: 20.2 ct ✓ │
-01:00-01:15: 26.5 ct ✗   (too expensive, period ends)
+01:00-01:15: 21.5 ct ✗   (exceeds flexibility threshold, period ends)
 ```
+
+**Why compare to MIN/MAX instead of average?**
+- Creates periods around the **best/worst price opportunities** of the day
+- More predictable behavior: flexibility directly controls how far from the extreme prices you go
+- Prevents marking mediocre prices as "best" just because the daily average is high
+
+**Note:** The flexibility check (vs MIN/MAX) and the minimum distance check (vs AVG in Step 4) work together to ensure periods are both close to extremes AND meaningfully different from average.
 
 ### Step 3: Minimum Period Length
 
@@ -94,28 +108,48 @@ Found periods:
 ### Step 4: Minimum Distance from Average
 
 **What happens:**
-- Periods must have **additional** distance from the daily average beyond flexibility
+- This is a **SEPARATE** filter from flexibility (Step 2)
+- Each interval must be sufficiently far from the daily average
 - Prevents marking "almost normal" prices as "Best/Peak" on days with small price spread
+- **Implicitly ensures intervals are below/above average** (since distance > 0% by default)
 
 **Configuration:**
-- `best_price_min_distance_from_avg` (default: 2%) - Additional distance below average
-- `peak_price_min_distance_from_avg` (default: 2%) - Additional distance above average
+- `best_price_min_distance_from_avg` (default: 2%) - Minimum distance below average
+- `peak_price_min_distance_from_avg` (default: 2%) - Minimum distance above average
 
 **Example (Best Price):**
 ```
-Daily average: 25.0 ct/kWh
-Flexibility threshold: 21.25 ct/kWh (from Step 2)
+Daily prices: 18.0 ct (min), 35.0 ct (max), 26.5 ct (avg)
+Flexibility: 15%
 Minimum distance: 2%
 
-Final check for each interval:
-1. Price ≤ flexibility threshold? (21.25 ct)
-2. AND price ≤ average × (1 - 0.02)? (24.5 ct)
+Flexibility threshold (from Step 2): 18.0 × 1.15 = 20.7 ct
+Average distance threshold: 26.5 × 0.98 = 25.97 ct
 
-Interval with 23.0 ct:
-  ✗ Meets flexibility (23.0 > 21.25)
-  ✓ Meets minimum distance (23.0 < 24.5)
-  → REJECTED (both conditions must be met)
+Final check for each interval - BOTH conditions must pass:
+1. Price ≤ flexibility threshold? (20.7 ct) ← vs MIN
+2. AND price ≤ average distance threshold? (25.97 ct) ← vs AVG
+
+Interval at 19.5 ct:
+  ✓ Meets flexibility (19.5 ≤ 20.7)
+  ✓ Meets min distance (19.5 ≤ 25.97)
+  → ACCEPTED (both conditions met)
+
+Interval at 22.0 ct:
+  ✗ Fails flexibility (22.0 > 20.7)
+  ✓ Meets min distance (22.0 ≤ 25.97)
+  → REJECTED (flexibility condition failed)
+
+Interval at 26.0 ct (hypothetical):
+  ✗ Fails flexibility (26.0 > 20.7)
+  ✗ Fails min distance (26.0 > 25.97)
+  → REJECTED (both conditions failed)
 ```
+
+**Why this matters:**
+- On days with small price variation, flexibility alone might include intervals that are barely below average
+- The minimum distance filter ensures you're actually getting meaningful savings
+- With default 2%, intervals must be at least 2% below average (which also ensures they're below average)
 
 ### Step 5: Filter Application
 
@@ -131,9 +165,9 @@ Interval with 23.0 ct:
 
 | Option | Default | Description | Acts in Step |
 |--------|---------|-------------|--------------|
-| `best_price_flex` | 15% | How much cheaper than average must a period be? | 2 (Identification) |
+| `best_price_flex` | 15% | How much more expensive than the daily **MIN** can an interval be? | 2 (Identification) |
 | `best_price_min_period_length` | 60 min | Minimum length of a period | 3 (Length filter) |
-| `best_price_min_distance_from_avg` | 2% | Additional minimum distance below daily average | 4 (Quality filter) |
+| `best_price_min_distance_from_avg` | 2% | Minimum distance below daily **average** (separate from flexibility) | 4 (Quality filter) |
 | `best_price_min_volatility` | LOW | Minimum volatility within the period (optional) | 5 (Volatility filter) |
 | `best_price_max_level` | ANY | Maximum price level (optional, e.g., only CHEAP or better) | 5 (Level filter) |
 | `best_price_max_level_gap_count` | 0 | Tolerance for level deviations (see [Gap Tolerance](#gap-tolerance-for-level-filters)) | 5 (Level filter) |
@@ -145,9 +179,9 @@ Interval with 23.0 ct:
 
 | Option | Default | Description | Acts in Step |
 |--------|---------|-------------|--------------|
-| `peak_price_flex` | -15% | How much more expensive than average must a period be? | 2 (Identification) |
+| `peak_price_flex` | -15% | How much less expensive than the daily **MAX** can an interval be? | 2 (Identification) |
 | `peak_price_min_period_length` | 60 min | Minimum length of a period | 3 (Length filter) |
-| `peak_price_min_distance_from_avg` | 2% | Additional minimum distance above daily average | 4 (Quality filter) |
+| `peak_price_min_distance_from_avg` | 2% | Minimum distance above daily **average** (separate from flexibility) | 4 (Quality filter) |
 | `peak_price_min_volatility` | LOW | Minimum volatility within the period (optional) | 5 (Volatility filter) |
 | `peak_price_min_level` | ANY | Minimum price level (optional, e.g., only EXPENSIVE or higher) | 5 (Level filter) |
 | `peak_price_max_level_gap_count` | 0 | Tolerance for level deviations (see [Gap Tolerance](#gap-tolerance-for-level-filters)) | 5 (Level filter) |
@@ -396,6 +430,8 @@ Step 3: ...
 
 **Calculation:** `new_flexibility = old_flexibility × (1 + relaxation_step / 100)`
 
+**Important:** This increases the flexibility percentage, which allows intervals **further from the daily MIN/MAX** to be included. For best price, this means accepting intervals more expensive than the original flexibility threshold.
+
 #### Level 2: Disable Volatility Filter
 ```
 If flexibility relaxation isn't enough:
@@ -463,23 +499,26 @@ best_price_max_level: "any"  # Filter disabled
 
 **Daily prices:**
 ```
-Average: 25.0 ct/kWh
-00:00-02:00: 19-21 ct (cheap)
+MIN: 18.0 ct/kWh
+MAX: 32.0 ct/kWh
+AVG: 25.0 ct/kWh
+
+00:00-02:00: 18-20 ct (cheap)
 06:00-08:00: 28-30 ct (expensive)
 12:00-14:00: 24-26 ct (normal)
-18:00-20:00: 20-22 ct (cheap)
+18:00-20:00: 19-21 ct (cheap)
 ```
 
 **Calculation:**
-1. Flexibility threshold: 25.0 - (25.0 × 0.15) = 21.25 ct
-2. Minimum distance threshold: 25.0 × (1 - 0.02) = 24.5 ct
-3. Both conditions: Price ≤ 21.25 ct
+1. Flexibility threshold: 18.0 × 1.15 = 20.7 ct (vs MIN, not average!)
+2. Minimum distance threshold: 25.0 × 0.98 = 24.5 ct (vs AVG)
+3. Both conditions: Price ≤ 20.7 ct AND Price ≤ 24.5 ct
 
 **Result:**
-- ✓ 00:00-02:00 (19-21 ct, all ≤ 21.25)
+- ✓ 00:00-02:00 (18-20 ct, all ≤ 20.7 and all ≤ 24.5)
 - ✗ 06:00-08:00 (too expensive)
-- ✗ 12:00-14:00 (24-26 ct, not cheap enough)
-- ✓ 18:00-20:00 (20-22 ct, all ≤ 21.25)
+- ✗ 12:00-14:00 (24-26 ct, exceeds flexibility threshold of 20.7 ct)
+- ✓ 18:00-20:00 (19-21 ct, all ≤ 20.7 and all ≤ 24.5)
 
 **2 Best Price periods found!**
 
@@ -572,40 +611,42 @@ enable_min_periods_best: true
 min_periods_best: 2
 relaxation_step_best: 25
 
-best_price_flex: 10  # Very strict!
+best_price_flex: 5  # Very strict!
 best_price_min_volatility: "high"  # Very strict!
 ```
 
 **Day with little price spread:**
 ```
-Average: 25.0 ct/kWh
+MIN: 23.0 ct/kWh
+MAX: 27.0 ct/kWh
+AVG: 25.0 ct/kWh
 All prices between 23-27 ct (low volatility)
 ```
 
 **Relaxation process:**
 
-1. **Attempt 1:** 10% flex + HIGH volatility
+1. **Attempt 1:** 5% flex + HIGH volatility
    ```
-   Threshold: 22.5 ct
+   Threshold: 23.0 × 1.05 = 24.15 ct (vs MIN)
    No period meets both conditions
    → 0 periods (< 2 required)
    ```
 
-2. **Attempt 2:** 12.5% flex + HIGH volatility
+2. **Attempt 2:** 6.25% flex + HIGH volatility
    ```
-   Threshold: 21.875 ct
+   Threshold: 23.0 × 1.0625 = 24.44 ct
    Still 0 periods
    ```
 
 3. **Attempt 3:** Disable volatility filter
    ```
-   12.5% flex + ANY volatility
+   6.25% flex + ANY volatility
    → 1 period found (< 2)
    ```
 
-4. **Attempt 4:** 15.625% flex + ANY volatility
+4. **Attempt 4:** 7.81% flex + ANY volatility
    ```
-   Threshold: 21.09 ct
+   Threshold: 23.0 × 1.0781 = 24.80 ct
    → 2 periods found ✓
    ```
 
@@ -623,7 +664,7 @@ All prices between 23-27 ct (low volatility)
 
 1. **Too strict flexibility**
    ```
-   best_price_flex: 5  # Only 5% cheaper than average
+   best_price_flex: 5  # Only allows intervals ≤5% above daily MIN
    ```
    **Solution:** Increase to 10-15%
 
@@ -648,7 +689,7 @@ All prices between 23-27 ct (low volatility)
 
 5. **Day with very small price spread**
    ```
-   All prices between 24-26 ct (hardly any differences)
+   MIN: 23 ct, MAX: 27 ct (hardly any differences)
    ```
    **Solution:** Enable relaxation mechanism:
    ```yaml

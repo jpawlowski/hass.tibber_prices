@@ -269,7 +269,6 @@ def _build_periods(
 
         # Check if interval qualifies for the period
         in_flex = percent_diff >= flex * 100 if reverse_sort else percent_diff <= flex * 100
-        within_avg_boundary = price >= avg_price if reverse_sort else price <= avg_price
 
         # Minimum distance from average
         if reverse_sort:
@@ -289,7 +288,7 @@ def _build_periods(
         last_ref_date = date_key
 
         # Add to period if all criteria are met
-        if in_flex and within_avg_boundary and meets_min_distance:
+        if in_flex and meets_min_distance:
             current_period.append(
                 {
                     "interval_hour": starts_at.hour,
