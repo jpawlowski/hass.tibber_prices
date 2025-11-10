@@ -1,8 +1,0 @@
-{
-    "instructionFiles": [
-        {
-            "pattern": "**",
-            "path": ".github/copilot-instructions.md"
-        }
-    ]
-}
