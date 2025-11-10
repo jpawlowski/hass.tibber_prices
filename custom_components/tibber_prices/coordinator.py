@@ -30,6 +30,10 @@ from .const import (
     CONF_BEST_PRICE_MIN_DISTANCE_FROM_AVG,
     CONF_BEST_PRICE_MIN_PERIOD_LENGTH,
     CONF_BEST_PRICE_MIN_VOLATILITY,
+    CONF_ENABLE_MIN_PERIODS_BEST,
+    CONF_ENABLE_MIN_PERIODS_PEAK,
+    CONF_MIN_PERIODS_BEST,
+    CONF_MIN_PERIODS_PEAK,
     CONF_PEAK_PRICE_FLEX,
     CONF_PEAK_PRICE_MIN_DISTANCE_FROM_AVG,
     CONF_PEAK_PRICE_MIN_LEVEL,
@@ -37,6 +41,8 @@ from .const import (
     CONF_PEAK_PRICE_MIN_VOLATILITY,
     CONF_PRICE_RATING_THRESHOLD_HIGH,
     CONF_PRICE_RATING_THRESHOLD_LOW,
+    CONF_RELAXATION_STEP_BEST,
+    CONF_RELAXATION_STEP_PEAK,
     CONF_VOLATILITY_THRESHOLD_HIGH,
     CONF_VOLATILITY_THRESHOLD_MODERATE,
     CONF_VOLATILITY_THRESHOLD_VERY_HIGH,
@@ -45,6 +51,10 @@ from .const import (
     DEFAULT_BEST_PRICE_MIN_DISTANCE_FROM_AVG,
     DEFAULT_BEST_PRICE_MIN_PERIOD_LENGTH,
     DEFAULT_BEST_PRICE_MIN_VOLATILITY,
+    DEFAULT_ENABLE_MIN_PERIODS_BEST,
+    DEFAULT_ENABLE_MIN_PERIODS_PEAK,
+    DEFAULT_MIN_PERIODS_BEST,
+    DEFAULT_MIN_PERIODS_PEAK,
     DEFAULT_PEAK_PRICE_FLEX,
     DEFAULT_PEAK_PRICE_MIN_DISTANCE_FROM_AVG,
     DEFAULT_PEAK_PRICE_MIN_LEVEL,
@@ -52,16 +62,19 @@ from .const import (
     DEFAULT_PEAK_PRICE_MIN_VOLATILITY,
     DEFAULT_PRICE_RATING_THRESHOLD_HIGH,
     DEFAULT_PRICE_RATING_THRESHOLD_LOW,
+    DEFAULT_RELAXATION_STEP_BEST,
+    DEFAULT_RELAXATION_STEP_PEAK,
     DEFAULT_VOLATILITY_THRESHOLD_HIGH,
     DEFAULT_VOLATILITY_THRESHOLD_MODERATE,
     DEFAULT_VOLATILITY_THRESHOLD_VERY_HIGH,
     DOMAIN,
     PRICE_LEVEL_MAPPING,
-    VOLATILITY_HIGH,
-    VOLATILITY_MODERATE,
-    VOLATILITY_VERY_HIGH,
 )
-from .period_utils import PeriodConfig, calculate_periods
+from .period_utils import (
+    PeriodConfig,
+    calculate_periods_with_relaxation,
+    filter_periods_by_volatility,
+)
 from .price_utils import (
     enrich_price_info_with_differences,
     find_price_data_for_interval,
@@ -735,97 +748,43 @@ class TibberPricesDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             "min_period_length": int(min_period_length),
         }
 
-    def _should_show_periods(self, price_info: dict[str, Any], *, reverse_sort: bool) -> bool:
+    def _should_show_periods(
+        self,
+        price_info: dict[str, Any],
+        *,
+        reverse_sort: bool,
+        level_override: str | None = None,
+    ) -> bool:
         """
-        Check if periods should be shown based on volatility AND level filters (UND-Verknüpfung).
+        Check if periods should be shown based on level filter only.
+
+        Note: Volatility filtering is now applied per-period after calculation,
+        not at the daily level. See _filter_periods_by_volatility().
 
         Args:
             price_info: Price information dict with today/yesterday/tomorrow data
             reverse_sort: If False (best_price), checks max_level filter.
                          If True (peak_price), checks min_level filter.
+            level_override: Optional override for level filter ("any" to disable)
 
         Returns:
             True if periods should be displayed, False if they should be filtered out.
-            Both conditions must be met for periods to be shown.
 
         """
-        # Check volatility filter
-        if not self._check_volatility_filter(price_info, reverse_sort=reverse_sort):
-            return False
-
-        # Check level filter (UND-Verknüpfung)
-        return self._check_level_filter(price_info, reverse_sort=reverse_sort)
-
-    def _check_volatility_filter(self, price_info: dict[str, Any], *, reverse_sort: bool) -> bool:
-        """
-        Check if today's volatility meets the minimum requirement.
-
-        Args:
-            price_info: Price information dict with today data
-            reverse_sort: If False (best_price), uses CONF_BEST_PRICE_MIN_VOLATILITY.
-                         If True (peak_price), uses CONF_PEAK_PRICE_MIN_VOLATILITY.
-
-        Returns:
-            True if volatility requirement met, False if periods should be filtered out.
-
-        """
-        # Get appropriate volatility config based on sensor type
-        if reverse_sort:
-            # Peak price sensor
-            min_volatility = self.config_entry.options.get(
-                CONF_PEAK_PRICE_MIN_VOLATILITY,
-                DEFAULT_PEAK_PRICE_MIN_VOLATILITY,
-            )
-        else:
-            # Best price sensor
-            min_volatility = self.config_entry.options.get(
-                CONF_BEST_PRICE_MIN_VOLATILITY,
-                DEFAULT_BEST_PRICE_MIN_VOLATILITY,
-            )
-
-        # "low" means no filtering (show at any volatility ≥0ct)
-        if min_volatility == "low":
-            return True
-
-        # "any" is legacy alias for "low" (no filtering)
-        if min_volatility == "any":
-            return True
-
-        # Get today's price data to calculate volatility
-        today_prices = price_info.get("today", [])
-        prices = [p.get("total") for p in today_prices if "total" in p] if today_prices else []
-
-        if not prices:
-            return True  # If no prices, don't filter
-
-        # Calculate today's spread (volatility metric) in minor units
-        spread_major = (max(prices) - min(prices)) * 100
-
-        # Get volatility thresholds from config
-        threshold_moderate = self.config_entry.options.get(
-            CONF_VOLATILITY_THRESHOLD_MODERATE,
-            DEFAULT_VOLATILITY_THRESHOLD_MODERATE,
-        )
-        threshold_high = self.config_entry.options.get(
-            CONF_VOLATILITY_THRESHOLD_HIGH,
-            DEFAULT_VOLATILITY_THRESHOLD_HIGH,
-        )
-        threshold_very_high = self.config_entry.options.get(
-            CONF_VOLATILITY_THRESHOLD_VERY_HIGH,
-            DEFAULT_VOLATILITY_THRESHOLD_VERY_HIGH,
+        # Only check level filter (day-level check: "does today have any qualifying intervals?")
+        return self._check_level_filter(
+            price_info,
+            reverse_sort=reverse_sort,
+            override=level_override,
         )
 
-        # Map min_volatility to threshold and check if spread meets requirement
-        threshold_map = {
-            VOLATILITY_MODERATE: threshold_moderate,
-            VOLATILITY_HIGH: threshold_high,
-            VOLATILITY_VERY_HIGH: threshold_very_high,
-        }
-
-        required_threshold = threshold_map.get(min_volatility)
-        return spread_major >= required_threshold if required_threshold is not None else True
-
-    def _check_level_filter(self, price_info: dict[str, Any], *, reverse_sort: bool) -> bool:
+    def _check_level_filter(
+        self,
+        price_info: dict[str, Any],
+        *,
+        reverse_sort: bool,
+        override: str | None = None,
+    ) -> bool:
         """
         Check if today has any intervals that meet the level requirement.
 
@@ -833,13 +792,17 @@ class TibberPricesDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             price_info: Price information dict with today data
             reverse_sort: If False (best_price), checks max_level (upper bound filter).
                          If True (peak_price), checks min_level (lower bound filter).
+            override: Optional override value (e.g., "any" to disable filter)
 
         Returns:
             True if ANY interval meets the level requirement, False otherwise.
 
         """
+        # Use override if provided
+        if override is not None:
+            level_config = override
         # Get appropriate config based on sensor type
-        if reverse_sort:
+        elif reverse_sort:
             # Peak price: minimum level filter (lower bound)
             level_config = self.config_entry.options.get(
                 CONF_PEAK_PRICE_MIN_LEVEL,
@@ -916,6 +879,20 @@ class TibberPricesDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         # Check if best price periods should be shown (apply filters)
         show_best_price = self._should_show_periods(price_info, reverse_sort=False) if all_prices else False
 
+        # Get relaxation configuration for best price
+        enable_relaxation_best = self.config_entry.options.get(
+            CONF_ENABLE_MIN_PERIODS_BEST,
+            DEFAULT_ENABLE_MIN_PERIODS_BEST,
+        )
+        min_periods_best = self.config_entry.options.get(
+            CONF_MIN_PERIODS_BEST,
+            DEFAULT_MIN_PERIODS_BEST,
+        )
+        relaxation_step_best = self.config_entry.options.get(
+            CONF_RELAXATION_STEP_BEST,
+            DEFAULT_RELAXATION_STEP_BEST,
+        )
+
         # Calculate best price periods (or return empty if filtered)
         if show_best_price:
             best_config = self._get_period_config(reverse_sort=False)
@@ -930,16 +907,49 @@ class TibberPricesDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 threshold_volatility_high=threshold_volatility_high,
                 threshold_volatility_very_high=threshold_volatility_very_high,
             )
-            best_periods = calculate_periods(all_prices, config=best_period_config)
+            best_periods, best_relaxation = calculate_periods_with_relaxation(
+                all_prices,
+                config=best_period_config,
+                enable_relaxation=enable_relaxation_best,
+                min_periods=min_periods_best,
+                relaxation_step_pct=relaxation_step_best,
+                should_show_callback=lambda _vol, lvl: self._should_show_periods(
+                    price_info,
+                    reverse_sort=False,
+                    level_override=lvl,
+                ),
+            )
+
+            # Apply period-level volatility filter (after calculation)
+            min_volatility_best = self.config_entry.options.get(
+                CONF_BEST_PRICE_MIN_VOLATILITY,
+                DEFAULT_BEST_PRICE_MIN_VOLATILITY,
+            )
+            best_periods = filter_periods_by_volatility(best_periods, min_volatility_best)
         else:
             best_periods = {
                 "periods": [],
                 "intervals": [],
                 "metadata": {"total_intervals": 0, "total_periods": 0, "config": {}},
             }
+            best_relaxation = {"relaxation_active": False, "relaxation_attempted": False}
 
         # Check if peak price periods should be shown (apply filters)
         show_peak_price = self._should_show_periods(price_info, reverse_sort=True) if all_prices else False
+
+        # Get relaxation configuration for peak price
+        enable_relaxation_peak = self.config_entry.options.get(
+            CONF_ENABLE_MIN_PERIODS_PEAK,
+            DEFAULT_ENABLE_MIN_PERIODS_PEAK,
+        )
+        min_periods_peak = self.config_entry.options.get(
+            CONF_MIN_PERIODS_PEAK,
+            DEFAULT_MIN_PERIODS_PEAK,
+        )
+        relaxation_step_peak = self.config_entry.options.get(
+            CONF_RELAXATION_STEP_PEAK,
+            DEFAULT_RELAXATION_STEP_PEAK,
+        )
 
         # Calculate peak price periods (or return empty if filtered)
         if show_peak_price:
@@ -955,17 +965,38 @@ class TibberPricesDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 threshold_volatility_high=threshold_volatility_high,
                 threshold_volatility_very_high=threshold_volatility_very_high,
             )
-            peak_periods = calculate_periods(all_prices, config=peak_period_config)
+            peak_periods, peak_relaxation = calculate_periods_with_relaxation(
+                all_prices,
+                config=peak_period_config,
+                enable_relaxation=enable_relaxation_peak,
+                min_periods=min_periods_peak,
+                relaxation_step_pct=relaxation_step_peak,
+                should_show_callback=lambda _vol, lvl: self._should_show_periods(
+                    price_info,
+                    reverse_sort=True,
+                    level_override=lvl,
+                ),
+            )
+
+            # Apply period-level volatility filter (after calculation)
+            min_volatility_peak = self.config_entry.options.get(
+                CONF_PEAK_PRICE_MIN_VOLATILITY,
+                DEFAULT_PEAK_PRICE_MIN_VOLATILITY,
+            )
+            peak_periods = filter_periods_by_volatility(peak_periods, min_volatility_peak)
         else:
             peak_periods = {
                 "periods": [],
                 "intervals": [],
                 "metadata": {"total_intervals": 0, "total_periods": 0, "config": {}},
             }
+            peak_relaxation = {"relaxation_active": False, "relaxation_attempted": False}
 
         return {
             "best_price": best_periods,
+            "best_price_relaxation": best_relaxation,
             "peak_price": peak_periods,
+            "peak_price_relaxation": peak_relaxation,
         }
 
     def _transform_data_for_main_entry(self, raw_data: dict[str, Any]) -> dict[str, Any]:

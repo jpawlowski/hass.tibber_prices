@@ -45,7 +45,11 @@ from .const import (
     CONF_BEST_PRICE_MIN_DISTANCE_FROM_AVG,
     CONF_BEST_PRICE_MIN_PERIOD_LENGTH,
     CONF_BEST_PRICE_MIN_VOLATILITY,
+    CONF_ENABLE_MIN_PERIODS_BEST,
+    CONF_ENABLE_MIN_PERIODS_PEAK,
     CONF_EXTENDED_DESCRIPTIONS,
+    CONF_MIN_PERIODS_BEST,
+    CONF_MIN_PERIODS_PEAK,
     CONF_PEAK_PRICE_FLEX,
     CONF_PEAK_PRICE_MIN_DISTANCE_FROM_AVG,
     CONF_PEAK_PRICE_MIN_LEVEL,
@@ -55,6 +59,8 @@ from .const import (
     CONF_PRICE_RATING_THRESHOLD_LOW,
     CONF_PRICE_TREND_THRESHOLD_FALLING,
     CONF_PRICE_TREND_THRESHOLD_RISING,
+    CONF_RELAXATION_STEP_BEST,
+    CONF_RELAXATION_STEP_PEAK,
     CONF_VOLATILITY_THRESHOLD_HIGH,
     CONF_VOLATILITY_THRESHOLD_MODERATE,
     CONF_VOLATILITY_THRESHOLD_VERY_HIGH,
@@ -63,7 +69,11 @@ from .const import (
     DEFAULT_BEST_PRICE_MIN_DISTANCE_FROM_AVG,
     DEFAULT_BEST_PRICE_MIN_PERIOD_LENGTH,
     DEFAULT_BEST_PRICE_MIN_VOLATILITY,
+    DEFAULT_ENABLE_MIN_PERIODS_BEST,
+    DEFAULT_ENABLE_MIN_PERIODS_PEAK,
     DEFAULT_EXTENDED_DESCRIPTIONS,
+    DEFAULT_MIN_PERIODS_BEST,
+    DEFAULT_MIN_PERIODS_PEAK,
     DEFAULT_PEAK_PRICE_FLEX,
     DEFAULT_PEAK_PRICE_MIN_DISTANCE_FROM_AVG,
     DEFAULT_PEAK_PRICE_MIN_LEVEL,
@@ -73,6 +83,8 @@ from .const import (
     DEFAULT_PRICE_RATING_THRESHOLD_LOW,
     DEFAULT_PRICE_TREND_THRESHOLD_FALLING,
     DEFAULT_PRICE_TREND_THRESHOLD_RISING,
+    DEFAULT_RELAXATION_STEP_BEST,
+    DEFAULT_RELAXATION_STEP_PEAK,
     DEFAULT_VOLATILITY_THRESHOLD_HIGH,
     DEFAULT_VOLATILITY_THRESHOLD_MODERATE,
     DEFAULT_VOLATILITY_THRESHOLD_VERY_HIGH,
@@ -667,6 +679,46 @@ class TibberPricesOptionsFlowHandler(OptionsFlow):
                             translation_key="price_level",
                         ),
                     ),
+                    vol.Optional(
+                        CONF_ENABLE_MIN_PERIODS_BEST,
+                        default=self.config_entry.options.get(
+                            CONF_ENABLE_MIN_PERIODS_BEST,
+                            DEFAULT_ENABLE_MIN_PERIODS_BEST,
+                        ),
+                    ): BooleanSelector(),
+                    vol.Optional(
+                        CONF_MIN_PERIODS_BEST,
+                        default=int(
+                            self.config_entry.options.get(
+                                CONF_MIN_PERIODS_BEST,
+                                DEFAULT_MIN_PERIODS_BEST,
+                            )
+                        ),
+                    ): NumberSelector(
+                        NumberSelectorConfig(
+                            min=1,
+                            max=10,
+                            step=1,
+                            mode=NumberSelectorMode.SLIDER,
+                        ),
+                    ),
+                    vol.Optional(
+                        CONF_RELAXATION_STEP_BEST,
+                        default=int(
+                            self.config_entry.options.get(
+                                CONF_RELAXATION_STEP_BEST,
+                                DEFAULT_RELAXATION_STEP_BEST,
+                            )
+                        ),
+                    ): NumberSelector(
+                        NumberSelectorConfig(
+                            min=5,
+                            max=50,
+                            step=5,
+                            unit_of_measurement="%",
+                            mode=NumberSelectorMode.SLIDER,
+                        ),
+                    ),
                 }
             ),
             description_placeholders=self._get_step_description_placeholders("best_price"),
@@ -757,6 +809,46 @@ class TibberPricesOptionsFlowHandler(OptionsFlow):
                             options=PEAK_PRICE_MIN_LEVEL_OPTIONS,
                             mode=SelectSelectorMode.DROPDOWN,
                             translation_key="price_level",
+                        ),
+                    ),
+                    vol.Optional(
+                        CONF_ENABLE_MIN_PERIODS_PEAK,
+                        default=self.config_entry.options.get(
+                            CONF_ENABLE_MIN_PERIODS_PEAK,
+                            DEFAULT_ENABLE_MIN_PERIODS_PEAK,
+                        ),
+                    ): BooleanSelector(),
+                    vol.Optional(
+                        CONF_MIN_PERIODS_PEAK,
+                        default=int(
+                            self.config_entry.options.get(
+                                CONF_MIN_PERIODS_PEAK,
+                                DEFAULT_MIN_PERIODS_PEAK,
+                            )
+                        ),
+                    ): NumberSelector(
+                        NumberSelectorConfig(
+                            min=1,
+                            max=10,
+                            step=1,
+                            mode=NumberSelectorMode.SLIDER,
+                        ),
+                    ),
+                    vol.Optional(
+                        CONF_RELAXATION_STEP_PEAK,
+                        default=int(
+                            self.config_entry.options.get(
+                                CONF_RELAXATION_STEP_PEAK,
+                                DEFAULT_RELAXATION_STEP_PEAK,
+                            )
+                        ),
+                    ): NumberSelector(
+                        NumberSelectorConfig(
+                            min=5,
+                            max=50,
+                            step=5,
+                            unit_of_measurement="%",
+                            mode=NumberSelectorMode.SLIDER,
                         ),
                     ),
                 }

@@ -105,11 +105,17 @@
                     "best_price_flex": "Fleksibilitet: Maksimum % over minimumspris",
                     "best_price_min_distance_from_avg": "Minimumsavstand: Påkrevd % under daglig gjennomsnitt",
                     "best_price_min_volatility": "Minimum volatilitetsfilter",
-                    "best_price_max_level": "Prisnivåfilter (valgfritt)"
+                    "best_price_max_level": "Prisnivåfilter (valgfritt)",
+                    "enable_min_periods_best": "Prøv å oppnå minimum antall perioder",
+                    "min_periods_best": "Minimum antall perioder",
+                    "relaxation_step_best": "Avslappingstrinn"
                 },
                 "data_description": {
-                    "best_price_min_volatility": "Vis kun beste prisperioder når dagens volatilitet oppfyller eller overskrider dette nivået. Standard: 'Lav' (vis uavhengig av volatilitet) - batterioptimalisering er nyttig selv ved små prisvariasjoner. Velg 'Moderat'/'Høy' for kun å vise perioder på mer volatile dager.",
-                    "best_price_max_level": "Vis kun beste prisperioder hvis minst ett intervall i dag har et prisnivå ≤ valgt verdi. Fungerer med OG-logikk: volatilitetsfilter (hvis satt) OG nivåfilter må begge være oppfylt. Nyttig for å unngå batterilading på dyre dager. Velg 'Alle' for å deaktivere dette filteret."
+                    "best_price_min_volatility": "Vis kun beste prisperioder når periodens interne prisvolatilitet (prisspennet innenfor perioden) oppfyller eller overskrider dette nivået. Standard: 'Lav' (vis perioder med hvilket som helst volatilitetsnivå) - gjør det mulig å finne billige perioder selv om prisene er stabile. Velg 'Moderat'/'Høy' for kun å vise perioder med betydelige prisvariasjoner, noe som kan indikere mer dynamiske prismuligheter.",
+                    "best_price_max_level": "Vis kun beste prisperioder hvis de inneholder intervaller med prisnivåer ≤ valgt verdi. For eksempel: å velge 'Billig' betyr at perioden må ha minst ett 'VELDIG_BILLIG' eller 'BILLIG' intervall. Dette sikrer at 'beste pris'-perioder ikke bare er relativt billige for dagen, men faktisk billige i absolutte tall. Velg 'Alle' for å vise beste priser uavhengig av deres absolutte prisnivå.",
+                    "enable_min_periods_best": "Når aktivert vil filtrene gradvis bli lempeligere hvis det ikke blir funnet nok perioder. Dette forsøker å nå ønsket minimum antall perioder, noe som kan føre til at mindre optimale tidsrom blir markert som beste-pris-perioder.",
+                    "min_periods_best": "Minimum antall beste-pris-perioder å sikte mot per dag. Filtre vil bli lempet trinn for trinn for å prøve å oppnå dette antallet. Kun aktiv når 'Prøv å oppnå minimum antall perioder' er aktivert. Standard: 1",
+                    "relaxation_step_best": "Prosentandel av den opprinnelige fleksibilitetsterskealen som legges til per avslappingstrinn. For eksempel: med 15% fleksibilitet og 25% trinnstørrelse vil filtrene prøve 15%, 18,75%, 22,5%, osv. Høyere verdier betyr raskere avslapping men mindre presisjon."
                 },
                 "submit": "Neste til steg 5"
             },
@@ -121,11 +127,17 @@
                     "peak_price_flex": "Fleksibilitet: Maksimum % under maksimumspris (negativ verdi)",
                     "peak_price_min_distance_from_avg": "Minimumsavstand: Påkrevd % over daglig gjennomsnitt",
                     "peak_price_min_volatility": "Minimum volatilitetsfilter",
-                    "peak_price_min_level": "Prisnivåfilter (valgfritt)"
+                    "peak_price_min_level": "Prisnivåfilter (valgfritt)",
+                    "enable_min_periods_peak": "Prøv å oppnå minimum antall perioder",
+                    "min_periods_peak": "Minimum antall perioder",
+                    "relaxation_step_peak": "Avslappingstrinn"
                 },
                 "data_description": {
-                    "peak_price_min_volatility": "Vis kun topprisperioder når dagens volatilitet oppfyller eller overskrider dette nivået. Standard: 'Lav' (vis uavhengig av volatilitet) - toppadvarsler er relevante selv ved lav spredning siden unngåelse av dyre timer alltid er viktig. Velg 'Moderat'/'Høy' for kun å vise topper på volatile dager.",
-                    "peak_price_min_level": "Vis kun topprisperioder hvis minst ett intervall i dag har et prisnivå ≥ valgt verdi. Fungerer med OG-logikk: volatilitetsfilter (hvis satt) OG nivåfilter må begge være oppfylt. Vanligvis satt til 'Alle' siden toppperioder er relative til dagen. Velg 'Alle' for å deaktivere dette filteret."
+                    "peak_price_min_volatility": "Vis kun topprisperioder når periodens interne prisvolatilitet (prisspennet innenfor perioden) oppfyller eller overskrider dette nivået. Standard: 'Lav' (vis perioder med hvilket som helst volatilitetsnivå) - gjør det mulig å identifisere dyre perioder selv om prisene er stabile. Velg 'Moderat'/'Høy' for kun å vise perioder med betydelige prisvariasjoner, noe som kan indikere mer presserende behov for å unngå disse tidspunktene.",
+                    "peak_price_min_level": "Vis kun topprisperioder hvis de inneholder intervaller med prisnivåer ≥ valgt verdi. For eksempel: å velge 'Dyr' betyr at perioden må ha minst ett 'DYR' eller 'VELDIG_DYR' intervall. Dette sikrer at 'topppris'-perioder ikke bare er relativt dyre for dagen, men faktisk dyre i absolutte tall. Velg 'Alle' for å vise topppriser uavhengig av deres absolutte prisnivå.",
+                    "enable_min_periods_peak": "Når aktivert vil filtrene gradvis bli lempeligere hvis det ikke blir funnet nok perioder. Dette forsøker å nå ønsket minimum antall perioder for å sikre at du blir advart om dyre perioder selv på dager med uvanlige prismønstre.",
+                    "min_periods_peak": "Minimum antall topp-pris-perioder å sikte mot per dag. Filtre vil bli lempet trinn for trinn for å prøve å oppnå dette antallet. Kun aktiv når 'Prøv å oppnå minimum antall perioder' er aktivert. Standard: 1",
+                    "relaxation_step_peak": "Prosentandel av den opprinnelige fleksibilitetsterskealen som legges til per avslappingstrinn. For eksempel: med -15% fleksibilitet og 25% trinnstørrelse vil filtrene prøve -15%, -18,75%, -22,5%, osv. Høyere verdier betyr raskere avslapping men mindre presisjon."
                 },
                 "submit": "Neste til steg 6"
             },

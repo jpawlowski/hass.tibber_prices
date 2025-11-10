@@ -35,6 +35,12 @@ CONF_BEST_PRICE_MIN_VOLATILITY = "best_price_min_volatility"
 CONF_PEAK_PRICE_MIN_VOLATILITY = "peak_price_min_volatility"
 CONF_BEST_PRICE_MAX_LEVEL = "best_price_max_level"
 CONF_PEAK_PRICE_MIN_LEVEL = "peak_price_min_level"
+CONF_ENABLE_MIN_PERIODS_BEST = "enable_min_periods_best"
+CONF_MIN_PERIODS_BEST = "min_periods_best"
+CONF_RELAXATION_STEP_BEST = "relaxation_step_best"
+CONF_ENABLE_MIN_PERIODS_PEAK = "enable_min_periods_peak"
+CONF_MIN_PERIODS_PEAK = "min_periods_peak"
+CONF_RELAXATION_STEP_PEAK = "relaxation_step_peak"
 
 ATTRIBUTION = "Data provided by Tibber"
 
@@ -58,6 +64,12 @@ DEFAULT_BEST_PRICE_MIN_VOLATILITY = "low"  # Show best price at any volatility (
 DEFAULT_PEAK_PRICE_MIN_VOLATILITY = "low"  # Always show peak price (warning relevant even at low spreads)
 DEFAULT_BEST_PRICE_MAX_LEVEL = "any"  # Default: show best price periods regardless of price level
 DEFAULT_PEAK_PRICE_MIN_LEVEL = "any"  # Default: show peak price periods regardless of price level
+DEFAULT_ENABLE_MIN_PERIODS_BEST = False  # Default: minimum periods feature disabled for best price
+DEFAULT_MIN_PERIODS_BEST = 2  # Default: require at least 2 best price periods (when enabled)
+DEFAULT_RELAXATION_STEP_BEST = 25  # Default: 25% of original threshold per relaxation step for best price
+DEFAULT_ENABLE_MIN_PERIODS_PEAK = False  # Default: minimum periods feature disabled for peak price
+DEFAULT_MIN_PERIODS_PEAK = 2  # Default: require at least 2 peak price periods (when enabled)
+DEFAULT_RELAXATION_STEP_PEAK = 25  # Default: 25% of original threshold per relaxation step for peak price
 
 # Home types
 HOME_TYPE_APARTMENT = "APARTMENT"
@@ -203,6 +215,12 @@ PEAK_PRICE_MIN_LEVEL_OPTIONS = [
     PRICE_LEVEL_CHEAP.lower(),  # Only show if level ≥ CHEAP
     PRICE_LEVEL_VERY_CHEAP.lower(),  # Only show if level ≥ VERY_CHEAP
 ]
+
+# Relaxation level constants (for period filter relaxation)
+# These describe which filter relaxation was applied to find a period
+RELAXATION_NONE = "none"  # No relaxation, normal filters
+RELAXATION_VOLATILITY_ANY = "volatility_any"  # Volatility filter disabled
+RELAXATION_ALL_FILTERS_OFF = "all_filters_off"  # All filters disabled (last resort)
 
 # Mapping for comparing price levels (used for sorting)
 PRICE_LEVEL_MAPPING = {

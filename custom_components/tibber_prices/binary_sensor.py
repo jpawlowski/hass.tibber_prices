@@ -18,6 +18,7 @@ from .entity import TibberPricesEntity
 
 if TYPE_CHECKING:
     from collections.abc import Callable
+    from datetime import datetime
 
     from homeassistant.core import HomeAssistant
     from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -283,6 +284,72 @@ class TibberPricesBinarySensor(TibberPricesEntity, BinarySensorEntity):
             "periods": [],
         }
 
+    def _add_time_attributes(self, attributes: dict, current_period: dict, timestamp: datetime) -> None:
+        """Add time-related attributes (priority 1)."""
+        attributes["timestamp"] = timestamp
+        if "start" in current_period:
+            attributes["start"] = current_period["start"]
+        if "end" in current_period:
+            attributes["end"] = current_period["end"]
+        if "duration_minutes" in current_period:
+            attributes["duration_minutes"] = current_period["duration_minutes"]
+
+    def _add_decision_attributes(self, attributes: dict, current_period: dict) -> None:
+        """Add core decision attributes (priority 2)."""
+        if "level" in current_period:
+            attributes["level"] = current_period["level"]
+        if "rating_level" in current_period:
+            attributes["rating_level"] = current_period["rating_level"]
+        if "rating_difference_%" in current_period:
+            attributes["rating_difference_%"] = current_period["rating_difference_%"]
+
+    def _add_price_attributes(self, attributes: dict, current_period: dict) -> None:
+        """Add price statistics attributes (priority 3)."""
+        if "price_avg" in current_period:
+            attributes["price_avg"] = current_period["price_avg"]
+        if "price_min" in current_period:
+            attributes["price_min"] = current_period["price_min"]
+        if "price_max" in current_period:
+            attributes["price_max"] = current_period["price_max"]
+        if "price_spread" in current_period:
+            attributes["price_spread"] = current_period["price_spread"]
+        if "volatility" in current_period:
+            attributes["volatility"] = current_period["volatility"]
+
+    def _add_comparison_attributes(self, attributes: dict, current_period: dict) -> None:
+        """Add price comparison attributes (priority 4)."""
+        if "period_price_diff_from_daily_min" in current_period:
+            attributes["period_price_diff_from_daily_min"] = current_period["period_price_diff_from_daily_min"]
+        if "period_price_diff_from_daily_min_%" in current_period:
+            attributes["period_price_diff_from_daily_min_%"] = current_period["period_price_diff_from_daily_min_%"]
+
+    def _add_detail_attributes(self, attributes: dict, current_period: dict) -> None:
+        """Add detail information attributes (priority 5)."""
+        if "period_interval_count" in current_period:
+            attributes["period_interval_count"] = current_period["period_interval_count"]
+        if "period_position" in current_period:
+            attributes["period_position"] = current_period["period_position"]
+        if "periods_total" in current_period:
+            attributes["periods_total"] = current_period["periods_total"]
+        if "periods_remaining" in current_period:
+            attributes["periods_remaining"] = current_period["periods_remaining"]
+
+    def _add_relaxation_attributes(self, attributes: dict, current_period: dict) -> None:
+        """
+        Add relaxation information attributes (priority 6).
+
+        Only adds relaxation attributes if the period was actually relaxed.
+        If relaxation_active is False or missing, no attributes are added.
+        """
+        if current_period.get("relaxation_active"):
+            attributes["relaxation_active"] = True
+            if "relaxation_level" in current_period:
+                attributes["relaxation_level"] = current_period["relaxation_level"]
+            if "relaxation_threshold_original_%" in current_period:
+                attributes["relaxation_threshold_original_%"] = current_period["relaxation_threshold_original_%"]
+            if "relaxation_threshold_applied_%" in current_period:
+                attributes["relaxation_threshold_applied_%"] = current_period["relaxation_threshold_applied_%"]
+
     def _build_final_attributes_simple(
         self,
         current_period: dict | None,
@@ -296,6 +363,16 @@ class TibberPricesBinarySensor(TibberPricesEntity, BinarySensorEntity):
         2. Uses the current/next period from summaries
         3. Adds nested period summaries
 
+        Attributes are ordered following the documented priority:
+        1. Time information (timestamp, start, end, duration)
+        2. Core decision attributes (level, rating_level, rating_difference_%)
+        3. Price statistics (price_avg, price_min, price_max, price_spread, volatility)
+        4. Price differences (period_price_diff_from_daily_min, period_price_diff_from_daily_min_%)
+        5. Detail information (period_interval_count, period_position, periods_total, periods_remaining)
+        6. Relaxation information (relaxation_active, relaxation_level, relaxation_threshold_original_%,
+           relaxation_threshold_applied_%) - only if period was relaxed
+        7. Meta information (periods list)
+
         Args:
             current_period: The current or next period (already complete from coordinator)
             period_summaries: All period summaries from coordinator
@@ -306,14 +383,30 @@ class TibberPricesBinarySensor(TibberPricesEntity, BinarySensorEntity):
         timestamp = now.replace(minute=current_minute, second=0, microsecond=0)
 
         if current_period:
-            # Start with complete period summary from coordinator (already has all attributes!)
-            attributes = {
-                "timestamp": timestamp,  # ONLY thing we calculate here!
-                **current_period,  # All other attributes come from coordinator
-            }
+            # Build attributes in priority order using helper methods
+            attributes = {}
 
-            # Add nested period summaries last (meta information)
+            # 1. Time information
+            self._add_time_attributes(attributes, current_period, timestamp)
+
+            # 2. Core decision attributes
+            self._add_decision_attributes(attributes, current_period)
+
+            # 3. Price statistics
+            self._add_price_attributes(attributes, current_period)
+
+            # 4. Price differences
+            self._add_comparison_attributes(attributes, current_period)
+
+            # 5. Detail information
+            self._add_detail_attributes(attributes, current_period)
+
+            # 6. Relaxation information (only if period was relaxed)
+            self._add_relaxation_attributes(attributes, current_period)
+
+            # 7. Meta information (periods array)
             attributes["periods"] = period_summaries
+
             return attributes
 
         # No current/next period found - return all periods with timestamp
