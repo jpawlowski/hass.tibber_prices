@@ -1169,6 +1169,32 @@ Public entry points → direct helpers (call order) → pure utilities. Prefix p
 
 **Translation sync:** When updating `/translations/en.json`, update ALL language files (`de.json`, etc.) with same keys (placeholder values OK).
 
+**Documentation language:**
+
+-   **CRITICAL**: All user-facing documentation (`README.md`, `/docs/user/`, `/docs/development/`) MUST be written in **English**
+-   **Code comments**: Always use English for code comments and docstrings
+-   **UI translations**: Multi-language support exists in `/translations/` and `/custom_translations/` (de, en, nb, nl, sv) for UI strings only
+-   **Why English-only docs**: Ensures maintainability, accessibility to global community, and consistency with Home Assistant ecosystem
+-   **Entity names in documentation**: Use **translated display names** from `/translations/en.json` (what users see), not internal entity IDs. Example: "Best Price Period" not "sensor.tibber_home_best_price_period" (add entity ID as comment if needed for clarity).
+
+**Examples and use cases:**
+
+-   **Regional context**: Tibber operates primarily in European markets (Norway, Sweden, Germany, Netherlands). Examples should reflect European context:
+    -   ✅ Use cases: Heat pump, dishwasher, washing machine, electric vehicle charging, water heater
+    -   ✅ Appliances: Common in European homes (heat pumps for heating/cooling, instantaneous water heaters)
+    -   ✅ Energy patterns: European pricing structures (often lower overnight rates, higher daytime rates)
+    -   ✅ Optimization strategies: ECO programs with long run times, heat pump defrost cycles, smart water heating
+    -   ❌ Avoid: US-centric examples (central air conditioning as primary cooling, 240V dryers, different voltage standards)
+    -   ❌ Avoid: US appliance behavior assumptions (e.g., dishwashers requiring hot water connection due to 120V limitations)
+-   **Technical differences**: European appliances operate differently due to 230V power supply:
+    -   Dishwashers: Built-in heaters, ECO programs (long duration, low energy), cold water connection standard
+    -   Washing machines: Fast heating cycles, higher temperature options (60°C, 90°C programs common)
+    -   Heat pumps: Primary heating source (not just cooling), complex defrost cycles, weather-dependent operation
+-   **Units and formats**: Use European conventions where appropriate:
+    -   Prices: ct/kWh or øre/kWh (as provided by Tibber API)
+    -   Time: 24-hour format (00:00-23:59)
+    -   Dates: ISO 8601 format (YYYY-MM-DD)
+
 **Language style and tone:**
 
 -   **Informal address**: Always use informal "you" forms (German: "du" not "Sie", Dutch: "je/jouw" not "u/uw"). This applies to all translations.

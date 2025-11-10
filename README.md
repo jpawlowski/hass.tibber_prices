@@ -15,6 +15,7 @@ A Home Assistant integration that provides advanced price information and rating
 ## 📖 Documentation
 
 - **[User Guide](docs/user/)** - Installation, configuration, and usage guides
+  - **[Period Calculation](docs/user/period-calculation.md)** - How Best/Peak Price periods are calculated
 - **[Developer Guide](docs/development/)** - Contributing, architecture, and release process
 - **[Changelog](https://github.com/jpawlowski/hass.tibber_prices/releases)** - Release history and notes
 
@@ -126,8 +127,8 @@ The integration provides **30+ sensors** across different categories. Key sensor
 
 | Entity                     | Description                                                    |
 | -------------------------- | -------------------------------------------------------------- |
-| Peak Price Interval        | ON when current interval is in the highest 20% of day's prices |
-| Best Price Interval        | ON when current interval is in the lowest 20% of day's prices  |
+| Peak Price Period          | ON when in a detected peak price period ([how it works](docs/user/period-calculation.md)) |
+| Best Price Period          | ON when in a detected best price period ([how it works](docs/user/period-calculation.md)) |
 | Tibber API Connection      | Connection status to Tibber API                                |
 | Tomorrow's Data Available  | Whether tomorrow's price data is available                     |
 
@@ -151,16 +152,18 @@ The following sensors are available but disabled by default. Enable them in `Set
 
 ## Automation Examples
 
+> **Note:** See the [full automation examples guide](docs/user/automation-examples.md) for more advanced recipes.
+
 ### Run Appliances During Cheap Hours
 
-Use the `binary_sensor.tibber_best_price_interval` to automatically start appliances during the cheapest 15-minute periods:
+Use the `binary_sensor.tibber_best_price_period` to automatically start appliances during detected best price periods:
 
 ```yaml
 automation:
     - alias: "Run Dishwasher During Cheap Hours"
       trigger:
           - platform: state
-            entity_id: binary_sensor.tibber_best_price_interval
+            entity_id: binary_sensor.tibber_best_price_period
             to: "on"
       condition:
           - condition: time
@@ -171,6 +174,8 @@ automation:
             target:
                 entity_id: switch.dishwasher
 ```
+
+> **Learn more:** The [period calculation guide](docs/user/period-calculation.md) explains how Best/Peak Price periods are identified and how you can configure filters (flexibility, minimum volatility, price level filters with gap tolerance).
 
 ### Notify on Extremely High Prices
 

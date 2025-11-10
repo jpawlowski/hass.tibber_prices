@@ -6,6 +6,7 @@ Welcome to Tibber Prices! This integration provides enhanced electricity price d
 
 - **[Installation](installation.md)** - How to install via HACS and configure the integration
 - **[Configuration](configuration.md)** - Setting up your Tibber API token and price thresholds
+- **[Period Calculation](period-calculation.md)** - How Best/Peak Price periods are calculated and configured
 - **[Sensors](sensors.md)** - Available sensors, their states, and attributes
 - **[Services](services.md)** - Custom services and how to use them
 - **[Automation Examples](automation-examples.md)** - Ready-to-use automation recipes
@@ -24,7 +25,7 @@ Welcome to Tibber Prices! This integration provides enhanced electricity price d
 - **Quarter-hourly precision** - 15-minute intervals for accurate price tracking
 - **Statistical analysis** - Trailing/leading 24h averages for context
 - **Price ratings** - LOW/NORMAL/HIGH classification based on your thresholds
-- **Best hour detection** - Automatic detection of cheapest/peak hours
+- **Best/Peak hour detection** - Automatic detection of cheapest/peak periods with configurable filters ([learn how](period-calculation.md))
 - **ApexCharts integration** - Custom services for beautiful price charts
 - **Multi-currency support** - EUR, NOK, SEK with proper minor units (ct, øre, öre)
 
