@@ -1,6 +1,6 @@
 # Development Setup
 
-> **Note:** This guide is under construction. For now, please refer to `.github/copilot-instructions.md` for detailed setup information.
+> **Note:** This guide is under construction. For now, please refer to [`AGENTS.md`](../../AGENTS.md) for detailed setup information.
 
 ## Prerequisites
 
@@ -50,4 +50,4 @@ Visit http://localhost:8123
 ./scripts/lint-check
 ```
 
-See `.github/copilot-instructions.md` for detailed patterns and conventions.
+See [`AGENTS.md`](../../AGENTS.md) for detailed patterns and conventions.

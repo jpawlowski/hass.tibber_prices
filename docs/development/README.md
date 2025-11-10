@@ -12,7 +12,7 @@ This section contains documentation for contributors and maintainers of the Tibb
 
 ## 🤖 AI Documentation
 
-The main AI/Copilot documentation is in [`.github/copilot-instructions.md`](../../.github/copilot-instructions.md). This file serves as long-term memory for AI assistants and contains:
+The main AI/Copilot documentation is in [`AGENTS.md`](../../AGENTS.md). This file serves as long-term memory for AI assistants and contains:
 
 - Detailed architectural patterns
 - Code quality rules and conventions
@@ -20,7 +20,7 @@ The main AI/Copilot documentation is in [`.github/copilot-instructions.md`](../.
 - Common pitfalls and anti-patterns
 - Project-specific patterns and utilities
 
-**Important:** When proposing changes to patterns or conventions, always update `copilot-instructions.md` to keep AI guidance consistent.
+**Important:** When proposing changes to patterns or conventions, always update [`AGENTS.md`](../../AGENTS.md) to keep AI guidance consistent.
 
 ### AI-Assisted Development
 
@@ -50,7 +50,7 @@ This integration is developed with extensive AI assistance (GitHub Copilot, Clau
 - Translation quality depends on AI's understanding of target language
 - User feedback is crucial for discovering real-world issues
 
-If you're working with AI tools on this project, the `copilot-instructions.md` file provides the context and patterns that ensure consistency.
+If you're working with AI tools on this project, the [`AGENTS.md`](../../AGENTS.md) file provides the context and patterns that ensure consistency.
 
 ## 🚀 Quick Start for Contributors
 
@@ -130,7 +130,7 @@ pytest --cov=custom_components.tibber_prices tests/
 
 - **User-facing docs** go in `docs/user/`
 - **Developer docs** go in `docs/development/`
-- **AI guidance** goes in `.github/copilot-instructions.md`
+- **AI guidance** goes in `AGENTS.md`
 - Use clear examples and code snippets
 - Keep docs up-to-date with code changes
 

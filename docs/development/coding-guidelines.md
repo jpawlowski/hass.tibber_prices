@@ -1,6 +1,6 @@
 # Coding Guidelines
 
-> **Note:** For complete coding standards, see `.github/copilot-instructions.md`.
+> **Note:** For complete coding standards, see `AGENTS.md`.
 
 ## Code Style
 
@@ -50,4 +50,4 @@ enriched = enrich_price_info_with_differences(
 )
 ```
 
-See `.github/copilot-instructions.md` for complete guidelines.
+See [`AGENTS.md`](../../AGENTS.md) for complete guidelines.

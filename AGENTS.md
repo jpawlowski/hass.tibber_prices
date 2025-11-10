@@ -92,7 +92,7 @@ When working with the codebase, Copilot MUST actively maintain consistency betwe
 **Update Proposal Format:**
 Include confidence level and impact in proposals:
 
-> **[🔴 HIGH]** I noticed the translation pattern in copilot-instructions.md references `enrich_price_info_with_differences()` in `price_utils.py`, but this function was renamed to `enrich_prices()`.
+> **[🔴 HIGH]** I noticed the translation pattern in AGENTS.md references `enrich_price_info_with_differences()` in `price_utils.py`, but this function was renamed to `enrich_prices()`.
 >
 > **Impact:** Future sessions will look for wrong function name.
 >
@@ -406,7 +406,7 @@ Combine into single commit when:
 > **Stage these files:**
 >
 > ```bash
-> git add pyproject.toml .github/copilot-instructions.md
+> git add pyproject.toml AGENTS.md
 > ```
 >
 > **Commit message:**
@@ -417,7 +417,7 @@ Combine into single commit when:
 > Consolidated ruff configuration into pyproject.toml following modern Python
 > conventions and integration_blueprint pattern.
 >
-> Updated all references in copilot-instructions.md from .ruff.toml to
+> Updated all references in AGENTS.md from .ruff.toml to
 > pyproject.toml under [tool.ruff] section.
 >
 > Impact: Aligns with modern Python tooling standards. No user-visible changes.
@@ -451,7 +451,7 @@ Combine into single commit when:
 > **Commit 2: Documentation**
 >
 > ```bash
-> git add .github/copilot-instructions.md
+> git add AGENTS.md
 > ```
 >
 > ```
@@ -532,7 +532,7 @@ encountering errors.
 ```
 docs(workflow): add git commit guidance for release notes
 
-Added comprehensive "Git Workflow Guidance" section to copilot-instructions.md
+Added comprehensive "Git Workflow Guidance" section to AGENTS.md
 documenting when AI should suggest commits, Conventional Commits format, and
 how to structure technical messages that enable future release note generation.
 
@@ -574,7 +574,7 @@ refactor: migrate ruff config from .ruff.toml to pyproject.toml
 Consolidated ruff configuration into pyproject.toml following modern Python
 conventions and integration_blueprint pattern.
 
-Updated all references in copilot-instructions.md from .ruff.toml to
+Updated all references in AGENTS.md from .ruff.toml to
 pyproject.toml under [tool.ruff] section.
 
 Impact: Aligns with modern Python tooling standards. No user-visible changes.

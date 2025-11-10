@@ -12,7 +12,7 @@ Thank you for your interest in contributing! This document provides guidelines f
 
 For detailed developer documentation, see [docs/development/](docs/development/).
 
-> **Note:** This project is developed with extensive AI assistance (GitHub Copilot, Claude). If you're also using AI tools, check [`.github/copilot-instructions.md`](/.github/copilot-instructions.md) for patterns and conventions that ensure consistency.
+> **Note:** This project is developed with extensive AI assistance (GitHub Copilot, Claude). If you're also using AI tools, check [`AGENTS.md`](/AGENTS.md) for patterns and conventions that ensure consistency.
 
 ## Getting Started
 
@@ -81,7 +81,7 @@ Added new sensor that calculates average price for the entire day.
 Impact: Users can now track daily average prices for cost analysis."
 ```
 
-See `.github/copilot-instructions.md` section "Git Workflow Guidance" for detailed guidelines.
+See [`AGENTS.md`](AGENTS.md) section "Git Workflow Guidance" for detailed guidelines.
 
 ## Submitting Changes
 
@@ -143,7 +143,7 @@ Report bugs via [GitHub Issues](../../issues/new/choose).
 ## Questions?
 
 - Check [Developer Documentation](docs/development/)
-- Read [Copilot Instructions](.github/copilot-instructions.md) for patterns
+- Read [Copilot Instructions](AGENTS.md) for patterns
 - Search [existing issues](https://github.com/jpawlowski/hass.tibber_prices/issues)
 - Open a [new issue](https://github.com/jpawlowski/hass.tibber_prices/issues/new)
 

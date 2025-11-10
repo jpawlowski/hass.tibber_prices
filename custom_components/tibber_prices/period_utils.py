@@ -521,7 +521,7 @@ def _build_period_summary_dict(
         Complete period summary dictionary following attribute ordering
 
     """
-    # Build complete period summary (following attribute ordering from copilot-instructions.md)
+    # Build complete period summary (following attribute ordering from AGENTS.md)
     summary = {
         # 1. Time information (when does this apply?)
         "start": period_data.start_time,

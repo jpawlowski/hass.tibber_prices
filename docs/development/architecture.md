@@ -1,6 +1,6 @@
 # Architecture
 
-> **Note:** This guide is under construction. For now, please refer to `.github/copilot-instructions.md` for detailed architecture information.
+> **Note:** This guide is under construction. For now, please refer to [`AGENTS.md`](../../AGENTS.md) for detailed architecture information.
 
 ## Core Components
 
@@ -18,4 +18,4 @@
 - **Quarter-hour precision**: Entity updates on 00/15/30/45 boundaries
 - **Intelligent caching**: User data (24h), price data (calendar day validation)
 
-See `.github/copilot-instructions.md` "Architecture Overview" section for complete details.
+See [`AGENTS.md`](../../AGENTS.md) "Architecture Overview" section for complete details.
