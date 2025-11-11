@@ -1,165 +1,1297 @@
-# Period Calculation
+# Period Calculation# Period Calculation
 
-A detailed explanation of how Best Price and Peak Price periods are calculated and how you can influence the calculation with configuration options.
 
-## Table of Contents
 
-- [Overview](#overview)
-- [Calculation Flow](#calculation-flow)
-- [Configuration Options in Detail](#configuration-options-in-detail)
-- [Filter Pipeline](#filter-pipeline)
-- [Gap Tolerance for Level Filters](#gap-tolerance-for-level-filters)
-- [Relaxation Mechanism](#relaxation-mechanism)
-- [Practical Examples](#practical-examples)
-- [Troubleshooting](#troubleshooting)
+Learn how Best Price and Peak Price periods work, and how to configure them for your needs.Learn how Best Price and Peak Price periods work, and how to configure them for your needs.
 
----
 
-## Overview
 
-### What are Price Periods?
+## Table of Contents## Table of Contents
 
-The integration automatically calculates **Best Price Periods** (cheap time windows) and **Peak Price Periods** (expensive time windows) for each day. These periods help you:
 
-- **Best Price**: Shift electricity consumption to cheap times (e.g., charge electric car, run dishwasher, washing machine, heat pump water heater)
-- **Peak Price**: Avoid high consumption during expensive times (e.g., reduce heating temporarily, defer non-essential loads)
 
-### Basic Principle
+- [Quick Start](#quick-start)- [Quick Start](#quick-start)
 
-The calculation happens in **multiple steps**:
+- [How It Works](#how-it-works)- [How It Works](#how-it-works)
 
-1. **Period Identification**: Find contiguous time ranges within a **flexibility range** of the daily MIN/MAX prices
-2. **Hard Filters**: Apply non-configurable filters (periods must be below/above average)
-3. **Length Filter**: Remove periods that are too short
-4. **Quality Filter**: Ensure meaningful distance from average
-5. **Optional Filters**: Apply volatility and level filters if configured
+- [Configuration Guide](#configuration-guide)- [Configuration Guide](#configuration-guide)
 
-All steps except #2 can be influenced by configuration options.
+- [Understanding Relaxation](#understanding-relaxation)- [Understanding Relaxation](#understanding-relaxation)
 
----
+- [Common Scenarios](#common-scenarios)- [Common Scenarios](#common-scenarios)
 
-## Calculation Flow
+- [Troubleshooting](#troubleshooting)- [Troubleshooting](#troubleshooting)
 
-### Step 1: Data Preparation
+- [Advanced Topics](#advanced-topics)- [Advanced Topics](#advanced-topics)
 
-**What happens:**
-- Fetch all price intervals for today (96 x 15-minute intervals = 24 hours)
-- Calculate daily **MIN, MAX, and AVG** prices
-- Calculate trailing 24h average for each interval
 
-**Example:**
+
+------
+
+
+
+## Quick Start## Quick Start
+
+
+
+### What Are Price Periods?### What Are Price Periods?
+
+
+
+The integration finds time windows when electricity is especially **cheap** (Best Price) or **expensive** (Peak Price):The integration finds time windows when electricity is especially **cheap** (Best Price) or **expensive** (Peak Price):
+
+
+
+- **Best Price Periods** 🟢 - When to run your dishwasher, charge your EV, or heat water- **Best Price Periods** 🟢 - When to run your dishwasher, charge your EV, or heat water
+
+- **Peak Price Periods** 🔴 - When to reduce consumption or defer non-essential loads- **Peak Price Periods** 🔴 - When to reduce consumption or defer non-essential loads
+
+
+
+### Default Behavior### Default Behavior
+
+
+
+Out of the box, the integration:Out of the box, the integration:
+
+- ✅ Finds the cheapest time windows each day (Best Price)- ✅ Finds the cheapest time windows each day (Best Price)
+
+- ✅ Finds the most expensive time windows each day (Peak Price)- ✅ Finds the most expensive time windows each day (Peak Price)
+
+- ✅ Requires periods to be at least 1 hour long- ✅ Requires periods to be at least 1 hour long
+
+- ✅ Automatically adjusts when no perfect matches exist (Relaxation)- ✅ Automatically adjusts when no perfect matches exist (Relaxation)
+
+
+
+**Most users don't need to change anything!** The defaults work well for typical use cases.**Most users don't need to change anything!** The defaults work well for typical use cases.
+
+
+
+------
+
+
+
+## How It Works## How It Works
+
+
+
+### The Basic Idea### The Basic Idea
+
+
+
+Each day, the integration analyzes all 96 quarter-hourly price intervals and identifies **continuous time ranges** that meet specific criteria.Each day, the integration analyzes all 96 quarter-hourly price intervals and identifies **continuous time ranges** that meet specific criteria.
+
+
+
+Think of it like this:Think of it like this:
+
+1. **Find potential windows** - Times close to the daily MIN (Best Price) or MAX (Peak Price)1. **Find potential windows** - Times close to the daily MIN (Best Price) or MAX (Peak Price)
+
+2. **Filter by quality** - Ensure they're meaningfully different from average2. **Filter by quality** - Ensure they're meaningfully different from average
+
+3. **Check duration** - Must be long enough to be useful3. **Check duration** - Must be long enough to be useful
+
+4. **Apply preferences** - Optional: only show stable prices, avoid mediocre times4. **Apply preferences** - Optional: only show stable prices, avoid mediocre times
+
+
+
+### Step-by-Step Process### Step-by-Step Process
+
+
+
+#### 1. Define the Search Range (Flexibility)#### 1. Define the Search Range (Flexibility)
+
+
+
+**Best Price:** How much MORE than the daily minimum can a price be?**Best Price:** How much MORE than the daily minimum can a price be?
+
+``````
+
+Daily MIN: 20 ct/kWhDaily MIN: 20 ct/kWh
+
+Flexibility: 15% (default)Flexibility: 15% (default)
+
+→ Search for times ≤ 23 ct/kWh (20 + 15%)→ Search for times ≤ 23 ct/kWh (20 + 15%)
+
+``````
+
+
+
+**Peak Price:** How much LESS than the daily maximum can a price be?**Peak Price:** How much LESS than the daily maximum can a price be?
+
+``````
+
+Daily MAX: 40 ct/kWhDaily MAX: 40 ct/kWh
+
+Flexibility: -15% (default)Flexibility: -15% (default)
+
+→ Search for times ≥ 34 ct/kWh (40 - 15%)→ Search for times ≥ 34 ct/kWh (40 - 15%)
+
+``````
+
+
+
+**Why flexibility?** Prices rarely stay at exactly MIN/MAX. Flexibility lets you capture realistic time windows.**Why flexibility?** Prices rarely stay at exactly MIN/MAX. Flexibility lets you capture realistic time windows.
+
+
+
+#### 2. Ensure Quality (Distance from Average)#### 2. Ensure Quality (Distance from Average)
+
+
+
+Periods must be meaningfully different from the daily average:Periods must be meaningfully different from the daily average:
+
+
+
+``````
+
+Daily AVG: 30 ct/kWhDaily AVG: 30 ct/kWh
+
+Minimum distance: 2% (default)Minimum distance: 2% (default)
+
+
+
+Best Price: Must be ≤ 29.4 ct/kWh (30 - 2%)Best Price: Must be ≤ 29.4 ct/kWh (30 - 2%)
+
+Peak Price: Must be ≥ 30.6 ct/kWh (30 + 2%)Peak Price: Must be ≥ 30.6 ct/kWh (30 + 2%)
+
+``````
+
+
+
+**Why?** This prevents marking mediocre times as "best" just because they're slightly below average.**Why?** This prevents marking mediocre times as "best" just because they're slightly below average.
+
+
+
+#### 3. Check Duration#### 3. Check Duration
+
+
+
+Periods must be long enough to be practical:Periods must be long enough to be practical:
+
+``````
+
+Default: 60 minutes minimumDefault: 60 minutes minimum
+
+
+
+45-minute period → Discarded45-minute period → Discarded
+
+90-minute period → Kept ✓90-minute period → Kept ✓
+
+``````
+
+
+
+#### 4. Apply Optional Filters#### 4. Apply Optional Filters
+
+
+
+You can optionally require:You can optionally require:
+
+- **Stable prices** (volatility filter) - "Only show if price doesn't fluctuate much"- **Stable prices** (volatility filter) - "Only show if price doesn't fluctuate much"
+
+- **Absolute quality** (level filter) - "Only show if prices are CHEAP/EXPENSIVE (not just below/above average)"- **Absolute quality** (level filter) - "Only show if prices are CHEAP/EXPENSIVE (not just below/above average)"
+
+
+
+### Visual Example### Visual Example
+
+
+
+**Timeline for a typical day:****Timeline for a typical day:**
+
+``````
+
+Hour:  00  01  02  03  04  05  06  07  08  09  10  11  12  13  14  15  16  17  18  19  20  21  22  23Hour:  00  01  02  03  04  05  06  07  08  09  10  11  12  13  14  15  16  17  18  19  20  21  22  23
+
+Price: 18  19  20  28  29  30  35  34  33  32  30  28  25  24  26  28  30  32  31  22  21  20  19  18Price: 18  19  20  28  29  30  35  34  33  32  30  28  25  24  26  28  30  32  31  22  21  20  19  18
+
+
+
+Daily MIN: 18 ct | Daily MAX: 35 ct | Daily AVG: 26 ctDaily MIN: 18 ct | Daily MAX: 35 ct | Daily AVG: 26 ct
+
+
+
+Best Price (15% flex = ≤20.7 ct):Best Price (15% flex = ≤20.7 ct):
+
+       ████████                                                                        ████████████████       ████████                                                                        ████████████████
+
+       00:00-03:00 (3h)                                                               19:00-24:00 (5h)       00:00-03:00 (3h)                                                               19:00-24:00 (5h)
+
+
+
+Peak Price (-15% flex = ≥29.75 ct):Peak Price (-15% flex = ≥29.75 ct):
+
+                              ████████████████████████                              ████████████████████████
+
+                              06:00-11:00 (5h)                              06:00-11:00 (5h)
+
+``````
+
+
+
+------
+
+
+
+## Configuration Guide## Configuration Guide
+
+
+
+### Basic Settings### Basic Settings
+
+
+
+#### Flexibility#### Flexibility
+
+
+
+**What:** How far from MIN/MAX to search for periods  **What:** How far from MIN/MAX to search for periods
+
+**Default:** 15% (Best Price), -15% (Peak Price)  **Default:** 15% (Best Price), -15% (Peak Price)
+
+**Range:** 0-100%**Range:** 0-100%
+
+
+
+```yaml```yaml
+
+best_price_flex: 15    # Can be up to 15% more expensive than daily MINbest_price_flex: 15    # Can be up to 15% more expensive than daily MIN
+
+peak_price_flex: -15   # Can be up to 15% less expensive than daily MAXpeak_price_flex: -15   # Can be up to 15% less expensive than daily MAX
+
+``````
+
+
+
+**When to adjust:****When to adjust:**
+
+- **Increase (20-25%)** → Find more/longer periods- **Increase (20-25%)** → Find more/longer periods
+
+- **Decrease (5-10%)** → Find only the very best/worst times- **Decrease (5-10%)** → Find only the very best/worst times
+
+
+
+#### Minimum Period Length#### Minimum Period Length
+
+
+
+**What:** How long a period must be to show it  **What:** How long a period must be to show it
+
+**Default:** 60 minutes  **Default:** 60 minutes
+
+**Range:** 15-240 minutes**Range:** 15-240 minutes
+
+
+
+```yaml```yaml
+
+best_price_min_period_length: 60best_price_min_period_length: 60
+
+peak_price_min_period_length: 60peak_price_min_period_length: 60
+
+``````
+
+
+
+**When to adjust:****When to adjust:**
+
+- **Increase (90-120 min)** → Only show longer periods (e.g., for heat pump cycles)- **Increase (90-120 min)** → Only show longer periods (e.g., for heat pump cycles)
+
+- **Decrease (30-45 min)** → Show shorter windows (e.g., for quick tasks)- **Decrease (30-45 min)** → Show shorter windows (e.g., for quick tasks)
+
+
+
+#### Distance from Average#### Distance from Average
+
+
+
+**What:** How much better than average a period must be  **What:** How much better than average a period must be
+
+**Default:** 2%  **Default:** 2%
+
+**Range:** 0-20%**Range:** 0-20%
+
+
+
+```yaml```yaml
+
+best_price_min_distance_from_avg: 2best_price_min_distance_from_avg: 2
+
+peak_price_min_distance_from_avg: 2peak_price_min_distance_from_avg: 2
+
+``````
+
+
+
+**When to adjust:****When to adjust:**
+
+- **Increase (5-10%)** → Only show clearly better times- **Increase (5-10%)** → Only show clearly better times
+
+- **Decrease (0-1%)** → Show any time below/above average- **Decrease (0-1%)** → Show any time below/above average
+
+
+
+### Optional Filters### Optional Filters
+
+
+
+#### Volatility Filter (Price Stability)#### Volatility Filter (Price Stability)
+
+
+
+**What:** Only show periods with stable prices (low fluctuation)  **What:** Only show periods with stable prices (low fluctuation)
+
+**Default:** `low` (disabled)  **Default:** `low` (disabled)
+
+**Options:** `low` | `moderate` | `high` | `very_high`**Options:** `low` | `moderate` | `high` | `very_high`
+
+
+
+```yaml```yaml
+
+best_price_min_volatility: low        # Show all periodsbest_price_min_volatility: low        # Show all periods
+
+best_price_min_volatility: moderate   # Only show if price doesn't swing >5 ctbest_price_min_volatility: moderate   # Only show if price doesn't swing >5 ct
+
+``````
+
+
+
+**Use case:** "I want predictable prices during the period"**Use case:** "I want predictable prices during the period"
+
+
+
+#### Level Filter (Absolute Quality)#### Level Filter (Absolute Quality)
+
+
+
+**What:** Only show periods with CHEAP/EXPENSIVE intervals (not just below/above average)  **What:** Only show periods with CHEAP/EXPENSIVE intervals (not just below/above average)
+
+**Default:** `any` (disabled)  **Default:** `any` (disabled)
+
+**Options:** `any` | `cheap` | `very_cheap` (Best Price) | `expensive` | `very_expensive` (Peak Price)**Options:** `any` | `cheap` | `very_cheap` (Best Price) | `expensive` | `very_expensive` (Peak Price)
+
+
+
+```yaml```yaml
+
+best_price_max_level: any      # Show any period below averagebest_price_max_level: any      # Show any period below average
+
+best_price_max_level: cheap    # Only show if at least one interval is CHEAPbest_price_max_level: cheap    # Only show if at least one interval is CHEAP
+
+``````
+
+
+
+**Use case:** "Only notify me when prices are objectively cheap/expensive"**Use case:** "Only notify me when prices are objectively cheap/expensive"
+
+
+
+#### Gap Tolerance (for Level Filter)#### Gap Tolerance (for Level Filter)
+
+
+
+**What:** Allow some "mediocre" intervals within an otherwise good period  **What:** Allow some "mediocre" intervals within an otherwise good period
+
+**Default:** 0 (strict)  **Default:** 0 (strict)
+
+**Range:** 0-10**Range:** 0-10
+
+
+
+```yaml```yaml
+
+best_price_max_level: cheapbest_price_max_level: cheap
+
+best_price_max_level_gap_count: 2   # Allow up to 2 NORMAL intervals per periodbest_price_max_level_gap_count: 2   # Allow up to 2 NORMAL intervals per period
+
+``````
+
+
+
+**Use case:** "Don't split periods just because one interval isn't perfectly CHEAP"**Use case:** "Don't split periods just because one interval isn't perfectly CHEAP"
+
+
+
+------
+
+
+
+## Understanding Relaxation## Understanding Relaxation
+
+
+
+### What Is Relaxation?### What Is Relaxation?
+
+
+
+Sometimes, strict filters find too few periods (or none). **Relaxation automatically loosens filters** until a minimum number of periods is found.Sometimes, strict filters find too few periods (or none). **Relaxation automatically loosens filters** until a minimum number of periods is found.
+
+
+
+### How to Enable### How to Enable
+
+
+
+```yaml```yaml
+
+enable_min_periods_best: trueenable_min_periods_best: true
+
+min_periods_best: 2              # Try to find at least 2 periods per daymin_periods_best: 2              # Try to find at least 2 periods per day
+
+relaxation_step_best: 35         # Increase flex by 35% per step (e.g., 15% → 20.25% → 27.3%)relaxation_step_best: 35         # Increase flex by 35% per step (e.g., 15% → 20.25% → 27.3%)
+
+``````
+
+
+
+### How It Works (Smart 4×4 Matrix)### How It Works (New Smart Strategy)
+
 ```
-Today: 96 intervals from 00:00 to 23:59
-Daily MIN: 18.0 ct/kWh
-Daily MAX: 35.0 ct/kWh
-Daily AVG: 26.5 ct/kWh
-```
 
-### Step 2: Period Identification (Flexibility)
+Relaxation uses a **4×4 matrix approach** - trying 4 flexibility levels with 4 different filter combinations (16 attempts total per day):Found periods:
 
-**What happens:**
-- Search for contiguous intervals within a **flexibility range** of the daily extreme prices
-- **Best Price**: Includes intervals within flexibility range of the day's **MINIMUM** price
-- **Peak Price**: Includes intervals within flexibility range of the day's **MAXIMUM** price
-
-**Configuration:**
-- `best_price_flex` (default: 15%) - How much more expensive than the daily MIN can an interval be?
-- `peak_price_flex` (default: -15%) - How much less expensive than the daily MAX can an interval be?
-
-**Example (Best Price with 15% flexibility):**
-```
-Daily prices: 18.0 ct (min), 35.0 ct (max), 26.5 ct (avg)
-Flexibility: 15%
-Reference: Daily MIN = 18.0 ct (not average!)
-Threshold: 18.0 + (18.0 × 0.15) = 20.7 ct/kWh
-
-Intervals that cost ≤ 20.7 ct/kWh are grouped into periods:
-00:00-00:15: 18.5 ct ✓ │
-00:15-00:30: 18.0 ct ✓ ├─ Period 1 (1h)
-00:30-00:45: 19.8 ct ✓ │
-00:45-01:00: 20.2 ct ✓ │
-01:00-01:15: 21.5 ct ✗   (exceeds flexibility threshold, period ends)
-```
-
-**Why compare to MIN/MAX instead of average?**
-- Creates periods around the **best/worst price opportunities** of the day
-- More predictable behavior: flexibility directly controls how far from the extreme prices you go
-- Prevents marking mediocre prices as "best" just because the daily average is high
-
-**Note:** The flexibility check (vs MIN/MAX) and the minimum distance check (vs AVG in Step 4) work together to ensure periods are both close to extremes AND meaningfully different from average.
-
-### Step 3: Minimum Period Length
-
-**What happens:**
-- Periods that are too short are discarded (not practical to use)
-
-**Configuration:**
-- `best_price_min_period_length` (default: 60 minutes)
-- `peak_price_min_period_length` (default: 60 minutes)
-
-**Example:**
-```
-Found periods:
 - 00:00-01:00 (60 min) ✓ Keep
-- 03:00-03:30 (30 min) ✗ Discard (too short)
+
+#### Phase Matrix- 03:00-03:30 (30 min) ✗ Discard (too short)
+
 - 14:00-15:15 (75 min) ✓ Keep
+
+For each day, the system tries:```
+
+
+
+**4 Flexibility Levels:**
+
+1. Original (e.g., 15%)### How It Works (New Smart Strategy)
+
+2. +35% step (e.g., 20.25%)
+
+3. +35% step (e.g., 27.3%)Relaxation uses a **4×4 matrix approach** - trying 4 flexibility levels with 4 different filter combinations (16 attempts total per day):
+
+4. +35% step (e.g., 36.9%)
+
+#### Phase Matrix
+
+**4 Filter Combinations (per flexibility level):**
+
+1. Original filters (your configured volatility + level)For each day, the system tries:
+
+2. Remove volatility filter (keep level filter)
+
+3. Remove level filter (keep volatility filter)**4 Flexibility Levels:**
+
+4. Remove both filters1. Original (e.g., 15%)
+
+2. +35% step (e.g., 20.25%)
+
+**Example progression:**3. +35% step (e.g., 27.3%)
+
+```4. +35% step (e.g., 36.9%)
+
+Flex 15% + Original filters → Not enough periods
+
+Flex 15% + Volatility=any   → Not enough periods**4 Filter Combinations (per flexibility level):**
+
+Flex 15% + Level=any        → Not enough periods1. Original filters (your configured volatility + level)
+
+Flex 15% + All filters off  → Not enough periods2. Remove volatility filter (keep level filter)
+
+Flex 20.25% + Original      → SUCCESS! Found 2 periods ✓3. Remove level filter (keep volatility filter)
+
+(stops here - no need to try more)4. Remove both filters
+
 ```
 
-### Step 4: Minimum Distance from Average
+**Example progression:**
 
-**What happens:**
-- This is a **SEPARATE** filter from flexibility (Step 2)
-- Each interval must be sufficiently far from the daily average
-- Prevents marking "almost normal" prices as "Best/Peak" on days with small price spread
-- **Implicitly ensures intervals are below/above average** (since distance > 0% by default)
+#### Per-Day Independence```
+
+Flex 15% + Original filters → Not enough periods
+
+**Critical:** Each day relaxes **independently**:Flex 15% + Volatility=any   → Not enough periods
+
+Flex 15% + Level=any        → Not enough periods
+
+```Flex 15% + All filters off  → Not enough periods
+
+Day 1: Finds 2 periods with flex 15% (original) → No relaxation neededFlex 20.25% + Original      → SUCCESS! Found 2 periods ✓
+
+Day 2: Needs flex 27.3% + level=any → Uses relaxed settings(stops here - no need to try more)
+
+Day 3: Finds 2 periods with flex 15% (original) → No relaxation needed```
+
+```
+
+#### Per-Day Independence
+
+**Why?** Price patterns vary daily. Some days have clear cheap/expensive windows (strict filters work), others don't (relaxation needed).
+
+**Critical:** Each day relaxes **independently**:
+
+#### Period Replacement Logic
+
+```
+
+When relaxation finds new periods, they interact with baseline periods in two ways:Day 1: Finds 2 periods with flex 15% (original) → No relaxation needed
+
+Day 2: Needs flex 27.3% + level=any → Uses relaxed settings
+
+**1. Extension** (Enlargement)Day 3: Finds 2 periods with flex 15% (original) → No relaxation needed
+
+A relaxed period that **overlaps** with a baseline period and extends it:```
+
+```
+
+Baseline:  [14:00-16:00] ████████**Why?** Price patterns vary daily. Some days have clear cheap/expensive windows (strict filters work), others don't (relaxation needed).
+
+Relaxed:   [13:00-16:30]    ████████████
+
+Result:    [13:00-16:30] ████████████████  (baseline expanded)#### Period Replacement Logic
+
+           ↑ Keeps baseline metadata (original flex/filters)
+
+```When relaxation finds new periods, they interact with baseline periods in two ways:
+
+
+
+**2. Replacement** (Substitution)**1. Extension** (Enlargement)
+
+A **larger** relaxed period completely contains a **smaller** relaxed period from earlier phases:A relaxed period that **overlaps** with a baseline period and extends it:
+
+``````
+
+Phase 1:   [14:00-15:00] ████        (found with flex 15%)Baseline:  [14:00-16:00] ████████
+
+Phase 3:   [13:00-17:00]    ████████████  (found with flex 27.3%)Relaxed:   [13:00-16:30]    ████████████
+
+Result:    [13:00-17:00] ████████████  (larger replaces smaller)Result:    [13:00-16:30] ████████████████  (baseline expanded)
+
+           ↑ Uses Phase 3 metadata (flex 27.3%)           ↑ Keeps baseline metadata (original flex/filters)
+
+``````
+
+
+
+**Why two different behaviors?****2. Replacement** (Substitution)
+
+- **Extensions preserve quality:** Baseline periods found with original strict filters are high-quality. When relaxation finds overlapping periods, we expand the baseline but keep its original metadata (indicating it was found with strict criteria).A **larger** relaxed period completely contains a **smaller** relaxed period from earlier phases:
+
+- **Replacements reflect reality:** When a larger relaxed period is found, it completely replaces smaller relaxed periods because it better represents the actual price window. The metadata shows which relaxation phase actually found this period.```
+
+Phase 1:   [14:00-15:00] ████        (found with flex 15%)
+
+**Key principle:** Baseline periods are "gold standard" - they get extended but never replaced. Relaxed periods compete with each other based on size.Phase 3:   [13:00-17:00]    ████████████  (found with flex 27.3%)
+
+Result:    [13:00-17:00] ████████████  (larger replaces smaller)
+
+#### Counting Logic           ↑ Uses Phase 3 metadata (flex 27.3%)
+
+```
+
+The system counts **standalone periods** (periods that remain in the final result):
+
+**Why two different behaviors?**
+
+```- **Extensions preserve quality:** Baseline periods found with original strict filters are high-quality. When relaxation finds overlapping periods, we expand the baseline but keep its original metadata (indicating it was found with strict criteria).
+
+After all relaxation phases:- **Replacements reflect reality:** When a larger relaxed period is found, it completely replaces smaller relaxed periods because it better represents the actual price window. The metadata shows which relaxation phase actually found this period.
+
+- Period A: Extended baseline (counts ✓)
+
+- Period B: Standalone relaxed (counts ✓)**Key principle:** Baseline periods are "gold standard" - they get extended but never replaced. Relaxed periods compete with each other based on size.
+
+- Period C: Was replaced by larger period (doesn't count ✗)
+
+#### Counting Logic
+
+Total: 2 periods
+
+Comparison: ≥ min_periods_best? → Yes → SUCCESSThe system counts **standalone periods** (periods that remain in the final result):
+
+```
+
+```
+
+### Metadata TrackingAfter all relaxation phases:
+
+- Period A: Extended baseline (counts ✓)
+
+Each period shows **how it was found** via entity attributes:- Period B: Standalone relaxed (counts ✓)
+
+- Period C: Was replaced by larger period (doesn't count ✗)
+
+**Baseline Period (no relaxation needed):**
+
+```yamlTotal: 2 periods
+
+relaxation_active: falseComparison: ≥ min_periods_best? → Yes → SUCCESS
+
+relaxation_level: "price_diff_15.0%"        # Original flexibility```
+
+```
+
+### Metadata Tracking
+
+**Extended Baseline (relaxation extended it):**
+
+```yamlEach period shows **how it was found** via entity attributes:
+
+relaxation_active: true                      # Relaxation was needed globally
+
+relaxation_level: "price_diff_15.0%"        # But THIS period was baseline**Baseline Period (no relaxation needed):**
+
+``````yaml
+
+relaxation_active: false
+
+**Standalone Relaxed Period:**relaxation_level: "price_diff_15.0%"        # Original flexibility
+
+```yaml```
+
+relaxation_active: true
+
+relaxation_level: "price_diff_27.3%+level_any"  # Found at flex 27.3%, level filter removed**Extended Baseline (relaxation extended it):**
+
+``````yaml
+
+relaxation_active: true                      # Relaxation was needed globally
+
+**Replaced Period (doesn't appear in final result):**relaxation_level: "price_diff_15.0%"        # But THIS period was baseline
+
+- Not exposed as entity (was replaced by larger period)```
+
+
+
+### Configuration Example**Standalone Relaxed Period:**
+
+```yaml
+
+```yamlrelaxation_active: true
+
+# Best Price with relaxationrelaxation_level: "price_diff_27.3%+level_any"  # Found at flex 27.3%, level filter removed
+
+enable_min_periods_best: true```
+
+min_periods_best: 2                    # Try to find at least 2 periods per day
+
+relaxation_step_best: 35               # Increase flex by 35% per step**Replaced Period (doesn't appear in final result):**
+
+best_price_flex: 15                    # Start with 15%- Not exposed as entity (was replaced by larger period)
+
+best_price_min_volatility: moderate    # Start with volatility filter
+
+best_price_max_level: cheap            # Start with level filter### Configuration Example
+
+
+
+# Result: Tries up to 16 combinations per day:```yaml
+
+# Flex 15%/20.25%/27.3%/36.9% × Filters original/vol-any/lvl-any/all-any# Best Price with relaxation
+
+# Stops immediately when 2 periods foundenable_min_periods_best: true
+
+```min_periods_best: 2                    # Try to find at least 2 periods per day
+
+relaxation_step_best: 35               # Increase flex by 35% per step
+
+---best_price_flex: 15                    # Start with 15%
+
+best_price_min_volatility: moderate    # Start with volatility filter
+
+## Common Scenariosbest_price_max_level: cheap            # Start with level filter
+
+
+
+### Scenario 1: Simple Best Price (Default)# Result: Tries up to 16 combinations per day:
+
+# Flex 15%/20.25%/27.3%/36.9% × Filters original/vol-any/lvl-any/all-any
+
+**Goal:** Find the cheapest time each day to run dishwasher# Stops immediately when 2 periods found
+
+```
 
 **Configuration:**
-- `best_price_min_distance_from_avg` (default: 2%) - Minimum distance below average
-- `peak_price_min_distance_from_avg` (default: 2%) - Minimum distance above average
 
-**Example (Best Price):**
-```
-Daily prices: 18.0 ct (min), 35.0 ct (max), 26.5 ct (avg)
-Flexibility: 15%
-Minimum distance: 2%
+```yaml---
 
-Flexibility threshold (from Step 2): 18.0 × 1.15 = 20.7 ct
-Average distance threshold: 26.5 × 0.98 = 25.97 ct
+# Use defaults - no configuration needed!
 
-Final check for each interval - BOTH conditions must pass:
-1. Price ≤ flexibility threshold? (20.7 ct) ← vs MIN
-2. AND price ≤ average distance threshold? (25.97 ct) ← vs AVG
+best_price_flex: 15                      # (default)## Common Scenarios
 
-Interval at 19.5 ct:
-  ✓ Meets flexibility (19.5 ≤ 20.7)
-  ✓ Meets min distance (19.5 ≤ 25.97)
-  → ACCEPTED (both conditions met)
+best_price_min_period_length: 60         # (default)
 
-Interval at 22.0 ct:
-  ✗ Fails flexibility (22.0 > 20.7)
-  ✓ Meets min distance (22.0 ≤ 25.97)
-  → REJECTED (flexibility condition failed)
+best_price_min_distance_from_avg: 2      # (default)### Scenario 1: Simple Best Price (Default)
 
-Interval at 26.0 ct (hypothetical):
-  ✗ Fails flexibility (26.0 > 20.7)
-  ✗ Fails min distance (26.0 > 25.97)
-  → REJECTED (both conditions failed)
 ```
 
-**Why this matters:**
-- On days with small price variation, flexibility alone might include intervals that are barely below average
-- The minimum distance filter ensures you're actually getting meaningful savings
-- With default 2%, intervals must be at least 2% below average (which also ensures they're below average)
+**Goal:** Find the cheapest time each day to run dishwasher
 
-### Step 5: Filter Application
+**What you get:**
 
-**What happens:**
-- Apply optional filters (volatility, price level)
-- See [Filter Pipeline](#filter-pipeline) for details
+- 1-3 periods per day with prices ≤ MIN + 15%**Configuration:**
+
+- Each period at least 1 hour long```yaml
+
+- All periods at least 2% cheaper than daily average# Use defaults - no configuration needed!
+
+best_price_flex: 15                      # (default)
+
+**Automation example:**best_price_min_period_length: 60         # (default)
+
+```yamlbest_price_min_distance_from_avg: 2      # (default)
+
+automation:```
+
+  - trigger:
+
+      - platform: state**What you get:**
+
+        entity_id: binary_sensor.tibber_home_best_price_period- 1-3 periods per day with prices ≤ MIN + 15%
+
+        to: "on"- Each period at least 1 hour long
+
+    action:- All periods at least 2% cheaper than daily average
+
+      - service: switch.turn_on
+
+        target:**Automation example:**
+
+          entity_id: switch.dishwasher```yaml
+
+```automation:
+
+  - trigger:
+
+### Scenario 2: Heat Pump (Long Periods + Relaxation)      - platform: state
+
+        entity_id: binary_sensor.tibber_home_best_price_period
+
+**Goal:** Run water heater during long cheap windows, accept longer periods even if not perfectly cheap        to: "on"
+
+    action:
+
+**Configuration:**      - service: switch.turn_on
+
+```yaml        target:
+
+best_price_min_period_length: 120        # Need at least 2 hours          entity_id: switch.dishwasher
+
+enable_min_periods_best: true```
+
+min_periods_best: 2                      # Want 2 opportunities per day
+
+relaxation_step_best: 35### Scenario 2: Heat Pump (Long Periods + Relaxation)
+
+best_price_max_level: cheap              # Prefer CHEAP intervals
+
+best_price_max_level_gap_count: 3        # But allow some NORMAL intervals**Goal:** Run water heater during long cheap windows, accept longer periods even if not perfectly cheap
+
+```
+
+**Configuration:**
+
+**What you get:**```yaml
+
+- At least 2 periods per day (relaxation ensures this)best_price_min_period_length: 120        # Need at least 2 hours
+
+- Each period at least 2 hours longenable_min_periods_best: true
+
+- Primarily CHEAP intervals, but tolerates up to 3 NORMAL intervals per periodmin_periods_best: 2                      # Want 2 opportunities per day
+
+- If not enough strict matches, relaxation finds longer/less-strict periodsrelaxation_step_best: 35
+
+best_price_max_level: cheap              # Prefer CHEAP intervals
+
+**Automation example:**best_price_max_level_gap_count: 3        # But allow some NORMAL intervals
+
+```yaml```
+
+automation:
+
+  - trigger:**What you get:**
+
+      - platform: state- At least 2 periods per day (relaxation ensures this)
+
+        entity_id: binary_sensor.tibber_home_best_price_period- Each period at least 2 hours long
+
+        to: "on"- Primarily CHEAP intervals, but tolerates up to 3 NORMAL intervals per period
+
+    condition:- If not enough strict matches, relaxation finds longer/less-strict periods
+
+      - condition: numeric_state
+
+        entity_id: sensor.water_heater_temperature**Automation example:**
+
+        below: 50```yaml
+
+    action:automation:
+
+      - service: climate.set_hvac_mode  - trigger:
+
+        target:      - platform: state
+
+          entity_id: climate.water_heater        entity_id: binary_sensor.tibber_home_best_price_period
+
+        data:        to: "on"
+
+          hvac_mode: heat    condition:
+
+```      - condition: numeric_state
+
+        entity_id: sensor.water_heater_temperature
+
+### Scenario 3: EV Charging (Stable Prices Only)        below: 50
+
+    action:
+
+**Goal:** Charge electric vehicle only during stable, predictable cheap prices      - service: climate.set_hvac_mode
+
+        target:
+
+**Configuration:**          entity_id: climate.water_heater
+
+```yaml        data:
+
+best_price_flex: 10                      # Very strict (only very cheap times)          hvac_mode: heat
+
+best_price_min_volatility: moderate      # Require stable prices```
+
+best_price_max_level: cheap              # Require at least one CHEAP interval
+
+enable_min_periods_best: false           # Don't relax - better to skip a day### Scenario 3: EV Charging (Stable Prices Only)
+
+```
+
+**Goal:** Charge electric vehicle only during stable, predictable cheap prices
+
+**What you get:**
+
+- Very strict matching - only clearly cheap, stable periods**Configuration:**
+
+- Some days might have 0 periods (and that's OK)```yaml
+
+- When periods appear, they're high confidencebest_price_flex: 10                      # Very strict (only very cheap times)
+
+best_price_min_volatility: moderate      # Require stable prices
+
+**Automation example:**best_price_max_level: cheap              # Require at least one CHEAP interval
+
+```yamlenable_min_periods_best: false           # Don't relax - better to skip a day
+
+automation:```
+
+  - trigger:
+
+      - platform: state**What you get:**
+
+        entity_id: binary_sensor.tibber_home_best_price_period- Very strict matching - only clearly cheap, stable periods
+
+        to: "on"- Some days might have 0 periods (and that's OK)
+
+    condition:- When periods appear, they're high confidence
+
+      - condition: numeric_state
+
+        entity_id: sensor.ev_battery_level**Automation example:**
+
+        below: 80```yaml
+
+      - condition: stateautomation:
+
+        entity_id: binary_sensor.ev_connected  - trigger:
+
+        state: "on"      - platform: state
+
+    action:        entity_id: binary_sensor.tibber_home_best_price_period
+
+      - service: switch.turn_on        to: "on"
+
+        target:    condition:
+
+          entity_id: switch.ev_charger      - condition: numeric_state
+
+```        entity_id: sensor.ev_battery_level
+
+        below: 80
+
+### Scenario 4: Peak Price Avoidance      - condition: state
+
+        entity_id: binary_sensor.ev_connected
+
+**Goal:** Reduce heating during the most expensive hours        state: "on"
+
+    action:
+
+**Configuration:**      - service: switch.turn_on
+
+```yaml        target:
+
+peak_price_flex: -10                     # Only the very expensive times          entity_id: switch.ev_charger
+
+peak_price_min_period_length: 30         # Even short periods matter```
+
+enable_min_periods_peak: true
+
+min_periods_peak: 1                      # Ensure at least 1 peak warning per day### Scenario 4: Peak Price Avoidance
+
+```
+
+**Goal:** Reduce heating during the most expensive hours
+
+**What you get:**
+
+- At least 1 expensive period per day (relaxation ensures this)**Configuration:**
+
+- Periods can be as short as 30 minutes```yaml
+
+- Clear signal when to reduce consumptionpeak_price_flex: -10                     # Only the very expensive times
+
+peak_price_min_period_length: 30         # Even short periods matter
+
+**Automation example:**enable_min_periods_peak: true
+
+```yamlmin_periods_peak: 1                      # Ensure at least 1 peak warning per day
+
+automation:```
+
+  - trigger:
+
+      - platform: state**What you get:**
+
+        entity_id: binary_sensor.tibber_home_peak_price_period- At least 1 expensive period per day (relaxation ensures this)
+
+        to: "on"- Periods can be as short as 30 minutes
+
+    action:- Clear signal when to reduce consumption
+
+      - service: climate.set_temperature
+
+        target:**Automation example:**
+
+          entity_id: climate.living_room```yaml
+
+        data:automation:
+
+          temperature: 19  # Reduce by 2°C during peaks  - trigger:
+
+```      - platform: state
+
+        entity_id: binary_sensor.tibber_home_peak_price_period
+
+---        to: "on"
+
+    action:
+
+## Troubleshooting      - service: climate.set_temperature
+
+        target:
+
+### No Periods Found          entity_id: climate.living_room
+
+        data:
+
+**Symptom:** `binary_sensor.tibber_home_best_price_period` never turns "on"          temperature: 19  # Reduce by 2°C during peaks
+
+```
+
+**Possible causes:**
 
 ---
 
-## Configuration Options in Detail
+1. **Filters too strict**
+
+   ```yaml## Troubleshooting
+
+   # Try:
+
+   best_price_flex: 20              # Increase from default 15%### No Periods Found
+
+   best_price_min_distance_from_avg: 1  # Reduce from default 2%
+
+   ```**Symptom:** `binary_sensor.tibber_home_best_price_period` never turns "on"
+
+
+
+2. **Period length too long****Possible causes:**
+
+   ```yaml
+
+   # Try:1. **Filters too strict**
+
+   best_price_min_period_length: 45     # Reduce from default 60 minutes   ```yaml
+
+   ```   # Try:
+
+   best_price_flex: 20              # Increase from default 15%
+
+3. **Flat price curve** (all prices very similar)   best_price_min_distance_from_avg: 1  # Reduce from default 2%
+
+   - Enable relaxation to ensure at least some periods   ```
+
+   ```yaml
+
+   enable_min_periods_best: true2. **Period length too long**
+
+   min_periods_best: 1   ```yaml
+
+   ```   # Try:
+
+   best_price_min_period_length: 45     # Reduce from default 60 minutes
+
+### Too Many Periods   ```
+
+
+
+**Symptom:** 5+ periods per day, hard to decide which one to use3. **Flat price curve** (all prices very similar)
+
+   - Enable relaxation to ensure at least some periods
+
+**Solution:**   ```yaml
+
+```yaml   enable_min_periods_best: true
+
+# Make filters stricter:   min_periods_best: 1
+
+best_price_flex: 10                  # Reduce from default 15%   ```
+
+best_price_min_period_length: 90     # Increase from default 60 minutes
+
+best_price_min_volatility: moderate  # Require stable prices
+
+best_price_max_level: cheap          # Require CHEAP intervals**Symptom:** 5+ periods per day, hard to decide which one to use
+
+```
+
+**Solution:**
+
+### Periods Split Into Small Pieces```yaml
+
+# Make filters stricter:
+
+**Symptom:** Many short periods instead of one long periodbest_price_flex: 10                  # Reduce from default 15%
+
+best_price_min_period_length: 90     # Increase from default 60 minutes
+
+**Possible causes:**best_price_min_volatility: moderate  # Require stable prices
+
+best_price_max_level: cheap          # Require CHEAP intervals
+
+1. **Level filter too strict**```
+
+   ```yaml
+
+   # One "NORMAL" interval splits an otherwise good period### Periods Split Into Small Pieces
+
+   # Solution: Use gap tolerance
+
+   best_price_max_level: cheap**Symptom:** Many short periods instead of one long period
+
+   best_price_max_level_gap_count: 2    # Allow 2 NORMAL intervals
+
+   ```**Possible causes:**
+
+
+
+2. **Flexibility too tight**1. **Level filter too strict**
+
+   ```yaml   ```yaml
+
+   # One interval just outside flex range splits the period   # One "NORMAL" interval splits an otherwise good period
+
+   # Solution: Increase flexibility   # Solution: Use gap tolerance
+
+   best_price_flex: 20                  # Increase from 15%   best_price_max_level: cheap
+
+   ```   best_price_max_level_gap_count: 2    # Allow 2 NORMAL intervals
+
+   ```
+
+### Understanding Sensor Attributes
+
+2. **Flexibility too tight**
+
+**Check period details:**   ```yaml
+
+```yaml   # One interval just outside flex range splits the period
+
+# Entity: binary_sensor.tibber_home_best_price_period   # Solution: Increase flexibility
+
+   best_price_flex: 20                  # Increase from 15%
+
+# Attributes when "on":   ```
+
+start: "2025-11-11T02:00:00+01:00"
+
+end: "2025-11-11T05:00:00+01:00"### Understanding Sensor Attributes
+
+duration_minutes: 180
+
+rating_level: "LOW"                              # All intervals are LOW price**Check period details:**
+
+price_avg: 18.5                                  # Average price in this period```yaml
+
+relaxation_active: true                          # This day used relaxation# Entity: binary_sensor.tibber_home_best_price_period
+
+relaxation_level: "price_diff_20.25%+level_any" # Found at flex 20.25%, level filter removed
+
+# Attributes when "on":
+
+# When "off" (outside any period):start: "2025-11-11T02:00:00+01:00"
+
+next_start: "2025-11-11T14:00:00+01:00"         # Next period starts at 14:00end: "2025-11-11T05:00:00+01:00"
+
+next_end: "2025-11-11T17:00:00+01:00"duration_minutes: 180
+
+next_duration_minutes: 180rating_level: "LOW"                              # All intervals are LOW price
+
+```price_avg: 18.5                                  # Average price in this period
+
+relaxation_active: true                          # This day used relaxation
+
+### Checking the Logsrelaxation_level: "price_diff_20.25%+level_any" # Found at flex 20.25%, level filter removed
+
+
+
+Enable debug logging to see detailed calculation:# When "off" (outside any period):
+
+next_start: "2025-11-11T14:00:00+01:00"         # Next period starts at 14:00
+
+```yamlnext_end: "2025-11-11T17:00:00+01:00"
+
+# configuration.yamlnext_duration_minutes: 180
+
+logger:```
+
+  default: warning
+
+  logs:### Checking the Logs
+
+    custom_components.tibber_prices.period_utils: debug
+
+```Enable debug logging to see detailed calculation:
+
+
+
+**What to look for:**```yaml
+
+```# configuration.yaml
+
+INFO: Calculating BEST PRICE periods: relaxation=ON, target=2/day, flex=15.0%logger:
+
+DEBUG: Day 2025-11-11: Found 1 baseline period (need 2)  default: warning
+
+DEBUG: Day 2025-11-11: Starting relaxation...  logs:
+
+DEBUG: Phase 1: flex 20.25% + original filters    custom_components.tibber_prices.period_utils: debug
+
+DEBUG:   Candidate: 02:00-05:00 (3h) - rating=LOW, avg=18.5 ct```
+
+DEBUG:   Result: 2 standalone periods after merge ✓
+
+INFO: Day 2025-11-11: Success after 1 relaxation phase (2 periods)**What to look for:**
+
+``````
+
+INFO: Calculating BEST PRICE periods: relaxation=ON, target=2/day, flex=15.0%
+
+---DEBUG: Day 2025-11-11: Found 1 baseline period (need 2)
+
+DEBUG: Day 2025-11-11: Starting relaxation...
+
+## Advanced TopicsDEBUG: Phase 1: flex 20.25% + original filters
+
+DEBUG:   Candidate: 02:00-05:00 (3h) - rating=LOW, avg=18.5 ct
+
+For advanced configuration patterns and technical deep-dive, see:DEBUG:   Result: 2 standalone periods after merge ✓
+
+- [Automation Examples](./automation-examples.md) - Real-world automation patternsINFO: Day 2025-11-11: Success after 1 relaxation phase (2 periods)
+
+- [Services](./services.md) - Using the `tibber_prices.get_price` service for custom logic```
+
+
+
+### Quick Reference---
+
+
+
+**Configuration Parameters:**## Advanced Topics
+
+
+
+| Parameter | Default | Range | Purpose |For advanced configuration patterns and technical deep-dive, see:
+
+|-----------|---------|-------|---------|- [Automation Examples](./automation-examples.md) - Real-world automation patterns
+
+| `best_price_flex` | 15% | 0-100% | Search range from daily MIN |- [Services](./services.md) - Using the `tibber_prices.get_price` service for custom logic
+
+| `best_price_min_period_length` | 60 min | 15-240 | Minimum duration |
+
+| `best_price_min_distance_from_avg` | 2% | 0-20% | Quality threshold |### Quick Reference
+
+| `best_price_min_volatility` | low | low/mod/high/vhigh | Stability filter |
+
+| `best_price_max_level` | any | any/cheap/vcheap | Absolute quality |**Configuration Parameters:**
+
+| `best_price_max_level_gap_count` | 0 | 0-10 | Gap tolerance |
+
+| `enable_min_periods_best` | false | true/false | Enable relaxation || Parameter | Default | Range | Purpose |
+
+| `min_periods_best` | - | 1-10 | Target periods per day ||-----------|---------|-------|---------|
+
+| `relaxation_step_best` | - | 5-100% | Relaxation increment || `best_price_flex` | 15% | 0-100% | Search range from daily MIN |
+
+| `best_price_min_period_length` | 60 min | 15-240 | Minimum duration |
+
+**Peak Price:** Same parameters with `peak_price_*` prefix (defaults: flex=-15%, same otherwise)| `best_price_min_distance_from_avg` | 2% | 0-20% | Quality threshold |
+
+| `best_price_min_volatility` | low | low/mod/high/vhigh | Stability filter |
+
+### Price Levels Reference| `best_price_max_level` | any | any/cheap/vcheap | Absolute quality |
+
+| `best_price_max_level_gap_count` | 0 | 0-10 | Gap tolerance |
+
+The Tibber API provides price levels for each 15-minute interval:| `enable_min_periods_best` | false | true/false | Enable relaxation |
+
+| `min_periods_best` | - | 1-10 | Target periods per day |
+
+**Levels (based on trailing 24h average):**| `relaxation_step_best` | - | 5-100% | Relaxation increment |
+
+- `VERY_CHEAP` - Significantly below average
+
+- `CHEAP` - Below average**Peak Price:** Same parameters with `peak_price_*` prefix (defaults: flex=-15%, same otherwise)
+
+- `NORMAL` - Around average
+
+- `EXPENSIVE` - Above average### Price Levels Reference
+
+- `VERY_EXPENSIVE` - Significantly above average
+
+The Tibber API provides price levels for each 15-minute interval:
+
+**Note:** Your configured `best_price_max_level` or `peak_price_min_level` filter uses these API-provided levels.
+
+**Levels (based on trailing 24h average):**
+
+---- `VERY_CHEAP` - Significantly below average
+
+- `CHEAP` - Below average
+
+**Last updated:** November 11, 2025  - `NORMAL` - Around average
+
+**Integration version:** 2.0+- `EXPENSIVE` - Above average
+
+- `VERY_EXPENSIVE` - Significantly above average
+
+**Note:** Your configured `best_price_max_level` or `peak_price_min_level` filter uses these API-provided levels.
+
+---
+
+**Last updated:** November 11, 2025
+**Integration version:** 2.0+
 
 ### Best Price Period Settings
 
@@ -172,7 +1304,7 @@ Interval at 26.0 ct (hypothetical):
 | `best_price_max_level` | ANY | Maximum price level (optional, e.g., only CHEAP or better) | 5 (Level filter) |
 | `best_price_max_level_gap_count` | 0 | Tolerance for level deviations (see [Gap Tolerance](#gap-tolerance-for-level-filters)) | 5 (Level filter) |
 | `enable_min_periods_best` | Off | Enables relaxation mechanism | - (Relaxation) |
-| `min_periods_best` | 2 | Minimum number of periods to achieve | - (Relaxation) |
+| `min_periods_best` | 2 | Minimum number of periods **per day** to achieve | - (Relaxation) |
 | `relaxation_step_best` | 25% | Step size for filter relaxation | - (Relaxation) |
 
 ### Peak Price Period Settings
@@ -186,7 +1318,7 @@ Interval at 26.0 ct (hypothetical):
 | `peak_price_min_level` | ANY | Minimum price level (optional, e.g., only EXPENSIVE or higher) | 5 (Level filter) |
 | `peak_price_max_level_gap_count` | 0 | Tolerance for level deviations (see [Gap Tolerance](#gap-tolerance-for-level-filters)) | 5 (Level filter) |
 | `enable_min_periods_peak` | Off | Enables relaxation mechanism | - (Relaxation) |
-| `min_periods_peak` | 2 | Minimum number of periods to achieve | - (Relaxation) |
+| `min_periods_peak` | 2 | Minimum number of periods **per day** to achieve | - (Relaxation) |
 | `relaxation_step_peak` | 25% | Step size for filter relaxation | - (Relaxation) |
 
 ---
@@ -414,7 +1546,19 @@ If **too few periods** are found despite all filters, the integration can automa
 
 Only when **both conditions** are met:
 1. `enable_min_periods_best/peak` is enabled
-2. Fewer than `min_periods_best/peak` periods found
+2. Fewer than `min_periods_best/peak` periods found **for a specific day**
+
+**Important:** The minimum period requirement is checked **separately for each day** (today and tomorrow). This ensures:
+- Each day must have enough periods independently
+- Today can meet the requirement while tomorrow doesn't (or vice versa)
+- When tomorrow's prices arrive, both days are evaluated separately
+
+**Example scenario:**
+- Configuration: `min_periods_best = 3`
+- 14:00: Tomorrow's prices arrive
+- Today: 10 periods remaining → ✅ Meets requirement (≥3)
+- Tomorrow: 2 periods found → ❌ Doesn't meet requirement (<3)
+- **Result:** Relaxation only applies to tomorrow's periods
 
 ### Relaxation Levels
 
