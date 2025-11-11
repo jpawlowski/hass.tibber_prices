@@ -4,8 +4,8 @@ This is a **Home Assistant custom component** for Tibber electricity price data,
 
 ## Documentation Metadata
 
--   **Last Major Update**: 2025-11-09
--   **Last Architecture Review**: 2025-11-09 (Translation system restructured - selector translations now use `selector.{translation_key}.options.{value}` pattern)
+-   **Last Major Update**: 2025-11-11
+-   **Last Architecture Review**: 2025-11-11 (Logging guidelines completely rewritten - hierarchical indentation, INFO/DEBUG/WARNING patterns, configuration context headers. User documentation quality principles added based on period-calculation.md rewrite. Documentation Writing Strategy added - explaining how live development + user feedback creates better docs than cold code analysis.)
 -   **Documentation Status**: ✅ Current (verified against codebase)
 
 _Note: When proposing significant updates to this file, update the metadata above with the new date and brief description of changes._
@@ -1147,10 +1147,103 @@ We use **Ruff** (which replaces Black, Flake8, isort, and more) as our sole lint
 
 **Logging guidelines:**
 
--   Use lazy logging: `_LOGGER.debug("Message with %s", variable)`
+**Critical principle:** Logs must enable logic tracing without reading code. Each log message should make the current state and decision-making process crystal clear.
+
+**Why good logging matters beyond debugging:**
+- Clear logs become the foundation for good documentation (see "Documentation Writing Strategy")
+- If you spend hours making logs explain the logic, that clarity transfers directly to user docs
+- Logs show state transitions and decisions that users need to understand
+- Pattern: Good hierarchical logs → Easy to extract examples and explanations for documentation
+
+**Log Level Strategy:**
+
+-   **INFO Level** - User-facing results and high-level progress:
+    -   Compact 1-line summaries (no multi-line blocks)
+    -   Important results only (success/failure outcomes)
+    -   No indentation (scannability)
+    -   Example: `"Calculating BEST PRICE periods: relaxation=ON, target=2/day, flex=15.0%"`
+    -   Example: `"Day 2025-11-11: Success after 1 relaxation phase (2 periods)"`
+
+-   **DEBUG Level** - Detailed execution trace:
+    -   Full context headers with all relevant configuration
+    -   Step-by-step progression through logic
+    -   Hierarchical indentation to show call depth/logic structure
+    -   Intermediate results and calculations
+    -   Example: `"  Day 2025-11-11: Found 1 baseline period (need 2)"`
+    -   Example: `"    Phase 1: flex 20.25% + original filters"`
+
+-   **WARNING Level** - Problems and unexpected states:
+    -   Top-level important messages (no indentation)
+    -   Clear indication of what went wrong
+    -   Example: `"Day 2025-11-11: All relaxation phases exhausted, still only 1 period found"`
+
+**Hierarchical Indentation Pattern:**
+
+Use consistent indentation to show logical structure (DEBUG level only):
+
+```python
+# Define indentation constants at module level
+INDENT_L0 = ""          # Top-level (0 spaces)
+INDENT_L1 = "  "        # Level 1 (2 spaces)
+INDENT_L2 = "    "      # Level 2 (4 spaces)
+INDENT_L3 = "      "    # Level 3 (6 spaces)
+INDENT_L4 = "        "  # Level 4 (8 spaces)
+INDENT_L5 = "          "# Level 5 (10 spaces)
+
+# Usage example showing logic hierarchy
+_LOGGER.debug("%sCalculating periods for day %s", INDENT_L0, day_date)
+_LOGGER.debug("%sBaseline: Found %d periods", INDENT_L1, baseline_count)
+_LOGGER.debug("%sStarting relaxation...", INDENT_L1)
+_LOGGER.debug("%sPhase 1: flex 20.25%%", INDENT_L2)
+_LOGGER.debug("%sCandidate period: %s", INDENT_L3, period_str)
+_LOGGER.debug("%sMerging with baseline...", INDENT_L3)
+_LOGGER.debug("%sExtended baseline period from %s to %s", INDENT_L4, old_end, new_end)
+```
+
+**Why indentation?**
+- Makes call stack and decision tree visible at a glance
+- Enables quick problem localization (which phase/step failed?)
+- Shows parent-child relationships between operations
+- Distinguishes between sequential steps vs nested logic
+
+**Configuration Context:**
+
+When starting complex calculations, log the full decision context upfront (DEBUG level):
+
+```python
+_LOGGER.debug(
+    "%sConfiguration:\n"
+    "%s  Relaxation: %s\n"
+    "%s  Target: %d periods per day\n"
+    "%s  Base flex: %.1f%%\n"
+    "%s  Strategy: 4 flex levels × 4 filter combinations",
+    INDENT_L0,
+    INDENT_L0, "ENABLED" if enable_relaxation else "DISABLED",
+    INDENT_L0, min_periods,
+    INDENT_L0, base_flex,
+    INDENT_L0,
+)
+```
+
+**Per-Day Processing:**
+
+Complex logic that operates per-day should clearly show which day is being processed (DEBUG level):
+
+```python
+for day_date, day_intervals in intervals_by_day.items():
+    _LOGGER.debug("%sProcessing day %s", INDENT_L1, day_date)
+    # ... processing ...
+    _LOGGER.debug("%sDay %s: Found %d periods", INDENT_L1, day_date, count)
+```
+
+**General Rules:**
+
+-   Use lazy logging: `_LOGGER.debug("Message with %s", variable)` (never f-strings in log calls - Ruff G004)
 -   No periods at end of log messages
--   No integration name in messages (added automatically)
--   Debug level for non-user-facing messages
+-   No integration name in messages (added automatically by HA)
+-   Always include relevant identifiers (day, phase, period) for context
+-   Log BEFORE and AFTER state changes to show transitions
+-   Use consistent terminology (e.g., "baseline" vs "relaxed", "extended" vs "replaced")
 
 **Function organization:**
 Public entry points → direct helpers (call order) → pure utilities. Prefix private helpers with `_`.
@@ -1204,6 +1297,77 @@ Public entry points → direct helpers (call order) → pure utilities. Prefix p
     -   Dutch: Use "je/jouw" (informal) instead of "u/uw" (formal)
     -   Swedish/Norwegian: Already use informal address by default (no formal "Ni"/"De" in modern usage)
     -   English: Already gender-neutral and appropriately informal
+
+**User Documentation Quality:**
+
+When writing or updating user-facing documentation (`docs/user/`), follow these principles learned from real user feedback:
+
+-   **Clarity over completeness**: Users want to understand concepts, not read technical specifications
+    -   ✅ Good: "Relaxation automatically loosens filters until enough periods are found"
+    -   ❌ Bad: "The relaxation algorithm implements a 4×4 matrix strategy with multiplicative flex increments"
+-   **Visual examples**: Use timeline diagrams, code blocks with comments, before/after comparisons
+    -   ✅ Show what a "period" looks like on a 24-hour timeline
+    -   ✅ Include automation examples with real entity names
+-   **Use-case driven**: Start with "what can I do with this?" not "how does it work internally"
+    -   ✅ Structure: Quick Start → Common Scenarios → Configuration Guide → Advanced Topics
+    -   ❌ Avoid: Starting with mathematical formulas or algorithm descriptions
+-   **Practical troubleshooting**: Address real problems users encounter
+    -   ✅ "No periods found → Try: increase flex from 15% to 20%"
+    -   ❌ Avoid: Generic "check your configuration" without specific guidance
+-   **Progressive disclosure**: Basic concepts first, advanced details later
+    -   ✅ Main doc covers 80% use cases in simple terms
+    -   ✅ Link to advanced/technical docs for edge cases
+    -   ❌ Don't mix basic explanations with deep technical details
+-   **When code changed significantly**: Verify documentation still matches
+    -   If relaxation strategy changed from 3 phases to 4×4 matrix → documentation MUST reflect this
+    -   If metadata format changed → update all examples showing attributes
+    -   If per-day independence was added → explain why some days relax differently
+
+**Documentation Writing Strategy:**
+
+Understanding **how** good documentation emerges is as important as knowing what makes it good:
+
+-   **Live Understanding vs. Code Analysis**
+    -   ✅ **DO:** Write docs during/after active development
+        -   When implementing complex logic, document it while the "why" is fresh
+        -   Use real examples from debugging sessions (actual logs, real data)
+        -   Document decisions as they're made, not after the fact
+    -   ❌ **DON'T:** Write docs from cold code analysis
+        -   Reading code shows "what", not "why"
+        -   Missing context: Which alternatives were considered?
+        -   No user perspective: What's actually confusing?
+
+-   **User Feedback Loop**
+    -   Key insight: Documentation improves when users question it
+    -   Pattern:
+        1. User asks: "Does this still match the code?"
+        2. AI realizes: "Oh, the 3-phase model is outdated"
+        3. Together we trace through real behavior
+        4. Documentation gets rewritten with correct mental model
+    -   Why it works: User questions force critical thinking, real confusion points get addressed
+
+-   **Log-Driven Documentation**
+    -   Observation: When logs explain logic clearly, documentation becomes easier
+    -   Why: Logs show state transitions ("Baseline insufficient → Starting relaxation"), decisions ("Replaced period X with larger Y"), and are already written for humans
+    -   Pattern: If you spent hours making logs clear → use that clarity in documentation too
+
+-   **Concrete Examples > Abstract Descriptions**
+    -   ✅ **Good:** "Day 2025-11-11 found 2 periods at flex=12.0% +volatility_any (stopped early, no need to try higher flex)"
+    -   ❌ **Bad:** "The relaxation algorithm uses a configurable threshold multiplier with filter combination strategies"
+    -   Use real data from debug sessions, show actual attribute values, demonstrate with timeline diagrams
+
+-   **Context Accumulation in Long Sessions**
+    -   Advantage: AI builds mental model incrementally, sees evolution of logic (not just final state), understands trade-offs
+    -   Disadvantage of short sessions: Cold start every time, missing "why" context, documentation becomes spec-writing
+    -   Lesson: Complex documentation benefits from focused, uninterrupted work with accumulated context
+
+-   **Document the "Why", Not Just the "What"**
+    -   Every complex pattern should answer:
+        1. **What** does it do? (quick summary)
+        2. **Why** was it designed this way? (alternatives considered)
+        3. **How** does a user benefit? (practical impact)
+        4. **When** does it fail? (known limitations)
+    -   Example: "Replacement Logic: Larger periods replace smaller overlapping ones because users want ONE long cheap period, not multiple short overlapping ones."
 
 ## Ruff Code Style Guidelines
 
