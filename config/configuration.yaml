@@ -3,6 +3,19 @@
 homeassistant:
   debug: true
 
+# Disable analytics, diagnostics and error reporting for development instance
+# https://www.home-assistant.io/integrations/analytics/
+analytics:
+  # Disable usage analytics to prevent skewing production statistics
+  # https://analytics.home-assistant.io should only reflect real user installations
+
+# https://www.home-assistant.io/integrations/system_health/
+system_health:
+
+# https://www.home-assistant.io/integrations/diagnostics/
+# Note: Diagnostics integration cannot be disabled, but without analytics
+# and with internal_url set, no data is sent externally
+
 # Core integrations needed for development
 http:
 
