@@ -1,4 +1,4 @@
-# Period Calculation# Period Calculation# Period Calculation
+# Period Calculation
 
 
 
