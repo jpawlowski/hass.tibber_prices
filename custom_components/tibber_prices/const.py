@@ -57,6 +57,9 @@ DEFAULT_PEAK_PRICE_FLEX = -20  # 20% flexibility for peak price (user-facing, pe
 DEFAULT_BEST_PRICE_MIN_DISTANCE_FROM_AVG = 5  # 5% minimum distance from daily average (ensures significance)
 DEFAULT_PEAK_PRICE_MIN_DISTANCE_FROM_AVG = 5  # 5% minimum distance from daily average (ensures significance)
 DEFAULT_BEST_PRICE_MIN_PERIOD_LENGTH = 60  # 60 minutes minimum period length for best price (user-facing, minutes)
+# Note: Peak price warnings are allowed for shorter periods (30 min) than best price periods (60 min).
+# This asymmetry is intentional: shorter peak periods are acceptable for alerting users to brief expensive spikes,
+# while best price periods require longer duration to ensure meaningful savings and avoid recommending short, impractical windows.
 DEFAULT_PEAK_PRICE_MIN_PERIOD_LENGTH = 30  # 30 minutes minimum period length for peak price (user-facing, minutes)
 DEFAULT_PRICE_RATING_THRESHOLD_LOW = -10  # Default rating threshold low percentage
 DEFAULT_PRICE_RATING_THRESHOLD_HIGH = 10  # Default rating threshold high percentage
