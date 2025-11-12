@@ -903,9 +903,12 @@ class TibberPricesDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 
         # Periods shorter than MIN_INTERVALS_FOR_GAP_TOLERANCE (1.5h) use strict filtering
         if interval_count < MIN_INTERVALS_FOR_GAP_TOLERANCE:
+            period_type = "peak" if reverse_sort else "best"
             _LOGGER.debug(
-                "Using strict filtering for short period (%d intervals)",
+                "Using strict filtering for short %s period (%d intervals < %d min required for gap tolerance)",
+                period_type,
                 interval_count,
+                MIN_INTERVALS_FOR_GAP_TOLERANCE,
             )
             return self._check_short_period_strict(today_intervals, level_order, reverse_sort=reverse_sort)
 
