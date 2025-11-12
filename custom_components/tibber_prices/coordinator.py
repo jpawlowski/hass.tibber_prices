@@ -30,7 +30,6 @@ from .const import (
     CONF_BEST_PRICE_MAX_LEVEL_GAP_COUNT,
     CONF_BEST_PRICE_MIN_DISTANCE_FROM_AVG,
     CONF_BEST_PRICE_MIN_PERIOD_LENGTH,
-    CONF_BEST_PRICE_MIN_VOLATILITY,
     CONF_ENABLE_MIN_PERIODS_BEST,
     CONF_ENABLE_MIN_PERIODS_PEAK,
     CONF_MIN_PERIODS_BEST,
@@ -40,7 +39,6 @@ from .const import (
     CONF_PEAK_PRICE_MIN_DISTANCE_FROM_AVG,
     CONF_PEAK_PRICE_MIN_LEVEL,
     CONF_PEAK_PRICE_MIN_PERIOD_LENGTH,
-    CONF_PEAK_PRICE_MIN_VOLATILITY,
     CONF_PRICE_RATING_THRESHOLD_HIGH,
     CONF_PRICE_RATING_THRESHOLD_LOW,
     CONF_RELAXATION_STEP_BEST,
@@ -53,7 +51,6 @@ from .const import (
     DEFAULT_BEST_PRICE_MAX_LEVEL_GAP_COUNT,
     DEFAULT_BEST_PRICE_MIN_DISTANCE_FROM_AVG,
     DEFAULT_BEST_PRICE_MIN_PERIOD_LENGTH,
-    DEFAULT_BEST_PRICE_MIN_VOLATILITY,
     DEFAULT_ENABLE_MIN_PERIODS_BEST,
     DEFAULT_ENABLE_MIN_PERIODS_PEAK,
     DEFAULT_MIN_PERIODS_BEST,
@@ -63,7 +60,6 @@ from .const import (
     DEFAULT_PEAK_PRICE_MIN_DISTANCE_FROM_AVG,
     DEFAULT_PEAK_PRICE_MIN_LEVEL,
     DEFAULT_PEAK_PRICE_MIN_PERIOD_LENGTH,
-    DEFAULT_PEAK_PRICE_MIN_VOLATILITY,
     DEFAULT_PRICE_RATING_THRESHOLD_HIGH,
     DEFAULT_PRICE_RATING_THRESHOLD_LOW,
     DEFAULT_RELAXATION_STEP_BEST,
@@ -78,7 +74,6 @@ from .const import (
 from .period_utils import (
     PeriodConfig,
     calculate_periods_with_relaxation,
-    filter_periods_by_volatility,
 )
 from .price_utils import (
     enrich_price_info_with_differences,
@@ -908,6 +903,10 @@ class TibberPricesDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 
         # Periods shorter than MIN_INTERVALS_FOR_GAP_TOLERANCE (1.5h) use strict filtering
         if interval_count < MIN_INTERVALS_FOR_GAP_TOLERANCE:
+            _LOGGER.debug(
+                "Using strict filtering for short period (%d intervals)",
+                interval_count,
+            )
             return self._check_short_period_strict(today_intervals, level_order, reverse_sort=reverse_sort)
 
         # Try normal gap tolerance check first
@@ -1143,14 +1142,19 @@ class TibberPricesDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             DEFAULT_VOLATILITY_THRESHOLD_VERY_HIGH,
         )
 
-        # Check if best price periods should be shown (apply filters)
-        show_best_price = self._should_show_periods(price_info, reverse_sort=False) if all_prices else False
-
         # Get relaxation configuration for best price
         enable_relaxation_best = self.config_entry.options.get(
             CONF_ENABLE_MIN_PERIODS_BEST,
             DEFAULT_ENABLE_MIN_PERIODS_BEST,
         )
+
+        # Check if best price periods should be shown
+        # If relaxation is enabled, always calculate (relaxation will try "any" filter)
+        # If relaxation is disabled, apply level filter check
+        if enable_relaxation_best:
+            show_best_price = bool(all_prices)
+        else:
+            show_best_price = self._should_show_periods(price_info, reverse_sort=False) if all_prices else False
         min_periods_best = self.config_entry.options.get(
             CONF_MIN_PERIODS_BEST,
             DEFAULT_MIN_PERIODS_BEST,
@@ -1163,6 +1167,15 @@ class TibberPricesDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         # Calculate best price periods (or return empty if filtered)
         if show_best_price:
             best_config = self._get_period_config(reverse_sort=False)
+            # Get level filter configuration
+            max_level_best = self.config_entry.options.get(
+                CONF_BEST_PRICE_MAX_LEVEL,
+                DEFAULT_BEST_PRICE_MAX_LEVEL,
+            )
+            gap_count_best = self.config_entry.options.get(
+                CONF_BEST_PRICE_MAX_LEVEL_GAP_COUNT,
+                DEFAULT_BEST_PRICE_MAX_LEVEL_GAP_COUNT,
+            )
             best_period_config = PeriodConfig(
                 reverse_sort=False,
                 flex=best_config["flex"],
@@ -1173,6 +1186,8 @@ class TibberPricesDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 threshold_volatility_moderate=threshold_volatility_moderate,
                 threshold_volatility_high=threshold_volatility_high,
                 threshold_volatility_very_high=threshold_volatility_very_high,
+                level_filter=max_level_best,
+                gap_count=gap_count_best,
             )
             best_periods, best_relaxation = calculate_periods_with_relaxation(
                 all_prices,
@@ -1186,13 +1201,6 @@ class TibberPricesDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                     level_override=lvl,
                 ),
             )
-
-            # Apply period-level volatility filter (after calculation)
-            min_volatility_best = self.config_entry.options.get(
-                CONF_BEST_PRICE_MIN_VOLATILITY,
-                DEFAULT_BEST_PRICE_MIN_VOLATILITY,
-            )
-            best_periods = filter_periods_by_volatility(best_periods, min_volatility_best)
         else:
             best_periods = {
                 "periods": [],
@@ -1201,14 +1209,19 @@ class TibberPricesDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             }
             best_relaxation = {"relaxation_active": False, "relaxation_attempted": False}
 
-        # Check if peak price periods should be shown (apply filters)
-        show_peak_price = self._should_show_periods(price_info, reverse_sort=True) if all_prices else False
-
         # Get relaxation configuration for peak price
         enable_relaxation_peak = self.config_entry.options.get(
             CONF_ENABLE_MIN_PERIODS_PEAK,
             DEFAULT_ENABLE_MIN_PERIODS_PEAK,
         )
+
+        # Check if peak price periods should be shown
+        # If relaxation is enabled, always calculate (relaxation will try "any" filter)
+        # If relaxation is disabled, apply level filter check
+        if enable_relaxation_peak:
+            show_peak_price = bool(all_prices)
+        else:
+            show_peak_price = self._should_show_periods(price_info, reverse_sort=True) if all_prices else False
         min_periods_peak = self.config_entry.options.get(
             CONF_MIN_PERIODS_PEAK,
             DEFAULT_MIN_PERIODS_PEAK,
@@ -1221,6 +1234,15 @@ class TibberPricesDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         # Calculate peak price periods (or return empty if filtered)
         if show_peak_price:
             peak_config = self._get_period_config(reverse_sort=True)
+            # Get level filter configuration
+            min_level_peak = self.config_entry.options.get(
+                CONF_PEAK_PRICE_MIN_LEVEL,
+                DEFAULT_PEAK_PRICE_MIN_LEVEL,
+            )
+            gap_count_peak = self.config_entry.options.get(
+                CONF_PEAK_PRICE_MAX_LEVEL_GAP_COUNT,
+                DEFAULT_PEAK_PRICE_MAX_LEVEL_GAP_COUNT,
+            )
             peak_period_config = PeriodConfig(
                 reverse_sort=True,
                 flex=peak_config["flex"],
@@ -1231,6 +1253,8 @@ class TibberPricesDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 threshold_volatility_moderate=threshold_volatility_moderate,
                 threshold_volatility_high=threshold_volatility_high,
                 threshold_volatility_very_high=threshold_volatility_very_high,
+                level_filter=min_level_peak,
+                gap_count=gap_count_peak,
             )
             peak_periods, peak_relaxation = calculate_periods_with_relaxation(
                 all_prices,
@@ -1244,13 +1268,6 @@ class TibberPricesDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                     level_override=lvl,
                 ),
             )
-
-            # Apply period-level volatility filter (after calculation)
-            min_volatility_peak = self.config_entry.options.get(
-                CONF_PEAK_PRICE_MIN_VOLATILITY,
-                DEFAULT_PEAK_PRICE_MIN_VOLATILITY,
-            )
-            peak_periods = filter_periods_by_volatility(peak_periods, min_volatility_peak)
         else:
             peak_periods = {
                 "periods": [],

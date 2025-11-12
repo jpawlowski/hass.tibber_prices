@@ -104,7 +104,6 @@
                     "best_price_min_period_length": "Minimale periode lengte",
                     "best_price_flex": "Flexibiliteit: Maximaal % boven minimumprijs",
                     "best_price_min_distance_from_avg": "Minimale afstand: Vereist % onder dagelijks gemiddelde",
-                    "best_price_min_volatility": "Minimum volatiliteitsfilter",
                     "best_price_max_level": "Prijsniveaufilter (Optioneel)",
                     "best_price_max_level_gap_count": "Gaptolerantie voor niveaufilter",
                     "enable_min_periods_best": "Probeer minimum aantal periodes te bereiken",
@@ -112,7 +111,6 @@
                     "relaxation_step_best": "Ontspanningsstap"
                 },
                 "data_description": {
-                    "best_price_min_volatility": "Toon alleen beste prijsperiodes wanneer de interne prijsvolatiliteit van de periode (prijsspanne binnen de periode) dit niveau bereikt of overschrijdt. Standaard: 'Laag' (toon periodes met elk volatiliteitsniveau) - maakt het mogelijk om goedkope periodes te vinden zelfs als de prijzen stabiel zijn. Selecteer 'Matig'/'Hoog' om alleen periodes met significante prijsvariaties te tonen, wat kan wijzen op meer dynamische prijsmogelijkheden.",
                     "best_price_max_level": "Toon alleen beste prijsperiodes als ze intervallen bevatten met prijsniveaus ≤ geselecteerde waarde. Bijvoorbeeld: selecteren van 'Goedkoop' betekent dat de periode minstens één 'ZEER_GOEDKOOP' of 'GOEDKOOP' interval moet hebben. Dit zorgt ervoor dat 'beste prijs'-periodes niet alleen relatief goedkoop zijn voor de dag, maar daadwerkelijk goedkoop in absolute termen. Selecteer 'Alle' om beste prijzen te tonen ongeacht hun absolute prijsniveau.",
                     "enable_min_periods_best": "Wanneer ingeschakeld worden filters geleidelijk versoepeld als er niet genoeg periodes worden gevonden. Dit probeert het gewenste minimum aantal periodes te bereiken om ervoor te zorgen dat je kansen hebt om van lage prijzen te profiteren, zelfs op dagen met ongebruikelijke prijspatronen.",
                     "min_periods_best": "Minimum aantal beste prijsperiodes om naar te streven per dag. Filters worden stap voor stap versoepeld om dit aantal te proberen bereiken. Alleen actief wanneer 'Probeer minimum aantal periodes te bereiken' is ingeschakeld. Standaard: 1",
@@ -128,7 +126,6 @@
                     "peak_price_min_period_length": "Minimale periode lengte",
                     "peak_price_flex": "Flexibiliteit: Maximaal % onder maximumprijs (negatieve waarde)",
                     "peak_price_min_distance_from_avg": "Minimale afstand: Vereist % boven dagelijks gemiddelde",
-                    "peak_price_min_volatility": "Minimum volatiliteitsfilter",
                     "peak_price_min_level": "Prijsniveaufilter (Optioneel)",
                     "peak_price_max_level_gap_count": "Gaptolerantie voor niveaufilter",
                     "enable_min_periods_peak": "Probeer minimum aantal periodes te bereiken",
@@ -136,7 +133,6 @@
                     "relaxation_step_peak": "Ontspanningsstap"
                 },
                 "data_description": {
-                    "peak_price_min_volatility": "Toon alleen piekprijsperiodes wanneer de interne prijsvolatiliteit van de periode (prijsspanne binnen de periode) dit niveau bereikt of overschrijdt. Standaard: 'Laag' (toon periodes met elk volatiliteitsniveau) - maakt het mogelijk om dure periodes te identificeren zelfs als de prijzen stabiel zijn. Selecteer 'Matig'/'Hoog' om alleen periodes met significante prijsvariaties te tonen, wat kan wijzen op een urgenter noodzaak om deze tijden te vermijden.",
                     "peak_price_min_level": "Toon alleen piekprijsperiodes als ze intervallen bevatten met prijsniveaus ≥ geselecteerde waarde. Bijvoorbeeld: selecteren van 'Duur' betekent dat de periode minstens één 'DUUR' of 'ZEER_DUUR' interval moet hebben. Dit zorgt ervoor dat 'piekprijs'-periodes niet alleen relatief duur zijn voor de dag, maar daadwerkelijk duur in absolute termen. Selecteer 'Alle' om piekprijzen te tonen ongeacht hun absolute prijsniveau.",
                     "enable_min_periods_peak": "Wanneer ingeschakeld worden filters geleidelijk versoepeld als er niet genoeg periodes worden gevonden. Dit probeert het gewenste minimum aantal periodes te bereiken om ervoor te zorgen dat je wordt gewaarschuwd voor dure periodes, zelfs op dagen met ongebruikelijke prijspatronen.",
                     "min_periods_peak": "Minimum aantal piekprijsperiodes om naar te streven per dag. Filters worden stap voor stap versoepeld om dit aantal te proberen bereiken. Alleen actief wanneer 'Probeer minimum aantal periodes te bereiken' is ingeschakeld. Standaard: 1",

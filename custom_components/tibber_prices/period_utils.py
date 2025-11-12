@@ -17,6 +17,7 @@ from .const import (
     DEFAULT_VOLATILITY_THRESHOLD_HIGH,
     DEFAULT_VOLATILITY_THRESHOLD_MODERATE,
     DEFAULT_VOLATILITY_THRESHOLD_VERY_HIGH,
+    PRICE_LEVEL_MAPPING,
 )
 from .price_utils import (
     aggregate_period_levels,
@@ -49,6 +50,8 @@ class PeriodConfig(NamedTuple):
     threshold_volatility_moderate: float = DEFAULT_VOLATILITY_THRESHOLD_MODERATE
     threshold_volatility_high: float = DEFAULT_VOLATILITY_THRESHOLD_HIGH
     threshold_volatility_very_high: float = DEFAULT_VOLATILITY_THRESHOLD_VERY_HIGH
+    level_filter: str | None = None  # "any", "cheap", "expensive", etc. or None
+    gap_count: int = 0  # Number of allowed consecutive deviating intervals
 
 
 class PeriodData(NamedTuple):
@@ -84,6 +87,16 @@ class ThresholdConfig(NamedTuple):
     threshold_volatility_moderate: float
     threshold_volatility_high: float
     threshold_volatility_very_high: float
+    reverse_sort: bool
+
+
+class IntervalCriteria(NamedTuple):
+    """Criteria for checking if an interval qualifies for a period."""
+
+    ref_price: float
+    avg_price: float
+    flex: float
+    min_distance_from_avg: float
     reverse_sort: bool
 
 
@@ -160,7 +173,13 @@ def calculate_periods(
         "flex": flex,
         "min_distance_from_avg": min_distance_from_avg,
     }
-    raw_periods = _build_periods(all_prices_sorted, price_context, reverse_sort=reverse_sort)
+    raw_periods = _build_periods(
+        all_prices_sorted,
+        price_context,
+        reverse_sort=reverse_sort,
+        level_filter=config.level_filter,
+        gap_count=config.gap_count,
+    )
 
     # Step 4: Filter by minimum length
     raw_periods = _filter_periods_by_min_length(raw_periods, min_period_length)
@@ -238,11 +257,123 @@ def _calculate_reference_prices(intervals_by_day: dict[date, list[dict]], *, rev
     return ref_prices
 
 
+def _check_level_with_gap_tolerance(
+    interval_level: int,
+    level_order: int,
+    consecutive_gaps: int,
+    gap_count: int,
+    *,
+    reverse_sort: bool,
+) -> tuple[bool, bool, int]:
+    """
+    Check if interval meets level requirement with gap tolerance.
+
+    Args:
+        interval_level: Level value of current interval (from PRICE_LEVEL_MAPPING)
+        level_order: Required level value
+        consecutive_gaps: Current count of consecutive gap intervals
+        gap_count: Maximum allowed consecutive gap intervals
+        reverse_sort: True for peak price, False for best price
+
+    Returns:
+        Tuple of (meets_level, is_gap, new_consecutive_gaps):
+        - meets_level: True if interval qualifies (exact match or within gap tolerance)
+        - is_gap: True if this is a gap interval (deviates by exactly 1 step)
+        - new_consecutive_gaps: Updated gap counter
+
+    """
+    if reverse_sort:
+        # Peak price: interval must be >= level_order (e.g., EXPENSIVE or higher)
+        meets_level_exact = interval_level >= level_order
+        # Gap: exactly 1 step below (e.g., NORMAL when expecting EXPENSIVE)
+        is_gap = interval_level == level_order - 1
+    else:
+        # Best price: interval must be <= level_order (e.g., CHEAP or lower)
+        meets_level_exact = interval_level <= level_order
+        # Gap: exactly 1 step above (e.g., NORMAL when expecting CHEAP)
+        is_gap = interval_level == level_order + 1
+
+    # Apply gap tolerance
+    if meets_level_exact:
+        return True, False, 0  # Meets level, not a gap, reset counter
+    if is_gap and consecutive_gaps < gap_count:
+        return True, True, consecutive_gaps + 1  # Allowed gap, increment counter
+    return False, False, 0  # Doesn't meet level, reset counter
+
+
+def _apply_level_filter(
+    price_data: dict,
+    level_order: int | None,
+    consecutive_gaps: int,
+    gap_count: int,
+    *,
+    reverse_sort: bool,
+) -> tuple[bool, int]:
+    """
+    Apply level filter to a single interval.
+
+    Args:
+        price_data: Price data dict with "level" key
+        level_order: Required level value (from PRICE_LEVEL_MAPPING) or None if disabled
+        consecutive_gaps: Current count of consecutive gap intervals
+        gap_count: Maximum allowed consecutive gap intervals
+        reverse_sort: True for peak price, False for best price
+
+    Returns:
+        Tuple of (meets_level, new_consecutive_gaps)
+
+    """
+    if level_order is None:
+        return True, consecutive_gaps
+
+    interval_level = PRICE_LEVEL_MAPPING.get(price_data.get("level", "NORMAL"), 0)
+    meets_level, _is_gap, new_consecutive_gaps = _check_level_with_gap_tolerance(
+        interval_level, level_order, consecutive_gaps, gap_count, reverse_sort=reverse_sort
+    )
+    return meets_level, new_consecutive_gaps
+
+
+def _check_interval_criteria(
+    price: float,
+    criteria: IntervalCriteria,
+) -> tuple[bool, bool]:
+    """
+    Check if interval meets flex and minimum distance criteria.
+
+    Args:
+        price: Interval price
+        criteria: Interval criteria (ref_price, avg_price, flex, etc.)
+
+    Returns:
+        Tuple of (in_flex, meets_min_distance)
+
+    """
+    # Calculate percentage difference from reference
+    percent_diff = ((price - criteria.ref_price) / criteria.ref_price) * 100 if criteria.ref_price != 0 else 0.0
+
+    # Check if interval qualifies for the period
+    in_flex = percent_diff >= criteria.flex * 100 if criteria.reverse_sort else percent_diff <= criteria.flex * 100
+
+    # Minimum distance from average
+    if criteria.reverse_sort:
+        # Peak price: must be at least min_distance_from_avg% above average
+        min_distance_threshold = criteria.avg_price * (1 + criteria.min_distance_from_avg / 100)
+        meets_min_distance = price >= min_distance_threshold
+    else:
+        # Best price: must be at least min_distance_from_avg% below average
+        min_distance_threshold = criteria.avg_price * (1 - criteria.min_distance_from_avg / 100)
+        meets_min_distance = price <= min_distance_threshold
+
+    return in_flex, meets_min_distance
+
+
 def _build_periods(
     all_prices: list[dict],
     price_context: dict[str, Any],
     *,
     reverse_sort: bool,
+    level_filter: str | None = None,
+    gap_count: int = 0,
 ) -> list[list[dict]]:
     """
     Build periods, allowing periods to cross midnight (day boundary).
@@ -251,15 +382,45 @@ def _build_periods(
     When a day boundary is crossed, the current period is ended.
     Adjacent periods at midnight are merged in a later step.
 
+    Args:
+        all_prices: All price data points
+        price_context: Dict with ref_prices, avg_prices, flex, min_distance_from_avg
+        reverse_sort: True for peak price (high prices), False for best price (low prices)
+        level_filter: Level filter string ("cheap", "expensive", "any", None)
+        gap_count: Number of allowed consecutive intervals deviating by exactly 1 level step
+
     """
     ref_prices = price_context["ref_prices"]
     avg_prices = price_context["avg_prices"]
     flex = price_context["flex"]
     min_distance_from_avg = price_context["min_distance_from_avg"]
 
+    # Calculate level_order if level_filter is active
+    level_order = None
+    level_filter_active = False
+    if level_filter and level_filter.lower() != "any":
+        level_order = PRICE_LEVEL_MAPPING.get(level_filter.upper(), 0)
+        level_filter_active = True
+        filter_direction = "≥" if reverse_sort else "≤"
+        gap_info = f", gap_tolerance={gap_count}" if gap_count > 0 else ""
+        _LOGGER.debug(
+            "%sLevel filter active: %s (order %s, require interval level %s filter level%s)",
+            INDENT_L3,
+            level_filter.upper(),
+            level_order,
+            filter_direction,
+            gap_info,
+        )
+    else:
+        status = "RELAXED to ANY" if (level_filter and level_filter.lower() == "any") else "DISABLED (not configured)"
+        _LOGGER.debug("%sLevel filter: %s (accepting all levels)", INDENT_L3, status)
+
     periods: list[list[dict]] = []
     current_period: list[dict] = []
     last_ref_date: date | None = None
+    consecutive_gaps = 0  # Track consecutive intervals that deviate by 1 level step
+    intervals_checked = 0
+    intervals_filtered_by_level = 0
 
     for price_data in all_prices:
         starts_at = dt_util.parse_datetime(price_data["startsAt"])
@@ -267,36 +428,37 @@ def _build_periods(
             continue
         starts_at = dt_util.as_local(starts_at)
         date_key = starts_at.date()
-        ref_price = ref_prices[date_key]
-        avg_price = avg_prices[date_key]
         price = float(price_data["total"])
 
-        # Calculate percentage difference from reference
-        percent_diff = ((price - ref_price) / ref_price) * 100 if ref_price != 0 else 0.0
-        percent_diff = round(percent_diff, 2)
+        intervals_checked += 1
 
-        # Check if interval qualifies for the period
-        in_flex = percent_diff >= flex * 100 if reverse_sort else percent_diff <= flex * 100
+        # Check flex and minimum distance criteria
+        criteria = IntervalCriteria(
+            ref_price=ref_prices[date_key],
+            avg_price=avg_prices[date_key],
+            flex=flex,
+            min_distance_from_avg=min_distance_from_avg,
+            reverse_sort=reverse_sort,
+        )
+        in_flex, meets_min_distance = _check_interval_criteria(price, criteria)
 
-        # Minimum distance from average
-        if reverse_sort:
-            # Peak price: must be at least min_distance_from_avg% above average
-            min_distance_threshold = avg_price * (1 + min_distance_from_avg / 100)
-            meets_min_distance = price >= min_distance_threshold
-        else:
-            # Best price: must be at least min_distance_from_avg% below average
-            min_distance_threshold = avg_price * (1 - min_distance_from_avg / 100)
-            meets_min_distance = price <= min_distance_threshold
+        # Level filter: Check if interval meets level requirement with gap tolerance
+        meets_level, consecutive_gaps = _apply_level_filter(
+            price_data, level_order, consecutive_gaps, gap_count, reverse_sort=reverse_sort
+        )
+        if not meets_level:
+            intervals_filtered_by_level += 1
 
         # Split period if day changes
         if last_ref_date is not None and date_key != last_ref_date and current_period:
             periods.append(current_period)
             current_period = []
+            consecutive_gaps = 0  # Reset gap counter on day boundary
 
         last_ref_date = date_key
 
         # Add to period if all criteria are met
-        if in_flex and meets_min_distance:
+        if in_flex and meets_min_distance and meets_level:
             current_period.append(
                 {
                     "interval_hour": starts_at.hour,
@@ -310,10 +472,22 @@ def _build_periods(
             # Criteria no longer met, end current period
             periods.append(current_period)
             current_period = []
+            consecutive_gaps = 0  # Reset gap counter
 
     # Add final period if exists
     if current_period:
         periods.append(current_period)
+
+    # Log summary
+    if level_filter_active and intervals_checked > 0:
+        filtered_pct = (intervals_filtered_by_level / intervals_checked) * 100
+        _LOGGER.debug(
+            "%sLevel filter summary: %d/%d intervals filtered (%.1f%%)",
+            INDENT_L3,
+            intervals_filtered_by_level,
+            intervals_checked,
+            filtered_pct,
+        )
 
     return periods
 
@@ -1196,12 +1370,29 @@ def _relax_single_day(  # noqa: PLR0913 - Comprehensive filter relaxation per da
                 continue
 
             # Calculate periods with this flex + filter combination
-            relaxed_config = config._replace(flex=new_flex)
+            # Apply level override if specified
+            level_filter_value = lvl_override if lvl_override else config.level_filter
+
+            # Log filter changes
+            flex_pct = round(abs(new_flex) * 100, 1)
+            if lvl_override:
+                _LOGGER.debug(
+                    "%sDay %s flex=%.1f%%: OVERRIDING level_filter: %s → %s",
+                    INDENT_L2,
+                    day_label,
+                    flex_pct,
+                    config.level_filter or "None",
+                    lvl_override.upper(),
+                )
+
+            relaxed_config = config._replace(
+                flex=new_flex,
+                level_filter=level_filter_value,
+            )
             relaxed_result = calculate_periods(day_prices, config=relaxed_config)
             new_periods = relaxed_result["periods"]
 
             # Build relaxation level label BEFORE marking periods
-            flex_pct = round(abs(new_flex) * 100, 1)
             relaxation_level = f"price_diff_{flex_pct}%{label_suffix}"
             phases_used.append(relaxation_level)
 

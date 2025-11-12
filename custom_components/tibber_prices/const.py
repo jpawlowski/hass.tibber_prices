@@ -31,8 +31,6 @@ CONF_PRICE_TREND_THRESHOLD_FALLING = "price_trend_threshold_falling"
 CONF_VOLATILITY_THRESHOLD_MODERATE = "volatility_threshold_moderate"
 CONF_VOLATILITY_THRESHOLD_HIGH = "volatility_threshold_high"
 CONF_VOLATILITY_THRESHOLD_VERY_HIGH = "volatility_threshold_very_high"
-CONF_BEST_PRICE_MIN_VOLATILITY = "best_price_min_volatility"
-CONF_PEAK_PRICE_MIN_VOLATILITY = "peak_price_min_volatility"
 CONF_BEST_PRICE_MAX_LEVEL = "best_price_max_level"
 CONF_PEAK_PRICE_MIN_LEVEL = "peak_price_min_level"
 CONF_BEST_PRICE_MAX_LEVEL_GAP_COUNT = "best_price_max_level_gap_count"
@@ -50,11 +48,11 @@ ATTRIBUTION = "Data provided by Tibber"
 DEFAULT_NAME = "Tibber Price Information & Ratings"
 DEFAULT_EXTENDED_DESCRIPTIONS = False
 DEFAULT_BEST_PRICE_FLEX = 15  # 15% flexibility for best price (user-facing, percent)
-DEFAULT_PEAK_PRICE_FLEX = -15  # 15% flexibility for peak price (user-facing, percent)
-DEFAULT_BEST_PRICE_MIN_DISTANCE_FROM_AVG = 2  # 2% minimum distance from daily average for best price
-DEFAULT_PEAK_PRICE_MIN_DISTANCE_FROM_AVG = 2  # 2% minimum distance from daily average for peak price
+DEFAULT_PEAK_PRICE_FLEX = -20  # 20% flexibility for peak price (user-facing, percent)
+DEFAULT_BEST_PRICE_MIN_DISTANCE_FROM_AVG = 5  # 5% minimum distance from daily average (ensures significance)
+DEFAULT_PEAK_PRICE_MIN_DISTANCE_FROM_AVG = 5  # 5% minimum distance from daily average (ensures significance)
 DEFAULT_BEST_PRICE_MIN_PERIOD_LENGTH = 60  # 60 minutes minimum period length for best price (user-facing, minutes)
-DEFAULT_PEAK_PRICE_MIN_PERIOD_LENGTH = 60  # 60 minutes minimum period length for peak price (user-facing, minutes)
+DEFAULT_PEAK_PRICE_MIN_PERIOD_LENGTH = 30  # 30 minutes minimum period length for peak price (user-facing, minutes)
 DEFAULT_PRICE_RATING_THRESHOLD_LOW = -10  # Default rating threshold low percentage
 DEFAULT_PRICE_RATING_THRESHOLD_HIGH = 10  # Default rating threshold high percentage
 DEFAULT_PRICE_TREND_THRESHOLD_RISING = 5  # Default trend threshold for rising prices (%)
@@ -62,17 +60,15 @@ DEFAULT_PRICE_TREND_THRESHOLD_FALLING = -5  # Default trend threshold for fallin
 DEFAULT_VOLATILITY_THRESHOLD_MODERATE = 5.0  # Default threshold for MODERATE volatility (ct/øre)
 DEFAULT_VOLATILITY_THRESHOLD_HIGH = 15.0  # Default threshold for HIGH volatility (ct/øre)
 DEFAULT_VOLATILITY_THRESHOLD_VERY_HIGH = 30.0  # Default threshold for VERY_HIGH volatility (ct/øre)
-DEFAULT_BEST_PRICE_MIN_VOLATILITY = "low"  # Show best price at any volatility (optimization always useful)
-DEFAULT_PEAK_PRICE_MIN_VOLATILITY = "low"  # Always show peak price (warning relevant even at low spreads)
-DEFAULT_BEST_PRICE_MAX_LEVEL = "any"  # Default: show best price periods regardless of price level
-DEFAULT_PEAK_PRICE_MIN_LEVEL = "any"  # Default: show peak price periods regardless of price level
-DEFAULT_BEST_PRICE_MAX_LEVEL_GAP_COUNT = 0  # Default: no tolerance for level gaps (strict filtering)
-DEFAULT_PEAK_PRICE_MAX_LEVEL_GAP_COUNT = 0  # Default: no tolerance for level gaps (strict filtering)
+DEFAULT_BEST_PRICE_MAX_LEVEL = "cheap"  # Default: prefer genuinely cheap periods, relax to "any" if needed
+DEFAULT_PEAK_PRICE_MIN_LEVEL = "expensive"  # Default: prefer genuinely expensive periods, relax to "any" if needed
+DEFAULT_BEST_PRICE_MAX_LEVEL_GAP_COUNT = 1  # Default: allow 1 level gap (e.g., CHEAP→NORMAL→CHEAP stays together)
+DEFAULT_PEAK_PRICE_MAX_LEVEL_GAP_COUNT = 1  # Default: allow 1 level gap for peak price periods
 MIN_INTERVALS_FOR_GAP_TOLERANCE = 6  # Minimum period length (in 15-min intervals = 1.5h) required for gap tolerance
-DEFAULT_ENABLE_MIN_PERIODS_BEST = False  # Default: minimum periods feature disabled for best price
+DEFAULT_ENABLE_MIN_PERIODS_BEST = True  # Default: minimum periods feature enabled for best price
 DEFAULT_MIN_PERIODS_BEST = 2  # Default: require at least 2 best price periods (when enabled)
 DEFAULT_RELAXATION_STEP_BEST = 25  # Default: 25% of original threshold per relaxation step for best price
-DEFAULT_ENABLE_MIN_PERIODS_PEAK = False  # Default: minimum periods feature disabled for peak price
+DEFAULT_ENABLE_MIN_PERIODS_PEAK = True  # Default: minimum periods feature enabled for peak price
 DEFAULT_MIN_PERIODS_PEAK = 2  # Default: require at least 2 peak price periods (when enabled)
 DEFAULT_RELAXATION_STEP_PEAK = 25  # Default: 25% of original threshold per relaxation step for peak price
 
@@ -193,15 +189,7 @@ VOLATILITY_OPTIONS = [
     VOLATILITY_VERY_HIGH.lower(),
 ]
 
-# Valid options for minimum volatility filter for periods
-MIN_VOLATILITY_FOR_PERIODS_OPTIONS = [
-    VOLATILITY_LOW.lower(),  # Show at any volatility (≥0ct spread) - no filter
-    VOLATILITY_MODERATE.lower(),  # Only show periods when volatility ≥ MODERATE (≥5ct)
-    VOLATILITY_HIGH.lower(),  # Only show periods when volatility ≥ HIGH (≥15ct)
-    VOLATILITY_VERY_HIGH.lower(),  # Only show periods when volatility ≥ VERY_HIGH (≥30ct)
-]
-
-# Valid options for best price maximum level filter (AND-linked with volatility filter)
+# Valid options for best price maximum level filter
 # Sorted from cheap to expensive: user selects "up to how expensive"
 BEST_PRICE_MAX_LEVEL_OPTIONS = [
     "any",  # No filter, allow all price levels

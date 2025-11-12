@@ -104,7 +104,6 @@
                     "best_price_min_period_length": "Minsta periodlängd",
                     "best_price_flex": "Flexibilitet: Maximalt % över minimumpris",
                     "best_price_min_distance_from_avg": "Minimiavstånd: Krävd % under dagligt genomsnitt",
-                    "best_price_min_volatility": "Minimum volatilitetsfilter",
                     "best_price_max_level": "Prisnivåfilter (Valfritt)",
                     "best_price_max_level_gap_count": "Gaptolerens för nivåfilter",
                     "enable_min_periods_best": "Försök uppnå minsta antal perioder",
@@ -112,7 +111,6 @@
                     "relaxation_step_best": "Avslappningssteg"
                 },
                 "data_description": {
-                    "best_price_min_volatility": "Visa endast bästa prisperioder när periodens interna prisvolatilitet (prisspann inom perioden) uppfyller eller överskrider denna nivå. Standard: 'Låg' (visa perioder med valfri volatilitetsnivå) - möjliggör att hitta billiga perioder även om priserna är stabila. Välj 'Måttlig'/'Hög' för att endast visa perioder med betydande prisvariationer, vilket kan indikera mer dynamiska prismöjligheter.",
                     "best_price_max_level": "Visa endast bästa prisperioder om de innehåller intervall med prisnivåer ≤ valt värde. Till exempel: att välja 'Billigt' betyder att perioden måste ha minst ett 'MYCKET_BILLIGT' eller 'BILLIGT' intervall. Detta säkerställer att 'bästa pris'-perioder inte bara är relativt billiga för dagen, utan faktiskt billiga i absoluta tal. Välj 'Alla' för att visa bästa priser oavsett deras absoluta prisnivå.",
                     "enable_min_periods_best": "När aktiverad kommer filtren att gradvis luckras upp om inte tillräckligt många perioder hittas. Detta försöker uppnå det önskade minsta antalet perioder för att säkerställa att du har möjligheter att dra nytta av låga priser även på dagar med ovanliga prismönster.",
                     "min_periods_best": "Minsta antal bästa prisperioder att sträva efter per dag. Filtren kommer att luckras upp steg för steg för att försöka uppnå detta antal. Endast aktiv när 'Försök uppnå minsta antal perioder' är aktiverad. Standard: 1",
@@ -128,7 +126,6 @@
                     "peak_price_min_period_length": "Minsta periodlängd",
                     "peak_price_flex": "Flexibilitet: Maximalt % under maximumpris (negativt värde)",
                     "peak_price_min_distance_from_avg": "Minimiavstånd: Krävd % över dagligt genomsnitt",
-                    "peak_price_min_volatility": "Minimum volatilitetsfilter",
                     "peak_price_min_level": "Prisnivåfilter (Valfritt)",
                     "peak_price_max_level_gap_count": "Gaptolerens för nivåfilter",
                     "enable_min_periods_peak": "Försök uppnå minsta antal perioder",
@@ -136,7 +133,6 @@
                     "relaxation_step_peak": "Avslappningssteg"
                 },
                 "data_description": {
-                    "peak_price_min_volatility": "Visa endast topprisperioder om de har en intern prisvolatilitet (prisspann inom perioden) som uppfyller eller överskrider denna nivå. Standard: 'Låg' (visa oavsett periodens volatilitet) - toppvarningar är relevanta även vid låg intern spridning. Högre volatilitet inom en period kan indikera mer brådskande behov att undvika dessa tider (eftersom priserna varierar kraftigt även inom den korta perioden).",
                     "peak_price_min_level": "Visa endast topprisperioder om de innehåller intervall med prisnivåer ≥ valt värde. Till exempel måste perioden om du väljer 'Dyr' ha minst ett 'DYR' eller 'MYCKET_DYR' intervall. Detta säkerställer att 'toppris'-perioder inte bara är relativt dyra för dagen, utan faktiskt dyra i absoluta termer (inte bara 'lite dyrare än genomsnittet på en billig dag').",
                     "enable_min_periods_peak": "När aktiverad kommer filtren att gradvis luckras upp om inte tillräckligt många perioder hittas. Detta försöker uppnå det önskade minsta antalet perioder för att säkerställa att du blir varnad för dyra perioder även på dagar med ovanliga prismönster.",
                     "min_periods_peak": "Minsta antal topprisperioder att sträva efter per dag. Filtren kommer att luckras upp steg för steg för att försöka uppnå detta antal. Endast aktiv när 'Försök uppnå minsta antal perioder' är aktiverad. Standard: 1",
