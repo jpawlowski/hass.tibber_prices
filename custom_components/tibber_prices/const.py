@@ -48,6 +48,11 @@ ATTRIBUTION = "Data provided by Tibber"
 DEFAULT_NAME = "Tibber Price Information & Ratings"
 DEFAULT_EXTENDED_DESCRIPTIONS = False
 DEFAULT_BEST_PRICE_FLEX = 15  # 15% flexibility for best price (user-facing, percent)
+# Peak price flexibility is set to -20 (20%) to allow for more adaptive detection of expensive periods.
+# This is intentionally more flexible than best price (15%) because peak price periods can be more variable,
+# and users may benefit from earlier warnings about expensive periods, even if they are less sharply defined.
+# The negative sign indicates that the threshold is above the average price, and a higher percentage allows
+# for more conservative detection, reducing false negatives for peak price warnings.
 DEFAULT_PEAK_PRICE_FLEX = -20  # 20% flexibility for peak price (user-facing, percent)
 DEFAULT_BEST_PRICE_MIN_DISTANCE_FROM_AVG = 5  # 5% minimum distance from daily average (ensures significance)
 DEFAULT_PEAK_PRICE_MIN_DISTANCE_FROM_AVG = 5  # 5% minimum distance from daily average (ensures significance)
