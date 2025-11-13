@@ -4,13 +4,13 @@ Learn how Best Price and Peak Price periods work, and how to configure them for 
 
 ## Table of Contents
 
-- [Quick Start](#quick-start)
-- [How It Works](#how-it-works)
-- [Configuration Guide](#configuration-guide)
-- [Understanding Relaxation](#understanding-relaxation)
-- [Common Scenarios](#common-scenarios)
-- [Troubleshooting](#troubleshooting)
-- [Advanced Topics](#advanced-topics)
+-   [Quick Start](#quick-start)
+-   [How It Works](#how-it-works)
+-   [Configuration Guide](#configuration-guide)
+-   [Understanding Relaxation](#understanding-relaxation)
+-   [Common Scenarios](#common-scenarios)
+-   [Troubleshooting](#troubleshooting)
+-   [Advanced Topics](#advanced-topics)
 
 ---
 
@@ -20,8 +20,8 @@ Learn how Best Price and Peak Price periods work, and how to configure them for 
 
 The integration finds time windows when electricity is especially **cheap** (Best Price) or **expensive** (Peak Price):
 
-- **Best Price Periods** 🟢 - When to run your dishwasher, charge your EV, or heat water
-- **Peak Price Periods** 🔴 - When to reduce consumption or defer non-essential loads
+-   **Best Price Periods** 🟢 - When to run your dishwasher, charge your EV, or heat water
+-   **Peak Price Periods** 🔴 - When to reduce consumption or defer non-essential loads
 
 ### Default Behavior
 
@@ -110,10 +110,10 @@ Default: 60 minutes minimum
 
 You can optionally require:
 
-- **Stable prices** (volatility filter) - "Only show if price doesn't fluctuate much"
-- **Absolute quality** (level filter) - "Only show if prices are CHEAP/EXPENSIVE (not just below/above average)"
+-   **Stable prices** (volatility filter) - "Only show if price doesn't fluctuate much"
+-   **Absolute quality** (level filter) - "Only show if prices are CHEAP/EXPENSIVE (not just below/above average)"
 
-#### 5. Statistical Outlier Filtering (NEW)
+#### 5. Statistical Outlier Filtering
 
 **Before** period identification, price spikes are automatically detected and smoothed:
 
@@ -126,16 +126,16 @@ Result: Continuous period 00:00-01:15 instead of split periods
 
 **How it works:**
 
-- **Linear regression** predicts expected price based on surrounding trend
-- **95% confidence intervals** (2 standard deviations) define spike tolerance
-- **Symmetry checking** preserves legitimate price shifts (morning/evening peaks)
-- **Enhanced zigzag detection** catches spike clusters without multiple passes
+-   **Linear regression** predicts expected price based on surrounding trend
+-   **95% confidence intervals** (2 standard deviations) define spike tolerance
+-   **Symmetry checking** preserves legitimate price shifts (morning/evening peaks)
+-   **Enhanced zigzag detection** catches spike clusters without multiple passes
 
 **Data integrity:**
 
-- Original prices **always preserved** for statistics (min/max/avg show real values)
-- Smoothing **only affects period formation** (which intervals qualify for periods)
-- Attributes show when smoothing was impactful: `period_interval_smoothed_count`
+-   Original prices **always preserved** for statistics (min/max/avg show real values)
+-   Smoothing **only affects period formation** (which intervals qualify for periods)
+-   Attributes show when smoothing was impactful: `period_interval_smoothed_count`
 
 **Example log output:**
 
@@ -178,14 +178,14 @@ Peak Price (-15% flex = ≥29.75 ct):
 **Range:** 0-100%
 
 ```yaml
-best_price_flex: 15    # Can be up to 15% more expensive than daily MIN
-peak_price_flex: -15   # Can be up to 15% less expensive than daily MAX
+best_price_flex: 15 # Can be up to 15% more expensive than daily MIN
+peak_price_flex: -15 # Can be up to 15% less expensive than daily MAX
 ```
 
 **When to adjust:**
 
-- **Increase (20-25%)** → Find more/longer periods
-- **Decrease (5-10%)** → Find only the very best/worst times
+-   **Increase (20-25%)** → Find more/longer periods
+-   **Decrease (5-10%)** → Find only the very best/worst times
 
 #### Minimum Period Length
 
@@ -200,8 +200,8 @@ peak_price_min_period_length: 60
 
 **When to adjust:**
 
-- **Increase (90-120 min)** → Only show longer periods (e.g., for heat pump cycles)
-- **Decrease (30-45 min)** → Show shorter windows (e.g., for quick tasks)
+-   **Increase (90-120 min)** → Only show longer periods (e.g., for heat pump cycles)
+-   **Decrease (30-45 min)** → Show shorter windows (e.g., for quick tasks)
 
 #### Distance from Average
 
@@ -216,8 +216,8 @@ peak_price_min_distance_from_avg: 2
 
 **When to adjust:**
 
-- **Increase (5-10%)** → Only show clearly better times
-- **Decrease (0-1%)** → Show any time below/above average
+-   **Increase (5-10%)** → Only show clearly better times
+-   **Decrease (0-1%)** → Show any time below/above average
 
 ### Optional Filters
 
@@ -255,7 +255,7 @@ best_price_max_level: cheap    # Only show if at least one interval is CHEAP
 
 ```yaml
 best_price_max_level: cheap
-best_price_max_level_gap_count: 2   # Allow up to 2 NORMAL intervals per period
+best_price_max_level_gap_count: 2 # Allow up to 2 NORMAL intervals per period
 ```
 
 **Use case:** "Don't split periods just because one interval isn't perfectly CHEAP"
@@ -272,8 +272,8 @@ Sometimes, strict filters find too few periods (or none). **Relaxation automatic
 
 ```yaml
 enable_min_periods_best: true
-min_periods_best: 2              # Try to find at least 2 periods per day
-relaxation_step_best: 35         # Increase flex by 35% per step (e.g., 15% → 20.25% → 27.3%)
+min_periods_best: 2 # Try to find at least 2 periods per day
+relaxation_step_best: 35 # Increase flex by 35% per step (e.g., 15% → 20.25% → 27.3%)
 ```
 
 ### How It Works (Smart 4×4 Matrix)
@@ -333,29 +333,29 @@ Day 3: Finds 2 periods with flex 15% (original) → No relaxation needed
 
 ```yaml
 # Use defaults - no configuration needed!
-best_price_flex: 15                      # (default)
-best_price_min_period_length: 60         # (default)
-best_price_min_distance_from_avg: 2      # (default)
+best_price_flex: 15 # (default)
+best_price_min_period_length: 60 # (default)
+best_price_min_distance_from_avg: 2 # (default)
 ```
 
 **What you get:**
 
-- 1-3 periods per day with prices ≤ MIN + 15%
-- Each period at least 1 hour long
-- All periods at least 2% cheaper than daily average
+-   1-3 periods per day with prices ≤ MIN + 15%
+-   Each period at least 1 hour long
+-   All periods at least 2% cheaper than daily average
 
 **Automation example:**
 
 ```yaml
 automation:
-  - trigger:
-      - platform: state
-        entity_id: binary_sensor.tibber_home_best_price_period
-        to: "on"
-    action:
-      - service: switch.turn_on
-        target:
-          entity_id: switch.dishwasher
+    - trigger:
+          - platform: state
+            entity_id: binary_sensor.tibber_home_best_price_period
+            to: "on"
+      action:
+          - service: switch.turn_on
+            target:
+                entity_id: switch.dishwasher
 ```
 
 ---
@@ -370,27 +370,27 @@ automation:
 
 1. **Filters too strict**
 
-   ```yaml
-   # Try:
-   best_price_flex: 20              # Increase from default 15%
-   best_price_min_distance_from_avg: 1  # Reduce from default 2%
-   ```
+    ```yaml
+    # Try:
+    best_price_flex: 20 # Increase from default 15%
+    best_price_min_distance_from_avg: 1 # Reduce from default 2%
+    ```
 
 2. **Period length too long**
 
-   ```yaml
-   # Try:
-   best_price_min_period_length: 45     # Reduce from default 60 minutes
-   ```
+    ```yaml
+    # Try:
+    best_price_min_period_length: 45 # Reduce from default 60 minutes
+    ```
 
 3. **Flat price curve** (all prices very similar)
 
-   - Enable relaxation to ensure at least some periods
+    - Enable relaxation to ensure at least some periods
 
-   ```yaml
-   enable_min_periods_best: true
-   min_periods_best: 1
-   ```
+    ```yaml
+    enable_min_periods_best: true
+    min_periods_best: 1
+    ```
 
 ### Periods Split Into Small Pieces
 
@@ -400,34 +400,34 @@ automation:
 
 1. **Level filter too strict**
 
-   ```yaml
-   # One "NORMAL" interval splits an otherwise good period
-   # Solution: Use gap tolerance
-   best_price_max_level: cheap
-   best_price_max_level_gap_count: 2    # Allow 2 NORMAL intervals
-   ```
+    ```yaml
+    # One "NORMAL" interval splits an otherwise good period
+    # Solution: Use gap tolerance
+    best_price_max_level: cheap
+    best_price_max_level_gap_count: 2 # Allow 2 NORMAL intervals
+    ```
 
 2. **Flexibility too tight**
 
-   ```yaml
-   # One interval just outside flex range splits the period
-   # Solution: Increase flexibility
-   best_price_flex: 20                  # Increase from 15%
-   ```
+    ```yaml
+    # One interval just outside flex range splits the period
+    # Solution: Increase flexibility
+    best_price_flex: 20 # Increase from 15%
+    ```
 
 3. **Price spikes breaking periods**
 
-   - Statistical outlier filtering should handle this automatically
-   - Check logs for smoothing activity:
+    - Statistical outlier filtering should handle this automatically
+    - Check logs for smoothing activity:
 
-   ```
-   DEBUG: [2025-11-11T14:30:00+01:00] Outlier detected: 35.2 ct
-   DEBUG:   Smoothed to: 20.7 ct (trend prediction)
-   ```
+    ```
+    DEBUG: [2025-11-11T14:30:00+01:00] Outlier detected: 35.2 ct
+    DEBUG:   Smoothed to: 20.7 ct (trend prediction)
+    ```
 
-   - If smoothing isn't working as expected, check:
-     - Is spike truly isolated? (3+ similar prices in a row won't be smoothed)
-     - Is it a legitimate price shift? (symmetry check preserves morning/evening peaks)
+    - If smoothing isn't working as expected, check:
+        - Is spike truly isolated? (3+ similar prices in a row won't be smoothed)
+        - Is it a legitimate price shift? (symmetry check preserves morning/evening peaks)
 
 ### Understanding Sensor Attributes
 
@@ -440,12 +440,12 @@ automation:
 start: "2025-11-11T02:00:00+01:00"
 end: "2025-11-11T05:00:00+01:00"
 duration_minutes: 180
-rating_level: "LOW"                              # All intervals are LOW price
-price_avg: 18.5                                  # Average price in this period
-relaxation_active: true                          # This day used relaxation
+rating_level: "LOW" # All intervals are LOW price
+price_avg: 18.5 # Average price in this period
+relaxation_active: true # This day used relaxation
 relaxation_level: "price_diff_20.25%+level_any" # Found at flex 20.25%, level filter removed
-period_interval_smoothed_count: 2                # 2 outliers were smoothed (only if >0)
-period_interval_level_gap_count: 1               # 1 interval kept via gap tolerance (only if >0)
+period_interval_smoothed_count: 2 # 2 outliers were smoothed (only if >0)
+period_interval_level_gap_count: 1 # 1 interval kept via gap tolerance (only if >0)
 ```
 
 ---
@@ -454,24 +454,24 @@ period_interval_level_gap_count: 1               # 1 interval kept via gap toler
 
 For advanced configuration patterns and technical deep-dive, see:
 
-- [Automation Examples](./automation-examples.md) - Real-world automation patterns
-- [Services](./services.md) - Using the `tibber_prices.get_price` service for custom logic
+-   [Automation Examples](./automation-examples.md) - Real-world automation patterns
+-   [Services](./services.md) - Using the `tibber_prices.get_price` service for custom logic
 
 ### Quick Reference
 
 **Configuration Parameters:**
 
-| Parameter | Default | Range | Purpose |
-|-----------|---------|-------|---------|
-| `best_price_flex` | 15% | 0-100% | Search range from daily MIN |
-| `best_price_min_period_length` | 60 min | 15-240 | Minimum duration |
-| `best_price_min_distance_from_avg` | 2% | 0-20% | Quality threshold |
-| `best_price_min_volatility` | low | low/mod/high/vhigh | Stability filter |
-| `best_price_max_level` | any | any/cheap/vcheap | Absolute quality |
-| `best_price_max_level_gap_count` | 0 | 0-10 | Gap tolerance |
-| `enable_min_periods_best` | false | true/false | Enable relaxation |
-| `min_periods_best` | - | 1-10 | Target periods per day |
-| `relaxation_step_best` | - | 5-100% | Relaxation increment |
+| Parameter                          | Default | Range              | Purpose                     |
+| ---------------------------------- | ------- | ------------------ | --------------------------- |
+| `best_price_flex`                  | 15%     | 0-100%             | Search range from daily MIN |
+| `best_price_min_period_length`     | 60 min  | 15-240             | Minimum duration            |
+| `best_price_min_distance_from_avg` | 2%      | 0-20%              | Quality threshold           |
+| `best_price_min_volatility`        | low     | low/mod/high/vhigh | Stability filter            |
+| `best_price_max_level`             | any     | any/cheap/vcheap   | Absolute quality            |
+| `best_price_max_level_gap_count`   | 0       | 0-10               | Gap tolerance               |
+| `enable_min_periods_best`          | false   | true/false         | Enable relaxation           |
+| `min_periods_best`                 | -       | 1-10               | Target periods per day      |
+| `relaxation_step_best`             | -       | 5-100%             | Relaxation increment        |
 
 **Peak Price:** Same parameters with `peak_price_*` prefix (defaults: flex=-15%, same otherwise)
 
@@ -481,11 +481,11 @@ The Tibber API provides price levels for each 15-minute interval:
 
 **Levels (based on trailing 24h average):**
 
-- `VERY_CHEAP` - Significantly below average
-- `CHEAP` - Below average
-- `NORMAL` - Around average
-- `EXPENSIVE` - Above average
-- `VERY_EXPENSIVE` - Significantly above average
+-   `VERY_CHEAP` - Significantly below average
+-   `CHEAP` - Below average
+-   `NORMAL` - Around average
+-   `EXPENSIVE` - Above average
+-   `VERY_EXPENSIVE` - Significantly above average
 
 ### Outlier Filtering Technical Details
 
@@ -498,17 +498,17 @@ The Tibber API provides price levels for each 15-minute interval:
 
 **Constants:**
 
-- `CONFIDENCE_LEVEL`: 2.0 (95% confidence)
-- `SYMMETRY_THRESHOLD`: 1.5 std dev
-- `RELATIVE_VOLATILITY_THRESHOLD`: 2.0
-- `MIN_CONTEXT_SIZE`: 3 intervals minimum
+-   `CONFIDENCE_LEVEL`: 2.0 (95% confidence)
+-   `SYMMETRY_THRESHOLD`: 1.5 std dev
+-   `RELATIVE_VOLATILITY_THRESHOLD`: 2.0
+-   `MIN_CONTEXT_SIZE`: 3 intervals minimum
 
 **Data integrity:**
 
-- Smoothed intervals stored with `_original_price` field
-- All statistics (min/max/avg) use original prices
-- Period attributes show impact: `period_interval_smoothed_count`
-- Smart counting: Only counts smoothing that actually changed period formation
+-   Smoothed intervals stored with `_original_price` field
+-   All statistics (min/max/avg) use original prices
+-   Period attributes show impact: `period_interval_smoothed_count`
+-   Smart counting: Only counts smoothing that actually changed period formation
 
 ---
 
