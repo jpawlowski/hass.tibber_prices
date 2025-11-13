@@ -452,18 +452,18 @@ def relax_single_day(  # noqa: PLR0913 - Comprehensive filter relaxation per day
 
             # Calculate periods with this flex + filter combination
             # Apply level override if specified
-            level_filter_value = lvl_override if lvl_override else config.level_filter
+            level_filter_value = lvl_override if lvl_override is not None else config.level_filter
 
             # Log filter changes
             flex_pct = round(abs(new_flex) * 100, 1)
-            if lvl_override:
+            if lvl_override is not None:
                 _LOGGER.debug(
                     "%sDay %s flex=%.1f%%: OVERRIDING level_filter: %s → %s",
                     INDENT_L2,
                     day_label,
                     flex_pct,
                     config.level_filter or "None",
-                    lvl_override.upper(),
+                    str(lvl_override).upper(),
                 )
 
             relaxed_config = config._replace(
