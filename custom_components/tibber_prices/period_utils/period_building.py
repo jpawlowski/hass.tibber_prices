@@ -164,7 +164,8 @@ def build_periods(  # noqa: PLR0915 - Complex period building logic requires man
                     "interval_time": f"{starts_at.hour:02d}:{starts_at.minute:02d}",
                     "price": price_original,  # Use original price in period data
                     "interval_start": starts_at,
-                    "smoothing_was_impactful": smoothing_was_impactful,  # Only True if smoothing changed whether the interval qualified for period inclusion
+                    # Only True if smoothing changed whether the interval qualified for period inclusion
+                    "smoothing_was_impactful": smoothing_was_impactful,
                     "is_level_gap": is_level_gap,  # Track if kept due to level gap tolerance
                 }
             )
