@@ -175,7 +175,7 @@ automation:
                 entity_id: switch.dishwasher
 ```
 
-> **Learn more:** The [period calculation guide](docs/user/period-calculation.md) explains how Best/Peak Price periods are identified and how you can configure filters (flexibility, minimum volatility, price level filters with gap tolerance).
+> **Learn more:** The [period calculation guide](docs/user/period-calculation.md) explains how Best/Peak Price periods are identified and how you can configure filters (flexibility, minimum distance from average, price level filters with gap tolerance).
 
 ### Notify on Extremely High Prices
 

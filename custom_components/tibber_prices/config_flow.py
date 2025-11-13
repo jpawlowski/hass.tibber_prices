@@ -45,7 +45,6 @@ from .const import (
     CONF_BEST_PRICE_MAX_LEVEL_GAP_COUNT,
     CONF_BEST_PRICE_MIN_DISTANCE_FROM_AVG,
     CONF_BEST_PRICE_MIN_PERIOD_LENGTH,
-    CONF_BEST_PRICE_MIN_VOLATILITY,
     CONF_ENABLE_MIN_PERIODS_BEST,
     CONF_ENABLE_MIN_PERIODS_PEAK,
     CONF_EXTENDED_DESCRIPTIONS,
@@ -56,7 +55,6 @@ from .const import (
     CONF_PEAK_PRICE_MIN_DISTANCE_FROM_AVG,
     CONF_PEAK_PRICE_MIN_LEVEL,
     CONF_PEAK_PRICE_MIN_PERIOD_LENGTH,
-    CONF_PEAK_PRICE_MIN_VOLATILITY,
     CONF_PRICE_RATING_THRESHOLD_HIGH,
     CONF_PRICE_RATING_THRESHOLD_LOW,
     CONF_PRICE_TREND_THRESHOLD_FALLING,
@@ -71,7 +69,6 @@ from .const import (
     DEFAULT_BEST_PRICE_MAX_LEVEL_GAP_COUNT,
     DEFAULT_BEST_PRICE_MIN_DISTANCE_FROM_AVG,
     DEFAULT_BEST_PRICE_MIN_PERIOD_LENGTH,
-    DEFAULT_BEST_PRICE_MIN_VOLATILITY,
     DEFAULT_ENABLE_MIN_PERIODS_BEST,
     DEFAULT_ENABLE_MIN_PERIODS_PEAK,
     DEFAULT_EXTENDED_DESCRIPTIONS,
@@ -82,7 +79,6 @@ from .const import (
     DEFAULT_PEAK_PRICE_MIN_DISTANCE_FROM_AVG,
     DEFAULT_PEAK_PRICE_MIN_LEVEL,
     DEFAULT_PEAK_PRICE_MIN_PERIOD_LENGTH,
-    DEFAULT_PEAK_PRICE_MIN_VOLATILITY,
     DEFAULT_PRICE_RATING_THRESHOLD_HIGH,
     DEFAULT_PRICE_RATING_THRESHOLD_LOW,
     DEFAULT_PRICE_TREND_THRESHOLD_FALLING,
@@ -94,7 +90,6 @@ from .const import (
     DEFAULT_VOLATILITY_THRESHOLD_VERY_HIGH,
     DOMAIN,
     LOGGER,
-    MIN_VOLATILITY_FOR_PERIODS_OPTIONS,
     PEAK_PRICE_MIN_LEVEL_OPTIONS,
 )
 
@@ -658,19 +653,6 @@ class TibberPricesOptionsFlowHandler(OptionsFlow):
                         ),
                     ),
                     vol.Optional(
-                        CONF_BEST_PRICE_MIN_VOLATILITY,
-                        default=self.config_entry.options.get(
-                            CONF_BEST_PRICE_MIN_VOLATILITY,
-                            DEFAULT_BEST_PRICE_MIN_VOLATILITY,
-                        ),
-                    ): SelectSelector(
-                        SelectSelectorConfig(
-                            options=MIN_VOLATILITY_FOR_PERIODS_OPTIONS,
-                            mode=SelectSelectorMode.DROPDOWN,
-                            translation_key="volatility",
-                        ),
-                    ),
-                    vol.Optional(
                         CONF_BEST_PRICE_MAX_LEVEL,
                         default=self.config_entry.options.get(
                             CONF_BEST_PRICE_MAX_LEVEL,
@@ -803,19 +785,6 @@ class TibberPricesOptionsFlowHandler(OptionsFlow):
                             step=1,
                             unit_of_measurement="%",
                             mode=NumberSelectorMode.SLIDER,
-                        ),
-                    ),
-                    vol.Optional(
-                        CONF_PEAK_PRICE_MIN_VOLATILITY,
-                        default=self.config_entry.options.get(
-                            CONF_PEAK_PRICE_MIN_VOLATILITY,
-                            DEFAULT_PEAK_PRICE_MIN_VOLATILITY,
-                        ),
-                    ): SelectSelector(
-                        SelectSelectorConfig(
-                            options=MIN_VOLATILITY_FOR_PERIODS_OPTIONS,
-                            mode=SelectSelectorMode.DROPDOWN,
-                            translation_key="volatility",
                         ),
                     ),
                     vol.Optional(
