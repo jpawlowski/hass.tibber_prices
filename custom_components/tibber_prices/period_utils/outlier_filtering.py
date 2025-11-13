@@ -181,6 +181,9 @@ def filter_price_outliers(
         flexibility_pct,
     )
 
+    # Convert percentage to ratio once for all comparisons (e.g., 15.0 → 0.15)
+    flexibility_ratio = flexibility_pct / 100
+
     result = []
     smoothed_count = 0
 
@@ -225,7 +228,7 @@ def filter_price_outliers(
 
         context_diff_pct = abs(avg_after - avg_before) / avg_before if avg_before > 0 else 0
 
-        if context_diff_pct > (flexibility_pct / 100):
+        if context_diff_pct > flexibility_ratio:
             result.append(current)
             _LOGGER.debug(
                 "%sInterval %s: Context unstable (%.1f%% change) - not a spike",
