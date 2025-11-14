@@ -156,11 +156,11 @@
             },
             "volatility": {
                 "title": "Prisvolatilitet Trösklar",
-                "description": "{step_progress}\n\nKonfigurera trösklar för volatilitetsklassificering. Volatilitet mäter prisvariationer (spridning mellan min/max) i minsta valutaenhet (ct/øre). Dessa trösklar används av volatilitetssensorer och periodfilter.",
+                "description": "{step_progress}\n\nKonfigurera trösklar för volatilitetsklassificering. Volatilitet mäter relativa prisvariationer med hjälp av variationskoefficienten (VK = standardavvikelse / medelvärde × 100%). Dessa trösklar är procentvärden som fungerar på alla prisnivåer och används av volatilitetssensorer och periodfilter.",
                 "data": {
-                    "volatility_threshold_moderate": "Måttlig tröskel (ct/øre, spridning ≥ detta värde)",
-                    "volatility_threshold_high": "Hög tröskel (ct/øre, spridning ≥ detta värde)",
-                    "volatility_threshold_very_high": "Mycket hög tröskel (ct/øre, spridning ≥ detta värde)"
+                    "volatility_threshold_moderate": "Måttlig tröskel (VK ≥ denna %, t.ex. 15)",
+                    "volatility_threshold_high": "Hög tröskel (VK ≥ denna %, t.ex. 30)",
+                    "volatility_threshold_very_high": "Mycket hög tröskel (VK ≥ detta %, t.ex. 50)"
                 },
                 "submit": "Nästa till steg 4"
             }

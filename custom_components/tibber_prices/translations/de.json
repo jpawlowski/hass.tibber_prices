@@ -156,11 +156,11 @@
             },
             "volatility": {
                 "title": "Preisvolatilität Schwellenwerte",
-                "description": "{step_progress}\n\nKonfiguriere Schwellenwerte für die Volatilitätsklassifizierung. Volatilität misst Preisschwankungen (Spanne zwischen Min/Max) in kleinster Währungseinheit. Diese Schwellenwerte werden von Volatilitätssensoren und Periodenfiltern verwendet.",
+                "description": "{step_progress}\n\nKonfiguriere Schwellenwerte für die Volatilitätsklassifizierung. Volatilität misst relative Preisschwankungen anhand des Variationskoeffizienten (VK = Standardabweichung / Durchschnitt × 100%). Diese Schwellenwerte sind Prozentwerte, die für alle Preisniveaus funktionieren und von Volatilitätssensoren sowie Periodenfiltern verwendet werden.",
                 "data": {
-                    "volatility_threshold_moderate": "Moderate Schwelle (Spanne ≥ dieser Wert)",
-                    "volatility_threshold_high": "Hohe Schwelle (Spanne ≥ dieser Wert)",
-                    "volatility_threshold_very_high": "Sehr hohe Schwelle (Spanne ≥ dieser Wert)"
+                    "volatility_threshold_moderate": "Moderate Schwelle (VK ≥ dieser %, z.B. 15)",
+                    "volatility_threshold_high": "Hohe Schwelle (VK ≥ dieser %, z.B. 30)",
+                    "volatility_threshold_very_high": "Sehr hohe Schwelle (VK ≥ dieser %, z.B. 50)"
                 },
                 "submit": "Weiter zu Schritt 4"
             }

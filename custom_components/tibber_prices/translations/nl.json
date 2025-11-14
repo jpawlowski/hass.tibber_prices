@@ -156,11 +156,11 @@
             },
             "volatility": {
                 "title": "Prijsvolatiliteit Drempels",
-                "description": "{step_progress}\n\nConfigureer drempels voor volatiliteitsclassificatie. Volatiliteit meet prijsschommelingen (spreiding tussen min/max) in kleinste valuta-eenheid (ct/øre). Deze drempels worden gebruikt door volatiliteitssensoren en periodefilters.",
+                "description": "{step_progress}\n\nConfigureer drempels voor volatiliteitsclassificatie. Volatiliteit meet relatieve prijsschommelingen aan de hand van de variatiecoëfficiënt (VC = standaarddeviatie / gemiddelde × 100%). Deze drempels zijn percentagewaarden die werken op alle prijsniveaus en worden gebruikt door volatiliteitssensoren en periodefilters.",
                 "data": {
-                    "volatility_threshold_moderate": "Matige drempel (ct/øre, spreiding ≥ deze waarde)",
-                    "volatility_threshold_high": "Hoge drempel (ct/øre, spreiding ≥ deze waarde)",
-                    "volatility_threshold_very_high": "Zeer hoge drempel (ct/øre, spreiding ≥ deze waarde)"
+                    "volatility_threshold_moderate": "Matige drempel (VC ≥ deze %, bijv. 15)",
+                    "volatility_threshold_high": "Hoge drempel (VC ≥ deze %, bijv. 30)",
+                    "volatility_threshold_very_high": "Zeer hoge drempel (VC ≥ deze %, bijv. 50)"
                 },
                 "submit": "Volgende naar stap 4"
             }

@@ -69,9 +69,12 @@ DEFAULT_PRICE_RATING_THRESHOLD_LOW = -10  # Default rating threshold low percent
 DEFAULT_PRICE_RATING_THRESHOLD_HIGH = 10  # Default rating threshold high percentage
 DEFAULT_PRICE_TREND_THRESHOLD_RISING = 5  # Default trend threshold for rising prices (%)
 DEFAULT_PRICE_TREND_THRESHOLD_FALLING = -5  # Default trend threshold for falling prices (%, negative value)
-DEFAULT_VOLATILITY_THRESHOLD_MODERATE = 5.0  # Default threshold for MODERATE volatility (ct/øre)
-DEFAULT_VOLATILITY_THRESHOLD_HIGH = 15.0  # Default threshold for HIGH volatility (ct/øre)
-DEFAULT_VOLATILITY_THRESHOLD_VERY_HIGH = 30.0  # Default threshold for VERY_HIGH volatility (ct/øre)
+# Default volatility thresholds (relative values using coefficient of variation)
+# Coefficient of variation = (standard_deviation / mean) * 100%
+# These thresholds are unitless and work across different price levels
+DEFAULT_VOLATILITY_THRESHOLD_MODERATE = 15.0  # 15% - moderate price fluctuation
+DEFAULT_VOLATILITY_THRESHOLD_HIGH = 30.0  # 30% - high price fluctuation
+DEFAULT_VOLATILITY_THRESHOLD_VERY_HIGH = 50.0  # 50% - very high price fluctuation
 DEFAULT_BEST_PRICE_MAX_LEVEL = "cheap"  # Default: prefer genuinely cheap periods, relax to "any" if needed
 DEFAULT_PEAK_PRICE_MIN_LEVEL = "expensive"  # Default: prefer genuinely expensive periods, relax to "any" if needed
 DEFAULT_BEST_PRICE_MAX_LEVEL_GAP_COUNT = 1  # Default: allow 1 level gap (e.g., CHEAP→NORMAL→CHEAP stays together)
@@ -172,7 +175,7 @@ PRICE_RATING_LOW = "LOW"
 PRICE_RATING_NORMAL = "NORMAL"
 PRICE_RATING_HIGH = "HIGH"
 
-# Price volatility levels (based on spread between min and max)
+# Price volatility levels (based on coefficient of variation: std_dev / mean * 100%)
 VOLATILITY_LOW = "LOW"
 VOLATILITY_MODERATE = "MODERATE"
 VOLATILITY_HIGH = "HIGH"
@@ -213,7 +216,7 @@ BEST_PRICE_MAX_LEVEL_OPTIONS = [
     PRICE_LEVEL_EXPENSIVE.lower(),  # Only show if level ≤ EXPENSIVE
 ]
 
-# Valid options for peak price minimum level filter (AND-linked with volatility filter)
+# Valid options for peak price minimum level filter
 # Sorted from expensive to cheap: user selects "starting from how expensive"
 PEAK_PRICE_MIN_LEVEL_OPTIONS = [
     "any",  # No filter, allow all price levels
@@ -226,8 +229,8 @@ PEAK_PRICE_MIN_LEVEL_OPTIONS = [
 # Relaxation level constants (for period filter relaxation)
 # These describe which filter relaxation was applied to find a period
 RELAXATION_NONE = "none"  # No relaxation, normal filters
-RELAXATION_VOLATILITY_ANY = "volatility_any"  # Volatility filter disabled
-RELAXATION_ALL_FILTERS_OFF = "all_filters_off"  # All filters disabled (last resort)
+RELAXATION_LEVEL_ANY = "level_any"  # Level filter disabled
+RELAXATION_ALL_FILTERS_OFF = "all_filters_off"  # All filters disabled (deprecated, same as level_any)
 
 # Mapping for comparing price levels (used for sorting)
 PRICE_LEVEL_MAPPING = {

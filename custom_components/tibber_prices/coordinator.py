@@ -762,9 +762,6 @@ class TibberPricesDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         """
         Check if periods should be shown based on level filter only.
 
-        Note: Volatility filtering is now applied per-period after calculation,
-        not at the daily level. See _filter_periods_by_volatility().
-
         Args:
             price_info: Price information dict with today/yesterday/tomorrow data
             reverse_sort: If False (best_price), checks max_level filter.
@@ -1207,7 +1204,7 @@ class TibberPricesDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 min_periods=min_periods_best,
                 relaxation_step_pct=relaxation_step_best,
                 max_relaxation_attempts=relaxation_attempts_best,
-                should_show_callback=lambda _vol, lvl: self._should_show_periods(
+                should_show_callback=lambda lvl: self._should_show_periods(
                     price_info,
                     reverse_sort=False,
                     level_override=lvl,
@@ -1279,7 +1276,7 @@ class TibberPricesDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 min_periods=min_periods_peak,
                 relaxation_step_pct=relaxation_step_peak,
                 max_relaxation_attempts=relaxation_attempts_peak,
-                should_show_callback=lambda _vol, lvl: self._should_show_periods(
+                should_show_callback=lambda lvl: self._should_show_periods(
                     price_info,
                     reverse_sort=True,
                     level_override=lvl,

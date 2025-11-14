@@ -156,11 +156,11 @@
             },
             "volatility": {
                 "title": "Prisvolatilitet Terskler",
-                "description": "{step_progress}\n\nKonfigurer terskler for volatilitetsklassifisering. Volatilitet måler prisvariasjoner (spredning mellom min/maks) i minste valutaenhet (ct/øre). Disse tersklene brukes av volatilitetssensorer og periodefiltre.",
+                "description": "{step_progress}\n\nKonfigurer terskler for volatilitetsklassifisering. Volatilitet måler relative prisvariasjoner ved hjelp av variasjonskoeffisienten (VK = standardavvik / gjennomsnitt × 100%). Disse tersklene er prosentverdier som fungerer på alle prisnivåer og brukes av volatilitetssensorer og periodefiltre.",
                 "data": {
-                    "volatility_threshold_moderate": "Moderat terskel (ct/øre, spredning ≥ denne verdien)",
-                    "volatility_threshold_high": "Høy terskel (ct/øre, spredning ≥ denne verdien)",
-                    "volatility_threshold_very_high": "Veldig høy terskel (ct/øre, spredning ≥ denne verdien)"
+                    "volatility_threshold_moderate": "Moderat terskel (VK ≥ denne %, f.eks. 15)",
+                    "volatility_threshold_high": "Høy terskel (VK ≥ denne %, f.eks. 30)",
+                    "volatility_threshold_very_high": "Veldig høy terskel (VK ≥ denne %, f.eks. 50)"
                 },
                 "submit": "Neste til steg 4"
             }

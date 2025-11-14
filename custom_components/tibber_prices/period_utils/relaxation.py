@@ -167,7 +167,7 @@ def calculate_periods_with_relaxation(  # noqa: PLR0913, PLR0915 - Per-day relax
     min_periods: int,
     relaxation_step_pct: int,
     max_relaxation_attempts: int,
-    should_show_callback: Callable[[str | None, str | None], bool],
+    should_show_callback: Callable[[str | None], bool],
 ) -> tuple[dict[str, Any], dict[str, Any]]:
     """
     Calculate periods with optional per-day filter relaxation.
@@ -179,8 +179,7 @@ def calculate_periods_with_relaxation(  # noqa: PLR0913, PLR0915 - Per-day relax
     relaxes filters in multiple phases FOR EACH DAY SEPARATELY:
 
     Phase 1: Increase flex threshold step-by-step (up to 4 attempts)
-    Phase 2: Disable volatility filter (set to "any")
-    Phase 3: Disable level filter (set to "any")
+    Phase 2: Disable level filter (set to "any")
 
     Args:
         all_prices: All price data points
@@ -191,7 +190,7 @@ def calculate_periods_with_relaxation(  # noqa: PLR0913, PLR0915 - Per-day relax
             step (controls how aggressively flex widens with each attempt)
         max_relaxation_attempts: Maximum number of flex levels (attempts) to try per day
             before giving up (each attempt runs the full filter matrix)
-        should_show_callback: Callback function(volatility_override, level_override) -> bool
+        should_show_callback: Callback function(level_override) -> bool
             Returns True if periods should be shown with given filter overrides. Pass None
             to use original configured filter values.
 
@@ -388,7 +387,7 @@ def relax_single_day(  # noqa: PLR0913 - Comprehensive filter relaxation per day
     min_periods: int,
     relaxation_step_pct: int,
     max_relaxation_attempts: int,
-    should_show_callback: Callable[[str | None, str | None], bool],
+    should_show_callback: Callable[[str | None], bool],
     baseline_periods: list[dict],
     day_label: str,
 ) -> tuple[dict[str, Any], dict[str, Any]]:
@@ -399,14 +398,11 @@ def relax_single_day(  # noqa: PLR0913 - Comprehensive filter relaxation per day
     This finds solutions faster by relaxing filters first (cheaper than increasing flex).
 
     Per flex level (6.25%, 7.5%, 8.75%, 10%), try in order:
-    1. Original filters (volatility=configured, level=configured)
-    2. Relax only volatility (volatility=any, level=configured)
-    3. Relax only level (volatility=configured, level=any)
-    4. Relax both (volatility=any, level=any)
+    1. Original filters (level=configured)
+    2. Relax level filter (level=any)
 
     This ensures we find the minimal relaxation needed. Example:
     - If periods exist at flex=6.25% with level=any, we find them before trying flex=7.5%
-    - If periods need both filters relaxed, we try that before increasing flex further
 
     Args:
         day_prices: Price data for this specific day only
@@ -414,7 +410,7 @@ def relax_single_day(  # noqa: PLR0913 - Comprehensive filter relaxation per day
         min_periods: Minimum periods needed for this day
         relaxation_step_pct: Relaxation increment percentage
         max_relaxation_attempts: Maximum number of flex levels (attempts) to try for this day
-        should_show_callback: Filter visibility callback(volatility_override, level_override)
+        should_show_callback: Filter visibility callback(level_override)
                              Returns True if periods should be shown with given overrides.
         baseline_periods: Periods found with normal filters
         day_label: Label for logging (e.g., "2025-11-11")
@@ -436,7 +432,7 @@ def relax_single_day(  # noqa: PLR0913 - Comprehensive filter relaxation per day
 
     baseline_standalone = len([p for p in baseline_periods if not p.get("is_extension")])
 
-    attempts = max(1, max_relaxation_attempts)
+    attempts = max(1, int(max_relaxation_attempts))
 
     # Flex levels: original + N steps (e.g., 5% → 6.25% → ...)
     for flex_step in range(1, attempts + 1):
@@ -447,17 +443,15 @@ def relax_single_day(  # noqa: PLR0913 - Comprehensive filter relaxation per day
             new_flex = -new_flex
 
         # Try filter combinations for this flex level
-        # Each tuple contains: volatility_override, level_override, label_suffix
+        # Each tuple contains: level_override, label_suffix
         filter_attempts = [
-            (None, None, ""),  # Original config
-            ("any", None, "+volatility_any"),  # Relax volatility only
-            (None, "any", "+level_any"),  # Relax level only
-            ("any", "any", "+all_filters_any"),  # Relax both
+            (None, ""),  # Original config
+            ("any", "+level_any"),  # Relax level filter
         ]
 
-        for vol_override, lvl_override, label_suffix in filter_attempts:
+        for lvl_override, label_suffix in filter_attempts:
             # Check if this combination is allowed by user config
-            if not should_show_callback(vol_override, lvl_override):
+            if not should_show_callback(lvl_override):
                 continue
 
             # Calculate periods with this flex + filter combination

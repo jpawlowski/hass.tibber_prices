@@ -110,7 +110,6 @@ Default: 60 minutes minimum
 
 You can optionally require:
 
--   **Stable prices** (volatility filter) - "Only show if price doesn't fluctuate much"
 -   **Absolute quality** (level filter) - "Only show if prices are CHEAP/EXPENSIVE (not just below/above average)"
 
 #### 5. Statistical Outlier Filtering
@@ -221,19 +220,6 @@ peak_price_min_distance_from_avg: 2
 
 ### Optional Filters
 
-#### Volatility Filter (Price Stability)
-
-**What:** Only show periods with stable prices (low fluctuation)
-**Default:** `low` (disabled)
-**Options:** `low` | `moderate` | `high` | `very_high`
-
-```yaml
-best_price_min_volatility: low        # Show all periods
-best_price_min_volatility: moderate   # Only show if price doesn't swing >5 ct
-```
-
-**Use case:** "I want predictable prices during the period"
-
 #### Level Filter (Absolute Quality)
 
 **What:** Only show periods with CHEAP/EXPENSIVE intervals (not just below/above average)
@@ -298,10 +284,8 @@ For each day, the system tries:
 
 **4 Filter Combinations (per flexibility level):**
 
-1. Original filters (your configured volatility + level)
-2. Remove volatility filter (keep level filter)
-3. Remove level filter (keep volatility filter)
-4. Remove both filters
+1. Original filters (your configured level filter)
+2. Remove level filter
 
 **Example progression:**
 
@@ -473,18 +457,17 @@ For advanced configuration patterns and technical deep-dive, see:
 
 **Configuration Parameters:**
 
-| Parameter                          | Default | Range              | Purpose                        |
-| ---------------------------------- | ------- | ------------------ | ------------------------------ |
-| `best_price_flex`                  | 15%     | 0-100%             | Search range from daily MIN    |
-| `best_price_min_period_length`     | 60 min  | 15-240             | Minimum duration               |
-| `best_price_min_distance_from_avg` | 2%      | 0-20%              | Quality threshold              |
-| `best_price_min_volatility`        | low     | low/mod/high/vhigh | Stability filter               |
-| `best_price_max_level`             | any     | any/cheap/vcheap   | Absolute quality               |
-| `best_price_max_level_gap_count`   | 0       | 0-10               | Gap tolerance                  |
-| `enable_min_periods_best`          | false   | true/false         | Enable relaxation              |
-| `min_periods_best`                 | -       | 1-10               | Target periods per day         |
-| `relaxation_step_best`             | -       | 5-100%             | Relaxation increment           |
-| `relaxation_attempts_best`         | 8       | 1-12               | Flex levels (attempts) per day |
+| Parameter                          | Default | Range            | Purpose                        |
+| ---------------------------------- | ------- | ---------------- | ------------------------------ |
+| `best_price_flex`                  | 15%     | 0-100%           | Search range from daily MIN    |
+| `best_price_min_period_length`     | 60 min  | 15-240           | Minimum duration               |
+| `best_price_min_distance_from_avg` | 2%      | 0-20%            | Quality threshold              |
+| `best_price_max_level`             | any     | any/cheap/vcheap | Absolute quality               |
+| `best_price_max_level_gap_count`   | 0       | 0-10             | Gap tolerance                  |
+| `enable_min_periods_best`          | false   | true/false       | Enable relaxation              |
+| `min_periods_best`                 | -       | 1-10             | Target periods per day         |
+| `relaxation_step_best`             | -       | 5-100%           | Relaxation increment           |
+| `relaxation_attempts_best`         | 8       | 1-12             | Flex levels (attempts) per day |
 
 **Peak Price:** Same parameters with `peak_price_*` prefix (defaults: flex=-15%, same otherwise)
 

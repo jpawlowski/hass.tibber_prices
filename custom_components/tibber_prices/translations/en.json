@@ -156,11 +156,11 @@
             },
             "volatility": {
                 "title": "Price Volatility Thresholds",
-                "description": "{step_progress}\n\nConfigure thresholds for volatility classification. Volatility measures price variation (spread between min/max) in minor currency units. These thresholds are used by volatility sensors and period filters.",
+                "description": "{step_progress}\n\nConfigure thresholds for volatility classification. Volatility measures relative price variation using the coefficient of variation (CV = standard deviation / mean × 100%). These thresholds are percentage values that work across all price levels and are used by volatility sensors and period filters.",
                 "data": {
-                    "volatility_threshold_moderate": "Moderate Threshold (spread ≥ this value)",
-                    "volatility_threshold_high": "High Threshold (spread ≥ this value)",
-                    "volatility_threshold_very_high": "Very High Threshold (spread ≥ this value)"
+                    "volatility_threshold_moderate": "Moderate Threshold (CV ≥ this %, e.g., 15)",
+                    "volatility_threshold_high": "High Threshold (CV ≥ this %, e.g., 30)",
+                    "volatility_threshold_very_high": "Very High Threshold (CV ≥ this %, e.g., 50)"
                 },
                 "submit": "Next to Step 4"
             }

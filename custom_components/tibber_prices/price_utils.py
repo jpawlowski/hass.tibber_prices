@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import logging
+import statistics
 from datetime import datetime, timedelta
 from typing import Any
 
@@ -24,22 +25,25 @@ from .const import (
 _LOGGER = logging.getLogger(__name__)
 
 MINUTES_PER_INTERVAL = 15
+MIN_PRICES_FOR_VOLATILITY = 2  # Minimum number of price values needed for volatility calculation
 
 
 def calculate_volatility_level(
-    spread: float,
+    prices: list[float],
     threshold_moderate: float | None = None,
     threshold_high: float | None = None,
     threshold_very_high: float | None = None,
 ) -> str:
     """
-    Calculate volatility level from price spread.
+    Calculate volatility level from price list using coefficient of variation.
 
     Volatility indicates how much prices fluctuate during a period, which helps
-    determine whether active load shifting is worthwhile.
+    determine whether active load shifting is worthwhile. Uses the coefficient
+    of variation (CV = std_dev / mean * 100%) for relative comparison that works
+    across different price levels and period lengths.
 
     Args:
-        spread: Absolute price difference between max and min (in minor currency units, e.g., ct or øre)
+        prices: List of price values (in any unit, typically major currency units like EUR or NOK)
         threshold_moderate: Custom threshold for MODERATE level (default: use DEFAULT_VOLATILITY_THRESHOLD_MODERATE)
         threshold_high: Custom threshold for HIGH level (default: use DEFAULT_VOLATILITY_THRESHOLD_HIGH)
         threshold_very_high: Custom threshold for VERY_HIGH level (default: use DEFAULT_VOLATILITY_THRESHOLD_VERY_HIGH)
@@ -48,22 +52,40 @@ def calculate_volatility_level(
         Volatility level: "LOW", "MODERATE", "HIGH", or "VERY_HIGH" (uppercase)
 
     Examples:
-        - spread < 5: LOW → minimal optimization potential
-        - 5 ≤ spread < 15: MODERATE → some optimization worthwhile
-        - 15 ≤ spread < 30: HIGH → strong optimization recommended
-        - spread ≥ 30: VERY_HIGH → maximum optimization potential
+        - CV < 15%: LOW → minimal optimization potential, prices relatively stable
+        - 15% ≤ CV < 30%: MODERATE → some optimization worthwhile, noticeable variation
+        - 30% ≤ CV < 50%: HIGH → strong optimization recommended, significant swings
+        - CV ≥ 50%: VERY_HIGH → maximum optimization potential, extreme volatility
+
+    Note:
+        Requires at least 2 price values for calculation. Returns LOW if insufficient data.
+        Works identically for short periods (2-3 intervals) and long periods (96 intervals/day).
 
     """
+    # Need at least 2 values for standard deviation
+    if len(prices) < MIN_PRICES_FOR_VOLATILITY:
+        return VOLATILITY_LOW
+
     # Use provided thresholds or fall back to constants
     t_moderate = threshold_moderate if threshold_moderate is not None else DEFAULT_VOLATILITY_THRESHOLD_MODERATE
     t_high = threshold_high if threshold_high is not None else DEFAULT_VOLATILITY_THRESHOLD_HIGH
     t_very_high = threshold_very_high if threshold_very_high is not None else DEFAULT_VOLATILITY_THRESHOLD_VERY_HIGH
 
-    if spread < t_moderate:
+    # Calculate coefficient of variation
+    mean = statistics.mean(prices)
+    if mean <= 0:
+        # Avoid division by zero or negative mean (shouldn't happen with prices)
         return VOLATILITY_LOW
-    if spread < t_high:
+
+    std_dev = statistics.stdev(prices)
+    coefficient_of_variation = (std_dev / mean) * 100  # As percentage
+
+    # Classify based on thresholds
+    if coefficient_of_variation < t_moderate:
+        return VOLATILITY_LOW
+    if coefficient_of_variation < t_high:
         return VOLATILITY_MODERATE
-    if spread < t_very_high:
+    if coefficient_of_variation < t_very_high:
         return VOLATILITY_HIGH
     return VOLATILITY_VERY_HIGH
 

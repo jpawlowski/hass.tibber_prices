@@ -262,7 +262,7 @@ STATISTICS_SENSORS = (
     ),
 )
 
-# Volatility sensors (price spread analysis)
+# Volatility sensors (coefficient of variation analysis)
 # NOTE: Enum options are defined inline (not imported from const.py) to avoid
 # import timing issues with Home Assistant's entity platform initialization.
 # Keep in sync with VOLATILITY_OPTIONS in const.py!
@@ -1459,15 +1459,15 @@ class TibberPricesSensor(TibberPricesEntity, SensorEntity):
             tomorrow_prices = [float(p["total"]) for p in price_info.get("tomorrow", []) if "total" in p]
 
             if today_prices:
+                today_vol = calculate_volatility_level(today_prices, **thresholds)
                 today_spread = (max(today_prices) - min(today_prices)) * 100
-                today_vol = calculate_volatility_level(today_spread, **thresholds)
                 self._last_volatility_attributes["today_spread"] = round(today_spread, 2)
                 self._last_volatility_attributes["today_volatility"] = today_vol
                 self._last_volatility_attributes["interval_count_today"] = len(today_prices)
 
             if tomorrow_prices:
+                tomorrow_vol = calculate_volatility_level(tomorrow_prices, **thresholds)
                 tomorrow_spread = (max(tomorrow_prices) - min(tomorrow_prices)) * 100
-                tomorrow_vol = calculate_volatility_level(tomorrow_spread, **thresholds)
                 self._last_volatility_attributes["tomorrow_spread"] = round(tomorrow_spread, 2)
                 self._last_volatility_attributes["tomorrow_volatility"] = tomorrow_vol
                 self._last_volatility_attributes["interval_count_tomorrow"] = len(tomorrow_prices)
@@ -1479,7 +1479,7 @@ class TibberPricesSensor(TibberPricesEntity, SensorEntity):
 
     def _get_volatility_value(self, *, volatility_type: str) -> str | None:
         """
-        Calculate price volatility (spread) for different time periods.
+        Calculate price volatility using coefficient of variation for different time periods.
 
         Args:
             volatility_type: One of "today", "tomorrow", "next_24h", "today_tomorrow"
@@ -1506,16 +1506,17 @@ class TibberPricesSensor(TibberPricesEntity, SensorEntity):
         if not prices_to_analyze:
             return None
 
-        # Calculate spread
+        # Calculate spread and basic statistics
         price_min = min(prices_to_analyze)
         price_max = max(prices_to_analyze)
         spread = price_max - price_min
+        price_avg = sum(prices_to_analyze) / len(prices_to_analyze)
 
-        # Convert to minor currency units (ct/øre) for volatility calculation
+        # Convert to minor currency units (ct/øre) for display
         spread_minor = spread * 100
 
-        # Calculate volatility level with custom thresholds
-        volatility = calculate_volatility_level(spread_minor, **thresholds)
+        # Calculate volatility level with custom thresholds (pass price list, not spread)
+        volatility = calculate_volatility_level(prices_to_analyze, **thresholds)
 
         # Store attributes for this sensor
         self._last_volatility_attributes = {
@@ -1523,7 +1524,7 @@ class TibberPricesSensor(TibberPricesEntity, SensorEntity):
             "price_volatility": volatility,
             "price_min": round(price_min * 100, 2),
             "price_max": round(price_max * 100, 2),
-            "price_avg": round((sum(prices_to_analyze) / len(prices_to_analyze)) * 100, 2),
+            "price_avg": round(price_avg * 100, 2),
             "interval_count": len(prices_to_analyze),
         }
 

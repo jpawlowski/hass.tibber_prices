@@ -452,16 +452,16 @@ def _enrich_intervals_with_averages(intervals: list[dict], price_info_by_day: di
 def _get_price_stats(merged: list[dict], thresholds: dict) -> PriceStats:
     """Calculate average, min, and max price from merged data."""
     if merged:
-        price_sum = sum(float(interval.get("price", 0)) for interval in merged if "price" in interval)
-        price_avg = round(price_sum / len(merged), 4)
+        prices = [float(interval.get("price", 0)) for interval in merged if "price" in interval]
+        price_avg = round(sum(prices) / len(prices), 4) if prices else 0
     else:
+        prices = []
         price_avg = 0
     price_min, price_min_interval = _get_price_stat(merged, "min")
     price_max, price_max_interval = _get_price_stat(merged, "max")
     price_spread = round(price_max - price_min, 4) if price_min is not None and price_max is not None else 0
-    # Convert spread to minor currency units (ct/øre) for volatility calculation
-    price_spread_minor = price_spread * 100
-    price_volatility = calculate_volatility_level(price_spread_minor, **thresholds)
+    # Calculate volatility from price list (coefficient of variation)
+    price_volatility = calculate_volatility_level(prices, **thresholds) if prices else "low"
     return PriceStats(
         price_avg=price_avg,
         price_min=price_min,

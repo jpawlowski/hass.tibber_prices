@@ -17,7 +17,7 @@ All public APIs are re-exported for backwards compatibility.
 from __future__ import annotations
 
 # Re-export main API functions
-from .core import calculate_periods, filter_periods_by_volatility
+from .core import calculate_periods
 
 # Re-export outlier filtering
 from .outlier_filtering import filter_price_outliers
@@ -56,6 +56,5 @@ __all__ = [
     "ThresholdConfig",
     "calculate_periods",
     "calculate_periods_with_relaxation",
-    "filter_periods_by_volatility",
     "filter_price_outliers",
 ]

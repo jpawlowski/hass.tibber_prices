@@ -185,7 +185,7 @@ def extract_period_summaries(
     Returns sensor-ready period summaries with:
     - Timestamps and positioning (start, end, hour, minute, time)
     - Aggregated price statistics (price_avg, price_min, price_max, price_spread)
-    - Volatility categorization (low/moderate/high/very_high based on absolute spread)
+    - Volatility categorization (low/moderate/high/very_high based on coefficient of variation)
     - Rating difference percentage (aggregated from intervals)
     - Period price differences (period_price_diff_from_daily_min/max)
     - Aggregated level and rating_level
@@ -264,9 +264,12 @@ def extract_period_summaries(
             price_stats["price_avg"], start_time, price_context
         )
 
+        # Extract prices for volatility calculation (coefficient of variation)
+        prices_for_volatility = [float(p["total"]) for p in period_price_data if "total" in p]
+
         # Calculate volatility (categorical) and aggregated rating difference (numeric)
         volatility = calculate_volatility_level(
-            price_stats["price_spread"],
+            prices_for_volatility,
             threshold_moderate=thresholds.threshold_volatility_moderate,
             threshold_high=thresholds.threshold_volatility_high,
             threshold_very_high=thresholds.threshold_volatility_very_high,
