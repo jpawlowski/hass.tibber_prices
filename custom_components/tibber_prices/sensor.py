@@ -37,8 +37,15 @@ from .const import (
     DEFAULT_PRICE_TREND_THRESHOLD_FALLING,
     DEFAULT_PRICE_TREND_THRESHOLD_RISING,
     DOMAIN,
+    PRICE_LEVEL_CASH_ICON_MAPPING,
+    PRICE_LEVEL_COLOR_MAPPING,
+    PRICE_LEVEL_ICON_MAPPING,
     PRICE_LEVEL_MAPPING,
+    PRICE_RATING_COLOR_MAPPING,
+    PRICE_RATING_ICON_MAPPING,
     PRICE_RATING_MAPPING,
+    VOLATILITY_COLOR_MAPPING,
+    VOLATILITY_ICON_MAPPING,
     async_get_entity_description,
     format_price_unit_minor,
     get_entity_description,
@@ -76,7 +83,7 @@ PRICE_SENSORS = (
         key="current_price",
         translation_key="current_price",
         name="Current Electricity Price",
-        icon="mdi:cash",
+        icon="mdi:cash",  # Dynamic: will show cash-multiple/plus/cash/minus/remove based on level
         device_class=SensorDeviceClass.MONETARY,
         suggested_display_precision=2,
     ),
@@ -84,7 +91,7 @@ PRICE_SENSORS = (
         key="next_interval_price",
         translation_key="next_interval_price",
         name="Next Price",
-        icon="mdi:clock-fast",
+        icon="mdi:cash-fast",  # Static: motion lines indicate "coming soon"
         device_class=SensorDeviceClass.MONETARY,
         suggested_display_precision=2,
     ),
@@ -92,7 +99,7 @@ PRICE_SENSORS = (
         key="previous_interval_price",
         translation_key="previous_interval_price",
         name="Previous Electricity Price",
-        icon="mdi:history",
+        icon="mdi:cash-refund",  # Static: arrow back indicates "past"
         device_class=SensorDeviceClass.MONETARY,
         entity_registry_enabled_default=False,
         suggested_display_precision=2,
@@ -101,7 +108,7 @@ PRICE_SENSORS = (
         key="current_hour_average",
         translation_key="current_hour_average",
         name="Current Hour Average Price",
-        icon="mdi:cash",
+        icon="mdi:cash",  # Dynamic: will show cash-multiple/plus/cash/minus/remove based on level
         device_class=SensorDeviceClass.MONETARY,
         suggested_display_precision=1,
     ),
@@ -109,7 +116,7 @@ PRICE_SENSORS = (
         key="next_hour_average",
         translation_key="next_hour_average",
         name="Next Hour Average Price",
-        icon="mdi:clock-fast",
+        icon="mdi:clock-fast",  # Static: clock indicates "next time period"
         device_class=SensorDeviceClass.MONETARY,
         suggested_display_precision=1,
     ),
@@ -1536,6 +1543,10 @@ class TibberPricesSensor(TibberPricesEntity, SensorEntity):
             "interval_count": len(prices_to_analyze),
         }
 
+        # Add icon_color for dynamic styling
+        if volatility in VOLATILITY_COLOR_MAPPING:
+            self._last_volatility_attributes["icon_color"] = VOLATILITY_COLOR_MAPPING[volatility]
+
         # Add type-specific attributes
         self._add_volatility_type_attributes(volatility_type, price_info, thresholds)
 
@@ -1729,21 +1740,147 @@ class TibberPricesSensor(TibberPricesEntity, SensorEntity):
     @property
     def icon(self) -> str | None:
         """Return the icon based on sensor type and state."""
-        # Dynamic icons for trend sensors
-        if self.entity_description.key.startswith("price_trend_"):
-            match self.native_value:
-                case "rising":
-                    return "mdi:trending-up"
-                case "falling":
-                    return "mdi:trending-down"
-                case "stable":
-                    return "mdi:trending-neutral"
-                case _:
-                    # Fallback to static icon if value is None or unknown
-                    return self.entity_description.icon
+        key = self.entity_description.key
+        value = self.native_value
 
-        # For all other sensors, use static icon from entity description
-        return self.entity_description.icon
+        # Try to get icon from various sources
+        icon = (
+            self._get_trend_icon(key, value)
+            or self._get_price_sensor_icon(key)
+            or self._get_level_sensor_icon(key, value)
+            or self._get_rating_sensor_icon(key, value)
+            or self._get_volatility_sensor_icon(key, value)
+        )
+
+        # Fall back to static icon from entity description
+        return icon or self.entity_description.icon
+
+    def _get_trend_icon(self, key: str, value: Any) -> str | None:
+        """Get icon for trend sensors."""
+        if not key.startswith("price_trend_") or not isinstance(value, str):
+            return None
+
+        trend_icons = {
+            "rising": "mdi:trending-up",
+            "falling": "mdi:trending-down",
+            "stable": "mdi:trending-neutral",
+        }
+        return trend_icons.get(value)
+
+    def _get_price_sensor_icon(self, key: str) -> str | None:
+        """
+        Get icon for current price sensors (dynamic based on price level).
+
+        Only current_price and current_hour_average have dynamic icons.
+        Other price sensors (next/previous) use static icons from entity description.
+        """
+        # Only current price sensors get dynamic icons
+        if key == "current_price":
+            level = self._get_price_level_for_sensor(key)
+            if level:
+                return PRICE_LEVEL_CASH_ICON_MAPPING.get(level.upper())
+        elif key == "current_hour_average":
+            level = self._get_hour_level_for_sensor(key)
+            if level:
+                return PRICE_LEVEL_CASH_ICON_MAPPING.get(level.upper())
+
+        # For all other price sensors, let entity description handle the icon
+        return None
+
+    def _get_level_sensor_icon(self, key: str, value: Any) -> str | None:
+        """Get icon for price level sensors."""
+        if key not in [
+            "price_level",
+            "next_interval_price_level",
+            "previous_interval_price_level",
+            "current_hour_price_level",
+            "next_hour_price_level",
+        ] or not isinstance(value, str):
+            return None
+
+        return PRICE_LEVEL_ICON_MAPPING.get(value.upper())
+
+    def _get_rating_sensor_icon(self, key: str, value: Any) -> str | None:
+        """Get icon for price rating sensors."""
+        if key not in [
+            "price_rating",
+            "next_interval_price_rating",
+            "previous_interval_price_rating",
+            "current_hour_price_rating",
+            "next_hour_price_rating",
+        ] or not isinstance(value, str):
+            return None
+
+        return PRICE_RATING_ICON_MAPPING.get(value.upper())
+
+    def _get_volatility_sensor_icon(self, key: str, value: Any) -> str | None:
+        """Get icon for volatility sensors."""
+        if not key.endswith("_volatility") or not isinstance(value, str):
+            return None
+
+        return VOLATILITY_ICON_MAPPING.get(value.upper())
+
+    def _get_price_level_for_sensor(self, key: str) -> str | None:
+        """Get the price level for a price sensor (current/next/previous interval)."""
+        if not self.coordinator.data:
+            return None
+
+        price_info = self.coordinator.data.get("priceInfo", {})
+        now = dt_util.now()
+
+        # Map sensor key to interval offset
+        offset_map = {
+            "current_price": 0,
+            "next_interval_price": 1,
+            "previous_interval_price": -1,
+        }
+
+        interval_offset = offset_map.get(key)
+        if interval_offset is None:
+            return None
+
+        target_time = now + timedelta(minutes=MINUTES_PER_INTERVAL * interval_offset)
+        interval_data = find_price_data_for_interval(price_info, target_time)
+
+        if not interval_data or "level" not in interval_data:
+            return None
+
+        return interval_data["level"]
+
+    def _get_hour_level_for_sensor(self, key: str) -> str | None:
+        """Get the price level for an hour average sensor (current/next hour)."""
+        if not self.coordinator.data:
+            return None
+
+        # Map sensor key to hour offset
+        offset_map = {
+            "current_hour_average": 0,
+            "next_hour_average": 1,
+        }
+
+        hour_offset = offset_map.get(key)
+        if hour_offset is None:
+            return None
+
+        # Use the same logic as _get_rolling_hour_level_value
+        price_info = self.coordinator.data.get("priceInfo", {})
+        yesterday_prices = price_info.get("yesterday", [])
+        today_prices = price_info.get("today", [])
+        tomorrow_prices = price_info.get("tomorrow", [])
+
+        all_prices = yesterday_prices + today_prices + tomorrow_prices
+        if not all_prices:
+            return None
+
+        center_idx = self._find_rolling_hour_center_index(all_prices, hour_offset)
+        if center_idx is None:
+            return None
+
+        levels = self._collect_rolling_window_levels(all_prices, center_idx)
+        if not levels:
+            return None
+
+        return aggregate_price_levels(levels)
 
     @property
     async def async_extra_state_attributes(self) -> dict | None:
@@ -1926,6 +2063,8 @@ class TibberPricesSensor(TibberPricesEntity, SensorEntity):
             "current_hour_price_rating",
         ]
 
+        # Set timestamp and interval data based on sensor type
+        interval_data = None
         if key in next_interval_sensors:
             target_time = now + timedelta(minutes=MINUTES_PER_INTERVAL)
             interval_data = find_price_data_for_interval(price_info, target_time)
@@ -1935,21 +2074,48 @@ class TibberPricesSensor(TibberPricesEntity, SensorEntity):
             interval_data = find_price_data_for_interval(price_info, target_time)
             attributes["timestamp"] = interval_data["startsAt"] if interval_data else None
         elif key in next_hour_sensors:
-            # For next hour sensors, show timestamp 1 hour ahead
             target_time = now + timedelta(hours=1)
             interval_data = find_price_data_for_interval(price_info, target_time)
             attributes["timestamp"] = interval_data["startsAt"] if interval_data else None
         elif key in current_hour_sensors:
-            # For current hour sensors, use current interval timestamp
             current_interval_data = self._get_current_interval_data()
             attributes["timestamp"] = current_interval_data["startsAt"] if current_interval_data else None
         else:
-            # Default: use current interval timestamp
             current_interval_data = self._get_current_interval_data()
             attributes["timestamp"] = current_interval_data["startsAt"] if current_interval_data else None
 
-        # Add price level info for price level sensors
-        if key == "price_level":
+        # Add icon_color for price sensors (based on their price level)
+        if key in ["current_price", "next_interval_price", "previous_interval_price"]:
+            # For interval-based price sensors, get level from interval_data
+            if interval_data and "level" in interval_data:
+                level = interval_data["level"]
+                if level in PRICE_LEVEL_COLOR_MAPPING:
+                    attributes["icon_color"] = PRICE_LEVEL_COLOR_MAPPING[level]
+        elif key in ["current_hour_average", "next_hour_average"]:
+            # For hour-based price sensors, get level from the corresponding level sensor
+            level = self._get_hour_level_for_sensor(key)
+            if level and level in PRICE_LEVEL_COLOR_MAPPING:
+                attributes["icon_color"] = PRICE_LEVEL_COLOR_MAPPING[level]
+
+        # Add price level attributes for all level sensors
+        self._add_level_attributes_for_sensor(attributes, key, interval_data)
+
+        # Add price rating attributes for all rating sensors
+        self._add_rating_attributes_for_sensor(attributes, key, interval_data)
+
+    def _add_level_attributes_for_sensor(self, attributes: dict, key: str, interval_data: dict | None) -> None:
+        """Add price level attributes based on sensor type."""
+        # For interval-based level sensors (next/previous), use interval data
+        if key in ["next_interval_price_level", "previous_interval_price_level"]:
+            if interval_data and "level" in interval_data:
+                self._add_price_level_attributes(attributes, interval_data["level"])
+        # For hour-aggregated level sensors, use native_value
+        elif key in ["current_hour_price_level", "next_hour_price_level"]:
+            level_value = self.native_value
+            if level_value and isinstance(level_value, str):
+                self._add_price_level_attributes(attributes, level_value.upper())
+        # For current price level sensor
+        elif key == "price_level":
             current_interval_data = self._get_current_interval_data()
             if current_interval_data and "level" in current_interval_data:
                 self._add_price_level_attributes(attributes, current_interval_data["level"])
@@ -1966,6 +2132,44 @@ class TibberPricesSensor(TibberPricesEntity, SensorEntity):
         if level in PRICE_LEVEL_MAPPING:
             attributes["level_value"] = PRICE_LEVEL_MAPPING[level]
         attributes["level_id"] = level
+
+        # Add icon_color for dynamic styling
+        if level in PRICE_LEVEL_COLOR_MAPPING:
+            attributes["icon_color"] = PRICE_LEVEL_COLOR_MAPPING[level]
+
+    def _add_rating_attributes_for_sensor(self, attributes: dict, key: str, interval_data: dict | None) -> None:
+        """Add price rating attributes based on sensor type."""
+        # For interval-based rating sensors (next/previous), use interval data
+        if key in ["next_interval_price_rating", "previous_interval_price_rating"]:
+            if interval_data and "rating_level" in interval_data:
+                self._add_price_rating_attributes(attributes, interval_data["rating_level"])
+        # For hour-aggregated rating sensors, use native_value
+        elif key in ["current_hour_price_rating", "next_hour_price_rating"]:
+            rating_value = self.native_value
+            if rating_value and isinstance(rating_value, str):
+                self._add_price_rating_attributes(attributes, rating_value.upper())
+        # For current price rating sensor
+        elif key == "price_rating":
+            current_interval_data = self._get_current_interval_data()
+            if current_interval_data and "rating_level" in current_interval_data:
+                self._add_price_rating_attributes(attributes, current_interval_data["rating_level"])
+
+    def _add_price_rating_attributes(self, attributes: dict, rating: str) -> None:
+        """
+        Add price rating specific attributes.
+
+        Args:
+            attributes: Dictionary to add attributes to
+            rating: The price rating value (e.g., LOW, NORMAL, HIGH)
+
+        """
+        if rating in PRICE_RATING_MAPPING:
+            attributes["rating_value"] = PRICE_RATING_MAPPING[rating]
+        attributes["rating_id"] = rating
+
+        # Add icon_color for dynamic styling
+        if rating in PRICE_RATING_COLOR_MAPPING:
+            attributes["icon_color"] = PRICE_RATING_COLOR_MAPPING[rating]
 
     def _find_price_timestamp(
         self,

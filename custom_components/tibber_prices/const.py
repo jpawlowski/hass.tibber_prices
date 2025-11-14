@@ -248,12 +248,98 @@ PRICE_RATING_MAPPING = {
     PRICE_RATING_HIGH: 1,
 }
 
+# Icon mapping for price levels (dynamic icons based on level)
+PRICE_LEVEL_ICON_MAPPING = {
+    PRICE_LEVEL_VERY_CHEAP: "mdi:gauge-empty",
+    PRICE_LEVEL_CHEAP: "mdi:gauge-low",
+    PRICE_LEVEL_NORMAL: "mdi:gauge",
+    PRICE_LEVEL_EXPENSIVE: "mdi:gauge-full",
+    PRICE_LEVEL_VERY_EXPENSIVE: "mdi:alert",
+}
+
+# Color mapping for price levels (CSS variables for theme compatibility)
+PRICE_LEVEL_COLOR_MAPPING = {
+    PRICE_LEVEL_VERY_CHEAP: "var(--success-color)",
+    PRICE_LEVEL_CHEAP: "var(--success-color)",
+    PRICE_LEVEL_NORMAL: "var(--state-icon-color)",
+    PRICE_LEVEL_EXPENSIVE: "var(--warning-color)",
+    PRICE_LEVEL_VERY_EXPENSIVE: "var(--error-color)",
+}
+
+# Icon mapping for current price sensors (dynamic icons based on price level)
+# Used by current_price and current_hour_average sensors
+# Icon shows price level (cheap/normal/expensive), icon_color reinforces with color
+PRICE_LEVEL_CASH_ICON_MAPPING = {
+    PRICE_LEVEL_VERY_CHEAP: "mdi:cash-multiple",  # Many coins (save a lot!)
+    PRICE_LEVEL_CHEAP: "mdi:cash-plus",  # Cash with plus (good price)
+    PRICE_LEVEL_NORMAL: "mdi:cash",  # Standard cash icon
+    PRICE_LEVEL_EXPENSIVE: "mdi:cash-minus",  # Cash with minus (expensive)
+    PRICE_LEVEL_VERY_EXPENSIVE: "mdi:cash-remove",  # Cash crossed out (very expensive)
+}
+
+# Icon mapping for price ratings (dynamic icons based on rating)
+PRICE_RATING_ICON_MAPPING = {
+    PRICE_RATING_LOW: "mdi:thumb-up",
+    PRICE_RATING_NORMAL: "mdi:thumbs-up-down",
+    PRICE_RATING_HIGH: "mdi:thumb-down",
+}
+
+# Color mapping for price ratings (CSS variables for theme compatibility)
+PRICE_RATING_COLOR_MAPPING = {
+    PRICE_RATING_LOW: "var(--success-color)",
+    PRICE_RATING_NORMAL: "var(--state-icon-color)",
+    PRICE_RATING_HIGH: "var(--error-color)",
+}
+
+# Icon mapping for volatility levels (dynamic icons based on volatility)
+VOLATILITY_ICON_MAPPING = {
+    VOLATILITY_LOW: "mdi:chart-line-variant",
+    VOLATILITY_MODERATE: "mdi:chart-timeline-variant",
+    VOLATILITY_HIGH: "mdi:chart-bar",
+    VOLATILITY_VERY_HIGH: "mdi:chart-scatter-plot",
+}
+
+# Color mapping for volatility levels (CSS variables for theme compatibility)
+VOLATILITY_COLOR_MAPPING = {
+    VOLATILITY_LOW: "var(--success-color)",
+    VOLATILITY_MODERATE: "var(--info-color)",
+    VOLATILITY_HIGH: "var(--warning-color)",
+    VOLATILITY_VERY_HIGH: "var(--error-color)",
+}
+
 # Mapping for comparing volatility levels (used for sorting)
 VOLATILITY_MAPPING = {
     VOLATILITY_LOW: 0,
     VOLATILITY_MODERATE: 1,
     VOLATILITY_HIGH: 2,
     VOLATILITY_VERY_HIGH: 3,
+}
+
+# Icon mapping for binary sensors (dynamic icons based on state)
+# Note: OFF state icons can vary based on whether future periods exist
+BINARY_SENSOR_ICON_MAPPING = {
+    "best_price_period": {
+        "on": "mdi:piggy-bank",
+        "off": "mdi:timer-sand",  # Has future periods
+        "off_no_future": "mdi:timer-sand-complete",  # No future periods today
+    },
+    "peak_price_period": {
+        "on": "mdi:alert-circle",
+        "off": "mdi:shield-check",  # Has future periods
+        "off_no_future": "mdi:shield-check-outline",  # No future periods today
+    },
+}
+
+# Color mapping for binary sensors (CSS variables for theme compatibility)
+BINARY_SENSOR_COLOR_MAPPING = {
+    "best_price_period": {
+        "on": "var(--success-color)",
+        "off": "var(--state-icon-color)",
+    },
+    "peak_price_period": {
+        "on": "var(--error-color)",
+        "off": "var(--state-icon-color)",
+    },
 }
 
 LOGGER = logging.getLogger(__package__)

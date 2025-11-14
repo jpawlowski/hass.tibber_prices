@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from datetime import timedelta
 from typing import TYPE_CHECKING
 
 from homeassistant.components.binary_sensor import (
@@ -27,6 +28,8 @@ if TYPE_CHECKING:
     from .data import TibberPricesConfigEntry
 
 from .const import (
+    BINARY_SENSOR_COLOR_MAPPING,
+    BINARY_SENSOR_ICON_MAPPING,
     CONF_EXTENDED_DESCRIPTIONS,
     DEFAULT_EXTENDED_DESCRIPTIONS,
     async_get_entity_description,
@@ -35,6 +38,10 @@ from .const import (
 
 MINUTES_PER_INTERVAL = 15
 MIN_TOMORROW_INTERVALS_15MIN = 96
+
+# Look-ahead window for future period detection (hours)
+# Icons will show "waiting" state if a period starts within this window
+PERIOD_LOOKAHEAD_HOURS = 6
 
 ENTITY_DESCRIPTIONS = (
     BinarySensorEntityDescription(
@@ -435,6 +442,63 @@ class TibberPricesBinarySensor(TibberPricesEntity, BinarySensorEntity):
             return None
 
     @property
+    def icon(self) -> str | None:
+        """Return the icon based on binary sensor state."""
+        key = self.entity_description.key
+
+        # Dynamic icons for best/peak price period sensors
+        if key in BINARY_SENSOR_ICON_MAPPING:
+            if self.is_on:
+                # Sensor is ON - use "on" icon
+                icon = BINARY_SENSOR_ICON_MAPPING[key].get("on")
+            else:
+                # Sensor is OFF - check if future periods exist
+                has_future_periods = self._has_future_periods()
+                if has_future_periods:
+                    icon = BINARY_SENSOR_ICON_MAPPING[key].get("off")
+                else:
+                    icon = BINARY_SENSOR_ICON_MAPPING[key].get("off_no_future")
+
+            if icon:
+                return icon
+
+        # For all other sensors, use static icon from entity description
+        return self.entity_description.icon
+
+    def _has_future_periods(self) -> bool:
+        """
+        Check if there are periods starting within the next 6 hours.
+
+        Returns True if any period starts between now and PERIOD_LOOKAHEAD_HOURS from now.
+        This provides a practical planning horizon instead of hard midnight cutoff.
+        """
+        if not self._attribute_getter:
+            return False
+
+        attrs = self._attribute_getter()
+        if not attrs or "periods" not in attrs:
+            return False
+
+        now = dt_util.now()
+        horizon = now + timedelta(hours=PERIOD_LOOKAHEAD_HOURS)
+        periods = attrs.get("periods", [])
+
+        # Check if any period starts within the look-ahead window
+        for period in periods:
+            start_str = period.get("start")
+            if start_str:
+                # Parse datetime if it's a string, otherwise use as-is
+                start_time = dt_util.parse_datetime(start_str) if isinstance(start_str, str) else start_str
+
+                if start_time:
+                    start_time_local = dt_util.as_local(start_time)
+                    # Period starts in the future but within our horizon
+                    if now < start_time_local <= horizon:
+                        return True
+
+        return False
+
+    @property
     async def async_extra_state_attributes(self) -> dict | None:
         """Return additional state attributes asynchronously."""
         try:
@@ -449,6 +513,14 @@ class TibberPricesBinarySensor(TibberPricesEntity, BinarySensorEntity):
                     # Copy and remove internal fields before exposing to user
                     clean_attrs = {k: v for k, v in dynamic_attrs.items() if not k.startswith("_")}
                     attributes.update(clean_attrs)
+
+            # Add icon_color for best/peak price period sensors
+            key = self.entity_description.key
+            if key in BINARY_SENSOR_COLOR_MAPPING:
+                state = "on" if self.is_on else "off"
+                color = BINARY_SENSOR_COLOR_MAPPING[key].get(state)
+                if color:
+                    attributes["icon_color"] = color
 
             # Add descriptions from the custom translations file
             if self.entity_description.translation_key and self.hass is not None:
@@ -523,6 +595,14 @@ class TibberPricesBinarySensor(TibberPricesEntity, BinarySensorEntity):
                     # Copy and remove internal fields before exposing to user
                     clean_attrs = {k: v for k, v in dynamic_attrs.items() if not k.startswith("_")}
                     attributes.update(clean_attrs)
+
+            # Add icon_color for best/peak price period sensors
+            key = self.entity_description.key
+            if key in BINARY_SENSOR_COLOR_MAPPING:
+                state = "on" if self.is_on else "off"
+                color = BINARY_SENSOR_COLOR_MAPPING[key].get(state)
+                if color:
+                    attributes["icon_color"] = color
 
             # Add descriptions from the cache (non-blocking)
             if self.entity_description.translation_key and self.hass is not None:
