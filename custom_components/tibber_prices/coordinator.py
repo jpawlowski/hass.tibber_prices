@@ -41,6 +41,8 @@ from .const import (
     CONF_PEAK_PRICE_MIN_PERIOD_LENGTH,
     CONF_PRICE_RATING_THRESHOLD_HIGH,
     CONF_PRICE_RATING_THRESHOLD_LOW,
+    CONF_RELAXATION_ATTEMPTS_BEST,
+    CONF_RELAXATION_ATTEMPTS_PEAK,
     CONF_RELAXATION_STEP_BEST,
     CONF_RELAXATION_STEP_PEAK,
     CONF_VOLATILITY_THRESHOLD_HIGH,
@@ -62,6 +64,8 @@ from .const import (
     DEFAULT_PEAK_PRICE_MIN_PERIOD_LENGTH,
     DEFAULT_PRICE_RATING_THRESHOLD_HIGH,
     DEFAULT_PRICE_RATING_THRESHOLD_LOW,
+    DEFAULT_RELAXATION_ATTEMPTS_BEST,
+    DEFAULT_RELAXATION_ATTEMPTS_PEAK,
     DEFAULT_RELAXATION_STEP_BEST,
     DEFAULT_RELAXATION_STEP_PEAK,
     DEFAULT_VOLATILITY_THRESHOLD_HIGH,
@@ -1166,6 +1170,10 @@ class TibberPricesDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             CONF_RELAXATION_STEP_BEST,
             DEFAULT_RELAXATION_STEP_BEST,
         )
+        relaxation_attempts_best = self.config_entry.options.get(
+            CONF_RELAXATION_ATTEMPTS_BEST,
+            DEFAULT_RELAXATION_ATTEMPTS_BEST,
+        )
 
         # Calculate best price periods (or return empty if filtered)
         if show_best_price:
@@ -1198,6 +1206,7 @@ class TibberPricesDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 enable_relaxation=enable_relaxation_best,
                 min_periods=min_periods_best,
                 relaxation_step_pct=relaxation_step_best,
+                max_relaxation_attempts=relaxation_attempts_best,
                 should_show_callback=lambda _vol, lvl: self._should_show_periods(
                     price_info,
                     reverse_sort=False,
@@ -1233,6 +1242,10 @@ class TibberPricesDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             CONF_RELAXATION_STEP_PEAK,
             DEFAULT_RELAXATION_STEP_PEAK,
         )
+        relaxation_attempts_peak = self.config_entry.options.get(
+            CONF_RELAXATION_ATTEMPTS_PEAK,
+            DEFAULT_RELAXATION_ATTEMPTS_PEAK,
+        )
 
         # Calculate peak price periods (or return empty if filtered)
         if show_peak_price:
@@ -1265,6 +1278,7 @@ class TibberPricesDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 enable_relaxation=enable_relaxation_peak,
                 min_periods=min_periods_peak,
                 relaxation_step_pct=relaxation_step_peak,
+                max_relaxation_attempts=relaxation_attempts_peak,
                 should_show_callback=lambda _vol, lvl: self._should_show_periods(
                     price_info,
                     reverse_sort=True,

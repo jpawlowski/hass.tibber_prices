@@ -59,6 +59,8 @@ from .const import (
     CONF_PRICE_RATING_THRESHOLD_LOW,
     CONF_PRICE_TREND_THRESHOLD_FALLING,
     CONF_PRICE_TREND_THRESHOLD_RISING,
+    CONF_RELAXATION_ATTEMPTS_BEST,
+    CONF_RELAXATION_ATTEMPTS_PEAK,
     CONF_RELAXATION_STEP_BEST,
     CONF_RELAXATION_STEP_PEAK,
     CONF_VOLATILITY_THRESHOLD_HIGH,
@@ -83,6 +85,8 @@ from .const import (
     DEFAULT_PRICE_RATING_THRESHOLD_LOW,
     DEFAULT_PRICE_TREND_THRESHOLD_FALLING,
     DEFAULT_PRICE_TREND_THRESHOLD_RISING,
+    DEFAULT_RELAXATION_ATTEMPTS_BEST,
+    DEFAULT_RELAXATION_ATTEMPTS_PEAK,
     DEFAULT_RELAXATION_STEP_BEST,
     DEFAULT_RELAXATION_STEP_PEAK,
     DEFAULT_VOLATILITY_THRESHOLD_HIGH,
@@ -721,6 +725,22 @@ class TibberPricesOptionsFlowHandler(OptionsFlow):
                             mode=NumberSelectorMode.SLIDER,
                         ),
                     ),
+                    vol.Optional(
+                        CONF_RELAXATION_ATTEMPTS_BEST,
+                        default=int(
+                            self.config_entry.options.get(
+                                CONF_RELAXATION_ATTEMPTS_BEST,
+                                DEFAULT_RELAXATION_ATTEMPTS_BEST,
+                            )
+                        ),
+                    ): NumberSelector(
+                        NumberSelectorConfig(
+                            min=1,
+                            max=12,
+                            step=1,
+                            mode=NumberSelectorMode.SLIDER,
+                        ),
+                    ),
                 }
             ),
             description_placeholders=self._get_step_description_placeholders("best_price"),
@@ -853,6 +873,22 @@ class TibberPricesOptionsFlowHandler(OptionsFlow):
                             max=50,
                             step=5,
                             unit_of_measurement="%",
+                            mode=NumberSelectorMode.SLIDER,
+                        ),
+                    ),
+                    vol.Optional(
+                        CONF_RELAXATION_ATTEMPTS_PEAK,
+                        default=int(
+                            self.config_entry.options.get(
+                                CONF_RELAXATION_ATTEMPTS_PEAK,
+                                DEFAULT_RELAXATION_ATTEMPTS_PEAK,
+                            )
+                        ),
+                    ): NumberSelector(
+                        NumberSelectorConfig(
+                            min=1,
+                            max=12,
+                            step=1,
                             mode=NumberSelectorMode.SLIDER,
                         ),
                     ),

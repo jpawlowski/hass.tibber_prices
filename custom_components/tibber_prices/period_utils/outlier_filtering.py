@@ -15,6 +15,7 @@ Uses statistical methods:
 from __future__ import annotations
 
 import logging
+from dataclasses import dataclass
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -24,9 +25,43 @@ CONFIDENCE_LEVEL = 2.0  # Standard deviations for 95% confidence interval
 VOLATILITY_THRESHOLD = 0.05  # 5% max relative std dev for zigzag detection
 SYMMETRY_THRESHOLD = 1.5  # Max std dev difference for symmetric spike
 RELATIVE_VOLATILITY_THRESHOLD = 2.0  # Window volatility vs context (cluster detection)
+ASYMMETRY_TAIL_WINDOW = 6  # Skip asymmetry check for last ~1.5h (6 intervals) of available data
+ZIGZAG_TAIL_WINDOW = 6  # Skip zigzag/cluster detection for last ~1.5h (6 intervals)
 
 # Module-local log indentation (each module starts at level 0)
 INDENT_L0 = ""  # All logs in this module (no indentation needed)
+
+
+@dataclass(slots=True)
+class SpikeCandidateContext:
+    """Container for spike validation parameters."""
+
+    current: dict
+    context_before: list[dict]
+    context_after: list[dict]
+    flexibility_ratio: float
+    remaining_intervals: int
+    stats: dict[str, float]
+    analysis_window: list[dict]
+
+
+def _should_skip_tail_check(
+    remaining_intervals: int,
+    tail_window: int,
+    check_name: str,
+    interval_label: str,
+) -> bool:
+    """Return True when remaining intervals fall inside tail window and log why."""
+    if remaining_intervals < tail_window:
+        _LOGGER.debug(
+            "%sSpike at %s: Skipping %s check (only %d intervals remaining)",
+            INDENT_L0,
+            interval_label,
+            check_name,
+            remaining_intervals,
+        )
+        return True
+    return False
 
 
 def _calculate_statistics(prices: list[float]) -> dict[str, float]:
@@ -147,6 +182,57 @@ def _detect_zigzag_pattern(window: list[dict], context_std_dev: float) -> bool:
     return std_dev > RELATIVE_VOLATILITY_THRESHOLD * context_std_dev
 
 
+def _validate_spike_candidate(
+    candidate: SpikeCandidateContext,
+) -> bool:
+    """Run stability, symmetry, and zigzag checks before smoothing."""
+    avg_before = sum(x["total"] for x in candidate.context_before) / len(candidate.context_before)
+    avg_after = sum(x["total"] for x in candidate.context_after) / len(candidate.context_after)
+
+    context_diff_pct = abs(avg_after - avg_before) / avg_before if avg_before > 0 else 0
+    if context_diff_pct > candidate.flexibility_ratio:
+        _LOGGER.debug(
+            "%sInterval %s: Context unstable (%.1f%% change) - not a spike",
+            INDENT_L0,
+            candidate.current.get("startsAt", "unknown interval"),
+            context_diff_pct * 100,
+        )
+        return False
+
+    if not _should_skip_tail_check(
+        candidate.remaining_intervals,
+        ASYMMETRY_TAIL_WINDOW,
+        "asymmetry",
+        candidate.current.get("startsAt", "unknown interval"),
+    ) and not _check_symmetry(avg_before, avg_after, candidate.stats["std_dev"]):
+        _LOGGER.debug(
+            "%sSpike at %s rejected: Asymmetric (before=%.2f, after=%.2f ct/kWh)",
+            INDENT_L0,
+            candidate.current.get("startsAt", "unknown interval"),
+            avg_before * 100,
+            avg_after * 100,
+        )
+        return False
+
+    if _should_skip_tail_check(
+        candidate.remaining_intervals,
+        ZIGZAG_TAIL_WINDOW,
+        "zigzag/cluster",
+        candidate.current.get("startsAt", "unknown interval"),
+    ):
+        return True
+
+    if _detect_zigzag_pattern(candidate.analysis_window, candidate.stats["std_dev"]):
+        _LOGGER.debug(
+            "%sSpike at %s rejected: Zigzag/cluster pattern detected",
+            INDENT_L0,
+            candidate.current.get("startsAt", "unknown interval"),
+        )
+        return False
+
+    return True
+
+
 def filter_price_outliers(
     intervals: list[dict],
     flexibility_pct: float,
@@ -220,48 +306,20 @@ def filter_price_outliers(
             continue
 
         # SPIKE CANDIDATE DETECTED - Now validate
-
-        # Check 1: Context Stability
-        # If context is changing significantly, this might be a legitimate transition
-        avg_before = sum(x["total"] for x in context_before) / len(context_before)
-        avg_after = sum(x["total"] for x in context_after) / len(context_after)
-
-        context_diff_pct = abs(avg_after - avg_before) / avg_before if avg_before > 0 else 0
-
-        if context_diff_pct > flexibility_ratio:
-            result.append(current)
-            _LOGGER.debug(
-                "%sInterval %s: Context unstable (%.1f%% change) - not a spike",
-                INDENT_L0,
-                current.get("startsAt", f"index {i}"),
-                context_diff_pct * 100,
-            )
-            continue
-
-        # Check 2: Symmetry
-        # Symmetric spikes return to baseline; asymmetric might be legitimate shifts
-        if not _check_symmetry(avg_before, avg_after, stats["std_dev"]):
-            result.append(current)
-            _LOGGER.debug(
-                "%sSpike at %s rejected: Asymmetric (before=%.2f, after=%.2f ct/kWh)",
-                INDENT_L0,
-                current.get("startsAt", f"index {i}"),
-                avg_before * 100,
-                avg_after * 100,
-            )
-            continue
-
-        # Check 3: Zigzag Pattern / Cluster Detection
-        # Build analysis window including the spike
+        remaining_intervals = len(intervals) - (i + 1)
         analysis_window = [*context_before[-2:], current, *context_after[:2]]
+        candidate_context = SpikeCandidateContext(
+            current=current,
+            context_before=context_before,
+            context_after=context_after,
+            flexibility_ratio=flexibility_ratio,
+            remaining_intervals=remaining_intervals,
+            stats=stats,
+            analysis_window=analysis_window,
+        )
 
-        if _detect_zigzag_pattern(analysis_window, stats["std_dev"]):
+        if not _validate_spike_candidate(candidate_context):
             result.append(current)
-            _LOGGER.debug(
-                "%sSpike at %s rejected: Zigzag/cluster pattern detected",
-                INDENT_L0,
-                current.get("startsAt", f"index {i}"),
-            )
             continue
 
         # ALL CHECKS PASSED - Smooth the spike

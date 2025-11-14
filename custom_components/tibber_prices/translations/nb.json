@@ -108,13 +108,15 @@
                     "best_price_max_level_gap_count": "Gaptoleranse for nivåfilter",
                     "enable_min_periods_best": "Prøv å oppnå minimum antall perioder",
                     "min_periods_best": "Minimum antall perioder",
-                    "relaxation_step_best": "Avslappingstrinn"
+                    "relaxation_step_best": "Avslappingstrinn",
+                    "relaxation_attempts_best": "Antall forsøk (fleksnivåer)"
                 },
                 "data_description": {
                     "best_price_max_level": "Vis kun beste prisperioder hvis de inneholder intervaller med prisnivåer ≤ valgt verdi. For eksempel: å velge 'Billig' betyr at perioden må ha minst ett 'VELDIG_BILLIG' eller 'BILLIG' intervall. Dette sikrer at 'beste pris'-perioder ikke bare er relativt billige for dagen, men faktisk billige i absolutte tall. Velg 'Alle' for å vise beste priser uavhengig av deres absolutte prisnivå.",
                     "enable_min_periods_best": "Når aktivert vil filtrene gradvis bli lempeligere hvis det ikke blir funnet nok perioder. Dette forsøker å nå ønsket minimum antall perioder, noe som kan føre til at mindre optimale tidsrom blir markert som beste-pris-perioder.",
                     "min_periods_best": "Minimum antall beste-pris-perioder å sikte mot per dag. Filtre vil bli lempet trinn for trinn for å prøve å oppnå dette antallet. Kun aktiv når 'Prøv å oppnå minimum antall perioder' er aktivert. Standard: 1",
                     "relaxation_step_best": "Prosentandel av den opprinnelige fleksibilitetsterskealen som legges til per avslappingstrinn. For eksempel: med 15% fleksibilitet og 25% trinnstørrelse vil filtrene prøve 15%, 18,75%, 22,5%, osv. Høyere verdier betyr raskere avslapping men mindre presisjon.",
+                    "relaxation_attempts_best": "Hvor mange fleksnivåer (forsøk) som testes før vi gir opp. Hvert forsøk kjører alle filterkombinasjoner på det nye fleksnivået. Flere forsøk øker sjansen for ekstra perioder, men tar litt lengre tid.",
                     "best_price_max_level_gap_count": "Maksimalt antall påfølgende intervaller som kan avvike med nøyaktig ett nivåtrinn fra det nødvendige nivået. For eksempel: med 'Billig' filter og gapantall 1, aksepteres sekvensen 'BILLIG, BILLIG, NORMAL, BILLIG' (NORMAL er ett trinn over BILLIG). Dette forhindrer at perioder blir delt opp av tilfeldige nivåavvik. Standard: 0 (streng filtrering, ingen toleranse)."
                 },
                 "submit": "Neste til steg 5"
@@ -130,13 +132,15 @@
                     "peak_price_max_level_gap_count": "Gaptoleranse for nivåfilter",
                     "enable_min_periods_peak": "Prøv å oppnå minimum antall perioder",
                     "min_periods_peak": "Minimum antall perioder",
-                    "relaxation_step_peak": "Avslappingstrinn"
+                    "relaxation_step_peak": "Avslappingstrinn",
+                    "relaxation_attempts_peak": "Antall forsøk (fleksnivåer)"
                 },
                 "data_description": {
                     "peak_price_min_level": "Vis kun topprisperioder hvis de inneholder intervaller med prisnivåer ≥ valgt verdi. For eksempel: å velge 'Dyr' betyr at perioden må ha minst ett 'DYR' eller 'VELDIG_DYR' intervall. Dette sikrer at 'topppris'-perioder ikke bare er relativt dyre for dagen, men faktisk dyre i absolutte tall. Velg 'Alle' for å vise topppriser uavhengig av deres absolutte prisnivå.",
                     "enable_min_periods_peak": "Når aktivert vil filtrene gradvis bli lempeligere hvis det ikke blir funnet nok perioder. Dette forsøker å nå ønsket minimum antall perioder for å sikre at du blir advart om dyre perioder selv på dager med uvanlige prismønstre.",
                     "min_periods_peak": "Minimum antall topp-pris-perioder å sikte mot per dag. Filtre vil bli lempet trinn for trinn for å prøve å oppnå dette antallet. Kun aktiv når 'Prøv å oppnå minimum antall perioder' er aktivert. Standard: 1",
                     "relaxation_step_peak": "Prosentandel av den opprinnelige fleksibilitetsterskealen som legges til per avslappingstrinn. For eksempel: med -15% fleksibilitet og 25% trinnstørrelse vil filtrene prøve -15%, -18,75%, -22,5%, osv. Høyere verdier betyr raskere avslapping men mindre presisjon.",
+                    "relaxation_attempts_peak": "Hvor mange fleksnivåer (forsøk) som testes før vi gir opp. Hvert forsøk kjører alle filterkombinasjoner på det nye fleksnivået. Flere forsøk øker sjansen for ekstra toppprisperioder, men tar litt lengre tid.",
                     "peak_price_max_level_gap_count": "Maksimalt antall påfølgende intervaller som kan avvike med nøyaktig ett nivåtrinn fra det nødvendige nivået. For eksempel: med 'Dyr' filter og gapantall 2, aksepteres sekvensen 'DYR, NORMAL, NORMAL, DYR' (NORMAL er ett trinn under DYR). Dette forhindrer at perioder blir delt opp av tilfeldige nivåavvik. Standard: 0 (streng filtrering, ingen toleranse)."
                 },
                 "submit": "Neste til steg 6"

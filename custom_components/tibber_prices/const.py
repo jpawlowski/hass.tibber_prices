@@ -38,9 +38,11 @@ CONF_PEAK_PRICE_MAX_LEVEL_GAP_COUNT = "peak_price_max_level_gap_count"
 CONF_ENABLE_MIN_PERIODS_BEST = "enable_min_periods_best"
 CONF_MIN_PERIODS_BEST = "min_periods_best"
 CONF_RELAXATION_STEP_BEST = "relaxation_step_best"
+CONF_RELAXATION_ATTEMPTS_BEST = "relaxation_attempts_best"
 CONF_ENABLE_MIN_PERIODS_PEAK = "enable_min_periods_peak"
 CONF_MIN_PERIODS_PEAK = "min_periods_peak"
 CONF_RELAXATION_STEP_PEAK = "relaxation_step_peak"
+CONF_RELAXATION_ATTEMPTS_PEAK = "relaxation_attempts_peak"
 
 ATTRIBUTION = "Data provided by Tibber"
 
@@ -78,9 +80,11 @@ MIN_INTERVALS_FOR_GAP_TOLERANCE = 6  # Minimum period length (in 15-min interval
 DEFAULT_ENABLE_MIN_PERIODS_BEST = True  # Default: minimum periods feature enabled for best price
 DEFAULT_MIN_PERIODS_BEST = 2  # Default: require at least 2 best price periods (when enabled)
 DEFAULT_RELAXATION_STEP_BEST = 25  # Default: 25% of original threshold per relaxation step for best price
+DEFAULT_RELAXATION_ATTEMPTS_BEST = 8  # Default: try 8 flex levels during relaxation (best price)
 DEFAULT_ENABLE_MIN_PERIODS_PEAK = True  # Default: minimum periods feature enabled for peak price
 DEFAULT_MIN_PERIODS_PEAK = 2  # Default: require at least 2 peak price periods (when enabled)
 DEFAULT_RELAXATION_STEP_PEAK = 25  # Default: 25% of original threshold per relaxation step for peak price
+DEFAULT_RELAXATION_ATTEMPTS_PEAK = 8  # Default: try 8 flex levels during relaxation (peak price)
 
 # Home types
 HOME_TYPE_APARTMENT = "APARTMENT"

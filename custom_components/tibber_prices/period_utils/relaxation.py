@@ -166,6 +166,7 @@ def calculate_periods_with_relaxation(  # noqa: PLR0913, PLR0915 - Per-day relax
     enable_relaxation: bool,
     min_periods: int,
     relaxation_step_pct: int,
+    max_relaxation_attempts: int,
     should_show_callback: Callable[[str | None, str | None], bool],
 ) -> tuple[dict[str, Any], dict[str, Any]]:
     """
@@ -186,10 +187,13 @@ def calculate_periods_with_relaxation(  # noqa: PLR0913, PLR0915 - Per-day relax
         config: Base period configuration
         enable_relaxation: Whether relaxation is enabled
         min_periods: Minimum number of periods required PER DAY
-        relaxation_step_pct: Percentage of original flex to add per relaxation step
+        relaxation_step_pct: Percentage of the original flex threshold to add per relaxation
+            step (controls how aggressively flex widens with each attempt)
+        max_relaxation_attempts: Maximum number of flex levels (attempts) to try per day
+            before giving up (each attempt runs the full filter matrix)
         should_show_callback: Callback function(volatility_override, level_override) -> bool
-                             Returns True if periods should be shown with given filter overrides.
-                             Pass None to use original configured filter values.
+            Returns True if periods should be shown with given filter overrides. Pass None
+            to use original configured filter values.
 
     Returns:
         Tuple of (periods_result, relaxation_metadata):
@@ -246,9 +250,10 @@ def calculate_periods_with_relaxation(  # noqa: PLR0913, PLR0915 - Per-day relax
             min_periods,
         )
         _LOGGER.debug(
-            "%sRelaxation strategy: %.1f%% flex increment per step (4 flex levels x 4 filter combinations)",
+            "%sRelaxation strategy: %.1f%% flex increment per step (%d flex levels x 4 filter combinations)",
             INDENT_L0,
             relaxation_step_pct,
+            max_relaxation_attempts,
         )
         _LOGGER.debug(
             "%sEarly exit: After EACH filter combination when target reached",
@@ -334,6 +339,7 @@ def calculate_periods_with_relaxation(  # noqa: PLR0913, PLR0915 - Per-day relax
             config=config,
             min_periods=min_periods,
             relaxation_step_pct=relaxation_step_pct,
+            max_relaxation_attempts=max_relaxation_attempts,
             should_show_callback=should_show_callback,
             baseline_periods=day_periods,
             day_label=str(day),
@@ -381,6 +387,7 @@ def relax_single_day(  # noqa: PLR0913 - Comprehensive filter relaxation per day
     config: PeriodConfig,
     min_periods: int,
     relaxation_step_pct: int,
+    max_relaxation_attempts: int,
     should_show_callback: Callable[[str | None, str | None], bool],
     baseline_periods: list[dict],
     day_label: str,
@@ -406,6 +413,7 @@ def relax_single_day(  # noqa: PLR0913 - Comprehensive filter relaxation per day
         config: Base period configuration
         min_periods: Minimum periods needed for this day
         relaxation_step_pct: Relaxation increment percentage
+        max_relaxation_attempts: Maximum number of flex levels (attempts) to try for this day
         should_show_callback: Filter visibility callback(volatility_override, level_override)
                              Returns True if periods should be shown with given overrides.
         baseline_periods: Periods found with normal filters
@@ -428,8 +436,10 @@ def relax_single_day(  # noqa: PLR0913 - Comprehensive filter relaxation per day
 
     baseline_standalone = len([p for p in baseline_periods if not p.get("is_extension")])
 
-    # 4 flex levels: original + 3 steps (e.g., 5% → 6.25% → 7.5% → 8.75% → 10%)
-    for flex_step in range(1, 5):
+    attempts = max(1, max_relaxation_attempts)
+
+    # Flex levels: original + N steps (e.g., 5% → 6.25% → ...)
+    for flex_step in range(1, attempts + 1):
         new_flex = original_flex + (flex_step * relaxation_increment)
         new_flex = min(new_flex, 100.0)
 
