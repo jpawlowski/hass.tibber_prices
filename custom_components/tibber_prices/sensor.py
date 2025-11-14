@@ -1719,6 +1719,25 @@ class TibberPricesSensor(TibberPricesEntity, SensorEntity):
         return format_price_unit_minor(currency)
 
     @property
+    def icon(self) -> str | None:
+        """Return the icon based on sensor type and state."""
+        # Dynamic icons for trend sensors
+        if self.entity_description.key.startswith("price_trend_"):
+            match self.native_value:
+                case "rising":
+                    return "mdi:trending-up"
+                case "falling":
+                    return "mdi:trending-down"
+                case "stable":
+                    return "mdi:trending-neutral"
+                case _:
+                    # Fallback to static icon if value is None or unknown
+                    return self.entity_description.icon
+
+        # For all other sensors, use static icon from entity description
+        return self.entity_description.icon
+
+    @property
     async def async_extra_state_attributes(self) -> dict | None:
         """Return additional state attributes asynchronously."""
         if not self.coordinator.data:
