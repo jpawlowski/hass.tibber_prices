@@ -1307,6 +1307,13 @@ class TibberPricesSensor(TibberPricesEntity, SensorEntity):
             current_price, future_avg, threshold_rising=threshold_rising, threshold_falling=threshold_falling
         )
 
+        # Determine icon color based on trend state
+        icon_color = {
+            "rising": "var(--error-color)",  # Red/Orange for rising prices (expensive)
+            "falling": "var(--success-color)",  # Green for falling prices (cheaper)
+            "stable": "var(--state-icon-color)",  # Default gray for stable prices
+        }.get(trend_state, "var(--state-icon-color)")
+
         # Store attributes in sensor-specific dictionary AND cache the trend value
         self._trend_attributes = {
             "timestamp": next_interval_start.isoformat(),
@@ -1315,6 +1322,7 @@ class TibberPricesSensor(TibberPricesEntity, SensorEntity):
             "interval_count": hours * 4,
             "threshold_rising": threshold_rising,
             "threshold_falling": threshold_falling,
+            "icon_color": icon_color,
         }
 
         # Calculate additional attributes for better granularity
