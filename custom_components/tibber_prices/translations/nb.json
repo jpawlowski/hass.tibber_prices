@@ -188,10 +188,10 @@
             "previous_interval_price": {
                 "name": "Forrige strømpris"
             },
-            "current_hour_average": {
+            "current_hour_average_price": {
                 "name": "Nåværende timepris gjennomsnitt"
             },
-            "next_hour_average": {
+            "next_hour_average_price": {
                 "name": "Neste timepris gjennomsnitt"
             },
             "current_interval_price_level": {

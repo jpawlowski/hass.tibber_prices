@@ -115,8 +115,8 @@ TIME_SENSITIVE_ENTITY_KEYS = frozenset(
         "next_interval_price_level",
         "previous_interval_price_level",
         # Rolling hour calculations (5-interval windows)
-        "current_hour_average",
-        "next_hour_average",
+        "current_hour_average_price",
+        "next_hour_average_price",
         "current_hour_price_level",
         "next_hour_price_level",
         # Current/next/previous price ratings

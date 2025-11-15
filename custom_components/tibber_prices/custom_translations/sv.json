@@ -15,12 +15,12 @@
             "long_description": "Visar priset för föregående 15-minuters intervall från ditt Tibber-abonnemang",
             "usage_tips": "Använd detta för att granska tidigare prisändringar eller spåra prishistorik"
         },
-        "current_hour_average": {
+        "current_hour_average_price": {
             "description": "Rullande 5-intervalls genomsnittspris per kWh",
             "long_description": "Visar genomsnittspriset per kWh beräknat från 5 intervaller: 2 föregående, nuvarande och 2 nästa intervaller (ungefär 75 minuter totalt). Detta ger ett utjämnat 'timpris' som anpassar sig när tiden går, istället för att vara fixerat till klockslag.",
             "usage_tips": "Använd detta för en stabilare prisindikator som jämnar ut kortsiktiga fluktuationer medan den fortfarande är responsiv till prisändringar. Bättre än fasta timpriser för konsumtionsbeslut."
         },
-        "next_hour_average": {
+        "next_hour_average_price": {
             "description": "Rullande 5-intervalls genomsnittspris för nästa timme per kWh",
             "long_description": "Visar genomsnittspriset per kWh beräknat från 5 intervaller centrerade en timme framåt: ungefär intervaller +2 till +6 från nu (täcker minuter +30 till +105). Detta ger ett framåtblickande utjämnat 'timpris' för konsumtionsplanering.",
             "usage_tips": "Använd detta för att förutse prisändringar nästa timme. Användbart för att schemalägga högkonsumtionsaktiviteter som laddning av elfordon, körning av diskmaskiner eller värmesystem."
@@ -167,8 +167,8 @@
         },
         "next_avg_1h": {
             "description": "Genomsnittspris för nästa 1 timme (endast framåt från nästa intervall)",
-            "long_description": "Framåtblickande genomsnitt: Visar genomsnitt av nästa 4 intervaller (1 timme) från och med NÄSTA 15-minuters intervall (inte inklusive nuvarande). Skiljer sig från current_hour_average som inkluderar tidigare intervaller. Använd för absolut priströskelpla nering.",
-            "usage_tips": "Absolut priströskel: Starta endast apparater när genomsnittet stannar under ditt maximalt acceptabla pris (t.ex. under 0,25 EUR/kWh). Kombinera med trendsensor för optimal timing. Obs: Detta är INTE en ersättning för timpriser - använd current_hour_average för det."
+            "long_description": "Framåtblickande genomsnitt: Visar genomsnitt av nästa 4 intervaller (1 timme) från och med NÄSTA 15-minuters intervall (inte inklusive nuvarande). Skiljer sig från current_hour_average_price som inkluderar tidigare intervaller. Använd för absolut priströskelpla nering.",
+            "usage_tips": "Absolut priströskel: Starta endast apparater när genomsnittet stannar under ditt maximalt acceptabla pris (t.ex. under 0,25 EUR/kWh). Kombinera med trendsensor för optimal timing. Obs: Detta är INTE en ersättning för timpriser - använd current_hour_average_price för det."
         },
         "next_avg_2h": {
             "description": "Genomsnittspris för nästa 2 timmar",

@@ -15,12 +15,12 @@
             "long_description": "Zeigt den Preis für das vorherige 15-Minuten-Intervall von deinem Tibber-Abonnement an",
             "usage_tips": "Nutze dies, um vergangene Preisänderungen zu überprüfen oder den Preisverlauf zu verfolgen"
         },
-        "current_hour_average": {
+        "current_hour_average_price": {
             "description": "Gleitender 5-Intervall-Durchschnittspreis pro kWh",
             "long_description": "Zeigt den durchschnittlichen Preis pro kWh berechnet aus 5 Intervallen: 2 vorherige, aktuelles und 2 nächste Intervalle (ca. 75 Minuten insgesamt). Dies bietet einen geglätteten 'Stundenpreis', der sich mit der Zeit anpasst, anstatt an feste Uhrzeiten gebunden zu sein.",
             "usage_tips": "Nutze dies für einen stabileren Preisindikator, der kurzfristige Schwankungen glättet und dennoch auf Preisänderungen reagiert. Besser als feste Stundenpreise für Verbrauchsentscheidungen."
         },
-        "next_hour_average": {
+        "next_hour_average_price": {
             "description": "Gleitender 5-Intervall-Durchschnittspreis für nächste Stunde pro kWh",
             "long_description": "Zeigt den durchschnittlichen Preis pro kWh berechnet aus 5 Intervallen, die eine Stunde voraus zentriert sind: ungefähr Intervalle +2 bis +6 von jetzt (Minuten +30 bis +105 abdeckend). Dies bietet einen vorausschauenden geglätteten 'Stundenpreis' zur Verbrauchsplanung.",
             "usage_tips": "Nutze dies, um Preisänderungen in der nächsten Stunde vorherzusehen. Hilfreich für die Planung von verbrauchsintensiven Aktivitäten wie Elektrofahrzeug-Laden, Geschirrspüler oder Heizsysteme."
@@ -167,8 +167,8 @@
         },
         "next_avg_1h": {
             "description": "Durchschnittspreis für die nächste 1 Stunde (vorwärts-blickend ab nächstem Intervall)",
-            "long_description": "Vorwärts-blickender Durchschnitt: Zeigt den Durchschnitt der nächsten 4 Intervalle (1 Stunde) beginnend ab dem NÄCHSTEN 15-Minuten-Intervall (aktuelles nicht inkludiert). Unterscheidet sich von current_hour_average, das vergangene Intervalle einbezieht. Nutze dies für absolute Preisschwellen-Planung.",
-            "usage_tips": "Absolute Preisschwelle: Starte Geräte nur, wenn der Durchschnitt unter deinem maximal akzeptablen Preis bleibt (z.B. unter 0,25 EUR/kWh). Kombiniere mit Trend-Sensor für optimales Timing. Hinweis: Dies ist KEIN Ersatz für Stundenpreise - nutze current_hour_average dafür."
+            "long_description": "Vorwärts-blickender Durchschnitt: Zeigt den Durchschnitt der nächsten 4 Intervalle (1 Stunde) beginnend ab dem NÄCHSTEN 15-Minuten-Intervall (aktuelles nicht inkludiert). Unterscheidet sich von current_hour_average_price, das vergangene Intervalle einbezieht. Nutze dies für absolute Preisschwellen-Planung.",
+            "usage_tips": "Absolute Preisschwelle: Starte Geräte nur, wenn der Durchschnitt unter deinem maximal akzeptablen Preis bleibt (z.B. unter 0,25 EUR/kWh). Kombiniere mit Trend-Sensor für optimales Timing. Hinweis: Dies ist KEIN Ersatz für Stundenpreise - nutze current_hour_average_price dafür."
         },
         "next_avg_2h": {
             "description": "Durchschnittspreis für die nächsten 2 Stunden",

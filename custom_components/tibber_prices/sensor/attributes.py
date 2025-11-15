@@ -68,8 +68,8 @@ def build_sensor_attributes(
             "current_interval_price_level",
             "next_interval_price",
             "previous_interval_price",
-            "current_hour_average",
-            "next_hour_average",
+            "current_hour_average_price",
+            "next_hour_average_price",
             "next_interval_price_level",
             "previous_interval_price_level",
             "current_hour_price_level",
@@ -185,12 +185,12 @@ def add_current_interval_price_attributes(
         "previous_interval_price_rating",
     ]
     next_hour_sensors = [
-        "next_hour_average",
+        "next_hour_average_price",
         "next_hour_price_level",
         "next_hour_price_rating",
     ]
     current_hour_sensors = [
-        "current_hour_average",
+        "current_hour_average_price",
         "current_hour_price_level",
         "current_hour_price_rating",
     ]
@@ -214,6 +214,7 @@ def add_current_interval_price_attributes(
         attributes["timestamp"] = current_interval_data["startsAt"] if current_interval_data else None
     else:
         current_interval_data = get_current_interval_data(coordinator)
+        interval_data = current_interval_data  # Use current_interval_data as interval_data for current_interval_price
         attributes["timestamp"] = current_interval_data["startsAt"] if current_interval_data else None
 
     # Add icon_color for price sensors (based on their price level)
@@ -222,7 +223,7 @@ def add_current_interval_price_attributes(
         if interval_data and "level" in interval_data:
             level = interval_data["level"]
             add_icon_color_attribute(attributes, key="price_level", state_value=level)
-    elif key in ["current_hour_average", "next_hour_average"]:
+    elif key in ["current_hour_average_price", "next_hour_average_price"]:
         # For hour-based price sensors, get level from cached_data
         level = cached_data.get("rolling_hour_level")
         if level:
@@ -454,7 +455,7 @@ def add_average_price_attributes(
     coordinator: TibberPricesDataUpdateCoordinator,
 ) -> None:
     """
-    Add attributes for trailing and leading average price sensors.
+    Add attributes for trailing and leading average/min/max price sensors.
 
     Args:
         attributes: Dictionary to add attributes to
@@ -485,8 +486,11 @@ def add_average_price_attributes(
         window_start = now
         window_end = now + timedelta(hours=24)
 
-    # Find all intervals in the window and get first/last timestamps
+    # Find all intervals in the window
     intervals_in_window = []
+    extreme_interval = None  # Track interval with min/max for min/max sensors
+    is_min_max_sensor = "min" in key or "max" in key
+
     for price_data in all_prices:
         starts_at = dt_util.parse_datetime(price_data["startsAt"])
         if starts_at is None:
@@ -495,10 +499,47 @@ def add_average_price_attributes(
         if window_start <= starts_at < window_end:
             intervals_in_window.append(price_data)
 
-    # Add timestamp attribute (first interval in the window)
+            # Track extreme interval for min/max sensors
+            if is_min_max_sensor:
+                extreme_interval = _update_extreme_interval(extreme_interval, price_data, key)
+
+    # Add timestamp attribute
     if intervals_in_window:
-        attributes["timestamp"] = intervals_in_window[0].get("startsAt")
+        # For min/max sensors: use the timestamp of the interval with extreme price
+        # For average sensors: use first interval in the window
+        if extreme_interval and is_min_max_sensor:
+            attributes["timestamp"] = extreme_interval.get("startsAt")
+        else:
+            attributes["timestamp"] = intervals_in_window[0].get("startsAt")
+
         attributes["interval_count"] = len(intervals_in_window)
+
+
+def _update_extreme_interval(extreme_interval: dict | None, price_data: dict, key: str) -> dict:
+    """
+    Update extreme interval for min/max sensors.
+
+    Args:
+        extreme_interval: Current extreme interval or None
+        price_data: New price data to compare
+        key: Sensor key to determine if min or max
+
+    Returns:
+        Updated extreme interval
+
+    """
+    if extreme_interval is None:
+        return price_data
+
+    price = price_data.get("total")
+    extreme_price = extreme_interval.get("total")
+
+    if price is None or extreme_price is None:
+        return extreme_interval
+
+    is_new_extreme = ("min" in key and price < extreme_price) or ("max" in key and price > extreme_price)
+
+    return price_data if is_new_extreme else extreme_interval
 
 
 def add_next_avg_attributes(
@@ -724,7 +765,21 @@ def add_volatility_type_attributes(
         thresholds: Volatility thresholds configuration
 
     """
-    if volatility_type == "today_tomorrow":
+    # Add timestamp for calendar day volatility sensors (midnight of the day)
+    if volatility_type == "today":
+        today_data = price_info.get("today", [])
+        if today_data:
+            volatility_attributes["timestamp"] = today_data[0].get("startsAt")
+    elif volatility_type == "tomorrow":
+        tomorrow_data = price_info.get("tomorrow", [])
+        if tomorrow_data:
+            volatility_attributes["timestamp"] = tomorrow_data[0].get("startsAt")
+    elif volatility_type == "today_tomorrow":
+        # For combined today+tomorrow, use today's midnight
+        today_data = price_info.get("today", [])
+        if today_data:
+            volatility_attributes["timestamp"] = today_data[0].get("startsAt")
+
         # Add breakdown for today vs tomorrow
         today_prices = [float(p["total"]) for p in price_info.get("today", []) if "total" in p]
         tomorrow_prices = [float(p["total"]) for p in price_info.get("tomorrow", []) if "total" in p]
@@ -742,7 +797,6 @@ def add_volatility_type_attributes(
             volatility_attributes["tomorrow_spread"] = round(tomorrow_spread, 2)
             volatility_attributes["tomorrow_volatility"] = tomorrow_vol
             volatility_attributes["interval_count_tomorrow"] = len(tomorrow_prices)
-
     elif volatility_type == "next_24h":
         # Add time window info
         now = dt_util.now()

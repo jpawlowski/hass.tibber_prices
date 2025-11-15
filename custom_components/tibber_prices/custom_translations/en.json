@@ -15,12 +15,12 @@
             "long_description": "Shows the price for the previous 15-minute interval from your Tibber subscription",
             "usage_tips": "Use this to review past price changes or track price history"
         },
-        "current_hour_average": {
+        "current_hour_average_price": {
             "description": "Rolling 5-interval average price per kWh",
             "long_description": "Shows the average price per kWh calculated from 5 intervals: 2 previous, current, and 2 next intervals (approximately 75 minutes total). This provides a smoothed 'hour price' that adapts as time moves, rather than being fixed to clock hours.",
             "usage_tips": "Use this for a more stable price indicator that smooths out short-term fluctuations while still being responsive to price changes. Better than fixed hourly prices for making consumption decisions."
         },
-        "next_hour_average": {
+        "next_hour_average_price": {
             "description": "Rolling 5-interval average price for next hour per kWh",
             "long_description": "Shows the average price per kWh calculated from 5 intervals centered one hour ahead: approximately intervals +2 through +6 from now (covering minutes +30 to +105). This provides a forward-looking smoothed 'hour price' for planning consumption.",
             "usage_tips": "Use this to anticipate price changes in the next hour. Helpful for scheduling high-consumption activities like charging electric vehicles, running dishwashers, or heating systems."
@@ -167,8 +167,8 @@
         },
         "next_avg_1h": {
             "description": "Average price for the next 1 hour (forward-only from next interval)",
-            "long_description": "Forward-looking average: Shows average of next 4 intervals (1 hour) starting from the NEXT 15-minute interval (not including current). Different from current_hour_average which includes past intervals. Use for absolute price threshold planning.",
-            "usage_tips": "Absolute price threshold: Only start appliances when average stays below your maximum acceptable price (e.g., below 0.25 EUR/kWh). Combine with trend sensor for optimal timing. Note: This is NOT a replacement for hourly prices - use current_hour_average for that."
+            "long_description": "Forward-looking average: Shows average of next 4 intervals (1 hour) starting from the NEXT 15-minute interval (not including current). Different from current_hour_average_price which includes past intervals. Use for absolute price threshold planning.",
+            "usage_tips": "Absolute price threshold: Only start appliances when average stays below your maximum acceptable price (e.g., below 0.25 EUR/kWh). Combine with trend sensor for optimal timing. Note: This is NOT a replacement for hourly prices - use current_hour_average_price for that."
         },
         "next_avg_2h": {
             "description": "Average price for the next 2 hours",

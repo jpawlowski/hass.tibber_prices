@@ -166,8 +166,8 @@ class TibberPricesSensor(TibberPricesEntity, SensorEntity):
             "current_hour_price_level": lambda: self._get_rolling_hour_value(hour_offset=0, value_type="level"),
             "next_hour_price_level": lambda: self._get_rolling_hour_value(hour_offset=1, value_type="level"),
             # Rolling hour average (5 intervals: 2 before + current + 2 after)
-            "current_hour_average": lambda: self._get_rolling_hour_value(hour_offset=0, value_type="price"),
-            "next_hour_average": lambda: self._get_rolling_hour_value(hour_offset=1, value_type="price"),
+            "current_hour_average_price": lambda: self._get_rolling_hour_value(hour_offset=0, value_type="price"),
+            "next_hour_average_price": lambda: self._get_rolling_hour_value(hour_offset=1, value_type="price"),
             "current_hour_price_rating": lambda: self._get_rolling_hour_value(hour_offset=0, value_type="rating"),
             "next_hour_price_rating": lambda: self._get_rolling_hour_value(hour_offset=1, value_type="rating"),
             # ================================================================
@@ -1105,8 +1105,8 @@ class TibberPricesSensor(TibberPricesEntity, SensorEntity):
 
     def _get_rolling_hour_level_for_cached_data(self, key: str) -> str | None:
         """Get rolling hour level for cached data if needed for icon color."""
-        if key in ["current_hour_average", "next_hour_average"]:
-            hour_offset = 0 if key == "current_hour_average" else 1
+        if key in ["current_hour_average_price", "next_hour_average_price"]:
+            hour_offset = 0 if key == "current_hour_average_price" else 1
             result = self._get_rolling_hour_value(hour_offset=hour_offset, value_type="level")
             return result if isinstance(result, str) else None
         return None

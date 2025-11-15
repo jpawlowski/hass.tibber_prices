@@ -13,6 +13,10 @@ from custom_components.tibber_prices.const import (
     VOLATILITY_ICON_MAPPING,
 )
 from custom_components.tibber_prices.price_utils import find_price_data_for_interval
+from custom_components.tibber_prices.sensor.helpers import (
+    aggregate_level_data,
+    find_rolling_hour_center_index,
+)
 from homeassistant.util import dt as dt_util
 
 if TYPE_CHECKING:
@@ -74,8 +78,9 @@ def get_price_sensor_icon(key: str, coordinator_data: dict | None) -> str | None
     """
     Get icon for current price sensors (dynamic based on price level).
 
-    Only current_interval_price and current_hour_average have dynamic icons.
-    Other price sensors (next/previous) use static icons from entity description.
+    Dynamic icons for: current_interval_price, next_interval_price,
+                      current_hour_average_price, next_hour_average_price
+    Other price sensors (previous interval) use static icons from entity description.
 
     Args:
         key: Entity description key
@@ -93,10 +98,21 @@ def get_price_sensor_icon(key: str, coordinator_data: dict | None) -> str | None
         level = get_price_level_for_icon(coordinator_data, interval_offset=0)
         if level:
             return PRICE_LEVEL_CASH_ICON_MAPPING.get(level.upper())
-    elif key == "current_hour_average":
-        # For hour average, we cannot use this helper (needs sensor rolling hour logic)
-        # Return None and let sensor handle it
-        return None
+    elif key == "next_interval_price":
+        # For next interval, use the next interval price level to determine icon
+        level = get_price_level_for_icon(coordinator_data, interval_offset=1)
+        if level:
+            return PRICE_LEVEL_CASH_ICON_MAPPING.get(level.upper())
+    elif key == "current_hour_average_price":
+        # For current hour average, use the current hour price level to determine icon
+        level = get_rolling_hour_price_level_for_icon(coordinator_data, hour_offset=0)
+        if level:
+            return PRICE_LEVEL_CASH_ICON_MAPPING.get(level.upper())
+    elif key == "next_hour_average_price":
+        # For next hour average, use the next hour price level to determine icon
+        level = get_rolling_hour_price_level_for_icon(coordinator_data, hour_offset=1)
+        if level:
+            return PRICE_LEVEL_CASH_ICON_MAPPING.get(level.upper())
 
     # For all other price sensors, let entity description handle the icon
     return None
@@ -210,3 +226,54 @@ def get_price_level_for_icon(
         return None
 
     return interval_data["level"]
+
+
+def get_rolling_hour_price_level_for_icon(
+    coordinator_data: dict,
+    *,
+    hour_offset: int = 0,
+) -> str | None:
+    """
+    Get the aggregated price level for rolling hour icon determination.
+
+    Uses the same logic as the sensor platform: 5-interval rolling window
+    (2 before + center + 2 after) to determine the price level.
+
+    This ensures icon calculation matches the actual sensor value calculation.
+
+    Args:
+        coordinator_data: Coordinator data
+        hour_offset: Hour offset (0=current hour, 1=next hour)
+
+    Returns:
+        Aggregated price level string or None if not found
+
+    """
+    if not coordinator_data:
+        return None
+
+    price_info = coordinator_data.get("priceInfo", {})
+    all_prices = price_info.get("yesterday", []) + price_info.get("today", []) + price_info.get("tomorrow", [])
+
+    if not all_prices:
+        return None
+
+    # Find center index using the same helper function as the sensor platform
+    now = dt_util.now()
+    center_idx = find_rolling_hour_center_index(all_prices, now, hour_offset)
+
+    if center_idx is None:
+        return None
+
+    # Collect data from 5-interval window (-2, -1, 0, +1, +2) - same as sensor platform
+    window_data = []
+    for offset in range(-2, 3):
+        idx = center_idx + offset
+        if 0 <= idx < len(all_prices):
+            window_data.append(all_prices[idx])
+
+    if not window_data:
+        return None
+
+    # Use the same aggregation function as the sensor platform
+    return aggregate_level_data(window_data)

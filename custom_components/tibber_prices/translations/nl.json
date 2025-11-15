@@ -188,10 +188,10 @@
             "previous_interval_price": {
                 "name": "Vorige elektriciteitsprijs"
             },
-            "current_hour_average": {
+            "current_hour_average_price": {
                 "name": "Huidig uurgemiddelde prijs"
             },
-            "next_hour_average": {
+            "next_hour_average_price": {
                 "name": "Volgend uurgemiddelde prijs"
             },
             "current_interval_price_level": {

@@ -188,10 +188,10 @@
             "previous_interval_price": {
                 "name": "Föregående elpris"
             },
-            "current_hour_average": {
+            "current_hour_average_price": {
                 "name": "Nuvarande timgenomsnitt pris"
             },
-            "next_hour_average": {
+            "next_hour_average_price": {
                 "name": "Nästa timgenomsnitt pris"
             },
             "current_interval_price_level": {

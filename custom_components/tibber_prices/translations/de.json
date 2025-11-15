@@ -192,10 +192,10 @@
             "previous_interval_price": {
                 "name": "Vorheriger Preis"
             },
-            "current_hour_average": {
+            "current_hour_average_price": {
                 "name": "Aktueller Stunden-Durchschnittspreis"
             },
-            "next_hour_average": {
+            "next_hour_average_price": {
                 "name": "Nächster Stunden-Durchschnittspreis"
             },
             "current_interval_price_level": {

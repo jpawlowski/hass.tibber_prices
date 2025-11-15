@@ -188,10 +188,10 @@
             "previous_interval_price": {
                 "name": "Previous Electricity Price"
             },
-            "current_hour_average": {
+            "current_hour_average_price": {
                 "name": "Current Hour Average Price"
             },
-            "next_hour_average": {
+            "next_hour_average_price": {
                 "name": "Next Hour Average Price"
             },
             "current_interval_price_level": {

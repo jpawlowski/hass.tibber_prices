@@ -15,12 +15,12 @@
             "long_description": "Toont de prijs voor het vorige 15-minuten interval van uw Tibber-abonnement",
             "usage_tips": "Gebruik dit om eerdere prijswijzigingen te bekijken of prijsgeschiedenis bij te houden"
         },
-        "current_hour_average": {
+        "current_hour_average_price": {
             "description": "Voortschrijdend 5-interval gemiddelde prijs per kWh",
             "long_description": "Toont de gemiddelde prijs per kWh berekend uit 5 intervallen: 2 vorige, huidige en 2 volgende intervallen (ongeveer 75 minuten totaal). Dit biedt een vloeiende 'uurprijs' die zich aanpast naarmate de tijd verstrijkt, in plaats van vast te zitten aan klokuren.",
             "usage_tips": "Gebruik dit voor een stabielere prijsindicator die korte schommelingen afvlakt terwijl deze nog steeds reageert op prijswijzigingen. Beter dan vaste uurprijzen voor verbruiksbeslissingen."
         },
-        "next_hour_average": {
+        "next_hour_average_price": {
             "description": "Voortschrijdend 5-interval gemiddelde prijs voor volgend uur per kWh",
             "long_description": "Toont de gemiddelde prijs per kWh berekend uit 5 intervallen gecentreerd één uur vooruit: ongeveer intervallen +2 tot +6 vanaf nu (dekking van minuten +30 tot +105). Dit biedt een vooruitkijkende vloeiende 'uurprijs' voor verbruiksplanning.",
             "usage_tips": "Gebruik dit om prijswijzigingen in het volgende uur te anticiperen. Handig voor het plannen van activiteiten met hoog verbruik zoals het opladen van elektrische voertuigen, het draaien van vaatwassers of verwarmingssystemen."
@@ -167,8 +167,8 @@
         },
         "next_avg_1h": {
             "description": "Gemiddelde prijs voor het volgende 1 uur (alleen vooruit vanaf volgend interval)",
-            "long_description": "Vooruitkijkend gemiddelde: Toont gemiddelde van volgende 4 intervallen (1 uur) vanaf het VOLGENDE 15-minuten interval (niet inclusief huidig). Verschilt van current_hour_average die vorige intervallen omvat. Gebruik voor absolute prijsdrempelplanning.",
-            "usage_tips": "Absolute prijsdrempel: Start apparaten alleen wanneer het gemiddelde onder uw maximaal acceptabele prijs blijft (bijv. onder 0,25 EUR/kWh). Combineer met trendsensor voor optimale timing. Let op: Dit is GEEN vervanging voor uurprijzen - gebruik current_hour_average daarvoor."
+            "long_description": "Vooruitkijkend gemiddelde: Toont gemiddelde van volgende 4 intervallen (1 uur) vanaf het VOLGENDE 15-minuten interval (niet inclusief huidig). Verschilt van current_hour_average_price die vorige intervallen omvat. Gebruik voor absolute prijsdrempelplanning.",
+            "usage_tips": "Absolute prijsdrempel: Start apparaten alleen wanneer het gemiddelde onder uw maximaal acceptabele prijs blijft (bijv. onder 0,25 EUR/kWh). Combineer met trendsensor voor optimale timing. Let op: Dit is GEEN vervanging voor uurprijzen - gebruik current_hour_average_price daarvoor."
         },
         "next_avg_2h": {
             "description": "Gemiddelde prijs voor de volgende 2 uur",

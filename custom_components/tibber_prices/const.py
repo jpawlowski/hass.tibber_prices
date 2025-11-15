@@ -267,7 +267,7 @@ PRICE_LEVEL_COLOR_MAPPING = {
 }
 
 # Icon mapping for current price sensors (dynamic icons based on price level)
-# Used by current_interval_price and current_hour_average sensors
+# Used by current_interval_price and current_hour_average_price sensors
 # Icon shows price level (cheap/normal/expensive), icon_color reinforces with color
 PRICE_LEVEL_CASH_ICON_MAPPING = {
     PRICE_LEVEL_VERY_CHEAP: "mdi:cash-multiple",  # Many coins (save a lot!)
