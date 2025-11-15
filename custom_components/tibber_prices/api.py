@@ -435,7 +435,7 @@ class TibberPricesApiClient:
         for home in homes:
             home_id = home.get("id")
             if home_id:
-                if "currentSubscription" in home:
+                if "currentSubscription" in home and home["currentSubscription"] is not None:
                     # Extract currency from consumption data if available
                     currency = None
                     if home.get("consumption"):
@@ -448,6 +448,10 @@ class TibberPricesApiClient:
                         currency,
                     )
                 else:
+                    _LOGGER.debug(
+                        "Home %s has no active subscription - price data will be unavailable",
+                        home_id,
+                    )
                     homes_data[home_id] = {}
 
         data["homes"] = homes_data
@@ -473,9 +477,13 @@ class TibberPricesApiClient:
         for home in homes:
             home_id = home.get("id")
             if home_id:
-                if "currentSubscription" in home:
+                if "currentSubscription" in home and home["currentSubscription"] is not None:
                     homes_data[home_id] = _flatten_price_rating(home["currentSubscription"])
                 else:
+                    _LOGGER.debug(
+                        "Home %s has no active subscription - daily rating data will be unavailable",
+                        home_id,
+                    )
                     homes_data[home_id] = {}
 
         data["homes"] = homes_data
@@ -501,9 +509,13 @@ class TibberPricesApiClient:
         for home in homes:
             home_id = home.get("id")
             if home_id:
-                if "currentSubscription" in home:
+                if "currentSubscription" in home and home["currentSubscription"] is not None:
                     homes_data[home_id] = _flatten_price_rating(home["currentSubscription"])
                 else:
+                    _LOGGER.debug(
+                        "Home %s has no active subscription - hourly rating data will be unavailable",
+                        home_id,
+                    )
                     homes_data[home_id] = {}
 
         data["homes"] = homes_data
@@ -529,9 +541,13 @@ class TibberPricesApiClient:
         for home in homes:
             home_id = home.get("id")
             if home_id:
-                if "currentSubscription" in home:
+                if "currentSubscription" in home and home["currentSubscription"] is not None:
                     homes_data[home_id] = _flatten_price_rating(home["currentSubscription"])
                 else:
+                    _LOGGER.debug(
+                        "Home %s has no active subscription - monthly rating data will be unavailable",
+                        home_id,
+                    )
                     homes_data[home_id] = {}
 
         data["homes"] = homes_data
