@@ -136,6 +136,7 @@ INTERVAL_RATING_SENSORS = (
         device_class=SensorDeviceClass.ENUM,
         state_class=None,  # Enum values: no statistics
         options=["low", "normal", "high"],
+        entity_registry_enabled_default=False,  # Level is more commonly used
     ),
     SensorEntityDescription(
         key="next_interval_price_rating",
@@ -145,6 +146,7 @@ INTERVAL_RATING_SENSORS = (
         device_class=SensorDeviceClass.ENUM,
         state_class=None,  # Enum values: no statistics
         options=["low", "normal", "high"],
+        entity_registry_enabled_default=False,  # Level is more commonly used
     ),
     SensorEntityDescription(
         key="previous_interval_price_rating",
@@ -222,6 +224,7 @@ ROLLING_HOUR_RATING_SENSORS = (
         device_class=SensorDeviceClass.ENUM,
         state_class=None,  # Enum values: no statistics
         options=["low", "normal", "high"],
+        entity_registry_enabled_default=False,  # Level is more commonly used
     ),
     SensorEntityDescription(
         key="next_hour_price_rating",
@@ -232,6 +235,7 @@ ROLLING_HOUR_RATING_SENSORS = (
         device_class=SensorDeviceClass.ENUM,
         state_class=None,  # Enum values: no statistics
         options=["low", "normal", "high"],
+        entity_registry_enabled_default=False,  # Level is more commonly used
     ),
 )
 
@@ -355,6 +359,7 @@ DAILY_RATING_SENSORS = (
         device_class=SensorDeviceClass.ENUM,
         state_class=None,  # Enum values: no statistics
         options=["low", "normal", "high"],
+        entity_registry_enabled_default=False,  # Level is more commonly used
     ),
     SensorEntityDescription(
         key="tomorrow_price_rating",
@@ -365,6 +370,7 @@ DAILY_RATING_SENSORS = (
         device_class=SensorDeviceClass.ENUM,
         state_class=None,  # Enum values: no statistics
         options=["low", "normal", "high"],
+        entity_registry_enabled_default=False,  # Level is more commonly used
     ),
 )
 
@@ -391,6 +397,7 @@ WINDOW_24H_SENSORS = (
         icon="mdi:chart-line-variant",
         device_class=SensorDeviceClass.MONETARY,
         state_class=SensorStateClass.TOTAL,  # MONETARY requires TOTAL or None
+        entity_registry_enabled_default=False,  # Advanced use case
         suggested_display_precision=1,
     ),
     SensorEntityDescription(
@@ -420,6 +427,7 @@ WINDOW_24H_SENSORS = (
         icon="mdi:arrow-collapse-down",
         device_class=SensorDeviceClass.MONETARY,
         state_class=SensorStateClass.TOTAL,  # MONETARY requires TOTAL or None
+        entity_registry_enabled_default=False,  # Advanced use case
         suggested_display_precision=1,
     ),
     SensorEntityDescription(
@@ -429,6 +437,7 @@ WINDOW_24H_SENSORS = (
         icon="mdi:arrow-collapse-up",
         device_class=SensorDeviceClass.MONETARY,
         state_class=SensorStateClass.TOTAL,  # MONETARY requires TOTAL or None
+        entity_registry_enabled_default=False,  # Advanced use case
         suggested_display_precision=1,
     ),
 )
@@ -635,6 +644,7 @@ VOLATILITY_SENSORS = (
         device_class=SensorDeviceClass.ENUM,
         state_class=None,  # Enum values: no statistics
         options=["low", "moderate", "high", "very_high"],
+        entity_registry_enabled_default=False,  # Today's volatility is usually sufficient
     ),
     SensorEntityDescription(
         key="next_24h_volatility",
@@ -645,6 +655,7 @@ VOLATILITY_SENSORS = (
         device_class=SensorDeviceClass.ENUM,
         state_class=None,  # Enum values: no statistics
         options=["low", "moderate", "high", "very_high"],
+        entity_registry_enabled_default=False,  # Advanced use case
     ),
     SensorEntityDescription(
         key="today_tomorrow_volatility",
@@ -655,6 +666,7 @@ VOLATILITY_SENSORS = (
         device_class=SensorDeviceClass.ENUM,
         state_class=None,  # Enum values: no statistics
         options=["low", "moderate", "high", "very_high"],
+        entity_registry_enabled_default=False,  # Advanced use case
     ),
 )
 
