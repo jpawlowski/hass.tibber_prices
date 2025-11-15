@@ -155,7 +155,7 @@
                 "submit": "Konfiguration abschließen"
             },
             "volatility": {
-                "title": "Preisvolatilität Schwellenwerte",
+                "title": "Volatilität Schwellenwerte",
                 "description": "{step_progress}\n\nKonfiguriere Schwellenwerte für die Volatilitätsklassifizierung. Volatilität misst relative Preisschwankungen anhand des Variationskoeffizienten (VK = Standardabweichung / Durchschnitt × 100%). Diese Schwellenwerte sind Prozentwerte, die für alle Preisniveaus funktionieren und von Volatilitätssensoren sowie Periodenfiltern verwendet werden.",
                 "data": {
                     "volatility_threshold_moderate": "Moderate Schwelle (VK ≥ dieser %, z.B. 15)",
@@ -196,10 +196,10 @@
                 "name": "Vorheriger Strompreis"
             },
             "current_hour_average_price": {
-                "name": "Aktueller Stunden-Durchschnittspreis"
+                "name": "⌀ Stunden-Preis aktuell"
             },
             "next_hour_average_price": {
-                "name": "Nächster Stunden-Durchschnittspreis"
+                "name": "⌀ Stunden-Preis nächste Stunde"
             },
             "current_interval_price_level": {
                 "name": "Aktuelles Preisniveau",
@@ -258,7 +258,7 @@
                 "name": "Höchstpreis heute"
             },
             "average_price_today": {
-                "name": "Durchschnittspreis heute"
+                "name": "⌀ Preis heute"
             },
             "lowest_price_tomorrow": {
                 "name": "Mindestpreis morgen"
@@ -267,7 +267,7 @@
                 "name": "Höchstpreis morgen"
             },
             "average_price_tomorrow": {
-                "name": "Durchschnittspreis morgen"
+                "name": "⌀ Preis morgen"
             },
             "yesterday_price_level": {
                 "name": "Preisniveau gestern",
@@ -324,10 +324,10 @@
                 }
             },
             "trailing_price_average": {
-                "name": "Nachlaufender 24h-Durchschnittspreis"
+                "name": "⌀ Preis nachlaufend 24h"
             },
             "leading_price_average": {
-                "name": "Vorlaufender 24h-Durchschnittspreis"
+                "name": "⌀ Preis vorlaufend 24h"
             },
             "trailing_price_min": {
                 "name": "Nachlaufender 24h-Mindestpreis"
@@ -382,28 +382,28 @@
                 }
             },
             "next_avg_1h": {
-                "name": "Durchschnittspreis nächste 1h"
+                "name": "⌀ Preis nächste 1h"
             },
             "next_avg_2h": {
-                "name": "Durchschnittspreis nächste 2h"
+                "name": "⌀ Preis nächste 2h"
             },
             "next_avg_3h": {
-                "name": "Durchschnittspreis nächste 3h"
+                "name": "⌀ Preis nächste 3h"
             },
             "next_avg_4h": {
-                "name": "Durchschnittspreis nächste 4h"
+                "name": "⌀ Preis nächste 4h"
             },
             "next_avg_5h": {
-                "name": "Durchschnittspreis nächste 5h"
+                "name": "⌀ Preis nächste 5h"
             },
             "next_avg_6h": {
-                "name": "Durchschnittspreis nächste 6h"
+                "name": "⌀ Preis nächste 6h"
             },
             "next_avg_8h": {
-                "name": "Durchschnittspreis nächste 8h"
+                "name": "⌀ Preis nächste 8h"
             },
             "next_avg_12h": {
-                "name": "Durchschnittspreis nächste 12h"
+                "name": "⌀ Preis nächste 12h"
             },
             "price_trend_1h": {
                 "name": "Preistrend (1h)",
@@ -479,7 +479,7 @@
                 "name": "Preisdaten-Ablauf"
             },
             "today_volatility": {
-                "name": "Preisvolatilität heute",
+                "name": "Volatilität heute",
                 "state": {
                     "low": "Niedrig",
                     "moderate": "Moderat",
@@ -488,7 +488,7 @@
                 }
             },
             "tomorrow_volatility": {
-                "name": "Preisvolatilität morgen",
+                "name": "Volatilität morgen",
                 "state": {
                     "low": "Niedrig",
                     "moderate": "Moderat",
@@ -497,7 +497,7 @@
                 }
             },
             "next_24h_volatility": {
-                "name": "Preisvolatilität der nächsten 24h",
+                "name": "Volatilität der nächsten 24h",
                 "state": {
                     "low": "Niedrig",
                     "moderate": "Moderat",
@@ -506,7 +506,7 @@
                 }
             },
             "today_tomorrow_volatility": {
-                "name": "Preisvolatilität heute+morgen",
+                "name": "Volatilität heute+morgen",
                 "state": {
                     "low": "Niedrig",
                     "moderate": "Moderat",

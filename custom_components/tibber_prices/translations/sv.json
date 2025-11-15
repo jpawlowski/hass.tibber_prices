@@ -186,16 +186,16 @@
                 "name": "Nuvarande elpris (Energipanel)"
             },
             "next_interval_price": {
-                "name": "Nästa pris"
+                "name": "Nästa elpris"
             },
             "previous_interval_price": {
                 "name": "Föregående elpris"
             },
             "current_hour_average_price": {
-                "name": "Nuvarande timgenomsnitt pris"
+                "name": "⌀ Timpris nuvarande"
             },
             "next_hour_average_price": {
-                "name": "Nästa timgenomsnitt pris"
+                "name": "⌀ Timpris nästa"
             },
             "current_interval_price_level": {
                 "name": "Nuvarande prisnivå",
@@ -254,7 +254,7 @@
                 "name": "Dagens högsta pris"
             },
             "average_price_today": {
-                "name": "Dagens genomsnittspris"
+                "name": "⌀ Pris idag"
             },
             "lowest_price_tomorrow": {
                 "name": "Morgondagens lägsta pris"
@@ -263,7 +263,7 @@
                 "name": "Morgondagens högsta pris"
             },
             "average_price_tomorrow": {
-                "name": "Morgondagens genomsnittspris"
+                "name": "⌀ Pris imorgon"
             },
             "yesterday_price_level": {
                 "name": "Prisnivå igår",
@@ -320,10 +320,10 @@
                 }
             },
             "trailing_price_average": {
-                "name": "Rullande 24t genomsnittspris"
+                "name": "⌀ Pris rullande 24t"
             },
             "leading_price_average": {
-                "name": "Framåtblickande 24t genomsnittspris"
+                "name": "⌀ Pris framåtblickande 24t"
             },
             "trailing_price_min": {
                 "name": "Rullande 24t minimumpris"
@@ -378,28 +378,28 @@
                 }
             },
             "next_avg_1h": {
-                "name": "Nästa 1t genomsnittspris"
+                "name": "⌀ Pris nästa 1t"
             },
             "next_avg_2h": {
-                "name": "Nästa 2t genomsnittspris"
+                "name": "⌀ Pris nästa 2t"
             },
             "next_avg_3h": {
-                "name": "Nästa 3t genomsnittspris"
+                "name": "⌀ Pris nästa 3t"
             },
             "next_avg_4h": {
-                "name": "Nästa 4t genomsnittspris"
+                "name": "⌀ Pris nästa 4t"
             },
             "next_avg_5h": {
-                "name": "Nästa 5t genomsnittspris"
+                "name": "⌀ Pris nästa 5t"
             },
             "next_avg_6h": {
-                "name": "Nästa 6t genomsnittspris"
+                "name": "⌀ Pris nästa 6t"
             },
             "next_avg_8h": {
-                "name": "Nästa 8t genomsnittspris"
+                "name": "⌀ Pris nästa 8t"
             },
             "next_avg_12h": {
-                "name": "Nästa 12t genomsnittspris"
+                "name": "⌀ Pris nästa 12t"
             },
             "price_trend_1h": {
                 "name": "Pristrend (1t)",

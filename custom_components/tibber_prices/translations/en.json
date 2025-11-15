@@ -192,10 +192,10 @@
                 "name": "Previous Electricity Price"
             },
             "current_hour_average_price": {
-                "name": "Current Hour Average Price"
+                "name": "⌀ Hourly Price Current"
             },
             "next_hour_average_price": {
-                "name": "Next Hour Average Price"
+                "name": "⌀ Hourly Price Next"
             },
             "current_interval_price_level": {
                 "name": "Current Price Level",
@@ -254,7 +254,7 @@
                 "name": "Today's Highest Price"
             },
             "average_price_today": {
-                "name": "Today's Average Price"
+                "name": "⌀ Price Today"
             },
             "lowest_price_tomorrow": {
                 "name": "Tomorrow's Lowest Price"
@@ -263,7 +263,7 @@
                 "name": "Tomorrow's Highest Price"
             },
             "average_price_tomorrow": {
-                "name": "Tomorrow's Average Price"
+                "name": "⌀ Price Tomorrow"
             },
             "yesterday_price_level": {
                 "name": "Yesterday's Price Level",
@@ -320,10 +320,10 @@
                 }
             },
             "trailing_price_average": {
-                "name": "Trailing 24h Average Price"
+                "name": "⌀ Price Trailing 24h"
             },
             "leading_price_average": {
-                "name": "Leading 24h Average Price"
+                "name": "⌀ Price Leading 24h"
             },
             "trailing_price_min": {
                 "name": "Trailing 24h Minimum Price"
@@ -378,28 +378,28 @@
                 }
             },
             "next_avg_1h": {
-                "name": "Next 1h Average Price"
+                "name": "⌀ Price Next 1h"
             },
             "next_avg_2h": {
-                "name": "Next 2h Average Price"
+                "name": "⌀ Price Next 2h"
             },
             "next_avg_3h": {
-                "name": "Next 3h Average Price"
+                "name": "⌀ Price Next 3h"
             },
             "next_avg_4h": {
-                "name": "Next 4h Average Price"
+                "name": "⌀ Price Next 4h"
             },
             "next_avg_5h": {
-                "name": "Next 5h Average Price"
+                "name": "⌀ Price Next 5h"
             },
             "next_avg_6h": {
-                "name": "Next 6h Average Price"
+                "name": "⌀ Price Next 6h"
             },
             "next_avg_8h": {
-                "name": "Next 8h Average Price"
+                "name": "⌀ Price Next 8h"
             },
             "next_avg_12h": {
-                "name": "Next 12h Average Price"
+                "name": "⌀ Price Next 12h"
             },
             "price_trend_1h": {
                 "name": "Price Trend (1h)",

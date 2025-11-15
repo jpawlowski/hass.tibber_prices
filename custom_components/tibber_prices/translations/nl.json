@@ -186,16 +186,16 @@
                 "name": "Huidige elektriciteitsprijs (Energie-dashboard)"
             },
             "next_interval_price": {
-                "name": "Volgende prijs"
+                "name": "Volgende elektriciteitsprijs"
             },
             "previous_interval_price": {
                 "name": "Vorige elektriciteitsprijs"
             },
             "current_hour_average_price": {
-                "name": "Huidig uurgemiddelde prijs"
+                "name": "⌀ Uurprijs huidig"
             },
             "next_hour_average_price": {
-                "name": "Volgend uurgemiddelde prijs"
+                "name": "⌀ Uurprijs volgend"
             },
             "current_interval_price_level": {
                 "name": "Huidig prijsniveau",
@@ -254,7 +254,7 @@
                 "name": "Hoogste prijs vandaag"
             },
             "average_price_today": {
-                "name": "Gemiddelde prijs vandaag"
+                "name": "⌀ Prijs vandaag"
             },
             "lowest_price_tomorrow": {
                 "name": "Laagste prijs morgen"
@@ -263,7 +263,7 @@
                 "name": "Hoogste prijs morgen"
             },
             "average_price_tomorrow": {
-                "name": "Gemiddelde prijs morgen"
+                "name": "⌀ Prijs morgen"
             },
             "yesterday_price_level": {
                 "name": "Prijsniveau gisteren",
@@ -320,10 +320,10 @@
                 }
             },
             "trailing_price_average": {
-                "name": "Voortschrijdend 24u gemiddelde prijs"
+                "name": "⌀ Prijs voortschrijdend 24u"
             },
             "leading_price_average": {
-                "name": "Vooruitlopend 24u gemiddelde prijs"
+                "name": "⌀ Prijs vooruitlopend 24u"
             },
             "trailing_price_min": {
                 "name": "Voortschrijdend 24u minimumprijs"
@@ -378,28 +378,28 @@
                 }
             },
             "next_avg_1h": {
-                "name": "Volgende 1u gemiddelde prijs"
+                "name": "⌀ Prijs volgende 1u"
             },
             "next_avg_2h": {
-                "name": "Volgende 2u gemiddelde prijs"
+                "name": "⌀ Prijs volgende 2u"
             },
             "next_avg_3h": {
-                "name": "Volgende 3u gemiddelde prijs"
+                "name": "⌀ Prijs volgende 3u"
             },
             "next_avg_4h": {
-                "name": "Volgende 4u gemiddelde prijs"
+                "name": "⌀ Prijs volgende 4u"
             },
             "next_avg_5h": {
-                "name": "Volgende 5u gemiddelde prijs"
+                "name": "⌀ Prijs volgende 5u"
             },
             "next_avg_6h": {
-                "name": "Volgende 6u gemiddelde prijs"
+                "name": "⌀ Prijs volgende 6u"
             },
             "next_avg_8h": {
-                "name": "Volgende 8u gemiddelde prijs"
+                "name": "⌀ Prijs volgende 8u"
             },
             "next_avg_12h": {
-                "name": "Volgende 12u gemiddelde prijs"
+                "name": "⌀ Prijs volgende 12u"
             },
             "price_trend_1h": {
                 "name": "Prijstrend (1u)",
