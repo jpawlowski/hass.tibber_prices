@@ -4,8 +4,8 @@ This is a **Home Assistant custom component** for Tibber electricity price data,
 
 ## Documentation Metadata
 
--   **Last Major Update**: 2025-11-11
--   **Last Architecture Review**: 2025-11-11 (Logging guidelines completely rewritten - hierarchical indentation, INFO/DEBUG/WARNING patterns, configuration context headers. User documentation quality principles added based on period-calculation.md rewrite. Documentation Writing Strategy added - explaining how live development + user feedback creates better docs than cold code analysis.)
+-   **Last Major Update**: 2025-11-15
+-   **Last Architecture Review**: 2025-11-15 (Sensor.py refactoring completed - unified handler methods for interval/rolling hour/daily stats/24h windows. Sensor organization changed from feature-type to calculation-method grouping. Common Tasks section updated with new patterns.)
 -   **Documentation Status**: ✅ Current (verified against codebase)
 
 _Note: When proposing significant updates to this file, update the metadata above with the new date and brief description of changes._
@@ -179,6 +179,12 @@ This ensures the documentation stays accurate and useful as the codebase evolves
       "rating_level": "NORMAL"      # Added: LOW/NORMAL/HIGH based on thresholds
     }
     ```
+-   **Sensor organization (refactored Nov 2025)**: Sensors in `sensor.py` are grouped by **calculation method** rather than feature type, enabling code reuse through unified handler methods:
+    -   **Interval-based sensors**: Use `_get_interval_value(interval_offset, value_type)` for current/next/previous interval data
+    -   **Rolling hour sensors**: Use `_get_rolling_hour_value(hour_offset, value_type)` for 5-interval windows
+    -   **Daily statistics**: Use `_get_daily_stat_value(day, stat_func)` for calendar day min/max/avg
+    -   **24h windows**: Use `_get_24h_window_value(stat_func)` for trailing/leading statistics
+    -   **See "Common Tasks" section** for detailed patterns and examples
 -   **Quarter-hour precision**: Entities update on 00/15/30/45-minute boundaries via `_schedule_quarter_hour_refresh()` in coordinator, not just on data fetch intervals. This ensures current price sensors update without waiting for the next API poll.
 -   **Currency handling**: Multi-currency support with major/minor units (e.g., EUR/ct, NOK/øre) via `get_currency_info()` and `format_price_unit_*()` in `const.py`.
 -   **Intelligent caching strategy**: Minimizes API calls while ensuring data freshness:
@@ -1750,10 +1756,110 @@ If the answer to any is "no", make the name more explicit.
 
 **Add a new sensor:**
 
-1. Define entity description in `sensor.py` (add to `SENSOR_TYPES`)
-2. Add translation keys to `/translations/en.json` and `/custom_translations/en.json`
-3. Sync all language files
-4. Implement `@property` methods in `TibberPricesSensor` class
+After the sensor.py refactoring (completed Nov 2025), sensors are organized by **calculation method** rather than feature type. Follow these steps:
+
+1. **Determine calculation pattern** - Choose which group your sensor belongs to:
+
+    - **Interval-based**: Uses time offset from current interval (e.g., current/next/previous)
+    - **Rolling hour**: Aggregates 5-interval window (2 before + center + 2 after)
+    - **Daily statistics**: Min/max/avg within calendar day boundaries
+    - **24h windows**: Trailing/leading from current interval
+    - **Future forecast**: N-hour windows starting from next interval
+    - **Volatility**: Statistical analysis of price variation
+    - **Diagnostic**: System information and metadata
+
+2. **Add entity description** to appropriate sensor group in `sensor.py`:
+
+    - `INTERVAL_PRICE_SENSORS`, `INTERVAL_LEVEL_SENSORS`, or `INTERVAL_RATING_SENSORS`
+    - `ROLLING_HOUR_PRICE_SENSORS`, `ROLLING_HOUR_LEVEL_SENSORS`, or `ROLLING_HOUR_RATING_SENSORS`
+    - `DAILY_STAT_SENSORS`
+    - `WINDOW_24H_SENSORS`
+    - `FUTURE_AVG_SENSORS` or `FUTURE_TREND_SENSORS`
+    - `VOLATILITY_SENSORS`
+    - `DIAGNOSTIC_SENSORS`
+
+3. **Add handler mapping** in `_get_value_getter()` method:
+
+    - For interval-based: Use `_get_interval_value(interval_offset, value_type)`
+    - For rolling hour: Use `_get_rolling_hour_value(hour_offset, value_type)`
+    - For daily stats: Use `_get_daily_stat_value(day, stat_func)`
+    - For 24h windows: Use `_get_24h_window_value(stat_func)`
+    - For others: Implement specific handler if needed
+
+4. **Add translation keys** to `/translations/en.json` and `/custom_translations/en.json`
+
+5. **Sync all language files** (de, nb, nl, sv)
+
+**Example - Adding a "2 hours ago" interval sensor:**
+
+```python
+# 1. Add to INTERVAL_PRICE_SENSORS group in sensor.py
+SensorEntityDescription(
+    key="two_hours_ago_price",
+    translation_key="two_hours_ago_price",
+    name="Price 2 Hours Ago",
+    icon="mdi:clock-time-eight",
+    device_class=SensorDeviceClass.MONETARY,
+    entity_registry_enabled_default=False,
+    suggested_display_precision=2,
+)
+
+# 2. Add handler in _get_value_getter()
+"two_hours_ago_price": lambda: self._get_interval_value(
+    interval_offset=-8,  # 2 hours = 8 intervals (15 min each)
+    value_type="price",
+    in_euro=False
+),
+
+# 3. Add translations (en.json)
+{
+  "entity": {
+    "sensor": {
+      "two_hours_ago_price": {
+        "name": "Price 2 Hours Ago"
+      }
+    }
+  }
+}
+
+# 4. Add custom translations (custom_translations/en.json)
+{
+  "sensor": {
+    "two_hours_ago_price": {
+      "description": "Electricity price from 2 hours ago"
+    }
+  }
+}
+```
+
+**Unified Handler Methods (Post-Refactoring):**
+
+The refactoring consolidated duplicate logic into unified methods:
+
+-   **`_get_interval_value(interval_offset, value_type, in_euro=False)`**
+
+    -   Replaces: `_get_interval_price_value()`, `_get_interval_level_value()`, `_get_interval_rating_value()`
+    -   Handles: All interval-based sensors (current/next/previous)
+    -   Returns: Price (float), level (str), or rating (str) based on value_type
+
+-   **`_get_rolling_hour_value(hour_offset, value_type)`**
+
+    -   Replaces: `_get_rolling_hour_average_value()`, `_get_rolling_hour_level_value()`, `_get_rolling_hour_rating_value()`
+    -   Handles: All 5-interval rolling hour windows
+    -   Returns: Aggregated value (average price, aggregated level/rating)
+
+-   **`_get_daily_stat_value(day, stat_func)`**
+
+    -   Replaces: `_get_statistics_value()` (calendar day portion)
+    -   Handles: Min/max/avg for calendar days (today/tomorrow)
+    -   Returns: Price in minor currency units (cents/øre)
+
+-   **`_get_24h_window_value(stat_func)`**
+    -   Replaces: `_get_average_value()`, `_get_minmax_value()`
+    -   Handles: Trailing/leading 24h window statistics
+    -   Returns: Price in minor currency units (cents/øre)
+
+Legacy wrapper methods still exist for backward compatibility but will be removed in a future cleanup phase.
 
 **Modify price calculations:**
 Edit `price_utils.py` or `average_utils.py`. These are stateless pure functions operating on price lists.

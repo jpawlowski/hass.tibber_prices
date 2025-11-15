@@ -18,11 +18,9 @@ from .average_utils import (
     calculate_current_leading_avg,
     calculate_current_leading_max,
     calculate_current_leading_min,
-    calculate_current_rolling_5interval_avg,
     calculate_current_trailing_avg,
     calculate_current_trailing_max,
     calculate_current_trailing_min,
-    calculate_next_hour_rolling_5interval_avg,
     calculate_next_n_hours_avg,
 )
 from .const import (
@@ -77,8 +75,31 @@ INTERVALS_PER_HOUR = 4  # 15-minute intervals
 MAX_FORECAST_INTERVALS = 8  # Show up to 8 future intervals (2 hours with 15-min intervals)
 MIN_HOURS_FOR_LATER_HALF = 3  # Minimum hours needed to calculate later half average
 
-# Main price sensors that users will typically use in automations
-PRICE_SENSORS = (
+# ============================================================================
+# SENSOR DEFINITIONS - Grouped by calculation method
+# ============================================================================
+#
+# Sensors are organized by HOW they calculate values, not WHAT they display.
+# This groups sensors that share common logic and enables code reuse through
+# unified handler methods.
+#
+# Calculation patterns:
+#   1. Interval-based: Use time offset from current interval
+#   2. Rolling hour: Aggregate 5-interval window (2 before + center + 2 after)
+#   3. Daily statistics: Min/max/avg within calendar day boundaries
+#   4. 24h windows: Trailing/leading from current interval
+#   5. Future forecast: N-hour windows starting from next interval
+#   6. Volatility: Statistical analysis of price variation
+#   7. Diagnostic: System information and metadata
+# ============================================================================
+
+# ----------------------------------------------------------------------------
+# 1. INTERVAL-BASED SENSORS (offset: -1, 0, +1 from current interval)
+# ----------------------------------------------------------------------------
+# All use find_price_data_for_interval() with time offset
+# Shared handler: _get_interval_value(interval_offset, value_type)
+
+INTERVAL_PRICE_SENSORS = (
     SensorEntityDescription(
         key="current_interval_price",
         translation_key="current_interval_price",
@@ -104,25 +125,12 @@ PRICE_SENSORS = (
         entity_registry_enabled_default=False,
         suggested_display_precision=2,
     ),
-    SensorEntityDescription(
-        key="current_hour_average",
-        translation_key="current_hour_average",
-        name="Current Hour Average Price",
-        icon="mdi:cash",  # Dynamic: will show cash-multiple/plus/cash/minus/remove based on level
-        device_class=SensorDeviceClass.MONETARY,
-        suggested_display_precision=1,
-    ),
-    SensorEntityDescription(
-        key="next_hour_average",
-        translation_key="next_hour_average",
-        name="Next Hour Average Price",
-        icon="mdi:clock-fast",  # Static: clock indicates "next time period"
-        device_class=SensorDeviceClass.MONETARY,
-        suggested_display_precision=1,
-    ),
-    # NOTE: Enum options are defined inline (not imported from const.py) to avoid
-    # import timing issues with Home Assistant's entity platform initialization.
-    # Keep in sync with PRICE_LEVEL_OPTIONS in const.py!
+)
+
+# NOTE: Enum options are defined inline (not imported from const.py) to avoid
+# import timing issues with Home Assistant's entity platform initialization.
+# Keep in sync with PRICE_LEVEL_OPTIONS in const.py!
+INTERVAL_LEVEL_SENSORS = (
     SensorEntityDescription(
         key="current_interval_price_level",
         translation_key="current_interval_price_level",
@@ -148,6 +156,68 @@ PRICE_SENSORS = (
         device_class=SensorDeviceClass.ENUM,
         options=["very_cheap", "cheap", "normal", "expensive", "very_expensive"],
     ),
+)
+
+# NOTE: Enum options are defined inline (not imported from const.py) to avoid
+# import timing issues with Home Assistant's entity platform initialization.
+# Keep in sync with PRICE_RATING_OPTIONS in const.py!
+INTERVAL_RATING_SENSORS = (
+    SensorEntityDescription(
+        key="current_interval_price_rating",
+        translation_key="current_interval_price_rating",
+        name="Current Price Rating",
+        icon="mdi:star-outline",
+        device_class=SensorDeviceClass.ENUM,
+        options=["low", "normal", "high"],
+    ),
+    SensorEntityDescription(
+        key="next_interval_price_rating",
+        translation_key="next_interval_price_rating",
+        name="Next Price Rating",
+        icon="mdi:star-half-full",
+        device_class=SensorDeviceClass.ENUM,
+        options=["low", "normal", "high"],
+    ),
+    SensorEntityDescription(
+        key="previous_interval_price_rating",
+        translation_key="previous_interval_price_rating",
+        name="Previous Price Rating",
+        icon="mdi:star-half-full",
+        entity_registry_enabled_default=False,
+        device_class=SensorDeviceClass.ENUM,
+        options=["low", "normal", "high"],
+    ),
+)
+
+# ----------------------------------------------------------------------------
+# 2. ROLLING HOUR SENSORS (5-interval window: 2 before + center + 2 after)
+# ----------------------------------------------------------------------------
+# All aggregate data from rolling 5-interval window around a specific hour
+# Shared handler: _get_rolling_hour_value(hour_offset, value_type)
+
+ROLLING_HOUR_PRICE_SENSORS = (
+    SensorEntityDescription(
+        key="current_hour_average",
+        translation_key="current_hour_average",
+        name="Current Hour Average Price",
+        icon="mdi:cash",  # Dynamic: will show cash-multiple/plus/cash/minus/remove based on level
+        device_class=SensorDeviceClass.MONETARY,
+        suggested_display_precision=1,
+    ),
+    SensorEntityDescription(
+        key="next_hour_average",
+        translation_key="next_hour_average",
+        name="Next Hour Average Price",
+        icon="mdi:clock-fast",  # Static: clock indicates "next time period"
+        device_class=SensorDeviceClass.MONETARY,
+        suggested_display_precision=1,
+    ),
+)
+
+# NOTE: Enum options are defined inline (not imported from const.py) to avoid
+# import timing issues with Home Assistant's entity platform initialization.
+# Keep in sync with PRICE_LEVEL_OPTIONS in const.py!
+ROLLING_HOUR_LEVEL_SENSORS = (
     SensorEntityDescription(
         key="current_hour_price_level",
         translation_key="current_hour_price_level",
@@ -166,8 +236,34 @@ PRICE_SENSORS = (
     ),
 )
 
-# Statistical price sensors
-STATISTICS_SENSORS = (
+# NOTE: Enum options are defined inline (not imported from const.py) to avoid
+# import timing issues with Home Assistant's entity platform initialization.
+# Keep in sync with PRICE_RATING_OPTIONS in const.py!
+ROLLING_HOUR_RATING_SENSORS = (
+    SensorEntityDescription(
+        key="current_hour_price_rating",
+        translation_key="current_hour_price_rating",
+        name="Current Hour Price Rating",
+        icon="mdi:star-outline",
+        device_class=SensorDeviceClass.ENUM,
+        options=["low", "normal", "high"],
+    ),
+    SensorEntityDescription(
+        key="next_hour_price_rating",
+        translation_key="next_hour_price_rating",
+        name="Next Hour Price Rating",
+        icon="mdi:star-half-full",
+        device_class=SensorDeviceClass.ENUM,
+        options=["low", "normal", "high"],
+    ),
+)
+
+# ----------------------------------------------------------------------------
+# 3. DAILY STATISTICS SENSORS (min/max/avg for calendar day boundaries)
+# ----------------------------------------------------------------------------
+# Calculate statistics for specific calendar days (today/tomorrow)
+
+DAILY_STAT_SENSORS = (
     SensorEntityDescription(
         key="lowest_price_today",
         translation_key="lowest_price_today",
@@ -216,6 +312,14 @@ STATISTICS_SENSORS = (
         device_class=SensorDeviceClass.MONETARY,
         suggested_display_precision=1,
     ),
+)
+
+# ----------------------------------------------------------------------------
+# 4. 24H WINDOW SENSORS (trailing/leading from current interval)
+# ----------------------------------------------------------------------------
+# Calculate statistics over sliding 24-hour windows
+
+WINDOW_24H_SENSORS = (
     SensorEntityDescription(
         key="trailing_price_average",
         translation_key="trailing_price_average",
@@ -269,95 +373,12 @@ STATISTICS_SENSORS = (
     ),
 )
 
-# Volatility sensors (coefficient of variation analysis)
-# NOTE: Enum options are defined inline (not imported from const.py) to avoid
-# import timing issues with Home Assistant's entity platform initialization.
-# Keep in sync with VOLATILITY_OPTIONS in const.py!
-VOLATILITY_SENSORS = (
-    SensorEntityDescription(
-        key="today_volatility",
-        translation_key="today_volatility",
-        name="Today's Price Volatility",
-        icon="mdi:chart-bell-curve-cumulative",
-        device_class=SensorDeviceClass.ENUM,
-        options=["low", "moderate", "high", "very_high"],
-    ),
-    SensorEntityDescription(
-        key="tomorrow_volatility",
-        translation_key="tomorrow_volatility",
-        name="Tomorrow's Price Volatility",
-        icon="mdi:chart-bell-curve-cumulative",
-        device_class=SensorDeviceClass.ENUM,
-        options=["low", "moderate", "high", "very_high"],
-    ),
-    SensorEntityDescription(
-        key="next_24h_volatility",
-        translation_key="next_24h_volatility",
-        name="Next 24h Price Volatility",
-        icon="mdi:chart-bell-curve-cumulative",
-        device_class=SensorDeviceClass.ENUM,
-        options=["low", "moderate", "high", "very_high"],
-    ),
-    SensorEntityDescription(
-        key="today_tomorrow_volatility",
-        translation_key="today_tomorrow_volatility",
-        name="Today + Tomorrow Price Volatility",
-        icon="mdi:chart-bell-curve-cumulative",
-        device_class=SensorDeviceClass.ENUM,
-        options=["low", "moderate", "high", "very_high"],
-    ),
-)
+# ----------------------------------------------------------------------------
+# 5. FUTURE FORECAST SENSORS (N-hour windows starting from next interval)
+# ----------------------------------------------------------------------------
+# Calculate averages and trends for upcoming time windows
 
-# Rating sensors
-# NOTE: Enum options are defined inline (not imported from const.py) to avoid
-# import timing issues with Home Assistant's entity platform initialization.
-# Keep in sync with PRICE_RATING_OPTIONS in const.py!
-RATING_SENSORS = (
-    SensorEntityDescription(
-        key="current_interval_price_rating",
-        translation_key="current_interval_price_rating",
-        name="Current Price Rating",
-        icon="mdi:star-outline",
-        device_class=SensorDeviceClass.ENUM,
-        options=["low", "normal", "high"],
-    ),
-    SensorEntityDescription(
-        key="next_interval_price_rating",
-        translation_key="next_interval_price_rating",
-        name="Next Price Rating",
-        icon="mdi:star-half-full",
-        device_class=SensorDeviceClass.ENUM,
-        options=["low", "normal", "high"],
-    ),
-    SensorEntityDescription(
-        key="previous_interval_price_rating",
-        translation_key="previous_interval_price_rating",
-        name="Previous Price Rating",
-        icon="mdi:star-half-full",
-        entity_registry_enabled_default=False,
-        device_class=SensorDeviceClass.ENUM,
-        options=["low", "normal", "high"],
-    ),
-    SensorEntityDescription(
-        key="current_hour_price_rating",
-        translation_key="current_hour_price_rating",
-        name="Current Hour Price Rating",
-        icon="mdi:star-outline",
-        device_class=SensorDeviceClass.ENUM,
-        options=["low", "normal", "high"],
-    ),
-    SensorEntityDescription(
-        key="next_hour_price_rating",
-        translation_key="next_hour_price_rating",
-        name="Next Hour Price Rating",
-        icon="mdi:star-half-full",
-        device_class=SensorDeviceClass.ENUM,
-        options=["low", "normal", "high"],
-    ),
-)
-
-# Future average sensors (rolling N-hour windows from next interval)
-FUTURE_AVERAGE_SENSORS = (
+FUTURE_AVG_SENSORS = (
     # Default enabled: 1h-5h
     SensorEntityDescription(
         key="next_avg_1h",
@@ -434,8 +455,7 @@ FUTURE_AVERAGE_SENSORS = (
     ),
 )
 
-# Price trend sensors
-TREND_SENSORS = (
+FUTURE_TREND_SENSORS = (
     # Default enabled: 1h-5h
     SensorEntityDescription(
         key="price_trend_1h",
@@ -512,7 +532,52 @@ TREND_SENSORS = (
     ),
 )
 
-# Diagnostic sensors for data availability
+# ----------------------------------------------------------------------------
+# 6. VOLATILITY SENSORS (coefficient of variation analysis)
+# ----------------------------------------------------------------------------
+# NOTE: Enum options are defined inline (not imported from const.py) to avoid
+# import timing issues with Home Assistant's entity platform initialization.
+# Keep in sync with VOLATILITY_OPTIONS in const.py!
+
+VOLATILITY_SENSORS = (
+    SensorEntityDescription(
+        key="today_volatility",
+        translation_key="today_volatility",
+        name="Today's Price Volatility",
+        icon="mdi:chart-bell-curve-cumulative",
+        device_class=SensorDeviceClass.ENUM,
+        options=["low", "moderate", "high", "very_high"],
+    ),
+    SensorEntityDescription(
+        key="tomorrow_volatility",
+        translation_key="tomorrow_volatility",
+        name="Tomorrow's Price Volatility",
+        icon="mdi:chart-bell-curve-cumulative",
+        device_class=SensorDeviceClass.ENUM,
+        options=["low", "moderate", "high", "very_high"],
+    ),
+    SensorEntityDescription(
+        key="next_24h_volatility",
+        translation_key="next_24h_volatility",
+        name="Next 24h Price Volatility",
+        icon="mdi:chart-bell-curve-cumulative",
+        device_class=SensorDeviceClass.ENUM,
+        options=["low", "moderate", "high", "very_high"],
+    ),
+    SensorEntityDescription(
+        key="today_tomorrow_volatility",
+        translation_key="today_tomorrow_volatility",
+        name="Today + Tomorrow Price Volatility",
+        icon="mdi:chart-bell-curve-cumulative",
+        device_class=SensorDeviceClass.ENUM,
+        options=["low", "moderate", "high", "very_high"],
+    ),
+)
+
+# ----------------------------------------------------------------------------
+# 7. DIAGNOSTIC SENSORS (data availability and metadata)
+# ----------------------------------------------------------------------------
+
 DIAGNOSTIC_SENSORS = (
     SensorEntityDescription(
         key="data_timestamp",
@@ -531,14 +596,22 @@ DIAGNOSTIC_SENSORS = (
     ),
 )
 
-# Combine all sensors
+# ----------------------------------------------------------------------------
+# COMBINED SENSOR DEFINITIONS
+# ----------------------------------------------------------------------------
+
 ENTITY_DESCRIPTIONS = (
-    *PRICE_SENSORS,
-    *STATISTICS_SENSORS,
+    *INTERVAL_PRICE_SENSORS,
+    *INTERVAL_LEVEL_SENSORS,
+    *INTERVAL_RATING_SENSORS,
+    *ROLLING_HOUR_PRICE_SENSORS,
+    *ROLLING_HOUR_LEVEL_SENSORS,
+    *ROLLING_HOUR_RATING_SENSORS,
+    *DAILY_STAT_SENSORS,
+    *WINDOW_24H_SENSORS,
+    *FUTURE_AVG_SENSORS,
+    *FUTURE_TREND_SENSORS,
     *VOLATILITY_SENSORS,
-    *RATING_SENSORS,
-    *FUTURE_AVERAGE_SENSORS,
-    *TREND_SENSORS,
     *DIAGNOSTIC_SENSORS,
 )
 
@@ -619,84 +692,79 @@ class TibberPricesSensor(TibberPricesEntity, SensorEntity):
 
         # Map sensor keys to their handler methods
         handlers = {
+            # ================================================================
+            # INTERVAL-BASED SENSORS (using unified _get_interval_value)
+            # ================================================================
             # Price level sensors
             "current_interval_price_level": self._get_price_level_value,
-            "next_interval_price_level": lambda: self._get_interval_level_value(interval_offset=1),
-            "previous_interval_price_level": lambda: self._get_interval_level_value(interval_offset=-1),
-            "current_hour_price_level": lambda: self._get_rolling_hour_level_value(hour_offset=0),
-            "next_hour_price_level": lambda: self._get_rolling_hour_level_value(hour_offset=1),
-            # Price sensors
-            "current_interval_price": lambda: self._get_interval_price_value(interval_offset=0, in_euro=False),
-            "next_interval_price": lambda: self._get_interval_price_value(interval_offset=1, in_euro=False),
-            "previous_interval_price": lambda: self._get_interval_price_value(interval_offset=-1, in_euro=False),
-            # Rolling hour average (5 intervals: 2 before + current + 2 after)
-            "current_hour_average": lambda: self._get_rolling_hour_average_value(
-                in_euro=False, decimals=2, hour_offset=0
+            "next_interval_price_level": lambda: self._get_interval_value(interval_offset=1, value_type="level"),
+            "previous_interval_price_level": lambda: self._get_interval_value(interval_offset=-1, value_type="level"),
+            # Price sensors (in cents)
+            "current_interval_price": lambda: self._get_interval_value(
+                interval_offset=0, value_type="price", in_euro=False
             ),
-            "next_hour_average": lambda: self._get_rolling_hour_average_value(in_euro=False, decimals=2, hour_offset=1),
-            # Statistics sensors
-            "lowest_price_today": lambda: self._get_statistics_value(stat_func=min, in_euro=False, decimals=2),
-            "highest_price_today": lambda: self._get_statistics_value(stat_func=max, in_euro=False, decimals=2),
-            "average_price_today": lambda: self._get_statistics_value(
-                stat_func=lambda prices: sum(prices) / len(prices),
-                in_euro=False,
-                decimals=2,
+            "next_interval_price": lambda: self._get_interval_value(
+                interval_offset=1, value_type="price", in_euro=False
             ),
-            # Tomorrow statistics sensors
-            "lowest_price_tomorrow": lambda: self._get_statistics_value(
-                stat_func=min, in_euro=False, decimals=2, day="tomorrow"
-            ),
-            "highest_price_tomorrow": lambda: self._get_statistics_value(
-                stat_func=max, in_euro=False, decimals=2, day="tomorrow"
-            ),
-            "average_price_tomorrow": lambda: self._get_statistics_value(
-                stat_func=lambda prices: sum(prices) / len(prices),
-                in_euro=False,
-                decimals=2,
-                day="tomorrow",
-            ),
-            # Trailing and leading average sensors
-            "trailing_price_average": lambda: self._get_average_value(
-                average_type="trailing",
-                in_euro=False,
-                decimals=2,
-            ),
-            "leading_price_average": lambda: self._get_average_value(
-                average_type="leading",
-                in_euro=False,
-                decimals=2,
-            ),
-            # Trailing and leading min/max sensors
-            "trailing_price_min": lambda: self._get_minmax_value(
-                stat_type="trailing",
-                func_type="min",
-                in_euro=False,
-                decimals=2,
-            ),
-            "trailing_price_max": lambda: self._get_minmax_value(
-                stat_type="trailing",
-                func_type="max",
-                in_euro=False,
-                decimals=2,
-            ),
-            "leading_price_min": lambda: self._get_minmax_value(
-                stat_type="leading",
-                func_type="min",
-                in_euro=False,
-                decimals=2,
-            ),
-            "leading_price_max": lambda: self._get_minmax_value(
-                stat_type="leading",
-                func_type="max",
-                in_euro=False,
-                decimals=2,
+            "previous_interval_price": lambda: self._get_interval_value(
+                interval_offset=-1, value_type="price", in_euro=False
             ),
             # Rating sensors
             "current_interval_price_rating": lambda: self._get_rating_value(rating_type="current"),
-            "next_interval_price_rating": lambda: self._get_interval_rating_value(interval_offset=1),
-            "previous_interval_price_rating": lambda: self._get_interval_rating_value(interval_offset=-1),
-            "current_hour_price_rating": lambda: self._get_rolling_hour_rating_value(hour_offset=0),
-            "next_hour_price_rating": lambda: self._get_rolling_hour_rating_value(hour_offset=1),
+            "next_interval_price_rating": lambda: self._get_interval_value(interval_offset=1, value_type="rating"),
+            "previous_interval_price_rating": lambda: self._get_interval_value(interval_offset=-1, value_type="rating"),
+            # ================================================================
+            # ROLLING HOUR SENSORS (5-interval windows) - Use unified method
+            # ================================================================
+            "current_hour_price_level": lambda: self._get_rolling_hour_value(hour_offset=0, value_type="level"),
+            "next_hour_price_level": lambda: self._get_rolling_hour_value(hour_offset=1, value_type="level"),
+            # Rolling hour average (5 intervals: 2 before + current + 2 after)
+            "current_hour_average": lambda: self._get_rolling_hour_value(hour_offset=0, value_type="price"),
+            "next_hour_average": lambda: self._get_rolling_hour_value(hour_offset=1, value_type="price"),
+            "current_hour_price_rating": lambda: self._get_rolling_hour_value(hour_offset=0, value_type="rating"),
+            "next_hour_price_rating": lambda: self._get_rolling_hour_value(hour_offset=1, value_type="rating"),
+            # ================================================================
+            # DAILY STATISTICS SENSORS
+            # ================================================================
+            "lowest_price_today": lambda: self._get_daily_stat_value(day="today", stat_func=min),
+            "highest_price_today": lambda: self._get_daily_stat_value(day="today", stat_func=max),
+            "average_price_today": lambda: self._get_daily_stat_value(
+                day="today",
+                stat_func=lambda prices: sum(prices) / len(prices),
+            ),
+            # Tomorrow statistics sensors
+            "lowest_price_tomorrow": lambda: self._get_daily_stat_value(day="tomorrow", stat_func=min),
+            "highest_price_tomorrow": lambda: self._get_daily_stat_value(day="tomorrow", stat_func=max),
+            "average_price_tomorrow": lambda: self._get_daily_stat_value(
+                day="tomorrow",
+                stat_func=lambda prices: sum(prices) / len(prices),
+            ),
+            # ================================================================
+            # 24H WINDOW SENSORS (trailing/leading from current)
+            # ================================================================
+            # Trailing and leading average sensors
+            "trailing_price_average": lambda: self._get_24h_window_value(
+                stat_func=calculate_current_trailing_avg,
+            ),
+            "leading_price_average": lambda: self._get_24h_window_value(
+                stat_func=calculate_current_leading_avg,
+            ),
+            # Trailing and leading min/max sensors
+            "trailing_price_min": lambda: self._get_24h_window_value(
+                stat_func=calculate_current_trailing_min,
+            ),
+            "trailing_price_max": lambda: self._get_24h_window_value(
+                stat_func=calculate_current_trailing_max,
+            ),
+            "leading_price_min": lambda: self._get_24h_window_value(
+                stat_func=calculate_current_leading_min,
+            ),
+            "leading_price_max": lambda: self._get_24h_window_value(
+                stat_func=calculate_current_leading_max,
+            ),
+            # ================================================================
+            # FUTURE FORECAST SENSORS
+            # ================================================================
             # Future average sensors (next N hours from next interval)
             "next_avg_1h": lambda: self._get_next_avg_n_hours_value(hours=1),
             "next_avg_2h": lambda: self._get_next_avg_n_hours_value(hours=2),
@@ -732,6 +800,58 @@ class TibberPricesSensor(TibberPricesEntity, SensorEntity):
         """Get the price data for the current interval using coordinator utility."""
         return self.coordinator.get_current_interval()
 
+    # ========================================================================
+    # UNIFIED INTERVAL VALUE METHODS (NEW)
+    # ========================================================================
+
+    def _get_interval_value(
+        self,
+        *,
+        interval_offset: int,
+        value_type: str,
+        in_euro: bool = False,
+    ) -> str | float | None:
+        """
+        Unified method to get values (price/level/rating) for intervals with offset.
+
+        Args:
+            interval_offset: Offset from current interval (0=current, 1=next, -1=previous)
+            value_type: Type of value to retrieve ("price", "level", "rating")
+            in_euro: For prices only - return in EUR if True, cents if False
+
+        Returns:
+            For "price": float in EUR or cents
+            For "level" or "rating": lowercase enum string
+            None if data unavailable
+
+        """
+        if not self.coordinator.data:
+            return None
+
+        price_info = self.coordinator.data.get("priceInfo", {})
+        now = dt_util.now()
+        target_time = now + timedelta(minutes=MINUTES_PER_INTERVAL * interval_offset)
+
+        interval_data = find_price_data_for_interval(price_info, target_time)
+        if not interval_data:
+            return None
+
+        # Extract value based on type
+        if value_type == "price":
+            price = interval_data.get("total")
+            if price is None:
+                return None
+            price = float(price)
+            return price if in_euro else round(price * 100, 2)
+
+        if value_type == "level":
+            level = interval_data.get("level")
+            return level.lower() if level else None
+
+        # For rating: extract rating_level
+        rating = interval_data.get("rating_level")
+        return rating.lower() if rating else None
+
     def _get_price_level_value(self) -> str | None:
         """Get the current price level value as enum string for the state."""
         current_interval_data = self._get_current_interval_data()
@@ -742,48 +862,118 @@ class TibberPricesSensor(TibberPricesEntity, SensorEntity):
         # Convert API level (e.g., "NORMAL") to lowercase enum value (e.g., "normal")
         return level.lower() if level else None
 
-    def _get_interval_level_value(self, *, interval_offset: int) -> str | None:
-        """Get price level for an interval with offset (e.g., next or previous interval)."""
+    # _get_interval_level_value() has been replaced by unified _get_interval_value()
+    # See line 814 for the new implementation
+
+    # ========================================================================
+    # ROLLING HOUR METHODS (unified)
+    # ========================================================================
+
+    def _get_rolling_hour_value(
+        self,
+        *,
+        hour_offset: int = 0,
+        value_type: str = "price",
+    ) -> str | float | None:
+        """
+        Unified method to get aggregated values from 5-interval rolling window.
+
+        Window: 2 before + center + 2 after = 5 intervals (60 minutes total).
+
+        Args:
+            hour_offset: 0 (current hour), 1 (next hour), etc.
+            value_type: "price" | "level" | "rating"
+
+        Returns:
+            Aggregated value based on type:
+            - "price": float (average price in minor currency units)
+            - "level": str (aggregated level: "very_cheap", "cheap", etc.)
+            - "rating": str (aggregated rating: "low", "normal", "high")
+
+        """
         if not self.coordinator.data:
             return None
 
+        # Get all available price data
         price_info = self.coordinator.data.get("priceInfo", {})
-        now = dt_util.now()
-        target_time = now + timedelta(minutes=MINUTES_PER_INTERVAL * interval_offset)
+        all_prices = price_info.get("yesterday", []) + price_info.get("today", []) + price_info.get("tomorrow", [])
 
-        interval_data = find_price_data_for_interval(price_info, target_time)
-        if not interval_data or "level" not in interval_data:
-            return None
-
-        level = interval_data["level"]
-        # Convert API level to lowercase enum value
-        return level.lower() if level else None
-
-    def _get_rolling_hour_level_value(self, *, hour_offset: int) -> str | None:
-        """Get aggregated price level for a 5-interval rolling window."""
-        if not self.coordinator.data:
-            return None
-
-        price_info = self.coordinator.data.get("priceInfo", {})
-        yesterday_prices = price_info.get("yesterday", [])
-        today_prices = price_info.get("today", [])
-        tomorrow_prices = price_info.get("tomorrow", [])
-
-        all_prices = yesterday_prices + today_prices + tomorrow_prices
         if not all_prices:
             return None
 
+        # Find center index for the rolling window
         center_idx = self._find_rolling_hour_center_index(all_prices, hour_offset)
         if center_idx is None:
             return None
 
-        levels = self._collect_rolling_window_levels(all_prices, center_idx)
-        if not levels:
+        # Collect data from 5-interval window (-2, -1, 0, +1, +2)
+        window_data = []
+        for offset in range(-2, 3):
+            idx = center_idx + offset
+            if 0 <= idx < len(all_prices):
+                window_data.append(all_prices[idx])
+
+        if not window_data:
             return None
 
-        aggregated_level = aggregate_price_levels(levels)
-        # Convert API level to lowercase enum value
-        return aggregated_level.lower() if aggregated_level else None
+        return self._aggregate_window_data(window_data, value_type)
+
+    def _aggregate_window_data(
+        self,
+        window_data: list[dict],
+        value_type: str,
+    ) -> str | float | None:
+        """Aggregate data from multiple intervals based on value type."""
+        # Map value types to aggregation functions
+        aggregators = {
+            "price": self._aggregate_price_data,
+            "level": self._aggregate_level_data,
+            "rating": self._aggregate_rating_data,
+        }
+
+        aggregator = aggregators.get(value_type)
+        if aggregator:
+            return aggregator(window_data)
+        return None
+
+    def _aggregate_price_data(self, window_data: list[dict]) -> float | None:
+        """Calculate average price from window data."""
+        prices = [float(i["total"]) for i in window_data if "total" in i]
+        if not prices:
+            return None
+        # Return in minor currency units (cents/øre)
+        return round((sum(prices) / len(prices)) * 100, 2)
+
+    def _aggregate_level_data(self, window_data: list[dict]) -> str | None:
+        """Aggregate price levels from window data."""
+        levels = [i["level"] for i in window_data if "level" in i]
+        if not levels:
+            return None
+        aggregated = aggregate_price_levels(levels)
+        return aggregated.lower() if aggregated else None
+
+    def _aggregate_rating_data(self, window_data: list[dict]) -> str | None:
+        """Aggregate price ratings from window data."""
+        differences = [i["difference"] for i in window_data if "difference" in i and "rating_level" in i]
+        if not differences:
+            return None
+
+        # Get thresholds from config
+        threshold_low = self.coordinator.config_entry.options.get(
+            CONF_PRICE_RATING_THRESHOLD_LOW,
+            DEFAULT_PRICE_RATING_THRESHOLD_LOW,
+        )
+        threshold_high = self.coordinator.config_entry.options.get(
+            CONF_PRICE_RATING_THRESHOLD_HIGH,
+            DEFAULT_PRICE_RATING_THRESHOLD_HIGH,
+        )
+
+        aggregated, _ = aggregate_price_rating(differences, threshold_low, threshold_high)
+        return aggregated.lower() if aggregated else None
+
+    # ========================================================================
+    # ROLLING HOUR HELPER METHODS
+    # ========================================================================
 
     def _find_rolling_hour_center_index(self, all_prices: list, hour_offset: int) -> int | None:
         """Find the center index for the rolling hour window."""
@@ -805,17 +995,6 @@ class TibberPricesSensor(TibberPricesEntity, SensorEntity):
             return None
 
         return current_idx + (hour_offset * 4)
-
-    def _collect_rolling_window_levels(self, all_prices: list, center_idx: int) -> list:
-        """Collect levels from 2 intervals before to 2 intervals after."""
-        levels = []
-        for offset in range(-2, 3):  # -2, -1, 0, 1, 2
-            idx = center_idx + offset
-            if 0 <= idx < len(all_prices):
-                level = all_prices[idx].get("level")
-                if level is not None:
-                    levels.append(level)
-        return levels
 
     def _translate_level(self, level: str) -> str:
         """Translate the level to the user's language."""
@@ -883,55 +1062,31 @@ class TibberPricesSensor(TibberPricesEntity, SensorEntity):
 
         return None
 
-    def _get_interval_price_value(self, *, interval_offset: int, in_euro: bool) -> float | None:
-        """Get price for the current interval or with offset, handling 15-minute intervals."""
-        if not self.coordinator.data:
-            return None
+    # ========================================================================
+    # UNIFIED STATISTICS METHODS
+    # ========================================================================
+    # Replaces: _get_statistics_value, _get_average_value, _get_minmax_value
+    # Groups daily stats (calendar day boundaries) separate from 24h windows
+    # ========================================================================
 
-        all_intervals = self.coordinator.get_all_intervals()
-        if not all_intervals:
-            return None
-
-        now = dt_util.now()
-
-        current_idx = None
-        for idx, interval in enumerate(all_intervals):
-            starts_at = interval.get("startsAt")
-            if starts_at:
-                ts = dt_util.parse_datetime(starts_at)
-                if ts and ts <= now < ts + timedelta(minutes=MINUTES_PER_INTERVAL):
-                    current_idx = idx
-                    break
-
-        if current_idx is None:
-            return None
-
-        target_idx = current_idx + interval_offset
-        if 0 <= target_idx < len(all_intervals):
-            price = float(all_intervals[target_idx]["total"])
-            return price if in_euro else round(price * 100, 2)
-
-        return None
-
-    def _get_statistics_value(
+    def _get_daily_stat_value(
         self,
         *,
-        stat_func: Callable[[list[float]], float],
-        in_euro: bool,
-        decimals: int | None = None,
         day: str = "today",
+        stat_func: Callable[[list[float]], float],
     ) -> float | None:
         """
-        Handle statistics sensor values using the provided statistical function.
+        Unified method for daily statistics (min/max/avg within calendar day).
+
+        Calculates statistics for a specific calendar day using local timezone
+        boundaries. Stores the extreme interval for use in attributes.
 
         Args:
-            stat_func: The statistical function to apply (min, max, avg, etc.)
-            in_euro: Whether to return the value in euros (True) or cents (False)
-            decimals: Number of decimal places to round to
-            day: Which day to calculate for - "today" or "tomorrow"
+            day: "today" or "tomorrow" - which calendar day to calculate for
+            stat_func: Statistical function (min, max, or lambda for avg)
 
         Returns:
-            The calculated value for the statistics sensor, or None if unavailable.
+            Price value in minor currency units (cents/øre), or None if unavailable
 
         """
         if not self.coordinator.data:
@@ -945,7 +1100,8 @@ class TibberPricesSensor(TibberPricesEntity, SensorEntity):
             local_midnight = local_midnight + timedelta(days=1)
         local_midnight_next_day = local_midnight + timedelta(days=1)
 
-        # Collect all prices and their intervals from both today and tomorrow data that fall within the target day
+        # Collect all prices and their intervals from both today and tomorrow data
+        # that fall within the target day's local date boundaries
         price_intervals = []
         for day_key in ["today", "tomorrow"]:
             for price_data in price_info.get(day_key, []):
@@ -984,126 +1140,40 @@ class TibberPricesSensor(TibberPricesEntity, SensorEntity):
                 self._last_extreme_interval = pi["interval"]
                 break
 
-        result = self._get_price_value(value, in_euro=in_euro)
+        # Always return in minor currency units (cents/øre) with 2 decimals
+        result = self._get_price_value(value, in_euro=False)
+        return round(result, 2)
 
-        if decimals is not None:
-            result = round(result, decimals)
-        return result
-
-    def _get_average_value(
+    def _get_24h_window_value(
         self,
         *,
-        average_type: str,
-        in_euro: bool,
-        decimals: int | None = None,
+        stat_func: Callable,
     ) -> float | None:
         """
-        Get trailing or leading 24-hour average price.
+        Unified method for 24-hour sliding window statistics.
+
+        Calculates statistics over a 24-hour window relative to the current interval:
+        - "trailing": Previous 24 hours (96 intervals before current)
+        - "leading": Next 24 hours (96 intervals after current)
 
         Args:
-            average_type: Either "trailing" or "leading"
-            in_euro: If True, return value in euros; if False, return in cents
-            decimals: Number of decimal places to round to, or None for no rounding
+            stat_func: Function from average_utils (e.g., calculate_current_trailing_avg)
 
         Returns:
-            The calculated average value, or None if unavailable
+            Price value in minor currency units (cents/øre), or None if unavailable
 
         """
-        if average_type == "trailing":
-            value = calculate_current_trailing_avg(self.coordinator.data)
-        elif average_type == "leading":
-            value = calculate_current_leading_avg(self.coordinator.data)
-        else:
+        if not self.coordinator.data:
             return None
+
+        value = stat_func(self.coordinator.data)
 
         if value is None:
             return None
 
-        result = self._get_price_value(value, in_euro=in_euro)
-
-        if decimals is not None:
-            result = round(result, decimals)
-        return result
-
-    def _get_rolling_hour_average_value(
-        self,
-        *,
-        in_euro: bool,
-        decimals: int | None = None,
-        hour_offset: int = 0,
-    ) -> float | None:
-        """
-        Get rolling 5-interval average (2 previous + current + 2 next).
-
-        This provides a smoothed "hour price" centered around a specific hour.
-        With hour_offset=0, it's centered on the current interval.
-        With hour_offset=1, it's centered on the interval 1 hour ahead.
-
-        Args:
-            in_euro: If True, return value in euros; if False, return in cents
-            decimals: Number of decimal places to round to, or None for no rounding
-            hour_offset: Number of hours to shift forward (0=current, 1=next hour)
-
-        Returns:
-            The calculated rolling average value, or None if unavailable
-
-        """
-        if hour_offset == 0:
-            value = calculate_current_rolling_5interval_avg(self.coordinator.data)
-        elif hour_offset == 1:
-            value = calculate_next_hour_rolling_5interval_avg(self.coordinator.data)
-        else:
-            return None
-
-        if value is None:
-            return None
-
-        result = self._get_price_value(value, in_euro=in_euro)
-
-        if decimals is not None:
-            result = round(result, decimals)
-        return result
-
-    def _get_minmax_value(
-        self,
-        *,
-        stat_type: str,
-        func_type: str,
-        in_euro: bool,
-        decimals: int | None = None,
-    ) -> float | None:
-        """
-        Get trailing or leading 24-hour minimum or maximum price.
-
-        Args:
-            stat_type: Either "trailing" or "leading"
-            func_type: Either "min" or "max"
-            in_euro: If True, return value in euros; if False, return in cents
-            decimals: Number of decimal places to round to, or None for no rounding
-
-        Returns:
-            The calculated min/max value, or None if unavailable
-
-        """
-        if stat_type == "trailing" and func_type == "min":
-            value = calculate_current_trailing_min(self.coordinator.data)
-        elif stat_type == "trailing" and func_type == "max":
-            value = calculate_current_trailing_max(self.coordinator.data)
-        elif stat_type == "leading" and func_type == "min":
-            value = calculate_current_leading_min(self.coordinator.data)
-        elif stat_type == "leading" and func_type == "max":
-            value = calculate_current_leading_max(self.coordinator.data)
-        else:
-            return None
-
-        if value is None:
-            return None
-
-        result = self._get_price_value(value, in_euro=in_euro)
-
-        if decimals is not None:
-            result = round(result, decimals)
-        return result
+        # Always return in minor currency units (cents/øre) with 2 decimals
+        result = self._get_price_value(value, in_euro=False)
+        return round(result, 2)
 
     def _translate_rating_level(self, level: str) -> str:
         """Translate the rating level using custom translations, falling back to English or the raw value."""
@@ -1163,85 +1233,8 @@ class TibberPricesSensor(TibberPricesEntity, SensorEntity):
         self._last_rating_level = None
         return None
 
-    def _get_interval_rating_value(self, *, interval_offset: int) -> str | None:
-        """Get price rating for an interval with offset (e.g., next or previous interval)."""
-        if not self.coordinator.data:
-            return None
-
-        price_info = self.coordinator.data.get("priceInfo", {})
-        now = dt_util.now()
-        target_time = now + timedelta(minutes=MINUTES_PER_INTERVAL * interval_offset)
-
-        interval_data = find_price_data_for_interval(price_info, target_time)
-        if not interval_data:
-            return None
-
-        rating_level = interval_data.get("rating_level")
-        # Convert API rating to lowercase enum value
-        return rating_level.lower() if rating_level else None
-
-    def _get_rolling_hour_rating_value(self, *, hour_offset: int) -> str | None:
-        """Get aggregated price rating for a 5-interval rolling window."""
-        if not self.coordinator.data:
-            return None
-
-        price_info = self.coordinator.data.get("priceInfo", {})
-        yesterday_prices = price_info.get("yesterday", [])
-        today_prices = price_info.get("today", [])
-        tomorrow_prices = price_info.get("tomorrow", [])
-
-        all_prices = yesterday_prices + today_prices + tomorrow_prices
-        if not all_prices:
-            return None
-
-        now = dt_util.now()
-
-        # Find the current interval
-        current_idx = None
-        for idx, price_data in enumerate(all_prices):
-            starts_at = dt_util.parse_datetime(price_data["startsAt"])
-            if starts_at is None:
-                continue
-            starts_at = dt_util.as_local(starts_at)
-            interval_end = starts_at + timedelta(minutes=15)
-
-            if starts_at <= now < interval_end:
-                current_idx = idx
-                break
-
-        if current_idx is None:
-            return None
-
-        # Shift by hour_offset * 4 intervals (4 intervals = 1 hour)
-        center_idx = current_idx + (hour_offset * 4)
-
-        # Collect differences from 2 intervals before to 2 intervals after (5 total)
-        differences = []
-        for offset in range(-2, 3):  # -2, -1, 0, 1, 2
-            idx = center_idx + offset
-            if 0 <= idx < len(all_prices):
-                difference = all_prices[idx].get("difference")
-                if difference is not None:
-                    differences.append(float(difference))
-
-        if not differences:
-            return None
-
-        # Get thresholds from config
-        threshold_low = self.coordinator.config_entry.options.get(
-            CONF_PRICE_RATING_THRESHOLD_LOW,
-            DEFAULT_PRICE_RATING_THRESHOLD_LOW,
-        )
-        threshold_high = self.coordinator.config_entry.options.get(
-            CONF_PRICE_RATING_THRESHOLD_HIGH,
-            DEFAULT_PRICE_RATING_THRESHOLD_HIGH,
-        )
-
-        # Aggregate using average difference
-        aggregated_rating, _avg_diff = aggregate_price_rating(differences, threshold_low, threshold_high)
-
-        # Convert API rating to lowercase enum value
-        return aggregated_rating.lower() if aggregated_rating else None
+    # _get_interval_rating_value() has been replaced by unified _get_interval_value()
+    # See line 814 for the new implementation
 
     def _get_next_avg_n_hours_value(self, *, hours: int) -> float | None:
         """
@@ -1862,25 +1855,10 @@ class TibberPricesSensor(TibberPricesEntity, SensorEntity):
         if hour_offset is None:
             return None
 
-        # Use the same logic as _get_rolling_hour_level_value
-        price_info = self.coordinator.data.get("priceInfo", {})
-        yesterday_prices = price_info.get("yesterday", [])
-        today_prices = price_info.get("today", [])
-        tomorrow_prices = price_info.get("tomorrow", [])
-
-        all_prices = yesterday_prices + today_prices + tomorrow_prices
-        if not all_prices:
-            return None
-
-        center_idx = self._find_rolling_hour_center_index(all_prices, hour_offset)
-        if center_idx is None:
-            return None
-
-        levels = self._collect_rolling_window_levels(all_prices, center_idx)
-        if not levels:
-            return None
-
-        return aggregate_price_levels(levels)
+        # Use unified rolling hour method
+        result = self._get_rolling_hour_value(hour_offset=hour_offset, value_type="level")
+        # Type narrowing: value_type="level" always returns str | None
+        return result if isinstance(result, str | type(None)) else None
 
     @property
     async def async_extra_state_attributes(self) -> dict | None:
