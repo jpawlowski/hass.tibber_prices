@@ -16,6 +16,7 @@ from homeassistant.util import dt as dt_util
 
 from .coordinator import TIME_SENSITIVE_ENTITY_KEYS
 from .entity import TibberPricesEntity
+from .entity_utils import add_icon_color_attribute, get_binary_sensor_icon
 
 if TYPE_CHECKING:
     from collections.abc import Callable
@@ -28,8 +29,6 @@ if TYPE_CHECKING:
     from .data import TibberPricesConfigEntry
 
 from .const import (
-    BINARY_SENSOR_COLOR_MAPPING,
-    BINARY_SENSOR_ICON_MAPPING,
     CONF_EXTENDED_DESCRIPTIONS,
     DEFAULT_EXTENDED_DESCRIPTIONS,
     async_get_entity_description,
@@ -446,24 +445,15 @@ class TibberPricesBinarySensor(TibberPricesEntity, BinarySensorEntity):
         """Return the icon based on binary sensor state."""
         key = self.entity_description.key
 
-        # Dynamic icons for best/peak price period sensors
-        if key in BINARY_SENSOR_ICON_MAPPING:
-            if self.is_on:
-                # Sensor is ON - use "on" icon
-                icon = BINARY_SENSOR_ICON_MAPPING[key].get("on")
-            else:
-                # Sensor is OFF - check if future periods exist
-                has_future_periods = self._has_future_periods()
-                if has_future_periods:
-                    icon = BINARY_SENSOR_ICON_MAPPING[key].get("off")
-                else:
-                    icon = BINARY_SENSOR_ICON_MAPPING[key].get("off_no_future")
+        # Use shared icon utility
+        icon = get_binary_sensor_icon(
+            key,
+            is_on=self.is_on,
+            has_future_periods_callback=self._has_future_periods,
+        )
 
-            if icon:
-                return icon
-
-        # For all other sensors, use static icon from entity description
-        return self.entity_description.icon
+        # Fall back to static icon from entity description
+        return icon or self.entity_description.icon
 
     def _has_future_periods(self) -> bool:
         """
@@ -514,15 +504,10 @@ class TibberPricesBinarySensor(TibberPricesEntity, BinarySensorEntity):
                     clean_attrs = {k: v for k, v in dynamic_attrs.items() if not k.startswith("_")}
                     attributes.update(clean_attrs)
 
-            # Add icon_color for best/peak price period sensors
-            key = self.entity_description.key
-            if key in BINARY_SENSOR_COLOR_MAPPING:
-                state = "on" if self.is_on else "off"
-                color = BINARY_SENSOR_COLOR_MAPPING[key].get(state)
-                if color:
-                    attributes["icon_color"] = color
+            # Add icon_color for best/peak price period sensors using shared utility
+            add_icon_color_attribute(attributes, self.entity_description.key, is_on=self.is_on)
 
-            # Add descriptions from the custom translations file
+            # Add description from the custom translations file
             if self.entity_description.translation_key and self.hass is not None:
                 # Get user's language preference
                 language = self.hass.config.language if self.hass.config.language else "en"
@@ -596,13 +581,8 @@ class TibberPricesBinarySensor(TibberPricesEntity, BinarySensorEntity):
                     clean_attrs = {k: v for k, v in dynamic_attrs.items() if not k.startswith("_")}
                     attributes.update(clean_attrs)
 
-            # Add icon_color for best/peak price period sensors
-            key = self.entity_description.key
-            if key in BINARY_SENSOR_COLOR_MAPPING:
-                state = "on" if self.is_on else "off"
-                color = BINARY_SENSOR_COLOR_MAPPING[key].get(state)
-                if color:
-                    attributes["icon_color"] = color
+            # Add icon_color for best/peak price period sensors using shared utility
+            add_icon_color_attribute(attributes, self.entity_description.key, is_on=self.is_on)
 
             # Add descriptions from the cache (non-blocking)
             if self.entity_description.translation_key and self.hass is not None:

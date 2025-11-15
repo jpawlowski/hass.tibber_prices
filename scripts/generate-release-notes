@@ -201,7 +201,7 @@ generate_with_copilot() {
    - Bug fixes that users experience (translations, api, coordinator, etc.)
 
 8. **Understanding the file paths (use this to assess importance):**
-   - custom_components/tibber_prices/sensor.py = User-facing sensors (HIGH priority for title)
+   - custom_components/tibber_prices/sensor/ = User-facing sensors (HIGH priority for title)
    - custom_components/tibber_prices/binary_sensor.py = User-facing binary sensors (HIGH priority)
    - custom_components/tibber_prices/config_flow.py = User-facing configuration (HIGH priority)
    - custom_components/tibber_prices/services.py = User-facing services (HIGH priority)

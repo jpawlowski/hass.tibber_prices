@@ -4,21 +4,21 @@ This section contains documentation for contributors and maintainers of the Tibb
 
 ## 📚 Developer Guides
 
-- **[Setup](setup.md)** - DevContainer, environment setup, and dependencies
-- **[Architecture](architecture.md)** - Code structure, patterns, and conventions
-- **[Testing](testing.md)** - How to run tests and write new test cases
-- **[Release Management](release-management.md)** - Release workflow and versioning process
-- **[Coding Guidelines](coding-guidelines.md)** - Style guide, linting, and best practices
+-   **[Setup](setup.md)** - DevContainer, environment setup, and dependencies
+-   **[Architecture](architecture.md)** - Code structure, patterns, and conventions
+-   **[Testing](testing.md)** - How to run tests and write new test cases
+-   **[Release Management](release-management.md)** - Release workflow and versioning process
+-   **[Coding Guidelines](coding-guidelines.md)** - Style guide, linting, and best practices
 
 ## 🤖 AI Documentation
 
 The main AI/Copilot documentation is in [`AGENTS.md`](../../AGENTS.md). This file serves as long-term memory for AI assistants and contains:
 
-- Detailed architectural patterns
-- Code quality rules and conventions
-- Development workflow guidance
-- Common pitfalls and anti-patterns
-- Project-specific patterns and utilities
+-   Detailed architectural patterns
+-   Code quality rules and conventions
+-   Development workflow guidance
+-   Common pitfalls and anti-patterns
+-   Project-specific patterns and utilities
 
 **Important:** When proposing changes to patterns or conventions, always update [`AGENTS.md`](../../AGENTS.md) to keep AI guidance consistent.
 
@@ -26,29 +26,32 @@ The main AI/Copilot documentation is in [`AGENTS.md`](../../AGENTS.md). This fil
 
 This integration is developed with extensive AI assistance (GitHub Copilot, Claude, and other AI tools). The AI handles:
 
-- **Pattern Recognition**: Understanding and applying Home Assistant best practices
-- **Code Generation**: Implementing features with proper type hints, error handling, and documentation
-- **Refactoring**: Maintaining consistency across the codebase during structural changes
-- **Translation Management**: Keeping 5 language files synchronized
-- **Documentation**: Generating and maintaining comprehensive documentation
+-   **Pattern Recognition**: Understanding and applying Home Assistant best practices
+-   **Code Generation**: Implementing features with proper type hints, error handling, and documentation
+-   **Refactoring**: Maintaining consistency across the codebase during structural changes
+-   **Translation Management**: Keeping 5 language files synchronized
+-   **Documentation**: Generating and maintaining comprehensive documentation
 
 **Quality Assurance:**
-- Automated linting with Ruff (120-char line length, max complexity 25)
-- Home Assistant's type checking and validation
-- Real-world testing in development environment
-- Code review by maintainer before merging
+
+-   Automated linting with Ruff (120-char line length, max complexity 25)
+-   Home Assistant's type checking and validation
+-   Real-world testing in development environment
+-   Code review by maintainer before merging
 
 **Benefits:**
-- Rapid feature development while maintaining quality
-- Consistent code patterns across all modules
-- Comprehensive documentation maintained alongside code
-- Quick bug fixes with proper understanding of context
+
+-   Rapid feature development while maintaining quality
+-   Consistent code patterns across all modules
+-   Comprehensive documentation maintained alongside code
+-   Quick bug fixes with proper understanding of context
 
 **Limitations:**
-- AI may occasionally miss edge cases or subtle bugs
-- Some complex Home Assistant patterns may need human review
-- Translation quality depends on AI's understanding of target language
-- User feedback is crucial for discovering real-world issues
+
+-   AI may occasionally miss edge cases or subtle bugs
+-   Some complex Home Assistant patterns may need human review
+-   Translation quality depends on AI's understanding of target language
+-   User feedback is crucial for discovering real-world issues
 
 If you're working with AI tools on this project, the [`AGENTS.md`](../../AGENTS.md) file provides the context and patterns that ensure consistency.
 
@@ -68,13 +71,13 @@ If you're working with AI tools on this project, the [`AGENTS.md`](../../AGENTS.
 
 The project includes several helper scripts in `./scripts/`:
 
-- `bootstrap` - Initial setup of dependencies
-- `develop` - Start Home Assistant in debug mode
-- `lint` - Auto-fix code issues with ruff
-- `lint-check` - Check code without modifications (CI mode)
-- `setup` - Install development tools (git-cliff, @github/copilot)
-- `prepare-release` - Prepare a new release (bump version, create tag)
-- `generate-release-notes` - Generate release notes from commits
+-   `bootstrap` - Initial setup of dependencies
+-   `develop` - Start Home Assistant in debug mode
+-   `lint` - Auto-fix code issues with ruff
+-   `lint-check` - Check code without modifications (CI mode)
+-   `setup` - Install development tools (git-cliff, @github/copilot)
+-   `prepare-release` - Prepare a new release (bump version, create tag)
+-   `generate-release-notes` - Generate release notes from commits
 
 ## 📦 Project Structure
 
@@ -85,8 +88,17 @@ custom_components/tibber_prices/
 ├── api.py               # Tibber GraphQL API client
 ├── price_utils.py       # Price enrichment functions
 ├── average_utils.py     # Average calculation utilities
-├── sensor.py            # Sensor platform
+├── sensor/              # Sensor platform (package)
+│   ├── __init__.py      #   Platform setup
+│   ├── core.py          #   TibberPricesSensor class
+│   ├── definitions.py   #   Entity descriptions
+│   ├── helpers.py       #   Pure helper functions
+│   └── attributes.py    #   Attribute builders
 ├── binary_sensor.py     # Binary sensor platform
+├── entity_utils/        # Shared entity helpers
+│   ├── icons.py         #   Icon mapping logic
+│   ├── colors.py        #   Color mapping logic
+│   └── attributes.py    #   Common attribute builders
 ├── services.py          # Custom services
 ├── config_flow.py       # UI configuration flow
 ├── const.py             # Constants and helpers
@@ -97,21 +109,24 @@ custom_components/tibber_prices/
 ## 🔍 Key Concepts
 
 **DataUpdateCoordinator Pattern:**
-- Centralized data fetching and caching
-- Automatic entity updates on data changes
-- Persistent storage via `Store`
-- Quarter-hour boundary refresh scheduling
+
+-   Centralized data fetching and caching
+-   Automatic entity updates on data changes
+-   Persistent storage via `Store`
+-   Quarter-hour boundary refresh scheduling
 
 **Price Data Enrichment:**
-- Raw API data is enriched with statistical analysis
-- Trailing/leading 24h averages calculated per interval
-- Price differences and ratings added
-- All via pure functions in `price_utils.py`
+
+-   Raw API data is enriched with statistical analysis
+-   Trailing/leading 24h averages calculated per interval
+-   Price differences and ratings added
+-   All via pure functions in `price_utils.py`
 
 **Translation System:**
-- Dual system: `/translations/` (HA schema) + `/custom_translations/` (extended)
-- Both must stay in sync across all languages (de, en, nb, nl, sv)
-- Async loading at integration setup
+
+-   Dual system: `/translations/` (HA schema) + `/custom_translations/` (extended)
+-   Both must stay in sync across all languages (de, en, nb, nl, sv)
+-   Async loading at integration setup
 
 ## 🧪 Testing
 
@@ -128,11 +143,11 @@ pytest --cov=custom_components.tibber_prices tests/
 
 ## 📝 Documentation Standards
 
-- **User-facing docs** go in `docs/user/`
-- **Developer docs** go in `docs/development/`
-- **AI guidance** goes in `AGENTS.md`
-- Use clear examples and code snippets
-- Keep docs up-to-date with code changes
+-   **User-facing docs** go in `docs/user/`
+-   **Developer docs** go in `docs/development/`
+-   **AI guidance** goes in `AGENTS.md`
+-   Use clear examples and code snippets
+-   Keep docs up-to-date with code changes
 
 ## 🤝 Contributing
 

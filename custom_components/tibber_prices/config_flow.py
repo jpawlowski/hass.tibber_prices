@@ -526,7 +526,7 @@ class TibberPricesOptionsFlowHandler(OptionsFlow):
 
         if user_input is not None:
             self._options.update(user_input)
-            return await self.async_step_price_rating()
+            return await self.async_step_current_interval_price_rating()
 
         return self.async_show_form(
             step_id="init",
@@ -546,7 +546,9 @@ class TibberPricesOptionsFlowHandler(OptionsFlow):
             },
         )
 
-    async def async_step_price_rating(self, user_input: dict[str, Any] | None = None) -> ConfigFlowResult:
+    async def async_step_current_interval_price_rating(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
         """Configure price rating thresholds."""
         if user_input is not None:
             self._options.update(user_input)

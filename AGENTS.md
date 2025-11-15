@@ -4,8 +4,8 @@ This is a **Home Assistant custom component** for Tibber electricity price data,
 
 ## Documentation Metadata
 
--   **Last Major Update**: 2025-11-15
--   **Last Architecture Review**: 2025-11-15 (Sensor.py refactoring completed - unified handler methods for interval/rolling hour/daily stats/24h windows. Sensor organization changed from feature-type to calculation-method grouping. Common Tasks section updated with new patterns.)
+-   **Last Major Update**: 2025-11-17
+-   **Last Architecture Review**: 2025-11-17 (Module splitting refactoring completed - sensor.py split into sensor/ package with core.py, definitions.py, helpers.py, attributes.py. Created entity_utils/ package for shared icon/color/attribute logic. All phases complete.)
 -   **Documentation Status**: ✅ Current (verified against codebase)
 
 _Note: When proposing significant updates to this file, update the metadata above with the new date and brief description of changes._
@@ -112,7 +112,7 @@ This ensures the documentation stays accurate and useful as the codebase evolves
 1. `TibberPricesApiClient` (`api.py`) queries Tibber's GraphQL API with `resolution:QUARTER_HOURLY` for user data and prices (yesterday/today/tomorrow - 192 intervals total)
 2. `TibberPricesDataUpdateCoordinator` (`coordinator.py`) orchestrates updates every 15 minutes, manages persistent storage via `Store`, and schedules quarter-hour entity refreshes
 3. Price enrichment functions (`price_utils.py`, `average_utils.py`) calculate trailing/leading 24h averages, price differences, and rating levels for each 15-minute interval
-4. Entity platforms (`sensor.py`, `binary_sensor.py`) expose enriched data as Home Assistant entities
+4. Entity platforms (`sensor/` package, `binary_sensor.py`) expose enriched data as Home Assistant entities
 5. Custom services (`services.py`) provide API endpoints for integrations like ApexCharts
 
 **Key Patterns:**
@@ -179,7 +179,7 @@ This ensures the documentation stays accurate and useful as the codebase evolves
       "rating_level": "NORMAL"      # Added: LOW/NORMAL/HIGH based on thresholds
     }
     ```
--   **Sensor organization (refactored Nov 2025)**: Sensors in `sensor.py` are grouped by **calculation method** rather than feature type, enabling code reuse through unified handler methods:
+-   **Sensor organization (refactored Nov 2025)**: The `sensor/` package is organized by **calculation method** rather than feature type, enabling code reuse through unified handler methods:
     -   **Interval-based sensors**: Use `_get_interval_value(interval_offset, value_type)` for current/next/previous interval data
     -   **Rolling hour sensors**: Use `_get_rolling_hour_value(hour_offset, value_type)` for 5-interval windows
     -   **Daily statistics**: Use `_get_daily_stat_value(day, stat_func)` for calendar day min/max/avg
@@ -204,9 +204,19 @@ custom_components/tibber_prices/
 ├── price_utils.py        # Price enrichment, level/rating calculations
 ├── average_utils.py      # Trailing/leading average utilities
 ├── services.py           # Custom services (get_price, ApexCharts, etc.)
-├── sensor.py             # Price/stats/diagnostic sensors
+├── sensor/               # Sensor platform (package)
+│   ├── __init__.py       #   Platform setup (async_setup_entry)
+│   ├── core.py           #   TibberPricesSensor class
+│   ├── definitions.py    #   ENTITY_DESCRIPTIONS
+│   ├── helpers.py        #   Pure helper functions
+│   └── attributes.py     #   Attribute builders
 ├── binary_sensor.py      # Peak/best hour binary sensors
 ├── entity.py             # Base TibberPricesEntity class
+├── entity_utils/         # Shared entity helpers (both platforms)
+│   ├── __init__.py       #   Package exports
+│   ├── icons.py          #   Icon mapping logic
+│   ├── colors.py         #   Color mapping logic
+│   └── attributes.py     #   Common attribute builders
 ├── data.py               # @dataclass TibberPricesData
 ├── const.py              # Constants, translation loaders, currency helpers
 ├── config_flow.py        # UI configuration flow
@@ -1768,7 +1778,7 @@ After the sensor.py refactoring (completed Nov 2025), sensors are organized by *
     - **Volatility**: Statistical analysis of price variation
     - **Diagnostic**: System information and metadata
 
-2. **Add entity description** to appropriate sensor group in `sensor.py`:
+2. **Add entity description** to appropriate sensor group in `sensor/definitions.py`:
 
     - `INTERVAL_PRICE_SENSORS`, `INTERVAL_LEVEL_SENSORS`, or `INTERVAL_RATING_SENSORS`
     - `ROLLING_HOUR_PRICE_SENSORS`, `ROLLING_HOUR_LEVEL_SENSORS`, or `ROLLING_HOUR_RATING_SENSORS`
@@ -1778,7 +1788,7 @@ After the sensor.py refactoring (completed Nov 2025), sensors are organized by *
     - `VOLATILITY_SENSORS`
     - `DIAGNOSTIC_SENSORS`
 
-3. **Add handler mapping** in `_get_value_getter()` method:
+3. **Add handler mapping** in `sensor/core.py` → `_get_value_getter()` method:
 
     - For interval-based: Use `_get_interval_value(interval_offset, value_type)`
     - For rolling hour: Use `_get_rolling_hour_value(hour_offset, value_type)`
@@ -1793,7 +1803,7 @@ After the sensor.py refactoring (completed Nov 2025), sensors are organized by *
 **Example - Adding a "2 hours ago" interval sensor:**
 
 ```python
-# 1. Add to INTERVAL_PRICE_SENSORS group in sensor.py
+# 1. Add to INTERVAL_PRICE_SENSORS group in sensor/definitions.py
 SensorEntityDescription(
     key="two_hours_ago_price",
     translation_key="two_hours_ago_price",
@@ -1804,7 +1814,7 @@ SensorEntityDescription(
     suggested_display_precision=2,
 )
 
-# 2. Add handler in _get_value_getter()
+# 2. Add handler in sensor/core.py → _get_value_getter()
 "two_hours_ago_price": lambda: self._get_interval_value(
     interval_offset=-8,  # 2 hours = 8 intervals (15 min each)
     value_type="price",
@@ -1834,7 +1844,7 @@ SensorEntityDescription(
 
 **Unified Handler Methods (Post-Refactoring):**
 
-The refactoring consolidated duplicate logic into unified methods:
+The refactoring consolidated duplicate logic into unified methods in `sensor/core.py`:
 
 -   **`_get_interval_value(interval_offset, value_type, in_euro=False)`**
 
