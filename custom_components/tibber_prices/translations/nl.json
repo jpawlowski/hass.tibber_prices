@@ -326,16 +326,16 @@
                 "name": "⌀ Prijs vooruitlopend 24u"
             },
             "trailing_price_min": {
-                "name": "Voortschrijdend 24u minimumprijs"
+                "name": "24u-minimumprijs voortschrijdend"
             },
             "trailing_price_max": {
-                "name": "Voortschrijdend 24u maximumprijs"
+                "name": "24u-maximumprijs voortschrijdend"
             },
             "leading_price_min": {
-                "name": "Vooruitlopend 24u minimumprijs"
+                "name": "24u-minimumprijs vooruitlopend"
             },
             "leading_price_max": {
-                "name": "Vooruitlopend 24u maximumprijs"
+                "name": "24u-maximumprijs vooruitlopend"
             },
             "current_interval_price_rating": {
                 "name": "Huidige prijsbeoordeling",
@@ -362,7 +362,7 @@
                 }
             },
             "current_hour_price_rating": {
-                "name": "Huidig uurprijs beoordeling",
+                "name": "Huidig uurprijsbeoordeling",
                 "state": {
                     "low": "Laag",
                     "normal": "Normaal",
@@ -370,7 +370,7 @@
                 }
             },
             "next_hour_price_rating": {
-                "name": "Volgend uurprijs beoordeling",
+                "name": "Volgend uurprijsbeoordeling",
                 "state": {
                     "low": "Laag",
                     "normal": "Normaal",
@@ -475,7 +475,7 @@
                 "name": "Prijsgegevens Vervaldatum"
             },
             "today_volatility": {
-                "name": "Vandaag Prijsvolatiliteit",
+                "name": "Volatiliteit vandaag",
                 "state": {
                     "low": "Laag",
                     "moderate": "Gematigd",
@@ -484,7 +484,7 @@
                 }
             },
             "tomorrow_volatility": {
-                "name": "Morgen Prijsvolatiliteit",
+                "name": "Volatiliteit morgen",
                 "state": {
                     "low": "Laag",
                     "moderate": "Gematigd",
@@ -493,7 +493,7 @@
                 }
             },
             "next_24h_volatility": {
-                "name": "Volgende 24u Prijsvolatiliteit",
+                "name": "Volatiliteit volgende 24u",
                 "state": {
                     "low": "Laag",
                     "moderate": "Gematigd",
@@ -502,7 +502,7 @@
                 }
             },
             "today_tomorrow_volatility": {
-                "name": "Vandaag+Morgen Prijsvolatiliteit",
+                "name": "Volatiliteit vandaag+morgen",
                 "state": {
                     "low": "Laag",
                     "moderate": "Gematigd",

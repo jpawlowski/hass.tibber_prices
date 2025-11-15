@@ -330,16 +330,16 @@
                 "name": "⌀ Preis vorlaufend 24h"
             },
             "trailing_price_min": {
-                "name": "Nachlaufender 24h-Mindestpreis"
+                "name": "24h-Mindestpreis nachlaufend"
             },
             "trailing_price_max": {
-                "name": "Nachlaufender 24h-Höchstpreis"
+                "name": "24h-Höchstpreis nachlaufend"
             },
             "leading_price_min": {
-                "name": "Vorlaufender 24h-Mindestpreis"
+                "name": "24h-Mindestpreis vorlaufend"
             },
             "leading_price_max": {
-                "name": "Vorlaufender 24h-Höchstpreis"
+                "name": "24h-Höchstpreis vorlaufend"
             },
             "current_interval_price_rating": {
                 "name": "Aktuelle Preisbewertung",

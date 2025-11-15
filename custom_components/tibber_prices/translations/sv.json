@@ -362,7 +362,7 @@
                 }
             },
             "current_hour_price_rating": {
-                "name": "Nuvarande timpris värdering",
+                "name": "Nuvarande timprisvärdering",
                 "state": {
                     "low": "Låg",
                     "normal": "Normal",
@@ -370,7 +370,7 @@
                 }
             },
             "next_hour_price_rating": {
-                "name": "Nästa timpris värdering",
+                "name": "Nästa timprisvärdering",
                 "state": {
                     "low": "Låg",
                     "normal": "Normal",
@@ -475,7 +475,7 @@
                 "name": "Prisdata Utgångsdatum"
             },
             "today_volatility": {
-                "name": "Dagens Prisvolatilitet",
+                "name": "Volatilitet idag",
                 "state": {
                     "low": "Låg",
                     "moderate": "Måttlig",
@@ -484,7 +484,7 @@
                 }
             },
             "tomorrow_volatility": {
-                "name": "Morgondagens Prisvolatilitet",
+                "name": "Volatilitet imorgon",
                 "state": {
                     "low": "Låg",
                     "moderate": "Måttlig",
@@ -493,7 +493,7 @@
                 }
             },
             "next_24h_volatility": {
-                "name": "Nästa 24t Prisvolatilitet",
+                "name": "Volatilitet nästa 24t",
                 "state": {
                     "low": "Låg",
                     "moderate": "Måttlig",
@@ -502,7 +502,7 @@
                 }
             },
             "today_tomorrow_volatility": {
-                "name": "Idag+Imorgon Prisvolatilitet",
+                "name": "Volatilitet idag+imorgon",
                 "state": {
                     "low": "Låg",
                     "moderate": "Måttlig",

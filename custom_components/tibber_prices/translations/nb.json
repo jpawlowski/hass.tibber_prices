@@ -362,7 +362,7 @@
                 }
             },
             "current_hour_price_rating": {
-                "name": "Nåværende timepris vurdering",
+                "name": "Nåværende timeprisvurdering",
                 "state": {
                     "low": "Lav",
                     "normal": "Normal",
@@ -370,7 +370,7 @@
                 }
             },
             "next_hour_price_rating": {
-                "name": "Neste timepris vurdering",
+                "name": "Neste timeprisvurdering",
                 "state": {
                     "low": "Lav",
                     "normal": "Normal",
@@ -475,7 +475,7 @@
                 "name": "Prisdata Utløp"
             },
             "today_volatility": {
-                "name": "Dagens Prisvolatilitet",
+                "name": "Volatilitet i dag",
                 "state": {
                     "low": "Lav",
                     "moderate": "Moderat",
@@ -484,7 +484,7 @@
                 }
             },
             "tomorrow_volatility": {
-                "name": "Morgendagens Prisvolatilitet",
+                "name": "Volatilitet i morgen",
                 "state": {
                     "low": "Lav",
                     "moderate": "Moderat",
@@ -493,7 +493,7 @@
                 }
             },
             "next_24h_volatility": {
-                "name": "Neste 24t Prisvolatilitet",
+                "name": "Volatilitet neste 24t",
                 "state": {
                     "low": "Lav",
                     "moderate": "Moderat",
@@ -502,7 +502,7 @@
                 }
             },
             "today_tomorrow_volatility": {
-                "name": "I dag+I morgen Prisvolatilitet",
+                "name": "Volatilitet i dag+i morgen",
                 "state": {
                     "low": "Lav",
                     "moderate": "Moderat",
