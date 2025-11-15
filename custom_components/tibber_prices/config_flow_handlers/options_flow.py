@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import Any, ClassVar
 
-from custom_components.tibber_prices.config_flow.schemas import (
+from custom_components.tibber_prices.config_flow_handlers.schemas import (
     get_best_price_schema,
     get_options_init_schema,
     get_peak_price_schema,

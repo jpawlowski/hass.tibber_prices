@@ -10,6 +10,10 @@ if [ -z "$VIRTUAL_ENV" ]; then
     . "$HOME/.venv/bin/activate"
 fi
 
+# Clean up critical issues (accidental package installations)
+# Uses minimal mode to avoid deleting useful caches
+"$(dirname "$0")/clean" --minimal
+
 # Create config dir if not present
 if [ ! -d "${PWD}/config" ]; then
         mkdir -p "${PWD}/config"

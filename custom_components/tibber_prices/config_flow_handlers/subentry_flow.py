@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from custom_components.tibber_prices.config_flow.schemas import (
+from custom_components.tibber_prices.config_flow_handlers.schemas import (
     get_select_home_schema,
     get_subentry_init_schema,
 )

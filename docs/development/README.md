@@ -64,18 +64,21 @@ If you're working with AI tools on this project, the [`AGENTS.md`](../../AGENTS.
 4. **Start development environment**: `./scripts/develop`
 5. **Make your changes** following the [Coding Guidelines](coding-guidelines.md)
 6. **Run linting**: `./scripts/lint`
-7. **Test your changes** in the running Home Assistant instance
-8. **Commit using Conventional Commits** format
-9. **Open a Pull Request** with clear description
+7. **Validate integration**: `./scripts/hassfest`
+8. **Test your changes** in the running Home Assistant instance
+9. **Commit using Conventional Commits** format
+10. **Open a Pull Request** with clear description
 
 ## 🛠️ Development Tools
 
 The project includes several helper scripts in `./scripts/`:
 
 -   `bootstrap` - Initial setup of dependencies
--   `develop` - Start Home Assistant in debug mode
+-   `develop` - Start Home Assistant in debug mode (auto-cleans .egg-info)
+-   `clean` - Remove build artifacts and caches
 -   `lint` - Auto-fix code issues with ruff
 -   `lint-check` - Check code without modifications (CI mode)
+-   `hassfest` - Validate integration structure (JSON, Python syntax, required files)
 -   `setup` - Install development tools (git-cliff, @github/copilot)
 -   `prepare-release` - Prepare a new release (bump version, create tag)
 -   `generate-release-notes` - Generate release notes from commits
@@ -132,6 +135,9 @@ custom_components/tibber_prices/
 ## 🧪 Testing
 
 ```bash
+# Validate integration structure
+./scripts/hassfest
+
 # Run all tests
 pytest tests/
 

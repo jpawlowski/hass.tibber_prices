@@ -1,0 +1,106 @@
+#!/usr/bin/env bash
+
+# script/hassfest: Lightweight local validation for Home Assistant integration
+# Note: This is a simplified version. Full hassfest runs in GitHub Actions.
+
+set -e
+
+cd "$(dirname "$0")/.."
+
+INTEGRATION_PATH="custom_components/tibber_prices"
+ERRORS=0
+
+echo "==> Running local integration validation..."
+echo ""
+
+# Check 1: config_flow.py exists
+echo "✓ Checking config_flow.py existence..."
+if [ ! -f "$INTEGRATION_PATH/config_flow.py" ]; then
+    echo "  ✗ ERROR: config_flow.py not found"
+    ERRORS=$((ERRORS + 1))
+else
+    echo "  ✓ config_flow.py exists"
+fi
+
+# Check 2: manifest.json syntax
+echo "✓ Checking manifest.json syntax..."
+if ! python -m json.tool "$INTEGRATION_PATH/manifest.json" > /dev/null 2>&1; then
+    echo "  ✗ ERROR: manifest.json has invalid JSON syntax"
+    ERRORS=$((ERRORS + 1))
+else
+    echo "  ✓ manifest.json is valid JSON"
+fi
+
+# Check 3: Translation files syntax
+echo "✓ Checking translation files syntax..."
+for lang_file in "$INTEGRATION_PATH"/translations/*.json; do
+    if [ -f "$lang_file" ]; then
+        lang=$(basename "$lang_file")
+        if ! python -m json.tool "$lang_file" > /dev/null 2>&1; then
+            echo "  ✗ ERROR: $lang has invalid JSON syntax"
+            ERRORS=$((ERRORS + 1))
+        else
+            echo "  ✓ $lang is valid JSON"
+        fi
+    fi
+done
+
+# Check 4: Custom translation files syntax
+if [ -d "$INTEGRATION_PATH/custom_translations" ]; then
+    echo "✓ Checking custom translation files syntax..."
+    for lang_file in "$INTEGRATION_PATH"/custom_translations/*.json; do
+        if [ -f "$lang_file" ]; then
+            lang=$(basename "$lang_file")
+            if ! python -m json.tool "$lang_file" > /dev/null 2>&1; then
+                echo "  ✗ ERROR: custom_translations/$lang has invalid JSON syntax"
+                ERRORS=$((ERRORS + 1))
+            else
+                echo "  ✓ custom_translations/$lang is valid JSON"
+            fi
+        fi
+    done
+fi
+
+# Check 5: Python syntax
+# Note: We use ast.parse() instead of py_compile to avoid creating __pycache__ artifacts
+# ast.parse() validates syntax without writing any files to disk
+echo "✓ Checking Python syntax..."
+PYTHON_ERRORS=0
+while IFS= read -r py_file; do
+    if ! python -c "import ast; ast.parse(open('$py_file').read())" 2>/dev/null; then
+        echo "  ✗ ERROR: $py_file has syntax errors"
+        PYTHON_ERRORS=$((PYTHON_ERRORS + 1))
+        ERRORS=$((ERRORS + 1))
+    fi
+done < <(find "$INTEGRATION_PATH" -name "*.py" -type f)
+if [ $PYTHON_ERRORS -eq 0 ]; then
+    echo "  ✓ All Python files have valid syntax"
+fi
+
+# Check 6: Required manifest fields
+echo "✓ Checking required manifest fields..."
+REQUIRED_FIELDS=("domain" "name" "version" "documentation" "issue_tracker" "codeowners")
+for field in "${REQUIRED_FIELDS[@]}"; do
+    if ! python -c "import json; data=json.load(open('$INTEGRATION_PATH/manifest.json')); exit(0 if '$field' in data else 1)" 2>/dev/null; then
+        echo "  ✗ ERROR: manifest.json missing required field: $field"
+        ERRORS=$((ERRORS + 1))
+    fi
+done
+if [ $ERRORS -eq 0 ]; then
+    echo "  ✓ All required manifest fields present"
+fi
+
+echo ""
+if [ $ERRORS -eq 0 ]; then
+    echo "==> ✓ All local validation checks passed!"
+    echo ""
+    echo "Note: Full hassfest validation runs in GitHub Actions."
+    echo "      Push your changes to run complete validation."
+    exit 0
+else
+    echo "==> ✗ Found $ERRORS error(s)"
+    echo ""
+    echo "Note: This is a simplified local validation."
+    echo "      Full hassfest validation runs in GitHub Actions."
+    exit 1
+fi

@@ -18,7 +18,7 @@ uv run --active ruff format .
 echo "==> Running Ruff check..."
 uv run --active ruff check . --fix
 
-# Uninstall editable package to avoid conflicts with Home Assistant
-pip uninstall -y tibber_prices >/dev/null 2>&1 || true
+# Clean up any accidental package installation from uv run
+"$(dirname "$0")/clean" --minimal
 
 echo "==> Linting completed!"

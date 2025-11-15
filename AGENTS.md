@@ -435,6 +435,15 @@ If you notice commands failing or missing dependencies:
 
 ```bash
 ./scripts/develop  # Starts HA in debug mode with config/ dir, sets PYTHONPATH
+                   # Automatically runs minimal cleanup (.egg-info only)
+```
+
+**Clean up artifacts:**
+
+```bash
+./scripts/clean           # Remove build artifacts, caches (pytest, ruff, coverage)
+./scripts/clean --deep    # Also remove __pycache__ (normally not needed)
+./scripts/clean --minimal # Only critical issues (.egg-info) - used by develop
 ```
 
 **Linting (auto-fix):**
@@ -448,6 +457,14 @@ If you notice commands failing or missing dependencies:
 ```bash
 ./scripts/lint-check  # CI mode, no modifications
 ```
+
+**Local validation:**
+
+```bash
+./scripts/hassfest  # Lightweight local integration validation
+```
+
+Note: The local `hassfest` script performs basic validation checks (JSON syntax, required files, Python syntax). Full hassfest validation runs in GitHub Actions.
 
 **Testing:**
 
@@ -1044,19 +1061,17 @@ cargo install git-cliff  # or download binary from releases
 -   **Markdown**: Standard GitHub-flavored Markdown supported
 -   **HTML**: Can include `<ha-alert>` tags for special notices (HA update entities only)
 
-**Validate JSON files:**
+**Validate integration:**
 
 ```bash
-# After editing translation files, validate syntax (ruff doesn't check JSON)
-python -m json.tool custom_components/tibber_prices/translations/de.json > /dev/null
+# Run local validation (checks JSON syntax, Python syntax, required files)
+./scripts/hassfest
 
-# Or validate all translation files at once:
-for f in custom_components/tibber_prices/translations/*.json; do
-    python -m json.tool "$f" > /dev/null && echo "✓ $f" || echo "✗ INVALID: $f"
-done
+# Or validate JSON files manually if needed:
+python -m json.tool custom_components/tibber_prices/translations/de.json > /dev/null
 ```
 
-**Why:** `ruff` only formats/lints Python code. JSON syntax errors (trailing commas, missing quotes) will cause HA to fail at runtime with cryptic error messages. Always validate JSON after manual edits.
+**Why:** The `./scripts/hassfest` script validates JSON syntax (translations, manifest), Python syntax, and required files. This catches common errors before pushing to GitHub Actions. For quick JSON-only checks, you can still use `python -m json.tool` directly.
 
 ## Linting Best Practices
 
@@ -1071,9 +1086,17 @@ done
 
 Calling `ruff` or `uv run ruff` directly can cause unintended side effects:
 
--   May install the integration as a Python package (creates `__pycache__`, `.egg-info`, etc.)
+-   May install the integration as a Python package (creates `.egg-info`, etc.)
 -   HA will then load the **installed** version instead of the **development** version from `custom_components/`
 -   Causes confusing behavior where code changes don't take effect
+
+**About `__pycache__` directories:**
+
+-   **Normal and expected** when Home Assistant runs - this is Python's bytecode cache for faster loading
+-   **Not a problem** in development - speeds up HA startup
+-   **Already in `.gitignore`** - won't be committed
+-   **Only problematic** if the package gets installed in `.venv` (then HA loads installed version, not dev version)
+-   `./scripts/develop`, `./scripts/lint`, and `./scripts/lint-check` automatically clean up accidental installations
 
 **Exception:** If you need to run `ruff` with custom flags not supported by our scripts:
 
@@ -1081,17 +1104,24 @@ Calling `ruff` or `uv run ruff` directly can cause unintended side effects:
 2. **Immediately after**, clean up any installation artifacts:
 
     ```bash
-    # Remove any accidentally installed package
-    uv pip uninstall tibber_prices 2>/dev/null || true
+    # Use our cleanup script (uses both pip and uv pip for compatibility)
+    ./scripts/clean --minimal
 
-    # Clean up cache and build artifacts
-    find . -type d -name "__pycache__" -exec rm -rf {} + 2>/dev/null || true
-    find . -type d -name "*.egg-info" -exec rm -rf {} + 2>/dev/null || true
+    # Or manually:
+    pip uninstall -y tibber_prices 2>/dev/null || true
+    uv pip uninstall tibber_prices 2>/dev/null || true
     ```
 
 3. Ask user to restart HA: `./scripts/develop`
 
 **When in doubt:** Stick to `./scripts/lint` - it's tested and safe.
+
+**Note on pip vs. uv pip:**
+
+-   `scripts/clean` uses **both** `pip` and `uv pip` for maximum compatibility
+-   Regular `pip uninstall` has cleaner output (no "Using Python X.Y..." messages)
+-   `uv pip uninstall` is used as fallback for robustness
+-   Both are needed because different commands may install via different methods
 
 **Key commands:**
 

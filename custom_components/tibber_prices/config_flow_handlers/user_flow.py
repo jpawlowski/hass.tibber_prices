@@ -4,18 +4,18 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any
 
-from custom_components.tibber_prices.config_flow.options_flow import (
+from custom_components.tibber_prices.config_flow_handlers.options_flow import (
     TibberPricesOptionsFlowHandler,
 )
-from custom_components.tibber_prices.config_flow.schemas import (
+from custom_components.tibber_prices.config_flow_handlers.schemas import (
     get_reauth_confirm_schema,
     get_select_home_schema,
     get_user_schema,
 )
-from custom_components.tibber_prices.config_flow.subentry_flow import (
+from custom_components.tibber_prices.config_flow_handlers.subentry_flow import (
     TibberPricesSubentryFlowHandler,
 )
-from custom_components.tibber_prices.config_flow.validators import (
+from custom_components.tibber_prices.config_flow_handlers.validators import (
     CannotConnectError,
     InvalidAuthError,
     validate_api_token,
