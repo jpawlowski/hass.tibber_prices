@@ -263,22 +263,58 @@
                 "name": "Tomorrow's Average Price"
             },
             "yesterday_price_level": {
-                "name": "Yesterday's Price Level"
+                "name": "Yesterday's Price Level",
+                "state": {
+                    "very_cheap": "Very Cheap",
+                    "cheap": "Cheap",
+                    "normal": "Normal",
+                    "expensive": "Expensive",
+                    "very_expensive": "Very Expensive"
+                }
             },
             "today_price_level": {
-                "name": "Today's Price Level"
+                "name": "Today's Price Level",
+                "state": {
+                    "very_cheap": "Very Cheap",
+                    "cheap": "Cheap",
+                    "normal": "Normal",
+                    "expensive": "Expensive",
+                    "very_expensive": "Very Expensive"
+                }
             },
             "tomorrow_price_level": {
-                "name": "Tomorrow's Price Level"
+                "name": "Tomorrow's Price Level",
+                "state": {
+                    "very_cheap": "Very Cheap",
+                    "cheap": "Cheap",
+                    "normal": "Normal",
+                    "expensive": "Expensive",
+                    "very_expensive": "Very Expensive"
+                }
             },
             "yesterday_price_rating": {
-                "name": "Yesterday's Price Rating"
+                "name": "Yesterday's Price Rating",
+                "state": {
+                    "low": "Low",
+                    "normal": "Normal",
+                    "high": "High"
+                }
             },
             "today_price_rating": {
-                "name": "Today's Price Rating"
+                "name": "Today's Price Rating",
+                "state": {
+                    "low": "Low",
+                    "normal": "Normal",
+                    "high": "High"
+                }
             },
             "tomorrow_price_rating": {
-                "name": "Tomorrow's Price Rating"
+                "name": "Tomorrow's Price Rating",
+                "state": {
+                    "low": "Low",
+                    "normal": "Normal",
+                    "high": "High"
+                }
             },
             "trailing_price_average": {
                 "name": "Trailing 24h Average Price"

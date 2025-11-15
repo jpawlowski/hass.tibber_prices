@@ -262,6 +262,60 @@
             "average_price_tomorrow": {
                 "name": "Morgondagens genomsnittspris"
             },
+            "yesterday_price_level": {
+                "name": "Prisnivå igår",
+                "state": {
+                    "very_cheap": "Mycket billigt",
+                    "cheap": "Billigt",
+                    "normal": "Normalt",
+                    "expensive": "Dyrt",
+                    "very_expensive": "Mycket dyrt"
+                }
+            },
+            "today_price_level": {
+                "name": "Prisnivå idag",
+                "state": {
+                    "very_cheap": "Mycket billigt",
+                    "cheap": "Billigt",
+                    "normal": "Normalt",
+                    "expensive": "Dyrt",
+                    "very_expensive": "Mycket dyrt"
+                }
+            },
+            "tomorrow_price_level": {
+                "name": "Prisnivå imorgon",
+                "state": {
+                    "very_cheap": "Mycket billigt",
+                    "cheap": "Billigt",
+                    "normal": "Normalt",
+                    "expensive": "Dyrt",
+                    "very_expensive": "Mycket dyrt"
+                }
+            },
+            "yesterday_price_rating": {
+                "name": "Prisvärdering igår",
+                "state": {
+                    "low": "Låg",
+                    "normal": "Normal",
+                    "high": "Hög"
+                }
+            },
+            "today_price_rating": {
+                "name": "Prisvärdering idag",
+                "state": {
+                    "low": "Låg",
+                    "normal": "Normal",
+                    "high": "Hög"
+                }
+            },
+            "tomorrow_price_rating": {
+                "name": "Prisvärdering imorgon",
+                "state": {
+                    "low": "Låg",
+                    "normal": "Normal",
+                    "high": "Hög"
+                }
+            },
             "trailing_price_average": {
                 "name": "Rullande 24t genomsnittspris"
             },

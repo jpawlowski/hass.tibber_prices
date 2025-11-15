@@ -267,22 +267,58 @@
                 "name": "Durchschnittspreis morgen"
             },
             "yesterday_price_level": {
-                "name": "Preisniveau gestern"
+                "name": "Preisniveau gestern",
+                "state": {
+                    "very_cheap": "Sehr günstig",
+                    "cheap": "Günstig",
+                    "normal": "Normal",
+                    "expensive": "Teuer",
+                    "very_expensive": "Sehr teuer"
+                }
             },
             "today_price_level": {
-                "name": "Preisniveau heute"
+                "name": "Preisniveau heute",
+                "state": {
+                    "very_cheap": "Sehr günstig",
+                    "cheap": "Günstig",
+                    "normal": "Normal",
+                    "expensive": "Teuer",
+                    "very_expensive": "Sehr teuer"
+                }
             },
             "tomorrow_price_level": {
-                "name": "Preisniveau morgen"
+                "name": "Preisniveau morgen",
+                "state": {
+                    "very_cheap": "Sehr günstig",
+                    "cheap": "Günstig",
+                    "normal": "Normal",
+                    "expensive": "Teuer",
+                    "very_expensive": "Sehr teuer"
+                }
             },
             "yesterday_price_rating": {
-                "name": "Preisbewertung gestern"
+                "name": "Preisbewertung gestern",
+                "state": {
+                    "low": "Niedrig",
+                    "normal": "Normal",
+                    "high": "Hoch"
+                }
             },
             "today_price_rating": {
-                "name": "Preisbewertung heute"
+                "name": "Preisbewertung heute",
+                "state": {
+                    "low": "Niedrig",
+                    "normal": "Normal",
+                    "high": "Hoch"
+                }
             },
             "tomorrow_price_rating": {
-                "name": "Preisbewertung morgen"
+                "name": "Preisbewertung morgen",
+                "state": {
+                    "low": "Niedrig",
+                    "normal": "Normal",
+                    "high": "Hoch"
+                }
             },
             "trailing_price_average": {
                 "name": "Nachlaufender 24h-Durchschnittspreis"

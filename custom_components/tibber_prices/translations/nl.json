@@ -262,6 +262,60 @@
             "average_price_tomorrow": {
                 "name": "Gemiddelde prijs morgen"
             },
+            "yesterday_price_level": {
+                "name": "Prijsniveau gisteren",
+                "state": {
+                    "very_cheap": "Zeer goedkoop",
+                    "cheap": "Goedkoop",
+                    "normal": "Normaal",
+                    "expensive": "Duur",
+                    "very_expensive": "Zeer duur"
+                }
+            },
+            "today_price_level": {
+                "name": "Prijsniveau vandaag",
+                "state": {
+                    "very_cheap": "Zeer goedkoop",
+                    "cheap": "Goedkoop",
+                    "normal": "Normaal",
+                    "expensive": "Duur",
+                    "very_expensive": "Zeer duur"
+                }
+            },
+            "tomorrow_price_level": {
+                "name": "Prijsniveau morgen",
+                "state": {
+                    "very_cheap": "Zeer goedkoop",
+                    "cheap": "Goedkoop",
+                    "normal": "Normaal",
+                    "expensive": "Duur",
+                    "very_expensive": "Zeer duur"
+                }
+            },
+            "yesterday_price_rating": {
+                "name": "Prijsbeoordeling gisteren",
+                "state": {
+                    "low": "Laag",
+                    "normal": "Normaal",
+                    "high": "Hoog"
+                }
+            },
+            "today_price_rating": {
+                "name": "Prijsbeoordeling vandaag",
+                "state": {
+                    "low": "Laag",
+                    "normal": "Normaal",
+                    "high": "Hoog"
+                }
+            },
+            "tomorrow_price_rating": {
+                "name": "Prijsbeoordeling morgen",
+                "state": {
+                    "low": "Laag",
+                    "normal": "Normaal",
+                    "high": "Hoog"
+                }
+            },
             "trailing_price_average": {
                 "name": "Voortschrijdend 24u gemiddelde prijs"
             },

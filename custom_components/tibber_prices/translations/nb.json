@@ -262,6 +262,60 @@
             "average_price_tomorrow": {
                 "name": "Morgendagens gjennomsnittspris"
             },
+            "yesterday_price_level": {
+                "name": "Prisnivå i går",
+                "state": {
+                    "very_cheap": "Veldig billig",
+                    "cheap": "Billig",
+                    "normal": "Normal",
+                    "expensive": "Dyr",
+                    "very_expensive": "Veldig dyr"
+                }
+            },
+            "today_price_level": {
+                "name": "Prisnivå i dag",
+                "state": {
+                    "very_cheap": "Veldig billig",
+                    "cheap": "Billig",
+                    "normal": "Normal",
+                    "expensive": "Dyr",
+                    "very_expensive": "Veldig dyr"
+                }
+            },
+            "tomorrow_price_level": {
+                "name": "Prisnivå i morgen",
+                "state": {
+                    "very_cheap": "Veldig billig",
+                    "cheap": "Billig",
+                    "normal": "Normal",
+                    "expensive": "Dyr",
+                    "very_expensive": "Veldig dyr"
+                }
+            },
+            "yesterday_price_rating": {
+                "name": "Prisvurdering i går",
+                "state": {
+                    "low": "Lav",
+                    "normal": "Normal",
+                    "high": "Høy"
+                }
+            },
+            "today_price_rating": {
+                "name": "Prisvurdering i dag",
+                "state": {
+                    "low": "Lav",
+                    "normal": "Normal",
+                    "high": "Høy"
+                }
+            },
+            "tomorrow_price_rating": {
+                "name": "Prisvurdering i morgen",
+                "state": {
+                    "low": "Lav",
+                    "normal": "Normal",
+                    "high": "Høy"
+                }
+            },
             "trailing_price_average": {
                 "name": "Glidende 24t gjennomsnittspris"
             },
