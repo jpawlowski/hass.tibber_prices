@@ -105,6 +105,129 @@ If you detect 3+ related minor changes (e.g., multiple constant renames during r
 
 This ensures the documentation stays accurate and useful as the codebase evolves, while maintaining user control over what gets documented.
 
+## Planning Major Refactorings
+
+**Purpose**: Large-scale architectural changes require careful planning before implementation.
+
+**Planning Directory**: `/planning/` (git-ignored, safe for iteration)
+
+**When to Create a Planning Document:**
+
+Create a detailed plan when:
+
+-   🔴 **Major refactoring** (>5 files, >500 lines changed)
+-   🔴 **Architectural changes** (new packages, module restructuring)
+-   🔴 **Breaking changes** (API changes, config format migrations)
+-   🟡 **Complex features** (multiple moving parts, unclear best approach)
+
+Skip planning for:
+
+-   🟢 Bug fixes (straightforward, <100 lines)
+-   🟢 Small features (<3 files, clear approach)
+-   🟢 Documentation updates
+-   🟢 Cosmetic changes (formatting, renaming)
+
+**Planning Document Lifecycle:**
+
+1. **Planning Phase** (WIP in `/planning/`)
+
+    - Create `planning/<feature>-refactoring-plan.md`
+    - Iterate freely (git-ignored, no commit pressure)
+    - AI can help refine without polluting git history
+    - Multiple revisions until plan is solid
+
+2. **Implementation Phase** (Active work)
+
+    - Use plan as reference during coding
+    - Update plan if issues discovered
+    - Track progress through phases
+    - Test after each phase
+
+3. **Completion Phase** (After implementation)
+
+    - **Option A**: Move to `docs/development/` if lasting value
+
+        - Example: `planning/module-splitting-plan.md` → `docs/development/module-splitting-plan.md`
+        - Update status to "✅ COMPLETED"
+        - Commit as historical reference
+
+    - **Option B**: Delete if superseded
+
+        - Plan served its purpose
+        - Code and AGENTS.md are source of truth
+
+    - **Option C**: Archive in `planning/archive/`
+        - Keep locally for "why we didn't do X" reference
+        - Don't commit (git-ignored)
+
+**Required Planning Document Sections:**
+
+```markdown
+# <Feature> Refactoring Plan
+
+**Status**: 🔄 PLANNING | 🚧 IN PROGRESS | ✅ COMPLETED | ❌ CANCELLED
+**Created**: YYYY-MM-DD
+**Last Updated**: YYYY-MM-DD
+
+## Problem Statement
+
+-   What's the issue?
+-   Why does it need fixing?
+-   Current pain points
+
+## Proposed Solution
+
+-   High-level approach
+-   File structure (before/after)
+-   Module responsibilities
+
+## Migration Strategy
+
+-   Phase-by-phase breakdown
+-   File lifecycle (CREATE/MODIFY/DELETE/RENAME)
+-   Dependencies between phases
+-   Testing checkpoints
+
+## Risks & Mitigation
+
+-   What could go wrong?
+-   How to prevent it?
+-   Rollback strategy
+
+## Success Criteria
+
+-   Measurable improvements
+-   Testing requirements
+-   Verification steps
+```
+
+**Example**: See `docs/development/module-splitting-plan.md` for a completed plan (moved from `planning/` after successful implementation).
+
+**Integration with AGENTS.md:**
+
+After successful refactoring:
+
+1. Update AGENTS.md with new patterns/conventions
+2. Move plan to `docs/development/` if valuable for future reference
+3. Planning doc is temporary scaffolding; AGENTS.md is permanent guide
+
+**Best Practices:**
+
+✅ **DO:**
+
+-   Iterate freely in `/planning/` (git-ignored)
+-   Break complex changes into clear phases
+-   Document file lifecycle explicitly
+-   Include code examples and patterns
+-   Plan testing after each phase
+
+❌ **DON'T:**
+
+-   Start coding before plan is solid
+-   Skip the "Why?" section
+-   Commit `/planning/` files (they're ignored!)
+-   Over-plan trivial changes
+
 ## Architecture Overview
 
 **Core Data Flow:**

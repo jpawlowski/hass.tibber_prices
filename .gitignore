@@ -32,3 +32,6 @@ home-assistant_v2.db*
 *.temp
 .DS_Store
 Thumbs.db
+
+# Planning documents (work-in-progress)
+planning/

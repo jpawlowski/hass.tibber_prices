@@ -9,6 +9,7 @@ This section contains documentation for contributors and maintainers of the Tibb
 -   **[Testing](testing.md)** - How to run tests and write new test cases
 -   **[Release Management](release-management.md)** - Release workflow and versioning process
 -   **[Coding Guidelines](coding-guidelines.md)** - Style guide, linting, and best practices
+-   **[Refactoring Guide](refactoring-guide.md)** - How to plan and execute major refactorings
 
 ## 🤖 AI Documentation
 
