@@ -2,7 +2,9 @@
 
 from __future__ import annotations
 
+import asyncio
 import logging
+import secrets
 from datetime import date, datetime, timedelta
 from typing import TYPE_CHECKING, Any
 
@@ -89,17 +91,57 @@ _LOGGER = logging.getLogger(__name__)
 # Storage version for storing data
 STORAGE_VERSION = 1
 
-# Update interval - fetch data every 15 minutes (when data is incomplete)
-UPDATE_INTERVAL = timedelta(minutes=15)
+# =============================================================================
+# TIMER SYSTEM - Three independent update mechanisms:
+# =============================================================================
+#
+# Timer #1: DataUpdateCoordinator (HA's built-in, every UPDATE_INTERVAL)
+#   - Purpose: Check if API data needs updating, fetch if necessary
+#   - Trigger: _async_update_data()
+#   - What it does:
+#     * Checks _should_update_price_data() (tomorrow missing? interval passed?)
+#     * Fetches fresh data from API if needed
+#     * Uses cached data otherwise (fast path)
+#     * Transforms data only when needed (config change, new data, midnight)
+#   - Load distribution:
+#     * Start time varies per installation → natural distribution
+#     * Tomorrow data check adds 0-30s random delay → prevents thundering herd
+#
+# Timer #2: Quarter-Hour Refresh (exact :00, :15, :30, :45 boundaries)
+#   - Purpose: Update time-sensitive entity states at interval boundaries
+#   - Trigger: _handle_quarter_hour_refresh()
+#   - What it does:
+#     * Notifies time-sensitive entities to recalculate state
+#     * Does NOT fetch data or transform - uses existing cache
+#     * Detects midnight turnover (yesterday → today → tomorrow rotation)
+#
+# Timer #3: Minute Refresh (every minute)
+#   - Purpose: Update countdown/progress sensors
+#   - Trigger: _handle_minute_refresh()
+#   - What it does:
+#     * Notifies minute-update entities (remaining_minutes, progress)
+#     * Does NOT fetch data or transform - uses existing cache
+#
+# =============================================================================
 
-# Update interval when all data is available - every 4 hours (reduce API calls)
-UPDATE_INTERVAL_COMPLETE = timedelta(hours=4)
+# Update interval for DataUpdateCoordinator timer
+# This determines how often Timer #1 runs to check if updates are needed.
+# Actual API calls only happen when:
+# - Cache is invalid (different day, corrupted)
+# - Tomorrow data missing after 13:00
+# - No cached data exists
+UPDATE_INTERVAL = timedelta(minutes=15)
 
 # Quarter-hour boundaries for entity state updates (minutes: 00, 15, 30, 45)
 QUARTER_HOUR_BOUNDARIES = (0, 15, 30, 45)
 
 # Hour after which tomorrow's price data is expected (13:00 local time)
 TOMORROW_DATA_CHECK_HOUR = 13
+
+# Random delay range for tomorrow data checks (spread API load)
+# When tomorrow data is missing after 13:00, wait 0-30 seconds before fetching
+# This prevents all HA instances from requesting simultaneously
+TOMORROW_DATA_RANDOM_DELAY_MAX = 30  # seconds
 
 # Entity keys that require quarter-hour updates (time-sensitive entities)
 # These entities calculate values based on current time and need updates every 15 minutes
@@ -215,6 +257,10 @@ class TibberPricesDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         # Price data cache
         self._cached_price_data: dict[str, Any] | None = None
         self._last_price_update: datetime | None = None
+
+        # Transformed data cache (to avoid re-processing on every coordinator update)
+        self._cached_transformed_data: dict[str, Any] | None = None
+        self._last_transformation_config: dict[str, Any] | None = None
 
         # Track the last date we checked for midnight turnover
         self._last_midnight_check: datetime | None = None
@@ -337,9 +383,21 @@ class TibberPricesDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 
     @callback
     def _handle_quarter_hour_refresh(self, _now: datetime | None = None) -> None:
-        """Handle quarter-hour entity refresh - check for midnight turnover and update entities."""
+        """
+        Handle quarter-hour entity refresh (Timer #2).
+
+        This is a SYNCHRONOUS callback (decorated with @callback) - it runs in the event loop
+        without async/await overhead because it performs only fast, non-blocking operations:
+        - Midnight turnover check (date comparison, data rotation)
+        - Listener notifications (entity state updates)
+
+        NO I/O operations (no API calls, no file operations), so no need for async def.
+
+        This is triggered at exact quarter-hour boundaries (:00, :15, :30, :45).
+        Does NOT fetch new data - only updates entity states based on existing cached data.
+        """
         now = dt_util.now()
-        self._log("debug", "Quarter-hour refresh triggered at %s", now.isoformat())
+        self._log("debug", "[Timer #2] Quarter-hour refresh triggered at %s", now.isoformat())
 
         # Check if midnight has passed since last check
         midnight_turnover_performed = self._check_and_handle_midnight_turnover(now)
@@ -378,9 +436,21 @@ class TibberPricesDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 
     @callback
     def _handle_minute_refresh(self, _now: datetime | None = None) -> None:
-        """Handle minute-by-minute entity refresh for timing sensors."""
+        """
+        Handle minute-by-minute entity refresh for timing sensors (Timer #3).
+
+        This is a SYNCHRONOUS callback (decorated with @callback) - it runs in the event loop
+        without async/await overhead because it performs only fast, non-blocking operations:
+        - Listener notifications for timing sensors (remaining_minutes, progress)
+
+        NO I/O operations (no API calls, no file operations), so no need for async def.
+        Runs every minute, so performance is critical - sync callbacks are faster.
+
+        This runs every minute to update countdown/progress sensors.
+        Does NOT fetch new data - only updates entity states based on existing cached data.
+        """
         # Only log at debug level to avoid log spam (this runs every minute)
-        self._log("debug", "Minute refresh triggered for timing sensors")
+        self._log("debug", "[Timer #3] Minute refresh for timing sensors")
 
         # Update only minute-update entities (remaining_minutes, progress, etc.)
         self._async_update_minute_listeners()
@@ -466,7 +536,20 @@ class TibberPricesDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         return self._is_main_entry
 
     async def _async_update_data(self) -> dict[str, Any]:
-        """Fetch data from Tibber API."""
+        """
+        Fetch data from Tibber API (called by DataUpdateCoordinator timer).
+
+        This is Timer #1 (HA's built-in coordinator timer, every 15 min).
+        Responsible for:
+        - Checking if API data needs updating
+        - Fetching new data if needed
+        - Using cached data otherwise
+
+        Note: This is separate from quarter-hour entity updates (Timer #2)
+        and minute updates (Timer #3) which only refresh entity states.
+        """
+        self._log("debug", "[Timer #1] DataUpdateCoordinator check triggered")
+
         # Load cache if not already loaded
         if self._cached_price_data is None and self._cached_user_data is None:
             await self._load_cache()
@@ -500,17 +583,34 @@ class TibberPricesDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         await self._update_user_data_if_needed(current_time)
 
         # Check if we need to update price data
-        if self._should_update_price_data(current_time):
+        should_update = self._should_update_price_data(current_time)
+
+        if should_update:
+            # If this is a tomorrow data check, add random delay to spread API load
+            if should_update == "tomorrow_check":
+                # Use secrets for better randomness distribution
+                delay = secrets.randbelow(TOMORROW_DATA_RANDOM_DELAY_MAX + 1)
+                self._log(
+                    "debug",
+                    "Tomorrow data check - adding random delay of %d seconds to spread load",
+                    delay,
+                )
+                await asyncio.sleep(delay)
+
+            self._log("debug", "Fetching fresh price data from API")
             raw_data = await self._fetch_all_homes_data()
             # Cache the data
             self._cached_price_data = raw_data
             self._last_price_update = current_time
+            # Invalidate transformed cache when new raw data arrives
+            self._cached_transformed_data = None
             await self._store_cache()
             # Transform for main entry: provide aggregated view
             return self._transform_data_for_main_entry(raw_data)
 
         # Use cached data if available
         if self._cached_price_data is not None:
+            self._log("debug", "Using cached price data (no API call needed)")
             return self._transform_data_for_main_entry(self._cached_price_data)
 
         # Fallback: no cache and no update needed (shouldn't happen)
@@ -528,8 +628,6 @@ class TibberPricesDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 
     async def _fetch_all_homes_data(self) -> dict[str, Any]:
         """Fetch data for all homes (main coordinator only)."""
-        self._log("debug", "Fetching data for all homes")
-
         # Get price data for all homes
         price_data = await self.api.async_get_price_info()
 
@@ -597,9 +695,13 @@ class TibberPricesDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                     self._log("info", "Cached price data is from a previous day, clearing cache to fetch fresh data")
                     self._cached_price_data = None
                     self._last_price_update = None
+                    # Also clear transformed cache when raw cache is invalidated
+                    self._cached_transformed_data = None
                     await self._store_cache()
                 else:
                     self._log("debug", "Cache loaded successfully")
+                    # Transformed cache is not persisted, so always needs to be regenerated
+                    self._cached_transformed_data = None
             else:
                 self._log("debug", "No cache found, will fetch fresh data")
         except OSError as ex:
@@ -708,22 +810,32 @@ class TibberPricesDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 self._log("warning", "Failed to update user data: %s", ex)
 
     @callback
-    def _should_update_price_data(self, current_time: datetime) -> bool:
+    def _should_update_price_data(self, current_time: datetime) -> bool | str:
         """
         Check if price data should be updated from the API.
 
-        Updates occur when:
+        API calls only happen when truly needed:
         1. No cached data exists
-        2. Cache is invalid (from previous day)
-        3. It's after 13:00 local time and tomorrow's data is missing or invalid
-        4. Regular update interval has passed
+        2. Cache is invalid (from previous day - detected by _is_cache_valid)
+        3. After 13:00 local time and tomorrow's data is missing or invalid
+
+        Cache validity is ensured by:
+        - _is_cache_valid() checks date mismatch on load
+        - Midnight turnover clears cache (Timer #2)
+        - Tomorrow data validation after 13:00
+
+        No periodic "safety" updates - trust the cache validation!
+
+        Returns:
+            bool or str: True for immediate update, "tomorrow_check" for tomorrow
+                        data check (needs random delay), False for no update
 
         """
         if self._cached_price_data is None:
-            self._log("debug", "Should update: No cached price data")
+            self._log("debug", "API update needed: No cached price data")
             return True
         if self._last_price_update is None:
-            self._log("debug", "Should update: No last price update timestamp")
+            self._log("debug", "API update needed: No last price update timestamp")
             return True
 
         now_local = dt_util.as_local(current_time)
@@ -736,28 +848,17 @@ class TibberPricesDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             and "homes" in self._cached_price_data
             and self._needs_tomorrow_data(tomorrow_date)
         ):
-            self._log("debug", "Should update: After %s:00 and valid tomorrow data missing", TOMORROW_DATA_CHECK_HOUR)
-            return True
-
-        # Check regular update interval
-        time_since_update = current_time - self._last_price_update
-
-        # Determine appropriate interval based on data completeness
-        has_tomorrow_data = self._has_valid_tomorrow_data(tomorrow_date)
-        interval = UPDATE_INTERVAL_COMPLETE if has_tomorrow_data else UPDATE_INTERVAL
-        should_update = time_since_update >= interval
-
-        if should_update:
             self._log(
                 "debug",
-                "Should update price data: %s (time since last update: %s, interval: %s, has_tomorrow: %s)",
-                should_update,
-                time_since_update,
-                interval,
-                has_tomorrow_data,
+                "API update needed: After %s:00 and tomorrow's data missing/invalid",
+                TOMORROW_DATA_CHECK_HOUR,
             )
+            # Return special marker to indicate this is a tomorrow data check
+            # Caller should add random delay to spread load
+            return "tomorrow_check"
 
-        return should_update
+        # No update needed - cache is valid and complete
+        return False
 
     def _needs_tomorrow_data(self, tomorrow_date: date) -> bool:
         """Check if tomorrow data is missing or invalid."""
@@ -1393,8 +1494,78 @@ class TibberPricesDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             "peak_price_relaxation": peak_relaxation,
         }
 
+    def _get_current_transformation_config(self) -> dict[str, Any]:
+        """Get current configuration that affects data transformation."""
+        return {
+            "thresholds": self._get_threshold_percentages(),
+            "volatility_thresholds": {
+                "moderate": self.config_entry.options.get(CONF_VOLATILITY_THRESHOLD_MODERATE, 15.0),
+                "high": self.config_entry.options.get(CONF_VOLATILITY_THRESHOLD_HIGH, 25.0),
+                "very_high": self.config_entry.options.get(CONF_VOLATILITY_THRESHOLD_VERY_HIGH, 40.0),
+            },
+            "best_price_config": {
+                "flex": self.config_entry.options.get(CONF_BEST_PRICE_FLEX, 15.0),
+                "max_level": self.config_entry.options.get(CONF_BEST_PRICE_MAX_LEVEL, "NORMAL"),
+                "min_period_length": self.config_entry.options.get(CONF_BEST_PRICE_MIN_PERIOD_LENGTH, 4),
+                "min_distance_from_avg": self.config_entry.options.get(CONF_BEST_PRICE_MIN_DISTANCE_FROM_AVG, -5.0),
+                "max_level_gap_count": self.config_entry.options.get(CONF_BEST_PRICE_MAX_LEVEL_GAP_COUNT, 0),
+                "enable_min_periods": self.config_entry.options.get(CONF_ENABLE_MIN_PERIODS_BEST, False),
+                "min_periods": self.config_entry.options.get(CONF_MIN_PERIODS_BEST, 2),
+                "relaxation_step": self.config_entry.options.get(CONF_RELAXATION_STEP_BEST, 5.0),
+                "relaxation_attempts": self.config_entry.options.get(CONF_RELAXATION_ATTEMPTS_BEST, 4),
+            },
+            "peak_price_config": {
+                "flex": self.config_entry.options.get(CONF_PEAK_PRICE_FLEX, 15.0),
+                "min_level": self.config_entry.options.get(CONF_PEAK_PRICE_MIN_LEVEL, "HIGH"),
+                "min_period_length": self.config_entry.options.get(CONF_PEAK_PRICE_MIN_PERIOD_LENGTH, 4),
+                "min_distance_from_avg": self.config_entry.options.get(CONF_PEAK_PRICE_MIN_DISTANCE_FROM_AVG, 5.0),
+                "max_level_gap_count": self.config_entry.options.get(CONF_PEAK_PRICE_MAX_LEVEL_GAP_COUNT, 0),
+                "enable_min_periods": self.config_entry.options.get(CONF_ENABLE_MIN_PERIODS_PEAK, False),
+                "min_periods": self.config_entry.options.get(CONF_MIN_PERIODS_PEAK, 2),
+                "relaxation_step": self.config_entry.options.get(CONF_RELAXATION_STEP_PEAK, 5.0),
+                "relaxation_attempts": self.config_entry.options.get(CONF_RELAXATION_ATTEMPTS_PEAK, 4),
+            },
+        }
+
+    def _should_retransform_data(self, current_time: datetime) -> bool:
+        """Check if data transformation should be performed."""
+        # No cached transformed data - must transform
+        if self._cached_transformed_data is None:
+            return True
+
+        # Configuration changed - must retransform
+        current_config = self._get_current_transformation_config()
+        if current_config != self._last_transformation_config:
+            self._log("debug", "Configuration changed, retransforming data")
+            return True
+
+        # Check for midnight turnover
+        now_local = dt_util.as_local(current_time)
+        current_date = now_local.date()
+
+        if self._last_midnight_check is None:
+            return True
+
+        last_check_local = dt_util.as_local(self._last_midnight_check)
+        last_check_date = last_check_local.date()
+
+        if current_date != last_check_date:
+            self._log("debug", "Midnight turnover detected, retransforming data")
+            return True
+
+        return False
+
     def _transform_data_for_main_entry(self, raw_data: dict[str, Any]) -> dict[str, Any]:
         """Transform raw data for main entry (aggregated view of all homes)."""
+        current_time = dt_util.now()
+
+        # Return cached transformed data if no retransformation needed
+        if not self._should_retransform_data(current_time) and self._cached_transformed_data is not None:
+            self._log("debug", "Using cached transformed data (no transformation needed)")
+            return self._cached_transformed_data
+
+        self._log("debug", "Transforming price data (enrichment + period calculation)")
+
         # For main entry, we can show data from the first home as default
         # or provide an aggregated view
         homes_data = raw_data.get("homes", {})
@@ -1430,15 +1601,31 @@ class TibberPricesDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         # Calculate periods (best price and peak price)
         periods = self._calculate_periods_for_price_info(price_info)
 
-        return {
+        transformed_data = {
             "timestamp": raw_data.get("timestamp"),
             "homes": homes_data,
             "priceInfo": price_info,
             "periods": periods,
         }
 
+        # Cache the transformed data
+        self._cached_transformed_data = transformed_data
+        self._last_transformation_config = self._get_current_transformation_config()
+        self._last_midnight_check = current_time
+
+        return transformed_data
+
     def _transform_data_for_subentry(self, main_data: dict[str, Any]) -> dict[str, Any]:
         """Transform main coordinator data for subentry (home-specific view)."""
+        current_time = dt_util.now()
+
+        # Return cached transformed data if no retransformation needed
+        if not self._should_retransform_data(current_time) and self._cached_transformed_data is not None:
+            self._log("debug", "Using cached transformed data (no transformation needed)")
+            return self._cached_transformed_data
+
+        self._log("debug", "Transforming price data for home (enrichment + period calculation)")
+
         home_id = self.config_entry.data.get("home_id")
         if not home_id:
             return main_data
@@ -1475,11 +1662,18 @@ class TibberPricesDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         # Calculate periods (best price and peak price)
         periods = self._calculate_periods_for_price_info(price_info)
 
-        return {
+        transformed_data = {
             "timestamp": main_data.get("timestamp"),
             "priceInfo": price_info,
             "periods": periods,
         }
+
+        # Cache the transformed data
+        self._cached_transformed_data = transformed_data
+        self._last_transformation_config = self._get_current_transformation_config()
+        self._last_midnight_check = current_time
+
+        return transformed_data
 
     # --- Methods expected by sensors and services ---
 
