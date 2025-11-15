@@ -266,6 +266,24 @@
             "average_price_tomorrow": {
                 "name": "Durchschnittspreis morgen"
             },
+            "yesterday_price_level": {
+                "name": "Preisniveau gestern"
+            },
+            "today_price_level": {
+                "name": "Preisniveau heute"
+            },
+            "tomorrow_price_level": {
+                "name": "Preisniveau morgen"
+            },
+            "yesterday_price_rating": {
+                "name": "Preisbewertung gestern"
+            },
+            "today_price_rating": {
+                "name": "Preisbewertung heute"
+            },
+            "tomorrow_price_rating": {
+                "name": "Preisbewertung morgen"
+            },
             "trailing_price_average": {
                 "name": "Nachlaufender 24h-Durchschnittspreis"
             },

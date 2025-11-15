@@ -110,6 +110,9 @@ def get_level_sensor_icon(key: str, value: Any) -> str | None:
         "previous_interval_price_level",
         "current_hour_price_level",
         "next_hour_price_level",
+        "yesterday_price_level",
+        "today_price_level",
+        "tomorrow_price_level",
     ] or not isinstance(value, str):
         return None
 
@@ -124,6 +127,9 @@ def get_rating_sensor_icon(key: str, value: Any) -> str | None:
         "previous_interval_price_rating",
         "current_hour_price_rating",
         "next_hour_price_rating",
+        "yesterday_price_rating",
+        "today_price_rating",
+        "tomorrow_price_rating",
     ] or not isinstance(value, str):
         return None
 

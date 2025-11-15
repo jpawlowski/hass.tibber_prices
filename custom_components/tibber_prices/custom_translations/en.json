@@ -55,6 +55,36 @@
             "long_description": "Shows the average price per kWh for tomorrow from your Tibber subscription. This sensor becomes unavailable until tomorrow's data is published by Tibber (typically around 13:00-14:00 CET).",
             "usage_tips": "Use this as a baseline for comparing tomorrow's prices and planning consumption. Compare with today's average to see if tomorrow will be more or less expensive overall."
         },
+        "yesterday_price_level": {
+            "description": "Aggregated price level for yesterday",
+            "long_description": "Shows the aggregated price level classification for all intervals in yesterday. Uses the same logic as hourly sensors to determine the overall price level for the entire day.",
+            "usage_tips": "Use this to understand yesterday's overall price situation. Compare with today to see daily trends."
+        },
+        "today_price_level": {
+            "description": "Aggregated price level for today",
+            "long_description": "Shows the aggregated price level classification for all intervals in today. Uses the same logic as hourly sensors to determine the overall price level for the entire day.",
+            "usage_tips": "Use this to understand today's overall price situation at a glance. Helpful for quick assessments of whether today is generally cheap or expensive."
+        },
+        "tomorrow_price_level": {
+            "description": "Aggregated price level for tomorrow",
+            "long_description": "Shows the aggregated price level classification for all intervals in tomorrow. Uses the same logic as hourly sensors to determine the overall price level for the entire day. This sensor becomes unavailable until tomorrow's data is published by Tibber (typically around 13:00-14:00 CET).",
+            "usage_tips": "Use this to understand tomorrow's overall price situation. Compare with today to see if tomorrow will be more or less favorable for energy consumption."
+        },
+        "yesterday_price_rating": {
+            "description": "Aggregated price rating for yesterday",
+            "long_description": "Shows the aggregated price rating (low/normal/high) for all intervals in yesterday, based on your configured thresholds. Uses the same logic as hourly sensors to determine the overall rating for the entire day.",
+            "usage_tips": "Use this to understand yesterday's price situation relative to your personalized thresholds. Compare with today for trend analysis."
+        },
+        "today_price_rating": {
+            "description": "Aggregated price rating for today",
+            "long_description": "Shows the aggregated price rating (low/normal/high) for all intervals in today, based on your configured thresholds. Uses the same logic as hourly sensors to determine the overall rating for the entire day.",
+            "usage_tips": "Use this to quickly assess today's price situation relative to your personalized thresholds. Helps make consumption decisions for the current day."
+        },
+        "tomorrow_price_rating": {
+            "description": "Aggregated price rating for tomorrow",
+            "long_description": "Shows the aggregated price rating (low/normal/high) for all intervals in tomorrow, based on your configured thresholds. Uses the same logic as hourly sensors to determine the overall rating for the entire day. This sensor becomes unavailable until tomorrow's data is published by Tibber (typically around 13:00-14:00 CET).",
+            "usage_tips": "Use this to plan tomorrow's energy consumption based on your personalized price thresholds. Compare with today to decide if you should shift consumption to tomorrow or use energy today."
+        },
         "trailing_price_average": {
             "description": "The average electricity price for the past 24 hours per kWh",
             "long_description": "Shows the average price per kWh calculated from the past 24 hours (trailing average) from your Tibber subscription. This provides a rolling average that updates every 15 minutes based on historical data.",

@@ -186,6 +186,14 @@ class TibberPricesSensor(TibberPricesEntity, SensorEntity):
                 day="tomorrow",
                 stat_func=lambda prices: sum(prices) / len(prices),
             ),
+            # Daily aggregated level sensors
+            "yesterday_price_level": lambda: self._get_daily_aggregated_value(day="yesterday", value_type="level"),
+            "today_price_level": lambda: self._get_daily_aggregated_value(day="today", value_type="level"),
+            "tomorrow_price_level": lambda: self._get_daily_aggregated_value(day="tomorrow", value_type="level"),
+            # Daily aggregated rating sensors
+            "yesterday_price_rating": lambda: self._get_daily_aggregated_value(day="yesterday", value_type="rating"),
+            "today_price_rating": lambda: self._get_daily_aggregated_value(day="today", value_type="rating"),
+            "tomorrow_price_rating": lambda: self._get_daily_aggregated_value(day="tomorrow", value_type="rating"),
             # ================================================================
             # 24H WINDOW SENSORS (trailing/leading from current)
             # ================================================================
@@ -524,6 +532,79 @@ class TibberPricesSensor(TibberPricesEntity, SensorEntity):
         # Always return in minor currency units (cents/øre) with 2 decimals
         result = get_price_value(value, in_euro=False)
         return round(result, 2)
+
+    def _get_daily_aggregated_value(
+        self,
+        *,
+        day: str = "today",
+        value_type: str = "level",
+    ) -> str | None:
+        """
+        Get aggregated price level or rating for a specific calendar day.
+
+        Aggregates all intervals within a calendar day using the same logic
+        as rolling hour sensors, but for the entire day.
+
+        Args:
+            day: "yesterday", "today", or "tomorrow" - which calendar day to calculate for
+            value_type: "level" or "rating" - type of aggregation to perform
+
+        Returns:
+            Aggregated level/rating value (lowercase), or None if unavailable
+
+        """
+        if not self.coordinator.data:
+            return None
+
+        price_info = self.coordinator.data.get("priceInfo", {})
+
+        # Get local midnight boundaries based on the requested day
+        local_midnight = dt_util.as_local(dt_util.start_of_local_day(dt_util.now()))
+        if day == "tomorrow":
+            local_midnight = local_midnight + timedelta(days=1)
+        elif day == "yesterday":
+            local_midnight = local_midnight - timedelta(days=1)
+        local_midnight_next_day = local_midnight + timedelta(days=1)
+
+        # Collect all intervals from both today and tomorrow data
+        # that fall within the target day's local date boundaries
+        day_intervals = []
+        for day_key in ["yesterday", "today", "tomorrow"]:
+            for price_data in price_info.get(day_key, []):
+                starts_at_str = price_data.get("startsAt")
+                if not starts_at_str:
+                    continue
+
+                starts_at = dt_util.parse_datetime(starts_at_str)
+                if starts_at is None:
+                    continue
+
+                # Convert to local timezone for comparison
+                starts_at = dt_util.as_local(starts_at)
+
+                # Include interval if it starts within the target day's local date boundaries
+                if local_midnight <= starts_at < local_midnight_next_day:
+                    day_intervals.append(price_data)
+
+        if not day_intervals:
+            return None
+
+        # Use the same aggregation logic as rolling hour sensors
+        if value_type == "level":
+            return aggregate_level_data(day_intervals)
+        if value_type == "rating":
+            # Get thresholds from config
+            threshold_low = self.coordinator.config_entry.options.get(
+                CONF_PRICE_RATING_THRESHOLD_LOW,
+                DEFAULT_PRICE_RATING_THRESHOLD_LOW,
+            )
+            threshold_high = self.coordinator.config_entry.options.get(
+                CONF_PRICE_RATING_THRESHOLD_HIGH,
+                DEFAULT_PRICE_RATING_THRESHOLD_HIGH,
+            )
+            return aggregate_rating_data(day_intervals, threshold_low, threshold_high)
+
+        return None
 
     def _get_24h_window_value(
         self,

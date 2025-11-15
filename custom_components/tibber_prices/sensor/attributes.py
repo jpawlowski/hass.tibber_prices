@@ -97,7 +97,22 @@ def build_sensor_attributes(
             add_average_price_attributes(attributes=attributes, key=key, coordinator=coordinator)
         elif key.startswith("next_avg_"):
             add_next_avg_attributes(attributes=attributes, key=key, coordinator=coordinator)
-        elif any(pattern in key for pattern in ["_price_today", "_price_tomorrow", "rating", "data_timestamp"]):
+        elif any(
+            pattern in key
+            for pattern in [
+                "_price_today",
+                "_price_tomorrow",
+                "_price_yesterday",
+                "yesterday_price_level",
+                "today_price_level",
+                "tomorrow_price_level",
+                "yesterday_price_rating",
+                "today_price_rating",
+                "tomorrow_price_rating",
+                "rating",
+                "data_timestamp",
+            ]
+        ):
             add_statistics_attributes(
                 attributes=attributes,
                 key=key,
@@ -109,9 +124,20 @@ def build_sensor_attributes(
         elif key.endswith("_volatility"):
             add_volatility_attributes(attributes=attributes, cached_data=cached_data)
 
-        # For price_level, add the original level as attribute
+        # For current_interval_price_level, add the original level as attribute
         if key == "current_interval_price_level" and cached_data.get("last_price_level") is not None:
             attributes["level_id"] = cached_data["last_price_level"]
+
+        # Add icon_color for daily level and rating sensors (uses native_value)
+        if key in [
+            "yesterday_price_level",
+            "today_price_level",
+            "tomorrow_price_level",
+            "yesterday_price_rating",
+            "today_price_rating",
+            "tomorrow_price_rating",
+        ]:
+            add_icon_color_attribute(attributes, key=key, state_value=native_value)
 
     except (KeyError, ValueError, TypeError) as ex:
         coordinator.logger.exception(
@@ -368,16 +394,58 @@ def add_statistics_attributes(
             attributes["timestamp"] = cached_data["last_extreme_interval"].get("startsAt")
         else:
             # Fallback: use the first timestamp of the appropriate day
-            day_key = "tomorrow" if "tomorrow" in key else "today"
-            day_data = price_info.get(day_key, [])
-            if day_data:
-                attributes["timestamp"] = day_data[0].get("startsAt")
-    else:
-        # Fallback: use the first timestamp of the appropriate day
-        day_key = "tomorrow" if "tomorrow" in key else "today"
+            _add_fallback_timestamp(attributes, key, price_info)
+    elif key in [
+        "yesterday_price_level",
+        "today_price_level",
+        "tomorrow_price_level",
+        "yesterday_price_rating",
+        "today_price_rating",
+        "tomorrow_price_rating",
+    ]:
+        # Daily aggregated level/rating sensors - add timestamp
+        day_key = _get_day_key_from_sensor_key(key)
         day_data = price_info.get(day_key, [])
         if day_data:
+            # Use first timestamp of the day (00:00)
             attributes["timestamp"] = day_data[0].get("startsAt")
+    else:
+        # Fallback: use the first timestamp of the appropriate day
+        _add_fallback_timestamp(attributes, key, price_info)
+
+
+def _get_day_key_from_sensor_key(key: str) -> str:
+    """
+    Extract day key (yesterday/today/tomorrow) from sensor key.
+
+    Args:
+        key: The sensor entity key
+
+    Returns:
+        Day key: "yesterday", "today", or "tomorrow"
+
+    """
+    if "yesterday" in key:
+        return "yesterday"
+    if "tomorrow" in key:
+        return "tomorrow"
+    return "today"
+
+
+def _add_fallback_timestamp(attributes: dict, key: str, price_info: dict) -> None:
+    """
+    Add fallback timestamp to attributes based on the day in the sensor key.
+
+    Args:
+        attributes: Dictionary to add timestamp to
+        key: The sensor entity key
+        price_info: Price info dictionary from coordinator data
+
+    """
+    day_key = _get_day_key_from_sensor_key(key)
+    day_data = price_info.get(day_key, [])
+    if day_data:
+        attributes["timestamp"] = day_data[0].get("startsAt")
 
 
 def add_average_price_attributes(

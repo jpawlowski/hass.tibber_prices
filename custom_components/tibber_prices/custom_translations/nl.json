@@ -55,6 +55,36 @@
             "long_description": "Toont de gemiddelde prijs per kWh voor morgen van uw Tibber-abonnement. Deze sensor wordt niet beschikbaar totdat de gegevens van morgen door Tibber worden gepubliceerd (meestal rond 13:00-14:00 CET).",
             "usage_tips": "Gebruik dit als basislijn voor het vergelijken van prijzen van morgen en het plannen van verbruik. Vergelijk met het gemiddelde van vandaag om te zien of morgen over het algemeen duurder of goedkoper wordt."
         },
+        "yesterday_price_level": {
+            "description": "Geaggregeerd prijsniveau voor gisteren",
+            "long_description": "Toont het geaggregeerde prijsniveau voor alle intervallen van gisteren. Gebruikt dezelfde logica als de uursensoren om het totale prijsniveau voor de hele dag te bepalen.",
+            "usage_tips": "Gebruik dit om de algemene prijssituatie van gisteren te begrijpen. Vergelijk met vandaag om dagelijkse trends te zien."
+        },
+        "today_price_level": {
+            "description": "Geaggregeerd prijsniveau voor vandaag",
+            "long_description": "Toont het geaggregeerde prijsniveau voor alle intervallen van vandaag. Gebruikt dezelfde logica als de uursensoren om het totale prijsniveau voor de hele dag te bepalen.",
+            "usage_tips": "Gebruik dit om de prijssituatie van vandaag in één oogopslag te begrijpen. Handig voor snelle beoordelingen of vandaag over het algemeen goedkoop of duur is."
+        },
+        "tomorrow_price_level": {
+            "description": "Geaggregeerd prijsniveau voor morgen",
+            "long_description": "Toont het geaggregeerde prijsniveau voor alle intervallen van morgen. Gebruikt dezelfde logica als de uursensoren om het totale prijsniveau voor de hele dag te bepalen. Deze sensor wordt niet beschikbaar totdat de gegevens van morgen door Tibber worden gepubliceerd (meestal rond 13:00-14:00 CET).",
+            "usage_tips": "Gebruik dit om de prijssituatie van morgen te begrijpen. Vergelijk met vandaag om te zien of morgen gunstiger of ongunstiger zal zijn voor energieverbruik."
+        },
+        "yesterday_price_rating": {
+            "description": "Geaggregeerde prijsbeoordeling voor gisteren",
+            "long_description": "Toont de geaggregeerde prijsbeoordeling (laag/normaal/hoog) voor alle intervallen van gisteren, gebaseerd op uw geconfigureerde drempelwaarden. Gebruikt dezelfde logica als de uursensoren om de totale beoordeling voor de hele dag te bepalen.",
+            "usage_tips": "Gebruik dit om de prijssituatie van gisteren te begrijpen ten opzichte van uw persoonlijke drempelwaarden. Vergelijk met vandaag voor trendanalyse."
+        },
+        "today_price_rating": {
+            "description": "Geaggregeerde prijsbeoordeling voor vandaag",
+            "long_description": "Toont de geaggregeerde prijsbeoordeling (laag/normaal/hoog) voor alle intervallen van vandaag, gebaseerd op uw geconfigureerde drempelwaarden. Gebruikt dezelfde logica als de uursensoren om de totale beoordeling voor de hele dag te bepalen.",
+            "usage_tips": "Gebruik dit om snel de prijssituatie van vandaag te beoordelen ten opzichte van uw persoonlijke drempelwaarden. Helpt bij het nemen van verbruiksbeslissingen voor de huidige dag."
+        },
+        "tomorrow_price_rating": {
+            "description": "Geaggregeerde prijsbeoordeling voor morgen",
+            "long_description": "Toont de geaggregeerde prijsbeoordeling (laag/normaal/hoog) voor alle intervallen van morgen, gebaseerd op uw geconfigureerde drempelwaarden. Gebruikt dezelfde logica als de uursensoren om de totale beoordeling voor de hele dag te bepalen. Deze sensor wordt niet beschikbaar totdat de gegevens van morgen door Tibber worden gepubliceerd (meestal rond 13:00-14:00 CET).",
+            "usage_tips": "Gebruik dit om het energieverbruik van morgen te plannen op basis van uw persoonlijke prijsdrempelwaarden. Vergelijk met vandaag om te beslissen of u verbruik naar morgen moet verschuiven of vandaag energie moet gebruiken."
+        },
         "trailing_price_average": {
             "description": "De gemiddelde elektriciteitsprijs voor de afgelopen 24 uur per kWh",
             "long_description": "Toont de gemiddelde prijs per kWh berekend uit de afgelopen 24 uur (voortschrijdend gemiddelde) van uw Tibber-abonnement. Dit biedt een voortschrijdend gemiddelde dat elke 15 minuten wordt bijgewerkt op basis van historische gegevens.",

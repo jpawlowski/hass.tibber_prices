@@ -55,6 +55,36 @@
             "long_description": "Zeigt den durchschnittlichen Preis pro kWh für den morgigen Tag von deinem Tibber-Abonnement an. Dieser Sensor wird nicht verfügbar, bis die Preise für morgen von Tibber veröffentlicht werden (typischerweise zwischen 13:00 und 14:00 Uhr MEZ).",
             "usage_tips": "Nutze dies als Grundlinie für den Vergleich mit den morgigen Preisen und zur Verbrauchsplanung. Vergleiche mit dem heutigen Durchschnitt, um zu sehen, ob morgen insgesamt teurer oder günstiger wird."
         },
+        "yesterday_price_level": {
+            "description": "Aggregiertes Preisniveau für gestern",
+            "long_description": "Zeigt das aggregierte Preisniveau für alle Intervalle von gestern. Verwendet die gleiche Logik wie die Stundensensoren, um das Gesamtpreisniveau für den ganzen Tag zu ermitteln.",
+            "usage_tips": "Nutze dies, um die gestrige Preissituation zu verstehen. Vergleiche mit heute, um tägliche Trends zu sehen."
+        },
+        "today_price_level": {
+            "description": "Aggregiertes Preisniveau für heute",
+            "long_description": "Zeigt das aggregierte Preisniveau für alle Intervalle von heute. Verwendet die gleiche Logik wie die Stundensensoren, um das Gesamtpreisniveau für den ganzen Tag zu ermitteln.",
+            "usage_tips": "Nutze dies, um die heutige Preissituation auf einen Blick zu verstehen. Hilfreich für schnelle Einschätzungen, ob heute generell günstig oder teuer ist."
+        },
+        "tomorrow_price_level": {
+            "description": "Aggregiertes Preisniveau für morgen",
+            "long_description": "Zeigt das aggregierte Preisniveau für alle Intervalle von morgen. Verwendet die gleiche Logik wie die Stundensensoren, um das Gesamtpreisniveau für den ganzen Tag zu ermitteln. Dieser Sensor wird nicht verfügbar, bis die Preise für morgen von Tibber veröffentlicht werden (typischerweise zwischen 13:00 und 14:00 Uhr MEZ).",
+            "usage_tips": "Nutze dies, um die morgige Preissituation zu verstehen. Vergleiche mit heute, um zu sehen, ob morgen günstiger oder teurer für den Energieverbrauch wird."
+        },
+        "yesterday_price_rating": {
+            "description": "Aggregierte Preisbewertung für gestern",
+            "long_description": "Zeigt die aggregierte Preisbewertung (niedrig/normal/hoch) für alle Intervalle von gestern, basierend auf deinen konfigurierten Schwellenwerten. Verwendet die gleiche Logik wie die Stundensensoren, um die Gesamtbewertung für den ganzen Tag zu ermitteln.",
+            "usage_tips": "Nutze dies, um die gestrige Preissituation relativ zu deinen persönlichen Schwellenwerten zu verstehen. Vergleiche mit heute für Trendanalysen."
+        },
+        "today_price_rating": {
+            "description": "Aggregierte Preisbewertung für heute",
+            "long_description": "Zeigt die aggregierte Preisbewertung (niedrig/normal/hoch) für alle Intervalle von heute, basierend auf deinen konfigurierten Schwellenwerten. Verwendet die gleiche Logik wie die Stundensensoren, um die Gesamtbewertung für den ganzen Tag zu ermitteln.",
+            "usage_tips": "Nutze dies, um die heutige Preissituation relativ zu deinen persönlichen Schwellenwerten schnell einzuschätzen. Hilft bei Verbrauchsentscheidungen für den aktuellen Tag."
+        },
+        "tomorrow_price_rating": {
+            "description": "Aggregierte Preisbewertung für morgen",
+            "long_description": "Zeigt die aggregierte Preisbewertung (niedrig/normal/hoch) für alle Intervalle von morgen, basierend auf deinen konfigurierten Schwellenwerten. Verwendet die gleiche Logik wie die Stundensensoren, um die Gesamtbewertung für den ganzen Tag zu ermitteln. Dieser Sensor wird nicht verfügbar, bis die Preise für morgen von Tibber veröffentlicht werden (typischerweise zwischen 13:00 und 14:00 Uhr MEZ).",
+            "usage_tips": "Nutze dies, um den morgigen Energieverbrauch basierend auf deinen persönlichen Preisschwellenwerten zu planen. Vergleiche mit heute, um zu entscheiden, ob du den Verbrauch auf morgen verschieben oder heute nutzen solltest."
+        },
         "trailing_price_average": {
             "description": "Der durchschnittliche Strompreis für die letzten 24 Stunden pro kWh",
             "long_description": "Zeigt den durchschnittlichen Preis pro kWh berechnet aus den letzten 24 Stunden (nachlaufender Durchschnitt) von deinem Tibber-Abonnement an. Dies bietet einen gleitenden Durchschnitt, der alle 15 Minuten basierend auf historischen Daten aktualisiert wird.",

@@ -55,6 +55,36 @@
             "long_description": "Viser gjennomsnittsprisen per kWh for morgendagen fra ditt Tibber-abonnement. Denne sensoren blir utilgjengelig inntil morgendagens data er publisert av Tibber (vanligvis rundt 13:00-14:00 CET).",
             "usage_tips": "Bruk dette som en baseline for å sammenligne morgendagens priser og planlegge forbruk. Sammenlign med dagens gjennomsnitt for å se om morgendagen vil være mer eller mindre dyr totalt sett."
         },
+        "yesterday_price_level": {
+            "description": "Aggregert prisnivå for i går",
+            "long_description": "Viser det aggregerte prisnivået for alle intervaller i går. Bruker samme logikk som timesensorene for å bestemme det samlede prisnivået for hele dagen.",
+            "usage_tips": "Bruk dette for å forstå gårsdagens generelle prissituasjon. Sammenlign med i dag for å se daglige trender."
+        },
+        "today_price_level": {
+            "description": "Aggregert prisnivå for i dag",
+            "long_description": "Viser det aggregerte prisnivået for alle intervaller i dag. Bruker samme logikk som timesensorene for å bestemme det samlede prisnivået for hele dagen.",
+            "usage_tips": "Bruk dette for å forstå dagens generelle prissituasjon på et øyeblikk. Nyttig for raske vurderinger av om i dag generelt er billig eller dyrt."
+        },
+        "tomorrow_price_level": {
+            "description": "Aggregert prisnivå for i morgen",
+            "long_description": "Viser det aggregerte prisnivået for alle intervaller i morgen. Bruker samme logikk som timesensorene for å bestemme det samlede prisnivået for hele dagen. Denne sensoren blir utilgjengelig inntil morgendagens data er publisert av Tibber (vanligvis rundt 13:00-14:00 CET).",
+            "usage_tips": "Bruk dette for å forstå morgendagens generelle prissituasjon. Sammenlign med i dag for å se om morgendagen vil være mer eller mindre gunstig for energiforbruk."
+        },
+        "yesterday_price_rating": {
+            "description": "Aggregert prisvurdering for i går",
+            "long_description": "Viser den aggregerte prisvurderingen (lav/normal/høy) for alle intervaller i går, basert på dine konfigurerte terskelverdier. Bruker samme logikk som timesensorene for å bestemme den samlede vurderingen for hele dagen.",
+            "usage_tips": "Bruk dette for å forstå gårsdagens prissituasjon i forhold til dine personlige terskelverdier. Sammenlign med i dag for trendanalyse."
+        },
+        "today_price_rating": {
+            "description": "Aggregert prisvurdering for i dag",
+            "long_description": "Viser den aggregerte prisvurderingen (lav/normal/høy) for alle intervaller i dag, basert på dine konfigurerte terskelverdier. Bruker samme logikk som timesensorene for å bestemme den samlede vurderingen for hele dagen.",
+            "usage_tips": "Bruk dette for raskt å vurdere dagens prissituasjon i forhold til dine personlige terskelverdier. Hjelper med å ta forbruksbeslutninger for gjeldende dag."
+        },
+        "tomorrow_price_rating": {
+            "description": "Aggregert prisvurdering for i morgen",
+            "long_description": "Viser den aggregerte prisvurderingen (lav/normal/høy) for alle intervaller i morgen, basert på dine konfigurerte terskelverdier. Bruker samme logikk som timesensorene for å bestemme den samlede vurderingen for hele dagen. Denne sensoren blir utilgjengelig inntil morgendagens data er publisert av Tibber (vanligvis rundt 13:00-14:00 CET).",
+            "usage_tips": "Bruk dette for å planlegge morgendagens energiforbruk basert på dine personlige pristerskelverdier. Sammenlign med i dag for å bestemme om du skal flytte forbruk til i morgen eller bruke energi i dag."
+        },
         "trailing_price_average": {
             "description": "Den gjennomsnittlige elektrisitetsprisen for de siste 24 timene per kWh",
             "long_description": "Viser gjennomsnittsprisen per kWh beregnet fra de siste 24 timene (glidende gjennomsnitt) fra ditt Tibber-abonnement. Dette gir et rullende gjennomsnitt som oppdateres hvert 15. minutt basert på historiske data.",

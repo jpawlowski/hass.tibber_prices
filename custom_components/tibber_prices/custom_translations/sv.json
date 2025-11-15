@@ -55,6 +55,36 @@
             "long_description": "Visar genomsnittspriset per kWh för morgondagen från ditt Tibber-abonnemang. Denna sensor blir otillgänglig tills morgondagens data publiceras av Tibber (vanligtvis runt 13:00-14:00 CET).",
             "usage_tips": "Använd detta som baslinje för att jämföra morgondagens priser och planera konsumtion. Jämför med dagens genomsnitt för att se om morgondagen kommer att bli dyrare eller billigare totalt sett."
         },
+        "yesterday_price_level": {
+            "description": "Aggregerad prisnivå för igår",
+            "long_description": "Visar den aggregerade prisnivån för alla intervall igår. Använder samma logik som timsensorerna för att bestämma den totala prisnivån för hela dagen.",
+            "usage_tips": "Använd detta för att förstå den övergripande prissituationen igår. Jämför med idag för att se dagliga trender."
+        },
+        "today_price_level": {
+            "description": "Aggregerad prisnivå för idag",
+            "long_description": "Visar den aggregerade prisnivån för alla intervall idag. Använder samma logik som timsensorerna för att bestämma den totala prisnivån för hela dagen.",
+            "usage_tips": "Använd detta för att förstå dagens prissituation snabbt. Praktiskt för snabba bedömningar om dagen i allmänhet är billig eller dyr."
+        },
+        "tomorrow_price_level": {
+            "description": "Aggregerad prisnivå för imorgon",
+            "long_description": "Visar den aggregerade prisnivån för alla intervall imorgon. Använder samma logik som timsensorerna för att bestämma den totala prisnivån för hela dagen. Denna sensor blir otillgänglig tills morgondagens data publiceras av Tibber (vanligtvis runt 13:00-14:00 CET).",
+            "usage_tips": "Använd detta för att förstå imorgonens prissituation. Jämför med idag för att se om imorgon blir mer eller mindre gynnsamt för energiförbrukning."
+        },
+        "yesterday_price_rating": {
+            "description": "Aggregerad prisvärdering för igår",
+            "long_description": "Visar den aggregerade prisvärderingen (låg/normal/hög) för alla intervall igår, baserat på dina konfigurerade tröskelvärden. Använder samma logik som timsensorerna för att bestämma den totala värderingen för hela dagen.",
+            "usage_tips": "Använd detta för att förstå igårens prissituation i förhållande till dina personliga tröskelvärden. Jämför med idag för trendanalys."
+        },
+        "today_price_rating": {
+            "description": "Aggregerad prisvärdering för idag",
+            "long_description": "Visar den aggregerade prisvärderingen (låg/normal/hög) för alla intervall idag, baserat på dina konfigurerade tröskelvärden. Använder samma logik som timsensorerna för att bestämme den totala värderingen för hela dagen.",
+            "usage_tips": "Använd detta för att snabbt bedöma dagens prissituation i förhållande till dina personliga tröskelvärden. Hjälper till att fatta förbrukningsbeslut för innevarande dag."
+        },
+        "tomorrow_price_rating": {
+            "description": "Aggregerad prisvärdering för imorgon",
+            "long_description": "Visar den aggregerade prisvärderingen (låg/normal/hög) för alla intervall imorgon, baserat på dina konfigurerade tröskelvärden. Använder samma logik som timsensorerna för att bestämma den totala värderingen för hela dagen. Denna sensor blir otillgänglig tills morgondagens data publiceras av Tibber (vanligtvis runt 13:00-14:00 CET).",
+            "usage_tips": "Använd detta för att planera imorgonens energiförbrukning baserat på dina personliga priströskelvärden. Jämför med idag för att avgöra om du ska skjuta upp förbrukning till imorgon eller använda energi idag."
+        },
         "trailing_price_average": {
             "description": "Det genomsnittliga elpriset för de senaste 24 timmarna per kWh",
             "long_description": "Visar genomsnittspriset per kWh beräknat från de senaste 24 timmarna (rullande genomsnitt) från ditt Tibber-abonnemang. Detta ger ett rullande genomsnitt som uppdateras var 15:e minut baserat på historiska data.",

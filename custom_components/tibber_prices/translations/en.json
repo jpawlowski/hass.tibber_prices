@@ -262,6 +262,24 @@
             "average_price_tomorrow": {
                 "name": "Tomorrow's Average Price"
             },
+            "yesterday_price_level": {
+                "name": "Yesterday's Price Level"
+            },
+            "today_price_level": {
+                "name": "Today's Price Level"
+            },
+            "tomorrow_price_level": {
+                "name": "Tomorrow's Price Level"
+            },
+            "yesterday_price_rating": {
+                "name": "Yesterday's Price Rating"
+            },
+            "today_price_rating": {
+                "name": "Today's Price Rating"
+            },
+            "tomorrow_price_rating": {
+                "name": "Tomorrow's Price Rating"
+            },
             "trailing_price_average": {
                 "name": "Trailing 24h Average Price"
             },

@@ -114,7 +114,7 @@ INTERVAL_RATING_SENSORS = (
         key="current_interval_price_rating",
         translation_key="current_interval_price_rating",
         name="Current Price Rating",
-        icon="mdi:star-outline",
+        icon="mdi:thumbs-up-down",
         device_class=SensorDeviceClass.ENUM,
         options=["low", "normal", "high"],
     ),
@@ -122,7 +122,7 @@ INTERVAL_RATING_SENSORS = (
         key="next_interval_price_rating",
         translation_key="next_interval_price_rating",
         name="Next Price Rating",
-        icon="mdi:star-half-full",
+        icon="mdi:thumbs-up-down",
         device_class=SensorDeviceClass.ENUM,
         options=["low", "normal", "high"],
     ),
@@ -130,7 +130,7 @@ INTERVAL_RATING_SENSORS = (
         key="previous_interval_price_rating",
         translation_key="previous_interval_price_rating",
         name="Previous Price Rating",
-        icon="mdi:star-half-full",
+        icon="mdi:thumbs-up-down",
         entity_registry_enabled_default=False,
         device_class=SensorDeviceClass.ENUM,
         options=["low", "normal", "high"],
@@ -192,7 +192,7 @@ ROLLING_HOUR_RATING_SENSORS = (
         key="current_hour_price_rating",
         translation_key="current_hour_price_rating",
         name="Current Hour Price Rating",
-        icon="mdi:star-outline",
+        icon="mdi:thumbs-up-down",
         device_class=SensorDeviceClass.ENUM,
         options=["low", "normal", "high"],
     ),
@@ -200,7 +200,7 @@ ROLLING_HOUR_RATING_SENSORS = (
         key="next_hour_price_rating",
         translation_key="next_hour_price_rating",
         name="Next Hour Price Rating",
-        icon="mdi:star-half-full",
+        icon="mdi:thumbs-up-down",
         device_class=SensorDeviceClass.ENUM,
         options=["low", "normal", "high"],
     ),
@@ -259,6 +259,68 @@ DAILY_STAT_SENSORS = (
         icon="mdi:chart-line",
         device_class=SensorDeviceClass.MONETARY,
         suggested_display_precision=1,
+    ),
+)
+
+# NOTE: Enum options are defined inline (not imported from const.py) to avoid
+# import timing issues with Home Assistant's entity platform initialization.
+# Keep in sync with PRICE_LEVEL_OPTIONS in const.py!
+DAILY_LEVEL_SENSORS = (
+    SensorEntityDescription(
+        key="yesterday_price_level",
+        translation_key="yesterday_price_level",
+        name="Yesterday's Price Level",
+        icon="mdi:gauge",
+        device_class=SensorDeviceClass.ENUM,
+        options=["very_cheap", "cheap", "normal", "expensive", "very_expensive"],
+        entity_registry_enabled_default=False,
+    ),
+    SensorEntityDescription(
+        key="today_price_level",
+        translation_key="today_price_level",
+        name="Today's Price Level",
+        icon="mdi:gauge",
+        device_class=SensorDeviceClass.ENUM,
+        options=["very_cheap", "cheap", "normal", "expensive", "very_expensive"],
+    ),
+    SensorEntityDescription(
+        key="tomorrow_price_level",
+        translation_key="tomorrow_price_level",
+        name="Tomorrow's Price Level",
+        icon="mdi:gauge",
+        device_class=SensorDeviceClass.ENUM,
+        options=["very_cheap", "cheap", "normal", "expensive", "very_expensive"],
+    ),
+)
+
+# NOTE: Enum options are defined inline (not imported from const.py) to avoid
+# import timing issues with Home Assistant's entity platform initialization.
+# Keep in sync with PRICE_RATING_OPTIONS in const.py!
+DAILY_RATING_SENSORS = (
+    SensorEntityDescription(
+        key="yesterday_price_rating",
+        translation_key="yesterday_price_rating",
+        name="Yesterday's Price Rating",
+        icon="mdi:thumbs-up-down",
+        device_class=SensorDeviceClass.ENUM,
+        options=["low", "normal", "high"],
+        entity_registry_enabled_default=False,
+    ),
+    SensorEntityDescription(
+        key="today_price_rating",
+        translation_key="today_price_rating",
+        name="Today's Price Rating",
+        icon="mdi:thumbs-up-down",
+        device_class=SensorDeviceClass.ENUM,
+        options=["low", "normal", "high"],
+    ),
+    SensorEntityDescription(
+        key="tomorrow_price_rating",
+        translation_key="tomorrow_price_rating",
+        name="Tomorrow's Price Rating",
+        icon="mdi:thumbs-up-down",
+        device_class=SensorDeviceClass.ENUM,
+        options=["low", "normal", "high"],
     ),
 )
 
@@ -556,6 +618,8 @@ ENTITY_DESCRIPTIONS = (
     *ROLLING_HOUR_LEVEL_SENSORS,
     *ROLLING_HOUR_RATING_SENSORS,
     *DAILY_STAT_SENSORS,
+    *DAILY_LEVEL_SENSORS,
+    *DAILY_RATING_SENSORS,
     *WINDOW_24H_SENSORS,
     *FUTURE_AVG_SENSORS,
     *FUTURE_TREND_SENSORS,
