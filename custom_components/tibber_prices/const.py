@@ -326,7 +326,7 @@ BINARY_SENSOR_ICON_MAPPING = {
     "peak_price_period": {
         "on": "mdi:alert-circle",
         "off": "mdi:shield-check",  # Has future periods
-        "off_no_future": "mdi:shield-check-outline",  # No future periods today
+        "off_no_future": "mdi:sleep",  # No future periods in next 6h
     },
 }
 
