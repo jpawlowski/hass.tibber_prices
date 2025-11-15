@@ -30,6 +30,7 @@ from custom_components.tibber_prices.const import (
     DEFAULT_PRICE_TREND_THRESHOLD_RISING,
     DOMAIN,
     async_get_entity_description,
+    format_price_unit_major,
     format_price_unit_minor,
     get_entity_description,
 )
@@ -175,6 +176,9 @@ class TibberPricesSensor(TibberPricesEntity, SensorEntity):
             "current_interval_price": lambda: self._get_interval_value(
                 interval_offset=0, value_type="price", in_euro=False
             ),
+            "current_interval_price_major": lambda: self._get_interval_value(
+                interval_offset=0, value_type="price", in_euro=True
+            ),
             "next_interval_price": lambda: self._get_interval_value(
                 interval_offset=1, value_type="price", in_euro=False
             ),
@@ -279,6 +283,9 @@ class TibberPricesSensor(TibberPricesEntity, SensorEntity):
             "best_price_end_time": lambda: self._get_period_timing_value(
                 period_type="best_price", value_type="end_time"
             ),
+            "best_price_period_duration": lambda: self._get_period_timing_value(
+                period_type="best_price", value_type="period_duration"
+            ),
             "best_price_remaining_minutes": lambda: self._get_period_timing_value(
                 period_type="best_price", value_type="remaining_minutes"
             ),
@@ -294,6 +301,9 @@ class TibberPricesSensor(TibberPricesEntity, SensorEntity):
             # Peak Price timing sensors
             "peak_price_end_time": lambda: self._get_period_timing_value(
                 period_type="peak_price", value_type="end_time"
+            ),
+            "peak_price_period_duration": lambda: self._get_period_timing_value(
+                period_type="peak_price", value_type="period_duration"
             ),
             "peak_price_remaining_minutes": lambda: self._get_period_timing_value(
                 period_type="peak_price", value_type="remaining_minutes"
@@ -1059,6 +1069,7 @@ class TibberPricesSensor(TibberPricesEntity, SensorEntity):
             "end_time": lambda: (
                 current_period.get("end") if current_period else (next_period.get("end") if next_period else None)
             ),
+            "period_duration": lambda: self._calc_period_duration(current_period, next_period),
             "next_start_time": lambda: next_period.get("start") if next_period else None,
             "remaining_minutes": lambda: (self._calc_remaining_minutes(current_period, now) if current_period else 0),
             "progress": lambda: self._calc_progress_with_grace_period(current_period, previous_period, now),
@@ -1132,6 +1143,33 @@ class TibberPricesSensor(TibberPricesEntity, SensorEntity):
             return 0
         delta = start - now
         return max(0, delta.total_seconds() / 60)
+
+    def _calc_period_duration(self, current_period: dict | None, next_period: dict | None) -> float | None:
+        """
+        Calculate total duration of active or next period in minutes.
+
+        Returns duration of current period if active, otherwise duration of next period.
+        This gives users a consistent view of period length regardless of timing.
+
+        Args:
+            current_period: Currently active period (if any)
+            next_period: Next upcoming period (if any)
+
+        Returns:
+            Duration in minutes, or None if no periods available
+
+        """
+        period = current_period or next_period
+        if not period:
+            return None
+
+        start = period.get("start")
+        end = period.get("end")
+        if not start or not end:
+            return None
+
+        duration = (end - start).total_seconds() / 60
+        return max(0, duration)
 
     def _calc_progress(self, period: dict, now: datetime) -> float:
         """Calculate progress percentage (0-100) of current period."""
@@ -1211,6 +1249,12 @@ class TibberPricesSensor(TibberPricesEntity, SensorEntity):
             if self.coordinator.data:
                 price_info = self.coordinator.data.get("priceInfo", {})
                 currency = price_info.get("currency")
+
+            # Use major currency unit for Energy Dashboard sensor
+            if self.entity_description.key == "current_interval_price_major":
+                return format_price_unit_major(currency)
+
+            # Use minor currency unit for all other price sensors
             return format_price_unit_minor(currency)
 
         # For all other sensors, use unit from entity description

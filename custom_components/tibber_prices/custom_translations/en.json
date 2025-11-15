@@ -5,6 +5,11 @@
             "long_description": "Shows the current price per kWh from your Tibber subscription",
             "usage_tips": "Use this to track prices or to create automations that run when electricity is cheap"
         },
+        "current_interval_price_major": {
+            "description": "Current electricity price in major currency (EUR/kWh, NOK/kWh, etc.) for Energy Dashboard",
+            "long_description": "Shows the current price per kWh in major currency units (e.g., EUR/kWh instead of ct/kWh, NOK/kWh instead of øre/kWh). This sensor is specifically designed for use with Home Assistant's Energy Dashboard, which requires prices in standard currency units.",
+            "usage_tips": "Use this sensor when configuring the Energy Dashboard under Settings → Dashboards → Energy. Select this sensor as the 'Entity with current price' to automatically calculate your energy costs. The Energy Dashboard multiplies your energy consumption (kWh) by this price to show total costs."
+        },
         "next_interval_price": {
             "description": "The next interval electricity price per kWh",
             "long_description": "Shows the price for the next 15-minute interval from your Tibber subscription",
@@ -289,6 +294,11 @@
             "long_description": "Shows the end timestamp of the current best price period when active, or the end of the next period when no period is active. Always shows a useful time reference for planning. Returns 'Unknown' only when no periods are configured.",
             "usage_tips": "Use this to display a countdown like 'Cheap period ends in 2 hours' (when active) or 'Next cheap period ends at 14:00' (when inactive). Home Assistant automatically shows relative time for timestamp sensors."
         },
+        "best_price_period_duration": {
+            "description": "Total length of current or next best price period in minutes",
+            "long_description": "Shows how long the best price period lasts in total. During an active period, shows the duration of the current period. When no period is active, shows the duration of the next upcoming period. Returns 'Unknown' only when no periods are configured.",
+            "usage_tips": "Useful for planning: 'The next cheap period lasts 90 minutes' or 'Current cheap period is 120 minutes long'. Combine with remaining_minutes to calculate when to start long-running appliances."
+        },
         "best_price_remaining_minutes": {
             "description": "Minutes remaining in current best price period (0 when inactive)",
             "long_description": "Shows how many minutes are left in the current best price period. Returns 0 when no period is active. Updates every minute. Check binary_sensor.best_price_period to see if a period is currently active.",
@@ -313,6 +323,11 @@
             "description": "When the current or next peak price period ends",
             "long_description": "Shows the end timestamp of the current peak price period when active, or the end of the next period when no period is active. Always shows a useful time reference for planning. Returns 'Unknown' only when no periods are configured.",
             "usage_tips": "Use this to display 'Expensive period ends in 1 hour' (when active) or 'Next expensive period ends at 18:00' (when inactive). Combine with automations to resume operations after peak."
+        },
+        "peak_price_period_duration": {
+            "description": "Total length of current or next peak price period in minutes",
+            "long_description": "Shows how long the peak price period lasts in total. During an active period, shows the duration of the current period. When no period is active, shows the duration of the next upcoming period. Returns 'Unknown' only when no periods are configured.",
+            "usage_tips": "Useful for planning: 'The next expensive period lasts 60 minutes' or 'Current peak is 90 minutes long'. Combine with remaining_minutes to decide whether to wait out the peak or proceed with operations."
         },
         "peak_price_remaining_minutes": {
             "description": "Minutes remaining in current peak price period (0 when inactive)",

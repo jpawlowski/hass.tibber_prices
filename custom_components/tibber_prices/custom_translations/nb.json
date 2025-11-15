@@ -5,6 +5,11 @@
             "long_description": "Viser nåværende pris per kWh fra ditt Tibber-abonnement",
             "usage_tips": "Bruk dette til å spore priser eller lage automatiseringer som kjører når strøm er billig"
         },
+        "current_interval_price_major": {
+            "description": "Nåværende elektrisitetspris i hovedvaluta (EUR/kWh, NOK/kWh, osv.) for Energi-dashboard",
+            "long_description": "Viser nåværende pris per kWh i hovedvalutaenheter (f.eks. EUR/kWh i stedet for ct/kWh, NOK/kWh i stedet for øre/kWh). Denne sensoren er spesielt designet for bruk med Home Assistants Energi-dashboard, som krever priser i standard valutaenheter.",
+            "usage_tips": "Bruk denne sensoren når du konfigurerer Energi-dashboardet under Innstillinger → Dashbord → Energi. Velg denne sensoren som 'Entitet med nåværende pris' for automatisk å beregne energikostnadene. Energi-dashboardet multipliserer energiforbruket ditt (kWh) med denne prisen for å vise totale kostnader."
+        },
         "next_interval_price": {
             "description": "Neste intervalls elektrisitetspris per kWh",
             "long_description": "Viser prisen for det neste 15-minutters intervallet fra ditt Tibber-abonnement",
@@ -333,6 +338,16 @@
             "description": "Minutter til neste dyrperiode starter (0 ved overgang)",
             "long_description": "Viser minutter til neste dyrperiode starter. Under en aktiv periode viser dette tiden til perioden ETTER den gjeldende. Returnerer 0 under korte overgangsmomenter. Oppdateres hvert minutt.",
             "usage_tips": "Forebyggende automatisering: 'Hvis next_in_minutes > 0 OG next_in_minutes < 10, fullfør gjeldende ladesyklus nå før prisene øker'."
+        },
+        "best_price_period_duration": {
+            "description": "Total varighet av gjeldende eller neste billigperiode i minutter",
+            "long_description": "Viser den totale varigheten av billigperioden i minutter. Under en aktiv periode viser dette hele varigheten av gjeldende periode. Når ingen periode er aktiv, viser dette varigheten av neste kommende periode. Eksempel: '90 minutter' for en 1,5-timers periode.",
+            "usage_tips": "Kombiner med remaining_minutes for å planlegge oppgaver: 'Hvis duration = 120 OG remaining_minutes > 90, start vaskemaskin (nok tid til å fullføre)'. Nyttig for å forstå om perioder er lange nok for strømkrevende oppgaver."
+        },
+        "peak_price_period_duration": {
+            "description": "Total varighet av gjeldende eller neste dyrperiode i minutter",
+            "long_description": "Viser den totale varigheten av dyrperioden i minutter. Under en aktiv periode viser dette hele varigheten av gjeldende periode. Når ingen periode er aktiv, viser dette varigheten av neste kommende periode. Eksempel: '60 minutter' for en 1-times periode.",
+            "usage_tips": "Bruk til å planlegge energibesparelsestiltak: 'Hvis duration > 120, reduser varmetemperatur mer aggressivt (lang dyr periode)'. Hjelper med å vurdere hvor mye energiforbruk må reduseres."
         }
     },
     "binary_sensor": {

@@ -5,6 +5,11 @@
             "long_description": "Visar nuvarande pris per kWh från ditt Tibber-abonnemang",
             "usage_tips": "Använd detta för att spåra priser eller skapa automationer som körs när el är billig"
         },
+        "current_interval_price_major": {
+            "description": "Nuvarande elpris i huvudvaluta (EUR/kWh, NOK/kWh, osv.) för Energipanelen",
+            "long_description": "Visar nuvarande pris per kWh i huvudvaluta-enheter (t.ex. EUR/kWh istället för ct/kWh, NOK/kWh istället för øre/kWh). Denna sensor är speciellt utformad för användning med Home Assistants Energipanel, som kräver priser i standardvalutaenheter.",
+            "usage_tips": "Använd denna sensor när du konfigurerar Energipanelen under Inställningar → Instrumentpaneler → Energi. Välj denna sensor som 'Entitet med nuvarande pris' för att automatiskt beräkna dina energikostnader. Energipanelen multiplicerar din energiförbrukning (kWh) med detta pris för att visa totala kostnader."
+        },
         "next_interval_price": {
             "description": "Nästa intervalls elpris per kWh",
             "long_description": "Visar priset för nästa 15-minuters intervall från ditt Tibber-abonnemang",
@@ -333,6 +338,16 @@
             "description": "Minuter tills nästa dyrperiod startar (0 vid övergång)",
             "long_description": "Visar minuter tills nästa dyrperiod startar. Under en aktiv period visar detta tiden till perioden EFTER den nuvarande. Returnerar 0 under korta övergångsmoment. Uppdateras varje minut.",
             "usage_tips": "Förebyggande automation: 'Om next_in_minutes > 0 OCH next_in_minutes < 10, slutför nuvarande laddcykel nu innan priserna ökar'."
+        },
+        "best_price_period_duration": {
+            "description": "Total längd på nuvarande eller nästa billigperiod i minuter",
+            "long_description": "Visar den totala längden på billigperioden i minuter. Under en aktiv period visar detta hela längden av nuvarande period. När ingen period är aktiv visar detta längden på nästa kommande period. Exempel: '90 minuter' för en 1,5-timmars period.",
+            "usage_tips": "Kombinera med remaining_minutes för att planera uppgifter: 'Om duration = 120 OCH remaining_minutes > 90, starta tvättmaskin (tillräckligt med tid för att slutföra)'. Användbart för att förstå om perioder är tillräckligt långa för energikrävande uppgifter."
+        },
+        "peak_price_period_duration": {
+            "description": "Total längd på nuvarande eller nästa dyrperiod i minuter",
+            "long_description": "Visar den totala längden på dyrperioden i minuter. Under en aktiv period visar detta hela längden av nuvarande period. När ingen period är aktiv visar detta längden på nästa kommande period. Exempel: '60 minuter' för en 1-timmars period.",
+            "usage_tips": "Använd för att planera energisparåtgärder: 'Om duration > 120, minska värmetemperatur mer aggressivt (lång dyr period)'. Hjälper till att bedöma hur mycket energiförbrukning måste minskas."
         }
     },
     "binary_sensor": {

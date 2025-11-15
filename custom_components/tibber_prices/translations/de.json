@@ -186,11 +186,14 @@
             "current_interval_price": {
                 "name": "Aktueller Strompreis"
             },
+            "current_interval_price_major": {
+                "name": "Aktueller Strompreis (Energie-Dashboard)"
+            },
             "next_interval_price": {
-                "name": "Nächster Preis"
+                "name": "Nächster Strompreis"
             },
             "previous_interval_price": {
-                "name": "Vorheriger Preis"
+                "name": "Vorheriger Strompreis"
             },
             "current_hour_average_price": {
                 "name": "Aktueller Stunden-Durchschnittspreis"
@@ -514,6 +517,9 @@
             "best_price_end_time": {
                 "name": "Günstige Periode endet"
             },
+            "best_price_period_duration": {
+                "name": "Günstige Periode Dauer"
+            },
             "best_price_remaining_minutes": {
                 "name": "Günstige Periode verbleibend"
             },
@@ -528,6 +534,9 @@
             },
             "peak_price_end_time": {
                 "name": "Teure Periode endet"
+            },
+            "peak_price_period_duration": {
+                "name": "Teure Periode Dauer"
             },
             "peak_price_remaining_minutes": {
                 "name": "Teure Periode verbleibend"

@@ -21,6 +21,7 @@ from __future__ import annotations
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntityDescription,
+    SensorStateClass,
 )
 from homeassistant.const import PERCENTAGE, EntityCategory, UnitOfTime
 
@@ -56,7 +57,17 @@ INTERVAL_PRICE_SENSORS = (
         name="Current Electricity Price",
         icon="mdi:cash",  # Dynamic: shows cash-multiple/plus/cash/minus/remove based on price level
         device_class=SensorDeviceClass.MONETARY,
+        state_class=SensorStateClass.TOTAL,  # MONETARY requires TOTAL or None
         suggested_display_precision=2,
+    ),
+    SensorEntityDescription(
+        key="current_interval_price_major",
+        translation_key="current_interval_price_major",
+        name="Current Electricity Price (Energy Dashboard)",
+        icon="mdi:cash",  # Dynamic: shows cash-multiple/plus/cash/minus/remove based on price level
+        device_class=SensorDeviceClass.MONETARY,
+        state_class=SensorStateClass.TOTAL,  # MONETARY requires TOTAL or None for Energy Dashboard
+        suggested_display_precision=4,  # More precision for major currency (e.g., 0.2534 EUR/kWh)
     ),
     SensorEntityDescription(
         key="next_interval_price",
@@ -64,6 +75,7 @@ INTERVAL_PRICE_SENSORS = (
         name="Next Price",
         icon="mdi:cash",  # Dynamic: shows cash-multiple/plus/cash/minus/remove based on price level
         device_class=SensorDeviceClass.MONETARY,
+        state_class=SensorStateClass.TOTAL,  # MONETARY requires TOTAL or None
         suggested_display_precision=2,
     ),
     SensorEntityDescription(
@@ -72,6 +84,7 @@ INTERVAL_PRICE_SENSORS = (
         name="Previous Electricity Price",
         icon="mdi:cash-refund",  # Static: arrow back indicates "past"
         device_class=SensorDeviceClass.MONETARY,
+        state_class=SensorStateClass.TOTAL,  # MONETARY requires TOTAL or None
         entity_registry_enabled_default=False,
         suggested_display_precision=2,
     ),
@@ -87,6 +100,7 @@ INTERVAL_LEVEL_SENSORS = (
         name="Current Price Level",
         icon="mdi:gauge",  # Dynamic: shows gauge/gauge-empty/gauge-low/gauge-full based on level value
         device_class=SensorDeviceClass.ENUM,
+        state_class=None,  # Enum values: no statistics
         options=["very_cheap", "cheap", "normal", "expensive", "very_expensive"],
     ),
     SensorEntityDescription(
@@ -95,6 +109,7 @@ INTERVAL_LEVEL_SENSORS = (
         name="Next Price Level",
         icon="mdi:gauge",  # Dynamic: shows gauge/gauge-empty/gauge-low/gauge-full based on level value
         device_class=SensorDeviceClass.ENUM,
+        state_class=None,  # Enum values: no statistics
         options=["very_cheap", "cheap", "normal", "expensive", "very_expensive"],
     ),
     SensorEntityDescription(
@@ -104,6 +119,7 @@ INTERVAL_LEVEL_SENSORS = (
         icon="mdi:gauge",  # Dynamic: shows gauge/gauge-empty/gauge-low/gauge-full based on level value
         entity_registry_enabled_default=False,
         device_class=SensorDeviceClass.ENUM,
+        state_class=None,  # Enum values: no statistics
         options=["very_cheap", "cheap", "normal", "expensive", "very_expensive"],
     ),
 )
@@ -118,6 +134,7 @@ INTERVAL_RATING_SENSORS = (
         name="Current Price Rating",
         icon="mdi:thumbs-up-down",  # Dynamic: shows thumbs-up/thumbs-up-down/thumbs-down based on rating value
         device_class=SensorDeviceClass.ENUM,
+        state_class=None,  # Enum values: no statistics
         options=["low", "normal", "high"],
     ),
     SensorEntityDescription(
@@ -126,6 +143,7 @@ INTERVAL_RATING_SENSORS = (
         name="Next Price Rating",
         icon="mdi:thumbs-up-down",  # Dynamic: shows thumbs-up/thumbs-up-down/thumbs-down based on rating value
         device_class=SensorDeviceClass.ENUM,
+        state_class=None,  # Enum values: no statistics
         options=["low", "normal", "high"],
     ),
     SensorEntityDescription(
@@ -135,6 +153,7 @@ INTERVAL_RATING_SENSORS = (
         icon="mdi:thumbs-up-down",  # Dynamic: shows thumbs-up/thumbs-up-down/thumbs-down based on rating value
         entity_registry_enabled_default=False,
         device_class=SensorDeviceClass.ENUM,
+        state_class=None,  # Enum values: no statistics
         options=["low", "normal", "high"],
     ),
 )
@@ -152,6 +171,7 @@ ROLLING_HOUR_PRICE_SENSORS = (
         name="Current Hour Average Price",
         icon="mdi:cash",  # Dynamic: shows cash-multiple/plus/cash/minus/remove based on aggregated price level
         device_class=SensorDeviceClass.MONETARY,
+        state_class=SensorStateClass.TOTAL,  # MONETARY requires TOTAL or None
         suggested_display_precision=1,
     ),
     SensorEntityDescription(
@@ -160,6 +180,7 @@ ROLLING_HOUR_PRICE_SENSORS = (
         name="Next Hour Average Price",
         icon="mdi:cash-fast",  # Dynamic: shows cash-multiple/plus/cash/minus/remove based on aggregated price level
         device_class=SensorDeviceClass.MONETARY,
+        state_class=SensorStateClass.TOTAL,  # MONETARY requires TOTAL or None
         suggested_display_precision=1,
     ),
 )
@@ -174,6 +195,7 @@ ROLLING_HOUR_LEVEL_SENSORS = (
         name="Current Hour Price Level",
         icon="mdi:gauge",  # Dynamic: shows gauge/gauge-empty/gauge-low/gauge-full based on aggregated level value
         device_class=SensorDeviceClass.ENUM,
+        state_class=None,  # Enum values: no statistics
         options=["very_cheap", "cheap", "normal", "expensive", "very_expensive"],
     ),
     SensorEntityDescription(
@@ -182,6 +204,7 @@ ROLLING_HOUR_LEVEL_SENSORS = (
         name="Next Hour Price Level",
         icon="mdi:gauge",  # Dynamic: shows gauge/gauge-empty/gauge-low/gauge-full based on aggregated level value
         device_class=SensorDeviceClass.ENUM,
+        state_class=None,  # Enum values: no statistics
         options=["very_cheap", "cheap", "normal", "expensive", "very_expensive"],
     ),
 )
@@ -197,6 +220,7 @@ ROLLING_HOUR_RATING_SENSORS = (
         # Dynamic: shows thumbs-up/thumbs-up-down/thumbs-down based on aggregated rating value
         icon="mdi:thumbs-up-down",
         device_class=SensorDeviceClass.ENUM,
+        state_class=None,  # Enum values: no statistics
         options=["low", "normal", "high"],
     ),
     SensorEntityDescription(
@@ -206,6 +230,7 @@ ROLLING_HOUR_RATING_SENSORS = (
         # Dynamic: shows thumbs-up/thumbs-up-down/thumbs-down based on aggregated rating value
         icon="mdi:thumbs-up-down",
         device_class=SensorDeviceClass.ENUM,
+        state_class=None,  # Enum values: no statistics
         options=["low", "normal", "high"],
     ),
 )
@@ -222,6 +247,7 @@ DAILY_STAT_SENSORS = (
         name="Today's Lowest Price",
         icon="mdi:arrow-collapse-down",
         device_class=SensorDeviceClass.MONETARY,
+        state_class=SensorStateClass.TOTAL,  # MONETARY requires TOTAL or None
         suggested_display_precision=1,
     ),
     SensorEntityDescription(
@@ -230,6 +256,7 @@ DAILY_STAT_SENSORS = (
         name="Today's Highest Price",
         icon="mdi:arrow-collapse-up",
         device_class=SensorDeviceClass.MONETARY,
+        state_class=SensorStateClass.TOTAL,  # MONETARY requires TOTAL or None
         suggested_display_precision=1,
     ),
     SensorEntityDescription(
@@ -238,6 +265,7 @@ DAILY_STAT_SENSORS = (
         name="Today's Average Price",
         icon="mdi:chart-line",
         device_class=SensorDeviceClass.MONETARY,
+        state_class=SensorStateClass.TOTAL,  # MONETARY requires TOTAL or None
         suggested_display_precision=1,
     ),
     SensorEntityDescription(
@@ -246,6 +274,7 @@ DAILY_STAT_SENSORS = (
         name="Tomorrow's Lowest Price",
         icon="mdi:arrow-collapse-down",
         device_class=SensorDeviceClass.MONETARY,
+        state_class=SensorStateClass.TOTAL,  # MONETARY requires TOTAL or None
         suggested_display_precision=1,
     ),
     SensorEntityDescription(
@@ -254,6 +283,7 @@ DAILY_STAT_SENSORS = (
         name="Tomorrow's Highest Price",
         icon="mdi:arrow-collapse-up",
         device_class=SensorDeviceClass.MONETARY,
+        state_class=SensorStateClass.TOTAL,  # MONETARY requires TOTAL or None
         suggested_display_precision=1,
     ),
     SensorEntityDescription(
@@ -262,6 +292,7 @@ DAILY_STAT_SENSORS = (
         name="Tomorrow's Average Price",
         icon="mdi:chart-line",
         device_class=SensorDeviceClass.MONETARY,
+        state_class=SensorStateClass.TOTAL,  # MONETARY requires TOTAL or None
         suggested_display_precision=1,
     ),
 )
@@ -276,6 +307,7 @@ DAILY_LEVEL_SENSORS = (
         name="Yesterday's Price Level",
         icon="mdi:gauge",  # Dynamic: shows gauge/gauge-empty/gauge-low/gauge-full based on daily level value
         device_class=SensorDeviceClass.ENUM,
+        state_class=None,  # Enum values: no statistics
         options=["very_cheap", "cheap", "normal", "expensive", "very_expensive"],
         entity_registry_enabled_default=False,
     ),
@@ -285,6 +317,7 @@ DAILY_LEVEL_SENSORS = (
         name="Today's Price Level",
         icon="mdi:gauge",  # Dynamic: shows gauge/gauge-empty/gauge-low/gauge-full based on daily level value
         device_class=SensorDeviceClass.ENUM,
+        state_class=None,  # Enum values: no statistics
         options=["very_cheap", "cheap", "normal", "expensive", "very_expensive"],
     ),
     SensorEntityDescription(
@@ -293,6 +326,7 @@ DAILY_LEVEL_SENSORS = (
         name="Tomorrow's Price Level",
         icon="mdi:gauge",  # Dynamic: shows gauge/gauge-empty/gauge-low/gauge-full based on daily level value
         device_class=SensorDeviceClass.ENUM,
+        state_class=None,  # Enum values: no statistics
         options=["very_cheap", "cheap", "normal", "expensive", "very_expensive"],
     ),
 )
@@ -308,6 +342,7 @@ DAILY_RATING_SENSORS = (
         # Dynamic: shows thumbs-up/thumbs-up-down/thumbs-down based on daily rating value
         icon="mdi:thumbs-up-down",
         device_class=SensorDeviceClass.ENUM,
+        state_class=None,  # Enum values: no statistics
         options=["low", "normal", "high"],
         entity_registry_enabled_default=False,
     ),
@@ -318,6 +353,7 @@ DAILY_RATING_SENSORS = (
         # Dynamic: shows thumbs-up/thumbs-up-down/thumbs-down based on daily rating value
         icon="mdi:thumbs-up-down",
         device_class=SensorDeviceClass.ENUM,
+        state_class=None,  # Enum values: no statistics
         options=["low", "normal", "high"],
     ),
     SensorEntityDescription(
@@ -327,6 +363,7 @@ DAILY_RATING_SENSORS = (
         # Dynamic: shows thumbs-up/thumbs-up-down/thumbs-down based on daily rating value
         icon="mdi:thumbs-up-down",
         device_class=SensorDeviceClass.ENUM,
+        state_class=None,  # Enum values: no statistics
         options=["low", "normal", "high"],
     ),
 )
@@ -343,6 +380,7 @@ WINDOW_24H_SENSORS = (
         name="Trailing 24h Average Price",
         icon="mdi:chart-line",
         device_class=SensorDeviceClass.MONETARY,
+        state_class=SensorStateClass.TOTAL,  # MONETARY requires TOTAL or None
         entity_registry_enabled_default=False,
         suggested_display_precision=1,
     ),
@@ -352,6 +390,7 @@ WINDOW_24H_SENSORS = (
         name="Leading 24h Average Price",
         icon="mdi:chart-line-variant",
         device_class=SensorDeviceClass.MONETARY,
+        state_class=SensorStateClass.TOTAL,  # MONETARY requires TOTAL or None
         suggested_display_precision=1,
     ),
     SensorEntityDescription(
@@ -360,6 +399,7 @@ WINDOW_24H_SENSORS = (
         name="Trailing 24h Minimum Price",
         icon="mdi:arrow-collapse-down",
         device_class=SensorDeviceClass.MONETARY,
+        state_class=SensorStateClass.TOTAL,  # MONETARY requires TOTAL or None
         entity_registry_enabled_default=False,
         suggested_display_precision=1,
     ),
@@ -369,6 +409,7 @@ WINDOW_24H_SENSORS = (
         name="Trailing 24h Maximum Price",
         icon="mdi:arrow-collapse-up",
         device_class=SensorDeviceClass.MONETARY,
+        state_class=SensorStateClass.TOTAL,  # MONETARY requires TOTAL or None
         entity_registry_enabled_default=False,
         suggested_display_precision=1,
     ),
@@ -378,6 +419,7 @@ WINDOW_24H_SENSORS = (
         name="Leading 24h Minimum Price",
         icon="mdi:arrow-collapse-down",
         device_class=SensorDeviceClass.MONETARY,
+        state_class=SensorStateClass.TOTAL,  # MONETARY requires TOTAL or None
         suggested_display_precision=1,
     ),
     SensorEntityDescription(
@@ -386,6 +428,7 @@ WINDOW_24H_SENSORS = (
         name="Leading 24h Maximum Price",
         icon="mdi:arrow-collapse-up",
         device_class=SensorDeviceClass.MONETARY,
+        state_class=SensorStateClass.TOTAL,  # MONETARY requires TOTAL or None
         suggested_display_precision=1,
     ),
 )
@@ -403,6 +446,7 @@ FUTURE_AVG_SENSORS = (
         name="Next 1h Average Price",
         icon="mdi:chart-line",
         device_class=SensorDeviceClass.MONETARY,
+        state_class=SensorStateClass.TOTAL,  # MONETARY requires TOTAL or None
         suggested_display_precision=1,
         entity_registry_enabled_default=True,
     ),
@@ -412,6 +456,7 @@ FUTURE_AVG_SENSORS = (
         name="Next 2h Average Price",
         icon="mdi:chart-line",
         device_class=SensorDeviceClass.MONETARY,
+        state_class=SensorStateClass.TOTAL,  # MONETARY requires TOTAL or None
         suggested_display_precision=1,
         entity_registry_enabled_default=True,
     ),
@@ -421,6 +466,7 @@ FUTURE_AVG_SENSORS = (
         name="Next 3h Average Price",
         icon="mdi:chart-line",
         device_class=SensorDeviceClass.MONETARY,
+        state_class=SensorStateClass.TOTAL,  # MONETARY requires TOTAL or None
         suggested_display_precision=1,
         entity_registry_enabled_default=True,
     ),
@@ -430,6 +476,7 @@ FUTURE_AVG_SENSORS = (
         name="Next 4h Average Price",
         icon="mdi:chart-line",
         device_class=SensorDeviceClass.MONETARY,
+        state_class=SensorStateClass.TOTAL,  # MONETARY requires TOTAL or None
         suggested_display_precision=1,
         entity_registry_enabled_default=True,
     ),
@@ -439,6 +486,7 @@ FUTURE_AVG_SENSORS = (
         name="Next 5h Average Price",
         icon="mdi:chart-line",
         device_class=SensorDeviceClass.MONETARY,
+        state_class=SensorStateClass.TOTAL,  # MONETARY requires TOTAL or None
         suggested_display_precision=1,
         entity_registry_enabled_default=True,
     ),
@@ -449,6 +497,7 @@ FUTURE_AVG_SENSORS = (
         name="Next 6h Average Price",
         icon="mdi:chart-line",
         device_class=SensorDeviceClass.MONETARY,
+        state_class=SensorStateClass.TOTAL,  # MONETARY requires TOTAL or None
         suggested_display_precision=1,
         entity_registry_enabled_default=False,
     ),
@@ -458,6 +507,7 @@ FUTURE_AVG_SENSORS = (
         name="Next 8h Average Price",
         icon="mdi:chart-line",
         device_class=SensorDeviceClass.MONETARY,
+        state_class=SensorStateClass.TOTAL,  # MONETARY requires TOTAL or None
         suggested_display_precision=1,
         entity_registry_enabled_default=False,
     ),
@@ -467,6 +517,7 @@ FUTURE_AVG_SENSORS = (
         name="Next 12h Average Price",
         icon="mdi:chart-line",
         device_class=SensorDeviceClass.MONETARY,
+        state_class=SensorStateClass.TOTAL,  # MONETARY requires TOTAL or None
         suggested_display_precision=1,
         entity_registry_enabled_default=False,
     ),
@@ -480,6 +531,7 @@ FUTURE_TREND_SENSORS = (
         name="Price Trend (1h)",
         icon="mdi:trending-up",  # Dynamic: shows trending-up/trending-down/trending-neutral based on trend value
         device_class=SensorDeviceClass.ENUM,
+        state_class=None,  # Enum values: no statistics
         options=["rising", "falling", "stable"],
         entity_registry_enabled_default=True,
     ),
@@ -489,6 +541,7 @@ FUTURE_TREND_SENSORS = (
         name="Price Trend (2h)",
         icon="mdi:trending-up",  # Dynamic: shows trending-up/trending-down/trending-neutral based on trend value
         device_class=SensorDeviceClass.ENUM,
+        state_class=None,  # Enum values: no statistics
         options=["rising", "falling", "stable"],
         entity_registry_enabled_default=True,
     ),
@@ -498,6 +551,7 @@ FUTURE_TREND_SENSORS = (
         name="Price Trend (3h)",
         icon="mdi:trending-up",  # Dynamic: shows trending-up/trending-down/trending-neutral based on trend value
         device_class=SensorDeviceClass.ENUM,
+        state_class=None,  # Enum values: no statistics
         options=["rising", "falling", "stable"],
         entity_registry_enabled_default=True,
     ),
@@ -507,6 +561,7 @@ FUTURE_TREND_SENSORS = (
         name="Price Trend (4h)",
         icon="mdi:trending-up",  # Dynamic: shows trending-up/trending-down/trending-neutral based on trend value
         device_class=SensorDeviceClass.ENUM,
+        state_class=None,  # Enum values: no statistics
         options=["rising", "falling", "stable"],
         entity_registry_enabled_default=True,
     ),
@@ -516,6 +571,7 @@ FUTURE_TREND_SENSORS = (
         name="Price Trend (5h)",
         icon="mdi:trending-up",  # Dynamic: shows trending-up/trending-down/trending-neutral based on trend value
         device_class=SensorDeviceClass.ENUM,
+        state_class=None,  # Enum values: no statistics
         options=["rising", "falling", "stable"],
         entity_registry_enabled_default=True,
     ),
@@ -526,6 +582,7 @@ FUTURE_TREND_SENSORS = (
         name="Price Trend (6h)",
         icon="mdi:trending-up",  # Dynamic: shows trending-up/trending-down/trending-neutral based on trend value
         device_class=SensorDeviceClass.ENUM,
+        state_class=None,  # Enum values: no statistics
         options=["rising", "falling", "stable"],
         entity_registry_enabled_default=False,
     ),
@@ -535,6 +592,7 @@ FUTURE_TREND_SENSORS = (
         name="Price Trend (8h)",
         icon="mdi:trending-up",  # Dynamic: shows trending-up/trending-down/trending-neutral based on trend value
         device_class=SensorDeviceClass.ENUM,
+        state_class=None,  # Enum values: no statistics
         options=["rising", "falling", "stable"],
         entity_registry_enabled_default=False,
     ),
@@ -544,6 +602,7 @@ FUTURE_TREND_SENSORS = (
         name="Price Trend (12h)",
         icon="mdi:trending-up",  # Dynamic: shows trending-up/trending-down/trending-neutral based on trend value
         device_class=SensorDeviceClass.ENUM,
+        state_class=None,  # Enum values: no statistics
         options=["rising", "falling", "stable"],
         entity_registry_enabled_default=False,
     ),
@@ -564,6 +623,7 @@ VOLATILITY_SENSORS = (
         # Dynamic: shows chart-bell-curve/chart-gantt/finance based on volatility level
         icon="mdi:chart-bell-curve-cumulative",
         device_class=SensorDeviceClass.ENUM,
+        state_class=None,  # Enum values: no statistics
         options=["low", "moderate", "high", "very_high"],
     ),
     SensorEntityDescription(
@@ -573,6 +633,7 @@ VOLATILITY_SENSORS = (
         # Dynamic: shows chart-bell-curve/chart-gantt/finance based on volatility level
         icon="mdi:chart-bell-curve-cumulative",
         device_class=SensorDeviceClass.ENUM,
+        state_class=None,  # Enum values: no statistics
         options=["low", "moderate", "high", "very_high"],
     ),
     SensorEntityDescription(
@@ -582,6 +643,7 @@ VOLATILITY_SENSORS = (
         # Dynamic: shows chart-bell-curve/chart-gantt/finance based on volatility level
         icon="mdi:chart-bell-curve-cumulative",
         device_class=SensorDeviceClass.ENUM,
+        state_class=None,  # Enum values: no statistics
         options=["low", "moderate", "high", "very_high"],
     ),
     SensorEntityDescription(
@@ -591,6 +653,7 @@ VOLATILITY_SENSORS = (
         # Dynamic: shows chart-bell-curve/chart-gantt/finance based on volatility level
         icon="mdi:chart-bell-curve-cumulative",
         device_class=SensorDeviceClass.ENUM,
+        state_class=None,  # Enum values: no statistics
         options=["low", "moderate", "high", "very_high"],
     ),
 )
@@ -619,6 +682,18 @@ BEST_PRICE_TIMING_SENSORS = (
         name="Best Price Period End",
         icon="mdi:clock-end",
         device_class=SensorDeviceClass.TIMESTAMP,
+        state_class=None,  # Timestamps: no statistics
+    ),
+    SensorEntityDescription(
+        key="best_price_period_duration",
+        translation_key="best_price_period_duration",
+        name="Best Price Period Duration",
+        icon="mdi:timer",
+        device_class=SensorDeviceClass.DURATION,
+        native_unit_of_measurement=UnitOfTime.MINUTES,
+        state_class=None,  # Changes with each period: no statistics
+        suggested_display_precision=0,
+        entity_registry_enabled_default=False,
     ),
     SensorEntityDescription(
         key="best_price_remaining_minutes",
@@ -626,6 +701,7 @@ BEST_PRICE_TIMING_SENSORS = (
         name="Best Price Remaining Time",
         icon="mdi:timer-sand",
         native_unit_of_measurement=UnitOfTime.MINUTES,
+        state_class=None,  # Countdown timer: no statistics
         suggested_display_precision=0,
     ),
     SensorEntityDescription(
@@ -634,6 +710,7 @@ BEST_PRICE_TIMING_SENSORS = (
         name="Best Price Progress",
         icon="mdi:percent",  # Dynamic: mdi:percent-0 to mdi:percent-100
         native_unit_of_measurement=PERCENTAGE,
+        state_class=None,  # Progress counter: no statistics
         suggested_display_precision=0,
     ),
     SensorEntityDescription(
@@ -642,6 +719,7 @@ BEST_PRICE_TIMING_SENSORS = (
         name="Best Price Next Period Start",
         icon="mdi:clock-start",
         device_class=SensorDeviceClass.TIMESTAMP,
+        state_class=None,  # Timestamps: no statistics
     ),
     SensorEntityDescription(
         key="best_price_next_in_minutes",
@@ -649,6 +727,7 @@ BEST_PRICE_TIMING_SENSORS = (
         name="Best Price Starts In",
         icon="mdi:timer-outline",
         native_unit_of_measurement=UnitOfTime.MINUTES,
+        state_class=None,  # Countdown timer: no statistics
         suggested_display_precision=0,
     ),
 )
@@ -660,6 +739,18 @@ PEAK_PRICE_TIMING_SENSORS = (
         name="Peak Price Period End",
         icon="mdi:clock-end",
         device_class=SensorDeviceClass.TIMESTAMP,
+        state_class=None,  # Timestamps: no statistics
+    ),
+    SensorEntityDescription(
+        key="peak_price_period_duration",
+        translation_key="peak_price_period_duration",
+        name="Peak Price Period Duration",
+        icon="mdi:timer",
+        device_class=SensorDeviceClass.DURATION,
+        native_unit_of_measurement=UnitOfTime.MINUTES,
+        state_class=None,  # Changes with each period: no statistics
+        suggested_display_precision=0,
+        entity_registry_enabled_default=False,
     ),
     SensorEntityDescription(
         key="peak_price_remaining_minutes",
@@ -667,6 +758,7 @@ PEAK_PRICE_TIMING_SENSORS = (
         name="Peak Price Remaining Time",
         icon="mdi:timer-sand",
         native_unit_of_measurement=UnitOfTime.MINUTES,
+        state_class=None,  # Countdown timer: no statistics
         suggested_display_precision=0,
     ),
     SensorEntityDescription(
@@ -675,6 +767,7 @@ PEAK_PRICE_TIMING_SENSORS = (
         name="Peak Price Progress",
         icon="mdi:percent",  # Dynamic: mdi:percent-0 to mdi:percent-100
         native_unit_of_measurement=PERCENTAGE,
+        state_class=None,  # Progress counter: no statistics
         suggested_display_precision=0,
     ),
     SensorEntityDescription(
@@ -683,6 +776,7 @@ PEAK_PRICE_TIMING_SENSORS = (
         name="Peak Price Next Period Start",
         icon="mdi:clock-start",
         device_class=SensorDeviceClass.TIMESTAMP,
+        state_class=None,  # Timestamps: no statistics
     ),
     SensorEntityDescription(
         key="peak_price_next_in_minutes",
@@ -690,6 +784,7 @@ PEAK_PRICE_TIMING_SENSORS = (
         name="Peak Price Starts In",
         icon="mdi:timer-outline",
         native_unit_of_measurement=UnitOfTime.MINUTES,
+        state_class=None,  # Countdown timer: no statistics
         suggested_display_precision=0,
     ),
 )
@@ -704,6 +799,7 @@ DIAGNOSTIC_SENSORS = (
         name="Data Expiration",
         icon="mdi:clock-check",
         device_class=SensorDeviceClass.TIMESTAMP,
+        state_class=None,  # Timestamps: no statistics
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     SensorEntityDescription(
@@ -711,6 +807,7 @@ DIAGNOSTIC_SENSORS = (
         translation_key="price_forecast",
         name="Price Forecast",
         icon="mdi:chart-line",
+        state_class=None,  # Text/status value: no statistics
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
 )

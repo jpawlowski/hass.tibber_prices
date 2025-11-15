@@ -182,8 +182,11 @@
             "current_interval_price": {
                 "name": "Current Electricity Price"
             },
+            "current_interval_price_major": {
+                "name": "Current Electricity Price (Energy Dashboard)"
+            },
             "next_interval_price": {
-                "name": "Next Price"
+                "name": "Next Electricity Price"
             },
             "previous_interval_price": {
                 "name": "Previous Electricity Price"
@@ -510,6 +513,9 @@
             "best_price_end_time": {
                 "name": "Best Price Period End"
             },
+            "best_price_period_duration": {
+                "name": "Best Price Period Duration"
+            },
             "best_price_remaining_minutes": {
                 "name": "Best Price Remaining Time"
             },
@@ -524,6 +530,9 @@
             },
             "peak_price_end_time": {
                 "name": "Peak Price Period End"
+            },
+            "peak_price_period_duration": {
+                "name": "Peak Price Period Duration"
             },
             "peak_price_remaining_minutes": {
                 "name": "Peak Price Remaining Time"

@@ -5,6 +5,11 @@
             "long_description": "Toont de huidige prijs per kWh van uw Tibber-abonnement",
             "usage_tips": "Gebruik dit om prijzen bij te houden of om automatiseringen te maken die worden uitgevoerd wanneer elektriciteit goedkoop is"
         },
+        "current_interval_price_major": {
+            "description": "Huidige elektriciteitsprijs in hoofdvaluta (EUR/kWh, NOK/kWh, enz.) voor Energie-dashboard",
+            "long_description": "Toont de huidige prijs per kWh in hoofdvaluta-eenheden (bijv. EUR/kWh in plaats van ct/kWh, NOK/kWh in plaats van øre/kWh). Deze sensor is speciaal ontworpen voor gebruik met het Energie-dashboard van Home Assistant, dat prijzen in standaard valuta-eenheden vereist.",
+            "usage_tips": "Gebruik deze sensor bij het configureren van het Energie-dashboard onder Instellingen → Dashboards → Energie. Selecteer deze sensor als 'Entiteit met huidige prijs' om automatisch je energiekosten te berekenen. Het Energie-dashboard vermenigvuldigt je energieverbruik (kWh) met deze prijs om totale kosten weer te geven."
+        },
         "next_interval_price": {
             "description": "De volgende interval elektriciteitsprijs per kWh",
             "long_description": "Toont de prijs voor het volgende 15-minuten interval van uw Tibber-abonnement",
@@ -333,6 +338,16 @@
             "description": "Minuten tot volgende dure periode begint (0 bij overgang)",
             "long_description": "Toont minuten tot de volgende dure periode begint. Tijdens een actieve periode toont dit de tijd tot de periode NA de huidige. Geeft 0 terug tijdens korte overgangsmomenten. Werkt elke minuut bij.",
             "usage_tips": "Preventieve automatisering: 'Als next_in_minutes > 0 EN next_in_minutes < 10, voltooi huidige laadcyclus nu voordat prijzen stijgen'."
+        },
+        "best_price_period_duration": {
+            "description": "Totale duur van huidige of volgende goedkope periode in minuten",
+            "long_description": "Toont de totale duur van de goedkope periode in minuten. Tijdens een actieve periode toont dit de volledige lengte van de huidige periode. Wanneer geen periode actief is, toont dit de duur van de volgende komende periode. Voorbeeld: '90 minuten' voor een 1,5-uur periode.",
+            "usage_tips": "Combineer met remaining_minutes voor taakplanning: 'Als duration = 120 EN remaining_minutes > 90, start wasmachine (genoeg tijd om te voltooien)'. Nuttig om te begrijpen of periodes lang genoeg zijn voor energie-intensieve taken."
+        },
+        "peak_price_period_duration": {
+            "description": "Totale duur van huidige of volgende dure periode in minuten",
+            "long_description": "Toont de totale duur van de dure periode in minuten. Tijdens een actieve periode toont dit de volledige lengte van de huidige periode. Wanneer geen periode actief is, toont dit de duur van de volgende komende periode. Voorbeeld: '60 minuten' voor een 1-uur periode.",
+            "usage_tips": "Gebruik om energiebesparende maatregelen te plannen: 'Als duration > 120, verlaag verwarmingstemperatuur agressiever (lange dure periode)'. Helpt bij het inschatten hoeveel energieverbruik moet worden verminderd."
         }
     },
     "binary_sensor": {

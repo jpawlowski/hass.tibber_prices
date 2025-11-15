@@ -182,6 +182,9 @@
             "current_interval_price": {
                 "name": "Huidige elektriciteitsprijs"
             },
+            "current_interval_price_major": {
+                "name": "Huidige elektriciteitsprijs (Energie-dashboard)"
+            },
             "next_interval_price": {
                 "name": "Volgende prijs"
             },
@@ -536,6 +539,12 @@
             },
             "peak_price_next_in_minutes": {
                 "name": "Piekprijsperiode start over"
+            },
+            "best_price_period_duration": {
+                "name": "Goedkope periode duur"
+            },
+            "peak_price_period_duration": {
+                "name": "Piekprijsperiode duur"
             },
             "price_forecast": {
                 "name": "Prijsprognose"

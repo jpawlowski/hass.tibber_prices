@@ -182,6 +182,9 @@
             "current_interval_price": {
                 "name": "Nåværende strømpris"
             },
+            "current_interval_price_major": {
+                "name": "Nåværende strømpris (Energi-dashboard)"
+            },
             "next_interval_price": {
                 "name": "Neste pris"
             },
@@ -536,6 +539,12 @@
             },
             "peak_price_next_in_minutes": {
                 "name": "Topprisperiode starter om"
+            },
+            "best_price_period_duration": {
+                "name": "Billigperiode varighet"
+            },
+            "peak_price_period_duration": {
+                "name": "Topprisperiode varighet"
             },
             "price_forecast": {
                 "name": "Prisprognose"

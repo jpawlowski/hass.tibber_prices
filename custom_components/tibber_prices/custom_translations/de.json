@@ -5,6 +5,11 @@
             "long_description": "Zeigt den aktuellen Preis pro kWh von deinem Tibber-Abonnement an",
             "usage_tips": "Nutze dies, um Preise zu verfolgen oder Automatisierungen zu erstellen, die bei günstigem Strom ausgeführt werden"
         },
+        "current_interval_price_major": {
+            "description": "Aktueller Strompreis in Hauptwährung (EUR/kWh, NOK/kWh, etc.) für Energie-Dashboard",
+            "long_description": "Zeigt den aktuellen Preis pro kWh in Hauptwährungseinheiten an (z.B. EUR/kWh statt ct/kWh, NOK/kWh statt øre/kWh). Dieser Sensor ist speziell für die Verwendung mit dem Energie-Dashboard von Home Assistant konzipiert, das Preise in Standard-Währungseinheiten benötigt.",
+            "usage_tips": "Verwende diesen Sensor beim Konfigurieren des Energie-Dashboards unter Einstellungen → Dashboards → Energie. Wähle diesen Sensor als 'Entität mit dem aktuellen Preis' aus, um deine Energiekosten automatisch zu berechnen. Das Energie-Dashboard multipliziert deinen Energieverbrauch (kWh) mit diesem Preis, um die Gesamtkosten anzuzeigen."
+        },
         "next_interval_price": {
             "description": "Der Strompreis für das nächste 15-Minuten-Intervall pro kWh",
             "long_description": "Zeigt den Preis für das nächste 15-Minuten-Intervall von deinem Tibber-Abonnement an",
@@ -289,6 +294,11 @@
             "long_description": "Zeigt den Endzeitstempel der aktuellen günstigen Periode wenn aktiv, oder das Ende der nächsten Periode wenn keine Periode aktiv ist. Zeigt immer eine nützliche Zeitreferenz zur Planung. Gibt nur 'Unbekannt' zurück, wenn keine Perioden konfiguriert sind.",
             "usage_tips": "Nutze dies, um einen Countdown wie 'Günstige Periode endet in 2 Stunden' (wenn aktiv) oder 'Nächste günstige Periode endet um 14:00' (wenn inaktiv) anzuzeigen. Home Assistant zeigt automatisch relative Zeit für Zeitstempel-Sensoren an."
         },
+        "best_price_period_duration": {
+            "description": "Gesamtlänge der aktuellen oder nächsten günstigen Periode in Minuten",
+            "long_description": "Zeigt, wie lange die günstige Periode insgesamt dauert. Während einer aktiven Periode zeigt dies die Dauer der aktuellen Periode. Wenn keine Periode aktiv ist, zeigt dies die Dauer der nächsten kommenden Periode. Gibt nur 'Unbekannt' zurück, wenn keine Perioden konfiguriert sind.",
+            "usage_tips": "Nützlich für Planung: 'Die nächste günstige Periode dauert 90 Minuten' oder 'Aktuelle günstige Periode ist 120 Minuten lang'. Kombiniere mit remaining_minutes, um zu berechnen, wann langlaufende Geräte gestartet werden sollten."
+        },
         "best_price_remaining_minutes": {
             "description": "Verbleibende Minuten in aktueller günstiger Periode (0 wenn inaktiv)",
             "long_description": "Zeigt, wie viele Minuten in der aktuellen günstigen Periode noch verbleiben. Gibt 0 zurück, wenn keine Periode aktiv ist. Aktualisiert sich jede Minute. Prüfe binary_sensor.best_price_period um zu sehen, ob eine Periode aktuell aktiv ist.",
@@ -313,6 +323,11 @@
             "description": "Wann die aktuelle oder nächste teure Periode endet",
             "long_description": "Zeigt den Endzeitstempel der aktuellen teuren Periode wenn aktiv, oder das Ende der nächsten Periode wenn keine Periode aktiv ist. Zeigt immer eine nützliche Zeitreferenz zur Planung. Gibt nur 'Unbekannt' zurück, wenn keine Perioden konfiguriert sind.",
             "usage_tips": "Nutze dies, um 'Teure Periode endet in 1 Stunde' (wenn aktiv) oder 'Nächste teure Periode endet um 18:00' (wenn inaktiv) anzuzeigen. Kombiniere mit Automatisierungen, um Betrieb nach Spitze fortzusetzen."
+        },
+        "peak_price_period_duration": {
+            "description": "Gesamtlänge der aktuellen oder nächsten teuren Periode in Minuten",
+            "long_description": "Zeigt, wie lange die teure Periode insgesamt dauert. Während einer aktiven Periode zeigt dies die Dauer der aktuellen Periode. Wenn keine Periode aktiv ist, zeigt dies die Dauer der nächsten kommenden Periode. Gibt nur 'Unbekannt' zurück, wenn keine Perioden konfiguriert sind.",
+            "usage_tips": "Nützlich für Planung: 'Die nächste teure Periode dauert 60 Minuten' oder 'Aktuelle Spitze ist 90 Minuten lang'. Kombiniere mit remaining_minutes, um zu entscheiden, ob die Spitze abgewartet oder der Betrieb fortgesetzt werden soll."
         },
         "peak_price_remaining_minutes": {
             "description": "Verbleibende Minuten in aktueller teurer Periode (0 wenn inaktiv)",
