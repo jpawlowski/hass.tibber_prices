@@ -321,7 +321,7 @@ BINARY_SENSOR_ICON_MAPPING = {
     "best_price_period": {
         "on": "mdi:piggy-bank",
         "off": "mdi:timer-sand",  # Has future periods
-        "off_no_future": "mdi:timer-sand-complete",  # No future periods today
+        "off_no_future": "mdi:sleep",  # No future periods in next 6h
     },
     "peak_price_period": {
         "on": "mdi:alert-circle",
