@@ -523,7 +523,7 @@
                 "name": "Bästa pris framsteg"
             },
             "best_price_next_start_time": {
-                "name": "Nästa bästa pris startar"
+                "name": "Bästa pris startar"
             },
             "best_price_next_in_minutes": {
                 "name": "Bästa pris startar om"
@@ -541,7 +541,7 @@
                 "name": "Topppris framsteg"
             },
             "peak_price_next_start_time": {
-                "name": "Nästa topppris startar"
+                "name": "Topppris startar"
             },
             "peak_price_next_in_minutes": {
                 "name": "Topppris startar om"
