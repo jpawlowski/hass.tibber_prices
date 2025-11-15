@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable
+from dataclasses import dataclass
 from datetime import timedelta
 from typing import TYPE_CHECKING, Any
 
@@ -19,20 +21,38 @@ from custom_components.tibber_prices.sensor.helpers import (
 )
 from homeassistant.util import dt as dt_util
 
+
+@dataclass
+class IconContext:
+    """Context data for dynamic icon selection."""
+
+    is_on: bool | None = None
+    coordinator_data: dict | None = None
+    has_future_periods_callback: Callable[[], bool] | None = None
+    period_is_active_callback: Callable[[], bool] | None = None
+
+
 if TYPE_CHECKING:
     from collections.abc import Callable
 
 # Constants imported from price_utils
 MINUTES_PER_INTERVAL = 15
 
+# Timing sensor icon thresholds (in minutes)
+TIMING_URGENT_THRESHOLD = 15  # ≤15 min: Alert icon
+TIMING_SOON_THRESHOLD = 60  # ≤1 hour: Timer icon
+TIMING_MEDIUM_THRESHOLD = 180  # ≤3 hours: Sand timer icon
+# >3 hours: Outline timer icon
+
+# Progress sensor constants
+PROGRESS_MAX = 100  # Maximum progress value (100%)
+
 
 def get_dynamic_icon(
     key: str,
     value: Any,
     *,
-    is_on: bool | None = None,
-    coordinator_data: dict | None = None,
-    has_future_periods_callback: Callable[[], bool] | None = None,
+    context: IconContext | None = None,
 ) -> str | None:
     """
     Get dynamic icon based on sensor state.
@@ -42,22 +62,23 @@ def get_dynamic_icon(
     Args:
         key: Entity description key
         value: Native value of the sensor
-        is_on: Binary sensor state (None for regular sensors)
-        coordinator_data: Coordinator data for price level lookups
-        has_future_periods_callback: Callback to check if future periods exist (binary sensors)
+        context: Optional context with is_on state, coordinator_data, and callbacks
 
     Returns:
         Icon string or None if no dynamic icon applies
 
     """
+    ctx = context or IconContext()
+
     # Try various icon sources in order
     return (
         get_trend_icon(key, value)
-        or get_price_sensor_icon(key, coordinator_data)
+        or get_timing_sensor_icon(key, value, period_is_active_callback=ctx.period_is_active_callback)
+        or get_price_sensor_icon(key, ctx.coordinator_data)
         or get_level_sensor_icon(key, value)
         or get_rating_sensor_icon(key, value)
         or get_volatility_sensor_icon(key, value)
-        or get_binary_sensor_icon(key, is_on=is_on, has_future_periods_callback=has_future_periods_callback)
+        or get_binary_sensor_icon(key, is_on=ctx.is_on, has_future_periods_callback=ctx.has_future_periods_callback)
     )
 
 
@@ -72,6 +93,74 @@ def get_trend_icon(key: str, value: Any) -> str | None:
         "stable": "mdi:trending-neutral",
     }
     return trend_icons.get(value)
+
+
+def get_timing_sensor_icon(
+    key: str,
+    value: Any,
+    *,
+    period_is_active_callback: Callable[[], bool] | None = None,
+) -> str | None:
+    """
+    Get dynamic icon for best_price/peak_price timing sensors.
+
+    Progress sensors: Different icons based on period state
+      - No period: mdi:help-circle-outline (Unknown/gray)
+      - Waiting (0%, period not active): mdi:timer-pause-outline (paused/waiting)
+      - Active (0%, period running): mdi:circle-outline (just started)
+      - Progress 1-99%: mdi:circle-slice-1 to mdi:circle-slice-7
+      - Complete (100%): mdi:circle-slice-8
+
+    Remaining/Next-in sensors: Different timer icons based on time remaining
+    Timestamp sensors: Static icons (handled by entity description)
+
+    Args:
+        key: Entity description key
+        value: Sensor value (percentage for progress, minutes for countdown)
+        period_is_active_callback: Callback to check if related period is currently active
+
+    Returns:
+        Icon string or None if not a timing sensor with dynamic icon
+
+    """
+    # Unknown state: Show help icon for all timing sensors
+    if value is None and key.startswith(("best_price_", "peak_price_")):
+        return "mdi:help-circle-outline"
+
+    # Progress sensors: Circle-slice icons for visual progress indication
+    # mdi:circle-slice-N where N represents filled portions (1=12.5%, 8=100%)
+    if key.endswith("_progress") and isinstance(value, (int, float)):
+        # Special handling for 0%: Distinguish between waiting and active
+        if value <= 0:
+            # Check if period is currently active via callback
+            is_active = (
+                period_is_active_callback()
+                if (period_is_active_callback and callable(period_is_active_callback))
+                else True
+            )
+            # Period just started (0% but running) vs waiting for next
+            return "mdi:circle-outline" if is_active else "mdi:timer-pause-outline"
+
+        # Calculate slice based on progress percentage
+        slice_num = 8 if value >= PROGRESS_MAX else min(7, max(1, int((value / PROGRESS_MAX) * 8)))
+        return f"mdi:circle-slice-{slice_num}"
+
+    # Remaining/Next-in minutes sensors: Timer icons based on urgency thresholds
+    if key.endswith(("_remaining_minutes", "_next_in_minutes")) and isinstance(value, (int, float)):
+        # Map time remaining to appropriate timer icon
+        urgency_map = [
+            (0, "mdi:timer-off-outline"),  # Exactly 0 minutes
+            (TIMING_URGENT_THRESHOLD, "mdi:timer-alert"),  # < 15 min: urgent
+            (TIMING_SOON_THRESHOLD, "mdi:timer"),  # < 60 min: soon
+            (TIMING_MEDIUM_THRESHOLD, "mdi:timer-sand"),  # < 180 min: medium
+        ]
+        for threshold, icon in urgency_map:
+            if value <= threshold:
+                return icon
+        return "mdi:timer-outline"  # >= 180 min: far away
+
+    # Timestamp sensors use static icons from entity description
+    return None
 
 
 def get_price_sensor_icon(key: str, coordinator_data: dict | None) -> str | None:

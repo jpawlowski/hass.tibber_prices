@@ -153,6 +153,28 @@ TIME_SENSITIVE_ENTITY_KEYS = frozenset(
         # Binary sensors that check if current time is in a period
         "peak_price_period",
         "best_price_period",
+        # Best/Peak price timestamp sensors (periods only change at interval boundaries)
+        "best_price_end_time",
+        "best_price_next_start_time",
+        "peak_price_end_time",
+        "peak_price_next_start_time",
+    }
+)
+
+# Entities that require minute-by-minute updates (separate from quarter-hour updates)
+# These are timing sensors that track countdown/progress within best/peak price periods
+# Timestamp sensors (end_time, next_start_time) only need quarter-hour updates since periods
+# can only change at interval boundaries
+MINUTE_UPDATE_ENTITY_KEYS = frozenset(
+    {
+        # Best Price countdown/progress sensors (need minute updates)
+        "best_price_remaining_minutes",
+        "best_price_progress",
+        "best_price_next_in_minutes",
+        # Peak Price countdown/progress sensors (need minute updates)
+        "peak_price_remaining_minutes",
+        "peak_price_progress",
+        "peak_price_next_in_minutes",
     }
 )
 
@@ -206,11 +228,19 @@ class TibberPricesDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         # Quarter-hour entity refresh timer (runs at :00, :15, :30, :45)
         self._quarter_hour_timer_cancel: CALLBACK_TYPE | None = None
 
+        # Minute-by-minute entity refresh timer (runs every minute for timing sensors)
+        self._minute_timer_cancel: CALLBACK_TYPE | None = None
+
         # Selective listener system for time-sensitive entities
         # Regular listeners update on API data changes, time-sensitive listeners update every 15 minutes
         self._time_sensitive_listeners: list[CALLBACK_TYPE] = []
 
+        # Minute-update listener system for timing sensors
+        # These listeners update every minute to track progress/remaining time in periods
+        self._minute_update_listeners: list[CALLBACK_TYPE] = []
+
         self._schedule_quarter_hour_refresh()
+        self._schedule_minute_refresh()
 
     def _log(self, level: str, message: str, *args: Any, **kwargs: Any) -> None:
         """Log with coordinator-specific prefix."""
@@ -248,6 +278,39 @@ class TibberPricesDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             "debug",
             "Updated %d time-sensitive entities at quarter-hour boundary",
             len(self._time_sensitive_listeners),
+        )
+
+    @callback
+    def async_add_minute_update_listener(self, update_callback: CALLBACK_TYPE) -> CALLBACK_TYPE:
+        """
+        Listen for minute-by-minute updates for timing sensors.
+
+        Timing sensors (like best_price_remaining_minutes, peak_price_progress, etc.) should use this
+        method to receive updates every minute for accurate countdown/progress tracking.
+
+        Returns:
+            Callback that can be used to remove the listener
+
+        """
+        self._minute_update_listeners.append(update_callback)
+
+        def remove_listener() -> None:
+            """Remove update listener."""
+            if update_callback in self._minute_update_listeners:
+                self._minute_update_listeners.remove(update_callback)
+
+        return remove_listener
+
+    @callback
+    def _async_update_minute_listeners(self) -> None:
+        """Update all minute-update entities without triggering a full coordinator update."""
+        for update_callback in self._minute_update_listeners:
+            update_callback()
+
+        self._log(
+            "debug",
+            "Updated %d minute-update entities",
+            len(self._minute_update_listeners),
         )
 
     def _schedule_quarter_hour_refresh(self) -> None:
@@ -292,6 +355,35 @@ class TibberPricesDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             # This causes time-sensitive entity state properties to be re-evaluated with the current time
             # Static entities (statistics, diagnostics) only update when new API data arrives
             self._async_update_time_sensitive_listeners()
+
+    def _schedule_minute_refresh(self) -> None:
+        """Schedule minute-by-minute entity refresh for timing sensors."""
+        # Cancel any existing timer
+        if self._minute_timer_cancel:
+            self._minute_timer_cancel()
+            self._minute_timer_cancel = None
+
+        # Use Home Assistant's async_track_utc_time_change to trigger every minute at second=1
+        # This ensures timing sensors (remaining_minutes, progress) update accurately
+        self._minute_timer_cancel = async_track_utc_time_change(
+            self.hass,
+            self._handle_minute_refresh,
+            second=1,
+        )
+
+        self._log(
+            "debug",
+            "Scheduled minute-by-minute refresh for timing sensors (every minute at second=1)",
+        )
+
+    @callback
+    def _handle_minute_refresh(self, _now: datetime | None = None) -> None:
+        """Handle minute-by-minute entity refresh for timing sensors."""
+        # Only log at debug level to avoid log spam (this runs every minute)
+        self._log("debug", "Minute refresh triggered for timing sensors")
+
+        # Update only minute-update entities (remaining_minutes, progress, etc.)
+        self._async_update_minute_listeners()
 
     @callback
     def _check_and_handle_midnight_turnover(self, now: datetime) -> bool:
@@ -356,6 +448,10 @@ class TibberPricesDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         if self._quarter_hour_timer_cancel:
             self._quarter_hour_timer_cancel()
             self._quarter_hour_timer_cancel = None
+
+        if self._minute_timer_cancel:
+            self._minute_timer_cancel()
+            self._minute_timer_cancel = None
 
     def _has_existing_main_coordinator(self) -> bool:
         """Check if there's already a main coordinator in hass.data."""

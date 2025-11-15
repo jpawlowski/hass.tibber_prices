@@ -507,6 +507,36 @@
                     "very_high": "Very High"
                 }
             },
+            "best_price_end_time": {
+                "name": "Best Price Period End"
+            },
+            "best_price_remaining_minutes": {
+                "name": "Best Price Remaining Time"
+            },
+            "best_price_progress": {
+                "name": "Best Price Progress"
+            },
+            "best_price_next_start_time": {
+                "name": "Best Price Next Period Start"
+            },
+            "best_price_next_in_minutes": {
+                "name": "Best Price Starts In"
+            },
+            "peak_price_end_time": {
+                "name": "Peak Price Period End"
+            },
+            "peak_price_remaining_minutes": {
+                "name": "Peak Price Remaining Time"
+            },
+            "peak_price_progress": {
+                "name": "Peak Price Progress"
+            },
+            "peak_price_next_start_time": {
+                "name": "Peak Price Next Period Start"
+            },
+            "peak_price_next_in_minutes": {
+                "name": "Peak Price Starts In"
+            },
             "price_forecast": {
                 "name": "Price Forecast"
             }

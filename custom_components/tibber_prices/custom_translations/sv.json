@@ -283,6 +283,56 @@
             "description": "Prognos för kommande elpriser",
             "long_description": "Visar kommande elpriser för framtida intervaller i ett format som är enkelt att använda i instrumentpaneler",
             "usage_tips": "Använd denna enhets attribut för att visa kommande priser i diagram eller anpassade kort. Få åtkomst till antingen 'intervals' för alla framtida intervaller eller 'hours' för timvisa sammanfattningar."
+        },
+        "best_price_end_time": {
+            "description": "När nuvarande eller nästa billigperiod slutar",
+            "long_description": "Visar sluttidsstämpeln för nuvarande billigperiod när aktiv, eller slutet av nästa period när ingen period är aktiv. Visar alltid en användbar tidsreferens för planering. Returnerar 'Okänt' endast när inga perioder är konfigurerade.",
+            "usage_tips": "Använd detta för att visa en nedräkning som 'Billigperiod slutar om 2 timmar' (när aktiv) eller 'Nästa billigperiod slutar kl 14:00' (när inaktiv). Home Assistant visar automatiskt relativ tid för tidsstämpelsensorer."
+        },
+        "best_price_remaining_minutes": {
+            "description": "Återstående minuter i nuvarande billigperiod (0 när inaktiv)",
+            "long_description": "Visar hur många minuter som återstår i nuvarande billigperiod. Returnerar 0 när ingen period är aktiv. Uppdateras varje minut. Kontrollera binary_sensor.best_price_period för att se om en period är aktiv.",
+            "usage_tips": "Perfekt för automationer: 'Om remaining_minutes > 0 OCH remaining_minutes < 30, starta tvättmaskin nu'. Värdet 0 gör det enkelt att kontrollera om en period är aktiv (värde > 0) eller inte (värde = 0)."
+        },
+        "best_price_progress": {
+            "description": "Framsteg genom nuvarande billigperiod (0% när inaktiv)",
+            "long_description": "Visar framsteg genom nuvarande billigperiod som 0-100%. Returnerar 0% när ingen period är aktiv. Uppdateras varje minut. 0% betyder period just startad, 100% betyder den snart slutar.",
+            "usage_tips": "Bra för visuella framstegsstaplar. Använd i automationer: 'Om progress > 0 OCH progress > 75, skicka meddelande att billigperiod snart slutar'. Värde 0 indikerar ingen aktiv period."
+        },
+        "best_price_next_start_time": {
+            "description": "När nästa billigperiod startar",
+            "long_description": "Visar när nästa kommande billigperiod startar. Under en aktiv period visar detta starten av NÄSTA period efter den nuvarande. Returnerar 'Okänt' endast när inga framtida perioder är konfigurerade.",
+            "usage_tips": "Alltid användbart för framåtplanering: 'Nästa billigperiod startar om 3 timmar' (oavsett om du är i en period nu eller inte). Kombinera med automationer: 'När nästa starttid är om 10 minuter, skicka meddelande för att förbereda tvättmaskin'."
+        },
+        "best_price_next_in_minutes": {
+            "description": "Minuter tills nästa billigperiod startar (0 vid övergång)",
+            "long_description": "Visar minuter tills nästa billigperiod startar. Under en aktiv period visar detta tiden till perioden EFTER den nuvarande. Returnerar 0 under korta övergångsmoment. Uppdateras varje minut.",
+            "usage_tips": "Perfekt för 'vänta tills billigperiod' automationer: 'Om next_in_minutes > 0 OCH next_in_minutes < 15, vänta innan diskmaskin startas'. Värde > 0 indikerar alltid att en framtida period är planerad."
+        },
+        "peak_price_end_time": {
+            "description": "När nuvarande eller nästa dyrperiod slutar",
+            "long_description": "Visar sluttidsstämpeln för nuvarande dyrperiod när aktiv, eller slutet av nästa period när ingen period är aktiv. Visar alltid en användbar tidsreferens för planering. Returnerar 'Okänt' endast när inga perioder är konfigurerade.",
+            "usage_tips": "Använd detta för att visa 'Dyrperiod slutar om 1 timme' (när aktiv) eller 'Nästa dyrperiod slutar kl 18:00' (när inaktiv). Kombinera med automationer för att återuppta drift efter topp."
+        },
+        "peak_price_remaining_minutes": {
+            "description": "Återstående minuter i nuvarande dyrperiod (0 när inaktiv)",
+            "long_description": "Visar hur många minuter som återstår i nuvarande dyrperiod. Returnerar 0 när ingen period är aktiv. Uppdateras varje minut. Kontrollera binary_sensor.peak_price_period för att se om en period är aktiv.",
+            "usage_tips": "Använd i automationer: 'Om remaining_minutes > 60, avbryt uppskjuten laddningssession'. Värde 0 gör det enkelt att skilja mellan aktiva (värde > 0) och inaktiva (värde = 0) perioder."
+        },
+        "peak_price_progress": {
+            "description": "Framsteg genom nuvarande dyrperiod (0% när inaktiv)",
+            "long_description": "Visar framsteg genom nuvarande dyrperiod som 0-100%. Returnerar 0% när ingen period är aktiv. Uppdateras varje minut.",
+            "usage_tips": "Visuell framstegsindikator i instrumentpaneler. Automation: 'Om progress > 0 OCH progress > 90, förbered normal värmeplanering'. Värde 0 indikerar ingen aktiv period."
+        },
+        "peak_price_next_start_time": {
+            "description": "När nästa dyrperiod startar",
+            "long_description": "Visar när nästa kommande dyrperiod startar. Under en aktiv period visar detta starten av NÄSTA period efter den nuvarande. Returnerar 'Okänt' endast när inga framtida perioder är konfigurerade.",
+            "usage_tips": "Alltid användbart för planering: 'Nästa dyrperiod startar om 2 timmar'. Automation: 'När nästa starttid är om 30 minuter, minska värmetemperatur förebyggande'."
+        },
+        "peak_price_next_in_minutes": {
+            "description": "Minuter tills nästa dyrperiod startar (0 vid övergång)",
+            "long_description": "Visar minuter tills nästa dyrperiod startar. Under en aktiv period visar detta tiden till perioden EFTER den nuvarande. Returnerar 0 under korta övergångsmoment. Uppdateras varje minut.",
+            "usage_tips": "Förebyggande automation: 'Om next_in_minutes > 0 OCH next_in_minutes < 10, slutför nuvarande laddcykel nu innan priserna ökar'."
         }
     },
     "binary_sensor": {

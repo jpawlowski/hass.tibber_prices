@@ -14,6 +14,9 @@ from custom_components.tibber_prices.average_utils import (
     calculate_current_trailing_min,
     calculate_next_n_hours_avg,
 )
+from custom_components.tibber_prices.binary_sensor.attributes import (
+    get_price_intervals_attributes,
+)
 from custom_components.tibber_prices.const import (
     CONF_EXTENDED_DESCRIPTIONS,
     CONF_PRICE_RATING_THRESHOLD_HIGH,
@@ -30,12 +33,16 @@ from custom_components.tibber_prices.const import (
     format_price_unit_minor,
     get_entity_description,
 )
-from custom_components.tibber_prices.coordinator import TIME_SENSITIVE_ENTITY_KEYS
+from custom_components.tibber_prices.coordinator import (
+    MINUTE_UPDATE_ENTITY_KEYS,
+    TIME_SENSITIVE_ENTITY_KEYS,
+)
 from custom_components.tibber_prices.entity import TibberPricesEntity
 from custom_components.tibber_prices.entity_utils import (
     add_icon_color_attribute,
     get_dynamic_icon,
 )
+from custom_components.tibber_prices.entity_utils.icons import IconContext
 from custom_components.tibber_prices.price_utils import (
     MINUTES_PER_INTERVAL,
     calculate_price_trend,
@@ -76,6 +83,7 @@ LAST_HOUR_OF_DAY = 23
 INTERVALS_PER_HOUR = 4  # 15-minute intervals
 MAX_FORECAST_INTERVALS = 8  # Show up to 8 future intervals (2 hours with 15-min intervals)
 MIN_HOURS_FOR_LATER_HALF = 3  # Minimum hours needed to calculate later half average
+PROGRESS_GRACE_PERIOD_SECONDS = 60  # Show 100% for 1 minute after period ends
 
 
 class TibberPricesSensor(TibberPricesEntity, SensorEntity):
@@ -93,6 +101,7 @@ class TibberPricesSensor(TibberPricesEntity, SensorEntity):
         self._attr_has_entity_name = True
         self._value_getter: Callable | None = self._get_value_getter()
         self._time_sensitive_remove_listener: Callable | None = None
+        self._minute_update_remove_listener: Callable | None = None
         self._trend_attributes: dict[str, Any] = {}  # Sensor-specific trend attributes
         self._cached_trend_value: str | None = None  # Cache for trend state
 
@@ -106,6 +115,12 @@ class TibberPricesSensor(TibberPricesEntity, SensorEntity):
                 self._handle_time_sensitive_update
             )
 
+        # Register with coordinator for minute-by-minute updates if applicable
+        if self.entity_description.key in MINUTE_UPDATE_ENTITY_KEYS:
+            self._minute_update_remove_listener = self.coordinator.async_add_minute_update_listener(
+                self._handle_minute_update
+            )
+
     async def async_will_remove_from_hass(self) -> None:
         """When entity will be removed from hass."""
         await super().async_will_remove_from_hass()
@@ -115,6 +130,11 @@ class TibberPricesSensor(TibberPricesEntity, SensorEntity):
             self._time_sensitive_remove_listener()
             self._time_sensitive_remove_listener = None
 
+        # Remove minute-update listener if registered
+        if self._minute_update_remove_listener:
+            self._minute_update_remove_listener()
+            self._minute_update_remove_listener = None
+
     @callback
     def _handle_time_sensitive_update(self) -> None:
         """Handle time-sensitive update from coordinator."""
@@ -122,6 +142,11 @@ class TibberPricesSensor(TibberPricesEntity, SensorEntity):
         if self.entity_description.key.startswith("price_trend_"):
             self._cached_trend_value = None
             self._trend_attributes = {}
+        self.async_write_ha_state()
+
+    @callback
+    def _handle_minute_update(self) -> None:
+        """Handle minute-by-minute update from coordinator."""
         self.async_write_ha_state()
 
     @callback
@@ -247,6 +272,41 @@ class TibberPricesSensor(TibberPricesEntity, SensorEntity):
             "tomorrow_volatility": lambda: self._get_volatility_value(volatility_type="tomorrow"),
             "next_24h_volatility": lambda: self._get_volatility_value(volatility_type="next_24h"),
             "today_tomorrow_volatility": lambda: self._get_volatility_value(volatility_type="today_tomorrow"),
+            # ================================================================
+            # BEST/PEAK PRICE TIMING SENSORS (period-based time tracking)
+            # ================================================================
+            # Best Price timing sensors
+            "best_price_end_time": lambda: self._get_period_timing_value(
+                period_type="best_price", value_type="end_time"
+            ),
+            "best_price_remaining_minutes": lambda: self._get_period_timing_value(
+                period_type="best_price", value_type="remaining_minutes"
+            ),
+            "best_price_progress": lambda: self._get_period_timing_value(
+                period_type="best_price", value_type="progress"
+            ),
+            "best_price_next_start_time": lambda: self._get_period_timing_value(
+                period_type="best_price", value_type="next_start_time"
+            ),
+            "best_price_next_in_minutes": lambda: self._get_period_timing_value(
+                period_type="best_price", value_type="next_in_minutes"
+            ),
+            # Peak Price timing sensors
+            "peak_price_end_time": lambda: self._get_period_timing_value(
+                period_type="peak_price", value_type="end_time"
+            ),
+            "peak_price_remaining_minutes": lambda: self._get_period_timing_value(
+                period_type="peak_price", value_type="remaining_minutes"
+            ),
+            "peak_price_progress": lambda: self._get_period_timing_value(
+                period_type="peak_price", value_type="progress"
+            ),
+            "peak_price_next_start_time": lambda: self._get_period_timing_value(
+                period_type="peak_price", value_type="next_start_time"
+            ),
+            "peak_price_next_in_minutes": lambda: self._get_period_timing_value(
+                period_type="peak_price", value_type="next_in_minutes"
+            ),
         }
 
         return handlers.get(key)
@@ -930,6 +990,188 @@ class TibberPricesSensor(TibberPricesEntity, SensorEntity):
         # Return lowercase for ENUM device class
         return volatility.lower()
 
+    # ========================================================================
+    # BEST/PEAK PRICE TIMING METHODS (period-based time tracking)
+    # ========================================================================
+
+    def _get_period_timing_value(
+        self,
+        *,
+        period_type: str,
+        value_type: str,
+    ) -> datetime | float | None:
+        """
+        Get timing-related values for best_price/peak_price periods.
+
+        This method provides timing information based on whether a period is currently
+        active or not, ensuring sensors always provide useful information.
+
+        Value types behavior:
+        - end_time: Active period → current end | No active → next period end | None if no periods
+        - next_start_time: Active period → next-next start | No active → next start | None if no more
+        - remaining_minutes: Active period → minutes to end | No active → 0
+        - progress: Active period → 0-100% | No active → 0
+        - next_in_minutes: Active period → minutes to next-next | No active → minutes to next | None if no more
+
+        Args:
+            period_type: "best_price" or "peak_price"
+            value_type: "end_time", "remaining_minutes", "progress", "next_start_time", "next_in_minutes"
+
+        Returns:
+            - datetime for end_time/next_start_time
+            - float for remaining_minutes/next_in_minutes/progress (or 0 when not active)
+            - None if no relevant period data available
+
+        """
+        if not self.coordinator.data:
+            return None
+
+        # Get period data from coordinator
+        periods_data = self.coordinator.data.get("periods", {})
+        period_data = periods_data.get(period_type)
+
+        if not period_data or not period_data.get("periods"):
+            # No periods available - return 0 for numeric sensors, None for timestamps
+            return 0 if value_type in ("remaining_minutes", "progress", "next_in_minutes") else None
+
+        period_summaries = period_data["periods"]
+        now = dt_util.now()
+
+        # Find current, previous and next periods
+        current_period = self._find_active_period(period_summaries, now)
+        previous_period = self._find_previous_period(period_summaries, now)
+        next_period = self._find_next_period(period_summaries, now, skip_current=bool(current_period))
+
+        # Delegate to specific calculators
+        return self._calculate_timing_value(value_type, current_period, previous_period, next_period, now)
+
+    def _calculate_timing_value(
+        self,
+        value_type: str,
+        current_period: dict | None,
+        previous_period: dict | None,
+        next_period: dict | None,
+        now: datetime,
+    ) -> datetime | float | None:
+        """Calculate specific timing value based on type and available periods."""
+        # Define calculation strategies for each value type
+        calculators = {
+            "end_time": lambda: (
+                current_period.get("end") if current_period else (next_period.get("end") if next_period else None)
+            ),
+            "next_start_time": lambda: next_period.get("start") if next_period else None,
+            "remaining_minutes": lambda: (self._calc_remaining_minutes(current_period, now) if current_period else 0),
+            "progress": lambda: self._calc_progress_with_grace_period(current_period, previous_period, now),
+            "next_in_minutes": lambda: (self._calc_next_in_minutes(next_period, now) if next_period else None),
+        }
+
+        calculator = calculators.get(value_type)
+        return calculator() if calculator else None
+
+    def _find_active_period(self, periods: list, now: datetime) -> dict | None:
+        """Find currently active period."""
+        for period in periods:
+            start = period.get("start")
+            end = period.get("end")
+            if start and end and start <= now < end:
+                return period
+        return None
+
+    def _find_previous_period(self, periods: list, now: datetime) -> dict | None:
+        """Find the most recent period that has already ended."""
+        past_periods = [p for p in periods if p.get("end") and p.get("end") <= now]
+
+        if not past_periods:
+            return None
+
+        # Sort by end time descending to get the most recent one
+        past_periods.sort(key=lambda p: p["end"], reverse=True)
+        return past_periods[0]
+
+    def _find_next_period(self, periods: list, now: datetime, *, skip_current: bool = False) -> dict | None:
+        """
+        Find next future period.
+
+        Args:
+            periods: List of period dictionaries
+            now: Current time
+            skip_current: If True, skip the first future period (to get next-next)
+
+        Returns:
+            Next period dict or None if no future periods
+
+        """
+        future_periods = [p for p in periods if p.get("start") and p.get("start") > now]
+
+        if not future_periods:
+            return None
+
+        # Sort by start time to ensure correct order
+        future_periods.sort(key=lambda p: p["start"])
+
+        # Return second period if skip_current=True (next-next), otherwise first (next)
+        if skip_current and len(future_periods) > 1:
+            return future_periods[1]
+        if not skip_current and future_periods:
+            return future_periods[0]
+
+        return None
+
+    def _calc_remaining_minutes(self, period: dict, now: datetime) -> float:
+        """Calculate minutes until period ends."""
+        end = period.get("end")
+        if not end:
+            return 0
+        delta = end - now
+        return max(0, delta.total_seconds() / 60)
+
+    def _calc_next_in_minutes(self, period: dict, now: datetime) -> float:
+        """Calculate minutes until period starts."""
+        start = period.get("start")
+        if not start:
+            return 0
+        delta = start - now
+        return max(0, delta.total_seconds() / 60)
+
+    def _calc_progress(self, period: dict, now: datetime) -> float:
+        """Calculate progress percentage (0-100) of current period."""
+        start = period.get("start")
+        end = period.get("end")
+        if not start or not end:
+            return 0
+        total_duration = (end - start).total_seconds()
+        if total_duration <= 0:
+            return 0
+        elapsed = (now - start).total_seconds()
+        progress = (elapsed / total_duration) * 100
+        return min(100, max(0, progress))
+
+    def _calc_progress_with_grace_period(
+        self, current_period: dict | None, previous_period: dict | None, now: datetime
+    ) -> float:
+        """
+        Calculate progress with grace period after period end.
+
+        Shows 100% for 1 minute after period ends to allow triggers on 100% completion.
+        This prevents the progress from jumping directly from ~99% to 0% without ever
+        reaching 100%, which would make automations like "when progress = 100%" impossible.
+        """
+        # If we have an active period, calculate normal progress
+        if current_period:
+            return self._calc_progress(current_period, now)
+
+        # No active period - check if we just finished one (within grace period)
+        if previous_period:
+            previous_end = previous_period.get("end")
+            if previous_end:
+                seconds_since_end = (now - previous_end).total_seconds()
+                # Grace period: Show 100% for defined time after period ended
+                if 0 <= seconds_since_end <= PROGRESS_GRACE_PERIOD_SECONDS:
+                    return 100
+
+        # No active period and either no previous period or grace period expired
+        return 0
+
     # Add method to get future price intervals
     def _get_price_forecast_value(self) -> str | None:
         """Get the highest or lowest price status for the price forecast entity."""
@@ -962,16 +1204,45 @@ class TibberPricesSensor(TibberPricesEntity, SensorEntity):
 
     @property
     def native_unit_of_measurement(self) -> str | None:
-        """Return the unit of measurement dynamically based on currency."""
-        if self.entity_description.device_class != SensorDeviceClass.MONETARY:
-            return None
+        """Return the unit of measurement dynamically based on currency or entity description."""
+        # For MONETARY sensors, return currency-specific unit
+        if self.entity_description.device_class == SensorDeviceClass.MONETARY:
+            currency = None
+            if self.coordinator.data:
+                price_info = self.coordinator.data.get("priceInfo", {})
+                currency = price_info.get("currency")
+            return format_price_unit_minor(currency)
 
-        currency = None
-        if self.coordinator.data:
-            price_info = self.coordinator.data.get("priceInfo", {})
-            currency = price_info.get("currency")
+        # For all other sensors, use unit from entity description
+        return self.entity_description.native_unit_of_measurement
 
-        return format_price_unit_minor(currency)
+    def _is_best_price_period_active(self) -> bool:
+        """Check if the current time is within a best price period."""
+        if not self.coordinator.data:
+            return False
+        attrs = get_price_intervals_attributes(self.coordinator.data, reverse_sort=False)
+        if not attrs:
+            return False
+        start = attrs.get("start")
+        end = attrs.get("end")
+        if not start or not end:
+            return False
+        now = dt_util.now()
+        return start <= now < end
+
+    def _is_peak_price_period_active(self) -> bool:
+        """Check if the current time is within a peak price period."""
+        if not self.coordinator.data:
+            return False
+        attrs = get_price_intervals_attributes(self.coordinator.data, reverse_sort=True)
+        if not attrs:
+            return False
+        start = attrs.get("start")
+        end = attrs.get("end")
+        if not start or not end:
+            return False
+        now = dt_util.now()
+        return start <= now < end
 
     @property
     def icon(self) -> str | None:
@@ -979,11 +1250,21 @@ class TibberPricesSensor(TibberPricesEntity, SensorEntity):
         key = self.entity_description.key
         value = self.native_value
 
-        # Use centralized icon logic
+        # Create callback for period active state check (used by timing sensors)
+        period_is_active_callback = None
+        if key.startswith("best_price_"):
+            period_is_active_callback = self._is_best_price_period_active
+        elif key.startswith("peak_price_"):
+            period_is_active_callback = self._is_peak_price_period_active
+
+        # Use centralized icon logic with context
         icon = get_dynamic_icon(
             key=key,
             value=value,
-            coordinator_data=self.coordinator.data,
+            context=IconContext(
+                coordinator_data=self.coordinator.data,
+                period_is_active_callback=period_is_active_callback,
+            ),
         )
 
         # Fall back to static icon from entity description

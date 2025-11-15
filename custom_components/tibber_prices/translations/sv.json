@@ -507,6 +507,36 @@
                     "very_high": "Mycket Hög"
                 }
             },
+            "best_price_end_time": {
+                "name": "Bästa prisperiod slutar"
+            },
+            "best_price_remaining_minutes": {
+                "name": "Bästa prisperiod återstående tid"
+            },
+            "best_price_progress": {
+                "name": "Bästa prisperiod framsteg"
+            },
+            "best_price_next_start_time": {
+                "name": "Nästa bästa prisperiod startar"
+            },
+            "best_price_next_in_minutes": {
+                "name": "Bästa prisperiod startar om"
+            },
+            "peak_price_end_time": {
+                "name": "Topprisperiod slutar"
+            },
+            "peak_price_remaining_minutes": {
+                "name": "Topprisperiod återstående tid"
+            },
+            "peak_price_progress": {
+                "name": "Topprisperiod framsteg"
+            },
+            "peak_price_next_start_time": {
+                "name": "Nästa topprisperiod startar"
+            },
+            "peak_price_next_in_minutes": {
+                "name": "Topprisperiod startar om"
+            },
             "price_forecast": {
                 "name": "Prisprognos"
             }

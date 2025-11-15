@@ -283,6 +283,56 @@
             "description": "Prognose kommender Strompreise",
             "long_description": "Zeigt kommende Strompreise für zukünftige Intervalle in einem Format, das einfach in Dashboards verwendet werden kann",
             "usage_tips": "Verwenden Sie die Attribute dieser Entität, um kommende Preise in Diagrammen oder benutzerdefinierten Karten anzuzeigen. Greifen Sie entweder auf 'intervals' für alle zukünftigen Intervalle oder auf 'hours' für stündliche Zusammenfassungen zu."
+        },
+        "best_price_end_time": {
+            "description": "Wann die aktuelle oder nächste günstige Periode endet",
+            "long_description": "Zeigt den Endzeitstempel der aktuellen günstigen Periode wenn aktiv, oder das Ende der nächsten Periode wenn keine Periode aktiv ist. Zeigt immer eine nützliche Zeitreferenz zur Planung. Gibt nur 'Unbekannt' zurück, wenn keine Perioden konfiguriert sind.",
+            "usage_tips": "Nutze dies, um einen Countdown wie 'Günstige Periode endet in 2 Stunden' (wenn aktiv) oder 'Nächste günstige Periode endet um 14:00' (wenn inaktiv) anzuzeigen. Home Assistant zeigt automatisch relative Zeit für Zeitstempel-Sensoren an."
+        },
+        "best_price_remaining_minutes": {
+            "description": "Verbleibende Minuten in aktueller günstiger Periode (0 wenn inaktiv)",
+            "long_description": "Zeigt, wie viele Minuten in der aktuellen günstigen Periode noch verbleiben. Gibt 0 zurück, wenn keine Periode aktiv ist. Aktualisiert sich jede Minute. Prüfe binary_sensor.best_price_period um zu sehen, ob eine Periode aktuell aktiv ist.",
+            "usage_tips": "Perfekt für Automatisierungen: 'Wenn remaining_minutes > 0 UND remaining_minutes < 30, starte Waschmaschine jetzt'. Der Wert 0 macht es einfach zu prüfen, ob eine Periode aktiv ist (Wert > 0) oder nicht (Wert = 0)."
+        },
+        "best_price_progress": {
+            "description": "Fortschritt durch aktuelle günstige Periode (0% wenn inaktiv)",
+            "long_description": "Zeigt den Fortschritt durch die aktuelle günstige Periode als 0-100%. Gibt 0% zurück, wenn keine Periode aktiv ist. Aktualisiert sich jede Minute. 0% bedeutet Periode gerade gestartet, 100% bedeutet sie endet gleich.",
+            "usage_tips": "Super für visuelle Fortschrittsbalken. Nutze in Automatisierungen: 'Wenn progress > 0 UND progress > 75, sende Benachrichtigung, dass günstige Periode bald endet'. Wert 0 zeigt keine aktive Periode an."
+        },
+        "best_price_next_start_time": {
+            "description": "Wann die nächste günstige Periode startet",
+            "long_description": "Zeigt, wann die nächste kommende günstige Periode startet. Während einer aktiven Periode zeigt dies den Start der NÄCHSTEN Periode nach der aktuellen. Gibt nur 'Unbekannt' zurück, wenn keine zukünftigen Perioden konfiguriert sind.",
+            "usage_tips": "Immer nützlich für Vorausplanung: 'Nächste günstige Periode startet in 3 Stunden' (egal ob du gerade in einer Periode bist oder nicht). Kombiniere mit Automatisierungen: 'Wenn nächste Startzeit in 10 Minuten ist, sende Benachrichtigung zur Vorbereitung der Waschmaschine'."
+        },
+        "best_price_next_in_minutes": {
+            "description": "Minuten bis nächste günstige Periode startet (0 beim Übergang)",
+            "long_description": "Zeigt Minuten bis die nächste günstige Periode startet. Während einer aktiven Periode zeigt dies die Zeit bis zur Periode NACH der aktuellen. Gibt 0 während kurzer Übergangsphasen zurück. Aktualisiert sich jede Minute.",
+            "usage_tips": "Perfekt für 'warte bis günstige Periode' Automatisierungen: 'Wenn next_in_minutes > 0 UND next_in_minutes < 15, warte bevor Geschirrspüler gestartet wird'. Wert > 0 zeigt immer an, dass eine zukünftige Periode geplant ist."
+        },
+        "peak_price_end_time": {
+            "description": "Wann die aktuelle oder nächste teure Periode endet",
+            "long_description": "Zeigt den Endzeitstempel der aktuellen teuren Periode wenn aktiv, oder das Ende der nächsten Periode wenn keine Periode aktiv ist. Zeigt immer eine nützliche Zeitreferenz zur Planung. Gibt nur 'Unbekannt' zurück, wenn keine Perioden konfiguriert sind.",
+            "usage_tips": "Nutze dies, um 'Teure Periode endet in 1 Stunde' (wenn aktiv) oder 'Nächste teure Periode endet um 18:00' (wenn inaktiv) anzuzeigen. Kombiniere mit Automatisierungen, um Betrieb nach Spitze fortzusetzen."
+        },
+        "peak_price_remaining_minutes": {
+            "description": "Verbleibende Minuten in aktueller teurer Periode (0 wenn inaktiv)",
+            "long_description": "Zeigt, wie viele Minuten in der aktuellen teuren Periode noch verbleiben. Gibt 0 zurück, wenn keine Periode aktiv ist. Aktualisiert sich jede Minute. Prüfe binary_sensor.peak_price_period um zu sehen, ob eine Periode aktuell aktiv ist.",
+            "usage_tips": "Nutze in Automatisierungen: 'Wenn remaining_minutes > 60, breche aufgeschobene Ladesitzung ab'. Wert 0 macht es einfach zu unterscheiden zwischen aktiven (Wert > 0) und inaktiven (Wert = 0) Perioden."
+        },
+        "peak_price_progress": {
+            "description": "Fortschritt durch aktuelle teure Periode (0% wenn inaktiv)",
+            "long_description": "Zeigt den Fortschritt durch die aktuelle teure Periode als 0-100%. Gibt 0% zurück, wenn keine Periode aktiv ist. Aktualisiert sich jede Minute.",
+            "usage_tips": "Visueller Fortschrittsindikator in Dashboards. Automatisierung: 'Wenn progress > 0 UND progress > 90, bereite normale Heizplanung vor'. Wert 0 zeigt keine aktive Periode an."
+        },
+        "peak_price_next_start_time": {
+            "description": "Wann die nächste teure Periode startet",
+            "long_description": "Zeigt, wann die nächste kommende teure Periode startet. Während einer aktiven Periode zeigt dies den Start der NÄCHSTEN Periode nach der aktuellen. Gibt nur 'Unbekannt' zurück, wenn keine zukünftigen Perioden konfiguriert sind.",
+            "usage_tips": "Immer nützlich für Planung: 'Nächste teure Periode startet in 2 Stunden'. Automatisierung: 'Wenn nächste Startzeit in 30 Minuten ist, reduziere Heiztemperatur vorsorglich'."
+        },
+        "peak_price_next_in_minutes": {
+            "description": "Minuten bis nächste teure Periode startet (0 beim Übergang)",
+            "long_description": "Zeigt Minuten bis die nächste teure Periode startet. Während einer aktiven Periode zeigt dies die Zeit bis zur Periode NACH der aktuellen. Gibt 0 während kurzer Übergangsphasen zurück. Aktualisiert sich jede Minute.",
+            "usage_tips": "Präventive Automatisierung: 'Wenn next_in_minutes > 0 UND next_in_minutes < 10, beende aktuellen Ladezyklus jetzt bevor Preise steigen'."
         }
     },
     "binary_sensor": {

@@ -283,6 +283,56 @@
             "description": "Prognose van aanstaande elektriciteitsprijzen",
             "long_description": "Toont aanstaande elektriciteitsprijzen voor toekomstige intervallen in een formaat dat gemakkelijk te gebruiken is in dashboards",
             "usage_tips": "Gebruik de attributen van deze entiteit om aanstaande prijzen weer te geven in grafieken of aangepaste kaarten. Toegang tot 'intervals' voor alle toekomstige intervallen of 'hours' voor uuroverzichten."
+        },
+        "best_price_end_time": {
+            "description": "Wanneer de huidige of volgende goedkope periode eindigt",
+            "long_description": "Toont het eindtijdstempel van de huidige goedkope periode wanneer actief, of het einde van de volgende periode wanneer geen periode actief is. Toont altijd een nuttige tijdreferentie voor planning. Geeft alleen 'Onbekend' terug wanneer geen periodes zijn geconfigureerd.",
+            "usage_tips": "Gebruik dit om een aftelling weer te geven zoals 'Goedkope periode eindigt over 2 uur' (wanneer actief) of 'Volgende goedkope periode eindigt om 14:00' (wanneer inactief). Home Assistant toont automatisch relatieve tijd voor tijdstempelsensoren."
+        },
+        "best_price_remaining_minutes": {
+            "description": "Resterende minuten in huidige goedkope periode (0 wanneer inactief)",
+            "long_description": "Toont hoeveel minuten er nog over zijn in de huidige goedkope periode. Geeft 0 terug wanneer geen periode actief is. Werkt elke minuut bij. Controleer binary_sensor.best_price_period om te zien of een periode momenteel actief is.",
+            "usage_tips": "Perfect voor automatiseringen: 'Als remaining_minutes > 0 EN remaining_minutes < 30, start wasmachine nu'. De waarde 0 maakt het gemakkelijk om te controleren of een periode actief is (waarde > 0) of niet (waarde = 0)."
+        },
+        "best_price_progress": {
+            "description": "Voortgang door huidige goedkope periode (0% wanneer inactief)",
+            "long_description": "Toont de voortgang door de huidige goedkope periode als 0-100%. Geeft 0% terug wanneer geen periode actief is. Werkt elke minuut bij. 0% betekent periode net gestart, 100% betekent het eindigt bijna.",
+            "usage_tips": "Geweldig voor visuele voortgangsbalken. Gebruik in automatiseringen: 'Als progress > 0 EN progress > 75, stuur melding dat goedkope periode bijna eindigt'. Waarde 0 geeft aan dat er geen actieve periode is."
+        },
+        "best_price_next_start_time": {
+            "description": "Wanneer de volgende goedkope periode begint",
+            "long_description": "Toont wanneer de volgende komende goedkope periode begint. Tijdens een actieve periode toont dit de start van de VOLGENDE periode na de huidige. Geeft alleen 'Onbekend' terug wanneer geen toekomstige periodes zijn geconfigureerd.",
+            "usage_tips": "Altijd nuttig voor vooruitplanning: 'Volgende goedkope periode begint over 3 uur' (of je nu in een periode zit of niet). Combineer met automatiseringen: 'Wanneer volgende starttijd over 10 minuten is, stuur melding om wasmachine voor te bereiden'."
+        },
+        "best_price_next_in_minutes": {
+            "description": "Minuten tot volgende goedkope periode begint (0 bij overgang)",
+            "long_description": "Toont minuten tot de volgende goedkope periode begint. Tijdens een actieve periode toont dit de tijd tot de periode NA de huidige. Geeft 0 terug tijdens korte overgangsmomenten. Werkt elke minuut bij.",
+            "usage_tips": "Perfect voor 'wacht tot goedkope periode' automatiseringen: 'Als next_in_minutes > 0 EN next_in_minutes < 15, wacht voordat vaatwasser wordt gestart'. Waarde > 0 geeft altijd aan dat een toekomstige periode is gepland."
+        },
+        "peak_price_end_time": {
+            "description": "Wanneer de huidige of volgende dure periode eindigt",
+            "long_description": "Toont het eindtijdstempel van de huidige dure periode wanneer actief, of het einde van de volgende periode wanneer geen periode actief is. Toont altijd een nuttige tijdreferentie voor planning. Geeft alleen 'Onbekend' terug wanneer geen periodes zijn geconfigureerd.",
+            "usage_tips": "Gebruik dit om 'Dure periode eindigt over 1 uur' weer te geven (wanneer actief) of 'Volgende dure periode eindigt om 18:00' (wanneer inactief). Combineer met automatiseringen om activiteiten te hervatten na piek."
+        },
+        "peak_price_remaining_minutes": {
+            "description": "Resterende minuten in huidige dure periode (0 wanneer inactief)",
+            "long_description": "Toont hoeveel minuten er nog over zijn in de huidige dure periode. Geeft 0 terug wanneer geen periode actief is. Werkt elke minuut bij. Controleer binary_sensor.peak_price_period om te zien of een periode momenteel actief is.",
+            "usage_tips": "Gebruik in automatiseringen: 'Als remaining_minutes > 60, annuleer uitgestelde laadronde'. Waarde 0 maakt het gemakkelijk om onderscheid te maken tussen actieve (waarde > 0) en inactieve (waarde = 0) periodes."
+        },
+        "peak_price_progress": {
+            "description": "Voortgang door huidige dure periode (0% wanneer inactief)",
+            "long_description": "Toont de voortgang door de huidige dure periode als 0-100%. Geeft 0% terug wanneer geen periode actief is. Werkt elke minuut bij.",
+            "usage_tips": "Visuele voortgangsindicator in dashboards. Automatisering: 'Als progress > 0 EN progress > 90, bereid normale verwarmingsplanning voor'. Waarde 0 geeft aan dat er geen actieve periode is."
+        },
+        "peak_price_next_start_time": {
+            "description": "Wanneer de volgende dure periode begint",
+            "long_description": "Toont wanneer de volgende komende dure periode begint. Tijdens een actieve periode toont dit de start van de VOLGENDE periode na de huidige. Geeft alleen 'Onbekend' terug wanneer geen toekomstige periodes zijn geconfigureerd.",
+            "usage_tips": "Altijd nuttig voor planning: 'Volgende dure periode begint over 2 uur'. Automatisering: 'Wanneer volgende starttijd over 30 minuten is, verlaag verwarmingstemperatuur preventief'."
+        },
+        "peak_price_next_in_minutes": {
+            "description": "Minuten tot volgende dure periode begint (0 bij overgang)",
+            "long_description": "Toont minuten tot de volgende dure periode begint. Tijdens een actieve periode toont dit de tijd tot de periode NA de huidige. Geeft 0 terug tijdens korte overgangsmomenten. Werkt elke minuut bij.",
+            "usage_tips": "Preventieve automatisering: 'Als next_in_minutes > 0 EN next_in_minutes < 10, voltooi huidige laadcyclus nu voordat prijzen stijgen'."
         }
     },
     "binary_sensor": {

@@ -32,6 +32,36 @@ if TYPE_CHECKING:
 MAX_FORECAST_INTERVALS = 8  # Show up to 8 future intervals (2 hours with 15-min intervals)
 
 
+def _is_timing_or_volatility_sensor(key: str) -> bool:
+    """Check if sensor is a timing or volatility sensor."""
+    return key.endswith("_volatility") or (
+        key.startswith(("best_price_", "peak_price_"))
+        and any(
+            suffix in key
+            for suffix in [
+                "end_time",
+                "remaining_minutes",
+                "progress",
+                "next_start_time",
+                "next_in_minutes",
+            ]
+        )
+    )
+
+
+def _add_timing_or_volatility_attributes(
+    attributes: dict,
+    key: str,
+    cached_data: dict,
+    native_value: Any = None,
+) -> None:
+    """Add attributes for timing or volatility sensors."""
+    if key.endswith("_volatility"):
+        add_volatility_attributes(attributes=attributes, cached_data=cached_data)
+    else:
+        add_period_timing_attributes(attributes=attributes, key=key, state_value=native_value)
+
+
 def build_sensor_attributes(
     key: str,
     coordinator: TibberPricesDataUpdateCoordinator,
@@ -121,8 +151,8 @@ def build_sensor_attributes(
             )
         elif key == "price_forecast":
             add_price_forecast_attributes(attributes=attributes, coordinator=coordinator)
-        elif key.endswith("_volatility"):
-            add_volatility_attributes(attributes=attributes, cached_data=cached_data)
+        elif _is_timing_or_volatility_sensor(key):
+            _add_timing_or_volatility_attributes(attributes, key, cached_data, native_value)
 
         # For current_interval_price_level, add the original level as attribute
         if key == "current_interval_price_level" and cached_data.get("last_price_level") is not None:
@@ -887,3 +917,42 @@ def get_current_interval_data(
     price_info = coordinator.data.get("priceInfo", {})
     now = dt_util.now()
     return find_price_data_for_interval(price_info, now)
+
+
+def add_period_timing_attributes(
+    attributes: dict,
+    key: str,
+    state_value: Any = None,
+) -> None:
+    """
+    Add timestamp and icon_color attributes for best_price/peak_price timing sensors.
+
+    The timestamp indicates when the sensor value was calculated:
+    - Quarter-hour sensors (end_time, next_start_time): Timestamp of current 15-min interval
+    - Minute-update sensors (remaining_minutes, progress, next_in_minutes): Current minute with :00 seconds
+
+    Args:
+        attributes: Dictionary to add attributes to
+        key: The sensor entity key (e.g., "best_price_end_time")
+        state_value: Current sensor value for icon_color calculation
+
+    """
+    # Determine if this is a quarter-hour or minute-update sensor
+    is_quarter_hour_sensor = key.endswith(("_end_time", "_next_start_time"))
+
+    now = dt_util.now()
+
+    if is_quarter_hour_sensor:
+        # Quarter-hour sensors: Use timestamp of current 15-minute interval
+        # Round down to the nearest quarter hour (:00, :15, :30, :45)
+        minute = (now.minute // 15) * 15
+        timestamp = now.replace(minute=minute, second=0, microsecond=0)
+    else:
+        # Minute-update sensors: Use current minute with :00 seconds
+        # This ensures clean timestamps despite timer fluctuations
+        timestamp = now.replace(second=0, microsecond=0)
+
+    attributes["timestamp"] = timestamp.isoformat()
+
+    # Add icon_color for dynamic styling
+    add_icon_color_attribute(attributes, key=key, state_value=state_value)

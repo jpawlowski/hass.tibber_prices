@@ -507,6 +507,36 @@
                     "very_high": "Svært Høy"
                 }
             },
+            "best_price_end_time": {
+                "name": "Beste prisperiode slutter"
+            },
+            "best_price_remaining_minutes": {
+                "name": "Beste prisperiode gjenværende tid"
+            },
+            "best_price_progress": {
+                "name": "Beste prisperiode fremgang"
+            },
+            "best_price_next_start_time": {
+                "name": "Neste beste prisperiode starter"
+            },
+            "best_price_next_in_minutes": {
+                "name": "Beste prisperiode starter om"
+            },
+            "peak_price_end_time": {
+                "name": "Topprisperiode slutter"
+            },
+            "peak_price_remaining_minutes": {
+                "name": "Topprisperiode gjenværende tid"
+            },
+            "peak_price_progress": {
+                "name": "Topprisperiode fremgang"
+            },
+            "peak_price_next_start_time": {
+                "name": "Neste topprisperiode starter"
+            },
+            "peak_price_next_in_minutes": {
+                "name": "Topprisperiode starter om"
+            },
             "price_forecast": {
                 "name": "Prisprognose"
             }

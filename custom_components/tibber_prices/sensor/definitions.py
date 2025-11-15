@@ -12,7 +12,8 @@ Organization by calculation pattern:
     4. 24h windows: Trailing/leading statistics
     5. Future forecast: N-hour windows from next interval
     6. Volatility: Price variation analysis
-    7. Diagnostic: System metadata
+    7. Best/Peak Price timing: Period-based time tracking
+    8. Diagnostic: System metadata
 """
 
 from __future__ import annotations
@@ -21,7 +22,7 @@ from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntityDescription,
 )
-from homeassistant.const import EntityCategory
+from homeassistant.const import PERCENTAGE, EntityCategory, UnitOfTime
 
 # ============================================================================
 # SENSOR DEFINITIONS - Grouped by calculation method
@@ -38,7 +39,8 @@ from homeassistant.const import EntityCategory
 #   4. 24h windows: Trailing/leading from current interval
 #   5. Future forecast: N-hour windows starting from next interval
 #   6. Volatility: Statistical analysis of price variation
-#   7. Diagnostic: System information and metadata
+#   7. Best/Peak Price timing: Period-based time tracking (requires minute updates)
+#   8. Diagnostic: System information and metadata
 # ============================================================================
 
 # ----------------------------------------------------------------------------
@@ -594,7 +596,105 @@ VOLATILITY_SENSORS = (
 )
 
 # ----------------------------------------------------------------------------
-# 7. DIAGNOSTIC SENSORS (data availability and metadata)
+# 7. BEST/PEAK PRICE TIMING SENSORS (period-based time tracking)
+# ----------------------------------------------------------------------------
+# These sensors track time relative to best_price/peak_price binary sensor periods.
+# They require minute-by-minute updates via async_track_time_interval.
+#
+# When period is active (binary_sensor ON):
+#   - end_time: Timestamp when current period ends
+#   - remaining_minutes: Minutes until period ends
+#   - progress: Percentage of period completed (0-100%)
+#
+# When period is inactive (binary_sensor OFF):
+#   - next_start_time: Timestamp when next period starts
+#   - next_in_minutes: Minutes until next period starts
+#
+# All return None/Unknown when no period is active/scheduled.
+
+BEST_PRICE_TIMING_SENSORS = (
+    SensorEntityDescription(
+        key="best_price_end_time",
+        translation_key="best_price_end_time",
+        name="Best Price Period End",
+        icon="mdi:clock-end",
+        device_class=SensorDeviceClass.TIMESTAMP,
+    ),
+    SensorEntityDescription(
+        key="best_price_remaining_minutes",
+        translation_key="best_price_remaining_minutes",
+        name="Best Price Remaining Time",
+        icon="mdi:timer-sand",
+        native_unit_of_measurement=UnitOfTime.MINUTES,
+        suggested_display_precision=0,
+    ),
+    SensorEntityDescription(
+        key="best_price_progress",
+        translation_key="best_price_progress",
+        name="Best Price Progress",
+        icon="mdi:percent",  # Dynamic: mdi:percent-0 to mdi:percent-100
+        native_unit_of_measurement=PERCENTAGE,
+        suggested_display_precision=0,
+    ),
+    SensorEntityDescription(
+        key="best_price_next_start_time",
+        translation_key="best_price_next_start_time",
+        name="Best Price Next Period Start",
+        icon="mdi:clock-start",
+        device_class=SensorDeviceClass.TIMESTAMP,
+    ),
+    SensorEntityDescription(
+        key="best_price_next_in_minutes",
+        translation_key="best_price_next_in_minutes",
+        name="Best Price Starts In",
+        icon="mdi:timer-outline",
+        native_unit_of_measurement=UnitOfTime.MINUTES,
+        suggested_display_precision=0,
+    ),
+)
+
+PEAK_PRICE_TIMING_SENSORS = (
+    SensorEntityDescription(
+        key="peak_price_end_time",
+        translation_key="peak_price_end_time",
+        name="Peak Price Period End",
+        icon="mdi:clock-end",
+        device_class=SensorDeviceClass.TIMESTAMP,
+    ),
+    SensorEntityDescription(
+        key="peak_price_remaining_minutes",
+        translation_key="peak_price_remaining_minutes",
+        name="Peak Price Remaining Time",
+        icon="mdi:timer-sand",
+        native_unit_of_measurement=UnitOfTime.MINUTES,
+        suggested_display_precision=0,
+    ),
+    SensorEntityDescription(
+        key="peak_price_progress",
+        translation_key="peak_price_progress",
+        name="Peak Price Progress",
+        icon="mdi:percent",  # Dynamic: mdi:percent-0 to mdi:percent-100
+        native_unit_of_measurement=PERCENTAGE,
+        suggested_display_precision=0,
+    ),
+    SensorEntityDescription(
+        key="peak_price_next_start_time",
+        translation_key="peak_price_next_start_time",
+        name="Peak Price Next Period Start",
+        icon="mdi:clock-start",
+        device_class=SensorDeviceClass.TIMESTAMP,
+    ),
+    SensorEntityDescription(
+        key="peak_price_next_in_minutes",
+        translation_key="peak_price_next_in_minutes",
+        name="Peak Price Starts In",
+        icon="mdi:timer-outline",
+        native_unit_of_measurement=UnitOfTime.MINUTES,
+        suggested_display_precision=0,
+    ),
+)
+
+# 8. DIAGNOSTIC SENSORS (data availability and metadata)
 # ----------------------------------------------------------------------------
 
 DIAGNOSTIC_SENSORS = (
@@ -633,5 +733,7 @@ ENTITY_DESCRIPTIONS = (
     *FUTURE_AVG_SENSORS,
     *FUTURE_TREND_SENSORS,
     *VOLATILITY_SENSORS,
+    *BEST_PRICE_TIMING_SENSORS,
+    *PEAK_PRICE_TIMING_SENSORS,
     *DIAGNOSTIC_SENSORS,
 )

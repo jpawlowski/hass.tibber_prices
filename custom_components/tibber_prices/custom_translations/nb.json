@@ -283,6 +283,56 @@
             "description": "Prognose for kommende elektrisitetspriser",
             "long_description": "Viser kommende elektrisitetspriser for fremtidige intervaller i et format som er enkelt å bruke i dashboards",
             "usage_tips": "Bruk denne entitetens attributter til å vise kommende priser i diagrammer eller tilpassede kort. Få tilgang til enten 'intervals' for alle fremtidige intervaller eller 'hours' for timesammendrag."
+        },
+        "best_price_end_time": {
+            "description": "Når gjeldende eller neste billigperiode slutter",
+            "long_description": "Viser sluttidspunktet for gjeldende billigperiode når aktiv, eller slutten av neste periode når ingen periode er aktiv. Viser alltid en nyttig tidsreferanse for planlegging. Returnerer 'Ukjent' bare når ingen perioder er konfigurert.",
+            "usage_tips": "Bruk dette til å vise en nedtelling som 'Billigperiode slutter om 2 timer' (når aktiv) eller 'Neste billigperiode slutter kl 14:00' (når inaktiv). Home Assistant viser automatisk relativ tid for tidsstempelsensorer."
+        },
+        "best_price_remaining_minutes": {
+            "description": "Gjenværende minutter i gjeldende billigperiode (0 når inaktiv)",
+            "long_description": "Viser hvor mange minutter som er igjen i gjeldende billigperiode. Returnerer 0 når ingen periode er aktiv. Oppdateres hvert minutt. Sjekk binary_sensor.best_price_period for å se om en periode er aktiv.",
+            "usage_tips": "Perfekt for automatiseringer: 'Hvis remaining_minutes > 0 OG remaining_minutes < 30, start vaskemaskin nå'. Verdien 0 gjør det enkelt å sjekke om en periode er aktiv (verdi > 0) eller ikke (verdi = 0)."
+        },
+        "best_price_progress": {
+            "description": "Fremdrift gjennom gjeldende billigperiode (0% når inaktiv)",
+            "long_description": "Viser fremdrift gjennom gjeldende billigperiode som 0-100%. Returnerer 0% når ingen periode er aktiv. Oppdateres hvert minutt. 0% betyr periode nettopp startet, 100% betyr den snart slutter.",
+            "usage_tips": "Flott for visuelle fremdriftslinjer. Bruk i automatiseringer: 'Hvis progress > 0 OG progress > 75, send varsel om at billigperiode snart slutter'. Verdi 0 indikerer ingen aktiv periode."
+        },
+        "best_price_next_start_time": {
+            "description": "Når neste billigperiode starter",
+            "long_description": "Viser når neste kommende billigperiode starter. Under en aktiv periode viser dette starten av NESTE periode etter den gjeldende. Returnerer 'Ukjent' bare når ingen fremtidige perioder er konfigurert.",
+            "usage_tips": "Alltid nyttig for planlegging: 'Neste billigperiode starter om 3 timer' (enten du er i en periode nå eller ikke). Kombiner med automatiseringer: 'Når neste starttid er om 10 minutter, send varsel for å forberede vaskemaskin'."
+        },
+        "best_price_next_in_minutes": {
+            "description": "Minutter til neste billigperiode starter (0 ved overgang)",
+            "long_description": "Viser minutter til neste billigperiode starter. Under en aktiv periode viser dette tiden til perioden ETTER den gjeldende. Returnerer 0 under korte overgangsmomenter. Oppdateres hvert minutt.",
+            "usage_tips": "Perfekt for 'vent til billigperiode' automatiseringer: 'Hvis next_in_minutes > 0 OG next_in_minutes < 15, vent før oppvaskmaskin startes'. Verdi > 0 indikerer alltid at en fremtidig periode er planlagt."
+        },
+        "peak_price_end_time": {
+            "description": "Når gjeldende eller neste dyrperiode slutter",
+            "long_description": "Viser sluttidspunktet for gjeldende dyrperiode når aktiv, eller slutten av neste periode når ingen periode er aktiv. Viser alltid en nyttig tidsreferanse for planlegging. Returnerer 'Ukjent' bare når ingen perioder er konfigurert.",
+            "usage_tips": "Bruk dette til å vise 'Dyrperiode slutter om 1 time' (når aktiv) eller 'Neste dyrperiode slutter kl 18:00' (når inaktiv). Kombiner med automatiseringer for å gjenoppta drift etter topp."
+        },
+        "peak_price_remaining_minutes": {
+            "description": "Gjenværende minutter i gjeldende dyrperiode (0 når inaktiv)",
+            "long_description": "Viser hvor mange minutter som er igjen i gjeldende dyrperiode. Returnerer 0 når ingen periode er aktiv. Oppdateres hvert minutt. Sjekk binary_sensor.peak_price_period for å se om en periode er aktiv.",
+            "usage_tips": "Bruk i automatiseringer: 'Hvis remaining_minutes > 60, avbryt utsatt ladeøkt'. Verdi 0 gjør det enkelt å skille mellom aktive (verdi > 0) og inaktive (verdi = 0) perioder."
+        },
+        "peak_price_progress": {
+            "description": "Fremdrift gjennom gjeldende dyrperiode (0% når inaktiv)",
+            "long_description": "Viser fremdrift gjennom gjeldende dyrperiode som 0-100%. Returnerer 0% når ingen periode er aktiv. Oppdateres hvert minutt.",
+            "usage_tips": "Visuell fremdriftsindikator i dashboards. Automatisering: 'Hvis progress > 0 OG progress > 90, forbered normal varmestyringsplan'. Verdi 0 indikerer ingen aktiv periode."
+        },
+        "peak_price_next_start_time": {
+            "description": "Når neste dyrperiode starter",
+            "long_description": "Viser når neste kommende dyrperiode starter. Under en aktiv periode viser dette starten av NESTE periode etter den gjeldende. Returnerer 'Ukjent' bare når ingen fremtidige perioder er konfigurert.",
+            "usage_tips": "Alltid nyttig for planlegging: 'Neste dyrperiode starter om 2 timer'. Automatisering: 'Når neste starttid er om 30 minutter, reduser varmetemperatur forebyggende'."
+        },
+        "peak_price_next_in_minutes": {
+            "description": "Minutter til neste dyrperiode starter (0 ved overgang)",
+            "long_description": "Viser minutter til neste dyrperiode starter. Under en aktiv periode viser dette tiden til perioden ETTER den gjeldende. Returnerer 0 under korte overgangsmomenter. Oppdateres hvert minutt.",
+            "usage_tips": "Forebyggende automatisering: 'Hvis next_in_minutes > 0 OG next_in_minutes < 10, fullfør gjeldende ladesyklus nå før prisene øker'."
         }
     },
     "binary_sensor": {

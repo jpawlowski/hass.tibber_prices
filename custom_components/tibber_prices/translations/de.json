@@ -511,6 +511,36 @@
                     "very_high": "Sehr hoch"
                 }
             },
+            "best_price_end_time": {
+                "name": "Günstige Periode endet"
+            },
+            "best_price_remaining_minutes": {
+                "name": "Günstige Periode verbleibend"
+            },
+            "best_price_progress": {
+                "name": "Günstige Periode Fortschritt"
+            },
+            "best_price_next_start_time": {
+                "name": "Nächste günstige Periode startet"
+            },
+            "best_price_next_in_minutes": {
+                "name": "Günstige Periode startet in"
+            },
+            "peak_price_end_time": {
+                "name": "Teure Periode endet"
+            },
+            "peak_price_remaining_minutes": {
+                "name": "Teure Periode verbleibend"
+            },
+            "peak_price_progress": {
+                "name": "Teure Periode Fortschritt"
+            },
+            "peak_price_next_start_time": {
+                "name": "Nächste teure Periode startet"
+            },
+            "peak_price_next_in_minutes": {
+                "name": "Teure Periode startet in"
+            },
             "price_forecast": {
                 "name": "Preisprognose"
             }
