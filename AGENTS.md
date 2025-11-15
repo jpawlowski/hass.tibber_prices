@@ -245,7 +245,7 @@ After successful refactoring:
     -   **Select selector translations**: Use `selector.{translation_key}.options.{value}` structure (NOT `selector.select.{translation_key}`). Example:
 
         ```python
-        # config_flow.py
+        # config_flow/schemas.py
         SelectSelector(SelectSelectorConfig(
             options=["LOW", "MODERATE", "HIGH"],
             translation_key="volatility"
@@ -346,7 +346,13 @@ custom_components/tibber_prices/
 │   └── attributes.py     #   Common attribute builders
 ├── data.py               # @dataclass TibberPricesData
 ├── const.py              # Constants, translation loaders, currency helpers
-├── config_flow.py        # UI configuration flow
+├── config_flow/          # UI configuration flow (package)
+│   ├── __init__.py       #   Package exports
+│   ├── user_flow.py      #   Main config flow (setup + reauth)
+│   ├── subentry_flow.py  #   Subentry flow (add homes)
+│   ├── options_flow.py   #   Options flow (settings)
+│   ├── schemas.py        #   vol.Schema definitions
+│   └── validators.py     #   Validation functions
 └── services.yaml         # Service definitions
 ```
 
@@ -573,7 +579,7 @@ Combine into single commit when:
 > **Commit 1: Translation Fix**
 >
 > ```bash
-> git add custom_components/tibber_prices/config_flow.py
+> git add custom_components/tibber_prices/config_flow/
 > git add custom_components/tibber_prices/translations/*.json
 > ```
 >
@@ -2100,6 +2106,37 @@ def build_low_price_alert_attributes(
 
 **Modify price calculations:**
 Edit `price_utils.py` or `average_utils.py`. These are stateless pure functions operating on price lists.
+
+**Add a new config flow step:**
+
+The config flow is split into three separate flow handlers:
+
+1. **User Flow** (`config_flow/user_flow.py`) - Initial setup and reauth
+
+    - `async_step_user()` - API token input
+    - `async_step_select_home()` - Home selection
+    - `async_step_reauth()` / `async_step_reauth_confirm()` - Reauth flow
+
+2. **Subentry Flow** (`config_flow/subentry_flow.py`) - Add additional homes
+
+    - `async_step_user()` - Select from available homes
+    - `async_step_init()` - Subentry options
+
+3. **Options Flow** (`config_flow/options_flow.py`) - Reconfiguration
+    - `async_step_init()` - General settings
+    - `async_step_current_interval_price_rating()` - Price rating thresholds
+    - `async_step_volatility()` - Volatility settings
+    - `async_step_best_price()` - Best price period settings
+    - `async_step_peak_price()` - Peak price period settings
+    - `async_step_price_trend()` - Price trend thresholds
+
+To add a new step:
+
+1. Add schema function to `config_flow/schemas.py`
+2. Add step method to appropriate flow handler
+3. Add translations to `/translations/*.json`
+4. Update step navigation (next step calls)
+5. Update `_STEP_INFO` dict in options flow if adding to multi-step wizard
 
 **Add a new service:**
 
