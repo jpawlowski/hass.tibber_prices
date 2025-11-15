@@ -1,6 +1,6 @@
 {
     "sensor": {
-        "current_price": {
+        "current_interval_price": {
             "description": "De huidige elektriciteitsprijs per kWh",
             "long_description": "Toont de huidige prijs per kWh van uw Tibber-abonnement",
             "usage_tips": "Gebruik dit om prijzen bij te houden of om automatiseringen te maken die worden uitgevoerd wanneer elektriciteit goedkoop is"
@@ -85,7 +85,7 @@
             "long_description": "Toont de maximumprijs per kWh van de komende 24 uur (vooruitlopend maximum) van uw Tibber-abonnement. Dit geeft de hoogste prijs die wordt verwacht in de komende 24 uur op basis van prognosegegevens.",
             "usage_tips": "Gebruik dit om te voorkomen dat u apparaten draait tijdens aanstaande piekprijsperioden."
         },
-        "price_level": {
+        "current_interval_price_level": {
             "description": "De huidige prijsniveauclassificatie",
             "long_description": "Toont de classificatie van Tibber van de huidige prijs vergeleken met historische prijzen",
             "usage_tips": "Gebruik dit om automatiseringen te maken op basis van relatieve prijsniveaus in plaats van absolute prijzen"
@@ -110,7 +110,7 @@
             "long_description": "Toont het mediane prijsniveau over 5 intervallen gecentreerd één uur vooruit. Helpt verbruik te plannen op basis van aanstaande prijstrends in plaats van momentane toekomstige prijzen.",
             "usage_tips": "Gebruik om activiteiten voor het volgende uur te plannen op basis van een vloeiende prijsniveauprognose."
         },
-        "price_rating": {
+        "current_interval_price_rating": {
             "description": "Hoe de prijs van het huidige interval zich verhoudt tot historische gegevens",
             "long_description": "Toont hoe de prijs van het huidige interval zich verhoudt tot historische prijsgegevens als een percentage",
             "usage_tips": "Een positief percentage betekent dat de huidige prijs boven het gemiddelde ligt, negatief betekent onder het gemiddelde"

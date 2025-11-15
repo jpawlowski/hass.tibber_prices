@@ -488,7 +488,7 @@ class TibberPricesOptionsFlowHandler(OptionsFlow):
     _TOTAL_STEPS: ClassVar[int] = 6
     _STEP_INFO: ClassVar[dict[str, int]] = {
         "init": 1,
-        "price_rating": 2,
+        "current_interval_price_rating": 2,
         "volatility": 3,
         "best_price": 4,
         "peak_price": 5,
@@ -553,7 +553,7 @@ class TibberPricesOptionsFlowHandler(OptionsFlow):
             return await self.async_step_volatility()
 
         return self.async_show_form(
-            step_id="price_rating",
+            step_id="current_interval_price_rating",
             data_schema=vol.Schema(
                 {
                     vol.Optional(
@@ -592,7 +592,7 @@ class TibberPricesOptionsFlowHandler(OptionsFlow):
                     ),
                 }
             ),
-            description_placeholders=self._get_step_description_placeholders("price_rating"),
+            description_placeholders=self._get_step_description_placeholders("current_interval_price_rating"),
         )
 
     async def async_step_best_price(self, user_input: dict[str, Any] | None = None) -> ConfigFlowResult:
@@ -666,7 +666,7 @@ class TibberPricesOptionsFlowHandler(OptionsFlow):
                         SelectSelectorConfig(
                             options=BEST_PRICE_MAX_LEVEL_OPTIONS,
                             mode=SelectSelectorMode.DROPDOWN,
-                            translation_key="price_level",
+                            translation_key="current_interval_price_level",
                         ),
                     ),
                     vol.Optional(
@@ -817,7 +817,7 @@ class TibberPricesOptionsFlowHandler(OptionsFlow):
                         SelectSelectorConfig(
                             options=PEAK_PRICE_MIN_LEVEL_OPTIONS,
                             mode=SelectSelectorMode.DROPDOWN,
-                            translation_key="price_level",
+                            translation_key="current_interval_price_level",
                         ),
                     ),
                     vol.Optional(

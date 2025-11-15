@@ -1,6 +1,6 @@
 {
     "sensor": {
-        "current_price": {
+        "current_interval_price": {
             "description": "Der aktuelle Strompreis pro kWh",
             "long_description": "Zeigt den aktuellen Preis pro kWh von deinem Tibber-Abonnement an",
             "usage_tips": "Nutze dies, um Preise zu verfolgen oder Automatisierungen zu erstellen, die bei günstigem Strom ausgeführt werden"
@@ -85,7 +85,7 @@
             "long_description": "Zeigt den höchsten Preis pro kWh für die nächsten 24 Stunden (vorlaufendes Maximum) von deinem Tibber-Abonnement an. Dies bietet den höchsten erwarteten Preis in den nächsten 24 Stunden basierend auf Prognosedaten.",
             "usage_tips": "Nutze dies, um den Betrieb von Geräten während kommender Spitzenpreiszeiten zu vermeiden."
         },
-        "price_level": {
+        "current_interval_price_level": {
             "description": "Die aktuelle Preislevelklassifikation",
             "long_description": "Zeigt die Klassifizierung von Tibber für den aktuellen Preis im Vergleich zu historischen Preisen an",
             "usage_tips": "Nutze dies, um Automatisierungen auf Basis des relativen Preisniveaus anstelle der absoluten Preise zu erstellen"
@@ -110,7 +110,7 @@
             "long_description": "Zeigt das mediane Preisniveau über 5 Intervalle, die eine Stunde voraus zentriert sind. Hilft bei der Verbrauchsplanung basierend auf kommenden Preistrends statt momentanen zukünftigen Preisen.",
             "usage_tips": "Nutze dies, um Aktivitäten für die nächste Stunde basierend auf einer geglätteten Preisniveau-Prognose zu planen."
         },
-        "price_rating": {
+        "current_interval_price_rating": {
             "description": "Wie sich der Preis des aktuellen Intervalls mit historischen Daten vergleicht",
             "long_description": "Zeigt, wie sich der Preis des aktuellen Intervalls im Vergleich zu historischen Preisdaten als Prozentsatz verhält",
             "usage_tips": "Ein positiver Prozentsatz bedeutet, dass der aktuelle Preis überdurchschnittlich ist, negativ bedeutet unterdurchschnittlich"

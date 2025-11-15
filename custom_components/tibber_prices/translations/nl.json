@@ -88,7 +88,7 @@
                 },
                 "submit": "Volgende naar stap 2"
             },
-            "price_rating": {
+            "current_interval_price_rating": {
                 "title": "Prijsbeoordelingsdrempels",
                 "description": "{step_progress}\n\nConfigureer drempels voor prijsbeoordelingsniveaus (laag/normaal/hoog) op basis van vergelijking met het voortschrijdend 24-uurs gemiddelde.",
                 "data": {
@@ -179,7 +179,7 @@
     },
     "entity": {
         "sensor": {
-            "current_price": {
+            "current_interval_price": {
                 "name": "Huidige elektriciteitsprijs"
             },
             "next_interval_price": {
@@ -194,7 +194,7 @@
             "next_hour_average": {
                 "name": "Volgend uurgemiddelde prijs"
             },
-            "price_level": {
+            "current_interval_price_level": {
                 "name": "Huidig prijsniveau",
                 "state": {
                     "very_cheap": "Zeer goedkoop",
@@ -280,7 +280,7 @@
             "leading_price_max": {
                 "name": "Vooruitlopend 24u maximumprijs"
             },
-            "price_rating": {
+            "current_interval_price_rating": {
                 "name": "Huidige prijsbeoordeling",
                 "state": {
                     "low": "Laag",
@@ -503,7 +503,7 @@
                 "very_high": "Zeer hoog"
             }
         },
-        "price_level": {
+        "current_interval_price_level": {
             "options": {
                 "any": "Alle",
                 "very_cheap": "Zeer goedkoop",

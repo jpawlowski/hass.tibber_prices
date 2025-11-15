@@ -88,7 +88,7 @@
                 },
                 "submit": "Next to Step 2"
             },
-            "price_rating": {
+            "current_interval_price_rating": {
                 "title": "Price Rating Thresholds",
                 "description": "{step_progress}\n\nConfigure thresholds for price rating levels (low/normal/high) based on comparison with trailing 24-hour average.",
                 "data": {
@@ -179,7 +179,7 @@
     },
     "entity": {
         "sensor": {
-            "current_price": {
+            "current_interval_price": {
                 "name": "Current Electricity Price"
             },
             "next_interval_price": {
@@ -194,7 +194,7 @@
             "next_hour_average": {
                 "name": "Next Hour Average Price"
             },
-            "price_level": {
+            "current_interval_price_level": {
                 "name": "Current Price Level",
                 "state": {
                     "very_cheap": "Very Cheap",
@@ -280,7 +280,7 @@
             "leading_price_max": {
                 "name": "Leading 24h Maximum Price"
             },
-            "price_rating": {
+            "current_interval_price_rating": {
                 "name": "Current Price Rating",
                 "state": {
                     "low": "Low",
@@ -503,7 +503,7 @@
                 "very_high": "Very high"
             }
         },
-        "price_level": {
+        "current_interval_price_level": {
             "options": {
                 "any": "Any",
                 "very_cheap": "Very cheap",

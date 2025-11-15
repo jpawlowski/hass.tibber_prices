@@ -88,7 +88,7 @@
                 },
                 "submit": "Neste til steg 2"
             },
-            "price_rating": {
+            "current_interval_price_rating": {
                 "title": "Prisvurderingsterskler",
                 "description": "{step_progress}\n\nKonfigurer terskler for prisvurderingsnivåer (lav/normal/høy) basert på sammenligning med 24-timers glidende gjennomsnitt.",
                 "data": {
@@ -179,7 +179,7 @@
     },
     "entity": {
         "sensor": {
-            "current_price": {
+            "current_interval_price": {
                 "name": "Nåværende strømpris"
             },
             "next_interval_price": {
@@ -194,7 +194,7 @@
             "next_hour_average": {
                 "name": "Neste timepris gjennomsnitt"
             },
-            "price_level": {
+            "current_interval_price_level": {
                 "name": "Nåværende prisnivå",
                 "state": {
                     "very_cheap": "Veldig billig",
@@ -280,7 +280,7 @@
             "leading_price_max": {
                 "name": "Fremtidig 24t maksimumspris"
             },
-            "price_rating": {
+            "current_interval_price_rating": {
                 "name": "Nåværende prisvurdering",
                 "state": {
                     "low": "Lav",
@@ -503,7 +503,7 @@
                 "very_high": "Svært høy"
             }
         },
-        "price_level": {
+        "current_interval_price_level": {
             "options": {
                 "any": "Alle",
                 "very_cheap": "Svært billig",

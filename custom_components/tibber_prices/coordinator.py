@@ -107,11 +107,11 @@ TOMORROW_DATA_CHECK_HOUR = 13
 TIME_SENSITIVE_ENTITY_KEYS = frozenset(
     {
         # Current/next/previous price sensors
-        "current_price",
+        "current_interval_price",
         "next_interval_price",
         "previous_interval_price",
         # Current/next/previous price levels
-        "price_level",
+        "current_interval_price_level",
         "next_interval_price_level",
         "previous_interval_price_level",
         # Rolling hour calculations (5-interval windows)
@@ -120,7 +120,7 @@ TIME_SENSITIVE_ENTITY_KEYS = frozenset(
         "current_hour_price_level",
         "next_hour_price_level",
         # Current/next/previous price ratings
-        "price_rating",
+        "current_interval_price_rating",
         "next_interval_price_rating",
         "previous_interval_price_rating",
         "current_hour_price_rating",
@@ -222,7 +222,7 @@ class TibberPricesDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         """
         Listen for time-sensitive updates that occur every quarter-hour.
 
-        Time-sensitive entities (like current_price, next_interval_price, etc.) should use this
+        Time-sensitive entities (like current_interval_price, next_interval_price, etc.) should use this
         method instead of async_add_listener to receive updates at quarter-hour boundaries.
 
         Returns:

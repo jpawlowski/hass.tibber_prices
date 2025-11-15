@@ -14,10 +14,10 @@ A Home Assistant integration that provides advanced price information and rating
 
 ## 📖 Documentation
 
-- **[User Guide](docs/user/)** - Installation, configuration, and usage guides
-  - **[Period Calculation](docs/user/period-calculation.md)** - How Best/Peak Price periods are calculated
-- **[Developer Guide](docs/development/)** - Contributing, architecture, and release process
-- **[Changelog](https://github.com/jpawlowski/hass.tibber_prices/releases)** - Release history and notes
+-   **[User Guide](docs/user/)** - Installation, configuration, and usage guides
+    -   **[Period Calculation](docs/user/period-calculation.md)** - How Best/Peak Price periods are calculated
+-   **[Developer Guide](docs/development/)** - Contributing, architecture, and release process
+-   **[Changelog](https://github.com/jpawlowski/hass.tibber_prices/releases)** - Release history and notes
 
 ## ✨ Features
 
@@ -44,6 +44,7 @@ Click the button below to open the integration directly in HACS:
 [![Open your Home Assistant instance and open a repository inside the Home Assistant Community Store.](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=jpawlowski&repository=hass.tibber_prices&category=integration)
 
 Then:
+
 1. Click "Download" to install the integration
 2. **Restart Home Assistant** (required after installation)
 
@@ -60,6 +61,7 @@ Click the button below to open the configuration dialog:
 [![Open your Home Assistant instance and start setting up a new integration.](https://my.home-assistant.io/badges/config_flow_start.svg)](https://my.home-assistant.io/redirect/config_flow_start/?domain=tibber_prices)
 
 This will guide you through:
+
 1. Enter your Tibber API token ([get one here](https://developer.tibber.com/settings/access-token))
 2. Select your Tibber home
 3. Configure price thresholds (optional)
@@ -73,9 +75,9 @@ This will guide you through:
 
 ### Step 3: Start Using!
 
-- 30+ sensors are now available (key sensors enabled by default)
-- Configure additional sensors in **Settings** → **Devices & Services** → **Tibber Price Information & Ratings** → **Entities**
-- Use sensors in automations, dashboards, and scripts
+-   30+ sensors are now available (key sensors enabled by default)
+-   Configure additional sensors in **Settings** → **Devices & Services** → **Tibber Price Information & Ratings** → **Entities**
+-   Use sensors in automations, dashboards, and scripts
 
 📖 **[Full Installation Guide →](docs/user/installation.md)**
 
@@ -87,66 +89,66 @@ The integration provides **30+ sensors** across different categories. Key sensor
 
 ### Core Price Sensors (Enabled by Default)
 
-| Entity                        | Description                                       |
-| ----------------------------- | ------------------------------------------------- |
-| Current Electricity Price     | Current 15-minute interval price                  |
-| Next Interval Price           | Price for the next 15-minute interval             |
-| Current Hour Average Price    | Average of current hour's 4 intervals             |
-| Next Hour Average Price       | Average of next hour's 4 intervals                |
-| Current Price Level           | API classification (VERY_CHEAP to VERY_EXPENSIVE) |
-| Next Interval Price Level     | Price level for next interval                     |
-| Current Hour Price Level      | Price level for current hour average              |
-| Next Hour Price Level         | Price level for next hour average                 |
+| Entity                     | Description                                       |
+| -------------------------- | ------------------------------------------------- |
+| Current Electricity Price  | Current 15-minute interval price                  |
+| Next Interval Price        | Price for the next 15-minute interval             |
+| Current Hour Average Price | Average of current hour's 4 intervals             |
+| Next Hour Average Price    | Average of next hour's 4 intervals                |
+| Current Price Level        | API classification (VERY_CHEAP to VERY_EXPENSIVE) |
+| Next Interval Price Level  | Price level for next interval                     |
+| Current Hour Price Level   | Price level for current hour average              |
+| Next Hour Price Level      | Price level for next hour average                 |
 
 ### Statistical Sensors (Enabled by Default)
 
-| Entity                         | Description                                  |
-| ------------------------------ | -------------------------------------------- |
-| Today's Lowest Price           | Minimum price for today                      |
-| Today's Highest Price          | Maximum price for today                      |
-| Today's Average Price          | Mean price across today's intervals          |
-| Tomorrow's Lowest Price        | Minimum price for tomorrow (when available)  |
-| Tomorrow's Highest Price       | Maximum price for tomorrow (when available)  |
-| Tomorrow's Average Price       | Mean price for tomorrow (when available)     |
-| Leading 24h Average Price      | Average of next 24 hours from now            |
-| Leading 24h Minimum Price      | Lowest price in next 24 hours                |
-| Leading 24h Maximum Price      | Highest price in next 24 hours               |
+| Entity                    | Description                                 |
+| ------------------------- | ------------------------------------------- |
+| Today's Lowest Price      | Minimum price for today                     |
+| Today's Highest Price     | Maximum price for today                     |
+| Today's Average Price     | Mean price across today's intervals         |
+| Tomorrow's Lowest Price   | Minimum price for tomorrow (when available) |
+| Tomorrow's Highest Price  | Maximum price for tomorrow (when available) |
+| Tomorrow's Average Price  | Mean price for tomorrow (when available)    |
+| Leading 24h Average Price | Average of next 24 hours from now           |
+| Leading 24h Minimum Price | Lowest price in next 24 hours               |
+| Leading 24h Maximum Price | Highest price in next 24 hours              |
 
 ### Price Rating Sensors (Enabled by Default)
 
-| Entity                      | Description                                                |
-| --------------------------- | ---------------------------------------------------------- |
-| Current Price Rating        | % difference from 24h trailing average (current interval) |
-| Next Interval Price Rating  | % difference from 24h trailing average (next interval)    |
-| Current Hour Price Rating   | % difference for current hour average                     |
-| Next Hour Price Rating      | % difference for next hour average                        |
+| Entity                     | Description                                               |
+| -------------------------- | --------------------------------------------------------- |
+| Current Price Rating       | % difference from 24h trailing average (current interval) |
+| Next Interval Price Rating | % difference from 24h trailing average (next interval)    |
+| Current Hour Price Rating  | % difference for current hour average                     |
+| Next Hour Price Rating     | % difference for next hour average                        |
 
 > **How ratings work**: Compares each interval to the average of the previous 96 intervals (24 hours). Positive values mean prices are above average, negative means below average.
 
 ### Binary Sensors (Enabled by Default)
 
-| Entity                     | Description                                                    |
-| -------------------------- | -------------------------------------------------------------- |
-| Peak Price Period          | ON when in a detected peak price period ([how it works](docs/user/period-calculation.md)) |
-| Best Price Period          | ON when in a detected best price period ([how it works](docs/user/period-calculation.md)) |
-| Tibber API Connection      | Connection status to Tibber API                                |
-| Tomorrow's Data Available  | Whether tomorrow's price data is available                     |
+| Entity                    | Description                                                                               |
+| ------------------------- | ----------------------------------------------------------------------------------------- |
+| Peak Price Period         | ON when in a detected peak price period ([how it works](docs/user/period-calculation.md)) |
+| Best Price Period         | ON when in a detected best price period ([how it works](docs/user/period-calculation.md)) |
+| Tibber API Connection     | Connection status to Tibber API                                                           |
+| Tomorrow's Data Available | Whether tomorrow's price data is available                                                |
 
 ### Diagnostic Sensors (Enabled by Default)
 
-| Entity            | Description                                |
-| ----------------- | ------------------------------------------ |
-| Data Expiration   | Timestamp when current data expires        |
-| Price Forecast    | Formatted list of upcoming price intervals |
+| Entity          | Description                                |
+| --------------- | ------------------------------------------ |
+| Data Expiration | Timestamp when current data expires        |
+| Price Forecast  | Formatted list of upcoming price intervals |
 
 ### Additional Sensors (Disabled by Default)
 
 The following sensors are available but disabled by default. Enable them in `Settings > Devices & Services > Tibber Price Information & Ratings > Entities`:
 
-- **Previous Interval Price** & **Previous Interval Price Level**: Historical data for the last 15-minute interval
-- **Previous Interval Price Rating**: Rating for the previous interval
-- **Trailing 24h Average Price**: Average of the past 24 hours from now
-- **Trailing 24h Minimum/Maximum Price**: Min/max in the past 24 hours
+-   **Previous Interval Price** & **Previous Interval Price Level**: Historical data for the last 15-minute interval
+-   **Previous Interval Price Rating**: Rating for the previous interval
+-   **Trailing 24h Average Price**: Average of the past 24 hours from now
+-   **Trailing 24h Minimum/Maximum Price**: Min/max in the past 24 hours
 
 > **Note**: All monetary sensors use minor currency units (ct/kWh, øre/kWh, ¢/kWh, p/kWh) automatically based on your Tibber account's currency. Supported: EUR, NOK, SEK, DKK, USD, GBP.
 
@@ -186,7 +188,7 @@ automation:
     - alias: "Notify on Very Expensive Electricity"
       trigger:
           - platform: state
-            entity_id: sensor.tibber_current_price_level
+            entity_id: sensor.tibber_current_interval_price_level
             to: "VERY_EXPENSIVE"
       action:
           - service: notify.mobile_app
@@ -204,14 +206,14 @@ automation:
     - alias: "Reduce Heating During High Price Ratings"
       trigger:
           - platform: numeric_state
-            entity_id: sensor.tibber_current_price_rating
-            above: 20  # More than 20% above 24h average
+            entity_id: sensor.tibber_current_interval_price_rating
+            above: 20 # More than 20% above 24h average
       action:
           - service: climate.set_temperature
             target:
                 entity_id: climate.living_room
             data:
-                temperature: 19  # Lower target temperature
+                temperature: 19 # Lower target temperature
 ```
 
 ### Smart EV Charging Based on Tomorrow's Prices
@@ -227,8 +229,8 @@ automation:
             to: "on"
       condition:
           - condition: numeric_state
-            entity_id: sensor.tibber_current_price_rating
-            below: -15  # At least 15% below average
+            entity_id: sensor.tibber_current_interval_price_rating
+            below: -15 # At least 15% below average
           - condition: numeric_state
             entity_id: sensor.ev_battery_level
             below: 80
@@ -273,15 +275,18 @@ automation:
 Every sensor includes rich attributes beyond just the state value. These attributes provide context, timestamps, and additional data useful for automations and templates.
 
 **Standard attributes available on most sensors:**
-- `timestamp` - ISO 8601 timestamp for the data point
-- `description` - Brief explanation of what the sensor represents
-- `level_id` and `level_value` - For price level sensors (e.g., `VERY_CHEAP` = -2)
+
+-   `timestamp` - ISO 8601 timestamp for the data point
+-   `description` - Brief explanation of what the sensor represents
+-   `level_id` and `level_value` - For price level sensors (e.g., `VERY_CHEAP` = -2)
 
 **Extended descriptions** (enable in integration options):
-- `long_description` - Detailed explanation of the sensor's purpose
-- `usage_tips` - Practical suggestions for using the sensor in automations
+
+-   `long_description` - Detailed explanation of the sensor's purpose
+-   `usage_tips` - Practical suggestions for using the sensor in automations
 
 **Example - Current Price sensor attributes:**
+
 ```yaml
 timestamp: "2025-11-03T14:15:00+01:00"
 description: "The current electricity price per kWh"
@@ -290,14 +295,15 @@ usage_tips: "Use this to track prices or to create automations that run when ele
 ```
 
 **Example template using attributes:**
+
 ```yaml
 template:
-  - sensor:
-      - name: "Price Status"
-        state: >
-          {% set price = states('sensor.tibber_current_electricity_price') | float %}
-          {% set timestamp = state_attr('sensor.tibber_current_electricity_price', 'timestamp') %}
-          Price at {{ timestamp }}: {{ price }} ct/kWh
+    - sensor:
+          - name: "Price Status"
+            state: >
+                {% set price = states('sensor.tibber_current_electricity_price') | float %}
+                {% set timestamp = state_attr('sensor.tibber_current_electricity_price', 'timestamp') %}
+                Price at {{ timestamp }}: {{ price }} ct/kWh
 ```
 
 📖 **[View all sensors and attributes →](docs/user/sensors.md)**
@@ -325,9 +331,9 @@ Contributions are welcome! Please read the [Contributing Guidelines](CONTRIBUTIN
 
 ### For Contributors
 
-- **[Developer Setup](docs/development/setup.md)** - Get started with DevContainer
-- **[Architecture Guide](docs/development/architecture.md)** - Understand the codebase
-- **[Release Management](docs/development/release-management.md)** - Release process and versioning
+-   **[Developer Setup](docs/development/setup.md)** - Get started with DevContainer
+-   **[Architecture Guide](docs/development/architecture.md)** - Understand the codebase
+-   **[Release Management](docs/development/release-management.md)** - Release process and versioning
 
 ## 🤖 Development Note
 

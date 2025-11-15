@@ -149,7 +149,7 @@ def calculate_trailing_average_for_interval(
 
 
 def calculate_difference_percentage(
-    current_price: float,
+    current_interval_price: float,
     trailing_average: float | None,
 ) -> float | None:
     """
@@ -158,7 +158,7 @@ def calculate_difference_percentage(
     This mimics the API's "difference" field from priceRating endpoint.
 
     Args:
-        current_price: The current interval's price
+        current_interval_price: The current interval's price
         trailing_average: The 24-hour trailing average price
 
     Returns:
@@ -169,7 +169,7 @@ def calculate_difference_percentage(
     if trailing_average is None or trailing_average == 0:
         return None
 
-    return ((current_price - trailing_average) / trailing_average) * 100
+    return ((current_interval_price - trailing_average) / trailing_average) * 100
 
 
 def calculate_rating_level(
@@ -238,9 +238,9 @@ def _process_price_interval(
         return
 
     starts_at = dt_util.as_local(starts_at)
-    current_price = price_interval.get("total")
+    current_interval_price = price_interval.get("total")
 
-    if current_price is None:
+    if current_interval_price is None:
         return
 
     # Calculate trailing average
@@ -248,7 +248,7 @@ def _process_price_interval(
 
     # Calculate and set the difference and rating_level
     if trailing_avg is not None:
-        difference = calculate_difference_percentage(float(current_price), trailing_avg)
+        difference = calculate_difference_percentage(float(current_interval_price), trailing_avg)
         price_interval["difference"] = difference
 
         # Calculate rating_level based on difference
@@ -486,7 +486,7 @@ def aggregate_period_ratings(
 
 
 def calculate_price_trend(
-    current_price: float,
+    current_interval_price: float,
     future_average: float,
     threshold_rising: float = 5.0,
     threshold_falling: float = -5.0,
@@ -495,7 +495,7 @@ def calculate_price_trend(
     Calculate price trend by comparing current price with future average.
 
     Args:
-        current_price: Current interval price
+        current_interval_price: Current interval price
         future_average: Average price of future intervals
         threshold_rising: Percentage threshold for rising trend (positive, default 5%)
         threshold_falling: Percentage threshold for falling trend (negative, default -5%)
@@ -506,12 +506,12 @@ def calculate_price_trend(
         difference_percentage: % change from current to future ((future - current) / current * 100)
 
     """
-    if current_price == 0:
+    if current_interval_price == 0:
         # Avoid division by zero
         return "stable", 0.0
 
     # Calculate percentage difference from current to future
-    diff_pct = ((future_average - current_price) / current_price) * 100
+    diff_pct = ((future_average - current_interval_price) / current_interval_price) * 100
 
     # Determine trend based on thresholds
     # threshold_falling is negative, so we compare with it directly

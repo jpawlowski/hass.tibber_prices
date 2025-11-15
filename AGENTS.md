@@ -1150,14 +1150,16 @@ We use **Ruff** (which replaces Black, Flake8, isort, and more) as our sole lint
 **Critical principle:** Logs must enable logic tracing without reading code. Each log message should make the current state and decision-making process crystal clear.
 
 **Why good logging matters beyond debugging:**
-- Clear logs become the foundation for good documentation (see "Documentation Writing Strategy")
-- If you spend hours making logs explain the logic, that clarity transfers directly to user docs
-- Logs show state transitions and decisions that users need to understand
-- Pattern: Good hierarchical logs → Easy to extract examples and explanations for documentation
+
+-   Clear logs become the foundation for good documentation (see "Documentation Writing Strategy")
+-   If you spend hours making logs explain the logic, that clarity transfers directly to user docs
+-   Logs show state transitions and decisions that users need to understand
+-   Pattern: Good hierarchical logs → Easy to extract examples and explanations for documentation
 
 **Log Level Strategy:**
 
 -   **INFO Level** - User-facing results and high-level progress:
+
     -   Compact 1-line summaries (no multi-line blocks)
     -   Important results only (success/failure outcomes)
     -   No indentation (scannability)
@@ -1165,6 +1167,7 @@ We use **Ruff** (which replaces Black, Flake8, isort, and more) as our sole lint
     -   Example: `"Day 2025-11-11: Success after 1 relaxation phase (2 periods)"`
 
 -   **DEBUG Level** - Detailed execution trace:
+
     -   Full context headers with all relevant configuration
     -   Step-by-step progression through logic
     -   Hierarchical indentation to show call depth/logic structure
@@ -1201,10 +1204,11 @@ _LOGGER.debug("%sExtended baseline period from %s to %s", INDENT_L4, old_end, ne
 ```
 
 **Why indentation?**
-- Makes call stack and decision tree visible at a glance
-- Enables quick problem localization (which phase/step failed?)
-- Shows parent-child relationships between operations
-- Distinguishes between sequential steps vs nested logic
+
+-   Makes call stack and decision tree visible at a glance
+-   Enables quick problem localization (which phase/step failed?)
+-   Shows parent-child relationships between operations
+-   Distinguishes between sequential steps vs nested logic
 
 **Configuration Context:**
 
@@ -1328,6 +1332,7 @@ When writing or updating user-facing documentation (`docs/user/`), follow these 
 Understanding **how** good documentation emerges is as important as knowing what makes it good:
 
 -   **Live Understanding vs. Code Analysis**
+
     -   ✅ **DO:** Write docs during/after active development
         -   When implementing complex logic, document it while the "why" is fresh
         -   Use real examples from debugging sessions (actual logs, real data)
@@ -1338,6 +1343,7 @@ Understanding **how** good documentation emerges is as important as knowing what
         -   No user perspective: What's actually confusing?
 
 -   **User Feedback Loop**
+
     -   Key insight: Documentation improves when users question it
     -   Pattern:
         1. User asks: "Does this still match the code?"
@@ -1347,16 +1353,19 @@ Understanding **how** good documentation emerges is as important as knowing what
     -   Why it works: User questions force critical thinking, real confusion points get addressed
 
 -   **Log-Driven Documentation**
+
     -   Observation: When logs explain logic clearly, documentation becomes easier
     -   Why: Logs show state transitions ("Baseline insufficient → Starting relaxation"), decisions ("Replaced period X with larger Y"), and are already written for humans
     -   Pattern: If you spent hours making logs clear → use that clarity in documentation too
 
 -   **Concrete Examples > Abstract Descriptions**
+
     -   ✅ **Good:** "Day 2025-11-11 found 2 periods at flex=12.0% +volatility_any (stopped early, no need to try higher flex)"
     -   ❌ **Bad:** "The relaxation algorithm uses a configurable threshold multiplier with filter combination strategies"
     -   Use real data from debug sessions, show actual attribute values, demonstrate with timeline diagrams
 
 -   **Context Accumulation in Long Sessions**
+
     -   Advantage: AI builds mental model incrementally, sees evolution of logic (not just final state), understands trade-offs
     -   Disadvantage of short sessions: Cold start every time, missing "why" context, documentation becomes spec-writing
     -   Lesson: Complex documentation benefits from focused, uninterrupted work with accumulated context
@@ -1406,7 +1415,7 @@ name = 'tibber_prices'  # Ruff will change to double quotes
 ```python
 # ✅ Always use trailing commas in multi-line structures
 SENSOR_TYPES = [
-    "current_price",
+    "current_interval_price",
     "min_price",
     "max_price",  # ← Trailing comma
 ]
@@ -1421,7 +1430,7 @@ def calculate_average(
 
 # ❌ Missing trailing comma
 SENSOR_TYPES = [
-    "current_price",
+    "current_interval_price",
     "min_price",
     "max_price"  # Ruff will add trailing comma
 ]
@@ -1483,7 +1492,7 @@ df = (
 
 ```python
 # ✅ Annotate function signatures (public functions)
-def get_current_price(coordinator: DataUpdateCoordinator) -> float:
+def get_current_interval_price(coordinator: DataUpdateCoordinator) -> float:
     """Get current price from coordinator."""
     return coordinator.data["priceInfo"]["today"][0]["total"]
 

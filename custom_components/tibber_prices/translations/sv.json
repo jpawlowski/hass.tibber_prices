@@ -88,7 +88,7 @@
                 },
                 "submit": "Nästa till steg 2"
             },
-            "price_rating": {
+            "current_interval_price_rating": {
                 "title": "Prisvärderingströsklar",
                 "description": "{step_progress}\n\nKonfigurera trösklar för prisvärderingsnivåer (låg/normal/hög) baserat på jämförelse med rullande 24-timmars genomsnitt.",
                 "data": {
@@ -179,7 +179,7 @@
     },
     "entity": {
         "sensor": {
-            "current_price": {
+            "current_interval_price": {
                 "name": "Nuvarande elpris"
             },
             "next_interval_price": {
@@ -194,7 +194,7 @@
             "next_hour_average": {
                 "name": "Nästa timgenomsnitt pris"
             },
-            "price_level": {
+            "current_interval_price_level": {
                 "name": "Nuvarande prisnivå",
                 "state": {
                     "very_cheap": "Mycket billigt",
@@ -280,7 +280,7 @@
             "leading_price_max": {
                 "name": "Framåtblickande 24t maximumpris"
             },
-            "price_rating": {
+            "current_interval_price_rating": {
                 "name": "Nuvarande prisvärdering",
                 "state": {
                     "low": "Låg",
@@ -503,7 +503,7 @@
                 "very_high": "Mycket hög"
             }
         },
-        "price_level": {
+        "current_interval_price_level": {
             "options": {
                 "any": "Alla",
                 "very_cheap": "Mycket billigt",

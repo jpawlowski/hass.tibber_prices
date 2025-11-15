@@ -1,6 +1,6 @@
 {
     "sensor": {
-        "current_price": {
+        "current_interval_price": {
             "description": "Den nåværende elektrisitetsprisen per kWh",
             "long_description": "Viser nåværende pris per kWh fra ditt Tibber-abonnement",
             "usage_tips": "Bruk dette til å spore priser eller lage automatiseringer som kjører når strøm er billig"
@@ -85,7 +85,7 @@
             "long_description": "Viser maksimumsprisen per kWh fra de neste 24 timene (fremtidsrettet maksimum) fra ditt Tibber-abonnement. Dette gir den høyeste prisen forventet i de neste 24 timene basert på prognosedata.",
             "usage_tips": "Bruk dette til å unngå å kjøre apparater i kommende topprisperioder."
         },
-        "price_level": {
+        "current_interval_price_level": {
             "description": "Den nåværende prisnivåklassifiseringen",
             "long_description": "Viser Tibbers klassifisering av nåværende pris sammenlignet med historiske priser",
             "usage_tips": "Bruk dette til å lage automatiseringer basert på relative prisnivåer i stedet for absolutte priser"
@@ -110,7 +110,7 @@
             "long_description": "Viser median prisnivå på tvers av 5 intervaller sentrert en time frem. Hjelper med å planlegge forbruk basert på kommende pristrender i stedet for øyeblikkelige fremtidige priser.",
             "usage_tips": "Bruk for å planlegge aktiviteter for neste time basert på en utjevnet prisnivåprognose."
         },
-        "price_rating": {
+        "current_interval_price_rating": {
             "description": "Hvordan nåværende intervalls pris sammenlignes med historiske data",
             "long_description": "Viser hvordan nåværende intervalls pris sammenlignes med historiske prisdata som en prosentandel",
             "usage_tips": "En positiv prosentandel betyr at nåværende pris er over gjennomsnittet, negativ betyr under gjennomsnittet"

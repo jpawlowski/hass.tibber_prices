@@ -267,7 +267,7 @@ PRICE_LEVEL_COLOR_MAPPING = {
 }
 
 # Icon mapping for current price sensors (dynamic icons based on price level)
-# Used by current_price and current_hour_average sensors
+# Used by current_interval_price and current_hour_average sensors
 # Icon shows price level (cheap/normal/expensive), icon_color reinforces with color
 PRICE_LEVEL_CASH_ICON_MAPPING = {
     PRICE_LEVEL_VERY_CHEAP: "mdi:cash-multiple",  # Many coins (save a lot!)
@@ -667,7 +667,9 @@ async def async_get_price_level_translation(
         The localized price level if found, None otherwise
 
     """
-    return await async_get_translation(hass, ["sensor", "price_level", "price_levels", level], language)
+    return await async_get_translation(
+        hass, ["sensor", "current_interval_price_level", "price_levels", level], language
+    )
 
 
 def get_price_level_translation(
@@ -687,7 +689,7 @@ def get_price_level_translation(
         The localized price level if found in cache, None otherwise
 
     """
-    return get_translation(["sensor", "price_level", "price_levels", level], language)
+    return get_translation(["sensor", "current_interval_price_level", "price_levels", level], language)
 
 
 async def async_get_home_type_translation(

@@ -88,7 +88,7 @@
                 },
                 "submit": "Weiter zu Schritt 2"
             },
-            "price_rating": {
+            "current_interval_price_rating": {
                 "title": "Preisbewertungs-Schwellwerte",
                 "description": "{step_progress}\n\nKonfiguration der Schwellwerte für Preisbewertungsstufen (niedrig/normal/hoch) basierend auf dem Vergleich mit dem gleitenden 24-Stunden-Durchschnitt.",
                 "data": {
@@ -183,7 +183,7 @@
     },
     "entity": {
         "sensor": {
-            "current_price": {
+            "current_interval_price": {
                 "name": "Aktueller Strompreis"
             },
             "next_interval_price": {
@@ -198,7 +198,7 @@
             "next_hour_average": {
                 "name": "Nächster Stunden-Durchschnittspreis"
             },
-            "price_level": {
+            "current_interval_price_level": {
                 "name": "Aktuelles Preisniveau",
                 "state": {
                     "very_cheap": "Sehr günstig",
@@ -284,7 +284,7 @@
             "leading_price_max": {
                 "name": "Vorlaufender 24h-Höchstpreis"
             },
-            "price_rating": {
+            "current_interval_price_rating": {
                 "name": "Aktuelle Preisbewertung",
                 "state": {
                     "low": "Niedrig",
@@ -507,7 +507,7 @@
                 "very_high": "Sehr hoch"
             }
         },
-        "price_level": {
+        "current_interval_price_level": {
             "options": {
                 "any": "Beliebig",
                 "very_cheap": "Sehr günstig",

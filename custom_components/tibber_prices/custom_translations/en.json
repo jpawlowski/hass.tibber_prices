@@ -1,6 +1,6 @@
 {
     "sensor": {
-        "current_price": {
+        "current_interval_price": {
             "description": "The current electricity price per kWh",
             "long_description": "Shows the current price per kWh from your Tibber subscription",
             "usage_tips": "Use this to track prices or to create automations that run when electricity is cheap"
@@ -85,7 +85,7 @@
             "long_description": "Shows the maximum price per kWh from the next 24 hours (leading maximum) from your Tibber subscription. This provides the highest price expected in the next 24 hours based on forecast data.",
             "usage_tips": "Use this to avoid running appliances during upcoming peak price periods."
         },
-        "price_level": {
+        "current_interval_price_level": {
             "description": "The current price level classification",
             "long_description": "Shows Tibber's classification of the current price compared to historical prices",
             "usage_tips": "Use this to create automations based on relative price levels rather than absolute prices"
@@ -110,7 +110,7 @@
             "long_description": "Shows the median price level across 5 intervals centered one hour ahead. Helps plan consumption based on upcoming price trends rather than instantaneous future prices.",
             "usage_tips": "Use to schedule activities for the next hour based on a smoothed price level forecast."
         },
-        "price_rating": {
+        "current_interval_price_rating": {
             "description": "How the current interval's price compares to historical data",
             "long_description": "Shows how the current interval's price compares to historical price data as a percentage",
             "usage_tips": "A positive percentage means the current price is above average, negative means below average"

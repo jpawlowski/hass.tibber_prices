@@ -80,8 +80,8 @@ MIN_HOURS_FOR_LATER_HALF = 3  # Minimum hours needed to calculate later half ave
 # Main price sensors that users will typically use in automations
 PRICE_SENSORS = (
     SensorEntityDescription(
-        key="current_price",
-        translation_key="current_price",
+        key="current_interval_price",
+        translation_key="current_interval_price",
         name="Current Electricity Price",
         icon="mdi:cash",  # Dynamic: will show cash-multiple/plus/cash/minus/remove based on level
         device_class=SensorDeviceClass.MONETARY,
@@ -124,8 +124,8 @@ PRICE_SENSORS = (
     # import timing issues with Home Assistant's entity platform initialization.
     # Keep in sync with PRICE_LEVEL_OPTIONS in const.py!
     SensorEntityDescription(
-        key="price_level",
-        translation_key="price_level",
+        key="current_interval_price_level",
+        translation_key="current_interval_price_level",
         name="Current Price Level",
         icon="mdi:gauge",
         device_class=SensorDeviceClass.ENUM,
@@ -314,8 +314,8 @@ VOLATILITY_SENSORS = (
 # Keep in sync with PRICE_RATING_OPTIONS in const.py!
 RATING_SENSORS = (
     SensorEntityDescription(
-        key="price_rating",
-        translation_key="price_rating",
+        key="current_interval_price_rating",
+        translation_key="current_interval_price_rating",
         name="Current Price Rating",
         icon="mdi:star-outline",
         device_class=SensorDeviceClass.ENUM,
@@ -620,13 +620,13 @@ class TibberPricesSensor(TibberPricesEntity, SensorEntity):
         # Map sensor keys to their handler methods
         handlers = {
             # Price level sensors
-            "price_level": self._get_price_level_value,
+            "current_interval_price_level": self._get_price_level_value,
             "next_interval_price_level": lambda: self._get_interval_level_value(interval_offset=1),
             "previous_interval_price_level": lambda: self._get_interval_level_value(interval_offset=-1),
             "current_hour_price_level": lambda: self._get_rolling_hour_level_value(hour_offset=0),
             "next_hour_price_level": lambda: self._get_rolling_hour_level_value(hour_offset=1),
             # Price sensors
-            "current_price": lambda: self._get_interval_price_value(interval_offset=0, in_euro=False),
+            "current_interval_price": lambda: self._get_interval_price_value(interval_offset=0, in_euro=False),
             "next_interval_price": lambda: self._get_interval_price_value(interval_offset=1, in_euro=False),
             "previous_interval_price": lambda: self._get_interval_price_value(interval_offset=-1, in_euro=False),
             # Rolling hour average (5 intervals: 2 before + current + 2 after)
@@ -692,7 +692,7 @@ class TibberPricesSensor(TibberPricesEntity, SensorEntity):
                 decimals=2,
             ),
             # Rating sensors
-            "price_rating": lambda: self._get_rating_value(rating_type="current"),
+            "current_interval_price_rating": lambda: self._get_rating_value(rating_type="current"),
             "next_interval_price_rating": lambda: self._get_interval_rating_value(interval_offset=1),
             "previous_interval_price_rating": lambda: self._get_interval_rating_value(interval_offset=-1),
             "current_hour_price_rating": lambda: self._get_rolling_hour_rating_value(hour_offset=0),
@@ -1115,11 +1115,11 @@ class TibberPricesSensor(TibberPricesEntity, SensorEntity):
         if (
             translations
             and "sensor" in translations
-            and "price_rating" in translations["sensor"]
-            and "price_levels" in translations["sensor"]["price_rating"]
-            and level in translations["sensor"]["price_rating"]["price_levels"]
+            and "current_interval_price_rating" in translations["sensor"]
+            and "price_levels" in translations["sensor"]["current_interval_price_rating"]
+            and level in translations["sensor"]["current_interval_price_rating"]["price_levels"]
         ):
-            return translations["sensor"]["price_rating"]["price_levels"][level]
+            return translations["sensor"]["current_interval_price_rating"]["price_levels"][level]
         # Fallback to English if not found
         if language != "en":
             en_cache_key = f"{DOMAIN}_translations_en"
@@ -1127,11 +1127,11 @@ class TibberPricesSensor(TibberPricesEntity, SensorEntity):
             if (
                 en_translations
                 and "sensor" in en_translations
-                and "price_rating" in en_translations
-                and "price_levels" in en_translations["sensor"]["price_rating"]
-                and level in en_translations["sensor"]["price_rating"]["price_levels"]
+                and "current_interval_price_rating" in en_translations
+                and "price_levels" in en_translations["sensor"]["current_interval_price_rating"]
+                and level in en_translations["sensor"]["current_interval_price_rating"]["price_levels"]
             ):
-                return en_translations["sensor"]["price_rating"]["price_levels"][level]
+                return en_translations["sensor"]["current_interval_price_rating"]["price_levels"][level]
         return level
 
     def _get_rating_value(self, *, rating_type: str) -> str | None:
@@ -1285,7 +1285,7 @@ class TibberPricesSensor(TibberPricesEntity, SensorEntity):
         if not current_interval or "total" not in current_interval:
             return None
 
-        current_price = float(current_interval["total"])
+        current_interval_price = float(current_interval["total"])
         current_starts_at = dt_util.parse_datetime(current_interval["startsAt"])
         if current_starts_at is None:
             return None
@@ -1311,7 +1311,7 @@ class TibberPricesSensor(TibberPricesEntity, SensorEntity):
 
         # Calculate trend with configured thresholds
         trend_state, diff_pct = calculate_price_trend(
-            current_price, future_avg, threshold_rising=threshold_rising, threshold_falling=threshold_falling
+            current_interval_price, future_avg, threshold_rising=threshold_rising, threshold_falling=threshold_falling
         )
 
         # Determine icon color based on trend state
@@ -1340,8 +1340,8 @@ class TibberPricesSensor(TibberPricesEntity, SensorEntity):
                 self._trend_attributes[f"second_half_{hours}h_avg"] = round(later_half_avg * 100, 2)
 
                 # Calculate incremental change: how much does the later half differ from current?
-                if current_price > 0:
-                    later_half_diff = ((later_half_avg - current_price) / current_price) * 100
+                if current_interval_price > 0:
+                    later_half_diff = ((later_half_avg - current_interval_price) / current_interval_price) * 100
                     self._trend_attributes[f"second_half_{hours}h_diff_from_current_%"] = round(later_half_diff, 1)
 
         # Cache the trend value for consistency
@@ -1711,7 +1711,7 @@ class TibberPricesSensor(TibberPricesEntity, SensorEntity):
             if not self.coordinator.data or not self._value_getter:
                 return None
             # For price_level, ensure we return the translated value as state
-            if self.entity_description.key == "price_level":
+            if self.entity_description.key == "current_interval_price_level":
                 return self._get_price_level_value()
             return self._value_getter()
         except (KeyError, ValueError, TypeError) as ex:
@@ -1771,11 +1771,11 @@ class TibberPricesSensor(TibberPricesEntity, SensorEntity):
         """
         Get icon for current price sensors (dynamic based on price level).
 
-        Only current_price and current_hour_average have dynamic icons.
+        Only current_interval_price and current_hour_average have dynamic icons.
         Other price sensors (next/previous) use static icons from entity description.
         """
         # Only current price sensors get dynamic icons
-        if key == "current_price":
+        if key == "current_interval_price":
             level = self._get_price_level_for_sensor(key)
             if level:
                 return PRICE_LEVEL_CASH_ICON_MAPPING.get(level.upper())
@@ -1790,7 +1790,7 @@ class TibberPricesSensor(TibberPricesEntity, SensorEntity):
     def _get_level_sensor_icon(self, key: str, value: Any) -> str | None:
         """Get icon for price level sensors."""
         if key not in [
-            "price_level",
+            "current_interval_price_level",
             "next_interval_price_level",
             "previous_interval_price_level",
             "current_hour_price_level",
@@ -1803,7 +1803,7 @@ class TibberPricesSensor(TibberPricesEntity, SensorEntity):
     def _get_rating_sensor_icon(self, key: str, value: Any) -> str | None:
         """Get icon for price rating sensors."""
         if key not in [
-            "price_rating",
+            "current_interval_price_rating",
             "next_interval_price_rating",
             "previous_interval_price_rating",
             "current_hour_price_rating",
@@ -1830,7 +1830,7 @@ class TibberPricesSensor(TibberPricesEntity, SensorEntity):
 
         # Map sensor key to interval offset
         offset_map = {
-            "current_price": 0,
+            "current_interval_price": 0,
             "next_interval_price": 1,
             "previous_interval_price": -1,
         }
@@ -1988,8 +1988,8 @@ class TibberPricesSensor(TibberPricesEntity, SensorEntity):
 
             # Group sensors by type and delegate to specific handlers
             if key in [
-                "current_price",
-                "price_level",
+                "current_interval_price",
+                "current_interval_price_level",
                 "next_interval_price",
                 "previous_interval_price",
                 "current_hour_average",
@@ -2003,7 +2003,7 @@ class TibberPricesSensor(TibberPricesEntity, SensorEntity):
                 "current_hour_price_rating",
                 "next_hour_price_rating",
             ]:
-                self._add_current_price_attributes(attributes)
+                self._add_current_interval_price_attributes(attributes)
             elif key in [
                 "trailing_price_average",
                 "leading_price_average",
@@ -2022,7 +2022,11 @@ class TibberPricesSensor(TibberPricesEntity, SensorEntity):
             elif key.endswith("_volatility"):
                 self._add_volatility_attributes(attributes)
             # For price_level, add the original level as attribute
-            if key == "price_level" and hasattr(self, "_last_price_level") and self._last_price_level is not None:
+            if (
+                key == "current_interval_price_level"
+                and hasattr(self, "_last_price_level")
+                and self._last_price_level is not None
+            ):
                 attributes["level_id"] = self._last_price_level
         except (KeyError, ValueError, TypeError) as ex:
             self.coordinator.logger.exception(
@@ -2035,8 +2039,8 @@ class TibberPricesSensor(TibberPricesEntity, SensorEntity):
         else:
             return attributes if attributes else None
 
-    def _add_current_price_attributes(self, attributes: dict) -> None:
-        """Add attributes for current price sensors."""
+    def _add_current_interval_price_attributes(self, attributes: dict) -> None:
+        """Add attributes for current interval price sensors."""
         key = self.entity_description.key
         price_info = self.coordinator.data.get("priceInfo", {}) if self.coordinator.data else {}
         now = dt_util.now()
@@ -2085,7 +2089,7 @@ class TibberPricesSensor(TibberPricesEntity, SensorEntity):
             attributes["timestamp"] = current_interval_data["startsAt"] if current_interval_data else None
 
         # Add icon_color for price sensors (based on their price level)
-        if key in ["current_price", "next_interval_price", "previous_interval_price"]:
+        if key in ["current_interval_price", "next_interval_price", "previous_interval_price"]:
             # For interval-based price sensors, get level from interval_data
             if interval_data and "level" in interval_data:
                 level = interval_data["level"]
@@ -2115,7 +2119,7 @@ class TibberPricesSensor(TibberPricesEntity, SensorEntity):
             if level_value and isinstance(level_value, str):
                 self._add_price_level_attributes(attributes, level_value.upper())
         # For current price level sensor
-        elif key == "price_level":
+        elif key == "current_interval_price_level":
             current_interval_data = self._get_current_interval_data()
             if current_interval_data and "level" in current_interval_data:
                 self._add_price_level_attributes(attributes, current_interval_data["level"])
@@ -2149,7 +2153,7 @@ class TibberPricesSensor(TibberPricesEntity, SensorEntity):
             if rating_value and isinstance(rating_value, str):
                 self._add_price_rating_attributes(attributes, rating_value.upper())
         # For current price rating sensor
-        elif key == "price_rating":
+        elif key == "current_interval_price_rating":
             current_interval_data = self._get_current_interval_data()
             if current_interval_data and "rating_level" in current_interval_data:
                 self._add_price_rating_attributes(attributes, current_interval_data["rating_level"])
@@ -2201,7 +2205,7 @@ class TibberPricesSensor(TibberPricesEntity, SensorEntity):
             latest_timestamp = self._get_data_timestamp()
             if latest_timestamp:
                 attributes["timestamp"] = latest_timestamp.isoformat()
-        elif key == "price_rating":
+        elif key == "current_interval_price_rating":
             interval_data = find_price_data_for_interval(price_info, now)
             attributes["timestamp"] = interval_data["startsAt"] if interval_data else None
             if hasattr(self, "_last_rating_difference") and self._last_rating_difference is not None:
