@@ -4,8 +4,8 @@ This is a **Home Assistant custom component** for Tibber electricity price data,
 
 ## Documentation Metadata
 
--   **Last Major Update**: 2025-11-17
--   **Last Architecture Review**: 2025-11-17 (Module splitting refactoring completed - sensor.py split into sensor/ package with core.py, definitions.py, helpers.py, attributes.py. Created entity_utils/ package for shared icon/color/attribute logic. All phases complete.)
+-   **Last Major Update**: 2025-11-15
+-   **Last Architecture Review**: 2025-11-15 (Module splitting refactoring completed - sensor.py and binary_sensor.py split into packages with core.py, definitions.py, helpers.py, attributes.py. Created entity_utils/ package for shared icon/color/attribute logic. All phases complete.)
 -   **Documentation Status**: ✅ Current (verified against codebase)
 
 _Note: When proposing significant updates to this file, update the metadata above with the new date and brief description of changes._
@@ -235,7 +235,7 @@ After successful refactoring:
 1. `TibberPricesApiClient` (`api.py`) queries Tibber's GraphQL API with `resolution:QUARTER_HOURLY` for user data and prices (yesterday/today/tomorrow - 192 intervals total)
 2. `TibberPricesDataUpdateCoordinator` (`coordinator.py`) orchestrates updates every 15 minutes, manages persistent storage via `Store`, and schedules quarter-hour entity refreshes
 3. Price enrichment functions (`price_utils.py`, `average_utils.py`) calculate trailing/leading 24h averages, price differences, and rating levels for each 15-minute interval
-4. Entity platforms (`sensor/` package, `binary_sensor.py`) expose enriched data as Home Assistant entities
+4. Entity platforms (`sensor/` package, `binary_sensor/` package) expose enriched data as Home Assistant entities
 5. Custom services (`services.py`) provide API endpoints for integrations like ApexCharts
 
 **Key Patterns:**
@@ -333,7 +333,11 @@ custom_components/tibber_prices/
 │   ├── definitions.py    #   ENTITY_DESCRIPTIONS
 │   ├── helpers.py        #   Pure helper functions
 │   └── attributes.py     #   Attribute builders
-├── binary_sensor.py      # Peak/best hour binary sensors
+├── binary_sensor/        # Binary sensor platform (package)
+│   ├── __init__.py       #   Platform setup (async_setup_entry)
+│   ├── core.py           #   TibberPricesBinarySensor class
+│   ├── definitions.py    #   ENTITY_DESCRIPTIONS, constants
+│   └── attributes.py     #   Attribute builders
 ├── entity.py             # Base TibberPricesEntity class
 ├── entity_utils/         # Shared entity helpers (both platforms)
 │   ├── __init__.py       #   Package exports
@@ -1993,6 +1997,106 @@ The refactoring consolidated duplicate logic into unified methods in `sensor/cor
     -   Returns: Price in minor currency units (cents/øre)
 
 Legacy wrapper methods still exist for backward compatibility but will be removed in a future cleanup phase.
+
+**Add a new binary sensor:**
+
+After the binary_sensor.py refactoring (completed Nov 2025), binary sensors are organized similarly to the sensor/ package. Follow these steps:
+
+1. **Add entity description** to `binary_sensor/definitions.py`:
+
+    - Add to `ENTITY_DESCRIPTIONS` tuple
+    - Define key, translation_key, name, icon, device_class
+
+2. **Implement state logic** in `binary_sensor/core.py`:
+
+    - Add state property (e.g., `_my_feature_state`) returning bool
+    - Update `is_on` property to route to your state method
+    - Follow pattern: Check coordinator data availability, calculate state, return bool
+
+3. **Add attribute builder** (if needed) in `binary_sensor/attributes.py`:
+
+    - Create `build_my_feature_attributes()` function
+    - Return dict with relevant attributes
+    - Update `build_async_extra_state_attributes()` or `build_sync_extra_state_attributes()` to call your builder
+
+4. **Add translation keys**:
+
+    - `/translations/en.json` (entity name per HA schema)
+    - `/custom_translations/en.json` (description, long_description, usage_tips)
+
+5. **Sync all language files** (de, nb, nl, sv)
+
+**Example - Adding a "low price alert" binary sensor:**
+
+```python
+# 1. Add to ENTITY_DESCRIPTIONS in binary_sensor/definitions.py
+BinarySensorEntityDescription(
+    key="low_price_alert",
+    translation_key="low_price_alert",
+    name="Low Price Alert",
+    icon="mdi:alert-circle",
+    device_class=BinarySensorDeviceClass.PROBLEM,  # ON = problem (not low)
+),
+
+# 2. Add state property in binary_sensor/core.py
+@property
+def _low_price_alert_state(self) -> bool:
+    """Return True if current price is NOT in low price range."""
+    if not self.coordinator.data or "priceInfo" not in self.coordinator.data:
+        return False
+
+    price_info = self.coordinator.data["priceInfo"]
+    today_prices = price_info.get("today", [])
+    if not today_prices:
+        return False
+
+    current_interval = today_prices[0]  # Simplified - should find actual current
+    return current_interval.get("rating_level") != "LOW"
+
+# 3. Update is_on property routing
+@property
+def is_on(self) -> bool:
+    """Return sensor state."""
+    if self.entity_description.key == "low_price_alert":
+        return self._low_price_alert_state
+    # ... existing routing ...
+
+# 4. Add attribute builder in binary_sensor/attributes.py (optional)
+def build_low_price_alert_attributes(
+    coordinator: TibberPricesDataUpdateCoordinator,
+) -> dict[str, Any]:
+    """Build attributes for low price alert sensor."""
+    if not coordinator.data or "priceInfo" not in coordinator.data:
+        return {}
+
+    price_info = coordinator.data["priceInfo"]
+    current_price = price_info["today"][0].get("total", 0)
+
+    return {
+        "current_price": current_price,
+        "threshold": 0.20,  # Example threshold
+    }
+
+# 5. Add translations (en.json)
+{
+  "entity": {
+    "binary_sensor": {
+      "low_price_alert": {
+        "name": "Low Price Alert"
+      }
+    }
+  }
+}
+
+# 6. Add custom translations (custom_translations/en.json)
+{
+  "binary_sensor": {
+    "low_price_alert": {
+      "description": "Alert when current price is NOT in low price range"
+    }
+  }
+}
+```
 
 **Modify price calculations:**
 Edit `price_utils.py` or `average_utils.py`. These are stateless pure functions operating on price lists.
