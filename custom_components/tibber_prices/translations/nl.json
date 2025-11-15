@@ -511,40 +511,40 @@
                 }
             },
             "best_price_end_time": {
-                "name": "Beste prijsperiode eindigt"
-            },
-            "best_price_remaining_minutes": {
-                "name": "Beste prijsperiode resterende tijd"
-            },
-            "best_price_progress": {
-                "name": "Beste prijsperiode voortgang"
-            },
-            "best_price_next_start_time": {
-                "name": "Volgende beste prijsperiode start"
-            },
-            "best_price_next_in_minutes": {
-                "name": "Beste prijsperiode start over"
-            },
-            "peak_price_end_time": {
-                "name": "Piekprijsperiode eindigt"
-            },
-            "peak_price_remaining_minutes": {
-                "name": "Piekprijsperiode resterende tijd"
-            },
-            "peak_price_progress": {
-                "name": "Piekprijsperiode voortgang"
-            },
-            "peak_price_next_start_time": {
-                "name": "Volgende piekprijsperiode start"
-            },
-            "peak_price_next_in_minutes": {
-                "name": "Piekprijsperiode start over"
+                "name": "Beste prijs eindigt"
             },
             "best_price_period_duration": {
-                "name": "Goedkope periode duur"
+                "name": "Beste prijs duur"
+            },
+            "best_price_remaining_minutes": {
+                "name": "Beste prijs resterende tijd"
+            },
+            "best_price_progress": {
+                "name": "Beste prijs voortgang"
+            },
+            "best_price_next_start_time": {
+                "name": "Volgende beste prijs start"
+            },
+            "best_price_next_in_minutes": {
+                "name": "Beste prijs start over"
+            },
+            "peak_price_end_time": {
+                "name": "Piekprijs eindigt"
             },
             "peak_price_period_duration": {
-                "name": "Piekprijsperiode duur"
+                "name": "Piekprijs duur"
+            },
+            "peak_price_remaining_minutes": {
+                "name": "Piekprijs resterende tijd"
+            },
+            "peak_price_progress": {
+                "name": "Piekprijs voortgang"
+            },
+            "peak_price_next_start_time": {
+                "name": "Volgende piekprijs start"
+            },
+            "peak_price_next_in_minutes": {
+                "name": "Piekprijs start over"
             },
             "price_forecast": {
                 "name": "Prijsprognose"

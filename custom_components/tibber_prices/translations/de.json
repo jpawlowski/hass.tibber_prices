@@ -515,40 +515,40 @@
                 }
             },
             "best_price_end_time": {
-                "name": "Günstige Periode endet"
+                "name": "Bestpreis endet"
             },
             "best_price_period_duration": {
-                "name": "Günstige Periode Dauer"
+                "name": "Bestpreis Dauer"
             },
             "best_price_remaining_minutes": {
-                "name": "Günstige Periode verbleibend"
+                "name": "Bestpreis verbleibend"
             },
             "best_price_progress": {
-                "name": "Günstige Periode Fortschritt"
+                "name": "Bestpreis Fortschritt"
             },
             "best_price_next_start_time": {
-                "name": "Nächste günstige Periode startet"
+                "name": "Nächster Bestpreis startet"
             },
             "best_price_next_in_minutes": {
-                "name": "Günstige Periode startet in"
+                "name": "Bestpreis startet in"
             },
             "peak_price_end_time": {
-                "name": "Teure Periode endet"
+                "name": "Spitzenpreis endet"
             },
             "peak_price_period_duration": {
-                "name": "Teure Periode Dauer"
+                "name": "Spitzenpreis Dauer"
             },
             "peak_price_remaining_minutes": {
-                "name": "Teure Periode verbleibend"
+                "name": "Spitzenpreis verbleibend"
             },
             "peak_price_progress": {
-                "name": "Teure Periode Fortschritt"
+                "name": "Spitzenpreis Fortschritt"
             },
             "peak_price_next_start_time": {
-                "name": "Nächste teure Periode startet"
+                "name": "Nächster Spitzenpreis startet"
             },
             "peak_price_next_in_minutes": {
-                "name": "Teure Periode startet in"
+                "name": "Spitzenpreis startet in"
             },
             "price_forecast": {
                 "name": "Preisprognose"

@@ -511,40 +511,40 @@
                 }
             },
             "best_price_end_time": {
-                "name": "Beste prisperiode slutter"
-            },
-            "best_price_remaining_minutes": {
-                "name": "Beste prisperiode gjenværende tid"
-            },
-            "best_price_progress": {
-                "name": "Beste prisperiode fremgang"
-            },
-            "best_price_next_start_time": {
-                "name": "Neste beste prisperiode starter"
-            },
-            "best_price_next_in_minutes": {
-                "name": "Beste prisperiode starter om"
-            },
-            "peak_price_end_time": {
-                "name": "Topprisperiode slutter"
-            },
-            "peak_price_remaining_minutes": {
-                "name": "Topprisperiode gjenværende tid"
-            },
-            "peak_price_progress": {
-                "name": "Topprisperiode fremgang"
-            },
-            "peak_price_next_start_time": {
-                "name": "Neste topprisperiode starter"
-            },
-            "peak_price_next_in_minutes": {
-                "name": "Topprisperiode starter om"
+                "name": "Beste pris slutter"
             },
             "best_price_period_duration": {
-                "name": "Billigperiode varighet"
+                "name": "Beste pris varighet"
+            },
+            "best_price_remaining_minutes": {
+                "name": "Beste pris gjenværende tid"
+            },
+            "best_price_progress": {
+                "name": "Beste pris fremgang"
+            },
+            "best_price_next_start_time": {
+                "name": "Neste beste pris starter"
+            },
+            "best_price_next_in_minutes": {
+                "name": "Beste pris starter om"
+            },
+            "peak_price_end_time": {
+                "name": "Topppris slutter"
             },
             "peak_price_period_duration": {
-                "name": "Topprisperiode varighet"
+                "name": "Topppris varighet"
+            },
+            "peak_price_remaining_minutes": {
+                "name": "Topppris gjenværende tid"
+            },
+            "peak_price_progress": {
+                "name": "Topppris fremgang"
+            },
+            "peak_price_next_start_time": {
+                "name": "Neste topppris starter"
+            },
+            "peak_price_next_in_minutes": {
+                "name": "Topppris starter om"
             },
             "price_forecast": {
                 "name": "Prisprognose"

@@ -511,10 +511,10 @@
                 }
             },
             "best_price_end_time": {
-                "name": "Best Price Period End"
+                "name": "Best Price End"
             },
             "best_price_period_duration": {
-                "name": "Best Price Period Duration"
+                "name": "Best Price Duration"
             },
             "best_price_remaining_minutes": {
                 "name": "Best Price Remaining Time"
@@ -523,16 +523,16 @@
                 "name": "Best Price Progress"
             },
             "best_price_next_start_time": {
-                "name": "Best Price Next Period Start"
+                "name": "Best Price Next Start"
             },
             "best_price_next_in_minutes": {
                 "name": "Best Price Starts In"
             },
             "peak_price_end_time": {
-                "name": "Peak Price Period End"
+                "name": "Peak Price End"
             },
             "peak_price_period_duration": {
-                "name": "Peak Price Period Duration"
+                "name": "Peak Price Duration"
             },
             "peak_price_remaining_minutes": {
                 "name": "Peak Price Remaining Time"
@@ -541,7 +541,7 @@
                 "name": "Peak Price Progress"
             },
             "peak_price_next_start_time": {
-                "name": "Peak Price Next Period Start"
+                "name": "Peak Price Next Start"
             },
             "peak_price_next_in_minutes": {
                 "name": "Peak Price Starts In"
