@@ -269,6 +269,36 @@ End the output after the last release note item. Nothing more."
 generate_with_gitcliff() {
     log_info "${BLUE}==> Generating with git-cliff${NC}"
 
+    # Analyze commits to generate smart title
+    FROM_TAG_SHORT="${FROM_TAG}"
+    TO_TAG_SHORT="${TO_TAG}"
+    COMMITS_LOG=$(git log --pretty=format:"%s" "${FROM_TAG}..${TO_TAG}" 2>/dev/null || echo "")
+
+    # Count user-facing changes (exclude dev/ci/docs)
+    FEAT_COUNT=$(echo "$COMMITS_LOG" | grep -cE "^feat\((sensors|binary_sensor|config_flow|services|coordinator|api)\):" || true)
+    FIX_COUNT=$(echo "$COMMITS_LOG" | grep -cE "^fix\((sensors|binary_sensor|config_flow|services|coordinator|api|translations)\):" || true)
+    PERF_COUNT=$(echo "$COMMITS_LOG" | grep -cE "^perf\(" || true)
+
+    # Generate intelligent title based on changes
+    if [ $PERF_COUNT -gt 0 ]; then
+        TITLE="# Performance & Reliability Improvements"
+    elif [ $FEAT_COUNT -gt 2 ]; then
+        TITLE="# New Features & Enhancements"
+    elif [ $FEAT_COUNT -gt 0 ] && [ $FIX_COUNT -gt 0 ]; then
+        TITLE="# New Features & Bug Fixes"
+    elif [ $FEAT_COUNT -gt 0 ]; then
+        TITLE="# New Features"
+    elif [ $FIX_COUNT -gt 2 ]; then
+        TITLE="# Bug Fixes & Improvements"
+    elif [ $FIX_COUNT -gt 0 ]; then
+        TITLE="# Bug Fixes"
+    else
+        TITLE="# Release Updates"
+    fi
+
+    echo "$TITLE"
+    echo ""
+
     # Create temporary cliff.toml if not exists
     if [ ! -f "cliff.toml" ]; then
         cat > /tmp/cliff.toml <<'EOF'
@@ -324,6 +354,32 @@ generate_with_manual() {
         log_info "${YELLOW}No commits found between ${FROM_TAG} and ${TO_TAG}${NC}"
         exit 0
     fi
+
+    # Analyze commits to generate smart title
+    COMMITS_LOG=$(git log --pretty=format:"%s" "${FROM_TAG}..${TO_TAG}" 2>/dev/null || echo "")
+
+    # Count user-facing changes (exclude dev/ci/docs)
+    FEAT_COUNT=$(echo "$COMMITS_LOG" | grep -cE "^feat\((sensors|binary_sensor|config_flow|services|coordinator|api)\):" || true)
+    FIX_COUNT=$(echo "$COMMITS_LOG" | grep -cE "^fix\((sensors|binary_sensor|config_flow|services|coordinator|api|translations)\):" || true)
+    PERF_COUNT=$(echo "$COMMITS_LOG" | grep -cE "^perf\(" || true)
+
+    # Generate intelligent title based on changes
+    if [ $PERF_COUNT -gt 0 ]; then
+        echo "# Performance & Reliability Improvements"
+    elif [ $FEAT_COUNT -gt 2 ]; then
+        echo "# New Features & Enhancements"
+    elif [ $FEAT_COUNT -gt 0 ] && [ $FIX_COUNT -gt 0 ]; then
+        echo "# New Features & Bug Fixes"
+    elif [ $FEAT_COUNT -gt 0 ]; then
+        echo "# New Features"
+    elif [ $FIX_COUNT -gt 2 ]; then
+        echo "# Bug Fixes & Improvements"
+    elif [ $FIX_COUNT -gt 0 ]; then
+        echo "# Bug Fixes"
+    else
+        echo "# Release Updates"
+    fi
+    echo ""
 
     # Create temporary files for each category
     TMPDIR=$(mktemp -d)
@@ -382,42 +438,42 @@ generate_with_manual() {
 
     # Output grouped by category
     if [ -s "$FEAT_FILE" ]; then
-        echo "## 🎉 New Features"
+        echo "### 🎉 New Features"
         echo ""
         cat "$FEAT_FILE"
         echo ""
     fi
 
     if [ -s "$FIX_FILE" ]; then
-        echo "## 🐛 Bug Fixes"
+        echo "### 🐛 Bug Fixes"
         echo ""
         cat "$FIX_FILE"
         echo ""
     fi
 
     if [ -s "$DOCS_FILE" ]; then
-        echo "## 📚 Documentation"
+        echo "### 📚 Documentation"
         echo ""
         cat "$DOCS_FILE"
         echo ""
     fi
 
     if [ -s "$REFACTOR_FILE" ]; then
-        echo "## 🔧 Maintenance & Refactoring"
+        echo "### 🔧 Maintenance & Refactoring"
         echo ""
         cat "$REFACTOR_FILE"
         echo ""
     fi
 
     if [ -s "$TEST_FILE" ]; then
-        echo "## 🧪 Testing"
+        echo "### 🧪 Testing"
         echo ""
         cat "$TEST_FILE"
         echo ""
     fi
 
     if [ -s "$OTHER_FILE" ]; then
-        echo "## 📝 Other Changes"
+        echo "### 📝 Other Changes"
         echo ""
         cat "$OTHER_FILE"
         echo ""
@@ -525,10 +581,10 @@ else
     NOTES_BODY=$(cat "$TEMP_NOTES")
 fi
 
-# Generate final title for GitHub release
+# Generate final title for GitHub release (without version tag - HACS adds it automatically)
 if [ -n "$EXTRACTED_TITLE" ]; then
-    # AI provided a title, prepend version tag
-    RELEASE_TITLE="$TO_TAG - $EXTRACTED_TITLE"
+    # Use the extracted title from release notes (no version prefix)
+    RELEASE_TITLE="$EXTRACTED_TITLE"
 else
     # Fallback: Keep current title if it looks meaningful
     # (more than just the tag itself)
@@ -541,15 +597,15 @@ else
         DOCS_COUNT=$(echo "$NOTES_BODY" | grep -c "^### 📚 Documentation" || true)
 
         if [ "$FEAT_COUNT" -gt 0 ] && [ "$FIX_COUNT" -gt 0 ]; then
-            RELEASE_TITLE="$TO_TAG - New Features & Bug Fixes"
+            RELEASE_TITLE="New Features & Bug Fixes"
         elif [ "$FEAT_COUNT" -gt 0 ]; then
-            RELEASE_TITLE="$TO_TAG - New Features"
+            RELEASE_TITLE="New Features"
         elif [ "$FIX_COUNT" -gt 0 ]; then
-            RELEASE_TITLE="$TO_TAG - Bug Fixes"
+            RELEASE_TITLE="Bug Fixes"
         elif [ "$DOCS_COUNT" -gt 0 ]; then
-            RELEASE_TITLE="$TO_TAG - Documentation Updates"
+            RELEASE_TITLE="Documentation Updates"
         else
-            RELEASE_TITLE="$TO_TAG - Updates"
+            RELEASE_TITLE="Release Updates"
         fi
     fi
 fi

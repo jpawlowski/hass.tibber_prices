@@ -195,6 +195,13 @@ jobs:
           # git-cliff will handle filtering via cliff.toml
           USE_AI=false ./scripts/generate-release-notes "${FROM_TAG}" "${TO_TAG}" > release-notes.md
 
+          # Extract title from release notes (first line starting with "# ")
+          TITLE=$(head -n 1 release-notes.md | sed 's/^# //')
+          if [ -z "$TITLE" ]; then
+            TITLE="Release Updates"
+          fi
+          echo "title=$TITLE" >> $GITHUB_OUTPUT
+
           # Append version warning if present
           WARNING="${{ steps.version_check.outputs.warning }}"
           if [ -n "$WARNING" ]; then
@@ -218,34 +225,10 @@ jobs:
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "${{ steps.version_check.outputs.warning }}" >> $GITHUB_STEP_SUMMARY
 
-      - name: Generate release title
-        id: release_title
-        run: |
-          TAG_VERSION="${GITHUB_REF#refs/tags/}"
-          FROM_TAG="${{ steps.previoustag.outputs.previous_tag }}"
-
-          # Extract main feature types from commits
-          FEAT_COUNT=$(git log ${FROM_TAG}..HEAD --format="%s" --no-merges | grep -cE "^feat(\(.+\))?:" || true)
-          FIX_COUNT=$(git log ${FROM_TAG}..HEAD --format="%s" --no-merges | grep -cE "^fix(\(.+\))?:" || true)
-
-          # Build title based on what changed
-          if [ $FEAT_COUNT -gt 0 ] && [ $FIX_COUNT -gt 0 ]; then
-            TITLE="$TAG_VERSION - New Features & Bug Fixes"
-          elif [ $FEAT_COUNT -gt 0 ]; then
-            TITLE="$TAG_VERSION - New Features"
-          elif [ $FIX_COUNT -gt 0 ]; then
-            TITLE="$TAG_VERSION - Bug Fixes"
-          else
-            TITLE="$TAG_VERSION"
-          fi
-
-          echo "title=$TITLE" >> $GITHUB_OUTPUT
-          echo "Release title: $TITLE"
-
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          name: ${{ steps.release_title.outputs.title }}
+          name: ${{ steps.release_notes.outputs.title }}
           body: ${{ steps.release_notes.outputs.notes }}
           draft: false
           prerelease: false
