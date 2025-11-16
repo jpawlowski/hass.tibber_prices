@@ -67,8 +67,21 @@ def _add_cached_trend_attributes(attributes: dict, key: str, cached_data: dict) 
     if key.startswith("price_trend_") and cached_data.get("trend_attributes"):
         attributes.update(cached_data["trend_attributes"])
     elif key == "current_price_trend" and cached_data.get("current_trend_attributes"):
+        # Add timestamp of current interval FIRST (when calculation was made)
+        now = dt_util.now()
+        minute = (now.minute // 15) * 15
+        current_interval_timestamp = now.replace(minute=minute, second=0, microsecond=0)
+        attributes["timestamp"] = current_interval_timestamp.isoformat()
+        # Then add other cached attributes
         attributes.update(cached_data["current_trend_attributes"])
     elif key == "next_price_trend_change" and cached_data.get("trend_change_attributes"):
+        # Add timestamp of current interval FIRST (when calculation was made)
+        # State contains the timestamp of the trend change itself
+        now = dt_util.now()
+        minute = (now.minute // 15) * 15
+        current_interval_timestamp = now.replace(minute=minute, second=0, microsecond=0)
+        attributes["timestamp"] = current_interval_timestamp.isoformat()
+        # Then add other cached attributes
         attributes.update(cached_data["trend_change_attributes"])
 
 

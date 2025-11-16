@@ -176,6 +176,9 @@ TIME_SENSITIVE_ENTITY_KEYS = frozenset(
         "next_avg_6h",
         "next_avg_8h",
         "next_avg_12h",
+        # Current/future price trend sensors (time-sensitive, update at interval boundaries)
+        "current_price_trend",
+        "next_price_trend_change",
         # Price trend sensors
         "price_trend_1h",
         "price_trend_2h",
