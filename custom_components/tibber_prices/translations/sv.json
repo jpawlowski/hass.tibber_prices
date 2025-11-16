@@ -155,8 +155,8 @@
                 "submit": "Slutför konfigurationen"
             },
             "volatility": {
-                "title": "Prisvolatilitet Trösklar",
-                "description": "{step_progress}\n\nKonfigurera trösklar för volatilitetsklassificering. Volatilitet mäter relativa prisvariationer med hjälp av variationskoefficienten (VK = standardavvikelse / medelvärde × 100%). Dessa trösklar är procentvärden som fungerar på alla prisnivåer och används av volatilitetssensorer och periodfilter.",
+                "title": "Volatilitet Trösklar",
+                "description": "{step_progress}\n\nKonfigurera trösklar för volatilitetsklassificering. Volatilitet mäter relativ prisvariation med hjälp av variationskoefficienten (VK = standardavvikelse / medelvärde × 100%). Dessa trösklar är procentvärden som fungerar över alla prisnivåer.\n\nAnvänds av:\n• Volatilitetssensorer (klassificering)\n• Trendsensorer (adaptiv tröskel justering: <måttlig = mer känslig, ≥hög = mindre känslig)",
                 "data": {
                     "volatility_threshold_moderate": "Måttlig tröskel (VK ≥ denna %, t.ex. 15)",
                     "volatility_threshold_high": "Hög tröskel (VK ≥ denna %, t.ex. 30)",
@@ -464,6 +464,17 @@
                     "falling": "Fallande",
                     "stable": "Stabil"
                 }
+            },
+            "current_price_trend": {
+                "name": "Nuvarande pristrend",
+                "state": {
+                    "rising": "Stigande",
+                    "falling": "Fallande",
+                    "stable": "Stabil"
+                }
+            },
+            "next_price_trend_change": {
+                "name": "Nästa trendförändring"
             },
             "daily_rating": {
                 "name": "Daglig prisvärdering"

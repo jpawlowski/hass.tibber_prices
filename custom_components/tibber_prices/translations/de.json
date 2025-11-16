@@ -156,7 +156,7 @@
             },
             "volatility": {
                 "title": "Volatilität Schwellenwerte",
-                "description": "{step_progress}\n\nKonfiguriere Schwellenwerte für die Volatilitätsklassifizierung. Volatilität misst relative Preisschwankungen anhand des Variationskoeffizienten (VK = Standardabweichung / Durchschnitt × 100%). Diese Schwellenwerte sind Prozentwerte, die für alle Preisniveaus funktionieren und von Volatilitätssensoren sowie Zeitraumfiltern verwendet werden.",
+                "description": "{step_progress}\n\nKonfiguriere Schwellenwerte für die Volatilitätsklassifizierung. Volatilität misst relative Preisschwankungen anhand des Variationskoeffizienten (VK = Standardabweichung / Durchschnitt × 100%). Diese Schwellenwerte sind Prozentwerte, die für alle Preisniveaus funktionieren.\n\nVerwendet von:\n• Volatilitätssensoren (Klassifizierung)\n• Trend-Sensoren (adaptive Schwellenanpassung: <moderat = empfindlicher, ≥hoch = weniger empfindlich)",
                 "data": {
                     "volatility_threshold_moderate": "Moderate Schwelle (VK ≥ dieser %, z.B. 15)",
                     "volatility_threshold_high": "Hohe Schwelle (VK ≥ dieser %, z.B. 30)",
@@ -468,6 +468,17 @@
                     "falling": "Fallend",
                     "stable": "Stabil"
                 }
+            },
+            "current_price_trend": {
+                "name": "Aktueller Preistrend",
+                "state": {
+                    "rising": "Steigend",
+                    "falling": "Fallend",
+                    "stable": "Stabil"
+                }
+            },
+            "next_price_trend_change": {
+                "name": "Nächste Trendänderung"
             },
             "daily_rating": {
                 "name": "Tägliche Preisbewertung"

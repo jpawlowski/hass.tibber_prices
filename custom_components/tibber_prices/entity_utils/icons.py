@@ -84,6 +84,11 @@ def get_dynamic_icon(
 
 def get_trend_icon(key: str, value: Any) -> str | None:
     """Get icon for trend sensors."""
+    # Handle next_price_trend_change TIMESTAMP sensor differently
+    # (icon based on attributes, not value which is a timestamp)
+    if key == "next_price_trend_change":
+        return None  # Will be handled by sensor's icon property using attributes
+
     if not key.startswith("price_trend_") or not isinstance(value, str):
         return None
 

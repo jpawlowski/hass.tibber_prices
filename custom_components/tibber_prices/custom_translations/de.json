@@ -250,6 +250,16 @@
             "long_description": "Vergleicht aktuellen Intervallpreis mit Durchschnitt der nächsten 12 Stunden (48 Intervalle). Steigend wenn Zukunft >5% höher, fallend wenn >5% niedriger, sonst stabil.",
             "usage_tips": "Relative Optimierung: Langfristige strategische Entscheidungen. 'fallend' = deutlich bessere Preise kommen heute Nacht/morgen. Findet optimales Timing in jeder Marktsituation. Am besten kombiniert mit avg-Sensor Preisobergrenze."
         },
+        "current_price_trend": {
+            "description": "Aktuelle Preistrend-Richtung und wie lange sie anhält",
+            "long_description": "Zeigt den aktuellen Preistrend (steigend/fallend/stabil) durch Kombination von historischem Momentum (gewichteter 1h-Rückblick) mit Zukunftsausblick. Erkennt laufende Trends früher als reine Zukunftsanalyse. Nutzt ±3% Momentum-Schwelle und volatilitätsabhängigen Zukunftsvergleich. Berechnet dynamisch bis zur nächsten Trendänderung (oder 3h Standard, falls keine Änderung in 24h). Der Status zeigt die aktuelle Richtung, Attribute zeigen, wann sich der Trend ändert und was als Nächstes kommt.",
+            "usage_tips": "Status-Anzeige: Dashboard-Sichtbarkeit von 'was passiert jetzt bis wann'. Perfekt synchronisiert mit next_price_trend_change. Beispiel: Badge mit 'Steigend für 2,5h' oder 'Fallend bis 16:45'. Besser als Zeitfenster-Sensoren, weil es versteht, dass du dich BEREITS in einem Trend befindest, nicht nur zukünftige Änderungen vorhersagt. Nutze für schnelle visuelle Übersicht, nicht für Automations-Trigger."
+        },
+        "next_price_trend_change": {
+            "description": "Wann die nächste bedeutende Preistrend-Änderung eintreten wird",
+            "long_description": "Scannt die nächsten 24 Stunden (96 Intervalle), um zu finden, wann sich der Preistrend (steigend/fallend/stabil) vom aktuellen Momentum ändern wird. Bestimmt zuerst den aktuellen Trend mit gewichtetem 1h-Rückblick (erkennt laufende Trends), dann findet es die Umkehr. Verwendet volatilitätsadaptive Schwellwerte (3% Momentum-Erkennung, marktangepasster Zukunftsvergleich). Gibt den Zeitstempel zurück, wann die Änderung erwartet wird.",
+            "usage_tips": "Ereignisbasierte Automation: Aktionen WENN Trend wechselt auslösen, nicht IN X Stunden. Beispiel: 'E-Auto laden wenn nächste Trendänderung fallende Preise zeigt' oder 'Spülmaschine vor Preisanstieg starten'. Ergänzt Zeitfenster-Sensoren (price_trend_Xh), die beantworten 'WERDEN Preise in X Stunden höher sein?'"
+        },
         "daily_rating": {
             "description": "Wie sich die heutigen Preise mit historischen Daten vergleichen",
             "long_description": "Zeigt, wie sich die heutigen Preise im Vergleich zu historischen Preisdaten als Prozentsatz verhält",

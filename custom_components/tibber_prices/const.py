@@ -67,8 +67,8 @@ DEFAULT_BEST_PRICE_MIN_PERIOD_LENGTH = 60  # 60 minutes minimum period length fo
 DEFAULT_PEAK_PRICE_MIN_PERIOD_LENGTH = 30  # 30 minutes minimum period length for peak price (user-facing, minutes)
 DEFAULT_PRICE_RATING_THRESHOLD_LOW = -10  # Default rating threshold low percentage
 DEFAULT_PRICE_RATING_THRESHOLD_HIGH = 10  # Default rating threshold high percentage
-DEFAULT_PRICE_TREND_THRESHOLD_RISING = 5  # Default trend threshold for rising prices (%)
-DEFAULT_PRICE_TREND_THRESHOLD_FALLING = -5  # Default trend threshold for falling prices (%, negative value)
+DEFAULT_PRICE_TREND_THRESHOLD_RISING = 3  # Default trend threshold for rising prices (%)
+DEFAULT_PRICE_TREND_THRESHOLD_FALLING = -3  # Default trend threshold for falling prices (%, negative value)
 # Default volatility thresholds (relative values using coefficient of variation)
 # Coefficient of variation = (standard_deviation / mean) * 100%
 # These thresholds are unitless and work across different price levels

@@ -540,6 +540,28 @@ FUTURE_AVG_SENSORS = (
 )
 
 FUTURE_TREND_SENSORS = (
+    # Current trend sensor (what is the trend right now, valid until next change?)
+    SensorEntityDescription(
+        key="current_price_trend",
+        translation_key="current_price_trend",
+        name="Current Price Trend",
+        icon="mdi:trending-up",  # Dynamic: trending-up/trending-down/trending-neutral based on current trend
+        device_class=SensorDeviceClass.ENUM,
+        state_class=None,  # Enum values: no statistics
+        options=["rising", "falling", "stable"],
+        entity_registry_enabled_default=True,
+    ),
+    # Next trend change sensor (when will trend change?)
+    SensorEntityDescription(
+        key="next_price_trend_change",
+        translation_key="next_price_trend_change",
+        name="Next Price Trend Change",
+        icon="mdi:clock-alert",  # Dynamic: trending-up/trending-down/trending-neutral based on direction
+        device_class=SensorDeviceClass.TIMESTAMP,
+        state_class=None,  # Timestamp: no statistics
+        entity_registry_enabled_default=True,
+    ),
+    # Price trend forecast sensors (will prices be higher/lower in X hours?)
     # Default enabled: 1h-5h
     SensorEntityDescription(
         key="price_trend_1h",

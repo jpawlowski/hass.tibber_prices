@@ -23,11 +23,15 @@ from custom_components.tibber_prices.const import (
     CONF_PRICE_RATING_THRESHOLD_LOW,
     CONF_PRICE_TREND_THRESHOLD_FALLING,
     CONF_PRICE_TREND_THRESHOLD_RISING,
+    CONF_VOLATILITY_THRESHOLD_HIGH,
+    CONF_VOLATILITY_THRESHOLD_MODERATE,
     DEFAULT_EXTENDED_DESCRIPTIONS,
     DEFAULT_PRICE_RATING_THRESHOLD_HIGH,
     DEFAULT_PRICE_RATING_THRESHOLD_LOW,
     DEFAULT_PRICE_TREND_THRESHOLD_FALLING,
     DEFAULT_PRICE_TREND_THRESHOLD_RISING,
+    DEFAULT_VOLATILITY_THRESHOLD_HIGH,
+    DEFAULT_VOLATILITY_THRESHOLD_MODERATE,
     DOMAIN,
     async_get_entity_description,
     format_price_unit_major,
@@ -106,6 +110,11 @@ class TibberPricesSensor(TibberPricesEntity, SensorEntity):
         self._minute_update_remove_listener: Callable | None = None
         self._trend_attributes: dict[str, Any] = {}  # Sensor-specific trend attributes
         self._cached_trend_value: str | None = None  # Cache for trend state
+        self._current_trend_attributes: dict[str, Any] | None = None  # Current trend attributes
+        self._trend_change_attributes: dict[str, Any] | None = None  # Next trend change attributes
+        # Centralized trend calculation cache (calculated once per coordinator update)
+        self._trend_calculation_cache: dict[str, Any] | None = None
+        self._trend_calculation_timestamp: datetime | None = None
 
     async def async_added_to_hass(self) -> None:
         """When entity is added to hass."""
@@ -259,6 +268,9 @@ class TibberPricesSensor(TibberPricesEntity, SensorEntity):
             "next_avg_6h": lambda: self._get_next_avg_n_hours_value(hours=6),
             "next_avg_8h": lambda: self._get_next_avg_n_hours_value(hours=8),
             "next_avg_12h": lambda: self._get_next_avg_n_hours_value(hours=12),
+            # Current and next trend change sensors
+            "current_price_trend": self._get_current_trend_value,
+            "next_price_trend_change": self._get_next_trend_change_value,
             # Price trend sensors
             "price_trend_1h": lambda: self._get_price_trend_value(hours=1),
             "price_trend_2h": lambda: self._get_price_trend_value(hours=2),
@@ -852,9 +864,34 @@ class TibberPricesSensor(TibberPricesEntity, SensorEntity):
             DEFAULT_PRICE_TREND_THRESHOLD_FALLING,
         )
 
-        # Calculate trend with configured thresholds
+        # Prepare data for volatility-adaptive thresholds
+        price_info = self.coordinator.data.get("priceInfo", {})
+        today_prices = price_info.get("today", [])
+        tomorrow_prices = price_info.get("tomorrow", [])
+        all_intervals = today_prices + tomorrow_prices
+        lookahead_intervals = hours * 4  # Convert hours to 15-minute intervals
+
+        # Get user-configured volatility thresholds (used for adaptive trend detection)
+        volatility_threshold_moderate = self.coordinator.config_entry.options.get(
+            CONF_VOLATILITY_THRESHOLD_MODERATE,
+            DEFAULT_VOLATILITY_THRESHOLD_MODERATE,
+        )
+        volatility_threshold_high = self.coordinator.config_entry.options.get(
+            CONF_VOLATILITY_THRESHOLD_HIGH,
+            DEFAULT_VOLATILITY_THRESHOLD_HIGH,
+        )
+
+        # Calculate trend with volatility-adaptive thresholds
         trend_state, diff_pct = calculate_price_trend(
-            current_interval_price, future_avg, threshold_rising=threshold_rising, threshold_falling=threshold_falling
+            current_interval_price,
+            future_avg,
+            threshold_rising=threshold_rising,
+            threshold_falling=threshold_falling,
+            volatility_adjustment=True,  # Always enabled
+            lookahead_intervals=lookahead_intervals,
+            all_intervals=all_intervals,
+            volatility_threshold_moderate=volatility_threshold_moderate,
+            volatility_threshold_high=volatility_threshold_high,
         )
 
         # Determine icon color based on trend state
@@ -941,6 +978,407 @@ class TibberPricesSensor(TibberPricesEntity, SensorEntity):
             return sum(later_prices) / len(later_prices)
 
         return None
+
+    def _get_thresholds_config(self) -> dict[str, float]:
+        """Get configured thresholds for trend calculation."""
+        return {
+            "rising": self.coordinator.config_entry.options.get(
+                CONF_PRICE_TREND_THRESHOLD_RISING, DEFAULT_PRICE_TREND_THRESHOLD_RISING
+            ),
+            "falling": self.coordinator.config_entry.options.get(
+                CONF_PRICE_TREND_THRESHOLD_FALLING, DEFAULT_PRICE_TREND_THRESHOLD_FALLING
+            ),
+            "moderate": self.coordinator.config_entry.options.get(
+                CONF_VOLATILITY_THRESHOLD_MODERATE, DEFAULT_VOLATILITY_THRESHOLD_MODERATE
+            ),
+            "high": self.coordinator.config_entry.options.get(
+                CONF_VOLATILITY_THRESHOLD_HIGH, DEFAULT_VOLATILITY_THRESHOLD_HIGH
+            ),
+        }
+
+    def _calculate_momentum(self, current_price: float, all_intervals: list, current_index: int) -> str:
+        """
+        Calculate price momentum from weighted trailing average (last 1h).
+
+        Args:
+            current_price: Current interval price
+            all_intervals: All price intervals
+            current_index: Index of current interval
+
+        Returns:
+            Momentum direction: "rising", "falling", or "stable"
+
+        """
+        # Look back 1 hour (4 intervals) for quick reaction
+        lookback_intervals = 4
+        min_intervals = 2  # Need at least 30 minutes of history
+
+        trailing_intervals = all_intervals[max(0, current_index - lookback_intervals) : current_index]
+
+        if len(trailing_intervals) < min_intervals:
+            return "stable"  # Not enough history
+
+        # Weighted average: newer intervals count more
+        # Weights: [0.5, 0.75, 1.0, 1.25] for 4 intervals (grows linearly)
+        weights = [0.5 + 0.25 * i for i in range(len(trailing_intervals))]
+        trailing_prices = [float(interval["total"]) for interval in trailing_intervals if "total" in interval]
+
+        if not trailing_prices or len(trailing_prices) != len(weights):
+            return "stable"
+
+        weighted_sum = sum(price * weight for price, weight in zip(trailing_prices, weights, strict=True))
+        weighted_avg = weighted_sum / sum(weights)
+
+        # Calculate momentum with 3% threshold
+        momentum_threshold = 0.03
+        diff = (current_price - weighted_avg) / weighted_avg
+
+        if diff > momentum_threshold:
+            return "rising"
+        if diff < -momentum_threshold:
+            return "falling"
+        return "stable"
+
+    def _combine_momentum_with_future(
+        self,
+        *,
+        current_momentum: str,
+        current_price: float,
+        future_avg: float,
+        context: dict,
+    ) -> str:
+        """
+        Combine momentum analysis with future outlook to determine final trend.
+
+        Args:
+            current_momentum: Current momentum direction (rising/falling/stable)
+            current_price: Current interval price
+            future_avg: Average price in future window
+            context: Dict with all_intervals, current_index, lookahead_intervals, thresholds
+
+        Returns:
+            Final trend direction: "rising", "falling", or "stable"
+
+        """
+        if current_momentum == "rising":
+            # We're in uptrend - does it continue?
+            return "rising" if future_avg >= current_price * 0.98 else "falling"
+
+        if current_momentum == "falling":
+            # We're in downtrend - does it continue?
+            return "falling" if future_avg <= current_price * 1.02 else "rising"
+
+        # current_momentum == "stable" - what's coming?
+        all_intervals = context["all_intervals"]
+        current_index = context["current_index"]
+        lookahead_intervals = context["lookahead_intervals"]
+        thresholds = context["thresholds"]
+
+        lookahead_for_volatility = all_intervals[current_index : current_index + lookahead_intervals]
+        trend_state, _ = calculate_price_trend(
+            current_price,
+            future_avg,
+            threshold_rising=thresholds["rising"],
+            threshold_falling=thresholds["falling"],
+            volatility_adjustment=True,
+            lookahead_intervals=lookahead_intervals,
+            all_intervals=lookahead_for_volatility,
+            volatility_threshold_moderate=thresholds["moderate"],
+            volatility_threshold_high=thresholds["high"],
+        )
+        return trend_state
+
+    def _calculate_standard_trend(
+        self,
+        all_intervals: list,
+        current_index: int,
+        current_interval: dict,
+        thresholds: dict,
+    ) -> str:
+        """Calculate standard 3h trend as baseline."""
+        min_intervals_for_trend = 4
+        standard_lookahead = 12  # 3 hours
+
+        standard_future_intervals = all_intervals[current_index + 1 : current_index + standard_lookahead + 1]
+
+        if len(standard_future_intervals) < min_intervals_for_trend:
+            return "stable"
+
+        standard_future_prices = [float(fi["total"]) for fi in standard_future_intervals if "total" in fi]
+        if not standard_future_prices:
+            return "stable"
+
+        standard_future_avg = sum(standard_future_prices) / len(standard_future_prices)
+        current_price = float(current_interval["total"])
+
+        standard_lookahead_volatility = all_intervals[current_index : current_index + standard_lookahead]
+        current_trend_3h, _ = calculate_price_trend(
+            current_price,
+            standard_future_avg,
+            threshold_rising=thresholds["rising"],
+            threshold_falling=thresholds["falling"],
+            volatility_adjustment=True,
+            lookahead_intervals=standard_lookahead,
+            all_intervals=standard_lookahead_volatility,
+            volatility_threshold_moderate=thresholds["moderate"],
+            volatility_threshold_high=thresholds["high"],
+        )
+
+        return current_trend_3h
+
+    def _calculate_trend_info(self) -> dict[str, Any] | None:
+        """
+        Centralized trend calculation for current_price_trend and next_price_trend_change sensors.
+
+        This method calculates all trend-related information in one place to avoid duplication
+        and ensure consistency between the two sensors. Results are cached per coordinator update.
+
+        Returns:
+            Dictionary with trend information for both sensors.
+
+        """
+        trend_cache_duration_seconds = 60  # Cache for 1 minute
+
+        # Check if we have a valid cache
+        now = dt_util.now()
+        if (
+            self._trend_calculation_cache is not None
+            and self._trend_calculation_timestamp is not None
+            and (now - self._trend_calculation_timestamp).total_seconds() < trend_cache_duration_seconds
+        ):
+            return self._trend_calculation_cache
+
+        # Validate coordinator data
+        if not self.coordinator.data:
+            return None
+
+        price_info = self.coordinator.data.get("priceInfo", {})
+        all_intervals = price_info.get("today", []) + price_info.get("tomorrow", [])
+        current_interval = find_price_data_for_interval(price_info, now)
+
+        if not all_intervals or not current_interval:
+            return None
+
+        current_interval_start = dt_util.parse_datetime(current_interval["startsAt"])
+        current_interval_start = dt_util.as_local(current_interval_start) if current_interval_start else None
+
+        if not current_interval_start:
+            return None
+
+        current_index = self._find_current_interval_index(all_intervals, current_interval_start)
+        if current_index is None:
+            return None
+
+        # Get configured thresholds
+        thresholds = self._get_thresholds_config()
+
+        # Step 1: Calculate current momentum from trailing data (1h weighted)
+        current_price = float(current_interval["total"])
+        current_momentum = self._calculate_momentum(current_price, all_intervals, current_index)
+
+        # Step 2: Calculate 3h baseline trend for comparison
+        current_trend_3h = self._calculate_standard_trend(all_intervals, current_index, current_interval, thresholds)
+
+        # Step 3: Find next trend change from current momentum
+        scan_params = {
+            "current_index": current_index,
+            "current_trend_state": current_momentum,  # Use momentum, not 3h baseline
+            "current_interval": current_interval,
+            "now": now,
+        }
+
+        next_change_time = self._scan_for_trend_change(all_intervals, scan_params, thresholds)
+
+        # Step 4: Calculate final trend combining momentum + future outlook
+        min_intervals_for_trend = 4
+        standard_lookahead = 12  # 3 hours
+
+        if next_change_time:
+            time_diff = next_change_time - now
+            intervals_until_change = int(time_diff.total_seconds() / 900)  # 900s = 15min
+            lookahead_intervals = max(min_intervals_for_trend, intervals_until_change)
+        else:
+            lookahead_intervals = standard_lookahead
+
+        # Get future data
+        future_intervals = all_intervals[current_index + 1 : current_index + lookahead_intervals + 1]
+        future_prices = [float(fi["total"]) for fi in future_intervals if "total" in fi]
+
+        # Combine momentum + future outlook
+        if len(future_intervals) >= min_intervals_for_trend and future_prices:
+            future_avg = sum(future_prices) / len(future_prices)
+            current_trend_state = self._combine_momentum_with_future(
+                current_momentum=current_momentum,
+                current_price=current_price,
+                future_avg=future_avg,
+                context={
+                    "all_intervals": all_intervals,
+                    "current_index": current_index,
+                    "lookahead_intervals": lookahead_intervals,
+                    "thresholds": thresholds,
+                },
+            )
+        else:
+            # Not enough future data - use 3h baseline as fallback
+            current_trend_state = current_trend_3h
+
+        # Build result dictionary
+        next_direction = self._trend_change_attributes.get("direction") if self._trend_change_attributes else None
+
+        result = {
+            "current_trend_state": current_trend_state,
+            "next_change_time": next_change_time,
+            "next_change_direction": next_direction,
+            "valid_until": next_change_time.isoformat() if next_change_time else None,
+            "duration_hours": None,
+            "duration_minutes": None,
+            "trend_change_attributes": self._trend_change_attributes,
+        }
+
+        if next_change_time:
+            time_diff = next_change_time - now
+            result["duration_hours"] = round(time_diff.total_seconds() / 3600, 1)
+            result["duration_minutes"] = int(time_diff.total_seconds() / 60)
+
+        # Cache the result
+        self._trend_calculation_cache = result
+        self._trend_calculation_timestamp = now
+
+        return result
+
+    def _get_current_trend_value(self) -> str | None:
+        """
+        Get the current price trend that is valid until the next change.
+
+        Uses centralized _calculate_trend_info() for consistency with next_price_trend_change sensor.
+
+        Returns:
+            Current trend state: "rising", "falling", or "stable"
+
+        """
+        trend_info = self._calculate_trend_info()
+
+        if not trend_info:
+            return None
+
+        # Set attributes for this sensor
+        self._current_trend_attributes = {
+            "valid_until": trend_info["valid_until"],
+            "next_direction": trend_info["next_change_direction"],
+            "duration_hours": trend_info["duration_hours"],
+            "duration_minutes": trend_info["duration_minutes"],
+        }
+
+        return trend_info["current_trend_state"]
+
+    def _find_current_interval_index(self, all_intervals: list, current_interval_start: datetime) -> int | None:
+        """Find the index of current interval in all_intervals list."""
+        for idx, interval in enumerate(all_intervals):
+            interval_start = dt_util.parse_datetime(interval["startsAt"])
+            if interval_start and dt_util.as_local(interval_start) == current_interval_start:
+                return idx
+        return None
+
+    def _scan_for_trend_change(
+        self,
+        all_intervals: list,
+        scan_params: dict,
+        thresholds: dict,
+    ) -> datetime | None:
+        """
+        Scan future intervals for trend change.
+
+        Args:
+            all_intervals: List of all price intervals
+            scan_params: Dict with current_index, current_trend_state, current_interval, now
+            thresholds: Dict with rising, falling, moderate, high threshold values
+
+        """
+        intervals_in_3h = 12  # 3 hours = 12 intervals @ 15min each
+        current_index = scan_params["current_index"]
+        current_trend_state = scan_params["current_trend_state"]
+        current_interval = scan_params["current_interval"]
+        now = scan_params["now"]
+
+        for i in range(current_index + 1, min(current_index + 97, len(all_intervals))):
+            interval = all_intervals[i]
+            interval_start = dt_util.parse_datetime(interval["startsAt"])
+            if not interval_start:
+                continue
+            interval_start = dt_util.as_local(interval_start)
+
+            # Skip if this interval is in the past
+            if interval_start <= now:
+                continue
+
+            # Calculate trend at this future interval
+            future_intervals = all_intervals[i + 1 : i + intervals_in_3h + 1]
+            if len(future_intervals) < intervals_in_3h:
+                break  # Not enough data to calculate trend
+
+            future_prices = [float(fi["total"]) for fi in future_intervals if "total" in fi]
+            if not future_prices:
+                continue
+
+            future_avg = sum(future_prices) / len(future_prices)
+            current_price = float(interval["total"])
+
+            # Calculate trend at this future point
+            lookahead_for_volatility = all_intervals[i : i + intervals_in_3h]
+            trend_state, _ = calculate_price_trend(
+                current_price,
+                future_avg,
+                threshold_rising=thresholds["rising"],
+                threshold_falling=thresholds["falling"],
+                volatility_adjustment=True,
+                lookahead_intervals=intervals_in_3h,
+                all_intervals=lookahead_for_volatility,
+                volatility_threshold_moderate=thresholds["moderate"],
+                volatility_threshold_high=thresholds["high"],
+            )
+
+            # Check if trend changed from current trend state
+            # We want to find ANY change from current state, including changes to/from stable
+            if trend_state != current_trend_state:
+                # Store details for attributes
+                time_diff = interval_start - now
+                hours_until = time_diff.total_seconds() / 3600
+                minutes_until = int(time_diff.total_seconds() / 60)
+
+                self._trend_change_attributes = {
+                    "timestamp": interval_start.isoformat(),
+                    "direction": trend_state,
+                    "from_direction": current_trend_state,
+                    "current_price_now": round(float(current_interval["total"]) * 100, 2),
+                    "price_at_change": round(current_price * 100, 2),
+                    "avg_after_change": round(future_avg * 100, 2),
+                    "trend_diff_%": round((future_avg - current_price) / current_price * 100, 1),
+                    "hours_until_change": round(hours_until, 1),
+                    "minutes_until_change": minutes_until,
+                }
+                return interval_start
+
+        return None
+
+    def _get_next_trend_change_value(self) -> datetime | None:
+        """
+        Calculate when the next price trend change will occur.
+
+        Uses centralized _calculate_trend_info() for consistency with current_price_trend sensor.
+
+        Returns:
+            Timestamp of next trend change, or None if no change expected in next 24h
+
+        """
+        trend_info = self._calculate_trend_info()
+
+        if not trend_info:
+            return None
+
+        # Set attributes for this sensor
+        self._trend_change_attributes = trend_info["trend_change_attributes"]
+
+        return trend_info["next_change_time"]
 
     def _get_data_timestamp(self) -> datetime | None:
         """Get the latest data timestamp."""
@@ -1415,6 +1853,24 @@ class TibberPricesSensor(TibberPricesEntity, SensorEntity):
         key = self.entity_description.key
         value = self.native_value
 
+        # Icon mapping for trend directions
+        trend_icons = {
+            "rising": "mdi:trending-up",
+            "falling": "mdi:trending-down",
+            "stable": "mdi:trending-neutral",
+        }
+
+        # Special handling for next_price_trend_change: Icon based on direction attribute
+        if key == "next_price_trend_change" and self._trend_change_attributes:
+            direction = self._trend_change_attributes.get("direction")
+            if isinstance(direction, str):
+                return trend_icons.get(direction, "mdi:help-circle-outline")
+            return "mdi:help-circle-outline"
+
+        # Special handling for current_price_trend: Icon based on current state value
+        if key == "current_price_trend" and isinstance(value, str):
+            return trend_icons.get(value, "mdi:help-circle-outline")
+
         # Create callback for period active state check (used by timing sensors)
         period_is_active_callback = None
         if key.startswith("best_price_"):
@@ -1532,6 +1988,8 @@ class TibberPricesSensor(TibberPricesEntity, SensorEntity):
         # Prepare cached data that attribute builders might need
         cached_data = {
             "trend_attributes": getattr(self, "_trend_attributes", None),
+            "current_trend_attributes": getattr(self, "_current_trend_attributes", None),
+            "trend_change_attributes": getattr(self, "_trend_change_attributes", None),
             "volatility_attributes": getattr(self, "_last_volatility_attributes", None),
             "last_extreme_interval": getattr(self, "_last_extreme_interval", None),
             "last_price_level": getattr(self, "_last_price_level", None),

@@ -246,13 +246,23 @@
             "usage_tips": "Relatieve optimalisatie: Nachtplanning. 'dalend' betekent wachten tot de nacht loont (>5% goedkoper). Werkt het hele jaar door zonder handmatige drempelaanpassingen. Start wanneer 'stabiel' of 'stijgend'."
         },
         "price_trend_12h": {
-            "description": "Prijstrend voor de volgende 12 uur",
-            "long_description": "Vergelijkt huidige intervalprijs met gemiddelde van volgende 12 uur (48 intervallen). Stijgend als toekomst >5% hoger is, dalend als >5% lager, anders stabiel.",
-            "usage_tips": "Relatieve optimalisatie: Lange termijn strategische beslissingen. 'dalend' = aanzienlijk betere prijzen komen vannacht/morgen. Vindt optimale timing in elke marktconditie. Best gecombineerd met avg-sensor prijslimiet."
+            "description": "Prijstrend voor de komende 12 uur",
+            "long_description": "Vergelijkt huidige intervalprijs met gemiddelde van de komende 12 uur (48 intervallen). Stijgend als toekomst >5% hoger is, dalend als >5% lager, anders stabiel.",
+            "usage_tips": "Relatieve optimalisatie: Lange termijn strategische beslissingen. 'dalend' = aanzienlijk betere prijzen komen vanavond/morgen. Vindt optimale timing in elke marktsituatie. Het beste gecombineerd met prijslimiet van avg-sensor."
+        },
+        "current_price_trend": {
+            "description": "Huidige prijstrend-richting en hoe lang deze aanhoudt",
+            "long_description": "Toont de huidige prijstrend (stijgend/dalend/stabiel) door historisch momentum (gewogen 1u terugblik) te combineren met toekomstperspectief. Herkent lopende trends eerder dan alleen toekomstanalyse. Gebruikt ±3% momentum-drempel en volatiliteit-afhankelijke toekomstvergelijking. Berekent dynamisch tot de volgende trendwijziging (of 3u standaard als geen wijziging in 24u). De status toont de huidige richting, attributen tonen wanneer het verandert en wat er daarna komt.",
+            "usage_tips": "Statusweergave: Dashboard-zichtbaarheid van 'wat gebeurt er nu tot wanneer'. Perfect gesynchroniseerd met next_price_trend_change. Voorbeeld: Badge met 'Stijgend voor 2,5u' of 'Dalend tot 16:45'. Beter dan tijdvenster-sensoren omdat het begrijpt dat je REEDS in een trend zit, niet alleen toekomstige veranderingen voorspelt. Gebruik voor snelle visuele overview, niet voor automatiserings-triggers."
+        },
+        "next_price_trend_change": {
+            "description": "Wanneer de volgende significante prijstrendwijziging zal plaatsvinden",
+            "long_description": "Scant de komende 24 uur (96 intervallen) om te vinden wanneer de prijstrend (stijgend/dalend/stabiel) zal veranderen ten opzichte van het huidige momentum. Bepaalt eerst de huidige trend met gewogen 1u terugblik (herkent lopende trends), vindt dan de omkering. Gebruikt volatiliteit-adaptieve drempelwaarden (3% momentum-detectie, marktaangepaste toekomstvergelijking). Retourneert het tijdstempel wanneer de wijziging wordt verwacht.",
+            "usage_tips": "Gebeurtenisgestuurde automatisering: Trigger acties WANNEER trend wijzigt, niet OVER X uur. Voorbeeld: 'Laad EV wanneer volgende trendwijziging dalende prijzen toont' of 'Start vaatwasser voordat prijzen stijgen'. Vult tijdvenster-sensors aan (price_trend_Xh) die beantwoorden 'ZULLEN prijzen over X uur hoger zijn?'"
         },
         "daily_rating": {
             "description": "Hoe de prijzen van vandaag zich verhouden tot historische gegevens",
-            "long_description": "Toont hoe de prijzen van vandaag zich verhouden tot historische prijsgegevens als een percentage",
+            "long_description": "Toont hoe de prijzen van vandaag zich verhouden tot historische prijsgegevens als percentage",
             "usage_tips": "Een positief percentage betekent dat de prijzen van vandaag boven het gemiddelde liggen, negatief betekent onder het gemiddelde"
         },
         "monthly_rating": {

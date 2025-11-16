@@ -27,6 +27,21 @@ _LOGGER = logging.getLogger(__name__)
 MINUTES_PER_INTERVAL = 15
 MIN_PRICES_FOR_VOLATILITY = 2  # Minimum number of price values needed for volatility calculation
 
+# Volatility factors for adaptive trend thresholds
+# These multipliers adjust the base trend thresholds based on price volatility.
+# The volatility *ranges* are user-configurable (threshold_moderate, threshold_high),
+# but the *reaction strength* (factors) is fixed for predictable behavior.
+# This separation allows users to adjust volatility classification without
+# unexpectedly changing trend sensitivity.
+#
+# Factor selection based on lookahead volatility:
+# - Below moderate threshold (e.g., <15%): Use 0.6 → 40% more sensitive
+# - Moderate to high (e.g., 15-30%): Use 1.0 → as configured by user
+# - High and above (e.g., ≥30%): Use 1.4 → 40% less sensitive (filters noise)
+VOLATILITY_FACTOR_SENSITIVE = 0.6  # Low volatility → more responsive
+VOLATILITY_FACTOR_NORMAL = 1.0  # Moderate volatility → baseline
+VOLATILITY_FACTOR_INSENSITIVE = 1.4  # High volatility → noise filtering
+
 
 def calculate_volatility_level(
     prices: list[float],
@@ -485,41 +500,178 @@ def aggregate_period_ratings(
     return rating_level.lower() if rating_level else None, avg_diff
 
 
-def calculate_price_trend(
+def _calculate_lookahead_volatility_factor(
+    all_intervals: list[dict[str, Any]],
+    lookahead_intervals: int,
+    volatility_threshold_moderate: float,
+    volatility_threshold_high: float,
+) -> float:
+    """
+    Calculate volatility factor for adaptive thresholds based on lookahead period.
+
+    Uses the same volatility calculation (coefficient of variation) as volatility sensors,
+    ensuring consistent volatility interpretation across the integration.
+
+    Args:
+        all_intervals: List of price intervals (today + tomorrow)
+        lookahead_intervals: Number of intervals to analyze for volatility
+        volatility_threshold_moderate: Threshold for moderate volatility (%, e.g., 15)
+        volatility_threshold_high: Threshold for high volatility (%, e.g., 30)
+
+    Returns:
+        Multiplier for base threshold:
+        - 0.6 for low volatility (< moderate threshold)
+        - 1.0 for moderate volatility (moderate to high threshold)
+        - 1.4 for high volatility (>= high threshold)
+
+    """
+    if len(all_intervals) < lookahead_intervals:
+        _LOGGER.debug(
+            "Insufficient data for volatility calculation: need %d intervals, have %d - using factor 1.0",
+            lookahead_intervals,
+            len(all_intervals),
+        )
+        return 1.0  # Fallback: no adjustment
+
+    # Extract prices from next N intervals
+    lookahead_prices = [
+        float(interval["total"])
+        for interval in all_intervals[:lookahead_intervals]
+        if "total" in interval and interval["total"] is not None
+    ]
+
+    if not lookahead_prices:
+        _LOGGER.debug("No valid prices in lookahead period - using factor 1.0")
+        return 1.0
+
+    # Use the same volatility calculation as volatility sensors (coefficient of variation)
+    # This ensures consistent interpretation of volatility across the integration
+    volatility_level = calculate_volatility_level(
+        prices=lookahead_prices,
+        threshold_moderate=volatility_threshold_moderate,
+        threshold_high=volatility_threshold_high,
+        # Note: We don't use VERY_HIGH threshold here, only LOW/MODERATE/HIGH matter for factor
+    )
+
+    # Map volatility level to adjustment factor
+    if volatility_level == VOLATILITY_LOW:
+        factor = VOLATILITY_FACTOR_SENSITIVE  # 0.6 → More sensitive trend detection
+    elif volatility_level in (VOLATILITY_MODERATE, VOLATILITY_HIGH):
+        # Treat MODERATE and HIGH the same for trend detection
+        # HIGH volatility means noisy data, so we need less sensitive thresholds
+        factor = VOLATILITY_FACTOR_NORMAL if volatility_level == VOLATILITY_MODERATE else VOLATILITY_FACTOR_INSENSITIVE
+    else:  # VOLATILITY_VERY_HIGH (should not occur with our thresholds, but handle it)
+        factor = VOLATILITY_FACTOR_INSENSITIVE  # 1.4 → Less sensitive (filter noise)
+
+    _LOGGER.debug(
+        "Volatility analysis: intervals=%d, prices=%d, "
+        "level=%s, thresholds=(moderate:%.0f%%, high:%.0f%%), factor=%.2f",
+        lookahead_intervals,
+        len(lookahead_prices),
+        volatility_level,
+        volatility_threshold_moderate,
+        volatility_threshold_high,
+        factor,
+    )
+
+    return factor
+
+
+def calculate_price_trend(  # noqa: PLR0913 - All parameters are necessary for volatility-adaptive calculation
     current_interval_price: float,
     future_average: float,
-    threshold_rising: float = 5.0,
-    threshold_falling: float = -5.0,
+    threshold_rising: float = 3.0,
+    threshold_falling: float = -3.0,
+    *,
+    volatility_adjustment: bool = True,
+    lookahead_intervals: int | None = None,
+    all_intervals: list[dict[str, Any]] | None = None,
+    volatility_threshold_moderate: float = DEFAULT_VOLATILITY_THRESHOLD_MODERATE,
+    volatility_threshold_high: float = DEFAULT_VOLATILITY_THRESHOLD_HIGH,
 ) -> tuple[str, float]:
     """
     Calculate price trend by comparing current price with future average.
 
+    Supports volatility-adaptive thresholds: when enabled, the effective threshold
+    is adjusted based on price volatility in the lookahead period. This makes the
+    trend detection more sensitive during stable periods and less noisy during
+    volatile periods.
+
+    Uses the same volatility thresholds as configured for volatility sensors,
+    ensuring consistent volatility interpretation across the integration.
+
     Args:
         current_interval_price: Current interval price
         future_average: Average price of future intervals
-        threshold_rising: Percentage threshold for rising trend (positive, default 5%)
-        threshold_falling: Percentage threshold for falling trend (negative, default -5%)
+        threshold_rising: Base threshold for rising trend (%, positive, default 3%)
+        threshold_falling: Base threshold for falling trend (%, negative, default -3%)
+        volatility_adjustment: Enable volatility-adaptive thresholds (default True)
+        lookahead_intervals: Number of intervals in trend period for volatility calc
+        all_intervals: Price intervals (today + tomorrow) for volatility calculation
+        volatility_threshold_moderate: User-configured moderate volatility threshold (%)
+        volatility_threshold_high: User-configured high volatility threshold (%)
 
     Returns:
         Tuple of (trend_state, difference_percentage)
         trend_state: "rising" | "falling" | "stable"
         difference_percentage: % change from current to future ((future - current) / current * 100)
 
+    Note:
+        Volatility adjustment factor:
+        - Low volatility (<15%): factor 0.6 → more sensitive (e.g., 3% → 1.8%)
+        - Moderate volatility (15-35%): factor 1.0 → as configured (3%)
+        - High volatility (>35%): factor 1.4 → less sensitive (e.g., 3% → 4.2%)
+
     """
     if current_interval_price == 0:
         # Avoid division by zero
+        _LOGGER.debug("Current price is zero - returning stable trend")
         return "stable", 0.0
+
+    # Apply volatility adjustment if enabled and data available
+    effective_rising = threshold_rising
+    effective_falling = threshold_falling
+    volatility_factor = 1.0
+
+    if volatility_adjustment and lookahead_intervals and all_intervals:
+        volatility_factor = _calculate_lookahead_volatility_factor(
+            all_intervals, lookahead_intervals, volatility_threshold_moderate, volatility_threshold_high
+        )
+        effective_rising = threshold_rising * volatility_factor
+        effective_falling = threshold_falling * volatility_factor
+
+        _LOGGER.debug(
+            "Trend threshold adjustment: base_rising=%.1f%%, base_falling=%.1f%%, "
+            "lookahead_intervals=%d, volatility_factor=%.2f, "
+            "effective_rising=%.1f%%, effective_falling=%.1f%%",
+            threshold_rising,
+            threshold_falling,
+            lookahead_intervals,
+            volatility_factor,
+            effective_rising,
+            effective_falling,
+        )
 
     # Calculate percentage difference from current to future
     diff_pct = ((future_average - current_interval_price) / current_interval_price) * 100
 
-    # Determine trend based on thresholds
-    # threshold_falling is negative, so we compare with it directly
-    if diff_pct > threshold_rising:
+    # Determine trend based on effective thresholds
+    if diff_pct >= effective_rising:
         trend = "rising"
-    elif diff_pct < threshold_falling:
+    elif diff_pct <= effective_falling:
         trend = "falling"
     else:
         trend = "stable"
+
+    _LOGGER.debug(
+        "Trend calculation: current=%.4f, future_avg=%.4f, diff=%.1f%%, "
+        "threshold_rising=%.1f%%, threshold_falling=%.1f%%, trend=%s",
+        current_interval_price,
+        future_average,
+        diff_pct,
+        effective_rising,
+        effective_falling,
+        trend,
+    )
 
     return trend, diff_pct

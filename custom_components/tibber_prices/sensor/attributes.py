@@ -62,6 +62,16 @@ def _add_timing_or_volatility_attributes(
         add_period_timing_attributes(attributes=attributes, key=key, state_value=native_value)
 
 
+def _add_cached_trend_attributes(attributes: dict, key: str, cached_data: dict) -> None:
+    """Add cached trend attributes if available."""
+    if key.startswith("price_trend_") and cached_data.get("trend_attributes"):
+        attributes.update(cached_data["trend_attributes"])
+    elif key == "current_price_trend" and cached_data.get("current_trend_attributes"):
+        attributes.update(cached_data["current_trend_attributes"])
+    elif key == "next_price_trend_change" and cached_data.get("trend_change_attributes"):
+        attributes.update(cached_data["trend_change_attributes"])
+
+
 def build_sensor_attributes(
     key: str,
     coordinator: TibberPricesDataUpdateCoordinator,
@@ -88,9 +98,8 @@ def build_sensor_attributes(
     try:
         attributes: dict[str, Any] = {}
 
-        # For trend sensors, use the cached _trend_attributes
-        if key.startswith("price_trend_") and cached_data.get("trend_attributes"):
-            attributes.update(cached_data["trend_attributes"])
+        # For trend sensors, use cached attributes
+        _add_cached_trend_attributes(attributes, key, cached_data)
 
         # Group sensors by type and delegate to specific handlers
         if key in [

@@ -155,8 +155,8 @@
                 "submit": "Fullfør konfigurasjon"
             },
             "volatility": {
-                "title": "Prisvolatilitet Terskler",
-                "description": "{step_progress}\n\nKonfigurer terskler for volatilitetsklassifisering. Volatilitet måler relative prisvariasjoner ved hjelp av variasjonskoeffisienten (VK = standardavvik / gjennomsnitt × 100%). Disse tersklene er prosentverdier som fungerer på alle prisnivåer og brukes av volatilitetssensorer og periodefiltre.",
+                "title": "Volatilitet Terskler",
+                "description": "{step_progress}\n\nKonfigurer terskler for volatilitetsklassifisering. Volatilitet måler relativ prisvariation ved hjelp av variasjonskoeffisienten (VK = standardavvik / gjennomsnitt × 100%). Disse tersklene er prosentverdier som fungerer på tvers av alle prisnivåer.\n\nBrukes av:\n• Volatilitetssensorer (klassifisering)\n• Trendsensorer (adaptiv terskel justering: <moderat = mer følsom, ≥høy = mindre følsom)",
                 "data": {
                     "volatility_threshold_moderate": "Moderat terskel (VK ≥ denne %, f.eks. 15)",
                     "volatility_threshold_high": "Høy terskel (VK ≥ denne %, f.eks. 30)",
@@ -464,6 +464,17 @@
                     "falling": "Fallende",
                     "stable": "Stabil"
                 }
+            },
+            "current_price_trend": {
+                "name": "Nåværende pristrend",
+                "state": {
+                    "rising": "Stigende",
+                    "falling": "Fallende",
+                    "stable": "Stabil"
+                }
+            },
+            "next_price_trend_change": {
+                "name": "Neste trendendring"
             },
             "daily_rating": {
                 "name": "Daglig prisvurdering"

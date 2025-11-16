@@ -250,6 +250,16 @@
             "long_description": "Compares current interval price with average of next 12 hours (48 intervals). Rising if future is >5% higher, falling if >5% lower, stable otherwise.",
             "usage_tips": "Relative optimization: Long-term strategic decisions. 'falling' = significantly better prices coming tonight/tomorrow. Finds optimal timing in any market condition. Best combined with avg sensor price cap."
         },
+        "current_price_trend": {
+            "description": "Current price trend direction and how long it will last",
+            "long_description": "Shows the current price trend (rising/falling/stable) by combining historical momentum (weighted 1h lookback) with future outlook. Recognizes ongoing trends earlier than future-only analysis. Uses ±3% momentum threshold and volatility-adaptive future comparison. Calculates dynamically until the next trend change occurs (or 3h default if no change in 24h). The state shows the current direction, attributes show when it changes and what comes next.",
+            "usage_tips": "Status display: Dashboard visibility of 'what's happening now until when'. Perfectly synchronized with next_price_trend_change. Example: Badge showing 'Rising for 2.5h' or 'Falling until 16:45'. Better than time-window sensors because it understands you're ALREADY in a trend, not just predicting future changes. Use for quick visual overview, not automation triggers."
+        },
+        "next_price_trend_change": {
+            "description": "When the next significant price trend change will occur",
+            "long_description": "Scans the next 24 hours (96 intervals) to find when the price trend (rising/falling/stable) will change from the current momentum. First determines current trend using weighted 1h lookback (recognizes ongoing trends), then finds when that trend reverses. Uses volatility-adaptive thresholds (3% momentum detection, market-adjusted future comparison). Returns the timestamp when the change is expected.",
+            "usage_tips": "Event-based automation: Trigger actions WHEN trend changes, not IN X hours. Example: 'Charge EV when next trend change shows falling prices' or 'Run dishwasher before prices start rising'. More accurate than simple future comparison because it knows if you're already in a trend. Complements time-window sensors (price_trend_Xh) which answer 'WILL prices be higher in X hours?'"
+        },
         "daily_rating": {
             "description": "How today's prices compare to historical data",
             "long_description": "Shows how today's prices compare to historical price data as a percentage",

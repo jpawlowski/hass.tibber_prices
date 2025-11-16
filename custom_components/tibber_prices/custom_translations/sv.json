@@ -250,6 +250,16 @@
             "long_description": "Jämför nuvarande intervallpris med genomsnitt av nästa 12 timmar (48 intervaller). Stigande om framtid är >5% högre, fallande om >5% lägre, annars stabil.",
             "usage_tips": "Relativ optimering: Långsiktiga strategiska beslut. 'fallande' = avsevärt bättre priser kommer ikväll/imorgon. Hittar optimal timing i vilket marknadsläge som helst. Bäst kombinerad med avg-sensor prisgräns."
         },
+        "current_price_trend": {
+            "description": "Nuvarande pristrend-riktning och hur länge den varar",
+            "long_description": "Visar nuvarande pristrend (stigande/fallande/stabil) genom att kombinera historiskt momentum (viktad 1h tillbakablick) med framtidsutsikt. Känner igen pågående trender tidigare än endast framtidsanalys. Använder ±3 % momentum-tröskel och volatilitetsanpassad framtidsjämförelse. Beräknar dynamiskt till nästa trendändring (eller 3t standard om ingen ändring på 24t). Status visar nuvarande riktning, attribut visar när den ändras och vad som kommer härnäst.",
+            "usage_tips": "Statusvisning: Dashboard-synlighet av 'vad händer nu till när'. Perfekt synkroniserad med next_price_trend_change. Exempel: Badge som visar 'Stigande i 2,5t' eller 'Fallande till 16:45'. Bättre än tidsfönster-sensorer eftersom den förstår att du REDAN är i en trend, inte bara förutsäger framtida ändringar. Använd för snabb visuell överblick, inte automationsutlösare."
+        },
+        "next_price_trend_change": {
+            "description": "När nästa betydande pristrendändring kommer att inträffa",
+            "long_description": "Skannar de nästa 24 timmarna (96 intervaller) för att hitta när pristrenden (stigande/fallande/stabil) kommer att ändras från nuvarande momentum. Bestämmer först nuvarande trend med viktad 1h tillbakablick (känner igen pågående trender), hittar sedan reverseringen. Använder volatilitetsadaptiva tröskelvärden (3 % momentum-detektering, marknadsanpassad framtidsjämförelse). Returnerar tidsstämpeln när ändringen förväntas.",
+            "usage_tips": "Händelsestyrd automatisering: Utlös åtgärder NÄR trenden ändras, inte OM X timmar. Exempel: 'Ladda EV när nästa trendändring visar fallande priser' eller 'Starta diskmaskin innan priserna stiger'. Kompletterar tidsfönster-sensorer (price_trend_Xh) som svarar på 'KOMMER priserna att vara högre om X timmar?'"
+        },
         "daily_rating": {
             "description": "Hur dagens priser jämförs med historiska data",
             "long_description": "Visar hur dagens priser jämförs med historiska prisdata som en procentsats",

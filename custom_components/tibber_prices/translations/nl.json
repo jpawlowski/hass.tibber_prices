@@ -155,8 +155,8 @@
                 "submit": "Configuratie voltooien"
             },
             "volatility": {
-                "title": "Prijsvolatiliteit Drempels",
-                "description": "{step_progress}\n\nConfigureer drempels voor volatiliteitsclassificatie. Volatiliteit meet relatieve prijsschommelingen aan de hand van de variatiecoëfficiënt (VC = standaarddeviatie / gemiddelde × 100%). Deze drempels zijn percentagewaarden die werken op alle prijsniveaus en worden gebruikt door volatiliteitssensoren en periodefilters.",
+                "title": "Volatiliteit Drempels",
+                "description": "{step_progress}\n\nConfigureer drempels voor volatiliteitsclassificatie. Volatiliteit meet relatieve prijsvariatie met behulp van de variatiecoëfficiënt (VC = standaarddeviatie / gemiddelde × 100%). Deze drempels zijn percentagewaarden die werken over alle prijsniveaus.\n\nGebruikt door:\n• Volatiliteitssensoren (classificatie)\n• Trendsensoren (adaptieve drempelaanpassing: <matig = gevoeliger, ≥hoog = minder gevoelig)",
                 "data": {
                     "volatility_threshold_moderate": "Matige drempel (VC ≥ deze %, bijv. 15)",
                     "volatility_threshold_high": "Hoge drempel (VC ≥ deze %, bijv. 30)",
@@ -464,6 +464,17 @@
                     "falling": "Dalend",
                     "stable": "Stabiel"
                 }
+            },
+            "current_price_trend": {
+                "name": "Huidige prijstrend",
+                "state": {
+                    "rising": "Stijgend",
+                    "falling": "Dalend",
+                    "stable": "Stabiel"
+                }
+            },
+            "next_price_trend_change": {
+                "name": "Volgende trendwijziging"
             },
             "daily_rating": {
                 "name": "Dagelijkse prijsbeoordeling"

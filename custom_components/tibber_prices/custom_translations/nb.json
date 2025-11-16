@@ -246,9 +246,19 @@
             "usage_tips": "Relativ optimalisering: Nattplanlegging. 'fallende' betyr at å vente til natten lønner seg (>5% billigere). Fungerer hele året uten manuelle terskeljusteringer. Start når 'stabil' eller 'stigende'."
         },
         "price_trend_12h": {
-            "description": "Pristrend for neste 12 timer",
-            "long_description": "Sammenligner nåværende intervallpris med gjennomsnitt av neste 12 timer (48 intervaller). Stigende hvis fremtiden er >5% høyere, fallende hvis >5% lavere, ellers stabil.",
-            "usage_tips": "Relativ optimalisering: Langsiktige strategiske beslutninger. 'fallende' = betydelig bedre priser kommer i natt/i morgen. Finner optimal timing i enhver markedstilstand. Best kombinert med avg-sensor pristak."
+            "description": "Pristrend for de neste 12 timene",
+            "long_description": "Sammenligner nåværende intervallpris med gjennomsnittet av de neste 12 timene (48 intervaller). Økende hvis framtidig pris er >5% høyere, synkende hvis >5% lavere, ellers stabil.",
+            "usage_tips": "Relativ optimalisering: Langsiktige strategiske beslutninger. 'synkende' = betydelig bedre priser kommer i natt/i morgen. Finner optimal timing i enhver markedssituasjon. Best kombinert med prisgrense fra avg-sensor."
+        },
+        "current_price_trend": {
+            "description": "Nåværende pristrend-retning og hvor lenge den varer",
+            "long_description": "Viser nåværende pristrend (økende/synkende/stabil) ved å kombinere historisk momentum (vektet 1t tilbakeblikk) med fremtidsutsikt. Gjenkjenner pågående trender tidligere enn bare fremtidsanalyse. Bruker ±3 % momentum-terskel og volatilitetsavhengig fremtidssammenligning. Beregner dynamisk til neste trendendring (eller 3t standard hvis ingen endring på 24t). Status viser nåværende retning, attributter viser når den endres og hva som kommer etterpå.",
+            "usage_tips": "Statusvisning: Dashboard-synlighet av 'hva skjer nå til når'. Perfekt synkronisert med next_price_trend_change. Eksempel: Badge som viser 'Økende i 2,5t' eller 'Synkende til 16:45'. Bedre enn tidsvindu-sensorer fordi den forstår at du ALLEREDE er i en trend, ikke bare forutsier fremtidige endringer. Bruk for rask visuell oversikt, ikke automatiseringsutløsere."
+        },
+        "next_price_trend_change": {
+            "description": "Når neste betydelige pristrendendring vil skje",
+            "long_description": "Skanner de neste 24 timene (96 intervaller) for å finne når pristrenden (økende/synkende/stabil) vil endre seg fra nåværende momentum. Bestemmer først nåværende trend med vektet 1t tilbakeblikk (gjenkjenner pågående trender), deretter finner den reverseringen. Bruker volatilitetsadaptive terskelverdier (3 % momentum-deteksjon, markedsjustert fremtidssammenligning). Returnerer tidsstempelet når endringen forventes.",
+            "usage_tips": "Hendelsesbasert automatisering: Utløs handlinger NÅR trenden endres, ikke OM X timer. Eksempel: 'Lad EV når neste trendendring viser synkende priser' eller 'Start oppvaskmaskin før prisene stiger'. Kompletterer tidsvindu-sensorer (price_trend_Xh) som svarer på 'VIL prisene være høyere om X timer?'"
         },
         "daily_rating": {
             "description": "Hvordan dagens priser sammenlignes med historiske data",
