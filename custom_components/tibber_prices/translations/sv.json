@@ -664,6 +664,110 @@
         }
     },
     "services": {
+        "get_apexcharts_yaml": {
+            "name": "Hämta ApexCharts-kort YAML",
+            "description": "Returnerar ett färdigt YAML-utklipp för ett ApexCharts-kort som visualiserar Tibber-priser för den valda dagen. Använd detta för att enkelt lägga till ett förkonfigurerat diagram till din instrumentpanel. YAML kommer att använda get_chartdata-tjänsten för data.",
+            "fields": {
+                "entry_id": {
+                    "name": "Post-ID",
+                    "description": "Konfigurationspost-ID för Tibber-integrationen."
+                },
+                "day": {
+                    "name": "Dag",
+                    "description": "Vilken dag som ska visualiseras (igår, idag eller imorgon)."
+                },
+                "level_type": {
+                    "name": "Nivåtyp",
+                    "description": "Välj vilken prisnivåklassificering som ska visualiseras: 'rating_level' (låg/normal/hög baserat på dina konfigurerade tröskelvärden) eller 'level' (Tibber API-nivåer: mycket billig/billig/normal/dyr/mycket dyr)."
+                }
+            }
+        },
+        "get_chartdata": {
+            "name": "Hämta diagramdata",
+            "description": "Returnerar prisdata i ett enkelt diagramvänligt format kompatibelt med Tibber Core-integrationens outputstruktur. Perfekt för användning med populära diagramkort som ha-price-timeline-card, ApexCharts Card, Plotly Graph Card, Mini Graph Card eller den inbyggda History Graph Card. Fältnamn och datastruktur kan anpassas för att matcha diagrammets krav.",
+            "fields": {
+                "entry_id": {
+                    "name": "Post-ID",
+                    "description": "Konfigurationspost-ID för Tibber-integrationen."
+                },
+                "day": {
+                    "name": "Dag",
+                    "description": "Vilken dag(ar) ska priser hämtas för. Du kan välja flera dagar. Om inte angivet, returneras alla tillgängliga data (idag + imorgon om tillgängligt)."
+                },
+                "resolution": {
+                    "name": "Upplösning",
+                    "description": "Tidsupplösning för returnerade data. Alternativ: 'interval' (standard, 15-minuters intervaller, 96 datapunkter per dag), 'hourly' (timgenomsnitt, 24 datapunkter per dag)."
+                },
+                "output_format": {
+                    "name": "Utdataformat",
+                    "description": "Utdataformat för returnerade data. Alternativ: 'array_of_objects' (standard, array av objekt med anpassningsbara fältnamn), 'array_of_arrays' (array av [tidsstämpel, pris]-arrayer med avslutande null-punkt för stepline-diagram)."
+                },
+                "array_fields": {
+                    "name": "Array-fält (endast Array av arrayer)",
+                    "description": "[ENDAST FÖR Array av arrayer FORMAT] Definiera vilka fält som ska inkluderas. Använd fältnamn inom måsvingar, separerade med kommatecken. Tillgängliga fält: start_time, price_per_kwh, level, rating_level, average. Fält aktiveras automatiskt även om include_*-alternativ inte är inställda. Lämna tomt för standard (endast tidsstämpel och pris)."
+                },
+                "minor_currency": {
+                    "name": "Mindre valutaenhet",
+                    "description": "Returnera priser i mindre valutaenheter (öre för SEK/NOK, cent för EUR) istället för huvudvalutaenheter. Inaktiverad som standard."
+                },
+                "round_decimals": {
+                    "name": "Avrunda decimaler",
+                    "description": "Antal decimaler att avrunda priser till (0-10). Om inte angivet används standardprecision (4 decimaler för huvudvaluta, 2 för mindre valutaenhet)."
+                },
+                "include_level": {
+                    "name": "Inkludera prisnivå (endast Array av objekt)",
+                    "description": "[ENDAST FÖR Array av objekt FORMAT] Inkludera Tibber-prisnivåfältet (VERY_CHEAP, CHEAP, NORMAL, EXPENSIVE, VERY_EXPENSIVE) i varje datapunkt."
+                },
+                "include_rating_level": {
+                    "name": "Inkludera prisvärdering (endast Array av objekt)",
+                    "description": "[ENDAST FÖR Array av objekt FORMAT] Inkludera det beräknade prisvärderingsfältet (LOW, NORMAL, HIGH) baserat på dina konfigurerade trösklar i varje datapunkt."
+                },
+                "include_average": {
+                    "name": "Inkludera genomsnitt (endast Array av objekt)",
+                    "description": "[ENDAST FÖR Array av objekt FORMAT] Inkludera dagligt genomsnittspris i varje datapunkt för jämförelse."
+                },
+                "level_filter": {
+                    "name": "Prisnivåfilter",
+                    "description": "Filtrera intervaller för att endast inkludera specifika Tibber-prisnivåer (VERY_CHEAP, CHEAP, NORMAL, EXPENSIVE, VERY_EXPENSIVE). Om inget anges inkluderas alla nivåer."
+                },
+                "rating_level_filter": {
+                    "name": "Prisvärderingsfilter",
+                    "description": "Filtrera intervall för att endast inkludera specifika prisvärderingar (LOW, NORMAL, HIGH). Om inte angivet inkluderas alla värderingar."
+                },
+                "insert_nulls": {
+                    "name": "Infoga NULL-värden",
+                    "description": "Kontrollera infogning av NULL-värden för filtrerad data. 'none' (standard): Inga NULL-värden, endast matchande intervall. 'segments': Lägg till NULL-punkter vid segmentgränser för rena luckor i diagram (rekommenderas för steglinjediagram). 'all': Infoga NULL för alla tidsstämplar där filtret inte matchar (användbart för kontinuerlig tidsserievisualisering)."
+                },
+                "add_trailing_null": {
+                    "name": "Lägg till avslutande null-punkt",
+                    "description": "[BÅDA FORMAT] Lägg till en sista datapunkt med null-värden (förutom tidsstämpel) i slutet. Vissa diagrambibliotek behöver detta för att förhindra extrapolering/interpolering till kanten av vyområdet vid stepline-rendering. Lämna inaktiverad om inte ditt diagram kräver det."
+                },
+                "timestamp_field": {
+                    "name": "Tidsstämpel-fältnamn (endast Array av objekt)",
+                    "description": "[ENDAST FÖR Array av objekt FORMAT] Anpassat namn för tidsstämpel-fältet i utdata. Standard är 'start_time' om inte angivet."
+                },
+                "price_field": {
+                    "name": "Prisfältsnamn (endast Array av objekt)",
+                    "description": "[ENDAST FÖR Array av objekt FORMAT] Anpassat namn för prisfältet i utdata. Standard är 'price_per_kwh'."
+                },
+                "level_field": {
+                    "name": "Prisnivåfältsnamn (endast Array av objekt)",
+                    "description": "[ENDAST FÖR Array av objekt FORMAT] Anpassat namn för prisnivåfältet i utdata. Standard är 'level'. Används endast när include_level är aktiverad."
+                },
+                "rating_level_field": {
+                    "name": "Prisvärderingsfältsnamn (endast Array av objekt)",
+                    "description": "[ENDAST FÖR Array av objekt FORMAT] Anpassat namn för prisvärderingsfältet i utdata. Standard är 'rating_level'. Används endast när include_rating_level är aktiverad."
+                },
+                "average_field": {
+                    "name": "Genomsnittsfältsnamn (endast Array av objekt)",
+                    "description": "[ENDAST FÖR Array av objekt FORMAT] Anpassat namn för genomsnittsfältet i utdata. Standard är 'average'. Används endast när include_average är aktiverad."
+                },
+                "data_key": {
+                    "name": "Datanyckel (båda formaten)",
+                    "description": "[BÅDA FORMATEN] Anpassat namn för datanyckeln på toppnivå i svaret. Standard är 'data' om inte angivet. För ApexCharts-kompatibilitet med Array av arrayer, använd 'points'."
+                }
+            }
+        },
         "refresh_user_data": {
             "name": "Uppdatera användardata",
             "description": "Tvingar en uppdatering av användardata (hem, profilinformation) från Tibber API. Detta kan vara användbart efter att ha gjort ändringar i ditt Tibber-konto eller vid felsökning av anslutningsproblem.",
@@ -676,6 +780,54 @@
         }
     },
     "selector": {
+        "day": {
+            "options": {
+                "yesterday": "Igår",
+                "today": "Idag",
+                "tomorrow": "Imorgon"
+            }
+        },
+        "resolution": {
+            "options": {
+                "interval": "Intervall (15 min)",
+                "hourly": "Varje timme"
+            }
+        },
+        "output_format": {
+            "options": {
+                "array_of_objects": "Array av objekt",
+                "array_of_arrays": "Array av arrayer"
+            }
+        },
+        "level_type": {
+            "options": {
+                "rating_level": "Betygsättningsnivå (låg/normal/hög)",
+                "level": "Tibber-nivå (mycket billig till mycket dyr)"
+            }
+        },
+        "level_filter": {
+            "options": {
+                "very_cheap": "Mycket billig",
+                "cheap": "Billig",
+                "normal": "Normal",
+                "expensive": "Dyr",
+                "very_expensive": "Mycket dyr"
+            }
+        },
+        "rating_level_filter": {
+            "options": {
+                "low": "Låg",
+                "normal": "Normal",
+                "high": "Hög"
+            }
+        },
+        "insert_nulls": {
+            "options": {
+                "none": "Ingen",
+                "segments": "Segment",
+                "all": "Alla"
+            }
+        },
         "volatility": {
             "options": {
                 "low": "Låg",

@@ -668,6 +668,110 @@
         }
     },
     "services": {
+        "get_apexcharts_yaml": {
+            "name": "ApexCharts-Karten-YAML abrufen",
+            "description": "Gibt einen fertigen YAML-Schnipsel für eine ApexCharts-Karte zurück, die Tibber-Preise für den ausgewählten Tag visualisiert. Verwende dies, um ganz einfach ein vorkonfiguriertes Diagramm zu deinem Dashboard hinzuzufügen. Das YAML verwendet den get_chartdata-Service für Daten.",
+            "fields": {
+                "entry_id": {
+                    "name": "Eintrags-ID",
+                    "description": "Die Konfigurationseintrags-ID für die Tibber-Integration."
+                },
+                "day": {
+                    "name": "Tag",
+                    "description": "Welcher Tag visualisiert werden soll (gestern, heute oder morgen)."
+                },
+                "level_type": {
+                    "name": "Stufen-Typ",
+                    "description": "Wähle, welche Preisstufen-Klassifizierung visualisiert werden soll: 'rating_level' (niedrig/normal/hoch basierend auf deinen konfigurierten Schwellenwerten) oder 'level' (Tibber-API-Stufen: sehr günstig/günstig/normal/teuer/sehr teuer)."
+                }
+            }
+        },
+        "get_chartdata": {
+            "name": "Diagrammdaten abrufen",
+            "description": "Gibt Preisdaten in einem einfachen, diagrammfreundlichen Format kompatibel mit der Tibber Core Integration zurück. Perfekt für beliebte Diagramm-Karten wie ha-price-timeline-card, ApexCharts Card, Plotly Graph Card, Mini Graph Card oder die eingebaute History Graph Card. Feldnamen und Datenstruktur können an die Anforderungen deines Diagramms angepasst werden.",
+            "fields": {
+                "entry_id": {
+                    "name": "Eintrag-ID",
+                    "description": "Die Konfigurationseintrag-ID für die Tibber-Integration."
+                },
+                "day": {
+                    "name": "Tag",
+                    "description": "Für welche(n) Tag(e) sollen Preise abgerufen werden. Du kannst mehrere Tage auswählen. Falls nicht angegeben, werden alle verfügbaren Daten zurückgegeben (heute + morgen falls verfügbar)."
+                },
+                "resolution": {
+                    "name": "Auflösung",
+                    "description": "Zeitauflösung für die zurückgegebenen Daten. Optionen: 'interval' (Standard, 15-Minuten-Intervalle, 96 Datenpunkte pro Tag), 'hourly' (stündliche Durchschnitte, 24 Datenpunkte pro Tag)."
+                },
+                "output_format": {
+                    "name": "Ausgabeformat",
+                    "description": "Ausgabeformat für die zurückgegebenen Daten. Optionen: 'array_of_objects' (Standard, Array von Objekten mit anpassbaren Feldnamen), 'array_of_arrays' (Array von [Zeitstempel, Preis]-Arrays mit abschließendem Null-Punkt für Stepline-Charts)."
+                },
+                "array_fields": {
+                    "name": "Array-Felder (nur Array von Arrays)",
+                    "description": "[NUR FÜR Array von Arrays FORMAT] Definiere, welche Felder im array_of_arrays-Format enthalten sein sollen. Verwende Feldnamen in geschweiften Klammern, getrennt durch Kommas. Verfügbare Felder: start_time, price_per_kwh, level, rating_level, average. Felder werden automatisch aktiviert, auch wenn include_*-Optionen nicht gesetzt sind. Leer lassen für Standard (nur Zeitstempel und Preis)."
+                },
+                "minor_currency": {
+                    "name": "Kleinere Währungseinheit",
+                    "description": "Gibt Preise in kleineren Währungseinheiten zurück (Cent für EUR, Øre für NOK/SEK) statt in Hauptwährungseinheiten. Standardmäßig deaktiviert."
+                },
+                "round_decimals": {
+                    "name": "Dezimalstellen runden",
+                    "description": "Anzahl der Dezimalstellen, auf die Preise gerundet werden sollen (0-10). Falls nicht angegeben, wird die Standardgenauigkeit verwendet (4 Dezimalstellen für Hauptwährung, 2 für kleinere Währungseinheit)."
+                },
+                "include_level": {
+                    "name": "Preisniveau einschließen (nur Array von Objekten)",
+                    "description": "[NUR FÜR Array von Objekten FORMAT] Fügt das Tibber-Preisniveau (VERY_CHEAP, CHEAP, NORMAL, EXPENSIVE, VERY_EXPENSIVE) zu jedem Datenpunkt hinzu."
+                },
+                "include_rating_level": {
+                    "name": "Preisbewertung einschließen (nur Array von Objekten)",
+                    "description": "[NUR FÜR Array von Objekten FORMAT] Fügt die berechnete Preisbewertung (LOW, NORMAL, HIGH) basierend auf deinen konfigurierten Schwellwerten zu jedem Datenpunkt hinzu."
+                },
+                "include_average": {
+                    "name": "Durchschnitt einschließen (nur Array von Objekten)",
+                    "description": "[NUR FÜR Array von Objekten FORMAT] Den Tagesdurchschnittspreis in jedem Datenpunkt zum Vergleich einschließen."
+                },
+                "level_filter": {
+                    "name": "Preisniveau-Filter",
+                    "description": "Intervalle filtern, um nur bestimmte Tibber-Preisniveaus einzuschließen (VERY_CHEAP, CHEAP, NORMAL, EXPENSIVE, VERY_EXPENSIVE). Falls nicht angegeben, werden alle Niveaus eingeschlossen."
+                },
+                "rating_level_filter": {
+                    "name": "Preisbewertungs-Filter",
+                    "description": "Intervalle filtern, um nur bestimmte Preisbewertungen einzuschließen (LOW, NORMAL, HIGH). Falls nicht angegeben, werden alle Bewertungen eingeschlossen."
+                },
+                "insert_nulls": {
+                    "name": "NULL-Werte einfügen",
+                    "description": "Steuert das Einfügen von NULL-Werten für gefilterte Daten. 'none' (Standard): Keine NULL-Werte, nur passende Intervalle. 'segments': NULL-Punkte an Segmentgrenzen für saubere Lücken in Diagrammen hinzufügen (empfohlen für Stufenliniendiagramme). 'all': NULL für alle Zeitstempel einfügen, bei denen der Filter nicht übereinstimmt (nützlich für kontinuierliche Zeitreihenvisualisierung)."
+                },
+                "add_trailing_null": {
+                    "name": "Abschließenden Null-Punkt hinzufügen",
+                    "description": "[BEIDE FORMATE] Füge einen finalen Datenpunkt mit Null-Werten (außer Zeitstempel) am Ende hinzu. Manche Diagramm-Bibliotheken benötigen dies, um Extrapolation/Interpolation bis zum Rand des Anzeigebereichs bei Stufenliniendarstellung zu verhindern. Deaktiviert lassen, es sei denn, dein Diagramm erfordert es."
+                },
+                "timestamp_field": {
+                    "name": "Zeitstempel-Feldname (nur Array von Objekten)",
+                    "description": "[NUR FÜR Array von Objekten FORMAT] Benutzerdefinierter Name für das Zeitstempel-Feld in der Ausgabe. Standard ist 'start_time', falls nicht angegeben."
+                },
+                "price_field": {
+                    "name": "Preis-Feldname (nur Array von Objekten)",
+                    "description": "[NUR FÜR Array von Objekten FORMAT] Benutzerdefinierter Name für das Preis-Feld in der Ausgabe. Standard ist 'price_per_kwh', falls nicht angegeben."
+                },
+                "level_field": {
+                    "name": "Preisniveau-Feldname (nur Array von Objekten)",
+                    "description": "[NUR FÜR Array von Objekten FORMAT] Benutzerdefinierter Name für das Preisniveau-Feld in der Ausgabe. Standard ist 'level', falls nicht angegeben. Wird nur verwendet, wenn include_level aktiviert ist."
+                },
+                "rating_level_field": {
+                    "name": "Preisbewertung-Feldname (nur Array von Objekten)",
+                    "description": "[NUR FÜR Array von Objekten FORMAT] Benutzerdefinierter Name für das Preisbewertungs-Feld in der Ausgabe. Standard ist 'rating_level', falls nicht angegeben. Wird nur verwendet, wenn include_rating_level aktiviert ist."
+                },
+                "average_field": {
+                    "name": "Durchschnitts-Feldname (nur Array von Objekten)",
+                    "description": "[NUR FÜR Array von Objekten FORMAT] Benutzerdefinierter Name für das Durchschnitts-Feld in der Ausgabe. Standard ist 'average', falls nicht angegeben. Wird nur verwendet, wenn include_average aktiviert ist."
+                },
+                "data_key": {
+                    "name": "Daten-Schlüssel (beide Formate)",
+                    "description": "[BEIDE FORMATE] Benutzerdefinierter Name für den obersten Datenschlüssel in der Antwort. Standard ist 'data', falls nicht angegeben. Für ApexCharts-Kompatibilität mit Array von Arrays verwende 'points'."
+                }
+            }
+        },
         "refresh_user_data": {
             "name": "Benutzerdaten aktualisieren",
             "description": "Erzwingt eine Aktualisierung der Benutzerdaten (Häuser, Profilinformationen) aus der Tibber API. Dies kann nützlich sein, nachdem Änderungen an deinem Tibber-Konto vorgenommen wurden oder bei der Fehlerbehebung von Verbindungsproblemen.",
@@ -680,6 +784,54 @@
         }
     },
     "selector": {
+        "day": {
+            "options": {
+                "yesterday": "Gestern",
+                "today": "Heute",
+                "tomorrow": "Morgen"
+            }
+        },
+        "resolution": {
+            "options": {
+                "interval": "Intervall (15 Min)",
+                "hourly": "Stündlich"
+            }
+        },
+        "output_format": {
+            "options": {
+                "array_of_objects": "Array aus Objekten",
+                "array_of_arrays": "Array aus Arrays"
+            }
+        },
+        "level_type": {
+            "options": {
+                "rating_level": "Preisbewertung (niedrig/normal/hoch)",
+                "level": "Preisniveau (sehr günstig bis sehr teuer)"
+            }
+        },
+        "level_filter": {
+            "options": {
+                "very_cheap": "Sehr günstig",
+                "cheap": "Günstig",
+                "normal": "Normal",
+                "expensive": "Teuer",
+                "very_expensive": "Sehr teuer"
+            }
+        },
+        "rating_level_filter": {
+            "options": {
+                "low": "Niedrig",
+                "normal": "Normal",
+                "high": "Hoch"
+            }
+        },
+        "insert_nulls": {
+            "options": {
+                "none": "Keine",
+                "segments": "Segmente",
+                "all": "Alle"
+            }
+        },
         "volatility": {
             "options": {
                 "low": "Niedrig",

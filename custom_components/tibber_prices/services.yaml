@@ -1,7 +1,7 @@
-get_price:
-  name: Get Tibber Price Info
+get_apexcharts_yaml:
+  name: Get ApexCharts Card YAML
   description: >-
-    Returns merged priceInfo and priceRating for the requested day and config entry. Optionally, you can simulate the response as if it were a specific time-of-day (time, format HH:mm or HH:mm:ss), which only affects the previous/current/next fields, not the prices list. The simulated time is always combined with the selected day.
+    Returns a ready-to-copy YAML snippet for an ApexCharts card visualizing Tibber Prices for the selected day. Use this to easily add a pre-configured chart to your dashboard. The YAML will use the get_chartdata service for data.
   fields:
     entry_id:
       name: Entry ID
@@ -13,41 +13,8 @@ get_price:
           integration: tibber_prices
     day:
       name: Day
-      description: Which day to fetch prices for (yesterday, today, or tomorrow).
-      required: false
-      default: today
-      example: today
-      selector:
-        select:
-          options:
-            - yesterday
-            - today
-            - tomorrow
-    time:
-      name: Time
-      description: >-
-        Time-of-day in HH:mm or HH:mm:ss format. If provided, simulates the response as if this were the current time for interval selection (previous/current/next) for the selected day. Does not filter the prices list. Example: "15:00" or "15:00:00".
-      required: false
-      selector:
-        time:
-get_apexcharts_data:
-  name: Get ApexCharts Data
-  description: >-
-    Returns data for an ApexCharts card visualizing Tibber Prices for the selected day.
-  fields:
-    entity_id:
-      name: Entity ID
-      description: The entity_id for the Tibber price sensor to determine the config entry ID.
-      required: true
-      example: sensor.tibber_price_today
-      selector:
-        entity:
-          domain: sensor
-          integration: tibber_prices
-    day:
-      name: Day
       description: Which day to visualize (yesterday, today, or tomorrow).
-      required: true
+      required: false
       default: today
       example: today
       selector:
@@ -56,61 +23,226 @@ get_apexcharts_data:
             - yesterday
             - today
             - tomorrow
+          translation_key: day
     level_type:
       name: Level Type
       description: >-
-        Select what data to return: 'rating_level' (the current official Tibber integration price level: LOW/NORMAL/HIGH) or 'level' (the original Tibber API price level: VERY_CHEAP, CHEAP, NORMAL, EXPENSIVE, VERY_EXPENSIVE).
-      required: true
+        Select which price level classification to visualize: 'rating_level' (LOW/NORMAL/HIGH based on your configured thresholds) or 'level' (Tibber API levels: VERY_CHEAP/CHEAP/NORMAL/EXPENSIVE/VERY_EXPENSIVE).
+      required: false
       default: rating_level
       example: rating_level
       selector:
         select:
           options:
-            - level
             - rating_level
-    level_key:
-      name: Level Key
-      description: >-
-        Select the key to use for the level type: For 'rating_level', use LOW/NORMAL/HIGH. For 'level', use VERY_CHEAP/CHEAP/LOW/NORMAL/HIGH/EXPENSIVE/VERY_EXPENSIVE.
-      required: true
-      default: NORMAL
-      example: NORMAL
-      selector:
-        select:
-          options:
-            - VERY_CHEAP
-            - CHEAP
-            - LOW
-            - NORMAL
-            - HIGH
-            - EXPENSIVE
-            - VERY_EXPENSIVE
-get_apexcharts_yaml:
-  name: Get ApexCharts Card YAML
+            - level
+          translation_key: level_type
+get_chartdata:
+  name: Get Chart Data
   description: >-
-    Returns a ready-to-copy YAML snippet for an ApexCharts card visualizing Tibber Prices for the selected day. Use this to easily add a pre-configured chart to your dashboard. The YAML will use the get_price service for data.
+    Returns price data in a simple chart-friendly format compatible with the Tibber Core integration output structure. Perfect for use with popular chart cards like ha-price-timeline-card, ApexCharts Card, Plotly Graph Card, Mini Graph Card, or the built-in History Graph Card. Field names and data structure can be customized to match your specific chart requirements.
   fields:
-    entity_id:
-      name: Entity ID
-      description: The entity_id for the Tibber price sensor (used for context, but the chart fetches data via the service).
+    # === Basic Settings (for all formats) ===
+    entry_id:
+      name: Entry ID
+      description: The config entry ID for the Tibber integration.
       required: true
-      example: sensor.tibber_price_today
+      example: "1234567890abcdef"
       selector:
-        entity:
-          domain: sensor
+        config_entry:
           integration: tibber_prices
     day:
       name: Day
-      description: Which day to visualize (yesterday, today, or tomorrow).
+      description: Which day(s) to fetch prices for. You can select multiple days. If not specified, returns all available data (today + tomorrow if available).
       required: false
-      default: today
-      example: today
       selector:
         select:
           options:
             - yesterday
             - today
             - tomorrow
+          multiple: true
+          translation_key: day
+    resolution:
+      name: Resolution
+      description: >-
+        Time resolution for the returned data. Options: 'interval' (default, 15-minute intervals, 96 points per day), 'hourly' (hourly averages, 24 points per day).
+      required: false
+      default: interval
+      example: hourly
+      selector:
+        select:
+          options:
+            - interval
+            - hourly
+          translation_key: resolution
+    minor_currency:
+      name: Minor Currency
+      description: >-
+        Return prices in minor currency units (cents for EUR, øre for NOK/SEK) instead of major currency units. Disabled by default.
+      required: false
+      default: false
+      example: true
+      selector:
+        boolean:
+    round_decimals:
+      name: Round Decimals
+      description: >-
+        Number of decimal places to round prices to (0-10). If not specified, uses default precision (4 decimals for major currency, 2 for minor currency).
+      required: false
+      example: 2
+      selector:
+        number:
+          min: 0
+          max: 10
+          mode: box
+    # === Filters (for all formats) ===
+    level_filter:
+      name: Level Filter
+      description: >-
+        Filter intervals to include only specific Tibber price levels (very_cheap, cheap, normal, expensive, very_expensive). If not specified, all levels are included.
+      required: false
+      selector:
+        select:
+          options:
+            - very_cheap
+            - cheap
+            - normal
+            - expensive
+            - very_expensive
+          multiple: true
+          translation_key: level_filter
+    rating_level_filter:
+      name: Rating Level Filter
+      description: >-
+        Filter intervals to include only specific rating levels (low, normal, high). If not specified, all rating levels are included.
+      required: false
+      selector:
+        select:
+          options:
+            - low
+            - normal
+            - high
+          multiple: true
+          translation_key: rating_level_filter
+    # === NULL Insertion ===
+    insert_nulls:
+      name: Insert NULL Values
+      description: >-
+        Control NULL value insertion for filtered data. 'none' (default): No NULL values, only matching intervals. 'segments': Add NULL points at segment boundaries for clean gaps in charts (recommended for stepline charts). 'all': Insert NULL for all timestamps where filter doesn't match (useful for continuous time series visualization).
+      required: false
+      default: none
+      selector:
+        select:
+          options:
+            - none
+            - segments
+            - all
+          translation_key: insert_nulls
+    # === Output Format Selection ===
+    output_format:
+      name: Output Format
+      description: >-
+        Output format for the returned data. Options: 'array_of_objects' (default, array of objects with customizable field names), 'array_of_arrays' (array of [timestamp, price] arrays).
+      required: false
+      default: array_of_objects
+      example: array_of_objects
+      selector:
+        select:
+          options:
+            - array_of_objects
+            - array_of_arrays
+          translation_key: output_format
+    # === For array_of_arrays format ===
+    add_trailing_null:
+      name: Add Trailing Null Point
+      description: >-
+        [BOTH FORMATS] Add a final data point with null values (except timestamp) at the end. Some chart libraries need this to prevent extrapolation/interpolation to the viewport edge when using stepline rendering. Leave disabled unless your chart requires it.
+      required: false
+      default: false
+      selector:
+        boolean:
+    array_fields:
+      name: Array Fields (array_of_arrays only)
+      description: >-
+        [ONLY FOR array_of_arrays FORMAT] Define which fields to include. Use field names in curly braces, separated by commas. Available fields: start_time, price_per_kwh, level, rating_level, average. Fields will be automatically enabled even if include_* options are not set. Leave empty for default (timestamp and price only).
+      required: false
+      selector:
+        text:
+    # === For array_of_objects format - Include Fields ===
+    include_level:
+      name: Include Level (array_of_objects only)
+      description: >-
+        [ONLY FOR array_of_objects FORMAT] Include the Tibber price level field (VERY_CHEAP, CHEAP, NORMAL, EXPENSIVE, VERY_EXPENSIVE) in each data point.
+      required: false
+      default: false
+      example: true
+      selector:
+        boolean:
+    include_rating_level:
+      name: Include Rating Level (array_of_objects only)
+      description: >-
+        [ONLY FOR array_of_objects FORMAT] Include the calculated rating level field (LOW, NORMAL, HIGH) based on your configured thresholds in each data point.
+      required: false
+      default: false
+      example: true
+      selector:
+        boolean:
+    include_average:
+      name: Include Average (array_of_objects only)
+      description: >-
+        [ONLY FOR array_of_objects FORMAT] Include the daily average price in each data point for comparison.
+      required: false
+      default: false
+      selector:
+        boolean:
+    # === For array_of_objects format - Customize Field Names ===
+    timestamp_field:
+      name: Timestamp Field Name (array_of_objects only)
+      description: >-
+        [ONLY FOR array_of_objects FORMAT] Custom name for the timestamp field in the output. Defaults to "start_time" if not specified.
+      required: false
+      example: time
+      selector:
+        text:
+    price_field:
+      name: Price Field Name (array_of_objects only)
+      description: >-
+        [ONLY FOR array_of_objects FORMAT] Custom name for the price field in the output. Defaults to "price_per_kwh" if not specified.
+      required: false
+      example: price
+      selector:
+        text:
+    level_field:
+      name: Level Field Name (array_of_objects only)
+      description: >-
+        [ONLY FOR array_of_objects FORMAT] Custom name for the level field in the output. Defaults to "level" if not specified. Only used when include_level is enabled.
+      required: false
+      selector:
+        text:
+    rating_level_field:
+      name: Rating Level Field Name (array_of_objects only)
+      description: >-
+        [ONLY FOR array_of_objects FORMAT] Custom name for the rating_level field in the output. Defaults to "rating_level" if not specified. Only used when include_rating_level is enabled.
+      required: false
+      selector:
+        text:
+    average_field:
+      name: Average Field Name (array_of_objects only)
+      description: >-
+        [ONLY FOR array_of_objects FORMAT] Custom name for the average field in the output. Defaults to "average" if not specified. Only used when include_average is enabled.
+      required: false
+      selector:
+        text:
+    # === Top-Level Response Key (both formats) ===
+    data_key:
+      name: Data Key (both formats)
+      description: >-
+        [BOTH FORMATS] Custom name for the top-level data key in the response. Defaults to "data" if not specified. For ApexCharts compatibility with array_of_arrays, use "points".
+      required: false
+      example: prices
+      selector:
+        text:
 refresh_user_data:
   name: Refresh User Data
   description: >-

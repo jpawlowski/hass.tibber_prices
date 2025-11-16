@@ -1,4 +1,8 @@
 {
+    "apexcharts": {
+        "title_rating_level": "Preisphasen Tagesverlauf",
+        "title_level": "Preisniveau"
+    },
     "sensor": {
         "current_interval_price": {
             "description": "Der aktuelle Strompreis pro kWh",

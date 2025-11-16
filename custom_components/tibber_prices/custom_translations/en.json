@@ -1,4 +1,8 @@
 {
+    "apexcharts": {
+        "title_rating_level": "Price Phases Daily Progress",
+        "title_level": "Price Level"
+    },
     "sensor": {
         "current_interval_price": {
             "description": "The current electricity price per kWh",

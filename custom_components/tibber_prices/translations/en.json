@@ -664,6 +664,110 @@
         }
     },
     "services": {
+        "get_apexcharts_yaml": {
+            "name": "Get ApexCharts Card YAML",
+            "description": "Returns a ready-to-copy YAML snippet for an ApexCharts card visualizing Tibber Prices for the selected day. Use this to easily add a pre-configured chart to your dashboard. The YAML will use the get_chartdata service for data.",
+            "fields": {
+                "entry_id": {
+                    "name": "Entry ID",
+                    "description": "The config entry ID for the Tibber integration."
+                },
+                "day": {
+                    "name": "Day",
+                    "description": "Which day to visualize (yesterday, today, or tomorrow)."
+                },
+                "level_type": {
+                    "name": "Level Type",
+                    "description": "Select which price level classification to visualize: 'rating_level' (low/normal/high based on your configured thresholds) or 'level' (Tibber API levels: very cheap/cheap/normal/expensive/very expensive)."
+                }
+            }
+        },
+        "get_chartdata": {
+            "name": "Get Chart Data",
+            "description": "Returns price data in a simple chart-friendly format compatible with the Tibber Core integration output structure. Perfect for use with popular chart cards like ha-price-timeline-card, ApexCharts Card, Plotly Graph Card, Mini Graph Card, or the built-in History Graph Card. Field names and data structure can be customized to match your specific chart requirements.",
+            "fields": {
+                "entry_id": {
+                    "name": "Entry ID",
+                    "description": "The config entry ID for the Tibber integration."
+                },
+                "day": {
+                    "name": "Day",
+                    "description": "Which day(s) to fetch prices for. You can select multiple days. If not specified, returns all available data (today + tomorrow if available)."
+                },
+                "resolution": {
+                    "name": "Resolution",
+                    "description": "Time resolution for the returned data. Options: 'interval' (default, 15-minute intervals, 96 points per day), 'hourly' (hourly averages, 24 points per day)."
+                },
+                "output_format": {
+                    "name": "Output Format",
+                    "description": "Output format for the returned data. Options: 'array_of_objects' (default, array of objects with customizable field names), 'array_of_arrays' (array of [timestamp, price] arrays with trailing null point for stepline charts)."
+                },
+                "array_fields": {
+                    "name": "Array Fields (Array of Arrays only)",
+                    "description": "[ONLY FOR Array of Arrays FORMAT] Define which fields to include. Use field names in curly braces, separated by commas. Available fields: start_time, price_per_kwh, level, rating_level, average. Fields will be automatically enabled even if include_* options are not set. Leave empty for default (timestamp and price only)."
+                },
+                "minor_currency": {
+                    "name": "Minor Currency",
+                    "description": "Return prices in minor currency units (cents for EUR, øre for NOK/SEK) instead of major currency units. Disabled by default."
+                },
+                "round_decimals": {
+                    "name": "Round Decimals",
+                    "description": "Number of decimal places to round prices to (0-10). If not specified, uses default precision (4 decimals for major currency, 2 for minor currency)."
+                },
+                "include_level": {
+                    "name": "Include Level (Array of Objects only)",
+                    "description": "[ONLY FOR Array of Objects FORMAT] Include the Tibber price level field (VERY_CHEAP, CHEAP, NORMAL, EXPENSIVE, VERY_EXPENSIVE) in each data point."
+                },
+                "include_rating_level": {
+                    "name": "Include Rating Level (Array of Objects only)",
+                    "description": "[ONLY FOR Array of Objects FORMAT] Include the calculated rating level field (LOW, NORMAL, HIGH) based on your configured thresholds in each data point."
+                },
+                "include_average": {
+                    "name": "Include Average (Array of Objects only)",
+                    "description": "[ONLY FOR Array of Objects FORMAT] Include the daily average price in each data point for comparison."
+                },
+                "level_filter": {
+                    "name": "Level Filter",
+                    "description": "Filter intervals to include only specific Tibber price levels (VERY_CHEAP, CHEAP, NORMAL, EXPENSIVE, VERY_EXPENSIVE). If not specified, all levels are included."
+                },
+                "rating_level_filter": {
+                    "name": "Rating Level Filter",
+                    "description": "Filter intervals to include only specific rating levels (LOW, NORMAL, HIGH). If not specified, all rating levels are included."
+                },
+                "insert_nulls": {
+                    "name": "Insert NULL Values",
+                    "description": "Control NULL value insertion for filtered data. 'none' (default): No NULL values, only matching intervals. 'segments': Add NULL points at segment boundaries for clean gaps in charts (recommended for stepline charts). 'all': Insert NULL for all timestamps where filter doesn't match (useful for continuous time series visualization)."
+                },
+                "add_trailing_null": {
+                    "name": "Add Trailing Null Point",
+                    "description": "[BOTH FORMATS] Add a final data point with null values (except timestamp) at the end. Some chart libraries need this to prevent extrapolation/interpolation to the viewport edge when using stepline rendering. Leave disabled unless your chart requires it."
+                },
+                "timestamp_field": {
+                    "name": "Timestamp Field Name (Array of Objects only)",
+                    "description": "[ONLY FOR Array of Objects FORMAT] Custom name for the timestamp field in the output. Defaults to 'start_time' if not specified."
+                },
+                "price_field": {
+                    "name": "Price Field Name (Array of Objects only)",
+                    "description": "[ONLY FOR Array of Objects FORMAT] Custom name for the price field in the output. Defaults to 'price_per_kwh' if not specified."
+                },
+                "level_field": {
+                    "name": "Level Field Name (Array of Objects only)",
+                    "description": "[ONLY FOR Array of Objects FORMAT] Custom name for the level field in the output. Defaults to 'level' if not specified. Only used when include_level is enabled."
+                },
+                "rating_level_field": {
+                    "name": "Rating Level Field Name (Array of Objects only)",
+                    "description": "[ONLY FOR Array of Objects FORMAT] Custom name for the rating_level field in the output. Defaults to 'rating_level' if not specified. Only used when include_rating_level is enabled."
+                },
+                "average_field": {
+                    "name": "Average Field Name (Array of Objects only)",
+                    "description": "[ONLY FOR Array of Objects FORMAT] Custom name for the average field in the output. Defaults to 'average' if not specified. Only used when include_average is enabled."
+                },
+                "data_key": {
+                    "name": "Data Key (both formats)",
+                    "description": "[BOTH FORMATS] Custom name for the top-level data key in the response. Defaults to 'data' if not specified. For ApexCharts compatibility with Array of Arrays, use 'points'."
+                }
+            }
+        },
         "refresh_user_data": {
             "name": "Refresh User Data",
             "description": "Forces a refresh of the user data (homes, profile information) from the Tibber API. This can be useful after making changes to your Tibber account or when troubleshooting connectivity issues.",
@@ -676,6 +780,54 @@
         }
     },
     "selector": {
+        "day": {
+            "options": {
+                "yesterday": "Yesterday",
+                "today": "Today",
+                "tomorrow": "Tomorrow"
+            }
+        },
+        "resolution": {
+            "options": {
+                "interval": "Interval (15 min)",
+                "hourly": "Hourly"
+            }
+        },
+        "output_format": {
+            "options": {
+                "array_of_objects": "Array of Objects",
+                "array_of_arrays": "Array of Arrays"
+            }
+        },
+        "level_type": {
+            "options": {
+                "rating_level": "Rating Level (low/normal/high)",
+                "level": "Tibber Level (very cheap to very expensive)"
+            }
+        },
+        "level_filter": {
+            "options": {
+                "very_cheap": "Very cheap",
+                "cheap": "Cheap",
+                "normal": "Normal",
+                "expensive": "Expensive",
+                "very_expensive": "Very expensive"
+            }
+        },
+        "rating_level_filter": {
+            "options": {
+                "low": "Low",
+                "normal": "Normal",
+                "high": "High"
+            }
+        },
+        "insert_nulls": {
+            "options": {
+                "none": "None",
+                "segments": "Segments",
+                "all": "All"
+            }
+        },
         "volatility": {
             "options": {
                 "low": "Low",

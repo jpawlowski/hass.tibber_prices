@@ -1,4 +1,8 @@
 {
+    "apexcharts": {
+        "title_rating_level": "Prisfaser daglig framsteg",
+        "title_level": "Prisnivå"
+    },
     "sensor": {
         "current_interval_price": {
             "description": "Det nuvarande elpriset per kWh",

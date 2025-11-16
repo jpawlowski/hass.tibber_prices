@@ -2,8 +2,8 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
-from datetime import datetime
+import re
+from datetime import timedelta
 from typing import Any, Final
 
 import voluptuous as vol
@@ -18,14 +18,11 @@ from .api import (
     TibberPricesApiClientCommunicationError,
     TibberPricesApiClientError,
 )
-from .average_utils import calculate_leading_24h_avg, calculate_trailing_24h_avg
 from .const import (
-    CONF_VOLATILITY_THRESHOLD_HIGH,
-    CONF_VOLATILITY_THRESHOLD_MODERATE,
-    CONF_VOLATILITY_THRESHOLD_VERY_HIGH,
-    DEFAULT_VOLATILITY_THRESHOLD_HIGH,
-    DEFAULT_VOLATILITY_THRESHOLD_MODERATE,
-    DEFAULT_VOLATILITY_THRESHOLD_VERY_HIGH,
+    CONF_PRICE_RATING_THRESHOLD_HIGH,
+    CONF_PRICE_RATING_THRESHOLD_LOW,
+    DEFAULT_PRICE_RATING_THRESHOLD_HIGH,
+    DEFAULT_PRICE_RATING_THRESHOLD_LOW,
     DOMAIN,
     PRICE_LEVEL_CHEAP,
     PRICE_LEVEL_EXPENSIVE,
@@ -35,50 +32,80 @@ from .const import (
     PRICE_RATING_HIGH,
     PRICE_RATING_LOW,
     PRICE_RATING_NORMAL,
-    get_price_level_translation,
+    format_price_unit_minor,
+    get_translation,
 )
-from .price_utils import calculate_volatility_level
+from .sensor.helpers import aggregate_level_data, aggregate_rating_data
 
-PRICE_SERVICE_NAME = "get_price"
-APEXCHARTS_DATA_SERVICE_NAME = "get_apexcharts_data"
 APEXCHARTS_YAML_SERVICE_NAME = "get_apexcharts_yaml"
+CHARTDATA_SERVICE_NAME = "get_chartdata"
 REFRESH_USER_DATA_SERVICE_NAME = "refresh_user_data"
 ATTR_DAY: Final = "day"
 ATTR_ENTRY_ID: Final = "entry_id"
-ATTR_TIME: Final = "time"
-
-PRICE_SERVICE_SCHEMA: Final = vol.Schema(
-    {
-        vol.Required(ATTR_ENTRY_ID): str,
-        vol.Optional(ATTR_DAY): vol.In(["yesterday", "today", "tomorrow"]),
-        vol.Optional(ATTR_TIME): vol.Match(r"^(\d{2}:\d{2}(:\d{2})?)$"),  # HH:mm or HH:mm:ss
-    }
-)
-
-APEXCHARTS_DATA_SERVICE_SCHEMA: Final = vol.Schema(
-    {
-        vol.Required("entity_id"): str,
-        vol.Required("day"): vol.In(["yesterday", "today", "tomorrow"]),
-        vol.Required("level_type"): vol.In(["level", "rating_level"]),
-        vol.Required("level_key"): vol.In(
-            [
-                PRICE_LEVEL_CHEAP,
-                PRICE_LEVEL_EXPENSIVE,
-                PRICE_LEVEL_NORMAL,
-                PRICE_LEVEL_VERY_CHEAP,
-                PRICE_LEVEL_VERY_EXPENSIVE,
-                PRICE_RATING_HIGH,
-                PRICE_RATING_LOW,
-                PRICE_RATING_NORMAL,
-            ]
-        ),
-    }
-)
 
 APEXCHARTS_SERVICE_SCHEMA: Final = vol.Schema(
     {
-        vol.Required("entity_id"): str,
+        vol.Required(ATTR_ENTRY_ID): str,
         vol.Optional("day", default="today"): vol.In(["yesterday", "today", "tomorrow"]),
+        vol.Optional("level_type", default="rating_level"): vol.In(["rating_level", "level"]),
+    }
+)
+
+
+def _normalize_level_filter(value: list[str] | None) -> list[str] | None:
+    """Convert level filter values to uppercase for case-insensitive comparison."""
+    if value is None:
+        return None
+    return [v.upper() for v in value]
+
+
+def _normalize_rating_level_filter(value: list[str] | None) -> list[str] | None:
+    """Convert rating level filter values to uppercase for case-insensitive comparison."""
+    if value is None:
+        return None
+    return [v.upper() for v in value]
+
+
+CHARTDATA_SERVICE_SCHEMA: Final = vol.Schema(
+    {
+        vol.Required(ATTR_ENTRY_ID): str,
+        vol.Optional(ATTR_DAY): vol.All(vol.Coerce(list), [vol.In(["yesterday", "today", "tomorrow"])]),
+        vol.Optional("resolution", default="interval"): vol.In(["interval", "hourly"]),
+        vol.Optional("output_format", default="array_of_objects"): vol.In(["array_of_objects", "array_of_arrays"]),
+        vol.Optional("array_fields"): str,
+        vol.Optional("minor_currency", default=False): bool,
+        vol.Optional("round_decimals"): vol.All(vol.Coerce(int), vol.Range(min=0, max=10)),
+        vol.Optional("include_level", default=False): bool,
+        vol.Optional("include_rating_level", default=False): bool,
+        vol.Optional("include_average", default=False): bool,
+        vol.Optional("level_filter"): vol.All(
+            vol.Coerce(list),
+            _normalize_level_filter,
+            [
+                vol.In(
+                    [
+                        PRICE_LEVEL_VERY_CHEAP,
+                        PRICE_LEVEL_CHEAP,
+                        PRICE_LEVEL_NORMAL,
+                        PRICE_LEVEL_EXPENSIVE,
+                        PRICE_LEVEL_VERY_EXPENSIVE,
+                    ]
+                )
+            ],
+        ),
+        vol.Optional("rating_level_filter"): vol.All(
+            vol.Coerce(list),
+            _normalize_rating_level_filter,
+            [vol.In([PRICE_RATING_LOW, PRICE_RATING_NORMAL, PRICE_RATING_HIGH])],
+        ),
+        vol.Optional("insert_nulls", default="none"): vol.In(["none", "segments", "all"]),
+        vol.Optional("add_trailing_null", default=False): bool,
+        vol.Optional("timestamp_field", default="start_time"): str,
+        vol.Optional("price_field", default="price_per_kwh"): str,
+        vol.Optional("level_field", default="level"): str,
+        vol.Optional("rating_level_field", default="rating_level"): str,
+        vol.Optional("average_field", default="average"): str,
+        vol.Optional("data_key", default="data"): str,
     }
 )
 
@@ -91,159 +118,531 @@ REFRESH_USER_DATA_SERVICE_SCHEMA: Final = vol.Schema(
 # --- Entry point: Service handler ---
 
 
-async def _get_price(call: ServiceCall) -> dict[str, Any]:
-    """Return price information for the requested day and config entry."""
+def _aggregate_hourly_exact(  # noqa: PLR0913, PLR0912
+    intervals: list[dict],
+    timestamp_field: str,
+    price_field: str,
+    *,
+    use_minor_currency: bool = False,
+    round_decimals: int | None = None,
+    include_level: bool = False,
+    include_rating_level: bool = False,
+    level_filter: list[str] | None = None,
+    rating_level_filter: list[str] | None = None,
+    include_average: bool = False,
+    level_field: str = "level",
+    rating_level_field: str = "rating_level",
+    average_field: str = "average",
+    day_average: float | None = None,
+    threshold_low: float = DEFAULT_PRICE_RATING_THRESHOLD_LOW,
+    threshold_high: float = DEFAULT_PRICE_RATING_THRESHOLD_HIGH,
+) -> list[dict]:
+    """
+    Aggregate 15-minute intervals to exact hourly averages.
+
+    Each hour uses exactly 4 intervals (00:00, 00:15, 00:30, 00:45).
+    Returns data points at the start of each hour.
+    """
+    if not intervals:
+        return []
+
+    hourly_data = []
+    i = 0
+
+    while i < len(intervals):
+        interval = intervals[i]
+        start_time_str = interval.get("startsAt")
+
+        if not start_time_str:
+            i += 1
+            continue
+
+        # Parse the timestamp
+        start_time = dt_util.parse_datetime(start_time_str)
+        if not start_time:
+            i += 1
+            continue
+
+        # Check if this is the start of an hour (:00)
+        if start_time.minute != 0:
+            i += 1
+            continue
+
+        # Collect 4 intervals for this hour (with optional filtering)
+        hour_intervals = []
+        hour_interval_data = []  # Complete interval data for aggregation functions
+        for j in range(4):
+            if i + j < len(intervals):
+                interval = intervals[i + j]
+
+                # Apply level filter if specified
+                if level_filter is not None and "level" in interval and interval["level"] not in level_filter:
+                    continue
+
+                # Apply rating_level filter if specified
+                if (
+                    rating_level_filter is not None
+                    and "rating_level" in interval
+                    and interval["rating_level"] not in rating_level_filter
+                ):
+                    continue
+
+                price = interval.get("total")
+                if price is not None:
+                    hour_intervals.append(price)
+                    hour_interval_data.append(interval)
+
+        # Calculate average if we have data
+        if hour_intervals:
+            avg_price = sum(hour_intervals) / len(hour_intervals)
+
+            # Convert to minor currency (cents/øre) if requested
+            avg_price = round(avg_price * 100, 2) if use_minor_currency else round(avg_price, 4)
+
+            # Apply custom rounding if specified
+            if round_decimals is not None:
+                avg_price = round(avg_price, round_decimals)
+
+            data_point = {timestamp_field: start_time_str, price_field: avg_price}
+
+            # Add aggregated level using same logic as sensors
+            if include_level and hour_interval_data:
+                aggregated_level = aggregate_level_data(hour_interval_data)
+                if aggregated_level:
+                    data_point[level_field] = aggregated_level.upper()  # Convert back to uppercase
+
+            # Add aggregated rating_level using same logic as sensors
+            if include_rating_level and hour_interval_data:
+                aggregated_rating = aggregate_rating_data(hour_interval_data, threshold_low, threshold_high)
+                if aggregated_rating:
+                    data_point[rating_level_field] = aggregated_rating.upper()  # Convert back to uppercase
+
+            # Add average if requested
+            if include_average and day_average is not None:
+                data_point[average_field] = day_average
+
+            hourly_data.append(data_point)
+
+        # Move to next hour (skip 4 intervals)
+        i += 4
+
+    return hourly_data
+
+
+async def _get_chartdata(call: ServiceCall) -> dict[str, Any]:  # noqa: PLR0912, PLR0915, C901
+    """Return price data in a simple chart-friendly format similar to Tibber Core integration."""
     hass = call.hass
     entry_id_raw = call.data.get(ATTR_ENTRY_ID)
     if entry_id_raw is None:
         raise ServiceValidationError(translation_domain=DOMAIN, translation_key="missing_entry_id")
     entry_id: str = str(entry_id_raw)
-    time_value = call.data.get(ATTR_TIME)
-    explicit_day = ATTR_DAY in call.data
-    day = call.data.get(ATTR_DAY, "today")
 
-    _, coordinator, _ = _get_entry_and_data(hass, entry_id)
-    price_info_data, currency = _extract_price_data(coordinator.data)
-
-    # Get volatility thresholds from config
-    thresholds = {
-        "threshold_moderate": coordinator.config_entry.options.get(
-            CONF_VOLATILITY_THRESHOLD_MODERATE, DEFAULT_VOLATILITY_THRESHOLD_MODERATE
-        ),
-        "threshold_high": coordinator.config_entry.options.get(
-            CONF_VOLATILITY_THRESHOLD_HIGH, DEFAULT_VOLATILITY_THRESHOLD_HIGH
-        ),
-        "threshold_very_high": coordinator.config_entry.options.get(
-            CONF_VOLATILITY_THRESHOLD_VERY_HIGH, DEFAULT_VOLATILITY_THRESHOLD_VERY_HIGH
-        ),
-    }
-
-    # Determine which days to include
-    if explicit_day:
-        day_key = day if day in ("yesterday", "today", "tomorrow") else "today"
-        prices_raw = price_info_data.get(day_key, [])
-        stats_raw = prices_raw
+    days_raw = call.data.get(ATTR_DAY)
+    # If no day specified, return all available data (today + tomorrow)
+    if days_raw is None:
+        days = ["today", "tomorrow"]
+    # Convert single string to list for uniform processing
+    elif isinstance(days_raw, str):
+        days = [days_raw]
     else:
-        # No explicit day: include today + tomorrow for prices, use today for stats
-        today_raw = price_info_data.get("today", [])
-        tomorrow_raw = price_info_data.get("tomorrow", [])
-        prices_raw = today_raw + tomorrow_raw
-        stats_raw = today_raw
-        day_key = "today"
+        days = days_raw
 
-    # Transform to service format
-    prices_transformed = _transform_price_intervals(prices_raw)
-    stats_transformed = _transform_price_intervals(stats_raw)
+    timestamp_field = call.data.get("timestamp_field", "start_time")
+    price_field = call.data.get("price_field", "price_per_kwh")
+    level_field = call.data.get("level_field", "level")
+    rating_level_field = call.data.get("rating_level_field", "rating_level")
+    average_field = call.data.get("average_field", "average")
+    data_key = call.data.get("data_key", "data")
+    resolution = call.data.get("resolution", "interval")
+    output_format = call.data.get("output_format", "array_of_objects")
+    minor_currency = call.data.get("minor_currency", False)
+    round_decimals = call.data.get("round_decimals")
+    include_level = call.data.get("include_level", False)
+    include_rating_level = call.data.get("include_rating_level", False)
+    include_average = call.data.get("include_average", False)
+    insert_nulls = call.data.get("insert_nulls", "none")
+    add_trailing_null = call.data.get("add_trailing_null", False)
+    # Filter values are already normalized to uppercase by schema validators
+    level_filter = call.data.get("level_filter")
+    rating_level_filter = call.data.get("rating_level_filter")
 
-    # Calculate stats
-    price_stats = _get_price_stats(stats_transformed, thresholds)
-
-    # Determine now and simulation flag
-    now, is_simulated = _determine_now_and_simulation(time_value, stats_transformed)
-
-    # Select intervals
-    previous_interval, current_interval, next_interval = _select_intervals(
-        stats_transformed, coordinator, day_key, now, simulated=is_simulated
-    )
-
-    # Add end_time to intervals
-    _annotate_end_times(prices_transformed, price_info_data, day_key)
-
-    # Enrich intervals with trailing and leading averages
-    _enrich_intervals_with_averages(prices_transformed, price_info_data)
-
-    # Clean up temp fields from all intervals
-    for interval in prices_transformed:
-        if "start_dt" in interval:
-            del interval["start_dt"]
-
-    # Also clean up from selected intervals
-    if previous_interval and "start_dt" in previous_interval:
-        del previous_interval["start_dt"]
-    if current_interval and "start_dt" in current_interval:
-        del current_interval["start_dt"]
-    if next_interval and "start_dt" in next_interval:
-        del next_interval["start_dt"]
-
-    response_ctx = PriceResponseContext(
-        price_stats=price_stats,
-        previous_interval=previous_interval,
-        current_interval=current_interval,
-        next_interval=next_interval,
-        currency=currency,
-        merged=prices_transformed,
-    )
-
-    return _build_price_response(response_ctx)
-
-
-async def _get_entry_id_from_entity_id(hass: HomeAssistant, entity_id: str) -> str | None:
-    """Return the config entry_id for a given entity_id."""
-    entity_registry = async_get_entity_registry(hass)
-    entry = entity_registry.async_get(entity_id)
-    if entry is not None:
-        return entry.config_entry_id
-    return None
-
-
-async def _get_apexcharts_data(call: ServiceCall) -> dict[str, Any]:
-    """Return points for ApexCharts for a single level type (e.g., LOW, NORMAL, HIGH, etc)."""
-    entity_id = call.data.get("entity_id", "sensor.tibber_price_today")
-    day = call.data.get("day", "today")
-    level_type = call.data.get("level_type", "rating_level")
-    level_key = call.data.get("level_key")
-    hass = call.hass
-
-    # Get entry ID and verify it exists
-    entry_id = await _get_entry_id_from_entity_id(hass, entity_id)
-    if not entry_id:
-        raise ServiceValidationError(translation_domain=DOMAIN, translation_key="invalid_entity_id")
+    # If array_fields is specified, implicitly enable fields that are used
+    array_fields_template = call.data.get("array_fields")
+    if array_fields_template and output_format == "array_of_arrays":
+        if level_field in array_fields_template:
+            include_level = True
+        if rating_level_field in array_fields_template:
+            include_rating_level = True
+        if average_field in array_fields_template:
+            include_average = True
 
     _, coordinator, _ = _get_entry_and_data(hass, entry_id)
 
-    # Get entries based on level_type
-    entries = _get_apexcharts_entries(coordinator, day, level_type)
-    if not entries:
-        return {"points": []}
+    # Get thresholds from config for rating aggregation
+    threshold_low = coordinator.config_entry.options.get(
+        CONF_PRICE_RATING_THRESHOLD_LOW, DEFAULT_PRICE_RATING_THRESHOLD_LOW
+    )
+    threshold_high = coordinator.config_entry.options.get(
+        CONF_PRICE_RATING_THRESHOLD_HIGH, DEFAULT_PRICE_RATING_THRESHOLD_HIGH
+    )
 
-    # Ensure level_key is a string
-    if level_key is None:
-        raise ServiceValidationError(translation_domain=DOMAIN, translation_key="missing_level_key")
-
-    # Generate points for the chart
-    points = _generate_apexcharts_points(entries, str(level_key))
-    return {"points": points}
-
-
-def _get_apexcharts_entries(coordinator: Any, day: str, _: str) -> list[dict]:
-    """Get the appropriate entries for ApexCharts based on day."""
-    # Price info is already enriched with difference and rating_level from coordinator
+    # Get price data for all requested days
     price_info = coordinator.data.get("priceInfo", {})
-    day_info = price_info.get(day, [])
-    return day_info if day_info else []
+    chart_data = []
+
+    # Collect all timestamps if insert_nulls='all' (needed to insert NULLs for missing filter matches)
+    all_timestamps = set()
+    if insert_nulls == "all" and (level_filter or rating_level_filter):
+        for day in days:
+            day_prices = price_info.get(day, [])
+            for interval in day_prices:
+                start_time = interval.get("startsAt")
+                if start_time:
+                    all_timestamps.add(start_time)
+        all_timestamps = sorted(all_timestamps)
+
+    # Calculate average if requested
+    day_averages = {}
+    if include_average:
+        for day in days:
+            day_prices = price_info.get(day, [])
+            if day_prices:
+                prices = [p["total"] for p in day_prices if p.get("total") is not None]
+                if prices:
+                    avg = sum(prices) / len(prices)
+                    # Apply same transformations as to regular prices
+                    avg = round(avg * 100, 2) if minor_currency else round(avg, 4)
+                    if round_decimals is not None:
+                        avg = round(avg, round_decimals)
+                    day_averages[day] = avg
+
+    for day in days:
+        day_prices = price_info.get(day, [])
+
+        if resolution == "interval":
+            # Original 15-minute intervals
+            if insert_nulls == "all" and (level_filter or rating_level_filter):
+                # Mode 'all': Insert NULL for all timestamps where filter doesn't match
+                # Build a map of timestamp -> interval for quick lookup
+                interval_map = {
+                    interval.get("startsAt"): interval for interval in day_prices if interval.get("startsAt")
+                }
+
+                # Process all timestamps, filling gaps with NULL
+                for start_time in all_timestamps:
+                    interval = interval_map.get(start_time)
+
+                    if interval is None:
+                        # No data for this timestamp - skip entirely
+                        continue
+
+                    price = interval.get("total")
+                    if price is None:
+                        continue
+
+                    # Check if this interval matches the filter
+                    matches_filter = False
+                    if level_filter and "level" in interval:
+                        matches_filter = interval["level"] in level_filter
+                    elif rating_level_filter and "rating_level" in interval:
+                        matches_filter = interval["rating_level"] in rating_level_filter
+
+                    # If filter is set but doesn't match, insert NULL price
+                    if not matches_filter:
+                        price = None
+                    elif price is not None:
+                        # Convert to minor currency (cents/øre) if requested
+                        price = round(price * 100, 2) if minor_currency else round(price, 4)
+                        # Apply custom rounding if specified
+                        if round_decimals is not None:
+                            price = round(price, round_decimals)
+
+                    data_point = {timestamp_field: start_time, price_field: price}
+
+                    # Add level if requested (only when price is not NULL)
+                    if include_level and "level" in interval and price is not None:
+                        data_point[level_field] = interval["level"]
+
+                    # Add rating_level if requested (only when price is not NULL)
+                    if include_rating_level and "rating_level" in interval and price is not None:
+                        data_point[rating_level_field] = interval["rating_level"]
+
+                    # Add average if requested
+                    if include_average and day in day_averages:
+                        data_point[average_field] = day_averages[day]
+
+                    chart_data.append(data_point)
+            elif insert_nulls == "segments" and (level_filter or rating_level_filter):
+                # Mode 'segments': Add NULL points at segment boundaries for clean gaps
+                # Determine which field to check based on filter type
+                filter_field = "rating_level" if rating_level_filter else "level"
+                filter_values = rating_level_filter if rating_level_filter else level_filter
+
+                for i in range(len(day_prices) - 1):
+                    interval = day_prices[i]
+                    next_interval = day_prices[i + 1]
+
+                    start_time = interval.get("startsAt")
+                    price = interval.get("total")
+                    next_start_time = next_interval.get("startsAt")
+
+                    if start_time is None or price is None:
+                        continue
+
+                    interval_value = interval.get(filter_field)
+                    next_value = next_interval.get(filter_field)
+
+                    # Check if current interval matches filter
+                    if interval_value in filter_values:
+                        # Convert price
+                        converted_price = round(price * 100, 2) if minor_currency else round(price, 4)
+                        if round_decimals is not None:
+                            converted_price = round(converted_price, round_decimals)
+
+                        # Add current point
+                        data_point = {timestamp_field: start_time, price_field: converted_price}
+
+                        if include_level and "level" in interval:
+                            data_point[level_field] = interval["level"]
+                        if include_rating_level and "rating_level" in interval:
+                            data_point[rating_level_field] = interval["rating_level"]
+                        if include_average and day in day_averages:
+                            data_point[average_field] = day_averages[day]
+
+                        chart_data.append(data_point)
+
+                        # Check if next interval is different level (segment boundary)
+                        if next_value != interval_value:
+                            # Hold current price until next timestamp (stepline effect)
+                            hold_point = {timestamp_field: next_start_time, price_field: converted_price}
+                            if include_level and "level" in interval:
+                                hold_point[level_field] = interval["level"]
+                            if include_rating_level and "rating_level" in interval:
+                                hold_point[rating_level_field] = interval["rating_level"]
+                            if include_average and day in day_averages:
+                                hold_point[average_field] = day_averages[day]
+                            chart_data.append(hold_point)
+
+                            # Add NULL point to create gap
+                            null_point = {timestamp_field: next_start_time, price_field: None}
+                            chart_data.append(null_point)
+
+                # Handle last interval of the day - extend to midnight
+                if day_prices:
+                    last_interval = day_prices[-1]
+                    last_start_time = last_interval.get("startsAt")
+                    last_price = last_interval.get("total")
+                    last_value = last_interval.get(filter_field)
+
+                    if last_start_time and last_price is not None and last_value in filter_values:
+                        # Parse timestamp and calculate midnight of next day
+                        last_dt = dt_util.parse_datetime(last_start_time)
+                        if last_dt:
+                            last_dt = dt_util.as_local(last_dt)
+                            # Calculate next day at 00:00
+                            next_day = last_dt.replace(hour=0, minute=0, second=0, microsecond=0)
+                            next_day = next_day + timedelta(days=1)
+                            midnight_timestamp = next_day.isoformat()
+
+                            # Try to get real price from tomorrow's first interval
+                            next_day_name = None
+                            if day == "yesterday":
+                                next_day_name = "today"
+                            elif day == "today":
+                                next_day_name = "tomorrow"
+                            # For "tomorrow", we don't have a "day after tomorrow"
+
+                            midnight_price = None
+                            midnight_interval = None
+
+                            if next_day_name:
+                                next_day_prices = price_info.get(next_day_name, [])
+                                if next_day_prices:
+                                    first_next = next_day_prices[0]
+                                    first_next_value = first_next.get(filter_field)
+                                    # Only use tomorrow's price if it matches the same filter
+                                    if first_next_value == last_value:
+                                        midnight_price = first_next.get("total")
+                                        midnight_interval = first_next
+
+                            # Fallback: use last interval's price if no tomorrow data or different level
+                            if midnight_price is None:
+                                midnight_price = last_price
+                                midnight_interval = last_interval
+
+                            # Convert price
+                            converted_price = (
+                                round(midnight_price * 100, 2) if minor_currency else round(midnight_price, 4)
+                            )
+                            if round_decimals is not None:
+                                converted_price = round(converted_price, round_decimals)
+
+                            # Add point at midnight with appropriate price (extends graph to end of day)
+                            end_point = {timestamp_field: midnight_timestamp, price_field: converted_price}
+                            if midnight_interval is not None:
+                                if include_level and "level" in midnight_interval:
+                                    end_point[level_field] = midnight_interval["level"]
+                                if include_rating_level and "rating_level" in midnight_interval:
+                                    end_point[rating_level_field] = midnight_interval["rating_level"]
+                            if include_average and day in day_averages:
+                                end_point[average_field] = day_averages[day]
+                            chart_data.append(end_point)
+            else:
+                # Mode 'none' (default): Only return matching intervals, no NULL insertion
+                for interval in day_prices:
+                    start_time = interval.get("startsAt")
+                    price = interval.get("total")
+
+                    if start_time is not None and price is not None:
+                        # Apply level filter if specified
+                        if level_filter is not None and "level" in interval and interval["level"] not in level_filter:
+                            continue
+
+                        # Apply rating_level filter if specified
+                        if (
+                            rating_level_filter is not None
+                            and "rating_level" in interval
+                            and interval["rating_level"] not in rating_level_filter
+                        ):
+                            continue
+
+                        # Convert to minor currency (cents/øre) if requested
+                        price = round(price * 100, 2) if minor_currency else round(price, 4)
+
+                        # Apply custom rounding if specified
+                        if round_decimals is not None:
+                            price = round(price, round_decimals)
+
+                        data_point = {timestamp_field: start_time, price_field: price}
+
+                        # Add level if requested
+                        if include_level and "level" in interval:
+                            data_point[level_field] = interval["level"]
+
+                        # Add rating_level if requested
+                        if include_rating_level and "rating_level" in interval:
+                            data_point[rating_level_field] = interval["rating_level"]
+
+                        # Add average if requested
+                        if include_average and day in day_averages:
+                            data_point[average_field] = day_averages[day]
+
+                        chart_data.append(data_point)
+
+        elif resolution == "hourly":
+            # Hourly averages (4 intervals per hour: :00, :15, :30, :45)
+            chart_data.extend(
+                _aggregate_hourly_exact(
+                    day_prices,
+                    timestamp_field,
+                    price_field,
+                    use_minor_currency=minor_currency,
+                    round_decimals=round_decimals,
+                    include_level=include_level,
+                    include_rating_level=include_rating_level,
+                    level_filter=level_filter,
+                    rating_level_filter=rating_level_filter,
+                    include_average=include_average,
+                    level_field=level_field,
+                    rating_level_field=rating_level_field,
+                    average_field=average_field,
+                    day_average=day_averages.get(day),
+                    threshold_low=threshold_low,
+                    threshold_high=threshold_high,
+                )
+            )
+
+    # Convert to array of arrays format if requested
+    if output_format == "array_of_arrays":
+        array_fields_template = call.data.get("array_fields")
+
+        # Default: nur timestamp und price
+        if not array_fields_template:
+            array_fields_template = f"{{{timestamp_field}}}, {{{price_field}}}"
+
+        # Parse template to extract field names
+        field_pattern = re.compile(r"\{([^}]+)\}")
+        field_names = field_pattern.findall(array_fields_template)
+
+        if not field_names:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="invalid_array_fields",
+                translation_placeholders={"template": array_fields_template},
+            )
+
+        # Convert to [[field1, field2, ...], ...] format
+        points = []
+        for item in chart_data:
+            row = []
+            for field_name in field_names:
+                # Get value from item, or None if field doesn't exist
+                value = item.get(field_name)
+                row.append(value)
+            points.append(row)
+
+        # Add final null point for stepline rendering if requested
+        # (some chart libraries need this to prevent extrapolation to viewport edge)
+        if add_trailing_null and points:
+            null_row = [points[-1][0]] + [None] * (len(field_names) - 1)
+            points.append(null_row)
+
+        return {data_key: points}
+
+    # Add trailing null point for array_of_objects format if requested
+    if add_trailing_null and chart_data:
+        # Create a null point with only timestamp from last item, all other fields as None
+        last_item = chart_data[-1]
+        null_point = {timestamp_field: last_item.get(timestamp_field)}
+        # Set all other potential fields to None
+        for field in [price_field, level_field, rating_level_field, average_field]:
+            if field in last_item:
+                null_point[field] = None
+        chart_data.append(null_point)
+
+    return {data_key: chart_data}
 
 
-def _generate_apexcharts_points(entries: list[dict], level_key: str) -> list:
-    """Generate data points for ApexCharts based on the entries and level key."""
-    points = []
-    for i in range(len(entries) - 1):
-        p = entries[i]
-        if p.get("level") != level_key:
-            continue
-        points.append([p.get("time") or p.get("startsAt"), round((p.get("total") or 0) * 100, 2)])
-
-    # Add a final point with null value if there are any points
-    if points:
-        points.append([points[-1][0], None])
-
-    return points
+def _get_level_translation(level_key: str, level_type: str, language: str) -> str:
+    """Get translated name for a price level or rating level."""
+    level_key_lower = level_key.lower()
+    # Use correct translation key based on level_type
+    if level_type == "rating_level":
+        name = get_translation(["selector", "rating_level_filter", "options", level_key_lower], language)
+    else:
+        name = get_translation(["selector", "level_filter", "options", level_key_lower], language)
+    # Fallback to original key if translation not found
+    return name or level_key
 
 
 async def _get_apexcharts_yaml(call: ServiceCall) -> dict[str, Any]:
     """Return a YAML snippet for an ApexCharts card using the get_apexcharts_data service for each level."""
-    entity_id = call.data.get("entity_id", "sensor.tibber_price_today")
+    hass = call.hass
+    entry_id_raw = call.data.get(ATTR_ENTRY_ID)
+    if entry_id_raw is None:
+        raise ServiceValidationError(translation_domain=DOMAIN, translation_key="missing_entry_id")
+    entry_id: str = str(entry_id_raw)
+
     day = call.data.get("day", "today")
     level_type = call.data.get("level_type", "rating_level")
+
+    # Get user's language from hass config
+    user_language = hass.config.language or "en"
+
+    # Get coordinator to access price data (for currency)
+    _, coordinator, _ = _get_entry_and_data(hass, entry_id)
+    price_info = coordinator.data.get("priceInfo", {})
+    currency = price_info.get("currency", "EUR")
+    price_unit = format_price_unit_minor(currency)
+
+    # Get a sample entity_id for the series (first sensor from this entry)
+    entity_registry = async_get_entity_registry(hass)
+    sample_entity = None
+    for entity in entity_registry.entities.values():
+        if entity.config_entry_id == entry_id and entity.domain == "sensor":
+            sample_entity = entity.entity_id
+            break
+
     if level_type == "rating_level":
         series_levels = [
             (PRICE_RATING_LOW, "#2ecc71"),
@@ -260,44 +659,117 @@ async def _get_apexcharts_yaml(call: ServiceCall) -> dict[str, Any]:
         ]
     series = []
     for level_key, color in series_levels:
-        name = get_price_level_translation(level_key, "en") or level_key
+        # Get translated name for the level using helper function
+        name = _get_level_translation(level_key, level_type, user_language)
+        # Use server-side insert_nulls='segments' for clean gaps
+        if level_type == "rating_level":
+            filter_param = f"rating_level_filter: ['{level_key}']"
+        else:
+            filter_param = f"level_filter: ['{level_key}']"
+
         data_generator = (
-            f"const data = await hass.callService('tibber_prices', 'get_apexcharts_data', "
-            f"{{ entity_id: '{entity_id}', day: '{day}', level_type: '{level_type}', level_key: '{level_key}' }});\n"
-            f"return data.points;"
+            f"const response = await hass.callWS({{ "
+            f"type: 'call_service', "
+            f"domain: 'tibber_prices', "
+            f"service: 'get_chartdata', "
+            f"return_response: true, "
+            f"service_data: {{ entry_id: '{entry_id}', day: ['{day}'], {filter_param}, "
+            f"output_format: 'array_of_arrays', insert_nulls: 'segments', minor_currency: true }} }}); "
+            f"return response.response.data;"
         )
+        # Only show extremas for HIGH and LOW levels (not NORMAL)
+        show_extremas = level_key != "NORMAL"
         series.append(
             {
-                "entity": entity_id,
+                "entity": sample_entity or "sensor.tibber_prices",
                 "name": name,
                 "type": "area",
                 "color": color,
                 "yaxis_id": "price",
-                "show": {"extremas": level_key != "NORMAL"},
+                "show": {"extremas": show_extremas, "legend_value": False},
                 "data_generator": data_generator,
+                "stroke_width": 1,
             }
         )
-    title = "Preisphasen Tagesverlauf" if level_type == "rating" else "Preisniveau"
+
+    # Get translated title based on level_type
+    title_key = "title_rating_level" if level_type == "rating_level" else "title_level"
+    title = get_translation(["apexcharts", title_key], user_language) or (
+        "Price Phases Daily Progress" if level_type == "rating_level" else "Price Level"
+    )
+
+    # Add translated day to title
+    day_translated = get_translation(["selector", "day", "options", day], user_language) or day.capitalize()
+    title = f"{title} - {day_translated}"
+
+    # Configure span based on selected day
+    if day == "yesterday":
+        span_config = {"start": "day", "offset": "-1d"}
+    elif day == "tomorrow":
+        span_config = {"start": "day", "offset": "+1d"}
+    else:  # today
+        span_config = {"start": "day"}
+
     return {
         "type": "custom:apexcharts-card",
         "update_interval": "5m",
-        "span": {"start": "day"},
+        "span": span_config,
         "header": {
             "show": True,
             "title": title,
             "show_states": False,
         },
         "apex_config": {
-            "stroke": {"curve": "stepline"},
-            "fill": {"opacity": 0.4},
-            "tooltip": {"x": {"format": "HH:mm"}},
-            "legend": {"show": True},
+            "chart": {
+                "animations": {"enabled": False},
+                "toolbar": {"show": True, "tools": {"zoom": True, "pan": True}},
+                "zoom": {"enabled": True},
+            },
+            "stroke": {"curve": "stepline", "width": 2},
+            "fill": {
+                "type": "gradient",
+                "opacity": 0.4,
+                "gradient": {
+                    "shade": "dark",
+                    "type": "vertical",
+                    "shadeIntensity": 0.5,
+                    "opacityFrom": 0.7,
+                    "opacityTo": 0.2,
+                },
+            },
+            "dataLabels": {"enabled": False},
+            "tooltip": {
+                "x": {"format": "HH:mm"},
+                "y": {"title": {"formatter": f"function() {{ return '{price_unit}'; }}"}},
+            },
+            "legend": {
+                "show": True,
+                "position": "top",
+                "horizontalAlign": "left",
+                "markers": {"radius": 2},
+            },
+            "grid": {
+                "show": True,
+                "borderColor": "#40475D",
+                "strokeDashArray": 4,
+                "xaxis": {"lines": {"show": True}},
+                "yaxis": {"lines": {"show": True}},
+            },
+            "markers": {"size": 0},
         },
         "yaxis": [
-            {"id": "price", "decimals": 0, "min": 0},
+            {
+                "id": "price",
+                "decimals": 2,
+                "min": 0,
+                "apex_config": {"title": {"text": price_unit}},
+            },
         ],
         "now": {"show": True, "color": "#8e24aa", "label": "🕒 LIVE"},
-        "all_series_config": {"stroke_width": 1, "show": {"legend_value": False}},
+        "all_series_config": {
+            "stroke_width": 1,
+            "group_by": {"func": "raw", "duration": "15min"},
+        },
         "series": series,
     }
 
@@ -371,306 +843,6 @@ def _get_entry_and_data(hass: HomeAssistant, entry_id: str) -> tuple[Any, Any, d
     return entry, coordinator, data
 
 
-def _extract_price_data(data: dict) -> tuple[dict, Any]:
-    """Extract price info from enriched coordinator data."""
-    price_info_data = data.get("priceInfo") or {}
-    currency = price_info_data.get("currency")
-    return price_info_data, currency
-
-
-def _transform_price_intervals(price_info: list[dict]) -> list[dict]:
-    """Transform priceInfo intervals to service output format."""
-    result = []
-    for interval in price_info or []:
-        ts = interval.get("startsAt")
-        start_dt = dt_util.parse_datetime(ts) if ts else None
-        item = {"start_time": ts, "start_dt": start_dt} if ts else {"start_dt": None}
-
-        for k, v in interval.items():
-            if k == "startsAt":
-                continue
-            if k == "total":
-                item["price"] = v
-                item["price_minor"] = round(v * 100, 2)
-            elif k not in ("energy", "tax"):
-                item[k] = v
-
-        result.append(item)
-
-    # Sort by datetime
-    result.sort(key=lambda x: (x.get("start_dt") is None, x.get("start_dt")))
-    return result
-
-
-def _annotate_end_times(merged: list[dict], price_info_by_day: dict, day: str) -> None:
-    """Annotate merged intervals with end_time."""
-    for idx, interval in enumerate(merged):
-        # Default: next interval's start_time
-        if idx + 1 < len(merged):
-            interval["end_time"] = merged[idx + 1].get("start_time")
-        # Last interval: look into next day's first interval
-        else:
-            next_day = "tomorrow" if day == "today" else (day if day == "tomorrow" else None)
-            if next_day and price_info_by_day.get(next_day):
-                first_of_next = price_info_by_day[next_day][0]
-                interval["end_time"] = first_of_next.get("startsAt")
-            else:
-                interval["end_time"] = None
-
-
-def _enrich_intervals_with_averages(intervals: list[dict], price_info_by_day: dict) -> None:
-    """Enrich intervals with trailing and leading 24-hour average prices."""
-    # Collect all price data from yesterday, today, and tomorrow
-    all_prices = []
-    for day in ["yesterday", "today", "tomorrow"]:
-        all_prices.extend(price_info_by_day.get(day, []))
-
-    if not all_prices:
-        return
-
-    # Enrich each interval with trailing and leading averages
-    for interval in intervals:
-        start_dt = interval.get("start_dt")
-        if not start_dt:
-            continue
-
-        # Ensure start_dt is timezone-aware
-        if start_dt.tzinfo is None:
-            start_dt = dt_util.as_local(start_dt)
-
-        # Calculate trailing and leading averages for this interval
-        trailing_avg = calculate_trailing_24h_avg(all_prices, start_dt)
-        leading_avg = calculate_leading_24h_avg(all_prices, start_dt)
-
-        # Add to interval
-        interval["trailing_price_average"] = round(trailing_avg, 4)
-        interval["trailing_price_average_minor"] = round(trailing_avg * 100, 2)
-        interval["leading_price_average"] = round(leading_avg, 4)
-        interval["leading_price_average_minor"] = round(leading_avg * 100, 2)
-
-
-def _get_price_stats(merged: list[dict], thresholds: dict) -> PriceStats:
-    """Calculate average, min, and max price from merged data."""
-    if merged:
-        prices = [float(interval.get("price", 0)) for interval in merged if "price" in interval]
-        price_avg = round(sum(prices) / len(prices), 4) if prices else 0
-    else:
-        prices = []
-        price_avg = 0
-    price_min, price_min_interval = _get_price_stat(merged, "min")
-    price_max, price_max_interval = _get_price_stat(merged, "max")
-    price_spread = round(price_max - price_min, 4) if price_min is not None and price_max is not None else 0
-    # Calculate volatility from price list (coefficient of variation)
-    price_volatility = calculate_volatility_level(prices, **thresholds) if prices else "low"
-    return PriceStats(
-        price_avg=price_avg,
-        price_min=price_min,
-        price_min_start_time=price_min_interval.get("start_time") if price_min_interval else None,
-        price_min_end_time=price_min_interval.get("end_time") if price_min_interval else None,
-        price_max=price_max,
-        price_max_start_time=price_max_interval.get("start_time") if price_max_interval else None,
-        price_max_end_time=price_max_interval.get("end_time") if price_max_interval else None,
-        price_min_interval=price_min_interval,
-        price_max_interval=price_max_interval,
-        price_spread=price_spread,
-        price_volatility=price_volatility,
-        stats_merged=merged,
-    )
-
-
-def _determine_now_and_simulation(
-    time_value: str | None, interval_selection_merged: list[dict]
-) -> tuple[datetime, bool]:
-    """Determine the 'now' datetime and simulation flag."""
-    is_simulated = False
-    if time_value:
-        if not interval_selection_merged or not interval_selection_merged[0].get("start_time"):
-            now = dt_util.now().replace(second=0, microsecond=0)
-            is_simulated = True
-            return now, is_simulated
-        day_prefix = interval_selection_merged[0]["start_time"].split("T")[0]
-        dt_str = f"{day_prefix}T{time_value}"
-        try:
-            now = datetime.fromisoformat(dt_str)
-        except ValueError as exc:
-            raise ServiceValidationError(
-                translation_domain=DOMAIN,
-                translation_key="invalid_time",
-                translation_placeholders={"error": str(exc)},
-            ) from exc
-        is_simulated = True
-    elif not interval_selection_merged or not interval_selection_merged[0].get("start_time"):
-        now = dt_util.now().replace(second=0, microsecond=0)
-    else:
-        day_prefix = interval_selection_merged[0]["start_time"].split("T")[0]
-        current_time = dt_util.now().time().replace(second=0, microsecond=0)
-        dt_str = f"{day_prefix}T{current_time.isoformat()}"
-        try:
-            now = datetime.fromisoformat(dt_str)
-        except ValueError:
-            now = dt_util.now().replace(second=0, microsecond=0)
-        is_simulated = True
-    return now, is_simulated
-
-
-def _select_intervals(  # noqa: PLR0912
-    merged: list[dict], coordinator: Any, day: str, now: datetime, *, simulated: bool
-) -> tuple[Any, Any, Any]:
-    """Select previous, current, and next intervals for the given day and time."""
-    if not merged or (not simulated and day in ("yesterday", "tomorrow")):
-        return None, None, None
-
-    # Find current interval by time
-    idx = None
-    cmp_now = dt_util.as_local(now) if now.tzinfo is None else now
-    for i, interval in enumerate(merged):
-        start_dt = interval.get("start_dt")
-        if not start_dt:
-            continue
-        if start_dt.tzinfo is None:
-            start_dt = dt_util.as_local(start_dt)
-        if start_dt <= cmp_now:
-            idx = i
-        elif start_dt > cmp_now:
-            break
-
-    previous_interval = merged[idx - 1] if idx is not None and idx > 0 else None
-    current_interval = merged[idx] if idx is not None else None
-    next_interval = (
-        merged[idx + 1] if idx is not None and idx + 1 < len(merged) else (merged[0] if idx is None else None)
-    )
-
-    # For today, try to fetch adjacent intervals from neighboring days
-    if day == "today":
-        if idx == 0 and previous_interval is None:
-            yday_info = coordinator.data.get("priceInfo", {}).get("yesterday", [])
-            if yday_info:
-                yday_transformed = _transform_price_intervals(yday_info)
-                if yday_transformed:
-                    previous_interval = yday_transformed[-1]
-
-        if idx == len(merged) - 1 and next_interval is None:
-            tmrw_info = coordinator.data.get("priceInfo", {}).get("tomorrow", [])
-            if tmrw_info:
-                tmrw_transformed = _transform_price_intervals(tmrw_info)
-                if tmrw_transformed:
-                    next_interval = tmrw_transformed[0]
-
-    return previous_interval, current_interval, next_interval
-
-
-def _build_price_response(ctx: PriceResponseContext) -> dict[str, Any]:
-    """Build the response dictionary for the price service."""
-    price_stats = ctx.price_stats
-
-    # Helper to clean internal fields from interval
-    def clean_interval(interval: dict | None) -> dict | None:
-        """Remove internal fields like start_dt from interval."""
-        if not interval:
-            return interval
-        return {k: v for k, v in interval.items() if k != "start_dt"}
-
-    # Build average interval (synthetic, using first interval as template)
-    average_interval = {}
-    if price_stats.stats_merged:
-        first = price_stats.stats_merged[0]
-        # Copy all attributes from first interval (excluding internal fields)
-        for k in first:
-            if k not in ("start_time", "end_time", "start_dt", "price", "price_minor"):
-                average_interval[k] = first[k]
-
-    return {
-        "average": {
-            **average_interval,
-            "start_time": price_stats.stats_merged[0].get("start_time") if price_stats.stats_merged else None,
-            "end_time": price_stats.stats_merged[0].get("end_time") if price_stats.stats_merged else None,
-            "price": price_stats.price_avg,
-            "price_minor": round(price_stats.price_avg * 100, 2),
-        },
-        "minimum": clean_interval(
-            {
-                **price_stats.price_min_interval,
-                "price": price_stats.price_min,
-                "price_minor": round(price_stats.price_min * 100, 2),
-            }
-        )
-        if price_stats.price_min_interval
-        else {
-            "start_time": price_stats.price_min_start_time,
-            "end_time": price_stats.price_min_end_time,
-            "price": price_stats.price_min,
-            "price_minor": round(price_stats.price_min * 100, 2),
-        },
-        "maximum": clean_interval(
-            {
-                **price_stats.price_max_interval,
-                "price": price_stats.price_max,
-                "price_minor": round(price_stats.price_max * 100, 2),
-            }
-        )
-        if price_stats.price_max_interval
-        else {
-            "start_time": price_stats.price_max_start_time,
-            "end_time": price_stats.price_max_end_time,
-            "price": price_stats.price_max,
-            "price_minor": round(price_stats.price_max * 100, 2),
-        },
-        "previous": clean_interval(ctx.previous_interval),
-        "current": clean_interval(ctx.current_interval),
-        "next": clean_interval(ctx.next_interval),
-        "currency": ctx.currency,
-        "interval_count": len(ctx.merged),
-        "price_spread": round(price_stats.price_spread * 100, 2),  # Convert to minor currency unit
-        "price_volatility": price_stats.price_volatility,
-        "intervals": ctx.merged,
-    }
-
-
-def _get_price_stat(merged: list[dict], stat: str) -> tuple[float, dict | None]:
-    """Return min or max price and its full interval from merged intervals."""
-    if not merged:
-        return 0, None
-    values = [float(interval.get("price", 0)) for interval in merged if "price" in interval]
-    if not values:
-        return 0, None
-    val = min(values) if stat == "min" else max(values)
-    interval = next((interval for interval in merged if interval.get("price") == val), None)
-    return val, interval
-
-
-# --- Dataclasses ---
-
-
-@dataclass
-class PriceStats:
-    """Encapsulates price statistics and their intervals for the Tibber Prices service."""
-
-    price_avg: float
-    price_min: float
-    price_min_start_time: str | None
-    price_min_end_time: str | None
-    price_min_interval: dict | None
-    price_max: float
-    price_max_start_time: str | None
-    price_max_end_time: str | None
-    price_max_interval: dict | None
-    price_spread: float
-    price_volatility: str
-    stats_merged: list[dict]
-
-
-@dataclass
-class PriceResponseContext:
-    """Context for building the price response."""
-
-    price_stats: PriceStats
-    previous_interval: dict | None
-    current_interval: dict | None
-    next_interval: dict | None
-    currency: str | None
-    merged: list[dict]
-
-
 # --- Service registration ---
 
 
@@ -679,23 +851,16 @@ def async_setup_services(hass: HomeAssistant) -> None:
     """Set up services for Tibber Prices integration."""
     hass.services.async_register(
         DOMAIN,
-        PRICE_SERVICE_NAME,
-        _get_price,
-        schema=PRICE_SERVICE_SCHEMA,
-        supports_response=SupportsResponse.ONLY,
-    )
-    hass.services.async_register(
-        DOMAIN,
-        APEXCHARTS_DATA_SERVICE_NAME,
-        _get_apexcharts_data,
-        schema=APEXCHARTS_DATA_SERVICE_SCHEMA,
-        supports_response=SupportsResponse.ONLY,
-    )
-    hass.services.async_register(
-        DOMAIN,
         APEXCHARTS_YAML_SERVICE_NAME,
         _get_apexcharts_yaml,
         schema=APEXCHARTS_SERVICE_SCHEMA,
+        supports_response=SupportsResponse.ONLY,
+    )
+    hass.services.async_register(
+        DOMAIN,
+        CHARTDATA_SERVICE_NAME,
+        _get_chartdata,
+        schema=CHARTDATA_SERVICE_SCHEMA,
         supports_response=SupportsResponse.ONLY,
     )
     hass.services.async_register(

@@ -1,4 +1,8 @@
 {
+    "apexcharts": {
+        "title_rating_level": "Prijsfasen dagelijkse voortgang",
+        "title_level": "Prijsniveau"
+    },
     "sensor": {
         "current_interval_price": {
             "description": "De huidige elektriciteitsprijs per kWh",

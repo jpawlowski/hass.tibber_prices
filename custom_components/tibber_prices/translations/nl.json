@@ -664,6 +664,110 @@
         }
     },
     "services": {
+        "get_apexcharts_yaml": {
+            "name": "ApexCharts-kaart YAML ophalen",
+            "description": "Retourneert een kant-en-klaar YAML-fragment voor een ApexCharts-kaart die Tibber-prijzen voor de geselecteerde dag visualiseert. Gebruik dit om eenvoudig een vooraf geconfigureerd diagram aan je dashboard toe te voegen. De YAML gebruikt de get_chartdata-service voor gegevens.",
+            "fields": {
+                "entry_id": {
+                    "name": "Invoer-ID",
+                    "description": "Het configuratie-invoer-ID voor de Tibber-integratie."
+                },
+                "day": {
+                    "name": "Dag",
+                    "description": "Welke dag gevisualiseerd moet worden (gisteren, vandaag of morgen)."
+                },
+                "level_type": {
+                    "name": "Niveautype",
+                    "description": "Selecteer welke prijsniveauclassificatie gevisualiseerd moet worden: 'rating_level' (laag/normaal/hoog op basis van jouw geconfigureerde drempelwaarden) of 'level' (Tibber API-niveaus: zeer goedkoop/goedkoop/normaal/duur/zeer duur)."
+                }
+            }
+        },
+        "get_chartdata": {
+            "name": "Haal grafiekgegevens op",
+            "description": "Geeft prijsgegevens terug in een eenvoudig grafiekvriendelijk formaat compatibel met de Tibber Core-integratie outputstructuur. Perfect voor gebruik met populaire grafiekkaarten zoals ha-price-timeline-card, ApexCharts Card, Plotly Graph Card, Mini Graph Card of de ingebouwde History Graph Card. Veldnamen en gegevensstructuur kunnen worden aangepast aan de vereisten van je grafiek.",
+            "fields": {
+                "entry_id": {
+                    "name": "Item-ID",
+                    "description": "De config-item-ID voor de Tibber-integratie."
+                },
+                "day": {
+                    "name": "Dag",
+                    "description": "Voor welke dag(en) moeten prijzen worden opgehaald. Je kunt meerdere dagen selecteren. Als niet opgegeven, worden alle beschikbare gegevens geretourneerd (vandaag + morgen indien beschikbaar)."
+                },
+                "resolution": {
+                    "name": "Resolutie",
+                    "description": "Tijdsresolutie voor de geretourneerde gegevens. Opties: 'interval' (standaard, 15-minuten intervallen, 96 datapunten per dag), 'hourly' (uurgemiddelden, 24 datapunten per dag)."
+                },
+                "output_format": {
+                    "name": "Uitvoerformaat",
+                    "description": "Uitvoerformaat voor de geretourneerde gegevens. Opties: 'array_of_objects' (standaard, array van objecten met aanpasbare veldnamen), 'array_of_arrays' (array van [tijdstempel, prijs]-arrays met afsluitend null-punt voor stepline-grafieken)."
+                },
+                "array_fields": {
+                    "name": "Array-velden (alleen Array van arrays)",
+                    "description": "[ALLEEN VOOR Array van arrays FORMAAT] Definieer welke velden moeten worden opgenomen. Gebruik veldnamen tussen accolades, gescheiden door komma's. Beschikbare velden: start_time, price_per_kwh, level, rating_level, average. Velden worden automatisch ingeschakeld, zelfs als include_*-opties niet zijn ingesteld. Laat leeg voor standaard (alleen tijdstempel en prijs)."
+                },
+                "minor_currency": {
+                    "name": "Kleine valuta-eenheid",
+                    "description": "Retourneer prijzen in kleine valuta-eenheden (cent voor EUR, øre voor NOK/SEK) in plaats van grote valuta-eenheden. Standaard uitgeschakeld."
+                },
+                "round_decimals": {
+                    "name": "Decimalen afronden",
+                    "description": "Aantal decimalen om prijzen op af te ronden (0-10). Indien niet opgegeven, wordt de standaardprecisie gebruikt (4 decimalen voor grote valuta, 2 voor kleine valuta-eenheid)."
+                },
+                "include_level": {
+                    "name": "Prijsniveau opnemen (alleen Array van objecten)",
+                    "description": "[ALLEEN VOOR Array van objecten FORMAAT] Voeg het Tibber-prijsniveauveld (VERY_CHEAP, CHEAP, NORMAL, EXPENSIVE, VERY_EXPENSIVE) toe aan elk gegevenspunt."
+                },
+                "include_rating_level": {
+                    "name": "Prijsbeoordeling opnemen (alleen Array van objecten)",
+                    "description": "[ALLEEN VOOR Array van objecten FORMAAT] Voeg het berekende prijsbeoordelingsveld (LOW, NORMAL, HIGH) toe op basis van jouw geconfigureerde drempels aan elk gegevenspunt."
+                },
+                "include_average": {
+                    "name": "Gemiddelde opnemen (alleen Array van objecten)",
+                    "description": "[ALLEEN VOOR Array van objecten FORMAAT] Dagelijkse gemiddelde prijs opnemen in elk gegevenspunt ter vergelijking."
+                },
+                "level_filter": {
+                    "name": "Prijsniveaufilter",
+                    "description": "Intervallen filteren om alleen specifieke Tibber-prijsniveaus op te nemen (VERY_CHEAP, CHEAP, NORMAL, EXPENSIVE, VERY_EXPENSIVE). Indien niet opgegeven, worden alle niveaus opgenomen."
+                },
+                "rating_level_filter": {
+                    "name": "Prijsbeoordeling Filter",
+                    "description": "Filter intervallen om alleen specifieke prijsbeoordelingen op te nemen (LOW, NORMAL, HIGH). Als dit niet is opgegeven, worden alle beoordelingen opgenomen."
+                },
+                "insert_nulls": {
+                    "name": "NULL-waarden invoegen",
+                    "description": "Beheer het invoegen van NULL-waarden voor gefilterde gegevens. 'none' (standaard): Geen NULL-waarden, alleen overeenkomende intervallen. 'segments': Voeg NULL-punten toe bij segmentgrenzen voor schone gaten in grafieken (aanbevolen voor traplijngrafieken). 'all': Voeg NULL in voor alle tijdstempels waarbij het filter niet overeenkomt (handig voor continue tijdreeksvisualisatie)."
+                },
+                "add_trailing_null": {
+                    "name": "Voeg afsluitend null-punt toe",
+                    "description": "[BEIDE FORMATEN] Voeg een laatste datapunt met null-waarden (behalve tijdstempel) toe aan het einde. Sommige diagrambibliotheken hebben dit nodig om extrapolatie/interpolatie naar de rand van het viewport te voorkomen bij stepline-weergave. Laat uitgeschakeld tenzij je diagram dit vereist."
+                },
+                "timestamp_field": {
+                    "name": "Tijdstempel-veldnaam (alleen Array van objecten)",
+                    "description": "[ALLEEN VOOR Array van objecten FORMAAT] Aangepaste naam voor het tijdstempel-veld in de uitvoer. Standaard is 'start_time' als niet opgegeven."
+                },
+                "price_field": {
+                    "name": "Prijsveld-naam (alleen Array van objecten)",
+                    "description": "[ALLEEN VOOR Array van objecten FORMAAT] Aangepaste naam voor het prijsveld in de uitvoer. Standaard is 'price_per_kwh'."
+                },
+                "level_field": {
+                    "name": "Prijsniveauveld-naam (alleen Array van objecten)",
+                    "description": "[ALLEEN VOOR Array van objecten FORMAAT] Aangepaste naam voor het prijsniveauveld in de uitvoer. Standaard is 'level'. Alleen gebruikt wanneer include_level is ingeschakeld."
+                },
+                "rating_level_field": {
+                    "name": "Prijsbeoordelingsveld-naam (alleen Array van objecten)",
+                    "description": "[ALLEEN VOOR Array van objecten FORMAAT] Aangepaste naam voor het prijsbeoordelingsveld in de uitvoer. Standaard is 'rating_level'. Alleen gebruikt wanneer include_rating_level is ingeschakeld."
+                },
+                "average_field": {
+                    "name": "Gemiddelde veld-naam (alleen Array van objecten)",
+                    "description": "[ALLEEN VOOR Array van objecten FORMAAT] Aangepaste naam voor het gemiddelde veld in de uitvoer. Standaard is 'average'. Alleen gebruikt wanneer include_average is ingeschakeld."
+                },
+                "data_key": {
+                    "name": "Gegevenssleutel (beide formaten)",
+                    "description": "[BEIDE FORMATEN] Aangepaste naam voor de gegevenssleutel op het hoogste niveau in het antwoord. Standaard is 'data' als niet opgegeven. Voor ApexCharts-compatibiliteit met Array van arrays, gebruik 'points'."
+                }
+            }
+        },
         "refresh_user_data": {
             "name": "Gebruikersgegevens vernieuwen",
             "description": "Forceert een vernieuwing van de gebruikersgegevens (huizen, profielinformatie) van de Tibber API. Dit kan handig zijn na het maken van wijzigingen in je Tibber-account of bij het oplossen van verbindingsproblemen.",
@@ -676,6 +780,54 @@
         }
     },
     "selector": {
+        "day": {
+            "options": {
+                "yesterday": "Gisteren",
+                "today": "Vandaag",
+                "tomorrow": "Morgen"
+            }
+        },
+        "resolution": {
+            "options": {
+                "interval": "Interval (15 min)",
+                "hourly": "Per uur"
+            }
+        },
+        "output_format": {
+            "options": {
+                "array_of_objects": "Array van objecten",
+                "array_of_arrays": "Array van arrays"
+            }
+        },
+        "level_type": {
+            "options": {
+                "rating_level": "Beoordelingsniveau (laag/normaal/hoog)",
+                "level": "Tibber-niveau (zeer goedkoop tot zeer duur)"
+            }
+        },
+        "level_filter": {
+            "options": {
+                "very_cheap": "Zeer goedkoop",
+                "cheap": "Goedkoop",
+                "normal": "Normaal",
+                "expensive": "Duur",
+                "very_expensive": "Zeer duur"
+            }
+        },
+        "rating_level_filter": {
+            "options": {
+                "low": "Laag",
+                "normal": "Normaal",
+                "high": "Hoog"
+            }
+        },
+        "insert_nulls": {
+            "options": {
+                "none": "Geen",
+                "segments": "Segmenten",
+                "all": "Alle"
+            }
+        },
         "volatility": {
             "options": {
                 "low": "Laag",
