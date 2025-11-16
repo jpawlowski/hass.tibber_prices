@@ -5,14 +5,13 @@ from __future__ import annotations
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import ATTRIBUTION, DOMAIN, get_home_type_translation
+from .const import ATTRIBUTION, DOMAIN, get_home_type_translation, get_translation
 from .coordinator import TibberPricesDataUpdateCoordinator
 
 
 class TibberPricesEntity(CoordinatorEntity[TibberPricesDataUpdateCoordinator]):
     """TibberPricesEntity class."""
 
-    _attr_attribution = ATTRIBUTION
     _attr_has_entity_name = True
 
     def __init__(self, coordinator: TibberPricesDataUpdateCoordinator) -> None:
@@ -22,9 +21,13 @@ class TibberPricesEntity(CoordinatorEntity[TibberPricesDataUpdateCoordinator]):
         # Get device information
         home_name, home_id, home_type = self._get_device_info()
 
-        # Get translated home type using the configured language
+        # Get configured language
         language = coordinator.hass.config.language or "en"
+
+        # Get translated home type and attribution
         translated_model = get_home_type_translation(home_type, language) if home_type else "Unknown"
+        # Get translated attribution, fallback to constant if translation not found
+        self._attr_attribution = get_translation(["attribution"], language) or ATTRIBUTION
 
         self._attr_device_info = DeviceInfo(
             entry_type=DeviceEntryType.SERVICE,
@@ -50,9 +53,6 @@ class TibberPricesEntity(CoordinatorEntity[TibberPricesDataUpdateCoordinator]):
 
         if is_subentry:
             home_name, home_id, home_type = self._get_subentry_device_info()
-            # Add user information if available
-            if user_profile and user_profile.get("name"):
-                home_name = f"{home_name} ({user_profile['name']})"
         elif user_profile:
             home_name = self._get_main_entry_device_info(user_profile)
         else:

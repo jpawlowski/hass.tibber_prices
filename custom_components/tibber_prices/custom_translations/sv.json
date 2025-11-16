@@ -348,6 +348,76 @@
             "description": "Total längd på nuvarande eller nästa dyrperiod i minuter",
             "long_description": "Visar den totala längden på dyrperioden i minuter. Under en aktiv period visar detta hela längden av nuvarande period. När ingen period är aktiv visar detta längden på nästa kommande period. Exempel: '60 minuter' för en 1-timmars period.",
             "usage_tips": "Använd för att planera energisparåtgärder: 'Om duration > 120, minska värmetemperatur mer aggressivt (lång dyr period)'. Hjälper till att bedöma hur mycket energiförbrukning måste minskas."
+        },
+        "home_type": {
+            "description": "Bostadstyp (lägenhet, hus osv.)",
+            "long_description": "Visar bostadstypen som konfigurerats i ditt Tibber-konto. Denna metadata kan vara användbar för att kategorisera energiförbrukningsmönster.",
+            "usage_tips": "Använd detta för att organisera ditt smarthussystem eller för analysändamål."
+        },
+        "home_size": {
+            "description": "Boyta i kvadratmeter",
+            "long_description": "Visar storleken på din bostad i kvadratmeter som konfigurerats i ditt Tibber-konto. Kan användas för att beräkna energiförbrukning per kvadratmeter.",
+            "usage_tips": "Använd detta i energieffektivitetsberäkningar: 'Min bostad använder X kWh per kvadratmeter per år'."
+        },
+        "main_fuse_size": {
+            "description": "Huvudsäkringsstorlek i ampere",
+            "long_description": "Visar kapaciteten på din huvudsäkring i ampere. Detta bestämmer den maximala elektriska belastningen din bostad kan hantera samtidigt.",
+            "usage_tips": "Använd detta för att förhindra överbelastning: 'Om total strömförbrukning närmar sig säkringsstorleken, skjut upp start av ytterligare apparater'."
+        },
+        "number_of_residents": {
+            "description": "Antal personer som bor i bostaden",
+            "long_description": "Visar antalet boende som konfigurerats i ditt Tibber-konto. Användbart för beräkningar av energiförbrukning per person.",
+            "usage_tips": "Använd detta för hushållets energianalyser: 'Energiförbrukning per person per dag'."
+        },
+        "primary_heating_source": {
+            "description": "Primär värmesystemtyp",
+            "long_description": "Visar typen av värmesystem som används i din bostad som konfigurerats i ditt Tibber-konto. Detta kan vara en värmepump, elektrisk uppvärmning, gas, olja eller andra värmekällor.",
+            "usage_tips": "Använd detta för att kategorisera värmerelaterade automationer eller för energiförbrukningsanalys efter värmetyp."
+        },
+        "grid_company": {
+            "description": "Namn på din elnätsoperatör",
+            "long_description": "Visar namnet på företaget som driver elnätet i ditt område. Detta är distributionssystemoperatören (DSO) som ansvarar för att leverera elektricitet till ditt hem.",
+            "usage_tips": "Användbart för administrativa ändamål och felsökning av nätrelaterade problem."
+        },
+        "grid_area_code": {
+            "description": "Nätområdets identifieringskod",
+            "long_description": "Visar koden som identifierar ditt elnätsområde. Denna kod används av nätoperatören för routing- och faktureringsändamål.",
+            "usage_tips": "Använd detta som administrativ referens eller vid kontakt med din nätoperatör."
+        },
+        "price_area_code": {
+            "description": "Elprisområdeskod",
+            "long_description": "Visar koden för ditt elprisområde (t.ex. NO1, NO2, SE3, DK1). Olika områden har olika grossistelpriser baserat på regionalt utbud och efterfrågan.",
+            "usage_tips": "Använd detta för att förstå vilket prisområde du befinner dig i. Användbart vid jämförelse av priser med andra eller analys av regionala prismönster."
+        },
+        "consumption_ean": {
+            "description": "EAN-kod för elförbrukningsmätning",
+            "long_description": "Visar European Article Number (EAN)-koden som unikt identifierar din elförbrukningsmätare. Denna 18-siffriga kod används för fakturerings- och administrativa ändamål.",
+            "usage_tips": "Använd detta vid kommunikation med din elleverantör eller för administrativ dokumentation."
+        },
+        "production_ean": {
+            "description": "EAN-kod för elproduktionsmätning",
+            "long_description": "Visar European Article Number (EAN)-koden för din elproduktionsmätare (om du har solpaneler eller annan produktion). Denna kod spårar elektricitet du matar tillbaka till nätet.",
+            "usage_tips": "Relevant om du har solpaneler eller annan elproduktion. Använd för administrativa ändamål och vid krav på inmatningsersättning."
+        },
+        "energy_tax_type": {
+            "description": "Typ av energiskatt som tillämpas",
+            "long_description": "Visar energiskattekategorin som tillämpas på din elförbrukning. Skattesatser varierar per land och ibland per konsumenttyp (privat, kommersiell osv.).",
+            "usage_tips": "Använd detta för att förstå uppdelningen av din elräkning och för totala kostnadsberäkningar."
+        },
+        "vat_type": {
+            "description": "Momskategori (mervärdesskatt)",
+            "long_description": "Visar momskategorin som tillämpas på din elförbrukning. Momssatser varierar per land och kan skilja sig för elektricitet jämfört med andra varor och tjänster.",
+            "usage_tips": "Använd detta för att förstå din elräkning och beräkna totala kostnader inklusive skatter."
+        },
+        "estimated_annual_consumption": {
+            "description": "Uppskattat årligt elförbrukning i kWh",
+            "long_description": "Visar din uppskattade årliga elförbrukning i kilowattimmar som beräknats eller konfigurerats i ditt Tibber-konto. Denna uppskattning används för att jämföra faktisk förbrukning med förväntade värden.",
+            "usage_tips": "Använd detta för att spåra om din faktiska förbrukning är över eller under förväntningarna. Jämför månatlig förbrukning med 1/12 av detta värde för att identifiera ovanliga mönster."
+        },
+        "subscription_status": {
+            "description": "Status för ditt Tibber-abonnemang",
+            "long_description": "Visar om ditt Tibber-abonnemang för närvarande är aktivt, har avslutats eller väntar på aktivering. En status 'Aktiv' betyder att du aktivt tar emot elektricitet genom Tibber.",
+            "usage_tips": "Använd detta för att övervaka din abonnemangsstatus. Ställ in varningar om statusen ändras från 'Aktiv' för att säkerställa oavbruten service."
         }
     },
     "binary_sensor": {
@@ -370,6 +440,16 @@
             "description": "Om anslutningen till Tibber API fungerar",
             "long_description": "Indikerar om integrationen framgångsrikt kan ansluta till Tibber API",
             "usage_tips": "Använd detta för att övervaka anslutningsstatus till Tibber API"
+        },
+        "has_ventilation_system": {
+            "description": "Om din bostad har ventilationssystem",
+            "long_description": "Indikerar om ett ventilationssystem är registrerat för din bostad i Tibber-kontot. Ventilationssystem kan vara betydande elförbrukare som kan dra nytta av smart schemaläggning.",
+            "usage_tips": "Använd detta för att aktivera ventilationsspecifika automationer eller energiövervakning. Om aktivt, överväg att schemalägga ventilation under lågprisperioder."
+        },
+        "realtime_consumption_enabled": {
+            "description": "Om realtidsförbrukningsövervakning är aktiv",
+            "long_description": "Indikerar om realtidsövervakning av elförbrukning är aktiverad och aktiv för ditt Tibber-hem. Detta kräver kompatibel mätutrustning (t.ex. Tibber Pulse) och en aktiv prenumeration.",
+            "usage_tips": "Använd detta för att verifiera att realtidsförbrukningen är tillgänglig. Aktivera meddelanden om detta oväntat ändras till 'av', vilket indikerar potentiella hårdvaru- eller anslutningsproblem."
         }
     },
     "home_types": {
@@ -377,5 +457,6 @@
         "ROWHOUSE": "Radhus",
         "HOUSE": "Hus",
         "COTTAGE": "Stuga"
-    }
+    },
+    "attribution": "Data tillhandahålls av Tibber"
 }

@@ -548,20 +548,97 @@
             },
             "price_forecast": {
                 "name": "Prisprognos"
+            },
+            "home_type": {
+                "name": "Bostadstyp",
+                "state": {
+                    "apartment": "Lägenhet",
+                    "rowhouse": "Radhus",
+                    "house": "Hus",
+                    "cottage": "Stuga"
+                }
+            },
+            "home_size": {
+                "name": "Boyta"
+            },
+            "main_fuse_size": {
+                "name": "Huvudsäkring"
+            },
+            "number_of_residents": {
+                "name": "Antal boende"
+            },
+            "primary_heating_source": {
+                "name": "Primär värmekälla",
+                "state": {
+                    "air2air_heatpump": "Luft-till-luft-värmepump",
+                    "air2water_heatpump": "Luft-till-vatten-värmepump",
+                    "boiler": "Varmvattenberedare",
+                    "central_heating": "Centralvärme",
+                    "district_heating": "Fjärrvärme",
+                    "district": "Fjärrvärme",
+                    "electric_boiler": "Elektrisk varmvattenberedare",
+                    "electricity": "Elektricitet",
+                    "floor": "Golvvärme",
+                    "gas": "Gas",
+                    "ground_heatpump": "Bergvärmepump",
+                    "ground": "Bergvärmepump",
+                    "oil": "Olja",
+                    "other": "Annat",
+                    "waste": "Spillvärme"
+                }
+            },
+            "grid_company": {
+                "name": "Nätbolag"
+            },
+            "grid_area_code": {
+                "name": "Nätområdeskod"
+            },
+            "price_area_code": {
+                "name": "Prisområdeskod"
+            },
+            "consumption_ean": {
+                "name": "Förbruknings-EAN"
+            },
+            "production_ean": {
+                "name": "Produktions-EAN"
+            },
+            "energy_tax_type": {
+                "name": "Energiskattetyp"
+            },
+            "vat_type": {
+                "name": "Momstyp"
+            },
+            "estimated_annual_consumption": {
+                "name": "Uppskattat årsförbrukning"
+            },
+            "subscription_status": {
+                "name": "Abonnemangsstatus",
+                "state": {
+                    "running": "Aktiv",
+                    "ended": "Avslutad",
+                    "pending": "Väntar",
+                    "unknown": "Okänd"
+                }
             }
         },
         "binary_sensor": {
             "peak_price_period": {
-                "name": "Topprisperiod"
+                "name": "Toppris-period"
             },
             "best_price_period": {
-                "name": "Bästa prisperiod"
+                "name": "Bästa pris-period"
             },
             "connection": {
                 "name": "Tibber API-anslutning"
             },
             "tomorrow_data_available": {
                 "name": "Morgondagens data tillgänglig"
+            },
+            "has_ventilation_system": {
+                "name": "Har ventilationssystem"
+            },
+            "realtime_consumption_enabled": {
+                "name": "Realtidsförbrukning aktiverad"
             }
         }
     },

@@ -552,20 +552,97 @@
             },
             "price_forecast": {
                 "name": "Preisprognose"
+            },
+            "home_type": {
+                "name": "Wohnungstyp",
+                "state": {
+                    "apartment": "Wohnung",
+                    "rowhouse": "Reihenhaus",
+                    "house": "Haus",
+                    "cottage": "Ferienhaus"
+                }
+            },
+            "home_size": {
+                "name": "Wohnfläche"
+            },
+            "main_fuse_size": {
+                "name": "Hauptsicherung"
+            },
+            "number_of_residents": {
+                "name": "Anzahl Bewohner"
+            },
+            "primary_heating_source": {
+                "name": "Primäre Heizquelle",
+                "state": {
+                    "air2air_heatpump": "Luft-Luft-Wärmepumpe",
+                    "air2water_heatpump": "Luft-Wasser-Wärmepumpe",
+                    "boiler": "Boiler",
+                    "central_heating": "Zentralheizung",
+                    "district_heating": "Fernwärme",
+                    "district": "Fernwärme",
+                    "electric_boiler": "Elektroboiler",
+                    "electricity": "Elektroheizung",
+                    "floor": "Fußbodenheizung",
+                    "gas": "Gas",
+                    "ground_heatpump": "Erdwärmepumpe",
+                    "ground": "Erdwärmepumpe",
+                    "oil": "Öl",
+                    "other": "Sonstige",
+                    "waste": "Abwärme"
+                }
+            },
+            "grid_company": {
+                "name": "Netzbetreiber"
+            },
+            "grid_area_code": {
+                "name": "Netzgebietscode"
+            },
+            "price_area_code": {
+                "name": "Preiszonencode"
+            },
+            "consumption_ean": {
+                "name": "Verbrauchs-EAN"
+            },
+            "production_ean": {
+                "name": "Erzeugungs-EAN"
+            },
+            "energy_tax_type": {
+                "name": "Energiesteuertyp"
+            },
+            "vat_type": {
+                "name": "Mehrwertsteuertyp"
+            },
+            "estimated_annual_consumption": {
+                "name": "Geschätzter Jahresverbrauch"
+            },
+            "subscription_status": {
+                "name": "Abonnementstatus",
+                "state": {
+                    "running": "Aktiv",
+                    "ended": "Beendet",
+                    "pending": "Ausstehend",
+                    "unknown": "Unbekannt"
+                }
             }
         },
         "binary_sensor": {
             "peak_price_period": {
-                "name": "Spitzenpreis-Periode"
+                "name": "Höchstpreis-Zeitraum"
             },
             "best_price_period": {
-                "name": "Bestpreis-Periode"
+                "name": "Bestpreis-Zeitraum"
             },
             "connection": {
-                "name": "Tibber API-Verbindung"
+                "name": "Tibber-API-Verbindung"
             },
             "tomorrow_data_available": {
-                "name": "Daten für morgen verfügbar"
+                "name": "Morgige Daten verfügbar"
+            },
+            "has_ventilation_system": {
+                "name": "Hat Lüftungsanlage"
+            },
+            "realtime_consumption_enabled": {
+                "name": "Echtzeitverbrauch aktiviert"
             }
         }
     },

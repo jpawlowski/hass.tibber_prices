@@ -548,6 +548,77 @@
             },
             "price_forecast": {
                 "name": "Price Forecast"
+            },
+            "home_type": {
+                "name": "Home Type",
+                "state": {
+                    "apartment": "Apartment",
+                    "rowhouse": "Rowhouse",
+                    "house": "House",
+                    "cottage": "Cottage"
+                }
+            },
+            "home_size": {
+                "name": "Home Size"
+            },
+            "main_fuse_size": {
+                "name": "Main Fuse Size"
+            },
+            "number_of_residents": {
+                "name": "Number of Residents"
+            },
+            "primary_heating_source": {
+                "name": "Primary Heating Source",
+                "state": {
+                    "air2air_heatpump": "Air-to-Air Heat Pump",
+                    "air2water_heatpump": "Air-to-Water Heat Pump",
+                    "boiler": "Boiler",
+                    "central_heating": "Central Heating",
+                    "district_heating": "District Heating",
+                    "district": "District Heating",
+                    "electric_boiler": "Electric Boiler",
+                    "electricity": "Electricity",
+                    "floor": "Floor Heating",
+                    "gas": "Gas",
+                    "ground_heatpump": "Ground Heat Pump",
+                    "ground": "Ground Heat Pump",
+                    "oil": "Oil",
+                    "other": "Other",
+                    "waste": "Waste Heat"
+                }
+            },
+            "grid_company": {
+                "name": "Grid Company"
+            },
+            "grid_area_code": {
+                "name": "Grid Area Code"
+            },
+            "price_area_code": {
+                "name": "Price Area Code"
+            },
+            "consumption_ean": {
+                "name": "Consumption EAN"
+            },
+            "production_ean": {
+                "name": "Production EAN"
+            },
+            "energy_tax_type": {
+                "name": "Energy Tax Type"
+            },
+            "vat_type": {
+                "name": "VAT Type"
+            },
+            "estimated_annual_consumption": {
+                "name": "Estimated Annual Consumption"
+            },
+            "subscription_status": {
+                "name": "Subscription Status",
+                "state": {
+                    "running": "Running",
+                    "ended": "Ended",
+                    "pending": "Pending",
+                    "unknown": "Unknown"
+                }
             }
         },
         "binary_sensor": {
@@ -562,6 +633,12 @@
             },
             "tomorrow_data_available": {
                 "name": "Tomorrow's Data Available"
+            },
+            "has_ventilation_system": {
+                "name": "Has Ventilation System"
+            },
+            "realtime_consumption_enabled": {
+                "name": "Realtime Consumption Enabled"
             }
         }
     },

@@ -348,6 +348,76 @@
             "description": "Minuten bis nächste teure Periode startet (0 beim Übergang)",
             "long_description": "Zeigt Minuten bis die nächste teure Periode startet. Während einer aktiven Periode zeigt dies die Zeit bis zur Periode NACH der aktuellen. Gibt 0 während kurzer Übergangsphasen zurück. Aktualisiert sich jede Minute.",
             "usage_tips": "Präventive Automatisierung: 'Wenn next_in_minutes > 0 UND next_in_minutes < 10, beende aktuellen Ladezyklus jetzt bevor Preise steigen'."
+        },
+        "home_type": {
+            "description": "Art der Wohnung (Wohnung, Haus usw.)",
+            "long_description": "Zeigt den Wohnungstyp, wie in deinem Tibber-Konto konfiguriert. Diese Metadaten können nützlich sein, um Energieverbrauchsmuster zu kategorisieren.",
+            "usage_tips": "Nutze dies zur Organisation deines Smart-Home-Systems oder für Analysezwecke."
+        },
+        "home_size": {
+            "description": "Wohnfläche in Quadratmetern",
+            "long_description": "Zeigt die Größe deiner Wohnung in Quadratmetern, wie in deinem Tibber-Konto konfiguriert. Kann verwendet werden, um den Energieverbrauch pro Quadratmeter zu berechnen.",
+            "usage_tips": "Nutze dies für Energieeffizienzberechnungen: 'Meine Wohnung verbraucht X kWh pro Quadratmeter pro Jahr'."
+        },
+        "main_fuse_size": {
+            "description": "Hauptsicherungsgröße in Ampere",
+            "long_description": "Zeigt die Kapazität deiner Hauptsicherung in Ampere. Dies bestimmt die maximale elektrische Last, die deine Wohnung gleichzeitig bewältigen kann.",
+            "usage_tips": "Nutze dies zur Überlastungsvermeidung: 'Wenn der Gesamtstromverbrauch sich der Sicherungsgröße nähert, verschiebe das Starten zusätzlicher Geräte'."
+        },
+        "number_of_residents": {
+            "description": "Anzahl der im Haushalt lebenden Personen",
+            "long_description": "Zeigt die Anzahl der Bewohner, wie in deinem Tibber-Konto konfiguriert. Nützlich für Pro-Kopf-Energieverbrauchsberechnungen.",
+            "usage_tips": "Nutze dies für Haushalts-Energieanalysen: 'Energieverbrauch pro Person pro Tag'."
+        },
+        "primary_heating_source": {
+            "description": "Primärer Heizungstyp",
+            "long_description": "Zeigt den Typ des in deiner Wohnung verwendeten Heizsystems, wie in deinem Tibber-Konto konfiguriert. Dies kann eine Wärmepumpe, Elektroheizung, Gas, Öl oder andere Heizquellen sein.",
+            "usage_tips": "Nutze dies zur Kategorisierung heizungsbezogener Automatisierungen oder für Energieverbrauchsanalysen nach Heizungsart."
+        },
+        "grid_company": {
+            "description": "Name deines Stromnetzbetreibers",
+            "long_description": "Zeigt den Namen des Unternehmens, das das Stromnetz in deiner Region betreibt. Dies ist der Verteilnetzbetreiber (VNB), der für die Stromlieferung zu deinem Haus verantwortlich ist.",
+            "usage_tips": "Nützlich für administrative Zwecke und zur Behebung netzbezogener Probleme."
+        },
+        "grid_area_code": {
+            "description": "Netzgebiets-Kennziffer",
+            "long_description": "Zeigt den Code, der dein Stromnetzgebiet identifiziert. Dieser Code wird vom Netzbetreiber für Routing- und Abrechnungszwecke verwendet.",
+            "usage_tips": "Nutze dies als administrative Referenz oder bei der Kontaktaufnahme mit deinem Netzbetreiber."
+        },
+        "price_area_code": {
+            "description": "Strompreis-Zonencode",
+            "long_description": "Zeigt den Code für deine Strompreiszone (z.B. NO1, NO2, SE3, DK1). Verschiedene Zonen haben unterschiedliche Großhandelsstrompreise basierend auf regionalem Angebot und Nachfrage.",
+            "usage_tips": "Nutze dies, um zu verstehen, in welcher Preisregion du dich befindest. Nützlich beim Preisvergleich mit anderen oder bei der Analyse regionaler Preismuster."
+        },
+        "consumption_ean": {
+            "description": "EAN-Code für Stromverbrauchsmessung",
+            "long_description": "Zeigt die Europäische Artikelnummer (EAN), die deinen Stromverbrauchszähler eindeutig identifiziert. Dieser 18-stellige Code wird für Abrechnungs- und Verwaltungszwecke verwendet.",
+            "usage_tips": "Nutze dies bei der Kommunikation mit deinem Stromanbieter oder für administrative Dokumentation."
+        },
+        "production_ean": {
+            "description": "EAN-Code für Stromerzeugungsmessung",
+            "long_description": "Zeigt die Europäische Artikelnummer (EAN) für deinen Stromerzeugungszähler (wenn du Solarpanels oder andere Erzeugung hast). Dieser Code verfolgt Strom, den du ins Netz einspeist.",
+            "usage_tips": "Relevant, wenn du Solarpanels oder andere Stromerzeugung hast. Nutze für administrative Zwecke und bei der Beantragung von Einspeisevergütung."
+        },
+        "energy_tax_type": {
+            "description": "Art der angewandten Energiesteuer",
+            "long_description": "Zeigt die Energiesteuerkategorie, die auf deinen Stromverbrauch angewendet wird. Steuersätze variieren nach Land und manchmal nach Verbrauchertyp (privat, gewerblich usw.).",
+            "usage_tips": "Nutze dies zum Verständnis der Aufschlüsselung deiner Stromrechnung und für Gesamtkostenberechnungen."
+        },
+        "vat_type": {
+            "description": "Mehrwertsteuerkategorie",
+            "long_description": "Zeigt die Mehrwertsteuerkategorie, die auf deinen Stromverbrauch angewendet wird. Mehrwertsteuersätze variieren nach Land und können für Strom anders sein als für andere Waren und Dienstleistungen.",
+            "usage_tips": "Nutze dies zum Verständnis deiner Stromrechnung und zur Berechnung der Gesamtkosten inklusive Steuern."
+        },
+        "estimated_annual_consumption": {
+            "description": "Geschätzter jährlicher Stromverbrauch in kWh",
+            "long_description": "Zeigt deinen geschätzten jährlichen Stromverbrauch in Kilowattstunden, wie in deinem Tibber-Konto berechnet oder konfiguriert. Diese Schätzung wird verwendet, um den tatsächlichen Verbrauch mit den erwarteten Werten zu vergleichen.",
+            "usage_tips": "Nutze dies, um zu verfolgen, ob dein tatsächlicher Verbrauch über oder unter den Erwartungen liegt. Vergleiche den monatlichen Verbrauch mit 1/12 dieses Wertes, um ungewöhnliche Muster zu identifizieren."
+        },
+        "subscription_status": {
+            "description": "Status deines Tibber-Abonnements",
+            "long_description": "Zeigt, ob dein Tibber-Abonnement derzeit aktiv ist, beendet wurde oder auf Aktivierung wartet. Ein Status 'Aktiv' bedeutet, dass du aktiv Strom über Tibber beziehst.",
+            "usage_tips": "Nutze dies zur Überwachung deines Abonnementstatus. Richte Benachrichtigungen ein, wenn sich der Status von 'Aktiv' ändert, um einen unterbrechungsfreien Service sicherzustellen."
         }
     },
     "binary_sensor": {
@@ -370,6 +440,16 @@
             "description": "Ob die Verbindung zur Tibber API funktioniert",
             "long_description": "Zeigt an, ob die Integration erfolgreich eine Verbindung zur Tibber API herstellen kann",
             "usage_tips": "Nutze dies, um den Verbindungsstatus zur Tibber API zu überwachen"
+        },
+        "has_ventilation_system": {
+            "description": "Ob deine Wohnung über eine Lüftungsanlage verfügt",
+            "long_description": "Zeigt an, ob eine Lüftungsanlage für deine Wohnung im Tibber-Konto registriert ist. Lüftungsanlagen können erhebliche Stromverbraucher sein, die von intelligenter Planung profitieren können.",
+            "usage_tips": "Nutze dies, um lüftungsspezifische Automatisierungen oder Energieüberwachung zu aktivieren. Falls aktiv, erwäge die Planung der Lüftung während Niedrigpreisphasen."
+        },
+        "realtime_consumption_enabled": {
+            "description": "Ob die Echtzeit-Verbrauchsüberwachung aktiv ist",
+            "long_description": "Zeigt an, ob die Echtzeit-Stromverbrauchsüberwachung für dein Tibber-Zuhause aktiviert und aktiv ist. Dies erfordert kompatible Messhardware (z. B. Tibber Pulse) und ein aktives Abonnement.",
+            "usage_tips": "Verwende dies, um zu überprüfen, ob Echtzeit-Verbrauchsdaten verfügbar sind. Aktiviere Benachrichtigungen, falls dies unerwartet auf 'Aus' wechselt, was auf potenzielle Hardware- oder Verbindungsprobleme hinweist."
         }
     },
     "home_types": {
@@ -377,5 +457,6 @@
         "ROWHOUSE": "Reihenhaus",
         "HOUSE": "Haus",
         "COTTAGE": "Ferienhaus"
-    }
+    },
+    "attribution": "Daten bereitgestellt von Tibber"
 }

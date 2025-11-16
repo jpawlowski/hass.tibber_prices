@@ -628,12 +628,24 @@ class TibberPricesDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 
     async def _fetch_all_homes_data(self) -> dict[str, Any]:
         """Fetch data for all homes (main coordinator only)."""
-        # Get price data for all homes
-        price_data = await self.api.async_get_price_info()
+        # Get list of home_ids that have active config entries
+        configured_home_ids = self._get_configured_home_ids()
+
+        if not configured_home_ids:
+            self._log("warning", "No configured homes found - cannot fetch price data")
+            return {
+                "timestamp": dt_util.utcnow(),
+                "homes": {},
+            }
+
+        # Get price data for configured homes only (API call with specific home_ids)
+        self._log("debug", "Fetching price data for %d configured home(s)", len(configured_home_ids))
+        price_data = await self.api.async_get_price_info(home_ids=configured_home_ids)
 
         all_homes_data = {}
         homes_list = price_data.get("homes", {})
 
+        # Process returned data
         for home_id, home_price_data in homes_list.items():
             # Store raw price data without enrichment
             # Enrichment will be done dynamically when data is transformed
@@ -641,6 +653,12 @@ class TibberPricesDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 "price_info": home_price_data,
             }
             all_homes_data[home_id] = home_data
+
+        self._log(
+            "debug",
+            "Successfully fetched data for %d home(s)",
+            len(all_homes_data),
+        )
 
         return {
             "timestamp": dt_util.utcnow(),
@@ -673,6 +691,24 @@ class TibberPricesDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             ):
                 return coordinator
         return None
+
+    def _get_configured_home_ids(self) -> set[str]:
+        """Get all home_ids that have active config entries (main + subentries)."""
+        home_ids = set()
+
+        # Collect home_ids from all config entries for this domain
+        for entry in self.hass.config_entries.async_entries(DOMAIN):
+            if home_id := entry.data.get("home_id"):
+                home_ids.add(home_id)
+
+        self._log(
+            "debug",
+            "Found %d configured home(s): %s",
+            len(home_ids),
+            ", ".join(sorted(home_ids)),
+        )
+
+        return home_ids
 
     async def _load_cache(self) -> None:
         """Load cached data from storage."""
@@ -1711,7 +1747,14 @@ class TibberPricesDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         """Force refresh of user data and return True if data was updated."""
         try:
             current_time = dt_util.utcnow()
-            await self._update_user_data_if_needed(current_time)
+            self._log("info", "Forcing user data refresh (bypassing cache)")
+
+            # Force update by calling API directly (bypass cache check)
+            user_data = await self.api.async_get_viewer_details()
+            self._cached_user_data = user_data
+            self._last_user_update = current_time
+            self._log("info", "User data refreshed successfully - found %d home(s)", len(user_data.get("homes", [])))
+
             await self._store_cache()
         except (
             TibberPricesApiClientAuthenticationError,
@@ -1733,4 +1776,5 @@ class TibberPricesDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         """Get list of user homes."""
         if not self._cached_user_data:
             return []
-        return self._cached_user_data.get("homes", [])
+        viewer = self._cached_user_data.get("viewer", {})
+        return viewer.get("homes", [])

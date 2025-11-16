@@ -548,20 +548,97 @@
             },
             "price_forecast": {
                 "name": "Prijsprognose"
+            },
+            "home_type": {
+                "name": "Woningtype",
+                "state": {
+                    "apartment": "Appartement",
+                    "rowhouse": "Rijtjeshuis",
+                    "house": "Huis",
+                    "cottage": "Vakantiehuis"
+                }
+            },
+            "home_size": {
+                "name": "Woonoppervlakte"
+            },
+            "main_fuse_size": {
+                "name": "Hoofdzekering"
+            },
+            "number_of_residents": {
+                "name": "Aantal bewoners"
+            },
+            "primary_heating_source": {
+                "name": "Primaire warmtebron",
+                "state": {
+                    "air2air_heatpump": "Lucht-lucht-warmtepomp",
+                    "air2water_heatpump": "Lucht-water-warmtepomp",
+                    "boiler": "Boiler",
+                    "central_heating": "Centrale verwarming",
+                    "district_heating": "Stadsverwarming",
+                    "district": "Stadsverwarming",
+                    "electric_boiler": "Elektrische boiler",
+                    "electricity": "Elektriciteit",
+                    "floor": "Vloerverwarming",
+                    "gas": "Gas",
+                    "ground_heatpump": "Bodemwarmtepomp",
+                    "ground": "Bodemwarmtepomp",
+                    "oil": "Olie",
+                    "other": "Anders",
+                    "waste": "Restwarmte"
+                }
+            },
+            "grid_company": {
+                "name": "Netbeheerder"
+            },
+            "grid_area_code": {
+                "name": "Netgebiedcode"
+            },
+            "price_area_code": {
+                "name": "Prijszonecode"
+            },
+            "consumption_ean": {
+                "name": "Verbruiks-EAN"
+            },
+            "production_ean": {
+                "name": "Productie-EAN"
+            },
+            "energy_tax_type": {
+                "name": "Energiebelastingtype"
+            },
+            "vat_type": {
+                "name": "BTW-type"
+            },
+            "estimated_annual_consumption": {
+                "name": "Geschat jaarverbruik"
+            },
+            "subscription_status": {
+                "name": "Abonnementsstatus",
+                "state": {
+                    "running": "Actief",
+                    "ended": "Beëindigd",
+                    "pending": "In afwachting",
+                    "unknown": "Onbekend"
+                }
             }
         },
         "binary_sensor": {
             "peak_price_period": {
-                "name": "Piekprijsperiode"
+                "name": "Piekprijs-periode"
             },
             "best_price_period": {
-                "name": "Beste prijsperiode"
+                "name": "Beste prijs-periode"
             },
             "connection": {
                 "name": "Tibber API-verbinding"
             },
             "tomorrow_data_available": {
                 "name": "Gegevens van morgen beschikbaar"
+            },
+            "has_ventilation_system": {
+                "name": "Heeft ventilatiesysteem"
+            },
+            "realtime_consumption_enabled": {
+                "name": "Realtime verbruik ingeschakeld"
             }
         }
     },

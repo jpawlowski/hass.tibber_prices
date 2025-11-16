@@ -348,6 +348,76 @@
             "description": "Totale duur van huidige of volgende dure periode in minuten",
             "long_description": "Toont de totale duur van de dure periode in minuten. Tijdens een actieve periode toont dit de volledige lengte van de huidige periode. Wanneer geen periode actief is, toont dit de duur van de volgende komende periode. Voorbeeld: '60 minuten' voor een 1-uur periode.",
             "usage_tips": "Gebruik om energiebesparende maatregelen te plannen: 'Als duration > 120, verlaag verwarmingstemperatuur agressiever (lange dure periode)'. Helpt bij het inschatten hoeveel energieverbruik moet worden verminderd."
+        },
+        "home_type": {
+            "description": "Type woning (appartement, huis enz.)",
+            "long_description": "Toont het woningtype zoals geconfigureerd in je Tibber-account. Deze metadata kunnen nuttig zijn voor het categoriseren van energieverbruikspatronen.",
+            "usage_tips": "Gebruik dit voor het organiseren van je smart home-systeem of voor analysedoeleinden."
+        },
+        "home_size": {
+            "description": "Woonoppervlakte in vierkante meters",
+            "long_description": "Toont de grootte van je woning in vierkante meters zoals geconfigureerd in je Tibber-account. Kan worden gebruikt om energieverbruik per vierkante meter te berekenen.",
+            "usage_tips": "Gebruik dit in energie-efficiëntieberekeningen: 'Mijn woning verbruikt X kWh per vierkante meter per jaar'."
+        },
+        "main_fuse_size": {
+            "description": "Hoofdzekeringgrootte in ampères",
+            "long_description": "Toont de capaciteit van je hoofdzekering in ampères. Dit bepaalt de maximale elektrische belasting die je woning tegelijkertijd aankan.",
+            "usage_tips": "Gebruik dit om overbelasting te voorkomen: 'Als het totale stroomverbruik de zekeringgrootte nadert, stel het starten van extra apparaten uit'."
+        },
+        "number_of_residents": {
+            "description": "Aantal personen dat in de woning woont",
+            "long_description": "Toont het aantal bewoners zoals geconfigureerd in je Tibber-account. Nuttig voor berekeningen van energieverbruik per persoon.",
+            "usage_tips": "Gebruik dit voor huishoudelijke energie-analyses: 'Energieverbruik per persoon per dag'."
+        },
+        "primary_heating_source": {
+            "description": "Primair verwarmingssysteemtype",
+            "long_description": "Toont het type verwarmingssysteem dat in je woning wordt gebruikt zoals geconfigureerd in je Tibber-account. Dit kan een warmtepomp, elektrische verwarming, gas, olie of andere warmtebronnen zijn.",
+            "usage_tips": "Gebruik dit om verwarmingsgerelateerde automatiseringen te categoriseren of voor energieverbruiksanalyse per verwarmingstype."
+        },
+        "grid_company": {
+            "description": "Naam van je elektriciteitsnetbeheerder",
+            "long_description": "Toont de naam van het bedrijf dat het elektriciteitsnet in je gebied beheert. Dit is de distributienetwerkbeheerder (DNB) die verantwoordelijk is voor de levering van elektriciteit aan je woning.",
+            "usage_tips": "Nuttig voor administratieve doeleinden en het oplossen van netgerelateerde problemen."
+        },
+        "grid_area_code": {
+            "description": "Netgebied-identificatiecode",
+            "long_description": "Toont de code die je elektriciteitsnetgebied identificeert. Deze code wordt door de netbeheerder gebruikt voor routing- en factureringsdoeleinden.",
+            "usage_tips": "Gebruik dit als administratieve referentie of bij contact met je netbeheerder."
+        },
+        "price_area_code": {
+            "description": "Elektriciteitsprijszonecode",
+            "long_description": "Toont de code voor je elektriciteitsprijszone (bijv. NO1, NO2, SE3, DK1). Verschillende zones hebben verschillende groothandelselektriciteitsprijzen op basis van regionaal aanbod en vraag.",
+            "usage_tips": "Gebruik dit om te begrijpen in welke prijsregio je je bevindt. Nuttig bij het vergelijken van prijzen met anderen of het analyseren van regionale prijspatronen."
+        },
+        "consumption_ean": {
+            "description": "EAN-code voor elektriciteitsverbruiksmeting",
+            "long_description": "Toont de European Article Number (EAN)-code die je elektriciteitsverbruiksmeter uniek identificeert. Deze 18-cijferige code wordt gebruikt voor facturerings- en administratieve doeleinden.",
+            "usage_tips": "Gebruik dit bij communicatie met je elektriciteitsleverancier of voor administratieve documentatie."
+        },
+        "production_ean": {
+            "description": "EAN-code voor elektriciteitsproductiemeting",
+            "long_description": "Toont de European Article Number (EAN)-code voor je elektriciteitsproductiemeter (als je zonnepanelen of andere opwekking hebt). Deze code volgt elektriciteit die je terug het net op stuurt.",
+            "usage_tips": "Relevant als je zonnepanelen of andere elektriciteitsopwekking hebt. Gebruik voor administratieve doeleinden en bij het claimen van teruglevering."
+        },
+        "energy_tax_type": {
+            "description": "Type energiebelasting toegepast",
+            "long_description": "Toont de energiebelastingcategorie die wordt toegepast op je elektriciteitsverbruik. Belastingtarieven variëren per land en soms per consumententype (particulier, zakelijk enz.).",
+            "usage_tips": "Gebruik dit voor het begrijpen van de uitsplitsing van je elektriciteitsrekening en voor berekeningen van totale kosten."
+        },
+        "vat_type": {
+            "description": "BTW-categorie (belasting over toegevoegde waarde)",
+            "long_description": "Toont de BTW-categorie die wordt toegepast op je elektriciteitsverbruik. BTW-tarieven variëren per land en kunnen verschillen voor elektriciteit vergeleken met andere goederen en diensten.",
+            "usage_tips": "Gebruik dit voor het begrijpen van je elektriciteitsrekening en het berekenen van totale kosten inclusief belastingen."
+        },
+        "estimated_annual_consumption": {
+            "description": "Geschat jaarlijks elektriciteitsverbruik in kWh",
+            "long_description": "Toont je geschatte jaarlijkse elektriciteitsverbruik in kilowattuur zoals berekend of geconfigureerd in je Tibber-account. Deze schatting wordt gebruikt om daadwerkelijk verbruik te vergelijken met verwachte waarden.",
+            "usage_tips": "Gebruik dit om te volgen of je daadwerkelijke verbruik boven of onder de verwachtingen ligt. Vergelijk maandelijks verbruik met 1/12 van deze waarde om ongebruikelijke patronen te identificeren."
+        },
+        "subscription_status": {
+            "description": "Status van je Tibber-abonnement",
+            "long_description": "Toont of je Tibber-abonnement momenteel actief is, is beëindigd of wacht op activering. Een status 'Actief' betekent dat je actief elektriciteit ontvangt via Tibber.",
+            "usage_tips": "Gebruik dit om je abonnementsstatus te monitoren. Stel meldingen in als de status verandert van 'Actief' om ononderbroken service te garanderen."
         }
     },
     "binary_sensor": {
@@ -370,6 +440,16 @@
             "description": "Of de verbinding met de Tibber API werkt",
             "long_description": "Geeft aan of de integratie succesvol verbinding kan maken met de Tibber API",
             "usage_tips": "Gebruik dit om de verbindingsstatus met de Tibber API te monitoren"
+        },
+        "has_ventilation_system": {
+            "description": "Of je woning een ventilatiesysteem heeft",
+            "long_description": "Geeft aan of een ventilatiesysteem is geregistreerd voor je woning in het Tibber-account. Ventilatiesystemen kunnen aanzienlijke elektriciteitsverbruikers zijn die baat kunnen hebben bij slimme planning.",
+            "usage_tips": "Gebruik dit om ventilatiespecifieke automatiseringen of energiemonitoring in te schakelen. Indien actief, overweeg ventilatie te plannen tijdens perioden met lage prijzen."
+        },
+        "realtime_consumption_enabled": {
+            "description": "Of realtime verbruiksmonitoring actief is",
+            "long_description": "Geeft aan of realtime elektriciteitsverbruikmonitoring is ingeschakeld en actief voor je Tibber-woning. Dit vereist compatibele meethardware (bijv. Tibber Pulse) en een actief abonnement.",
+            "usage_tips": "Gebruik dit om te verifiëren dat realtimeverbruiksgegevens beschikbaar zijn. Schakel meldingen in als dit onverwacht verandert naar 'uit', wat wijst op mogelijke hardware- of verbindingsproblemen."
         }
     },
     "home_types": {
@@ -377,5 +457,6 @@
         "ROWHOUSE": "Rijhuis",
         "HOUSE": "Huis",
         "COTTAGE": "Huisje"
-    }
+    },
+    "attribution": "Gegevens geleverd door Tibber"
 }

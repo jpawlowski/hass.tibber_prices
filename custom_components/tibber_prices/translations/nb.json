@@ -548,20 +548,97 @@
             },
             "price_forecast": {
                 "name": "Prisprognose"
+            },
+            "home_type": {
+                "name": "Boligtype",
+                "state": {
+                    "apartment": "Leilighet",
+                    "rowhouse": "Rekkehus",
+                    "house": "Hus",
+                    "cottage": "Hytte"
+                }
+            },
+            "home_size": {
+                "name": "Boligareal"
+            },
+            "main_fuse_size": {
+                "name": "Hovedsikring"
+            },
+            "number_of_residents": {
+                "name": "Antall beboere"
+            },
+            "primary_heating_source": {
+                "name": "Primær varmekilde",
+                "state": {
+                    "air2air_heatpump": "Luft-til-luft-varmepumpe",
+                    "air2water_heatpump": "Luft-til-vann-varmepumpe",
+                    "boiler": "Varmtvannsbereder",
+                    "central_heating": "Sentralvarme",
+                    "district_heating": "Fjernvarme",
+                    "district": "Fjernvarme",
+                    "electric_boiler": "Elektrisk varmtvannsbereder",
+                    "electricity": "Elektrisitet",
+                    "floor": "Gulvvarme",
+                    "gas": "Gass",
+                    "ground_heatpump": "Jordvarmepumpe",
+                    "ground": "Jordvarmepumpe",
+                    "oil": "Olje",
+                    "other": "Annet",
+                    "waste": "Spillvarme"
+                }
+            },
+            "grid_company": {
+                "name": "Nettselskap"
+            },
+            "grid_area_code": {
+                "name": "Nettområdekode"
+            },
+            "price_area_code": {
+                "name": "Prisområdekode"
+            },
+            "consumption_ean": {
+                "name": "Forbruks-EAN"
+            },
+            "production_ean": {
+                "name": "Produksjons-EAN"
+            },
+            "energy_tax_type": {
+                "name": "Energiavgiftstype"
+            },
+            "vat_type": {
+                "name": "MVA-type"
+            },
+            "estimated_annual_consumption": {
+                "name": "Estimert årlig forbruk"
+            },
+            "subscription_status": {
+                "name": "Abonnementsstatus",
+                "state": {
+                    "running": "Aktiv",
+                    "ended": "Avsluttet",
+                    "pending": "Venter",
+                    "unknown": "Ukjent"
+                }
             }
         },
         "binary_sensor": {
             "peak_price_period": {
-                "name": "Topprisperiode"
+                "name": "Toppris-periode"
             },
             "best_price_period": {
-                "name": "Beste prisperiode"
+                "name": "Lavpris-periode"
             },
             "connection": {
                 "name": "Tibber API-tilkobling"
             },
             "tomorrow_data_available": {
                 "name": "Morgendagens data tilgjengelig"
+            },
+            "has_ventilation_system": {
+                "name": "Har ventilasjonsanlegg"
+            },
+            "realtime_consumption_enabled": {
+                "name": "Sanntidsforbruk aktivert"
             }
         }
     },

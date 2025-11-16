@@ -41,6 +41,25 @@ ENTITY_DESCRIPTIONS = (
         translation_key="tomorrow_data_available",
         name="Tomorrow's Data Available",
         icon="mdi:calendar-check",
+        device_class=None,  # No specific device_class = shows generic "On/Off"
         entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    BinarySensorEntityDescription(
+        key="has_ventilation_system",
+        translation_key="has_ventilation_system",
+        name="Has Ventilation System",
+        icon="mdi:air-filter",
+        device_class=None,  # No specific device_class = shows generic "On/Off"
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+    ),
+    BinarySensorEntityDescription(
+        key="realtime_consumption_enabled",
+        translation_key="realtime_consumption_enabled",
+        name="Realtime Consumption Enabled",
+        icon="mdi:speedometer",
+        device_class=None,  # No specific device_class = shows generic "On/Off"
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
     ),
 )

@@ -348,6 +348,76 @@
             "description": "Minutes until next peak price period starts (0 when in transition)",
             "long_description": "Shows minutes until the next peak price period starts. During an active period, shows time until the period AFTER the current one. Returns 0 during brief transition moments. Updates every minute.",
             "usage_tips": "Pre-emptive automation: 'If next_in_minutes > 0 AND next_in_minutes < 10, complete current charging cycle now before prices increase'."
+        },
+        "home_type": {
+            "description": "Type of home (apartment, house, etc.)",
+            "long_description": "Shows the type of dwelling as configured in your Tibber account. This metadata can be useful for categorizing energy consumption patterns.",
+            "usage_tips": "Use this for organizing your smart home system or for analytics purposes."
+        },
+        "home_size": {
+            "description": "Size of home in square meters",
+            "long_description": "Shows the size of your home in square meters as configured in your Tibber account. Can be used to calculate energy consumption per square meter.",
+            "usage_tips": "Use this in energy efficiency calculations: 'My home uses X kWh per square meter per year'."
+        },
+        "main_fuse_size": {
+            "description": "Main electrical fuse size in amperes",
+            "long_description": "Shows the capacity of your main electrical fuse in amperes. This determines the maximum electrical load your home can handle simultaneously.",
+            "usage_tips": "Use this to prevent overloading: 'If total current consumption approaches fuse size, postpone starting additional appliances'."
+        },
+        "number_of_residents": {
+            "description": "Number of people living in the home",
+            "long_description": "Shows the number of residents as configured in your Tibber account. Useful for per-capita energy consumption calculations.",
+            "usage_tips": "Use this for household energy analytics: 'Energy consumption per person per day'."
+        },
+        "primary_heating_source": {
+            "description": "Primary heating system type",
+            "long_description": "Shows the type of heating system used in your home as configured in your Tibber account. This can be a heat pump, electric heating, gas, oil, or other heating sources.",
+            "usage_tips": "Use this to categorize heating-related automations or for energy consumption analysis by heating type."
+        },
+        "grid_company": {
+            "description": "Name of your electricity grid operator",
+            "long_description": "Shows the name of the company operating the electrical grid in your area. This is the distribution system operator (DSO) responsible for delivering electricity to your home.",
+            "usage_tips": "Useful for administrative purposes and troubleshooting grid-related issues."
+        },
+        "grid_area_code": {
+            "description": "Grid area identifier code",
+            "long_description": "Shows the code identifying your electrical grid area. This code is used by the grid operator for routing and billing purposes.",
+            "usage_tips": "Use this for administrative reference or when contacting your grid operator."
+        },
+        "price_area_code": {
+            "description": "Electricity price area code",
+            "long_description": "Shows the code for your electricity price area (e.g., NO1, NO2, SE3, DK1). Different areas have different wholesale electricity prices based on regional supply and demand.",
+            "usage_tips": "Use this to understand which price region you're in. Useful when comparing prices with others or analyzing regional price patterns."
+        },
+        "consumption_ean": {
+            "description": "EAN code for electricity consumption metering",
+            "long_description": "Shows the European Article Number (EAN) code that uniquely identifies your electricity consumption meter. This 18-digit code is used for billing and administrative purposes.",
+            "usage_tips": "Use this when communicating with your electricity provider or for administrative documentation."
+        },
+        "production_ean": {
+            "description": "EAN code for electricity production metering",
+            "long_description": "Shows the European Article Number (EAN) code for your electricity production meter (if you have solar panels or other generation). This code tracks electricity you feed back into the grid.",
+            "usage_tips": "Relevant if you have solar panels or other electricity generation. Use for administrative purposes and when claiming feed-in compensation."
+        },
+        "energy_tax_type": {
+            "description": "Type of energy tax applied",
+            "long_description": "Shows the energy tax category applied to your electricity consumption. Tax rates vary by country and sometimes by consumer type (residential, commercial, etc.).",
+            "usage_tips": "Use this for understanding your electricity bill breakdown and total cost calculations."
+        },
+        "vat_type": {
+            "description": "VAT (Value Added Tax) category",
+            "long_description": "Shows the VAT category applied to your electricity consumption. VAT rates vary by country and may differ for electricity compared to other goods and services.",
+            "usage_tips": "Use this for understanding your electricity bill and calculating total costs including taxes."
+        },
+        "estimated_annual_consumption": {
+            "description": "Estimated yearly electricity consumption in kWh",
+            "long_description": "Shows your estimated annual electricity consumption in kilowatt-hours as calculated or configured in your Tibber account. This estimate is used for comparing actual consumption to expected values.",
+            "usage_tips": "Use this to track if your actual consumption is above or below expectations. Compare monthly consumption to 1/12 of this value to identify unusual patterns."
+        },
+        "subscription_status": {
+            "description": "Status of your Tibber subscription",
+            "long_description": "Shows whether your Tibber subscription is currently running, has ended, or is pending activation. A status of 'running' means you're actively receiving electricity through Tibber.",
+            "usage_tips": "Use this to monitor your subscription status. Set up alerts if status changes from 'running' to ensure uninterrupted service."
         }
     },
     "binary_sensor": {
@@ -370,6 +440,16 @@
             "description": "Whether the connection to the Tibber API is working",
             "long_description": "Indicates if the integration can successfully connect to the Tibber API",
             "usage_tips": "Use this to monitor the connection status to the Tibber API"
+        },
+        "has_ventilation_system": {
+            "description": "Whether your home has a ventilation system",
+            "long_description": "Indicates if a ventilation system is registered for your home in the Tibber account. Ventilation systems can be significant electricity consumers that may benefit from smart scheduling.",
+            "usage_tips": "Use this to enable ventilation-specific automations or energy monitoring. If true, consider scheduling ventilation during low-price periods."
+        },
+        "realtime_consumption_enabled": {
+            "description": "Whether realtime consumption monitoring is active",
+            "long_description": "Indicates if realtime electricity consumption monitoring is enabled and active for your Tibber home. This requires compatible metering hardware (e.g., Tibber Pulse) and an active subscription.",
+            "usage_tips": "Use this to verify that realtime consumption data is available. Enable notifications if this changes to 'off' unexpectedly, indicating potential hardware or connectivity issues."
         }
     },
     "home_types": {
@@ -377,5 +457,6 @@
         "ROWHOUSE": "Rowhouse",
         "HOUSE": "House",
         "COTTAGE": "Cottage"
-    }
+    },
+    "attribution": "Data provided by Tibber"
 }

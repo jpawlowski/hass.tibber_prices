@@ -187,47 +187,54 @@ def _is_data_empty(data: dict, query_type: str) -> bool:
             )
 
         elif query_type == "price_info":
-            # Check for homes existence and non-emptiness before accessing
-            subscription = None
-            if (
-                "viewer" not in data
-                or "homes" not in data["viewer"]
-                or not isinstance(data["viewer"]["homes"], list)
-                or len(data["viewer"]["homes"]) == 0
-                or "currentSubscription" not in data["viewer"]["homes"][0]
-                or data["viewer"]["homes"][0]["currentSubscription"] is None
-            ):
-                _LOGGER.debug("Missing homes/currentSubscription in price_info check")
+            # Check for home aliases (home0, home1, etc.)
+            viewer = data.get("viewer", {})
+            home_aliases = [key for key in viewer if key.startswith("home") and key[4:].isdigit()]
+
+            if not home_aliases:
+                _LOGGER.debug("No home aliases found in price_info response")
                 is_empty = True
             else:
-                subscription = data["viewer"]["homes"][0]["currentSubscription"]
+                # Check first home for valid data
+                _LOGGER.debug("Checking price_info with %d home(s)", len(home_aliases))
+                first_home = viewer.get(home_aliases[0])
 
-                # Check priceInfoRange (192 quarter-hourly intervals)
-                has_historical = (
-                    "priceInfoRange" in subscription
-                    and subscription["priceInfoRange"] is not None
-                    and "edges" in subscription["priceInfoRange"]
-                    and subscription["priceInfoRange"]["edges"]
-                )
+                if (
+                    not first_home
+                    or "currentSubscription" not in first_home
+                    or first_home["currentSubscription"] is None
+                ):
+                    _LOGGER.debug("Missing currentSubscription in first home")
+                    is_empty = True
+                else:
+                    subscription = first_home["currentSubscription"]
 
-                # Check priceInfo for today's data
-                has_price_info = "priceInfo" in subscription and subscription["priceInfo"] is not None
-                has_today = (
-                    has_price_info
-                    and "today" in subscription["priceInfo"]
-                    and subscription["priceInfo"]["today"] is not None
-                    and len(subscription["priceInfo"]["today"]) > 0
-                )
+                    # Check priceInfoRange (192 quarter-hourly intervals)
+                    has_historical = (
+                        "priceInfoRange" in subscription
+                        and subscription["priceInfoRange"] is not None
+                        and "edges" in subscription["priceInfoRange"]
+                        and subscription["priceInfoRange"]["edges"]
+                    )
 
-                # Data is empty if we don't have historical data or today's data
-                is_empty = not has_historical or not has_today
+                    # Check priceInfo for today's data
+                    has_price_info = "priceInfo" in subscription and subscription["priceInfo"] is not None
+                    has_today = (
+                        has_price_info
+                        and "today" in subscription["priceInfo"]
+                        and subscription["priceInfo"]["today"] is not None
+                        and len(subscription["priceInfo"]["today"]) > 0
+                    )
 
-                _LOGGER.debug(
-                    "Price info check - priceInfoRange: %s, today: %s, is_empty: %s",
-                    bool(has_historical),
-                    bool(has_today),
-                    is_empty,
-                )
+                    # Data is empty if we don't have historical data or today's data
+                    is_empty = not has_historical or not has_today
+
+                    _LOGGER.debug(
+                        "Price info check - priceInfoRange: %s, today: %s, is_empty: %s",
+                        bool(has_historical),
+                        bool(has_today),
+                        is_empty,
+                    )
 
         elif query_type in ["daily", "hourly", "monthly"]:
             # Check for homes existence and non-emptiness before accessing
@@ -377,7 +384,7 @@ class TibberPricesApiClient:
         self._socket_connect_timeout = 5  # Socket connection timeout
 
     async def async_get_viewer_details(self) -> Any:
-        """Test connection to the API."""
+        """Get comprehensive viewer and home details from Tibber API."""
         return await self._api_wrapper(
             data={
                 "query": """
@@ -386,15 +393,63 @@ class TibberPricesApiClient:
                             userId
                             name
                             login
+                            accountType
                             homes {
                                 id
                                 type
                                 appNickname
+                                appAvatar
+                                size
+                                timeZone
+                                mainFuseSize
+                                numberOfResidents
+                                primaryHeatingSource
+                                hasVentilationSystem
                                 address {
                                     address1
+                                    address2
+                                    address3
                                     postalCode
                                     city
                                     country
+                                    latitude
+                                    longitude
+                                }
+                                owner {
+                                    id
+                                    firstName
+                                    lastName
+                                    isCompany
+                                    name
+                                    contactInfo {
+                                        email
+                                        mobile
+                                    }
+                                    language
+                                }
+                                meteringPointData {
+                                    consumptionEan
+                                    gridCompany
+                                    gridAreaCode
+                                    priceAreaCode
+                                    productionEan
+                                    energyTaxType
+                                    vatType
+                                    estimatedAnnualConsumption
+                                }
+                                currentSubscription {
+                                    id
+                                    status
+                                    validFrom
+                                    validTo
+                                    priceInfo {
+                                        current {
+                                            currency
+                                        }
+                                    }
+                                }
+                                features {
+                                    realTimeConsumptionEnabled
                                 }
                             }
                         }
@@ -404,55 +459,90 @@ class TibberPricesApiClient:
             query_type=QueryType.USER,
         )
 
-    async def async_get_price_info(self) -> dict:
-        """Get price info data in flat format for all homes."""
+    async def async_get_price_info(self, home_ids: set[str]) -> dict:
+        """
+        Get price info data in flat format for specified homes.
+
+        Args:
+            home_ids: Set of home IDs to fetch data for.
+
+        Returns:
+            Dictionary with homes data keyed by home_id.
+
+        """
+        return await self._get_price_info_for_specific_homes(home_ids)
+
+    async def _get_price_info_for_specific_homes(self, home_ids: set[str]) -> dict:
+        """Get price info for specific homes using GraphQL aliases."""
+        if not home_ids:
+            return {"homes": {}}
+
+        # Build query with aliases for each home
+        # Example: home1: home(id: "abc") { ... }
+        home_queries = []
+        for idx, home_id in enumerate(sorted(home_ids)):
+            alias = f"home{idx}"
+            home_query = f"""
+                {alias}: home(id: "{home_id}") {{
+                    id
+                    consumption(resolution:DAILY,last:1) {{
+                        pageInfo{{currency}}
+                    }}
+                    currentSubscription {{
+                        priceInfoRange(resolution:QUARTER_HOURLY,last:192) {{
+                            edges{{node{{
+                                startsAt total energy tax level
+                            }}}}
+                        }}
+                        priceInfo(resolution:QUARTER_HOURLY) {{
+                            today{{startsAt total energy tax level}}
+                            tomorrow{{startsAt total energy tax level}}
+                        }}
+                    }}
+                }}
+            """
+            home_queries.append(home_query)
+
+        query = "{viewer{" + "".join(home_queries) + "}}"
+
+        _LOGGER.debug("Fetching price info for %d specific home(s)", len(home_ids))
+
         data = await self._api_wrapper(
-            data={
-                "query": """
-                    {viewer{homes{
-                        id
-                        consumption(resolution:DAILY,last:1){
-                            pageInfo{currency}
-                        }
-                        currentSubscription{
-                            priceInfoRange(resolution:QUARTER_HOURLY,last:192){
-                                edges{node{
-                                    startsAt total energy tax level
-                                }}
-                            }
-                            priceInfo(resolution:QUARTER_HOURLY){
-                                today{startsAt total energy tax level}
-                                tomorrow{startsAt total energy tax level}
-                            }
-                        }
-                    }}}"""
-            },
+            data={"query": query},
             query_type=QueryType.PRICE_INFO,
         )
-        homes = data.get("viewer", {}).get("homes", [])
 
+        # Parse aliased response
+        viewer = data.get("viewer", {})
         homes_data = {}
-        for home in homes:
-            home_id = home.get("id")
-            if home_id:
-                if "currentSubscription" in home and home["currentSubscription"] is not None:
-                    # Extract currency from consumption data if available
-                    currency = None
-                    if home.get("consumption"):
-                        page_info = home["consumption"].get("pageInfo")
-                        if page_info:
-                            currency = page_info.get("currency")
 
-                    homes_data[home_id] = _flatten_price_info(
-                        home["currentSubscription"],
-                        currency,
-                    )
-                else:
-                    _LOGGER.debug(
-                        "Home %s has no active subscription - price data will be unavailable",
-                        home_id,
-                    )
-                    homes_data[home_id] = {}
+        for idx, home_id in enumerate(sorted(home_ids)):
+            alias = f"home{idx}"
+            home = viewer.get(alias)
+
+            if not home:
+                _LOGGER.debug("Home %s not found in API response", home_id)
+                homes_data[home_id] = {}
+                continue
+
+            if "currentSubscription" in home and home["currentSubscription"] is not None:
+                # Extract currency from consumption data if available
+                currency = None
+                if home.get("consumption"):
+                    page_info = home["consumption"].get("pageInfo")
+                    if page_info:
+                        currency = page_info.get("currency")
+
+                homes_data[home_id] = _flatten_price_info(
+                    home["currentSubscription"],
+                    currency,
+                )
+            else:
+                _LOGGER.debug(
+                    "Home %s has no active subscription - price data will be unavailable",
+                    home_id,
+                )
+                homes_data[home_id] = {}
 
         data["homes"] = homes_data
         return data
@@ -552,40 +642,6 @@ class TibberPricesApiClient:
 
         data["homes"] = homes_data
         return data
-
-    async def async_get_data(self) -> dict:
-        """Get all data from the API by combining multiple queries in flat format for all homes."""
-        price_info = await self.async_get_price_info()
-        daily_rating = await self.async_get_daily_price_rating()
-        hourly_rating = await self.async_get_hourly_price_rating()
-        monthly_rating = await self.async_get_monthly_price_rating()
-
-        all_home_ids = set()
-        all_home_ids.update(price_info.get("homes", {}).keys())
-        all_home_ids.update(daily_rating.get("homes", {}).keys())
-        all_home_ids.update(hourly_rating.get("homes", {}).keys())
-        all_home_ids.update(monthly_rating.get("homes", {}).keys())
-
-        homes_combined = {}
-        for home_id in all_home_ids:
-            daily_data = daily_rating.get("homes", {}).get(home_id, {})
-            hourly_data = hourly_rating.get("homes", {}).get(home_id, {})
-            monthly_data = monthly_rating.get("homes", {}).get(home_id, {})
-
-            price_rating = {
-                "thresholdPercentages": daily_data.get("thresholdPercentages"),
-                "daily": daily_data.get("daily", []),
-                "hourly": hourly_data.get("hourly", []),
-                "monthly": monthly_data.get("monthly", []),
-                "currency": (daily_data.get("currency") or hourly_data.get("currency") or monthly_data.get("currency")),
-            }
-
-            homes_combined[home_id] = {
-                "priceInfo": price_info.get("homes", {}).get(home_id, {}),
-                "priceRating": price_rating,
-            }
-
-        return {"homes": homes_combined}
 
     async def _make_request(
         self,

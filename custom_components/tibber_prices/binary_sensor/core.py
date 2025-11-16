@@ -78,16 +78,16 @@ class TibberPricesBinarySensor(TibberPricesEntity, BinarySensorEntity):
         """Return the appropriate state getter method based on the sensor type."""
         key = self.entity_description.key
 
-        if key == "peak_price_period":
-            return self._peak_price_state
-        if key == "best_price_period":
-            return self._best_price_state
-        if key == "connection":
-            return lambda: True if self.coordinator.data else None
-        if key == "tomorrow_data_available":
-            return self._tomorrow_data_available_state
+        state_getters = {
+            "peak_price_period": self._peak_price_state,
+            "best_price_period": self._best_price_state,
+            "connection": lambda: True if self.coordinator.data else None,
+            "tomorrow_data_available": self._tomorrow_data_available_state,
+            "has_ventilation_system": self._has_ventilation_system_state,
+            "realtime_consumption_enabled": self._realtime_consumption_enabled_state,
+        }
 
-        return None
+        return state_getters.get(key)
 
     def _best_price_state(self) -> bool | None:
         """Return True if the current time is within a best price period."""
@@ -129,6 +129,50 @@ class TibberPricesBinarySensor(TibberPricesEntity, BinarySensorEntity):
         if interval_count == 0:
             return False
         return False
+
+    def _has_ventilation_system_state(self) -> bool | None:
+        """Return True if the home has a ventilation system."""
+        if not self.coordinator.data:
+            return None
+
+        user_homes = self.coordinator.get_user_homes()
+        if not user_homes:
+            return None
+
+        home_id = self.coordinator.config_entry.data.get("home_id")
+        if not home_id:
+            return None
+
+        home_data = next((home for home in user_homes if home.get("id") == home_id), None)
+        if not home_data:
+            return None
+
+        value = home_data.get("hasVentilationSystem")
+        return value if isinstance(value, bool) else None
+
+    def _realtime_consumption_enabled_state(self) -> bool | None:
+        """Return True if realtime consumption is enabled."""
+        if not self.coordinator.data:
+            return None
+
+        user_homes = self.coordinator.get_user_homes()
+        if not user_homes:
+            return None
+
+        home_id = self.coordinator.config_entry.data.get("home_id")
+        if not home_id:
+            return None
+
+        home_data = next((home for home in user_homes if home.get("id") == home_id), None)
+        if not home_data:
+            return None
+
+        features = home_data.get("features")
+        if not features:
+            return None
+
+        value = features.get("realTimeConsumptionEnabled")
+        return value if isinstance(value, bool) else None
 
     def _get_tomorrow_data_available_attributes(self) -> dict | None:
         """Return attributes for tomorrow_data_available binary sensor."""

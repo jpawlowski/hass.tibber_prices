@@ -56,12 +56,16 @@ class TibberPricesSubentryFlowHandler(ConfigSubentryFlow):
                 unique_id=home_id,
             )
 
-        # Get existing home IDs by checking all subentries for this parent
+        # Get existing home IDs by checking all entries (parent + subentries)
         existing_home_ids = {
             entry.data["home_id"]
             for entry in self.hass.config_entries.async_entries(DOMAIN)
-            if entry.data.get("home_id") and entry != parent_entry
+            if entry.data.get("home_id")
         }
+
+        # Also include parent entry's home_id if it exists
+        if parent_entry.data.get("home_id"):
+            existing_home_ids.add(parent_entry.data["home_id"])
 
         available_homes = [home for home in homes if home["id"] not in existing_home_ids]
 

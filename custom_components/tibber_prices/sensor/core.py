@@ -55,6 +55,7 @@ from homeassistant.components.sensor import (
     SensorEntity,
     SensorEntityDescription,
 )
+from homeassistant.const import EntityCategory
 from homeassistant.core import callback
 from homeassistant.util import dt as dt_util
 
@@ -271,6 +272,23 @@ class TibberPricesSensor(TibberPricesEntity, SensorEntity):
             "data_timestamp": self._get_data_timestamp,
             # Price forecast sensor
             "price_forecast": self._get_price_forecast_value,
+            # Home metadata sensors
+            "home_type": lambda: self._get_home_metadata_value("type"),
+            "home_size": lambda: self._get_home_metadata_value("size"),
+            "main_fuse_size": lambda: self._get_home_metadata_value("mainFuseSize"),
+            "number_of_residents": lambda: self._get_home_metadata_value("numberOfResidents"),
+            "primary_heating_source": lambda: self._get_home_metadata_value("primaryHeatingSource"),
+            # Metering point sensors
+            "grid_company": lambda: self._get_metering_point_value("gridCompany"),
+            "grid_area_code": lambda: self._get_metering_point_value("gridAreaCode"),
+            "price_area_code": lambda: self._get_metering_point_value("priceAreaCode"),
+            "consumption_ean": lambda: self._get_metering_point_value("consumptionEan"),
+            "production_ean": lambda: self._get_metering_point_value("productionEan"),
+            "energy_tax_type": lambda: self._get_metering_point_value("energyTaxType"),
+            "vat_type": lambda: self._get_metering_point_value("vatType"),
+            "estimated_annual_consumption": lambda: self._get_metering_point_value("estimatedAnnualConsumption"),
+            # Subscription sensors
+            "subscription_status": lambda: self._get_subscription_value("status"),
             # Volatility sensors
             "today_volatility": lambda: self._get_volatility_value(volatility_type="today"),
             "tomorrow_volatility": lambda: self._get_volatility_value(volatility_type="tomorrow"),
@@ -1219,6 +1237,109 @@ class TibberPricesSensor(TibberPricesEntity, SensorEntity):
 
         # Return a simple status message indicating how much forecast data is available
         return f"Forecast available for {len(future_prices)} intervals"
+
+    def _get_home_metadata_value(self, field: str) -> str | int | None:
+        """
+        Get home metadata value from user data.
+
+        String values are converted to lowercase for ENUM device_class compatibility.
+        """
+        user_homes = self.coordinator.get_user_homes()
+        if not user_homes:
+            return None
+
+        # Find the home matching this sensor's home_id
+        home_id = self.coordinator.config_entry.data.get("home_id")
+        if not home_id:
+            return None
+
+        home_data = next((home for home in user_homes if home.get("id") == home_id), None)
+        if not home_data:
+            return None
+
+        value = home_data.get(field)
+
+        # Convert string to lowercase for ENUM device_class
+        if isinstance(value, str):
+            return value.lower()
+
+        return value
+
+    def _get_metering_point_value(self, field: str) -> str | int | None:
+        """Get metering point data value from user data."""
+        user_homes = self.coordinator.get_user_homes()
+        if not user_homes:
+            return None
+
+        home_id = self.coordinator.config_entry.data.get("home_id")
+        if not home_id:
+            return None
+
+        home_data = next((home for home in user_homes if home.get("id") == home_id), None)
+        if not home_data:
+            return None
+
+        metering_point = home_data.get("meteringPointData")
+        if not metering_point:
+            return None
+
+        return metering_point.get(field)
+
+    def _get_subscription_value(self, field: str) -> str | None:
+        """
+        Get subscription value from user data.
+
+        String values are converted to lowercase for ENUM device_class compatibility.
+        """
+        user_homes = self.coordinator.get_user_homes()
+        if not user_homes:
+            return None
+
+        home_id = self.coordinator.config_entry.data.get("home_id")
+        if not home_id:
+            return None
+
+        home_data = next((home for home in user_homes if home.get("id") == home_id), None)
+        if not home_data:
+            return None
+
+        subscription = home_data.get("currentSubscription")
+        if not subscription:
+            return None
+
+        value = subscription.get(field)
+
+        # Convert string to lowercase for ENUM device_class
+        if isinstance(value, str):
+            return value.lower()
+
+        return value
+
+    @property
+    def available(self) -> bool:
+        """
+        Return if entity is available.
+
+        For diagnostic sensors, hide them if they have no data (return None).
+        User requirement: Don't show sensors with "Unknown" state.
+        """
+        # First check if coordinator is available
+        if not super().available:
+            return False
+
+        # For diagnostic sensors with no data, hide them completely
+        if self.entity_description.entity_category == EntityCategory.DIAGNOSTIC:
+            try:
+                value = self.native_value
+            except (KeyError, ValueError, TypeError):
+                # If we can't get the value, hide the sensor
+                return False
+            else:
+                # Hide sensor if value is None (no data available)
+                return value is not None
+
+        # For all other sensors, use default availability
+        return True
 
     @property
     def native_value(self) -> float | str | datetime | None:
