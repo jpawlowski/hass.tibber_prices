@@ -1,0 +1,39 @@
+#!/usr/bin/env bash
+
+# script/sync-hacs: Sync HACS-installed integrations to custom_components/
+
+set -e
+
+cd "$(dirname "$0")/.."
+
+echo "==> Syncing HACS-installed integrations..."
+
+# Check if config/custom_components exists
+if [ ! -d "config/custom_components" ]; then
+    echo "    ℹ️  No config/custom_components directory found"
+    exit 0
+fi
+
+# Create symlinks for all integrations in config/custom_components/
+# except those that already exist in custom_components/
+synced=0
+for dir in config/custom_components/*/; do
+    component=$(basename "$dir")
+    target="custom_components/$component"
+
+    # Skip if already exists and is not a symlink (don't touch tibber_prices)
+    if [ -e "$target" ] && [ ! -L "$target" ]; then
+        continue
+    fi
+
+    # Create or update symlink
+    ln -sf "${PWD}/config/custom_components/$component" "$target"
+    echo "    ✓ Linked: $component"
+    synced=$((synced + 1))
+done
+
+if [ $synced -eq 0 ]; then
+    echo "    ℹ️  No new integrations to sync"
+else
+    echo "    ✓ Synced $synced integration(s)"
+fi

@@ -19,6 +19,11 @@ uv.lock
 config/*
 !config/configuration.yaml
 
+# HACS and other custom components installed for testing
+# Ignore everything in custom_components/ except tibber_prices
+custom_components/*
+!custom_components/tibber_prices/
+
 # Home Assistant database and logs
 *.db
 *.db-shm
