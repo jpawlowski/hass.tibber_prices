@@ -28,7 +28,6 @@
                 "ms-vscode-remote.remote-containers",
                 "redhat.vscode-yaml",
                 "ryanluker.vscode-coverage-gutters",
-                "visualstudioexptteam.vscodeintellicode"
             ],
             "settings": {
                 "editor.tabSize": 4,
