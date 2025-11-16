@@ -14,6 +14,25 @@ if [ ! -d "config/custom_components" ]; then
     exit 0
 fi
 
+# Clean up broken symlinks (where target no longer exists)
+cleaned=0
+if [ -d "custom_components" ]; then
+    for link in custom_components/*; do
+        # Skip if not a symlink
+        if [ ! -L "$link" ]; then
+            continue
+        fi
+
+        # Check if symlink target exists
+        if [ ! -e "$link" ]; then
+            component=$(basename "$link")
+            rm "$link"
+            echo "    🗑️  Removed broken link: $component"
+            cleaned=$((cleaned + 1))
+        fi
+    done
+fi
+
 # Create symlinks for all integrations in config/custom_components/
 # except those that already exist in custom_components/
 synced=0
@@ -32,8 +51,12 @@ for dir in config/custom_components/*/; do
     synced=$((synced + 1))
 done
 
-if [ $synced -eq 0 ]; then
-    echo "    ℹ️  No new integrations to sync"
-else
+if [ $synced -eq 0 ] && [ $cleaned -eq 0 ]; then
+    echo "    ℹ️  No changes needed"
+elif [ $synced -gt 0 ] && [ $cleaned -eq 0 ]; then
     echo "    ✓ Synced $synced integration(s)"
+elif [ $synced -eq 0 ] && [ $cleaned -gt 0 ]; then
+    echo "    ✓ Cleaned up $cleaned broken link(s)"
+else
+    echo "    ✓ Synced $synced integration(s), cleaned up $cleaned broken link(s)"
 fi
