@@ -644,6 +644,14 @@
                     "pending": "In afwachting",
                     "unknown": "Onbekend"
                 }
+            },
+            "chart_data_export": {
+                "name": "Grafiek Data Export",
+                "state": {
+                    "pending": "In afwachting",
+                    "ready": "Klaar",
+                    "error": "Fout"
+                }
             }
         },
         "binary_sensor": {
@@ -664,9 +672,6 @@
             },
             "realtime_consumption_enabled": {
                 "name": "Realtime verbruik ingeschakeld"
-            },
-            "chart_data_export": {
-                "name": "Grafiek Data Export"
             }
         }
     },

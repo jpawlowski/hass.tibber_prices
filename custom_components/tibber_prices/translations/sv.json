@@ -644,6 +644,14 @@
                     "pending": "Väntar",
                     "unknown": "Okänd"
                 }
+            },
+            "chart_data_export": {
+                "name": "Diagramdataexport",
+                "state": {
+                    "pending": "Väntar",
+                    "ready": "Redo",
+                    "error": "Fel"
+                }
             }
         },
         "binary_sensor": {
@@ -664,9 +672,6 @@
             },
             "realtime_consumption_enabled": {
                 "name": "Realtidsförbrukning aktiverad"
-            },
-            "chart_data_export": {
-                "name": "Diagramdataexport"
             }
         }
     },

@@ -126,7 +126,7 @@ data:
 
 ## Migration from Chart Data Export Sensor
 
-If you're currently using the `binary_sensor.tibber_home_chart_data_export` sensor, consider migrating to `tibber_prices.get_chartdata`:
+If you're currently using the `sensor.tibber_home_chart_data_export` sensor, consider migrating to `tibber_prices.get_chartdata`:
 
 **Benefits:**
 

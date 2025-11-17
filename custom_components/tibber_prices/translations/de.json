@@ -648,6 +648,14 @@
                     "pending": "Ausstehend",
                     "unknown": "Unbekannt"
                 }
+            },
+            "chart_data_export": {
+                "name": "Diagramm-Datenexport",
+                "state": {
+                    "pending": "Ausstehend",
+                    "ready": "Bereit",
+                    "error": "Fehler"
+                }
             }
         },
         "binary_sensor": {
@@ -668,9 +676,6 @@
             },
             "realtime_consumption_enabled": {
                 "name": "Echtzeitverbrauch aktiviert"
-            },
-            "chart_data_export": {
-                "name": "Diagramm-Datenexport"
             }
         }
     },

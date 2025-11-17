@@ -1000,6 +1000,16 @@ DIAGNOSTIC_SENSORS = (
         options=["running", "ended", "pending", "unknown"],
         entity_registry_enabled_default=False,
     ),
+    SensorEntityDescription(
+        key="chart_data_export",
+        translation_key="chart_data_export",
+        name="Chart Data Export",
+        icon="mdi:database-export",
+        device_class=SensorDeviceClass.ENUM,
+        options=["pending", "ready", "error"],
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,  # Opt-in
+    ),
 )
 
 # ----------------------------------------------------------------------------

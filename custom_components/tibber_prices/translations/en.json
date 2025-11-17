@@ -644,6 +644,14 @@
                     "pending": "Pending",
                     "unknown": "Unknown"
                 }
+            },
+            "chart_data_export": {
+                "name": "Chart Data Export",
+                "state": {
+                    "pending": "Pending",
+                    "ready": "Ready",
+                    "error": "Error"
+                }
             }
         },
         "binary_sensor": {
@@ -664,9 +672,6 @@
             },
             "realtime_consumption_enabled": {
                 "name": "Realtime Consumption Enabled"
-            },
-            "chart_data_export": {
-                "name": "Chart Data Export"
             }
         }
     },

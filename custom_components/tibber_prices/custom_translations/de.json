@@ -432,6 +432,11 @@
             "description": "Status deines Tibber-Abonnements",
             "long_description": "Zeigt, ob dein Tibber-Abonnement derzeit aktiv ist, beendet wurde oder auf Aktivierung wartet. Ein Status 'Aktiv' bedeutet, dass du aktiv Strom über Tibber beziehst.",
             "usage_tips": "Nutze dies zur Überwachung deines Abonnementstatus. Richte Benachrichtigungen ein, wenn sich der Status von 'Aktiv' ändert, um einen unterbrechungsfreien Service sicherzustellen."
+        },
+        "chart_data_export": {
+            "description": "Datenexport für Dashboard-Integrationen",
+            "long_description": "Dieser Sensor ruft den get_chartdata-Service mit deiner konfigurierten YAML-Konfiguration auf und stellt das Ergebnis als Entity-Attribute bereit. Der Status zeigt 'ready' wenn Daten verfügbar sind, 'error' bei Fehlern, oder 'pending' vor dem ersten Aufruf. Perfekt für Dashboard-Integrationen wie ApexCharts, die Preisdaten aus Entity-Attributen lesen.",
+            "usage_tips": "Konfiguriere die YAML-Parameter in den Integrationsoptionen entsprechend deinem get_chartdata-Service-Aufruf. Der Sensor aktualisiert automatisch bei Preisdaten-Updates (typischerweise nach Mitternacht und wenn morgige Daten eintreffen). Greife auf die Service-Response-Daten direkt über die Entity-Attribute zu - die Struktur entspricht exakt dem, was get_chartdata zurückgibt."
         }
     },
     "binary_sensor": {
@@ -464,11 +469,6 @@
             "description": "Ob die Echtzeit-Verbrauchsüberwachung aktiv ist",
             "long_description": "Zeigt an, ob die Echtzeit-Stromverbrauchsüberwachung für dein Tibber-Zuhause aktiviert und aktiv ist. Dies erfordert kompatible Messhardware (z. B. Tibber Pulse) und ein aktives Abonnement.",
             "usage_tips": "Verwende dies, um zu überprüfen, ob Echtzeit-Verbrauchsdaten verfügbar sind. Aktiviere Benachrichtigungen, falls dies unerwartet auf 'Aus' wechselt, was auf potenzielle Hardware- oder Verbindungsprobleme hinweist."
-        },
-        "chart_data_export": {
-            "description": "Datenexport für Dashboard-Integrationen",
-            "long_description": "Dieser Binärsensor ruft den get_chartdata-Service auf, um Daten für externe Dashboard-Integrationen wie ApexCharts bereitzustellen. Wird verwendet, um Preisdaten in benutzerdefinierten Visualisierungen anzuzeigen.",
-            "usage_tips": "Konfiguriere die YAML-Parameter in den Integrationsoptionen, um Datenquellen, Zeiträume und Aggregationsmethoden festzulegen. Verwende dies mit benutzerdefinierten Karten oder ApexCharts-Dashboards zur Visualisierung von Preistrends und Verbrauchsdaten."
         }
     },
     "home_types": {

@@ -430,8 +430,13 @@
         },
         "subscription_status": {
             "description": "Status van je Tibber-abonnement",
-            "long_description": "Toont of je Tibber-abonnement momenteel actief is, is beëindigd of wacht op activering. Een status 'Actief' betekent dat je actief elektriciteit ontvangt via Tibber.",
-            "usage_tips": "Gebruik dit om je abonnementsstatus te monitoren. Stel meldingen in als de status verandert van 'Actief' om ononderbroken service te garanderen."
+            "long_description": "Geeft aan of je Tibber-abonnement momenteel actief is, beëindigd of wacht op activering. Een 'Actief'-status betekent dat je actief elektriciteit via Tibber afneemt.",
+            "usage_tips": "Gebruik dit om je abonnementsstatus te monitoren. Stel meldingen in als de status verandert van 'Actief' om ononderbroken service te waarborgen."
+        },
+        "chart_data_export": {
+            "description": "Data-export voor dashboard-integraties",
+            "long_description": "Deze sensor roept de get_chartdata-service aan met jouw geconfigureerde YAML-configuratie en stelt het resultaat beschikbaar als entiteitsattributen. De status toont 'ready' wanneer data beschikbaar is, 'error' bij fouten, of 'pending' voor de eerste aanroep. Perfekt voor dashboard-integraties zoals ApexCharts die prijsgegevens uit entiteitsattributen moeten lezen.",
+            "usage_tips": "Configureer de YAML-parameters in de integratie-opties om overeen te komen met jouw get_chartdata-service-aanroep. De sensor wordt automatisch bijgewerkt wanneer prijsgegevens worden bijgewerkt (typisch na middernacht en wanneer gegevens van morgen binnenkomen). Krijg toegang tot de service-responsgegevens direct vanuit de entiteitsattributen - de structuur komt exact overeen met wat get_chartdata retourneert."
         }
     },
     "binary_sensor": {

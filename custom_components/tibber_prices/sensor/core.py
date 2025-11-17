@@ -5,6 +5,8 @@ from __future__ import annotations
 from datetime import datetime, timedelta
 from typing import TYPE_CHECKING, Any
 
+import yaml
+
 from custom_components.tibber_prices.average_utils import (
     calculate_current_leading_avg,
     calculate_current_leading_max,
@@ -18,6 +20,7 @@ from custom_components.tibber_prices.binary_sensor.attributes import (
     get_price_intervals_attributes,
 )
 from custom_components.tibber_prices.const import (
+    CONF_CHART_DATA_CONFIG,
     CONF_EXTENDED_DESCRIPTIONS,
     CONF_PRICE_RATING_THRESHOLD_HIGH,
     CONF_PRICE_RATING_THRESHOLD_LOW,
@@ -33,7 +36,6 @@ from custom_components.tibber_prices.const import (
     DEFAULT_VOLATILITY_THRESHOLD_HIGH,
     DEFAULT_VOLATILITY_THRESHOLD_MODERATE,
     DOMAIN,
-    async_get_entity_description,
     format_price_unit_major,
     format_price_unit_minor,
     get_entity_description,
@@ -115,6 +117,10 @@ class TibberPricesSensor(TibberPricesEntity, SensorEntity):
         # Centralized trend calculation cache (calculated once per coordinator update)
         self._trend_calculation_cache: dict[str, Any] | None = None
         self._trend_calculation_timestamp: datetime | None = None
+        # Chart data export (for chart_data_export sensor) - from binary_sensor
+        self._chart_data_last_update = None  # Track last service call timestamp
+        self._chart_data_error = None  # Track last service call error
+        self._chart_data_response = None  # Store service response for attributes
 
     async def async_added_to_hass(self) -> None:
         """When entity is added to hass."""
@@ -131,6 +137,10 @@ class TibberPricesSensor(TibberPricesEntity, SensorEntity):
             self._minute_update_remove_listener = self.coordinator.async_add_minute_update_listener(
                 self._handle_minute_update
             )
+
+        # For chart_data_export, trigger initial service call
+        if self.entity_description.key == "chart_data_export":
+            await self._refresh_chart_data()
 
     async def async_will_remove_from_hass(self) -> None:
         """When entity will be removed from hass."""
@@ -351,6 +361,8 @@ class TibberPricesSensor(TibberPricesEntity, SensorEntity):
             "peak_price_next_in_minutes": lambda: self._get_period_timing_value(
                 period_type="peak_price", value_type="next_in_minutes"
             ),
+            # Chart data export sensor
+            "chart_data_export": self._get_chart_data_export_value,
         }
 
         return handlers.get(key)
@@ -1967,99 +1979,84 @@ class TibberPricesSensor(TibberPricesEntity, SensorEntity):
         # Fall back to static icon from entity description
         return icon or self.entity_description.icon
 
+    def _get_description_attributes(self) -> dict[str, str]:
+        """Get description/long_description/usage_tips attributes."""
+        attributes = {}
+
+        if not self.entity_description.translation_key or not self.hass:
+            return attributes
+
+        language = self.hass.config.language if self.hass.config.language else "en"
+
+        # Add basic description (from cache, synchronous)
+        description = get_entity_description("sensor", self.entity_description.translation_key, language, "description")
+        if description:
+            attributes["description"] = description
+
+        # Check if extended descriptions are enabled
+        extended_descriptions = self.coordinator.config_entry.options.get(
+            CONF_EXTENDED_DESCRIPTIONS,
+            self.coordinator.config_entry.data.get(CONF_EXTENDED_DESCRIPTIONS, DEFAULT_EXTENDED_DESCRIPTIONS),
+        )
+
+        if extended_descriptions:
+            long_desc = get_entity_description(
+                "sensor", self.entity_description.translation_key, language, "long_description"
+            )
+            if long_desc:
+                attributes["long_description"] = long_desc
+
+            usage_tips = get_entity_description(
+                "sensor", self.entity_description.translation_key, language, "usage_tips"
+            )
+            if usage_tips:
+                attributes["usage_tips"] = usage_tips
+
+        return attributes
+
     @property
-    async def async_extra_state_attributes(self) -> dict | None:
-        """Return additional state attributes asynchronously."""
+    def extra_state_attributes(self) -> dict[str, Any] | None:
+        """Return additional state attributes."""
         if not self.coordinator.data:
             return None
 
-        attributes = self._get_sensor_attributes() or {}
+        # For chart_data_export: special ordering (metadata → descriptions → service data)
+        if self.entity_description.key == "chart_data_export":
+            attributes: dict[str, Any] = {}
+            chart_attrs = self._get_chart_data_export_attributes()
 
-        # Add description from the custom translations file
-        if self.entity_description.translation_key and self.hass is not None:
-            # Get user's language preference
-            language = self.hass.config.language if self.hass.config.language else "en"
+            # Step 1: Add metadata (timestamp, error)
+            if chart_attrs:
+                for key in ("timestamp", "error"):
+                    if key in chart_attrs:
+                        attributes[key] = chart_attrs[key]
 
-            # Add basic description
-            description = await async_get_entity_description(
-                self.hass, "sensor", self.entity_description.translation_key, language, "description"
-            )
-            if description:
-                attributes["description"] = description
+            # Step 2: Add descriptions
+            description_attrs = self._get_description_attributes()
+            attributes.update(description_attrs)
 
-            # Check if extended descriptions are enabled in the config
-            extended_descriptions = self.coordinator.config_entry.options.get(
-                CONF_EXTENDED_DESCRIPTIONS,
-                self.coordinator.config_entry.data.get(CONF_EXTENDED_DESCRIPTIONS, DEFAULT_EXTENDED_DESCRIPTIONS),
-            )
+            # Step 3: Add service data (everything except metadata)
+            if chart_attrs:
+                attributes.update({k: v for k, v in chart_attrs.items() if k not in ("timestamp", "error")})
 
-            # Add extended descriptions if enabled
-            if extended_descriptions:
-                # Add long description if available
-                long_desc = await async_get_entity_description(
-                    self.hass, "sensor", self.entity_description.translation_key, language, "long_description"
-                )
-                if long_desc:
-                    attributes["long_description"] = long_desc
+            return attributes if attributes else None
 
-                # Add usage tips if available
-                usage_tips = await async_get_entity_description(
-                    self.hass, "sensor", self.entity_description.translation_key, language, "usage_tips"
-                )
-                if usage_tips:
-                    attributes["usage_tips"] = usage_tips
-
-        return attributes if attributes else None
-
-    @property
-    def extra_state_attributes(self) -> dict | None:
-        """
-        Return additional state attributes (synchronous version).
-
-        This synchronous method is required by Home Assistant and will
-        first return basic attributes, then add cached descriptions
-        without any blocking I/O operations.
-        """
-        if not self.coordinator.data:
-            return None
-
-        # Start with the basic attributes
-        attributes = self._get_sensor_attributes() or {}
-
-        # Add descriptions from the cache if available (non-blocking)
-        if self.entity_description.translation_key and self.hass is not None:
-            # Get user's language preference
-            language = self.hass.config.language if self.hass.config.language else "en"
-            translation_key = self.entity_description.translation_key
-
-            # Add basic description from cache
-            description = get_entity_description("sensor", translation_key, language, "description")
-            if description:
-                attributes["description"] = description
-
-            # Check if extended descriptions are enabled in the config
-            extended_descriptions = self.coordinator.config_entry.options.get(
-                CONF_EXTENDED_DESCRIPTIONS,
-                self.coordinator.config_entry.data.get(CONF_EXTENDED_DESCRIPTIONS, DEFAULT_EXTENDED_DESCRIPTIONS),
-            )
-
-            # Add extended descriptions if enabled (from cache only)
-            if extended_descriptions:
-                # Add long description if available in cache
-                long_desc = get_entity_description("sensor", translation_key, language, "long_description")
-                if long_desc:
-                    attributes["long_description"] = long_desc
-
-                # Add usage tips if available in cache
-                usage_tips = get_entity_description("sensor", translation_key, language, "usage_tips")
-                if usage_tips:
-                    attributes["usage_tips"] = usage_tips
+        # For all other sensors: standard behavior
+        attributes: dict[str, Any] = self._get_sensor_attributes() or {}
+        description_attrs = self._get_description_attributes()
+        # Merge description attributes
+        for key, value in description_attrs.items():
+            attributes[key] = value
 
         return attributes if attributes else None
 
     def _get_sensor_attributes(self) -> dict | None:
         """Get attributes based on sensor type."""
         key = self.entity_description.key
+
+        # Special handling for chart_data_export - returns chart data in attributes
+        if key == "chart_data_export":
+            return self._get_chart_data_export_attributes()
 
         # Prepare cached data that attribute builders might need
         cached_data = {
@@ -2094,3 +2091,117 @@ class TibberPricesSensor(TibberPricesEntity, SensorEntity):
     async def async_update(self) -> None:
         """Force a refresh when homeassistant.update_entity is called."""
         await self.coordinator.async_request_refresh()
+
+        # For chart_data_export, also refresh the service call
+        if self.entity_description.key == "chart_data_export":
+            await self._refresh_chart_data()
+
+    # ========================================================================
+    # CHART DATA EXPORT METHODS
+    # ========================================================================
+
+    def _get_chart_data_export_value(self) -> str | None:
+        """Return state for chart_data_export sensor."""
+        if self._chart_data_error:
+            return "error"
+        if self._chart_data_last_update:
+            return "ready"
+        return "pending"
+
+    async def _refresh_chart_data(self) -> None:
+        """Refresh chart data by calling get_chartdata service."""
+        await self._call_chartdata_service_async()
+        # Result stored in cache variables, no need to return
+        # Trigger state update after refresh
+        self.async_write_ha_state()
+
+    async def _call_chartdata_service_async(self) -> dict | None:
+        """Call get_chartdata service with user-configured YAML (async)."""
+        # Get user-configured YAML
+        yaml_config = self.coordinator.config_entry.options.get(CONF_CHART_DATA_CONFIG, "")
+
+        # Parse YAML if provided, otherwise use empty dict (service defaults)
+        service_params = {}
+        if yaml_config and yaml_config.strip():
+            try:
+                parsed = yaml.safe_load(yaml_config)
+                # Ensure we have a dict (yaml.safe_load can return str, int, etc.)
+                if isinstance(parsed, dict):
+                    service_params = parsed
+                else:
+                    self.coordinator.logger.warning(
+                        "YAML configuration must be a dictionary, got %s. Using service defaults.",
+                        type(parsed).__name__,
+                        extra={"entity": self.entity_description.key},
+                    )
+                    service_params = {}
+            except yaml.YAMLError as err:
+                self.coordinator.logger.warning(
+                    "Invalid chart data YAML configuration: %s. Using service defaults.",
+                    err,
+                    extra={"entity": self.entity_description.key},
+                )
+                service_params = {}  # Fall back to service defaults
+
+        # Add required entry_id parameter
+        service_params["entry_id"] = self.coordinator.config_entry.entry_id
+
+        # Call get_chartdata service using official HA service system
+        try:
+            response = await self.hass.services.async_call(
+                DOMAIN,
+                "get_chartdata",
+                service_params,
+                blocking=True,
+                return_response=True,
+            )
+        except Exception as ex:
+            self.coordinator.logger.exception(
+                "Chart data service call failed",
+                extra={"entity": self.entity_description.key},
+            )
+            self._chart_data_response = None
+            self._chart_data_last_update = dt_util.now()
+            self._chart_data_error = str(ex)
+            return None
+        else:
+            self._chart_data_response = response
+            self._chart_data_last_update = dt_util.now()
+            self._chart_data_error = None
+            return response
+
+    def _get_chart_data_export_attributes(self) -> dict[str, object] | None:
+        """
+        Return chart data from last service call as attributes with metadata.
+
+        Attribute order: timestamp, error (if any), service data (at the end).
+        Note: description/long_description/usage_tips are added BEFORE these attributes
+        by async_extra_state_attributes() / extra_state_attributes().
+        """
+        # Build base attributes with metadata FIRST
+        attributes: dict[str, object] = {
+            "timestamp": self._chart_data_last_update.isoformat() if self._chart_data_last_update else None,
+        }
+
+        # Add error message if service call failed
+        if self._chart_data_error:
+            attributes["error"] = self._chart_data_error
+
+        if not self._chart_data_response:
+            # No data - only metadata (timestamp, error)
+            return attributes
+
+        # Service data goes LAST - after metadata
+        # Descriptions will be inserted BEFORE this by the property methods
+        if isinstance(self._chart_data_response, dict):
+            if len(self._chart_data_response) > 1:
+                # Multiple keys → wrap to prevent collision with metadata
+                attributes["data"] = self._chart_data_response
+            else:
+                # Single key → safe to merge directly
+                attributes.update(self._chart_data_response)
+        else:
+            # If response is array/list/primitive, wrap it in "data" key
+            attributes["data"] = self._chart_data_response
+
+        return attributes

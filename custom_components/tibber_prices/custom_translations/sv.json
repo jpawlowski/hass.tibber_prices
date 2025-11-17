@@ -432,6 +432,11 @@
             "description": "Status för ditt Tibber-abonnemang",
             "long_description": "Visar om ditt Tibber-abonnemang för närvarande är aktivt, har avslutats eller väntar på aktivering. En status 'Aktiv' betyder att du aktivt tar emot elektricitet genom Tibber.",
             "usage_tips": "Använd detta för att övervaka din abonnemangsstatus. Ställ in varningar om statusen ändras från 'Aktiv' för att säkerställa oavbruten service."
+        },
+        "chart_data_export": {
+            "description": "Dataexport för instrumentpanelsintegrationer",
+            "long_description": "Denna sensor anropar get_chartdata-tjänsten med din konfigurerade YAML-konfiguration och exponerar resultatet som entitetsattribut. Statusen visar 'ready' när data är tillgänglig, 'error' vid fel, eller 'pending' före första anropet. Perfekt för instrumentpanelsintegrationer som ApexCharts som behöver läsa prisdata från entitetsattribut.",
+            "usage_tips": "Konfigurera YAML-parametrarna i integrationsinställningarna för att matcha ditt get_chartdata-tjänsteanrop. Sensorn uppdateras automatiskt när prisdata uppdateras (vanligtvis efter midnatt och när morgondagens data anländer). Få åtkomst till tjänstesvarsdata direkt från entitetens attribut - strukturen matchar exakt vad get_chartdata returnerar."
         }
     },
     "binary_sensor": {

@@ -644,6 +644,14 @@
                     "pending": "Venter",
                     "unknown": "Ukjent"
                 }
+            },
+            "chart_data_export": {
+                "name": "Diagramdataeksport",
+                "state": {
+                    "pending": "Venter",
+                    "ready": "Klar",
+                    "error": "Feil"
+                }
             }
         },
         "binary_sensor": {
@@ -664,9 +672,6 @@
             },
             "realtime_consumption_enabled": {
                 "name": "Sanntidsforbruk aktivert"
-            },
-            "chart_data_export": {
-                "name": "Diagramdataeksport"
             }
         }
     },
