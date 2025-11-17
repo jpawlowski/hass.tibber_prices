@@ -464,6 +464,11 @@
             "description": "Whether realtime consumption monitoring is active",
             "long_description": "Indicates if realtime electricity consumption monitoring is enabled and active for your Tibber home. This requires compatible metering hardware (e.g., Tibber Pulse) and an active subscription.",
             "usage_tips": "Use this to verify that realtime consumption data is available. Enable notifications if this changes to 'off' unexpectedly, indicating potential hardware or connectivity issues."
+        },
+        "chart_data_export": {
+            "description": "Data export for dashboard integrations",
+            "long_description": "This binary sensor calls the get_chartdata service with your configured YAML parameters and exposes the result as entity attributes. The state is 'on' when the service call succeeds and data is available, 'off' when the call fails or no configuration is set. Perfect for dashboard integrations like ApexCharts that need to read price data from entity attributes.",
+            "usage_tips": "Configure the YAML parameters in the integration options to match your get_chartdata service call. The sensor will automatically refresh when price data updates (typically after midnight and when tomorrow's data arrives). Access the service response data directly from the entity's attributes - the structure matches exactly what get_chartdata returns."
         }
     },
     "home_types": {

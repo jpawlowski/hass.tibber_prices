@@ -274,7 +274,7 @@ def build_final_attributes_simple(
     }
 
 
-async def build_async_extra_state_attributes(  # noqa: PLR0913
+async def build_async_extra_state_attributes(  # noqa: PLR0913, PLR0912
     entity_key: str,
     translation_key: str | None,
     hass: HomeAssistant,
@@ -302,11 +302,31 @@ async def build_async_extra_state_attributes(  # noqa: PLR0913
     """
     attributes = {}
 
-    # Add dynamic attributes if available
+    # For chart_data_export: Add metadata first, descriptions next, service data last
+    # For other sensors: Follow normal order (dynamic_attrs first, then descriptions)
+    is_chart_export = entity_key == "chart_data_export"
+
+    # Extract metadata and service data for chart_data_export
+    chart_metadata = {}
+    chart_service_data = {}
+    if is_chart_export and dynamic_attrs:
+        # Separate metadata (timestamp, error) from service data
+        for key, value in dynamic_attrs.items():
+            if key in ("timestamp", "error"):
+                chart_metadata[key] = value
+            else:
+                chart_service_data[key] = value
+
+    # Add dynamic attributes in correct order
     if dynamic_attrs:
-        # Copy and remove internal fields before exposing to user
-        clean_attrs = {k: v for k, v in dynamic_attrs.items() if not k.startswith("_")}
-        attributes.update(clean_attrs)
+        if is_chart_export:
+            # For chart_data_export: Start with metadata only
+            attributes.update(chart_metadata)
+        else:
+            # For other sensors: Add all dynamic attributes first
+            # Copy and remove internal fields before exposing to user
+            clean_attrs = {k: v for k, v in dynamic_attrs.items() if not k.startswith("_")}
+            attributes.update(clean_attrs)
 
     # Add icon_color for best/peak price period sensors using shared utility
     add_icon_color_attribute(attributes, entity_key, is_on=is_on)
@@ -357,10 +377,14 @@ async def build_async_extra_state_attributes(  # noqa: PLR0913
             if usage_tips:
                 attributes["usage_tips"] = usage_tips
 
+    # For chart_data_export: Add service data at the END (after descriptions)
+    if is_chart_export and chart_service_data:
+        attributes.update(chart_service_data)
+
     return attributes if attributes else None
 
 
-def build_sync_extra_state_attributes(  # noqa: PLR0913
+def build_sync_extra_state_attributes(  # noqa: PLR0913, PLR0912
     entity_key: str,
     translation_key: str | None,
     hass: HomeAssistant,
@@ -388,11 +412,31 @@ def build_sync_extra_state_attributes(  # noqa: PLR0913
     """
     attributes = {}
 
-    # Add dynamic attributes if available
+    # For chart_data_export: Add metadata first, descriptions next, service data last
+    # For other sensors: Follow normal order (dynamic_attrs first, then descriptions)
+    is_chart_export = entity_key == "chart_data_export"
+
+    # Extract metadata and service data for chart_data_export
+    chart_metadata = {}
+    chart_service_data = {}
+    if is_chart_export and dynamic_attrs:
+        # Separate metadata (timestamp, error) from service data
+        for key, value in dynamic_attrs.items():
+            if key in ("timestamp", "error"):
+                chart_metadata[key] = value
+            else:
+                chart_service_data[key] = value
+
+    # Add dynamic attributes in correct order
     if dynamic_attrs:
-        # Copy and remove internal fields before exposing to user
-        clean_attrs = {k: v for k, v in dynamic_attrs.items() if not k.startswith("_")}
-        attributes.update(clean_attrs)
+        if is_chart_export:
+            # For chart_data_export: Start with metadata only
+            attributes.update(chart_metadata)
+        else:
+            # For other sensors: Add all dynamic attributes first
+            # Copy and remove internal fields before exposing to user
+            clean_attrs = {k: v for k, v in dynamic_attrs.items() if not k.startswith("_")}
+            attributes.update(clean_attrs)
 
     # Add icon_color for best/peak price period sensors using shared utility
     add_icon_color_attribute(attributes, entity_key, is_on=is_on)
@@ -439,5 +483,9 @@ def build_sync_extra_state_attributes(  # noqa: PLR0913
             )
             if usage_tips:
                 attributes["usage_tips"] = usage_tips
+
+    # For chart_data_export: Add service data at the END (after descriptions)
+    if is_chart_export and chart_service_data:
+        attributes.update(chart_service_data)
 
     return attributes if attributes else None

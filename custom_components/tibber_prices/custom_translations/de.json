@@ -464,6 +464,11 @@
             "description": "Ob die Echtzeit-Verbrauchsüberwachung aktiv ist",
             "long_description": "Zeigt an, ob die Echtzeit-Stromverbrauchsüberwachung für dein Tibber-Zuhause aktiviert und aktiv ist. Dies erfordert kompatible Messhardware (z. B. Tibber Pulse) und ein aktives Abonnement.",
             "usage_tips": "Verwende dies, um zu überprüfen, ob Echtzeit-Verbrauchsdaten verfügbar sind. Aktiviere Benachrichtigungen, falls dies unerwartet auf 'Aus' wechselt, was auf potenzielle Hardware- oder Verbindungsprobleme hinweist."
+        },
+        "chart_data_export": {
+            "description": "Datenexport für Dashboard-Integrationen",
+            "long_description": "Dieser Binärsensor ruft den get_chartdata-Service auf, um Daten für externe Dashboard-Integrationen wie ApexCharts bereitzustellen. Wird verwendet, um Preisdaten in benutzerdefinierten Visualisierungen anzuzeigen.",
+            "usage_tips": "Konfiguriere die YAML-Parameter in den Integrationsoptionen, um Datenquellen, Zeiträume und Aggregationsmethoden festzulegen. Verwende dies mit benutzerdefinierten Karten oder ApexCharts-Dashboards zur Visualisierung von Preistrends und Verbrauchsdaten."
         }
     },
     "home_types": {

@@ -43,6 +43,7 @@ CONF_ENABLE_MIN_PERIODS_PEAK = "enable_min_periods_peak"
 CONF_MIN_PERIODS_PEAK = "min_periods_peak"
 CONF_RELAXATION_STEP_PEAK = "relaxation_step_peak"
 CONF_RELAXATION_ATTEMPTS_PEAK = "relaxation_attempts_peak"
+CONF_CHART_DATA_CONFIG = "chart_data_config"  # YAML config for chart data export
 
 ATTRIBUTION = "Data provided by Tibber"
 
@@ -327,6 +328,10 @@ BINARY_SENSOR_ICON_MAPPING = {
         "on": "mdi:alert-circle",
         "off": "mdi:shield-check",  # Has future periods
         "off_no_future": "mdi:sleep",  # No future periods in next 6h
+    },
+    "chart_data_export": {
+        "on": "mdi:database-export",  # Data available
+        "off": "mdi:database-alert",  # Service call failed or no config
     },
 }
 

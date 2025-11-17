@@ -42,7 +42,7 @@ get_chartdata:
   description: >-
     Returns price data in a simple chart-friendly format compatible with the Tibber Core integration output structure. Perfect for use with popular chart cards like ha-price-timeline-card, ApexCharts Card, Plotly Graph Card, Mini Graph Card, or the built-in History Graph Card. Field names and data structure can be customized to match your specific chart requirements.
   fields:
-    # === Basic Settings (for all formats) ===
+    # === REQUIRED ===
     entry_id:
       name: Entry ID
       description: The config entry ID for the Tibber integration.
@@ -51,6 +51,7 @@ get_chartdata:
       selector:
         config_entry:
           integration: tibber_prices
+    # === DATA SELECTION ===
     day:
       name: Day
       description: Which day(s) to fetch prices for. You can select multiple days. If not specified, returns all available data (today + tomorrow if available).
@@ -76,27 +77,7 @@ get_chartdata:
             - interval
             - hourly
           translation_key: resolution
-    minor_currency:
-      name: Minor Currency
-      description: >-
-        Return prices in minor currency units (cents for EUR, øre for NOK/SEK) instead of major currency units. Disabled by default.
-      required: false
-      default: false
-      example: true
-      selector:
-        boolean:
-    round_decimals:
-      name: Round Decimals
-      description: >-
-        Number of decimal places to round prices to (0-10). If not specified, uses default precision (4 decimals for major currency, 2 for minor currency).
-      required: false
-      example: 2
-      selector:
-        number:
-          min: 0
-          max: 10
-          mode: box
-    # === Filters (for all formats) ===
+    # === FILTERS ===
     level_filter:
       name: Level Filter
       description: >-
@@ -125,7 +106,18 @@ get_chartdata:
             - high
           multiple: true
           translation_key: rating_level_filter
-    # === NULL Insertion ===
+    period_filter:
+      name: Period Filter
+      description: >-
+        Filter intervals to include only those within Best Price or Peak Price periods. Options: 'best_price' (only intervals in Best Price periods), 'peak_price' (only intervals in Peak Price periods). If not specified, all intervals are included. This uses the precomputed period data from binary sensors (binary_sensor.best_price_period / binary_sensor.peak_price_period).
+      required: false
+      selector:
+        select:
+          options:
+            - best_price
+            - peak_price
+          translation_key: period_filter
+    # === FILTER BEHAVIOR ===
     insert_nulls:
       name: Insert NULL Values
       description: >-
@@ -139,7 +131,7 @@ get_chartdata:
             - segments
             - all
           translation_key: insert_nulls
-    # === Output Format Selection ===
+    # === OUTPUT FORMAT ===
     output_format:
       name: Output Format
       description: >-
@@ -153,7 +145,28 @@ get_chartdata:
             - array_of_objects
             - array_of_arrays
           translation_key: output_format
-    # === For array_of_arrays format ===
+    # === CURRENCY & PRECISION ===
+    minor_currency:
+      name: Minor Currency
+      description: >-
+        Return prices in minor currency units (cents for EUR, øre for NOK/SEK) instead of major currency units. Disabled by default.
+      required: false
+      default: false
+      example: true
+      selector:
+        boolean:
+    round_decimals:
+      name: Round Decimals
+      description: >-
+        Number of decimal places to round prices to (0-10). If not specified, uses default precision (4 decimals for major currency, 2 for minor currency).
+      required: false
+      example: 2
+      selector:
+        number:
+          min: 0
+          max: 10
+          mode: box
+    # === ARRAY OF ARRAYS OPTIONS ===
     add_trailing_null:
       name: Add Trailing Null Point
       description: >-
@@ -169,7 +182,7 @@ get_chartdata:
       required: false
       selector:
         text:
-    # === For array_of_objects format - Include Fields ===
+    # === ARRAY OF OBJECTS OPTIONS ===
     include_level:
       name: Include Level (array_of_objects only)
       description: >-
@@ -196,13 +209,21 @@ get_chartdata:
       default: false
       selector:
         boolean:
-    # === For array_of_objects format - Customize Field Names ===
-    timestamp_field:
-      name: Timestamp Field Name (array_of_objects only)
+    # === ARRAY OF OBJECTS - FIELD NAMES ===
+    start_time_field:
+      name: Start Time Field Name (array_of_objects only)
       description: >-
-        [ONLY FOR array_of_objects FORMAT] Custom name for the timestamp field in the output. Defaults to "start_time" if not specified.
+        [ONLY FOR array_of_objects FORMAT] Custom name for the start time field in the output. Defaults to "start_time" if not specified.
       required: false
       example: time
+      selector:
+        text:
+    end_time_field:
+      name: End Time Field Name (array_of_objects only)
+      description: >-
+        [ONLY FOR array_of_objects FORMAT] Custom name for the end time field in the output. Defaults to "end_time" if not specified. Only used with period_filter.
+      required: false
+      example: end
       selector:
         text:
     price_field:

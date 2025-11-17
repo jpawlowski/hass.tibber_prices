@@ -464,6 +464,11 @@
             "description": "Om realtidsförbrukningsövervakning är aktiv",
             "long_description": "Indikerar om realtidsövervakning av elförbrukning är aktiverad och aktiv för ditt Tibber-hem. Detta kräver kompatibel mätutrustning (t.ex. Tibber Pulse) och en aktiv prenumeration.",
             "usage_tips": "Använd detta för att verifiera att realtidsförbrukningen är tillgänglig. Aktivera meddelanden om detta oväntat ändras till 'av', vilket indikerar potentiella hårdvaru- eller anslutningsproblem."
+        },
+        "chart_data_export": {
+            "description": "Dataexport för instrumentpanelsintegrationer",
+            "long_description": "Denna binär sensor anropar tjänsten get_chartdata för att exportera prissensordata i format som är kompatibelt med ApexCharts och andra instrumentpanelskomponenter. Använd denna tillsammans med custom:apexcharts-card för att visa prissensorer på din instrumentpanel.",
+            "usage_tips": "Konfigurera YAML-parametrarna i integrationens alternativ under 'ApexCharts-datakonfiguration'. Tjänsten kräver en giltig sensorenhet och returnerar formaterad data för kartrendring. Se dokumentationen för tillgängliga parametrar och anpassningsalternativ."
         }
     },
     "home_types": {

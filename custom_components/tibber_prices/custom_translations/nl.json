@@ -464,6 +464,11 @@
             "description": "Of realtime verbruiksmonitoring actief is",
             "long_description": "Geeft aan of realtime elektriciteitsverbruikmonitoring is ingeschakeld en actief voor je Tibber-woning. Dit vereist compatibele meethardware (bijv. Tibber Pulse) en een actief abonnement.",
             "usage_tips": "Gebruik dit om te verifiëren dat realtimeverbruiksgegevens beschikbaar zijn. Schakel meldingen in als dit onverwacht verandert naar 'uit', wat wijst op mogelijke hardware- of verbindingsproblemen."
+        },
+        "chart_data_export": {
+            "description": "Gegevensexport voor dashboardintegraties",
+            "long_description": "Deze binaire sensor roept de get_chartdata-service aan om gegevens voor dashboard-widgets te exporteren. Ondersteunt ApexCharts en andere dashboardoplossingen die prijsgegevens willen visualiseren.",
+            "usage_tips": "Configureer de YAML-parameters in de integratieopties onder 'Geavanceerd'. Deze sensor biedt meestal geen praktische waarde in automatiseringen - hij dient hoofdzakelijk als servicecontainer voor dashboardgebruik. Raadpleeg de documentatie voor specifieke parameterformat."
         }
     },
     "home_types": {

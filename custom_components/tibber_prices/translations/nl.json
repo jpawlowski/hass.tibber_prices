@@ -39,7 +39,10 @@
             "unknown": "Onverwachte fout",
             "cannot_connect": "Verbinding mislukt",
             "invalid_access_token": "Ongeldig toegangstoken",
-            "missing_homes": "Het nieuwe toegangstoken heeft geen toegang tot alle geconfigureerde huizen. Gebruik een toegangstoken dat toegang heeft tot dezelfde Tibber-huizen."
+            "missing_homes": "Het nieuwe toegangstoken heeft geen toegang tot alle geconfigureerde huizen. Gebruik een toegangstoken dat toegang heeft tot dezelfde Tibber-huizen.",
+            "invalid_yaml_syntax": "Ongeldige YAML-syntaxis. Controleer inspringen, dubbele punten en speciale tekens.",
+            "invalid_yaml_structure": "YAML moet een woordenboek/object zijn (sleutel: waarde-paren), geen lijst of platte tekst.",
+            "service_call_failed": "Service-aanroep validatie mislukt: {error_detail}"
         },
         "abort": {
             "already_configured": "Integratie is al geconfigureerd",
@@ -152,7 +155,7 @@
                     "price_trend_threshold_rising": "Stijgende drempel (% boven huidige prijs)",
                     "price_trend_threshold_falling": "Dalende drempel (% onder huidige prijs, negatieve waarde)"
                 },
-                "submit": "Configuratie voltooien"
+                "submit": "Verder naar stap 7"
             },
             "volatility": {
                 "title": "Volatiliteit Drempels",
@@ -163,6 +166,17 @@
                     "volatility_threshold_very_high": "Zeer hoge drempel (VC ≥ deze %, bijv. 50)"
                 },
                 "submit": "Volgende naar stap 4"
+            },
+            "chart_data_export": {
+                "title": "Grafiek Data Export",
+                "description": "{step_progress}\n\n⚠️ **Deze stap is optioneel:** Configureer alleen als je een diagnostische sensor nodig hebt voor oudere dashboardtools die GEEN services kunnen aanroepen.\n\n⚠️ **BELANGRIJK: Legacy-functie**\nDeze sensor bestaat alleen voor achterwaartse compatibiliteit met oudere tools die alleen data kunnen lezen uit entiteitsattributen.\n\n**Voor nieuwe integraties, gebruik de `tibber_prices.get_chartdata` service direct** - deze is flexibeler, efficiënter en de aanbevolen Home Assistant-aanpak.\n\n**Wanneer deze sensor gebruiken:**\n✅ ALLEEN als jouw dashboardtool ALLEEN attributen kan lezen (bijv. oudere versies)\n❌ NIET voor nieuwe integraties - gebruik de service direct\n\n**Wat is deze sensor?**\nEen diagnostische sensor die de `tibber_prices.get_chartdata` service aanroept met jouw YAML-parameters en het resultaat beschikbaar stelt als attributen.\n\n**Hoe te gebruiken:**\n1. Open Instellingen → Apparaten en services → Tibber Prices\n2. Selecteer jouw woning\n3. Vind 'Grafiek Data Export' in de Diagnostiek-sectie\n4. Activeer de sensor (standaard uitgeschakeld)\n5. Gebruik `homeassistant.update_entity` om data handmatig bij te werken\n\n**Configuratiehandleiding:**\n1. Test je service-aanroep in Ontwikkelaarstools → Services → `tibber_prices.get_chartdata`\n2. Kopieer de YAML uit de `data:` sectie (zonder `entry_id`)\n3. Plak het hieronder (gebruik Shift+Enter of Ctrl+Enter voor nieuwe regels)\n\n**Voorbeeld YAML:**\n```yaml\nday:\n  - today\n  - tomorrow\ninclude_level: true\ninclude_rating_level: true\n```\n\n**Opmerking:** Laat leeg of sla deze stap over als je de service direct gebruikt (aanbevolen).",
+                "data": {
+                    "chart_data_config": "Serviceconfiguratie (YAML)"
+                },
+                "data_description": {
+                    "chart_data_config": "YAML-configuratie voor `get_chartdata` service. Ondersteunde parameters: day (lijst met yesterday/today/tomorrow), resolution (interval/hourly), output_format, include_level, include_rating_level, include_average, en nog veel meer. Zie servicedocumentatie voor volledige lijst. Laat leeg om standaardinstellingen te gebruiken (today, interval resolution, array of objects)."
+                },
+                "submit": "Configuratie voltooien"
             }
         },
         "error": {
@@ -650,6 +664,9 @@
             },
             "realtime_consumption_enabled": {
                 "name": "Realtime verbruik ingeschakeld"
+            },
+            "chart_data_export": {
+                "name": "Grafiek Data Export"
             }
         }
     },
@@ -734,6 +751,10 @@
                     "name": "Prijsbeoordeling Filter",
                     "description": "Filter intervallen om alleen specifieke prijsbeoordelingen op te nemen (LOW, NORMAL, HIGH). Als dit niet is opgegeven, worden alle beoordelingen opgenomen."
                 },
+                "period_filter": {
+                    "name": "Periode Filter",
+                    "description": "Filter intervallen om alleen die binnen Beste prijs- of Piek prijs-perioden op te nemen. Opties: 'best_price' (alleen intervallen in Beste prijs-perioden), 'peak_price' (alleen intervallen in Piek prijs-perioden). Als niet opgegeven, worden alle intervallen opgenomen. Gebruikt vooraf berekende periodegegevens van binaire sensoren."
+                },
                 "insert_nulls": {
                     "name": "NULL-waarden invoegen",
                     "description": "Beheer het invoegen van NULL-waarden voor gefilterde gegevens. 'none' (standaard): Geen NULL-waarden, alleen overeenkomende intervallen. 'segments': Voeg NULL-punten toe bij segmentgrenzen voor schone gaten in grafieken (aanbevolen voor traplijngrafieken). 'all': Voeg NULL in voor alle tijdstempels waarbij het filter niet overeenkomt (handig voor continue tijdreeksvisualisatie)."
@@ -742,9 +763,13 @@
                     "name": "Voeg afsluitend null-punt toe",
                     "description": "[BEIDE FORMATEN] Voeg een laatste datapunt met null-waarden (behalve tijdstempel) toe aan het einde. Sommige diagrambibliotheken hebben dit nodig om extrapolatie/interpolatie naar de rand van het viewport te voorkomen bij stepline-weergave. Laat uitgeschakeld tenzij je diagram dit vereist."
                 },
-                "timestamp_field": {
-                    "name": "Tijdstempel-veldnaam (alleen Array van objecten)",
-                    "description": "[ALLEEN VOOR Array van objecten FORMAAT] Aangepaste naam voor het tijdstempel-veld in de uitvoer. Standaard is 'start_time' als niet opgegeven."
+                "start_time_field": {
+                    "name": "Starttijd-veldnaam (alleen Array van objecten)",
+                    "description": "[ALLEEN VOOR Array van objecten FORMAAT] Aangepaste naam voor het starttijd-veld in de uitvoer. Standaard is 'start_time' als niet opgegeven."
+                },
+                "end_time_field": {
+                    "name": "Eindtijd-veldnaam (alleen Array van objecten)",
+                    "description": "[ALLEEN VOOR Array van objecten FORMAAT] Aangepaste naam voor het eindtijd-veld in de uitvoer. Standaard is 'end_time' als niet opgegeven. Alleen gebruikt met period_filter."
                 },
                 "price_field": {
                     "name": "Prijsveld-naam (alleen Array van objecten)",
@@ -826,6 +851,12 @@
                 "none": "Geen",
                 "segments": "Segmenten",
                 "all": "Alle"
+            }
+        },
+        "period_filter": {
+            "options": {
+                "best_price": "Beste prijsperioden",
+                "peak_price": "Piek prijsperioden"
             }
         },
         "volatility": {

@@ -62,4 +62,13 @@ ENTITY_DESCRIPTIONS = (
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
     ),
+    BinarySensorEntityDescription(
+        key="chart_data_export",
+        translation_key="chart_data_export",
+        name="Chart Data Export",
+        icon="mdi:database-export",
+        device_class=BinarySensorDeviceClass.CONNECTIVITY,  # ON = data available
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,  # Opt-in
+    ),
 )

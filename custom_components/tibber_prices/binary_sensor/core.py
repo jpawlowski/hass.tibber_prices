@@ -5,6 +5,9 @@ from __future__ import annotations
 from datetime import timedelta
 from typing import TYPE_CHECKING
 
+import yaml
+
+from custom_components.tibber_prices.const import CONF_CHART_DATA_CONFIG, DOMAIN
 from custom_components.tibber_prices.coordinator import TIME_SENSITIVE_ENTITY_KEYS
 from custom_components.tibber_prices.entity import TibberPricesEntity
 from custom_components.tibber_prices.entity_utils import get_binary_sensor_icon
@@ -49,6 +52,8 @@ class TibberPricesBinarySensor(TibberPricesEntity, BinarySensorEntity):
         self._state_getter: Callable | None = self._get_state_getter()
         self._attribute_getter: Callable | None = self._get_attribute_getter()
         self._time_sensitive_remove_listener: Callable | None = None
+        self._chart_data_last_update = None  # Track last service call timestamp
+        self._chart_data_error = None  # Track last service call error
 
     async def async_added_to_hass(self) -> None:
         """When entity is added to hass."""
@@ -59,6 +64,10 @@ class TibberPricesBinarySensor(TibberPricesEntity, BinarySensorEntity):
             self._time_sensitive_remove_listener = self.coordinator.async_add_time_sensitive_listener(
                 self._handle_time_sensitive_update
             )
+
+        # For chart_data_export, trigger initial service call
+        if self.entity_description.key == "chart_data_export":
+            await self._refresh_chart_data()
 
     async def async_will_remove_from_hass(self) -> None:
         """When entity will be removed from hass."""
@@ -85,6 +94,7 @@ class TibberPricesBinarySensor(TibberPricesEntity, BinarySensorEntity):
             "tomorrow_data_available": self._tomorrow_data_available_state,
             "has_ventilation_system": self._has_ventilation_system_state,
             "realtime_consumption_enabled": self._realtime_consumption_enabled_state,
+            "chart_data_export": self._chart_data_export_state,
         }
 
         return state_getters.get(key)
@@ -174,6 +184,79 @@ class TibberPricesBinarySensor(TibberPricesEntity, BinarySensorEntity):
         value = features.get("realTimeConsumptionEnabled")
         return value if isinstance(value, bool) else None
 
+    def _chart_data_export_state(self) -> bool | None:
+        """Return True if chart data export was successful."""
+        if not self.coordinator.data:
+            return None
+
+        # Try to fetch chart data - state is ON if successful
+        # Note: This is called in property context, so we can't use async
+        # We'll check if data was cached from last async call
+        chart_data = self._get_cached_chart_data()
+        return chart_data is not None
+
+    def _get_cached_chart_data(self) -> dict | None:
+        """Get cached chart data from last service call."""
+        # Store service response in instance variable for reuse
+        if not hasattr(self, "_chart_data_cache"):
+            self._chart_data_cache = None
+        return self._chart_data_cache
+
+    async def _call_chartdata_service_async(self) -> dict | None:
+        """Call get_chartdata service with user-configured YAML (async)."""
+        # Get user-configured YAML
+        yaml_config = self.coordinator.config_entry.options.get(CONF_CHART_DATA_CONFIG, "")
+
+        # Parse YAML if provided, otherwise use empty dict (service defaults)
+        service_params = {}
+        if yaml_config and yaml_config.strip():
+            try:
+                parsed = yaml.safe_load(yaml_config)
+                # Ensure we have a dict (yaml.safe_load can return str, int, etc.)
+                if isinstance(parsed, dict):
+                    service_params = parsed
+                else:
+                    self.coordinator.logger.warning(
+                        "YAML configuration must be a dictionary, got %s. Using service defaults.",
+                        type(parsed).__name__,
+                        extra={"entity": self.entity_description.key},
+                    )
+                    service_params = {}
+            except yaml.YAMLError as err:
+                self.coordinator.logger.warning(
+                    "Invalid chart data YAML configuration: %s. Using service defaults.",
+                    err,
+                    extra={"entity": self.entity_description.key},
+                )
+                service_params = {}  # Fall back to service defaults
+
+        # Add required entry_id parameter
+        service_params["entry_id"] = self.coordinator.config_entry.entry_id
+
+        # Call get_chartdata service using official HA service system
+        try:
+            response = await self.hass.services.async_call(
+                DOMAIN,
+                "get_chartdata",
+                service_params,
+                blocking=True,
+                return_response=True,
+            )
+        except Exception as ex:
+            self.coordinator.logger.exception(
+                "Chart data service call failed",
+                extra={"entity": self.entity_description.key},
+            )
+            self._chart_data_cache = None
+            self._chart_data_last_update = dt_util.now()
+            self._chart_data_error = str(ex)
+            return None
+        else:
+            self._chart_data_cache = response
+            self._chart_data_last_update = dt_util.now()
+            self._chart_data_error = None
+            return response
+
     def _get_tomorrow_data_available_attributes(self) -> dict | None:
         """Return attributes for tomorrow_data_available binary sensor."""
         return get_tomorrow_data_available_attributes(self.coordinator.data)
@@ -188,8 +271,80 @@ class TibberPricesBinarySensor(TibberPricesEntity, BinarySensorEntity):
             return lambda: get_price_intervals_attributes(self.coordinator.data, reverse_sort=False)
         if key == "tomorrow_data_available":
             return self._get_tomorrow_data_available_attributes
+        if key == "chart_data_export":
+            return self._get_chart_data_export_attributes
 
         return None
+
+    def _get_chart_data_export_attributes(self) -> dict[str, object] | None:
+        """
+        Return chart data from service call as attributes with metadata.
+
+        Strategy to avoid attribute name collisions:
+        - If service returns dict with SINGLE top-level key → use directly
+        - If service returns dict with MULTIPLE top-level keys → wrap in {"data": {...}}
+        - If service returns array/primitive → wrap in {"data": <response>}
+
+        Attribute order: timestamp, error (if any), descriptions, service data (at the end).
+        """
+        chart_data = self._get_cached_chart_data()
+
+        # Build base attributes with metadata
+        # timestamp = when service was last called (not current interval)
+        attributes: dict[str, object] = {
+            "timestamp": self._chart_data_last_update.isoformat() if self._chart_data_last_update else None,
+        }
+
+        # Add error message if service call failed
+        if self._chart_data_error:
+            attributes["error"] = self._chart_data_error
+
+        # Note: descriptions will be added by build_async_extra_state_attributes
+        # and will appear before service data because we return attributes first,
+        # then they get merged with descriptions, then service data is appended
+
+        if not chart_data:
+            # No data - only metadata (timestamp, error)
+            return attributes
+
+        # Service data goes at the END - append after metadata
+        # If response is a dict with multiple top-level keys, wrap it
+        # to avoid collision with our own attributes (timestamp, error, etc.)
+        if isinstance(chart_data, dict):
+            if len(chart_data) > 1:
+                # Multiple keys → wrap to prevent collision
+                attributes["data"] = chart_data
+            else:
+                # Single key → safe to merge directly
+                attributes.update(chart_data)
+        else:
+            # If response is array/list/primitive, wrap it in "data" key
+            attributes["data"] = chart_data
+
+        return attributes
+
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        """Handle updated data from the coordinator."""
+        # Chart data export: No automatic refresh needed.
+        # Data only refreshes on:
+        # 1. Initial sensor activation (async_added_to_hass)
+        # 2. Config changes via Options Flow (triggers re-add)
+        # Hourly coordinator updates don't change the chart data content.
+        super()._handle_coordinator_update()
+
+    async def _refresh_chart_data(self) -> None:
+        """
+        Refresh chart data by calling service.
+
+        Called only on:
+        - Initial sensor activation (async_added_to_hass)
+        - Config changes via Options Flow (triggers re-add → async_added_to_hass)
+
+        NOT called on routine coordinator updates to avoid unnecessary service calls.
+        """
+        await self._call_chartdata_service_async()
+        self.async_write_ha_state()
 
     @property
     def is_on(self) -> bool | None:
@@ -262,6 +417,19 @@ class TibberPricesBinarySensor(TibberPricesEntity, BinarySensorEntity):
     async def async_extra_state_attributes(self) -> dict | None:
         """Return additional state attributes asynchronously."""
         try:
+            # For chart_data_export, use custom attribute builder with descriptions
+            if self.entity_description.key == "chart_data_export":
+                chart_attrs = self._get_chart_data_export_attributes()
+                # Add descriptions like other sensors
+                return await build_async_extra_state_attributes(
+                    self.entity_description.key,
+                    self.entity_description.translation_key,
+                    self.hass,
+                    config_entry=self.coordinator.config_entry,
+                    dynamic_attrs=chart_attrs,
+                    is_on=self.is_on,
+                )
+
             # Get the dynamic attributes if the getter is available
             if not self.coordinator.data:
                 return None
@@ -294,7 +462,20 @@ class TibberPricesBinarySensor(TibberPricesEntity, BinarySensorEntity):
     def extra_state_attributes(self) -> dict | None:
         """Return additional state attributes synchronously."""
         try:
-            # Start with dynamic attributes if available
+            # For chart_data_export, use custom attribute builder with descriptions
+            if self.entity_description.key == "chart_data_export":
+                chart_attrs = self._get_chart_data_export_attributes()
+                # Add descriptions like other sensors
+                return build_sync_extra_state_attributes(
+                    self.entity_description.key,
+                    self.entity_description.translation_key,
+                    self.hass,
+                    config_entry=self.coordinator.config_entry,
+                    dynamic_attrs=chart_attrs,
+                    is_on=self.is_on,
+                )
+
+            # Get the dynamic attributes if the getter is available
             if not self.coordinator.data:
                 return None
 
@@ -324,4 +505,9 @@ class TibberPricesBinarySensor(TibberPricesEntity, BinarySensorEntity):
 
     async def async_update(self) -> None:
         """Force a refresh when homeassistant.update_entity is called."""
+        # Always refresh coordinator data
         await self.coordinator.async_request_refresh()
+
+        # For chart_data_export, also refresh the service call
+        if self.entity_description.key == "chart_data_export":
+            await self._refresh_chart_data()

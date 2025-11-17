@@ -39,7 +39,10 @@
             "unknown": "Unexpected error",
             "cannot_connect": "Failed to connect",
             "invalid_access_token": "Invalid access token",
-            "missing_homes": "The new access token does not have access to all configured homes. Please use an access token that has access to the same Tibber homes."
+            "missing_homes": "The new access token does not have access to all configured homes. Please use an access token that has access to the same Tibber homes.",
+            "invalid_yaml_syntax": "Invalid YAML syntax. Please check indentation, colons, and special characters.",
+            "invalid_yaml_structure": "YAML must be a dictionary/object (key: value pairs), not a list or plain text.",
+            "service_call_failed": "Service call validation failed: {error_detail}"
         },
         "abort": {
             "already_configured": "Integration is already configured",
@@ -151,6 +154,17 @@
                 "data": {
                     "price_trend_threshold_rising": "Rising Threshold (above current price)",
                     "price_trend_threshold_falling": "Falling Threshold (below current price, negative value)"
+                },
+                "submit": "Next to Step 7"
+            },
+            "chart_data_export": {
+                "title": "Chart Data Export",
+                "description": "{step_progress}\n\n**⚠️ This step is optional** and only relevant if you plan to enable the **Chart Data Export** diagnostic sensor.\n\n**⚠️ IMPORTANT: Legacy Feature**\nThis sensor exists for **backwards compatibility** with tools that can only read entity attributes (e.g., older ApexCharts versions). **For new integrations, use the `tibber_prices.get_chartdata` service directly** - it's more flexible, efficient, and the recommended Home Assistant approach.\n\n**When to use this sensor:**\n- ✅ Your dashboard tool can ONLY read attributes (not call services)\n- ✅ You need static data that updates automatically\n- ❌ NOT recommended for new integrations that support service calls\n\n**What is this sensor?**\nThis sensor calls the `tibber_prices.get_chartdata` service with your custom YAML parameters and exposes the result as entity attributes.\n\n**How to use it:**\n1. **Complete this configuration** (or leave empty for service defaults)\n2. Go to **Settings → Devices & Services → Tibber Prices**\n3. Click on your home → Find **'Chart Data Export'** in the **Diagnostic** section\n4. Enable the sensor - it will automatically call the service with your configuration\n5. Use the sensor's attributes in your dashboard cards\n\n**Configuration guide:**\n1. Test your service call in **Developer Tools → Services → `tibber_prices.get_chartdata`**\n2. Copy the YAML from the `data:` section (without `entry_id`)\n3. Paste it below (use **Shift+Enter** or **Ctrl+Enter** for new lines, NOT just Enter)\n\n**Example YAML:**\n```yaml\nday:\n  - today\n  - tomorrow\ninclude_level: true\ninclude_rating_level: true\n```\n\n**Note:** Leave empty to use service defaults or skip this feature if you don't need the sensor.",
+                "data": {
+                    "chart_data_config": "Service Configuration (YAML)"
+                },
+                "data_description": {
+                    "chart_data_config": "YAML configuration for get_chartdata service. Supported parameters: day (list of yesterday/today/tomorrow), resolution (interval/hourly), output_format, include_level, include_rating_level, include_average, and many more. See service documentation for full list. Leave empty to use service defaults (today, interval resolution, array of objects)."
                 },
                 "submit": "Complete Configuration"
             },
@@ -650,6 +664,9 @@
             },
             "realtime_consumption_enabled": {
                 "name": "Realtime Consumption Enabled"
+            },
+            "chart_data_export": {
+                "name": "Chart Data Export"
             }
         }
     },
@@ -734,6 +751,10 @@
                     "name": "Rating Level Filter",
                     "description": "Filter intervals to include only specific rating levels (LOW, NORMAL, HIGH). If not specified, all rating levels are included."
                 },
+                "period_filter": {
+                    "name": "Period Filter",
+                    "description": "Filter intervals to include only those within Best Price or Peak Price periods. Options: 'best_price' (only intervals in Best Price periods), 'peak_price' (only intervals in Peak Price periods). If not specified, all intervals are included. This uses the precomputed period data from binary sensors."
+                },
                 "insert_nulls": {
                     "name": "Insert NULL Values",
                     "description": "Control NULL value insertion for filtered data. 'none' (default): No NULL values, only matching intervals. 'segments': Add NULL points at segment boundaries for clean gaps in charts (recommended for stepline charts). 'all': Insert NULL for all timestamps where filter doesn't match (useful for continuous time series visualization)."
@@ -742,9 +763,13 @@
                     "name": "Add Trailing Null Point",
                     "description": "[BOTH FORMATS] Add a final data point with null values (except timestamp) at the end. Some chart libraries need this to prevent extrapolation/interpolation to the viewport edge when using stepline rendering. Leave disabled unless your chart requires it."
                 },
-                "timestamp_field": {
-                    "name": "Timestamp Field Name (Array of Objects only)",
-                    "description": "[ONLY FOR Array of Objects FORMAT] Custom name for the timestamp field in the output. Defaults to 'start_time' if not specified."
+                "start_time_field": {
+                    "name": "Start Time Field Name (Array of Objects only)",
+                    "description": "[ONLY FOR Array of Objects FORMAT] Custom name for the start time field in the output. Defaults to 'start_time' if not specified."
+                },
+                "end_time_field": {
+                    "name": "End Time Field Name (Array of Objects only)",
+                    "description": "[ONLY FOR Array of Objects FORMAT] Custom name for the end time field in the output. Defaults to 'end_time' if not specified. Only used with period_filter."
                 },
                 "price_field": {
                     "name": "Price Field Name (Array of Objects only)",
@@ -826,6 +851,12 @@
                 "none": "None",
                 "segments": "Segments",
                 "all": "All"
+            }
+        },
+        "period_filter": {
+            "options": {
+                "best_price": "Best Price Periods",
+                "peak_price": "Peak Price Periods"
             }
         },
         "volatility": {

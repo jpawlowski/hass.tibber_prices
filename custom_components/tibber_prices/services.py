@@ -100,7 +100,9 @@ CHARTDATA_SERVICE_SCHEMA: Final = vol.Schema(
         ),
         vol.Optional("insert_nulls", default="none"): vol.In(["none", "segments", "all"]),
         vol.Optional("add_trailing_null", default=False): bool,
-        vol.Optional("timestamp_field", default="start_time"): str,
+        vol.Optional("period_filter"): vol.In(["best_price", "peak_price"]),
+        vol.Optional("start_time_field", default="start_time"): str,
+        vol.Optional("end_time_field", default="end_time"): str,
         vol.Optional("price_field", default="price_per_kwh"): str,
         vol.Optional("level_field", default="level"): str,
         vol.Optional("rating_level_field", default="rating_level"): str,
@@ -118,9 +120,9 @@ REFRESH_USER_DATA_SERVICE_SCHEMA: Final = vol.Schema(
 # --- Entry point: Service handler ---
 
 
-def _aggregate_hourly_exact(  # noqa: PLR0913, PLR0912
+def _aggregate_hourly_exact(  # noqa: PLR0913, PLR0912, PLR0915
     intervals: list[dict],
-    timestamp_field: str,
+    start_time_field: str,
     price_field: str,
     *,
     use_minor_currency: bool = False,
@@ -136,6 +138,7 @@ def _aggregate_hourly_exact(  # noqa: PLR0913, PLR0912
     day_average: float | None = None,
     threshold_low: float = DEFAULT_PRICE_RATING_THRESHOLD_LOW,
     threshold_high: float = DEFAULT_PRICE_RATING_THRESHOLD_HIGH,
+    period_timestamps: set[str] | None = None,
 ) -> list[dict]:
     """
     Aggregate 15-minute intervals to exact hourly averages.
@@ -175,6 +178,12 @@ def _aggregate_hourly_exact(  # noqa: PLR0913, PLR0912
             if i + j < len(intervals):
                 interval = intervals[i + j]
 
+                # Apply period filter if specified (check startsAt timestamp)
+                if period_timestamps is not None:
+                    interval_start = interval.get("startsAt")
+                    if interval_start and interval_start not in period_timestamps:
+                        continue
+
                 # Apply level filter if specified
                 if level_filter is not None and "level" in interval and interval["level"] not in level_filter:
                     continue
@@ -203,7 +212,7 @@ def _aggregate_hourly_exact(  # noqa: PLR0913, PLR0912
             if round_decimals is not None:
                 avg_price = round(avg_price, round_decimals)
 
-            data_point = {timestamp_field: start_time_str, price_field: avg_price}
+            data_point = {start_time_field: start_time_str, price_field: avg_price}
 
             # Add aggregated level using same logic as sensors
             if include_level and hour_interval_data:
@@ -229,6 +238,165 @@ def _aggregate_hourly_exact(  # noqa: PLR0913, PLR0912
     return hourly_data
 
 
+def _get_period_data(  # noqa: PLR0913, PLR0912, PLR0915
+    *,
+    coordinator: Any,
+    period_filter: str,
+    days: list[str],
+    output_format: str,
+    minor_currency: bool,
+    round_decimals: int | None,
+    level_filter: list[str] | None,
+    rating_level_filter: list[str] | None,
+    include_level: bool,
+    include_rating_level: bool,
+    start_time_field: str,
+    end_time_field: str,
+    price_field: str,
+    level_field: str,
+    rating_level_field: str,
+    data_key: str,
+    add_trailing_null: bool,
+) -> dict[str, Any]:
+    """
+    Get period summary data instead of interval data.
+
+    When period_filter is specified, returns the precomputed period summaries
+    from the coordinator instead of filtering intervals.
+
+    Note: Period prices (price_avg) are stored in minor currency units (ct/øre).
+    They are converted to major currency unless minor_currency=True.
+
+    Args:
+        coordinator: Data coordinator with period summaries
+        period_filter: "best_price" or "peak_price"
+        days: List of days to include
+        output_format: "array_of_objects" or "array_of_arrays"
+        minor_currency: If False, convert prices from minor to major units
+        round_decimals: Optional decimal rounding
+        level_filter: Optional level filter
+        rating_level_filter: Optional rating level filter
+        include_level: Whether to include level field in output
+        include_rating_level: Whether to include rating_level field in output
+        start_time_field: Custom name for start time field
+        end_time_field: Custom name for end time field
+        price_field: Custom name for price field
+        level_field: Custom name for level field
+        rating_level_field: Custom name for rating_level field
+        data_key: Top-level key name in response
+        add_trailing_null: Whether to add trailing null point
+
+    Returns:
+        Dictionary with period data in requested format
+
+    """
+    periods_data = coordinator.data.get("periods", {})
+    period_data = periods_data.get(period_filter)
+
+    if not period_data:
+        return {data_key: []}
+
+    period_summaries = period_data.get("periods", [])
+    if not period_summaries:
+        return {data_key: []}
+
+    chart_data = []
+
+    # Filter periods by day if requested
+    filtered_periods = []
+    if days:
+        # Build set of allowed dates
+        allowed_dates = set()
+        for day in days:
+            # Map day names to actual dates from coordinator
+            price_info = coordinator.data.get("priceInfo", {})
+            day_prices = price_info.get(day, [])
+            if day_prices:
+                # Extract date from first interval
+                first_interval = day_prices[0]
+                starts_at = first_interval.get("startsAt")
+                if starts_at:
+                    dt = dt_util.parse_datetime(starts_at)
+                    if dt:
+                        dt = dt_util.as_local(dt)
+                        allowed_dates.add(dt.date())
+
+        # Filter periods to those within allowed dates
+        for period in period_summaries:
+            start = period.get("start")
+            if start and start.date() in allowed_dates:
+                filtered_periods.append(period)
+    else:
+        filtered_periods = period_summaries
+
+    # Apply level and rating_level filters
+    for period in filtered_periods:
+        # Apply level filter (normalize to uppercase for comparison)
+        if level_filter and "level" in period and period["level"].upper() not in level_filter:
+            continue
+
+        # Apply rating_level filter (normalize to uppercase for comparison)
+        if (
+            rating_level_filter
+            and "rating_level" in period
+            and period["rating_level"].upper() not in rating_level_filter
+        ):
+            continue
+
+        # Build data point based on output format
+        if output_format == "array_of_objects":
+            # Map period fields to custom field names
+            # Period has: start, end, level, rating_level, price_avg, price_min, price_max
+            data_point = {}
+
+            # Start time
+            data_point[start_time_field] = period["start"]
+
+            # End time
+            data_point[end_time_field] = period.get("end")
+
+            # Price (use price_avg from period, stored in minor units)
+            price_avg = period.get("price_avg", 0.0)
+            # Convert to major currency unless minor_currency=True
+            if not minor_currency:
+                price_avg = price_avg / 100
+            if round_decimals is not None:
+                price_avg = round(price_avg, round_decimals)
+            data_point[price_field] = price_avg
+
+            # Level (only if requested and present)
+            if include_level and "level" in period:
+                data_point[level_field] = period["level"].upper()
+
+            # Rating level (only if requested and present)
+            if include_rating_level and "rating_level" in period:
+                data_point[rating_level_field] = period["rating_level"].upper()
+
+            chart_data.append(data_point)
+
+        else:  # array_of_arrays
+            # For array_of_arrays, include: [start, price_avg]
+            price_avg = period.get("price_avg", 0.0)
+            # Convert to major currency unless minor_currency=True
+            if not minor_currency:
+                price_avg = price_avg / 100
+            if round_decimals is not None:
+                price_avg = round(price_avg, round_decimals)
+            chart_data.append([period["start"], price_avg])
+
+    # Add trailing null point if requested
+    if add_trailing_null and chart_data:
+        if output_format == "array_of_objects":
+            null_point = {start_time_field: None, end_time_field: None}
+            for field in [price_field, level_field, rating_level_field]:
+                null_point[field] = None
+            chart_data.append(null_point)
+        else:  # array_of_arrays
+            chart_data.append([None, None])
+
+    return {data_key: chart_data}
+
+
 async def _get_chartdata(call: ServiceCall) -> dict[str, Any]:  # noqa: PLR0912, PLR0915, C901
     """Return price data in a simple chart-friendly format similar to Tibber Core integration."""
     hass = call.hass
@@ -247,7 +415,8 @@ async def _get_chartdata(call: ServiceCall) -> dict[str, Any]:  # noqa: PLR0912,
     else:
         days = days_raw
 
-    timestamp_field = call.data.get("timestamp_field", "start_time")
+    start_time_field = call.data.get("start_time_field", "start_time")
+    end_time_field = call.data.get("end_time_field", "end_time")
     price_field = call.data.get("price_field", "price_per_kwh")
     level_field = call.data.get("level_field", "level")
     rating_level_field = call.data.get("rating_level_field", "rating_level")
@@ -262,6 +431,7 @@ async def _get_chartdata(call: ServiceCall) -> dict[str, Any]:  # noqa: PLR0912,
     include_average = call.data.get("include_average", False)
     insert_nulls = call.data.get("insert_nulls", "none")
     add_trailing_null = call.data.get("add_trailing_null", False)
+    period_filter = call.data.get("period_filter")
     # Filter values are already normalized to uppercase by schema validators
     level_filter = call.data.get("level_filter")
     rating_level_filter = call.data.get("rating_level_filter")
@@ -286,9 +456,54 @@ async def _get_chartdata(call: ServiceCall) -> dict[str, Any]:  # noqa: PLR0912,
         CONF_PRICE_RATING_THRESHOLD_HIGH, DEFAULT_PRICE_RATING_THRESHOLD_HIGH
     )
 
+    # === SPECIAL HANDLING: Period Filter ===
+    # When period_filter is set, return period summaries instead of interval data
+    # Period summaries are already complete objects with aggregated data
+    if period_filter:
+        return _get_period_data(
+            coordinator=coordinator,
+            period_filter=period_filter,
+            days=days,
+            output_format=output_format,
+            minor_currency=minor_currency,
+            round_decimals=round_decimals,
+            level_filter=level_filter,
+            rating_level_filter=rating_level_filter,
+            include_level=include_level,
+            include_rating_level=include_rating_level,
+            start_time_field=start_time_field,
+            end_time_field=end_time_field,
+            price_field=price_field,
+            level_field=level_field,
+            rating_level_field=rating_level_field,
+            data_key=data_key,
+            add_trailing_null=add_trailing_null,
+        )
+
+    # === NORMAL HANDLING: Interval Data ===
     # Get price data for all requested days
     price_info = coordinator.data.get("priceInfo", {})
     chart_data = []
+
+    # Build set of timestamps that match period_filter if specified
+    period_timestamps = None
+    if period_filter:
+        period_timestamps = set()
+        periods_data = coordinator.data.get("periods", {})
+        period_data = periods_data.get(period_filter)
+        if period_data:
+            period_summaries = period_data.get("periods", [])
+            # Period summaries don't contain intervals, only start/end timestamps
+            # Build set of all 15-minute intervals within period ranges
+            for period_summary in period_summaries:
+                start = period_summary.get("start")
+                end = period_summary.get("end")
+                if start and end:
+                    # Generate all 15-minute timestamps within this period
+                    current = start
+                    while current < end:
+                        period_timestamps.add(current.isoformat())
+                        current = current + timedelta(minutes=15)
 
     # Collect all timestamps if insert_nulls='all' (needed to insert NULLs for missing filter matches)
     all_timestamps = set()
@@ -357,7 +572,7 @@ async def _get_chartdata(call: ServiceCall) -> dict[str, Any]:  # noqa: PLR0912,
                         if round_decimals is not None:
                             price = round(price, round_decimals)
 
-                    data_point = {timestamp_field: start_time, price_field: price}
+                    data_point = {start_time_field: start_time, price_field: price}
 
                     # Add level if requested (only when price is not NULL)
                     if include_level and "level" in interval and price is not None:
@@ -400,7 +615,7 @@ async def _get_chartdata(call: ServiceCall) -> dict[str, Any]:  # noqa: PLR0912,
                             converted_price = round(converted_price, round_decimals)
 
                         # Add current point
-                        data_point = {timestamp_field: start_time, price_field: converted_price}
+                        data_point = {start_time_field: start_time, price_field: converted_price}
 
                         if include_level and "level" in interval:
                             data_point[level_field] = interval["level"]
@@ -414,7 +629,7 @@ async def _get_chartdata(call: ServiceCall) -> dict[str, Any]:  # noqa: PLR0912,
                         # Check if next interval is different level (segment boundary)
                         if next_value != interval_value:
                             # Hold current price until next timestamp (stepline effect)
-                            hold_point = {timestamp_field: next_start_time, price_field: converted_price}
+                            hold_point = {start_time_field: next_start_time, price_field: converted_price}
                             if include_level and "level" in interval:
                                 hold_point[level_field] = interval["level"]
                             if include_rating_level and "rating_level" in interval:
@@ -424,7 +639,7 @@ async def _get_chartdata(call: ServiceCall) -> dict[str, Any]:  # noqa: PLR0912,
                             chart_data.append(hold_point)
 
                             # Add NULL point to create gap
-                            null_point = {timestamp_field: next_start_time, price_field: None}
+                            null_point = {start_time_field: next_start_time, price_field: None}
                             chart_data.append(null_point)
 
                 # Handle last interval of the day - extend to midnight
@@ -478,7 +693,7 @@ async def _get_chartdata(call: ServiceCall) -> dict[str, Any]:  # noqa: PLR0912,
                                 converted_price = round(converted_price, round_decimals)
 
                             # Add point at midnight with appropriate price (extends graph to end of day)
-                            end_point = {timestamp_field: midnight_timestamp, price_field: converted_price}
+                            end_point = {start_time_field: midnight_timestamp, price_field: converted_price}
                             if midnight_interval is not None:
                                 if include_level and "level" in midnight_interval:
                                     end_point[level_field] = midnight_interval["level"]
@@ -494,6 +709,14 @@ async def _get_chartdata(call: ServiceCall) -> dict[str, Any]:  # noqa: PLR0912,
                     price = interval.get("total")
 
                     if start_time is not None and price is not None:
+                        # Apply period filter if specified
+                        if (
+                            period_filter is not None
+                            and period_timestamps is not None
+                            and start_time not in period_timestamps
+                        ):
+                            continue
+
                         # Apply level filter if specified
                         if level_filter is not None and "level" in interval and interval["level"] not in level_filter:
                             continue
@@ -513,7 +736,7 @@ async def _get_chartdata(call: ServiceCall) -> dict[str, Any]:  # noqa: PLR0912,
                         if round_decimals is not None:
                             price = round(price, round_decimals)
 
-                        data_point = {timestamp_field: start_time, price_field: price}
+                        data_point = {start_time_field: start_time, price_field: price}
 
                         # Add level if requested
                         if include_level and "level" in interval:
@@ -534,7 +757,7 @@ async def _get_chartdata(call: ServiceCall) -> dict[str, Any]:  # noqa: PLR0912,
             chart_data.extend(
                 _aggregate_hourly_exact(
                     day_prices,
-                    timestamp_field,
+                    start_time_field,
                     price_field,
                     use_minor_currency=minor_currency,
                     round_decimals=round_decimals,
@@ -548,6 +771,7 @@ async def _get_chartdata(call: ServiceCall) -> dict[str, Any]:  # noqa: PLR0912,
                     average_field=average_field,
                     day_average=day_averages.get(day),
                     threshold_low=threshold_low,
+                    period_timestamps=period_timestamps,
                     threshold_high=threshold_high,
                 )
             )
@@ -558,7 +782,7 @@ async def _get_chartdata(call: ServiceCall) -> dict[str, Any]:  # noqa: PLR0912,
 
         # Default: nur timestamp und price
         if not array_fields_template:
-            array_fields_template = f"{{{timestamp_field}}}, {{{price_field}}}"
+            array_fields_template = f"{{{start_time_field}}}, {{{price_field}}}"
 
         # Parse template to extract field names
         field_pattern = re.compile(r"\{([^}]+)\}")
@@ -593,7 +817,7 @@ async def _get_chartdata(call: ServiceCall) -> dict[str, Any]:  # noqa: PLR0912,
     if add_trailing_null and chart_data:
         # Create a null point with only timestamp from last item, all other fields as None
         last_item = chart_data[-1]
-        null_point = {timestamp_field: last_item.get(timestamp_field)}
+        null_point = {start_time_field: last_item.get(start_time_field)}
         # Set all other potential fields to None
         for field in [price_field, level_field, rating_level_field, average_field]:
             if field in last_item:

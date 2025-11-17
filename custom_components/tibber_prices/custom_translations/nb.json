@@ -464,6 +464,11 @@
             "description": "Om sanntidsforbruksovervåking er aktiv",
             "long_description": "Indikerer om sanntidsovervåking av strømforbruk er aktivert og aktiv for ditt Tibber-hjem. Dette krever kompatibel målehardware (f.eks. Tibber Pulse) og et aktivt abonnement.",
             "usage_tips": "Bruk dette for å bekrefte at sanntidsforbruksdata er tilgjengelig. Aktiver varsler hvis dette endres til 'av' uventet, noe som indikerer potensielle maskinvare- eller tilkoblingsproblemer."
+        },
+        "chart_data_export": {
+            "description": "Dataeksport for dashboardintegrasjoner",
+            "long_description": "Denne binærsensoren kaller get_chartdata-tjenesten for å eksportere prisdata i formater som er kompatible med ApexCharts og andre dashboardverktøy. Dataeksporten inkluderer historiske og fremtidsrettede prisdata strukturert for visualisering.",
+            "usage_tips": "Konfigurer YAML-parametrene i integrasjonsalternativene. Bruk denne sensoren til å trigge dataeksporthendelser for dashboards. Når den slås på, eksporteres data til en fil eller tjeneste som er konfigurert for integrering med ApexCharts eller tilsvarende visualiseringsverktøy."
         }
     },
     "home_types": {

@@ -39,7 +39,10 @@
             "unknown": "Ein unerwarteter Fehler ist aufgetreten. Bitte überprüfe die Logs für Details.",
             "cannot_connect": "Verbindung fehlgeschlagen",
             "invalid_access_token": "Ungültiges Zugriffstoken",
-            "missing_homes": "Der neue Zugriffstoken hat keinen Zugriff auf alle konfigurierten Zuhause. Bitte verwende einen Zugriffstoken, der Zugriff auf die gleichen Tibber-Zuhause hat."
+            "missing_homes": "Der neue Zugriffstoken hat keinen Zugriff auf alle konfigurierten Zuhause. Bitte verwende einen Zugriffstoken, der Zugriff auf die gleichen Tibber-Zuhause hat.",
+            "invalid_yaml_syntax": "Ungültige YAML-Syntax. Bitte prüfe Einrückung, Doppelpunkte und Sonderzeichen.",
+            "invalid_yaml_structure": "YAML muss ein Dictionary/Objekt sein (Schlüssel: Wert-Paare), keine Liste oder reiner Text.",
+            "service_call_failed": "Service-Aufruf-Validierung fehlgeschlagen: {error_detail}"
         },
         "abort": {
             "already_configured": "Integration ist bereits konfiguriert",
@@ -152,7 +155,7 @@
                     "price_trend_threshold_rising": "Steigender Schwellenwert (über dem aktuellen Preis)",
                     "price_trend_threshold_falling": "Fallender Schwellenwert (unter dem aktuellen Preis, negativer Wert)"
                 },
-                "submit": "Konfiguration abschließen"
+                "submit": "Weiter zu Schritt 7"
             },
             "volatility": {
                 "title": "Volatilität Schwellenwerte",
@@ -163,6 +166,17 @@
                     "volatility_threshold_very_high": "Sehr hohe Schwelle (VK ≥ dieser %, z.B. 50)"
                 },
                 "submit": "Weiter zu Schritt 4"
+            },
+            "chart_data_export": {
+                "title": "Diagramm-Datenexport",
+                "description": "{step_progress}\n\n⚠️ **Dieser Schritt ist optional:** Konfiguriere nur, wenn du einen diagnostischen Sensor für ältere Dashboard-Tools benötigst, die KEINE Services aufrufen können.\n\n⚠️ **WICHTIG: Legacy-Feature**\nDieser Sensor existiert nur für Abwärtskompatibilität mit älteren Tools, die Daten nur aus Entity-Attributen lesen können.\n\n**Für neue Integrationen nutze stattdessen direkt den `tibber_prices.get_chartdata` Service** - er ist flexibler, effizienter und der empfohlene Home Assistant Ansatz.\n\n**Wann diesen Sensor nutzen:**\n✅ NUR wenn dein Dashboard-Tool NUR Attribute lesen kann (z.B. ältere Versionen)\n❌ NICHT für neue Integrationen - nutze den Service direkt\n\n**Was ist dieser Sensor?**\nEin diagnostischer Sensor, der den `tibber_prices.get_chartdata` Service mit deinen YAML-Parametern aufruft und das Ergebnis als Attribute bereitstellt.\n\n**Wie nutzen:**\n1. Öffne Settings → Devices & Services → Tibber Prices\n2. Wähle dein Home\n3. Finde 'Diagramm-Datenexport' im Diagnose-Bereich\n4. Aktiviere den Sensor (standardmäßig deaktiviert)\n5. Nutze `homeassistant.update_entity` um Daten manuell zu aktualisieren\n\n**Konfigurationsanleitung:**\n1. Teste deinen Service-Aufruf in Entwicklerwerkzeuge → Services → `tibber_prices.get_chartdata`\n2. Kopiere das YAML aus dem `data:` Bereich (ohne `entry_id`)\n3. Füge es unten ein (nutze Shift+Enter oder Strg+Enter für neue Zeilen)\n\n**Beispiel-YAML:**\n```yaml\nday:\n  - today\n  - tomorrow\ninclude_level: true\ninclude_rating_level: true\n```\n\n**Hinweis:** Leer lassen oder diesen Schritt überspringen, wenn du den Service direkt nutzt (empfohlen).",
+                "data": {
+                    "chart_data_config": "Service-Konfiguration (YAML)"
+                },
+                "data_description": {
+                    "chart_data_config": "YAML-Konfiguration für get_chartdata Service. Unterstützte Parameter: day (Liste aus yesterday/today/tomorrow), resolution (interval/hourly), output_format, include_level, include_rating_level, include_average, und viele mehr. Siehe Service-Dokumentation für vollständige Liste. Leer lassen für Standard-Einstellungen (today, interval resolution, array of objects)."
+                },
+                "submit": "Konfiguration abschließen"
             }
         },
         "error": {
@@ -654,6 +668,9 @@
             },
             "realtime_consumption_enabled": {
                 "name": "Echtzeitverbrauch aktiviert"
+            },
+            "chart_data_export": {
+                "name": "Diagramm-Datenexport"
             }
         }
     },
@@ -738,17 +755,25 @@
                     "name": "Preisbewertungs-Filter",
                     "description": "Intervalle filtern, um nur bestimmte Preisbewertungen einzuschließen (LOW, NORMAL, HIGH). Falls nicht angegeben, werden alle Bewertungen eingeschlossen."
                 },
+                "period_filter": {
+                    "name": "Perioden-Filter",
+                    "description": "Intervalle filtern, um nur solche innerhalb von Bestepreis- oder Spitzenpreis-Zeiträumen einzuschließen. Optionen: 'best_price' (nur Intervalle in Beste-Preis-Perioden), 'peak_price' (nur Intervalle in Spitzen-Preis-Perioden). Falls nicht angegeben, werden alle Intervalle eingeschlossen. Verwendet vorberechnete Periodendaten von Binär-Sensoren."
+                },
                 "insert_nulls": {
                     "name": "NULL-Werte einfügen",
                     "description": "Steuert das Einfügen von NULL-Werten für gefilterte Daten. 'none' (Standard): Keine NULL-Werte, nur passende Intervalle. 'segments': NULL-Punkte an Segmentgrenzen für saubere Lücken in Diagrammen hinzufügen (empfohlen für Stufenliniendiagramme). 'all': NULL für alle Zeitstempel einfügen, bei denen der Filter nicht übereinstimmt (nützlich für kontinuierliche Zeitreihenvisualisierung)."
                 },
                 "add_trailing_null": {
                     "name": "Abschließenden Null-Punkt hinzufügen",
-                    "description": "[BEIDE FORMATE] Füge einen finalen Datenpunkt mit Null-Werten (außer Zeitstempel) am Ende hinzu. Manche Diagramm-Bibliotheken benötigen dies, um Extrapolation/Interpolation bis zum Rand des Anzeigebereichs bei Stufenliniendarstellung zu verhindern. Deaktiviert lassen, es sei denn, dein Diagramm erfordert es."
+                    "description": "[BEIDE FORMATE] Füge einen finalen Datenpunkt mit Nullwerten (außer Zeitstempel) am Ende hinzu. Einige Diagrammbibliotheken benötigen dies, um Extrapolation/Interpolation zum Viewport-Rand bei Verwendung von Stufendarstellung zu verhindern. Deaktiviert lassen, es sei denn, dein Diagramm benötigt es."
                 },
-                "timestamp_field": {
-                    "name": "Zeitstempel-Feldname (nur Array von Objekten)",
-                    "description": "[NUR FÜR Array von Objekten FORMAT] Benutzerdefinierter Name für das Zeitstempel-Feld in der Ausgabe. Standard ist 'start_time', falls nicht angegeben."
+                "start_time_field": {
+                    "name": "Startzeit-Feldname (nur Array von Objekten)",
+                    "description": "[NUR FÜR Array von Objekten FORMAT] Benutzerdefinierter Name für das Startzeit-Feld in der Ausgabe. Standardmäßig 'start_time', wenn nicht angegeben."
+                },
+                "end_time_field": {
+                    "name": "Endzeit-Feldname (nur Array von Objekten)",
+                    "description": "[NUR FÜR Array von Objekten FORMAT] Benutzerdefinierter Name für das Endzeit-Feld in der Ausgabe. Standardmäßig 'end_time', wenn nicht angegeben. Nur verwendet mit period_filter."
                 },
                 "price_field": {
                     "name": "Preis-Feldname (nur Array von Objekten)",
@@ -830,6 +855,12 @@
                 "none": "Keine",
                 "segments": "Segmente",
                 "all": "Alle"
+            }
+        },
+        "period_filter": {
+            "options": {
+                "best_price": "Bestpreis-Zeiträume",
+                "peak_price": "Spitzenpreis-Zeiträume"
             }
         },
         "volatility": {

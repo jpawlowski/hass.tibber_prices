@@ -39,7 +39,10 @@
             "unknown": "Uventet feil",
             "cannot_connect": "Kunne ikke koble til",
             "invalid_access_token": "Ugyldig tilgangstoken",
-            "missing_homes": "Det nye tilgangstokenet har ikke tilgang til alle konfigurerte hjem. Vennligst bruk et tilgangstoken som har tilgang til de samme Tibber-hjemmene."
+            "missing_homes": "Det nye tilgangstokenet har ikke tilgang til alle konfigurerte hjem. Vennligst bruk et tilgangstoken som har tilgang til de samme Tibber-hjemmene.",
+            "invalid_yaml_syntax": "Ugyldig YAML-syntaks. Vennligst sjekk innrykk, kolon og spesialtegn.",
+            "invalid_yaml_structure": "YAML må være en ordbok/objekt (nøkkel: verdi-par), ikke en liste eller ren tekst.",
+            "service_call_failed": "Service-kall validering feilet: {error_detail}"
         },
         "abort": {
             "already_configured": "Integrasjonen er allerede konfigurert",
@@ -152,7 +155,7 @@
                     "price_trend_threshold_rising": "Stigende terskel (% over nåværende pris)",
                     "price_trend_threshold_falling": "Fallende terskel (% under nåværende pris, negativ verdi)"
                 },
-                "submit": "Fullfør konfigurasjon"
+                "submit": "Neste til trinn 7"
             },
             "volatility": {
                 "title": "Volatilitet Terskler",
@@ -163,6 +166,17 @@
                     "volatility_threshold_very_high": "Veldig høy terskel (VK ≥ denne %, f.eks. 50)"
                 },
                 "submit": "Neste til steg 4"
+            },
+            "chart_data_export": {
+                "title": "Diagramdataeksport",
+                "description": "{step_progress}\n\n⚠️ **Dette trinnet er valgfritt:** Konfigurer bare hvis du trenger en diagnostisk sensor for eldre dashboardverktøy som IKKE kan kalle tjenester.\n\n⚠️ **VIKTIG: Legacy-funksjon**\nDenne sensoren finnes kun for bakoverkompatibilitet med eldre verktøy som bare kan lese data fra entitetsattributter.\n\n**For nye integrasjoner, bruk `tibber_prices.get_chartdata` tjenesten direkte** - den er mer fleksibel, effektiv og den anbefalte Home Assistant-tilnærmingen.\n\n**Når bruke denne sensoren:**\n✅ KUN hvis dashboardverktøyet ditt KUN kan lese attributter (f.eks. eldre versjoner)\n❌ IKKE for nye integrasjoner - bruk tjenesten direkte\n\n**Hva er denne sensoren?**\nEn diagnostisk sensor som kaller `tibber_prices.get_chartdata` tjenesten med dine YAML-parametere og gir resultatet som attributter.\n\n**Hvordan bruke:**\n1. Åpne Innstillinger → Enheter og tjenester → Tibber Prices\n2. Velg ditt hjem\n3. Finn 'Diagramdataeksport' i Diagnostikk-seksjonen\n4. Aktiver sensoren (deaktivert som standard)\n5. Bruk `homeassistant.update_entity` for å oppdatere data manuelt\n\n**Konfigurasjonsveiledning:**\n1. Test tjenestekallet ditt i Utviklerverktøy → Tjenester → `tibber_prices.get_chartdata`\n2. Kopier YAML fra `data:` seksjonen (uten `entry_id`)\n3. Lim det inn nedenfor (bruk Shift+Enter eller Ctrl+Enter for nye linjer)\n\n**Eksempel YAML:**\n```yaml\nday:\n  - today\n  - tomorrow\ninclude_level: true\ninclude_rating_level: true\n```\n\n**Merk:** La være tomt eller hopp over dette trinnet hvis du bruker tjenesten direkte (anbefalt).",
+                "data": {
+                    "chart_data_config": "Tjenestekonfigurasjon (YAML)"
+                },
+                "data_description": {
+                    "chart_data_config": "YAML-konfigurasjon for `get_chartdata` tjeneste. Støttede parametere: day (liste med yesterday/today/tomorrow), resolution (interval/hourly), output_format, include_level, include_rating_level, include_average, og mange flere. Se tjenestens dokumentasjon for full liste. La være tomt for å bruke standardinnstillinger (today, interval resolution, array of objects)."
+                },
+                "submit": "Fullfør konfigurasjon"
             }
         },
         "error": {
@@ -650,6 +664,9 @@
             },
             "realtime_consumption_enabled": {
                 "name": "Sanntidsforbruk aktivert"
+            },
+            "chart_data_export": {
+                "name": "Diagramdataeksport"
             }
         }
     },
@@ -734,17 +751,25 @@
                     "name": "Prisvurderingsfilter",
                     "description": "Filtrer intervaller for å inkludere bare spesifikke prisvurderinger (LOW, NORMAL, HIGH). Hvis ikke spesifisert, inkluderes alle vurderinger."
                 },
+                "period_filter": {
+                    "name": "Periodefilter",
+                    "description": "Filtrer intervaller for å inkludere kun de innenfor Beste pris- eller Topp pris-perioder. Alternativer: 'best_price' (kun intervaller i Beste pris-perioder), 'peak_price' (kun intervaller i Topp pris-perioder). Hvis ikke spesifisert, inkluderes alle intervaller. Bruker forhåndsberegnede periodedata fra binære sensorer."
+                },
                 "insert_nulls": {
                     "name": "Sett inn NULL-verdier",
                     "description": "Kontroller innsetting av NULL-verdier for filtrerte data. 'none' (standard): Ingen NULL-verdier, bare matchende intervaller. 'segments': Legg til NULL-punkter ved segmentgrenser for rene hull i diagrammer (anbefalt for trinnlinjediagrammer). 'all': Sett inn NULL for alle tidsstempler der filteret ikke samsvarer (nyttig for kontinuerlig tidsserievisualisering)."
                 },
                 "add_trailing_null": {
                     "name": "Legg til avsluttende null-punkt",
-                    "description": "[BEGGE FORMATER] Legg til et siste datapunkt med null-verdier (unntatt tidsstempel) på slutten. Noen diagrambiblioteker trenger dette for å forhindre ekstrapolering/interpolering til kanten av visningsområdet ved stepline-gjengivelse. La være deaktivert med mindre diagrammet ditt krever det."
+                    "description": "[BEGGE FORMATER] Legg til et siste datapunkt med nullverdier (unntatt tidsstempel) på slutten. Noen diagrambiblioteker trenger dette for å forhindre ekstrapolering/interpolering til visningsportens kant ved bruk av trinnlinje-rendering. La være deaktivert med mindre diagrammet ditt krever det."
                 },
-                "timestamp_field": {
-                    "name": "Tidsstempel-feltnavn (kun Array av objekter)",
-                    "description": "[KUN FOR Array av objekter FORMAT] Tilpasset navn for tidsstempel-feltet i utdata. Standard er 'start_time' hvis ikke angitt."
+                "start_time_field": {
+                    "name": "Starttid-feltnavn (kun Array of Objects)",
+                    "description": "[KUN FOR Array of Objects FORMAT] Egendefinert navn for starttid-feltet i utdata. Standard er 'start_time' hvis ikke angitt."
+                },
+                "end_time_field": {
+                    "name": "Sluttid-feltnavn (kun Array of Objects)",
+                    "description": "[KUN FOR Array of Objects FORMAT] Egendefinert navn for sluttid-feltet i utdata. Standard er 'end_time' hvis ikke angitt. Brukes kun med period_filter."
                 },
                 "price_field": {
                     "name": "Prisfelt-navn (kun Array av objekter)",
@@ -826,6 +851,12 @@
                 "none": "Ingen",
                 "segments": "Segmenter",
                 "all": "Alle"
+            }
+        },
+        "period_filter": {
+            "options": {
+                "best_price": "Beste prisperioder",
+                "peak_price": "Topp prisperioder"
             }
         },
         "volatility": {
