@@ -2,9 +2,11 @@
 
 from __future__ import annotations
 
-from datetime import timedelta
 from typing import TYPE_CHECKING
 
+from custom_components.tibber_prices.average_utils import (
+    round_to_nearest_quarter_hour,
+)
 from custom_components.tibber_prices.const import get_price_level_translation
 from custom_components.tibber_prices.price_utils import (
     aggregate_price_levels,
@@ -96,6 +98,9 @@ def find_rolling_hour_center_index(
         Index of the center interval for the rolling hour window, or None if not found
 
     """
+    # Round to nearest interval boundary to handle edge cases where HA schedules
+    # us slightly before the boundary (e.g., 14:59:59.999 → 15:00:00)
+    target_time = round_to_nearest_quarter_hour(current_time)
     current_idx = None
 
     for idx, price_data in enumerate(all_prices):
@@ -103,9 +108,9 @@ def find_rolling_hour_center_index(
         if starts_at is None:
             continue
         starts_at = dt_util.as_local(starts_at)
-        interval_end = starts_at + timedelta(minutes=15)
 
-        if starts_at <= current_time < interval_end:
+        # Exact match after rounding
+        if starts_at == target_time:
             current_idx = idx
             break
 

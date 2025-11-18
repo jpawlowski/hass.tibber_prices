@@ -308,7 +308,7 @@ After successful refactoring:
     -   **Daily statistics**: Use `_get_daily_stat_value(day, stat_func)` for calendar day min/max/avg
     -   **24h windows**: Use `_get_24h_window_value(stat_func)` for trailing/leading statistics
     -   **See "Common Tasks" section** for detailed patterns and examples
--   **Quarter-hour precision**: Entities update on 00/15/30/45-minute boundaries via `_schedule_quarter_hour_refresh()` in coordinator, not just on data fetch intervals. This ensures current price sensors update without waiting for the next API poll.
+-   **Quarter-hour precision**: Entities update on 00/15/30/45-minute boundaries via `schedule_quarter_hour_refresh()` in `coordinator/listeners.py`, not just on data fetch intervals. Uses `async_track_utc_time_change(minute=[0, 15, 30, 45], second=0)` for absolute-time scheduling. Smart boundary tolerance (±2 seconds) in `sensor/helpers.py` → `round_to_nearest_quarter_hour()` handles HA scheduling jitter: if HA triggers at 14:59:58 → rounds to 15:00:00 (next interval), if HA restarts at 14:59:30 → stays at 14:45:00 (current interval). This ensures current price sensors update without waiting for the next API poll, while preventing premature data display during normal operation.
 -   **Currency handling**: Multi-currency support with major/minor units (e.g., EUR/ct, NOK/øre) via `get_currency_info()` and `format_price_unit_*()` in `const.py`.
 -   **Intelligent caching strategy**: Minimizes API calls while ensuring data freshness:
     -   User data cached for 24h (rarely changes)
@@ -316,6 +316,42 @@ After successful refactoring:
     -   Cache survives HA restarts via `Store` persistence
     -   API polling intensifies only when tomorrow's data expected (afternoons)
     -   Stale cache detection via `_is_cache_valid()` prevents using yesterday's data as today's
+
+**Multi-Layer Caching (Performance Optimization)**:
+
+The integration uses **4 distinct caching layers** with automatic invalidation:
+
+1. **Persistent API Cache** (`coordinator/cache.py` → HA Storage):
+    - **What**: Raw price/user data from Tibber API (~50KB)
+    - **Lifetime**: Until midnight (price) or 24h (user)
+    - **Invalidation**: Automatic at 00:00 local, cache validation on load
+    - **Why**: Reduce API calls from every 15min to once per day, survive HA restarts
+
+2. **Translation Cache** (`const.py` → in-memory dicts):
+    - **What**: UI strings, entity descriptions (~5KB)
+    - **Lifetime**: Forever (until HA restart)
+    - **Invalidation**: Never (read-only after startup load)
+    - **Why**: Avoid file I/O on every entity attribute access (15+ times/hour)
+
+3. **Config Dictionary Cache** (`coordinator/` modules):
+    - **What**: Parsed options dict (~1KB per module)
+    - **Lifetime**: Until `config_entry.options` change
+    - **Invalidation**: Explicit via `invalidate_config_cache()` on options update
+    - **Why**: Avoid ~30-40 `options.get()` calls per coordinator update (98% time saving)
+
+4. **Period Calculation Cache** (`coordinator/periods.py`):
+    - **What**: Calculated best/peak price periods (~10KB)
+    - **Lifetime**: Until price data or config changes
+    - **Invalidation**: Automatic via hash comparison of inputs (timestamps + rating_levels + config)
+    - **Why**: Avoid expensive calculation (~100-500ms) when data unchanged (70% CPU saving)
+
+**Cache Invalidation Coordination**:
+- Options change → Explicit `invalidate_config_cache()` on both DataTransformer and PeriodCalculator
+- Midnight turnover → Clear persistent + transformation cache, period cache auto-invalidates via hash
+- Tomorrow data arrival → Hash mismatch triggers period recalculation only
+- No cascading invalidations - each cache is independent
+
+**See** `docs/development/caching-strategy.md` for detailed lifetime, invalidation logic, and debugging guide.
 
 **Component Structure:**
 
@@ -331,7 +367,7 @@ custom_components/tibber_prices/
 │   ├── __init__.py       #   Platform setup (async_setup_entry)
 │   ├── core.py           #   TibberPricesSensor class
 │   ├── definitions.py    #   ENTITY_DESCRIPTIONS
-│   ├── helpers.py        #   Pure helper functions
+│   ├── helpers.py        #   Pure helper functions (incl. smart boundary tolerance)
 │   └── attributes.py     #   Attribute builders
 ├── binary_sensor/        # Binary sensor platform (package)
 │   ├── __init__.py       #   Platform setup (async_setup_entry)
@@ -2176,7 +2212,7 @@ To add a new step:
 4. Register in `async_setup_services()`
 
 **Change update intervals:**
-Edit `UPDATE_INTERVAL` in `coordinator.py` (default: 15 min) or `QUARTER_HOUR_BOUNDARIES` for entity refresh timing.
+Edit `UPDATE_INTERVAL` in `coordinator/core.py` (default: 15 min) for API polling, or `QUARTER_HOUR_BOUNDARIES` in `coordinator/constants.py` for entity refresh timing (defaults to `[0, 15, 30, 45]`). Timer scheduling uses `async_track_utc_time_change()` for absolute-time triggers, not relative delays.
 
 **Debug GraphQL queries:**
 Check `api.py` → `QueryType` enum and `_build_query()` method. Queries are dynamically constructed based on operation type.

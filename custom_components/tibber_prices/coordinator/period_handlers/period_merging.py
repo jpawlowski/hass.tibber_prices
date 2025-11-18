@@ -5,8 +5,9 @@ from __future__ import annotations
 import logging
 from datetime import datetime, timedelta
 
-from custom_components.tibber_prices.period_utils.types import MINUTES_PER_INTERVAL
 from homeassistant.util import dt as dt_util
+
+from .types import MINUTES_PER_INTERVAL
 
 _LOGGER = logging.getLogger(__name__)
 

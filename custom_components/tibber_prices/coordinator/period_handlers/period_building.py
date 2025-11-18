@@ -7,15 +7,16 @@ from datetime import date, timedelta
 from typing import Any
 
 from custom_components.tibber_prices.const import PRICE_LEVEL_MAPPING
-from custom_components.tibber_prices.period_utils.level_filtering import (
+from homeassistant.util import dt as dt_util
+
+from .level_filtering import (
     apply_level_filter,
     check_interval_criteria,
 )
-from custom_components.tibber_prices.period_utils.types import (
+from .types import (
     MINUTES_PER_INTERVAL,
     IntervalCriteria,
 )
-from homeassistant.util import dt as dt_util
 
 _LOGGER = logging.getLogger(__name__)
 
