@@ -9,6 +9,7 @@ from typing import Any
 
 from homeassistant.util import dt as dt_util
 
+from .average_utils import round_to_nearest_quarter_hour
 from .const import (
     DEFAULT_VOLATILITY_THRESHOLD_HIGH,
     DEFAULT_VOLATILITY_THRESHOLD_MODERATE,
@@ -345,7 +346,11 @@ def find_price_data_for_interval(price_info: Any, target_time: datetime) -> dict
         Price data dict if found, None otherwise
 
     """
-    day_key = "tomorrow" if target_time.date() > dt_util.now().date() else "today"
+    # Round to nearest quarter-hour to handle edge cases where we're called
+    # slightly before the boundary (e.g., 14:59:59.999 → 15:00:00)
+    rounded_time = round_to_nearest_quarter_hour(target_time)
+
+    day_key = "tomorrow" if rounded_time.date() > dt_util.now().date() else "today"
     search_days = [day_key, "tomorrow" if day_key == "today" else "today"]
 
     for search_day in search_days:
@@ -359,8 +364,8 @@ def find_price_data_for_interval(price_info: Any, target_time: datetime) -> dict
                 continue
 
             starts_at = dt_util.as_local(starts_at)
-            interval_end = starts_at + timedelta(minutes=MINUTES_PER_INTERVAL)
-            if starts_at <= target_time < interval_end and starts_at.date() == target_time.date():
+            # Exact match after rounding
+            if starts_at == rounded_time and starts_at.date() == rounded_time.date():
                 return price_data
 
     return None

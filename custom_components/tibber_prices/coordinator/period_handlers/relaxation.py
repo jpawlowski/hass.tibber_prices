@@ -9,18 +9,19 @@ if TYPE_CHECKING:
     from collections.abc import Callable
     from datetime import date
 
-    from custom_components.tibber_prices.period_utils.types import PeriodConfig
+    from .types import PeriodConfig
 
-from custom_components.tibber_prices.period_utils.period_merging import (
+from homeassistant.util import dt as dt_util
+
+from .period_merging import (
     recalculate_period_metadata,
     resolve_period_overlaps,
 )
-from custom_components.tibber_prices.period_utils.types import (
+from .types import (
     INDENT_L0,
     INDENT_L1,
     INDENT_L2,
 )
-from homeassistant.util import dt as dt_util
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -201,7 +202,7 @@ def calculate_periods_with_relaxation(  # noqa: PLR0913, PLR0915 - Per-day relax
 
     """
     # Import here to avoid circular dependency
-    from custom_components.tibber_prices.period_utils.core import (  # noqa: PLC0415
+    from .core import (  # noqa: PLC0415
         calculate_periods,
     )
 
@@ -420,7 +421,7 @@ def relax_single_day(  # noqa: PLR0913 - Comprehensive filter relaxation per day
 
     """
     # Import here to avoid circular dependency
-    from custom_components.tibber_prices.period_utils.core import (  # noqa: PLC0415
+    from .core import (  # noqa: PLC0415
         calculate_periods,
     )
 

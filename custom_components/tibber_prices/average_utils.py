@@ -6,6 +6,71 @@ from datetime import datetime, timedelta
 
 from homeassistant.util import dt as dt_util
 
+# Constants
+INTERVALS_PER_DAY = 96  # 24 hours * 4 intervals per hour
+
+
+def round_to_nearest_quarter_hour(dt: datetime) -> datetime:
+    """
+    Round datetime to nearest 15-minute boundary with smart tolerance.
+
+    This handles edge cases where HA schedules us slightly before the boundary
+    (e.g., 14:59:59.500), while avoiding premature rounding during normal operation.
+
+    Strategy:
+    - If within ±2 seconds of a boundary → round to that boundary
+    - Otherwise → floor to current interval start
+
+    Examples:
+    - 14:59:57.999 → 15:00:00 (within 2s of boundary)
+    - 14:59:59.999 → 15:00:00 (within 2s of boundary)
+    - 14:59:30.000 → 14:45:00 (NOT within 2s, stay in current)
+    - 15:00:00.000 → 15:00:00 (exact boundary)
+    - 15:00:01.500 → 15:00:00 (within 2s of boundary)
+
+    Args:
+        dt: Datetime to round
+
+    Returns:
+        Datetime rounded to appropriate 15-minute boundary
+
+    """
+    # Calculate current interval start (floor)
+    total_seconds = dt.hour * 3600 + dt.minute * 60 + dt.second + dt.microsecond / 1_000_000
+    interval_index = int(total_seconds // (15 * 60))  # Floor division
+    interval_start_seconds = interval_index * 15 * 60
+
+    # Calculate next interval start
+    next_interval_index = (interval_index + 1) % INTERVALS_PER_DAY
+    next_interval_start_seconds = next_interval_index * 15 * 60
+
+    # Distance to current interval start and next interval start
+    distance_to_current = total_seconds - interval_start_seconds
+    if next_interval_index == 0:  # Midnight wrap
+        distance_to_next = (24 * 3600) - total_seconds
+    else:
+        distance_to_next = next_interval_start_seconds - total_seconds
+
+    # Tolerance: If within 2 seconds of a boundary, snap to it
+    boundary_tolerance_seconds = 2.0
+
+    if distance_to_next <= boundary_tolerance_seconds:
+        # Very close to next boundary → use next interval
+        target_interval_index = next_interval_index
+    elif distance_to_current <= boundary_tolerance_seconds:
+        # Very close to current boundary (shouldn't happen in practice, but handle it)
+        target_interval_index = interval_index
+    else:
+        # Normal case: stay in current interval
+        target_interval_index = interval_index
+
+    # Convert back to time
+    target_minutes = target_interval_index * 15
+    target_hour = int(target_minutes // 60)
+    target_minute = int(target_minutes % 60)
+
+    return dt.replace(hour=target_hour, minute=target_minute, second=0, microsecond=0)
+
 
 def calculate_trailing_24h_avg(all_prices: list[dict], interval_start: datetime) -> float:
     """

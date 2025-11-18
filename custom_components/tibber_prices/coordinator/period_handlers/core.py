@@ -5,12 +5,12 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
-    from custom_components.tibber_prices.period_utils.types import PeriodConfig
+    from .types import PeriodConfig
 
-from custom_components.tibber_prices.period_utils.outlier_filtering import (
+from .outlier_filtering import (
     filter_price_outliers,
 )
-from custom_components.tibber_prices.period_utils.period_building import (
+from .period_building import (
     add_interval_ends,
     build_periods,
     calculate_reference_prices,
@@ -18,13 +18,13 @@ from custom_components.tibber_prices.period_utils.period_building import (
     filter_periods_by_min_length,
     split_intervals_by_day,
 )
-from custom_components.tibber_prices.period_utils.period_merging import (
+from .period_merging import (
     merge_adjacent_periods_at_midnight,
 )
-from custom_components.tibber_prices.period_utils.period_statistics import (
+from .period_statistics import (
     extract_period_summaries,
 )
-from custom_components.tibber_prices.period_utils.types import ThresholdConfig
+from .types import ThresholdConfig
 
 
 def calculate_periods(

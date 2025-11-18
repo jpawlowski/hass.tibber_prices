@@ -5,7 +5,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from custom_components.tibber_prices.period_utils.types import IntervalCriteria
+    from .types import IntervalCriteria
 
 from custom_components.tibber_prices.const import PRICE_LEVEL_MAPPING
 

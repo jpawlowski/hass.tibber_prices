@@ -7,19 +7,20 @@ from typing import TYPE_CHECKING, Any
 if TYPE_CHECKING:
     from datetime import datetime
 
-    from custom_components.tibber_prices.period_utils.types import (
+    from .types import (
         PeriodData,
         PeriodStatistics,
         ThresholdConfig,
     )
 
-from custom_components.tibber_prices.period_utils.types import MINUTES_PER_INTERVAL
 from custom_components.tibber_prices.price_utils import (
     aggregate_period_levels,
     aggregate_period_ratings,
     calculate_volatility_level,
 )
 from homeassistant.util import dt as dt_util
+
+from .types import MINUTES_PER_INTERVAL
 
 
 def calculate_period_price_diff(
@@ -200,7 +201,7 @@ def extract_period_summaries(
         thresholds: Threshold configuration for calculations
 
     """
-    from custom_components.tibber_prices.period_utils.types import (  # noqa: PLC0415 - Avoid circular import
+    from .types import (  # noqa: PLC0415 - Avoid circular import
         PeriodData,
         PeriodStatistics,
     )
