@@ -5,7 +5,7 @@ This is a **Home Assistant custom component** for Tibber electricity price data,
 ## Documentation Metadata
 
 -   **Last Major Update**: 2025-11-18
--   **Last Architecture Review**: 2025-11-18 (Created /utils/ package, moved average_utils.py→utils/average.py and price_utils.py→utils/price.py. Added file organization policy to prevent root clutter.)
+-   **Last Architecture Review**: 2025-11-18 (Completed sensor/core.py refactoring: Calculator Pattern implementation with 8 specialized calculators and 8 attribute modules. Reduced core.py from 2,170 → 1,268 lines (42% reduction). Total 3,047 lines extracted to specialized packages.)
 -   **Last Code Example Cleanup**: 2025-11-18 (Removed redundant implementation details from AGENTS.md, added guidelines for when to include code examples)
 -   **Documentation Status**: ✅ Current (verified against codebase)
 
@@ -337,10 +337,13 @@ After successful refactoring:
    -   **Pattern**: Coordinator-specific implementations
 
 4. **`/sensor/`** - Sensor platform package
-   -   `core.py` - Entity class
+   -   `core.py` - Entity class (1,268 lines - manages 80+ sensor types)
    -   `definitions.py` - Entity descriptions
-   -   `attributes.py` - Attribute builders
    -   `helpers.py` - Sensor-specific helpers
+   -   `calculators/` - Value calculation package (8 specialized calculators, 1,838 lines)
+   -   `attributes/` - Attribute builders package (8 specialized modules, 1,209 lines)
+   -   **Pattern**: Calculator Pattern (business logic separated from presentation)
+   -   **Architecture**: Two-tier (Calculators handle computation → Attributes handle state presentation)
 
 5. **`/binary_sensor/`** - Binary sensor platform package
    -   Same structure as `/sensor/`
@@ -393,11 +396,26 @@ After successful refactoring:
         See `config_flow/schemas.py` for implementation examples.
 
 -   **Price data enrichment**: All quarter-hourly price intervals get augmented with `trailing_avg_24h`, `difference`, and `rating_level` fields via `enrich_price_info_with_differences()` in `utils/price.py`. This adds statistical analysis (24h trailing average, percentage difference from average, rating classification) to each 15-minute interval. See `utils/price.py` for enrichment logic.
--   **Sensor organization (refactored Nov 2025)**: The `sensor/` package is organized by **calculation method** rather than feature type, enabling code reuse through unified handler methods:
-    -   **Interval-based sensors**: Use `_get_interval_value(interval_offset, value_type)` for current/next/previous interval data
-    -   **Rolling hour sensors**: Use `_get_rolling_hour_value(hour_offset, value_type)` for 5-interval windows
-    -   **Daily statistics**: Use `_get_daily_stat_value(day, stat_func)` for calendar day min/max/avg
-    -   **24h windows**: Use `_get_24h_window_value(stat_func)` for trailing/leading statistics
+-   **Sensor organization (refactored Nov 2025)**: The `sensor/` package uses **Calculator Pattern** for separation of concerns:
+    -   **Calculator Package** (`sensor/calculators/`): 8 specialized calculators handle business logic (1,838 lines total)
+        -   `base.py` - Abstract BaseCalculator with coordinator access
+        -   `interval.py` - Single interval calculations (current/next/previous)
+        -   `rolling_hour.py` - 5-interval rolling windows
+        -   `daily_stat.py` - Calendar day min/max/avg statistics
+        -   `window_24h.py` - Trailing/leading 24h windows
+        -   `volatility.py` - Price volatility analysis
+        -   `trend.py` - Complex trend analysis with caching (640 lines)
+        -   `timing.py` - Best/peak price period timing
+        -   `metadata.py` - Home/metering metadata
+    -   **Attributes Package** (`sensor/attributes/`): 8 specialized modules handle state presentation (1,209 lines total)
+        -   Modules match calculator types: `interval.py`, `daily_stat.py`, `window_24h.py`, `volatility.py`, `trend.py`, `timing.py`, `future.py`, `metadata.py`
+        -   `__init__.py` - Routing logic + unified builders (`build_sensor_attributes`, `build_extra_state_attributes`)
+    -   **Core Entity** (`sensor/core.py`): 1,268 lines managing 80+ sensor types
+        -   Instantiates all calculators in `__init__`
+        -   Delegates value calculations to appropriate calculator
+        -   Uses unified handler methods: `_get_interval_value()`, `_get_rolling_hour_value()`, `_get_daily_stat_value()`, `_get_24h_window_value()`
+        -   Handler mapping dictionary routes entity keys to value getters
+    -   **Architecture Benefits**: 42% line reduction in core.py (2,170 → 1,268 lines), clear separation of concerns, improved testability, reusable components
     -   **See "Common Tasks" section** for detailed patterns and examples
 -   **Quarter-hour precision**: Entities update on 00/15/30/45-minute boundaries via `schedule_quarter_hour_refresh()` in `coordinator/listeners.py`, not just on data fetch intervals. Uses `async_track_utc_time_change(minute=[0, 15, 30, 45], second=0)` for absolute-time scheduling. Smart boundary tolerance (±2 seconds) in `sensor/helpers.py` → `round_to_nearest_quarter_hour()` handles HA scheduling jitter: if HA triggers at 14:59:58 → rounds to 15:00:00 (next interval), if HA restarts at 14:59:30 → stays at 14:45:00 (current interval). This ensures current price sensors update without waiting for the next API poll, while preventing premature data display during normal operation.
 -   **Currency handling**: Multi-currency support with major/minor units (e.g., EUR/ct, NOK/øre) via `get_currency_info()` and `format_price_unit_*()` in `const.py`.
@@ -458,10 +476,30 @@ custom_components/tibber_prices/
 ├── services.py           # Custom services (get_price, ApexCharts, etc.)
 ├── sensor/               # Sensor platform (package)
 │   ├── __init__.py       #   Platform setup (async_setup_entry)
-│   ├── core.py           #   TibberPricesSensor class
+│   ├── core.py           #   TibberPricesSensor class (1,268 lines)
 │   ├── definitions.py    #   ENTITY_DESCRIPTIONS
 │   ├── helpers.py        #   Pure helper functions (incl. smart boundary tolerance)
-│   └── attributes.py     #   Attribute builders
+│   ├── calculators/      #   Value calculation package (1,838 lines)
+│   │   ├── __init__.py   #     Package exports
+│   │   ├── base.py       #     Abstract BaseCalculator (57 lines)
+│   │   ├── interval.py   #     Single interval calculations (206 lines)
+│   │   ├── rolling_hour.py #   5-interval rolling windows (123 lines)
+│   │   ├── daily_stat.py #     Daily min/max/avg (211 lines)
+│   │   ├── window_24h.py #     Trailing/leading 24h (53 lines)
+│   │   ├── volatility.py #     Price volatility (113 lines)
+│   │   ├── trend.py      #     Trend analysis with caching (640 lines)
+│   │   ├── timing.py     #     Best/peak price timing (246 lines)
+│   │   └── metadata.py   #     Home/metering metadata (123 lines)
+│   └── attributes/       #   Attribute builders package (1,209 lines)
+│       ├── __init__.py   #     Routing + unified builders (267 lines)
+│       ├── interval.py   #     Interval attributes (228 lines)
+│       ├── daily_stat.py #     Statistics attributes (124 lines)
+│       ├── window_24h.py #     24h window attributes (106 lines)
+│       ├── timing.py     #     Period timing attributes (64 lines)
+│       ├── volatility.py #     Volatility attributes (128 lines)
+│       ├── trend.py      #     Trend attribute routing (34 lines)
+│       ├── future.py     #     Forecast attributes (223 lines)
+│       └── metadata.py   #     Current interval helper (35 lines)
 ├── binary_sensor/        # Binary sensor platform (package)
 │   ├── __init__.py       #   Platform setup (async_setup_entry)
 │   ├── core.py           #   TibberPricesBinarySensor class
