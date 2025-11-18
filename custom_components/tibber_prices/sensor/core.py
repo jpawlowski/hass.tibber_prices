@@ -7,28 +7,17 @@ from typing import TYPE_CHECKING, Any
 
 import yaml
 
-from custom_components.tibber_prices.average_utils import (
-    calculate_current_leading_avg,
-    calculate_current_leading_max,
-    calculate_current_leading_min,
-    calculate_current_trailing_avg,
-    calculate_current_trailing_max,
-    calculate_current_trailing_min,
-    calculate_next_n_hours_avg,
-)
 from custom_components.tibber_prices.binary_sensor.attributes import (
     get_price_intervals_attributes,
 )
 from custom_components.tibber_prices.const import (
     CONF_CHART_DATA_CONFIG,
-    CONF_EXTENDED_DESCRIPTIONS,
     CONF_PRICE_RATING_THRESHOLD_HIGH,
     CONF_PRICE_RATING_THRESHOLD_LOW,
     CONF_PRICE_TREND_THRESHOLD_FALLING,
     CONF_PRICE_TREND_THRESHOLD_RISING,
     CONF_VOLATILITY_THRESHOLD_HIGH,
     CONF_VOLATILITY_THRESHOLD_MODERATE,
-    DEFAULT_EXTENDED_DESCRIPTIONS,
     DEFAULT_PRICE_RATING_THRESHOLD_HIGH,
     DEFAULT_PRICE_RATING_THRESHOLD_LOW,
     DEFAULT_PRICE_TREND_THRESHOLD_FALLING,
@@ -36,9 +25,9 @@ from custom_components.tibber_prices.const import (
     DEFAULT_VOLATILITY_THRESHOLD_HIGH,
     DEFAULT_VOLATILITY_THRESHOLD_MODERATE,
     DOMAIN,
+    MINUTES_PER_INTERVAL,
     format_price_unit_major,
     format_price_unit_minor,
-    get_entity_description,
 )
 from custom_components.tibber_prices.coordinator import (
     MINUTE_UPDATE_ENTITY_KEYS,
@@ -47,11 +36,21 @@ from custom_components.tibber_prices.coordinator import (
 from custom_components.tibber_prices.entity import TibberPricesEntity
 from custom_components.tibber_prices.entity_utils import (
     add_icon_color_attribute,
+    find_rolling_hour_center_index,
     get_dynamic_icon,
+    get_price_value,
 )
 from custom_components.tibber_prices.entity_utils.icons import IconContext
-from custom_components.tibber_prices.price_utils import (
-    MINUTES_PER_INTERVAL,
+from custom_components.tibber_prices.utils.average import (
+    calculate_current_leading_avg,
+    calculate_current_leading_max,
+    calculate_current_leading_min,
+    calculate_current_trailing_avg,
+    calculate_current_trailing_max,
+    calculate_current_trailing_min,
+    calculate_next_n_hours_avg,
+)
+from custom_components.tibber_prices.utils.price import (
     calculate_price_trend,
     calculate_volatility_level,
     find_price_data_for_interval,
@@ -67,6 +66,7 @@ from homeassistant.util import dt as dt_util
 
 from .attributes import (
     add_volatility_type_attributes,
+    build_extra_state_attributes,
     build_sensor_attributes,
     get_future_prices,
     get_prices_for_volatility,
@@ -75,8 +75,6 @@ from .helpers import (
     aggregate_level_data,
     aggregate_price_data,
     aggregate_rating_data,
-    find_rolling_hour_center_index,
-    get_price_value,
 )
 
 if TYPE_CHECKING:
@@ -1979,76 +1977,35 @@ class TibberPricesSensor(TibberPricesEntity, SensorEntity):
         # Fall back to static icon from entity description
         return icon or self.entity_description.icon
 
-    def _get_description_attributes(self) -> dict[str, str]:
-        """Get description/long_description/usage_tips attributes."""
-        attributes = {}
-
-        if not self.entity_description.translation_key or not self.hass:
-            return attributes
-
-        language = self.hass.config.language if self.hass.config.language else "en"
-
-        # Add basic description (from cache, synchronous)
-        description = get_entity_description("sensor", self.entity_description.translation_key, language, "description")
-        if description:
-            attributes["description"] = description
-
-        # Check if extended descriptions are enabled
-        extended_descriptions = self.coordinator.config_entry.options.get(
-            CONF_EXTENDED_DESCRIPTIONS,
-            self.coordinator.config_entry.data.get(CONF_EXTENDED_DESCRIPTIONS, DEFAULT_EXTENDED_DESCRIPTIONS),
-        )
-
-        if extended_descriptions:
-            long_desc = get_entity_description(
-                "sensor", self.entity_description.translation_key, language, "long_description"
-            )
-            if long_desc:
-                attributes["long_description"] = long_desc
-
-            usage_tips = get_entity_description(
-                "sensor", self.entity_description.translation_key, language, "usage_tips"
-            )
-            if usage_tips:
-                attributes["usage_tips"] = usage_tips
-
-        return attributes
-
     @property
     def extra_state_attributes(self) -> dict[str, Any] | None:
         """Return additional state attributes."""
-        if not self.coordinator.data:
+        try:
+            if not self.coordinator.data:
+                return None
+
+            # Get sensor-specific attributes
+            sensor_attrs = self._get_sensor_attributes()
+
+            # Build complete attributes using unified builder
+            return build_extra_state_attributes(
+                entity_key=self.entity_description.key,
+                translation_key=self.entity_description.translation_key,
+                hass=self.hass,
+                config_entry=self.coordinator.config_entry,
+                coordinator_data=self.coordinator.data,
+                sensor_attrs=sensor_attrs,
+            )
+
+        except (KeyError, ValueError, TypeError) as ex:
+            self.coordinator.logger.exception(
+                "Error getting sensor attributes",
+                extra={
+                    "error": str(ex),
+                    "entity": self.entity_description.key,
+                },
+            )
             return None
-
-        # For chart_data_export: special ordering (metadata → descriptions → service data)
-        if self.entity_description.key == "chart_data_export":
-            attributes: dict[str, Any] = {}
-            chart_attrs = self._get_chart_data_export_attributes()
-
-            # Step 1: Add metadata (timestamp, error)
-            if chart_attrs:
-                for key in ("timestamp", "error"):
-                    if key in chart_attrs:
-                        attributes[key] = chart_attrs[key]
-
-            # Step 2: Add descriptions
-            description_attrs = self._get_description_attributes()
-            attributes.update(description_attrs)
-
-            # Step 3: Add service data (everything except metadata)
-            if chart_attrs:
-                attributes.update({k: v for k, v in chart_attrs.items() if k not in ("timestamp", "error")})
-
-            return attributes if attributes else None
-
-        # For all other sensors: standard behavior
-        attributes: dict[str, Any] = self._get_sensor_attributes() or {}
-        description_attrs = self._get_description_attributes()
-        # Merge description attributes
-        for key, value in description_attrs.items():
-            attributes[key] = value
-
-        return attributes if attributes else None
 
     def _get_sensor_attributes(self) -> dict | None:
         """Get attributes based on sensor type."""

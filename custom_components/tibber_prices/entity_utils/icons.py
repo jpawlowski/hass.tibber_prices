@@ -9,16 +9,15 @@ from typing import TYPE_CHECKING, Any
 
 from custom_components.tibber_prices.const import (
     BINARY_SENSOR_ICON_MAPPING,
+    MINUTES_PER_INTERVAL,
     PRICE_LEVEL_CASH_ICON_MAPPING,
     PRICE_LEVEL_ICON_MAPPING,
     PRICE_RATING_ICON_MAPPING,
     VOLATILITY_ICON_MAPPING,
 )
-from custom_components.tibber_prices.price_utils import find_price_data_for_interval
-from custom_components.tibber_prices.sensor.helpers import (
-    aggregate_level_data,
-    find_rolling_hour_center_index,
-)
+from custom_components.tibber_prices.entity_utils.helpers import find_rolling_hour_center_index
+from custom_components.tibber_prices.sensor.helpers import aggregate_level_data
+from custom_components.tibber_prices.utils.price import find_price_data_for_interval
 from homeassistant.util import dt as dt_util
 
 
@@ -34,9 +33,6 @@ class IconContext:
 
 if TYPE_CHECKING:
     from collections.abc import Callable
-
-# Constants imported from price_utils
-MINUTES_PER_INTERVAL = 15
 
 # Timing sensor icon thresholds (in minutes)
 TIMING_URGENT_THRESHOLD = 15  # ≤15 min: Alert icon
