@@ -1,0 +1,68 @@
+"""
+Service handlers for Tibber Prices integration.
+
+This package provides service endpoints for external integrations and data export:
+- Chart data export (get_chartdata)
+- ApexCharts YAML generation (get_apexcharts_yaml)
+- User data refresh (refresh_user_data)
+
+Architecture:
+- helpers.py: Common utilities (get_entry_and_data)
+- formatters.py: Data transformation and formatting functions
+- chartdata.py: Main data export service handler
+- apexcharts.py: ApexCharts card YAML generator
+- refresh_user_data.py: User data refresh handler
+
+"""
+
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
+from custom_components.tibber_prices.const import DOMAIN
+from homeassistant.core import SupportsResponse, callback
+
+from .apexcharts import (
+    APEXCHARTS_SERVICE_SCHEMA,
+    APEXCHARTS_YAML_SERVICE_NAME,
+    handle_apexcharts_yaml,
+)
+from .chartdata import CHARTDATA_SERVICE_NAME, CHARTDATA_SERVICE_SCHEMA, handle_chartdata
+from .refresh_user_data import (
+    REFRESH_USER_DATA_SERVICE_NAME,
+    REFRESH_USER_DATA_SERVICE_SCHEMA,
+    handle_refresh_user_data,
+)
+
+if TYPE_CHECKING:
+    from homeassistant.core import HomeAssistant
+
+__all__ = [
+    "async_setup_services",
+]
+
+
+@callback
+def async_setup_services(hass: HomeAssistant) -> None:
+    """Set up services for Tibber Prices integration."""
+    hass.services.async_register(
+        DOMAIN,
+        APEXCHARTS_YAML_SERVICE_NAME,
+        handle_apexcharts_yaml,
+        schema=APEXCHARTS_SERVICE_SCHEMA,
+        supports_response=SupportsResponse.ONLY,
+    )
+    hass.services.async_register(
+        DOMAIN,
+        CHARTDATA_SERVICE_NAME,
+        handle_chartdata,
+        schema=CHARTDATA_SERVICE_SCHEMA,
+        supports_response=SupportsResponse.ONLY,
+    )
+    hass.services.async_register(
+        DOMAIN,
+        REFRESH_USER_DATA_SERVICE_NAME,
+        handle_refresh_user_data,
+        schema=REFRESH_USER_DATA_SERVICE_SCHEMA,
+        supports_response=SupportsResponse.ONLY,
+    )
