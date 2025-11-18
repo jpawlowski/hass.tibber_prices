@@ -197,17 +197,46 @@ For detailed cache behavior, see [Caching Strategy](./caching-strategy.md).
 | **Coordinator** | `coordinator.py` | Update orchestration, cache management, absolute-time scheduling with boundary tolerance |
 | **Data Transformer** | `coordinator/data_transformation.py` | Price enrichment (averages, ratings, differences) |
 | **Period Calculator** | `coordinator/periods.py` | Best/peak price period calculation with relaxation |
-| **Sensors** | `sensor/` | 120+ entities for prices, levels, ratings, statistics |
+| **Sensors** | `sensor/` | 80+ entities for prices, levels, ratings, statistics |
 | **Binary Sensors** | `binary_sensor/` | Period indicators (best/peak price active) |
 | **Services** | `services.py` | Custom service endpoints (get_price, ApexCharts) |
+
+### Sensor Architecture (Calculator Pattern)
+
+The sensor platform uses **Calculator Pattern** for clean separation of concerns (refactored Nov 2025):
+
+| Component | Files | Lines | Responsibility |
+|-----------|-------|-------|----------------|
+| **Entity Class** | `sensor/core.py` | 909 | Entity lifecycle, coordinator, delegates to calculators |
+| **Calculators** | `sensor/calculators/` | 1,838 | Business logic (8 specialized calculators) |
+| **Attributes** | `sensor/attributes/` | 1,209 | State presentation (8 specialized modules) |
+| **Routing** | `sensor/value_getters.py` | 276 | Centralized sensor → calculator mapping |
+| **Chart Export** | `sensor/chart_data.py` | 144 | Service call handling, YAML parsing |
+| **Helpers** | `sensor/helpers.py` | 188 | Aggregation functions, utilities |
+
+**Calculator Package** (`sensor/calculators/`):
+- `base.py` - Abstract BaseCalculator with coordinator access
+- `interval.py` - Single interval calculations (current/next/previous)
+- `rolling_hour.py` - 5-interval rolling windows
+- `daily_stat.py` - Calendar day min/max/avg statistics
+- `window_24h.py` - Trailing/leading 24h windows
+- `volatility.py` - Price volatility analysis
+- `trend.py` - Complex trend analysis with caching
+- `timing.py` - Best/peak price period timing
+- `metadata.py` - Home/metering metadata
+
+**Benefits:**
+- 58% reduction in core.py (2,170 → 909 lines)
+- Clear separation: Calculators (logic) vs Attributes (presentation)
+- Independent testability for each calculator
+- Easy to add sensors: Choose calculation pattern, add to routing
 
 ### Helper Utilities
 
 | Utility | File | Purpose |
 |---------|------|---------|
-| **Price Utils** | `price_utils.py` | Rating calculation, enrichment, level aggregation |
-| **Average Utils** | `average_utils.py` | Trailing/leading 24h average calculations |
-| **Sensor Helpers** | `sensor/helpers.py` | Interval detection with smart boundary tolerance (±2s) |
+| **Price Utils** | `utils/price.py` | Rating calculation, enrichment, level aggregation |
+| **Average Utils** | `utils/average.py` | Trailing/leading 24h average calculations |
 | **Entity Utils** | `entity_utils/` | Shared icon/color/attribute logic |
 | **Translations** | `const.py` | Translation loading and caching |
 
@@ -224,7 +253,7 @@ For detailed cache behavior, see [Caching Strategy](./caching-strategy.md).
 
 ### 2. Price Data Enrichment
 
-All quarter-hourly price intervals get augmented:
+All quarter-hourly price intervals get augmented via `utils/price.py`:
 
 ```python
 # Original from Tibber API
@@ -234,7 +263,7 @@ All quarter-hourly price intervals get augmented:
   "level": "NORMAL"
 }
 
-# After enrichment (price_utils.py)
+# After enrichment (utils/price.py)
 {
   "startsAt": "2025-11-03T14:00:00+01:00",
   "total": 0.2534,
@@ -248,26 +277,45 @@ All quarter-hourly price intervals get augmented:
 ### 3. Quarter-Hour Precision
 
 - **API polling**: Every 15 minutes (coordinator fetch cycle)
-- **Entity updates**: On 00/15/30/45-minute boundaries via `_schedule_quarter_hour_refresh()`
+- **Entity updates**: On 00/15/30/45-minute boundaries via `coordinator/listeners.py`
 - **Timer scheduling**: Uses `async_track_utc_time_change(minute=[0, 15, 30, 45], second=0)`
   - HA may trigger ±few milliseconds before/after exact boundary
-  - Smart boundary tolerance (±2 seconds) handles scheduling jitter
+  - Smart boundary tolerance (±2 seconds) handles scheduling jitter in `sensor/helpers.py`
   - If HA schedules at 14:59:58 → rounds to 15:00:00 (shows new interval data)
   - If HA restarts at 14:59:30 → stays at 14:45:00 (shows current interval data)
 - **Absolute time tracking**: Timer plans for **all future boundaries** (not relative delays)
   - Prevents double-updates (if triggered at 14:59:58, next trigger is 15:15:00, not 15:00:00)
 - **Result**: Current price sensors update without waiting for next API poll
 
-### 4. Unified Sensor Handlers
+### 4. Calculator Pattern (Sensor Platform)
 
-Sensors organized by **calculation method** (post-refactoring Nov 2025):
+Sensors organized by **calculation method** (refactored Nov 2025):
 
-- **Interval-based**: `_get_interval_value(offset, type)` - current/next/previous
-- **Rolling hour**: `_get_rolling_hour_value(offset, type)` - 5-interval windows
-- **Daily stats**: `_get_daily_stat_value(day, stat_func)` - calendar day min/max/avg
-- **24h windows**: `_get_24h_window_value(stat_func)` - trailing/leading statistics
+**Unified Handler Methods** (`sensor/core.py`):
+- `_get_interval_value(offset, type)` - current/next/previous intervals
+- `_get_rolling_hour_value(offset, type)` - 5-interval rolling windows
+- `_get_daily_stat_value(day, stat_func)` - calendar day min/max/avg
+- `_get_24h_window_value(stat_func)` - trailing/leading statistics
 
-Single implementation, minimal code duplication.
+**Routing** (`sensor/value_getters.py`):
+- Single source of truth mapping 80+ entity keys to calculator methods
+- Organized by calculation type (Interval, Rolling Hour, Daily Stats, etc.)
+
+**Calculators** (`sensor/calculators/`):
+- Each calculator inherits from `BaseCalculator` with coordinator access
+- Focused responsibility: `IntervalCalculator`, `TrendCalculator`, etc.
+- Complex logic isolated (e.g., `TrendCalculator` has internal caching)
+
+**Attributes** (`sensor/attributes/`):
+- Separate from business logic, handles state presentation
+- Builds extra_state_attributes dicts for entity classes
+- Unified builders: `build_sensor_attributes()`, `build_extra_state_attributes()`
+
+**Benefits:**
+- Minimal code duplication across 80+ sensors
+- Clear separation of concerns (calculation vs presentation)
+- Easy to extend: Add sensor → choose pattern → add to routing
+- Independent testability for each component
 
 ---
 
