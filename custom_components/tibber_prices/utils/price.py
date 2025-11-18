@@ -7,10 +7,7 @@ import statistics
 from datetime import datetime, timedelta
 from typing import Any
 
-from homeassistant.util import dt as dt_util
-
-from .average_utils import round_to_nearest_quarter_hour
-from .const import (
+from custom_components.tibber_prices.const import (
     DEFAULT_VOLATILITY_THRESHOLD_HIGH,
     DEFAULT_VOLATILITY_THRESHOLD_MODERATE,
     DEFAULT_VOLATILITY_THRESHOLD_VERY_HIGH,
@@ -22,10 +19,12 @@ from .const import (
     VOLATILITY_MODERATE,
     VOLATILITY_VERY_HIGH,
 )
+from homeassistant.util import dt as dt_util
+
+from .average import round_to_nearest_quarter_hour
 
 _LOGGER = logging.getLogger(__name__)
 
-MINUTES_PER_INTERVAL = 15
 MIN_PRICES_FOR_VOLATILITY = 2  # Minimum number of price values needed for volatility calculation
 
 # Volatility factors for adaptive trend thresholds
