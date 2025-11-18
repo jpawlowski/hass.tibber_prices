@@ -46,8 +46,7 @@ class TibberPricesBinarySensor(TibberPricesEntity, BinarySensorEntity):
         super().__init__(coordinator)
         self.entity_description = entity_description
         self._attr_unique_id = f"{coordinator.config_entry.entry_id}_{entity_description.key}"
-        self._state_getter: Callable | None = self._get_state_getter()
-        self._attribute_getter: Callable | None = self._get_attribute_getter()
+        self._state_getter: Callable | None = self._get_value_getter()
         self._time_sensitive_remove_listener: Callable | None = None
 
     async def async_added_to_hass(self) -> None:
@@ -74,8 +73,8 @@ class TibberPricesBinarySensor(TibberPricesEntity, BinarySensorEntity):
         """Handle time-sensitive update from coordinator."""
         self.async_write_ha_state()
 
-    def _get_state_getter(self) -> Callable | None:
-        """Return the appropriate state getter method based on the sensor type."""
+    def _get_value_getter(self) -> Callable | None:
+        """Return the appropriate value getter method based on the sensor type."""
         key = self.entity_description.key
 
         state_getters = {
@@ -178,16 +177,21 @@ class TibberPricesBinarySensor(TibberPricesEntity, BinarySensorEntity):
         """Return attributes for tomorrow_data_available binary sensor."""
         return get_tomorrow_data_available_attributes(self.coordinator.data)
 
-    def _get_attribute_getter(self) -> Callable | None:
-        """Return the appropriate attribute getter method based on the sensor type."""
+    def _get_sensor_attributes(self) -> dict | None:
+        """
+        Get sensor-specific attributes.
+
+        Returns a dictionary of sensor-specific attributes, or None if no
+        attributes are needed.
+        """
         key = self.entity_description.key
 
         if key == "peak_price_period":
-            return lambda: get_price_intervals_attributes(self.coordinator.data, reverse_sort=True)
+            return get_price_intervals_attributes(self.coordinator.data, reverse_sort=True)
         if key == "best_price_period":
-            return lambda: get_price_intervals_attributes(self.coordinator.data, reverse_sort=False)
+            return get_price_intervals_attributes(self.coordinator.data, reverse_sort=False)
         if key == "tomorrow_data_available":
-            return self._get_tomorrow_data_available_attributes
+            return self._get_tomorrow_data_available_attributes()
 
         return None
 
@@ -241,10 +245,7 @@ class TibberPricesBinarySensor(TibberPricesEntity, BinarySensorEntity):
         Returns True if any period starts between now and PERIOD_LOOKAHEAD_HOURS from now.
         This provides a practical planning horizon instead of hard midnight cutoff.
         """
-        if not self._attribute_getter:
-            return False
-
-        attrs = self._attribute_getter()
+        attrs = self._get_sensor_attributes()
         if not attrs or "periods" not in attrs:
             return False
 
@@ -271,13 +272,11 @@ class TibberPricesBinarySensor(TibberPricesEntity, BinarySensorEntity):
     async def async_extra_state_attributes(self) -> dict | None:
         """Return additional state attributes asynchronously."""
         try:
-            # Get the dynamic attributes if the getter is available
+            # Get the sensor-specific attributes
             if not self.coordinator.data:
                 return None
 
-            dynamic_attrs = None
-            if self._attribute_getter:
-                dynamic_attrs = self._attribute_getter()
+            sensor_attrs = self._get_sensor_attributes()
 
             # Use extracted function to build all attributes
             return await build_async_extra_state_attributes(
@@ -285,7 +284,7 @@ class TibberPricesBinarySensor(TibberPricesEntity, BinarySensorEntity):
                 self.entity_description.translation_key,
                 self.hass,
                 config_entry=self.coordinator.config_entry,
-                dynamic_attrs=dynamic_attrs,
+                sensor_attrs=sensor_attrs,
                 is_on=self.is_on,
             )
 
@@ -303,13 +302,11 @@ class TibberPricesBinarySensor(TibberPricesEntity, BinarySensorEntity):
     def extra_state_attributes(self) -> dict | None:
         """Return additional state attributes synchronously."""
         try:
-            # Get the dynamic attributes if the getter is available
+            # Get the sensor-specific attributes
             if not self.coordinator.data:
                 return None
 
-            dynamic_attrs = None
-            if self._attribute_getter:
-                dynamic_attrs = self._attribute_getter()
+            sensor_attrs = self._get_sensor_attributes()
 
             # Use extracted function to build all attributes
             return build_sync_extra_state_attributes(
@@ -317,7 +314,7 @@ class TibberPricesBinarySensor(TibberPricesEntity, BinarySensorEntity):
                 self.entity_description.translation_key,
                 self.hass,
                 config_entry=self.coordinator.config_entry,
-                dynamic_attrs=dynamic_attrs,
+                sensor_attrs=sensor_attrs,
                 is_on=self.is_on,
             )
 

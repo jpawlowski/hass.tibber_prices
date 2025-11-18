@@ -4,13 +4,8 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from custom_components.tibber_prices.const import (
-    CONF_EXTENDED_DESCRIPTIONS,
-    DEFAULT_EXTENDED_DESCRIPTIONS,
-    async_get_entity_description,
-    get_entity_description,
-)
 from custom_components.tibber_prices.entity_utils import add_icon_color_attribute
+from custom_components.tibber_prices.utils.average import round_to_nearest_quarter_hour
 from homeassistant.util import dt as dt_util
 
 if TYPE_CHECKING:
@@ -280,7 +275,7 @@ async def build_async_extra_state_attributes(  # noqa: PLR0913
     hass: HomeAssistant,
     *,
     config_entry: TibberPricesConfigEntry,
-    dynamic_attrs: dict | None = None,
+    sensor_attrs: dict | None = None,
     is_on: bool | None = None,
 ) -> dict | None:
     """
@@ -293,69 +288,44 @@ async def build_async_extra_state_attributes(  # noqa: PLR0913
         translation_key: Translation key for entity
         hass: Home Assistant instance
         config_entry: Config entry with options (keyword-only)
-        dynamic_attrs: Dynamic attributes from attribute getter (keyword-only)
+        sensor_attrs: Sensor-specific attributes (keyword-only)
         is_on: Binary sensor state (keyword-only)
 
     Returns:
         Complete attributes dict with descriptions
 
     """
-    attributes = {}
+    # Calculate default timestamp: current time rounded to nearest quarter hour
+    # This ensures all binary sensors have a consistent reference time for when calculations were made
+    # Individual sensors can override this via sensor_attrs if needed
+    now = dt_util.now()
+    default_timestamp = round_to_nearest_quarter_hour(now)
 
-    # Add dynamic attributes first
-    if dynamic_attrs:
+    attributes = {
+        "timestamp": default_timestamp.isoformat(),
+    }
+
+    # Add sensor-specific attributes (may override timestamp)
+    if sensor_attrs:
         # Copy and remove internal fields before exposing to user
-        clean_attrs = {k: v for k, v in dynamic_attrs.items() if not k.startswith("_")}
+        clean_attrs = {k: v for k, v in sensor_attrs.items() if not k.startswith("_")}
+        # Merge sensor attributes (can override default timestamp)
         attributes.update(clean_attrs)
 
     # Add icon_color for best/peak price period sensors using shared utility
     add_icon_color_attribute(attributes, entity_key, is_on=is_on)
 
-    # Add description from the custom translations file
-    if translation_key and hass is not None:
-        # Get user's language preference
-        language = hass.config.language if hass.config.language else "en"
+    # Add description attributes (always last, via central utility)
+    from ..entity_utils import async_add_description_attributes  # noqa: PLC0415, TID252
 
-        # Add basic description
-        description = await async_get_entity_description(
-            hass,
-            "binary_sensor",
-            translation_key,
-            language,
-            "description",
-        )
-        if description:
-            attributes["description"] = description
-
-        # Check if extended descriptions are enabled in the config
-        extended_descriptions = config_entry.options.get(
-            CONF_EXTENDED_DESCRIPTIONS,
-            config_entry.data.get(CONF_EXTENDED_DESCRIPTIONS, DEFAULT_EXTENDED_DESCRIPTIONS),
-        )
-
-        # Add extended descriptions if enabled
-        if extended_descriptions:
-            # Add long description if available
-            long_desc = await async_get_entity_description(
-                hass,
-                "binary_sensor",
-                translation_key,
-                language,
-                "long_description",
-            )
-            if long_desc:
-                attributes["long_description"] = long_desc
-
-            # Add usage tips if available
-            usage_tips = await async_get_entity_description(
-                hass,
-                "binary_sensor",
-                translation_key,
-                language,
-                "usage_tips",
-            )
-            if usage_tips:
-                attributes["usage_tips"] = usage_tips
+    await async_add_description_attributes(
+        attributes,
+        "binary_sensor",
+        translation_key,
+        hass,
+        config_entry,
+        position="end",
+    )
 
     return attributes if attributes else None
 
@@ -366,7 +336,7 @@ def build_sync_extra_state_attributes(  # noqa: PLR0913
     hass: HomeAssistant,
     *,
     config_entry: TibberPricesConfigEntry,
-    dynamic_attrs: dict | None = None,
+    sensor_attrs: dict | None = None,
     is_on: bool | None = None,
 ) -> dict | None:
     """
@@ -379,65 +349,43 @@ def build_sync_extra_state_attributes(  # noqa: PLR0913
         translation_key: Translation key for entity
         hass: Home Assistant instance
         config_entry: Config entry with options (keyword-only)
-        dynamic_attrs: Dynamic attributes from attribute getter (keyword-only)
+        sensor_attrs: Sensor-specific attributes (keyword-only)
         is_on: Binary sensor state (keyword-only)
 
     Returns:
         Complete attributes dict with cached descriptions
 
     """
-    attributes = {}
+    # Calculate default timestamp: current time rounded to nearest quarter hour
+    # This ensures all binary sensors have a consistent reference time for when calculations were made
+    # Individual sensors can override this via sensor_attrs if needed
+    now = dt_util.now()
+    default_timestamp = round_to_nearest_quarter_hour(now)
 
-    # Add dynamic attributes first
-    if dynamic_attrs:
+    attributes = {
+        "timestamp": default_timestamp.isoformat(),
+    }
+
+    # Add sensor-specific attributes (may override timestamp)
+    if sensor_attrs:
         # Copy and remove internal fields before exposing to user
-        clean_attrs = {k: v for k, v in dynamic_attrs.items() if not k.startswith("_")}
+        clean_attrs = {k: v for k, v in sensor_attrs.items() if not k.startswith("_")}
+        # Merge sensor attributes (can override default timestamp)
         attributes.update(clean_attrs)
 
     # Add icon_color for best/peak price period sensors using shared utility
     add_icon_color_attribute(attributes, entity_key, is_on=is_on)
 
-    # Add descriptions from the cache (non-blocking)
-    if translation_key and hass is not None:
-        # Get user's language preference
-        language = hass.config.language if hass.config.language else "en"
+    # Add description attributes (always last, via central utility)
+    from ..entity_utils import add_description_attributes  # noqa: PLC0415, TID252
 
-        # Add basic description from cache
-        description = get_entity_description(
-            "binary_sensor",
-            translation_key,
-            language,
-            "description",
-        )
-        if description:
-            attributes["description"] = description
-
-        # Check if extended descriptions are enabled in the config
-        extended_descriptions = config_entry.options.get(
-            CONF_EXTENDED_DESCRIPTIONS,
-            config_entry.data.get(CONF_EXTENDED_DESCRIPTIONS, DEFAULT_EXTENDED_DESCRIPTIONS),
-        )
-
-        # Add extended descriptions if enabled
-        if extended_descriptions:
-            # Add long description from cache
-            long_desc = get_entity_description(
-                "binary_sensor",
-                translation_key,
-                language,
-                "long_description",
-            )
-            if long_desc:
-                attributes["long_description"] = long_desc
-
-            # Add usage tips from cache
-            usage_tips = get_entity_description(
-                "binary_sensor",
-                translation_key,
-                language,
-                "usage_tips",
-            )
-            if usage_tips:
-                attributes["usage_tips"] = usage_tips
+    add_description_attributes(
+        attributes,
+        "binary_sensor",
+        translation_key,
+        hass,
+        config_entry,
+        position="end",
+    )
 
     return attributes if attributes else None

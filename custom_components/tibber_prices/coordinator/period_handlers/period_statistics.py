@@ -13,7 +13,7 @@ if TYPE_CHECKING:
         ThresholdConfig,
     )
 
-from custom_components.tibber_prices.price_utils import (
+from custom_components.tibber_prices.utils.price import (
     aggregate_period_levels,
     aggregate_period_ratings,
     calculate_volatility_level,

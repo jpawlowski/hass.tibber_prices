@@ -11,12 +11,13 @@ from datetime import datetime, timedelta
 from typing import TYPE_CHECKING, Any
 
 from custom_components.tibber_prices.const import (
+    MINUTES_PER_INTERVAL,
     PRICE_LEVEL_MAPPING,
     PRICE_RATING_MAPPING,
 )
 from custom_components.tibber_prices.entity_utils import add_icon_color_attribute
-from custom_components.tibber_prices.price_utils import (
-    MINUTES_PER_INTERVAL,
+from custom_components.tibber_prices.utils.average import round_to_nearest_quarter_hour
+from custom_components.tibber_prices.utils.price import (
     calculate_volatility_level,
     find_price_data_for_interval,
 )
@@ -27,6 +28,8 @@ if TYPE_CHECKING:
     from custom_components.tibber_prices.coordinator import (
         TibberPricesDataUpdateCoordinator,
     )
+    from custom_components.tibber_prices.data import TibberPricesConfigEntry
+    from homeassistant.core import HomeAssistant
 
 # Constants
 MAX_FORECAST_INTERVALS = 8  # Show up to 8 future intervals (2 hours with 15-min intervals)
@@ -67,21 +70,11 @@ def _add_cached_trend_attributes(attributes: dict, key: str, cached_data: dict) 
     if key.startswith("price_trend_") and cached_data.get("trend_attributes"):
         attributes.update(cached_data["trend_attributes"])
     elif key == "current_price_trend" and cached_data.get("current_trend_attributes"):
-        # Add timestamp of current interval FIRST (when calculation was made)
-        now = dt_util.now()
-        minute = (now.minute // 15) * 15
-        current_interval_timestamp = now.replace(minute=minute, second=0, microsecond=0)
-        attributes["timestamp"] = current_interval_timestamp.isoformat()
-        # Then add other cached attributes
+        # Add cached attributes (timestamp already set by platform)
         attributes.update(cached_data["current_trend_attributes"])
     elif key == "next_price_trend_change" and cached_data.get("trend_change_attributes"):
-        # Add timestamp of current interval FIRST (when calculation was made)
+        # Add cached attributes (timestamp already set by platform)
         # State contains the timestamp of the trend change itself
-        now = dt_util.now()
-        minute = (now.minute // 15) * 15
-        current_interval_timestamp = now.replace(minute=minute, second=0, microsecond=0)
-        attributes["timestamp"] = current_interval_timestamp.isoformat()
-        # Then add other cached attributes
         attributes.update(cached_data["trend_change_attributes"])
 
 
@@ -168,7 +161,6 @@ def build_sensor_attributes(
             add_statistics_attributes(
                 attributes=attributes,
                 key=key,
-                coordinator=coordinator,
                 cached_data=cached_data,
             )
         elif key == "price_forecast":
@@ -247,27 +239,35 @@ def add_current_interval_price_attributes(
         "current_hour_price_rating",
     ]
 
-    # Set timestamp and interval data based on sensor type
+    # Set interval data based on sensor type
+    # For sensors showing data from OTHER intervals (next/previous), override timestamp with that interval's startsAt
+    # For current interval sensors, keep the default platform timestamp (calculation time)
     interval_data = None
     if key in next_interval_sensors:
         target_time = now + timedelta(minutes=MINUTES_PER_INTERVAL)
         interval_data = find_price_data_for_interval(price_info, target_time)
-        attributes["timestamp"] = interval_data["startsAt"] if interval_data else None
+        # Override timestamp with the NEXT interval's startsAt (when that interval starts)
+        if interval_data:
+            attributes["timestamp"] = interval_data["startsAt"]
     elif key in previous_interval_sensors:
         target_time = now - timedelta(minutes=MINUTES_PER_INTERVAL)
         interval_data = find_price_data_for_interval(price_info, target_time)
-        attributes["timestamp"] = interval_data["startsAt"] if interval_data else None
+        # Override timestamp with the PREVIOUS interval's startsAt
+        if interval_data:
+            attributes["timestamp"] = interval_data["startsAt"]
     elif key in next_hour_sensors:
         target_time = now + timedelta(hours=1)
         interval_data = find_price_data_for_interval(price_info, target_time)
-        attributes["timestamp"] = interval_data["startsAt"] if interval_data else None
+        # Override timestamp with the center of the next rolling hour window
+        if interval_data:
+            attributes["timestamp"] = interval_data["startsAt"]
     elif key in current_hour_sensors:
         current_interval_data = get_current_interval_data(coordinator)
-        attributes["timestamp"] = current_interval_data["startsAt"] if current_interval_data else None
+        # Keep default timestamp (when calculation was made) for current hour sensors
     else:
         current_interval_data = get_current_interval_data(coordinator)
         interval_data = current_interval_data  # Use current_interval_data as interval_data for current_interval_price
-        attributes["timestamp"] = current_interval_data["startsAt"] if current_interval_data else None
+        # Keep default timestamp (current calculation time) for current interval sensors
 
     # Add icon_color for price sensors (based on their price level)
     if key in ["current_interval_price", "next_interval_price", "previous_interval_price"]:
@@ -402,10 +402,22 @@ def add_price_rating_attributes(attributes: dict, rating: str) -> None:
     add_icon_color_attribute(attributes, key="price_rating", state_value=rating)
 
 
+def _get_day_midnight_timestamp(key: str) -> str:
+    """Get midnight timestamp for a given day sensor key."""
+    now = dt_util.now()
+    local_midnight = dt_util.start_of_local_day(now)
+
+    if key.startswith("yesterday") or key == "average_price_yesterday":
+        local_midnight = local_midnight - timedelta(days=1)
+    elif key.startswith("tomorrow") or key == "average_price_tomorrow":
+        local_midnight = local_midnight + timedelta(days=1)
+
+    return local_midnight.isoformat()
+
+
 def add_statistics_attributes(
     attributes: dict,
     key: str,
-    coordinator: TibberPricesDataUpdateCoordinator,
     cached_data: dict,
 ) -> None:
     """
@@ -414,21 +426,18 @@ def add_statistics_attributes(
     Args:
         attributes: Dictionary to add attributes to
         key: The sensor entity key
-        coordinator: The data update coordinator
         cached_data: Dictionary containing cached sensor data
 
     """
-    price_info = coordinator.data.get("priceInfo", {})
-    now = dt_util.now()
-
+    # Data timestamp sensor - shows API fetch time
     if key == "data_timestamp":
-        # For data_timestamp sensor, use the latest timestamp from cached_data
         latest_timestamp = cached_data.get("data_timestamp")
         if latest_timestamp:
             attributes["timestamp"] = latest_timestamp.isoformat()
-    elif key == "current_interval_price_rating":
-        interval_data = find_price_data_for_interval(price_info, now)
-        attributes["timestamp"] = interval_data["startsAt"] if interval_data else None
+        return
+
+    # Current interval price rating - add rating attributes
+    if key == "current_interval_price_rating":
         if cached_data.get("last_rating_difference") is not None:
             attributes["diff_" + PERCENTAGE] = cached_data["last_rating_difference"]
         if cached_data.get("last_rating_level") is not None:
@@ -436,35 +445,42 @@ def add_statistics_attributes(
             attributes["level_value"] = PRICE_RATING_MAPPING.get(
                 cached_data["last_rating_level"], cached_data["last_rating_level"]
             )
-    elif key in [
+        return
+
+    # Extreme value sensors - show when the extreme occurs
+    extreme_sensors = {
         "lowest_price_today",
         "highest_price_today",
         "lowest_price_tomorrow",
         "highest_price_tomorrow",
-    ]:
-        # Use the timestamp from the interval that has the extreme price
+    }
+    if key in extreme_sensors:
         if cached_data.get("last_extreme_interval"):
-            attributes["timestamp"] = cached_data["last_extreme_interval"].get("startsAt")
-        else:
-            # Fallback: use the first timestamp of the appropriate day
-            _add_fallback_timestamp(attributes, key, price_info)
-    elif key in [
+            extreme_starts_at = cached_data["last_extreme_interval"].get("startsAt")
+            if extreme_starts_at:
+                attributes["timestamp"] = extreme_starts_at
+        return
+
+    # Daily average sensors - show midnight to indicate whole day
+    daily_avg_sensors = {"average_price_today", "average_price_tomorrow"}
+    if key in daily_avg_sensors:
+        attributes["timestamp"] = _get_day_midnight_timestamp(key)
+        return
+
+    # Daily aggregated level/rating sensors - show midnight to indicate whole day
+    daily_aggregated_sensors = {
         "yesterday_price_level",
         "today_price_level",
         "tomorrow_price_level",
         "yesterday_price_rating",
         "today_price_rating",
         "tomorrow_price_rating",
-    ]:
-        # Daily aggregated level/rating sensors - add timestamp
-        day_key = _get_day_key_from_sensor_key(key)
-        day_data = price_info.get(day_key, [])
-        if day_data:
-            # Use first timestamp of the day (00:00)
-            attributes["timestamp"] = day_data[0].get("startsAt")
-    else:
-        # Fallback: use the first timestamp of the appropriate day
-        _add_fallback_timestamp(attributes, key, price_info)
+    }
+    if key in daily_aggregated_sensors:
+        attributes["timestamp"] = _get_day_midnight_timestamp(key)
+        return
+
+    # All other statistics sensors - keep default timestamp (when calculation was made)
 
 
 def _get_day_key_from_sensor_key(key: str) -> str:
@@ -978,3 +994,113 @@ def add_period_timing_attributes(
 
     # Add icon_color for dynamic styling
     add_icon_color_attribute(attributes, key=key, state_value=state_value)
+
+
+def build_extra_state_attributes(  # noqa: PLR0913
+    entity_key: str,
+    translation_key: str | None,
+    hass: HomeAssistant,
+    *,
+    config_entry: TibberPricesConfigEntry,
+    coordinator_data: dict,
+    sensor_attrs: dict | None = None,
+) -> dict[str, Any] | None:
+    """
+    Build extra state attributes for sensors.
+
+    This function implements the unified attribute building pattern:
+    1. Generate default timestamp (current time rounded to nearest quarter hour)
+    2. Merge sensor-specific attributes (may override timestamp)
+    3. Preserve timestamp ordering (always FIRST in dict)
+    4. Add description attributes (always LAST)
+
+    Args:
+        entity_key: Entity key (e.g., "current_interval_price")
+        translation_key: Translation key for entity
+        hass: Home Assistant instance
+        config_entry: Config entry with options (keyword-only)
+        coordinator_data: Coordinator data dict (keyword-only)
+        sensor_attrs: Sensor-specific attributes (keyword-only)
+
+    Returns:
+        Complete attributes dict or None if no data available
+
+    """
+    if not coordinator_data:
+        return None
+
+    # Calculate default timestamp: current time rounded to nearest quarter hour
+    # This ensures all sensors have a consistent reference time for when calculations were made
+    # Individual sensors can override this if they need a different timestamp
+    now = dt_util.now()
+    default_timestamp = round_to_nearest_quarter_hour(now)
+
+    # Special handling for chart_data_export: metadata → descriptions → service data
+    if entity_key == "chart_data_export":
+        attributes: dict[str, Any] = {
+            "timestamp": default_timestamp.isoformat(),
+        }
+
+        # Step 1: Add metadata (timestamp + error if present)
+        if sensor_attrs:
+            if "timestamp" in sensor_attrs and sensor_attrs["timestamp"] is not None:
+                # Chart data has its own timestamp (when service was last called)
+                attributes["timestamp"] = sensor_attrs["timestamp"]
+
+            if "error" in sensor_attrs:
+                attributes["error"] = sensor_attrs["error"]
+
+        # Step 2: Add descriptions before service data (via central utility)
+        from ..entity_utils import add_description_attributes  # noqa: PLC0415, TID252
+
+        add_description_attributes(
+            attributes,
+            "sensor",
+            translation_key,
+            hass,
+            config_entry,
+            position="before_service_data",
+        )
+
+        # Step 3: Add service data (everything except metadata)
+        if sensor_attrs:
+            attributes.update({k: v for k, v in sensor_attrs.items() if k not in ("timestamp", "error")})
+
+        return attributes if attributes else None
+
+    # For all other sensors: standard behavior
+    # Start with default timestamp
+    attributes: dict[str, Any] = {
+        "timestamp": default_timestamp.isoformat(),
+    }
+
+    # Add sensor-specific attributes (may override timestamp)
+    if sensor_attrs:
+        # Extract timestamp override if present
+        timestamp_override = sensor_attrs.pop("timestamp", None)
+
+        # Add all other sensor attributes
+        attributes.update(sensor_attrs)
+
+        # If sensor wants to override timestamp, rebuild dict with timestamp FIRST
+        if timestamp_override is not None:
+            temp_attrs = dict(attributes)
+            attributes.clear()
+            attributes["timestamp"] = timestamp_override
+            for key, value in temp_attrs.items():
+                if key != "timestamp":
+                    attributes[key] = value
+
+    # Add description attributes (always last, via central utility)
+    from ..entity_utils import add_description_attributes  # noqa: PLC0415, TID252
+
+    add_description_attributes(
+        attributes,
+        "sensor",
+        translation_key,
+        hass,
+        config_entry,
+        position="end",
+    )
+
+    return attributes if attributes else None

@@ -26,7 +26,7 @@ from custom_components.tibber_prices.api import (
     TibberPricesApiClientError,
 )
 from custom_components.tibber_prices.const import DOMAIN
-from custom_components.tibber_prices.price_utils import (
+from custom_components.tibber_prices.utils.price import (
     find_price_data_for_interval,
 )
 

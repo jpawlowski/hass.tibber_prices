@@ -9,7 +9,6 @@ from homeassistant.components.binary_sensor import (
 from homeassistant.const import EntityCategory
 
 # Constants
-MINUTES_PER_INTERVAL = 15
 MIN_TOMORROW_INTERVALS_15MIN = 96
 
 # Look-ahead window for future period detection (hours)

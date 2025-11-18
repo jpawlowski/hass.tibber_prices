@@ -17,6 +17,11 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 
 DOMAIN = "tibber_prices"
+
+# Time constants
+MINUTES_PER_INTERVAL = 15  # Tibber uses 15-minute intervals for price data
+
+# Configuration keys
 CONF_EXTENDED_DESCRIPTIONS = "extended_descriptions"
 CONF_BEST_PRICE_FLEX = "best_price_flex"
 CONF_PEAK_PRICE_FLEX = "peak_price_flex"

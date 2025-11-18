@@ -6,7 +6,7 @@ import logging
 from typing import TYPE_CHECKING, Any
 
 from custom_components.tibber_prices import const as _const
-from custom_components.tibber_prices.price_utils import enrich_price_info_with_differences
+from custom_components.tibber_prices.utils.price import enrich_price_info_with_differences
 from homeassistant.util import dt as dt_util
 
 if TYPE_CHECKING:

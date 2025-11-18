@@ -1,4 +1,17 @@
-"""Sensor platform for Tibber Prices integration."""
+"""
+Sensor platform for Tibber Prices integration.
+
+Provides electricity price sensors organized by calculation method:
+- Interval-based: Current/next/previous price intervals
+- Rolling hour: 5-interval sliding windows (2h 30m periods)
+- Daily statistics: Min/max/avg within calendar day boundaries
+- 24h windows: Trailing/leading statistics from current interval
+- Future forecast: N-hour price predictions
+- Volatility: Price variation analysis
+- Diagnostic: System information and metadata
+
+See definitions.py for complete sensor catalog.
+"""
 
 from __future__ import annotations
 

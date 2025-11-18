@@ -1,4 +1,21 @@
-"""Config flow for Tibber Prices integration."""
+"""
+Configuration flow package for UI-based setup.
+
+This package handles all user interaction for integration configuration:
+- Initial setup: API token validation, home selection
+- Subentry flow: Add additional Tibber homes
+- Options flow: Multi-step configuration wizard
+- Reauthentication: Token refresh when expired
+
+Flow handlers:
+- user_flow.py: Initial setup and reauth
+- subentry_flow.py: Add additional homes
+- options_flow.py: 6-step configuration wizard
+
+Supporting modules:
+- schemas.py: Form schema definitions (vol.Schema)
+- validators.py: Input validation and API testing
+"""
 
 from __future__ import annotations
 
