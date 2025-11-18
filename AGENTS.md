@@ -4,8 +4,9 @@ This is a **Home Assistant custom component** for Tibber electricity price data,
 
 ## Documentation Metadata
 
--   **Last Major Update**: 2025-11-15
--   **Last Architecture Review**: 2025-11-15 (Module splitting refactoring completed - sensor.py and binary_sensor.py split into packages with core.py, definitions.py, helpers.py, attributes.py. Created entity_utils/ package for shared icon/color/attribute logic. All phases complete.)
+-   **Last Major Update**: 2025-11-18
+-   **Last Architecture Review**: 2025-11-18 (Created /utils/ package, moved average_utils.py→utils/average.py and price_utils.py→utils/price.py. Added file organization policy to prevent root clutter.)
+-   **Last Code Example Cleanup**: 2025-11-18 (Removed redundant implementation details from AGENTS.md, added guidelines for when to include code examples)
 -   **Documentation Status**: ✅ Current (verified against codebase)
 
 _Note: When proposing significant updates to this file, update the metadata above with the new date and brief description of changes._
@@ -58,6 +59,76 @@ When working with the codebase, Copilot MUST actively maintain consistency betwe
     -   User asks open-ended question ("how should we...", "what's the best way...")
 
 **Goal:** Save time. File edits with VS Code tracking are fast for simple changes. Chat discussion is better for decisions requiring input before committing to an approach.
+
+**Code Examples in AGENTS.md - When and How:**
+
+**CRITICAL:** Code examples in this file are **conceptual illustrations**, NOT implementation references. They demonstrate patterns and architectural decisions, but may not match actual code exactly.
+
+**When to include code examples:**
+
+✅ **DO include examples for:**
+
+-   **Architectural patterns** - Show WHY a design decision was made (e.g., "direct method pattern vs Callable pattern")
+-   **Non-obvious patterns** - Illustrate unusual HA-specific patterns not documented elsewhere (e.g., selector translation structure)
+-   **Decision rationale** - Demonstrate trade-offs between approaches (e.g., performance comparison with metrics)
+-   **Configuration patterns** - Show structure of config files when format is critical (e.g., git-cliff.toml template)
+-   **Best practices vs anti-patterns** - Side-by-side comparison of ✅ correct vs ❌ wrong approaches
+
+❌ **DON'T include examples for:**
+
+-   **Implementation details** - Code that duplicates what's in actual source files (e.g., full function implementations)
+-   **API usage** - Standard library or HA API calls that are documented elsewhere (just reference the actual files)
+-   **Entity definitions** - Complete SensorEntityDescription examples (just describe the pattern)
+-   **Translation JSON** - Full translation file examples (just show the key structure pattern)
+-   **Service schemas** - Complete schema definitions (reference services.py instead)
+
+**Style for code examples:**
+
+When code examples ARE justified:
+
+1. **Keep them minimal** - Show only the concept, not full implementation
+2. **Use comments liberally** - Explain WHY, not WHAT (code shows WHAT)
+3. **Mark as conceptual** - Add comment like `# Conceptual - see actual_file.py for implementation`
+4. **Prefer pseudo-code** - When illustrating logic flow, simplified pseudo-code > real code
+5. **Reference actual files** - Always point to where the real implementation lives
+
+**Example comparison:**
+
+```python
+# ❌ TOO DETAILED - duplicates actual code
+def build_extra_state_attributes(
+    entity_key: str,
+    translation_key: str | None,
+    hass: HomeAssistant,
+    *,
+    config_entry: TibberPricesConfigEntry,
+    coordinator_data: dict,
+    sensor_attrs: dict | None = None,
+) -> dict[str, Any] | None:
+    """Build extra state attributes for sensors."""
+    timestamp = round_to_nearest_quarter_hour(dt_util.now())
+    attributes = {"timestamp": timestamp.isoformat()}
+    # ... 20 more lines ...
+
+# ✅ GOOD - shows pattern, references implementation
+# Pattern: Default timestamp → merge sensor_attrs → preserve ordering
+# See sensor/attributes.py build_extra_state_attributes() for implementation
+def build_extra_state_attributes(...) -> dict[str, Any] | None:
+    # 1. Generate default timestamp (rounded quarter)
+    # 2. Merge sensor-specific attributes (may override timestamp)
+    # 3. Preserve timestamp ordering (always FIRST)
+    # 4. Add description attributes inline (always LAST)
+```
+
+**Maintenance principle:**
+
+If you notice yourself copying function signatures or implementation details from actual source files into AGENTS.md, STOP. Instead:
+
+1. Describe the pattern/concept in words
+2. Reference the actual file path
+3. Only add minimal pseudo-code if the pattern is truly non-obvious
+
+This prevents AGENTS.md from becoming outdated when code evolves, while still preserving the architectural knowledge and decision rationale that makes this file valuable.
 
 **When to Propose Updates (with Confidence Levels):**
 
@@ -228,13 +299,82 @@ After successful refactoring:
 -   Commit `/planning/` files (they're ignored!)
 -   Over-plan trivial changes
 
+## File Organization and Structure Policy
+
+**CRITICAL: Keep integration root clean - only platform modules belong there.**
+
+**Root Directory (`custom_components/tibber_prices/`):**
+
+**✅ ALLOWED in root:**
+-   Platform modules: `__init__.py`, `sensor.py` (deprecated, now `sensor/`), `binary_sensor.py` (deprecated, now `binary_sensor/`), future platforms
+-   Core integration files: `const.py`, `manifest.json`, `services.yaml`, `diagnostics.py`, `data.py`
+-   Translation directories: `translations/`, `custom_translations/`
+
+**❌ PROHIBITED in root:**
+-   Utility modules (use `/utils/` package instead)
+-   Helper functions (use `/utils/` or appropriate package)
+-   Data transformation logic (use `/utils/` or `/coordinator/`)
+-   Any `*_utils.py` or `*_helpers.py` files
+
+**Organized Packages:**
+
+1. **`/utils/`** - Pure data transformation functions (stateless)
+   -   `average.py` - Average and time-window calculations
+   -   `price.py` - Price enrichment, volatility, rating calculations
+   -   **Pattern**: Import as `from ..utils.average import function_name`
+
+2. **`/entity_utils/`** - Entity-specific utilities
+   -   `icons.py` - Dynamic icon selection logic
+   -   `colors.py` - Icon color mapping
+   -   `attributes.py` - Common attribute builders
+   -   **Pattern**: Import as `from ..entity_utils import function_name`
+
+3. **`/coordinator/`** - DataUpdateCoordinator and related logic
+   -   `core.py` - Main coordinator class
+   -   `cache.py` - Persistent storage handling
+   -   `data_transformation.py` - Raw data → enriched data
+   -   `period_handlers/` - Period calculation sub-package
+   -   **Pattern**: Coordinator-specific implementations
+
+4. **`/sensor/`** - Sensor platform package
+   -   `core.py` - Entity class
+   -   `definitions.py` - Entity descriptions
+   -   `attributes.py` - Attribute builders
+   -   `helpers.py` - Sensor-specific helpers
+
+5. **`/binary_sensor/`** - Binary sensor platform package
+   -   Same structure as `/sensor/`
+
+6. **`/config_flow_handlers/`** - Configuration flow package
+   -   `user_flow.py` - Initial setup flow
+   -   `subentry_flow.py` - Add additional homes
+   -   `options_flow.py` - Reconfiguration
+   -   `schemas.py` - Form schemas
+   -   `validators.py` - Input validation
+
+7. **`/api/`** - External API communication
+   -   `client.py` - GraphQL client
+   -   `queries.py` - Query definitions
+   -   `exceptions.py` - API-specific exceptions
+
+**When Adding New Files:**
+
+**Before creating a new file in root, ask:**
+1. Is this a new HA platform? → OK in root (e.g., `switch.py`, `number.py`)
+2. Is this a utility/helper? → Goes in `/utils/` or `/entity_utils/`
+3. Is this coordinator-related? → Goes in `/coordinator/`
+4. Is this entity-related? → Goes in `/sensor/` or `/binary_sensor/`
+5. Is this config flow related? → Goes in `/config_flow_handlers/`
+
+**Goal**: Maintain clean architecture where integration root only contains platform entry points and core integration files. All logic organized in purpose-specific packages.
+
 ## Architecture Overview
 
 **Core Data Flow:**
 
 1. `TibberPricesApiClient` (`api.py`) queries Tibber's GraphQL API with `resolution:QUARTER_HOURLY` for user data and prices (yesterday/today/tomorrow - 192 intervals total)
 2. `TibberPricesDataUpdateCoordinator` (`coordinator.py`) orchestrates updates every 15 minutes, manages persistent storage via `Store`, and schedules quarter-hour entity refreshes
-3. Price enrichment functions (`price_utils.py`, `average_utils.py`) calculate trailing/leading 24h averages, price differences, and rating levels for each 15-minute interval
+3. Price enrichment functions (`utils/price.py`, `utils/average.py`) calculate trailing/leading 24h averages, price differences, and rating levels for each 15-minute interval
 4. Entity platforms (`sensor/` package, `binary_sensor/` package) expose enriched data as Home Assistant entities
 5. Custom services (`services.py`) provide API endpoints for integrations like ApexCharts
 
@@ -242,66 +382,17 @@ After successful refactoring:
 
 -   **Dual translation system**: Standard HA translations in `/translations/` (config flow, UI strings per HA schema), supplemental in `/custom_translations/` (entity descriptions not supported by HA schema). Both must stay in sync. Use `async_load_translations()` and `async_load_standard_translations()` from `const.py`. When to use which: `/translations/` is bound to official HA schema requirements; anything else goes in `/custom_translations/` (requires manual translation loading). **Schema reference**: `/scripts/json_schemas/translation_schema.json` provides the structure for `/translations/*.json` files based on [HA's translation documentation](https://developers.home-assistant.io/docs/internationalization/core).
 
-    -   **Select selector translations**: Use `selector.{translation_key}.options.{value}` structure (NOT `selector.select.{translation_key}`). Example:
+    -   **Select selector translations**: Use `selector.{translation_key}.options.{value}` structure (NOT `selector.select.{translation_key}`). Translation keys map to JSON in `/translations/*.json` following the HA schema structure.
 
-        ```python
-        # config_flow/schemas.py
-        SelectSelector(SelectSelectorConfig(
-            options=["LOW", "MODERATE", "HIGH"],
-            translation_key="volatility"
-        ))
-        ```
+        **CRITICAL Rules:**
+        - When using `translation_key`, pass options as **plain string list**, NOT `SelectOptionDict`
+        - Selector option keys MUST be lowercase: `[a-z0-9-_]+` pattern (Hassfest validation)
+        - Label parameter overrides translations (avoid when using translation_key)
+        - Use `SelectOptionDict` ONLY for dynamic/non-translatable options (no translation_key)
 
-        ```json
-        # translations/en.json
-        {
-          "selector": {
-            "volatility": {
-              "options": {
-                "low": "Low",
-                "moderate": "Moderate",
-                "high": "High"
-              }
-            }
-          }
-        }
-        ```
+        See `config_flow/schemas.py` for implementation examples.
 
-        **CRITICAL:** When using `translation_key`, pass options as **plain string list**, NOT `SelectOptionDict`.
-
-        **VALIDATION:** Selector option keys MUST be lowercase: `[a-z0-9-_]+` pattern (no uppercase, cannot start/end with hyphen/underscore). Hassfest will reject keys like `LOW`, `ANY`, `VERY_HIGH`. Use `low`, `any`, `very_high` instead.
-
-        ```python
-        # ✅ CORRECT with translation_key
-        SelectSelector(SelectSelectorConfig(
-            options=["LOW", "MODERATE", "HIGH"],  # Plain strings!
-            translation_key="volatility"
-        ))
-
-        # ❌ WRONG - label parameter overrides translations
-        SelectSelector(SelectSelectorConfig(
-            options=[SelectOptionDict(value="LOW", label="Low"), ...],
-            translation_key="volatility"  # translation_key is ignored when label is set!
-        ))
-
-        # ✅ SelectOptionDict ONLY for dynamic/non-translatable options
-        SelectSelector(SelectSelectorConfig(
-            options=[SelectOptionDict(value=home_id, label=home_name) for ...],
-            # No translation_key - labels come from runtime data
-        ))
-        ```
-
--   **Price data enrichment**: All quarter-hourly price intervals get augmented with `trailing_avg_24h`, `difference`, and `rating_level` fields via `enrich_price_info_with_differences()` in `price_utils.py`. Enriched structure example:
-    ```python
-    {
-      "startsAt": "2025-11-03T14:00:00+01:00",
-      "total": 0.2534,              # Original from API
-      "level": "NORMAL",            # Original from API
-      "trailing_avg_24h": 0.2312,   # Added: 24h trailing average
-      "difference": 9.6,            # Added: % diff from trailing avg
-      "rating_level": "NORMAL"      # Added: LOW/NORMAL/HIGH based on thresholds
-    }
-    ```
+-   **Price data enrichment**: All quarter-hourly price intervals get augmented with `trailing_avg_24h`, `difference`, and `rating_level` fields via `enrich_price_info_with_differences()` in `utils/price.py`. This adds statistical analysis (24h trailing average, percentage difference from average, rating classification) to each 15-minute interval. See `utils/price.py` for enrichment logic.
 -   **Sensor organization (refactored Nov 2025)**: The `sensor/` package is organized by **calculation method** rather than feature type, enabling code reuse through unified handler methods:
     -   **Interval-based sensors**: Use `_get_interval_value(interval_offset, value_type)` for current/next/previous interval data
     -   **Rolling hour sensors**: Use `_get_rolling_hour_value(hour_offset, value_type)` for 5-interval windows
@@ -360,8 +451,10 @@ custom_components/tibber_prices/
 ├── __init__.py           # Entry setup, platform registration
 ├── coordinator.py        # DataUpdateCoordinator with caching/scheduling
 ├── api.py                # GraphQL client with retry/error handling
-├── price_utils.py        # Price enrichment, level/rating calculations
-├── average_utils.py      # Trailing/leading average utilities
+├── utils/                # Pure data transformation utilities
+│   ├── __init__.py       #   Package exports
+│   ├── average.py        #   Trailing/leading average utilities
+│   └── price.py          #   Price enrichment, level/rating calculations
 ├── services.py           # Custom services (get_price, ApexCharts, etc.)
 ├── sensor/               # Sensor platform (package)
 │   ├── __init__.py       #   Platform setup (async_setup_entry)
@@ -1168,162 +1261,33 @@ Calling `ruff` or `uv run ruff` directly can cause unintended side effects:
 ## Critical Project-Specific Patterns
 
 **1. Translation Loading (Async-First)**
-Always load translations at integration setup or before first use:
-
-```python
-# In __init__.py async_setup_entry:
-await async_load_translations(hass, "en")
-await async_load_standard_translations(hass, "en")
-```
-
-Access cached translations synchronously later via `get_translation(path, language)`.
+Load translations at integration setup via `async_load_translations()` and `async_load_standard_translations()` in `__init__.py`. Access cached translations synchronously later via `get_translation(path, language)` from `const.py`.
 
 **2. Price Data Enrichment**
-Never use raw API price data directly. Always enrich first:
-
-```python
-from .price_utils import enrich_price_info_with_differences
-
-enriched = enrich_price_info_with_differences(
-    price_info_data,  # Raw API response
-    thresholds,       # User-configured rating thresholds
-)
-```
-
-This adds `trailing_avg_24h`, `difference`, `rating_level` to each interval.
+Never use raw API price data directly. Always enrich via `enrich_price_info_with_differences()` from `utils/price.py` to add `trailing_avg_24h`, `difference`, and `rating_level` fields.
 
 **3. Time Handling**
-Always prefer Home Assistant utilities over standard library equivalents. Use `dt_util` from `homeassistant.util` instead of Python's `datetime` module.
-
-**Critical:** Always use `dt_util.as_local()` when comparing API timestamps to local time:
-
-```python
-from homeassistant.util import dt as dt_util
-
-# ✅ Use dt_util for timezone-aware operations
-price_time = dt_util.parse_datetime(price_data["startsAt"])
-price_time = dt_util.as_local(price_time)  # IMPORTANT: Convert to HA's local timezone
-now = dt_util.now()  # Current time in HA's timezone
-
-# ❌ Avoid standard library datetime for timezone operations
-# from datetime import datetime
-# now = datetime.now()  # Don't use this
-```
-
-When you need Python's standard datetime types (e.g., for type annotations), import only specific types:
-
-```python
-from datetime import date, datetime, timedelta  # For type hints
-from homeassistant.util import dt as dt_util    # For operations
-
-def _needs_tomorrow_data(self, tomorrow_date: date) -> bool:
-    """Use date type hint but dt_util for operations."""
-    price_time = dt_util.parse_datetime(starts_at)
-    price_date = dt_util.as_local(price_time).date()  # Convert to local before extracting date
-```
+Always use `dt_util` from `homeassistant.util` instead of Python's `datetime` module for timezone-aware operations. **Critical:** Use `dt_util.as_local()` when comparing API timestamps to local time. Import datetime types only for type hints: `from datetime import date, datetime, timedelta`.
 
 **4. Coordinator Data Structure**
-Access coordinator data like:
-
-```python
-coordinator.data = {
-    "user_data": {...},      # Cached user info from viewer query
-    "priceInfo": {
-        "yesterday": [...],  # List of enriched price dicts
-        "today": [...],
-        "tomorrow": [...],
-        "currency": "EUR",
-    },
-}
-```
+Coordinator data follows structure: `coordinator.data = {"user_data": {...}, "priceInfo": {"yesterday": [...], "today": [...], "tomorrow": [...], "currency": "EUR"}}`. Each price list contains enriched interval dicts. See `coordinator/core.py` for data management.
 
 **5. Service Response Pattern**
-Services use `SupportsResponse.ONLY` and must return dicts:
-
-```python
-@callback
-def async_setup_services(hass: HomeAssistant) -> None:
-    hass.services.async_register(
-        DOMAIN, "get_price", _get_price,
-        schema=PRICE_SERVICE_SCHEMA,
-        supports_response=SupportsResponse.ONLY,
-    )
-```
+Services returning data must declare `supports_response=SupportsResponse.ONLY` in registration. See `services.py` for implementation patterns.
 
 ## Common Pitfalls (HA-Specific)
 
 **1. Entity State Class Compatibility:**
-
-```python
-# ❌ Wrong - MONETARY with MEASUREMENT state class
-class PriceSensor(SensorEntity):
-    _attr_device_class = SensorDeviceClass.MONETARY
-    _attr_state_class = SensorStateClass.MEASUREMENT  # ← WRONG!
-
-# ✅ Correct - MONETARY with TOTAL or None
-class PriceSensor(SensorEntity):
-    _attr_device_class = SensorDeviceClass.MONETARY
-    _attr_state_class = SensorStateClass.TOTAL  # Or None for snapshots
-```
-
-Rule: Check [HA sensor docs](https://developers.home-assistant.io/docs/core/entity/sensor) for valid `device_class` + `state_class` combinations. Common mistakes: MONETARY requires TOTAL, TIMESTAMP requires None.
+MONETARY device_class requires TOTAL state_class (or None for snapshots), NOT MEASUREMENT. TIMESTAMP device_class requires None state_class. Check [HA sensor docs](https://developers.home-assistant.io/docs/core/entity/sensor) for valid combinations. See `sensor/definitions.py` for correct implementations.
 
 **2. Config Flow Input Validation:**
-
-```python
-# ❌ Missing validation - creates broken entries
-async def async_step_user(self, user_input=None):
-    if user_input is not None:
-        return self.async_create_entry(title="Name", data=user_input)
-
-# ✅ Always validate before creating entry
-async def async_step_user(self, user_input=None):
-    if user_input is not None:
-        errors = {}
-        try:
-            await validate_api_connection(self.hass, user_input)
-        except InvalidAuth:
-            errors["base"] = "invalid_auth"
-        except CannotConnect:
-            errors["base"] = "cannot_connect"
-        else:
-            return self.async_create_entry(title="Name", data=user_input)
-        return self.async_show_form(step_id="user", errors=errors, ...)
-```
-
-Rule: ALWAYS test API connection/validate data before `async_create_entry()`. Use specific error keys for proper translation.
+ALWAYS validate input before `async_create_entry()`. Test API connection, validate data format. Use specific error keys for proper translation. See `config_flow/user_flow.py` for validation patterns.
 
 **3. Don't Override async_update() with DataUpdateCoordinator:**
-
-```python
-# ❌ Unnecessary - coordinator handles this
-class MySensor(CoordinatorEntity):
-    async def async_update(self):
-        await self.coordinator.async_request_refresh()
-
-# ✅ Only implement properties
-class MySensor(CoordinatorEntity):
-    @property
-    def native_value(self):
-        return self.coordinator.data["value"]
-```
-
-Rule: When using `DataUpdateCoordinator`, entities get updates automatically. Don't implement `async_update()`.
+When using `DataUpdateCoordinator`, entities get updates automatically. Only implement properties (`native_value`, `extra_state_attributes`), not `async_update()`. See `sensor/core.py` and `binary_sensor/core.py` for correct patterns.
 
 **4. Service Response Declaration:**
-
-```python
-# ❌ Returns data without declaring response support
-hass.services.async_register(DOMAIN, "get_data", handler)
-
-# ✅ Explicit response support declaration
-hass.services.async_register(
-    DOMAIN, "get_data", handler,
-    supports_response=SupportsResponse.ONLY,  # ONLY, OPTIONAL, or NONE
-)
-```
-
-Rule: Services returning data MUST declare `supports_response`. Use `ONLY` for data-only services, `OPTIONAL` for dual-purpose, `NONE` for action-only.
+Services returning data MUST declare `supports_response` parameter. Use `SupportsResponse.ONLY` for data-only services, `OPTIONAL` for dual-purpose, `NONE` for action-only. See `services.py` for examples.
 
 ## Code Quality Rules
 
@@ -1833,15 +1797,158 @@ attributes = {
 
 **Critical: The `timestamp` Attribute**
 
-The `timestamp` attribute **MUST always be first** in every sensor's attributes. It serves as the reference time indicating:
+The `timestamp` attribute **MUST always be first** in every sensor's attributes. It serves as the reference time indicating when the state and attributes are valid.
 
--   **For which interval** the state and attributes are valid
--   **Current interval sensors**: Contains `startsAt` of the current 15-minute interval
--   **Future/forecast sensors**: Contains `startsAt` of the future interval being calculated
--   **Statistical sensors (min/max)**: Contains `startsAt` of the specific interval when the extreme value occurs
--   **Statistical sensors (avg)**: Contains start of the day (00:00) since average applies to entire day
+**Automatic Default Behavior:**
 
-This allows users to verify data freshness and understand temporal context without parsing other attributes.
+All sensors (both `sensor` and `binary_sensor` platforms) automatically receive a default `timestamp` attribute set to the **current time rounded to the nearest quarter hour** (00, 15, 30, or 45 minutes). This is handled using unified attribute builder functions:
+
+-   **Sensor platform**: `sensor/attributes.py` → `build_extra_state_attributes()` (called from `sensor/core.py` → `extra_state_attributes` property)
+-   **Binary sensor platform**: `binary_sensor/attributes.py` → `build_async_extra_state_attributes()` and `build_sync_extra_state_attributes()` (called from `binary_sensor/core.py` properties)
+
+Both platforms use the same pattern: a `build_*_extra_state_attributes()` function that generates the default timestamp, merges sensor-specific attributes, and ensures timestamp ordering.
+
+The rounding uses `round_to_nearest_quarter_hour()` from `average_utils.py`, which intelligently handles HA scheduling jitter (±2 seconds tolerance).
+
+**When Sensors Override the Default:**
+
+Individual sensors can override the default timestamp to reflect different time contexts:
+
+-   **Current interval sensors**: Use default (rounded quarter) - represents when calculation was made
+-   **Next interval sensors**: Override with next interval's `startsAt` - shows when that interval starts
+-   **Previous interval sensors**: Override with previous interval's `startsAt` - shows when that interval started
+-   **Statistical sensors (min/max)**: Override with extreme interval's `startsAt` - shows when the extreme price occurs
+-   **Daily average sensors**: Override with midnight (00:00) of that day - shows the value applies to the whole day
+-   **Daily aggregated sensors**: Override with midnight (00:00) of that day - shows the value applies to the whole day
+-   **Daily volatility sensors**: Override with day start (00:00 of yesterday/today/tomorrow) - shows which day's data is analyzed
+-   **Next 24h volatility sensor**: Override with current time (not rounded) - shows the exact start of the 24h window
+-   **Future forecast sensors**: Override with first interval's `startsAt` - shows when the forecast window begins
+-   **Timing sensors** (`best_price_end_time`, etc.): Override with minute-precise or quarter-rounded time - shows current calculation time with appropriate precision
+-   **Period sensors**: Use default (rounded quarter) - represents when period state was determined (via binary_sensor attribute functions)
+-   **Chart data export**: Overrides with service call timestamp (when data was requested)
+-   **Data timestamp sensor**: Overrides with API's data timestamp (when data was fetched from Tibber)
+
+**Key Principles:** The timestamp represents one of these concepts:
+
+1. **WHEN the calculation was made** (current/forecast sensors) - uses default rounded quarter
+2. **WHEN the referenced interval occurs** (next/previous/extreme interval sensors) - uses interval's `startsAt`
+3. **WHICH day the data applies to** (daily average/aggregated sensors) - uses midnight of that day
+4. **WHICH day's data is analyzed** (volatility sensors) - uses day start (00:00 of that specific day)
+5. **WHEN a time window starts** (next 24h, future N-hour forecasts) - uses exact current time or first interval start
+6. **WHEN an action occurred** (service calls, API fetches) - uses action timestamp
+7. **Current time with appropriate precision** (timing sensors) - uses minute-precise or quarter-rounded time depending on update frequency
+
+The midnight timestamp (concept 3) indicates temporal scope rather than calculation time. Even though the value may be recalculated multiple times throughout the day (e.g., when tomorrow's data arrives), the timestamp stays at midnight to show "this value represents the entire day from 00:00 to 23:59".
+
+Day start timestamps (concept 4) differ from midnight timestamps: they always point to 00:00 of the **specific day being analyzed** (yesterday = 00:00 yesterday, tomorrow = 00:00 tomorrow), not today's midnight.
+
+This ensures users always understand temporal context - when the sensor updated, which specific interval the data refers to, which calendar day applies, or which time window is being analyzed.
+
+**Implementation Pattern:**
+
+Both platforms use **unified architecture with direct method pattern** for attribute collection:
+
+**1. Direct Method Pattern (Standardized Nov 2025):**
+
+Both `sensor/core.py` and `binary_sensor/core.py` implement `_get_sensor_attributes()`:
+
+```python
+# sensor/core.py
+def _get_sensor_attributes(self) -> dict | None:
+    """Get sensor-specific attributes."""
+    # Direct implementation returns dict
+    return build_sensor_attributes(...)
+
+# binary_sensor/core.py
+def _get_sensor_attributes(self) -> dict | None:
+    """Get sensor-specific attributes."""
+    # Direct implementation returns dict
+    return get_price_intervals_attributes(...) if key == "best_price_period" else None
+```
+
+**Why direct method over Callable pattern?**
+- **Simpler**: No lambda/Callable indirection, clearer stack traces
+- **More HA-standard**: Most Core integrations use direct methods
+- **Better performance**: ~2x faster (~0.1-0.5μs vs 0.2-0.8μs per call)
+- **More maintainable**: Single implementation approach across both platforms
+- **Future-proof**: Less moving parts, getter never changes at runtime
+
+**2. Unified Attribute Builder Functions:**
+
+Both platforms now use **identical signatures and patterns** (unified Nov 2025):
+
+**Sensor Platform (`sensor/attributes.py`):**
+```python
+def build_extra_state_attributes(
+    entity_key: str,
+    translation_key: str | None,
+    hass: HomeAssistant,
+    *,
+    config_entry: TibberPricesConfigEntry,
+    coordinator_data: dict,
+    sensor_attrs: dict | None = None,
+) -> dict[str, Any] | None:
+    """Build extra state attributes for sensors."""
+    # 1. Generate default timestamp (rounded quarter)
+    # 2. Merge sensor-specific attributes (may override timestamp)
+    # 3. Preserve timestamp ordering (always FIRST)
+    # 4. Add description attributes inline (always LAST)
+```
+
+**Binary Sensor Platform (`binary_sensor/attributes.py`):**
+```python
+async def build_async_extra_state_attributes(
+    entity_key: str,
+    translation_key: str | None,
+    hass: HomeAssistant,
+    *,
+    config_entry: TibberPricesConfigEntry,
+    sensor_attrs: dict | None = None,
+    is_on: bool | None = None,  # Binary sensor specific
+) -> dict | None:
+    """Build async extra state attributes (with translation loading)."""
+    # Same pattern: Default timestamp → merge sensor_attrs → descriptions inline
+
+def build_sync_extra_state_attributes(...) -> dict | None:
+    """Build sync extra state attributes (cached translations)."""
+    # Same pattern: Default timestamp → merge sensor_attrs → descriptions inline
+```
+
+**Key Points:**
+- **Architectural consistency**: Both platforms use direct method pattern (not Callable)
+- **Naming consistency**: Both use `_get_sensor_attributes()` method name
+- **Parameter consistency**: Both builders accept `sensor_attrs` parameter
+- **Description logic unified**: Both build descriptions **inline** (no separate method in core.py)
+- **Same logic flow**: Default timestamp → merge attributes → preserve ordering → add descriptions
+- **Exception handling**: Both platforms have try/except in extra_state_attributes properties
+- **Platform separation**: Logic stays separate per platform, but patterns are unified
+
+**3. Timestamp Override Pattern:**
+
+Sensors override the timestamp by setting it in their attribute builders (e.g., `sensor/attributes.py` helper functions). The platform ensures timestamp stays FIRST in the attribute dict even when overridden:
+
+```python
+# 1. Platform generates default timestamp (rounded quarter) - ALWAYS FIRST
+default_timestamp = round_to_nearest_quarter_hour(now)
+attributes = {"timestamp": default_timestamp.isoformat()}
+
+# 2. Sensor-specific attributes added
+sensor_attrs = self._get_sensor_attributes()  # May include timestamp override
+
+# 3. If sensor overrides timestamp, it's extracted and kept FIRST
+if "timestamp" in sensor_attrs:
+    timestamp_override = sensor_attrs.pop("timestamp")
+    # Rebuild dict with overridden timestamp FIRST
+    attributes = {"timestamp": timestamp_override, **attributes}
+
+# 4. All other sensor attributes merged (timestamp position preserved)
+attributes.update(sensor_attrs)
+
+# 5. Description attributes added last (never override timestamp)
+attributes.update(description_attrs)
+```
+
+This ensures timestamp is always the first key in the attribute dict, regardless of whether it was overridden.
 
 **Rationale:**
 
@@ -1922,34 +2029,6 @@ This allows users to verify data freshness and understand temporal context witho
 -   Reference comparisons: `period_price_diff_from_daily_min` (period avg vs daily min)
 -   Interval-specific: `interval_price_diff_from_daily_max` (current interval vs daily max)
 
-### Examples
-
-**❌ Bad (Ambiguous):**
-
-```python
-attributes = {
-    "future_avg_3h": 0.25,           # Future when? From when?
-    "later_half_diff_%": 5.2,        # Later than what? Diff from what?
-    "remaining_minutes": 45,          # Remaining in what?
-    "status": "partial",              # Status of what?
-    "hours": [{...}],                 # What about hours?
-    "intervals_count": 12,            # Should be singular: interval_count
-}
-```
-
-**✅ Good (Clear):**
-
-```python
-attributes = {
-    "next_3h_avg": 0.25,                              # Average of next 3 hours from next interval
-    "second_half_3h_diff_from_current_%": 5.2,        # Second half of 3h window vs current price
-    "remaining_minutes_in_period": 45,                # Minutes remaining in the current period
-    "data_status": "partial",                         # Status of data availability
-    "intervals_by_hour": [{...}],                     # Intervals grouped by hour
-    "interval_count": 12,                             # Number of intervals (singular)
-}
-```
-
 ### Before Adding New Attributes
 
 Ask yourself:
@@ -1999,47 +2078,7 @@ After the sensor.py refactoring (completed Nov 2025), sensors are organized by *
 
 5. **Sync all language files** (de, nb, nl, sv)
 
-**Example - Adding a "2 hours ago" interval sensor:**
-
-```python
-# 1. Add to INTERVAL_PRICE_SENSORS group in sensor/definitions.py
-SensorEntityDescription(
-    key="two_hours_ago_price",
-    translation_key="two_hours_ago_price",
-    name="Price 2 Hours Ago",
-    icon="mdi:clock-time-eight",
-    device_class=SensorDeviceClass.MONETARY,
-    entity_registry_enabled_default=False,
-    suggested_display_precision=2,
-)
-
-# 2. Add handler in sensor/core.py → _get_value_getter()
-"two_hours_ago_price": lambda: self._get_interval_value(
-    interval_offset=-8,  # 2 hours = 8 intervals (15 min each)
-    value_type="price",
-    in_euro=False
-),
-
-# 3. Add translations (en.json)
-{
-  "entity": {
-    "sensor": {
-      "two_hours_ago_price": {
-        "name": "Price 2 Hours Ago"
-      }
-    }
-  }
-}
-
-# 4. Add custom translations (custom_translations/en.json)
-{
-  "sensor": {
-    "two_hours_ago_price": {
-      "description": "Electricity price from 2 hours ago"
-    }
-  }
-}
-```
+**See** `sensor/definitions.py` for sensor grouping examples and `sensor/core.py` for handler implementations.
 
 **Unified Handler Methods (Post-Refactoring):**
 
@@ -2072,106 +2111,18 @@ Legacy wrapper methods still exist for backward compatibility but will be remove
 
 **Add a new binary sensor:**
 
-After the binary_sensor.py refactoring (completed Nov 2025), binary sensors are organized similarly to the sensor/ package. Follow these steps:
+After the binary_sensor.py refactoring (completed Nov 2025), follow these steps:
 
-1. **Add entity description** to `binary_sensor/definitions.py`:
-
-    - Add to `ENTITY_DESCRIPTIONS` tuple
-    - Define key, translation_key, name, icon, device_class
-
-2. **Implement state logic** in `binary_sensor/core.py`:
-
-    - Add state property (e.g., `_my_feature_state`) returning bool
-    - Update `is_on` property to route to your state method
-    - Follow pattern: Check coordinator data availability, calculate state, return bool
-
-3. **Add attribute builder** (if needed) in `binary_sensor/attributes.py`:
-
-    - Create `build_my_feature_attributes()` function
-    - Return dict with relevant attributes
-    - Update `build_async_extra_state_attributes()` or `build_sync_extra_state_attributes()` to call your builder
-
-4. **Add translation keys**:
-
-    - `/translations/en.json` (entity name per HA schema)
-    - `/custom_translations/en.json` (description, long_description, usage_tips)
-
+1. **Add entity description** to `binary_sensor/definitions.py` → `ENTITY_DESCRIPTIONS` tuple
+2. **Implement state logic** in `binary_sensor/core.py` → Add state property returning bool, update `is_on` routing
+3. **Add attribute builder** (if needed) in `binary_sensor/attributes.py` → Create builder function, call from unified builder
+4. **Add translations**: `/translations/en.json` (entity name) + `/custom_translations/en.json` (descriptions)
 5. **Sync all language files** (de, nb, nl, sv)
 
-**Example - Adding a "low price alert" binary sensor:**
-
-```python
-# 1. Add to ENTITY_DESCRIPTIONS in binary_sensor/definitions.py
-BinarySensorEntityDescription(
-    key="low_price_alert",
-    translation_key="low_price_alert",
-    name="Low Price Alert",
-    icon="mdi:alert-circle",
-    device_class=BinarySensorDeviceClass.PROBLEM,  # ON = problem (not low)
-),
-
-# 2. Add state property in binary_sensor/core.py
-@property
-def _low_price_alert_state(self) -> bool:
-    """Return True if current price is NOT in low price range."""
-    if not self.coordinator.data or "priceInfo" not in self.coordinator.data:
-        return False
-
-    price_info = self.coordinator.data["priceInfo"]
-    today_prices = price_info.get("today", [])
-    if not today_prices:
-        return False
-
-    current_interval = today_prices[0]  # Simplified - should find actual current
-    return current_interval.get("rating_level") != "LOW"
-
-# 3. Update is_on property routing
-@property
-def is_on(self) -> bool:
-    """Return sensor state."""
-    if self.entity_description.key == "low_price_alert":
-        return self._low_price_alert_state
-    # ... existing routing ...
-
-# 4. Add attribute builder in binary_sensor/attributes.py (optional)
-def build_low_price_alert_attributes(
-    coordinator: TibberPricesDataUpdateCoordinator,
-) -> dict[str, Any]:
-    """Build attributes for low price alert sensor."""
-    if not coordinator.data or "priceInfo" not in coordinator.data:
-        return {}
-
-    price_info = coordinator.data["priceInfo"]
-    current_price = price_info["today"][0].get("total", 0)
-
-    return {
-        "current_price": current_price,
-        "threshold": 0.20,  # Example threshold
-    }
-
-# 5. Add translations (en.json)
-{
-  "entity": {
-    "binary_sensor": {
-      "low_price_alert": {
-        "name": "Low Price Alert"
-      }
-    }
-  }
-}
-
-# 6. Add custom translations (custom_translations/en.json)
-{
-  "binary_sensor": {
-    "low_price_alert": {
-      "description": "Alert when current price is NOT in low price range"
-    }
-  }
-}
-```
+**See** existing binary sensors in `binary_sensor/` package for implementation patterns.
 
 **Modify price calculations:**
-Edit `price_utils.py` or `average_utils.py`. These are stateless pure functions operating on price lists.
+Edit `utils/price.py` or `utils/average.py`. These are stateless pure functions operating on price lists.
 
 **Add a new config flow step:**
 
@@ -2258,59 +2209,16 @@ Only after consulting the official HA docs did we discover the correct pattern:
 
 **Never do these:**
 
-```python
-# ❌ Blocking operations in event loop
-data = requests.get(url)  # Use aiohttp with async_get_clientsession(hass)
-time.sleep(5)             # Use await asyncio.sleep(5)
+-   ❌ **Blocking operations in event loop**: Use `aiohttp` with `async_get_clientsession(hass)`, not `requests.get()`. Use `await asyncio.sleep()`, not `time.sleep()`.
+-   ❌ **Processing data inside try block**: Move data processing outside exception handlers. Only API calls belong in try blocks.
+-   ❌ **Hardcoded strings (not translatable)**: Use `translation_key` instead of `_attr_name = "Temperature Sensor"`.
+-   ❌ **Accessing hass.data directly in tests**: Use proper fixtures.
+-   ❌ **User-configurable polling intervals**: Integration determines this, not users.
+-   ❌ **Using standard library datetime**: Use `dt_util.now()` instead of `datetime.now()`.
 
-# ❌ Processing data inside try block
-try:
-    data = await api.get_data()
-    processed = data["value"] * 100  # Move outside try
-    self._attr_native_value = processed
-except ApiError:
-    pass
-
-# ❌ Hardcoded strings (not translatable)
-self._attr_name = "Temperature Sensor"  # Use translation_key instead
-
-# ❌ Accessing hass.data directly in tests
-coord = hass.data[DOMAIN][entry.entry_id]  # Use proper fixtures
-
-# ❌ User-configurable polling intervals
-vol.Optional("scan_interval"): cv.positive_int  # Not allowed, integration determines this
-
-# ❌ Using standard library datetime for timezone operations
-from datetime import datetime
-now = datetime.now()  # Use dt_util.now() instead
-```
-
-**Do these instead:**
-
-```python
-# ✅ Async operations
-data = await session.get(url)
-await asyncio.sleep(5)
-
-# ✅ Process after exception handling
-try:
-    data = await api.get_data()
-except ApiError:
-    return
-processed = data["value"] * 100  # Safe processing after try/except
-
-# ✅ Translatable entities
-_attr_has_entity_name = True
-_attr_translation_key = "temperature_sensor"
-
-# ✅ Proper test setup with fixtures
-@pytest.fixture
-async def init_integration(hass, mock_config_entry):
-    mock_config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    return mock_config_entry
-
-# ✅ Use Home Assistant datetime utilities
-from homeassistant.util import dt as dt_util
-now = dt_util.now()  # Timezone-aware current time
-```
+**See code for correct patterns:**
+-   Async operations: `api/client.py`
+-   Exception handling: `coordinator/core.py`
+-   Translations: `sensor/definitions.py` (translation_key usage)
+-   Test fixtures: `tests/conftest.py`
+-   Time handling: Any file importing `dt_util`
