@@ -43,7 +43,6 @@ from custom_components.tibber_prices.const import (
     PRICE_RATING_NORMAL,
 )
 from homeassistant.exceptions import ServiceValidationError
-from homeassistant.util import dt as dt_util
 
 from .formatters import aggregate_hourly_exact, get_period_data, normalize_level_filter, normalize_rating_level_filter
 from .helpers import get_entry_and_data
@@ -227,7 +226,7 @@ async def handle_chartdata(call: ServiceCall) -> dict[str, Any]:  # noqa: PLR091
                     current = start
                     while current < end:
                         period_timestamps.add(current.isoformat())
-                        current = current + timedelta(minutes=15)
+                        current = current + coordinator.time.get_interval_duration()
 
     # Collect all timestamps if insert_nulls='all' (needed to insert NULLs for missing filter matches)
     all_timestamps = set()
@@ -374,10 +373,9 @@ async def handle_chartdata(call: ServiceCall) -> dict[str, Any]:  # noqa: PLR091
                     last_value = last_interval.get(filter_field)
 
                     if last_start_time and last_price is not None and last_value in filter_values:
-                        # Parse timestamp and calculate midnight of next day
-                        last_dt = dt_util.parse_datetime(last_start_time)
+                        # Timestamp is already datetime in local timezone
+                        last_dt = last_start_time  # Already datetime object
                         if last_dt:
-                            last_dt = dt_util.as_local(last_dt)
                             # Calculate next day at 00:00
                             next_day = last_dt.replace(hour=0, minute=0, second=0, microsecond=0)
                             next_day = next_day + timedelta(days=1)
@@ -483,6 +481,7 @@ async def handle_chartdata(call: ServiceCall) -> dict[str, Any]:  # noqa: PLR091
                     day_prices,
                     start_time_field,
                     price_field,
+                    coordinator=coordinator,
                     use_minor_currency=minor_currency,
                     round_decimals=round_decimals,
                     include_level=include_level,

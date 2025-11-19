@@ -10,17 +10,14 @@ This module handles all timing-related calculations for period-based sensors:
 
 The calculator provides smart defaults:
 - Active period → show current period timing
-- No active → show next period timing
-- No more periods → 0 for numeric values, None for timestamps
+    - No active → show next period timing
+    - No more periods → 0 for numeric values, None for timestamps
 """
 
 from datetime import datetime
 
-from homeassistant.util import dt as dt_util
+from .base import BaseCalculator  # Constants
 
-from .base import BaseCalculator
-
-# Constants
 PROGRESS_GRACE_PERIOD_SECONDS = 60  # Show 100% for 1 minute after period ends
 
 
@@ -80,12 +77,13 @@ class TimingCalculator(BaseCalculator):
             return 0 if value_type in ("remaining_minutes", "progress", "next_in_minutes") else None
 
         period_summaries = period_data["periods"]
-        now = dt_util.now()
+        time = self.coordinator.time
+        now = time.now()
 
         # Find current, previous and next periods
-        current_period = self._find_active_period(period_summaries, now)
-        previous_period = self._find_previous_period(period_summaries, now)
-        next_period = self._find_next_period(period_summaries, now, skip_current=bool(current_period))
+        current_period = self._find_active_period(period_summaries)
+        previous_period = self._find_previous_period(period_summaries)
+        next_period = self._find_next_period(period_summaries, skip_current=bool(current_period))
 
         # Delegate to specific calculators
         return self._calculate_timing_value(value_type, current_period, previous_period, next_period, now)
@@ -106,26 +104,46 @@ class TimingCalculator(BaseCalculator):
             ),
             "period_duration": lambda: self._calc_period_duration(current_period, next_period),
             "next_start_time": lambda: next_period.get("start") if next_period else None,
-            "remaining_minutes": lambda: (self._calc_remaining_minutes(current_period, now) if current_period else 0),
+            "remaining_minutes": lambda: (self._calc_remaining_minutes(current_period) if current_period else 0),
             "progress": lambda: self._calc_progress_with_grace_period(current_period, previous_period, now),
-            "next_in_minutes": lambda: (self._calc_next_in_minutes(next_period, now) if next_period else None),
+            "next_in_minutes": lambda: (self._calc_next_in_minutes(next_period) if next_period else None),
         }
 
         calculator = calculators.get(value_type)
         return calculator() if calculator else None
 
-    def _find_active_period(self, periods: list, now: datetime) -> dict | None:
-        """Find currently active period."""
+    def _find_active_period(self, periods: list) -> dict | None:
+        """
+        Find currently active period.
+
+        Args:
+            periods: List of period dictionaries
+
+        Returns:
+            Currently active period or None
+
+        """
+        time = self.coordinator.time
         for period in periods:
             start = period.get("start")
             end = period.get("end")
-            if start and end and start <= now < end:
+            if start and end and time.is_current_interval(start, end):
                 return period
         return None
 
-    def _find_previous_period(self, periods: list, now: datetime) -> dict | None:
-        """Find the most recent period that has already ended."""
-        past_periods = [p for p in periods if p.get("end") and p.get("end") <= now]
+    def _find_previous_period(self, periods: list) -> dict | None:
+        """
+        Find the most recent period that has already ended.
+
+        Args:
+            periods: List of period dictionaries
+
+        Returns:
+            Most recent past period or None
+
+        """
+        time = self.coordinator.time
+        past_periods = [p for p in periods if p.get("end") and time.is_in_past(p["end"])]
 
         if not past_periods:
             return None
@@ -134,20 +152,20 @@ class TimingCalculator(BaseCalculator):
         past_periods.sort(key=lambda p: p["end"], reverse=True)
         return past_periods[0]
 
-    def _find_next_period(self, periods: list, now: datetime, *, skip_current: bool = False) -> dict | None:
+    def _find_next_period(self, periods: list, *, skip_current: bool = False) -> dict | None:
         """
         Find next future period.
 
         Args:
             periods: List of period dictionaries
-            now: Current time
             skip_current: If True, skip the first future period (to get next-next)
 
         Returns:
             Next period dict or None if no future periods
 
         """
-        future_periods = [p for p in periods if p.get("start") and p.get("start") > now]
+        time = self.coordinator.time
+        future_periods = [p for p in periods if p.get("start") and time.is_in_future(p["start"])]
 
         if not future_periods:
             return None
@@ -163,21 +181,47 @@ class TimingCalculator(BaseCalculator):
 
         return None
 
-    def _calc_remaining_minutes(self, period: dict, now: datetime) -> float:
-        """Calculate minutes until period ends."""
+    def _calc_remaining_minutes(self, period: dict) -> int:
+        """
+        Calculate ROUNDED minutes until period ends.
+
+        Uses standard rounding (0.5 rounds up) to match Home Assistant frontend
+        relative time display. This ensures sensor values match what users see
+        in the UI ("in X minutes").
+
+        Args:
+            period: Period dictionary
+
+        Returns:
+            Rounded minutes until period ends (matches HA frontend display)
+
+        """
+        time = self.coordinator.time
         end = period.get("end")
         if not end:
             return 0
-        delta = end - now
-        return max(0, delta.total_seconds() / 60)
+        return time.minutes_until_rounded(end)
 
-    def _calc_next_in_minutes(self, period: dict, now: datetime) -> float:
-        """Calculate minutes until period starts."""
+    def _calc_next_in_minutes(self, period: dict) -> int:
+        """
+        Calculate ROUNDED minutes until next period starts.
+
+        Uses standard rounding (0.5 rounds up) to match Home Assistant frontend
+        relative time display. This ensures sensor values match what users see
+        in the UI ("in X minutes").
+
+        Args:
+            period: Period dictionary
+
+        Returns:
+            Rounded minutes until period starts (matches HA frontend display)
+
+        """
+        time = self.coordinator.time
         start = period.get("start")
         if not start:
             return 0
-        delta = start - now
-        return max(0, delta.total_seconds() / 60)
+        return time.minutes_until_rounded(start)
 
     def _calc_period_duration(self, current_period: dict | None, next_period: dict | None) -> float | None:
         """

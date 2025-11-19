@@ -3,73 +3,10 @@
 from __future__ import annotations
 
 from datetime import datetime, timedelta
+from typing import TYPE_CHECKING
 
-from homeassistant.util import dt as dt_util
-
-# Constants
-INTERVALS_PER_DAY = 96  # 24 hours * 4 intervals per hour
-
-
-def round_to_nearest_quarter_hour(dt: datetime) -> datetime:
-    """
-    Round datetime to nearest 15-minute boundary with smart tolerance.
-
-    This handles edge cases where HA schedules us slightly before the boundary
-    (e.g., 14:59:59.500), while avoiding premature rounding during normal operation.
-
-    Strategy:
-    - If within ±2 seconds of a boundary → round to that boundary
-    - Otherwise → floor to current interval start
-
-    Examples:
-    - 14:59:57.999 → 15:00:00 (within 2s of boundary)
-    - 14:59:59.999 → 15:00:00 (within 2s of boundary)
-    - 14:59:30.000 → 14:45:00 (NOT within 2s, stay in current)
-    - 15:00:00.000 → 15:00:00 (exact boundary)
-    - 15:00:01.500 → 15:00:00 (within 2s of boundary)
-
-    Args:
-        dt: Datetime to round
-
-    Returns:
-        Datetime rounded to appropriate 15-minute boundary
-
-    """
-    # Calculate current interval start (floor)
-    total_seconds = dt.hour * 3600 + dt.minute * 60 + dt.second + dt.microsecond / 1_000_000
-    interval_index = int(total_seconds // (15 * 60))  # Floor division
-    interval_start_seconds = interval_index * 15 * 60
-
-    # Calculate next interval start
-    next_interval_index = (interval_index + 1) % INTERVALS_PER_DAY
-    next_interval_start_seconds = next_interval_index * 15 * 60
-
-    # Distance to current interval start and next interval start
-    distance_to_current = total_seconds - interval_start_seconds
-    if next_interval_index == 0:  # Midnight wrap
-        distance_to_next = (24 * 3600) - total_seconds
-    else:
-        distance_to_next = next_interval_start_seconds - total_seconds
-
-    # Tolerance: If within 2 seconds of a boundary, snap to it
-    boundary_tolerance_seconds = 2.0
-
-    if distance_to_next <= boundary_tolerance_seconds:
-        # Very close to next boundary → use next interval
-        target_interval_index = next_interval_index
-    elif distance_to_current <= boundary_tolerance_seconds:
-        # Very close to current boundary (shouldn't happen in practice, but handle it)
-        target_interval_index = interval_index
-    else:
-        # Normal case: stay in current interval
-        target_interval_index = interval_index
-
-    # Convert back to time
-    target_minutes = target_interval_index * 15
-    target_hour = int(target_minutes // 60)
-    target_minute = int(target_minutes % 60)
-
-    return dt.replace(hour=target_hour, minute=target_minute, second=0, microsecond=0)
+if TYPE_CHECKING:
+    from custom_components.tibber_prices.coordinator.time_service import TimeService
 
 
 def calculate_trailing_24h_avg(all_prices: list[dict], interval_start: datetime) -> float:
@@ -79,6 +16,7 @@ def calculate_trailing_24h_avg(all_prices: list[dict], interval_start: datetime)
     Args:
         all_prices: List of all price data (yesterday, today, tomorrow combined)
         interval_start: Start time of the interval to calculate average for
+        time: TimeService instance (required)
 
     Returns:
         Average price for the 24 hours preceding the interval (not including the interval itself)
@@ -91,10 +29,9 @@ def calculate_trailing_24h_avg(all_prices: list[dict], interval_start: datetime)
     # Filter prices within the 24-hour window
     prices_in_window = []
     for price_data in all_prices:
-        starts_at = dt_util.parse_datetime(price_data["startsAt"])
+        starts_at = price_data["startsAt"]  # Already datetime object in local timezone
         if starts_at is None:
             continue
-        starts_at = dt_util.as_local(starts_at)
         # Include intervals that start within the window (not including the current interval's end)
         if window_start <= starts_at < window_end:
             prices_in_window.append(float(price_data["total"]))
@@ -112,6 +49,7 @@ def calculate_leading_24h_avg(all_prices: list[dict], interval_start: datetime) 
     Args:
         all_prices: List of all price data (yesterday, today, tomorrow combined)
         interval_start: Start time of the interval to calculate average for
+        time: TimeService instance (required)
 
     Returns:
         Average price for up to 24 hours following the interval (including the interval itself)
@@ -124,10 +62,9 @@ def calculate_leading_24h_avg(all_prices: list[dict], interval_start: datetime) 
     # Filter prices within the 24-hour window
     prices_in_window = []
     for price_data in all_prices:
-        starts_at = dt_util.parse_datetime(price_data["startsAt"])
+        starts_at = price_data["startsAt"]  # Already datetime object in local timezone
         if starts_at is None:
             continue
-        starts_at = dt_util.as_local(starts_at)
         # Include intervals that start within the window
         if window_start <= starts_at < window_end:
             prices_in_window.append(float(price_data["total"]))
@@ -138,12 +75,17 @@ def calculate_leading_24h_avg(all_prices: list[dict], interval_start: datetime) 
     return 0.0
 
 
-def calculate_current_trailing_avg(coordinator_data: dict) -> float | None:
+def calculate_current_trailing_avg(
+    coordinator_data: dict,
+    *,
+    time: TimeService,
+) -> float | None:
     """
     Calculate the trailing 24-hour average for the current time.
 
     Args:
         coordinator_data: The coordinator data containing priceInfo
+        time: TimeService instance (required)
 
     Returns:
         Current trailing 24-hour average price, or None if unavailable
@@ -161,16 +103,21 @@ def calculate_current_trailing_avg(coordinator_data: dict) -> float | None:
     if not all_prices:
         return None
 
-    now = dt_util.now()
+    now = time.now()
     return calculate_trailing_24h_avg(all_prices, now)
 
 
-def calculate_current_leading_avg(coordinator_data: dict) -> float | None:
+def calculate_current_leading_avg(
+    coordinator_data: dict,
+    *,
+    time: TimeService,
+) -> float | None:
     """
     Calculate the leading 24-hour average for the current time.
 
     Args:
         coordinator_data: The coordinator data containing priceInfo
+        time: TimeService instance (required)
 
     Returns:
         Current leading 24-hour average price, or None if unavailable
@@ -188,17 +135,23 @@ def calculate_current_leading_avg(coordinator_data: dict) -> float | None:
     if not all_prices:
         return None
 
-    now = dt_util.now()
+    now = time.now()
     return calculate_leading_24h_avg(all_prices, now)
 
 
-def calculate_trailing_24h_min(all_prices: list[dict], interval_start: datetime) -> float:
+def calculate_trailing_24h_min(
+    all_prices: list[dict],
+    interval_start: datetime,
+    *,
+    time: TimeService,
+) -> float:
     """
     Calculate trailing 24-hour minimum price for a given interval.
 
     Args:
         all_prices: List of all price data (yesterday, today, tomorrow combined)
         interval_start: Start time of the interval to calculate minimum for
+        time: TimeService instance (required)
 
     Returns:
         Minimum price for the 24 hours preceding the interval (not including the interval itself)
@@ -211,10 +164,9 @@ def calculate_trailing_24h_min(all_prices: list[dict], interval_start: datetime)
     # Filter prices within the 24-hour window
     prices_in_window = []
     for price_data in all_prices:
-        starts_at = dt_util.parse_datetime(price_data["startsAt"])
+        starts_at = time.get_interval_time(price_data)
         if starts_at is None:
             continue
-        starts_at = dt_util.as_local(starts_at)
         # Include intervals that start within the window (not including the current interval's end)
         if window_start <= starts_at < window_end:
             prices_in_window.append(float(price_data["total"]))
@@ -225,13 +177,19 @@ def calculate_trailing_24h_min(all_prices: list[dict], interval_start: datetime)
     return 0.0
 
 
-def calculate_trailing_24h_max(all_prices: list[dict], interval_start: datetime) -> float:
+def calculate_trailing_24h_max(
+    all_prices: list[dict],
+    interval_start: datetime,
+    *,
+    time: TimeService,
+) -> float:
     """
     Calculate trailing 24-hour maximum price for a given interval.
 
     Args:
         all_prices: List of all price data (yesterday, today, tomorrow combined)
         interval_start: Start time of the interval to calculate maximum for
+        time: TimeService instance (required)
 
     Returns:
         Maximum price for the 24 hours preceding the interval (not including the interval itself)
@@ -244,10 +202,9 @@ def calculate_trailing_24h_max(all_prices: list[dict], interval_start: datetime)
     # Filter prices within the 24-hour window
     prices_in_window = []
     for price_data in all_prices:
-        starts_at = dt_util.parse_datetime(price_data["startsAt"])
+        starts_at = time.get_interval_time(price_data)
         if starts_at is None:
             continue
-        starts_at = dt_util.as_local(starts_at)
         # Include intervals that start within the window (not including the current interval's end)
         if window_start <= starts_at < window_end:
             prices_in_window.append(float(price_data["total"]))
@@ -258,13 +215,19 @@ def calculate_trailing_24h_max(all_prices: list[dict], interval_start: datetime)
     return 0.0
 
 
-def calculate_leading_24h_min(all_prices: list[dict], interval_start: datetime) -> float:
+def calculate_leading_24h_min(
+    all_prices: list[dict],
+    interval_start: datetime,
+    *,
+    time: TimeService,
+) -> float:
     """
     Calculate leading 24-hour minimum price for a given interval.
 
     Args:
         all_prices: List of all price data (yesterday, today, tomorrow combined)
         interval_start: Start time of the interval to calculate minimum for
+        time: TimeService instance (required)
 
     Returns:
         Minimum price for up to 24 hours following the interval (including the interval itself)
@@ -277,10 +240,9 @@ def calculate_leading_24h_min(all_prices: list[dict], interval_start: datetime) 
     # Filter prices within the 24-hour window
     prices_in_window = []
     for price_data in all_prices:
-        starts_at = dt_util.parse_datetime(price_data["startsAt"])
+        starts_at = time.get_interval_time(price_data)
         if starts_at is None:
             continue
-        starts_at = dt_util.as_local(starts_at)
         # Include intervals that start within the window
         if window_start <= starts_at < window_end:
             prices_in_window.append(float(price_data["total"]))
@@ -291,13 +253,19 @@ def calculate_leading_24h_min(all_prices: list[dict], interval_start: datetime) 
     return 0.0
 
 
-def calculate_leading_24h_max(all_prices: list[dict], interval_start: datetime) -> float:
+def calculate_leading_24h_max(
+    all_prices: list[dict],
+    interval_start: datetime,
+    *,
+    time: TimeService,
+) -> float:
     """
     Calculate leading 24-hour maximum price for a given interval.
 
     Args:
         all_prices: List of all price data (yesterday, today, tomorrow combined)
         interval_start: Start time of the interval to calculate maximum for
+        time: TimeService instance (required)
 
     Returns:
         Maximum price for up to 24 hours following the interval (including the interval itself)
@@ -310,10 +278,9 @@ def calculate_leading_24h_max(all_prices: list[dict], interval_start: datetime) 
     # Filter prices within the 24-hour window
     prices_in_window = []
     for price_data in all_prices:
-        starts_at = dt_util.parse_datetime(price_data["startsAt"])
+        starts_at = time.get_interval_time(price_data)
         if starts_at is None:
             continue
-        starts_at = dt_util.as_local(starts_at)
         # Include intervals that start within the window
         if window_start <= starts_at < window_end:
             prices_in_window.append(float(price_data["total"]))
@@ -324,12 +291,17 @@ def calculate_leading_24h_max(all_prices: list[dict], interval_start: datetime) 
     return 0.0
 
 
-def calculate_current_trailing_min(coordinator_data: dict) -> float | None:
+def calculate_current_trailing_min(
+    coordinator_data: dict,
+    *,
+    time: TimeService,
+) -> float | None:
     """
     Calculate the trailing 24-hour minimum for the current time.
 
     Args:
         coordinator_data: The coordinator data containing priceInfo
+        time: TimeService instance (required)
 
     Returns:
         Current trailing 24-hour minimum price, or None if unavailable
@@ -347,16 +319,21 @@ def calculate_current_trailing_min(coordinator_data: dict) -> float | None:
     if not all_prices:
         return None
 
-    now = dt_util.now()
-    return calculate_trailing_24h_min(all_prices, now)
+    now = time.now()
+    return calculate_trailing_24h_min(all_prices, now, time=time)
 
 
-def calculate_current_trailing_max(coordinator_data: dict) -> float | None:
+def calculate_current_trailing_max(
+    coordinator_data: dict,
+    *,
+    time: TimeService,
+) -> float | None:
     """
     Calculate the trailing 24-hour maximum for the current time.
 
     Args:
         coordinator_data: The coordinator data containing priceInfo
+        time: TimeService instance (required)
 
     Returns:
         Current trailing 24-hour maximum price, or None if unavailable
@@ -374,16 +351,21 @@ def calculate_current_trailing_max(coordinator_data: dict) -> float | None:
     if not all_prices:
         return None
 
-    now = dt_util.now()
-    return calculate_trailing_24h_max(all_prices, now)
+    now = time.now()
+    return calculate_trailing_24h_max(all_prices, now, time=time)
 
 
-def calculate_current_leading_min(coordinator_data: dict) -> float | None:
+def calculate_current_leading_min(
+    coordinator_data: dict,
+    *,
+    time: TimeService,
+) -> float | None:
     """
     Calculate the leading 24-hour minimum for the current time.
 
     Args:
         coordinator_data: The coordinator data containing priceInfo
+        time: TimeService instance (required)
 
     Returns:
         Current leading 24-hour minimum price, or None if unavailable
@@ -401,16 +383,21 @@ def calculate_current_leading_min(coordinator_data: dict) -> float | None:
     if not all_prices:
         return None
 
-    now = dt_util.now()
-    return calculate_leading_24h_min(all_prices, now)
+    now = time.now()
+    return calculate_leading_24h_min(all_prices, now, time=time)
 
 
-def calculate_current_leading_max(coordinator_data: dict) -> float | None:
+def calculate_current_leading_max(
+    coordinator_data: dict,
+    *,
+    time: TimeService,
+) -> float | None:
     """
     Calculate the leading 24-hour maximum for the current time.
 
     Args:
         coordinator_data: The coordinator data containing priceInfo
+        time: TimeService instance (required)
 
     Returns:
         Current leading 24-hour maximum price, or None if unavailable
@@ -428,11 +415,16 @@ def calculate_current_leading_max(coordinator_data: dict) -> float | None:
     if not all_prices:
         return None
 
-    now = dt_util.now()
-    return calculate_leading_24h_max(all_prices, now)
+    now = time.now()
+    return calculate_leading_24h_max(all_prices, now, time=time)
 
 
-def calculate_next_n_hours_avg(coordinator_data: dict, hours: int) -> float | None:
+def calculate_next_n_hours_avg(
+    coordinator_data: dict,
+    hours: int,
+    *,
+    time: TimeService,
+) -> float | None:
     """
     Calculate average price for the next N hours starting from the next interval.
 
@@ -442,6 +434,7 @@ def calculate_next_n_hours_avg(coordinator_data: dict, hours: int) -> float | No
     Args:
         coordinator_data: The coordinator data containing priceInfo
         hours: Number of hours to look ahead (1, 2, 3, 4, 5, 6, 8, 12, etc.)
+        time: TimeService instance (required)
 
     Returns:
         Average price for the next N hours, or None if insufficient data
@@ -459,46 +452,38 @@ def calculate_next_n_hours_avg(coordinator_data: dict, hours: int) -> float | No
     if not all_prices:
         return None
 
-    now = dt_util.now()
-
     # Find the current interval index
     current_idx = None
     for idx, price_data in enumerate(all_prices):
-        starts_at = dt_util.parse_datetime(price_data["startsAt"])
+        starts_at = time.get_interval_time(price_data)
         if starts_at is None:
             continue
-        starts_at = dt_util.as_local(starts_at)
-        interval_end = starts_at + timedelta(minutes=15)
+        interval_end = starts_at + time.get_interval_duration()
 
-        if starts_at <= now < interval_end:
+        if time.is_current_interval(starts_at, interval_end):
             current_idx = idx
             break
 
     if current_idx is None:
         return None
 
-    # Calculate how many 15-minute intervals are in N hours
-    intervals_needed = hours * 4  # 4 intervals per hour
+    # Calculate how many intervals are in N hours
+    intervals_needed = time.minutes_to_intervals(hours * 60)
 
     # Collect prices starting from NEXT interval (current_idx + 1)
     prices_in_window = []
     for offset in range(1, intervals_needed + 1):
         idx = current_idx + offset
-        if idx < len(all_prices):
-            price = all_prices[idx].get("total")
-            if price is not None:
-                prices_in_window.append(float(price))
-        else:
+        if idx >= len(all_prices):
             # Not enough future data available
             break
+        price = all_prices[idx].get("total")
+        if price is not None:
+            prices_in_window.append(float(price))
 
-    # Only return average if we have data for the full requested period
-    if len(prices_in_window) >= intervals_needed:
-        return sum(prices_in_window) / len(prices_in_window)
+    # Return None if no data at all
+    if not prices_in_window:
+        return None
 
-    # If we don't have enough data for full period, return what we have
-    # (allows graceful degradation when tomorrow's data isn't available yet)
-    if prices_in_window:
-        return sum(prices_in_window) / len(prices_in_window)
-
-    return None
+    # Return average (prefer full period, but allow graceful degradation)
+    return sum(prices_in_window) / len(prices_in_window)

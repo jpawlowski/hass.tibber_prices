@@ -5,12 +5,12 @@ from __future__ import annotations
 import logging
 from typing import TYPE_CHECKING, Any, NamedTuple
 
-from homeassistant.util import dt as dt_util
-
 if TYPE_CHECKING:
     from datetime import datetime
 
     from homeassistant.helpers.storage import Store
+
+    from .time_service import TimeService
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -28,6 +28,8 @@ class CacheData(NamedTuple):
 async def load_cache(
     store: Store,
     log_prefix: str,
+    *,
+    time: TimeService,
 ) -> CacheData:
     """Load cached data from storage."""
     try:
@@ -42,11 +44,11 @@ async def load_cache(
             last_midnight_check = None
 
             if last_price_update_str := stored.get("last_price_update"):
-                last_price_update = dt_util.parse_datetime(last_price_update_str)
+                last_price_update = time.parse_datetime(last_price_update_str)
             if last_user_update_str := stored.get("last_user_update"):
-                last_user_update = dt_util.parse_datetime(last_user_update_str)
+                last_user_update = time.parse_datetime(last_user_update_str)
             if last_midnight_check_str := stored.get("last_midnight_check"):
-                last_midnight_check = dt_util.parse_datetime(last_midnight_check_str)
+                last_midnight_check = time.parse_datetime(last_midnight_check_str)
 
             _LOGGER.debug("%s Cache loaded successfully", log_prefix)
             return CacheData(
@@ -94,6 +96,8 @@ async def store_cache(
 def is_cache_valid(
     cache_data: CacheData,
     log_prefix: str,
+    *,
+    time: TimeService,
 ) -> bool:
     """
     Validate if cached price data is still current.
@@ -107,8 +111,8 @@ def is_cache_valid(
     if cache_data.price_data is None or cache_data.last_price_update is None:
         return False
 
-    current_local_date = dt_util.as_local(dt_util.now()).date()
-    last_update_local_date = dt_util.as_local(cache_data.last_price_update).date()
+    current_local_date = time.as_local(time.now()).date()
+    last_update_local_date = time.as_local(cache_data.last_price_update).date()
 
     if current_local_date != last_update_local_date:
         _LOGGER.debug(

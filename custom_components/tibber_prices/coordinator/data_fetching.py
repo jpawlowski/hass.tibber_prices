@@ -5,8 +5,10 @@ from __future__ import annotations
 import asyncio
 import logging
 import secrets
-from datetime import timedelta
 from typing import TYPE_CHECKING, Any
+
+if TYPE_CHECKING:
+    from datetime import timedelta
 
 from custom_components.tibber_prices.api import (
     TibberPricesApiClientAuthenticationError,
@@ -16,7 +18,6 @@ from custom_components.tibber_prices.api import (
 from homeassistant.core import callback
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import UpdateFailed
-from homeassistant.util import dt as dt_util
 
 from . import cache, helpers
 from .constants import TOMORROW_DATA_CHECK_HOUR, TOMORROW_DATA_RANDOM_DELAY_MAX
@@ -26,6 +27,8 @@ if TYPE_CHECKING:
     from datetime import date, datetime
 
     from custom_components.tibber_prices.api import TibberPricesApiClient
+
+    from .time_service import TimeService
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -39,12 +42,14 @@ class DataFetcher:
         store: Any,
         log_prefix: str,
         user_update_interval: timedelta,
+        time: TimeService,
     ) -> None:
         """Initialize the data fetcher."""
         self.api = api
         self._store = store
         self._log_prefix = log_prefix
         self._user_update_interval = user_update_interval
+        self.time = time
 
         # Cached data
         self._cached_price_data: dict[str, Any] | None = None
@@ -59,15 +64,19 @@ class DataFetcher:
 
     async def load_cache(self) -> None:
         """Load cached data from storage."""
-        cache_data = await cache.load_cache(self._store, self._log_prefix)
+        cache_data = await cache.load_cache(self._store, self._log_prefix, time=self.time)
 
         self._cached_price_data = cache_data.price_data
         self._cached_user_data = cache_data.user_data
         self._last_price_update = cache_data.last_price_update
         self._last_user_update = cache_data.last_user_update
 
+        # Parse timestamps if we loaded price data from cache
+        if self._cached_price_data:
+            self._cached_price_data = helpers.parse_all_timestamps(self._cached_price_data, time=self.time)
+
         # Validate cache: check if price data is from a previous day
-        if not cache.is_cache_valid(cache_data, self._log_prefix):
+        if not cache.is_cache_valid(cache_data, self._log_prefix, time=self.time):
             self._log("info", "Cached price data is from a previous day, clearing cache to fetch fresh data")
             self._cached_price_data = None
             self._last_price_update = None
@@ -128,8 +137,10 @@ class DataFetcher:
             self._log("debug", "API update needed: No last price update timestamp")
             return True
 
-        now_local = dt_util.as_local(current_time)
-        tomorrow_date = (now_local + timedelta(days=1)).date()
+        # Get tomorrow's date using TimeService
+        _, tomorrow_midnight = self.time.get_day_boundaries("today")
+        tomorrow_date = tomorrow_midnight.date()
+        now_local = self.time.as_local(current_time)
 
         # Check if after 13:00 and tomorrow data is missing or invalid
         if (
@@ -154,12 +165,12 @@ class DataFetcher:
         """Check if tomorrow data is missing or invalid."""
         return helpers.needs_tomorrow_data(self._cached_price_data, tomorrow_date)
 
-    async def fetch_all_homes_data(self, configured_home_ids: set[str]) -> dict[str, Any]:
+    async def fetch_all_homes_data(self, configured_home_ids: set[str], current_time: datetime) -> dict[str, Any]:
         """Fetch data for all homes (main coordinator only)."""
         if not configured_home_ids:
             self._log("warning", "No configured homes found - cannot fetch price data")
             return {
-                "timestamp": dt_util.utcnow(),
+                "timestamp": current_time,
                 "homes": {},
             }
 
@@ -186,7 +197,7 @@ class DataFetcher:
         )
 
         return {
-            "timestamp": dt_util.utcnow(),
+            "timestamp": current_time,
             "homes": all_homes_data,
         }
 
@@ -216,8 +227,10 @@ class DataFetcher:
                 await asyncio.sleep(delay)
 
             self._log("debug", "Fetching fresh price data from API")
-            raw_data = await self.fetch_all_homes_data(configured_home_ids)
-            # Cache the data
+            raw_data = await self.fetch_all_homes_data(configured_home_ids, current_time)
+            # Parse timestamps immediately after API fetch
+            raw_data = helpers.parse_all_timestamps(raw_data, time=self.time)
+            # Cache the data (now with datetime objects)
             self._cached_price_data = raw_data
             self._last_price_update = current_time
             await self.store_cache()
@@ -268,7 +281,7 @@ class DataFetcher:
             Updated price_info with rotated day data
 
         """
-        return helpers.perform_midnight_turnover(price_info)
+        return helpers.perform_midnight_turnover(price_info, time=self.time)
 
     @property
     def cached_price_data(self) -> dict[str, Any] | None:

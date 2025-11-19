@@ -3,11 +3,12 @@
 from __future__ import annotations
 
 import logging
-from datetime import datetime, timedelta
+from typing import TYPE_CHECKING
 
-from homeassistant.util import dt as dt_util
+if TYPE_CHECKING:
+    from datetime import datetime
 
-from .types import MINUTES_PER_INTERVAL
+    from custom_components.tibber_prices.coordinator.time_service import TimeService
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -17,7 +18,7 @@ INDENT_L1 = "  "  # Nested logic / loop iterations
 INDENT_L2 = "    "  # Deeper nesting
 
 
-def merge_adjacent_periods_at_midnight(periods: list[list[dict]]) -> list[list[dict]]:
+def merge_adjacent_periods_at_midnight(periods: list[list[dict]], *, time: TimeService) -> list[list[dict]]:
     """
     Merge adjacent periods that meet at midnight.
 
@@ -46,8 +47,8 @@ def merge_adjacent_periods_at_midnight(periods: list[list[dict]]) -> list[list[d
                 last_date = last_start.date()
                 next_date = next_start.date()
 
-                # If they are 15 minutes apart and on different days (crossing midnight)
-                if time_diff == timedelta(minutes=MINUTES_PER_INTERVAL) and next_date > last_date:
+                # If they are one interval apart and on different days (crossing midnight)
+                if time_diff == time.get_interval_duration() and next_date > last_date:
                     # Merge the two periods
                     merged_period = current_period + next_period
                     merged.append(merged_period)
@@ -61,7 +62,7 @@ def merge_adjacent_periods_at_midnight(periods: list[list[dict]]) -> list[list[d
     return merged
 
 
-def recalculate_period_metadata(periods: list[dict]) -> None:
+def recalculate_period_metadata(periods: list[dict], *, time: TimeService) -> None:
     """
     Recalculate period metadata after merging periods.
 
@@ -73,13 +74,14 @@ def recalculate_period_metadata(periods: list[dict]) -> None:
 
     Args:
         periods: List of period summary dicts (mutated in-place)
+        time: TimeService instance (required)
 
     """
     if not periods:
         return
 
     # Sort periods chronologically by start time
-    periods.sort(key=lambda p: p.get("start") or dt_util.now())
+    periods.sort(key=lambda p: p.get("start") or time.now())
 
     # Update metadata for all periods
     total_periods = len(periods)

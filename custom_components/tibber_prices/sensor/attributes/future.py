@@ -2,16 +2,14 @@
 
 from __future__ import annotations
 
-from datetime import datetime, timedelta
+from datetime import datetime
 from typing import TYPE_CHECKING, Any
-
-from custom_components.tibber_prices.const import MINUTES_PER_INTERVAL
-from homeassistant.util import dt as dt_util
 
 if TYPE_CHECKING:
     from custom_components.tibber_prices.coordinator.core import (
         TibberPricesDataUpdateCoordinator,
     )
+    from custom_components.tibber_prices.coordinator.time_service import TimeService
 
 # Constants
 MAX_FORECAST_INTERVALS = 8  # Show up to 8 future intervals (2 hours with 15-min intervals)
@@ -21,6 +19,8 @@ def add_next_avg_attributes(
     attributes: dict,
     key: str,
     coordinator: TibberPricesDataUpdateCoordinator,
+    *,
+    time: TimeService,
 ) -> None:
     """
     Add attributes for next N hours average price sensors.
@@ -29,21 +29,17 @@ def add_next_avg_attributes(
         attributes: Dictionary to add attributes to
         key: The sensor entity key
         coordinator: The data update coordinator
+        time: TimeService instance (required)
 
     """
-    now = dt_util.now()
-
     # Extract hours from sensor key (e.g., "next_avg_3h" -> 3)
     try:
-        hours = int(key.replace("next_avg_", "").replace("h", ""))
+        hours = int(key.split("_")[-1].replace("h", ""))
     except (ValueError, AttributeError):
         return
 
-    # Get next interval start time (this is where the calculation begins)
-    next_interval_start = now + timedelta(minutes=MINUTES_PER_INTERVAL)
-
-    # Calculate the end of the time window
-    window_end = next_interval_start + timedelta(hours=hours)
+    # Use TimeService to get the N-hour window starting from next interval
+    next_interval_start, window_end = time.get_next_n_hours_window(hours)
 
     # Get all price intervals
     price_info = coordinator.data.get("priceInfo", {})
@@ -57,10 +53,9 @@ def add_next_avg_attributes(
     # Find all intervals in the window
     intervals_in_window = []
     for price_data in all_prices:
-        starts_at = dt_util.parse_datetime(price_data["startsAt"])
+        starts_at = time.get_interval_time(price_data)
         if starts_at is None:
             continue
-        starts_at = dt_util.as_local(starts_at)
         if next_interval_start <= starts_at < window_end:
             intervals_in_window.append(price_data)
 
@@ -74,6 +69,8 @@ def add_next_avg_attributes(
 def add_price_forecast_attributes(
     attributes: dict,
     coordinator: TibberPricesDataUpdateCoordinator,
+    *,
+    time: TimeService,
 ) -> None:
     """
     Add forecast attributes for the price forecast sensor.
@@ -81,9 +78,10 @@ def add_price_forecast_attributes(
     Args:
         attributes: Dictionary to add attributes to
         coordinator: The data update coordinator
+        time: TimeService instance (required)
 
     """
-    future_prices = get_future_prices(coordinator, max_intervals=MAX_FORECAST_INTERVALS)
+    future_prices = get_future_prices(coordinator, max_intervals=MAX_FORECAST_INTERVALS, time=time)
     if not future_prices:
         attributes["intervals"] = []
         attributes["intervals_by_hour"] = []
@@ -100,14 +98,18 @@ def add_price_forecast_attributes(
     # Group by hour for easier consumption in dashboards
     hours: dict[str, Any] = {}
     for interval in future_prices:
-        starts_at = datetime.fromisoformat(interval["interval_start"])
+        # interval_start is already a datetime object (from coordinator data)
+        starts_at = interval["interval_start"]
+        if not isinstance(starts_at, datetime):
+            # Fallback: parse if it's still a string (shouldn't happen)
+            starts_at = datetime.fromisoformat(starts_at)
         hour_key = starts_at.strftime("%Y-%m-%d %H")
 
         if hour_key not in hours:
             hours[hour_key] = {
                 "hour": starts_at.hour,
                 "day": interval["day"],
-                "date": starts_at.date().isoformat(),
+                "date": starts_at.date(),
                 "intervals": [],
                 "min_price": None,
                 "max_price": None,
@@ -161,6 +163,8 @@ def add_price_forecast_attributes(
 def get_future_prices(
     coordinator: TibberPricesDataUpdateCoordinator,
     max_intervals: int | None = None,
+    *,
+    time: TimeService,
 ) -> list[dict] | None:
     """
     Get future price data for multiple upcoming intervals.
@@ -168,6 +172,7 @@ def get_future_prices(
     Args:
         coordinator: The data update coordinator
         max_intervals: Maximum number of future intervals to return
+        time: TimeService instance (required)
 
     Returns:
         List of upcoming price intervals with timestamps and prices
@@ -185,8 +190,6 @@ def get_future_prices(
     if not all_prices:
         return None
 
-    now = dt_util.now()
-
     # Initialize the result list
     future_prices = []
 
@@ -195,18 +198,18 @@ def get_future_prices(
 
     for day_key in ["today", "tomorrow"]:
         for price_data in price_info.get(day_key, []):
-            starts_at = dt_util.parse_datetime(price_data["startsAt"])
+            starts_at = time.get_interval_time(price_data)
             if starts_at is None:
                 continue
 
-            starts_at = dt_util.as_local(starts_at)
-            interval_end = starts_at + timedelta(minutes=MINUTES_PER_INTERVAL)
+            interval_end = starts_at + time.get_interval_duration()
 
-            if starts_at > now:
+            # Use TimeService to check if interval is in future
+            if time.is_in_future(starts_at):
                 future_prices.append(
                     {
-                        "interval_start": starts_at.isoformat(),
-                        "interval_end": interval_end.isoformat(),
+                        "interval_start": starts_at,
+                        "interval_end": interval_end,
                         "price": float(price_data["total"]),
                         "price_minor": round(float(price_data["total"]) * 100, 2),
                         "level": price_data.get("level", "NORMAL"),

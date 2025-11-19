@@ -7,10 +7,11 @@ from datetime import timedelta
 from typing import TYPE_CHECKING
 
 from homeassistant.const import __version__ as ha_version
-from homeassistant.util import dt as dt_util
 
 if TYPE_CHECKING:
     import aiohttp
+
+    from custom_components.tibber_prices.coordinator.time_service import TimeService
 
     from .queries import QueryType
 
@@ -251,7 +252,7 @@ def prepare_headers(access_token: str, version: str) -> dict[str, str]:
     }
 
 
-def flatten_price_info(subscription: dict, currency: str | None = None) -> dict:
+def flatten_price_info(subscription: dict, currency: str | None = None, *, time: TimeService) -> dict:
     """
     Transform and flatten priceInfo from full API data structure.
 
@@ -261,8 +262,8 @@ def flatten_price_info(subscription: dict, currency: str | None = None) -> dict:
     price_info = subscription.get("priceInfo", {})
     price_info_range = subscription.get("priceInfoRange", {})
 
-    # Get today and yesterday dates using Home Assistant's dt_util
-    today_local = dt_util.now().date()
+    # Get today and yesterday dates using TimeService
+    today_local = time.now().date()
     yesterday_local = today_local - timedelta(days=1)
     _LOGGER.debug("Processing data for yesterday's date: %s", yesterday_local)
 
@@ -277,14 +278,12 @@ def flatten_price_info(subscription: dict, currency: str | None = None) -> dict:
                 continue
 
             price_data = edge["node"]
-            # Parse timestamp using dt_util for proper timezone handling
-            starts_at = dt_util.parse_datetime(price_data["startsAt"])
+            # Parse timestamp using TimeService for proper timezone handling
+            starts_at = time.get_interval_time(price_data)
             if starts_at is None:
                 _LOGGER.debug("Could not parse timestamp: %s", price_data["startsAt"])
                 continue
 
-            # Convert to local timezone
-            starts_at = dt_util.as_local(starts_at)
             price_date = starts_at.date()
 
             # Only include prices from yesterday

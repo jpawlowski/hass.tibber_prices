@@ -15,14 +15,11 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 from custom_components.tibber_prices.const import get_price_level_translation
-from custom_components.tibber_prices.utils.average import (
-    round_to_nearest_quarter_hour,
-)
-from homeassistant.util import dt as dt_util
 
 if TYPE_CHECKING:
     from datetime import datetime
 
+    from custom_components.tibber_prices.coordinator.time_service import TimeService
     from homeassistant.core import HomeAssistant
 
 
@@ -93,6 +90,8 @@ def find_rolling_hour_center_index(
     all_prices: list[dict],
     current_time: datetime,
     hour_offset: int,
+    *,
+    time: TimeService,
 ) -> int | None:
     """
     Find the center index for the rolling hour window.
@@ -101,6 +100,7 @@ def find_rolling_hour_center_index(
         all_prices: List of all price interval dictionaries with 'startsAt' key
         current_time: Current datetime to find the current interval
         hour_offset: Number of hours to offset from current interval (can be negative)
+        time: TimeService instance (required)
 
     Returns:
         Index of the center interval for the rolling hour window, or None if not found
@@ -108,14 +108,13 @@ def find_rolling_hour_center_index(
     """
     # Round to nearest interval boundary to handle edge cases where HA schedules
     # us slightly before the boundary (e.g., 14:59:59.999 → 15:00:00)
-    target_time = round_to_nearest_quarter_hour(current_time)
+    target_time = time.round_to_nearest_quarter(current_time)
     current_idx = None
 
     for idx, price_data in enumerate(all_prices):
-        starts_at = dt_util.parse_datetime(price_data["startsAt"])
+        starts_at = time.get_interval_time(price_data)
         if starts_at is None:
             continue
-        starts_at = dt_util.as_local(starts_at)
 
         # Exact match after rounding
         if starts_at == target_time:

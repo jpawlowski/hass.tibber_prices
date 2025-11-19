@@ -5,8 +5,9 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 from custom_components.tibber_prices.entity_utils import add_icon_color_attribute
-from custom_components.tibber_prices.utils.average import round_to_nearest_quarter_hour
-from homeassistant.util import dt as dt_util
+
+if TYPE_CHECKING:
+    from custom_components.tibber_prices.coordinator.time_service import TimeService
 
 if TYPE_CHECKING:
     from datetime import datetime
@@ -14,15 +15,18 @@ if TYPE_CHECKING:
     from custom_components.tibber_prices.data import TibberPricesConfigEntry
     from homeassistant.core import HomeAssistant
 
-from .definitions import MIN_TOMORROW_INTERVALS_15MIN
 
-
-def get_tomorrow_data_available_attributes(coordinator_data: dict) -> dict | None:
+def get_tomorrow_data_available_attributes(
+    coordinator_data: dict,
+    *,
+    time: TimeService,
+) -> dict | None:
     """
     Build attributes for tomorrow_data_available sensor.
 
     Args:
         coordinator_data: Coordinator data dict
+        time: TimeService instance
 
     Returns:
         Attributes dict with intervals_available and data_status
@@ -35,9 +39,13 @@ def get_tomorrow_data_available_attributes(coordinator_data: dict) -> dict | Non
     tomorrow_prices = price_info.get("tomorrow", [])
     interval_count = len(tomorrow_prices)
 
+    # Get expected intervals for tomorrow (handles DST)
+    tomorrow_date = time.get_local_date(offset_days=1)
+    expected_intervals = time.get_expected_intervals_for_day(tomorrow_date)
+
     if interval_count == 0:
         status = "none"
-    elif interval_count == MIN_TOMORROW_INTERVALS_15MIN:
+    elif interval_count == expected_intervals:
         status = "full"
     else:
         status = "partial"
@@ -51,6 +59,7 @@ def get_tomorrow_data_available_attributes(coordinator_data: dict) -> dict | Non
 def get_price_intervals_attributes(
     coordinator_data: dict,
     *,
+    time: TimeService,
     reverse_sort: bool,
 ) -> dict | None:
     """
@@ -63,6 +72,7 @@ def get_price_intervals_attributes(
 
     Args:
         coordinator_data: Coordinator data dict
+        time: TimeService instance (required)
         reverse_sort: True for peak_price (highest first), False for best_price (lowest first)
 
     Returns:
@@ -70,7 +80,7 @@ def get_price_intervals_attributes(
 
     """
     if not coordinator_data:
-        return build_no_periods_result()
+        return build_no_periods_result(time=time)
 
     # Get precomputed period summaries from coordinator
     periods_data = coordinator_data.get("periods", {})
@@ -78,21 +88,20 @@ def get_price_intervals_attributes(
     period_data = periods_data.get(period_type)
 
     if not period_data:
-        return build_no_periods_result()
+        return build_no_periods_result(time=time)
 
     period_summaries = period_data.get("periods", [])
     if not period_summaries:
-        return build_no_periods_result()
+        return build_no_periods_result(time=time)
 
     # Find current or next period based on current time
-    now = dt_util.now()
     current_period = None
 
     # First pass: find currently active period
     for period in period_summaries:
         start = period.get("start")
         end = period.get("end")
-        if start and end and start <= now < end:
+        if start and end and time.is_current_interval(start, end):
             current_period = period
             break
 
@@ -100,15 +109,15 @@ def get_price_intervals_attributes(
     if not current_period:
         for period in period_summaries:
             start = period.get("start")
-            if start and start > now:
+            if start and time.is_in_future(start):
                 current_period = period
                 break
 
     # Build final attributes
-    return build_final_attributes_simple(current_period, period_summaries)
+    return build_final_attributes_simple(current_period, period_summaries, time=time)
 
 
-def build_no_periods_result() -> dict:
+def build_no_periods_result(*, time: TimeService) -> dict:
     """
     Build result when no periods exist (not filtered, just none available).
 
@@ -117,7 +126,7 @@ def build_no_periods_result() -> dict:
 
     """
     # Calculate timestamp: current time rounded down to last quarter hour
-    now = dt_util.now()
+    now = time.now()
     current_minute = (now.minute // 15) * 15
     timestamp = now.replace(minute=current_minute, second=0, microsecond=0)
 
@@ -204,6 +213,8 @@ def add_relaxation_attributes(attributes: dict, current_period: dict) -> None:
 def build_final_attributes_simple(
     current_period: dict | None,
     period_summaries: list[dict],
+    *,
+    time: TimeService,
 ) -> dict:
     """
     Build the final attributes dictionary from coordinator's period summaries.
@@ -226,12 +237,13 @@ def build_final_attributes_simple(
     Args:
         current_period: The current or next period (already complete from coordinator)
         period_summaries: All period summaries from coordinator
+        time: TimeService instance (required)
 
     Returns:
         Complete attributes dict with all fields
 
     """
-    now = dt_util.now()
+    now = time.now()
     current_minute = (now.minute // 15) * 15
     timestamp = now.replace(minute=current_minute, second=0, microsecond=0)
 
@@ -274,6 +286,7 @@ async def build_async_extra_state_attributes(  # noqa: PLR0913
     translation_key: str | None,
     hass: HomeAssistant,
     *,
+    time: TimeService,
     config_entry: TibberPricesConfigEntry,
     sensor_attrs: dict | None = None,
     is_on: bool | None = None,
@@ -287,22 +300,23 @@ async def build_async_extra_state_attributes(  # noqa: PLR0913
         entity_key: Entity key (e.g., "best_price_period")
         translation_key: Translation key for entity
         hass: Home Assistant instance
+        time: TimeService instance (required)
         config_entry: Config entry with options (keyword-only)
         sensor_attrs: Sensor-specific attributes (keyword-only)
         is_on: Binary sensor state (keyword-only)
 
     Returns:
-        Complete attributes dict with descriptions
+        Complete attributes dict with descriptions (synchronous)
 
     """
     # Calculate default timestamp: current time rounded to nearest quarter hour
     # This ensures all binary sensors have a consistent reference time for when calculations were made
     # Individual sensors can override this via sensor_attrs if needed
-    now = dt_util.now()
-    default_timestamp = round_to_nearest_quarter_hour(now)
+    now = time.now()
+    default_timestamp = time.round_to_nearest_quarter(now)
 
     attributes = {
-        "timestamp": default_timestamp.isoformat(),
+        "timestamp": default_timestamp,
     }
 
     # Add sensor-specific attributes (may override timestamp)
@@ -335,6 +349,7 @@ def build_sync_extra_state_attributes(  # noqa: PLR0913
     translation_key: str | None,
     hass: HomeAssistant,
     *,
+    time: TimeService,
     config_entry: TibberPricesConfigEntry,
     sensor_attrs: dict | None = None,
     is_on: bool | None = None,
@@ -348,6 +363,7 @@ def build_sync_extra_state_attributes(  # noqa: PLR0913
         entity_key: Entity key (e.g., "best_price_period")
         translation_key: Translation key for entity
         hass: Home Assistant instance
+        time: TimeService instance (required)
         config_entry: Config entry with options (keyword-only)
         sensor_attrs: Sensor-specific attributes (keyword-only)
         is_on: Binary sensor state (keyword-only)
@@ -359,11 +375,11 @@ def build_sync_extra_state_attributes(  # noqa: PLR0913
     # Calculate default timestamp: current time rounded to nearest quarter hour
     # This ensures all binary sensors have a consistent reference time for when calculations were made
     # Individual sensors can override this via sensor_attrs if needed
-    now = dt_util.now()
-    default_timestamp = round_to_nearest_quarter_hour(now)
+    now = time.now()
+    default_timestamp = time.round_to_nearest_quarter(now)
 
     attributes = {
-        "timestamp": default_timestamp.isoformat(),
+        "timestamp": default_timestamp,
     }
 
     # Add sensor-specific attributes (may override timestamp)

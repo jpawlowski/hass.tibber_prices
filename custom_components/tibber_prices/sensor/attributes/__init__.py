@@ -14,13 +14,12 @@ from custom_components.tibber_prices.entity_utils import (
     add_description_attributes,
     add_icon_color_attribute,
 )
-from custom_components.tibber_prices.utils.average import round_to_nearest_quarter_hour
-from homeassistant.util import dt as dt_util
 
 if TYPE_CHECKING:
     from custom_components.tibber_prices.coordinator.core import (
         TibberPricesDataUpdateCoordinator,
     )
+    from custom_components.tibber_prices.coordinator.time_service import TimeService
     from custom_components.tibber_prices.data import TibberPricesConfigEntry
     from homeassistant.core import HomeAssistant
 
@@ -63,6 +62,7 @@ def build_sensor_attributes(
         Dictionary of attributes or None if no attributes should be added
 
     """
+    time = coordinator.time
     if not coordinator.data:
         return None
 
@@ -95,6 +95,7 @@ def build_sensor_attributes(
                 coordinator=coordinator,
                 native_value=native_value,
                 cached_data=cached_data,
+                time=time,
             )
         elif key in [
             "trailing_price_average",
@@ -104,9 +105,9 @@ def build_sensor_attributes(
             "leading_price_min",
             "leading_price_max",
         ]:
-            add_average_price_attributes(attributes=attributes, key=key, coordinator=coordinator)
+            add_average_price_attributes(attributes=attributes, key=key, coordinator=coordinator, time=time)
         elif key.startswith("next_avg_"):
-            add_next_avg_attributes(attributes=attributes, key=key, coordinator=coordinator)
+            add_next_avg_attributes(attributes=attributes, key=key, coordinator=coordinator, time=time)
         elif any(
             pattern in key
             for pattern in [
@@ -127,11 +128,12 @@ def build_sensor_attributes(
                 attributes=attributes,
                 key=key,
                 cached_data=cached_data,
+                time=time,
             )
         elif key == "price_forecast":
-            add_price_forecast_attributes(attributes=attributes, coordinator=coordinator)
+            add_price_forecast_attributes(attributes=attributes, coordinator=coordinator, time=time)
         elif _is_timing_or_volatility_sensor(key):
-            _add_timing_or_volatility_attributes(attributes, key, cached_data, native_value)
+            _add_timing_or_volatility_attributes(attributes, key, cached_data, native_value, time=time)
 
         # For current_interval_price_level, add the original level as attribute
         if key == "current_interval_price_level" and cached_data.get("last_price_level") is not None:
@@ -169,6 +171,7 @@ def build_extra_state_attributes(  # noqa: PLR0913
     config_entry: TibberPricesConfigEntry,
     coordinator_data: dict,
     sensor_attrs: dict | None = None,
+    time: TimeService | None = None,
 ) -> dict[str, Any] | None:
     """
     Build extra state attributes for sensors.
@@ -186,6 +189,7 @@ def build_extra_state_attributes(  # noqa: PLR0913
         config_entry: Config entry with options (keyword-only)
         coordinator_data: Coordinator data dict (keyword-only)
         sensor_attrs: Sensor-specific attributes (keyword-only)
+        time: TimeService instance (optional, creates new if not provided)
 
     Returns:
         Complete attributes dict or None if no data available
@@ -197,13 +201,13 @@ def build_extra_state_attributes(  # noqa: PLR0913
     # Calculate default timestamp: current time rounded to nearest quarter hour
     # This ensures all sensors have a consistent reference time for when calculations were made
     # Individual sensors can override this if they need a different timestamp
-    now = dt_util.now()
-    default_timestamp = round_to_nearest_quarter_hour(now)
+    now = time.now()
+    default_timestamp = time.round_to_nearest_quarter(now)
 
     # Special handling for chart_data_export: metadata → descriptions → service data
     if entity_key == "chart_data_export":
         attributes: dict[str, Any] = {
-            "timestamp": default_timestamp.isoformat(),
+            "timestamp": default_timestamp,
         }
 
         # Step 1: Add metadata (timestamp + error if present)
@@ -232,9 +236,9 @@ def build_extra_state_attributes(  # noqa: PLR0913
         return attributes if attributes else None
 
     # For all other sensors: standard behavior
-    # Start with default timestamp
+    # Start with default timestamp (datetime object - HA serializes automatically)
     attributes: dict[str, Any] = {
-        "timestamp": default_timestamp.isoformat(),
+        "timestamp": default_timestamp,
     }
 
     # Add sensor-specific attributes (may override timestamp)

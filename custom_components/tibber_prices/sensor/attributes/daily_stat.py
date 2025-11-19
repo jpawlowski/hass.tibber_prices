@@ -2,24 +2,28 @@
 
 from __future__ import annotations
 
-from datetime import timedelta
+from typing import TYPE_CHECKING
 
 from custom_components.tibber_prices.const import PRICE_RATING_MAPPING
 from homeassistant.const import PERCENTAGE
-from homeassistant.util import dt as dt_util
+
+if TYPE_CHECKING:
+    from custom_components.tibber_prices.coordinator.time_service import TimeService
 
 
-def _get_day_midnight_timestamp(key: str) -> str:
+def _get_day_midnight_timestamp(key: str, *, time: TimeService) -> str:
     """Get midnight timestamp for a given day sensor key."""
-    now = dt_util.now()
-    local_midnight = dt_util.start_of_local_day(now)
-
+    # Determine which day based on sensor key
     if key.startswith("yesterday") or key == "average_price_yesterday":
-        local_midnight = local_midnight - timedelta(days=1)
+        day = "yesterday"
     elif key.startswith("tomorrow") or key == "average_price_tomorrow":
-        local_midnight = local_midnight + timedelta(days=1)
+        day = "tomorrow"
+    else:
+        day = "today"
 
-    return local_midnight.isoformat()
+    # Use TimeService to get midnight for that day
+    local_midnight, _ = time.get_day_boundaries(day)
+    return local_midnight
 
 
 def _get_day_key_from_sensor_key(key: str) -> str:
@@ -60,6 +64,8 @@ def add_statistics_attributes(
     attributes: dict,
     key: str,
     cached_data: dict,
+    *,
+    time: TimeService,
 ) -> None:
     """
     Add attributes for statistics and rating sensors.
@@ -68,13 +74,14 @@ def add_statistics_attributes(
         attributes: Dictionary to add attributes to
         key: The sensor entity key
         cached_data: Dictionary containing cached sensor data
+        time: TimeService instance (required)
 
     """
     # Data timestamp sensor - shows API fetch time
     if key == "data_timestamp":
         latest_timestamp = cached_data.get("data_timestamp")
         if latest_timestamp:
-            attributes["timestamp"] = latest_timestamp.isoformat()
+            attributes["timestamp"] = latest_timestamp
         return
 
     # Current interval price rating - add rating attributes
@@ -105,7 +112,7 @@ def add_statistics_attributes(
     # Daily average sensors - show midnight to indicate whole day
     daily_avg_sensors = {"average_price_today", "average_price_tomorrow"}
     if key in daily_avg_sensors:
-        attributes["timestamp"] = _get_day_midnight_timestamp(key)
+        attributes["timestamp"] = _get_day_midnight_timestamp(key, time=time)
         return
 
     # Daily aggregated level/rating sensors - show midnight to indicate whole day
@@ -118,7 +125,7 @@ def add_statistics_attributes(
         "tomorrow_price_rating",
     }
     if key in daily_aggregated_sensors:
-        attributes["timestamp"] = _get_day_midnight_timestamp(key)
+        attributes["timestamp"] = _get_day_midnight_timestamp(key, time=time)
         return
 
     # All other statistics sensors - keep default timestamp (when calculation was made)

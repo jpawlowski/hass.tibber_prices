@@ -118,7 +118,7 @@ def build_chart_data_attributes(
     """
     # Build base attributes with metadata FIRST
     attributes: dict[str, object] = {
-        "timestamp": chart_data_last_update.isoformat() if chart_data_last_update else None,
+        "timestamp": chart_data_last_update,
     }
 
     # Add error message if service call failed

@@ -2,10 +2,15 @@
 
 from __future__ import annotations
 
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from custom_components.tibber_prices.entity_utils import add_icon_color_attribute
-from homeassistant.util import dt as dt_util
+
+if TYPE_CHECKING:
+    from custom_components.tibber_prices.coordinator.time_service import TimeService
+
+# Timer #3 triggers every 30 seconds
+TIMER_30_SEC_BOUNDARY = 30
 
 
 def _is_timing_or_volatility_sensor(key: str) -> bool:
@@ -29,24 +34,27 @@ def add_period_timing_attributes(
     attributes: dict,
     key: str,
     state_value: Any = None,
+    *,
+    time: TimeService,
 ) -> None:
     """
     Add timestamp and icon_color attributes for best_price/peak_price timing sensors.
 
     The timestamp indicates when the sensor value was calculated:
-    - Quarter-hour sensors (end_time, next_start_time): Timestamp of current 15-min interval
-    - Minute-update sensors (remaining_minutes, progress, next_in_minutes): Current minute with :00 seconds
+    - Quarter-hour sensors (end_time, next_start_time): Rounded to 15-min boundary (:00, :15, :30, :45)
+    - 30-second update sensors (remaining_minutes, progress, next_in_minutes): Current time with seconds
 
     Args:
         attributes: Dictionary to add attributes to
         key: The sensor entity key (e.g., "best_price_end_time")
         state_value: Current sensor value for icon_color calculation
+        time: TimeService instance (required)
 
     """
-    # Determine if this is a quarter-hour or minute-update sensor
+    # Determine if this is a quarter-hour or 30-second update sensor
     is_quarter_hour_sensor = key.endswith(("_end_time", "_next_start_time"))
 
-    now = dt_util.now()
+    now = time.now()
 
     if is_quarter_hour_sensor:
         # Quarter-hour sensors: Use timestamp of current 15-minute interval
@@ -54,11 +62,12 @@ def add_period_timing_attributes(
         minute = (now.minute // 15) * 15
         timestamp = now.replace(minute=minute, second=0, microsecond=0)
     else:
-        # Minute-update sensors: Use current minute with :00 seconds
-        # This ensures clean timestamps despite timer fluctuations
-        timestamp = now.replace(second=0, microsecond=0)
+        # 30-second update sensors: Round to nearest 30-second boundary (:00 or :30)
+        # Timer triggers at :00 and :30, so round current time to these boundaries
+        second = 0 if now.second < TIMER_30_SEC_BOUNDARY else TIMER_30_SEC_BOUNDARY
+        timestamp = now.replace(second=second, microsecond=0)
 
-    attributes["timestamp"] = timestamp.isoformat()
+    attributes["timestamp"] = timestamp
 
     # Add icon_color for dynamic styling
     add_icon_color_attribute(attributes, key=key, state_value=state_value)

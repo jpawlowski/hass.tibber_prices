@@ -24,7 +24,6 @@ from .average import (
     calculate_current_trailing_max,
     calculate_current_trailing_min,
     calculate_next_n_hours_avg,
-    round_to_nearest_quarter_hour,
 )
 from .price import (
     aggregate_period_levels,
@@ -59,5 +58,4 @@ __all__ = [
     "calculate_volatility_level",
     "enrich_price_info_with_differences",
     "find_price_data_for_interval",
-    "round_to_nearest_quarter_hour",
 ]

@@ -64,7 +64,7 @@ class VolatilityCalculator(BaseCalculator):
         }
 
         # Get prices based on volatility type
-        prices_to_analyze = get_prices_for_volatility(volatility_type, price_info)
+        prices_to_analyze = get_prices_for_volatility(volatility_type, price_info, time=self.coordinator.time)
 
         if not prices_to_analyze:
             return None
@@ -95,7 +95,9 @@ class VolatilityCalculator(BaseCalculator):
         add_icon_color_attribute(self._last_volatility_attributes, key="volatility", state_value=volatility)
 
         # Add type-specific attributes
-        add_volatility_type_attributes(self._last_volatility_attributes, volatility_type, price_info, thresholds)
+        add_volatility_type_attributes(
+            self._last_volatility_attributes, volatility_type, price_info, thresholds, time=self.coordinator.time
+        )
 
         # Return lowercase for ENUM device class
         return volatility.lower()

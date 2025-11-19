@@ -3,14 +3,19 @@
 from __future__ import annotations
 
 from datetime import timedelta
+from typing import TYPE_CHECKING
 
 from custom_components.tibber_prices.utils.price import calculate_volatility_level
-from homeassistant.util import dt as dt_util
+
+if TYPE_CHECKING:
+    from custom_components.tibber_prices.coordinator.time_service import TimeService
 
 
 def add_volatility_attributes(
     attributes: dict,
     cached_data: dict,
+    *,
+    time: TimeService,  # noqa: ARG001
 ) -> None:
     """
     Add attributes for volatility sensors.
@@ -18,6 +23,7 @@ def add_volatility_attributes(
     Args:
         attributes: Dictionary to add attributes to
         cached_data: Dictionary containing cached sensor data
+        time: TimeService instance (required)
 
     """
     if cached_data.get("volatility_attributes"):
@@ -27,6 +33,8 @@ def add_volatility_attributes(
 def get_prices_for_volatility(
     volatility_type: str,
     price_info: dict,
+    *,
+    time: TimeService,
 ) -> list[float]:
     """
     Get price list for volatility calculation based on type.
@@ -34,6 +42,7 @@ def get_prices_for_volatility(
     Args:
         volatility_type: One of "today", "tomorrow", "next_24h", "today_tomorrow"
         price_info: Price information dictionary from coordinator data
+        time: TimeService instance (required)
 
     Returns:
         List of prices to analyze
@@ -47,18 +56,17 @@ def get_prices_for_volatility(
 
     if volatility_type == "next_24h":
         # Rolling 24h from now
-        now = dt_util.now()
+        now = time.now()
         end_time = now + timedelta(hours=24)
         prices = []
 
         for day_key in ["today", "tomorrow"]:
             for price_data in price_info.get(day_key, []):
-                starts_at = dt_util.parse_datetime(price_data.get("startsAt"))
+                starts_at = price_data.get("startsAt")  # Already datetime in local timezone
                 if starts_at is None:
                     continue
-                starts_at = dt_util.as_local(starts_at)
 
-                if now <= starts_at < end_time and "total" in price_data:
+                if time.is_in_future(starts_at) and starts_at < end_time and "total" in price_data:
                     prices.append(float(price_data["total"]))
         return prices
 
@@ -79,6 +87,8 @@ def add_volatility_type_attributes(
     volatility_type: str,
     price_info: dict,
     thresholds: dict,
+    *,
+    time: TimeService,
 ) -> None:
     """
     Add type-specific attributes for volatility sensors.
@@ -88,6 +98,7 @@ def add_volatility_type_attributes(
         volatility_type: Type of volatility calculation
         price_info: Price information dictionary from coordinator data
         thresholds: Volatility thresholds configuration
+        time: TimeService instance (required)
 
     """
     # Add timestamp for calendar day volatility sensors (midnight of the day)
@@ -124,5 +135,5 @@ def add_volatility_type_attributes(
             volatility_attributes["interval_count_tomorrow"] = len(tomorrow_prices)
     elif volatility_type == "next_24h":
         # Add time window info
-        now = dt_util.now()
-        volatility_attributes["timestamp"] = now.isoformat()
+        now = time.now()
+        volatility_attributes["timestamp"] = now

@@ -2,12 +2,9 @@
 
 from __future__ import annotations
 
-from datetime import timedelta
 from typing import TYPE_CHECKING
 
-from custom_components.tibber_prices.const import MINUTES_PER_INTERVAL
 from custom_components.tibber_prices.utils.price import find_price_data_for_interval
-from homeassistant.util import dt as dt_util
 
 from .base import BaseCalculator
 
@@ -64,10 +61,11 @@ class IntervalCalculator(BaseCalculator):
             return None
 
         price_info = self.price_info
-        now = dt_util.now()
-        target_time = now + timedelta(minutes=MINUTES_PER_INTERVAL * interval_offset)
+        time = self.coordinator.time
+        # Use TimeService to get interval offset time
+        target_time = time.get_interval_offset_time(interval_offset)
 
-        interval_data = find_price_data_for_interval(price_info, target_time)
+        interval_data = find_price_data_for_interval(price_info, target_time, time=time)
         if not interval_data:
             return None
 
@@ -124,9 +122,10 @@ class IntervalCalculator(BaseCalculator):
             self._last_rating_level = None
             return None
 
-        now = dt_util.now()
+        time = self.coordinator.time
+        now = time.now()
         price_info = self.price_info
-        current_interval = find_price_data_for_interval(price_info, now)
+        current_interval = find_price_data_for_interval(price_info, now, time=time)
 
         if current_interval:
             rating_level = current_interval.get("rating_level")

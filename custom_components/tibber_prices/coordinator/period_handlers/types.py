@@ -13,7 +13,6 @@ from custom_components.tibber_prices.const import (
     DEFAULT_VOLATILITY_THRESHOLD_HIGH,
     DEFAULT_VOLATILITY_THRESHOLD_MODERATE,
     DEFAULT_VOLATILITY_THRESHOLD_VERY_HIGH,
-    MINUTES_PER_INTERVAL,  # noqa: F401 - Re-exported for period handler modules
 )
 
 # Log indentation levels for visual hierarchy

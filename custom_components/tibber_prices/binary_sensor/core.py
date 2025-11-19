@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from datetime import timedelta
 from typing import TYPE_CHECKING
 
 from custom_components.tibber_prices.coordinator import TIME_SENSITIVE_ENTITY_KEYS
@@ -13,7 +12,6 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntityDescription,
 )
 from homeassistant.core import callback
-from homeassistant.util import dt as dt_util
 
 from .attributes import (
     build_async_extra_state_attributes,
@@ -21,10 +19,7 @@ from .attributes import (
     get_price_intervals_attributes,
     get_tomorrow_data_available_attributes,
 )
-from .definitions import (
-    MIN_TOMORROW_INTERVALS_15MIN,
-    PERIOD_LOOKAHEAD_HOURS,
-)
+from .definitions import PERIOD_LOOKAHEAD_HOURS
 
 if TYPE_CHECKING:
     from collections.abc import Callable
@@ -32,6 +27,7 @@ if TYPE_CHECKING:
     from custom_components.tibber_prices.coordinator import (
         TibberPricesDataUpdateCoordinator,
     )
+    from custom_components.tibber_prices.coordinator.time_service import TimeService
 
 
 class TibberPricesBinarySensor(TibberPricesEntity, BinarySensorEntity):
@@ -69,8 +65,17 @@ class TibberPricesBinarySensor(TibberPricesEntity, BinarySensorEntity):
             self._time_sensitive_remove_listener = None
 
     @callback
-    def _handle_time_sensitive_update(self) -> None:
-        """Handle time-sensitive update from coordinator."""
+    def _handle_time_sensitive_update(self, time_service: TimeService) -> None:
+        """
+        Handle time-sensitive update from coordinator.
+
+        Args:
+            time_service: TimeService instance with reference time for this update cycle
+
+        """
+        # Store TimeService from Timer #2 for calculations during this update cycle
+        self.coordinator.time = time_service
+
         self.async_write_ha_state()
 
     def _get_value_getter(self) -> Callable | None:
@@ -92,29 +97,29 @@ class TibberPricesBinarySensor(TibberPricesEntity, BinarySensorEntity):
         """Return True if the current time is within a best price period."""
         if not self.coordinator.data:
             return None
-        attrs = get_price_intervals_attributes(self.coordinator.data, reverse_sort=False)
+        attrs = get_price_intervals_attributes(self.coordinator.data, reverse_sort=False, time=self.coordinator.time)
         if not attrs:
             return False  # Should not happen, but safety fallback
         start = attrs.get("start")
         end = attrs.get("end")
         if not start or not end:
             return False  # No period found = sensor is off
-        now = dt_util.now()
-        return start <= now < end
+        time = self.coordinator.time
+        return time.is_time_in_period(start, end)
 
     def _peak_price_state(self) -> bool | None:
         """Return True if the current time is within a peak price period."""
         if not self.coordinator.data:
             return None
-        attrs = get_price_intervals_attributes(self.coordinator.data, reverse_sort=True)
+        attrs = get_price_intervals_attributes(self.coordinator.data, reverse_sort=True, time=self.coordinator.time)
         if not attrs:
             return False  # Should not happen, but safety fallback
         start = attrs.get("start")
         end = attrs.get("end")
         if not start or not end:
             return False  # No period found = sensor is off
-        now = dt_util.now()
-        return start <= now < end
+        time = self.coordinator.time
+        return time.is_time_in_period(start, end)
 
     def _tomorrow_data_available_state(self) -> bool | None:
         """Return True if tomorrow's data is fully available, False if not, None if unknown."""
@@ -123,7 +128,12 @@ class TibberPricesBinarySensor(TibberPricesEntity, BinarySensorEntity):
         price_info = self.coordinator.data.get("priceInfo", {})
         tomorrow_prices = price_info.get("tomorrow", [])
         interval_count = len(tomorrow_prices)
-        if interval_count == MIN_TOMORROW_INTERVALS_15MIN:
+
+        # Get expected intervals for tomorrow (handles DST)
+        tomorrow_date = self.coordinator.time.get_local_date(offset_days=1)
+        expected_intervals = self.coordinator.time.get_expected_intervals_for_day(tomorrow_date)
+
+        if interval_count == expected_intervals:
             return True
         if interval_count == 0:
             return False
@@ -175,7 +185,7 @@ class TibberPricesBinarySensor(TibberPricesEntity, BinarySensorEntity):
 
     def _get_tomorrow_data_available_attributes(self) -> dict | None:
         """Return attributes for tomorrow_data_available binary sensor."""
-        return get_tomorrow_data_available_attributes(self.coordinator.data)
+        return get_tomorrow_data_available_attributes(self.coordinator.data, time=self.coordinator.time)
 
     def _get_sensor_attributes(self) -> dict | None:
         """
@@ -187,9 +197,9 @@ class TibberPricesBinarySensor(TibberPricesEntity, BinarySensorEntity):
         key = self.entity_description.key
 
         if key == "peak_price_period":
-            return get_price_intervals_attributes(self.coordinator.data, reverse_sort=True)
+            return get_price_intervals_attributes(self.coordinator.data, reverse_sort=True, time=self.coordinator.time)
         if key == "best_price_period":
-            return get_price_intervals_attributes(self.coordinator.data, reverse_sort=False)
+            return get_price_intervals_attributes(self.coordinator.data, reverse_sort=False, time=self.coordinator.time)
         if key == "tomorrow_data_available":
             return self._get_tomorrow_data_available_attributes()
 
@@ -249,22 +259,19 @@ class TibberPricesBinarySensor(TibberPricesEntity, BinarySensorEntity):
         if not attrs or "periods" not in attrs:
             return False
 
-        now = dt_util.now()
-        horizon = now + timedelta(hours=PERIOD_LOOKAHEAD_HOURS)
+        time = self.coordinator.time
         periods = attrs.get("periods", [])
 
         # Check if any period starts within the look-ahead window
         for period in periods:
             start_str = period.get("start")
             if start_str:
-                # Parse datetime if it's a string, otherwise use as-is
-                start_time = dt_util.parse_datetime(start_str) if isinstance(start_str, str) else start_str
+                # Already datetime object (periods come from coordinator.data)
+                start_time = start_str if not isinstance(start_str, str) else time.parse_datetime(start_str)
 
-                if start_time:
-                    start_time_local = dt_util.as_local(start_time)
-                    # Period starts in the future but within our horizon
-                    if now < start_time_local <= horizon:
-                        return True
+                # Period starts in the future but within our horizon
+                if start_time and time.is_time_within_horizon(start_time, hours=PERIOD_LOOKAHEAD_HOURS):
+                    return True
 
         return False
 
@@ -286,6 +293,7 @@ class TibberPricesBinarySensor(TibberPricesEntity, BinarySensorEntity):
                 config_entry=self.coordinator.config_entry,
                 sensor_attrs=sensor_attrs,
                 is_on=self.is_on,
+                time=self.coordinator.time,
             )
 
         except (KeyError, ValueError, TypeError) as ex:
@@ -316,6 +324,7 @@ class TibberPricesBinarySensor(TibberPricesEntity, BinarySensorEntity):
                 config_entry=self.coordinator.config_entry,
                 sensor_attrs=sensor_attrs,
                 is_on=self.is_on,
+                time=self.coordinator.time,
             )
 
         except (KeyError, ValueError, TypeError) as ex:

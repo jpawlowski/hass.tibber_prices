@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import datetime, timedelta
+from datetime import datetime  # noqa: TC003 - Used at runtime for _get_data_timestamp()
 from typing import TYPE_CHECKING, Any
 
 from custom_components.tibber_prices.binary_sensor.attributes import (
@@ -25,10 +25,9 @@ from custom_components.tibber_prices.entity import TibberPricesEntity
 from custom_components.tibber_prices.entity_utils import (
     add_icon_color_attribute,
     find_rolling_hour_center_index,
-    get_dynamic_icon,
     get_price_value,
 )
-from custom_components.tibber_prices.entity_utils.icons import IconContext
+from custom_components.tibber_prices.entity_utils.icons import IconContext, get_dynamic_icon
 from custom_components.tibber_prices.utils.average import (
     calculate_next_n_hours_avg,
 )
@@ -42,7 +41,6 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.const import EntityCategory
 from homeassistant.core import callback
-from homeassistant.util import dt as dt_util
 
 from .attributes import (
     add_volatility_type_attributes,
@@ -75,10 +73,10 @@ if TYPE_CHECKING:
     from custom_components.tibber_prices.coordinator import (
         TibberPricesDataUpdateCoordinator,
     )
+    from custom_components.tibber_prices.coordinator.time_service import TimeService
 
 HOURS_IN_DAY = 24
 LAST_HOUR_OF_DAY = 23
-INTERVALS_PER_HOUR = 4  # 15-minute intervals
 MAX_FORECAST_INTERVALS = 8  # Show up to 8 future intervals (2 hours with 15-min intervals)
 MIN_HOURS_FOR_LATER_HALF = 3  # Minimum hours needed to calculate later half average
 
@@ -148,8 +146,17 @@ class TibberPricesSensor(TibberPricesEntity, SensorEntity):
             self._minute_update_remove_listener = None
 
     @callback
-    def _handle_time_sensitive_update(self) -> None:
-        """Handle time-sensitive update from coordinator."""
+    def _handle_time_sensitive_update(self, time_service: TimeService) -> None:
+        """
+        Handle time-sensitive update from coordinator.
+
+        Args:
+            time_service: TimeService instance with reference time for this update cycle
+
+        """
+        # Store TimeService from Timer #2 for calculations during this update cycle
+        self.coordinator.time = time_service
+
         # Clear cached trend values on time-sensitive updates
         if self.entity_description.key.startswith("price_trend_"):
             self._trend_calculator.clear_trend_cache()
@@ -159,8 +166,17 @@ class TibberPricesSensor(TibberPricesEntity, SensorEntity):
         self.async_write_ha_state()
 
     @callback
-    def _handle_minute_update(self) -> None:
-        """Handle minute-by-minute update from coordinator."""
+    def _handle_minute_update(self, time_service: TimeService) -> None:
+        """
+        Handle minute-by-minute update from coordinator.
+
+        Args:
+            time_service: TimeService instance with reference time for this update cycle
+
+        """
+        # Store TimeService from Timer #3 for calculations during this update cycle
+        self.coordinator.time = time_service
+
         self.async_write_ha_state()
 
     @callback
@@ -235,8 +251,9 @@ class TibberPricesSensor(TibberPricesEntity, SensorEntity):
             return None
 
         # Find center index for the rolling window
-        now = dt_util.now()
-        center_idx = find_rolling_hour_center_index(all_prices, now, hour_offset)
+        time = self.coordinator.time
+        now = time.now()
+        center_idx = find_rolling_hour_center_index(all_prices, now, hour_offset, time=time)
         if center_idx is None:
             return None
 
@@ -288,27 +305,20 @@ class TibberPricesSensor(TibberPricesEntity, SensorEntity):
 
         price_info = self.coordinator.data.get("priceInfo", {})
 
-        # Get local midnight boundaries based on the requested day
-        local_midnight = dt_util.as_local(dt_util.start_of_local_day(dt_util.now()))
-        if day == "tomorrow":
-            local_midnight = local_midnight + timedelta(days=1)
-        local_midnight_next_day = local_midnight + timedelta(days=1)
+        # Get TimeService from coordinator
+        time = self.coordinator.time
+
+        # Get local midnight boundaries based on the requested day using TimeService
+        local_midnight, local_midnight_next_day = time.get_day_boundaries(day)
 
         # Collect all prices and their intervals from both today and tomorrow data
         # that fall within the target day's local date boundaries
         price_intervals = []
         for day_key in ["today", "tomorrow"]:
             for price_data in price_info.get(day_key, []):
-                starts_at_str = price_data.get("startsAt")
-                if not starts_at_str:
+                starts_at = price_data.get("startsAt")  # Already datetime in local timezone
+                if not starts_at:
                     continue
-
-                starts_at = dt_util.parse_datetime(starts_at_str)
-                if starts_at is None:
-                    continue
-
-                # Convert to local timezone for comparison
-                starts_at = dt_util.as_local(starts_at)
 
                 # Include price if it starts within the target day's local date boundaries
                 if local_midnight <= starts_at < local_midnight_next_day:
@@ -363,29 +373,18 @@ class TibberPricesSensor(TibberPricesEntity, SensorEntity):
 
         price_info = self.coordinator.data.get("priceInfo", {})
 
-        # Get local midnight boundaries based on the requested day
-        local_midnight = dt_util.as_local(dt_util.start_of_local_day(dt_util.now()))
-        if day == "tomorrow":
-            local_midnight = local_midnight + timedelta(days=1)
-        elif day == "yesterday":
-            local_midnight = local_midnight - timedelta(days=1)
-        local_midnight_next_day = local_midnight + timedelta(days=1)
+        # Get local midnight boundaries based on the requested day using TimeService
+        time = self.coordinator.time
+        local_midnight, local_midnight_next_day = time.get_day_boundaries(day)
 
         # Collect all intervals from both today and tomorrow data
         # that fall within the target day's local date boundaries
         day_intervals = []
         for day_key in ["yesterday", "today", "tomorrow"]:
             for price_data in price_info.get(day_key, []):
-                starts_at_str = price_data.get("startsAt")
-                if not starts_at_str:
+                starts_at = price_data.get("startsAt")  # Already datetime in local timezone
+                if not starts_at:
                     continue
-
-                starts_at = dt_util.parse_datetime(starts_at_str)
-                if starts_at is None:
-                    continue
-
-                # Convert to local timezone for comparison
-                starts_at = dt_util.as_local(starts_at)
 
                 # Include interval if it starts within the target day's local date boundaries
                 if local_midnight <= starts_at < local_midnight_next_day:
@@ -482,7 +481,7 @@ class TibberPricesSensor(TibberPricesEntity, SensorEntity):
             Average price in minor currency units (e.g., cents), or None if unavailable
 
         """
-        avg_price = calculate_next_n_hours_avg(self.coordinator.data, hours)
+        avg_price = calculate_next_n_hours_avg(self.coordinator.data, hours, time=self.coordinator.time)
         if avg_price is None:
             return None
 
@@ -490,7 +489,16 @@ class TibberPricesSensor(TibberPricesEntity, SensorEntity):
         return round(avg_price * 100, 2)
 
     def _get_data_timestamp(self) -> datetime | None:
-        """Get the latest data timestamp."""
+        """
+        Get the latest data timestamp from price data.
+
+        Returns timezone-aware datetime of the most recent price interval.
+        Home Assistant automatically displays TIMESTAMP sensors in user's timezone.
+
+        Returns:
+            Latest interval timestamp (timezone-aware), or None if no data available.
+
+        """
         if not self.coordinator.data:
             return None
 
@@ -499,11 +507,14 @@ class TibberPricesSensor(TibberPricesEntity, SensorEntity):
 
         for day in ["today", "tomorrow"]:
             for price_data in price_info.get(day, []):
-                timestamp = datetime.fromisoformat(price_data["startsAt"])
-                if not latest_timestamp or timestamp > latest_timestamp:
-                    latest_timestamp = timestamp
+                starts_at = price_data.get("startsAt")  # Already datetime in local timezone
+                if not starts_at:
+                    continue
+                if not latest_timestamp or starts_at > latest_timestamp:
+                    latest_timestamp = starts_at
 
-        return dt_util.as_utc(latest_timestamp) if latest_timestamp else None
+        # Return timezone-aware datetime (HA handles timezone display automatically)
+        return latest_timestamp
 
     def _get_volatility_value(self, *, volatility_type: str) -> str | None:
         """
@@ -529,7 +540,7 @@ class TibberPricesSensor(TibberPricesEntity, SensorEntity):
         }
 
         # Get prices based on volatility type
-        prices_to_analyze = get_prices_for_volatility(volatility_type, price_info)
+        prices_to_analyze = get_prices_for_volatility(volatility_type, price_info, time=self.coordinator.time)
 
         if not prices_to_analyze:
             return None
@@ -560,7 +571,9 @@ class TibberPricesSensor(TibberPricesEntity, SensorEntity):
         add_icon_color_attribute(self._last_volatility_attributes, key="volatility", state_value=volatility)
 
         # Add type-specific attributes
-        add_volatility_type_attributes(self._last_volatility_attributes, volatility_type, price_info, thresholds)
+        add_volatility_type_attributes(
+            self._last_volatility_attributes, volatility_type, price_info, thresholds, time=self.coordinator.time
+        )
 
         # Return lowercase for ENUM device class
         return volatility.lower()
@@ -572,7 +585,9 @@ class TibberPricesSensor(TibberPricesEntity, SensorEntity):
     # Add method to get future price intervals
     def _get_price_forecast_value(self) -> str | None:
         """Get the highest or lowest price status for the price forecast entity."""
-        future_prices = get_future_prices(self.coordinator, max_intervals=MAX_FORECAST_INTERVALS)
+        future_prices = get_future_prices(
+            self.coordinator, max_intervals=MAX_FORECAST_INTERVALS, time=self.coordinator.time
+        )
         if not future_prices:
             return "No forecast data available"
 
@@ -726,29 +741,30 @@ class TibberPricesSensor(TibberPricesEntity, SensorEntity):
         """Check if the current time is within a best price period."""
         if not self.coordinator.data:
             return False
-        attrs = get_price_intervals_attributes(self.coordinator.data, reverse_sort=False)
+        attrs = get_price_intervals_attributes(self.coordinator.data, reverse_sort=False, time=self.coordinator.time)
         if not attrs:
             return False
         start = attrs.get("start")
         end = attrs.get("end")
         if not start or not end:
             return False
-        now = dt_util.now()
+        time = self.coordinator.time
+        now = time.now()
         return start <= now < end
 
     def _is_peak_price_period_active(self) -> bool:
         """Check if the current time is within a peak price period."""
         if not self.coordinator.data:
             return False
-        attrs = get_price_intervals_attributes(self.coordinator.data, reverse_sort=True)
+        attrs = get_price_intervals_attributes(self.coordinator.data, reverse_sort=True, time=self.coordinator.time)
         if not attrs:
             return False
         start = attrs.get("start")
         end = attrs.get("end")
         if not start or not end:
             return False
-        now = dt_util.now()
-        return start <= now < end
+        time = self.coordinator.time
+        return time.is_current_interval(start, end)
 
     @property
     def icon(self) -> str | None:
@@ -790,6 +806,7 @@ class TibberPricesSensor(TibberPricesEntity, SensorEntity):
             context=IconContext(
                 coordinator_data=self.coordinator.data,
                 period_is_active_callback=period_is_active_callback,
+                time=self.coordinator.time,
             ),
         )
 
@@ -806,6 +823,8 @@ class TibberPricesSensor(TibberPricesEntity, SensorEntity):
             # Get sensor-specific attributes
             sensor_attrs = self._get_sensor_attributes()
 
+            time = self.coordinator.time
+
             # Build complete attributes using unified builder
             return build_extra_state_attributes(
                 entity_key=self.entity_description.key,
@@ -814,6 +833,7 @@ class TibberPricesSensor(TibberPricesEntity, SensorEntity):
                 config_entry=self.coordinator.config_entry,
                 coordinator_data=self.coordinator.data,
                 sensor_attrs=sensor_attrs,
+                time=time,
             )
 
         except (KeyError, ValueError, TypeError) as ex:
@@ -891,7 +911,8 @@ class TibberPricesSensor(TibberPricesEntity, SensorEntity):
             config_entry=self.coordinator.config_entry,
         )
         self._chart_data_response = response
-        self._chart_data_last_update = dt_util.now()
+        time = self.coordinator.time
+        self._chart_data_last_update = time.now()
         self._chart_data_error = error
         # Trigger state update after refresh
         self.async_write_ha_state()

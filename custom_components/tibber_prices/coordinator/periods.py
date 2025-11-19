@@ -12,6 +12,9 @@ from typing import TYPE_CHECKING, Any
 
 from custom_components.tibber_prices import const as _const
 
+if TYPE_CHECKING:
+    from custom_components.tibber_prices.coordinator.time_service import TimeService
+
 from .period_handlers import (
     PeriodConfig,
     calculate_periods_with_relaxation,
@@ -34,6 +37,7 @@ class PeriodCalculator:
         """Initialize the period calculator."""
         self.config_entry = config_entry
         self._log_prefix = log_prefix
+        self.time: TimeService  # Set by coordinator before first use
         self._config_cache: dict[str, dict[str, Any]] | None = None
         self._config_cache_valid = False
 
@@ -336,7 +340,7 @@ class PeriodCalculator:
                 _const.DEFAULT_BEST_PRICE_MIN_PERIOD_LENGTH,
             )
 
-        min_period_intervals = min_period_minutes // 15
+        min_period_intervals = self.time.minutes_to_intervals(min_period_minutes)
 
         sub_sequences = self.split_at_gap_clusters(
             today_intervals,
@@ -627,6 +631,7 @@ class PeriodCalculator:
                     reverse_sort=False,
                     level_override=lvl,
                 ),
+                time=self.time,
             )
         else:
             best_periods = {
@@ -699,6 +704,7 @@ class PeriodCalculator:
                     reverse_sort=True,
                     level_override=lvl,
                 ),
+                time=self.time,
             )
         else:
             peak_periods = {

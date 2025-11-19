@@ -22,10 +22,12 @@ from .constants import (
     TIME_SENSITIVE_ENTITY_KEYS,
 )
 from .core import TibberPricesDataUpdateCoordinator
+from .time_service import TimeService
 
 __all__ = [
     "MINUTE_UPDATE_ENTITY_KEYS",
     "STORAGE_VERSION",
     "TIME_SENSITIVE_ENTITY_KEYS",
     "TibberPricesDataUpdateCoordinator",
+    "TimeService",
 ]

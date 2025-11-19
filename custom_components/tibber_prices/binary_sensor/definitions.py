@@ -8,9 +8,6 @@ from homeassistant.components.binary_sensor import (
 )
 from homeassistant.const import EntityCategory
 
-# Constants
-MIN_TOMORROW_INTERVALS_15MIN = 96
-
 # Look-ahead window for future period detection (hours)
 # Icons will show "waiting" state if a period starts within this window
 PERIOD_LOOKAHEAD_HOURS = 6

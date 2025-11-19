@@ -7,13 +7,14 @@ from typing import TYPE_CHECKING, Any
 
 from custom_components.tibber_prices import const as _const
 from custom_components.tibber_prices.utils.price import enrich_price_info_with_differences
-from homeassistant.util import dt as dt_util
 
 if TYPE_CHECKING:
     from collections.abc import Callable
     from datetime import datetime
 
     from homeassistant.config_entries import ConfigEntry
+
+    from .time_service import TimeService
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -26,11 +27,13 @@ class DataTransformer:
         config_entry: ConfigEntry,
         log_prefix: str,
         perform_turnover_fn: Callable[[dict[str, Any]], dict[str, Any]],
+        time: TimeService,
     ) -> None:
         """Initialize the data transformer."""
         self.config_entry = config_entry
         self._log_prefix = log_prefix
         self._perform_turnover_fn = perform_turnover_fn
+        self.time = time
 
         # Transformation cache
         self._cached_transformed_data: dict[str, Any] | None = None
@@ -122,13 +125,13 @@ class DataTransformer:
             return True
 
         # Check for midnight turnover
-        now_local = dt_util.as_local(current_time)
+        now_local = self.time.as_local(current_time)
         current_date = now_local.date()
 
         if self._last_midnight_check is None:
             return True
 
-        last_check_local = dt_util.as_local(self._last_midnight_check)
+        last_check_local = self.time.as_local(self._last_midnight_check)
         last_check_date = last_check_local.date()
 
         if current_date != last_check_date:
@@ -139,7 +142,7 @@ class DataTransformer:
 
     def transform_data_for_main_entry(self, raw_data: dict[str, Any]) -> dict[str, Any]:
         """Transform raw data for main entry (aggregated view of all homes)."""
-        current_time = dt_util.now()
+        current_time = self.time.now()
 
         # Return cached transformed data if no retransformation needed
         if not self._should_retransform_data(current_time) and self._cached_transformed_data is not None:
@@ -198,7 +201,7 @@ class DataTransformer:
 
     def transform_data_for_subentry(self, main_data: dict[str, Any], home_id: str) -> dict[str, Any]:
         """Transform main coordinator data for subentry (home-specific view)."""
-        current_time = dt_util.now()
+        current_time = self.time.now()
 
         # Return cached transformed data if no retransformation needed
         if not self._should_retransform_data(current_time) and self._cached_transformed_data is not None:

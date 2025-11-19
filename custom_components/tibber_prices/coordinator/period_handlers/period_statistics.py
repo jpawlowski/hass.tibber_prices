@@ -7,20 +7,18 @@ from typing import TYPE_CHECKING, Any
 if TYPE_CHECKING:
     from datetime import datetime
 
+    from custom_components.tibber_prices.coordinator.time_service import TimeService
+
     from .types import (
         PeriodData,
         PeriodStatistics,
         ThresholdConfig,
     )
-
 from custom_components.tibber_prices.utils.price import (
     aggregate_period_levels,
     aggregate_period_ratings,
     calculate_volatility_level,
 )
-from homeassistant.util import dt as dt_util
-
-from .types import MINUTES_PER_INTERVAL
 
 
 def calculate_period_price_diff(
@@ -139,7 +137,7 @@ def build_period_summary_dict(
         # 1. Time information (when does this apply?)
         "start": period_data.start_time,
         "end": period_data.end_time,
-        "duration_minutes": period_data.period_length * MINUTES_PER_INTERVAL,
+        "duration_minutes": period_data.period_length * 15,  # period_length is in intervals
         # 2. Core decision attributes (what should I do?)
         "level": stats.aggregated_level,
         "rating_level": stats.aggregated_rating,
@@ -179,6 +177,8 @@ def extract_period_summaries(
     all_prices: list[dict],
     price_context: dict[str, Any],
     thresholds: ThresholdConfig,
+    *,
+    time: TimeService,
 ) -> list[dict]:
     """
     Extract complete period summaries with all aggregated attributes.
@@ -199,6 +199,7 @@ def extract_period_summaries(
         all_prices: All price data from the API (enriched with level, difference, rating_level)
         price_context: Dictionary with ref_prices and avg_prices per day
         thresholds: Threshold configuration for calculations
+        time: TimeService instance (required)
 
     """
     from .types import (  # noqa: PLC0415 - Avoid circular import
@@ -209,9 +210,8 @@ def extract_period_summaries(
     # Build lookup dictionary for full price data by timestamp
     price_lookup: dict[str, dict] = {}
     for price_data in all_prices:
-        starts_at = dt_util.parse_datetime(price_data["startsAt"])
+        starts_at = time.get_interval_time(price_data)
         if starts_at:
-            starts_at = dt_util.as_local(starts_at)
             price_lookup[starts_at.isoformat()] = price_data
 
     summaries = []

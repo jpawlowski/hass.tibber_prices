@@ -11,7 +11,6 @@ from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.helpers import aiohttp_client
 from homeassistant.helpers.storage import Store
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
-from homeassistant.util import dt as dt_util
 
 if TYPE_CHECKING:
     from datetime import date, datetime
@@ -39,6 +38,7 @@ from .data_fetching import DataFetcher
 from .data_transformation import DataTransformer
 from .listeners import ListenerManager
 from .periods import PeriodCalculator
+from .time_service import TimeService
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -134,6 +134,12 @@ class TibberPricesDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         # Track if this is the main entry (first one created)
         self._is_main_entry = not self._has_existing_main_coordinator()
 
+        # Initialize time service (single source of truth for datetime operations)
+        self.time = TimeService()
+
+        # Set time on API client (needed for rate limiting)
+        self.api.time = self.time
+
         # Initialize helper modules
         self._listener_manager = ListenerManager(hass, self._log_prefix)
         self._data_fetcher = DataFetcher(
@@ -141,11 +147,13 @@ class TibberPricesDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             store=self._store,
             log_prefix=self._log_prefix,
             user_update_interval=timedelta(days=1),
+            time=self.time,
         )
         self._data_transformer = DataTransformer(
             config_entry=config_entry,
             log_prefix=self._log_prefix,
             perform_turnover_fn=self._perform_midnight_turnover,
+            time=self.time,
         )
         self._period_calculator = PeriodCalculator(
             config_entry=config_entry,
@@ -197,9 +205,15 @@ class TibberPricesDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         return self._listener_manager.async_add_time_sensitive_listener(update_callback)
 
     @callback
-    def _async_update_time_sensitive_listeners(self) -> None:
-        """Update all time-sensitive entities without triggering a full coordinator update."""
-        self._listener_manager.async_update_time_sensitive_listeners()
+    def _async_update_time_sensitive_listeners(self, time_service: TimeService) -> None:
+        """
+        Update all time-sensitive entities without triggering a full coordinator update.
+
+        Args:
+            time_service: TimeService instance with reference time for this update cycle
+
+        """
+        self._listener_manager.async_update_time_sensitive_listeners(time_service)
 
     @callback
     def async_add_minute_update_listener(self, update_callback: CALLBACK_TYPE) -> CALLBACK_TYPE:
@@ -216,9 +230,15 @@ class TibberPricesDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         return self._listener_manager.async_add_minute_update_listener(update_callback)
 
     @callback
-    def _async_update_minute_listeners(self) -> None:
-        """Update all minute-update entities without triggering a full coordinator update."""
-        self._listener_manager.async_update_minute_listeners()
+    def _async_update_minute_listeners(self, time_service: TimeService) -> None:
+        """
+        Update all minute-update entities without triggering a full coordinator update.
+
+        Args:
+            time_service: TimeService instance with reference time for this update cycle
+
+        """
+        self._listener_manager.async_update_minute_listeners(time_service)
 
     @callback
     def _handle_quarter_hour_refresh(self, _now: datetime | None = None) -> None:
@@ -235,7 +255,23 @@ class TibberPricesDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         This is triggered at exact quarter-hour boundaries (:00, :15, :30, :45).
         Does NOT fetch new data - only updates entity states based on existing cached data.
         """
-        now = dt_util.now()
+        # Create LOCAL TimeService with fresh reference time for this refresh
+        # Each timer has its own TimeService instance - no shared state between timers
+        # This timer updates 30+ time-sensitive entities at quarter-hour boundaries
+        # (Timer #3 handles timing entities separately - no overlap)
+        time_service = TimeService()
+        now = time_service.now()
+
+        # Update shared coordinator time (used by Timer #1 and other operations)
+        # This is safe because we're in a @callback (synchronous event loop)
+        self.time = time_service
+
+        # Update helper modules with fresh TimeService instance
+        self.api.time = time_service
+        self._data_fetcher.time = time_service
+        self._data_transformer.time = time_service
+        self._period_calculator.time = time_service
+
         self._log("debug", "[Timer #2] Quarter-hour refresh triggered at %s", now.isoformat())
 
         # Check if midnight has passed since last check
@@ -251,28 +287,38 @@ class TibberPricesDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         else:
             # Regular quarter-hour refresh - only update time-sensitive entities
             # (Midnight turnover was either not needed, or already done by Timer #1)
-            self._async_update_time_sensitive_listeners()
+            # Pass local time_service to entities (not self.time which could be overwritten)
+            self._async_update_time_sensitive_listeners(time_service)
 
     @callback
     def _handle_minute_refresh(self, _now: datetime | None = None) -> None:
         """
-        Handle minute-by-minute entity refresh for timing sensors (Timer #3).
+        Handle 30-second entity refresh for timing sensors (Timer #3).
 
         This is a SYNCHRONOUS callback (decorated with @callback) - it runs in the event loop
         without async/await overhead because it performs only fast, non-blocking operations:
         - Listener notifications for timing sensors (remaining_minutes, progress)
 
         NO I/O operations (no API calls, no file operations), so no need for async def.
-        Runs every minute, so performance is critical - sync callbacks are faster.
+        Runs every 30 seconds to keep sensor values in sync with HA frontend display.
 
-        This runs every minute to update countdown/progress sensors.
+        This runs every 30 seconds to update countdown/progress sensors.
+        Timing calculations use rounded minutes matching HA's relative time display.
         Does NOT fetch new data - only updates entity states based on existing cached data.
         """
-        # Only log at debug level to avoid log spam (this runs every minute)
-        self._log("debug", "[Timer #3] Minute refresh for timing sensors")
+        # Create LOCAL TimeService with fresh reference time for this 30-second refresh
+        # Each timer has its own TimeService instance - no shared state between timers
+        # Timer #2 updates 30+ time-sensitive entities (prices, levels, timestamps)
+        # Timer #3 updates 6 timing entities (remaining_minutes, progress, next_in_minutes)
+        # NO overlap - entities are registered with either Timer #2 OR Timer #3, never both
+        time_service = TimeService()
+
+        # Only log at debug level to avoid log spam (this runs every 30 seconds)
+        self._log("debug", "[Timer #3] 30-second refresh for timing sensors")
 
         # Update only minute-update entities (remaining_minutes, progress, etc.)
-        self._async_update_minute_listeners()
+        # Pass local time_service to entities (not self.time which could be overwritten)
+        self._async_update_minute_listeners(time_service)
 
     def _check_midnight_turnover_needed(self, now: datetime) -> bool:
         """
@@ -400,11 +446,19 @@ class TibberPricesDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         """
         self._log("debug", "[Timer #1] DataUpdateCoordinator check triggered")
 
+        # Create TimeService with fresh reference time for this update cycle
+        self.time = TimeService()
+        current_time = self.time.now()
+
+        # Update helper modules with fresh TimeService instance
+        self.api.time = self.time
+        self._data_fetcher.time = self.time
+        self._data_transformer.time = self.time
+        self._period_calculator.time = self.time
+
         # Load cache if not already loaded
         if self._cached_price_data is None and self._cached_user_data is None:
             await self._load_cache()
-
-        current_time = dt_util.utcnow()
 
         # Initialize midnight check on first run
         if self._last_midnight_check is None:
@@ -514,7 +568,7 @@ class TibberPricesDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             Updated price_info with rotated day data
 
         """
-        return helpers.perform_midnight_turnover(price_info)
+        return helpers.perform_midnight_turnover(price_info, time=self.time)
 
     async def _store_cache(self) -> None:
         """Store cache data."""
@@ -593,13 +647,13 @@ class TibberPricesDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             return True
 
         # Check for midnight turnover
-        now_local = dt_util.as_local(current_time)
+        now_local = self.time.as_local(current_time)
         current_date = now_local.date()
 
         if self._last_midnight_check is None:
             return True
 
-        last_check_local = dt_util.as_local(self._last_midnight_check)
+        last_check_local = self.time.as_local(self._last_midnight_check)
         last_check_date = last_check_local.date()
 
         if current_date != last_check_date:
@@ -610,7 +664,7 @@ class TibberPricesDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 
     def _transform_data_for_main_entry(self, raw_data: dict[str, Any]) -> dict[str, Any]:
         """Transform raw data for main entry (aggregated view of all homes)."""
-        current_time = dt_util.now()
+        current_time = self.time.now()
 
         # Return cached transformed data if no retransformation needed
         if not self._should_retransform_data(current_time) and self._cached_transformed_data is not None:
@@ -635,7 +689,7 @@ class TibberPricesDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 
     def _transform_data_for_subentry(self, main_data: dict[str, Any]) -> dict[str, Any]:
         """Transform main coordinator data for subentry (home-specific view)."""
-        current_time = dt_util.now()
+        current_time = self.time.now()
 
         # Return cached transformed data if no retransformation needed
         if not self._should_retransform_data(current_time) and self._cached_transformed_data is not None:
@@ -681,8 +735,8 @@ class TibberPricesDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         if not price_info:
             return None
 
-        now = dt_util.now()
-        return find_price_data_for_interval(price_info, now)
+        now = self.time.now()
+        return find_price_data_for_interval(price_info, now, time=self.time)
 
     def get_all_intervals(self) -> list[dict[str, Any]]:
         """Get all price intervals (today + tomorrow)."""
@@ -697,7 +751,7 @@ class TibberPricesDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     async def refresh_user_data(self) -> bool:
         """Force refresh of user data and return True if data was updated."""
         try:
-            current_time = dt_util.utcnow()
+            current_time = self.time.now()
             self._log("info", "Forcing user data refresh (bypassing cache)")
 
             # Force update by calling API directly (bypass cache check)

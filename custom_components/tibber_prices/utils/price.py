@@ -5,7 +5,10 @@ from __future__ import annotations
 import logging
 import statistics
 from datetime import datetime, timedelta
-from typing import Any
+from typing import TYPE_CHECKING, Any
+
+if TYPE_CHECKING:
+    from custom_components.tibber_prices.coordinator.time_service import TimeService
 
 from custom_components.tibber_prices.const import (
     DEFAULT_VOLATILITY_THRESHOLD_HIGH,
@@ -19,9 +22,6 @@ from custom_components.tibber_prices.const import (
     VOLATILITY_MODERATE,
     VOLATILITY_VERY_HIGH,
 )
-from homeassistant.util import dt as dt_util
-
-from .average import round_to_nearest_quarter_hour
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -131,17 +131,9 @@ def calculate_trailing_average_for_interval(
     matching_prices = []
 
     for price_data in all_prices:
-        starts_at_str = price_data.get("startsAt")
-        if not starts_at_str:
+        price_time = price_data.get("startsAt")  # Already datetime object in local timezone
+        if not price_time:
             continue
-
-        # Parse the timestamp
-        price_time = dt_util.parse_datetime(starts_at_str)
-        if price_time is None:
-            continue
-
-        # Convert to local timezone for comparison
-        price_time = dt_util.as_local(price_time)
 
         # Check if this price falls within our lookback window
         # Include prices that start >= lookback_start and start < interval_start
@@ -244,15 +236,9 @@ def _process_price_interval(
         day_label: Label for logging ("today" or "tomorrow")
 
     """
-    starts_at_str = price_interval.get("startsAt")
-    if not starts_at_str:
+    starts_at = price_interval.get("startsAt")  # Already datetime object in local timezone
+    if not starts_at:
         return
-
-    starts_at = dt_util.parse_datetime(starts_at_str)
-    if starts_at is None:
-        return
-
-    starts_at = dt_util.as_local(starts_at)
     current_interval_price = price_interval.get("total")
 
     if current_interval_price is None:
@@ -295,6 +281,7 @@ def enrich_price_info_with_differences(
         price_info: Dictionary with 'yesterday', 'today', 'tomorrow' keys
         threshold_low: Low threshold percentage for rating_level (defaults to -10)
         threshold_high: High threshold percentage for rating_level (defaults to 10)
+        time: TimeService instance (required)
 
     Returns:
         Updated price_info dict with 'difference' and 'rating_level' added
@@ -333,13 +320,19 @@ def enrich_price_info_with_differences(
     return price_info
 
 
-def find_price_data_for_interval(price_info: Any, target_time: datetime) -> dict | None:
+def find_price_data_for_interval(
+    price_info: Any,
+    target_time: datetime,
+    *,
+    time: TimeService,
+) -> dict | None:
     """
     Find the price data for a specific 15-minute interval timestamp.
 
     Args:
         price_info: The price info dictionary from Tibber API
         target_time: The target timestamp to find price data for
+        time: TimeService instance (required)
 
     Returns:
         Price data dict if found, None otherwise
@@ -347,9 +340,9 @@ def find_price_data_for_interval(price_info: Any, target_time: datetime) -> dict
     """
     # Round to nearest quarter-hour to handle edge cases where we're called
     # slightly before the boundary (e.g., 14:59:59.999 → 15:00:00)
-    rounded_time = round_to_nearest_quarter_hour(target_time)
+    rounded_time = time.round_to_nearest_quarter(target_time)
 
-    day_key = "tomorrow" if rounded_time.date() > dt_util.now().date() else "today"
+    day_key = "tomorrow" if rounded_time.date() > time.now().date() else "today"
     search_days = [day_key, "tomorrow" if day_key == "today" else "today"]
 
     for search_day in search_days:
@@ -358,11 +351,10 @@ def find_price_data_for_interval(price_info: Any, target_time: datetime) -> dict
             continue
 
         for price_data in day_prices:
-            starts_at = dt_util.parse_datetime(price_data["startsAt"])
+            starts_at = time.get_interval_time(price_data)
             if starts_at is None:
                 continue
 
-            starts_at = dt_util.as_local(starts_at)
             # Exact match after rounding
             if starts_at == rounded_time and starts_at.date() == rounded_time.date():
                 return price_data

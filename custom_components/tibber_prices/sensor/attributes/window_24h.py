@@ -2,15 +2,13 @@
 
 from __future__ import annotations
 
-from datetime import timedelta
 from typing import TYPE_CHECKING
-
-from homeassistant.util import dt as dt_util
 
 if TYPE_CHECKING:
     from custom_components.tibber_prices.coordinator.core import (
         TibberPricesDataUpdateCoordinator,
     )
+    from custom_components.tibber_prices.coordinator.time_service import TimeService
 
 
 def _update_extreme_interval(extreme_interval: dict | None, price_data: dict, key: str) -> dict:
@@ -44,6 +42,8 @@ def add_average_price_attributes(
     attributes: dict,
     key: str,
     coordinator: TibberPricesDataUpdateCoordinator,
+    *,
+    time: TimeService,
 ) -> None:
     """
     Add attributes for trailing and leading average/min/max price sensors.
@@ -52,10 +52,9 @@ def add_average_price_attributes(
         attributes: Dictionary to add attributes to
         key: The sensor entity key
         coordinator: The data update coordinator
+        time: TimeService instance (required)
 
     """
-    now = dt_util.now()
-
     # Determine if this is trailing or leading
     is_trailing = "trailing" in key
 
@@ -69,13 +68,11 @@ def add_average_price_attributes(
     if not all_prices:
         return
 
-    # Calculate the time window
+    # Calculate the time window using TimeService
     if is_trailing:
-        window_start = now - timedelta(hours=24)
-        window_end = now
+        window_start, window_end = time.get_trailing_window(hours=24)
     else:
-        window_start = now
-        window_end = now + timedelta(hours=24)
+        window_start, window_end = time.get_leading_window(hours=24)
 
     # Find all intervals in the window
     intervals_in_window = []
@@ -83,10 +80,9 @@ def add_average_price_attributes(
     is_min_max_sensor = "min" in key or "max" in key
 
     for price_data in all_prices:
-        starts_at = dt_util.parse_datetime(price_data["startsAt"])
+        starts_at = time.get_interval_time(price_data)
         if starts_at is None:
             continue
-        starts_at = dt_util.as_local(starts_at)
         if window_start <= starts_at < window_end:
             intervals_in_window.append(price_data)
 

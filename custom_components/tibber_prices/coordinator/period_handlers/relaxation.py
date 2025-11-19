@@ -9,9 +9,9 @@ if TYPE_CHECKING:
     from collections.abc import Callable
     from datetime import date
 
-    from .types import PeriodConfig
+    from custom_components.tibber_prices.coordinator.time_service import TimeService
 
-from homeassistant.util import dt as dt_util
+    from .types import PeriodConfig
 
 from .period_merging import (
     recalculate_period_metadata,
@@ -54,24 +54,25 @@ def group_periods_by_day(periods: list[dict]) -> dict[date, list[dict]]:
     return periods_by_day
 
 
-def group_prices_by_day(all_prices: list[dict]) -> dict[date, list[dict]]:
+def group_prices_by_day(all_prices: list[dict], *, time: TimeService) -> dict[date, list[dict]]:
     """
     Group price intervals by the day they belong to (today and future only).
 
     Args:
         all_prices: List of price dicts with "startsAt" timestamp
+        time: TimeService instance (required)
 
     Returns:
         Dict mapping date to list of price intervals for that day (only today and future)
 
     """
-    today = dt_util.now().date()
+    today = time.now().date()
     prices_by_day: dict[date, list[dict]] = {}
 
     for price in all_prices:
-        starts_at = dt_util.parse_datetime(price["startsAt"])
+        starts_at = price["startsAt"]  # Already datetime in local timezone
         if starts_at:
-            price_date = dt_util.as_local(starts_at).date()
+            price_date = starts_at.date()
             # Only include today and future days
             if price_date >= today:
                 prices_by_day.setdefault(price_date, []).append(price)
@@ -79,7 +80,9 @@ def group_prices_by_day(all_prices: list[dict]) -> dict[date, list[dict]]:
     return prices_by_day
 
 
-def check_min_periods_per_day(periods: list[dict], min_periods: int, all_prices: list[dict]) -> bool:
+def check_min_periods_per_day(
+    periods: list[dict], min_periods: int, all_prices: list[dict], *, time: TimeService
+) -> bool:
     """
     Check if minimum periods requirement is met for each day individually.
 
@@ -90,6 +93,7 @@ def check_min_periods_per_day(periods: list[dict], min_periods: int, all_prices:
         periods: List of period summary dicts
         min_periods: Minimum number of periods required per day
         all_prices: All available price intervals (used to determine which days have data)
+        time: TimeService instance (required)
 
     Returns:
         True if every day with price data has at least min_periods, False otherwise
@@ -99,12 +103,12 @@ def check_min_periods_per_day(periods: list[dict], min_periods: int, all_prices:
         return False  # No periods at all, continue relaxation
 
     # Get all days that have price data (today and future only, not yesterday)
-    today = dt_util.now().date()
+    today = time.now().date()
     available_days = set()
     for price in all_prices:
-        starts_at = dt_util.parse_datetime(price["startsAt"])
+        starts_at = time.get_interval_time(price)
         if starts_at:
-            price_date = dt_util.as_local(starts_at).date()
+            price_date = starts_at.date()
             # Only count today and future days (not yesterday)
             if price_date >= today:
                 available_days.add(price_date)
@@ -169,6 +173,7 @@ def calculate_periods_with_relaxation(  # noqa: PLR0913, PLR0915 - Per-day relax
     relaxation_step_pct: int,
     max_relaxation_attempts: int,
     should_show_callback: Callable[[str | None], bool],
+    time: TimeService,
 ) -> tuple[dict[str, Any], dict[str, Any]]:
     """
     Calculate periods with optional per-day filter relaxation.
@@ -194,6 +199,7 @@ def calculate_periods_with_relaxation(  # noqa: PLR0913, PLR0915 - Per-day relax
         should_show_callback: Callback function(level_override) -> bool
             Returns True if periods should be shown with given filter overrides. Pass None
             to use original configured filter values.
+        time: TimeService instance (required)
 
     Returns:
         Tuple of (periods_result, relaxation_metadata):
@@ -265,7 +271,7 @@ def calculate_periods_with_relaxation(  # noqa: PLR0913, PLR0915 - Per-day relax
     )
 
     # Group prices by day (for both relaxation enabled/disabled)
-    prices_by_day = group_prices_by_day(all_prices)
+    prices_by_day = group_prices_by_day(all_prices, time=time)
 
     if not prices_by_day:
         # No price data for today/future
@@ -300,7 +306,7 @@ def calculate_periods_with_relaxation(  # noqa: PLR0913, PLR0915 - Per-day relax
         )
 
         # Calculate baseline periods for this day
-        day_result = calculate_periods(day_prices, config=config)
+        day_result = calculate_periods(day_prices, config=config, time=time)
         day_periods = day_result["periods"]
         standalone_count = len([p for p in day_periods if not p.get("is_extension")])
 
@@ -343,6 +349,7 @@ def calculate_periods_with_relaxation(  # noqa: PLR0913, PLR0915 - Per-day relax
             should_show_callback=should_show_callback,
             baseline_periods=day_periods,
             day_label=str(day),
+            time=time,
         )
 
         all_periods.extend(day_relaxed_result["periods"])
@@ -358,7 +365,7 @@ def calculate_periods_with_relaxation(  # noqa: PLR0913, PLR0915 - Per-day relax
     all_periods.sort(key=lambda p: p["start"])
 
     # Recalculate metadata for combined periods
-    recalculate_period_metadata(all_periods)
+    recalculate_period_metadata(all_periods, time=time)
 
     # Build combined result
     if all_periods:
@@ -391,6 +398,8 @@ def relax_single_day(  # noqa: PLR0913 - Comprehensive filter relaxation per day
     should_show_callback: Callable[[str | None], bool],
     baseline_periods: list[dict],
     day_label: str,
+    *,
+    time: TimeService,
 ) -> tuple[dict[str, Any], dict[str, Any]]:
     """
     Run comprehensive relaxation for a single day.
@@ -415,6 +424,7 @@ def relax_single_day(  # noqa: PLR0913 - Comprehensive filter relaxation per day
                              Returns True if periods should be shown with given overrides.
         baseline_periods: Periods found with normal filters
         day_label: Label for logging (e.g., "2025-11-11")
+        time: TimeService instance (required)
 
     Returns:
         Tuple of (periods_result, metadata) for this day
@@ -475,7 +485,7 @@ def relax_single_day(  # noqa: PLR0913 - Comprehensive filter relaxation per day
                 flex=new_flex,
                 level_filter=level_filter_value,
             )
-            relaxed_result = calculate_periods(day_prices, config=relaxed_config)
+            relaxed_result = calculate_periods(day_prices, config=relaxed_config, time=time)
             new_periods = relaxed_result["periods"]
 
             # Build relaxation level label BEFORE marking periods
@@ -522,7 +532,7 @@ def relax_single_day(  # noqa: PLR0913 - Comprehensive filter relaxation per day
                     baseline_standalone,
                     standalone_count,
                 )
-                recalculate_period_metadata(merged)
+                recalculate_period_metadata(merged, time=time)
                 result = relaxed_result.copy()
                 result["periods"] = merged
                 return result, {"phases_used": phases_used}
@@ -541,7 +551,7 @@ def relax_single_day(  # noqa: PLR0913 - Comprehensive filter relaxation per day
         new_standalone,
     )
 
-    recalculate_period_metadata(accumulated_periods)
+    recalculate_period_metadata(accumulated_periods, time=time)
 
     if relaxed_result:
         result = relaxed_result.copy()

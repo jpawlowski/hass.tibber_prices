@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from datetime import timedelta
 from typing import TYPE_CHECKING
 
 from custom_components.tibber_prices.const import (
@@ -16,7 +15,6 @@ from custom_components.tibber_prices.sensor.helpers import (
     aggregate_level_data,
     aggregate_rating_data,
 )
-from homeassistant.util import dt as dt_util
 
 from .base import BaseCalculator
 
@@ -72,27 +70,18 @@ class DailyStatCalculator(BaseCalculator):
 
         price_info = self.price_info
 
-        # Get local midnight boundaries based on the requested day
-        local_midnight = dt_util.as_local(dt_util.start_of_local_day(dt_util.now()))
-        if day == "tomorrow":
-            local_midnight = local_midnight + timedelta(days=1)
-        local_midnight_next_day = local_midnight + timedelta(days=1)
+        # Get local midnight boundaries based on the requested day using TimeService
+        time = self.coordinator.time
+        local_midnight, local_midnight_next_day = time.get_day_boundaries(day)
 
         # Collect all prices and their intervals from both today and tomorrow data
         # that fall within the target day's local date boundaries
         price_intervals = []
         for day_key in ["today", "tomorrow"]:
             for price_data in price_info.get(day_key, []):
-                starts_at_str = price_data.get("startsAt")
-                if not starts_at_str:
+                starts_at = price_data.get("startsAt")  # Already datetime in local timezone
+                if not starts_at:
                     continue
-
-                starts_at = dt_util.parse_datetime(starts_at_str)
-                if starts_at is None:
-                    continue
-
-                # Convert to local timezone for comparison
-                starts_at = dt_util.as_local(starts_at)
 
                 # Include price if it starts within the target day's local date boundaries
                 if local_midnight <= starts_at < local_midnight_next_day:
@@ -147,29 +136,18 @@ class DailyStatCalculator(BaseCalculator):
 
         price_info = self.price_info
 
-        # Get local midnight boundaries based on the requested day
-        local_midnight = dt_util.as_local(dt_util.start_of_local_day(dt_util.now()))
-        if day == "tomorrow":
-            local_midnight = local_midnight + timedelta(days=1)
-        elif day == "yesterday":
-            local_midnight = local_midnight - timedelta(days=1)
-        local_midnight_next_day = local_midnight + timedelta(days=1)
+        # Get local midnight boundaries based on the requested day using TimeService
+        time = self.coordinator.time
+        local_midnight, local_midnight_next_day = time.get_day_boundaries(day)
 
         # Collect all intervals from both today and tomorrow data
         # that fall within the target day's local date boundaries
         day_intervals = []
         for day_key in ["yesterday", "today", "tomorrow"]:
             for price_data in price_info.get(day_key, []):
-                starts_at_str = price_data.get("startsAt")
-                if not starts_at_str:
+                starts_at = price_data.get("startsAt")  # Already datetime in local timezone
+                if not starts_at:
                     continue
-
-                starts_at = dt_util.parse_datetime(starts_at_str)
-                if starts_at is None:
-                    continue
-
-                # Convert to local timezone for comparison
-                starts_at = dt_util.as_local(starts_at)
 
                 # Include interval if it starts within the target day's local date boundaries
                 if local_midnight <= starts_at < local_midnight_next_day:

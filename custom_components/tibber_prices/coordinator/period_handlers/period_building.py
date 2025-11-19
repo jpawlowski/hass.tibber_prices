@@ -3,20 +3,20 @@
 from __future__ import annotations
 
 import logging
-from datetime import date, timedelta
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from custom_components.tibber_prices.const import PRICE_LEVEL_MAPPING
-from homeassistant.util import dt as dt_util
+
+if TYPE_CHECKING:
+    from datetime import date
+
+    from custom_components.tibber_prices.coordinator.time_service import TimeService
 
 from .level_filtering import (
     apply_level_filter,
     check_interval_criteria,
 )
-from .types import (
-    MINUTES_PER_INTERVAL,
-    IntervalCriteria,
-)
+from .types import IntervalCriteria
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -24,16 +24,17 @@ _LOGGER = logging.getLogger(__name__)
 INDENT_L0 = ""  # Entry point / main function
 
 
-def split_intervals_by_day(all_prices: list[dict]) -> tuple[dict[date, list[dict]], dict[date, float]]:
+def split_intervals_by_day(
+    all_prices: list[dict], *, time: TimeService
+) -> tuple[dict[date, list[dict]], dict[date, float]]:
     """Split intervals by day and calculate average price per day."""
     intervals_by_day: dict[date, list[dict]] = {}
     avg_price_by_day: dict[date, float] = {}
 
     for price_data in all_prices:
-        dt = dt_util.parse_datetime(price_data["startsAt"])
+        dt = time.get_interval_time(price_data)
         if dt is None:
             continue
-        dt = dt_util.as_local(dt)
         date_key = dt.date()
         intervals_by_day.setdefault(date_key, []).append(price_data)
 
@@ -52,13 +53,14 @@ def calculate_reference_prices(intervals_by_day: dict[date, list[dict]], *, reve
     return ref_prices
 
 
-def build_periods(  # noqa: PLR0915 - Complex period building logic requires many statements
+def build_periods(  # noqa: PLR0913, PLR0915 - Complex period building logic requires many arguments and statements
     all_prices: list[dict],
     price_context: dict[str, Any],
     *,
     reverse_sort: bool,
     level_filter: str | None = None,
     gap_count: int = 0,
+    time: TimeService,
 ) -> list[list[dict]]:
     """
     Build periods, allowing periods to cross midnight (day boundary).
@@ -73,6 +75,7 @@ def build_periods(  # noqa: PLR0915 - Complex period building logic requires man
         reverse_sort: True for peak price (high prices), False for best price (low prices)
         level_filter: Level filter string ("cheap", "expensive", "any", None)
         gap_count: Number of allowed consecutive intervals deviating by exactly 1 level step
+        time: TimeService instance (required)
 
     """
     ref_prices = price_context["ref_prices"]
@@ -108,10 +111,9 @@ def build_periods(  # noqa: PLR0915 - Complex period building logic requires man
     intervals_filtered_by_level = 0
 
     for price_data in all_prices:
-        starts_at = dt_util.parse_datetime(price_data["startsAt"])
+        starts_at = time.get_interval_time(price_data)
         if starts_at is None:
             continue
-        starts_at = dt_util.as_local(starts_at)
         date_key = starts_at.date()
 
         # Use smoothed price for criteria checks (flex/distance)
@@ -194,22 +196,25 @@ def build_periods(  # noqa: PLR0915 - Complex period building logic requires man
     return periods
 
 
-def filter_periods_by_min_length(periods: list[list[dict]], min_period_length: int) -> list[list[dict]]:
+def filter_periods_by_min_length(
+    periods: list[list[dict]], min_period_length: int, *, time: TimeService
+) -> list[list[dict]]:
     """Filter periods to only include those meeting the minimum length requirement."""
-    min_intervals = min_period_length // MINUTES_PER_INTERVAL
+    min_intervals = time.minutes_to_intervals(min_period_length)
     return [period for period in periods if len(period) >= min_intervals]
 
 
-def add_interval_ends(periods: list[list[dict]]) -> None:
+def add_interval_ends(periods: list[list[dict]], *, time: TimeService) -> None:
     """Add interval_end to each interval in-place."""
+    interval_duration = time.get_interval_duration()
     for period in periods:
         for interval in period:
             start = interval.get("interval_start")
             if start:
-                interval["interval_end"] = start + timedelta(minutes=MINUTES_PER_INTERVAL)
+                interval["interval_end"] = start + interval_duration
 
 
-def filter_periods_by_end_date(periods: list[list[dict]]) -> list[list[dict]]:
+def filter_periods_by_end_date(periods: list[list[dict]], *, time: TimeService) -> list[list[dict]]:
     """
     Filter periods to keep only relevant ones for today and tomorrow.
 
@@ -221,9 +226,9 @@ def filter_periods_by_end_date(periods: list[list[dict]]) -> list[list[dict]]:
     - Periods that ended yesterday
     - Periods that ended exactly at midnight today (they're completely in the past)
     """
-    now = dt_util.now()
+    now = time.now()
     today = now.date()
-    midnight_today = dt_util.start_of_local_day(now)
+    midnight_today = time.start_of_local_day(now)
 
     filtered = []
     for period in periods:
@@ -238,7 +243,7 @@ def filter_periods_by_end_date(periods: list[list[dict]]) -> list[list[dict]]:
             continue
 
         # Keep if period ends in the future
-        if period_end > now:
+        if time.is_in_future(period_end):
             filtered.append(period)
             continue
 

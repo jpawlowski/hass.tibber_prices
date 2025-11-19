@@ -21,12 +21,14 @@ from __future__ import annotations
 from datetime import timedelta
 from typing import TYPE_CHECKING
 
+if TYPE_CHECKING:
+    from custom_components.tibber_prices.coordinator.time_service import TimeService
+
 from custom_components.tibber_prices.entity_utils.helpers import get_price_value
 from custom_components.tibber_prices.utils.price import (
     aggregate_price_levels,
     aggregate_price_rating,
 )
-from homeassistant.util import dt as dt_util
 
 if TYPE_CHECKING:
     from collections.abc import Callable
@@ -132,6 +134,7 @@ def get_hourly_price_value(
     *,
     hour_offset: int,
     in_euro: bool,
+    time: TimeService,
 ) -> float | None:
     """
     Get price for current hour or with offset.
@@ -143,13 +146,14 @@ def get_hourly_price_value(
         price_info: Price information dict with 'today' and 'tomorrow' keys
         hour_offset: Hour offset from current time (positive=future, negative=past)
         in_euro: If True, return price in major currency (EUR), else minor (cents/øre)
+        time: TimeService instance (required)
 
     Returns:
         Price value, or None if not found
 
     """
-    # Use HomeAssistant's dt_util to get the current time in the user's timezone
-    now = dt_util.now()
+    # Use TimeService to get the current time in the user's timezone
+    now = time.now()
 
     # Calculate the exact target datetime (not just the hour)
     # This properly handles day boundaries
@@ -162,12 +166,11 @@ def get_hourly_price_value(
 
     for price_data in price_info.get(day_key, []):
         # Parse the timestamp and convert to local time
-        starts_at = dt_util.parse_datetime(price_data["startsAt"])
+        starts_at = time.get_interval_time(price_data)
         if starts_at is None:
             continue
 
         # Make sure it's in the local timezone for proper comparison
-        starts_at = dt_util.as_local(starts_at)
 
         # Compare using both hour and date for accuracy
         if starts_at.hour == target_hour and starts_at.date() == target_date:
@@ -177,11 +180,10 @@ def get_hourly_price_value(
     # This is a fallback for potential edge cases
     other_day_key = "today" if day_key == "tomorrow" else "tomorrow"
     for price_data in price_info.get(other_day_key, []):
-        starts_at = dt_util.parse_datetime(price_data["startsAt"])
+        starts_at = time.get_interval_time(price_data)
         if starts_at is None:
             continue
 
-        starts_at = dt_util.as_local(starts_at)
         if starts_at.hour == target_hour and starts_at.date() == target_date:
             return get_price_value(float(price_data["total"]), in_euro=in_euro)
 

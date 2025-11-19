@@ -12,16 +12,14 @@ Caching strategy:
 - Current trend + next change: Cached centrally for 60s to avoid duplicate calculations
 """
 
-from datetime import datetime, timedelta
+from datetime import datetime
 from typing import TYPE_CHECKING, Any
 
-from custom_components.tibber_prices.const import MINUTES_PER_INTERVAL
 from custom_components.tibber_prices.utils.average import calculate_next_n_hours_avg
 from custom_components.tibber_prices.utils.price import (
     calculate_price_trend,
     find_price_data_for_interval,
 )
-from homeassistant.util import dt as dt_util
 
 from .base import BaseCalculator
 
@@ -89,16 +87,16 @@ class TrendCalculator(BaseCalculator):
             return None
 
         current_interval_price = float(current_interval["total"])
-        current_starts_at = dt_util.parse_datetime(current_interval["startsAt"])
+        time = self.coordinator.time
+        current_starts_at = time.get_interval_time(current_interval)
         if current_starts_at is None:
             return None
-        current_starts_at = dt_util.as_local(current_starts_at)
 
         # Get next interval timestamp (basis for calculation)
-        next_interval_start = current_starts_at + timedelta(minutes=MINUTES_PER_INTERVAL)
+        next_interval_start = time.get_next_interval_start()
 
         # Get future average price
-        future_avg = calculate_next_n_hours_avg(self.coordinator.data, hours)
+        future_avg = calculate_next_n_hours_avg(self.coordinator.data, hours, time=self.coordinator.time)
         if future_avg is None:
             return None
 
@@ -113,7 +111,7 @@ class TrendCalculator(BaseCalculator):
         today_prices = price_info.get("today", [])
         tomorrow_prices = price_info.get("tomorrow", [])
         all_intervals = today_prices + tomorrow_prices
-        lookahead_intervals = hours * 4  # Convert hours to 15-minute intervals
+        lookahead_intervals = self.coordinator.time.minutes_to_intervals(hours * 60)
 
         # Calculate trend with volatility-adaptive thresholds
         trend_state, diff_pct = calculate_price_trend(
@@ -137,10 +135,10 @@ class TrendCalculator(BaseCalculator):
 
         # Store attributes in sensor-specific dictionary AND cache the trend value
         self._trend_attributes = {
-            "timestamp": next_interval_start.isoformat(),
+            "timestamp": next_interval_start,
             f"trend_{hours}h_%": round(diff_pct, 1),
             f"next_{hours}h_avg": round(future_avg * 100, 2),
-            "interval_count": hours * 4,
+            "interval_count": lookahead_intervals,
             "threshold_rising": threshold_rising,
             "threshold_falling": threshold_falling,
             "icon_color": icon_color,
@@ -259,18 +257,19 @@ class TrendCalculator(BaseCalculator):
             return None
 
         # Calculate which intervals belong to the later half
-        total_intervals = hours * 4
+        time = self.coordinator.time
+        total_intervals = time.minutes_to_intervals(hours * 60)
         first_half_intervals = total_intervals // 2
-        later_half_start = next_interval_start + timedelta(minutes=MINUTES_PER_INTERVAL * first_half_intervals)
-        later_half_end = next_interval_start + timedelta(minutes=MINUTES_PER_INTERVAL * total_intervals)
+        interval_duration = time.get_interval_duration()
+        later_half_start = next_interval_start + (interval_duration * first_half_intervals)
+        later_half_end = next_interval_start + (interval_duration * total_intervals)
 
         # Collect prices in the later half
         later_prices = []
         for price_data in all_prices:
-            starts_at = dt_util.parse_datetime(price_data["startsAt"])
+            starts_at = time.get_interval_time(price_data)
             if starts_at is None:
                 continue
-            starts_at = dt_util.as_local(starts_at)
 
             if later_half_start <= starts_at < later_half_end:
                 price = price_data.get("total")
@@ -296,7 +295,8 @@ class TrendCalculator(BaseCalculator):
         trend_cache_duration_seconds = 60  # Cache for 1 minute
 
         # Check if we have a valid cache
-        now = dt_util.now()
+        time = self.coordinator.time
+        now = time.now()
         if (
             self._trend_calculation_cache is not None
             and self._trend_calculation_timestamp is not None
@@ -310,13 +310,12 @@ class TrendCalculator(BaseCalculator):
 
         price_info = self.coordinator.data.get("priceInfo", {})
         all_intervals = price_info.get("today", []) + price_info.get("tomorrow", [])
-        current_interval = find_price_data_for_interval(price_info, now)
+        current_interval = find_price_data_for_interval(price_info, now, time=time)
 
         if not all_intervals or not current_interval:
             return None
 
-        current_interval_start = dt_util.parse_datetime(current_interval["startsAt"])
-        current_interval_start = dt_util.as_local(current_interval_start) if current_interval_start else None
+        current_interval_start = time.get_interval_time(current_interval)
 
         if not current_interval_start:
             return None
@@ -380,14 +379,15 @@ class TrendCalculator(BaseCalculator):
         # Calculate duration of current trend
         trend_duration_minutes = None
         if trend_start_time:
-            duration = now - trend_start_time
-            trend_duration_minutes = int(duration.total_seconds() / 60)
+            time = self.coordinator.time
+            # Duration is negative of minutes_until (time in the past)
+            trend_duration_minutes = -int(time.minutes_until(trend_start_time))
 
         # Calculate minutes until change
         minutes_until_change = None
         if next_change_time:
-            time_diff = next_change_time - now
-            minutes_until_change = int(time_diff.total_seconds() / 60)
+            time = self.coordinator.time
+            minutes_until_change = int(time.minutes_until(next_change_time))
 
         result = {
             "current_trend_state": current_trend_state,
@@ -546,9 +546,10 @@ class TrendCalculator(BaseCalculator):
 
     def _find_current_interval_index(self, all_intervals: list, current_interval_start: datetime) -> int | None:
         """Find the index of current interval in all_intervals list."""
+        time = self.coordinator.time
         for idx, interval in enumerate(all_intervals):
-            interval_start = dt_util.parse_datetime(interval["startsAt"])
-            if interval_start and dt_util.as_local(interval_start) == current_interval_start:
+            interval_start = time.get_interval_time(interval)
+            if interval_start and interval_start == current_interval_start:
                 return idx
         return None
 
@@ -577,15 +578,15 @@ class TrendCalculator(BaseCalculator):
         intervals_in_3h = 12  # 3 hours = 12 intervals @ 15min each
 
         # Scan backward to find when trend changed TO current state
+        time = self.coordinator.time
         for i in range(current_index - 1, max(-1, current_index - 97), -1):
             if i < 0:
                 break
 
             interval = all_intervals[i]
-            interval_start = dt_util.parse_datetime(interval["startsAt"])
+            interval_start = time.get_interval_time(interval)
             if not interval_start:
                 continue
-            interval_start = dt_util.as_local(interval_start)
 
             # Calculate trend at this past interval
             future_intervals = all_intervals[i + 1 : i + intervals_in_3h + 1]
@@ -617,9 +618,9 @@ class TrendCalculator(BaseCalculator):
             if trend_state != current_trend_state:
                 # Found the change point - the NEXT interval is where current trend started
                 next_interval = all_intervals[i + 1]
-                trend_start = dt_util.parse_datetime(next_interval["startsAt"])
+                trend_start = time.get_interval_time(next_interval)
                 if trend_start:
-                    return dt_util.as_local(trend_start), trend_state
+                    return trend_start, trend_state
 
         # Reached data boundary - current trend extends beyond available data
         return None, None
@@ -642,6 +643,7 @@ class TrendCalculator(BaseCalculator):
             Timestamp of next trend change, or None if no change in next 24h
 
         """
+        time = self.coordinator.time
         intervals_in_3h = 12  # 3 hours = 12 intervals @ 15min each
         current_index = scan_params["current_index"]
         current_trend_state = scan_params["current_trend_state"]
@@ -650,10 +652,9 @@ class TrendCalculator(BaseCalculator):
 
         for i in range(current_index + 1, min(current_index + 97, len(all_intervals))):
             interval = all_intervals[i]
-            interval_start = dt_util.parse_datetime(interval["startsAt"])
+            interval_start = time.get_interval_time(interval)
             if not interval_start:
                 continue
-            interval_start = dt_util.as_local(interval_start)
 
             # Skip if this interval is in the past
             if interval_start <= now:
@@ -689,8 +690,8 @@ class TrendCalculator(BaseCalculator):
             # We want to find ANY change from current state, including changes to/from stable
             if trend_state != current_trend_state:
                 # Store details for attributes
-                time_diff = interval_start - now
-                minutes_until = int(time_diff.total_seconds() / 60)
+                time = self.coordinator.time
+                minutes_until = int(time.minutes_until(interval_start))
 
                 self._trend_change_attributes = {
                     "direction": trend_state,

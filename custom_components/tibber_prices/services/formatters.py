@@ -28,7 +28,6 @@ from custom_components.tibber_prices.const import (
     get_translation,
 )
 from custom_components.tibber_prices.sensor.helpers import aggregate_level_data, aggregate_rating_data
-from homeassistant.util import dt as dt_util
 
 
 def normalize_level_filter(value: list[str] | None) -> list[str] | None:
@@ -50,6 +49,7 @@ def aggregate_hourly_exact(  # noqa: PLR0913, PLR0912, PLR0915
     start_time_field: str,
     price_field: str,
     *,
+    coordinator: Any,
     use_minor_currency: bool = False,
     round_decimals: int | None = None,
     include_level: bool = False,
@@ -75,6 +75,7 @@ def aggregate_hourly_exact(  # noqa: PLR0913, PLR0912, PLR0915
         intervals: List of 15-minute price intervals
         start_time_field: Custom name for start time field
         price_field: Custom name for price field
+        coordinator: Data update coordinator instance (required)
         use_minor_currency: Convert to minor currency units (cents/øre)
         round_decimals: Optional decimal rounding
         include_level: Include aggregated level field
@@ -108,8 +109,9 @@ def aggregate_hourly_exact(  # noqa: PLR0913, PLR0912, PLR0915
             i += 1
             continue
 
-        # Parse the timestamp
-        start_time = dt_util.parse_datetime(start_time_str)
+        # Get timestamp (already datetime in local timezone)
+        time = coordinator.time
+        start_time = start_time_str  # Already datetime object
         if not start_time:
             i += 1
             continue
@@ -119,10 +121,11 @@ def aggregate_hourly_exact(  # noqa: PLR0913, PLR0912, PLR0915
             i += 1
             continue
 
-        # Collect 4 intervals for this hour (with optional filtering)
+        # Collect intervals for this hour (with optional filtering)
+        intervals_per_hour = time.minutes_to_intervals(60)
         hour_intervals = []
         hour_interval_data = []  # Complete interval data for aggregation functions
-        for j in range(4):
+        for j in range(intervals_per_hour):
             if i + j < len(intervals):
                 interval = intervals[i + j]
 
@@ -180,8 +183,8 @@ def aggregate_hourly_exact(  # noqa: PLR0913, PLR0912, PLR0915
 
             hourly_data.append(data_point)
 
-        # Move to next hour (skip 4 intervals)
-        i += 4
+        # Move to next hour (skip intervals_per_hour)
+        i += time.minutes_to_intervals(60)
 
     return hourly_data
 
@@ -260,14 +263,11 @@ def get_period_data(  # noqa: PLR0913, PLR0912, PLR0915
             price_info = coordinator.data.get("priceInfo", {})
             day_prices = price_info.get(day, [])
             if day_prices:
-                # Extract date from first interval
+                # Extract date from first interval (already datetime in local timezone)
                 first_interval = day_prices[0]
-                starts_at = first_interval.get("startsAt")
+                starts_at = first_interval.get("startsAt")  # Already datetime object
                 if starts_at:
-                    dt = dt_util.parse_datetime(starts_at)
-                    if dt:
-                        dt = dt_util.as_local(dt)
-                        allowed_dates.add(dt.date())
+                    allowed_dates.add(starts_at.date())
 
         # Filter periods to those within allowed dates
         for period in period_summaries:

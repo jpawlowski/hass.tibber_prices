@@ -5,31 +5,34 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 from custom_components.tibber_prices.utils.price import find_price_data_for_interval
-from homeassistant.util import dt as dt_util
 
 if TYPE_CHECKING:
     from custom_components.tibber_prices.coordinator.core import (
         TibberPricesDataUpdateCoordinator,
     )
+    from custom_components.tibber_prices.coordinator.time_service import TimeService
 
 
 def get_current_interval_data(
     coordinator: TibberPricesDataUpdateCoordinator,
+    *,
+    time: TimeService,
 ) -> dict | None:
     """
-    Get the current price interval data.
+    Get current interval's price data.
 
     Args:
         coordinator: The data update coordinator
+        time: TimeService instance (required)
 
     Returns:
-        Current interval data dict, or None if unavailable
+        Current interval data or None if not found
 
     """
     if not coordinator.data:
         return None
 
     price_info = coordinator.data.get("priceInfo", {})
-    now = dt_util.now()
+    now = time.now()
 
-    return find_price_data_for_interval(price_info, now)
+    return find_price_data_for_interval(price_info, now, time=time)

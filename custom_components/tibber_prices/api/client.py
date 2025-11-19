@@ -7,11 +7,9 @@ import logging
 import re
 import socket
 from datetime import timedelta
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import aiohttp
-
-from homeassistant.util import dt as dt_util
 
 from .exceptions import (
     TibberPricesApiClientAuthenticationError,
@@ -27,6 +25,9 @@ from .helpers import (
     verify_response_or_raise,
 )
 from .queries import QueryType
+
+if TYPE_CHECKING:
+    from custom_components.tibber_prices.coordinator.time_service import TimeService
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -45,7 +46,8 @@ class TibberPricesApiClient:
         self._session = session
         self._version = version
         self._request_semaphore = asyncio.Semaphore(2)  # Max 2 concurrent requests
-        self._last_request_time = dt_util.now()
+        self.time: TimeService | None = None  # Set externally by coordinator
+        self._last_request_time = None  # Set on first request
         self._min_request_interval = timedelta(seconds=1)  # Min 1 second between requests
         self._max_retries = 5
         self._retry_delay = 2  # Base retry delay in seconds
@@ -208,6 +210,7 @@ class TibberPricesApiClient:
                 homes_data[home_id] = flatten_price_info(
                     home["currentSubscription"],
                     currency,
+                    time=self.time,
                 )
             else:
                 _LOGGER.debug(
@@ -444,17 +447,20 @@ class TibberPricesApiClient:
     ) -> Any:
         """Handle a single API request with rate limiting."""
         async with self._request_semaphore:
-            now = dt_util.now()
-            time_since_last_request = now - self._last_request_time
-            if time_since_last_request < self._min_request_interval:
-                sleep_time = (self._min_request_interval - time_since_last_request).total_seconds()
-                _LOGGER.debug(
-                    "Rate limiting: waiting %s seconds before next request",
-                    sleep_time,
-                )
-                await asyncio.sleep(sleep_time)
+            # Rate limiting: ensure minimum interval between requests
+            if self.time and self._last_request_time:
+                now = self.time.now()
+                time_since_last_request = now - self._last_request_time
+                if time_since_last_request < self._min_request_interval:
+                    sleep_time = (self._min_request_interval - time_since_last_request).total_seconds()
+                    _LOGGER.debug(
+                        "Rate limiting: waiting %s seconds before next request",
+                        sleep_time,
+                    )
+                    await asyncio.sleep(sleep_time)
 
-            self._last_request_time = dt_util.now()
+            if self.time:
+                self._last_request_time = self.time.now()
             return await self._make_request(
                 headers,
                 data or {},

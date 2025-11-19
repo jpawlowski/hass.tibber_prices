@@ -15,6 +15,8 @@ if TYPE_CHECKING:
 
     from homeassistant.core import HomeAssistant
 
+    from .time_service import TimeService
+
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -64,10 +66,16 @@ class ListenerManager:
         return remove_listener
 
     @callback
-    def async_update_time_sensitive_listeners(self) -> None:
-        """Update all time-sensitive entities without triggering a full coordinator update."""
+    def async_update_time_sensitive_listeners(self, time_service: TimeService) -> None:
+        """
+        Update all time-sensitive entities without triggering a full coordinator update.
+
+        Args:
+            time_service: TimeService instance with reference time for this update cycle
+
+        """
         for update_callback in self._time_sensitive_listeners:
-            update_callback()
+            update_callback(time_service)
 
         self._log(
             "debug",
@@ -97,14 +105,20 @@ class ListenerManager:
         return remove_listener
 
     @callback
-    def async_update_minute_listeners(self) -> None:
-        """Update all minute-update entities without triggering a full coordinator update."""
+    def async_update_minute_listeners(self, time_service: TimeService) -> None:
+        """
+        Update all minute-update entities without triggering a full coordinator update.
+
+        Args:
+            time_service: TimeService instance with reference time for this update cycle
+
+        """
         for update_callback in self._minute_update_listeners:
-            update_callback()
+            update_callback(time_service)
 
         self._log(
             "debug",
-            "Updated %d minute-update entities",
+            "Updated %d timing entities (30-second update)",
             len(self._minute_update_listeners),
         )
 
@@ -139,25 +153,24 @@ class ListenerManager:
         self,
         handler_callback: CALLBACK_TYPE,
     ) -> None:
-        """Schedule minute-by-minute entity refresh for timing sensors."""
+        """Schedule 30-second entity refresh for timing sensors."""
         # Cancel any existing timer
         if self._minute_timer_cancel:
             self._minute_timer_cancel()
             self._minute_timer_cancel = None
 
-        # Use Home Assistant's async_track_utc_time_change to trigger every minute
-        # HA may schedule us a few milliseconds before/after the exact minute boundary.
-        # Our timing calculations are based on dt_util.now() which gives the actual current time,
-        # so small scheduling variations don't affect accuracy.
+        # Trigger every 30 seconds (:00 and :30) to keep sensor values in sync with
+        # Home Assistant's frontend relative time display ("in X minutes").
+        # The timing calculator uses rounded minute values that match HA's rounding behavior.
         self._minute_timer_cancel = async_track_utc_time_change(
             self.hass,
             handler_callback,
-            second=0,  # Trigger at :XX:00 (HA handles scheduling tolerance)
+            second=[0, 30],  # Trigger at :XX:00 and :XX:30
         )
 
         self._log(
             "debug",
-            "Scheduled minute-by-minute refresh for timing sensors (second=0)",
+            "Scheduled 30-second refresh for timing sensors (second=[0, 30])",
         )
 
     def check_midnight_crossed(self, now: datetime) -> bool:

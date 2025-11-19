@@ -5,6 +5,8 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
+    from custom_components.tibber_prices.coordinator.time_service import TimeService
+
     from .types import PeriodConfig
 
 from .outlier_filtering import (
@@ -31,6 +33,7 @@ def calculate_periods(
     all_prices: list[dict],
     *,
     config: PeriodConfig,
+    time: TimeService,
 ) -> dict[str, Any]:
     """
     Calculate price periods (best or peak) from price data.
@@ -50,6 +53,7 @@ def calculate_periods(
         all_prices: All price data points from yesterday/today/tomorrow
         config: Period configuration containing reverse_sort, flex, min_distance_from_avg,
                 min_period_length, threshold_low, and threshold_high
+        time: TimeService instance (required)
 
     Returns:
         Dict with:
@@ -88,7 +92,7 @@ def calculate_periods(
     all_prices_sorted = sorted(all_prices, key=lambda p: p["startsAt"])
 
     # Step 1: Split by day and calculate averages
-    intervals_by_day, avg_price_by_day = split_intervals_by_day(all_prices_sorted)
+    intervals_by_day, avg_price_by_day = split_intervals_by_day(all_prices_sorted, time=time)
 
     # Step 2: Calculate reference prices (min or max per day)
     ref_prices = calculate_reference_prices(intervals_by_day, reverse_sort=reverse_sort)
@@ -115,19 +119,20 @@ def calculate_periods(
         reverse_sort=reverse_sort,
         level_filter=config.level_filter,
         gap_count=config.gap_count,
+        time=time,
     )
 
     # Step 4: Filter by minimum length
-    raw_periods = filter_periods_by_min_length(raw_periods, min_period_length)
+    raw_periods = filter_periods_by_min_length(raw_periods, min_period_length, time=time)
 
     # Step 5: Merge adjacent periods at midnight
-    raw_periods = merge_adjacent_periods_at_midnight(raw_periods)
+    raw_periods = merge_adjacent_periods_at_midnight(raw_periods, time=time)
 
     # Step 6: Add interval ends
-    add_interval_ends(raw_periods)
+    add_interval_ends(raw_periods, time=time)
 
     # Step 7: Filter periods by end date (keep periods ending today or later)
-    raw_periods = filter_periods_by_end_date(raw_periods)
+    raw_periods = filter_periods_by_end_date(raw_periods, time=time)
 
     # Step 8: Extract lightweight period summaries (no full price data)
     # Note: Filtering for current/future is done here based on end date,
@@ -145,6 +150,7 @@ def calculate_periods(
         all_prices_sorted,
         price_context,
         thresholds,
+        time=time,
     )
 
     return {

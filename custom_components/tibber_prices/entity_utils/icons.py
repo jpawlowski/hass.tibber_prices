@@ -7,9 +7,11 @@ from dataclasses import dataclass
 from datetime import timedelta
 from typing import TYPE_CHECKING, Any
 
+if TYPE_CHECKING:
+    from custom_components.tibber_prices.coordinator.time_service import TimeService
+
 from custom_components.tibber_prices.const import (
     BINARY_SENSOR_ICON_MAPPING,
-    MINUTES_PER_INTERVAL,
     PRICE_LEVEL_CASH_ICON_MAPPING,
     PRICE_LEVEL_ICON_MAPPING,
     PRICE_RATING_ICON_MAPPING,
@@ -18,7 +20,9 @@ from custom_components.tibber_prices.const import (
 from custom_components.tibber_prices.entity_utils.helpers import find_rolling_hour_center_index
 from custom_components.tibber_prices.sensor.helpers import aggregate_level_data
 from custom_components.tibber_prices.utils.price import find_price_data_for_interval
-from homeassistant.util import dt as dt_util
+
+# Icon update logic uses timedelta directly (cosmetic, independent - allowed per AGENTS.md)
+_INTERVAL_MINUTES = 15  # Tibber's 15-minute intervals
 
 
 @dataclass
@@ -29,6 +33,7 @@ class IconContext:
     coordinator_data: dict | None = None
     has_future_periods_callback: Callable[[], bool] | None = None
     period_is_active_callback: Callable[[], bool] | None = None
+    time: TimeService | None = None
 
 
 if TYPE_CHECKING:
@@ -70,7 +75,7 @@ def get_dynamic_icon(
     return (
         get_trend_icon(key, value)
         or get_timing_sensor_icon(key, value, period_is_active_callback=ctx.period_is_active_callback)
-        or get_price_sensor_icon(key, ctx.coordinator_data)
+        or get_price_sensor_icon(key, ctx.coordinator_data, time=ctx.time)
         or get_level_sensor_icon(key, value)
         or get_rating_sensor_icon(key, value)
         or get_volatility_sensor_icon(key, value)
@@ -164,7 +169,12 @@ def get_timing_sensor_icon(
     return None
 
 
-def get_price_sensor_icon(key: str, coordinator_data: dict | None) -> str | None:
+def get_price_sensor_icon(
+    key: str,
+    coordinator_data: dict | None,
+    *,
+    time: TimeService | None,
+) -> str | None:
     """
     Get icon for current price sensors (dynamic based on price level).
 
@@ -175,32 +185,34 @@ def get_price_sensor_icon(key: str, coordinator_data: dict | None) -> str | None
     Args:
         key: Entity description key
         coordinator_data: Coordinator data for price level lookups
+        time: TimeService instance (required for determining current interval)
 
     Returns:
         Icon string or None if not a current price sensor
 
     """
-    if not coordinator_data:
+    # Early exit if coordinator_data or time not available
+    if not coordinator_data or time is None:
         return None
 
     # Only current price sensors get dynamic icons
     if key == "current_interval_price":
-        level = get_price_level_for_icon(coordinator_data, interval_offset=0)
+        level = get_price_level_for_icon(coordinator_data, interval_offset=0, time=time)
         if level:
             return PRICE_LEVEL_CASH_ICON_MAPPING.get(level.upper())
     elif key == "next_interval_price":
         # For next interval, use the next interval price level to determine icon
-        level = get_price_level_for_icon(coordinator_data, interval_offset=1)
+        level = get_price_level_for_icon(coordinator_data, interval_offset=1, time=time)
         if level:
             return PRICE_LEVEL_CASH_ICON_MAPPING.get(level.upper())
     elif key == "current_hour_average_price":
         # For current hour average, use the current hour price level to determine icon
-        level = get_rolling_hour_price_level_for_icon(coordinator_data, hour_offset=0)
+        level = get_rolling_hour_price_level_for_icon(coordinator_data, hour_offset=0, time=time)
         if level:
             return PRICE_LEVEL_CASH_ICON_MAPPING.get(level.upper())
     elif key == "next_hour_average_price":
         # For next hour average, use the next hour price level to determine icon
-        level = get_rolling_hour_price_level_for_icon(coordinator_data, hour_offset=1)
+        level = get_rolling_hour_price_level_for_icon(coordinator_data, hour_offset=1, time=time)
         if level:
             return PRICE_LEVEL_CASH_ICON_MAPPING.get(level.upper())
 
@@ -288,6 +300,7 @@ def get_price_level_for_icon(
     coordinator_data: dict,
     *,
     interval_offset: int | None = None,
+    time: TimeService,
 ) -> str | None:
     """
     Get the price level for icon determination.
@@ -297,6 +310,7 @@ def get_price_level_for_icon(
     Args:
         coordinator_data: Coordinator data
         interval_offset: Interval offset (0=current, 1=next, -1=previous)
+        time: TimeService instance (required)
 
     Returns:
         Price level string or None if not found
@@ -306,11 +320,11 @@ def get_price_level_for_icon(
         return None
 
     price_info = coordinator_data.get("priceInfo", {})
-    now = dt_util.now()
+    now = time.now()
 
     # Interval-based lookup
-    target_time = now + timedelta(minutes=MINUTES_PER_INTERVAL * interval_offset)
-    interval_data = find_price_data_for_interval(price_info, target_time)
+    target_time = now + timedelta(minutes=_INTERVAL_MINUTES * interval_offset)
+    interval_data = find_price_data_for_interval(price_info, target_time, time=time)
 
     if not interval_data or "level" not in interval_data:
         return None
@@ -322,6 +336,7 @@ def get_rolling_hour_price_level_for_icon(
     coordinator_data: dict,
     *,
     hour_offset: int = 0,
+    time: TimeService,
 ) -> str | None:
     """
     Get the aggregated price level for rolling hour icon determination.
@@ -334,6 +349,7 @@ def get_rolling_hour_price_level_for_icon(
     Args:
         coordinator_data: Coordinator data
         hour_offset: Hour offset (0=current hour, 1=next hour)
+        time: TimeService instance (required)
 
     Returns:
         Aggregated price level string or None if not found
@@ -349,8 +365,8 @@ def get_rolling_hour_price_level_for_icon(
         return None
 
     # Find center index using the same helper function as the sensor platform
-    now = dt_util.now()
-    center_idx = find_rolling_hour_center_index(all_prices, now, hour_offset)
+    now = time.now()
+    center_idx = find_rolling_hour_center_index(all_prices, now, hour_offset, time=time)
 
     if center_idx is None:
         return None

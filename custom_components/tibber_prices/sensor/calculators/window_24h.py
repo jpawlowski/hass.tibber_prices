@@ -42,7 +42,7 @@ class Window24hCalculator(BaseCalculator):
         if not self.coordinator_data:
             return None
 
-        value = stat_func(self.coordinator_data)
+        value = stat_func(self.coordinator_data, time=self.coordinator.time)
 
         if value is None:
             return None

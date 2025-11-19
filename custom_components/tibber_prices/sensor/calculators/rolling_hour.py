@@ -14,7 +14,6 @@ from custom_components.tibber_prices.sensor.helpers import (
     aggregate_price_data,
     aggregate_rating_data,
 )
-from homeassistant.util import dt as dt_util
 
 from .base import BaseCalculator
 
@@ -60,8 +59,9 @@ class RollingHourCalculator(BaseCalculator):
             return None
 
         # Find center index for the rolling window
-        now = dt_util.now()
-        center_idx = find_rolling_hour_center_index(all_prices, now, hour_offset)
+        time = self.coordinator.time
+        now = time.now()
+        center_idx = find_rolling_hour_center_index(all_prices, now, hour_offset, time=time)
         if center_idx is None:
             return None
 
