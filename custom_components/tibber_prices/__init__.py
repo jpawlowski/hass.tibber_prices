@@ -64,6 +64,11 @@ async def async_setup_entry(
         version=str(integration.version) if integration.version else "unknown",
     )
 
+    # CRITICAL: Load cache BEFORE first refresh to ensure user_data is available
+    # for metadata sensors (grid_company, estimated_annual_consumption, etc.)
+    # This prevents sensors from being marked as "unavailable" on first setup
+    await coordinator.load_cache()
+
     entry.runtime_data = TibberPricesData(
         client=TibberPricesApiClient(
             access_token=entry.data[CONF_ACCESS_TOKEN],

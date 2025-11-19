@@ -458,7 +458,7 @@ class TibberPricesDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 
         # Load cache if not already loaded
         if self._cached_price_data is None and self._cached_user_data is None:
-            await self._load_cache()
+            await self.load_cache()
 
         # Initialize midnight check on first run
         if self._last_midnight_check is None:
@@ -481,11 +481,15 @@ class TibberPricesDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             if self.is_main_entry():
                 # Main entry fetches data for all homes
                 configured_home_ids = self._get_configured_home_ids()
-                return await self._data_fetcher.handle_main_entry_update(
+                result = await self._data_fetcher.handle_main_entry_update(
                     current_time,
                     configured_home_ids,
                     self._transform_data_for_main_entry,
                 )
+                # CRITICAL: Sync cached_user_data after API call (for new integrations without cache)
+                # handle_main_entry_update() may have fetched user_data via update_user_data_if_needed()
+                self._cached_user_data = self._data_fetcher.cached_user_data
+                return result
             # Subentries get data from main coordinator
             return await self._handle_subentry_update()
 
@@ -544,7 +548,7 @@ class TibberPricesDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 
         return home_ids
 
-    async def _load_cache(self) -> None:
+    async def load_cache(self) -> None:
         """Load cached data from storage."""
         await self._data_fetcher.load_cache()
         # Sync legacy references
