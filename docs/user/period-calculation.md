@@ -186,6 +186,8 @@ peak_price_flex: -15 # Can be up to 15% less expensive than daily MAX
 -   **Increase (20-25%)** → Find more/longer periods
 -   **Decrease (5-10%)** → Find only the very best/worst times
 
+**⚠️ Important:** Flexibility works together with "Distance from Average" (see below). Very high flexibility (>30%) can conflict with the distance filter and become counterproductive. **Recommendation:** Start with 15-20% and enable relaxation instead of manually increasing flexibility.
+
 #### Minimum Period Length
 
 **What:** How long a period must be to show it
@@ -218,6 +220,17 @@ peak_price_min_distance_from_avg: 2
 -   **Increase (5-10%)** → Only show clearly better times
 -   **Decrease (0-1%)** → Show any time below/above average
 
+**ℹ️ Note:** This filter works **independently** from flexibility. Both conditions must be met:
+- Price must be within flex range (close to MIN/MAX)
+- **AND** price must be sufficiently below/above average
+
+**Example conflict:** If daily MIN is 10 ct, daily AVG is 20 ct, flex is 50%, and min_distance is 5%:
+- Flex allows prices up to 15 ct
+- Distance requires prices ≤ 19 ct (20 - 5%)
+- **Both must pass** → effective limit is 15 ct (the stricter one)
+
+This is why very high flexibility (>30%) can be counterproductive - the distance filter may become the dominant constraint.
+
 ### Optional Filters
 
 #### Level Filter (Absolute Quality)
@@ -246,6 +259,77 @@ best_price_max_level_gap_count: 2 # Allow up to 2 NORMAL intervals per period
 
 **Use case:** "Don't split periods just because one interval isn't perfectly CHEAP"
 
+### Tweaking Strategy: What to Adjust First?
+
+When you're not happy with the default behavior, adjust settings in this order:
+
+#### 1. **Start with Relaxation (Easiest)**
+
+If you're not finding enough periods:
+
+```yaml
+enable_min_periods_best: true   # Already default!
+min_periods_best: 2             # Already default!
+relaxation_attempts_best: 11    # Already default!
+```
+
+**Why start here?** Relaxation automatically finds the right balance for each day. Much easier than manual tuning.
+
+#### 2. **Adjust Period Length (Simple)**
+
+If periods are too short/long for your use case:
+
+```yaml
+best_price_min_period_length: 90  # Increase from 60 for longer periods
+# OR
+best_price_min_period_length: 45  # Decrease from 60 for shorter periods
+```
+
+**Safe to change:** This only affects duration, not price selection logic.
+
+#### 3. **Fine-tune Flexibility (Moderate)**
+
+If you consistently want more/fewer periods:
+
+```yaml
+best_price_flex: 20  # Increase from 15% for more periods
+# OR
+best_price_flex: 10  # Decrease from 15% for stricter selection
+```
+
+**⚠️ Watch out:** Values >25% may conflict with distance filter. Use relaxation instead.
+
+#### 4. **Adjust Distance from Average (Advanced)**
+
+Only if periods seem "mediocre" (not really cheap/expensive):
+
+```yaml
+best_price_min_distance_from_avg: 5  # Increase from 2% for stricter quality
+```
+
+**⚠️ Careful:** High values (>10%) can make it impossible to find periods on flat price days.
+
+#### 5. **Enable Level Filter (Expert)**
+
+Only if you want absolute quality requirements:
+
+```yaml
+best_price_max_level: cheap  # Only show objectively CHEAP periods
+```
+
+**⚠️ Very strict:** Many days may have zero qualifying periods. **Always enable relaxation when using this!**
+
+### Common Mistakes to Avoid
+
+❌ **Don't increase flexibility to >30% manually** → Use relaxation instead
+❌ **Don't combine high distance (>10%) with strict level filter** → Too restrictive
+❌ **Don't disable relaxation with strict filters** → You'll get zero periods on some days
+❌ **Don't change all settings at once** → Adjust one at a time and observe results
+
+✅ **Do use defaults + relaxation** → Works for 90% of cases
+✅ **Do adjust one setting at a time** → Easier to understand impact
+✅ **Do check sensor attributes** → Shows why periods were/weren't found
+
 ---
 
 ## Understanding Relaxation
@@ -259,15 +343,34 @@ Sometimes, strict filters find too few periods (or none). **Relaxation automatic
 ```yaml
 enable_min_periods_best: true
 min_periods_best: 2 # Try to find at least 2 periods per day
-relaxation_step_best: 35 # Increase flex by 35% per step (e.g., 15% → 20.25% → 27.3%)
-relaxation_attempts_best: 8 # Flex levels to test (default 8 flex levels = 32 filter combinations)
+relaxation_attempts_best: 11 # Flex levels to test (default: 11 steps = 22 filter combinations)
 ```
 
-Set the matching `relaxation_attempts_peak` value when tuning Peak Price periods. Both sliders accept 1-12 attempts, and the default of 8 flex levels translates to 32 filter-combination tries (8 flex levels × 4 filter combos) for each of Best and Peak calculations. Lower it for quick feedback, or raise it when either sensor struggles to hit the minimum-period target on volatile days.
+**ℹ️ Good news:** Relaxation is **enabled by default** with sensible settings. Most users don't need to change anything here!
+
+Set the matching `relaxation_attempts_peak` value when tuning Peak Price periods. Both sliders accept 1-12 attempts, and the default of 11 flex levels translates to 22 filter-combination tries (11 flex levels × 2 filter combos) for each of Best and Peak calculations. Lower it for quick feedback, or raise it when either sensor struggles to hit the minimum-period target on volatile days.
+
+### Why Relaxation Is Better Than Manual Tweaking
+
+**Problem with manual settings:**
+- You set flex to 25% → Works great on Monday (volatile prices)
+- Same 25% flex on Tuesday (flat prices) → Finds "best price" periods that aren't really cheap
+- You're stuck with one setting for all days
+
+**Solution with relaxation:**
+- Monday (volatile): Uses flex 15% (original) → Finds 2 perfect periods ✓
+- Tuesday (flat): Escalates to flex 21% → Finds 2 decent periods ✓
+- Wednesday (mixed): Uses flex 18% → Finds 2 good periods ✓
+
+**Each day gets exactly the flexibility it needs!**
 
 ### How It Works (Adaptive Matrix)
 
-Relaxation uses a **matrix approach** - trying _N_ flexibility levels (your configured **relaxation attempts**) with the same 4 filter combinations. With the default of 8 attempts, that means 8 flex levels × 4 filter combinations = **32 total filter-combination tries per day**; fewer attempts mean fewer flex increases, while more attempts extend the search further before giving up.
+Relaxation uses a **matrix approach** - trying _N_ flexibility levels (your configured **relaxation attempts**) with 2 filter combinations per level. With the default of 11 attempts, that means 11 flex levels × 2 filter combinations = **22 total filter-combination tries per day**; fewer attempts mean fewer flex increases, while more attempts extend the search further before giving up.
+
+**Important:** The flexibility increment is **fixed at 3% per step** (hard-coded for reliability). This means:
+- Base flex 15% → 18% → 21% → 24% → ... → 48% (with 11 attempts)
+- Base flex 20% → 23% → 26% → 29% → ... → 50% (with 11 attempts)
 
 #### Phase Matrix
 
@@ -276,34 +379,33 @@ For each day, the system tries:
 **Flexibility Levels (Attempts):**
 
 1. Attempt 1 = Original flex (e.g., 15%)
-2. Attempt 2 = +35% step (e.g., 20.25%)
-3. Attempt 3 = +35% step (e.g., 27.3%)
-4. Attempt 4 = +35% step (e.g., 36.9%)
-5. … Attempts 5-8 (default) continue adding +35% each time
-6. … Additional attempts keep extending the same pattern up to the 12-attempt maximum
+2. Attempt 2 = +3% step (18%)
+3. Attempt 3 = +3% step (21%)
+4. Attempt 4 = +3% step (24%)
+5. … Attempts 5-11 (default) continue adding +3% each time
+6. … Additional attempts keep extending the same pattern up to the 12-attempt maximum (up to 51%)
 
-**4 Filter Combinations (per flexibility level):**
+**2 Filter Combinations (per flexibility level):**
 
 1. Original filters (your configured level filter)
-2. Remove level filter
+2. Remove level filter (level=any)
 
 **Example progression:**
 
 ```
 Flex 15% + Original filters → Not enough periods
-Flex 15% + Volatility=any   → Not enough periods
 Flex 15% + Level=any        → Not enough periods
-Flex 15% + All filters off  → Not enough periods
-Flex 20.25% + Original      → SUCCESS! Found 2 periods ✓
+Flex 18% + Original filters → Not enough periods
+Flex 18% + Level=any        → SUCCESS! Found 2 periods ✓
 (stops here - no need to try more)
 ```
 
 ### Choosing the Number of Attempts
 
--   **Default (8 attempts)** balances speed and completeness for most grids (32 combinations per day for both Best and Peak)
--   **Lower (1-4 attempts)** if you only want mild relaxation and keep processing time minimal
--   **Higher (9-12 attempts)** for extremely volatile days or when you must hit a strict minimum (up to 48 combinations)
--   Remember: each additional attempt adds four more filter combinations because every new flex level still runs all four filter overrides
+-   **Default (11 attempts)** balances speed and completeness for most grids (22 combinations per day for both Best and Peak)
+-   **Lower (4-8 attempts)** if you only want mild relaxation and keep processing time minimal (reaches ~27-39% flex)
+-   **Higher (12 attempts)** for extremely volatile days when you must reach near the 50% maximum (24 combinations)
+-   Remember: each additional attempt adds two more filter combinations because every new flex level still runs both filter overrides (original + level=any)
 
 #### Per-Day Independence
 
@@ -311,7 +413,7 @@ Flex 20.25% + Original      → SUCCESS! Found 2 periods ✓
 
 ```
 Day 1: Finds 2 periods with flex 15% (original) → No relaxation needed
-Day 2: Needs flex 27.3% + level=any → Uses relaxed settings
+Day 2: Needs flex 21% + level=any → Uses relaxed settings
 Day 3: Finds 2 periods with flex 15% (original) → No relaxation needed
 ```
 
@@ -439,7 +541,7 @@ duration_minutes: 180
 rating_level: "LOW" # All intervals are LOW price
 price_avg: 18.5 # Average price in this period
 relaxation_active: true # This day used relaxation
-relaxation_level: "price_diff_20.25%+level_any" # Found at flex 20.25%, level filter removed
+relaxation_level: "price_diff_18.0%+level_any" # Found at flex 18%, level filter removed
 period_interval_smoothed_count: 2 # 2 outliers were smoothed (only if >0)
 period_interval_level_gap_count: 1 # 1 interval kept via gap tolerance (only if >0)
 ```
@@ -464,10 +566,9 @@ For advanced configuration patterns and technical deep-dive, see:
 | `best_price_min_distance_from_avg` | 2%      | 0-20%            | Quality threshold              |
 | `best_price_max_level`             | any     | any/cheap/vcheap | Absolute quality               |
 | `best_price_max_level_gap_count`   | 0       | 0-10             | Gap tolerance                  |
-| `enable_min_periods_best`          | false   | true/false       | Enable relaxation              |
-| `min_periods_best`                 | -       | 1-10             | Target periods per day         |
-| `relaxation_step_best`             | -       | 5-100%           | Relaxation increment           |
-| `relaxation_attempts_best`         | 8       | 1-12             | Flex levels (attempts) per day |
+| `enable_min_periods_best`          | true    | true/false       | Enable relaxation              |
+| `min_periods_best`                 | 2       | 1-10             | Target periods per day         |
+| `relaxation_attempts_best`         | 11      | 1-12             | Flex levels (attempts) per day |
 
 **Peak Price:** Same parameters with `peak_price_*` prefix (defaults: flex=-15%, same otherwise)
 
@@ -508,5 +609,5 @@ The Tibber API provides price levels for each 15-minute interval:
 
 ---
 
-**Last updated:** November 15, 2025
+**Last updated:** November 19, 2025
 **Integration version:** 2.0+

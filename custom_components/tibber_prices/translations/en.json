@@ -111,7 +111,6 @@
                     "best_price_max_level_gap_count": "Level Filter Gap Tolerance",
                     "enable_min_periods_best": "Try to Achieve Minimum Period Count",
                     "min_periods_best": "Minimum Periods Required",
-                    "relaxation_step_best": "Filter Relaxation Step Size",
                     "relaxation_attempts_best": "Relaxation Attempts"
                 },
                 "data_description": {
@@ -119,7 +118,6 @@
                     "best_price_max_level_gap_count": "Maximum number of consecutive intervals allowed that deviate by exactly one level step from the required level. For example: with 'Cheap' filter and gap count 1, a sequence 'CHEAP, CHEAP, NORMAL, CHEAP' is accepted (NORMAL is one step above CHEAP). This prevents periods from being split by occasional level deviations. Default: 0 (strict filtering, no tolerance).",
                     "enable_min_periods_best": "When enabled, filters will be gradually relaxed if not enough periods are found. This attempts to reach the desired minimum number of periods, which may include less optimal time windows as best-price periods.",
                     "min_periods_best": "Minimum number of best price periods to aim for per day. Filters will be relaxed step-by-step to try achieving this count. Only active when 'Try to Achieve Minimum Period Count' is enabled. Default: 1",
-                    "relaxation_step_best": "Percentage of the original flexibility threshold to add per relaxation step. For example: with 15% flexibility and 25% step size, filters will try 15%, 18.75%, 22.5%, etc. Higher values mean faster relaxation but less precision.",
                     "relaxation_attempts_best": "How many flex levels (attempts) to try before giving up. Each attempt runs all filter combinations at the new flex level. More attempts increase the chance of finding additional periods at the cost of longer processing time."
                 },
                 "submit": "Next to Step 5"
@@ -135,7 +133,6 @@
                     "peak_price_max_level_gap_count": "Level Filter Gap Tolerance",
                     "enable_min_periods_peak": "Try to Achieve Minimum Period Count",
                     "min_periods_peak": "Minimum Periods Required",
-                    "relaxation_step_peak": "Filter Relaxation Step Size",
                     "relaxation_attempts_peak": "Relaxation Attempts"
                 },
                 "data_description": {
@@ -143,7 +140,6 @@
                     "peak_price_max_level_gap_count": "Maximum number of consecutive intervals allowed that deviate by exactly one level step from the required level. For example: with 'Expensive' filter and gap count 2, a sequence 'EXPENSIVE, NORMAL, NORMAL, EXPENSIVE' is accepted (NORMAL is one step below EXPENSIVE). This prevents periods from being split by occasional level deviations. Default: 0 (strict filtering, no tolerance).",
                     "enable_min_periods_peak": "When enabled, filters will be gradually relaxed if not enough periods are found. This attempts to reach the desired minimum number of periods to ensure you're warned about expensive periods even on days with unusual price patterns.",
                     "min_periods_peak": "Minimum number of peak price periods to aim for per day. Filters will be relaxed step-by-step to try achieving this count. Only active when 'Try to Achieve Minimum Period Count' is enabled. Default: 1",
-                    "relaxation_step_peak": "Percentage of the original flexibility threshold to add per relaxation step. For example: with -15% flexibility and 25% step size, filters will try -15%, -18.75%, -22.5%, etc. Higher values mean faster relaxation but less precision.",
                     "relaxation_attempts_peak": "How many flex levels (attempts) to try before giving up. Each attempt runs all filter combinations at the new flex level. More attempts increase the chance of finding additional peak periods at the cost of longer processing time."
                 },
                 "submit": "Next to Step 6"

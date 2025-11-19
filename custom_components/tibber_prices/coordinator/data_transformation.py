@@ -89,7 +89,6 @@ class DataTransformer:
                 "max_level_gap_count": self.config_entry.options.get(_const.CONF_BEST_PRICE_MAX_LEVEL_GAP_COUNT, 0),
                 "enable_min_periods": self.config_entry.options.get(_const.CONF_ENABLE_MIN_PERIODS_BEST, False),
                 "min_periods": self.config_entry.options.get(_const.CONF_MIN_PERIODS_BEST, 2),
-                "relaxation_step": self.config_entry.options.get(_const.CONF_RELAXATION_STEP_BEST, 5.0),
                 "relaxation_attempts": self.config_entry.options.get(_const.CONF_RELAXATION_ATTEMPTS_BEST, 4),
             },
             "peak_price_config": {
@@ -102,7 +101,6 @@ class DataTransformer:
                 "max_level_gap_count": self.config_entry.options.get(_const.CONF_PEAK_PRICE_MAX_LEVEL_GAP_COUNT, 0),
                 "enable_min_periods": self.config_entry.options.get(_const.CONF_ENABLE_MIN_PERIODS_PEAK, False),
                 "min_periods": self.config_entry.options.get(_const.CONF_MIN_PERIODS_PEAK, 2),
-                "relaxation_step": self.config_entry.options.get(_const.CONF_RELAXATION_STEP_PEAK, 5.0),
                 "relaxation_attempts": self.config_entry.options.get(_const.CONF_RELAXATION_ATTEMPTS_PEAK, 4),
             },
         }

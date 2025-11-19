@@ -111,7 +111,6 @@
                     "best_price_max_level_gap_count": "Lückentoleranz für Niveaufilter",
                     "enable_min_periods_best": "Mindestanzahl Zeiträume anstreben",
                     "min_periods_best": "Mindestanzahl Zeiträume",
-                    "relaxation_step_best": "Lockerungsschritt",
                     "relaxation_attempts_best": "Lockerungsversuche (Flex-Stufen)"
                 },
                 "data_description": {
@@ -119,7 +118,6 @@
                     "best_price_max_level_gap_count": "Maximale Anzahl aufeinanderfolgender Intervalle, die exakt um eine Niveaustufe vom geforderten Level abweichen dürfen. Beispiel: Bei Filter 'Günstig' und Lückentoleranz 1 wird die Sequenz 'GÜNSTIG, GÜNSTIG, NORMAL, GÜNSTIG' akzeptiert (NORMAL ist eine Stufe über GÜNSTIG). Dies verhindert, dass Zeiträume durch gelegentliche Niveau-Abweichungen aufgespalten werden. Standard: 1.",
                     "enable_min_periods_best": "Wenn aktiviert, werden Filter schrittweise gelockert, falls nicht genug Zeiträume gefunden wurden. Dies versucht die gewünschte Mindestanzahl zu erreichen, was dazu führen kann, dass auch weniger optimale Zeiträume als Bestpreis-Zeiträume markiert werden.",
                     "min_periods_best": "Mindestanzahl an Bestpreis-Zeiträumen, die pro Tag angestrebt werden. Filter werden schrittweise gelockert, um diese Anzahl zu erreichen. Nur aktiv, wenn 'Mindestanzahl Zeiträume anstreben' aktiviert ist. Standard: 1",
-                    "relaxation_step_best": "Prozentsatz des ursprünglichen Flexibilitätsschwellwerts, der pro Lockerungsschritt addiert wird. Beispiel: Bei 15% Flexibilität und 25% Schrittgröße werden 15%, 18,75%, 22,5% usw. versucht. Höhere Werte bedeuten schnellere Lockerung, aber geringere Präzision.",
                     "relaxation_attempts_best": "Wie viele Flex-Stufen (Versuche) nacheinander ausprobiert werden, bevor aufgegeben wird. Jeder Versuch testet alle Filterkombinationen auf der neuen Flex-Stufe. Mehr Versuche erhöhen die Chance auf zusätzliche Zeiträume, benötigen aber etwas mehr Rechenzeit."
                 },
                 "submit": "Weiter zu Schritt 5"
@@ -135,7 +133,6 @@
                     "peak_price_max_level_gap_count": "Lückentoleranz für Niveaufilter",
                     "enable_min_periods_peak": "Mindestanzahl Zeiträume anstreben",
                     "min_periods_peak": "Mindestanzahl Zeiträume",
-                    "relaxation_step_peak": "Lockerungsschritt",
                     "relaxation_attempts_peak": "Lockerungsversuche (Flex-Stufen)"
                 },
                 "data_description": {
@@ -143,7 +140,6 @@
                     "peak_price_max_level_gap_count": "Maximale Anzahl aufeinanderfolgender Intervalle, die exakt um eine Niveaustufe vom geforderten Level abweichen dürfen. Beispiel: Bei Filter 'Teuer' und Lückentoleranz 2 wird die Sequenz 'TEUER, NORMAL, NORMAL, TEUER' akzeptiert (NORMAL ist eine Stufe unter TEUER). Dies verhindert, dass Zeiträume durch gelegentliche Niveau-Abweichungen aufgespalten werden. Standard: 0.",
                     "enable_min_periods_peak": "Wenn aktiviert, werden Filter schrittweise gelockert, falls nicht genug Zeiträume gefunden wurden. Dies versucht die gewünschte Mindestanzahl zu erreichen, um sicherzustellen, dass du auch an Tagen mit ungewöhnlichen Preismustern vor teuren Zeiträumen gewarnt wirst.",
                     "min_periods_peak": "Mindestanzahl an Spitzenpreis-Zeiträumen, die pro Tag angestrebt werden. Filter werden schrittweise gelockert, um diese Anzahl zu erreichen. Nur aktiv, wenn 'Mindestanzahl Zeiträume anstreben' aktiviert ist. Standard: 1",
-                    "relaxation_step_peak": "Prozentsatz des ursprünglichen Flexibilitätsschwellwerts, der pro Lockerungsschritt addiert wird. Beispiel: Bei -15% Flexibilität und 25% Schrittgröße werden -15%, -18,75%, -22,5% usw. versucht. Höhere Werte bedeuten schnellere Lockerung, aber geringere Präzision.",
                     "relaxation_attempts_peak": "Wie viele Flex-Stufen (Versuche) nacheinander ausprobiert werden, bevor aufgegeben wird. Jeder Versuch testet alle Filterkombinationen auf der neuen Flex-Stufe. Mehr Versuche erhöhen die Chance auf zusätzliche Spitzenpreis-Zeiträume, benötigen aber etwas mehr Rechenzeit."
                 },
                 "submit": "Weiter zu Schritt 6"

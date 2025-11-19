@@ -53,7 +53,7 @@ def calculate_reference_prices(intervals_by_day: dict[date, list[dict]], *, reve
     return ref_prices
 
 
-def build_periods(  # noqa: PLR0913, PLR0915 - Complex period building logic requires many arguments and statements
+def build_periods(  # noqa: PLR0913, PLR0915, PLR0912 - Complex period building logic requires many arguments, statements, and branches
     all_prices: list[dict],
     price_context: dict[str, Any],
     *,
@@ -65,9 +65,9 @@ def build_periods(  # noqa: PLR0913, PLR0915 - Complex period building logic req
     """
     Build periods, allowing periods to cross midnight (day boundary).
 
-    Periods are built day-by-day, comparing each interval to its own day's reference.
-    When a day boundary is crossed, the current period is ended.
-    Adjacent periods at midnight are merged in a later step.
+    Periods can span multiple days. Each period uses the reference price (min/max) from
+    the day when the period started, ensuring consistent filtering criteria throughout
+    the period even when crossing midnight.
 
     Args:
         all_prices: All price data points
@@ -105,10 +105,12 @@ def build_periods(  # noqa: PLR0913, PLR0915 - Complex period building logic req
 
     periods: list[list[dict]] = []
     current_period: list[dict] = []
-    last_ref_date: date | None = None
+    period_start_date: date | None = None  # Track start day of current period
     consecutive_gaps = 0  # Track consecutive intervals that deviate by 1 level step
     intervals_checked = 0
     intervals_filtered_by_level = 0
+    intervals_filtered_by_flex = 0
+    intervals_filtered_by_min_distance = 0
 
     for price_data in all_prices:
         starts_at = time.get_interval_time(price_data)
@@ -123,15 +125,25 @@ def build_periods(  # noqa: PLR0913, PLR0915 - Complex period building logic req
 
         intervals_checked += 1
 
-        # Check flex and minimum distance criteria (using smoothed price)
+        # Use reference price from period start day (for consistency across midnight)
+        # If no period active, use current interval's day
+        ref_date = period_start_date if period_start_date is not None else date_key
+
+        # Check flex and minimum distance criteria (using smoothed price and period start date reference)
         criteria = IntervalCriteria(
-            ref_price=ref_prices[date_key],
-            avg_price=avg_prices[date_key],
+            ref_price=ref_prices[ref_date],
+            avg_price=avg_prices[ref_date],
             flex=flex,
             min_distance_from_avg=min_distance_from_avg,
             reverse_sort=reverse_sort,
         )
         in_flex, meets_min_distance = check_interval_criteria(price_for_criteria, criteria)
+
+        # Track why intervals are filtered
+        if not in_flex:
+            intervals_filtered_by_flex += 1
+        if not meets_min_distance:
+            intervals_filtered_by_min_distance += 1
 
         # If this interval was smoothed, check if smoothing actually made a difference
         smoothing_was_impactful = False
@@ -150,16 +162,12 @@ def build_periods(  # noqa: PLR0913, PLR0915 - Complex period building logic req
         if not meets_level:
             intervals_filtered_by_level += 1
 
-        # Split period if day changes
-        if last_ref_date is not None and date_key != last_ref_date and current_period:
-            periods.append(current_period)
-            current_period = []
-            consecutive_gaps = 0  # Reset gap counter on day boundary
-
-        last_ref_date = date_key
-
         # Add to period if all criteria are met
         if in_flex and meets_min_distance and meets_level:
+            # Start new period if none active
+            if not current_period:
+                period_start_date = date_key  # Lock reference to start day
+
             current_period.append(
                 {
                     "interval_hour": starts_at.hour,
@@ -176,22 +184,47 @@ def build_periods(  # noqa: PLR0913, PLR0915 - Complex period building logic req
             # Criteria no longer met, end current period
             periods.append(current_period)
             current_period = []
+            period_start_date = None  # Reset period start date
             consecutive_gaps = 0  # Reset gap counter
 
     # Add final period if exists
     if current_period:
         periods.append(current_period)
 
-    # Log summary
-    if level_filter_active and intervals_checked > 0:
-        filtered_pct = (intervals_filtered_by_level / intervals_checked) * 100
+    # Log detailed filter statistics
+    if intervals_checked > 0:
         _LOGGER.debug(
-            "%sLevel filter summary: %d/%d intervals filtered (%.1f%%)",
+            "%sFilter statistics: %d intervals checked",
             INDENT_L0,
-            intervals_filtered_by_level,
             intervals_checked,
-            filtered_pct,
         )
+        if intervals_filtered_by_flex > 0:
+            flex_pct = (intervals_filtered_by_flex / intervals_checked) * 100
+            _LOGGER.debug(
+                "%s  Filtered by FLEX (price too far from ref): %d/%d (%.1f%%)",
+                INDENT_L0,
+                intervals_filtered_by_flex,
+                intervals_checked,
+                flex_pct,
+            )
+        if intervals_filtered_by_min_distance > 0:
+            distance_pct = (intervals_filtered_by_min_distance / intervals_checked) * 100
+            _LOGGER.debug(
+                "%s  Filtered by MIN_DISTANCE (price too close to avg): %d/%d (%.1f%%)",
+                INDENT_L0,
+                intervals_filtered_by_min_distance,
+                intervals_checked,
+                distance_pct,
+            )
+        if level_filter_active and intervals_filtered_by_level > 0:
+            level_pct = (intervals_filtered_by_level / intervals_checked) * 100
+            _LOGGER.debug(
+                "%s  Filtered by LEVEL (wrong price level): %d/%d (%.1f%%)",
+                INDENT_L0,
+                intervals_filtered_by_level,
+                intervals_checked,
+                level_pct,
+            )
 
     return periods
 

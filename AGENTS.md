@@ -523,6 +523,114 @@ custom_components/tibber_prices/
 └── services.yaml         # Service definitions
 ```
 
+## Period Calculation System (Best/Peak Price Periods)
+
+**CRITICAL:** Period calculation uses multi-criteria filtering that can create **mathematical conflicts** at high flexibility values. Understanding these interactions is essential for reliable period detection.
+
+**Core Challenge:**
+
+The period calculation applies **three independent filters** that ALL must pass:
+1. **Flex filter**: `price ≤ daily_min × (1 + flex)`
+2. **Min_Distance filter**: `price ≤ daily_avg × (1 - min_distance/100)`
+3. **Level filter**: `rating_level IN [allowed_levels]`
+
+**Mathematical Conflict Condition:**
+
+When `daily_min × (1 + flex) > daily_avg × (1 - min_distance/100)`, the flex filter permits intervals that the min_distance filter blocks, causing zero periods despite high flexibility.
+
+Example: daily_min=10 ct, daily_avg=20 ct, flex=50%, min_distance=5%
+- Flex allows: ≤15 ct
+- Distance allows: ≤19 ct
+- But combined: Only intervals ≤15 ct AND ≤19 ct AND matching level → Distance becomes dominant constraint
+
+**Solutions Implemented (Nov 2025):**
+
+1. **Hard Caps on Flex** (`coordinator/period_handlers/core.py`):
+   - `MAX_SAFE_FLEX = 0.50` (50% overall maximum)
+   - `MAX_OUTLIER_FLEX = 0.25` (25% for price spike detection)
+   - Warns users when base flex exceeds thresholds (INFO at 25%, WARNING at 30%)
+
+2. **Relaxation Increment Cap** (`coordinator/period_handlers/relaxation.py`):
+   - Maximum 3% increment per relaxation step (prevents explosion from high base flex)
+   - Example: Base flex 40% → increments as 43%, 46%, 49% (capped at 50%)
+   - Without cap: 40% × 1.25 = 50% step → reaches 100% in 6 steps
+
+3. **Dynamic Min_Distance Scaling** (`coordinator/period_handlers/level_filtering.py`):
+   - Reduces min_distance proportionally as flex increases above 20%
+   - Formula: `scale_factor = max(0.25, 1.0 - ((flex - 0.20) × 2.5))`
+   - Example: flex=30% → scale=0.75 → min_distance reduced by 25%
+   - Minimum scaling: 25% of original (prevents complete removal)
+
+4. **Enhanced Debug Logging** (`coordinator/period_handlers/period_building.py`):
+   - Tracks exact counts of intervals filtered by flex, min_distance, and level
+   - Shows which filter blocked the most candidates
+   - Enables diagnosis of configuration issues
+
+**Configuration Guidance:**
+
+**Recommended Flex Ranges:**
+- **With relaxation enabled**: 10-20% base flex (relaxation will escalate as needed)
+- **Without relaxation**: 20-35% direct flex (no automatic escalation)
+- **Anti-pattern**: Base flex >30% with relaxation enabled → causes rapid escalation and filter conflicts
+
+**Key Constants** (defined in `coordinator/period_handlers/core.py`):
+```python
+MAX_SAFE_FLEX = 0.50                      # 50% absolute maximum
+MAX_OUTLIER_FLEX = 0.25                   # 25% for stable outlier detection
+FLEX_WARNING_THRESHOLD_RELAXATION = 0.25  # INFO warning at 25% base flex
+FLEX_HIGH_THRESHOLD_RELAXATION = 0.30     # WARNING at 30% base flex
+```
+
+**Relaxation Strategy** (`coordinator/period_handlers/relaxation.py`):
+- Per-day independent loops (each day escalates separately based on its needs)
+- Hard cap: 3% absolute maximum increment per step (prevents explosion from high base flex)
+- Default configuration: 11 flex levels (15% base → 18% → 21% → ... → 48% max)
+- Filter combinations: original level → level="any" (tries both price and volatility levels)
+- Each flex level tries all filter combinations before increasing flex further
+
+**Period Boundary Behavior** (`coordinator/period_handlers/period_building.py`):
+- Periods can **cross midnight** (day boundaries) naturally
+- Reference price locked to **period start day** for consistency across the entire period
+- Pattern: "Uses reference price from start day of the period for consistency" (same as period statistics)
+- Example: Period starting 23:45 on Day 1 continues into Day 2 using Day 1's daily_min as reference
+- This prevents artificial splits at midnight when prices remain favorable across the boundary
+
+**Default Configuration Values** (`const.py`):
+```python
+DEFAULT_BEST_PRICE_FLEX = 15              # 15% base - optimal for relaxation mode
+DEFAULT_PEAK_PRICE_FLEX = -20             # 20% base (negative for peak detection)
+DEFAULT_RELAXATION_ATTEMPTS_BEST = 11     # 11 steps: 15% → 48% (3% increment per step)
+DEFAULT_RELAXATION_ATTEMPTS_PEAK = 11     # 11 steps: 20% → 50% (3% increment per step)
+```
+
+The relaxation increment is **hard-coded at 3% per step** in `relaxation.py` for reliability and predictability. This prevents configuration issues with high base flex values while still allowing sufficient escalation to the 50% hard maximum.
+
+**Dynamic Scaling Table** (min_distance adjustment):
+```
+Flex    Scale   Example (min_distance=5%)
+-------------------------------------------
+≤20%    100%    5.00% (no reduction)
+25%     87.5%   4.38%
+30%     75%     3.75%
+35%     62.5%   3.13%
+40%     50%     2.50%
+45%     37.5%   1.88%
+≥50%    25%     1.25% (minimum)
+```
+
+**Testing Scenarios:**
+
+When debugging period calculation issues:
+1. Check flex value: Is base flex >30%? Reduce to 15-20% if using relaxation
+2. Check logs for "scaled min_distance": Is it reducing too much? May need lower base flex
+3. Check filter statistics: Which filter blocks most intervals? (flex, distance, or level)
+4. Check relaxation warnings: INFO at 25%, WARNING at 30% indicate suboptimal config
+
+**See:**
+- **Theory documentation**: `docs/development/period-calculation-theory.md` (comprehensive mathematical analysis, conflict conditions, configuration pitfalls)
+- **Implementation**: `coordinator/period_handlers/` package (core.py, relaxation.py, level_filtering.py, period_building.py)
+- **User guide**: `docs/user/period-calculation.md` (simplified user-facing explanations)
+
 ## Development Environment Setup
 
 **Python Virtual Environment:**

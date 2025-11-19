@@ -518,7 +518,7 @@ class PeriodCalculator:
             reverse_sort=reverse_sort,
         )
 
-    def calculate_periods_for_price_info(  # noqa: PLR0915
+    def calculate_periods_for_price_info(
         self,
         price_info: dict[str, Any],
     ) -> dict[str, Any]:
@@ -585,10 +585,6 @@ class PeriodCalculator:
             _const.CONF_MIN_PERIODS_BEST,
             _const.DEFAULT_MIN_PERIODS_BEST,
         )
-        relaxation_step_best = self.config_entry.options.get(
-            _const.CONF_RELAXATION_STEP_BEST,
-            _const.DEFAULT_RELAXATION_STEP_BEST,
-        )
         relaxation_attempts_best = self.config_entry.options.get(
             _const.CONF_RELAXATION_ATTEMPTS_BEST,
             _const.DEFAULT_RELAXATION_ATTEMPTS_BEST,
@@ -624,7 +620,6 @@ class PeriodCalculator:
                 config=best_period_config,
                 enable_relaxation=enable_relaxation_best,
                 min_periods=min_periods_best,
-                relaxation_step_pct=relaxation_step_best,
                 max_relaxation_attempts=relaxation_attempts_best,
                 should_show_callback=lambda lvl: self.should_show_periods(
                     price_info,
@@ -657,10 +652,6 @@ class PeriodCalculator:
         min_periods_peak = self.config_entry.options.get(
             _const.CONF_MIN_PERIODS_PEAK,
             _const.DEFAULT_MIN_PERIODS_PEAK,
-        )
-        relaxation_step_peak = self.config_entry.options.get(
-            _const.CONF_RELAXATION_STEP_PEAK,
-            _const.DEFAULT_RELAXATION_STEP_PEAK,
         )
         relaxation_attempts_peak = self.config_entry.options.get(
             _const.CONF_RELAXATION_ATTEMPTS_PEAK,
@@ -697,7 +688,6 @@ class PeriodCalculator:
                 config=peak_period_config,
                 enable_relaxation=enable_relaxation_peak,
                 min_periods=min_periods_peak,
-                relaxation_step_pct=relaxation_step_peak,
                 max_relaxation_attempts=relaxation_attempts_peak,
                 should_show_callback=lambda lvl: self.should_show_periods(
                     price_info,

@@ -111,14 +111,12 @@
                     "best_price_max_level_gap_count": "Gaptolerantie voor niveaufilter",
                     "enable_min_periods_best": "Probeer minimum aantal periodes te bereiken",
                     "min_periods_best": "Minimum aantal periodes",
-                    "relaxation_step_best": "Ontspanningsstap",
                     "relaxation_attempts_best": "Aantal ontspanningspogingen"
                 },
                 "data_description": {
                     "best_price_max_level": "Toon alleen beste prijsperiodes als ze intervallen bevatten met prijsniveaus ≤ geselecteerde waarde. Bijvoorbeeld: selecteren van 'Goedkoop' betekent dat de periode minstens één 'ZEER_GOEDKOOP' of 'GOEDKOOP' interval moet hebben. Dit zorgt ervoor dat 'beste prijs'-periodes niet alleen relatief goedkoop zijn voor de dag, maar daadwerkelijk goedkoop in absolute termen. Selecteer 'Alle' om beste prijzen te tonen ongeacht hun absolute prijsniveau.",
                     "enable_min_periods_best": "Wanneer ingeschakeld worden filters geleidelijk versoepeld als er niet genoeg periodes worden gevonden. Dit probeert het gewenste minimum aantal periodes te bereiken om ervoor te zorgen dat je kansen hebt om van lage prijzen te profiteren, zelfs op dagen met ongebruikelijke prijspatronen.",
                     "min_periods_best": "Minimum aantal beste prijsperiodes om naar te streven per dag. Filters worden stap voor stap versoepeld om dit aantal te proberen bereiken. Alleen actief wanneer 'Probeer minimum aantal periodes te bereiken' is ingeschakeld. Standaard: 1",
-                    "relaxation_step_best": "Percentage van de oorspronkelijke flexibiliteitsdrempel om toe te voegen per ontspanningsstap. Bijvoorbeeld: met 15% flexibiliteit en 25% stapgrootte zullen de filters 15%, 18,75%, 22,5%, enz. proberen. Hogere waarden betekenen snellere ontspanning maar minder precisie.",
                     "relaxation_attempts_best": "Hoeveel keer de ontspanningslogica filters opnieuw mag proberen. Gebruik hogere waarden om meer variaties te testen als dagen extreem grillig zijn. Hogere aantallen vergen meer rekentijd maar vergroten de kans dat het gewenste minimum aantal periodes wordt gehaald.",
                     "best_price_max_level_gap_count": "Maximum aantal opeenvolgende intervallen dat precies één niveaustap mag afwijken van het vereiste niveau. Bijvoorbeeld: met 'Goedkoop' filter en gaptelling 1 wordt de reeks 'GOEDKOOP, GOEDKOOP, NORMAAL, GOEDKOOP' geaccepteerd (NORMAAL is één stap boven GOEDKOOP). Dit voorkomt dat periodes worden opgesplitst door incidentele niveauafwijkingen. Standaard: 0 (strikte filtering, geen tolerantie)."
                 },
@@ -135,14 +133,12 @@
                     "peak_price_max_level_gap_count": "Gaptolerantie voor niveaufilter",
                     "enable_min_periods_peak": "Probeer minimum aantal periodes te bereiken",
                     "min_periods_peak": "Minimum aantal periodes",
-                    "relaxation_step_peak": "Ontspanningsstap",
                     "relaxation_attempts_peak": "Aantal ontspanningspogingen"
                 },
                 "data_description": {
                     "peak_price_min_level": "Toon alleen piekprijsperiodes als ze intervallen bevatten met prijsniveaus ≥ geselecteerde waarde. Bijvoorbeeld: selecteren van 'Duur' betekent dat de periode minstens één 'DUUR' of 'ZEER_DUUR' interval moet hebben. Dit zorgt ervoor dat 'piekprijs'-periodes niet alleen relatief duur zijn voor de dag, maar daadwerkelijk duur in absolute termen. Selecteer 'Alle' om piekprijzen te tonen ongeacht hun absolute prijsniveau.",
                     "enable_min_periods_peak": "Wanneer ingeschakeld worden filters geleidelijk versoepeld als er niet genoeg periodes worden gevonden. Dit probeert het gewenste minimum aantal periodes te bereiken om ervoor te zorgen dat je wordt gewaarschuwd voor dure periodes, zelfs op dagen met ongebruikelijke prijspatronen.",
                     "min_periods_peak": "Minimum aantal piekprijsperiodes om naar te streven per dag. Filters worden stap voor stap versoepeld om dit aantal te proberen bereiken. Alleen actief wanneer 'Probeer minimum aantal periodes te bereiken' is ingeschakeld. Standaard: 1",
-                    "relaxation_step_peak": "Percentage van de oorspronkelijke flexibiliteitsdrempel om toe te voegen per ontspanningsstap. Bijvoorbeeld: met -15% flexibiliteit en 25% stapgrootte zullen de filters -15%, -18,75%, -22,5%, enz. proberen. Hogere waarden betekenen snellere ontspanning maar minder precisie.",
                     "relaxation_attempts_peak": "Hoeveel keer de ontspanningslogica filters opnieuw mag proberen. Gebruik meer pogingen wanneer de piekperiodes moeilijk te vinden zijn door vlakke of zeer grillige dagen. Elke extra poging kost wat extra verwerkingstijd maar vergroot de kans dat periodes worden gevonden.",
                     "peak_price_max_level_gap_count": "Maximum aantal opeenvolgende intervallen dat precies één niveaustap mag afwijken van het vereiste niveau. Bijvoorbeeld: met 'Duur' filter en gaptelling 2 wordt de reeks 'DUUR, NORMAAL, NORMAAL, DUUR' geaccepteerd (NORMAAL is één stap onder DUUR). Dit voorkomt dat periodes worden opgesplitst door incidentele niveauafwijkingen. Standaard: 0 (strikte filtering, geen tolerantie)."
                 },

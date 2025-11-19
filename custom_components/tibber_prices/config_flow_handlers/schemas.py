@@ -33,8 +33,6 @@ from custom_components.tibber_prices.const import (
     CONF_PRICE_TREND_THRESHOLD_RISING,
     CONF_RELAXATION_ATTEMPTS_BEST,
     CONF_RELAXATION_ATTEMPTS_PEAK,
-    CONF_RELAXATION_STEP_BEST,
-    CONF_RELAXATION_STEP_PEAK,
     CONF_VOLATILITY_THRESHOLD_HIGH,
     CONF_VOLATILITY_THRESHOLD_MODERATE,
     CONF_VOLATILITY_THRESHOLD_VERY_HIGH,
@@ -59,8 +57,6 @@ from custom_components.tibber_prices.const import (
     DEFAULT_PRICE_TREND_THRESHOLD_RISING,
     DEFAULT_RELAXATION_ATTEMPTS_BEST,
     DEFAULT_RELAXATION_ATTEMPTS_PEAK,
-    DEFAULT_RELAXATION_STEP_BEST,
-    DEFAULT_RELAXATION_STEP_PEAK,
     DEFAULT_VOLATILITY_THRESHOLD_HIGH,
     DEFAULT_VOLATILITY_THRESHOLD_MODERATE,
     DEFAULT_VOLATILITY_THRESHOLD_VERY_HIGH,
@@ -356,23 +352,6 @@ def get_best_price_schema(options: Mapping[str, Any]) -> vol.Schema:
                 ),
             ),
             vol.Optional(
-                CONF_RELAXATION_STEP_BEST,
-                default=int(
-                    options.get(
-                        CONF_RELAXATION_STEP_BEST,
-                        DEFAULT_RELAXATION_STEP_BEST,
-                    )
-                ),
-            ): NumberSelector(
-                NumberSelectorConfig(
-                    min=5,
-                    max=50,
-                    step=5,
-                    unit_of_measurement="%",
-                    mode=NumberSelectorMode.SLIDER,
-                ),
-            ),
-            vol.Optional(
                 CONF_RELAXATION_ATTEMPTS_BEST,
                 default=int(
                     options.get(
@@ -496,23 +475,6 @@ def get_peak_price_schema(options: Mapping[str, Any]) -> vol.Schema:
                     min=1,
                     max=10,
                     step=1,
-                    mode=NumberSelectorMode.SLIDER,
-                ),
-            ),
-            vol.Optional(
-                CONF_RELAXATION_STEP_PEAK,
-                default=int(
-                    options.get(
-                        CONF_RELAXATION_STEP_PEAK,
-                        DEFAULT_RELAXATION_STEP_PEAK,
-                    )
-                ),
-            ): NumberSelector(
-                NumberSelectorConfig(
-                    min=5,
-                    max=50,
-                    step=5,
-                    unit_of_measurement="%",
                     mode=NumberSelectorMode.SLIDER,
                 ),
             ),

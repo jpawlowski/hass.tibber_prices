@@ -6,7 +6,7 @@ This package splits period calculation logic into focused modules:
 - level_filtering: Interval-level filtering logic
 - period_building: Period construction from intervals
 - period_statistics: Statistics calculation
-- period_merging: Overlap resolution and merging
+- period_overlap: Overlap resolution logic
 - relaxation: Per-day relaxation strategy
 - core: Main API orchestration
 - outlier_filtering: Price spike detection and smoothing

@@ -6,6 +6,7 @@ This section contains documentation for contributors and maintainers of the Tibb
 
 -   **[Setup](setup.md)** - DevContainer, environment setup, and dependencies
 -   **[Architecture](architecture.md)** - Code structure, patterns, and conventions
+-   **[Period Calculation Theory](period-calculation-theory.md)** - Mathematical foundations, Flex/Distance interaction, Relaxation strategy
 -   **[Timer Architecture](timer-architecture.md)** - Timer system, scheduling, coordination (3 independent timers)
 -   **[Caching Strategy](caching-strategy.md)** - Cache layers, invalidation, debugging
 -   **[Testing](testing.md)** - How to run tests and write new test cases

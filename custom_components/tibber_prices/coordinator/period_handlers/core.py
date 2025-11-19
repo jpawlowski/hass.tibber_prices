@@ -20,13 +20,14 @@ from .period_building import (
     filter_periods_by_min_length,
     split_intervals_by_day,
 )
-from .period_merging import (
-    merge_adjacent_periods_at_midnight,
-)
 from .period_statistics import (
     extract_period_summaries,
 )
 from .types import ThresholdConfig
+
+# Flex limits to prevent degenerate behavior (see docs/development/period-calculation-theory.md)
+MAX_SAFE_FLEX = 0.50  # 50% - hard cap: above this, period detection becomes unreliable
+MAX_OUTLIER_FLEX = 0.25  # 25% - cap for outlier filtering: above this, spike detection too permissive
 
 
 def calculate_periods(
@@ -46,8 +47,9 @@ def calculate_periods(
     2. Calculate reference prices (min/max per day)
     3. Build periods based on criteria
     4. Filter by minimum length
-    5. Merge adjacent periods at midnight
-    6. Extract period summaries (start/end times, not full price data)
+    5. Add interval ends
+    6. Filter periods by end date
+    7. Extract period summaries (start/end times, not full price data)
 
     Args:
         all_prices: All price data points from yesterday/today/tomorrow
@@ -62,13 +64,32 @@ def calculate_periods(
         - reference_data: Daily min/max/avg for on-demand annotation
 
     """
+    # Import logger at the start of function
+    import logging  # noqa: PLC0415
+
+    from .types import INDENT_L0  # noqa: PLC0415
+
+    _LOGGER = logging.getLogger(__name__)  # noqa: N806
+
     # Extract config values
     reverse_sort = config.reverse_sort
-    flex = config.flex
+    flex_raw = config.flex
     min_distance_from_avg = config.min_distance_from_avg
     min_period_length = config.min_period_length
     threshold_low = config.threshold_low
     threshold_high = config.threshold_high
+
+    # CRITICAL: Hard cap flex at 50% to prevent degenerate behavior
+    # Above 50%, period detection becomes unreliable (too many intervals qualify)
+    flex = flex_raw
+    if abs(flex_raw) > MAX_SAFE_FLEX:
+        flex = MAX_SAFE_FLEX if flex_raw > 0 else -MAX_SAFE_FLEX
+        _LOGGER.warning(
+            "Flex %.1f%% exceeds maximum safe value! Capping at %.0f%%. "
+            "Recommendation: Use 15-20%% with relaxation enabled, or 25-35%% without relaxation.",
+            abs(flex_raw) * 100,
+            MAX_SAFE_FLEX * 100,
+        )
 
     if not all_prices:
         return {
@@ -100,9 +121,23 @@ def calculate_periods(
     # Step 2.5: Filter price outliers (smoothing for period formation only)
     # This runs BEFORE period formation to prevent isolated price spikes
     # from breaking up otherwise continuous periods
+
+    # CRITICAL: Cap flexibility for outlier filtering at 25%
+    # High flex (>25%) makes outlier detection too permissive, accepting
+    # unstable price contexts as "normal". This breaks period formation.
+    # User's flex setting still applies to period criteria (in_flex check).
+    outlier_flex = min(abs(flex) * 100, MAX_OUTLIER_FLEX * 100)
+    if abs(flex) * 100 > MAX_OUTLIER_FLEX * 100:
+        _LOGGER.debug(
+            "%sOutlier filtering: Using capped flex %.1f%% (user setting: %.1f%%)",
+            INDENT_L0,
+            outlier_flex,
+            abs(flex) * 100,
+        )
+
     all_prices_smoothed = filter_price_outliers(
         all_prices_sorted,
-        abs(flex) * 100,  # Convert to percentage (e.g., 0.15 → 15.0)
+        outlier_flex,  # Use capped flex for outlier detection
         min_period_length,
     )
 
@@ -122,16 +157,27 @@ def calculate_periods(
         time=time,
     )
 
+    _LOGGER.debug(
+        "%sAfter build_periods: %d raw periods found (flex=%.1f%%, level_filter=%s)",
+        INDENT_L0,
+        len(raw_periods),
+        abs(flex) * 100,
+        config.level_filter or "None",
+    )
+
     # Step 4: Filter by minimum length
     raw_periods = filter_periods_by_min_length(raw_periods, min_period_length, time=time)
+    _LOGGER.debug(
+        "%sAfter filter_by_min_length (>= %d min): %d periods remain",
+        INDENT_L0,
+        min_period_length,
+        len(raw_periods),
+    )
 
-    # Step 5: Merge adjacent periods at midnight
-    raw_periods = merge_adjacent_periods_at_midnight(raw_periods, time=time)
-
-    # Step 6: Add interval ends
+    # Step 5: Add interval ends
     add_interval_ends(raw_periods, time=time)
 
-    # Step 7: Filter periods by end date (keep periods ending today or later)
+    # Step 6: Filter periods by end date (keep periods ending today or later)
     raw_periods = filter_periods_by_end_date(raw_periods, time=time)
 
     # Step 8: Extract lightweight period summaries (no full price data)

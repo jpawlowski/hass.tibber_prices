@@ -39,11 +39,9 @@ CONF_BEST_PRICE_MAX_LEVEL_GAP_COUNT = "best_price_max_level_gap_count"
 CONF_PEAK_PRICE_MAX_LEVEL_GAP_COUNT = "peak_price_max_level_gap_count"
 CONF_ENABLE_MIN_PERIODS_BEST = "enable_min_periods_best"
 CONF_MIN_PERIODS_BEST = "min_periods_best"
-CONF_RELAXATION_STEP_BEST = "relaxation_step_best"
 CONF_RELAXATION_ATTEMPTS_BEST = "relaxation_attempts_best"
 CONF_ENABLE_MIN_PERIODS_PEAK = "enable_min_periods_peak"
 CONF_MIN_PERIODS_PEAK = "min_periods_peak"
-CONF_RELAXATION_STEP_PEAK = "relaxation_step_peak"
 CONF_RELAXATION_ATTEMPTS_PEAK = "relaxation_attempts_peak"
 CONF_CHART_DATA_CONFIG = "chart_data_config"  # YAML config for chart data export
 
@@ -52,14 +50,14 @@ ATTRIBUTION = "Data provided by Tibber"
 # Integration name should match manifest.json
 DEFAULT_NAME = "Tibber Price Information & Ratings"
 DEFAULT_EXTENDED_DESCRIPTIONS = False
-DEFAULT_BEST_PRICE_FLEX = 15  # 15% flexibility for best price (user-facing, percent)
-# Peak price flexibility is set to -20 (20%) to allow for more adaptive detection of expensive periods.
+DEFAULT_BEST_PRICE_FLEX = 15  # 15% base flexibility - optimal for relaxation mode (default enabled)
+# Peak price flexibility is set to -20% (20% base flexibility - optimal for relaxation mode).
 # This is intentionally more flexible than best price (15%) because peak price periods can be more variable,
 # and users may benefit from earlier warnings about expensive periods, even if they are less sharply defined.
 # The negative sign indicates that the threshold is set below the MAX price
 # (e.g., -20% means MAX * 0.8), not above the average price.
 # A higher percentage allows for more conservative detection, reducing false negatives for peak price warnings.
-DEFAULT_PEAK_PRICE_FLEX = -20  # 20% flexibility for peak price (user-facing, percent)
+DEFAULT_PEAK_PRICE_FLEX = -20  # 20% base flexibility (user-facing, percent)
 DEFAULT_BEST_PRICE_MIN_DISTANCE_FROM_AVG = 5  # 5% minimum distance from daily average (ensures significance)
 DEFAULT_PEAK_PRICE_MIN_DISTANCE_FROM_AVG = 5  # 5% minimum distance from daily average (ensures significance)
 DEFAULT_BEST_PRICE_MIN_PERIOD_LENGTH = 60  # 60 minutes minimum period length for best price (user-facing, minutes)
@@ -85,12 +83,10 @@ DEFAULT_PEAK_PRICE_MAX_LEVEL_GAP_COUNT = 1  # Default: allow 1 level gap for pea
 MIN_INTERVALS_FOR_GAP_TOLERANCE = 6  # Minimum period length (in 15-min intervals = 1.5h) required for gap tolerance
 DEFAULT_ENABLE_MIN_PERIODS_BEST = True  # Default: minimum periods feature enabled for best price
 DEFAULT_MIN_PERIODS_BEST = 2  # Default: require at least 2 best price periods (when enabled)
-DEFAULT_RELAXATION_STEP_BEST = 25  # Default: 25% of original threshold per relaxation step for best price
-DEFAULT_RELAXATION_ATTEMPTS_BEST = 8  # Default: try 8 flex levels during relaxation (best price)
+DEFAULT_RELAXATION_ATTEMPTS_BEST = 11  # Default: 11 steps allows escalation from 15% to 48% (3% increment per step)
 DEFAULT_ENABLE_MIN_PERIODS_PEAK = True  # Default: minimum periods feature enabled for peak price
 DEFAULT_MIN_PERIODS_PEAK = 2  # Default: require at least 2 peak price periods (when enabled)
-DEFAULT_RELAXATION_STEP_PEAK = 25  # Default: 25% of original threshold per relaxation step for peak price
-DEFAULT_RELAXATION_ATTEMPTS_PEAK = 8  # Default: try 8 flex levels during relaxation (peak price)
+DEFAULT_RELAXATION_ATTEMPTS_PEAK = 11  # Default: 11 steps allows escalation from 20% to 50% (3% increment per step)
 
 # Home types
 HOME_TYPE_APARTMENT = "APARTMENT"

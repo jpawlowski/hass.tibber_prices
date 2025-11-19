@@ -1,4 +1,13 @@
-"""Interval-level filtering logic for period calculation."""
+"""
+Interval-level filtering logic for period calculation.
+
+Key Concepts:
+- Flex Filter: Limits price distance from daily min/max
+- Min Distance Filter: Ensures prices are significantly different from average
+- Dynamic Scaling: Min_Distance reduces at high Flex to prevent conflicts
+
+See docs/development/period-calculation-theory.md for detailed explanation.
+"""
 
 from __future__ import annotations
 
@@ -8,6 +17,13 @@ if TYPE_CHECKING:
     from .types import IntervalCriteria
 
 from custom_components.tibber_prices.const import PRICE_LEVEL_MAPPING
+
+# Module-local log indentation (each module starts at level 0)
+INDENT_L0 = ""  # Entry point / main function
+
+# Flex threshold for min_distance scaling
+FLEX_SCALING_THRESHOLD = 0.20  # 20% - start adjusting min_distance
+SCALE_FACTOR_WARNING_THRESHOLD = 0.8  # Log when reduction > 20%
 
 
 def check_level_with_gap_tolerance(
@@ -107,14 +123,47 @@ def check_interval_criteria(
     # Check if interval qualifies for the period
     in_flex = percent_diff >= criteria.flex * 100 if criteria.reverse_sort else percent_diff <= criteria.flex * 100
 
-    # Minimum distance from average
+    # CRITICAL: Adjust min_distance dynamically based on flex to prevent conflicts
+    # Problem: High flex (e.g., 50%) can conflict with fixed min_distance (e.g., 5%)
+    # Solution: When flex is high, reduce min_distance requirement proportionally
+    #
+    # At low flex (≤20%), use full min_distance (e.g., 5%)
+    # At high flex (≥40%), reduce min_distance to avoid over-filtering
+    # Linear interpolation between 20-40% flex range
+
+    adjusted_min_distance = criteria.min_distance_from_avg
+    flex_abs = abs(criteria.flex)
+
+    if flex_abs > FLEX_SCALING_THRESHOLD:
+        # Scale down min_distance as flex increases
+        # At 20% flex: multiplier = 1.0 (full min_distance)
+        # At 40% flex: multiplier = 0.5 (half min_distance)
+        # At 50% flex: multiplier = 0.25 (quarter min_distance)
+        flex_excess = flex_abs - 0.20  # How much above 20%
+        scale_factor = max(0.25, 1.0 - (flex_excess * 2.5))  # Linear reduction, min 25%
+        adjusted_min_distance = criteria.min_distance_from_avg * scale_factor
+
+        # Log adjustment at DEBUG level (only when significant reduction)
+        if scale_factor < SCALE_FACTOR_WARNING_THRESHOLD:
+            import logging  # noqa: PLC0415
+
+            _LOGGER = logging.getLogger(__name__)  # noqa: N806
+            _LOGGER.debug(
+                "High flex %.1f%% detected: Reducing min_distance %.1f%% → %.1f%% (scale %.2f)",
+                flex_abs * 100,
+                criteria.min_distance_from_avg,
+                adjusted_min_distance,
+                scale_factor,
+            )
+
+    # Minimum distance from average (using adjusted value)
     if criteria.reverse_sort:
-        # Peak price: must be at least min_distance_from_avg% above average
-        min_distance_threshold = criteria.avg_price * (1 + criteria.min_distance_from_avg / 100)
+        # Peak price: must be at least adjusted_min_distance% above average
+        min_distance_threshold = criteria.avg_price * (1 + adjusted_min_distance / 100)
         meets_min_distance = price >= min_distance_threshold
     else:
-        # Best price: must be at least min_distance_from_avg% below average
-        min_distance_threshold = criteria.avg_price * (1 - criteria.min_distance_from_avg / 100)
+        # Best price: must be at least adjusted_min_distance% below average
+        min_distance_threshold = criteria.avg_price * (1 - adjusted_min_distance / 100)
         meets_min_distance = price <= min_distance_threshold
 
     return in_flex, meets_min_distance
