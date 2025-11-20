@@ -158,7 +158,7 @@
                 "submit": "Weiter →"
             },
             "price_trend": {
-                "title": "📈 Pristrend-Schwellenwerte",
+                "title": "📈 Preistrend-Schwellenwerte",
                 "description": "_{step_progress}_\n\n**Konfiguriere Schwellenwerte für Preistrend-Sensoren. Diese Sensoren vergleichen den aktuellen Preis mit dem Durchschnitt der nächsten N Stunden, um festzustellen, ob die Preise steigen, fallen oder stabil sind.**\n\n---",
                 "data": {
                     "price_trend_threshold_rising": "Steigend-Schwelle",
