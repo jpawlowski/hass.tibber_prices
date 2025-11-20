@@ -508,8 +508,16 @@
             "monthly_rating": {
                 "name": "Monthly Price Rating"
             },
-            "data_timestamp": {
-                "name": "Price Data Expiration"
+            "data_lifecycle_status": {
+                "name": "Data Lifecycle Status",
+                "state": {
+                    "cached": "Cached",
+                    "fresh": "Fresh",
+                    "refreshing": "Refreshing",
+                    "searching_tomorrow": "Searching Tomorrow",
+                    "turnover_pending": "Turnover Pending",
+                    "error": "Error"
+                }
             },
             "today_volatility": {
                 "name": "Today's Price Volatility",
@@ -582,9 +590,6 @@
             },
             "peak_price_next_in_minutes": {
                 "name": "Peak Price Starts In"
-            },
-            "price_forecast": {
-                "name": "Price Forecast"
             },
             "home_type": {
                 "name": "Home Type",

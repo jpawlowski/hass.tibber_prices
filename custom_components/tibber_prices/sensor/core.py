@@ -49,12 +49,12 @@ from .attributes import (
     add_volatility_type_attributes,
     build_extra_state_attributes,
     build_sensor_attributes,
-    get_future_prices,
     get_prices_for_volatility,
 )
 from .calculators import (
     TibberPricesDailyStatCalculator,
     TibberPricesIntervalCalculator,
+    TibberPricesLifecycleCalculator,
     TibberPricesMetadataCalculator,
     TibberPricesRollingHourCalculator,
     TibberPricesTimingCalculator,
@@ -106,6 +106,7 @@ class TibberPricesSensor(TibberPricesEntity, SensorEntity):
         self._interval_calculator = TibberPricesIntervalCalculator(coordinator)
         self._timing_calculator = TibberPricesTimingCalculator(coordinator)
         self._trend_calculator = TibberPricesTrendCalculator(coordinator)
+        self._lifecycle_calculator = TibberPricesLifecycleCalculator(coordinator)
         self._value_getter: Callable | None = self._get_value_getter()
         self._time_sensitive_remove_listener: Callable | None = None
         self._minute_update_remove_listener: Callable | None = None
@@ -113,6 +114,10 @@ class TibberPricesSensor(TibberPricesEntity, SensorEntity):
         self._chart_data_last_update = None  # Track last service call timestamp
         self._chart_data_error = None  # Track last service call error
         self._chart_data_response = None  # Store service response for attributes
+
+        # Register for push updates if this is the lifecycle sensor
+        if entity_description.key == "data_lifecycle_status":
+            coordinator.register_lifecycle_callback(self.async_write_ha_state)
 
     async def async_added_to_hass(self) -> None:
         """When entity is added to hass."""
@@ -208,8 +213,8 @@ class TibberPricesSensor(TibberPricesEntity, SensorEntity):
             timing_calculator=self._timing_calculator,
             volatility_calculator=self._volatility_calculator,
             metadata_calculator=self._metadata_calculator,
+            lifecycle_calculator=self._lifecycle_calculator,
             get_next_avg_n_hours_value=self._get_next_avg_n_hours_value,
-            get_price_forecast_value=self._get_price_forecast_value,
             get_data_timestamp=self._get_data_timestamp,
             get_chart_data_export_value=self._get_chart_data_export_value,
         )
@@ -591,18 +596,6 @@ class TibberPricesSensor(TibberPricesEntity, SensorEntity):
     # BEST/PEAK PRICE TIMING METHODS (period-based time tracking)
     # ========================================================================
 
-    # Add method to get future price intervals
-    def _get_price_forecast_value(self) -> str | None:
-        """Get the highest or lowest price status for the price forecast entity."""
-        future_prices = get_future_prices(
-            self.coordinator, max_intervals=MAX_FORECAST_INTERVALS, time=self.coordinator.time
-        )
-        if not future_prices:
-            return "No forecast data available"
-
-        # Return a simple status message indicating how much forecast data is available
-        return f"Forecast available for {len(future_prices)} intervals"
-
     def _get_home_metadata_value(self, field: str) -> str | int | None:
         """
         Get home metadata value from user data.
@@ -875,6 +868,7 @@ class TibberPricesSensor(TibberPricesEntity, SensorEntity):
             "last_rating_level": self._interval_calculator.get_last_rating_level(),
             "data_timestamp": getattr(self, "_data_timestamp", None),
             "rolling_hour_level": self._get_rolling_hour_level_for_cached_data(key),
+            "lifecycle_calculator": self._lifecycle_calculator,  # For lifecycle sensor attributes
         }
 
         # Use the centralized attribute builder

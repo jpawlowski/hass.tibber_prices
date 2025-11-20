@@ -298,10 +298,10 @@
             "long_description": "Zeigt die Volatilität über heute und morgen zusammen (wenn morgige Daten verfügbar sind). Bietet eine erweiterte Ansicht der Preisvariation über bis zu 48 Stunden. Fällt auf Nur-Heute zurück, wenn morgige Daten noch nicht verfügbar sind.",
             "usage_tips": "Verwenden Sie dies für Mehrtagsplanung und um zu verstehen, ob Preismöglichkeiten über die Tagesgrenze hinweg bestehen. Die Attribute 'today_volatility' und 'tomorrow_volatility' zeigen individuelle Tagesbeiträge. Nützlich für die Planung von Ladesitzungen, die Mitternacht überschreiten könnten."
         },
-        "price_forecast": {
-            "description": "Prognose kommender Strompreise",
-            "long_description": "Zeigt kommende Strompreise für zukünftige Intervalle in einem Format, das einfach in Dashboards verwendet werden kann",
-            "usage_tips": "Verwenden Sie die Attribute dieser Entität, um kommende Preise in Diagrammen oder benutzerdefinierten Karten anzuzeigen. Greifen Sie entweder auf 'intervals' für alle zukünftigen Intervalle oder auf 'hours' für stündliche Zusammenfassungen zu."
+        "data_lifecycle_status": {
+            "description": "Aktueller Status des Preisdaten-Lebenszyklus und der Zwischenspeicherung",
+            "long_description": "Zeigt an, ob die Integration zwischengespeicherte Daten oder frische Daten von der API verwendet. Zeigt aktuellen Lebenszyklus-Status: 'cached' (verwendet gespeicherte Daten), 'fresh' (gerade von API abgerufen), 'refreshing' (wird gerade abgerufen), 'searching_tomorrow' (sucht aktiv nach Morgendaten nach 13:00 Uhr), 'turnover_pending' (innerhalb 15 Minuten vor Mitternacht, 23:45-00:00) oder 'error' (Abruf fehlgeschlagen). Enthält umfassende Attribute wie Cache-Alter, nächste API-Abfragezeit, Datenvollständigkeit und API-Aufruf-Statistiken.",
+            "usage_tips": "Verwende diesen Diagnosesensor, um Datenaktualität und API-Aufrufmuster zu verstehen. Prüfe das 'cache_age'-Attribut, um zu sehen, wie alt die aktuellen Daten sind. Überwache 'next_api_poll', um zu wissen, wann das nächste Update geplant ist. Verwende 'data_completeness', um zu sehen, ob Daten für gestern/heute/morgen verfügbar sind. Der 'api_calls_today'-Zähler hilft, die API-Nutzung zu verfolgen. Perfekt zur Fehlersuche oder zum Verständnis des Integrationsverhaltens."
         },
         "best_price_end_time": {
             "description": "Wann der aktuelle oder nächste günstige Zeitraum endet",

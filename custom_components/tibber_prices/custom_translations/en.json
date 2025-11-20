@@ -298,10 +298,10 @@
             "long_description": "Shows volatility across both today and tomorrow combined (when tomorrow's data is available). Provides an extended view of price variation spanning up to 48 hours. Falls back to today-only when tomorrow's data isn't available yet.",
             "usage_tips": "Use this for multi-day planning and to understand if price opportunities exist across the day boundary. The 'today_volatility' and 'tomorrow_volatility' breakdown attributes show individual day contributions. Useful for scheduling charging sessions that might span midnight."
         },
-        "price_forecast": {
-            "description": "Forecast of upcoming electricity prices",
-            "long_description": "Shows upcoming electricity prices for future intervals in a format that's easy to use in dashboards",
-            "usage_tips": "Use this entity's attributes to display upcoming prices in charts or custom cards. Access either 'intervals' for all future intervals or 'hours' for hourly summaries."
+        "data_lifecycle_status": {
+            "description": "Current state of price data lifecycle and caching",
+            "long_description": "Shows whether the integration is using cached data or fresh data from the API. Displays current lifecycle state: 'cached' (using stored data), 'fresh' (just fetched from API), 'refreshing' (currently fetching), 'searching_tomorrow' (actively polling for tomorrow's data after 13:00), 'turnover_pending' (within 15 minutes of midnight, 23:45-00:00), or 'error' (fetch failed). Includes comprehensive attributes like cache age, next API poll time, data completeness, and API call statistics.",
+            "usage_tips": "Use this diagnostic sensor to understand data freshness and API call patterns. Check 'cache_age' attribute to see how old the current data is. Monitor 'next_api_poll' to know when the next update is scheduled. Use 'data_completeness' to see if yesterday/today/tomorrow data is available. The 'api_calls_today' counter helps track API usage. Perfect for troubleshooting or understanding the integration's behavior."
         },
         "best_price_end_time": {
             "description": "When the current or next best price period ends",

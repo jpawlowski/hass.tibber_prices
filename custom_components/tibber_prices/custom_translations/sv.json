@@ -295,13 +295,13 @@
         },
         "today_tomorrow_volatility": {
             "description": "Kombinerad prisvolatilitetsklassificering för idag och imorgon",
-            "long_description": "Visar volatilitet över både idag och imorgon kombinerat (när morgondagens data är tillgänglig). Ger en utökad vy av prisvariationen som sträcker sig upp till 48 timmar. Faller tillbaka på endast idag när morgondagens data inte är tillgänglig än.",
-            "usage_tips": "Använd detta för flerdagarsplanering och för att förstå om prismöjligheter finns över daggränsen. 'today_volatility' och 'tomorrow_volatility' uppdelningsattributen visar individuella dagsbidrag. Användbart för planering av laddningssessioner som kan sträcka sig över midnatt."
+            "long_description": "Visar volatilitet över både idag och imorgon kombinerat (när morgondagens data är tillgänglig). Ger en utökad vy av prisvariation över upp till 48 timmar. Faller tillbaka till endast idag när morgondagens data inte är tillgänglig ännu.",
+            "usage_tips": "Använd detta för flerdagarsplanering och för att förstå om prismöjligheter existerar över dagsgränsen. Attributen 'today_volatility' och 'tomorrow_volatility' visar individuella dagsbidrag. Användbart för planering av laddningssessioner som kan sträcka sig över midnatt."
         },
-        "price_forecast": {
-            "description": "Prognos för kommande elpriser",
-            "long_description": "Visar kommande elpriser för framtida intervaller i ett format som är enkelt att använda i instrumentpaneler",
-            "usage_tips": "Använd denna enhets attribut för att visa kommande priser i diagram eller anpassade kort. Få åtkomst till antingen 'intervals' för alla framtida intervaller eller 'hours' för timvisa sammanfattningar."
+        "data_lifecycle_status": {
+            "description": "Aktuell status för prisdatalivscykel och cachning",
+            "long_description": "Visar om integrationen använder cachad data eller färsk data från API:et. Visar aktuell livscykelstatus: 'cached' (använder lagrad data), 'fresh' (nyss hämtad från API), 'refreshing' (hämtar för närvarande), 'searching_tomorrow' (söker aktivt efter morgondagens data efter 13:00), 'turnover_pending' (inom 15 minuter före midnatt, 23:45-00:00), eller 'error' (hämtning misslyckades). Inkluderar omfattande attribut som cache-ålder, nästa API-polling, datafullständighet och API-anropsstatistik.",
+            "usage_tips": "Använd denna diagnostiksensor för att förstå datafärskhet och API-anropsmönster. Kontrollera 'cache_age'-attributet för att se hur gammal den aktuella datan är. Övervaka 'next_api_poll' för att veta när nästa uppdatering är schemalagd. Använd 'data_completeness' för att se om data för igår/idag/imorgon är tillgänglig. Räknaren 'api_calls_today' hjälper till att spåra API-användning. Perfekt för felsökning eller förståelse av integrationens beteende."
         },
         "best_price_end_time": {
             "description": "När nuvarande eller nästa billigperiod slutar",

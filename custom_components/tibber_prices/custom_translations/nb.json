@@ -295,13 +295,13 @@
         },
         "today_tomorrow_volatility": {
             "description": "Kombinert prisvolatilitetsklassifisering for i dag og i morgen",
-            "long_description": "Viser volatilitet på tvers av både i dag og i morgen kombinert (når morgendagens data er tilgjengelig). Gir en utvidet oversikt over prisvariasjoner som spenner over opptil 48 timer. Faller tilbake til kun i dag når morgendagens data ikke er tilgjengelig ennå.",
-            "usage_tips": "Bruk dette til flerørs planlegging og for å forstå om prismuligheter eksisterer på tvers av daggrensen. Attributtene 'today_volatility' og 'tomorrow_volatility' viser individuelle dagsbidrag. Nyttig for planlegging av ladesesjoner som kan strekke seg over midnatt."
+            "long_description": "Viser volatilitet på tvers av både i dag og i morgen kombinert (når morgendagens data er tilgjengelig). Gir en utvidet visning av prisvariasjoner som spenner over opptil 48 timer. Faller tilbake til bare i dag når morgendagens data ikke er tilgjengelig ennå.",
+            "usage_tips": "Bruk dette for flersdagers planlegging og for å forstå om prismuligheter eksisterer på tvers av dags grensen. Attributtene 'today_volatility' og 'tomorrow_volatility' viser individuelle dagbidrag. Nyttig for planlegging av ladeøkter som kan strekke seg over midnatt."
         },
-        "price_forecast": {
-            "description": "Prognose for kommende elektrisitetspriser",
-            "long_description": "Viser kommende elektrisitetspriser for fremtidige intervaller i et format som er enkelt å bruke i dashboards",
-            "usage_tips": "Bruk denne entitetens attributter til å vise kommende priser i diagrammer eller tilpassede kort. Få tilgang til enten 'intervals' for alle fremtidige intervaller eller 'hours' for timesammendrag."
+        "data_lifecycle_status": {
+            "description": "Gjeldende tilstand for prisdatalivssyklus og hurtigbufring",
+            "long_description": "Viser om integrasjonen bruker hurtigbufrede data eller ferske data fra API-et. Viser gjeldende livssyklustilstand: 'cached' (bruker lagrede data), 'fresh' (nettopp hentet fra API), 'refreshing' (henter for øyeblikket), 'searching_tomorrow' (søker aktivt etter morgendagens data etter 13:00), 'turnover_pending' (innen 15 minutter før midnatt, 23:45-00:00), eller 'error' (henting mislyktes). Inkluderer omfattende attributter som cache-alder, neste API-spørring, datafullstendighet og API-anropsstatistikk.",
+            "usage_tips": "Bruk denne diagnosesensoren for å forstå dataferskhet og API-anropsmønstre. Sjekk 'cache_age'-attributtet for å se hvor gamle de nåværende dataene er. Overvåk 'next_api_poll' for å vite når neste oppdatering er planlagt. Bruk 'data_completeness' for å se om data for i går/i dag/i morgen er tilgjengelig. 'api_calls_today'-telleren hjelper med å spore API-bruk. Perfekt for feilsøking eller forståelse av integrasjonens oppførsel."
         },
         "best_price_end_time": {
             "description": "Når gjeldende eller neste billigperiode slutter",

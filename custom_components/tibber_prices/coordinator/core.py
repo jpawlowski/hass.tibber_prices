@@ -13,6 +13,7 @@ from homeassistant.helpers.storage import Store
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 if TYPE_CHECKING:
+    from collections.abc import Callable
     from datetime import date, datetime
 
     from homeassistant.config_entries import ConfigEntry
@@ -43,6 +44,9 @@ from .periods import TibberPricesPeriodCalculator
 from .time_service import TibberPricesTimeService
 
 _LOGGER = logging.getLogger(__name__)
+
+# Lifecycle state transition thresholds
+FRESH_TO_CACHED_SECONDS = 300  # 5 minutes
 
 # =============================================================================
 # TIMER SYSTEM - Three independent update mechanisms:
@@ -90,14 +94,15 @@ _LOGGER = logging.getLogger(__name__)
 # Midnight Turnover Coordination:
 #   - Both Timer #1 and Timer #2 check for midnight turnover
 #   - Atomic check: _check_midnight_turnover_needed(now)
-#     Returns True if current_date > _last_midnight_check.date()
+#     Returns True if current_date > _last_midnight_turnover_check.date()
 #     Returns False if already done today
 #   - Whoever runs first (Timer #1 or Timer #2) performs turnover:
 #     Calls _perform_midnight_data_rotation(now)
-#     Updates _last_midnight_check to current time
+#     Updates _last_midnight_turnover_check and _last_actual_turnover to current time
 #   - The other timer sees turnover already done and skips
 #   - No locks needed - date comparison is naturally atomic
 #   - No race condition possible - Python datetime.date() comparison is thread-safe
+#   - _last_transformation_time is separate and tracks when data was last transformed (for cache)
 #
 # =============================================================================
 
@@ -173,7 +178,19 @@ class TibberPricesDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         self._last_price_update: datetime | None = None
         self._cached_transformed_data: dict[str, Any] | None = None
         self._last_transformation_config: dict[str, Any] | None = None
-        self._last_midnight_check: datetime | None = None
+        self._last_transformation_time: datetime | None = None  # When data was last transformed (for cache)
+        self._last_midnight_turnover_check: datetime | None = None  # Last midnight turnover detection check
+        self._last_actual_turnover: datetime | None = None  # When midnight turnover actually happened
+
+        # Data lifecycle tracking for diagnostic sensor
+        self._lifecycle_state: str = (
+            "cached"  # Current state: cached, fresh, refreshing, searching_tomorrow, turnover_pending, error
+        )
+        self._api_calls_today: int = 0  # Counter for API calls today
+        self._last_api_call_date: date | None = None  # Date of last API call (for daily reset)
+        self._is_fetching: bool = False  # Flag to track active API fetch
+        self._last_coordinator_update: datetime | None = None  # When Timer #1 last ran (_async_update_data)
+        self._lifecycle_callbacks: list[Callable[[], None]] = []  # Push-update callbacks for lifecycle sensor
 
         # Start timers
         self._listener_manager.schedule_quarter_hour_refresh(self._handle_quarter_hour_refresh)
@@ -339,10 +356,10 @@ class TibberPricesDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         current_date = now.date()
 
         # First time check - initialize (no turnover needed)
-        if self._last_midnight_check is None:
+        if self._last_midnight_turnover_check is None:
             return False
 
-        last_check_date = self._last_midnight_check.date()
+        last_check_date = self._last_midnight_turnover_check.date()
 
         # Turnover needed if we've crossed into a new day
         return current_date > last_check_date
@@ -362,7 +379,9 @@ class TibberPricesDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 
         """
         current_date = now.date()
-        last_check_date = self._last_midnight_check.date() if self._last_midnight_check else current_date
+        last_check_date = (
+            self._last_midnight_turnover_check.date() if self._last_midnight_turnover_check else current_date
+        )
 
         self._log(
             "debug",
@@ -391,7 +410,8 @@ class TibberPricesDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                     self.data["timestamp"] = now
 
         # Mark turnover as done for today (atomic update)
-        self._last_midnight_check = now
+        self._last_midnight_turnover_check = now
+        self._last_actual_turnover = now  # Record when actual turnover happened
 
     @callback
     def _check_and_handle_midnight_turnover(self, now: datetime) -> bool:
@@ -424,6 +444,26 @@ class TibberPricesDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 
         return True
 
+    def register_lifecycle_callback(self, callback: Callable[[], None]) -> None:
+        """
+        Register callback for lifecycle state changes (push updates).
+
+        This allows the lifecycle sensor to receive immediate updates when
+        the coordinator's lifecycle state changes, instead of waiting for
+        the next polling cycle.
+
+        Args:
+            callback: Function to call when lifecycle state changes (typically async_write_ha_state)
+
+        """
+        if callback not in self._lifecycle_callbacks:
+            self._lifecycle_callbacks.append(callback)
+
+    def _notify_lifecycle_change(self) -> None:
+        """Notify registered callbacks about lifecycle state change (push update)."""
+        for lifecycle_callback in self._lifecycle_callbacks:
+            lifecycle_callback()
+
     async def async_shutdown(self) -> None:
         """Shut down the coordinator and clean up timers."""
         self._listener_manager.cancel_timers()
@@ -448,9 +488,19 @@ class TibberPricesDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         """
         self._log("debug", "[Timer #1] DataUpdateCoordinator check triggered")
 
+        # Track when Timer #1 ran (for next_api_poll calculation)
+        self._last_coordinator_update = self.time.now()
+
         # Create TimeService with fresh reference time for this update cycle
         self.time = TibberPricesTimeService()
         current_time = self.time.now()
+
+        # Transition lifecycle state from "fresh" to "cached" if enough time passed
+        # (5 minutes threshold defined in lifecycle calculator)
+        if self._lifecycle_state == "fresh" and self._last_price_update:
+            age = current_time - self._last_price_update
+            if age.total_seconds() > FRESH_TO_CACHED_SECONDS:
+                self._lifecycle_state = "cached"
 
         # Update helper modules with fresh TimeService instance
         self.api.time = self.time
@@ -462,9 +512,9 @@ class TibberPricesDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         if self._cached_price_data is None and self._cached_user_data is None:
             await self.load_cache()
 
-        # Initialize midnight check on first run
-        if self._last_midnight_check is None:
-            self._last_midnight_check = current_time
+        # Initialize midnight turnover check on first run
+        if self._last_midnight_turnover_check is None:
+            self._last_midnight_turnover_check = current_time
 
         # CRITICAL: Check for midnight turnover FIRST (before any data operations)
         # This prevents race condition with Timer #2 (quarter-hour refresh)
@@ -481,6 +531,17 @@ class TibberPricesDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 
         try:
             if self.is_main_entry():
+                # Set lifecycle state to refreshing before API call
+                self._lifecycle_state = "refreshing"
+                self._is_fetching = True
+                self._notify_lifecycle_change()  # Push update: now refreshing
+
+                # Reset API call counter if day changed
+                current_date = current_time.date()
+                if self._last_api_call_date != current_date:
+                    self._api_calls_today = 0
+                    self._last_api_call_date = current_date
+
                 # Main entry fetches data for all homes
                 configured_home_ids = self._get_configured_home_ids()
                 result = await self._data_fetcher.handle_main_entry_update(
@@ -488,11 +549,20 @@ class TibberPricesDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                     configured_home_ids,
                     self._transform_data_for_main_entry,
                 )
+
+                # Update lifecycle tracking after successful fetch
+                self._is_fetching = False
+                self._api_calls_today += 1
+                self._lifecycle_state = "fresh"  # Data just fetched
+                self._notify_lifecycle_change()  # Push update: fresh data available
+
                 # CRITICAL: Sync cached_user_data after API call (for new integrations without cache)
                 # handle_main_entry_update() may have fetched user_data via update_user_data_if_needed()
                 self._cached_user_data = self._data_fetcher.cached_user_data
+                # Sync _last_price_update for lifecycle tracking
+                self._last_price_update = self._data_fetcher._last_price_update  # noqa: SLF001 - Sync for lifecycle tracking
                 return result
-            # Subentries get data from main coordinator
+            # Subentries get data from main coordinator (no lifecycle tracking - they don't fetch)
             return await self._handle_subentry_update()
 
         except (
@@ -500,6 +570,10 @@ class TibberPricesDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             TibberPricesApiClientCommunicationError,
             TibberPricesApiClientError,
         ) as err:
+            # Reset lifecycle state on error
+            self._is_fetching = False
+            self._lifecycle_state = "error"
+            self._notify_lifecycle_change()  # Push update: error occurred
             return await self._data_fetcher.handle_api_error(
                 err,
                 self._transform_data_for_main_entry,
@@ -556,6 +630,17 @@ class TibberPricesDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         # Sync legacy references
         self._cached_price_data = self._data_fetcher.cached_price_data
         self._cached_user_data = self._data_fetcher.cached_user_data
+        self._last_price_update = self._data_fetcher._last_price_update  # noqa: SLF001 - Sync for lifecycle tracking
+        self._last_user_update = self._data_fetcher._last_user_update  # noqa: SLF001 - Sync for lifecycle tracking
+
+        # Initialize _last_actual_turnover: If cache is from today, assume turnover happened at midnight
+        if self._last_price_update:
+            cache_date = self.time.as_local(self._last_price_update).date()
+            today_date = self.time.as_local(self.time.now()).date()
+            if cache_date == today_date:
+                # Cache is from today, so midnight turnover already happened
+                today_midnight = self.time.as_local(self.time.now()).replace(hour=0, minute=0, second=0, microsecond=0)
+                self._last_actual_turnover = today_midnight
 
     def _perform_midnight_turnover(self, price_info: dict[str, Any]) -> dict[str, Any]:
         """
@@ -578,7 +663,7 @@ class TibberPricesDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 
     async def _store_cache(self) -> None:
         """Store cache data."""
-        await self._data_fetcher.store_cache(self._last_midnight_check)
+        await self._data_fetcher.store_cache(self._last_midnight_turnover_check)
 
     def _needs_tomorrow_data(self, tomorrow_date: date) -> bool:
         """Check if tomorrow data is missing or invalid."""
@@ -654,13 +739,13 @@ class TibberPricesDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         now_local = self.time.as_local(current_time)
         current_date = now_local.date()
 
-        if self._last_midnight_check is None:
+        if self._last_transformation_time is None:
             return True
 
-        last_check_local = self.time.as_local(self._last_midnight_check)
-        last_check_date = last_check_local.date()
+        last_transform_local = self.time.as_local(self._last_transformation_time)
+        last_transform_date = last_transform_local.date()
 
-        if current_date != last_check_date:
+        if current_date != last_transform_date:
             self._log("debug", "Midnight turnover detected, retransforming data")
             return True
 
@@ -687,7 +772,7 @@ class TibberPricesDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         # Cache the transformed data
         self._cached_transformed_data = transformed_data
         self._last_transformation_config = self._get_current_transformation_config()
-        self._last_midnight_check = current_time
+        self._last_transformation_time = current_time
 
         return transformed_data
 
@@ -716,7 +801,7 @@ class TibberPricesDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         # Cache the transformed data
         self._cached_transformed_data = transformed_data
         self._last_transformation_config = self._get_current_transformation_config()
-        self._last_midnight_check = current_time
+        self._last_transformation_time = current_time
 
         return transformed_data
 

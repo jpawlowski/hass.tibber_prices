@@ -2,8 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import datetime
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from custom_components.tibber_prices.coordinator.core import (
@@ -64,100 +63,6 @@ def add_next_avg_attributes(
         attributes["timestamp"] = intervals_in_window[0].get("startsAt")
         attributes["interval_count"] = len(intervals_in_window)
         attributes["hours"] = hours
-
-
-def add_price_forecast_attributes(
-    attributes: dict,
-    coordinator: TibberPricesDataUpdateCoordinator,
-    *,
-    time: TibberPricesTimeService,
-) -> None:
-    """
-    Add forecast attributes for the price forecast sensor.
-
-    Args:
-        attributes: Dictionary to add attributes to
-        coordinator: The data update coordinator
-        time: TibberPricesTimeService instance (required)
-
-    """
-    future_prices = get_future_prices(coordinator, max_intervals=MAX_FORECAST_INTERVALS, time=time)
-    if not future_prices:
-        attributes["intervals"] = []
-        attributes["intervals_by_hour"] = []
-        attributes["data_available"] = False
-        return
-
-    # Add timestamp attribute (first future interval)
-    if future_prices:
-        attributes["timestamp"] = future_prices[0]["interval_start"]
-
-    attributes["intervals"] = future_prices
-    attributes["data_available"] = True
-
-    # Group by hour for easier consumption in dashboards
-    hours: dict[str, Any] = {}
-    for interval in future_prices:
-        # interval_start is already a datetime object (from coordinator data)
-        starts_at = interval["interval_start"]
-        if not isinstance(starts_at, datetime):
-            # Fallback: parse if it's still a string (shouldn't happen)
-            starts_at = datetime.fromisoformat(starts_at)
-        hour_key = starts_at.strftime("%Y-%m-%d %H")
-
-        if hour_key not in hours:
-            hours[hour_key] = {
-                "hour": starts_at.hour,
-                "day": interval["day"],
-                "date": starts_at.date(),
-                "intervals": [],
-                "min_price": None,
-                "max_price": None,
-                "avg_price": 0,
-                "avg_rating": None,  # Initialize rating tracking
-                "ratings_available": False,  # Track if any ratings are available
-            }
-
-        # Create interval data with both price and rating info
-        interval_data = {
-            "minute": starts_at.minute,
-            "price": interval["price"],
-            "price_minor": interval["price_minor"],
-            "level": interval["level"],  # Price level from priceInfo
-            "time": starts_at.strftime("%H:%M"),
-        }
-
-        # Add rating data if available
-        if interval["rating"] is not None:
-            interval_data["rating"] = interval["rating"]
-            interval_data["rating_level"] = interval["rating_level"]
-            hours[hour_key]["ratings_available"] = True
-
-        hours[hour_key]["intervals"].append(interval_data)
-
-        # Track min/max/avg for the hour
-        price = interval["price"]
-        if hours[hour_key]["min_price"] is None or price < hours[hour_key]["min_price"]:
-            hours[hour_key]["min_price"] = price
-        if hours[hour_key]["max_price"] is None or price > hours[hour_key]["max_price"]:
-            hours[hour_key]["max_price"] = price
-
-    # Calculate averages
-    for hour_data in hours.values():
-        prices = [interval["price"] for interval in hour_data["intervals"]]
-        if prices:
-            hour_data["avg_price"] = sum(prices) / len(prices)
-            hour_data["min_price"] = hour_data["min_price"]
-            hour_data["max_price"] = hour_data["max_price"]
-
-            # Calculate average rating if ratings are available
-            if hour_data["ratings_available"]:
-                ratings = [interval.get("rating") for interval in hour_data["intervals"] if "rating" in interval]
-                if ratings:
-                    hour_data["avg_rating"] = sum(ratings) / len(ratings)
-
-    # Convert to list sorted by hour
-    attributes["intervals_by_hour"] = [hour_data for _, hour_data in sorted(hours.items())]
 
 
 def get_future_prices(

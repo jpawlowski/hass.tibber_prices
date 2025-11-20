@@ -19,6 +19,7 @@ if TYPE_CHECKING:
 
     from custom_components.tibber_prices.sensor.calculators.daily_stat import TibberPricesDailyStatCalculator
     from custom_components.tibber_prices.sensor.calculators.interval import TibberPricesIntervalCalculator
+    from custom_components.tibber_prices.sensor.calculators.lifecycle import TibberPricesLifecycleCalculator
     from custom_components.tibber_prices.sensor.calculators.metadata import TibberPricesMetadataCalculator
     from custom_components.tibber_prices.sensor.calculators.rolling_hour import TibberPricesRollingHourCalculator
     from custom_components.tibber_prices.sensor.calculators.timing import TibberPricesTimingCalculator
@@ -36,8 +37,8 @@ def get_value_getter_mapping(  # noqa: PLR0913 - needs all calculators as parame
     timing_calculator: TibberPricesTimingCalculator,
     volatility_calculator: TibberPricesVolatilityCalculator,
     metadata_calculator: TibberPricesMetadataCalculator,
+    lifecycle_calculator: TibberPricesLifecycleCalculator,
     get_next_avg_n_hours_value: Callable[[int], float | None],
-    get_price_forecast_value: Callable[[], str | None],
     get_data_timestamp: Callable[[], datetime | None],
     get_chart_data_export_value: Callable[[], str | None],
 ) -> dict[str, Callable]:
@@ -56,8 +57,8 @@ def get_value_getter_mapping(  # noqa: PLR0913 - needs all calculators as parame
         timing_calculator: Calculator for best/peak price period timing
         volatility_calculator: Calculator for price volatility analysis
         metadata_calculator: Calculator for home/metering metadata
+        lifecycle_calculator: Calculator for data lifecycle tracking
         get_next_avg_n_hours_value: Method for next N-hour average forecasts
-        get_price_forecast_value: Method for price forecast sensor
         get_data_timestamp: Method for data timestamp sensor
         get_chart_data_export_value: Method for chart data export sensor
 
@@ -203,8 +204,8 @@ def get_value_getter_mapping(  # noqa: PLR0913 - needs all calculators as parame
         "price_trend_12h": lambda: trend_calculator.get_price_trend_value(hours=12),
         # Diagnostic sensors
         "data_timestamp": get_data_timestamp,
-        # Price forecast sensor
-        "price_forecast": get_price_forecast_value,
+        # Data lifecycle status sensor
+        "data_lifecycle_status": lambda: lifecycle_calculator.get_lifecycle_state(),
         # Home metadata sensors (via MetadataCalculator)
         "home_type": lambda: metadata_calculator.get_home_metadata_value("type"),
         "home_size": lambda: metadata_calculator.get_home_metadata_value("size"),

@@ -508,8 +508,16 @@
             "monthly_rating": {
                 "name": "Månatlig prisvärdering"
             },
-            "data_timestamp": {
-                "name": "Prisdata Utgångsdatum"
+            "data_lifecycle_status": {
+                "name": "Datalivscykel-status",
+                "state": {
+                    "cached": "Cachad",
+                    "fresh": "Färsk",
+                    "refreshing": "Uppdaterar",
+                    "searching_tomorrow": "Söker morgondagens data",
+                    "turnover_pending": "Midnattskifte väntar",
+                    "error": "Fel"
+                }
             },
             "today_volatility": {
                 "name": "Volatilitet idag",
@@ -582,9 +590,6 @@
             },
             "peak_price_next_in_minutes": {
                 "name": "Topppris startar om"
-            },
-            "price_forecast": {
-                "name": "Prisprognos"
             },
             "home_type": {
                 "name": "Bostadstyp",

@@ -835,20 +835,13 @@ PEAK_PRICE_TIMING_SENSORS = (
 
 DIAGNOSTIC_SENSORS = (
     SensorEntityDescription(
-        key="data_timestamp",
-        translation_key="data_timestamp",
-        name="Data Expiration",
-        icon="mdi:clock-check",
-        device_class=SensorDeviceClass.TIMESTAMP,
-        state_class=None,  # Timestamps: no statistics
-        entity_category=EntityCategory.DIAGNOSTIC,
-    ),
-    SensorEntityDescription(
-        key="price_forecast",
-        translation_key="price_forecast",
-        name="Price Forecast",
-        icon="mdi:chart-line",
-        state_class=None,  # Text/status value: no statistics
+        key="data_lifecycle_status",
+        translation_key="data_lifecycle_status",
+        name="Data Lifecycle Status",
+        icon="mdi:database-sync",
+        device_class=SensorDeviceClass.ENUM,
+        options=["cached", "fresh", "refreshing", "searching_tomorrow", "turnover_pending", "error"],
+        state_class=None,  # Status value: no statistics
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     # Home metadata from user data

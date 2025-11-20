@@ -13,6 +13,7 @@ from __future__ import annotations
 from .base import TibberPricesBaseCalculator
 from .daily_stat import TibberPricesDailyStatCalculator
 from .interval import TibberPricesIntervalCalculator
+from .lifecycle import TibberPricesLifecycleCalculator
 from .metadata import TibberPricesMetadataCalculator
 from .rolling_hour import TibberPricesRollingHourCalculator
 from .timing import TibberPricesTimingCalculator
@@ -24,6 +25,7 @@ __all__ = [
     "TibberPricesBaseCalculator",
     "TibberPricesDailyStatCalculator",
     "TibberPricesIntervalCalculator",
+    "TibberPricesLifecycleCalculator",
     "TibberPricesMetadataCalculator",
     "TibberPricesRollingHourCalculator",
     "TibberPricesTimingCalculator",

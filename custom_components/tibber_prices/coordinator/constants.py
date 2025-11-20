@@ -84,6 +84,8 @@ TIME_SENSITIVE_ENTITY_KEYS = frozenset(
         "best_price_next_start_time",
         "peak_price_end_time",
         "peak_price_next_start_time",
+        # Lifecycle sensor (needs quarter-hour updates for turnover_pending detection at 23:45)
+        "data_lifecycle_status",
     }
 )
 

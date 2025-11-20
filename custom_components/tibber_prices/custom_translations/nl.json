@@ -295,13 +295,13 @@
         },
         "today_tomorrow_volatility": {
             "description": "Gecombineerde prijsvolatiliteitsclassificatie voor vandaag en morgen",
-            "long_description": "Toont volatiliteit over zowel vandaag als morgen gecombineerd (wanneer de gegevens van morgen beschikbaar zijn). Biedt een uitgebreid beeld van prijsvariatie over maximaal 48 uur. Valt terug op alleen vandaag wanneer de gegevens van morgen nog niet beschikbaar zijn.",
-            "usage_tips": "Gebruik dit voor meerdaagse planning en om te begrijpen of prijskansen bestaan over de daggrens heen. De 'today_volatility' en 'tomorrow_volatility' breakdown-attributen tonen individuele dagbijdragen. Nuttig voor het plannen van laadsessies die middernacht kunnen overschrijden."
+            "long_description": "Toont volatiliteit over zowel vandaag als morgen gecombineerd (wanneer de gegevens van morgen beschikbaar zijn). Biedt een uitgebreid overzicht van prijsvariatie over maximaal 48 uur. Valt terug op alleen vandaag wanneer de gegevens van morgen nog niet beschikbaar zijn.",
+            "usage_tips": "Gebruik dit voor meerdaagse planning en om te begrijpen of prijskansen bestaan over de daggrenzen heen. De attributen 'today_volatility' en 'tomorrow_volatility' tonen individuele dagbijdragen. Handig voor het plannen van laadsessies die middernacht kunnen overschrijden."
         },
-        "price_forecast": {
-            "description": "Prognose van aanstaande elektriciteitsprijzen",
-            "long_description": "Toont aanstaande elektriciteitsprijzen voor toekomstige intervallen in een formaat dat gemakkelijk te gebruiken is in dashboards",
-            "usage_tips": "Gebruik de attributen van deze entiteit om aanstaande prijzen weer te geven in grafieken of aangepaste kaarten. Toegang tot 'intervals' voor alle toekomstige intervallen of 'hours' voor uuroverzichten."
+        "data_lifecycle_status": {
+            "description": "Huidige status van prijsgegevenslevenscyclus en caching",
+            "long_description": "Toont of de integratie gebruikmaakt van gecachte gegevens of verse gegevens van de API. Toont huidige levenscyclusstatus: 'cached' (gebruikt opgeslagen gegevens), 'fresh' (net opgehaald van API), 'refreshing' (momenteel aan het ophalen), 'searching_tomorrow' (actief aan het zoeken naar morgengegevens na 13:00), 'turnover_pending' (binnen 15 minuten voor middernacht, 23:45-00:00), of 'error' (ophalen mislukt). Bevat uitgebreide attributen zoals cache-leeftijd, volgende API-poll-tijd, gegevensvolledigheid en API-aanroepstatistieken.",
+            "usage_tips": "Gebruik deze diagnostische sensor om gegevensfrisheid en API-aanroeppatronen te begrijpen. Controleer het 'cache_age'-attribuut om te zien hoe oud de huidige gegevens zijn. Monitor 'next_api_poll' om te weten wanneer de volgende update is gepland. Gebruik 'data_completeness' om te zien of gisteren/vandaag/morgen gegevens beschikbaar zijn. De 'api_calls_today'-teller helpt API-gebruik bij te houden. Perfect voor probleemoplossing of begrip van integratiegedrag."
         },
         "best_price_end_time": {
             "description": "Wanneer de huidige of volgende goedkope periode eindigt",

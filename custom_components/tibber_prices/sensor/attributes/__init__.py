@@ -25,8 +25,9 @@ if TYPE_CHECKING:
 
 # Import from specialized modules
 from .daily_stat import add_statistics_attributes
-from .future import add_next_avg_attributes, add_price_forecast_attributes, get_future_prices
+from .future import add_next_avg_attributes, get_future_prices
 from .interval import add_current_interval_price_attributes
+from .lifecycle import build_lifecycle_attributes
 from .timing import _is_timing_or_volatility_sensor
 from .trend import _add_cached_trend_attributes, _add_timing_or_volatility_attributes
 from .volatility import add_volatility_type_attributes, get_prices_for_volatility
@@ -130,8 +131,12 @@ def build_sensor_attributes(
                 cached_data=cached_data,
                 time=time,
             )
-        elif key == "price_forecast":
-            add_price_forecast_attributes(attributes=attributes, coordinator=coordinator, time=time)
+        elif key == "data_lifecycle_status":
+            # Lifecycle sensor uses dedicated builder with calculator
+            lifecycle_calculator = cached_data.get("lifecycle_calculator")
+            if lifecycle_calculator:
+                lifecycle_attrs = build_lifecycle_attributes(coordinator, lifecycle_calculator)
+                attributes.update(lifecycle_attrs)
         elif _is_timing_or_volatility_sensor(key):
             _add_timing_or_volatility_attributes(attributes, key, cached_data, native_value, time=time)
 
