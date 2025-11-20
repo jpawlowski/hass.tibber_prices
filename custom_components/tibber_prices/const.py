@@ -17,6 +17,10 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 
 DOMAIN = "tibber_prices"
+LOGGER = logging.getLogger(__package__)
+
+# Data storage keys
+DATA_CHART_CONFIG = "chart_config"  # Key for chart export config in hass.data
 
 # Configuration keys
 CONF_EXTENDED_DESCRIPTIONS = "extended_descriptions"
@@ -344,8 +348,6 @@ BINARY_SENSOR_COLOR_MAPPING = {
         "off": "var(--state-icon-color)",
     },
 }
-
-LOGGER = logging.getLogger(__package__)
 
 # Path to custom translations directory
 CUSTOM_TRANSLATIONS_DIR = Path(__file__).parent / "custom_translations"

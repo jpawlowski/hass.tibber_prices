@@ -7,7 +7,9 @@ https://github.com/jpawlowski/hass.tibber_prices
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
+
+import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_ACCESS_TOKEN, Platform
@@ -17,6 +19,7 @@ from homeassistant.loader import async_get_loaded_integration
 
 from .api import TibberPricesApiClient
 from .const import (
+    DATA_CHART_CONFIG,
     DOMAIN,
     LOGGER,
     async_load_standard_translations,
@@ -35,6 +38,62 @@ PLATFORMS: list[Platform] = [
     Platform.SENSOR,
     Platform.BINARY_SENSOR,
 ]
+
+# Configuration schema for configuration.yaml
+CONFIG_SCHEMA = vol.Schema(
+    {
+        DOMAIN: vol.Schema(
+            {
+                vol.Optional("chart_export"): vol.Schema(
+                    {
+                        vol.Optional("day"): vol.All(vol.Any(str, list), vol.Coerce(list)),
+                        vol.Optional("resolution"): str,
+                        vol.Optional("output_format"): str,
+                        vol.Optional("minor_currency"): bool,
+                        vol.Optional("round_decimals"): vol.All(int, vol.Range(min=0, max=10)),
+                        vol.Optional("include_level"): bool,
+                        vol.Optional("include_rating_level"): bool,
+                        vol.Optional("include_average"): bool,
+                        vol.Optional("level_filter"): vol.All(vol.Any(str, list), vol.Coerce(list)),
+                        vol.Optional("rating_level_filter"): vol.All(vol.Any(str, list), vol.Coerce(list)),
+                        vol.Optional("period_filter"): str,
+                        vol.Optional("insert_nulls"): str,
+                        vol.Optional("add_trailing_null"): bool,
+                        vol.Optional("array_fields"): str,
+                        vol.Optional("start_time_field"): str,
+                        vol.Optional("end_time_field"): str,
+                        vol.Optional("price_field"): str,
+                        vol.Optional("level_field"): str,
+                        vol.Optional("rating_level_field"): str,
+                        vol.Optional("average_field"): str,
+                        vol.Optional("data_key"): str,
+                    }
+                ),
+            }
+        ),
+    },
+    extra=vol.ALLOW_EXTRA,
+)
+
+
+async def async_setup(hass: HomeAssistant, config: dict[str, Any]) -> bool:
+    """Set up the Tibber Prices component from configuration.yaml."""
+    # Store chart export configuration in hass.data for sensor access
+    if DOMAIN not in hass.data:
+        hass.data[DOMAIN] = {}
+
+    # Extract chart_export config if present
+    domain_config = config.get(DOMAIN, {})
+    chart_config = domain_config.get("chart_export", {})
+
+    if chart_config:
+        LOGGER.debug("Loaded chart_export configuration from configuration.yaml")
+        hass.data[DOMAIN][DATA_CHART_CONFIG] = chart_config
+    else:
+        LOGGER.debug("No chart_export configuration found in configuration.yaml")
+        hass.data[DOMAIN][DATA_CHART_CONFIG] = {}
+
+    return True
 
 
 # https://developers.home-assistant.io/docs/config_entries_index/#setting-up-an-entry

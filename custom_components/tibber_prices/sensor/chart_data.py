@@ -4,9 +4,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-import yaml
-
-from custom_components.tibber_prices.const import CONF_CHART_DATA_CONFIG, DOMAIN
+from custom_components.tibber_prices.const import DATA_CHART_CONFIG, DOMAIN
 
 if TYPE_CHECKING:
     from datetime import datetime
@@ -22,7 +20,7 @@ async def call_chartdata_service_async(
     config_entry: TibberPricesConfigEntry,
 ) -> tuple[dict | None, str | None]:
     """
-    Call get_chartdata service with user-configured YAML (async).
+    Call get_chartdata service with configuration from configuration.yaml (async).
 
     Returns:
         Tuple of (response, error_message).
@@ -30,29 +28,12 @@ async def call_chartdata_service_async(
         If failed: (None, error_string)
 
     """
-    # Get user-configured YAML
-    yaml_config = config_entry.options.get(CONF_CHART_DATA_CONFIG, "")
+    # Get configuration from hass.data (loaded from configuration.yaml)
+    domain_data = hass.data.get(DOMAIN, {})
+    chart_config = domain_data.get(DATA_CHART_CONFIG, {})
 
-    # Parse YAML if provided, otherwise use empty dict (service defaults)
-    service_params = {}
-    if yaml_config and yaml_config.strip():
-        try:
-            parsed = yaml.safe_load(yaml_config)
-            # Ensure we have a dict (yaml.safe_load can return str, int, etc.)
-            if isinstance(parsed, dict):
-                service_params = parsed
-            else:
-                coordinator.logger.warning(
-                    "YAML configuration must be a dictionary, got %s. Using service defaults.",
-                    type(parsed).__name__,
-                )
-                service_params = {}
-        except yaml.YAMLError as err:
-            coordinator.logger.warning(
-                "Invalid chart data YAML configuration: %s. Using service defaults.",
-                err,
-            )
-            service_params = {}  # Fall back to service defaults
+    # Use chart_config directly (already a dict from async_setup)
+    service_params = dict(chart_config) if chart_config else {}
 
     # Add required entry_id parameter
     service_params["entry_id"] = config_entry.entry_id

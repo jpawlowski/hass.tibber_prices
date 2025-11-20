@@ -16,7 +16,6 @@ from custom_components.tibber_prices.const import (
     CONF_BEST_PRICE_MAX_LEVEL_GAP_COUNT,
     CONF_BEST_PRICE_MIN_DISTANCE_FROM_AVG,
     CONF_BEST_PRICE_MIN_PERIOD_LENGTH,
-    CONF_CHART_DATA_CONFIG,
     CONF_ENABLE_MIN_PERIODS_BEST,
     CONF_ENABLE_MIN_PERIODS_PEAK,
     CONF_EXTENDED_DESCRIPTIONS,
@@ -540,24 +539,7 @@ def get_price_trend_schema(options: Mapping[str, Any]) -> vol.Schema:
     )
 
 
-def get_chart_data_export_schema(options: Mapping[str, Any]) -> vol.Schema:
-    """Return schema for chart data export configuration."""
-    default_yaml = options.get(
-        CONF_CHART_DATA_CONFIG,
-        # Default: Empty string - uses service defaults (today, interval resolution)
-        "",
-    )
-
-    return vol.Schema(
-        {
-            vol.Optional(
-                CONF_CHART_DATA_CONFIG,
-                description={"suggested_value": default_yaml},
-            ): TextSelector(
-                TextSelectorConfig(
-                    multiline=True,
-                    type=TextSelectorType.TEXT,
-                )
-            ),
-        }
-    )
+def get_chart_data_export_schema(_options: Mapping[str, Any]) -> vol.Schema:
+    """Return schema for chart data export info page (no input fields)."""
+    # Empty schema - this is just an info page now
+    return vol.Schema({})
