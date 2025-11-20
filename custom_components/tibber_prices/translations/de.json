@@ -52,7 +52,7 @@
         }
     },
     "common": {
-        "step_progress": "Schritt {step_num} von {total_steps}"
+        "step_progress": "{step_num} / {total_steps}"
     },
     "config_subentries": {
         "home": {
@@ -84,95 +84,117 @@
     "options": {
         "step": {
             "init": {
-                "title": "Allgemeine Einstellungen",
-                "description": "{step_progress}\n\nKonfiguration allgemeiner Einstellungen für Tibber Preisinformationen & Bewertungen.\n\nBenutzer: {user_login}",
+                "title": "⚙️ Allgemeine Einstellungen",
+                "description": "_{step_progress}_\n\n**Konfiguriere allgemeine Einstellungen für Tibber-Preisinformationen und -bewertungen.**\n\n---\n\n**Benutzer:** {user_login}",
                 "data": {
-                    "extended_descriptions": "Erweiterte Beschreibungen in Entity-Attributen anzeigen"
-                },
-                "submit": "Weiter zu Schritt 2"
-            },
-            "current_interval_price_rating": {
-                "title": "Preisbewertungs-Schwellwerte",
-                "description": "{step_progress}\n\nKonfiguration der Schwellwerte für Preisbewertungsstufen (niedrig/normal/hoch) basierend auf dem Vergleich mit dem gleitenden 24-Stunden-Durchschnitt.",
-                "data": {
-                    "price_rating_threshold_low": "Schwellwert für niedrige Bewertung (unter gleitendem Durchschnitt)",
-                    "price_rating_threshold_high": "Schwellwert für hohe Bewertung (über gleitendem Durchschnitt)"
-                },
-                "submit": "Weiter zu Schritt 3"
-            },
-            "best_price": {
-                "title": "Bestpreis-Zeitraum Einstellungen",
-                "description": "{step_progress}\n\nKonfiguration für den Bestpreis-Zeitraum mit den niedrigsten Strompreisen.",
-                "data": {
-                    "best_price_min_period_length": "Minimale Zeitraumlänge",
-                    "best_price_flex": "Flexibilität: Maximal über dem Mindestpreis",
-                    "best_price_min_distance_from_avg": "Mindestabstand: Erforderlich unter dem Tagesdurchschnitt",
-                    "best_price_max_level": "Preisniveau-Filter (Optional)",
-                    "best_price_max_level_gap_count": "Lückentoleranz für Niveaufilter",
-                    "enable_min_periods_best": "Mindestanzahl Zeiträume anstreben",
-                    "min_periods_best": "Mindestanzahl Zeiträume",
-                    "relaxation_attempts_best": "Lockerungsversuche (Flex-Stufen)"
+                    "extended_descriptions": "Erweiterte Beschreibungen"
                 },
                 "data_description": {
+                    "extended_descriptions": "Steuert, ob Entitätsattribute ausführliche Erklärungen und Nutzungstipps enthalten.\n\n• Deaktiviert (Standard): Nur kurze Beschreibung\n• Aktiviert: Ausführliche Erklärung + praktische Nutzungsbeispiele\n\nBeispiel:\nDeaktiviert = 1 Attribut\nAktiviert = 2 zusätzliche Attribute"
+                },
+                "submit": "Weiter →"
+            },
+            "current_interval_price_rating": {
+                "title": "📊 Preisbewertungs-Schwellenwerte",
+                "description": "_{step_progress}_\n\n**Konfiguriere Schwellenwerte für Preisbewertungsstufen (niedrig/normal/hoch) basierend auf dem Vergleich mit dem nachlaufenden 24-Stunden-Durchschnitt.**\n\n---",
+                "data": {
+                    "price_rating_threshold_low": "Niedrig-Schwelle",
+                    "price_rating_threshold_high": "Hoch-Schwelle"
+                },
+                "data_description": {
+                    "price_rating_threshold_low": "Prozentwert, um wie viel der aktuelle Preis unter dem nachlaufenden 24-Stunden-Durchschnitt liegen muss, damit er als 'niedrig' bewertet wird. Beispiel: 5 bedeutet mindestens 5% unter Durchschnitt. Sensoren mit dieser Bewertung zeigen günstige Zeitfenster an. Standard: 5%",
+                    "price_rating_threshold_high": "Prozentwert, um wie viel der aktuelle Preis über dem nachlaufenden 24-Stunden-Durchschnitt liegen muss, damit er als 'hoch' bewertet wird. Beispiel: 10 bedeutet mindestens 10% über Durchschnitt. Sensoren mit dieser Bewertung warnen vor teuren Zeitfenstern. Standard: 10%"
+                },
+                "submit": "Weiter →"
+            },
+            "best_price": {
+                "title": "💚 Bestpreis-Zeitraum Einstellungen",
+                "description": "_{step_progress}_\n\n**Konfiguration für den Bestpreis-Zeitraum mit den niedrigsten Strompreisen.**\n\n---",
+                "data": {
+                    "best_price_min_period_length": "Minimale Zeitraumlänge",
+                    "best_price_flex": "Flexibilität",
+                    "best_price_min_distance_from_avg": "Mindestabstand",
+                    "best_price_max_level": "Preisniveau-Filter",
+                    "best_price_max_level_gap_count": "Lückentoleranz",
+                    "enable_min_periods_best": "Mindestanzahl anstreben",
+                    "min_periods_best": "Mindestanzahl Zeiträume",
+                    "relaxation_attempts_best": "Lockerungsversuche"
+                },
+                "data_description": {
+                    "best_price_min_period_length": "Minimale Dauer, damit ein Zeitraum als 'Bestpreis' gilt. Längere Zeiträume sind praktischer für den Betrieb von Geräten wie Geschirrspülern oder Wärmepumpen. Bestpreis-Zeiträume erfordern mindestens 60 Minuten (im Vergleich zu 30 Minuten für Spitzenpreis-Warnungen), da sie sinnvolle Zeitfenster für die Verbrauchsplanung bieten sollen, nicht nur kurze Gelegenheiten.",
+                    "best_price_flex": "Maximal über dem täglichen Mindestpreis, bei dem Intervalle noch als 'Bestpreis' qualifizieren. Empfehlung: 15-20 mit aktivierter Lockerung (Standard), oder 25-35 ohne Lockerung. Maximum: 50 (harte Grenze für zuverlässige Zeitraumerkennung).",
+                    "best_price_min_distance_from_avg": "Stellt sicher, dass Zeiträume signifikant günstiger als der Tagesdurchschnitt sind, nicht nur geringfügig darunter. Dies filtert Rauschen und verhindert, dass leicht unterdurchschnittliche Zeiträume an Tagen mit flachen Preisen als 'Bestpreis' markiert werden. Höhere Werte = strengere Filterung (nur wirklich günstige Zeiträume qualifizieren). Standard: 5 bedeutet, Zeiträume müssen mindestens 5% unter dem Tagesdurchschnitt liegen.",
                     "best_price_max_level": "Zeigt Bestpreis-Zeiträume nur an, wenn sie Intervalle mit Preisniveaus ≤ dem gewählten Wert enthalten. Beispiel: Wahl von 'Günstig' bedeutet, dass der Zeitraum mindestens ein 'SEHR GÜNSTIG' oder 'GÜNSTIG' Intervall haben muss. Dies stellt sicher, dass Bestpreis-Zeiträume nicht nur relativ günstig für den Tag sind, sondern tatsächlich günstig in absoluten Zahlen. Wähle 'Beliebig' um Bestpreise unabhängig vom absoluten Preisniveau anzuzeigen.",
                     "best_price_max_level_gap_count": "Maximale Anzahl aufeinanderfolgender Intervalle, die exakt um eine Niveaustufe vom geforderten Level abweichen dürfen. Beispiel: Bei Filter 'Günstig' und Lückentoleranz 1 wird die Sequenz 'GÜNSTIG, GÜNSTIG, NORMAL, GÜNSTIG' akzeptiert (NORMAL ist eine Stufe über GÜNSTIG). Dies verhindert, dass Zeiträume durch gelegentliche Niveau-Abweichungen aufgespalten werden. Standard: 1.",
                     "enable_min_periods_best": "Wenn aktiviert, werden Filter schrittweise gelockert, falls nicht genug Zeiträume gefunden wurden. Dies versucht die gewünschte Mindestanzahl zu erreichen, was dazu führen kann, dass auch weniger optimale Zeiträume als Bestpreis-Zeiträume markiert werden.",
                     "min_periods_best": "Mindestanzahl an Bestpreis-Zeiträumen, die pro Tag angestrebt werden. Filter werden schrittweise gelockert, um diese Anzahl zu erreichen. Nur aktiv, wenn 'Mindestanzahl Zeiträume anstreben' aktiviert ist. Standard: 1",
                     "relaxation_attempts_best": "Wie viele Flex-Stufen (Versuche) nacheinander ausprobiert werden, bevor aufgegeben wird. Jeder Versuch testet alle Filterkombinationen auf der neuen Flex-Stufe. Mehr Versuche erhöhen die Chance auf zusätzliche Zeiträume, benötigen aber etwas mehr Rechenzeit."
                 },
-                "submit": "Weiter zu Schritt 5"
+                "submit": "Weiter →"
             },
             "peak_price": {
-                "title": "Spitzenpreis-Zeitraum Einstellungen",
-                "description": "{step_progress}\n\nKonfiguration für den Spitzenpreis-Zeitraum mit den höchsten Strompreisen.",
+                "title": "🔴 Spitzenpreis-Zeitraum Einstellungen",
+                "description": "_{step_progress}_\n\n**Konfiguration für den Spitzenpreis-Zeitraum mit den höchsten Strompreisen.**\n\n---",
                 "data": {
                     "peak_price_min_period_length": "Minimale Zeitraumlänge",
-                    "peak_price_flex": "Flexibilität: Maximal unter dem Höchstpreis (negativer Wert)",
-                    "peak_price_min_distance_from_avg": "Mindestabstand: Erforderlich über dem Tagesdurchschnitt",
-                    "peak_price_min_level": "Preisniveau-Filter (Optional)",
-                    "peak_price_max_level_gap_count": "Lückentoleranz für Niveaufilter",
-                    "enable_min_periods_peak": "Mindestanzahl Zeiträume anstreben",
+                    "peak_price_flex": "Flexibilität",
+                    "peak_price_min_distance_from_avg": "Mindestabstand",
+                    "peak_price_min_level": "Preisniveau-Filter",
+                    "peak_price_max_level_gap_count": "Lückentoleranz",
+                    "enable_min_periods_peak": "Mindestanzahl anstreben",
                     "min_periods_peak": "Mindestanzahl Zeiträume",
-                    "relaxation_attempts_peak": "Lockerungsversuche (Flex-Stufen)"
+                    "relaxation_attempts_peak": "Lockerungsversuche"
                 },
                 "data_description": {
+                    "peak_price_min_period_length": "Minimale Dauer, damit ein Zeitraum als 'Spitzenpreis' gilt. Spitzenpreis-Warnungen sind für kürzere Zeiträume zulässig (mindestens 30 Minuten im Vergleich zu 60 Minuten für Bestpreis), da kurze teure Spitzen eine Warnung wert sind, auch wenn sie für die Verbrauchsplanung zu kurz sind.",
+                    "peak_price_flex": "Maximal unter dem täglichen Höchstpreis, bei dem Intervalle noch als 'Spitzenpreis' qualifizieren. Empfehlung: -15 bis -20 mit aktivierter Lockerung (Standard), oder -25 bis -35 ohne Lockerung. Maximum: -50 (harte Grenze für zuverlässige Zeitraumerkennung). Hinweis: Negative Werte zeigen den Abstand unter dem Maximum an.",
+                    "peak_price_min_distance_from_avg": "Stellt sicher, dass Zeiträume signifikant teurer als der Tagesdurchschnitt sind, nicht nur geringfügig darüber. Dies filtert Rauschen und verhindert, dass leicht überdurchschnittliche Zeiträume an Tagen mit flachen Preisen als 'Spitzenpreis' markiert werden. Höhere Werte = strengere Filterung (nur wirklich teure Zeiträume qualifizieren). Standard: 5 bedeutet, Zeiträume müssen mindestens 5% über dem Tagesdurchschnitt liegen.",
                     "peak_price_min_level": "Zeigt Spitzenpreis-Zeiträume nur an, wenn sie Intervalle mit Preisniveaus ≥ dem gewählten Wert enthalten. Beispiel: Wahl von 'Teuer' bedeutet, dass der Zeitraum mindestens ein 'TEUER' oder 'SEHR TEUER' Intervall haben muss. Dies stellt sicher, dass Spitzenpreis-Zeiträume nicht nur relativ teuer für den Tag sind, sondern tatsächlich teuer in absoluten Zahlen. Wähle 'Beliebig' um Spitzenpreise unabhängig vom absoluten Preisniveau anzuzeigen.",
                     "peak_price_max_level_gap_count": "Maximale Anzahl aufeinanderfolgender Intervalle, die exakt um eine Niveaustufe vom geforderten Level abweichen dürfen. Beispiel: Bei Filter 'Teuer' und Lückentoleranz 2 wird die Sequenz 'TEUER, NORMAL, NORMAL, TEUER' akzeptiert (NORMAL ist eine Stufe unter TEUER). Dies verhindert, dass Zeiträume durch gelegentliche Niveau-Abweichungen aufgespalten werden. Standard: 0.",
                     "enable_min_periods_peak": "Wenn aktiviert, werden Filter schrittweise gelockert, falls nicht genug Zeiträume gefunden wurden. Dies versucht die gewünschte Mindestanzahl zu erreichen, um sicherzustellen, dass du auch an Tagen mit ungewöhnlichen Preismustern vor teuren Zeiträumen gewarnt wirst.",
                     "min_periods_peak": "Mindestanzahl an Spitzenpreis-Zeiträumen, die pro Tag angestrebt werden. Filter werden schrittweise gelockert, um diese Anzahl zu erreichen. Nur aktiv, wenn 'Mindestanzahl Zeiträume anstreben' aktiviert ist. Standard: 1",
                     "relaxation_attempts_peak": "Wie viele Flex-Stufen (Versuche) nacheinander ausprobiert werden, bevor aufgegeben wird. Jeder Versuch testet alle Filterkombinationen auf der neuen Flex-Stufe. Mehr Versuche erhöhen die Chance auf zusätzliche Spitzenpreis-Zeiträume, benötigen aber etwas mehr Rechenzeit."
                 },
-                "submit": "Weiter zu Schritt 6"
+                "submit": "Weiter →"
             },
             "price_trend": {
-                "title": "Preistrend-Schwellenwerte",
-                "description": "{step_progress}\n\nKonfiguriere Schwellenwerte für Preistrend-Sensoren. Diese Sensoren vergleichen den aktuellen Preis mit dem Durchschnitt der nächsten N Stunden, um festzustellen, ob die Preise steigen, fallen oder stabil sind.",
+                "title": "📈 Pristrend-Schwellenwerte",
+                "description": "_{step_progress}_\n\n**Konfiguriere Schwellenwerte für Preistrend-Sensoren. Diese Sensoren vergleichen den aktuellen Preis mit dem Durchschnitt der nächsten N Stunden, um festzustellen, ob die Preise steigen, fallen oder stabil sind.**\n\n---",
                 "data": {
-                    "price_trend_threshold_rising": "Steigender Schwellenwert (über dem aktuellen Preis)",
-                    "price_trend_threshold_falling": "Fallender Schwellenwert (unter dem aktuellen Preis, negativer Wert)"
+                    "price_trend_threshold_rising": "Steigend-Schwelle",
+                    "price_trend_threshold_falling": "Fallend-Schwelle"
                 },
-                "submit": "Weiter zu Schritt 7"
+                "data_description": {
+                    "price_trend_threshold_rising": "Prozentwert, um wie viel der Durchschnitt der nächsten N Stunden über dem aktuellen Preis liegen muss, damit der Trend als 'steigend' gilt. Beispiel: 5 bedeutet Durchschnitt ist mindestens 5% höher → Preise werden steigen. Typische Werte: 5-15%. Standard: 5%",
+                    "price_trend_threshold_falling": "Prozentwert (negativ), um wie viel der Durchschnitt der nächsten N Stunden unter dem aktuellen Preis liegen muss, damit der Trend als 'fallend' gilt. Beispiel: -5 bedeutet Durchschnitt ist mindestens 5% niedriger → Preise werden fallen. Typische Werte: -5 bis -15%. Standard: -5%"
+                },
+                "submit": "Weiter →"
             },
             "volatility": {
-                "title": "Volatilität Schwellenwerte",
-                "description": "{step_progress}\n\nKonfiguriere Schwellenwerte für die Volatilitätsklassifizierung. Volatilität misst relative Preisschwankungen anhand des Variationskoeffizienten (VK = Standardabweichung / Durchschnitt × 100%). Diese Schwellenwerte sind Prozentwerte, die für alle Preisniveaus funktionieren.\n\nVerwendet von:\n• Volatilitätssensoren (Klassifizierung)\n• Trend-Sensoren (adaptive Schwellenanpassung: <moderat = empfindlicher, ≥hoch = weniger empfindlich)",
+                "title": "💨 Volatilität Schwellenwerte",
+                "description": "_{step_progress}_\n\n**Konfiguriere Schwellenwerte für die Volatilitätsklassifizierung.** Volatilität misst relative Preisschwankungen anhand des Variationskoeffizienten (VK = Standardabweichung / Durchschnitt × 100%). Diese Schwellenwerte sind Prozentwerte, die für alle Preisniveaus funktionieren.\n\nVerwendet von:\n• Volatilitätssensoren (Klassifizierung)\n• Trend-Sensoren (adaptive Schwellenanpassung: &lt;moderat = empfindlicher, ≥hoch = weniger empfindlich)\n\n---",
                 "data": {
-                    "volatility_threshold_moderate": "Moderate Schwelle (VK ≥ dieser %, z.B. 15)",
-                    "volatility_threshold_high": "Hohe Schwelle (VK ≥ dieser %, z.B. 30)",
-                    "volatility_threshold_very_high": "Sehr hohe Schwelle (VK ≥ dieser %, z.B. 50)"
+                    "volatility_threshold_moderate": "Moderat-Schwelle",
+                    "volatility_threshold_high": "Hoch-Schwelle",
+                    "volatility_threshold_very_high": "Sehr hoch-Schwelle"
                 },
-                "submit": "Weiter zu Schritt 4"
+                "data_description": {
+                    "volatility_threshold_moderate": "Variationskoeffizient (VK) ab dem Preise als 'moderat volatil' gelten. VK = (Standardabweichung / Durchschnitt) × 100%. Beispiel: 15 bedeutet Preisschwankungen von ±15% um den Durchschnitt. Sensoren zeigen diese Klassifizierung an, Trend-Sensoren werden empfindlicher. Standard: 15%",
+                    "volatility_threshold_high": "Variationskoeffizient (VK) ab dem Preise als 'hoch volatil' gelten. Beispiel: 30 bedeutet Preisschwankungen von ±30% um den Durchschnitt. Größere Preissprünge erwartet, Trend-Sensoren werden weniger empfindlich. Standard: 30%",
+                    "volatility_threshold_very_high": "Variationskoeffizient (VK) ab dem Preise als 'sehr hoch volatil' gelten. Beispiel: 50 bedeutet extreme Preisschwankungen von ±50% um den Durchschnitt. An solchen Tagen sind starke Preisspitzen wahrscheinlich. Standard: 50%"
+                },
+                "submit": "Weiter →"
             },
             "chart_data_export": {
-                "title": "Diagramm-Datenexport",
-                "description": "{step_progress}\n\n⚠️ **Dieser Schritt ist optional:** Konfiguriere nur, wenn du einen diagnostischen Sensor für ältere Dashboard-Tools benötigst, die KEINE Services aufrufen können.\n\n⚠️ **WICHTIG: Legacy-Feature**\nDieser Sensor existiert nur für Abwärtskompatibilität mit älteren Tools, die Daten nur aus Entity-Attributen lesen können.\n\n**Für neue Integrationen nutze stattdessen direkt den `tibber_prices.get_chartdata` Service** - er ist flexibler, effizienter und der empfohlene Home Assistant Ansatz.\n\n**Wann diesen Sensor nutzen:**\n✅ NUR wenn dein Dashboard-Tool NUR Attribute lesen kann (z.B. ältere Versionen)\n❌ NICHT für neue Integrationen - nutze den Service direkt\n\n**Was ist dieser Sensor?**\nEin diagnostischer Sensor, der den `tibber_prices.get_chartdata` Service mit deinen YAML-Parametern aufruft und das Ergebnis als Attribute bereitstellt.\n\n**Wie nutzen:**\n1. Öffne Settings → Devices & Services → Tibber Prices\n2. Wähle dein Home\n3. Finde 'Diagramm-Datenexport' im Diagnose-Bereich\n4. Aktiviere den Sensor (standardmäßig deaktiviert)\n5. Nutze `homeassistant.update_entity` um Daten manuell zu aktualisieren\n\n**Konfigurationsanleitung:**\n1. Teste deinen Service-Aufruf in Entwicklerwerkzeuge → Services → `tibber_prices.get_chartdata`\n2. Kopiere das YAML aus dem `data:` Bereich (ohne `entry_id`)\n3. Füge es unten ein (nutze Shift+Enter oder Strg+Enter für neue Zeilen)\n\n**Beispiel-YAML:**\n```yaml\nday:\n  - today\n  - tomorrow\ninclude_level: true\ninclude_rating_level: true\n```\n\n**Hinweis:** Leer lassen oder diesen Schritt überspringen, wenn du den Service direkt nutzt (empfohlen).",
+                "title": "📊 Diagramm-Datenexport",
+                "description": "_{step_progress}_\n\n⚠️ **Dieser Schritt ist optional:** Konfiguriere nur, wenn du einen diagnostischen Sensor für ältere Dashboard-Tools benötigst, die KEINE Services aufrufen können.\n\n⚠️ **WICHTIG: Legacy-Feature**\nDieser Sensor existiert nur für Abwärtskompatibilität mit älteren Tools, die Daten nur aus Entity-Attributen lesen können.\n\n**Für neue Integrationen nutze stattdessen direkt den `tibber_prices.get_chartdata` Service** - er ist flexibler, effizienter und der empfohlene Home Assistant Ansatz.\n\n**Wann diesen Sensor nutzen:**\n✅ NUR wenn dein Dashboard-Tool NUR Attribute lesen kann (z.B. ältere Versionen)\n❌ NICHT für neue Integrationen - nutze den Service direkt\n\n**Was ist dieser Sensor?**\nEin diagnostischer Sensor, der den `tibber_prices.get_chartdata` Service mit deinen YAML-Parametern aufruft und das Ergebnis als Attribute bereitstellt.\n\n**Wie nutzen:**\n1. Öffne Settings → Devices & Services → Tibber Prices\n2. Wähle dein Home\n3. Finde 'Diagramm-Datenexport' im Diagnose-Bereich\n4. Aktiviere den Sensor (standardmäßig deaktiviert)\n5. Nutze `homeassistant.update_entity` um Daten manuell zu aktualisieren\n\n**Konfigurationsanleitung:**\n1. Teste deinen Service-Aufruf in Entwicklerwerkzeuge → Services → `tibber_prices.get_chartdata`\n2. Kopiere das YAML aus dem `data:` Bereich (ohne `entry_id`)\n3. Füge es unten ein (nutze Shift+Enter oder Strg+Enter für neue Zeilen)\n\n**Beispiel-YAML:**\n```yaml\nday:\n  - today\n  - tomorrow\ninclude_level: true\ninclude_rating_level: true\n```\n\n**Hinweis:** Leer lassen oder diesen Schritt überspringen, wenn du den Service direkt nutzt (empfohlen).",
                 "data": {
                     "chart_data_config": "Service-Konfiguration (YAML)"
                 },
                 "data_description": {
                     "chart_data_config": "YAML-Konfiguration für get_chartdata Service. Unterstützte Parameter: day (Liste aus yesterday/today/tomorrow), resolution (interval/hourly), output_format, include_level, include_rating_level, include_average, und viele mehr. Siehe Service-Dokumentation für vollständige Liste. Leer lassen für Standard-Einstellungen (today, interval resolution, array of objects)."
                 },
-                "submit": "Konfiguration abschließen"
+                "submit": "Abschließen ✓"
             }
         },
         "error": {

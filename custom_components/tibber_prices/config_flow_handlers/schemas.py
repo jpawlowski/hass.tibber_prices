@@ -276,7 +276,7 @@ def get_best_price_schema(options: Mapping[str, Any]) -> vol.Schema:
             ): NumberSelector(
                 NumberSelectorConfig(
                     min=0,
-                    max=100,
+                    max=50,
                     step=1,
                     unit_of_measurement="%",
                     mode=NumberSelectorMode.SLIDER,
@@ -402,7 +402,7 @@ def get_peak_price_schema(options: Mapping[str, Any]) -> vol.Schema:
                 ),
             ): NumberSelector(
                 NumberSelectorConfig(
-                    min=-100,
+                    min=-50,
                     max=0,
                     step=1,
                     unit_of_measurement="%",

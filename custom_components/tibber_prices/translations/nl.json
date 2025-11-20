@@ -52,7 +52,7 @@
         }
     },
     "common": {
-        "step_progress": "Stap {step_num} van {total_steps}"
+        "step_progress": "{step_num} / {total_steps}"
     },
     "config_subentries": {
         "home": {
@@ -84,29 +84,36 @@
     "options": {
         "step": {
             "init": {
-                "title": "Algemene instellingen",
-                "description": "{step_progress}\n\nConfigureer algemene instellingen voor Tibber Prijsinformatie & Beoordelingen.\n\nGebruiker: {user_login}",
+                "title": "⚙️ Algemene instellingen",
+                "description": "_{step_progress}_\n\n**Configureer algemene instellingen voor Tibber-prijsinformatie en -beoordelingen.**\n\n---\n\n**Gebruiker:** {user_login}",
                 "data": {
-                    "extended_descriptions": "Uitgebreide beschrijvingen tonen in entiteitsattributen"
+                    "extended_descriptions": "Uitgebreide beschrijvingen"
                 },
-                "submit": "Volgende naar stap 2"
+                "data_description": {
+                    "extended_descriptions": "Bepaalt of entiteitsattributen gedetailleerde uitleg en gebruikstips bevatten.\n\n• Uitgeschakeld (standaard): Alleen korte beschrijving\n• Ingeschakeld: Gedetailleerde uitleg + praktische gebruiksvoorbeelden\n\nVoorbeeld:\nUitgeschakeld = 1 attribuut\nIngeschakeld = 2 extra attributen"
+                },
+                "submit": "Doorgaan →"
             },
             "current_interval_price_rating": {
-                "title": "Prijsbeoordelingsdrempels",
-                "description": "{step_progress}\n\nConfigureer drempels voor prijsbeoordelingsniveaus (laag/normaal/hoog) op basis van vergelijking met het voortschrijdend 24-uurs gemiddelde.",
+                "title": "📊 Prijsbeoordelingsdrempels",
+                "description": "_{step_progress}_\n\n**Configureer drempels voor prijsbeoordelingsniveaus (laag/normaal/hoog) op basis van vergelijking met het lopende 24-uurs gemiddelde.**\n\n---",
                 "data": {
-                    "price_rating_threshold_low": "Lage beoordelingsdrempel (% onder voortschrijdend gemiddelde)",
-                    "price_rating_threshold_high": "Hoge beoordelingsdrempel (% boven voortschrijdend gemiddelde)"
+                    "price_rating_threshold_low": "Lage drempel",
+                    "price_rating_threshold_high": "Hoge drempel"
                 },
-                "submit": "Volgende naar stap 3"
+                "data_description": {
+                    "price_rating_threshold_low": "Percentage onder het lopende 24-uurs gemiddelde dat de huidige prijs moet zijn om als 'laag' te kwalificeren. Voorbeeld: 5 betekent minstens 5% onder gemiddelde. Sensoren met deze beoordeling geven gunstige tijdsvensters aan. Standaard: 5%",
+                    "price_rating_threshold_high": "Percentage boven het lopende 24-uurs gemiddelde dat de huidige prijs moet zijn om als 'hoog' te kwalificeren. Voorbeeld: 10 betekent minstens 10% boven gemiddelde. Sensoren met deze beoordeling waarschuwen voor dure tijdsvensters. Standaard: 10%"
+                },
+                "submit": "Doorgaan →"
             },
             "best_price": {
-                "title": "Instellingen beste prijsperiode",
-                "description": "{step_progress}\n\nConfigureer instellingen voor de Beste Prijsperiode binaire sensor. Deze sensor is actief tijdens perioden met de laagste elektriciteitsprijzen.",
+                "title": "💚 Beste Prijs Periode Instellingen",
+                "description": "_{step_progress}_\n\nConfigureer instellingen voor de **Beste Prijs Periode** binaire sensor. Deze sensor is actief tijdens periodes met de laagste elektriciteitsprijzen.\n\n---",
                 "data": {
-                    "best_price_min_period_length": "Minimale periode lengte",
-                    "best_price_flex": "Flexibiliteit: Maximaal % boven minimumprijs",
-                    "best_price_min_distance_from_avg": "Minimale afstand: Vereist % onder dagelijks gemiddelde",
+                    "best_price_min_period_length": "Minimale periodelengte",
+                    "best_price_flex": "Flexibiliteit: Maximaal boven minimumprijs",
+                    "best_price_min_distance_from_avg": "Minimale afstand: Vereist onder daggemiddelde",
                     "best_price_max_level": "Prijsniveaufilter (Optioneel)",
                     "best_price_max_level_gap_count": "Gaptolerantie voor niveaufilter",
                     "enable_min_periods_best": "Probeer minimum aantal periodes te bereiken",
@@ -114,21 +121,24 @@
                     "relaxation_attempts_best": "Aantal ontspanningspogingen"
                 },
                 "data_description": {
+                    "best_price_min_period_length": "Minimale duur voordat een periode als 'beste prijs' wordt beschouwd. Langere periodes zijn praktischer voor het gebruik van apparaten zoals vaatwassers of warmtepompen. Beste prijs periodes vereisen minimaal 60 minuten (versus 30 minuten voor piekprijs waarschuwingen) omdat ze betekenisvolle tijdsvensters moeten bieden voor verbruiksplanning, niet alleen korte kansen.",
+                    "best_price_flex": "Maximaal boven de dagelijkse minimumprijs waarbij intervallen nog kwalificeren als 'beste prijs'. Aanbeveling: 15-20 met versoepeling geactiveerd (standaard), of 25-35 zonder versoepeling. Maximum: 50 (harde limiet voor betrouwbare periodedetectie).",
+                    "best_price_min_distance_from_avg": "Zorgt ervoor dat periodes significant goedkoper zijn dan het daggemiddelde, niet slechts marginaal eronder. Dit filtert ruis en voorkomt dat licht-onder-gemiddelde periodes op dagen met vlakke prijzen als 'beste prijs' worden gemarkeerd. Hogere waarden = striktere filtering (alleen echt goedkope periodes kwalificeren). Standaard: 5 betekent dat periodes minimaal 5% onder het daggemiddelde moeten liggen.",
                     "best_price_max_level": "Toon alleen beste prijsperiodes als ze intervallen bevatten met prijsniveaus ≤ geselecteerde waarde. Bijvoorbeeld: selecteren van 'Goedkoop' betekent dat de periode minstens één 'ZEER_GOEDKOOP' of 'GOEDKOOP' interval moet hebben. Dit zorgt ervoor dat 'beste prijs'-periodes niet alleen relatief goedkoop zijn voor de dag, maar daadwerkelijk goedkoop in absolute termen. Selecteer 'Alle' om beste prijzen te tonen ongeacht hun absolute prijsniveau.",
                     "enable_min_periods_best": "Wanneer ingeschakeld worden filters geleidelijk versoepeld als er niet genoeg periodes worden gevonden. Dit probeert het gewenste minimum aantal periodes te bereiken om ervoor te zorgen dat je kansen hebt om van lage prijzen te profiteren, zelfs op dagen met ongebruikelijke prijspatronen.",
                     "min_periods_best": "Minimum aantal beste prijsperiodes om naar te streven per dag. Filters worden stap voor stap versoepeld om dit aantal te proberen bereiken. Alleen actief wanneer 'Probeer minimum aantal periodes te bereiken' is ingeschakeld. Standaard: 1",
                     "relaxation_attempts_best": "Hoeveel keer de ontspanningslogica filters opnieuw mag proberen. Gebruik hogere waarden om meer variaties te testen als dagen extreem grillig zijn. Hogere aantallen vergen meer rekentijd maar vergroten de kans dat het gewenste minimum aantal periodes wordt gehaald.",
                     "best_price_max_level_gap_count": "Maximum aantal opeenvolgende intervallen dat precies één niveaustap mag afwijken van het vereiste niveau. Bijvoorbeeld: met 'Goedkoop' filter en gaptelling 1 wordt de reeks 'GOEDKOOP, GOEDKOOP, NORMAAL, GOEDKOOP' geaccepteerd (NORMAAL is één stap boven GOEDKOOP). Dit voorkomt dat periodes worden opgesplitst door incidentele niveauafwijkingen. Standaard: 0 (strikte filtering, geen tolerantie)."
                 },
-                "submit": "Volgende naar stap 5"
+                "submit": "Doorgaan →"
             },
             "peak_price": {
-                "title": "Instellingen piekprijsperiode",
-                "description": "{step_progress}\n\nConfigureer instellingen voor de Piekprijsperiode binaire sensor. Deze sensor is actief tijdens perioden met de hoogste elektriciteitsprijzen.",
+                "title": "🔴 Piekprijs Periode Instellingen",
+                "description": "_{step_progress}_\n\nConfigureer instellingen voor de **Piekprijs Periode** binaire sensor. Deze sensor is actief tijdens periodes met de hoogste elektriciteitsprijzen.\n\n---",
                 "data": {
-                    "peak_price_min_period_length": "Minimale periode lengte",
-                    "peak_price_flex": "Flexibiliteit: Maximaal % onder maximumprijs (negatieve waarde)",
-                    "peak_price_min_distance_from_avg": "Minimale afstand: Vereist % boven dagelijks gemiddelde",
+                    "peak_price_min_period_length": "Minimale periodelengte",
+                    "peak_price_flex": "Flexibiliteit: Maximaal onder maximumprijs",
+                    "peak_price_min_distance_from_avg": "Minimale afstand: Vereist boven daggemiddelde",
                     "peak_price_min_level": "Prijsniveaufilter (Optioneel)",
                     "peak_price_max_level_gap_count": "Gaptolerantie voor niveaufilter",
                     "enable_min_periods_peak": "Probeer minimum aantal periodes te bereiken",
@@ -136,32 +146,44 @@
                     "relaxation_attempts_peak": "Aantal ontspanningspogingen"
                 },
                 "data_description": {
-                    "peak_price_min_level": "Toon alleen piekprijsperiodes als ze intervallen bevatten met prijsniveaus ≥ geselecteerde waarde. Bijvoorbeeld: selecteren van 'Duur' betekent dat de periode minstens één 'DUUR' of 'ZEER_DUUR' interval moet hebben. Dit zorgt ervoor dat 'piekprijs'-periodes niet alleen relatief duur zijn voor de dag, maar daadwerkelijk duur in absolute termen. Selecteer 'Alle' om piekprijzen te tonen ongeacht hun absolute prijsniveau.",
+                    "peak_price_min_period_length": "Minimale duur voordat een periode als 'piekprijs' wordt beschouwd. Piekprijs waarschuwingen zijn toegestaan voor kortere periodes (minimaal 30 minuten versus 60 minuten voor beste prijs) omdat korte dure pieken de moeite waard zijn om voor te waarschuwen, zelfs als ze te kort zijn voor verbruiksplanning.",
+                    "peak_price_flex": "Maximaal onder de dagelijkse maximumprijs waarbij intervallen nog kwalificeren als 'piekprijs'. Aanbeveling: -15 tot -20 met versoepeling geactiveerd (standaard), of -25 tot -35 zonder versoepeling. Maximum: -50 (harde limiet voor betrouwbare periodedetectie). Let op: Negatieve waarden geven de afstand onder het maximum aan.",
+                    "peak_price_min_distance_from_avg": "Zorgt ervoor dat periodes significant duurder zijn dan het daggemiddelde, niet slechts marginaal erboven. Dit filtert ruis en voorkomt dat licht-boven-gemiddelde periodes op dagen met vlakke prijzen als 'piekprijs' worden gemarkeerd. Hogere waarden = striktere filtering (alleen echt dure periodes kwalificeren). Standaard: 5 betekent dat periodes minimaal 5% boven het daggemiddelde moeten liggen.",
+                    "peak_price_min_level": "Toon alleen piekprijs periodes als ze intervallen bevatten met prijsniveaus ≥ geselecteerde waarde. Bijvoorbeeld: selecteren van 'Duur' betekent dat de periode minstens één 'DUUR' of 'ZEER_DUUR' interval moet hebben. Dit zorgt ervoor dat 'piekprijs'-periodes niet alleen relatief duur zijn voor de dag, maar daadwerkelijk duur in absolute termen. Selecteer 'Alle' om piekprijzen te tonen ongeacht hun absolute prijsniveau.",
                     "enable_min_periods_peak": "Wanneer ingeschakeld worden filters geleidelijk versoepeld als er niet genoeg periodes worden gevonden. Dit probeert het gewenste minimum aantal periodes te bereiken om ervoor te zorgen dat je wordt gewaarschuwd voor dure periodes, zelfs op dagen met ongebruikelijke prijspatronen.",
                     "min_periods_peak": "Minimum aantal piekprijsperiodes om naar te streven per dag. Filters worden stap voor stap versoepeld om dit aantal te proberen bereiken. Alleen actief wanneer 'Probeer minimum aantal periodes te bereiken' is ingeschakeld. Standaard: 1",
                     "relaxation_attempts_peak": "Hoeveel keer de ontspanningslogica filters opnieuw mag proberen. Gebruik meer pogingen wanneer de piekperiodes moeilijk te vinden zijn door vlakke of zeer grillige dagen. Elke extra poging kost wat extra verwerkingstijd maar vergroot de kans dat periodes worden gevonden.",
-                    "peak_price_max_level_gap_count": "Maximum aantal opeenvolgende intervallen dat precies één niveaustap mag afwijken van het vereiste niveau. Bijvoorbeeld: met 'Duur' filter en gaptelling 2 wordt de reeks 'DUUR, NORMAAL, NORMAAL, DUUR' geaccepteerd (NORMAAL is één stap onder DUUR). Dit voorkomt dat periodes worden opgesplitst door incidentele niveauafwijkingen. Standaard: 0 (strikte filtering, geen tolerantie)."
+                    "peak_price_max_level_gap_count": "Maximum aantal opeenvolgende intervallen dat precies één niveaustap mag afwijken van het vereiste niveau. Bijvoorbeeld: met 'Duur' filter en gaptelling 1 wordt de reeks 'DUUR, DUUR, NORMAAL, DUUR' geaccepteerd (NORMAAL is één stap onder DUUR). Dit voorkomt dat periodes worden opgesplitst door incidentele niveauafwijkingen. Standaard: 0 (strikte filtering, geen tolerantie)."
                 },
-                "submit": "Volgende naar stap 6"
+                "submit": "Doorgaan →"
             },
             "price_trend": {
-                "title": "Prijstrenddrempels",
-                "description": "{step_progress}\n\nConfigureer drempels voor prijstrendsensoren. Deze sensoren vergelijken de huidige prijs met het gemiddelde van de volgende N uur om te bepalen of prijzen stijgen, dalen of stabiel zijn.",
+                "title": "📈 Prijstrenddrempels",
+                "description": "_{step_progress}_\n\n**Configureer drempels voor prijstrendsensoren. Deze sensoren vergelijken de huidige prijs met het gemiddelde van de volgende N uur om te bepalen of prijzen stijgen, dalen of stabiel zijn.**\n\n---",
                 "data": {
-                    "price_trend_threshold_rising": "Stijgende drempel (% boven huidige prijs)",
-                    "price_trend_threshold_falling": "Dalende drempel (% onder huidige prijs, negatieve waarde)"
+                    "price_trend_threshold_rising": "Stijgende drempel",
+                    "price_trend_threshold_falling": "Dalende drempel"
                 },
-                "submit": "Verder naar stap 7"
+                "data_description": {
+                    "price_trend_threshold_rising": "Percentage voor gemiddelde prijsstijging per uur die de trend kwalificeert als 'stijgend'. Voorbeeld: 5 betekent minstens 5% stijging per uur. Sensoren met deze trend geven aan dat prijzen snel zullen stijgen. Standaard: 5%",
+                    "price_trend_threshold_falling": "Percentage voor gemiddelde prijsdaling per uur die de trend kwalificeert als 'dalend'. Voorbeeld: -5 betekent minstens 5% daling per uur. Sensoren met deze trend geven aan dat prijzen snel zullen dalen. Standaard: -5%"
+                },
+                "submit": "Doorgaan →"
             },
             "volatility": {
-                "title": "Volatiliteit Drempels",
-                "description": "{step_progress}\n\nConfigureer drempels voor volatiliteitsclassificatie. Volatiliteit meet relatieve prijsvariatie met behulp van de variatiecoëfficiënt (VC = standaarddeviatie / gemiddelde × 100%). Deze drempels zijn percentagewaarden die werken over alle prijsniveaus.\n\nGebruikt door:\n• Volatiliteitssensoren (classificatie)\n• Trendsensoren (adaptieve drempelaanpassing: <matig = gevoeliger, ≥hoog = minder gevoelig)",
+                "title": "💨 Volatiliteit Drempels",
+                "description": "_{step_progress}_\n\n**Configureer drempels voor volatiliteitsclassificatie. Volatiliteit meet relatieve prijsvariatie met behulp van de variatiecoëfficiënt (VC = standaarddeviatie / gemiddelde × 100%). Deze drempels zijn percentagewaarden die werken over alle prijsniveaus.**\n\nGebruikt door:\n• Volatiliteitssensoren (classificatie)\n• Trendsensoren (adaptieve drempelaanpassing: &lt;matig = gevoeliger, ≥hoog = minder gevoelig)\n\n---",
                 "data": {
-                    "volatility_threshold_moderate": "Matige drempel (VC ≥ deze %, bijv. 15)",
-                    "volatility_threshold_high": "Hoge drempel (VC ≥ deze %, bijv. 30)",
-                    "volatility_threshold_very_high": "Zeer hoge drempel (VC ≥ deze %, bijv. 50)"
+                    "volatility_threshold_moderate": "Matige drempel",
+                    "volatility_threshold_high": "Hoge drempel",
+                    "volatility_threshold_very_high": "Zeer hoge drempel"
                 },
-                "submit": "Volgende naar stap 4"
+                "data_description": {
+                    "volatility_threshold_moderate": "Grenswaarde voor standaardafwijking (% van gemiddelde) om prijsvariatie als 'matig' te classificeren. Voorbeeld: 10 betekent standaardafwijking ≥ 10% van gemiddelde. Dit wijst op verhoogde prijsinstabiliteit. Standaard: 10%",
+                    "volatility_threshold_high": "Grenswaarde voor standaardafwijking (% van gemiddelde) om prijsvariatie als 'hoog' te classificeren. Voorbeeld: 20 betekent standaardafwijking ≥ 20% van gemiddelde. Dit wijst op aanzienlijke prijsschommelingen. Standaard: 20%",
+                    "volatility_threshold_very_high": "Grenswaarde voor standaardafwijking (% van gemiddelde) om prijsvariatie als 'zeer hoog' te classificeren. Voorbeeld: 30 betekent standaardafwijking ≥ 30% van gemiddelde. Dit wijst op extreme prijsinstabiliteit. Standaard: 30%"
+                },
+                "submit": "Doorgaan →"
             },
             "chart_data_export": {
                 "title": "Grafiek Data Export",
@@ -172,7 +194,7 @@
                 "data_description": {
                     "chart_data_config": "YAML-configuratie voor `get_chartdata` service. Ondersteunde parameters: day (lijst met yesterday/today/tomorrow), resolution (interval/hourly), output_format, include_level, include_rating_level, include_average, en nog veel meer. Zie servicedocumentatie voor volledige lijst. Laat leeg om standaardinstellingen te gebruiken (today, interval resolution, array of objects)."
                 },
-                "submit": "Configuratie voltooien"
+                "submit": "Voltooiën ✓"
             }
         },
         "error": {
