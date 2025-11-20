@@ -5,7 +5,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
-    from custom_components.tibber_prices.coordinator.time_service import TimeService
+    from custom_components.tibber_prices.coordinator.time_service import TibberPricesTimeService
 
 from .timing import add_period_timing_attributes
 from .volatility import add_volatility_attributes
@@ -17,7 +17,7 @@ def _add_timing_or_volatility_attributes(
     cached_data: dict,
     native_value: Any = None,
     *,
-    time: TimeService,
+    time: TibberPricesTimeService,
 ) -> None:
     """Add attributes for timing or volatility sensors."""
     if key.endswith("_volatility"):

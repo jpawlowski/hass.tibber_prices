@@ -146,7 +146,7 @@ class TibberPricesOptionsFlowHandler(OptionsFlow):
                     errors["base"] = "invalid_yaml_syntax"
 
                 # Test service call with parsed parameters
-                if not errors and parsed:
+                if not errors and parsed and isinstance(parsed, dict):
                     try:
                         # Add entry_id to service call data
                         service_data = {**parsed, "entry_id": self.config_entry.entry_id}

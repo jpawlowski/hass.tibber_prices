@@ -22,7 +22,7 @@ from datetime import timedelta
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from custom_components.tibber_prices.coordinator.time_service import TimeService
+    from custom_components.tibber_prices.coordinator.time_service import TibberPricesTimeService
 
 from custom_components.tibber_prices.entity_utils.helpers import get_price_value
 from custom_components.tibber_prices.utils.price import (
@@ -134,7 +134,7 @@ def get_hourly_price_value(
     *,
     hour_offset: int,
     in_euro: bool,
-    time: TimeService,
+    time: TibberPricesTimeService,
 ) -> float | None:
     """
     Get price for current hour or with offset.
@@ -146,7 +146,7 @@ def get_hourly_price_value(
         price_info: Price information dict with 'today' and 'tomorrow' keys
         hour_offset: Hour offset from current time (positive=future, negative=past)
         in_euro: If True, return price in major currency (EUR), else minor (cents/øre)
-        time: TimeService instance (required)
+        time: TibberPricesTimeService instance (required)
 
     Returns:
         Price value, or None if not found

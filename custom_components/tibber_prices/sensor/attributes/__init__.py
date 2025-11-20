@@ -19,7 +19,7 @@ if TYPE_CHECKING:
     from custom_components.tibber_prices.coordinator.core import (
         TibberPricesDataUpdateCoordinator,
     )
-    from custom_components.tibber_prices.coordinator.time_service import TimeService
+    from custom_components.tibber_prices.coordinator.time_service import TibberPricesTimeService
     from custom_components.tibber_prices.data import TibberPricesConfigEntry
     from homeassistant.core import HomeAssistant
 
@@ -171,7 +171,7 @@ def build_extra_state_attributes(  # noqa: PLR0913
     config_entry: TibberPricesConfigEntry,
     coordinator_data: dict,
     sensor_attrs: dict | None = None,
-    time: TimeService | None = None,
+    time: TibberPricesTimeService,
 ) -> dict[str, Any] | None:
     """
     Build extra state attributes for sensors.
@@ -189,7 +189,7 @@ def build_extra_state_attributes(  # noqa: PLR0913
         config_entry: Config entry with options (keyword-only)
         coordinator_data: Coordinator data dict (keyword-only)
         sensor_attrs: Sensor-specific attributes (keyword-only)
-        time: TimeService instance (optional, creates new if not provided)
+        time: TibberPricesTimeService instance (required)
 
     Returns:
         Complete attributes dict or None if no data available

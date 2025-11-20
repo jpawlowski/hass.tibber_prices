@@ -5,9 +5,9 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
-    from custom_components.tibber_prices.coordinator.time_service import TimeService
+    from custom_components.tibber_prices.coordinator.time_service import TibberPricesTimeService
 
-    from .types import PeriodConfig
+    from .types import TibberPricesPeriodConfig
 
 from .outlier_filtering import (
     filter_price_outliers,
@@ -23,7 +23,7 @@ from .period_building import (
 from .period_statistics import (
     extract_period_summaries,
 )
-from .types import ThresholdConfig
+from .types import TibberPricesThresholdConfig
 
 # Flex limits to prevent degenerate behavior (see docs/development/period-calculation-theory.md)
 MAX_SAFE_FLEX = 0.50  # 50% - hard cap: above this, period detection becomes unreliable
@@ -33,8 +33,8 @@ MAX_OUTLIER_FLEX = 0.25  # 25% - cap for outlier filtering: above this, spike de
 def calculate_periods(
     all_prices: list[dict],
     *,
-    config: PeriodConfig,
-    time: TimeService,
+    config: TibberPricesPeriodConfig,
+    time: TibberPricesTimeService,
 ) -> dict[str, Any]:
     """
     Calculate price periods (best or peak) from price data.
@@ -55,7 +55,7 @@ def calculate_periods(
         all_prices: All price data points from yesterday/today/tomorrow
         config: Period configuration containing reverse_sort, flex, min_distance_from_avg,
                 min_period_length, threshold_low, and threshold_high
-        time: TimeService instance (required)
+        time: TibberPricesTimeService instance (required)
 
     Returns:
         Dict with:
@@ -183,7 +183,7 @@ def calculate_periods(
     # Step 8: Extract lightweight period summaries (no full price data)
     # Note: Filtering for current/future is done here based on end date,
     # not start date. This preserves periods that started yesterday but end today.
-    thresholds = ThresholdConfig(
+    thresholds = TibberPricesThresholdConfig(
         threshold_low=threshold_low,
         threshold_high=threshold_high,
         threshold_volatility_moderate=config.threshold_volatility_moderate,

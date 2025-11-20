@@ -8,14 +8,14 @@ from typing import TYPE_CHECKING
 from custom_components.tibber_prices.utils.price import calculate_volatility_level
 
 if TYPE_CHECKING:
-    from custom_components.tibber_prices.coordinator.time_service import TimeService
+    from custom_components.tibber_prices.coordinator.time_service import TibberPricesTimeService
 
 
 def add_volatility_attributes(
     attributes: dict,
     cached_data: dict,
     *,
-    time: TimeService,  # noqa: ARG001
+    time: TibberPricesTimeService,  # noqa: ARG001
 ) -> None:
     """
     Add attributes for volatility sensors.
@@ -23,7 +23,7 @@ def add_volatility_attributes(
     Args:
         attributes: Dictionary to add attributes to
         cached_data: Dictionary containing cached sensor data
-        time: TimeService instance (required)
+        time: TibberPricesTimeService instance (required)
 
     """
     if cached_data.get("volatility_attributes"):
@@ -34,7 +34,7 @@ def get_prices_for_volatility(
     volatility_type: str,
     price_info: dict,
     *,
-    time: TimeService,
+    time: TibberPricesTimeService,
 ) -> list[float]:
     """
     Get price list for volatility calculation based on type.
@@ -42,7 +42,7 @@ def get_prices_for_volatility(
     Args:
         volatility_type: One of "today", "tomorrow", "next_24h", "today_tomorrow"
         price_info: Price information dictionary from coordinator data
-        time: TimeService instance (required)
+        time: TibberPricesTimeService instance (required)
 
     Returns:
         List of prices to analyze
@@ -88,7 +88,7 @@ def add_volatility_type_attributes(
     price_info: dict,
     thresholds: dict,
     *,
-    time: TimeService,
+    time: TibberPricesTimeService,
 ) -> None:
     """
     Add type-specific attributes for volatility sensors.
@@ -98,7 +98,7 @@ def add_volatility_type_attributes(
         volatility_type: Type of volatility calculation
         price_info: Price information dictionary from coordinator data
         thresholds: Volatility thresholds configuration
-        time: TimeService instance (required)
+        time: TibberPricesTimeService instance (required)
 
     """
     # Add timestamp for calendar day volatility sensors (midnight of the day)

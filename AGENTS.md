@@ -1516,6 +1516,25 @@ venv = ".venv"
 typeCheckingMode = "basic"
 ```
 
+**CRITICAL: When generating code, always aim for Pyright `basic` mode compliance:**
+
+✅ **DO:**
+- Add type hints to all function signatures (parameters + return types)
+- Use proper type annotations: `dict[str, Any]`, `list[dict]`, `str | None`
+- Handle Optional types explicitly (None-checks before use)
+- Use TYPE_CHECKING imports for type-only dependencies
+- Prefer explicit returns over implicit `None`
+
+❌ **DON'T:**
+- Leave functions without return type hints
+- Ignore potential `None` values in Optional types
+- Use `Any` as escape hatch (only when truly needed)
+- Create functions that could return different types based on runtime logic
+
+**Goal:** Generated code should pass `./scripts/type-check` on first try, minimizing post-generation fixes.
+
+**See also:** "Ruff Code Style Guidelines" section below for complementary code style rules that ensure `./scripts/lint` compliance.
+
 ### When Type Errors Are Acceptable
 
 **Use `type: ignore` comments sparingly and ONLY when:**
@@ -2065,6 +2084,8 @@ Understanding **how** good documentation emerges is as important as knowing what
 ## Ruff Code Style Guidelines
 
 These rules ensure generated code passes `./scripts/lint` on first try. Ruff enforces these automatically.
+
+**See also:** "Linting Best Practices" section above for Pyright type checking guidelines that ensure `./scripts/type-check` compliance.
 
 **String Formatting:**
 

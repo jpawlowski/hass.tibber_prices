@@ -16,7 +16,7 @@ from custom_components.tibber_prices.sensor.helpers import (
     aggregate_rating_data,
 )
 
-from .base import BaseCalculator
+from .base import TibberPricesBaseCalculator
 
 if TYPE_CHECKING:
     from collections.abc import Callable
@@ -26,7 +26,7 @@ if TYPE_CHECKING:
     )
 
 
-class DailyStatCalculator(BaseCalculator):
+class TibberPricesDailyStatCalculator(TibberPricesBaseCalculator):
     """
     Calculator for daily statistics.
 

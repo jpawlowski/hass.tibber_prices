@@ -12,7 +12,7 @@ if TYPE_CHECKING:
     from homeassistant.core import HomeAssistant
 
 
-class BaseCalculator:
+class TibberPricesBaseCalculator:
     """
     Base class for all sensor value calculators.
 

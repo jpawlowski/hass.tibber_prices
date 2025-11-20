@@ -5,7 +5,7 @@ from __future__ import annotations
 from enum import Enum
 
 
-class QueryType(Enum):
+class TibberPricesQueryType(Enum):
     """Types of queries that can be made to the API."""
 
     PRICE_INFO = "price_info"

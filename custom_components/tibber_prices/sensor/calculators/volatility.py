@@ -11,13 +11,13 @@ from custom_components.tibber_prices.sensor.attributes import (
 )
 from custom_components.tibber_prices.utils.price import calculate_volatility_level
 
-from .base import BaseCalculator
+from .base import TibberPricesBaseCalculator
 
 if TYPE_CHECKING:
     from typing import Any
 
 
-class VolatilityCalculator(BaseCalculator):
+class TibberPricesVolatilityCalculator(TibberPricesBaseCalculator):
     """
     Calculator for price volatility analysis.
 

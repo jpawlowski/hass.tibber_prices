@@ -10,13 +10,13 @@ from custom_components.tibber_prices.const import PRICE_LEVEL_MAPPING
 if TYPE_CHECKING:
     from datetime import date
 
-    from custom_components.tibber_prices.coordinator.time_service import TimeService
+    from custom_components.tibber_prices.coordinator.time_service import TibberPricesTimeService
 
 from .level_filtering import (
     apply_level_filter,
     check_interval_criteria,
 )
-from .types import IntervalCriteria
+from .types import TibberPricesIntervalCriteria
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -25,7 +25,7 @@ INDENT_L0 = ""  # Entry point / main function
 
 
 def split_intervals_by_day(
-    all_prices: list[dict], *, time: TimeService
+    all_prices: list[dict], *, time: TibberPricesTimeService
 ) -> tuple[dict[date, list[dict]], dict[date, float]]:
     """Split intervals by day and calculate average price per day."""
     intervals_by_day: dict[date, list[dict]] = {}
@@ -60,7 +60,7 @@ def build_periods(  # noqa: PLR0913, PLR0915, PLR0912 - Complex period building 
     reverse_sort: bool,
     level_filter: str | None = None,
     gap_count: int = 0,
-    time: TimeService,
+    time: TibberPricesTimeService,
 ) -> list[list[dict]]:
     """
     Build periods, allowing periods to cross midnight (day boundary).
@@ -75,7 +75,7 @@ def build_periods(  # noqa: PLR0913, PLR0915, PLR0912 - Complex period building 
         reverse_sort: True for peak price (high prices), False for best price (low prices)
         level_filter: Level filter string ("cheap", "expensive", "any", None)
         gap_count: Number of allowed consecutive intervals deviating by exactly 1 level step
-        time: TimeService instance (required)
+        time: TibberPricesTimeService instance (required)
 
     """
     ref_prices = price_context["ref_prices"]
@@ -130,7 +130,7 @@ def build_periods(  # noqa: PLR0913, PLR0915, PLR0912 - Complex period building 
         ref_date = period_start_date if period_start_date is not None else date_key
 
         # Check flex and minimum distance criteria (using smoothed price and period start date reference)
-        criteria = IntervalCriteria(
+        criteria = TibberPricesIntervalCriteria(
             ref_price=ref_prices[ref_date],
             avg_price=avg_prices[ref_date],
             flex=flex,
@@ -230,14 +230,14 @@ def build_periods(  # noqa: PLR0913, PLR0915, PLR0912 - Complex period building 
 
 
 def filter_periods_by_min_length(
-    periods: list[list[dict]], min_period_length: int, *, time: TimeService
+    periods: list[list[dict]], min_period_length: int, *, time: TibberPricesTimeService
 ) -> list[list[dict]]:
     """Filter periods to only include those meeting the minimum length requirement."""
     min_intervals = time.minutes_to_intervals(min_period_length)
     return [period for period in periods if len(period) >= min_intervals]
 
 
-def add_interval_ends(periods: list[list[dict]], *, time: TimeService) -> None:
+def add_interval_ends(periods: list[list[dict]], *, time: TibberPricesTimeService) -> None:
     """Add interval_end to each interval in-place."""
     interval_duration = time.get_interval_duration()
     for period in periods:
@@ -247,7 +247,7 @@ def add_interval_ends(periods: list[list[dict]], *, time: TimeService) -> None:
                 interval["interval_end"] = start + interval_duration
 
 
-def filter_periods_by_end_date(periods: list[list[dict]], *, time: TimeService) -> list[list[dict]]:
+def filter_periods_by_end_date(periods: list[list[dict]], *, time: TibberPricesTimeService) -> list[list[dict]]:
     """
     Filter periods to keep only relevant ones for today and tomorrow.
 

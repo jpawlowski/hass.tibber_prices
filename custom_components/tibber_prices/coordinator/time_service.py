@@ -45,7 +45,7 @@ _INTERVALS_PER_DAY = 24 * _INTERVALS_PER_HOUR  # 96
 _BOUNDARY_TOLERANCE_SECONDS = 2
 
 
-class TimeService:
+class TibberPricesTimeService:
     """
     Centralized time service for Tibber Prices integration.
 
@@ -669,6 +669,10 @@ class TimeService:
         #     - Normal day: 24 hours (96 intervals)
         #
         tz = self._reference_time.tzinfo  # Get timezone from reference time
+        if tz is None:
+            # Should never happen - dt_util.now() always returns timezone-aware datetime
+            msg = "Reference time has no timezone information"
+            raise ValueError(msg)
 
         # Create naive datetimes for midnight of target and next day
         start_naive = datetime.combine(target_date, datetime.min.time())
@@ -678,8 +682,9 @@ class TimeService:
         # Localize to get correct DST offset for each date
         if hasattr(tz, "localize"):
             # pytz timezone - use localize() to handle DST correctly
-            start_midnight_local = tz.localize(start_naive)
-            end_midnight_local = tz.localize(end_naive)
+            # Type checker doesn't understand hasattr runtime check, but this is safe
+            start_midnight_local = tz.localize(start_naive)  # type: ignore[attr-defined]
+            end_midnight_local = tz.localize(end_naive)  # type: ignore[attr-defined]
         else:
             # zoneinfo or other timezone - can use replace directly
             start_midnight_local = start_naive.replace(tzinfo=tz)
@@ -767,9 +772,9 @@ class TimeService:
     # Time-Travel Support
     # -------------------------------------------------------------------------
 
-    def with_reference_time(self, new_time: datetime) -> TimeService:
+    def with_reference_time(self, new_time: datetime) -> TibberPricesTimeService:
         """
-        Create new TimeService with different reference time.
+        Create new TibberPricesTimeService with different reference time.
 
         Used for time-travel testing: inject simulated "now".
 
@@ -777,7 +782,7 @@ class TimeService:
             new_time: New reference time.
 
         Returns:
-            New TimeService instance with updated reference time.
+            New TibberPricesTimeService instance with updated reference time.
 
         Example:
             # Simulate being at 14:30 on 2025-11-19
@@ -785,4 +790,4 @@ class TimeService:
             future_service = time_service.with_reference_time(simulated_time)
 
         """
-        return TimeService(reference_time=new_time)
+        return TibberPricesTimeService(reference_time=new_time)

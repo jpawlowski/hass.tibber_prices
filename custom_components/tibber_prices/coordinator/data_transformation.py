@@ -14,12 +14,12 @@ if TYPE_CHECKING:
 
     from homeassistant.config_entries import ConfigEntry
 
-    from .time_service import TimeService
+    from .time_service import TibberPricesTimeService
 
 _LOGGER = logging.getLogger(__name__)
 
 
-class DataTransformer:
+class TibberPricesDataTransformer:
     """Handles data transformation, enrichment, and period calculations."""
 
     def __init__(
@@ -27,13 +27,13 @@ class DataTransformer:
         config_entry: ConfigEntry,
         log_prefix: str,
         perform_turnover_fn: Callable[[dict[str, Any]], dict[str, Any]],
-        time: TimeService,
+        time: TibberPricesTimeService,
     ) -> None:
         """Initialize the data transformer."""
         self.config_entry = config_entry
         self._log_prefix = log_prefix
         self._perform_turnover_fn = perform_turnover_fn
-        self.time = time
+        self.time: TibberPricesTimeService = time
 
         # Transformation cache
         self._cached_transformed_data: dict[str, Any] | None = None

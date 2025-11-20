@@ -2,10 +2,10 @@
 
 from __future__ import annotations
 
-from .base import BaseCalculator
+from .base import TibberPricesBaseCalculator
 
 
-class MetadataCalculator(BaseCalculator):
+class TibberPricesMetadataCalculator(TibberPricesBaseCalculator):
     """
     Calculator for home metadata, metering point, and subscription data.
 

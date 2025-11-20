@@ -27,17 +27,17 @@ from .config_flow_handlers.subentry_flow import (
 )
 from .config_flow_handlers.user_flow import TibberPricesFlowHandler as ConfigFlow
 from .config_flow_handlers.validators import (
-    CannotConnectError,
-    InvalidAuthError,
+    TibberPricesCannotConnectError,
+    TibberPricesInvalidAuthError,
     validate_api_token,
 )
 
 __all__ = [
-    "CannotConnectError",
     "ConfigFlow",
-    "InvalidAuthError",
     "OptionsFlowHandler",
     "SubentryFlowHandler",
+    "TibberPricesCannotConnectError",
+    "TibberPricesInvalidAuthError",
     "get_best_price_schema",
     "get_options_init_schema",
     "get_peak_price_schema",

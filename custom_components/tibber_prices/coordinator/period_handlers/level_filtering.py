@@ -14,7 +14,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from .types import IntervalCriteria
+    from .types import TibberPricesIntervalCriteria
 
 from custom_components.tibber_prices.const import PRICE_LEVEL_MAPPING
 
@@ -104,7 +104,7 @@ def apply_level_filter(
 
 def check_interval_criteria(
     price: float,
-    criteria: IntervalCriteria,
+    criteria: TibberPricesIntervalCriteria,
 ) -> tuple[bool, bool]:
     """
     Check if interval meets flex and minimum distance criteria.

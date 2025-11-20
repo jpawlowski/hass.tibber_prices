@@ -16,7 +16,7 @@ if TYPE_CHECKING:
     from custom_components.tibber_prices.coordinator.core import (
         TibberPricesDataUpdateCoordinator,
     )
-    from custom_components.tibber_prices.coordinator.time_service import TimeService
+    from custom_components.tibber_prices.coordinator.time_service import TibberPricesTimeService
 
 from .metadata import get_current_interval_data
 
@@ -28,7 +28,7 @@ def add_current_interval_price_attributes(  # noqa: PLR0913
     native_value: Any,
     cached_data: dict,
     *,
-    time: TimeService,
+    time: TibberPricesTimeService,
 ) -> None:
     """
     Add attributes for current interval price sensors.
@@ -39,7 +39,7 @@ def add_current_interval_price_attributes(  # noqa: PLR0913
         coordinator: The data update coordinator
         native_value: The current native value of the sensor
         cached_data: Dictionary containing cached sensor data
-        time: TimeService instance (required)
+        time: TibberPricesTimeService instance (required)
 
     """
     price_info = coordinator.data.get("priceInfo", {}) if coordinator.data else {}
@@ -137,7 +137,7 @@ def add_level_attributes_for_sensor(  # noqa: PLR0913
     coordinator: TibberPricesDataUpdateCoordinator,
     native_value: Any,
     *,
-    time: TimeService,
+    time: TibberPricesTimeService,
 ) -> None:
     """
     Add price level attributes based on sensor type.
@@ -148,7 +148,7 @@ def add_level_attributes_for_sensor(  # noqa: PLR0913
         interval_data: Interval data for next/previous sensors
         coordinator: The data update coordinator
         native_value: The current native value of the sensor
-        time: TimeService instance (required)
+        time: TibberPricesTimeService instance (required)
 
     """
     # For interval-based level sensors (next/previous), use interval data
@@ -191,7 +191,7 @@ def add_rating_attributes_for_sensor(  # noqa: PLR0913
     coordinator: TibberPricesDataUpdateCoordinator,
     native_value: Any,
     *,
-    time: TimeService,
+    time: TibberPricesTimeService,
 ) -> None:
     """
     Add price rating attributes based on sensor type.
@@ -202,7 +202,7 @@ def add_rating_attributes_for_sensor(  # noqa: PLR0913
         interval_data: Interval data for next/previous sensors
         coordinator: The data update coordinator
         native_value: The current native value of the sensor
-        time: TimeService instance (required)
+        time: TibberPricesTimeService instance (required)
 
     """
     # For interval-based rating sensors (next/previous), use interval data

@@ -16,8 +16,8 @@ from custom_components.tibber_prices.config_flow_handlers.subentry_flow import (
     TibberPricesSubentryFlowHandler,
 )
 from custom_components.tibber_prices.config_flow_handlers.validators import (
-    CannotConnectError,
-    InvalidAuthError,
+    TibberPricesCannotConnectError,
+    TibberPricesInvalidAuthError,
     validate_api_token,
 )
 from custom_components.tibber_prices.const import DOMAIN, LOGGER
@@ -84,10 +84,10 @@ class TibberPricesFlowHandler(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             try:
                 viewer = await validate_api_token(self.hass, user_input[CONF_ACCESS_TOKEN])
-            except InvalidAuthError as exception:
+            except TibberPricesInvalidAuthError as exception:
                 LOGGER.warning(exception)
                 _errors["base"] = "auth"
-            except CannotConnectError as exception:
+            except TibberPricesCannotConnectError as exception:
                 LOGGER.error(exception)
                 _errors["base"] = "connection"
             else:
@@ -137,10 +137,10 @@ class TibberPricesFlowHandler(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             try:
                 viewer = await validate_api_token(self.hass, user_input[CONF_ACCESS_TOKEN])
-            except InvalidAuthError as exception:
+            except TibberPricesInvalidAuthError as exception:
                 LOGGER.warning(exception)
                 _errors["base"] = "auth"
-            except CannotConnectError as exception:
+            except TibberPricesCannotConnectError as exception:
                 LOGGER.error(exception)
                 _errors["base"] = "connection"
             else:

@@ -27,7 +27,7 @@ if TYPE_CHECKING:
     from custom_components.tibber_prices.coordinator import (
         TibberPricesDataUpdateCoordinator,
     )
-    from custom_components.tibber_prices.coordinator.time_service import TimeService
+    from custom_components.tibber_prices.coordinator.time_service import TibberPricesTimeService
 
 
 class TibberPricesBinarySensor(TibberPricesEntity, BinarySensorEntity):
@@ -65,12 +65,12 @@ class TibberPricesBinarySensor(TibberPricesEntity, BinarySensorEntity):
             self._time_sensitive_remove_listener = None
 
     @callback
-    def _handle_time_sensitive_update(self, time_service: TimeService) -> None:
+    def _handle_time_sensitive_update(self, time_service: TibberPricesTimeService) -> None:
         """
         Handle time-sensitive update from coordinator.
 
         Args:
-            time_service: TimeService instance with reference time for this update cycle
+            time_service: TibberPricesTimeService instance with reference time for this update cycle
 
         """
         # Store TimeService from Timer #2 for calculations during this update cycle

@@ -7,7 +7,7 @@ from typing import TYPE_CHECKING
 from custom_components.tibber_prices.entity_utils import add_icon_color_attribute
 
 if TYPE_CHECKING:
-    from custom_components.tibber_prices.coordinator.time_service import TimeService
+    from custom_components.tibber_prices.coordinator.time_service import TibberPricesTimeService
 
 if TYPE_CHECKING:
     from datetime import datetime
@@ -19,14 +19,14 @@ if TYPE_CHECKING:
 def get_tomorrow_data_available_attributes(
     coordinator_data: dict,
     *,
-    time: TimeService,
+    time: TibberPricesTimeService,
 ) -> dict | None:
     """
     Build attributes for tomorrow_data_available sensor.
 
     Args:
         coordinator_data: Coordinator data dict
-        time: TimeService instance
+        time: TibberPricesTimeService instance
 
     Returns:
         Attributes dict with intervals_available and data_status
@@ -59,7 +59,7 @@ def get_tomorrow_data_available_attributes(
 def get_price_intervals_attributes(
     coordinator_data: dict,
     *,
-    time: TimeService,
+    time: TibberPricesTimeService,
     reverse_sort: bool,
 ) -> dict | None:
     """
@@ -72,7 +72,7 @@ def get_price_intervals_attributes(
 
     Args:
         coordinator_data: Coordinator data dict
-        time: TimeService instance (required)
+        time: TibberPricesTimeService instance (required)
         reverse_sort: True for peak_price (highest first), False for best_price (lowest first)
 
     Returns:
@@ -117,7 +117,7 @@ def get_price_intervals_attributes(
     return build_final_attributes_simple(current_period, period_summaries, time=time)
 
 
-def build_no_periods_result(*, time: TimeService) -> dict:
+def build_no_periods_result(*, time: TibberPricesTimeService) -> dict:
     """
     Build result when no periods exist (not filtered, just none available).
 
@@ -214,7 +214,7 @@ def build_final_attributes_simple(
     current_period: dict | None,
     period_summaries: list[dict],
     *,
-    time: TimeService,
+    time: TibberPricesTimeService,
 ) -> dict:
     """
     Build the final attributes dictionary from coordinator's period summaries.
@@ -237,7 +237,7 @@ def build_final_attributes_simple(
     Args:
         current_period: The current or next period (already complete from coordinator)
         period_summaries: All period summaries from coordinator
-        time: TimeService instance (required)
+        time: TibberPricesTimeService instance (required)
 
     Returns:
         Complete attributes dict with all fields
@@ -286,7 +286,7 @@ async def build_async_extra_state_attributes(  # noqa: PLR0913
     translation_key: str | None,
     hass: HomeAssistant,
     *,
-    time: TimeService,
+    time: TibberPricesTimeService,
     config_entry: TibberPricesConfigEntry,
     sensor_attrs: dict | None = None,
     is_on: bool | None = None,
@@ -300,7 +300,7 @@ async def build_async_extra_state_attributes(  # noqa: PLR0913
         entity_key: Entity key (e.g., "best_price_period")
         translation_key: Translation key for entity
         hass: Home Assistant instance
-        time: TimeService instance (required)
+        time: TibberPricesTimeService instance (required)
         config_entry: Config entry with options (keyword-only)
         sensor_attrs: Sensor-specific attributes (keyword-only)
         is_on: Binary sensor state (keyword-only)
@@ -349,7 +349,7 @@ def build_sync_extra_state_attributes(  # noqa: PLR0913
     translation_key: str | None,
     hass: HomeAssistant,
     *,
-    time: TimeService,
+    time: TibberPricesTimeService,
     config_entry: TibberPricesConfigEntry,
     sensor_attrs: dict | None = None,
     is_on: bool | None = None,
@@ -363,7 +363,7 @@ def build_sync_extra_state_attributes(  # noqa: PLR0913
         entity_key: Entity key (e.g., "best_price_period")
         translation_key: Translation key for entity
         hass: Home Assistant instance
-        time: TimeService instance (required)
+        time: TibberPricesTimeService instance (required)
         config_entry: Config entry with options (keyword-only)
         sensor_attrs: Sensor-specific attributes (keyword-only)
         is_on: Binary sensor state (keyword-only)

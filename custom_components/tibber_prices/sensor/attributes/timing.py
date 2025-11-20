@@ -7,7 +7,7 @@ from typing import TYPE_CHECKING, Any
 from custom_components.tibber_prices.entity_utils import add_icon_color_attribute
 
 if TYPE_CHECKING:
-    from custom_components.tibber_prices.coordinator.time_service import TimeService
+    from custom_components.tibber_prices.coordinator.time_service import TibberPricesTimeService
 
 # Timer #3 triggers every 30 seconds
 TIMER_30_SEC_BOUNDARY = 30
@@ -35,7 +35,7 @@ def add_period_timing_attributes(
     key: str,
     state_value: Any = None,
     *,
-    time: TimeService,
+    time: TibberPricesTimeService,
 ) -> None:
     """
     Add timestamp and icon_color attributes for best_price/peak_price timing sensors.
@@ -48,7 +48,7 @@ def add_period_timing_attributes(
         attributes: Dictionary to add attributes to
         key: The sensor entity key (e.g., "best_price_end_time")
         state_value: Current sensor value for icon_color calculation
-        time: TimeService instance (required)
+        time: TibberPricesTimeService instance (required)
 
     """
     # Determine if this is a quarter-hour or 30-second update sensor

@@ -15,7 +15,7 @@ Uses statistical methods:
 from __future__ import annotations
 
 import logging
-from dataclasses import dataclass
+from typing import NamedTuple
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -32,8 +32,7 @@ ZIGZAG_TAIL_WINDOW = 6  # Skip zigzag/cluster detection for last ~1.5h (6 interv
 INDENT_L0 = ""  # All logs in this module (no indentation needed)
 
 
-@dataclass(slots=True)
-class SpikeCandidateContext:
+class TibberPricesSpikeCandidateContext(NamedTuple):
     """Container for spike validation parameters."""
 
     current: dict
@@ -183,7 +182,7 @@ def _detect_zigzag_pattern(window: list[dict], context_std_dev: float) -> bool:
 
 
 def _validate_spike_candidate(
-    candidate: SpikeCandidateContext,
+    candidate: TibberPricesSpikeCandidateContext,
 ) -> bool:
     """Run stability, symmetry, and zigzag checks before smoothing."""
     avg_before = sum(x["total"] for x in candidate.context_before) / len(candidate.context_before)
@@ -308,7 +307,7 @@ def filter_price_outliers(
         # SPIKE CANDIDATE DETECTED - Now validate
         remaining_intervals = len(intervals) - (i + 1)
         analysis_window = [*context_before[-2:], current, *context_after[:2]]
-        candidate_context = SpikeCandidateContext(
+        candidate_context = TibberPricesSpikeCandidateContext(
             current=current,
             context_before=context_before,
             context_after=context_after,

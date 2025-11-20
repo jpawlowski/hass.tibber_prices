@@ -13,10 +13,10 @@ from typing import TYPE_CHECKING, Any
 from custom_components.tibber_prices import const as _const
 
 if TYPE_CHECKING:
-    from custom_components.tibber_prices.coordinator.time_service import TimeService
+    from custom_components.tibber_prices.coordinator.time_service import TibberPricesTimeService
 
 from .period_handlers import (
-    PeriodConfig,
+    TibberPricesPeriodConfig,
     calculate_periods_with_relaxation,
 )
 
@@ -26,7 +26,7 @@ if TYPE_CHECKING:
 _LOGGER = logging.getLogger(__name__)
 
 
-class PeriodCalculator:
+class TibberPricesPeriodCalculator:
     """Handles period calculations with level filtering and gap tolerance."""
 
     def __init__(
@@ -37,7 +37,7 @@ class PeriodCalculator:
         """Initialize the period calculator."""
         self.config_entry = config_entry
         self._log_prefix = log_prefix
-        self.time: TimeService  # Set by coordinator before first use
+        self.time: TibberPricesTimeService  # Set by coordinator before first use
         self._config_cache: dict[str, dict[str, Any]] | None = None
         self._config_cache_valid = False
 
@@ -602,7 +602,7 @@ class PeriodCalculator:
                 _const.CONF_BEST_PRICE_MAX_LEVEL_GAP_COUNT,
                 _const.DEFAULT_BEST_PRICE_MAX_LEVEL_GAP_COUNT,
             )
-            best_period_config = PeriodConfig(
+            best_period_config = TibberPricesPeriodConfig(
                 reverse_sort=False,
                 flex=best_config["flex"],
                 min_distance_from_avg=best_config["min_distance_from_avg"],
@@ -670,7 +670,7 @@ class PeriodCalculator:
                 _const.CONF_PEAK_PRICE_MAX_LEVEL_GAP_COUNT,
                 _const.DEFAULT_PEAK_PRICE_MAX_LEVEL_GAP_COUNT,
             )
-            peak_period_config = PeriodConfig(
+            peak_period_config = TibberPricesPeriodConfig(
                 reverse_sort=True,
                 flex=peak_config["flex"],
                 min_distance_from_avg=peak_config["min_distance_from_avg"],

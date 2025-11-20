@@ -6,7 +6,7 @@ import logging
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from custom_components.tibber_prices.coordinator.time_service import TimeService
+    from custom_components.tibber_prices.coordinator.time_service import TibberPricesTimeService
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -16,7 +16,7 @@ INDENT_L1 = "  "  # Nested logic / loop iterations
 INDENT_L2 = "    "  # Deeper nesting
 
 
-def recalculate_period_metadata(periods: list[dict], *, time: TimeService) -> None:
+def recalculate_period_metadata(periods: list[dict], *, time: TibberPricesTimeService) -> None:
     """
     Recalculate period metadata after merging periods.
 
@@ -28,7 +28,7 @@ def recalculate_period_metadata(periods: list[dict], *, time: TimeService) -> No
 
     Args:
         periods: List of period summary dicts (mutated in-place)
-        time: TimeService instance (required)
+        time: TibberPricesTimeService instance (required)
 
     """
     if not periods:

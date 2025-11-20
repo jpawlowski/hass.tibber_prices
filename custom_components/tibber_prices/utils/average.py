@@ -6,7 +6,7 @@ from datetime import datetime, timedelta
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from custom_components.tibber_prices.coordinator.time_service import TimeService
+    from custom_components.tibber_prices.coordinator.time_service import TibberPricesTimeService
 
 
 def calculate_trailing_24h_avg(all_prices: list[dict], interval_start: datetime) -> float:
@@ -16,7 +16,7 @@ def calculate_trailing_24h_avg(all_prices: list[dict], interval_start: datetime)
     Args:
         all_prices: List of all price data (yesterday, today, tomorrow combined)
         interval_start: Start time of the interval to calculate average for
-        time: TimeService instance (required)
+        time: TibberPricesTimeService instance (required)
 
     Returns:
         Average price for the 24 hours preceding the interval (not including the interval itself)
@@ -49,7 +49,7 @@ def calculate_leading_24h_avg(all_prices: list[dict], interval_start: datetime) 
     Args:
         all_prices: List of all price data (yesterday, today, tomorrow combined)
         interval_start: Start time of the interval to calculate average for
-        time: TimeService instance (required)
+        time: TibberPricesTimeService instance (required)
 
     Returns:
         Average price for up to 24 hours following the interval (including the interval itself)
@@ -78,14 +78,14 @@ def calculate_leading_24h_avg(all_prices: list[dict], interval_start: datetime) 
 def calculate_current_trailing_avg(
     coordinator_data: dict,
     *,
-    time: TimeService,
+    time: TibberPricesTimeService,
 ) -> float | None:
     """
     Calculate the trailing 24-hour average for the current time.
 
     Args:
         coordinator_data: The coordinator data containing priceInfo
-        time: TimeService instance (required)
+        time: TibberPricesTimeService instance (required)
 
     Returns:
         Current trailing 24-hour average price, or None if unavailable
@@ -110,14 +110,14 @@ def calculate_current_trailing_avg(
 def calculate_current_leading_avg(
     coordinator_data: dict,
     *,
-    time: TimeService,
+    time: TibberPricesTimeService,
 ) -> float | None:
     """
     Calculate the leading 24-hour average for the current time.
 
     Args:
         coordinator_data: The coordinator data containing priceInfo
-        time: TimeService instance (required)
+        time: TibberPricesTimeService instance (required)
 
     Returns:
         Current leading 24-hour average price, or None if unavailable
@@ -143,7 +143,7 @@ def calculate_trailing_24h_min(
     all_prices: list[dict],
     interval_start: datetime,
     *,
-    time: TimeService,
+    time: TibberPricesTimeService,
 ) -> float:
     """
     Calculate trailing 24-hour minimum price for a given interval.
@@ -151,7 +151,7 @@ def calculate_trailing_24h_min(
     Args:
         all_prices: List of all price data (yesterday, today, tomorrow combined)
         interval_start: Start time of the interval to calculate minimum for
-        time: TimeService instance (required)
+        time: TibberPricesTimeService instance (required)
 
     Returns:
         Minimum price for the 24 hours preceding the interval (not including the interval itself)
@@ -181,7 +181,7 @@ def calculate_trailing_24h_max(
     all_prices: list[dict],
     interval_start: datetime,
     *,
-    time: TimeService,
+    time: TibberPricesTimeService,
 ) -> float:
     """
     Calculate trailing 24-hour maximum price for a given interval.
@@ -189,7 +189,7 @@ def calculate_trailing_24h_max(
     Args:
         all_prices: List of all price data (yesterday, today, tomorrow combined)
         interval_start: Start time of the interval to calculate maximum for
-        time: TimeService instance (required)
+        time: TibberPricesTimeService instance (required)
 
     Returns:
         Maximum price for the 24 hours preceding the interval (not including the interval itself)
@@ -219,7 +219,7 @@ def calculate_leading_24h_min(
     all_prices: list[dict],
     interval_start: datetime,
     *,
-    time: TimeService,
+    time: TibberPricesTimeService,
 ) -> float:
     """
     Calculate leading 24-hour minimum price for a given interval.
@@ -227,7 +227,7 @@ def calculate_leading_24h_min(
     Args:
         all_prices: List of all price data (yesterday, today, tomorrow combined)
         interval_start: Start time of the interval to calculate minimum for
-        time: TimeService instance (required)
+        time: TibberPricesTimeService instance (required)
 
     Returns:
         Minimum price for up to 24 hours following the interval (including the interval itself)
@@ -257,7 +257,7 @@ def calculate_leading_24h_max(
     all_prices: list[dict],
     interval_start: datetime,
     *,
-    time: TimeService,
+    time: TibberPricesTimeService,
 ) -> float:
     """
     Calculate leading 24-hour maximum price for a given interval.
@@ -265,7 +265,7 @@ def calculate_leading_24h_max(
     Args:
         all_prices: List of all price data (yesterday, today, tomorrow combined)
         interval_start: Start time of the interval to calculate maximum for
-        time: TimeService instance (required)
+        time: TibberPricesTimeService instance (required)
 
     Returns:
         Maximum price for up to 24 hours following the interval (including the interval itself)
@@ -294,14 +294,14 @@ def calculate_leading_24h_max(
 def calculate_current_trailing_min(
     coordinator_data: dict,
     *,
-    time: TimeService,
+    time: TibberPricesTimeService,
 ) -> float | None:
     """
     Calculate the trailing 24-hour minimum for the current time.
 
     Args:
         coordinator_data: The coordinator data containing priceInfo
-        time: TimeService instance (required)
+        time: TibberPricesTimeService instance (required)
 
     Returns:
         Current trailing 24-hour minimum price, or None if unavailable
@@ -326,14 +326,14 @@ def calculate_current_trailing_min(
 def calculate_current_trailing_max(
     coordinator_data: dict,
     *,
-    time: TimeService,
+    time: TibberPricesTimeService,
 ) -> float | None:
     """
     Calculate the trailing 24-hour maximum for the current time.
 
     Args:
         coordinator_data: The coordinator data containing priceInfo
-        time: TimeService instance (required)
+        time: TibberPricesTimeService instance (required)
 
     Returns:
         Current trailing 24-hour maximum price, or None if unavailable
@@ -358,14 +358,14 @@ def calculate_current_trailing_max(
 def calculate_current_leading_min(
     coordinator_data: dict,
     *,
-    time: TimeService,
+    time: TibberPricesTimeService,
 ) -> float | None:
     """
     Calculate the leading 24-hour minimum for the current time.
 
     Args:
         coordinator_data: The coordinator data containing priceInfo
-        time: TimeService instance (required)
+        time: TibberPricesTimeService instance (required)
 
     Returns:
         Current leading 24-hour minimum price, or None if unavailable
@@ -390,14 +390,14 @@ def calculate_current_leading_min(
 def calculate_current_leading_max(
     coordinator_data: dict,
     *,
-    time: TimeService,
+    time: TibberPricesTimeService,
 ) -> float | None:
     """
     Calculate the leading 24-hour maximum for the current time.
 
     Args:
         coordinator_data: The coordinator data containing priceInfo
-        time: TimeService instance (required)
+        time: TibberPricesTimeService instance (required)
 
     Returns:
         Current leading 24-hour maximum price, or None if unavailable
@@ -423,7 +423,7 @@ def calculate_next_n_hours_avg(
     coordinator_data: dict,
     hours: int,
     *,
-    time: TimeService,
+    time: TibberPricesTimeService,
 ) -> float | None:
     """
     Calculate average price for the next N hours starting from the next interval.
@@ -434,7 +434,7 @@ def calculate_next_n_hours_avg(
     Args:
         coordinator_data: The coordinator data containing priceInfo
         hours: Number of hours to look ahead (1, 2, 3, 4, 5, 6, 8, 12, etc.)
-        time: TimeService instance (required)
+        time: TibberPricesTimeService instance (required)
 
     Returns:
         Average price for the next N hours, or None if insufficient data

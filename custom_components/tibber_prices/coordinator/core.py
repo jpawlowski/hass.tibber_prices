@@ -17,6 +17,8 @@ if TYPE_CHECKING:
 
     from homeassistant.config_entries import ConfigEntry
 
+    from .listeners import TimeServiceCallback
+
 from custom_components.tibber_prices import const as _const
 from custom_components.tibber_prices.api import (
     TibberPricesApiClient,
@@ -34,11 +36,11 @@ from .constants import (
     STORAGE_VERSION,
     UPDATE_INTERVAL,
 )
-from .data_fetching import DataFetcher
-from .data_transformation import DataTransformer
-from .listeners import ListenerManager
-from .periods import PeriodCalculator
-from .time_service import TimeService
+from .data_fetching import TibberPricesDataFetcher
+from .data_transformation import TibberPricesDataTransformer
+from .listeners import TibberPricesListenerManager
+from .periods import TibberPricesPeriodCalculator
+from .time_service import TibberPricesTimeService
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -134,28 +136,28 @@ class TibberPricesDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         # Track if this is the main entry (first one created)
         self._is_main_entry = not self._has_existing_main_coordinator()
 
-        # Initialize time service (single source of truth for datetime operations)
-        self.time = TimeService()
+        # Initialize time service (single source of truth for all time operations)
+        self.time = TibberPricesTimeService()
 
         # Set time on API client (needed for rate limiting)
         self.api.time = self.time
 
         # Initialize helper modules
-        self._listener_manager = ListenerManager(hass, self._log_prefix)
-        self._data_fetcher = DataFetcher(
+        self._listener_manager = TibberPricesListenerManager(hass, self._log_prefix)
+        self._data_fetcher = TibberPricesDataFetcher(
             api=self.api,
             store=self._store,
             log_prefix=self._log_prefix,
             user_update_interval=timedelta(days=1),
             time=self.time,
         )
-        self._data_transformer = DataTransformer(
+        self._data_transformer = TibberPricesDataTransformer(
             config_entry=config_entry,
             log_prefix=self._log_prefix,
             perform_turnover_fn=self._perform_midnight_turnover,
             time=self.time,
         )
-        self._period_calculator = PeriodCalculator(
+        self._period_calculator = TibberPricesPeriodCalculator(
             config_entry=config_entry,
             log_prefix=self._log_prefix,
         )
@@ -191,7 +193,7 @@ class TibberPricesDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         await self.async_request_refresh()
 
     @callback
-    def async_add_time_sensitive_listener(self, update_callback: CALLBACK_TYPE) -> CALLBACK_TYPE:
+    def async_add_time_sensitive_listener(self, update_callback: TimeServiceCallback) -> CALLBACK_TYPE:
         """
         Listen for time-sensitive updates that occur every quarter-hour.
 
@@ -205,18 +207,18 @@ class TibberPricesDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         return self._listener_manager.async_add_time_sensitive_listener(update_callback)
 
     @callback
-    def _async_update_time_sensitive_listeners(self, time_service: TimeService) -> None:
+    def _async_update_time_sensitive_listeners(self, time_service: TibberPricesTimeService) -> None:
         """
         Update all time-sensitive entities without triggering a full coordinator update.
 
         Args:
-            time_service: TimeService instance with reference time for this update cycle
+            time_service: TibberPricesTimeService instance with reference time for this update cycle
 
         """
         self._listener_manager.async_update_time_sensitive_listeners(time_service)
 
     @callback
-    def async_add_minute_update_listener(self, update_callback: CALLBACK_TYPE) -> CALLBACK_TYPE:
+    def async_add_minute_update_listener(self, update_callback: TimeServiceCallback) -> CALLBACK_TYPE:
         """
         Listen for minute-by-minute updates for timing sensors.
 
@@ -230,12 +232,12 @@ class TibberPricesDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         return self._listener_manager.async_add_minute_update_listener(update_callback)
 
     @callback
-    def _async_update_minute_listeners(self, time_service: TimeService) -> None:
+    def _async_update_minute_listeners(self, time_service: TibberPricesTimeService) -> None:
         """
         Update all minute-update entities without triggering a full coordinator update.
 
         Args:
-            time_service: TimeService instance with reference time for this update cycle
+            time_service: TibberPricesTimeService instance with reference time for this update cycle
 
         """
         self._listener_manager.async_update_minute_listeners(time_service)
@@ -259,7 +261,7 @@ class TibberPricesDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         # Each timer has its own TimeService instance - no shared state between timers
         # This timer updates 30+ time-sensitive entities at quarter-hour boundaries
         # (Timer #3 handles timing entities separately - no overlap)
-        time_service = TimeService()
+        time_service = TibberPricesTimeService()
         now = time_service.now()
 
         # Update shared coordinator time (used by Timer #1 and other operations)
@@ -311,7 +313,7 @@ class TibberPricesDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         # Timer #2 updates 30+ time-sensitive entities (prices, levels, timestamps)
         # Timer #3 updates 6 timing entities (remaining_minutes, progress, next_in_minutes)
         # NO overlap - entities are registered with either Timer #2 OR Timer #3, never both
-        time_service = TimeService()
+        time_service = TibberPricesTimeService()
 
         # Only log at debug level to avoid log spam (this runs every 30 seconds)
         self._log("debug", "[Timer #3] 30-second refresh for timing sensors")
@@ -447,7 +449,7 @@ class TibberPricesDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         self._log("debug", "[Timer #1] DataUpdateCoordinator check triggered")
 
         # Create TimeService with fresh reference time for this update cycle
-        self.time = TimeService()
+        self.time = TibberPricesTimeService()
         current_time = self.time.now()
 
         # Update helper modules with fresh TimeService instance

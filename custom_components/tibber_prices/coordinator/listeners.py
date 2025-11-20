@@ -11,16 +11,20 @@ from homeassistant.helpers.event import async_track_utc_time_change
 from .constants import QUARTER_HOUR_BOUNDARIES
 
 if TYPE_CHECKING:
+    from collections.abc import Callable
     from datetime import datetime
 
     from homeassistant.core import HomeAssistant
 
-    from .time_service import TimeService
+    from .time_service import TibberPricesTimeService
+
+    # Callback type that accepts TibberPricesTimeService parameter
+    TimeServiceCallback = Callable[[TibberPricesTimeService], None]
 
 _LOGGER = logging.getLogger(__name__)
 
 
-class ListenerManager:
+class TibberPricesListenerManager:
     """Manages listeners and scheduling for coordinator updates."""
 
     def __init__(self, hass: HomeAssistant, log_prefix: str) -> None:
@@ -29,8 +33,8 @@ class ListenerManager:
         self._log_prefix = log_prefix
 
         # Listener lists
-        self._time_sensitive_listeners: list[CALLBACK_TYPE] = []
-        self._minute_update_listeners: list[CALLBACK_TYPE] = []
+        self._time_sensitive_listeners: list[TimeServiceCallback] = []
+        self._minute_update_listeners: list[TimeServiceCallback] = []
 
         # Timer cancellation callbacks
         self._quarter_hour_timer_cancel: CALLBACK_TYPE | None = None
@@ -45,7 +49,7 @@ class ListenerManager:
         getattr(_LOGGER, level)(prefixed_message, *args, **kwargs)
 
     @callback
-    def async_add_time_sensitive_listener(self, update_callback: CALLBACK_TYPE) -> CALLBACK_TYPE:
+    def async_add_time_sensitive_listener(self, update_callback: TimeServiceCallback) -> CALLBACK_TYPE:
         """
         Listen for time-sensitive updates that occur every quarter-hour.
 
@@ -66,12 +70,12 @@ class ListenerManager:
         return remove_listener
 
     @callback
-    def async_update_time_sensitive_listeners(self, time_service: TimeService) -> None:
+    def async_update_time_sensitive_listeners(self, time_service: TibberPricesTimeService) -> None:
         """
         Update all time-sensitive entities without triggering a full coordinator update.
 
         Args:
-            time_service: TimeService instance with reference time for this update cycle
+            time_service: TibberPricesTimeService instance with reference time for this update cycle
 
         """
         for update_callback in self._time_sensitive_listeners:
@@ -84,7 +88,7 @@ class ListenerManager:
         )
 
     @callback
-    def async_add_minute_update_listener(self, update_callback: CALLBACK_TYPE) -> CALLBACK_TYPE:
+    def async_add_minute_update_listener(self, update_callback: TimeServiceCallback) -> CALLBACK_TYPE:
         """
         Listen for minute-by-minute updates for timing sensors.
 
@@ -105,12 +109,12 @@ class ListenerManager:
         return remove_listener
 
     @callback
-    def async_update_minute_listeners(self, time_service: TimeService) -> None:
+    def async_update_minute_listeners(self, time_service: TibberPricesTimeService) -> None:
         """
         Update all minute-update entities without triggering a full coordinator update.
 
         Args:
-            time_service: TimeService instance with reference time for this update cycle
+            time_service: TibberPricesTimeService instance with reference time for this update cycle
 
         """
         for update_callback in self._minute_update_listeners:
@@ -124,7 +128,7 @@ class ListenerManager:
 
     def schedule_quarter_hour_refresh(
         self,
-        handler_callback: CALLBACK_TYPE,
+        handler_callback: Callable[[datetime], None],
     ) -> None:
         """Schedule the next quarter-hour entity refresh using Home Assistant's time tracking."""
         # Cancel any existing timer
@@ -151,7 +155,7 @@ class ListenerManager:
 
     def schedule_minute_refresh(
         self,
-        handler_callback: CALLBACK_TYPE,
+        handler_callback: Callable[[datetime], None],
     ) -> None:
         """Schedule 30-second entity refresh for timing sensors."""
         # Cancel any existing timer

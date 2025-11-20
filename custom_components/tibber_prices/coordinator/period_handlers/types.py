@@ -24,7 +24,7 @@ INDENT_L4 = "        "  # Period-by-period analysis
 INDENT_L5 = "          "  # Segment details
 
 
-class PeriodConfig(NamedTuple):
+class TibberPricesPeriodConfig(NamedTuple):
     """Configuration for period calculation."""
 
     reverse_sort: bool
@@ -40,7 +40,7 @@ class PeriodConfig(NamedTuple):
     gap_count: int = 0  # Number of allowed consecutive deviating intervals
 
 
-class PeriodData(NamedTuple):
+class TibberPricesPeriodData(NamedTuple):
     """Data for building a period summary."""
 
     start_time: datetime
@@ -50,7 +50,7 @@ class PeriodData(NamedTuple):
     total_periods: int
 
 
-class PeriodStatistics(NamedTuple):
+class TibberPricesPeriodStatistics(NamedTuple):
     """Calculated statistics for a period."""
 
     aggregated_level: str | None
@@ -65,7 +65,7 @@ class PeriodStatistics(NamedTuple):
     period_price_diff_pct: float | None
 
 
-class ThresholdConfig(NamedTuple):
+class TibberPricesThresholdConfig(NamedTuple):
     """Threshold configuration for period calculations."""
 
     threshold_low: float | None
@@ -76,7 +76,7 @@ class ThresholdConfig(NamedTuple):
     reverse_sort: bool
 
 
-class IntervalCriteria(NamedTuple):
+class TibberPricesIntervalCriteria(NamedTuple):
     """Criteria for checking if an interval qualifies for a period."""
 
     ref_price: float

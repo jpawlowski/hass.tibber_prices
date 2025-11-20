@@ -15,10 +15,10 @@ from custom_components.tibber_prices.sensor.helpers import (
     aggregate_rating_data,
 )
 
-from .base import BaseCalculator
+from .base import TibberPricesBaseCalculator
 
 
-class RollingHourCalculator(BaseCalculator):
+class TibberPricesRollingHourCalculator(TibberPricesBaseCalculator):
     """
     Calculator for rolling hour values (5-interval windows).
 
@@ -75,9 +75,9 @@ class RollingHourCalculator(BaseCalculator):
         if not window_data:
             return None
 
-        return self._aggregate_window_data(window_data, value_type)
+        return self.aggregate_window_data(window_data, value_type)
 
-    def _aggregate_window_data(
+    def aggregate_window_data(
         self,
         window_data: list[dict],
         value_type: str,

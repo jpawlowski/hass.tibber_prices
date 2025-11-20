@@ -8,11 +8,13 @@ from custom_components.tibber_prices.const import PRICE_RATING_MAPPING
 from homeassistant.const import PERCENTAGE
 
 if TYPE_CHECKING:
-    from custom_components.tibber_prices.coordinator.time_service import TimeService
+    from datetime import datetime
+
+    from custom_components.tibber_prices.coordinator.time_service import TibberPricesTimeService
 
 
-def _get_day_midnight_timestamp(key: str, *, time: TimeService) -> str:
-    """Get midnight timestamp for a given day sensor key."""
+def _get_day_midnight_timestamp(key: str, *, time: TibberPricesTimeService) -> datetime:
+    """Get midnight timestamp for a given day sensor key (returns datetime object)."""
     # Determine which day based on sensor key
     if key.startswith("yesterday") or key == "average_price_yesterday":
         day = "yesterday"
@@ -65,7 +67,7 @@ def add_statistics_attributes(
     key: str,
     cached_data: dict,
     *,
-    time: TimeService,
+    time: TibberPricesTimeService,
 ) -> None:
     """
     Add attributes for statistics and rating sensors.
@@ -74,7 +76,7 @@ def add_statistics_attributes(
         attributes: Dictionary to add attributes to
         key: The sensor entity key
         cached_data: Dictionary containing cached sensor data
-        time: TimeService instance (required)
+        time: TibberPricesTimeService instance (required)
 
     """
     # Data timestamp sensor - shows API fetch time

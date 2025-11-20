@@ -21,7 +21,7 @@ from custom_components.tibber_prices.utils.price import (
     find_price_data_for_interval,
 )
 
-from .base import BaseCalculator
+from .base import TibberPricesBaseCalculator
 
 if TYPE_CHECKING:
     from custom_components.tibber_prices.coordinator import (
@@ -32,7 +32,7 @@ if TYPE_CHECKING:
 MIN_HOURS_FOR_LATER_HALF = 3  # Minimum hours needed to calculate later half average
 
 
-class TrendCalculator(BaseCalculator):
+class TibberPricesTrendCalculator(TibberPricesBaseCalculator):
     """
     Calculator for price trend sensors.
 

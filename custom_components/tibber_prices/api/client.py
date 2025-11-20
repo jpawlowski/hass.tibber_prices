@@ -24,10 +24,10 @@ from .helpers import (
     verify_graphql_response,
     verify_response_or_raise,
 )
-from .queries import QueryType
+from .queries import TibberPricesQueryType
 
 if TYPE_CHECKING:
-    from custom_components.tibber_prices.coordinator.time_service import TimeService
+    from custom_components.tibber_prices.coordinator.time_service import TibberPricesTimeService
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -46,7 +46,7 @@ class TibberPricesApiClient:
         self._session = session
         self._version = version
         self._request_semaphore = asyncio.Semaphore(2)  # Max 2 concurrent requests
-        self.time: TimeService | None = None  # Set externally by coordinator
+        self.time: TibberPricesTimeService  # Set externally by coordinator (always initialized before use)
         self._last_request_time = None  # Set on first request
         self._min_request_interval = timedelta(seconds=1)  # Min 1 second between requests
         self._max_retries = 5
@@ -130,7 +130,7 @@ class TibberPricesApiClient:
                     }
                 """
             },
-            query_type=QueryType.USER,
+            query_type=TibberPricesQueryType.USER,
         )
 
     async def async_get_price_info(self, home_ids: set[str]) -> dict:
@@ -183,7 +183,7 @@ class TibberPricesApiClient:
 
         data = await self._api_wrapper(
             data={"query": query},
-            query_type=QueryType.PRICE_INFO,
+            query_type=TibberPricesQueryType.PRICE_INFO,
         )
 
         # Parse aliased response
@@ -234,7 +234,7 @@ class TibberPricesApiClient:
                         }
                     }}}}}"""
             },
-            query_type=QueryType.DAILY_RATING,
+            query_type=TibberPricesQueryType.DAILY_RATING,
         )
         homes = data.get("viewer", {}).get("homes", [])
 
@@ -266,7 +266,7 @@ class TibberPricesApiClient:
                         }
                     }}}}}"""
             },
-            query_type=QueryType.HOURLY_RATING,
+            query_type=TibberPricesQueryType.HOURLY_RATING,
         )
         homes = data.get("viewer", {}).get("homes", [])
 
@@ -298,7 +298,7 @@ class TibberPricesApiClient:
                         }
                     }}}}}"""
             },
-            query_type=QueryType.MONTHLY_RATING,
+            query_type=TibberPricesQueryType.MONTHLY_RATING,
         )
         homes = data.get("viewer", {}).get("homes", [])
 
@@ -322,7 +322,7 @@ class TibberPricesApiClient:
         self,
         headers: dict[str, str],
         data: dict,
-        query_type: QueryType,
+        query_type: TibberPricesQueryType,
     ) -> dict[str, Any]:
         """Make an API request with comprehensive error handling for network issues."""
         _LOGGER.debug("Making API request with data: %s", data)
@@ -443,7 +443,7 @@ class TibberPricesApiClient:
         self,
         headers: dict[str, str],
         data: dict,
-        query_type: QueryType,
+        query_type: TibberPricesQueryType,
     ) -> Any:
         """Handle a single API request with rate limiting."""
         async with self._request_semaphore:
@@ -547,7 +547,7 @@ class TibberPricesApiClient:
         self,
         data: dict | None = None,
         headers: dict | None = None,
-        query_type: QueryType = QueryType.USER,
+        query_type: TibberPricesQueryType = TibberPricesQueryType.USER,
     ) -> Any:
         """Get information from the API with rate limiting and retry logic."""
         headers = headers or prepare_headers(self._access_token, self._version)

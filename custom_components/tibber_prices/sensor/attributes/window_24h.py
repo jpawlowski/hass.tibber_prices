@@ -8,7 +8,7 @@ if TYPE_CHECKING:
     from custom_components.tibber_prices.coordinator.core import (
         TibberPricesDataUpdateCoordinator,
     )
-    from custom_components.tibber_prices.coordinator.time_service import TimeService
+    from custom_components.tibber_prices.coordinator.time_service import TibberPricesTimeService
 
 
 def _update_extreme_interval(extreme_interval: dict | None, price_data: dict, key: str) -> dict:
@@ -43,7 +43,7 @@ def add_average_price_attributes(
     key: str,
     coordinator: TibberPricesDataUpdateCoordinator,
     *,
-    time: TimeService,
+    time: TibberPricesTimeService,
 ) -> None:
     """
     Add attributes for trailing and leading average/min/max price sensors.
@@ -52,7 +52,7 @@ def add_average_price_attributes(
         attributes: Dictionary to add attributes to
         key: The sensor entity key
         coordinator: The data update coordinator
-        time: TimeService instance (required)
+        time: TibberPricesTimeService instance (required)
 
     """
     # Determine if this is trailing or leading

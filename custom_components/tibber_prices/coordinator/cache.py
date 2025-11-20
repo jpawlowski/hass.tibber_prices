@@ -10,12 +10,12 @@ if TYPE_CHECKING:
 
     from homeassistant.helpers.storage import Store
 
-    from .time_service import TimeService
+    from .time_service import TibberPricesTimeService
 
 _LOGGER = logging.getLogger(__name__)
 
 
-class CacheData(NamedTuple):
+class TibberPricesCacheData(NamedTuple):
     """Cache data structure."""
 
     price_data: dict[str, Any] | None
@@ -29,8 +29,8 @@ async def load_cache(
     store: Store,
     log_prefix: str,
     *,
-    time: TimeService,
-) -> CacheData:
+    time: TibberPricesTimeService,
+) -> TibberPricesCacheData:
     """Load cached data from storage."""
     try:
         stored = await store.async_load()
@@ -51,7 +51,7 @@ async def load_cache(
                 last_midnight_check = time.parse_datetime(last_midnight_check_str)
 
             _LOGGER.debug("%s Cache loaded successfully", log_prefix)
-            return CacheData(
+            return TibberPricesCacheData(
                 price_data=cached_price_data,
                 user_data=cached_user_data,
                 last_price_update=last_price_update,
@@ -63,7 +63,7 @@ async def load_cache(
     except OSError as ex:
         _LOGGER.warning("%s Failed to load cache: %s", log_prefix, ex)
 
-    return CacheData(
+    return TibberPricesCacheData(
         price_data=None,
         user_data=None,
         last_price_update=None,
@@ -72,9 +72,9 @@ async def load_cache(
     )
 
 
-async def store_cache(
+async def save_cache(
     store: Store,
-    cache_data: CacheData,
+    cache_data: TibberPricesCacheData,
     log_prefix: str,
 ) -> None:
     """Store cache data."""
@@ -94,10 +94,10 @@ async def store_cache(
 
 
 def is_cache_valid(
-    cache_data: CacheData,
+    cache_data: TibberPricesCacheData,
     log_prefix: str,
     *,
-    time: TimeService,
+    time: TibberPricesTimeService,
 ) -> bool:
     """
     Validate if cached price data is still current.

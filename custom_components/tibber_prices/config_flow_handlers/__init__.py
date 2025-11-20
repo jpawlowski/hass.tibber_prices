@@ -42,15 +42,15 @@ from custom_components.tibber_prices.config_flow_handlers.user_flow import (
     TibberPricesFlowHandler,
 )
 from custom_components.tibber_prices.config_flow_handlers.validators import (
-    CannotConnectError,
-    InvalidAuthError,
+    TibberPricesCannotConnectError,
+    TibberPricesInvalidAuthError,
     validate_api_token,
 )
 
 __all__ = [
-    "CannotConnectError",
-    "InvalidAuthError",
+    "TibberPricesCannotConnectError",
     "TibberPricesFlowHandler",
+    "TibberPricesInvalidAuthError",
     "TibberPricesOptionsFlowHandler",
     "TibberPricesSubentryFlowHandler",
     "get_best_price_schema",

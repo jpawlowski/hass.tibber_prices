@@ -23,11 +23,11 @@ MAX_FLEX_PERCENTAGE = 100.0
 MAX_MIN_PERIODS = 10  # Arbitrary upper limit for sanity
 
 
-class InvalidAuthError(HomeAssistantError):
+class TibberPricesInvalidAuthError(HomeAssistantError):
     """Error to indicate invalid authentication."""
 
 
-class CannotConnectError(HomeAssistantError):
+class TibberPricesCannotConnectError(HomeAssistantError):
     """Error to indicate we cannot connect."""
 
 
@@ -43,8 +43,8 @@ async def validate_api_token(hass: HomeAssistant, token: str) -> dict:
         dict with viewer data on success
 
     Raises:
-        InvalidAuthError: Invalid token
-        CannotConnectError: API connection failed
+        TibberPricesInvalidAuthError: Invalid token
+        TibberPricesCannotConnectError: API connection failed
 
     """
     try:
@@ -57,11 +57,11 @@ async def validate_api_token(hass: HomeAssistant, token: str) -> dict:
         result = await client.async_get_viewer_details()
         return result["viewer"]
     except TibberPricesApiClientAuthenticationError as exception:
-        raise InvalidAuthError from exception
+        raise TibberPricesInvalidAuthError from exception
     except TibberPricesApiClientCommunicationError as exception:
-        raise CannotConnectError from exception
+        raise TibberPricesCannotConnectError from exception
     except TibberPricesApiClientError as exception:
-        raise CannotConnectError from exception
+        raise TibberPricesCannotConnectError from exception
 
 
 def validate_threshold_range(value: float, min_val: float, max_val: float) -> bool:

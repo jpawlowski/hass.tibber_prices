@@ -10,7 +10,7 @@ if TYPE_CHECKING:
 
     from homeassistant.core import HomeAssistant
 
-    from .time_service import TimeService
+    from .time_service import TibberPricesTimeService
 
 from custom_components.tibber_prices.const import DOMAIN
 
@@ -57,7 +57,7 @@ def needs_tomorrow_data(
     return False
 
 
-def perform_midnight_turnover(price_info: dict[str, Any], *, time: TimeService) -> dict[str, Any]:
+def perform_midnight_turnover(price_info: dict[str, Any], *, time: TibberPricesTimeService) -> dict[str, Any]:
     """
     Perform midnight turnover on price data.
 
@@ -69,7 +69,7 @@ def perform_midnight_turnover(price_info: dict[str, Any], *, time: TimeService) 
 
     Args:
         price_info: The price info dict with 'today', 'tomorrow', 'yesterday' keys
-        time: TimeService instance (required)
+        time: TibberPricesTimeService instance (required)
 
     Returns:
         Updated price_info with rotated day data
@@ -103,7 +103,7 @@ def perform_midnight_turnover(price_info: dict[str, Any], *, time: TimeService) 
     return price_info
 
 
-def parse_all_timestamps(price_data: dict[str, Any], *, time: TimeService) -> dict[str, Any]:
+def parse_all_timestamps(price_data: dict[str, Any], *, time: TibberPricesTimeService) -> dict[str, Any]:
     """
     Parse all API timestamp strings to datetime objects.
 
@@ -114,7 +114,7 @@ def parse_all_timestamps(price_data: dict[str, Any], *, time: TimeService) -> di
 
     Args:
         price_data: Raw API data with string timestamps
-        time: TimeService for parsing
+        time: TibberPricesTimeService for parsing
 
     Returns:
         Same structure but with datetime objects instead of strings

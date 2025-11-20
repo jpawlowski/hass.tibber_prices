@@ -7,12 +7,12 @@ from typing import TYPE_CHECKING, Any
 if TYPE_CHECKING:
     from datetime import datetime
 
-    from custom_components.tibber_prices.coordinator.time_service import TimeService
+    from custom_components.tibber_prices.coordinator.time_service import TibberPricesTimeService
 
     from .types import (
-        PeriodData,
-        PeriodStatistics,
-        ThresholdConfig,
+        TibberPricesPeriodData,
+        TibberPricesPeriodStatistics,
+        TibberPricesThresholdConfig,
     )
 from custom_components.tibber_prices.utils.price import (
     aggregate_period_levels,
@@ -115,8 +115,8 @@ def calculate_period_price_statistics(period_price_data: list[dict]) -> dict[str
 
 
 def build_period_summary_dict(
-    period_data: PeriodData,
-    stats: PeriodStatistics,
+    period_data: TibberPricesPeriodData,
+    stats: TibberPricesPeriodStatistics,
     *,
     reverse_sort: bool,
 ) -> dict:
@@ -176,9 +176,9 @@ def extract_period_summaries(
     periods: list[list[dict]],
     all_prices: list[dict],
     price_context: dict[str, Any],
-    thresholds: ThresholdConfig,
+    thresholds: TibberPricesThresholdConfig,
     *,
-    time: TimeService,
+    time: TibberPricesTimeService,
 ) -> list[dict]:
     """
     Extract complete period summaries with all aggregated attributes.
@@ -199,12 +199,12 @@ def extract_period_summaries(
         all_prices: All price data from the API (enriched with level, difference, rating_level)
         price_context: Dictionary with ref_prices and avg_prices per day
         thresholds: Threshold configuration for calculations
-        time: TimeService instance (required)
+        time: TibberPricesTimeService instance (required)
 
     """
     from .types import (  # noqa: PLC0415 - Avoid circular import
-        PeriodData,
-        PeriodStatistics,
+        TibberPricesPeriodData,
+        TibberPricesPeriodStatistics,
     )
 
     # Build lookup dictionary for full price data by timestamp
@@ -284,7 +284,7 @@ def extract_period_summaries(
         level_gap_count = sum(1 for interval in period if interval.get("is_level_gap", False))
 
         # Build period data and statistics objects
-        period_data = PeriodData(
+        period_data = TibberPricesPeriodData(
             start_time=start_time,
             end_time=end_time,
             period_length=len(period),
@@ -292,7 +292,7 @@ def extract_period_summaries(
             total_periods=total_periods,
         )
 
-        stats = PeriodStatistics(
+        stats = TibberPricesPeriodStatistics(
             aggregated_level=aggregated_level,
             aggregated_rating=aggregated_rating,
             rating_difference_pct=rating_difference_pct,

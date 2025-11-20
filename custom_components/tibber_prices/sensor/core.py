@@ -27,7 +27,10 @@ from custom_components.tibber_prices.entity_utils import (
     find_rolling_hour_center_index,
     get_price_value,
 )
-from custom_components.tibber_prices.entity_utils.icons import IconContext, get_dynamic_icon
+from custom_components.tibber_prices.entity_utils.icons import (
+    TibberPricesIconContext,
+    get_dynamic_icon,
+)
 from custom_components.tibber_prices.utils.average import (
     calculate_next_n_hours_avg,
 )
@@ -50,14 +53,14 @@ from .attributes import (
     get_prices_for_volatility,
 )
 from .calculators import (
-    DailyStatCalculator,
-    IntervalCalculator,
-    MetadataCalculator,
-    RollingHourCalculator,
-    TimingCalculator,
-    TrendCalculator,
-    VolatilityCalculator,
-    Window24hCalculator,
+    TibberPricesDailyStatCalculator,
+    TibberPricesIntervalCalculator,
+    TibberPricesMetadataCalculator,
+    TibberPricesRollingHourCalculator,
+    TibberPricesTimingCalculator,
+    TibberPricesTrendCalculator,
+    TibberPricesVolatilityCalculator,
+    TibberPricesWindow24hCalculator,
 )
 from .chart_data import (
     build_chart_data_attributes,
@@ -73,7 +76,7 @@ if TYPE_CHECKING:
     from custom_components.tibber_prices.coordinator import (
         TibberPricesDataUpdateCoordinator,
     )
-    from custom_components.tibber_prices.coordinator.time_service import TimeService
+    from custom_components.tibber_prices.coordinator.time_service import TibberPricesTimeService
 
 HOURS_IN_DAY = 24
 LAST_HOUR_OF_DAY = 23
@@ -95,14 +98,14 @@ class TibberPricesSensor(TibberPricesEntity, SensorEntity):
         self._attr_unique_id = f"{coordinator.config_entry.entry_id}_{entity_description.key}"
         self._attr_has_entity_name = True
         # Instantiate calculators
-        self._metadata_calculator = MetadataCalculator(coordinator)
-        self._volatility_calculator = VolatilityCalculator(coordinator)
-        self._window_24h_calculator = Window24hCalculator(coordinator)
-        self._rolling_hour_calculator = RollingHourCalculator(coordinator)
-        self._daily_stat_calculator = DailyStatCalculator(coordinator)
-        self._interval_calculator = IntervalCalculator(coordinator)
-        self._timing_calculator = TimingCalculator(coordinator)
-        self._trend_calculator = TrendCalculator(coordinator)
+        self._metadata_calculator = TibberPricesMetadataCalculator(coordinator)
+        self._volatility_calculator = TibberPricesVolatilityCalculator(coordinator)
+        self._window_24h_calculator = TibberPricesWindow24hCalculator(coordinator)
+        self._rolling_hour_calculator = TibberPricesRollingHourCalculator(coordinator)
+        self._daily_stat_calculator = TibberPricesDailyStatCalculator(coordinator)
+        self._interval_calculator = TibberPricesIntervalCalculator(coordinator)
+        self._timing_calculator = TibberPricesTimingCalculator(coordinator)
+        self._trend_calculator = TibberPricesTrendCalculator(coordinator)
         self._value_getter: Callable | None = self._get_value_getter()
         self._time_sensitive_remove_listener: Callable | None = None
         self._minute_update_remove_listener: Callable | None = None
@@ -146,12 +149,12 @@ class TibberPricesSensor(TibberPricesEntity, SensorEntity):
             self._minute_update_remove_listener = None
 
     @callback
-    def _handle_time_sensitive_update(self, time_service: TimeService) -> None:
+    def _handle_time_sensitive_update(self, time_service: TibberPricesTimeService) -> None:
         """
         Handle time-sensitive update from coordinator.
 
         Args:
-            time_service: TimeService instance with reference time for this update cycle
+            time_service: TibberPricesTimeService instance with reference time for this update cycle
 
         """
         # Store TimeService from Timer #2 for calculations during this update cycle
@@ -166,12 +169,12 @@ class TibberPricesSensor(TibberPricesEntity, SensorEntity):
         self.async_write_ha_state()
 
     @callback
-    def _handle_minute_update(self, time_service: TimeService) -> None:
+    def _handle_minute_update(self, time_service: TibberPricesTimeService) -> None:
         """
         Handle minute-by-minute update from coordinator.
 
         Args:
-            time_service: TimeService instance with reference time for this update cycle
+            time_service: TibberPricesTimeService instance with reference time for this update cycle
 
         """
         # Store TimeService from Timer #3 for calculations during this update cycle
@@ -267,7 +270,7 @@ class TibberPricesSensor(TibberPricesEntity, SensorEntity):
         if not window_data:
             return None
 
-        return self._aggregate_window_data(window_data, value_type)
+        return self._rolling_hour_calculator.aggregate_window_data(window_data, value_type)
 
     # ========================================================================
     # INTERVAL-BASED VALUE METHODS
@@ -470,7 +473,7 @@ class TibberPricesSensor(TibberPricesEntity, SensorEntity):
                 return en_translations["sensor"]["current_interval_price_rating"]["price_levels"][level]
         return level
 
-    def _get_next_avg_n_hours_value(self, *, hours: int) -> float | None:
+    def _get_next_avg_n_hours_value(self, hours: int) -> float | None:
         """
         Get average price for next N hours starting from next interval.
 
@@ -803,7 +806,7 @@ class TibberPricesSensor(TibberPricesEntity, SensorEntity):
         icon = get_dynamic_icon(
             key=key,
             value=value,
-            context=IconContext(
+            context=TibberPricesIconContext(
                 coordinator_data=self.coordinator.data,
                 period_is_active_callback=period_is_active_callback,
                 time=self.coordinator.time,

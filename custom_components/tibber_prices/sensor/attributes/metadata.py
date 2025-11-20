@@ -10,20 +10,20 @@ if TYPE_CHECKING:
     from custom_components.tibber_prices.coordinator.core import (
         TibberPricesDataUpdateCoordinator,
     )
-    from custom_components.tibber_prices.coordinator.time_service import TimeService
+    from custom_components.tibber_prices.coordinator.time_service import TibberPricesTimeService
 
 
 def get_current_interval_data(
     coordinator: TibberPricesDataUpdateCoordinator,
     *,
-    time: TimeService,
+    time: TibberPricesTimeService,
 ) -> dict | None:
     """
     Get current interval's price data.
 
     Args:
         coordinator: The data update coordinator
-        time: TimeService instance (required)
+        time: TibberPricesTimeService instance (required)
 
     Returns:
         Current interval data or None if not found

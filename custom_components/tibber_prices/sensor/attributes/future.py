@@ -9,7 +9,7 @@ if TYPE_CHECKING:
     from custom_components.tibber_prices.coordinator.core import (
         TibberPricesDataUpdateCoordinator,
     )
-    from custom_components.tibber_prices.coordinator.time_service import TimeService
+    from custom_components.tibber_prices.coordinator.time_service import TibberPricesTimeService
 
 # Constants
 MAX_FORECAST_INTERVALS = 8  # Show up to 8 future intervals (2 hours with 15-min intervals)
@@ -20,7 +20,7 @@ def add_next_avg_attributes(
     key: str,
     coordinator: TibberPricesDataUpdateCoordinator,
     *,
-    time: TimeService,
+    time: TibberPricesTimeService,
 ) -> None:
     """
     Add attributes for next N hours average price sensors.
@@ -29,7 +29,7 @@ def add_next_avg_attributes(
         attributes: Dictionary to add attributes to
         key: The sensor entity key
         coordinator: The data update coordinator
-        time: TimeService instance (required)
+        time: TibberPricesTimeService instance (required)
 
     """
     # Extract hours from sensor key (e.g., "next_avg_3h" -> 3)
@@ -70,7 +70,7 @@ def add_price_forecast_attributes(
     attributes: dict,
     coordinator: TibberPricesDataUpdateCoordinator,
     *,
-    time: TimeService,
+    time: TibberPricesTimeService,
 ) -> None:
     """
     Add forecast attributes for the price forecast sensor.
@@ -78,7 +78,7 @@ def add_price_forecast_attributes(
     Args:
         attributes: Dictionary to add attributes to
         coordinator: The data update coordinator
-        time: TimeService instance (required)
+        time: TibberPricesTimeService instance (required)
 
     """
     future_prices = get_future_prices(coordinator, max_intervals=MAX_FORECAST_INTERVALS, time=time)
@@ -164,7 +164,7 @@ def get_future_prices(
     coordinator: TibberPricesDataUpdateCoordinator,
     max_intervals: int | None = None,
     *,
-    time: TimeService,
+    time: TibberPricesTimeService,
 ) -> list[dict] | None:
     """
     Get future price data for multiple upcoming intervals.
@@ -172,7 +172,7 @@ def get_future_prices(
     Args:
         coordinator: The data update coordinator
         max_intervals: Maximum number of future intervals to return
-        time: TimeService instance (required)
+        time: TibberPricesTimeService instance (required)
 
     Returns:
         List of upcoming price intervals with timestamps and prices

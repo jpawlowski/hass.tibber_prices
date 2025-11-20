@@ -8,7 +8,7 @@ from datetime import datetime, timedelta
 from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
-    from custom_components.tibber_prices.coordinator.time_service import TimeService
+    from custom_components.tibber_prices.coordinator.time_service import TibberPricesTimeService
 
 from custom_components.tibber_prices.const import (
     DEFAULT_VOLATILITY_THRESHOLD_HIGH,
@@ -281,7 +281,7 @@ def enrich_price_info_with_differences(
         price_info: Dictionary with 'yesterday', 'today', 'tomorrow' keys
         threshold_low: Low threshold percentage for rating_level (defaults to -10)
         threshold_high: High threshold percentage for rating_level (defaults to 10)
-        time: TimeService instance (required)
+        time: TibberPricesTimeService instance (required)
 
     Returns:
         Updated price_info dict with 'difference' and 'rating_level' added
@@ -324,7 +324,7 @@ def find_price_data_for_interval(
     price_info: Any,
     target_time: datetime,
     *,
-    time: TimeService,
+    time: TibberPricesTimeService,
 ) -> dict | None:
     """
     Find the price data for a specific 15-minute interval timestamp.
@@ -332,7 +332,7 @@ def find_price_data_for_interval(
     Args:
         price_info: The price info dictionary from Tibber API
         target_time: The target timestamp to find price data for
-        time: TimeService instance (required)
+        time: TibberPricesTimeService instance (required)
 
     Returns:
         Price data dict if found, None otherwise

@@ -6,7 +6,7 @@ from typing import TYPE_CHECKING
 
 from custom_components.tibber_prices.utils.price import find_price_data_for_interval
 
-from .base import BaseCalculator
+from .base import TibberPricesBaseCalculator
 
 if TYPE_CHECKING:
     from custom_components.tibber_prices.coordinator import (
@@ -14,7 +14,7 @@ if TYPE_CHECKING:
     )
 
 
-class IntervalCalculator(BaseCalculator):
+class TibberPricesIntervalCalculator(TibberPricesBaseCalculator):
     """
     Calculator for interval-based sensors.
 

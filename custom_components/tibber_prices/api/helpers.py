@@ -11,9 +11,9 @@ from homeassistant.const import __version__ as ha_version
 if TYPE_CHECKING:
     import aiohttp
 
-    from custom_components.tibber_prices.coordinator.time_service import TimeService
+    from custom_components.tibber_prices.coordinator.time_service import TibberPricesTimeService
 
-    from .queries import QueryType
+    from .queries import TibberPricesQueryType
 
 from .exceptions import (
     TibberPricesApiClientAuthenticationError,
@@ -50,7 +50,7 @@ def verify_response_or_raise(response: aiohttp.ClientResponse) -> None:
     response.raise_for_status()
 
 
-async def verify_graphql_response(response_json: dict, query_type: QueryType) -> None:
+async def verify_graphql_response(response_json: dict, query_type: TibberPricesQueryType) -> None:
     """Verify the GraphQL response for errors and data completeness, including empty data."""
     if "errors" in response_json:
         errors = response_json["errors"]
@@ -252,7 +252,7 @@ def prepare_headers(access_token: str, version: str) -> dict[str, str]:
     }
 
 
-def flatten_price_info(subscription: dict, currency: str | None = None, *, time: TimeService) -> dict:
+def flatten_price_info(subscription: dict, currency: str | None = None, *, time: TibberPricesTimeService) -> dict:
     """
     Transform and flatten priceInfo from full API data structure.
 

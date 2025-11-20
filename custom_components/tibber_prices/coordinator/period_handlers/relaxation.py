@@ -9,9 +9,9 @@ if TYPE_CHECKING:
     from collections.abc import Callable
     from datetime import date
 
-    from custom_components.tibber_prices.coordinator.time_service import TimeService
+    from custom_components.tibber_prices.coordinator.time_service import TibberPricesTimeService
 
-    from .types import PeriodConfig
+    from .types import TibberPricesPeriodConfig
 
 from .period_overlap import (
     recalculate_period_metadata,
@@ -60,13 +60,13 @@ def group_periods_by_day(periods: list[dict]) -> dict[date, list[dict]]:
     return periods_by_day
 
 
-def group_prices_by_day(all_prices: list[dict], *, time: TimeService) -> dict[date, list[dict]]:
+def group_prices_by_day(all_prices: list[dict], *, time: TibberPricesTimeService) -> dict[date, list[dict]]:
     """
     Group price intervals by the day they belong to (today and future only).
 
     Args:
         all_prices: List of price dicts with "startsAt" timestamp
-        time: TimeService instance (required)
+        time: TibberPricesTimeService instance (required)
 
     Returns:
         Dict mapping date to list of price intervals for that day (only today and future)
@@ -87,7 +87,7 @@ def group_prices_by_day(all_prices: list[dict], *, time: TimeService) -> dict[da
 
 
 def check_min_periods_per_day(
-    periods: list[dict], min_periods: int, all_prices: list[dict], *, time: TimeService
+    periods: list[dict], min_periods: int, all_prices: list[dict], *, time: TibberPricesTimeService
 ) -> bool:
     """
     Check if minimum periods requirement is met for each day individually.
@@ -99,7 +99,7 @@ def check_min_periods_per_day(
         periods: List of period summary dicts
         min_periods: Minimum number of periods required per day
         all_prices: All available price intervals (used to determine which days have data)
-        time: TimeService instance (required)
+        time: TibberPricesTimeService instance (required)
 
     Returns:
         True if every day with price data has at least min_periods, False otherwise
@@ -171,12 +171,12 @@ def mark_periods_with_relaxation(
 def calculate_periods_with_relaxation(  # noqa: PLR0913, PLR0915 - Per-day relaxation requires many parameters and statements
     all_prices: list[dict],
     *,
-    config: PeriodConfig,
+    config: TibberPricesPeriodConfig,
     enable_relaxation: bool,
     min_periods: int,
     max_relaxation_attempts: int,
     should_show_callback: Callable[[str | None], bool],
-    time: TimeService,
+    time: TibberPricesTimeService,
 ) -> tuple[dict[str, Any], dict[str, Any]]:
     """
     Calculate periods with optional per-day filter relaxation.
@@ -201,7 +201,7 @@ def calculate_periods_with_relaxation(  # noqa: PLR0913, PLR0915 - Per-day relax
         should_show_callback: Callback function(level_override) -> bool
             Returns True if periods should be shown with given filter overrides. Pass None
             to use original configured filter values.
-        time: TimeService instance (required)
+        time: TibberPricesTimeService instance (required)
 
     Returns:
         Tuple of (periods_result, relaxation_metadata):
@@ -273,7 +273,11 @@ def calculate_periods_with_relaxation(  # noqa: PLR0913, PLR0915 - Per-day relax
 
     # Validate we have price data for today/future
     today = time.now().date()
-    future_prices = [p for p in all_prices if time.get_interval_time(p).date() >= today]
+    future_prices = [
+        p
+        for p in all_prices
+        if (interval_time := time.get_interval_time(p)) is not None and interval_time.date() >= today
+    ]
 
     if not future_prices:
         # No price data for today/future
@@ -394,13 +398,13 @@ def calculate_periods_with_relaxation(  # noqa: PLR0913, PLR0915 - Per-day relax
 
 def relax_all_prices(  # noqa: PLR0913 - Comprehensive filter relaxation requires many parameters and statements
     all_prices: list[dict],
-    config: PeriodConfig,
+    config: TibberPricesPeriodConfig,
     min_periods: int,
     max_relaxation_attempts: int,
     should_show_callback: Callable[[str | None], bool],
     baseline_periods: list[dict],
     *,
-    time: TimeService,
+    time: TibberPricesTimeService,
 ) -> tuple[dict[str, Any], dict[str, Any]]:
     """
     Relax filters for all prices until min_periods per day is reached.
@@ -416,7 +420,7 @@ def relax_all_prices(  # noqa: PLR0913 - Comprehensive filter relaxation require
         max_relaxation_attempts: Maximum flex levels to try
         should_show_callback: Callback to check if a flex level should be shown
         baseline_periods: Baseline periods (before relaxation)
-        time: TimeService instance
+        time: TibberPricesTimeService instance
 
     Returns:
         Tuple of (result_dict, metadata_dict)

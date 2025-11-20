@@ -6,13 +6,13 @@ from typing import TYPE_CHECKING
 
 from custom_components.tibber_prices.entity_utils import get_price_value
 
-from .base import BaseCalculator
+from .base import TibberPricesBaseCalculator
 
 if TYPE_CHECKING:
     from collections.abc import Callable
 
 
-class Window24hCalculator(BaseCalculator):
+class TibberPricesWindow24hCalculator(TibberPricesBaseCalculator):
     """
     Calculator for 24-hour sliding window statistics.
 

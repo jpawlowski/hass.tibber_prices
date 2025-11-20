@@ -8,7 +8,7 @@ from datetime import timedelta
 from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
-    from custom_components.tibber_prices.coordinator.time_service import TimeService
+    from custom_components.tibber_prices.coordinator.time_service import TibberPricesTimeService
 
 from custom_components.tibber_prices.const import (
     BINARY_SENSOR_ICON_MAPPING,
@@ -26,14 +26,14 @@ _INTERVAL_MINUTES = 15  # Tibber's 15-minute intervals
 
 
 @dataclass
-class IconContext:
+class TibberPricesIconContext:
     """Context data for dynamic icon selection."""
 
     is_on: bool | None = None
     coordinator_data: dict | None = None
     has_future_periods_callback: Callable[[], bool] | None = None
     period_is_active_callback: Callable[[], bool] | None = None
-    time: TimeService | None = None
+    time: TibberPricesTimeService | None = None
 
 
 if TYPE_CHECKING:
@@ -53,7 +53,7 @@ def get_dynamic_icon(
     key: str,
     value: Any,
     *,
-    context: IconContext | None = None,
+    context: TibberPricesIconContext | None = None,
 ) -> str | None:
     """
     Get dynamic icon based on sensor state.
@@ -69,7 +69,7 @@ def get_dynamic_icon(
         Icon string or None if no dynamic icon applies
 
     """
-    ctx = context or IconContext()
+    ctx = context or TibberPricesIconContext()
 
     # Try various icon sources in order
     return (
@@ -173,7 +173,7 @@ def get_price_sensor_icon(
     key: str,
     coordinator_data: dict | None,
     *,
-    time: TimeService | None,
+    time: TibberPricesTimeService | None,
 ) -> str | None:
     """
     Get icon for current price sensors (dynamic based on price level).
@@ -185,7 +185,7 @@ def get_price_sensor_icon(
     Args:
         key: Entity description key
         coordinator_data: Coordinator data for price level lookups
-        time: TimeService instance (required for determining current interval)
+        time: TibberPricesTimeService instance (required for determining current interval)
 
     Returns:
         Icon string or None if not a current price sensor
@@ -300,7 +300,7 @@ def get_price_level_for_icon(
     coordinator_data: dict,
     *,
     interval_offset: int | None = None,
-    time: TimeService,
+    time: TibberPricesTimeService,
 ) -> str | None:
     """
     Get the price level for icon determination.
@@ -310,7 +310,7 @@ def get_price_level_for_icon(
     Args:
         coordinator_data: Coordinator data
         interval_offset: Interval offset (0=current, 1=next, -1=previous)
-        time: TimeService instance (required)
+        time: TibberPricesTimeService instance (required)
 
     Returns:
         Price level string or None if not found
@@ -336,7 +336,7 @@ def get_rolling_hour_price_level_for_icon(
     coordinator_data: dict,
     *,
     hour_offset: int = 0,
-    time: TimeService,
+    time: TibberPricesTimeService,
 ) -> str | None:
     """
     Get the aggregated price level for rolling hour icon determination.
@@ -349,7 +349,7 @@ def get_rolling_hour_price_level_for_icon(
     Args:
         coordinator_data: Coordinator data
         hour_offset: Hour offset (0=current hour, 1=next hour)
-        time: TimeService instance (required)
+        time: TibberPricesTimeService instance (required)
 
     Returns:
         Aggregated price level string or None if not found

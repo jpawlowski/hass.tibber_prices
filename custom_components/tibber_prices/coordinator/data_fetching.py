@@ -28,12 +28,12 @@ if TYPE_CHECKING:
 
     from custom_components.tibber_prices.api import TibberPricesApiClient
 
-    from .time_service import TimeService
+    from .time_service import TibberPricesTimeService
 
 _LOGGER = logging.getLogger(__name__)
 
 
-class DataFetcher:
+class TibberPricesDataFetcher:
     """Handles data fetching, caching, and main/subentry coordination."""
 
     def __init__(
@@ -42,14 +42,14 @@ class DataFetcher:
         store: Any,
         log_prefix: str,
         user_update_interval: timedelta,
-        time: TimeService,
+        time: TibberPricesTimeService,
     ) -> None:
         """Initialize the data fetcher."""
         self.api = api
         self._store = store
         self._log_prefix = log_prefix
         self._user_update_interval = user_update_interval
-        self.time = time
+        self.time: TibberPricesTimeService = time
 
         # Cached data
         self._cached_price_data: dict[str, Any] | None = None
@@ -84,14 +84,14 @@ class DataFetcher:
 
     async def store_cache(self, last_midnight_check: datetime | None = None) -> None:
         """Store cache data."""
-        cache_data = cache.CacheData(
+        cache_data = cache.TibberPricesCacheData(
             price_data=self._cached_price_data,
             user_data=self._cached_user_data,
             last_price_update=self._last_price_update,
             last_user_update=self._last_user_update,
             last_midnight_check=last_midnight_check,
         )
-        await cache.store_cache(self._store, cache_data, self._log_prefix)
+        await cache.save_cache(self._store, cache_data, self._log_prefix)
 
     async def update_user_data_if_needed(self, current_time: datetime) -> None:
         """Update user data if needed (daily check)."""

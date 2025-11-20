@@ -15,29 +15,30 @@ from custom_components.tibber_prices.utils.average import (
 
 if TYPE_CHECKING:
     from collections.abc import Callable
+    from datetime import datetime
 
-    from custom_components.tibber_prices.sensor.calculators.daily_stat import DailyStatCalculator
-    from custom_components.tibber_prices.sensor.calculators.interval import IntervalCalculator
-    from custom_components.tibber_prices.sensor.calculators.metadata import MetadataCalculator
-    from custom_components.tibber_prices.sensor.calculators.rolling_hour import RollingHourCalculator
-    from custom_components.tibber_prices.sensor.calculators.timing import TimingCalculator
-    from custom_components.tibber_prices.sensor.calculators.trend import TrendCalculator
-    from custom_components.tibber_prices.sensor.calculators.volatility import VolatilityCalculator
-    from custom_components.tibber_prices.sensor.calculators.window_24h import Window24hCalculator
+    from custom_components.tibber_prices.sensor.calculators.daily_stat import TibberPricesDailyStatCalculator
+    from custom_components.tibber_prices.sensor.calculators.interval import TibberPricesIntervalCalculator
+    from custom_components.tibber_prices.sensor.calculators.metadata import TibberPricesMetadataCalculator
+    from custom_components.tibber_prices.sensor.calculators.rolling_hour import TibberPricesRollingHourCalculator
+    from custom_components.tibber_prices.sensor.calculators.timing import TibberPricesTimingCalculator
+    from custom_components.tibber_prices.sensor.calculators.trend import TibberPricesTrendCalculator
+    from custom_components.tibber_prices.sensor.calculators.volatility import TibberPricesVolatilityCalculator
+    from custom_components.tibber_prices.sensor.calculators.window_24h import TibberPricesWindow24hCalculator
 
 
 def get_value_getter_mapping(  # noqa: PLR0913 - needs all calculators as parameters
-    interval_calculator: IntervalCalculator,
-    rolling_hour_calculator: RollingHourCalculator,
-    daily_stat_calculator: DailyStatCalculator,
-    window_24h_calculator: Window24hCalculator,
-    trend_calculator: TrendCalculator,
-    timing_calculator: TimingCalculator,
-    volatility_calculator: VolatilityCalculator,
-    metadata_calculator: MetadataCalculator,
+    interval_calculator: TibberPricesIntervalCalculator,
+    rolling_hour_calculator: TibberPricesRollingHourCalculator,
+    daily_stat_calculator: TibberPricesDailyStatCalculator,
+    window_24h_calculator: TibberPricesWindow24hCalculator,
+    trend_calculator: TibberPricesTrendCalculator,
+    timing_calculator: TibberPricesTimingCalculator,
+    volatility_calculator: TibberPricesVolatilityCalculator,
+    metadata_calculator: TibberPricesMetadataCalculator,
     get_next_avg_n_hours_value: Callable[[int], float | None],
     get_price_forecast_value: Callable[[], str | None],
-    get_data_timestamp: Callable[[], str | None],
+    get_data_timestamp: Callable[[], datetime | None],
     get_chart_data_export_value: Callable[[], str | None],
 ) -> dict[str, Callable]:
     """
@@ -154,7 +155,7 @@ def get_value_getter_mapping(  # noqa: PLR0913 - needs all calculators as parame
             day="tomorrow", value_type="rating"
         ),
         # ================================================================
-        # 24H WINDOW SENSORS (trailing/leading from current) - via Window24hCalculator
+        # 24H WINDOW SENSORS (trailing/leading from current) - via TibberPricesWindow24hCalculator
         # ================================================================
         # Trailing and leading average sensors
         "trailing_price_average": lambda: window_24h_calculator.get_24h_window_value(
@@ -180,14 +181,14 @@ def get_value_getter_mapping(  # noqa: PLR0913 - needs all calculators as parame
         # FUTURE FORECAST SENSORS
         # ================================================================
         # Future average sensors (next N hours from next interval)
-        "next_avg_1h": lambda: get_next_avg_n_hours_value(hours=1),
-        "next_avg_2h": lambda: get_next_avg_n_hours_value(hours=2),
-        "next_avg_3h": lambda: get_next_avg_n_hours_value(hours=3),
-        "next_avg_4h": lambda: get_next_avg_n_hours_value(hours=4),
-        "next_avg_5h": lambda: get_next_avg_n_hours_value(hours=5),
-        "next_avg_6h": lambda: get_next_avg_n_hours_value(hours=6),
-        "next_avg_8h": lambda: get_next_avg_n_hours_value(hours=8),
-        "next_avg_12h": lambda: get_next_avg_n_hours_value(hours=12),
+        "next_avg_1h": lambda: get_next_avg_n_hours_value(1),
+        "next_avg_2h": lambda: get_next_avg_n_hours_value(2),
+        "next_avg_3h": lambda: get_next_avg_n_hours_value(3),
+        "next_avg_4h": lambda: get_next_avg_n_hours_value(4),
+        "next_avg_5h": lambda: get_next_avg_n_hours_value(5),
+        "next_avg_6h": lambda: get_next_avg_n_hours_value(6),
+        "next_avg_8h": lambda: get_next_avg_n_hours_value(8),
+        "next_avg_12h": lambda: get_next_avg_n_hours_value(12),
         # Current and next trend change sensors
         "current_price_trend": trend_calculator.get_current_trend_value,
         "next_price_trend_change": trend_calculator.get_next_trend_change_value,

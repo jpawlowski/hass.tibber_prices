@@ -19,7 +19,7 @@ from custom_components.tibber_prices.const import get_price_level_translation
 if TYPE_CHECKING:
     from datetime import datetime
 
-    from custom_components.tibber_prices.coordinator.time_service import TimeService
+    from custom_components.tibber_prices.coordinator.time_service import TibberPricesTimeService
     from homeassistant.core import HomeAssistant
 
 
@@ -91,7 +91,7 @@ def find_rolling_hour_center_index(
     current_time: datetime,
     hour_offset: int,
     *,
-    time: TimeService,
+    time: TibberPricesTimeService,
 ) -> int | None:
     """
     Find the center index for the rolling hour window.
@@ -100,7 +100,7 @@ def find_rolling_hour_center_index(
         all_prices: List of all price interval dictionaries with 'startsAt' key
         current_time: Current datetime to find the current interval
         hour_offset: Number of hours to offset from current interval (can be negative)
-        time: TimeService instance (required)
+        time: TibberPricesTimeService instance (required)
 
     Returns:
         Index of the center interval for the rolling hour window, or None if not found

@@ -16,12 +16,12 @@ The calculator provides smart defaults:
 
 from datetime import datetime
 
-from .base import BaseCalculator  # Constants
+from .base import TibberPricesBaseCalculator  # Constants
 
 PROGRESS_GRACE_PERIOD_SECONDS = 60  # Show 100% for 1 minute after period ends
 
 
-class TimingCalculator(BaseCalculator):
+class TibberPricesTimingCalculator(TibberPricesBaseCalculator):
     """
     Calculator for period timing sensors.
 
