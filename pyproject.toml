@@ -4,11 +4,26 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "tibber_prices"
-version = "0.0.0"  # Version is managed in manifest.json only
+version = "0.0.0"          # Version is managed in manifest.json only
 requires-python = ">=3.13"
 
 [tool.setuptools]
 packages = ["custom_components.tibber_prices"]
+
+[tool.pyright]
+include = ["custom_components/tibber_prices"]
+exclude = [
+    "**/node_modules",
+    "**/__pycache__",
+    "**/.git",
+    "**/.github",
+    "**/docs",
+    "**/venv",
+    "**/.venv",
+]
+venvPath = "."
+venv = ".venv"
+typeCheckingMode = "basic"
 
 [tool.ruff]
 # Based on https://github.com/home-assistant/core/blob/dev/pyproject.toml
@@ -18,12 +33,12 @@ line-length = 120
 [tool.ruff.lint]
 select = ["ALL"]
 ignore = [
-#    "ANN101",  # Missing type annotation for `self` in method
-    "ANN401",  # Dynamically typed expressions (typing.Any) are disallowed
-    "D203",    # no-blank-line-before-class (incompatible with formatter)
-    "D212",    # multi-line-summary-first-line (incompatible with formatter)
-    "COM812",  # incompatible with formatter
-    "ISC001",  # incompatible with formatter
+    #    "ANN101",  # Missing type annotation for `self` in method
+    "ANN401", # Dynamically typed expressions (typing.Any) are disallowed
+    "D203",   # no-blank-line-before-class (incompatible with formatter)
+    "D212",   # multi-line-summary-first-line (incompatible with formatter)
+    "COM812", # incompatible with formatter
+    "ISC001", # incompatible with formatter
 ]
 
 [tool.ruff.lint.flake8-pytest-style]

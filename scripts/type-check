@@ -1,0 +1,17 @@
+#!/bin/sh
+
+# script/type-check: Run type checking tools
+
+set -e
+
+cd "$(dirname "$0")/.."
+
+if [ -z "$VIRTUAL_ENV" ]; then
+    . "$HOME/.venv/bin/activate"
+fi
+
+echo "==> Running type checking tools..."
+
+pyright
+
+echo "==> Type checking completed."

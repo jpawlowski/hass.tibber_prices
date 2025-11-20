@@ -1,0 +1,14 @@
+#!/bin/sh
+
+# script/check: Run linting and type checking tools together
+
+set -e
+
+cd "$(dirname "$0")/.."
+
+if [ -z "$VIRTUAL_ENV" ]; then
+    . "$HOME/.venv/bin/activate"
+fi
+
+scripts/type-check
+scripts/lint-check
