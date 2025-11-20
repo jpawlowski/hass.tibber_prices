@@ -39,6 +39,12 @@
                 "python.analysis.typeCheckingMode": "basic",
                 "python.analysis.autoImportCompletions": true,
                 "python.analysis.diagnosticMode": "workspace",
+                "python.analysis.diagnosticSeverityOverrides": {
+                    "reportUnusedImport": "none",
+                    "reportUnusedVariable": "none",
+                    "reportUnusedCoroutine": "none",
+                    "reportMissingTypeStubs": "none"
+                },
                 "python.analysis.include": [
                     "custom_components/tibber_prices"
                 ],
