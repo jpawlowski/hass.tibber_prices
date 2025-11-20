@@ -188,6 +188,12 @@ class TibberPricesSensor(TibberPricesEntity, SensorEntity):
         # Clear cached trend values when coordinator data changes
         if self.entity_description.key.startswith("price_trend_"):
             self._trend_calculator.clear_trend_cache()
+
+        # Refresh chart data when coordinator updates (new price data or user data)
+        if self.entity_description.key == "chart_data_export":
+            # Schedule async refresh as a task (we're in a callback)
+            self.hass.async_create_task(self._refresh_chart_data())
+
         super()._handle_coordinator_update()
 
     def _get_value_getter(self) -> Callable | None:

@@ -93,8 +93,14 @@ class TibberPricesDataFetcher:
         )
         await cache.save_cache(self._store, cache_data, self._log_prefix)
 
-    async def update_user_data_if_needed(self, current_time: datetime) -> None:
-        """Update user data if needed (daily check)."""
+    async def update_user_data_if_needed(self, current_time: datetime) -> bool:
+        """
+        Update user data if needed (daily check).
+
+        Returns:
+            True if user data was updated, False otherwise
+
+        """
         if self._last_user_update is None or current_time - self._last_user_update >= self._user_update_interval:
             try:
                 self._log("debug", "Updating user data")
@@ -107,6 +113,10 @@ class TibberPricesDataFetcher:
                 TibberPricesApiClientCommunicationError,
             ) as ex:
                 self._log("warning", "Failed to update user data: %s", ex)
+                return False  # Update failed
+            else:
+                return True  # User data was updated
+        return False  # No update needed
 
     @callback
     def should_update_price_data(self, current_time: datetime) -> bool | str:
@@ -209,7 +219,7 @@ class TibberPricesDataFetcher:
     ) -> dict[str, Any]:
         """Handle update for main entry - fetch data for all homes."""
         # Update user data if needed (daily check)
-        await self.update_user_data_if_needed(current_time)
+        user_data_updated = await self.update_user_data_if_needed(current_time)
 
         # Check if we need to update price data
         should_update = self.should_update_price_data(current_time)
@@ -239,7 +249,12 @@ class TibberPricesDataFetcher:
 
         # Use cached data if available
         if self._cached_price_data is not None:
-            self._log("debug", "Using cached price data (no API call needed)")
+            # If user data was updated, we need to return transformed data to trigger entity updates
+            # This ensures diagnostic sensors (home_type, grid_company, etc.) get refreshed
+            if user_data_updated:
+                self._log("debug", "User data updated - returning transformed data to update diagnostic sensors")
+            else:
+                self._log("debug", "Using cached price data (no API call needed)")
             return transform_fn(self._cached_price_data)
 
         # Fallback: no cache and no update needed (shouldn't happen)
