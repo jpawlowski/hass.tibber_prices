@@ -137,13 +137,165 @@ if flex > 0.20:  # 20% threshold
 
 **Implementation:** See `level_filtering.py` → `check_interval_criteria()`
 
+**Code Extract:**
+```python
+# coordinator/period_handlers/level_filtering.py
+
+FLEX_SCALING_THRESHOLD = 0.20  # 20% - start adjusting min_distance
+SCALE_FACTOR_WARNING_THRESHOLD = 0.8  # Log when reduction > 20%
+
+def check_interval_criteria(price, criteria):
+    # ... flex check ...
+
+    # Dynamic min_distance scaling
+    adjusted_min_distance = criteria.min_distance_from_avg
+    flex_abs = abs(criteria.flex)
+
+    if flex_abs > FLEX_SCALING_THRESHOLD:
+        flex_excess = flex_abs - 0.20  # How much above 20%
+        scale_factor = max(0.25, 1.0 - (flex_excess × 2.5))
+        adjusted_min_distance = criteria.min_distance_from_avg × scale_factor
+
+        if scale_factor < SCALE_FACTOR_WARNING_THRESHOLD:
+            _LOGGER.debug(
+                "High flex %.1f%% detected: Reducing min_distance %.1f%% → %.1f%%",
+                flex_abs × 100,
+                criteria.min_distance_from_avg,
+                adjusted_min_distance,
+            )
+
+    # Apply adjusted min_distance in distance check
+    meets_min_distance = (
+        price <= avg_price × (1 - adjusted_min_distance/100)  # Best Price
+        # OR
+        price >= avg_price × (1 + adjusted_min_distance/100)  # Peak Price
+    )
+```
+
+**Why Linear Scaling?**
+- Simple and predictable
+- No abrupt behavior changes
+- Easy to reason about for users and developers
+- Alternative considered: Exponential scaling (rejected as too aggressive)
+
+**Why 25% Minimum?**
+- Below this, min_distance loses semantic meaning
+- Even on flat days, some quality filter needed
+- Prevents "every interval is a period" scenario
+- Maintains user expectation: "best/peak price means notably different"
+
 ---
 
 ## Flex Limits and Safety Caps
 
-### Hard Limits (Enforced in Code)
+### Implementation Constants
 
-#### 1. Absolute Maximum: 50%
+**Defined in `coordinator/period_handlers/core.py`:**
+```python
+MAX_SAFE_FLEX = 0.50  # 50% - hard cap: above this, period detection becomes unreliable
+MAX_OUTLIER_FLEX = 0.25  # 25% - cap for outlier filtering: above this, spike detection too permissive
+```
+
+**Defined in `const.py`:**
+```python
+DEFAULT_BEST_PRICE_FLEX = 15  # 15% base - optimal for relaxation mode (default enabled)
+DEFAULT_PEAK_PRICE_FLEX = -20  # 20% base (negative for peak detection)
+DEFAULT_RELAXATION_ATTEMPTS_BEST = 11  # 11 steps: 15% → 48% (3% increment per step)
+DEFAULT_RELAXATION_ATTEMPTS_PEAK = 11  # 11 steps: 20% → 50% (3% increment per step)
+DEFAULT_BEST_PRICE_MIN_PERIOD_LENGTH = 60  # 60 minutes
+DEFAULT_PEAK_PRICE_MIN_PERIOD_LENGTH = 30  # 30 minutes
+DEFAULT_BEST_PRICE_MIN_DISTANCE_FROM_AVG = 5  # 5% minimum distance
+DEFAULT_PEAK_PRICE_MIN_DISTANCE_FROM_AVG = 5  # 5% minimum distance
+```
+
+### Rationale for Asymmetric Defaults
+
+**Why Best Price ≠ Peak Price?**
+
+The different defaults reflect fundamentally different use cases:
+
+#### Best Price: Optimization Focus
+
+**Goal:** Find practical time windows for running appliances
+
+**Constraints:**
+- Appliances need time to complete cycles (dishwasher: 2-3h, EV charging: 4-8h)
+- Short periods are impractical (not worth automation overhead)
+- User wants genuinely cheap times, not just "slightly below average"
+
+**Defaults:**
+- **60 min minimum** - Ensures period is long enough for meaningful use
+- **15% flex** - Stricter selection, focuses on truly cheap times
+- **Reasoning:** Better to find fewer, higher-quality periods than many mediocre ones
+
+**User behavior:**
+- Automations trigger actions (turn on devices)
+- Wrong automation = wasted energy/money
+- Preference: Conservative (miss some savings) over aggressive (false positives)
+
+#### Peak Price: Warning Focus
+
+**Goal:** Alert users to expensive periods for consumption reduction
+
+**Constraints:**
+- Brief price spikes still matter (even 15-30 min is worth avoiding)
+- Early warning more valuable than perfect accuracy
+- User can manually decide whether to react
+
+**Defaults:**
+- **30 min minimum** - Catches shorter expensive spikes
+- **20% flex** - More permissive, earlier detection
+- **Reasoning:** Better to warn early (even if not peak) than miss expensive periods
+
+**User behavior:**
+- Notifications/alerts (informational)
+- Wrong alert = minor inconvenience, not cost
+- Preference: Sensitive (catch more) over specific (catch only extremes)
+
+#### Mathematical Justification
+
+**Peak Price Volatility:**
+
+Price curves tend to have:
+- **Sharp spikes** during peak hours (morning/evening)
+- **Shorter duration** at maximum (1-2 hours typical)
+- **Higher variance** in peak times than cheap times
+
+**Example day:**
+```
+Cheap period:     02:00-07:00 (5 hours at 10-12 ct)  ← Gradual, stable
+Expensive period: 17:00-18:30 (1.5 hours at 35-40 ct) ← Sharp, brief
+```
+
+**Implication:**
+- Stricter flex on peak (15%) might miss real expensive periods (too brief)
+- Longer min_length (60 min) might exclude legitimate spikes
+- Solution: More flexible thresholds for peak detection
+
+#### Design Alternatives Considered
+
+**Option 1: Symmetric defaults (rejected)**
+- Both 60 min, both 15% flex
+- Problem: Misses short but expensive spikes
+- User feedback: "Why didn't I get warned about the 30-min price spike?"
+
+**Option 2: Same defaults, let users figure it out (rejected)**
+- No guidance on best practices
+- Users would need to experiment to find good values
+- Most users stick with defaults, so defaults matter
+
+**Option 3: Current approach (adopted)**
+- **All values user-configurable** via config flow options
+- **Different installation defaults** for Best Price vs. Peak Price
+- Defaults reflect recommended practices for each use case
+- Users who need different behavior can adjust
+- Most users benefit from sensible defaults without configuration
+
+---
+
+## Flex Limits and Safety Caps
+
+#### 1. Absolute Maximum: 50% (MAX_SAFE_FLEX)
 
 **Enforcement:** `core.py` caps `abs(flex)` at 0.50 (50%)
 
@@ -214,34 +366,72 @@ Ensure **minimum periods per day** are found even when baseline filters are too 
 
 ### Relaxation Increments
 
-**Problem (Before Fix):**
-```python
-# OLD: Increment scales with base Flex
-increment = base_flex × (step_pct / 100)
+**Current Implementation (November 2025):**
 
-# Example: base_flex=40%, step_pct=25%
-increment = 0.40 × 0.25 = 0.10 (10% per step!)
-# After 6 steps: 40% → 50% → 60% → 70% → 80% → 90% → 100% (explosion!)
+**File:** `coordinator/period_handlers/relaxation.py`
+
+```python
+# Hard-coded 3% increment per step (reliability over configurability)
+flex_increment = 0.03  # 3% per step
+base_flex = abs(config.flex)
+
+# Generate flex levels
+for attempt in range(max_relaxation_attempts):
+    flex_level = base_flex + (attempt × flex_increment)
+    # Try flex_level with both filter combinations
 ```
 
-**Solution (Current):**
+**Constants:**
 ```python
-# NEW: Cap increment at 3% per step
-raw_increment = base_flex × (step_pct / 100)
-capped_increment = min(raw_increment, 0.03)  # 3% maximum
-
-# Example: base_flex=40%, step_pct=25%
-increment = min(0.10, 0.03) = 0.03 (3% per step)
-# After 8 steps: 40% → 43% → 46% → 49% → 52% → 55% → 58% → 61% (controlled!)
+FLEX_WARNING_THRESHOLD_RELAXATION = 0.25  # 25% - INFO: suggest lowering to 15-20%
+FLEX_HIGH_THRESHOLD_RELAXATION = 0.30  # 30% - WARNING: very high for relaxation mode
+MAX_FLEX_HARD_LIMIT = 0.50  # 50% - absolute maximum (enforced in core.py)
 ```
 
-**Rationale:**
-- High base Flex (30%+) already very permissive
-- Large increments push toward 100% too quickly
-- 100% Flex = accept ALL prices (meaningless periods)
+**Design Decisions:**
 
-**Warning Threshold:**
-- If base Flex > 30% with relaxation enabled: Warn user to lower base Flex
+1. **Why 3% fixed increment?**
+   - Predictable escalation path (15% → 18% → 21% → ...)
+   - Independent of base flex (works consistently)
+   - 11 attempts covers full useful range (15% → 48%)
+   - Balance: Not too slow (2%), not too fast (5%)
+
+2. **Why hard-coded, not configurable?**
+   - Prevents user misconfiguration
+   - Simplifies mental model (fewer knobs to turn)
+   - Reliable behavior across all configurations
+   - If needed, user adjusts `max_relaxation_attempts` (fewer/more steps)
+
+3. **Why warn at 25% base flex?**
+   - At 25% base, first relaxation step reaches 28%
+   - Above 30%, entering diminishing returns territory
+   - User likely doesn't need relaxation with such high base flex
+   - Should either: (a) lower base flex, or (b) disable relaxation
+
+**Historical Context (Pre-November 2025):**
+
+The algorithm previously used percentage-based increments that scaled with base flex:
+```python
+increment = base_flex × (step_pct / 100)  # REMOVED
+```
+
+This caused exponential escalation with high base flex values (e.g., 40% → 50% → 60% → 70% in just 6 steps), making behavior unpredictable. The fixed 3% increment solves this by providing consistent, controlled escalation regardless of starting point.
+
+**Warning Messages:**
+```python
+if base_flex >= FLEX_HIGH_THRESHOLD_RELAXATION:  # 30%
+    _LOGGER.warning(
+        "Base flex %.1f%% is very high for relaxation mode! "
+        "Consider lowering to 15-20%% or disabling relaxation.",
+        base_flex × 100,
+    )
+elif base_flex >= FLEX_WARNING_THRESHOLD_RELAXATION:  # 25%
+    _LOGGER.info(
+        "Base flex %.1f%% is on the high side. "
+        "Consider 15-20%% for optimal relaxation effectiveness.",
+        base_flex × 100,
+    )
+```
 
 ### Filter Combination Strategy
 
@@ -291,7 +481,111 @@ def calculate_periods_with_relaxation(...) -> tuple[dict, dict]
 def relax_single_day(...) -> tuple[dict, dict]
 ```
 
-### Debugging Tips
+#### Outlier Filtering Implementation
+
+**File:** `coordinator/period_handlers/outlier_filtering.py`
+
+**Purpose:** Detect and smooth isolated price spikes before period identification to prevent artificial fragmentation.
+
+**Algorithm Details:**
+
+1. **Linear Regression Prediction:**
+   - Uses surrounding intervals to predict expected price
+   - Window size: 3+ intervals (MIN_CONTEXT_SIZE)
+   - Calculates trend slope and standard deviation
+   - Formula: `predicted = mean + slope × (position - center)`
+
+2. **Confidence Intervals:**
+   - 95% confidence level (2 standard deviations)
+   - Tolerance = 2.0 × std_dev (CONFIDENCE_LEVEL constant)
+   - Outlier if: `|actual - predicted| > tolerance`
+   - Accounts for natural price volatility in context window
+
+3. **Symmetry Check:**
+   - Rejects asymmetric outliers (threshold: 1.5 std dev)
+   - Preserves legitimate price shifts (morning/evening peaks)
+   - Algorithm:
+     ```python
+     residual = abs(actual - predicted)
+     symmetry_threshold = 1.5 × std_dev
+
+     if residual > tolerance:
+         # Check if spike is symmetric in context
+         context_residuals = [abs(p - pred) for p, pred in context]
+         avg_context_residual = mean(context_residuals)
+
+         if residual > symmetry_threshold × avg_context_residual:
+             # Asymmetric spike → smooth it
+         else:
+             # Symmetric (part of trend) → keep it
+     ```
+
+4. **Enhanced Zigzag Detection:**
+   - Detects spike clusters via relative volatility
+   - Threshold: 2.0× local volatility (RELATIVE_VOLATILITY_THRESHOLD)
+   - Single-pass algorithm (no iteration needed)
+   - Catches patterns like: 18, 35, 19, 34, 18 (alternating spikes)
+
+**Constants:**
+```python
+# coordinator/period_handlers/outlier_filtering.py
+
+CONFIDENCE_LEVEL = 2.0  # 95% confidence (2 std deviations)
+SYMMETRY_THRESHOLD = 1.5  # Asymmetry detection threshold
+RELATIVE_VOLATILITY_THRESHOLD = 2.0  # Zigzag spike detection
+MIN_CONTEXT_SIZE = 3  # Minimum intervals for regression
+```
+
+**Data Integrity:**
+- Original prices stored in `_original_price` field
+- All statistics (daily min/max/avg) use original prices
+- Smoothing only affects period formation logic
+- Smart counting: Only counts smoothing that changed period outcome
+
+**Performance:**
+- Single pass through price data
+- O(n) complexity with small context window
+- No iterative refinement needed
+- Typical processing time: <1ms for 96 intervals
+
+**Example Debug Output:**
+```
+DEBUG: [2025-11-11T14:30:00+01:00] Outlier detected: 35.2 ct
+DEBUG:   Context: 18.5, 19.1, 19.3, 19.8, 20.2 ct
+DEBUG:   Residual: 14.5 ct > tolerance: 4.8 ct (2×2.4 std dev)
+DEBUG:   Trend slope: 0.3 ct/interval (gradual increase)
+DEBUG:   Predicted: 20.7 ct (linear regression)
+DEBUG:   Smoothed to: 20.7 ct
+DEBUG:   Asymmetry ratio: 3.2 (>1.5 threshold) → confirmed outlier
+```
+
+**Why This Approach?**
+
+1. **Linear regression over moving average:**
+   - Accounts for price trends (morning ramp-up, evening decline)
+   - Moving average can't predict direction, only level
+   - Better accuracy on non-stationary price curves
+
+2. **Symmetry check over fixed threshold:**
+   - Prevents false positives on legitimate price shifts
+   - Adapts to local volatility patterns
+   - Preserves user expectation: "expensive during peak hours"
+
+3. **Single-pass over iterative:**
+   - Predictable behavior (no convergence issues)
+   - Fast and deterministic
+   - Easier to debug and reason about
+
+**Alternative Approaches Considered:**
+
+1. **Median filtering** - Rejected: Too aggressive, removes legitimate peaks
+2. **Moving average** - Rejected: Can't handle trends
+3. **IQR (Interquartile Range)** - Rejected: Assumes normal distribution
+4. **RANSAC** - Rejected: Overkill for 1D data, slow
+
+---
+
+## Debugging Tips
 
 **Enable DEBUG logging:**
 ```yaml
@@ -345,7 +639,7 @@ best_price_min_distance_from_avg: 0
 
 **Solution:**
 ```yaml
-best_price_min_distance_from_avg: 5  # Keep at least 5%
+best_price_min_distance_from_avg: 5  # Use default 5%
 ```
 
 ### ❌ Anti-Pattern 3: Conflicting Flex + Distance
@@ -380,6 +674,14 @@ best_price_min_distance_from_avg: 5
 - Flex 30%: Should find 4-8 periods (more lenient)
 - Min_Distance 5%: Effective throughout range
 
+**Debug Checks:**
+```
+DEBUG: Filter statistics: 96 intervals checked
+DEBUG:   Filtered by FLEX: 12/96 (12.5%)  ← Low percentage = good variation
+DEBUG:   Filtered by MIN_DISTANCE: 8/96 (8.3%)  ← Both filters active
+DEBUG: After build_periods: 3 raw periods found
+```
+
 ### Scenario 2: Flat Day (Poor Variation)
 
 **Price Range:** 14 - 16 ct/kWh (14% variation)
@@ -390,6 +692,15 @@ best_price_min_distance_from_avg: 5
 - Min_Distance 5%: Critical here - ensures only truly cheaper intervals qualify
 - Without Min_Distance: Would accept almost entire day as "best price"
 
+**Debug Checks:**
+```
+DEBUG: Filter statistics: 96 intervals checked
+DEBUG:   Filtered by FLEX: 45/96 (46.9%)  ← High percentage = poor variation
+DEBUG:   Filtered by MIN_DISTANCE: 52/96 (54.2%)  ← Distance filter dominant
+DEBUG: After build_periods: 1 raw period found
+DEBUG: Day 2025-11-11: Baseline insufficient (1 < 2), starting relaxation
+```
+
 ### Scenario 3: Extreme Day (High Volatility)
 
 **Price Range:** 5 - 40 ct/kWh (700% variation)
@@ -399,6 +710,75 @@ best_price_min_distance_from_avg: 5
 - Flex 15%: Finds multiple very cheap periods (5-6 ct)
 - Outlier filtering: May smooth isolated spikes (30-40 ct)
 - Distance filter: Less impactful (clear separation between cheap/expensive)
+
+**Debug Checks:**
+```
+DEBUG: Outlier detected: 38.5 ct (threshold: 4.2 ct)
+DEBUG:   Smoothed to: 20.1 ct (trend prediction)
+DEBUG: Filter statistics: 96 intervals checked
+DEBUG:   Filtered by FLEX: 8/96 (8.3%)  ← Very selective
+DEBUG:   Filtered by MIN_DISTANCE: 4/96 (4.2%)  ← Flex dominates
+DEBUG: After build_periods: 4 raw periods found
+```
+
+### Scenario 4: Relaxation Success
+
+**Initial State:** Baseline finds 1 period, target is 2
+
+**Expected Flow:**
+```
+INFO: Calculating BEST PRICE periods: relaxation=ON, target=2/day, flex=15.0%
+DEBUG: Day 2025-11-11: Baseline found 1 period (need 2)
+DEBUG:   Phase 1: flex 18.0% + original filters
+DEBUG:     Found 1 period (insufficient)
+DEBUG:   Phase 2: flex 18.0% + level=any
+DEBUG:     Found 2 periods → SUCCESS
+INFO: Day 2025-11-11: Success after 1 relaxation phase (2 periods)
+```
+
+### Scenario 5: Relaxation Exhausted
+
+**Initial State:** Strict filters, very flat day
+
+**Expected Flow:**
+```
+INFO: Calculating BEST PRICE periods: relaxation=ON, target=2/day, flex=15.0%
+DEBUG: Day 2025-11-11: Baseline found 0 periods (need 2)
+DEBUG:   Phase 1-11: flex 15%→48%, all filter combinations tried
+WARNING: Day 2025-11-11: All relaxation phases exhausted, still only 1 period found
+INFO: Period calculation completed: 1/2 days reached target
+```
+
+### Debugging Checklist
+
+When debugging period calculation issues:
+
+1. **Check Filter Statistics**
+   - Which filter blocks most intervals? (flex, distance, or level)
+   - High flex filtering (>30%) = Need more flexibility or relaxation
+   - High distance filtering (>50%) = Min_distance too strict or flat day
+   - High level filtering = Level filter too restrictive
+
+2. **Check Relaxation Behavior**
+   - Did relaxation activate? Check for "Baseline insufficient" message
+   - Which phase succeeded? Early success (phase 1-3) = good config
+   - Late success (phase 8-11) = Consider adjusting base config
+   - Exhausted all phases = Unrealistic target for this day's price curve
+
+3. **Check Flex Warnings**
+   - INFO at 25% base flex = On the high side
+   - WARNING at 30% base flex = Too high for relaxation
+   - If seeing these: Lower base flex to 15-20%
+
+4. **Check Min_Distance Scaling**
+   - Debug messages show "High flex X% detected: Reducing min_distance Y% → Z%"
+   - If scale factor <0.8 (20% reduction): High flex is active
+   - If periods still not found: Filters conflict even with scaling
+
+5. **Check Outlier Filtering**
+   - Look for "Outlier detected" messages
+   - Check `period_interval_smoothed_count` attribute
+   - If no smoothing but periods fragmented: Not isolated spikes, but legitimate price levels
 
 ---
 
@@ -426,6 +806,170 @@ best_price_min_distance_from_avg: 5
 1. **Fixed increment step:** 3% cap may be too aggressive for very low base Flex
 2. **Linear distance scaling:** Could benefit from non-linear curve
 3. **No consideration of temporal distribution:** May find all periods in one part of day
+
+---
+
+## Future Enhancements
+
+### Potential Improvements
+
+#### 1. Adaptive Flex Calculation (Not Yet Implemented)
+
+**Concept:** Auto-adjust Flex based on daily price variation
+
+**Algorithm:**
+```python
+# Pseudo-code for adaptive flex
+variation = (daily_max - daily_min) / daily_avg
+
+if variation < 0.15:  # Flat day (< 15% variation)
+    adaptive_flex = 0.30  # Need higher flex
+elif variation > 0.50:  # High volatility (> 50% variation)
+    adaptive_flex = 0.10  # Lower flex sufficient
+else:  # Normal day
+    adaptive_flex = 0.15  # Standard flex
+```
+
+**Benefits:**
+- Eliminates need for relaxation on most days
+- Self-adjusting to market conditions
+- Better user experience (less configuration needed)
+
+**Challenges:**
+- Harder to predict behavior (less transparent)
+- May conflict with user's mental model
+- Needs extensive testing across different markets
+
+**Status:** Considered but not implemented (prefer explicit relaxation)
+
+#### 2. Machine Learning Approach (Future Work)
+
+**Concept:** Learn optimal Flex/Distance from user feedback
+
+**Approach:**
+- Track which periods user actually uses (automation triggers)
+- Classify days by pattern (normal/flat/volatile/bimodal)
+- Apply pattern-specific defaults
+- Learn per-user preferences over time
+
+**Benefits:**
+- Personalized to user's actual behavior
+- Adapts to local market patterns
+- Could discover non-obvious patterns
+
+**Challenges:**
+- Requires user feedback mechanism (not implemented)
+- Privacy concerns (storing usage patterns)
+- Complexity for users to understand "why this period?"
+- Cold start problem (new users have no history)
+
+**Status:** Theoretical only (no implementation planned)
+
+#### 3. Multi-Objective Optimization (Research Idea)
+
+**Concept:** Balance multiple goals simultaneously
+
+**Goals:**
+- Period count vs. quality (cheap vs. very cheap)
+- Period duration vs. price level (long mediocre vs. short excellent)
+- Temporal distribution (spread throughout day vs. clustered)
+- User's stated use case (EV charging vs. heat pump vs. dishwasher)
+
+**Algorithm:**
+- Pareto optimization (find trade-off frontier)
+- User chooses point on frontier via preferences
+- Genetic algorithm or simulated annealing
+
+**Benefits:**
+- More sophisticated period selection
+- Better match to user's actual needs
+- Could handle complex appliance requirements
+
+**Challenges:**
+- Much more complex to implement
+- Harder to explain to users
+- Computational cost (may need caching)
+- Configuration explosion (too many knobs)
+
+**Status:** Research idea only (not planned)
+
+### Known Limitations
+
+#### 1. Fixed Increment Step
+
+**Current:** 3% cap may be too aggressive for very low base Flex
+
+**Example:**
+- Base flex 5% + 3% increment = 8% (60% increase!)
+- Base flex 15% + 3% increment = 18% (20% increase)
+
+**Possible Solution:**
+- Percentage-based increment: `increment = max(base_flex × 0.20, 0.03)`
+- This gives: 5% → 6% (20%), 15% → 18% (20%), 40% → 43% (7.5%)
+
+**Why Not Implemented:**
+- Very low base flex (<10%) unusual
+- Users with strict requirements likely disable relaxation
+- Simplicity preferred over edge case optimization
+
+#### 2. Linear Distance Scaling
+
+**Current:** Linear scaling may be too aggressive/conservative
+
+**Alternative:** Non-linear curve
+```python
+# Example: Exponential scaling
+scale_factor = 0.25 + 0.75 × exp(-5 × (flex - 0.20))
+
+# Or: Sigmoid scaling
+scale_factor = 0.25 + 0.75 / (1 + exp(10 × (flex - 0.35)))
+```
+
+**Why Not Implemented:**
+- Linear is easier to reason about
+- No evidence that non-linear is better
+- Would need extensive testing
+
+#### 3. No Temporal Distribution Consideration
+
+**Issue:** May find all periods in one part of day
+
+**Example:**
+- All 3 "best price" periods between 02:00-08:00
+- No periods in evening (when user might want to run appliances)
+
+**Possible Solution:**
+- Add "spread" parameter (prefer distributed periods)
+- Weight periods by time-of-day preferences
+- Consider user's typical usage patterns
+
+**Why Not Implemented:**
+- Adds complexity
+- Users can work around with multiple automations
+- Different users have different needs (no one-size-fits-all)
+
+#### 4. Period Boundary Handling
+
+**Current Behavior:** Periods can cross midnight naturally
+
+**Issue:** Period starting 23:45 continues into next day
+- Uses Day 1's daily_min as reference
+- May be confusing when Day 2's prices very different
+
+**Alternative Approaches Considered:**
+1. **Split at midnight** - Always keep periods within calendar day
+   - Problem: Artificially fragments natural periods
+   - Rejected: Worse user experience
+
+2. **Use next day's reference** - Switch reference at midnight
+   - Problem: Period criteria inconsistent across its duration
+   - Rejected: Confusing and unpredictable
+
+3. **Current approach** - Lock to start day's reference
+   - Benefit: Consistent criteria throughout period
+   - Drawback: Period may "spill" into different price context
+
+**Status:** Current approach is intentional design choice
 
 ---
 
