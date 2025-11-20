@@ -16,6 +16,63 @@ Run before committing:
 ./scripts/hassfest    # Validate integration structure
 ```
 
+## Naming Conventions
+
+### Class Names
+
+**All public classes MUST use the integration name as prefix.**
+
+This is a Home Assistant standard to avoid naming conflicts between integrations.
+
+```python
+# ✅ CORRECT
+class TibberPricesApiClient:
+class TibberPricesDataUpdateCoordinator:
+class TibberPricesSensor:
+
+# ❌ WRONG - Missing prefix
+class ApiClient:
+class DataFetcher:
+class TimeService:
+```
+
+**When prefix is required:**
+- Public classes used across multiple modules
+- All exception classes
+- All coordinator and entity classes
+- Data classes (dataclasses, NamedTuples) used as public APIs
+
+**When prefix can be omitted:**
+- Private helper classes within a single module (prefix with `_` underscore)
+- Type aliases and callbacks (e.g., `TimeServiceCallback`)
+- Small internal NamedTuples for function returns
+
+**Private Classes:**
+
+If a helper class is ONLY used within a single module file, prefix it with underscore:
+
+```python
+# ✅ Private class - used only in this file
+class _InternalHelper:
+    """Helper used only within this module."""
+    pass
+
+# ❌ Wrong - no prefix but used across modules
+class DataFetcher:  # Should be TibberPricesDataFetcher
+    pass
+```
+
+**Note:** Currently (Nov 2025), this project has **NO private classes** - all classes are used across module boundaries.
+
+**Current Technical Debt:**
+
+Many existing classes lack the `TibberPrices` prefix. Before refactoring:
+1. Document the plan in `/planning/class-naming-refactoring.md`
+2. Use `multi_replace_string_in_file` for bulk renames
+3. Test thoroughly after each module
+
+See [`AGENTS.md`](../../AGENTS.md) for complete list of classes needing rename.
+
 ## Import Order
 
 1. Python stdlib (specific types only)

@@ -721,16 +721,13 @@ If you notice commands failing or missing dependencies:
 ./scripts/clean --minimal # Only critical issues (.egg-info) - used by develop
 ```
 
-**Linting (auto-fix):**
+**Type checking and linting:**
 
 ```bash
-./scripts/lint     # Runs ruff format + ruff check --fix
-```
-
-**Linting (check-only):**
-
-```bash
-./scripts/lint-check  # CI mode, no modifications
+./scripts/type-check  # Run Pyright type checking
+./scripts/lint-check  # Run Ruff linting (check-only, CI mode)
+./scripts/lint        # Run Ruff linting with auto-fix
+./scripts/check       # Run both type-check + lint-check (recommended before commits)
 ```
 
 **Local validation:**
@@ -1350,6 +1347,204 @@ python -m json.tool custom_components/tibber_prices/translations/de.json > /dev/
 
 ## Linting Best Practices
 
+**CRITICAL: Always check BOTH type checking (Pyright) AND linting (Ruff) before completing work.**
+
+### Quick Reference: Available Scripts
+
+```bash
+# Type checking only (Pyright/Pylance)
+./scripts/type-check
+
+# Linting only (Ruff)
+./scripts/lint-check  # Check-only (CI mode)
+./scripts/lint        # Auto-fix mode
+
+# Both together (recommended workflow)
+./scripts/check       # Runs type-check + lint-check
+```
+
+### Two-Tool Strategy: Pyright vs Ruff
+
+This project uses **two complementary tools** with different responsibilities:
+
+**Pyright (Type Checker)** - Catches type safety issues:
+- ✅ Type mismatches (`str` passed where `int` expected)
+- ✅ None-safety violations (`Optional[T]` used as `T`)
+- ✅ Missing/wrong type annotations
+- ✅ Attribute access on wrong types
+- ✅ Function signature mismatches
+- ⚠️ **Cannot auto-fix** - requires manual code changes
+- 🔍 **Always run first** - catches design issues early
+
+**Ruff (Linter + Formatter)** - Enforces code style and patterns:
+- ✅ Code formatting (line length, indentation, quotes)
+- ✅ Import ordering (stdlib → third-party → local)
+- ✅ Unused imports/variables
+- ✅ Complexity checks (McCabe)
+- ✅ Best practice violations (mutable defaults, etc.)
+- 🔧 **Can auto-fix** most issues with `./scripts/lint`
+- 📋 **Run after Pyright** - cleans up after manual fixes
+
+### Recommended Workflow
+
+**When making changes:**
+
+1. **Write/modify code** with type hints
+2. **Run `./scripts/type-check`** - fix type errors manually
+3. **Run `./scripts/lint`** - auto-format and fix style issues
+4. **Run `./scripts/check`** - final verification (both tools)
+
+**When debugging errors:**
+
+If you see errors from one tool, understand which tool should fix them:
+
+```bash
+# Pyright errors → Manual fixes needed
+./scripts/type-check
+
+# Example Pyright errors:
+# - "Type X is not assignable to type Y"
+# - "Cannot access attribute 'foo' for class 'Bar'"
+# - "Argument of type 'str | None' cannot be assigned..."
+```
+
+```bash
+# Ruff errors → Usually auto-fixable
+./scripts/lint       # Try auto-fix first
+./scripts/lint-check # Verify remaining issues
+
+# Example Ruff errors:
+# - "Line too long (121 > 120 characters)"
+# - "Unused import 'datetime'"
+# - "Missing type annotation"
+```
+
+### Common Type Checking Patterns
+
+**Pattern 1: Optional Types - Always Be Explicit**
+
+```python
+# ❌ BAD - Pylance sees this as potentially None
+def process_data(time: TimeService | None) -> None:
+    result = time.now()  # Error: 'None' has no attribute 'now'
+
+# ✅ GOOD - Guard against None
+def process_data(time: TimeService | None) -> None:
+    if time is None:
+        return
+    result = time.now()  # OK - type narrowed to TimeService
+
+# ✅ BETTER - Make it required if always provided
+def process_data(time: TimeService) -> None:
+    result = time.now()  # OK - never None
+```
+
+**Pattern 2: Custom Type Aliases for Clarity**
+
+```python
+# ✅ Define custom types in TYPE_CHECKING block
+if TYPE_CHECKING:
+    from collections.abc import Callable
+    from .time_service import TimeService
+
+    # Custom callback type that accepts TimeService
+    TimeServiceCallback = Callable[[TimeService], None]
+
+# Use in class definition
+class ListenerManager:
+    def __init__(self) -> None:
+        self._listeners: list[TimeServiceCallback] = []
+
+    def add_listener(self, callback: TimeServiceCallback) -> None:
+        self._listeners.append(callback)  # Type-safe!
+```
+
+**Pattern 3: Runtime Checks for Dynamic Attributes**
+
+```python
+# ❌ BAD - Pyright doesn't understand hasattr
+if hasattr(tz, "localize"):
+    result = tz.localize(dt)  # Error: attribute not known
+
+# ✅ GOOD - Use type: ignore with explanation
+if hasattr(tz, "localize"):
+    # Type checker doesn't understand hasattr, but this is safe
+    result = tz.localize(dt)  # type: ignore[attr-defined]
+```
+
+**Pattern 4: Walrus Operator for None-Checks**
+
+```python
+# ❌ BAD - Two calls, potential race condition
+if time.get_interval_time(price) is not None:
+    dt = time.get_interval_time(price).date()  # Called twice!
+
+# ✅ GOOD - Walrus operator with type narrowing
+if (interval_time := time.get_interval_time(price)) is not None:
+    dt = interval_time.date()  # Type-safe, single call
+```
+
+**Pattern 5: Return Type Consistency**
+
+```python
+# ❌ BAD - Function signature says str, returns datetime
+def get_timestamp() -> str:
+    return datetime.now()  # Error: incompatible return type
+
+# ✅ GOOD - Match return type to actual return value
+def get_timestamp() -> datetime:
+    return datetime.now()  # OK
+
+# ✅ ALSO GOOD - Convert if signature requires string
+def get_timestamp() -> str:
+    return datetime.now().isoformat()  # OK - returns str
+```
+
+### Pyright Configuration
+
+Project uses `typeCheckingMode = "basic"` in `pyproject.toml`:
+- Balanced between strictness and pragmatism
+- Catches real bugs without excessive noise
+- Compatible with Home Assistant's typing style
+
+**Key settings:**
+```toml
+[tool.pyright]
+include = ["custom_components/tibber_prices"]
+venvPath = "."
+venv = ".venv"
+typeCheckingMode = "basic"
+```
+
+### When Type Errors Are Acceptable
+
+**Use `type: ignore` comments sparingly and ONLY when:**
+
+1. **Runtime checks guarantee safety** (hasattr, isinstance)
+2. **Third-party library has wrong/missing type stubs**
+3. **Home Assistant API has incomplete typing**
+
+**ALWAYS include explanation:**
+```python
+# ✅ GOOD - Explains why ignore is needed
+result = tz.localize(dt)  # type: ignore[attr-defined]  # pytz-specific method
+
+# ❌ BAD - No explanation
+result = tz.localize(dt)  # type: ignore
+```
+
+### Integration with VS Code
+
+Pylance (VS Code's Python language server) uses the same Pyright engine:
+- **Red squiggles** = Type errors (must fix)
+- **Yellow squiggles** = Warnings (should fix)
+- Hover for details, Cmd/Ctrl+Click for definitions
+- Problems panel shows all issues at once
+
+The `./scripts/type-check` script runs the same checks in terminal, ensuring CI/CD consistency.
+
+### Linting Details
+
 **Always use the provided scripts:**
 
 ```bash
@@ -1398,11 +1593,15 @@ Calling `ruff` or `uv run ruff` directly can cause unintended side effects:
 -   `uv pip uninstall` is used as fallback for robustness
 -   Both are needed because different commands may install via different methods
 
-**Key commands:**
+**Ruff Configuration:**
 
--   Dev container includes `hass` CLI for manual HA operations
--   Use `uv run --active` prefix for running Python tools in the venv
--   `pyproject.toml` (under `[tool.ruff]`) enforces max line length 120, complexity ≤25, Python 3.13 target
+-   Max line length: **120** chars (not 88 from Ruff's default)
+-   Max complexity: **25** (McCabe)
+-   Target: Python 3.13
+-   No unused imports/variables (`F401`, `F841`)
+-   No mutable default args (`B008`)
+-   Use `_LOGGER` not `print()` (`T201`)
+-   `pyproject.toml` (under `[tool.ruff]`) has full configuration
 
 ## Critical Project-Specific Patterns
 
@@ -1437,9 +1636,160 @@ Services returning data MUST declare `supports_response` parameter. Use `Support
 
 ## Code Quality Rules
 
+**CRITICAL: See "Linting Best Practices" section for comprehensive type checking (Pyright) and linting (Ruff) guidelines.**
+
+### Home Assistant Class Naming Conventions
+
+**All public classes in an integration MUST use the integration name as prefix.**
+
+This is a Home Assistant standard to avoid naming conflicts between integrations and ensure clear ownership of classes.
+
+**Naming Pattern:**
+```python
+# ✅ CORRECT - Integration prefix + semantic purpose
+class TibberPricesApiClient:              # Integration + semantic role
+class TibberPricesDataUpdateCoordinator:  # Integration + semantic role
+class TibberPricesDataFetcher:            # Integration + semantic role
+class TibberPricesSensor:                 # Integration + entity type
+class TibberPricesEntity:                 # Integration + entity type
+
+# ❌ INCORRECT - Missing integration prefix
+class DataFetcher:         # Should be: TibberPricesDataFetcher
+class TimeService:         # Should be: TibberPricesTimeService
+class PeriodCalculator:    # Should be: TibberPricesPeriodCalculator
+
+# ❌ INCORRECT - Including package hierarchy (unnecessary)
+class TibberPricesCoordinatorDataFetcher:  # Too verbose, package path is namespace
+class TibberPricesSensorCalculatorTrend:   # Too verbose, import path shows location
+```
+
+**IMPORTANT:** Do NOT include package hierarchy in class names. Python's import system provides the namespace:
+```python
+# The import path IS the full namespace:
+from custom_components.tibber_prices.coordinator.data_fetching import TibberPricesDataFetcher
+from custom_components.tibber_prices.sensor.calculators.trend import TibberPricesTrendCalculator
+
+# Adding package names to class would be redundant:
+# TibberPricesCoordinatorDataFetcher  ❌ NO - unnecessarily verbose
+# TibberPricesSensorCalculatorsTrendCalculator  ❌ NO - ridiculously long
+```
+
+**Home Assistant Core follows this pattern:**
+- `TibberDataCoordinator` (not `TibberCoordinatorDataCoordinator`)
+- `MetWeatherData` (not `MetCoordinatorWeatherData`)
+- `MetDataUpdateCoordinator` (not `MetCoordinatorDataUpdateCoordinator`)
+
+Use semantic prefixes that describe the PURPOSE, not the package location.
+
+**When prefix is required:**
+- ✅ All public classes (used across multiple modules)
+- ✅ All exception classes
+- ✅ All coordinator classes
+- ✅ All entity classes (Sensor, BinarySensor, etc.)
+- ✅ All service/helper classes exposed to other modules
+- ✅ All data classes (dataclasses, NamedTuples) used as public APIs
+
+**When prefix can be omitted:**
+- 🟡 Private helper classes used only within a single module (prefix class name with `_` underscore)
+- 🟡 Type aliases and callbacks (e.g., `TimeServiceCallback` is acceptable)
+- 🟡 Small NamedTuples used only for internal function returns (e.g., within calculators)
+- 🟡 Enums that are clearly namespaced (e.g., `QueryType` in `api.queries`)
+
+**Private Classes (Module-Internal):**
+
+If you create a helper class that is ONLY used within a single module file:
+```python
+# ✅ CORRECT - Private class with underscore prefix
+class _InternalHelper:
+    """Helper class used only within this module."""
+    pass
+
+# Usage: Only in the same file, never imported elsewhere
+result = _InternalHelper().process()
+```
+
+**Important:** Currently (Nov 2025), this project has **NO private classes** - all classes are used across module boundaries and therefore need the `TibberPrices` prefix.
+
+**When to use private classes:**
+- ❌ **DON'T** use for code organization alone - if it deserves a class, it's usually public
+- ✅ **DO** use for internal implementation details (e.g., state machines, internal builders)
+- ✅ **DO** use for temporary refactoring helpers (mark as `# TODO: Make public` if it grows)
+
+**Example of genuine private class use case:**
+```python
+# In coordinator/data_fetching.py
+class _ApiRetryStateMachine:
+    """Internal state machine for retry logic. Never used outside this file."""
+    def __init__(self, max_retries: int) -> None:
+        self._attempts = 0
+        self._max_retries = max_retries
+
+    # Only used by DataFetcher methods in this file
+```
+
+In practice, most "helper" logic should be **functions**, not classes. Reserve classes for stateful components.
+
+**Current State (as of Nov 2025):**
+
+⚠️ **Known Issue**: Many classes in this project lack the `TibberPrices` prefix. This is a technical debt item that needs addressing.
+
+**Classes that need renaming:**
+```python
+# Coordinator module
+DataFetcher → TibberPricesDataFetcher
+DataTransformer → TibberPricesDataTransformer
+ListenerManager → TibberPricesListenerManager
+PeriodCalculator → TibberPricesPeriodCalculator
+TimeService → TibberPricesTimeService
+CacheData → TibberPricesCacheData
+
+# Config flow
+CannotConnectError → TibberPricesCannotConnectError
+InvalidAuthError → TibberPricesInvalidAuthError
+
+# Entity utils
+IconContext → TibberPricesIconContext
+
+# Sensor calculators (8 classes)
+BaseCalculator → TibberPricesBaseCalculator
+IntervalCalculator → TibberPricesIntervalCalculator
+RollingHourCalculator → TibberPricesRollingHourCalculator
+DailyStatCalculator → TibberPricesDailyStatCalculator
+Window24hCalculator → TibberPricesWindow24hCalculator
+VolatilityCalculator → TibberPricesVolatilityCalculator
+TrendCalculator → TibberPricesTrendCalculator
+TimingCalculator → TibberPricesTimingCalculator
+MetadataCalculator → TibberPricesMetadataCalculator
+
+# Period handlers (NamedTuples in types.py)
+IntervalCriteria → TibberPricesIntervalCriteria
+PeriodConfig → TibberPricesPeriodConfig
+PeriodData → TibberPricesPeriodData
+PeriodStatistics → TibberPricesPeriodStatistics
+ThresholdConfig → TibberPricesThresholdConfig
+SpikeCandidateContext → TibberPricesSpikeCandidateContext
+```
+
+**Action Required:**
+Before making changes to these classes, plan the refactoring:
+1. Create a plan in `/planning/class-naming-refactoring.md`
+2. Use multi_replace_string_in_file for bulk renames
+3. Run `./scripts/check` after each module
+4. Update imports across the codebase
+5. Test thoroughly with `./scripts/develop`
+
+**When adding NEW classes:**
+- ✅ ALWAYS use `TibberPrices` prefix for public classes
+- ✅ Document in docstring if prefix is intentionally omitted (with justification)
+- ✅ Check HA Core integrations for similar patterns when in doubt
+
+See `docs/development/coding-guidelines.md` for detailed naming conventions.
+
+### Ruff and Pyright Configuration
+
 **Ruff config (`pyproject.toml` under `[tool.ruff]`):**
 
-We use **Ruff** (which replaces Black, Flake8, isort, and more) as our sole linter and formatter:
+We use **Ruff** (which replaces Black, Flake8, isort, and more) as our linter and formatter:
 
 -   Max line length: **120** chars (not 88 from Ruff's default)
 -   Max complexity: **25** (McCabe)
@@ -1447,6 +1797,15 @@ We use **Ruff** (which replaces Black, Flake8, isort, and more) as our sole lint
 -   No unused imports/variables (`F401`, `F841`)
 -   No mutable default args (`B008`)
 -   Use `_LOGGER` not `print()` (`T201`)
+
+**Pyright config (`pyproject.toml` under `[tool.pyright]`):**
+
+We use **Pyright** for static type checking:
+
+-   Type checking mode: **basic** (balanced strictness)
+-   Target: Python 3.13
+-   Validates type annotations, None-safety, attribute access
+-   Integrated with VS Code via Pylance extension
 
 **Import order (enforced by isort):**
 
