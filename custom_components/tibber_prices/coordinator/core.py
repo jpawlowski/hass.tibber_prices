@@ -104,6 +104,17 @@ FRESH_TO_CACHED_SECONDS = 300  # 5 minutes
 #   - No race condition possible - Python datetime.date() comparison is thread-safe
 #   - _last_transformation_time is separate and tracks when data was last transformed (for cache)
 #
+#   CRITICAL - Dual Listener System:
+#   After midnight turnover, BOTH listener groups must be notified:
+#   1. Normal listeners (async_update_listeners) - standard HA entities
+#   2. Time-sensitive listeners (_async_update_time_sensitive_listeners) - quarter-hour entities
+#
+#   Why? Entities like best_price_period and peak_price_period register as time-sensitive
+#   listeners and won't update if only async_update_listeners() is called. This caused
+#   the bug where period binary sensors showed stale data until the next quarter-hour
+#   refresh at 00:15 (they were updated then because Timer #2 explicitly calls
+#   _async_update_time_sensitive_listeners in its normal flow).
+#
 # =============================================================================
 
 
@@ -439,8 +450,16 @@ class TibberPricesDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         self._log("info", "[Timer #2] Midnight turnover detected, performing data rotation")
         self._perform_midnight_data_rotation(now)
 
-        # Notify listeners about updated data
+        # CRITICAL: Notify BOTH listener groups after midnight turnover
+        # - async_update_listeners(): Notifies normal entities (via HA's DataUpdateCoordinator)
+        # - async_update_time_sensitive_listeners(): Notifies time-sensitive entities (custom system)
+        # Without both calls, period binary sensors (best_price_period, peak_price_period)
+        # won't update because they're time-sensitive listeners, not normal listeners.
         self.async_update_listeners()
+
+        # Create TimeService with fresh reference time for time-sensitive entity updates
+        time_service = TibberPricesTimeService()
+        self._async_update_time_sensitive_listeners(time_service)
 
         return True
 
@@ -525,6 +544,16 @@ class TibberPricesDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             self._perform_midnight_data_rotation(current_time)
             # After rotation, save cache and notify entities
             await self._store_cache()
+
+            # CRITICAL: Notify time-sensitive listeners explicitly
+            # When Timer #1 performs turnover, returning self.data will trigger
+            # async_update_listeners() (normal listeners) automatically via DataUpdateCoordinator.
+            # But time-sensitive listeners (like best_price_period, peak_price_period)
+            # won't be notified unless we explicitly call their update method.
+            # This ensures ALL entities see the updated periods after midnight turnover.
+            time_service = TibberPricesTimeService()
+            self._async_update_time_sensitive_listeners(time_service)
+
             # Return current data (enriched after rotation) to trigger entity updates
             if self.data:
                 return self.data
