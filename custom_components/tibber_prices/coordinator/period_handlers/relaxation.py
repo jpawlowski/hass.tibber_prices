@@ -60,6 +60,41 @@ def group_periods_by_day(periods: list[dict]) -> dict[date, list[dict]]:
     return periods_by_day
 
 
+def mark_periods_with_relaxation(
+    periods: list[dict],
+    relaxation_level: str,
+    original_threshold: float,
+    applied_threshold: float,
+    *,
+    reverse_sort: bool = False,
+) -> None:
+    """
+    Mark periods with relaxation information (mutates period dicts in-place).
+
+    Uses consistent 'relaxation_*' prefix for all relaxation-related attributes.
+    These attributes are read by period_overlap.py and binary_sensor/attributes.py.
+
+    For Peak Price periods (reverse_sort=True), thresholds are stored as negative
+    values to match the user's configuration semantics (negative flex = below maximum).
+
+    Args:
+        periods: List of period dicts to mark
+        relaxation_level: String describing the relaxation level (e.g., "flex=18.0% +level_any")
+        original_threshold: Original flex threshold value (decimal, e.g., 0.15 for 15%)
+        applied_threshold: Actually applied threshold value (decimal, e.g., 0.18 for 18%)
+        reverse_sort: True for Peak Price (negative values), False for Best Price (positive values)
+
+    """
+    for period in periods:
+        period["relaxation_active"] = True
+        period["relaxation_level"] = relaxation_level
+        # Convert decimal to percentage for display
+        # For Peak Prices: Store as negative to match user's config semantics
+        sign = -1 if reverse_sort else 1
+        period["relaxation_threshold_original_%"] = round(original_threshold * 100 * sign, 1)
+        period["relaxation_threshold_applied_%"] = round(applied_threshold * 100 * sign, 1)
+
+
 def group_prices_by_day(all_prices: list[dict], *, time: TibberPricesTimeService) -> dict[date, list[dict]]:
     """
     Group price intervals by the day they belong to (today and future only).
@@ -84,88 +119,6 @@ def group_prices_by_day(all_prices: list[dict], *, time: TibberPricesTimeService
                 prices_by_day.setdefault(price_date, []).append(price)
 
     return prices_by_day
-
-
-def check_min_periods_per_day(
-    periods: list[dict], min_periods: int, all_prices: list[dict], *, time: TibberPricesTimeService
-) -> bool:
-    """
-    Check if minimum periods requirement is met for each day individually.
-
-    Returns True if we should STOP relaxation (enough periods found per day).
-    Returns False if we should CONTINUE relaxation (not enough periods yet).
-
-    Args:
-        periods: List of period summary dicts
-        min_periods: Minimum number of periods required per day
-        all_prices: All available price intervals (used to determine which days have data)
-        time: TibberPricesTimeService instance (required)
-
-    Returns:
-        True if every day with price data has at least min_periods, False otherwise
-
-    """
-    if not periods:
-        return False  # No periods at all, continue relaxation
-
-    # Get all days that have price data (today and future only, not yesterday)
-    today = time.now().date()
-    available_days = set()
-    for price in all_prices:
-        starts_at = time.get_interval_time(price)
-        if starts_at:
-            price_date = starts_at.date()
-            # Only count today and future days (not yesterday)
-            if price_date >= today:
-                available_days.add(price_date)
-
-    if not available_days:
-        return False  # No price data for today/future, continue relaxation
-
-    # Group found periods by day
-    periods_by_day = group_periods_by_day(periods)
-
-    # Check each day with price data: ALL must have at least min_periods
-    for day in available_days:
-        day_periods = periods_by_day.get(day, [])
-        period_count = len(day_periods)
-        if period_count < min_periods:
-            _LOGGER.debug(
-                "Day %s has only %d periods (need %d) - continuing relaxation",
-                day,
-                period_count,
-                min_periods,
-            )
-            return False  # This day doesn't have enough, continue relaxation
-
-    # All days with price data have enough periods, stop relaxation
-    return True
-
-
-def mark_periods_with_relaxation(
-    periods: list[dict],
-    relaxation_level: str,
-    original_threshold: float,
-    applied_threshold: float,
-) -> None:
-    """
-    Mark periods with relaxation information (mutates period dicts in-place).
-
-    Uses consistent 'relaxation_*' prefix for all relaxation-related attributes.
-
-    Args:
-        periods: List of period dicts to mark
-        relaxation_level: String describing the relaxation level
-        original_threshold: Original flex threshold value (decimal, e.g., 0.19 for 19%)
-        applied_threshold: Actually applied threshold value (decimal, e.g., 0.25 for 25%)
-
-    """
-    for period in periods:
-        period["relaxation_active"] = True
-        period["relaxation_level"] = relaxation_level
-        # Convert decimal to percentage for display (0.19 → 19.0)
-        period["relaxation_threshold_original_%"] = round(original_threshold * 100, 1)
-        period["relaxation_threshold_applied_%"] = round(applied_threshold * 100, 1)
 
 
 def calculate_periods_with_relaxation(  # noqa: PLR0913, PLR0915 - Per-day relaxation requires many parameters and statements
@@ -492,6 +445,15 @@ def relax_all_prices(  # noqa: PLR0913 - Comprehensive filter relaxation require
             INDENT_L2,
             phase_label_full,
             len(new_periods),
+        )
+
+        # Mark newly found periods with relaxation metadata BEFORE merging
+        mark_periods_with_relaxation(
+            new_periods,
+            relaxation_level=phase_label_full,
+            original_threshold=base_flex,
+            applied_threshold=current_flex,
+            reverse_sort=config.reverse_sort,
         )
 
         # Resolve overlaps between existing and new periods
