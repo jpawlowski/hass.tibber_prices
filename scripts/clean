@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+#!/bin/sh
 
 # script/clean: Clean up development artifacts and caches
 # Usage:
@@ -19,13 +19,13 @@ elif [ "$1" = "--deep" ]; then
     DEEP_MODE=true
 fi
 
-if [ "$MINIMAL_MODE" = false ]; then
+if [ "$MINIMAL_MODE" = "false" ]; then
     echo "==> Cleaning development artifacts..."
 fi
 
 # Clean up accidental package installation (always, even in minimal mode)
 if [ -d "tibber_prices.egg-info" ]; then
-    if [ "$MINIMAL_MODE" = false ]; then
+    if [ "$MINIMAL_MODE" = "false" ]; then
         echo "  → Removing tibber_prices.egg-info"
     fi
     rm -rf tibber_prices.egg-info
@@ -36,7 +36,7 @@ fi
 PACKAGE_INSTALLED=false
 if pip show tibber_prices >/dev/null 2>&1 || uv pip show tibber_prices >/dev/null 2>&1; then
     PACKAGE_INSTALLED=true
-    if [ "$MINIMAL_MODE" = false ]; then
+    if [ "$MINIMAL_MODE" = "false" ]; then
         echo "  → Uninstalling accidentally installed package"
     fi
     # Use regular pip (cleaner output, always works in venv)
@@ -46,7 +46,7 @@ if pip show tibber_prices >/dev/null 2>&1 || uv pip show tibber_prices >/dev/nul
 fi
 
 # Exit early if minimal mode
-if [ "$MINIMAL_MODE" = true ]; then
+if [ "$MINIMAL_MODE" = "true" ]; then
     exit 0
 fi
 
@@ -73,7 +73,7 @@ if [ -d ".ruff_cache" ]; then
 fi
 
 # Optional: Clean __pycache__ (normally not needed, but useful for troubleshooting)
-if [ "$DEEP_MODE" = true ]; then
+if [ "$DEEP_MODE" = "true" ]; then
     echo "  → Deep clean: Removing all __pycache__ directories"
     find . -type d -name "__pycache__" -exec rm -rf {} + 2>/dev/null || true
     echo "  → Deep clean: Removing all .pyc files"
@@ -82,7 +82,7 @@ fi
 
 echo ""
 echo "==> Cleanup complete!"
-if [ "$DEEP_MODE" = false ]; then
+if [ "$DEEP_MODE" = "false" ]; then
     echo ""
     echo "Tip: Use './scripts/clean --deep' to also remove __pycache__ directories"
     echo "     (normally not needed - __pycache__ speeds up Home Assistant startup)"

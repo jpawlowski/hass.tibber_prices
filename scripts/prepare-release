@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+#!/bin/sh
 
 # script/prepare-release: Prepare a new release by bumping version and creating tag
 #
@@ -15,7 +15,7 @@
 #   ./scripts/prepare-release 0.3.0
 #   ./scripts/prepare-release 1.0.0
 
-set -euo pipefail
+set -eu
 
 # Colors
 RED='\033[0;31m'
@@ -28,12 +28,12 @@ NC='\033[0m' # No Color
 cd "$(dirname "$0")/.."
 
 # Check if --suggest or no argument
-if [[ "${1:-}" == "--suggest" ]] || [[ -z "${1:-}" ]]; then
+if [ "${1:-}" = "--suggest" ] || [ -z "${1:-}" ]; then
     ./scripts/suggest-version
 
-    if [[ -z "${1:-}" ]]; then
+    if [ -z "${1:-}" ]; then
         echo ""
-        echo -e "${YELLOW}Provide version number as argument:${NC}"
+        printf "${YELLOW}Provide version number as argument:${NC}\n"
         echo "  ./scripts/prepare-release X.Y.Z"
         exit 0
     fi
@@ -42,15 +42,15 @@ fi
 
 # Check if we have uncommitted changes
 if ! git diff-index --quiet HEAD --; then
-    echo -e "${RED}❌ Error: You have uncommitted changes.${NC}"
+    printf "${RED}❌ Error: You have uncommitted changes.${NC}\n"
     echo "Please commit or stash them first."
     exit 1
 fi
 
 # Parse version argument
 VERSION="${1:-}"
-if [[ -z "$VERSION" ]]; then
-    echo -e "${RED}❌ Error: No version specified.${NC}"
+if [ -z "$VERSION" ]; then
+    printf "${RED}❌ Error: No version specified.${NC}\n"
     echo ""
     echo "Usage: $0 VERSION"
     echo ""
@@ -65,7 +65,7 @@ VERSION="${VERSION#v}"
 
 # Validate version format (X.Y.Z)
 if ! echo "$VERSION" | grep -qE '^[0-9]+\.[0-9]+\.[0-9]+$'; then
-    echo -e "${RED}❌ Error: Invalid version format: $VERSION${NC}"
+    printf "${RED}❌ Error: Invalid version format: $VERSION${NC}\n"
     echo "Expected format: X.Y.Z (e.g., 0.3.0, 1.0.0)"
     exit 1
 fi
@@ -74,33 +74,33 @@ TAG="v$VERSION"
 MANIFEST="custom_components/tibber_prices/manifest.json"
 
 # Check if manifest.json exists
-if [[ ! -f "$MANIFEST" ]]; then
-    echo -e "${RED}❌ Error: Manifest file not found: $MANIFEST${NC}"
+if [ ! -f "$MANIFEST" ]; then
+    printf "${RED}❌ Error: Manifest file not found: $MANIFEST${NC}\n"
     exit 1
 fi
 
 # Check if tag already exists (locally or remotely)
 if git rev-parse "$TAG" >/dev/null 2>&1; then
-    echo -e "${RED}❌ Error: Tag $TAG already exists locally!${NC}"
+    printf "${RED}❌ Error: Tag $TAG already exists locally!${NC}\n"
     echo "To remove it: git tag -d $TAG"
     exit 1
 fi
 
 if git ls-remote --tags origin | grep -q "refs/tags/$TAG"; then
-    echo -e "${RED}❌ Error: Tag $TAG already exists on remote!${NC}"
+    printf "${RED}❌ Error: Tag $TAG already exists on remote!${NC}\n"
     exit 1
 fi
 
 # Get current version
 CURRENT_VERSION=$(jq -r '.version' "$MANIFEST")
-echo -e "${BLUE}Current version: ${CURRENT_VERSION}${NC}"
-echo -e "${BLUE}New version: ${VERSION}${NC}"
+printf "${BLUE}Current version: ${CURRENT_VERSION}${NC}\n"
+printf "${BLUE}New version: ${VERSION}${NC}\n"
 echo ""
 
 # Update manifest.json
-echo -e "${YELLOW}📝 Updating $MANIFEST...${NC}"
+printf "${YELLOW}📝 Updating $MANIFEST...${NC}\n"
 if ! command -v jq >/dev/null 2>&1; then
-    echo -e "${RED}❌ Error: jq is not installed${NC}"
+    printf "${RED}❌ Error: jq is not installed${NC}\n"
     echo "Please install jq: apt-get install jq (or brew install jq)"
     exit 1
 fi
@@ -110,7 +110,7 @@ cp "$MANIFEST" "$MANIFEST.backup"
 
 # Update version with jq
 if ! jq ".version = \"$VERSION\"" "$MANIFEST" > "$MANIFEST.tmp"; then
-    echo -e "${RED}❌ Error: Failed to update manifest.json${NC}"
+    printf "${RED}❌ Error: Failed to update manifest.json${NC}\n"
     mv "$MANIFEST.backup" "$MANIFEST"
     exit 1
 fi
@@ -118,44 +118,44 @@ fi
 mv "$MANIFEST.tmp" "$MANIFEST"
 rm "$MANIFEST.backup"
 
-echo -e "${GREEN}✓ Updated manifest.json${NC}"
+printf "${GREEN}✓ Updated manifest.json${NC}\n"
 
 # Stage and commit
-echo -e "${YELLOW}📦 Creating commit...${NC}"
+printf "${YELLOW}📦 Creating commit...${NC}\n"
 git add "$MANIFEST"
 git commit -m "chore(release): bump version to $VERSION"
-echo -e "${GREEN}✓ Created commit${NC}"
+printf "${GREEN}✓ Created commit${NC}\n"
 
 # Create annotated tag
-echo -e "${YELLOW}🏷️  Creating tag $TAG...${NC}"
+printf "${YELLOW}🏷️  Creating tag $TAG...${NC}\n"
 git tag -a "$TAG" -m "chore(release): version $VERSION"
-echo -e "${GREEN}✓ Created tag $TAG${NC}"
+printf "${GREEN}✓ Created tag $TAG${NC}\n"
 
 # Show preview
 echo ""
-echo -e "${GREEN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
-echo -e "${GREEN}✅ Release $VERSION prepared successfully!${NC}"
-echo -e "${GREEN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+printf "${GREEN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}\n"
+printf "${GREEN}✅ Release $VERSION prepared successfully!${NC}\n"
+printf "${GREEN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}\n"
 echo ""
-echo -e "${BLUE}Review the changes:${NC}"
+printf "${BLUE}Review the changes:${NC}\n"
 git log -1 --stat
 echo ""
-echo -e "${BLUE}Review the tag:${NC}"
+printf "${BLUE}Review the tag:${NC}\n"
 git show "$TAG" --no-patch
 echo ""
-echo -e "${GREEN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
-echo -e "${YELLOW}Next steps:${NC}"
+printf "${GREEN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}\n"
+printf "${YELLOW}Next steps:${NC}\n"
 echo ""
-echo -e "  ${GREEN}✓ To push and trigger release:${NC}"
-echo -e "    git push origin main $TAG"
+printf "  ${GREEN}✓ To push and trigger release:${NC}\n"
+printf "    git push origin main $TAG\n"
 echo ""
-echo -e "  ${RED}✗ To abort and undo:${NC}"
-echo -e "    git reset --hard HEAD~1    # Undo commit"
-echo -e "    git tag -d $TAG            # Delete tag"
+printf "  ${RED}✗ To abort and undo:${NC}\n"
+printf "    git reset --hard HEAD~1    # Undo commit\n"
+printf "    git tag -d $TAG            # Delete tag\n"
 echo ""
-echo -e "${BLUE}What happens after push:${NC}"
+printf "${BLUE}What happens after push:${NC}\n"
 echo "  1. Both commit and tag are pushed to GitHub"
 echo "  2. CI/CD detects the new tag"
 echo "  3. Release notes are generated automatically"
 echo "  4. GitHub release is created"
-echo -e "${GREEN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+printf "${GREEN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}\n"

@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 # Analyze commits since last release and suggest next version number
 #
 # Usage:
@@ -10,7 +10,7 @@
 
 set -e
 
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 cd "${SCRIPT_DIR}/.."
 
 # Colors
@@ -26,14 +26,14 @@ FROM_TAG="${2:-}"
 
 # Get current version from manifest.json
 MANIFEST="custom_components/tibber_prices/manifest.json"
-if [[ ! -f "$MANIFEST" ]]; then
-    echo -e "${RED}Error: Manifest file not found: $MANIFEST${NC}"
+if [ ! -f "$MANIFEST" ]; then
+    printf "%bError: Manifest file not found: %s%b\n" "$RED" "$MANIFEST" "$NC"
     exit 1
 fi
 
 # Require jq for JSON parsing
 if ! command -v jq >/dev/null 2>&1; then
-    echo -e "${RED}Error: jq is not installed${NC}"
+    printf "%bError: jq is not installed%b\n" "$RED" "$NC"
     echo "Please install jq: apt-get install jq (or brew install jq)"
     exit 1
 fi
@@ -45,7 +45,7 @@ MANIFEST_TAG="v${MANIFEST_VERSION}"
 if [ -z "$FROM_TAG" ]; then
     FROM_TAG=$(git tag -l 'v*.*.*' --sort=-version:refname | head -1)
     if [ -z "$FROM_TAG" ]; then
-        echo -e "${RED}Error: No version tags found${NC}"
+        printf "%bError: No version tags found%b\n" "$RED" "$NC"
         exit 1
     fi
 fi
@@ -54,11 +54,11 @@ fi
 if git rev-parse "$MANIFEST_TAG" >/dev/null 2>&1; then
     # Manifest version is already tagged - analyze from that tag
     FROM_TAG="$MANIFEST_TAG"
-    echo -e "${YELLOW}Note: manifest.json version ${MANIFEST_VERSION} already tagged as ${MANIFEST_TAG}${NC}"
+    printf "%bNote: manifest.json version %s already tagged as %s%b\n" "$YELLOW" "$MANIFEST_VERSION" "$MANIFEST_TAG" "$NC"
     echo ""
 fi
 
-echo -e "${BOLD}Analyzing commits since $FROM_TAG${NC}"
+printf "%bAnalyzing commits since %s%b\n" "$BOLD" "$FROM_TAG" "$NC"
 echo ""
 
 # Parse current version (from the tag we're analyzing from)
@@ -68,8 +68,8 @@ MINOR=$(echo "$CURRENT_VERSION" | cut -d. -f2)
 PATCH=$(echo "$CURRENT_VERSION" | cut -d. -f3)
 
 echo "Current released version: v${MAJOR}.${MINOR}.${PATCH}"
-if [[ "$MANIFEST_VERSION" != "$CURRENT_VERSION" ]]; then
-    echo -e "${YELLOW}Manifest.json version: ${MANIFEST_VERSION} (not yet tagged)${NC}"
+if [ "$MANIFEST_VERSION" != "$CURRENT_VERSION" ]; then
+    printf "%bManifest.json version: %s (not yet tagged)%b\n" "$YELLOW" "$MANIFEST_VERSION" "$NC"
 fi
 echo ""
 
@@ -77,12 +77,12 @@ echo ""
 COMMITS=$(git log "$FROM_TAG"..HEAD --format="%s" --no-merges | grep -v "^chore(release):" || true)
 
 if [ -z "$COMMITS" ]; then
-    echo -e "${YELLOW}No new commits since last release${NC}"
+    printf "%bNo new commits since last release%b\n" "$YELLOW" "$NC"
 
     # Check if manifest.json needs to be tagged
-    if [[ "$MANIFEST_VERSION" != "$CURRENT_VERSION" ]]; then
+    if [ "$MANIFEST_VERSION" != "$CURRENT_VERSION" ]; then
         echo ""
-        echo -e "${BLUE}Manifest.json has version ${MANIFEST_VERSION} but no tag exists yet.${NC}"
+        printf "%bManifest.json has version %s but no tag exists yet.%b\n" "$BLUE" "$MANIFEST_VERSION" "$NC"
         echo "Create tag with:"
         echo "  git tag -a v${MANIFEST_VERSION} -m \"Release ${MANIFEST_VERSION}\""
         echo "  git push origin v${MANIFEST_VERSION}"
@@ -90,33 +90,33 @@ if [ -z "$COMMITS" ]; then
     exit 0
 fi
 
-# Count commit types
+# Count commit types (using grep -c with || true to handle zero matches)
 BREAKING_COUNT=$(echo "$COMMITS" | grep -c "^[^:]*!:" || true)
-FEAT_COUNT=$(echo "$COMMITS" | grep -cE "^feat(\(.+\))?:" || true)
-FIX_COUNT=$(echo "$COMMITS" | grep -cE "^fix(\(.+\))?:" || true)
-REFACTOR_COUNT=$(echo "$COMMITS" | grep -cE "^refactor(\(.+\))?:" || true)
-DOCS_COUNT=$(echo "$COMMITS" | grep -cE "^docs(\(.+\))?:" || true)
-OTHER_COUNT=$(echo "$COMMITS" | grep -vcE "^(feat|fix|refactor|docs)(\(.+\))?:" || true)
+FEAT_COUNT=$(echo "$COMMITS" | grep -c -E "^feat(\(.+\))?:" || true)
+FIX_COUNT=$(echo "$COMMITS" | grep -c -E "^fix(\(.+\))?:" || true)
+REFACTOR_COUNT=$(echo "$COMMITS" | grep -c -E "^refactor(\(.+\))?:" || true)
+DOCS_COUNT=$(echo "$COMMITS" | grep -c -E "^docs(\(.+\))?:" || true)
+OTHER_COUNT=$(echo "$COMMITS" | grep -v -c -E "^(feat|fix|refactor|docs)(\(.+\))?:" || true)
 
 # Check for breaking changes in commit messages or Impact sections
-BREAKING_IN_BODY=$(git log "$FROM_TAG"..HEAD --format="%b" --no-merges | grep -ci "BREAKING CHANGE:" || true)
+BREAKING_IN_BODY=$(git log "$FROM_TAG"..HEAD --format="%b" --no-merges | grep -c -i "BREAKING CHANGE:" || true)
 TOTAL_BREAKING=$((BREAKING_COUNT + BREAKING_IN_BODY))
 
-echo -e "${BOLD}Commit Analysis:${NC}"
+printf "%bCommit Analysis:%b\n" "$BOLD" "$NC"
 echo ""
-if [ $TOTAL_BREAKING -gt 0 ]; then
-    echo -e "  ${RED}⚠ Breaking changes:${NC} $TOTAL_BREAKING"
+if [ "$TOTAL_BREAKING" -gt 0 ]; then
+    printf "  %b⚠ Breaking changes:%b %s\n" "$RED" "$NC" "$TOTAL_BREAKING"
 fi
-echo -e "  ${GREEN}✨ New features:${NC} $FEAT_COUNT"
-echo -e "  ${BLUE}🐛 Bug fixes:${NC} $FIX_COUNT"
-if [ $REFACTOR_COUNT -gt 0 ]; then
-    echo -e "  ${YELLOW}🔧 Refactorings:${NC} $REFACTOR_COUNT"
+printf "  %b✨ New features:%b %s\n" "$GREEN" "$NC" "$FEAT_COUNT"
+printf "  %b🐛 Bug fixes:%b %s\n" "$BLUE" "$NC" "$FIX_COUNT"
+if [ "$REFACTOR_COUNT" -gt 0 ]; then
+    printf "  %b🔧 Refactorings:%b %s\n" "$YELLOW" "$NC" "$REFACTOR_COUNT"
 fi
-if [ $DOCS_COUNT -gt 0 ]; then
-    echo -e "  📚 Documentation: $DOCS_COUNT"
+if [ "$DOCS_COUNT" -gt 0 ]; then
+    printf "  📚 Documentation: %s\n" "$DOCS_COUNT"
 fi
-if [ $OTHER_COUNT -gt 0 ]; then
-    echo -e "  📦 Other: $OTHER_COUNT"
+if [ "$OTHER_COUNT" -gt 0 ]; then
+    printf "  📦 Other: %s\n" "$OTHER_COUNT"
 fi
 echo ""
 
@@ -125,10 +125,10 @@ SUGGESTED_MAJOR=$MAJOR
 SUGGESTED_MINOR=$MINOR
 SUGGESTED_PATCH=$PATCH
 
-if [ $TOTAL_BREAKING -gt 0 ]; then
+if [ "$TOTAL_BREAKING" -gt 0 ]; then
     # Before v1.0.0: Breaking changes bump minor
     # After v1.0.0: Breaking changes bump major
-    if [ $MAJOR -eq 0 ]; then
+    if [ "$MAJOR" -eq 0 ]; then
         SUGGESTED_MINOR=$((MINOR + 1))
         SUGGESTED_PATCH=0
         BUMP_TYPE="MINOR (breaking changes in 0.x)"
@@ -140,12 +140,12 @@ if [ $TOTAL_BREAKING -gt 0 ]; then
         BUMP_TYPE="MAJOR (breaking)"
         BUMP_REASON="Breaking changes detected"
     fi
-elif [ $FEAT_COUNT -gt 0 ]; then
+elif [ "$FEAT_COUNT" -gt 0 ]; then
     SUGGESTED_MINOR=$((MINOR + 1))
     SUGGESTED_PATCH=0
     BUMP_TYPE="MINOR (features)"
     BUMP_REASON="New features added"
-elif [ $FIX_COUNT -gt 0 ]; then
+elif [ "$FIX_COUNT" -gt 0 ]; then
     SUGGESTED_PATCH=$((PATCH + 1))
     BUMP_TYPE="PATCH (fixes)"
     BUMP_REASON="Bug fixes only"
@@ -157,36 +157,36 @@ fi
 
 SUGGESTED_VERSION="v${SUGGESTED_MAJOR}.${SUGGESTED_MINOR}.${SUGGESTED_PATCH}"
 
-echo -e "${BOLD}${GREEN}Suggested Version: $SUGGESTED_VERSION${NC}"
-echo -e "  Bump type: ${BUMP_TYPE}"
-echo -e "  Reason: ${BUMP_REASON}"
+printf "%b%bSuggested Version: %s%b\n" "$BOLD" "$GREEN" "$SUGGESTED_VERSION" "$NC"
+printf "  Bump type: %s\n" "$BUMP_TYPE"
+printf "  Reason: %s\n" "$BUMP_REASON"
 echo ""
 
 # Show alternative versions
-echo -e "${BOLD}Alternative Versions:${NC}"
-echo -e "  ${YELLOW}MAJOR:${NC} v$((MAJOR + 1)).0.0 (if you want to release v1.0.0 or have breaking changes)"
-echo -e "  ${GREEN}MINOR:${NC} v${MAJOR}.$((MINOR + 1)).0 (if adding features)"
-echo -e "  ${BLUE}PATCH:${NC} v${MAJOR}.${MINOR}.$((PATCH + 1)) (if only fixes/docs)"
+printf "%bAlternative Versions:%b\n" "$BOLD" "$NC"
+printf "  %bMAJOR:%b v%s.0.0 (if you want to release v1.0.0 or have breaking changes)\n" "$YELLOW" "$NC" "$((MAJOR + 1))"
+printf "  %bMINOR:%b v%s.%s.0 (if adding features)\n" "$GREEN" "$NC" "$MAJOR" "$((MINOR + 1))"
+printf "  %bPATCH:%b v%s.%s.%s (if only fixes/docs)\n" "$BLUE" "$NC" "$MAJOR" "$MINOR" "$((PATCH + 1))"
 echo ""
 
 # Show preview command
-echo -e "${BOLD}Preview Release Notes:${NC}"
+printf "%bPreview Release Notes:%b\n" "$BOLD" "$NC"
 echo "  ./scripts/generate-release-notes $FROM_TAG HEAD"
 echo ""
-echo -e "${BOLD}Create Release:${NC}"
+printf "%bCreate Release:%b\n" "$BOLD" "$NC"
 echo "  ./scripts/prepare-release ${SUGGESTED_MAJOR}.${SUGGESTED_MINOR}.${SUGGESTED_PATCH}"
 echo ""
 
 # Show warning if breaking changes detected
-if [ $TOTAL_BREAKING -gt 0 ]; then
-    echo -e "${RED}${BOLD}⚠ WARNING: Breaking changes detected!${NC}"
-    echo -e "${RED}Make sure to document migration steps in release notes.${NC}"
+if [ "$TOTAL_BREAKING" -gt 0 ]; then
+    printf "%b%b⚠ WARNING: Breaking changes detected!%b\n" "$RED" "$BOLD" "$NC"
+    printf "%bMake sure to document migration steps in release notes.%b\n" "$RED" "$NC"
     echo ""
 fi
 
 # Show note about pre-1.0 versioning
-if [ $MAJOR -eq 0 ]; then
-    echo -e "${YELLOW}Note: Pre-1.0 versioning (0.x.y)${NC}"
+if [ "$MAJOR" -eq 0 ]; then
+    printf "%bNote: Pre-1.0 versioning (0.x.y)%b\n" "$YELLOW" "$NC"
     echo "  - Breaking changes bump MINOR (0.x.0)"
     echo "  - Features bump MINOR (0.x.0)"
     echo "  - Fixes bump PATCH (0.0.x)"

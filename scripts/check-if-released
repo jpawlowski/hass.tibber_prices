@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 # Check if a commit or code change has been released (is contained in any version tag)
 #
 # Usage:
@@ -11,8 +11,7 @@
 
 set -e
 
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-cd "${SCRIPT_DIR}/.."
+cd "$(dirname "$0")/.."
 
 # Colors for output
 RED='\033[0;31m'
@@ -35,7 +34,7 @@ DETAILS="${2:-}"
 
 # Validate commit exists
 if ! git rev-parse --verify "$COMMIT" >/dev/null 2>&1; then
-    echo -e "${RED}Error: Commit '$COMMIT' not found${NC}"
+    printf '%bError: Commit '\''%s'\'' not found%b\n' "$RED" "$COMMIT" "$NC"
     exit 1
 fi
 
@@ -56,17 +55,17 @@ echo ""
 TAGS=$(git tag --contains "$COMMIT" | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+' || true)
 
 if [ -z "$TAGS" ]; then
-    echo -e "${GREEN}✓ NOT RELEASED${NC}"
+    printf '%b✓ NOT RELEASED%b\n' "$GREEN" "$NC"
     echo "This commit is not part of any version tag."
     echo ""
-    echo -e "${YELLOW}→ No legacy migration needed for code introduced in this commit${NC}"
+    printf '%b→ No legacy migration needed for code introduced in this commit%b\n' "$YELLOW" "$NC"
     exit 0
 else
-    echo -e "${RED}✗ ALREADY RELEASED${NC}"
+    printf '%b✗ ALREADY RELEASED%b\n' "$RED" "$NC"
     echo "This commit is included in the following version tags:"
     echo "$TAGS" | sed 's/^/  - /'
     echo ""
-    echo -e "${YELLOW}⚠ Breaking Change Decision:${NC}"
+    printf '%b⚠ Breaking Change Decision:%b\n' "$YELLOW" "$NC"
     echo "  1. If migration is SIMPLE (e.g., .lower(), key rename) → Add it"
     echo "  2. If migration is COMPLEX → Document in release notes instead"
     echo "  3. Home Assistant style: Prefer breaking changes over code complexity"

@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+#!/bin/sh
 
 # script/sync-hacs: Sync HACS-installed integrations to custom_components/
 

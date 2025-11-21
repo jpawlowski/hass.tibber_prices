@@ -41,6 +41,12 @@ ignore = [
     "ISC001", # incompatible with formatter
 ]
 
+[tool.ruff.lint.per-file-ignores]
+"tests/*" = [
+    "S101",    # assert is fine in tests
+    "PLR2004", # Magic values are fine in tests
+]
+
 [tool.ruff.lint.flake8-pytest-style]
 fixture-parentheses = false
 
@@ -53,3 +59,22 @@ max-complexity = 25
 [tool.ruff.lint.isort]
 force-single-line = false
 known-first-party = ["custom_components", "homeassistant"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+asyncio_default_fixture_loop_scope = "function"
+addopts = "-ra -q --strict-markers"
+markers = [
+    "unit: Unit tests (fast, no external dependencies)",
+    "integration: Integration tests (may use coordinator/time service)",
+]
+
+[project.optional-dependencies]
+test = [
+    "pytest>=8.0.0",
+    "pytest-asyncio>=0.23.0",
+    "pytest-homeassistant-custom-component>=0.13.0",
+]

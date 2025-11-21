@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+#!/bin/sh
 
 # script/setup: Setup script used by DevContainers to prepare the project
 

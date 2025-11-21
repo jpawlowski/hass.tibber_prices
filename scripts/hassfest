@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+#!/bin/sh
 
 # script/hassfest: Lightweight local validation for Home Assistant integration
 # Note: This is a simplified version. Full hassfest runs in GitHub Actions.
@@ -66,21 +66,21 @@ fi
 # ast.parse() validates syntax without writing any files to disk
 echo "✓ Checking Python syntax..."
 PYTHON_ERRORS=0
-while IFS= read -r py_file; do
+find "$INTEGRATION_PATH" -name "*.py" -type f | while IFS= read -r py_file; do
     if ! python -c "import ast; ast.parse(open('$py_file').read())" 2>/dev/null; then
         echo "  ✗ ERROR: $py_file has syntax errors"
         PYTHON_ERRORS=$((PYTHON_ERRORS + 1))
         ERRORS=$((ERRORS + 1))
     fi
-done < <(find "$INTEGRATION_PATH" -name "*.py" -type f)
+done
 if [ $PYTHON_ERRORS -eq 0 ]; then
     echo "  ✓ All Python files have valid syntax"
 fi
 
 # Check 6: Required manifest fields
 echo "✓ Checking required manifest fields..."
-REQUIRED_FIELDS=("domain" "name" "version" "documentation" "issue_tracker" "codeowners")
-for field in "${REQUIRED_FIELDS[@]}"; do
+REQUIRED_FIELDS="domain name version documentation issue_tracker codeowners"
+for field in $REQUIRED_FIELDS; do
     if ! python -c "import json; data=json.load(open('$INTEGRATION_PATH/manifest.json')); exit(0 if '$field' in data else 1)" 2>/dev/null; then
         echo "  ✗ ERROR: manifest.json missing required field: $field"
         ERRORS=$((ERRORS + 1))

@@ -741,8 +741,13 @@ Note: The local `hassfest` script performs basic validation checks (JSON syntax,
 **Testing:**
 
 ```bash
-pytest tests/      # Unit tests exist (test_*.py) but no framework enforced
+./scripts/test     # Run all tests (pytest with project configuration)
+./scripts/test -v  # Verbose output
+./scripts/test -k test_midnight  # Run specific test by name
+./scripts/test tests/test_midnight_periods.py  # Run specific file
 ```
+
+Test framework: pytest with Home Assistant custom component support. Tests live in `/tests/` directory. Use `@pytest.mark.unit` for fast tests, `@pytest.mark.integration` for tests that use real coordinator/time services.
 
 ## Testing Changes
 

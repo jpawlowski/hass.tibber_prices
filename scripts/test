@@ -1,0 +1,23 @@
+#!/bin/sh
+
+# script/test: Run project tests
+
+set -e
+
+cd "$(dirname "$0")/.."
+
+# Colors
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+NC='\033[0m' # No Color
+
+# Check if pytest is available
+if ! .venv/bin/python -c "import pytest" 2>/dev/null; then
+    printf "${YELLOW}pytest not found. Installing test dependencies...${NC}\n"
+    .venv/bin/pip install -e ".[test]"
+fi
+
+# Run pytest with project configuration
+printf "${GREEN}Running tests...${NC}\n\n"
+.venv/bin/pytest "$@"
