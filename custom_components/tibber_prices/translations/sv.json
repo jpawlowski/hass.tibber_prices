@@ -128,7 +128,7 @@
                     "enable_min_periods_best": "När aktiverad kommer filtren att gradvis luckras upp om inte tillräckligt många perioder hittas. Detta försöker uppnå det önskade minsta antalet perioder för att säkerställa att du har möjligheter att dra nytta av låga priser även på dagar med ovanliga prismönster.",
                     "min_periods_best": "Minsta antal bästa prisperioder att sträva efter per dag. Filtren kommer att luckras upp steg för steg för att försöka uppnå detta antal. Endast aktiv när 'Försök uppnå minsta antal perioder' är aktiverad. Standard: 1",
                     "relaxation_attempts_best": "Hur många gånger avslappningslogiken får försöka hitta nya kombinationer av flex och filter. Öka detta om dagarna är extrema och du behöver fler försök för att nå minimikravet. Varje extra försök tar lite mer tid men ökar chansen att hitta perioder.",
-                    "best_price_max_level_gap_count": "Maximalt antal på varandra följande intervaller som får avvika med exakt ett nivåsteg från det erforderliga nivået. Till exempel: med 'Billigt' filter och gapantal 1 accepteras sekvensen 'BILLIGT, BILLIGT, NORMALT, BILLIGT' (NORMALT är ett steg över BILLIGT). Detta förhindrar att perioder delas upp av tillfälliga nivåavvikelser. Standard: 0 (strikt filtrering, ingen tolerans)."
+                    "best_price_max_level_gap_count": "Maximalt antal på varandra följande intervaller som får avvika med exakt ett nivåsteg från det erforderliga nivået. Till exempel: med 'Billigt' filter och gapantal 1 accepteras sekvensen 'BILLIGT, BILLIGT, NORMALT, BILLIGT' (NORMALT är ett steg över BILLIGT). Detta förhindrar att perioder delas upp av tillfälliga nivåavvikelser. **Obs:** Gaptoleransen kräver perioder ≥90 minuter (6 intervaller) för att detektera avvikelser effektivt. Standard: 0 (strikt filtrering, ingen tolerans)."
                 },
                 "submit": "Fortsätt →"
             },
@@ -153,7 +153,7 @@
                     "enable_min_periods_peak": "När aktiverad kommer filtren att gradvis luckras upp om inte tillräckligt många perioder hittas. Detta försöker uppnå det önskade minsta antalet perioder för att säkerställa att du blir varnad för dyra perioder även på dagar med ovanliga prismönster.",
                     "min_periods_peak": "Minsta antal topprisperioder att sträva efter per dag. Filtren kommer att luckras upp steg för steg för att försöka uppnå detta antal. Endast aktiv när 'Försök uppnå minsta antal perioder' är aktiverad. Standard: 1",
                     "relaxation_attempts_peak": "Hur många gånger avslappningslogiken får försöka hitta nya kombinationer av flex och filter. Öka detta när topperioderna är svåra att hitta på grund av platta eller mycket volatila dagar. Fler försök ger större chans att hitta perioder men kräver lite mer beräkningstid.",
-                    "peak_price_max_level_gap_count": "Maximalt antal på varandra följande intervaller som får avvika med exakt ett nivåsteg från det erforderliga nivået. Till exempel: med 'Dyrt' filter och gapantal 1 accepteras sekvensen 'DYRT, DYRT, NORMALT, DYRT' (NORMALT är ett steg under DYRT). Detta förhindrar att perioder delas upp av tillfälliga nivåavvikelser. Standard: 0 (strikt filtrering, ingen tolerans)."
+                    "peak_price_max_level_gap_count": "Maximalt antal på varandra följande intervaller som får avvika med exakt ett nivåsteg från det erforderliga nivået. Till exempel: med 'Dyrt' filter och gapantal 1 accepteras sekvensen 'DYRT, DYRT, NORMALT, DYRT' (NORMALT är ett steg under DYRT). Detta förhindrar att perioder delas upp av tillfälliga nivåavvikelser. **Obs:** Gaptoleransen kräver perioder ≥90 minuter (6 intervaller) för att detektera avvikelser effektivt. Standard: 0 (strikt filtrering, ingen tolerans)."
                 },
                 "submit": "Fortsätt →"
             },
@@ -197,7 +197,19 @@
             "unknown": "Ett oväntat fel inträffade. Vänligen kontrollera loggarna för detaljer.",
             "cannot_connect": "Kunde inte ansluta",
             "invalid_access_token": "Ogiltig åtkomsttoken",
-            "different_home": "Åtkomsttoken är inte giltig för hem-ID:t som denna integration är konfigurerad för."
+            "different_home": "Åtkomsttoken är inte giltig för hem-ID:t som denna integration är konfigurerad för.",
+            "invalid_flex": "TRANSLATE: Flexibility percentage must be between -50% and +50%",
+            "invalid_distance": "TRANSLATE: Distance percentage must be between 0% and 50%",
+            "invalid_min_periods": "TRANSLATE: Minimum periods count must be between 1 and 10",
+            "invalid_period_length": "Periodlängden måste vara minst 15 minuter (multiplar av 15).",
+            "invalid_gap_count": "Gaptolerans måste vara mellan 0 och 8",
+            "invalid_relaxation_attempts": "Avslappningsförsök måste vara mellan 1 och 12",
+            "invalid_price_rating_low": "Låg prisklassificeringströskel måste vara mellan -50% och -5%",
+            "invalid_price_rating_high": "Hög prisklassificeringströskel måste vara mellan 5% och 50%",
+            "invalid_price_rating_thresholds": "Låg tröskel måste vara mindre än hög tröskel",
+            "invalid_volatility_threshold": "Volatilitetströskel måste vara mellan 0% och 100%",
+            "invalid_price_trend_rising": "Stigande trendtröskel måste vara mellan 1% och 50%",
+            "invalid_price_trend_falling": "Fallande trendtröskel måste vara mellan -50% och -1%"
         },
         "abort": {
             "entry_not_found": "Tibber-konfigurationspost hittades inte."

@@ -125,7 +125,7 @@
                     "best_price_flex": "Maximum above the daily minimum price that intervals can be and still qualify as 'best price'. Recommended: 15-20 with relaxation enabled (default), or 25-35 without relaxation. Maximum: 50 (hard cap for reliable period detection).",
                     "best_price_min_distance_from_avg": "Ensures periods are significantly cheaper than the daily average, not just marginally below it. This filters out noise and prevents marking slightly-below-average periods as 'best price' on days with flat prices. Higher values = stricter filtering (only truly cheap periods qualify). Default: 5 means periods must be at least 5% below the daily average.",
                     "best_price_max_level": "Only show best price periods if they contain intervals with price levels ≤ selected value. For example, selecting 'Cheap' means the period must have at least one 'VERY_CHEAP' or 'CHEAP' interval. This ensures 'best price' periods are not just relatively cheap for the day, but actually cheap in absolute terms. Select 'Any' to show best prices regardless of their absolute price level.",
-                    "best_price_max_level_gap_count": "Maximum number of consecutive intervals allowed that deviate by exactly one level step from the required level. For example: with 'Cheap' filter and gap count 1, a sequence 'CHEAP, CHEAP, NORMAL, CHEAP' is accepted (NORMAL is one step above CHEAP). This prevents periods from being split by occasional level deviations. Default: 0 (strict filtering, no tolerance).",
+                    "best_price_max_level_gap_count": "Maximum number of consecutive intervals allowed that deviate by exactly one level step from the required level. For example: with 'Cheap' filter and gap count 1, a sequence 'CHEAP, CHEAP, NORMAL, CHEAP' is accepted (NORMAL is one step above CHEAP). This prevents periods from being split by occasional level deviations. **Note:** Gap tolerance requires periods ≥90 minutes (6 intervals) to detect outliers effectively. Default: 0 (strict filtering, no tolerance).",
                     "enable_min_periods_best": "When enabled, filters will be gradually relaxed if not enough periods are found. This attempts to reach the desired minimum number of periods, which may include less optimal time windows as best-price periods.",
                     "min_periods_best": "Minimum number of best price periods to aim for per day. Filters will be relaxed step-by-step to try achieving this count. Only active when 'Try to Achieve Minimum Period Count' is enabled. Default: 1",
                     "relaxation_attempts_best": "How many flex levels (attempts) to try before giving up. Each attempt runs all filter combinations at the new flex level. More attempts increase the chance of finding additional periods at the cost of longer processing time."
@@ -150,7 +150,7 @@
                     "peak_price_flex": "Maximum below the daily maximum price that intervals can be and still qualify as 'peak price'. Recommended: -15 to -20 with relaxation enabled (default), or -25 to -35 without relaxation. Maximum: -50 (hard cap for reliable period detection). Note: Negative values indicate distance below maximum.",
                     "peak_price_min_distance_from_avg": "Ensures periods are significantly more expensive than the daily average, not just marginally above it. This filters out noise and prevents marking slightly-above-average periods as 'peak price' on days with flat prices. Higher values = stricter filtering (only truly expensive periods qualify). Default: 5 means periods must be at least 5% above the daily average.",
                     "peak_price_min_level": "Only show peak price periods if they contain intervals with price levels ≥ selected value. For example, selecting 'Expensive' means the period must have at least one 'EXPENSIVE' or 'VERY_EXPENSIVE' interval. This ensures 'peak price' periods are not just relatively expensive for the day, but actually expensive in absolute terms. Select 'Any' to show peak prices regardless of their absolute price level.",
-                    "peak_price_max_level_gap_count": "Maximum number of consecutive intervals allowed that deviate by exactly one level step from the required level. For example: with 'Expensive' filter and gap count 2, a sequence 'EXPENSIVE, NORMAL, NORMAL, EXPENSIVE' is accepted (NORMAL is one step below EXPENSIVE). This prevents periods from being split by occasional level deviations. Default: 0 (strict filtering, no tolerance).",
+                    "peak_price_max_level_gap_count": "Maximum number of consecutive intervals allowed that deviate by exactly one level step from the required level. For example: with 'Expensive' filter and gap count 2, a sequence 'EXPENSIVE, NORMAL, NORMAL, EXPENSIVE' is accepted (NORMAL is one step below EXPENSIVE). This prevents periods from being split by occasional level deviations. **Note:** Gap tolerance requires periods ≥90 minutes (6 intervals) to detect outliers effectively. Default: 0 (strict filtering, no tolerance).",
                     "enable_min_periods_peak": "When enabled, filters will be gradually relaxed if not enough periods are found. This attempts to reach the desired minimum number of periods to ensure you're warned about expensive periods even on days with unusual price patterns.",
                     "min_periods_peak": "Minimum number of peak price periods to aim for per day. Filters will be relaxed step-by-step to try achieving this count. Only active when 'Try to Achieve Minimum Period Count' is enabled. Default: 1",
                     "relaxation_attempts_peak": "How many flex levels (attempts) to try before giving up. Each attempt runs all filter combinations at the new flex level. More attempts increase the chance of finding additional peak periods at the cost of longer processing time."
@@ -197,7 +197,19 @@
             "unknown": "An unexpected error occurred. Please check the logs for details.",
             "cannot_connect": "Failed to connect",
             "invalid_access_token": "Invalid access token",
-            "different_home": "The access token is not valid for the home ID this integration is configured for."
+            "different_home": "The access token is not valid for the home ID this integration is configured for.",
+            "invalid_period_length": "Period length must be at least 15 minutes (multiples of 15).",
+            "invalid_flex": "Flexibility percentage must be between -50% and +50%",
+            "invalid_distance": "Distance percentage must be between 0% and 50%",
+            "invalid_min_periods": "Minimum periods count must be between 1 and 10",
+            "invalid_gap_count": "Gap count must be between 0 and 8",
+            "invalid_relaxation_attempts": "Relaxation attempts must be between 1 and 12",
+            "invalid_price_rating_low": "Low price rating threshold must be between -50% and -5%",
+            "invalid_price_rating_high": "High price rating threshold must be between 5% and 50%",
+            "invalid_price_rating_thresholds": "Low threshold must be less than high threshold",
+            "invalid_volatility_threshold": "Volatility threshold must be between 0% and 100%",
+            "invalid_price_trend_rising": "Rising trend threshold must be between 1% and 50%",
+            "invalid_price_trend_falling": "Falling trend threshold must be between -50% and -1%"
         },
         "abort": {
             "entry_not_found": "Tibber configuration entry not found."

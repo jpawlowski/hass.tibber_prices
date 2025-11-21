@@ -128,7 +128,7 @@
                     "enable_min_periods_best": "Når aktivert vil filtrene gradvis bli lempeligere hvis det ikke blir funnet nok perioder. Dette forsøker å nå ønsket minimum antall perioder, noe som kan føre til at mindre optimale tidsrom blir markert som beste-pris-perioder.",
                     "min_periods_best": "Minimum antall beste-pris-perioder å sikte mot per dag. Filtre vil bli lempet trinn for trinn for å prøve å oppnå dette antallet. Kun aktiv når 'Prøv å oppnå minimum antall perioder' er aktivert. Standard: 1",
                     "relaxation_attempts_best": "Hvor mange fleksnivåer (forsøk) som testes før vi gir opp. Hvert forsøk kjører alle filterkombinasjoner på det nye fleksnivået. Flere forsøk øker sjansen for ekstra perioder, men tar litt lengre tid.",
-                    "best_price_max_level_gap_count": "Maksimalt antall påfølgende intervaller som kan avvike med nøyaktig étt nivåtrinn fra det nødvendige nivået. For eksempel: med 'Billig' filter og gapantall 1, aksepteres sekvensen 'BILLIG, BILLIG, NORMAL, BILLIG' (NORMAL er étt trinn over BILLIG). Dette forhindrer at perioder blir delt opp av tilfeldige nivåavvik. Standard: 0 (streng filtrering, ingen toleranse)."
+                    "best_price_max_level_gap_count": "Maksimalt antall påfølgende intervaller som kan avvike med nøyaktig étt nivåtrinn fra det nødvendige nivået. For eksempel: med 'Billig' filter og gapantall 1, aksepteres sekvensen 'BILLIG, BILLIG, NORMAL, BILLIG' (NORMAL er étt trinn over BILLIG). Dette forhindrer at perioder blir delt opp av tilfeldige nivåavvik. **Merk:** Gaptoleranse krever perioder ≥90 minutter (6 intervaller) for å oppdage avvik effektivt. Standard: 0 (streng filtrering, ingen toleranse)."
                 },
                 "submit": "Fortsett →"
             },
@@ -153,7 +153,7 @@
                     "enable_min_periods_peak": "Når aktivert vil filtrene gradvis bli lempeligere hvis det ikke blir funnet nok perioder. Dette forsøker å nå ønsket minimum antall perioder for å sikre at du blir advart om dyre perioder selv på dager med uvanlige prismønstre.",
                     "min_periods_peak": "Minimum antall topp-pris-perioder å sikte mot per dag. Filtre vil bli lempet trinn for trinn for å prøve å oppnå dette antallet. Kun aktiv når 'Prøv å oppnå minimum antall perioder' er aktivert. Standard: 1",
                     "relaxation_attempts_peak": "Hvor mange fleksnivåer (forsøk) som testes før vi gir opp. Hvert forsøk kjører alle filterkombinasjoner på det nye fleksnivået. Flere forsøk øker sjansen for ekstra toppprisperioder, men tar litt lengre tid.",
-                    "peak_price_max_level_gap_count": "Maksimalt antall påfølgende intervaller som kan avvike med nøyaktig étt nivåtrinn fra det nødvendige nivået. For eksempel: med 'Dyr' filter og gapantall 1, aksepteres sekvensen 'DYR, DYR, NORMAL, DYR' (NORMAL er étt trinn under DYR). Dette forhindrer at perioder blir delt opp av tilfeldige nivåavvik. Standard: 0 (streng filtrering, ingen toleranse)."
+                    "peak_price_max_level_gap_count": "Maksimalt antall påfølgende intervaller som kan avvike med nøyaktig étt nivåtrinn fra det nødvendige nivået. For eksempel: med 'Dyr' filter og gapantall 1, aksepteres sekvensen 'DYR, DYR, NORMAL, DYR' (NORMAL er étt trinn under DYR). Dette forhindrer at perioder blir delt opp av tilfeldige nivåavvik. **Merk:** Gaptoleranse krever perioder ≥90 minutter (6 intervaller) for å oppdage avvik effektivt. Standard: 0 (streng filtrering, ingen toleranse)."
                 },
                 "submit": "Fortsett →"
             },
@@ -197,7 +197,19 @@
             "unknown": "En uventet feil oppstod. Vennligst sjekk loggene for detaljer.",
             "cannot_connect": "Kunne ikke koble til",
             "invalid_access_token": "Ugyldig tilgangstoken",
-            "different_home": "Tilgangstokenet er ikke gyldig for hjem-ID-en denne integrasjonen er konfigurert for."
+            "different_home": "Tilgangstokenet er ikke gyldig for hjem-ID-en denne integrasjonen er konfigurert for.",
+            "invalid_flex": "TRANSLATE: Flexibility percentage must be between -50% and +50%",
+            "invalid_distance": "TRANSLATE: Distance percentage must be between 0% and 50%",
+            "invalid_min_periods": "TRANSLATE: Minimum periods count must be between 1 and 10",
+            "invalid_period_length": "Periodelengden må være minst 15 minutter (multipler av 15).",
+            "invalid_gap_count": "Gaptoleranse må være mellom 0 og 8",
+            "invalid_relaxation_attempts": "Lempingsforsøk må være mellom 1 og 12",
+            "invalid_price_rating_low": "Lav prisvurderingsgrense må være mellom -50% og -5%",
+            "invalid_price_rating_high": "Høy prisvurderingsgrense må være mellom 5% og 50%",
+            "invalid_price_rating_thresholds": "Lav grense må være mindre enn høy grense",
+            "invalid_volatility_threshold": "Volatilitetsgrense må være mellom 0% og 100%",
+            "invalid_price_trend_rising": "Stigende trendgrense må være mellom 1% og 50%",
+            "invalid_price_trend_falling": "Fallende trendgrense må være mellom -50% og -1%"
         },
         "abort": {
             "entry_not_found": "Tibber-konfigurasjonsoppføring ikke funnet."

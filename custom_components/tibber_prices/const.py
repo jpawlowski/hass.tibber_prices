@@ -92,6 +92,39 @@ DEFAULT_ENABLE_MIN_PERIODS_PEAK = True  # Default: minimum periods feature enabl
 DEFAULT_MIN_PERIODS_PEAK = 2  # Default: require at least 2 peak price periods (when enabled)
 DEFAULT_RELAXATION_ATTEMPTS_PEAK = 11  # Default: 11 steps allows escalation from 20% to 50% (3% increment per step)
 
+# Validation limits (used in GUI schemas and server-side validation)
+# These ensure consistency between frontend and backend validation
+MAX_FLEX_PERCENTAGE = 50  # Maximum flexibility percentage (aligned with GUI slider and MAX_SAFE_FLEX)
+MAX_DISTANCE_PERCENTAGE = 50  # Maximum distance from average percentage (GUI slider limit)
+MAX_GAP_COUNT = 8  # Maximum gap count for level filtering (GUI slider limit)
+MAX_MIN_PERIODS = 10  # Maximum number of minimum periods per day (GUI slider limit)
+MAX_RELAXATION_ATTEMPTS = 12  # Maximum relaxation attempts (GUI slider limit)
+MIN_PERIOD_LENGTH = 15  # Minimum period length in minutes (1 quarter hour)
+MAX_MIN_PERIOD_LENGTH = 180  # Maximum for minimum period length setting (3 hours - realistic for required minimum)
+
+# Price rating threshold limits
+# LOW threshold: negative values (prices below average) - practical range -50% to -5%
+# HIGH threshold: positive values (prices above average) - practical range +5% to +50%
+# Ensure minimum 5% gap between thresholds to avoid overlap at 0%
+MIN_PRICE_RATING_THRESHOLD_LOW = -50  # Minimum value for low rating threshold
+MAX_PRICE_RATING_THRESHOLD_LOW = -5  # Maximum value for low rating threshold (must be < HIGH)
+MIN_PRICE_RATING_THRESHOLD_HIGH = 5  # Minimum value for high rating threshold (must be > LOW)
+MAX_PRICE_RATING_THRESHOLD_HIGH = 50  # Maximum value for high rating threshold
+
+# Volatility threshold limits
+MIN_VOLATILITY_THRESHOLD = 0.0  # Minimum volatility threshold percentage
+MAX_VOLATILITY_THRESHOLD = 100.0  # Maximum volatility threshold percentage
+
+# Price trend threshold limits
+MIN_PRICE_TREND_RISING = 1  # Minimum rising trend threshold
+MAX_PRICE_TREND_RISING = 50  # Maximum rising trend threshold
+MIN_PRICE_TREND_FALLING = -50  # Minimum falling trend threshold (negative)
+MAX_PRICE_TREND_FALLING = -1  # Maximum falling trend threshold (negative)
+
+# Gap count and relaxation limits
+MIN_GAP_COUNT = 0  # Minimum gap count
+MIN_RELAXATION_ATTEMPTS = 1  # Minimum relaxation attempts
+
 # Home types
 HOME_TYPE_APARTMENT = "APARTMENT"
 HOME_TYPE_ROWHOUSE = "ROWHOUSE"

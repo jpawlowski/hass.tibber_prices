@@ -59,6 +59,23 @@ from custom_components.tibber_prices.const import (
     DEFAULT_VOLATILITY_THRESHOLD_HIGH,
     DEFAULT_VOLATILITY_THRESHOLD_MODERATE,
     DEFAULT_VOLATILITY_THRESHOLD_VERY_HIGH,
+    MAX_GAP_COUNT,
+    MAX_MIN_PERIOD_LENGTH,
+    MAX_MIN_PERIODS,
+    MAX_PRICE_RATING_THRESHOLD_HIGH,
+    MAX_PRICE_RATING_THRESHOLD_LOW,
+    MAX_PRICE_TREND_FALLING,
+    MAX_PRICE_TREND_RISING,
+    MAX_RELAXATION_ATTEMPTS,
+    MAX_VOLATILITY_THRESHOLD,
+    MIN_GAP_COUNT,
+    MIN_PERIOD_LENGTH,
+    MIN_PRICE_RATING_THRESHOLD_HIGH,
+    MIN_PRICE_RATING_THRESHOLD_LOW,
+    MIN_PRICE_TREND_FALLING,
+    MIN_PRICE_TREND_RISING,
+    MIN_RELAXATION_ATTEMPTS,
+    MIN_VOLATILITY_THRESHOLD,
     PEAK_PRICE_MIN_LEVEL_OPTIONS,
 )
 from homeassistant.const import CONF_ACCESS_TOKEN
@@ -156,8 +173,8 @@ def get_price_rating_schema(options: Mapping[str, Any]) -> vol.Schema:
                 ),
             ): NumberSelector(
                 NumberSelectorConfig(
-                    min=-100,
-                    max=0,
+                    min=MIN_PRICE_RATING_THRESHOLD_LOW,
+                    max=MAX_PRICE_RATING_THRESHOLD_LOW,
                     unit_of_measurement="%",
                     step=1,
                     mode=NumberSelectorMode.SLIDER,
@@ -173,8 +190,8 @@ def get_price_rating_schema(options: Mapping[str, Any]) -> vol.Schema:
                 ),
             ): NumberSelector(
                 NumberSelectorConfig(
-                    min=0,
-                    max=100,
+                    min=MIN_PRICE_RATING_THRESHOLD_HIGH,
+                    max=MAX_PRICE_RATING_THRESHOLD_HIGH,
                     unit_of_measurement="%",
                     step=1,
                     mode=NumberSelectorMode.SLIDER,
@@ -198,8 +215,8 @@ def get_volatility_schema(options: Mapping[str, Any]) -> vol.Schema:
                 ),
             ): NumberSelector(
                 NumberSelectorConfig(
-                    min=0.0,
-                    max=100.0,
+                    min=MIN_VOLATILITY_THRESHOLD,
+                    max=MAX_VOLATILITY_THRESHOLD,
                     step=0.1,
                     unit_of_measurement="%",
                     mode=NumberSelectorMode.BOX,
@@ -215,8 +232,8 @@ def get_volatility_schema(options: Mapping[str, Any]) -> vol.Schema:
                 ),
             ): NumberSelector(
                 NumberSelectorConfig(
-                    min=0.0,
-                    max=100.0,
+                    min=MIN_VOLATILITY_THRESHOLD,
+                    max=MAX_VOLATILITY_THRESHOLD,
                     step=0.1,
                     unit_of_measurement="%",
                     mode=NumberSelectorMode.BOX,
@@ -232,8 +249,8 @@ def get_volatility_schema(options: Mapping[str, Any]) -> vol.Schema:
                 ),
             ): NumberSelector(
                 NumberSelectorConfig(
-                    min=0.0,
-                    max=100.0,
+                    min=MIN_VOLATILITY_THRESHOLD,
+                    max=MAX_VOLATILITY_THRESHOLD,
                     step=0.1,
                     unit_of_measurement="%",
                     mode=NumberSelectorMode.BOX,
@@ -257,8 +274,8 @@ def get_best_price_schema(options: Mapping[str, Any]) -> vol.Schema:
                 ),
             ): NumberSelector(
                 NumberSelectorConfig(
-                    min=15,
-                    max=240,
+                    min=MIN_PERIOD_LENGTH,
+                    max=MAX_MIN_PERIOD_LENGTH,
                     step=15,
                     unit_of_measurement="min",
                     mode=NumberSelectorMode.SLIDER,
@@ -321,8 +338,8 @@ def get_best_price_schema(options: Mapping[str, Any]) -> vol.Schema:
                 ),
             ): NumberSelector(
                 NumberSelectorConfig(
-                    min=0,
-                    max=8,
+                    min=MIN_GAP_COUNT,
+                    max=MAX_GAP_COUNT,
                     step=1,
                     mode=NumberSelectorMode.SLIDER,
                 ),
@@ -345,7 +362,7 @@ def get_best_price_schema(options: Mapping[str, Any]) -> vol.Schema:
             ): NumberSelector(
                 NumberSelectorConfig(
                     min=1,
-                    max=10,
+                    max=MAX_MIN_PERIODS,
                     step=1,
                     mode=NumberSelectorMode.SLIDER,
                 ),
@@ -360,8 +377,8 @@ def get_best_price_schema(options: Mapping[str, Any]) -> vol.Schema:
                 ),
             ): NumberSelector(
                 NumberSelectorConfig(
-                    min=1,
-                    max=12,
+                    min=MIN_RELAXATION_ATTEMPTS,
+                    max=MAX_RELAXATION_ATTEMPTS,
                     step=1,
                     mode=NumberSelectorMode.SLIDER,
                 ),
@@ -384,8 +401,8 @@ def get_peak_price_schema(options: Mapping[str, Any]) -> vol.Schema:
                 ),
             ): NumberSelector(
                 NumberSelectorConfig(
-                    min=15,
-                    max=240,
+                    min=MIN_PERIOD_LENGTH,
+                    max=MAX_MIN_PERIOD_LENGTH,
                     step=15,
                     unit_of_measurement="min",
                     mode=NumberSelectorMode.SLIDER,
@@ -448,8 +465,8 @@ def get_peak_price_schema(options: Mapping[str, Any]) -> vol.Schema:
                 ),
             ): NumberSelector(
                 NumberSelectorConfig(
-                    min=0,
-                    max=8,
+                    min=MIN_GAP_COUNT,
+                    max=MAX_GAP_COUNT,
                     step=1,
                     mode=NumberSelectorMode.SLIDER,
                 ),
@@ -472,7 +489,7 @@ def get_peak_price_schema(options: Mapping[str, Any]) -> vol.Schema:
             ): NumberSelector(
                 NumberSelectorConfig(
                     min=1,
-                    max=10,
+                    max=MAX_MIN_PERIODS,
                     step=1,
                     mode=NumberSelectorMode.SLIDER,
                 ),
@@ -487,8 +504,8 @@ def get_peak_price_schema(options: Mapping[str, Any]) -> vol.Schema:
                 ),
             ): NumberSelector(
                 NumberSelectorConfig(
-                    min=1,
-                    max=12,
+                    min=MIN_RELAXATION_ATTEMPTS,
+                    max=MAX_RELAXATION_ATTEMPTS,
                     step=1,
                     mode=NumberSelectorMode.SLIDER,
                 ),
@@ -511,8 +528,8 @@ def get_price_trend_schema(options: Mapping[str, Any]) -> vol.Schema:
                 ),
             ): NumberSelector(
                 NumberSelectorConfig(
-                    min=1,
-                    max=50,
+                    min=MIN_PRICE_TREND_RISING,
+                    max=MAX_PRICE_TREND_RISING,
                     step=1,
                     unit_of_measurement="%",
                     mode=NumberSelectorMode.SLIDER,
@@ -528,8 +545,8 @@ def get_price_trend_schema(options: Mapping[str, Any]) -> vol.Schema:
                 ),
             ): NumberSelector(
                 NumberSelectorConfig(
-                    min=-50,
-                    max=-1,
+                    min=MIN_PRICE_TREND_FALLING,
+                    max=MAX_PRICE_TREND_FALLING,
                     step=1,
                     unit_of_measurement="%",
                     mode=NumberSelectorMode.SLIDER,

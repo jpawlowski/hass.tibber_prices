@@ -128,7 +128,7 @@
                     "enable_min_periods_best": "Wanneer ingeschakeld worden filters geleidelijk versoepeld als er niet genoeg periodes worden gevonden. Dit probeert het gewenste minimum aantal periodes te bereiken om ervoor te zorgen dat je kansen hebt om van lage prijzen te profiteren, zelfs op dagen met ongebruikelijke prijspatronen.",
                     "min_periods_best": "Minimum aantal beste prijsperiodes om naar te streven per dag. Filters worden stap voor stap versoepeld om dit aantal te proberen bereiken. Alleen actief wanneer 'Probeer minimum aantal periodes te bereiken' is ingeschakeld. Standaard: 1",
                     "relaxation_attempts_best": "Hoeveel keer de ontspanningslogica filters opnieuw mag proberen. Gebruik hogere waarden om meer variaties te testen als dagen extreem grillig zijn. Hogere aantallen vergen meer rekentijd maar vergroten de kans dat het gewenste minimum aantal periodes wordt gehaald.",
-                    "best_price_max_level_gap_count": "Maximum aantal opeenvolgende intervallen dat precies één niveaustap mag afwijken van het vereiste niveau. Bijvoorbeeld: met 'Goedkoop' filter en gaptelling 1 wordt de reeks 'GOEDKOOP, GOEDKOOP, NORMAAL, GOEDKOOP' geaccepteerd (NORMAAL is één stap boven GOEDKOOP). Dit voorkomt dat periodes worden opgesplitst door incidentele niveauafwijkingen. Standaard: 0 (strikte filtering, geen tolerantie)."
+                    "best_price_max_level_gap_count": "Maximum aantal opeenvolgende intervallen dat precies één niveaustap mag afwijken van het vereiste niveau. Bijvoorbeeld: met 'Goedkoop' filter en gaptelling 1 wordt de reeks 'GOEDKOOP, GOEDKOOP, NORMAAL, GOEDKOOP' geaccepteerd (NORMAAL is één stap boven GOEDKOOP). Dit voorkomt dat periodes worden opgesplitst door incidentele niveauafwijkingen. **Let op:** Gaptolerantie vereist periodes ≥90 minuten (6 intervallen) om afwijkingen effectief te detecteren. Standaard: 0 (strikte filtering, geen tolerantie)."
                 },
                 "submit": "Doorgaan →"
             },
@@ -153,7 +153,7 @@
                     "enable_min_periods_peak": "Wanneer ingeschakeld worden filters geleidelijk versoepeld als er niet genoeg periodes worden gevonden. Dit probeert het gewenste minimum aantal periodes te bereiken om ervoor te zorgen dat je wordt gewaarschuwd voor dure periodes, zelfs op dagen met ongebruikelijke prijspatronen.",
                     "min_periods_peak": "Minimum aantal piekprijsperiodes om naar te streven per dag. Filters worden stap voor stap versoepeld om dit aantal te proberen bereiken. Alleen actief wanneer 'Probeer minimum aantal periodes te bereiken' is ingeschakeld. Standaard: 1",
                     "relaxation_attempts_peak": "Hoeveel keer de ontspanningslogica filters opnieuw mag proberen. Gebruik meer pogingen wanneer de piekperiodes moeilijk te vinden zijn door vlakke of zeer grillige dagen. Elke extra poging kost wat extra verwerkingstijd maar vergroot de kans dat periodes worden gevonden.",
-                    "peak_price_max_level_gap_count": "Maximum aantal opeenvolgende intervallen dat precies één niveaustap mag afwijken van het vereiste niveau. Bijvoorbeeld: met 'Duur' filter en gaptelling 1 wordt de reeks 'DUUR, DUUR, NORMAAL, DUUR' geaccepteerd (NORMAAL is één stap onder DUUR). Dit voorkomt dat periodes worden opgesplitst door incidentele niveauafwijkingen. Standaard: 0 (strikte filtering, geen tolerantie)."
+                    "peak_price_max_level_gap_count": "Maximum aantal opeenvolgende intervallen dat precies één niveaustap mag afwijken van het vereiste niveau. Bijvoorbeeld: met 'Duur' filter en gaptelling 1 wordt de reeks 'DUUR, DUUR, NORMAAL, DUUR' geaccepteerd (NORMAAL is één stap onder DUUR). Dit voorkomt dat periodes worden opgesplitst door incidentele niveauafwijkingen. **Let op:** Gaptolerantie vereist periodes ≥90 minuten (6 intervallen) om afwijkingen effectief te detecteren. Standaard: 0 (strikte filtering, geen tolerantie)."
                 },
                 "submit": "Doorgaan →"
             },
@@ -197,7 +197,19 @@
             "unknown": "Er is een onverwachte fout opgetreden. Controleer de logboeken voor details.",
             "cannot_connect": "Verbinding mislukt",
             "invalid_access_token": "Ongeldig toegangstoken",
-            "different_home": "Het toegangstoken is niet geldig voor de huis-ID waarvoor deze integratie is geconfigureerd."
+            "different_home": "Het toegangstoken is niet geldig voor de huis-ID waarvoor deze integratie is geconfigureerd.",
+            "invalid_flex": "TRANSLATE: Flexibility percentage must be between -50% and +50%",
+            "invalid_distance": "TRANSLATE: Distance percentage must be between 0% and 50%",
+            "invalid_min_periods": "TRANSLATE: Minimum periods count must be between 1 and 10",
+            "invalid_period_length": "De periodelengte moet minimaal 15 minuten zijn (veelvouden van 15).",
+            "invalid_gap_count": "Gaptolerantie moet tussen 0 en 8 liggen",
+            "invalid_relaxation_attempts": "Versoepelingspogingen moeten tussen 1 en 12 liggen",
+            "invalid_price_rating_low": "Lage prijsbeoordelingsdrempel moet tussen -50% en -5% liggen",
+            "invalid_price_rating_high": "Hoge prijsbeoordelingsdrempel moet tussen 5% en 50% liggen",
+            "invalid_price_rating_thresholds": "Lage drempel moet lager zijn dan hoge drempel",
+            "invalid_volatility_threshold": "Volatiliteitsdrempel moet tussen 0% en 100% liggen",
+            "invalid_price_trend_rising": "Stijgende trenddrempel moet tussen 1% en 50% liggen",
+            "invalid_price_trend_falling": "Dalende trenddrempel moet tussen -50% en -1% liggen"
         },
         "abort": {
             "entry_not_found": "Tibber-configuratie-item niet gevonden."
