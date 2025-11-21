@@ -207,7 +207,10 @@
             "invalid_price_rating_low": "Untere Preis-Bewertungsschwelle muss zwischen -50% und -5% liegen",
             "invalid_price_rating_high": "Obere Preis-Bewertungsschwelle muss zwischen 5% und 50% liegen",
             "invalid_price_rating_thresholds": "Untere Schwelle muss kleiner als obere Schwelle sein",
-            "invalid_volatility_threshold": "Volatilitätsschwelle muss zwischen 0% und 100% liegen",
+            "invalid_volatility_threshold_moderate": "Moderate Volatilitätsschwelle muss zwischen 5% und 25% liegen",
+            "invalid_volatility_threshold_high": "Hohe Volatilitätsschwelle muss zwischen 20% und 40% liegen",
+            "invalid_volatility_threshold_very_high": "Sehr hohe Volatilitätsschwelle muss zwischen 35% und 80% liegen",
+            "invalid_volatility_thresholds": "Schwellenwerte müssen aufsteigend sein: moderat < hoch < sehr hoch",
             "invalid_price_trend_rising": "Steigender Trendschwellenwert muss zwischen 1% und 50% liegen",
             "invalid_price_trend_falling": "Fallender Trendschwellenwert muss zwischen -50% und -1% liegen"
         },

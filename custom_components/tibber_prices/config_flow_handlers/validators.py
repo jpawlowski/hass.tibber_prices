@@ -21,7 +21,9 @@ from custom_components.tibber_prices.const import (
     MAX_PRICE_TREND_FALLING,
     MAX_PRICE_TREND_RISING,
     MAX_RELAXATION_ATTEMPTS,
-    MAX_VOLATILITY_THRESHOLD,
+    MAX_VOLATILITY_THRESHOLD_HIGH,
+    MAX_VOLATILITY_THRESHOLD_MODERATE,
+    MAX_VOLATILITY_THRESHOLD_VERY_HIGH,
     MIN_GAP_COUNT,
     MIN_PERIOD_LENGTH,
     MIN_PRICE_RATING_THRESHOLD_HIGH,
@@ -29,7 +31,9 @@ from custom_components.tibber_prices.const import (
     MIN_PRICE_TREND_FALLING,
     MIN_PRICE_TREND_RISING,
     MIN_RELAXATION_ATTEMPTS,
-    MIN_VOLATILITY_THRESHOLD,
+    MIN_VOLATILITY_THRESHOLD_HIGH,
+    MIN_VOLATILITY_THRESHOLD_MODERATE,
+    MIN_VOLATILITY_THRESHOLD_VERY_HIGH,
 )
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
@@ -219,18 +223,78 @@ def validate_price_rating_thresholds(threshold_low: int, threshold_high: int) ->
     return threshold_low < threshold_high
 
 
-def validate_volatility_threshold(threshold: float) -> bool:
+def validate_volatility_threshold_moderate(threshold: float) -> bool:
     """
-    Validate volatility threshold percentage.
+    Validate moderate volatility threshold.
 
     Args:
-        threshold: Volatility threshold percentage (0.0 to 100.0)
+        threshold: Moderate volatility threshold percentage (5.0 to 25.0)
 
     Returns:
-        True if threshold is valid (MIN_VOLATILITY_THRESHOLD to MAX_VOLATILITY_THRESHOLD)
+        True if threshold is valid (MIN_VOLATILITY_THRESHOLD_MODERATE to MAX_VOLATILITY_THRESHOLD_MODERATE)
 
     """
-    return MIN_VOLATILITY_THRESHOLD <= threshold <= MAX_VOLATILITY_THRESHOLD
+    return MIN_VOLATILITY_THRESHOLD_MODERATE <= threshold <= MAX_VOLATILITY_THRESHOLD_MODERATE
+
+
+def validate_volatility_threshold_high(threshold: float) -> bool:
+    """
+    Validate high volatility threshold.
+
+    Args:
+        threshold: High volatility threshold percentage (20.0 to 40.0)
+
+    Returns:
+        True if threshold is valid (MIN_VOLATILITY_THRESHOLD_HIGH to MAX_VOLATILITY_THRESHOLD_HIGH)
+
+    """
+    return MIN_VOLATILITY_THRESHOLD_HIGH <= threshold <= MAX_VOLATILITY_THRESHOLD_HIGH
+
+
+def validate_volatility_threshold_very_high(threshold: float) -> bool:
+    """
+    Validate very high volatility threshold.
+
+    Args:
+        threshold: Very high volatility threshold percentage (35.0 to 80.0)
+
+    Returns:
+        True if threshold is valid (MIN_VOLATILITY_THRESHOLD_VERY_HIGH to MAX_VOLATILITY_THRESHOLD_VERY_HIGH)
+
+    """
+    return MIN_VOLATILITY_THRESHOLD_VERY_HIGH <= threshold <= MAX_VOLATILITY_THRESHOLD_VERY_HIGH
+
+
+def validate_volatility_thresholds(
+    threshold_moderate: float,
+    threshold_high: float,
+    threshold_very_high: float,
+) -> bool:
+    """
+    Cross-validate all three volatility thresholds together.
+
+    Ensures that MODERATE < HIGH < VERY_HIGH to maintain logical classification
+    boundaries. Each threshold represents an escalating level of price volatility.
+
+    Args:
+        threshold_moderate: Moderate volatility threshold (5.0 to 25.0)
+        threshold_high: High volatility threshold (20.0 to 40.0)
+        threshold_very_high: Very high volatility threshold (35.0 to 80.0)
+
+    Returns:
+        True if all thresholds are valid individually AND maintain proper ordering
+
+    """
+    # Validate individual ranges first
+    if not validate_volatility_threshold_moderate(threshold_moderate):
+        return False
+    if not validate_volatility_threshold_high(threshold_high):
+        return False
+    if not validate_volatility_threshold_very_high(threshold_very_high):
+        return False
+
+    # Ensure cascading order: MODERATE < HIGH < VERY_HIGH
+    return threshold_moderate < threshold_high < threshold_very_high
 
 
 def validate_price_trend_rising(threshold: int) -> bool:

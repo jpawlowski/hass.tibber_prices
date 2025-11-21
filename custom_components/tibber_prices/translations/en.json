@@ -207,7 +207,10 @@
             "invalid_price_rating_low": "Low price rating threshold must be between -50% and -5%",
             "invalid_price_rating_high": "High price rating threshold must be between 5% and 50%",
             "invalid_price_rating_thresholds": "Low threshold must be less than high threshold",
-            "invalid_volatility_threshold": "Volatility threshold must be between 0% and 100%",
+            "invalid_volatility_threshold_moderate": "Moderate volatility threshold must be between 5% and 25%",
+            "invalid_volatility_threshold_high": "High volatility threshold must be between 20% and 40%",
+            "invalid_volatility_threshold_very_high": "Very high volatility threshold must be between 35% and 80%",
+            "invalid_volatility_thresholds": "Thresholds must be in ascending order: moderate < high < very high",
             "invalid_price_trend_rising": "Rising trend threshold must be between 1% and 50%",
             "invalid_price_trend_falling": "Falling trend threshold must be between -50% and -1%"
         },

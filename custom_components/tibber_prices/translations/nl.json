@@ -207,7 +207,10 @@
             "invalid_price_rating_low": "Lage prijsbeoordelingsdrempel moet tussen -50% en -5% liggen",
             "invalid_price_rating_high": "Hoge prijsbeoordelingsdrempel moet tussen 5% en 50% liggen",
             "invalid_price_rating_thresholds": "Lage drempel moet lager zijn dan hoge drempel",
-            "invalid_volatility_threshold": "Volatiliteitsdrempel moet tussen 0% en 100% liggen",
+            "invalid_volatility_threshold_moderate": "Gematigde volatiliteitsdrempel moet tussen 5% en 25% liggen",
+            "invalid_volatility_threshold_high": "Hoge volatiliteitsdrempel moet tussen 20% en 40% liggen",
+            "invalid_volatility_threshold_very_high": "Zeer hoge volatiliteitsdrempel moet tussen 35% en 80% liggen",
+            "invalid_volatility_thresholds": "Drempels moeten in oplopende volgorde zijn: gematigd < hoog < zeer hoog",
             "invalid_price_trend_rising": "Stijgende trenddrempel moet tussen 1% en 50% liggen",
             "invalid_price_trend_falling": "Dalende trenddrempel moet tussen -50% en -1% liggen"
         },

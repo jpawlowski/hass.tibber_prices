@@ -112,8 +112,16 @@ MIN_PRICE_RATING_THRESHOLD_HIGH = 5  # Minimum value for high rating threshold (
 MAX_PRICE_RATING_THRESHOLD_HIGH = 50  # Maximum value for high rating threshold
 
 # Volatility threshold limits
-MIN_VOLATILITY_THRESHOLD = 0.0  # Minimum volatility threshold percentage
-MAX_VOLATILITY_THRESHOLD = 100.0  # Maximum volatility threshold percentage
+# MODERATE threshold: practical range 5% to 25% (entry point for noticeable fluctuation)
+# HIGH threshold: practical range 20% to 40% (significant price swings)
+# VERY_HIGH threshold: practical range 35% to 80% (extreme volatility)
+# Ensure cascading: MODERATE < HIGH < VERY_HIGH with ~5% minimum gaps
+MIN_VOLATILITY_THRESHOLD_MODERATE = 5.0  # Minimum for moderate volatility threshold
+MAX_VOLATILITY_THRESHOLD_MODERATE = 25.0  # Maximum for moderate volatility threshold (must be < HIGH)
+MIN_VOLATILITY_THRESHOLD_HIGH = 20.0  # Minimum for high volatility threshold (must be > MODERATE)
+MAX_VOLATILITY_THRESHOLD_HIGH = 40.0  # Maximum for high volatility threshold (must be < VERY_HIGH)
+MIN_VOLATILITY_THRESHOLD_VERY_HIGH = 35.0  # Minimum for very high volatility threshold (must be > HIGH)
+MAX_VOLATILITY_THRESHOLD_VERY_HIGH = 80.0  # Maximum for very high volatility threshold
 
 # Price trend threshold limits
 MIN_PRICE_TREND_RISING = 1  # Minimum rising trend threshold

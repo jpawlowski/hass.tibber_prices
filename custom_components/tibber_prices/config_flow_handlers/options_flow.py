@@ -29,7 +29,10 @@ from custom_components.tibber_prices.config_flow_handlers.validators import (
     validate_price_trend_falling,
     validate_price_trend_rising,
     validate_relaxation_attempts,
-    validate_volatility_threshold,
+    validate_volatility_threshold_high,
+    validate_volatility_threshold_moderate,
+    validate_volatility_threshold_very_high,
+    validate_volatility_thresholds,
 )
 from custom_components.tibber_prices.const import (
     CONF_BEST_PRICE_FLEX,
@@ -51,6 +54,9 @@ from custom_components.tibber_prices.const import (
     CONF_VOLATILITY_THRESHOLD_HIGH,
     CONF_VOLATILITY_THRESHOLD_MODERATE,
     CONF_VOLATILITY_THRESHOLD_VERY_HIGH,
+    DEFAULT_VOLATILITY_THRESHOLD_HIGH,
+    DEFAULT_VOLATILITY_THRESHOLD_MODERATE,
+    DEFAULT_VOLATILITY_THRESHOLD_VERY_HIGH,
     DOMAIN,
 )
 from homeassistant.config_entries import ConfigFlowResult, OptionsFlow
@@ -359,22 +365,41 @@ class TibberPricesOptionsFlowHandler(OptionsFlow):
 
         if user_input is not None:
             # Validate moderate volatility threshold
-            if CONF_VOLATILITY_THRESHOLD_MODERATE in user_input and not validate_volatility_threshold(
+            if CONF_VOLATILITY_THRESHOLD_MODERATE in user_input and not validate_volatility_threshold_moderate(
                 user_input[CONF_VOLATILITY_THRESHOLD_MODERATE]
             ):
-                errors[CONF_VOLATILITY_THRESHOLD_MODERATE] = "invalid_volatility_threshold"
+                errors[CONF_VOLATILITY_THRESHOLD_MODERATE] = "invalid_volatility_threshold_moderate"
 
             # Validate high volatility threshold
-            if CONF_VOLATILITY_THRESHOLD_HIGH in user_input and not validate_volatility_threshold(
+            if CONF_VOLATILITY_THRESHOLD_HIGH in user_input and not validate_volatility_threshold_high(
                 user_input[CONF_VOLATILITY_THRESHOLD_HIGH]
             ):
-                errors[CONF_VOLATILITY_THRESHOLD_HIGH] = "invalid_volatility_threshold"
+                errors[CONF_VOLATILITY_THRESHOLD_HIGH] = "invalid_volatility_threshold_high"
 
             # Validate very high volatility threshold
-            if CONF_VOLATILITY_THRESHOLD_VERY_HIGH in user_input and not validate_volatility_threshold(
+            if CONF_VOLATILITY_THRESHOLD_VERY_HIGH in user_input and not validate_volatility_threshold_very_high(
                 user_input[CONF_VOLATILITY_THRESHOLD_VERY_HIGH]
             ):
-                errors[CONF_VOLATILITY_THRESHOLD_VERY_HIGH] = "invalid_volatility_threshold"
+                errors[CONF_VOLATILITY_THRESHOLD_VERY_HIGH] = "invalid_volatility_threshold_very_high"
+
+            # Cross-validation: Ensure MODERATE < HIGH < VERY_HIGH
+            if not errors:
+                existing_options = self.config_entry.options
+                moderate = user_input.get(
+                    CONF_VOLATILITY_THRESHOLD_MODERATE,
+                    existing_options.get(CONF_VOLATILITY_THRESHOLD_MODERATE, DEFAULT_VOLATILITY_THRESHOLD_MODERATE),
+                )
+                high = user_input.get(
+                    CONF_VOLATILITY_THRESHOLD_HIGH,
+                    existing_options.get(CONF_VOLATILITY_THRESHOLD_HIGH, DEFAULT_VOLATILITY_THRESHOLD_HIGH),
+                )
+                very_high = user_input.get(
+                    CONF_VOLATILITY_THRESHOLD_VERY_HIGH,
+                    existing_options.get(CONF_VOLATILITY_THRESHOLD_VERY_HIGH, DEFAULT_VOLATILITY_THRESHOLD_VERY_HIGH),
+                )
+
+                if not validate_volatility_thresholds(moderate, high, very_high):
+                    errors["base"] = "invalid_volatility_thresholds"
 
             if not errors:
                 self._options.update(user_input)

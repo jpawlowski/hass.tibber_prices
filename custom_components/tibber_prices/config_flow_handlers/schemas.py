@@ -67,7 +67,9 @@ from custom_components.tibber_prices.const import (
     MAX_PRICE_TREND_FALLING,
     MAX_PRICE_TREND_RISING,
     MAX_RELAXATION_ATTEMPTS,
-    MAX_VOLATILITY_THRESHOLD,
+    MAX_VOLATILITY_THRESHOLD_HIGH,
+    MAX_VOLATILITY_THRESHOLD_MODERATE,
+    MAX_VOLATILITY_THRESHOLD_VERY_HIGH,
     MIN_GAP_COUNT,
     MIN_PERIOD_LENGTH,
     MIN_PRICE_RATING_THRESHOLD_HIGH,
@@ -75,7 +77,9 @@ from custom_components.tibber_prices.const import (
     MIN_PRICE_TREND_FALLING,
     MIN_PRICE_TREND_RISING,
     MIN_RELAXATION_ATTEMPTS,
-    MIN_VOLATILITY_THRESHOLD,
+    MIN_VOLATILITY_THRESHOLD_HIGH,
+    MIN_VOLATILITY_THRESHOLD_MODERATE,
+    MIN_VOLATILITY_THRESHOLD_VERY_HIGH,
     PEAK_PRICE_MIN_LEVEL_OPTIONS,
 )
 from homeassistant.const import CONF_ACCESS_TOKEN
@@ -215,11 +219,11 @@ def get_volatility_schema(options: Mapping[str, Any]) -> vol.Schema:
                 ),
             ): NumberSelector(
                 NumberSelectorConfig(
-                    min=MIN_VOLATILITY_THRESHOLD,
-                    max=MAX_VOLATILITY_THRESHOLD,
-                    step=0.1,
+                    min=MIN_VOLATILITY_THRESHOLD_MODERATE,
+                    max=MAX_VOLATILITY_THRESHOLD_MODERATE,
+                    step=1.0,
                     unit_of_measurement="%",
-                    mode=NumberSelectorMode.BOX,
+                    mode=NumberSelectorMode.SLIDER,
                 ),
             ),
             vol.Optional(
@@ -232,11 +236,11 @@ def get_volatility_schema(options: Mapping[str, Any]) -> vol.Schema:
                 ),
             ): NumberSelector(
                 NumberSelectorConfig(
-                    min=MIN_VOLATILITY_THRESHOLD,
-                    max=MAX_VOLATILITY_THRESHOLD,
-                    step=0.1,
+                    min=MIN_VOLATILITY_THRESHOLD_HIGH,
+                    max=MAX_VOLATILITY_THRESHOLD_HIGH,
+                    step=1.0,
                     unit_of_measurement="%",
-                    mode=NumberSelectorMode.BOX,
+                    mode=NumberSelectorMode.SLIDER,
                 ),
             ),
             vol.Optional(
@@ -249,11 +253,11 @@ def get_volatility_schema(options: Mapping[str, Any]) -> vol.Schema:
                 ),
             ): NumberSelector(
                 NumberSelectorConfig(
-                    min=MIN_VOLATILITY_THRESHOLD,
-                    max=MAX_VOLATILITY_THRESHOLD,
-                    step=0.1,
+                    min=MIN_VOLATILITY_THRESHOLD_VERY_HIGH,
+                    max=MAX_VOLATILITY_THRESHOLD_VERY_HIGH,
+                    step=1.0,
                     unit_of_measurement="%",
-                    mode=NumberSelectorMode.BOX,
+                    mode=NumberSelectorMode.SLIDER,
                 ),
             ),
         }

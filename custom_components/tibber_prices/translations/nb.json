@@ -207,7 +207,10 @@
             "invalid_price_rating_low": "Lav prisvurderingsgrense må være mellom -50% og -5%",
             "invalid_price_rating_high": "Høy prisvurderingsgrense må være mellom 5% og 50%",
             "invalid_price_rating_thresholds": "Lav grense må være mindre enn høy grense",
-            "invalid_volatility_threshold": "Volatilitetsgrense må være mellom 0% og 100%",
+            "invalid_volatility_threshold_moderate": "Moderat volatilitetsgrense må være mellom 5% og 25%",
+            "invalid_volatility_threshold_high": "Høy volatilitetsgrense må være mellom 20% og 40%",
+            "invalid_volatility_threshold_very_high": "Svært høy volatilitetsgrense må være mellom 35% og 80%",
+            "invalid_volatility_thresholds": "Grensene må være i stigende rekkefølge: moderat < høy < svært høy",
             "invalid_price_trend_rising": "Stigende trendgrense må være mellom 1% og 50%",
             "invalid_price_trend_falling": "Fallende trendgrense må være mellom -50% og -1%"
         },

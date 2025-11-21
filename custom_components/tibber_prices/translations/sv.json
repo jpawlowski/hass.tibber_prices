@@ -207,7 +207,10 @@
             "invalid_price_rating_low": "Låg prisklassificeringströskel måste vara mellan -50% och -5%",
             "invalid_price_rating_high": "Hög prisklassificeringströskel måste vara mellan 5% och 50%",
             "invalid_price_rating_thresholds": "Låg tröskel måste vara mindre än hög tröskel",
-            "invalid_volatility_threshold": "Volatilitetströskel måste vara mellan 0% och 100%",
+            "invalid_volatility_threshold_moderate": "Måttlig volatilitetströskel måste vara mellan 5% och 25%",
+            "invalid_volatility_threshold_high": "Hög volatilitetströskel måste vara mellan 20% och 40%",
+            "invalid_volatility_threshold_very_high": "Mycket hög volatilitetströskel måste vara mellan 35% och 80%",
+            "invalid_volatility_thresholds": "Trösklar måste vara i stigande ordning: måttlig < hög < mycket hög",
             "invalid_price_trend_rising": "Stigande trendtröskel måste vara mellan 1% och 50%",
             "invalid_price_trend_falling": "Fallande trendtröskel måste vara mellan -50% och -1%"
         },
