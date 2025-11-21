@@ -49,7 +49,7 @@ def build_period_attributes(period_data: dict) -> dict:
     }
 
 
-def add_description_attributes(  # noqa: PLR0913
+def add_description_attributes(  # noqa: PLR0913, PLR0912
     attributes: dict,
     platform: str,
     translation_key: str | None,
@@ -61,8 +61,13 @@ def add_description_attributes(  # noqa: PLR0913
     """
     Add description attributes from custom translations to an existing attributes dict.
 
-    Adds description (always), and optionally long_description and usage_tips if
-    CONF_EXTENDED_DESCRIPTIONS is enabled in config.
+    The 'description' attribute is always present, but its content changes based on
+    CONF_EXTENDED_DESCRIPTIONS setting:
+    - When disabled: Uses short 'description' from translations
+    - When enabled: Uses 'long_description' from translations (falls back to short if not available)
+
+    Additionally, when CONF_EXTENDED_DESCRIPTIONS is enabled, 'usage_tips' is added as
+    a separate attribute.
 
     This function modifies the attributes dict in-place. By default, descriptions are
     added at the END of the dict (after all other attributes). For special cases like
@@ -95,20 +100,27 @@ def add_description_attributes(  # noqa: PLR0913
     # Build description dict
     desc_attrs: dict[str, str] = {}
 
-    description = get_entity_description(platform, translation_key, language, "description")
-    if description:
-        desc_attrs["description"] = description
-
     extended_descriptions = config_entry.options.get(
         CONF_EXTENDED_DESCRIPTIONS,
         config_entry.data.get(CONF_EXTENDED_DESCRIPTIONS, DEFAULT_EXTENDED_DESCRIPTIONS),
     )
 
+    # Choose description based on extended_descriptions setting
     if extended_descriptions:
-        long_desc = get_entity_description(platform, translation_key, language, "long_description")
-        if long_desc:
-            desc_attrs["long_description"] = long_desc
+        # Use long_description as description content (if available)
+        description = get_entity_description(platform, translation_key, language, "long_description")
+        if not description:
+            # Fallback to short description if long_description not available
+            description = get_entity_description(platform, translation_key, language, "description")
+    else:
+        # Use short description
+        description = get_entity_description(platform, translation_key, language, "description")
 
+    if description:
+        desc_attrs["description"] = description
+
+    # Add usage_tips as separate attribute if extended_descriptions enabled
+    if extended_descriptions:
         usage_tips = get_entity_description(platform, translation_key, language, "usage_tips")
         if usage_tips:
             desc_attrs["usage_tips"] = usage_tips
@@ -140,7 +152,7 @@ def add_description_attributes(  # noqa: PLR0913
             attributes[key] = value
 
 
-async def async_add_description_attributes(  # noqa: PLR0913
+async def async_add_description_attributes(  # noqa: PLR0913, PLR0912
     attributes: dict,
     platform: str,
     translation_key: str | None,
@@ -179,32 +191,45 @@ async def async_add_description_attributes(  # noqa: PLR0913
     # Build description dict
     desc_attrs: dict[str, str] = {}
 
-    description = await async_get_entity_description(
-        hass,
-        platform,
-        translation_key,
-        language,
-        "description",
-    )
-    if description:
-        desc_attrs["description"] = description
-
     extended_descriptions = config_entry.options.get(
         CONF_EXTENDED_DESCRIPTIONS,
         config_entry.data.get(CONF_EXTENDED_DESCRIPTIONS, DEFAULT_EXTENDED_DESCRIPTIONS),
     )
 
+    # Choose description based on extended_descriptions setting
     if extended_descriptions:
-        long_desc = await async_get_entity_description(
+        # Use long_description as description content (if available)
+        description = await async_get_entity_description(
             hass,
             platform,
             translation_key,
             language,
             "long_description",
         )
-        if long_desc:
-            desc_attrs["long_description"] = long_desc
+        if not description:
+            # Fallback to short description if long_description not available
+            description = await async_get_entity_description(
+                hass,
+                platform,
+                translation_key,
+                language,
+                "description",
+            )
+    else:
+        # Use short description
+        description = await async_get_entity_description(
+            hass,
+            platform,
+            translation_key,
+            language,
+            "description",
+        )
 
+    if description:
+        desc_attrs["description"] = description
+
+    # Add usage_tips as separate attribute if extended_descriptions enabled
+    if extended_descriptions:
         usage_tips = await async_get_entity_description(
             hass,
             platform,
