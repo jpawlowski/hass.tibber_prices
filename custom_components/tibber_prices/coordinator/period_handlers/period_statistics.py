@@ -119,6 +119,7 @@ def build_period_summary_dict(
     stats: TibberPricesPeriodStatistics,
     *,
     reverse_sort: bool,
+    price_context: dict[str, Any] | None = None,
 ) -> dict:
     """
     Build the complete period summary dictionary.
@@ -127,6 +128,7 @@ def build_period_summary_dict(
         period_data: Period timing and position data
         stats: Calculated period statistics
         reverse_sort: True for peak price, False for best price (keyword-only)
+        price_context: Optional dict with ref_prices, avg_prices, intervals_by_day for day statistics
 
     Returns:
         Complete period summary dictionary following attribute ordering
@@ -168,6 +170,30 @@ def build_period_summary_dict(
             summary["period_price_diff_from_daily_min"] = stats.period_price_diff
             if stats.period_price_diff_pct is not None:
                 summary["period_price_diff_from_daily_min_%"] = stats.period_price_diff_pct
+
+    # Add day volatility and price statistics (for understanding midnight classification changes)
+    if price_context:
+        period_start_date = period_data.start_time.date()
+        intervals_by_day = price_context.get("intervals_by_day", {})
+        avg_prices = price_context.get("avg_prices", {})
+
+        day_intervals = intervals_by_day.get(period_start_date, [])
+        if day_intervals:
+            # Calculate day price statistics (in EUR major units from API)
+            day_prices = [float(p["total"]) for p in day_intervals]
+            day_min = min(day_prices)
+            day_max = max(day_prices)
+            day_span = day_max - day_min
+            day_avg = avg_prices.get(period_start_date, sum(day_prices) / len(day_prices))
+
+            # Calculate volatility percentage (span / avg * 100)
+            day_volatility_pct = round((day_span / day_avg * 100), 1) if day_avg > 0 else 0.0
+
+            # Convert to minor units (ct/øre) for consistency with other price attributes
+            summary["day_volatility_%"] = day_volatility_pct
+            summary["day_price_min"] = round(day_min * 100, 2)
+            summary["day_price_max"] = round(day_max * 100, 2)
+            summary["day_price_span"] = round(day_span * 100, 2)
 
     return summary
 
@@ -306,7 +332,9 @@ def extract_period_summaries(
         )
 
         # Build complete period summary
-        summary = build_period_summary_dict(period_data, stats, reverse_sort=thresholds.reverse_sort)
+        summary = build_period_summary_dict(
+            period_data, stats, reverse_sort=thresholds.reverse_sort, price_context=price_context
+        )
 
         # Add smoothing information if any intervals benefited from smoothing
         if smoothed_impactful_count > 0:

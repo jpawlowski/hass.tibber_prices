@@ -10,6 +10,9 @@ Learn how Best Price and Peak Price periods work, and how to configure them for 
 -   [Understanding Relaxation](#understanding-relaxation)
 -   [Common Scenarios](#common-scenarios)
 -   [Troubleshooting](#troubleshooting)
+    -   [No Periods Found](#no-periods-found)
+    -   [Periods Split Into Small Pieces](#periods-split-into-small-pieces)
+    -   [Midnight Price Classification Changes](#midnight-price-classification-changes)
 -   [Advanced Topics](#advanced-topics)
 
 ---
@@ -237,6 +240,8 @@ best_price_max_level: cheap    # Only show if at least one interval is CHEAP
 ```
 
 **Use case:** "Only notify me when prices are objectively cheap/expensive"
+
+**ℹ️ Volatility Thresholds:** The level filter also supports volatility-based levels (`volatility_low`, `volatility_medium`, `volatility_high`). These use **fixed internal thresholds** (LOW < 10%, MEDIUM < 20%, HIGH ≥ 20%) that are separate from the sensor volatility thresholds you configure in the UI. This separation ensures that changing sensor display preferences doesn't affect period calculation behavior.
 
 #### Gap Tolerance (for Level Filter)
 
@@ -522,6 +527,136 @@ relaxation_level: "price_diff_18.0%+level_any"  # Found at 18% flex, level filte
 period_interval_smoothed_count: 2    # Number of price spikes smoothed
 period_interval_level_gap_count: 1   # Number of "mediocre" intervals tolerated
 ```
+
+### Midnight Price Classification Changes
+
+**Symptom:** A Best Price period at 23:45 suddenly changes to Peak Price at 00:00 (or vice versa), even though the absolute price barely changed.
+
+**Why This Happens:**
+
+This is **mathematically correct behavior** caused by how electricity prices are set in the day-ahead market:
+
+**Market Timing:**
+- The EPEX SPOT Day-Ahead auction closes at **12:00 CET** each day
+- **All prices** for the next day (00:00-23:45) are set at this moment
+- Late-day intervals (23:45) are priced **~36 hours before delivery**
+- Early-day intervals (00:00) are priced **~12 hours before delivery**
+
+**Why Prices Jump at Midnight:**
+1. **Forecast Uncertainty:** Weather, demand, and renewable generation forecasts are more uncertain 36 hours ahead than 12 hours ahead
+2. **Risk Buffer:** Late-day prices include a risk premium for this uncertainty
+3. **Independent Days:** Each day has its own min/max/avg calculated from its 96 intervals
+4. **Relative Classification:** Periods are classified based on their **position within the day's price range**, not absolute prices
+
+**Example:**
+
+```yaml
+# Day 1 (low volatility, narrow range)
+Price range: 18-22 ct/kWh (4 ct span)
+Daily average: 20 ct/kWh
+23:45: 18.5 ct/kWh → 7.5% below average → BEST PRICE ✅
+
+# Day 2 (low volatility, narrow range)
+Price range: 17-21 ct/kWh (4 ct span)
+Daily average: 19 ct/kWh
+00:00: 18.6 ct/kWh → 2.1% below average → PEAK PRICE ❌
+
+# Observation: Absolute price barely changed (18.5 → 18.6 ct)
+# But relative position changed dramatically:
+# - Day 1: Near the bottom of the range
+# - Day 2: Near the middle/top of the range
+```
+
+**When This Occurs:**
+- **Low-volatility days:** When price span is narrow (< 5 ct/kWh)
+- **Stable weather:** Similar conditions across multiple days
+- **Market transitions:** Switching between high/low demand seasons
+
+**How to Detect:**
+
+Check the volatility sensors to understand if a period flip is meaningful:
+
+```yaml
+# Check daily volatility (available in integration)
+sensor.tibber_home_volatility_today: 8.2%     # Low volatility
+sensor.tibber_home_volatility_tomorrow: 7.9%  # Also low
+
+# Low volatility (< 15%) means:
+# - Small absolute price differences between periods
+# - Classification changes may not be economically significant
+# - Consider ignoring period classification on such days
+```
+
+**Handling in Automations:**
+
+You can make your automations volatility-aware:
+
+```yaml
+# Option 1: Only act on high-volatility days
+automation:
+  - alias: "Dishwasher - Best Price (High Volatility Only)"
+    trigger:
+      - platform: state
+        entity_id: binary_sensor.tibber_home_best_price_period
+        to: "on"
+    condition:
+      - condition: numeric_state
+        entity_id: sensor.tibber_home_volatility_today
+        above: 15  # Only act if volatility > 15%
+    action:
+      - service: switch.turn_on
+        entity_id: switch.dishwasher
+
+# Option 2: Check absolute price, not just classification
+automation:
+  - alias: "Heat Water - Cheap Enough"
+    trigger:
+      - platform: state
+        entity_id: binary_sensor.tibber_home_best_price_period
+        to: "on"
+    condition:
+      - condition: numeric_state
+        entity_id: sensor.tibber_home_current_interval_price_ct
+        below: 20  # Absolute threshold: < 20 ct/kWh
+    action:
+      - service: switch.turn_on
+        entity_id: switch.water_heater
+
+# Option 3: Use per-period day volatility (available on period sensors)
+automation:
+  - alias: "EV Charging - Volatility-Aware"
+    trigger:
+      - platform: state
+        entity_id: binary_sensor.tibber_home_best_price_period
+        to: "on"
+    condition:
+      # Check if the period's day has meaningful volatility
+      - condition: template
+        value_template: >
+          {{ state_attr('binary_sensor.tibber_home_best_price_period', 'day_volatility_%') | float(0) > 15 }}
+    action:
+      - service: switch.turn_on
+        entity_id: switch.ev_charger
+```
+
+**Available Per-Period Attributes:**
+
+Each period sensor exposes day volatility and price statistics:
+
+```yaml
+binary_sensor.tibber_home_best_price_period:
+  day_volatility_%: 8.2         # Volatility % of the period's day
+  day_price_min: 1800.0          # Minimum price of the day (ct/kWh)
+  day_price_max: 2200.0          # Maximum price of the day (ct/kWh)
+  day_price_span: 400.0          # Difference (max - min) in ct
+```
+
+These attributes allow automations to check: "Is the classification meaningful on this particular day?"
+
+**Summary:**
+- ✅ **Expected behavior:** Periods are evaluated per-day, midnight is a natural boundary
+- ✅ **Market reality:** Late-day prices have more uncertainty than early-day prices
+- ✅ **Solution:** Use volatility sensors, absolute price thresholds, or per-period day volatility attributes
 
 ---
 

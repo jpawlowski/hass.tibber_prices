@@ -60,6 +60,42 @@ meets_distance = price >= (daily_avg × (1 + min_distance/100))
 
 **Logic:** See `level_filtering.py` for gap tolerance details.
 
+**Volatility Thresholds - Important Separation:**
+
+The integration maintains **two independent sets** of volatility thresholds:
+
+1. **Sensor Thresholds** (user-configurable via `CONF_VOLATILITY_*_THRESHOLD`)
+   - Purpose: Display classification in `sensor.tibber_home_volatility_*`
+   - Default: LOW < 10%, MEDIUM < 20%, HIGH ≥ 20%
+   - User can adjust in config flow options
+   - Affects: Sensor state/attributes only
+
+2. **Period Filter Thresholds** (internal, fixed)
+   - Purpose: Level filter criteria when using `level="volatility_low"` etc.
+   - Source: `PRICE_LEVEL_THRESHOLDS` in `const.py`
+   - Values: Same as sensor defaults (LOW < 10%, MEDIUM < 20%, HIGH ≥ 20%)
+   - User **cannot** adjust these
+   - Affects: Period candidate selection
+
+**Rationale for Separation:**
+
+- **Sensor thresholds** = Display preference ("I want to see LOW at 15% instead of 10%")
+- **Period thresholds** = Algorithm configuration (tested defaults, complex interactions)
+- Changing sensor display should not affect automation behavior
+- Prevents unexpected side effects when user adjusts sensor classification
+- Period calculation has many interacting filters (Flex, Distance, Level) - exposing all internals would be error-prone
+
+**Implementation:**
+```python
+# Sensor classification uses user config
+user_low_threshold = config_entry.options.get(CONF_VOLATILITY_LOW_THRESHOLD, 10)
+
+# Period filter uses fixed constants
+period_low_threshold = PRICE_LEVEL_THRESHOLDS["volatility_low"]  # Always 10%
+```
+
+**Status:** Intentional design decision (Nov 2025). No plans to expose period thresholds to users.
+
 ---
 
 ## The Flex × Min_Distance Conflict
@@ -952,24 +988,116 @@ scale_factor = 0.25 + 0.75 / (1 + exp(10 × (flex - 0.35)))
 
 **Current Behavior:** Periods can cross midnight naturally
 
-**Issue:** Period starting 23:45 continues into next day
-- Uses Day 1's daily_min as reference
-- May be confusing when Day 2's prices very different
+**Design Principle:** Each interval is evaluated using its **own day's** reference prices (daily min/max/avg).
 
-**Alternative Approaches Considered:**
-1. **Split at midnight** - Always keep periods within calendar day
+**Implementation:**
+```python
+# In period_building.py build_periods():
+for price_data in all_prices:
+    starts_at = time.get_interval_time(price_data)
+    date_key = starts_at.date()
+
+    # CRITICAL: Use interval's own day, not period_start_date
+    ref_date = date_key
+
+    criteria = TibberPricesIntervalCriteria(
+        ref_price=ref_prices[ref_date],      # Interval's day
+        avg_price=avg_prices[ref_date],      # Interval's day
+        flex=flex,
+        min_distance_from_avg=min_distance_from_avg,
+        reverse_sort=reverse_sort,
+    )
+```
+
+**Why Per-Day Evaluation?**
+
+Periods can cross midnight (e.g., 23:45 → 01:00). Each day has independent reference prices calculated from its 96 intervals.
+
+**Example showing the problem with period-start-day approach:**
+
+```
+Day 1 (2025-11-21): Cheap day
+  daily_min = 10 ct, daily_avg = 20 ct, flex = 15%
+  Criteria: price ≤ 11.5 ct (10 + 10×0.15)
+
+Day 2 (2025-11-22): Expensive day
+  daily_min = 20 ct, daily_avg = 30 ct, flex = 15%
+  Criteria: price ≤ 23 ct (20 + 20×0.15)
+
+Period crossing midnight: 23:45 Day 1 → 00:15 Day 2
+  23:45 (Day 1): 11 ct → ✅ Passes (11 ≤ 11.5)
+  00:00 (Day 2): 21 ct → Should this pass?
+
+❌ WRONG (using period start day):
+  00:00 evaluated against Day 1's 11.5 ct threshold
+  21 ct > 11.5 ct → Fails
+  But 21ct IS cheap on Day 2 (min=20ct)!
+
+✅ CORRECT (using interval's own day):
+  00:00 evaluated against Day 2's 23 ct threshold
+  21 ct ≤ 23 ct → Passes
+  Correctly identified as cheap relative to Day 2
+```
+
+**Trade-off: Periods May Break at Midnight**
+
+When days differ significantly, period can split:
+```
+Day 1: Min=10ct, Avg=20ct, 23:45=11ct → ✅ Cheap (relative to Day 1)
+Day 2: Min=25ct, Avg=35ct, 00:00=21ct → ❌ Expensive (relative to Day 2)
+Result: Period stops at 23:45, new period starts later
+```
+
+This is **mathematically correct** - 21ct is genuinely expensive on a day where minimum is 25ct.
+
+**Market Reality Explains Price Jumps:**
+
+Day-ahead electricity markets (EPEX SPOT) set prices at 12:00 CET for all next-day hours:
+- Late intervals (23:45): Priced ~36h before delivery → high forecast uncertainty → risk premium
+- Early intervals (00:00): Priced ~12h before delivery → better forecasts → lower risk buffer
+
+This explains why absolute prices jump at midnight despite minimal demand changes.
+
+**User-Facing Solution (Nov 2025):**
+
+Added per-period day volatility attributes to detect when classification changes are meaningful:
+- `day_volatility_%`: Percentage spread (span/avg × 100)
+- `day_price_min`, `day_price_max`, `day_price_span`: Daily price range (ct/øre)
+
+Automations can check volatility before acting:
+```yaml
+condition:
+  - condition: template
+    value_template: >
+      {{ state_attr('binary_sensor.tibber_home_best_price_period', 'day_volatility_%') | float(0) > 15 }}
+```
+
+Low volatility (< 15%) means classification changes are less economically significant.
+
+**Alternative Approaches Rejected:**
+
+1. **Use period start day for all intervals**
+   - Problem: Mathematically incorrect - lends cheap day's criteria to expensive day
+   - Rejected: Violates relative evaluation principle
+
+2. **Adjust flex/distance at midnight**
+   - Problem: Complex, unpredictable, hides market reality
+   - Rejected: Users should understand price context, not have it hidden
+
+3. **Split at midnight always**
    - Problem: Artificially fragments natural periods
    - Rejected: Worse user experience
 
-2. **Use next day's reference** - Switch reference at midnight
-   - Problem: Period criteria inconsistent across its duration
+4. **Use next day's reference after midnight**
+   - Problem: Period criteria inconsistent across duration
    - Rejected: Confusing and unpredictable
 
-3. **Current approach** - Lock to start day's reference
-   - Benefit: Consistent criteria throughout period
-   - Drawback: Period may "spill" into different price context
+**Status:** Per-day evaluation is intentional design prioritizing mathematical correctness.
 
-**Status:** Current approach is intentional design choice
+**See Also:**
+- User documentation: `docs/user/period-calculation.md` → "Midnight Price Classification Changes"
+- Implementation: `coordinator/period_handlers/period_building.py` (line ~126: `ref_date = date_key`)
+- Attributes: `coordinator/period_handlers/period_statistics.py` (day volatility calculation)
 
 ---
 

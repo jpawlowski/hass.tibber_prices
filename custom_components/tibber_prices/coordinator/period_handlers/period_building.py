@@ -65,9 +65,10 @@ def build_periods(  # noqa: PLR0913, PLR0915, PLR0912 - Complex period building 
     """
     Build periods, allowing periods to cross midnight (day boundary).
 
-    Periods can span multiple days. Each period uses the reference price (min/max) from
-    the day when the period started, ensuring consistent filtering criteria throughout
-    the period even when crossing midnight.
+    Periods can span multiple days. Each interval is evaluated against the reference
+    price (min/max) and average price of its own day. This ensures fair filtering
+    criteria even when periods cross midnight, where prices can jump significantly
+    due to different forecasting uncertainty (prices at day end vs. day start).
 
     Args:
         all_prices: All price data points
@@ -105,7 +106,6 @@ def build_periods(  # noqa: PLR0913, PLR0915, PLR0912 - Complex period building 
 
     periods: list[list[dict]] = []
     current_period: list[dict] = []
-    period_start_date: date | None = None  # Track start day of current period
     consecutive_gaps = 0  # Track consecutive intervals that deviate by 1 level step
     intervals_checked = 0
     intervals_filtered_by_level = 0
@@ -125,11 +125,14 @@ def build_periods(  # noqa: PLR0913, PLR0915, PLR0912 - Complex period building 
 
         intervals_checked += 1
 
-        # Use reference price from period start day (for consistency across midnight)
-        # If no period active, use current interval's day
-        ref_date = period_start_date if period_start_date is not None else date_key
+        # CRITICAL: Always use reference price from the interval's own day
+        # Each interval must meet the criteria of its own day, not the period start day.
+        # This ensures fair filtering even when periods cross midnight, where prices
+        # can jump significantly (last intervals of a day have more risk buffer than
+        # first intervals of next day, as they're set with different uncertainty levels).
+        ref_date = date_key
 
-        # Check flex and minimum distance criteria (using smoothed price and period start date reference)
+        # Check flex and minimum distance criteria (using smoothed price and interval's own day reference)
         criteria = TibberPricesIntervalCriteria(
             ref_price=ref_prices[ref_date],
             avg_price=avg_prices[ref_date],
@@ -164,10 +167,6 @@ def build_periods(  # noqa: PLR0913, PLR0915, PLR0912 - Complex period building 
 
         # Add to period if all criteria are met
         if in_flex and meets_min_distance and meets_level:
-            # Start new period if none active
-            if not current_period:
-                period_start_date = date_key  # Lock reference to start day
-
             current_period.append(
                 {
                     "interval_hour": starts_at.hour,
@@ -184,7 +183,6 @@ def build_periods(  # noqa: PLR0913, PLR0915, PLR0912 - Complex period building 
             # Criteria no longer met, end current period
             periods.append(current_period)
             current_period = []
-            period_start_date = None  # Reset period start date
             consecutive_gaps = 0  # Reset gap counter
 
     # Add final period if exists

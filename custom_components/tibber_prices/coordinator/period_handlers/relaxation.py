@@ -34,28 +34,43 @@ FLEX_HIGH_THRESHOLD_RELAXATION = 0.30  # 30% - WARNING: base flex too high for r
 
 def group_periods_by_day(periods: list[dict]) -> dict[date, list[dict]]:
     """
-    Group periods by the day they end in.
+    Group periods by ALL days they span (including midnight crossings).
 
-    This ensures periods crossing midnight are counted towards the day they end,
-    not the day they start. Example: Period 23:00 yesterday - 02:00 today counts
-    as "today" since it ends today.
+    Periods crossing midnight are assigned to ALL affected days.
+    Example: Period 23:00 yesterday - 02:00 today appears in BOTH days.
+
+    This ensures that:
+    1. For min_periods checking: A midnight-crossing period counts towards both days
+    2. For binary sensors: Each day shows all relevant periods (including those starting/ending in other days)
 
     Args:
         periods: List of period summary dicts with "start" and "end" datetime
 
     Returns:
-        Dict mapping date to list of periods ending on that date
+        Dict mapping date to list of periods spanning that date
 
     """
     periods_by_day: dict[date, list[dict]] = {}
 
     for period in periods:
-        # Use end time for grouping so periods crossing midnight are counted
-        # towards the day they end (more relevant for min_periods check)
+        start_time = period.get("start")
         end_time = period.get("end")
-        if end_time:
-            day = end_time.date()
-            periods_by_day.setdefault(day, []).append(period)
+
+        if not start_time or not end_time:
+            continue
+
+        # Assign period to ALL days it spans
+        start_date = start_time.date()
+        end_date = end_time.date()
+
+        # Handle single-day and multi-day periods
+        current_date = start_date
+        while current_date <= end_date:
+            periods_by_day.setdefault(current_date, []).append(period)
+            # Move to next day
+            from datetime import timedelta  # noqa: PLC0415
+
+            current_date = current_date + timedelta(days=1)
 
     return periods_by_day
 
@@ -224,18 +239,10 @@ def calculate_periods_with_relaxation(  # noqa: PLR0913, PLR0915 - Per-day relax
         INDENT_L0,
     )
 
-    # Validate we have price data for today/future
-    today = time.now().date()
-    future_prices = [
-        p
-        for p in all_prices
-        if (interval_time := time.get_interval_time(p)) is not None and interval_time.date() >= today
-    ]
-
-    if not future_prices:
-        # No price data for today/future
+    # Validate we have price data
+    if not all_prices:
         _LOGGER.warning(
-            "No price data available for today/future - cannot calculate periods",
+            "No price data available - cannot calculate periods",
         )
         return {"periods": [], "metadata": {}, "reference_data": {}}, {
             "relaxation_active": False,
@@ -244,7 +251,7 @@ def calculate_periods_with_relaxation(  # noqa: PLR0913, PLR0915 - Per-day relax
             "periods_found": 0,
         }
 
-    # Count available days for logging
+    # Count available days for logging (today and future only)
     prices_by_day = group_prices_by_day(all_prices, time=time)
     total_days = len(prices_by_day)
 
@@ -253,13 +260,14 @@ def calculate_periods_with_relaxation(  # noqa: PLR0913, PLR0915 - Per-day relax
         total_days,
     )
     _LOGGER.debug(
-        "%sProcessing ALL %d price intervals together (allows midnight crossing)",
+        "%sProcessing ALL %d price intervals together (yesterday+today+tomorrow, allows midnight crossing)",
         INDENT_L1,
-        len(future_prices),
+        len(all_prices),
     )
 
-    # === BASELINE CALCULATION (process ALL prices together) ===
-    baseline_result = calculate_periods(future_prices, config=config, time=time)
+    # === BASELINE CALCULATION (process ALL prices together, including yesterday) ===
+    # Periods that ended yesterday will be filtered out later by filter_periods_by_end_date()
+    baseline_result = calculate_periods(all_prices, config=config, time=time)
     all_periods = baseline_result["periods"]
 
     # Count periods per day for min_periods check
@@ -295,9 +303,9 @@ def calculate_periods_with_relaxation(  # noqa: PLR0913, PLR0915 - Per-day relax
         )
         relaxation_was_needed = True
 
-        # Run relaxation on ALL prices together
+        # Run relaxation on ALL prices together (including yesterday)
         relaxed_result, relax_metadata = relax_all_prices(
-            all_prices=future_prices,
+            all_prices=all_prices,
             config=config,
             min_periods=min_periods,
             max_relaxation_attempts=max_relaxation_attempts,
@@ -363,11 +371,12 @@ def relax_all_prices(  # noqa: PLR0913 - Comprehensive filter relaxation require
     Relax filters for all prices until min_periods per day is reached.
 
     Strategy: Try increasing flex by 3% increments, then relax level filter.
-    Processes all prices together, allowing periods to cross midnight boundaries.
-    Returns when ALL days have min_periods (or max attempts exhausted).
+    Processes all prices together (yesterday+today+tomorrow), allowing periods
+    to cross midnight boundaries. Returns when ALL days have min_periods
+    (or max attempts exhausted).
 
     Args:
-        all_prices: All price intervals (today + future)
+        all_prices: All price intervals (yesterday+today+tomorrow)
         config: Base period configuration
         min_periods: Target number of periods PER DAY
         max_relaxation_attempts: Maximum flex levels to try

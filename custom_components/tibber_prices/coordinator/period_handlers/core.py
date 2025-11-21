@@ -145,6 +145,7 @@ def calculate_periods(
     price_context = {
         "ref_prices": ref_prices,
         "avg_prices": avg_price_by_day,
+        "intervals_by_day": intervals_by_day,  # Needed for day volatility calculation
         "flex": flex,
         "min_distance_from_avg": min_distance_from_avg,
     }
