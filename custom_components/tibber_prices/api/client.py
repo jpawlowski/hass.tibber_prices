@@ -46,7 +46,7 @@ class TibberPricesApiClient:
         self._session = session
         self._version = version
         self._request_semaphore = asyncio.Semaphore(2)  # Max 2 concurrent requests
-        self.time: TibberPricesTimeService  # Set externally by coordinator (always initialized before use)
+        self.time: TibberPricesTimeService | None = None  # Set externally by coordinator (optional during config flow)
         self._last_request_time = None  # Set on first request
         self._min_request_interval = timedelta(seconds=1)  # Min 1 second between requests
         self._max_retries = 5
@@ -148,6 +148,10 @@ class TibberPricesApiClient:
 
     async def _get_price_info_for_specific_homes(self, home_ids: set[str]) -> dict:
         """Get price info for specific homes using GraphQL aliases."""
+        if not self.time:
+            msg = "TimeService not initialized - required for price info processing"
+            raise TibberPricesApiClientError(msg)
+
         if not home_ids:
             return {"homes": {}}
 
