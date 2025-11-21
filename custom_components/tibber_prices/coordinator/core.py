@@ -556,10 +556,13 @@ class TibberPricesDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 self._lifecycle_state = "fresh"  # Data just fetched
                 self._notify_lifecycle_change()  # Push update: fresh data available
 
-                # CRITICAL: Sync cached_user_data after API call (for new integrations without cache)
-                # handle_main_entry_update() may have fetched user_data via update_user_data_if_needed()
+                # CRITICAL: Sync cached data after API call
+                # handle_main_entry_update() updates data_fetcher's cache, we need to sync:
+                # 1. cached_user_data (for new integrations, may be fetched via update_user_data_if_needed())
+                # 2. cached_price_data (CRITICAL: contains tomorrow data, needed for _needs_tomorrow_data())
+                # 3. _last_price_update (for lifecycle tracking: cache age, fresh state detection)
                 self._cached_user_data = self._data_fetcher.cached_user_data
-                # Sync _last_price_update for lifecycle tracking
+                self._cached_price_data = self._data_fetcher.cached_price_data
                 self._last_price_update = self._data_fetcher._last_price_update  # noqa: SLF001 - Sync for lifecycle tracking
                 return result
             # Subentries get data from main coordinator (no lifecycle tracking - they don't fetch)
