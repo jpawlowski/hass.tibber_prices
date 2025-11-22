@@ -87,13 +87,15 @@ def calculate_volatility_level(
     t_very_high = threshold_very_high if threshold_very_high is not None else DEFAULT_VOLATILITY_THRESHOLD_VERY_HIGH
 
     # Calculate coefficient of variation
+    # CRITICAL: Use absolute value of mean for negative prices (Norway/Germany)
+    # Negative electricity prices are valid and should have measurable volatility
     mean = statistics.mean(prices)
-    if mean <= 0:
-        # Avoid division by zero or negative mean (shouldn't happen with prices)
+    if mean == 0:
+        # Division by zero case (all prices exactly zero)
         return VOLATILITY_LOW
 
     std_dev = statistics.stdev(prices)
-    coefficient_of_variation = (std_dev / mean) * 100  # As percentage
+    coefficient_of_variation = (std_dev / abs(mean)) * 100  # As percentage, use abs(mean)
 
     # Classify based on thresholds
     if coefficient_of_variation < t_moderate:
@@ -151,6 +153,18 @@ def calculate_trailing_average_for_interval(
         )
         return None
 
+    # CRITICAL: Warn if we have less than 24 hours of data (partial average)
+    # 24 hours = 96 intervals (4 per hour)
+    expected_intervals_24h = 96
+    if len(matching_prices) < expected_intervals_24h:
+        _LOGGER.debug(
+            "Partial trailing average: only %d intervals available (expected %d for full 24h) "
+            "for interval starting at %s",
+            len(matching_prices),
+            expected_intervals_24h,
+            interval_start,
+        )
+
     # Calculate and return the average
     return sum(matching_prices) / len(matching_prices)
 
@@ -164,19 +178,25 @@ def calculate_difference_percentage(
 
     This mimics the API's "difference" field from priceRating endpoint.
 
+    CRITICAL: For negative averages, use absolute value to get meaningful percentage.
+    Example: current=10 ct, average=-10 ct
+    - Wrong: (10-(-10))/-10 = -200% (would rate as "cheap" despite being expensive)
+    - Right: (10-(-10))/abs(-10) = +200% (correctly rates as "expensive")
+
     Args:
         current_interval_price: The current interval's price
         trailing_average: The 24-hour trailing average price
 
     Returns:
-        The percentage difference: ((current - average) / average) * 100
+        The percentage difference: ((current - average) / abs(average)) * 100
         or None if trailing_average is None or zero.
 
     """
     if trailing_average is None or trailing_average == 0:
         return None
 
-    return ((current_interval_price - trailing_average) / trailing_average) * 100
+    # Use absolute value of average to handle negative prices correctly
+    return ((current_interval_price - trailing_average) / abs(trailing_average)) * 100
 
 
 def calculate_rating_level(
@@ -204,8 +224,15 @@ def calculate_rating_level(
     if difference is None:
         return None
 
-    # If difference falls in both ranges (shouldn't normally happen), return NORMAL
-    if difference <= threshold_low and difference >= threshold_high:
+    # CRITICAL: Validate threshold configuration
+    # threshold_low must be less than threshold_high for meaningful classification
+    if threshold_low >= threshold_high:
+        _LOGGER.warning(
+            "Invalid rating thresholds: threshold_low (%.2f) >= threshold_high (%.2f). "
+            "Using NORMAL as fallback. Please check configuration.",
+            threshold_low,
+            threshold_high,
+        )
         return PRICE_RATING_NORMAL
 
     # Classify based on thresholds
@@ -368,13 +395,22 @@ def aggregate_price_levels(levels: list[str]) -> str:
 
     Takes a list of price level strings (e.g., "VERY_CHEAP", "NORMAL", "EXPENSIVE")
     and returns the median level after sorting by numeric values. This naturally
-    tends toward "NORMAL" when levels are mixed.
+    tends toward "NORMAL" when levels are mixed, which is the desired conservative
+    behavior for period/window aggregations.
 
     Args:
         levels: List of price level strings from intervals
 
     Returns:
         The median price level string, or PRICE_LEVEL_NORMAL if input is empty
+
+    Note:
+        For even-length lists, uses upper-middle value (len // 2) to bias toward
+        NORMAL rather than cheaper levels. This provides conservative recommendations
+        when periods contain mixed price levels.
+
+        Example: [-2, -1, 0, 1] → index 2 → value 0 (NORMAL)
+        This is intentional: we prefer saying "NORMAL" over "CHEAP" when ambiguous.
 
     """
     if not levels:
@@ -384,7 +420,8 @@ def aggregate_price_levels(levels: list[str]) -> str:
     numeric_values = [PRICE_LEVEL_MAPPING.get(level, 0) for level in levels]
     numeric_values.sort()
 
-    # Get median (middle value for odd length, lower-middle for even length)
+    # Get median: middle value for odd length, upper-middle for even length
+    # Upper-middle (len // 2) intentionally biases toward NORMAL (0) for even counts
     median_idx = len(numeric_values) // 2
     median_value = numeric_values[median_idx]
 
@@ -649,7 +686,13 @@ def calculate_price_trend(  # noqa: PLR0913 - All parameters are necessary for v
         )
 
     # Calculate percentage difference from current to future
-    diff_pct = ((future_average - current_interval_price) / current_interval_price) * 100
+    # CRITICAL: Use abs() for negative prices to get correct percentage direction
+    # Example: current=-10, future=-5 → diff=5, pct=5/abs(-10)*100=+50% (correctly shows rising)
+    if current_interval_price == 0:
+        # Edge case: avoid division by zero
+        diff_pct = 0.0
+    else:
+        diff_pct = ((future_average - current_interval_price) / abs(current_interval_price)) * 100
 
     # Determine trend based on effective thresholds
     if diff_pct >= effective_rising:

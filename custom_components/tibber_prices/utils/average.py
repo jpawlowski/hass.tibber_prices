@@ -9,7 +9,7 @@ if TYPE_CHECKING:
     from custom_components.tibber_prices.coordinator.time_service import TibberPricesTimeService
 
 
-def calculate_trailing_24h_avg(all_prices: list[dict], interval_start: datetime) -> float:
+def calculate_trailing_24h_avg(all_prices: list[dict], interval_start: datetime) -> float | None:
     """
     Calculate trailing 24-hour average price for a given interval.
 
@@ -19,7 +19,7 @@ def calculate_trailing_24h_avg(all_prices: list[dict], interval_start: datetime)
         time: TibberPricesTimeService instance (required)
 
     Returns:
-        Average price for the 24 hours preceding the interval (not including the interval itself)
+        Average price for the 24 hours preceding the interval, or None if no data in window
 
     """
     # Define the 24-hour window: from 24 hours before interval_start up to interval_start
@@ -37,12 +37,14 @@ def calculate_trailing_24h_avg(all_prices: list[dict], interval_start: datetime)
             prices_in_window.append(float(price_data["total"]))
 
     # Calculate average
+    # CRITICAL: Return None instead of 0.0 when no data available
+    # With negative prices, 0.0 could be misinterpreted as a real average value
     if prices_in_window:
         return sum(prices_in_window) / len(prices_in_window)
-    return 0.0
+    return None
 
 
-def calculate_leading_24h_avg(all_prices: list[dict], interval_start: datetime) -> float:
+def calculate_leading_24h_avg(all_prices: list[dict], interval_start: datetime) -> float | None:
     """
     Calculate leading 24-hour average price for a given interval.
 
@@ -52,7 +54,7 @@ def calculate_leading_24h_avg(all_prices: list[dict], interval_start: datetime) 
         time: TibberPricesTimeService instance (required)
 
     Returns:
-        Average price for up to 24 hours following the interval (including the interval itself)
+        Average price for up to 24 hours following the interval, or None if no data in window
 
     """
     # Define the 24-hour window: from interval_start up to 24 hours after
@@ -70,9 +72,11 @@ def calculate_leading_24h_avg(all_prices: list[dict], interval_start: datetime) 
             prices_in_window.append(float(price_data["total"]))
 
     # Calculate average
+    # CRITICAL: Return None instead of 0.0 when no data available
+    # With negative prices, 0.0 could be misinterpreted as a real average value
     if prices_in_window:
         return sum(prices_in_window) / len(prices_in_window)
-    return 0.0
+    return None
 
 
 def calculate_current_trailing_avg(
@@ -144,7 +148,7 @@ def calculate_trailing_24h_min(
     interval_start: datetime,
     *,
     time: TibberPricesTimeService,
-) -> float:
+) -> float | None:
     """
     Calculate trailing 24-hour minimum price for a given interval.
 
@@ -154,7 +158,7 @@ def calculate_trailing_24h_min(
         time: TibberPricesTimeService instance (required)
 
     Returns:
-        Minimum price for the 24 hours preceding the interval (not including the interval itself)
+        Minimum price for the 24 hours preceding the interval, or None if no data in window
 
     """
     # Define the 24-hour window: from 24 hours before interval_start up to interval_start
@@ -172,9 +176,11 @@ def calculate_trailing_24h_min(
             prices_in_window.append(float(price_data["total"]))
 
     # Calculate minimum
+    # CRITICAL: Return None instead of 0.0 when no data available
+    # With negative prices, 0.0 could be misinterpreted as a maximum value
     if prices_in_window:
         return min(prices_in_window)
-    return 0.0
+    return None
 
 
 def calculate_trailing_24h_max(
@@ -182,7 +188,7 @@ def calculate_trailing_24h_max(
     interval_start: datetime,
     *,
     time: TibberPricesTimeService,
-) -> float:
+) -> float | None:
     """
     Calculate trailing 24-hour maximum price for a given interval.
 
@@ -192,7 +198,7 @@ def calculate_trailing_24h_max(
         time: TibberPricesTimeService instance (required)
 
     Returns:
-        Maximum price for the 24 hours preceding the interval (not including the interval itself)
+        Maximum price for the 24 hours preceding the interval, or None if no data in window
 
     """
     # Define the 24-hour window: from 24 hours before interval_start up to interval_start
@@ -210,9 +216,11 @@ def calculate_trailing_24h_max(
             prices_in_window.append(float(price_data["total"]))
 
     # Calculate maximum
+    # CRITICAL: Return None instead of 0.0 when no data available
+    # With negative prices, 0.0 could be misinterpreted as a real price value
     if prices_in_window:
         return max(prices_in_window)
-    return 0.0
+    return None
 
 
 def calculate_leading_24h_min(
@@ -220,7 +228,7 @@ def calculate_leading_24h_min(
     interval_start: datetime,
     *,
     time: TibberPricesTimeService,
-) -> float:
+) -> float | None:
     """
     Calculate leading 24-hour minimum price for a given interval.
 
@@ -230,7 +238,7 @@ def calculate_leading_24h_min(
         time: TibberPricesTimeService instance (required)
 
     Returns:
-        Minimum price for up to 24 hours following the interval (including the interval itself)
+        Minimum price for up to 24 hours following the interval, or None if no data in window
 
     """
     # Define the 24-hour window: from interval_start up to 24 hours after
@@ -248,9 +256,11 @@ def calculate_leading_24h_min(
             prices_in_window.append(float(price_data["total"]))
 
     # Calculate minimum
+    # CRITICAL: Return None instead of 0.0 when no data available
+    # With negative prices, 0.0 could be misinterpreted as a maximum value
     if prices_in_window:
         return min(prices_in_window)
-    return 0.0
+    return None
 
 
 def calculate_leading_24h_max(
@@ -258,7 +268,7 @@ def calculate_leading_24h_max(
     interval_start: datetime,
     *,
     time: TibberPricesTimeService,
-) -> float:
+) -> float | None:
     """
     Calculate leading 24-hour maximum price for a given interval.
 
@@ -268,7 +278,7 @@ def calculate_leading_24h_max(
         time: TibberPricesTimeService instance (required)
 
     Returns:
-        Maximum price for up to 24 hours following the interval (including the interval itself)
+        Maximum price for up to 24 hours following the interval, or None if no data in window
 
     """
     # Define the 24-hour window: from interval_start up to 24 hours after
@@ -286,9 +296,11 @@ def calculate_leading_24h_max(
             prices_in_window.append(float(price_data["total"]))
 
     # Calculate maximum
+    # CRITICAL: Return None instead of 0.0 when no data available
+    # With negative prices, 0.0 could be misinterpreted as a real price value
     if prices_in_window:
         return max(prices_in_window)
-    return 0.0
+    return None
 
 
 def calculate_current_trailing_min(

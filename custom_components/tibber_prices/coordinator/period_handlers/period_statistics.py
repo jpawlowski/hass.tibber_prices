@@ -50,7 +50,9 @@ def calculate_period_price_diff(
     period_price_diff = round(price_avg - ref_price_minor, 2)
     period_price_diff_pct = None
     if ref_price_minor != 0:
-        period_price_diff_pct = round((period_price_diff / ref_price_minor) * 100, 2)
+        # CRITICAL: Use abs() for negative prices (same logic as calculate_difference_percentage)
+        # Example: avg=-10, ref=-20 → diff=10, pct=10/abs(-20)*100=+50% (correctly shows more expensive)
+        period_price_diff_pct = round((period_price_diff / abs(ref_price_minor)) * 100, 2)
 
     return period_price_diff, period_price_diff_pct
 

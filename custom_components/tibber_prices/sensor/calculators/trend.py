@@ -152,8 +152,10 @@ class TibberPricesTrendCalculator(TibberPricesBaseCalculator):
                 self._trend_attributes[f"second_half_{hours}h_avg"] = round(later_half_avg * 100, 2)
 
                 # Calculate incremental change: how much does the later half differ from current?
-                if current_interval_price > 0:
-                    later_half_diff = ((later_half_avg - current_interval_price) / current_interval_price) * 100
+                # CRITICAL: Use abs() for negative prices and allow calculation for all non-zero prices
+                # Example: current=-10, later=-5 → diff=5, pct=5/abs(-10)*100=+50% (correctly shows increase)
+                if current_interval_price != 0:
+                    later_half_diff = ((later_half_avg - current_interval_price) / abs(current_interval_price)) * 100
                     self._trend_attributes[f"second_half_{hours}h_diff_from_current_%"] = round(later_half_diff, 1)
 
         # Cache the trend value for consistency
