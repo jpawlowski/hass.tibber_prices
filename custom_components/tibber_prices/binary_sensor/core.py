@@ -21,7 +21,6 @@ from .attributes import (
     get_price_intervals_attributes,
     get_tomorrow_data_available_attributes,
 )
-from .definitions import PERIOD_LOOKAHEAD_HOURS
 
 if TYPE_CHECKING:
     from collections.abc import Callable
@@ -46,11 +45,6 @@ class TibberPricesBinarySensor(TibberPricesEntity, BinarySensorEntity):
         self._attr_unique_id = f"{coordinator.config_entry.entry_id}_{entity_description.key}"
         self._state_getter: Callable | None = self._get_value_getter()
         self._time_sensitive_remove_listener: Callable | None = None
-        self._lifecycle_remove_listener: Callable | None = None
-
-        # Register for lifecycle push updates if this sensor depends on connection state
-        if entity_description.key in ("connection", "tomorrow_data_available"):
-            self._lifecycle_remove_listener = coordinator.register_lifecycle_callback(self.async_write_ha_state)
 
     async def async_added_to_hass(self) -> None:
         """When entity is added to hass."""
@@ -70,11 +64,6 @@ class TibberPricesBinarySensor(TibberPricesEntity, BinarySensorEntity):
         if self._time_sensitive_remove_listener:
             self._time_sensitive_remove_listener()
             self._time_sensitive_remove_listener = None
-
-        # Remove lifecycle listener if registered
-        if self._lifecycle_remove_listener:
-            self._lifecycle_remove_listener()
-            self._lifecycle_remove_listener = None
 
     @callback
     def _handle_time_sensitive_update(self, time_service: TibberPricesTimeService) -> None:
@@ -270,10 +259,10 @@ class TibberPricesBinarySensor(TibberPricesEntity, BinarySensorEntity):
 
     def _has_future_periods(self) -> bool:
         """
-        Check if there are periods starting within the next 6 hours.
+        Check if there are any future periods.
 
-        Returns True if any period starts between now and PERIOD_LOOKAHEAD_HOURS from now.
-        This provides a practical planning horizon instead of hard midnight cutoff.
+        Returns True if any period starts in the future (no time limit).
+        This ensures icons show "waiting" state whenever periods are scheduled.
         """
         attrs = self._get_sensor_attributes()
         if not attrs or "periods" not in attrs:
@@ -282,15 +271,15 @@ class TibberPricesBinarySensor(TibberPricesEntity, BinarySensorEntity):
         time = self.coordinator.time
         periods = attrs.get("periods", [])
 
-        # Check if any period starts within the look-ahead window
+        # Check if any period starts in the future (no time limit)
         for period in periods:
             start_str = period.get("start")
             if start_str:
                 # Already datetime object (periods come from coordinator.data)
                 start_time = start_str if not isinstance(start_str, str) else time.parse_datetime(start_str)
 
-                # Period starts in the future but within our horizon
-                if start_time and time.is_time_within_horizon(start_time, hours=PERIOD_LOOKAHEAD_HOURS):
+                # Period starts in the future
+                if start_time and time.is_in_future(start_time):
                     return True
 
         return False

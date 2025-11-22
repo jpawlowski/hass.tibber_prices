@@ -158,7 +158,8 @@ class TibberPricesTimingCalculator(TibberPricesBaseCalculator):
 
         Args:
             periods: List of period dictionaries
-            skip_current: If True, skip the first future period (to get next-next)
+            skip_current: If True, try to skip the first future period (to get next-next)
+                         If only one future period exists, return it anyway (pragmatic fallback)
 
         Returns:
             Next period dict or None if no future periods
@@ -173,11 +174,13 @@ class TibberPricesTimingCalculator(TibberPricesBaseCalculator):
         # Sort by start time to ensure correct order
         future_periods.sort(key=lambda p: p["start"])
 
-        # Return second period if skip_current=True (next-next), otherwise first (next)
+        # If skip_current requested and we have multiple periods, return second
+        # If only one period left, return it anyway (pragmatic: better than showing unknown)
         if skip_current and len(future_periods) > 1:
             return future_periods[1]
-        if not skip_current and future_periods:
-            return future_periods[0]
+
+        # Default: return first future period
+        return future_periods[0] if future_periods else None
 
         return None
 
