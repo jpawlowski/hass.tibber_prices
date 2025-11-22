@@ -65,11 +65,11 @@ class TibberPricesTimingCalculator(TibberPricesBaseCalculator):
             - None if no relevant period data available
 
         """
-        if not self.coordinator.data:
+        if not self.has_data():
             return None
 
         # Get period data from coordinator
-        periods_data = self.coordinator.data.get("periods", {})
+        periods_data = self.coordinator_data.get("periods", {})
         period_data = periods_data.get(period_type)
 
         if not period_data or not period_data.get("periods"):

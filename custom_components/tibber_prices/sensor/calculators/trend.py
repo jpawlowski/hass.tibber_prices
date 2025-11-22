@@ -78,7 +78,7 @@ class TibberPricesTrendCalculator(TibberPricesBaseCalculator):
         if self._cached_trend_value is not None and self._trend_attributes:
             return self._cached_trend_value
 
-        if not self.coordinator.data:
+        if not self.has_data():
             return None
 
         # Get current interval price and timestamp
@@ -107,9 +107,8 @@ class TibberPricesTrendCalculator(TibberPricesBaseCalculator):
         volatility_threshold_high = self.config.get("volatility_threshold_high", 30.0)
 
         # Prepare data for volatility-adaptive thresholds
-        price_info = self.coordinator.data.get("priceInfo", {})
-        today_prices = price_info.get("today", [])
-        tomorrow_prices = price_info.get("tomorrow", [])
+        today_prices = self.intervals_today
+        tomorrow_prices = self.intervals_tomorrow
         all_intervals = today_prices + tomorrow_prices
         lookahead_intervals = self.coordinator.time.minutes_to_intervals(hours * 60)
 
@@ -247,12 +246,11 @@ class TibberPricesTrendCalculator(TibberPricesBaseCalculator):
             Average price for the later half intervals, or None if insufficient data
 
         """
-        if not self.coordinator.data:
+        if not self.has_data():
             return None
 
-        price_info = self.coordinator.data.get("priceInfo", {})
-        today_prices = price_info.get("today", [])
-        tomorrow_prices = price_info.get("tomorrow", [])
+        today_prices = self.intervals_today
+        tomorrow_prices = self.intervals_tomorrow
         all_prices = today_prices + tomorrow_prices
 
         if not all_prices:
@@ -307,12 +305,11 @@ class TibberPricesTrendCalculator(TibberPricesBaseCalculator):
             return self._trend_calculation_cache
 
         # Validate coordinator data
-        if not self.coordinator.data:
+        if not self.has_data():
             return None
 
-        price_info = self.coordinator.data.get("priceInfo", {})
-        all_intervals = price_info.get("today", []) + price_info.get("tomorrow", [])
-        current_interval = find_price_data_for_interval(price_info, now, time=time)
+        all_intervals = self.get_all_intervals()
+        current_interval = find_price_data_for_interval(self.price_info, now, time=time)
 
         if not all_intervals or not current_interval:
             return None

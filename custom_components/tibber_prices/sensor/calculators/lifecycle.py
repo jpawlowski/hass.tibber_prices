@@ -201,12 +201,10 @@ class TibberPricesLifecycleCalculator(TibberPricesBaseCalculator):
             True if data exists and is not empty
 
         """
-        coordinator = self.coordinator
-        if not coordinator.data:
+        if not self.has_data():
             return False
 
-        price_info = coordinator.data.get("priceInfo", {})
-        day_data = price_info.get(day, [])
+        day_data = self.get_intervals(day)
         return bool(day_data)
 
     def get_data_completeness_status(self) -> str:
@@ -248,7 +246,7 @@ class TibberPricesLifecycleCalculator(TibberPricesBaseCalculator):
         """
         coordinator = self.coordinator
         # Check if coordinator has data (transformed, ready for entities)
-        if not coordinator.data:
+        if not self.has_data():
             return "empty"
 
         # Check if we have price update timestamp
