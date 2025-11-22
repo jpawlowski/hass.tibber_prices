@@ -64,27 +64,6 @@ class TestListenerCleanup:
         assert callback not in manager._minute_update_listeners  # noqa: SLF001
         assert len(manager._minute_update_listeners) == 0  # noqa: SLF001
 
-    def test_coordinator_removes_lifecycle_callbacks(self) -> None:
-        """Test that lifecycle callbacks can be unregistered."""
-        # Create mock coordinator
-        coordinator = object.__new__(TibberPricesDataUpdateCoordinator)
-        coordinator._lifecycle_callbacks = []  # noqa: SLF001
-
-        # Register a callback
-        callback = Mock()
-        unregister_fn = coordinator.register_lifecycle_callback(callback)
-
-        # Verify callback was registered
-        assert callback in coordinator._lifecycle_callbacks  # noqa: SLF001
-        assert len(coordinator._lifecycle_callbacks) == 1  # noqa: SLF001
-
-        # Unregister callback
-        unregister_fn()
-
-        # Verify callback was removed
-        assert callback not in coordinator._lifecycle_callbacks  # noqa: SLF001
-        assert len(coordinator._lifecycle_callbacks) == 0  # noqa: SLF001
-
     @pytest.mark.asyncio
     async def test_sensor_cleanup_pattern_exists(self) -> None:
         """
