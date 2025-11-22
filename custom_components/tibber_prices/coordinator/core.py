@@ -31,6 +31,7 @@ from custom_components.tibber_prices.const import DOMAIN
 from custom_components.tibber_prices.utils.price import (
     find_price_data_for_interval,
 )
+from homeassistant.exceptions import ConfigEntryAuthFailed
 
 from . import helpers
 from .constants import (
@@ -40,6 +41,7 @@ from .constants import (
 from .data_fetching import TibberPricesDataFetcher
 from .data_transformation import TibberPricesDataTransformer
 from .listeners import TibberPricesListenerManager
+from .midnight_handler import TibberPricesMidnightHandler
 from .periods import TibberPricesPeriodCalculator
 from .time_service import TibberPricesTimeService
 
@@ -47,6 +49,44 @@ _LOGGER = logging.getLogger(__name__)
 
 # Lifecycle state transition thresholds
 FRESH_TO_CACHED_SECONDS = 300  # 5 minutes
+
+
+def get_connection_state(coordinator: TibberPricesDataUpdateCoordinator) -> bool | None:
+    """
+    Determine API connection state based on lifecycle and exceptions.
+
+    This is the source of truth for the connection binary sensor.
+    It ensures consistency between lifecycle_status and connection state.
+
+    Returns:
+        True: Connected and working (cached or fresh data)
+        False: Connection failed or auth failed
+        None: Unknown state (no data yet, initializing)
+
+    Logic:
+        - Auth failures → definitively disconnected (False)
+        - Other errors with cached data → considered connected (True, using cache)
+        - No errors with data → connected (True)
+        - No data and no error → initializing (None)
+
+    """
+    # Auth failures = definitively disconnected
+    # User must provide new token via reauth flow
+    if isinstance(coordinator.last_exception, ConfigEntryAuthFailed):
+        return False
+
+    # Other errors but cache available = considered connected (using cached data as fallback)
+    # This shows "on" but lifecycle_status will show "error" to indicate degraded operation
+    if coordinator.last_exception and coordinator.data:
+        return True
+
+    # No error and data available = connected
+    if coordinator.data:
+        return True
+
+    # No data and no error = initializing (unknown state)
+    return None
+
 
 # =============================================================================
 # TIMER SYSTEM - Three independent update mechanisms:
@@ -160,6 +200,7 @@ class TibberPricesDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 
         # Initialize helper modules
         self._listener_manager = TibberPricesListenerManager(hass, self._log_prefix)
+        self._midnight_handler = TibberPricesMidnightHandler()
         self._data_fetcher = TibberPricesDataFetcher(
             api=self.api,
             store=self._store,
@@ -190,8 +231,6 @@ class TibberPricesDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         self._cached_transformed_data: dict[str, Any] | None = None
         self._last_transformation_config: dict[str, Any] | None = None
         self._last_transformation_time: datetime | None = None  # When data was last transformed (for cache)
-        self._last_midnight_turnover_check: datetime | None = None  # Last midnight turnover detection check
-        self._last_actual_turnover: datetime | None = None  # When midnight turnover actually happened
 
         # Data lifecycle tracking for diagnostic sensor
         self._lifecycle_state: str = (
@@ -364,16 +403,13 @@ class TibberPricesDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             True if midnight turnover is needed, False if already done
 
         """
-        current_date = now.date()
-
-        # First time check - initialize (no turnover needed)
-        if self._last_midnight_turnover_check is None:
+        # Initialize handler on first use
+        if self._midnight_handler.last_check_time is None:
+            self._midnight_handler.update_check_time(now)
             return False
 
-        last_check_date = self._last_midnight_turnover_check.date()
-
-        # Turnover needed if we've crossed into a new day
-        return current_date > last_check_date
+        # Delegate to midnight handler
+        return self._midnight_handler.is_turnover_needed(now)
 
     def _perform_midnight_data_rotation(self, now: datetime) -> None:
         """
@@ -391,7 +427,7 @@ class TibberPricesDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         """
         current_date = now.date()
         last_check_date = (
-            self._last_midnight_turnover_check.date() if self._last_midnight_turnover_check else current_date
+            self._midnight_handler.last_check_time.date() if self._midnight_handler.last_check_time else current_date
         )
 
         self._log(
@@ -420,9 +456,14 @@ class TibberPricesDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                     # Main coordinator will have performed rotation already
                     self.data["timestamp"] = now
 
+            # CRITICAL: Update _last_price_update to current time after turnover
+            # This prevents cache_validity from showing "date_mismatch" after midnight
+            # The data is still valid (just rotated today→yesterday, tomorrow→today)
+            # Update timestamp to reflect that the data is current for the new day
+            self._last_price_update = now
+
         # Mark turnover as done for today (atomic update)
-        self._last_midnight_turnover_check = now
-        self._last_actual_turnover = now  # Record when actual turnover happened
+        self._midnight_handler.mark_turnover_done(now)
 
     @callback
     def _check_and_handle_midnight_turnover(self, now: datetime) -> bool:
@@ -463,20 +504,29 @@ class TibberPricesDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 
         return True
 
-    def register_lifecycle_callback(self, callback: Callable[[], None]) -> None:
+    def register_lifecycle_callback(self, callback: Callable[[], None]) -> Callable[[], None]:
         """
         Register callback for lifecycle state changes (push updates).
 
-        This allows the lifecycle sensor to receive immediate updates when
-        the coordinator's lifecycle state changes, instead of waiting for
-        the next polling cycle.
+        This allows sensors to receive immediate updates when the coordinator's
+        lifecycle state changes, instead of waiting for the next polling cycle.
 
         Args:
             callback: Function to call when lifecycle state changes (typically async_write_ha_state)
 
+        Returns:
+            Callable that unregisters the callback when called
+
         """
         if callback not in self._lifecycle_callbacks:
             self._lifecycle_callbacks.append(callback)
+
+        def unregister() -> None:
+            """Unregister the lifecycle callback."""
+            if callback in self._lifecycle_callbacks:
+                self._lifecycle_callbacks.remove(callback)
+
+        return unregister
 
     def _notify_lifecycle_change(self) -> None:
         """Notify registered callbacks about lifecycle state change (push update)."""
@@ -484,8 +534,27 @@ class TibberPricesDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             lifecycle_callback()
 
     async def async_shutdown(self) -> None:
-        """Shut down the coordinator and clean up timers."""
+        """
+        Shut down the coordinator and clean up timers.
+
+        Cancels all three timer types:
+        - Timer #1: API polling (coordinator update timer)
+        - Timer #2: Quarter-hour entity updates
+        - Timer #3: Minute timing sensor updates
+
+        Also saves cache to persist any unsaved changes.
+        """
+        # Cancel all timers first
         self._listener_manager.cancel_timers()
+
+        # Save cache to persist any unsaved data
+        # This ensures we don't lose data if HA is shutting down
+        try:
+            await self._store_cache()
+            self._log("debug", "Cache saved during shutdown")
+        except OSError as err:
+            # Log but don't raise - shutdown should complete even if cache save fails
+            self._log("error", "Failed to save cache during shutdown: %s", err)
 
     def _has_existing_main_coordinator(self) -> bool:
         """Check if there's already a main coordinator in hass.data."""
@@ -531,9 +600,9 @@ class TibberPricesDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         if self._cached_price_data is None and self._cached_user_data is None:
             await self.load_cache()
 
-        # Initialize midnight turnover check on first run
-        if self._last_midnight_turnover_check is None:
-            self._last_midnight_turnover_check = current_time
+        # Initialize midnight handler on first run
+        if self._midnight_handler.last_check_time is None:
+            self._midnight_handler.update_check_time(current_time)
 
         # CRITICAL: Check for midnight turnover FIRST (before any data operations)
         # This prevents race condition with Timer #2 (quarter-hour refresh)
@@ -560,11 +629,6 @@ class TibberPricesDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 
         try:
             if self.is_main_entry():
-                # Set lifecycle state to refreshing before API call
-                self._lifecycle_state = "refreshing"
-                self._is_fetching = True
-                self._notify_lifecycle_change()  # Push update: now refreshing
-
                 # Reset API call counter if day changed
                 current_date = current_time.date()
                 if self._last_api_call_date != current_date:
@@ -573,17 +637,15 @@ class TibberPricesDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 
                 # Main entry fetches data for all homes
                 configured_home_ids = self._get_configured_home_ids()
+
+                # Track last_price_update timestamp before fetch to detect if data actually changed
+                old_price_update = self._last_price_update
+
                 result = await self._data_fetcher.handle_main_entry_update(
                     current_time,
                     configured_home_ids,
                     self._transform_data_for_main_entry,
                 )
-
-                # Update lifecycle tracking after successful fetch
-                self._is_fetching = False
-                self._api_calls_today += 1
-                self._lifecycle_state = "fresh"  # Data just fetched
-                self._notify_lifecycle_change()  # Push update: fresh data available
 
                 # CRITICAL: Sync cached data after API call
                 # handle_main_entry_update() updates data_fetcher's cache, we need to sync:
@@ -593,6 +655,14 @@ class TibberPricesDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 self._cached_user_data = self._data_fetcher.cached_user_data
                 self._cached_price_data = self._data_fetcher.cached_price_data
                 self._last_price_update = self._data_fetcher._last_price_update  # noqa: SLF001 - Sync for lifecycle tracking
+
+                # Update lifecycle tracking only if we fetched NEW data (timestamp changed)
+                # This prevents recorder spam from state changes when returning cached data
+                if self._last_price_update != old_price_update:
+                    self._api_calls_today += 1
+                    self._lifecycle_state = "fresh"  # Data just fetched
+                    self._notify_lifecycle_change()  # Push update: fresh data available
+
                 return result
             # Subentries get data from main coordinator (no lifecycle tracking - they don't fetch)
             return await self._handle_subentry_update()
@@ -665,14 +735,17 @@ class TibberPricesDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         self._last_price_update = self._data_fetcher._last_price_update  # noqa: SLF001 - Sync for lifecycle tracking
         self._last_user_update = self._data_fetcher._last_user_update  # noqa: SLF001 - Sync for lifecycle tracking
 
-        # Initialize _last_actual_turnover: If cache is from today, assume turnover happened at midnight
+        # CRITICAL: Restore midnight handler state from cache
+        # If cache is from today, assume turnover already happened at midnight
+        # This allows proper turnover detection after HA restart
         if self._last_price_update:
             cache_date = self.time.as_local(self._last_price_update).date()
             today_date = self.time.as_local(self.time.now()).date()
             if cache_date == today_date:
                 # Cache is from today, so midnight turnover already happened
                 today_midnight = self.time.as_local(self.time.now()).replace(hour=0, minute=0, second=0, microsecond=0)
-                self._last_actual_turnover = today_midnight
+                # Restore handler state: mark today's midnight as last turnover
+                self._midnight_handler.mark_turnover_done(today_midnight)
 
     def _perform_midnight_turnover(self, price_info: dict[str, Any]) -> dict[str, Any]:
         """
@@ -695,7 +768,7 @@ class TibberPricesDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 
     async def _store_cache(self) -> None:
         """Store cache data."""
-        await self._data_fetcher.store_cache(self._last_midnight_turnover_check)
+        await self._data_fetcher.store_cache(self._midnight_handler.last_check_time)
 
     def _needs_tomorrow_data(self, tomorrow_date: date) -> bool:
         """Check if tomorrow data is missing or invalid."""

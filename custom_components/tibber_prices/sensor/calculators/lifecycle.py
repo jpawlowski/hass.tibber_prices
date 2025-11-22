@@ -15,7 +15,7 @@ from .base import TibberPricesBaseCalculator
 # Constants for lifecycle state determination
 FRESH_DATA_THRESHOLD_MINUTES = 5  # Data is "fresh" within 5 minutes of API fetch
 TOMORROW_CHECK_HOUR = 13  # After 13:00, we actively check for tomorrow data
-TURNOVER_WARNING_SECONDS = 300  # Warn 5 minutes before midnight
+TURNOVER_WARNING_SECONDS = 900  # Warn 15 minutes before midnight (last quarter-hour: 23:45-00:00)
 
 # Constants for 15-minute update boundaries (Timer #1)
 QUARTER_HOUR_BOUNDARIES = [0, 15, 30, 45]  # Minutes when Timer #1 can trigger
@@ -34,29 +34,31 @@ class TibberPricesLifecycleCalculator(TibberPricesBaseCalculator):
         - "fresh": Just fetched from API (within 5 minutes)
         - "refreshing": Currently fetching data from API
         - "searching_tomorrow": After 13:00, actively looking for tomorrow data
-        - "turnover_pending": Midnight is approaching (within 5 minutes)
+        - "turnover_pending": Last interval of day (23:45-00:00, midnight approaching)
         - "error": Last API call failed
+
+        Priority order (highest to lowest):
+        1. refreshing - Active operation has highest priority
+        2. error - Errors must be immediately visible
+        3. turnover_pending - Important event at 23:45, should stay visible
+        4. searching_tomorrow - Stable during search phase (13:00-~15:00)
+        5. fresh - Informational only, lowest priority among active states
+        6. cached - Default fallback
 
         """
         coordinator = self.coordinator
         current_time = coordinator.time.now()
 
-        # Check if actively fetching
+        # Priority 1: Check if actively fetching (highest priority)
         if coordinator._is_fetching:  # noqa: SLF001 - Internal state access for lifecycle tracking
             return "refreshing"
 
-        # Check if last update failed
+        # Priority 2: Check if last update failed
         # If coordinator has last_exception set, the last fetch failed
         if coordinator.last_exception is not None:
             return "error"
 
-        # Check if data is fresh (within 5 minutes of last API fetch)
-        if coordinator._last_price_update:  # noqa: SLF001 - Internal state access for lifecycle tracking
-            age = current_time - coordinator._last_price_update  # noqa: SLF001
-            if age <= timedelta(minutes=FRESH_DATA_THRESHOLD_MINUTES):
-                return "fresh"
-
-        # Check if midnight turnover is pending (within 15 minutes)
+        # Priority 3: Check if midnight turnover is pending (last quarter of day: 23:45-00:00)
         midnight = coordinator.time.as_local(current_time).replace(
             hour=0, minute=0, second=0, microsecond=0
         ) + timedelta(days=1)
@@ -64,7 +66,8 @@ class TibberPricesLifecycleCalculator(TibberPricesBaseCalculator):
         if 0 < time_to_midnight <= TURNOVER_WARNING_SECONDS:  # Within 15 minutes of midnight (23:45-00:00)
             return "turnover_pending"
 
-        # Check if we're in tomorrow data search mode (after 13:00 and tomorrow missing)
+        # Priority 4: Check if we're in tomorrow data search mode (after 13:00 and tomorrow missing)
+        # This should remain stable during the search phase, not flicker with "fresh" every 15 minutes
         now_local = coordinator.time.as_local(current_time)
         if now_local.hour >= TOMORROW_CHECK_HOUR:
             _, tomorrow_midnight = coordinator.time.get_day_boundaries("today")
@@ -72,7 +75,14 @@ class TibberPricesLifecycleCalculator(TibberPricesBaseCalculator):
             if coordinator._needs_tomorrow_data(tomorrow_date):  # noqa: SLF001 - Internal state access
                 return "searching_tomorrow"
 
-        # Default: using cached data
+        # Priority 5: Check if data is fresh (within 5 minutes of last API fetch)
+        # Lower priority than searching_tomorrow to avoid state flickering during search phase
+        if coordinator._last_price_update:  # noqa: SLF001 - Internal state access for lifecycle tracking
+            age = current_time - coordinator._last_price_update  # noqa: SLF001
+            if age <= timedelta(minutes=FRESH_DATA_THRESHOLD_MINUTES):
+                return "fresh"
+
+        # Priority 6: Default - using cached data
         return "cached"
 
     def get_cache_age_minutes(self) -> int | None:
@@ -109,8 +119,26 @@ class TibberPricesLifecycleCalculator(TibberPricesBaseCalculator):
         tomorrow_date = tomorrow_midnight.date()
         tomorrow_missing = coordinator._needs_tomorrow_data(tomorrow_date)  # noqa: SLF001
 
-        # Case 1: Before 13:00 today - next poll is today at 13:00 (when tomorrow-search begins)
+        # Case 1: Before 13:00 today - next poll is today at 13:xx:xx (when tomorrow-search begins)
         if now_local.hour < TOMORROW_CHECK_HOUR:
+            # Calculate exact time based on Timer #1 offset (minute and second precision)
+            if coordinator._last_coordinator_update is not None:  # noqa: SLF001
+                last_update_local = coordinator.time.as_local(coordinator._last_coordinator_update)  # noqa: SLF001
+                # Timer offset: minutes + seconds past the quarter-hour
+                minutes_past_quarter = last_update_local.minute % 15
+                seconds_offset = last_update_local.second
+
+                # Calculate first timer execution at or after 13:00 today
+                # Just apply timer offset to 13:00 (first quarter-hour mark >= 13:00)
+                # Timer runs at X:04:37 → Next poll at 13:04:37
+                return now_local.replace(
+                    hour=TOMORROW_CHECK_HOUR,
+                    minute=minutes_past_quarter,
+                    second=seconds_offset,
+                    microsecond=0,
+                )
+
+            # Fallback: No timer history yet
             return now_local.replace(hour=TOMORROW_CHECK_HOUR, minute=0, second=0, microsecond=0)
 
         # Case 2: After 13:00 today AND tomorrow data missing - actively polling now
@@ -258,12 +286,36 @@ class TibberPricesLifecycleCalculator(TibberPricesBaseCalculator):
             return "date_mismatch"
 
         # Check if cache is stale (older than expected)
-        age = current_time - coordinator._last_price_update  # noqa: SLF001
-        # Consider stale if older than 2 hours (8 * 15-minute intervals)
-        if age > timedelta(hours=2):
-            return "stale"
+        # CRITICAL: After midnight turnover, _last_price_update is set to 00:00
+        # without new API data. The data is still valid (rotated yesterday→today).
+        #
+        # Cache is considered "valid" if EITHER:
+        # 1. Within normal update interval expectations (age ≤ 2 hours), OR
+        # 2. Coordinator update cycle ran recently (within last 30 minutes)
+        #
+        # Why check _last_coordinator_update?
+        # - After midnight turnover, _last_price_update stays at 00:00
+        # - But coordinator polls every 15 minutes and validates cache
+        # - If coordinator ran recently, cache was checked and deemed valid
+        # - This prevents false "stale" status when using rotated data
 
-        return "valid"
+        age = current_time - coordinator._last_price_update  # noqa: SLF001
+
+        # If cache age is within normal expectations (≤2 hours), it's valid
+        if age <= timedelta(hours=2):
+            return "valid"
+
+        # Cache is older than 2 hours - check if coordinator validated it recently
+        # If coordinator ran within last 30 minutes, cache is considered current
+        # (even if _last_price_update is older, e.g., from midnight turnover)
+        if coordinator._last_coordinator_update:  # noqa: SLF001 - Internal state access
+            time_since_coordinator_check = current_time - coordinator._last_coordinator_update  # noqa: SLF001
+            if time_since_coordinator_check <= timedelta(minutes=30):
+                # Coordinator validated cache recently - it's current
+                return "valid"
+
+        # Cache is old AND coordinator hasn't validated recently - stale
+        return "stale"
 
     def get_api_calls_today(self) -> int:
         """Get the number of API calls made today."""

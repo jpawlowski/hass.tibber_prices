@@ -83,8 +83,9 @@ def build_lifecycle_attributes(
     api_calls = lifecycle_calculator.get_api_calls_today()
     attributes["updates_today"] = api_calls
 
-    if coordinator._last_actual_turnover:  # noqa: SLF001 - Internal state access for diagnostic display
-        attributes["last_turnover"] = coordinator._last_actual_turnover.isoformat()  # noqa: SLF001
+    # Last Turnover Time (from midnight handler)
+    if coordinator._midnight_handler.last_turnover_time:  # noqa: SLF001 - Internal state access for diagnostic display
+        attributes["last_turnover"] = coordinator._midnight_handler.last_turnover_time.isoformat()  # noqa: SLF001
 
     # Last Error (if any)
     if coordinator.last_exception:
