@@ -12,6 +12,33 @@ All datetime operations MUST go through TimeService to ensure:
 - Proper timezone handling (local time, not UTC)
 - Testability (mock time in one place)
 - Future time-travel feature support
+
+TIMER ARCHITECTURE:
+
+This integration uses three distinct timer mechanisms:
+
+1. **Timer #1: API Polling (DataUpdateCoordinator)**
+   - Runs every 15 minutes at a RANDOM offset (e.g., 10:04:37, 10:19:37, 10:34:37)
+   - Offset determined by when last API call completed
+   - Tracked via _last_coordinator_update for next poll prediction
+   - NO tolerance needed - offset variation is INTENTIONAL
+   - Purpose: Spread API load, avoid thundering herd problem
+
+2. **Timer #2: Entity Updates (quarter-hour boundaries)**
+   - Must trigger at EXACT boundaries (00, 15, 30, 45 minutes)
+   - Uses _BOUNDARY_TOLERANCE_SECONDS for HA scheduling jitter correction
+   - Scheduled via async_track_utc_time_change(minute=[0,15,30,45], second=0)
+   - If HA triggers at 15:00:01 → round to 15:00:00 (within ±2s tolerance)
+   - Purpose: Entity state updates reflect correct quarter-hour interval
+
+3. **Timer #3: Timing Sensors (30-second boundaries)**
+   - Must trigger at EXACT boundaries (0, 30 seconds)
+   - Uses _BOUNDARY_TOLERANCE_SECONDS for HA scheduling jitter correction
+   - Scheduled via async_track_utc_time_change(second=[0,30])
+   - Purpose: Update countdown/time-to sensors
+
+CRITICAL: The tolerance is ONLY for Timer #2 and #3 to correct HA's
+scheduling delays. It is NOT used for Timer #1's offset tracking.
 """
 
 from __future__ import annotations
@@ -42,6 +69,13 @@ _INTERVALS_PER_HOUR = 60 // _DEFAULT_INTERVAL_MINUTES  # 4
 _INTERVALS_PER_DAY = 24 * _INTERVALS_PER_HOUR  # 96
 
 # Rounding tolerance for boundary detection (±2 seconds)
+# This handles Home Assistant's scheduling jitter for Timer #2 (entity updates)
+# and Timer #3 (timing sensors). When HA schedules a callback for exactly
+# 15:00:00 but actually triggers it at 15:00:01, this tolerance ensures we
+# still recognize it as the 15:00:00 boundary.
+#
+# NOT used for Timer #1 (API polling), which intentionally runs at random
+# offsets determined by last API call completion time.
 _BOUNDARY_TOLERANCE_SECONDS = 2
 
 
@@ -498,16 +532,17 @@ class TibberPricesTimeService:
             rounded_seconds = interval_start_seconds
         elif distance_to_next <= _BOUNDARY_TOLERANCE_SECONDS:
             # Near next interval start → use it
+            # CRITICAL: If rounding to next interval and it wraps to midnight (index 0),
+            # we need to increment to next day, not stay on same day!
+            if next_interval_index == 0:
+                # Rounding to midnight of NEXT day
+                return (target + timedelta(days=1)).replace(hour=0, minute=0, second=0, microsecond=0)
             rounded_seconds = next_interval_start_seconds
         else:
             # Not near any boundary → floor to current interval
             rounded_seconds = interval_start_seconds
 
-        # Handle midnight wrap
-        if rounded_seconds >= 24 * 3600:
-            rounded_seconds = 0
-
-        # Build rounded datetime
+        # Build rounded datetime (no midnight wrap needed here - handled above)
         hours = int(rounded_seconds // 3600)
         minutes = int((rounded_seconds % 3600) // 60)
 
