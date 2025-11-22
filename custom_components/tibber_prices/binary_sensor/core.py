@@ -5,6 +5,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 from custom_components.tibber_prices.coordinator import TIME_SENSITIVE_ENTITY_KEYS
+from custom_components.tibber_prices.coordinator.core import get_connection_state
 from custom_components.tibber_prices.entity import TibberPricesEntity
 from custom_components.tibber_prices.entity_utils import get_binary_sensor_icon
 from homeassistant.components.binary_sensor import (
@@ -12,6 +13,7 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntityDescription,
 )
 from homeassistant.core import callback
+from homeassistant.exceptions import ConfigEntryAuthFailed
 
 from .attributes import (
     build_async_extra_state_attributes,
@@ -44,6 +46,11 @@ class TibberPricesBinarySensor(TibberPricesEntity, BinarySensorEntity):
         self._attr_unique_id = f"{coordinator.config_entry.entry_id}_{entity_description.key}"
         self._state_getter: Callable | None = self._get_value_getter()
         self._time_sensitive_remove_listener: Callable | None = None
+        self._lifecycle_remove_listener: Callable | None = None
+
+        # Register for lifecycle push updates if this sensor depends on connection state
+        if entity_description.key in ("connection", "tomorrow_data_available"):
+            self._lifecycle_remove_listener = coordinator.register_lifecycle_callback(self.async_write_ha_state)
 
     async def async_added_to_hass(self) -> None:
         """When entity is added to hass."""
@@ -63,6 +70,11 @@ class TibberPricesBinarySensor(TibberPricesEntity, BinarySensorEntity):
         if self._time_sensitive_remove_listener:
             self._time_sensitive_remove_listener()
             self._time_sensitive_remove_listener = None
+
+        # Remove lifecycle listener if registered
+        if self._lifecycle_remove_listener:
+            self._lifecycle_remove_listener()
+            self._lifecycle_remove_listener = None
 
     @callback
     def _handle_time_sensitive_update(self, time_service: TibberPricesTimeService) -> None:
@@ -85,7 +97,7 @@ class TibberPricesBinarySensor(TibberPricesEntity, BinarySensorEntity):
         state_getters = {
             "peak_price_period": self._peak_price_state,
             "best_price_period": self._best_price_state,
-            "connection": lambda: True if self.coordinator.data else None,
+            "connection": lambda: get_connection_state(self.coordinator),
             "tomorrow_data_available": self._tomorrow_data_available_state,
             "has_ventilation_system": self._has_ventilation_system_state,
             "realtime_consumption_enabled": self._realtime_consumption_enabled_state,
@@ -123,8 +135,16 @@ class TibberPricesBinarySensor(TibberPricesEntity, BinarySensorEntity):
 
     def _tomorrow_data_available_state(self) -> bool | None:
         """Return True if tomorrow's data is fully available, False if not, None if unknown."""
+        # Auth errors: Cannot reliably check - return unknown
+        # User must fix auth via reauth flow before we can determine tomorrow data availability
+        if isinstance(self.coordinator.last_exception, ConfigEntryAuthFailed):
+            return None
+
+        # No data: unknown state (initializing or error)
         if not self.coordinator.data:
             return None
+
+        # Check tomorrow data availability (normal operation)
         price_info = self.coordinator.data.get("priceInfo", {})
         tomorrow_prices = price_info.get("tomorrow", [])
         interval_count = len(tomorrow_prices)
