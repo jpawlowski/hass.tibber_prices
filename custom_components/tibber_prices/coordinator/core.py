@@ -504,35 +504,6 @@ class TibberPricesDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 
         return True
 
-    def register_lifecycle_callback(self, callback: Callable[[], None]) -> Callable[[], None]:
-        """
-        Register callback for lifecycle state changes (push updates).
-
-        This allows sensors to receive immediate updates when the coordinator's
-        lifecycle state changes, instead of waiting for the next polling cycle.
-
-        Args:
-            callback: Function to call when lifecycle state changes (typically async_write_ha_state)
-
-        Returns:
-            Callable that unregisters the callback when called
-
-        """
-        if callback not in self._lifecycle_callbacks:
-            self._lifecycle_callbacks.append(callback)
-
-        def unregister() -> None:
-            """Unregister the lifecycle callback."""
-            if callback in self._lifecycle_callbacks:
-                self._lifecycle_callbacks.remove(callback)
-
-        return unregister
-
-    def _notify_lifecycle_change(self) -> None:
-        """Notify registered callbacks about lifecycle state change (push update)."""
-        for lifecycle_callback in self._lifecycle_callbacks:
-            lifecycle_callback()
-
     async def async_shutdown(self) -> None:
         """
         Shut down the coordinator and clean up timers.
@@ -661,7 +632,8 @@ class TibberPricesDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 if self._last_price_update != old_price_update:
                     self._api_calls_today += 1
                     self._lifecycle_state = "fresh"  # Data just fetched
-                    self._notify_lifecycle_change()  # Push update: fresh data available
+                    # No separate lifecycle notification needed - normal async_update_listeners()
+                    # will trigger all entities (including lifecycle sensor) after this return
 
                 return result
             # Subentries get data from main coordinator (no lifecycle tracking - they don't fetch)
@@ -675,7 +647,8 @@ class TibberPricesDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             # Reset lifecycle state on error
             self._is_fetching = False
             self._lifecycle_state = "error"
-            self._notify_lifecycle_change()  # Push update: error occurred
+            # No separate lifecycle notification needed - error case returns data
+            # which triggers normal async_update_listeners()
             return await self._data_fetcher.handle_api_error(
                 err,
                 self._transform_data_for_main_entry,

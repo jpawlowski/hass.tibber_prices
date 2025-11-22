@@ -72,10 +72,6 @@ def build_lifecycle_attributes(
     if next_poll:  # None means data is complete, no more polls needed
         attributes["next_api_poll"] = next_poll.isoformat()
 
-    next_tomorrow_check = lifecycle_calculator.get_next_tomorrow_check_time()
-    if next_tomorrow_check:
-        attributes["next_tomorrow_check"] = next_tomorrow_check.isoformat()
-
     next_midnight = lifecycle_calculator.get_next_midnight_turnover_time()
     attributes["next_midnight_turnover"] = next_midnight.isoformat()
 

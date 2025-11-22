@@ -110,22 +110,10 @@ class TibberPricesSensor(TibberPricesEntity, SensorEntity):
         self._value_getter: Callable | None = self._get_value_getter()
         self._time_sensitive_remove_listener: Callable | None = None
         self._minute_update_remove_listener: Callable | None = None
-        self._lifecycle_remove_listener: Callable | None = None
         # Chart data export (for chart_data_export sensor) - from binary_sensor
         self._chart_data_last_update = None  # Track last service call timestamp
         self._chart_data_error = None  # Track last service call error
         self._chart_data_response = None  # Store service response for attributes
-
-        # Register for push updates if this is the lifecycle sensor
-        if entity_description.key == "data_lifecycle_status":
-            self._lifecycle_remove_listener = coordinator.register_lifecycle_callback(self.async_write_ha_state)
-
-        # Register for push updates if this is the chart_data_export sensor
-        # This ensures chart data is refreshed immediately when new price data arrives
-        if entity_description.key == "chart_data_export":
-            self._lifecycle_remove_listener = coordinator.register_lifecycle_callback(
-                self._handle_lifecycle_update_for_chart
-            )
 
     async def async_added_to_hass(self) -> None:
         """When entity is added to hass."""
@@ -161,11 +149,6 @@ class TibberPricesSensor(TibberPricesEntity, SensorEntity):
             self._minute_update_remove_listener()
             self._minute_update_remove_listener = None
 
-        # Remove lifecycle listener if registered
-        if self._lifecycle_remove_listener:
-            self._lifecycle_remove_listener()
-            self._lifecycle_remove_listener = None
-
     @callback
     def _handle_time_sensitive_update(self, time_service: TibberPricesTimeService) -> None:
         """
@@ -199,17 +182,6 @@ class TibberPricesSensor(TibberPricesEntity, SensorEntity):
         self.coordinator.time = time_service
 
         self.async_write_ha_state()
-
-    @callback
-    def _handle_lifecycle_update_for_chart(self) -> None:
-        """
-        Handle lifecycle state change for chart_data_export sensor.
-
-        When lifecycle state changes (especially to "fresh" after new API data),
-        refresh chart data immediately to ensure charts show latest prices.
-        """
-        # Schedule async refresh as a task (we're in a callback)
-        self.hass.async_create_task(self._refresh_chart_data())
 
     @callback
     def _handle_coordinator_update(self) -> None:

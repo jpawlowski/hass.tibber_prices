@@ -181,29 +181,6 @@ class TibberPricesLifecycleCalculator(TibberPricesBaseCalculator):
         # Fallback: If we don't know timer offset yet, assume 13:00:00
         return tomorrow_13
 
-    def get_next_tomorrow_check_time(self) -> datetime | None:
-        """
-        Calculate when the next tomorrow data check will occur.
-
-        Returns None if not applicable (before 13:00 or tomorrow already available).
-        """
-        coordinator = self.coordinator
-        current_time = coordinator.time.now()
-        now_local = coordinator.time.as_local(current_time)
-
-        # Only relevant after 13:00
-        if now_local.hour < TOMORROW_CHECK_HOUR:
-            return None
-
-        # Only relevant if tomorrow data is missing
-        _, tomorrow_midnight = coordinator.time.get_day_boundaries("today")
-        tomorrow_date = tomorrow_midnight.date()
-        if not coordinator._needs_tomorrow_data(tomorrow_date):  # noqa: SLF001 - Internal state access
-            return None
-
-        # Next check = next regular API poll (same as get_next_api_poll_time)
-        return self.get_next_api_poll_time()
-
     def get_next_midnight_turnover_time(self) -> datetime:
         """Calculate when the next midnight turnover will occur."""
         coordinator = self.coordinator
