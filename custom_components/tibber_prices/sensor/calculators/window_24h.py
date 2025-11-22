@@ -39,7 +39,7 @@ class TibberPricesWindow24hCalculator(TibberPricesBaseCalculator):
             Price value in minor currency units (cents/øre), or None if unavailable.
 
         """
-        if not self.coordinator_data:
+        if not self.has_data():
             return None
 
         value = stat_func(self.coordinator_data, time=self.coordinator.time)

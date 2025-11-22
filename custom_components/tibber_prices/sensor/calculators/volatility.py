@@ -51,10 +51,8 @@ class TibberPricesVolatilityCalculator(TibberPricesBaseCalculator):
             Volatility level: "low", "moderate", "high", "very_high", or None if unavailable.
 
         """
-        if not self.coordinator_data:
+        if not self.has_data():
             return None
-
-        price_info = self.price_info
 
         # Get volatility thresholds from config
         thresholds = {
@@ -64,7 +62,7 @@ class TibberPricesVolatilityCalculator(TibberPricesBaseCalculator):
         }
 
         # Get prices based on volatility type
-        prices_to_analyze = get_prices_for_volatility(volatility_type, price_info, time=self.coordinator.time)
+        prices_to_analyze = get_prices_for_volatility(volatility_type, self.price_info, time=self.coordinator.time)
 
         if not prices_to_analyze:
             return None
@@ -96,7 +94,7 @@ class TibberPricesVolatilityCalculator(TibberPricesBaseCalculator):
 
         # Add type-specific attributes
         add_volatility_type_attributes(
-            self._last_volatility_attributes, volatility_type, price_info, thresholds, time=self.coordinator.time
+            self._last_volatility_attributes, volatility_type, self.price_info, thresholds, time=self.coordinator.time
         )
 
         # Return lowercase for ENUM device class

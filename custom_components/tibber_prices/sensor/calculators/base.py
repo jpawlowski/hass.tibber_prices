@@ -69,3 +69,126 @@ class TibberPricesBaseCalculator:
     def currency(self) -> str:
         """Get currency code from price info."""
         return self.price_info.get("currency", "EUR")
+
+    # Smart data access methods with built-in None-safety
+
+    def get_intervals(self, day: str) -> list[dict]:
+        """
+        Get price intervals for a specific day with None-safety.
+
+        Args:
+            day: Day key ("yesterday", "today", "tomorrow").
+
+        Returns:
+            List of interval dictionaries, empty list if unavailable.
+
+        """
+        if not self.coordinator_data:
+            return []
+        return self.price_info.get(day, [])
+
+    @property
+    def intervals_today(self) -> list[dict]:
+        """Get today's intervals with None-safety."""
+        return self.get_intervals("today")
+
+    @property
+    def intervals_tomorrow(self) -> list[dict]:
+        """Get tomorrow's intervals with None-safety."""
+        return self.get_intervals("tomorrow")
+
+    @property
+    def intervals_yesterday(self) -> list[dict]:
+        """Get yesterday's intervals with None-safety."""
+        return self.get_intervals("yesterday")
+
+    def get_all_intervals(self) -> list[dict]:
+        """
+        Get all available intervals (yesterday + today + tomorrow).
+
+        Returns:
+            Combined list of all interval dictionaries.
+
+        """
+        return [
+            *self.intervals_yesterday,
+            *self.intervals_today,
+            *self.intervals_tomorrow,
+        ]
+
+    def find_interval_at_offset(self, offset: int) -> dict | None:
+        """
+        Find interval at given offset from current time with bounds checking.
+
+        Args:
+            offset: Offset from current interval (0=current, 1=next, -1=previous).
+
+        Returns:
+            Interval dictionary or None if out of bounds or unavailable.
+
+        """
+        if not self.coordinator_data:
+            return None
+
+        from custom_components.tibber_prices.utils.price import (  # noqa: PLC0415 - avoid circular import
+            find_price_data_for_interval,
+        )
+
+        time = self.coordinator.time
+        target_time = time.get_interval_offset_time(offset)
+        return find_price_data_for_interval(self.price_info, target_time, time=time)
+
+    def safe_get_from_interval(
+        self,
+        interval: dict[str, Any],
+        key: str,
+        default: Any = None,
+    ) -> Any:
+        """
+        Safely get a value from an interval dictionary.
+
+        Args:
+            interval: Interval dictionary.
+            key: Key to retrieve.
+            default: Default value if key not found.
+
+        Returns:
+            Value from interval or default.
+
+        """
+        return interval.get(key, default) if interval else default
+
+    def has_data(self) -> bool:
+        """
+        Check if coordinator has any data available.
+
+        Returns:
+            True if data is available, False otherwise.
+
+        """
+        return bool(self.coordinator_data)
+
+    def has_price_info(self) -> bool:
+        """
+        Check if price info is available in coordinator data.
+
+        Returns:
+            True if price info exists, False otherwise.
+
+        """
+        return bool(self.price_info)
+
+    def get_day_intervals(self, day: str) -> list[dict]:
+        """
+        Get intervals for a specific day from coordinator data.
+
+        This is an alias for get_intervals() with consistent naming.
+
+        Args:
+            day: Day key ("yesterday", "today", "tomorrow").
+
+        Returns:
+            List of interval dictionaries, empty list if unavailable.
+
+        """
+        return self.get_intervals(day)

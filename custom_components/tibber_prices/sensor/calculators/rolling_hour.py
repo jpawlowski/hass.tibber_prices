@@ -48,12 +48,11 @@ class TibberPricesRollingHourCalculator(TibberPricesBaseCalculator):
             - "rating": str (aggregated rating: "low", "normal", "high")
 
         """
-        if not self.coordinator_data:
+        if not self.has_data():
             return None
 
         # Get all available price data
-        price_info = self.price_info
-        all_prices = price_info.get("yesterday", []) + price_info.get("today", []) + price_info.get("tomorrow", [])
+        all_prices = self.get_all_intervals()
 
         if not all_prices:
             return None

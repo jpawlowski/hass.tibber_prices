@@ -211,7 +211,14 @@ def format_price_unit_minor(currency_code: str | None) -> str:
     return f"{minor_symbol}/{UnitOfPower.KILO_WATT}{UnitOfTime.HOURS}"
 
 
-# Price level constants from Tibber API
+# ============================================================================
+# Price Level, Rating, and Volatility Constants
+# ============================================================================
+# IMPORTANT: These string constants are the single source of truth for
+# valid enum values. The Literal types in sensor/types.py and binary_sensor/types.py
+# should be kept in sync with these values manually.
+
+# Price level constants (from Tibber API)
 PRICE_LEVEL_VERY_CHEAP = "VERY_CHEAP"
 PRICE_LEVEL_CHEAP = "CHEAP"
 PRICE_LEVEL_NORMAL = "NORMAL"
@@ -223,7 +230,7 @@ PRICE_RATING_LOW = "LOW"
 PRICE_RATING_NORMAL = "NORMAL"
 PRICE_RATING_HIGH = "HIGH"
 
-# Price volatility levels (based on coefficient of variation: std_dev / mean * 100%)
+# Price volatility level constants
 VOLATILITY_LOW = "LOW"
 VOLATILITY_MODERATE = "MODERATE"
 VOLATILITY_HIGH = "HIGH"

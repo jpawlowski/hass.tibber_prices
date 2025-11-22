@@ -6,6 +6,8 @@ from typing import TYPE_CHECKING
 
 from custom_components.tibber_prices.entity_utils import add_icon_color_attribute
 
+# Import TypedDict definitions for documentation (not used in signatures)
+
 if TYPE_CHECKING:
     from custom_components.tibber_prices.coordinator.time_service import TibberPricesTimeService
 
@@ -23,6 +25,8 @@ def get_tomorrow_data_available_attributes(
 ) -> dict | None:
     """
     Build attributes for tomorrow_data_available sensor.
+
+    Returns TomorrowDataAvailableAttributes structure.
 
     Args:
         coordinator_data: Coordinator data dict
@@ -64,6 +68,8 @@ def get_price_intervals_attributes(
 ) -> dict | None:
     """
     Build attributes for period-based sensors (best/peak price).
+
+    Returns PeriodAttributes structure.
 
     All data is already calculated in the coordinator - we just need to:
     1. Get period summaries from coordinator (already filtered and fully calculated)

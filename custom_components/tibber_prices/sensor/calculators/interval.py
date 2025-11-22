@@ -4,8 +4,6 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from custom_components.tibber_prices.utils.price import find_price_data_for_interval
-
 from .base import TibberPricesBaseCalculator
 
 if TYPE_CHECKING:
@@ -57,32 +55,27 @@ class TibberPricesIntervalCalculator(TibberPricesBaseCalculator):
             None if data unavailable.
 
         """
-        if not self.coordinator_data:
+        if not self.has_data():
             return None
 
-        price_info = self.price_info
-        time = self.coordinator.time
-        # Use TimeService to get interval offset time
-        target_time = time.get_interval_offset_time(interval_offset)
-
-        interval_data = find_price_data_for_interval(price_info, target_time, time=time)
+        interval_data = self.find_interval_at_offset(interval_offset)
         if not interval_data:
             return None
 
         # Extract value based on type
         if value_type == "price":
-            price = interval_data.get("total")
+            price = self.safe_get_from_interval(interval_data, "total")
             if price is None:
                 return None
             price = float(price)
             return price if in_euro else round(price * 100, 2)
 
         if value_type == "level":
-            level = interval_data.get("level")
+            level = self.safe_get_from_interval(interval_data, "level")
             return level.lower() if level else None
 
         # For rating: extract rating_level
-        rating = interval_data.get("rating_level")
+        rating = self.safe_get_from_interval(interval_data, "rating_level")
         return rating.lower() if rating else None
 
     def get_price_level_value(self) -> str | None:
@@ -117,19 +110,16 @@ class TibberPricesIntervalCalculator(TibberPricesBaseCalculator):
             Rating level (lowercase), or None if unavailable.
 
         """
-        if not self.coordinator_data or rating_type != "current":
+        if not self.has_data() or rating_type != "current":
             self._last_rating_difference = None
             self._last_rating_level = None
             return None
 
-        time = self.coordinator.time
-        now = time.now()
-        price_info = self.price_info
-        current_interval = find_price_data_for_interval(price_info, now, time=time)
+        current_interval = self.find_interval_at_offset(0)
 
         if current_interval:
-            rating_level = current_interval.get("rating_level")
-            difference = current_interval.get("difference")
+            rating_level = self.safe_get_from_interval(current_interval, "rating_level")
+            difference = self.safe_get_from_interval(current_interval, "difference")
             if rating_level is not None:
                 self._last_rating_difference = float(difference) if difference is not None else None
                 self._last_rating_level = rating_level

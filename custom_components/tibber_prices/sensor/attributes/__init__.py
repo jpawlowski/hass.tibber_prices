@@ -14,6 +14,22 @@ from custom_components.tibber_prices.entity_utils import (
     add_description_attributes,
     add_icon_color_attribute,
 )
+from custom_components.tibber_prices.sensor.types import (
+    DailyStatPriceAttributes,
+    DailyStatRatingAttributes,
+    FutureAttributes,
+    IntervalLevelAttributes,
+    # Import all types for re-export
+    IntervalPriceAttributes,
+    IntervalRatingAttributes,
+    LifecycleAttributes,
+    MetadataAttributes,
+    SensorAttributes,
+    TimingAttributes,
+    TrendAttributes,
+    VolatilityAttributes,
+    Window24hAttributes,
+)
 
 if TYPE_CHECKING:
     from custom_components.tibber_prices.coordinator.core import (
@@ -34,6 +50,20 @@ from .volatility import add_volatility_type_attributes, get_prices_for_volatilit
 from .window_24h import add_average_price_attributes
 
 __all__ = [
+    "DailyStatPriceAttributes",
+    "DailyStatRatingAttributes",
+    "FutureAttributes",
+    "IntervalLevelAttributes",
+    "IntervalPriceAttributes",
+    "IntervalRatingAttributes",
+    "LifecycleAttributes",
+    "MetadataAttributes",
+    # Type exports
+    "SensorAttributes",
+    "TimingAttributes",
+    "TrendAttributes",
+    "VolatilityAttributes",
+    "Window24hAttributes",
     "add_volatility_type_attributes",
     "build_extra_state_attributes",
     "build_sensor_attributes",
@@ -47,7 +77,7 @@ def build_sensor_attributes(
     coordinator: TibberPricesDataUpdateCoordinator,
     native_value: Any,
     cached_data: dict,
-) -> dict | None:
+) -> dict[str, Any] | None:
     """
     Build attributes for a sensor based on its key.
 
@@ -175,7 +205,7 @@ def build_extra_state_attributes(  # noqa: PLR0913
     *,
     config_entry: TibberPricesConfigEntry,
     coordinator_data: dict,
-    sensor_attrs: dict | None = None,
+    sensor_attrs: dict[str, Any] | None = None,
     time: TibberPricesTimeService,
 ) -> dict[str, Any] | None:
     """

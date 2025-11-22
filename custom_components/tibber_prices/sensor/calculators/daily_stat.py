@@ -65,10 +65,8 @@ class TibberPricesDailyStatCalculator(TibberPricesBaseCalculator):
             Price value in minor currency units (cents/øre), or None if unavailable.
 
         """
-        if not self.coordinator_data:
+        if not self.has_data():
             return None
-
-        price_info = self.price_info
 
         # Get local midnight boundaries based on the requested day using TimeService
         time = self.coordinator.time
@@ -78,7 +76,7 @@ class TibberPricesDailyStatCalculator(TibberPricesBaseCalculator):
         # that fall within the target day's local date boundaries
         price_intervals = []
         for day_key in ["today", "tomorrow"]:
-            for price_data in price_info.get(day_key, []):
+            for price_data in self.get_intervals(day_key):
                 starts_at = price_data.get("startsAt")  # Already datetime in local timezone
                 if not starts_at:
                     continue
@@ -131,10 +129,8 @@ class TibberPricesDailyStatCalculator(TibberPricesBaseCalculator):
             Aggregated level/rating value (lowercase), or None if unavailable.
 
         """
-        if not self.coordinator_data:
+        if not self.has_data():
             return None
-
-        price_info = self.price_info
 
         # Get local midnight boundaries based on the requested day using TimeService
         time = self.coordinator.time
@@ -144,7 +140,7 @@ class TibberPricesDailyStatCalculator(TibberPricesBaseCalculator):
         # that fall within the target day's local date boundaries
         day_intervals = []
         for day_key in ["yesterday", "today", "tomorrow"]:
-            for price_data in price_info.get(day_key, []):
+            for price_data in self.get_intervals(day_key):
                 starts_at = price_data.get("startsAt")  # Already datetime in local timezone
                 if not starts_at:
                     continue
