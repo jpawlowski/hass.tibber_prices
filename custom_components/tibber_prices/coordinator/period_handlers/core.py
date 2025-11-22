@@ -73,7 +73,7 @@ def calculate_periods(
 
     # Extract config values
     reverse_sort = config.reverse_sort
-    flex_raw = config.flex
+    flex_raw = config.flex  # Already normalized to positive by get_period_config()
     min_distance_from_avg = config.min_distance_from_avg
     min_period_length = config.min_period_length
     threshold_low = config.threshold_low
@@ -81,13 +81,14 @@ def calculate_periods(
 
     # CRITICAL: Hard cap flex at 50% to prevent degenerate behavior
     # Above 50%, period detection becomes unreliable (too many intervals qualify)
+    # NOTE: flex_raw is already positive from normalization in get_period_config()
     flex = flex_raw
-    if abs(flex_raw) > MAX_SAFE_FLEX:
-        flex = MAX_SAFE_FLEX if flex_raw > 0 else -MAX_SAFE_FLEX
+    if flex_raw > MAX_SAFE_FLEX:
+        flex = MAX_SAFE_FLEX
         _LOGGER.warning(
             "Flex %.1f%% exceeds maximum safe value! Capping at %.0f%%. "
             "Recommendation: Use 15-20%% with relaxation enabled, or 25-35%% without relaxation.",
-            abs(flex_raw) * 100,
+            flex_raw * 100,
             MAX_SAFE_FLEX * 100,
         )
 

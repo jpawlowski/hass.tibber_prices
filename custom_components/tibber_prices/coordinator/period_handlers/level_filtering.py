@@ -109,6 +109,11 @@ def check_interval_criteria(
     """
     Check if interval meets flex and minimum distance criteria.
 
+    CRITICAL: This function works with NORMALIZED values (always positive):
+    - criteria.flex: Always positive (e.g., 0.20 for 20%)
+    - criteria.min_distance_from_avg: Always positive (e.g., 5.0 for 5%)
+    - criteria.reverse_sort: Determines direction (True=Peak, False=Best)
+
     Args:
         price: Interval price
         criteria: Interval criteria (ref_price, avg_price, flex, etc.)
@@ -117,54 +122,51 @@ def check_interval_criteria(
         Tuple of (in_flex, meets_min_distance)
 
     """
-    # CRITICAL: Handle negative reference prices correctly
-    # For best price (reverse_sort=False): ref_price is daily minimum
-    # For peak price (reverse_sort=True): ref_price is daily maximum
+    # Normalize inputs to absolute values for consistent calculation
+    flex_abs = abs(criteria.flex)
+    min_distance_abs = abs(criteria.min_distance_from_avg)
+
+    # ============================================================
+    # FLEX FILTER: Check if price is within flex threshold of reference
+    # ============================================================
+    # Reference price is:
+    # - Peak price (reverse_sort=True): daily MAXIMUM
+    # - Best price (reverse_sort=False): daily MINIMUM
     #
-    # Flex determines price band:
-    # - Best price: [ref_price, ref_price + abs(ref_price) * flex]
-    # - Peak price: [ref_price - abs(ref_price) * flex, ref_price]
+    # Flex band calculation (using absolute values):
+    # - Peak price: [max - max*flex, max] → accept prices near the maximum
+    # - Best price: [min, min + min*flex] → accept prices near the minimum
     #
-    # Examples (flex=15%):
-    # Positive ref (10 ct, best):  [10, 11.5]     → max = 10 + 10*0.15 = 11.5
-    # Negative ref (-10 ct, best): [-10, -8.5]    → max = -10 + 10*0.15 = -8.5 (less negative = more expensive)
-    # Positive ref (30 ct, peak):  [25.5, 30]     → min = 30 - 30*0.15 = 25.5
-    # Negative ref (-5 ct, peak):  [-5.75, -5]    → min = -5 - 5*0.15 = -5.75 (more negative = cheaper)
+    # Examples with flex=20%:
+    # - Peak: max=30 ct → accept [24, 30] ct (prices ≥ 24 ct)
+    # - Best: min=10 ct → accept [10, 12] ct (prices ≤ 12 ct)
 
     if criteria.ref_price == 0:
         # Zero reference: flex has no effect, use strict equality
         in_flex = price == 0
     else:
-        # Calculate flex threshold using absolute value of reference
-        flex_amount = abs(criteria.ref_price) * criteria.flex
+        # Calculate flex amount using absolute value
+        flex_amount = abs(criteria.ref_price) * flex_abs
 
         if criteria.reverse_sort:
-            # Peak price: price must be >= (ref_price - flex_amount)
-            # For negative ref: more negative is cheaper, so subtract
-            # For positive ref: lower value is cheaper, so subtract
-            # Example: ref=30, flex=15% → accept [25.5, 30] → price >= 25.5
-            # Example: ref=-5, flex=15% → accept [-5.75, -5] → price >= -5.75
+            # Peak price: accept prices >= (ref_price - flex_amount)
+            # Prices must be CLOSE TO or AT the maximum
             flex_threshold = criteria.ref_price - flex_amount
-            in_flex = price >= flex_threshold and price <= criteria.ref_price
+            in_flex = price >= flex_threshold
         else:
-            # Best price: price must be in range [ref_price, ref_price + flex_amount]
-            # For negative ref: less negative is more expensive, so add
-            # For positive ref: higher value is more expensive, so add
-            # Example: ref=10, flex=15% → accept [10, 11.5] → 10 <= price <= 11.5
-            # Example: ref=-10, flex=15% → accept [-10, -8.5] → -10 <= price <= -8.5
+            # Best price: accept prices <= (ref_price + flex_amount)
+            # Prices must be CLOSE TO or AT the minimum
             flex_threshold = criteria.ref_price + flex_amount
             in_flex = price >= criteria.ref_price and price <= flex_threshold
 
+    # ============================================================
+    # MIN_DISTANCE FILTER: Check if price is far enough from average
+    # ============================================================
     # CRITICAL: Adjust min_distance dynamically based on flex to prevent conflicts
     # Problem: High flex (e.g., 50%) can conflict with fixed min_distance (e.g., 5%)
     # Solution: When flex is high, reduce min_distance requirement proportionally
-    #
-    # At low flex (≤20%), use full min_distance (e.g., 5%)
-    # At high flex (≥40%), reduce min_distance to avoid over-filtering
-    # Linear interpolation between 20-40% flex range
 
-    adjusted_min_distance = criteria.min_distance_from_avg
-    flex_abs = abs(criteria.flex)
+    adjusted_min_distance = min_distance_abs
 
     if flex_abs > FLEX_SCALING_THRESHOLD:
         # Scale down min_distance as flex increases
@@ -173,7 +175,7 @@ def check_interval_criteria(
         # At 50% flex: multiplier = 0.25 (quarter min_distance)
         flex_excess = flex_abs - 0.20  # How much above 20%
         scale_factor = max(0.25, 1.0 - (flex_excess * 2.5))  # Linear reduction, min 25%
-        adjusted_min_distance = criteria.min_distance_from_avg * scale_factor
+        adjusted_min_distance = min_distance_abs * scale_factor
 
         # Log adjustment at DEBUG level (only when significant reduction)
         if scale_factor < SCALE_FACTOR_WARNING_THRESHOLD:
@@ -183,18 +185,21 @@ def check_interval_criteria(
             _LOGGER.debug(
                 "High flex %.1f%% detected: Reducing min_distance %.1f%% → %.1f%% (scale %.2f)",
                 flex_abs * 100,
-                criteria.min_distance_from_avg,
+                min_distance_abs,
                 adjusted_min_distance,
                 scale_factor,
             )
 
-    # Minimum distance from average (using adjusted value)
-    # Uniform formula: avg * (1 + distance/100) works for both Best (negative) and Peak (positive)
-    # - Best: distance=-5% → avg * 0.95 (5% below average)
-    # - Peak: distance=+5% → avg * 1.05 (5% above average)
-    min_distance_threshold = criteria.avg_price * (1 + adjusted_min_distance / 100)
-
-    # Check: Peak (≥ threshold) or Best (≤ threshold)
-    meets_min_distance = price >= min_distance_threshold if criteria.reverse_sort else price <= min_distance_threshold
+    # Calculate threshold from average (using normalized positive distance)
+    # - Peak price: threshold = avg * (1 + distance/100) → prices must be ABOVE avg+distance
+    # - Best price: threshold = avg * (1 - distance/100) → prices must be BELOW avg-distance
+    if criteria.reverse_sort:
+        # Peak: price must be >= avg * (1 + distance%)
+        min_distance_threshold = criteria.avg_price * (1 + adjusted_min_distance / 100)
+        meets_min_distance = price >= min_distance_threshold
+    else:
+        # Best: price must be <= avg * (1 - distance%)
+        min_distance_threshold = criteria.avg_price * (1 - adjusted_min_distance / 100)
+        meets_min_distance = price <= min_distance_threshold
 
     return in_flex, meets_min_distance

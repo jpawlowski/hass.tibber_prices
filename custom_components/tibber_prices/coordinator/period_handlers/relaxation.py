@@ -431,8 +431,9 @@ def relax_all_prices(  # noqa: PLR0913 - Comprehensive filter relaxation require
                 original_level_filter,
             )
 
+        # NOTE: config.flex is already normalized to positive by get_period_config()
         relaxed_config = config._replace(
-            flex=current_flex if config.flex >= 0 else -current_flex,
+            flex=current_flex,  # Already positive from normalization
             level_filter="any",
         )
 

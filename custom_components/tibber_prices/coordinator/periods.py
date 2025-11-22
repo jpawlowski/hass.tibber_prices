@@ -143,14 +143,30 @@ class TibberPricesPeriodCalculator:
             )
 
         # Convert flex from percentage to decimal (e.g., 5 -> 0.05)
+        # CRITICAL: Normalize to absolute value for internal calculations
+        # User-facing values use sign convention:
+        # - Best price: positive (e.g., +15% above minimum)
+        # - Peak price: negative (e.g., -20% below maximum)
+        # Internal calculations always use positive values with reverse_sort flag
         try:
-            flex = float(flex) / 100
+            flex = abs(float(flex)) / 100  # Always positive internally
         except (TypeError, ValueError):
-            flex = _const.DEFAULT_BEST_PRICE_FLEX / 100 if not reverse_sort else _const.DEFAULT_PEAK_PRICE_FLEX / 100
+            flex = (
+                abs(_const.DEFAULT_BEST_PRICE_FLEX) / 100
+                if not reverse_sort
+                else abs(_const.DEFAULT_PEAK_PRICE_FLEX) / 100
+            )
+
+        # CRITICAL: Normalize min_distance_from_avg to absolute value
+        # User-facing values use sign convention:
+        # - Best price: negative (e.g., -5% below average)
+        # - Peak price: positive (e.g., +5% above average)
+        # Internal calculations always use positive values with reverse_sort flag
+        min_distance_from_avg_normalized = abs(float(min_distance_from_avg))
 
         config = {
             "flex": flex,
-            "min_distance_from_avg": float(min_distance_from_avg),
+            "min_distance_from_avg": min_distance_from_avg_normalized,
             "min_period_length": int(min_period_length),
         }
 
