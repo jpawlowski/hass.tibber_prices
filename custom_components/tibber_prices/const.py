@@ -62,8 +62,12 @@ DEFAULT_BEST_PRICE_FLEX = 15  # 15% base flexibility - optimal for relaxation mo
 # (e.g., -20% means MAX * 0.8), not above the average price.
 # A higher percentage allows for more conservative detection, reducing false negatives for peak price warnings.
 DEFAULT_PEAK_PRICE_FLEX = -20  # 20% base flexibility (user-facing, percent)
-DEFAULT_BEST_PRICE_MIN_DISTANCE_FROM_AVG = 5  # 5% minimum distance from daily average (ensures significance)
-DEFAULT_PEAK_PRICE_MIN_DISTANCE_FROM_AVG = 5  # 5% minimum distance from daily average (ensures significance)
+DEFAULT_BEST_PRICE_MIN_DISTANCE_FROM_AVG = (
+    -5
+)  # -5% minimum distance from daily average (below average, ensures significance)
+DEFAULT_PEAK_PRICE_MIN_DISTANCE_FROM_AVG = (
+    5  # 5% minimum distance from daily average (above average, ensures significance)
+)
 DEFAULT_BEST_PRICE_MIN_PERIOD_LENGTH = 60  # 60 minutes minimum period length for best price (user-facing, minutes)
 # Note: Peak price warnings are allowed for shorter periods (30 min) than best price periods (60 min).
 # This asymmetry is intentional: shorter peak periods are acceptable for alerting users to brief expensive spikes,

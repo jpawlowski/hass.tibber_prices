@@ -64,7 +64,7 @@ def period_config() -> TibberPricesPeriodConfig:
     return TibberPricesPeriodConfig(
         reverse_sort=False,  # Best price (cheap periods)
         flex=0.50,  # 50% flexibility
-        min_distance_from_avg=5.0,
+        min_distance_from_avg=-5.0,  # -5% below average
         min_period_length=60,  # 60 minutes minimum
         threshold_low=20.0,
         threshold_high=30.0,

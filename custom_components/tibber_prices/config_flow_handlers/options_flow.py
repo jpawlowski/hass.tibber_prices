@@ -18,6 +18,7 @@ from custom_components.tibber_prices.config_flow_handlers.schemas import (
     get_volatility_schema,
 )
 from custom_components.tibber_prices.config_flow_handlers.validators import (
+    validate_best_price_distance_percentage,
     validate_distance_percentage,
     validate_flex_percentage,
     validate_gap_count,
@@ -237,11 +238,11 @@ class TibberPricesOptionsFlowHandler(OptionsFlow):
             if CONF_BEST_PRICE_FLEX in user_input and not validate_flex_percentage(user_input[CONF_BEST_PRICE_FLEX]):
                 errors[CONF_BEST_PRICE_FLEX] = "invalid_flex"
 
-            # Validate distance from average
-            if CONF_BEST_PRICE_MIN_DISTANCE_FROM_AVG in user_input and not validate_distance_percentage(
+            # Validate distance from average (Best Price uses negative values)
+            if CONF_BEST_PRICE_MIN_DISTANCE_FROM_AVG in user_input and not validate_best_price_distance_percentage(
                 user_input[CONF_BEST_PRICE_MIN_DISTANCE_FROM_AVG]
             ):
-                errors[CONF_BEST_PRICE_MIN_DISTANCE_FROM_AVG] = "invalid_distance"
+                errors[CONF_BEST_PRICE_MIN_DISTANCE_FROM_AVG] = "invalid_best_price_distance"
 
             # Validate minimum periods count
             if CONF_MIN_PERIODS_BEST in user_input and not validate_min_periods(user_input[CONF_MIN_PERIODS_BEST]):
@@ -285,11 +286,11 @@ class TibberPricesOptionsFlowHandler(OptionsFlow):
             if CONF_PEAK_PRICE_FLEX in user_input and not validate_flex_percentage(user_input[CONF_PEAK_PRICE_FLEX]):
                 errors[CONF_PEAK_PRICE_FLEX] = "invalid_flex"
 
-            # Validate distance from average
+            # Validate distance from average (Peak Price uses positive values)
             if CONF_PEAK_PRICE_MIN_DISTANCE_FROM_AVG in user_input and not validate_distance_percentage(
                 user_input[CONF_PEAK_PRICE_MIN_DISTANCE_FROM_AVG]
             ):
-                errors[CONF_PEAK_PRICE_MIN_DISTANCE_FROM_AVG] = "invalid_distance"
+                errors[CONF_PEAK_PRICE_MIN_DISTANCE_FROM_AVG] = "invalid_peak_price_distance"
 
             # Validate minimum periods count
             if CONF_MIN_PERIODS_PEAK in user_input and not validate_min_periods(user_input[CONF_MIN_PERIODS_PEAK]):

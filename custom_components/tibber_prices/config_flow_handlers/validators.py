@@ -128,7 +128,7 @@ def validate_min_periods(count: int) -> bool:
 
 def validate_distance_percentage(distance: float) -> bool:
     """
-    Validate distance from average percentage is reasonable.
+    Validate distance from average percentage (for Peak Price - positive values).
 
     Args:
         distance: Distance percentage (0-50% is typical range)
@@ -138,6 +138,20 @@ def validate_distance_percentage(distance: float) -> bool:
 
     """
     return 0.0 <= distance <= MAX_DISTANCE_PERCENTAGE
+
+
+def validate_best_price_distance_percentage(distance: float) -> bool:
+    """
+    Validate distance from average percentage (for Best Price - negative values).
+
+    Args:
+        distance: Distance percentage (-50% to 0% range, negative = below average)
+
+    Returns:
+        True if distance is valid (-MAX_DISTANCE_PERCENTAGE to 0)
+
+    """
+    return -MAX_DISTANCE_PERCENTAGE <= distance <= 0.0
 
 
 def validate_gap_count(count: int) -> bool:

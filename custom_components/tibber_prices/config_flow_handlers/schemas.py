@@ -312,8 +312,8 @@ def get_best_price_schema(options: Mapping[str, Any]) -> vol.Schema:
                 ),
             ): NumberSelector(
                 NumberSelectorConfig(
-                    min=0,
-                    max=50,
+                    min=-50,
+                    max=0,
                     step=1,
                     unit_of_measurement="%",
                     mode=NumberSelectorMode.SLIDER,
