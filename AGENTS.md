@@ -4,8 +4,8 @@ This is a **Home Assistant custom component** for Tibber electricity price data,
 
 ## Documentation Metadata
 
--   **Last Major Update**: 2025-11-18
--   **Last Architecture Review**: 2025-11-18 (Completed sensor/core.py refactoring: Calculator Pattern implementation with 8 specialized calculators and 8 attribute modules. Reduced core.py from 2,170 → 1,268 lines (42% reduction). Total 3,047 lines extracted to specialized packages.)
+-   **Last Major Update**: 2025-01-21
+-   **Last Architecture Review**: 2025-01-21 (Phase 1: Added TypedDict documentation system, improved BaseCalculator with 8 helper methods. Phase 2: Documented Import Architecture - Hybrid Pattern (Trend/Volatility build own attributes), verified no circular dependencies, confirmed optimal TYPE_CHECKING usage across all 8 calculators.)
 -   **Last Code Example Cleanup**: 2025-11-18 (Removed redundant implementation details from AGENTS.md, added guidelines for when to include code examples)
 -   **Documentation Status**: ✅ Current (verified against codebase)
 
@@ -522,6 +522,110 @@ custom_components/tibber_prices/
 │   └── validators.py     #   Validation functions
 └── services.yaml         # Service definitions
 ```
+
+## Import Architecture and Dependency Management
+
+**CRITICAL: Import architecture follows strict layering to prevent circular dependencies.**
+
+### Dependency Flow (Calculator Pattern)
+
+**Clean Separation:**
+```
+sensor/calculators/  → sensor/attributes/  (Volatility only - Hybrid Pattern)
+sensor/calculators/  → sensor/helpers/     (DailyStat, RollingHour - Pure functions)
+sensor/calculators/  → entity_utils/       (Pure utility functions)
+sensor/calculators/  → const.py            (Constants only)
+
+sensor/attributes/   ✗  (NO imports from calculators/)
+sensor/helpers/      ✗  (NO imports from calculators/)
+```
+
+**Why this works:**
+- **One-way dependencies**: Calculators can import from attributes/helpers, but NOT vice versa
+- **No circular imports**: Reverse direction is empty (verified Jan 2025)
+- **Clean testing**: Each layer can be tested independently
+
+### Hybrid Pattern (Trend/Volatility Calculators)
+
+**Background:** During Nov 2025 refactoring, Trend and Volatility calculators retained attribute-building logic to avoid duplicating complex calculations. This creates a **backwards dependency** (calculator → attributes) but is INTENTIONAL.
+
+**Pattern:**
+1. **Calculator** computes value AND builds attribute dict
+2. **Core** stores attributes in `cached_data` dict
+3. **Attributes package** retrieves cached attributes via:
+   - `_add_cached_trend_attributes()` for trend sensors
+   - `_add_timing_or_volatility_attributes()` for volatility sensors
+
+**Example (Volatility):**
+```python
+# sensor/calculators/volatility.py
+from custom_components.tibber_prices.sensor.attributes import (
+    add_volatility_type_attributes,  # ← Backwards dependency (calculator → attributes)
+    get_prices_for_volatility,
+)
+
+def get_volatility_value(self, *, volatility_type: str) -> str | None:
+    # Calculate volatility level
+    volatility = calculate_volatility_level(prices, ...)
+
+    # Build attribute dict (stored for later)
+    self._last_volatility_attributes = {"volatility": volatility, ...}
+    add_volatility_type_attributes(self._last_volatility_attributes, ...)
+
+    return volatility
+
+def get_volatility_attributes(self) -> dict | None:
+    return self._last_volatility_attributes  # ← Retrieved by attributes package
+```
+
+**Trade-offs:**
+- ✅ **Pro**: Complex logic stays in ONE place (no duplication)
+- ✅ **Pro**: Calculator has full context for attribute decisions
+- ❌ **Con**: Violates strict separation (calculator builds attributes)
+- ❌ **Con**: Creates backwards dependency (testability impact)
+
+**Decision:** Pattern is **acceptable** for complex calculators (Trend, Volatility) where attribute logic is tightly coupled to calculation. Simple calculators (Interval, DailyStat, etc.) DO NOT follow this pattern.
+
+### TYPE_CHECKING Best Practices
+
+All calculator modules use `TYPE_CHECKING` correctly:
+
+**Pattern:**
+```python
+# Runtime imports (used in function bodies)
+from custom_components.tibber_prices.const import CONF_PRICE_RATING_THRESHOLD_HIGH
+from custom_components.tibber_prices.entity_utils import get_price_value
+
+from .base import TibberPricesBaseCalculator
+
+# Type-only imports (only for type hints)
+if TYPE_CHECKING:
+    from collections.abc import Callable
+    from typing import Any
+```
+
+**Rules:**
+- ✅ **Runtime imports**: Functions, classes, constants used in code → OUTSIDE TYPE_CHECKING
+- ✅ **Type-only imports**: Only used in type hints → INSIDE TYPE_CHECKING
+- ✅ **Coordinator import**: Always in base.py, inherited by all calculators
+
+**Verified Status (Jan 2025):**
+- All 8 calculators (base, interval, rolling_hour, daily_stat, window_24h, volatility, trend, timing, metadata) use TYPE_CHECKING correctly
+- No optimization needed - imports are already categorized optimally
+
+### Import Anti-Patterns to Avoid
+
+❌ **DON'T:**
+- Import from higher layers (attributes/helpers importing from calculators)
+- Use runtime imports for type-only dependencies
+- Create circular dependencies between packages
+- Import entire modules when only needing one function
+
+✅ **DO:**
+- Follow one-way dependency flow (calculators → attributes/helpers)
+- Use TYPE_CHECKING for type-only imports
+- Import specific items: `from .helpers import aggregate_price_data`
+- Document intentional backwards dependencies (Hybrid Pattern)
 
 ## Period Calculation System (Best/Peak Price Periods)
 
