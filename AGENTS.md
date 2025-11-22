@@ -1718,6 +1718,7 @@ Use semantic prefixes that describe the PURPOSE, not the package location.
 - 🟡 Type aliases and callbacks (e.g., `TimeServiceCallback` is acceptable)
 - 🟡 Small NamedTuples used only for internal function returns (e.g., within calculators)
 - 🟡 Enums that are clearly namespaced (e.g., `QueryType` in `api.queries`)
+- 🟡 **TypedDict classes**: Documentation-only constructs (never instantiated), used solely for IDE autocomplete - shorter names improve readability (e.g., `IntervalPriceAttributes`, `PeriodAttributes`)
 
 **Private Classes (Module-Internal):**
 
@@ -1731,8 +1732,6 @@ class _InternalHelper:
 # Usage: Only in the same file, never imported elsewhere
 result = _InternalHelper().process()
 ```
-
-**Important:** Currently (Nov 2025), this project has **NO private classes** - all classes are used across module boundaries and therefore need the `TibberPrices` prefix.
 
 **When to use private classes:**
 - ❌ **DON'T** use for code organization alone - if it deserves a class, it's usually public
@@ -1753,63 +1752,7 @@ class _ApiRetryStateMachine:
 
 In practice, most "helper" logic should be **functions**, not classes. Reserve classes for stateful components.
 
-**Current State (as of Nov 2025):**
-
-⚠️ **Known Issue**: Many classes in this project lack the `TibberPrices` prefix. This is a technical debt item that needs addressing.
-
-**Classes that need renaming:**
-```python
-# Coordinator module
-DataFetcher → TibberPricesDataFetcher
-DataTransformer → TibberPricesDataTransformer
-ListenerManager → TibberPricesListenerManager
-PeriodCalculator → TibberPricesPeriodCalculator
-TimeService → TibberPricesTimeService
-CacheData → TibberPricesCacheData
-
-# Config flow
-CannotConnectError → TibberPricesCannotConnectError
-InvalidAuthError → TibberPricesInvalidAuthError
-
-# Entity utils
-IconContext → TibberPricesIconContext
-
-# Sensor calculators (8 classes)
-BaseCalculator → TibberPricesBaseCalculator
-IntervalCalculator → TibberPricesIntervalCalculator
-RollingHourCalculator → TibberPricesRollingHourCalculator
-DailyStatCalculator → TibberPricesDailyStatCalculator
-Window24hCalculator → TibberPricesWindow24hCalculator
-VolatilityCalculator → TibberPricesVolatilityCalculator
-TrendCalculator → TibberPricesTrendCalculator
-TimingCalculator → TibberPricesTimingCalculator
-MetadataCalculator → TibberPricesMetadataCalculator
-
-# Period handlers (NamedTuples in types.py)
-IntervalCriteria → TibberPricesIntervalCriteria
-PeriodConfig → TibberPricesPeriodConfig
-PeriodData → TibberPricesPeriodData
-PeriodStatistics → TibberPricesPeriodStatistics
-ThresholdConfig → TibberPricesThresholdConfig
-SpikeCandidateContext → TibberPricesSpikeCandidateContext
-```
-
-**Action Required:**
-Before making changes to these classes, plan the refactoring:
-1. Create a plan in `/planning/class-naming-refactoring.md`
-2. Use multi_replace_string_in_file for bulk renames
-3. Run `./scripts/check` after each module
-4. Update imports across the codebase
-5. Test thoroughly with `./scripts/develop`
-
-**When adding NEW classes:**
-- ✅ ALWAYS use `TibberPrices` prefix for public classes
-- ✅ Document in docstring if prefix is intentionally omitted (with justification)
-- ✅ Check HA Core integrations for similar patterns when in doubt
-
-See `docs/development/coding-guidelines.md` for detailed naming conventions.
-
-### Ruff and Pyright Configuration
+### Ruff Code Style Guidelines
 
 **Ruff config (`pyproject.toml` under `[tool.ruff]`):**
 
