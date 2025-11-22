@@ -157,7 +157,18 @@ class TibberPricesListenerManager:
         self,
         handler_callback: Callable[[datetime], None],
     ) -> None:
-        """Schedule 30-second entity refresh for timing sensors."""
+        """
+        Schedule 30-second entity refresh for timing sensors (Timer #3).
+
+        This is Timer #3 in the integration's timer architecture. It MUST trigger
+        at exact 30-second boundaries (0, 30 seconds) to keep timing sensors
+        (countdown, time-to) accurate.
+
+        Home Assistant may introduce small scheduling delays (jitter), which are
+        corrected using _BOUNDARY_TOLERANCE_SECONDS in time_service.py.
+
+        Runs independently of Timer #1 (API polling), which operates at random offsets.
+        """
         # Cancel any existing timer
         if self._minute_timer_cancel:
             self._minute_timer_cancel()
