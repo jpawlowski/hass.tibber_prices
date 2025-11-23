@@ -312,8 +312,7 @@ template:
 
 The integration provides custom services for advanced use cases:
 
--   `tibber_prices.get_price` - Fetch price data for specific days/times
--   `tibber_prices.get_apexcharts_data` - Get formatted data for ApexCharts cards
+-   `tibber_prices.get_chartdata` - Get price data in chart-friendly formats for any visualization card
 -   `tibber_prices.get_apexcharts_yaml` - Generate complete ApexCharts configurations
 -   `tibber_prices.refresh_user_data` - Manually refresh account information
 

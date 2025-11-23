@@ -379,7 +379,7 @@ After successful refactoring:
 2. `TibberPricesDataUpdateCoordinator` (`coordinator.py`) orchestrates updates every 15 minutes, manages persistent storage via `Store`, and schedules quarter-hour entity refreshes
 3. Price enrichment functions (`utils/price.py`, `utils/average.py`) calculate trailing/leading 24h averages, price differences, and rating levels for each 15-minute interval
 4. Entity platforms (`sensor/` package, `binary_sensor/` package) expose enriched data as Home Assistant entities
-5. Custom services (`services.py`) provide API endpoints for integrations like ApexCharts
+5. Custom services (`services/` package) provide API endpoints for chart data export, ApexCharts YAML generation, and user data refresh
 
 **Key Patterns:**
 
@@ -473,7 +473,13 @@ custom_components/tibber_prices/
 │   ├── __init__.py       #   Package exports
 │   ├── average.py        #   Trailing/leading average utilities
 │   └── price.py          #   Price enrichment, level/rating calculations
-├── services.py           # Custom services (get_price, ApexCharts, etc.)
+├── services/             # Custom services package
+│   ├── __init__.py       #   Service registration
+│   ├── chartdata.py      #   Chart data export service
+│   ├── apexcharts.py     #   ApexCharts YAML generator
+│   ├── refresh_user_data.py # User data refresh
+│   ├── formatters.py     #   Data transformation utilities
+│   └── helpers.py        #   Common service helpers
 ├── sensor/               # Sensor platform (package)
 │   ├── __init__.py       #   Platform setup (async_setup_entry)
 │   ├── core.py           #   TibberPricesSensor class (1,268 lines)

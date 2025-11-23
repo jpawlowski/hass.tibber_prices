@@ -665,7 +665,7 @@ These attributes allow automations to check: "Is the classification meaningful o
 For advanced configuration patterns and technical deep-dive, see:
 
 -   [Automation Examples](./automation-examples.md) - Real-world automation patterns
--   [Services](./services.md) - Using the `tibber_prices.get_price` service for custom logic
+-   [Services](./services.md) - Using the `tibber_prices.get_chartdata` service for custom visualizations
 
 ### Quick Reference
 

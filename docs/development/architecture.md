@@ -36,7 +36,7 @@ flowchart TB
     %% Output Components
     SENSORS["sensor/<br/>TibberPricesSensor<br/><br/>120+ price/level/rating sensors"]
     BINARY["binary_sensor/<br/>TibberPricesBinarySensor<br/><br/>Period indicators"]
-    SERVICES["services.py<br/><br/>Custom service endpoints<br/>(get_price, ApexCharts)"]
+    SERVICES["services/<br/><br/>Custom service endpoints<br/>(get_chartdata, ApexCharts)"]
 
     %% Flow Connections
     TIBBER -->|"Query user data<br/>Query prices<br/>(yesterday/today/tomorrow)"| API
@@ -199,7 +199,7 @@ For detailed cache behavior, see [Caching Strategy](./caching-strategy.md).
 | **Period Calculator** | `coordinator/periods.py` | Best/peak price period calculation with relaxation |
 | **Sensors** | `sensor/` | 80+ entities for prices, levels, ratings, statistics |
 | **Binary Sensors** | `binary_sensor/` | Period indicators (best/peak price active) |
-| **Services** | `services.py` | Custom service endpoints (get_price, ApexCharts) |
+| **Services** | `services/` | Custom service endpoints (get_chartdata, get_apexcharts_yaml, refresh_user_data) |
 
 ### Sensor Architecture (Calculator Pattern)
 

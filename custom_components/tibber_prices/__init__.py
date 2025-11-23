@@ -163,8 +163,7 @@ async def async_unload_entry(
     # Unregister services if this was the last config entry
     if not hass.config_entries.async_entries(DOMAIN):
         for service in [
-            "get_price",
-            "get_apexcharts_data",
+            "get_chartdata",
             "get_apexcharts_yaml",
             "refresh_user_data",
         ]:
