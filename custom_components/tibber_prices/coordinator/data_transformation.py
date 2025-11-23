@@ -27,18 +27,21 @@ class TibberPricesDataTransformer:
         config_entry: ConfigEntry,
         log_prefix: str,
         perform_turnover_fn: Callable[[dict[str, Any]], dict[str, Any]],
+        calculate_periods_fn: Callable[[dict[str, Any]], dict[str, Any]],
         time: TibberPricesTimeService,
     ) -> None:
         """Initialize the data transformer."""
         self.config_entry = config_entry
         self._log_prefix = log_prefix
         self._perform_turnover_fn = perform_turnover_fn
+        self._calculate_periods_fn = calculate_periods_fn
         self.time: TibberPricesTimeService = time
 
         # Transformation cache
         self._cached_transformed_data: dict[str, Any] | None = None
         self._last_transformation_config: dict[str, Any] | None = None
         self._last_midnight_check: datetime | None = None
+        self._last_source_data_timestamp: datetime | None = None  # Track when source data changed
         self._config_cache: dict[str, Any] | None = None
         self._config_cache_valid = False
 
@@ -110,10 +113,26 @@ class TibberPricesDataTransformer:
         self._config_cache_valid = True
         return config
 
-    def _should_retransform_data(self, current_time: datetime) -> bool:
-        """Check if data transformation should be performed."""
+    def _should_retransform_data(self, current_time: datetime, source_data_timestamp: datetime | None = None) -> bool:
+        """
+        Check if data transformation should be performed.
+
+        Args:
+            current_time: Current time for midnight check
+            source_data_timestamp: Timestamp of source data (if available)
+
+        Returns:
+            True if retransformation needed, False if cached data can be used
+
+        """
         # No cached transformed data - must transform
         if self._cached_transformed_data is None:
+            return True
+
+        # Source data changed - must retransform
+        # This detects when new API data was fetched (e.g., tomorrow data arrival)
+        if source_data_timestamp is not None and source_data_timestamp != self._last_source_data_timestamp:
+            self._log("debug", "Source data changed, retransforming data")
             return True
 
         # Configuration changed - must retransform
@@ -141,13 +160,17 @@ class TibberPricesDataTransformer:
     def transform_data_for_main_entry(self, raw_data: dict[str, Any]) -> dict[str, Any]:
         """Transform raw data for main entry (aggregated view of all homes)."""
         current_time = self.time.now()
+        source_data_timestamp = raw_data.get("timestamp")
 
         # Return cached transformed data if no retransformation needed
-        if not self._should_retransform_data(current_time) and self._cached_transformed_data is not None:
+        if (
+            not self._should_retransform_data(current_time, source_data_timestamp)
+            and self._cached_transformed_data is not None
+        ):
             self._log("debug", "Using cached transformed data (no transformation needed)")
             return self._cached_transformed_data
 
-        self._log("debug", "Transforming price data (enrichment only, periods cached separately)")
+        self._log("debug", "Transforming price data (enrichment + period calculation)")
 
         # For main entry, we can show data from the first home as default
         # or provide an aggregated view
@@ -181,32 +204,38 @@ class TibberPricesDataTransformer:
             threshold_high=thresholds["high"],
         )
 
-        # Note: Periods are calculated and cached separately by PeriodCalculator
-        # to avoid redundant caching (periods were cached twice before)
-
         transformed_data = {
             "timestamp": raw_data.get("timestamp"),
             "homes": homes_data,
             "priceInfo": price_info,
         }
 
+        # Calculate periods (best price and peak price)
+        if "priceInfo" in transformed_data:
+            transformed_data["periods"] = self._calculate_periods_fn(transformed_data["priceInfo"])
+
         # Cache the transformed data
         self._cached_transformed_data = transformed_data
         self._last_transformation_config = self._get_current_transformation_config()
         self._last_midnight_check = current_time
+        self._last_source_data_timestamp = source_data_timestamp
 
         return transformed_data
 
     def transform_data_for_subentry(self, main_data: dict[str, Any], home_id: str) -> dict[str, Any]:
         """Transform main coordinator data for subentry (home-specific view)."""
         current_time = self.time.now()
+        source_data_timestamp = main_data.get("timestamp")
 
         # Return cached transformed data if no retransformation needed
-        if not self._should_retransform_data(current_time) and self._cached_transformed_data is not None:
+        if (
+            not self._should_retransform_data(current_time, source_data_timestamp)
+            and self._cached_transformed_data is not None
+        ):
             self._log("debug", "Using cached transformed data (no transformation needed)")
             return self._cached_transformed_data
 
-        self._log("debug", "Transforming price data for home (enrichment only, periods cached separately)")
+        self._log("debug", "Transforming price data for home (enrichment + period calculation)")
 
         if not home_id:
             return main_data
@@ -240,18 +269,20 @@ class TibberPricesDataTransformer:
             threshold_high=thresholds["high"],
         )
 
-        # Note: Periods are calculated and cached separately by PeriodCalculator
-        # to avoid redundant caching (periods were cached twice before)
-
         transformed_data = {
             "timestamp": main_data.get("timestamp"),
             "priceInfo": price_info,
         }
 
+        # Calculate periods (best price and peak price)
+        if "priceInfo" in transformed_data:
+            transformed_data["periods"] = self._calculate_periods_fn(transformed_data["priceInfo"])
+
         # Cache the transformed data
         self._cached_transformed_data = transformed_data
         self._last_transformation_config = self._get_current_transformation_config()
         self._last_midnight_check = current_time
+        self._last_source_data_timestamp = source_data_timestamp
 
         return transformed_data
 

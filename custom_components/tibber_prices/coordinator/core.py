@@ -20,7 +20,6 @@ if TYPE_CHECKING:
 
     from .listeners import TimeServiceCallback
 
-from custom_components.tibber_prices import const as _const
 from custom_components.tibber_prices.api import (
     TibberPricesApiClient,
     TibberPricesApiClientAuthenticationError,
@@ -212,6 +211,9 @@ class TibberPricesDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             config_entry=config_entry,
             log_prefix=self._log_prefix,
             perform_turnover_fn=self._perform_midnight_turnover,
+            calculate_periods_fn=lambda price_info: self._period_calculator.calculate_periods_for_price_info(
+                price_info
+            ),
             time=self.time,
         )
         self._period_calculator = TibberPricesPeriodCalculator(
@@ -228,9 +230,6 @@ class TibberPricesDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         self._user_update_interval = timedelta(days=1)
         self._cached_price_data: dict[str, Any] | None = None
         self._last_price_update: datetime | None = None
-        self._cached_transformed_data: dict[str, Any] | None = None
-        self._last_transformation_config: dict[str, Any] | None = None
-        self._last_transformation_time: datetime | None = None  # When data was last transformed (for cache)
 
         # Data lifecycle tracking for diagnostic sensor
         self._lifecycle_state: str = (
@@ -766,122 +765,21 @@ class TibberPricesDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         """Calculate periods (best price and peak price) for the given price info."""
         return self._period_calculator.calculate_periods_for_price_info(price_info)
 
-    def _get_current_transformation_config(self) -> dict[str, Any]:
-        """Get current configuration that affects data transformation."""
-        return {
-            "thresholds": self._get_threshold_percentages(),
-            "volatility_thresholds": {
-                "moderate": self.config_entry.options.get(_const.CONF_VOLATILITY_THRESHOLD_MODERATE, 15.0),
-                "high": self.config_entry.options.get(_const.CONF_VOLATILITY_THRESHOLD_HIGH, 25.0),
-                "very_high": self.config_entry.options.get(_const.CONF_VOLATILITY_THRESHOLD_VERY_HIGH, 40.0),
-            },
-            "best_price_config": {
-                "flex": self.config_entry.options.get(_const.CONF_BEST_PRICE_FLEX, 15.0),
-                "max_level": self.config_entry.options.get(_const.CONF_BEST_PRICE_MAX_LEVEL, "NORMAL"),
-                "min_period_length": self.config_entry.options.get(_const.CONF_BEST_PRICE_MIN_PERIOD_LENGTH, 4),
-                "min_distance_from_avg": self.config_entry.options.get(
-                    _const.CONF_BEST_PRICE_MIN_DISTANCE_FROM_AVG, -5.0
-                ),
-                "max_level_gap_count": self.config_entry.options.get(_const.CONF_BEST_PRICE_MAX_LEVEL_GAP_COUNT, 0),
-                "enable_min_periods": self.config_entry.options.get(_const.CONF_ENABLE_MIN_PERIODS_BEST, False),
-                "min_periods": self.config_entry.options.get(_const.CONF_MIN_PERIODS_BEST, 2),
-                "relaxation_attempts": self.config_entry.options.get(_const.CONF_RELAXATION_ATTEMPTS_BEST, 4),
-            },
-            "peak_price_config": {
-                "flex": self.config_entry.options.get(_const.CONF_PEAK_PRICE_FLEX, 15.0),
-                "min_level": self.config_entry.options.get(_const.CONF_PEAK_PRICE_MIN_LEVEL, "HIGH"),
-                "min_period_length": self.config_entry.options.get(_const.CONF_PEAK_PRICE_MIN_PERIOD_LENGTH, 4),
-                "min_distance_from_avg": self.config_entry.options.get(
-                    _const.CONF_PEAK_PRICE_MIN_DISTANCE_FROM_AVG, 5.0
-                ),
-                "max_level_gap_count": self.config_entry.options.get(_const.CONF_PEAK_PRICE_MAX_LEVEL_GAP_COUNT, 0),
-                "enable_min_periods": self.config_entry.options.get(_const.CONF_ENABLE_MIN_PERIODS_PEAK, False),
-                "min_periods": self.config_entry.options.get(_const.CONF_MIN_PERIODS_PEAK, 2),
-                "relaxation_attempts": self.config_entry.options.get(_const.CONF_RELAXATION_ATTEMPTS_PEAK, 4),
-            },
-        }
-
-    def _should_retransform_data(self, current_time: datetime) -> bool:
-        """Check if data transformation should be performed."""
-        # No cached transformed data - must transform
-        if self._cached_transformed_data is None:
-            return True
-
-        # Configuration changed - must retransform
-        current_config = self._get_current_transformation_config()
-        if current_config != self._last_transformation_config:
-            self._log("debug", "Configuration changed, retransforming data")
-            return True
-
-        # Check for midnight turnover
-        now_local = self.time.as_local(current_time)
-        current_date = now_local.date()
-
-        if self._last_transformation_time is None:
-            return True
-
-        last_transform_local = self.time.as_local(self._last_transformation_time)
-        last_transform_date = last_transform_local.date()
-
-        if current_date != last_transform_date:
-            self._log("debug", "Midnight turnover detected, retransforming data")
-            return True
-
-        return False
-
     def _transform_data_for_main_entry(self, raw_data: dict[str, Any]) -> dict[str, Any]:
         """Transform raw data for main entry (aggregated view of all homes)."""
-        current_time = self.time.now()
-
-        # Return cached transformed data if no retransformation needed
-        if not self._should_retransform_data(current_time) and self._cached_transformed_data is not None:
-            self._log("debug", "Using cached transformed data (no transformation needed)")
-            return self._cached_transformed_data
-
-        self._log("debug", "Transforming price data (enrichment only, periods calculated separately)")
-
-        # Delegate actual transformation to DataTransformer (enrichment only)
-        transformed_data = self._data_transformer.transform_data_for_main_entry(raw_data)
-
-        # Add periods (calculated and cached separately by PeriodCalculator)
-        if "priceInfo" in transformed_data:
-            transformed_data["periods"] = self._calculate_periods_for_price_info(transformed_data["priceInfo"])
-
-        # Cache the transformed data
-        self._cached_transformed_data = transformed_data
-        self._last_transformation_config = self._get_current_transformation_config()
-        self._last_transformation_time = current_time
-
-        return transformed_data
+        # Delegate complete transformation to DataTransformer (enrichment + periods)
+        # DataTransformer handles its own caching internally
+        return self._data_transformer.transform_data_for_main_entry(raw_data)
 
     def _transform_data_for_subentry(self, main_data: dict[str, Any]) -> dict[str, Any]:
         """Transform main coordinator data for subentry (home-specific view)."""
-        current_time = self.time.now()
-
-        # Return cached transformed data if no retransformation needed
-        if not self._should_retransform_data(current_time) and self._cached_transformed_data is not None:
-            self._log("debug", "Using cached transformed data (no transformation needed)")
-            return self._cached_transformed_data
-
-        self._log("debug", "Transforming price data for home (enrichment only, periods calculated separately)")
-
         home_id = self.config_entry.data.get("home_id")
         if not home_id:
             return main_data
 
-        # Delegate actual transformation to DataTransformer (enrichment only)
-        transformed_data = self._data_transformer.transform_data_for_subentry(main_data, home_id)
-
-        # Add periods (calculated and cached separately by PeriodCalculator)
-        if "priceInfo" in transformed_data:
-            transformed_data["periods"] = self._calculate_periods_for_price_info(transformed_data["priceInfo"])
-
-        # Cache the transformed data
-        self._cached_transformed_data = transformed_data
-        self._last_transformation_config = self._get_current_transformation_config()
-        self._last_transformation_time = current_time
-
-        return transformed_data
+        # Delegate complete transformation to DataTransformer (enrichment + periods)
+        # DataTransformer handles its own caching internally
+        return self._data_transformer.transform_data_for_subentry(main_data, home_id)
 
     # --- Methods expected by sensors and services ---
 
