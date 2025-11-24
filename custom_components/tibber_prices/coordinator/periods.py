@@ -637,7 +637,7 @@ class TibberPricesPeriodCalculator:
                 level_filter=max_level_best,
                 gap_count=gap_count_best,
             )
-            best_periods, best_relaxation = calculate_periods_with_relaxation(
+            best_periods = calculate_periods_with_relaxation(
                 all_prices,
                 config=best_period_config,
                 enable_relaxation=enable_relaxation_best,
@@ -654,9 +654,13 @@ class TibberPricesPeriodCalculator:
             best_periods = {
                 "periods": [],
                 "intervals": [],
-                "metadata": {"total_intervals": 0, "total_periods": 0, "config": {}},
+                "metadata": {
+                    "total_intervals": 0,
+                    "total_periods": 0,
+                    "config": {},
+                    "relaxation": {"relaxation_active": False, "relaxation_attempted": False},
+                },
             }
-            best_relaxation = {"relaxation_active": False, "relaxation_attempted": False}
 
         # Get relaxation configuration for peak price
         enable_relaxation_peak = self.config_entry.options.get(
@@ -705,7 +709,7 @@ class TibberPricesPeriodCalculator:
                 level_filter=min_level_peak,
                 gap_count=gap_count_peak,
             )
-            peak_periods, peak_relaxation = calculate_periods_with_relaxation(
+            peak_periods = calculate_periods_with_relaxation(
                 all_prices,
                 config=peak_period_config,
                 enable_relaxation=enable_relaxation_peak,
@@ -722,15 +726,17 @@ class TibberPricesPeriodCalculator:
             peak_periods = {
                 "periods": [],
                 "intervals": [],
-                "metadata": {"total_intervals": 0, "total_periods": 0, "config": {}},
+                "metadata": {
+                    "total_intervals": 0,
+                    "total_periods": 0,
+                    "config": {},
+                    "relaxation": {"relaxation_active": False, "relaxation_attempted": False},
+                },
             }
-            peak_relaxation = {"relaxation_active": False, "relaxation_attempted": False}
 
         result = {
             "best_price": best_periods,
-            "best_price_relaxation": best_relaxation,
             "peak_price": peak_periods,
-            "peak_price_relaxation": peak_relaxation,
         }
 
         # Cache the result

@@ -11,8 +11,9 @@ from typing import TYPE_CHECKING, Any
 
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigEntryState
+from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.const import CONF_ACCESS_TOKEN, Platform
+from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.storage import Store
 from homeassistant.loader import async_get_loaded_integration
@@ -96,6 +97,43 @@ async def async_setup(hass: HomeAssistant, config: dict[str, Any]) -> bool:
     return True
 
 
+def _get_access_token(hass: HomeAssistant, entry: ConfigEntry) -> str:
+    """
+    Get access token from entry or parent entry.
+
+    For parent entries, the token is stored in entry.data.
+    For subentries, we need to find the parent entry and get its token.
+
+    Args:
+        hass: HomeAssistant instance
+        entry: Config entry (parent or subentry)
+
+    Returns:
+        Access token string
+
+    Raises:
+        ConfigEntryAuthFailed: If no access token found
+
+    """
+    # Try to get token from this entry (works for parent)
+    if CONF_ACCESS_TOKEN in entry.data:
+        return entry.data[CONF_ACCESS_TOKEN]
+
+    # This is a subentry, find parent entry
+    # Parent entry is the one without subentries in its data structure
+    # and has the same domain
+    for potential_parent in hass.config_entries.async_entries(DOMAIN):
+        # Parent has ACCESS_TOKEN and is not the current entry
+        if potential_parent.entry_id != entry.entry_id and CONF_ACCESS_TOKEN in potential_parent.data:
+            # Check if this entry is actually a subentry of this parent
+            # (HA Core manages this relationship internally)
+            return potential_parent.data[CONF_ACCESS_TOKEN]
+
+    # No token found anywhere
+    msg = f"No access token found for entry {entry.entry_id}"
+    raise ConfigEntryAuthFailed(msg)
+
+
 # https://developers.home-assistant.io/docs/config_entries_index/#setting-up-an-entry
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -117,10 +155,20 @@ async def async_setup_entry(
 
     integration = async_get_loaded_integration(hass, entry.domain)
 
+    # Get access token (from this entry if parent, from parent if subentry)
+    access_token = _get_access_token(hass, entry)
+
+    # Create API client
+    api_client = TibberPricesApiClient(
+        access_token=access_token,
+        session=async_get_clientsession(hass),
+        version=str(integration.version) if integration.version else "unknown",
+    )
+
     coordinator = TibberPricesDataUpdateCoordinator(
         hass=hass,
         config_entry=entry,
-        version=str(integration.version) if integration.version else "unknown",
+        api_client=api_client,
     )
 
     # CRITICAL: Load cache BEFORE first refresh to ensure user_data is available
@@ -129,11 +177,7 @@ async def async_setup_entry(
     await coordinator.load_cache()
 
     entry.runtime_data = TibberPricesData(
-        client=TibberPricesApiClient(
-            access_token=entry.data[CONF_ACCESS_TOKEN],
-            session=async_get_clientsession(hass),
-            version=str(integration.version) if integration.version else "unknown",
-        ),
+        client=api_client,
         integration=integration,
         coordinator=coordinator,
     )

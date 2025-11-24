@@ -244,7 +244,7 @@ def get_period_data(  # noqa: PLR0913, PLR0912, PLR0915
         Dictionary with period data in requested format
 
     """
-    periods_data = coordinator.data.get("periods", {})
+    periods_data = coordinator.data.get("pricePeriods", {})
     period_data = periods_data.get(period_filter)
 
     if not period_data:

@@ -20,11 +20,15 @@ from custom_components.tibber_prices.coordinator.data_transformation import (
 from custom_components.tibber_prices.coordinator.time_service import (
     TibberPricesTimeService,
 )
+from homeassistant.util import dt as dt_util
 
 
 def create_price_intervals(day_offset: int = 0) -> list[dict]:
     """Create 96 mock price intervals (quarter-hourly for one day)."""
-    base_date = datetime(2025, 11, 22, 0, 0, 0, tzinfo=ZoneInfo("Europe/Oslo"))
+    # Use CURRENT date so tests work regardless of when they run
+    now_local = dt_util.now()
+    base_date = now_local.replace(hour=0, minute=0, second=0, microsecond=0)
+
     intervals = []
     for i in range(96):
         interval_time = base_date.replace(day=base_date.day + day_offset, hour=i // 4, minute=(i % 4) * 15)
@@ -72,7 +76,6 @@ def test_transformation_cache_invalidation_on_new_timestamp() -> None:
     transformer = TibberPricesDataTransformer(
         config_entry=config_entry,
         log_prefix="[Test]",
-        perform_turnover_fn=lambda x: x,  # No-op
         calculate_periods_fn=mock_period_calc.calculate_periods_for_price_info,
         time=time_service,
     )
@@ -81,25 +84,19 @@ def test_transformation_cache_invalidation_on_new_timestamp() -> None:
     # ================================================================
     data_t1 = {
         "timestamp": current_time,
-        "homes": {
-            "home_123": {
-                "price_info": {
-                    "yesterday": [],
-                    "today": create_price_intervals(0),
-                    "tomorrow": [],  # NO TOMORROW YET
-                    "currency": "EUR",
-                }
-            }
-        },
+        "home_id": "home_123",
+        "price_info": create_price_intervals(0),  # Today only
+        "currency": "EUR",
     }
 
-    result_t1 = transformer.transform_data_for_main_entry(data_t1)
+    result_t1 = transformer.transform_data(data_t1)
     assert result_t1 is not None
-    assert result_t1["priceInfo"]["tomorrow"] == []
+    # In new flat structure, priceInfo is a list with only today's intervals (96)
+    assert len(result_t1["priceInfo"]) == 96
 
     # STEP 2: Second call with SAME timestamp should use cache
     # =========================================================
-    result_t1_cached = transformer.transform_data_for_main_entry(data_t1)
+    result_t1_cached = transformer.transform_data(data_t1)
     assert result_t1_cached is result_t1  # SAME object (cached)
 
     # STEP 3: Third call with DIFFERENT timestamp should NOT use cache
@@ -107,24 +104,17 @@ def test_transformation_cache_invalidation_on_new_timestamp() -> None:
     new_time = current_time + timedelta(minutes=1)
     data_t2 = {
         "timestamp": new_time,  # DIFFERENT timestamp
-        "homes": {
-            "home_123": {
-                "price_info": {
-                    "yesterday": [],
-                    "today": create_price_intervals(0),
-                    "tomorrow": create_price_intervals(1),  # NOW HAS TOMORROW
-                    "currency": "EUR",
-                }
-            }
-        },
+        "home_id": "home_123",
+        "price_info": create_price_intervals(0) + create_price_intervals(1),  # Today + Tomorrow
+        "currency": "EUR",
     }
 
-    result_t2 = transformer.transform_data_for_main_entry(data_t2)
+    result_t2 = transformer.transform_data(data_t2)
 
     # CRITICAL ASSERTIONS: Cache must be invalidated
     assert result_t2 is not result_t1  # DIFFERENT object (re-transformed)
-    assert len(result_t2["priceInfo"]["tomorrow"]) == 96  # New data present
-    assert "periods" in result_t2  # Periods recalculated
+    assert len(result_t2["priceInfo"]) == 192  # Today (96) + Tomorrow (96)
+    assert "pricePeriods" in result_t2  # Periods recalculated
 
 
 @pytest.mark.unit
@@ -158,31 +148,23 @@ def test_cache_behavior_on_config_change() -> None:
     transformer = TibberPricesDataTransformer(
         config_entry=config_entry,
         log_prefix="[Test]",
-        perform_turnover_fn=lambda x: x,
         calculate_periods_fn=mock_period_calc.calculate_periods_for_price_info,
         time=time_service,
     )
 
     data = {
         "timestamp": current_time,
-        "homes": {
-            "home_123": {
-                "price_info": {
-                    "yesterday": [],
-                    "today": create_price_intervals(0),
-                    "tomorrow": create_price_intervals(1),
-                    "currency": "EUR",
-                }
-            }
-        },
+        "home_id": "home_123",
+        "price_info": create_price_intervals(0) + create_price_intervals(1),  # Today + Tomorrow
+        "currency": "EUR",
     }
 
     # First transformation
-    result_1 = transformer.transform_data_for_main_entry(data)
+    result_1 = transformer.transform_data(data)
     assert result_1 is not None
 
     # Second call with SAME config and timestamp should use cache
-    result_1_cached = transformer.transform_data_for_main_entry(data)
+    result_1_cached = transformer.transform_data(data)
     assert result_1_cached is result_1  # SAME object
 
     # Change config (note: in real system, config change triggers coordinator reload)
@@ -193,7 +175,7 @@ def test_cache_behavior_on_config_change() -> None:
 
     # Call with SAME timestamp but DIFFERENT config
     # Current behavior: Still uses cache (acceptable, see docstring)
-    result_2 = transformer.transform_data_for_main_entry(data)
+    result_2 = transformer.transform_data(data)
     assert result_2 is result_1  # SAME object (cache preserved)
 
 
@@ -224,29 +206,21 @@ def test_cache_preserved_when_neither_timestamp_nor_config_changed() -> None:
     transformer = TibberPricesDataTransformer(
         config_entry=config_entry,
         log_prefix="[Test]",
-        perform_turnover_fn=lambda x: x,
         calculate_periods_fn=mock_period_calc.calculate_periods_for_price_info,
         time=time_service,
     )
 
     data = {
         "timestamp": current_time,
-        "homes": {
-            "home_123": {
-                "price_info": {
-                    "yesterday": [],
-                    "today": create_price_intervals(0),
-                    "tomorrow": create_price_intervals(1),
-                    "currency": "EUR",
-                }
-            }
-        },
+        "home_id": "home_123",
+        "price_info": create_price_intervals(0) + create_price_intervals(1),  # Today + Tomorrow
+        "currency": "EUR",
     }
 
     # Multiple calls with unchanged data/config should all use cache
-    result_1 = transformer.transform_data_for_main_entry(data)
-    result_2 = transformer.transform_data_for_main_entry(data)
-    result_3 = transformer.transform_data_for_main_entry(data)
+    result_1 = transformer.transform_data(data)
+    result_2 = transformer.transform_data(data)
+    result_3 = transformer.transform_data(data)
 
     assert result_1 is result_2 is result_3  # ALL same object (cached)
 

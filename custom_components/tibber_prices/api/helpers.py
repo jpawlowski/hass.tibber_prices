@@ -145,27 +145,21 @@ def is_data_empty(data: dict, query_type: str) -> bool:
             )
 
         elif query_type == "price_info":
-            # Check for home aliases (home0, home1, etc.)
+            # Check for single home data (viewer.home)
             viewer = data.get("viewer", {})
-            home_aliases = [key for key in viewer if key.startswith("home") and key[4:].isdigit()]
+            home_data = viewer.get("home")
 
-            if not home_aliases:
-                _LOGGER.debug("No home aliases found in price_info response")
+            if not home_data:
+                _LOGGER.debug("No home data found in price_info response")
                 is_empty = True
             else:
-                # Check first home for valid data
-                _LOGGER.debug("Checking price_info with %d home(s)", len(home_aliases))
-                first_home = viewer.get(home_aliases[0])
+                _LOGGER.debug("Checking price_info for single home")
 
-                if (
-                    not first_home
-                    or "currentSubscription" not in first_home
-                    or first_home["currentSubscription"] is None
-                ):
-                    _LOGGER.debug("Missing currentSubscription in first home")
+                if not home_data or "currentSubscription" not in home_data or home_data["currentSubscription"] is None:
+                    _LOGGER.debug("Missing currentSubscription in home")
                     is_empty = True
                 else:
-                    subscription = first_home["currentSubscription"]
+                    subscription = home_data["currentSubscription"]
 
                     # Check priceInfoRange (96 quarter-hourly intervals)
                     has_yesterday = (

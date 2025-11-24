@@ -15,6 +15,9 @@ from datetime import UTC, datetime, timedelta
 
 import pytest
 
+from custom_components.tibber_prices.coordinator.time_service import (
+    TibberPricesTimeService,
+)
 from custom_components.tibber_prices.utils.price import (
     aggregate_period_levels,
     aggregate_period_ratings,
@@ -326,50 +329,64 @@ def test_rating_level_none_difference() -> None:
 
 
 @pytest.mark.parametrize(
-    ("yesterday_price", "today_price", "expected_diff", "expected_rating", "description"),
+    ("day_before_yesterday_price", "yesterday_price", "today_price", "expected_diff", "expected_rating", "description"),
     [
         # Positive prices
-        (10.0, 15.0, 50.0, "HIGH", "positive prices: day more expensive"),
-        (15.0, 10.0, -33.33, "LOW", "positive prices: day cheaper"),
-        (10.0, 10.0, 0.0, "NORMAL", "positive prices: stable"),
+        (10.0, 10.0, 15.0, 50.0, "HIGH", "positive prices: day more expensive"),
+        (15.0, 15.0, 10.0, -33.33, "LOW", "positive prices: day cheaper"),
+        (10.0, 10.0, 10.0, 0.0, "NORMAL", "positive prices: stable"),
         # Negative prices (Norway/Germany scenario)
-        (-10.0, -15.0, -50.0, "LOW", "negative prices: day more negative (cheaper)"),
-        (-15.0, -10.0, 33.33, "HIGH", "negative prices: day less negative (expensive)"),
-        (-10.0, -10.0, 0.0, "NORMAL", "negative prices: stable"),
+        (-10.0, -10.0, -15.0, -50.0, "LOW", "negative prices: day more negative (cheaper)"),
+        (-15.0, -15.0, -10.0, 33.33, "HIGH", "negative prices: day less negative (expensive)"),
+        (-10.0, -10.0, -10.0, 0.0, "NORMAL", "negative prices: stable"),
         # Transition scenarios
-        (-10.0, 0.0, 100.0, "HIGH", "transition: negative to zero"),
-        (-10.0, 10.0, 200.0, "HIGH", "transition: negative to positive"),
-        (10.0, 0.0, -100.0, "LOW", "transition: positive to zero"),
-        (10.0, -10.0, -200.0, "LOW", "transition: positive to negative"),
+        (-10.0, -10.0, 0.0, 100.0, "HIGH", "transition: negative to zero"),
+        (-10.0, -10.0, 10.0, 200.0, "HIGH", "transition: negative to positive"),
+        (10.0, 10.0, 0.0, -100.0, "LOW", "transition: positive to zero"),
+        (10.0, 10.0, -10.0, -200.0, "LOW", "transition: positive to negative"),
         # Zero scenarios
-        (0.1, 0.1, 0.0, "NORMAL", "prices near zero: stable"),
+        (0.1, 0.1, 0.1, 0.0, "NORMAL", "prices near zero: stable"),
     ],
 )
-def test_enrich_price_info_scenarios(
+def test_enrich_price_info_scenarios(  # noqa: PLR0913  # Many parameters needed for comprehensive test scenarios
+    day_before_yesterday_price: float,
     yesterday_price: float,
     today_price: float,
     expected_diff: float,
     expected_rating: str,
     description: str,
 ) -> None:
-    """Test price enrichment across various price scenarios."""
-    base = datetime(2025, 11, 22, 0, 0, 0, tzinfo=UTC)
+    """
+    Test price enrichment across various price scenarios.
 
+    CRITICAL: Tests now include day_before_yesterday data to provide full 24h lookback
+    for yesterday intervals. This matches the real API structure (192 intervals from
+    priceInfoRange + today/tomorrow).
+    """
+    base = datetime(2025, 11, 22, 0, 0, 0, tzinfo=UTC)
+    time_service = TibberPricesTimeService()
+
+    # Day before yesterday (needed for lookback)
+    day_before_yesterday = [
+        {"startsAt": base - timedelta(days=2) + timedelta(minutes=15 * i), "total": day_before_yesterday_price}
+        for i in range(96)
+    ]
+
+    # Yesterday (will be enriched using day_before_yesterday for lookback)
     yesterday = [
         {"startsAt": base - timedelta(days=1) + timedelta(minutes=15 * i), "total": yesterday_price} for i in range(96)
     ]
 
+    # Today (will be enriched using yesterday for lookback)
     today = [{"startsAt": base + timedelta(minutes=15 * i), "total": today_price} for i in range(96)]
 
-    price_info = {
-        "yesterday": yesterday,
-        "today": today,
-        "tomorrow": [],
-    }
+    # Flat list matching API structure (priceInfoRange + today)
+    all_intervals = day_before_yesterday + yesterday + today
 
-    enriched = enrich_price_info_with_differences(price_info)
+    enriched = enrich_price_info_with_differences(all_intervals, time=time_service)
 
-    first_today = enriched["today"][0]
+    # First "today" interval is at index 192 (96 day_before_yesterday + 96 yesterday)
+    first_today = enriched[192]
     assert "difference" in first_today, f"Failed for {description}: no difference field"
     assert first_today["difference"] == pytest.approx(expected_diff, rel=0.01), f"Failed for {description}"
     assert first_today["rating_level"] == expected_rating, f"Failed for {description}"
@@ -378,48 +395,57 @@ def test_enrich_price_info_scenarios(
 def test_enrich_price_info_no_yesterday_data() -> None:
     """Test enrichment when no lookback data available."""
     base = datetime(2025, 11, 22, 0, 0, 0, tzinfo=UTC)
+    time_service = TibberPricesTimeService()
 
     today = [{"startsAt": base + timedelta(minutes=15 * i), "total": 10.0} for i in range(96)]
 
-    price_info = {
-        "yesterday": [],
-        "today": today,
-        "tomorrow": [],
-    }
+    # New API: flat list (no yesterday data)
+    all_intervals = today
 
-    enriched = enrich_price_info_with_differences(price_info)
+    enriched = enrich_price_info_with_differences(all_intervals, time=time_service)
 
     # First interval has no 24h lookback → difference=None
-    first_today = enriched["today"][0]
+    first_today = enriched[0]
     assert first_today.get("difference") is None
     assert first_today.get("rating_level") is None
 
 
 def test_enrich_price_info_custom_thresholds() -> None:
-    """Test enrichment with custom rating thresholds."""
-    base = datetime(2025, 11, 22, 0, 0, 0, tzinfo=UTC)
+    """
+    Test enrichment with custom rating thresholds.
 
+    CRITICAL: Includes day_before_yesterday for full 24h lookback.
+    """
+    base = datetime(2025, 11, 22, 0, 0, 0, tzinfo=UTC)
+    time_service = TibberPricesTimeService()
+
+    # Day before yesterday (needed for lookback)
+    day_before_yesterday = [
+        {"startsAt": base - timedelta(days=2) + timedelta(minutes=15 * i), "total": 10.0} for i in range(96)
+    ]
+
+    # Yesterday (provides lookback for today)
     yesterday = [{"startsAt": base - timedelta(days=1) + timedelta(minutes=15 * i), "total": 10.0} for i in range(96)]
 
+    # Today (+10% vs yesterday average)
     today = [
         {"startsAt": base + timedelta(minutes=15 * i), "total": 11.0}  # +10% vs yesterday
         for i in range(96)
     ]
 
-    price_info = {
-        "yesterday": yesterday,
-        "today": today,
-        "tomorrow": [],
-    }
+    # Flat list matching API structure
+    all_intervals = day_before_yesterday + yesterday + today
 
     # Custom thresholds: LOW at -5%, HIGH at +5%
     enriched = enrich_price_info_with_differences(
-        price_info,
+        all_intervals,
         threshold_low=-5.0,
         threshold_high=5.0,
+        time=time_service,
     )
 
-    first_today = enriched["today"][0]
+    # First "today" interval is at index 192 (96 day_before_yesterday + 96 yesterday)
+    first_today = enriched[192]
     assert first_today["difference"] == pytest.approx(10.0, rel=1e-9)
     assert first_today["rating_level"] == "HIGH"
 

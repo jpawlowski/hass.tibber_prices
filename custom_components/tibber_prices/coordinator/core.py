@@ -6,11 +6,9 @@ import logging
 from datetime import timedelta
 from typing import TYPE_CHECKING, Any
 
-from homeassistant.const import CONF_ACCESS_TOKEN
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
-from homeassistant.helpers import aiohttp_client
 from homeassistant.helpers.storage import Store
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 if TYPE_CHECKING:
     from collections.abc import Callable
@@ -164,7 +162,7 @@ class TibberPricesDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         self,
         hass: HomeAssistant,
         config_entry: ConfigEntry,
-        version: str,
+        api_client: TibberPricesApiClient,
     ) -> None:
         """Initialize the coordinator."""
         super().__init__(
@@ -175,11 +173,14 @@ class TibberPricesDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         )
 
         self.config_entry = config_entry
-        self.api = TibberPricesApiClient(
-            access_token=config_entry.data[CONF_ACCESS_TOKEN],
-            session=aiohttp_client.async_get_clientsession(hass),
-            version=version,
-        )
+
+        # Get home_id from config entry
+        self._home_id = config_entry.data.get("home_id", "")
+        if not self._home_id:
+            _LOGGER.error("No home_id found in config entry %s", config_entry.entry_id)
+
+        # Use the API client from runtime_data (created in __init__.py with proper TOKEN handling)
+        self.api = api_client
 
         # Storage for persistence
         storage_key = f"{DOMAIN}.{config_entry.entry_id}"
@@ -188,8 +189,8 @@ class TibberPricesDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         # Log prefix for identifying this coordinator instance
         self._log_prefix = f"[{config_entry.title}]"
 
-        # Track if this is the main entry (first one created)
-        self._is_main_entry = not self._has_existing_main_coordinator()
+        # Note: In the new architecture, all coordinators (parent + subentries) fetch their own data
+        # No distinction between "main" and "sub" coordinators anymore
 
         # Initialize time service (single source of truth for all time operations)
         self.time = TibberPricesTimeService()
@@ -440,11 +441,7 @@ class TibberPricesDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         # Just update coordinator's data to trigger entity updates.
         if self.data and self._cached_price_data:
             # Re-transform data to ensure enrichment is refreshed
-            if self.is_main_entry():
-                self.data = self._transform_data_for_main_entry(self._cached_price_data)
-            else:
-                # For subentry, get fresh data from main coordinator
-                pass
+            self.data = self._transform_data(self._cached_price_data)
 
             # CRITICAL: Update _last_price_update to current time after midnight
             # This prevents cache_validity from showing "date_mismatch" after midnight
@@ -517,18 +514,6 @@ class TibberPricesDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             # Log but don't raise - shutdown should complete even if cache save fails
             self._log("error", "Failed to save cache during shutdown: %s", err)
 
-    def _has_existing_main_coordinator(self) -> bool:
-        """Check if there's already a main coordinator in hass.data."""
-        domain_data = self.hass.data.get(DOMAIN, {})
-        return any(
-            isinstance(coordinator, TibberPricesDataUpdateCoordinator) and coordinator.is_main_entry()
-            for coordinator in domain_data.values()
-        )
-
-    def is_main_entry(self) -> bool:
-        """Return True if this is the main entry that fetches data for all homes."""
-        return self._is_main_entry
-
     async def _async_update_data(self) -> dict[str, Any]:
         """
         Fetch data from Tibber API (called by DataUpdateCoordinator timer).
@@ -589,46 +574,37 @@ class TibberPricesDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 return self.data
 
         try:
-            if self.is_main_entry():
-                # Reset API call counter if day changed
-                current_date = current_time.date()
-                if self._last_api_call_date != current_date:
-                    self._api_calls_today = 0
-                    self._last_api_call_date = current_date
+            # Reset API call counter if day changed
+            current_date = current_time.date()
+            if self._last_api_call_date != current_date:
+                self._api_calls_today = 0
+                self._last_api_call_date = current_date
 
-                # Main entry fetches data for all homes
-                configured_home_ids = self._get_configured_home_ids()
+            # Track last_price_update timestamp before fetch to detect if data actually changed
+            old_price_update = self._last_price_update
 
-                # Track last_price_update timestamp before fetch to detect if data actually changed
-                old_price_update = self._last_price_update
+            result = await self._data_fetcher.handle_main_entry_update(
+                current_time,
+                self._home_id,
+                self._transform_data,
+            )
 
-                result = await self._data_fetcher.handle_main_entry_update(
-                    current_time,
-                    configured_home_ids,
-                    self._transform_data_for_main_entry,
-                )
+            # CRITICAL: Sync cached data after API call
+            # handle_main_entry_update() updates data_fetcher's cache, we need to sync:
+            # 1. cached_user_data (for new integrations, may be fetched via update_user_data_if_needed())
+            # 2. cached_price_data (CRITICAL: contains tomorrow data, needed for _needs_tomorrow_data())
+            # 3. _last_price_update (for lifecycle tracking: cache age, fresh state detection)
+            self._cached_user_data = self._data_fetcher.cached_user_data
+            self._cached_price_data = self._data_fetcher.cached_price_data
+            self._last_price_update = self._data_fetcher._last_price_update  # noqa: SLF001 - Sync for lifecycle tracking
 
-                # CRITICAL: Sync cached data after API call
-                # handle_main_entry_update() updates data_fetcher's cache, we need to sync:
-                # 1. cached_user_data (for new integrations, may be fetched via update_user_data_if_needed())
-                # 2. cached_price_data (CRITICAL: contains tomorrow data, needed for _needs_tomorrow_data())
-                # 3. _last_price_update (for lifecycle tracking: cache age, fresh state detection)
-                self._cached_user_data = self._data_fetcher.cached_user_data
-                self._cached_price_data = self._data_fetcher.cached_price_data
-                self._last_price_update = self._data_fetcher._last_price_update  # noqa: SLF001 - Sync for lifecycle tracking
-
-                # Update lifecycle tracking only if we fetched NEW data (timestamp changed)
-                # This prevents recorder spam from state changes when returning cached data
-                if self._last_price_update != old_price_update:
-                    self._api_calls_today += 1
-                    self._lifecycle_state = "fresh"  # Data just fetched
-                    # No separate lifecycle notification needed - normal async_update_listeners()
-                    # will trigger all entities (including lifecycle sensor) after this return
-
-                return result
-            # Subentries get data from main coordinator (no lifecycle tracking - they don't fetch)
-            return await self._handle_subentry_update()
-
+            # Update lifecycle tracking only if we fetched NEW data (timestamp changed)
+            # This prevents recorder spam from state changes when returning cached data
+            if self._last_price_update != old_price_update:
+                self._api_calls_today += 1
+                self._lifecycle_state = "fresh"  # Data just fetched
+                # No separate lifecycle notification needed - normal async_update_listeners()
+                # will trigger all entities (including lifecycle sensor) after this return
         except (
             TibberPricesApiClientAuthenticationError,
             TibberPricesApiClientCommunicationError,
@@ -641,53 +617,10 @@ class TibberPricesDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             # which triggers normal async_update_listeners()
             return await self._data_fetcher.handle_api_error(
                 err,
-                self._transform_data_for_main_entry,
+                self._transform_data,
             )
-
-    async def _handle_subentry_update(self) -> dict[str, Any]:
-        """Handle update for subentry - get data from main coordinator."""
-        main_data = await self._get_data_from_main_coordinator()
-        return self._transform_data_for_subentry(main_data)
-
-    async def _get_data_from_main_coordinator(self) -> dict[str, Any]:
-        """Get data from the main coordinator (subentries only)."""
-        # Find the main coordinator
-        main_coordinator = self._find_main_coordinator()
-        if not main_coordinator:
-            msg = "Main coordinator not found"
-            raise UpdateFailed(msg)
-
-        # Wait for main coordinator to have data
-        if main_coordinator.data is None:
-            main_coordinator.async_set_updated_data({})
-
-        # Return the main coordinator's data
-        return main_coordinator.data or {}
-
-    def _find_main_coordinator(self) -> TibberPricesDataUpdateCoordinator | None:
-        """Find the main coordinator that fetches data for all homes."""
-        domain_data = self.hass.data.get(DOMAIN, {})
-        for coordinator in domain_data.values():
-            if (
-                isinstance(coordinator, TibberPricesDataUpdateCoordinator)
-                and coordinator.is_main_entry()
-                and coordinator != self
-            ):
-                return coordinator
-        return None
-
-    def _get_configured_home_ids(self) -> set[str]:
-        """Get all home_ids that have active config entries (main + subentries)."""
-        home_ids = helpers.get_configured_home_ids(self.hass)
-
-        self._log(
-            "debug",
-            "Found %d configured home(s): %s",
-            len(home_ids),
-            ", ".join(sorted(home_ids)),
-        )
-
-        return home_ids
+        else:
+            return result
 
     async def load_cache(self) -> None:
         """Load cached data from storage."""
@@ -714,20 +647,20 @@ class TibberPricesDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         """Store cache data."""
         await self._data_fetcher.store_cache(self._midnight_handler.last_check_time)
 
-    def _needs_tomorrow_data(self, tomorrow_date: date) -> bool:
+    def _needs_tomorrow_data(self) -> bool:
         """Check if tomorrow data is missing or invalid."""
-        return helpers.needs_tomorrow_data(self._cached_price_data, tomorrow_date)
+        return helpers.needs_tomorrow_data(self._cached_price_data)
 
-    def _has_valid_tomorrow_data(self, tomorrow_date: date) -> bool:
+    def _has_valid_tomorrow_data(self) -> bool:
         """Check if we have valid tomorrow data (inverse of _needs_tomorrow_data)."""
-        return not self._needs_tomorrow_data(tomorrow_date)
+        return not self._needs_tomorrow_data()
 
     @callback
     def _merge_cached_data(self) -> dict[str, Any]:
         """Merge cached data into the expected format for main entry."""
         if not self._cached_price_data:
             return {}
-        return self._transform_data_for_main_entry(self._cached_price_data)
+        return self._transform_data(self._cached_price_data)
 
     def _get_threshold_percentages(self) -> dict[str, int]:
         """Get threshold percentages from config options."""
@@ -737,31 +670,25 @@ class TibberPricesDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         """Calculate periods (best price and peak price) for the given price info."""
         return self._period_calculator.calculate_periods_for_price_info(price_info)
 
-    def _transform_data_for_main_entry(self, raw_data: dict[str, Any]) -> dict[str, Any]:
+    def _transform_data(self, raw_data: dict[str, Any]) -> dict[str, Any]:
         """Transform raw data for main entry (aggregated view of all homes)."""
         # Delegate complete transformation to DataTransformer (enrichment + periods)
         # DataTransformer handles its own caching internally
-        return self._data_transformer.transform_data_for_main_entry(raw_data)
-
-    def _transform_data_for_subentry(self, main_data: dict[str, Any]) -> dict[str, Any]:
-        """Transform main coordinator data for subentry (home-specific view)."""
-        home_id = self.config_entry.data.get("home_id")
-        if not home_id:
-            return main_data
-
-        # Delegate complete transformation to DataTransformer (enrichment + periods)
-        # DataTransformer handles its own caching internally
-        return self._data_transformer.transform_data_for_subentry(main_data, home_id)
+        return self._data_transformer.transform_data(raw_data)
 
     # --- Methods expected by sensors and services ---
 
     def get_home_data(self, home_id: str) -> dict[str, Any] | None:
-        """Get data for a specific home."""
+        """Get data for a specific home (returns this coordinator's data if home_id matches)."""
         if not self.data:
             return None
 
-        homes_data = self.data.get("homes", {})
-        return homes_data.get(home_id)
+        # In new architecture, each coordinator manages one home only
+        # Return data only if requesting this coordinator's home
+        if home_id == self._home_id:
+            return self.data
+
+        return None
 
     def get_current_interval(self) -> dict[str, Any] | None:
         """Get the price data for the current interval."""

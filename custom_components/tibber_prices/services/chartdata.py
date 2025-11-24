@@ -214,7 +214,7 @@ async def handle_chartdata(call: ServiceCall) -> dict[str, Any]:  # noqa: PLR091
     period_timestamps = None
     if period_filter:
         period_timestamps = set()
-        periods_data = coordinator.data.get("periods", {})
+        periods_data = coordinator.data.get("pricePeriods", {})
         period_data = periods_data.get(period_filter)
         if period_data:
             period_summaries = period_data.get("periods", [])

@@ -155,8 +155,8 @@ class TibberPricesDataTransformer:
 
         return False
 
-    def transform_data_for_main_entry(self, raw_data: dict[str, Any]) -> dict[str, Any]:
-        """Transform raw data for main entry (aggregated view of all homes)."""
+    def transform_data(self, raw_data: dict[str, Any]) -> dict[str, Any]:
+        """Transform raw data for main entry (single home view)."""
         current_time = self.time.now()
         source_data_timestamp = raw_data.get("timestamp")
 
@@ -170,22 +170,22 @@ class TibberPricesDataTransformer:
 
         self._log("debug", "Transforming price data (enrichment + period calculation)")
 
-        # For main entry, we can show data from the first home as default
-        # or provide an aggregated view
-        homes_data = raw_data.get("homes", {})
-        if not homes_data:
+        # Extract data from single-home structure
+        home_id = raw_data.get("home_id", "")
+        all_intervals = raw_data.get("price_info", [])
+        currency = raw_data.get("currency", "EUR")
+
+        if not all_intervals:
             return {
                 "timestamp": raw_data.get("timestamp"),
-                "homes": {},
-                "priceInfo": {},
+                "home_id": home_id,
+                "priceInfo": [],
+                "pricePeriods": {
+                    "best_price": [],
+                    "peak_price": [],
+                },
+                "currency": currency,
             }
-
-        # Use the first home's data as the main entry's data
-        first_home_data = next(iter(homes_data.values()))
-        all_intervals = first_home_data.get("price_info", [])
-
-        # Extract currency from home_data (populated from user_data)
-        currency = first_home_data.get("currency", "EUR")
 
         # Enrich price info dynamically with calculated differences and rating levels
         # (Modifies all_intervals in-place, returns same list)
@@ -199,74 +199,14 @@ class TibberPricesDataTransformer:
 
         # Store enriched intervals directly as priceInfo (flat list)
         transformed_data = {
-            "homes": homes_data,
+            "home_id": home_id,
             "priceInfo": enriched_intervals,
             "currency": currency,
         }
 
         # Calculate periods (best price and peak price)
         if "priceInfo" in transformed_data:
-            transformed_data["periods"] = self._calculate_periods_fn(transformed_data["priceInfo"])
-
-        # Cache the transformed data
-        self._cached_transformed_data = transformed_data
-        self._last_transformation_config = self._get_current_transformation_config()
-        self._last_midnight_check = current_time
-        self._last_source_data_timestamp = source_data_timestamp
-
-        return transformed_data
-
-    def transform_data_for_subentry(self, main_data: dict[str, Any], home_id: str) -> dict[str, Any]:
-        """Transform main coordinator data for subentry (home-specific view)."""
-        current_time = self.time.now()
-        source_data_timestamp = main_data.get("timestamp")
-
-        # Return cached transformed data if no retransformation needed
-        if (
-            not self._should_retransform_data(current_time, source_data_timestamp)
-            and self._cached_transformed_data is not None
-        ):
-            self._log("debug", "Using cached transformed data (no transformation needed)")
-            return self._cached_transformed_data
-
-        self._log("debug", "Transforming price data for home (enrichment + period calculation)")
-
-        if not home_id:
-            return main_data
-
-        homes_data = main_data.get("homes", {})
-        home_data = homes_data.get(home_id, {})
-
-        if not home_data:
-            return {
-                "timestamp": main_data.get("timestamp"),
-                "priceInfo": {},
-            }
-
-        all_intervals = home_data.get("price_info", [])
-
-        # Extract currency from home_data (populated from user_data)
-        currency = home_data.get("currency", "EUR")
-
-        # Enrich price info dynamically with calculated differences and rating levels
-        # (Modifies all_intervals in-place, returns same list)
-        thresholds = self.get_threshold_percentages()
-        enriched_intervals = enrich_price_info_with_differences(
-            all_intervals,
-            threshold_low=thresholds["low"],
-            threshold_high=thresholds["high"],
-            time=self.time,
-        )
-
-        # Store enriched intervals directly as priceInfo (flat list)
-        transformed_data = {
-            "priceInfo": enriched_intervals,
-            "currency": currency,
-        }
-
-        # Calculate periods (best price and peak price)
-        if "priceInfo" in transformed_data:
-            transformed_data["periods"] = self._calculate_periods_fn(transformed_data["priceInfo"])
+            transformed_data["pricePeriods"] = self._calculate_periods_fn(transformed_data["priceInfo"])
 
         # Cache the transformed data
         self._cached_transformed_data = transformed_data

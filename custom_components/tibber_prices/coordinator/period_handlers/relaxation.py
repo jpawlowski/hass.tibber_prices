@@ -145,7 +145,7 @@ def calculate_periods_with_relaxation(  # noqa: PLR0913, PLR0915 - Per-day relax
     max_relaxation_attempts: int,
     should_show_callback: Callable[[str | None], bool],
     time: TibberPricesTimeService,
-) -> tuple[dict[str, Any], dict[str, Any]]:
+) -> dict[str, Any]:
     """
     Calculate periods with optional per-day filter relaxation.
 
@@ -172,9 +172,10 @@ def calculate_periods_with_relaxation(  # noqa: PLR0913, PLR0915 - Per-day relax
         time: TibberPricesTimeService instance (required)
 
     Returns:
-        Tuple of (periods_result, relaxation_metadata):
-        - periods_result: Same format as calculate_periods() output, with periods from all days
-        - relaxation_metadata: Dict with relaxation information (aggregated across all days)
+        Dict with same format as calculate_periods() output:
+        - periods: List of period summaries
+        - metadata: Config and statistics (includes relaxation info)
+        - reference_data: Daily min/max/avg prices
 
     """
     # Import here to avoid circular dependency
@@ -244,11 +245,17 @@ def calculate_periods_with_relaxation(  # noqa: PLR0913, PLR0915 - Per-day relax
         _LOGGER.warning(
             "No price data available - cannot calculate periods",
         )
-        return {"periods": [], "metadata": {}, "reference_data": {}}, {
-            "relaxation_active": False,
-            "relaxation_attempted": False,
-            "min_periods_requested": min_periods if enable_relaxation else 0,
-            "periods_found": 0,
+        return {
+            "periods": [],
+            "metadata": {
+                "relaxation": {
+                    "relaxation_active": False,
+                    "relaxation_attempted": False,
+                    "min_periods_requested": min_periods if enable_relaxation else 0,
+                    "periods_found": 0,
+                },
+            },
+            "reference_data": {},
         }
 
     # Count available days for logging (today and future only)
@@ -345,7 +352,10 @@ def calculate_periods_with_relaxation(  # noqa: PLR0913, PLR0915 - Per-day relax
 
     total_periods = len(all_periods)
 
-    return final_result, {
+    # Add relaxation info to metadata
+    if "metadata" not in final_result:
+        final_result["metadata"] = {}
+    final_result["metadata"]["relaxation"] = {
         "relaxation_active": relaxation_was_needed,
         "relaxation_attempted": relaxation_was_needed,
         "min_periods_requested": min_periods,
@@ -355,6 +365,8 @@ def calculate_periods_with_relaxation(  # noqa: PLR0913, PLR0915 - Per-day relax
         "days_meeting_requirement": days_meeting_requirement,
         "relaxation_incomplete": days_meeting_requirement < total_days,
     }
+
+    return final_result
 
 
 def relax_all_prices(  # noqa: PLR0913 - Comprehensive filter relaxation requires many parameters and statements

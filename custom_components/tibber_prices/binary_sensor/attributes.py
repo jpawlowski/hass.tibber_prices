@@ -90,7 +90,7 @@ def get_price_intervals_attributes(
         return build_no_periods_result(time=time)
 
     # Get precomputed period summaries from coordinator
-    periods_data = coordinator_data.get("periods", {})
+    periods_data = coordinator_data.get("pricePeriods", {})
     period_type = "peak_price" if reverse_sort else "best_price"
     period_data = periods_data.get(period_type)
 

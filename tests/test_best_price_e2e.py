@@ -34,8 +34,9 @@ def _create_realistic_intervals() -> list[dict]:
     Pattern: Morning peak (6-9h), midday low (9-15h), evening moderate (15-24h).
     Daily stats: Min=30.44ct, Avg=33.26ct, Max=36.03ct
     """
-    base_time = dt_util.parse_datetime("2025-11-22T00:00:00+01:00")
-    assert base_time is not None
+    # Use CURRENT date so tests work regardless of when they run
+    now_local = dt_util.now()
+    base_time = now_local.replace(hour=0, minute=0, second=0, microsecond=0)
 
     daily_min, daily_avg, daily_max = 0.3044, 0.3326, 0.3603
 
@@ -104,6 +105,7 @@ def _create_realistic_intervals() -> list[dict]:
 
 
 @pytest.mark.unit
+@pytest.mark.freeze_time("2025-11-22 12:00:00+01:00")
 class TestBestPriceGenerationWorks:
     """Validate that best price periods generate successfully after bug fix."""
 
@@ -132,7 +134,7 @@ class TestBestPriceGenerationWorks:
         )
 
         # Calculate periods with relaxation
-        result, _ = calculate_periods_with_relaxation(
+        result = calculate_periods_with_relaxation(
             intervals,
             config=config,
             enable_relaxation=True,
@@ -171,7 +173,7 @@ class TestBestPriceGenerationWorks:
             reverse_sort=False,
         )
 
-        result_pos, _ = calculate_periods_with_relaxation(
+        result_pos = calculate_periods_with_relaxation(
             intervals,
             config=config_positive,
             enable_relaxation=True,
@@ -208,7 +210,7 @@ class TestBestPriceGenerationWorks:
             reverse_sort=False,
         )
 
-        result, _ = calculate_periods_with_relaxation(
+        result = calculate_periods_with_relaxation(
             intervals,
             config=config,
             enable_relaxation=True,
@@ -253,7 +255,7 @@ class TestBestPriceGenerationWorks:
             reverse_sort=False,
         )
 
-        result, relaxation_meta = calculate_periods_with_relaxation(
+        result = calculate_periods_with_relaxation(
             intervals,
             config=config,
             enable_relaxation=True,
@@ -269,6 +271,7 @@ class TestBestPriceGenerationWorks:
         assert len(periods) >= 2, "Relaxation should find periods"
 
         # Check if relaxation was used
+        relaxation_meta = result.get("metadata", {}).get("relaxation", {})
         if "max_flex_used" in relaxation_meta:
             max_flex_used = relaxation_meta["max_flex_used"]
             # Fix ensures reasonable flex is sufficient
@@ -276,6 +279,7 @@ class TestBestPriceGenerationWorks:
 
 
 @pytest.mark.unit
+@pytest.mark.freeze_time("2025-11-22 12:00:00+01:00")
 class TestBestPriceBugRegressionValidation:
     """Regression tests ensuring consistent behavior with peak price fix."""
 
@@ -301,7 +305,7 @@ class TestBestPriceBugRegressionValidation:
             reverse_sort=False,
         )
 
-        result, relaxation_meta = calculate_periods_with_relaxation(
+        result = calculate_periods_with_relaxation(
             intervals,
             config=config,
             enable_relaxation=True,
@@ -321,6 +325,7 @@ class TestBestPriceBugRegressionValidation:
             assert 0.10 <= flex_used <= 0.35, f"Expected flex 10-35%, got {flex_used * 100:.1f}%"
 
         # Also check relaxation metadata
+        relaxation_meta = result.get("metadata", {}).get("relaxation", {})
         if "max_flex_used" in relaxation_meta:
             max_flex = relaxation_meta["max_flex_used"]
             assert max_flex <= 0.35, f"Max flex should be reasonable, got {max_flex * 100:.1f}%"
@@ -347,7 +352,7 @@ class TestBestPriceBugRegressionValidation:
             reverse_sort=False,
         )
 
-        result, _ = calculate_periods_with_relaxation(
+        result = calculate_periods_with_relaxation(
             intervals,
             config=config,
             enable_relaxation=True,

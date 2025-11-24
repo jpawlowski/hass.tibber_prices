@@ -136,21 +136,21 @@ class TibberPricesApiClient:
             query_type=TibberPricesQueryType.USER,
         )
 
-    async def async_get_price_info(self, home_ids: set[str], user_data: dict[str, Any]) -> dict:
+    async def async_get_price_info(self, home_id: str, user_data: dict[str, Any]) -> dict:
         """
-        Get price info for specific homes using GraphQL aliases.
+        Get price info for a single home.
 
-        Uses timezone-aware cursor calculation per home based on the home's actual timezone
+        Uses timezone-aware cursor calculation based on the home's actual timezone
         from Tibber API (not HA system timezone). This ensures correct "day before yesterday
         midnight" calculation for homes in different timezones.
 
         Args:
-            home_ids: Set of home IDs to fetch price data for.
+            home_id: Home ID to fetch price data for.
             user_data: User data dict containing home metadata (including timezone).
                       REQUIRED - must be fetched before calling this method.
 
         Returns:
-            Dict with "homes" key containing home_id -> price_data mapping.
+            Dict with "home_id", "price_info", and other home data.
 
         Raises:
             TibberPricesApiClientError: If TimeService not initialized or user_data missing.
@@ -164,26 +164,23 @@ class TibberPricesApiClient:
             msg = "User data required for timezone-aware price fetching - fetch user data first"
             raise TibberPricesApiClientError(msg)
 
-        if not home_ids:
-            return {"homes": {}}
+        if not home_id:
+            msg = "Home ID is required"
+            raise TibberPricesApiClientError(msg)
 
         # Build home_id -> timezone mapping from user_data
         home_timezones = self._extract_home_timezones(user_data)
 
-        # Build query with aliases for each home
-        # Each home gets its own cursor based on its timezone
-        home_queries = []
-        for idx, home_id in enumerate(sorted(home_ids)):
-            alias = f"home{idx}"
+        # Get timezone for this home (fallback to HA system timezone)
+        home_tz = home_timezones.get(home_id)
 
-            # Get timezone for this home (fallback to HA system timezone)
-            home_tz = home_timezones.get(home_id)
+        # Calculate cursor: day before yesterday midnight in home's timezone
+        cursor = self._calculate_cursor_for_home(home_tz)
 
-            # Calculate cursor: day before yesterday midnight in home's timezone
-            cursor = self._calculate_cursor_for_home(home_tz)
-
-            home_query = f"""
-                {alias}: home(id: "{home_id}") {{
+        # Simple single-home query (no alias needed)
+        query = f"""
+            {{viewer{{
+                home(id: "{home_id}") {{
                     id
                     currentSubscription {{
                         priceInfoRange(resolution:QUARTER_HOURLY, first:192, after: "{cursor}") {{
@@ -198,42 +195,38 @@ class TibberPricesApiClient:
                         }}
                     }}
                 }}
-            """
-            home_queries.append(home_query)
+            }}}}
+        """
 
-        query = "{viewer{" + "".join(home_queries) + "}}"
-
-        _LOGGER.debug("Fetching price info for %d specific home(s)", len(home_ids))
+        _LOGGER.debug("Fetching price info for home %s", home_id)
 
         data = await self._api_wrapper(
             data={"query": query},
             query_type=TibberPricesQueryType.PRICE_INFO,
         )
 
-        # Parse aliased response
+        # Parse response
         viewer = data.get("viewer", {})
-        homes_data = {}
+        home = viewer.get("home")
 
-        for idx, home_id in enumerate(sorted(home_ids)):
-            alias = f"home{idx}"
-            home = viewer.get(alias)
+        if not home:
+            msg = f"Home {home_id} not found in API response"
+            _LOGGER.warning(msg)
+            return {"home_id": home_id, "price_info": []}
 
-            if not home:
-                _LOGGER.debug("Home %s not found in API response", home_id)
-                homes_data[home_id] = {}
-                continue
+        if "currentSubscription" in home and home["currentSubscription"] is not None:
+            price_info = flatten_price_info(home["currentSubscription"])
+        else:
+            _LOGGER.warning(
+                "Home %s has no active subscription - price data will be unavailable",
+                home_id,
+            )
+            price_info = []
 
-            if "currentSubscription" in home and home["currentSubscription"] is not None:
-                homes_data[home_id] = flatten_price_info(home["currentSubscription"])
-            else:
-                _LOGGER.debug(
-                    "Home %s has no active subscription - price data will be unavailable",
-                    home_id,
-                )
-                homes_data[home_id] = {}
-
-        data["homes"] = homes_data
-        return data
+        return {
+            "home_id": home_id,
+            "price_info": price_info,
+        }
 
     def _extract_home_timezones(self, user_data: dict[str, Any]) -> dict[str, str]:
         """
