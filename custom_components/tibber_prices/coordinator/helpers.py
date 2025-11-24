@@ -6,29 +6,12 @@ import logging
 from datetime import timedelta
 from typing import TYPE_CHECKING, Any
 
-from custom_components.tibber_prices.const import DOMAIN
 from homeassistant.util import dt as dt_util
 
 if TYPE_CHECKING:
-    from datetime import date
-
-    from homeassistant.core import HomeAssistant
-
     from .time_service import TibberPricesTimeService
 
 _LOGGER = logging.getLogger(__name__)
-
-
-def get_configured_home_ids(hass: HomeAssistant) -> set[str]:
-    """Get all home_ids that have active config entries (main + subentries)."""
-    home_ids = set()
-
-    # Collect home_ids from all config entries for this domain
-    for entry in hass.config_entries.async_entries(DOMAIN):
-        if home_id := entry.data.get("home_id"):
-            home_ids.add(home_id)
-
-    return home_ids
 
 
 def get_intervals_for_day_offsets(
@@ -124,27 +107,31 @@ def get_intervals_for_day_offsets(
 
 def needs_tomorrow_data(
     cached_price_data: dict[str, Any] | None,
-    tomorrow_date: date,
 ) -> bool:
-    """Check if tomorrow data is missing or invalid in flat interval list."""
+    """
+    Check if tomorrow data is missing or invalid in flat interval list.
+
+    Uses get_intervals_for_day_offsets() to automatically determine tomorrow
+    based on current date. No explicit date parameter needed.
+
+    Args:
+        cached_price_data: Cached price data with homes structure
+
+    Returns:
+        True if any home is missing tomorrow's data, False otherwise
+
+    """
     if not cached_price_data or "homes" not in cached_price_data:
         return False
 
     # Check each home's intervals for tomorrow's date
     for home_data in cached_price_data["homes"].values():
-        all_intervals = home_data.get("price_info", [])
+        # Use helper to get tomorrow's intervals (offset +1 from current date)
+        coordinator_data = {"priceInfo": home_data.get("price_info", [])}
+        tomorrow_intervals = get_intervals_for_day_offsets(coordinator_data, [1])
 
-        # Check if any interval exists for tomorrow's date
-        has_tomorrow = False
-        for interval in all_intervals:
-            if starts_at := interval.get("startsAt"):  # Already datetime in local timezone
-                interval_date = starts_at.date()
-                if interval_date == tomorrow_date:
-                    has_tomorrow = True
-                    break
-
-        # If no interval for tomorrow found, we need tomorrow data
-        if not has_tomorrow:
+        # If no intervals for tomorrow found, we need tomorrow data
+        if not tomorrow_intervals:
             return True
 
     return False
@@ -160,30 +147,28 @@ def parse_all_timestamps(price_data: dict[str, Any], *, time: TibberPricesTimeSe
     Performance: ~200 timestamps parsed ONCE instead of multiple times per update cycle.
 
     Args:
-        price_data: Raw API data with string timestamps (flat interval list)
+        price_data: Raw API data with string timestamps (single-home structure)
         time: TibberPricesTimeService for parsing
 
     Returns:
         Same structure but with datetime objects instead of strings
 
     """
-    if not price_data or "homes" not in price_data:
+    if not price_data:
         return price_data
 
-    # Process each home
-    for home_data in price_data["homes"].values():
-        # price_info is now a flat list of intervals
-        price_info = home_data.get("price_info", [])
+    # Single-home structure: price_info is a flat list of intervals
+    price_info = price_data.get("price_info", [])
 
-        # Skip if price_info is not a list (empty or invalid)
-        if not isinstance(price_info, list):
-            continue
+    # Skip if price_info is not a list (empty or invalid)
+    if not isinstance(price_info, list):
+        return price_data
 
-        # Parse timestamps in flat interval list
-        for interval in price_info:
-            if (starts_at_str := interval.get("startsAt")) and isinstance(starts_at_str, str):
-                # Parse once, convert to local timezone, store as datetime object
-                interval["startsAt"] = time.parse_and_localize(starts_at_str)
-                # If already datetime (e.g., from cache), skip parsing
+    # Parse timestamps in flat interval list
+    for interval in price_info:
+        if (starts_at_str := interval.get("startsAt")) and isinstance(starts_at_str, str):
+            # Parse once, convert to local timezone, store as datetime object
+            interval["startsAt"] = time.parse_and_localize(starts_at_str)
+            # If already datetime (e.g., from cache), skip parsing
 
     return price_data

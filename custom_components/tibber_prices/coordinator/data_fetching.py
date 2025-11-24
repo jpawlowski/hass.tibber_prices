@@ -24,7 +24,7 @@ from .constants import TOMORROW_DATA_CHECK_HOUR, TOMORROW_DATA_RANDOM_DELAY_MAX
 
 if TYPE_CHECKING:
     from collections.abc import Callable
-    from datetime import date, datetime
+    from datetime import datetime
 
     from custom_components.tibber_prices.api import TibberPricesApiClient
 
@@ -147,17 +147,13 @@ class TibberPricesDataFetcher:
             self._log("debug", "API update needed: No last price update timestamp")
             return True
 
-        # Get tomorrow's date using TimeService
-        _, tomorrow_midnight = self.time.get_day_boundaries("today")
-        tomorrow_date = tomorrow_midnight.date()
-        now_local = self.time.as_local(current_time)
-
         # Check if after 13:00 and tomorrow data is missing or invalid
+        now_local = self.time.as_local(current_time)
         if (
             now_local.hour >= TOMORROW_DATA_CHECK_HOUR
             and self._cached_price_data
             and "homes" in self._cached_price_data
-            and self.needs_tomorrow_data(tomorrow_date)
+            and self.needs_tomorrow_data()
         ):
             self._log(
                 "debug",
@@ -171,17 +167,19 @@ class TibberPricesDataFetcher:
         # No update needed - cache is valid and complete
         return False
 
-    def needs_tomorrow_data(self, tomorrow_date: date) -> bool:
+    def needs_tomorrow_data(self) -> bool:
         """Check if tomorrow data is missing or invalid."""
-        return helpers.needs_tomorrow_data(self._cached_price_data, tomorrow_date)
+        return helpers.needs_tomorrow_data(self._cached_price_data)
 
-    async def fetch_all_homes_data(self, configured_home_ids: set[str], current_time: datetime) -> dict[str, Any]:
-        """Fetch data for all homes (main coordinator only)."""
-        if not configured_home_ids:
-            self._log("warning", "No configured homes found - cannot fetch price data")
+    async def fetch_home_data(self, home_id: str, current_time: datetime) -> dict[str, Any]:
+        """Fetch data for a single home."""
+        if not home_id:
+            self._log("warning", "No home ID provided - cannot fetch price data")
             return {
                 "timestamp": current_time,
-                "homes": {},
+                "home_id": "",
+                "price_info": [],
+                "currency": "EUR",
             }
 
         # Ensure we have user_data before fetching price data
@@ -200,71 +198,61 @@ class TibberPricesDataFetcher:
                 self._log("error", msg)
                 raise TibberPricesApiClientError(msg) from ex
 
-        # Get price data for configured homes only (API call with specific home_ids)
-        # Pass user_data for timezone-aware cursor calculation per home
+        # Get price data for this home
+        # Pass user_data for timezone-aware cursor calculation
         # At this point, _cached_user_data is guaranteed to be not None (checked above)
         if not self._cached_user_data:
             msg = "User data unexpectedly None after fetch attempt"
             raise TibberPricesApiClientError(msg)
 
-        self._log("debug", "Fetching price data for %d configured home(s)", len(configured_home_ids))
-        price_data = await self.api.async_get_price_info(
-            home_ids=configured_home_ids,
+        self._log("debug", "Fetching price data for home %s", home_id)
+        home_data = await self.api.async_get_price_info(
+            home_id=home_id,
             user_data=self._cached_user_data,
         )
 
-        all_homes_data = {}
-        homes_list = price_data.get("homes", {})
+        # Extract currency for this home from user_data
+        currency = self._get_currency_for_home(home_id)
 
-        # Build home_id -> currency mapping from user_data
-        currency_map = {}
-        if self._cached_user_data:
-            viewer = self._cached_user_data.get("viewer", {})
-            homes = viewer.get("homes", [])
-            for home in homes:
-                home_id = home.get("id")
-                if home_id:
-                    # Extract currency from nested structure (with fallback to EUR)
-                    currency = (
-                        home.get("currentSubscription", {})
-                        .get("priceInfo", {})
-                        .get("current", {})
-                        .get("currency", "EUR")
-                    )
-                    currency_map[home_id] = currency
-                    self._log("debug", "Extracted currency %s for home %s", currency, home_id)
+        price_info = home_data.get("price_info", [])
 
-        # Process returned data
-        for home_id, home_price_data in homes_list.items():
-            # Get currency from user_data (cached)
-            currency = currency_map.get(home_id, "EUR")
-
-            # Store raw price data with currency from user_data
-            # Enrichment will be done dynamically when data is transformed
-            home_data = {
-                "price_info": home_price_data,
-                "currency": currency,
-            }
-            all_homes_data[home_id] = home_data
-
-        self._log(
-            "debug",
-            "Successfully fetched data for %d home(s)",
-            len(all_homes_data),
-        )
+        self._log("debug", "Successfully fetched data for home %s (%d intervals)", home_id, len(price_info))
 
         return {
             "timestamp": current_time,
-            "homes": all_homes_data,
+            "home_id": home_id,
+            "price_info": price_info,
+            "currency": currency,
         }
+
+    def _get_currency_for_home(self, home_id: str) -> str:
+        """Get currency for a specific home from cached user_data."""
+        if not self._cached_user_data:
+            self._log("warning", "No user data cached, using EUR as default currency")
+            return "EUR"
+
+        viewer = self._cached_user_data.get("viewer", {})
+        homes = viewer.get("homes", [])
+
+        for home in homes:
+            if home.get("id") == home_id:
+                # Extract currency from nested structure (with fallback to EUR)
+                currency = (
+                    home.get("currentSubscription", {}).get("priceInfo", {}).get("current", {}).get("currency", "EUR")
+                )
+                self._log("debug", "Extracted currency %s for home %s", currency, home_id)
+                return currency
+
+        self._log("warning", "Home %s not found in user data, using EUR as default", home_id)
+        return "EUR"
 
     async def handle_main_entry_update(
         self,
         current_time: datetime,
-        configured_home_ids: set[str],
+        home_id: str,
         transform_fn: Callable[[dict[str, Any]], dict[str, Any]],
     ) -> dict[str, Any]:
-        """Handle update for main entry - fetch data for all homes."""
+        """Handle update for main entry - fetch data for this home."""
         # Update user data if needed (daily check)
         user_data_updated = await self.update_user_data_if_needed(current_time)
 
@@ -284,14 +272,14 @@ class TibberPricesDataFetcher:
                 await asyncio.sleep(delay)
 
             self._log("debug", "Fetching fresh price data from API")
-            raw_data = await self.fetch_all_homes_data(configured_home_ids, current_time)
+            raw_data = await self.fetch_home_data(home_id, current_time)
             # Parse timestamps immediately after API fetch
             raw_data = helpers.parse_all_timestamps(raw_data, time=self.time)
             # Cache the data (now with datetime objects)
             self._cached_price_data = raw_data
             self._last_price_update = current_time
             await self.store_cache()
-            # Transform for main entry: provide aggregated view
+            # Transform for main entry
             return transform_fn(raw_data)
 
         # Use cached data if available
@@ -308,8 +296,9 @@ class TibberPricesDataFetcher:
         self._log("warning", "No cached data available and update not triggered - returning empty data")
         return {
             "timestamp": current_time,
-            "homes": {},
-            "priceInfo": {},
+            "home_id": home_id,
+            "priceInfo": [],
+            "currency": "",
         }
 
     async def handle_api_error(

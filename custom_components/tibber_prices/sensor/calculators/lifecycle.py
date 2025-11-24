@@ -69,11 +69,8 @@ class TibberPricesLifecycleCalculator(TibberPricesBaseCalculator):
         # Priority 4: Check if we're in tomorrow data search mode (after 13:00 and tomorrow missing)
         # This should remain stable during the search phase, not flicker with "fresh" every 15 minutes
         now_local = coordinator.time.as_local(current_time)
-        if now_local.hour >= TOMORROW_CHECK_HOUR:
-            _, tomorrow_midnight = coordinator.time.get_day_boundaries("today")
-            tomorrow_date = tomorrow_midnight.date()
-            if coordinator._needs_tomorrow_data(tomorrow_date):  # noqa: SLF001 - Internal state access
-                return "searching_tomorrow"
+        if now_local.hour >= TOMORROW_CHECK_HOUR and coordinator._needs_tomorrow_data():  # noqa: SLF001 - Internal state access
+            return "searching_tomorrow"
 
         # Priority 5: Check if data is fresh (within 5 minutes of last API fetch)
         # Lower priority than searching_tomorrow to avoid state flickering during search phase
@@ -115,9 +112,10 @@ class TibberPricesLifecycleCalculator(TibberPricesBaseCalculator):
         now_local = coordinator.time.as_local(current_time)
 
         # Check if tomorrow data is missing
+        tomorrow_missing = coordinator._needs_tomorrow_data()  # noqa: SLF001
+
+        # Get tomorrow date for time calculations
         _, tomorrow_midnight = coordinator.time.get_day_boundaries("today")
-        tomorrow_date = tomorrow_midnight.date()
-        tomorrow_missing = coordinator._needs_tomorrow_data(tomorrow_date)  # noqa: SLF001
 
         # Case 1: Before 13:00 today - next poll is today at 13:xx:xx (when tomorrow-search begins)
         if now_local.hour < TOMORROW_CHECK_HOUR:
