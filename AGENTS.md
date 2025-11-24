@@ -2369,8 +2369,8 @@ attributes = {
     "interval_count": ...,
 
     # 6. Meta information (technical details)
-    "periods": [...],          # Nested structures last
-    "intervals": [...],
+    "pricePeriods": [...],          # Nested structures last
+    "priceInfo": [...],
 
     # 7. Extended descriptions (always last)
     "description": "...",      # Short description from custom_translations (always shown)

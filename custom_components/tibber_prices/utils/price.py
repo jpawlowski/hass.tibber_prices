@@ -299,69 +299,87 @@ def enrich_price_info_with_differences(
     *,
     threshold_low: float | None = None,
     threshold_high: float | None = None,
-    time: TibberPricesTimeService,
+    time: TibberPricesTimeService | None = None,  # noqa: ARG001  # Used in production (via coordinator), kept for compatibility
 ) -> list[dict[str, Any]]:
     """
     Enrich price intervals with calculated 'difference' and 'rating_level' values.
 
     Computes the trailing 24-hour average, difference percentage, and rating level
-    for each interval in the flat list (in-place modification).
+    for intervals that have sufficient lookback data (in-place modification).
+
+    CRITICAL: Only enriches intervals that have at least 24 hours of prior data
+    available. This is determined by checking if (interval_start - earliest_interval_start) >= 24h.
+    Works independently of interval density (24 vs 96 intervals/day) and handles
+    transition periods (e.g., Oct 1, 2025) correctly.
 
     Args:
-        all_intervals: Flat list of all price intervals.
+        all_intervals: Flat list of all price intervals (day_before_yesterday + yesterday + today + tomorrow).
         threshold_low: Low threshold percentage for rating_level (defaults to -10)
         threshold_high: High threshold percentage for rating_level (defaults to 10)
-        time: TibberPricesTimeService instance (required)
+        time: TibberPricesTimeService instance (kept for API compatibility, not used)
 
     Returns:
         Same list (modified in-place) with 'difference' and 'rating_level' added
+        to intervals that have full 24h lookback data. Intervals within the first
+        24 hours remain unenriched.
+
+    Note:
+        Interval density changed on Oct 1, 2025 from 24 to 96 intervals/day.
+        This function works correctly across this transition by using time-based
+        rather than count-based logic.
 
     """
-    if threshold_low is None:
-        threshold_low = -10
-    if threshold_high is None:
-        threshold_high = 10
+    threshold_low = threshold_low if threshold_low is not None else -10
+    threshold_high = threshold_high if threshold_high is not None else 10
 
     if not all_intervals:
         return all_intervals
 
-    # Determine day keys for logging
-    now_date = time.now().date()
-    yesterday_date = now_date - timedelta(days=1)
-    tomorrow_date = now_date + timedelta(days=1)
+    # Find the earliest interval timestamp (start of available data)
+    earliest_start: datetime | None = None
+    for interval in all_intervals:
+        starts_at = interval.get("startsAt")
+        if starts_at and (earliest_start is None or starts_at < earliest_start):
+            earliest_start = starts_at
 
-    yesterday_count = sum(1 for p in all_intervals if p.get("startsAt") and p["startsAt"].date() == yesterday_date)
-    today_count = sum(1 for p in all_intervals if p.get("startsAt") and p["startsAt"].date() == now_date)
-    tomorrow_count = sum(1 for p in all_intervals if p.get("startsAt") and p["startsAt"].date() == tomorrow_date)
+    if earliest_start is None:
+        _LOGGER.debug("No valid timestamps found in intervals - skipping enrichment")
+        return all_intervals
+
+    # Calculate the 24-hour boundary from earliest data
+    # Only intervals starting at or after this boundary have full 24h lookback
+    enrichment_boundary = earliest_start + timedelta(hours=24)
 
     _LOGGER.debug(
-        "Enriching price info with differences and rating levels: "
-        "yesterday=%d, today=%d, tomorrow=%d, thresholds: low=%.2f, high=%.2f",
-        yesterday_count,
-        today_count,
-        tomorrow_count,
-        threshold_low,
-        threshold_high,
+        "Enrichment boundary: earliest_start=%s, boundary=%s (skip first 24h)",
+        earliest_start,
+        enrichment_boundary,
     )
 
-    # Process all intervals (modifies in-place)
+    # Process intervals (modifies in-place)
+    # CRITICAL: Only enrich intervals that start >= 24h after earliest data
+    enriched_count = 0
+    skipped_count = 0
+
     for price_interval in all_intervals:
         starts_at = price_interval.get("startsAt")
         if not starts_at:
+            skipped_count += 1
             continue
 
-        # Determine day key for this interval
-        interval_date = starts_at.date()
-        if interval_date == yesterday_date:
-            day_key = "yesterday"
-        elif interval_date == now_date:
-            day_key = "today"
-        elif interval_date == tomorrow_date:
-            day_key = "tomorrow"
-        else:
-            day_key = "unknown"
+        # Skip if interval doesn't have full 24h lookback
+        if starts_at < enrichment_boundary:
+            skipped_count += 1
+            continue
 
-        _process_price_interval(price_interval, all_intervals, threshold_low, threshold_high, day_key)
+        _process_price_interval(price_interval, all_intervals, threshold_low, threshold_high, "enriched")
+        enriched_count += 1
+
+    _LOGGER.debug(
+        "Enrichment complete: %d intervals enriched, %d intervals skipped (within first 24h or invalid)",
+        enriched_count,
+        skipped_count,
+    )
 
     return all_intervals
 
