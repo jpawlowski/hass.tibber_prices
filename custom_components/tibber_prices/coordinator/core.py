@@ -210,7 +210,6 @@ class TibberPricesDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         self._data_transformer = TibberPricesDataTransformer(
             config_entry=config_entry,
             log_prefix=self._log_prefix,
-            perform_turnover_fn=self._perform_midnight_turnover,
             calculate_periods_fn=lambda price_info: self._period_calculator.calculate_periods_for_price_info(
                 price_info
             ),
@@ -436,26 +435,18 @@ class TibberPricesDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             current_date,
         )
 
-        # Perform rotation on cached data if available
-        if self._cached_price_data and "homes" in self._cached_price_data:
-            for home_id, home_data in self._cached_price_data["homes"].items():
-                if "price_info" in home_data:
-                    price_info = home_data["price_info"]
-                    rotated = self._perform_midnight_turnover(price_info)
-                    home_data["price_info"] = rotated
-                    self._log("debug", "Rotated price data for home %s", home_id)
+        # With flat interval list architecture, no rotation needed!
+        # get_intervals_for_day_offsets() automatically filters by date.
+        # Just update coordinator's data to trigger entity updates.
+        if self.data and self._cached_price_data:
+            # Re-transform data to ensure enrichment is refreshed
+            if self.is_main_entry():
+                self.data = self._transform_data_for_main_entry(self._cached_price_data)
+            else:
+                # For subentry, get fresh data from main coordinator
+                pass
 
-            # Update coordinator's data with enriched rotated data
-            if self.data:
-                # Re-transform data to ensure enrichment is applied to rotated data
-                if self.is_main_entry():
-                    self.data = self._transform_data_for_main_entry(self._cached_price_data)
-                else:
-                    # For subentry, get fresh data from main coordinator after rotation
-                    # Main coordinator will have performed rotation already
-                    self.data["timestamp"] = now
-
-            # CRITICAL: Update _last_price_update to current time after turnover
+            # CRITICAL: Update _last_price_update to current time after midnight
             # This prevents cache_validity from showing "date_mismatch" after midnight
             # The data is still valid (just rotated today→yesterday, tomorrow→today)
             # Update timestamp to reflect that the data is current for the new day
@@ -719,25 +710,6 @@ class TibberPricesDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 # Restore handler state: mark today's midnight as last turnover
                 self._midnight_handler.mark_turnover_done(today_midnight)
 
-    def _perform_midnight_turnover(self, price_info: dict[str, Any]) -> dict[str, Any]:
-        """
-        Perform midnight turnover on price data.
-
-        Moves: today → yesterday, tomorrow → today, clears tomorrow.
-
-        This handles cases where:
-        - Server was running through midnight
-        - Cache is being refreshed and needs proper day rotation
-
-        Args:
-            price_info: The price info dict with 'today', 'tomorrow', 'yesterday' keys
-
-        Returns:
-            Updated price_info with rotated day data
-
-        """
-        return helpers.perform_midnight_turnover(price_info, time=self.time)
-
     async def _store_cache(self) -> None:
         """Store cache data."""
         await self._data_fetcher.store_cache(self._midnight_handler.last_check_time)
@@ -796,22 +768,11 @@ class TibberPricesDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         if not self.data:
             return None
 
-        price_info = self.data.get("priceInfo", {})
-        if not price_info:
+        if not self.data:
             return None
 
         now = self.time.now()
-        return find_price_data_for_interval(price_info, now, time=self.time)
-
-    def get_all_intervals(self) -> list[dict[str, Any]]:
-        """Get all price intervals (today + tomorrow)."""
-        if not self.data:
-            return []
-
-        price_info = self.data.get("priceInfo", {})
-        today_prices = price_info.get("today", [])
-        tomorrow_prices = price_info.get("tomorrow", [])
-        return today_prices + tomorrow_prices
+        return find_price_data_for_interval(self.data, now, time=self.time)
 
     async def refresh_user_data(self) -> bool:
         """Force refresh of user data and return True if data was updated."""

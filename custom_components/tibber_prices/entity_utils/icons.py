@@ -17,6 +17,7 @@ from custom_components.tibber_prices.const import (
     PRICE_RATING_ICON_MAPPING,
     VOLATILITY_ICON_MAPPING,
 )
+from custom_components.tibber_prices.coordinator.helpers import get_intervals_for_day_offsets
 from custom_components.tibber_prices.entity_utils.helpers import find_rolling_hour_center_index
 from custom_components.tibber_prices.sensor.helpers import aggregate_level_data
 from custom_components.tibber_prices.utils.price import find_price_data_for_interval
@@ -319,12 +320,11 @@ def get_price_level_for_icon(
     if not coordinator_data or interval_offset is None:
         return None
 
-    price_info = coordinator_data.get("priceInfo", {})
     now = time.now()
 
     # Interval-based lookup
     target_time = now + timedelta(minutes=_INTERVAL_MINUTES * interval_offset)
-    interval_data = find_price_data_for_interval(price_info, target_time, time=time)
+    interval_data = find_price_data_for_interval(coordinator_data, target_time, time=time)
 
     if not interval_data or "level" not in interval_data:
         return None
@@ -358,8 +358,8 @@ def get_rolling_hour_price_level_for_icon(
     if not coordinator_data:
         return None
 
-    price_info = coordinator_data.get("priceInfo", {})
-    all_prices = price_info.get("yesterday", []) + price_info.get("today", []) + price_info.get("tomorrow", [])
+    # Get all intervals (yesterday, today, tomorrow) via helper
+    all_prices = get_intervals_for_day_offsets(coordinator_data, [-1, 0, 1])
 
     if not all_prices:
         return None

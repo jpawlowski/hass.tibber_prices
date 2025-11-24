@@ -3,13 +3,17 @@
 from __future__ import annotations
 
 import asyncio
+import base64
 import logging
 import re
 import socket
 from datetime import timedelta
 from typing import TYPE_CHECKING, Any
+from zoneinfo import ZoneInfo
 
 import aiohttp
+
+from homeassistant.util import dt as dt_utils
 
 from .exceptions import (
     TibberPricesApiClientAuthenticationError,
@@ -19,7 +23,6 @@ from .exceptions import (
 )
 from .helpers import (
     flatten_price_info,
-    flatten_price_rating,
     prepare_headers,
     verify_graphql_response,
     verify_response_or_raise,
@@ -133,48 +136,65 @@ class TibberPricesApiClient:
             query_type=TibberPricesQueryType.USER,
         )
 
-    async def async_get_price_info(self, home_ids: set[str]) -> dict:
+    async def async_get_price_info(self, home_ids: set[str], user_data: dict[str, Any]) -> dict:
         """
-        Get price info data in flat format for specified homes.
+        Get price info for specific homes using GraphQL aliases.
+
+        Uses timezone-aware cursor calculation per home based on the home's actual timezone
+        from Tibber API (not HA system timezone). This ensures correct "day before yesterday
+        midnight" calculation for homes in different timezones.
 
         Args:
-            home_ids: Set of home IDs to fetch data for.
+            home_ids: Set of home IDs to fetch price data for.
+            user_data: User data dict containing home metadata (including timezone).
+                      REQUIRED - must be fetched before calling this method.
 
         Returns:
-            Dictionary with homes data keyed by home_id.
+            Dict with "homes" key containing home_id -> price_data mapping.
+
+        Raises:
+            TibberPricesApiClientError: If TimeService not initialized or user_data missing.
 
         """
-        return await self._get_price_info_for_specific_homes(home_ids)
-
-    async def _get_price_info_for_specific_homes(self, home_ids: set[str]) -> dict:
-        """Get price info for specific homes using GraphQL aliases."""
         if not self.time:
             msg = "TimeService not initialized - required for price info processing"
+            raise TibberPricesApiClientError(msg)
+
+        if not user_data:
+            msg = "User data required for timezone-aware price fetching - fetch user data first"
             raise TibberPricesApiClientError(msg)
 
         if not home_ids:
             return {"homes": {}}
 
+        # Build home_id -> timezone mapping from user_data
+        home_timezones = self._extract_home_timezones(user_data)
+
         # Build query with aliases for each home
-        # Example: home1: home(id: "abc") { ... }
+        # Each home gets its own cursor based on its timezone
         home_queries = []
         for idx, home_id in enumerate(sorted(home_ids)):
             alias = f"home{idx}"
+
+            # Get timezone for this home (fallback to HA system timezone)
+            home_tz = home_timezones.get(home_id)
+
+            # Calculate cursor: day before yesterday midnight in home's timezone
+            cursor = self._calculate_cursor_for_home(home_tz)
+
             home_query = f"""
                 {alias}: home(id: "{home_id}") {{
                     id
-                    consumption(resolution:DAILY,last:1) {{
-                        pageInfo{{currency}}
-                    }}
                     currentSubscription {{
-                        priceInfoRange(resolution:QUARTER_HOURLY,last:192) {{
+                        priceInfoRange(resolution:QUARTER_HOURLY, first:192, after: "{cursor}") {{
+                            pageInfo{{ count }}
                             edges{{node{{
-                                startsAt total energy tax level
+                                startsAt total level
                             }}}}
                         }}
                         priceInfo(resolution:QUARTER_HOURLY) {{
-                            today{{startsAt total energy tax level}}
-                            tomorrow{{startsAt total energy tax level}}
+                            today{{startsAt total level}}
+                            tomorrow{{startsAt total level}}
                         }}
                     }}
                 }}
@@ -204,18 +224,7 @@ class TibberPricesApiClient:
                 continue
 
             if "currentSubscription" in home and home["currentSubscription"] is not None:
-                # Extract currency from consumption data if available
-                currency = None
-                if home.get("consumption"):
-                    page_info = home["consumption"].get("pageInfo")
-                    if page_info:
-                        currency = page_info.get("currency")
-
-                homes_data[home_id] = flatten_price_info(
-                    home["currentSubscription"],
-                    currency,
-                    time=self.time,
-                )
+                homes_data[home_id] = flatten_price_info(home["currentSubscription"])
             else:
                 _LOGGER.debug(
                     "Home %s has no active subscription - price data will be unavailable",
@@ -226,101 +235,76 @@ class TibberPricesApiClient:
         data["homes"] = homes_data
         return data
 
-    async def async_get_daily_price_rating(self) -> dict:
-        """Get daily price rating data in flat format for all homes."""
-        data = await self._api_wrapper(
-            data={
-                "query": """
-                    {viewer{homes{id,currentSubscription{priceRating{
-                        daily{
-                            currency
-                            entries{time total energy tax difference level}
-                        }
-                    }}}}}"""
-            },
-            query_type=TibberPricesQueryType.DAILY_RATING,
-        )
-        homes = data.get("viewer", {}).get("homes", [])
+    def _extract_home_timezones(self, user_data: dict[str, Any]) -> dict[str, str]:
+        """
+        Extract home_id -> timezone mapping from user_data.
 
-        homes_data = {}
+        Args:
+            user_data: User data dict from async_get_viewer_details() (required).
+
+        Returns:
+            Dict mapping home_id to timezone string (e.g., "Europe/Oslo").
+
+        """
+        home_timezones = {}
+        viewer = user_data.get("viewer", {})
+        homes = viewer.get("homes", [])
+
         for home in homes:
             home_id = home.get("id")
-            if home_id:
-                if "currentSubscription" in home and home["currentSubscription"] is not None:
-                    homes_data[home_id] = flatten_price_rating(home["currentSubscription"])
-                else:
-                    _LOGGER.debug(
-                        "Home %s has no active subscription - daily rating data will be unavailable",
-                        home_id,
-                    )
-                    homes_data[home_id] = {}
+            timezone = home.get("timeZone")
 
-        data["homes"] = homes_data
-        return data
+            if home_id and timezone:
+                home_timezones[home_id] = timezone
+                _LOGGER.debug("Extracted timezone %s for home %s", timezone, home_id)
+            elif home_id:
+                _LOGGER.warning("Home %s has no timezone in user data, will use fallback", home_id)
 
-    async def async_get_hourly_price_rating(self) -> dict:
-        """Get hourly price rating data in flat format for all homes."""
-        data = await self._api_wrapper(
-            data={
-                "query": """
-                    {viewer{homes{id,currentSubscription{priceRating{
-                        hourly{
-                            currency
-                            entries{time total energy tax difference level}
-                        }
-                    }}}}}"""
-            },
-            query_type=TibberPricesQueryType.HOURLY_RATING,
+        return home_timezones
+
+    def _calculate_cursor_for_home(self, home_timezone: str | None) -> str:
+        """
+        Calculate cursor (day before yesterday midnight) for a home's timezone.
+
+        Args:
+            home_timezone: Timezone string (e.g., "Europe/Oslo", "America/New_York").
+                          If None, falls back to HA system timezone.
+
+        Returns:
+            Base64-encoded ISO timestamp string for use as GraphQL cursor.
+
+        """
+        if not self.time:
+            msg = "TimeService not initialized"
+            raise TibberPricesApiClientError(msg)
+
+        # Get current time
+        now = self.time.now()
+
+        # Convert to home's timezone or fallback to HA system timezone
+        if home_timezone:
+            try:
+                tz = ZoneInfo(home_timezone)
+                now_in_home_tz = now.astimezone(tz)
+            except (KeyError, ValueError, OSError) as error:
+                _LOGGER.warning(
+                    "Invalid timezone %s (%s), falling back to HA system timezone",
+                    home_timezone,
+                    error,
+                )
+                now_in_home_tz = dt_utils.as_local(now)
+        else:
+            # Fallback to HA system timezone
+            now_in_home_tz = dt_utils.as_local(now)
+
+        # Calculate day before yesterday midnight in home's timezone
+        day_before_yesterday_midnight = (now_in_home_tz - timedelta(days=2)).replace(
+            hour=0, minute=0, second=0, microsecond=0
         )
-        homes = data.get("viewer", {}).get("homes", [])
 
-        homes_data = {}
-        for home in homes:
-            home_id = home.get("id")
-            if home_id:
-                if "currentSubscription" in home and home["currentSubscription"] is not None:
-                    homes_data[home_id] = flatten_price_rating(home["currentSubscription"])
-                else:
-                    _LOGGER.debug(
-                        "Home %s has no active subscription - hourly rating data will be unavailable",
-                        home_id,
-                    )
-                    homes_data[home_id] = {}
-
-        data["homes"] = homes_data
-        return data
-
-    async def async_get_monthly_price_rating(self) -> dict:
-        """Get monthly price rating data in flat format for all homes."""
-        data = await self._api_wrapper(
-            data={
-                "query": """
-                    {viewer{homes{id,currentSubscription{priceRating{
-                        monthly{
-                            currency
-                            entries{time total energy tax difference level}
-                        }
-                    }}}}}"""
-            },
-            query_type=TibberPricesQueryType.MONTHLY_RATING,
-        )
-        homes = data.get("viewer", {}).get("homes", [])
-
-        homes_data = {}
-        for home in homes:
-            home_id = home.get("id")
-            if home_id:
-                if "currentSubscription" in home and home["currentSubscription"] is not None:
-                    homes_data[home_id] = flatten_price_rating(home["currentSubscription"])
-                else:
-                    _LOGGER.debug(
-                        "Home %s has no active subscription - monthly rating data will be unavailable",
-                        home_id,
-                    )
-                    homes_data[home_id] = {}
-
-        data["homes"] = homes_data
-        return data
+        # Convert to ISO format and base64 encode
+        iso_string = day_before_yesterday_midnight.isoformat()
+        return base64.b64encode(iso_string.encode()).decode()
 
     async def _make_request(
         self,

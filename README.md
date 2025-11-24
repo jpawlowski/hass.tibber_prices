@@ -21,7 +21,7 @@ A Home Assistant integration that provides advanced price information and rating
 
 ## ✨ Features
 
--   **Quarter-Hourly Price Data**: Access detailed 15-minute interval pricing (192 data points across yesterday/today/tomorrow)
+-   **Quarter-Hourly Price Data**: Access detailed 15-minute interval pricing (384 data points across 4 days: day before yesterday/yesterday/today/tomorrow)
 -   **Current and Next Interval Prices**: Get real-time price data in both major currency (€, kr) and minor units (ct, øre)
 -   **Multi-Currency Support**: Automatic detection and formatting for EUR, NOK, SEK, DKK, USD, and GBP
 -   **Price Level Indicators**: Know when you're in a VERY_CHEAP, CHEAP, NORMAL, EXPENSIVE, or VERY_EXPENSIVE period

@@ -6,6 +6,7 @@ from typing import TYPE_CHECKING
 
 from custom_components.tibber_prices.coordinator import TIME_SENSITIVE_ENTITY_KEYS
 from custom_components.tibber_prices.coordinator.core import get_connection_state
+from custom_components.tibber_prices.coordinator.helpers import get_intervals_for_day_offsets
 from custom_components.tibber_prices.entity import TibberPricesEntity
 from custom_components.tibber_prices.entity_utils import get_binary_sensor_icon
 from homeassistant.components.binary_sensor import (
@@ -134,12 +135,11 @@ class TibberPricesBinarySensor(TibberPricesEntity, BinarySensorEntity):
             return None
 
         # Check tomorrow data availability (normal operation)
-        price_info = self.coordinator.data.get("priceInfo", {})
-        tomorrow_prices = price_info.get("tomorrow", [])
+        tomorrow_prices = get_intervals_for_day_offsets(self.coordinator.data, [1])
+        tomorrow_date = self.coordinator.time.get_local_date(offset_days=1)
         interval_count = len(tomorrow_prices)
 
         # Get expected intervals for tomorrow (handles DST)
-        tomorrow_date = self.coordinator.time.get_local_date(offset_days=1)
         expected_intervals = self.coordinator.time.get_expected_intervals_for_day(tomorrow_date)
 
         if interval_count == expected_intervals:

@@ -8,6 +8,7 @@ from custom_components.tibber_prices.const import (
     DEFAULT_PRICE_RATING_THRESHOLD_HIGH,
     DEFAULT_PRICE_RATING_THRESHOLD_LOW,
 )
+from custom_components.tibber_prices.coordinator.helpers import get_intervals_for_day_offsets
 from custom_components.tibber_prices.entity_utils import find_rolling_hour_center_index
 from custom_components.tibber_prices.sensor.helpers import (
     aggregate_level_data,
@@ -51,8 +52,8 @@ class TibberPricesRollingHourCalculator(TibberPricesBaseCalculator):
         if not self.has_data():
             return None
 
-        # Get all available price data
-        all_prices = self.get_all_intervals()
+        # Get all available price data (yesterday, today, tomorrow)
+        all_prices = get_intervals_for_day_offsets(self.coordinator_data, [-1, 0, 1])
 
         if not all_prices:
             return None

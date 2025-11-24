@@ -22,6 +22,7 @@ from custom_components.tibber_prices.const import (
     VOLATILITY_MODERATE,
     VOLATILITY_VERY_HIGH,
 )
+from custom_components.tibber_prices.coordinator.helpers import get_intervals_for_day_offsets
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -294,24 +295,26 @@ def _process_price_interval(
 
 
 def enrich_price_info_with_differences(
-    price_info: dict[str, Any],
+    all_intervals: list[dict[str, Any]],
+    *,
     threshold_low: float | None = None,
     threshold_high: float | None = None,
-) -> dict[str, Any]:
+    time: TibberPricesTimeService,
+) -> list[dict[str, Any]]:
     """
-    Enrich price info with calculated 'difference' and 'rating_level' values.
+    Enrich price intervals with calculated 'difference' and 'rating_level' values.
 
     Computes the trailing 24-hour average, difference percentage, and rating level
-    for each interval in today and tomorrow (excluding yesterday since it's historical).
+    for each interval in the flat list (in-place modification).
 
     Args:
-        price_info: Dictionary with 'yesterday', 'today', 'tomorrow' keys
+        all_intervals: Flat list of all price intervals.
         threshold_low: Low threshold percentage for rating_level (defaults to -10)
         threshold_high: High threshold percentage for rating_level (defaults to 10)
         time: TibberPricesTimeService instance (required)
 
     Returns:
-        Updated price_info dict with 'difference' and 'rating_level' added
+        Same list (modified in-place) with 'difference' and 'rating_level' added
 
     """
     if threshold_low is None:
@@ -319,36 +322,52 @@ def enrich_price_info_with_differences(
     if threshold_high is None:
         threshold_high = 10
 
-    yesterday_prices = price_info.get("yesterday", [])
-    today_prices = price_info.get("today", [])
-    tomorrow_prices = price_info.get("tomorrow", [])
+    if not all_intervals:
+        return all_intervals
 
-    # Combine all prices for lookback calculation
-    all_prices = yesterday_prices + today_prices + tomorrow_prices
+    # Determine day keys for logging
+    now_date = time.now().date()
+    yesterday_date = now_date - timedelta(days=1)
+    tomorrow_date = now_date + timedelta(days=1)
+
+    yesterday_count = sum(1 for p in all_intervals if p.get("startsAt") and p["startsAt"].date() == yesterday_date)
+    today_count = sum(1 for p in all_intervals if p.get("startsAt") and p["startsAt"].date() == now_date)
+    tomorrow_count = sum(1 for p in all_intervals if p.get("startsAt") and p["startsAt"].date() == tomorrow_date)
 
     _LOGGER.debug(
         "Enriching price info with differences and rating levels: "
         "yesterday=%d, today=%d, tomorrow=%d, thresholds: low=%.2f, high=%.2f",
-        len(yesterday_prices),
-        len(today_prices),
-        len(tomorrow_prices),
+        yesterday_count,
+        today_count,
+        tomorrow_count,
         threshold_low,
         threshold_high,
     )
 
-    # Process today's prices
-    for price_interval in today_prices:
-        _process_price_interval(price_interval, all_prices, threshold_low, threshold_high, "today")
+    # Process all intervals (modifies in-place)
+    for price_interval in all_intervals:
+        starts_at = price_interval.get("startsAt")
+        if not starts_at:
+            continue
 
-    # Process tomorrow's prices
-    for price_interval in tomorrow_prices:
-        _process_price_interval(price_interval, all_prices, threshold_low, threshold_high, "tomorrow")
+        # Determine day key for this interval
+        interval_date = starts_at.date()
+        if interval_date == yesterday_date:
+            day_key = "yesterday"
+        elif interval_date == now_date:
+            day_key = "today"
+        elif interval_date == tomorrow_date:
+            day_key = "tomorrow"
+        else:
+            day_key = "unknown"
 
-    return price_info
+        _process_price_interval(price_interval, all_intervals, threshold_low, threshold_high, day_key)
+
+    return all_intervals
 
 
 def find_price_data_for_interval(
-    price_info: Any,
+    coordinator_data: dict,
     target_time: datetime,
     *,
     time: TibberPricesTimeService,
@@ -357,7 +376,7 @@ def find_price_data_for_interval(
     Find the price data for a specific 15-minute interval timestamp.
 
     Args:
-        price_info: The price info dictionary from Tibber API
+        coordinator_data: The coordinator data dict
         target_time: The target timestamp to find price data for
         time: TibberPricesTimeService instance (required)
 
@@ -368,23 +387,20 @@ def find_price_data_for_interval(
     # Round to nearest quarter-hour to handle edge cases where we're called
     # slightly before the boundary (e.g., 14:59:59.999 → 15:00:00)
     rounded_time = time.round_to_nearest_quarter(target_time)
+    rounded_date = rounded_time.date()
 
-    day_key = "tomorrow" if rounded_time.date() > time.now().date() else "today"
-    search_days = [day_key, "tomorrow" if day_key == "today" else "today"]
+    # Get all intervals (yesterday, today, tomorrow) via helper
+    all_intervals = get_intervals_for_day_offsets(coordinator_data, [-1, 0, 1])
 
-    for search_day in search_days:
-        day_prices = price_info.get(search_day, [])
-        if not day_prices:
+    # Search for matching interval
+    for price_data in all_intervals:
+        starts_at = time.get_interval_time(price_data)
+        if starts_at is None:
             continue
 
-        for price_data in day_prices:
-            starts_at = time.get_interval_time(price_data)
-            if starts_at is None:
-                continue
-
-            # Exact match after rounding
-            if starts_at == rounded_time and starts_at.date() == rounded_time.date():
-                return price_data
+        # Exact match after rounding (both time and date must match)
+        if starts_at == rounded_time and starts_at.date() == rounded_date:
+            return price_data
 
     return None
 

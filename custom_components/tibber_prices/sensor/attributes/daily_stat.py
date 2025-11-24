@@ -5,6 +5,9 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 from custom_components.tibber_prices.const import PRICE_RATING_MAPPING
+from custom_components.tibber_prices.coordinator.helpers import (
+    get_intervals_for_day_offsets,
+)
 from homeassistant.const import PERCENTAGE
 
 if TYPE_CHECKING:
@@ -46,20 +49,32 @@ def _get_day_key_from_sensor_key(key: str) -> str:
     return "today"
 
 
-def _add_fallback_timestamp(attributes: dict, key: str, price_info: dict) -> None:
+def _add_fallback_timestamp(
+    attributes: dict,
+    key: str,
+    price_info: dict,
+) -> None:
     """
     Add fallback timestamp to attributes based on the day in the sensor key.
 
     Args:
         attributes: Dictionary to add timestamp to
         key: The sensor entity key
-        price_info: Price info dictionary from coordinator data
+        price_info: Price info dictionary from coordinator data (flat structure)
 
     """
     day_key = _get_day_key_from_sensor_key(key)
-    day_data = price_info.get(day_key, [])
-    if day_data:
-        attributes["timestamp"] = day_data[0].get("startsAt")
+
+    # Use helper to get intervals for this day
+    # Build minimal coordinator_data structure for helper
+    coordinator_data = {"priceInfo": price_info}
+    # Map day key to offset: yesterday=-1, today=0, tomorrow=1
+    day_offset = {"yesterday": -1, "today": 0, "tomorrow": 1}[day_key]
+    day_intervals = get_intervals_for_day_offsets(coordinator_data, [day_offset])
+
+    # Use first interval's timestamp if available
+    if day_intervals:
+        attributes["timestamp"] = day_intervals[0].get("startsAt")
 
 
 def add_statistics_attributes(

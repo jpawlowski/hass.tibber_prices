@@ -95,8 +95,8 @@ async def handle_apexcharts_yaml(call: ServiceCall) -> dict[str, Any]:
 
     # Get coordinator to access price data (for currency)
     _, coordinator, _ = get_entry_and_data(hass, entry_id)
-    price_info = coordinator.data.get("priceInfo", {})
-    currency = price_info.get("currency", "EUR")
+    # Get currency from coordinator data
+    currency = coordinator.data.get("currency", "EUR")
     price_unit = format_price_unit_minor(currency)
 
     # Get a sample entity_id for the series (first sensor from this entry)

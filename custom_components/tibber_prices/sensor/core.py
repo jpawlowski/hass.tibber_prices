@@ -21,6 +21,9 @@ from custom_components.tibber_prices.coordinator import (
     MINUTE_UPDATE_ENTITY_KEYS,
     TIME_SENSITIVE_ENTITY_KEYS,
 )
+from custom_components.tibber_prices.coordinator.helpers import (
+    get_intervals_for_day_offsets,
+)
 from custom_components.tibber_prices.entity import TibberPricesEntity
 from custom_components.tibber_prices.entity_utils import (
     add_icon_color_attribute,
@@ -253,9 +256,8 @@ class TibberPricesSensor(TibberPricesEntity, SensorEntity):
         if not self.coordinator.data:
             return None
 
-        # Get all available price data
-        price_info = self.coordinator.data.get("priceInfo", {})
-        all_prices = price_info.get("yesterday", []) + price_info.get("today", []) + price_info.get("tomorrow", [])
+        # Get all available price data (yesterday, today, tomorrow) via helper
+        all_prices = get_intervals_for_day_offsets(self.coordinator.data, [-1, 0, 1])
 
         if not all_prices:
             return None
@@ -313,33 +315,21 @@ class TibberPricesSensor(TibberPricesEntity, SensorEntity):
         if not self.coordinator.data:
             return None
 
-        price_info = self.coordinator.data.get("priceInfo", {})
+        # Map day key to offset: yesterday=-1, today=0, tomorrow=1
+        day_offset = {"yesterday": -1, "today": 0, "tomorrow": 1}[day]
+        day_intervals = get_intervals_for_day_offsets(self.coordinator.data, [day_offset])
 
-        # Get TimeService from coordinator
-        time = self.coordinator.time
-
-        # Get local midnight boundaries based on the requested day using TimeService
-        local_midnight, local_midnight_next_day = time.get_day_boundaries(day)
-
-        # Collect all prices and their intervals from both today and tomorrow data
-        # that fall within the target day's local date boundaries
+        # Collect all prices and their intervals
         price_intervals = []
-        for day_key in ["today", "tomorrow"]:
-            for price_data in price_info.get(day_key, []):
-                starts_at = price_data.get("startsAt")  # Already datetime in local timezone
-                if not starts_at:
-                    continue
-
-                # Include price if it starts within the target day's local date boundaries
-                if local_midnight <= starts_at < local_midnight_next_day:
-                    total_price = price_data.get("total")
-                    if total_price is not None:
-                        price_intervals.append(
-                            {
-                                "price": float(total_price),
-                                "interval": price_data,
-                            }
-                        )
+        for price_data in day_intervals:
+            total_price = price_data.get("total")
+            if total_price is not None:
+                price_intervals.append(
+                    {
+                        "price": float(total_price),
+                        "interval": price_data,
+                    }
+                )
 
         if not price_intervals:
             return None
@@ -381,24 +371,9 @@ class TibberPricesSensor(TibberPricesEntity, SensorEntity):
         if not self.coordinator.data:
             return None
 
-        price_info = self.coordinator.data.get("priceInfo", {})
-
-        # Get local midnight boundaries based on the requested day using TimeService
-        time = self.coordinator.time
-        local_midnight, local_midnight_next_day = time.get_day_boundaries(day)
-
-        # Collect all intervals from both today and tomorrow data
-        # that fall within the target day's local date boundaries
-        day_intervals = []
-        for day_key in ["yesterday", "today", "tomorrow"]:
-            for price_data in price_info.get(day_key, []):
-                starts_at = price_data.get("startsAt")  # Already datetime in local timezone
-                if not starts_at:
-                    continue
-
-                # Include interval if it starts within the target day's local date boundaries
-                if local_midnight <= starts_at < local_midnight_next_day:
-                    day_intervals.append(price_data)
+        # Map day key to offset: yesterday=-1, today=0, tomorrow=1
+        day_offset = {"yesterday": -1, "today": 0, "tomorrow": 1}[day]
+        day_intervals = get_intervals_for_day_offsets(self.coordinator.data, [day_offset])
 
         if not day_intervals:
             return None
@@ -512,16 +487,17 @@ class TibberPricesSensor(TibberPricesEntity, SensorEntity):
         if not self.coordinator.data:
             return None
 
-        price_info = self.coordinator.data.get("priceInfo", {})
+        # Use helper to get all intervals (today and tomorrow)
+        all_intervals = get_intervals_for_day_offsets(self.coordinator.data, [0, 1])
         latest_timestamp = None
 
-        for day in ["today", "tomorrow"]:
-            for price_data in price_info.get(day, []):
-                starts_at = price_data.get("startsAt")  # Already datetime in local timezone
-                if not starts_at:
-                    continue
-                if not latest_timestamp or starts_at > latest_timestamp:
-                    latest_timestamp = starts_at
+        # Search through intervals to find latest timestamp
+        for price_data in all_intervals:
+            starts_at = price_data.get("startsAt")  # Already datetime in local timezone
+            if not starts_at:
+                continue
+            if not latest_timestamp or starts_at > latest_timestamp:
+                latest_timestamp = starts_at
 
         # Return timezone-aware datetime (HA handles timezone display automatically)
         return latest_timestamp
@@ -540,8 +516,6 @@ class TibberPricesSensor(TibberPricesEntity, SensorEntity):
         if not self.coordinator.data:
             return None
 
-        price_info = self.coordinator.data.get("priceInfo", {})
-
         # Get volatility thresholds from config
         thresholds = {
             "threshold_moderate": self.coordinator.config_entry.options.get("volatility_threshold_moderate", 5.0),
@@ -550,7 +524,9 @@ class TibberPricesSensor(TibberPricesEntity, SensorEntity):
         }
 
         # Get prices based on volatility type
-        prices_to_analyze = get_prices_for_volatility(volatility_type, price_info, time=self.coordinator.time)
+        prices_to_analyze = get_prices_for_volatility(
+            volatility_type, self.coordinator.data, time=self.coordinator.time
+        )
 
         if not prices_to_analyze:
             return None
@@ -582,7 +558,11 @@ class TibberPricesSensor(TibberPricesEntity, SensorEntity):
 
         # Add type-specific attributes
         add_volatility_type_attributes(
-            self._last_volatility_attributes, volatility_type, price_info, thresholds, time=self.coordinator.time
+            self._last_volatility_attributes,
+            volatility_type,
+            self.coordinator.data,
+            thresholds,
+            time=self.coordinator.time,
         )
 
         # Return lowercase for ENUM device class
@@ -722,8 +702,7 @@ class TibberPricesSensor(TibberPricesEntity, SensorEntity):
         if self.entity_description.device_class == SensorDeviceClass.MONETARY:
             currency = None
             if self.coordinator.data:
-                price_info = self.coordinator.data.get("priceInfo", {})
-                currency = price_info.get("currency")
+                currency = self.coordinator.data.get("currency")
 
             # Use major currency unit for Energy Dashboard sensor
             if self.entity_description.key == "current_interval_price_major":

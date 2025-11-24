@@ -4,6 +4,10 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any
 
+from custom_components.tibber_prices.coordinator.helpers import (
+    get_intervals_for_day_offsets,
+)
+
 if TYPE_CHECKING:
     from custom_components.tibber_prices.coordinator import (
         TibberPricesDataUpdateCoordinator,
@@ -56,9 +60,9 @@ class TibberPricesBaseCalculator:
         return self._coordinator.data
 
     @property
-    def price_info(self) -> dict[str, Any]:
-        """Get price information from coordinator data."""
-        return self.coordinator_data.get("priceInfo", {})
+    def price_info(self) -> list[dict[str, Any]]:
+        """Get price info (intervals list) from coordinator data."""
+        return self.coordinator_data.get("priceInfo", [])
 
     @property
     def user_data(self) -> dict[str, Any]:
@@ -67,17 +71,19 @@ class TibberPricesBaseCalculator:
 
     @property
     def currency(self) -> str:
-        """Get currency code from price info."""
-        return self.price_info.get("currency", "EUR")
+        """Get currency code from coordinator data."""
+        return self.coordinator_data.get("currency", "EUR")
 
     # Smart data access methods with built-in None-safety
 
-    def get_intervals(self, day: str) -> list[dict]:
+    def get_intervals(self, day_offset: int) -> list[dict]:
         """
         Get price intervals for a specific day with None-safety.
 
+        Uses get_intervals_for_day_offsets() to abstract data structure access.
+
         Args:
-            day: Day key ("yesterday", "today", "tomorrow").
+            day_offset: Day offset (-1=yesterday, 0=today, 1=tomorrow).
 
         Returns:
             List of interval dictionaries, empty list if unavailable.
@@ -85,36 +91,22 @@ class TibberPricesBaseCalculator:
         """
         if not self.coordinator_data:
             return []
-        return self.price_info.get(day, [])
+        return get_intervals_for_day_offsets(self.coordinator_data, [day_offset])
 
     @property
     def intervals_today(self) -> list[dict]:
         """Get today's intervals with None-safety."""
-        return self.get_intervals("today")
+        return self.get_intervals(0)
 
     @property
     def intervals_tomorrow(self) -> list[dict]:
         """Get tomorrow's intervals with None-safety."""
-        return self.get_intervals("tomorrow")
+        return self.get_intervals(1)
 
     @property
     def intervals_yesterday(self) -> list[dict]:
         """Get yesterday's intervals with None-safety."""
-        return self.get_intervals("yesterday")
-
-    def get_all_intervals(self) -> list[dict]:
-        """
-        Get all available intervals (yesterday + today + tomorrow).
-
-        Returns:
-            Combined list of all interval dictionaries.
-
-        """
-        return [
-            *self.intervals_yesterday,
-            *self.intervals_today,
-            *self.intervals_tomorrow,
-        ]
+        return self.get_intervals(-1)
 
     def find_interval_at_offset(self, offset: int) -> dict | None:
         """
@@ -136,7 +128,7 @@ class TibberPricesBaseCalculator:
 
         time = self.coordinator.time
         target_time = time.get_interval_offset_time(offset)
-        return find_price_data_for_interval(self.price_info, target_time, time=time)
+        return find_price_data_for_interval(self.coordinator.data, target_time, time=time)
 
     def safe_get_from_interval(
         self,
@@ -178,17 +170,17 @@ class TibberPricesBaseCalculator:
         """
         return bool(self.price_info)
 
-    def get_day_intervals(self, day: str) -> list[dict]:
+    def get_day_intervals(self, day_offset: int) -> list[dict]:
         """
         Get intervals for a specific day from coordinator data.
 
         This is an alias for get_intervals() with consistent naming.
 
         Args:
-            day: Day key ("yesterday", "today", "tomorrow").
+            day_offset: Day offset (-1=yesterday, 0=today, 1=tomorrow).
 
         Returns:
             List of interval dictionaries, empty list if unavailable.
 
         """
-        return self.get_intervals(day)
+        return self.get_intervals(day_offset)

@@ -375,7 +375,7 @@ After successful refactoring:
 
 **Core Data Flow:**
 
-1. `TibberPricesApiClient` (`api.py`) queries Tibber's GraphQL API with `resolution:QUARTER_HOURLY` for user data and prices (yesterday/today/tomorrow - 192 intervals total)
+1. `TibberPricesApiClient` (`api.py`) queries Tibber's GraphQL API with `resolution:QUARTER_HOURLY` for user data and prices (day before yesterday/yesterday/today/tomorrow - 384 intervals total, ensuring trailing 24h averages are accurate for all intervals)
 2. `TibberPricesDataUpdateCoordinator` (`coordinator.py`) orchestrates updates every 15 minutes, manages persistent storage via `Store`, and schedules quarter-hour entity refreshes
 3. Price enrichment functions (`utils/price.py`, `utils/average.py`) calculate trailing/leading 24h averages, price differences, and rating levels for each 15-minute interval
 4. Entity platforms (`sensor/` package, `binary_sensor/` package) expose enriched data as Home Assistant entities
@@ -1749,7 +1749,7 @@ Never use raw API price data directly. Always enrich via `enrich_price_info_with
 Always use `dt_util` from `homeassistant.util` instead of Python's `datetime` module for timezone-aware operations. **Critical:** Use `dt_util.as_local()` when comparing API timestamps to local time. Import datetime types only for type hints: `from datetime import date, datetime, timedelta`.
 
 **4. Coordinator Data Structure**
-Coordinator data follows structure: `coordinator.data = {"user_data": {...}, "priceInfo": {"yesterday": [...], "today": [...], "tomorrow": [...], "currency": "EUR"}}`. Each price list contains enriched interval dicts. See `coordinator/core.py` for data management.
+Coordinator data follows structure: `coordinator.data = {"user_data": {...}, "priceInfo": [...], "currency": "EUR"}`. The `priceInfo` is a flat list containing all enriched interval dicts (yesterday + today + tomorrow). Currency is stored at top level for easy access. See `coordinator/core.py` for data management.
 
 **5. Service Response Pattern**
 Services returning data must declare `supports_response=SupportsResponse.ONLY` in registration. See `services.py` for implementation patterns.
@@ -2257,7 +2257,7 @@ df = (
 # ✅ Annotate function signatures (public functions)
 def get_current_interval_price(coordinator: DataUpdateCoordinator) -> float:
     """Get current price from coordinator."""
-    return coordinator.data["priceInfo"]["today"][0]["total"]
+    return coordinator.data["priceInfo"][0]["total"]
 
 # ✅ Use modern type syntax (Python 3.13)
 def process_prices(prices: list[dict[str, Any]]) -> dict[str, float]:

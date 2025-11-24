@@ -5,6 +5,7 @@ from __future__ import annotations
 from datetime import timedelta
 from typing import TYPE_CHECKING
 
+from custom_components.tibber_prices.coordinator.helpers import get_intervals_for_day_offsets
 from custom_components.tibber_prices.utils.price import calculate_volatility_level
 
 if TYPE_CHECKING:
@@ -32,7 +33,7 @@ def add_volatility_attributes(
 
 def get_prices_for_volatility(
     volatility_type: str,
-    price_info: dict,
+    coordinator_data: dict,
     *,
     time: TibberPricesTimeService,
 ) -> list[float]:
@@ -41,18 +42,33 @@ def get_prices_for_volatility(
 
     Args:
         volatility_type: One of "today", "tomorrow", "next_24h", "today_tomorrow"
-        price_info: Price information dictionary from coordinator data
+        coordinator_data: Coordinator data dict
         time: TibberPricesTimeService instance (required)
 
     Returns:
         List of prices to analyze
 
     """
+    # Get all intervals (yesterday, today, tomorrow) via helper
+    all_intervals = get_intervals_for_day_offsets(coordinator_data, [-1, 0, 1])
+
     if volatility_type == "today":
-        return [float(p["total"]) for p in price_info.get("today", []) if "total" in p]
+        # Filter for today's intervals
+        today_date = time.now().date()
+        return [
+            float(p["total"])
+            for p in all_intervals
+            if "total" in p and p.get("startsAt") and p["startsAt"].date() == today_date
+        ]
 
     if volatility_type == "tomorrow":
-        return [float(p["total"]) for p in price_info.get("tomorrow", []) if "total" in p]
+        # Filter for tomorrow's intervals
+        tomorrow_date = (time.now() + timedelta(days=1)).date()
+        return [
+            float(p["total"])
+            for p in all_intervals
+            if "total" in p and p.get("startsAt") and p["startsAt"].date() == tomorrow_date
+        ]
 
     if volatility_type == "next_24h":
         # Rolling 24h from now
@@ -60,23 +76,24 @@ def get_prices_for_volatility(
         end_time = now + timedelta(hours=24)
         prices = []
 
-        for day_key in ["today", "tomorrow"]:
-            for price_data in price_info.get(day_key, []):
-                starts_at = price_data.get("startsAt")  # Already datetime in local timezone
-                if starts_at is None:
-                    continue
+        for price_data in all_intervals:
+            starts_at = price_data.get("startsAt")  # Already datetime in local timezone
+            if starts_at is None:
+                continue
 
-                if time.is_in_future(starts_at) and starts_at < end_time and "total" in price_data:
-                    prices.append(float(price_data["total"]))
+            if time.is_in_future(starts_at) and starts_at < end_time and "total" in price_data:
+                prices.append(float(price_data["total"]))
         return prices
 
     if volatility_type == "today_tomorrow":
         # Combined today + tomorrow
+        today_date = time.now().date()
+        tomorrow_date = (time.now() + timedelta(days=1)).date()
         prices = []
-        for day_key in ["today", "tomorrow"]:
-            for price_data in price_info.get(day_key, []):
-                if "total" in price_data:
-                    prices.append(float(price_data["total"]))
+        for price_data in all_intervals:
+            starts_at = price_data.get("startsAt")
+            if starts_at and starts_at.date() in [today_date, tomorrow_date] and "total" in price_data:
+                prices.append(float(price_data["total"]))
         return prices
 
     return []
@@ -85,7 +102,7 @@ def get_prices_for_volatility(
 def add_volatility_type_attributes(
     volatility_attributes: dict,
     volatility_type: str,
-    price_info: dict,
+    coordinator_data: dict,
     thresholds: dict,
     *,
     time: TibberPricesTimeService,
@@ -96,29 +113,43 @@ def add_volatility_type_attributes(
     Args:
         volatility_attributes: Dictionary to add type-specific attributes to
         volatility_type: Type of volatility calculation
-        price_info: Price information dictionary from coordinator data
+        coordinator_data: Coordinator data dict
         thresholds: Volatility thresholds configuration
         time: TibberPricesTimeService instance (required)
 
     """
+    # Get all intervals (yesterday, today, tomorrow) via helper
+    all_intervals = get_intervals_for_day_offsets(coordinator_data, [-1, 0, 1])
+    now = time.now()
+    today_date = now.date()
+    tomorrow_date = (now + timedelta(days=1)).date()
+
     # Add timestamp for calendar day volatility sensors (midnight of the day)
     if volatility_type == "today":
-        today_data = price_info.get("today", [])
+        today_data = [p for p in all_intervals if p.get("startsAt") and p["startsAt"].date() == today_date]
         if today_data:
             volatility_attributes["timestamp"] = today_data[0].get("startsAt")
     elif volatility_type == "tomorrow":
-        tomorrow_data = price_info.get("tomorrow", [])
+        tomorrow_data = [p for p in all_intervals if p.get("startsAt") and p["startsAt"].date() == tomorrow_date]
         if tomorrow_data:
             volatility_attributes["timestamp"] = tomorrow_data[0].get("startsAt")
     elif volatility_type == "today_tomorrow":
         # For combined today+tomorrow, use today's midnight
-        today_data = price_info.get("today", [])
+        today_data = [p for p in all_intervals if p.get("startsAt") and p["startsAt"].date() == today_date]
         if today_data:
             volatility_attributes["timestamp"] = today_data[0].get("startsAt")
 
         # Add breakdown for today vs tomorrow
-        today_prices = [float(p["total"]) for p in price_info.get("today", []) if "total" in p]
-        tomorrow_prices = [float(p["total"]) for p in price_info.get("tomorrow", []) if "total" in p]
+        today_prices = [
+            float(p["total"])
+            for p in all_intervals
+            if "total" in p and p.get("startsAt") and p["startsAt"].date() == today_date
+        ]
+        tomorrow_prices = [
+            float(p["total"])
+            for p in all_intervals
+            if "total" in p and p.get("startsAt") and p["startsAt"].date() == tomorrow_date
+        ]
 
         if today_prices:
             today_vol = calculate_volatility_level(today_prices, **thresholds)

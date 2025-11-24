@@ -24,6 +24,7 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from custom_components.tibber_prices.coordinator.time_service import TibberPricesTimeService
 
+from custom_components.tibber_prices.coordinator.helpers import get_intervals_for_day_offsets
 from custom_components.tibber_prices.entity_utils.helpers import get_price_value
 from custom_components.tibber_prices.utils.price import (
     aggregate_price_levels,
@@ -130,7 +131,7 @@ def aggregate_window_data(
 
 
 def get_hourly_price_value(
-    price_info: dict,
+    coordinator_data: dict,
     *,
     hour_offset: int,
     in_euro: bool,
@@ -143,7 +144,7 @@ def get_hourly_price_value(
     Kept for potential backward compatibility.
 
     Args:
-        price_info: Price information dict with 'today' and 'tomorrow' keys
+        coordinator_data: Coordinator data dict
         hour_offset: Hour offset from current time (positive=future, negative=past)
         in_euro: If True, return price in major currency (EUR), else minor (cents/øre)
         time: TibberPricesTimeService instance (required)
@@ -161,29 +162,17 @@ def get_hourly_price_value(
     target_hour = target_datetime.hour
     target_date = target_datetime.date()
 
-    # Determine which day's data we need
-    day_key = "tomorrow" if target_date > now.date() else "today"
+    # Get all intervals (yesterday, today, tomorrow) via helper
+    all_intervals = get_intervals_for_day_offsets(coordinator_data, [-1, 0, 1])
 
-    for price_data in price_info.get(day_key, []):
+    # Search through all intervals to find the matching hour
+    for price_data in all_intervals:
         # Parse the timestamp and convert to local time
         starts_at = time.get_interval_time(price_data)
         if starts_at is None:
             continue
 
-        # Make sure it's in the local timezone for proper comparison
-
         # Compare using both hour and date for accuracy
-        if starts_at.hour == target_hour and starts_at.date() == target_date:
-            return get_price_value(float(price_data["total"]), in_euro=in_euro)
-
-    # If we didn't find the price in the expected day's data, check the other day
-    # This is a fallback for potential edge cases
-    other_day_key = "today" if day_key == "tomorrow" else "tomorrow"
-    for price_data in price_info.get(other_day_key, []):
-        starts_at = time.get_interval_time(price_data)
-        if starts_at is None:
-            continue
-
         if starts_at.hour == target_hour and starts_at.date() == target_date:
             return get_price_value(float(price_data["total"]), in_euro=in_euro)
 

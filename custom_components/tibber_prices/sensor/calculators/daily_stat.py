@@ -75,8 +75,8 @@ class TibberPricesDailyStatCalculator(TibberPricesBaseCalculator):
         # Collect all prices and their intervals from both today and tomorrow data
         # that fall within the target day's local date boundaries
         price_intervals = []
-        for day_key in ["today", "tomorrow"]:
-            for price_data in self.get_intervals(day_key):
+        for day_offset in [0, 1]:  # today=0, tomorrow=1
+            for price_data in self.get_intervals(day_offset):
                 starts_at = price_data.get("startsAt")  # Already datetime in local timezone
                 if not starts_at:
                     continue
@@ -139,8 +139,8 @@ class TibberPricesDailyStatCalculator(TibberPricesBaseCalculator):
         # Collect all intervals from both today and tomorrow data
         # that fall within the target day's local date boundaries
         day_intervals = []
-        for day_key in ["yesterday", "today", "tomorrow"]:
-            for price_data in self.get_intervals(day_key):
+        for day_offset in [-1, 0, 1]:  # yesterday=-1, today=0, tomorrow=1
+            for price_data in self.get_intervals(day_offset):
                 starts_at = price_data.get("startsAt")  # Already datetime in local timezone
                 if not starts_at:
                     continue

@@ -26,14 +26,12 @@ class TibberPricesDataTransformer:
         self,
         config_entry: ConfigEntry,
         log_prefix: str,
-        perform_turnover_fn: Callable[[dict[str, Any]], dict[str, Any]],
         calculate_periods_fn: Callable[[dict[str, Any]], dict[str, Any]],
         time: TibberPricesTimeService,
     ) -> None:
         """Initialize the data transformer."""
         self.config_entry = config_entry
         self._log_prefix = log_prefix
-        self._perform_turnover_fn = perform_turnover_fn
         self._calculate_periods_fn = calculate_periods_fn
         self.time: TibberPricesTimeService = time
 
@@ -184,30 +182,26 @@ class TibberPricesDataTransformer:
 
         # Use the first home's data as the main entry's data
         first_home_data = next(iter(homes_data.values()))
-        price_info = first_home_data.get("price_info", {})
+        all_intervals = first_home_data.get("price_info", [])
 
-        # Perform midnight turnover if needed (handles day transitions)
-        price_info = self._perform_turnover_fn(price_info)
-
-        # Ensure all required keys exist (API might not return tomorrow data yet)
-        price_info.setdefault("yesterday", [])
-        price_info.setdefault("today", [])
-        price_info.setdefault("tomorrow", [])
-        price_info.setdefault("currency", "EUR")
+        # Extract currency from home_data (populated from user_data)
+        currency = first_home_data.get("currency", "EUR")
 
         # Enrich price info dynamically with calculated differences and rating levels
-        # This ensures enrichment is always up-to-date, especially after midnight turnover
+        # (Modifies all_intervals in-place, returns same list)
         thresholds = self.get_threshold_percentages()
-        price_info = enrich_price_info_with_differences(
-            price_info,
+        enriched_intervals = enrich_price_info_with_differences(
+            all_intervals,
             threshold_low=thresholds["low"],
             threshold_high=thresholds["high"],
+            time=self.time,
         )
 
+        # Store enriched intervals directly as priceInfo (flat list)
         transformed_data = {
-            "timestamp": raw_data.get("timestamp"),
             "homes": homes_data,
-            "priceInfo": price_info,
+            "priceInfo": enriched_intervals,
+            "currency": currency,
         }
 
         # Calculate periods (best price and peak price)
@@ -249,29 +243,25 @@ class TibberPricesDataTransformer:
                 "priceInfo": {},
             }
 
-        price_info = home_data.get("price_info", {})
+        all_intervals = home_data.get("price_info", [])
 
-        # Perform midnight turnover if needed (handles day transitions)
-        price_info = self._perform_turnover_fn(price_info)
-
-        # Ensure all required keys exist (API might not return tomorrow data yet)
-        price_info.setdefault("yesterday", [])
-        price_info.setdefault("today", [])
-        price_info.setdefault("tomorrow", [])
-        price_info.setdefault("currency", "EUR")
+        # Extract currency from home_data (populated from user_data)
+        currency = home_data.get("currency", "EUR")
 
         # Enrich price info dynamically with calculated differences and rating levels
-        # This ensures enrichment is always up-to-date, especially after midnight turnover
+        # (Modifies all_intervals in-place, returns same list)
         thresholds = self.get_threshold_percentages()
-        price_info = enrich_price_info_with_differences(
-            price_info,
+        enriched_intervals = enrich_price_info_with_differences(
+            all_intervals,
             threshold_low=thresholds["low"],
             threshold_high=thresholds["high"],
+            time=self.time,
         )
 
+        # Store enriched intervals directly as priceInfo (flat list)
         transformed_data = {
-            "timestamp": main_data.get("timestamp"),
-            "priceInfo": price_info,
+            "priceInfo": enriched_intervals,
+            "currency": currency,
         }
 
         # Calculate periods (best price and peak price)

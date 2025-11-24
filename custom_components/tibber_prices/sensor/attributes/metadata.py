@@ -32,7 +32,6 @@ def get_current_interval_data(
     if not coordinator.data:
         return None
 
-    price_info = coordinator.data.get("priceInfo", {})
     now = time.now()
 
-    return find_price_data_for_interval(price_info, now, time=time)
+    return find_price_data_for_interval(coordinator.data, now, time=time)

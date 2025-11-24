@@ -14,14 +14,13 @@ from custom_components.tibber_prices import const as _const
 
 if TYPE_CHECKING:
     from custom_components.tibber_prices.coordinator.time_service import TibberPricesTimeService
+    from homeassistant.config_entries import ConfigEntry
 
+from .helpers import get_intervals_for_day_offsets
 from .period_handlers import (
     TibberPricesPeriodConfig,
     calculate_periods_with_relaxation,
 )
-
-if TYPE_CHECKING:
-    from homeassistant.config_entries import ConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -72,8 +71,10 @@ class TibberPricesPeriodCalculator:
             Hash string for cache key comparison.
 
         """
-        # Get relevant price data
-        today = price_info.get("today", [])
+        # Get relevant price data from flat interval list
+        # Build minimal coordinator_data structure for get_intervals_for_day_offsets
+        coordinator_data = {"priceInfo": price_info}
+        today = get_intervals_for_day_offsets(coordinator_data, [0])
         today_signature = tuple((interval.get("startsAt"), interval.get("rating_level")) for interval in today)
 
         # Get period configs (both best and peak)
@@ -491,8 +492,10 @@ class TibberPricesPeriodCalculator:
         if level_config == "any":
             return True
 
-        # Get today's intervals
-        today_intervals = price_info.get("today", [])
+        # Get today's intervals from flat list
+        # Build minimal coordinator_data structure for get_intervals_for_day_offsets
+        coordinator_data = {"priceInfo": price_info}
+        today_intervals = get_intervals_for_day_offsets(coordinator_data, [0])
 
         if not today_intervals:
             return True  # If no data, don't filter
@@ -555,9 +558,12 @@ class TibberPricesPeriodCalculator:
 
         self._log("debug", "Calculating periods (cache miss or hash mismatch)")
 
-        yesterday_prices = price_info.get("yesterday", [])
-        today_prices = price_info.get("today", [])
-        tomorrow_prices = price_info.get("tomorrow", [])
+        # Get intervals by day from flat list
+        # Build minimal coordinator_data structure for get_intervals_for_day_offsets
+        coordinator_data = {"priceInfo": price_info}
+        yesterday_prices = get_intervals_for_day_offsets(coordinator_data, [-1])
+        today_prices = get_intervals_for_day_offsets(coordinator_data, [0])
+        tomorrow_prices = get_intervals_for_day_offsets(coordinator_data, [1])
         all_prices = yesterday_prices + today_prices + tomorrow_prices
 
         # Get rating thresholds from config

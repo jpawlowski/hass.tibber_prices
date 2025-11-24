@@ -15,6 +15,7 @@ Caching strategy:
 from datetime import datetime
 from typing import TYPE_CHECKING, Any
 
+from custom_components.tibber_prices.coordinator.helpers import get_intervals_for_day_offsets
 from custom_components.tibber_prices.utils.average import calculate_next_n_hours_avg
 from custom_components.tibber_prices.utils.price import (
     calculate_price_trend,
@@ -308,8 +309,8 @@ class TibberPricesTrendCalculator(TibberPricesBaseCalculator):
         if not self.has_data():
             return None
 
-        all_intervals = self.get_all_intervals()
-        current_interval = find_price_data_for_interval(self.price_info, now, time=time)
+        all_intervals = get_intervals_for_day_offsets(self.coordinator_data, [-1, 0, 1])
+        current_interval = find_price_data_for_interval(self.coordinator.data, now, time=time)
 
         if not all_intervals or not current_interval:
             return None

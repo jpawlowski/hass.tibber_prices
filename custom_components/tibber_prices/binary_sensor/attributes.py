@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
+from custom_components.tibber_prices.coordinator.helpers import get_intervals_for_day_offsets
 from custom_components.tibber_prices.entity_utils import add_icon_color_attribute
 
 # Import TypedDict definitions for documentation (not used in signatures)
@@ -39,12 +40,12 @@ def get_tomorrow_data_available_attributes(
     if not coordinator_data:
         return None
 
-    price_info = coordinator_data.get("priceInfo", {})
-    tomorrow_prices = price_info.get("tomorrow", [])
+    # Use helper to get tomorrow's intervals
+    tomorrow_prices = get_intervals_for_day_offsets(coordinator_data, [1])
+    tomorrow_date = time.get_local_date(offset_days=1)
     interval_count = len(tomorrow_prices)
 
     # Get expected intervals for tomorrow (handles DST)
-    tomorrow_date = time.get_local_date(offset_days=1)
     expected_intervals = time.get_expected_intervals_for_day(tomorrow_date)
 
     if interval_count == 0:

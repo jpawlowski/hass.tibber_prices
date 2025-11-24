@@ -27,6 +27,9 @@ from custom_components.tibber_prices.const import (
     DEFAULT_PRICE_RATING_THRESHOLD_LOW,
     get_translation,
 )
+from custom_components.tibber_prices.coordinator.helpers import (
+    get_intervals_for_day_offsets,
+)
 from custom_components.tibber_prices.sensor.helpers import aggregate_level_data, aggregate_rating_data
 
 
@@ -256,18 +259,12 @@ def get_period_data(  # noqa: PLR0913, PLR0912, PLR0915
     # Filter periods by day if requested
     filtered_periods = []
     if days:
-        # Build set of allowed dates
-        allowed_dates = set()
-        for day in days:
-            # Map day names to actual dates from coordinator
-            price_info = coordinator.data.get("priceInfo", {})
-            day_prices = price_info.get(day, [])
-            if day_prices:
-                # Extract date from first interval (already datetime in local timezone)
-                first_interval = day_prices[0]
-                starts_at = first_interval.get("startsAt")  # Already datetime object
-                if starts_at:
-                    allowed_dates.add(starts_at.date())
+        # Use helper to get intervals for requested days, extract their dates
+        # Map day keys to offsets: yesterday=-1, today=0, tomorrow=1
+        day_offset_map = {"yesterday": -1, "today": 0, "tomorrow": 1}
+        offsets = [day_offset_map[day] for day in days]
+        day_intervals = get_intervals_for_day_offsets(coordinator.data, offsets)
+        allowed_dates = {interval["startsAt"].date() for interval in day_intervals if interval.get("startsAt")}
 
         # Filter periods to those within allowed dates
         for period in period_summaries:

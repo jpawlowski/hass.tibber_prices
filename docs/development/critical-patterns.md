@@ -185,12 +185,8 @@ These patterns were analyzed and classified as **not critical**:
 ```python
 coordinator.data = {
     "user_data": {...},
-    "priceInfo": {
-        "yesterday": [...],
-        "today": [...],
-        "tomorrow": [...],
-        "currency": "EUR"
-    }
+    "priceInfo": [...],  # Flat list of all enriched intervals
+    "currency": "EUR"  # Top-level for easy access
 }
 ```
 

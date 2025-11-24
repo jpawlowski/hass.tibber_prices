@@ -42,6 +42,9 @@ from custom_components.tibber_prices.const import (
     PRICE_RATING_LOW,
     PRICE_RATING_NORMAL,
 )
+from custom_components.tibber_prices.coordinator.helpers import (
+    get_intervals_for_day_offsets,
+)
 from homeassistant.exceptions import ServiceValidationError
 
 from .formatters import aggregate_hourly_exact, get_period_data, normalize_level_filter, normalize_rating_level_filter
@@ -205,7 +208,6 @@ async def handle_chartdata(call: ServiceCall) -> dict[str, Any]:  # noqa: PLR091
 
     # === NORMAL HANDLING: Interval Data ===
     # Get price data for all requested days
-    price_info = coordinator.data.get("priceInfo", {})
     chart_data = []
 
     # Build set of timestamps that match period_filter if specified
@@ -231,31 +233,40 @@ async def handle_chartdata(call: ServiceCall) -> dict[str, Any]:  # noqa: PLR091
     # Collect all timestamps if insert_nulls='all' (needed to insert NULLs for missing filter matches)
     all_timestamps = set()
     if insert_nulls == "all" and (level_filter or rating_level_filter):
-        for day in days:
-            day_prices = price_info.get(day, [])
-            for interval in day_prices:
-                start_time = interval.get("startsAt")
-                if start_time:
-                    all_timestamps.add(start_time)
+        # Use helper to get intervals for requested days
+        # Map day keys to offsets: yesterday=-1, today=0, tomorrow=1
+        day_offset_map = {"yesterday": -1, "today": 0, "tomorrow": 1}
+        offsets = [day_offset_map[day] for day in days]
+        day_intervals = get_intervals_for_day_offsets(coordinator.data, offsets)
+        all_timestamps = {interval["startsAt"] for interval in day_intervals if interval.get("startsAt")}
         all_timestamps = sorted(all_timestamps)
 
     # Calculate average if requested
     day_averages = {}
     if include_average:
         for day in days:
-            day_prices = price_info.get(day, [])
-            if day_prices:
-                prices = [p["total"] for p in day_prices if p.get("total") is not None]
-                if prices:
-                    avg = sum(prices) / len(prices)
-                    # Apply same transformations as to regular prices
-                    avg = round(avg * 100, 2) if minor_currency else round(avg, 4)
-                    if round_decimals is not None:
-                        avg = round(avg, round_decimals)
-                    day_averages[day] = avg
+            # Use helper to get intervals for this day
+            # Build minimal coordinator_data for single day query
+            # Map day key to offset: yesterday=-1, today=0, tomorrow=1
+            day_offset = {"yesterday": -1, "today": 0, "tomorrow": 1}[day]
+            day_intervals = get_intervals_for_day_offsets(coordinator.data, [day_offset])
+
+            # Collect prices from intervals
+            prices = [p["total"] for p in day_intervals if p.get("total") is not None]
+
+            if prices:
+                avg = sum(prices) / len(prices)
+                # Apply same transformations as to regular prices
+                avg = round(avg * 100, 2) if minor_currency else round(avg, 4)
+                if round_decimals is not None:
+                    avg = round(avg, round_decimals)
+                day_averages[day] = avg
 
     for day in days:
-        day_prices = price_info.get(day, [])
+        # Use helper to get intervals for this day
+        # Map day key to offset: yesterday=-1, today=0, tomorrow=1
+        day_offset = {"yesterday": -1, "today": 0, "tomorrow": 1}[day]
+        day_prices = get_intervals_for_day_offsets(coordinator.data, [day_offset])
 
         if resolution == "interval":
             # Original 15-minute intervals
@@ -331,7 +342,7 @@ async def handle_chartdata(call: ServiceCall) -> dict[str, Any]:  # noqa: PLR091
                     next_value = next_interval.get(filter_field)
 
                     # Check if current interval matches filter
-                    if interval_value in filter_values:
+                    if interval_value in filter_values:  # type: ignore[operator]
                         # Convert price
                         converted_price = round(price * 100, 2) if minor_currency else round(price, 4)
                         if round_decimals is not None:
@@ -372,7 +383,7 @@ async def handle_chartdata(call: ServiceCall) -> dict[str, Any]:  # noqa: PLR091
                     last_price = last_interval.get("total")
                     last_value = last_interval.get(filter_field)
 
-                    if last_start_time and last_price is not None and last_value in filter_values:
+                    if last_start_time and last_price is not None and last_value in filter_values:  # type: ignore[operator]
                         # Timestamp is already datetime in local timezone
                         last_dt = last_start_time  # Already datetime object
                         if last_dt:
@@ -393,9 +404,12 @@ async def handle_chartdata(call: ServiceCall) -> dict[str, Any]:  # noqa: PLR091
                             midnight_interval = None
 
                             if next_day_name:
-                                next_day_prices = price_info.get(next_day_name, [])
-                                if next_day_prices:
-                                    first_next = next_day_prices[0]
+                                # Use helper to get first interval of next day
+                                # Map day key to offset: yesterday=-1, today=0, tomorrow=1
+                                next_day_offset = {"yesterday": -1, "today": 0, "tomorrow": 1}[next_day_name]
+                                next_day_intervals = get_intervals_for_day_offsets(coordinator.data, [next_day_offset])
+                                if next_day_intervals:
+                                    first_next = next_day_intervals[0]
                                     first_next_value = first_next.get(filter_field)
                                     # Only use tomorrow's price if it matches the same filter
                                     if first_next_value == last_value:

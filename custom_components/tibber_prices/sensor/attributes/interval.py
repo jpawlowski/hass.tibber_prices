@@ -42,7 +42,6 @@ def add_current_interval_price_attributes(  # noqa: PLR0913
         time: TibberPricesTimeService instance (required)
 
     """
-    price_info = coordinator.data.get("priceInfo", {}) if coordinator.data else {}
     now = time.now()
 
     # Determine which interval to use based on sensor type
@@ -73,19 +72,19 @@ def add_current_interval_price_attributes(  # noqa: PLR0913
     interval_data = None
     if key in next_interval_sensors:
         target_time = time.get_next_interval_start()
-        interval_data = find_price_data_for_interval(price_info, target_time, time=time)
+        interval_data = find_price_data_for_interval(coordinator.data, target_time, time=time)
         # Override timestamp with the NEXT interval's startsAt (when that interval starts)
         if interval_data:
             attributes["timestamp"] = interval_data["startsAt"]
     elif key in previous_interval_sensors:
         target_time = time.get_interval_offset_time(-1)
-        interval_data = find_price_data_for_interval(price_info, target_time, time=time)
+        interval_data = find_price_data_for_interval(coordinator.data, target_time, time=time)
         # Override timestamp with the PREVIOUS interval's startsAt
         if interval_data:
             attributes["timestamp"] = interval_data["startsAt"]
     elif key in next_hour_sensors:
         target_time = now + timedelta(hours=1)
-        interval_data = find_price_data_for_interval(price_info, target_time, time=time)
+        interval_data = find_price_data_for_interval(coordinator.data, target_time, time=time)
         # Override timestamp with the center of the next rolling hour window
         if interval_data:
             attributes["timestamp"] = interval_data["startsAt"]

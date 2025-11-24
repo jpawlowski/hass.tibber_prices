@@ -62,9 +62,9 @@ def build_lifecycle_attributes(
     data_completeness = lifecycle_calculator.get_data_completeness_status()
     attributes["data_completeness"] = data_completeness
 
-    attributes["yesterday_available"] = lifecycle_calculator.is_data_available("yesterday")
-    attributes["today_available"] = lifecycle_calculator.is_data_available("today")
-    attributes["tomorrow_available"] = lifecycle_calculator.is_data_available("tomorrow")
+    attributes["yesterday_available"] = lifecycle_calculator.is_data_available(-1)
+    attributes["today_available"] = lifecycle_calculator.is_data_available(0)
+    attributes["tomorrow_available"] = lifecycle_calculator.is_data_available(1)
     attributes["tomorrow_expected_after"] = "13:00"
 
     # Next Actions (only show if meaningful)

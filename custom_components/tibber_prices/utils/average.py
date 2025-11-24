@@ -5,6 +5,8 @@ from __future__ import annotations
 from datetime import datetime, timedelta
 from typing import TYPE_CHECKING
 
+from custom_components.tibber_prices.coordinator.helpers import get_intervals_for_day_offsets
+
 if TYPE_CHECKING:
     from custom_components.tibber_prices.coordinator.time_service import TibberPricesTimeService
 
@@ -98,17 +100,13 @@ def calculate_current_trailing_avg(
     if not coordinator_data:
         return None
 
-    price_info = coordinator_data.get("priceInfo", {})
-    yesterday_prices = price_info.get("yesterday", [])
-    today_prices = price_info.get("today", [])
-    tomorrow_prices = price_info.get("tomorrow", [])
-
-    all_prices = yesterday_prices + today_prices + tomorrow_prices
+    # Get all intervals (yesterday, today, tomorrow) via helper
+    all_prices = get_intervals_for_day_offsets(coordinator_data, [-1, 0, 1])
     if not all_prices:
         return None
 
     now = time.now()
-    return calculate_trailing_24h_avg(all_prices, now)
+    return calculate_trailing_24h_min(all_prices, now, time=time)
 
 
 def calculate_current_leading_avg(
@@ -130,17 +128,13 @@ def calculate_current_leading_avg(
     if not coordinator_data:
         return None
 
-    price_info = coordinator_data.get("priceInfo", {})
-    yesterday_prices = price_info.get("yesterday", [])
-    today_prices = price_info.get("today", [])
-    tomorrow_prices = price_info.get("tomorrow", [])
-
-    all_prices = yesterday_prices + today_prices + tomorrow_prices
+    # Get all intervals (yesterday, today, tomorrow) via helper
+    all_prices = get_intervals_for_day_offsets(coordinator_data, [-1, 0, 1])
     if not all_prices:
         return None
 
     now = time.now()
-    return calculate_leading_24h_avg(all_prices, now)
+    return calculate_leading_24h_min(all_prices, now, time=time)
 
 
 def calculate_trailing_24h_min(
@@ -322,12 +316,8 @@ def calculate_current_trailing_min(
     if not coordinator_data:
         return None
 
-    price_info = coordinator_data.get("priceInfo", {})
-    yesterday_prices = price_info.get("yesterday", [])
-    today_prices = price_info.get("today", [])
-    tomorrow_prices = price_info.get("tomorrow", [])
-
-    all_prices = yesterday_prices + today_prices + tomorrow_prices
+    # Get all intervals (yesterday, today, tomorrow) via helper
+    all_prices = get_intervals_for_day_offsets(coordinator_data, [-1, 0, 1])
     if not all_prices:
         return None
 
@@ -354,12 +344,8 @@ def calculate_current_trailing_max(
     if not coordinator_data:
         return None
 
-    price_info = coordinator_data.get("priceInfo", {})
-    yesterday_prices = price_info.get("yesterday", [])
-    today_prices = price_info.get("today", [])
-    tomorrow_prices = price_info.get("tomorrow", [])
-
-    all_prices = yesterday_prices + today_prices + tomorrow_prices
+    # Get all intervals (yesterday, today, tomorrow) via helper
+    all_prices = get_intervals_for_day_offsets(coordinator_data, [-1, 0, 1])
     if not all_prices:
         return None
 
@@ -386,17 +372,13 @@ def calculate_current_leading_min(
     if not coordinator_data:
         return None
 
-    price_info = coordinator_data.get("priceInfo", {})
-    yesterday_prices = price_info.get("yesterday", [])
-    today_prices = price_info.get("today", [])
-    tomorrow_prices = price_info.get("tomorrow", [])
-
-    all_prices = yesterday_prices + today_prices + tomorrow_prices
+    # Get all intervals (yesterday, today, tomorrow) via helper
+    all_prices = get_intervals_for_day_offsets(coordinator_data, [-1, 0, 1])
     if not all_prices:
         return None
 
     now = time.now()
-    return calculate_leading_24h_min(all_prices, now, time=time)
+    return calculate_leading_24h_avg(all_prices, now)
 
 
 def calculate_current_leading_max(
@@ -418,12 +400,8 @@ def calculate_current_leading_max(
     if not coordinator_data:
         return None
 
-    price_info = coordinator_data.get("priceInfo", {})
-    yesterday_prices = price_info.get("yesterday", [])
-    today_prices = price_info.get("today", [])
-    tomorrow_prices = price_info.get("tomorrow", [])
-
-    all_prices = yesterday_prices + today_prices + tomorrow_prices
+    # Get all intervals (yesterday, today, tomorrow) via helper
+    all_prices = get_intervals_for_day_offsets(coordinator_data, [-1, 0, 1])
     if not all_prices:
         return None
 
@@ -455,12 +433,8 @@ def calculate_next_n_hours_avg(
     if not coordinator_data or hours <= 0:
         return None
 
-    price_info = coordinator_data.get("priceInfo", {})
-    yesterday_prices = price_info.get("yesterday", [])
-    today_prices = price_info.get("today", [])
-    tomorrow_prices = price_info.get("tomorrow", [])
-
-    all_prices = yesterday_prices + today_prices + tomorrow_prices
+    # Get all intervals (yesterday, today, tomorrow) via helper
+    all_prices = get_intervals_for_day_offsets(coordinator_data, [-1, 0, 1])
     if not all_prices:
         return None
 

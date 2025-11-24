@@ -20,7 +20,7 @@ The integration uses **4 distinct caching layers** with different purposes and l
 **Purpose:** Reduce API calls to Tibber by caching user data and price data between HA restarts.
 
 **What is cached:**
-- **Price data** (`price_data`): Yesterday/today/tomorrow price intervals with enriched fields
+- **Price data** (`price_data`): Day before yesterday/yesterday/today/tomorrow price intervals with enriched fields (384 intervals total)
 - **User data** (`user_data`): Homes, subscriptions, features from Tibber GraphQL `viewer` query
 - **Timestamps**: Last update times for validation
 

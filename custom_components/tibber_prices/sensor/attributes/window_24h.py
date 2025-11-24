@@ -4,6 +4,8 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
+from custom_components.tibber_prices.coordinator.helpers import get_intervals_for_day_offsets
+
 if TYPE_CHECKING:
     from custom_components.tibber_prices.coordinator.core import (
         TibberPricesDataUpdateCoordinator,
@@ -58,12 +60,8 @@ def add_average_price_attributes(
     # Determine if this is trailing or leading
     is_trailing = "trailing" in key
 
-    # Get all price intervals
-    price_info = coordinator.data.get("priceInfo", {})
-    yesterday_prices = price_info.get("yesterday", [])
-    today_prices = price_info.get("today", [])
-    tomorrow_prices = price_info.get("tomorrow", [])
-    all_prices = yesterday_prices + today_prices + tomorrow_prices
+    # Get all intervals (yesterday, today, tomorrow) via helper
+    all_prices = get_intervals_for_day_offsets(coordinator.data, [-1, 0, 1])
 
     if not all_prices:
         return

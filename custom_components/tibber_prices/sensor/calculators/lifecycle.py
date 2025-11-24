@@ -190,12 +190,12 @@ class TibberPricesLifecycleCalculator(TibberPricesBaseCalculator):
         # Next midnight
         return now_local.replace(hour=0, minute=0, second=0, microsecond=0) + timedelta(days=1)
 
-    def is_data_available(self, day: str) -> bool:
+    def is_data_available(self, day_offset: int) -> bool:
         """
         Check if data is available for a specific day.
 
         Args:
-            day: "yesterday", "today", or "tomorrow"
+            day_offset: Day offset (-1=yesterday, 0=today, 1=tomorrow)
 
         Returns:
             True if data exists and is not empty
@@ -204,7 +204,7 @@ class TibberPricesLifecycleCalculator(TibberPricesBaseCalculator):
         if not self.has_data():
             return False
 
-        day_data = self.get_intervals(day)
+        day_data = self.get_intervals(day_offset)
         return bool(day_data)
 
     def get_data_completeness_status(self) -> str:
@@ -219,9 +219,9 @@ class TibberPricesLifecycleCalculator(TibberPricesBaseCalculator):
             'no_data': No data available at all
 
         """
-        yesterday_available = self.is_data_available("yesterday")
-        today_available = self.is_data_available("today")
-        tomorrow_available = self.is_data_available("tomorrow")
+        yesterday_available = self.is_data_available(-1)
+        today_available = self.is_data_available(0)
+        tomorrow_available = self.is_data_available(1)
 
         if yesterday_available and today_available and tomorrow_available:
             return "complete"

@@ -3,15 +3,12 @@
 from __future__ import annotations
 
 import logging
-from datetime import timedelta
 from typing import TYPE_CHECKING
 
 from homeassistant.const import __version__ as ha_version
 
 if TYPE_CHECKING:
     import aiohttp
-
-    from custom_components.tibber_prices.coordinator.time_service import TibberPricesTimeService
 
     from .queries import TibberPricesQueryType
 
@@ -120,10 +117,6 @@ def is_data_empty(data: dict, query_type: str) -> bool:
     - Must have range data
     - Must have today data
     - tomorrow can be empty if we have valid historical and today data
-
-    For rating data:
-    - Must have thresholdPercentages
-    - Must have non-empty entries for the specific rating type
     """
     _LOGGER.debug("Checking if data is empty for query_type %s", query_type)
 
@@ -174,8 +167,8 @@ def is_data_empty(data: dict, query_type: str) -> bool:
                 else:
                     subscription = first_home["currentSubscription"]
 
-                    # Check priceInfoRange (192 quarter-hourly intervals)
-                    has_historical = (
+                    # Check priceInfoRange (96 quarter-hourly intervals)
+                    has_yesterday = (
                         "priceInfoRange" in subscription
                         and subscription["priceInfoRange"] is not None
                         and "edges" in subscription["priceInfoRange"]
@@ -192,47 +185,15 @@ def is_data_empty(data: dict, query_type: str) -> bool:
                     )
 
                     # Data is empty if we don't have historical data or today's data
-                    is_empty = not has_historical or not has_today
+                    is_empty = not has_yesterday or not has_today
 
                     _LOGGER.debug(
                         "Price info check - priceInfoRange: %s, today: %s, is_empty: %s",
-                        bool(has_historical),
+                        bool(has_yesterday),
                         bool(has_today),
                         is_empty,
                     )
 
-        elif query_type in ["daily", "hourly", "monthly"]:
-            # Check for homes existence and non-emptiness before accessing
-            if (
-                "viewer" not in data
-                or "homes" not in data["viewer"]
-                or not isinstance(data["viewer"]["homes"], list)
-                or len(data["viewer"]["homes"]) == 0
-                or "currentSubscription" not in data["viewer"]["homes"][0]
-                or data["viewer"]["homes"][0]["currentSubscription"] is None
-                or "priceRating" not in data["viewer"]["homes"][0]["currentSubscription"]
-            ):
-                _LOGGER.debug("Missing homes/currentSubscription/priceRating in rating check")
-                is_empty = True
-            else:
-                rating = data["viewer"]["homes"][0]["currentSubscription"]["priceRating"]
-
-                # Check rating entries
-                has_entries = (
-                    query_type in rating
-                    and rating[query_type] is not None
-                    and "entries" in rating[query_type]
-                    and rating[query_type]["entries"] is not None
-                    and len(rating[query_type]["entries"]) > 0
-                )
-
-                is_empty = not has_entries
-                _LOGGER.debug(
-                    "%s rating check - entries count: %d, is_empty: %s",
-                    query_type,
-                    len(rating[query_type]["entries"]) if has_entries else 0,
-                    is_empty,
-                )
         else:
             _LOGGER.debug("Unknown query type %s, treating as non-empty", query_type)
             is_empty = False
@@ -252,23 +213,29 @@ def prepare_headers(access_token: str, version: str) -> dict[str, str]:
     }
 
 
-def flatten_price_info(subscription: dict, currency: str | None = None, *, time: TibberPricesTimeService) -> dict:
+def flatten_price_info(subscription: dict) -> list[dict]:
     """
     Transform and flatten priceInfo from full API data structure.
 
-    Now handles priceInfoRange (192 quarter-hourly intervals) separately from
-    priceInfo (today and tomorrow data). Currency is stored as a separate attribute.
+    Returns a flat list of all price intervals ordered as:
+    [day_before_yesterday_prices, yesterday_prices, today_prices, tomorrow_prices]
+
+    priceInfoRange fetches 192 quarter-hourly intervals starting from the day before
+    yesterday midnight (2 days of historical data), which provides sufficient data
+    for calculating trailing 24h averages for all intervals including yesterday.
+
+    Args:
+        subscription: The currentSubscription dictionary from API response.
+
+    Returns:
+        A flat list containing all price dictionaries (startsAt, total, level).
+
     """
-    price_info = subscription.get("priceInfo", {})
     price_info_range = subscription.get("priceInfoRange", {})
 
-    # Get today and yesterday dates using TimeService
-    today_local = time.now().date()
-    yesterday_local = today_local - timedelta(days=1)
-    _LOGGER.debug("Processing data for yesterday's date: %s", yesterday_local)
-
-    # Transform priceInfoRange edges data (extract yesterday's quarter-hourly prices)
-    yesterday_prices = []
+    # Transform priceInfoRange edges data (extract historical quarter-hourly prices)
+    # This contains 192 intervals (2 days) starting from day before yesterday midnight
+    historical_prices = []
     if "edges" in price_info_range:
         edges = price_info_range["edges"]
 
@@ -276,47 +243,11 @@ def flatten_price_info(subscription: dict, currency: str | None = None, *, time:
             if "node" not in edge:
                 _LOGGER.debug("Skipping edge without node: %s", edge)
                 continue
+            historical_prices.append(edge["node"])
 
-            price_data = edge["node"]
-            # Parse timestamp using TimeService for proper timezone handling
-            starts_at = time.get_interval_time(price_data)
-            if starts_at is None:
-                _LOGGER.debug("Could not parse timestamp: %s", price_data["startsAt"])
-                continue
-
-            price_date = starts_at.date()
-
-            # Only include prices from yesterday
-            if price_date == yesterday_local:
-                yesterday_prices.append(price_data)
-
-        _LOGGER.debug("Found %d price entries for yesterday", len(yesterday_prices))
-
-    return {
-        "yesterday": yesterday_prices,
-        "today": price_info.get("today", []),
-        "tomorrow": price_info.get("tomorrow", []),
-        "currency": currency,
-    }
-
-
-def flatten_price_rating(subscription: dict) -> dict:
-    """Extract and flatten priceRating from subscription, including currency."""
-    price_rating = subscription.get("priceRating", {})
-
-    def extract_entries_and_currency(rating: dict) -> tuple[list, str | None]:
-        if rating is None:
-            return [], None
-        return rating.get("entries", []), rating.get("currency")
-
-    hourly_entries, hourly_currency = extract_entries_and_currency(price_rating.get("hourly"))
-    daily_entries, daily_currency = extract_entries_and_currency(price_rating.get("daily"))
-    monthly_entries, monthly_currency = extract_entries_and_currency(price_rating.get("monthly"))
-    # Prefer hourly, then daily, then monthly for top-level currency
-    currency = hourly_currency or daily_currency or monthly_currency
-    return {
-        "hourly": hourly_entries,
-        "daily": daily_entries,
-        "monthly": monthly_entries,
-        "currency": currency,
-    }
+    # Return all intervals as a single flattened array
+    return (
+        historical_prices
+        + subscription.get("priceInfo", {}).get("today", [])
+        + subscription.get("priceInfo", {}).get("tomorrow", [])
+    )

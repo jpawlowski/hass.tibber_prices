@@ -62,7 +62,9 @@ class TibberPricesVolatilityCalculator(TibberPricesBaseCalculator):
         }
 
         # Get prices based on volatility type
-        prices_to_analyze = get_prices_for_volatility(volatility_type, self.price_info, time=self.coordinator.time)
+        prices_to_analyze = get_prices_for_volatility(
+            volatility_type, self.coordinator.data, time=self.coordinator.time
+        )
 
         if not prices_to_analyze:
             return None
@@ -94,7 +96,11 @@ class TibberPricesVolatilityCalculator(TibberPricesBaseCalculator):
 
         # Add type-specific attributes
         add_volatility_type_attributes(
-            self._last_volatility_attributes, volatility_type, self.price_info, thresholds, time=self.coordinator.time
+            self._last_volatility_attributes,
+            volatility_type,
+            self.coordinator.data,
+            thresholds,
+            time=self.coordinator.time,
         )
 
         # Return lowercase for ENUM device class

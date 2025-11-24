@@ -184,19 +184,66 @@ class TibberPricesDataFetcher:
                 "homes": {},
             }
 
+        # Ensure we have user_data before fetching price data
+        # This is critical for timezone-aware cursor calculation
+        if not self._cached_user_data:
+            self._log("info", "User data not cached, fetching before price data")
+            try:
+                user_data = await self.api.async_get_viewer_details()
+                self._cached_user_data = user_data
+                self._last_user_update = current_time
+            except (
+                TibberPricesApiClientError,
+                TibberPricesApiClientCommunicationError,
+            ) as ex:
+                msg = f"Failed to fetch user data (required for price fetching): {ex}"
+                self._log("error", msg)
+                raise TibberPricesApiClientError(msg) from ex
+
         # Get price data for configured homes only (API call with specific home_ids)
+        # Pass user_data for timezone-aware cursor calculation per home
+        # At this point, _cached_user_data is guaranteed to be not None (checked above)
+        if not self._cached_user_data:
+            msg = "User data unexpectedly None after fetch attempt"
+            raise TibberPricesApiClientError(msg)
+
         self._log("debug", "Fetching price data for %d configured home(s)", len(configured_home_ids))
-        price_data = await self.api.async_get_price_info(home_ids=configured_home_ids)
+        price_data = await self.api.async_get_price_info(
+            home_ids=configured_home_ids,
+            user_data=self._cached_user_data,
+        )
 
         all_homes_data = {}
         homes_list = price_data.get("homes", {})
 
+        # Build home_id -> currency mapping from user_data
+        currency_map = {}
+        if self._cached_user_data:
+            viewer = self._cached_user_data.get("viewer", {})
+            homes = viewer.get("homes", [])
+            for home in homes:
+                home_id = home.get("id")
+                if home_id:
+                    # Extract currency from nested structure (with fallback to EUR)
+                    currency = (
+                        home.get("currentSubscription", {})
+                        .get("priceInfo", {})
+                        .get("current", {})
+                        .get("currency", "EUR")
+                    )
+                    currency_map[home_id] = currency
+                    self._log("debug", "Extracted currency %s for home %s", currency, home_id)
+
         # Process returned data
         for home_id, home_price_data in homes_list.items():
-            # Store raw price data without enrichment
+            # Get currency from user_data (cached)
+            currency = currency_map.get(home_id, "EUR")
+
+            # Store raw price data with currency from user_data
             # Enrichment will be done dynamically when data is transformed
             home_data = {
                 "price_info": home_price_data,
+                "currency": currency,
             }
             all_homes_data[home_id] = home_data
 
@@ -282,21 +329,6 @@ class TibberPricesDataFetcher:
 
         msg = f"Error communicating with API: {error}"
         raise UpdateFailed(msg) from error
-
-    def perform_midnight_turnover(self, price_info: dict[str, Any]) -> dict[str, Any]:
-        """
-        Perform midnight turnover on price data.
-
-        Moves: today → yesterday, tomorrow → today, clears tomorrow.
-
-        Args:
-            price_info: The price info dict with 'today', 'tomorrow', 'yesterday' keys
-
-        Returns:
-            Updated price_info with rotated day data
-
-        """
-        return helpers.perform_midnight_turnover(price_info, time=self.time)
 
     @property
     def cached_price_data(self) -> dict[str, Any] | None:
