@@ -1,6 +1,22 @@
 {
     "config": {
         "step": {
+            "account_choice": {
+                "title": "Choose Account",
+                "description": "You can add another home of an existing Tibber account or enter a new API token for a different account.",
+                "data": {
+                    "account_choice": "Account"
+                },
+                "submit": "Continue →"
+            },
+            "new_token": {
+                "title": "Enter API Token",
+                "description": "Set up Tibber Price Information & Ratings.\n\nTo generate an API access token, visit https://developer.tibber.com.",
+                "data": {
+                    "access_token": "API access token"
+                },
+                "submit": "Validate Token"
+            },
             "user": {
                 "description": "Set up Tibber Price Information & Ratings.\n\nTo generate an API access token, visit https://developer.tibber.com.",
                 "data": {
@@ -40,12 +56,21 @@
             "cannot_connect": "Failed to connect",
             "invalid_access_token": "Invalid access token",
             "missing_homes": "The new access token does not have access to all configured homes. Please use an access token that has access to the same Tibber homes.",
+            "home_already_configured": "This home is already configured in another entry. Each home can only be configured once.",
+            "no_active_subscription": "This home does not have an active Tibber contract. Only homes with active electricity contracts can be added to Home Assistant.",
+            "subscription_expired": "The Tibber contract for this home has expired. Only homes with active or future electricity contracts can be added to Home Assistant.",
+            "future_subscription_warning": "Note: This home's Tibber contract has not started yet. Functionality may be limited until the contract becomes active.",
             "invalid_yaml_syntax": "Invalid YAML syntax. Please check indentation, colons, and special characters.",
             "invalid_yaml_structure": "YAML must be a dictionary/object (key: value pairs), not a list or plain text.",
-            "service_call_failed": "Service call validation failed: {error_detail}"
+            "service_call_failed": "Service call validation failed: {error_detail}",
+            "missing_entry_id": "Entry ID is required but was not provided.",
+            "invalid_entry_id": "Invalid entry ID or entry not found.",
+            "missing_home_id": "Home ID is missing from the configuration entry.",
+            "user_data_not_available": "User data is not available. Please refresh user data first.",
+            "price_fetch_failed": "Failed to fetch price data. Please check logs for details."
         },
         "abort": {
-            "already_configured": "Integration is already configured",
+            "already_configured": "All available Tibber homes are already configured. Each home can only be configured once.",
             "entry_not_found": "Tibber configuration entry not found.",
             "setup_complete": "Setup complete! You can change additional options for Tibber Prices in the integration's options after closing this dialog.",
             "reauth_successful": "Reauthentication successful. The integration has been updated with the new access token."
@@ -57,27 +82,59 @@
     "config_subentries": {
         "home": {
             "initiate_flow": {
-                "user": "Add Tibber Home"
+                "user": "Create Time-Travel View"
             },
-            "title": "Add Tibber Home",
+            "title": "Create Time-Travel View",
             "step": {
                 "user": {
-                    "title": "Add Tibber Home",
-                    "description": "Select a home to add to your Tibber integration.\n\n**Note:** After adding this home, you can add additional homes from the integration's context menu by selecting \"Add Tibber Home\".",
+                    "title": "Select Configuration Entry",
+                    "description": "Select the configuration entry for which you want to create a time-travel view.\n\n**Time-travel views** allow you to see historical price data as if it were the current time. This is useful for testing automations or analyzing past price patterns.",
                     "data": {
-                        "home_id": "Home"
+                        "parent_entry_id": "Configuration Entry"
+                    }
+                },
+                "time_offset": {
+                    "title": "Configure Time Offset",
+                    "description": "Configure how far back in time this view should travel.\n\n**Recommended:** Use **≥2 days** offset to avoid conflicts with \"yesterday\" entities that also provide historical data.\n\n**Examples:**\n• **-7 days**: View prices from 7 days ago\n• **-2 days, 3 hours**: View prices from 2 days and 3 hours ago\n• **-14 days**: View prices from 2 weeks ago",
+                    "data": {
+                        "virtual_time_offset_days": "Days Back",
+                        "time_offset": "Additional Time Offset"
+                    },
+                    "data_description": {
+                        "virtual_time_offset_days": "How many days to travel back in time. Slider range: 0 to 374 days (≈1 year). Recommended: ≥2 days to avoid conflicts with \"yesterday\" entities.",
+                        "time_offset": "Optional fine-tuning: Add hours and/or minutes to the day offset. The time will be automatically subtracted (travel back further). Note: Seconds are ignored - only minute-level precision is supported."
+                    }
+                },
+                "init": {
+                    "title": "Reconfigure Time Offset",
+                    "description": "Update the time offset for this time-travel view.",
+                    "data": {
+                        "virtual_time_offset_days": "Days Back",
+                        "time_offset": "Additional Time Offset"
+                    },
+                    "data_description": {
+                        "virtual_time_offset_days": "How many days to travel back in time. Slider range: 0 to 374 days (≈1 year). Recommended: ≥2 days to avoid conflicts with \"yesterday\" entities.",
+                        "time_offset": "Optional fine-tuning: Add hours and/or minutes to the day offset. The time will be automatically subtracted (travel back further). Note: Seconds are ignored - only minute-level precision is supported."
                     }
                 }
             },
             "error": {
-                "api_error": "Failed to fetch homes from Tibber API"
+                "no_time_offset": "At least one time offset value must be negative (historical data only)."
             },
             "abort": {
-                "no_parent_entry": "Parent entry not found",
-                "no_access_token": "No access token available",
-                "home_not_found": "Selected home not found",
-                "api_error": "Failed to fetch homes from Tibber API",
-                "no_available_homes": "No additional homes available to add. All homes from your Tibber account have already been added."
+                "already_configured": "**A time-travel view with this exact time offset already exists.**\n\nPlease choose a different offset.",
+                "no_main_entries": "No main configuration entries found. Please add a Tibber home first.",
+                "parent_entry_not_found": "Selected configuration entry not found."
+            },
+            "time_units": {
+                "day": "{count} day",
+                "days": "{count} days",
+                "hour": "{count} hour",
+                "hours": "{count} hours",
+                "minute": "{count} minute",
+                "minutes": "{count} minutes",
+                "ago": "{parts} ago",
+                "now": "now"
             }
         }
     },
@@ -719,6 +776,24 @@
         }
     },
     "services": {
+        "get_price": {
+            "name": "Get Price Data",
+            "description": "Fetch price data for a specific time range with automatic routing. Development and testing service for the price_info_for_range API function. Automatically uses PRICE_INFO, PRICE_INFO_RANGE, or both based on the time range boundary.",
+            "fields": {
+                "entry_id": {
+                    "name": "Entry ID",
+                    "description": "The config entry ID for the Tibber integration."
+                },
+                "start_time": {
+                    "name": "Start Time",
+                    "description": "Start of the time range (inclusive, timezone-aware)."
+                },
+                "end_time": {
+                    "name": "End Time",
+                    "description": "End of the time range (exclusive, timezone-aware)."
+                }
+            }
+        },
         "get_apexcharts_yaml": {
             "name": "Get ApexCharts Card YAML",
             "description": "Returns a ready-to-copy YAML snippet for an ApexCharts card visualizing Tibber Prices for the selected day. Use this to easily add a pre-configured chart to your dashboard. The YAML will use the get_chartdata service for data.",
@@ -843,6 +918,11 @@
         }
     },
     "selector": {
+        "account_choice": {
+            "options": {
+                "new_token": "Add new Tibber account API token"
+            }
+        },
         "day": {
             "options": {
                 "yesterday": "Yesterday",

@@ -1,6 +1,22 @@
 {
     "config": {
         "step": {
+            "account_choice": {
+                "title": "Konto wählen",
+                "description": "Du kannst ein weiteres Zuhause aus einem bestehenden Tibber-Konto hinzufügen oder einen neuen API-Token für ein anderes Konto eingeben.",
+                "data": {
+                    "account_choice": "Konto"
+                },
+                "submit": "Weiter →"
+            },
+            "new_token": {
+                "title": "API-Token eingeben",
+                "description": "Richte Tibber Preisinformationen & Bewertungen ein.\n\nUm einen API-Zugriffstoken zu generieren, besuche https://developer.tibber.com.",
+                "data": {
+                    "access_token": "API-Zugriffstoken"
+                },
+                "submit": "Token validieren"
+            },
             "user": {
                 "description": "Richte Tibber Preisinformationen & Bewertungen ein.\n\nUm einen API-Zugriffstoken zu generieren, besuche https://developer.tibber.com.",
                 "data": {
@@ -40,15 +56,24 @@
             "cannot_connect": "Verbindung fehlgeschlagen",
             "invalid_access_token": "Ungültiges Zugriffstoken",
             "missing_homes": "Der neue Zugriffstoken hat keinen Zugriff auf alle konfigurierten Zuhause. Bitte verwende einen Zugriffstoken, der Zugriff auf die gleichen Tibber-Zuhause hat.",
-            "invalid_yaml_syntax": "Ungültige YAML-Syntax. Bitte prüfe Einrückung, Doppelpunkte und Sonderzeichen.",
+            "home_already_configured": "Dieses Zuhause ist bereits in einem anderen Eintrag konfiguriert. Jedes Zuhause kann nur einmal konfiguriert werden.",
+            "no_active_subscription": "Dieses Zuhause hat keinen aktiven Tibber-Vertrag. Nur Häuser mit aktivem Stromvertrag können zu Home Assistant hinzugefügt werden.",
+            "subscription_expired": "Der Tibber-Vertrag für dieses Zuhause ist abgelaufen. Nur Häuser mit aktivem oder zukünftigem Stromvertrag können zu Home Assistant hinzugefügt werden.",
+            "future_subscription_warning": "Hinweis: Der Tibber-Vertrag für dieses Zuhause hat noch nicht begonnen. Die Funktionalität ist möglicherweise eingeschränkt, bis der Vertrag aktiv wird.",
+            "invalid_yaml_syntax": "Ungültige YAML-Syntax. Bitte überprüfe Einrückungen, Doppelpunkte und Sonderzeichen.",
             "invalid_yaml_structure": "YAML muss ein Dictionary/Objekt sein (Schlüssel: Wert-Paare), keine Liste oder reiner Text.",
-            "service_call_failed": "Service-Aufruf-Validierung fehlgeschlagen: {error_detail}"
+            "service_call_failed": "Service-Aufruf-Validierung fehlgeschlagen: {error_detail}",
+            "missing_entry_id": "Eintrag-ID wird benötigt, wurde aber nicht bereitgestellt.",
+            "invalid_entry_id": "Ungültige Eintrag-ID oder Eintrag nicht gefunden.",
+            "missing_home_id": "Home-ID fehlt in der Konfiguration.",
+            "user_data_not_available": "Benutzerdaten nicht verfügbar. Bitte aktualisiere zuerst die Benutzerdaten.",
+            "price_fetch_failed": "Preisdaten konnten nicht abgerufen werden. Bitte prüfe die Logs für Details."
         },
         "abort": {
-            "already_configured": "Integration ist bereits konfiguriert",
-            "entry_not_found": "Tibber Konfigurationseintrag nicht gefunden.",
-            "setup_complete": "Einrichtung abgeschlossen! Du kannst zusätzliche Optionen für Tibber Preise in den Integrationsoptionen ändern, nachdem du diesen Dialog geschlossen hast.",
-            "reauth_successful": "Erneute Authentifizierung erfolgreich. Die Integration wurde mit dem neuen Zugriffstoken aktualisiert."
+            "already_configured": "Alle verfügbaren Tibber-Zuhause sind bereits konfiguriert. Jedes Zuhause kann nur einmal konfiguriert werden.",
+            "entry_not_found": "Tibber-Konfigurationseintrag nicht gefunden.",
+            "setup_complete": "Einrichtung abgeschlossen! Du kannst zusätzliche Optionen für Tibber Prices in den Integrationsoptionen nach Schließen dieses Dialogs ändern.",
+            "reauth_successful": "Neuauthentifizierung erfolgreich. Die Integration wurde mit dem neuen Zugriffstoken aktualisiert."
         }
     },
     "common": {
@@ -57,27 +82,59 @@
     "config_subentries": {
         "home": {
             "initiate_flow": {
-                "user": "Tibber Zuhause hinzufügen"
+                "user": "Zeitreise-Ansicht erstellen"
             },
-            "title": "Tibber Zuhause hinzufügen",
+            "title": "Zeitreise-Ansicht erstellen",
             "step": {
                 "user": {
-                    "title": "Tibber Zuhause hinzufügen",
-                    "description": "Wähle ein Zuhause aus, das du zu deiner Tibber-Integration hinzufügen möchtest.",
+                    "title": "Konfigurationseintrag auswählen",
+                    "description": "Wähle den Konfigurationseintrag aus, für den du eine Zeitreise-Ansicht erstellen möchtest.\n\n**Zeitreise-Ansichten** ermöglichen es dir, historische Preisdaten so anzuzeigen, als wären sie die aktuellen Daten. Dies ist nützlich zum Testen von Automatisierungen oder zur Analyse vergangener Preismuster.",
                     "data": {
-                        "home_id": "Zuhause"
+                        "parent_entry_id": "Konfigurationseintrag"
+                    }
+                },
+                "time_offset": {
+                    "title": "Zeitversatz konfigurieren",
+                    "description": "Konfiguriere, wie weit zurück in der Zeit diese Ansicht reisen soll.\n\n**Empfohlen:** Verwende **≥2 Tage** Versatz, um Konflikte mit \"yesterday\"-Entitäten zu vermeiden, die ebenfalls historische Daten bereitstellen.\n\n**Beispiele:**\n• **-7 Tage**: Zeigt Preise von vor 7 Tagen\n• **-2 Tage, 3 Stunden**: Zeigt Preise von vor 2 Tagen und 3 Stunden\n• **-14 Tage**: Zeigt Preise von vor 2 Wochen",
+                    "data": {
+                        "virtual_time_offset_days": "Tage zurück",
+                        "time_offset": "Zusätzlicher Zeitversatz"
+                    },
+                    "data_description": {
+                        "virtual_time_offset_days": "Wie viele Tage in die Vergangenheit reisen. Slider-Bereich: 0 bis 374 Tage (≈1 Jahr). Empfohlen: ≥2 Tage, um Konflikte mit \"yesterday\"-Entitäten zu vermeiden.",
+                        "time_offset": "Optionale Feinabstimmung: Füge Stunden und/oder Minuten zum Tagesversatz hinzu. Die Zeit wird automatisch subtrahiert (weiter zurück reisen). Hinweis: Sekunden werden ignoriert - nur minutengenaue Präzision wird unterstützt."
+                    }
+                },
+                "init": {
+                    "title": "Zeitversatz neu konfigurieren",
+                    "description": "Aktualisiere den Zeitversatz für diese Zeitreise-Ansicht.",
+                    "data": {
+                        "virtual_time_offset_days": "Tage zurück",
+                        "time_offset": "Zusätzlicher Zeitversatz"
+                    },
+                    "data_description": {
+                        "virtual_time_offset_days": "Wie viele Tage in die Vergangenheit reisen. Slider-Bereich: 0 bis 374 Tage (≈1 Jahr). Empfohlen: ≥2 Tage, um Konflikte mit \"yesterday\"-Entitäten zu vermeiden.",
+                        "time_offset": "Optionale Feinabstimmung: Füge Stunden und/oder Minuten zum Tagesversatz hinzu. Die Zeit wird automatisch subtrahiert (weiter zurück reisen). Hinweis: Sekunden werden ignoriert - nur minutengenaue Präzision wird unterstützt."
                     }
                 }
             },
             "error": {
-                "api_error": "Fehler beim Abrufen der Zuhause von der Tibber API"
+                "no_time_offset": "Mindestens ein Zeitversatzwert muss negativ sein (nur historische Daten)."
             },
             "abort": {
-                "no_parent_entry": "Übergeordneter Eintrag nicht gefunden",
-                "no_access_token": "Kein Zugriffstoken verfügbar",
-                "home_not_found": "Ausgewähltes Zuhause nicht gefunden",
-                "api_error": "Fehler beim Abrufen der Zuhause von der Tibber API",
-                "no_available_homes": "Keine zusätzlichen Zuhause verfügbar. Alle Zuhause von deinem Tibber-Konto wurden bereits hinzugefügt."
+                "already_configured": "**Eine Zeitreise-Ansicht mit diesem exakten Zeitversatz existiert bereits.**\n\nBitte wähle einen anderen Versatz.",
+                "no_main_entries": "Keine Hauptkonfigurationseinträge gefunden. Füge zuerst ein Tibber-Zuhause hinzu.",
+                "parent_entry_not_found": "Ausgewählter Konfigurationseintrag nicht gefunden."
+            },
+            "time_units": {
+                "day": "{count} Tag",
+                "days": "{count} Tagen",
+                "hour": "{count} Stunde",
+                "hours": "{count} Stunden",
+                "minute": "{count} Minute",
+                "minutes": "{count} Minuten",
+                "ago": "vor {parts}",
+                "now": "jetzt"
             }
         }
     },
@@ -723,6 +780,24 @@
         }
     },
     "services": {
+        "get_price": {
+            "name": "Preisdaten abrufen",
+            "description": "Preisdaten für einen bestimmten Zeitraum mit automatischem Routing abrufen. Entwicklungs- und Test-Service für die price_info_for_range API-Funktion. Verwendet automatisch PRICE_INFO, PRICE_INFO_RANGE oder beide basierend auf der Zeitraumgrenze.",
+            "fields": {
+                "entry_id": {
+                    "name": "Eintrag-ID",
+                    "description": "Die Konfigurations-Eintrag-ID für die Tibber-Integration."
+                },
+                "start_time": {
+                    "name": "Startzeit",
+                    "description": "Start des Zeitraums (inklusive, zeitzonenbewusst)."
+                },
+                "end_time": {
+                    "name": "Endzeit",
+                    "description": "Ende des Zeitraums (exklusive, zeitzonenbewusst)."
+                }
+            }
+        },
         "get_apexcharts_yaml": {
             "name": "ApexCharts-Karten-YAML abrufen",
             "description": "Gibt einen fertigen YAML-Schnipsel für eine ApexCharts-Karte zurück, die Tibber-Preise für den ausgewählten Tag visualisiert. Verwende dies, um ganz einfach ein vorkonfiguriertes Diagramm zu deinem Dashboard hinzuzufügen. Das YAML verwendet den get_chartdata-Service für Daten.",
@@ -847,6 +922,11 @@
         }
     },
     "selector": {
+        "account_choice": {
+            "options": {
+                "new_token": "Neues Tibber-Konto per API-Token hinzufügen"
+            }
+        },
         "day": {
             "options": {
                 "yesterday": "Gestern",

@@ -1,6 +1,22 @@
 {
     "config": {
         "step": {
+            "account_choice": {
+                "title": "Kies account",
+                "description": "Je kunt een ander huis van een bestaande Tibber-account toevoegen of een nieuw API-token invoeren voor een ander account.",
+                "data": {
+                    "account_choice": "Account"
+                },
+                "submit": "Doorgaan →"
+            },
+            "new_token": {
+                "title": "Voer API-token in",
+                "description": "Stel Tibber Prijsinformatie & Beoordelingen in.\n\nOm een API-toegangstoken te genereren, bezoek https://developer.tibber.com.",
+                "data": {
+                    "access_token": "API-toegangstoken"
+                },
+                "submit": "Token valideren"
+            },
             "user": {
                 "description": "Stel Tibber Prijsinformatie & Beoordelingen in.\n\nOm een API-toegangstoken te genereren, bezoek https://developer.tibber.com.",
                 "data": {
@@ -40,15 +56,24 @@
             "cannot_connect": "Verbinding mislukt",
             "invalid_access_token": "Ongeldig toegangstoken",
             "missing_homes": "Het nieuwe toegangstoken heeft geen toegang tot alle geconfigureerde huizen. Gebruik een toegangstoken dat toegang heeft tot dezelfde Tibber-huizen.",
-            "invalid_yaml_syntax": "Ongeldige YAML-syntaxis. Controleer inspringen, dubbele punten en speciale tekens.",
+            "home_already_configured": "Dit huis is al geconfigureerd in een ander item. Elk huis kan slechts één keer worden geconfigureerd.",
+            "no_active_subscription": "Dit huis heeft geen actief Tibber-contract. Alleen huizen met actieve elektriciteitscontracten kunnen worden toegevoegd aan Home Assistant.",
+            "subscription_expired": "Het Tibber-contract voor dit huis is verlopen. Alleen huizen met actieve of toekomstige elektriciteitscontracten kunnen worden toegevoegd aan Home Assistant.",
+            "future_subscription_warning": "Let op: Het Tibber-contract voor dit huis is nog niet begonnen. De functionaliteit kan beperkt zijn totdat het contract actief wordt.",
+            "invalid_yaml_syntax": "Ongeldige YAML-syntaxis. Controleer inspringingen, dubbele punten en speciale tekens.",
             "invalid_yaml_structure": "YAML moet een woordenboek/object zijn (sleutel: waarde-paren), geen lijst of platte tekst.",
-            "service_call_failed": "Service-aanroep validatie mislukt: {error_detail}"
+            "service_call_failed": "Service-aanroep validatie mislukt: {error_detail}",
+            "missing_entry_id": "Entry ID is vereist maar niet opgegeven.",
+            "invalid_entry_id": "Ongeldige entry ID of entry niet gevonden.",
+            "missing_home_id": "Huis-ID ontbreekt in de configuratie.",
+            "user_data_not_available": "Gebruikersgegevens niet beschikbaar. Vernieuw eerst de gebruikersgegevens.",
+            "price_fetch_failed": "Prijsgegevens ophalen mislukt. Controleer de logs voor details."
         },
         "abort": {
-            "already_configured": "Integratie is al geconfigureerd",
+            "already_configured": "Alle beschikbare Tibber-huizen zijn al geconfigureerd. Elk huis kan slechts één keer worden geconfigureerd.",
             "entry_not_found": "Tibber-configuratie-item niet gevonden.",
-            "setup_complete": "Installatie voltooid! Je kunt aanvullende opties voor Tibber-prijzen wijzigen in de integratie-opties na het sluiten van dit dialoogvenster.",
-            "reauth_successful": "Herauthenticatie succesvol. De integratie is bijgewerkt met het nieuwe toegangstoken."
+            "setup_complete": "Installatie voltooid! Je kunt extra opties voor Tibber Prices wijzigen in de integratie-opties na het sluiten van deze dialoog.",
+            "reauth_successful": "Herauthenticatie geslaagd. De integratie is bijgewerkt met het nieuwe toegangstoken."
         }
     },
     "common": {
@@ -57,27 +82,59 @@
     "config_subentries": {
         "home": {
             "initiate_flow": {
-                "user": "Tibber-huis toevoegen"
+                "user": "Tijdreisweergave maken"
             },
-            "title": "Tibber-huis toevoegen",
+            "title": "Tijdreisweergave maken",
             "step": {
                 "user": {
-                    "title": "Tibber-huis toevoegen",
-                    "description": "Selecteer een huis om toe te voegen aan je Tibber-integratie.\n\n**Opmerking:** Na het toevoegen van dit huis kun je extra huizen toevoegen via het contextmenu van de integratie door \"Tibber-huis toevoegen\" te selecteren.",
+                    "title": "Configuratie-item selecteren",
+                    "description": "Selecteer het configuratie-item waarvoor je een tijdreisweergave wilt maken.\n\n**Tijdreisweergaves** stellen je in staat om historische prijsgegevens te zien alsof het de huidige tijd is. Dit is handig voor het testen van automatiseringen of het analyseren van eerdere prijspatronen.",
                     "data": {
-                        "home_id": "Huis"
+                        "parent_entry_id": "Configuratie-item"
+                    }
+                },
+                "time_offset": {
+                    "title": "Tijdverschuiving configureren",
+                    "description": "Configureer hoe ver terug in de tijd deze weergave moet reizen.\n\n**Aanbevolen:** Gebruik **≥2 dagen** verschuiving om conflicten met \"yesterday\"-entiteiten te vermijden die ook historische gegevens bieden.\n\n**Voorbeelden:**\n• **-7 dagen**: Toon prijzen van 7 dagen geleden\n• **-2 dagen, 3 uur**: Toon prijzen van 2 dagen en 3 uur geleden\n• **-14 dagen**: Toon prijzen van 2 weken geleden",
+                    "data": {
+                        "virtual_time_offset_days": "Dagen terug",
+                        "time_offset": "Extra tijdverschuiving"
+                    },
+                    "data_description": {
+                        "virtual_time_offset_days": "Hoeveel dagen terug in de tijd reizen. Schuifregelaar bereik: 0 tot 374 dagen (≈1 jaar). Aanbevolen: ≥2 dagen om conflicten met \"yesterday\"-entiteiten te vermijden.",
+                        "time_offset": "Optionele fijnafstemming: Voeg uren en/of minuten toe aan de dagverschuiving. De tijd wordt automatisch afgetrokken (verder terug reizen). Let op: Seconden worden genegeerd - alleen precisie op minuutniveau wordt ondersteund."
+                    }
+                },
+                "init": {
+                    "title": "Tijdverschuiving opnieuw configureren",
+                    "description": "Werk de tijdverschuiving voor deze tijdreisweergave bij.",
+                    "data": {
+                        "virtual_time_offset_days": "Dagen terug",
+                        "time_offset": "Extra tijdverschuiving"
+                    },
+                    "data_description": {
+                        "virtual_time_offset_days": "Hoeveel dagen terug in de tijd reizen. Schuifregelaar bereik: 0 tot 374 dagen (≈1 jaar). Aanbevolen: ≥2 dagen om conflicten met \"yesterday\"-entiteiten te vermijden.",
+                        "time_offset": "Optionele fijnafstemming: Voeg uren en/of minuten toe aan de dagverschuiving. De tijd wordt automatisch afgetrokken (verder terug reizen). Let op: Seconden worden genegeerd - alleen precisie op minuutniveau wordt ondersteund."
                     }
                 }
             },
             "error": {
-                "api_error": "Ophalen van huizen van Tibber API mislukt"
+                "no_time_offset": "Ten minste één tijdverschuivingswaarde moet negatief zijn (alleen historische gegevens)."
             },
             "abort": {
-                "no_parent_entry": "Bovenliggend item niet gevonden",
-                "no_access_token": "Geen toegangstoken beschikbaar",
-                "home_not_found": "Geselecteerd huis niet gevonden",
-                "api_error": "Ophalen van huizen van Tibber API mislukt",
-                "no_available_homes": "Geen extra huizen beschikbaar om toe te voegen. Alle huizen van je Tibber-account zijn al toegevoegd."
+                "already_configured": "**Een tijdreis-weergave met deze exacte tijdverschuiving bestaat al.**\n\nKies een andere verschuiving.",
+                "no_main_entries": "Geen hoofdconfiguratie-items gevonden. Voeg eerst een Tibber-huis toe.",
+                "parent_entry_not_found": "Geselecteerd configuratie-item niet gevonden."
+            },
+            "time_units": {
+                "day": "{count} dag",
+                "days": "{count} dagen",
+                "hour": "{count} uur",
+                "hours": "{count} uur",
+                "minute": "{count} minuut",
+                "minutes": "{count} minuten",
+                "ago": "{parts} geleden",
+                "now": "nu"
             }
         }
     },
@@ -719,6 +776,24 @@
         }
     },
     "services": {
+        "get_price": {
+            "name": "Prijsgegevens ophalen",
+            "description": "Haal prijsgegevens op voor een specifiek tijdsbereik met automatische routing. Ontwikkelings- en testservice voor de price_info_for_range API-functie. Gebruikt automatisch PRICE_INFO, PRICE_INFO_RANGE of beide op basis van de tijdsbereikgrens.",
+            "fields": {
+                "entry_id": {
+                    "name": "Entry ID",
+                    "description": "De configuratie entry ID voor de Tibber integratie."
+                },
+                "start_time": {
+                    "name": "Starttijd",
+                    "description": "Begin van het tijdsbereik (inclusief, tijdzonebewust)."
+                },
+                "end_time": {
+                    "name": "Eindtijd",
+                    "description": "Einde van het tijdsbereik (exclusief, tijdzonebewust)."
+                }
+            }
+        },
         "get_apexcharts_yaml": {
             "name": "ApexCharts-kaart YAML ophalen",
             "description": "Retourneert een kant-en-klaar YAML-fragment voor een ApexCharts-kaart die Tibber-prijzen voor de geselecteerde dag visualiseert. Gebruik dit om eenvoudig een vooraf geconfigureerd diagram aan je dashboard toe te voegen. De YAML gebruikt de get_chartdata-service voor gegevens.",
@@ -843,6 +918,11 @@
         }
     },
     "selector": {
+        "account_choice": {
+            "options": {
+                "new_token": "Nieuw Tibber-account toevoegen met API-token"
+            }
+        },
         "day": {
             "options": {
                 "yesterday": "Gisteren",

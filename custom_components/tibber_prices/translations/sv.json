@@ -1,6 +1,22 @@
 {
     "config": {
         "step": {
+            "account_choice": {
+                "title": "Välj konto",
+                "description": "Du kan lägga till ett annat hem från ett befintligt Tibber-konto eller ange ett nytt API-token för ett annat konto.",
+                "data": {
+                    "account_choice": "Konto"
+                },
+                "submit": "Fortsätt →"
+            },
+            "new_token": {
+                "title": "Ange API-token",
+                "description": "Konfigurera Tibber Prisinformation & Betyg.\n\nFör att generera en API-åtkomsttoken, besök https://developer.tibber.com.",
+                "data": {
+                    "access_token": "API-åtkomsttoken"
+                },
+                "submit": "Validera token"
+            },
             "user": {
                 "description": "Konfigurera Tibber Prisinformation & Betyg.\n\nFör att generera en API-åtkomsttoken, besök https://developer.tibber.com.",
                 "data": {
@@ -39,15 +55,24 @@
             "unknown": "Oväntat fel",
             "cannot_connect": "Kunde inte ansluta",
             "invalid_access_token": "Ogiltig åtkomsttoken",
-            "missing_homes": "Den nya åtkomsttoken har inte åtkomst till alla konfigurerade hem. Vänligen använd en åtkomsttoken som har åtkomst till samma Tibber-hem.",
-            "invalid_yaml_syntax": "Ogiltig YAML-syntax. Kontrollera indrag, kolon och specialtecken.",
+            "missing_homes": "Den nya åtkomsttoken har inte åtkomst till alla konfigurerade hem. Använd en åtkomsttoken som har åtkomst till samma Tibber-hem.",
+            "home_already_configured": "Detta hem är redan konfigurerat i en annan post. Varje hem kan endast konfigureras en gång.",
+            "no_active_subscription": "Detta hem har inget aktivt Tibber-avtal. Endast hem med aktiva elavtal kan läggas till i Home Assistant.",
+            "subscription_expired": "Tibber-avtalet för detta hem har gått ut. Endast hem med aktiva eller framtida elavtal kan läggas till i Home Assistant.",
+            "future_subscription_warning": "Obs: Tibber-avtalet för detta hem har inte startat än. Funktionaliteten kan vara begränsad tills avtalet blir aktivt.",
+            "invalid_yaml_syntax": "Ogiltig YAML-syntax. Kontrollera indragning, kolon och specialtecken.",
             "invalid_yaml_structure": "YAML måste vara en ordbok/objekt (nyckel: värde-par), inte en lista eller ren text.",
-            "service_call_failed": "Service-anrop validering misslyckades: {error_detail}"
+            "service_call_failed": "Tjänsteanropsvalidering misslyckades: {error_detail}",
+            "missing_entry_id": "Post-ID krävs men tillhandahölls inte.",
+            "invalid_entry_id": "Ogiltig post-ID eller post hittades inte.",
+            "missing_home_id": "Hem-ID saknas från konfigurationsposten.",
+            "user_data_not_available": "Användardata är inte tillgänglig. Uppdatera användardata först.",
+            "price_fetch_failed": "Kunde inte hämta prisdata. Kontrollera loggarna för detaljer."
         },
         "abort": {
-            "already_configured": "Integrationen är redan konfigurerad",
+            "already_configured": "Alla tillgängliga Tibber-hem är redan konfigurerade. Varje hem kan endast konfigureras en gång.",
             "entry_not_found": "Tibber-konfigurationspost hittades inte.",
-            "setup_complete": "Konfiguration klar! Du kan ändra ytterligare alternativ för Tibber-priser i integrationens alternativ efter att ha stängt denna dialog.",
+            "setup_complete": "Installation klar! Du kan ändra ytterligare alternativ för Tibber Prices i integrationens alternativ efter att ha stängt denna dialog.",
             "reauth_successful": "Omautentisering lyckades. Integrationen har uppdaterats med den nya åtkomsttoken."
         }
     },
@@ -57,27 +82,59 @@
     "config_subentries": {
         "home": {
             "initiate_flow": {
-                "user": "Lägg till Tibber-hem"
+                "user": "Skapa tidsresevy"
             },
-            "title": "Lägg till Tibber-hem",
+            "title": "Skapa tidsresevy",
             "step": {
                 "user": {
-                    "title": "Lägg till Tibber-hem",
-                    "description": "Välj ett hem att lägga till i din Tibber-integration.\n\n**Obs:** Efter att ha lagt till detta hem kan du lägga till ytterligare hem från integrationens kontextmeny genom att välja \"Lägg till Tibber-hem\".",
+                    "title": "Välj konfigurationspost",
+                    "description": "Välj konfigurationsposten som du vill skapa en tidsresevy för.\n\n**Tidsresevyer** låter dig se historiska prisdata som om det vore nuvarande tid. Detta är användbart för att testa automationer eller analysera tidigare prismönster.",
                     "data": {
-                        "home_id": "Hem"
+                        "parent_entry_id": "Konfigurationspost"
+                    }
+                },
+                "time_offset": {
+                    "title": "Konfigurera tidsförskjutning",
+                    "description": "Konfigurera hur långt tillbaka i tiden denna vy ska resa.\n\n**Rekommenderat:** Använd **≥2 dagar** förskjutning för att undvika konflikter med \"yesterday\"-entiteter som också tillhandahåller historisk data.\n\n**Exempel:**\n• **-7 dagar**: Visa priser från 7 dagar sedan\n• **-2 dagar, 3 timmar**: Visa priser från 2 dagar och 3 timmar sedan\n• **-14 dagar**: Visa priser från 2 veckor sedan",
+                    "data": {
+                        "virtual_time_offset_days": "Dagar tillbaka",
+                        "time_offset": "Extra tidsförskjutning"
+                    },
+                    "data_description": {
+                        "virtual_time_offset_days": "Hur många dagar att resa tillbaka i tiden. Skjutreglage område: 0 till 374 dagar (≈1 år). Rekommenderat: ≥2 dagar för att undvika konflikter med \"yesterday\"-entiteter.",
+                        "time_offset": "Valfri finjustering: Lägg till timmar och/eller minuter till dagförskjutningen. Tiden subtraheras automatiskt (res längre tillbaka). Obs: Sekunder ignoreras - endast minutbaserad precision stöds."
+                    }
+                },
+                "init": {
+                    "title": "Konfigurera om tidsförskjutning",
+                    "description": "Uppdatera tidsförskjutningen för denna tidsresevy.",
+                    "data": {
+                        "virtual_time_offset_days": "Dagar tillbaka",
+                        "time_offset": "Extra tidsförskjutning"
+                    },
+                    "data_description": {
+                        "virtual_time_offset_days": "Hur många dagar att resa tillbaka i tiden. Skjutreglage område: 0 till 374 dagar (≈1 år). Rekommenderat: ≥2 dagar för att undvika konflikter med \"yesterday\"-entiteter.",
+                        "time_offset": "Valfri finjustering: Lägg till timmar och/eller minuter till dagförskjutningen. Tiden subtraheras automatiskt (res längre tillbaka). Obs: Sekunder ignoreras - endast minutbaserad precision stöds."
                     }
                 }
             },
             "error": {
-                "api_error": "Kunde inte hämta hem från Tibber API"
+                "no_time_offset": "Minst ett tidsförskjutningsvärde måste vara negativt (endast historiska data)."
             },
             "abort": {
-                "no_parent_entry": "Överordnad post hittades inte",
-                "no_access_token": "Ingen åtkomsttoken tillgänglig",
-                "home_not_found": "Valt hem hittades inte",
-                "api_error": "Kunde inte hämta hem från Tibber API",
-                "no_available_homes": "Inga ytterligare hem tillgängliga att lägga till. Alla hem från ditt Tibber-konto har redan lagts till."
+                "already_configured": "**En tidsresevy med denna exakta tidsförskjutning existerar redan.**\n\nVälj en annan förskjutning.",
+                "no_main_entries": "Inga huvudkonfigurationsposter hittades. Lägg först till ett Tibber-hem.",
+                "parent_entry_not_found": "Vald konfigurationspost hittades inte."
+            },
+            "time_units": {
+                "day": "{count} dag",
+                "days": "{count} dagar",
+                "hour": "{count} timme",
+                "hours": "{count} timmar",
+                "minute": "{count} minut",
+                "minutes": "{count} minuter",
+                "ago": "{parts} sedan",
+                "now": "nu"
             }
         }
     },
@@ -719,6 +776,24 @@
         }
     },
     "services": {
+        "get_price": {
+            "name": "Hämta prisdata",
+            "description": "Hämta prisdata för ett specifikt tidsintervall med automatisk routing. Utvecklings- och testtjänst för price_info_for_range API-funktionen. Använder automatiskt PRICE_INFO, PRICE_INFO_RANGE eller båda baserat på tidsintervallgränsen.",
+            "fields": {
+                "entry_id": {
+                    "name": "Post-ID",
+                    "description": "Konfigurationspost-ID för Tibber-integrationen."
+                },
+                "start_time": {
+                    "name": "Starttid",
+                    "description": "Start av tidsintervallet (inklusiv, tidszonskänslig)."
+                },
+                "end_time": {
+                    "name": "Sluttid",
+                    "description": "Slut av tidsintervallet (exklusiv, tidszonskänslig)."
+                }
+            }
+        },
         "get_apexcharts_yaml": {
             "name": "Hämta ApexCharts-kort YAML",
             "description": "Returnerar ett färdigt YAML-utklipp för ett ApexCharts-kort som visualiserar Tibber-priser för den valda dagen. Använd detta för att enkelt lägga till ett förkonfigurerat diagram till din instrumentpanel. YAML kommer att använda get_chartdata-tjänsten för data.",
@@ -843,6 +918,11 @@
         }
     },
     "selector": {
+        "account_choice": {
+            "options": {
+                "new_token": "Lägg till nytt Tibber-konto med API-token"
+            }
+        },
         "day": {
             "options": {
                 "yesterday": "Igår",

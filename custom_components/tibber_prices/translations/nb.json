@@ -1,6 +1,22 @@
 {
     "config": {
         "step": {
+            "account_choice": {
+                "title": "Velg konto",
+                "description": "Du kan legge til et nytt hjem fra en eksisterende Tibber-konto eller skrive inn et nytt API-token for en annen konto.",
+                "data": {
+                    "account_choice": "Konto"
+                },
+                "submit": "Fortsett →"
+            },
+            "new_token": {
+                "title": "Skriv inn API-token",
+                "description": "Sett opp Tibber Prisinformasjon & Vurderinger.\n\nFor å generere et API-tilgangstoken, besøk https://developer.tibber.com.",
+                "data": {
+                    "access_token": "API-tilgangstoken"
+                },
+                "submit": "Valider token"
+            },
             "user": {
                 "description": "Sett opp Tibber Prisinformasjon & Vurderinger.\n\nFor å generere et API-tilgangstoken, besøk https://developer.tibber.com.",
                 "data": {
@@ -40,15 +56,24 @@
             "cannot_connect": "Kunne ikke koble til",
             "invalid_access_token": "Ugyldig tilgangstoken",
             "missing_homes": "Det nye tilgangstokenet har ikke tilgang til alle konfigurerte hjem. Vennligst bruk et tilgangstoken som har tilgang til de samme Tibber-hjemmene.",
+            "home_already_configured": "Dette hjemmet er allerede konfigurert i en annen oppføring. Hvert hjem kan kun konfigureres én gang.",
+            "no_active_subscription": "Dette hjemmet har ikke en aktiv Tibber-kontrakt. Bare hjem med aktive strømkontrakter kan legges til Home Assistant.",
+            "subscription_expired": "Tibber-kontrakten for dette hjemmet har utløpt. Bare hjem med aktive eller fremtidige strømkontrakter kan legges til Home Assistant.",
+            "future_subscription_warning": "Merk: Tibber-kontrakten for dette hjemmet har ikke startet ennå. Funksjonaliteten kan være begrenset til kontrakten blir aktiv.",
             "invalid_yaml_syntax": "Ugyldig YAML-syntaks. Vennligst sjekk innrykk, kolon og spesialtegn.",
             "invalid_yaml_structure": "YAML må være en ordbok/objekt (nøkkel: verdi-par), ikke en liste eller ren tekst.",
-            "service_call_failed": "Service-kall validering feilet: {error_detail}"
+            "service_call_failed": "Service-kall validering feilet: {error_detail}",
+            "missing_entry_id": "Oppførings-ID er påkrevd, men ble ikke oppgitt.",
+            "invalid_entry_id": "Ugyldig oppførings-ID eller oppføring ikke funnet.",
+            "missing_home_id": "Hjem-ID mangler fra konfigurasjonsoppføringen.",
+            "user_data_not_available": "Brukerdata er ikke tilgjengelig. Vennligst oppdater brukerdata først.",
+            "price_fetch_failed": "Kunne ikke hente prisdata. Vennligst sjekk loggene for detaljer."
         },
         "abort": {
-            "already_configured": "Integrasjonen er allerede konfigurert",
+            "already_configured": "Alle tilgjengelige Tibber-hjem er allerede konfigurert. Hvert hjem kan kun konfigureres én gang.",
             "entry_not_found": "Tibber-konfigurasjonsoppføring ikke funnet.",
-            "setup_complete": "Oppsett fullført! Du kan endre flere innstillinger for Tibber-priser i integrasjonens alternativer etter å ha lukket denne dialogen.",
-            "reauth_successful": "Autentisering vellykket. Integrasjonen er oppdatert med det nye tilgangstokenet."
+            "setup_complete": "Oppsett fullført! Du kan endre ytterligere alternativer for Tibber Prices i integrasjonens alternativer etter å ha lukket denne dialogen.",
+            "reauth_successful": "Ny autentisering vellykket. Integrasjonen har blitt oppdatert med det nye tilgangstokenet."
         }
     },
     "common": {
@@ -57,27 +82,59 @@
     "config_subentries": {
         "home": {
             "initiate_flow": {
-                "user": "Legg til Tibber-hjem"
+                "user": "Opprett tidsreisevisning"
             },
-            "title": "Legg til Tibber-hjem",
+            "title": "Opprett tidsreisevisning",
             "step": {
                 "user": {
-                    "title": "Legg til Tibber-hjem",
-                    "description": "Velg et hjem å legge til i din Tibber-integrasjon.\n\n**Merk:** Etter å ha lagt til dette hjemmet, kan du legge til flere hjem fra integrasjonens kontekstmeny ved å velge \"Legg til Tibber-hjem\".",
+                    "title": "Velg konfigurasjonsoppføring",
+                    "description": "Velg konfigurasjonsoppføringen du vil opprette en tidsreisevisning for.\n\n**Tidsreisevisninger** lar deg se historiske prisdata som om det var nåværende tid. Dette er nyttig for å teste automatiseringer eller analysere tidligere prismønstre.",
                     "data": {
-                        "home_id": "Hjem"
+                        "parent_entry_id": "Konfigurasjonsoppføring"
+                    }
+                },
+                "time_offset": {
+                    "title": "Konfigurer tidsforskyvning",
+                    "description": "Konfigurer hvor langt tilbake i tid denne visningen skal reise.\n\n**Anbefalt:** Bruk **≥2 dager** forskyvning for å unngå konflikter med \"yesterday\"-entiteter som også gir historiske data.\n\n**Eksempler:**\n• **-7 dager**: Vis priser fra 7 dager siden\n• **-2 dager, 3 timer**: Vis priser fra 2 dager og 3 timer siden\n• **-14 dager**: Vis priser fra 2 uker siden",
+                    "data": {
+                        "virtual_time_offset_days": "Dager tilbake",
+                        "time_offset": "Ekstra tidsforskyvning"
+                    },
+                    "data_description": {
+                        "virtual_time_offset_days": "Hvor mange dager å reise tilbake i tid. Glidebryter-område: 0 til 374 dager (≈1 år). Anbefalt: ≥2 dager for å unngå konflikter med \"yesterday\"-entiteter.",
+                        "time_offset": "Valgfri finjustering: Legg til timer og/eller minutter til dagesforskyvningen. Tiden trekkes automatisk fra (reis lenger tilbake). Merk: Sekunder ignoreres - kun minuttbasert presisjon støttes."
+                    }
+                },
+                "init": {
+                    "title": "Konfigurer tidsforskyvning på nytt",
+                    "description": "Oppdater tidsforskyvningen for denne tidsreisevisningen.",
+                    "data": {
+                        "virtual_time_offset_days": "Dager tilbake",
+                        "time_offset": "Ekstra tidsforskyvning"
+                    },
+                    "data_description": {
+                        "virtual_time_offset_days": "Hvor mange dager å reise tilbake i tid. Glidebryter-område: 0 til 374 dager (≈1 år). Anbefalt: ≥2 dager for å unngå konflikter med \"yesterday\"-entiteter.",
+                        "time_offset": "Valgfri finjustering: Legg til timer og/eller minutter til dagesforskyvningen. Tiden trekkes automatisk fra (reis lenger tilbake). Merk: Sekunder ignoreres - kun minuttbasert presisjon støttes."
                     }
                 }
             },
             "error": {
-                "api_error": "Kunne ikke hente hjem fra Tibber API"
+                "no_time_offset": "Minst én tidsforskyvningsverdi må være negativ (kun historiske data)."
             },
             "abort": {
-                "no_parent_entry": "Overordnet oppføring ikke funnet",
-                "no_access_token": "Ingen tilgangstoken tilgjengelig",
-                "home_not_found": "Valgt hjem ikke funnet",
-                "api_error": "Kunne ikke hente hjem fra Tibber API",
-                "no_available_homes": "Ingen flere hjem tilgjengelig for å legge til. Alle hjem fra din Tibber-konto er allerede lagt til."
+                "already_configured": "**En tidsreisevisning med denne eksakte tidsforskyvningen eksisterer allerede.**\n\nVelg en annen forskyvning.",
+                "no_main_entries": "Ingen hovedkonfigurasjonsoppføringer funnet. Legg til et Tibber-hjem først.",
+                "parent_entry_not_found": "Valgt konfigurasjonsoppføring ikke funnet."
+            },
+            "time_units": {
+                "day": "{count} dag",
+                "days": "{count} dager",
+                "hour": "{count} time",
+                "hours": "{count} timer",
+                "minute": "{count} minutt",
+                "minutes": "{count} minutter",
+                "ago": "{parts} siden",
+                "now": "nå"
             }
         }
     },
@@ -719,6 +776,24 @@
         }
     },
     "services": {
+        "get_price": {
+            "name": "Hent prisdata",
+            "description": "Hent prisdata for et spesifikt tidsrom med automatisk ruting. Utviklings- og testtjeneste for price_info_for_range API-funksjonen. Bruker automatisk PRICE_INFO, PRICE_INFO_RANGE eller begge basert på tidsromgrensen.",
+            "fields": {
+                "entry_id": {
+                    "name": "Oppførings-ID",
+                    "description": "Konfigurasjonsoppførings-IDen for Tibber-integrasjonen."
+                },
+                "start_time": {
+                    "name": "Starttid",
+                    "description": "Start av tidsrommet (inklusiv, tidssonetilpasset)."
+                },
+                "end_time": {
+                    "name": "Sluttid",
+                    "description": "Slutt av tidsrommet (eksklusiv, tidssonetilpasset)."
+                }
+            }
+        },
         "get_apexcharts_yaml": {
             "name": "Hent ApexCharts-kort YAML",
             "description": "Returnerer en klar-til-kopier YAML-snippet for et ApexCharts-kort som visualiserer Tibber-priser for den valgte dagen. Bruk dette for å enkelt legge til et forhåndskonfigurert diagram til dashboardet ditt. YAML vil bruke get_chartdata-tjenesten for data.",
@@ -843,6 +918,11 @@
         }
     },
     "selector": {
+        "account_choice": {
+            "options": {
+                "new_token": "Legg til ny Tibber-konto med API-token"
+            }
+        },
         "day": {
             "options": {
                 "yesterday": "I går",
