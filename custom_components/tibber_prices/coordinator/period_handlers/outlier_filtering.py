@@ -18,6 +18,7 @@ import logging
 from typing import NamedTuple
 
 _LOGGER = logging.getLogger(__name__)
+_LOGGER_DETAILS = logging.getLogger(__name__ + ".details")
 
 # Outlier filtering constants
 MIN_CONTEXT_SIZE = 3  # Minimum intervals needed before/after for analysis
@@ -52,7 +53,7 @@ def _should_skip_tail_check(
 ) -> bool:
     """Return True when remaining intervals fall inside tail window and log why."""
     if remaining_intervals < tail_window:
-        _LOGGER.debug(
+        _LOGGER_DETAILS.debug(
             "%sSpike at %s: Skipping %s check (only %d intervals remaining)",
             INDENT_L0,
             interval_label,
@@ -190,7 +191,7 @@ def _validate_spike_candidate(
 
     context_diff_pct = abs(avg_after - avg_before) / avg_before if avg_before > 0 else 0
     if context_diff_pct > candidate.flexibility_ratio:
-        _LOGGER.debug(
+        _LOGGER_DETAILS.debug(
             "%sInterval %s: Context unstable (%.1f%% change) - not a spike",
             INDENT_L0,
             candidate.current.get("startsAt", "unknown interval"),
@@ -204,7 +205,7 @@ def _validate_spike_candidate(
         "asymmetry",
         candidate.current.get("startsAt", "unknown interval"),
     ) and not _check_symmetry(avg_before, avg_after, candidate.stats["std_dev"]):
-        _LOGGER.debug(
+        _LOGGER_DETAILS.debug(
             "%sSpike at %s rejected: Asymmetric (before=%.2f, after=%.2f ct/kWh)",
             INDENT_L0,
             candidate.current.get("startsAt", "unknown interval"),
@@ -222,7 +223,7 @@ def _validate_spike_candidate(
         return True
 
     if _detect_zigzag_pattern(candidate.analysis_window, candidate.stats["std_dev"]):
-        _LOGGER.debug(
+        _LOGGER_DETAILS.debug(
             "%sSpike at %s rejected: Zigzag/cluster pattern detected",
             INDENT_L0,
             candidate.current.get("startsAt", "unknown interval"),
@@ -330,7 +331,7 @@ def filter_price_outliers(
         result.append(smoothed)
         smoothed_count += 1
 
-        _LOGGER.debug(
+        _LOGGER_DETAILS.debug(
             "%sSmoothed spike at %s: %.2f → %.2f ct/kWh (residual: %.2f, tolerance: %.2f, trend_slope: %.4f)",
             INDENT_L0,
             current.get("startsAt", f"index {i}"),

@@ -19,6 +19,7 @@ from .level_filtering import (
 from .types import TibberPricesIntervalCriteria
 
 _LOGGER = logging.getLogger(__name__)
+_LOGGER_DETAILS = logging.getLogger(__name__ + ".details")
 
 # Module-local log indentation (each module starts at level 0)
 INDENT_L0 = ""  # Entry point / main function
@@ -92,7 +93,7 @@ def build_periods(  # noqa: PLR0913, PLR0915, PLR0912 - Complex period building 
         level_filter_active = True
         filter_direction = "≥" if reverse_sort else "≤"
         gap_info = f", gap_tolerance={gap_count}" if gap_count > 0 else ""
-        _LOGGER.debug(
+        _LOGGER_DETAILS.debug(
             "%sLevel filter active: %s (order %s, require interval level %s filter level%s)",
             INDENT_L0,
             level_filter.upper(),
@@ -102,7 +103,7 @@ def build_periods(  # noqa: PLR0913, PLR0915, PLR0912 - Complex period building 
         )
     else:
         status = "RELAXED to ANY" if (level_filter and level_filter.lower() == "any") else "DISABLED (not configured)"
-        _LOGGER.debug("%sLevel filter: %s (accepting all levels)", INDENT_L0, status)
+        _LOGGER_DETAILS.debug("%sLevel filter: %s (accepting all levels)", INDENT_L0, status)
 
     periods: list[list[dict]] = []
     current_period: list[dict] = []
@@ -191,14 +192,14 @@ def build_periods(  # noqa: PLR0913, PLR0915, PLR0912 - Complex period building 
 
     # Log detailed filter statistics
     if intervals_checked > 0:
-        _LOGGER.debug(
+        _LOGGER_DETAILS.debug(
             "%sFilter statistics: %d intervals checked",
             INDENT_L0,
             intervals_checked,
         )
         if intervals_filtered_by_flex > 0:
             flex_pct = (intervals_filtered_by_flex / intervals_checked) * 100
-            _LOGGER.debug(
+            _LOGGER_DETAILS.debug(
                 "%s  Filtered by FLEX (price too far from ref): %d/%d (%.1f%%)",
                 INDENT_L0,
                 intervals_filtered_by_flex,
@@ -207,7 +208,7 @@ def build_periods(  # noqa: PLR0913, PLR0915, PLR0912 - Complex period building 
             )
         if intervals_filtered_by_min_distance > 0:
             distance_pct = (intervals_filtered_by_min_distance / intervals_checked) * 100
-            _LOGGER.debug(
+            _LOGGER_DETAILS.debug(
                 "%s  Filtered by MIN_DISTANCE (price too close to avg): %d/%d (%.1f%%)",
                 INDENT_L0,
                 intervals_filtered_by_min_distance,
@@ -216,7 +217,7 @@ def build_periods(  # noqa: PLR0913, PLR0915, PLR0912 - Complex period building 
             )
         if level_filter_active and intervals_filtered_by_level > 0:
             level_pct = (intervals_filtered_by_level / intervals_checked) * 100
-            _LOGGER.debug(
+            _LOGGER_DETAILS.debug(
                 "%s  Filtered by LEVEL (wrong price level): %d/%d (%.1f%%)",
                 INDENT_L0,
                 intervals_filtered_by_level,

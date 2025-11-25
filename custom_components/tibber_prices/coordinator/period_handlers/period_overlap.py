@@ -9,6 +9,7 @@ if TYPE_CHECKING:
     from custom_components.tibber_prices.coordinator.time_service import TibberPricesTimeService
 
 _LOGGER = logging.getLogger(__name__)
+_LOGGER_DETAILS = logging.getLogger(__name__ + ".details")
 
 # Module-local log indentation (each module starts at level 0)
 INDENT_L0 = ""  # Entry point / main function

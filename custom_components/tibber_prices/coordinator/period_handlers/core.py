@@ -127,9 +127,13 @@ def calculate_periods(
     # High flex (>25%) makes outlier detection too permissive, accepting
     # unstable price contexts as "normal". This breaks period formation.
     # User's flex setting still applies to period criteria (in_flex check).
+
+    # Import details logger locally (core.py imports logger locally in function)
+    _LOGGER_DETAILS = logging.getLogger(__name__ + ".details")  # noqa: N806
+
     outlier_flex = min(abs(flex) * 100, MAX_OUTLIER_FLEX * 100)
     if abs(flex) * 100 > MAX_OUTLIER_FLEX * 100:
-        _LOGGER.debug(
+        _LOGGER_DETAILS.debug(
             "%sOutlier filtering: Using capped flex %.1f%% (user setting: %.1f%%)",
             INDENT_L0,
             outlier_flex,

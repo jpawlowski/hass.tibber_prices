@@ -24,6 +24,7 @@ from .types import (
 )
 
 _LOGGER = logging.getLogger(__name__)
+_LOGGER_DETAILS = logging.getLogger(__name__ + ".details")
 
 # Flex thresholds for warnings (see docs/development/period-calculation-theory.md)
 # With relaxation active, high base flex is counterproductive (reduces relaxation effectiveness)
@@ -204,38 +205,38 @@ def calculate_periods_with_relaxation(  # noqa: PLR0913, PLR0915 - Per-day relax
 
     # Detailed DEBUG-level context header
     period_type_full = "PEAK PRICE (most expensive)" if config.reverse_sort else "BEST PRICE (cheapest)"
-    _LOGGER.debug(
+    _LOGGER_DETAILS.debug(
         "%s========== %s PERIODS ==========",
         INDENT_L0,
         period_type_full,
     )
-    _LOGGER.debug(
+    _LOGGER_DETAILS.debug(
         "%sRelaxation: %s",
         INDENT_L0,
         "ENABLED (user setting: ON)" if enable_relaxation else "DISABLED by user configuration",
     )
-    _LOGGER.debug(
+    _LOGGER_DETAILS.debug(
         "%sBase config: flex=%.1f%%, min_length=%d min",
         INDENT_L0,
         abs(config.flex) * 100,
         config.min_period_length,
     )
     if enable_relaxation:
-        _LOGGER.debug(
+        _LOGGER_DETAILS.debug(
             "%sRelaxation target: %d periods per day",
             INDENT_L0,
             min_periods,
         )
-        _LOGGER.debug(
+        _LOGGER_DETAILS.debug(
             "%sRelaxation strategy: 3%% fixed flex increment per step (%d flex levels x 2 filter combinations)",
             INDENT_L0,
             max_relaxation_attempts,
         )
-        _LOGGER.debug(
+        _LOGGER_DETAILS.debug(
             "%sEarly exit: After EACH filter combination when target reached",
             INDENT_L0,
         )
-    _LOGGER.debug(
+    _LOGGER_DETAILS.debug(
         "%s=============================================",
         INDENT_L0,
     )
@@ -266,7 +267,7 @@ def calculate_periods_with_relaxation(  # noqa: PLR0913, PLR0915 - Per-day relax
         "Calculating baseline periods for %d days...",
         total_days,
     )
-    _LOGGER.debug(
+    _LOGGER_DETAILS.debug(
         "%sProcessing ALL %d price intervals together (yesterday+today+tomorrow, allows midnight crossing)",
         INDENT_L1,
         len(all_prices),
@@ -285,7 +286,7 @@ def calculate_periods_with_relaxation(  # noqa: PLR0913, PLR0915 - Per-day relax
         day_periods = periods_by_day.get(day, [])
         period_count = len(day_periods)
 
-        _LOGGER.debug(
+        _LOGGER_DETAILS.debug(
             "%sDay %s baseline: Found %d periods%s",
             INDENT_L1,
             day,
@@ -302,7 +303,7 @@ def calculate_periods_with_relaxation(  # noqa: PLR0913, PLR0915 - Per-day relax
 
     if enable_relaxation and days_meeting_requirement < total_days:
         # At least one day doesn't have enough periods
-        _LOGGER.debug(
+        _LOGGER_DETAILS.debug(
             "%sBaseline insufficient (%d/%d days met target) - starting relaxation",
             INDENT_L1,
             days_meeting_requirement,
@@ -334,7 +335,7 @@ def calculate_periods_with_relaxation(  # noqa: PLR0913, PLR0915 - Per-day relax
             if period_count >= min_periods:
                 days_meeting_requirement += 1
     elif enable_relaxation:
-        _LOGGER.debug(
+        _LOGGER_DETAILS.debug(
             "%sAll %d days met target with baseline - no relaxation needed",
             INDENT_L1,
             total_days,
@@ -422,7 +423,7 @@ def relax_all_prices(  # noqa: PLR0913 - Comprehensive filter relaxation require
 
         # Stop if we exceed hard maximum
         if current_flex > MAX_FLEX_HARD_LIMIT:
-            _LOGGER.debug(
+            _LOGGER_DETAILS.debug(
                 "%s    Reached 50%% flex hard limit",
                 INDENT_L2,
             )
@@ -436,7 +437,7 @@ def relax_all_prices(  # noqa: PLR0913 - Comprehensive filter relaxation require
 
         # Try current flex with level="any" (in relaxation mode)
         if original_level_filter != "any":
-            _LOGGER.debug(
+            _LOGGER_DETAILS.debug(
                 "%s    Flex=%.1f%%: OVERRIDING level_filter: %s → ANY",
                 INDENT_L2,
                 current_flex * 100,
@@ -450,7 +451,7 @@ def relax_all_prices(  # noqa: PLR0913 - Comprehensive filter relaxation require
         )
 
         phase_label_full = f"flex={current_flex * 100:.1f}% +level_any"
-        _LOGGER.debug(
+        _LOGGER_DETAILS.debug(
             "%s    Trying %s: config has %d intervals (all days together), level_filter=%s",
             INDENT_L2,
             phase_label_full,
@@ -462,7 +463,7 @@ def relax_all_prices(  # noqa: PLR0913 - Comprehensive filter relaxation require
         result = calculate_periods(all_prices, config=relaxed_config, time=time)
         new_periods = result["periods"]
 
-        _LOGGER.debug(
+        _LOGGER_DETAILS.debug(
             "%s    %s: calculate_periods returned %d periods",
             INDENT_L2,
             phase_label_full,
@@ -494,7 +495,7 @@ def relax_all_prices(  # noqa: PLR0913 - Comprehensive filter relaxation require
             if period_count >= min_periods:
                 days_meeting_requirement += 1
 
-            _LOGGER.debug(
+            _LOGGER_DETAILS.debug(
                 "%s      Day %s: %d periods%s",
                 INDENT_L2,
                 day,
@@ -503,7 +504,7 @@ def relax_all_prices(  # noqa: PLR0913 - Comprehensive filter relaxation require
             )
 
         total_periods = len(combined)
-        _LOGGER.debug(
+        _LOGGER_DETAILS.debug(
             "%s    %s: found %d periods total, %d/%d days meet requirement",
             INDENT_L2,
             phase_label_full,
