@@ -22,12 +22,13 @@ from typing import TYPE_CHECKING
 from custom_components.tibber_prices.const import DOMAIN
 from homeassistant.core import SupportsResponse, callback
 
-from .apexcharts import (
+from .get_apexcharts_yaml import (
     APEXCHARTS_SERVICE_SCHEMA,
     APEXCHARTS_YAML_SERVICE_NAME,
     handle_apexcharts_yaml,
 )
-from .chartdata import CHARTDATA_SERVICE_NAME, CHARTDATA_SERVICE_SCHEMA, handle_chartdata
+from .get_chartdata import CHARTDATA_SERVICE_NAME, CHARTDATA_SERVICE_SCHEMA, handle_chartdata
+from .get_price import GET_PRICE_SERVICE_NAME, GET_PRICE_SERVICE_SCHEMA, handle_get_price
 from .refresh_user_data import (
     REFRESH_USER_DATA_SERVICE_NAME,
     REFRESH_USER_DATA_SERVICE_SCHEMA,
@@ -57,6 +58,13 @@ def async_setup_services(hass: HomeAssistant) -> None:
         CHARTDATA_SERVICE_NAME,
         handle_chartdata,
         schema=CHARTDATA_SERVICE_SCHEMA,
+        supports_response=SupportsResponse.ONLY,
+    )
+    hass.services.async_register(
+        DOMAIN,
+        GET_PRICE_SERVICE_NAME,
+        handle_get_price,
+        schema=GET_PRICE_SERVICE_SCHEMA,
         supports_response=SupportsResponse.ONLY,
     )
     hass.services.async_register(

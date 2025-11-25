@@ -1,3 +1,30 @@
+get_price:
+  name: Get Price Data
+  description: >-
+    Fetch price data for a specific time range with automatic routing. Development and testing service for the price_info_for_range API function. Automatically uses PRICE_INFO, PRICE_INFO_RANGE, or both based on the time range boundary.
+  fields:
+    entry_id:
+      name: Entry ID
+      description: The config entry ID for the Tibber integration.
+      required: true
+      example: "1234567890abcdef"
+      selector:
+        config_entry:
+          integration: tibber_prices
+    start_time:
+      name: Start Time
+      description: Start of the time range (inclusive, timezone-aware).
+      required: true
+      example: "2025-11-01T00:00:00+01:00"
+      selector:
+        datetime:
+    end_time:
+      name: End Time
+      description: End of the time range (exclusive, timezone-aware).
+      required: true
+      example: "2025-11-02T00:00:00+01:00"
+      selector:
+        datetime:
 get_apexcharts_yaml:
   name: Get ApexCharts Card YAML
   description: >-
