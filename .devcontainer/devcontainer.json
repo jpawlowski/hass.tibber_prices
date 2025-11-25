@@ -94,13 +94,13 @@
                         "fileMatch": [
                             "homeassistant/components/*/manifest.json"
                         ],
-                        "url": "${containerWorkspaceFolder}/scripts/json_schemas/manifest_schema.json"
+                        "url": "${containerWorkspaceFolder}/schemas/json/manifest_schema.json"
                     },
                     {
                         "fileMatch": [
                             "homeassistant/components/*/translations/*.json"
                         ],
-                        "url": "${containerWorkspaceFolder}/scripts/json_schemas/translation_schema.json"
+                        "url": "${containerWorkspaceFolder}/schemas/json/translation_schema.json"
                     }
                 ]
             }

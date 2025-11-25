@@ -29,4 +29,41 @@ scene:
 logger:
   default: info
   logs:
+    # Main integration logger - applies to ALL sub-loggers by default
     custom_components.tibber_prices: debug
+
+    # Reduce verbosity for details loggers (change to 'debug' for deep debugging)
+    # API client details (raw requests/responses - very verbose!)
+    custom_components.tibber_prices.api.client.details: info
+
+    # Period calculation details (all set to 'info' by default, change to 'debug' as needed):
+    # Relaxation strategy details (flex levels, per-day results)
+    custom_components.tibber_prices.coordinator.period_handlers.relaxation.details: info
+    # Filter statistics and criteria checks
+    custom_components.tibber_prices.coordinator.period_handlers.period_building.details: info
+    # Outlier/spike detection details
+    custom_components.tibber_prices.coordinator.period_handlers.outlier_filtering.details: info
+    # Period overlap resolution details
+    custom_components.tibber_prices.coordinator.period_handlers.period_overlap.details: info
+    # Outlier flex capping
+    custom_components.tibber_prices.coordinator.period_handlers.core.details: info
+
+    # Interval pool details (cache operations, GC):
+    # Cache lookup/miss, gap detection, fetch group additions
+    custom_components.tibber_prices.interval_pool.manager.details: info
+    # Garbage collection details (eviction, dead interval cleanup)
+    custom_components.tibber_prices.interval_pool.garbage_collector.details: info
+    # Gap detection and API fetching details
+    custom_components.tibber_prices.interval_pool.fetcher.details: info
+    # API endpoint routing decisions
+    custom_components.tibber_prices.interval_pool.routing.details: info
+    # Cache fetch group operations
+    custom_components.tibber_prices.interval_pool.cache.details: info
+    # Index rebuild operations
+    custom_components.tibber_prices.interval_pool.index.details: info
+    # Storage save operations
+    custom_components.tibber_prices.interval_pool.storage.details: info
+
+    # API helpers details (response validation):
+    # Data emptiness checks, structure validation
+    custom_components.tibber_prices.api.helpers.details: info
