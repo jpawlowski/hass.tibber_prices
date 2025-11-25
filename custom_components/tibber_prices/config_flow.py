@@ -25,7 +25,7 @@ from .config_flow_handlers.schemas import (
 from .config_flow_handlers.subentry_flow import (
     TibberPricesSubentryFlowHandler as SubentryFlowHandler,
 )
-from .config_flow_handlers.user_flow import TibberPricesFlowHandler as ConfigFlow
+from .config_flow_handlers.user_flow import TibberPricesConfigFlowHandler as ConfigFlow
 from .config_flow_handlers.validators import (
     TibberPricesCannotConnectError,
     TibberPricesInvalidAuthError,

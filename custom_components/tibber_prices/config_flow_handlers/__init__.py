@@ -39,7 +39,7 @@ from custom_components.tibber_prices.config_flow_handlers.subentry_flow import (
     TibberPricesSubentryFlowHandler,
 )
 from custom_components.tibber_prices.config_flow_handlers.user_flow import (
-    TibberPricesFlowHandler,
+    TibberPricesConfigFlowHandler,
 )
 from custom_components.tibber_prices.config_flow_handlers.validators import (
     TibberPricesCannotConnectError,
@@ -49,7 +49,7 @@ from custom_components.tibber_prices.config_flow_handlers.validators import (
 
 __all__ = [
     "TibberPricesCannotConnectError",
-    "TibberPricesFlowHandler",
+    "TibberPricesConfigFlowHandler",
     "TibberPricesInvalidAuthError",
     "TibberPricesOptionsFlowHandler",
     "TibberPricesSubentryFlowHandler",
