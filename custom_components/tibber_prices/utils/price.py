@@ -146,25 +146,11 @@ def calculate_trailing_average_for_interval(
                 matching_prices.append(float(total_price))
 
     if not matching_prices:
-        _LOGGER.debug(
-            "No prices found in 24-hour lookback window for interval starting at %s (lookback: %s to %s)",
-            interval_start,
-            lookback_start,
-            interval_start,
-        )
         return None
 
     # CRITICAL: Warn if we have less than 24 hours of data (partial average)
     # 24 hours = 96 intervals (4 per hour)
-    expected_intervals_24h = 96
-    if len(matching_prices) < expected_intervals_24h:
-        _LOGGER.debug(
-            "Partial trailing average: only %d intervals available (expected %d for full 24h) "
-            "for interval starting at %s",
-            len(matching_prices),
-            expected_intervals_24h,
-            interval_start,
-        )
+    # Note: This is expected for intervals in the first 24h window
 
     # Calculate and return the average
     return sum(matching_prices) / len(matching_prices)
@@ -251,7 +237,6 @@ def _process_price_interval(
     all_prices: list[dict[str, Any]],
     threshold_low: float,
     threshold_high: float,
-    day_label: str,
 ) -> None:
     """
     Process a single price interval and add difference and rating_level.
@@ -284,14 +269,9 @@ def _process_price_interval(
         rating_level = calculate_rating_level(difference, threshold_low, threshold_high)
         price_interval["rating_level"] = rating_level
     else:
-        # Set to None if we couldn't calculate
+        # Set to None if we couldn't calculate (expected for intervals in first 24h)
         price_interval["difference"] = None
         price_interval["rating_level"] = None
-        _LOGGER.debug(
-            "Could not calculate trailing average for %s interval %s",
-            day_label,
-            starts_at,
-        )
 
 
 def enrich_price_info_with_differences(
@@ -343,18 +323,12 @@ def enrich_price_info_with_differences(
             earliest_start = starts_at
 
     if earliest_start is None:
-        _LOGGER.debug("No valid timestamps found in intervals - skipping enrichment")
+        # No valid intervals - return as-is
         return all_intervals
 
     # Calculate the 24-hour boundary from earliest data
     # Only intervals starting at or after this boundary have full 24h lookback
     enrichment_boundary = earliest_start + timedelta(hours=24)
-
-    _LOGGER.debug(
-        "Enrichment boundary: earliest_start=%s, boundary=%s (skip first 24h)",
-        earliest_start,
-        enrichment_boundary,
-    )
 
     # Process intervals (modifies in-place)
     # CRITICAL: Only enrich intervals that start >= 24h after earliest data
@@ -372,14 +346,8 @@ def enrich_price_info_with_differences(
             skipped_count += 1
             continue
 
-        _process_price_interval(price_interval, all_intervals, threshold_low, threshold_high, "enriched")
+        _process_price_interval(price_interval, all_intervals, threshold_low, threshold_high)
         enriched_count += 1
-
-    _LOGGER.debug(
-        "Enrichment complete: %d intervals enriched, %d intervals skipped (within first 24h or invalid)",
-        enriched_count,
-        skipped_count,
-    )
 
     return all_intervals
 
@@ -593,12 +561,8 @@ def _calculate_lookahead_volatility_factor(
 
     """
     if len(all_intervals) < lookahead_intervals:
-        _LOGGER.debug(
-            "Insufficient data for volatility calculation: need %d intervals, have %d - using factor 1.0",
-            lookahead_intervals,
-            len(all_intervals),
-        )
-        return 1.0  # Fallback: no adjustment
+        # Insufficient data - use default factor (no adjustment)
+        return 1.0
 
     # Extract prices from next N intervals
     lookahead_prices = [
@@ -608,7 +572,7 @@ def _calculate_lookahead_volatility_factor(
     ]
 
     if not lookahead_prices:
-        _LOGGER.debug("No valid prices in lookahead period - using factor 1.0")
+        # No valid prices - use default factor
         return 1.0
 
     # Use the same volatility calculation as volatility sensors (coefficient of variation)
@@ -629,17 +593,6 @@ def _calculate_lookahead_volatility_factor(
         factor = VOLATILITY_FACTOR_NORMAL if volatility_level == VOLATILITY_MODERATE else VOLATILITY_FACTOR_INSENSITIVE
     else:  # VOLATILITY_VERY_HIGH (should not occur with our thresholds, but handle it)
         factor = VOLATILITY_FACTOR_INSENSITIVE  # 1.4 → Less sensitive (filter noise)
-
-    _LOGGER.debug(
-        "Volatility analysis: intervals=%d, prices=%d, "
-        "level=%s, thresholds=(moderate:%.0f%%, high:%.0f%%), factor=%.2f",
-        lookahead_intervals,
-        len(lookahead_prices),
-        volatility_level,
-        volatility_threshold_moderate,
-        volatility_threshold_high,
-        factor,
-    )
 
     return factor
 
@@ -691,8 +644,7 @@ def calculate_price_trend(  # noqa: PLR0913 - All parameters are necessary for v
 
     """
     if current_interval_price == 0:
-        # Avoid division by zero
-        _LOGGER.debug("Current price is zero - returning stable trend")
+        # Avoid division by zero - return stable trend
         return "stable", 0.0
 
     # Apply volatility adjustment if enabled and data available
@@ -706,18 +658,6 @@ def calculate_price_trend(  # noqa: PLR0913 - All parameters are necessary for v
         )
         effective_rising = threshold_rising * volatility_factor
         effective_falling = threshold_falling * volatility_factor
-
-        _LOGGER.debug(
-            "Trend threshold adjustment: base_rising=%.1f%%, base_falling=%.1f%%, "
-            "lookahead_intervals=%d, volatility_factor=%.2f, "
-            "effective_rising=%.1f%%, effective_falling=%.1f%%",
-            threshold_rising,
-            threshold_falling,
-            lookahead_intervals,
-            volatility_factor,
-            effective_rising,
-            effective_falling,
-        )
 
     # Calculate percentage difference from current to future
     # CRITICAL: Use abs() for negative prices to get correct percentage direction
@@ -735,16 +675,5 @@ def calculate_price_trend(  # noqa: PLR0913 - All parameters are necessary for v
         trend = "falling"
     else:
         trend = "stable"
-
-    _LOGGER.debug(
-        "Trend calculation: current=%.4f, future_avg=%.4f, diff=%.1f%%, "
-        "threshold_rising=%.1f%%, threshold_falling=%.1f%%, trend=%s",
-        current_interval_price,
-        future_average,
-        diff_pct,
-        effective_rising,
-        effective_falling,
-        trend,
-    )
 
     return trend, diff_pct
