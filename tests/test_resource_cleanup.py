@@ -307,13 +307,15 @@ class TestStorageCleanup:
         from custom_components.tibber_prices import async_remove_entry  # noqa: PLC0415
 
         # Create mocks
-        hass = MagicMock()
+        hass = AsyncMock()
+        hass.async_add_executor_job = AsyncMock()
         config_entry = MagicMock()
         config_entry.entry_id = "test_entry_123"
 
         # Mock Store
         mock_store = AsyncMock()
         mock_store.async_remove = AsyncMock()
+        mock_store.hass = hass
 
         # Patch Store creation
         from unittest.mock import patch  # noqa: PLC0415
