@@ -383,7 +383,7 @@ After successful refactoring:
 
 **Key Patterns:**
 
--   **Dual translation system**: Standard HA translations in `/translations/` (config flow, UI strings per HA schema), supplemental in `/custom_translations/` (entity descriptions not supported by HA schema). Both must stay in sync. Use `async_load_translations()` and `async_load_standard_translations()` from `const.py`. When to use which: `/translations/` is bound to official HA schema requirements; anything else goes in `/custom_translations/` (requires manual translation loading). **Schema reference**: `/scripts/json_schemas/translation_schema.json` provides the structure for `/translations/*.json` files based on [HA's translation documentation](https://developers.home-assistant.io/docs/internationalization/core).
+-   **Dual translation system**: Standard HA translations in `/translations/` (config flow, UI strings per HA schema), supplemental in `/custom_translations/` (entity descriptions not supported by HA schema). Both must stay in sync. Use `async_load_translations()` and `async_load_standard_translations()` from `const.py`. When to use which: `/translations/` is bound to official HA schema requirements; anything else goes in `/custom_translations/` (requires manual translation loading). **Schema reference**: `/schemas/json/translation_schema.json` provides the structure for `/translations/*.json` files based on [HA's translation documentation](https://developers.home-assistant.io/docs/internationalization/core).
 
     -   **Select selector translations**: Use `selector.{translation_key}.options.{value}` structure (NOT `selector.select.{translation_key}`). Translation keys map to JSON in `/translations/*.json` following the HA schema structure.
 
