@@ -24,6 +24,11 @@ DATA_CHART_CONFIG = "chart_config"  # Key for chart export config in hass.data
 
 # Configuration keys
 CONF_EXTENDED_DESCRIPTIONS = "extended_descriptions"
+CONF_VIRTUAL_TIME_OFFSET_DAYS = (
+    "virtual_time_offset_days"  # Time-travel: days offset (negative only, e.g., -7 = 7 days ago)
+)
+CONF_VIRTUAL_TIME_OFFSET_HOURS = "virtual_time_offset_hours"  # Time-travel: hours offset (-23 to +23)
+CONF_VIRTUAL_TIME_OFFSET_MINUTES = "virtual_time_offset_minutes"  # Time-travel: minutes offset (-59 to +59)
 CONF_BEST_PRICE_FLEX = "best_price_flex"
 CONF_PEAK_PRICE_FLEX = "peak_price_flex"
 CONF_BEST_PRICE_MIN_DISTANCE_FROM_AVG = "best_price_min_distance_from_avg"
@@ -54,6 +59,9 @@ ATTRIBUTION = "Data provided by Tibber"
 # Integration name should match manifest.json
 DEFAULT_NAME = "Tibber Price Information & Ratings"
 DEFAULT_EXTENDED_DESCRIPTIONS = False
+DEFAULT_VIRTUAL_TIME_OFFSET_DAYS = 0  # No time offset (live mode)
+DEFAULT_VIRTUAL_TIME_OFFSET_HOURS = 0
+DEFAULT_VIRTUAL_TIME_OFFSET_MINUTES = 0
 DEFAULT_BEST_PRICE_FLEX = 15  # 15% base flexibility - optimal for relaxation mode (default enabled)
 # Peak price flexibility is set to -20% (20% base flexibility - optimal for relaxation mode).
 # This is intentionally more flexible than best price (15%) because peak price periods can be more variable,

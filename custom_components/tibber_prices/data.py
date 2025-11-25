@@ -11,6 +11,7 @@ if TYPE_CHECKING:
 
     from .api import TibberPricesApiClient
     from .coordinator import TibberPricesDataUpdateCoordinator
+    from .interval_pool import TibberPricesIntervalPool
 
 
 @dataclass
@@ -20,6 +21,7 @@ class TibberPricesData:
     client: TibberPricesApiClient
     coordinator: TibberPricesDataUpdateCoordinator
     integration: Integration
+    interval_pool: TibberPricesIntervalPool  # Shared interval pool per config entry
 
 
 if TYPE_CHECKING:

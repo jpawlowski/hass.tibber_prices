@@ -19,6 +19,7 @@ from .exceptions import (
 )
 
 _LOGGER = logging.getLogger(__name__)
+_LOGGER_DETAILS = logging.getLogger(__name__ + ".details")
 
 HTTP_BAD_REQUEST = 400
 HTTP_UNAUTHORIZED = 401
@@ -95,12 +96,135 @@ async def verify_graphql_response(response_json: dict, query_type: TibberPricesQ
             TibberPricesApiClientError.GRAPHQL_ERROR.format(message="Response missing data object")
         )
 
-    # Empty data check (for retry logic) - always check, regardless of query_type
+    # Empty data check - validate response completeness
+    # This is NOT a retryable error - API simply has no data for the requested range
     if is_data_empty(response_json["data"], query_type.value):
-        _LOGGER.debug("Empty data detected for query_type: %s", query_type)
+        _LOGGER_DETAILS.debug("Empty data detected for query_type: %s - API has no data available", query_type)
         raise TibberPricesApiClientError(
             TibberPricesApiClientError.EMPTY_DATA_ERROR.format(query_type=query_type.value)
         )
+
+
+def _check_user_data_empty(data: dict) -> bool:
+    """Check if user data is empty or incomplete."""
+    has_user_id = (
+        "viewer" in data
+        and isinstance(data["viewer"], dict)
+        and "userId" in data["viewer"]
+        and data["viewer"]["userId"] is not None
+    )
+    has_homes = (
+        "viewer" in data
+        and isinstance(data["viewer"], dict)
+        and "homes" in data["viewer"]
+        and isinstance(data["viewer"]["homes"], list)
+        and len(data["viewer"]["homes"]) > 0
+    )
+    is_empty = not has_user_id or not has_homes
+    _LOGGER_DETAILS.debug(
+        "Viewer check - has_user_id: %s, has_homes: %s, is_empty: %s",
+        has_user_id,
+        has_homes,
+        is_empty,
+    )
+    return is_empty
+
+
+def _check_price_info_empty(data: dict) -> bool:
+    """
+    Check if price_info data is empty or incomplete.
+
+    Note: Missing currentSubscription is VALID (home without active contract).
+    Only check for structural issues, not missing data that legitimately might not exist.
+    """
+    viewer = data.get("viewer", {})
+    home_data = viewer.get("home")
+
+    if not home_data:
+        _LOGGER_DETAILS.debug("No home data found in price_info response")
+        return True
+
+    _LOGGER_DETAILS.debug("Checking price_info for single home")
+
+    # Missing currentSubscription is VALID - home has no active contract
+    # This is not an "empty data" error, it's a legitimate state
+    if "currentSubscription" not in home_data or home_data["currentSubscription"] is None:
+        _LOGGER_DETAILS.debug("No currentSubscription - home has no active contract (valid state)")
+        return False  # NOT empty - this is expected for homes without subscription
+
+    subscription = home_data["currentSubscription"]
+
+    # Check priceInfoRange (yesterday data - optional, may not be available)
+    has_yesterday = (
+        "priceInfoRange" in subscription
+        and subscription["priceInfoRange"] is not None
+        and "edges" in subscription["priceInfoRange"]
+        and subscription["priceInfoRange"]["edges"]
+    )
+
+    # Check priceInfo for today's data (required if subscription exists)
+    has_price_info = "priceInfo" in subscription and subscription["priceInfo"] is not None
+    has_today = (
+        has_price_info
+        and "today" in subscription["priceInfo"]
+        and subscription["priceInfo"]["today"] is not None
+        and len(subscription["priceInfo"]["today"]) > 0
+    )
+
+    # Only require today's data - yesterday is optional
+    # If subscription exists but no today data, that's a structural problem
+    is_empty = not has_today
+
+    _LOGGER_DETAILS.debug(
+        "Price info check - priceInfoRange: %s, today: %s, is_empty: %s",
+        bool(has_yesterday),
+        bool(has_today),
+        is_empty,
+    )
+    return is_empty
+
+
+def _check_price_info_range_empty(data: dict) -> bool:
+    """
+    Check if price_info_range data is empty or incomplete.
+
+    For historical range queries, empty edges array is VALID (no data available
+    for that time range, e.g., too old). Only structural problems are errors.
+    """
+    viewer = data.get("viewer", {})
+    home_data = viewer.get("home")
+
+    if not home_data:
+        _LOGGER_DETAILS.debug("No home data found in price_info_range response")
+        return True
+
+    subscription = home_data.get("currentSubscription")
+    if not subscription:
+        _LOGGER_DETAILS.debug("Missing currentSubscription in home")
+        return True
+
+    # For price_info_range, check if the structure exists
+    # Empty edges array is VALID (no data for that time range)
+    price_info_range = subscription.get("priceInfoRange")
+    if price_info_range is None:
+        _LOGGER_DETAILS.debug("Missing priceInfoRange in subscription")
+        return True
+
+    if "edges" not in price_info_range:
+        _LOGGER_DETAILS.debug("Missing edges key in priceInfoRange")
+        return True
+
+    edges = price_info_range["edges"]
+    if not isinstance(edges, list):
+        _LOGGER_DETAILS.debug("priceInfoRange edges is not a list")
+        return True
+
+    # Empty edges is VALID for historical queries (data not available)
+    _LOGGER_DETAILS.debug(
+        "Price info range check - structure valid, edge_count: %s (empty is OK for old data)",
+        len(edges),
+    )
+    return False  # Structure is valid, even if edges is empty
 
 
 def is_data_empty(data: dict, query_type: str) -> bool:
@@ -117,85 +241,28 @@ def is_data_empty(data: dict, query_type: str) -> bool:
     - Must have range data
     - Must have today data
     - tomorrow can be empty if we have valid historical and today data
-    """
-    _LOGGER.debug("Checking if data is empty for query_type %s", query_type)
 
-    is_empty = False
+    For price info range:
+    - Must have priceInfoRange with edges
+    Used by interval pool for historical data fetching
+    """
+    _LOGGER_DETAILS.debug("Checking if data is empty for query_type %s", query_type)
+
     try:
         if query_type == "user":
-            has_user_id = (
-                "viewer" in data
-                and isinstance(data["viewer"], dict)
-                and "userId" in data["viewer"]
-                and data["viewer"]["userId"] is not None
-            )
-            has_homes = (
-                "viewer" in data
-                and isinstance(data["viewer"], dict)
-                and "homes" in data["viewer"]
-                and isinstance(data["viewer"]["homes"], list)
-                and len(data["viewer"]["homes"]) > 0
-            )
-            is_empty = not has_user_id or not has_homes
-            _LOGGER.debug(
-                "Viewer check - has_user_id: %s, has_homes: %s, is_empty: %s",
-                has_user_id,
-                has_homes,
-                is_empty,
-            )
+            return _check_user_data_empty(data)
+        if query_type == "price_info":
+            return _check_price_info_empty(data)
+        if query_type == "price_info_range":
+            return _check_price_info_range_empty(data)
 
-        elif query_type == "price_info":
-            # Check for single home data (viewer.home)
-            viewer = data.get("viewer", {})
-            home_data = viewer.get("home")
-
-            if not home_data:
-                _LOGGER.debug("No home data found in price_info response")
-                is_empty = True
-            else:
-                _LOGGER.debug("Checking price_info for single home")
-
-                if not home_data or "currentSubscription" not in home_data or home_data["currentSubscription"] is None:
-                    _LOGGER.debug("Missing currentSubscription in home")
-                    is_empty = True
-                else:
-                    subscription = home_data["currentSubscription"]
-
-                    # Check priceInfoRange (96 quarter-hourly intervals)
-                    has_yesterday = (
-                        "priceInfoRange" in subscription
-                        and subscription["priceInfoRange"] is not None
-                        and "edges" in subscription["priceInfoRange"]
-                        and subscription["priceInfoRange"]["edges"]
-                    )
-
-                    # Check priceInfo for today's data
-                    has_price_info = "priceInfo" in subscription and subscription["priceInfo"] is not None
-                    has_today = (
-                        has_price_info
-                        and "today" in subscription["priceInfo"]
-                        and subscription["priceInfo"]["today"] is not None
-                        and len(subscription["priceInfo"]["today"]) > 0
-                    )
-
-                    # Data is empty if we don't have historical data or today's data
-                    is_empty = not has_yesterday or not has_today
-
-                    _LOGGER.debug(
-                        "Price info check - priceInfoRange: %s, today: %s, is_empty: %s",
-                        bool(has_yesterday),
-                        bool(has_today),
-                        is_empty,
-                    )
-
-        else:
-            _LOGGER.debug("Unknown query type %s, treating as non-empty", query_type)
-            is_empty = False
+        # Unknown query type
+        _LOGGER_DETAILS.debug("Unknown query type %s, treating as non-empty", query_type)
     except (KeyError, IndexError, TypeError) as error:
-        _LOGGER.debug("Error checking data emptiness: %s", error)
-        is_empty = True
-
-    return is_empty
+        _LOGGER_DETAILS.debug("Error checking data emptiness: %s", error)
+        return True
+    else:
+        return False
 
 
 def prepare_headers(access_token: str, version: str) -> dict[str, str]:

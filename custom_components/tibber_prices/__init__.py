@@ -28,6 +28,12 @@ from .const import (
 )
 from .coordinator import STORAGE_VERSION, TibberPricesDataUpdateCoordinator
 from .data import TibberPricesData
+from .interval_pool import (
+    TibberPricesIntervalPool,
+    async_load_pool_state,
+    async_remove_pool_storage,
+    async_save_pool_state,
+)
 from .services import async_setup_services
 
 if TYPE_CHECKING:
@@ -165,10 +171,49 @@ async def async_setup_entry(
         version=str(integration.version) if integration.version else "unknown",
     )
 
+    # Get home_id from config entry (required for single-home pool architecture)
+    home_id = entry.data.get("home_id")
+    if not home_id:
+        msg = f"[{entry.title}] Config entry missing home_id (required for interval pool)"
+        raise ConfigEntryAuthFailed(msg)
+
+    # Create or load interval pool for this config entry (single-home architecture)
+    pool_state = await async_load_pool_state(hass, entry.entry_id)
+    if pool_state:
+        interval_pool = TibberPricesIntervalPool.from_dict(
+            pool_state,
+            api=api_client,
+            hass=hass,
+            entry_id=entry.entry_id,
+        )
+        if interval_pool is None:
+            # Old multi-home format or corrupted → create new pool
+            LOGGER.info(
+                "[%s] Interval pool storage invalid/corrupted, creating new pool (will rebuild from API)",
+                entry.title,
+            )
+            interval_pool = TibberPricesIntervalPool(
+                home_id=home_id,
+                api=api_client,
+                hass=hass,
+                entry_id=entry.entry_id,
+            )
+        else:
+            LOGGER.debug("[%s] Interval pool restored from storage (auto-save enabled)", entry.title)
+    else:
+        interval_pool = TibberPricesIntervalPool(
+            home_id=home_id,
+            api=api_client,
+            hass=hass,
+            entry_id=entry.entry_id,
+        )
+        LOGGER.debug("[%s] Created new interval pool (auto-save enabled)", entry.title)
+
     coordinator = TibberPricesDataUpdateCoordinator(
         hass=hass,
         config_entry=entry,
         api_client=api_client,
+        interval_pool=interval_pool,
     )
 
     # CRITICAL: Load cache BEFORE first refresh to ensure user_data is available
@@ -180,6 +225,7 @@ async def async_setup_entry(
         client=api_client,
         integration=integration,
         coordinator=coordinator,
+        interval_pool=interval_pool,
     )
 
     # https://developers.home-assistant.io/docs/integration_fetching_data#coordinated-single-api-poll-for-data-for-all-entities
@@ -199,6 +245,12 @@ async def async_unload_entry(
     entry: TibberPricesConfigEntry,
 ) -> bool:
     """Unload a config entry."""
+    # Save interval pool state before unloading
+    if entry.runtime_data is not None and entry.runtime_data.interval_pool is not None:
+        pool_state = entry.runtime_data.interval_pool.to_dict()
+        await async_save_pool_state(hass, entry.entry_id, pool_state)
+        LOGGER.debug("[%s] Interval pool state saved on unload", entry.title)
+
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
     if unload_ok and entry.runtime_data is not None:
@@ -222,9 +274,14 @@ async def async_remove_entry(
     entry: TibberPricesConfigEntry,
 ) -> None:
     """Handle removal of an entry."""
+    # Remove coordinator cache storage
     if storage := Store(hass, STORAGE_VERSION, f"{DOMAIN}.{entry.entry_id}"):
         LOGGER.debug(f"[tibber_prices] async_remove_entry removing cache store for entry_id={entry.entry_id}")
         await storage.async_remove()
+
+    # Remove interval pool storage
+    await async_remove_pool_storage(hass, entry.entry_id)
+    LOGGER.debug(f"[tibber_prices] async_remove_entry removed interval pool storage for entry_id={entry.entry_id}")
 
 
 async def async_reload_entry(

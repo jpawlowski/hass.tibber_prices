@@ -163,6 +163,7 @@ class TibberPricesDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         hass: HomeAssistant,
         config_entry: ConfigEntry,
         api_client: TibberPricesApiClient,
+        interval_pool: Any,  # TibberPricesIntervalPool - Any to avoid circular import
     ) -> None:
         """Initialize the coordinator."""
         super().__init__(
@@ -181,6 +182,9 @@ class TibberPricesDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 
         # Use the API client from runtime_data (created in __init__.py with proper TOKEN handling)
         self.api = api_client
+
+        # Use the shared interval pool (one per config entry/Tibber account)
+        self.interval_pool = interval_pool
 
         # Storage for persistence
         storage_key = f"{DOMAIN}.{config_entry.entry_id}"
