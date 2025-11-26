@@ -15,9 +15,6 @@ from custom_components.tibber_prices.config_flow_handlers.schemas import (
     get_select_home_schema,
     get_user_schema,
 )
-from custom_components.tibber_prices.config_flow_handlers.subentry_flow import (
-    TibberPricesSubentryFlowHandler,
-)
 from custom_components.tibber_prices.config_flow_handlers.validators import (
     TibberPricesCannotConnectError,
     TibberPricesInvalidAuthError,
@@ -66,7 +63,12 @@ class TibberPricesConfigFlowHandler(ConfigFlow, domain=DOMAIN):
         config_entry: ConfigEntry,  # noqa: ARG003
     ) -> dict[str, type[ConfigSubentryFlow]]:
         """Return subentries supported by this integration."""
-        return {"home": TibberPricesSubentryFlowHandler}
+        # Temporarily disabled: Time-travel feature not yet fully implemented
+        # When enabled, this causes "Devices that don't belong to a sub-entry" warning
+        # because subentries don't have their own entities yet.
+        # See: https://github.com/home-assistant/core/issues/147570
+        # Will be re-enabled when time-travel functionality is implemented
+        return {}
 
     @staticmethod
     @callback
