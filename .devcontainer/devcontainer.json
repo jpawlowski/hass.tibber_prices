@@ -1,7 +1,7 @@
 {
     "name": "jpawlowski/hass.tibber_prices",
     "image": "mcr.microsoft.com/devcontainers/python:3.13",
-    "postCreateCommand": "scripts/setup/setup",
+    "postCreateCommand": "bash .devcontainer/setup-git.sh && scripts/setup/setup",
     "postStartCommand": "scripts/motd",
     "containerEnv": {
         "PYTHONASYNCIODEBUG": "1"
@@ -102,13 +102,20 @@
                         ],
                         "url": "${containerWorkspaceFolder}/schemas/json/translation_schema.json"
                     }
-                ]
+                ],
+                "git.useConfigOnly": false
             }
         }
     },
+    "mounts": [
+        "source=${localEnv:HOME}${localEnv:USERPROFILE}/.gitconfig,target=/home/vscode/.gitconfig.host,type=bind,consistency=cached"
+    ],
     "remoteUser": "vscode",
     "features": {
         "ghcr.io/devcontainers/features/github-cli:1": {},
+        "ghcr.io/flexwie/devcontainer-features/op:1": {
+            "version": "latest"
+        },
         "ghcr.io/devcontainers/features/node:1": {
             "version": "22"
         },
