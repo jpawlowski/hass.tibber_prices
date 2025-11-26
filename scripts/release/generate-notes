@@ -1,37 +1,22 @@
-#!/bin/sh
+#!/bin/bash
 
-# script/generate-release-notes: Generate release notes from conventional commits
+# script/generate-notes: Generate release notes from conventional commits
 #
-# This script generates release notes by parsing conventional commits between git tags.
-# It supports multiple backends for generation:
-#
-#   1. GitHub Copilot CLI - Intelligent, context-aware (uses premium quota)
-#   2. git-cliff - Fast, template-based Rust tool
-#   3. Manual parsing - Simple grep/awk fallback
-#
-# Auto-update feature:
-#   If a GitHub release exists for TO_TAG, the script will automatically offer
-#   to update the release notes on GitHub (interactive prompt, local only).
+# Parses conventional commits between git tags and generates formatted release
+# notes. Supports multiple backends: GitHub Copilot CLI (AI), git-cliff
+# (template), or manual grep/awk parsing. Can auto-update existing GitHub releases.
 #
 # Usage:
-#   ./scripts/generate-release-notes [FROM_TAG] [TO_TAG]
-#   ./scripts/generate-release-notes v1.0.0 v1.1.0
-#   ./scripts/generate-release-notes v1.0.0 HEAD
-#   ./scripts/generate-release-notes               # Uses latest tag to HEAD
+#   ./scripts/release/generate-notes [FROM_TAG] [TO_TAG]
 #
-#   # Interactive update of existing release:
-#   ./scripts/generate-release-notes v0.2.0 v0.3.0
-#   # → Generates notes
-#   # → Detects release exists
-#   # → Offers to update: [y/N]
-#
-# Environment variables:
-#   RELEASE_NOTES_BACKEND - Force specific backend: copilot, git-cliff, manual
-#   USE_AI - Set to "false" to skip AI backends (for CI/CD)
+# Examples:
+#   ./scripts/release/generate-notes                 # Latest tag to HEAD
+#   ./scripts/release/generate-notes v1.0.0 v1.1.0
+#   ./scripts/release/generate-notes v1.0.0 HEAD
 
 set -e
 
-cd "$(dirname "$0")/.."
+cd "$(dirname "$0")/../.."
 
 # Colors for output
 RED='\033[0;31m'
@@ -41,7 +26,7 @@ BLUE='\033[0;34m'
 NC='\033[0m' # No Color
 
 # Detect if running in CI (suppress colored output to stdout)
-if [ -n "$CI" ] || [ -n "$GITHUB_ACTIONS" ]; then
+if [[ -n $CI || -n $GITHUB_ACTIONS ]]; then
     # In CI, send info messages to stderr to keep release notes clean
     log_info() {
         echo "$@" >&2
@@ -62,7 +47,7 @@ GITHUB_REPO="${GITHUB_REPOSITORY:-jpawlowski/hass.tibber_prices}"
 FROM_TAG="${1:-$(git describe --tags --abbrev=0 2>/dev/null || echo "")}"
 TO_TAG="${2:-HEAD}"
 
-if [ -z "$FROM_TAG" ]; then
+if [[ -z $FROM_TAG ]]; then
     echo "${RED}Error: No tags found in repository${NC}" >&2
     echo "Usage: $0 [FROM_TAG] [TO_TAG]" >&2
     exit 1
@@ -73,13 +58,13 @@ log_info ""
 
 # Detect available backends
 detect_backend() {
-    if [ "$BACKEND" != "auto" ]; then
+    if [[ $BACKEND != auto ]]; then
         echo "$BACKEND"
         return
     fi
 
     # Skip AI in CI/CD or if disabled
-    if [ "$USE_AI" = "false" ] || [ -n "$CI" ] || [ -n "$GITHUB_ACTIONS" ]; then
+    if [[ $USE_AI == false || -n $CI || -n $GITHUB_ACTIONS ]]; then
         if command -v git-cliff >/dev/null 2>&1; then
             echo "git-cliff"
             return
@@ -116,9 +101,9 @@ generate_with_copilot() {
 
     # Get commit log for the range with file statistics
     # This helps the AI understand which commits touched which files
-    COMMITS=$(git log --pretty=format:"%h | %s%n%b%n" --stat --compact-summary "${FROM_TAG}..${TO_TAG}")
+    COMMITS=$(git log --pretty=format:\"%h | %s%n%b%n\" --stat --compact-summary \"${FROM_TAG}..${TO_TAG}\")
 
-    if [ -z "$COMMITS" ]; then
+    if [[ -z $COMMITS ]]; then
         log_info "${YELLOW}No commits found between ${FROM_TAG} and ${TO_TAG}${NC}"
         exit 0
     fi
@@ -245,7 +230,7 @@ End the output after the last release note item. Nothing more."
     echo "$PROMPT" > "$TEMP_PROMPT"
 
     # Use Claude Haiku 4.5 for faster, cheaper generation (same quality for structured tasks)
-    # Can override with: COPILOT_MODEL=claude-sonnet-4.5 ./scripts/generate-release-notes
+    # Can override with: COPILOT_MODEL=claude-sonnet-4.5 ./scripts/release/generate-notes
     COPILOT_MODEL="${COPILOT_MODEL:-claude-haiku-4.5}"
 
     # Call copilot CLI (it will handle authentication interactively)
@@ -657,7 +642,7 @@ if [ "$UPDATE_RELEASE" = "y" ] || [ "$UPDATE_RELEASE" = "Y" ]; then
 else
     log_info "Skipped release update"
     log_info "You can update manually later with:"
-    echo "  ${CYAN}./scripts/generate-release-notes $FROM_TAG $TO_TAG | gh release edit $TO_TAG --notes-file -${NC}" >&2
+    echo "  ${CYAN}./scripts/release/generate-notes $FROM_TAG $TO_TAG | gh release edit $TO_TAG --notes-file -${NC}" >&2
 fi
 
 rm -f "$TEMP_NOTES" "$TEMP_BODY"

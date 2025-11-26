@@ -33,7 +33,7 @@ jobs:
           version: "0.9.3"
 
       - name: Install requirements
-        run: scripts/bootstrap
+        run: scripts/setup/bootstrap
 
       - name: Lint check
         run: scripts/lint-check

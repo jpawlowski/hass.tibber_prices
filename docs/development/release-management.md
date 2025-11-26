@@ -8,7 +8,7 @@ This project supports **three ways** to generate release notes from conventional
 
 ```bash
 # 1. Use the helper script to prepare release
-./scripts/prepare-release 0.3.0
+./scripts/release/prepare 0.3.0
 
 # This will:
 #   - Update manifest.json version to 0.3.0
@@ -59,38 +59,38 @@ Use GitHub's built-in release notes generator:
 
 ### 2. Local Script (Intelligent)
 
-Run `./scripts/generate-release-notes` to parse conventional commits locally.
+Run `./scripts/release/generate-notes` to parse conventional commits locally.
 
 **Automatic backend detection:**
 
 ```bash
 # Generate from latest tag to HEAD
-./scripts/generate-release-notes
+./scripts/release/generate-notes
 
 # Generate between specific tags
-./scripts/generate-release-notes v1.0.0 v1.1.0
+./scripts/release/generate-notes v1.0.0 v1.1.0
 
 # Generate from tag to HEAD
-./scripts/generate-release-notes v1.0.0 HEAD
+./scripts/release/generate-notes v1.0.0 HEAD
 ```
 
 **Force specific backend:**
 
 ```bash
 # Use AI (GitHub Copilot CLI)
-RELEASE_NOTES_BACKEND=copilot ./scripts/generate-release-notes
+RELEASE_NOTES_BACKEND=copilot ./scripts/release/generate-notes
 
 # Use git-cliff (template-based)
-RELEASE_NOTES_BACKEND=git-cliff ./scripts/generate-release-notes
+RELEASE_NOTES_BACKEND=git-cliff ./scripts/release/generate-notes
 
 # Use manual parsing (grep/awk fallback)
-RELEASE_NOTES_BACKEND=manual ./scripts/generate-release-notes
+RELEASE_NOTES_BACKEND=manual ./scripts/release/generate-notes
 ```
 
 **Disable AI** (useful for CI/CD):
 
 ```bash
-USE_AI=false ./scripts/generate-release-notes
+USE_AI=false ./scripts/release/generate-notes
 ```
 
 #### Backend Priority
@@ -109,7 +109,7 @@ In CI/CD (`$CI` or `$GITHUB_ACTIONS`), AI is automatically disabled.
 
 git-cliff is automatically installed when the DevContainer is built:
 - **Rust toolchain**: Installed via `ghcr.io/devcontainers/features/rust:1` (minimal profile)
-- **git-cliff**: Installed via cargo in `scripts/setup`
+- **git-cliff**: Installed via cargo in `scripts/setup/setup`
 
 Simply rebuild the container (VS Code: "Dev Containers: Rebuild Container") and git-cliff will be available.
 
@@ -202,7 +202,7 @@ All methods produce GitHub-flavored Markdown with emoji categories:
 
 ```bash
 # Step 1: Prepare release (all-in-one)
-./scripts/prepare-release 0.3.0
+./scripts/release/prepare 0.3.0
 
 # Step 2: Review changes
 git log -1 --stat
@@ -267,7 +267,7 @@ git push origin main v0.3.0
 
 ## ⚙️ Configuration Files
 
-- `scripts/prepare-release` - Helper script to bump version + create tag
+- `scripts/release/prepare` - Helper script to bump version + create tag
 - `.github/workflows/auto-tag.yml` - Automatic tag creation on manifest.json change
 - `.github/workflows/release.yml` - Automatic release on tag push
 - `.github/release.yml` - GitHub UI button configuration
@@ -354,7 +354,7 @@ Check workflow runs in GitHub Actions. Common causes:
 
 2. **Impact Section:** Add `Impact:` in commit body for user-friendly descriptions
 
-3. **Test Locally:** Run `./scripts/generate-release-notes` before creating release
+3. **Test Locally:** Run `./scripts/release/generate-notes` before creating release
 
 4. **AI vs Template:** GitHub Copilot CLI provides better descriptions, git-cliff is faster and more reliable
 

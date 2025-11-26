@@ -1,7 +1,7 @@
 {
     "name": "jpawlowski/hass.tibber_prices",
     "image": "mcr.microsoft.com/devcontainers/python:3.13",
-    "postCreateCommand": "scripts/setup",
+    "postCreateCommand": "scripts/setup/setup",
     "postStartCommand": "scripts/motd",
     "containerEnv": {
         "PYTHONASYNCIODEBUG": "1"

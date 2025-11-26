@@ -1,32 +1,43 @@
-#!/bin/sh
+#!/bin/bash
 
 # script/clean: Clean up development artifacts and caches
+#
+# Removes build artifacts, test caches, and accidental package installations.
+# Use --minimal for critical cleanup only, --deep to also remove __pycache__.
+#
 # Usage:
+#   ./scripts/clean [--minimal|--deep]
+#
+# Examples:
 #   ./scripts/clean           # Standard cleanup (recommended)
 #   ./scripts/clean --deep    # Also remove __pycache__
 #   ./scripts/clean --minimal # Only critical issues (.egg-info)
 
-set -e
+set -euo pipefail
 
-cd "$(dirname "$0")/.."
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+cd "$SCRIPT_DIR/.."
+
+# shellcheck source=scripts/.lib/output.sh
+source "$SCRIPT_DIR/.lib/output.sh"
 
 MINIMAL_MODE=false
 DEEP_MODE=false
 
-if [ "$1" = "--minimal" ]; then
+if [[ ${1:-} == --minimal ]]; then
     MINIMAL_MODE=true
-elif [ "$1" = "--deep" ]; then
+elif [[ ${1:-} == --deep ]]; then
     DEEP_MODE=true
 fi
 
-if [ "$MINIMAL_MODE" = "false" ]; then
-    echo "==> Cleaning development artifacts..."
+if [[ $MINIMAL_MODE == false ]]; then
+    log_header "Cleaning development artifacts"
 fi
 
 # Clean up accidental package installation (always, even in minimal mode)
-if [ -d "tibber_prices.egg-info" ]; then
-    if [ "$MINIMAL_MODE" = "false" ]; then
-        echo "  → Removing tibber_prices.egg-info"
+if [[ -d tibber_prices.egg-info ]]; then
+    if [[ $MINIMAL_MODE == false ]]; then
+        log_step "Removing tibber_prices.egg-info"
     fi
     rm -rf tibber_prices.egg-info
 fi
@@ -36,8 +47,8 @@ fi
 PACKAGE_INSTALLED=false
 if pip show tibber_prices >/dev/null 2>&1 || uv pip show tibber_prices >/dev/null 2>&1; then
     PACKAGE_INSTALLED=true
-    if [ "$MINIMAL_MODE" = "false" ]; then
-        echo "  → Uninstalling accidentally installed package"
+    if [[ $MINIMAL_MODE == false ]]; then
+        log_step "Uninstalling accidentally installed package"
     fi
     # Use regular pip (cleaner output, always works in venv)
     pip uninstall -y tibber_prices >/dev/null 2>&1 || true
@@ -46,44 +57,47 @@ if pip show tibber_prices >/dev/null 2>&1 || uv pip show tibber_prices >/dev/nul
 fi
 
 # Exit early if minimal mode
-if [ "$MINIMAL_MODE" = "true" ]; then
+if [[ $MINIMAL_MODE == true ]]; then
     exit 0
 fi
 
 # Clean pytest cache
-if [ -d ".pytest_cache" ]; then
-    echo "  → Removing .pytest_cache"
+if [[ -d .pytest_cache ]]; then
+    log_step "Removing .pytest_cache"
     rm -rf .pytest_cache
 fi
 
 # Clean coverage files
-if [ -f ".coverage" ]; then
-    echo "  → Removing .coverage"
+if [[ -f .coverage ]]; then
+    log_step "Removing .coverage"
     rm -f .coverage
 fi
-if [ -f "coverage.xml" ]; then
-    echo "  → Removing coverage.xml"
+if [[ -f coverage.xml ]]; then
+    log_step "Removing coverage.xml"
     rm -f coverage.xml
 fi
 
 # Clean ruff cache
-if [ -d ".ruff_cache" ]; then
-    echo "  → Removing .ruff_cache"
+if [[ -d .ruff_cache ]]; then
+    log_step "Removing .ruff_cache"
     rm -rf .ruff_cache
 fi
 
 # Optional: Clean __pycache__ (normally not needed, but useful for troubleshooting)
-if [ "$DEEP_MODE" = "true" ]; then
-    echo "  → Deep clean: Removing all __pycache__ directories"
+if [[ $DEEP_MODE == true ]]; then
+    log_step "Deep clean: Removing all __pycache__ directories"
     find . -type d -name "__pycache__" -exec rm -rf {} + 2>/dev/null || true
-    echo "  → Deep clean: Removing all .pyc files"
+    log_step "Deep clean: Removing all .pyc files"
     find . -type f -name "*.pyc" -delete 2>/dev/null || true
 fi
 
-echo ""
-echo "==> Cleanup complete!"
-if [ "$DEEP_MODE" = "false" ]; then
+log_success "Cleanup complete"
+
+if [[ $DEEP_MODE == false ]]; then
     echo ""
-    echo "Tip: Use './scripts/clean --deep' to also remove __pycache__ directories"
-    echo "     (normally not needed - __pycache__ speeds up Home Assistant startup)"
+    log_info "Tip: Use './scripts/clean --deep' to also remove __pycache__ directories"
+    log_step "(normally not needed - __pycache__ speeds up Home Assistant startup)"
+    echo ""
+    log_info "Tip: Use './scripts/setup/reset' to reset config/ to fresh HA installation"
+    log_step "(removes everything, restores configuration.yaml, re-runs setup)"
 fi

@@ -63,11 +63,11 @@ If you're working with AI tools on this project, the [`AGENTS.md`](../../AGENTS.
 
 1. **Fork and clone** the repository
 2. **Open in DevContainer** (VS Code: "Reopen in Container")
-3. **Run setup**: `./scripts/setup` (happens automatically via `postCreateCommand`)
+3. **Run setup**: `./scripts/setup/setup` (happens automatically via `postCreateCommand`)
 4. **Start development environment**: `./scripts/develop`
 5. **Make your changes** following the [Coding Guidelines](coding-guidelines.md)
 6. **Run linting**: `./scripts/lint`
-7. **Validate integration**: `./scripts/hassfest`
+7. **Validate integration**: `./scripts/release/hassfest`
 8. **Test your changes** in the running Home Assistant instance
 9. **Commit using Conventional Commits** format
 10. **Open a Pull Request** with clear description
@@ -139,7 +139,7 @@ custom_components/tibber_prices/
 
 ```bash
 # Validate integration structure
-./scripts/hassfest
+./scripts/release/hassfest
 
 # Run all tests
 pytest tests/

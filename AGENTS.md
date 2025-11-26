@@ -769,12 +769,12 @@ When debugging period calculation issues:
 -   All scripts in `./scripts/` automatically use the correct `.venv`
 -   No need to manually activate venv or specify Python path
 -   Examples: `./scripts/lint`, `./scripts/develop`, `./scripts/lint-check`
--   Release management: `./scripts/prepare-release`, `./scripts/generate-release-notes`
+-   Release management: `./scripts/release/prepare`, `./scripts/release/generate-notes`
 
 **Release Note Backends (auto-installed in DevContainer):**
 
 -   **Rust toolchain**: Minimal Rust installation via DevContainer feature
--   **git-cliff**: Template-based release notes (fast, reliable, installed via cargo in `scripts/setup`)
+-   **git-cliff**: Template-based release notes (fast, reliable, installed via cargo in `scripts/setup/setup`)
 -   Manual grep/awk parsing as fallback (always available)
 
 **When generating shell commands:**
@@ -843,7 +843,7 @@ If you notice commands failing or missing dependencies:
 **Local validation:**
 
 ```bash
-./scripts/hassfest  # Lightweight local integration validation
+./scripts/release/hassfest  # Lightweight local integration validation
 ```
 
 Note: The local `hassfest` script performs basic validation checks (JSON syntax, required files, Python syntax). Full hassfest validation runs in GitHub Actions.
@@ -1227,10 +1227,10 @@ The "Impact:" section bridges technical commits and future release notes:
 
 1. **Helper Script** (recommended, foolproof)
 
-    - Script: `./scripts/prepare-release VERSION`
+    - Script: `./scripts/release/prepare VERSION`
     - Bumps manifest.json version → commits → creates tag locally
     - You review and push when ready
-    - Example: `./scripts/prepare-release 0.3.0`
+    - Example: `./scripts/release/prepare 0.3.0`
 
 2. **Auto-Tag Workflow** (safety net)
 
@@ -1241,7 +1241,7 @@ The "Impact:" section bridges technical commits and future release notes:
 
 3. **Local Script** (testing, preview, and updating releases)
 
-    - Script: `./scripts/generate-release-notes [FROM_TAG] [TO_TAG]`
+    - Script: `./scripts/release/generate-notes [FROM_TAG] [TO_TAG]`
     - Parses Conventional Commits between tags
     - Supports multiple backends (auto-detected):
         - **AI-powered**: GitHub Copilot CLI (best, context-aware)
@@ -1253,7 +1253,7 @@ The "Impact:" section bridges technical commits and future release notes:
 
     ```bash
     # Generate and preview notes
-    ./scripts/generate-release-notes v0.2.0 v0.3.0
+    ./scripts/release/generate-notes v0.2.0 v0.3.0
 
     # If release exists, you'll see:
     # → Generated release notes
@@ -1262,7 +1262,7 @@ The "Impact:" section bridges technical commits and future release notes:
     # → Answer 'y' to auto-update, 'n' to skip
 
     # Force specific backend
-    RELEASE_NOTES_BACKEND=copilot ./scripts/generate-release-notes v0.2.0 v0.3.0
+    RELEASE_NOTES_BACKEND=copilot ./scripts/release/generate-notes v0.2.0 v0.3.0
     ```
 
 4. **GitHub UI Button** (manual, PR-based)
@@ -1283,7 +1283,7 @@ The "Impact:" section bridges technical commits and future release notes:
 
 ```bash
 # Step 1: Get version suggestion (analyzes commits since last release)
-./scripts/suggest-version
+./scripts/release/suggest-version
 
 # Output shows:
 # - Commit analysis (features, fixes, breaking changes)
@@ -1292,12 +1292,12 @@ The "Impact:" section bridges technical commits and future release notes:
 # - Preview and release commands
 
 # Step 2: Preview release notes (with AI if available)
-./scripts/generate-release-notes v0.2.0 HEAD
+./scripts/release/generate-notes v0.2.0 HEAD
 
 # Step 3: Prepare release (bumps manifest.json + creates tag)
-./scripts/prepare-release 0.3.0
+./scripts/release/prepare 0.3.0
 # Or without argument to show suggestion first:
-./scripts/prepare-release
+./scripts/release/prepare
 
 # Step 4: Review changes
 git log -1 --stat
@@ -1315,7 +1315,7 @@ If you want better release notes after the automated release:
 
 ```bash
 # Generate AI-powered notes and update existing release
-./scripts/generate-release-notes v0.2.0 v0.3.0
+./scripts/release/generate-notes v0.2.0 v0.3.0
 
 # Script will:
 # 1. Generate notes (uses AI if available locally)
@@ -1355,16 +1355,16 @@ git push
 
 ```bash
 # Generate from latest tag to HEAD
-./scripts/generate-release-notes
+./scripts/release/generate-notes
 
 # Generate between specific tags
-./scripts/generate-release-notes v1.0.0 v1.1.0
+./scripts/release/generate-notes v1.0.0 v1.1.0
 
 # Force specific backend
-RELEASE_NOTES_BACKEND=manual ./scripts/generate-release-notes
+RELEASE_NOTES_BACKEND=manual ./scripts/release/generate-notes
 
 # Disable AI (use in CI/CD)
-USE_AI=false ./scripts/generate-release-notes
+USE_AI=false ./scripts/release/generate-notes
 ```
 
 **Backend Selection Logic:**
@@ -1430,7 +1430,7 @@ All backends produce GitHub-flavored Markdown with consistent structure:
 
 ```bash
 # git-cliff (fast, reliable, used in CI/CD)
-# Auto-installed in DevContainer via scripts/setup
+# Auto-installed in DevContainer via scripts/setup/setup
 # See: https://git-cliff.org/docs/installation
 cargo install git-cliff  # or download binary from releases
 ````
@@ -1452,13 +1452,13 @@ cargo install git-cliff  # or download binary from releases
 
 ```bash
 # Run local validation (checks JSON syntax, Python syntax, required files)
-./scripts/hassfest
+./scripts/release/hassfest
 
 # Or validate JSON files manually if needed:
 python -m json.tool custom_components/tibber_prices/translations/de.json > /dev/null
 ```
 
-**Why:** The `./scripts/hassfest` script validates JSON syntax (translations, manifest), Python syntax, and required files. This catches common errors before pushing to GitHub Actions. For quick JSON-only checks, you can still use `python -m json.tool` directly.
+**Why:** The `./scripts/release/hassfest` script validates JSON syntax (translations, manifest), Python syntax, and required files. This catches common errors before pushing to GitHub Actions. For quick JSON-only checks, you can still use `python -m json.tool` directly.
 
 ## Linting Best Practices
 
@@ -2016,8 +2016,8 @@ Public entry points → direct helpers (call order) → pure utilities. Prefix p
 **Legacy/Backwards compatibility:**
 
 -   **Do NOT add legacy migration code** unless the change was already released in a version tag
--   **Check if released**: Use `./scripts/check-if-released <commit-hash>` to verify if code is in any `v*.*.*` tag
--   **Example**: If introducing breaking config change in commit `abc123`, run `./scripts/check-if-released abc123`:
+-   **Check if released**: Use `./scripts/release/check-if-released <commit-hash>` to verify if code is in any `v*.*.*` tag
+-   **Example**: If introducing breaking config change in commit `abc123`, run `./scripts/release/check-if-released abc123`:
     -   ✓ NOT RELEASED → No migration needed, just use new code
     -   ✗ ALREADY RELEASED → Migration may be needed for users upgrading from that version
 -   **Rule**: Only add backwards compatibility for changes that shipped to users via HACS/GitHub releases

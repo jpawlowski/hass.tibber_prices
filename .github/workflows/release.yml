@@ -167,8 +167,8 @@ jobs:
               echo ""
               echo "**To fix:**"
               echo "1. Delete the tag: \`git tag -d v$TAG_VERSION && git push origin :refs/tags/v$TAG_VERSION\`"
-              echo "2. Run locally: \`./scripts/suggest-version\`"
-              echo "3. Create correct tag: \`./scripts/prepare-release X.Y.Z\`"
+              echo "2. Run locally: \`./scripts/release/suggest-version\`"
+              echo "3. Create correct tag: \`./scripts/release/prepare X.Y.Z\`"
               echo "EOF"
             } >> $GITHUB_OUTPUT
           else
@@ -193,7 +193,7 @@ jobs:
 
           # Use our script with git-cliff backend (AI disabled in CI)
           # git-cliff will handle filtering via cliff.toml
-          USE_AI=false ./scripts/generate-release-notes "${FROM_TAG}" "${TO_TAG}" > release-notes.md
+          USE_AI=false ./scripts/release/generate-notes "${FROM_TAG}" "${TO_TAG}" > release-notes.md
 
           # Extract title from release notes (first line starting with "# ")
           TITLE=$(head -n 1 release-notes.md | sed 's/^# //')

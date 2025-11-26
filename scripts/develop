@@ -1,30 +1,53 @@
-#!/bin/sh
+#!/bin/bash
 
 # script/develop: Start Home Assistant in development mode
+#
+# Starts Home Assistant with debug logging enabled, using the config/ directory
+# for configuration. Automatically cleans up accidental package installations and
+# sets PYTHONPATH to load the integration from custom_components/.
+#
+# Usage:
+#   ./scripts/develop
+#
+# Examples:
+#   ./scripts/develop
 
-set -e
+set -euo pipefail
 
-cd "$(dirname "$0")/.."
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+cd "$SCRIPT_DIR/.."
 
-if [ -z "$VIRTUAL_ENV" ]; then
-    . "$HOME/.venv/bin/activate"
+# shellcheck source=scripts/.lib/output.sh
+source "$SCRIPT_DIR/.lib/output.sh"
+
+if [[ -z ${VIRTUAL_ENV:-} ]]; then
+    # shellcheck source=/dev/null
+    source "$HOME/.venv/bin/activate"
 fi
 
 # Clean up critical issues (accidental package installations)
 # Uses minimal mode to avoid deleting useful caches
-"$(dirname "$0")/clean" --minimal
+"$SCRIPT_DIR/clean" --minimal
 
 # Create config dir if not present
-if [ ! -d "${PWD}/config" ]; then
+if [[ ! -d ${PWD}/config ]]; then
         mkdir -p "${PWD}/config"
         hass --config "${PWD}/config" --script ensure_config
 fi
+
+"$SCRIPT_DIR/setup/sync-hacs"
 
 # Set the path to custom_components
 ## This let's us have the structure we want <root>/custom_components/tibber_prices
 ## while at the same time have Home Assistant configuration inside <root>/config
 ## without resulting to symlinks.
-export PYTHONPATH="${PYTHONPATH}:${PWD}/custom_components"
+export PYTHONPATH="${PYTHONPATH:-}:${PWD}/custom_components"
+
+log_header "Starting Home Assistant in development mode"
+log_info "Config directory: ${PWD}/config"
+log_info "Debug logging: enabled"
+log_separator
+echo ""
 
 # Start Home Assistant
 hass --config "${PWD}/config" --debug

@@ -1,24 +1,36 @@
-#!/bin/sh
+#!/bin/bash
 
 # script/lint: Run linting tools and apply formatting
+#
+# Runs Ruff format and Ruff check with auto-fix enabled. Automatically cleans up
+# any accidental package installations after running.
+#
+# Usage:
+#   ./scripts/lint
+#
+# Examples:
+#   ./scripts/lint
 
-set -e
+set -euo pipefail
 
-cd "$(dirname "$0")/.."
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+cd "$SCRIPT_DIR/.."
 
-if [ -z "$VIRTUAL_ENV" ]; then
-    . "$HOME/.venv/bin/activate"
+# shellcheck source=scripts/.lib/output.sh
+source "$SCRIPT_DIR/.lib/output.sh"
+
+if [[ -z ${VIRTUAL_ENV:-} ]]; then
+    # shellcheck source=/dev/null
+    source "$HOME/.venv/bin/activate"
 fi
 
-echo "==> Running linting tools..."
-
-echo "==> Running Ruff format..."
+log_header "Running Ruff format"
 uv run --active ruff format .
 
-echo "==> Running Ruff check..."
+log_header "Running Ruff check"
 uv run --active ruff check . --fix
 
 # Clean up any accidental package installation from uv run
-"$(dirname "$0")/clean" --minimal
+"$SCRIPT_DIR/clean" --minimal
 
-echo "==> Linting completed!"
+log_success "Linting completed"

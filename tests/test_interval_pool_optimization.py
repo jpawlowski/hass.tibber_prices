@@ -22,7 +22,7 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
-from custom_components.tibber_prices.interval_pool.pool import TibberPricesIntervalPool
+from custom_components.tibber_prices.interval_pool import TibberPricesIntervalPool
 from homeassistant.util import dt as dt_utils
 
 pytest_plugins = ("pytest_homeassistant_custom_component",)

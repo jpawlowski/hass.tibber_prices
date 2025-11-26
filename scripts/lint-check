@@ -1,22 +1,36 @@
-#!/bin/sh
+#!/bin/bash
 
-# script/lint-check: Check linting without making changes.
+# script/lint-check: Check linting without making changes
+#
+# Runs Ruff in check-only mode without applying fixes. Useful for CI/CD
+# and pre-commit validation.
+#
+# Usage:
+#   ./scripts/lint-check
+#
+# Examples:
+#   ./scripts/lint-check
 
-set -e
+set -euo pipefail
 
-cd "$(dirname "$0")/.."
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+cd "$SCRIPT_DIR/.."
 
-if [ -z "$VIRTUAL_ENV" ]; then
-    . "$HOME/.venv/bin/activate"
+# shellcheck source=scripts/.lib/output.sh
+source "$SCRIPT_DIR/.lib/output.sh"
+
+if [[ -z ${VIRTUAL_ENV:-} ]]; then
+    # shellcheck source=/dev/null
+    source "$HOME/.venv/bin/activate"
 fi
 
-echo "==> Checking code format..."
+log_header "Checking code format"
 uv run --active ruff format . --check
 
-echo "==> Checking code with Ruff..."
+log_header "Checking code with Ruff"
 uv run --active ruff check .
 
 # Clean up any accidental package installation from uv run
-"$(dirname "$0")/clean" --minimal
+"$SCRIPT_DIR/clean" --minimal
 
-echo "==> Linting check completed!"
+log_success "Linting check completed"

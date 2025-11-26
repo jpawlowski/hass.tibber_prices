@@ -1,0 +1,135 @@
+#!/bin/bash
+
+# script/prepare: Prepare a new release by bumping version and creating tag
+#
+# Validates version format, updates manifest.json, commits with conventional
+# commit format, and creates annotated git tag. You control when to push.
+#
+# Usage:
+#   ./scripts/release/prepare [VERSION|--suggest]
+#
+# Examples:
+#   ./scripts/release/prepare --suggest  # Show version suggestion
+#   ./scripts/release/prepare 0.3.0      # Bump to version 0.3.0
+#   ./scripts/release/prepare 1.0.0      # Bump to version 1.0.0
+
+set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+cd "$SCRIPT_DIR/../.."
+
+# shellcheck source=scripts/.lib/output.sh
+source "$SCRIPT_DIR/../.lib/output.sh"
+
+# Check if --suggest or no argument
+if [[ ${1:-} == --suggest ]] || [[ -z ${1:-} ]]; then
+    "$SCRIPT_DIR/suggest-version"
+
+    if [[ -z ${1:-} ]]; then
+        echo ""
+        log_warning "Provide version number as argument:"
+        echo "  ./scripts/release/prepare X.Y.Z"
+        exit 0
+    fi
+    exit 0
+fi
+
+# Check if we have uncommitted changes
+if ! git diff-index --quiet HEAD --; then
+    die "You have uncommitted changes. Please commit or stash them first."
+fi
+
+# Parse version argument
+VERSION="${1:-}"
+if [[ -z $VERSION ]]; then
+    die "No version specified.\n\nUsage: $0 VERSION\n\nExamples:\n  $0 0.3.0      # Bump to version 0.3.0\n  $0 1.0.0      # Bump to version 1.0.0"
+fi
+
+# Strip 'v' prefix if present
+VERSION="${VERSION#v}"
+
+# Validate version format (X.Y.Z)
+if ! echo "$VERSION" | grep -qE '^[0-9]+\.[0-9]+\.[0-9]+$'; then
+    die "Invalid version format: $VERSION\nExpected format: X.Y.Z (e.g., 0.3.0, 1.0.0)"
+fi
+
+TAG="v$VERSION"
+MANIFEST="custom_components/tibber_prices/manifest.json"
+
+# Check if manifest.json exists
+if [[ ! -f $MANIFEST ]]; then
+    die "Manifest file not found: $MANIFEST"
+fi
+
+# Check if tag already exists (locally or remotely)
+if git rev-parse "$TAG" >/dev/null 2>&1; then
+    die "Tag $TAG already exists locally\\nTo remove it: git tag -d $TAG"
+fi
+
+if git ls-remote --tags origin | grep -q "refs/tags/$TAG"; then
+    die "Tag $TAG already exists on remote"
+fi
+
+# Get current version
+CURRENT_VERSION=$(jq -r '.version' "$MANIFEST")
+log_info "Current version: ${BOLD}${CURRENT_VERSION}${NC}"
+log_info "New version: ${BOLD}${VERSION}${NC}"
+echo ""
+
+# Update manifest.json
+log_header "Updating $MANIFEST"
+require_command "jq" "apt-get install jq (or brew install jq)"
+
+# Create backup
+cp "$MANIFEST" "$MANIFEST.backup"
+
+# Update version with jq
+if ! jq ".version = \"$VERSION\"" "$MANIFEST" > "$MANIFEST.tmp"; then
+    mv "$MANIFEST.backup" "$MANIFEST"
+    die "Failed to update manifest.json"
+fi
+
+mv "$MANIFEST.tmp" "$MANIFEST"
+rm "$MANIFEST.backup"
+
+log_success "Updated manifest.json"
+
+# Stage and commit
+log_header "Creating commit"
+git add "$MANIFEST"
+git commit -m "chore(release): bump version to $VERSION"
+log_success "Created commit"
+
+# Create annotated tag
+log_header "Creating tag $TAG"
+git tag -a "$TAG" -m "chore(release): version $VERSION"
+log_success "Created tag $TAG"
+
+# Show preview
+echo ""
+log_separator
+printf "%b%s Release %s prepared successfully!%b\n" "$BOLD$GREEN" "$SPARKLES" "$VERSION" "$NC"
+log_separator
+echo ""
+printf "%bReview the changes:%b\n" "$BOLD" "$NC"
+git log -1 --stat
+echo ""
+printf "%bReview the tag:%b\n" "$BOLD" "$NC"
+git show "$TAG" --no-patch
+echo ""
+log_separator
+printf "%bNext steps:%b\n" "$BOLD" "$NC"
+echo ""
+printf "  %b%s To push and trigger release:%b\n" "$GREEN" "$CHECK" "$NC"
+printf "    %bgit push origin main %s%b\n" "$BOLD" "$TAG" "$NC"
+echo ""
+printf "  %b%s To abort and undo:%b\n" "$RED" "$CROSS" "$NC"
+printf "    git reset --hard HEAD~1    # Undo commit\n"
+printf "    git tag -d %s            # Delete tag\n" "$TAG"
+echo ""
+printf "%bWhat happens after push:%b\n" "$BOLD" "$NC"
+log_step "Both commit and tag are pushed to GitHub"
+log_step "CI/CD detects the new tag"
+log_step "Release notes are generated automatically"
+log_step "GitHub release is created"
+log_separator

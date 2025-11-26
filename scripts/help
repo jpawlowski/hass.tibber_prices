@@ -1,39 +1,73 @@
-#!/bin/sh
+#!/bin/bash
 
-# script/help: Display information about available scripts.
+# script/help: Display information about available scripts
+#
+# Shows all available scripts grouped by category (development, release, setup)
+# with descriptions extracted from script headers.
+#
+# Usage:
+#   ./scripts/help
+#
+# Examples:
+#   ./scripts/help
 
-set -e
+set -euo pipefail
 
-cd "$(dirname "$0")/.."
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+cd "$SCRIPT_DIR/.."
+
+# shellcheck source=scripts/.lib/output.sh
+source "$SCRIPT_DIR/.lib/output.sh"
 
 REPO_NAME=$(basename "$(git rev-parse --show-toplevel 2>/dev/null)" 2>/dev/null || basename "$(pwd)")
 
-printf "\033[1m%s\033[36m %s\033[32m %s\033[0m \n\n" "Development environment for" "$REPO_NAME" ""
+printf "%bDevelopment environment for %s%b\n\n" "$BOLD" "$REPO_NAME" "$NC"
 
-echo "Available scripts:"
-echo ""
+# Helper function to display scripts from a directory
+show_scripts() {
+    local dir="$1"
+    local prefix="$2"
 
-find scripts -type f -perm -111 -print0 | sort -z | while IFS= read -r -d '' script; do
-    script_name=$(basename "$script")
-    description=$(awk -v prefix="# script/$script_name:" '
-        BEGIN {desc=""}
-        $0 ~ prefix {
-            line = $0
-            sub(prefix, "", line)
-            sub(/^# */, "", line)
-            desc = desc (desc ? " " : "") line
-            next
-        }
-        desc != "" {exit}
-        END {print desc}
-    ' "$script")
-    if [ -z "$description" ]; then
-        description="No description available"
-    fi
-    if [ "${#description}" -gt 60 ]; then
-        description=$(echo "$description" | cut -c1-57)...
-    fi
-    printf " \033[36m %-25s\033[0m %s\n" "scripts/$script_name" "$description"
-done
+    find "$dir" -maxdepth 1 -type f -perm -111 -print0 2>/dev/null | sort -z | while IFS= read -r -d '' script; do
+        script_name=$(basename "$script")
+        script_path="$prefix$script_name"
+
+        description=$(awk -v prefix="# script/$script_name:" '
+            BEGIN {desc=""}
+            $0 ~ prefix {
+                line = $0
+                sub(prefix, "", line)
+                sub(/^# */, "", line)
+                desc = desc (desc ? " " : "") line
+                next
+            }
+            desc != "" {exit}
+            END {print desc}
+        ' "$script")
+
+        if [[ -z $description ]]; then
+            description="No description available"
+        fi
+        if [[ ${#description} -gt 60 ]]; then
+            description=$(echo "$description" | cut -c1-57)...
+        fi
+        printf "  %b%-25s%b %s\n" "$CYAN" "$script_path" "$NC" "$description"
+    done
+}
+
+printf "%bDevelopment scripts (daily use):%b\n\n" "$BOLD" "$NC"
+show_scripts "scripts" "scripts/"
+
+if [[ -d scripts/release ]]; then
+    echo ""
+    printf "%bRelease management:%b\n\n" "$BOLD" "$NC"
+    show_scripts "scripts/release" "scripts/release/"
+fi
+
+if [[ -d scripts/setup ]]; then
+    echo ""
+    printf "%bSetup & maintenance:%b\n\n" "$BOLD" "$NC"
+    show_scripts "scripts/setup" "scripts/setup/"
+fi
 
 echo ""

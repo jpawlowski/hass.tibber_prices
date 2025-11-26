@@ -1,14 +1,31 @@
-#!/bin/sh
+#!/bin/bash
 
 # script/check: Run linting and type checking tools together
+#
+# Runs both type-check (Pyright) and lint-check (Ruff) in sequence.
+# Recommended before committing changes.
+#
+# Usage:
+#   ./scripts/check
+#
+# Examples:
+#   ./scripts/check
 
-set -e
+set -euo pipefail
 
-cd "$(dirname "$0")/.."
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+cd "$SCRIPT_DIR/.."
 
-if [ -z "$VIRTUAL_ENV" ]; then
-    . "$HOME/.venv/bin/activate"
+# shellcheck source=scripts/.lib/output.sh
+source "$SCRIPT_DIR/.lib/output.sh"
+
+if [[ -z ${VIRTUAL_ENV:-} ]]; then
+    # shellcheck source=/dev/null
+    source "$HOME/.venv/bin/activate"
 fi
 
-scripts/type-check
-scripts/lint-check
+"$SCRIPT_DIR/type-check"
+echo ""
+"$SCRIPT_DIR/lint-check"
+
+log_success "All checks passed"

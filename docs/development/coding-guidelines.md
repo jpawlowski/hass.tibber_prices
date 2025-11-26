@@ -13,7 +13,7 @@ Run before committing:
 
 ```bash
 ./scripts/lint        # Auto-fix issues
-./scripts/hassfest    # Validate integration structure
+./scripts/release/hassfest    # Validate integration structure
 ```
 
 ## Naming Conventions

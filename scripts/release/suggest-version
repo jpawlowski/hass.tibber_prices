@@ -1,52 +1,45 @@
-#!/bin/sh
-# Analyze commits since last release and suggest next version number
+#!/bin/bash
+
+# script/suggest-version: Suggest next semantic version based on commit analysis
+#
+# Analyzes conventional commits since last release and suggests appropriate
+# version bump (MAJOR.MINOR.PATCH) based on commit types.
 #
 # Usage:
-#   ./scripts/suggest-version [--from TAG]
+#   ./scripts/release/suggest-version [--from TAG]
 #
 # Examples:
-#   ./scripts/suggest-version
-#   ./scripts/suggest-version --from v0.2.0
+#   ./scripts/release/suggest-version
+#   ./scripts/release/suggest-version --from v0.2.0
 
-set -e
+set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
-cd "${SCRIPT_DIR}/.."
+cd "$SCRIPT_DIR/../.."
 
-# Colors
-RED='\033[0;31m'
-GREEN='\033[0;32m'
-YELLOW='\033[1;33m'
-BLUE='\033[0;34m'
-BOLD='\033[1m'
-NC='\033[0m'
+# shellcheck source=scripts/.lib/output.sh
+source "$SCRIPT_DIR/../.lib/output.sh"
 
 # Parse arguments
 FROM_TAG="${2:-}"
 
 # Get current version from manifest.json
 MANIFEST="custom_components/tibber_prices/manifest.json"
-if [ ! -f "$MANIFEST" ]; then
-    printf "%bError: Manifest file not found: %s%b\n" "$RED" "$MANIFEST" "$NC"
-    exit 1
+if [[ ! -f $MANIFEST ]]; then
+    die "Manifest file not found: $MANIFEST"
 fi
 
 # Require jq for JSON parsing
-if ! command -v jq >/dev/null 2>&1; then
-    printf "%bError: jq is not installed%b\n" "$RED" "$NC"
-    echo "Please install jq: apt-get install jq (or brew install jq)"
-    exit 1
-fi
+require_command "jq" "apt-get install jq (or brew install jq)"
 
 MANIFEST_VERSION=$(jq -r '.version' "$MANIFEST")
 MANIFEST_TAG="v${MANIFEST_VERSION}"
 
 # Get latest version tag
-if [ -z "$FROM_TAG" ]; then
+if [[ -z $FROM_TAG ]]; then
     FROM_TAG=$(git tag -l 'v*.*.*' --sort=-version:refname | head -1)
-    if [ -z "$FROM_TAG" ]; then
-        printf "%bError: No version tags found%b\n" "$RED" "$NC"
-        exit 1
+    if [[ -z $FROM_TAG ]]; then
+        die "No version tags found"
     fi
 fi
 
@@ -54,11 +47,11 @@ fi
 if git rev-parse "$MANIFEST_TAG" >/dev/null 2>&1; then
     # Manifest version is already tagged - analyze from that tag
     FROM_TAG="$MANIFEST_TAG"
-    printf "%bNote: manifest.json version %s already tagged as %s%b\n" "$YELLOW" "$MANIFEST_VERSION" "$MANIFEST_TAG" "$NC"
+    log_info "manifest.json version $MANIFEST_VERSION already tagged as $MANIFEST_TAG"
     echo ""
 fi
 
-printf "%bAnalyzing commits since %s%b\n" "$BOLD" "$FROM_TAG" "$NC"
+log_header "Analyzing commits since $FROM_TAG"
 echo ""
 
 # Parse current version (from the tag we're analyzing from)
@@ -67,22 +60,22 @@ MAJOR=$(echo "$CURRENT_VERSION" | cut -d. -f1)
 MINOR=$(echo "$CURRENT_VERSION" | cut -d. -f2)
 PATCH=$(echo "$CURRENT_VERSION" | cut -d. -f3)
 
-echo "Current released version: v${MAJOR}.${MINOR}.${PATCH}"
-if [ "$MANIFEST_VERSION" != "$CURRENT_VERSION" ]; then
-    printf "%bManifest.json version: %s (not yet tagged)%b\n" "$YELLOW" "$MANIFEST_VERSION" "$NC"
+printf "Current released version: %bv%s.%s.%s%b\n" "$BOLD" "$MAJOR" "$MINOR" "$PATCH" "$NC"
+if [[ $MANIFEST_VERSION != "$CURRENT_VERSION" ]]; then
+    log_warning "Manifest.json version: $MANIFEST_VERSION (not yet tagged)"
 fi
 echo ""
 
 # Analyze commits (exclude version bump commits)
 COMMITS=$(git log "$FROM_TAG"..HEAD --format="%s" --no-merges | grep -v "^chore(release):" || true)
 
-if [ -z "$COMMITS" ]; then
-    printf "%bNo new commits since last release%b\n" "$YELLOW" "$NC"
+if [[ -z $COMMITS ]]; then
+    log_warning "No new commits since last release"
 
     # Check if manifest.json needs to be tagged
-    if [ "$MANIFEST_VERSION" != "$CURRENT_VERSION" ]; then
+    if [[ $MANIFEST_VERSION != "$CURRENT_VERSION" ]]; then
         echo ""
-        printf "%bManifest.json has version %s but no tag exists yet.%b\n" "$BLUE" "$MANIFEST_VERSION" "$NC"
+        log_info "Manifest.json has version $MANIFEST_VERSION but no tag exists yet."
         echo "Create tag with:"
         echo "  git tag -a v${MANIFEST_VERSION} -m \"Release ${MANIFEST_VERSION}\""
         echo "  git push origin v${MANIFEST_VERSION}"
@@ -171,10 +164,10 @@ echo ""
 
 # Show preview command
 printf "%bPreview Release Notes:%b\n" "$BOLD" "$NC"
-echo "  ./scripts/generate-release-notes $FROM_TAG HEAD"
+echo "  ./scripts/release/generate-notes $FROM_TAG HEAD"
 echo ""
 printf "%bCreate Release:%b\n" "$BOLD" "$NC"
-echo "  ./scripts/prepare-release ${SUGGESTED_MAJOR}.${SUGGESTED_MINOR}.${SUGGESTED_PATCH}"
+echo "  ./scripts/release/prepare ${SUGGESTED_MAJOR}.${SUGGESTED_MINOR}.${SUGGESTED_PATCH}"
 echo ""
 
 # Show warning if breaking changes detected

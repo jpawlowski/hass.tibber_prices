@@ -1,0 +1,111 @@
+#!/bin/bash
+
+# script/bootstrap: Install/update all dependencies required to run the project
+#
+# Bootstraps the development environment by installing system packages,
+# setting up uv package manager, creating virtual environment, and installing
+# Python dependencies including Home Assistant core and development tools.
+#
+# Usage:
+#   ./scripts/setup/bootstrap
+#
+# Examples:
+#   ./scripts/setup/bootstrap
+
+set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+cd "$SCRIPT_DIR/../.."
+
+# shellcheck source=scripts/.lib/output.sh
+source "$SCRIPT_DIR/../.lib/output.sh"
+
+log_header "Updating system packages"
+sudo apt-get update
+sudo apt-get upgrade -y
+
+# Ensure curl is available (needed to fetch Home Assistant requirement files)
+if ! command -v curl >/dev/null 2>&1; then
+  log_header "Installing curl"
+  sudo apt-get install -y curl
+fi
+
+log_header "Checking for uv"
+if ! command -v uv >/dev/null 2>&1; then
+  log_info "UV not found, installing..."
+  pipx install uv
+fi
+
+# if no venv, create one
+if [[ ! -d $HOME/.venv ]]; then
+    log_header "Creating virtual environment"
+    uv venv "$HOME/.venv"
+    ln -s "$HOME/.venv/" .venv
+fi
+# shellcheck source=/dev/null
+source "$HOME/.venv/bin/activate"
+
+log_header "Installing project dependencies"
+uv pip install --requirement requirements.txt
+
+###############################################################################
+# Home Assistant dependency setup (version-synchronized with core repository) #
+###############################################################################
+
+# HA_VERSION can be overridden from the environment, e.g.:
+#   HA_VERSION=2025.11.3 script/bootstrap
+HA_VERSION=${HA_VERSION:-"2025.11.3"}
+HA_CORE_BASE_URL="https://raw.githubusercontent.com/home-assistant/core/${HA_VERSION}"
+HA_TMP_DIR="$HOME/.ha_requirements"
+
+log_header "Setting up Home Assistant dependencies for version ${HA_VERSION}"
+mkdir -p "${HA_TMP_DIR}/homeassistant"
+
+log_step "Downloading package_constraints.txt..."
+curl -fsSL "${HA_CORE_BASE_URL}/homeassistant/package_constraints.txt" \
+  -o "${HA_TMP_DIR}/homeassistant/package_constraints.txt"
+
+log_step "Downloading core requirements.txt..."
+curl -fsSL "${HA_CORE_BASE_URL}/requirements.txt" \
+  -o "${HA_TMP_DIR}/requirements.txt"
+
+# Optional: download requirements_all.txt for all integrations (large file)
+log_step "Downloading requirements_all.txt (optional)..."
+if curl -fsSL "${HA_CORE_BASE_URL}/requirements_all.txt" \
+  -o "${HA_TMP_DIR}/requirements_all.txt"; then
+  HAVE_REQ_ALL=1
+else
+  log_info "(requirements_all.txt not found for ${HA_VERSION}, skipping)"
+  HAVE_REQ_ALL=0
+fi
+
+log_header "Installing Home Assistant package"
+uv pip install "homeassistant==${HA_VERSION}"
+
+echo "==> Installing Home Assistant voice/intent dependencies (hassil, home-assistant-intents)..."
+uv pip install \
+  --constraint "${HA_TMP_DIR}/homeassistant/package_constraints.txt" \
+  hassil \
+  home-assistant-intents || echo "    (Optional deps failed, continuing...)"
+
+if [[ $HAVE_REQ_ALL -eq 1 ]]; then
+  echo "==> Installing Home Assistant integration dependencies (requirements_all.txt)..."
+  uv pip install \
+    --constraint "${HA_TMP_DIR}/homeassistant/package_constraints.txt" \
+    --requirement "${HA_TMP_DIR}/requirements_all.txt"
+fi
+
+echo "==> Installing pre-commit hooks..."
+pre-commit install
+
+log_header "Updating shell environment"
+if ! grep -q "source $HOME/.venv/bin/activate" "$HOME/.bashrc" 2>/dev/null; then
+    echo "source $HOME/.venv/bin/activate" >> "$HOME/.bashrc"
+fi
+if [[ -f $HOME/.zshrc ]]; then
+    if ! grep -q "source $HOME/.venv/bin/activate" "$HOME/.zshrc"; then
+        echo "source $HOME/.venv/bin/activate" >> "$HOME/.zshrc"
+    fi
+fi
+
+log_success "Bootstrap completed"

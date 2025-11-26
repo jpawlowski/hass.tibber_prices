@@ -51,7 +51,7 @@ Visit http://localhost:8123
 ./scripts/lint-check
 
 # Validate integration structure
-./scripts/hassfest
+./scripts/release/hassfest
 ```
 
 See [`AGENTS.md`](../../AGENTS.md) for detailed patterns and conventions.

@@ -1,26 +1,27 @@
-#!/bin/sh
-# Check if a commit or code change has been released (is contained in any version tag)
+#!/bin/bash
+
+# script/check-if-released: Check if a commit has been released in any version tag
+#
+# Determines whether a specific commit is included in any released version tag.
+# Useful for deciding if legacy migration code is needed for unreleased changes.
 #
 # Usage:
-#   ./scripts/check-if-released <commit-hash>
-#   ./scripts/check-if-released <commit-hash> --details
+#   ./scripts/release/check-if-released <commit-hash> [--details]
 #
 # Examples:
-#   ./scripts/check-if-released f4568be
-#   ./scripts/check-if-released HEAD~3 --details
+#   ./scripts/release/check-if-released f4568be
+#   ./scripts/release/check-if-released HEAD~3 --details
 
-set -e
+set -euo pipefail
 
-cd "$(dirname "$0")/.."
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+cd "$SCRIPT_DIR/../.."
 
-# Colors for output
-RED='\033[0;31m'
-GREEN='\033[0;32m'
-YELLOW='\033[1;33m'
-NC='\033[0m' # No Color
+# shellcheck source=scripts/.lib/output.sh
+source "$SCRIPT_DIR/../.lib/output.sh"
 
 # Check if commit hash provided
-if [ -z "$1" ]; then
+if [[ -z ${1:-} ]]; then
     echo "Usage: $0 <commit-hash> [--details]"
     echo ""
     echo "Examples:"
@@ -34,8 +35,7 @@ DETAILS="${2:-}"
 
 # Validate commit exists
 if ! git rev-parse --verify "$COMMIT" >/dev/null 2>&1; then
-    printf '%bError: Commit '\''%s'\'' not found%b\n' "$RED" "$COMMIT" "$NC"
-    exit 1
+    die "Commit '$COMMIT' not found"
 fi
 
 # Get full commit hash
@@ -54,7 +54,7 @@ echo ""
 # Check if commit is in any version tag (v*.*.*)
 TAGS=$(git tag --contains "$COMMIT" | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+' || true)
 
-if [ -z "$TAGS" ]; then
+if [[ -z $TAGS ]]; then
     printf '%b✓ NOT RELEASED%b\n' "$GREEN" "$NC"
     echo "This commit is not part of any version tag."
     echo ""
@@ -71,7 +71,7 @@ else
     echo "  3. Home Assistant style: Prefer breaking changes over code complexity"
     echo ""
 
-    if [ "$DETAILS" = "--details" ]; then
+    if [[ $DETAILS == --details ]]; then
         echo ""
         echo "First release containing this commit:"
         FIRST_TAG=$(echo "$TAGS" | head -1)

@@ -1,0 +1,119 @@
+#!/bin/bash
+
+# script/hassfest: Lightweight local validation for Home Assistant integration
+#
+# Performs basic validation checks on the integration structure: JSON syntax,
+# required files, Python syntax, and translation consistency. Full hassfest
+# validation runs in GitHub Actions.
+#
+# Usage:
+#   ./scripts/release/hassfest
+#
+# Examples:
+#   ./scripts/release/hassfest
+
+set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+cd "$SCRIPT_DIR/../.."
+
+# shellcheck source=scripts/.lib/output.sh
+source "$SCRIPT_DIR/../.lib/output.sh"
+
+INTEGRATION_PATH="custom_components/tibber_prices"
+ERRORS=0
+
+log_header "Running local integration validation"
+echo ""
+
+# Check 1: config_flow.py exists
+printf "%b Checking config_flow.py existence...%b\n" "$BOLD" "$NC"
+if [[ ! -f $INTEGRATION_PATH/config_flow.py ]]; then
+    log_result 1 "config_flow.py not found"
+    ERRORS=$((ERRORS + 1))
+else
+    log_result 0 "config_flow.py exists"
+fi
+
+# Check 2: manifest.json syntax
+printf "%b Checking manifest.json syntax...%b\n" "$BOLD" "$NC"
+if ! python -m json.tool "$INTEGRATION_PATH/manifest.json" > /dev/null 2>&1; then
+    log_result 1 "manifest.json has invalid JSON syntax"
+    ERRORS=$((ERRORS + 1))
+else
+    log_result 0 "manifest.json is valid JSON"
+fi
+
+# Check 3: Translation files syntax
+printf "%b Checking translation files syntax...%b\n" "$BOLD" "$NC"
+for lang_file in "$INTEGRATION_PATH"/translations/*.json; do
+    if [[ -f $lang_file ]]; then
+        lang=$(basename "$lang_file")
+        if ! python -m json.tool "$lang_file" > /dev/null 2>&1; then
+            log_result 1 "$lang has invalid JSON syntax"
+            ERRORS=$((ERRORS + 1))
+        else
+            log_result 0 "$lang is valid JSON"
+        fi
+    fi
+done
+
+# Check 4: Custom translation files syntax
+if [[ -d $INTEGRATION_PATH/custom_translations ]]; then
+    printf "%b Checking custom translation files syntax...%b\n" "$BOLD" "$NC"
+    for lang_file in "$INTEGRATION_PATH"/custom_translations/*.json; do
+        if [[ -f $lang_file ]]; then
+            lang=$(basename "$lang_file")
+            if ! python -m json.tool "$lang_file" > /dev/null 2>&1; then
+                log_result 1 "custom_translations/$lang has invalid JSON syntax"
+                ERRORS=$((ERRORS + 1))
+            else
+                log_result 0 "custom_translations/$lang is valid JSON"
+            fi
+        fi
+    done
+fi
+
+# Check 5: Python syntax
+# Note: We use ast.parse() instead of py_compile to avoid creating __pycache__ artifacts
+# ast.parse() validates syntax without writing any files to disk
+printf "%b Checking Python syntax...%b\n" "$BOLD" "$NC"
+PYTHON_ERRORS=0
+find "$INTEGRATION_PATH" -name "*.py" -type f | while IFS= read -r py_file; do
+    if ! python -c "import ast; ast.parse(open('$py_file').read())" 2>/dev/null; then
+        log_result 1 "$py_file has syntax errors"
+        PYTHON_ERRORS=$((PYTHON_ERRORS + 1))
+        ERRORS=$((ERRORS + 1))
+    fi
+done
+if [[ $PYTHON_ERRORS -eq 0 ]]; then
+    log_result 0 "All Python files have valid syntax"
+fi
+
+# Check 6: Required manifest fields
+printf "%b Checking required manifest fields...%b\n" "$BOLD" "$NC"
+REQUIRED_FIELDS="domain name version documentation issue_tracker codeowners"
+for field in $REQUIRED_FIELDS; do
+    if ! python -c "import json; data=json.load(open('$INTEGRATION_PATH/manifest.json')); exit(0 if '$field' in data else 1)" 2>/dev/null; then
+        log_result 1 "manifest.json missing required field: $field"
+        ERRORS=$((ERRORS + 1))
+    fi
+done
+if [[ $ERRORS -eq 0 ]]; then
+    log_result 0 "All required manifest fields present"
+fi
+
+echo ""
+if [[ $ERRORS -eq 0 ]]; then
+    log_success "All local validation checks passed"
+    echo ""
+    log_info "Full hassfest validation runs in GitHub Actions."
+    log_step "Push your changes to run complete validation."
+    exit 0
+else
+    log_error "Found $ERRORS error(s)"
+    echo ""
+    log_info "This is a simplified local validation."
+    log_step "Full hassfest validation runs in GitHub Actions."
+    exit 1
+fi

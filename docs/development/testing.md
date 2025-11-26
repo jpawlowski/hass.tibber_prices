@@ -8,7 +8,7 @@ Before running tests or committing changes, validate the integration structure:
 
 ```bash
 # Run local validation (JSON syntax, Python syntax, required files)
-./scripts/hassfest
+./scripts/release/hassfest
 ```
 
 This lightweight script checks:

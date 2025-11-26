@@ -1,24 +1,37 @@
-#/bin/sh
+#!/bin/bash
 
 # script/motd: Display Message of the Day for development environment
+#
+# Displays welcome message with project info and available scripts.
+# Called automatically by DevContainer on startup.
+#
+# Usage:
+#   ./scripts/motd
+#
+# Examples:
+#   ./scripts/motd
 
-set -e
+set -euo pipefail
 
-cd "$(dirname "$0")/.."
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+cd "$SCRIPT_DIR/.."
+
+# shellcheck source=scripts/.lib/output.sh
+source "$SCRIPT_DIR/.lib/output.sh"
 
 REPO_NAME=$(basename "$(git rev-parse --show-toplevel 2>/dev/null)" 2>/dev/null || basename "$(pwd)")
 
 echo ""
-echo "🎉 Welcome to the $REPO_NAME development environment!"
+printf "%b Welcome to the %s development environment!%b\n" "$BOLD$BLUE$ROCKET" "$REPO_NAME" "$NC"
 echo ""
-echo "📂 Project: $(pwd)"
-echo "🌿 Git branch: $(git rev-parse --abbrev-ref HEAD 2>/dev/null || echo 'Not a git repo')"
-echo "🐍 Python: $(python3 --version 2>/dev/null || echo 'Not available')"
+printf "%b%b Project:%b %s\n" "$DIM" "$PACKAGE" "$NC" "$(pwd)"
+printf "%b%b Git branch:%b %s\n" "$DIM" "$ARROW" "$NC" "$(git rev-parse --abbrev-ref HEAD 2>/dev/null || echo 'Not a git repo')"
+printf "%b%b Python:%b %s\n" "$DIM" "$WRENCH" "$NC" "$(python3 --version 2>/dev/null || echo 'Not available')"
 echo ""
 
-scripts/help
+"$SCRIPT_DIR/help"
 
 echo ""
-echo "💡 Tip: Run 'scripts/develop' to start Home Assistant with your custom integration."
-echo "    Access it at http://localhost:8123"
+printf "%b%b Tip:%b Run %bscripts/develop%b to start Home Assistant with your custom integration.\n" "$CYAN" "$INFO" "$NC" "$BOLD" "$NC"
+printf "    Access it at %bhttp://localhost:8123%b\n" "$CYAN" "$NC"
 echo ""
