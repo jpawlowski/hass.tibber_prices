@@ -23,18 +23,19 @@ RED='\033[0;31m'
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
 BLUE='\033[0;34m'
+CYAN='\033[0;36m'
 NC='\033[0m' # No Color
 
 # Detect if running in CI (suppress colored output to stdout)
 if [[ -n $CI || -n $GITHUB_ACTIONS ]]; then
     # In CI, send info messages to stderr to keep release notes clean
     log_info() {
-        echo "$@" >&2
+        echo -e "$@" >&2
     }
 else
     # Local execution, show colored output
     log_info() {
-        echo "$@"
+        echo -e "$@"
     }
 fi
 
@@ -48,7 +49,7 @@ FROM_TAG="${1:-$(git describe --tags --abbrev=0 2>/dev/null || echo "")}"
 TO_TAG="${2:-HEAD}"
 
 if [[ -z $FROM_TAG ]]; then
-    echo "${RED}Error: No tags found in repository${NC}" >&2
+    echo -e "${RED}Error: No tags found in repository${NC}" >&2
     echo "Usage: $0 [FROM_TAG] [TO_TAG]" >&2
     exit 1
 fi
@@ -101,7 +102,7 @@ generate_with_copilot() {
 
     # Get commit log for the range with file statistics
     # This helps the AI understand which commits touched which files
-    COMMITS=$(git log --pretty=format:\"%h | %s%n%b%n\" --stat --compact-summary \"${FROM_TAG}..${TO_TAG}\")
+    COMMITS=$(git log --pretty=format:"%h | %s%n%b%n" --stat --compact-summary "${FROM_TAG}..${TO_TAG}")
 
     if [[ -z $COMMITS ]]; then
         log_info "${YELLOW}No commits found between ${FROM_TAG} and ${TO_TAG}${NC}"
@@ -493,7 +494,7 @@ fi
 case "$BACKEND" in
     copilot)
         if ! command -v copilot >/dev/null 2>&1; then
-            echo "${RED}Error: GitHub Copilot CLI not found${NC}" >&2
+            echo -e "${RED}Error: GitHub Copilot CLI not found${NC}" >&2
             echo "Install: npm install -g @github/copilot" >&2
             echo "See: https://github.com/github/copilot-cli" >&2
             exit 1
@@ -501,7 +502,7 @@ case "$BACKEND" in
         ;;
     git-cliff)
         if ! command -v git-cliff >/dev/null 2>&1; then
-            echo "${RED}Error: git-cliff not found${NC}" >&2
+            echo -e "${RED}Error: git-cliff not found${NC}" >&2
             echo "Install: https://git-cliff.org/docs/installation" >&2
             exit 1
         fi
@@ -637,12 +638,12 @@ if [ "$UPDATE_RELEASE" = "y" ] || [ "$UPDATE_RELEASE" = "Y" ]; then
         echo "" >&2
         log_info "${RED}✗ Failed to update release${NC}"
         log_info "You can manually update with:"
-        echo "  ${CYAN}gh release edit $TO_TAG --notes-file -${NC} < notes.md" >&2
+        echo -e "  ${CYAN}gh release edit $TO_TAG --notes-file -${NC} < notes.md" >&2
     fi
 else
     log_info "Skipped release update"
     log_info "You can update manually later with:"
-    echo "  ${CYAN}./scripts/release/generate-notes $FROM_TAG $TO_TAG | gh release edit $TO_TAG --notes-file -${NC}" >&2
+    echo -e "  ${CYAN}./scripts/release/generate-notes $FROM_TAG $TO_TAG | gh release edit $TO_TAG --notes-file -${NC}" >&2
 fi
 
 rm -f "$TEMP_NOTES" "$TEMP_BODY"
