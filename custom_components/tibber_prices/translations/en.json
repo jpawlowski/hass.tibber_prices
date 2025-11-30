@@ -77,10 +77,21 @@
         }
     },
     "common": {
-        "step_progress": "{step_num} / {total_steps}"
+        "step_progress": "{step_num} / {total_steps}",
+        "time_units": {
+            "day": "{count} day",
+            "days": "{count} days",
+            "hour": "{count} hour",
+            "hours": "{count} hours",
+            "minute": "{count} minute",
+            "minutes": "{count} minutes",
+            "ago": "{parts} ago",
+            "now": "now"
+        }
     },
     "config_subentries": {
         "home": {
+            "entry_type": "Time-Travel View",
             "initiate_flow": {
                 "user": "Create Time-Travel View"
             },
@@ -125,16 +136,6 @@
                 "already_configured": "**A time-travel view with this exact time offset already exists.**\n\nPlease choose a different offset.",
                 "no_main_entries": "No main configuration entries found. Please add a Tibber home first.",
                 "parent_entry_not_found": "Selected configuration entry not found."
-            },
-            "time_units": {
-                "day": "{count} day",
-                "days": "{count} days",
-                "hour": "{count} hour",
-                "hours": "{count} hours",
-                "minute": "{count} minute",
-                "minutes": "{count} minutes",
-                "ago": "{parts} ago",
-                "now": "now"
             }
         }
     },

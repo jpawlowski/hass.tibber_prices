@@ -77,10 +77,21 @@
         }
     },
     "common": {
-        "step_progress": "{step_num} / {total_steps}"
+        "step_progress": "{step_num} / {total_steps}",
+        "time_units": {
+            "day": "{count} Tag",
+            "days": "{count} Tagen",
+            "hour": "{count} Stunde",
+            "hours": "{count} Stunden",
+            "minute": "{count} Minute",
+            "minutes": "{count} Minuten",
+            "ago": "vor {parts}",
+            "now": "jetzt"
+        }
     },
     "config_subentries": {
         "home": {
+            "entry_type": "Zeitreise-Ansicht",
             "initiate_flow": {
                 "user": "Zeitreise-Ansicht erstellen"
             },
@@ -125,16 +136,6 @@
                 "already_configured": "**Eine Zeitreise-Ansicht mit diesem exakten Zeitversatz existiert bereits.**\n\nBitte wähle einen anderen Versatz.",
                 "no_main_entries": "Keine Hauptkonfigurationseinträge gefunden. Füge zuerst ein Tibber-Zuhause hinzu.",
                 "parent_entry_not_found": "Ausgewählter Konfigurationseintrag nicht gefunden."
-            },
-            "time_units": {
-                "day": "{count} Tag",
-                "days": "{count} Tagen",
-                "hour": "{count} Stunde",
-                "hours": "{count} Stunden",
-                "minute": "{count} Minute",
-                "minutes": "{count} Minuten",
-                "ago": "vor {parts}",
-                "now": "jetzt"
             }
         }
     },

@@ -77,10 +77,21 @@
         }
     },
     "common": {
-        "step_progress": "{step_num} / {total_steps}"
+        "step_progress": "{step_num} / {total_steps}",
+        "time_units": {
+            "day": "{count} dag",
+            "days": "{count} dagen",
+            "hour": "{count} uur",
+            "hours": "{count} uur",
+            "minute": "{count} minuut",
+            "minutes": "{count} minuten",
+            "ago": "{parts} geleden",
+            "now": "nu"
+        }
     },
     "config_subentries": {
         "home": {
+            "entry_type": "Tijdreisweergave",
             "initiate_flow": {
                 "user": "Tijdreisweergave maken"
             },
@@ -125,16 +136,6 @@
                 "already_configured": "**Een tijdreis-weergave met deze exacte tijdverschuiving bestaat al.**\n\nKies een andere verschuiving.",
                 "no_main_entries": "Geen hoofdconfiguratie-items gevonden. Voeg eerst een Tibber-huis toe.",
                 "parent_entry_not_found": "Geselecteerd configuratie-item niet gevonden."
-            },
-            "time_units": {
-                "day": "{count} dag",
-                "days": "{count} dagen",
-                "hour": "{count} uur",
-                "hours": "{count} uur",
-                "minute": "{count} minuut",
-                "minutes": "{count} minuten",
-                "ago": "{parts} geleden",
-                "now": "nu"
             }
         }
     },

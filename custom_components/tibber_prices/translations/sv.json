@@ -77,10 +77,21 @@
         }
     },
     "common": {
-        "step_progress": "{step_num} / {total_steps}"
+        "step_progress": "{step_num} / {total_steps}",
+        "time_units": {
+            "day": "{count} dag",
+            "days": "{count} dagar",
+            "hour": "{count} timme",
+            "hours": "{count} timmar",
+            "minute": "{count} minut",
+            "minutes": "{count} minuter",
+            "ago": "{parts} sedan",
+            "now": "nu"
+        }
     },
     "config_subentries": {
         "home": {
+            "entry_type": "Tidsresevy",
             "initiate_flow": {
                 "user": "Skapa tidsresevy"
             },
@@ -125,16 +136,6 @@
                 "already_configured": "**En tidsresevy med denna exakta tidsförskjutning existerar redan.**\n\nVälj en annan förskjutning.",
                 "no_main_entries": "Inga huvudkonfigurationsposter hittades. Lägg först till ett Tibber-hem.",
                 "parent_entry_not_found": "Vald konfigurationspost hittades inte."
-            },
-            "time_units": {
-                "day": "{count} dag",
-                "days": "{count} dagar",
-                "hour": "{count} timme",
-                "hours": "{count} timmar",
-                "minute": "{count} minut",
-                "minutes": "{count} minuter",
-                "ago": "{parts} sedan",
-                "now": "nu"
             }
         }
     },

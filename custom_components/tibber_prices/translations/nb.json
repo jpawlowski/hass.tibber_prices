@@ -77,10 +77,21 @@
         }
     },
     "common": {
-        "step_progress": "{step_num} / {total_steps}"
+        "step_progress": "{step_num} / {total_steps}",
+        "time_units": {
+            "day": "{count} dag",
+            "days": "{count} dager",
+            "hour": "{count} time",
+            "hours": "{count} timer",
+            "minute": "{count} minutt",
+            "minutes": "{count} minutter",
+            "ago": "{parts} siden",
+            "now": "nå"
+        }
     },
     "config_subentries": {
         "home": {
+            "entry_type": "Tidsreisevisning",
             "initiate_flow": {
                 "user": "Opprett tidsreisevisning"
             },
@@ -125,16 +136,6 @@
                 "already_configured": "**En tidsreisevisning med denne eksakte tidsforskyvningen eksisterer allerede.**\n\nVelg en annen forskyvning.",
                 "no_main_entries": "Ingen hovedkonfigurasjonsoppføringer funnet. Legg til et Tibber-hjem først.",
                 "parent_entry_not_found": "Valgt konfigurasjonsoppføring ikke funnet."
-            },
-            "time_units": {
-                "day": "{count} dag",
-                "days": "{count} dager",
-                "hour": "{count} time",
-                "hours": "{count} timer",
-                "minute": "{count} minutt",
-                "minutes": "{count} minutter",
-                "ago": "{parts} siden",
-                "now": "nå"
             }
         }
     },

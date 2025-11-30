@@ -177,7 +177,7 @@ class TibberPricesSubentryFlowHandler(ConfigSubentryFlow):
         # Get translations loaded by Home Assistant
         standard_translations_key = f"{DOMAIN}_standard_translations_{self.hass.config.language}"
         translations = self.hass.data.get(standard_translations_key, {})
-        time_units = translations.get("config_subentries", {}).get("home", {}).get("time_units", {})
+        time_units = translations.get("common", {}).get("time_units", {})
 
         # Fallback to English if translations not available
         if not time_units:
