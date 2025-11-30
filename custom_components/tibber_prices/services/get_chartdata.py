@@ -306,7 +306,10 @@ async def handle_chartdata(call: ServiceCall) -> dict[str, Any]:  # noqa: PLR091
                         if round_decimals is not None:
                             price = round(price, round_decimals)
 
-                    data_point = {start_time_field: start_time, price_field: price}
+                    data_point = {
+                        start_time_field: start_time.isoformat() if hasattr(start_time, "isoformat") else start_time,
+                        price_field: price,
+                    }
 
                     # Add level if requested (only when price is not NULL)
                     if include_level and "level" in interval and price is not None:
@@ -349,7 +352,12 @@ async def handle_chartdata(call: ServiceCall) -> dict[str, Any]:  # noqa: PLR091
                             converted_price = round(converted_price, round_decimals)
 
                         # Add current point
-                        data_point = {start_time_field: start_time, price_field: converted_price}
+                        data_point = {
+                            start_time_field: start_time.isoformat()
+                            if hasattr(start_time, "isoformat")
+                            else start_time,
+                            price_field: converted_price,
+                        }
 
                         if include_level and "level" in interval:
                             data_point[level_field] = interval["level"]
@@ -363,7 +371,12 @@ async def handle_chartdata(call: ServiceCall) -> dict[str, Any]:  # noqa: PLR091
                         # Check if next interval is different level (segment boundary)
                         if next_value != interval_value:
                             # Hold current price until next timestamp (stepline effect)
-                            hold_point = {start_time_field: next_start_time, price_field: converted_price}
+                            next_start_serialized = (
+                                next_start_time.isoformat()
+                                if next_start_time and hasattr(next_start_time, "isoformat")
+                                else next_start_time
+                            )
+                            hold_point = {start_time_field: next_start_serialized, price_field: converted_price}
                             if include_level and "level" in interval:
                                 hold_point[level_field] = interval["level"]
                             if include_rating_level and "rating_level" in interval:
@@ -373,7 +386,7 @@ async def handle_chartdata(call: ServiceCall) -> dict[str, Any]:  # noqa: PLR091
                             chart_data.append(hold_point)
 
                             # Add NULL point to create gap
-                            null_point = {start_time_field: next_start_time, price_field: None}
+                            null_point = {start_time_field: next_start_serialized, price_field: None}
                             chart_data.append(null_point)
 
                 # Handle last interval of the day - extend to midnight
@@ -472,7 +485,12 @@ async def handle_chartdata(call: ServiceCall) -> dict[str, Any]:  # noqa: PLR091
                         if round_decimals is not None:
                             price = round(price, round_decimals)
 
-                        data_point = {start_time_field: start_time, price_field: price}
+                        data_point = {
+                            start_time_field: start_time.isoformat()
+                            if hasattr(start_time, "isoformat")
+                            else start_time,
+                            price_field: price,
+                        }
 
                         # Add level if requested
                         if include_level and "level" in interval:

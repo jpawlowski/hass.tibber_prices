@@ -166,7 +166,12 @@ def aggregate_hourly_exact(  # noqa: PLR0913, PLR0912, PLR0915
             if round_decimals is not None:
                 avg_price = round(avg_price, round_decimals)
 
-            data_point = {start_time_field: start_time_str, price_field: avg_price}
+            data_point = {
+                start_time_field: start_time_str.isoformat()
+                if hasattr(start_time_str, "isoformat")
+                else start_time_str,
+                price_field: avg_price,
+            }
 
             # Add aggregated level using same logic as sensors
             if include_level and hour_interval_data:
@@ -295,10 +300,12 @@ def get_period_data(  # noqa: PLR0913, PLR0912, PLR0915
             data_point = {}
 
             # Start time
-            data_point[start_time_field] = period["start"]
+            start = period["start"]
+            data_point[start_time_field] = start.isoformat() if hasattr(start, "isoformat") else start
 
             # End time
-            data_point[end_time_field] = period.get("end")
+            end = period.get("end")
+            data_point[end_time_field] = end.isoformat() if end and hasattr(end, "isoformat") else end
 
             # Price (use price_avg from period, stored in minor units)
             price_avg = period.get("price_avg", 0.0)
@@ -327,7 +334,9 @@ def get_period_data(  # noqa: PLR0913, PLR0912, PLR0915
                 price_avg = price_avg / 100
             if round_decimals is not None:
                 price_avg = round(price_avg, round_decimals)
-            chart_data.append([period["start"], price_avg])
+            start = period["start"]
+            start_serialized = start.isoformat() if hasattr(start, "isoformat") else start
+            chart_data.append([start_serialized, price_avg])
 
     # Add trailing null point if requested
     if add_trailing_null and chart_data:
