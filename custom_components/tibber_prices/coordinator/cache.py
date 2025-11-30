@@ -106,9 +106,28 @@ def is_cache_valid(
     - No cached data exists
     - Cached data is from a different calendar day (in local timezone)
     - Midnight turnover has occurred since cache was saved
+    - Cache structure is outdated (pre-v0.15.0 multi-home format)
 
     """
     if cache_data.price_data is None or cache_data.last_price_update is None:
+        return False
+
+    # Check for old cache structure (multi-home format from v0.14.0)
+    # Old format: {"homes": {home_id: {...}}}
+    # New format: {"home_id": str, "price_info": [...]}
+    if "homes" in cache_data.price_data:
+        _LOGGER.info(
+            "%s Cache has old multi-home structure (v0.14.0), invalidating to fetch fresh data",
+            log_prefix,
+        )
+        return False
+
+    # Check for missing required keys in new structure
+    if "price_info" not in cache_data.price_data:
+        _LOGGER.info(
+            "%s Cache missing 'price_info' key, invalidating to fetch fresh data",
+            log_prefix,
+        )
         return False
 
     current_local_date = time.as_local(time.now()).date()
