@@ -77,17 +77,7 @@
         }
     },
     "common": {
-        "step_progress": "{step_num} / {total_steps}",
-        "time_units": {
-            "day": "{count} dag",
-            "days": "{count} dagar",
-            "hour": "{count} timme",
-            "hours": "{count} timmar",
-            "minute": "{count} minut",
-            "minutes": "{count} minuter",
-            "ago": "{parts} sedan",
-            "now": "nu"
-        }
+        "step_progress": "{step_num} / {total_steps}"
     },
     "config_subentries": {
         "home": {
@@ -872,6 +862,10 @@
                 "insert_nulls": {
                     "name": "Infoga NULL-värden",
                     "description": "Kontrollera infogning av NULL-värden för filtrerad data. 'none' (standard): Inga NULL-värden, endast matchande intervall. 'segments': Lägg till NULL-punkter vid segmentgränser för rena luckor i diagram (rekommenderas för steglinjediagram). 'all': Infoga NULL för alla tidsstämplar där filtret inte matchar (användbart för kontinuerlig tidsserievisualisering)."
+                },
+                "connect_segments": {
+                    "name": "Anslut segment",
+                    "description": "[ENDAST MED insert_nulls='segments'] När aktiverad, läggs anslutningspunkter till vid segmentgränser för att visuellt ansluta olika prisnivå-segment i steglinjediagram. När priset går NER läggs en punkt med lägre pris till i slutet av nuvarande segment. När priset går UPP läggs en hållpunkt till före luckan. Detta skapar mjuka visuella övergångar mellan segment istället för abrupta luckor."
                 },
                 "add_trailing_null": {
                     "name": "Lägg till avslutande null-punkt",

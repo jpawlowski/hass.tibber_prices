@@ -482,5 +482,15 @@
         "HOUSE": "Huis",
         "COTTAGE": "Huisje"
     },
+    "time_units": {
+        "day": "{count} dag",
+        "days": "{count} dagen",
+        "hour": "{count} uur",
+        "hours": "{count} uur",
+        "minute": "{count} minuut",
+        "minutes": "{count} minuten",
+        "ago": "{parts} geleden",
+        "now": "nu"
+    },
     "attribution": "Gegevens geleverd door Tibber"
 }

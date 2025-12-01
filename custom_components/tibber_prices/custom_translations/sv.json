@@ -482,5 +482,15 @@
         "HOUSE": "Hus",
         "COTTAGE": "Stuga"
     },
+    "time_units": {
+        "day": "{count} dag",
+        "days": "{count} dagar",
+        "hour": "{count} timme",
+        "hours": "{count} timmar",
+        "minute": "{count} minut",
+        "minutes": "{count} minuter",
+        "ago": "{parts} sedan",
+        "now": "nu"
+    },
     "attribution": "Data tillhandahålls av Tibber"
 }

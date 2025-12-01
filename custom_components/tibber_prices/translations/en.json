@@ -77,17 +77,7 @@
         }
     },
     "common": {
-        "step_progress": "{step_num} / {total_steps}",
-        "time_units": {
-            "day": "{count} day",
-            "days": "{count} days",
-            "hour": "{count} hour",
-            "hours": "{count} hours",
-            "minute": "{count} minute",
-            "minutes": "{count} minutes",
-            "ago": "{parts} ago",
-            "now": "now"
-        }
+        "step_progress": "{step_num} / {total_steps}"
     },
     "config_subentries": {
         "home": {
@@ -872,6 +862,10 @@
                 "insert_nulls": {
                     "name": "Insert NULL Values",
                     "description": "Control NULL value insertion for filtered data. 'none' (default): No NULL values, only matching intervals. 'segments': Add NULL points at segment boundaries for clean gaps in charts (recommended for stepline charts). 'all': Insert NULL for all timestamps where filter doesn't match (useful for continuous time series visualization)."
+                },
+                "connect_segments": {
+                    "name": "Connect Segments",
+                    "description": "[ONLY WITH insert_nulls='segments'] When enabled, adds connecting points at segment boundaries to visually connect different price level segments in stepline charts. When price goes DOWN at a boundary, adds a point with the lower price at the end of the current segment. When price goes UP, adds a hold point before the gap. This creates smooth visual transitions between segments instead of abrupt gaps."
                 },
                 "add_trailing_null": {
                     "name": "Add Trailing Null Point",

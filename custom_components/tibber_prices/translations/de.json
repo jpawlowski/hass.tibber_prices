@@ -77,17 +77,7 @@
         }
     },
     "common": {
-        "step_progress": "{step_num} / {total_steps}",
-        "time_units": {
-            "day": "{count} Tag",
-            "days": "{count} Tagen",
-            "hour": "{count} Stunde",
-            "hours": "{count} Stunden",
-            "minute": "{count} Minute",
-            "minutes": "{count} Minuten",
-            "ago": "vor {parts}",
-            "now": "jetzt"
-        }
+        "step_progress": "{step_num} / {total_steps}"
     },
     "config_subentries": {
         "home": {
@@ -876,6 +866,10 @@
                 "insert_nulls": {
                     "name": "NULL-Werte einfügen",
                     "description": "Steuert das Einfügen von NULL-Werten für gefilterte Daten. 'none' (Standard): Keine NULL-Werte, nur passende Intervalle. 'segments': NULL-Punkte an Segmentgrenzen für saubere Lücken in Diagrammen hinzufügen (empfohlen für Stufenliniendiagramme). 'all': NULL für alle Zeitstempel einfügen, bei denen der Filter nicht übereinstimmt (nützlich für kontinuierliche Zeitreihenvisualisierung)."
+                },
+                "connect_segments": {
+                    "name": "Segmente verbinden",
+                    "description": "[NUR MIT insert_nulls='segments'] Wenn aktiviert, werden an Segmentgrenzen Verbindungspunkte hinzugefügt, um verschiedene Preisstufen-Segmente in Stufenliniendiagrammen visuell zu verbinden. Bei fallendem Preis wird ein Punkt mit dem niedrigeren Preis am Ende des aktuellen Segments hinzugefügt. Bei steigendem Preis wird ein Haltepunkt vor der Lücke hinzugefügt. Dies erzeugt sanfte visuelle Übergänge zwischen Segmenten anstelle von abrupten Lücken."
                 },
                 "add_trailing_null": {
                     "name": "Abschließenden Null-Punkt hinzufügen",
