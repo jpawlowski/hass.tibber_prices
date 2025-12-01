@@ -580,6 +580,12 @@ async def handle_chartdata(call: ServiceCall) -> dict[str, Any]:  # noqa: PLR091
                 )
             )
 
+    # Remove trailing null values from chart_data (for proper ApexCharts header display).
+    # Internal nulls at segment boundaries are preserved for gap visualization.
+    # Only trailing nulls cause issues with in_header showing "N/A".
+    while chart_data and chart_data[-1].get(price_field) is None:
+        chart_data.pop()
+
     # Convert to array of arrays format if requested
     if output_format == "array_of_arrays":
         array_fields_template = call.data.get("array_fields")

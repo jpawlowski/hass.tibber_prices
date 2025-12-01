@@ -159,3 +159,69 @@ class TestPriceConversion:
         round_decimals = 2
         final = round(converted, round_decimals)
         assert final == 0.12, "Should round to 2 decimal places"
+
+
+class TestTrailingNullRemoval:
+    """Test trailing null value removal for ApexCharts header display."""
+
+    def test_trailing_nulls_removed(self) -> None:
+        """Test that trailing null values are removed from chart_data."""
+        price_field = "price_per_kwh"
+        chart_data = [
+            {"start_time": "2025-12-01T00:00:00", price_field: 10.0},
+            {"start_time": "2025-12-01T00:15:00", price_field: 12.0},
+            {"start_time": "2025-12-01T00:30:00", price_field: None},  # Trailing null
+            {"start_time": "2025-12-01T00:45:00", price_field: None},  # Trailing null
+        ]
+
+        # Simulate the trailing null removal logic
+        while chart_data and chart_data[-1].get(price_field) is None:
+            chart_data.pop()
+
+        assert len(chart_data) == 2, "Should have 2 items after removing trailing nulls"
+        assert chart_data[-1][price_field] == 12.0, "Last item should be the last non-null price"
+
+    def test_internal_nulls_preserved(self) -> None:
+        """Test that internal null values are preserved for gap visualization."""
+        price_field = "price_per_kwh"
+        chart_data = [
+            {"start_time": "2025-12-01T00:00:00", price_field: 10.0},
+            {"start_time": "2025-12-01T00:15:00", price_field: None},  # Internal null (gap)
+            {"start_time": "2025-12-01T00:30:00", price_field: 12.0},
+            {"start_time": "2025-12-01T00:45:00", price_field: None},  # Trailing null
+        ]
+
+        # Simulate the trailing null removal logic
+        while chart_data and chart_data[-1].get(price_field) is None:
+            chart_data.pop()
+
+        assert len(chart_data) == 3, "Should have 3 items after removing trailing null"
+        assert chart_data[1][price_field] is None, "Internal null should be preserved"
+        assert chart_data[-1][price_field] == 12.0, "Last item should be the last non-null price"
+
+    def test_no_nulls_unchanged(self) -> None:
+        """Test that chart_data without trailing nulls is unchanged."""
+        price_field = "price_per_kwh"
+        chart_data = [
+            {"start_time": "2025-12-01T00:00:00", price_field: 10.0},
+            {"start_time": "2025-12-01T00:15:00", price_field: 12.0},
+        ]
+
+        original_length = len(chart_data)
+
+        # Simulate the trailing null removal logic
+        while chart_data and chart_data[-1].get(price_field) is None:
+            chart_data.pop()
+
+        assert len(chart_data) == original_length, "Data without trailing nulls should be unchanged"
+
+    def test_empty_data_handled(self) -> None:
+        """Test that empty chart_data is handled without error."""
+        price_field = "price_per_kwh"
+        chart_data: list[dict] = []
+
+        # Simulate the trailing null removal logic - should not raise
+        while chart_data and chart_data[-1].get(price_field) is None:
+            chart_data.pop()
+
+        assert chart_data == [], "Empty data should remain empty"
