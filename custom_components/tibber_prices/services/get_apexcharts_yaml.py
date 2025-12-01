@@ -131,9 +131,6 @@ async def handle_apexcharts_yaml(call: ServiceCall) -> dict[str, Any]:
         else:
             filter_param = f"level_filter: ['{level_key}']"
 
-        # Data generator fetches chart data and removes trailing nulls for proper header display.
-        # ApexCharts in_header shows last value, so trailing nulls cause "N/A".
-        # The pop loop safely removes trailing null price values ([timestamp, null]) from the end.
         data_generator = (
             f"const response = await hass.callWS({{ "
             f"type: 'call_service', "
@@ -142,9 +139,7 @@ async def handle_apexcharts_yaml(call: ServiceCall) -> dict[str, Any]:
             f"return_response: true, "
             f"service_data: {{ entry_id: '{entry_id}', day: ['{day}'], {filter_param}, "
             f"output_format: 'array_of_arrays', insert_nulls: 'segments', minor_currency: true }} }}); "
-            f"const data = response.response.data; "
-            f"while (data.length > 0 && data[data.length - 1]?.[1] === null) data.pop(); "
-            f"return data;"
+            f"return response.response.data;"
         )
         # Only show extremas for HIGH and LOW levels (not NORMAL)
         show_extremas = level_key != "NORMAL"
