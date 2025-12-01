@@ -873,6 +873,10 @@
                     "name": "Infoga NULL-värden",
                     "description": "Kontrollera infogning av NULL-värden för filtrerad data. 'none' (standard): Inga NULL-värden, endast matchande intervall. 'segments': Lägg till NULL-punkter vid segmentgränser för rena luckor i diagram (rekommenderas för steglinjediagram). 'all': Infoga NULL för alla tidsstämplar där filtret inte matchar (användbart för kontinuerlig tidsserievisualisering)."
                 },
+                "connect_segments": {
+                    "name": "Anslut segment",
+                    "description": "[ENDAST MED insert_nulls='segments'] När aktiverad, läggs anslutningspunkter till vid segmentgränser för att visuellt ansluta olika prisnivå-segment i steglinjediagram. När priset går NER läggs en punkt med lägre pris till i slutet av nuvarande segment. När priset går UPP läggs en hållpunkt till före luckan. Detta skapar mjuka visuella övergångar mellan segment istället för abrupta luckor."
+                },
                 "add_trailing_null": {
                     "name": "Lägg till avslutande null-punkt",
                     "description": "[BÅDA FORMATEN] Lägg till en sista datapunkt med nullvärden (utom tidsstämpel) i slutet. Vissa diagrambibliotek behöver detta för att förhindra extrapolering/interpolering till visningsportens kant vid användning av trappstegsrendering. Lämna inaktiverad om inte ditt diagram kräver det."

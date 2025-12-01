@@ -873,6 +873,10 @@
                     "name": "NULL-waarden invoegen",
                     "description": "Beheer het invoegen van NULL-waarden voor gefilterde gegevens. 'none' (standaard): Geen NULL-waarden, alleen overeenkomende intervallen. 'segments': Voeg NULL-punten toe bij segmentgrenzen voor schone gaten in grafieken (aanbevolen voor traplijngrafieken). 'all': Voeg NULL in voor alle tijdstempels waarbij het filter niet overeenkomt (handig voor continue tijdreeksvisualisatie)."
                 },
+                "connect_segments": {
+                    "name": "Segmenten verbinden",
+                    "description": "[ALLEEN MET insert_nulls='segments'] Indien ingeschakeld, worden verbindingspunten toegevoegd bij segmentgrenzen om verschillende prijsniveau-segmenten visueel te verbinden in traplijngrafieken. Wanneer de prijs DAALT, wordt een punt met de lagere prijs toegevoegd aan het einde van het huidige segment. Wanneer de prijs STIJGT, wordt een houdpunt toegevoegd vóór de gat. Dit creëert vloeiende visuele overgangen tussen segmenten in plaats van abrupte gaten."
+                },
                 "add_trailing_null": {
                     "name": "Voeg afsluitend null-punt toe",
                     "description": "[BEIDE FORMATEN] Voeg een laatste datapunt met null-waarden (behalve tijdstempel) toe aan het einde. Sommige diagrambibliotheken hebben dit nodig om extrapolatie/interpolatie naar de rand van het viewport te voorkomen bij stepline-weergave. Laat uitgeschakeld tenzij je diagram dit vereist."

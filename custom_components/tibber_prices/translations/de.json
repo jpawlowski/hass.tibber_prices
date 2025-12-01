@@ -877,6 +877,10 @@
                     "name": "NULL-Werte einfügen",
                     "description": "Steuert das Einfügen von NULL-Werten für gefilterte Daten. 'none' (Standard): Keine NULL-Werte, nur passende Intervalle. 'segments': NULL-Punkte an Segmentgrenzen für saubere Lücken in Diagrammen hinzufügen (empfohlen für Stufenliniendiagramme). 'all': NULL für alle Zeitstempel einfügen, bei denen der Filter nicht übereinstimmt (nützlich für kontinuierliche Zeitreihenvisualisierung)."
                 },
+                "connect_segments": {
+                    "name": "Segmente verbinden",
+                    "description": "[NUR MIT insert_nulls='segments'] Wenn aktiviert, werden an Segmentgrenzen Verbindungspunkte hinzugefügt, um verschiedene Preisstufen-Segmente in Stufenliniendiagrammen visuell zu verbinden. Bei fallendem Preis wird ein Punkt mit dem niedrigeren Preis am Ende des aktuellen Segments hinzugefügt. Bei steigendem Preis wird ein Haltepunkt vor der Lücke hinzugefügt. Dies erzeugt sanfte visuelle Übergänge zwischen Segmenten anstelle von abrupten Lücken."
+                },
                 "add_trailing_null": {
                     "name": "Abschließenden Null-Punkt hinzufügen",
                     "description": "[BEIDE FORMATE] Füge einen finalen Datenpunkt mit Nullwerten (außer Zeitstempel) am Ende hinzu. Einige Diagrammbibliotheken benötigen dies, um Extrapolation/Interpolation zum Viewport-Rand bei Verwendung von Stufendarstellung zu verhindern. Deaktiviert lassen, es sei denn, dein Diagramm benötigt es."

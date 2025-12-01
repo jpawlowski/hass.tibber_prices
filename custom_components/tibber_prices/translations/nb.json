@@ -873,6 +873,10 @@
                     "name": "Sett inn NULL-verdier",
                     "description": "Kontroller innsetting av NULL-verdier for filtrerte data. 'none' (standard): Ingen NULL-verdier, bare matchende intervaller. 'segments': Legg til NULL-punkter ved segmentgrenser for rene hull i diagrammer (anbefalt for trinnlinjediagrammer). 'all': Sett inn NULL for alle tidsstempler der filteret ikke samsvarer (nyttig for kontinuerlig tidsserievisualisering)."
                 },
+                "connect_segments": {
+                    "name": "Koble segmenter",
+                    "description": "[KUN MED insert_nulls='segments'] Når aktivert, legges tilkoblingspunkter til ved segmentgrenser for å visuelt koble ulike prisnivå-segmenter i trinnlinjediagrammer. Når prisen går NED, legges et punkt med lavere pris til på slutten av gjeldende segment. Når prisen går OPP, legges et holdepunkt til før hullet. Dette skaper jevne visuelle overganger mellom segmenter i stedet for brå hull."
+                },
                 "add_trailing_null": {
                     "name": "Legg til avsluttende null-punkt",
                     "description": "[BEGGE FORMATER] Legg til et siste datapunkt med nullverdier (unntatt tidsstempel) på slutten. Noen diagrambiblioteker trenger dette for å forhindre ekstrapolering/interpolering til visningsportens kant ved bruk av trinnlinje-rendering. La være deaktivert med mindre diagrammet ditt krever det."
