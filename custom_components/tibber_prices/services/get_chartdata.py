@@ -92,6 +92,7 @@ CHARTDATA_SERVICE_SCHEMA: Final = vol.Schema(
             [vol.In([PRICE_RATING_LOW, PRICE_RATING_NORMAL, PRICE_RATING_HIGH])],
         ),
         vol.Optional("insert_nulls", default="none"): vol.In(["none", "segments", "all"]),
+        vol.Optional("connect_segments", default=False): bool,
         vol.Optional("add_trailing_null", default=False): bool,
         vol.Optional("period_filter"): vol.In(["best_price", "peak_price"]),
         vol.Optional("start_time_field", default="start_time"): str,
@@ -156,6 +157,7 @@ async def handle_chartdata(call: ServiceCall) -> dict[str, Any]:  # noqa: PLR091
     include_rating_level = call.data.get("include_rating_level", False)
     include_average = call.data.get("include_average", False)
     insert_nulls = call.data.get("insert_nulls", "none")
+    connect_segments = call.data.get("connect_segments", False)
     add_trailing_null = call.data.get("add_trailing_null", False)
     period_filter = call.data.get("period_filter")
     # Filter values are already normalized to uppercase by schema validators
@@ -336,6 +338,7 @@ async def handle_chartdata(call: ServiceCall) -> dict[str, Any]:  # noqa: PLR091
 
                     start_time = interval.get("startsAt")
                     price = interval.get("total")
+                    next_price = next_interval.get("total")
                     next_start_time = next_interval.get("startsAt")
 
                     if start_time is None or price is None:
@@ -370,24 +373,70 @@ async def handle_chartdata(call: ServiceCall) -> dict[str, Any]:  # noqa: PLR091
 
                         # Check if next interval is different level (segment boundary)
                         if next_value != interval_value:
-                            # Hold current price until next timestamp (stepline effect)
                             next_start_serialized = (
                                 next_start_time.isoformat()
                                 if next_start_time and hasattr(next_start_time, "isoformat")
                                 else next_start_time
                             )
-                            hold_point = {start_time_field: next_start_serialized, price_field: converted_price}
-                            if include_level and "level" in interval:
-                                hold_point[level_field] = interval["level"]
-                            if include_rating_level and "rating_level" in interval:
-                                hold_point[rating_level_field] = interval["rating_level"]
-                            if include_average and day in day_averages:
-                                hold_point[average_field] = day_averages[day]
-                            chart_data.append(hold_point)
 
-                            # Add NULL point to create gap
-                            null_point = {start_time_field: next_start_serialized, price_field: None}
-                            chart_data.append(null_point)
+                            if connect_segments and next_price is not None:
+                                # Connect segments visually by adding transition points
+                                # Convert next price for comparison and use
+                                converted_next_price = (
+                                    round(next_price * 100, 2) if minor_currency else round(next_price, 4)
+                                )
+                                if round_decimals is not None:
+                                    converted_next_price = round(converted_next_price, round_decimals)
+
+                                if next_price < price:
+                                    # Price goes DOWN: Add point at end of current segment with lower price
+                                    # This draws the line downward from current level
+                                    connect_point = {
+                                        start_time_field: next_start_serialized,
+                                        price_field: converted_next_price,
+                                    }
+                                    if include_level and "level" in interval:
+                                        connect_point[level_field] = interval["level"]
+                                    if include_rating_level and "rating_level" in interval:
+                                        connect_point[rating_level_field] = interval["rating_level"]
+                                    if include_average and day in day_averages:
+                                        connect_point[average_field] = day_averages[day]
+                                    chart_data.append(connect_point)
+                                else:
+                                    # Price goes UP or stays same: Add hold point with current price
+                                    # Then add connect point at next level with higher price
+                                    hold_point = {
+                                        start_time_field: next_start_serialized,
+                                        price_field: converted_price,
+                                    }
+                                    if include_level and "level" in interval:
+                                        hold_point[level_field] = interval["level"]
+                                    if include_rating_level and "rating_level" in interval:
+                                        hold_point[rating_level_field] = interval["rating_level"]
+                                    if include_average and day in day_averages:
+                                        hold_point[average_field] = day_averages[day]
+                                    chart_data.append(hold_point)
+
+                                # Add NULL point to create gap after transition
+                                null_point = {start_time_field: next_start_serialized, price_field: None}
+                                chart_data.append(null_point)
+                            else:
+                                # Original behavior: Hold current price until next timestamp
+                                hold_point = {
+                                    start_time_field: next_start_serialized,
+                                    price_field: converted_price,
+                                }
+                                if include_level and "level" in interval:
+                                    hold_point[level_field] = interval["level"]
+                                if include_rating_level and "rating_level" in interval:
+                                    hold_point[rating_level_field] = interval["rating_level"]
+                                if include_average and day in day_averages:
+                                    hold_point[average_field] = day_averages[day]
+                                chart_data.append(hold_point)
+
+                                # Add NULL point to create gap
+                                null_point = {start_time_field: next_start_serialized, price_field: None}
+                                chart_data.append(null_point)
 
                 # Handle last interval of the day - extend to midnight
                 if day_prices:
