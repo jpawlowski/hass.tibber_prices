@@ -48,7 +48,7 @@ from custom_components.tibber_prices.coordinator.helpers import (
 from homeassistant.exceptions import ServiceValidationError
 
 from .formatters import aggregate_hourly_exact, get_period_data, normalize_level_filter, normalize_rating_level_filter
-from .helpers import get_entry_and_data
+from .helpers import get_entry_and_data, has_tomorrow_data
 
 if TYPE_CHECKING:
     from homeassistant.core import ServiceCall
@@ -114,6 +114,11 @@ async def handle_chartdata(call: ServiceCall) -> dict[str, Any]:  # noqa: PLR091
     Supports both 15-minute intervals and hourly aggregation, with optional filtering by
     price level, rating level, or period (best_price/peak_price).
 
+    Default behavior (no day parameter):
+    - Returns rolling 2-day window for continuous chart display
+    - If tomorrow data available: today + tomorrow
+    - If tomorrow data NOT available: yesterday + today
+
     See services.yaml for detailed parameter documentation.
 
     Args:
@@ -132,10 +137,15 @@ async def handle_chartdata(call: ServiceCall) -> dict[str, Any]:  # noqa: PLR091
         raise ServiceValidationError(translation_domain=DOMAIN, translation_key="missing_entry_id")
     entry_id: str = str(entry_id_raw)
 
+    # Get coordinator to check data availability
+    _, coordinator, _ = get_entry_and_data(hass, entry_id)
+
     days_raw = call.data.get(ATTR_DAY)
-    # If no day specified, return all available data (today + tomorrow)
+    # If no day specified, use rolling 2-day window:
+    # - If tomorrow data available: today + tomorrow
+    # - If tomorrow data NOT available: yesterday + today
     if days_raw is None:
-        days = ["today", "tomorrow"]
+        days = ["today", "tomorrow"] if has_tomorrow_data(coordinator) else ["yesterday", "today"]
     # Convert single string to list for uniform processing
     elif isinstance(days_raw, str):
         days = [days_raw]
@@ -173,8 +183,6 @@ async def handle_chartdata(call: ServiceCall) -> dict[str, Any]:  # noqa: PLR091
             include_rating_level = True
         if average_field in array_fields_template:
             include_average = True
-
-    _, coordinator, _ = get_entry_and_data(hass, entry_id)
 
     # Get thresholds from config for rating aggregation
     threshold_low = coordinator.config_entry.options.get(

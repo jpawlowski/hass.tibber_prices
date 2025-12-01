@@ -795,7 +795,7 @@
                 },
                 "day": {
                     "name": "Day",
-                    "description": "Which day to visualize (yesterday, today, or tomorrow)."
+                    "description": "Which day to visualize (yesterday, today, or tomorrow). If not specified, returns a rolling 2-day window: today+tomorrow (when tomorrow data is available) or yesterday+today (when tomorrow data is not yet available)."
                 },
                 "level_type": {
                     "name": "Level Type",
@@ -813,7 +813,7 @@
                 },
                 "day": {
                     "name": "Day",
-                    "description": "Which day(s) to fetch prices for. You can select multiple days. If not specified, returns all available data (today + tomorrow if available)."
+                    "description": "Which day(s) to fetch prices for. You can select multiple days. If not specified, returns a rolling 2-day window: today+tomorrow (when tomorrow data is available) or yesterday+today (when tomorrow data is not yet available). This provides continuous chart display without gaps."
                 },
                 "resolution": {
                     "name": "Resolution",

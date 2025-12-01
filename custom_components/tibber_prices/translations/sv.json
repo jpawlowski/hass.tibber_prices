@@ -795,7 +795,7 @@
                 },
                 "day": {
                     "name": "Dag",
-                    "description": "Vilken dag som ska visualiseras (igår, idag eller imorgon)."
+                    "description": "Vilken dag som ska visualiseras (igår, idag eller imorgon). Om inte angivet returneras ett rullande 2-dagarsfönster: idag+imorgon (när data för imorgon är tillgänglig) eller igår+idag (när data för imorgon inte är tillgänglig ännu)."
                 },
                 "level_type": {
                     "name": "Nivåtyp",
@@ -813,7 +813,7 @@
                 },
                 "day": {
                     "name": "Dag",
-                    "description": "Vilken dag(ar) ska priser hämtas för. Du kan välja flera dagar. Om inte angivet, returneras alla tillgängliga data (idag + imorgon om tillgängligt)."
+                    "description": "Vilken dag(ar) ska priser hämtas för. Du kan välja flera dagar. Om inte angivet, returneras ett rullande 2-dagars fönster: idag+imorgon (när morgondagens data är tillgänglig) eller igår+idag (när morgondagens data inte är tillgänglig ännu). Detta ger kontinuerlig diagramvisning utan luckor."
                 },
                 "resolution": {
                     "name": "Upplösning",

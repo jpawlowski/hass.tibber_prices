@@ -799,7 +799,7 @@
                 },
                 "day": {
                     "name": "Tag",
-                    "description": "Welcher Tag visualisiert werden soll (gestern, heute oder morgen)."
+                    "description": "Welcher Tag visualisiert werden soll (gestern, heute oder morgen). Falls nicht angegeben, wird ein rollierendes 2-Tage-Fenster zurückgegeben: heute+morgen (wenn Daten für morgen verfügbar sind) oder gestern+heute (wenn Daten für morgen noch nicht verfügbar sind)."
                 },
                 "level_type": {
                     "name": "Stufen-Typ",
@@ -817,7 +817,7 @@
                 },
                 "day": {
                     "name": "Tag",
-                    "description": "Für welche(n) Tag(e) sollen Preise abgerufen werden. Du kannst mehrere Tage auswählen. Falls nicht angegeben, werden alle verfügbaren Daten zurückgegeben (heute + morgen falls verfügbar)."
+                    "description": "Für welche(n) Tag(e) sollen Preise abgerufen werden. Du kannst mehrere Tage auswählen. Falls nicht angegeben, wird ein rollierendes 2-Tages-Fenster zurückgegeben: heute+morgen (wenn Morgendaten verfügbar) oder gestern+heute (wenn Morgendaten noch nicht verfügbar). Dies ermöglicht eine kontinuierliche Diagrammanzeige ohne Lücken."
                 },
                 "resolution": {
                     "name": "Auflösung",

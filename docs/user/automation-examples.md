@@ -241,4 +241,60 @@ Coming soon...
 
 ## ApexCharts Cards
 
-Coming soon...
+The `tibber_prices.get_apexcharts_yaml` service generates complete ApexCharts card configurations for visualizing electricity prices.
+
+### Prerequisites
+
+**Required:**
+- [ApexCharts Card](https://github.com/RomRider/apexcharts-card) - Install via HACS
+
+**Optional (for rolling window mode):**
+- [Config Template Card](https://github.com/iantrich/config-template-card) - Install via HACS
+
+### Installation
+
+1. Open HACS → Frontend
+2. Search for "ApexCharts Card" and install
+3. (Optional) Search for "Config Template Card" and install if you want rolling window mode
+
+### Example: Fixed Day View
+
+```yaml
+# Generate configuration via automation/script
+service: tibber_prices.get_apexcharts_yaml
+data:
+    entry_id: YOUR_ENTRY_ID
+    day: today  # or "yesterday", "tomorrow"
+    level_type: rating_level  # or "level" for 5-level view
+response_variable: apexcharts_config
+```
+
+Then copy the generated YAML into your Lovelace dashboard.
+
+### Example: Rolling 48h Window
+
+For a dynamic chart that automatically adapts to data availability:
+
+```yaml
+service: tibber_prices.get_apexcharts_yaml
+data:
+    entry_id: YOUR_ENTRY_ID
+    # Omit 'day' parameter for rolling window
+    level_type: rating_level
+response_variable: apexcharts_config
+```
+
+**Behavior:**
+- **When tomorrow data available** (typically after ~13:00): Shows today + tomorrow
+- **When tomorrow data not available**: Shows yesterday + today
+
+**Note:** Rolling window mode requires Config Template Card to dynamically adjust the time range.
+
+### Features
+
+- Color-coded price levels/ratings (green = cheap, yellow = normal, red = expensive)
+- Best price period highlighting (semi-transparent green overlay)
+- Automatic NULL insertion for clean gaps
+- Translated labels based on your Home Assistant language
+- Interactive zoom and pan
+- Live marker showing current time

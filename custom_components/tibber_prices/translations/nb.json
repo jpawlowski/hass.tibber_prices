@@ -795,7 +795,7 @@
                 },
                 "day": {
                     "name": "Dag",
-                    "description": "Hvilken dag som skal visualiseres (i går, i dag eller i morgen)."
+                    "description": "Hvilken dag som skal visualiseres (i går, i dag eller i morgen). Hvis ikke angitt, returneres et rullende 2-dagers vindu: i dag+i morgen (når data for i morgen er tilgjengelig) eller i går+i dag (når data for i morgen ikke er tilgjengelig ennå)."
                 },
                 "level_type": {
                     "name": "Nivåtype",
@@ -813,7 +813,7 @@
                 },
                 "day": {
                     "name": "Dag",
-                    "description": "Hvilken dag(er) skal det hentes priser for. Du kan velge flere dager. Hvis ikke angitt, returneres alle tilgjengelige data (i dag + i morgen hvis tilgjengelig)."
+                    "description": "Hvilken dag(er) skal det hentes priser for. Du kan velge flere dager. Hvis ikke angitt, returneres et rullerende 2-dagers vindu: i dag+i morgen (når morgendagens data er tilgjengelig) eller i går+i dag (når morgendagens data ikke er tilgjengelig ennå). Dette gir kontinuerlig diagramvisning uten hull."
                 },
                 "resolution": {
                     "name": "Oppløsning",

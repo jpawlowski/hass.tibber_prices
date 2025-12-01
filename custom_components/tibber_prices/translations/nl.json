@@ -795,7 +795,7 @@
                 },
                 "day": {
                     "name": "Dag",
-                    "description": "Welke dag gevisualiseerd moet worden (gisteren, vandaag of morgen)."
+                    "description": "Welke dag gevisualiseerd moet worden (gisteren, vandaag of morgen). Indien niet opgegeven, wordt een rollend 2-dagen venster geretourneerd: vandaag+morgen (wanneer gegevens voor morgen beschikbaar zijn) of gisteren+vandaag (wanneer gegevens voor morgen nog niet beschikbaar zijn)."
                 },
                 "level_type": {
                     "name": "Niveautype",
@@ -813,7 +813,7 @@
                 },
                 "day": {
                     "name": "Dag",
-                    "description": "Voor welke dag(en) moeten prijzen worden opgehaald. Je kunt meerdere dagen selecteren. Als niet opgegeven, worden alle beschikbare gegevens geretourneerd (vandaag + morgen indien beschikbaar)."
+                    "description": "Voor welke dag(en) moeten prijzen worden opgehaald. Je kunt meerdere dagen selecteren. Als niet opgegeven, wordt een rollend 2-daags venster geretourneerd: vandaag+morgen (wanneer morgengegevens beschikbaar zijn) of gisteren+vandaag (wanneer morgengegevens nog niet beschikbaar zijn). Dit zorgt voor een continue grafiekweergave zonder hiaten."
                 },
                 "resolution": {
                     "name": "Resolutie",

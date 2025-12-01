@@ -36,6 +36,7 @@ from custom_components.tibber_prices.const import (
     get_translation,
 )
 from homeassistant.exceptions import ServiceValidationError
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_registry import (
     EntityRegistry,
 )
@@ -55,12 +56,12 @@ ATTR_DAY: Final = "day"
 ATTR_ENTRY_ID: Final = "entry_id"
 
 # Service schema
-APEXCHARTS_SERVICE_SCHEMA: Final = vol.Schema(
+APEXCHARTS_SERVICE_SCHEMA = vol.Schema(
     {
-        vol.Required(ATTR_ENTRY_ID): str,
-        vol.Optional("day", default="today"): vol.In(["yesterday", "today", "tomorrow"]),
+        vol.Required(ATTR_ENTRY_ID): cv.string,
+        vol.Optional("day"): vol.In(["yesterday", "today", "tomorrow"]),
         vol.Optional("level_type", default="rating_level"): vol.In(["rating_level", "level"]),
-        vol.Optional("highlight_best_price", default=True): bool,
+        vol.Optional("highlight_best_price", default=True): cv.boolean,
     }
 )
 
@@ -158,7 +159,7 @@ def _get_current_price_entity(entity_registry: EntityRegistry, entry_id: str) ->
     )
 
 
-async def handle_apexcharts_yaml(call: ServiceCall) -> dict[str, Any]:
+async def handle_apexcharts_yaml(call: ServiceCall) -> dict[str, Any]:  # noqa: PLR0912, PLR0915
     """
     Return YAML snippet for ApexCharts card.
 
@@ -186,7 +187,7 @@ async def handle_apexcharts_yaml(call: ServiceCall) -> dict[str, Any]:
         raise ServiceValidationError(translation_domain=DOMAIN, translation_key="missing_entry_id")
     entry_id: str = str(entry_id_raw)
 
-    day = call.data.get("day", "today")
+    day = call.data.get("day")  # Can be None (rolling window mode)
     level_type = call.data.get("level_type", "rating_level")
     highlight_best_price = call.data.get("highlight_best_price", True)
 
@@ -203,7 +204,8 @@ async def handle_apexcharts_yaml(call: ServiceCall) -> dict[str, Any]:
     entity_registry = async_get_entity_registry(hass)
 
     # Build entity mapping based on level_type and day for clickable states
-    entity_map = _build_entity_map(entity_registry, entry_id, level_type, day)
+    # When day is None, use "today" as fallback for entity mapping
+    entity_map = _build_entity_map(entity_registry, entry_id, level_type, day or "today")
 
     if level_type == "rating_level":
         series_levels = [
@@ -234,13 +236,16 @@ async def handle_apexcharts_yaml(call: ServiceCall) -> dict[str, Any]:
         else:
             filter_param = f"level_filter: ['{level_key}']"
 
+        # Conditionally include day parameter (omit for rolling window mode)
+        day_param = f"day: ['{day}'], " if day else ""
+
         data_generator = (
             f"const response = await hass.callWS({{ "
             f"type: 'call_service', "
             f"domain: 'tibber_prices', "
             f"service: 'get_chartdata', "
             f"return_response: true, "
-            f"service_data: {{ entry_id: '{entry_id}', day: ['{day}'], {filter_param}, "
+            f"service_data: {{ entry_id: '{entry_id}', {day_param}{filter_param}, "
             f"output_format: 'array_of_arrays', insert_nulls: 'segments', minor_currency: true, "
             f"connect_segments: true }} }}); "
             f"return response.response.data;"
@@ -276,13 +281,16 @@ async def handle_apexcharts_yaml(call: ServiceCall) -> dict[str, Any]:
     if highlight_best_price and entity_map:
         # Create vertical highlight bands using separate Y-axis (0-1 range)
         # This creates a semi-transparent overlay from bottom to top without affecting price scale
+        # Conditionally include day parameter (omit for rolling window mode)
+        day_param = f"day: ['{day}'], " if day else ""
+
         best_price_generator = (
             f"const response = await hass.callWS({{ "
             f"type: 'call_service', "
             f"domain: 'tibber_prices', "
             f"service: 'get_chartdata', "
             f"return_response: true, "
-            f"service_data: {{ entry_id: '{entry_id}', day: ['{day}'], "
+            f"service_data: {{ entry_id: '{entry_id}', {day_param}"
             f"period_filter: 'best_price', "
             f"output_format: 'array_of_arrays', minor_currency: true }} }}); "
             f"return response.response.data.map(point => [point[0], 1]);"
@@ -311,22 +319,34 @@ async def handle_apexcharts_yaml(call: ServiceCall) -> dict[str, Any]:
         "Price Phases Daily Progress" if level_type == "rating_level" else "Price Level"
     )
 
-    # Add translated day to title
-    day_translated = get_translation(["selector", "day", "options", day], user_language) or day.capitalize()
-    title = f"{title} - {day_translated}"
+    # Add translated day to title (only if day parameter was provided)
+    if day:
+        day_translated = get_translation(["selector", "day", "options", day], user_language) or day.capitalize()
+        title = f"{title} - {day_translated}"
 
     # Configure span based on selected day
+    # For rolling window mode, use config-template-card for dynamic offset
     if day == "yesterday":
         span_config = {"start": "day", "offset": "-1d"}
+        graph_span_value = None
+        use_template = False
     elif day == "tomorrow":
         span_config = {"start": "day", "offset": "+1d"}
-    else:  # today
+        graph_span_value = None
+        use_template = False
+    elif day:  # today (explicit)
         span_config = {"start": "day"}
+        graph_span_value = None
+        use_template = False
+    else:  # Rolling window mode (None)
+        # Use config-template-card to dynamically set offset based on data availability
+        span_config = None  # Will be set in template
+        graph_span_value = "48h"
+        use_template = True
 
-    return {
+    result = {
         "type": "custom:apexcharts-card",
         "update_interval": "5m",
-        "span": span_config,
         "header": {
             "show": True,
             "title": title,
@@ -392,3 +412,55 @@ async def handle_apexcharts_yaml(call: ServiceCall) -> dict[str, Any]:
         },
         "series": series,
     }
+
+    # For rolling window mode, wrap in config-template-card for dynamic offset
+    if use_template:
+        # Add graph_span to base config (48h window)
+        result["graph_span"] = graph_span_value
+
+        # Find tomorrow_data_available binary sensor
+        tomorrow_data_sensor = next(
+            (
+                entity.entity_id
+                for entity in entity_registry.entities.values()
+                if entity.config_entry_id == entry_id
+                and entity.unique_id
+                and entity.unique_id.endswith("_tomorrow_data_available")
+            ),
+            None,
+        )
+
+        if tomorrow_data_sensor:
+            # Wrap in config-template-card with dynamic offset calculation
+            # Template checks if tomorrow data is available (binary sensor state)
+            # If 'on' (tomorrow data available) → offset +1d (show today+tomorrow)
+            # If 'off' (no tomorrow data) → offset +0d (show yesterday+today)
+            template_value = f"states['{tomorrow_data_sensor}'].state === 'on' ? '+1d' : '+0d'"
+            return {
+                "type": "custom:config-template-card",
+                "variables": {
+                    "v_offset": template_value,
+                },
+                "entities": [tomorrow_data_sensor],
+                "card": {
+                    **result,
+                    "span": {
+                        "end": "day",
+                        "offset": "${v_offset}",
+                    },
+                },
+            }
+
+        # Fallback if sensor not found: just use +1d offset
+        result["span"] = {"end": "day", "offset": "+1d"}
+        return result
+
+    # Add span for fixed-day views
+    if span_config:
+        result["span"] = span_config
+
+    # Add graph_span if needed
+    if graph_span_value:
+        result["graph_span"] = graph_span_value
+
+    return result

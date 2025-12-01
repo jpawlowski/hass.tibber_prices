@@ -57,6 +57,25 @@ response_variable: chart_data
 | `minor_currency` | Return prices in ct/øre instead of EUR/NOK  | `false`                 |
 | `round_decimals` | Decimal places (0-10)                       | 4 (major) or 2 (minor)  |
 
+**Rolling Window Mode:**
+
+Omit the `day` parameter to get a dynamic 48-hour rolling window that automatically adapts to data availability:
+
+```yaml
+service: tibber_prices.get_chartdata
+data:
+    entry_id: YOUR_ENTRY_ID
+    # Omit 'day' for rolling window
+    output_format: array_of_objects
+response_variable: chart_data
+```
+
+**Behavior:**
+- **When tomorrow data available** (typically after ~13:00): Returns today + tomorrow
+- **When tomorrow data not available**: Returns yesterday + today
+
+This is useful for charts that should always show a 48-hour window without manual day selection.
+
 **Period Filter Example:**
 
 Get best price periods as summaries instead of intervals:
@@ -93,14 +112,25 @@ For detailed parameter descriptions, see the service definition in **Developer T
 
 **Purpose:** Generates complete ApexCharts card YAML configuration for visualizing electricity prices.
 
+**Prerequisites:**
+- [ApexCharts Card](https://github.com/RomRider/apexcharts-card) (required for all configurations)
+- [Config Template Card](https://github.com/iantrich/config-template-card) (required only for rolling window mode without `day` parameter)
+
 **Quick Example:**
 
 ```yaml
 service: tibber_prices.get_apexcharts_yaml
 data:
     entry_id: YOUR_ENTRY_ID
+    day: today  # Optional: omit for rolling 48h window (requires config-template-card)
 response_variable: apexcharts_config
 ```
+
+**Rolling Window Mode:** When omitting the `day` parameter, the service generates a dynamic 48-hour rolling window that automatically shows:
+- Today + Tomorrow (when tomorrow data is available)
+- Yesterday + Today (when tomorrow data is not yet available)
+
+This mode requires the Config Template Card to dynamically adjust the time window based on data availability.
 
 Use the response in Lovelace dashboards by copying the generated YAML.
 
