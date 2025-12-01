@@ -77,17 +77,7 @@
         }
     },
     "common": {
-        "step_progress": "{step_num} / {total_steps}",
-        "time_units": {
-            "day": "{count} dag",
-            "days": "{count} dager",
-            "hour": "{count} time",
-            "hours": "{count} timer",
-            "minute": "{count} minutt",
-            "minutes": "{count} minutter",
-            "ago": "{parts} siden",
-            "now": "nå"
-        }
+        "step_progress": "{step_num} / {total_steps}"
     },
     "config_subentries": {
         "home": {
