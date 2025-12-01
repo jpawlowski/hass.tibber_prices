@@ -174,10 +174,10 @@ class TibberPricesSubentryFlowHandler(ConfigSubentryFlow):
             -7, -2, -30 -> "7 days - 02:30" (compact format when time is added)
 
         """
-        # Get translations loaded by Home Assistant
-        standard_translations_key = f"{DOMAIN}_standard_translations_{self.hass.config.language}"
-        translations = self.hass.data.get(standard_translations_key, {})
-        time_units = translations.get("common", {}).get("time_units", {})
+        # Get translations from custom_translations (loaded via async_load_translations)
+        translations_key = f"{DOMAIN}_translations_{self.hass.config.language}"
+        translations = self.hass.data.get(translations_key, {})
+        time_units = translations.get("time_units", {})
 
         # Fallback to English if translations not available
         if not time_units:

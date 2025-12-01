@@ -477,5 +477,15 @@
         "HOUSE": "Haus",
         "COTTAGE": "Ferienhaus"
     },
+    "time_units": {
+        "day": "{count} Tag",
+        "days": "{count} Tagen",
+        "hour": "{count} Stunde",
+        "hours": "{count} Stunden",
+        "minute": "{count} Minute",
+        "minutes": "{count} Minuten",
+        "ago": "vor {parts}",
+        "now": "jetzt"
+    },
     "attribution": "Daten bereitgestellt von Tibber"
 }

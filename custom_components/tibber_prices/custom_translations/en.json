@@ -477,5 +477,15 @@
         "HOUSE": "House",
         "COTTAGE": "Cottage"
     },
+    "time_units": {
+        "day": "{count} day",
+        "days": "{count} days",
+        "hour": "{count} hour",
+        "hours": "{count} hours",
+        "minute": "{count} minute",
+        "minutes": "{count} minutes",
+        "ago": "{parts} ago",
+        "now": "now"
+    },
     "attribution": "Data provided by Tibber"
 }

@@ -482,5 +482,15 @@
         "HOUSE": "Hus",
         "COTTAGE": "Hytte"
     },
+    "time_units": {
+        "day": "{count} dag",
+        "days": "{count} dager",
+        "hour": "{count} time",
+        "hours": "{count} timer",
+        "minute": "{count} minutt",
+        "minutes": "{count} minutter",
+        "ago": "{parts} siden",
+        "now": "nå"
+    },
     "attribution": "Data levert av Tibber"
 }
