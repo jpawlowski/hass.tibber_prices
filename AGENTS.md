@@ -1023,41 +1023,81 @@ Combine into single commit when:
 
 ### Conventional Commits Format
 
+**Reference:** Follow [Conventional Commits v1.0.0](https://www.conventionalcommits.org/en/v1.0.0/) specification.
+
 **Structure:**
 
 ```
-<type>(<scope>): <short summary (max 50-72 chars)>
+<type>[optional scope]: <description>
 
-<detailed description, wrapped at 72 chars>
+[optional body]
 
-Impact: <user-visible effects or context for future release notes>
+[optional footer(s)]
 ```
 
-**Best Practices:**
+**Required Elements:**
 
--   **Subject line**: Max 50 chars (hard limit 72), imperative mood ("Add" not "Added")
--   **Body**: Wrap at 72 chars, explain WHAT and WHY (not HOW - code shows that)
--   **Blank line**: Required between subject and body
--   **Impact section**: Our addition for release note generation (optional but recommended)
+-   **type**: Lowercase, communicates intent (feat, fix, docs, etc.)
+-   **description**: Short summary (max 50-72 chars), imperative mood ("add" not "added"), lowercase start, no period
 
-**Types:**
+**Optional Elements:**
+
+-   **scope**: Parentheses after type, e.g., `feat(sensors):` - lowercase, specific area of change
+-   **body**: Detailed explanation, wrap at 72 chars, explain WHAT and WHY (not HOW - code shows that)
+-   **footer**: Breaking changes, issue references, or custom fields
+
+**Breaking Changes:**
+
+Use `BREAKING CHANGE:` footer or `!` after type/scope:
+```
+feat(api)!: drop support for legacy endpoint
+
+BREAKING CHANGE: The /v1/prices endpoint has been removed. Use /v2/prices instead.
+```
+
+**Types (Conventional Commits standard):**
 
 -   `feat`: New feature (appears in release notes as "New Features")
 -   `fix`: Bug fix (appears in release notes as "Bug Fixes")
 -   `docs`: Documentation only (appears in release notes as "Documentation")
+-   `style`: Code style/formatting (no behavior change, omitted from release notes)
 -   `refactor`: Code restructure without behavior change (may or may not appear in release notes)
--   `chore`: Maintenance tasks (usually omitted from release notes)
+-   `perf`: Performance improvement (appears in release notes)
 -   `test`: Test changes only (omitted from release notes)
--   `style`: Formatting changes (omitted from release notes)
+-   `build`: Build system/dependencies (omitted from release notes)
+-   `ci`: CI configuration (omitted from release notes)
+-   `chore`: Maintenance tasks (usually omitted from release notes)
 
-**Scope (optional but recommended):**
+**Scope (project-specific, optional but recommended):**
 
 -   `translations`: Translation system changes
 -   `config_flow`: Configuration flow changes
 -   `sensors`: Sensor implementation
+-   `binary_sensors`: Binary sensor implementation
 -   `api`: API client changes
 -   `coordinator`: Data coordinator changes
+-   `services`: Service implementations
 -   `docs`: Documentation files
+
+**Custom Footer - Impact Section:**
+
+Add `Impact:` footer for release note generation context (project-specific addition):
+
+```
+feat(services): add rolling window support
+
+Implement dynamic 48h window that adapts to data availability.
+
+Impact: Users can create auto-adapting price charts without manual
+day selection. Requires config-template-card for ApexCharts mode.
+```
+
+**Best Practices:**
+
+-   **Subject line**: Max 50 chars (hard limit 72), lowercase, imperative mood
+-   **Body**: Wrap at 72 chars, optional but useful for complex changes
+-   **Blank line**: Required between subject and body
+-   **Impact footer**: Optional but recommended for user-facing changes
 
 ### Technical Commit Message Examples
 
