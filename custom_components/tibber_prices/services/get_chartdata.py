@@ -404,7 +404,7 @@ async def handle_chartdata(call: ServiceCall) -> dict[str, Any]:  # noqa: PLR091
                                     chart_data.append(connect_point)
                                 else:
                                     # Price goes UP or stays same: Add hold point with current price
-                                    # Then add connect point at next level with higher price
+                                    # This extends the current level to the boundary before the gap
                                     hold_point = {
                                         start_time_field: next_start_serialized,
                                         price_field: converted_price,

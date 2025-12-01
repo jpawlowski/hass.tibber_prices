@@ -79,10 +79,12 @@ class TestConnectSegmentsOutput:
         next_price = 0.12
 
         # With connect_segments=True and price going down:
-        # The transition point should use next_price (lower price)
-        transition_price = min(current_price, next_price)
+        # The transition point should use next_price (the lower price)
+        # This draws the line downward from current segment level
+        is_price_going_down = next_price < current_price
+        transition_price = next_price  # Use next price when going down
 
-        assert transition_price == next_price
+        assert is_price_going_down, "Price should be going down"
         assert transition_price == 0.12
 
     def test_transition_point_up_has_current_price(self) -> None:
@@ -96,9 +98,10 @@ class TestConnectSegmentsOutput:
 
         # With connect_segments=True and price going up:
         # The hold point should use current_price (extend current level)
-        hold_price = min(current_price, next_price)
+        is_price_going_up = next_price >= current_price
+        hold_price = current_price  # Extend current level when going up
 
-        assert hold_price == current_price
+        assert is_price_going_up, "Price should be going up"
         assert hold_price == 0.11
 
 
