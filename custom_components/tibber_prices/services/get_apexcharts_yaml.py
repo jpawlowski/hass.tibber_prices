@@ -138,11 +138,11 @@ async def handle_apexcharts_yaml(call: ServiceCall) -> dict[str, Any]:
             f"service: 'get_chartdata', "
             f"return_response: true, "
             f"service_data: {{ entry_id: '{entry_id}', day: ['{day}'], {filter_param}, "
-            f"output_format: 'array_of_arrays', insert_nulls: 'segments', minor_currency: true }} }}); "
+            f"output_format: 'array_of_arrays', insert_nulls: 'segments', minor_currency: true, "
+            f"connect_segments: true }} }}); "
             f"return response.response.data;"
         )
-        # Only show extremas for HIGH and LOW levels (not NORMAL)
-        show_extremas = level_key != "NORMAL"
+        # All series use same configuration (no extremas on data_generator series)
         series.append(
             {
                 "entity": sample_entity or "sensor.tibber_prices",
@@ -150,11 +150,15 @@ async def handle_apexcharts_yaml(call: ServiceCall) -> dict[str, Any]:
                 "type": "area",
                 "color": color,
                 "yaxis_id": "price",
-                "show": {"extremas": show_extremas, "legend_value": False},
+                "show": {"legend_value": False},
                 "data_generator": data_generator,
                 "stroke_width": 1,
             }
         )
+
+    # Note: Extrema markers don't work with data_generator approach
+    # ApexCharts requires entity time-series data for extremas feature
+    # Min/Max sensors are single values, not time-series
 
     # Get translated title based on level_type
     title_key = "title_rating_level" if level_type == "rating_level" else "title_level"
@@ -181,7 +185,7 @@ async def handle_apexcharts_yaml(call: ServiceCall) -> dict[str, Any]:
         "header": {
             "show": True,
             "title": title,
-            "show_states": False,
+            "show_states": True,
         },
         "apex_config": {
             "chart": {

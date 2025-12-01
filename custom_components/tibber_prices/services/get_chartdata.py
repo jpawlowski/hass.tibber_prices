@@ -380,44 +380,32 @@ async def handle_chartdata(call: ServiceCall) -> dict[str, Any]:  # noqa: PLR091
                             )
 
                             if connect_segments and next_price is not None:
-                                # Connect segments visually by adding transition points
-                                # Convert next price for comparison and use
+                                # Connect segments visually by adding bridge point + NULL
+                                # Bridge point: extends current series to boundary with next price
+                                # NULL point: stops series so it doesn't continue into next segment
+
                                 converted_next_price = (
                                     round(next_price * 100, 2) if minor_currency else round(next_price, 4)
                                 )
                                 if round_decimals is not None:
                                     converted_next_price = round(converted_next_price, round_decimals)
 
-                                if next_price < price:
-                                    # Price goes DOWN: Add point at end of current segment with lower price
-                                    # This draws the line downward from current level
-                                    connect_point = {
-                                        start_time_field: next_start_serialized,
-                                        price_field: converted_next_price,
-                                    }
-                                    if include_level and "level" in interval:
-                                        connect_point[level_field] = interval["level"]
-                                    if include_rating_level and "rating_level" in interval:
-                                        connect_point[rating_level_field] = interval["rating_level"]
-                                    if include_average and day in day_averages:
-                                        connect_point[average_field] = day_averages[day]
-                                    chart_data.append(connect_point)
-                                else:
-                                    # Price goes UP or stays same: Add hold point with current price
-                                    # This extends the current level to the boundary before the gap
-                                    hold_point = {
-                                        start_time_field: next_start_serialized,
-                                        price_field: converted_price,
-                                    }
-                                    if include_level and "level" in interval:
-                                        hold_point[level_field] = interval["level"]
-                                    if include_rating_level and "rating_level" in interval:
-                                        hold_point[rating_level_field] = interval["rating_level"]
-                                    if include_average and day in day_averages:
-                                        hold_point[average_field] = day_averages[day]
-                                    chart_data.append(hold_point)
+                                # 1. Bridge point: boundary with next price, still current level
+                                # This makes the line go up/down to meet the next series
+                                bridge_point = {
+                                    start_time_field: next_start_serialized,
+                                    price_field: converted_next_price,
+                                }
+                                if include_level and "level" in interval:
+                                    bridge_point[level_field] = interval["level"]
+                                if include_rating_level and "rating_level" in interval:
+                                    bridge_point[rating_level_field] = interval["rating_level"]
+                                if include_average and day in day_averages:
+                                    bridge_point[average_field] = day_averages[day]
+                                chart_data.append(bridge_point)
 
-                                # Add NULL point to create gap after transition
+                                # 2. NULL point: stops the current series
+                                # Without this, ApexCharts continues drawing within the series
                                 null_point = {start_time_field: next_start_serialized, price_field: None}
                                 chart_data.append(null_point)
                             else:
@@ -580,11 +568,13 @@ async def handle_chartdata(call: ServiceCall) -> dict[str, Any]:  # noqa: PLR091
                 )
             )
 
-    # Remove trailing null values from chart_data (for proper ApexCharts header display).
+    # Remove trailing null values ONLY for insert_nulls='segments' mode.
+    # For 'all' mode, trailing nulls are intentional (show no-match until end of day).
+    # For 'segments' mode, trailing nulls cause ApexCharts header to show "N/A".
     # Internal nulls at segment boundaries are preserved for gap visualization.
-    # Only trailing nulls cause issues with in_header showing "N/A".
-    while chart_data and chart_data[-1].get(price_field) is None:
-        chart_data.pop()
+    if insert_nulls == "segments":
+        while chart_data and chart_data[-1].get(price_field) is None:
+            chart_data.pop()
 
     # Convert to array of arrays format if requested
     if output_format == "array_of_arrays":

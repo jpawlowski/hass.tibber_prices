@@ -162,7 +162,7 @@ class TestPriceConversion:
 
 
 class TestTrailingNullRemoval:
-    """Test trailing null value removal for ApexCharts header display."""
+    """Test trailing null value removal for ApexCharts header display (segments mode only)."""
 
     def test_trailing_nulls_removed(self) -> None:
         """Test that trailing null values are removed from chart_data."""
@@ -225,3 +225,66 @@ class TestTrailingNullRemoval:
             chart_data.pop()
 
         assert chart_data == [], "Empty data should remain empty"
+
+
+class TestTrailingNullModeSpecific:
+    """Test that trailing null removal respects insert_nulls mode."""
+
+    def test_segments_mode_removes_trailing_nulls(self) -> None:
+        """Test that insert_nulls='segments' removes trailing nulls for ApexCharts header fix."""
+        price_field = "price_per_kwh"
+        insert_nulls = "segments"
+        chart_data = [
+            {"start_time": "2025-12-01T00:00:00", price_field: 10.0},
+            {"start_time": "2025-12-01T00:15:00", price_field: 12.0},
+            {"start_time": "2025-12-01T00:30:00", price_field: None},  # Trailing null
+            {"start_time": "2025-12-01T00:45:00", price_field: None},  # Trailing null
+        ]
+
+        # Simulate the conditional trailing null removal
+        if insert_nulls == "segments":
+            while chart_data and chart_data[-1].get(price_field) is None:
+                chart_data.pop()
+
+        assert len(chart_data) == 2, "Segments mode should remove trailing nulls"
+        assert chart_data[-1][price_field] == 12.0, "Last item should be last non-null price"
+
+    def test_all_mode_preserves_trailing_nulls(self) -> None:
+        """Test that insert_nulls='all' preserves trailing nulls (intentional gaps)."""
+        price_field = "price_per_kwh"
+        insert_nulls = "all"
+        chart_data = [
+            {"start_time": "2025-12-01T00:00:00", price_field: 10.0},
+            {"start_time": "2025-12-01T00:15:00", price_field: 12.0},
+            {"start_time": "2025-12-01T00:30:00", price_field: None},  # Intentional gap
+            {"start_time": "2025-12-01T00:45:00", price_field: None},  # Intentional gap
+        ]
+
+        original_length = len(chart_data)
+
+        # Simulate the conditional trailing null removal
+        if insert_nulls == "segments":
+            while chart_data and chart_data[-1].get(price_field) is None:
+                chart_data.pop()
+
+        assert len(chart_data) == original_length, "'all' mode should preserve trailing nulls"
+        assert chart_data[-1][price_field] is None, "Last item should remain null"
+
+    def test_none_mode_no_trailing_nulls_expected(self) -> None:
+        """Test that insert_nulls='none' has no trailing nulls by design."""
+        price_field = "price_per_kwh"
+        insert_nulls = "none"
+        # In 'none' mode, nulls are never inserted, so no trailing nulls exist
+        chart_data = [
+            {"start_time": "2025-12-01T00:00:00", price_field: 10.0},
+            {"start_time": "2025-12-01T00:15:00", price_field: 12.0},
+        ]
+
+        original_length = len(chart_data)
+
+        # Simulate the conditional trailing null removal
+        if insert_nulls == "segments":
+            while chart_data and chart_data[-1].get(price_field) is None:
+                chart_data.pop()
+
+        assert len(chart_data) == original_length, "'none' mode should have no nulls to remove"
