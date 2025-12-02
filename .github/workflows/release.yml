@@ -77,14 +77,28 @@ jobs:
       - name: Commit and push manifest.json update
         if: steps.update.outputs.updated == 'true'
         run: |
+          TAG_VERSION="v${{ steps.tag.outputs.version }}"
+
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
 
           git add custom_components/tibber_prices/manifest.json
-          git commit -m "chore(release): sync manifest.json with tag v${{ steps.tag.outputs.version }}"
+          git commit -m "chore(release): sync manifest.json with tag ${TAG_VERSION}"
 
           # Push to main branch
           git push origin HEAD:main
+
+          # Delete and recreate tag on new commit
+          echo "::notice::Recreating tag ${TAG_VERSION} on updated commit"
+          git tag -d "${TAG_VERSION}"
+          git push origin :refs/tags/"${TAG_VERSION}"
+          git tag -a "${TAG_VERSION}" -m "Release ${TAG_VERSION}"
+          git push origin "${TAG_VERSION}"
+
+          # Delete existing release if present (will be recreated by release-notes job)
+          gh release delete "${TAG_VERSION}" --yes --cleanup-tag=false || echo "No existing release to delete"
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   release-notes:
     name: Generate and publish release notes
