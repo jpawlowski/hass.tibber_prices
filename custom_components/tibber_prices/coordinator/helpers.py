@@ -109,32 +109,33 @@ def needs_tomorrow_data(
     cached_price_data: dict[str, Any] | None,
 ) -> bool:
     """
-    Check if tomorrow data is missing or invalid in flat interval list.
+    Check if tomorrow data is missing or invalid in cached price data.
+
+    Expects single-home cache format: {"price_info": [...], "home_id": "xxx"}
+
+    Old multi-home format (v0.14.0) is automatically invalidated by is_cache_valid()
+    in cache.py, so we only need to handle the current format here.
 
     Uses get_intervals_for_day_offsets() to automatically determine tomorrow
     based on current date. No explicit date parameter needed.
 
     Args:
-        cached_price_data: Cached price data with homes structure
+        cached_price_data: Cached price data in single-home structure
 
     Returns:
-        True if any home is missing tomorrow's data, False otherwise
+        True if tomorrow's data is missing, False otherwise
 
     """
-    if not cached_price_data or "homes" not in cached_price_data:
+    if not cached_price_data or "price_info" not in cached_price_data:
         return False
 
-    # Check each home's intervals for tomorrow's date
-    for home_data in cached_price_data["homes"].values():
-        # Use helper to get tomorrow's intervals (offset +1 from current date)
-        coordinator_data = {"priceInfo": home_data.get("price_info", [])}
-        tomorrow_intervals = get_intervals_for_day_offsets(coordinator_data, [1])
+    # Single-home format: {"price_info": [...], "home_id": "xxx"}
+    # Use helper to get tomorrow's intervals (offset +1 from current date)
+    coordinator_data = {"priceInfo": cached_price_data.get("price_info", [])}
+    tomorrow_intervals = get_intervals_for_day_offsets(coordinator_data, [1])
 
-        # If no intervals for tomorrow found, we need tomorrow data
-        if not tomorrow_intervals:
-            return True
-
-    return False
+    # If no intervals for tomorrow found, we need tomorrow data
+    return len(tomorrow_intervals) == 0
 
 
 def parse_all_timestamps(price_data: dict[str, Any], *, time: TibberPricesTimeService) -> dict[str, Any]:

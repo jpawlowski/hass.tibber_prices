@@ -149,14 +149,9 @@ class TibberPricesDataFetcher:
 
         # Check if after 13:00 and tomorrow data is missing or invalid
         now_local = self.time.as_local(current_time)
-        if (
-            now_local.hour >= TOMORROW_DATA_CHECK_HOUR
-            and self._cached_price_data
-            and "homes" in self._cached_price_data
-            and self.needs_tomorrow_data()
-        ):
+        if now_local.hour >= TOMORROW_DATA_CHECK_HOUR and self._cached_price_data and self.needs_tomorrow_data():
             self._log(
-                "debug",
+                "info",
                 "API update needed: After %s:00 and tomorrow's data missing/invalid",
                 TOMORROW_DATA_CHECK_HOUR,
             )
@@ -165,6 +160,7 @@ class TibberPricesDataFetcher:
             return "tomorrow_check"
 
         # No update needed - cache is valid and complete
+        self._log("debug", "No API update needed: Cache is valid and complete")
         return False
 
     def needs_tomorrow_data(self) -> bool:

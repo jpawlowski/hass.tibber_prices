@@ -587,11 +587,27 @@ class TibberPricesDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             # Track last_price_update timestamp before fetch to detect if data actually changed
             old_price_update = self._last_price_update
 
+            # CRITICAL: Check if we need to fetch data BEFORE starting the fetch
+            # This allows the lifecycle sensor to show "searching_tomorrow" status
+            # when we're actively looking for tomorrow's data after 13:00
+            should_update = self._data_fetcher.should_update_price_data(current_time)
+
+            # Set _is_fetching flag if we're about to fetch data
+            # This makes the lifecycle sensor show "refreshing" status during the API call
+            if should_update:
+                self._is_fetching = True
+                # Immediately notify lifecycle sensor about state change
+                # This ensures "refreshing" or "searching_tomorrow" appears DURING the fetch
+                self.async_update_listeners()
+
             result = await self._data_fetcher.handle_main_entry_update(
                 current_time,
                 self._home_id,
                 self._transform_data,
             )
+
+            # CRITICAL: Reset fetching flag AFTER data fetch completes
+            self._is_fetching = False
 
             # CRITICAL: Sync cached data after API call
             # handle_main_entry_update() updates data_fetcher's cache, we need to sync:
