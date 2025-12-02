@@ -89,6 +89,7 @@ from custom_components.tibber_prices.const import (
     PEAK_PRICE_MIN_LEVEL_OPTIONS,
 )
 from homeassistant.const import CONF_ACCESS_TOKEN
+from homeassistant.data_entry_flow import section
 from homeassistant.helpers.selector import (
     BooleanSelector,
     NumberSelector,
@@ -212,352 +213,408 @@ def get_price_rating_schema(options: Mapping[str, Any]) -> vol.Schema:
     """Return schema for price rating thresholds configuration."""
     return vol.Schema(
         {
-            vol.Optional(
-                CONF_PRICE_RATING_THRESHOLD_LOW,
-                default=int(
-                    options.get(
-                        CONF_PRICE_RATING_THRESHOLD_LOW,
-                        DEFAULT_PRICE_RATING_THRESHOLD_LOW,
-                    )
+            vol.Required("price_rating_thresholds"): section(
+                vol.Schema(
+                    {
+                        vol.Optional(
+                            CONF_PRICE_RATING_THRESHOLD_LOW,
+                            default=int(
+                                options.get(
+                                    CONF_PRICE_RATING_THRESHOLD_LOW,
+                                    DEFAULT_PRICE_RATING_THRESHOLD_LOW,
+                                )
+                            ),
+                        ): NumberSelector(
+                            NumberSelectorConfig(
+                                min=MIN_PRICE_RATING_THRESHOLD_LOW,
+                                max=MAX_PRICE_RATING_THRESHOLD_LOW,
+                                unit_of_measurement="%",
+                                step=1,
+                                mode=NumberSelectorMode.SLIDER,
+                            ),
+                        ),
+                        vol.Optional(
+                            CONF_PRICE_RATING_THRESHOLD_HIGH,
+                            default=int(
+                                options.get(
+                                    CONF_PRICE_RATING_THRESHOLD_HIGH,
+                                    DEFAULT_PRICE_RATING_THRESHOLD_HIGH,
+                                )
+                            ),
+                        ): NumberSelector(
+                            NumberSelectorConfig(
+                                min=MIN_PRICE_RATING_THRESHOLD_HIGH,
+                                max=MAX_PRICE_RATING_THRESHOLD_HIGH,
+                                unit_of_measurement="%",
+                                step=1,
+                                mode=NumberSelectorMode.SLIDER,
+                            ),
+                        ),
+                    }
                 ),
-            ): NumberSelector(
-                NumberSelectorConfig(
-                    min=MIN_PRICE_RATING_THRESHOLD_LOW,
-                    max=MAX_PRICE_RATING_THRESHOLD_LOW,
-                    unit_of_measurement="%",
-                    step=1,
-                    mode=NumberSelectorMode.SLIDER,
-                ),
-            ),
-            vol.Optional(
-                CONF_PRICE_RATING_THRESHOLD_HIGH,
-                default=int(
-                    options.get(
-                        CONF_PRICE_RATING_THRESHOLD_HIGH,
-                        DEFAULT_PRICE_RATING_THRESHOLD_HIGH,
-                    )
-                ),
-            ): NumberSelector(
-                NumberSelectorConfig(
-                    min=MIN_PRICE_RATING_THRESHOLD_HIGH,
-                    max=MAX_PRICE_RATING_THRESHOLD_HIGH,
-                    unit_of_measurement="%",
-                    step=1,
-                    mode=NumberSelectorMode.SLIDER,
-                ),
+                {"collapsed": True},
             ),
         }
     )
 
 
 def get_volatility_schema(options: Mapping[str, Any]) -> vol.Schema:
-    """Return schema for volatility thresholds configuration."""
+    """Return schema for volatility thresholds configuration with collapsible sections."""
     return vol.Schema(
         {
-            vol.Optional(
-                CONF_VOLATILITY_THRESHOLD_MODERATE,
-                default=float(
-                    options.get(
-                        CONF_VOLATILITY_THRESHOLD_MODERATE,
-                        DEFAULT_VOLATILITY_THRESHOLD_MODERATE,
-                    )
+            vol.Required("volatility_thresholds"): section(
+                vol.Schema(
+                    {
+                        vol.Optional(
+                            CONF_VOLATILITY_THRESHOLD_MODERATE,
+                            default=float(
+                                options.get(
+                                    CONF_VOLATILITY_THRESHOLD_MODERATE,
+                                    DEFAULT_VOLATILITY_THRESHOLD_MODERATE,
+                                )
+                            ),
+                        ): NumberSelector(
+                            NumberSelectorConfig(
+                                min=MIN_VOLATILITY_THRESHOLD_MODERATE,
+                                max=MAX_VOLATILITY_THRESHOLD_MODERATE,
+                                step=1.0,
+                                unit_of_measurement="%",
+                                mode=NumberSelectorMode.SLIDER,
+                            ),
+                        ),
+                        vol.Optional(
+                            CONF_VOLATILITY_THRESHOLD_HIGH,
+                            default=float(
+                                options.get(
+                                    CONF_VOLATILITY_THRESHOLD_HIGH,
+                                    DEFAULT_VOLATILITY_THRESHOLD_HIGH,
+                                )
+                            ),
+                        ): NumberSelector(
+                            NumberSelectorConfig(
+                                min=MIN_VOLATILITY_THRESHOLD_HIGH,
+                                max=MAX_VOLATILITY_THRESHOLD_HIGH,
+                                step=1.0,
+                                unit_of_measurement="%",
+                                mode=NumberSelectorMode.SLIDER,
+                            ),
+                        ),
+                        vol.Optional(
+                            CONF_VOLATILITY_THRESHOLD_VERY_HIGH,
+                            default=float(
+                                options.get(
+                                    CONF_VOLATILITY_THRESHOLD_VERY_HIGH,
+                                    DEFAULT_VOLATILITY_THRESHOLD_VERY_HIGH,
+                                )
+                            ),
+                        ): NumberSelector(
+                            NumberSelectorConfig(
+                                min=MIN_VOLATILITY_THRESHOLD_VERY_HIGH,
+                                max=MAX_VOLATILITY_THRESHOLD_VERY_HIGH,
+                                step=1.0,
+                                unit_of_measurement="%",
+                                mode=NumberSelectorMode.SLIDER,
+                            ),
+                        ),
+                    }
                 ),
-            ): NumberSelector(
-                NumberSelectorConfig(
-                    min=MIN_VOLATILITY_THRESHOLD_MODERATE,
-                    max=MAX_VOLATILITY_THRESHOLD_MODERATE,
-                    step=1.0,
-                    unit_of_measurement="%",
-                    mode=NumberSelectorMode.SLIDER,
-                ),
-            ),
-            vol.Optional(
-                CONF_VOLATILITY_THRESHOLD_HIGH,
-                default=float(
-                    options.get(
-                        CONF_VOLATILITY_THRESHOLD_HIGH,
-                        DEFAULT_VOLATILITY_THRESHOLD_HIGH,
-                    )
-                ),
-            ): NumberSelector(
-                NumberSelectorConfig(
-                    min=MIN_VOLATILITY_THRESHOLD_HIGH,
-                    max=MAX_VOLATILITY_THRESHOLD_HIGH,
-                    step=1.0,
-                    unit_of_measurement="%",
-                    mode=NumberSelectorMode.SLIDER,
-                ),
-            ),
-            vol.Optional(
-                CONF_VOLATILITY_THRESHOLD_VERY_HIGH,
-                default=float(
-                    options.get(
-                        CONF_VOLATILITY_THRESHOLD_VERY_HIGH,
-                        DEFAULT_VOLATILITY_THRESHOLD_VERY_HIGH,
-                    )
-                ),
-            ): NumberSelector(
-                NumberSelectorConfig(
-                    min=MIN_VOLATILITY_THRESHOLD_VERY_HIGH,
-                    max=MAX_VOLATILITY_THRESHOLD_VERY_HIGH,
-                    step=1.0,
-                    unit_of_measurement="%",
-                    mode=NumberSelectorMode.SLIDER,
-                ),
+                {"collapsed": True},
             ),
         }
     )
 
 
 def get_best_price_schema(options: Mapping[str, Any]) -> vol.Schema:
-    """Return schema for best price period configuration."""
+    """Return schema for best price period configuration with collapsible sections."""
     return vol.Schema(
         {
-            vol.Optional(
-                CONF_BEST_PRICE_MIN_PERIOD_LENGTH,
-                default=int(
-                    options.get(
-                        CONF_BEST_PRICE_MIN_PERIOD_LENGTH,
-                        DEFAULT_BEST_PRICE_MIN_PERIOD_LENGTH,
-                    )
+            vol.Required("period_settings"): section(
+                vol.Schema(
+                    {
+                        vol.Optional(
+                            CONF_BEST_PRICE_MIN_PERIOD_LENGTH,
+                            default=int(
+                                options.get(
+                                    CONF_BEST_PRICE_MIN_PERIOD_LENGTH,
+                                    DEFAULT_BEST_PRICE_MIN_PERIOD_LENGTH,
+                                )
+                            ),
+                        ): NumberSelector(
+                            NumberSelectorConfig(
+                                min=MIN_PERIOD_LENGTH,
+                                max=MAX_MIN_PERIOD_LENGTH,
+                                step=15,
+                                unit_of_measurement="min",
+                                mode=NumberSelectorMode.SLIDER,
+                            ),
+                        ),
+                        vol.Optional(
+                            CONF_BEST_PRICE_MAX_LEVEL,
+                            default=options.get(
+                                CONF_BEST_PRICE_MAX_LEVEL,
+                                DEFAULT_BEST_PRICE_MAX_LEVEL,
+                            ),
+                        ): SelectSelector(
+                            SelectSelectorConfig(
+                                options=BEST_PRICE_MAX_LEVEL_OPTIONS,
+                                mode=SelectSelectorMode.DROPDOWN,
+                                translation_key="current_interval_price_level",
+                            ),
+                        ),
+                        vol.Optional(
+                            CONF_BEST_PRICE_MAX_LEVEL_GAP_COUNT,
+                            default=int(
+                                options.get(
+                                    CONF_BEST_PRICE_MAX_LEVEL_GAP_COUNT,
+                                    DEFAULT_BEST_PRICE_MAX_LEVEL_GAP_COUNT,
+                                )
+                            ),
+                        ): NumberSelector(
+                            NumberSelectorConfig(
+                                min=MIN_GAP_COUNT,
+                                max=MAX_GAP_COUNT,
+                                step=1,
+                                mode=NumberSelectorMode.SLIDER,
+                            ),
+                        ),
+                    }
                 ),
-            ): NumberSelector(
-                NumberSelectorConfig(
-                    min=MIN_PERIOD_LENGTH,
-                    max=MAX_MIN_PERIOD_LENGTH,
-                    step=15,
-                    unit_of_measurement="min",
-                    mode=NumberSelectorMode.SLIDER,
-                ),
+                {"collapsed": True},
             ),
-            vol.Optional(
-                CONF_BEST_PRICE_FLEX,
-                default=int(
-                    options.get(
-                        CONF_BEST_PRICE_FLEX,
-                        DEFAULT_BEST_PRICE_FLEX,
-                    )
+            vol.Required("flexibility_settings"): section(
+                vol.Schema(
+                    {
+                        vol.Optional(
+                            CONF_BEST_PRICE_FLEX,
+                            default=int(
+                                options.get(
+                                    CONF_BEST_PRICE_FLEX,
+                                    DEFAULT_BEST_PRICE_FLEX,
+                                )
+                            ),
+                        ): NumberSelector(
+                            NumberSelectorConfig(
+                                min=0,
+                                max=50,
+                                step=1,
+                                unit_of_measurement="%",
+                                mode=NumberSelectorMode.SLIDER,
+                            ),
+                        ),
+                        vol.Optional(
+                            CONF_BEST_PRICE_MIN_DISTANCE_FROM_AVG,
+                            default=int(
+                                options.get(
+                                    CONF_BEST_PRICE_MIN_DISTANCE_FROM_AVG,
+                                    DEFAULT_BEST_PRICE_MIN_DISTANCE_FROM_AVG,
+                                )
+                            ),
+                        ): NumberSelector(
+                            NumberSelectorConfig(
+                                min=-50,
+                                max=0,
+                                step=1,
+                                unit_of_measurement="%",
+                                mode=NumberSelectorMode.SLIDER,
+                            ),
+                        ),
+                    }
                 ),
-            ): NumberSelector(
-                NumberSelectorConfig(
-                    min=0,
-                    max=50,
-                    step=1,
-                    unit_of_measurement="%",
-                    mode=NumberSelectorMode.SLIDER,
-                ),
+                {"collapsed": True},
             ),
-            vol.Optional(
-                CONF_BEST_PRICE_MIN_DISTANCE_FROM_AVG,
-                default=int(
-                    options.get(
-                        CONF_BEST_PRICE_MIN_DISTANCE_FROM_AVG,
-                        DEFAULT_BEST_PRICE_MIN_DISTANCE_FROM_AVG,
-                    )
+            vol.Required("relaxation_and_target_periods"): section(
+                vol.Schema(
+                    {
+                        vol.Optional(
+                            CONF_ENABLE_MIN_PERIODS_BEST,
+                            default=options.get(
+                                CONF_ENABLE_MIN_PERIODS_BEST,
+                                DEFAULT_ENABLE_MIN_PERIODS_BEST,
+                            ),
+                        ): BooleanSelector(),
+                        vol.Optional(
+                            CONF_MIN_PERIODS_BEST,
+                            default=int(
+                                options.get(
+                                    CONF_MIN_PERIODS_BEST,
+                                    DEFAULT_MIN_PERIODS_BEST,
+                                )
+                            ),
+                        ): NumberSelector(
+                            NumberSelectorConfig(
+                                min=1,
+                                max=MAX_MIN_PERIODS,
+                                step=1,
+                                mode=NumberSelectorMode.SLIDER,
+                            ),
+                        ),
+                        vol.Optional(
+                            CONF_RELAXATION_ATTEMPTS_BEST,
+                            default=int(
+                                options.get(
+                                    CONF_RELAXATION_ATTEMPTS_BEST,
+                                    DEFAULT_RELAXATION_ATTEMPTS_BEST,
+                                )
+                            ),
+                        ): NumberSelector(
+                            NumberSelectorConfig(
+                                min=MIN_RELAXATION_ATTEMPTS,
+                                max=MAX_RELAXATION_ATTEMPTS,
+                                step=1,
+                                mode=NumberSelectorMode.SLIDER,
+                            ),
+                        ),
+                    }
                 ),
-            ): NumberSelector(
-                NumberSelectorConfig(
-                    min=-50,
-                    max=0,
-                    step=1,
-                    unit_of_measurement="%",
-                    mode=NumberSelectorMode.SLIDER,
-                ),
-            ),
-            vol.Optional(
-                CONF_BEST_PRICE_MAX_LEVEL,
-                default=options.get(
-                    CONF_BEST_PRICE_MAX_LEVEL,
-                    DEFAULT_BEST_PRICE_MAX_LEVEL,
-                ),
-            ): SelectSelector(
-                SelectSelectorConfig(
-                    options=BEST_PRICE_MAX_LEVEL_OPTIONS,
-                    mode=SelectSelectorMode.DROPDOWN,
-                    translation_key="current_interval_price_level",
-                ),
-            ),
-            vol.Optional(
-                CONF_BEST_PRICE_MAX_LEVEL_GAP_COUNT,
-                default=int(
-                    options.get(
-                        CONF_BEST_PRICE_MAX_LEVEL_GAP_COUNT,
-                        DEFAULT_BEST_PRICE_MAX_LEVEL_GAP_COUNT,
-                    )
-                ),
-            ): NumberSelector(
-                NumberSelectorConfig(
-                    min=MIN_GAP_COUNT,
-                    max=MAX_GAP_COUNT,
-                    step=1,
-                    mode=NumberSelectorMode.SLIDER,
-                ),
-            ),
-            vol.Optional(
-                CONF_ENABLE_MIN_PERIODS_BEST,
-                default=options.get(
-                    CONF_ENABLE_MIN_PERIODS_BEST,
-                    DEFAULT_ENABLE_MIN_PERIODS_BEST,
-                ),
-            ): BooleanSelector(),
-            vol.Optional(
-                CONF_MIN_PERIODS_BEST,
-                default=int(
-                    options.get(
-                        CONF_MIN_PERIODS_BEST,
-                        DEFAULT_MIN_PERIODS_BEST,
-                    )
-                ),
-            ): NumberSelector(
-                NumberSelectorConfig(
-                    min=1,
-                    max=MAX_MIN_PERIODS,
-                    step=1,
-                    mode=NumberSelectorMode.SLIDER,
-                ),
-            ),
-            vol.Optional(
-                CONF_RELAXATION_ATTEMPTS_BEST,
-                default=int(
-                    options.get(
-                        CONF_RELAXATION_ATTEMPTS_BEST,
-                        DEFAULT_RELAXATION_ATTEMPTS_BEST,
-                    )
-                ),
-            ): NumberSelector(
-                NumberSelectorConfig(
-                    min=MIN_RELAXATION_ATTEMPTS,
-                    max=MAX_RELAXATION_ATTEMPTS,
-                    step=1,
-                    mode=NumberSelectorMode.SLIDER,
-                ),
+                {"collapsed": True},
             ),
         }
     )
 
 
 def get_peak_price_schema(options: Mapping[str, Any]) -> vol.Schema:
-    """Return schema for peak price period configuration."""
+    """Return schema for peak price period configuration with collapsible sections."""
     return vol.Schema(
         {
-            vol.Optional(
-                CONF_PEAK_PRICE_MIN_PERIOD_LENGTH,
-                default=int(
-                    options.get(
-                        CONF_PEAK_PRICE_MIN_PERIOD_LENGTH,
-                        DEFAULT_PEAK_PRICE_MIN_PERIOD_LENGTH,
-                    )
+            vol.Required("period_settings"): section(
+                vol.Schema(
+                    {
+                        vol.Optional(
+                            CONF_PEAK_PRICE_MIN_PERIOD_LENGTH,
+                            default=int(
+                                options.get(
+                                    CONF_PEAK_PRICE_MIN_PERIOD_LENGTH,
+                                    DEFAULT_PEAK_PRICE_MIN_PERIOD_LENGTH,
+                                )
+                            ),
+                        ): NumberSelector(
+                            NumberSelectorConfig(
+                                min=MIN_PERIOD_LENGTH,
+                                max=MAX_MIN_PERIOD_LENGTH,
+                                step=15,
+                                unit_of_measurement="min",
+                                mode=NumberSelectorMode.SLIDER,
+                            ),
+                        ),
+                        vol.Optional(
+                            CONF_PEAK_PRICE_MIN_LEVEL,
+                            default=options.get(
+                                CONF_PEAK_PRICE_MIN_LEVEL,
+                                DEFAULT_PEAK_PRICE_MIN_LEVEL,
+                            ),
+                        ): SelectSelector(
+                            SelectSelectorConfig(
+                                options=PEAK_PRICE_MIN_LEVEL_OPTIONS,
+                                mode=SelectSelectorMode.DROPDOWN,
+                                translation_key="current_interval_price_level",
+                            ),
+                        ),
+                        vol.Optional(
+                            CONF_PEAK_PRICE_MAX_LEVEL_GAP_COUNT,
+                            default=int(
+                                options.get(
+                                    CONF_PEAK_PRICE_MAX_LEVEL_GAP_COUNT,
+                                    DEFAULT_PEAK_PRICE_MAX_LEVEL_GAP_COUNT,
+                                )
+                            ),
+                        ): NumberSelector(
+                            NumberSelectorConfig(
+                                min=MIN_GAP_COUNT,
+                                max=MAX_GAP_COUNT,
+                                step=1,
+                                mode=NumberSelectorMode.SLIDER,
+                            ),
+                        ),
+                    }
                 ),
-            ): NumberSelector(
-                NumberSelectorConfig(
-                    min=MIN_PERIOD_LENGTH,
-                    max=MAX_MIN_PERIOD_LENGTH,
-                    step=15,
-                    unit_of_measurement="min",
-                    mode=NumberSelectorMode.SLIDER,
-                ),
+                {"collapsed": True},
             ),
-            vol.Optional(
-                CONF_PEAK_PRICE_FLEX,
-                default=int(
-                    options.get(
-                        CONF_PEAK_PRICE_FLEX,
-                        DEFAULT_PEAK_PRICE_FLEX,
-                    )
+            vol.Required("flexibility_settings"): section(
+                vol.Schema(
+                    {
+                        vol.Optional(
+                            CONF_PEAK_PRICE_FLEX,
+                            default=int(
+                                options.get(
+                                    CONF_PEAK_PRICE_FLEX,
+                                    DEFAULT_PEAK_PRICE_FLEX,
+                                )
+                            ),
+                        ): NumberSelector(
+                            NumberSelectorConfig(
+                                min=-50,
+                                max=0,
+                                step=1,
+                                unit_of_measurement="%",
+                                mode=NumberSelectorMode.SLIDER,
+                            ),
+                        ),
+                        vol.Optional(
+                            CONF_PEAK_PRICE_MIN_DISTANCE_FROM_AVG,
+                            default=int(
+                                options.get(
+                                    CONF_PEAK_PRICE_MIN_DISTANCE_FROM_AVG,
+                                    DEFAULT_PEAK_PRICE_MIN_DISTANCE_FROM_AVG,
+                                )
+                            ),
+                        ): NumberSelector(
+                            NumberSelectorConfig(
+                                min=0,
+                                max=50,
+                                step=1,
+                                unit_of_measurement="%",
+                                mode=NumberSelectorMode.SLIDER,
+                            ),
+                        ),
+                    }
                 ),
-            ): NumberSelector(
-                NumberSelectorConfig(
-                    min=-50,
-                    max=0,
-                    step=1,
-                    unit_of_measurement="%",
-                    mode=NumberSelectorMode.SLIDER,
-                ),
+                {"collapsed": True},
             ),
-            vol.Optional(
-                CONF_PEAK_PRICE_MIN_DISTANCE_FROM_AVG,
-                default=int(
-                    options.get(
-                        CONF_PEAK_PRICE_MIN_DISTANCE_FROM_AVG,
-                        DEFAULT_PEAK_PRICE_MIN_DISTANCE_FROM_AVG,
-                    )
+            vol.Required("relaxation_and_target_periods"): section(
+                vol.Schema(
+                    {
+                        vol.Optional(
+                            CONF_ENABLE_MIN_PERIODS_PEAK,
+                            default=options.get(
+                                CONF_ENABLE_MIN_PERIODS_PEAK,
+                                DEFAULT_ENABLE_MIN_PERIODS_PEAK,
+                            ),
+                        ): BooleanSelector(),
+                        vol.Optional(
+                            CONF_MIN_PERIODS_PEAK,
+                            default=int(
+                                options.get(
+                                    CONF_MIN_PERIODS_PEAK,
+                                    DEFAULT_MIN_PERIODS_PEAK,
+                                )
+                            ),
+                        ): NumberSelector(
+                            NumberSelectorConfig(
+                                min=1,
+                                max=MAX_MIN_PERIODS,
+                                step=1,
+                                mode=NumberSelectorMode.SLIDER,
+                            ),
+                        ),
+                        vol.Optional(
+                            CONF_RELAXATION_ATTEMPTS_PEAK,
+                            default=int(
+                                options.get(
+                                    CONF_RELAXATION_ATTEMPTS_PEAK,
+                                    DEFAULT_RELAXATION_ATTEMPTS_PEAK,
+                                )
+                            ),
+                        ): NumberSelector(
+                            NumberSelectorConfig(
+                                min=MIN_RELAXATION_ATTEMPTS,
+                                max=MAX_RELAXATION_ATTEMPTS,
+                                step=1,
+                                mode=NumberSelectorMode.SLIDER,
+                            ),
+                        ),
+                    }
                 ),
-            ): NumberSelector(
-                NumberSelectorConfig(
-                    min=0,
-                    max=50,
-                    step=1,
-                    unit_of_measurement="%",
-                    mode=NumberSelectorMode.SLIDER,
-                ),
-            ),
-            vol.Optional(
-                CONF_PEAK_PRICE_MIN_LEVEL,
-                default=options.get(
-                    CONF_PEAK_PRICE_MIN_LEVEL,
-                    DEFAULT_PEAK_PRICE_MIN_LEVEL,
-                ),
-            ): SelectSelector(
-                SelectSelectorConfig(
-                    options=PEAK_PRICE_MIN_LEVEL_OPTIONS,
-                    mode=SelectSelectorMode.DROPDOWN,
-                    translation_key="current_interval_price_level",
-                ),
-            ),
-            vol.Optional(
-                CONF_PEAK_PRICE_MAX_LEVEL_GAP_COUNT,
-                default=int(
-                    options.get(
-                        CONF_PEAK_PRICE_MAX_LEVEL_GAP_COUNT,
-                        DEFAULT_PEAK_PRICE_MAX_LEVEL_GAP_COUNT,
-                    )
-                ),
-            ): NumberSelector(
-                NumberSelectorConfig(
-                    min=MIN_GAP_COUNT,
-                    max=MAX_GAP_COUNT,
-                    step=1,
-                    mode=NumberSelectorMode.SLIDER,
-                ),
-            ),
-            vol.Optional(
-                CONF_ENABLE_MIN_PERIODS_PEAK,
-                default=options.get(
-                    CONF_ENABLE_MIN_PERIODS_PEAK,
-                    DEFAULT_ENABLE_MIN_PERIODS_PEAK,
-                ),
-            ): BooleanSelector(),
-            vol.Optional(
-                CONF_MIN_PERIODS_PEAK,
-                default=int(
-                    options.get(
-                        CONF_MIN_PERIODS_PEAK,
-                        DEFAULT_MIN_PERIODS_PEAK,
-                    )
-                ),
-            ): NumberSelector(
-                NumberSelectorConfig(
-                    min=1,
-                    max=MAX_MIN_PERIODS,
-                    step=1,
-                    mode=NumberSelectorMode.SLIDER,
-                ),
-            ),
-            vol.Optional(
-                CONF_RELAXATION_ATTEMPTS_PEAK,
-                default=int(
-                    options.get(
-                        CONF_RELAXATION_ATTEMPTS_PEAK,
-                        DEFAULT_RELAXATION_ATTEMPTS_PEAK,
-                    )
-                ),
-            ): NumberSelector(
-                NumberSelectorConfig(
-                    min=MIN_RELAXATION_ATTEMPTS,
-                    max=MAX_RELAXATION_ATTEMPTS,
-                    step=1,
-                    mode=NumberSelectorMode.SLIDER,
-                ),
+                {"collapsed": True},
             ),
         }
     )
@@ -567,39 +624,46 @@ def get_price_trend_schema(options: Mapping[str, Any]) -> vol.Schema:
     """Return schema for price trend thresholds configuration."""
     return vol.Schema(
         {
-            vol.Optional(
-                CONF_PRICE_TREND_THRESHOLD_RISING,
-                default=int(
-                    options.get(
-                        CONF_PRICE_TREND_THRESHOLD_RISING,
-                        DEFAULT_PRICE_TREND_THRESHOLD_RISING,
-                    )
+            vol.Required("price_trend_thresholds"): section(
+                vol.Schema(
+                    {
+                        vol.Optional(
+                            CONF_PRICE_TREND_THRESHOLD_RISING,
+                            default=int(
+                                options.get(
+                                    CONF_PRICE_TREND_THRESHOLD_RISING,
+                                    DEFAULT_PRICE_TREND_THRESHOLD_RISING,
+                                )
+                            ),
+                        ): NumberSelector(
+                            NumberSelectorConfig(
+                                min=MIN_PRICE_TREND_RISING,
+                                max=MAX_PRICE_TREND_RISING,
+                                step=1,
+                                unit_of_measurement="%",
+                                mode=NumberSelectorMode.SLIDER,
+                            ),
+                        ),
+                        vol.Optional(
+                            CONF_PRICE_TREND_THRESHOLD_FALLING,
+                            default=int(
+                                options.get(
+                                    CONF_PRICE_TREND_THRESHOLD_FALLING,
+                                    DEFAULT_PRICE_TREND_THRESHOLD_FALLING,
+                                )
+                            ),
+                        ): NumberSelector(
+                            NumberSelectorConfig(
+                                min=MIN_PRICE_TREND_FALLING,
+                                max=MAX_PRICE_TREND_FALLING,
+                                step=1,
+                                unit_of_measurement="%",
+                                mode=NumberSelectorMode.SLIDER,
+                            ),
+                        ),
+                    }
                 ),
-            ): NumberSelector(
-                NumberSelectorConfig(
-                    min=MIN_PRICE_TREND_RISING,
-                    max=MAX_PRICE_TREND_RISING,
-                    step=1,
-                    unit_of_measurement="%",
-                    mode=NumberSelectorMode.SLIDER,
-                ),
-            ),
-            vol.Optional(
-                CONF_PRICE_TREND_THRESHOLD_FALLING,
-                default=int(
-                    options.get(
-                        CONF_PRICE_TREND_THRESHOLD_FALLING,
-                        DEFAULT_PRICE_TREND_THRESHOLD_FALLING,
-                    )
-                ),
-            ): NumberSelector(
-                NumberSelectorConfig(
-                    min=MIN_PRICE_TREND_FALLING,
-                    max=MAX_PRICE_TREND_FALLING,
-                    step=1,
-                    unit_of_measurement="%",
-                    mode=NumberSelectorMode.SLIDER,
-                ),
+                {"collapsed": True},
             ),
         }
     )

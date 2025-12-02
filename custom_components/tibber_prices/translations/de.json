@@ -145,91 +145,153 @@
             "current_interval_price_rating": {
                 "title": "📊 Preisbewertungs-Schwellenwerte",
                 "description": "_{step_progress}_\n\n**Konfiguriere Schwellenwerte für Preisbewertungsstufen (niedrig/normal/hoch) basierend auf dem Vergleich mit dem nachlaufenden 24-Stunden-Durchschnitt.**\n\n---",
-                "data": {
-                    "price_rating_threshold_low": "Niedrig-Schwelle",
-                    "price_rating_threshold_high": "Hoch-Schwelle"
-                },
-                "data_description": {
-                    "price_rating_threshold_low": "Prozentwert, um wie viel der aktuelle Preis unter dem nachlaufenden 24-Stunden-Durchschnitt liegen muss, damit er als 'niedrig' bewertet wird. Beispiel: 5 bedeutet mindestens 5% unter Durchschnitt. Sensoren mit dieser Bewertung zeigen günstige Zeitfenster an. Standard: 5%",
-                    "price_rating_threshold_high": "Prozentwert, um wie viel der aktuelle Preis über dem nachlaufenden 24-Stunden-Durchschnitt liegen muss, damit er als 'hoch' bewertet wird. Beispiel: 10 bedeutet mindestens 10% über Durchschnitt. Sensoren mit dieser Bewertung warnen vor teuren Zeitfenstern. Standard: 10%"
+                "sections": {
+                    "price_rating_thresholds": {
+                        "name": "Preisbewertungs-Schwellenwerte",
+                        "description": "Definiere die Einstufungen für die Preisbewertung.",
+                        "data": {
+                            "price_rating_threshold_low": "Niedrig-Schwelle",
+                            "price_rating_threshold_high": "Hoch-Schwelle"
+                        },
+                        "data_description": {
+                            "price_rating_threshold_low": "Prozentwert, um wie viel der aktuelle Preis unter dem nachlaufenden 24-Stunden-Durchschnitt liegen muss, damit er als 'niedrig' bewertet wird. Beispiel: 5 bedeutet mindestens 5% unter Durchschnitt. Sensoren mit dieser Bewertung zeigen günstige Zeitfenster an. Standard: 5%",
+                            "price_rating_threshold_high": "Prozentwert, um wie viel der aktuelle Preis über dem nachlaufenden 24-Stunden-Durchschnitt liegen muss, damit er als 'hoch' bewertet wird. Beispiel: 10 bedeutet mindestens 10% über Durchschnitt. Sensoren mit dieser Bewertung warnen vor teuren Zeitfenstern. Standard: 10%"
+                        }
+                    }
                 },
                 "submit": "Weiter →"
             },
             "best_price": {
                 "title": "💚 Bestpreis-Zeitraum Einstellungen",
                 "description": "_{step_progress}_\n\n**Konfiguration für den Bestpreis-Zeitraum mit den niedrigsten Strompreisen.**\n\n---",
-                "data": {
-                    "best_price_min_period_length": "Minimale Zeitraumlänge",
-                    "best_price_flex": "Flexibilität",
-                    "best_price_min_distance_from_avg": "Mindestabstand",
-                    "best_price_max_level": "Preisniveau-Filter",
-                    "best_price_max_level_gap_count": "Lückentoleranz",
-                    "enable_min_periods_best": "Mindestanzahl anstreben",
-                    "min_periods_best": "Mindestanzahl Zeiträume",
-                    "relaxation_attempts_best": "Lockerungsversuche"
-                },
-                "data_description": {
-                    "best_price_min_period_length": "Minimale Dauer, damit ein Zeitraum als 'Bestpreis' gilt. Längere Zeiträume sind praktischer für den Betrieb von Geräten wie Geschirrspülern oder Wärmepumpen. Bestpreis-Zeiträume erfordern mindestens 60 Minuten (im Vergleich zu 30 Minuten für Spitzenpreis-Warnungen), da sie sinnvolle Zeitfenster für die Verbrauchsplanung bieten sollen, nicht nur kurze Gelegenheiten.",
-                    "best_price_flex": "Maximal über dem täglichen Mindestpreis, bei dem Intervalle noch als 'Bestpreis' qualifizieren. Empfehlung: 15-20 mit aktivierter Lockerung (Standard), oder 25-35 ohne Lockerung. Maximum: 50 (harte Grenze für zuverlässige Zeitraumerkennung).",
-                    "best_price_min_distance_from_avg": "Stellt sicher, dass Zeiträume signifikant günstiger als der Tagesdurchschnitt sind, nicht nur geringfügig darunter. Dies filtert Rauschen und verhindert, dass leicht unterdurchschnittliche Zeiträume an Tagen mit flachen Preisen als 'Bestpreis' markiert werden. Höhere Werte = strengere Filterung (nur wirklich günstige Zeiträume qualifizieren). Standard: 5 bedeutet, Zeiträume müssen mindestens 5% unter dem Tagesdurchschnitt liegen.",
-                    "best_price_max_level": "Zeigt Bestpreis-Zeiträume nur an, wenn sie Intervalle mit Preisniveaus ≤ dem gewählten Wert enthalten. Beispiel: Wahl von 'Günstig' bedeutet, dass der Zeitraum mindestens ein 'SEHR GÜNSTIG' oder 'GÜNSTIG' Intervall haben muss. Dies stellt sicher, dass Bestpreis-Zeiträume nicht nur relativ günstig für den Tag sind, sondern tatsächlich günstig in absoluten Zahlen. Wähle 'Beliebig' um Bestpreise unabhängig vom absoluten Preisniveau anzuzeigen.",
-                    "best_price_max_level_gap_count": "Maximale Anzahl aufeinanderfolgender Intervalle, die exakt um eine Niveaustufe vom geforderten Level abweichen dürfen. Beispiel: Bei Filter 'Günstig' und Lückentoleranz 1 wird die Sequenz 'GÜNSTIG, GÜNSTIG, NORMAL, GÜNSTIG' akzeptiert (NORMAL ist eine Stufe über GÜNSTIG). Dies verhindert, dass Zeiträume durch gelegentliche Niveau-Abweichungen aufgespalten werden. **Hinweis:** Lückentoleranz erfordert Zeiträume ≥90 Minuten (6 Intervalle), um Ausreißer effektiv zu erkennen. Standard: 0 (strenge Filterung, keine Toleranz).",
-                    "enable_min_periods_best": "Wenn aktiviert, werden Filter schrittweise gelockert, falls nicht genug Zeiträume gefunden wurden. Dies versucht die gewünschte Mindestanzahl zu erreichen, was dazu führen kann, dass auch weniger optimale Zeiträume als Bestpreis-Zeiträume markiert werden.",
-                    "min_periods_best": "Mindestanzahl an Bestpreis-Zeiträumen, die pro Tag angestrebt werden. Filter werden schrittweise gelockert, um diese Anzahl zu erreichen. Nur aktiv, wenn 'Mindestanzahl Zeiträume anstreben' aktiviert ist. Standard: 1",
-                    "relaxation_attempts_best": "Wie viele Flex-Stufen (Versuche) nacheinander ausprobiert werden, bevor aufgegeben wird. Jeder Versuch testet alle Filterkombinationen auf der neuen Flex-Stufe. Mehr Versuche erhöhen die Chance auf zusätzliche Zeiträume, benötigen aber etwas mehr Rechenzeit."
+                "sections": {
+                    "period_settings": {
+                        "name": "Zeitraumdauer & Preisniveaus",
+                        "description": "Legen Sie fest, wie lange Zeiträume sein sollen und welche Preisniveaus einbezogen werden.",
+                        "data": {
+                            "best_price_min_period_length": "Minimale Zeitraumlänge",
+                            "best_price_max_level": "Preisniveau-Filter",
+                            "best_price_max_level_gap_count": "Lückentoleranz"
+                        },
+                        "data_description": {
+                            "best_price_min_period_length": "Mindestdauer für einen Zeitraum um als 'Bestpreis' zu gelten. Längere Zeiträume sind prakti scher für Geräte wie Geschirrspüler oder Wärmepumpen. Bestpreis-Zeiträume benötigen mindestens 60 Minuten (vs. 30 Minuten für Spitzenlast-Warnungen), da sie aussagekräftige Zeitfenster für die Verbrauchsplanung bieten sollten.",
+                            "best_price_max_level": "Nur Bestpreis-Zeiträume anzeigen, wenn sie Intervalle mit Preisniveaus ≤ dem ausgewählten Wert enthalten. Beispiel: Auswahl 'Günstig' bedeutet, der Zeitraum muss mindestens ein 'SEHR_GÜNSTIG' oder 'GÜNSTIG' Intervall enthalten. Dies stellt sicher, dass 'Bestpreis'-Zeiträume nicht nur relativ billig für den Tag sind, sondern auch absolut günstig. Wählen Sie 'Alle' um Bestpreise unabhängig vom absoluten Preisniveau anzuzeigen.",
+                            "best_price_max_level_gap_count": "Maximale Anzahl aufeinanderfolgender Intervalle, die um genau eine Preisstufe vom erforderlichen Niveau abweichen dürfen. Beispiel: Mit 'Günstig'-Filter und Lückenzähler 1 wird eine Sequenz 'GÜNSTIG, GÜNSTIG, NORMAL, GÜNSTIG' akzeptiert (NORMAL ist eine Stufe über GÜNSTIG). Dies verhindert, dass Zeiträume durch gelegentliche Niveauabweichungen aufgeteilt werden. **Hinweis:** Lückentoleranz erfordert Zeiträume ≥90 Minuten (6 Intervalle), um Ausreißer effektiv zu erkennen. Standard: 0 (strikte Filterung, keine Toleranz)."
+                        }
+                    },
+                    "flexibility_settings": {
+                        "name": "Flexibilität & Schwellenwerte",
+                        "description": "Kontrollieren Sie, wie sehr Preise abweichen dürfen und dennoch als 'Bestpreis' gelten.",
+                        "data": {
+                            "best_price_flex": "Flexibilität",
+                            "best_price_min_distance_from_avg": "Mindestabstand"
+                        },
+                        "data_description": {
+                            "best_price_flex": "Maximale Menge über dem Tagesminimumpreis, um noch als 'Bestpreis' zu gelten. Empfohlen: 15-20% mit Lockerung aktiviert (Standard), oder 25-35% ohne Lockerung. Maximum: 50% (Hartgrenze für zuverlässige Zeitraumerkennung).",
+                            "best_price_min_distance_from_avg": "Stellt sicher, dass Zeiträume erheblich günstiger als der Tagesdurchschnitt sind, nicht nur marginal darunter. Dies filtert Rauschen heraus und verhindert, dass leicht unterdurchschnittliche Zeiträume an flachen Preistagen als 'Bestpreis' markiert werden. Höhere Werte = strengere Filterung (nur wirklich billige Zeiträume gelten). Standard: 5 bedeutet Zeiträume müssen mindestens 5% unter dem Tagesdurchschnitt liegen."
+                        }
+                    },
+                    "relaxation_and_target_periods": {
+                        "name": "Lockerung & Zielanzahl Zeiträume",
+                        "description": "Konfigurieren Sie automatische Filterlockerung und Zielanzahl von Zeiträumen. Aktivieren Sie 'Mindestanzahl anstreben' um die Lockerung zu aktivieren.",
+                        "data": {
+                            "enable_min_periods_best": "Mindestanzahl anstreben",
+                            "min_periods_best": "Mindestanzahl Zeiträume",
+                            "relaxation_attempts_best": "Lockerungsversuche"
+                        },
+                        "data_description": {
+                            "enable_min_periods_best": "Bei Aktivierung werden Filter schrittweise gelockert, wenn nicht genug Zeiträume gefunden werden. Dies versucht, die gewünschte Mindestanzahl von Zeiträumen zu erreichen, was weniger optimale Zeitfenster als Bestpreis-Zeiträume einschließen kann.",
+                            "min_periods_best": "Mindestanzahl von Bestpreis-Zeiträumen pro Tag, die angestrebt werden sollen. Filter werden schrittweise gelockert, um diese Anzahl zu erreichen. Nur aktiv wenn 'Mindestanzahl anstreben' aktiviert ist. Standard: 1",
+                            "relaxation_attempts_best": "Wie viele Flexibilitätsstufen (Versuche) zu versuchen sind, bevor aufgegeben wird. Jeder Versuch führt alle Filterkombinationen auf der neuen Flexibilitätsstufe aus. Mehr Versuche erhöhen die Chance, zusätzliche Zeiträume zu finden, kosten aber mehr Verarbeitungszeit."
+                        }
+                    }
                 },
                 "submit": "Weiter →"
             },
             "peak_price": {
                 "title": "🔴 Spitzenpreis-Zeitraum Einstellungen",
                 "description": "_{step_progress}_\n\n**Konfiguration für den Spitzenpreis-Zeitraum mit den höchsten Strompreisen.**\n\n---",
-                "data": {
-                    "peak_price_min_period_length": "Minimale Zeitraumlänge",
-                    "peak_price_flex": "Flexibilität",
-                    "peak_price_min_distance_from_avg": "Mindestabstand",
-                    "peak_price_min_level": "Preisniveau-Filter",
-                    "peak_price_max_level_gap_count": "Lückentoleranz",
-                    "enable_min_periods_peak": "Mindestanzahl anstreben",
-                    "min_periods_peak": "Mindestanzahl Zeiträume",
-                    "relaxation_attempts_peak": "Lockerungsversuche"
-                },
-                "data_description": {
-                    "peak_price_min_period_length": "Minimale Dauer, damit ein Zeitraum als 'Spitzenpreis' gilt. Spitzenpreis-Warnungen sind für kürzere Zeiträume zulässig (mindestens 30 Minuten im Vergleich zu 60 Minuten für Bestpreis), da kurze teure Spitzen eine Warnung wert sind, auch wenn sie für die Verbrauchsplanung zu kurz sind.",
-                    "peak_price_flex": "Maximal unter dem täglichen Höchstpreis, bei dem Intervalle noch als 'Spitzenpreis' qualifizieren. Empfehlung: -15 bis -20 mit aktivierter Lockerung (Standard), oder -25 bis -35 ohne Lockerung. Maximum: -50 (harte Grenze für zuverlässige Zeitraumerkennung). Hinweis: Negative Werte zeigen den Abstand unter dem Maximum an.",
-                    "peak_price_min_distance_from_avg": "Stellt sicher, dass Zeiträume signifikant teurer als der Tagesdurchschnitt sind, nicht nur geringfügig darüber. Dies filtert Rauschen und verhindert, dass leicht überdurchschnittliche Zeiträume an Tagen mit flachen Preisen als 'Spitzenpreis' markiert werden. Höhere Werte = strengere Filterung (nur wirklich teure Zeiträume qualifizieren). Standard: 5 bedeutet, Zeiträume müssen mindestens 5% über dem Tagesdurchschnitt liegen.",
-                    "peak_price_min_level": "Zeigt Spitzenpreis-Zeiträume nur an, wenn sie Intervalle mit Preisniveaus ≥ dem gewählten Wert enthalten. Beispiel: Wahl von 'Teuer' bedeutet, dass der Zeitraum mindestens ein 'TEUER' oder 'SEHR TEUER' Intervall haben muss. Dies stellt sicher, dass Spitzenpreis-Zeiträume nicht nur relativ teuer für den Tag sind, sondern tatsächlich teuer in absoluten Zahlen. Wähle 'Beliebig' um Spitzenpreise unabhängig vom absoluten Preisniveau anzuzeigen.",
-                    "peak_price_max_level_gap_count": "Maximale Anzahl aufeinanderfolgender Intervalle, die exakt um eine Niveaustufe vom geforderten Level abweichen dürfen. Beispiel: Bei Filter 'Teuer' und Lückentoleranz 2 wird die Sequenz 'TEUER, NORMAL, NORMAL, TEUER' akzeptiert (NORMAL ist eine Stufe unter TEUER). Dies verhindert, dass Zeiträume durch gelegentliche Niveau-Abweichungen aufgespalten werden. **Hinweis:** Lückentoleranz erfordert Zeiträume ≥90 Minuten (6 Intervalle), um Ausreißer effektiv zu erkennen. Standard: 0 (strenge Filterung, keine Toleranz).",
-                    "enable_min_periods_peak": "Wenn aktiviert, werden Filter schrittweise gelockert, falls nicht genug Zeiträume gefunden wurden. Dies versucht die gewünschte Mindestanzahl zu erreichen, um sicherzustellen, dass du auch an Tagen mit ungewöhnlichen Preismustern vor teuren Zeiträumen gewarnt wirst.",
-                    "min_periods_peak": "Mindestanzahl an Spitzenpreis-Zeiträumen, die pro Tag angestrebt werden. Filter werden schrittweise gelockert, um diese Anzahl zu erreichen. Nur aktiv, wenn 'Mindestanzahl Zeiträume anstreben' aktiviert ist. Standard: 1",
-                    "relaxation_attempts_peak": "Wie viele Flex-Stufen (Versuche) nacheinander ausprobiert werden, bevor aufgegeben wird. Jeder Versuch testet alle Filterkombinationen auf der neuen Flex-Stufe. Mehr Versuche erhöhen die Chance auf zusätzliche Spitzenpreis-Zeiträume, benötigen aber etwas mehr Rechenzeit."
+                "sections": {
+                    "period_settings": {
+                        "name": "Zeitraum-Einstellungen",
+                        "description": "Konfiguriere Zeitraumlänge und Preisniveau-Einschränkungen.",
+                        "data": {
+                            "peak_price_min_period_length": "Minimale Zeitraumlänge",
+                            "peak_price_min_level": "Preisniveau-Filter",
+                            "peak_price_max_level_gap_count": "Lückentoleranz"
+                        },
+                        "data_description": {
+                            "peak_price_min_period_length": "Minimale Dauer, damit ein Zeitraum als 'Spitzenpreis' gilt. Spitzenpreis-Warnungen sind für kürzere Zeiträume zulässig (mindestens 30 Minuten im Vergleich zu 60 Minuten für Bestpreis), da kurze teure Spitzen eine Warnung wert sind, auch wenn sie für die Verbrauchsplanung zu kurz sind.",
+                            "peak_price_min_level": "Zeigt Spitzenpreis-Zeiträume nur an, wenn sie Intervalle mit Preisniveaus ≥ dem gewählten Wert enthalten. Beispiel: Wahl von 'Teuer' bedeutet, dass der Zeitraum mindestens ein 'TEUER' oder 'SEHR TEUER' Intervall haben muss. Dies stellt sicher, dass Spitzenpreis-Zeiträume nicht nur relativ teuer für den Tag sind, sondern tatsächlich teuer in absoluten Zahlen. Wähle 'Beliebig' um Spitzenpreise unabhängig vom absoluten Preisniveau anzuzeigen.",
+                            "peak_price_max_level_gap_count": "Maximale Anzahl aufeinanderfolgender Intervalle, die exakt um eine Niveaustufe vom geforderten Level abweichen dürfen. Beispiel: Bei Filter 'Teuer' und Lückentoleranz 2 wird die Sequenz 'TEUER, NORMAL, NORMAL, TEUER' akzeptiert (NORMAL ist eine Stufe unter TEUER). Dies verhindert, dass Zeiträume durch gelegentliche Niveau-Abweichungen aufgespalten werden. **Hinweis:** Lückentoleranz erfordert Zeiträume ≥90 Minuten (6 Intervalle), um Ausreißer effektiv zu erkennen. Standard: 0 (strenge Filterung, keine Toleranz)."
+                        }
+                    },
+                    "flexibility_settings": {
+                        "name": "Flexibilitäts-Einstellungen",
+                        "description": "Konfiguriere Preisvergleich-Schwellenwerte und Filterung.",
+                        "data": {
+                            "peak_price_flex": "Flexibilität",
+                            "peak_price_min_distance_from_avg": "Mindestabstand"
+                        },
+                        "data_description": {
+                            "peak_price_flex": "Maximal unter dem täglichen Höchstpreis, bei dem Intervalle noch als 'Spitzenpreis' qualifizieren. Empfehlung: -15 bis -20 mit aktivierter Lockerung (Standard), oder -25 bis -35 ohne Lockerung. Maximum: -50 (harte Grenze für zuverlässige Zeitraumerkennung). Hinweis: Negative Werte zeigen den Abstand unter dem Maximum an.",
+                            "peak_price_min_distance_from_avg": "Stellt sicher, dass Zeiträume signifikant teurer als der Tagesdurchschnitt sind, nicht nur geringfügig darüber. Dies filtert Rauschen und verhindert, dass leicht überdurchschnittliche Zeiträume an Tagen mit flachen Preisen als 'Spitzenpreis' markiert werden. Höhere Werte = strengere Filterung (nur wirklich teure Zeiträume qualifizieren). Standard: 5 bedeutet, Zeiträume müssen mindestens 5% über dem Tagesdurchschnitt liegen."
+                        }
+                    },
+                    "relaxation_and_target_periods": {
+                        "name": "Lockerung & Zielzeiträume",
+                        "description": "Konfiguriere automatische Filter-Lockerung und Zielzeiträume. Aktiviere 'Mindestanzahl anstreben' um Lockerung zu aktivieren.",
+                        "data": {
+                            "enable_min_periods_peak": "Mindestanzahl anstreben",
+                            "min_periods_peak": "Mindestanzahl Zeiträume",
+                            "relaxation_attempts_peak": "Lockerungsversuche"
+                        },
+                        "data_description": {
+                            "enable_min_periods_peak": "Wenn aktiviert, werden Filter schrittweise gelockert, falls nicht genug Zeiträume gefunden wurden. Dies versucht die gewünschte Mindestanzahl zu erreichen, um sicherzustellen, dass du auch an Tagen mit ungewöhnlichen Preismustern vor teuren Zeiträumen gewarnt wirst.",
+                            "min_periods_peak": "Mindestanzahl an Spitzenpreis-Zeiträumen, die pro Tag angestrebt werden. Filter werden schrittweise gelockert, um diese Anzahl zu erreichen. Nur aktiv, wenn 'Mindestanzahl Zeiträume anstreben' aktiviert ist. Standard: 1",
+                            "relaxation_attempts_peak": "Wie viele Flex-Stufen (Versuche) nacheinander ausprobiert werden, bevor aufgegeben wird. Jeder Versuch testet alle Filterkombinationen auf der neuen Flex-Stufe. Mehr Versuche erhöhen die Chance auf zusätzliche Spitzenpreis-Zeiträume, benötigen aber etwas mehr Rechenzeit."
+                        }
+                    }
                 },
                 "submit": "Weiter →"
             },
             "price_trend": {
                 "title": "📈 Preistrend-Schwellenwerte",
                 "description": "_{step_progress}_\n\n**Konfiguriere Schwellenwerte für Preistrend-Sensoren. Diese Sensoren vergleichen den aktuellen Preis mit dem Durchschnitt der nächsten N Stunden, um festzustellen, ob die Preise steigen, fallen oder stabil sind.**\n\n---",
-                "data": {
-                    "price_trend_threshold_rising": "Steigend-Schwelle",
-                    "price_trend_threshold_falling": "Fallend-Schwelle"
-                },
-                "data_description": {
-                    "price_trend_threshold_rising": "Prozentwert, um wie viel der Durchschnitt der nächsten N Stunden über dem aktuellen Preis liegen muss, damit der Trend als 'steigend' gilt. Beispiel: 5 bedeutet Durchschnitt ist mindestens 5% höher → Preise werden steigen. Typische Werte: 5-15%. Standard: 5%",
-                    "price_trend_threshold_falling": "Prozentwert (negativ), um wie viel der Durchschnitt der nächsten N Stunden unter dem aktuellen Preis liegen muss, damit der Trend als 'fallend' gilt. Beispiel: -5 bedeutet Durchschnitt ist mindestens 5% niedriger → Preise werden fallen. Typische Werte: -5 bis -15%. Standard: -5%"
+                "sections": {
+                    "price_trend_thresholds": {
+                        "name": "Preistrend-Schwellenwerte",
+                        "description": "Definiere die Einstufungen für den Preistrend.",
+                        "data": {
+                            "price_trend_threshold_rising": "Steigend-Schwelle",
+                            "price_trend_threshold_falling": "Fallend-Schwelle"
+                        },
+                        "data_description": {
+                            "price_trend_threshold_rising": "Prozentwert, um wie viel der Durchschnitt der nächsten N Stunden über dem aktuellen Preis liegen muss, damit der Trend als 'steigend' gilt. Beispiel: 5 bedeutet Durchschnitt ist mindestens 5% höher → Preise werden steigen. Typische Werte: 5-15%. Standard: 5%",
+                            "price_trend_threshold_falling": "Prozentwert (negativ), um wie viel der Durchschnitt der nächsten N Stunden unter dem aktuellen Preis liegen muss, damit der Trend als 'fallend' gilt. Beispiel: -5 bedeutet Durchschnitt ist mindestens 5% niedriger → Preise werden fallen. Typische Werte: -5 bis -15%. Standard: -5%"
+                        }
+                    }
                 },
                 "submit": "Weiter →"
             },
             "volatility": {
                 "title": "💨 Volatilität Schwellenwerte",
                 "description": "_{step_progress}_\n\n**Konfiguriere Schwellenwerte für die Volatilitätsklassifizierung.** Volatilität misst relative Preisschwankungen anhand des Variationskoeffizienten (VK = Standardabweichung / Durchschnitt × 100%). Diese Schwellenwerte sind Prozentwerte, die für alle Preisniveaus funktionieren.\n\nVerwendet von:\n• Volatilitätssensoren (Klassifizierung)\n• Trend-Sensoren (adaptive Schwellenanpassung: &lt;moderat = empfindlicher, ≥hoch = weniger empfindlich)\n\n---",
-                "data": {
-                    "volatility_threshold_moderate": "Moderat-Schwelle",
-                    "volatility_threshold_high": "Hoch-Schwelle",
-                    "volatility_threshold_very_high": "Sehr hoch-Schwelle"
-                },
-                "data_description": {
-                    "volatility_threshold_moderate": "Variationskoeffizient (VK) ab dem Preise als 'moderat volatil' gelten. VK = (Standardabweichung / Durchschnitt) × 100%. Beispiel: 15 bedeutet Preisschwankungen von ±15% um den Durchschnitt. Sensoren zeigen diese Klassifizierung an, Trend-Sensoren werden empfindlicher. Standard: 15%",
-                    "volatility_threshold_high": "Variationskoeffizient (VK) ab dem Preise als 'hoch volatil' gelten. Beispiel: 30 bedeutet Preisschwankungen von ±30% um den Durchschnitt. Größere Preissprünge erwartet, Trend-Sensoren werden weniger empfindlich. Standard: 30%",
-                    "volatility_threshold_very_high": "Variationskoeffizient (VK) ab dem Preise als 'sehr hoch volatil' gelten. Beispiel: 50 bedeutet extreme Preisschwankungen von ±50% um den Durchschnitt. An solchen Tagen sind starke Preisspitzen wahrscheinlich. Standard: 50%"
+                "sections": {
+                    "volatility_thresholds": {
+                        "name": "Volatilitätsschwellen",
+                        "description": "Definiere Volatilitäts-Klassifizierungsstufen.",
+                        "data": {
+                            "volatility_threshold_moderate": "Moderat-Schwelle",
+                            "volatility_threshold_high": "Hoch-Schwelle",
+                            "volatility_threshold_very_high": "Sehr hoch-Schwelle"
+                        },
+                        "data_description": {
+                            "volatility_threshold_moderate": "Variationskoeffizient (VK) ab dem Preise als 'moderat volatil' gelten. VK = (Standardabweichung / Durchschnitt) × 100%. Beispiel: 15 bedeutet Preisschwankungen von ±15% um den Durchschnitt. Sensoren zeigen diese Klassifizierung an, Trend-Sensoren werden empfindlicher. Standard: 15%",
+                            "volatility_threshold_high": "Variationskoeffizient (VK) ab dem Preise als 'hoch volatil' gelten. Beispiel: 30 bedeutet Preisschwankungen von ±30% um den Durchschnitt. Größere Preissprünge erwartet, Trend-Sensoren werden weniger empfindlich. Standard: 30%",
+                            "volatility_threshold_very_high": "Variationskoeffizient (VK) ab dem Preise als 'sehr hoch volatil' gelten. Beispiel: 50 bedeutet extreme Preisschwankungen von ±50% um den Durchschnitt. An solchen Tagen sind starke Preisspitzen wahrscheinlich. Standard: 50%"
+                        }
+                    }
                 },
                 "submit": "Weiter →"
             },

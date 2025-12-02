@@ -145,76 +145,132 @@
             "current_interval_price_rating": {
                 "title": "📊 Price Rating Thresholds",
                 "description": "_{step_progress}_\n\n**Configure thresholds for price rating levels (low/normal/high) based on comparison with trailing 24-hour average.**\n\n---",
-                "data": {
-                    "price_rating_threshold_low": "Low Threshold",
-                    "price_rating_threshold_high": "High Threshold"
-                },
-                "data_description": {
-                    "price_rating_threshold_low": "Percentage below the trailing 24-hour average that the current price must be to qualify as 'low' rating. Example: 5 means at least 5% below average. Sensors with this rating indicate favorable time windows. Default: 5%",
-                    "price_rating_threshold_high": "Percentage above the trailing 24-hour average that the current price must be to qualify as 'high' rating. Example: 10 means at least 10% above average. Sensors with this rating warn about expensive time windows. Default: 10%"
+                "sections": {
+                    "price_rating_thresholds": {
+                        "name": "Price Rating Thresholds",
+                        "description": "Define price rating classification levels.",
+                        "data": {
+                            "price_rating_threshold_low": "Low Threshold",
+                            "price_rating_threshold_high": "High Threshold"
+                        },
+                        "data_description": {
+                            "price_rating_threshold_low": "Percentage below the trailing 24-hour average that the current price must be to qualify as 'low' rating. Example: 5 means at least 5% below average. Sensors with this rating indicate favorable time windows. Default: 5%",
+                            "price_rating_threshold_high": "Percentage above the trailing 24-hour average that the current price must be to qualify as 'high' rating. Example: 10 means at least 10% above average. Sensors with this rating warn about expensive time windows. Default: 10%"
+                        }
+                    }
                 },
                 "submit": "Continue →"
             },
             "best_price": {
                 "title": "💚 Best Price Period Settings",
                 "description": "_{step_progress}_\n\n**Configure settings for the Best Price Period binary sensor. This sensor is active during periods with the lowest electricity prices.**\n\n---",
-                "data": {
-                    "best_price_min_period_length": "Minimum Period Length",
-                    "best_price_flex": "Flexibility",
-                    "best_price_min_distance_from_avg": "Minimum Distance",
-                    "best_price_max_level": "Price Level Filter",
-                    "best_price_max_level_gap_count": "Gap Tolerance",
-                    "enable_min_periods_best": "Achieve Minimum Count",
-                    "min_periods_best": "Minimum Periods",
-                    "relaxation_attempts_best": "Relaxation Attempts"
-                },
-                "data_description": {
-                    "best_price_min_period_length": "Minimum duration for a period to be considered as 'best price'. Longer periods are more practical for running appliances like dishwashers or heat pumps. Best price periods require 60 minutes minimum (vs. 30 minutes for peak price warnings) because they should provide meaningful time windows for consumption planning, not just brief opportunities.",
-                    "best_price_flex": "Maximum above the daily minimum price that intervals can be and still qualify as 'best price'. Recommended: 15-20 with relaxation enabled (default), or 25-35 without relaxation. Maximum: 50 (hard cap for reliable period detection).",
-                    "best_price_min_distance_from_avg": "Ensures periods are significantly cheaper than the daily average, not just marginally below it. This filters out noise and prevents marking slightly-below-average periods as 'best price' on days with flat prices. Higher values = stricter filtering (only truly cheap periods qualify). Default: 5 means periods must be at least 5% below the daily average.",
-                    "best_price_max_level": "Only show best price periods if they contain intervals with price levels ≤ selected value. For example, selecting 'Cheap' means the period must have at least one 'VERY_CHEAP' or 'CHEAP' interval. This ensures 'best price' periods are not just relatively cheap for the day, but actually cheap in absolute terms. Select 'Any' to show best prices regardless of their absolute price level.",
-                    "best_price_max_level_gap_count": "Maximum number of consecutive intervals allowed that deviate by exactly one level step from the required level. For example: with 'Cheap' filter and gap count 1, a sequence 'CHEAP, CHEAP, NORMAL, CHEAP' is accepted (NORMAL is one step above CHEAP). This prevents periods from being split by occasional level deviations. **Note:** Gap tolerance requires periods ≥90 minutes (6 intervals) to detect outliers effectively. Default: 0 (strict filtering, no tolerance).",
-                    "enable_min_periods_best": "When enabled, filters will be gradually relaxed if not enough periods are found. This attempts to reach the desired minimum number of periods, which may include less optimal time windows as best-price periods.",
-                    "min_periods_best": "Minimum number of best price periods to aim for per day. Filters will be relaxed step-by-step to try achieving this count. Only active when 'Try to Achieve Minimum Period Count' is enabled. Default: 1",
-                    "relaxation_attempts_best": "How many flex levels (attempts) to try before giving up. Each attempt runs all filter combinations at the new flex level. More attempts increase the chance of finding additional periods at the cost of longer processing time."
+                "sections": {
+                    "period_settings": {
+                        "name": "Period Duration & Levels",
+                        "description": "Configure how long periods should be and which price levels to include.",
+                        "data": {
+                            "best_price_min_period_length": "Minimum Period Length",
+                            "best_price_max_level": "Price Level Filter",
+                            "best_price_max_level_gap_count": "Gap Tolerance"
+                        },
+                        "data_description": {
+                            "best_price_min_period_length": "Minimum duration for a period to be considered as 'best price'. Longer periods are more practical for running appliances like dishwashers or heat pumps. Best price periods require 60 minutes minimum (vs. 30 minutes for peak price warnings) because they should provide meaningful time windows for consumption planning, not just brief opportunities.",
+                            "best_price_max_level": "Only show best price periods if they contain intervals with price levels ≤ selected value. For example, selecting 'Cheap' means the period must have at least one 'VERY_CHEAP' or 'CHEAP' interval. This ensures 'best price' periods are not just relatively cheap for the day, but actually cheap in absolute terms. Select 'Any' to show best prices regardless of their absolute price level.",
+                            "best_price_max_level_gap_count": "Maximum number of consecutive intervals allowed that deviate by exactly one level step from the required level. For example: with 'Cheap' filter and gap count 1, a sequence 'CHEAP, CHEAP, NORMAL, CHEAP' is accepted (NORMAL is one step above CHEAP). This prevents periods from being split by occasional level deviations. **Note:** Gap tolerance requires periods ≥90 minutes (6 intervals) to detect outliers effectively. Default: 0 (strict filtering, no tolerance)."
+                        }
+                    },
+                    "flexibility_settings": {
+                        "name": "Flexibility & Thresholds",
+                        "description": "Control how much prices can deviate and still qualify as 'best price'.",
+                        "data": {
+                            "best_price_flex": "Flexibility",
+                            "best_price_min_distance_from_avg": "Minimum Distance"
+                        },
+                        "data_description": {
+                            "best_price_flex": "Maximum above the daily minimum price that intervals can be and still qualify as 'best price'. Recommended: 15-20 with relaxation enabled (default), or 25-35 without relaxation. Maximum: 50 (hard cap for reliable period detection).",
+                            "best_price_min_distance_from_avg": "Ensures periods are significantly cheaper than the daily average, not just marginally below it. This filters out noise and prevents marking slightly-below-average periods as 'best price' on days with flat prices. Higher values = stricter filtering (only truly cheap periods qualify). Default: 5 means periods must be at least 5% below the daily average."
+                        }
+                    },
+                    "relaxation_and_target_periods": {
+                        "name": "Relaxation & Target Periods",
+                        "description": "Configure automatic filter relaxation and target period counts. Enable 'Achieve Minimum Count' to activate relaxation.",
+                        "data": {
+                            "enable_min_periods_best": "Achieve Minimum Count",
+                            "min_periods_best": "Minimum Periods",
+                            "relaxation_attempts_best": "Relaxation Attempts"
+                        },
+                        "data_description": {
+                            "enable_min_periods_best": "When enabled, filters will be gradually relaxed if not enough periods are found. This attempts to reach the desired minimum number of periods, which may include less optimal time windows as best-price periods.",
+                            "min_periods_best": "Minimum number of best price periods to aim for per day. Filters will be relaxed step-by-step to try achieving this count. Only active when 'Achieve Minimum Count' is enabled. Default: 1",
+                            "relaxation_attempts_best": "How many flex levels (attempts) to try before giving up. Each attempt runs all filter combinations at the new flex level. More attempts increase the chance of finding additional periods at the cost of longer processing time."
+                        }
+                    }
                 },
                 "submit": "Continue →"
             },
             "peak_price": {
                 "title": "🔴 Peak Price Period Settings",
                 "description": "_{step_progress}_\n\n**Configure settings for the Peak Price Period binary sensor. This sensor is active during periods with the highest electricity prices.**\n\n---",
-                "data": {
-                    "peak_price_min_period_length": "Minimum Period Length",
-                    "peak_price_flex": "Flexibility",
-                    "peak_price_min_distance_from_avg": "Minimum Distance",
-                    "peak_price_min_level": "Price Level Filter",
-                    "peak_price_max_level_gap_count": "Gap Tolerance",
-                    "enable_min_periods_peak": "Achieve Minimum Count",
-                    "min_periods_peak": "Minimum Periods",
-                    "relaxation_attempts_peak": "Relaxation Attempts"
-                },
-                "data_description": {
-                    "peak_price_min_period_length": "Minimum duration for a period to be considered as 'peak price'. Peak price warnings are allowed for shorter periods (30 minutes minimum vs. 60 minutes for best price) because brief expensive spikes are worth alerting about, even if they're too short for consumption planning.",
-                    "peak_price_flex": "Maximum below the daily maximum price that intervals can be and still qualify as 'peak price'. Recommended: -15 to -20 with relaxation enabled (default), or -25 to -35 without relaxation. Maximum: -50 (hard cap for reliable period detection). Note: Negative values indicate distance below maximum.",
-                    "peak_price_min_distance_from_avg": "Ensures periods are significantly more expensive than the daily average, not just marginally above it. This filters out noise and prevents marking slightly-above-average periods as 'peak price' on days with flat prices. Higher values = stricter filtering (only truly expensive periods qualify). Default: 5 means periods must be at least 5% above the daily average.",
-                    "peak_price_min_level": "Only show peak price periods if they contain intervals with price levels ≥ selected value. For example, selecting 'Expensive' means the period must have at least one 'EXPENSIVE' or 'VERY_EXPENSIVE' interval. This ensures 'peak price' periods are not just relatively expensive for the day, but actually expensive in absolute terms. Select 'Any' to show peak prices regardless of their absolute price level.",
-                    "peak_price_max_level_gap_count": "Maximum number of consecutive intervals allowed that deviate by exactly one level step from the required level. For example: with 'Expensive' filter and gap count 2, a sequence 'EXPENSIVE, NORMAL, NORMAL, EXPENSIVE' is accepted (NORMAL is one step below EXPENSIVE). This prevents periods from being split by occasional level deviations. **Note:** Gap tolerance requires periods ≥90 minutes (6 intervals) to detect outliers effectively. Default: 0 (strict filtering, no tolerance).",
-                    "enable_min_periods_peak": "When enabled, filters will be gradually relaxed if not enough periods are found. This attempts to reach the desired minimum number of periods to ensure you're warned about expensive periods even on days with unusual price patterns.",
-                    "min_periods_peak": "Minimum number of peak price periods to aim for per day. Filters will be relaxed step-by-step to try achieving this count. Only active when 'Try to Achieve Minimum Period Count' is enabled. Default: 1",
-                    "relaxation_attempts_peak": "How many flex levels (attempts) to try before giving up. Each attempt runs all filter combinations at the new flex level. More attempts increase the chance of finding additional peak periods at the cost of longer processing time."
+                "sections": {
+                    "period_settings": {
+                        "name": "Period Settings",
+                        "description": "Configure period duration and price level constraints.",
+                        "data": {
+                            "peak_price_min_period_length": "Minimum Period Length",
+                            "peak_price_min_level": "Price Level Filter",
+                            "peak_price_max_level_gap_count": "Gap Tolerance"
+                        },
+                        "data_description": {
+                            "peak_price_min_period_length": "Minimum duration for a period to be considered as 'peak price'. Peak price warnings are allowed for shorter periods (30 minutes minimum vs. 60 minutes for best price) because brief expensive spikes are worth alerting about, even if they're too short for consumption planning.",
+                            "peak_price_min_level": "Only show peak price periods if they contain intervals with price levels ≥ selected value. For example, selecting 'Expensive' means the period must have at least one 'EXPENSIVE' or 'VERY_EXPENSIVE' interval. This ensures 'peak price' periods are not just relatively expensive for the day, but actually expensive in absolute terms. Select 'Any' to show peak prices regardless of their absolute price level.",
+                            "peak_price_max_level_gap_count": "Maximum number of consecutive intervals allowed that deviate by exactly one level step from the required level. For example: with 'Expensive' filter and gap count 2, a sequence 'EXPENSIVE, NORMAL, NORMAL, EXPENSIVE' is accepted (NORMAL is one step below EXPENSIVE). This prevents periods from being split by occasional level deviations. **Note:** Gap tolerance requires periods ≥90 minutes (6 intervals) to detect outliers effectively. Default: 0 (strict filtering, no tolerance)."
+                        }
+                    },
+                    "flexibility_settings": {
+                        "name": "Flexibility Settings",
+                        "description": "Configure price comparison thresholds and filtering.",
+                        "data": {
+                            "peak_price_flex": "Flexibility",
+                            "peak_price_min_distance_from_avg": "Minimum Distance"
+                        },
+                        "data_description": {
+                            "peak_price_flex": "Maximum below the daily maximum price that intervals can be and still qualify as 'peak price'. Recommended: -15 to -20 with relaxation enabled (default), or -25 to -35 without relaxation. Maximum: -50 (hard cap for reliable period detection). Note: Negative values indicate distance below maximum.",
+                            "peak_price_min_distance_from_avg": "Ensures periods are significantly more expensive than the daily average, not just marginally above it. This filters out noise and prevents marking slightly-above-average periods as 'peak price' on days with flat prices. Higher values = stricter filtering (only truly expensive periods qualify). Default: 5 means periods must be at least 5% above the daily average."
+                        }
+                    },
+                    "relaxation_and_target_periods": {
+                        "name": "Relaxation & Target Periods",
+                        "description": "Configure automatic filter relaxation and target period counts. Enable 'Achieve Minimum Count' to activate relaxation.",
+                        "data": {
+                            "enable_min_periods_peak": "Achieve Minimum Count",
+                            "min_periods_peak": "Minimum Periods",
+                            "relaxation_attempts_peak": "Relaxation Attempts"
+                        },
+                        "data_description": {
+                            "enable_min_periods_peak": "When enabled, filters will be gradually relaxed if not enough periods are found. This attempts to reach the desired minimum number of periods to ensure you're warned about expensive periods even on days with unusual price patterns.",
+                            "min_periods_peak": "Minimum number of peak price periods to aim for per day. Filters will be relaxed step-by-step to try achieving this count. Only active when 'Achieve Minimum Count' is enabled. Default: 1",
+                            "relaxation_attempts_peak": "How many flex levels (attempts) to try before giving up. Each attempt runs all filter combinations at the new flex level. More attempts increase the chance of finding additional peak periods at the cost of longer processing time."
+                        }
+                    }
                 },
                 "submit": "Continue →"
             },
             "price_trend": {
                 "title": "📈 Price Trend Thresholds",
                 "description": "_{step_progress}_\n\n**Configure thresholds for price trend sensors. These sensors compare current price with the average of the next N hours to determine if prices are rising, falling, or stable.**\n\n---",
-                "data": {
-                    "price_trend_threshold_rising": "Rising Threshold",
-                    "price_trend_threshold_falling": "Falling Threshold"
-                },
-                "data_description": {
-                    "price_trend_threshold_rising": "Percentage that the average of the next N hours must be above the current price to qualify as 'rising' trend. Example: 5 means average is at least 5% higher → prices will rise. Typical values: 5-15%. Default: 5%",
-                    "price_trend_threshold_falling": "Percentage (negative) that the average of the next N hours must be below the current price to qualify as 'falling' trend. Example: -5 means average is at least 5% lower → prices will fall. Typical values: -5 to -15%. Default: -5%"
+                "sections": {
+                    "price_trend_thresholds": {
+                        "name": "Price Trend Thresholds",
+                        "description": "Define price trend classification levels.",
+                        "data": {
+                            "price_trend_threshold_rising": "Rising Threshold",
+                            "price_trend_threshold_falling": "Falling Threshold"
+                        },
+                        "data_description": {
+                            "price_trend_threshold_rising": "Percentage that the average of the next N hours must be above the current price to qualify as 'rising' trend. Example: 5 means average is at least 5% higher → prices will rise. Typical values: 5-15%. Default: 5%",
+                            "price_trend_threshold_falling": "Percentage (negative) that the average of the next N hours must be below the current price to qualify as 'falling' trend. Example: -5 means average is at least 5% lower → prices will fall. Typical values: -5 to -15%. Default: -5%"
+                        }
+                    }
                 },
                 "submit": "Continue →"
             },
@@ -226,17 +282,23 @@
             "volatility": {
                 "title": "💨 Price Volatility Thresholds",
                 "description": "_{step_progress}_\n\n**Configure thresholds for volatility classification.** Volatility measures relative price variation using the coefficient of variation (CV = standard deviation / mean × 100%). These thresholds are percentage values that work across all price levels.\n\nUsed by:\n• Volatility sensors (classification)\n• Trend sensors (adaptive threshold adjustment: &lt;moderate = more sensitive, ≥high = less sensitive)\n\n---",
-                "data": {
-                    "volatility_threshold_moderate": "Moderate Threshold",
-                    "volatility_threshold_high": "High Threshold",
-                    "volatility_threshold_very_high": "Very High Threshold"
+                "sections": {
+                    "volatility_thresholds": {
+                        "name": "Volatility Thresholds",
+                        "description": "Define price volatility classification levels.",
+                        "data": {
+                            "volatility_threshold_moderate": "Moderate Threshold",
+                            "volatility_threshold_high": "High Threshold",
+                            "volatility_threshold_very_high": "Very High Threshold"
+                        },
+                        "data_description": {
+                            "volatility_threshold_moderate": "Coefficient of Variation (CV) at which prices are considered 'moderately volatile'. CV = (standard deviation / mean) × 100%. Example: 15 means price fluctuations of ±15% around average. Sensors show this classification, trend sensors become more sensitive. Default: 15%",
+                            "volatility_threshold_high": "Coefficient of Variation (CV) at which prices are considered 'highly volatile'. Example: 30 means price fluctuations of ±30% around average. Larger price jumps expected, trend sensors become less sensitive. Default: 30%",
+                            "volatility_threshold_very_high": "Coefficient of Variation (CV) at which prices are considered 'very highly volatile'. Example: 50 means extreme price fluctuations of ±50% around average. On such days, strong price spikes are likely. Default: 50%"
+                        }
+                    }
                 },
-                "data_description": {
-                    "volatility_threshold_moderate": "Coefficient of Variation (CV) at which prices are considered 'moderately volatile'. CV = (standard deviation / mean) × 100%. Example: 15 means price fluctuations of ±15% around average. Sensors show this classification, trend sensors become more sensitive. Default: 15%",
-                    "volatility_threshold_high": "Coefficient of Variation (CV) at which prices are considered 'highly volatile'. Example: 30 means price fluctuations of ±30% around average. Larger price jumps expected, trend sensors become less sensitive. Default: 30%",
-                    "volatility_threshold_very_high": "Coefficient of Variation (CV) at which prices are considered 'very highly volatile'. Example: 50 means extreme price fluctuations of ±50% around average. On such days, strong price spikes are likely. Default: 50%"
-                },
-                "submit": "Next to Step 4"
+                "submit": "Continue →"
             }
         },
         "error": {

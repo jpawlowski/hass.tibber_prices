@@ -145,91 +145,153 @@
             "current_interval_price_rating": {
                 "title": "📊 Prisvurderings-terskler",
                 "description": "_{step_progress}_\n\n**Konfigurer terskler for prisvurderingsnivåer (lav/normal/høy) basert på sammenligning med etterfølgende 24-timers gjennomsnitt.**\n\n---",
-                "data": {
-                    "price_rating_threshold_low": "Lav-terskel",
-                    "price_rating_threshold_high": "Høy-terskel"
-                },
-                "data_description": {
-                    "price_rating_threshold_low": "Prosentverdi for hvor mye gjeldende pris må være under det etterfølgende 24-timers gjennomsnittet for å kvalifisere som 'lav' vurdering. Eksempel: 5 betyr minst 5% under gjennomsnitt. Sensorer med denne vurderingen indikerer gunstige tidsvinduer. Standard: 5%",
-                    "price_rating_threshold_high": "Prosentverdi for hvor mye gjeldende pris må være over det etterfølgende 24-timers gjennomsnittet for å kvalifisere som 'høy' vurdering. Eksempel: 10 betyr minst 10% over gjennomsnitt. Sensorer med denne vurderingen advarer om dyre tidsvinduer. Standard: 10%"
+                "sections": {
+                    "price_rating_thresholds": {
+                        "name": "Prisvurderings-terskler",
+                        "description": "Definer prisvurderingsnivåer.",
+                        "data": {
+                            "price_rating_threshold_low": "Lav-terskel",
+                            "price_rating_threshold_high": "Høy-terskel"
+                        },
+                        "data_description": {
+                            "price_rating_threshold_low": "Prosentverdi for hvor mye gjeldende pris må være under det etterfølgende 24-timers gjennomsnittet for å kvalifisere som 'lav' vurdering. Eksempel: 5 betyr minst 5% under gjennomsnitt. Sensorer med denne vurderingen indikerer gunstige tidsvinduer. Standard: 5%",
+                            "price_rating_threshold_high": "Prosentverdi for hvor mye gjeldende pris må være over det etterfølgende 24-timers gjennomsnittet for å kvalifisere som 'høy' vurdering. Eksempel: 10 betyr minst 10% over gjennomsnitt. Sensorer med denne vurderingen advarer om dyre tidsvinduer. Standard: 10%"
+                        }
+                    }
                 },
                 "submit": "Fortsett →"
             },
             "best_price": {
                 "title": "💚 Beste Prisperiode Innstillinger",
                 "description": "_{step_progress}_\n\nKonfigurer innstillinger for **Beste Prisperiode** binærsensor. Denne sensoren er aktiv i perioder med de laveste strømprisene.\n\n---",
-                "data": {
-                    "best_price_min_period_length": "Minimum periodelengde",
-                    "best_price_flex": "Fleksibilitet: Maksimum over minimumspris",
-                    "best_price_min_distance_from_avg": "Minimumsavstand: Påkrevd under daglig gjennomsnitt",
-                    "best_price_max_level": "Prisnivåfilter (valgfritt)",
-                    "best_price_max_level_gap_count": "Gaptoleranse for nivåfilter",
-                    "enable_min_periods_best": "Prøv å oppnå minimum antall perioder",
-                    "min_periods_best": "Minimum antall perioder",
-                    "relaxation_attempts_best": "Antall forsøk (fleksnivåer)"
-                },
-                "data_description": {
-                    "best_price_min_period_length": "Minimum varighet for at en periode skal regnes som 'beste pris'. Lengre perioder er mer praktiske for å kjøre apparater som oppvaskmaskiner eller varmepumper. Beste-pris-perioder krever minimum 60 minutter (sammenlignet med 30 minutter for topppris-advarsler) fordi de skal gi meningsfulle tidsvinduer for forbruksplanlegging, ikke bare korte muligheter.",
-                    "best_price_flex": "Maksimalt over den daglige minimumsprisen der intervaller fortsatt kvalifiserer som 'beste pris'. Anbefaling: 15-20 med lemping aktivert (standard), eller 25-35 uten lemping. Maksimum: 50 (hard grense for pålitelig periodegjenkjenning).",
-                    "best_price_min_distance_from_avg": "Sikrer at perioder er betydelig billigere enn daglig gjennomsnitt, ikke bare marginalt under det. Dette filtrerer støy og forhindrer at litt-under-gjennomsnittet perioder markeres som 'beste pris' på dager med flate priser. Høyere verdier = strengere filtrering (bare virkelig billige perioder kvalifiserer). Standard: 5 betyr at perioder må være minst 5% under daglig gjennomsnitt.",
-                    "best_price_max_level": "Vis kun beste prisperioder hvis de inneholder intervaller med prisnivåer ≤ valgt verdi. For eksempel: å velge 'Billig' betyr at perioden må ha minst étt 'VELDIG_BILLIG' eller 'BILLIG' intervall. Dette sikrer at 'beste pris'-perioder ikke bare er relativt billige for dagen, men faktisk billige i absolutte tall. Velg 'Alle' for å vise beste priser uavhengig av deres absolutte prisnivå.",
-                    "enable_min_periods_best": "Når aktivert vil filtrene gradvis bli lempeligere hvis det ikke blir funnet nok perioder. Dette forsøker å nå ønsket minimum antall perioder, noe som kan føre til at mindre optimale tidsrom blir markert som beste-pris-perioder.",
-                    "min_periods_best": "Minimum antall beste-pris-perioder å sikte mot per dag. Filtre vil bli lempet trinn for trinn for å prøve å oppnå dette antallet. Kun aktiv når 'Prøv å oppnå minimum antall perioder' er aktivert. Standard: 1",
-                    "relaxation_attempts_best": "Hvor mange fleksnivåer (forsøk) som testes før vi gir opp. Hvert forsøk kjører alle filterkombinasjoner på det nye fleksnivået. Flere forsøk øker sjansen for ekstra perioder, men tar litt lengre tid.",
-                    "best_price_max_level_gap_count": "Maksimalt antall påfølgende intervaller som kan avvike med nøyaktig étt nivåtrinn fra det nødvendige nivået. For eksempel: med 'Billig' filter og gapantall 1, aksepteres sekvensen 'BILLIG, BILLIG, NORMAL, BILLIG' (NORMAL er étt trinn over BILLIG). Dette forhindrer at perioder blir delt opp av tilfeldige nivåavvik. **Merk:** Gaptoleranse krever perioder ≥90 minutter (6 intervaller) for å oppdage avvik effektivt. Standard: 0 (streng filtrering, ingen toleranse)."
+                "sections": {
+                    "period_settings": {
+                        "name": "Period Settings",
+                        "description": "Configure period duration and price level constraints.",
+                        "data": {
+                            "best_price_min_period_length": "Minimum Period Length",
+                            "best_price_max_level": "Price Level Filter",
+                            "best_price_max_level_gap_count": "Gap Tolerance"
+                        },
+                        "data_description": {
+                            "best_price_min_period_length": "Minimum duration for a period to be considered as 'best price'. Longer periods are more practical for running appliances like dishwashers or heat pumps. Best price periods require minimum 60 minutes (compared to 30 minutes for peak price alerts) because they should provide meaningful time windows for consumption planning, not just brief opportunities.",
+                            "best_price_max_level": "Only show best price periods if they contain intervals with price levels ≤ selected value. For example, selecting 'Cheap' means the period must have at least one 'VERY_CHEAP' or 'CHEAP' interval. This ensures 'best price' periods are not just relatively cheap for the day, but actually cheap in absolute terms. Select 'Any' to show best prices regardless of their absolute price level.",
+                            "best_price_max_level_gap_count": "Maximum number of consecutive intervals allowed that deviate by exactly one level step from the required level. For example: with 'Cheap' filter and gap count 1, a sequence 'CHEAP, CHEAP, NORMAL, CHEAP' is accepted (NORMAL is one step above CHEAP). This prevents periods from being split by occasional level deviations. **Note:** Gap tolerance requires periods ≥90 minutes (6 intervals) to detect outliers effectively. Default: 0 (strict filtering, no tolerance)."
+                        }
+                    },
+                    "flexibility_settings": {
+                        "name": "Flexibility Settings",
+                        "description": "Configure price comparison thresholds and filtering.",
+                        "data": {
+                            "best_price_flex": "Flexibility",
+                            "best_price_min_distance_from_avg": "Minimum Distance"
+                        },
+                        "data_description": {
+                            "best_price_flex": "Maximum above the daily minimum price that intervals can be and still qualify as 'best price'. Recommended: 15-20 with relaxation enabled (default), or 25-35 without relaxation. Maximum: 50 (hard cap for reliable period detection).",
+                            "best_price_min_distance_from_avg": "Ensures periods are significantly cheaper than the daily average, not just marginally below it. This filters out noise and prevents marking slightly-below-average periods as 'best price' on days with flat prices. Higher values = stricter filtering (only truly cheap periods qualify). Default: 5 means periods must be at least 5% below the daily average."
+                        }
+                    },
+                    "relaxation_and_target_periods": {
+                        "name": "Relaxation & Target Periods",
+                        "description": "Configure automatic filter relaxation and target period counts. Enable 'Achieve Minimum Count' to activate relaxation.",
+                        "data": {
+                            "enable_min_periods_best": "Achieve Minimum Count",
+                            "min_periods_best": "Minimum Periods",
+                            "relaxation_attempts_best": "Relaxation Attempts"
+                        },
+                        "data_description": {
+                            "enable_min_periods_best": "When enabled, filters will be gradually relaxed if not enough periods are found. This attempts to reach the desired minimum number of periods, which may include less optimal time windows as best-price periods.",
+                            "min_periods_best": "Minimum number of best price periods to aim for per day. Filters will be relaxed step-by-step to try achieving this count. Only active when 'Achieve Minimum Count' is enabled. Default: 1",
+                            "relaxation_attempts_best": "How many flex levels (attempts) to try before giving up. Each attempt runs all filter combinations at the new flex level. More attempts increase the chance of finding additional periods at the cost of longer processing time."
+                        }
+                    }
                 },
                 "submit": "Fortsett →"
             },
             "peak_price": {
                 "title": "🔴 Toppprisperiode Innstillinger",
                 "description": "_{step_progress}_\n\nKonfigurer innstillinger for **Toppprisperiode** binærsensor. Denne sensoren er aktiv i perioder med de høyeste strømprisene.\n\n---",
-                "data": {
-                    "peak_price_min_period_length": "Minimum periodelengde",
-                    "peak_price_flex": "Fleksibilitet: Maksimum under maksimumspris",
-                    "peak_price_min_distance_from_avg": "Minimumsavstand: Påkrevd over daglig gjennomsnitt",
-                    "peak_price_min_level": "Prisnivåfilter (valgfritt)",
-                    "peak_price_max_level_gap_count": "Gaptoleranse for nivåfilter",
-                    "enable_min_periods_peak": "Prøv å oppnå minimum antall perioder",
-                    "min_periods_peak": "Minimum antall perioder",
-                    "relaxation_attempts_peak": "Antall forsøk (fleksnivåer)"
-                },
-                "data_description": {
-                    "peak_price_min_period_length": "Minimum varighet for at en periode skal regnes som 'topppris'. Topppris-advarsler er tillatt for kortere perioder (minimum 30 minutter sammenlignet med 60 minutter for beste pris) fordi korte dyre topper er verdt å advare om, selv om de er for korte for forbruksplanlegging.",
-                    "peak_price_flex": "Maksimalt under den daglige maksimumsprisen der intervaller fortsatt kvalifiserer som 'topppris'. Anbefaling: -15 til -20 med lemping aktivert (standard), eller -25 til -35 uten lemping. Maksimum: -50 (hard grense for pålitelig periodegjenkjenning). Merk: Negative verdier angir avstand under maksimum.",
-                    "peak_price_min_distance_from_avg": "Sikrer at perioder er betydelig dyrere enn daglig gjennomsnitt, ikke bare marginalt over det. Dette filtrerer støy og forhindrer at litt-over-gjennomsnittet perioder markeres som 'topppris' på dager med flate priser. Høyere verdier = strengere filtrering (bare virkelig dyre perioder kvalifiserer). Standard: 5 betyr at perioder må være minst 5% over daglig gjennomsnitt.",
-                    "peak_price_min_level": "Vis kun topprisperioder hvis de inneholder intervaller med prisnivåer ≥ valgt verdi. For eksempel: å velge 'Dyr' betyr at perioden må ha minst étt 'DYR' eller 'VELDIG_DYR' intervall. Dette sikrer at 'topppris'-perioder ikke bare er relativt dyre for dagen, men faktisk dyre i absolutte tall. Velg 'Alle' for å vise topppriser uavhengig av deres absolutte prisnivå.",
-                    "enable_min_periods_peak": "Når aktivert vil filtrene gradvis bli lempeligere hvis det ikke blir funnet nok perioder. Dette forsøker å nå ønsket minimum antall perioder for å sikre at du blir advart om dyre perioder selv på dager med uvanlige prismønstre.",
-                    "min_periods_peak": "Minimum antall topp-pris-perioder å sikte mot per dag. Filtre vil bli lempet trinn for trinn for å prøve å oppnå dette antallet. Kun aktiv når 'Prøv å oppnå minimum antall perioder' er aktivert. Standard: 1",
-                    "relaxation_attempts_peak": "Hvor mange fleksnivåer (forsøk) som testes før vi gir opp. Hvert forsøk kjører alle filterkombinasjoner på det nye fleksnivået. Flere forsøk øker sjansen for ekstra toppprisperioder, men tar litt lengre tid.",
-                    "peak_price_max_level_gap_count": "Maksimalt antall påfølgende intervaller som kan avvike med nøyaktig étt nivåtrinn fra det nødvendige nivået. For eksempel: med 'Dyr' filter og gapantall 1, aksepteres sekvensen 'DYR, DYR, NORMAL, DYR' (NORMAL er étt trinn under DYR). Dette forhindrer at perioder blir delt opp av tilfeldige nivåavvik. **Merk:** Gaptoleranse krever perioder ≥90 minutter (6 intervaller) for å oppdage avvik effektivt. Standard: 0 (streng filtrering, ingen toleranse)."
+                "sections": {
+                    "period_settings": {
+                        "name": "Periodeinnstillinger",
+                        "description": "Konfigurer periodelengde og prisnivåbegrensninger.",
+                        "data": {
+                            "peak_price_min_period_length": "Minimum periodelengde",
+                            "peak_price_min_level": "Prisnivåfilter",
+                            "peak_price_max_level_gap_count": "Gaptoleranse"
+                        },
+                        "data_description": {
+                            "peak_price_min_period_length": "Minimum varighet for at en periode skal regnes som 'topppris'. Topppris-advarsler er tillatt for kortere perioder (minimum 30 minutter sammenlignet med 60 minutter for beste pris) fordi korte dyre topper er verdt å advare om, selv om de er for korte for forbruksplanlegging.",
+                            "peak_price_min_level": "Vis kun topprisperioder hvis de inneholder intervaller med prisnivåer ≥ valgt verdi. For eksempel: å velge 'Dyr' betyr at perioden må ha minst étt 'DYR' eller 'VELDIG_DYR' intervall. Dette sikrer at 'topppris'-perioder ikke bare er relativt dyre for dagen, men faktisk dyre i absolutte tall. Velg 'Alle' for å vise topppriser uavhengig av deres absolutte prisnivå.",
+                            "peak_price_max_level_gap_count": "Maksimalt antall påfølgende intervaller som kan avvike med nøyaktig étt nivåtrinn fra det nødvendige nivået. For eksempel: med 'Dyr' filter og gapantall 1, aksepteres sekvensen 'DYR, DYR, NORMAL, DYR' (NORMAL er étt trinn under DYR). Dette forhindrer at perioder blir delt opp av tilfeldige nivåavvik. **Merk:** Gaptoleranse krever perioder ≥90 minutter (6 intervaller) for å oppdage avvik effektivt. Standard: 0 (streng filtrering, ingen toleranse)."
+                        }
+                    },
+                    "flexibility_settings": {
+                        "name": "Fleksibilitetsinnstillinger",
+                        "description": "Konfigurer prissammenligningskriterier og filtrering.",
+                        "data": {
+                            "peak_price_flex": "Fleksibilitet",
+                            "peak_price_min_distance_from_avg": "Minimumsavstand"
+                        },
+                        "data_description": {
+                            "peak_price_flex": "Maksimalt under den daglige maksimumsprisen der intervaller fortsatt kvalifiserer som 'topppris'. Anbefaling: -15 til -20 med lemping aktivert (standard), eller -25 til -35 uten lemping. Maksimum: -50 (hard grense for pålitelig periodegjenkjenning). Merk: Negative verdier angir avstand under maksimum.",
+                            "peak_price_min_distance_from_avg": "Sikrer at perioder er betydelig dyrere enn daglig gjennomsnitt, ikke bare marginalt over det. Dette filtrerer støy og forhindrer at litt-over-gjennomsnittet perioder markeres som 'topppris' på dager med flate priser. Høyere verdier = strengere filtrering (bare virkelig dyre perioder kvalifiserer). Standard: 5 betyr at perioder må være minst 5% over daglig gjennomsnitt."
+                        }
+                    },
+                    "relaxation_and_target_periods": {
+                        "name": "Lemping & målperioder",
+                        "description": "Konfigurer automatisk filterlempelse og målperioder. Aktiver 'Prøv å oppnå minimum antall perioder' for å aktivere lemping.",
+                        "data": {
+                            "enable_min_periods_peak": "Prøv å oppnå minimum antall perioder",
+                            "min_periods_peak": "Minimum antall perioder",
+                            "relaxation_attempts_peak": "Antall lempingsforsøk"
+                        },
+                        "data_description": {
+                            "enable_min_periods_peak": "Når aktivert vil filtrene gradvis bli lempeligere hvis det ikke blir funnet nok perioder. Dette forsøker å nå ønsket minimum antall perioder for å sikre at du blir advart om dyre perioder selv på dager med uvanlige prismønstre.",
+                            "min_periods_peak": "Minimum antall topp-pris-perioder å sikte mot per dag. Filtre vil bli lempet trinn for trinn for å prøve å oppnå dette antallet. Kun aktiv når 'Prøv å oppnå minimum antall perioder' er aktivert. Standard: 1",
+                            "relaxation_attempts_peak": "Hvor mange fleksnivåer (forsøk) som testes før vi gir opp. Hvert forsøk kjører alle filterkombinasjoner på det nye fleksnivået. Flere forsøk øker sjansen for ekstra toppprisperioder, men tar litt lengre tid."
+                        }
+                    }
                 },
                 "submit": "Fortsett →"
             },
             "price_trend": {
                 "title": "📈 Pristrendterskler",
                 "description": "_{step_progress}_\n\n**Konfigurer terskler for pristrendsensorer. Disse sensorene sammenligner nåværende pris med gjennomsnittet av de neste N timene for å bestemme om prisene stiger, faller eller er stabile.**\n\n---",
-                "data": {
-                    "price_trend_threshold_rising": "Stigende terskel",
-                    "price_trend_threshold_falling": "Fallende terskel"
-                },
-                "data_description": {
-                    "price_trend_threshold_rising": "Prosentverdi for gjennomsnittlig prisøkning per time som kvalifiserer trenden som 'stigende'. Eksempel: 5 betyr minst 5% økning per time. Sensorer med denne trenden indikerer at prisene vil stige raskt. Standard: 5%",
-                    "price_trend_threshold_falling": "Prosentverdi for gjennomsnittlig prisnedgang per time som kvalifiserer trenden som 'synkende'. Eksempel: -5 betyr minst 5% nedgang per time. Sensorer med denne trenden indikerer at prisene vil synke raskt. Standard: -5%"
+                "sections": {
+                    "price_trend_thresholds": {
+                        "name": "Pristrendterskler",
+                        "description": "Definer pristrendnivåer.",
+                        "data": {
+                            "price_trend_threshold_rising": "Stigende terskel",
+                            "price_trend_threshold_falling": "Fallende terskel"
+                        },
+                        "data_description": {
+                            "price_trend_threshold_rising": "Prosentverdi for gjennomsnittlig prisøkning per time som kvalifiserer trenden som 'stigende'. Eksempel: 5 betyr minst 5% økning per time. Sensorer med denne trenden indikerer at prisene vil stige raskt. Standard: 5%",
+                            "price_trend_threshold_falling": "Prosentverdi for gjennomsnittlig prisnedgang per time som kvalifiserer trenden som 'synkende'. Eksempel: -5 betyr minst 5% nedgang per time. Sensorer med denne trenden indikerer at prisene vil synke raskt. Standard: -5%"
+                        }
+                    }
                 },
                 "submit": "Fortsett →"
             },
             "volatility": {
                 "title": "💨 Volatilitets-terskler",
                 "description": "_{step_progress}_\n\n**Konfigurer terskler for volatilitetsklassifisering. Volatilitet måler relativ prisvariation ved hjelp av variasjonskoeffisienten (VK = standardavvik / gjennomsnitt × 100%). Disse tersklene er prosentverdier som fungerer på tvers av alle prisnivåer.**\n\nBrukes av:\n• Volatilitetssensorer (klassifisering)\n• Trendsensorer (adaptiv terskel justering: &lt;moderat = mer følsom, ≥høy = mindre følsom)\n\n---",
-                "data": {
-                    "volatility_threshold_moderate": "Moderat terskel",
-                    "volatility_threshold_high": "Høy terskel",
-                    "volatility_threshold_very_high": "Veldig høy terskel"
-                },
-                "data_description": {
-                    "volatility_threshold_moderate": "Grenseverdi for standardavvik (% av gjennomsnitt) for å klassifisere prisvariasjonen som 'moderat'. Eksempel: 10 betyr standardavvik ≥ 10% av gjennomsnitt. Dette indikerer økt prisustabilitet. Standard: 10%",
-                    "volatility_threshold_high": "Grenseverdi for standardavvik (% av gjennomsnitt) for å klassifisere prisvariasjonen som 'høy'. Eksempel: 20 betyr standardavvik ≥ 20% av gjennomsnitt. Dette indikerer betydelige prissvingninger. Standard: 20%",
-                    "volatility_threshold_very_high": "Grenseverdi for standardavvik (% av gjennomsnitt) for å klassifisere prisvariasjonen som 'veldig høy'. Eksempel: 30 betyr standardavvik ≥ 30% av gjennomsnitt. Dette indikerer ekstrem prisustabilitet. Standard: 30%"
+                "sections": {
+                    "volatility_thresholds": {
+                        "name": "Volatilitetsterskler",
+                        "description": "Definer volatilitetsklassifiseringsnivåer.",
+                        "data": {
+                            "volatility_threshold_moderate": "Moderat terskel",
+                            "volatility_threshold_high": "Høy terskel",
+                            "volatility_threshold_very_high": "Veldig høy terskel"
+                        },
+                        "data_description": {
+                            "volatility_threshold_moderate": "Grenseverdi for standardavvik (% av gjennomsnitt) for å klassifisere prisvariasjonen som 'moderat'. Eksempel: 10 betyr standardavvik ≥ 10% av gjennomsnitt. Dette indikerer økt prisustabilitet. Standard: 10%",
+                            "volatility_threshold_high": "Grenseverdi for standardavvik (% av gjennomsnitt) for å klassifisere prisvariasjonen som 'høy'. Eksempel: 20 betyr standardavvik ≥ 20% av gjennomsnitt. Dette indikerer betydelige prissvingninger. Standard: 20%",
+                            "volatility_threshold_very_high": "Grenseverdi for standardavvik (% av gjennomsnitt) for å klassifisere prisvariasjonen som 'veldig høy'. Eksempel: 30 betyr standardavvik ≥ 30% av gjennomsnitt. Dette indikerer ekstrem prisustabilitet. Standard: 30%"
+                        }
+                    }
                 },
                 "submit": "Fortsett →"
             },
