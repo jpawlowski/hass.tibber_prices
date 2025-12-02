@@ -806,6 +806,36 @@
         "get_chartdata": {
             "name": "Haal grafiekgegevens op",
             "description": "Geeft prijsgegevens terug in een eenvoudig grafiekvriendelijk formaat compatibel met de Tibber Core-integratie outputstructuur. Perfect voor gebruik met populaire grafiekkaarten zoals ha-price-timeline-card, ApexCharts Card, Plotly Graph Card, Mini Graph Card of de ingebouwde History Graph Card. Veldnamen en gegevensstructuur kunnen worden aangepast aan de vereisten van je grafiek.",
+            "sections": {
+                "general": {
+                    "name": "Algemeen",
+                    "description": "Basisopties voor het ophalen van grafiekgegevens."
+                },
+                "selection": {
+                    "name": "Selectie",
+                    "description": "Selecteer welke gegevens in de uitvoer moeten worden opgenomen."
+                },
+                "filters": {
+                    "name": "Filters",
+                    "description": "Filter gegevens op basis van prijsniveaus, prijsbeoordelingen of speciale periodes."
+                },
+                "transformation": {
+                    "name": "Gegevens transformeren",
+                    "description": "Transformeer de gegevensuitvoer voor betere grafiekcompatibiliteit."
+                },
+                "format": {
+                    "name": "Formaat",
+                    "description": "Pas het uitvoerformaat aan."
+                },
+                "arrays_of_arrays": {
+                    "name": "Geavanceerde uitvoerinstellingen: Array van arrays",
+                    "description": "Instellingen voor uitvoerformaat bij gebruik van array van arrays."
+                },
+                "arrays_of_objects": {
+                    "name": "Geavanceerde uitvoerinstellingen: Array van objecten",
+                    "description": "Instellingen voor uitvoerformaat bij gebruik van array van objecten."
+                }
+            },
             "fields": {
                 "entry_id": {
                     "name": "Item-ID",

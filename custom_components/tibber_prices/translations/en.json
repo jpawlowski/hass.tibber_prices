@@ -806,6 +806,36 @@
         "get_chartdata": {
             "name": "Get Chart Data",
             "description": "Returns price data in a simple chart-friendly format compatible with the Tibber Core integration output structure. Perfect for use with popular chart cards like ha-price-timeline-card, ApexCharts Card, Plotly Graph Card, Mini Graph Card, or the built-in History Graph Card. Field names and data structure can be customized to match your specific chart requirements.",
+            "sections": {
+                "general": {
+                    "name": "General",
+                    "description": "General settings for fetching chart data."
+                },
+                "selection": {
+                    "name": "Selection",
+                    "description": "Select which data to include in the output."
+                },
+                "filters": {
+                    "name": "Filters",
+                    "description": "Filter data based on price levels, rating levels, or special periods."
+                },
+                "transformation": {
+                    "name": "Transform Data",
+                    "description": "Transform the data output for better chart compatibility."
+                },
+                "format": {
+                    "name": "Format",
+                    "description": "Customize the output format."
+                },
+                "arrays_of_arrays": {
+                    "name": "Advanced Output Settings: Array of Arrays",
+                    "description": "Settings for output format when using an array of arrays."
+                },
+                "arrays_of_objects": {
+                    "name": "Advanced Output Settings: Array of Objects",
+                    "description": "Settings for output format when using an array of objects."
+                }
+            },
             "fields": {
                 "entry_id": {
                     "name": "Entry ID",
@@ -824,8 +854,8 @@
                     "description": "Output format for the returned data. Options: 'array_of_objects' (default, array of objects with customizable field names), 'array_of_arrays' (array of [timestamp, price] arrays with trailing null point for stepline charts)."
                 },
                 "array_fields": {
-                    "name": "Array Fields (Array of Arrays only)",
-                    "description": "[ONLY FOR Array of Arrays FORMAT] Define which fields to include. Use field names in curly braces, separated by commas. Available fields: start_time, price_per_kwh, level, rating_level, average. Fields will be automatically enabled even if include_* options are not set. Leave empty for default (timestamp and price only)."
+                    "name": "Array Fields",
+                    "description": "Define which fields to include. Use field names in curly braces, separated by commas. Available fields: start_time, price_per_kwh, level, rating_level, average. Fields will be automatically enabled even if include_* options are not set. Leave empty for default (timestamp and price only)."
                 },
                 "minor_currency": {
                     "name": "Minor Currency",
@@ -835,17 +865,21 @@
                     "name": "Round Decimals",
                     "description": "Number of decimal places to round prices to (0-10). If not specified, uses default precision (4 decimals for major currency, 2 for minor currency)."
                 },
+                "data_key": {
+                    "name": "Data Key",
+                    "description": "Custom name for the top-level data key in the response. Defaults to 'data' if not specified. For ApexCharts compatibility with Array of Arrays, use 'points'."
+                },
                 "include_level": {
-                    "name": "Include Level (Array of Objects only)",
-                    "description": "[ONLY FOR Array of Objects FORMAT] Include the Tibber price level field (VERY_CHEAP, CHEAP, NORMAL, EXPENSIVE, VERY_EXPENSIVE) in each data point."
+                    "name": "Include Level",
+                    "description": "Include the Tibber price level field (VERY_CHEAP, CHEAP, NORMAL, EXPENSIVE, VERY_EXPENSIVE) in each data point."
                 },
                 "include_rating_level": {
-                    "name": "Include Rating Level (Array of Objects only)",
-                    "description": "[ONLY FOR Array of Objects FORMAT] Include the calculated rating level field (LOW, NORMAL, HIGH) based on your configured thresholds in each data point."
+                    "name": "Include Rating Level",
+                    "description": "Include the calculated rating level field (LOW, NORMAL, HIGH) based on your configured thresholds in each data point."
                 },
                 "include_average": {
-                    "name": "Include Average (Array of Objects only)",
-                    "description": "[ONLY FOR Array of Objects FORMAT] Include the daily average price in each data point for comparison."
+                    "name": "Include Average",
+                    "description": "Include the daily average price in each data point for comparison."
                 },
                 "level_filter": {
                     "name": "Level Filter",
@@ -869,35 +903,31 @@
                 },
                 "add_trailing_null": {
                     "name": "Add Trailing Null Point",
-                    "description": "[BOTH FORMATS] Add a final data point with null values (except timestamp) at the end. Some chart libraries need this to prevent extrapolation/interpolation to the viewport edge when using stepline rendering. Leave disabled unless your chart requires it."
+                    "description": "Add a final data point with null values (except timestamp) at the end. Some chart libraries need this to prevent extrapolation/interpolation to the viewport edge when using stepline rendering. Leave disabled unless your chart requires it."
                 },
                 "start_time_field": {
-                    "name": "Start Time Field Name (Array of Objects only)",
-                    "description": "[ONLY FOR Array of Objects FORMAT] Custom name for the start time field in the output. Defaults to 'start_time' if not specified."
+                    "name": "Start Time Field Name",
+                    "description": "Custom name for the start time field in the output. Defaults to 'start_time' if not specified."
                 },
                 "end_time_field": {
-                    "name": "End Time Field Name (Array of Objects only)",
-                    "description": "[ONLY FOR Array of Objects FORMAT] Custom name for the end time field in the output. Defaults to 'end_time' if not specified. Only used with period_filter."
+                    "name": "End Time Field Name",
+                    "description": "Custom name for the end time field in the output. Defaults to 'end_time' if not specified. Only used with period_filter."
                 },
                 "price_field": {
-                    "name": "Price Field Name (Array of Objects only)",
-                    "description": "[ONLY FOR Array of Objects FORMAT] Custom name for the price field in the output. Defaults to 'price_per_kwh' if not specified."
+                    "name": "Price Field Name",
+                    "description": "Custom name for the price field in the output. Defaults to 'price_per_kwh' if not specified."
                 },
                 "level_field": {
-                    "name": "Level Field Name (Array of Objects only)",
-                    "description": "[ONLY FOR Array of Objects FORMAT] Custom name for the level field in the output. Defaults to 'level' if not specified. Only used when include_level is enabled."
+                    "name": "Level Field Name",
+                    "description": "Custom name for the level field in the output. Defaults to 'level' if not specified. Only used when include_level is enabled."
                 },
                 "rating_level_field": {
-                    "name": "Rating Level Field Name (Array of Objects only)",
-                    "description": "[ONLY FOR Array of Objects FORMAT] Custom name for the rating_level field in the output. Defaults to 'rating_level' if not specified. Only used when include_rating_level is enabled."
+                    "name": "Rating Level Field Name",
+                    "description": "Custom name for the rating_level field in the output. Defaults to 'rating_level' if not specified. Only used when include_rating_level is enabled."
                 },
                 "average_field": {
-                    "name": "Average Field Name (Array of Objects only)",
-                    "description": "[ONLY FOR Array of Objects FORMAT] Custom name for the average field in the output. Defaults to 'average' if not specified. Only used when include_average is enabled."
-                },
-                "data_key": {
-                    "name": "Data Key (both formats)",
-                    "description": "[BOTH FORMATS] Custom name for the top-level data key in the response. Defaults to 'data' if not specified. For ApexCharts compatibility with Array of Arrays, use 'points'."
+                    "name": "Average Field Name",
+                    "description": "Custom name for the average field in the output. Defaults to 'average' if not specified. Only used when include_average is enabled."
                 }
             }
         },

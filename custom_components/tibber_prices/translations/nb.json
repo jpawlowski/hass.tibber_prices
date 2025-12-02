@@ -806,6 +806,36 @@
         "get_chartdata": {
             "name": "Hent diagramdata",
             "description": "Returnerer prisdata i et enkelt diagramvennlig format kompatibelt med Tibber Core-integrasjonens utdatastruktur. Perfekt for bruk med populære diagramkort som ha-price-timeline-card, ApexCharts Card, Plotly Graph Card, Mini Graph Card eller den innebygde History Graph Card. Feltnavn og datastruktur kan tilpasses for å matche diagrammets krav.",
+            "sections": {
+                "general": {
+                    "name": "Generelt",
+                    "description": "Basisalternativer for henting av diagramdata."
+                },
+                "selection": {
+                    "name": "Valg",
+                    "description": "Velg hvilke data som skal inkluderes i utdataene."
+                },
+                "filters": {
+                    "name": "Filtre",
+                    "description": "Filtrer data basert på prisnivåer, prisvurderinger eller spesielle perioder."
+                },
+                "transformation": {
+                    "name": "Transformer data",
+                    "description": "Transformer datautdataene for bedre diagramkompatibilitet."
+                },
+                "format": {
+                    "name": "Format",
+                    "description": "Tilpass utdataformatet."
+                },
+                "arrays_of_arrays": {
+                    "name": "Avanserte utdatainnstillinger: Array av arrays",
+                    "description": "Innstillinger for utdataformat ved bruk av array av arrays."
+                },
+                "arrays_of_objects": {
+                    "name": "Avanserte utdatainnstillinger: Array av objekter",
+                    "description": "Innstillinger for utdataformat ved bruk av array av objekter."
+                }
+            },
             "fields": {
                 "entry_id": {
                     "name": "Oppførings-ID",

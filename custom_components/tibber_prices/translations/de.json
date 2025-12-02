@@ -810,6 +810,36 @@
         "get_chartdata": {
             "name": "Diagrammdaten abrufen",
             "description": "Gibt Preisdaten in einem einfachen, diagrammfreundlichen Format kompatibel mit der Tibber Core Integration zurück. Perfekt für beliebte Diagramm-Karten wie ha-price-timeline-card, ApexCharts Card, Plotly Graph Card, Mini Graph Card oder die eingebaute History Graph Card. Feldnamen und Datenstruktur können an die Anforderungen deines Diagramms angepasst werden.",
+            "sections": {
+                "general": {
+                    "name": "Allgemein",
+                    "description": "Basisoptionen für das Abrufen von Diagrammdaten."
+                },
+                "selection": {
+                    "name": "Auswahl",
+                    "description": "Wähle aus, welche Daten in die Ausgabe aufgenommen werden sollen."
+                },
+                "filters": {
+                    "name": "Filter",
+                    "description": "Filtere Daten basierend auf Preisniveaus, Preisbewertungen oder speziellen Zeiträumen."
+                },
+                "transformation": {
+                    "name": "Daten transformieren",
+                    "description": "Transformiere die Datenausgabe für bessere Diagrammkompatibilität."
+                },
+                "format": {
+                    "name": "Format",
+                    "description": "Passe das Ausgabeformat an."
+                },
+                "arrays_of_arrays": {
+                    "name": "Erweiterte Ausgabeeinstellungen: Array von Arrays",
+                    "description": "Einstellungen für das Ausgabeformat bei Verwendung eines Arrays von Arrays."
+                },
+                "arrays_of_objects": {
+                    "name": "Erweiterte Ausgabeeinstellungen: Array von Objekten",
+                    "description": "Einstellungen für das Ausgabeformat bei Verwendung eines Arrays von Objekten."
+                }
+            },
             "fields": {
                 "entry_id": {
                     "name": "Eintrag-ID",
