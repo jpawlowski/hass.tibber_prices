@@ -10,7 +10,7 @@ Welcome to Tibber Prices! This integration provides enhanced electricity price d
 -   **[Sensors](sensors.md)** - Available sensors, their states, and attributes
 -   **[Dynamic Icons](dynamic-icons.md)** - State-based automatic icon changes
 -   **[Dynamic Icon Colors](icon-colors.md)** - Using icon_color attribute for color-coded dashboards
--   **[Services](services.md)** - Custom services and how to use them
+-   **[Actions](actions.md)** - Custom actions (service endpoints) and how to use them
 -   **[Automation Examples](automation-examples.md)** - Ready-to-use automation recipes
 -   **[Troubleshooting](troubleshooting.md)** - Common issues and solutions
 
@@ -28,7 +28,7 @@ Welcome to Tibber Prices! This integration provides enhanced electricity price d
 -   **Statistical analysis** - Trailing/leading 24h averages for context
 -   **Price ratings** - LOW/NORMAL/HIGH classification based on your thresholds
 -   **Best/Peak hour detection** - Automatic detection of cheapest/peak periods with configurable filters ([learn how](period-calculation.md))
--   **ApexCharts integration** - Custom services for beautiful price charts
+-   **ApexCharts integration** - Custom actions for beautiful price charts
 -   **Multi-currency support** - EUR, NOK, SEK with proper minor units (ct, øre, öre)
 
 ## 🔗 Useful Links

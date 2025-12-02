@@ -29,7 +29,7 @@ A Home Assistant integration that provides advanced price information and rating
 -   **Price Ratings**: Quarter-hourly ratings comparing current prices to 24-hour trailing averages
 -   **Smart Indicators**: Binary sensors to detect peak hours and best price hours for automations
 -   **Intelligent Caching**: Minimizes API calls while ensuring data freshness across Home Assistant restarts
--   **Custom Services**: API endpoints for advanced integrations (ApexCharts support included)
+-   **Custom Actions** (backend services): API endpoints for advanced integrations (ApexCharts support included)
 -   **Diagnostic Sensors**: Monitor data freshness and availability
 -   **Reliable API Usage**: Uses only official Tibber [`priceInfo`](https://developer.tibber.com/docs/reference#priceinfo) and [`priceInfoRange`](https://developer.tibber.com/docs/reference#subscription) endpoints - no legacy APIs. Price ratings and statistics are calculated locally for maximum reliability and future-proofing.
 
@@ -308,19 +308,19 @@ template:
 
 📖 **[View all sensors and attributes →](docs/user/sensors.md)**
 
-### Custom Services
+### Custom Actions
 
-The integration provides custom services for advanced use cases:
+The integration provides custom actions (they still appear as services under the hood) for advanced use cases. These actions show up in Home Assistant under **Developer Tools → Actions**.
 
 -   `tibber_prices.get_chartdata` - Get price data in chart-friendly formats for any visualization card
 -   `tibber_prices.get_apexcharts_yaml` - Generate complete ApexCharts configurations
 -   `tibber_prices.refresh_user_data` - Manually refresh account information
 
-📖 **[Service documentation and examples →](docs/user/services.md)**
+📖 **[Action documentation and examples →](docs/user/actions.md)**
 
 ### ApexCharts Integration
 
-The integration includes built-in support for creating beautiful price visualization cards. Use the `get_apexcharts_yaml` service to generate card configurations automatically.
+The integration includes built-in support for creating beautiful price visualization cards. Use the `get_apexcharts_yaml` action to generate card configurations automatically.
 
 📖 **[ApexCharts examples →](docs/user/automation-examples.md#apexcharts-cards)**
 

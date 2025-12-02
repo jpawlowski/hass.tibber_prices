@@ -1,8 +1,10 @@
-# Services
+# Actions (Services)
 
-This integration provides several services for advanced price data access and manipulation.
+Home Assistant now surfaces these backend service endpoints as **Actions** in the UI (for example, Developer Tools → Actions or the Action editor inside dashboards). Behind the scenes they are still Home Assistant services that use the `service:` key, but this guide uses the word “action” whenever we refer to the user interface.
 
-## Available Services
+You can still call them from automations, scripts, and dashboards the same way as before (`service: tibber_prices.get_chartdata`, etc.), just remember that the frontend officially lists them as actions.
+
+## Available Actions
 
 ### tibber_prices.get_chartdata
 
@@ -71,8 +73,8 @@ response_variable: chart_data
 ```
 
 **Behavior:**
-- **When tomorrow data available** (typically after ~13:00): Returns today + tomorrow
-- **When tomorrow data not available**: Returns yesterday + today
+-   **When tomorrow data available** (typically after ~13:00): Returns today + tomorrow
+-   **When tomorrow data not available**: Returns yesterday + today
 
 This is useful for charts that should always show a 48-hour window without manual day selection.
 
@@ -104,19 +106,19 @@ data:
 
 **Complete Documentation:**
 
-For detailed parameter descriptions, see the service definition in **Developer Tools → Services → tibber_prices.get_chartdata** or check the inline documentation in the integration's `services.yaml` file.
+For detailed parameter descriptions, open **Developer Tools → Actions** (the UI label) and select `tibber_prices.get_chartdata`. The inline documentation is still stored in `services.yaml` because actions are backed by services.
 
 ---
 
 ### tibber_prices.get_apexcharts_yaml
 
-> ⚠️ **IMPORTANT:** This service generates a **basic example configuration** as a starting point, NOT a complete solution for all ApexCharts features.
+> ⚠️ **IMPORTANT:** This action generates a **basic example configuration** as a starting point, NOT a complete solution for all ApexCharts features.
 >
-> This integration is primarily a **data provider**. The generated YAML demonstrates how to use the `get_chartdata` service to fetch price data. Due to the segmented nature of our data (different time periods per series) and the use of Home Assistant's service API instead of entity attributes, many advanced ApexCharts features (like `in_header`, certain transformations) are **not compatible** or require manual customization.
+> This integration is primarily a **data provider**. The generated YAML demonstrates how to use the `get_chartdata` action to fetch price data. Due to the segmented nature of our data (different time periods per series) and the use of Home Assistant's service API instead of entity attributes, many advanced ApexCharts features (like `in_header`, certain transformations) are **not compatible** or require manual customization.
 >
 > **You are welcome to customize** the generated YAML for your specific needs, but comprehensive ApexCharts configuration support is beyond the scope of this integration. Community contributions with improved configurations are always appreciated!
 >
-> **For custom solutions:** Use the `get_chartdata` service directly to build your own charts with full control over the data format and visualization.
+> **For custom solutions:** Use the `get_chartdata` action directly to build your own charts with full control over the data format and visualization.
 
 **Purpose:** Generates a basic ApexCharts card YAML configuration example for visualizing electricity prices.
 
@@ -134,7 +136,7 @@ data:
 response_variable: apexcharts_config
 ```
 
-**Rolling Window Mode:** When omitting the `day` parameter, the service generates a dynamic 48-hour rolling window that automatically shows:
+**Rolling Window Mode:** When omitting the `day` parameter, the action generates a dynamic 48-hour rolling window that automatically shows:
 - Today + Tomorrow (when tomorrow data is available)
 - Yesterday + Today (when tomorrow data is not yet available)
 
@@ -142,7 +144,7 @@ This mode requires the Config Template Card to dynamically adjust the time windo
 
 Use the response in Lovelace dashboards by copying the generated YAML.
 
-**Documentation:** See Developer Tools → Services for parameter details.
+**Documentation:** Refer to **Developer Tools → Actions** for descriptions of the fields exposed by this action.
 
 ---
 
@@ -158,13 +160,13 @@ data:
     entry_id: YOUR_ENTRY_ID
 ```
 
-**Note:** User data is cached for 24 hours. Use this service only when you need immediate updates (e.g., after changing Tibber subscriptions).
+**Note:** User data is cached for 24 hours. Trigger this action only when you need immediate updates (e.g., after changing Tibber subscriptions).
 
 ---
 
 ## Migration from Chart Data Export Sensor
 
-If you're currently using the `sensor.tibber_home_chart_data_export` sensor, consider migrating to `tibber_prices.get_chartdata`:
+If you're still using the `sensor.tibber_home_chart_data_export` sensor, consider migrating to the `tibber_prices.get_chartdata` action:
 
 **Benefits:**
 
@@ -176,6 +178,6 @@ If you're currently using the `sensor.tibber_home_chart_data_export` sensor, con
 **Migration Steps:**
 
 1. Note your current sensor configuration (Step 7 in Options Flow)
-2. Create automation/script using `tibber_prices.get_chartdata` with same parameters
+2. Create automation/script that calls `tibber_prices.get_chartdata` with the same parameters
 3. Test the new approach
 4. Disable the old sensor when satisfied
