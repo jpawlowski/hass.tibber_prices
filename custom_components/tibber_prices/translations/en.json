@@ -787,7 +787,7 @@
         },
         "get_apexcharts_yaml": {
             "name": "Get ApexCharts Card YAML",
-            "description": "Returns a ready-to-copy YAML snippet for an ApexCharts card visualizing Tibber Prices for the selected day. Use this to easily add a pre-configured chart to your dashboard. The YAML will use the get_chartdata service for data.",
+            "description": "⚠️ IMPORTANT: This service generates a BASIC EXAMPLE configuration for ApexCharts Card as a starting point. It is NOT a complete solution for all ApexCharts features. This integration is primarily a DATA PROVIDER. The generated YAML demonstrates how to use the `get_chartdata` service to fetch price data. Due to the segmented nature of our data (different time periods per series) and the use of Home Assistant's service API instead of entity attributes, many advanced ApexCharts features (like in_header, certain transformations) are not compatible or require manual customization. You are welcome to customize the generated YAML for your specific needs, but please understand that comprehensive ApexCharts configuration support is beyond the scope of this integration. Community contributions with improved configurations are always appreciated - if you find a better setup that works, please share it so everyone can benefit! For direct data access to build your own charts, use the `get_chartdata` service instead.",
             "fields": {
                 "entry_id": {
                     "name": "Entry ID",

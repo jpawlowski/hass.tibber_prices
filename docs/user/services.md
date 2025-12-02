@@ -110,7 +110,15 @@ For detailed parameter descriptions, see the service definition in **Developer T
 
 ### tibber_prices.get_apexcharts_yaml
 
-**Purpose:** Generates complete ApexCharts card YAML configuration for visualizing electricity prices.
+> ⚠️ **IMPORTANT:** This service generates a **basic example configuration** as a starting point, NOT a complete solution for all ApexCharts features.
+>
+> This integration is primarily a **data provider**. The generated YAML demonstrates how to use the `get_chartdata` service to fetch price data. Due to the segmented nature of our data (different time periods per series) and the use of Home Assistant's service API instead of entity attributes, many advanced ApexCharts features (like `in_header`, certain transformations) are **not compatible** or require manual customization.
+>
+> **You are welcome to customize** the generated YAML for your specific needs, but comprehensive ApexCharts configuration support is beyond the scope of this integration. Community contributions with improved configurations are always appreciated!
+>
+> **For custom solutions:** Use the `get_chartdata` service directly to build your own charts with full control over the data format and visualization.
+
+**Purpose:** Generates a basic ApexCharts card YAML configuration example for visualizing electricity prices.
 
 **Prerequisites:**
 - [ApexCharts Card](https://github.com/RomRider/apexcharts-card) (required for all configurations)

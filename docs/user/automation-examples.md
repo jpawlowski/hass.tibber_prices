@@ -241,7 +241,13 @@ Coming soon...
 
 ## ApexCharts Cards
 
-The `tibber_prices.get_apexcharts_yaml` service generates complete ApexCharts card configurations for visualizing electricity prices.
+> ⚠️ **IMPORTANT:** The `tibber_prices.get_apexcharts_yaml` service generates a **basic example configuration** as a starting point. It is NOT a complete solution for all ApexCharts features.
+>
+> This integration is primarily a **data provider**. Due to technical limitations (segmented time periods, service API usage), many advanced ApexCharts features require manual customization or may not be compatible.
+>
+> **For advanced customization:** Use the `get_chartdata` service directly to build charts tailored to your specific needs. Community contributions with improved configurations are welcome!
+
+The `tibber_prices.get_apexcharts_yaml` service generates basic ApexCharts card configuration examples for visualizing electricity prices.
 
 ### Prerequisites
 
