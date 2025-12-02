@@ -2,6 +2,7 @@ get_price:
   name: Get Price Data
   description: >-
     Fetch price data for a specific time range with automatic routing. Development and testing service for the price_info_for_range API function. Automatically uses PRICE_INFO, PRICE_INFO_RANGE, or both based on the time range boundary.
+  icon: mdi:table-search
   fields:
     entry_id:
       name: Entry ID
@@ -29,6 +30,7 @@ get_apexcharts_yaml:
   name: Get ApexCharts Card YAML
   description: >-
     ⚠️ IMPORTANT: This service generates a BASIC EXAMPLE configuration for ApexCharts Card as a starting point. It is NOT a complete solution for all ApexCharts features.
+  icon: mdi:chart-line
 
 
     This integration is primarily a DATA PROVIDER. The generated YAML demonstrates how to use the `get_chartdata` service to fetch price data. Due to the segmented nature of our data (different time periods per series) and the use of Home Assistant's service API instead of entity attributes, many advanced ApexCharts features (like in_header, certain transformations) are not compatible or require manual customization.
@@ -86,6 +88,7 @@ get_chartdata:
   name: Get Chart Data
   description: >-
     Returns price data in a simple chart-friendly format compatible with the Tibber Core integration output structure. Perfect for use with popular chart cards like ha-price-timeline-card, ApexCharts Card, Plotly Graph Card, Mini Graph Card, or the built-in History Graph Card. Field names and data structure can be customized to match your specific chart requirements.
+  icon: mdi:chart-bar
   fields:
     # === REQUIRED ===
     entry_id:
@@ -322,6 +325,7 @@ refresh_user_data:
   name: Refresh User Data
   description: >-
     Forces a refresh of the user data (homes, profile information) from the Tibber API. This can be useful after making changes to your Tibber account or when troubleshooting connectivity issues.
+  icon: mdi:refresh
   fields:
     entry_id:
       name: Entry ID
