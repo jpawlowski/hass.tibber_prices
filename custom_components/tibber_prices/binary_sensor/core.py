@@ -217,11 +217,13 @@ class TibberPricesBinarySensor(TibberPricesEntity, BinarySensorEntity):
     @callback
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
-        # Chart data export: No automatic refresh needed.
-        # Data only refreshes on:
-        # 1. Initial sensor activation (async_added_to_hass)
-        # 2. Config changes via Options Flow (triggers re-add)
-        # Hourly coordinator updates don't change the chart data content.
+        # All binary sensors get push updates when coordinator has new data:
+        # - tomorrow_data_available: Reflects new data availability immediately after API fetch
+        # - connection: Reflects connection state changes immediately
+        # - chart_data_export: Updates chart data when price data changes
+        # - peak_price_period, best_price_period: Update when periods change (also get Timer #2 updates)
+        # - data_lifecycle_status: Gets both push and Timer #2 updates
+        self.async_write_ha_state()
 
     @property
     def is_on(self) -> bool | None:
