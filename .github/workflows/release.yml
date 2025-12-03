@@ -180,9 +180,11 @@ jobs:
               echo "**Commits analyzed:** Breaking=$BREAKING, Features=$FEAT, Fixes=$FIX"
               echo ""
               echo "**To fix:**"
-              echo "1. Delete the tag: \`git tag -d v$TAG_VERSION && git push origin :refs/tags/v$TAG_VERSION\`"
-              echo "2. Run locally: \`./scripts/release/suggest-version\`"
-              echo "3. Create correct tag: \`./scripts/release/prepare X.Y.Z\`"
+              echo "1. Run locally: \`./scripts/release/suggest-version\`"
+              echo "2. Create correct tag: \`./scripts/release/prepare <suggested-version>\`"
+              echo "3. Push the corrected tag: \`git push origin v<suggested-version>\`"
+              echo ""
+              echo "**This tag will be automatically deleted in the next step.**"
               echo "EOF"
             } >> $GITHUB_OUTPUT
           else
@@ -190,7 +192,19 @@ jobs:
             echo "warning=" >> $GITHUB_OUTPUT
           fi
 
+      - name: Delete inappropriate version tag
+        if: steps.version_check.outputs.warning != ''
+        run: |
+          TAG_NAME="${GITHUB_REF#refs/tags/}"
+          echo "❌ Deleting tag $TAG_NAME (version not appropriate for changes)"
+          echo ""
+          echo "${{ steps.version_check.outputs.warning }}"
+          echo ""
+          git push origin --delete "$TAG_NAME"
+          exit 1
+
       - name: Install git-cliff
+        if: steps.version_check.outputs.warning == ''
         run: |
           wget https://github.com/orhun/git-cliff/releases/download/v2.4.0/git-cliff-2.4.0-x86_64-unknown-linux-gnu.tar.gz
           tar -xzf git-cliff-2.4.0-x86_64-unknown-linux-gnu.tar.gz
@@ -198,6 +212,7 @@ jobs:
           git-cliff --version
 
       - name: Generate release notes
+        if: steps.version_check.outputs.warning == ''
         id: release_notes
         run: |
           FROM_TAG="${{ steps.previoustag.outputs.previous_tag }}"
@@ -216,15 +231,6 @@ jobs:
           fi
           echo "title=$TITLE" >> $GITHUB_OUTPUT
 
-          # Append version warning if present
-          WARNING="${{ steps.version_check.outputs.warning }}"
-          if [ -n "$WARNING" ]; then
-            echo "" >> release-notes.md
-            echo "---" >> release-notes.md
-            echo "" >> release-notes.md
-            echo "$WARNING" >> release-notes.md
-          fi
-
           # Output for GitHub Actions
           {
             echo 'notes<<EOF'
@@ -232,14 +238,8 @@ jobs:
             echo EOF
           } >> $GITHUB_OUTPUT
 
-      - name: Version Check Summary
-        if: steps.version_check.outputs.warning != ''
-        run: |
-          echo "### ⚠️ Version Mismatch Detected" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "${{ steps.version_check.outputs.warning }}" >> $GITHUB_STEP_SUMMARY
-
       - name: Create GitHub Release
+        if: steps.version_check.outputs.warning == ''
         uses: softprops/action-gh-release@v2
         with:
           name: ${{ steps.release_notes.outputs.title }}
@@ -251,6 +251,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Summary
+        if: steps.version_check.outputs.warning == ''
         run: |
           echo "✅ Release notes generated and published!" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
