@@ -215,6 +215,7 @@ def get_period_data(  # noqa: PLR0913, PLR0912, PLR0915
     level_field: str,
     rating_level_field: str,
     data_key: str,
+    insert_nulls: str,
     add_trailing_null: bool,
 ) -> dict[str, Any]:
     """
@@ -243,6 +244,7 @@ def get_period_data(  # noqa: PLR0913, PLR0912, PLR0915
         level_field: Custom name for level field
         rating_level_field: Custom name for rating_level field
         data_key: Top-level key name in response
+        insert_nulls: NULL insertion mode ('none', 'segments', 'all')
         add_trailing_null: Whether to add trailing null point
 
     Returns:
@@ -327,7 +329,12 @@ def get_period_data(  # noqa: PLR0913, PLR0912, PLR0915
             chart_data.append(data_point)
 
         else:  # array_of_arrays
-            # For array_of_arrays, include: [start, price_avg]
+            # For array_of_arrays, include 2-3 points per period depending on insert_nulls:
+            # Always:
+            # 1. Start time with price (begin period)
+            # 2. End time with price (hold price until end)
+            # If insert_nulls='segments' or 'all':
+            # 3. End time with NULL (cleanly terminate segment for ApexCharts)
             price_avg = period.get("price_avg", 0.0)
             # Convert to major currency unless minor_currency=True
             if not minor_currency:
@@ -335,10 +342,23 @@ def get_period_data(  # noqa: PLR0913, PLR0912, PLR0915
             if round_decimals is not None:
                 price_avg = round(price_avg, round_decimals)
             start = period["start"]
+            end = period.get("end")
             start_serialized = start.isoformat() if hasattr(start, "isoformat") else start
-            chart_data.append([start_serialized, price_avg])
+            end_serialized = end.isoformat() if end and hasattr(end, "isoformat") else end
 
-    # Add trailing null point if requested
+            # Add data points per period
+            chart_data.append([start_serialized, price_avg])  # 1. Start with price
+            if end_serialized:
+                chart_data.append([end_serialized, price_avg])  # 2. End with price (hold level)
+                # 3. Add NULL terminator only if insert_nulls is enabled
+                if insert_nulls in ("segments", "all"):
+                    chart_data.append([end_serialized, None])  # 3. End with NULL (terminate segment)
+
+    # Add trailing null point if requested (independent of insert_nulls)
+    # This adds an additional NULL at the end of the entire data series.
+    # If both insert_nulls and add_trailing_null are enabled, you get:
+    # - NULL terminator after each period (from insert_nulls)
+    # - Additional NULL at the very end (from add_trailing_null)
     if add_trailing_null and chart_data:
         if output_format == "array_of_objects":
             null_point = {start_time_field: None, end_time_field: None}

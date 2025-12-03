@@ -284,6 +284,8 @@ async def handle_apexcharts_yaml(call: ServiceCall) -> dict[str, Any]:  # noqa: 
         # Conditionally include day parameter (omit for rolling window mode)
         day_param = f"day: ['{day}'], " if day else ""
 
+        # Store original prices for tooltip, but map to 1 for full-height overlay
+        # We use a custom tooltip formatter to show the real price
         best_price_generator = (
             f"const response = await hass.callWS({{ "
             f"type: 'call_service', "
@@ -292,8 +294,13 @@ async def handle_apexcharts_yaml(call: ServiceCall) -> dict[str, Any]:  # noqa: 
             f"return_response: true, "
             f"service_data: {{ entry_id: '{entry_id}', {day_param}"
             f"period_filter: 'best_price', "
-            f"output_format: 'array_of_arrays', minor_currency: true }} }}); "
-            f"return response.response.data.map(point => [point[0], 1]);"
+            f"output_format: 'array_of_arrays', insert_nulls: 'segments', minor_currency: true }} }}); "
+            f"const originalData = response.response.data; "
+            f"return originalData.map((point, i) => {{ "
+            f"const result = [point[0], point[1] === null ? null : 1]; "
+            f"result.originalPrice = point[1]; "
+            f"return result; "
+            f"}});"
         )
 
         # Use first entity from entity_map (reuse existing entity to avoid extra header entries)
@@ -305,7 +312,7 @@ async def handle_apexcharts_yaml(call: ServiceCall) -> dict[str, Any]:  # noqa: 
                 "name": best_price_name,
                 "type": "area",
                 "color": "rgba(46, 204, 113, 0.2)",  # Semi-transparent green
-                "yaxis_id": "highlight",
+                "yaxis_id": "highlight",  # Use separate Y-axis (0-1) for full-height overlay
                 "show": {"legend_value": False, "in_header": False, "in_legend": False},
                 "data_generator": best_price_generator,
                 "stroke_width": 0,

@@ -213,6 +213,7 @@ async def handle_chartdata(call: ServiceCall) -> dict[str, Any]:  # noqa: PLR091
             level_field=level_field,
             rating_level_field=rating_level_field,
             data_key=data_key,
+            insert_nulls=insert_nulls,
             add_trailing_null=add_trailing_null,
         )
 
