@@ -920,8 +920,8 @@
                     "description": "Ausgabeformat für die zurückgegebenen Daten. Optionen: 'array_of_objects' (Standard, Array von Objekten mit anpassbaren Feldnamen), 'array_of_arrays' (Array von [Zeitstempel, Preis]-Arrays mit abschließendem Null-Punkt für Stepline-Charts)."
                 },
                 "array_fields": {
-                    "name": "Array-Felder (nur Array von Arrays)",
-                    "description": "[NUR FÜR Array von Arrays FORMAT] Definiere, welche Felder im array_of_arrays-Format enthalten sein sollen. Verwende Feldnamen in geschweiften Klammern, getrennt durch Kommas. Verfügbare Felder: start_time, price_per_kwh, level, rating_level, average. Felder werden automatisch aktiviert, auch wenn include_*-Optionen nicht gesetzt sind. Leer lassen für Standard (nur Zeitstempel und Preis)."
+                    "name": "Array-Felder",
+                    "description": "Definiere, welche Felder im array_of_arrays-Format enthalten sein sollen. Verwende Feldnamen in geschweiften Klammern, getrennt durch Kommas. Verfügbare Felder: start_time, price_per_kwh, level, rating_level, average. Felder werden automatisch aktiviert, auch wenn include_*-Optionen nicht gesetzt sind. Leer lassen für Standard (nur Zeitstempel und Preis)."
                 },
                 "minor_currency": {
                     "name": "Kleinere Währungseinheit",
@@ -932,16 +932,16 @@
                     "description": "Anzahl der Dezimalstellen, auf die Preise gerundet werden sollen (0-10). Falls nicht angegeben, wird die Standardgenauigkeit verwendet (4 Dezimalstellen für Hauptwährung, 2 für kleinere Währungseinheit)."
                 },
                 "include_level": {
-                    "name": "Preisniveau einschließen (nur Array von Objekten)",
-                    "description": "[NUR FÜR Array von Objekten FORMAT] Fügt das Tibber-Preisniveau (VERY_CHEAP, CHEAP, NORMAL, EXPENSIVE, VERY_EXPENSIVE) zu jedem Datenpunkt hinzu."
+                    "name": "Preisniveau einschließen",
+                    "description": "Fügt das Tibber-Preisniveau (VERY_CHEAP, CHEAP, NORMAL, EXPENSIVE, VERY_EXPENSIVE) zu jedem Datenpunkt hinzu."
                 },
                 "include_rating_level": {
-                    "name": "Preisbewertung einschließen (nur Array von Objekten)",
-                    "description": "[NUR FÜR Array von Objekten FORMAT] Fügt die berechnete Preisbewertung (LOW, NORMAL, HIGH) basierend auf deinen konfigurierten Schwellwerten zu jedem Datenpunkt hinzu."
+                    "name": "Preisbewertung einschließen",
+                    "description": "Fügt die berechnete Preisbewertung (LOW, NORMAL, HIGH) basierend auf deinen konfigurierten Schwellwerten zu jedem Datenpunkt hinzu."
                 },
                 "include_average": {
-                    "name": "Durchschnitt einschließen (nur Array von Objekten)",
-                    "description": "[NUR FÜR Array von Objekten FORMAT] Den Tagesdurchschnittspreis in jedem Datenpunkt zum Vergleich einschließen."
+                    "name": "Durchschnitt einschließen",
+                    "description": "Den Tagesdurchschnittspreis in jedem Datenpunkt zum Vergleich einschließen."
                 },
                 "level_filter": {
                     "name": "Preisniveau-Filter",
@@ -961,39 +961,39 @@
                 },
                 "connect_segments": {
                     "name": "Segmente verbinden",
-                    "description": "[NUR MIT insert_nulls='segments'] Wenn aktiviert, werden an Segmentgrenzen Verbindungspunkte hinzugefügt, um verschiedene Preisstufen-Segmente in Stufenliniendiagrammen visuell zu verbinden. Bei fallendem Preis wird ein Punkt mit dem niedrigeren Preis am Ende des aktuellen Segments hinzugefügt. Bei steigendem Preis wird ein Haltepunkt vor der Lücke hinzugefügt. Dies erzeugt sanfte visuelle Übergänge zwischen Segmenten anstelle von abrupten Lücken."
+                    "description": "[NUR BEI 'NULL-Werte einfügen'] Wenn aktiviert, werden an Segmentgrenzen Verbindungspunkte hinzugefügt, um verschiedene Preisstufen-Segmente in Stufenliniendiagrammen visuell zu verbinden. Bei fallendem Preis wird ein Punkt mit dem niedrigeren Preis am Ende des aktuellen Segments hinzugefügt. Bei steigendem Preis wird ein Haltepunkt vor der Lücke hinzugefügt. Dies erzeugt sanfte visuelle Übergänge zwischen Segmenten anstelle von abrupten Lücken."
                 },
                 "add_trailing_null": {
                     "name": "Abschließenden Null-Punkt hinzufügen",
-                    "description": "[BEIDE FORMATE] Füge einen finalen Datenpunkt mit Nullwerten (außer Zeitstempel) am Ende hinzu. Einige Diagrammbibliotheken benötigen dies, um Extrapolation/Interpolation zum Viewport-Rand bei Verwendung von Stufendarstellung zu verhindern. Deaktiviert lassen, es sei denn, dein Diagramm benötigt es."
+                    "description": "Füge einen finalen Datenpunkt mit Nullwerten (außer Zeitstempel) am Ende hinzu. Einige Diagrammbibliotheken benötigen dies, um Extrapolation/Interpolation zum Viewport-Rand bei Verwendung von Stufendarstellung zu verhindern. Deaktiviert lassen, es sei denn, dein Diagramm benötigt es."
                 },
                 "start_time_field": {
-                    "name": "Startzeit-Feldname (nur Array von Objekten)",
-                    "description": "[NUR FÜR Array von Objekten FORMAT] Benutzerdefinierter Name für das Startzeit-Feld in der Ausgabe. Standardmäßig 'start_time', wenn nicht angegeben."
+                    "name": "Startzeit-Feldname",
+                    "description": "Benutzerdefinierter Name für das Startzeit-Feld in der Ausgabe. Standardmäßig 'start_time', wenn nicht angegeben."
                 },
                 "end_time_field": {
-                    "name": "Endzeit-Feldname (nur Array von Objekten)",
-                    "description": "[NUR FÜR Array von Objekten FORMAT] Benutzerdefinierter Name für das Endzeit-Feld in der Ausgabe. Standardmäßig 'end_time', wenn nicht angegeben. Nur verwendet mit period_filter."
+                    "name": "Endzeit-Feldname",
+                    "description": "Benutzerdefinierter Name für das Endzeit-Feld in der Ausgabe. Standardmäßig 'end_time', wenn nicht angegeben. Nur verwendet mit period_filter."
                 },
                 "price_field": {
-                    "name": "Preis-Feldname (nur Array von Objekten)",
-                    "description": "[NUR FÜR Array von Objekten FORMAT] Benutzerdefinierter Name für das Preis-Feld in der Ausgabe. Standard ist 'price_per_kwh', falls nicht angegeben."
+                    "name": "Preis-Feldname",
+                    "description": "Benutzerdefinierter Name für das Preis-Feld in der Ausgabe. Standard ist 'price_per_kwh', falls nicht angegeben."
                 },
                 "level_field": {
-                    "name": "Preisniveau-Feldname (nur Array von Objekten)",
-                    "description": "[NUR FÜR Array von Objekten FORMAT] Benutzerdefinierter Name für das Preisniveau-Feld in der Ausgabe. Standard ist 'level', falls nicht angegeben. Wird nur verwendet, wenn include_level aktiviert ist."
+                    "name": "Preisniveau-Feldname",
+                    "description": "Benutzerdefinierter Name für das Preisniveau-Feld in der Ausgabe. Standard ist 'level', falls nicht angegeben. Wird nur verwendet, wenn include_level aktiviert ist."
                 },
                 "rating_level_field": {
-                    "name": "Preisbewertung-Feldname (nur Array von Objekten)",
-                    "description": "[NUR FÜR Array von Objekten FORMAT] Benutzerdefinierter Name für das Preisbewertungs-Feld in der Ausgabe. Standard ist 'rating_level', falls nicht angegeben. Wird nur verwendet, wenn include_rating_level aktiviert ist."
+                    "name": "Preisbewertung-Feldname",
+                    "description": "Benutzerdefinierter Name für das Preisbewertungs-Feld in der Ausgabe. Standard ist 'rating_level', falls nicht angegeben. Wird nur verwendet, wenn include_rating_level aktiviert ist."
                 },
                 "average_field": {
-                    "name": "Durchschnitts-Feldname (nur Array von Objekten)",
-                    "description": "[NUR FÜR Array von Objekten FORMAT] Benutzerdefinierter Name für das Durchschnitts-Feld in der Ausgabe. Standard ist 'average', falls nicht angegeben. Wird nur verwendet, wenn include_average aktiviert ist."
+                    "name": "Durchschnitts-Feldname",
+                    "description": "Benutzerdefinierter Name für das Durchschnitts-Feld in der Ausgabe. Standard ist 'average', falls nicht angegeben. Wird nur verwendet, wenn include_average aktiviert ist."
                 },
                 "data_key": {
-                    "name": "Daten-Schlüssel (beide Formate)",
-                    "description": "[BEIDE FORMATE] Benutzerdefinierter Name für den obersten Datenschlüssel in der Antwort. Standard ist 'data', falls nicht angegeben. Für ApexCharts-Kompatibilität mit Array von Arrays verwende 'points'."
+                    "name": "Daten-Schlüssel",
+                    "description": "Benutzerdefinierter Name für den obersten Datenschlüssel in der Antwort. Standard ist 'data', falls nicht angegeben. Für ApexCharts-Kompatibilität mit Array von Arrays verwende 'points'."
                 }
             }
         },

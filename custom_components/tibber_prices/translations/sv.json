@@ -916,8 +916,8 @@
                     "description": "Utdataformat för returnerade data. Alternativ: 'array_of_objects' (standard, array av objekt med anpassningsbara fältnamn), 'array_of_arrays' (array av [tidsstämpel, pris]-arrayer med avslutande null-punkt för stepline-diagram)."
                 },
                 "array_fields": {
-                    "name": "Array-fält (endast Array av arrayer)",
-                    "description": "[ENDAST FÖR Array av arrayer FORMAT] Definiera vilka fält som ska inkluderas. Använd fältnamn inom måsvingar, separerade med kommatecken. Tillgängliga fält: start_time, price_per_kwh, level, rating_level, average. Fält aktiveras automatiskt även om include_*-alternativ inte är inställda. Lämna tomt för standard (endast tidsstämpel och pris)."
+                    "name": "Array-fält",
+                    "description": "Definiera vilka fält som ska inkluderas. Använd fältnamn inom måsvingar, separerade med kommatecken. Tillgängliga fält: start_time, price_per_kwh, level, rating_level, average. Fält aktiveras automatiskt även om include_*-alternativ inte är inställda. Lämna tomt för standard (endast tidsstämpel och pris)."
                 },
                 "minor_currency": {
                     "name": "Mindre valutaenhet",
@@ -928,16 +928,16 @@
                     "description": "Antal decimaler att avrunda priser till (0-10). Om inte angivet används standardprecision (4 decimaler för huvudvaluta, 2 för mindre valutaenhet)."
                 },
                 "include_level": {
-                    "name": "Inkludera prisnivå (endast Array av objekt)",
-                    "description": "[ENDAST FÖR Array av objekt FORMAT] Inkludera Tibber-prisnivåfältet (VERY_CHEAP, CHEAP, NORMAL, EXPENSIVE, VERY_EXPENSIVE) i varje datapunkt."
+                    "name": "Inkludera prisnivå",
+                    "description": "Inkludera Tibber-prisnivåfältet (VERY_CHEAP, CHEAP, NORMAL, EXPENSIVE, VERY_EXPENSIVE) i varje datapunkt."
                 },
                 "include_rating_level": {
-                    "name": "Inkludera prisvärdering (endast Array av objekt)",
-                    "description": "[ENDAST FÖR Array av objekt FORMAT] Inkludera det beräknade prisvärderingsfältet (LOW, NORMAL, HIGH) baserat på dina konfigurerade trösklar i varje datapunkt."
+                    "name": "Inkludera prisvärdering",
+                    "description": "Inkludera det beräknade prisvärderingsfältet (LOW, NORMAL, HIGH) baserat på dina konfigurerade trösklar i varje datapunkt."
                 },
                 "include_average": {
-                    "name": "Inkludera genomsnitt (endast Array av objekt)",
-                    "description": "[ENDAST FÖR Array av objekt FORMAT] Inkludera dagligt genomsnittspris i varje datapunkt för jämförelse."
+                    "name": "Inkludera genomsnitt",
+                    "description": "Inkludera dagligt genomsnittspris i varje datapunkt för jämförelse."
                 },
                 "level_filter": {
                     "name": "Prisnivåfilter",
@@ -957,39 +957,39 @@
                 },
                 "connect_segments": {
                     "name": "Anslut segment",
-                    "description": "[ENDAST MED insert_nulls='segments'] När aktiverad, läggs anslutningspunkter till vid segmentgränser för att visuellt ansluta olika prisnivå-segment i steglinjediagram. När priset går NER läggs en punkt med lägre pris till i slutet av nuvarande segment. När priset går UPP läggs en hållpunkt till före luckan. Detta skapar mjuka visuella övergångar mellan segment istället för abrupta luckor."
+                    "description": "[ENDAST MED 'Infoga NULL-värden'] När aktiverad, läggs anslutningspunkter till vid segmentgränser för att visuellt ansluta olika prisnivå-segment i steglinjediagram. När priset går NER läggs en punkt med lägre pris till i slutet av nuvarande segment. När priset går UPP läggs en hållpunkt till före luckan. Detta skapar mjuka visuella övergångar mellan segment istället för abrupta luckor."
                 },
                 "add_trailing_null": {
                     "name": "Lägg till avslutande null-punkt",
-                    "description": "[BÅDA FORMATEN] Lägg till en sista datapunkt med nullvärden (utom tidsstämpel) i slutet. Vissa diagrambibliotek behöver detta för att förhindra extrapolering/interpolering till visningsportens kant vid användning av trappstegsrendering. Lämna inaktiverad om inte ditt diagram kräver det."
+                    "description": "Lägg till en sista datapunkt med nullvärden (utom tidsstämpel) i slutet. Vissa diagrambibliotek behöver detta för att förhindra extrapolering/interpolering till visningsportens kant vid användning av trappstegsrendering. Lämna inaktiverad om inte ditt diagram kräver det."
                 },
                 "start_time_field": {
-                    "name": "Starttid-fältnamn (endast Array of Objects)",
-                    "description": "[ENDAST FÖR Array of Objects FORMAT] Anpassat namn för starttid-fältet i utdata. Standard är 'start_time' om inte angivet."
+                    "name": "Starttid-fältnamn",
+                    "description": "Anpassat namn för starttid-fältet i utdata. Standard är 'start_time' om inte angivet."
                 },
                 "end_time_field": {
-                    "name": "Sluttid-fältnamn (endast Array of Objects)",
-                    "description": "[ENDAST FÖR Array of Objects FORMAT] Anpassat namn för sluttid-fältet i utdata. Standard är 'end_time' om inte angivet. Används endast med period_filter."
+                    "name": "Sluttid-fältnamn",
+                    "description": "Anpassat namn för sluttid-fältet i utdata. Standard är 'end_time' om inte angivet. Används endast med period_filter."
                 },
                 "price_field": {
-                    "name": "Prisfältsnamn (endast Array av objekt)",
-                    "description": "[ENDAST FÖR Array av objekt FORMAT] Anpassat namn för prisfältet i utdata. Standard är 'price_per_kwh'."
+                    "name": "Prisfältsnamn",
+                    "description": "Anpassat namn för prisfältet i utdata. Standard är 'price_per_kwh'."
                 },
                 "level_field": {
-                    "name": "Prisnivåfältsnamn (endast Array av objekt)",
-                    "description": "[ENDAST FÖR Array av objekt FORMAT] Anpassat namn för prisnivåfältet i utdata. Standard är 'level'. Används endast när include_level är aktiverad."
+                    "name": "Prisnivåfältsnamn",
+                    "description": "Anpassat namn för prisnivåfältet i utdata. Standard är 'level'. Används endast när include_level är aktiverad."
                 },
                 "rating_level_field": {
-                    "name": "Prisvärderingsfältsnamn (endast Array av objekt)",
-                    "description": "[ENDAST FÖR Array av objekt FORMAT] Anpassat namn för prisvärderingsfältet i utdata. Standard är 'rating_level'. Används endast när include_rating_level är aktiverad."
+                    "name": "Prisvärderingsfältsnamn",
+                    "description": "Anpassat namn för prisvärderingsfältet i utdata. Standard är 'rating_level'. Används endast när include_rating_level är aktiverad."
                 },
                 "average_field": {
-                    "name": "Genomsnittsfältsnamn (endast Array av objekt)",
-                    "description": "[ENDAST FÖR Array av objekt FORMAT] Anpassat namn för genomsnittsfältet i utdata. Standard är 'average'. Används endast när include_average är aktiverad."
+                    "name": "Genomsnittsfältsnamn",
+                    "description": "Anpassat namn för genomsnittsfältet i utdata. Standard är 'average'. Används endast när include_average är aktiverad."
                 },
                 "data_key": {
-                    "name": "Datanyckel (båda formaten)",
-                    "description": "[BÅDA FORMATEN] Anpassat namn för datanyckeln på toppnivå i svaret. Standard är 'data' om inte angivet. För ApexCharts-kompatibilitet med Array av arrayer, använd 'points'."
+                    "name": "Datanyckel",
+                    "description": "Anpassat namn för datanyckeln på toppnivå i svaret. Standard är 'data' om inte angivet. För ApexCharts-kompatibilitet med Array av arrayer, använd 'points'."
                 }
             }
         },

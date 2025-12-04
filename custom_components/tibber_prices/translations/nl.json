@@ -916,8 +916,8 @@
                     "description": "Uitvoerformaat voor de geretourneerde gegevens. Opties: 'array_of_objects' (standaard, array van objecten met aanpasbare veldnamen), 'array_of_arrays' (array van [tijdstempel, prijs]-arrays met afsluitend null-punt voor stepline-grafieken)."
                 },
                 "array_fields": {
-                    "name": "Array-velden (alleen Array van arrays)",
-                    "description": "[ALLEEN VOOR Array van arrays FORMAAT] Definieer welke velden moeten worden opgenomen. Gebruik veldnamen tussen accolades, gescheiden door komma's. Beschikbare velden: start_time, price_per_kwh, level, rating_level, average. Velden worden automatisch ingeschakeld, zelfs als include_*-opties niet zijn ingesteld. Laat leeg voor standaard (alleen tijdstempel en prijs)."
+                    "name": "Array-velden",
+                    "description": "Definieer welke velden moeten worden opgenomen. Gebruik veldnamen tussen accolades, gescheiden door komma's. Beschikbare velden: start_time, price_per_kwh, level, rating_level, average. Velden worden automatisch ingeschakeld, zelfs als include_*-opties niet zijn ingesteld. Laat leeg voor standaard (alleen tijdstempel en prijs)."
                 },
                 "minor_currency": {
                     "name": "Kleine valuta-eenheid",
@@ -928,16 +928,16 @@
                     "description": "Aantal decimalen om prijzen op af te ronden (0-10). Indien niet opgegeven, wordt de standaardprecisie gebruikt (4 decimalen voor grote valuta, 2 voor kleine valuta-eenheid)."
                 },
                 "include_level": {
-                    "name": "Prijsniveau opnemen (alleen Array van objecten)",
-                    "description": "[ALLEEN VOOR Array van objecten FORMAAT] Voeg het Tibber-prijsniveauveld (VERY_CHEAP, CHEAP, NORMAL, EXPENSIVE, VERY_EXPENSIVE) toe aan elk gegevenspunt."
+                    "name": "Prijsniveau opnemen",
+                    "description": "Voeg het Tibber-prijsniveauveld (VERY_CHEAP, CHEAP, NORMAL, EXPENSIVE, VERY_EXPENSIVE) toe aan elk gegevenspunt."
                 },
                 "include_rating_level": {
-                    "name": "Prijsbeoordeling opnemen (alleen Array van objecten)",
-                    "description": "[ALLEEN VOOR Array van objecten FORMAAT] Voeg het berekende prijsbeoordelingsveld (LOW, NORMAL, HIGH) toe op basis van jouw geconfigureerde drempels aan elk gegevenspunt."
+                    "name": "Prijsbeoordeling opnemen",
+                    "description": "Voeg het berekende prijsbeoordelingsveld (LOW, NORMAL, HIGH) toe op basis van jouw geconfigureerde drempels aan elk gegevenspunt."
                 },
                 "include_average": {
-                    "name": "Gemiddelde opnemen (alleen Array van objecten)",
-                    "description": "[ALLEEN VOOR Array van objecten FORMAAT] Dagelijkse gemiddelde prijs opnemen in elk gegevenspunt ter vergelijking."
+                    "name": "Gemiddelde opnemen",
+                    "description": "Dagelijkse gemiddelde prijs opnemen in elk gegevenspunt ter vergelijking."
                 },
                 "level_filter": {
                     "name": "Prijsniveaufilter",
@@ -957,39 +957,39 @@
                 },
                 "connect_segments": {
                     "name": "Segmenten verbinden",
-                    "description": "[ALLEEN MET insert_nulls='segments'] Indien ingeschakeld, worden verbindingspunten toegevoegd bij segmentgrenzen om verschillende prijsniveau-segmenten visueel te verbinden in traplijngrafieken. Wanneer de prijs DAALT, wordt een punt met de lagere prijs toegevoegd aan het einde van het huidige segment. Wanneer de prijs STIJGT, wordt een houdpunt toegevoegd vóór de gat. Dit creëert vloeiende visuele overgangen tussen segmenten in plaats van abrupte gaten."
+                    "description": "[ALLEEN MET 'NULL-waarden invoegen'] Indien ingeschakeld, worden verbindingspunten toegevoegd bij segmentgrenzen om verschillende prijsniveau-segmenten visueel te verbinden in traplijngrafieken. Wanneer de prijs DAALT, wordt een punt met de lagere prijs toegevoegd aan het einde van het huidige segment. Wanneer de prijs STIJGT, wordt een houdpunt toegevoegd vóór de gat. Dit creëert vloeiende visuele overgangen tussen segmenten in plaats van abrupte gaten."
                 },
                 "add_trailing_null": {
                     "name": "Voeg afsluitend null-punt toe",
-                    "description": "[BEIDE FORMATEN] Voeg een laatste datapunt met null-waarden (behalve tijdstempel) toe aan het einde. Sommige diagrambibliotheken hebben dit nodig om extrapolatie/interpolatie naar de rand van het viewport te voorkomen bij stepline-weergave. Laat uitgeschakeld tenzij je diagram dit vereist."
+                    "description": "Voeg een laatste datapunt met null-waarden (behalve tijdstempel) toe aan het einde. Sommige diagrambibliotheken hebben dit nodig om extrapolatie/interpolatie naar de rand van het viewport te voorkomen bij stepline-weergave. Laat uitgeschakeld tenzij je diagram dit vereist."
                 },
                 "start_time_field": {
-                    "name": "Starttijd-veldnaam (alleen Array van objecten)",
-                    "description": "[ALLEEN VOOR Array van objecten FORMAAT] Aangepaste naam voor het starttijd-veld in de uitvoer. Standaard is 'start_time' als niet opgegeven."
+                    "name": "Starttijd-veldnaam",
+                    "description": "Aangepaste naam voor het starttijd-veld in de uitvoer. Standaard is 'start_time' als niet opgegeven."
                 },
                 "end_time_field": {
-                    "name": "Eindtijd-veldnaam (alleen Array van objecten)",
-                    "description": "[ALLEEN VOOR Array van objecten FORMAAT] Aangepaste naam voor het eindtijd-veld in de uitvoer. Standaard is 'end_time' als niet opgegeven. Alleen gebruikt met period_filter."
+                    "name": "Eindtijd-veldnaam",
+                    "description": "Aangepaste naam voor het eindtijd-veld in de uitvoer. Standaard is 'end_time' als niet opgegeven. Alleen gebruikt met period_filter."
                 },
                 "price_field": {
-                    "name": "Prijsveld-naam (alleen Array van objecten)",
-                    "description": "[ALLEEN VOOR Array van objecten FORMAAT] Aangepaste naam voor het prijsveld in de uitvoer. Standaard is 'price_per_kwh'."
+                    "name": "Prijsveld-naam",
+                    "description": "Aangepaste naam voor het prijsveld in de uitvoer. Standaard is 'price_per_kwh'."
                 },
                 "level_field": {
-                    "name": "Prijsniveauveld-naam (alleen Array van objecten)",
-                    "description": "[ALLEEN VOOR Array van objecten FORMAAT] Aangepaste naam voor het prijsniveauveld in de uitvoer. Standaard is 'level'. Alleen gebruikt wanneer include_level is ingeschakeld."
+                    "name": "Prijsniveauveld-naam",
+                    "description": "Aangepaste naam voor het prijsniveauveld in de uitvoer. Standaard is 'level'. Alleen gebruikt wanneer include_level is ingeschakeld."
                 },
                 "rating_level_field": {
-                    "name": "Prijsbeoordelingsveld-naam (alleen Array van objecten)",
-                    "description": "[ALLEEN VOOR Array van objecten FORMAAT] Aangepaste naam voor het prijsbeoordelingsveld in de uitvoer. Standaard is 'rating_level'. Alleen gebruikt wanneer include_rating_level is ingeschakeld."
+                    "name": "Prijsbeoordelingsveld-naam",
+                    "description": "Aangepaste naam voor het prijsbeoordelingsveld in de uitvoer. Standaard is 'rating_level'. Alleen gebruikt wanneer include_rating_level is ingeschakeld."
                 },
                 "average_field": {
-                    "name": "Gemiddelde veld-naam (alleen Array van objecten)",
-                    "description": "[ALLEEN VOOR Array van objecten FORMAAT] Aangepaste naam voor het gemiddelde veld in de uitvoer. Standaard is 'average'. Alleen gebruikt wanneer include_average is ingeschakeld."
+                    "name": "Gemiddelde veld-naam",
+                    "description": "Aangepaste naam voor het gemiddelde veld in de uitvoer. Standaard is 'average'. Alleen gebruikt wanneer include_average is ingeschakeld."
                 },
                 "data_key": {
-                    "name": "Gegevenssleutel (beide formaten)",
-                    "description": "[BEIDE FORMATEN] Aangepaste naam voor de gegevenssleutel op het hoogste niveau in het antwoord. Standaard is 'data' als niet opgegeven. Voor ApexCharts-compatibiliteit met Array van arrays, gebruik 'points'."
+                    "name": "Gegevenssleutel",
+                    "description": "Aangepaste naam voor de gegevenssleutel op het hoogste niveau in het antwoord. Standaard is 'data' als niet opgegeven. Voor ApexCharts-compatibiliteit met Array van arrays, gebruik 'points'."
                 }
             }
         },

@@ -961,7 +961,7 @@
                 },
                 "connect_segments": {
                     "name": "Connect Segments",
-                    "description": "[ONLY WITH insert_nulls='segments'] When enabled, adds connecting points at segment boundaries to visually connect different price level segments in stepline charts. When price goes DOWN at a boundary, adds a point with the lower price at the end of the current segment. When price goes UP, adds a hold point before the gap. This creates smooth visual transitions between segments instead of abrupt gaps."
+                    "description": "[ONLY WITH 'Insert NULL Values'] When enabled, adds connecting points at segment boundaries to visually connect different price level segments in stepline charts. When price goes DOWN at a boundary, adds a point with the lower price at the end of the current segment. When price goes UP, adds a hold point before the gap. This creates smooth visual transitions between segments instead of abrupt gaps."
                 },
                 "add_trailing_null": {
                     "name": "Add Trailing Null Point",
