@@ -857,11 +857,15 @@
                 },
                 "day": {
                     "name": "Dag",
-                    "description": "Hvilken dag som skal visualiseres (i går, i dag eller i morgen). Hvis ikke angitt, returneres et rullende 2-dagers vindu: i dag+i morgen (når data for i morgen er tilgjengelig) eller i går+i dag (når data for i morgen ikke er tilgjengelig ennå)."
+                    "description": "Hvilken dag som skal visualiseres (standard: Rullerende vindu). Faste dagalternativer (I går/I dag/I morgen) viser 24t-spenn uten ekstra avhengigheter. Dynamiske alternativer krever config-template-card: Rullerende vindu lager et fast 48t-vindu som automatisk skifter mellom i går+i dag og i dag+i morgen basert på datatilgjengelighet. Rullerende vindu (Auto-Zoom) oppfører seg likt, men zoomer i tillegg automatisk inn (2t tilbakeblikk + gjenværende tid til midnatt, graph_span reduseres hvert 15. minutt)."
                 },
                 "level_type": {
                     "name": "Nivåtype",
                     "description": "Velg hvilken prisnivåklassifisering som skal visualiseres: 'rating_level' (lav/normal/høy basert på dine konfigurerte terskelverdier) eller 'level' (Tibber API-nivåer: veldig billig/billig/normal/dyr/veldig dyr)."
+                },
+                "highlight_best_price": {
+                    "name": "Fremhev beste prisperioder",
+                    "description": "Legg til et halvgjennomsiktig grønt overlegg for å fremheve de beste prisperiodene i diagrammet. Dette gjør det enkelt å visuelt identifisere de optimale tidene for energiforbruk."
                 }
             }
         },
@@ -1014,7 +1018,9 @@
             "options": {
                 "yesterday": "I går",
                 "today": "I dag",
-                "tomorrow": "I morgen"
+                "tomorrow": "I morgen",
+                "rolling_window": "Rullerende vindu",
+                "rolling_window_autozoom": "Rullerende vindu (Auto-Zoom)"
             }
         },
         "resolution": {

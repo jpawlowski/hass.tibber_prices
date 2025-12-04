@@ -132,15 +132,17 @@ For detailed parameter descriptions, open **Developer Tools → Actions** (the U
 service: tibber_prices.get_apexcharts_yaml
 data:
     entry_id: YOUR_ENTRY_ID
-    day: today  # Optional: omit for rolling 48h window (requires config-template-card)
+    day: today  # Optional: yesterday, today, tomorrow, rolling_window, rolling_window_autozoom
 response_variable: apexcharts_config
 ```
 
-**Rolling Window Mode:** When omitting the `day` parameter, the action generates a dynamic 48-hour rolling window that automatically shows:
-- Today + Tomorrow (when tomorrow data is available)
-- Yesterday + Today (when tomorrow data is not yet available)
+**Day Parameter Options:**
 
-This mode requires the Config Template Card to dynamically adjust the time window based on data availability.
+- **Fixed days** (`yesterday`, `today`, `tomorrow`): Static 24-hour views, no additional dependencies
+- **Rolling Window** (default when omitted or `rolling_window`): Dynamic 48-hour window that automatically shifts between yesterday+today and today+tomorrow based on data availability
+- **Rolling Window (Auto-Zoom)** (`rolling_window_autozoom`): Same as rolling window, but additionally zooms in progressively (2h lookback + remaining time until midnight, graph span decreases every 15 minutes)
+
+**Note:** Rolling window modes require [Config Template Card](https://github.com/iantrich/config-template-card) for dynamic behavior.
 
 Use the response in Lovelace dashboards by copying the generated YAML.
 

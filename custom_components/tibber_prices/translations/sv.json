@@ -857,11 +857,15 @@
                 },
                 "day": {
                     "name": "Dag",
-                    "description": "Vilken dag som ska visualiseras (igår, idag eller imorgon). Om inte angivet returneras ett rullande 2-dagarsfönster: idag+imorgon (när data för imorgon är tillgänglig) eller igår+idag (när data för imorgon inte är tillgänglig ännu)."
+                    "description": "Vilken dag som ska visualiseras (standard: Rullande fönster). Fasta dagalternativ (Igår/Idag/Imorgon) visar 24t-spann utan extra beroenden. Dynamiska alternativ kräver config-template-card: Rullande fönster skapar ett fast 48t-fönster som automatiskt växlar mellan igår+idag och idag+imorgon baserat på datatillgänglighet. Rullande fönster (Auto-Zoom) beter sig likadant men zoomar dessutom automatiskt in (2t tillbakablick + återstående tid till midnatt, graph_span minskar varje kvart)."
                 },
                 "level_type": {
                     "name": "Nivåtyp",
                     "description": "Välj vilken prisnivåklassificering som ska visualiseras: 'rating_level' (låg/normal/hög baserat på dina konfigurerade tröskelvärden) eller 'level' (Tibber API-nivåer: mycket billig/billig/normal/dyr/mycket dyr)."
+                },
+                "highlight_best_price": {
+                    "name": "Markera bästa prisperioder",
+                    "description": "Lägg till ett halvgenomskinligt grönt överlägg för att markera de bästa prisperioderna i diagrammet. Detta gör det enkelt att visuellt identifiera de optimala tiderna för energiförbrukning."
                 }
             }
         },
@@ -1014,7 +1018,9 @@
             "options": {
                 "yesterday": "Igår",
                 "today": "Idag",
-                "tomorrow": "Imorgon"
+                "tomorrow": "Imorgon",
+                "rolling_window": "Rullande fönster",
+                "rolling_window_autozoom": "Rullande fönster (Auto-Zoom)"
             }
         },
         "resolution": {

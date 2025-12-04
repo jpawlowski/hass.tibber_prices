@@ -59,7 +59,7 @@ ATTR_ENTRY_ID: Final = "entry_id"
 APEXCHARTS_SERVICE_SCHEMA = vol.Schema(
     {
         vol.Required(ATTR_ENTRY_ID): cv.string,
-        vol.Optional("day"): vol.In(["yesterday", "today", "tomorrow"]),
+        vol.Optional("day"): vol.In(["yesterday", "today", "tomorrow", "rolling_window", "rolling_window_autozoom"]),
         vol.Optional("level_type", default="rating_level"): vol.In(["rating_level", "level"]),
         vol.Optional("highlight_best_price", default=True): cv.boolean,
     }
@@ -92,6 +92,7 @@ def _build_entity_map(
     # Define mapping patterns for each combination of level_type and day
     # Note: Match by entity key (in unique_id), not entity_id (user can rename)
     # Note: For "yesterday", we use "today" sensors as they show current state
+    # Note: For "yesterday_today_tomorrow" and "today_tomorrow", we use "today" sensors (dynamic windows)
     pattern_map = {
         ("rating_level", "today"): [
             ("lowest_price_today", [PRICE_RATING_LOW]),
@@ -108,6 +109,16 @@ def _build_entity_map(
             ("average_price_tomorrow", [PRICE_RATING_NORMAL]),
             ("highest_price_tomorrow", [PRICE_RATING_HIGH]),
         ],
+        ("rating_level", "rolling_window"): [
+            ("lowest_price_today", [PRICE_RATING_LOW]),
+            ("average_price_today", [PRICE_RATING_NORMAL]),
+            ("highest_price_today", [PRICE_RATING_HIGH]),
+        ],
+        ("rating_level", "rolling_window_autozoom"): [
+            ("lowest_price_today", [PRICE_RATING_LOW]),
+            ("average_price_today", [PRICE_RATING_NORMAL]),
+            ("highest_price_today", [PRICE_RATING_HIGH]),
+        ],
         ("level", "today"): [
             ("lowest_price_today", [PRICE_LEVEL_VERY_CHEAP, PRICE_LEVEL_CHEAP]),
             ("average_price_today", [PRICE_LEVEL_NORMAL]),
@@ -122,6 +133,16 @@ def _build_entity_map(
             ("lowest_price_tomorrow", [PRICE_LEVEL_VERY_CHEAP, PRICE_LEVEL_CHEAP]),
             ("average_price_tomorrow", [PRICE_LEVEL_NORMAL]),
             ("highest_price_tomorrow", [PRICE_LEVEL_EXPENSIVE, PRICE_LEVEL_VERY_EXPENSIVE]),
+        ],
+        ("level", "rolling_window"): [
+            ("lowest_price_today", [PRICE_LEVEL_VERY_CHEAP, PRICE_LEVEL_CHEAP]),
+            ("average_price_today", [PRICE_LEVEL_NORMAL]),
+            ("highest_price_today", [PRICE_LEVEL_EXPENSIVE, PRICE_LEVEL_VERY_EXPENSIVE]),
+        ],
+        ("level", "rolling_window_autozoom"): [
+            ("lowest_price_today", [PRICE_LEVEL_VERY_CHEAP, PRICE_LEVEL_CHEAP]),
+            ("average_price_today", [PRICE_LEVEL_NORMAL]),
+            ("highest_price_today", [PRICE_LEVEL_EXPENSIVE, PRICE_LEVEL_VERY_EXPENSIVE]),
         ],
     }
 
@@ -237,7 +258,8 @@ async def handle_apexcharts_yaml(call: ServiceCall) -> dict[str, Any]:  # noqa: 
             filter_param = f"level_filter: ['{level_key}']"
 
         # Conditionally include day parameter (omit for rolling window mode)
-        day_param = f"day: ['{day}'], " if day else ""
+        # For rolling_window and rolling_window_autozoom, omit day parameter (dynamic selection)
+        day_param = "" if day in ("rolling_window", "rolling_window_autozoom", None) else f"day: ['{day}'], "
 
         data_generator = (
             f"const response = await hass.callWS({{ "
@@ -282,7 +304,8 @@ async def handle_apexcharts_yaml(call: ServiceCall) -> dict[str, Any]:  # noqa: 
         # Create vertical highlight bands using separate Y-axis (0-1 range)
         # This creates a semi-transparent overlay from bottom to top without affecting price scale
         # Conditionally include day parameter (omit for rolling window mode)
-        day_param = f"day: ['{day}'], " if day else ""
+        # For rolling_window and rolling_window_autozoom, omit day parameter (dynamic selection)
+        day_param = "" if day in ("rolling_window", "rolling_window_autozoom", None) else f"day: ['{day}'], "
 
         # Store original prices for tooltip, but map to 1 for full-height overlay
         # We use a custom tooltip formatter to show the real price
@@ -326,13 +349,13 @@ async def handle_apexcharts_yaml(call: ServiceCall) -> dict[str, Any]:  # noqa: 
         "Price Phases Daily Progress" if level_type == "rating_level" else "Price Level"
     )
 
-    # Add translated day to title (only if day parameter was provided)
-    if day:
+    # Add translated day to title (only for fixed day views, not for dynamic modes)
+    if day and day not in ("rolling_window", "rolling_window_autozoom"):
         day_translated = get_translation(["selector", "day", "options", day], user_language) or day.capitalize()
         title = f"{title} - {day_translated}"
 
     # Configure span based on selected day
-    # For rolling window mode, use config-template-card for dynamic offset
+    # For rolling window modes, use config-template-card for dynamic config
     if day == "yesterday":
         span_config = {"start": "day", "offset": "-1d"}
         graph_span_value = None
@@ -341,11 +364,22 @@ async def handle_apexcharts_yaml(call: ServiceCall) -> dict[str, Any]:  # noqa: 
         span_config = {"start": "day", "offset": "+1d"}
         graph_span_value = None
         use_template = False
+    elif day == "rolling_window":
+        # Rolling 48h window: yesterday+today OR today+tomorrow (shifts at 13:00)
+        span_config = None  # Will be set in template
+        graph_span_value = "48h"
+        use_template = True
+    elif day == "rolling_window_autozoom":
+        # Rolling 48h window with auto-zoom: yesterday+today OR today+tomorrow (shifts at 13:00)
+        # Auto-zooms based on current time (2h lookback + remaining time)
+        span_config = None  # Will be set in template
+        graph_span_value = None  # Will be set in template
+        use_template = True
     elif day:  # today (explicit)
         span_config = {"start": "day"}
         graph_span_value = None
         use_template = False
-    else:  # Rolling window mode (None)
+    else:  # Rolling window mode (None - same as rolling_window)
         # Use config-template-card to dynamically set offset based on data availability
         span_config = None  # Will be set in template
         graph_span_value = "48h"
@@ -390,8 +424,8 @@ async def handle_apexcharts_yaml(call: ServiceCall) -> dict[str, Any]:  # noqa: 
             },
             "grid": {
                 "show": True,
-                "borderColor": "#40475D",
-                "strokeDashArray": 4,
+                "borderColor": "#f5f5f5",
+                "strokeDashArray": 0,
                 "xaxis": {"lines": {"show": True}},
                 "yaxis": {"lines": {"show": True}},
             },
@@ -420,11 +454,8 @@ async def handle_apexcharts_yaml(call: ServiceCall) -> dict[str, Any]:  # noqa: 
         "series": series,
     }
 
-    # For rolling window mode, wrap in config-template-card for dynamic offset
+    # For rolling window mode and today_tomorrow, wrap in config-template-card for dynamic config
     if use_template:
-        # Add graph_span to base config (48h window)
-        result["graph_span"] = graph_span_value
-
         # Find tomorrow_data_available binary sensor
         tomorrow_data_sensor = next(
             (
@@ -438,6 +469,81 @@ async def handle_apexcharts_yaml(call: ServiceCall) -> dict[str, Any]:  # noqa: 
         )
 
         if tomorrow_data_sensor:
+            if day == "rolling_window_autozoom":
+                # rolling_window_autozoom mode: Dynamic graph_span with auto-zoom
+                # Shows last 120 min (8 intervals) + remaining minutes until end of time window
+                # Auto-zooms every 15 minutes when current interval completes
+                # When tomorrow data arrives after 13:00, extends to show tomorrow too
+                #
+                # Key principle: graph_span must always be divisible by 15 (full intervals)
+                # The current (running) interval stays included until it completes
+                #
+                # Calculation:
+                # 1. Round current time UP to next quarter-hour (include running interval)
+                # 2. Calculate minutes from end of running interval to midnight
+                # 3. Round to ensure full 15-minute intervals
+                # 4. Add 120min lookback (always 8 intervals)
+                # 5. If tomorrow data available: add 1440min (96 intervals)
+                #
+                # Example timeline (without tomorrow data):
+                # 08:00 → next quarter: 08:15 → to midnight: 945min → span: 120+945 = 1065min (71 intervals)
+                # 08:07 → next quarter: 08:15 → to midnight: 945min → span: 120+945 = 1065min (stays same)
+                # 08:15 → next quarter: 08:30 → to midnight: 930min → span: 120+930 = 1050min (70 intervals)
+                # 14:23 → next quarter: 14:30 → to midnight: 570min → span: 120+570 = 690min (46 intervals)
+                #
+                # After 13:00 with tomorrow data:
+                # 14:00 → next quarter: 14:15 → to midnight: 585min → span: 120+585+1440 = 2145min (143 intervals)
+                # 14:15 → next quarter: 14:30 → to midnight: 570min → span: 120+570+1440 = 2130min (142 intervals)
+                template_graph_span = (
+                    f"const now = new Date(); "
+                    f"const currentMinute = now.getMinutes(); "
+                    f"const nextQuarterMinute = Math.ceil(currentMinute / 15) * 15; "
+                    f"const currentIntervalEnd = new Date(now); "
+                    f"if (nextQuarterMinute === 60) {{ "
+                    f"  currentIntervalEnd.setHours(now.getHours() + 1, 0, 0, 0); "
+                    f"}} else {{ "
+                    f"  currentIntervalEnd.setMinutes(nextQuarterMinute, 0, 0); "
+                    f"}} "
+                    f"const midnight = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1, 0, 0, 0); "
+                    f"const minutesFromIntervalEndToMidnight = Math.ceil((midnight - currentIntervalEnd) / 60000); "
+                    f"const minutesRounded = Math.ceil(minutesFromIntervalEndToMidnight / 15) * 15; "
+                    f"const lookback = 120; "
+                    f"const hasTomorrowData = states['{tomorrow_data_sensor}'].state === 'on'; "
+                    f"const totalMinutes = lookback + minutesRounded + (hasTomorrowData ? 1440 : 0); "
+                    f"totalMinutes + 'min';"
+                )
+
+                # Find current_interval_price sensor for 15-minute update trigger
+                current_price_sensor = next(
+                    (
+                        entity.entity_id
+                        for entity in entity_registry.entities.values()
+                        if entity.config_entry_id == entry_id
+                        and entity.unique_id
+                        and entity.unique_id.endswith("_current_interval_price")
+                    ),
+                    None,
+                )
+
+                trigger_entities = [tomorrow_data_sensor]
+                if current_price_sensor:
+                    trigger_entities.append(current_price_sensor)
+
+                return {
+                    "type": "custom:config-template-card",
+                    "variables": {
+                        "v_graph_span": template_graph_span,
+                    },
+                    "entities": trigger_entities,
+                    "card": {
+                        **result,
+                        "span": {"start": "minute", "offset": "-120min"},
+                        "graph_span": "${v_graph_span}",
+                    },
+                }
+            # Rolling window modes (day is None or rolling_window): Dynamic offset
+            # Add graph_span to base config (48h window)
+            result["graph_span"] = graph_span_value
             # Wrap in config-template-card with dynamic offset calculation
             # Template checks if tomorrow data is available (binary sensor state)
             # If 'on' (tomorrow data available) → offset +1d (show today+tomorrow)
@@ -458,8 +564,15 @@ async def handle_apexcharts_yaml(call: ServiceCall) -> dict[str, Any]:  # noqa: 
                 },
             }
 
-        # Fallback if sensor not found: just use +1d offset
-        result["span"] = {"end": "day", "offset": "+1d"}
+        # Fallback if sensor not found
+        if day == "rolling_window_autozoom":
+            # Fallback: show today with 24h span
+            result["span"] = {"start": "day"}
+            result["graph_span"] = "24h"
+        else:
+            # Rolling window fallback (rolling_window or None): just use +1d offset
+            result["span"] = {"end": "day", "offset": "+1d"}
+            result["graph_span"] = "48h"
         return result
 
     # Add span for fixed-day views

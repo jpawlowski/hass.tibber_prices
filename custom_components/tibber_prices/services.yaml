@@ -1,54 +1,30 @@
 get_price:
-  name: Get Price Data
-  description: >-
-    Fetch price data for a specific time range with automatic routing. Development and testing service for the price_info_for_range API function. Automatically uses PRICE_INFO, PRICE_INFO_RANGE, or both based on the time range boundary.
   fields:
     entry_id:
-      name: Entry ID
-      description: The config entry ID for the Tibber integration.
       required: true
       example: "1234567890abcdef"
       selector:
         config_entry:
           integration: tibber_prices
     start_time:
-      name: Start Time
-      description: Start of the time range (inclusive, timezone-aware).
       required: true
       example: "2025-11-01T00:00:00+01:00"
       selector:
         datetime:
     end_time:
-      name: End Time
-      description: End of the time range (exclusive, timezone-aware).
       required: true
       example: "2025-11-02T00:00:00+01:00"
       selector:
         datetime:
 get_apexcharts_yaml:
-  name: Get ApexCharts Card YAML
-  description: >-
-    ⚠️ IMPORTANT: This service generates a BASIC EXAMPLE configuration for ApexCharts Card as a starting point. It is NOT a complete solution for all ApexCharts features.
-    This integration is primarily a DATA PROVIDER. The generated YAML demonstrates how to use the `get_chartdata` service to fetch price data. Due to the segmented nature of our data (different time periods per series) and the use of Home Assistant's service API instead of entity attributes, many advanced ApexCharts features (like in_header, certain transformations) are not compatible or require manual customization.
-
-
-    You are welcome to customize the generated YAML for your specific needs, but please understand that comprehensive ApexCharts configuration support is beyond the scope of this integration. Community contributions with improved configurations are always appreciated - if you find a better setup that works, please share it so everyone can benefit!
-
-
-    For direct data access to build your own charts, use the `get_chartdata` service instead.
   fields:
     entry_id:
-      name: Entry ID
-      description: The config entry ID for the Tibber integration.
       required: true
       example: "1234567890abcdef"
       selector:
         config_entry:
           integration: tibber_prices
     day:
-      name: Day
-      description: >-
-        Which day to visualize (yesterday, today, or tomorrow). If not specified, returns a rolling 2-day window: today+tomorrow (when tomorrow data is available) or yesterday+today (when tomorrow data is not yet available).
       required: false
       example: today
       selector:
@@ -57,11 +33,10 @@ get_apexcharts_yaml:
             - yesterday
             - today
             - tomorrow
+            - rolling_window
+            - rolling_window_autozoom
           translation_key: day
     level_type:
-      name: Level Type
-      description: >-
-        Select which price level classification to visualize: 'rating_level' (LOW/NORMAL/HIGH based on your configured thresholds) or 'level' (Tibber API levels: VERY_CHEAP/CHEAP/NORMAL/EXPENSIVE/VERY_EXPENSIVE).
       required: false
       default: rating_level
       example: rating_level
@@ -72,24 +47,16 @@ get_apexcharts_yaml:
             - level
           translation_key: level_type
     highlight_best_price:
-      name: Highlight Best Price Periods
-      description: >-
-        Add a semi-transparent green overlay to highlight the best price periods on the chart. This makes it easy to visually identify the optimal times for energy consumption.
       required: false
       default: true
       example: true
       selector:
         boolean:
 get_chartdata:
-  name: Get Chart Data
-  description: >-
-    Returns price data in a chart-friendly format compatible with Tibber Core output. Works with ha-price-timeline-card, ApexCharts, Plotly, Mini Graph Card, and History Graph. Field names and structure are configurable.
   fields:
     general:
       fields:
         entry_id:
-          name: Entry ID
-          description: The config entry ID for the Tibber integration.
           required: true
           example: "1234567890abcdef"
           selector:
@@ -99,9 +66,6 @@ get_chartdata:
       collapsed: true
       fields:
         day:
-          name: Day
-          description: >-
-            Which day(s) to fetch prices for. You can select multiple days. If not specified, returns a rolling 2-day window: today+tomorrow (when tomorrow data is available) or yesterday+today (when tomorrow data is not yet available). This provides continuous chart display without gaps.
           required: false
           selector:
             select:
@@ -112,9 +76,6 @@ get_chartdata:
               multiple: true
               translation_key: day
         resolution:
-          name: Resolution
-          description: >-
-            Time resolution for the returned data. Options: 'interval' (default, 15-minute intervals, 96 points per day), 'hourly' (hourly averages, 24 points per day).
           required: false
           default: interval
           example: hourly
@@ -128,9 +89,6 @@ get_chartdata:
       collapsed: true
       fields:
         level_filter:
-          name: Level Filter
-          description: >-
-            Filter intervals to include only specific Tibber price levels (very_cheap, cheap, normal, expensive, very_expensive). If not specified, all levels are included.
           required: false
           selector:
             select:
@@ -143,9 +101,6 @@ get_chartdata:
               multiple: true
               translation_key: level_filter
         rating_level_filter:
-          name: Rating Level Filter
-          description: >-
-            Filter intervals to include only specific rating levels (low, normal, high). If not specified, all rating levels are included.
           required: false
           selector:
             select:
@@ -156,9 +111,6 @@ get_chartdata:
               multiple: true
               translation_key: rating_level_filter
         period_filter:
-          name: Period Filter
-          description: >-
-            Filter intervals to include only those within Best Price or Peak Price periods. Options: 'best_price' (only intervals in Best Price periods), 'peak_price' (only intervals in Peak Price periods). If not specified, all intervals are included. This uses the precomputed period data from binary sensors (binary_sensor.best_price_period / binary_sensor.peak_price_period).
           required: false
           selector:
             select:
@@ -170,18 +122,12 @@ get_chartdata:
       collapsed: true
       fields:
         minor_currency:
-          name: Minor Currency
-          description: >-
-            Return prices in minor currency units (cents for EUR, øre for NOK/SEK) instead of major currency units. Disabled by default.
           required: false
           default: false
           example: true
           selector:
             boolean:
         round_decimals:
-          name: Round Decimals
-          description: >-
-            Number of decimal places to round prices to (0-10). If not specified, uses default precision (4 decimals for major currency, 2 for minor currency).
           required: false
           example: 2
           selector:
@@ -190,12 +136,6 @@ get_chartdata:
               max: 10
               mode: box
         insert_nulls:
-          name: Insert NULL Values
-          description: >-
-            NULL insertion mode for filtered data.
-            • none (default): only matching intervals
-            • segments: add NULLs at segment boundaries (clean gaps)
-            • all: NULL for every non-matching timestamp
           required: false
           default: none
           selector:
@@ -206,19 +146,11 @@ get_chartdata:
                 - all
               translation_key: insert_nulls
         connect_segments:
-          name: Connect Segments
-          description: >-
-            Only with insert_nulls='segments'. Adds boundary points to visually connect segments (stepline).
-            • Downward boundary: lower price at end of current segment
-            • Upward boundary: hold previous price before the gap
           required: false
           default: false
           selector:
             boolean:
         add_trailing_null:
-          name: Add Trailing Null Point
-          description: >-
-            Add a final data point with null values (except timestamp) at the end. Some chart libraries need this to prevent extrapolation/interpolation to the viewport edge when using stepline rendering. Leave disabled unless your chart requires it.
           required: false
           default: false
           selector:
@@ -227,11 +159,6 @@ get_chartdata:
       collapsed: true
       fields:
         output_format:
-          name: Output Format
-          description: >-
-            Output format.
-            • array_of_objects (default): objects with configurable field names
-            • array_of_arrays: [timestamp, price] tuples
           required: false
           default: array_of_objects
           example: array_of_objects
@@ -242,9 +169,6 @@ get_chartdata:
                 - array_of_arrays
               translation_key: output_format
         data_key:
-          name: Data Key
-          description: >-
-            Custom name for the top-level data key in the response. Defaults to "data" if not specified. For ApexCharts compatibility with array_of_arrays, use "points".
           required: false
           example: prices
           selector:
@@ -253,73 +177,46 @@ get_chartdata:
       collapsed: true
       fields:
         include_level:
-          name: Include Level
-          description: >-
-            Include Tibber price level (VERY_CHEAP … VERY_EXPENSIVE).
           required: false
           default: false
           example: true
           selector:
             boolean:
         include_rating_level:
-          name: Include Rating Level
-          description: >-
-            Include rating level (LOW/NORMAL/HIGH) based on configured thresholds.
           required: false
           default: false
           example: true
           selector:
             boolean:
         include_average:
-          name: Include Average
-          description: >-
-            Include daily average price.
           required: false
           default: false
           selector:
             boolean:
         start_time_field:
-          name: Start Time Field Name
-          description: >-
-            Custom name for the start time field in the output. Defaults to "start_time" if not specified.
           required: false
           example: time
           selector:
             text:
         end_time_field:
-          name: End Time Field Name
-          description: >-
-            Custom name for the end time field in the output. Defaults to "end_time" if not specified. Only used with period_filter.
           required: false
           example: end
           selector:
             text:
         price_field:
-          name: Price Field Name
-          description: >-
-            Custom name for the price field in the output. Defaults to "price_per_kwh" if not specified.
           required: false
           example: price
           selector:
             text:
         level_field:
-          name: Level Field Name
-          description: >-
-            Custom name for the level field in the output. Defaults to "level" if not specified. Only used when include_level is enabled.
           required: false
           selector:
             text:
         rating_level_field:
-          name: Rating Level Field Name
-          description: >-
-            Custom name for the rating_level field in the output. Defaults to "rating_level" if not specified. Only used when include_rating_level is enabled.
           required: false
           selector:
             text:
         average_field:
-          name: Average Field Name
-          description: >-
-            Custom name for the average field in the output. Defaults to "average" if not specified. Only used when include_average is enabled.
           required: false
           selector:
             text:
@@ -327,22 +224,12 @@ get_chartdata:
       collapsed: true
       fields:
         array_fields:
-          name: Array Fields
-          description: >-
-            Choose extra fields to include using {field} syntax, comma-separated.
-            Available: start_time, price_per_kwh, level, rating_level, average.
-            Empty = default (timestamp + price).
           required: false
           selector:
             text:
 refresh_user_data:
-  name: Refresh User Data
-  description: >-
-    Forces a refresh of the user data (homes, profile information) from the Tibber API. This can be useful after making changes to your Tibber account or when troubleshooting connectivity issues.
   fields:
     entry_id:
-      name: Entry ID
-      description: The config entry ID for the Tibber integration.
       required: true
       example: "1234567890abcdef"
       selector:

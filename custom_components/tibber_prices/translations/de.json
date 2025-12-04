@@ -861,11 +861,15 @@
                 },
                 "day": {
                     "name": "Tag",
-                    "description": "Welcher Tag visualisiert werden soll (gestern, heute oder morgen). Falls nicht angegeben, wird ein rollierendes 2-Tage-Fenster zurückgegeben: heute+morgen (wenn Daten für morgen verfügbar sind) oder gestern+heute (wenn Daten für morgen noch nicht verfügbar sind)."
+                    "description": "Welcher Tag visualisiert werden soll (Standard: Rollierendes Fenster). Feste Tag-Optionen (Gestern/Heute/Morgen) zeigen 24h-Fenster ohne zusätzliche Abhängigkeiten. Dynamische Optionen benötigen config-template-card: Rollierendes Fenster zeigt ein festes 48h-Fenster, das automatisch zwischen gestern+heute und heute+morgen wechselt basierend auf Datenverfügbarkeit. Rollierendes Fenster (Auto-Zoom) verhält sich gleich, zoomt aber zusätzlich automatisch rein (2h Rückblick + verbleibende Zeit bis Mitternacht, graph_span verringert sich alle 15 Minuten)."
                 },
                 "level_type": {
                     "name": "Stufen-Typ",
                     "description": "Wähle, welche Preisstufen-Klassifizierung visualisiert werden soll: 'rating_level' (niedrig/normal/hoch basierend auf deinen konfigurierten Schwellenwerten) oder 'level' (Tibber-API-Stufen: sehr günstig/günstig/normal/teuer/sehr teuer)."
+                },
+                "highlight_best_price": {
+                    "name": "Bestpreis-Zeiträume hervorheben",
+                    "description": "Füge eine halbtransparente grüne Überlagerung hinzu, um die Bestpreis-Zeiträume im Diagramm hervorzuheben. Dies erleichtert die visuelle Identifizierung der optimalen Zeiten für den Energieverbrauch."
                 }
             }
         },
@@ -1018,7 +1022,9 @@
             "options": {
                 "yesterday": "Gestern",
                 "today": "Heute",
-                "tomorrow": "Morgen"
+                "tomorrow": "Morgen",
+                "rolling_window": "Rollierendes Fenster",
+                "rolling_window_autozoom": "Rollierendes Fenster (Auto-Zoom)"
             }
         },
         "resolution": {

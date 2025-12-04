@@ -285,7 +285,7 @@ For a dynamic chart that automatically adapts to data availability:
 service: tibber_prices.get_apexcharts_yaml
 data:
     entry_id: YOUR_ENTRY_ID
-    # Omit 'day' parameter for rolling window
+    day: rolling_window  # Or omit for same behavior (default)
     level_type: rating_level
 response_variable: apexcharts_config
 ```
@@ -293,8 +293,26 @@ response_variable: apexcharts_config
 **Behavior:**
 - **When tomorrow data available** (typically after ~13:00): Shows today + tomorrow
 - **When tomorrow data not available**: Shows yesterday + today
+- **Fixed 48h span:** Always shows full 48 hours
 
-**Note:** Rolling window mode requires Config Template Card to dynamically adjust the time range.
+**Auto-Zoom Variant:**
+
+For progressive zoom-in throughout the day:
+
+```yaml
+service: tibber_prices.get_apexcharts_yaml
+data:
+    entry_id: YOUR_ENTRY_ID
+    day: rolling_window_autozoom
+    level_type: rating_level
+response_variable: apexcharts_config
+```
+
+- Same data loading as rolling window
+- **Progressive zoom:** Graph span starts at ~26h in the morning and decreases to ~14h by midnight
+- **Updates every 15 minutes:** Always shows 2h lookback + remaining time until midnight
+
+**Note:** Rolling window modes require Config Template Card to dynamically adjust the time range.
 
 ### Features
 

@@ -857,11 +857,15 @@
                 },
                 "day": {
                     "name": "Dag",
-                    "description": "Welke dag gevisualiseerd moet worden (gisteren, vandaag of morgen). Indien niet opgegeven, wordt een rollend 2-dagen venster geretourneerd: vandaag+morgen (wanneer gegevens voor morgen beschikbaar zijn) of gisteren+vandaag (wanneer gegevens voor morgen nog niet beschikbaar zijn)."
+                    "description": "Welke dag gevisualiseerd moet worden (standaard: Rollend venster). Vaste dagopties (Gisteren/Vandaag/Morgen) tonen 24u-vensters zonder extra afhankelijkheden. Dynamische opties vereisen config-template-card: Rollend venster creëert een vast 48u-venster dat automatisch wisselt tussen gisteren+vandaag en vandaag+morgen op basis van databeschikbaarheid. Rollend venster (Auto-Zoom) gedraagt zich hetzelfde maar zoomt bovendien automatisch in (2u terugkijken + resterende tijd tot middernacht, graph_span neemt elke 15 minuten af)."
                 },
                 "level_type": {
                     "name": "Niveautype",
                     "description": "Selecteer welke prijsniveauclassificatie gevisualiseerd moet worden: 'rating_level' (laag/normaal/hoog op basis van jouw geconfigureerde drempelwaarden) of 'level' (Tibber API-niveaus: zeer goedkoop/goedkoop/normaal/duur/zeer duur)."
+                },
+                "highlight_best_price": {
+                    "name": "Beste prijsperiodes markeren",
+                    "description": "Voeg een halfdo0rzichtige groene overlay toe om de beste prijsperiodes in de grafiek te markeren. Dit maakt het gemakkelijk om visueel de optimale tijden voor energieverbruik te identificeren."
                 }
             }
         },
@@ -1014,7 +1018,9 @@
             "options": {
                 "yesterday": "Gisteren",
                 "today": "Vandaag",
-                "tomorrow": "Morgen"
+                "tomorrow": "Morgen",
+                "rolling_window": "Rollend venster",
+                "rolling_window_autozoom": "Rollend venster (Auto-Zoom)"
             }
         },
         "resolution": {

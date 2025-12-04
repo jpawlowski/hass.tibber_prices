@@ -857,11 +857,15 @@
                 },
                 "day": {
                     "name": "Day",
-                    "description": "Which day to visualize (yesterday, today, or tomorrow). If not specified, returns a rolling 2-day window: today+tomorrow (when tomorrow data is available) or yesterday+today (when tomorrow data is not yet available)."
+                    "description": "Which day to visualize (default: Rolling Window). Fixed day options (Yesterday/Today/Tomorrow) show 24h spans without additional dependencies. Dynamic options require config-template-card: Rolling Window displays a fixed 48h window that automatically shifts between yesterday+today and today+tomorrow based on data availability. Rolling Window (Auto-Zoom) behaves the same but additionally auto-zooms in (2h lookback + remaining time until midnight, graph_span decreases every 15 minutes)."
                 },
                 "level_type": {
                     "name": "Level Type",
                     "description": "Select which price level classification to visualize: 'rating_level' (low/normal/high based on your configured thresholds) or 'level' (Tibber API levels: very cheap/cheap/normal/expensive/very expensive)."
+                },
+                "highlight_best_price": {
+                    "name": "Highlight Best Price Periods",
+                    "description": "Add a semi-transparent green overlay to highlight the best price periods on the chart. This makes it easy to visually identify the optimal times for energy consumption."
                 }
             }
         },
@@ -1014,7 +1018,9 @@
             "options": {
                 "yesterday": "Yesterday",
                 "today": "Today",
-                "tomorrow": "Tomorrow"
+                "tomorrow": "Tomorrow",
+                "rolling_window": "Rolling Window",
+                "rolling_window_autozoom": "Rolling Window (Auto-Zoom)"
             }
         },
         "resolution": {
