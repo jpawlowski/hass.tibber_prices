@@ -70,6 +70,11 @@ from .chart_data import (
     call_chartdata_service_async,
     get_chart_data_state,
 )
+from .chart_metadata import (
+    build_chart_metadata_attributes,
+    call_chartdata_service_for_metadata_async,
+    get_chart_metadata_state,
+)
 from .helpers import aggregate_level_data, aggregate_rating_data
 from .value_getters import get_value_getter_mapping
 
@@ -117,6 +122,10 @@ class TibberPricesSensor(TibberPricesEntity, SensorEntity):
         self._chart_data_last_update = None  # Track last service call timestamp
         self._chart_data_error = None  # Track last service call error
         self._chart_data_response = None  # Store service response for attributes
+        # Chart metadata (for chart_metadata sensor)
+        self._chart_metadata_last_update = None  # Track last service call timestamp
+        self._chart_metadata_error = None  # Track last service call error
+        self._chart_metadata_response = None  # Store service response for attributes
 
     async def async_added_to_hass(self) -> None:
         """When entity is added to hass."""
@@ -137,6 +146,10 @@ class TibberPricesSensor(TibberPricesEntity, SensorEntity):
         # For chart_data_export, trigger initial service call
         if self.entity_description.key == "chart_data_export":
             await self._refresh_chart_data()
+
+        # For chart_metadata, trigger initial service call
+        if self.entity_description.key == "chart_metadata":
+            await self._refresh_chart_metadata()
 
     async def async_will_remove_from_hass(self) -> None:
         """When entity will be removed from hass."""
@@ -198,6 +211,11 @@ class TibberPricesSensor(TibberPricesEntity, SensorEntity):
             # Schedule async refresh as a task (we're in a callback)
             self.hass.async_create_task(self._refresh_chart_data())
 
+        # Refresh chart metadata when coordinator updates (new price data or user data)
+        if self.entity_description.key == "chart_metadata":
+            # Schedule async refresh as a task (we're in a callback)
+            self.hass.async_create_task(self._refresh_chart_metadata())
+
         super()._handle_coordinator_update()
 
     def _get_value_getter(self) -> Callable | None:
@@ -216,6 +234,7 @@ class TibberPricesSensor(TibberPricesEntity, SensorEntity):
             get_next_avg_n_hours_value=self._get_next_avg_n_hours_value,
             get_data_timestamp=self._get_data_timestamp,
             get_chart_data_export_value=self._get_chart_data_export_value,
+            get_chart_metadata_value=self._get_chart_metadata_value,
         )
         return handlers.get(self.entity_description.key)
 
@@ -831,6 +850,10 @@ class TibberPricesSensor(TibberPricesEntity, SensorEntity):
         if key == "chart_data_export":
             return self._get_chart_data_export_attributes()
 
+        # Special handling for chart_metadata - returns metadata in attributes
+        if key == "chart_metadata":
+            return self._get_chart_metadata_attributes()
+
         # Prepare cached data that attribute builders might need
         cached_data = {
             "trend_attributes": self._trend_calculator.get_trend_attributes(),
@@ -905,4 +928,37 @@ class TibberPricesSensor(TibberPricesEntity, SensorEntity):
             chart_data_response=self._chart_data_response,
             chart_data_last_update=self._chart_data_last_update,
             chart_data_error=self._chart_data_error,
+        )
+
+    def _get_chart_metadata_value(self) -> str | None:
+        """Return state for chart_metadata sensor."""
+        return get_chart_metadata_state(
+            chart_metadata_response=self._chart_metadata_response,
+            chart_metadata_error=self._chart_metadata_error,
+        )
+
+    async def _refresh_chart_metadata(self) -> None:
+        """Refresh chart metadata by calling get_chartdata service with metadata=only."""
+        response, error = await call_chartdata_service_for_metadata_async(
+            hass=self.hass,
+            coordinator=self.coordinator,
+            config_entry=self.coordinator.config_entry,
+        )
+        self._chart_metadata_response = response
+        time = self.coordinator.time
+        self._chart_metadata_last_update = time.now()
+        self._chart_metadata_error = error
+        # Trigger state update after refresh
+        self.async_write_ha_state()
+
+    def _get_chart_metadata_attributes(self) -> dict[str, object] | None:
+        """
+        Return chart metadata from last service call as attributes.
+
+        Delegates to chart_metadata module for attribute building.
+        """
+        return build_chart_metadata_attributes(
+            chart_metadata_response=self._chart_metadata_response,
+            chart_metadata_last_update=self._chart_metadata_last_update,
+            chart_metadata_error=self._chart_metadata_error,
         )

@@ -799,6 +799,14 @@
                     "ready": "Bereit",
                     "error": "Fehler"
                 }
+            },
+            "chart_metadata": {
+                "name": "Diagramm-Metadaten",
+                "state": {
+                    "pending": "Ausstehend",
+                    "ready": "Bereit",
+                    "error": "Fehler"
+                }
             }
         },
         "binary_sensor": {

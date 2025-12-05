@@ -21,6 +21,7 @@ from homeassistant.loader import async_get_loaded_integration
 from .api import TibberPricesApiClient
 from .const import (
     DATA_CHART_CONFIG,
+    DATA_CHART_METADATA_CONFIG,
     DOMAIN,
     LOGGER,
     async_load_standard_translations,
@@ -99,6 +100,16 @@ async def async_setup(hass: HomeAssistant, config: dict[str, Any]) -> bool:
     else:
         LOGGER.debug("No chart_export configuration found in configuration.yaml")
         hass.data[DOMAIN][DATA_CHART_CONFIG] = {}
+
+    # Extract chart_metadata config if present
+    chart_metadata_config = domain_config.get("chart_metadata", {})
+
+    if chart_metadata_config:
+        LOGGER.debug("Loaded chart_metadata configuration from configuration.yaml")
+        hass.data[DOMAIN][DATA_CHART_METADATA_CONFIG] = chart_metadata_config
+    else:
+        LOGGER.debug("No chart_metadata configuration found in configuration.yaml")
+        hass.data[DOMAIN][DATA_CHART_METADATA_CONFIG] = {}
 
     return True
 

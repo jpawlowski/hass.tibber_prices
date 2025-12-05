@@ -41,6 +41,7 @@ def get_value_getter_mapping(  # noqa: PLR0913 - needs all calculators as parame
     get_next_avg_n_hours_value: Callable[[int], float | None],
     get_data_timestamp: Callable[[], datetime | None],
     get_chart_data_export_value: Callable[[], str | None],
+    get_chart_metadata_value: Callable[[], str | None],
 ) -> dict[str, Callable]:
     """
     Build mapping from entity key to value getter callable.
@@ -61,6 +62,7 @@ def get_value_getter_mapping(  # noqa: PLR0913 - needs all calculators as parame
         get_next_avg_n_hours_value: Method for next N-hour average forecasts
         get_data_timestamp: Method for data timestamp sensor
         get_chart_data_export_value: Method for chart data export sensor
+        get_chart_metadata_value: Method for chart metadata sensor
 
     Returns:
         Dictionary mapping entity keys to their value getter callables.
@@ -275,4 +277,6 @@ def get_value_getter_mapping(  # noqa: PLR0913 - needs all calculators as parame
         ),
         # Chart data export sensor
         "chart_data_export": get_chart_data_export_value,
+        # Chart metadata sensor
+        "chart_metadata": get_chart_metadata_value,
     }

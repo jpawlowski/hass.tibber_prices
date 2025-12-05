@@ -795,6 +795,14 @@
                     "ready": "Redo",
                     "error": "Fel"
                 }
+            },
+            "chart_metadata": {
+                "name": "Diagrammetadata",
+                "state": {
+                    "pending": "Väntar",
+                    "ready": "Redo",
+                    "error": "Fel"
+                }
             }
         },
         "binary_sensor": {

@@ -1,7 +1,18 @@
 {
     "apexcharts": {
         "title_rating_level": "Preisphasen Tagesverlauf",
-        "title_level": "Preisniveau"
+        "title_level": "Preisniveau",
+        "best_price_period_name": "Beste Preisperiode",
+        "notification": {
+            "metadata_sensor_unavailable": {
+                "title": "Tibber Prices: ApexCharts YAML mit eingeschränkter Funktionalität generiert",
+                "message": "Du hast gerade eine ApexCharts-Card-Konfiguration über die Entwicklerwerkzeuge generiert. Der Chart-Metadaten-Sensor ist aktuell deaktiviert, daher zeigt das generierte YAML nur **Basisfunktionalität** (Auto-Skalierung, fester Gradient bei 50%).\n\n**Für volle Funktionalität** (optimierte Skalierung, dynamische Verlaufsfarben):\n1. [Tibber Prices Integration öffnen](https://my.home-assistant.io/redirect/integration/?domain=tibber_prices)\n2. Aktiviere den 'Chart Metadata' Sensor\n3. **Generiere das YAML erneut** über die Entwicklerwerkzeuge\n4. **Ersetze den alten YAML-Code** in deinem Dashboard durch die neue Version\n\n⚠️ Nur den Sensor zu aktivieren reicht nicht - du musst das YAML neu generieren und ersetzen!"
+            },
+            "missing_cards": {
+                "title": "Tibber Prices: ApexCharts YAML kann nicht verwendet werden",
+                "message": "Du hast gerade eine ApexCharts-Card-Konfiguration über die Entwicklerwerkzeuge generiert, aber das generierte YAML **funktioniert nicht**, weil erforderliche Custom Cards fehlen.\n\n**Fehlende Cards:**\n{cards}\n\n**Um das generierte YAML zu nutzen:**\n1. Klicke auf die obigen Links, um die fehlenden Cards über HACS zu installieren\n2. Starte Home Assistant neu (manchmal erforderlich)\n3. **Generiere das YAML erneut** über die Entwicklerwerkzeuge\n4. Füge das YAML zu deinem Dashboard hinzu\n\n⚠️ Der aktuelle YAML-Code funktioniert nicht, bis alle Cards installiert sind!"
+            }
+        }
     },
     "sensor": {
         "current_interval_price": {
@@ -437,6 +448,11 @@
             "description": "Datenexport für Dashboard-Integrationen",
             "long_description": "Dieser Sensor ruft den get_chartdata-Service mit deiner konfigurierten YAML-Konfiguration auf und stellt das Ergebnis als Entity-Attribute bereit. Der Status zeigt 'ready' wenn Daten verfügbar sind, 'error' bei Fehlern, oder 'pending' vor dem ersten Aufruf. Perfekt für Dashboard-Integrationen wie ApexCharts, die Preisdaten aus Entity-Attributen lesen.",
             "usage_tips": "Konfiguriere die YAML-Parameter in den Integrationsoptionen entsprechend deinem get_chartdata-Service-Aufruf. Der Sensor aktualisiert automatisch bei Preisdaten-Updates (typischerweise nach Mitternacht und wenn morgige Daten eintreffen). Greife auf die Service-Response-Daten direkt über die Entity-Attribute zu - die Struktur entspricht exakt dem, was get_chartdata zurückgibt."
+        },
+        "chart_metadata": {
+            "description": "Leichtgewichtige Metadaten für Diagrammkonfiguration",
+            "long_description": "Liefert wesentliche Diagrammkonfigurationswerte als Sensor-Attribute. Nützlich für jede Diagrammkarte, die Y-Achsen-Grenzen oder Gradientenpositionierung benötigt. Der Sensor ruft get_chartdata im Nur-Metadaten-Modus auf (keine Datenverarbeitung) und extrahiert: yaxis_min, yaxis_max (vorgeschlagener Y-Achsenbereich) und gradient_stop (durchschnittliche Preisposition 0-100%). Der Status spiegelt das Service-Call-Ergebnis wider: 'ready' bei Erfolg, 'error' bei Fehler, 'pending' während der Initialisierung.",
+            "usage_tips": "Konfiguriere über configuration.yaml unter tibber_prices.chart_metadata_config (optional: day, minor_currency, resolution). Der Sensor aktualisiert sich automatisch bei Preisdatenänderungen. Greife auf Metadaten aus Attributen zu: yaxis_min, yaxis_max, gradient_stop. Verwende mit config-template-card oder jedem Tool, das Entity-Attribute liest - perfekt für dynamische Diagrammkonfiguration ohne manuelle Berechnungen."
         }
     },
     "binary_sensor": {

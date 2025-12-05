@@ -18,7 +18,7 @@ Response: YAML configuration dict for ApexCharts card
 
 from __future__ import annotations
 
-from typing import Any, Final
+from typing import TYPE_CHECKING, Any, Final
 
 import voluptuous as vol
 
@@ -35,7 +35,6 @@ from custom_components.tibber_prices.const import (
     format_price_unit_minor,
     get_translation,
 )
-from homeassistant.core import ServiceCall
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_registry import (
@@ -46,8 +45,10 @@ from homeassistant.helpers.entity_registry import (
 )
 
 from .formatters import get_level_translation
-from .get_chartdata import handle_chartdata
 from .helpers import get_entry_and_data
+
+if TYPE_CHECKING:
+    from homeassistant.core import ServiceCall
 
 # Service constants
 APEXCHARTS_YAML_SERVICE_NAME: Final = "get_apexcharts_yaml"
@@ -179,7 +180,90 @@ def _get_current_price_entity(entity_registry: EntityRegistry, entry_id: str) ->
     )
 
 
-async def handle_apexcharts_yaml(call: ServiceCall) -> dict[str, Any]:  # noqa: PLR0912, PLR0915
+def _check_custom_cards_installed(hass: Any) -> dict[str, bool]:
+    """
+    Check if required custom cards are installed via HACS/Lovelace resources.
+
+    Args:
+        hass: Home Assistant instance
+
+    Returns:
+        Dictionary with card names as keys and installation status as bool values
+
+    """
+    installed_cards = {"apexcharts-card": False, "config-template-card": False}
+
+    # Access Lovelace resources via the new API (2026.2+)
+    lovelace_data = hass.data.get("lovelace")
+    if lovelace_data and hasattr(lovelace_data, "resources"):
+        try:
+            # ResourceStorageCollection has async_items() method
+            resources = lovelace_data.resources
+            if hasattr(resources, "async_items") and hasattr(resources, "data") and isinstance(resources.data, dict):
+                # Can't use await here, so we check the internal storage
+                for resource in resources.data.values():
+                    url = resource.get("url", "") if isinstance(resource, dict) else ""
+                    if "apexcharts-card" in url:
+                        installed_cards["apexcharts-card"] = True
+                    if "config-template-card" in url:
+                        installed_cards["config-template-card"] = True
+        except (AttributeError, TypeError):
+            # Fallback: can't determine, assume not installed
+            pass
+
+    return installed_cards
+
+
+def _get_sensor_disabled_notification(language: str) -> dict[str, str]:
+    """Get notification texts for disabled chart metadata sensor."""
+    title = get_translation(["apexcharts", "notification", "metadata_sensor_unavailable", "title"], language)
+    message = get_translation(["apexcharts", "notification", "metadata_sensor_unavailable", "message"], language)
+
+    if not title:
+        title = get_translation(["apexcharts", "notification", "metadata_sensor_unavailable", "title"], "en")
+    if not message:
+        message = get_translation(["apexcharts", "notification", "metadata_sensor_unavailable", "message"], "en")
+
+    if not title:
+        title = "Tibber Prices: Chart Metadata Sensor Disabled"
+    if not message:
+        message = (
+            "The Chart Metadata sensor is currently disabled. "
+            "Enable it to get optimized chart scaling and gradient colors.\n\n"
+            "[Open Tibber Prices Integration](https://my.home-assistant.io/redirect/integration/?domain=tibber_prices)\n\n"
+            "After enabling the sensor, regenerate the ApexCharts YAML."
+        )
+
+    return {"title": title, "message": message}
+
+
+def _get_missing_cards_notification(language: str, missing_cards: list[str]) -> dict[str, str]:
+    """Get notification texts for missing custom cards."""
+    title = get_translation(["apexcharts", "notification", "missing_cards", "title"], language)
+    message = get_translation(["apexcharts", "notification", "missing_cards", "message"], language)
+
+    if not title:
+        title = get_translation(["apexcharts", "notification", "missing_cards", "title"], "en")
+    if not message:
+        message = get_translation(["apexcharts", "notification", "missing_cards", "message"], "en")
+
+    if not title:
+        title = "Tibber Prices: Missing Custom Cards"
+    if not message:
+        message = (
+            "The following custom cards are required but not installed:\n"
+            "{cards}\n\n"
+            "Please click the links above to install them from HACS."
+        )
+
+    # Replace {cards} placeholder
+    cards_list = "\n".join(missing_cards)
+    message = message.replace("{cards}", cards_list)
+
+    return {"title": title, "message": message}
+
+
+async def handle_apexcharts_yaml(call: ServiceCall) -> dict[str, Any]:  # noqa: PLR0912, PLR0915, C901
     """
     Return YAML snippet for ApexCharts card.
 
@@ -313,9 +397,7 @@ async def handle_apexcharts_yaml(call: ServiceCall) -> dict[str, Any]:  # noqa: 
     # ApexCharts card requires direct entity data for extremas feature, not dynamically generated data
 
     # Get translated name for best price periods (needed for tooltip formatter)
-    best_price_name = (
-        get_translation(["binary_sensor", "best_price_period", "name"], user_language) or "Best Price Period"
-    )
+    best_price_name = get_translation(["apexcharts", "best_price_period_name"], user_language) or "Best Price Period"
 
     # Add best price period highlight overlay (vertical bands from top to bottom)
     if highlight_best_price and entity_map:
@@ -549,52 +631,96 @@ async def handle_apexcharts_yaml(call: ServiceCall) -> dict[str, Any]:  # noqa: 
                 if current_price_sensor:
                     trigger_entities.append(current_price_sensor)
 
-                # Pre-calculate metadata server-side for dynamic yaxis and gradient
-                # This avoids async issues with config-template-card variables
-                # Create service call to get metadata
-                metadata_call = ServiceCall(
-                    hass=hass,
-                    domain="tibber_prices",
-                    service="get_chartdata",
-                    data={
-                        "entry_id": entry_id,
-                        "minor_currency": True,
-                        "metadata": "only",
-                    },
-                    context=call.context,
-                    return_response=True,
+                # Get metadata from chart_metadata sensor (preferred) or static fallback
+                # The chart_metadata sensor provides yaxis_min, yaxis_max, and gradient_stop
+                # as attributes, avoiding the need for async service calls in templates
+                chart_metadata_sensor = next(
+                    (
+                        entity.entity_id
+                        for entity in entity_registry.entities.values()
+                        if entity.config_entry_id == entry_id
+                        and entity.unique_id
+                        and entity.unique_id.endswith("_chart_metadata")
+                    ),
+                    None,
                 )
-                metadata_response = await handle_chartdata(metadata_call)
-                metadata = metadata_response.get("metadata", {})
 
-                # Extract values with fallbacks
-                yaxis_min = metadata.get("yaxis_suggested", {}).get("min", 0)
-                yaxis_max = metadata.get("yaxis_suggested", {}).get("max", 100)
-                avg_position = metadata.get("price_stats", {}).get("combined", {}).get("avg_position", 0.5)
-                gradient_stop = round(avg_position * 100)
+                # Track warning if sensor not available
+                metadata_warning = None
+                use_sensor_metadata = False
 
-                return {
+                # Check if sensor exists and is ready
+                if chart_metadata_sensor:
+                    metadata_state = hass.states.get(chart_metadata_sensor)
+                    if metadata_state and metadata_state.state == "ready":
+                        # Sensor ready - will use template variables
+                        use_sensor_metadata = True
+                    else:
+                        # Sensor not ready - will show notification
+                        metadata_warning = True
+                else:
+                    # Sensor not found - will show notification
+                    metadata_warning = True
+
+                # Set fallback values if sensor not used
+                if not use_sensor_metadata:
+                    gradient_stop = 50
+
+                    # Build yaxis config (only include min/max if not None)
+                    yaxis_price_config = {
+                        "id": "price",
+                        "decimals": 2,
+                        "apex_config": {
+                            "title": {"text": price_unit},
+                            "decimalsInFloat": 0,
+                            "forceNiceScale": True,
+                        },
+                    }
+
+                    gradient_stops = [gradient_stop, 100]
+                    entities_list = trigger_entities
+                else:
+                    # Use template variables to read sensor dynamically
+                    # Add chart_metadata sensor to entities list
+                    entities_list = [*trigger_entities, chart_metadata_sensor]
+
+                    # Build yaxis config with template variables
+                    yaxis_price_config = {
+                        "id": "price",
+                        "decimals": 2,
+                        "min": "${v_yaxis_min}",
+                        "max": "${v_yaxis_max}",
+                        "apex_config": {
+                            "title": {"text": price_unit},
+                            "decimalsInFloat": 0,
+                            "forceNiceScale": False,
+                        },
+                    }
+
+                    gradient_stops = ["${v_gradient_stop}", 100]
+
+                # Build variables dict
+                variables_dict = {"v_graph_span": template_graph_span}
+                if use_sensor_metadata:
+                    # Add dynamic metadata variables from sensor
+                    variables_dict.update(
+                        {
+                            "v_yaxis_min": f"states['{chart_metadata_sensor}'].attributes.yaxis_min",
+                            "v_yaxis_max": f"states['{chart_metadata_sensor}'].attributes.yaxis_max",
+                            "v_gradient_stop": f"states['{chart_metadata_sensor}'].attributes.gradient_stop",
+                        }
+                    )
+
+                result_dict = {
                     "type": "custom:config-template-card",
-                    "variables": {
-                        "v_graph_span": template_graph_span,
-                    },
-                    "entities": trigger_entities,
+                    "variables": variables_dict,
+                    "entities": entities_list,
                     "card": {
                         **result,
                         "span": {"start": "minute", "offset": "-120min"},
                         "graph_span": "${v_graph_span}",
                         "yaxis": [
-                            {
-                                "id": "price",
-                                "decimals": 2,
-                                "min": yaxis_min,
-                                "max": yaxis_max,
-                                "apex_config": {
-                                    "title": {"text": price_unit},
-                                    "decimalsInFloat": 0,
-                                    "forceNiceScale": False,
-                                },
-                            },
+                            yaxis_price_config,
                             {
                                 "id": "highlight",
                                 "min": 0,
@@ -615,12 +741,53 @@ async def handle_apexcharts_yaml(call: ServiceCall) -> dict[str, Any]:  # noqa: 
                                     "opacityFrom": 0.7,
                                     "opacityTo": 0.25,
                                     "gradientToColors": ["#transparent"],
-                                    "stops": [gradient_stop, 100],
+                                    "stops": gradient_stops,
                                 },
                             },
                         },
                     },
                 }
+
+                # Create separate notifications for different issues
+                if metadata_warning:
+                    # Notification 1: Chart Metadata Sensor disabled
+                    notification_texts = _get_sensor_disabled_notification(user_language)
+                    await hass.services.async_call(
+                        "persistent_notification",
+                        "create",
+                        {
+                            "message": notification_texts["message"],
+                            "title": notification_texts["title"],
+                            "notification_id": f"tibber_prices_chart_metadata_{entry_id}",
+                        },
+                    )
+
+                # Check which custom cards are installed (always check, independent of sensor state)
+                installed_cards = _check_custom_cards_installed(hass)
+                missing_cards = [
+                    "[apexcharts-card](https://my.home-assistant.io/redirect/hacs_repository/?owner=RomRider&repository=apexcharts-card)"
+                    if not installed_cards["apexcharts-card"]
+                    else None,
+                    "[config-template-card](https://my.home-assistant.io/redirect/hacs_repository/?owner=iantrich&repository=config-template-card)"
+                    if not installed_cards["config-template-card"]
+                    else None,
+                ]
+                missing_cards = [card for card in missing_cards if card]  # Filter out None
+
+                if missing_cards:
+                    # Notification 2: Missing Custom Cards
+                    notification_texts = _get_missing_cards_notification(user_language, missing_cards)
+                    await hass.services.async_call(
+                        "persistent_notification",
+                        "create",
+                        {
+                            "message": notification_texts["message"],
+                            "title": notification_texts["title"],
+                            "notification_id": f"tibber_prices_missing_cards_{entry_id}",
+                        },
+                    )
+
+                return result_dict
             # Rolling window modes (day is None or rolling_window): Dynamic offset
             # Add graph_span to base config (48h window)
             result["graph_span"] = graph_span_value
@@ -630,36 +797,90 @@ async def handle_apexcharts_yaml(call: ServiceCall) -> dict[str, Any]:  # noqa: 
             # If 'off' (no tomorrow data) → offset +0d (show yesterday+today)
             template_value = f"states['{tomorrow_data_sensor}'].state === 'on' ? '+1d' : '+0d'"
 
-            # Pre-calculate metadata server-side for dynamic yaxis and gradient
-            # This avoids async issues with config-template-card variables
-            # Create service call to get metadata
-            metadata_call = ServiceCall(
-                hass=hass,
-                domain="tibber_prices",
-                service="get_chartdata",
-                data={
-                    "entry_id": entry_id,
-                    "minor_currency": True,
-                    "metadata": "only",
-                },
-                context=call.context,
-                return_response=True,
+            # Get metadata from chart_metadata sensor (preferred) or static fallback
+            # The chart_metadata sensor provides yaxis_min, yaxis_max, and gradient_stop
+            # as attributes, avoiding the need for async service calls in templates
+            chart_metadata_sensor = next(
+                (
+                    entity.entity_id
+                    for entity in entity_registry.entities.values()
+                    if entity.config_entry_id == entry_id
+                    and entity.unique_id
+                    and entity.unique_id.endswith("_chart_metadata")
+                ),
+                None,
             )
-            metadata_response = await handle_chartdata(metadata_call)
-            metadata = metadata_response.get("metadata", {})
 
-            # Extract values with fallbacks
-            yaxis_min = metadata.get("yaxis_suggested", {}).get("min", 0)
-            yaxis_max = metadata.get("yaxis_suggested", {}).get("max", 100)
-            avg_position = metadata.get("price_stats", {}).get("combined", {}).get("avg_position", 0.5)
-            gradient_stop = round(avg_position * 100)
+            # Track warning if sensor not available
+            metadata_warning = None
+            use_sensor_metadata = False
 
-            return {
+            # Check if sensor exists and is ready
+            if chart_metadata_sensor:
+                metadata_state = hass.states.get(chart_metadata_sensor)
+                if metadata_state and metadata_state.state == "ready":
+                    # Sensor ready - will use template variables
+                    use_sensor_metadata = True
+                else:
+                    # Sensor not ready - will show notification
+                    metadata_warning = True
+            else:
+                # Sensor not found - will show notification
+                metadata_warning = True
+
+            # Set fallback values if sensor not used
+            if not use_sensor_metadata:
+                gradient_stop = 50
+
+                # Build yaxis config (only include min/max if not None)
+                yaxis_price_config = {
+                    "id": "price",
+                    "decimals": 2,
+                    "apex_config": {
+                        "title": {"text": price_unit},
+                        "decimalsInFloat": 0,
+                        "forceNiceScale": True,
+                    },
+                }
+
+                gradient_stops = [gradient_stop, 100]
+                entities_list = [tomorrow_data_sensor]
+            else:
+                # Use template variables to read sensor dynamically
+                # Add chart_metadata sensor to entities list
+                entities_list = [tomorrow_data_sensor, chart_metadata_sensor]
+
+                # Build yaxis config with template variables
+                yaxis_price_config = {
+                    "id": "price",
+                    "decimals": 2,
+                    "min": "${v_yaxis_min}",
+                    "max": "${v_yaxis_max}",
+                    "apex_config": {
+                        "title": {"text": price_unit},
+                        "decimalsInFloat": 0,
+                        "forceNiceScale": False,
+                    },
+                }
+
+                gradient_stops = ["${v_gradient_stop}", 100]
+
+            # Build variables dict
+            variables_dict = {"v_offset": template_value}
+            if use_sensor_metadata:
+                # Add dynamic metadata variables from sensor
+                variables_dict.update(
+                    {
+                        "v_yaxis_min": f"states['{chart_metadata_sensor}'].attributes.yaxis_min",
+                        "v_yaxis_max": f"states['{chart_metadata_sensor}'].attributes.yaxis_max",
+                        "v_gradient_stop": f"states['{chart_metadata_sensor}'].attributes.gradient_stop",
+                    }
+                )
+
+            result_dict = {
                 "type": "custom:config-template-card",
-                "variables": {
-                    "v_offset": template_value,
-                },
-                "entities": [tomorrow_data_sensor],
+                "variables": variables_dict,
+                "entities": entities_list,
                 "card": {
                     **result,
                     "span": {
@@ -667,17 +888,7 @@ async def handle_apexcharts_yaml(call: ServiceCall) -> dict[str, Any]:  # noqa: 
                         "offset": "${v_offset}",
                     },
                     "yaxis": [
-                        {
-                            "id": "price",
-                            "decimals": 2,
-                            "min": yaxis_min,
-                            "max": yaxis_max,
-                            "apex_config": {
-                                "title": {"text": price_unit},
-                                "decimalsInFloat": 0,
-                                "forceNiceScale": False,
-                            },
-                        },
+                        yaxis_price_config,
                         {
                             "id": "highlight",
                             "min": 0,
@@ -698,12 +909,53 @@ async def handle_apexcharts_yaml(call: ServiceCall) -> dict[str, Any]:  # noqa: 
                                 "opacityFrom": 0.7,
                                 "opacityTo": 0.25,
                                 "gradientToColors": ["#transparent"],
-                                "stops": [gradient_stop, 100],
+                                "stops": gradient_stops,
                             },
                         },
                     },
                 },
             }
+
+            # Create separate notifications for different issues
+            if metadata_warning:
+                # Notification 1: Chart Metadata Sensor disabled
+                notification_texts = _get_sensor_disabled_notification(user_language)
+                await hass.services.async_call(
+                    "persistent_notification",
+                    "create",
+                    {
+                        "message": notification_texts["message"],
+                        "title": notification_texts["title"],
+                        "notification_id": f"tibber_prices_chart_metadata_{entry_id}",
+                    },
+                )
+
+            # Check which custom cards are installed (always check, independent of sensor state)
+            installed_cards = _check_custom_cards_installed(hass)
+            missing_cards = [
+                "[apexcharts-card](https://my.home-assistant.io/redirect/hacs_repository/?owner=RomRider&repository=apexcharts-card)"
+                if not installed_cards["apexcharts-card"]
+                else None,
+                "[config-template-card](https://my.home-assistant.io/redirect/hacs_repository/?owner=iantrich&repository=config-template-card)"
+                if not installed_cards["config-template-card"]
+                else None,
+            ]
+            missing_cards = [card for card in missing_cards if card]  # Filter out None
+
+            if missing_cards:
+                # Notification 2: Missing Custom Cards
+                notification_texts = _get_missing_cards_notification(user_language, missing_cards)
+                await hass.services.async_call(
+                    "persistent_notification",
+                    "create",
+                    {
+                        "message": notification_texts["message"],
+                        "title": notification_texts["title"],
+                        "notification_id": f"tibber_prices_missing_cards_{entry_id}",
+                    },
+                )
+
+            return result_dict
 
         # Fallback if sensor not found
         if day == "rolling_window_autozoom":

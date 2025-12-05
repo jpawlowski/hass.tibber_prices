@@ -843,6 +843,7 @@ DIAGNOSTIC_SENSORS = (
         options=["cached", "fresh", "refreshing", "searching_tomorrow", "turnover_pending", "error"],
         state_class=None,  # Status value: no statistics
         entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=True,  # Critical for debugging
     ),
     # Home metadata from user data
     SensorEntityDescription(
@@ -1002,6 +1003,16 @@ DIAGNOSTIC_SENSORS = (
         options=["pending", "ready", "error"],
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,  # Opt-in
+    ),
+    SensorEntityDescription(
+        key="chart_metadata",
+        translation_key="chart_metadata",
+        name="Chart Metadata",
+        icon="mdi:chart-box-outline",
+        device_class=SensorDeviceClass.ENUM,
+        options=["pending", "ready", "error"],
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=True,  # Critical for chart features
     ),
 )
 

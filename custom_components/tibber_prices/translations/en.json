@@ -795,6 +795,14 @@
                     "ready": "Ready",
                     "error": "Error"
                 }
+            },
+            "chart_metadata": {
+                "name": "Chart Metadata",
+                "state": {
+                    "pending": "Pending",
+                    "ready": "Ready",
+                    "error": "Error"
+                }
             }
         },
         "binary_sensor": {

@@ -795,6 +795,14 @@
                     "ready": "Klar",
                     "error": "Feil"
                 }
+            },
+            "chart_metadata": {
+                "name": "Diagrammetadata",
+                "state": {
+                    "pending": "Venter",
+                    "ready": "Klar",
+                    "error": "Feil"
+                }
             }
         },
         "binary_sensor": {

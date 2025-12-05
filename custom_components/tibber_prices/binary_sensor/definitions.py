@@ -38,6 +38,7 @@ ENTITY_DESCRIPTIONS = (
         icon="mdi:calendar-check",
         device_class=None,  # No specific device_class = shows generic "On/Off"
         entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=True,  # Critical for automations
     ),
     BinarySensorEntityDescription(
         key="has_ventilation_system",

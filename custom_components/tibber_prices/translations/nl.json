@@ -785,6 +785,14 @@
                     "error": "Fout"
                 }
             },
+            "chart_metadata": {
+                "name": "Grafiekmetadata",
+                "state": {
+                    "pending": "In afwachting",
+                    "ready": "Klaar",
+                    "error": "Fout"
+                }
+            },
             "data_lifecycle_status": {
                 "name": "Datalevenscyclus-status",
                 "state": {

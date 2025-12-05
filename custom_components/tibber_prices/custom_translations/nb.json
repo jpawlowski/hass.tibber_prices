@@ -1,7 +1,18 @@
 {
     "apexcharts": {
-        "title_rating_level": "Prisfaser daglig fremgang",
-        "title_level": "Prisnivå"
+        "title_rating_level": "Prisfaser dagsfremdrift",
+        "title_level": "Prisnivå",
+        "best_price_period_name": "Beste prisperiode",
+        "notification": {
+            "metadata_sensor_unavailable": {
+                "title": "Tibber Prices: ApexCharts YAML generert med begrenset funksjonalitet",
+                "message": "Du har nettopp generert en ApexCharts-kort-konfigurasjon via Utviklerverktøy. Diagram-metadata-sensoren er deaktivert, så den genererte YAML-en vil bare vise **grunnleggende funksjonalitet** (auto-skalering, fast gradient på 50%).\n\n**For full funksjonalitet** (optimert skalering, dynamiske gradientfarger):\n1. [Åpne Tibber Prices-integrasjonen](https://my.home-assistant.io/redirect/integration/?domain=tibber_prices)\n2. Aktiver 'Chart Metadata'-sensoren\n3. **Generer YAML-en på nytt** via Utviklerverktøy\n4. **Erstatt den gamle YAML-en** i dashbordet ditt med den nye versjonen\n\n⚠️ Det er ikke nok å bare aktivere sensoren - du må regenerere og erstatte YAML-koden!"
+            },
+            "missing_cards": {
+                "title": "Tibber Prices: ApexCharts YAML kan ikke brukes",
+                "message": "Du har nettopp generert en ApexCharts-kort-konfigurasjon via Utviklerverktøy, men den genererte YAML-en **vil ikke fungere** fordi nødvendige tilpassede kort mangler.\n\n**Manglende kort:**\n{cards}\n\n**For å bruke den genererte YAML-en:**\n1. Klikk på lenkene ovenfor for å installere de manglende kortene fra HACS\n2. Start Home Assistant på nytt (noen ganger nødvendig)\n3. **Generer YAML-en på nytt** via Utviklerverktøy\n4. Legg til YAML-en i dashbordet ditt\n\n⚠️ Den nåværende YAML-koden vil ikke fungere før alle kort er installert!"
+            }
+        }
     },
     "sensor": {
         "current_interval_price": {
@@ -437,6 +448,11 @@
             "description": "Dataeksport for dashboardintegrasjoner",
             "long_description": "Denne sensoren kaller get_chartdata-tjenesten med din konfigurerte YAML-konfigurasjon og eksponerer resultatet som entitetsattributter. Status viser 'ready' når data er tilgjengelig, 'error' ved feil, eller 'pending' før første kall. Perfekt for dashboardintegrasjoner som ApexCharts som trenger å lese prisdata fra entitetsattributter.",
             "usage_tips": "Konfigurer YAML-parametrene i integrasjonsinnstillingene for å matche get_chartdata-tjenestekallet ditt. Sensoren vil automatisk oppdatere når prisdata oppdateres (typisk etter midnatt og når morgendagens data ankommer). Få tilgang til tjenesteresponsdataene direkte fra entitetens attributter - strukturen matcher nøyaktig det get_chartdata returnerer."
+        },
+        "chart_metadata": {
+            "description": "Lettvekts metadata for diagramkonfigurasjon",
+            "long_description": "Gir essensielle diagramkonfigurasjonsverdier som sensorattributter. Nyttig for ethvert diagramkort som trenger Y-aksegrenser eller gradientposisjonering. Sensoren kaller get_chartdata med kun-metadata-modus (ingen databehandling) og trekker ut: yaxis_min, yaxis_max (foreslått Y-akseområde) og gradient_stop (gjennomsnittlig prisposisjon 0-100%). Status reflekterer tjenestekallresultatet: 'ready' ved suksess, 'error' ved feil, 'pending' under initialisering.",
+            "usage_tips": "Konfigurer via configuration.yaml under tibber_prices.chart_metadata_config (valgfritt: day, minor_currency, resolution). Sensoren oppdateres automatisk når prisdata endres. Få tilgang til metadata fra attributter: yaxis_min, yaxis_max, gradient_stop. Bruk med config-template-card eller ethvert verktøy som leser entitetsattributter - perfekt for dynamisk diagramkonfigurasjon uten manuelle beregninger."
         }
     },
     "binary_sensor": {

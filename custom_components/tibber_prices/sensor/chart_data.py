@@ -38,6 +38,9 @@ async def call_chartdata_service_async(
     # Add required entry_id parameter
     service_params["entry_id"] = config_entry.entry_id
 
+    # Make sure metadata is never requested for this sensor
+    service_params["metadata"] = "none"
+
     # Call get_chartdata service using official HA service system
     try:
         response = await hass.services.async_call(
