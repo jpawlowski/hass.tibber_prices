@@ -152,7 +152,7 @@ Based on **absolute price ranges** (calculated from daily min/max):
 
 ## Dynamic Y-Axis Scaling
 
-Rolling window modes (3 & 4) automatically integrate with the `chart_metadata` sensor for optimal visualization:
+Rolling window modes (2 & 3) automatically integrate with the `chart_metadata` sensor for optimal visualization:
 
 **Without chart_metadata sensor (disabled):**
 ```
@@ -175,18 +175,12 @@ Rolling window modes (3 & 4) automatically integrate with the `chart_metadata` s
 18             28 ct   ← Optimal range
 ```
 
-**How to enable:**
+**Requirements:**
 
-1. Enable `sensor.tibber_home_chart_metadata` in entity settings
-2. Add configuration to `configuration.yaml`:
-   ```yaml
-   tibber_prices:
-       chart_metadata_config:
-           day: rolling_window
-           minor_currency: true
-   ```
-3. Restart Home Assistant
-4. Rolling window charts automatically use dynamic scaling!
+- ✅ The `sensor.tibber_home_chart_metadata` must be **enabled** (it's enabled by default!)
+- ✅ That's it! The generated YAML automatically uses the sensor for dynamic scaling
+
+**Important:** Do NOT disable the `chart_metadata` sensor if you want optimal Y-axis scaling in rolling window modes!
 
 **Note:** Fixed day views (`today`, `tomorrow`) use ApexCharts' built-in auto-scaling and don't require the metadata sensor.
 

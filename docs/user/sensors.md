@@ -34,16 +34,14 @@ Coming soon...
 ### Chart Metadata
 
 **Entity ID:** `sensor.tibber_home_NAME_chart_metadata`
-**Default State:** Disabled (must be manually enabled)
 
-> **✨ New Feature**: This sensor provides dynamic chart configuration metadata for optimal visualization. Perfect for use with ApexCharts cards!
+> **✨ New Feature**: This sensor provides dynamic chart configuration metadata for optimal visualization. Perfect for use with the `get_apexcharts_yaml` action!
 
-This diagnostic sensor provides essential chart configuration values as sensor attributes, enabling dynamic Y-axis scaling and optimal chart appearance without manual calculations.
+This diagnostic sensor provides essential chart configuration values as sensor attributes, enabling dynamic Y-axis scaling and optimal chart appearance in rolling window modes.
 
 **Key Features:**
 
 -   **Dynamic Y-Axis Bounds**: Automatically calculates optimal `yaxis_min` and `yaxis_max` for your price data
--   **Configurable via configuration.yaml**: Set parameters like `day`, `minor_currency`, `resolution` under `tibber_prices.chart_metadata_config`
 -   **Automatic Updates**: Refreshes when price data changes (coordinator updates)
 -   **Lightweight**: Metadata-only mode (no data processing) for fast response
 -   **State Indicator**: Shows `pending` (initialization), `ready` (data available), or `error` (service call failed)
@@ -57,38 +55,11 @@ This diagnostic sensor provides essential chart configuration values as sensor a
 -   **`resolution`**: Interval duration in minutes (usually 15)
 -   **`error`**: Error message if service call failed
 
-**Configuration:**
+**Usage:**
 
-Add to your `configuration.yaml`:
+The `tibber_prices.get_apexcharts_yaml` action **automatically uses this sensor** for dynamic Y-axis scaling in `rolling_window` and `rolling_window_autozoom` modes! No manual configuration needed - just enable the action's result with `config-template-card` and the sensor provides optimal Y-axis bounds automatically.
 
-```yaml
-tibber_prices:
-    chart_metadata_config:
-        day: today # Options: yesterday, today, tomorrow, rolling_window
-        minor_currency: true # Use cents/øre instead of EUR/NOK
-        resolution: quarter_hourly # Default: quarter_hourly
-```
-
-**Usage with config-template-card:**
-
-The sensor works seamlessly with `config-template-card` to create dynamic ApexCharts configurations:
-
-```yaml
-type: custom:config-template-card
-entities:
-    - sensor.tibber_home_chart_metadata
-card:
-    type: custom:apexcharts-card
-    apex_config:
-        yaxis:
-            min: ${states['sensor.tibber_home_chart_metadata'].attributes.yaxis_min}
-            max: ${states['sensor.tibber_home_chart_metadata'].attributes.yaxis_max}
-    # ... rest of your chart config
-```
-
-**Integration with get_apexcharts_yaml Service:**
-
-The `tibber_prices.get_apexcharts_yaml` service **automatically uses this sensor** for dynamic Y-axis scaling in `rolling_window` and `rolling_window_autozoom` modes! See the [Actions Guide](actions.md) for details.
+See the **[Chart Examples Guide](chart-examples.md)** for practical examples!
 
 ---
 
