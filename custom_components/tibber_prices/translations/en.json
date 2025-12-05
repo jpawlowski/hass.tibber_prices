@@ -933,7 +933,7 @@
                 },
                 "data_key": {
                     "name": "Data Key",
-                    "description": "Custom name for the top-level data key in the response. Defaults to 'data' if not specified. For ApexCharts compatibility with Array of Arrays, use 'points'."
+                    "description": "Custom name for the top-level data key in the response. Defaults to 'data' if not specified."
                 },
                 "include_level": {
                     "name": "Include Level",
@@ -994,6 +994,10 @@
                 "average_field": {
                     "name": "Average Field Name",
                     "description": "Custom name for the average field in the output. Defaults to 'average' if not specified. Only used when include_average is enabled."
+                },
+                "metadata": {
+                    "name": "Metadata",
+                    "description": "Control metadata inclusion in the response. 'include' (default): Returns both chart data and metadata with price statistics, currency info, Y-axis suggestions, and time range. 'only': Returns only metadata without processing chart data (fast, useful for dynamic Y-axis configuration). 'none': Returns only chart data without metadata."
                 }
             }
         },
@@ -1068,6 +1072,13 @@
             "options": {
                 "best_price": "Best Price Periods",
                 "peak_price": "Peak Price Periods"
+            }
+        },
+        "metadata": {
+            "options": {
+                "include": "Include (data + metadata)",
+                "only": "Only metadata",
+                "none": "None (data only)"
             }
         },
         "volatility": {

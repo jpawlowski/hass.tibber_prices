@@ -173,6 +173,16 @@ get_chartdata:
           example: prices
           selector:
             text:
+        metadata:
+          required: false
+          default: include
+          selector:
+            select:
+              options:
+                - include
+                - only
+                - none
+              translation_key: metadata
     arrays_of_objects:
       collapsed: true
       fields:

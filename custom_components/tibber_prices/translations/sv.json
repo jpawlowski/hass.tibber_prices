@@ -991,9 +991,13 @@
                     "name": "Genomsnittsfältsnamn",
                     "description": "Anpassat namn för genomsnittsfältet i utdata. Standard är 'average'. Används endast när include_average är aktiverad."
                 },
+                "metadata": {
+                    "name": "Metadata",
+                    "description": "Styr metadata-inkludering i svaret. 'include' (standard): Returnerar både diagramdata och metadata med prisstatistik, valutainformation, Y-axelförslag och tidsperiod. 'only': Returnerar endast metadata utan att bearbeta diagramdata (snabbt, användbart för dynamisk Y-axel konfiguration). 'none': Returnerar endast diagramdata utan metadata."
+                },
                 "data_key": {
                     "name": "Datanyckel",
-                    "description": "Anpassat namn för datanyckeln på toppnivå i svaret. Standard är 'data' om inte angivet. För ApexCharts-kompatibilitet med Array av arrayer, använd 'points'."
+                    "description": "Anpassat namn för datanyckeln på toppnivå i svaret. Standard är 'data' om inte angivet."
                 }
             }
         },
@@ -1068,6 +1072,13 @@
             "options": {
                 "best_price": "Bästa prisperioder",
                 "peak_price": "Topp prisperioder"
+            }
+        },
+        "metadata": {
+            "options": {
+                "include": "Inkludera (data + metadata)",
+                "only": "Endast metadata",
+                "none": "Ingen (endast data)"
             }
         },
         "volatility": {

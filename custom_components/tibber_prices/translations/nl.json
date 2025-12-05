@@ -991,9 +991,13 @@
                     "name": "Gemiddelde veld-naam",
                     "description": "Aangepaste naam voor het gemiddelde veld in de uitvoer. Standaard is 'average'. Alleen gebruikt wanneer include_average is ingeschakeld."
                 },
+                "metadata": {
+                    "name": "Metadata",
+                    "description": "Beheer metadata-opname in het antwoord. 'include' (standaard): Retourneert zowel grafiekdata als metadata met prijsstatistieken, valuta-info, Y-as suggesties en tijdsbereik. 'only': Retourneert alleen metadata zonder grafiekdata te verwerken (snel, handig voor dynamische Y-as configuratie). 'none': Retourneert alleen grafiekdata zonder metadata."
+                },
                 "data_key": {
                     "name": "Gegevenssleutel",
-                    "description": "Aangepaste naam voor de gegevenssleutel op het hoogste niveau in het antwoord. Standaard is 'data' als niet opgegeven. Voor ApexCharts-compatibiliteit met Array van arrays, gebruik 'points'."
+                    "description": "Aangepaste naam voor de gegevenssleutel op het hoogste niveau in het antwoord. Standaard is 'data' als niet opgegeven."
                 }
             }
         },
@@ -1068,6 +1072,13 @@
             "options": {
                 "best_price": "Beste prijsperioden",
                 "peak_price": "Piek prijsperioden"
+            }
+        },
+        "metadata": {
+            "options": {
+                "include": "Opnemen (data + metadata)",
+                "only": "Alleen metadata",
+                "none": "Geen (alleen data)"
             }
         },
         "volatility": {

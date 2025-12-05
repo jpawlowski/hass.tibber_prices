@@ -18,7 +18,7 @@ Response: YAML configuration dict for ApexCharts card
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, Final
+from typing import Any, Final
 
 import voluptuous as vol
 
@@ -35,6 +35,7 @@ from custom_components.tibber_prices.const import (
     format_price_unit_minor,
     get_translation,
 )
+from homeassistant.core import ServiceCall
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_registry import (
@@ -45,10 +46,8 @@ from homeassistant.helpers.entity_registry import (
 )
 
 from .formatters import get_level_translation
+from .get_chartdata import handle_chartdata
 from .helpers import get_entry_and_data
-
-if TYPE_CHECKING:
-    from homeassistant.core import ServiceCall
 
 # Service constants
 APEXCHARTS_YAML_SERVICE_NAME: Final = "get_apexcharts_yaml"
@@ -261,21 +260,41 @@ async def handle_apexcharts_yaml(call: ServiceCall) -> dict[str, Any]:  # noqa: 
         # For rolling_window and rolling_window_autozoom, omit day parameter (dynamic selection)
         day_param = "" if day in ("rolling_window", "rolling_window_autozoom", None) else f"day: ['{day}'], "
 
-        data_generator = (
-            f"const response = await hass.callWS({{ "
-            f"type: 'call_service', "
-            f"domain: 'tibber_prices', "
-            f"service: 'get_chartdata', "
-            f"return_response: true, "
-            f"service_data: {{ entry_id: '{entry_id}', {day_param}{filter_param}, "
-            f"output_format: 'array_of_arrays', insert_nulls: 'segments', minor_currency: true, "
-            f"connect_segments: true }} }}); "
-            f"return response.response.data;"
-        )
-        # All series use same configuration (no extremas on data_generator series)
-        # Hide all levels in header since data_generator series don't show meaningful state values
-        # (the entity state is the min/max/avg price, not the current price for this level)
-        show_config = {"legend_value": False, "in_header": False}
+        # For rolling window modes, we'll capture metadata for dynamic config
+        # For static day modes, just return data array
+        if day in ("rolling_window", "rolling_window_autozoom", None):
+            data_generator = (
+                f"const response = await hass.callWS({{ "
+                f"type: 'call_service', "
+                f"domain: 'tibber_prices', "
+                f"service: 'get_chartdata', "
+                f"return_response: true, "
+                f"service_data: {{ entry_id: '{entry_id}', {day_param}{filter_param}, "
+                f"output_format: 'array_of_arrays', insert_nulls: 'segments', minor_currency: true, "
+                f"connect_segments: true }} }}); "
+                f"return response.response.data;"
+            )
+        else:
+            # Static day modes: just return data (no metadata needed)
+            data_generator = (
+                f"const response = await hass.callWS({{ "
+                f"type: 'call_service', "
+                f"domain: 'tibber_prices', "
+                f"service: 'get_chartdata', "
+                f"return_response: true, "
+                f"service_data: {{ entry_id: '{entry_id}', {day_param}{filter_param}, "
+                f"output_format: 'array_of_arrays', insert_nulls: 'segments', minor_currency: true, "
+                f"connect_segments: true }} }}); "
+                f"return response.response.data;"
+            )
+        # Configure show options based on level_type and level_key
+        # rating_level LOW/HIGH: Show raw state in header (entity state = min/max price of day)
+        # rating_level NORMAL: Hide from header (not meaningful as extrema)
+        # level (VERY_CHEAP/CHEAP/etc): Hide from header (entity state is aggregated value)
+        if level_type == "rating_level" and level_key in (PRICE_RATING_LOW, PRICE_RATING_HIGH):
+            show_config = {"legend_value": False, "in_header": "raw"}
+        else:
+            show_config = {"legend_value": False, "in_header": False}
 
         series.append(
             {
@@ -286,13 +305,12 @@ async def handle_apexcharts_yaml(call: ServiceCall) -> dict[str, Any]:  # noqa: 
                 "yaxis_id": "price",
                 "show": show_config,
                 "data_generator": data_generator,
-                "stroke_width": 1,
+                "stroke_width": 1.5,
             }
         )
 
     # Note: Extrema markers don't work with data_generator approach
-    # ApexCharts requires entity time-series data for extremas feature
-    # Min/Max sensors are single values, not time-series
+    # ApexCharts card requires direct entity data for extremas feature, not dynamically generated data
 
     # Get translated name for best price periods (needed for tooltip formatter)
     best_price_name = (
@@ -334,12 +352,11 @@ async def handle_apexcharts_yaml(call: ServiceCall) -> dict[str, Any]:  # noqa: 
                 "entity": best_price_entity,
                 "name": best_price_name,
                 "type": "area",
-                "color": "rgba(46, 204, 113, 0.2)",  # Semi-transparent green
+                "color": "rgba(46, 204, 113, 0.05)",  # Ultra-subtle green overlay (barely visible)
                 "yaxis_id": "highlight",  # Use separate Y-axis (0-1) for full-height overlay
                 "show": {"legend_value": False, "in_header": False, "in_legend": False},
                 "data_generator": best_price_generator,
                 "stroke_width": 0,
-                "curve": "stepline",
             }
         )
 
@@ -391,7 +408,7 @@ async def handle_apexcharts_yaml(call: ServiceCall) -> dict[str, Any]:  # noqa: 
         "header": {
             "show": True,
             "title": title,
-            "show_states": True,
+            "show_states": False,
         },
         "apex_config": {
             "chart": {
@@ -399,16 +416,16 @@ async def handle_apexcharts_yaml(call: ServiceCall) -> dict[str, Any]:  # noqa: 
                 "toolbar": {"show": True, "tools": {"zoom": True, "pan": True}},
                 "zoom": {"enabled": True},
             },
-            "stroke": {"curve": "stepline", "width": 2},
+            "stroke": {"curve": "stepline"},
             "fill": {
                 "type": "gradient",
-                "opacity": 0.4,
+                "opacity": 0.45,
                 "gradient": {
-                    "shade": "dark",
+                    "shade": "light",
                     "type": "vertical",
-                    "shadeIntensity": 0.5,
+                    "shadeIntensity": 0.2,
                     "opacityFrom": 0.7,
-                    "opacityTo": 0.2,
+                    "opacityTo": 0.25,
                 },
             },
             "dataLabels": {"enabled": False},
@@ -418,18 +435,21 @@ async def handle_apexcharts_yaml(call: ServiceCall) -> dict[str, Any]:  # noqa: 
             },
             "legend": {
                 "show": False,
-                "position": "top",
-                "horizontalAlign": "left",
-                "markers": {"radius": 2},
+                "position": "bottom",
+                "horizontalAlign": "center",
             },
             "grid": {
                 "show": True,
                 "borderColor": "#f5f5f5",
                 "strokeDashArray": 0,
-                "xaxis": {"lines": {"show": True}},
+                "xaxis": {"lines": {"show": False}},
                 "yaxis": {"lines": {"show": True}},
             },
-            "markers": {"size": 0},
+            "markers": {
+                "size": 0,  # No markers on data points
+                "hover": {"size": 2},  # Show marker only on hover
+                "strokeWidth": 1,
+            },
         },
         "yaxis": [
             {
@@ -446,11 +466,11 @@ async def handle_apexcharts_yaml(call: ServiceCall) -> dict[str, Any]:  # noqa: 
                 "opposite": True,
             },
         ],
-        "now": {"show": True, "color": "#8e24aa", "label": "🕒 LIVE"},
-        "all_series_config": {
-            "stroke_width": 1,
-            "group_by": {"func": "raw", "duration": "15min"},
-        },
+        "now": (
+            {"show": True, "color": "#8e24aa"}
+            if day == "rolling_window_autozoom"
+            else {"show": True, "color": "#8e24aa", "label": "🕒 LIVE"}
+        ),
         "series": series,
     }
 
@@ -529,6 +549,30 @@ async def handle_apexcharts_yaml(call: ServiceCall) -> dict[str, Any]:  # noqa: 
                 if current_price_sensor:
                     trigger_entities.append(current_price_sensor)
 
+                # Pre-calculate metadata server-side for dynamic yaxis and gradient
+                # This avoids async issues with config-template-card variables
+                # Create service call to get metadata
+                metadata_call = ServiceCall(
+                    hass=hass,
+                    domain="tibber_prices",
+                    service="get_chartdata",
+                    data={
+                        "entry_id": entry_id,
+                        "minor_currency": True,
+                        "metadata": "only",
+                    },
+                    context=call.context,
+                    return_response=True,
+                )
+                metadata_response = await handle_chartdata(metadata_call)
+                metadata = metadata_response.get("metadata", {})
+
+                # Extract values with fallbacks
+                yaxis_min = metadata.get("yaxis_suggested", {}).get("min", 0)
+                yaxis_max = metadata.get("yaxis_suggested", {}).get("max", 100)
+                avg_position = metadata.get("price_stats", {}).get("combined", {}).get("avg_position", 0.5)
+                gradient_stop = round(avg_position * 100)
+
                 return {
                     "type": "custom:config-template-card",
                     "variables": {
@@ -539,6 +583,42 @@ async def handle_apexcharts_yaml(call: ServiceCall) -> dict[str, Any]:  # noqa: 
                         **result,
                         "span": {"start": "minute", "offset": "-120min"},
                         "graph_span": "${v_graph_span}",
+                        "yaxis": [
+                            {
+                                "id": "price",
+                                "decimals": 2,
+                                "min": yaxis_min,
+                                "max": yaxis_max,
+                                "apex_config": {
+                                    "title": {"text": price_unit},
+                                    "decimalsInFloat": 0,
+                                    "forceNiceScale": False,
+                                },
+                            },
+                            {
+                                "id": "highlight",
+                                "min": 0,
+                                "max": 1,
+                                "show": False,
+                                "opposite": True,
+                            },
+                        ],
+                        "apex_config": {
+                            **result["apex_config"],
+                            "fill": {
+                                "type": "gradient",
+                                "opacity": 0.45,
+                                "gradient": {
+                                    "shade": "light",
+                                    "type": "vertical",
+                                    "shadeIntensity": 0.2,
+                                    "opacityFrom": 0.7,
+                                    "opacityTo": 0.25,
+                                    "gradientToColors": ["#transparent"],
+                                    "stops": [gradient_stop, 100],
+                                },
+                            },
+                        },
                     },
                 }
             # Rolling window modes (day is None or rolling_window): Dynamic offset
@@ -549,6 +629,31 @@ async def handle_apexcharts_yaml(call: ServiceCall) -> dict[str, Any]:  # noqa: 
             # If 'on' (tomorrow data available) → offset +1d (show today+tomorrow)
             # If 'off' (no tomorrow data) → offset +0d (show yesterday+today)
             template_value = f"states['{tomorrow_data_sensor}'].state === 'on' ? '+1d' : '+0d'"
+
+            # Pre-calculate metadata server-side for dynamic yaxis and gradient
+            # This avoids async issues with config-template-card variables
+            # Create service call to get metadata
+            metadata_call = ServiceCall(
+                hass=hass,
+                domain="tibber_prices",
+                service="get_chartdata",
+                data={
+                    "entry_id": entry_id,
+                    "minor_currency": True,
+                    "metadata": "only",
+                },
+                context=call.context,
+                return_response=True,
+            )
+            metadata_response = await handle_chartdata(metadata_call)
+            metadata = metadata_response.get("metadata", {})
+
+            # Extract values with fallbacks
+            yaxis_min = metadata.get("yaxis_suggested", {}).get("min", 0)
+            yaxis_max = metadata.get("yaxis_suggested", {}).get("max", 100)
+            avg_position = metadata.get("price_stats", {}).get("combined", {}).get("avg_position", 0.5)
+            gradient_stop = round(avg_position * 100)
+
             return {
                 "type": "custom:config-template-card",
                 "variables": {
@@ -560,6 +665,42 @@ async def handle_apexcharts_yaml(call: ServiceCall) -> dict[str, Any]:  # noqa: 
                     "span": {
                         "end": "day",
                         "offset": "${v_offset}",
+                    },
+                    "yaxis": [
+                        {
+                            "id": "price",
+                            "decimals": 2,
+                            "min": yaxis_min,
+                            "max": yaxis_max,
+                            "apex_config": {
+                                "title": {"text": price_unit},
+                                "decimalsInFloat": 0,
+                                "forceNiceScale": False,
+                            },
+                        },
+                        {
+                            "id": "highlight",
+                            "min": 0,
+                            "max": 1,
+                            "show": False,
+                            "opposite": True,
+                        },
+                    ],
+                    "apex_config": {
+                        **result["apex_config"],
+                        "fill": {
+                            "type": "gradient",
+                            "opacity": 0.45,
+                            "gradient": {
+                                "shade": "light",
+                                "type": "vertical",
+                                "shadeIntensity": 0.2,
+                                "opacityFrom": 0.7,
+                                "opacityTo": 0.25,
+                                "gradientToColors": ["#transparent"],
+                                "stops": [gradient_stop, 100],
+                            },
+                        },
                     },
                 },
             }

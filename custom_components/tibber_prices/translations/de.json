@@ -995,9 +995,13 @@
                     "name": "Durchschnitts-Feldname",
                     "description": "Benutzerdefinierter Name für das Durchschnitts-Feld in der Ausgabe. Standard ist 'average', falls nicht angegeben. Wird nur verwendet, wenn include_average aktiviert ist."
                 },
+                "metadata": {
+                    "name": "Metadaten",
+                    "description": "Steuerung der Metadaten-Einbindung in der Antwort. 'include' (Standard): Gibt Chart-Daten und Metadaten mit Preisstatistiken, Währungsinformationen, Y-Achsen-Vorschlägen und Zeitbereich zurück. 'only': Gibt nur Metadaten zurück ohne Chart-Daten zu verarbeiten (schnell, nützlich für dynamische Y-Achsen-Konfiguration). 'none': Gibt nur Chart-Daten ohne Metadaten zurück."
+                },
                 "data_key": {
                     "name": "Daten-Schlüssel",
-                    "description": "Benutzerdefinierter Name für den obersten Datenschlüssel in der Antwort. Standard ist 'data', falls nicht angegeben. Für ApexCharts-Kompatibilität mit Array von Arrays verwende 'points'."
+                    "description": "Benutzerdefinierter Name für den obersten Datenschlüssel in der Antwort. Standard ist 'data', falls nicht angegeben."
                 }
             }
         },
@@ -1072,6 +1076,13 @@
             "options": {
                 "best_price": "Bestpreis-Zeiträume",
                 "peak_price": "Spitzenpreis-Zeiträume"
+            }
+        },
+        "metadata": {
+            "options": {
+                "include": "Einbeziehen (Daten + Metadaten)",
+                "only": "Nur Metadaten",
+                "none": "Keine (nur Daten)"
             }
         },
         "volatility": {

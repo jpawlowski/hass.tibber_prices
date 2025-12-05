@@ -162,12 +162,12 @@ HOME_TYPES = {
 # Currency mapping: ISO code -> (major_symbol, minor_symbol, minor_name)
 # For currencies with Home Assistant constants, use those; otherwise define custom ones
 CURRENCY_INFO = {
-    "EUR": (CURRENCY_EURO, "ct", "cents"),
-    "NOK": ("kr", "øre", "øre"),
-    "SEK": ("kr", "öre", "öre"),
-    "DKK": ("kr", "øre", "øre"),
-    "USD": (CURRENCY_DOLLAR, "¢", "cents"),
-    "GBP": ("£", "p", "pence"),
+    "EUR": (CURRENCY_EURO, "ct", "Cents"),
+    "NOK": ("kr", "øre", "Øre"),
+    "SEK": ("kr", "öre", "Öre"),
+    "DKK": ("kr", "øre", "Øre"),
+    "USD": (CURRENCY_DOLLAR, "¢", "Cents"),
+    "GBP": ("£", "p", "Pence"),
 }
 
 

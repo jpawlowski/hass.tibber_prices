@@ -21,8 +21,9 @@ Response: JSON with chart-ready data
 
 from __future__ import annotations
 
+import math
 import re
-from datetime import timedelta
+from datetime import datetime, timedelta
 from typing import TYPE_CHECKING, Any, Final
 
 import voluptuous as vol
@@ -41,6 +42,9 @@ from custom_components.tibber_prices.const import (
     PRICE_RATING_HIGH,
     PRICE_RATING_LOW,
     PRICE_RATING_NORMAL,
+    format_price_unit_major,
+    format_price_unit_minor,
+    get_currency_info,
 )
 from custom_components.tibber_prices.coordinator.helpers import (
     get_intervals_for_day_offsets,
@@ -52,6 +56,161 @@ from .helpers import get_entry_and_data, has_tomorrow_data
 
 if TYPE_CHECKING:
     from homeassistant.core import ServiceCall
+
+
+def _calculate_metadata(  # noqa: PLR0912, PLR0913, PLR0915
+    chart_data: list[dict[str, Any]],
+    price_field: str,
+    start_time_field: str,
+    currency: str,
+    *,
+    resolution: str,
+    minor_currency: bool = False,
+) -> dict[str, Any]:
+    """
+    Calculate metadata for chart visualization.
+
+    Args:
+        chart_data: The chart data array
+        price_field: Name of the price field in chart_data
+        start_time_field: Name of the start time field
+        currency: Currency code (e.g., "EUR", "NOK")
+        resolution: Resolution type ("interval" or "hourly")
+        minor_currency: Whether prices are in minor currency units
+
+    Returns:
+        Metadata dictionary with price statistics, yaxis suggestions, and time info
+
+    """
+    # Get currency info (returns tuple: major_symbol, minor_symbol, minor_name)
+    major_symbol, minor_symbol, minor_name = get_currency_info(currency)
+
+    # Build currency object with only the active unit
+    if minor_currency:
+        currency_obj = {
+            "code": currency,
+            "symbol": minor_symbol,
+            "name": minor_name,  # Already capitalized in CURRENCY_INFO
+            "unit": format_price_unit_minor(currency),
+        }
+    else:
+        currency_obj = {
+            "code": currency,
+            "symbol": major_symbol,
+            "unit": format_price_unit_major(currency),
+        }
+
+    # Extract all prices (excluding None values)
+    prices = [item[price_field] for item in chart_data if item.get(price_field) is not None]
+
+    if not prices:
+        return {}
+
+    # Parse timestamps to determine day boundaries
+    # Group by date (midnight-to-midnight)
+    dates_seen = set()
+    for item in chart_data:
+        timestamp_str = item.get(start_time_field)
+        if timestamp_str and item.get(price_field) is not None:
+            # Parse ISO timestamp
+            dt = datetime.fromisoformat(timestamp_str) if isinstance(timestamp_str, str) else timestamp_str
+            date = dt.date()
+            dates_seen.add(date)
+
+    # Sort dates to ensure consistent day numbering
+    sorted_dates = sorted(dates_seen)
+
+    # Split data by day - dynamically handle any number of days
+    days_data: dict[str, list[float]] = {}
+    for i, _date in enumerate(sorted_dates, start=1):
+        day_key = f"day{i}"
+        days_data[day_key] = []
+
+    # Assign prices to their respective days
+    for item in chart_data:
+        timestamp_str = item.get(start_time_field)
+        price = item.get(price_field)
+        if timestamp_str and price is not None:
+            dt = datetime.fromisoformat(timestamp_str) if isinstance(timestamp_str, str) else timestamp_str
+            date = dt.date()
+            # Find which day this date corresponds to
+            day_index = sorted_dates.index(date) + 1
+            day_key = f"day{day_index}"
+            days_data[day_key].append(price)
+
+    def calc_stats(data: list[float]) -> dict[str, float]:
+        """Calculate comprehensive statistics for a dataset."""
+        if not data:
+            return {}
+        min_val = min(data)
+        max_val = max(data)
+        avg_val = sum(data) / len(data)
+        median_val = sorted(data)[len(data) // 2]
+
+        # Calculate avg_position and median_position (0-1 scale)
+        price_range = max_val - min_val
+        avg_position = (avg_val - min_val) / price_range if price_range > 0 else 0.5
+        median_position = (median_val - min_val) / price_range if price_range > 0 else 0.5
+
+        # Position precision: 2 decimals for minor currency, 4 for major currency
+        position_decimals = 2 if minor_currency else 4
+
+        return {
+            "min": round(min_val, 2),
+            "max": round(max_val, 2),
+            "avg": round(avg_val, 2),
+            "avg_position": round(avg_position, position_decimals),
+            "median": round(median_val, 2),
+            "median_position": round(median_position, position_decimals),
+        }
+
+    # Calculate stats for combined and per-day data
+    combined_stats = calc_stats(prices)
+
+    # Calculate stats for each day dynamically
+    per_day_stats: dict[str, dict[str, float]] = {}
+    for day_key, day_data in days_data.items():
+        if day_data:
+            per_day_stats[day_key] = calc_stats(day_data)
+
+    # Calculate suggested yaxis bounds (floor(min) - 1 and ceil(max) + 1)
+    yaxis_min = math.floor(combined_stats["min"]) - 1 if combined_stats else 0
+    yaxis_max = math.ceil(combined_stats["max"]) + 1 if combined_stats else 100
+
+    # Get time range from chart data
+    timestamps = [item[start_time_field] for item in chart_data if item.get(start_time_field)]
+    time_range = {}
+
+    if timestamps:
+        time_range = {
+            "start": timestamps[0],
+            "end": timestamps[-1],
+            "days_included": list(days_data.keys()),
+        }
+
+    # Determine interval duration in minutes based on resolution
+    interval_duration_minutes = 15 if resolution == "interval" else 60
+
+    # Calculate suggested yaxis bounds
+    # For minor currency (ct, øre): integer values (floor/ceil)
+    # For major currency (€, kr): 2 decimal places precision
+    if minor_currency:
+        yaxis_min = math.floor(combined_stats["min"]) - 1 if combined_stats else 0
+        yaxis_max = math.ceil(combined_stats["max"]) + 1 if combined_stats else 100
+    else:
+        # Major currency: round to 2 decimal places with padding
+        yaxis_min = round(math.floor(combined_stats["min"] * 100) / 100 - 0.01, 2) if combined_stats else 0
+        yaxis_max = round(math.ceil(combined_stats["max"] * 100) / 100 + 0.01, 2) if combined_stats else 1.0
+
+    return {
+        "currency": currency_obj,
+        "resolution": interval_duration_minutes,
+        "data_count": len(chart_data),
+        "price_stats": {"combined": combined_stats, **per_day_stats},
+        "yaxis_suggested": {"min": yaxis_min, "max": yaxis_max},
+        "time_range": time_range,
+    }
+
 
 # Service constants
 CHARTDATA_SERVICE_NAME: Final = "get_chartdata"
@@ -102,6 +261,7 @@ CHARTDATA_SERVICE_SCHEMA: Final = vol.Schema(
         vol.Optional("rating_level_field", default="rating_level"): str,
         vol.Optional("average_field", default="average"): str,
         vol.Optional("data_key", default="data"): str,
+        vol.Optional("metadata", default="include"): vol.In(["include", "only", "none"]),
     }
 )
 
@@ -162,6 +322,7 @@ async def handle_chartdata(call: ServiceCall) -> dict[str, Any]:  # noqa: PLR091
     resolution = call.data.get("resolution", "interval")
     output_format = call.data.get("output_format", "array_of_objects")
     minor_currency = call.data.get("minor_currency", False)
+    metadata = call.data.get("metadata", "include")
     round_decimals = call.data.get("round_decimals")
     include_level = call.data.get("include_level", False)
     include_rating_level = call.data.get("include_rating_level", False)
@@ -173,6 +334,44 @@ async def handle_chartdata(call: ServiceCall) -> dict[str, Any]:  # noqa: PLR091
     # Filter values are already normalized to uppercase by schema validators
     level_filter = call.data.get("level_filter")
     rating_level_filter = call.data.get("rating_level_filter")
+
+    # === METADATA-ONLY MODE ===
+    # Early return: calculate and return only metadata, skip all data processing
+    if metadata == "only":
+        # Get minimal data to calculate metadata (just timestamps and prices)
+        # Use helper to get intervals for requested days
+        day_offset_map = {"yesterday": -1, "today": 0, "tomorrow": 1}
+        offsets = [day_offset_map[day] for day in days]
+        all_intervals = get_intervals_for_day_offsets(coordinator.data, offsets)
+
+        # Build minimal chart_data for metadata calculation
+        chart_data_for_meta = []
+        for interval in all_intervals:
+            start_time = interval.get("startsAt")
+            price = interval.get("total")
+            if start_time is not None and price is not None:
+                # Convert price to requested currency
+                converted_price = round(price * 100, 2) if minor_currency else round(price, 4)
+                chart_data_for_meta.append(
+                    {
+                        start_time_field: start_time.isoformat() if hasattr(start_time, "isoformat") else start_time,
+                        price_field: converted_price,
+                    }
+                )
+
+        # Calculate metadata
+        metadata = _calculate_metadata(
+            chart_data=chart_data_for_meta,
+            price_field=price_field,
+            start_time_field=start_time_field,
+            currency=coordinator.data.get("currency", "EUR"),
+            resolution=resolution,
+            minor_currency=minor_currency,
+        )
+
+        return {"metadata": metadata}
+
+    # Filter values are already normalized to uppercase by schema validators
 
     # If array_fields is specified, implicitly enable fields that are used
     array_fields_template = call.data.get("array_fields")
@@ -620,7 +819,34 @@ async def handle_chartdata(call: ServiceCall) -> dict[str, Any]:  # noqa: PLR091
             null_row = [points[-1][0]] + [None] * (len(field_names) - 1)
             points.append(null_row)
 
-        return {data_key: points}
+        # Calculate metadata (before adding trailing null to chart_data)
+        result = {data_key: points}
+        if metadata in ("include", "only"):
+            metadata_obj = _calculate_metadata(
+                chart_data=chart_data,
+                price_field=price_field,
+                start_time_field=start_time_field,
+                currency=coordinator.data.get("currency", "EUR"),
+                resolution=resolution,
+                minor_currency=minor_currency,
+            )
+            if metadata_obj:
+                result["metadata"] = metadata_obj  # type: ignore[index]
+        return result
+
+    # Calculate metadata (before adding trailing null)
+    result = {data_key: chart_data}
+    if metadata in ("include", "only"):
+        metadata_obj = _calculate_metadata(
+            chart_data=chart_data,
+            price_field=price_field,
+            start_time_field=start_time_field,
+            currency=coordinator.data.get("currency", "EUR"),
+            resolution=resolution,
+            minor_currency=minor_currency,
+        )
+        if metadata_obj:
+            result["metadata"] = metadata_obj  # type: ignore[index]
 
     # Add trailing null point for array_of_objects format if requested
     if add_trailing_null and chart_data:
@@ -633,4 +859,4 @@ async def handle_chartdata(call: ServiceCall) -> dict[str, Any]:  # noqa: PLR091
                 null_point[field] = None
         chart_data.append(null_point)
 
-    return {data_key: chart_data}
+    return result
