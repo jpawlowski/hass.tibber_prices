@@ -28,6 +28,8 @@ A Home Assistant integration that provides advanced price information and rating
 -   **Statistical Sensors**: Track lowest, highest, and average prices for the day
 -   **Price Ratings**: Quarter-hourly ratings comparing current prices to 24-hour trailing averages
 -   **Smart Indicators**: Binary sensors to detect peak hours and best price hours for automations
+-   **Beautiful ApexCharts**: Auto-generated chart configurations with dynamic Y-axis scaling ([see examples](docs/user/chart-examples.md))
+-   **Chart Metadata Sensor**: Dynamic chart configuration for optimal visualization
 -   **Intelligent Caching**: Minimizes API calls while ensuring data freshness across Home Assistant restarts
 -   **Custom Actions** (backend services): API endpoints for advanced integrations (ApexCharts support included)
 -   **Diagnostic Sensors**: Monitor data freshness and availability
@@ -308,6 +310,16 @@ template:
 
 📖 **[View all sensors and attributes →](docs/user/sensors.md)**
 
+### Dynamic Icons & Visual Indicators
+
+All sensors feature dynamic icons that change based on price levels, providing instant visual feedback in your dashboards.
+
+<img src="images/entities-overview.jpg" width="400" alt="Entity list showing dynamic icons for different price states">
+
+_Dynamic icons adapt to price levels, trends, and period states - showing CHEAP prices, FALLING trend, and active Best Price Period_
+
+📖 **[Dynamic Icons Guide →](docs/user/dynamic-icons.md)** | **[Icon Colors Guide →](docs/user/icon-colors.md)**
+
 ### Custom Actions
 
 The integration provides custom actions (they still appear as services under the hood) for advanced use cases. These actions show up in Home Assistant under **Developer Tools → Actions**.
@@ -318,11 +330,15 @@ The integration provides custom actions (they still appear as services under the
 
 📖 **[Action documentation and examples →](docs/user/actions.md)**
 
-### ApexCharts Integration
+### Chart Visualizations (Optional)
 
-The integration includes built-in support for creating beautiful price visualization cards. Use the `get_apexcharts_yaml` action to generate card configurations automatically.
+The integration includes built-in support for creating price visualization cards with automatic Y-axis scaling and color-coded series.
 
-📖 **[ApexCharts examples →](docs/user/automation-examples.md#apexcharts-cards)**
+<img src="images/charts/rolling-window.jpg" width="600" alt="Example: Dynamic 48h rolling window chart">
+
+_Optional: Dynamic 48h chart with automatic Y-axis scaling - generated via `get_apexcharts_yaml` action_
+
+📖 **[Chart examples and setup guide →](docs/user/chart-examples.md)**
 
 ## 🤝 Contributing
 

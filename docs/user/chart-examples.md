@@ -40,7 +40,7 @@ data:
 
 **Screenshot:**
 
-<img src="../../images/charts/today.png" width="800" alt="Today's Prices - Static 24h View">
+<img src="../../images/charts/today.jpg" width="800" alt="Today's Prices - Static 24h View">
 
 **Key Features:**
 - ✅ Color-coded price levels (LOW, NORMAL, HIGH)
@@ -70,7 +70,7 @@ data:
 
 **Screenshot:**
 
-<img src="../../images/charts/rolling-window.png" width="800" alt="Rolling 48h Window with Dynamic Y-Axis Scaling">
+<img src="../../images/charts/rolling-window.jpg" width="800" alt="Rolling 48h Window with Dynamic Y-Axis Scaling">
 
 **Key Features:**
 - ✅ **Dynamic Y-axis scaling** via `chart_metadata` sensor
@@ -104,7 +104,7 @@ data:
 
 **Screenshot:**
 
-<img src="../../images/charts/rolling-window-autozoom.png" width="800" alt="Rolling Window Auto-Zoom - Progressive Zoom Effect">
+<img src="../../images/charts/rolling-window-autozoom.jpg" width="800" alt="Rolling Window Auto-Zoom - Progressive Zoom Effect">
 
 **Key Features:**
 - ✅ **Progressive zoom:** Graph span decreases every 15 minutes
@@ -298,16 +298,14 @@ cards:
 
 1. **Today View (Static)** - Representative of all fixed day views (yesterday/today/tomorrow)
 
-   <img src="../../images/charts/today.png" width="600" alt="Today View">
+   <img src="../../images/charts/today.jpg" width="600" alt="Today View">
 
 2. **Rolling Window (Dynamic)** - Shows dynamic Y-axis scaling and 48h window
 
-   <img src="../../images/charts/rolling-window.png" width="600" alt="Rolling Window">
-
-   **Recommended for README** - showcases the most impressive features!
+   <img src="../../images/charts/rolling-window.jpg" width="600" alt="Rolling Window">
 
 3. **Rolling Window Auto-Zoom (Dynamic)** - Shows progressive zoom effect
 
-   <img src="../../images/charts/rolling-window-autozoom.png" width="600" alt="Rolling Window Auto-Zoom">
+   <img src="../../images/charts/rolling-window-autozoom.jpg" width="600" alt="Rolling Window Auto-Zoom">
 
-**Note:** Tomorrow view is visually identical to Today view (same chart type, just different data), so one static screenshot is sufficient to represent all fixed day modes.
+**Note:** Tomorrow view is visually identical to Today view (same chart type, just different data).
