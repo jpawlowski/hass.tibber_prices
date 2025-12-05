@@ -451,8 +451,8 @@
         },
         "chart_metadata": {
             "description": "Lichtgewicht metadata voor diagramconfiguratie",
-            "long_description": "Biedt essentiële diagramconfiguratiewaarden als sensorattributen. Nuttig voor elke grafiekkaart die Y-as-grenzen of gradiëntpositionering nodig heeft. De sensor roept get_chartdata aan in alleen-metadata-modus (geen dataverwerking) en extraheert: yaxis_min, yaxis_max (gesuggereerd Y-asbereik) en gradient_stop (gemiddelde prijspositie 0-100%). De status weerspiegelt het service-aanroepresultaat: 'ready' bij succes, 'error' bij fouten, 'pending' tijdens initialisatie.",
-            "usage_tips": "Configureer via configuration.yaml onder tibber_prices.chart_metadata_config (optioneel: day, minor_currency, resolution). De sensor wordt automatisch bijgewerkt bij prijsgegevenswijzigingen. Krijg toegang tot metadata vanuit attributen: yaxis_min, yaxis_max, gradient_stop. Gebruik met config-template-card of elk hulpmiddel dat entiteitsattributen leest - perfect voor dynamische diagramconfiguratie zonder handmatige berekeningen."
+            "long_description": "Biedt essentiële diagramconfiguratiewaarden als sensorattributen. Nuttig voor elke grafiekkaart die Y-as-grenzen nodig heeft. De sensor roept get_chartdata aan in alleen-metadata-modus (geen dataverwerking) en extraheert: yaxis_min, yaxis_max (gesuggereerd Y-asbereik voor optimale schaling). De status weerspiegelt het service-aanroepresultaat: 'ready' bij succes, 'error' bij fouten, 'pending' tijdens initialisatie.",
+            "usage_tips": "Configureer via configuration.yaml onder tibber_prices.chart_metadata_config (optioneel: day, minor_currency, resolution). De sensor wordt automatisch bijgewerkt bij prijsgegevenswijzigingen. Krijg toegang tot metadata vanuit attributen: yaxis_min, yaxis_max. Gebruik met config-template-card of elk hulpmiddel dat entiteitsattributen leest - perfect voor dynamische diagramconfiguratie zonder handmatige berekeningen."
         }
     },
     "binary_sensor": {

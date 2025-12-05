@@ -483,8 +483,8 @@
         },
         "chart_metadata": {
             "description": "Lightweight metadata for chart configuration",
-            "long_description": "Provides essential chart configuration values as sensor attributes. Useful for any chart card that needs Y-axis bounds or gradient positioning. The sensor calls get_chartdata with metadata-only mode (no data processing) and extracts: yaxis_min, yaxis_max (suggested Y-axis range), and gradient_stop (average price position 0-100%). The state reflects the service call result: 'ready' when successful, 'error' on failure, 'pending' during initialization.",
-            "usage_tips": "Configure via configuration.yaml under tibber_prices.chart_metadata_config (optional: day, minor_currency, resolution). The sensor automatically refreshes when price data updates. Access metadata from attributes: yaxis_min, yaxis_max, gradient_stop. Use with config-template-card or any tool that reads entity attributes - perfect for dynamic chart configuration without manual calculations."
+            "long_description": "Provides essential chart configuration values as sensor attributes. Useful for any chart card that needs Y-axis bounds. The sensor calls get_chartdata with metadata-only mode (no data processing) and extracts: yaxis_min, yaxis_max (suggested Y-axis range for optimal scaling). The state reflects the service call result: 'ready' when successful, 'error' on failure, 'pending' during initialization.",
+            "usage_tips": "Configure via configuration.yaml under tibber_prices.chart_metadata_config (optional: day, minor_currency, resolution). The sensor automatically refreshes when price data updates. Access metadata from attributes: yaxis_min, yaxis_max. Use with config-template-card or any tool that reads entity attributes - perfect for dynamic chart configuration without manual calculations."
         }
     },
     "home_types": {

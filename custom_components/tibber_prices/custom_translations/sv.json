@@ -451,8 +451,8 @@
         },
         "chart_metadata": {
             "description": "Lättviktig metadata för diagramkonfiguration",
-            "long_description": "Tillhandahåller väsentliga diagramkonfigurationsvärden som sensorattribut. Användbart för vilket diagramkort som helst som behöver Y-axelgränser eller gradientpositionering. Sensorn anropar get_chartdata med endast-metadata-läge (ingen databehandling) och extraherar: yaxis_min, yaxis_max (föreslagen Y-axelomfång) och gradient_stop (genomsnittlig prisposition 0-100%). Statusen återspeglar tjänstanropsresultatet: 'ready' vid framgång, 'error' vid fel, 'pending' under initialisering.",
-            "usage_tips": "Konfigurera via configuration.yaml under tibber_prices.chart_metadata_config (valfritt: day, minor_currency, resolution). Sensorn uppdateras automatiskt vid pris dataändringar. Få tillgång till metadata från attribut: yaxis_min, yaxis_max, gradient_stop. Använd med config-template-card eller vilket verktyg som helst som läser entitetsattribut - perfekt för dynamisk diagramkonfiguration utan manuella beräkningar."
+            "long_description": "Tillhandahåller väsentliga diagramkonfigurationsvärden som sensorattribut. Användbart för vilket diagramkort som helst som behöver Y-axelgränser. Sensorn anropar get_chartdata med endast-metadata-läge (ingen databehandling) och extraherar: yaxis_min, yaxis_max (föreslagen Y-axelomfång för optimal skalning). Statusen återspeglar tjänstanropsresultatet: 'ready' vid framgång, 'error' vid fel, 'pending' under initialisering.",
+            "usage_tips": "Konfigurera via configuration.yaml under tibber_prices.chart_metadata_config (valfritt: day, minor_currency, resolution). Sensorn uppdateras automatiskt vid pris dataändringar. Få tillgång till metadata från attribut: yaxis_min, yaxis_max. Använd med config-template-card eller vilket verktyg som helst som läser entitetsattribut - perfekt för dynamisk diagramkonfiguration utan manuella beräkningar."
         }
     },
     "binary_sensor": {

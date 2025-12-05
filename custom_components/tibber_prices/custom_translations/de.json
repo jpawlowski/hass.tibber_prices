@@ -451,8 +451,8 @@
         },
         "chart_metadata": {
             "description": "Leichtgewichtige Metadaten für Diagrammkonfiguration",
-            "long_description": "Liefert wesentliche Diagrammkonfigurationswerte als Sensor-Attribute. Nützlich für jede Diagrammkarte, die Y-Achsen-Grenzen oder Gradientenpositionierung benötigt. Der Sensor ruft get_chartdata im Nur-Metadaten-Modus auf (keine Datenverarbeitung) und extrahiert: yaxis_min, yaxis_max (vorgeschlagener Y-Achsenbereich) und gradient_stop (durchschnittliche Preisposition 0-100%). Der Status spiegelt das Service-Call-Ergebnis wider: 'ready' bei Erfolg, 'error' bei Fehler, 'pending' während der Initialisierung.",
-            "usage_tips": "Konfiguriere über configuration.yaml unter tibber_prices.chart_metadata_config (optional: day, minor_currency, resolution). Der Sensor aktualisiert sich automatisch bei Preisdatenänderungen. Greife auf Metadaten aus Attributen zu: yaxis_min, yaxis_max, gradient_stop. Verwende mit config-template-card oder jedem Tool, das Entity-Attribute liest - perfekt für dynamische Diagrammkonfiguration ohne manuelle Berechnungen."
+            "long_description": "Liefert wesentliche Diagrammkonfigurationswerte als Sensor-Attribute. Nützlich für jede Diagrammkarte, die Y-Achsen-Grenzen benötigt. Der Sensor ruft get_chartdata im Nur-Metadaten-Modus auf (keine Datenverarbeitung) und extrahiert: yaxis_min, yaxis_max (vorgeschlagener Y-Achsenbereich für optimale Skalierung). Der Status spiegelt das Service-Call-Ergebnis wider: 'ready' bei Erfolg, 'error' bei Fehler, 'pending' während der Initialisierung.",
+            "usage_tips": "Konfiguriere über configuration.yaml unter tibber_prices.chart_metadata_config (optional: day, minor_currency, resolution). Der Sensor aktualisiert sich automatisch bei Preisdatenänderungen. Greife auf Metadaten aus Attributen zu: yaxis_min, yaxis_max. Verwende mit config-template-card oder jedem Tool, das Entity-Attribute liest - perfekt für dynamische Diagrammkonfiguration ohne manuelle Berechnungen."
         }
     },
     "binary_sensor": {

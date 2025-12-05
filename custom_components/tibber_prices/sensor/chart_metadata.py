@@ -124,19 +124,12 @@ def build_chart_metadata_attributes(
     # These are the universal chart metadata fields useful for any chart card
     if metadata:
         yaxis_suggested = metadata.get("yaxis_suggested", {})
-        price_stats = metadata.get("price_stats", {})
-        combined_stats = price_stats.get("combined", {})
 
         # Add yaxis bounds (useful for all chart cards)
         if "min" in yaxis_suggested:
             attributes["yaxis_min"] = yaxis_suggested["min"]
         if "max" in yaxis_suggested:
             attributes["yaxis_max"] = yaxis_suggested["max"]
-
-        # Add gradient stop position (useful for gradient-based charts)
-        if "avg_position" in combined_stats:
-            avg_position = combined_stats["avg_position"]
-            attributes["gradient_stop"] = round(avg_position * 100)
 
         # Add currency info (useful for labeling)
         if "currency" in metadata:

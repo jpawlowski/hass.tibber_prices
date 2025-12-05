@@ -662,10 +662,11 @@ async def handle_apexcharts_yaml(call: ServiceCall) -> dict[str, Any]:  # noqa: 
                     # Sensor not found - will show notification
                     metadata_warning = True
 
+                # Fixed gradient stop at 50% (visual appeal, no semantic meaning)
+                gradient_stops = [50, 100]
+
                 # Set fallback values if sensor not used
                 if not use_sensor_metadata:
-                    gradient_stop = 50
-
                     # Build yaxis config (only include min/max if not None)
                     yaxis_price_config = {
                         "id": "price",
@@ -677,7 +678,6 @@ async def handle_apexcharts_yaml(call: ServiceCall) -> dict[str, Any]:  # noqa: 
                         },
                     }
 
-                    gradient_stops = [gradient_stop, 100]
                     entities_list = trigger_entities
                 else:
                     # Use template variables to read sensor dynamically
@@ -697,8 +697,6 @@ async def handle_apexcharts_yaml(call: ServiceCall) -> dict[str, Any]:  # noqa: 
                         },
                     }
 
-                    gradient_stops = ["${v_gradient_stop}", 100]
-
                 # Build variables dict
                 variables_dict = {"v_graph_span": template_graph_span}
                 if use_sensor_metadata:
@@ -707,7 +705,6 @@ async def handle_apexcharts_yaml(call: ServiceCall) -> dict[str, Any]:  # noqa: 
                         {
                             "v_yaxis_min": f"states['{chart_metadata_sensor}'].attributes.yaxis_min",
                             "v_yaxis_max": f"states['{chart_metadata_sensor}'].attributes.yaxis_max",
-                            "v_gradient_stop": f"states['{chart_metadata_sensor}'].attributes.gradient_stop",
                         }
                     )
 
@@ -828,10 +825,11 @@ async def handle_apexcharts_yaml(call: ServiceCall) -> dict[str, Any]:  # noqa: 
                 # Sensor not found - will show notification
                 metadata_warning = True
 
+            # Fixed gradient stop at 50% (visual appeal, no semantic meaning)
+            gradient_stops = [50, 100]
+
             # Set fallback values if sensor not used
             if not use_sensor_metadata:
-                gradient_stop = 50
-
                 # Build yaxis config (only include min/max if not None)
                 yaxis_price_config = {
                     "id": "price",
@@ -843,7 +841,6 @@ async def handle_apexcharts_yaml(call: ServiceCall) -> dict[str, Any]:  # noqa: 
                     },
                 }
 
-                gradient_stops = [gradient_stop, 100]
                 entities_list = [tomorrow_data_sensor]
             else:
                 # Use template variables to read sensor dynamically
@@ -863,8 +860,6 @@ async def handle_apexcharts_yaml(call: ServiceCall) -> dict[str, Any]:  # noqa: 
                     },
                 }
 
-                gradient_stops = ["${v_gradient_stop}", 100]
-
             # Build variables dict
             variables_dict = {"v_offset": template_value}
             if use_sensor_metadata:
@@ -873,7 +868,6 @@ async def handle_apexcharts_yaml(call: ServiceCall) -> dict[str, Any]:  # noqa: 
                     {
                         "v_yaxis_min": f"states['{chart_metadata_sensor}'].attributes.yaxis_min",
                         "v_yaxis_max": f"states['{chart_metadata_sensor}'].attributes.yaxis_max",
-                        "v_gradient_stop": f"states['{chart_metadata_sensor}'].attributes.gradient_stop",
                     }
                 )
 
