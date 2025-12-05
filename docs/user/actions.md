@@ -120,11 +120,19 @@ For detailed parameter descriptions, open **Developer Tools → Actions** (the U
 >
 > **For custom solutions:** Use the `get_chartdata` action directly to build your own charts with full control over the data format and visualization.
 
-**Purpose:** Generates a basic ApexCharts card YAML configuration example for visualizing electricity prices.
+**Purpose:** Generates a basic ApexCharts card YAML configuration example for visualizing electricity prices with automatic color-coding by price level.
 
 **Prerequisites:**
 - [ApexCharts Card](https://github.com/RomRider/apexcharts-card) (required for all configurations)
-- [Config Template Card](https://github.com/iantrich/config-template-card) (required only for rolling window mode without `day` parameter)
+- [Config Template Card](https://github.com/iantrich/config-template-card) (required only for rolling window modes - enables dynamic Y-axis scaling)
+
+**✨ Key Features:**
+
+- **Automatic Color-Coded Series**: Separate series for each price level (VERY_CHEAP, CHEAP, NORMAL, EXPENSIVE, VERY_EXPENSIVE) or rating (LOW, NORMAL, HIGH)
+- **Dynamic Y-Axis Scaling**: Rolling window modes automatically use `chart_metadata` sensor for optimal Y-axis bounds
+- **Best Price Period Highlights**: Optional vertical bands showing detected best price periods
+- **Translated Labels**: Automatically uses your Home Assistant language setting
+- **Clean Gap Visualization**: Proper NULL insertion for missing data segments
 
 **Quick Example:**
 
@@ -133,6 +141,8 @@ service: tibber_prices.get_apexcharts_yaml
 data:
     entry_id: YOUR_ENTRY_ID
     day: today  # Optional: yesterday, today, tomorrow, rolling_window, rolling_window_autozoom
+    level_type: rating_level  # or "level" for 5-level classification
+    highlight_best_price: true  # Show best price period overlays
 response_variable: apexcharts_config
 ```
 
@@ -140,9 +150,76 @@ response_variable: apexcharts_config
 
 - **Fixed days** (`yesterday`, `today`, `tomorrow`): Static 24-hour views, no additional dependencies
 - **Rolling Window** (default when omitted or `rolling_window`): Dynamic 48-hour window that automatically shifts between yesterday+today and today+tomorrow based on data availability
+  - **✨ Includes dynamic Y-axis scaling** via `chart_metadata` sensor
 - **Rolling Window (Auto-Zoom)** (`rolling_window_autozoom`): Same as rolling window, but additionally zooms in progressively (2h lookback + remaining time until midnight, graph span decreases every 15 minutes)
+  - **✨ Includes dynamic Y-axis scaling** via `chart_metadata` sensor
 
-**Note:** Rolling window modes require [Config Template Card](https://github.com/iantrich/config-template-card) for dynamic behavior.
+**Dynamic Y-Axis Scaling (Rolling Window Modes):**
+
+Rolling window configurations automatically integrate with the `chart_metadata` sensor for optimal chart appearance:
+
+- **Automatic bounds**: Y-axis min/max adjust to data range
+- **No manual configuration**: Works out of the box if sensor is enabled
+- **Fallback behavior**: If sensor is disabled, uses ApexCharts auto-scaling
+- **Real-time updates**: Y-axis adapts when price data changes
+
+**Example: Today's Prices (Static View)**
+
+```yaml
+service: tibber_prices.get_apexcharts_yaml
+data:
+    entry_id: YOUR_ENTRY_ID
+    day: today
+    level_type: rating_level
+response_variable: config
+
+# Use in dashboard:
+type: custom:apexcharts-card
+# ... paste generated config
+```
+
+**Example: Rolling 48h Window (Dynamic View)**
+
+```yaml
+service: tibber_prices.get_apexcharts_yaml
+data:
+    entry_id: YOUR_ENTRY_ID
+    # Omit 'day' for rolling window (or use 'rolling_window')
+    level_type: level  # 5-level classification
+    highlight_best_price: true
+response_variable: config
+
+# Use in dashboard:
+type: custom:config-template-card
+entities:
+    - sensor.tibber_home_tomorrow_data
+    - sensor.tibber_home_chart_metadata  # For dynamic Y-axis
+card:
+    # ... paste generated config
+```
+
+**Screenshots:**
+
+_Screenshots coming soon for all 4 modes: today, tomorrow, rolling_window, rolling_window_autozoom_
+
+**Level Type Options:**
+
+- **`rating_level`** (default): 3 series (LOW, NORMAL, HIGH) - based on your personal thresholds
+- **`level`**: 5 series (VERY_CHEAP, CHEAP, NORMAL, EXPENSIVE, VERY_EXPENSIVE) - absolute price ranges
+
+**Best Price Period Highlights:**
+
+When `highlight_best_price: true`:
+- Vertical bands overlay the chart showing detected best price periods
+- Tooltip shows "Best Price Period" label when hovering over highlighted areas
+- Only appears when best price periods are configured and detected
+
+**Important Notes:**
+
+- **Config Template Card** is only required for rolling window modes (enables dynamic Y-axis)
+- Fixed day views (`today`, `tomorrow`, `yesterday`) work with ApexCharts Card alone
+- Generated YAML is a starting point - customize colors, styling, features as needed
+- All labels are automatically translated to your Home Assistant language
 
 Use the response in Lovelace dashboards by copying the generated YAML.
 
