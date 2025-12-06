@@ -95,10 +95,10 @@ jobs:
       # MERGE BUILDS
       - name: Merge both documentation sites
         run: |
-          mkdir -p deploy-root
+          mkdir -p deploy-root/user
+          mkdir -p deploy-root/developer
           cp docs/index.html deploy-root/
           cp -r docs/user/build/* deploy-root/user/
-          mkdir -p deploy-root/developer
           cp -r docs/developer/build/* deploy-root/developer/
 
       # COMMIT VERSION SNAPSHOTS
