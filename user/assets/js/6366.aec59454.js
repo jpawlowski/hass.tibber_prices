@@ -1,0 +1,1 @@
+"use strict";(globalThis.webpackChunkdocs_split_user=globalThis.webpackChunkdocs_split_user||[]).push([[6366],{6366:(s,e,c)=>{c.d(e,{createArchitectureServices:()=>r.S});var r=c(8980);c(7960)}}]);
