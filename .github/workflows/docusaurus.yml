@@ -10,13 +10,24 @@ on:
       - 'v*.*.*'
   workflow_dispatch:
 
+# Concurrency control: cancel in-progress deployments
+# Pattern from GitHub Actions best practices for deployment workflows
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 permissions:
   contents: write
+  pages: write
+  id-token: write
 
 jobs:
   deploy:
     name: Build and Deploy Documentation Sites
     runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -25,6 +36,10 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 24
+          cache: 'npm'
+          cache-dependency-path: |
+            docs/user/package-lock.json
+            docs/developer/package-lock.json
 
       # USER DOCS BUILD
       - name: Install user docs dependencies
@@ -123,11 +138,15 @@ jobs:
             echo "Version snapshots committed and pushed to main"
           fi
 
-      # DEPLOY
-      - name: Deploy to GitHub Pages
-        uses: peaceiris/actions-gh-pages@v4
+      # DEPLOY TO GITHUB PAGES
+      - name: Setup Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
         with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./deploy-root
-          user_name: github-actions[bot]
-          user_email: github-actions[bot]@users.noreply.github.com
+          path: ./deploy-root
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
