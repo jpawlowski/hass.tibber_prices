@@ -10,7 +10,8 @@
 
 [![hacs][hacsbadge]][hacs]
 [![Project Maintenance][maintenance-shield]][user_profile]
-[![BuyMeCoffee][buymecoffeebadge]][buymecoffee]
+
+<a href="https://www.buymeacoffee.com/jpawlowski" target="_blank"><img src="images/bmc-button.svg" alt="Buy Me A Coffee" height="41" width="174"></a>
 
 > **⚠️ Not affiliated with Tibber**
 > This is an independent, community-maintained custom integration for Home Assistant. It is **not** an official Tibber product and is **not** affiliated with or endorsed by Tibber AS.

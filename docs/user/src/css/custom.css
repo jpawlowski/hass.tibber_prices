@@ -213,3 +213,16 @@ h1, h2, h3, h4, h5, h6 {
   transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
   transition-duration: 150ms;
 }
+
+/* Buy Me a Coffee logo theme switching */
+.bmc-logo-dark {
+  display: none;
+}
+
+[data-theme='dark'] .bmc-logo-light {
+  display: none;
+}
+
+[data-theme='dark'] .bmc-logo-dark {
+  display: block;
+}
