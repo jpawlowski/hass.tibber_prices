@@ -1,0 +1,14 @@
+#!/usr/bin/env bash
+# Start User Documentation development server
+
+set -e
+
+# Find repository root (where .git directory is)
+REPO_ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
+cd "$REPO_ROOT/docs/user" || exit 1
+
+echo "Starting User Documentation development server..."
+echo "Access at: http://localhost:3000/hass.tibber_prices/user/"
+echo ""
+
+npm start -- --host 0.0.0.0 --poll 1000

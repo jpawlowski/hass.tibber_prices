@@ -1,0 +1,24 @@
+#!/usr/bin/env bash
+# Build both documentation sites
+
+set -e
+
+# Find repository root (where .git directory is)
+REPO_ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
+cd "$REPO_ROOT" || exit 1
+
+echo "🔨 Building User Documentation..."
+cd docs/user
+npm run build
+cd ../..
+
+echo ""
+echo "🔨 Building Developer Documentation..."
+cd docs/developer
+npm run build
+cd ../..
+
+echo ""
+echo "✅ Both documentation sites built successfully!"
+echo "   - User docs: docs/user/build/"
+echo "   - Developer docs: docs/developer/build/"

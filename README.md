@@ -1,4 +1,8 @@
-# Tibber Price Information & Ratings
+# Tibber Prices - Custom Home Assistant Integration
+
+<p align="center">
+  <img src="images/header.svg" alt="Tibber Prices Custom Integration for Tibber" width="600">
+</p>
 
 [![GitHub Release][releases-shield]][releases]
 [![GitHub Activity][commits-shield]][commits]
@@ -8,16 +12,24 @@
 [![Project Maintenance][maintenance-shield]][user_profile]
 [![BuyMeCoffee][buymecoffeebadge]][buymecoffee]
 
-A Home Assistant integration that provides advanced price information and ratings from Tibber. This integration fetches **quarter-hourly** electricity prices, enriches them with statistical analysis, and provides smart indicators to help you optimize your energy consumption and save money.
+> **⚠️ Not affiliated with Tibber**
+> This is an independent, community-maintained custom integration for Home Assistant. It is **not** an official Tibber product and is **not** affiliated with or endorsed by Tibber AS.
 
-![Tibber Price Information & Ratings](images/logo.png)
+A custom Home Assistant integration that provides advanced electricity price information and ratings from Tibber. This integration fetches **quarter-hourly** electricity prices, enriches them with statistical analysis, and provides smart indicators to help you optimize your energy consumption and save money.
 
 ## 📖 Documentation
 
--   **[User Guide](docs/user/)** - Installation, configuration, and usage guides
-    -   **[Period Calculation](docs/user/period-calculation.md)** - How Best/Peak Price periods are calculated
--   **[Developer Guide](docs/development/)** - Contributing, architecture, and release process
--   **[Changelog](https://github.com/jpawlowski/hass.tibber_prices/releases)** - Release history and notes
+**[📚 Complete Documentation](https://jpawlowski.github.io/hass.tibber_prices/)** - Two comprehensive documentation sites:
+
+-   **[👤 User Documentation](https://jpawlowski.github.io/hass.tibber_prices/user/)** - Installation, configuration, usage guides, and examples
+-   **[🔧 Developer Documentation](https://jpawlowski.github.io/hass.tibber_prices/developer/)** - Architecture, contributing guidelines, and development setup
+
+**Quick Links:**
+-   [Installation Guide](https://jpawlowski.github.io/hass.tibber_prices/user/installation) - Step-by-step setup instructions
+-   [Sensor Reference](https://jpawlowski.github.io/hass.tibber_prices/user/sensors) - Complete list of all sensors and attributes
+-   [Chart Examples](https://jpawlowski.github.io/hass.tibber_prices/user/chart-examples) - ApexCharts visualizations
+-   [Automation Examples](https://jpawlowski.github.io/hass.tibber_prices/user/automation-examples) - Real-world automation scenarios
+-   [Changelog](https://github.com/jpawlowski/hass.tibber_prices/releases) - Release history and notes
 
 ## ✨ Features
 
@@ -28,7 +40,7 @@ A Home Assistant integration that provides advanced price information and rating
 -   **Statistical Sensors**: Track lowest, highest, and average prices for the day
 -   **Price Ratings**: Quarter-hourly ratings comparing current prices to 24-hour trailing averages
 -   **Smart Indicators**: Binary sensors to detect peak hours and best price hours for automations
--   **Beautiful ApexCharts**: Auto-generated chart configurations with dynamic Y-axis scaling ([see examples](docs/user/chart-examples.md))
+-   **Beautiful ApexCharts**: Auto-generated chart configurations with dynamic Y-axis scaling ([see examples](https://jpawlowski.github.io/hass.tibber_prices/user/chart-examples))
 -   **Chart Metadata Sensor**: Dynamic chart configuration for optimal visualization
 -   **Intelligent Caching**: Minimizes API calls while ensuring data freshness across Home Assistant restarts
 -   **Custom Actions** (backend services): API endpoints for advanced integrations (ApexCharts support included)
@@ -81,13 +93,15 @@ This will guide you through:
 -   Configure additional sensors in **Settings** → **Devices & Services** → **Tibber Price Information & Ratings** → **Entities**
 -   Use sensors in automations, dashboards, and scripts
 
-📖 **[Full Installation Guide →](docs/user/installation.md)**
+📖 **[Full Installation Guide →](https://jpawlowski.github.io/hass.tibber_prices/user/installation)**
 
 ## 📊 Available Entities
 
 The integration provides **30+ sensors** across different categories. Key sensors are enabled by default, while advanced sensors can be enabled as needed.
 
 > **Rich Sensor Attributes**: All sensors include extensive attributes with timestamps, context data, and detailed explanations. Enable **Extended Descriptions** in the integration options to add `long_description` and `usage_tips` attributes to every sensor, providing in-context documentation directly in Home Assistant's UI.
+
+**[📋 Complete Sensor Reference](https://jpawlowski.github.io/hass.tibber_prices/user/sensors)** - Full list with descriptions and attributes
 
 ### Core Price Sensors (Enabled by Default)
 
@@ -131,8 +145,8 @@ The integration provides **30+ sensors** across different categories. Key sensor
 
 | Entity                    | Description                                                                               |
 | ------------------------- | ----------------------------------------------------------------------------------------- |
-| Peak Price Period         | ON when in a detected peak price period ([how it works](docs/user/period-calculation.md)) |
-| Best Price Period         | ON when in a detected best price period ([how it works](docs/user/period-calculation.md)) |
+| Peak Price Period         | ON when in a detected peak price period ([how it works](https://jpawlowski.github.io/hass.tibber_prices/user/period-calculation)) |
+| Best Price Period         | ON when in a detected best price period ([how it works](https://jpawlowski.github.io/hass.tibber_prices/user/period-calculation)) |
 | Tibber API Connection     | Connection status to Tibber API                                                           |
 | Tomorrow's Data Available | Whether tomorrow's price data is available                                                |
 
@@ -156,7 +170,7 @@ The following sensors are available but disabled by default. Enable them in `Set
 
 ## Automation Examples
 
-> **Note:** See the [full automation examples guide](docs/user/automation-examples.md) for more advanced recipes.
+> **Note:** See the [full automation examples guide](https://jpawlowski.github.io/hass.tibber_prices/user/automation-examples) for more advanced recipes.
 
 ### Run Appliances During Cheap Hours
 
@@ -179,7 +193,7 @@ automation:
                 entity_id: switch.dishwasher
 ```
 
-> **Learn more:** The [period calculation guide](docs/user/period-calculation.md) explains how Best/Peak Price periods are identified and how you can configure filters (flexibility, minimum distance from average, price level filters with gap tolerance).
+> **Learn more:** The [period calculation guide](https://jpawlowski.github.io/hass.tibber_prices/user/period-calculation) explains how Best/Peak Price periods are identified and how you can configure filters (flexibility, minimum distance from average, price level filters with gap tolerance).
 
 ### Notify on Extremely High Prices
 
@@ -308,17 +322,17 @@ template:
                 Price at {{ timestamp }}: {{ price }} ct/kWh
 ```
 
-📖 **[View all sensors and attributes →](docs/user/sensors.md)**
+📖 **[View all sensors and attributes →](https://jpawlowski.github.io/hass.tibber_prices/user/sensors)**
 
 ### Dynamic Icons & Visual Indicators
 
 All sensors feature dynamic icons that change based on price levels, providing instant visual feedback in your dashboards.
 
-<img src="images/entities-overview.jpg" width="400" alt="Entity list showing dynamic icons for different price states">
+<img src="docs/user/static/img/entities-overview.jpg" width="400" alt="Entity list showing dynamic icons for different price states">
 
 _Dynamic icons adapt to price levels, trends, and period states - showing CHEAP prices, FALLING trend, and active Best Price Period_
 
-📖 **[Dynamic Icons Guide →](docs/user/dynamic-icons.md)** | **[Icon Colors Guide →](docs/user/icon-colors.md)**
+📖 **[Dynamic Icons Guide →](https://jpawlowski.github.io/hass.tibber_prices/user/dynamic-icons)** | **[Icon Colors Guide →](https://jpawlowski.github.io/hass.tibber_prices/user/icon-colors)**
 
 ### Custom Actions
 
@@ -328,27 +342,27 @@ The integration provides custom actions (they still appear as services under the
 -   `tibber_prices.get_apexcharts_yaml` - Generate complete ApexCharts configurations
 -   `tibber_prices.refresh_user_data` - Manually refresh account information
 
-📖 **[Action documentation and examples →](docs/user/actions.md)**
+📖 **[Action documentation and examples →](https://jpawlowski.github.io/hass.tibber_prices/user/actions)**
 
 ### Chart Visualizations (Optional)
 
 The integration includes built-in support for creating price visualization cards with automatic Y-axis scaling and color-coded series.
 
-<img src="images/charts/rolling-window.jpg" width="600" alt="Example: Dynamic 48h rolling window chart">
+<img src="docs/user/static/img/charts/rolling-window.jpg" width="600" alt="Example: Dynamic 48h rolling window chart">
 
 _Optional: Dynamic 48h chart with automatic Y-axis scaling - generated via `get_apexcharts_yaml` action_
 
-📖 **[Chart examples and setup guide →](docs/user/chart-examples.md)**
+📖 **[Chart examples and setup guide →](https://jpawlowski.github.io/hass.tibber_prices/user/chart-examples)**
 
 ## 🤝 Contributing
 
-Contributions are welcome! Please read the [Contributing Guidelines](CONTRIBUTING.md) and [Developer Guide](docs/development/) before submitting pull requests.
+Contributions are welcome! Please read the [Contributing Guidelines](CONTRIBUTING.md) and [Developer Documentation](https://jpawlowski.github.io/hass.tibber_prices/developer/) before submitting pull requests.
 
 ### For Contributors
 
--   **[Developer Setup](docs/development/setup.md)** - Get started with DevContainer
--   **[Architecture Guide](docs/development/architecture.md)** - Understand the codebase
--   **[Release Management](docs/development/release-management.md)** - Release process and versioning
+-   **[Developer Setup](https://jpawlowski.github.io/hass.tibber_prices/developer/setup)** - Get started with DevContainer
+-   **[Architecture Guide](https://jpawlowski.github.io/hass.tibber_prices/developer/architecture)** - Understand the codebase
+-   **[Release Management](https://jpawlowski.github.io/hass.tibber_prices/developer/release-management)** - Release process and versioning
 
 ## 🤖 Development Note
 

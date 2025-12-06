@@ -1,0 +1,133 @@
+name: Deploy Docusaurus Documentation (Dual Sites)
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'docs/**'
+      - '.github/workflows/docusaurus.yml'
+    tags:
+      - 'v*.*.*'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  deploy:
+    name: Build and Deploy Documentation Sites
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Needed for version timestamps
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+
+      # USER DOCS BUILD
+      - name: Install user docs dependencies
+        working-directory: docs/user
+        run: npm ci
+
+      - name: Create user docs version snapshot on tag
+        if: startsWith(github.ref, 'refs/tags/v')
+        working-directory: docs/user
+        run: |
+          TAG_VERSION=${GITHUB_REF#refs/tags/}
+          echo "Creating user documentation version: $TAG_VERSION"
+
+          npm run docusaurus docs:version $TAG_VERSION || echo "Version already exists"
+
+          # Update GitHub links in versioned docs
+          if [ -d "versioned_docs/version-$TAG_VERSION" ]; then
+            find versioned_docs/version-$TAG_VERSION -name "*.md" -type f -exec sed -i "s|github.com/jpawlowski/hass.tibber_prices/blob/main/|github.com/jpawlowski/hass.tibber_prices/blob/$TAG_VERSION/|g" {} \; || true
+          fi
+
+      - name: Cleanup old user docs versions
+        if: startsWith(github.ref, 'refs/tags/v')
+        working-directory: docs/user
+        run: |
+          chmod +x ../cleanup-old-versions.sh
+          # Adapt script for single-instance mode (versioned_docs/ instead of user_versioned_docs/)
+          sed 's/user_versioned_docs/versioned_docs/g; s/user_versions.json/versions.json/g; s/developer_versioned_docs/versioned_docs/g; s/developer_versions.json/versions.json/g' ../cleanup-old-versions.sh > cleanup-single.sh
+          chmod +x cleanup-single.sh
+          ./cleanup-single.sh
+
+      - name: Build user docs website
+        working-directory: docs/user
+        run: npm run build
+
+      # DEVELOPER DOCS BUILD
+      - name: Install developer docs dependencies
+        working-directory: docs/developer
+        run: npm ci
+
+      - name: Create developer docs version snapshot on tag
+        if: startsWith(github.ref, 'refs/tags/v')
+        working-directory: docs/developer
+        run: |
+          TAG_VERSION=${GITHUB_REF#refs/tags/}
+          echo "Creating developer documentation version: $TAG_VERSION"
+
+          npm run docusaurus docs:version $TAG_VERSION || echo "Version already exists"
+
+          # Update GitHub links in versioned docs
+          if [ -d "versioned_docs/version-$TAG_VERSION" ]; then
+            find versioned_docs/version-$TAG_VERSION -name "*.md" -type f -exec sed -i "s|github.com/jpawlowski/hass.tibber_prices/blob/main/|github.com/jpawlowski/hass.tibber_prices/blob/$TAG_VERSION/|g" {} \; || true
+          fi
+
+      - name: Cleanup old developer docs versions
+        if: startsWith(github.ref, 'refs/tags/v')
+        working-directory: docs/developer
+        run: |
+          chmod +x ../cleanup-old-versions.sh
+          # Adapt script for single-instance mode
+          sed 's/user_versioned_docs/versioned_docs/g; s/user_versions.json/versions.json/g; s/developer_versioned_docs/versioned_docs/g; s/developer_versions.json/versions.json/g' ../cleanup-old-versions.sh > cleanup-single.sh
+          chmod +x cleanup-single.sh
+          ./cleanup-single.sh
+
+      - name: Build developer docs website
+        working-directory: docs/developer
+        run: npm run build
+
+      # MERGE BUILDS
+      - name: Merge both documentation sites
+        run: |
+          mkdir -p deploy-root
+          cp docs/index.html deploy-root/
+          cp -r docs/user/build/* deploy-root/user/
+          mkdir -p deploy-root/developer
+          cp -r docs/developer/build/* deploy-root/developer/
+
+      # COMMIT VERSION SNAPSHOTS
+      - name: Commit version snapshots back to repository
+        if: startsWith(github.ref, 'refs/tags/v')
+        run: |
+          TAG_VERSION=${GITHUB_REF#refs/tags/}
+
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          # Add version files from both docs
+          git add docs/user/versioned_docs/ docs/user/versions.json 2>/dev/null || true
+          git add docs/developer/versioned_docs/ docs/developer/versions.json 2>/dev/null || true
+
+          # Commit if there are changes
+          if git diff --staged --quiet; then
+            echo "No version snapshot changes to commit"
+          else
+            git commit -m "docs: add version snapshot $TAG_VERSION and cleanup old versions [skip ci]"
+            git push origin HEAD:main
+            echo "Version snapshots committed and pushed to main"
+          fi
+
+      # DEPLOY
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./deploy-root
+          user_name: github-actions[bot]
+          user_email: github-actions[bot]@users.noreply.github.com

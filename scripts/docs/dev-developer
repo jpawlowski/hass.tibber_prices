@@ -1,0 +1,14 @@
+#!/usr/bin/env bash
+# Start Developer Documentation development server
+
+set -e
+
+# Find repository root (where .git directory is)
+REPO_ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
+cd "$REPO_ROOT/docs/developer" || exit 1
+
+echo "Starting Developer Documentation development server..."
+echo "Access at: http://localhost:3001/hass.tibber_prices/developer/"
+echo ""
+
+npm start -- --port 3001 --host 0.0.0.0 --poll 1000

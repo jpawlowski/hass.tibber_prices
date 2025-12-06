@@ -7,11 +7,21 @@
         "PYTHONASYNCIODEBUG": "1"
     },
     "forwardPorts": [
-        8123
+        8123,
+        3000,
+        3001
     ],
     "portsAttributes": {
         "8123": {
             "label": "Home Assistant",
+            "onAutoForward": "notify"
+        },
+        "3000": {
+            "label": "Docusaurus User Docs",
+            "onAutoForward": "notify"
+        },
+        "3001": {
+            "label": "Docusaurus Developer Docs",
             "onAutoForward": "notify"
         }
     },

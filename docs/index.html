@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tibber Prices Documentation</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            padding: 60px 40px;
+            max-width: 800px;
+            width: 100%;
+            text-align: center;
+        }
+
+        .logo {
+            font-size: 120px;
+            margin-bottom: 20px;
+            position: relative;
+            display: inline-block;
+        }
+
+        .logo svg {
+            width: 120px;
+            height: 120px;
+            filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.1));
+        }
+
+        h1 {
+            font-size: 36px;
+            color: #1a202c;
+            margin-bottom: 12px;
+        }
+
+        .tagline {
+            font-size: 18px;
+            color: #718096;
+            margin-bottom: 40px;
+        }
+
+        .warning {
+            background: #fff5f5;
+            border: 2px solid #fc8181;
+            border-radius: 8px;
+            padding: 16px;
+            margin-bottom: 40px;
+            color: #742a2a;
+        }
+
+        .warning strong {
+            display: block;
+            margin-bottom: 4px;
+        }
+
+        .docs-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 24px;
+            margin-bottom: 40px;
+        }
+
+        .doc-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 12px;
+            padding: 32px 24px;
+            text-decoration: none;
+            color: white;
+            transition: transform 0.2s, box-shadow 0.2s;
+            cursor: pointer;
+        }
+
+        .doc-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 24px rgba(0, 0, 0, 0.2);
+        }
+
+        .doc-card.user {
+            background: linear-gradient(135deg, #00D4FF 0%, #0099CC 100%);
+        }
+
+        .doc-card.developer {
+            background: linear-gradient(135deg, #00FFA3 0%, #00CC7A 100%);
+        }
+
+        .doc-icon {
+            font-size: 48px;
+            margin-bottom: 16px;
+        }
+
+        .doc-title {
+            font-size: 24px;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .doc-description {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+
+        .links {
+            display: flex;
+            gap: 16px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .link {
+            color: #667eea;
+            text-decoration: none;
+            font-size: 14px;
+            transition: color 0.2s;
+        }
+
+        .link:hover {
+            color: #764ba2;
+            text-decoration: underline;
+        }
+
+        @media (max-width: 600px) {
+            .container {
+                padding: 40px 24px;
+            }
+
+            h1 {
+                font-size: 28px;
+            }
+
+            .docs-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div class="logo">
+            <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+                <!-- Tibber lightning bolt inspired shape -->
+                <defs>
+                    <linearGradient id="boltGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" style="stop-color:#00D4FF;stop-opacity:1" />
+                        <stop offset="100%" style="stop-color:#0099CC;stop-opacity:1" />
+                    </linearGradient>
+                    <linearGradient id="priceGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" style="stop-color:#FFD700;stop-opacity:1" />
+                        <stop offset="100%" style="stop-color:#FFA500;stop-opacity:1" />
+                    </linearGradient>
+                </defs>
+
+                <!-- Stylized lightning bolt (Tibber inspired) -->
+                <path d="M 100 20 L 70 90 L 100 85 L 80 150 L 140 80 L 110 85 Z" fill="url(#boltGradient)"
+                    stroke="none" />
+
+                <!-- Price tag circle -->
+                <circle cx="145" cy="50" r="35" fill="url(#priceGradient)" stroke="white" stroke-width="4" />
+
+                <!-- Currency symbols inside price tag -->
+                <text x="145" y="58" font-family="Arial, sans-serif" font-size="32" font-weight="bold" fill="white"
+                    text-anchor="middle">€</text>
+
+                <!-- Small "T" from Tibber style at bottom -->
+                <text x="100" y="185" font-family="Arial, sans-serif" font-size="24" font-weight="bold" fill="#667eea"
+                    text-anchor="middle">T</text>
+            </svg>
+        </div>
+        <h1>Tibber Prices Documentation</h1>
+        <p class="tagline">Custom Home Assistant Integration</p>
+
+        <div class="warning">
+            <strong>⚠️ Not affiliated with Tibber</strong>
+            This is an independent, community-maintained custom integration. Not an official Tibber product.
+        </div>
+
+        <div class="docs-grid">
+            <a href="user/" class="doc-card user">
+                <div class="doc-icon">👤</div>
+                <div class="doc-title">User Documentation</div>
+                <div class="doc-description">Installation guides, configuration, sensors, and automation examples</div>
+            </a>
+
+            <a href="developer/" class="doc-card developer">
+                <div class="doc-icon">🔧</div>
+                <div class="doc-title">Developer Documentation</div>
+                <div class="doc-description">Architecture, contributing guidelines, and development setup</div>
+            </a>
+        </div>
+
+        <div class="links">
+            <a href="https://github.com/jpawlowski/hass.tibber_prices" class="link">📦 GitHub Repository</a>
+            <a href="https://github.com/jpawlowski/hass.tibber_prices/releases" class="link">📋 Changelog</a>
+            <a href="https://github.com/jpawlowski/hass.tibber_prices/issues" class="link">🐛 Report Issues</a>
+        </div>
+    </div>
+</body>
+
+</html>

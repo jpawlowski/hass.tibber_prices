@@ -1,0 +1,214 @@
+/**
+ * Any CSS included here will be global. The classic template
+ * bundles Infima by default. Infima is a CSS framework designed to
+ * work well for content-centric websites.
+ */
+
+/* Modern font stack */
+:root {
+  --ifm-font-family-base: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --ifm-heading-font-family: 'Space Grotesk', var(--ifm-font-family-base);
+  --ifm-font-family-monospace: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
+}
+
+/* Tibber-inspired electric color scheme */
+:root {
+  /* Primary: Electric blue */
+  --ifm-color-primary: #00b9e7;
+  --ifm-color-primary-dark: #00a7d0;
+  --ifm-color-primary-darker: #009ec4;
+  --ifm-color-primary-darkest: #0082a2;
+  --ifm-color-primary-light: #00cbfe;
+  --ifm-color-primary-lighter: #19d1ff;
+  --ifm-color-primary-lightest: #4dddff;
+
+  /* Accent: Energy green */
+  --ifm-color-success: #00ffa3;
+
+  /* Warning: Price orange */
+  --ifm-color-warning: #ffb800;
+
+  --ifm-code-font-size: 95%;
+  --docusaurus-highlighted-code-line-bg: rgba(0, 185, 231, 0.1);
+
+  /* Modern border radius */
+  --ifm-global-radius: 0.75rem;
+  --ifm-button-border-radius: 0.75rem;
+  --ifm-card-border-radius: 1rem;
+  --ifm-code-border-radius: 0.5rem;
+
+  /* Subtle shadows for depth */
+  --ifm-global-shadow-lw: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+  --ifm-global-shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  --ifm-global-shadow-tl: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+
+  /* Hero background gradient */
+  --ifm-hero-background-color: linear-gradient(135deg, #00b9e7 0%, #00ffa3 100%);
+}
+
+/* Dark mode with electric theme */
+[data-theme='dark'] {
+  --ifm-color-primary: #00d4ff;
+  --ifm-color-primary-dark: #00c0e6;
+  --ifm-color-primary-darker: #00b5d9;
+  --ifm-color-primary-darkest: #0095b3;
+  --ifm-color-primary-light: #19ddff;
+  --ifm-color-primary-lighter: #33e1ff;
+  --ifm-color-primary-lightest: #66e9ff;
+
+  /* Accent: Brighter green in dark mode */
+  --ifm-color-success: #00ffb3;
+
+  --docusaurus-highlighted-code-line-bg: rgba(0, 212, 255, 0.15);
+
+  /* Darker background for better contrast */
+  --ifm-background-color: #1a1a1a;
+  --ifm-background-surface-color: #242424;
+
+  /* Darker shadows for dark mode */
+  --ifm-global-shadow-lw: 0 1px 3px 0 rgba(0, 0, 0, 0.3), 0 1px 2px 0 rgba(0, 0, 0, 0.2);
+  --ifm-global-shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.3), 0 2px 4px -1px rgba(0, 0, 0, 0.2);
+  --ifm-global-shadow-tl: 0 10px 15px -3px rgba(0, 0, 0, 0.4), 0 4px 6px -2px rgba(0, 0, 0, 0.2);
+}
+
+/* Hero section styling */
+.hero--primary {
+  background: linear-gradient(135deg, #00b9e7 0%, #0099cc 50%, #ffb800 100%);
+  color: white;
+  position: relative;
+}
+
+.hero--primary::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, rgba(0, 185, 231, 0.95) 0%, rgba(0, 153, 204, 0.95) 50%, rgba(255, 184, 0, 0.85) 100%);
+  z-index: 0;
+}
+
+.hero--primary .container {
+  position: relative;
+  z-index: 1;
+}
+
+[data-theme='dark'] .hero--primary {
+  background: linear-gradient(135deg, #00506b 0%, #003d52 50%, #665000 100%);
+}
+
+[data-theme='dark'] .hero--primary::before {
+  background: linear-gradient(135deg, rgba(0, 80, 107, 0.95) 0%, rgba(0, 61, 82, 0.95) 50%, rgba(102, 80, 0, 0.85) 100%);
+}
+
+/* Unreleased version banner styling */
+[data-theme='light'] .theme-doc-version-banner {
+  background-color: #fff4e6;
+  border-color: #ffb800;
+}
+
+[data-theme='dark'] .theme-doc-version-banner {
+  background-color: #2d2000;
+  border-color: #ffb800;
+}
+
+/* Make code blocks stand out */
+.docusaurus-highlight-code-line {
+  background-color: rgba(0, 185, 231, 0.2);
+  display: block;
+  margin: 0 calc(-1 * var(--ifm-pre-padding));
+  padding: 0 var(--ifm-pre-padding);
+}
+
+[data-theme='dark'] .docusaurus-highlight-code-line {
+  background-color: rgba(0, 212, 255, 0.2);
+}
+
+/* Sidebar customization */
+.theme-doc-sidebar-container {
+  border-right: 1px solid var(--ifm-toc-border-color);
+}
+
+/* Table of contents highlighting */
+.table-of-contents__link--active {
+  color: var(--ifm-color-primary);
+  font-weight: bold;
+}
+
+/* Admonition styling */
+.admonition {
+  border-left-width: 4px;
+}
+
+.admonition-note {
+  border-left-color: var(--ifm-color-primary);
+}
+
+.admonition-tip {
+  border-left-color: var(--ifm-color-success);
+}
+
+.admonition-warning {
+  border-left-color: var(--ifm-color-warning);
+}
+
+/* Features section on homepage */
+.features {
+  padding: 4rem 0;
+}
+
+.features h3 {
+  color: var(--ifm-color-primary);
+}
+
+[data-theme='dark'] .features h3 {
+  color: var(--ifm-color-primary-lighter);
+}
+
+/* Card styling with modern shadows */
+.card {
+  border-radius: var(--ifm-card-border-radius);
+  box-shadow: var(--ifm-global-shadow-md);
+  transition: box-shadow 0.2s ease-in-out, transform 0.2s ease-in-out;
+}
+
+.card:hover {
+  box-shadow: var(--ifm-global-shadow-tl);
+  transform: translateY(-2px);
+}
+
+/* Navbar with subtle shadow */
+.navbar {
+  box-shadow: var(--ifm-global-shadow-lw);
+}
+
+/* Code blocks with modern styling */
+code {
+  border-radius: var(--ifm-code-border-radius);
+}
+
+/* Buttons with modern feel */
+.button {
+  font-weight: 600;
+  letter-spacing: 0.025em;
+  transition: all 0.2s ease-in-out;
+}
+
+.button:hover {
+  transform: translateY(-1px);
+  box-shadow: var(--ifm-global-shadow-md);
+}
+
+/* Headings with Space Grotesk */
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--ifm-heading-font-family);
+  letter-spacing: -0.02em;
+}
+
+/* Smooth transitions everywhere */
+* {
+  transition-property: background-color, border-color, color, fill, stroke;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  transition-duration: 150ms;
+}
