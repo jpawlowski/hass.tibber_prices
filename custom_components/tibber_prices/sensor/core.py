@@ -41,8 +41,8 @@ from custom_components.tibber_prices.utils.price import (
     calculate_volatility_level,
 )
 from homeassistant.components.sensor import (
+    RestoreSensor,
     SensorDeviceClass,
-    SensorEntity,
     SensorEntityDescription,
 )
 from homeassistant.const import EntityCategory
@@ -92,8 +92,8 @@ MAX_FORECAST_INTERVALS = 8  # Show up to 8 future intervals (2 hours with 15-min
 MIN_HOURS_FOR_LATER_HALF = 3  # Minimum hours needed to calculate later half average
 
 
-class TibberPricesSensor(TibberPricesEntity, SensorEntity):
-    """tibber_prices Sensor class."""
+class TibberPricesSensor(TibberPricesEntity, RestoreSensor):
+    """tibber_prices Sensor class with state restoration."""
 
     # Attributes excluded from recorder history
     # See: https://developers.home-assistant.io/docs/core/entity/#excluding-state-attributes-from-recorder-history
@@ -184,6 +184,29 @@ class TibberPricesSensor(TibberPricesEntity, SensorEntity):
         """When entity is added to hass."""
         await super().async_added_to_hass()
 
+        # Restore last state if available
+        if (
+            (last_state := await self.async_get_last_state()) is not None
+            and last_state.state not in (None, "unknown", "unavailable", "")
+            and (last_sensor_data := await self.async_get_last_sensor_data()) is not None
+        ):
+            # Restore native_value from extra data (more reliable than state)
+            self._attr_native_value = last_sensor_data.native_value
+
+            # For chart sensors, restore response data from attributes
+            if self.entity_description.key == "chart_data_export":
+                self._chart_data_response = last_state.attributes.get("data")
+                self._chart_data_last_update = last_state.attributes.get("last_update")
+            elif self.entity_description.key == "chart_metadata":
+                # Restore metadata response from attributes
+                metadata_attrs = {}
+                for key in ["title", "yaxis_min", "yaxis_max", "currency", "resolution"]:
+                    if key in last_state.attributes:
+                        metadata_attrs[key] = last_state.attributes[key]
+                if metadata_attrs:
+                    self._chart_metadata_response = metadata_attrs
+                self._chart_metadata_last_update = last_state.attributes.get("last_update")
+
         # Register with coordinator for time-sensitive updates if applicable
         if self.entity_description.key in TIME_SENSITIVE_ENTITY_KEYS:
             self._time_sensitive_remove_listener = self.coordinator.async_add_time_sensitive_listener(
@@ -196,13 +219,15 @@ class TibberPricesSensor(TibberPricesEntity, SensorEntity):
                 self._handle_minute_update
             )
 
-        # For chart_data_export, trigger initial service call
+        # For chart_data_export, trigger initial service call as background task
+        # (non-blocking to avoid delaying entity setup)
         if self.entity_description.key == "chart_data_export":
-            await self._refresh_chart_data()
+            self.hass.async_create_task(self._refresh_chart_data())
 
-        # For chart_metadata, trigger initial service call
+        # For chart_metadata, trigger initial service call as background task
+        # (non-blocking to avoid delaying entity setup)
         if self.entity_description.key == "chart_metadata":
-            await self._refresh_chart_metadata()
+            self.hass.async_create_task(self._refresh_chart_metadata())
 
     async def async_will_remove_from_hass(self) -> None:
         """When entity will be removed from hass."""

@@ -1812,6 +1812,17 @@ When using `DataUpdateCoordinator`, entities get updates automatically. Only imp
 **4. Service Response Declaration:**
 Services returning data MUST declare `supports_response` parameter. Use `SupportsResponse.ONLY` for data-only services, `OPTIONAL` for dual-purpose, `NONE` for action-only. See `services.py` for examples.
 
+**5. Entity Lifecycle & State Management:**
+All entities MUST implement these patterns for proper HA integration:
+
+- **`available` property**: Indicates if entity can be read/controlled. Return `False` when coordinator has no data yet or last update failed. See `entity.py` for base implementation. Special cases (e.g., `connection` binary_sensor) override to always return `True`.
+
+- **State Restore**: Inherit from `RestoreSensor` (sensors) or `RestoreEntity` (binary_sensors) to restore state after HA restart. Eliminates "unavailable" gaps in history. Restore logic in `async_added_to_hass()` using `async_get_last_state()` and `async_get_last_sensor_data()`. See `sensor/core.py` and `binary_sensor/core.py` for implementation.
+
+- **`force_update` property**: Set to `True` for entities where every state change should be recorded, even if value unchanged (e.g., `connection` sensor tracking connectivity issues). Default is `False`. See `binary_sensor/core.py` for example.
+
+**Why this matters**: Without `available`, entities show stale data during errors. Without state restore, history has gaps after HA restart. Without `force_update`, repeated state changes aren't visible in history.
+
 ## Code Quality Rules
 
 **CRITICAL: See "Linting Best Practices" section for comprehensive type checking (Pyright) and linting (Ruff) guidelines.**

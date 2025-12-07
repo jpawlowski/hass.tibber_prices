@@ -44,6 +44,22 @@ class TibberPricesEntity(CoordinatorEntity[TibberPricesDataUpdateCoordinator]):
             configuration_url="https://developer.tibber.com/explorer",
         )
 
+    @property
+    def available(self) -> bool:
+        """
+        Return if entity is available.
+
+        Entity is unavailable when:
+        - Coordinator has not completed first update (no data yet)
+        - Coordinator has encountered an error (last_update_success = False)
+
+        Note: Auth failures are handled by coordinator's update method,
+        which raises ConfigEntryAuthFailed and triggers reauth flow.
+        """
+        # Return False if coordinator not ready or has errors
+        # Return True if coordinator has data (bool conversion handles None/empty)
+        return self.coordinator.last_update_success and bool(self.coordinator.data)
+
     def _get_device_info(self) -> tuple[str, str | None, str | None]:
         """Get device name, ID and type."""
         user_profile = self.coordinator.get_user_profile()

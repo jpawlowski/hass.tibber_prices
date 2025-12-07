@@ -15,6 +15,7 @@ from homeassistant.components.binary_sensor import (
 )
 from homeassistant.core import callback
 from homeassistant.exceptions import ConfigEntryAuthFailed
+from homeassistant.helpers.restore_state import RestoreEntity
 
 from .attributes import (
     build_async_extra_state_attributes,
@@ -32,8 +33,8 @@ if TYPE_CHECKING:
     from custom_components.tibber_prices.coordinator.time_service import TibberPricesTimeService
 
 
-class TibberPricesBinarySensor(TibberPricesEntity, BinarySensorEntity):
-    """tibber_prices binary_sensor class."""
+class TibberPricesBinarySensor(TibberPricesEntity, BinarySensorEntity, RestoreEntity):
+    """tibber_prices binary_sensor class with state restoration."""
 
     # Attributes excluded from recorder history
     # See: https://developers.home-assistant.io/docs/core/entity/#excluding-state-attributes-from-recorder-history
@@ -82,6 +83,11 @@ class TibberPricesBinarySensor(TibberPricesEntity, BinarySensorEntity):
     async def async_added_to_hass(self) -> None:
         """When entity is added to hass."""
         await super().async_added_to_hass()
+
+        # Restore last state if available
+        if (last_state := await self.async_get_last_state()) is not None and last_state.state in ("on", "off"):
+            # Restore binary state (on/off) - will be used until first coordinator update
+            self._attr_is_on = last_state.state == "on"
 
         # Register with coordinator for time-sensitive updates if applicable
         if self.entity_description.key in TIME_SENSITIVE_ENTITY_KEYS:
@@ -179,6 +185,31 @@ class TibberPricesBinarySensor(TibberPricesEntity, BinarySensorEntity):
         if interval_count == 0:
             return False
         return False
+
+    @property
+    def available(self) -> bool:
+        """
+        Return if entity is available.
+
+        Override base implementation for connection sensor which should
+        always be available to show connection state.
+        """
+        # Connection sensor is always available (shows connection state)
+        if self.entity_description.key == "connection":
+            return True
+
+        # All other binary sensors use base availability logic
+        return super().available
+
+    @property
+    def force_update(self) -> bool:
+        """
+        Force update for connection sensor to record all state changes.
+
+        Connection sensor should write every state change to history,
+        even if the state (on/off) is the same, to track connectivity issues.
+        """
+        return self.entity_description.key == "connection"
 
     def _has_ventilation_system_state(self) -> bool | None:
         """Return True if the home has a ventilation system."""
