@@ -5,7 +5,7 @@ import type * as Preset from '@docusaurus/preset-classic';
 const config: Config = {
   title: 'Tibber Prices - Developer Guide',
   tagline: 'Developer documentation for the Tibber Prices custom integration',
-  favicon: 'img/logo.svg',
+  favicon: 'img/icon.svg',
 
   future: {
     v4: true,
@@ -139,7 +139,7 @@ const config: Config = {
       title: 'Tibber Prices HA',
       logo: {
         alt: 'Tibber Prices Integration Logo',
-        src: 'img/logo.svg',
+        src: 'img/icon.svg',
       },
       items: [
         {

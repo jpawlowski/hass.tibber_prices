@@ -14,61 +14,65 @@
         </linearGradient>
     </defs>
 
-    <g transform="translate(35, 50) scale(0.25)">
-        <!-- Lightning bolt -->
-        <path d="M 100 20 L 70 90 L 100 85 L 80 150 L 140 80 L 110 85 Z"
-              fill="url(#boltGrad)"
-              stroke="none"/>
+    <!-- Centered content group -->
+    <g transform="translate(67, 0)">
+        <g transform="translate(5, 20) scale(0.38)">
+            <!-- Lightning bolt -->
+            <path d="M 100 20 L 70 90 L 100 85 L 80 150 L 140 80 L 110 85 Z"
+                  fill="url(#boltGrad)"
+                  stroke="none"/>
 
-        <!-- Price tag circle -->
-        <circle cx="145" cy="50" r="35" fill="url(#priceGrad)" stroke="white" stroke-width="4"/>
+            <!-- Price tag circle -->
+            <circle cx="145" cy="50" r="35" fill="url(#priceGrad)" stroke="white" stroke-width="4"/>
 
-        <!-- Euro symbol -->
-        <text x="145" y="58"
+            <!-- Euro symbol -->
+            <text x="145" y="53"
+                  font-family="Arial, sans-serif"
+                  font-size="32"
+                  font-weight="bold"
+                  fill="white"
+                  text-anchor="middle"
+                  dominant-baseline="middle">€</text>
+        </g>
+
+        <!-- Integration Name (light text for dark mode) -->
+        <text x="90" y="45"
               font-family="Arial, sans-serif"
-              font-size="32"
+              font-size="24"
+              font-weight="700"
+              fill="#E8E8E8">Tibber Prices</text>
+
+        <text x="90" y="65"
+              font-family="Arial, sans-serif"
+              font-size="12"
+              font-weight="normal"
+              fill="#B0B0B0">Custom Integration</text>
+
+        <!-- Vertical Divider (lighter) -->
+        <line x1="270" y1="25" x2="270" y2="75"
+              stroke="#666666"
+              stroke-width="2"/>
+
+        <!-- "for" text (lighter) -->
+        <text x="290" y="55"
+              font-family="Arial, sans-serif"
+              font-size="14"
+              font-weight="normal"
+              fill="#B0B0B0">for</text>
+
+        <!-- Tibber Logo (right side - simplified) -->
+        <g transform="translate(335, 50)">
+            <!-- Lightning bolt symbol -->
+            <path d="M 0 -30 L -15 5 L 0 0 L -8 25 L 18 -5 L 5 0 Z"
+                  fill="#00D4FF"
+                  stroke="none"/>
+        </g>
+
+        <!-- Tibber Text (light text for dark mode) -->
+        <text x="365" y="58"
+              font-family="Arial, sans-serif"
+              font-size="28"
               font-weight="bold"
-              fill="white"
-              text-anchor="middle">€</text>
+              fill="#E8E8E8">Tibber</text>
     </g>
-
-    <!-- Integration Name (light text for dark mode) -->
-    <text x="90" y="45"
-          font-family="Arial, sans-serif"
-          font-size="24"
-          font-weight="700"
-          fill="#E8E8E8">Tibber Prices</text>
-
-    <text x="90" y="65"
-          font-family="Arial, sans-serif"
-          font-size="12"
-          font-weight="normal"
-          fill="#B0B0B0">Custom Integration</text>
-
-    <!-- Vertical Divider (lighter) -->
-    <line x1="270" y1="25" x2="270" y2="75"
-          stroke="#666666"
-          stroke-width="2"/>
-
-    <!-- "for" text (lighter) -->
-    <text x="290" y="55"
-          font-family="Arial, sans-serif"
-          font-size="14"
-          font-weight="normal"
-          fill="#888888">for</text>
-
-    <!-- Tibber Logo (right side - simplified) -->
-    <g transform="translate(335, 50)">
-        <!-- Lightning bolt symbol -->
-        <path d="M 0 -30 L -15 5 L 0 0 L -8 25 L 18 -5 L 5 0 Z"
-              fill="#00D4FF"
-              stroke="none"/>
-    </g>
-
-    <!-- Tibber Text (light text for dark mode) -->
-    <text x="365" y="58"
-          font-family="Arial, sans-serif"
-          font-size="28"
-          font-weight="bold"
-          fill="#E8E8E8">Tibber</text>
 </svg>

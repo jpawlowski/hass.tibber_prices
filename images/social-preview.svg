@@ -1,0 +1,98 @@
+<svg viewBox="0 0 1280 640" xmlns="http://www.w3.org/2000/svg">
+    <!-- Social Preview for GitHub - 1280x640px -->
+
+    <!-- Background with subtle gradient -->
+    <defs>
+        <linearGradient id="bgGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" style="stop-color:#FFFFFF;stop-opacity:1" />
+            <stop offset="100%" style="stop-color:#E3E8ED;stop-opacity:1" />
+        </linearGradient>
+        <linearGradient id="boltGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" style="stop-color:#00D4FF;stop-opacity:1" />
+            <stop offset="100%" style="stop-color:#0099CC;stop-opacity:1" />
+        </linearGradient>
+        <linearGradient id="priceGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" style="stop-color:#FFD700;stop-opacity:1" />
+            <stop offset="100%" style="stop-color:#FFA500;stop-opacity:1" />
+        </linearGradient>
+    </defs>
+
+    <!-- Background -->
+    <rect width="1280" height="640" fill="url(#bgGradient)"/>
+
+    <!-- Centered content group -->
+    <g transform="translate(640, 320)">
+        <!-- Custom Integration Logo (scaled larger for social preview) -->
+        <g transform="translate(-380, -100) scale(0.8)">
+            <!-- Lightning bolt -->
+            <path d="M 100 20 L 70 90 L 100 85 L 80 150 L 140 80 L 110 85 Z"
+                  fill="url(#boltGrad)"
+                  stroke="none"/>
+
+            <!-- Price tag circle -->
+            <circle cx="145" cy="50" r="35" fill="url(#priceGrad)" stroke="white" stroke-width="4"/>
+
+            <!-- Euro symbol -->
+            <text x="145" y="53"
+                  font-family="Arial, sans-serif"
+                  font-size="32"
+                  font-weight="bold"
+                  fill="white"
+                  text-anchor="middle"
+                  dominant-baseline="middle">€</text>
+        </g>
+
+        <!-- Main Title -->
+        <text x="0" y="-40"
+              font-family="Arial, sans-serif"
+              font-size="72"
+              font-weight="700"
+              fill="#333333"
+              text-anchor="middle">Tibber Prices</text>
+
+        <!-- Subtitle -->
+        <text x="0" y="20"
+              font-family="Arial, sans-serif"
+              font-size="32"
+              font-weight="normal"
+              fill="#666666"
+              text-anchor="middle">Custom Integration for Home Assistant</text>
+
+        <!-- Divider line -->
+        <line x1="-200" y1="60" x2="200" y2="60"
+              stroke="#999999"
+              stroke-width="2"/>
+
+        <!-- Description -->
+        <text x="0" y="110"
+              font-family="Arial, sans-serif"
+              font-size="24"
+              font-weight="normal"
+              fill="#777777"
+              text-anchor="middle">Quarter-hourly electricity prices with advanced analytics</text>
+
+        <!-- Tibber Logo reference (right bottom corner) -->
+        <g transform="translate(450, 150)">
+            <text x="0" y="0"
+                  font-family="Arial, sans-serif"
+                  font-size="20"
+                  font-weight="normal"
+                  fill="#999999"
+                  text-anchor="end">powered by</text>
+
+            <!-- Small Tibber bolt -->
+            <g transform="translate(25, -5) scale(0.4)">
+                <path d="M 0 -30 L -15 5 L 0 0 L -8 25 L 18 -5 L 5 0 Z"
+                      fill="#00D4FF"
+                      stroke="none"/>
+            </g>
+
+            <!-- Tibber Text -->
+            <text x="50" y="0"
+                  font-family="Arial, sans-serif"
+                  font-size="24"
+                  font-weight="bold"
+                  fill="#333333">Tibber</text>
+        </g>
+    </g>
+</svg>

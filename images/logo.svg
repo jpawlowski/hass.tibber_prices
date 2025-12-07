@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<svg width="100%" height="100%" viewBox="0 0 400 128" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" xml:space="preserve" xmlns:serif="http://www.serif.com/" style="fill-rule:evenodd;clip-rule:evenodd;">
+    <g transform="matrix(1.1242,0,0,1.1242,103.468,63.1904)">
+        <text x="0px" y="0px" style="font-family:'Helvetica-Bold', 'Helvetica';font-weight:700;font-size:42px;fill:rgb(119,119,119);">T<tspan x="24.917px 36.586px " y="0px 0px ">ib</tspan>ber Prices</text>
+    </g>
+    <g transform="matrix(1,0,0,1,120,90)">
+        <g transform="matrix(1.1242,0,0,1.1242,112.968,1.29547)">
+            <text x="0px" y="0px" style="font-family:'Helvetica';font-size:14px;fill:rgb(153,153,153);">powered by</text>
+        </g>
+        <g transform="matrix(0.417583,0,0,0.417583,218.162,-1.31861)">
+            <path d="M0,-30L-15,5L0,0L-8,25L18,-5L5,0L0,-30Z" style="fill:rgb(51,224,255);fill-rule:nonzero;"/>
+        </g>
+        <g transform="matrix(1.1242,0,0,1.1242,225.388,1.29547)">
+            <text x="0px" y="0px" style="font-family:'Helvetica-Bold', 'Helvetica';font-weight:700;font-size:16px;fill:rgb(119,119,119);">T<tspan x="9.492px 13.938px " y="0px 0px ">ib</tspan>ber</text>
+        </g>
+    </g>
+    <g transform="matrix(0.888889,0,0,0.888889,-62.2222,-9.33333)">
+        <path d="M100,20L70,90L100,85L80,150L140,80L110,85L100,20Z" style="fill:url(#_Linear1);fill-rule:nonzero;"/>
+        <circle cx="145" cy="50" r="35" style="fill:url(#_Linear2);stroke:white;stroke-width:4px;"/>
+        <g transform="matrix(1,0,0,1,143.018,60.8601)">
+            <text x="-11.906px" y="0px" style="font-family:'Helvetica-Bold', 'Helvetica';font-weight:700;font-size:32px;fill:white;">€</text>
+        </g>
+    </g>
+    <defs>
+        <linearGradient id="_Linear1" x1="0" y1="0" x2="1" y2="0" gradientUnits="userSpaceOnUse" gradientTransform="matrix(70,130,-130,70,70,20)"><stop offset="0" style="stop-color:rgb(0,212,255);stop-opacity:1"/><stop offset="1" style="stop-color:rgb(0,153,204);stop-opacity:1"/></linearGradient>
+        <linearGradient id="_Linear2" x1="0" y1="0" x2="1" y2="0" gradientUnits="userSpaceOnUse" gradientTransform="matrix(70,70,-70,70,110,15)"><stop offset="0" style="stop-color:rgb(255,215,0);stop-opacity:1"/><stop offset="1" style="stop-color:rgb(255,165,0);stop-opacity:1"/></linearGradient>
+    </defs>
+</svg>
