@@ -834,6 +834,18 @@
         "homes_removed": {
             "title": "Tibber-hem borttagna",
             "description": "Vi upptäckte att {count} hem har tagits bort från ditt Tibber-konto: {homes}. Vänligen granska din Tibber-integrationskonfiguration."
+        },
+        "tomorrow_data_missing": {
+            "title": "Prisdata för imorgon saknas för {home_name}",
+            "description": "Elprisdata för imorgon är fortfarande otillgänglig efter {warning_hour}:00. Detta är ovanligt, eftersom Tibber vanligtvis publicerar morgondagens priser på eftermiddagen (runt 13:00-14:00 CET).\n\nMöjliga orsaker:\n- Tibber har inte publicerat morgondagens priser ännu\n- Tillfälliga API-problem\n- Din elleverantör har inte skickat in priser till Tibber\n\nDetta problem kommer att lösas automatiskt när morgondagens data blir tillgänglig. Om detta fortsätter efter 20:00, vänligen kontrollera Tibber-appen eller kontakta Tibber-support."
+        },
+        "rate_limit_exceeded": {
+            "title": "API-hastighetsgräns överskriden för {home_name}",
+            "description": "Tibber-API:et har hastighetsbegränsat denna integration efter {error_count} på varandra följande fel. Detta betyder att förfrågningar görs för ofta.\n\nIntegrationen kommer automatiskt att försöka igen med ökande fördröjningar. Detta problem kommer att lösas när hastighetsgränsen löper ut.\n\nOm detta fortsätter i flera timmar, överväg:\n- Att kontrollera om flera Home Assistant-instanser använder samma API-token\n- Att verifiera att inga andra applikationer använder din Tibber-API-token mycket\n- Att minska uppdateringsfrekvensen om du har anpassat den"
+        },
+        "home_not_found": {
+            "title": "Hemmet '{home_name}' hittades inte i Tibber-kontot",
+            "description": "Hemmet som konfigurerats i denna integration (post-ID: {entry_id}) är inte längre tillgängligt i ditt Tibber-konto. Detta händer vanligtvis när:\n- Hemmet togs bort från ditt Tibber-konto\n- Hemmet flyttades till ett annat Tibber-konto\n- Åtkomst till detta hem återkallades\n\nVänligen ta bort denna integrationspost och lägg till den igen om hemmet fortfarande ska övervakas. För att ta bort denna post, gå till Inställningar → Enheter och tjänster → Tibber Prices och ta bort '{home_name}'-konfigurationen."
         }
     },
     "services": {

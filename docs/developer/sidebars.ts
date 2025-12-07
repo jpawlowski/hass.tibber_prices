@@ -25,7 +25,7 @@ const sidebars: SidebarsConfig = {
     {
       type: 'category',
       label: '💻 Development',
-      items: ['setup', 'coding-guidelines', 'critical-patterns', 'debugging'],
+      items: ['setup', 'coding-guidelines', 'critical-patterns', 'repairs-system', 'debugging'],
       collapsible: true,
       collapsed: false,
     },

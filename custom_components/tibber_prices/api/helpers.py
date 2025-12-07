@@ -25,31 +25,79 @@ HTTP_BAD_REQUEST = 400
 HTTP_UNAUTHORIZED = 401
 HTTP_FORBIDDEN = 403
 HTTP_TOO_MANY_REQUESTS = 429
+HTTP_INTERNAL_SERVER_ERROR = 500
+HTTP_BAD_GATEWAY = 502
+HTTP_SERVICE_UNAVAILABLE = 503
+HTTP_GATEWAY_TIMEOUT = 504
 
 
 def verify_response_or_raise(response: aiohttp.ClientResponse) -> None:
-    """Verify that the response is valid."""
+    """
+    Verify HTTP response and map to appropriate exceptions.
+
+    Error Mapping:
+    - 401 Unauthorized → AuthenticationError (non-retryable)
+    - 403 Forbidden → PermissionError (non-retryable)
+    - 429 Rate Limit → ApiClientError with retry support
+    - 400 Bad Request → ApiClientError (non-retryable, invalid query)
+    - 5xx Server Errors → CommunicationError (retryable)
+    - Other errors → Let aiohttp.raise_for_status() handle
+    """
+    # Authentication failures - non-retryable
     if response.status == HTTP_UNAUTHORIZED:
         _LOGGER.error("Tibber API authentication failed - check access token")
         raise TibberPricesApiClientAuthenticationError(TibberPricesApiClientAuthenticationError.INVALID_CREDENTIALS)
+
+    # Permission denied - non-retryable
     if response.status == HTTP_FORBIDDEN:
         _LOGGER.error("Tibber API access forbidden - insufficient permissions")
         raise TibberPricesApiClientPermissionError(TibberPricesApiClientPermissionError.INSUFFICIENT_PERMISSIONS)
+
+    # Rate limiting - retryable with explicit delay
     if response.status == HTTP_TOO_MANY_REQUESTS:
         # Check for Retry-After header that Tibber might send
         retry_after = response.headers.get("Retry-After", "unknown")
         _LOGGER.warning("Tibber API rate limit exceeded - retry after %s seconds", retry_after)
         raise TibberPricesApiClientError(TibberPricesApiClientError.RATE_LIMIT_ERROR.format(retry_after=retry_after))
+
+    # Bad request - non-retryable (invalid query)
     if response.status == HTTP_BAD_REQUEST:
         _LOGGER.error("Tibber API rejected request - likely invalid GraphQL query")
         raise TibberPricesApiClientError(
             TibberPricesApiClientError.INVALID_QUERY_ERROR.format(message="Bad request - likely invalid GraphQL query")
         )
+
+    # Server errors 5xx - retryable (temporary server issues)
+    if response.status in (
+        HTTP_INTERNAL_SERVER_ERROR,
+        HTTP_BAD_GATEWAY,
+        HTTP_SERVICE_UNAVAILABLE,
+        HTTP_GATEWAY_TIMEOUT,
+    ):
+        _LOGGER.warning(
+            "Tibber API server error %d - temporary issue, will retry",
+            response.status,
+        )
+        # Let this be caught as aiohttp.ClientResponseError in _api_wrapper
+        # where it's converted to CommunicationError with retry logic
+        response.raise_for_status()
+
+    # All other HTTP errors - let aiohttp handle
     response.raise_for_status()
 
 
 async def verify_graphql_response(response_json: dict, query_type: TibberPricesQueryType) -> None:
-    """Verify the GraphQL response for errors and data completeness, including empty data."""
+    """
+    Verify GraphQL response and map error codes to appropriate exceptions.
+
+    GraphQL Error Code Mapping:
+    - UNAUTHENTICATED → AuthenticationError (triggers reauth flow)
+    - FORBIDDEN → PermissionError (non-retryable)
+    - RATE_LIMITED/TOO_MANY_REQUESTS → ApiClientError (retryable)
+    - VALIDATION_ERROR/GRAPHQL_VALIDATION_FAILED → ApiClientError (non-retryable)
+    - Other codes → Generic ApiClientError (with code in message)
+    - Empty data → ApiClientError (non-retryable, API has no data)
+    """
     if "errors" in response_json:
         errors = response_json["errors"]
         if not errors:

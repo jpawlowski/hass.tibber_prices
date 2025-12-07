@@ -834,6 +834,18 @@
         "homes_removed": {
             "title": "Tibber-Häuser entfernt",
             "description": "Wir haben erkannt, dass {count} Zuhause aus deinem Tibber-Konto entfernt wurde(n): {homes}. Bitte überprüfe deine Tibber-Integrationskonfiguration."
+        },
+        "tomorrow_data_missing": {
+            "title": "Preisdaten für morgen fehlen für {home_name}",
+            "description": "Die Strompreisdaten für morgen sind nach {warning_hour}:00 Uhr immer noch nicht verfügbar. Das ist ungewöhnlich, da Tibber normalerweise die Preise für morgen am Nachmittag veröffentlicht (ca. 13:00-14:00 Uhr MEZ).\n\nMögliche Ursachen:\n- Tibber hat die Preise für morgen noch nicht veröffentlicht\n- Temporäre API-Probleme\n- Dein Stromanbieter hat die Preise noch nicht an Tibber übermittelt\n\nDieses Problem löst sich automatisch, sobald die Daten für morgen verfügbar sind. Falls dies nach 20:00 Uhr weiterhin besteht, prüfe bitte die Tibber-App oder kontaktiere den Tibber-Support."
+        },
+        "rate_limit_exceeded": {
+            "title": "API-Ratenlimit erreicht für {home_name}",
+            "description": "Die Tibber-API hat diese Integration nach {error_count} aufeinanderfolgenden Fehlern ratenlimitiert. Das bedeutet, dass Anfragen zu häufig gestellt werden.\n\nDie Integration wird automatisch mit zunehmenden Verzögerungen erneut versuchen. Dieses Problem löst sich, sobald das Ratenlimit abläuft.\n\nFalls dies mehrere Stunden anhält, überprüfe:\n- Ob mehrere Home Assistant Instanzen denselben API-Token verwenden\n- Ob andere Anwendungen deinen Tibber-API-Token stark nutzen\n- Die Update-Frequenz reduzieren, falls du sie angepasst hast"
+        },
+        "home_not_found": {
+            "title": "Zuhause '{home_name}' nicht im Tibber-Konto gefunden",
+            "description": "Das in dieser Integration konfigurierte Zuhause (Eintrag-ID: {entry_id}) ist nicht mehr in deinem Tibber-Konto verfügbar. Dies passiert normalerweise, wenn:\n- Das Zuhause aus deinem Tibber-Konto gelöscht wurde\n- Das Zuhause zu einem anderen Tibber-Konto verschoben wurde\n- Der Zugriff auf dieses Zuhause widerrufen wurde\n\nBitte entferne diesen Integrationseintrag und füge ihn erneut hinzu, falls das Zuhause weiterhin überwacht werden soll. Um diesen Eintrag zu entfernen, gehe zu Einstellungen → Geräte & Dienste → Tibber Prices und lösche die Konfiguration '{home_name}'."
         }
     },
     "services": {

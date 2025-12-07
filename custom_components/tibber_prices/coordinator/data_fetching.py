@@ -5,10 +5,8 @@ from __future__ import annotations
 import asyncio
 import logging
 import secrets
+from datetime import timedelta
 from typing import TYPE_CHECKING, Any
-
-if TYPE_CHECKING:
-    from datetime import timedelta
 
 from custom_components.tibber_prices.api import (
     TibberPricesApiClientAuthenticationError,
@@ -242,6 +240,26 @@ class TibberPricesDataFetcher:
         self._log("warning", "Home %s not found in user data, using EUR as default", home_id)
         return "EUR"
 
+    def _check_home_exists(self, home_id: str) -> bool:
+        """
+        Check if a home ID exists in cached user data.
+
+        Args:
+            home_id: The home ID to check.
+
+        Returns:
+            True if home exists, False otherwise.
+
+        """
+        if not self._cached_user_data:
+            # No user data yet - assume home exists (will be checked on next update)
+            return True
+
+        viewer = self._cached_user_data.get("viewer", {})
+        homes = viewer.get("homes", [])
+
+        return any(home.get("id") == home_id for home in homes)
+
     async def handle_main_entry_update(
         self,
         current_time: datetime,
@@ -251,6 +269,17 @@ class TibberPricesDataFetcher:
         """Handle update for main entry - fetch data for this home."""
         # Update user data if needed (daily check)
         user_data_updated = await self.update_user_data_if_needed(current_time)
+
+        # Check if this home still exists in user data after update
+        # This detects when a home was removed from the Tibber account
+        home_exists = self._check_home_exists(home_id)
+        if not home_exists:
+            self._log("warning", "Home ID %s not found in Tibber account", home_id)
+            # Return a special marker in the result that coordinator can check
+            # We still need to return valid data to avoid coordinator errors
+            result = transform_fn(self._cached_price_data or {})
+            result["_home_not_found"] = True  # Special marker for coordinator
+            return result
 
         # Check if we need to update price data
         should_update = self.should_update_price_data(current_time)
@@ -329,3 +358,37 @@ class TibberPricesDataFetcher:
     def cached_user_data(self) -> dict[str, Any] | None:
         """Get cached user data."""
         return self._cached_user_data
+
+    def has_tomorrow_data(self, price_info: list[dict[str, Any]]) -> bool:
+        """
+        Check if tomorrow's price data is available.
+
+        Args:
+            price_info: List of price intervals from coordinator data.
+
+        Returns:
+            True if at least one interval from tomorrow is present.
+
+        """
+        if not price_info:
+            return False
+
+        # Get tomorrow's date
+        now = self.time.now()
+        tomorrow = (self.time.as_local(now) + timedelta(days=1)).date()
+
+        # Check if any interval is from tomorrow
+        for interval in price_info:
+            if "startsAt" not in interval:
+                continue
+
+            # startsAt is already a datetime object after _transform_data()
+            interval_time = interval["startsAt"]
+            if isinstance(interval_time, str):
+                # Fallback: parse if still string (shouldn't happen with transformed data)
+                interval_time = self.time.parse_datetime(interval_time)
+
+            if interval_time and self.time.as_local(interval_time).date() == tomorrow:
+                return True
+
+        return False

@@ -834,6 +834,18 @@
         "homes_removed": {
             "title": "Tibber-hjem fjernet",
             "description": "Vi oppdaget at {count} hjem har blitt fjernet fra din Tibber-konto: {homes}. Vennligst gjennomgå din Tibber-integrasjonskonfigurasjon."
+        },
+        "tomorrow_data_missing": {
+            "title": "Prisdata for i morgen mangler for {home_name}",
+            "description": "Strømprisdata for i morgen er fortsatt utilgjengelig etter {warning_hour}:00. Dette er uvanlig, da Tibber vanligvis publiserer morgendagens priser på ettermiddagen (rundt 13:00-14:00 CET).\n\nMulige årsaker:\n- Tibber har ikke publisert morgendagens priser ennå\n- Midlertidige API-problemer\n- Strømleverandøren din har ikke sendt inn priser til Tibber\n\nDette problemet vil løse seg automatisk når morgendagens data blir tilgjengelig. Hvis dette vedvarer etter 20:00, vennligst sjekk Tibber-appen eller kontakt Tibber-support."
+        },
+        "rate_limit_exceeded": {
+            "title": "API-hastighetsbegrensning overskredet for {home_name}",
+            "description": "Tibber-APIet har hastighetsbegrenset denne integrasjonen etter {error_count} påfølgende feil. Dette betyr at forespørsler blir gjort for hyppig.\n\nIntegrasjonen vil automatisk prøve på nytt med økende forsinkelser. Dette problemet vil løse seg når hastighetsbegrensningen utløper.\n\nHvis dette vedvarer i flere timer, vurder:\n- Å sjekke om flere Home Assistant-instanser bruker samme API-token\n- Å verifisere at ingen andre applikasjoner bruker Tibber-API-tokenet ditt mye\n- Å redusere oppdateringsfrekvensen hvis du har tilpasset den"
+        },
+        "home_not_found": {
+            "title": "Hjemmet '{home_name}' ble ikke funnet i Tibber-kontoen",
+            "description": "Hjemmet konfigurert i denne integrasjonen (oppførings-ID: {entry_id}) er ikke lenger tilgjengelig i Tibber-kontoen din. Dette skjer vanligvis når:\n- Hjemmet ble slettet fra Tibber-kontoen din\n- Hjemmet ble flyttet til en annen Tibber-konto\n- Tilgang til dette hjemmet ble tilbakekalt\n\nVennligst fjern denne integrasjonsoppføringen og legg den til på nytt hvis hjemmet fortsatt skal overvåkes. For å fjerne denne oppføringen, gå til Innstillinger → Enheter og tjenester → Tibber Prices og slett '{home_name}'-konfigurasjonen."
         }
     },
     "services": {

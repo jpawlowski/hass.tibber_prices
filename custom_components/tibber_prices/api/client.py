@@ -886,7 +886,24 @@ class TibberPricesApiClient:
         headers: dict | None = None,
         query_type: TibberPricesQueryType = TibberPricesQueryType.USER,
     ) -> Any:
-        """Get information from the API with rate limiting and retry logic."""
+        """
+        Get information from the API with rate limiting and retry logic.
+
+        Exception Handling Strategy:
+        - AuthenticationError: Immediate raise, triggers reauth flow
+        - PermissionError: Immediate raise, non-retryable
+        - CommunicationError: Retry with exponential backoff
+        - ApiClientError (Rate Limit): Retry with Retry-After delay
+        - ApiClientError (Other): Retry only if explicitly retryable
+        - Network errors (aiohttp.ClientError, socket.gaierror, TimeoutError):
+          Converted to CommunicationError and retried
+
+        Retry Logic:
+        - Max retries: 5 (configurable via _max_retries)
+        - Base delay: 2 seconds (exponential backoff: 2s, 4s, 8s, 16s, 32s)
+        - Rate limit delay: Uses Retry-After header or falls back to exponential
+        - Caps: 30s for network errors, 120s for rate limits, 300s for Retry-After
+        """
         headers = headers or prepare_headers(self._access_token, self._version)
         last_error: Exception | None = None
 

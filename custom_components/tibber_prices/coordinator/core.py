@@ -40,6 +40,7 @@ from .data_transformation import TibberPricesDataTransformer
 from .listeners import TibberPricesListenerManager
 from .midnight_handler import TibberPricesMidnightHandler
 from .periods import TibberPricesPeriodCalculator
+from .repairs import TibberPricesRepairManager
 from .time_service import TibberPricesTimeService
 
 _LOGGER = logging.getLogger(__name__)
@@ -223,6 +224,11 @@ class TibberPricesDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         self._period_calculator = TibberPricesPeriodCalculator(
             config_entry=config_entry,
             log_prefix=self._log_prefix,
+        )
+        self._repair_manager = TibberPricesRepairManager(
+            hass=hass,
+            entry_id=config_entry.entry_id,
+            home_name=config_entry.title,
         )
 
         # Register options update listener to invalidate config caches
@@ -504,10 +510,13 @@ class TibberPricesDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         - Timer #2: Quarter-hour entity updates
         - Timer #3: Minute timing sensor updates
 
-        Also saves cache to persist any unsaved changes.
+        Also saves cache to persist any unsaved changes and clears all repairs.
         """
         # Cancel all timers first
         self._listener_manager.cancel_timers()
+
+        # Clear all repairs when integration is removed or disabled
+        await self._repair_manager.clear_all_repairs()
 
         # Save cache to persist any unsaved data
         # This ensures we don't lose data if HA is shutting down
@@ -633,6 +642,10 @@ class TibberPricesDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             # Reset lifecycle state on error
             self._is_fetching = False
             self._lifecycle_state = "error"
+
+            # Track rate limit errors for repair system
+            await self._track_rate_limit_error(err)
+
             # No separate lifecycle notification needed - error case returns data
             # which triggers normal async_update_listeners()
             return await self._data_fetcher.handle_api_error(
@@ -640,7 +653,42 @@ class TibberPricesDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 self._transform_data,
             )
         else:
+            # Check for repair conditions after successful update
+            await self._check_repair_conditions(result, current_time)
             return result
+
+    async def _track_rate_limit_error(self, error: Exception) -> None:
+        """Track rate limit errors for repair notification system."""
+        error_str = str(error).lower()
+        is_rate_limit = "429" in error_str or "rate limit" in error_str or "too many requests" in error_str
+        if is_rate_limit:
+            await self._repair_manager.track_rate_limit_error()
+
+    async def _check_repair_conditions(
+        self,
+        result: dict[str, Any],
+        current_time: datetime,
+    ) -> None:
+        """Check and manage repair conditions after successful data update."""
+        # 1. Home not found detection (home was removed from Tibber account)
+        if result and result.get("_home_not_found"):
+            await self._repair_manager.create_home_not_found_repair()
+            # Remove the marker before returning to entities
+            result.pop("_home_not_found", None)
+        else:
+            # Home exists - clear any existing repair
+            await self._repair_manager.clear_home_not_found_repair()
+
+        # 2. Tomorrow data availability (after 18:00)
+        if result and "priceInfo" in result:
+            has_tomorrow_data = self._data_fetcher.has_tomorrow_data(result["priceInfo"])
+            await self._repair_manager.check_tomorrow_data_availability(
+                has_tomorrow_data=has_tomorrow_data,
+                current_time=current_time,
+            )
+
+        # 3. Clear rate limit tracking on successful API call
+        await self._repair_manager.clear_rate_limit_tracking()
 
     async def load_cache(self) -> None:
         """Load cached data from storage."""

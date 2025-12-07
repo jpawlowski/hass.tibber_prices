@@ -834,6 +834,18 @@
         "homes_removed": {
             "title": "Tibber-huizen verwijderd",
             "description": "We hebben gedetecteerd dat {count} huis/huizen zijn verwijderd van je Tibber-account: {homes}. Controleer je Tibber-integratieconfiguratie."
+        },
+        "tomorrow_data_missing": {
+            "title": "Prijsgegevens voor morgen ontbreken voor {home_name}",
+            "description": "De elektriciteitsprijsgegevens voor morgen zijn nog steeds niet beschikbaar na {warning_hour}:00 uur. Dit is ongebruikelijk, aangezien Tibber doorgaans de prijzen voor morgen in de middag publiceert (rond 13:00-14:00 CET).\n\nMogelijke oorzaken:\n- Tibber heeft de prijzen voor morgen nog niet gepubliceerd\n- Tijdelijke API-problemen\n- Je elektriciteitsleverancier heeft nog geen prijzen aan Tibber ingediend\n\nDit probleem wordt automatisch opgelost zodra de gegevens voor morgen beschikbaar zijn. Als dit na 20:00 uur aanhoudt, controleer dan de Tibber-app of neem contact op met Tibber-ondersteuning."
+        },
+        "rate_limit_exceeded": {
+            "title": "API-snelheidslimiet overschreden voor {home_name}",
+            "description": "De Tibber-API heeft deze integratie beperkt na {error_count} opeenvolgende fouten. Dit betekent dat verzoeken te vaak worden gedaan.\n\nDe integratie zal automatisch opnieuw proberen met toenemende vertragingen. Dit probleem wordt opgelost zodra de snelheidslimiet verloopt.\n\nAls dit meerdere uren aanhoudt, overweeg dan:\n- Controleren of meerdere Home Assistant-instanties hetzelfde API-token gebruiken\n- Verifiëren dat geen andere applicaties je Tibber-API-token intensief gebruiken\n- De updatefrequentie verminderen als je deze hebt aangepast"
+        },
+        "home_not_found": {
+            "title": "Huis '{home_name}' niet gevonden in Tibber-account",
+            "description": "Het huis geconfigureerd in deze integratie (entry ID: {entry_id}) is niet langer beschikbaar in je Tibber-account. Dit gebeurt meestal wanneer:\n- Het huis is verwijderd uit je Tibber-account\n- Het huis is verplaatst naar een ander Tibber-account\n- Toegang tot dit huis is ingetrokken\n\nVerwijder deze integratie-entry en voeg deze opnieuw toe als het huis nog steeds moet worden gemonitord. Om deze entry te verwijderen, ga naar Instellingen → Apparaten & Diensten → Tibber Prices en verwijder de '{home_name}'-configuratie."
         }
     },
     "services": {

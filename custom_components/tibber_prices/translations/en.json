@@ -834,6 +834,18 @@
         "homes_removed": {
             "title": "Tibber homes removed",
             "description": "We detected that {count} home(s) have been removed from your Tibber account: {homes}. Please review your Tibber integration configuration."
+        },
+        "tomorrow_data_missing": {
+            "title": "Tomorrow's price data missing for {home_name}",
+            "description": "Tomorrow's electricity price data is still unavailable after {warning_hour}:00. This is unusual, as Tibber typically publishes tomorrow's prices in the afternoon (around 13:00-14:00 CET).\n\nPossible causes:\n- Tibber has not yet published tomorrow's prices\n- Temporary API issues\n- Your electricity provider has not submitted prices to Tibber\n\nThis issue will automatically resolve once tomorrow's data becomes available. If this persists beyond 20:00, please check the Tibber app or contact Tibber support."
+        },
+        "rate_limit_exceeded": {
+            "title": "API rate limit exceeded for {home_name}",
+            "description": "The Tibber API has rate-limited this integration after {error_count} consecutive errors. This means requests are being made too frequently.\n\nThe integration will automatically retry with increasing delays. This issue will resolve once the rate limit expires.\n\nIf this persists for several hours, consider:\n- Checking if multiple Home Assistant instances are using the same API token\n- Verifying no other applications are heavily using your Tibber API token\n- Reducing the update frequency if you've customized it"
+        },
+        "home_not_found": {
+            "title": "Home '{home_name}' not found in Tibber account",
+            "description": "The home configured in this integration (entry ID: {entry_id}) is no longer available in your Tibber account. This typically happens when:\n- The home was deleted from your Tibber account\n- The home was moved to a different Tibber account\n- Access to this home was revoked\n\nPlease remove this integration entry and re-add it if the home should still be monitored. To remove this entry, go to Settings → Devices & Services → Tibber Prices and delete the '{home_name}' configuration."
         }
     },
     "services": {
