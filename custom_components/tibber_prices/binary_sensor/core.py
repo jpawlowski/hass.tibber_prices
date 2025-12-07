@@ -35,6 +35,38 @@ if TYPE_CHECKING:
 class TibberPricesBinarySensor(TibberPricesEntity, BinarySensorEntity):
     """tibber_prices binary_sensor class."""
 
+    # Attributes excluded from recorder history
+    # See: https://developers.home-assistant.io/docs/core/entity/#excluding-state-attributes-from-recorder-history
+    _unrecorded_attributes = frozenset(
+        {
+            # Descriptions/Help Text (static, large)
+            "description",
+            "usage_tips",
+            # Large Nested Structures
+            "periods",  # Array of all period summaries
+            # Frequently Changing Diagnostics
+            "icon_color",
+            "data_status",
+            # Static/Rarely Changing
+            "level_value",
+            "rating_value",
+            "level_id",
+            "rating_id",
+            # Relaxation Details
+            "relaxation_level",
+            "relaxation_threshold_original_%",
+            "relaxation_threshold_applied_%",
+            # Redundant/Derived
+            "price_spread",
+            "volatility",
+            "rating_difference_%",
+            "period_price_diff_from_daily_min",
+            "period_price_diff_from_daily_min_%",
+            "periods_total",
+            "periods_remaining",
+        }
+    )
+
     def __init__(
         self,
         coordinator: TibberPricesDataUpdateCoordinator,

@@ -95,6 +95,59 @@ MIN_HOURS_FOR_LATER_HALF = 3  # Minimum hours needed to calculate later half ave
 class TibberPricesSensor(TibberPricesEntity, SensorEntity):
     """tibber_prices Sensor class."""
 
+    # Attributes excluded from recorder history
+    # See: https://developers.home-assistant.io/docs/core/entity/#excluding-state-attributes-from-recorder-history
+    _unrecorded_attributes = frozenset(
+        {
+            # Descriptions/Help Text (static, large)
+            "description",
+            "usage_tips",
+            # Large Nested Structures
+            "trend_attributes",
+            "current_trend_attributes",
+            "trend_change_attributes",
+            "volatility_attributes",
+            "data",  # chart_data_export large nested data
+            # Frequently Changing Diagnostics
+            "icon_color",
+            "cache_age",
+            "cache_validity",
+            "data_completeness",
+            "data_status",
+            # Static/Rarely Changing
+            "tomorrow_expected_after",
+            "level_value",
+            "rating_value",
+            "level_id",
+            "rating_id",
+            "currency",
+            "resolution",
+            "yaxis_min",
+            "yaxis_max",
+            # Temporary/Time-Bound
+            "next_api_poll",
+            "next_midnight_turnover",
+            "last_api_fetch",
+            "last_cache_update",
+            "last_turnover",
+            "last_error",
+            "error",
+            # Relaxation Details
+            "relaxation_level",
+            "relaxation_threshold_original_%",
+            "relaxation_threshold_applied_%",
+            # Redundant/Derived
+            "price_spread",
+            "volatility",
+            "diff_%",
+            "rating_difference_%",
+            "period_price_diff_from_daily_min",
+            "period_price_diff_from_daily_min_%",
+            "periods_total",
+            "periods_remaining",
+        }
+    )
+
     def __init__(
         self,
         coordinator: TibberPricesDataUpdateCoordinator,
