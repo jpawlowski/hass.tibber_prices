@@ -175,8 +175,8 @@
                         },
                         "data_description": {
                             "best_price_min_period_length": "Minimum duration for a period to be considered as 'best price'. Longer periods are more practical for running appliances like dishwashers or heat pumps. Best price periods require 60 minutes minimum (vs. 30 minutes for peak price warnings) because they should provide meaningful time windows for consumption planning, not just brief opportunities.",
-                            "best_price_max_level": "Only show best price periods if they contain intervals with price levels ≤ selected value. For example, selecting 'Cheap' means the period must have at least one 'VERY_CHEAP' or 'CHEAP' interval. This ensures 'best price' periods are not just relatively cheap for the day, but actually cheap in absolute terms. Select 'Any' to show best prices regardless of their absolute price level.",
-                            "best_price_max_level_gap_count": "Maximum number of consecutive intervals allowed that deviate by exactly one level step from the required level. For example: with 'Cheap' filter and gap count 1, a sequence 'CHEAP, CHEAP, NORMAL, CHEAP' is accepted (NORMAL is one step above CHEAP). This prevents periods from being split by occasional level deviations. **Note:** Gap tolerance requires periods ≥90 minutes (6 intervals) to detect outliers effectively. Default: 0 (strict filtering, no tolerance)."
+                            "best_price_max_level": "Only show best price periods if they contain intervals with price levels ≤ selected value. For example, selecting '**Cheap**' means the period must have at least one '**Very cheap**' or '**Cheap**' interval. This ensures 'best price' periods are not just relatively cheap for the day, but actually cheap in absolute terms. Select '**Any**' to show best prices regardless of their absolute price level.",
+                            "best_price_max_level_gap_count": "Maximum number of consecutive intervals allowed that deviate by exactly one level step from the required level. For example: with '**Cheap**' filter and gap count 1, a sequence '**Cheap**, **Cheap**, **Normal**, **Cheap**' is accepted (**Normal** is one step above **Cheap**). This prevents periods from being split by occasional level deviations. **Note:** Gap tolerance requires periods ≥90 minutes (6 intervals) to detect outliers effectively. Default: 0 (strict filtering, no tolerance)."
                         }
                     },
                     "flexibility_settings": {
@@ -222,8 +222,8 @@
                         },
                         "data_description": {
                             "peak_price_min_period_length": "Minimum duration for a period to be considered as 'peak price'. Peak price warnings are allowed for shorter periods (30 minutes minimum vs. 60 minutes for best price) because brief expensive spikes are worth alerting about, even if they're too short for consumption planning.",
-                            "peak_price_min_level": "Only show peak price periods if they contain intervals with price levels ≥ selected value. For example, selecting 'Expensive' means the period must have at least one 'EXPENSIVE' or 'VERY_EXPENSIVE' interval. This ensures 'peak price' periods are not just relatively expensive for the day, but actually expensive in absolute terms. Select 'Any' to show peak prices regardless of their absolute price level.",
-                            "peak_price_max_level_gap_count": "Maximum number of consecutive intervals allowed that deviate by exactly one level step from the required level. For example: with 'Expensive' filter and gap count 2, a sequence 'EXPENSIVE, NORMAL, NORMAL, EXPENSIVE' is accepted (NORMAL is one step below EXPENSIVE). This prevents periods from being split by occasional level deviations. **Note:** Gap tolerance requires periods ≥90 minutes (6 intervals) to detect outliers effectively. Default: 0 (strict filtering, no tolerance)."
+                            "peak_price_min_level": "Only show peak price periods if they contain intervals with price levels ≥ selected value. For example, selecting '**Expensive**' means the period must have at least one '**Expensive**' or '**Very expensive**' interval. This ensures 'peak price' periods are not just relatively expensive for the day, but actually expensive in absolute terms. Select '**Any**' to show peak prices regardless of their absolute price level.",
+                            "peak_price_max_level_gap_count": "Maximum number of consecutive intervals allowed that deviate by exactly one level step from the required level. For example: with '**Expensive**' filter and gap count 2, a sequence '**Expensive**, **Normal**, **Normal**, **Expensive**' is accepted (**Normal** is one step below **Expensive**). This prevents periods from being split by occasional level deviations. **Note:** Gap tolerance requires periods ≥90 minutes (6 intervals) to detect outliers effectively. Default: 0 (strict filtering, no tolerance)."
                         }
                     },
                     "flexibility_settings": {
@@ -945,11 +945,11 @@
                 },
                 "include_level": {
                     "name": "Include Level",
-                    "description": "Include the Tibber price level field (VERY_CHEAP, CHEAP, NORMAL, EXPENSIVE, VERY_EXPENSIVE) in each data point."
+                    "description": "Include the Tibber price level field (very cheap/cheap/normal/expensive/very expensive) in each data point."
                 },
                 "include_rating_level": {
                     "name": "Include Rating Level",
-                    "description": "Include the calculated rating level field (LOW, NORMAL, HIGH) based on your configured thresholds in each data point."
+                    "description": "Include the calculated rating level field (low/normal/high) based on your configured thresholds in each data point."
                 },
                 "include_average": {
                     "name": "Include Average",
@@ -957,11 +957,11 @@
                 },
                 "level_filter": {
                     "name": "Level Filter",
-                    "description": "Filter intervals to include only specific Tibber price levels (VERY_CHEAP, CHEAP, NORMAL, EXPENSIVE, VERY_EXPENSIVE). If not specified, all levels are included."
+                    "description": "Filter intervals to include only specific Tibber price levels (very cheap/cheap/normal/expensive/very expensive). If not specified, all levels are included."
                 },
                 "rating_level_filter": {
                     "name": "Rating Level Filter",
-                    "description": "Filter intervals to include only specific rating levels (LOW, NORMAL, HIGH). If not specified, all rating levels are included."
+                    "description": "Filter intervals to include only specific rating levels (low/normal/high). If not specified, all rating levels are included."
                 },
                 "period_filter": {
                     "name": "Period Filter",

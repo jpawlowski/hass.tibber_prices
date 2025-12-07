@@ -166,43 +166,43 @@
                 "description": "_{step_progress}_\n\nConfigureer instellingen voor de **Beste Prijs Periode** binaire sensor. Deze sensor is actief tijdens periodes met de laagste elektriciteitsprijzen.\n\n---",
                 "sections": {
                     "period_settings": {
-                        "name": "Period Settings",
-                        "description": "Configure period duration and price level constraints.",
+                        "name": "Periode-instellingen",
+                        "description": "Configureer periodelengte en prijsniveaubeperkingen.",
                         "data": {
-                            "best_price_min_period_length": "Minimum Period Length",
-                            "best_price_max_level": "Price Level Filter",
-                            "best_price_max_level_gap_count": "Gap Tolerance"
+                            "best_price_min_period_length": "Minimale periodelengte",
+                            "best_price_max_level": "Prijsniveaufilter",
+                            "best_price_max_level_gap_count": "Gaptolerantie"
                         },
                         "data_description": {
-                            "best_price_min_period_length": "Minimum duration for a period to be considered as 'best price'. Longer periods are more practical for running appliances like dishwashers or heat pumps. Best price periods require minimum 60 minutes (compared to 30 minutes for peak price alerts) because they should provide meaningful time windows for consumption planning, not just brief opportunities.",
-                            "best_price_max_level": "Only show best price periods if they contain intervals with price levels ≤ selected value. For example, selecting 'Cheap' means the period must have at least one 'VERY_CHEAP' or 'CHEAP' interval. This ensures 'best price' periods are not just relatively cheap for the day, but actually cheap in absolute terms. Select 'Any' to show best prices regardless of their absolute price level.",
-                            "best_price_max_level_gap_count": "Maximum number of consecutive intervals allowed that deviate by exactly one level step from the required level. For example: with 'Cheap' filter and gap count 1, a sequence 'CHEAP, CHEAP, NORMAL, CHEAP' is accepted (NORMAL is one step above CHEAP). This prevents periods from being split by occasional level deviations. **Note:** Gap tolerance requires periods ≥90 minutes (6 intervals) to detect outliers effectively. Default: 0 (strict filtering, no tolerance)."
+                            "best_price_min_period_length": "Minimale duur voordat een periode als 'beste prijs' wordt beschouwd. Langere periodes zijn praktischer voor apparaten zoals vaatwassers of warmtepompen. Beste prijs periodes vereisen minimaal 60 minuten (versus 30 minuten voor piekprijs waarschuwingen) omdat ze betekenisvolle tijdvensters voor verbruiksplanning moeten bieden, niet alleen korte kansen.",
+                            "best_price_max_level": "Toon alleen beste prijs periodes als ze intervallen bevatten met prijsniveaus ≤ geselecteerde waarde. Bijvoorbeeld: selecteren van '**Goedkoop**' betekent dat de periode minstens één '**Zeer goedkoop**' of '**Goedkoop**' interval moet hebben. Dit zorgt ervoor dat 'beste prijs'-periodes niet alleen relatief goedkoop zijn voor de dag, maar daadwerkelijk goedkoop in absolute termen. Selecteer '**Alle**' om beste prijzen te tonen ongeacht hun absolute prijsniveau.",
+                            "best_price_max_level_gap_count": "Maximum aantal opeenvolgende intervallen dat precies één niveaustap mag afwijken van het vereiste niveau. Bijvoorbeeld: met '**Goedkoop**' filter en gaptelling 1 wordt de reeks '**Goedkoop**, **Goedkoop**, **Normaal**, **Goedkoop**' geaccepteerd (**Normaal** is één stap boven **Goedkoop**). Dit voorkomt dat periodes worden opgesplitst door incidentele niveauafwijkingen. **Let op:** Gaptolerantie vereist periodes ≥90 minuten (6 intervallen) om afwijkingen effectief te detecteren. Standaard: 0 (strikte filtering, geen tolerantie)."
                         }
                     },
                     "flexibility_settings": {
-                        "name": "Flexibility Settings",
-                        "description": "Configure price comparison thresholds and filtering.",
+                        "name": "Flexibiliteitsinstellingen",
+                        "description": "Configureer prijsvergelijkingsdrempels en filtering.",
                         "data": {
-                            "best_price_flex": "Flexibility",
-                            "best_price_min_distance_from_avg": "Minimum Distance"
+                            "best_price_flex": "Flexibiliteit",
+                            "best_price_min_distance_from_avg": "Minimale afstand"
                         },
                         "data_description": {
-                            "best_price_flex": "Maximum above the daily minimum price that intervals can be and still qualify as 'best price'. Recommended: 15-20 with relaxation enabled (default), or 25-35 without relaxation. Maximum: 50 (hard cap for reliable period detection).",
-                            "best_price_min_distance_from_avg": "Ensures periods are significantly cheaper than the daily average, not just marginally below it. This filters out noise and prevents marking slightly-below-average periods as 'best price' on days with flat prices. Higher values = stricter filtering (only truly cheap periods qualify). Default: 5 means periods must be at least 5% below the daily average."
+                            "best_price_flex": "Maximaal boven de dagelijkse minimumprijs waarbij intervallen nog kwalificeren als 'beste prijs'. Aanbevolen: 15-20 met versoepeling geactiveerd (standaard), of 25-35 zonder versoepeling. Maximum: 50 (harde limiet voor betrouwbare periodedetectie).",
+                            "best_price_min_distance_from_avg": "Zorgt ervoor dat periodes significant goedkoper zijn dan het daggemiddelde, niet slechts marginaal eronder. Dit filtert ruis en voorkomt dat licht-onder-gemiddelde periodes op dagen met vlakke prijzen als 'beste prijs' worden gemarkeerd. Hogere waarden = striktere filtering (alleen echt goedkope periodes kwalificeren). Standaard: 5 betekent dat periodes minimaal 5% onder het daggemiddelde moeten liggen."
                         }
                     },
                     "relaxation_and_target_periods": {
-                        "name": "Relaxation & Target Periods",
-                        "description": "Configure automatic filter relaxation and target period counts. Enable 'Achieve Minimum Count' to activate relaxation.",
+                        "name": "Versoepeling & Doelperiodes",
+                        "description": "Configureer automatische filterversoepeling en doelperiodetellingen. Activeer 'Minimum aantal bereiken' om versoepeling te activeren.",
                         "data": {
-                            "enable_min_periods_best": "Achieve Minimum Count",
-                            "min_periods_best": "Minimum Periods",
-                            "relaxation_attempts_best": "Relaxation Attempts"
+                            "enable_min_periods_best": "Minimum aantal bereiken",
+                            "min_periods_best": "Minimum periodes",
+                            "relaxation_attempts_best": "Versoepeling pogingen"
                         },
                         "data_description": {
-                            "enable_min_periods_best": "When enabled, filters will be gradually relaxed if not enough periods are found. This attempts to reach the desired minimum number of periods, which may include less optimal time windows as best-price periods.",
-                            "min_periods_best": "Minimum number of best price periods to aim for per day. Filters will be relaxed step-by-step to try achieving this count. Only active when 'Achieve Minimum Count' is enabled. Default: 1",
-                            "relaxation_attempts_best": "How many flex levels (attempts) to try before giving up. Each attempt runs all filter combinations at the new flex level. More attempts increase the chance of finding additional periods at the cost of longer processing time."
+                            "enable_min_periods_best": "Wanneer ingeschakeld worden filters geleidelijk versoepeld als er niet genoeg periodes worden gevonden. Dit probeert het gewenste minimum aantal periodes te bereiken, wat minder optimale tijdvensters kan omvatten als beste-prijs periodes.",
+                            "min_periods_best": "Minimum aantal beste prijs periodes om per dag na te streven. Filters worden stap voor stap versoepeld om deze telling te bereiken. Alleen actief wanneer 'Minimum aantal bereiken' is ingeschakeld. Standaard: 1",
+                            "relaxation_attempts_best": "Hoeveel flexniveaus (pogingen) te proberen voordat wordt opgegeven. Elke poging voert alle filtercombinaties uit op het nieuwe flexniveau. Meer pogingen vergroten de kans op het vinden van extra periodes ten koste van langere verwerkingstijd."
                         }
                     }
                 },
@@ -222,8 +222,8 @@
                         },
                         "data_description": {
                             "peak_price_min_period_length": "Minimale duur voordat een periode als 'piekprijs' wordt beschouwd. Piekprijs waarschuwingen zijn toegestaan voor kortere periodes (minimaal 30 minuten versus 60 minuten voor beste prijs) omdat korte dure pieken de moeite waard zijn om voor te waarschuwen, zelfs als ze te kort zijn voor verbruiksplanning.",
-                            "peak_price_min_level": "Toon alleen piekprijs periodes als ze intervallen bevatten met prijsniveaus ≥ geselecteerde waarde. Bijvoorbeeld: selecteren van 'Duur' betekent dat de periode minstens één 'DUUR' of 'ZEER_DUUR' interval moet hebben. Dit zorgt ervoor dat 'piekprijs'-periodes niet alleen relatief duur zijn voor de dag, maar daadwerkelijk duur in absolute termen. Selecteer 'Alle' om piekprijzen te tonen ongeacht hun absolute prijsniveau.",
-                            "peak_price_max_level_gap_count": "Maximum aantal opeenvolgende intervallen dat precies één niveaustap mag afwijken van het vereiste niveau. Bijvoorbeeld: met 'Duur' filter en gaptelling 1 wordt de reeks 'DUUR, DUUR, NORMAAL, DUUR' geaccepteerd (NORMAAL is één stap onder DUUR). Dit voorkomt dat periodes worden opgesplitst door incidentele niveauafwijkingen. **Let op:** Gaptolerantie vereist periodes ≥90 minuten (6 intervallen) om afwijkingen effectief te detecteren. Standaard: 0 (strikte filtering, geen tolerantie)."
+                            "peak_price_min_level": "Toon alleen piekprijs periodes als ze intervallen bevatten met prijsniveaus ≥ geselecteerde waarde. Bijvoorbeeld: selecteren van '**Duur**' betekent dat de periode minstens één '**Duur**' of '**Zeer duur**' interval moet hebben. Dit zorgt ervoor dat 'piekprijs'-periodes niet alleen relatief duur zijn voor de dag, maar daadwerkelijk duur in absolute termen. Selecteer '**Alle**' om piekprijzen te tonen ongeacht hun absolute prijsniveau.",
+                            "peak_price_max_level_gap_count": "Maximum aantal opeenvolgende intervallen dat precies één niveaustap mag afwijken van het vereiste niveau. Bijvoorbeeld: met '**Duur**' filter en gaptelling 1 wordt de reeks '**Duur**, **Duur**, **Normaal**, **Duur**' geaccepteerd (**Normaal** is één stap onder **Duur**). Dit voorkomt dat periodes worden opgesplitst door incidentele niveauafwijkingen. **Let op:** Gaptolerantie vereist periodes ≥90 minuten (6 intervallen) om afwijkingen effectief te detecteren. Standaard: 0 (strikte filtering, geen tolerantie)."
                         }
                     },
                     "flexibility_settings": {
@@ -308,10 +308,10 @@
             "cannot_connect": "Verbinding mislukt",
             "invalid_access_token": "Ongeldig toegangstoken",
             "different_home": "Het toegangstoken is niet geldig voor de huis-ID waarvoor deze integratie is geconfigureerd.",
-            "invalid_flex": "TRANSLATE: Flexibility percentage must be between -50% and +50%",
-            "invalid_best_price_distance": "TRANSLATE: Distance percentage must be between -50% and 0% (negative = below average)",
-            "invalid_peak_price_distance": "TRANSLATE: Distance percentage must be between 0% and 50% (positive = above average)",
-            "invalid_min_periods": "TRANSLATE: Minimum periods count must be between 1 and 10",
+            "invalid_flex": "Flexibiliteitspercentage moet tussen -50% en +50% liggen",
+            "invalid_best_price_distance": "Afstandspercentage moet tussen -50% en 0% liggen (negatief = onder gemiddelde)",
+            "invalid_peak_price_distance": "Afstandspercentage moet tussen 0% en 50% liggen (positief = boven gemiddelde)",
+            "invalid_min_periods": "Minimum aantal perioden moet tussen 1 en 10 liggen",
             "invalid_period_length": "De periodelengte moet minimaal 15 minuten zijn (veelvouden van 15).",
             "invalid_gap_count": "Gaptolerantie moet tussen 0 en 8 liggen",
             "invalid_relaxation_attempts": "Versoepelingspogingen moeten tussen 1 en 12 liggen",
@@ -941,11 +941,11 @@
                 },
                 "include_level": {
                     "name": "Prijsniveau opnemen",
-                    "description": "Voeg het Tibber-prijsniveauveld (VERY_CHEAP, CHEAP, NORMAL, EXPENSIVE, VERY_EXPENSIVE) toe aan elk gegevenspunt."
+                    "description": "Voeg het Tibber-prijsniveauveld (zeer goedkoop/goedkoop/normaal/duur/zeer duur) toe aan elk gegevenspunt."
                 },
                 "include_rating_level": {
                     "name": "Prijsbeoordeling opnemen",
-                    "description": "Voeg het berekende prijsbeoordelingsveld (LOW, NORMAL, HIGH) toe op basis van jouw geconfigureerde drempels aan elk gegevenspunt."
+                    "description": "Voeg het berekende prijsbeoordelingsveld (laag/normaal/hoog) toe op basis van jouw geconfigureerde drempels aan elk gegevenspunt."
                 },
                 "include_average": {
                     "name": "Gemiddelde opnemen",
@@ -953,11 +953,11 @@
                 },
                 "level_filter": {
                     "name": "Prijsniveaufilter",
-                    "description": "Intervallen filteren om alleen specifieke Tibber-prijsniveaus op te nemen (VERY_CHEAP, CHEAP, NORMAL, EXPENSIVE, VERY_EXPENSIVE). Indien niet opgegeven, worden alle niveaus opgenomen."
+                    "description": "Intervallen filteren om alleen specifieke Tibber-prijsniveaus op te nemen (zeer goedkoop/goedkoop/normaal/duur/zeer duur). Indien niet opgegeven, worden alle niveaus opgenomen."
                 },
                 "rating_level_filter": {
                     "name": "Prijsbeoordeling Filter",
-                    "description": "Filter intervallen om alleen specifieke prijsbeoordelingen op te nemen (LOW, NORMAL, HIGH). Als dit niet is opgegeven, worden alle beoordelingen opgenomen."
+                    "description": "Filter intervallen om alleen specifieke prijsbeoordelingen op te nemen (laag/normaal/hoog). Als dit niet is opgegeven, worden alle beoordelingen opgenomen."
                 },
                 "period_filter": {
                     "name": "Periode Filter",

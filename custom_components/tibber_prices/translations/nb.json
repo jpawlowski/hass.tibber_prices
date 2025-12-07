@@ -166,43 +166,43 @@
                 "description": "_{step_progress}_\n\nKonfigurer innstillinger for **Beste Prisperiode** binærsensor. Denne sensoren er aktiv i perioder med de laveste strømprisene.\n\n---",
                 "sections": {
                     "period_settings": {
-                        "name": "Period Settings",
-                        "description": "Configure period duration and price level constraints.",
+                        "name": "Periodeinnstillinger",
+                        "description": "Konfigurer periodelengde og prisnivåbegrensninger.",
                         "data": {
-                            "best_price_min_period_length": "Minimum Period Length",
-                            "best_price_max_level": "Price Level Filter",
-                            "best_price_max_level_gap_count": "Gap Tolerance"
+                            "best_price_min_period_length": "Minimum periodelengde",
+                            "best_price_max_level": "Prisnivåfilter",
+                            "best_price_max_level_gap_count": "Gaptoleranse"
                         },
                         "data_description": {
-                            "best_price_min_period_length": "Minimum duration for a period to be considered as 'best price'. Longer periods are more practical for running appliances like dishwashers or heat pumps. Best price periods require minimum 60 minutes (compared to 30 minutes for peak price alerts) because they should provide meaningful time windows for consumption planning, not just brief opportunities.",
-                            "best_price_max_level": "Only show best price periods if they contain intervals with price levels ≤ selected value. For example, selecting 'Cheap' means the period must have at least one 'VERY_CHEAP' or 'CHEAP' interval. This ensures 'best price' periods are not just relatively cheap for the day, but actually cheap in absolute terms. Select 'Any' to show best prices regardless of their absolute price level.",
-                            "best_price_max_level_gap_count": "Maximum number of consecutive intervals allowed that deviate by exactly one level step from the required level. For example: with 'Cheap' filter and gap count 1, a sequence 'CHEAP, CHEAP, NORMAL, CHEAP' is accepted (NORMAL is one step above CHEAP). This prevents periods from being split by occasional level deviations. **Note:** Gap tolerance requires periods ≥90 minutes (6 intervals) to detect outliers effectively. Default: 0 (strict filtering, no tolerance)."
+                            "best_price_min_period_length": "Minimum varighet for at en periode skal regnes som 'beste pris'. Lengre perioder er mer praktiske for å kjøre apparater som oppvaskmaskiner eller varmepumper. Beste pris-perioder krever minimum 60 minutter (sammenlignet med 30 minutter for topppris-advarsler) fordi de skal gi meningsfulle tidsvinduer for forbruksplanlegging, ikke bare kortvarige muligheter.",
+                            "best_price_max_level": "Vis kun beste pris-perioder hvis de inneholder intervaller med prisnivåer ≤ valgt verdi. For eksempel: å velge '**Billig**' betyr at perioden må ha minst étt '**Veldig billig**' eller '**Billig**' intervall. Dette sikrer at 'beste pris'-perioder ikke bare er relativt billige for dagen, men faktisk billige i absolutte tall. Velg '**Alle**' for å vise beste priser uavhengig av deres absolutte prisnivå.",
+                            "best_price_max_level_gap_count": "Maksimalt antall påfølgende intervaller som kan avvike med nøyaktig étt nivåtrinn fra det nødvendige nivået. For eksempel: med '**Billig**' filter og gapantall 1, aksepteres sekvensen '**Billig**, **Billig**, **Normal**, **Billig**' (**Normal** er étt trinn over **Billig**). Dette forhindrer at perioder blir delt opp av tilfeldige nivåavvik. **Merk:** Gaptoleranse krever perioder ≥90 minutter (6 intervaller) for å oppdage avvik effektivt. Standard: 0 (streng filtrering, ingen toleranse)."
                         }
                     },
                     "flexibility_settings": {
-                        "name": "Flexibility Settings",
-                        "description": "Configure price comparison thresholds and filtering.",
+                        "name": "Fleksibilitetsinnstillinger",
+                        "description": "Konfigurer prissammenligningsgrenser og filtrering.",
                         "data": {
-                            "best_price_flex": "Flexibility",
-                            "best_price_min_distance_from_avg": "Minimum Distance"
+                            "best_price_flex": "Fleksibilitet",
+                            "best_price_min_distance_from_avg": "Minimumsavstand"
                         },
                         "data_description": {
-                            "best_price_flex": "Maximum above the daily minimum price that intervals can be and still qualify as 'best price'. Recommended: 15-20 with relaxation enabled (default), or 25-35 without relaxation. Maximum: 50 (hard cap for reliable period detection).",
-                            "best_price_min_distance_from_avg": "Ensures periods are significantly cheaper than the daily average, not just marginally below it. This filters out noise and prevents marking slightly-below-average periods as 'best price' on days with flat prices. Higher values = stricter filtering (only truly cheap periods qualify). Default: 5 means periods must be at least 5% below the daily average."
+                            "best_price_flex": "Maksimalt over den daglige minimumsprisen der intervaller fortsatt kvalifiserer som 'beste pris'. Anbefalt: 15-20 med lemping aktivert (standard), eller 25-35 uten lemping. Maksimum: 50 (hard grense for pålitelig periodegjenkjenning).",
+                            "best_price_min_distance_from_avg": "Sikrer at perioder er betydelig billigere enn daglig gjennomsnitt, ikke bare marginalt under det. Dette filtrerer støy og forhindrer at litt-under-gjennomsnittet perioder markeres som 'beste pris' på dager med flate priser. Høyere verdier = strengere filtrering (bare virkelig billige perioder kvalifiserer). Standard: 5 betyr at perioder må være minst 5% under daglig gjennomsnitt."
                         }
                     },
                     "relaxation_and_target_periods": {
-                        "name": "Relaxation & Target Periods",
-                        "description": "Configure automatic filter relaxation and target period counts. Enable 'Achieve Minimum Count' to activate relaxation.",
+                        "name": "Lemping & Målperioder",
+                        "description": "Konfigurer automatisk filterlemping og målperiodeantall. Aktiver 'Oppnå minimumsantall' for å aktivere lemping.",
                         "data": {
-                            "enable_min_periods_best": "Achieve Minimum Count",
-                            "min_periods_best": "Minimum Periods",
-                            "relaxation_attempts_best": "Relaxation Attempts"
+                            "enable_min_periods_best": "Oppnå minimumsantall",
+                            "min_periods_best": "Minimumsperioder",
+                            "relaxation_attempts_best": "Lempingsforsøk"
                         },
                         "data_description": {
-                            "enable_min_periods_best": "When enabled, filters will be gradually relaxed if not enough periods are found. This attempts to reach the desired minimum number of periods, which may include less optimal time windows as best-price periods.",
-                            "min_periods_best": "Minimum number of best price periods to aim for per day. Filters will be relaxed step-by-step to try achieving this count. Only active when 'Achieve Minimum Count' is enabled. Default: 1",
-                            "relaxation_attempts_best": "How many flex levels (attempts) to try before giving up. Each attempt runs all filter combinations at the new flex level. More attempts increase the chance of finding additional periods at the cost of longer processing time."
+                            "enable_min_periods_best": "Når aktivert vil filtre gradvis bli lempet hvis ikke nok perioder blir funnet. Dette forsøker å nå det ønskede minimumsantall perioder, som kan inkludere mindre optimale tidsvinduer som beste pris-perioder.",
+                            "min_periods_best": "Minimumsantall beste pris-perioder å sikte på per dag. Filtre vil bli lempet steg for steg for å forsøke å oppnå dette antallet. Kun aktiv når 'Oppnå minimumsantall' er aktivert. Standard: 1",
+                            "relaxation_attempts_best": "Hvor mange fleksnivåer (forsøk) å prøve før man gir opp. Hvert forsøk kjører alle filterkombinasjoner på det nye fleksnivået. Flere forsøk øker sjansen for å finne flere perioder på bekostning av lengre behandlingstid."
                         }
                     }
                 },
@@ -222,8 +222,8 @@
                         },
                         "data_description": {
                             "peak_price_min_period_length": "Minimum varighet for at en periode skal regnes som 'topppris'. Topppris-advarsler er tillatt for kortere perioder (minimum 30 minutter sammenlignet med 60 minutter for beste pris) fordi korte dyre topper er verdt å advare om, selv om de er for korte for forbruksplanlegging.",
-                            "peak_price_min_level": "Vis kun topprisperioder hvis de inneholder intervaller med prisnivåer ≥ valgt verdi. For eksempel: å velge 'Dyr' betyr at perioden må ha minst étt 'DYR' eller 'VELDIG_DYR' intervall. Dette sikrer at 'topppris'-perioder ikke bare er relativt dyre for dagen, men faktisk dyre i absolutte tall. Velg 'Alle' for å vise topppriser uavhengig av deres absolutte prisnivå.",
-                            "peak_price_max_level_gap_count": "Maksimalt antall påfølgende intervaller som kan avvike med nøyaktig étt nivåtrinn fra det nødvendige nivået. For eksempel: med 'Dyr' filter og gapantall 1, aksepteres sekvensen 'DYR, DYR, NORMAL, DYR' (NORMAL er étt trinn under DYR). Dette forhindrer at perioder blir delt opp av tilfeldige nivåavvik. **Merk:** Gaptoleranse krever perioder ≥90 minutter (6 intervaller) for å oppdage avvik effektivt. Standard: 0 (streng filtrering, ingen toleranse)."
+                            "peak_price_min_level": "Vis kun topprisperioder hvis de inneholder intervaller med prisnivåer ≥ valgt verdi. For eksempel: å velge '**Dyr**' betyr at perioden må ha minst étt '**Dyr**' eller '**Veldig dyr**' intervall. Dette sikrer at 'topppris'-perioder ikke bare er relativt dyre for dagen, men faktisk dyre i absolutte tall. Velg '**Alle**' for å vise topppriser uavhengig av deres absolutte prisnivå.",
+                            "peak_price_max_level_gap_count": "Maksimalt antall påfølgende intervaller som kan avvike med nøyaktig étt nivåtrinn fra det nødvendige nivået. For eksempel: med '**Dyr**' filter og gapantall 1, aksepteres sekvensen '**Dyr**, **Dyr**, **Normal**, **Dyr**' (**Normal** er étt trinn under **Dyr**). Dette forhindrer at perioder blir delt opp av tilfeldige nivåavvik. **Merk:** Gaptoleranse krever perioder ≥90 minutter (6 intervaller) for å oppdage avvik effektivt. Standard: 0 (streng filtrering, ingen toleranse)."
                         }
                     },
                     "flexibility_settings": {
@@ -308,10 +308,10 @@
             "cannot_connect": "Kunne ikke koble til",
             "invalid_access_token": "Ugyldig tilgangstoken",
             "different_home": "Tilgangstokenet er ikke gyldig for hjem-ID-en denne integrasjonen er konfigurert for.",
-            "invalid_flex": "TRANSLATE: Flexibility percentage must be between -50% and +50%",
-            "invalid_best_price_distance": "TRANSLATE: Distance percentage must be between -50% and 0% (negative = below average)",
-            "invalid_peak_price_distance": "TRANSLATE: Distance percentage must be between 0% and 50% (positive = above average)",
-            "invalid_min_periods": "TRANSLATE: Minimum periods count must be between 1 and 10",
+            "invalid_flex": "Fleksibilitetsprosent må være mellom -50% og +50%",
+            "invalid_best_price_distance": "Avstandsprosent må være mellom -50% og 0% (negativ = under gjennomsnitt)",
+            "invalid_peak_price_distance": "Avstandsprosent må være mellom 0% og 50% (positiv = over gjennomsnitt)",
+            "invalid_min_periods": "Minimumsantall perioder må være mellom 1 og 10",
             "invalid_period_length": "Periodelengden må være minst 15 minutter (multipler av 15).",
             "invalid_gap_count": "Gaptoleranse må være mellom 0 og 8",
             "invalid_relaxation_attempts": "Lempingsforsøk må være mellom 1 og 12",
@@ -941,11 +941,11 @@
                 },
                 "include_level": {
                     "name": "Inkluder prisnivå",
-                    "description": "Inkluder Tibber-prisnivåfeltet (VERY_CHEAP, CHEAP, NORMAL, EXPENSIVE, VERY_EXPENSIVE) i hvert datapunkt."
+                    "description": "Inkluder Tibber-prisnivåfeltet (veldig billig/billig/normal/dyr/veldig dyr) i hvert datapunkt."
                 },
                 "include_rating_level": {
                     "name": "Inkluder prisvurdering",
-                    "description": "Inkluder det beregnede prisvurderingsfeltet (LOW, NORMAL, HIGH) basert på dine konfigurerte terskler i hvert datapunkt."
+                    "description": "Inkluder det beregnede prisvurderingsfeltet (lav/normal/høy) basert på dine konfigurerte terskler i hvert datapunkt."
                 },
                 "include_average": {
                     "name": "Inkluder gjennomsnitt",
@@ -953,11 +953,11 @@
                 },
                 "level_filter": {
                     "name": "Prisnivåfilter",
-                    "description": "Filtrer intervaller for å bare inkludere spesifikke Tibber-prisnivåer (VERY_CHEAP, CHEAP, NORMAL, EXPENSIVE, VERY_EXPENSIVE). Hvis ikke angitt, inkluderes alle nivåer."
+                    "description": "Filtrer intervaller for å bare inkludere spesifikke Tibber-prisnivåer (veldig billig/billig/normal/dyr/veldig dyr). Hvis ikke angitt, inkluderes alle nivåer."
                 },
                 "rating_level_filter": {
                     "name": "Prisvurderingsfilter",
-                    "description": "Filtrer intervaller for å inkludere bare spesifikke prisvurderinger (LOW, NORMAL, HIGH). Hvis ikke spesifisert, inkluderes alle vurderinger."
+                    "description": "Filtrer intervaller for å inkludere bare spesifikke prisvurderinger (lav/normal/høy). Hvis ikke spesifisert, inkluderes alle vurderinger."
                 },
                 "period_filter": {
                     "name": "Periodefilter",

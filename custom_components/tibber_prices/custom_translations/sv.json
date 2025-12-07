@@ -291,13 +291,13 @@
         },
         "today_volatility": {
             "description": "Prisvolatilitetsklassificering för idag",
-            "long_description": "Visar hur mycket elpriserna varierar under dagen baserat på spridningen (skillnaden mellan högsta och lägsta pris). Klassificering: LÅG = spridning < 5 öre, MÅTTLIG = 5-15 öre, HÖG = 15-30 öre, MYCKET HÖG = >30 öre.",
-            "usage_tips": "Använd detta för att avgöra om prisbaserad optimering är värt besväret. Till exempel, med ett balkongbatteri som har 15% effektivitetsförlust är optimering endast meningsfull när volatiliteten är åtminstone MÅTTLIG. Skapa automationer som kontrollerar volatiliteten innan laddnings-/urladdningscykler planeras."
+            "long_description": "Visar hur mycket elpriserna varierar under dagen baserat på spridningen (skillnaden mellan högsta och lägsta pris). Klassificering: låg = spridning < 5 öre, måttlig = 5-15 öre, hög = 15-30 öre, mycket hög = >30 öre.",
+            "usage_tips": "Använd detta för att avgöra om prisbaserad optimering är värt besväret. Till exempel, med ett balkongbatteri som har 15% effektivitetsförlust är optimering endast meningsfull när volatiliteten är åtminstone måttlig. Skapa automationer som kontrollerar volatiliteten innan laddnings-/urladdningscykler planeras."
         },
         "tomorrow_volatility": {
             "description": "Prisvolatilitetsklassificering för imorgon",
             "long_description": "Visar hur mycket elpriserna kommer att variera under morgondagen baserat på spridningen (skillnaden mellan högsta och lägsta pris). Blir otillgänglig tills morgondagens data publiceras (vanligtvis 13:00-14:00 CET).",
-            "usage_tips": "Använd detta för förhandsplanering av morgondagens energianvändning. Om morgondagen har HÖG eller MYCKET HÖG volatilitet är det värt att optimera energiförbrukningstiming. Vid LÅG volatilitet kan du köra enheter när som helst utan betydande kostnadsskillnader."
+            "usage_tips": "Använd detta för förhandsplanering av morgondagens energianvändning. Om morgondagen har hög eller mycket hög volatilitet är det värt att optimera energiförbrukningstiming. Vid låg volatilitet kan du köra enheter när som helst utan betydande kostnadsskillnader."
         },
         "next_24h_volatility": {
             "description": "Prisvolatilitetsklassificering för rullande nästa 24 timmar",
@@ -485,11 +485,6 @@
             "description": "Om realtidsförbrukningsövervakning är aktiv",
             "long_description": "Indikerar om realtidsövervakning av elförbrukning är aktiverad och aktiv för ditt Tibber-hem. Detta kräver kompatibel mätutrustning (t.ex. Tibber Pulse) och en aktiv prenumeration.",
             "usage_tips": "Använd detta för att verifiera att realtidsförbrukningen är tillgänglig. Aktivera meddelanden om detta oväntat ändras till 'av', vilket indikerar potentiella hårdvaru- eller anslutningsproblem."
-        },
-        "chart_data_export": {
-            "description": "Dataexport för instrumentpanelsintegrationer",
-            "long_description": "Denna binär sensor anropar tjänsten get_chartdata för att exportera prissensordata i format som är kompatibelt med ApexCharts och andra instrumentpanelskomponenter. Använd denna tillsammans med custom:apexcharts-card för att visa prissensorer på din instrumentpanel.",
-            "usage_tips": "Konfigurera YAML-parametrarna i integrationens alternativ under 'ApexCharts-datakonfiguration'. Tjänsten kräver en giltig sensorenhet och returnerar formaterad data för kartrendring. Se dokumentationen för tillgängliga parametrar och anpassningsalternativ."
         }
     },
     "home_types": {

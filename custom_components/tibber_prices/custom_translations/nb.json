@@ -291,13 +291,13 @@
         },
         "today_volatility": {
             "description": "Prisvolatilitetsklassifisering for i dag",
-            "long_description": "Viser hvor mye strømprisene varierer gjennom dagen basert på spredningen (forskjellen mellom høyeste og laveste pris). Klassifisering: LOW = spredning < 5øre, MODERATE = 5-15øre, HIGH = 15-30øre, VERY HIGH = >30øre.",
-            "usage_tips": "Bruk dette til å bestemme om prisbasert optimalisering er verdt det. For eksempel, med et balkongbatteri som har 15% effektivitetstap, er optimalisering kun meningsfull når volatiliteten er minst MODERATE. Opprett automatiseringer som sjekker volatilitet før planlegging av lade-/utladingssykluser."
+            "long_description": "Viser hvor mye strømprisene varierer gjennom dagen basert på spredningen (forskjellen mellom høyeste og laveste pris). Klassifisering: lav = spredning < 5øre, moderat = 5-15øre, høy = 15-30øre, veldig høy = >30øre.",
+            "usage_tips": "Bruk dette til å bestemme om prisbasert optimalisering er verdt det. For eksempel, med et balkongbatteri som har 15% effektivitetstap, er optimalisering kun meningsfull når volatiliteten er minst moderat. Opprett automatiseringer som sjekker volatilitet før planlegging av lade-/utladingssykluser."
         },
         "tomorrow_volatility": {
             "description": "Prisvolatilitetsklassifisering for i morgen",
             "long_description": "Viser hvor mye strømprisene vil variere gjennom morgendagen basert på spredningen (forskjellen mellom høyeste og laveste pris). Blir utilgjengelig til morgendagens data er publisert (typisk 13:00-14:00 CET).",
-            "usage_tips": "Bruk dette til forhåndsplanlegging av morgendagens energiforbruk. Hvis morgendagen har HIGH eller VERY HIGH volatilitet, er det verdt å optimalisere tidspunktet for energiforbruk. Hvis LOW, kan du kjøre enheter når som helst uten betydelige kostnadsforskjeller."
+            "usage_tips": "Bruk dette til forhåndsplanlegging av morgendagens energiforbruk. Hvis morgendagen har høy eller veldig høy volatilitet, er det verdt å optimalisere tidspunktet for energiforbruk. Hvis lav, kan du kjøre enheter når som helst uten betydelige kostnadsforskjeller."
         },
         "next_24h_volatility": {
             "description": "Prisvolatilitetsklassifisering for de rullerende neste 24 timene",
@@ -485,11 +485,6 @@
             "description": "Om sanntidsforbruksovervåking er aktiv",
             "long_description": "Indikerer om sanntidsovervåking av strømforbruk er aktivert og aktiv for ditt Tibber-hjem. Dette krever kompatibel målehardware (f.eks. Tibber Pulse) og et aktivt abonnement.",
             "usage_tips": "Bruk dette for å bekrefte at sanntidsforbruksdata er tilgjengelig. Aktiver varsler hvis dette endres til 'av' uventet, noe som indikerer potensielle maskinvare- eller tilkoblingsproblemer."
-        },
-        "chart_data_export": {
-            "description": "Dataeksport for dashboardintegrasjoner",
-            "long_description": "Denne binærsensoren kaller get_chartdata-tjenesten for å eksportere prisdata i formater som er kompatible med ApexCharts og andre dashboardverktøy. Dataeksporten inkluderer historiske og fremtidsrettede prisdata strukturert for visualisering.",
-            "usage_tips": "Konfigurer YAML-parametrene i integrasjonsalternativene. Bruk denne sensoren til å trigge dataeksporthendelser for dashboards. Når den slås på, eksporteres data til en fil eller tjeneste som er konfigurert for integrering med ApexCharts eller tilsvarende visualiseringsverktøy."
         }
     },
     "home_types": {

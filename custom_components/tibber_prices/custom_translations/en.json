@@ -291,13 +291,13 @@
         },
         "today_volatility": {
             "description": "Price volatility classification for today",
-            "long_description": "Shows how much electricity prices vary throughout today based on the spread (difference between highest and lowest price). Classification: LOW = spread < 5ct, MODERATE = 5-15ct, HIGH = 15-30ct, VERY HIGH = >30ct.",
-            "usage_tips": "Use this to decide if price-based optimization is worthwhile. For example, with a balcony battery that has 15% efficiency losses, optimization only makes sense when volatility is at least MODERATE. Create automations that check volatility before scheduling charging/discharging cycles."
+            "long_description": "Shows how much electricity prices vary throughout today based on the spread (difference between highest and lowest price). Classification: low = spread < 5ct, moderate = 5-15ct, high = 15-30ct, very high = >30ct.",
+            "usage_tips": "Use this to decide if price-based optimization is worthwhile. For example, with a balcony battery that has 15% efficiency losses, optimization only makes sense when volatility is at least moderate. Create automations that check volatility before scheduling charging/discharging cycles."
         },
         "tomorrow_volatility": {
             "description": "Price volatility classification for tomorrow",
             "long_description": "Shows how much electricity prices will vary throughout tomorrow based on the spread (difference between highest and lowest price). Becomes unavailable until tomorrow's data is published (typically 13:00-14:00 CET).",
-            "usage_tips": "Use this for advance planning of tomorrow's energy usage. If tomorrow has HIGH or VERY HIGH volatility, it's worth optimizing energy consumption timing. If LOW, you can run devices anytime without significant cost differences."
+            "usage_tips": "Use this for advance planning of tomorrow's energy usage. If tomorrow has high or very high volatility, it's worth optimizing energy consumption timing. If low, you can run devices anytime without significant cost differences."
         },
         "next_24h_volatility": {
             "description": "Price volatility classification for the rolling next 24 hours",
@@ -443,6 +443,16 @@
             "description": "Status of your Tibber subscription",
             "long_description": "Shows whether your Tibber subscription is currently running, has ended, or is pending activation. A status of 'running' means you're actively receiving electricity through Tibber.",
             "usage_tips": "Use this to monitor your subscription status. Set up alerts if status changes from 'running' to ensure uninterrupted service."
+        },
+        "chart_data_export": {
+            "description": "Data export for dashboard integrations",
+            "long_description": "This binary sensor calls the get_chartdata service with your configured YAML parameters and exposes the result as entity attributes. The state is 'on' when the service call succeeds and data is available, 'off' when the call fails or no configuration is set. Perfect for dashboard integrations like ApexCharts that need to read price data from entity attributes.",
+            "usage_tips": "Configure the YAML parameters in the integration options to match your get_chartdata service call. The sensor will automatically refresh when price data updates (typically after midnight and when tomorrow's data arrives). Access the service response data directly from the entity's attributes - the structure matches exactly what get_chartdata returns."
+        },
+        "chart_metadata": {
+            "description": "Lightweight metadata for chart configuration",
+            "long_description": "Provides essential chart configuration values as sensor attributes. Useful for any chart card that needs Y-axis bounds. The sensor calls get_chartdata with metadata-only mode (no data processing) and extracts: yaxis_min, yaxis_max (suggested Y-axis range for optimal scaling). The state reflects the service call result: 'ready' when successful, 'error' on failure, 'pending' during initialization.",
+            "usage_tips": "Configure via configuration.yaml under tibber_prices.chart_metadata_config (optional: day, minor_currency, resolution). The sensor automatically refreshes when price data updates. Access metadata from attributes: yaxis_min, yaxis_max. Use with config-template-card or any tool that reads entity attributes - perfect for dynamic chart configuration without manual calculations."
         }
     },
     "binary_sensor": {
@@ -475,16 +485,6 @@
             "description": "Whether realtime consumption monitoring is active",
             "long_description": "Indicates if realtime electricity consumption monitoring is enabled and active for your Tibber home. This requires compatible metering hardware (e.g., Tibber Pulse) and an active subscription.",
             "usage_tips": "Use this to verify that realtime consumption data is available. Enable notifications if this changes to 'off' unexpectedly, indicating potential hardware or connectivity issues."
-        },
-        "chart_data_export": {
-            "description": "Data export for dashboard integrations",
-            "long_description": "This binary sensor calls the get_chartdata service with your configured YAML parameters and exposes the result as entity attributes. The state is 'on' when the service call succeeds and data is available, 'off' when the call fails or no configuration is set. Perfect for dashboard integrations like ApexCharts that need to read price data from entity attributes.",
-            "usage_tips": "Configure the YAML parameters in the integration options to match your get_chartdata service call. The sensor will automatically refresh when price data updates (typically after midnight and when tomorrow's data arrives). Access the service response data directly from the entity's attributes - the structure matches exactly what get_chartdata returns."
-        },
-        "chart_metadata": {
-            "description": "Lightweight metadata for chart configuration",
-            "long_description": "Provides essential chart configuration values as sensor attributes. Useful for any chart card that needs Y-axis bounds. The sensor calls get_chartdata with metadata-only mode (no data processing) and extracts: yaxis_min, yaxis_max (suggested Y-axis range for optimal scaling). The state reflects the service call result: 'ready' when successful, 'error' on failure, 'pending' during initialization.",
-            "usage_tips": "Configure via configuration.yaml under tibber_prices.chart_metadata_config (optional: day, minor_currency, resolution). The sensor automatically refreshes when price data updates. Access metadata from attributes: yaxis_min, yaxis_max. Use with config-template-card or any tool that reads entity attributes - perfect for dynamic chart configuration without manual calculations."
         }
     },
     "home_types": {

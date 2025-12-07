@@ -167,21 +167,21 @@
                 "sections": {
                     "period_settings": {
                         "name": "Zeitraumdauer & Preisniveaus",
-                        "description": "Legen Sie fest, wie lange Zeiträume sein sollen und welche Preisniveaus einbezogen werden.",
+                        "description": "Lege fest, wie lange Zeiträume sein sollen und welche Preisniveaus einbezogen werden.",
                         "data": {
                             "best_price_min_period_length": "Minimale Zeitraumlänge",
                             "best_price_max_level": "Preisniveau-Filter",
                             "best_price_max_level_gap_count": "Lückentoleranz"
                         },
                         "data_description": {
-                            "best_price_min_period_length": "Mindestdauer für einen Zeitraum um als 'Bestpreis' zu gelten. Längere Zeiträume sind prakti scher für Geräte wie Geschirrspüler oder Wärmepumpen. Bestpreis-Zeiträume benötigen mindestens 60 Minuten (vs. 30 Minuten für Spitzenlast-Warnungen), da sie aussagekräftige Zeitfenster für die Verbrauchsplanung bieten sollten.",
-                            "best_price_max_level": "Nur Bestpreis-Zeiträume anzeigen, wenn sie Intervalle mit Preisniveaus ≤ dem ausgewählten Wert enthalten. Beispiel: Auswahl 'Günstig' bedeutet, der Zeitraum muss mindestens ein 'SEHR_GÜNSTIG' oder 'GÜNSTIG' Intervall enthalten. Dies stellt sicher, dass 'Bestpreis'-Zeiträume nicht nur relativ billig für den Tag sind, sondern auch absolut günstig. Wählen Sie 'Alle' um Bestpreise unabhängig vom absoluten Preisniveau anzuzeigen.",
-                            "best_price_max_level_gap_count": "Maximale Anzahl aufeinanderfolgender Intervalle, die um genau eine Preisstufe vom erforderlichen Niveau abweichen dürfen. Beispiel: Mit 'Günstig'-Filter und Lückenzähler 1 wird eine Sequenz 'GÜNSTIG, GÜNSTIG, NORMAL, GÜNSTIG' akzeptiert (NORMAL ist eine Stufe über GÜNSTIG). Dies verhindert, dass Zeiträume durch gelegentliche Niveauabweichungen aufgeteilt werden. **Hinweis:** Lückentoleranz erfordert Zeiträume ≥90 Minuten (6 Intervalle), um Ausreißer effektiv zu erkennen. Standard: 0 (strikte Filterung, keine Toleranz)."
+                            "best_price_min_period_length": "Mindestdauer für einen Zeitraum um als 'Bestpreis' zu gelten. Längere Zeiträume sind praktischer für Geräte wie Geschirrspüler oder Wärmepumpen. Bestpreis-Zeiträume benötigen mindestens 60 Minuten (vs. 30 Minuten für Spitzenlast-Warnungen), da sie aussagekräftige Zeitfenster für die Verbrauchsplanung bieten sollten.",
+                            "best_price_max_level": "Nur Bestpreis-Zeiträume anzeigen, wenn sie Intervalle mit Preisniveaus ≤ dem ausgewählten Wert enthalten. Beispiel: Auswahl '**Günstig**' bedeutet, der Zeitraum muss mindestens ein '**Sehr günstig**' oder '**Günstig**' Intervall enthalten. Dies stellt sicher, dass 'Bestpreis'-Zeiträume nicht nur relativ billig für den Tag sind, sondern auch absolut günstig. Wähle '**Alle**' um Bestpreise unabhängig vom absoluten Preisniveau anzuzeigen.",
+                            "best_price_max_level_gap_count": "Maximale Anzahl aufeinanderfolgender Intervalle, die um genau eine Preisstufe vom erforderlichen Niveau abweichen dürfen. Beispiel: Mit '**Günstig**'-Filter und Lückenzähler 1 wird eine Sequenz '**Günstig**, **Günstig**, **Normal**, **Günstig**' akzeptiert (**Normal** ist eine Stufe über **Günstig**). Dies verhindert, dass Zeiträume durch gelegentliche Niveauabweichungen aufgeteilt werden. **Hinweis:** Lückentoleranz erfordert Zeiträume ≥90 Minuten (6 Intervalle), um Ausreißer effektiv zu erkennen. Standard: 0 (strikte Filterung, keine Toleranz)."
                         }
                     },
                     "flexibility_settings": {
                         "name": "Flexibilität & Schwellenwerte",
-                        "description": "Kontrollieren Sie, wie sehr Preise abweichen dürfen und dennoch als 'Bestpreis' gelten.",
+                        "description": "Kontrolliere, wie sehr Preise abweichen dürfen und dennoch als 'Bestpreis' gelten.",
                         "data": {
                             "best_price_flex": "Flexibilität",
                             "best_price_min_distance_from_avg": "Mindestabstand"
@@ -193,7 +193,7 @@
                     },
                     "relaxation_and_target_periods": {
                         "name": "Lockerung & Zielanzahl Zeiträume",
-                        "description": "Konfigurieren Sie automatische Filterlockerung und Zielanzahl von Zeiträumen. Aktivieren Sie 'Mindestanzahl anstreben' um die Lockerung zu aktivieren.",
+                        "description": "Konfiguriere automatische Filterlockerung und Zielanzahl von Zeiträumen. Aktiviere 'Mindestanzahl anstreben' um die Lockerung zu aktivieren.",
                         "data": {
                             "enable_min_periods_best": "Mindestanzahl anstreben",
                             "min_periods_best": "Mindestanzahl Zeiträume",
@@ -222,8 +222,8 @@
                         },
                         "data_description": {
                             "peak_price_min_period_length": "Minimale Dauer, damit ein Zeitraum als 'Spitzenpreis' gilt. Spitzenpreis-Warnungen sind für kürzere Zeiträume zulässig (mindestens 30 Minuten im Vergleich zu 60 Minuten für Bestpreis), da kurze teure Spitzen eine Warnung wert sind, auch wenn sie für die Verbrauchsplanung zu kurz sind.",
-                            "peak_price_min_level": "Zeigt Spitzenpreis-Zeiträume nur an, wenn sie Intervalle mit Preisniveaus ≥ dem gewählten Wert enthalten. Beispiel: Wahl von 'Teuer' bedeutet, dass der Zeitraum mindestens ein 'TEUER' oder 'SEHR TEUER' Intervall haben muss. Dies stellt sicher, dass Spitzenpreis-Zeiträume nicht nur relativ teuer für den Tag sind, sondern tatsächlich teuer in absoluten Zahlen. Wähle 'Beliebig' um Spitzenpreise unabhängig vom absoluten Preisniveau anzuzeigen.",
-                            "peak_price_max_level_gap_count": "Maximale Anzahl aufeinanderfolgender Intervalle, die exakt um eine Niveaustufe vom geforderten Level abweichen dürfen. Beispiel: Bei Filter 'Teuer' und Lückentoleranz 2 wird die Sequenz 'TEUER, NORMAL, NORMAL, TEUER' akzeptiert (NORMAL ist eine Stufe unter TEUER). Dies verhindert, dass Zeiträume durch gelegentliche Niveau-Abweichungen aufgespalten werden. **Hinweis:** Lückentoleranz erfordert Zeiträume ≥90 Minuten (6 Intervalle), um Ausreißer effektiv zu erkennen. Standard: 0 (strenge Filterung, keine Toleranz)."
+                            "peak_price_min_level": "Zeigt Spitzenpreis-Zeiträume nur an, wenn sie Intervalle mit Preisniveaus ≥ dem gewählten Wert enthalten. Beispiel: Wahl von '**Teuer**' bedeutet, dass der Zeitraum mindestens ein '**Teuer**' oder '**Sehr teuer**' Intervall haben muss. Dies stellt sicher, dass Spitzenpreis-Zeiträume nicht nur relativ teuer für den Tag sind, sondern tatsächlich teuer in absoluten Zahlen. Wähle '**Beliebig**' um Spitzenpreise unabhängig vom absoluten Preisniveau anzuzeigen.",
+                            "peak_price_max_level_gap_count": "Maximale Anzahl aufeinanderfolgender Intervalle, die exakt um eine Niveaustufe vom geforderten Level abweichen dürfen. Beispiel: Bei Filter '**Teuer**' und Lückentoleranz 2 wird die Sequenz '**Teuer**, **Normal**, **Normal**, **Teuer**' akzeptiert (**Normal** ist eine Stufe unter **Teuer**). Dies verhindert, dass Zeiträume durch gelegentliche Niveau-Abweichungen aufgespalten werden. **Hinweis:** Lückentoleranz erfordert Zeiträume ≥90 Minuten (6 Intervalle), um Ausreißer effektiv zu erkennen. Standard: 0 (strenge Filterung, keine Toleranz)."
                         }
                     },
                     "flexibility_settings": {
@@ -308,10 +308,10 @@
             "cannot_connect": "Verbindung fehlgeschlagen",
             "invalid_access_token": "Ungültiges Zugriffstoken",
             "different_home": "Der Zugriffstoken ist nicht gültig für die Home ID, für die diese Integration konfiguriert ist.",
-            "invalid_flex": "TRANSLATE: Flexibility percentage must be between -50% and +50%",
-            "invalid_best_price_distance": "TRANSLATE: Distance percentage must be between -50% and 0% (negative = below average)",
-            "invalid_peak_price_distance": "TRANSLATE: Distance percentage must be between 0% and 50% (positive = above average)",
-            "invalid_min_periods": "TRANSLATE: Minimum periods count must be between 1 and 10",
+            "invalid_flex": "Flexibilitätsprozentsatz muss zwischen -50% und +50% liegen",
+            "invalid_best_price_distance": "Distanzprozentsatz muss zwischen -50% und 0% liegen (negativ = unter Durchschnitt)",
+            "invalid_peak_price_distance": "Distanzprozentsatz muss zwischen 0% und 50% liegen (positiv = über Durchschnitt)",
+            "invalid_min_periods": "Mindestanzahl der Zeiträume muss zwischen 1 und 10 liegen",
             "invalid_period_length": "Die Periodenlänge muss mindestens 15 Minuten betragen (Vielfache von 15).",
             "invalid_gap_count": "Lückentoleranz muss zwischen 0 und 8 liegen",
             "invalid_relaxation_attempts": "Lockerungsversuche müssen zwischen 1 und 12 liegen",
@@ -327,11 +327,7 @@
         },
         "abort": {
             "entry_not_found": "Tibber Konfigurationseintrag nicht gefunden."
-        },
-        "best_price_flex": "Bestpreis Flexibilität (%)",
-        "peak_price_flex": "Spitzenpreis Flexibilität (%)",
-        "price_rating_threshold_low": "Niedriger Preis Schwellenwert (% zum gleitenden Durchschnitt)",
-        "price_rating_threshold_high": "Hoher Preis Schwellenwert (% zum gleitenden Durchschnitt)"
+        }
     },
     "entity": {
         "sensor": {
@@ -945,11 +941,11 @@
                 },
                 "include_level": {
                     "name": "Preisniveau einschließen",
-                    "description": "Fügt das Tibber-Preisniveau (VERY_CHEAP, CHEAP, NORMAL, EXPENSIVE, VERY_EXPENSIVE) zu jedem Datenpunkt hinzu."
+                    "description": "Fügt das Tibber-Preisniveau (sehr günstig/günstig/normal/teuer/sehr teuer) zu jedem Datenpunkt hinzu."
                 },
                 "include_rating_level": {
                     "name": "Preisbewertung einschließen",
-                    "description": "Fügt die berechnete Preisbewertung (LOW, NORMAL, HIGH) basierend auf deinen konfigurierten Schwellwerten zu jedem Datenpunkt hinzu."
+                    "description": "Fügt die berechnete Preisbewertung (niedrig/normal/hoch) basierend auf deinen konfigurierten Schwellwerten zu jedem Datenpunkt hinzu."
                 },
                 "include_average": {
                     "name": "Durchschnitt einschließen",
@@ -957,11 +953,11 @@
                 },
                 "level_filter": {
                     "name": "Preisniveau-Filter",
-                    "description": "Intervalle filtern, um nur bestimmte Tibber-Preisniveaus einzuschließen (VERY_CHEAP, CHEAP, NORMAL, EXPENSIVE, VERY_EXPENSIVE). Falls nicht angegeben, werden alle Niveaus eingeschlossen."
+                    "description": "Intervalle filtern, um nur bestimmte Tibber-Preisniveaus einzuschließen (sehr günstig/günstig/normal/teuer/sehr teuer). Falls nicht angegeben, werden alle Niveaus eingeschlossen."
                 },
                 "rating_level_filter": {
                     "name": "Preisbewertungs-Filter",
-                    "description": "Intervalle filtern, um nur bestimmte Preisbewertungen einzuschließen (LOW, NORMAL, HIGH). Falls nicht angegeben, werden alle Bewertungen eingeschlossen."
+                    "description": "Intervalle filtern, um nur bestimmte Preisbewertungen einzuschließen (niedrig/normal/hoch). Falls nicht angegeben, werden alle Bewertungen eingeschlossen."
                 },
                 "period_filter": {
                     "name": "Perioden-Filter",
