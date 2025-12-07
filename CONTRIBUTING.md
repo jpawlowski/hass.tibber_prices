@@ -122,13 +122,23 @@ Always run before committing:
 - Enrich price data before exposing to entities
 - Follow Home Assistant entity naming conventions
 
-See [Coding Guidelines](docs/development/coding-guidelines.md) for complete details.
+See [Coding Guidelines](docs/developer/docs/coding-guidelines.md) for complete details.
 
 ## Documentation
 
-- **User guides**: Place in `docs/user/` (installation, configuration, usage)
-- **Developer guides**: Place in `docs/development/` (architecture, patterns)
-- **Update translations**: When changing `translations/en.json`, update ALL language files
+Documentation is organized in two Docusaurus sites:
+
+- **User docs** (`docs/user/`): Installation, configuration, usage guides
+  - Markdown files in `docs/user/docs/*.md`
+  - Navigation via `docs/user/sidebars.ts`
+- **Developer docs** (`docs/developer/`): Architecture, patterns, contribution guides
+  - Markdown files in `docs/developer/docs/*.md`
+  - Navigation via `docs/developer/sidebars.ts`
+
+**When adding new documentation:**
+1. Place file in appropriate `docs/*/docs/` directory
+2. Add to corresponding `sidebars.ts` for navigation
+3. Update translations when changing `translations/en.json` (update ALL language files)
 
 ## Reporting Bugs
 

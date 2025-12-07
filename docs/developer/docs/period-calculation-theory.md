@@ -1095,7 +1095,7 @@ Low volatility (< 15%) means classification changes are less economically signif
 **Status:** Per-day evaluation is intentional design prioritizing mathematical correctness.
 
 **See Also:**
-- User documentation: `docs/user/period-calculation.md` → "Midnight Price Classification Changes"
+- User documentation: `docs/user/docs/period-calculation.md` → "Midnight Price Classification Changes"
 - Implementation: `coordinator/period_handlers/period_building.py` (line ~126: `ref_date = date_key`)
 - Attributes: `coordinator/period_handlers/period_statistics.py` (day volatility calculation)
 

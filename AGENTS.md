@@ -17,14 +17,18 @@ _Note: When proposing significant updates to this file, update the metadata abov
 
 When working with the codebase, Copilot MUST actively maintain consistency between this documentation and the actual code:
 
-**Scope:** "This documentation" and "this file" refer specifically to `AGENTS.md` in the repository root. This does NOT include user-facing documentation like `README.md`, `/docs/user/`, or comments in code. Those serve different purposes and are maintained separately.
+**Scope:** "This documentation" and "this file" refer specifically to `AGENTS.md` in the repository root. This does NOT include user-facing documentation like `README.md`, Docusaurus sites, or comments in code. Those serve different purposes and are maintained separately.
 
 **Documentation Organization:**
 
 -   **This file** (`AGENTS.md`): AI/Developer long-term memory, patterns, conventions
--   **`docs/user/`**: End-user guides (installation, configuration, usage examples)
--   **`docs/development/`**: Contributor guides (setup, architecture, release management)
--   **`README.md`**: Project overview with links to detailed documentation
+-   **`docs/user/`**: Docusaurus site for end-users (installation, configuration, usage examples)
+    -   Markdown files in `docs/user/docs/*.md`
+    -   Navigation managed via `docs/user/sidebars.ts`
+-   **`docs/developer/`**: Docusaurus site for contributors (architecture, development guides)
+    -   Markdown files in `docs/developer/docs/*.md`
+    -   Navigation managed via `docs/developer/sidebars.ts`
+-   **`README.md`**: Project overview with links to documentation sites
 
 **Automatic Inconsistency Detection:**
 
@@ -737,9 +741,9 @@ When debugging period calculation issues:
 4. Check relaxation warnings: INFO at 25%, WARNING at 30% indicate suboptimal config
 
 **See:**
-- **Theory documentation**: `docs/development/period-calculation-theory.md` (comprehensive mathematical analysis, conflict conditions, configuration pitfalls)
+- **Theory documentation**: `docs/developer/docs/period-calculation-theory.md` (comprehensive mathematical analysis, conflict conditions, configuration pitfalls)
 - **Implementation**: `coordinator/period_handlers/` package (core.py, relaxation.py, level_filtering.py, period_building.py)
-- **User guide**: `docs/user/period-calculation.md` (simplified user-facing explanations)
+- **User guide**: `docs/user/docs/period-calculation.md` (simplified user-facing explanations)
 
 ## Development Environment Setup
 
@@ -2067,7 +2071,7 @@ Public entry points → direct helpers (call order) → pure utilities. Prefix p
 
 **Documentation language:**
 
--   **CRITICAL**: All user-facing documentation (`README.md`, `/docs/user/`, `/docs/development/`) MUST be written in **English**
+-   **CRITICAL**: All user-facing documentation (`README.md`, `docs/user/docs/`, `docs/developer/docs/`) MUST be written in **English**
 -   **Code comments**: Always use English for code comments and docstrings
 -   **UI translations**: Multi-language support exists in `/translations/` and `/custom_translations/` (de, en, nb, nl, sv) for UI strings only
 -   **Why English-only docs**: Ensures maintainability, accessibility to global community, and consistency with Home Assistant ecosystem
@@ -2105,7 +2109,7 @@ Public entry points → direct helpers (call order) → pure utilities. Prefix p
 
 **User Documentation Quality:**
 
-When writing or updating user-facing documentation (`docs/user/`), follow these principles learned from real user feedback:
+When writing or updating user-facing documentation (`docs/user/docs/` or `docs/developer/docs/`), follow these principles learned from real user feedback:
 
 -   **Clarity over completeness**: Users want to understand concepts, not read technical specifications
     -   ✅ Good: "Relaxation automatically loosens filters until enough periods are found"
@@ -2846,3 +2850,32 @@ Only after consulting the official HA docs did we discover the correct pattern:
 -   Translations: `sensor/definitions.py` (translation_key usage)
 -   Test fixtures: `tests/conftest.py`
 -   Time handling: Any file importing `dt_util`
+
+## Recorder History Optimization
+
+**CRITICAL: Always exclude non-essential attributes from Recorder to prevent database bloat.**
+
+**Implementation:**
+- Use `_unrecorded_attributes = frozenset({...})` as **class attribute** in entity classes
+- See `sensor/core.py` and `binary_sensor/core.py` for current implementation
+
+**What to exclude:**
+1. **Descriptions/help text** - `description`, `usage_tips` (static, large)
+2. **Large nested structures** - `periods`, `data`, `*_attributes` dicts (>1KB)
+3. **Frequently changing diagnostics** - `icon_color`, `cache_age`, status strings
+4. **Static/rarely changing config** - `currency`, `resolution`, `*_id` mappings
+5. **Temporary/time-bound data** - `next_api_poll`, `last_*` timestamps
+6. **Redundant/derived data** - `price_spread`, `diff_%` (calculable from other attrs)
+
+**What to keep:**
+- `timestamp` (always), all price values, `cache_age_minutes`, `updates_today`
+- Period timing (`start`, `end`, `duration_minutes`), price statistics
+- Boolean status flags, `relaxation_active`
+
+**When adding new attributes:**
+- Will this be useful in history 1 week from now? No → Exclude
+- Can this be calculated from other attributes? Yes → Exclude
+- Is this >100 bytes and not essential? Yes → Exclude
+
+**See:** `docs/developer/docs/recorder-optimization.md` for detailed categories and impact analysis
+
