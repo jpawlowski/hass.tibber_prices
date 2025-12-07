@@ -32,7 +32,7 @@ const sidebars: SidebarsConfig = {
     {
       type: 'category',
       label: '📐 Advanced Topics',
-      items: ['period-calculation-theory', 'refactoring-guide', 'performance'],
+      items: ['period-calculation-theory', 'refactoring-guide', 'performance', 'recorder-optimization'],
       collapsible: true,
       collapsed: false,
     },
