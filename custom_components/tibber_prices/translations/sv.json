@@ -844,8 +844,8 @@
             "description": "Tibber-API:et har hastighetsbegränsat denna integration efter {error_count} på varandra följande fel. Detta betyder att förfrågningar görs för ofta.\n\nIntegrationen kommer automatiskt att försöka igen med ökande fördröjningar. Detta problem kommer att lösas när hastighetsgränsen löper ut.\n\nOm detta fortsätter i flera timmar, överväg:\n- Att kontrollera om flera Home Assistant-instanser använder samma API-token\n- Att verifiera att inga andra applikationer använder din Tibber-API-token mycket\n- Att minska uppdateringsfrekvensen om du har anpassat den"
         },
         "home_not_found": {
-            "title": "Hemmet '{home_name}' hittades inte i Tibber-kontot",
-            "description": "Hemmet som konfigurerats i denna integration (post-ID: {entry_id}) är inte längre tillgängligt i ditt Tibber-konto. Detta händer vanligtvis när:\n- Hemmet togs bort från ditt Tibber-konto\n- Hemmet flyttades till ett annat Tibber-konto\n- Åtkomst till detta hem återkallades\n\nVänligen ta bort denna integrationspost och lägg till den igen om hemmet fortfarande ska övervakas. För att ta bort denna post, gå till Inställningar → Enheter och tjänster → Tibber Prices och ta bort '{home_name}'-konfigurationen."
+            "title": "Hemmet {home_name} hittades inte i Tibber-kontot",
+            "description": "Hemmet som konfigurerats i denna integration (post-ID: {entry_id}) är inte längre tillgängligt i ditt Tibber-konto. Detta händer vanligtvis när:\n- Hemmet togs bort från ditt Tibber-konto\n- Hemmet flyttades till ett annat Tibber-konto\n- Åtkomst till detta hem återkallades\n\nVänligen ta bort denna integrationspost och lägg till den igen om hemmet fortfarande ska övervakas. För att ta bort denna post, gå till Inställningar → Enheter och tjänster → Tibber Prices och ta bort {home_name}-konfigurationen."
         }
     },
     "services": {

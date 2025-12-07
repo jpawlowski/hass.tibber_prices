@@ -844,8 +844,8 @@
             "description": "Die Tibber-API hat diese Integration nach {error_count} aufeinanderfolgenden Fehlern ratenlimitiert. Das bedeutet, dass Anfragen zu häufig gestellt werden.\n\nDie Integration wird automatisch mit zunehmenden Verzögerungen erneut versuchen. Dieses Problem löst sich, sobald das Ratenlimit abläuft.\n\nFalls dies mehrere Stunden anhält, überprüfe:\n- Ob mehrere Home Assistant Instanzen denselben API-Token verwenden\n- Ob andere Anwendungen deinen Tibber-API-Token stark nutzen\n- Die Update-Frequenz reduzieren, falls du sie angepasst hast"
         },
         "home_not_found": {
-            "title": "Zuhause '{home_name}' nicht im Tibber-Konto gefunden",
-            "description": "Das in dieser Integration konfigurierte Zuhause (Eintrag-ID: {entry_id}) ist nicht mehr in deinem Tibber-Konto verfügbar. Dies passiert normalerweise, wenn:\n- Das Zuhause aus deinem Tibber-Konto gelöscht wurde\n- Das Zuhause zu einem anderen Tibber-Konto verschoben wurde\n- Der Zugriff auf dieses Zuhause widerrufen wurde\n\nBitte entferne diesen Integrationseintrag und füge ihn erneut hinzu, falls das Zuhause weiterhin überwacht werden soll. Um diesen Eintrag zu entfernen, gehe zu Einstellungen → Geräte & Dienste → Tibber Prices und lösche die Konfiguration '{home_name}'."
+            "title": "Zuhause {home_name} nicht im Tibber-Konto gefunden",
+            "description": "Das in dieser Integration konfigurierte Zuhause (Eintrag-ID: {entry_id}) ist nicht mehr in deinem Tibber-Konto verfügbar. Dies passiert normalerweise, wenn:\n- Das Zuhause aus deinem Tibber-Konto gelöscht wurde\n- Das Zuhause zu einem anderen Tibber-Konto verschoben wurde\n- Der Zugriff auf dieses Zuhause widerrufen wurde\n\nBitte entferne diesen Integrationseintrag und füge ihn erneut hinzu, falls das Zuhause weiterhin überwacht werden soll. Um diesen Eintrag zu entfernen, gehe zu Einstellungen → Geräte & Dienste → Tibber Prices und lösche die Konfiguration {home_name}."
         }
     },
     "services": {
