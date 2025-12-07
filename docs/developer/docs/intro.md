@@ -157,11 +157,20 @@ pytest --cov=custom_components.tibber_prices tests/
 
 ## 📝 Documentation Standards
 
--   **User-facing docs** go in `docs/user/`
--   **Developer docs** go in `docs/development/`
--   **AI guidance** goes in `AGENTS.md`
+Documentation is organized in two Docusaurus sites:
+
+-   **User docs** (`docs/user/`): Installation, configuration, usage guides
+    -   Markdown files in `docs/user/docs/*.md`
+    -   Navigation managed via `docs/user/sidebars.ts`
+-   **Developer docs** (`docs/developer/`): Architecture, patterns, contribution guides
+    -   Markdown files in `docs/developer/docs/*.md`
+    -   Navigation managed via `docs/developer/sidebars.ts`
+-   **AI guidance**: `AGENTS.md` (patterns, conventions, long-term memory)
+
+**Best practices:**
 -   Use clear examples and code snippets
 -   Keep docs up-to-date with code changes
+-   Add new pages to appropriate `sidebars.ts` for navigation
 
 ## 🤝 Contributing
 
@@ -169,7 +178,7 @@ See [CONTRIBUTING.md](https://github.com/jpawlowski/hass.tibber_prices/blob/main
 
 ## 📄 License
 
-This project is licensed under the [Apache License 2.0](https://github.com/jpawlowski/hass.tibber_prices/blob/main/LICENSE).
+This project is licensed under the [MIT License](https://github.com/jpawlowski/hass.tibber_prices/blob/main/LICENSE).
 
 ---
 
