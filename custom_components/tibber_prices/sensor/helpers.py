@@ -26,6 +26,7 @@ if TYPE_CHECKING:
 
 from custom_components.tibber_prices.coordinator.helpers import get_intervals_for_day_offsets
 from custom_components.tibber_prices.entity_utils.helpers import get_price_value
+from custom_components.tibber_prices.utils.average import calculate_median
 from custom_components.tibber_prices.utils.price import (
     aggregate_price_levels,
     aggregate_price_rating,
@@ -35,22 +36,26 @@ if TYPE_CHECKING:
     from collections.abc import Callable
 
 
-def aggregate_price_data(window_data: list[dict]) -> float | None:
+def aggregate_price_data(window_data: list[dict]) -> tuple[float | None, float | None]:
     """
-    Calculate average price from window data.
+    Calculate average and median price from window data.
 
     Args:
         window_data: List of price interval dictionaries with 'total' key
 
     Returns:
-        Average price in minor currency units (cents/øre), or None if no prices
+        Tuple of (average price, median price) in minor currency units (cents/øre),
+        or (None, None) if no prices
 
     """
     prices = [float(i["total"]) for i in window_data if "total" in i]
     if not prices:
-        return None
+        return None, None
+    # Calculate both average and median
+    avg = sum(prices) / len(prices)
+    median = calculate_median(prices)
     # Return in minor currency units (cents/øre)
-    return round((sum(prices) / len(prices)) * 100, 2)
+    return round(avg * 100, 2), round(median * 100, 2) if median is not None else None
 
 
 def aggregate_level_data(window_data: list[dict]) -> str | None:
@@ -119,7 +124,7 @@ def aggregate_window_data(
     """
     # Map value types to aggregation functions
     aggregators: dict[str, Callable] = {
-        "price": lambda data: aggregate_price_data(data),
+        "price": lambda data: aggregate_price_data(data)[0],  # Use only average from tuple
         "level": lambda data: aggregate_level_data(data),
         "rating": lambda data: aggregate_rating_data(data, threshold_low, threshold_high),
     }

@@ -40,6 +40,7 @@ class TibberPricesBinarySensor(TibberPricesEntity, BinarySensorEntity, RestoreEn
     # See: https://developers.home-assistant.io/docs/core/entity/#excluding-state-attributes-from-recorder-history
     _unrecorded_attributes = frozenset(
         {
+            "timestamp",
             # Descriptions/Help Text (static, large)
             "description",
             "usage_tips",

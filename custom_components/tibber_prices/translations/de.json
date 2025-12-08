@@ -135,10 +135,12 @@
                 "title": "⚙️ Allgemeine Einstellungen",
                 "description": "_{step_progress}_\n\n**Konfiguriere allgemeine Einstellungen für Tibber-Preisinformationen und -bewertungen.**\n\n---\n\n**Benutzer:** {user_login}",
                 "data": {
-                    "extended_descriptions": "Erweiterte Beschreibungen"
+                    "extended_descriptions": "Erweiterte Beschreibungen",
+                    "average_sensor_display": "Durchschnittsensor-Anzeige"
                 },
                 "data_description": {
-                    "extended_descriptions": "Steuert, ob Entitätsattribute ausführliche Erklärungen und Nutzungstipps enthalten.\n\n• Deaktiviert (Standard): Nur kurze Beschreibung\n• Aktiviert: Ausführliche Erklärung + praktische Nutzungsbeispiele\n\nBeispiel:\nDeaktiviert = 1 Attribut\nAktiviert = 2 zusätzliche Attribute"
+                    "extended_descriptions": "Steuert, ob Entitätsattribute ausführliche Erklärungen und Nutzungstipps enthalten.\n\n• Deaktiviert (Standard): Nur kurze Beschreibung\n• Aktiviert: Ausführliche Erklärung + praktische Nutzungsbeispiele\n\nBeispiel:\nDeaktiviert = 1 Attribut\nAktiviert = 2 zusätzliche Attribute",
+                    "average_sensor_display": "Wähle aus, welcher statistische Wert im Sensorstatus für Durchschnitts-Preissensoren angezeigt wird. Der andere Wert wird als Attribut angezeigt. Der Median ist resistenter gegen Extremwerte, während das arithmetische Mittel dem traditionellen Durchschnitt entspricht. Standard: Median"
                 },
                 "submit": "Weiter →"
             },
@@ -151,11 +153,13 @@
                         "description": "Definiere die Einstufungen für die Preisbewertung.",
                         "data": {
                             "price_rating_threshold_low": "Niedrig-Schwelle",
-                            "price_rating_threshold_high": "Hoch-Schwelle"
+                            "price_rating_threshold_high": "Hoch-Schwelle",
+                            "average_sensor_display": "Durchschnitts-Sensor Anzeige"
                         },
                         "data_description": {
                             "price_rating_threshold_low": "Prozentwert, um wie viel der aktuelle Preis unter dem nachlaufenden 24-Stunden-Durchschnitt liegen muss, damit er als 'niedrig' bewertet wird. Beispiel: 5 bedeutet mindestens 5% unter Durchschnitt. Sensoren mit dieser Bewertung zeigen günstige Zeitfenster an. Standard: 5%",
-                            "price_rating_threshold_high": "Prozentwert, um wie viel der aktuelle Preis über dem nachlaufenden 24-Stunden-Durchschnitt liegen muss, damit er als 'hoch' bewertet wird. Beispiel: 10 bedeutet mindestens 10% über Durchschnitt. Sensoren mit dieser Bewertung warnen vor teuren Zeitfenstern. Standard: 10%"
+                            "price_rating_threshold_high": "Prozentwert, um wie viel der aktuelle Preis über dem nachlaufenden 24-Stunden-Durchschnitt liegen muss, damit er als 'hoch' bewertet wird. Beispiel: 10 bedeutet mindestens 10% über Durchschnitt. Sensoren mit dieser Bewertung warnen vor teuren Zeitfenstern. Standard: 10%",
+                            "average_sensor_display": "Wähle, welches statistische Maß im Sensor-Status für Durchschnittspreissensoren angezeigt werden soll. Der andere Wert wird als Attribut angezeigt. Der Median ist widerstandsfähiger gegen Extremwerte, während das arithmetische Mittel den traditionellen Durchschnitt darstellt. Standard: Median"
                         }
                     }
                 },
@@ -1117,6 +1121,12 @@
                 "normal": "Normal",
                 "expensive": "Teuer",
                 "very_expensive": "Sehr teuer"
+            }
+        },
+        "average_sensor_display": {
+            "options": {
+                "median": "Median",
+                "mean": "Arithmetisches Mittel"
             }
         }
     },

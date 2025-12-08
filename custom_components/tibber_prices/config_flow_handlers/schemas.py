@@ -11,6 +11,7 @@ import voluptuous as vol
 
 from custom_components.tibber_prices.const import (
     BEST_PRICE_MAX_LEVEL_OPTIONS,
+    CONF_AVERAGE_SENSOR_DISPLAY,
     CONF_BEST_PRICE_FLEX,
     CONF_BEST_PRICE_MAX_LEVEL,
     CONF_BEST_PRICE_MAX_LEVEL_GAP_COUNT,
@@ -38,6 +39,7 @@ from custom_components.tibber_prices.const import (
     CONF_VOLATILITY_THRESHOLD_HIGH,
     CONF_VOLATILITY_THRESHOLD_MODERATE,
     CONF_VOLATILITY_THRESHOLD_VERY_HIGH,
+    DEFAULT_AVERAGE_SENSOR_DISPLAY,
     DEFAULT_BEST_PRICE_FLEX,
     DEFAULT_BEST_PRICE_MAX_LEVEL,
     DEFAULT_BEST_PRICE_MAX_LEVEL_GAP_COUNT,
@@ -205,6 +207,21 @@ def get_options_init_schema(options: Mapping[str, Any]) -> vol.Schema:
                 CONF_EXTENDED_DESCRIPTIONS,
                 default=options.get(CONF_EXTENDED_DESCRIPTIONS, DEFAULT_EXTENDED_DESCRIPTIONS),
             ): BooleanSelector(),
+            vol.Optional(
+                CONF_AVERAGE_SENSOR_DISPLAY,
+                default=str(
+                    options.get(
+                        CONF_AVERAGE_SENSOR_DISPLAY,
+                        DEFAULT_AVERAGE_SENSOR_DISPLAY,
+                    )
+                ),
+            ): SelectSelector(
+                SelectSelectorConfig(
+                    options=["median", "mean"],
+                    mode=SelectSelectorMode.DROPDOWN,
+                    translation_key="average_sensor_display",
+                ),
+            ),
         }
     )
 

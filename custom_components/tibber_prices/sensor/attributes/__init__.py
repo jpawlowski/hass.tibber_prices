@@ -77,6 +77,8 @@ def build_sensor_attributes(
     coordinator: TibberPricesDataUpdateCoordinator,
     native_value: Any,
     cached_data: dict,
+    *,
+    config_entry: TibberPricesConfigEntry,
 ) -> dict[str, Any] | None:
     """
     Build attributes for a sensor based on its key.
@@ -88,6 +90,7 @@ def build_sensor_attributes(
         coordinator: The data update coordinator
         native_value: The current native value of the sensor
         cached_data: Dictionary containing cached sensor data
+        config_entry: Config entry for user preferences
 
     Returns:
         Dictionary of attributes or None if no attributes should be added
@@ -127,6 +130,7 @@ def build_sensor_attributes(
                 native_value=native_value,
                 cached_data=cached_data,
                 time=time,
+                config_entry=config_entry,
             )
         elif key in [
             "trailing_price_average",
@@ -136,9 +140,23 @@ def build_sensor_attributes(
             "leading_price_min",
             "leading_price_max",
         ]:
-            add_average_price_attributes(attributes=attributes, key=key, coordinator=coordinator, time=time)
+            add_average_price_attributes(
+                attributes=attributes,
+                key=key,
+                coordinator=coordinator,
+                time=time,
+                cached_data=cached_data,
+                config_entry=config_entry,
+            )
         elif key.startswith("next_avg_"):
-            add_next_avg_attributes(attributes=attributes, key=key, coordinator=coordinator, time=time)
+            add_next_avg_attributes(
+                attributes=attributes,
+                key=key,
+                coordinator=coordinator,
+                time=time,
+                cached_data=cached_data,
+                config_entry=config_entry,
+            )
         elif any(
             pattern in key
             for pattern in [
@@ -160,6 +178,7 @@ def build_sensor_attributes(
                 key=key,
                 cached_data=cached_data,
                 time=time,
+                config_entry=config_entry,
             )
         elif key == "data_lifecycle_status":
             # Lifecycle sensor uses dedicated builder with calculator

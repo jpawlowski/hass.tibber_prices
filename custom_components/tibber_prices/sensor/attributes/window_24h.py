@@ -11,6 +11,9 @@ if TYPE_CHECKING:
         TibberPricesDataUpdateCoordinator,
     )
     from custom_components.tibber_prices.coordinator.time_service import TibberPricesTimeService
+    from custom_components.tibber_prices.data import TibberPricesConfigEntry
+
+from .helpers import add_alternate_average_attribute
 
 
 def _update_extreme_interval(extreme_interval: dict | None, price_data: dict, key: str) -> dict:
@@ -40,12 +43,14 @@ def _update_extreme_interval(extreme_interval: dict | None, price_data: dict, ke
     return price_data if is_new_extreme else extreme_interval
 
 
-def add_average_price_attributes(
+def add_average_price_attributes(  # noqa: PLR0913
     attributes: dict,
     key: str,
     coordinator: TibberPricesDataUpdateCoordinator,
     *,
     time: TibberPricesTimeService,
+    cached_data: dict | None = None,
+    config_entry: TibberPricesConfigEntry | None = None,
 ) -> None:
     """
     Add attributes for trailing and leading average/min/max price sensors.
@@ -55,6 +60,8 @@ def add_average_price_attributes(
         key: The sensor entity key
         coordinator: The data update coordinator
         time: TibberPricesTimeService instance (required)
+        cached_data: Optional cached data dictionary for median values
+        config_entry: Optional config entry for user preferences
 
     """
     # Determine if this is trailing or leading
@@ -98,3 +105,13 @@ def add_average_price_attributes(
             attributes["timestamp"] = intervals_in_window[0].get("startsAt")
 
         attributes["interval_count"] = len(intervals_in_window)
+
+        # Add alternate average attribute for average sensors if available in cached_data
+        if cached_data and config_entry and "average" in key:
+            base_key = key.replace("_average", "")
+            add_alternate_average_attribute(
+                attributes,
+                cached_data,
+                base_key,
+                config_entry=config_entry,
+            )

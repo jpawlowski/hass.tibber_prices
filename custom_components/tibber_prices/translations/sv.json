@@ -1118,6 +1118,12 @@
                 "expensive": "Dyrt",
                 "very_expensive": "Mycket dyrt"
             }
+        },
+        "average_sensor_display": {
+            "options": {
+                "median": "Median",
+                "mean": "Aritmetiskt medelvärde"
+            }
         }
     },
     "title": "Tibber Prisinformation & Betyg"

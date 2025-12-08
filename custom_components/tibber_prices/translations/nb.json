@@ -135,10 +135,12 @@
                 "title": "⚙️ Generelle innstillinger",
                 "description": "_{step_progress}_\n\n**Konfigurer generelle innstillinger for Tibber prisinformasjon og vurderinger.**\n\n---\n\n**Bruker:** {user_login}",
                 "data": {
-                    "extended_descriptions": "Utvidede beskrivelser"
+                    "extended_descriptions": "Utvidede beskrivelser",
+                    "average_sensor_display": "Gjennomsnittssensor-visning"
                 },
                 "data_description": {
-                    "extended_descriptions": "Styrer om entitetsattributter inkluderer detaljerte forklaringer og brukstips.\n\n• Deaktivert (standard): Bare kort beskrivelse\n• Aktivert: Detaljert forklaring + praktiske brukseksempler\n\nEksempel:\nDeaktivert = 1 attributt\nAktivert = 2 ekstra attributter"
+                    "extended_descriptions": "Styrer om entitetsattributter inkluderer detaljerte forklaringer og brukstips.\n\n• Deaktivert (standard): Bare kort beskrivelse\n• Aktivert: Detaljert forklaring + praktiske brukseksempler\n\nEksempel:\nDeaktivert = 1 attributt\nAktivert = 2 ekstra attributter",
+                    "average_sensor_display": "Velg hvilket statistisk mål som skal vises i sensortilstanden for gjennomsnittspris-sensorer. Den andre verdien vises som attributt. Median er mer motstandsdyktig mot ekstremverdier, mens aritmetisk gjennomsnitt representerer tradisjonelt gjennomsnitt. Standard: Median"
                 },
                 "submit": "Videre til trinn 2"
             },
@@ -1117,6 +1119,12 @@
                 "normal": "Normal",
                 "expensive": "Dyr",
                 "very_expensive": "Svært dyr"
+            }
+        },
+        "average_sensor_display": {
+            "options": {
+                "median": "Median",
+                "mean": "Aritmetisk gjennomsnitt"
             }
         }
     },

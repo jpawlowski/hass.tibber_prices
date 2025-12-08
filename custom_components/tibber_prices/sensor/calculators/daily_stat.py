@@ -49,8 +49,8 @@ class TibberPricesDailyStatCalculator(TibberPricesBaseCalculator):
         self,
         *,
         day: str = "today",
-        stat_func: Callable[[list[float]], float],
-    ) -> float | None:
+        stat_func: Callable[[list[float]], float] | Callable[[list[float]], tuple[float, float | None]],
+    ) -> float | tuple[float, float | None] | None:
         """
         Unified method for daily statistics (min/max/avg within calendar day).
 
@@ -59,10 +59,12 @@ class TibberPricesDailyStatCalculator(TibberPricesBaseCalculator):
 
         Args:
             day: "today" or "tomorrow" - which calendar day to calculate for.
-            stat_func: Statistical function (min, max, or lambda for avg).
+            stat_func: Statistical function (min, max, or lambda for avg/median).
 
         Returns:
             Price value in minor currency units (cents/øre), or None if unavailable.
+            For average functions: tuple of (avg, median) where median may be None.
+            For min/max functions: single float value.
 
         """
         if not self.has_data():
@@ -97,7 +99,21 @@ class TibberPricesDailyStatCalculator(TibberPricesBaseCalculator):
 
         # Find the extreme value and store its interval for later use in attributes
         prices = [pi["price"] for pi in price_intervals]
-        value = stat_func(prices)
+        result = stat_func(prices)
+
+        # Check if result is a tuple (avg, median) from average functions
+        if isinstance(result, tuple):
+            value, median = result
+            # Store the interval (for avg, use first interval as reference)
+            if price_intervals:
+                self._last_extreme_interval = price_intervals[0]["interval"]
+            # Convert both to minor currency units
+            avg_result = round(get_price_value(value, in_euro=False), 2)
+            median_result = round(get_price_value(median, in_euro=False), 2) if median is not None else None
+            return avg_result, median_result
+
+        # Single value result (min/max functions)
+        value = result
 
         # Store the interval with the extreme price for use in attributes
         for pi in price_intervals:

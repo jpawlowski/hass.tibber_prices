@@ -56,7 +56,8 @@ class TibberPricesPeriodStatistics(NamedTuple):
     aggregated_level: str | None
     aggregated_rating: str | None
     rating_difference_pct: float | None
-    price_avg: float
+    price_mean: float
+    price_median: float
     price_min: float
     price_max: float
     price_spread: float

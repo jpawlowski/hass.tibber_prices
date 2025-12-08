@@ -2408,7 +2408,8 @@ attributes = {
     "rating_level": ...,       # Price rating (LOW, NORMAL, HIGH)
 
     # 3. Price statistics (how much does it cost?)
-    "price_avg": ...,
+    "price_mean": ...,
+    "price_median": ...,
     "price_min": ...,
     "price_max": ...,
 
@@ -2608,7 +2609,8 @@ This ensures timestamp is always the first key in the attribute dict, regardless
     "start": "2025-11-08T14:00:00+01:00",
     "end": "2025-11-08T15:00:00+01:00",
     "rating_level": "LOW",
-    "price_avg": 18.5,
+    "price_mean": 18.5,
+    "price_median": 18.3,
     "interval_count": 4,
     "intervals": [...]
 }
@@ -2619,7 +2621,7 @@ This ensures timestamp is always the first key in the attribute dict, regardless
     "interval_count": 4,
     "rating_level": "LOW",
     "start": "2025-11-08T14:00:00+01:00",
-    "price_avg": 18.5,
+    "price_mean": 18.5,
     "end": "2025-11-08T15:00:00+01:00"
 }
 ```
@@ -2664,8 +2666,8 @@ This ensures timestamp is always the first key in the attribute dict, regardless
 
 **Price-Related Attributes:**
 
--   Period averages: `period_price_avg` (average across the period)
--   Reference comparisons: `period_price_diff_from_daily_min` (period avg vs daily min)
+-   Period statistics: `price_mean` (arithmetic mean), `price_median` (median value)
+-   Reference comparisons: `period_price_diff_from_daily_min` (period mean vs daily min)
 -   Interval-specific: `interval_price_diff_from_daily_max` (current interval vs daily max)
 
 ### Before Adding New Attributes

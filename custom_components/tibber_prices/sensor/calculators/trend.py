@@ -97,7 +97,7 @@ class TibberPricesTrendCalculator(TibberPricesBaseCalculator):
         next_interval_start = time.get_next_interval_start()
 
         # Get future average price
-        future_avg = calculate_next_n_hours_avg(self.coordinator.data, hours, time=self.coordinator.time)
+        future_avg, _ = calculate_next_n_hours_avg(self.coordinator.data, hours, time=self.coordinator.time)
         if future_avg is None:
             return None
 

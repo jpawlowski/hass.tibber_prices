@@ -135,10 +135,12 @@
                 "title": "⚙️ General Settings",
                 "description": "_{step_progress}_\n\n**Configure general settings for Tibber Price Information & Ratings.**\n\n---\n\n**User:** {user_login}",
                 "data": {
-                    "extended_descriptions": "Extended Descriptions"
+                    "extended_descriptions": "Extended Descriptions",
+                    "average_sensor_display": "Average Sensor Display"
                 },
                 "data_description": {
-                    "extended_descriptions": "Controls whether entity attributes include detailed explanations and usage tips.\n\n• Disabled (default): Brief description only\n• Enabled: Detailed explanation + practical usage examples\n\nExample:\nDisabled = 1 attribute\nEnabled = 2 additional attributes"
+                    "extended_descriptions": "Controls whether entity attributes include detailed explanations and usage tips.\n\n• Disabled (default): Brief description only\n• Enabled: Detailed explanation + practical usage examples\n\nExample:\nDisabled = 1 attribute\nEnabled = 2 additional attributes",
+                    "average_sensor_display": "Choose which statistical measure to display in the sensor state for average price sensors. The other value will be shown as an attribute. Median is more resistant to extreme values, while arithmetic mean represents the traditional average. Default: Median"
                 },
                 "submit": "Continue →"
             },
@@ -1117,6 +1119,12 @@
                 "normal": "Normal",
                 "expensive": "Expensive",
                 "very_expensive": "Very expensive"
+            }
+        },
+        "average_sensor_display": {
+            "options": {
+                "median": "Median",
+                "mean": "Arithmetic Mean"
             }
         }
     },

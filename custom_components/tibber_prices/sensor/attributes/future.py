@@ -11,17 +11,22 @@ if TYPE_CHECKING:
         TibberPricesDataUpdateCoordinator,
     )
     from custom_components.tibber_prices.coordinator.time_service import TibberPricesTimeService
+    from custom_components.tibber_prices.data import TibberPricesConfigEntry
+
+from .helpers import add_alternate_average_attribute
 
 # Constants
 MAX_FORECAST_INTERVALS = 8  # Show up to 8 future intervals (2 hours with 15-min intervals)
 
 
-def add_next_avg_attributes(
+def add_next_avg_attributes(  # noqa: PLR0913
     attributes: dict,
     key: str,
     coordinator: TibberPricesDataUpdateCoordinator,
     *,
     time: TibberPricesTimeService,
+    cached_data: dict | None = None,
+    config_entry: TibberPricesConfigEntry | None = None,
 ) -> None:
     """
     Add attributes for next N hours average price sensors.
@@ -31,6 +36,8 @@ def add_next_avg_attributes(
         key: The sensor entity key
         coordinator: The data update coordinator
         time: TibberPricesTimeService instance (required)
+        cached_data: Optional cached data dictionary for median values
+        config_entry: Optional config entry for user preferences
 
     """
     # Extract hours from sensor key (e.g., "next_avg_3h" -> 3)
@@ -61,6 +68,16 @@ def add_next_avg_attributes(
         attributes["timestamp"] = intervals_in_window[0].get("startsAt")
         attributes["interval_count"] = len(intervals_in_window)
         attributes["hours"] = hours
+
+        # Add alternate average attribute if available in cached_data
+        if cached_data and config_entry:
+            base_key = f"next_avg_{hours}h"
+            add_alternate_average_attribute(
+                attributes,
+                cached_data,
+                base_key,
+                config_entry=config_entry,
+            )
 
 
 def get_future_prices(

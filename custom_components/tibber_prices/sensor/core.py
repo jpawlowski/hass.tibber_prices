@@ -9,8 +9,10 @@ from custom_components.tibber_prices.binary_sensor.attributes import (
     get_price_intervals_attributes,
 )
 from custom_components.tibber_prices.const import (
+    CONF_AVERAGE_SENSOR_DISPLAY,
     CONF_PRICE_RATING_THRESHOLD_HIGH,
     CONF_PRICE_RATING_THRESHOLD_LOW,
+    DEFAULT_AVERAGE_SENSOR_DISPLAY,
     DEFAULT_PRICE_RATING_THRESHOLD_HIGH,
     DEFAULT_PRICE_RATING_THRESHOLD_LOW,
     DOMAIN,
@@ -99,6 +101,7 @@ class TibberPricesSensor(TibberPricesEntity, RestoreSensor):
     # See: https://developers.home-assistant.io/docs/core/entity/#excluding-state-attributes-from-recorder-history
     _unrecorded_attributes = frozenset(
         {
+            "timestamp",
             # Descriptions/Help Text (static, large)
             "description",
             "usage_tips",
@@ -158,6 +161,8 @@ class TibberPricesSensor(TibberPricesEntity, RestoreSensor):
         self.entity_description = entity_description
         self._attr_unique_id = f"{coordinator.config_entry.entry_id}_{entity_description.key}"
         self._attr_has_entity_name = True
+        # Cached data for attributes (e.g., median values)
+        self.cached_data: dict[str, Any] = {}
         # Instantiate calculators
         self._metadata_calculator = TibberPricesMetadataCalculator(coordinator)
         self._volatility_calculator = TibberPricesVolatilityCalculator(coordinator)
@@ -376,7 +381,15 @@ class TibberPricesSensor(TibberPricesEntity, RestoreSensor):
         if not window_data:
             return None
 
-        return self._rolling_hour_calculator.aggregate_window_data(window_data, value_type)
+        result = self._rolling_hour_calculator.aggregate_window_data(window_data, value_type)
+        # For price type, aggregate_window_data returns (avg, median)
+        if isinstance(result, tuple):
+            avg, median = result
+            # Cache median for attributes
+            if median is not None:
+                self.cached_data[f"{self.entity_description.key}_median"] = median
+            return avg
+        return result
 
     # ========================================================================
     # INTERVAL-BASED VALUE METHODS
@@ -563,9 +576,13 @@ class TibberPricesSensor(TibberPricesEntity, RestoreSensor):
             Average price in minor currency units (e.g., cents), or None if unavailable
 
         """
-        avg_price = calculate_next_n_hours_avg(self.coordinator.data, hours, time=self.coordinator.time)
+        avg_price, median_price = calculate_next_n_hours_avg(self.coordinator.data, hours, time=self.coordinator.time)
         if avg_price is None:
             return None
+
+        # Store median for attributes
+        if median_price is not None:
+            self.cached_data[f"next_avg_{hours}h_median"] = round(median_price * 100, 2)
 
         # Convert from major to minor currency units (e.g., EUR to cents)
         return round(avg_price * 100, 2)
@@ -773,7 +790,7 @@ class TibberPricesSensor(TibberPricesEntity, RestoreSensor):
         return True
 
     @property
-    def native_value(self) -> float | str | datetime | None:
+    def native_value(self) -> float | str | datetime | None:  # noqa: PLR0912
         """Return the native value of the sensor."""
         try:
             if not self.coordinator.data or not self._value_getter:
@@ -781,7 +798,8 @@ class TibberPricesSensor(TibberPricesEntity, RestoreSensor):
             # For price_level, ensure we return the translated value as state
             if self.entity_description.key == "current_interval_price_level":
                 return self._interval_calculator.get_price_level_value()
-            return self._value_getter()
+
+            result = self._value_getter()
         except (KeyError, ValueError, TypeError) as ex:
             self.coordinator.logger.exception(
                 "Error getting sensor value",
@@ -791,6 +809,48 @@ class TibberPricesSensor(TibberPricesEntity, RestoreSensor):
                 },
             )
             return None
+        else:
+            # Handle tuple results (average + median) from calculators
+            if isinstance(result, tuple):
+                avg, median = result
+                # Get user preference for state display
+                display_pref = self.coordinator.config_entry.options.get(
+                    CONF_AVERAGE_SENSOR_DISPLAY,
+                    DEFAULT_AVERAGE_SENSOR_DISPLAY,
+                )
+
+                # Cache BOTH values for attribute builders to use
+                key = self.entity_description.key
+                if "average_price_today" in key:
+                    self.cached_data["average_price_today_mean"] = avg
+                    self.cached_data["average_price_today_median"] = median
+                elif "average_price_tomorrow" in key:
+                    self.cached_data["average_price_tomorrow_mean"] = avg
+                    self.cached_data["average_price_tomorrow_median"] = median
+                elif "trailing_price_average" in key:
+                    self.cached_data["trailing_price_mean"] = avg
+                    self.cached_data["trailing_price_median"] = median
+                elif "leading_price_average" in key:
+                    self.cached_data["leading_price_mean"] = avg
+                    self.cached_data["leading_price_median"] = median
+                elif "current_hour_average_price" in key:
+                    self.cached_data["rolling_hour_0_mean"] = avg
+                    self.cached_data["rolling_hour_0_median"] = median
+                elif "next_hour_average_price" in key:
+                    self.cached_data["rolling_hour_1_mean"] = avg
+                    self.cached_data["rolling_hour_1_median"] = median
+                elif key.startswith("next_avg_"):
+                    # Extract hours from key (e.g., "next_avg_3h" -> "3")
+                    hours = key.split("_")[-1].replace("h", "")
+                    self.cached_data[f"next_avg_{hours}h_mean"] = avg
+                    self.cached_data[f"next_avg_{hours}h_median"] = median
+
+                # Return the value chosen for state display
+                if display_pref == "median":
+                    return median
+                return avg  # "mean"
+
+            return result
 
     @property
     def native_unit_of_measurement(self) -> str | None:
@@ -933,19 +993,25 @@ class TibberPricesSensor(TibberPricesEntity, RestoreSensor):
             return self._get_chart_metadata_attributes()
 
         # Prepare cached data that attribute builders might need
-        cached_data = {
-            "trend_attributes": self._trend_calculator.get_trend_attributes(),
-            "current_trend_attributes": self._trend_calculator.get_current_trend_attributes(),
-            "trend_change_attributes": self._trend_calculator.get_trend_change_attributes(),
-            "volatility_attributes": self._volatility_calculator.get_volatility_attributes(),
-            "last_extreme_interval": self._daily_stat_calculator.get_last_extreme_interval(),
-            "last_price_level": self._interval_calculator.get_last_price_level(),
-            "last_rating_difference": self._interval_calculator.get_last_rating_difference(),
-            "last_rating_level": self._interval_calculator.get_last_rating_level(),
-            "data_timestamp": getattr(self, "_data_timestamp", None),
-            "rolling_hour_level": self._get_rolling_hour_level_for_cached_data(key),
-            "lifecycle_calculator": self._lifecycle_calculator,  # For lifecycle sensor attributes
-        }
+        # Start with all mean/median values from self.cached_data
+        cached_data = {k: v for k, v in self.cached_data.items() if "_mean" in k or "_median" in k}
+
+        # Add special calculator results
+        cached_data.update(
+            {
+                "trend_attributes": self._trend_calculator.get_trend_attributes(),
+                "current_trend_attributes": self._trend_calculator.get_current_trend_attributes(),
+                "trend_change_attributes": self._trend_calculator.get_trend_change_attributes(),
+                "volatility_attributes": self._volatility_calculator.get_volatility_attributes(),
+                "last_extreme_interval": self._daily_stat_calculator.get_last_extreme_interval(),
+                "last_price_level": self._interval_calculator.get_last_price_level(),
+                "last_rating_difference": self._interval_calculator.get_last_rating_difference(),
+                "last_rating_level": self._interval_calculator.get_last_rating_level(),
+                "data_timestamp": getattr(self, "_data_timestamp", None),
+                "rolling_hour_level": self._get_rolling_hour_level_for_cached_data(key),
+                "lifecycle_calculator": self._lifecycle_calculator,  # For lifecycle sensor attributes
+            }
+        )
 
         # Use the centralized attribute builder
         return build_sensor_attributes(
@@ -953,6 +1019,7 @@ class TibberPricesSensor(TibberPricesEntity, RestoreSensor):
             coordinator=self.coordinator,
             native_value=self.native_value,
             cached_data=cached_data,
+            config_entry=self.coordinator.config_entry,
         )
 
     def _get_rolling_hour_level_for_cached_data(self, key: str) -> str | None:

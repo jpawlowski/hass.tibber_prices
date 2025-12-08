@@ -135,10 +135,12 @@
                 "title": "⚙️ Algemene instellingen",
                 "description": "_{step_progress}_\n\n**Configureer algemene instellingen voor Tibber-prijsinformatie en -beoordelingen.**\n\n---\n\n**Gebruiker:** {user_login}",
                 "data": {
-                    "extended_descriptions": "Uitgebreide beschrijvingen"
+                    "extended_descriptions": "Uitgebreide beschrijvingen",
+                    "average_sensor_display": "Gemiddelde sensor weergave"
                 },
                 "data_description": {
-                    "extended_descriptions": "Bepaalt of entiteitsattributen gedetailleerde uitleg en gebruikstips bevatten.\n\n• Uitgeschakeld (standaard): Alleen korte beschrijving\n• Ingeschakeld: Gedetailleerde uitleg + praktische gebruiksvoorbeelden\n\nVoorbeeld:\nUitgeschakeld = 1 attribuut\nIngeschakeld = 2 extra attributen"
+                    "extended_descriptions": "Bepaalt of entiteitsattributen gedetailleerde uitleg en gebruikstips bevatten.\n\n• Uitgeschakeld (standaard): Alleen korte beschrijving\n• Ingeschakeld: Gedetailleerde uitleg + praktische gebruiksvoorbeelden\n\nVoorbeeld:\nUitgeschakeld = 1 attribuut\nIngeschakeld = 2 extra attributen",
+                    "average_sensor_display": "Kies welke statistische maat wordt weergegeven in de sensorstatus voor gemiddelde prijssensoren. De andere waarde wordt weergegeven als attribuut. Mediaan is resistenter tegen extreme waarden, terwijl het rekenkundig gemiddelde het traditionele gemiddelde vertegenwoordigt. Standaard: Mediaan"
                 },
                 "submit": "Doorgaan →"
             },
@@ -1117,6 +1119,12 @@
                 "normal": "Normaal",
                 "expensive": "Duur",
                 "very_expensive": "Zeer duur"
+            }
+        },
+        "average_sensor_display": {
+            "options": {
+                "median": "Mediaan",
+                "mean": "Rekenkundig gemiddelde"
             }
         }
     },

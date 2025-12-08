@@ -38,6 +38,7 @@ CONF_BEST_PRICE_MIN_PERIOD_LENGTH = "best_price_min_period_length"
 CONF_PEAK_PRICE_MIN_PERIOD_LENGTH = "peak_price_min_period_length"
 CONF_PRICE_RATING_THRESHOLD_LOW = "price_rating_threshold_low"
 CONF_PRICE_RATING_THRESHOLD_HIGH = "price_rating_threshold_high"
+CONF_AVERAGE_SENSOR_DISPLAY = "average_sensor_display"  # "median" or "mean"
 CONF_PRICE_TREND_THRESHOLD_RISING = "price_trend_threshold_rising"
 CONF_PRICE_TREND_THRESHOLD_FALLING = "price_trend_threshold_falling"
 CONF_VOLATILITY_THRESHOLD_MODERATE = "volatility_threshold_moderate"
@@ -85,6 +86,7 @@ DEFAULT_BEST_PRICE_MIN_PERIOD_LENGTH = 60  # 60 minutes minimum period length fo
 DEFAULT_PEAK_PRICE_MIN_PERIOD_LENGTH = 30  # 30 minutes minimum period length for peak price (user-facing, minutes)
 DEFAULT_PRICE_RATING_THRESHOLD_LOW = -10  # Default rating threshold low percentage
 DEFAULT_PRICE_RATING_THRESHOLD_HIGH = 10  # Default rating threshold high percentage
+DEFAULT_AVERAGE_SENSOR_DISPLAY = "median"  # Default: show median in state, mean in attributes
 DEFAULT_PRICE_TREND_THRESHOLD_RISING = 3  # Default trend threshold for rising prices (%)
 DEFAULT_PRICE_TREND_THRESHOLD_FALLING = -3  # Default trend threshold for falling prices (%, negative value)
 # Default volatility thresholds (relative values using coefficient of variation)

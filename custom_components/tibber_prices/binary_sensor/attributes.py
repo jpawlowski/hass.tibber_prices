@@ -168,8 +168,10 @@ def add_decision_attributes(attributes: dict, current_period: dict) -> None:
 
 def add_price_attributes(attributes: dict, current_period: dict) -> None:
     """Add price statistics attributes (priority 3)."""
-    if "price_avg" in current_period:
-        attributes["price_avg"] = current_period["price_avg"]
+    if "price_mean" in current_period:
+        attributes["price_mean"] = current_period["price_mean"]
+    if "price_median" in current_period:
+        attributes["price_median"] = current_period["price_median"]
     if "price_min" in current_period:
         attributes["price_min"] = current_period["price_min"]
     if "price_max" in current_period:
@@ -234,7 +236,7 @@ def build_final_attributes_simple(
     Attributes are ordered following the documented priority:
     1. Time information (timestamp, start, end, duration)
     2. Core decision attributes (level, rating_level, rating_difference_%)
-    3. Price statistics (price_avg, price_min, price_max, price_spread, volatility)
+    3. Price statistics (price_mean, price_median, price_min, price_max, price_spread, volatility)
     4. Price differences (period_price_diff_from_daily_min, period_price_diff_from_daily_min_%)
     5. Detail information (period_interval_count, period_position, periods_total, periods_remaining)
     6. Relaxation information (relaxation_active, relaxation_level, relaxation_threshold_original_%,

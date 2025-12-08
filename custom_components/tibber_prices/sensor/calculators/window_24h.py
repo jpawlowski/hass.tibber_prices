@@ -24,7 +24,7 @@ class TibberPricesWindow24hCalculator(TibberPricesBaseCalculator):
         self,
         *,
         stat_func: Callable,
-    ) -> float | None:
+    ) -> float | tuple[float, float | None] | None:
         """
         Unified method for 24-hour sliding window statistics.
 
@@ -37,13 +37,27 @@ class TibberPricesWindow24hCalculator(TibberPricesBaseCalculator):
 
         Returns:
             Price value in minor currency units (cents/øre), or None if unavailable.
+            For average functions: tuple of (avg, median) where median may be None.
+            For min/max functions: single float value.
 
         """
         if not self.has_data():
             return None
 
-        value = stat_func(self.coordinator_data, time=self.coordinator.time)
+        result = stat_func(self.coordinator_data, time=self.coordinator.time)
 
+        # Check if result is a tuple (avg, median) from average functions
+        if isinstance(result, tuple):
+            value, median = result
+            if value is None:
+                return None
+            # Return both values converted to minor currency units
+            avg_result = round(get_price_value(value, in_euro=False), 2)
+            median_result = round(get_price_value(median, in_euro=False), 2) if median is not None else None
+            return avg_result, median_result
+
+        # Single value result (min/max functions)
+        value = result
         if value is None:
             return None
 

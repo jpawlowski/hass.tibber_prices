@@ -11,6 +11,7 @@ from custom_components.tibber_prices.utils.average import (
     calculate_current_trailing_avg,
     calculate_current_trailing_max,
     calculate_current_trailing_min,
+    calculate_median,
 )
 
 if TYPE_CHECKING:
@@ -130,14 +131,14 @@ def get_value_getter_mapping(  # noqa: PLR0913 - needs all calculators as parame
         "highest_price_today": lambda: daily_stat_calculator.get_daily_stat_value(day="today", stat_func=max),
         "average_price_today": lambda: daily_stat_calculator.get_daily_stat_value(
             day="today",
-            stat_func=lambda prices: sum(prices) / len(prices),
+            stat_func=lambda prices: (sum(prices) / len(prices), calculate_median(prices)),
         ),
         # Tomorrow statistics sensors
         "lowest_price_tomorrow": lambda: daily_stat_calculator.get_daily_stat_value(day="tomorrow", stat_func=min),
         "highest_price_tomorrow": lambda: daily_stat_calculator.get_daily_stat_value(day="tomorrow", stat_func=max),
         "average_price_tomorrow": lambda: daily_stat_calculator.get_daily_stat_value(
             day="tomorrow",
-            stat_func=lambda prices: sum(prices) / len(prices),
+            stat_func=lambda prices: (sum(prices) / len(prices), calculate_median(prices)),
         ),
         # Daily aggregated level sensors
         "yesterday_price_level": lambda: daily_stat_calculator.get_daily_aggregated_value(

@@ -14,6 +14,7 @@ if TYPE_CHECKING:
         TibberPricesPeriodStatistics,
         TibberPricesThresholdConfig,
     )
+from custom_components.tibber_prices.utils.average import calculate_median
 from custom_components.tibber_prices.utils.price import (
     aggregate_period_levels,
     aggregate_period_ratings,
@@ -22,7 +23,7 @@ from custom_components.tibber_prices.utils.price import (
 
 
 def calculate_period_price_diff(
-    price_avg: float,
+    price_mean: float,
     start_time: datetime,
     price_context: dict[str, Any],
 ) -> tuple[float | None, float | None]:
@@ -47,7 +48,7 @@ def calculate_period_price_diff(
 
     # Convert reference price to minor units (ct/øre)
     ref_price_minor = round(ref_price * 100, 2)
-    period_price_diff = round(price_avg - ref_price_minor, 2)
+    period_price_diff = round(price_mean - ref_price_minor, 2)
     period_price_diff_pct = None
     if ref_price_minor != 0:
         # CRITICAL: Use abs() for negative prices (same logic as calculate_difference_percentage)
@@ -90,26 +91,30 @@ def calculate_period_price_statistics(period_price_data: list[dict]) -> dict[str
         period_price_data: List of price data dictionaries with "total" field
 
     Returns:
-        Dictionary with price_avg, price_min, price_max, price_spread (all in minor units: ct/øre)
+        Dictionary with price_mean, price_median, price_min, price_max, price_spread (all in minor units: ct/øre)
+        Note: price_spread is calculated based on price_mean (max - min range as percentage of mean)
 
     """
     prices_minor = [round(float(p["total"]) * 100, 2) for p in period_price_data]
 
     if not prices_minor:
         return {
-            "price_avg": 0.0,
+            "price_mean": 0.0,
+            "price_median": 0.0,
             "price_min": 0.0,
             "price_max": 0.0,
             "price_spread": 0.0,
         }
 
-    price_avg = round(sum(prices_minor) / len(prices_minor), 2)
+    price_mean = round(sum(prices_minor) / len(prices_minor), 2)
+    price_median = round(calculate_median(prices_minor), 2)
     price_min = round(min(prices_minor), 2)
     price_max = round(max(prices_minor), 2)
     price_spread = round(price_max - price_min, 2)
 
     return {
-        "price_avg": price_avg,
+        "price_mean": price_mean,
+        "price_median": price_median,
         "price_min": price_min,
         "price_max": price_max,
         "price_spread": price_spread,
@@ -147,7 +152,8 @@ def build_period_summary_dict(
         "rating_level": stats.aggregated_rating,
         "rating_difference_%": stats.rating_difference_pct,
         # 3. Price statistics (how much does it cost?)
-        "price_avg": stats.price_avg,
+        "price_mean": stats.price_mean,
+        "price_median": stats.price_median,
         "price_min": stats.price_min,
         "price_max": stats.price_max,
         "price_spread": stats.price_spread,
@@ -290,7 +296,7 @@ def extract_period_summaries(
 
         # Calculate period price difference from daily reference
         period_price_diff, period_price_diff_pct = calculate_period_price_diff(
-            price_stats["price_avg"], start_time, price_context
+            price_stats["price_mean"], start_time, price_context
         )
 
         # Extract prices for volatility calculation (coefficient of variation)
@@ -324,7 +330,8 @@ def extract_period_summaries(
             aggregated_level=aggregated_level,
             aggregated_rating=aggregated_rating,
             rating_difference_pct=rating_difference_pct,
-            price_avg=price_stats["price_avg"],
+            price_mean=price_stats["price_mean"],
+            price_median=price_stats["price_median"],
             price_min=price_stats["price_min"],
             price_max=price_stats["price_max"],
             price_spread=price_stats["price_spread"],

@@ -516,7 +516,8 @@ automation:
 start: "2025-11-11T02:00:00+01:00"  # Period start time
 end: "2025-11-11T05:00:00+01:00"    # Period end time
 duration_minutes: 180                # Duration in minutes
-price_avg: 18.5                      # Average price in the period
+price_mean: 18.5                     # Arithmetic mean price in the period
+price_median: 18.3                   # Median price in the period
 rating_level: "LOW"                  # All intervals have LOW rating
 
 # Relaxation info (shows if filter loosening was needed):

@@ -32,7 +32,7 @@ class TibberPricesRollingHourCalculator(TibberPricesBaseCalculator):
         *,
         hour_offset: int = 0,
         value_type: str = "price",
-    ) -> str | float | None:
+    ) -> str | float | tuple[float | None, float | None] | None:
         """
         Unified method to get aggregated values from 5-interval rolling window.
 
@@ -44,7 +44,7 @@ class TibberPricesRollingHourCalculator(TibberPricesBaseCalculator):
 
         Returns:
             Aggregated value based on type:
-            - "price": float (average price in minor currency units)
+            - "price": float or tuple[float, float | None] (avg, median)
             - "level": str (aggregated level: "very_cheap", "cheap", etc.)
             - "rating": str (aggregated rating: "low", "normal", "high")
 
@@ -81,7 +81,7 @@ class TibberPricesRollingHourCalculator(TibberPricesBaseCalculator):
         self,
         window_data: list[dict],
         value_type: str,
-    ) -> str | float | None:
+    ) -> str | float | tuple[float | None, float | None] | None:
         """
         Aggregate data from multiple intervals based on value type.
 
@@ -90,7 +90,10 @@ class TibberPricesRollingHourCalculator(TibberPricesBaseCalculator):
             value_type: "price" | "level" | "rating".
 
         Returns:
-            Aggregated value based on type.
+            Aggregated value based on type:
+            - "price": tuple[float, float | None] (avg, median)
+            - "level": str
+            - "rating": str
 
         """
         # Get thresholds from config for rating aggregation
@@ -103,9 +106,12 @@ class TibberPricesRollingHourCalculator(TibberPricesBaseCalculator):
             DEFAULT_PRICE_RATING_THRESHOLD_HIGH,
         )
 
-        # Map value types to aggregation functions
+        # Handle price aggregation - return tuple directly
+        if value_type == "price":
+            return aggregate_price_data(window_data)
+
+        # Map other value types to aggregation functions
         aggregators = {
-            "price": lambda data: aggregate_price_data(data),
             "level": lambda data: aggregate_level_data(data),
             "rating": lambda data: aggregate_rating_data(data, threshold_low, threshold_high),
         }

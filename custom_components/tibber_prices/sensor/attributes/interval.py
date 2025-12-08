@@ -17,7 +17,9 @@ if TYPE_CHECKING:
         TibberPricesDataUpdateCoordinator,
     )
     from custom_components.tibber_prices.coordinator.time_service import TibberPricesTimeService
+    from custom_components.tibber_prices.data import TibberPricesConfigEntry
 
+from .helpers import add_alternate_average_attribute
 from .metadata import get_current_interval_data
 
 
@@ -29,6 +31,7 @@ def add_current_interval_price_attributes(  # noqa: PLR0913
     cached_data: dict,
     *,
     time: TibberPricesTimeService,
+    config_entry: TibberPricesConfigEntry,
 ) -> None:
     """
     Add attributes for current interval price sensors.
@@ -40,6 +43,7 @@ def add_current_interval_price_attributes(  # noqa: PLR0913
         native_value: The current native value of the sensor
         cached_data: Dictionary containing cached sensor data
         time: TibberPricesTimeService instance (required)
+        config_entry: Config entry for user preferences
 
     """
     now = time.now()
@@ -107,6 +111,15 @@ def add_current_interval_price_attributes(  # noqa: PLR0913
         level = cached_data.get("rolling_hour_level")
         if level:
             add_icon_color_attribute(attributes, key="price_level", state_value=level)
+
+        # Add alternate average attribute for rolling hour average price sensors
+        base_key = "rolling_hour_0" if key == "current_hour_average_price" else "rolling_hour_1"
+        add_alternate_average_attribute(
+            attributes,
+            cached_data,
+            base_key,
+            config_entry=config_entry,
+        )
 
     # Add price level attributes for all level sensors
     add_level_attributes_for_sensor(

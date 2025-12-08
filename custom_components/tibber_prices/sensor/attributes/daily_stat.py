@@ -14,6 +14,9 @@ if TYPE_CHECKING:
     from datetime import datetime
 
     from custom_components.tibber_prices.coordinator.time_service import TibberPricesTimeService
+    from custom_components.tibber_prices.data import TibberPricesConfigEntry
+
+from .helpers import add_alternate_average_attribute
 
 
 def _get_day_midnight_timestamp(key: str, *, time: TibberPricesTimeService) -> datetime:
@@ -83,6 +86,7 @@ def add_statistics_attributes(
     cached_data: dict,
     *,
     time: TibberPricesTimeService,
+    config_entry: TibberPricesConfigEntry,
 ) -> None:
     """
     Add attributes for statistics and rating sensors.
@@ -92,6 +96,7 @@ def add_statistics_attributes(
         key: The sensor entity key
         cached_data: Dictionary containing cached sensor data
         time: TibberPricesTimeService instance (required)
+        config_entry: Config entry for user preferences
 
     """
     # Data timestamp sensor - shows API fetch time
@@ -126,10 +131,17 @@ def add_statistics_attributes(
                 attributes["timestamp"] = extreme_starts_at
         return
 
-    # Daily average sensors - show midnight to indicate whole day
+    # Daily average sensors - show midnight to indicate whole day + add alternate value
     daily_avg_sensors = {"average_price_today", "average_price_tomorrow"}
     if key in daily_avg_sensors:
         attributes["timestamp"] = _get_day_midnight_timestamp(key, time=time)
+        # Add alternate average attribute
+        add_alternate_average_attribute(
+            attributes,
+            cached_data,
+            key,  # base_key = key itself ("average_price_today" or "average_price_tomorrow")
+            config_entry=config_entry,
+        )
         return
 
     # Daily aggregated level/rating sensors - show midnight to indicate whole day
