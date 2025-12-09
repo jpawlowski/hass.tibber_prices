@@ -107,7 +107,8 @@ def calculate_period_price_statistics(period_price_data: list[dict]) -> dict[str
         }
 
     price_mean = round(sum(prices_minor) / len(prices_minor), 2)
-    price_median = round(calculate_median(prices_minor), 2)
+    median_value = calculate_median(prices_minor)
+    price_median = round(median_value, 2) if median_value is not None else 0.0
     price_min = round(min(prices_minor), 2)
     price_max = round(max(prices_minor), 2)
     price_spread = round(price_max - price_min, 2)
