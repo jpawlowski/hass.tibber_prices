@@ -153,15 +153,11 @@ def add_volatility_type_attributes(
 
         if today_prices:
             today_vol = calculate_volatility_level(today_prices, **thresholds)
-            today_spread = (max(today_prices) - min(today_prices)) * 100
-            volatility_attributes["today_spread"] = round(today_spread, 2)
             volatility_attributes["today_volatility"] = today_vol
             volatility_attributes["interval_count_today"] = len(today_prices)
 
         if tomorrow_prices:
             tomorrow_vol = calculate_volatility_level(tomorrow_prices, **thresholds)
-            tomorrow_spread = (max(tomorrow_prices) - min(tomorrow_prices)) * 100
-            volatility_attributes["tomorrow_spread"] = round(tomorrow_spread, 2)
             volatility_attributes["tomorrow_volatility"] = tomorrow_vol
             volatility_attributes["interval_count_tomorrow"] = len(tomorrow_prices)
     elif volatility_type == "next_24h":

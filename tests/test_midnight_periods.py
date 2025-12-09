@@ -32,7 +32,7 @@ def create_test_period(start_hour: int, end_hour: int, base_date: datetime) -> d
         "start": start,
         "end": end,
         "duration_minutes": int((end - start).total_seconds() / 60),
-        "price_avg": 25.5,
+        "price_median": 25.5,
     }
 
 
@@ -95,7 +95,7 @@ def test_period_spanning_three_days(base_date: datetime) -> None:
         "start": day1.replace(hour=22, minute=0),
         "end": day3.replace(hour=2, minute=0),
         "duration_minutes": int((day3.replace(hour=2) - day1.replace(hour=22)).total_seconds() / 60),
-        "price_avg": 25.5,
+        "price_median": 25.5,
     }
 
     periods = [period]

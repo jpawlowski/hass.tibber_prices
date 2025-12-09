@@ -219,7 +219,7 @@ def extract_period_summaries(
 
     Returns sensor-ready period summaries with:
     - Timestamps and positioning (start, end, hour, minute, time)
-    - Aggregated price statistics (price_avg, price_min, price_max, price_spread)
+    - Aggregated price statistics (price_mean, price_median, price_min, price_max, price_spread)
     - Volatility categorization (low/moderate/high/very_high based on coefficient of variation)
     - Rating difference percentage (aggregated from intervals)
     - Period price differences (period_price_diff_from_daily_min/max)

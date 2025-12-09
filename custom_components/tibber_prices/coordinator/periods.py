@@ -63,7 +63,7 @@ class TibberPricesPeriodCalculator:
         Compute hash of price data and config for period calculation caching.
 
         Only includes data that affects period calculation:
-        - Today's interval timestamps and enriched rating levels
+        - All interval timestamps and enriched rating levels (yesterday/today/tomorrow)
         - Period calculation config (flex, min_distance, min_period_length)
         - Level filter overrides
 
@@ -71,11 +71,20 @@ class TibberPricesPeriodCalculator:
             Hash string for cache key comparison.
 
         """
-        # Get relevant price data from flat interval list
-        # Build minimal coordinator_data structure for get_intervals_for_day_offsets
+        # Get today and tomorrow intervals for hash calculation
+        # CRITICAL: Only today+tomorrow needed in hash because:
+        # 1. Mitternacht: "today" startsAt changes → cache invalidates
+        # 2. Tomorrow arrival: "tomorrow" startsAt changes from None → cache invalidates
+        # 3. Yesterday/day-before-yesterday are static (rating_levels don't change retroactively)
+        # 4. Using first startsAt as representative (changes → entire day changed)
         coordinator_data = {"priceInfo": price_info}
-        today = get_intervals_for_day_offsets(coordinator_data, [0])
-        today_signature = tuple((interval.get("startsAt"), interval.get("rating_level")) for interval in today)
+        today_intervals = get_intervals_for_day_offsets(coordinator_data, [0])
+        tomorrow_intervals = get_intervals_for_day_offsets(coordinator_data, [1])
+
+        # Use first startsAt of each day as representative for entire day's data
+        # If day is empty, use None (detects data availability changes)
+        today_start = today_intervals[0].get("startsAt") if today_intervals else None
+        tomorrow_start = tomorrow_intervals[0].get("startsAt") if tomorrow_intervals else None
 
         # Get period configs (both best and peak)
         best_config = self.get_period_config(reverse_sort=False)
@@ -88,7 +97,8 @@ class TibberPricesPeriodCalculator:
 
         # Compute hash from all relevant data
         hash_data = (
-            today_signature,
+            today_start,  # Representative for today's data (changes at midnight)
+            tomorrow_start,  # Representative for tomorrow's data (changes when data arrives)
             tuple(best_config.items()),
             tuple(peak_config.items()),
             best_level_filter,
@@ -558,13 +568,11 @@ class TibberPricesPeriodCalculator:
 
         self._log("debug", "Calculating periods (cache miss or hash mismatch)")
 
-        # Get intervals by day from flat list
-        # Build minimal coordinator_data structure for get_intervals_for_day_offsets
+        # Get all intervals at once (day before yesterday + yesterday + today + tomorrow)
+        # CRITICAL: 4 days ensure stable historical period calculations
+        # (periods calculated today for yesterday match periods calculated yesterday)
         coordinator_data = {"priceInfo": price_info}
-        yesterday_prices = get_intervals_for_day_offsets(coordinator_data, [-1])
-        today_prices = get_intervals_for_day_offsets(coordinator_data, [0])
-        tomorrow_prices = get_intervals_for_day_offsets(coordinator_data, [1])
-        all_prices = yesterday_prices + today_prices + tomorrow_prices
+        all_prices = get_intervals_for_day_offsets(coordinator_data, [-2, -1, 0, 1])
 
         # Get rating thresholds from config
         threshold_low = self.config_entry.options.get(

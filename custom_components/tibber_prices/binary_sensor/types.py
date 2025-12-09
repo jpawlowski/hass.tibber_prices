@@ -90,7 +90,8 @@ class PeriodSummary(TypedDict, total=False):
     rating_difference_pct: float  # Difference from daily average (%)
 
     # Price statistics (priority 3)
-    price_avg: float  # Average price in period (minor currency)
+    price_mean: float  # Arithmetic mean price in period (minor currency)
+    price_median: float  # Median price in period (minor currency)
     price_min: float  # Minimum price in period (minor currency)
     price_max: float  # Maximum price in period (minor currency)
     price_spread: float  # Price spread (max - min)
@@ -122,7 +123,7 @@ class PeriodAttributes(BaseAttributes, total=False):
     Attributes follow priority ordering:
     1. Time information (timestamp, start, end, duration_minutes)
     2. Core decision attributes (level, rating_level, rating_difference_%)
-    3. Price statistics (price_avg, price_min, price_max, price_spread, volatility)
+    3. Price statistics (price_mean, price_median, price_min, price_max, price_spread, volatility)
     4. Price comparison (period_price_diff_from_daily_min, period_price_diff_from_daily_min_%)
     5. Detail information (period_interval_count, period_position, periods_total, periods_remaining)
     6. Relaxation information (only if period was relaxed)
@@ -140,7 +141,8 @@ class PeriodAttributes(BaseAttributes, total=False):
     rating_difference_pct: float  # Difference from daily average (%)
 
     # Price statistics (priority 3)
-    price_avg: float  # Average price in current/next period (minor currency)
+    price_mean: float  # Arithmetic mean price in current/next period (minor currency)
+    price_median: float  # Median price in current/next period (minor currency)
     price_min: float  # Minimum price in current/next period (minor currency)
     price_max: float  # Maximum price in current/next period (minor currency)
     price_spread: float  # Price spread (max - min) in current/next period

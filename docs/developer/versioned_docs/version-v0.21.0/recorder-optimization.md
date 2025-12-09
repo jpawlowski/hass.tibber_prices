@@ -18,7 +18,7 @@ Both `TibberPricesSensor` and `TibberPricesBinarySensor` implement `_unrecorded_
 ```python
 class TibberPricesSensor(TibberPricesEntity, SensorEntity):
     """tibber_prices Sensor class."""
-    
+
     _unrecorded_attributes = frozenset(
         {
             "description",
@@ -73,7 +73,8 @@ class TibberPricesSensor(TibberPricesEntity, SensorEntity):
       "start": "2025-12-07T06:00:00+01:00",
       "end": "2025-12-07T08:00:00+01:00",
       "duration_minutes": 120,
-      "price_avg": 18.5,
+      "price_mean": 18.5,
+      "price_median": 18.3,
       "price_min": 17.2,
       "price_max": 19.8,
       // ... 10+ more attributes × 10-20 periods
@@ -164,7 +165,7 @@ These attributes **remain in history** because they provide essential analytical
 
 ### Period Data
 - `start`, `end`, `duration_minutes` - Core period timing
-- `price_avg`, `price_min`, `price_max` - Core price statistics
+- `price_mean`, `price_median`, `price_min`, `price_max` - Core price statistics
 
 ### High-Level Status
 - `relaxation_active` - Whether relaxation was used (boolean, useful for analyzing when periods needed relaxation)
@@ -265,12 +266,12 @@ After modifying `_unrecorded_attributes`:
 
 **SQL Query to check attribute presence:**
 ```sql
-SELECT 
+SELECT
     state_id,
     attributes
-FROM states 
+FROM states
 WHERE entity_id = 'sensor.tibber_home_current_interval_price'
-ORDER BY last_updated DESC 
+ORDER BY last_updated DESC
 LIMIT 5;
 ```
 

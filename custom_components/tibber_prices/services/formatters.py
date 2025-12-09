@@ -20,6 +20,7 @@ Used by:
 
 from __future__ import annotations
 
+from datetime import datetime, time
 from typing import Any
 
 from custom_components.tibber_prices.const import (
@@ -197,7 +198,7 @@ def aggregate_hourly_exact(  # noqa: PLR0913, PLR0912, PLR0915
     return hourly_data
 
 
-def get_period_data(  # noqa: PLR0913, PLR0912, PLR0915
+def get_period_data(  # noqa: PLR0913, PLR0912, PLR0915, C901
     *,
     coordinator: Any,
     period_filter: str,
@@ -224,7 +225,7 @@ def get_period_data(  # noqa: PLR0913, PLR0912, PLR0915
     When period_filter is specified, returns the precomputed period summaries
     from the coordinator instead of filtering intervals.
 
-    Note: Period prices (price_avg) are stored in minor currency units (ct/øre).
+    Note: Period prices (price_median) are stored in minor currency units (ct/øre).
     They are converted to major currency unless minor_currency=True.
 
     Args:
@@ -273,11 +274,44 @@ def get_period_data(  # noqa: PLR0913, PLR0912, PLR0915
         day_intervals = get_intervals_for_day_offsets(coordinator.data, offsets)
         allowed_dates = {interval["startsAt"].date() for interval in day_intervals if interval.get("startsAt")}
 
-        # Filter periods to those within allowed dates
-        for period in period_summaries:
-            start = period.get("start")
-            if start and start.date() in allowed_dates:
-                filtered_periods.append(period)
+        # Calculate day boundaries for trimming
+        # Find min/max dates to determine the overall requested window
+        if allowed_dates:
+            min_date = min(allowed_dates)
+            max_date = max(allowed_dates)
+
+            # CRITICAL: Trim periods that span day boundaries
+            # Window start = midnight of first requested day
+            # Window end = midnight of day AFTER last requested day (exclusive boundary)
+            window_start = datetime.combine(min_date, time.min)
+            window_end = datetime.combine(max_date, time.max).replace(microsecond=999999)
+
+            # Make timezone-aware using coordinator's time service
+            window_start = coordinator.time.as_local(window_start)
+            window_end = coordinator.time.as_local(window_end)
+
+            # Filter and trim periods to window
+            for period in period_summaries:
+                start = period.get("start")
+                end = period.get("end")
+
+                if not start:
+                    continue
+
+                # Skip periods that end before window or start after window
+                if end and end <= window_start:
+                    continue
+                if start >= window_end:
+                    continue
+
+                # Trim period to window boundaries
+                trimmed_period = period.copy()
+                if start < window_start:
+                    trimmed_period["start"] = window_start
+                if end and end > window_end:
+                    trimmed_period["end"] = window_end
+
+                filtered_periods.append(trimmed_period)
     else:
         filtered_periods = period_summaries
 
@@ -298,7 +332,7 @@ def get_period_data(  # noqa: PLR0913, PLR0912, PLR0915
         # Build data point based on output format
         if output_format == "array_of_objects":
             # Map period fields to custom field names
-            # Period has: start, end, level, rating_level, price_avg, price_min, price_max
+            # Period has: start, end, level, rating_level, price_mean, price_median, price_min, price_max
             data_point = {}
 
             # Start time
@@ -309,14 +343,16 @@ def get_period_data(  # noqa: PLR0913, PLR0912, PLR0915
             end = period.get("end")
             data_point[end_time_field] = end.isoformat() if end and hasattr(end, "isoformat") else end
 
-            # Price (use price_avg from period, stored in minor units)
-            price_avg = period.get("price_avg", 0.0)
+            # Price (use price_median from period for visual consistency with sensor states)
+            # Median is more representative than mean for periods with gap tolerance
+            # (single "normal" intervals between cheap/expensive ones don't skew the display)
+            price_median = period.get("price_median", 0.0)
             # Convert to major currency unless minor_currency=True
             if not minor_currency:
-                price_avg = price_avg / 100
+                price_median = price_median / 100
             if round_decimals is not None:
-                price_avg = round(price_avg, round_decimals)
-            data_point[price_field] = price_avg
+                price_median = round(price_median, round_decimals)
+            data_point[price_field] = price_median
 
             # Level (only if requested and present)
             if include_level and "level" in period:
@@ -335,21 +371,22 @@ def get_period_data(  # noqa: PLR0913, PLR0912, PLR0915
             # 2. End time with price (hold price until end)
             # If insert_nulls='segments' or 'all':
             # 3. End time with NULL (cleanly terminate segment for ApexCharts)
-            price_avg = period.get("price_avg", 0.0)
+            # Use price_median for consistency with sensor states (more representative for periods)
+            price_median = period.get("price_median", 0.0)
             # Convert to major currency unless minor_currency=True
             if not minor_currency:
-                price_avg = price_avg / 100
+                price_median = price_median / 100
             if round_decimals is not None:
-                price_avg = round(price_avg, round_decimals)
+                price_median = round(price_median, round_decimals)
             start = period["start"]
             end = period.get("end")
             start_serialized = start.isoformat() if hasattr(start, "isoformat") else start
             end_serialized = end.isoformat() if end and hasattr(end, "isoformat") else end
 
             # Add data points per period
-            chart_data.append([start_serialized, price_avg])  # 1. Start with price
+            chart_data.append([start_serialized, price_median])  # 1. Start with price
             if end_serialized:
-                chart_data.append([end_serialized, price_avg])  # 2. End with price (hold level)
+                chart_data.append([end_serialized, price_median])  # 2. End with price (hold level)
                 # 3. Add NULL terminator only if insert_nulls is enabled
                 if insert_nulls in ("segments", "all"):
                     chart_data.append([end_serialized, None])  # 3. End with NULL (terminate segment)

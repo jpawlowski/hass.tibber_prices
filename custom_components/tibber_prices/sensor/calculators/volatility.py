@@ -73,7 +73,8 @@ class TibberPricesVolatilityCalculator(TibberPricesBaseCalculator):
         price_min = min(prices_to_analyze)
         price_max = max(prices_to_analyze)
         spread = price_max - price_min
-        price_avg = sum(prices_to_analyze) / len(prices_to_analyze)
+        # Use arithmetic mean for volatility calculation (required for coefficient of variation)
+        price_mean = sum(prices_to_analyze) / len(prices_to_analyze)
 
         # Convert to minor currency units (ct/øre) for display
         spread_minor = spread * 100
@@ -87,7 +88,7 @@ class TibberPricesVolatilityCalculator(TibberPricesBaseCalculator):
             "price_volatility": volatility,
             "price_min": round(price_min * 100, 2),
             "price_max": round(price_max * 100, 2),
-            "price_avg": round(price_avg * 100, 2),
+            "price_mean": round(price_mean * 100, 2),  # Mean used for volatility calculation
             "interval_count": len(prices_to_analyze),
         }
 

@@ -54,9 +54,9 @@ def build_lifecycle_attributes(
     cache_validity = lifecycle_calculator.get_cache_validity_status()
     attributes["cache_validity"] = cache_validity
 
+    # Use single "last_update" field instead of duplicating as "last_api_fetch" and "last_cache_update"
     if coordinator._last_price_update:  # noqa: SLF001 - Internal state access for diagnostic display
-        attributes["last_api_fetch"] = coordinator._last_price_update.isoformat()  # noqa: SLF001
-        attributes["last_cache_update"] = coordinator._last_price_update.isoformat()  # noqa: SLF001
+        attributes["last_update"] = coordinator._last_price_update.isoformat()  # noqa: SLF001
 
     # Data Availability & Completeness
     data_completeness = lifecycle_calculator.get_data_completeness_status()

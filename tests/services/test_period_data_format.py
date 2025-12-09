@@ -16,20 +16,20 @@ def test_period_array_of_arrays_with_insert_nulls() -> None:
     period = {
         "start": datetime(2025, 12, 3, 10, 0, tzinfo=UTC),
         "end": datetime(2025, 12, 3, 12, 0, tzinfo=UTC),
-        "price_avg": 1250,  # Stored in minor units (12.50 EUR/ct)
+        "price_median": 1250,  # Stored in minor units (12.50 EUR/ct)
         "level": "CHEAP",
         "rating_level": "LOW",
     }
 
     # Test with insert_nulls='segments' (should add NULL terminator)
     chart_data = []
-    price_avg = period["price_avg"]
+    price_median = period["price_median"]
     start_serialized = period["start"].isoformat()
     end_serialized = period["end"].isoformat()
     insert_nulls = "segments"
 
-    chart_data.append([start_serialized, price_avg])  # 1. Start with price
-    chart_data.append([end_serialized, price_avg])  # 2. End with price (hold level)
+    chart_data.append([start_serialized, price_median])  # 1. Start with price
+    chart_data.append([end_serialized, price_median])  # 2. End with price (hold level)
     # 3. Add NULL terminator only if insert_nulls is enabled
     if insert_nulls in ("segments", "all"):
         chart_data.append([end_serialized, None])  # 3. End with NULL (terminate segment)
@@ -61,18 +61,18 @@ def test_period_array_of_arrays_without_insert_nulls() -> None:
     period = {
         "start": datetime(2025, 12, 3, 10, 0, tzinfo=UTC),
         "end": datetime(2025, 12, 3, 12, 0, tzinfo=UTC),
-        "price_avg": 1250,
+        "price_median": 1250,
     }
 
     # Test with insert_nulls='none' (should NOT add NULL terminator)
     chart_data = []
-    price_avg = period["price_avg"]
+    price_median = period["price_median"]
     start_serialized = period["start"].isoformat()
     end_serialized = period["end"].isoformat()
     insert_nulls = "none"
 
-    chart_data.append([start_serialized, price_avg])
-    chart_data.append([end_serialized, price_avg])
+    chart_data.append([start_serialized, price_median])
+    chart_data.append([end_serialized, price_median])
     if insert_nulls in ("segments", "all"):
         chart_data.append([end_serialized, None])
 
@@ -92,24 +92,24 @@ def test_multiple_periods_separated_by_nulls() -> None:
         {
             "start": datetime(2025, 12, 3, 10, 0, tzinfo=UTC),
             "end": datetime(2025, 12, 3, 12, 0, tzinfo=UTC),
-            "price_avg": 1250,
+            "price_median": 1250,
         },
         {
             "start": datetime(2025, 12, 3, 15, 0, tzinfo=UTC),
             "end": datetime(2025, 12, 3, 17, 0, tzinfo=UTC),
-            "price_avg": 1850,
+            "price_median": 1850,
         },
     ]
 
     chart_data = []
     insert_nulls = "segments"
     for period in periods:
-        price_avg = period["price_avg"]
+        price_median = period["price_median"]
         start_serialized = period["start"].isoformat()
         end_serialized = period["end"].isoformat()
 
-        chart_data.append([start_serialized, price_avg])
-        chart_data.append([end_serialized, price_avg])
+        chart_data.append([start_serialized, price_median])
+        chart_data.append([end_serialized, price_median])
         if insert_nulls in ("segments", "all"):
             chart_data.append([end_serialized, None])
 
@@ -137,24 +137,24 @@ def test_multiple_periods_without_nulls() -> None:
         {
             "start": datetime(2025, 12, 3, 10, 0, tzinfo=UTC),
             "end": datetime(2025, 12, 3, 12, 0, tzinfo=UTC),
-            "price_avg": 1250,
+            "price_median": 1250,
         },
         {
             "start": datetime(2025, 12, 3, 15, 0, tzinfo=UTC),
             "end": datetime(2025, 12, 3, 17, 0, tzinfo=UTC),
-            "price_avg": 1850,
+            "price_median": 1850,
         },
     ]
 
     chart_data = []
     insert_nulls = "none"
     for period in periods:
-        price_avg = period["price_avg"]
+        price_median = period["price_median"]
         start_serialized = period["start"].isoformat()
         end_serialized = period["end"].isoformat()
 
-        chart_data.append([start_serialized, price_avg])
-        chart_data.append([end_serialized, price_avg])
+        chart_data.append([start_serialized, price_median])
+        chart_data.append([end_serialized, price_median])
         if insert_nulls in ("segments", "all"):
             chart_data.append([end_serialized, None])
 
@@ -174,15 +174,15 @@ def test_period_currency_conversion() -> None:
     period = {
         "start": datetime(2025, 12, 3, 10, 0, tzinfo=UTC),
         "end": datetime(2025, 12, 3, 12, 0, tzinfo=UTC),
-        "price_avg": 1250,  # 12.50 ct/øre
+        "price_median": 1250,  # 12.50 ct/øre
     }
 
     # Test 1: Keep minor currency (for ApexCharts internal use)
-    price_minor = period["price_avg"]
+    price_minor = period["price_median"]
     assert price_minor == 1250, "Should keep minor units"
 
     # Test 2: Convert to major currency (for display)
-    price_major = period["price_avg"] / 100
+    price_major = period["price_median"] / 100
     assert price_major == 12.50, "Should convert to major units (EUR)"
 
 
@@ -195,22 +195,22 @@ def test_period_with_missing_end_time() -> None:
     period = {
         "start": datetime(2025, 12, 3, 10, 0, tzinfo=UTC),
         "end": None,  # No end time
-        "price_avg": 1250,
+        "price_median": 1250,
     }
 
     chart_data = []
-    price_avg = period["price_avg"]
+    price_median = period["price_median"]
     start_serialized = period["start"].isoformat()
     end = period.get("end")
     end_serialized = end.isoformat() if end else None
     insert_nulls = "segments"
 
     # Add start point
-    chart_data.append([start_serialized, price_avg])
+    chart_data.append([start_serialized, price_median])
 
     # Only add end points if end_serialized exists
     if end_serialized:
-        chart_data.append([end_serialized, price_avg])
+        chart_data.append([end_serialized, price_median])
         if insert_nulls in ("segments", "all"):
             chart_data.append([end_serialized, None])
 
@@ -252,17 +252,17 @@ def test_insert_nulls_all_mode() -> None:
     period = {
         "start": datetime(2025, 12, 3, 10, 0, tzinfo=UTC),
         "end": datetime(2025, 12, 3, 12, 0, tzinfo=UTC),
-        "price_avg": 1250,
+        "price_median": 1250,
     }
 
     chart_data = []
-    price_avg = period["price_avg"]
+    price_median = period["price_median"]
     start_serialized = period["start"].isoformat()
     end_serialized = period["end"].isoformat()
     insert_nulls = "all"
 
-    chart_data.append([start_serialized, price_avg])
-    chart_data.append([end_serialized, price_avg])
+    chart_data.append([start_serialized, price_median])
+    chart_data.append([end_serialized, price_median])
     if insert_nulls in ("segments", "all"):
         chart_data.append([end_serialized, None])
 
@@ -285,7 +285,7 @@ def test_insert_nulls_and_add_trailing_null_both_enabled() -> None:
         {
             "start": datetime(2025, 12, 3, 10, 0, tzinfo=UTC),
             "end": datetime(2025, 12, 3, 12, 0, tzinfo=UTC),
-            "price_avg": 1250,
+            "price_median": 1250,
         },
     ]
 
@@ -294,12 +294,12 @@ def test_insert_nulls_and_add_trailing_null_both_enabled() -> None:
     add_trailing_null = True
 
     for period in periods:
-        price_avg = period["price_avg"]
+        price_median = period["price_median"]
         start_serialized = period["start"].isoformat()
         end_serialized = period["end"].isoformat()
 
-        chart_data.append([start_serialized, price_avg])
-        chart_data.append([end_serialized, price_avg])
+        chart_data.append([start_serialized, price_median])
+        chart_data.append([end_serialized, price_median])
         if insert_nulls in ("segments", "all"):
             chart_data.append([end_serialized, None])
 
@@ -328,18 +328,18 @@ def test_neither_insert_nulls_nor_add_trailing_null() -> None:
     period = {
         "start": datetime(2025, 12, 3, 10, 0, tzinfo=UTC),
         "end": datetime(2025, 12, 3, 12, 0, tzinfo=UTC),
-        "price_avg": 1250,
+        "price_median": 1250,
     }
 
     chart_data = []
-    price_avg = period["price_avg"]
+    price_median = period["price_median"]
     start_serialized = period["start"].isoformat()
     end_serialized = period["end"].isoformat()
     insert_nulls = "none"
     add_trailing_null = False
 
-    chart_data.append([start_serialized, price_avg])
-    chart_data.append([end_serialized, price_avg])
+    chart_data.append([start_serialized, price_median])
+    chart_data.append([end_serialized, price_median])
     if insert_nulls in ("segments", "all"):
         chart_data.append([end_serialized, None])
 

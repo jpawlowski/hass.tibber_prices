@@ -130,8 +130,7 @@ class TibberPricesSensor(TibberPricesEntity, RestoreSensor):
             # Temporary/Time-Bound
             "next_api_poll",
             "next_midnight_turnover",
-            "last_api_fetch",
-            "last_cache_update",
+            "last_update",  # Lifecycle sensor last update timestamp
             "last_turnover",
             "last_error",
             "error",
@@ -139,8 +138,7 @@ class TibberPricesSensor(TibberPricesEntity, RestoreSensor):
             "relaxation_level",
             "relaxation_threshold_original_%",
             "relaxation_threshold_applied_%",
-            # Redundant/Derived
-            "price_spread",
+            # Redundant/Derived (removed from attributes, kept here for safety)
             "volatility",
             "diff_%",
             "rating_difference_%",
@@ -645,25 +643,12 @@ class TibberPricesSensor(TibberPricesEntity, RestoreSensor):
         if not prices_to_analyze:
             return None
 
-        # Calculate spread and basic statistics
-        price_min = min(prices_to_analyze)
-        price_max = max(prices_to_analyze)
-        spread = price_max - price_min
-        price_avg = sum(prices_to_analyze) / len(prices_to_analyze)
-
-        # Convert to minor currency units (ct/øre) for display
-        spread_minor = spread * 100
-
-        # Calculate volatility level with custom thresholds (pass price list, not spread)
+        # Calculate volatility level with custom thresholds
+        # Note: Volatility calculation (coefficient of variation) uses mean internally
         volatility = calculate_volatility_level(prices_to_analyze, **thresholds)
 
-        # Store attributes for this sensor
+        # Store minimal attributes (only unique info not available in other sensors)
         self._last_volatility_attributes = {
-            "price_spread": round(spread_minor, 2),
-            "price_volatility": volatility,
-            "price_min": round(price_min * 100, 2),
-            "price_max": round(price_max * 100, 2),
-            "price_avg": round(price_avg * 100, 2),
             "interval_count": len(prices_to_analyze),
         }
 
