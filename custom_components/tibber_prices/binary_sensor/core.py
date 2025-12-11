@@ -138,7 +138,12 @@ class TibberPricesBinarySensor(TibberPricesEntity, BinarySensorEntity, RestoreEn
         """Return True if the current time is within a best price period."""
         if not self.coordinator.data:
             return None
-        attrs = get_price_intervals_attributes(self.coordinator.data, reverse_sort=False, time=self.coordinator.time)
+        attrs = get_price_intervals_attributes(
+            self.coordinator.data,
+            reverse_sort=False,
+            time=self.coordinator.time,
+            config_entry=self.coordinator.config_entry,
+        )
         if not attrs:
             return False  # Should not happen, but safety fallback
         start = attrs.get("start")
@@ -152,7 +157,12 @@ class TibberPricesBinarySensor(TibberPricesEntity, BinarySensorEntity, RestoreEn
         """Return True if the current time is within a peak price period."""
         if not self.coordinator.data:
             return None
-        attrs = get_price_intervals_attributes(self.coordinator.data, reverse_sort=True, time=self.coordinator.time)
+        attrs = get_price_intervals_attributes(
+            self.coordinator.data,
+            reverse_sort=True,
+            time=self.coordinator.time,
+            config_entry=self.coordinator.config_entry,
+        )
         if not attrs:
             return False  # Should not happen, but safety fallback
         start = attrs.get("start")
@@ -270,9 +280,19 @@ class TibberPricesBinarySensor(TibberPricesEntity, BinarySensorEntity, RestoreEn
         key = self.entity_description.key
 
         if key == "peak_price_period":
-            return get_price_intervals_attributes(self.coordinator.data, reverse_sort=True, time=self.coordinator.time)
+            return get_price_intervals_attributes(
+                self.coordinator.data,
+                reverse_sort=True,
+                time=self.coordinator.time,
+                config_entry=self.coordinator.config_entry,
+            )
         if key == "best_price_period":
-            return get_price_intervals_attributes(self.coordinator.data, reverse_sort=False, time=self.coordinator.time)
+            return get_price_intervals_attributes(
+                self.coordinator.data,
+                reverse_sort=False,
+                time=self.coordinator.time,
+                config_entry=self.coordinator.config_entry,
+            )
         if key == "tomorrow_data_available":
             return self._get_tomorrow_data_available_attributes()
 

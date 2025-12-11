@@ -23,6 +23,8 @@ from typing import TYPE_CHECKING, Any, Final
 import voluptuous as vol
 
 from custom_components.tibber_prices.const import (
+    CONF_CURRENCY_DISPLAY_MODE,
+    DISPLAY_MODE_SUBUNIT,
     DOMAIN,
     PRICE_LEVEL_CHEAP,
     PRICE_LEVEL_EXPENSIVE,
@@ -32,7 +34,7 @@ from custom_components.tibber_prices.const import (
     PRICE_RATING_HIGH,
     PRICE_RATING_LOW,
     PRICE_RATING_NORMAL,
-    format_price_unit_subunit,
+    get_display_unit_string,
     get_translation,
 )
 from homeassistant.exceptions import ServiceValidationError
@@ -298,11 +300,15 @@ async def handle_apexcharts_yaml(call: ServiceCall) -> dict[str, Any]:  # noqa: 
     # Get user's language from hass config
     user_language = hass.config.language or "en"
 
-    # Get coordinator to access price data (for currency)
-    _, coordinator, _ = get_entry_and_data(hass, entry_id)
+    # Get coordinator to access price data (for currency) and config entry for display settings
+    config_entry, coordinator, _ = get_entry_and_data(hass, entry_id)
     # Get currency from coordinator data
     currency = coordinator.data.get("currency", "EUR")
-    price_unit = format_price_unit_subunit(currency)
+
+    # Get user's display unit preference (subunit or base currency)
+    display_mode = config_entry.options.get(CONF_CURRENCY_DISPLAY_MODE, DISPLAY_MODE_SUBUNIT)
+    use_subunit = display_mode == DISPLAY_MODE_SUBUNIT
+    price_unit = get_display_unit_string(config_entry, currency)
 
     # Get entity registry for mapping
     entity_registry = async_get_entity_registry(hass)
@@ -326,6 +332,54 @@ async def handle_apexcharts_yaml(call: ServiceCall) -> dict[str, Any]:  # noqa: 
             (PRICE_LEVEL_VERY_EXPENSIVE, "#e74c3c"),
         ]
     series = []
+
+    # Get translated name for best price periods (needed for layer)
+    best_price_name = get_translation(["apexcharts", "best_price_period_name"], user_language) or "Best Price Period"
+
+    # Add best price period highlight overlay FIRST (so it renders behind all other series)
+    if highlight_best_price and entity_map:
+        # Create vertical highlight bands using separate Y-axis (0-1 range)
+        # This creates a semi-transparent overlay from bottom to top without affecting price scale
+        # Conditionally include day parameter (omit for rolling window mode)
+        # For rolling_window and rolling_window_autozoom, omit day parameter (dynamic selection)
+        day_param = "" if day in ("rolling_window", "rolling_window_autozoom", None) else f"day: ['{day}'], "
+
+        # Store original prices for tooltip, but map to 1 for full-height overlay
+        # Use user's display unit preference for period data too
+        subunit_param = "true" if use_subunit else "false"
+        best_price_generator = (
+            f"const response = await hass.callWS({{ "
+            f"type: 'call_service', "
+            f"domain: 'tibber_prices', "
+            f"service: 'get_chartdata', "
+            f"return_response: true, "
+            f"service_data: {{ entry_id: '{entry_id}', {day_param}"
+            f"period_filter: 'best_price', "
+            f"output_format: 'array_of_arrays', insert_nulls: 'segments', subunit_currency: {subunit_param} }} }}); "
+            f"const originalData = response.response.data; "
+            f"return originalData.map((point, i) => {{ "
+            f"const result = [point[0], point[1] === null ? null : 1]; "
+            f"result.originalPrice = point[1]; "
+            f"return result; "
+            f"}});"
+        )
+
+        # Use first entity from entity_map (reuse existing entity to avoid extra header entries)
+        best_price_entity = next(iter(entity_map.values()))
+
+        series.append(
+            {
+                "entity": best_price_entity,
+                "name": best_price_name,
+                "type": "area",
+                "color": "rgba(46, 204, 113, 0.05)",  # Ultra-subtle green overlay (barely visible)
+                "yaxis_id": "highlight",  # Use separate Y-axis (0-1) for full-height overlay
+                "show": {"legend_value": False, "in_header": False, "in_legend": False},
+                "data_generator": best_price_generator,
+                "stroke_width": 0,
+            }
+        )
+
     # Only create series for levels that have a matching entity (filter out missing levels)
     for level_key, color in series_levels:
         # Skip levels that don't have a corresponding sensor
@@ -346,6 +400,8 @@ async def handle_apexcharts_yaml(call: ServiceCall) -> dict[str, Any]:  # noqa: 
 
         # For rolling window modes, we'll capture metadata for dynamic config
         # For static day modes, just return data array
+        # Use user's display unit preference for all data requests
+        subunit_param = "true" if use_subunit else "false"
         if day in ("rolling_window", "rolling_window_autozoom", None):
             data_generator = (
                 f"const response = await hass.callWS({{ "
@@ -354,7 +410,7 @@ async def handle_apexcharts_yaml(call: ServiceCall) -> dict[str, Any]:  # noqa: 
                 f"service: 'get_chartdata', "
                 f"return_response: true, "
                 f"service_data: {{ entry_id: '{entry_id}', {day_param}{filter_param}, "
-                f"output_format: 'array_of_arrays', insert_nulls: 'segments', subunit_currency: true, "
+                f"output_format: 'array_of_arrays', insert_nulls: 'segments', subunit_currency: {subunit_param}, "
                 f"connect_segments: true }} }}); "
                 f"return response.response.data;"
             )
@@ -367,7 +423,7 @@ async def handle_apexcharts_yaml(call: ServiceCall) -> dict[str, Any]:  # noqa: 
                 f"service: 'get_chartdata', "
                 f"return_response: true, "
                 f"service_data: {{ entry_id: '{entry_id}', {day_param}{filter_param}, "
-                f"output_format: 'array_of_arrays', insert_nulls: 'segments', subunit_currency: true, "
+                f"output_format: 'array_of_arrays', insert_nulls: 'segments', subunit_currency: {subunit_param}, "
                 f"connect_segments: true }} }}); "
                 f"return response.response.data;"
             )
@@ -395,52 +451,6 @@ async def handle_apexcharts_yaml(call: ServiceCall) -> dict[str, Any]:  # noqa: 
 
     # Note: Extrema markers don't work with data_generator approach
     # ApexCharts card requires direct entity data for extremas feature, not dynamically generated data
-
-    # Get translated name for best price periods (needed for tooltip formatter)
-    best_price_name = get_translation(["apexcharts", "best_price_period_name"], user_language) or "Best Price Period"
-
-    # Add best price period highlight overlay (vertical bands from top to bottom)
-    if highlight_best_price and entity_map:
-        # Create vertical highlight bands using separate Y-axis (0-1 range)
-        # This creates a semi-transparent overlay from bottom to top without affecting price scale
-        # Conditionally include day parameter (omit for rolling window mode)
-        # For rolling_window and rolling_window_autozoom, omit day parameter (dynamic selection)
-        day_param = "" if day in ("rolling_window", "rolling_window_autozoom", None) else f"day: ['{day}'], "
-
-        # Store original prices for tooltip, but map to 1 for full-height overlay
-        # We use a custom tooltip formatter to show the real price
-        best_price_generator = (
-            f"const response = await hass.callWS({{ "
-            f"type: 'call_service', "
-            f"domain: 'tibber_prices', "
-            f"service: 'get_chartdata', "
-            f"return_response: true, "
-            f"service_data: {{ entry_id: '{entry_id}', {day_param}"
-            f"period_filter: 'best_price', "
-            f"output_format: 'array_of_arrays', insert_nulls: 'segments', subunit_currency: true }} }}); "
-            f"const originalData = response.response.data; "
-            f"return originalData.map((point, i) => {{ "
-            f"const result = [point[0], point[1] === null ? null : 1]; "
-            f"result.originalPrice = point[1]; "
-            f"return result; "
-            f"}});"
-        )
-
-        # Use first entity from entity_map (reuse existing entity to avoid extra header entries)
-        best_price_entity = next(iter(entity_map.values()))
-
-        series.append(
-            {
-                "entity": best_price_entity,
-                "name": best_price_name,
-                "type": "area",
-                "color": "rgba(46, 204, 113, 0.05)",  # Ultra-subtle green overlay (barely visible)
-                "yaxis_id": "highlight",  # Use separate Y-axis (0-1) for full-height overlay
-                "show": {"legend_value": False, "in_header": False, "in_legend": False},
-                "data_generator": best_price_generator,
-                "stroke_width": 0,
-            }
-        )
 
     # Get translated title based on level_type
     title_key = "title_rating_level" if level_type == "rating_level" else "title_level"
@@ -506,15 +516,12 @@ async def handle_apexcharts_yaml(call: ServiceCall) -> dict[str, Any]:  # noqa: 
                     "shade": "light",
                     "type": "vertical",
                     "shadeIntensity": 0.2,
-                    "opacityFrom": 0.7,
+                    "opacityFrom": [0.5, 0.7, 0.7, 0.7, 0.7, 0.7],
                     "opacityTo": 0.25,
+                    "stops": [50, 100],
                 },
             },
             "dataLabels": {"enabled": False},
-            "tooltip": {
-                "x": {"format": "HH:mm"},
-                "y": {"title": {"formatter": f"function() {{ return '{price_unit}'; }}"}},
-            },
             "legend": {
                 "show": False,
                 "position": "bottom",
@@ -522,22 +529,35 @@ async def handle_apexcharts_yaml(call: ServiceCall) -> dict[str, Any]:  # noqa: 
             },
             "grid": {
                 "show": True,
-                "borderColor": "#f5f5f5",
+                "borderColor": "rgba(144, 164, 174, 0.35)",
                 "strokeDashArray": 0,
                 "xaxis": {"lines": {"show": False}},
                 "yaxis": {"lines": {"show": True}},
             },
             "markers": {
                 "size": 0,  # No markers on data points
-                "hover": {"size": 2},  # Show marker only on hover
-                "strokeWidth": 1,
+                "hover": {"size": 3},  # Show marker only on hover
+                "colors": "#ff0000",
+                "fillOpacity": 0.5,
+                "strokeWidth": 5,
+                "strokeColors": "#ff0000",
+                "strokeOpacity": 0.15,
+                "showNullDataPoints": False,
+            },
+            "tooltip": {
+                "enabled": True,
+                "enabledOnSeries": [1, 2, 3, 4, 5],  # Enable for all price level series
+                "marker": {
+                    "show": False,
+                },
+                "x": {
+                    "show": False,
+                },
             },
         },
         "yaxis": [
             {
                 "id": "price",
-                "decimals": 2,
-                "min": 0,
                 "apex_config": {"title": {"text": price_unit}},
             },
             {
@@ -553,6 +573,9 @@ async def handle_apexcharts_yaml(call: ServiceCall) -> dict[str, Any]:  # noqa: 
             if day == "rolling_window_autozoom"
             else {"show": True, "color": "#8e24aa", "label": "🕒 LIVE"}
         ),
+        "all_series_config": {
+            "float_precision": 2,
+        },
         "series": series,
     }
 
@@ -632,7 +655,7 @@ async def handle_apexcharts_yaml(call: ServiceCall) -> dict[str, Any]:  # noqa: 
                     trigger_entities.append(current_price_sensor)
 
                 # Get metadata from chart_metadata sensor (preferred) or static fallback
-                # The chart_metadata sensor provides yaxis_min, yaxis_max, and gradient_stop
+                # The chart_metadata sensor provides yaxis_min and yaxis_max
                 # as attributes, avoiding the need for async service calls in templates
                 chart_metadata_sensor = next(
                     (
@@ -662,18 +685,14 @@ async def handle_apexcharts_yaml(call: ServiceCall) -> dict[str, Any]:  # noqa: 
                     # Sensor not found - will show notification
                     metadata_warning = True
 
-                # Fixed gradient stop at 50% (visual appeal, no semantic meaning)
-                gradient_stops = [50, 100]
-
                 # Set fallback values if sensor not used
                 if not use_sensor_metadata:
                     # Build yaxis config (only include min/max if not None)
                     yaxis_price_config = {
                         "id": "price",
-                        "decimals": 2,
                         "apex_config": {
                             "title": {"text": price_unit},
-                            "decimalsInFloat": 0,
+                            "decimalsInFloat": 0 if use_subunit else 1,
                             "forceNiceScale": True,
                         },
                     }
@@ -687,13 +706,12 @@ async def handle_apexcharts_yaml(call: ServiceCall) -> dict[str, Any]:  # noqa: 
                     # Build yaxis config with template variables
                     yaxis_price_config = {
                         "id": "price",
-                        "decimals": 2,
                         "min": "${v_yaxis_min}",
                         "max": "${v_yaxis_max}",
                         "apex_config": {
                             "title": {"text": price_unit},
-                            "decimalsInFloat": 0,
-                            "forceNiceScale": False,
+                            "decimalsInFloat": 0 if use_subunit else 1,
+                            "forceNiceScale": True,
                         },
                     }
 
@@ -735,10 +753,9 @@ async def handle_apexcharts_yaml(call: ServiceCall) -> dict[str, Any]:  # noqa: 
                                     "shade": "light",
                                     "type": "vertical",
                                     "shadeIntensity": 0.2,
-                                    "opacityFrom": 0.7,
+                                    "opacityFrom": [0.5, 0.7, 0.7, 0.7, 0.7, 0.7],
                                     "opacityTo": 0.25,
-                                    "gradientToColors": ["#transparent"],
-                                    "stops": gradient_stops,
+                                    "stops": [50, 100],
                                 },
                             },
                         },
@@ -795,7 +812,7 @@ async def handle_apexcharts_yaml(call: ServiceCall) -> dict[str, Any]:  # noqa: 
             template_value = f"states['{tomorrow_data_sensor}'].state === 'on' ? '+1d' : '+0d'"
 
             # Get metadata from chart_metadata sensor (preferred) or static fallback
-            # The chart_metadata sensor provides yaxis_min, yaxis_max, and gradient_stop
+            # The chart_metadata sensor provides yaxis_min and yaxis_max
             # as attributes, avoiding the need for async service calls in templates
             chart_metadata_sensor = next(
                 (
@@ -825,18 +842,14 @@ async def handle_apexcharts_yaml(call: ServiceCall) -> dict[str, Any]:  # noqa: 
                 # Sensor not found - will show notification
                 metadata_warning = True
 
-            # Fixed gradient stop at 50% (visual appeal, no semantic meaning)
-            gradient_stops = [50, 100]
-
             # Set fallback values if sensor not used
             if not use_sensor_metadata:
                 # Build yaxis config (only include min/max if not None)
                 yaxis_price_config = {
                     "id": "price",
-                    "decimals": 2,
                     "apex_config": {
                         "title": {"text": price_unit},
-                        "decimalsInFloat": 0,
+                        "decimalsInFloat": 0 if use_subunit else 1,
                         "forceNiceScale": True,
                     },
                 }
@@ -850,13 +863,12 @@ async def handle_apexcharts_yaml(call: ServiceCall) -> dict[str, Any]:  # noqa: 
                 # Build yaxis config with template variables
                 yaxis_price_config = {
                     "id": "price",
-                    "decimals": 2,
                     "min": "${v_yaxis_min}",
                     "max": "${v_yaxis_max}",
                     "apex_config": {
                         "title": {"text": price_unit},
-                        "decimalsInFloat": 0,
-                        "forceNiceScale": False,
+                        "decimalsInFloat": 0 if use_subunit else 1,
+                        "forceNiceScale": True,
                     },
                 }
 
@@ -900,10 +912,9 @@ async def handle_apexcharts_yaml(call: ServiceCall) -> dict[str, Any]:  # noqa: 
                                 "shade": "light",
                                 "type": "vertical",
                                 "shadeIntensity": 0.2,
-                                "opacityFrom": 0.7,
+                                "opacityFrom": [0.5, 0.7, 0.7, 0.7, 0.7, 0.7],
                                 "opacityTo": 0.25,
-                                "gradientToColors": ["#transparent"],
-                                "stops": gradient_stops,
+                                "stops": [50, 100],
                             },
                         },
                     },

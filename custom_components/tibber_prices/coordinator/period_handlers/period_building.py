@@ -248,19 +248,21 @@ def add_interval_ends(periods: list[list[dict]], *, time: TibberPricesTimeServic
 
 def filter_periods_by_end_date(periods: list[list[dict]], *, time: TibberPricesTimeService) -> list[list[dict]]:
     """
-    Filter periods to keep only relevant ones for today and tomorrow.
+    Filter periods to keep only relevant ones for yesterday, today, and tomorrow.
 
     Keep periods that:
-    - End in the future (> now)
-    - End today but after the start of the day (not exactly at midnight)
+    - End yesterday or later (>= start of yesterday)
 
     This removes:
-    - Periods that ended yesterday
-    - Periods that ended exactly at midnight today (they're completely in the past)
+    - Periods that ended before yesterday (day-before-yesterday or earlier)
+
+    Rationale: Coordinator caches periods for yesterday/today/tomorrow so that:
+    - Binary sensors can filter for today+tomorrow (current/next periods)
+    - Services can access yesterday's periods when user requests "yesterday" data
     """
     now = time.now()
-    today = now.date()
-    midnight_today = time.start_of_local_day(now)
+    # Calculate start of yesterday (midnight yesterday)
+    yesterday_start = time.start_of_local_day(now) - time.get_interval_duration() * 96  # 96 intervals = 24 hours
 
     filtered = []
     for period in periods:
@@ -274,13 +276,8 @@ def filter_periods_by_end_date(periods: list[list[dict]], *, time: TibberPricesT
         if not period_end:
             continue
 
-        # Keep if period ends in the future
-        if time.is_in_future(period_end):
-            filtered.append(period)
-            continue
-
-        # Keep if period ends today but AFTER midnight (not exactly at midnight)
-        if period_end.date() == today and period_end > midnight_today:
+        # Keep if period ends yesterday or later
+        if period_end >= yesterday_start:
             filtered.append(period)
 
     return filtered

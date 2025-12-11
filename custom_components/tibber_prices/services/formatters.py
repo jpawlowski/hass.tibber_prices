@@ -198,7 +198,7 @@ def aggregate_hourly_exact(  # noqa: PLR0913, PLR0912, PLR0915
     return hourly_data
 
 
-def get_period_data(  # noqa: PLR0913, PLR0912, PLR0915, C901
+def get_period_data(  # noqa: PLR0913, PLR0912, PLR0915
     *,
     coordinator: Any,
     period_filter: str,
@@ -347,11 +347,12 @@ def get_period_data(  # noqa: PLR0913, PLR0912, PLR0915, C901
             # Median is more representative than mean for periods with gap tolerance
             # (single "normal" intervals between cheap/expensive ones don't skew the display)
             price_median = period.get("price_median", 0.0)
-            # Convert to subunit currency if subunit_currency=True (periods stored in major)
+            # Convert to subunit currency if subunit_currency=True (periods stored in base currency)
             if subunit_currency:
                 price_median = price_median * 100
-            if round_decimals is not None:
-                price_median = round(price_median, round_decimals)
+            # Apply rounding: use round_decimals if provided, otherwise default precision
+            precision = round_decimals if round_decimals is not None else (2 if subunit_currency else 4)
+            price_median = round(price_median, precision)
             data_point[price_field] = price_median
 
             # Level (only if requested and present)
@@ -373,11 +374,12 @@ def get_period_data(  # noqa: PLR0913, PLR0912, PLR0915, C901
             # 3. End time with NULL (cleanly terminate segment for ApexCharts)
             # Use price_median for consistency with sensor states (more representative for periods)
             price_median = period.get("price_median", 0.0)
-            # Convert to subunit currency if subunit_currency=True (periods stored in major)
+            # Convert to subunit currency if subunit_currency=True (periods stored in base currency)
             if subunit_currency:
                 price_median = price_median * 100
-            if round_decimals is not None:
-                price_median = round(price_median, round_decimals)
+            # Apply rounding: use round_decimals if provided, otherwise default precision
+            precision = round_decimals if round_decimals is not None else (2 if subunit_currency else 4)
+            price_median = round(price_median, precision)
             start = period["start"]
             end = period.get("end")
             start_serialized = start.isoformat() if hasattr(start, "isoformat") else start

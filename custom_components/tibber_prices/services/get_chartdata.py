@@ -45,6 +45,7 @@ from custom_components.tibber_prices.const import (
     format_price_unit_base,
     format_price_unit_subunit,
     get_currency_info,
+    get_currency_name,
 )
 from custom_components.tibber_prices.coordinator.helpers import (
     get_intervals_for_day_offsets,
@@ -97,6 +98,7 @@ def _calculate_metadata(  # noqa: PLR0912, PLR0913, PLR0915
         currency_obj = {
             "code": currency,
             "symbol": base_symbol,
+            "name": get_currency_name(currency),  # Full currency name (e.g., "Euro")
             "unit": format_price_unit_base(currency),
         }
 
@@ -154,13 +156,15 @@ def _calculate_metadata(  # noqa: PLR0912, PLR0913, PLR0915
 
         # Position precision: 2 decimals for subunit currency, 4 for base currency
         position_decimals = 2 if subunit_currency else 4
+        # Price precision: 2 decimals for subunit currency, 4 for base currency
+        price_decimals = 2 if subunit_currency else 4
 
         return {
-            "min": round(min_val, 2),
-            "max": round(max_val, 2),
-            "avg": round(avg_val, 2),
+            "min": round(min_val, price_decimals),
+            "max": round(max_val, price_decimals),
+            "avg": round(avg_val, price_decimals),
             "avg_position": round(avg_position, position_decimals),
-            "median": round(median_val, 2),
+            "median": round(median_val, price_decimals),
             "median_position": round(median_position, position_decimals),
         }
 

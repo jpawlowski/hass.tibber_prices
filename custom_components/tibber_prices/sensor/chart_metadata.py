@@ -4,7 +4,12 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from custom_components.tibber_prices.const import DATA_CHART_METADATA_CONFIG, DOMAIN
+from custom_components.tibber_prices.const import (
+    CONF_CURRENCY_DISPLAY_MODE,
+    DATA_CHART_METADATA_CONFIG,
+    DISPLAY_MODE_SUBUNIT,
+    DOMAIN,
+)
 
 if TYPE_CHECKING:
     from datetime import datetime
@@ -41,9 +46,11 @@ async def call_chartdata_service_for_metadata_async(
     # Force metadata to "only" - this sensor ONLY provides metadata
     service_params["metadata"] = "only"
 
-    # Default to subunit_currency=True for ApexCharts compatibility (can be overridden in configuration.yaml)
+    # Use user's display unit preference from config_entry
+    # This ensures chart_metadata yaxis values match the user's configured currency display mode
     if "subunit_currency" not in service_params:
-        service_params["subunit_currency"] = True
+        display_mode = config_entry.options.get(CONF_CURRENCY_DISPLAY_MODE, DISPLAY_MODE_SUBUNIT)
+        service_params["subunit_currency"] = display_mode == DISPLAY_MODE_SUBUNIT
 
     # Call get_chartdata service using official HA service system
     try:

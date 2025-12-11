@@ -179,6 +179,16 @@ CURRENCY_INFO = {
     "GBP": ("£", "p", "Pence"),
 }
 
+# Base currency names: ISO code -> full currency name (in local language)
+CURRENCY_NAMES = {
+    "EUR": "Euro",
+    "NOK": "Norske kroner",
+    "SEK": "Svenska kronor",
+    "DKK": "Danske kroner",
+    "USD": "US Dollar",
+    "GBP": "British Pound",
+}
+
 
 def get_currency_info(currency_code: str | None) -> tuple[str, str, str]:
     """
@@ -226,6 +236,24 @@ def format_price_unit_subunit(currency_code: str | None) -> str:
     """
     _, subunit_symbol, _ = get_currency_info(currency_code)
     return f"{subunit_symbol}/{UnitOfPower.KILO_WATT}{UnitOfTime.HOURS}"
+
+
+def get_currency_name(currency_code: str | None) -> str:
+    """
+    Get the full name of the base currency.
+
+    Args:
+        currency_code: ISO 4217 currency code (e.g., 'EUR', 'NOK', 'SEK')
+
+    Returns:
+        Full currency name like 'Euro' or 'Norwegian Krone'
+        Defaults to 'Euro' if currency is not recognized
+
+    """
+    if not currency_code:
+        currency_code = "EUR"
+
+    return CURRENCY_NAMES.get(currency_code.upper(), CURRENCY_NAMES["EUR"])
 
 
 # ============================================================================

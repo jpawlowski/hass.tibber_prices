@@ -18,6 +18,7 @@ from custom_components.tibber_prices.const import (
     DEFAULT_PRICE_RATING_THRESHOLD_LOW,
     DISPLAY_MODE_BASE,
     DOMAIN,
+    format_price_unit_base,
     get_display_unit_factor,
     get_display_unit_string,
 )
@@ -851,6 +852,11 @@ class TibberPricesSensor(TibberPricesEntity, RestoreSensor):
             if self.coordinator.data:
                 currency = self.coordinator.data.get("currency")
 
+            # Special case: Energy Dashboard sensor always uses base currency
+            # regardless of user display mode configuration
+            if self.entity_description.key == "current_interval_price_base":
+                return format_price_unit_base(currency)
+
             # Get unit based on user configuration (major or minor)
             return get_display_unit_string(self.coordinator.config_entry, currency)
 
@@ -861,7 +867,12 @@ class TibberPricesSensor(TibberPricesEntity, RestoreSensor):
         """Check if the current time is within a best price period."""
         if not self.coordinator.data:
             return False
-        attrs = get_price_intervals_attributes(self.coordinator.data, reverse_sort=False, time=self.coordinator.time)
+        attrs = get_price_intervals_attributes(
+            self.coordinator.data,
+            reverse_sort=False,
+            time=self.coordinator.time,
+            config_entry=self.coordinator.config_entry,
+        )
         if not attrs:
             return False
         start = attrs.get("start")
@@ -876,7 +887,12 @@ class TibberPricesSensor(TibberPricesEntity, RestoreSensor):
         """Check if the current time is within a peak price period."""
         if not self.coordinator.data:
             return False
-        attrs = get_price_intervals_attributes(self.coordinator.data, reverse_sort=True, time=self.coordinator.time)
+        attrs = get_price_intervals_attributes(
+            self.coordinator.data,
+            reverse_sort=True,
+            time=self.coordinator.time,
+            config_entry=self.coordinator.config_entry,
+        )
         if not attrs:
             return False
         start = attrs.get("start")

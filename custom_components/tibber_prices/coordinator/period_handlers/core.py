@@ -35,7 +35,6 @@ def calculate_periods(
     *,
     config: TibberPricesPeriodConfig,
     time: TibberPricesTimeService,
-    config_entry: Any,  # ConfigEntry type
 ) -> dict[str, Any]:
     """
     Calculate price periods (best or peak) from price data.
@@ -57,7 +56,6 @@ def calculate_periods(
         config: Period configuration containing reverse_sort, flex, min_distance_from_avg,
                 min_period_length, threshold_low, and threshold_high.
         time: TibberPricesTimeService instance (required).
-        config_entry: Config entry to get display unit configuration.
 
     Returns:
         Dict with:
@@ -185,12 +183,14 @@ def calculate_periods(
     # Step 5: Add interval ends
     add_interval_ends(raw_periods, time=time)
 
-    # Step 6: Filter periods by end date (keep periods ending today or later)
+    # Step 6: Filter periods by end date (keep periods ending yesterday or later)
+    # This ensures coordinator cache contains yesterday/today/tomorrow periods
+    # Sensors filter further for today+tomorrow, services can access all cached periods
     raw_periods = filter_periods_by_end_date(raw_periods, time=time)
 
     # Step 8: Extract lightweight period summaries (no full price data)
-    # Note: Filtering for current/future is done here based on end date,
-    # not start date. This preserves periods that started yesterday but end today.
+    # Note: Periods are filtered by end date to keep yesterday/today/tomorrow.
+    # This preserves periods that started day-before-yesterday but end yesterday.
     thresholds = TibberPricesThresholdConfig(
         threshold_low=threshold_low,
         threshold_high=threshold_high,
@@ -205,7 +205,6 @@ def calculate_periods(
         price_context,
         thresholds,
         time=time,
-        config_entry=config_entry,
     )
 
     return {

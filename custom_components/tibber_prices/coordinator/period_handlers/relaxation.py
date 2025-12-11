@@ -276,8 +276,9 @@ def calculate_periods_with_relaxation(  # noqa: PLR0913, PLR0915 - Per-day relax
     )
 
     # === BASELINE CALCULATION (process ALL prices together, including yesterday) ===
-    # Periods that ended yesterday will be filtered out later by filter_periods_by_end_date()
-    baseline_result = calculate_periods(all_prices, config=config, time=time, config_entry=config_entry)
+    # Periods that ended before yesterday will be filtered out later by filter_periods_by_end_date()
+    # This keeps yesterday/today/tomorrow periods in the cache
+    baseline_result = calculate_periods(all_prices, config=config, time=time)
     all_periods = baseline_result["periods"]
 
     # Count periods per day for min_periods check
@@ -465,7 +466,7 @@ def relax_all_prices(  # noqa: PLR0913 - Comprehensive filter relaxation require
         )
 
         # Process ALL prices together (allows midnight crossing)
-        result = calculate_periods(all_prices, config=relaxed_config, time=time, config_entry=config_entry)
+        result = calculate_periods(all_prices, config=relaxed_config, time=time)
         new_periods = result["periods"]
 
         _LOGGER_DETAILS.debug(
