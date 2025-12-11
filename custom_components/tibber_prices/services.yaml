@@ -121,7 +121,7 @@ get_chartdata:
     transformation:
       collapsed: true
       fields:
-        minor_currency:
+        subunit_currency:
           required: false
           default: false
           example: true
