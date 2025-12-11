@@ -108,7 +108,7 @@ class TibberPricesRollingHourCalculator(TibberPricesBaseCalculator):
 
         # Handle price aggregation - return tuple directly
         if value_type == "price":
-            return aggregate_price_data(window_data)
+            return aggregate_price_data(window_data, self.config_entry)
 
         # Map other value types to aggregation functions
         aggregators = {

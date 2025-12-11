@@ -23,7 +23,9 @@ from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from custom_components.tibber_prices.coordinator.time_service import TibberPricesTimeService
+    from homeassistant.config_entries import ConfigEntry
 
+from custom_components.tibber_prices.const import get_display_unit_factor
 from custom_components.tibber_prices.coordinator.helpers import get_intervals_for_day_offsets
 from custom_components.tibber_prices.entity_utils.helpers import get_price_value
 from custom_components.tibber_prices.utils.average import calculate_median
@@ -36,16 +38,20 @@ if TYPE_CHECKING:
     from collections.abc import Callable
 
 
-def aggregate_price_data(window_data: list[dict]) -> tuple[float | None, float | None]:
+def aggregate_price_data(
+    window_data: list[dict],
+    config_entry: ConfigEntry,
+) -> tuple[float | None, float | None]:
     """
     Calculate average and median price from window data.
 
     Args:
-        window_data: List of price interval dictionaries with 'total' key
+        window_data: List of price interval dictionaries with 'total' key.
+        config_entry: Config entry to get display unit configuration.
 
     Returns:
-        Tuple of (average price, median price) in minor currency units (cents/øre),
-        or (None, None) if no prices
+        Tuple of (average price, median price) in display currency units,
+        or (None, None) if no prices.
 
     """
     prices = [float(i["total"]) for i in window_data if "total" in i]
@@ -54,8 +60,9 @@ def aggregate_price_data(window_data: list[dict]) -> tuple[float | None, float |
     # Calculate both average and median
     avg = sum(prices) / len(prices)
     median = calculate_median(prices)
-    # Return in minor currency units (cents/øre)
-    return round(avg * 100, 2), round(median * 100, 2) if median is not None else None
+    # Convert to display currency unit based on configuration
+    factor = get_display_unit_factor(config_entry)
+    return round(avg * factor, 2), round(median * factor, 2) if median is not None else None
 
 
 def aggregate_level_data(window_data: list[dict]) -> str | None:
@@ -106,25 +113,29 @@ def aggregate_window_data(
     value_type: str,
     threshold_low: float,
     threshold_high: float,
+    config_entry: ConfigEntry,
 ) -> str | float | None:
     """
     Aggregate data from multiple intervals based on value type.
 
     Unified helper that routes to appropriate aggregation function.
 
+    NOTE: This function is legacy code - rolling_hour calculator has its own implementation.
+
     Args:
-        window_data: List of price interval dictionaries
-        value_type: Type of value to aggregate ('price', 'level', or 'rating')
-        threshold_low: Low threshold for rating calculation
-        threshold_high: High threshold for rating calculation
+        window_data: List of price interval dictionaries.
+        value_type: Type of value to aggregate ('price', 'level', or 'rating').
+        threshold_low: Low threshold for rating calculation.
+        threshold_high: High threshold for rating calculation.
+        config_entry: Config entry to get display unit configuration.
 
     Returns:
-        Aggregated value (price as float, level/rating as str), or None if no data
+        Aggregated value (price as float, level/rating as str), or None if no data.
 
     """
     # Map value types to aggregation functions
     aggregators: dict[str, Callable] = {
-        "price": lambda data: aggregate_price_data(data)[0],  # Use only average from tuple
+        "price": lambda data: aggregate_price_data(data, config_entry)[0],  # Use only average from tuple
         "level": lambda data: aggregate_level_data(data),
         "rating": lambda data: aggregate_rating_data(data, threshold_low, threshold_high),
     }
@@ -151,7 +162,7 @@ def get_hourly_price_value(
     Args:
         coordinator_data: Coordinator data dict
         hour_offset: Hour offset from current time (positive=future, negative=past)
-        in_euro: If True, return price in major currency (EUR), else minor (cents/øre)
+        in_euro: If True, return price in base currency (EUR), else minor (cents/øre)
         time: TibberPricesTimeService instance (required)
 
     Returns:

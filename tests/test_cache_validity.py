@@ -35,7 +35,7 @@ def test_cache_valid_same_day() -> None:
     time_service.as_local.side_effect = lambda dt: dt
 
     cache_data = TibberPricesCacheData(
-        price_data={"priceInfo": {"today": [1, 2, 3]}},
+        price_data={"price_info": [1, 2, 3]},
         user_data={"viewer": {"home": {"id": "test"}}},
         last_price_update=cache_time,
         last_user_update=cache_time,
@@ -63,7 +63,7 @@ def test_cache_invalid_different_day() -> None:
     time_service.as_local.side_effect = lambda dt: dt
 
     cache_data = TibberPricesCacheData(
-        price_data={"priceInfo": {"today": [1, 2, 3]}},
+        price_data={"price_info": [1, 2, 3]},
         user_data={"viewer": {"home": {"id": "test"}}},
         last_price_update=cache_time,
         last_user_update=cache_time,
@@ -117,7 +117,7 @@ def test_cache_invalid_no_last_update() -> None:
     time_service.as_local.side_effect = lambda dt: dt
 
     cache_data = TibberPricesCacheData(
-        price_data={"priceInfo": {"today": [1, 2, 3]}},
+        price_data={"price_info": [1, 2, 3]},
         user_data={"viewer": {"home": {"id": "test"}}},
         last_price_update=None,  # No timestamp!
         last_user_update=None,
@@ -149,7 +149,7 @@ def test_cache_valid_after_midnight_turnover() -> None:
     time_service.as_local.side_effect = lambda dt: dt
 
     cache_data = TibberPricesCacheData(
-        price_data={"priceInfo": {"yesterday": [1], "today": [2], "tomorrow": []}},
+        price_data={"price_info": [1, 2]},
         user_data={"viewer": {"home": {"id": "test"}}},
         last_price_update=turnover_time,  # Updated during turnover!
         last_user_update=turnover_time,
@@ -177,7 +177,7 @@ def test_cache_invalid_midnight_crossing_without_update() -> None:
     time_service.as_local.side_effect = lambda dt: dt
 
     cache_data = TibberPricesCacheData(
-        price_data={"priceInfo": {"today": [1, 2, 3]}},
+        price_data={"price_info": [1, 2, 3]},
         user_data={"viewer": {"home": {"id": "test"}}},
         last_price_update=cache_time,  # Still yesterday!
         last_user_update=cache_time,
@@ -214,7 +214,7 @@ def test_cache_validity_timezone_aware() -> None:
     time_service.as_local.return_value = current_time_local
 
     cache_data = TibberPricesCacheData(
-        price_data={"priceInfo": {"today": [1, 2, 3]}},
+        price_data={"price_info": [1, 2, 3]},
         user_data={"viewer": {"home": {"id": "test"}}},
         last_price_update=cache_time_utc,
         last_user_update=cache_time_utc,
@@ -251,7 +251,7 @@ def test_cache_validity_exact_midnight_boundary() -> None:
     time_service.as_local.side_effect = lambda dt: dt
 
     cache_data = TibberPricesCacheData(
-        price_data={"priceInfo": {"today": [1, 2, 3]}},
+        price_data={"price_info": [1, 2, 3]},
         user_data={"viewer": {"home": {"id": "test"}}},
         last_price_update=cache_time,
         last_user_update=cache_time,

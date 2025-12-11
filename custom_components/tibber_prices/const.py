@@ -1,10 +1,11 @@
 """Constants for the Tibber Price Analytics integration."""
 
+from __future__ import annotations
+
 import json
 import logging
-from collections.abc import Sequence
 from pathlib import Path
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import aiofiles
 
@@ -14,7 +15,12 @@ from homeassistant.const import (
     UnitOfPower,
     UnitOfTime,
 )
-from homeassistant.core import HomeAssistant
+
+if TYPE_CHECKING:
+    from collections.abc import Sequence
+
+    from homeassistant.config_entries import ConfigEntry
+    from homeassistant.core import HomeAssistant
 
 DOMAIN = "tibber_prices"
 LOGGER = logging.getLogger(__package__)
@@ -192,9 +198,9 @@ def get_currency_info(currency_code: str | None) -> tuple[str, str, str]:
     return CURRENCY_INFO.get(currency_code.upper(), CURRENCY_INFO["EUR"])
 
 
-def format_price_unit_major(currency_code: str | None) -> str:
+def format_price_unit_base(currency_code: str | None) -> str:
     """
-    Format the price unit string with major currency unit (e.g., '€/kWh').
+    Format the price unit string with base currency unit (e.g., '€/kWh').
 
     Args:
         currency_code: ISO 4217 currency code (e.g., 'EUR', 'NOK', 'SEK')
@@ -203,13 +209,13 @@ def format_price_unit_major(currency_code: str | None) -> str:
         Formatted unit string like '€/kWh' or 'kr/kWh'
 
     """
-    major_symbol, _, _ = get_currency_info(currency_code)
-    return f"{major_symbol}/{UnitOfPower.KILO_WATT}{UnitOfTime.HOURS}"
+    base_symbol, _, _ = get_currency_info(currency_code)
+    return f"{base_symbol}/{UnitOfPower.KILO_WATT}{UnitOfTime.HOURS}"
 
 
-def format_price_unit_minor(currency_code: str | None) -> str:
+def format_price_unit_subunit(currency_code: str | None) -> str:
     """
-    Format the price unit string with minor currency unit (e.g., 'ct/kWh').
+    Format the price unit string with subunit currency unit (e.g., 'ct/kWh').
 
     Args:
         currency_code: ISO 4217 currency code (e.g., 'EUR', 'NOK', 'SEK')
@@ -218,8 +224,93 @@ def format_price_unit_minor(currency_code: str | None) -> str:
         Formatted unit string like 'ct/kWh' or 'øre/kWh'
 
     """
-    _, minor_symbol, _ = get_currency_info(currency_code)
-    return f"{minor_symbol}/{UnitOfPower.KILO_WATT}{UnitOfTime.HOURS}"
+    _, subunit_symbol, _ = get_currency_info(currency_code)
+    return f"{subunit_symbol}/{UnitOfPower.KILO_WATT}{UnitOfTime.HOURS}"
+
+
+# ============================================================================
+# Currency Display Mode Configuration
+# ============================================================================
+
+# Configuration key for currency display mode
+CONF_CURRENCY_DISPLAY_MODE = "currency_display_mode"
+
+# Display mode values
+DISPLAY_MODE_BASE = "base"  # Display in base currency units (€, kr)
+DISPLAY_MODE_SUBUNIT = "subunit"  # Display in subunit currency units (ct, øre)
+
+# Intelligent per-currency defaults based on market analysis
+# EUR: Subunit (cents) - established convention in Germany/Netherlands
+# NOK/SEK/DKK: Base (kroner) - Scandinavian preference for whole units
+# USD/GBP: Base - international standard
+DEFAULT_CURRENCY_DISPLAY = {
+    "EUR": DISPLAY_MODE_SUBUNIT,
+    "NOK": DISPLAY_MODE_BASE,
+    "SEK": DISPLAY_MODE_BASE,
+    "DKK": DISPLAY_MODE_BASE,
+    "USD": DISPLAY_MODE_BASE,
+    "GBP": DISPLAY_MODE_BASE,
+}
+
+
+def get_default_currency_display(currency_code: str | None) -> str:
+    """
+    Get intelligent default display mode for a currency.
+
+    Args:
+        currency_code: ISO 4217 currency code (e.g., 'EUR', 'NOK')
+
+    Returns:
+        Default display mode ('base' or 'subunit')
+
+    """
+    if not currency_code:
+        return DISPLAY_MODE_SUBUNIT  # Fallback default
+
+    return DEFAULT_CURRENCY_DISPLAY.get(currency_code.upper(), DISPLAY_MODE_SUBUNIT)
+
+
+def get_display_unit_factor(config_entry: ConfigEntry) -> int:
+    """
+    Get multiplication factor for converting base to display currency.
+
+    Internal storage is ALWAYS in base currency (4 decimals precision).
+    This function returns the conversion factor based on user configuration.
+
+    Args:
+        config_entry: ConfigEntry with currency_display_mode option
+
+    Returns:
+        100 for subunit currency display, 1 for base currency display
+
+    Example:
+        price_base = 0.2534  # Internal: 0.2534 €/kWh
+        factor = get_display_unit_factor(config_entry)
+        display_value = round(price_base * factor, 2)
+        # → 25.34 ct/kWh (subunit) or 0.25 €/kWh (base)
+
+    """
+    display_mode = config_entry.options.get(CONF_CURRENCY_DISPLAY_MODE, DISPLAY_MODE_SUBUNIT)
+    return 100 if display_mode == DISPLAY_MODE_SUBUNIT else 1
+
+
+def get_display_unit_string(config_entry: ConfigEntry, currency_code: str | None) -> str:
+    """
+    Get unit string for display based on configuration.
+
+    Args:
+        config_entry: ConfigEntry with currency_display_mode option
+        currency_code: ISO 4217 currency code
+
+    Returns:
+        Formatted unit string (e.g., 'ct/kWh' or '€/kWh')
+
+    """
+    display_mode = config_entry.options.get(CONF_CURRENCY_DISPLAY_MODE, DISPLAY_MODE_SUBUNIT)
+
+    if display_mode == DISPLAY_MODE_SUBUNIT:
+        return format_price_unit_subunit(currency_code)
+    return format_price_unit_base(currency_code)
 
 
 # ============================================================================

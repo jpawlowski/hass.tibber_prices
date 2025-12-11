@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
+from custom_components.tibber_prices.const import get_display_unit_factor
 from custom_components.tibber_prices.entity_utils import add_icon_color_attribute
 from custom_components.tibber_prices.sensor.attributes import (
     add_volatility_type_attributes,
@@ -76,19 +77,20 @@ class TibberPricesVolatilityCalculator(TibberPricesBaseCalculator):
         # Use arithmetic mean for volatility calculation (required for coefficient of variation)
         price_mean = sum(prices_to_analyze) / len(prices_to_analyze)
 
-        # Convert to minor currency units (ct/øre) for display
-        spread_minor = spread * 100
+        # Convert to display currency unit based on configuration
+        factor = get_display_unit_factor(self.config_entry)
+        spread_display = spread * factor
 
         # Calculate volatility level with custom thresholds (pass price list, not spread)
         volatility = calculate_volatility_level(prices_to_analyze, **thresholds)
 
         # Store attributes for this sensor
         self._last_volatility_attributes = {
-            "price_spread": round(spread_minor, 2),
+            "price_spread": round(spread_display, 2),
             "price_volatility": volatility,
-            "price_min": round(price_min * 100, 2),
-            "price_max": round(price_max * 100, 2),
-            "price_mean": round(price_mean * 100, 2),  # Mean used for volatility calculation
+            "price_min": round(price_min * factor, 2),
+            "price_max": round(price_max * factor, 2),
+            "price_mean": round(price_mean * factor, 2),  # Mean used for volatility calculation
             "interval_count": len(prices_to_analyze),
         }
 

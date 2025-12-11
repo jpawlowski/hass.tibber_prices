@@ -142,6 +142,17 @@
                 },
                 "submit": "Fortsätt →"
             },
+            "display_settings": {
+                "title": "💱 Valutavisningsinställningar",
+                "description": "_{step_progress}_\n\n**Konfigurera hur elpriser visas - i basvaluta (€, kr) eller underenhet (ct, öre).**\n\n---",
+                "data": {
+                    "currency_display_mode": "Visningsläge"
+                },
+                "data_description": {
+                    "currency_display_mode": "Välj hur priser visas:\n\n• **Basvaluta** (€/kWh, kr/kWh): Decimalvärden (t.ex. 0,25 €/kWh) - skillnader synliga från 3:e-4:e decimalen\n• **Underenhet** (ct/kWh, öre/kWh): Större värden (t.ex. 25,00 ct/kWh) - skillnader redan synliga från 1:a decimalen\n\nStandard beror på din valuta:\n• EUR → Underenhet (cent) - tysk/nederländsk preferens\n• NOK/SEK/DKK → Basvaluta (kronor) - skandinavisk preferens\n• USD/GBP → Basvaluta\n\n**💡 Tips:** Vid val av underenhet kan du aktivera den extra sensorn \"Nuvarande elpris (Energipanel)\" (inaktiverad som standard)."
+                },
+                "submit": "Fortsätt →"
+            },
             "current_interval_price_rating": {
                 "title": "📊 Prisvärderingströsklar",
                 "description": "_{step_progress}_\n\n**Konfigurera trösklar för prisvärderingsnivåer (låg/normal/hög) baserat på jämförelse med rullande 24-timmars genomsnitt.**\n\n---",
@@ -334,7 +345,7 @@
             "current_interval_price": {
                 "name": "Nuvarande elpris"
             },
-            "current_interval_price_major": {
+            "current_interval_price_base": {
                 "name": "Nuvarande elpris (Energipanel)"
             },
             "next_interval_price": {
@@ -943,13 +954,13 @@
                     "name": "Array-fält",
                     "description": "Definiera vilka fält som ska inkluderas. Använd fältnamn inom måsvingar, separerade med kommatecken. Tillgängliga fält: start_time, price_per_kwh, level, rating_level, average. Fält aktiveras automatiskt även om include_*-alternativ inte är inställda. Lämna tomt för standard (endast tidsstämpel och pris)."
                 },
-                "minor_currency": {
-                    "name": "Mindre valutaenhet",
-                    "description": "Returnera priser i mindre valutaenheter (öre för SEK/NOK, cent för EUR) istället för huvudvalutaenheter. Inaktiverad som standard."
+                "subunit_currency": {
+                    "name": "Underenhet valuta",
+                    "description": "Returnera priser i underenhet valutaenheter (öre för SEK/NOK, cent för EUR) istället för basvalutaenheter. Inaktiverad som standard."
                 },
                 "round_decimals": {
                     "name": "Avrunda decimaler",
-                    "description": "Antal decimaler att avrunda priser till (0-10). Om inte angivet används standardprecision (4 decimaler för huvudvaluta, 2 för mindre valutaenhet)."
+                    "description": "Antal decimaler att avrunda priser till (0-10). Om inte angivet används standardprecision (4 decimaler för basvaluta, 2 för underenhet valuta)."
                 },
                 "include_level": {
                     "name": "Inkludera prisnivå",
@@ -1117,6 +1128,12 @@
                 "normal": "Normalt",
                 "expensive": "Dyrt",
                 "very_expensive": "Mycket dyrt"
+            }
+        },
+        "currency_display_mode": {
+            "options": {
+                "base": "Basvaluta (€, kr)",
+                "subunit": "Underenhet valuta (ct, öre)"
             }
         },
         "average_sensor_display": {

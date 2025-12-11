@@ -24,8 +24,8 @@ Quick reference for terms used throughout the documentation.
 
 ## C
 
-**Currency Units**
-: Minor currency units used for display (ct for EUR, øre for NOK/SEK). Integration handles conversion automatically.
+**Currency Display Mode**
+: Configurable setting for how prices are shown. Choose base currency (€, kr) or subunit (ct, øre). Smart defaults apply: EUR → subunit, NOK/SEK/DKK → base.
 
 **Coordinator**
 : Home Assistant component managing data fetching and updates. Polls Tibber API every 15 minutes.

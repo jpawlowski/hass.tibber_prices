@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
+from custom_components.tibber_prices.const import get_display_unit_factor
 from custom_components.tibber_prices.coordinator.helpers import get_intervals_for_day_offsets
 
 if TYPE_CHECKING:
@@ -85,17 +86,19 @@ def get_future_prices(
     max_intervals: int | None = None,
     *,
     time: TibberPricesTimeService,
+    config_entry: TibberPricesConfigEntry,
 ) -> list[dict] | None:
     """
     Get future price data for multiple upcoming intervals.
 
     Args:
-        coordinator: The data update coordinator
-        max_intervals: Maximum number of future intervals to return
-        time: TibberPricesTimeService instance (required)
+        coordinator: The data update coordinator.
+        max_intervals: Maximum number of future intervals to return.
+        time: TibberPricesTimeService instance (required).
+        config_entry: Config entry to get display unit configuration.
 
     Returns:
-        List of upcoming price intervals with timestamps and prices
+        List of upcoming price intervals with timestamps and prices.
 
     """
     if not coordinator.data:
@@ -136,12 +139,17 @@ def get_future_prices(
             else:
                 day_key = "unknown"
 
+            # Convert to display currency unit based on configuration
+            price_major = float(price_data["total"])
+            factor = get_display_unit_factor(config_entry)
+            price_display = round(price_major * factor, 2)
+
             future_prices.append(
                 {
                     "interval_start": starts_at,
                     "interval_end": interval_end,
-                    "price": float(price_data["total"]),
-                    "price_minor": round(float(price_data["total"]) * 100, 2),
+                    "price": price_major,
+                    "price_minor": price_display,
                     "level": price_data.get("level", "NORMAL"),
                     "rating": price_data.get("difference", None),
                     "rating_level": price_data.get("rating_level"),

@@ -20,9 +20,9 @@
             "long_description": "Shows the current price per kWh from your Tibber subscription",
             "usage_tips": "Use this to track prices or to create automations that run when electricity is cheap"
         },
-        "current_interval_price_major": {
-            "description": "Current electricity price in major currency (EUR/kWh, NOK/kWh, etc.) for Energy Dashboard",
-            "long_description": "Shows the current price per kWh in major currency units (e.g., EUR/kWh instead of ct/kWh, NOK/kWh instead of øre/kWh). This sensor is specifically designed for use with Home Assistant's Energy Dashboard, which requires prices in standard currency units.",
+        "current_interval_price_base": {
+            "description": "Current electricity price in base currency (EUR/kWh, NOK/kWh, etc.) for Energy Dashboard",
+            "long_description": "Shows the current price per kWh in base currency units (e.g., EUR/kWh instead of ct/kWh, NOK/kWh instead of øre/kWh). This sensor is specifically designed for use with Home Assistant's Energy Dashboard, which requires prices in standard currency units.",
             "usage_tips": "Use this sensor when configuring the Energy Dashboard under Settings → Dashboards → Energy. Select this sensor as the 'Entity with current price' to automatically calculate your energy costs. The Energy Dashboard multiplies your energy consumption (kWh) by this price to show total costs."
         },
         "next_interval_price": {
@@ -452,7 +452,7 @@
         "chart_metadata": {
             "description": "Lightweight metadata for chart configuration",
             "long_description": "Provides essential chart configuration values as sensor attributes. Useful for any chart card that needs Y-axis bounds. The sensor calls get_chartdata with metadata-only mode (no data processing) and extracts: yaxis_min, yaxis_max (suggested Y-axis range for optimal scaling). The state reflects the service call result: 'ready' when successful, 'error' on failure, 'pending' during initialization.",
-            "usage_tips": "Configure via configuration.yaml under tibber_prices.chart_metadata_config (optional: day, minor_currency, resolution). The sensor automatically refreshes when price data updates. Access metadata from attributes: yaxis_min, yaxis_max. Use with config-template-card or any tool that reads entity attributes - perfect for dynamic chart configuration without manual calculations."
+            "usage_tips": "Configure via configuration.yaml under tibber_prices.chart_metadata_config (optional: day, subunit_currency, resolution). The sensor automatically refreshes when price data updates. Access metadata from attributes: yaxis_min, yaxis_max. Use with config-template-card or any tool that reads entity attributes - perfect for dynamic chart configuration without manual calculations."
         }
     },
     "binary_sensor": {

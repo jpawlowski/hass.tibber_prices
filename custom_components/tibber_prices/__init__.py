@@ -20,8 +20,10 @@ from homeassistant.loader import async_get_loaded_integration
 
 from .api import TibberPricesApiClient
 from .const import (
+    CONF_CURRENCY_DISPLAY_MODE,
     DATA_CHART_CONFIG,
     DATA_CHART_METADATA_CONFIG,
+    DISPLAY_MODE_SUBUNIT,
     DOMAIN,
     LOGGER,
     async_load_standard_translations,
@@ -57,7 +59,7 @@ CONFIG_SCHEMA = vol.Schema(
                         vol.Optional("day"): vol.All(vol.Any(str, list), vol.Coerce(list)),
                         vol.Optional("resolution"): str,
                         vol.Optional("output_format"): str,
-                        vol.Optional("minor_currency"): bool,
+                        vol.Optional("subunit_currency"): bool,
                         vol.Optional("round_decimals"): vol.All(int, vol.Range(min=0, max=10)),
                         vol.Optional("include_level"): bool,
                         vol.Optional("include_rating_level"): bool,
@@ -114,6 +116,34 @@ async def async_setup(hass: HomeAssistant, config: dict[str, Any]) -> bool:
     return True
 
 
+async def _migrate_config_options(hass: HomeAssistant, entry: ConfigEntry) -> None:
+    """
+    Migrate config options for backward compatibility.
+
+    This ensures existing configs get sensible defaults when new options are added.
+    Runs automatically on integration startup.
+    """
+    migration_performed = False
+    migrated = dict(entry.options)
+
+    # Migration: Set currency_display_mode to minor for existing configs
+    # New configs get currency-appropriate defaults from schema.
+    # This preserves legacy behavior where all prices were in subunit currency.
+    if CONF_CURRENCY_DISPLAY_MODE not in migrated:
+        migrated[CONF_CURRENCY_DISPLAY_MODE] = DISPLAY_MODE_SUBUNIT
+        migration_performed = True
+        LOGGER.info(
+            "[%s] Migrated config: Set currency_display_mode=%s (legacy default for existing configs)",
+            entry.title,
+            DISPLAY_MODE_SUBUNIT,
+        )
+
+    # Save migrated options if any changes were made
+    if migration_performed:
+        hass.config_entries.async_update_entry(entry, options=migrated)
+        LOGGER.debug("[%s] Config migration completed", entry.title)
+
+
 def _get_access_token(hass: HomeAssistant, entry: ConfigEntry) -> str:
     """
     Get access token from entry or parent entry.
@@ -158,6 +188,10 @@ async def async_setup_entry(
 ) -> bool:
     """Set up this integration using UI."""
     LOGGER.debug(f"[tibber_prices] async_setup_entry called for entry_id={entry.entry_id}")
+
+    # Migrate config options if needed (e.g., set default currency display mode for existing configs)
+    await _migrate_config_options(hass, entry)
+
     # Preload translations to populate the cache
     await async_load_translations(hass, "en")
     await async_load_standard_translations(hass, "en")

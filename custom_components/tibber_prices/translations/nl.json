@@ -144,6 +144,17 @@
                 },
                 "submit": "Doorgaan →"
             },
+            "display_settings": {
+                "title": "💱 Valuta-weergave-instellingen",
+                "description": "_{step_progress}_\n\n**Configureer hoe elektriciteitsprijzen worden weergegeven - in basisvaluta (€, kr) of subeenheid (ct, øre).**\n\n---",
+                "data": {
+                    "currency_display_mode": "Weergavemodus"
+                },
+                "data_description": {
+                    "currency_display_mode": "Kies hoe prijzen worden weergegeven:\n\n• **Basisvaluta** (€/kWh, kr/kWh): Decimaalwaarden (bijv. 0,25 €/kWh) - verschillen zichtbaar vanaf 3e-4e decimaal\n• **Subeenheid** (ct/kWh, øre/kWh): Grotere waarden (bijv. 25,00 ct/kWh) - verschillen al zichtbaar vanaf 1e decimaal\n\nStandaard hangt af van jouw valuta:\n• EUR → Subeenheid (cent) - Duitse/Nederlandse voorkeur\n• NOK/SEK/DKK → Basisvaluta (kronen) - Scandinavische voorkeur\n• USD/GBP → Basisvaluta\n\n**💡 Tip:** Bij keuze van subeenheid kun je de extra sensor \"Huidige elektriciteitsprijs (Energie-dashboard)\" activeren (standaard uitgeschakeld)."
+                },
+                "submit": "Doorgaan →"
+            },
             "current_interval_price_rating": {
                 "title": "📊 Prijsbeoordelingsdrempels",
                 "description": "_{step_progress}_\n\n**Configureer drempels voor prijsbeoordelingsniveaus (laag/normaal/hoog) op basis van vergelijking met het lopende 24-uurs gemiddelde.**\n\n---",
@@ -336,7 +347,7 @@
             "current_interval_price": {
                 "name": "Huidige elektriciteitsprijs"
             },
-            "current_interval_price_major": {
+            "current_interval_price_base": {
                 "name": "Huidige elektriciteitsprijs (Energie-dashboard)"
             },
             "next_interval_price": {
@@ -945,13 +956,13 @@
                     "name": "Array-velden",
                     "description": "Definieer welke velden moeten worden opgenomen. Gebruik veldnamen tussen accolades, gescheiden door komma's. Beschikbare velden: start_time, price_per_kwh, level, rating_level, average. Velden worden automatisch ingeschakeld, zelfs als include_*-opties niet zijn ingesteld. Laat leeg voor standaard (alleen tijdstempel en prijs)."
                 },
-                "minor_currency": {
-                    "name": "Kleine valuta-eenheid",
-                    "description": "Retourneer prijzen in kleine valuta-eenheden (cent voor EUR, øre voor NOK/SEK) in plaats van grote valuta-eenheden. Standaard uitgeschakeld."
+                "subunit_currency": {
+                    "name": "Subeenheid valuta",
+                    "description": "Retourneer prijzen in subeenheid valuta-eenheden (cent voor EUR, øre voor NOK/SEK) in plaats van basisvaluta-eenheden. Standaard uitgeschakeld."
                 },
                 "round_decimals": {
                     "name": "Decimalen afronden",
-                    "description": "Aantal decimalen om prijzen op af te ronden (0-10). Indien niet opgegeven, wordt de standaardprecisie gebruikt (4 decimalen voor grote valuta, 2 voor kleine valuta-eenheid)."
+                    "description": "Aantal decimalen om prijzen op af te ronden (0-10). Indien niet opgegeven, wordt de standaardprecisie gebruikt (4 decimalen voor basisvaluta, 2 voor subeenheid valuta)."
                 },
                 "include_level": {
                     "name": "Prijsniveau opnemen",
@@ -1119,6 +1130,12 @@
                 "normal": "Normaal",
                 "expensive": "Duur",
                 "very_expensive": "Zeer duur"
+            }
+        },
+        "currency_display_mode": {
+            "options": {
+                "base": "Basisvaluta (€, kr)",
+                "subunit": "Subeenheid valuta (ct, øre)"
             }
         },
         "average_sensor_display": {

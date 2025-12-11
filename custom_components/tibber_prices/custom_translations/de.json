@@ -20,7 +20,7 @@
             "long_description": "Zeigt den aktuellen Preis pro kWh von deinem Tibber-Abonnement an",
             "usage_tips": "Nutze dies, um Preise zu verfolgen oder Automatisierungen zu erstellen, die bei günstigem Strom ausgeführt werden"
         },
-        "current_interval_price_major": {
+        "current_interval_price_base": {
             "description": "Aktueller Strompreis in Hauptwährung (EUR/kWh, NOK/kWh, etc.) für Energie-Dashboard",
             "long_description": "Zeigt den aktuellen Preis pro kWh in Hauptwährungseinheiten an (z.B. EUR/kWh statt ct/kWh, NOK/kWh statt øre/kWh). Dieser Sensor ist speziell für die Verwendung mit dem Energie-Dashboard von Home Assistant konzipiert, das Preise in Standard-Währungseinheiten benötigt.",
             "usage_tips": "Verwende diesen Sensor beim Konfigurieren des Energie-Dashboards unter Einstellungen → Dashboards → Energie. Wähle diesen Sensor als 'Entität mit dem aktuellen Preis' aus, um deine Energiekosten automatisch zu berechnen. Das Energie-Dashboard multipliziert deinen Energieverbrauch (kWh) mit diesem Preis, um die Gesamtkosten anzuzeigen."
@@ -452,7 +452,7 @@
         "chart_metadata": {
             "description": "Leichtgewichtige Metadaten für Diagrammkonfiguration",
             "long_description": "Liefert wesentliche Diagrammkonfigurationswerte als Sensor-Attribute. Nützlich für jede Diagrammkarte, die Y-Achsen-Grenzen benötigt. Der Sensor ruft get_chartdata im Nur-Metadaten-Modus auf (keine Datenverarbeitung) und extrahiert: yaxis_min, yaxis_max (vorgeschlagener Y-Achsenbereich für optimale Skalierung). Der Status spiegelt das Service-Call-Ergebnis wider: 'ready' bei Erfolg, 'error' bei Fehler, 'pending' während der Initialisierung.",
-            "usage_tips": "Konfiguriere über configuration.yaml unter tibber_prices.chart_metadata_config (optional: day, minor_currency, resolution). Der Sensor aktualisiert sich automatisch bei Preisdatenänderungen. Greife auf Metadaten aus Attributen zu: yaxis_min, yaxis_max. Verwende mit config-template-card oder jedem Tool, das Entity-Attribute liest - perfekt für dynamische Diagrammkonfiguration ohne manuelle Berechnungen."
+            "usage_tips": "Konfiguriere über configuration.yaml unter tibber_prices.chart_metadata_config (optional: day, subunit_currency, resolution). Der Sensor aktualisiert sich automatisch bei Preisdatenänderungen. Greife auf Metadaten aus Attributen zu: yaxis_min, yaxis_max. Verwende mit config-template-card oder jedem Tool, das Entity-Attribute liest - perfekt für dynamische Diagrammkonfiguration ohne manuelle Berechnungen."
         }
     },
     "binary_sensor": {

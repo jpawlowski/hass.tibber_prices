@@ -17,6 +17,7 @@ from custom_components.tibber_prices.const import (
     CONF_BEST_PRICE_MAX_LEVEL_GAP_COUNT,
     CONF_BEST_PRICE_MIN_DISTANCE_FROM_AVG,
     CONF_BEST_PRICE_MIN_PERIOD_LENGTH,
+    CONF_CURRENCY_DISPLAY_MODE,
     CONF_ENABLE_MIN_PERIODS_BEST,
     CONF_ENABLE_MIN_PERIODS_PEAK,
     CONF_EXTENDED_DESCRIPTIONS,
@@ -67,6 +68,8 @@ from custom_components.tibber_prices.const import (
     DEFAULT_VOLATILITY_THRESHOLD_HIGH,
     DEFAULT_VOLATILITY_THRESHOLD_MODERATE,
     DEFAULT_VOLATILITY_THRESHOLD_VERY_HIGH,
+    DISPLAY_MODE_BASE,
+    DISPLAY_MODE_SUBUNIT,
     MAX_GAP_COUNT,
     MAX_MIN_PERIOD_LENGTH,
     MAX_MIN_PERIODS,
@@ -89,6 +92,7 @@ from custom_components.tibber_prices.const import (
     MIN_VOLATILITY_THRESHOLD_MODERATE,
     MIN_VOLATILITY_THRESHOLD_VERY_HIGH,
     PEAK_PRICE_MIN_LEVEL_OPTIONS,
+    get_default_currency_display,
 )
 from homeassistant.const import CONF_ACCESS_TOKEN
 from homeassistant.data_entry_flow import section
@@ -220,6 +224,31 @@ def get_options_init_schema(options: Mapping[str, Any]) -> vol.Schema:
                     options=["median", "mean"],
                     mode=SelectSelectorMode.DROPDOWN,
                     translation_key="average_sensor_display",
+                ),
+            ),
+        }
+    )
+
+
+def get_display_settings_schema(options: Mapping[str, Any], currency_code: str | None) -> vol.Schema:
+    """Return schema for display settings configuration."""
+    default_display_mode = get_default_currency_display(currency_code)
+
+    return vol.Schema(
+        {
+            vol.Optional(
+                CONF_CURRENCY_DISPLAY_MODE,
+                default=str(
+                    options.get(
+                        CONF_CURRENCY_DISPLAY_MODE,
+                        default_display_mode,
+                    )
+                ),
+            ): SelectSelector(
+                SelectSelectorConfig(
+                    options=[DISPLAY_MODE_BASE, DISPLAY_MODE_SUBUNIT],
+                    mode=SelectSelectorMode.DROPDOWN,
+                    translation_key="currency_display_mode",
                 ),
             ),
         }

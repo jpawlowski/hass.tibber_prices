@@ -144,6 +144,17 @@
                 },
                 "submit": "Weiter →"
             },
+            "display_settings": {
+                "title": "💱 Währungsanzeige-Einstellungen",
+                "description": "_{step_progress}_\n\n**Konfiguriere, wie Strompreise angezeigt werden - in Basiswährung (€, kr) oder Unterwährungseinheit (ct, øre).**\n\n---",
+                "data": {
+                    "currency_display_mode": "Anzeigemodus"
+                },
+                "data_description": {
+                    "currency_display_mode": "Wähle, wie Preise angezeigt werden:\n\n• **Basiswährung** (€/kWh, kr/kWh): Dezimalwerte (z.B. 0,25 €/kWh) - Unterschiede sichtbar ab 3.-4. Nachkommastelle\n• **Unterwährungseinheit** (ct/kWh, øre/kWh): Größere Werte (z.B. 25,00 ct/kWh) - Unterschiede bereits ab 1. Nachkommastelle sichtbar\n\nStandard abhängig von deiner Währung:\n• EUR → Unterwährungseinheit (Cent) - deutsche/niederländische Präferenz\n• NOK/SEK/DKK → Basiswährung (Kronen) - skandinavische Präferenz\n• USD/GBP → Basiswährung\n\n**💡 Tipp:** Bei Auswahl von Unterwährungseinheit kannst du den zusätzlichen Sensor \"Aktueller Strompreis (Energie-Dashboard)\" aktivieren (standardmäßig deaktiviert)."
+                },
+                "submit": "Weiter →"
+            },
             "current_interval_price_rating": {
                 "title": "📊 Preisbewertungs-Schwellenwerte",
                 "description": "_{step_progress}_\n\n**Konfiguriere Schwellenwerte für Preisbewertungsstufen (niedrig/normal/hoch) basierend auf dem Vergleich mit dem nachlaufenden 24-Stunden-Durchschnitt.**\n\n---",
@@ -338,7 +349,7 @@
             "current_interval_price": {
                 "name": "Aktueller Strompreis"
             },
-            "current_interval_price_major": {
+            "current_interval_price_base": {
                 "name": "Aktueller Strompreis (Energie-Dashboard)"
             },
             "next_interval_price": {
@@ -947,13 +958,13 @@
                     "name": "Array-Felder",
                     "description": "Definiere, welche Felder im array_of_arrays-Format enthalten sein sollen. Verwende Feldnamen in geschweiften Klammern, getrennt durch Kommas. Verfügbare Felder: start_time, price_per_kwh, level, rating_level, average. Felder werden automatisch aktiviert, auch wenn include_*-Optionen nicht gesetzt sind. Leer lassen für Standard (nur Zeitstempel und Preis)."
                 },
-                "minor_currency": {
-                    "name": "Kleinere Währungseinheit",
-                    "description": "Gibt Preise in kleineren Währungseinheiten zurück (Cent für EUR, Øre für NOK/SEK) statt in Hauptwährungseinheiten. Standardmäßig deaktiviert."
+                "subunit_currency": {
+                    "name": "Unterwährungseinheit",
+                    "description": "Gibt Preise in Unterwährungseinheiten zurück (Cent für EUR, Øre für NOK/SEK) statt in Basiswährungseinheiten. Standardmäßig deaktiviert."
                 },
                 "round_decimals": {
                     "name": "Dezimalstellen runden",
-                    "description": "Anzahl der Dezimalstellen, auf die Preise gerundet werden sollen (0-10). Falls nicht angegeben, wird die Standardgenauigkeit verwendet (4 Dezimalstellen für Hauptwährung, 2 für kleinere Währungseinheit)."
+                    "description": "Anzahl der Dezimalstellen, auf die Preise gerundet werden sollen (0-10). Falls nicht angegeben, wird die Standardgenauigkeit verwendet (4 Dezimalstellen für Basiswährung, 2 für Unterwährungseinheit)."
                 },
                 "include_level": {
                     "name": "Preisniveau einschließen",
@@ -1121,6 +1132,12 @@
                 "normal": "Normal",
                 "expensive": "Teuer",
                 "very_expensive": "Sehr teuer"
+            }
+        },
+        "currency_display_mode": {
+            "options": {
+                "base": "Basiswährung (€, kr)",
+                "subunit": "Unterwährungseinheit (ct, øre)"
             }
         },
         "average_sensor_display": {

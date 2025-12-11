@@ -15,6 +15,7 @@ Caching strategy:
 from datetime import datetime
 from typing import TYPE_CHECKING, Any
 
+from custom_components.tibber_prices.const import get_display_unit_factor
 from custom_components.tibber_prices.coordinator.helpers import get_intervals_for_day_offsets
 from custom_components.tibber_prices.utils.average import calculate_next_n_hours_avg
 from custom_components.tibber_prices.utils.price import (
@@ -133,11 +134,14 @@ class TibberPricesTrendCalculator(TibberPricesBaseCalculator):
             "stable": "var(--state-icon-color)",  # Default gray for stable prices
         }.get(trend_state, "var(--state-icon-color)")
 
+        # Convert prices to display currency unit based on configuration
+        factor = get_display_unit_factor(self.config_entry)
+
         # Store attributes in sensor-specific dictionary AND cache the trend value
         self._trend_attributes = {
             "timestamp": next_interval_start,
             f"trend_{hours}h_%": round(diff_pct, 1),
-            f"next_{hours}h_avg": round(future_avg * 100, 2),
+            f"next_{hours}h_avg": round(future_avg * factor, 2),
             "interval_count": lookahead_intervals,
             "threshold_rising": threshold_rising,
             "threshold_falling": threshold_falling,
@@ -149,7 +153,7 @@ class TibberPricesTrendCalculator(TibberPricesBaseCalculator):
             # Get second half average for longer periods
             later_half_avg = self._calculate_later_half_average(hours, next_interval_start)
             if later_half_avg is not None:
-                self._trend_attributes[f"second_half_{hours}h_avg"] = round(later_half_avg * 100, 2)
+                self._trend_attributes[f"second_half_{hours}h_avg"] = round(later_half_avg * factor, 2)
 
                 # Calculate incremental change: how much does the later half differ from current?
                 # CRITICAL: Use abs() for negative prices and allow calculation for all non-zero prices
@@ -693,13 +697,16 @@ class TibberPricesTrendCalculator(TibberPricesBaseCalculator):
                 time = self.coordinator.time
                 minutes_until = int(time.minutes_until(interval_start))
 
+                # Convert prices to display currency unit
+                factor = get_display_unit_factor(self.config_entry)
+
                 self._trend_change_attributes = {
                     "direction": trend_state,
                     "from_direction": current_trend_state,
                     "minutes_until_change": minutes_until,
-                    "current_price_now": round(float(current_interval["total"]) * 100, 2),
-                    "price_at_change": round(current_price * 100, 2),
-                    "avg_after_change": round(future_avg * 100, 2),
+                    "current_price_now": round(float(current_interval["total"]) * factor, 2),
+                    "price_at_change": round(current_price * factor, 2),
+                    "avg_after_change": round(future_avg * factor, 2),
                     "trend_diff_%": round((future_avg - current_price) / current_price * 100, 1),
                 }
                 return interval_start

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from datetime import datetime, timedelta
+from unittest.mock import Mock
 from zoneinfo import ZoneInfo
 
 import pytest
@@ -90,12 +91,21 @@ def test_midnight_crossing_period_consistency(period_config: TibberPricesPeriodC
     tz = ZoneInfo("Europe/Berlin")
     yesterday_prices, today_prices, tomorrow_prices, day_after_tomorrow_prices = create_price_data_scenario()
 
+    # Create mock config entry
+    mock_config_entry = Mock()
+    mock_config_entry.options.get.return_value = "minor"
+
     # SCENARIO 1: Before midnight (today = 2025-11-21 22:00)
     current_time_before = datetime(2025, 11, 21, 22, 0, 0, tzinfo=tz)
     time_service_before = TibberPricesTimeService(current_time_before)
     all_prices_before = yesterday_prices + today_prices + tomorrow_prices
 
-    result_before = calculate_periods(all_prices_before, config=period_config, time=time_service_before)
+    result_before = calculate_periods(
+        all_prices_before,
+        config=period_config,
+        time=time_service_before,
+        config_entry=mock_config_entry,
+    )
     periods_before = result_before["periods"]
 
     # Find the midnight-crossing period (starts 21st, ends 22nd)
@@ -117,7 +127,12 @@ def test_midnight_crossing_period_consistency(period_config: TibberPricesPeriodC
     tomorrow_after_turnover = day_after_tomorrow_prices
     all_prices_after = yesterday_after_turnover + today_after_turnover + tomorrow_after_turnover
 
-    result_after = calculate_periods(all_prices_after, config=period_config, time=time_service_after)
+    result_after = calculate_periods(
+        all_prices_after,
+        config=period_config,
+        time=time_service_after,
+        config_entry=mock_config_entry,
+    )
     periods_after = result_after["periods"]
 
     # Find period that started on 2025-11-21 (now "yesterday")

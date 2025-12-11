@@ -18,7 +18,7 @@ You can still call them from automations, scripts, and dashboards the same way a
 -   **Period Support**: Return best/peak price period summaries instead of intervals
 -   **Resolution Control**: Interval (15-minute) or hourly aggregation
 -   **Customizable Field Names**: Rename output fields to match your chart library
--   **Currency Control**: Major (EUR/NOK) or minor (ct/øre) units
+-   **Currency Control**: Override integration default - use base (€/kWh, kr/kWh) or subunit (ct/kWh, øre/kWh)
 
 **Basic Example:**
 
@@ -56,8 +56,8 @@ response_variable: chart_data
 | `day`            | Days to include: yesterday, today, tomorrow | `["today", "tomorrow"]` |
 | `output_format`  | `array_of_objects` or `array_of_arrays`     | `array_of_objects`      |
 | `resolution`     | `interval` (15-min) or `hourly`             | `interval`              |
-| `minor_currency` | Return prices in ct/øre instead of EUR/NOK  | `false`                 |
-| `round_decimals` | Decimal places (0-10)                       | 4 (major) or 2 (minor)  |
+| `subunit_currency` | Override display mode: `true` for subunit (ct/øre), `false` for base (€/kr) | Integration setting |
+| `round_decimals` | Decimal places (0-10)                       | 2 (subunit) or 4 (base) |
 
 **Rolling Window Mode:**
 

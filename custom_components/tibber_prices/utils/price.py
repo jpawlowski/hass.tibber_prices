@@ -59,7 +59,7 @@ def calculate_volatility_level(
     across different price levels and period lengths.
 
     Args:
-        prices: List of price values (in any unit, typically major currency units like EUR or NOK)
+        prices: List of price values (in any unit, typically base currency units like EUR or NOK)
         threshold_moderate: Custom threshold for MODERATE level (default: use DEFAULT_VOLATILITY_THRESHOLD_MODERATE)
         threshold_high: Custom threshold for HIGH level (default: use DEFAULT_VOLATILITY_THRESHOLD_HIGH)
         threshold_very_high: Custom threshold for VERY_HIGH level (default: use DEFAULT_VOLATILITY_THRESHOLD_VERY_HIGH)

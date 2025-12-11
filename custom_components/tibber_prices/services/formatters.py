@@ -54,7 +54,7 @@ def aggregate_hourly_exact(  # noqa: PLR0913, PLR0912, PLR0915
     price_field: str,
     *,
     coordinator: Any,
-    use_minor_currency: bool = False,
+    use_subunit_currency: bool = False,
     round_decimals: int | None = None,
     include_level: bool = False,
     include_rating_level: bool = False,
@@ -80,7 +80,7 @@ def aggregate_hourly_exact(  # noqa: PLR0913, PLR0912, PLR0915
         start_time_field: Custom name for start time field
         price_field: Custom name for price field
         coordinator: Data update coordinator instance (required)
-        use_minor_currency: Convert to minor currency units (cents/øre)
+        use_subunit_currency: Convert to subunit currency units (cents/øre)
         round_decimals: Optional decimal rounding
         include_level: Include aggregated level field
         include_rating_level: Include aggregated rating_level field
@@ -160,8 +160,8 @@ def aggregate_hourly_exact(  # noqa: PLR0913, PLR0912, PLR0915
         if hour_intervals:
             avg_price = sum(hour_intervals) / len(hour_intervals)
 
-            # Convert to minor currency (cents/øre) if requested
-            avg_price = round(avg_price * 100, 2) if use_minor_currency else round(avg_price, 4)
+            # Convert to subunit currency (cents/øre) if requested
+            avg_price = round(avg_price * 100, 2) if use_subunit_currency else round(avg_price, 4)
 
             # Apply custom rounding if specified
             if round_decimals is not None:
@@ -204,7 +204,7 @@ def get_period_data(  # noqa: PLR0913, PLR0912, PLR0915, C901
     period_filter: str,
     days: list[str],
     output_format: str,
-    minor_currency: bool,
+    subunit_currency: bool,
     round_decimals: int | None,
     level_filter: list[str] | None,
     rating_level_filter: list[str] | None,
@@ -225,15 +225,15 @@ def get_period_data(  # noqa: PLR0913, PLR0912, PLR0915, C901
     When period_filter is specified, returns the precomputed period summaries
     from the coordinator instead of filtering intervals.
 
-    Note: Period prices (price_median) are stored in minor currency units (ct/øre).
-    They are converted to major currency unless minor_currency=True.
+    Note: Period prices (price_median) are stored in base currency units (€/kr/$/£).
+    They are converted to subunit currency units (ct/øre/¢/p) if subunit_currency=True.
 
     Args:
         coordinator: Data coordinator with period summaries
         period_filter: "best_price" or "peak_price"
         days: List of days to include
         output_format: "array_of_objects" or "array_of_arrays"
-        minor_currency: If False, convert prices from minor to major units
+        subunit_currency: If False, convert prices from minor to major units
         round_decimals: Optional decimal rounding
         level_filter: Optional level filter
         rating_level_filter: Optional rating level filter
@@ -347,9 +347,9 @@ def get_period_data(  # noqa: PLR0913, PLR0912, PLR0915, C901
             # Median is more representative than mean for periods with gap tolerance
             # (single "normal" intervals between cheap/expensive ones don't skew the display)
             price_median = period.get("price_median", 0.0)
-            # Convert to major currency unless minor_currency=True
-            if not minor_currency:
-                price_median = price_median / 100
+            # Convert to subunit currency if subunit_currency=True (periods stored in major)
+            if subunit_currency:
+                price_median = price_median * 100
             if round_decimals is not None:
                 price_median = round(price_median, round_decimals)
             data_point[price_field] = price_median
@@ -373,9 +373,9 @@ def get_period_data(  # noqa: PLR0913, PLR0912, PLR0915, C901
             # 3. End time with NULL (cleanly terminate segment for ApexCharts)
             # Use price_median for consistency with sensor states (more representative for periods)
             price_median = period.get("price_median", 0.0)
-            # Convert to major currency unless minor_currency=True
-            if not minor_currency:
-                price_median = price_median / 100
+            # Convert to subunit currency if subunit_currency=True (periods stored in major)
+            if subunit_currency:
+                price_median = price_median * 100
             if round_decimals is not None:
                 price_median = round(price_median, round_decimals)
             start = period["start"]

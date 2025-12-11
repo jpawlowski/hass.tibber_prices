@@ -42,8 +42,8 @@ from custom_components.tibber_prices.const import (
     PRICE_RATING_HIGH,
     PRICE_RATING_LOW,
     PRICE_RATING_NORMAL,
-    format_price_unit_major,
-    format_price_unit_minor,
+    format_price_unit_base,
+    format_price_unit_subunit,
     get_currency_info,
 )
 from custom_components.tibber_prices.coordinator.helpers import (
@@ -65,7 +65,7 @@ def _calculate_metadata(  # noqa: PLR0912, PLR0913, PLR0915
     currency: str,
     *,
     resolution: str,
-    minor_currency: bool = False,
+    subunit_currency: bool = False,
 ) -> dict[str, Any]:
     """
     Calculate metadata for chart visualization.
@@ -76,28 +76,28 @@ def _calculate_metadata(  # noqa: PLR0912, PLR0913, PLR0915
         start_time_field: Name of the start time field
         currency: Currency code (e.g., "EUR", "NOK")
         resolution: Resolution type ("interval" or "hourly")
-        minor_currency: Whether prices are in minor currency units
+        subunit_currency: Whether prices are in subunit currency units
 
     Returns:
         Metadata dictionary with price statistics, yaxis suggestions, and time info
 
     """
-    # Get currency info (returns tuple: major_symbol, minor_symbol, minor_name)
-    major_symbol, minor_symbol, minor_name = get_currency_info(currency)
+    # Get currency info (returns tuple: base_symbol, subunit_symbol, subunit_name)
+    base_symbol, subunit_symbol, subunit_name = get_currency_info(currency)
 
     # Build currency object with only the active unit
-    if minor_currency:
+    if subunit_currency:
         currency_obj = {
             "code": currency,
-            "symbol": minor_symbol,
-            "name": minor_name,  # Already capitalized in CURRENCY_INFO
-            "unit": format_price_unit_minor(currency),
+            "symbol": subunit_symbol,
+            "name": subunit_name,  # Already capitalized in CURRENCY_INFO
+            "unit": format_price_unit_subunit(currency),
         }
     else:
         currency_obj = {
             "code": currency,
-            "symbol": major_symbol,
-            "unit": format_price_unit_major(currency),
+            "symbol": base_symbol,
+            "unit": format_price_unit_base(currency),
         }
 
     # Extract all prices (excluding None values)
@@ -152,8 +152,8 @@ def _calculate_metadata(  # noqa: PLR0912, PLR0913, PLR0915
         avg_position = (avg_val - min_val) / price_range if price_range > 0 else 0.5
         median_position = (median_val - min_val) / price_range if price_range > 0 else 0.5
 
-        # Position precision: 2 decimals for minor currency, 4 for major currency
-        position_decimals = 2 if minor_currency else 4
+        # Position precision: 2 decimals for subunit currency, 4 for base currency
+        position_decimals = 2 if subunit_currency else 4
 
         return {
             "min": round(min_val, 2),
@@ -192,13 +192,13 @@ def _calculate_metadata(  # noqa: PLR0912, PLR0913, PLR0915
     interval_duration_minutes = 15 if resolution == "interval" else 60
 
     # Calculate suggested yaxis bounds
-    # For minor currency (ct, øre): integer values (floor/ceil)
-    # For major currency (€, kr): 2 decimal places precision
-    if minor_currency:
+    # For subunit currency (ct, øre): integer values (floor/ceil)
+    # For base currency (€, kr): 2 decimal places precision
+    if subunit_currency:
         yaxis_min = math.floor(combined_stats["min"]) - 1 if combined_stats else 0
         yaxis_max = math.ceil(combined_stats["max"]) + 1 if combined_stats else 100
     else:
-        # Major currency: round to 2 decimal places with padding
+        # Base currency: round to 2 decimal places with padding
         yaxis_min = round(math.floor(combined_stats["min"] * 100) / 100 - 0.01, 2) if combined_stats else 0
         yaxis_max = round(math.ceil(combined_stats["max"] * 100) / 100 + 0.01, 2) if combined_stats else 1.0
 
@@ -225,7 +225,7 @@ CHARTDATA_SERVICE_SCHEMA: Final = vol.Schema(
         vol.Optional("resolution", default="interval"): vol.In(["interval", "hourly"]),
         vol.Optional("output_format", default="array_of_objects"): vol.In(["array_of_objects", "array_of_arrays"]),
         vol.Optional("array_fields"): str,
-        vol.Optional("minor_currency", default=False): bool,
+        vol.Optional("subunit_currency", default=False): bool,
         vol.Optional("round_decimals"): vol.All(vol.Coerce(int), vol.Range(min=0, max=10)),
         vol.Optional("include_level", default=False): bool,
         vol.Optional("include_rating_level", default=False): bool,
@@ -321,7 +321,7 @@ async def handle_chartdata(call: ServiceCall) -> dict[str, Any]:  # noqa: PLR091
     data_key = call.data.get("data_key", "data")
     resolution = call.data.get("resolution", "interval")
     output_format = call.data.get("output_format", "array_of_objects")
-    minor_currency = call.data.get("minor_currency", False)
+    subunit_currency = call.data.get("subunit_currency", False)
     metadata = call.data.get("metadata", "include")
     round_decimals = call.data.get("round_decimals")
     include_level = call.data.get("include_level", False)
@@ -351,7 +351,7 @@ async def handle_chartdata(call: ServiceCall) -> dict[str, Any]:  # noqa: PLR091
             price = interval.get("total")
             if start_time is not None and price is not None:
                 # Convert price to requested currency
-                converted_price = round(price * 100, 2) if minor_currency else round(price, 4)
+                converted_price = round(price * 100, 2) if subunit_currency else round(price, 4)
                 chart_data_for_meta.append(
                     {
                         start_time_field: start_time.isoformat() if hasattr(start_time, "isoformat") else start_time,
@@ -366,7 +366,7 @@ async def handle_chartdata(call: ServiceCall) -> dict[str, Any]:  # noqa: PLR091
             start_time_field=start_time_field,
             currency=coordinator.data.get("currency", "EUR"),
             resolution=resolution,
-            minor_currency=minor_currency,
+            subunit_currency=subunit_currency,
         )
 
         return {"metadata": metadata}
@@ -400,7 +400,7 @@ async def handle_chartdata(call: ServiceCall) -> dict[str, Any]:  # noqa: PLR091
             period_filter=period_filter,
             days=days,
             output_format=output_format,
-            minor_currency=minor_currency,
+            subunit_currency=subunit_currency,
             round_decimals=round_decimals,
             level_filter=level_filter,
             rating_level_filter=rating_level_filter,
@@ -467,7 +467,7 @@ async def handle_chartdata(call: ServiceCall) -> dict[str, Any]:  # noqa: PLR091
             if prices:
                 avg = sum(prices) / len(prices)
                 # Apply same transformations as to regular prices
-                avg = round(avg * 100, 2) if minor_currency else round(avg, 4)
+                avg = round(avg * 100, 2) if subunit_currency else round(avg, 4)
                 if round_decimals is not None:
                     avg = round(avg, round_decimals)
                 day_averages[day] = avg
@@ -510,8 +510,8 @@ async def handle_chartdata(call: ServiceCall) -> dict[str, Any]:  # noqa: PLR091
                     if not matches_filter:
                         price = None
                     elif price is not None:
-                        # Convert to minor currency (cents/øre) if requested
-                        price = round(price * 100, 2) if minor_currency else round(price, 4)
+                        # Convert to subunit currency (cents/øre) if requested
+                        price = round(price * 100, 2) if subunit_currency else round(price, 4)
                         # Apply custom rounding if specified
                         if round_decimals is not None:
                             price = round(price, round_decimals)
@@ -558,7 +558,7 @@ async def handle_chartdata(call: ServiceCall) -> dict[str, Any]:  # noqa: PLR091
                     # Check if current interval matches filter
                     if interval_value in filter_values:  # type: ignore[operator]
                         # Convert price
-                        converted_price = round(price * 100, 2) if minor_currency else round(price, 4)
+                        converted_price = round(price * 100, 2) if subunit_currency else round(price, 4)
                         if round_decimals is not None:
                             converted_price = round(converted_price, round_decimals)
 
@@ -593,7 +593,7 @@ async def handle_chartdata(call: ServiceCall) -> dict[str, Any]:  # noqa: PLR091
                                 # NULL point: stops series so it doesn't continue into next segment
 
                                 converted_next_price = (
-                                    round(next_price * 100, 2) if minor_currency else round(next_price, 4)
+                                    round(next_price * 100, 2) if subunit_currency else round(next_price, 4)
                                 )
                                 if round_decimals is not None:
                                     converted_next_price = round(converted_next_price, round_decimals)
@@ -681,7 +681,7 @@ async def handle_chartdata(call: ServiceCall) -> dict[str, Any]:  # noqa: PLR091
 
                             # Convert price
                             converted_price = (
-                                round(midnight_price * 100, 2) if minor_currency else round(midnight_price, 4)
+                                round(midnight_price * 100, 2) if subunit_currency else round(midnight_price, 4)
                             )
                             if round_decimals is not None:
                                 converted_price = round(converted_price, round_decimals)
@@ -723,8 +723,8 @@ async def handle_chartdata(call: ServiceCall) -> dict[str, Any]:  # noqa: PLR091
                         ):
                             continue
 
-                        # Convert to minor currency (cents/øre) if requested
-                        price = round(price * 100, 2) if minor_currency else round(price, 4)
+                        # Convert to subunit currency (cents/øre) if requested
+                        price = round(price * 100, 2) if subunit_currency else round(price, 4)
 
                         # Apply custom rounding if specified
                         if round_decimals is not None:
@@ -759,7 +759,7 @@ async def handle_chartdata(call: ServiceCall) -> dict[str, Any]:  # noqa: PLR091
                     start_time_field,
                     price_field,
                     coordinator=coordinator,
-                    use_minor_currency=minor_currency,
+                    use_subunit_currency=subunit_currency,
                     round_decimals=round_decimals,
                     include_level=include_level,
                     include_rating_level=include_rating_level,
@@ -828,7 +828,7 @@ async def handle_chartdata(call: ServiceCall) -> dict[str, Any]:  # noqa: PLR091
                 start_time_field=start_time_field,
                 currency=coordinator.data.get("currency", "EUR"),
                 resolution=resolution,
-                minor_currency=minor_currency,
+                subunit_currency=subunit_currency,
             )
             if metadata_obj:
                 result["metadata"] = metadata_obj  # type: ignore[index]
@@ -843,7 +843,7 @@ async def handle_chartdata(call: ServiceCall) -> dict[str, Any]:  # noqa: PLR091
             start_time_field=start_time_field,
             currency=coordinator.data.get("currency", "EUR"),
             resolution=resolution,
-            minor_currency=minor_currency,
+            subunit_currency=subunit_currency,
         )
         if metadata_obj:
             result["metadata"] = metadata_obj  # type: ignore[index]

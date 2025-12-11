@@ -146,6 +146,7 @@ def calculate_periods_with_relaxation(  # noqa: PLR0913, PLR0915 - Per-day relax
     max_relaxation_attempts: int,
     should_show_callback: Callable[[str | None], bool],
     time: TibberPricesTimeService,
+    config_entry: Any,  # ConfigEntry type
 ) -> dict[str, Any]:
     """
     Calculate periods with optional per-day filter relaxation.
@@ -170,7 +171,8 @@ def calculate_periods_with_relaxation(  # noqa: PLR0913, PLR0915 - Per-day relax
         should_show_callback: Callback function(level_override) -> bool
             Returns True if periods should be shown with given filter overrides. Pass None
             to use original configured filter values.
-        time: TibberPricesTimeService instance (required)
+        time: TibberPricesTimeService instance (required).
+        config_entry: Config entry to get display unit configuration.
 
     Returns:
         Dict with same format as calculate_periods() output:
@@ -275,7 +277,7 @@ def calculate_periods_with_relaxation(  # noqa: PLR0913, PLR0915 - Per-day relax
 
     # === BASELINE CALCULATION (process ALL prices together, including yesterday) ===
     # Periods that ended yesterday will be filtered out later by filter_periods_by_end_date()
-    baseline_result = calculate_periods(all_prices, config=config, time=time)
+    baseline_result = calculate_periods(all_prices, config=config, time=time, config_entry=config_entry)
     all_periods = baseline_result["periods"]
 
     # Count periods per day for min_periods check
@@ -320,6 +322,7 @@ def calculate_periods_with_relaxation(  # noqa: PLR0913, PLR0915 - Per-day relax
             should_show_callback=should_show_callback,
             baseline_periods=all_periods,
             time=time,
+            config_entry=config_entry,
         )
 
         all_periods = relaxed_result["periods"]
@@ -379,6 +382,7 @@ def relax_all_prices(  # noqa: PLR0913 - Comprehensive filter relaxation require
     baseline_periods: list[dict],
     *,
     time: TibberPricesTimeService,
+    config_entry: Any,  # ConfigEntry type
 ) -> tuple[dict[str, Any], dict[str, Any]]:
     """
     Relax filters for all prices until min_periods per day is reached.
@@ -389,13 +393,14 @@ def relax_all_prices(  # noqa: PLR0913 - Comprehensive filter relaxation require
     (or max attempts exhausted).
 
     Args:
-        all_prices: All price intervals (yesterday+today+tomorrow)
-        config: Base period configuration
-        min_periods: Target number of periods PER DAY
-        max_relaxation_attempts: Maximum flex levels to try
-        should_show_callback: Callback to check if a flex level should be shown
-        baseline_periods: Baseline periods (before relaxation)
-        time: TibberPricesTimeService instance
+        all_prices: All price intervals (yesterday+today+tomorrow).
+        config: Base period configuration.
+        min_periods: Target number of periods PER DAY.
+        max_relaxation_attempts: Maximum flex levels to try.
+        should_show_callback: Callback to check if a flex level should be shown.
+        baseline_periods: Baseline periods (before relaxation).
+        time: TibberPricesTimeService instance.
+        config_entry: Config entry to get display unit configuration.
 
     Returns:
         Tuple of (result_dict, metadata_dict)
@@ -460,7 +465,7 @@ def relax_all_prices(  # noqa: PLR0913 - Comprehensive filter relaxation require
         )
 
         # Process ALL prices together (allows midnight crossing)
-        result = calculate_periods(all_prices, config=relaxed_config, time=time)
+        result = calculate_periods(all_prices, config=relaxed_config, time=time, config_entry=config_entry)
         new_periods = result["periods"]
 
         _LOGGER_DETAILS.debug(

@@ -33,9 +33,10 @@ def test_trailing_avg_returns_none_when_empty() -> None:
     interval_start = datetime(2025, 11, 22, 12, 0, tzinfo=UTC)
     empty_prices: list[dict] = []
 
-    result = calculate_trailing_24h_avg(empty_prices, interval_start)
+    avg, _median = calculate_trailing_24h_avg(empty_prices, interval_start)
 
-    assert result is None, "Empty price list should return None, not 0.0"
+    assert avg is None, "Empty price list should return (None, None), not 0.0"
+    assert _median is None, "Empty price list should return (None, None), not 0.0"
 
 
 def test_leading_avg_returns_none_when_empty() -> None:
@@ -48,9 +49,10 @@ def test_leading_avg_returns_none_when_empty() -> None:
     interval_start = datetime(2025, 11, 22, 12, 0, tzinfo=UTC)
     empty_prices: list[dict] = []
 
-    result = calculate_leading_24h_avg(empty_prices, interval_start)
+    avg, _median = calculate_leading_24h_avg(empty_prices, interval_start)
 
-    assert result is None, "Empty price list should return None, not 0.0"
+    assert avg is None, "Empty price list should return (None, None), not 0.0"
+    assert _median is None, "Empty price list should return (None, None), not 0.0"
 
 
 def test_trailing_avg_returns_none_when_no_data_in_window(sample_prices: list[dict]) -> None:
@@ -65,13 +67,13 @@ def test_trailing_avg_returns_none_when_no_data_in_window(sample_prices: list[di
     # For example, 2 hours after the last data point
     interval_start = datetime(2025, 11, 22, 16, 0, tzinfo=UTC)
 
-    result = calculate_trailing_24h_avg(sample_prices, interval_start)
+    avg, _median = calculate_trailing_24h_avg(sample_prices, interval_start)
 
     # Trailing window is 16:00 - 24h = yesterday 16:00 to today 16:00
     # Sample data is from 10:00-14:00, which IS in this window
-    assert result is not None, "Should find data in 24h trailing window"
+    assert avg is not None, "Should find data in 24h trailing window"
     # Average of all sample prices: (-10 + -5 + 0 + 5 + 10) / 5 = 0.0
-    assert result == pytest.approx(0.0), "Average should be 0.0"
+    assert avg == pytest.approx(0.0), "Average should be 0.0"
 
 
 def test_leading_avg_returns_none_when_no_data_in_window(sample_prices: list[dict]) -> None:
@@ -85,11 +87,12 @@ def test_leading_avg_returns_none_when_no_data_in_window(sample_prices: list[dic
     # Set interval_start far in the future, so 24h leading window doesn't contain the data
     interval_start = datetime(2025, 11, 23, 15, 0, tzinfo=UTC)
 
-    result = calculate_leading_24h_avg(sample_prices, interval_start)
+    avg, _median = calculate_leading_24h_avg(sample_prices, interval_start)
 
     # Leading window is from 15:00 today to 15:00 tomorrow
     # Sample data is from yesterday, outside this window
-    assert result is None, "Should return None when no data in 24h leading window"
+    assert avg is None, "Should return (None, None) when no data in 24h leading window"
+    assert _median is None, "Should return (None, None) when no data in 24h leading window"
 
 
 def test_trailing_avg_with_negative_prices_distinguishes_zero(sample_prices: list[dict]) -> None:
@@ -102,12 +105,12 @@ def test_trailing_avg_with_negative_prices_distinguishes_zero(sample_prices: lis
     # Use base_time where we have data
     interval_start = datetime(2025, 11, 22, 12, 0, tzinfo=UTC)
 
-    result = calculate_trailing_24h_avg(sample_prices, interval_start)
+    avg, _median = calculate_trailing_24h_avg(sample_prices, interval_start)
 
     # Should return an actual average (negative, since we have -10, -5 in the trailing window)
-    assert result is not None, "Should return average when data exists"
-    assert isinstance(result, float), "Should return float, not None"
-    assert result != 0.0, "With negative prices, average should not be exactly 0.0"
+    assert avg is not None, "Should return average when data exists"
+    assert isinstance(avg, float), "Should return float, not None"
+    assert avg != 0.0, "With negative prices, average should not be exactly 0.0"
 
 
 def test_leading_avg_with_negative_prices_distinguishes_zero(sample_prices: list[dict]) -> None:
@@ -120,12 +123,12 @@ def test_leading_avg_with_negative_prices_distinguishes_zero(sample_prices: list
     # Use base_time - 2h to include all sample data in leading window
     interval_start = datetime(2025, 11, 22, 10, 0, tzinfo=UTC)
 
-    result = calculate_leading_24h_avg(sample_prices, interval_start)
+    avg, _median = calculate_leading_24h_avg(sample_prices, interval_start)
 
     # Should return an actual average (0.0 because average of -10, -5, 0, 5, 10 = 0.0)
-    assert result is not None, "Should return average when data exists"
-    assert isinstance(result, float), "Should return float, not None"
-    assert result == 0.0, "Average of symmetric negative/positive prices should be 0.0"
+    assert avg is not None, "Should return average when data exists"
+    assert isinstance(avg, float), "Should return float, not None"
+    assert avg == 0.0, "Average of symmetric negative/positive prices should be 0.0"
 
 
 def test_trailing_avg_with_all_negative_prices() -> None:
@@ -142,11 +145,11 @@ def test_trailing_avg_with_all_negative_prices() -> None:
         {"startsAt": base_time - timedelta(hours=1), "total": -5.0},
     ]
 
-    result = calculate_trailing_24h_avg(all_negative, base_time)
+    avg, _median = calculate_trailing_24h_avg(all_negative, base_time)
 
-    assert result is not None, "Should return average for all negative prices"
-    assert result < 0, "Average should be negative"
-    assert result == pytest.approx(-10.0), "Average of -15, -10, -5 should be -10.0"
+    assert avg is not None, "Should return average for all negative prices"
+    assert avg < 0, "Average should be negative"
+    assert avg == pytest.approx(-10.0), "Average of -15, -10, -5 should be -10.0"
 
 
 def test_leading_avg_with_all_negative_prices() -> None:
@@ -163,11 +166,11 @@ def test_leading_avg_with_all_negative_prices() -> None:
         {"startsAt": base_time + timedelta(hours=2), "total": -15.0},
     ]
 
-    result = calculate_leading_24h_avg(all_negative, base_time)
+    avg, _median = calculate_leading_24h_avg(all_negative, base_time)
 
-    assert result is not None, "Should return average for all negative prices"
-    assert result < 0, "Average should be negative"
-    assert result == pytest.approx(-10.0), "Average of -5, -10, -15 should be -10.0"
+    assert avg is not None, "Should return average for all negative prices"
+    assert avg < 0, "Average should be negative"
+    assert avg == pytest.approx(-10.0), "Average of -5, -10, -15 should be -10.0"
 
 
 def test_trailing_avg_returns_none_with_none_timestamps() -> None:
@@ -183,9 +186,10 @@ def test_trailing_avg_returns_none_with_none_timestamps() -> None:
         {"startsAt": None, "total": 20.0},
     ]
 
-    result = calculate_trailing_24h_avg(prices_with_none, interval_start)
+    avg, _median = calculate_trailing_24h_avg(prices_with_none, interval_start)
 
-    assert result is None, "Should return None when all timestamps are None"
+    assert avg is None, "Should return (None, None) when all timestamps are None"
+    assert _median is None, "Should return (None, None) when all timestamps are None"
 
 
 def test_leading_avg_returns_none_with_none_timestamps() -> None:
@@ -201,6 +205,7 @@ def test_leading_avg_returns_none_with_none_timestamps() -> None:
         {"startsAt": None, "total": 20.0},
     ]
 
-    result = calculate_leading_24h_avg(prices_with_none, interval_start)
+    avg, _median = calculate_leading_24h_avg(prices_with_none, interval_start)
 
-    assert result is None, "Should return None when all timestamps are None"
+    assert avg is None, "Should return (None, None) when all timestamps are None"
+    assert _median is None, "Should return (None, None) when all timestamps are None"

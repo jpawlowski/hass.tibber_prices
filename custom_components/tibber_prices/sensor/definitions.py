@@ -68,13 +68,13 @@ INTERVAL_PRICE_SENSORS = (
         suggested_display_precision=2,
     ),
     SensorEntityDescription(
-        key="current_interval_price_major",
-        translation_key="current_interval_price_major",
+        key="current_interval_price_base",
+        translation_key="current_interval_price_base",
         name="Current Electricity Price (Energy Dashboard)",
         icon="mdi:cash",  # Dynamic: shows cash-multiple/plus/cash/minus/remove based on price level
         device_class=SensorDeviceClass.MONETARY,
         state_class=SensorStateClass.TOTAL,  # MONETARY requires TOTAL or None for Energy Dashboard
-        suggested_display_precision=4,  # More precision for major currency (e.g., 0.2534 EUR/kWh)
+        suggested_display_precision=4,  # More precision for base currency (e.g., 0.2534 EUR/kWh)
     ),
     SensorEntityDescription(
         key="next_interval_price",
@@ -181,7 +181,7 @@ ROLLING_HOUR_PRICE_SENSORS = (
         icon="mdi:cash",  # Dynamic: shows cash-multiple/plus/cash/minus/remove based on aggregated price level
         device_class=SensorDeviceClass.MONETARY,
         state_class=SensorStateClass.TOTAL,  # MONETARY requires TOTAL or None
-        suggested_display_precision=1,
+        suggested_display_precision=2,
     ),
     SensorEntityDescription(
         key="next_hour_average_price",
@@ -190,7 +190,7 @@ ROLLING_HOUR_PRICE_SENSORS = (
         icon="mdi:cash-fast",  # Dynamic: shows cash-multiple/plus/cash/minus/remove based on aggregated price level
         device_class=SensorDeviceClass.MONETARY,
         state_class=SensorStateClass.TOTAL,  # MONETARY requires TOTAL or None
-        suggested_display_precision=1,
+        suggested_display_precision=2,
     ),
 )
 
@@ -259,7 +259,7 @@ DAILY_STAT_SENSORS = (
         icon="mdi:arrow-collapse-down",
         device_class=SensorDeviceClass.MONETARY,
         state_class=SensorStateClass.TOTAL,  # MONETARY requires TOTAL or None
-        suggested_display_precision=1,
+        suggested_display_precision=2,
     ),
     SensorEntityDescription(
         key="highest_price_today",
@@ -268,7 +268,7 @@ DAILY_STAT_SENSORS = (
         icon="mdi:arrow-collapse-up",
         device_class=SensorDeviceClass.MONETARY,
         state_class=SensorStateClass.TOTAL,  # MONETARY requires TOTAL or None
-        suggested_display_precision=1,
+        suggested_display_precision=2,
     ),
     SensorEntityDescription(
         key="average_price_today",
@@ -277,7 +277,7 @@ DAILY_STAT_SENSORS = (
         icon="mdi:chart-line",
         device_class=SensorDeviceClass.MONETARY,
         state_class=SensorStateClass.TOTAL,  # MONETARY requires TOTAL or None
-        suggested_display_precision=1,
+        suggested_display_precision=2,
     ),
     SensorEntityDescription(
         key="lowest_price_tomorrow",
@@ -286,7 +286,7 @@ DAILY_STAT_SENSORS = (
         icon="mdi:arrow-collapse-down",
         device_class=SensorDeviceClass.MONETARY,
         state_class=SensorStateClass.TOTAL,  # MONETARY requires TOTAL or None
-        suggested_display_precision=1,
+        suggested_display_precision=2,
     ),
     SensorEntityDescription(
         key="highest_price_tomorrow",
@@ -295,7 +295,7 @@ DAILY_STAT_SENSORS = (
         icon="mdi:arrow-collapse-up",
         device_class=SensorDeviceClass.MONETARY,
         state_class=SensorStateClass.TOTAL,  # MONETARY requires TOTAL or None
-        suggested_display_precision=1,
+        suggested_display_precision=2,
     ),
     SensorEntityDescription(
         key="average_price_tomorrow",
@@ -304,7 +304,7 @@ DAILY_STAT_SENSORS = (
         icon="mdi:chart-line",
         device_class=SensorDeviceClass.MONETARY,
         state_class=SensorStateClass.TOTAL,  # MONETARY requires TOTAL or None
-        suggested_display_precision=1,
+        suggested_display_precision=2,
     ),
 )
 
@@ -395,7 +395,7 @@ WINDOW_24H_SENSORS = (
         device_class=SensorDeviceClass.MONETARY,
         state_class=SensorStateClass.TOTAL,  # MONETARY requires TOTAL or None
         entity_registry_enabled_default=False,
-        suggested_display_precision=1,
+        suggested_display_precision=2,
     ),
     SensorEntityDescription(
         key="leading_price_average",
@@ -405,7 +405,7 @@ WINDOW_24H_SENSORS = (
         device_class=SensorDeviceClass.MONETARY,
         state_class=SensorStateClass.TOTAL,  # MONETARY requires TOTAL or None
         entity_registry_enabled_default=False,  # Advanced use case
-        suggested_display_precision=1,
+        suggested_display_precision=2,
     ),
     SensorEntityDescription(
         key="trailing_price_min",
@@ -415,7 +415,7 @@ WINDOW_24H_SENSORS = (
         device_class=SensorDeviceClass.MONETARY,
         state_class=SensorStateClass.TOTAL,  # MONETARY requires TOTAL or None
         entity_registry_enabled_default=False,
-        suggested_display_precision=1,
+        suggested_display_precision=2,
     ),
     SensorEntityDescription(
         key="trailing_price_max",
@@ -425,7 +425,7 @@ WINDOW_24H_SENSORS = (
         device_class=SensorDeviceClass.MONETARY,
         state_class=SensorStateClass.TOTAL,  # MONETARY requires TOTAL or None
         entity_registry_enabled_default=False,
-        suggested_display_precision=1,
+        suggested_display_precision=2,
     ),
     SensorEntityDescription(
         key="leading_price_min",
@@ -435,7 +435,7 @@ WINDOW_24H_SENSORS = (
         device_class=SensorDeviceClass.MONETARY,
         state_class=SensorStateClass.TOTAL,  # MONETARY requires TOTAL or None
         entity_registry_enabled_default=False,  # Advanced use case
-        suggested_display_precision=1,
+        suggested_display_precision=2,
     ),
     SensorEntityDescription(
         key="leading_price_max",
@@ -445,7 +445,7 @@ WINDOW_24H_SENSORS = (
         device_class=SensorDeviceClass.MONETARY,
         state_class=SensorStateClass.TOTAL,  # MONETARY requires TOTAL or None
         entity_registry_enabled_default=False,  # Advanced use case
-        suggested_display_precision=1,
+        suggested_display_precision=2,
     ),
 )
 
@@ -463,7 +463,7 @@ FUTURE_AVG_SENSORS = (
         icon="mdi:chart-line",
         device_class=SensorDeviceClass.MONETARY,
         state_class=SensorStateClass.TOTAL,  # MONETARY requires TOTAL or None
-        suggested_display_precision=1,
+        suggested_display_precision=2,
         entity_registry_enabled_default=True,
     ),
     SensorEntityDescription(
@@ -473,7 +473,7 @@ FUTURE_AVG_SENSORS = (
         icon="mdi:chart-line",
         device_class=SensorDeviceClass.MONETARY,
         state_class=SensorStateClass.TOTAL,  # MONETARY requires TOTAL or None
-        suggested_display_precision=1,
+        suggested_display_precision=2,
         entity_registry_enabled_default=True,
     ),
     SensorEntityDescription(
@@ -483,7 +483,7 @@ FUTURE_AVG_SENSORS = (
         icon="mdi:chart-line",
         device_class=SensorDeviceClass.MONETARY,
         state_class=SensorStateClass.TOTAL,  # MONETARY requires TOTAL or None
-        suggested_display_precision=1,
+        suggested_display_precision=2,
         entity_registry_enabled_default=True,
     ),
     SensorEntityDescription(
@@ -493,7 +493,7 @@ FUTURE_AVG_SENSORS = (
         icon="mdi:chart-line",
         device_class=SensorDeviceClass.MONETARY,
         state_class=SensorStateClass.TOTAL,  # MONETARY requires TOTAL or None
-        suggested_display_precision=1,
+        suggested_display_precision=2,
         entity_registry_enabled_default=True,
     ),
     SensorEntityDescription(
@@ -503,7 +503,7 @@ FUTURE_AVG_SENSORS = (
         icon="mdi:chart-line",
         device_class=SensorDeviceClass.MONETARY,
         state_class=SensorStateClass.TOTAL,  # MONETARY requires TOTAL or None
-        suggested_display_precision=1,
+        suggested_display_precision=2,
         entity_registry_enabled_default=True,
     ),
     # Disabled by default: 6h, 8h, 12h (advanced use cases)
@@ -514,7 +514,7 @@ FUTURE_AVG_SENSORS = (
         icon="mdi:chart-line",
         device_class=SensorDeviceClass.MONETARY,
         state_class=SensorStateClass.TOTAL,  # MONETARY requires TOTAL or None
-        suggested_display_precision=1,
+        suggested_display_precision=2,
         entity_registry_enabled_default=False,
     ),
     SensorEntityDescription(
@@ -524,7 +524,7 @@ FUTURE_AVG_SENSORS = (
         icon="mdi:chart-line",
         device_class=SensorDeviceClass.MONETARY,
         state_class=SensorStateClass.TOTAL,  # MONETARY requires TOTAL or None
-        suggested_display_precision=1,
+        suggested_display_precision=2,
         entity_registry_enabled_default=False,
     ),
     SensorEntityDescription(
@@ -534,7 +534,7 @@ FUTURE_AVG_SENSORS = (
         icon="mdi:chart-line",
         device_class=SensorDeviceClass.MONETARY,
         state_class=SensorStateClass.TOTAL,  # MONETARY requires TOTAL or None
-        suggested_display_precision=1,
+        suggested_display_precision=2,
         entity_registry_enabled_default=False,
     ),
 )

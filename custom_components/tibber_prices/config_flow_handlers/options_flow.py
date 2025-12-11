@@ -11,6 +11,7 @@ if TYPE_CHECKING:
 from custom_components.tibber_prices.config_flow_handlers.schemas import (
     get_best_price_schema,
     get_chart_data_export_schema,
+    get_display_settings_schema,
     get_options_init_schema,
     get_peak_price_schema,
     get_price_rating_schema,
@@ -69,15 +70,16 @@ class TibberPricesOptionsFlowHandler(OptionsFlow):
     """Handle options for tibber_prices entries."""
 
     # Step progress tracking
-    _TOTAL_STEPS: ClassVar[int] = 7
+    _TOTAL_STEPS: ClassVar[int] = 8
     _STEP_INFO: ClassVar[dict[str, int]] = {
         "init": 1,
-        "current_interval_price_rating": 2,
-        "volatility": 3,
-        "best_price": 4,
-        "peak_price": 5,
-        "price_trend": 6,
-        "chart_data_export": 7,
+        "display_settings": 2,
+        "current_interval_price_rating": 3,
+        "volatility": 4,
+        "best_price": 5,
+        "peak_price": 6,
+        "price_trend": 7,
+        "chart_data_export": 8,
     }
 
     def __init__(self) -> None:
@@ -170,7 +172,7 @@ class TibberPricesOptionsFlowHandler(OptionsFlow):
 
         if user_input is not None:
             self._options.update(user_input)
-            return await self.async_step_current_interval_price_rating()
+            return await self.async_step_display_settings()
 
         return self.async_show_form(
             step_id="init",
@@ -179,6 +181,26 @@ class TibberPricesOptionsFlowHandler(OptionsFlow):
                 **self._get_step_description_placeholders("init"),
                 "user_login": self.config_entry.data.get("user_login", "N/A"),
             },
+        )
+
+    async def async_step_display_settings(self, user_input: dict[str, Any] | None = None) -> ConfigFlowResult:
+        """Configure currency display settings."""
+        # Get currency from coordinator data (if available)
+        # During options flow setup, integration might not be fully loaded yet
+        currency_code = None
+        if DOMAIN in self.hass.data and self.config_entry.entry_id in self.hass.data[DOMAIN]:
+            tibber_data = self.hass.data[DOMAIN][self.config_entry.entry_id]
+            if tibber_data.coordinator.data:
+                currency_code = tibber_data.coordinator.data.get("currency")
+
+        if user_input is not None:
+            self._options.update(user_input)
+            return await self.async_step_current_interval_price_rating()
+
+        return self.async_show_form(
+            step_id="display_settings",
+            data_schema=get_display_settings_schema(self.config_entry.options, currency_code),
+            description_placeholders=self._get_step_description_placeholders("display_settings"),
         )
 
     async def async_step_current_interval_price_rating(

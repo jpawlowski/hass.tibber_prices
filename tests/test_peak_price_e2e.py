@@ -143,6 +143,7 @@ class TestPeakPriceGenerationWorks:
             max_relaxation_attempts=11,
             should_show_callback=lambda _: True,  # Allow all levels
             time=time_service,
+            config_entry=mock_coordinator.config_entry,
         )
 
         periods = result.get("periods", [])
@@ -183,6 +184,7 @@ class TestPeakPriceGenerationWorks:
             max_relaxation_attempts=11,
             should_show_callback=lambda _: True,
             time=time_service,
+            config_entry=mock_coordinator.config_entry,
         )
 
         periods_pos = result_pos.get("periods", [])
@@ -220,6 +222,7 @@ class TestPeakPriceGenerationWorks:
             max_relaxation_attempts=11,
             should_show_callback=lambda _: True,
             time=time_service,
+            config_entry=mock_coordinator.config_entry,
         )
 
         periods = result.get("periods", [])
@@ -228,7 +231,7 @@ class TestPeakPriceGenerationWorks:
 
         # Check period averages are NOT near daily minimum
         for period in periods:
-            period_avg = period.get("price_avg", 0)
+            period_avg = period.get("price_mean", 0)
             assert period_avg > daily_min * 1.05, (
                 f"Peak period has too low avg: {period_avg:.4f} vs daily_min={daily_min:.4f}"
             )
@@ -264,6 +267,7 @@ class TestPeakPriceGenerationWorks:
             max_relaxation_attempts=11,
             should_show_callback=lambda _: True,
             time=time_service,
+            config_entry=mock_coordinator.config_entry,
         )
 
         periods = result.get("periods", [])
@@ -315,6 +319,7 @@ class TestBugRegressionValidation:
             max_relaxation_attempts=11,
             should_show_callback=lambda _: True,
             time=time_service,
+            config_entry=mock_coordinator.config_entry,
         )
 
         # Check metadata from result
@@ -366,6 +371,7 @@ class TestBugRegressionValidation:
             max_relaxation_attempts=11,
             should_show_callback=lambda _: True,
             time=time_service,
+            config_entry=mock_coordinator.config_entry,
         )
 
         periods = result.get("periods", [])
@@ -374,7 +380,7 @@ class TestBugRegressionValidation:
         daily_max = intervals[0]["daily_max"]
 
         # At least one period should have high average
-        max_period_avg = max(p.get("price_avg", 0) for p in periods)
+        max_period_avg = max(p.get("price_mean", 0) for p in periods)
 
         assert max_period_avg >= daily_avg * 1.05, (
             f"Peak periods should have high avg: {max_period_avg:.4f} vs daily_avg={daily_avg:.4f}"

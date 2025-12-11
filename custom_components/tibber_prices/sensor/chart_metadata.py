@@ -41,9 +41,9 @@ async def call_chartdata_service_for_metadata_async(
     # Force metadata to "only" - this sensor ONLY provides metadata
     service_params["metadata"] = "only"
 
-    # Default to minor_currency=True for ApexCharts compatibility (can be overridden in configuration.yaml)
-    if "minor_currency" not in service_params:
-        service_params["minor_currency"] = True
+    # Default to subunit_currency=True for ApexCharts compatibility (can be overridden in configuration.yaml)
+    if "subunit_currency" not in service_params:
+        service_params["subunit_currency"] = True
 
     # Call get_chartdata service using official HA service system
     try:

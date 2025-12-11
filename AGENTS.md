@@ -422,7 +422,7 @@ After successful refactoring:
     -   **Architecture Benefits**: 42% line reduction in core.py (2,170 → 1,268 lines), clear separation of concerns, improved testability, reusable components
     -   **See "Common Tasks" section** for detailed patterns and examples
 -   **Quarter-hour precision**: Entities update on 00/15/30/45-minute boundaries via `schedule_quarter_hour_refresh()` in `coordinator/listeners.py`, not just on data fetch intervals. Uses `async_track_utc_time_change(minute=[0, 15, 30, 45], second=0)` for absolute-time scheduling. Smart boundary tolerance (±2 seconds) in `sensor/helpers.py` → `round_to_nearest_quarter_hour()` handles HA scheduling jitter: if HA triggers at 14:59:58 → rounds to 15:00:00 (next interval), if HA restarts at 14:59:30 → stays at 14:45:00 (current interval). This ensures current price sensors update without waiting for the next API poll, while preventing premature data display during normal operation.
--   **Currency handling**: Multi-currency support with major/minor units (e.g., EUR/ct, NOK/øre) via `get_currency_info()` and `format_price_unit_*()` in `const.py`.
+-   **Currency handling**: Multi-currency support with base/sub units (e.g., EUR/ct, NOK/øre) via `get_currency_info()` and `format_price_unit_*()` in `const.py`.
 -   **Intelligent caching strategy**: Minimizes API calls while ensuring data freshness:
     -   User data cached for 24h (rarely changes)
     -   Price data validated against calendar day - cleared on midnight turnover to force fresh fetch
@@ -2741,12 +2741,12 @@ The refactoring consolidated duplicate logic into unified methods in `sensor/cor
 
     -   Replaces: `_get_statistics_value()` (calendar day portion)
     -   Handles: Min/max/avg for calendar days (today/tomorrow)
-    -   Returns: Price in minor currency units (cents/øre)
+    -   Returns: Price in subunit currency units (cents/øre)
 
 -   **`_get_24h_window_value(stat_func)`**
     -   Replaces: `_get_average_value()`, `_get_minmax_value()`
     -   Handles: Trailing/leading 24h window statistics
-    -   Returns: Price in minor currency units (cents/øre)
+    -   Returns: Price in subunit currency units (cents/øre)
 
 Legacy wrapper methods still exist for backward compatibility but will be removed in a future cleanup phase.
 

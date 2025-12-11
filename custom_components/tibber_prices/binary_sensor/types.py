@@ -90,15 +90,15 @@ class PeriodSummary(TypedDict, total=False):
     rating_difference_pct: float  # Difference from daily average (%)
 
     # Price statistics (priority 3)
-    price_mean: float  # Arithmetic mean price in period (minor currency)
-    price_median: float  # Median price in period (minor currency)
-    price_min: float  # Minimum price in period (minor currency)
-    price_max: float  # Maximum price in period (minor currency)
+    price_mean: float  # Arithmetic mean price in period
+    price_median: float  # Median price in period
+    price_min: float  # Minimum price in period
+    price_max: float  # Maximum price in period
     price_spread: float  # Price spread (max - min)
     volatility: float  # Price volatility within period
 
     # Price comparison (priority 4)
-    period_price_diff_from_daily_min: float  # Difference from daily min (minor currency)
+    period_price_diff_from_daily_min: float  # Difference from daily min
     period_price_diff_from_daily_min_pct: float  # Difference from daily min (%)
 
     # Detail information (priority 5)
@@ -141,15 +141,15 @@ class PeriodAttributes(BaseAttributes, total=False):
     rating_difference_pct: float  # Difference from daily average (%)
 
     # Price statistics (priority 3)
-    price_mean: float  # Arithmetic mean price in current/next period (minor currency)
-    price_median: float  # Median price in current/next period (minor currency)
-    price_min: float  # Minimum price in current/next period (minor currency)
-    price_max: float  # Maximum price in current/next period (minor currency)
+    price_mean: float  # Arithmetic mean price in current/next period
+    price_median: float  # Median price in current/next period
+    price_min: float  # Minimum price in current/next period
+    price_max: float  # Maximum price in current/next period
     price_spread: float  # Price spread (max - min) in current/next period
     volatility: float  # Price volatility within current/next period
 
     # Price comparison (priority 4)
-    period_price_diff_from_daily_min: float  # Difference from daily min (minor currency)
+    period_price_diff_from_daily_min: float  # Difference from daily min
     period_price_diff_from_daily_min_pct: float  # Difference from daily min (%)
 
     # Detail information (priority 5)

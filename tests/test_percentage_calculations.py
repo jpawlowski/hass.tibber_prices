@@ -1,6 +1,7 @@
 """Test Bug #9, #10, #11: Percentage calculations with negative prices use abs() correctly."""
 
 from datetime import UTC, datetime
+from unittest.mock import Mock
 
 import pytest
 
@@ -40,7 +41,12 @@ def test_bug9_period_price_diff_negative_reference(price_context_negative: dict)
     start_time = datetime(2025, 11, 22, 12, 0, tzinfo=UTC)
     price_avg = -10.0  # Period average in minor units (ct)
 
-    period_diff, period_diff_pct = calculate_period_price_diff(price_avg, start_time, price_context_negative)
+    mock_config_entry = Mock()
+    mock_config_entry.options.get.return_value = "minor"  # Default display mode
+
+    period_diff, period_diff_pct = calculate_period_price_diff(
+        price_avg, start_time, price_context_negative, mock_config_entry
+    )
 
     # Reference price: -20 ct
     # Difference: -10 - (-20) = 10 ct (period is 10 ct MORE EXPENSIVE than reference)
@@ -59,7 +65,12 @@ def test_bug9_period_price_diff_more_negative_than_reference(price_context_negat
     start_time = datetime(2025, 11, 22, 12, 0, tzinfo=UTC)
     price_avg = -25.0  # More negative (cheaper) than reference -20 ct
 
-    period_diff, period_diff_pct = calculate_period_price_diff(price_avg, start_time, price_context_negative)
+    mock_config_entry = Mock()
+    mock_config_entry.options.get.return_value = "minor"  # Default display mode
+
+    period_diff, period_diff_pct = calculate_period_price_diff(
+        price_avg, start_time, price_context_negative, mock_config_entry
+    )
 
     # Reference: -20 ct
     # Difference: -25 - (-20) = -5 ct (period is 5 ct CHEAPER)
@@ -77,7 +88,12 @@ def test_bug9_period_price_diff_positive_reference(price_context_positive: dict)
     start_time = datetime(2025, 11, 22, 12, 0, tzinfo=UTC)
     price_avg = 30.0  # ct
 
-    period_diff, period_diff_pct = calculate_period_price_diff(price_avg, start_time, price_context_positive)
+    mock_config_entry = Mock()
+    mock_config_entry.options.get.return_value = "minor"  # Default display mode
+
+    period_diff, period_diff_pct = calculate_period_price_diff(
+        price_avg, start_time, price_context_positive, mock_config_entry
+    )
 
     # Reference: 20 ct
     # Difference: 30 - 20 = 10 ct

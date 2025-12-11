@@ -20,7 +20,7 @@
             "long_description": "Visar nuvarande pris per kWh från ditt Tibber-abonnemang",
             "usage_tips": "Använd detta för att spåra priser eller skapa automationer som körs när el är billig"
         },
-        "current_interval_price_major": {
+        "current_interval_price_base": {
             "description": "Nuvarande elpris i huvudvaluta (EUR/kWh, NOK/kWh, osv.) för Energipanelen",
             "long_description": "Visar nuvarande pris per kWh i huvudvaluta-enheter (t.ex. EUR/kWh istället för ct/kWh, NOK/kWh istället för øre/kWh). Denna sensor är speciellt utformad för användning med Home Assistants Energipanel, som kräver priser i standardvalutaenheter.",
             "usage_tips": "Använd denna sensor när du konfigurerar Energipanelen under Inställningar → Instrumentpaneler → Energi. Välj denna sensor som 'Entitet med nuvarande pris' för att automatiskt beräkna dina energikostnader. Energipanelen multiplicerar din energiförbrukning (kWh) med detta pris för att visa totala kostnader."
@@ -452,7 +452,7 @@
         "chart_metadata": {
             "description": "Lättviktig metadata för diagramkonfiguration",
             "long_description": "Tillhandahåller väsentliga diagramkonfigurationsvärden som sensorattribut. Användbart för vilket diagramkort som helst som behöver Y-axelgränser. Sensorn anropar get_chartdata med endast-metadata-läge (ingen databehandling) och extraherar: yaxis_min, yaxis_max (föreslagen Y-axelomfång för optimal skalning). Statusen återspeglar tjänstanropsresultatet: 'ready' vid framgång, 'error' vid fel, 'pending' under initialisering.",
-            "usage_tips": "Konfigurera via configuration.yaml under tibber_prices.chart_metadata_config (valfritt: day, minor_currency, resolution). Sensorn uppdateras automatiskt vid pris dataändringar. Få tillgång till metadata från attribut: yaxis_min, yaxis_max. Använd med config-template-card eller vilket verktyg som helst som läser entitetsattribut - perfekt för dynamisk diagramkonfiguration utan manuella beräkningar."
+            "usage_tips": "Konfigurera via configuration.yaml under tibber_prices.chart_metadata_config (valfritt: day, subunit_currency, resolution). Sensorn uppdateras automatiskt vid pris dataändringar. Få tillgång till metadata från attribut: yaxis_min, yaxis_max. Använd med config-template-card eller vilket verktyg som helst som läser entitetsattribut - perfekt för dynamisk diagramkonfiguration utan manuella beräkningar."
         }
     },
     "binary_sensor": {

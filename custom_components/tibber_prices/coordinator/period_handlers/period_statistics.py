@@ -8,12 +8,15 @@ if TYPE_CHECKING:
     from datetime import datetime
 
     from custom_components.tibber_prices.coordinator.time_service import TibberPricesTimeService
+    from homeassistant.config_entries import ConfigEntry
 
     from .types import (
         TibberPricesPeriodData,
         TibberPricesPeriodStatistics,
         TibberPricesThresholdConfig,
     )
+
+from custom_components.tibber_prices.const import get_display_unit_factor
 from custom_components.tibber_prices.utils.average import calculate_median
 from custom_components.tibber_prices.utils.price import (
     aggregate_period_levels,
@@ -26,11 +29,18 @@ def calculate_period_price_diff(
     price_mean: float,
     start_time: datetime,
     price_context: dict[str, Any],
+    config_entry: ConfigEntry,
 ) -> tuple[float | None, float | None]:
     """
     Calculate period price difference from daily reference (min or max).
 
     Uses reference price from start day of the period for consistency.
+
+    Args:
+        price_mean: Mean price of the period (already in display units).
+        start_time: Start time of the period.
+        price_context: Dictionary with ref_prices per day.
+        config_entry: Config entry to get display unit configuration.
 
     Returns:
         Tuple of (period_price_diff, period_price_diff_pct) or (None, None) if no reference available.
@@ -46,14 +56,15 @@ def calculate_period_price_diff(
     if ref_price is None:
         return None, None
 
-    # Convert reference price to minor units (ct/øre)
-    ref_price_minor = round(ref_price * 100, 2)
-    period_price_diff = round(price_mean - ref_price_minor, 2)
+    # Convert reference price to display units
+    factor = get_display_unit_factor(config_entry)
+    ref_price_display = round(ref_price * factor, 2)
+    period_price_diff = round(price_mean - ref_price_display, 2)
     period_price_diff_pct = None
-    if ref_price_minor != 0:
+    if ref_price_display != 0:
         # CRITICAL: Use abs() for negative prices (same logic as calculate_difference_percentage)
         # Example: avg=-10, ref=-20 → diff=10, pct=10/abs(-20)*100=+50% (correctly shows more expensive)
-        period_price_diff_pct = round((period_price_diff / abs(ref_price_minor)) * 100, 2)
+        period_price_diff_pct = round((period_price_diff / abs(ref_price_display)) * 100, 2)
 
     return period_price_diff, period_price_diff_pct
 
@@ -83,21 +94,27 @@ def calculate_aggregated_rating_difference(period_price_data: list[dict]) -> flo
     return round(sum(differences) / len(differences), 2)
 
 
-def calculate_period_price_statistics(period_price_data: list[dict]) -> dict[str, float]:
+def calculate_period_price_statistics(
+    period_price_data: list[dict],
+    config_entry: ConfigEntry,
+) -> dict[str, float]:
     """
     Calculate price statistics for a period.
 
     Args:
-        period_price_data: List of price data dictionaries with "total" field
+        period_price_data: List of price data dictionaries with "total" field.
+        config_entry: Config entry to get display unit configuration.
 
     Returns:
-        Dictionary with price_mean, price_median, price_min, price_max, price_spread (all in minor units: ct/øre)
-        Note: price_spread is calculated based on price_mean (max - min range as percentage of mean)
+        Dictionary with price_mean, price_median, price_min, price_max, price_spread (all in display units).
+        Note: price_spread is calculated based on price_mean (max - min range as percentage of mean).
 
     """
-    prices_minor = [round(float(p["total"]) * 100, 2) for p in period_price_data]
+    # Convert prices to display units based on configuration
+    factor = get_display_unit_factor(config_entry)
+    prices_display = [round(float(p["total"]) * factor, 2) for p in period_price_data]
 
-    if not prices_minor:
+    if not prices_display:
         return {
             "price_mean": 0.0,
             "price_median": 0.0,
@@ -106,11 +123,11 @@ def calculate_period_price_statistics(period_price_data: list[dict]) -> dict[str
             "price_spread": 0.0,
         }
 
-    price_mean = round(sum(prices_minor) / len(prices_minor), 2)
-    median_value = calculate_median(prices_minor)
+    price_mean = round(sum(prices_display) / len(prices_display), 2)
+    median_value = calculate_median(prices_display)
     price_median = round(median_value, 2) if median_value is not None else 0.0
-    price_min = round(min(prices_minor), 2)
-    price_max = round(max(prices_minor), 2)
+    price_min = round(min(prices_display), 2)
+    price_max = round(max(prices_display), 2)
     price_spread = round(price_max - price_min, 2)
 
     return {
@@ -207,13 +224,14 @@ def build_period_summary_dict(
     return summary
 
 
-def extract_period_summaries(
+def extract_period_summaries(  # noqa: PLR0913
     periods: list[list[dict]],
     all_prices: list[dict],
     price_context: dict[str, Any],
     thresholds: TibberPricesThresholdConfig,
     *,
     time: TibberPricesTimeService,
+    config_entry: ConfigEntry,
 ) -> list[dict]:
     """
     Extract complete period summaries with all aggregated attributes.
@@ -230,11 +248,12 @@ def extract_period_summaries(
     All data is pre-calculated and ready for display - no further processing needed.
 
     Args:
-        periods: List of periods, where each period is a list of interval dictionaries
-        all_prices: All price data from the API (enriched with level, difference, rating_level)
-        price_context: Dictionary with ref_prices and avg_prices per day
-        thresholds: Threshold configuration for calculations
-        time: TibberPricesTimeService instance (required)
+        periods: List of periods, where each period is a list of interval dictionaries.
+        all_prices: All price data from the API (enriched with level, difference, rating_level).
+        price_context: Dictionary with ref_prices and avg_prices per day.
+        thresholds: Threshold configuration for calculations.
+        time: TibberPricesTimeService instance (required).
+        config_entry: Config entry to get display unit configuration.
 
     """
     from .types import (  # noqa: PLC0415 - Avoid circular import
@@ -292,12 +311,12 @@ def extract_period_summaries(
                     thresholds.threshold_high,
                 )
 
-        # Calculate price statistics (in minor units: ct/øre)
-        price_stats = calculate_period_price_statistics(period_price_data)
+        # Calculate price statistics (in display units based on configuration)
+        price_stats = calculate_period_price_statistics(period_price_data, config_entry)
 
         # Calculate period price difference from daily reference
         period_price_diff, period_price_diff_pct = calculate_period_price_diff(
-            price_stats["price_mean"], start_time, price_context
+            price_stats["price_mean"], start_time, price_context, config_entry
         )
 
         # Extract prices for volatility calculation (coefficient of variation)

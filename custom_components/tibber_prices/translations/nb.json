@@ -144,6 +144,17 @@
                 },
                 "submit": "Videre til trinn 2"
             },
+            "display_settings": {
+                "title": "💱 Valutavisningsinnstillinger",
+                "description": "_{step_progress}_\n\n**Konfigurer hvordan strømpriser vises - i basisvaluta (€, kr) eller underenhet (ct, øre).**\n\n---",
+                "data": {
+                    "currency_display_mode": "Visningsmodus"
+                },
+                "data_description": {
+                    "currency_display_mode": "Velg hvordan priser vises:\n\n• **Basisvaluta** (€/kWh, kr/kWh): Desimalverdier (f.eks. 0,25 €/kWh) - forskjeller synlige fra 3.-4. desimalplass\n• **Underenhet** (ct/kWh, øre/kWh): Større verdier (f.eks. 25,00 ct/kWh) - forskjeller allerede synlige fra 1. desimalplass\n\nStandard avhenger av valutaen din:\n• EUR → Underenhet (cent) - tysk/nederlandsk preferanse\n• NOK/SEK/DKK → Basisvaluta (kroner) - skandinavisk preferanse\n• USD/GBP → Basisvaluta\n\n**💡 Tips:** Ved valg av underenhet kan du aktivere den ekstra sensoren \"Nåværende strømpris (Energi-dashboard)\" (deaktivert som standard)."
+                },
+                "submit": "Videre til trinn 3"
+            },
             "current_interval_price_rating": {
                 "title": "📊 Prisvurderings-terskler",
                 "description": "_{step_progress}_\n\n**Konfigurer terskler for prisvurderingsnivåer (lav/normal/høy) basert på sammenligning med etterfølgende 24-timers gjennomsnitt.**\n\n---",
@@ -336,7 +347,7 @@
             "current_interval_price": {
                 "name": "Nåværende strømpris"
             },
-            "current_interval_price_major": {
+            "current_interval_price_base": {
                 "name": "Nåværende strømpris (Energi-dashboard)"
             },
             "next_interval_price": {
@@ -945,13 +956,13 @@
                     "name": "Array-felt",
                     "description": "Definer hvilke felt som skal inkluderes. Bruk feltnavn i krøllparenteser, adskilt med komma. Tilgjengelige felt: start_time, price_per_kwh, level, rating_level, average. Felt vil automatisk aktiveres selv om include_*-alternativene ikke er satt. La stå tom for standard (kun tidsstempel og pris)."
                 },
-                "minor_currency": {
-                    "name": "Mindre valutaenhet",
-                    "description": "Returner priser i mindre valutaenheter (øre for NOK/SEK, cent for EUR) i stedet for hovedvalutaenheter. Deaktivert som standard."
+                "subunit_currency": {
+                    "name": "Underenhet valuta",
+                    "description": "Returner priser i underenhet valutaenheter (øre for NOK/SEK, cent for EUR) i stedet for basisvalutaenheter. Deaktivert som standard."
                 },
                 "round_decimals": {
                     "name": "Rund desimaler",
-                    "description": "Antall desimalplasser å runde priser til (0-10). Hvis ikke angitt, brukes standard presisjon (4 desimaler for hovedvaluta, 2 for mindre valutaenhet)."
+                    "description": "Antall desimalplasser å runde priser til (0-10). Hvis ikke angitt, brukes standard presisjon (4 desimaler for basisvaluta, 2 for underenhet valuta)."
                 },
                 "include_level": {
                     "name": "Inkluder prisnivå",
@@ -1119,6 +1130,12 @@
                 "normal": "Normal",
                 "expensive": "Dyr",
                 "very_expensive": "Svært dyr"
+            }
+        },
+        "currency_display_mode": {
+            "options": {
+                "base": "Basisvaluta (€, kr)",
+                "subunit": "Underenhet valuta (ct, øre)"
             }
         },
         "average_sensor_display": {

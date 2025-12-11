@@ -2,7 +2,7 @@
 Common helper functions for entities across platforms.
 
 This module provides utility functions used by both sensor and binary_sensor platforms:
-- Price value conversion (major/minor currency units)
+- Price value conversion (major/subunit currency units)
 - Translation helpers (price levels, ratings)
 - Time-based calculations (rolling hour center index)
 
@@ -14,28 +14,52 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from custom_components.tibber_prices.const import get_price_level_translation
+from custom_components.tibber_prices.const import get_display_unit_factor, get_price_level_translation
 
 if TYPE_CHECKING:
     from datetime import datetime
 
     from custom_components.tibber_prices.coordinator.time_service import TibberPricesTimeService
+    from custom_components.tibber_prices.data import TibberPricesConfigEntry
+    from homeassistant.config_entries import ConfigEntry
     from homeassistant.core import HomeAssistant
 
 
-def get_price_value(price: float, *, in_euro: bool) -> float:
+def get_price_value(
+    price: float,
+    *,
+    in_euro: bool | None = None,
+    config_entry: ConfigEntry | TibberPricesConfigEntry | None = None,
+) -> float:
     """
     Convert price based on unit.
 
+    NOTE: This function supports two modes for backward compatibility:
+    1. Legacy mode: in_euro=True/False (hardcoded conversion)
+    2. New mode: config_entry (config-driven conversion)
+
+    New code should use get_display_unit_factor(config_entry) directly.
+
     Args:
-        price: Price value to convert
-        in_euro: If True, return price in euros; if False, return in cents/øre
+        price: Price value to convert.
+        in_euro: (Legacy) If True, return in base currency; if False, in subunit currency.
+        config_entry: (New) Config entry to get display unit configuration.
 
     Returns:
-        Price in requested unit (euros or minor currency units)
+        Price in requested unit (major or subunit currency units).
 
     """
-    return price if in_euro else round((price * 100), 2)
+    # Legacy mode: use in_euro parameter
+    if in_euro is not None:
+        return price if in_euro else round(price * 100, 2)
+
+    # New mode: use config_entry
+    if config_entry is not None:
+        factor = get_display_unit_factor(config_entry)
+        return round(price * factor, 2)
+
+    # Fallback: default to subunit currency (backward compatibility)
+    return round(price * 100, 2)
 
 
 def translate_level(hass: HomeAssistant, level: str) -> str:

@@ -32,7 +32,7 @@ from custom_components.tibber_prices.const import (
     PRICE_RATING_HIGH,
     PRICE_RATING_LOW,
     PRICE_RATING_NORMAL,
-    format_price_unit_minor,
+    format_price_unit_subunit,
     get_translation,
 )
 from homeassistant.exceptions import ServiceValidationError
@@ -302,7 +302,7 @@ async def handle_apexcharts_yaml(call: ServiceCall) -> dict[str, Any]:  # noqa: 
     _, coordinator, _ = get_entry_and_data(hass, entry_id)
     # Get currency from coordinator data
     currency = coordinator.data.get("currency", "EUR")
-    price_unit = format_price_unit_minor(currency)
+    price_unit = format_price_unit_subunit(currency)
 
     # Get entity registry for mapping
     entity_registry = async_get_entity_registry(hass)
@@ -354,7 +354,7 @@ async def handle_apexcharts_yaml(call: ServiceCall) -> dict[str, Any]:  # noqa: 
                 f"service: 'get_chartdata', "
                 f"return_response: true, "
                 f"service_data: {{ entry_id: '{entry_id}', {day_param}{filter_param}, "
-                f"output_format: 'array_of_arrays', insert_nulls: 'segments', minor_currency: true, "
+                f"output_format: 'array_of_arrays', insert_nulls: 'segments', subunit_currency: true, "
                 f"connect_segments: true }} }}); "
                 f"return response.response.data;"
             )
@@ -367,7 +367,7 @@ async def handle_apexcharts_yaml(call: ServiceCall) -> dict[str, Any]:  # noqa: 
                 f"service: 'get_chartdata', "
                 f"return_response: true, "
                 f"service_data: {{ entry_id: '{entry_id}', {day_param}{filter_param}, "
-                f"output_format: 'array_of_arrays', insert_nulls: 'segments', minor_currency: true, "
+                f"output_format: 'array_of_arrays', insert_nulls: 'segments', subunit_currency: true, "
                 f"connect_segments: true }} }}); "
                 f"return response.response.data;"
             )
@@ -417,7 +417,7 @@ async def handle_apexcharts_yaml(call: ServiceCall) -> dict[str, Any]:  # noqa: 
             f"return_response: true, "
             f"service_data: {{ entry_id: '{entry_id}', {day_param}"
             f"period_filter: 'best_price', "
-            f"output_format: 'array_of_arrays', insert_nulls: 'segments', minor_currency: true }} }}); "
+            f"output_format: 'array_of_arrays', insert_nulls: 'segments', subunit_currency: true }} }}); "
             f"const originalData = response.response.data; "
             f"return originalData.map((point, i) => {{ "
             f"const result = [point[0], point[1] === null ? null : 1]; "

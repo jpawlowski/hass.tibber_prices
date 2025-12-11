@@ -213,6 +213,11 @@ class TibberPricesDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             user_update_interval=timedelta(days=1),
             time=self.time,
         )
+        # Create period calculator BEFORE data transformer (transformer needs it in lambda)
+        self._period_calculator = TibberPricesPeriodCalculator(
+            config_entry=config_entry,
+            log_prefix=self._log_prefix,
+        )
         self._data_transformer = TibberPricesDataTransformer(
             config_entry=config_entry,
             log_prefix=self._log_prefix,
@@ -220,10 +225,6 @@ class TibberPricesDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 price_info
             ),
             time=self.time,
-        )
-        self._period_calculator = TibberPricesPeriodCalculator(
-            config_entry=config_entry,
-            log_prefix=self._log_prefix,
         )
         self._repair_manager = TibberPricesRepairManager(
             hass=hass,

@@ -4,6 +4,8 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
+from custom_components.tibber_prices.const import get_display_unit_factor
+
 from .base import TibberPricesBaseCalculator
 
 if TYPE_CHECKING:
@@ -34,7 +36,7 @@ class TibberPricesIntervalCalculator(TibberPricesBaseCalculator):
         self._last_rating_level: str | None = None
         self._last_rating_difference: float | None = None
 
-    def get_interval_value(
+    def get_interval_value(  # noqa: PLR0911
         self,
         *,
         interval_offset: int,
@@ -68,7 +70,11 @@ class TibberPricesIntervalCalculator(TibberPricesBaseCalculator):
             if price is None:
                 return None
             price = float(price)
-            return price if in_euro else round(price * 100, 2)
+            # Return in base currency if in_euro=True, otherwise in display unit
+            if in_euro:
+                return price
+            factor = get_display_unit_factor(self.config_entry)
+            return round(price * factor, 2)
 
         if value_type == "level":
             level = self.safe_get_from_interval(interval_data, "level")

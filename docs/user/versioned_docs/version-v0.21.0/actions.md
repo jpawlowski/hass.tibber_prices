@@ -56,7 +56,7 @@ response_variable: chart_data
 | `day`            | Days to include: yesterday, today, tomorrow | `["today", "tomorrow"]` |
 | `output_format`  | `array_of_objects` or `array_of_arrays`     | `array_of_objects`      |
 | `resolution`     | `interval` (15-min) or `hourly`             | `interval`              |
-| `minor_currency` | Return prices in ct/øre instead of EUR/NOK  | `false`                 |
+| `subunit_currency` | Return prices in ct/øre instead of EUR/NOK  | `false`                 |
 | `round_decimals` | Decimal places (0-10)                       | 4 (major) or 2 (minor)  |
 
 **Rolling Window Mode:**

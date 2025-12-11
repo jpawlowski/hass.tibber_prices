@@ -138,18 +138,18 @@ class TestSegmentBoundaryDetection:
 class TestPriceConversion:
     """Test price conversion logic used in connect_segments."""
 
-    def test_minor_currency_conversion(self) -> None:
-        """Test conversion to minor currency (cents/øre)."""
+    def test_subunit_currency_conversion(self) -> None:
+        """Test conversion to subunit currency (cents/øre)."""
         price = 0.12  # EUR
-        minor_currency = True
-        converted = round(price * 100, 2) if minor_currency else round(price, 4)
+        subunit_currency = True
+        converted = round(price * 100, 2) if subunit_currency else round(price, 4)
         assert converted == 12.0, "0.12 EUR should be 12 cents"
 
-    def test_major_currency_rounding(self) -> None:
-        """Test major currency precision."""
+    def test_base_currency_rounding(self) -> None:
+        """Test base currency precision."""
         price = 0.123456
-        minor_currency = False
-        converted = round(price * 100, 2) if minor_currency else round(price, 4)
+        subunit_currency = False
+        converted = round(price * 100, 2) if subunit_currency else round(price, 4)
         assert converted == 0.1235, "Should round to 4 decimal places"
 
     def test_custom_rounding(self) -> None:

@@ -35,6 +35,7 @@ def calculate_periods(
     *,
     config: TibberPricesPeriodConfig,
     time: TibberPricesTimeService,
+    config_entry: Any,  # ConfigEntry type
 ) -> dict[str, Any]:
     """
     Calculate price periods (best or peak) from price data.
@@ -52,10 +53,11 @@ def calculate_periods(
     7. Extract period summaries (start/end times, not full price data)
 
     Args:
-        all_prices: All price data points from yesterday/today/tomorrow
+        all_prices: All price data points from yesterday/today/tomorrow.
         config: Period configuration containing reverse_sort, flex, min_distance_from_avg,
-                min_period_length, threshold_low, and threshold_high
-        time: TibberPricesTimeService instance (required)
+                min_period_length, threshold_low, and threshold_high.
+        time: TibberPricesTimeService instance (required).
+        config_entry: Config entry to get display unit configuration.
 
     Returns:
         Dict with:
@@ -203,6 +205,7 @@ def calculate_periods(
         price_context,
         thresholds,
         time=time,
+        config_entry=config_entry,
     )
 
     return {

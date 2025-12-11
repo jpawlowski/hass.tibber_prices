@@ -62,7 +62,7 @@ class TibberPricesDailyStatCalculator(TibberPricesBaseCalculator):
             stat_func: Statistical function (min, max, or lambda for avg/median).
 
         Returns:
-            Price value in minor currency units (cents/øre), or None if unavailable.
+            Price value in subunit currency units (cents/øre), or None if unavailable.
             For average functions: tuple of (avg, median) where median may be None.
             For min/max functions: single float value.
 
@@ -107,9 +107,13 @@ class TibberPricesDailyStatCalculator(TibberPricesBaseCalculator):
             # Store the interval (for avg, use first interval as reference)
             if price_intervals:
                 self._last_extreme_interval = price_intervals[0]["interval"]
-            # Convert both to minor currency units
-            avg_result = round(get_price_value(value, in_euro=False), 2)
-            median_result = round(get_price_value(median, in_euro=False), 2) if median is not None else None
+            # Convert to display currency units based on config
+            avg_result = round(get_price_value(value, config_entry=self.coordinator.config_entry), 2)
+            median_result = (
+                round(get_price_value(median, config_entry=self.coordinator.config_entry), 2)
+                if median is not None
+                else None
+            )
             return avg_result, median_result
 
         # Single value result (min/max functions)
@@ -121,8 +125,8 @@ class TibberPricesDailyStatCalculator(TibberPricesBaseCalculator):
                 self._last_extreme_interval = pi["interval"]
                 break
 
-        # Always return in minor currency units (cents/øre) with 2 decimals
-        result = get_price_value(value, in_euro=False)
+        # Return in configured display currency units with 2 decimals
+        result = get_price_value(value, config_entry=self.coordinator.config_entry)
         return round(result, 2)
 
     def get_daily_aggregated_value(

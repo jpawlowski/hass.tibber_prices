@@ -657,6 +657,7 @@ class TibberPricesPeriodCalculator:
                     level_override=lvl,
                 ),
                 time=self.time,
+                config_entry=self.config_entry,
             )
         else:
             best_periods = {
@@ -729,6 +730,7 @@ class TibberPricesPeriodCalculator:
                     level_override=lvl,
                 ),
                 time=self.time,
+                config_entry=self.config_entry,
             )
         else:
             peak_periods = {

@@ -16,7 +16,7 @@ def test_period_array_of_arrays_with_insert_nulls() -> None:
     period = {
         "start": datetime(2025, 12, 3, 10, 0, tzinfo=UTC),
         "end": datetime(2025, 12, 3, 12, 0, tzinfo=UTC),
-        "price_median": 1250,  # Stored in minor units (12.50 EUR/ct)
+        "price_median": 12.50,  # Stored in major units (12.50 EUR)
         "level": "CHEAP",
         "rating_level": "LOW",
     }
@@ -39,11 +39,11 @@ def test_period_array_of_arrays_with_insert_nulls() -> None:
 
     # Point 1: Start with price
     assert chart_data[0][0] == "2025-12-03T10:00:00+00:00"
-    assert chart_data[0][1] == 1250
+    assert chart_data[0][1] == 12.50
 
     # Point 2: End with price (holds level)
     assert chart_data[1][0] == "2025-12-03T12:00:00+00:00"
-    assert chart_data[1][1] == 1250
+    assert chart_data[1][1] == 12.50
 
     # Point 3: End with NULL (terminates segment)
     assert chart_data[2][0] == "2025-12-03T12:00:00+00:00"
@@ -61,7 +61,7 @@ def test_period_array_of_arrays_without_insert_nulls() -> None:
     period = {
         "start": datetime(2025, 12, 3, 10, 0, tzinfo=UTC),
         "end": datetime(2025, 12, 3, 12, 0, tzinfo=UTC),
-        "price_median": 1250,
+        "price_median": 12.50,
     }
 
     # Test with insert_nulls='none' (should NOT add NULL terminator)
@@ -78,8 +78,8 @@ def test_period_array_of_arrays_without_insert_nulls() -> None:
 
     # Verify structure: Only 2 points without NULL terminator
     assert len(chart_data) == 2, "Should generate 2 points with insert_nulls='none'"
-    assert chart_data[0][1] == 1250
-    assert chart_data[1][1] == 1250
+    assert chart_data[0][1] == 12.50
+    assert chart_data[1][1] == 12.50
 
 
 def test_multiple_periods_separated_by_nulls() -> None:
@@ -92,12 +92,12 @@ def test_multiple_periods_separated_by_nulls() -> None:
         {
             "start": datetime(2025, 12, 3, 10, 0, tzinfo=UTC),
             "end": datetime(2025, 12, 3, 12, 0, tzinfo=UTC),
-            "price_median": 1250,
+            "price_median": 12.50,
         },
         {
             "start": datetime(2025, 12, 3, 15, 0, tzinfo=UTC),
             "end": datetime(2025, 12, 3, 17, 0, tzinfo=UTC),
-            "price_median": 1850,
+            "price_median": 18.50,
         },
     ]
 
@@ -121,7 +121,7 @@ def test_multiple_periods_separated_by_nulls() -> None:
 
     # Period 2 starts
     assert chart_data[3][0] == "2025-12-03T15:00:00+00:00"
-    assert chart_data[3][1] == 1850
+    assert chart_data[3][1] == 18.50
 
     # Period 2 ends with NULL
     assert chart_data[5][1] is None
@@ -137,12 +137,12 @@ def test_multiple_periods_without_nulls() -> None:
         {
             "start": datetime(2025, 12, 3, 10, 0, tzinfo=UTC),
             "end": datetime(2025, 12, 3, 12, 0, tzinfo=UTC),
-            "price_median": 1250,
+            "price_median": 12.50,
         },
         {
             "start": datetime(2025, 12, 3, 15, 0, tzinfo=UTC),
             "end": datetime(2025, 12, 3, 17, 0, tzinfo=UTC),
-            "price_median": 1850,
+            "price_median": 18.50,
         },
     ]
 
@@ -167,23 +167,23 @@ def test_multiple_periods_without_nulls() -> None:
 
 def test_period_currency_conversion() -> None:
     """
-    Test that period prices are correctly converted between major/minor currency.
+    Test that period prices are correctly converted between major/subunit currency.
 
-    Period prices are stored in minor units (ct/øre) in coordinator data.
+    Period prices are stored in major units (€/kr/$) in coordinator data.
     """
     period = {
         "start": datetime(2025, 12, 3, 10, 0, tzinfo=UTC),
         "end": datetime(2025, 12, 3, 12, 0, tzinfo=UTC),
-        "price_median": 1250,  # 12.50 ct/øre
+        "price_median": 12.50,  # 12.50 €/kr (base currency)
     }
 
-    # Test 1: Keep minor currency (for ApexCharts internal use)
-    price_minor = period["price_median"]
-    assert price_minor == 1250, "Should keep minor units"
+    # Test 1: Keep base currency (default for services)
+    price_major = period["price_median"]
+    assert price_major == 12.50, "Should keep major units (EUR)"
 
-    # Test 2: Convert to major currency (for display)
-    price_major = period["price_median"] / 100
-    assert price_major == 12.50, "Should convert to major units (EUR)"
+    # Test 2: Convert to subunit currency (if subunit_currency=True)
+    price_minor = period["price_median"] * 100
+    assert price_minor == 1250, "Should convert to minor units (ct/øre)"
 
 
 def test_period_with_missing_end_time() -> None:
@@ -195,7 +195,7 @@ def test_period_with_missing_end_time() -> None:
     period = {
         "start": datetime(2025, 12, 3, 10, 0, tzinfo=UTC),
         "end": None,  # No end time
-        "price_median": 1250,
+        "price_median": 12.50,
     }
 
     chart_data = []
@@ -216,7 +216,7 @@ def test_period_with_missing_end_time() -> None:
 
     # Verify: Only 1 point (start) for incomplete period
     assert len(chart_data) == 1, "Should only have start point for incomplete period"
-    assert chart_data[0][1] == 1250
+    assert chart_data[0][1] == 12.50
 
 
 def test_apexcharts_mapping_preserves_structure() -> None:

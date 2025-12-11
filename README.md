@@ -35,7 +35,7 @@ A custom Home Assistant integration that provides advanced electricity price inf
 ## ✨ Features
 
 -   **Quarter-Hourly Price Data**: Access detailed 15-minute interval pricing (384 data points across 4 days: day before yesterday/yesterday/today/tomorrow)
--   **Current and Next Interval Prices**: Get real-time price data in both major currency (€, kr) and minor units (ct, øre)
+-   **Flexible Currency Display**: Choose between base currency (€, kr) or subunit (ct, øre) display - configurable per your preference with smart defaults
 -   **Multi-Currency Support**: Automatic detection and formatting for EUR, NOK, SEK, DKK, USD, and GBP
 -   **Price Level Indicators**: Know when you're in a VERY_CHEAP, CHEAP, NORMAL, EXPENSIVE, or VERY_EXPENSIVE period
 -   **Statistical Sensors**: Track lowest, highest, and average prices for the day
@@ -165,13 +165,15 @@ The following sensors are available but disabled by default. Enable them in `Set
 -   **Previous Interval Price** & **Previous Interval Price Level**: Historical data for the last 15-minute interval
 -   **Previous Interval Price Rating**: Rating for the previous interval
 -   **Trailing 24h Average Price**: Average of the past 24 hours from now
--   **Trailing 24h Minimum/Maximum Price**: Min/max in the past 24 hours
+    -   **Trailing 24h Minimum/Maximum Price**: Min/max in the past 24 hours
 
-> **Note**: All monetary sensors use minor currency units (ct/kWh, øre/kWh, ¢/kWh, p/kWh) automatically based on your Tibber account's currency. Supported: EUR, NOK, SEK, DKK, USD, GBP.
+> **Note**: Currency display is configurable during setup. Choose between:
+> - **Base currency** (€/kWh, kr/kWh) - decimal values, differences visible from 3rd-4th decimal
+> - **Subunit** (ct/kWh, øre/kWh) - larger values, differences visible from 1st decimal
+>
+> Smart defaults: EUR → subunit (German/Dutch preference), NOK/SEK/DKK → base (Scandinavian preference). Supported currencies: EUR, NOK, SEK, DKK, USD, GBP.
 
-## Automation Examples
-
-> **Note:** See the [full automation examples guide](https://jpawlowski.github.io/hass.tibber_prices/user/automation-examples) for more advanced recipes.
+## Automation Examples> **Note:** See the [full automation examples guide](https://jpawlowski.github.io/hass.tibber_prices/user/automation-examples) for more advanced recipes.
 
 ### Run Appliances During Cheap Hours
 
@@ -282,8 +284,9 @@ automation:
 ### Currency or units showing incorrectly
 
 -   Currency is automatically detected from your Tibber account
--   The integration supports EUR, NOK, SEK, DKK, USD, and GBP with appropriate minor units
--   Enable/disable major vs. minor unit sensors in `Settings > Devices & Services > Tibber Price Information & Ratings > Entities`
+-   Display mode (base currency vs. subunit) can be configured in integration options: `Settings > Devices & Services > Tibber Price Information & Ratings > Configure`
+-   Supported currencies: EUR, NOK, SEK, DKK, USD, and GBP
+-   Smart defaults apply: EUR users get subunit (ct), Scandinavian users get base currency (kr)
 
 ## Advanced Features
 

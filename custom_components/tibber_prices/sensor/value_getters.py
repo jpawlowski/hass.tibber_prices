@@ -85,7 +85,7 @@ def get_value_getter_mapping(  # noqa: PLR0913 - needs all calculators as parame
         "current_interval_price": lambda: interval_calculator.get_interval_value(
             interval_offset=0, value_type="price", in_euro=False
         ),
-        "current_interval_price_major": lambda: interval_calculator.get_interval_value(
+        "current_interval_price_base": lambda: interval_calculator.get_interval_value(
             interval_offset=0, value_type="price", in_euro=True
         ),
         "next_interval_price": lambda: interval_calculator.get_interval_value(

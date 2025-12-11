@@ -89,13 +89,18 @@ This means **all intervals meet your criteria** (very cheap day!):
 - Consider tightening filters (lower flex, higher min_distance)
 - Or add automation to only run during first detected period
 
-### Prices are in wrong currency
+### Prices are in wrong currency or wrong units
 
-Integration uses currency from your Tibber subscription:
-- EUR → displays in ct/kWh
-- NOK/SEK → displays in øre/kWh
+**Currency** is determined by your Tibber subscription (cannot be changed).
 
-Cannot be changed (tied to your electricity contract).
+**Display mode** (base vs. subunit) is configurable:
+- Configure in: `Settings > Devices & Services > Tibber Prices > Configure`
+- Options:
+  - **Base currency**: €/kWh, kr/kWh (decimal values like 0.25)
+  - **Subunit**: ct/kWh, øre/kWh (larger values like 25.00)
+- Smart defaults: EUR → subunit, NOK/SEK/DKK → base currency
+
+If you see unexpected units, check your configuration in the integration options.
 
 ### Tomorrow data not appearing at all
 

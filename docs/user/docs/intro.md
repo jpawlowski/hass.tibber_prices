@@ -39,7 +39,7 @@ This is an independent, community-maintained custom integration. It is **not** a
 -   **Best/Peak hour detection** - Automatic detection of cheapest/peak periods with configurable filters ([learn how](period-calculation.md))
 -   **Beautiful ApexCharts** - Auto-generated chart configurations with dynamic Y-axis scaling ([see examples](chart-examples.md))
 -   **Chart metadata sensor** - Dynamic chart configuration for optimal visualization
--   **Multi-currency support** - EUR, NOK, SEK with proper minor units (ct, øre, öre)
+-   **Flexible currency display** - Choose base currency (€, kr) or subunit (ct, øre) with smart defaults per currency
 
 ## 🔗 Useful Links
 
