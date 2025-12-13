@@ -34,13 +34,14 @@ _LOGGER = logging.getLogger(__name__)
 class TibberPricesDataFetcher:
     """Handles data fetching, caching, and main/subentry coordination."""
 
-    def __init__(
+    def __init__(  # noqa: PLR0913
         self,
         api: TibberPricesApiClient,
         store: Any,
         log_prefix: str,
         user_update_interval: timedelta,
         time: TibberPricesTimeService,
+        home_id: str,
     ) -> None:
         """Initialize the data fetcher."""
         self.api = api
@@ -48,6 +49,7 @@ class TibberPricesDataFetcher:
         self._log_prefix = log_prefix
         self._user_update_interval = user_update_interval
         self.time: TibberPricesTimeService = time
+        self.home_id = home_id
 
         # Cached data
         self._cached_price_data: dict[str, Any] | None = None
@@ -91,9 +93,77 @@ class TibberPricesDataFetcher:
         )
         await cache.save_cache(self._store, cache_data, self._log_prefix)
 
+    def _validate_user_data(self, user_data: dict, home_id: str) -> bool:  # noqa: PLR0911
+        """
+        Validate user data completeness.
+
+        Rejects incomplete/invalid data from API to prevent caching temporary errors.
+        Currency information is critical - if missing, we cannot safely calculate prices.
+
+        Args:
+            user_data: User data dict from API.
+            home_id: Home ID to validate against.
+
+        Returns:
+            True if data is valid and complete, False otherwise.
+
+        """
+        if not user_data:
+            self._log("warning", "User data validation failed: Empty data")
+            return False
+
+        viewer = user_data.get("viewer")
+        if not viewer or not isinstance(viewer, dict):
+            self._log("warning", "User data validation failed: Missing or invalid viewer")
+            return False
+
+        homes = viewer.get("homes")
+        if not homes or not isinstance(homes, list) or len(homes) == 0:
+            self._log("warning", "User data validation failed: No homes found")
+            return False
+
+        # Find our home and validate it has required data
+        home_found = False
+        for home in homes:
+            if home.get("id") == home_id:
+                home_found = True
+
+                # Validate home has timezone (required for cursor calculation)
+                if not home.get("timeZone"):
+                    self._log("warning", "User data validation failed: Home %s missing timezone", home_id)
+                    return False
+
+                # Currency is critical - if home has subscription, must have currency
+                subscription = home.get("currentSubscription")
+                if subscription and subscription is not None:
+                    price_info = subscription.get("priceInfo")
+                    if price_info and price_info is not None:
+                        current = price_info.get("current")
+                        if current and current is not None:
+                            currency = current.get("currency")
+                            if not currency:
+                                self._log(
+                                    "warning",
+                                    "User data validation failed: Home %s has subscription but no currency",
+                                    home_id,
+                                )
+                                return False
+
+                break
+
+        if not home_found:
+            self._log("warning", "User data validation failed: Home %s not found in homes list", home_id)
+            return False
+
+        self._log("debug", "User data validation passed for home %s", home_id)
+        return True
+
     async def update_user_data_if_needed(self, current_time: datetime) -> bool:
         """
         Update user data if needed (daily check).
+
+        Only accepts complete and valid data. If API returns incomplete data
+        (e.g., during maintenance), keeps existing cached data and retries later.
 
         Returns:
             True if user data was updated, False otherwise
@@ -103,6 +173,16 @@ class TibberPricesDataFetcher:
             try:
                 self._log("debug", "Updating user data")
                 user_data = await self.api.async_get_viewer_details()
+
+                # Validate before caching
+                if not self._validate_user_data(user_data, self.home_id):
+                    self._log(
+                        "warning",
+                        "Rejecting incomplete user data from API - keeping existing cached data",
+                    )
+                    return False  # Keep existing data, don't update timestamp
+
+                # Data is valid, cache it
                 self._cached_user_data = user_data
                 self._last_user_update = current_time
                 self._log("debug", "User data updated successfully")
@@ -182,6 +262,13 @@ class TibberPricesDataFetcher:
             self._log("info", "User data not cached, fetching before price data")
             try:
                 user_data = await self.api.async_get_viewer_details()
+
+                # Validate data before accepting it (especially on initial setup)
+                if not self._validate_user_data(user_data, self.home_id):
+                    msg = "Received incomplete user data from API - cannot proceed with price fetching"
+                    self._log("error", msg)
+                    raise TibberPricesApiClientError(msg)  # noqa: TRY301
+
                 self._cached_user_data = user_data
                 self._last_user_update = current_time
             except (
@@ -220,25 +307,46 @@ class TibberPricesDataFetcher:
         }
 
     def _get_currency_for_home(self, home_id: str) -> str:
-        """Get currency for a specific home from cached user_data."""
+        """
+        Get currency for a specific home from cached user_data.
+
+        Returns:
+            Currency code (e.g., "EUR", "NOK", "SEK").
+
+        Raises:
+            TibberPricesApiClientError: If currency cannot be determined.
+
+        """
         if not self._cached_user_data:
-            self._log("warning", "No user data cached, using EUR as default currency")
-            return "EUR"
+            msg = "No user data cached - cannot determine currency"
+            self._log("error", msg)
+            raise TibberPricesApiClientError(msg)
 
         viewer = self._cached_user_data.get("viewer", {})
         homes = viewer.get("homes", [])
 
         for home in homes:
             if home.get("id") == home_id:
-                # Extract currency from nested structure (with fallback to EUR)
-                currency = (
-                    home.get("currentSubscription", {}).get("priceInfo", {}).get("current", {}).get("currency", "EUR")
-                )
+                # Extract currency from nested structure
+                # Use 'or {}' to handle None values (homes without active subscription)
+                subscription = home.get("currentSubscription") or {}
+                price_info = subscription.get("priceInfo") or {}
+                current = price_info.get("current") or {}
+                currency = current.get("currency")
+
+                if not currency:
+                    # Home without active subscription - cannot determine currency
+                    msg = f"Home {home_id} has no active subscription - currency unavailable"
+                    self._log("error", msg)
+                    raise TibberPricesApiClientError(msg)
+
                 self._log("debug", "Extracted currency %s for home %s", currency, home_id)
                 return currency
 
-        self._log("warning", "Home %s not found in user data, using EUR as default", home_id)
-        return "EUR"
+        # Home not found in cached data - data validation should have caught this
+        msg = f"Home {home_id} not found in user data - data validation failed"
+        self._log("error", msg)
+        raise TibberPricesApiClientError(msg)
 
     def _check_home_exists(self, home_id: str) -> bool:
         """

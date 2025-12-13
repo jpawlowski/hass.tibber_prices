@@ -340,7 +340,8 @@ def flatten_price_info(subscription: dict) -> list[dict]:
         A flat list containing all price dictionaries (startsAt, total, level).
 
     """
-    price_info_range = subscription.get("priceInfoRange", {})
+    # Use 'or {}' to handle None values (API may return None during maintenance)
+    price_info_range = subscription.get("priceInfoRange") or {}
 
     # Transform priceInfoRange edges data (extract historical quarter-hourly prices)
     # This contains 192 intervals (2 days) starting from day before yesterday midnight
@@ -355,8 +356,6 @@ def flatten_price_info(subscription: dict) -> list[dict]:
             historical_prices.append(edge["node"])
 
     # Return all intervals as a single flattened array
-    return (
-        historical_prices
-        + subscription.get("priceInfo", {}).get("today", [])
-        + subscription.get("priceInfo", {}).get("tomorrow", [])
-    )
+    # Use 'or {}' to handle None values (API may return None during maintenance)
+    price_info = subscription.get("priceInfo") or {}
+    return historical_prices + (price_info.get("today") or []) + (price_info.get("tomorrow") or [])

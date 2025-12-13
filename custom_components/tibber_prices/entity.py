@@ -118,8 +118,10 @@ class TibberPricesEntity(CoordinatorEntity[TibberPricesDataUpdateCoordinator]):
             return "Tibber Home", None
 
         try:
-            address1 = str(self.coordinator.data.get("address", {}).get("address1", ""))
-            city = str(self.coordinator.data.get("address", {}).get("city", ""))
+            # Use 'or {}' to handle None values (API may return None during maintenance)
+            address = self.coordinator.data.get("address") or {}
+            address1 = str(address.get("address1", ""))
+            city = str(address.get("city", ""))
             app_nickname = str(self.coordinator.data.get("appNickname", ""))
             home_type = str(self.coordinator.data.get("type", ""))
 
