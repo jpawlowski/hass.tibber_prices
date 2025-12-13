@@ -104,7 +104,6 @@ def test_midnight_crossing_period_consistency(period_config: TibberPricesPeriodC
         all_prices_before,
         config=period_config,
         time=time_service_before,
-        config_entry=mock_config_entry,
     )
     periods_before = result_before["periods"]
 
@@ -131,7 +130,6 @@ def test_midnight_crossing_period_consistency(period_config: TibberPricesPeriodC
         all_prices_after,
         config=period_config,
         time=time_service_after,
-        config_entry=mock_config_entry,
     )
     periods_after = result_after["periods"]
 

@@ -1,7 +1,6 @@
 """Test Bug #9, #10, #11: Percentage calculations with negative prices use abs() correctly."""
 
 from datetime import UTC, datetime
-from unittest.mock import Mock
 
 import pytest
 
@@ -39,19 +38,14 @@ def test_bug9_period_price_diff_negative_reference(price_context_negative: dict)
     Now: Uses abs(ref_price) → correct percentage direction
     """
     start_time = datetime(2025, 11, 22, 12, 0, tzinfo=UTC)
-    price_avg = -10.0  # Period average in minor units (ct)
+    price_avg = -0.10  # Period average in base currency (EUR) = -10 ct
 
-    mock_config_entry = Mock()
-    mock_config_entry.options.get.return_value = "minor"  # Default display mode
+    period_diff, period_diff_pct = calculate_period_price_diff(price_avg, start_time, price_context_negative)
 
-    period_diff, period_diff_pct = calculate_period_price_diff(
-        price_avg, start_time, price_context_negative, mock_config_entry
-    )
-
-    # Reference price: -20 ct
-    # Difference: -10 - (-20) = 10 ct (period is 10 ct MORE EXPENSIVE than reference)
-    # Percentage: 10 / abs(-20) * 100 = +50% (correctly shows increase)
-    assert period_diff == 10.0, "Difference should be +10 ct"
+    # Reference price: -0.20 EUR (-20 ct)
+    # Difference: -0.10 - (-0.20) = 0.10 EUR (period is 10 ct MORE EXPENSIVE than reference)
+    # Percentage: 0.10 / abs(-0.20) * 100 = +50% (correctly shows increase)
+    assert period_diff == 0.10, "Difference should be +0.10 EUR (+10 ct)"
     assert period_diff_pct == 50.0, "Percentage should be +50% (more expensive than ref)"
 
 
@@ -63,19 +57,14 @@ def test_bug9_period_price_diff_more_negative_than_reference(price_context_negat
     the percentage correctly shows negative (cheaper).
     """
     start_time = datetime(2025, 11, 22, 12, 0, tzinfo=UTC)
-    price_avg = -25.0  # More negative (cheaper) than reference -20 ct
+    price_avg = -0.25  # More negative (cheaper) than reference: -0.25 EUR = -25 ct
 
-    mock_config_entry = Mock()
-    mock_config_entry.options.get.return_value = "minor"  # Default display mode
+    period_diff, period_diff_pct = calculate_period_price_diff(price_avg, start_time, price_context_negative)
 
-    period_diff, period_diff_pct = calculate_period_price_diff(
-        price_avg, start_time, price_context_negative, mock_config_entry
-    )
-
-    # Reference: -20 ct
-    # Difference: -25 - (-20) = -5 ct (period is 5 ct CHEAPER)
-    # Percentage: -5 / abs(-20) * 100 = -25% (correctly shows decrease)
-    assert period_diff == -5.0, "Difference should be -5 ct"
+    # Reference: -0.20 EUR (-20 ct)
+    # Difference: -0.25 - (-0.20) = -0.05 EUR (period is 5 ct CHEAPER)
+    # Percentage: -0.05 / abs(-0.20) * 100 = -25% (correctly shows decrease)
+    assert period_diff == -0.05, "Difference should be -0.05 EUR (-5 ct)"
     assert period_diff_pct == -25.0, "Percentage should be -25% (cheaper than ref)"
 
 
@@ -86,19 +75,14 @@ def test_bug9_period_price_diff_positive_reference(price_context_positive: dict)
     Verifies that abs() doesn't break normal positive price calculations.
     """
     start_time = datetime(2025, 11, 22, 12, 0, tzinfo=UTC)
-    price_avg = 30.0  # ct
+    price_avg = 0.30  # Period average in base currency (EUR) = 30 ct
 
-    mock_config_entry = Mock()
-    mock_config_entry.options.get.return_value = "minor"  # Default display mode
+    period_diff, period_diff_pct = calculate_period_price_diff(price_avg, start_time, price_context_positive)
 
-    period_diff, period_diff_pct = calculate_period_price_diff(
-        price_avg, start_time, price_context_positive, mock_config_entry
-    )
-
-    # Reference: 20 ct
-    # Difference: 30 - 20 = 10 ct
-    # Percentage: 10 / 20 * 100 = +50%
-    assert period_diff == 10.0, "Difference should be +10 ct"
+    # Reference: 0.20 EUR (20 ct)
+    # Difference: 0.30 - 0.20 = 0.10 EUR (10 ct)
+    # Percentage: 0.10 / 0.20 * 100 = +50%
+    assert period_diff == 0.10, "Difference should be +0.10 EUR (+10 ct)"
     assert period_diff_pct == 50.0, "Percentage should be +50%"
 
 

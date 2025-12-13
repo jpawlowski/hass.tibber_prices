@@ -18,7 +18,9 @@ The fix implements data validation that:
 - Raises exception if currency cannot be determined (no silent EUR fallback)
 """
 
-from datetime import timedelta
+from datetime import datetime, timedelta
+from unittest.mock import Mock
+from zoneinfo import ZoneInfo
 
 import pytest
 
@@ -27,6 +29,27 @@ from custom_components.tibber_prices.api.helpers import flatten_price_info
 from custom_components.tibber_prices.coordinator.data_fetching import (
     TibberPricesDataFetcher,
 )
+
+
+@pytest.fixture
+def mock_api_client() -> Mock:
+    """Create a mock API client."""
+    return Mock()
+
+
+@pytest.fixture
+def mock_time_service() -> Mock:
+    """Create a mock time service."""
+    time_service = Mock()
+    time_service.now.return_value = datetime(2025, 11, 22, 12, 0, 0, tzinfo=ZoneInfo("Europe/Berlin"))
+    time_service.as_local.side_effect = lambda dt: dt
+    return time_service
+
+
+@pytest.fixture
+def mock_store() -> Mock:
+    """Create a mock store."""
+    return Mock()
 
 
 @pytest.mark.unit
@@ -143,7 +166,7 @@ def test_validate_user_data_subscription_without_currency(mock_api_client, mock_
                     "timeZone": "Europe/Berlin",
                     "currentSubscription": {
                         "priceInfo": {
-                            "current": {}  # Currency missing!
+                            "current": {"currency": None}  # Currency explicitly None
                         }
                     },
                 }
