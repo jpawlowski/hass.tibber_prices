@@ -96,6 +96,7 @@ from custom_components.tibber_prices.const import (
 )
 from homeassistant.const import CONF_ACCESS_TOKEN
 from homeassistant.data_entry_flow import section
+from homeassistant.helpers import selector
 from homeassistant.helpers.selector import (
     BooleanSelector,
     NumberSelector,
@@ -259,112 +260,98 @@ def get_price_rating_schema(options: Mapping[str, Any]) -> vol.Schema:
     """Return schema for price rating thresholds configuration."""
     return vol.Schema(
         {
-            vol.Required("price_rating_thresholds"): section(
-                vol.Schema(
-                    {
-                        vol.Optional(
-                            CONF_PRICE_RATING_THRESHOLD_LOW,
-                            default=int(
-                                options.get(
-                                    CONF_PRICE_RATING_THRESHOLD_LOW,
-                                    DEFAULT_PRICE_RATING_THRESHOLD_LOW,
-                                )
-                            ),
-                        ): NumberSelector(
-                            NumberSelectorConfig(
-                                min=MIN_PRICE_RATING_THRESHOLD_LOW,
-                                max=MAX_PRICE_RATING_THRESHOLD_LOW,
-                                unit_of_measurement="%",
-                                step=1,
-                                mode=NumberSelectorMode.SLIDER,
-                            ),
-                        ),
-                        vol.Optional(
-                            CONF_PRICE_RATING_THRESHOLD_HIGH,
-                            default=int(
-                                options.get(
-                                    CONF_PRICE_RATING_THRESHOLD_HIGH,
-                                    DEFAULT_PRICE_RATING_THRESHOLD_HIGH,
-                                )
-                            ),
-                        ): NumberSelector(
-                            NumberSelectorConfig(
-                                min=MIN_PRICE_RATING_THRESHOLD_HIGH,
-                                max=MAX_PRICE_RATING_THRESHOLD_HIGH,
-                                unit_of_measurement="%",
-                                step=1,
-                                mode=NumberSelectorMode.SLIDER,
-                            ),
-                        ),
-                    }
+            vol.Optional(
+                CONF_PRICE_RATING_THRESHOLD_LOW,
+                default=int(
+                    options.get(
+                        CONF_PRICE_RATING_THRESHOLD_LOW,
+                        DEFAULT_PRICE_RATING_THRESHOLD_LOW,
+                    )
                 ),
-                {"collapsed": True},
+            ): NumberSelector(
+                NumberSelectorConfig(
+                    min=MIN_PRICE_RATING_THRESHOLD_LOW,
+                    max=MAX_PRICE_RATING_THRESHOLD_LOW,
+                    unit_of_measurement="%",
+                    step=1,
+                    mode=NumberSelectorMode.SLIDER,
+                ),
+            ),
+            vol.Optional(
+                CONF_PRICE_RATING_THRESHOLD_HIGH,
+                default=int(
+                    options.get(
+                        CONF_PRICE_RATING_THRESHOLD_HIGH,
+                        DEFAULT_PRICE_RATING_THRESHOLD_HIGH,
+                    )
+                ),
+            ): NumberSelector(
+                NumberSelectorConfig(
+                    min=MIN_PRICE_RATING_THRESHOLD_HIGH,
+                    max=MAX_PRICE_RATING_THRESHOLD_HIGH,
+                    unit_of_measurement="%",
+                    step=1,
+                    mode=NumberSelectorMode.SLIDER,
+                ),
             ),
         }
     )
 
 
 def get_volatility_schema(options: Mapping[str, Any]) -> vol.Schema:
-    """Return schema for volatility thresholds configuration with collapsible sections."""
+    """Return schema for volatility thresholds configuration."""
     return vol.Schema(
         {
-            vol.Required("volatility_thresholds"): section(
-                vol.Schema(
-                    {
-                        vol.Optional(
-                            CONF_VOLATILITY_THRESHOLD_MODERATE,
-                            default=float(
-                                options.get(
-                                    CONF_VOLATILITY_THRESHOLD_MODERATE,
-                                    DEFAULT_VOLATILITY_THRESHOLD_MODERATE,
-                                )
-                            ),
-                        ): NumberSelector(
-                            NumberSelectorConfig(
-                                min=MIN_VOLATILITY_THRESHOLD_MODERATE,
-                                max=MAX_VOLATILITY_THRESHOLD_MODERATE,
-                                step=1.0,
-                                unit_of_measurement="%",
-                                mode=NumberSelectorMode.SLIDER,
-                            ),
-                        ),
-                        vol.Optional(
-                            CONF_VOLATILITY_THRESHOLD_HIGH,
-                            default=float(
-                                options.get(
-                                    CONF_VOLATILITY_THRESHOLD_HIGH,
-                                    DEFAULT_VOLATILITY_THRESHOLD_HIGH,
-                                )
-                            ),
-                        ): NumberSelector(
-                            NumberSelectorConfig(
-                                min=MIN_VOLATILITY_THRESHOLD_HIGH,
-                                max=MAX_VOLATILITY_THRESHOLD_HIGH,
-                                step=1.0,
-                                unit_of_measurement="%",
-                                mode=NumberSelectorMode.SLIDER,
-                            ),
-                        ),
-                        vol.Optional(
-                            CONF_VOLATILITY_THRESHOLD_VERY_HIGH,
-                            default=float(
-                                options.get(
-                                    CONF_VOLATILITY_THRESHOLD_VERY_HIGH,
-                                    DEFAULT_VOLATILITY_THRESHOLD_VERY_HIGH,
-                                )
-                            ),
-                        ): NumberSelector(
-                            NumberSelectorConfig(
-                                min=MIN_VOLATILITY_THRESHOLD_VERY_HIGH,
-                                max=MAX_VOLATILITY_THRESHOLD_VERY_HIGH,
-                                step=1.0,
-                                unit_of_measurement="%",
-                                mode=NumberSelectorMode.SLIDER,
-                            ),
-                        ),
-                    }
+            vol.Optional(
+                CONF_VOLATILITY_THRESHOLD_MODERATE,
+                default=float(
+                    options.get(
+                        CONF_VOLATILITY_THRESHOLD_MODERATE,
+                        DEFAULT_VOLATILITY_THRESHOLD_MODERATE,
+                    )
                 ),
-                {"collapsed": True},
+            ): NumberSelector(
+                NumberSelectorConfig(
+                    min=MIN_VOLATILITY_THRESHOLD_MODERATE,
+                    max=MAX_VOLATILITY_THRESHOLD_MODERATE,
+                    step=1.0,
+                    unit_of_measurement="%",
+                    mode=NumberSelectorMode.SLIDER,
+                ),
+            ),
+            vol.Optional(
+                CONF_VOLATILITY_THRESHOLD_HIGH,
+                default=float(
+                    options.get(
+                        CONF_VOLATILITY_THRESHOLD_HIGH,
+                        DEFAULT_VOLATILITY_THRESHOLD_HIGH,
+                    )
+                ),
+            ): NumberSelector(
+                NumberSelectorConfig(
+                    min=MIN_VOLATILITY_THRESHOLD_HIGH,
+                    max=MAX_VOLATILITY_THRESHOLD_HIGH,
+                    step=1.0,
+                    unit_of_measurement="%",
+                    mode=NumberSelectorMode.SLIDER,
+                ),
+            ),
+            vol.Optional(
+                CONF_VOLATILITY_THRESHOLD_VERY_HIGH,
+                default=float(
+                    options.get(
+                        CONF_VOLATILITY_THRESHOLD_VERY_HIGH,
+                        DEFAULT_VOLATILITY_THRESHOLD_VERY_HIGH,
+                    )
+                ),
+            ): NumberSelector(
+                NumberSelectorConfig(
+                    min=MIN_VOLATILITY_THRESHOLD_VERY_HIGH,
+                    max=MAX_VOLATILITY_THRESHOLD_VERY_HIGH,
+                    step=1.0,
+                    unit_of_measurement="%",
+                    mode=NumberSelectorMode.SLIDER,
+                ),
             ),
         }
     )
@@ -372,6 +359,7 @@ def get_volatility_schema(options: Mapping[str, Any]) -> vol.Schema:
 
 def get_best_price_schema(options: Mapping[str, Any]) -> vol.Schema:
     """Return schema for best price period configuration with collapsible sections."""
+    period_settings = options.get("period_settings", {})
     return vol.Schema(
         {
             vol.Required("period_settings"): section(
@@ -380,7 +368,7 @@ def get_best_price_schema(options: Mapping[str, Any]) -> vol.Schema:
                         vol.Optional(
                             CONF_BEST_PRICE_MIN_PERIOD_LENGTH,
                             default=int(
-                                options.get(
+                                period_settings.get(
                                     CONF_BEST_PRICE_MIN_PERIOD_LENGTH,
                                     DEFAULT_BEST_PRICE_MIN_PERIOD_LENGTH,
                                 )
@@ -396,7 +384,7 @@ def get_best_price_schema(options: Mapping[str, Any]) -> vol.Schema:
                         ),
                         vol.Optional(
                             CONF_BEST_PRICE_MAX_LEVEL,
-                            default=options.get(
+                            default=period_settings.get(
                                 CONF_BEST_PRICE_MAX_LEVEL,
                                 DEFAULT_BEST_PRICE_MAX_LEVEL,
                             ),
@@ -410,7 +398,7 @@ def get_best_price_schema(options: Mapping[str, Any]) -> vol.Schema:
                         vol.Optional(
                             CONF_BEST_PRICE_MAX_LEVEL_GAP_COUNT,
                             default=int(
-                                options.get(
+                                period_settings.get(
                                     CONF_BEST_PRICE_MAX_LEVEL_GAP_COUNT,
                                     DEFAULT_BEST_PRICE_MAX_LEVEL_GAP_COUNT,
                                 )
@@ -425,7 +413,7 @@ def get_best_price_schema(options: Mapping[str, Any]) -> vol.Schema:
                         ),
                     }
                 ),
-                {"collapsed": True},
+                {"collapsed": False},
             ),
             vol.Required("flexibility_settings"): section(
                 vol.Schema(
@@ -433,7 +421,7 @@ def get_best_price_schema(options: Mapping[str, Any]) -> vol.Schema:
                         vol.Optional(
                             CONF_BEST_PRICE_FLEX,
                             default=int(
-                                options.get(
+                                options.get("flexibility_settings", {}).get(
                                     CONF_BEST_PRICE_FLEX,
                                     DEFAULT_BEST_PRICE_FLEX,
                                 )
@@ -450,7 +438,7 @@ def get_best_price_schema(options: Mapping[str, Any]) -> vol.Schema:
                         vol.Optional(
                             CONF_BEST_PRICE_MIN_DISTANCE_FROM_AVG,
                             default=int(
-                                options.get(
+                                options.get("flexibility_settings", {}).get(
                                     CONF_BEST_PRICE_MIN_DISTANCE_FROM_AVG,
                                     DEFAULT_BEST_PRICE_MIN_DISTANCE_FROM_AVG,
                                 )
@@ -473,7 +461,7 @@ def get_best_price_schema(options: Mapping[str, Any]) -> vol.Schema:
                     {
                         vol.Optional(
                             CONF_ENABLE_MIN_PERIODS_BEST,
-                            default=options.get(
+                            default=options.get("relaxation_and_target_periods", {}).get(
                                 CONF_ENABLE_MIN_PERIODS_BEST,
                                 DEFAULT_ENABLE_MIN_PERIODS_BEST,
                             ),
@@ -481,7 +469,7 @@ def get_best_price_schema(options: Mapping[str, Any]) -> vol.Schema:
                         vol.Optional(
                             CONF_MIN_PERIODS_BEST,
                             default=int(
-                                options.get(
+                                options.get("relaxation_and_target_periods", {}).get(
                                     CONF_MIN_PERIODS_BEST,
                                     DEFAULT_MIN_PERIODS_BEST,
                                 )
@@ -497,7 +485,7 @@ def get_best_price_schema(options: Mapping[str, Any]) -> vol.Schema:
                         vol.Optional(
                             CONF_RELAXATION_ATTEMPTS_BEST,
                             default=int(
-                                options.get(
+                                options.get("relaxation_and_target_periods", {}).get(
                                     CONF_RELAXATION_ATTEMPTS_BEST,
                                     DEFAULT_RELAXATION_ATTEMPTS_BEST,
                                 )
@@ -520,6 +508,7 @@ def get_best_price_schema(options: Mapping[str, Any]) -> vol.Schema:
 
 def get_peak_price_schema(options: Mapping[str, Any]) -> vol.Schema:
     """Return schema for peak price period configuration with collapsible sections."""
+    period_settings = options.get("period_settings", {})
     return vol.Schema(
         {
             vol.Required("period_settings"): section(
@@ -528,7 +517,7 @@ def get_peak_price_schema(options: Mapping[str, Any]) -> vol.Schema:
                         vol.Optional(
                             CONF_PEAK_PRICE_MIN_PERIOD_LENGTH,
                             default=int(
-                                options.get(
+                                period_settings.get(
                                     CONF_PEAK_PRICE_MIN_PERIOD_LENGTH,
                                     DEFAULT_PEAK_PRICE_MIN_PERIOD_LENGTH,
                                 )
@@ -544,7 +533,7 @@ def get_peak_price_schema(options: Mapping[str, Any]) -> vol.Schema:
                         ),
                         vol.Optional(
                             CONF_PEAK_PRICE_MIN_LEVEL,
-                            default=options.get(
+                            default=period_settings.get(
                                 CONF_PEAK_PRICE_MIN_LEVEL,
                                 DEFAULT_PEAK_PRICE_MIN_LEVEL,
                             ),
@@ -558,7 +547,7 @@ def get_peak_price_schema(options: Mapping[str, Any]) -> vol.Schema:
                         vol.Optional(
                             CONF_PEAK_PRICE_MAX_LEVEL_GAP_COUNT,
                             default=int(
-                                options.get(
+                                period_settings.get(
                                     CONF_PEAK_PRICE_MAX_LEVEL_GAP_COUNT,
                                     DEFAULT_PEAK_PRICE_MAX_LEVEL_GAP_COUNT,
                                 )
@@ -573,7 +562,7 @@ def get_peak_price_schema(options: Mapping[str, Any]) -> vol.Schema:
                         ),
                     }
                 ),
-                {"collapsed": True},
+                {"collapsed": False},
             ),
             vol.Required("flexibility_settings"): section(
                 vol.Schema(
@@ -581,7 +570,7 @@ def get_peak_price_schema(options: Mapping[str, Any]) -> vol.Schema:
                         vol.Optional(
                             CONF_PEAK_PRICE_FLEX,
                             default=int(
-                                options.get(
+                                options.get("flexibility_settings", {}).get(
                                     CONF_PEAK_PRICE_FLEX,
                                     DEFAULT_PEAK_PRICE_FLEX,
                                 )
@@ -598,7 +587,7 @@ def get_peak_price_schema(options: Mapping[str, Any]) -> vol.Schema:
                         vol.Optional(
                             CONF_PEAK_PRICE_MIN_DISTANCE_FROM_AVG,
                             default=int(
-                                options.get(
+                                options.get("flexibility_settings", {}).get(
                                     CONF_PEAK_PRICE_MIN_DISTANCE_FROM_AVG,
                                     DEFAULT_PEAK_PRICE_MIN_DISTANCE_FROM_AVG,
                                 )
@@ -621,7 +610,7 @@ def get_peak_price_schema(options: Mapping[str, Any]) -> vol.Schema:
                     {
                         vol.Optional(
                             CONF_ENABLE_MIN_PERIODS_PEAK,
-                            default=options.get(
+                            default=options.get("relaxation_and_target_periods", {}).get(
                                 CONF_ENABLE_MIN_PERIODS_PEAK,
                                 DEFAULT_ENABLE_MIN_PERIODS_PEAK,
                             ),
@@ -629,7 +618,7 @@ def get_peak_price_schema(options: Mapping[str, Any]) -> vol.Schema:
                         vol.Optional(
                             CONF_MIN_PERIODS_PEAK,
                             default=int(
-                                options.get(
+                                options.get("relaxation_and_target_periods", {}).get(
                                     CONF_MIN_PERIODS_PEAK,
                                     DEFAULT_MIN_PERIODS_PEAK,
                                 )
@@ -645,7 +634,7 @@ def get_peak_price_schema(options: Mapping[str, Any]) -> vol.Schema:
                         vol.Optional(
                             CONF_RELAXATION_ATTEMPTS_PEAK,
                             default=int(
-                                options.get(
+                                options.get("relaxation_and_target_periods", {}).get(
                                     CONF_RELAXATION_ATTEMPTS_PEAK,
                                     DEFAULT_RELAXATION_ATTEMPTS_PEAK,
                                 )
@@ -670,46 +659,39 @@ def get_price_trend_schema(options: Mapping[str, Any]) -> vol.Schema:
     """Return schema for price trend thresholds configuration."""
     return vol.Schema(
         {
-            vol.Required("price_trend_thresholds"): section(
-                vol.Schema(
-                    {
-                        vol.Optional(
-                            CONF_PRICE_TREND_THRESHOLD_RISING,
-                            default=int(
-                                options.get(
-                                    CONF_PRICE_TREND_THRESHOLD_RISING,
-                                    DEFAULT_PRICE_TREND_THRESHOLD_RISING,
-                                )
-                            ),
-                        ): NumberSelector(
-                            NumberSelectorConfig(
-                                min=MIN_PRICE_TREND_RISING,
-                                max=MAX_PRICE_TREND_RISING,
-                                step=1,
-                                unit_of_measurement="%",
-                                mode=NumberSelectorMode.SLIDER,
-                            ),
-                        ),
-                        vol.Optional(
-                            CONF_PRICE_TREND_THRESHOLD_FALLING,
-                            default=int(
-                                options.get(
-                                    CONF_PRICE_TREND_THRESHOLD_FALLING,
-                                    DEFAULT_PRICE_TREND_THRESHOLD_FALLING,
-                                )
-                            ),
-                        ): NumberSelector(
-                            NumberSelectorConfig(
-                                min=MIN_PRICE_TREND_FALLING,
-                                max=MAX_PRICE_TREND_FALLING,
-                                step=1,
-                                unit_of_measurement="%",
-                                mode=NumberSelectorMode.SLIDER,
-                            ),
-                        ),
-                    }
+            vol.Optional(
+                CONF_PRICE_TREND_THRESHOLD_RISING,
+                default=int(
+                    options.get(
+                        CONF_PRICE_TREND_THRESHOLD_RISING,
+                        DEFAULT_PRICE_TREND_THRESHOLD_RISING,
+                    )
                 ),
-                {"collapsed": True},
+            ): NumberSelector(
+                NumberSelectorConfig(
+                    min=MIN_PRICE_TREND_RISING,
+                    max=MAX_PRICE_TREND_RISING,
+                    step=1,
+                    unit_of_measurement="%",
+                    mode=NumberSelectorMode.SLIDER,
+                ),
+            ),
+            vol.Optional(
+                CONF_PRICE_TREND_THRESHOLD_FALLING,
+                default=int(
+                    options.get(
+                        CONF_PRICE_TREND_THRESHOLD_FALLING,
+                        DEFAULT_PRICE_TREND_THRESHOLD_FALLING,
+                    )
+                ),
+            ): NumberSelector(
+                NumberSelectorConfig(
+                    min=MIN_PRICE_TREND_FALLING,
+                    max=MAX_PRICE_TREND_FALLING,
+                    step=1,
+                    unit_of_measurement="%",
+                    mode=NumberSelectorMode.SLIDER,
+                ),
             ),
         }
     )
@@ -719,3 +701,12 @@ def get_chart_data_export_schema(_options: Mapping[str, Any]) -> vol.Schema:
     """Return schema for chart data export info page (no input fields)."""
     # Empty schema - this is just an info page now
     return vol.Schema({})
+
+
+def get_reset_to_defaults_schema() -> vol.Schema:
+    """Return schema for reset to defaults confirmation step."""
+    return vol.Schema(
+        {
+            vol.Required("confirm_reset", default=False): selector.BooleanSelector(),
+        }
+    )

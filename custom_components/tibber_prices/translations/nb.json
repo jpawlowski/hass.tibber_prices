@@ -132,8 +132,22 @@
     "options": {
         "step": {
             "init": {
+                "menu_options": {
+                    "general_settings": "⚙️ Generelle innstillinger",
+                    "display_settings": "💱 Valutavisning",
+                    "current_interval_price_rating": "📊 Prisvurdering",
+                    "volatility": "💨 Prisvolatilitet",
+                    "best_price": "💚 Beste prisperiode",
+                    "peak_price": "🔴 Toppprisperiode",
+                    "price_trend": "📈 Pristrend",
+                    "chart_data_export": "📊 Diagramdata-eksportsensor",
+                    "reset_to_defaults": "🔄 Tilbakestill til standard",
+                    "finish": "⬅️ Tilbake"
+                }
+            },
+            "general_settings": {
                 "title": "⚙️ Generelle innstillinger",
-                "description": "_{step_progress}_\n\n**Konfigurer generelle innstillinger for Tibber prisinformasjon og vurderinger.**\n\n---\n\n**Bruker:** {user_login}",
+                "description": "**Konfigurer generelle innstillinger for Tibber prisinformasjon og vurderinger.**\n\n---\n\n**Bruker:** {user_login}",
                 "data": {
                     "extended_descriptions": "Utvidede beskrivelser",
                     "average_sensor_display": "Gjennomsnittssensor-visning"
@@ -142,7 +156,7 @@
                     "extended_descriptions": "Styrer om entitetsattributter inkluderer detaljerte forklaringer og brukstips.\n\n• Deaktivert (standard): Bare kort beskrivelse\n• Aktivert: Detaljert forklaring + praktiske brukseksempler\n\nEksempel:\nDeaktivert = 1 attributt\nAktivert = 2 ekstra attributter",
                     "average_sensor_display": "Velg hvilket statistisk mål som skal vises i sensortilstanden for gjennomsnittspris-sensorer. Den andre verdien vises som attributt. Median er mer motstandsdyktig mot ekstremverdier, mens aritmetisk gjennomsnitt representerer tradisjonelt gjennomsnitt. Standard: Median"
                 },
-                "submit": "Videre til trinn 2"
+                "submit": "↩ Lagre & tilbake"
             },
             "display_settings": {
                 "title": "💱 Valutavisningsinnstillinger",
@@ -153,30 +167,24 @@
                 "data_description": {
                     "currency_display_mode": "Velg hvordan priser vises:\n\n• **Basisvaluta** (€/kWh, kr/kWh): Desimalverdier (f.eks. 0,25 €/kWh) - forskjeller synlige fra 3.-4. desimalplass\n• **Underenhet** (ct/kWh, øre/kWh): Større verdier (f.eks. 25,00 ct/kWh) - forskjeller allerede synlige fra 1. desimalplass\n\nStandard avhenger av valutaen din:\n• EUR → Underenhet (cent) - tysk/nederlandsk preferanse\n• NOK/SEK/DKK → Basisvaluta (kroner) - skandinavisk preferanse\n• USD/GBP → Basisvaluta\n\n**💡 Tips:** Ved valg av underenhet kan du aktivere den ekstra sensoren \"Nåværende strømpris (Energi-dashboard)\" (deaktivert som standard)."
                 },
-                "submit": "Videre til trinn 3"
+                "submit": "↩ Lagre & tilbake"
             },
             "current_interval_price_rating": {
                 "title": "📊 Prisvurderings-terskler",
-                "description": "_{step_progress}_\n\n**Konfigurer terskler for prisvurderingsnivåer (lav/normal/høy) basert på sammenligning med etterfølgende 24-timers gjennomsnitt.**\n\n---",
-                "sections": {
-                    "price_rating_thresholds": {
-                        "name": "Prisvurderings-terskler",
-                        "description": "Definer prisvurderingsnivåer.",
-                        "data": {
-                            "price_rating_threshold_low": "Lav-terskel",
-                            "price_rating_threshold_high": "Høy-terskel"
-                        },
-                        "data_description": {
-                            "price_rating_threshold_low": "Prosentverdi for hvor mye gjeldende pris må være under det etterfølgende 24-timers gjennomsnittet for å kvalifisere som 'lav' vurdering. Eksempel: 5 betyr minst 5% under gjennomsnitt. Sensorer med denne vurderingen indikerer gunstige tidsvinduer. Standard: 5%",
-                            "price_rating_threshold_high": "Prosentverdi for hvor mye gjeldende pris må være over det etterfølgende 24-timers gjennomsnittet for å kvalifisere som 'høy' vurdering. Eksempel: 10 betyr minst 10% over gjennomsnitt. Sensorer med denne vurderingen advarer om dyre tidsvinduer. Standard: 10%"
-                        }
-                    }
+                "description": "**Konfigurer terskler for prisvurderingsnivåer (lav/normal/høy) basert på sammenligning med etterfølgende 24-timers gjennomsnitt.**",
+                "data": {
+                    "price_rating_threshold_low": "Lav-terskel",
+                    "price_rating_threshold_high": "Høy-terskel"
                 },
-                "submit": "Fortsett →"
+                "data_description": {
+                    "price_rating_threshold_low": "Prosentverdi for hvor mye gjeldende pris må være under det etterfølgende 24-timers gjennomsnittet for å kvalifisere som 'lav' vurdering. Eksempel: 5 betyr minst 5% under gjennomsnitt. Sensorer med denne vurderingen indikerer gunstige tidsvinduer. Standard: 5%",
+                    "price_rating_threshold_high": "Prosentverdi for hvor mye gjeldende pris må være over det etterfølgende 24-timers gjennomsnittet for å kvalifisere som 'høy' vurdering. Eksempel: 10 betyr minst 10% over gjennomsnitt. Sensorer med denne vurderingen advarer om dyre tidsvinduer. Standard: 10%"
+                },
+                "submit": "↩ Lagre & tilbake"
             },
             "best_price": {
                 "title": "💚 Beste Prisperiode Innstillinger",
-                "description": "_{step_progress}_\n\nKonfigurer innstillinger for **Beste Prisperiode** binærsensor. Denne sensoren er aktiv i perioder med de laveste strømprisene.\n\n---",
+                "description": "**Konfigurer innstillinger for Beste Prisperiode binærsensor. Denne sensoren er aktiv i perioder med de laveste strømprisene.**\n\n---",
                 "sections": {
                     "period_settings": {
                         "name": "Periodeinnstillinger",
@@ -219,11 +227,11 @@
                         }
                     }
                 },
-                "submit": "Fortsett →"
+                "submit": "↩ Lagre & tilbake"
             },
             "peak_price": {
                 "title": "🔴 Toppprisperiode Innstillinger",
-                "description": "_{step_progress}_\n\nKonfigurer innstillinger for **Toppprisperiode** binærsensor. Denne sensoren er aktiv i perioder med de høyeste strømprisene.\n\n---",
+                "description": "**Konfigurer innstillinger for Toppprisperiode binærsensor. Denne sensoren er aktiv i perioder med de høyeste strømprisene.**\n\n---",
                 "sections": {
                     "period_settings": {
                         "name": "Periodeinnstillinger",
@@ -266,52 +274,48 @@
                         }
                     }
                 },
-                "submit": "Fortsett →"
+                "submit": "↩ Lagre & tilbake"
             },
             "price_trend": {
                 "title": "📈 Pristrendterskler",
-                "description": "_{step_progress}_\n\n**Konfigurer terskler for pristrendsensorer. Disse sensorene sammenligner nåværende pris med gjennomsnittet av de neste N timene for å bestemme om prisene stiger, faller eller er stabile.**\n\n---",
-                "sections": {
-                    "price_trend_thresholds": {
-                        "name": "Pristrendterskler",
-                        "description": "Definer pristrendnivåer.",
-                        "data": {
-                            "price_trend_threshold_rising": "Stigende terskel",
-                            "price_trend_threshold_falling": "Fallende terskel"
-                        },
-                        "data_description": {
-                            "price_trend_threshold_rising": "Prosentverdi for gjennomsnittlig prisøkning per time som kvalifiserer trenden som 'stigende'. Eksempel: 5 betyr minst 5% økning per time. Sensorer med denne trenden indikerer at prisene vil stige raskt. Standard: 5%",
-                            "price_trend_threshold_falling": "Prosentverdi for gjennomsnittlig prisnedgang per time som kvalifiserer trenden som 'synkende'. Eksempel: -5 betyr minst 5% nedgang per time. Sensorer med denne trenden indikerer at prisene vil synke raskt. Standard: -5%"
-                        }
-                    }
+                "description": "**Konfigurer terskler for pristrendsensorer. Disse sensorene sammenligner nåværende pris med gjennomsnittet av de neste N timene for å bestemme om prisene stiger, faller eller er stabile.**",
+                "data": {
+                    "price_trend_threshold_rising": "Stigende terskel",
+                    "price_trend_threshold_falling": "Fallende terskel"
                 },
-                "submit": "Fortsett →"
+                "data_description": {
+                    "price_trend_threshold_rising": "Prosentverdi som gjennomsnittet av de neste N timene må være over den nåværende prisen for å kvalifisere som 'stigende' trend. Eksempel: 5 betyr gjennomsnittet er minst 5% høyere → prisene vil stige. Typiske verdier: 5-15%. Standard: 5%",
+                    "price_trend_threshold_falling": "Prosentverdi (negativ) som gjennomsnittet av de neste N timene må være under den nåværende prisen for å kvalifisere som 'synkende' trend. Eksempel: -5 betyr gjennomsnittet er minst 5% lavere → prisene vil falle. Typiske verdier: -5 til -15%. Standard: -5%"
+                },
+                "submit": "↩ Lagre & tilbake"
             },
             "volatility": {
                 "title": "💨 Volatilitets-terskler",
-                "description": "_{step_progress}_\n\n**Konfigurer terskler for volatilitetsklassifisering. Volatilitet måler relativ prisvariation ved hjelp av variasjonskoeffisienten (VK = standardavvik / gjennomsnitt × 100%). Disse tersklene er prosentverdier som fungerer på tvers av alle prisnivåer.**\n\nBrukes av:\n• Volatilitetssensorer (klassifisering)\n• Trendsensorer (adaptiv terskel justering: &lt;moderat = mer følsom, ≥høy = mindre følsom)\n\n---",
-                "sections": {
-                    "volatility_thresholds": {
-                        "name": "Volatilitetsterskler",
-                        "description": "Definer volatilitetsklassifiseringsnivåer.",
-                        "data": {
-                            "volatility_threshold_moderate": "Moderat terskel",
-                            "volatility_threshold_high": "Høy terskel",
-                            "volatility_threshold_very_high": "Veldig høy terskel"
-                        },
-                        "data_description": {
-                            "volatility_threshold_moderate": "Grenseverdi for standardavvik (% av gjennomsnitt) for å klassifisere prisvariasjonen som 'moderat'. Eksempel: 10 betyr standardavvik ≥ 10% av gjennomsnitt. Dette indikerer økt prisustabilitet. Standard: 10%",
-                            "volatility_threshold_high": "Grenseverdi for standardavvik (% av gjennomsnitt) for å klassifisere prisvariasjonen som 'høy'. Eksempel: 20 betyr standardavvik ≥ 20% av gjennomsnitt. Dette indikerer betydelige prissvingninger. Standard: 20%",
-                            "volatility_threshold_very_high": "Grenseverdi for standardavvik (% av gjennomsnitt) for å klassifisere prisvariasjonen som 'veldig høy'. Eksempel: 30 betyr standardavvik ≥ 30% av gjennomsnitt. Dette indikerer ekstrem prisustabilitet. Standard: 30%"
-                        }
-                    }
+                "description": "**Konfigurer terskler for volatilitetsklassifisering.** Volatilitet måler relativ prisvariation ved hjelp av variasjonskoeffisienten (VK = standardavvik / gjennomsnitt × 100%). Disse tersklene er prosentverdier som fungerer på tvers av alle prisnivåer.\n\nBrukes av:\n• Volatilitetssensorer (klassifisering)\n• Trendsensorer (adaptiv terskel justering: &lt;moderat = mer følsom, ≥høy = mindre følsom)",
+                "data": {
+                    "volatility_threshold_moderate": "Moderat terskel",
+                    "volatility_threshold_high": "Høy terskel",
+                    "volatility_threshold_very_high": "Veldig høy terskel"
                 },
-                "submit": "Fortsett →"
+                "data_description": {
+                    "volatility_threshold_moderate": "Grenseverdi for standardavvik (% av gjennomsnitt) for å klassifisere prisvariasjonen som 'moderat'. Eksempel: 10 betyr standardavvik ≥ 10% av gjennomsnitt. Dette indikerer økt prisustabilitet. Standard: 10%",
+                    "volatility_threshold_high": "Grenseverdi for standardavvik (% av gjennomsnitt) for å klassifisere prisvariasjonen som 'høy'. Eksempel: 20 betyr standardavvik ≥ 20% av gjennomsnitt. Dette indikerer betydelige prissvingninger. Standard: 20%",
+                    "volatility_threshold_very_high": "Grenseverdi for standardavvik (% av gjennomsnitt) for å klassifisere prisvariasjonen som 'veldig høy'. Eksempel: 30 betyr standardavvik ≥ 30% av gjennomsnitt. Dette indikerer ekstrem prisustabilitet. Standard: 30%"
+                },
+                "submit": "↩ Lagre & tilbake"
             },
             "chart_data_export": {
                 "title": "📊 Diagram-dataeksport Sensor",
-                "description": "_{step_progress}_\n\nDiagram-dataeksport-sensoren gir prisdata som sensorattributter.\n\n⚠️ **Merk:** Denne sensoren er en legacy-funksjon for kompatibilitet med eldre verktøy.\n\n**Anbefalt for nye oppsett:** Bruk `tibber_prices.get_chartdata` **tjenesten direkte** - den er mer fleksibel, effektiv og den moderne Home Assistant-tilnærmingen.\n\n**Når denne sensoren gir mening:**\n\n✅ Dashboardverktøyet ditt kan **kun** lese attributter (ingen tjenestekall)\n✅ Du trenger statiske data som oppdateres automatisk\n❌ **Ikke for automatiseringer:** Bruk `tibber_prices.get_chartdata` direkte der - mer fleksibel og effektiv!\n\n---\n\n**Aktiver sensoren:**\n\n1. Åpne **Innstillinger → Enheter og tjenester → Tibber Prices**\n2. Velg ditt hjem → Finn **'Diagramdataeksport'** (Diagnostikk-seksjonen)\n3. **Aktiver sensoren** (deaktivert som standard)\n\n**Konfigurasjon (valgfritt):**\n\nStandardinnstillinger fungerer umiddelbart (i dag+i morgen, 15-minutters intervaller, bare priser).\n\nFor tilpasning, legg til i **`configuration.yaml`**:\n\n```yaml\ntibber_prices:\n  chart_export:\n    day:\n      - today\n      - tomorrow\n    include_level: true\n    include_rating_level: true\n```\n\n**Alle parametere:** Se `tibber_prices.get_chartdata` tjenestens dokumentasjon",
-                "submit": "Fullfør ✓"
+                "description": "Diagram-dataeksport-sensoren gir prisdata som sensorattributter.\n\n⚠️ **Merk:** Denne sensoren er en legacy-funksjon for kompatibilitet med eldre verktøy.\n\n**Anbefalt for nye oppsett:** Bruk `tibber_prices.get_chartdata` **tjenesten direkte** - den er mer fleksibel, effektiv og den moderne Home Assistant-tilnærmingen.\n\n**Når denne sensoren gir mening:**\n\n✅ Dashboardverktøyet ditt kan **kun** lese attributter (ingen tjenestekall)\n✅ Du trenger statiske data som oppdateres automatisk\n❌ **Ikke for automatiseringer:** Bruk `tibber_prices.get_chartdata` direkte der - mer fleksibel og effektiv!\n\n---\n\n**Aktiver sensoren:**\n\n1. Åpne **Innstillinger → Enheter og tjenester → Tibber Prices**\n2. Velg ditt hjem → Finn **'Diagramdataeksport'** (Diagnostikk-seksjonen)\n3. **Aktiver sensoren** (deaktivert som standard)\n\n**Konfigurasjon (valgfritt):**\n\nStandardinnstillinger fungerer umiddelbart (i dag+i morgen, 15-minutters intervaller, bare priser).\n\nFor tilpasning, legg til i **`configuration.yaml`**:\n\n```yaml\ntibber_prices:\n  chart_export:\n    day:\n      - today\n      - tomorrow\n    include_level: true\n    include_rating_level: true\n```\n\n**Alle parametere:** Se `tibber_prices.get_chartdata` tjenestens dokumentasjon",
+                "submit": "↩ Ok & tilbake"
+            },
+            "reset_to_defaults": {
+                "title": "🔄 Tilbakestill til standard",
+                "description": "⚠️ **Advarsel:** Dette vil tilbakestille **ALLE** innstillinger til fabrikkstandard.\n\n**Hva vil bli tilbakestilt:**\n• Alle prisvurderingsterskler\n• Alle volatilitetsterskler\n• Alle pristrendterskler\n• Alle innstillinger for beste prisperiode\n• Alle innstillinger for toppprisperiode\n• Visningsinnstillinger\n• Generelle innstillinger\n\n**Hva vil IKKE bli tilbakestilt:**\n• Ditt Tibber API-token\n• Valgt hjem\n• Valuta\n\n**💡 Tips:** Dette er nyttig hvis du vil starte på nytt etter å ha eksperimentert med innstillinger.",
+                "data": {
+                    "confirm_reset": "Ja, tilbakestill alt til standard"
+                },
+                "submit": "Tilbakestill nå"
             }
         },
         "error": {
@@ -339,7 +343,10 @@
             "invalid_price_trend_falling": "Fallende trendgrense må være mellom -50% og -1%"
         },
         "abort": {
-            "entry_not_found": "Tibber-konfigurasjonsoppføring ikke funnet."
+            "entry_not_found": "Tibber-konfigurasjonsoppføring ikke funnet.",
+            "reset_cancelled": "Tilbakestilling avbrutt. Ingen endringer ble gjort i konfigurasjonen din.",
+            "reset_successful": "✅ Alle innstillinger har blitt tilbakestilt til fabrikkstandard. Konfigurasjonen din er nå som en ny installasjon.",
+            "finished": "Konfigurasjon fullført."
         }
     },
     "entity": {

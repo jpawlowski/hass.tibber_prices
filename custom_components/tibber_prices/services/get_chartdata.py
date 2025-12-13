@@ -146,12 +146,12 @@ def _calculate_metadata(  # noqa: PLR0912, PLR0913, PLR0915
             return {}
         min_val = min(data)
         max_val = max(data)
-        avg_val = sum(data) / len(data)
+        mean_val = sum(data) / len(data)
         median_val = sorted(data)[len(data) // 2]
 
-        # Calculate avg_position and median_position (0-1 scale)
+        # Calculate mean_position and median_position (0-1 scale)
         price_range = max_val - min_val
-        avg_position = (avg_val - min_val) / price_range if price_range > 0 else 0.5
+        mean_position = (mean_val - min_val) / price_range if price_range > 0 else 0.5
         median_position = (median_val - min_val) / price_range if price_range > 0 else 0.5
 
         # Position precision: 2 decimals for subunit currency, 4 for base currency
@@ -162,8 +162,8 @@ def _calculate_metadata(  # noqa: PLR0912, PLR0913, PLR0915
         return {
             "min": round(min_val, price_decimals),
             "max": round(max_val, price_decimals),
-            "avg": round(avg_val, price_decimals),
-            "avg_position": round(avg_position, position_decimals),
+            "mean": round(mean_val, price_decimals),
+            "mean_position": round(mean_position, position_decimals),
             "median": round(median_val, price_decimals),
             "median_position": round(median_position, position_decimals),
         }

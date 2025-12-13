@@ -3,7 +3,7 @@
         "step": {
             "account_choice": {
                 "title": "Välj konto",
-                "description": "Du kan lägga till ett annat hem från ett befintligt Tibber-konto eller ange ett nytt API-token för ett annat konto.",
+                "description": "Du kan lägga till ett annat hem från ett befintligt Tibber-konto eller ange en ny API-token för ett annat konto.",
                 "data": {
                     "account_choice": "Konto"
                 },
@@ -41,8 +41,8 @@
                 "submit": "Välj hem"
             },
             "reauth_confirm": {
-                "title": "Autentisera Tibber Prisintegrationen igen",
-                "description": "Åtkomsttoken för Tibber är inte längre giltig. Vänligen ange en ny API-åtkomsttoken för att fortsätta använda denna integration.\n\nFör att generera en ny API-åtkomsttoken, besök https://developer.tibber.com.",
+                "title": "Återautentisera Tibber-prisintegration",
+                "description": "Åtkomsttoken för Tibber är inte längre giltig. Ange en ny API-åtkomsttoken för att fortsätta använda denna integration.\n\nFör att generera en ny API-åtkomsttoken, besök https://developer.tibber.com.",
                 "data": {
                     "access_token": "API-åtkomsttoken"
                 },
@@ -51,29 +51,29 @@
         },
         "error": {
             "auth": "Tibber-åtkomsttoken är ogiltig.",
-            "connection": "Kunde inte ansluta till Tibber. Vänligen kontrollera din internetanslutning.",
+            "connection": "Kan inte ansluta till Tibber. Kontrollera din internetanslutning.",
             "unknown": "Oväntat fel",
-            "cannot_connect": "Kunde inte ansluta",
+            "cannot_connect": "Anslutning misslyckades",
             "invalid_access_token": "Ogiltig åtkomsttoken",
             "missing_homes": "Den nya åtkomsttoken har inte åtkomst till alla konfigurerade hem. Använd en åtkomsttoken som har åtkomst till samma Tibber-hem.",
-            "home_already_configured": "Detta hem är redan konfigurerat i en annan post. Varje hem kan endast konfigureras en gång.",
+            "home_already_configured": "Detta hem är redan konfigurerat i en annan post. Varje hem kan bara konfigureras en gång.",
             "no_active_subscription": "Detta hem har inget aktivt Tibber-avtal. Endast hem med aktiva elavtal kan läggas till i Home Assistant.",
-            "subscription_expired": "Tibber-avtalet för detta hem har gått ut. Endast hem med aktiva eller framtida elavtal kan läggas till i Home Assistant.",
-            "future_subscription_warning": "Obs: Tibber-avtalet för detta hem har inte startat än. Funktionaliteten kan vara begränsad tills avtalet blir aktivt.",
+            "subscription_expired": "Tibber-avtalet för detta hem har löpt ut. Endast hem med aktiva eller framtida elavtal kan läggas till i Home Assistant.",
+            "future_subscription_warning": "Obs: Detta hems Tibber-avtal har inte börjat ännu. Funktionaliteten kan vara begränsad tills avtalet blir aktivt.",
             "invalid_yaml_syntax": "Ogiltig YAML-syntax. Kontrollera indragning, kolon och specialtecken.",
-            "invalid_yaml_structure": "YAML måste vara en ordbok/objekt (nyckel: värde-par), inte en lista eller ren text.",
-            "service_call_failed": "Tjänsteanropsvalidering misslyckades: {error_detail}",
-            "missing_entry_id": "Post-ID krävs men tillhandahölls inte.",
-            "invalid_entry_id": "Ogiltig post-ID eller post hittades inte.",
+            "invalid_yaml_structure": "YAML måste vara en ordbok/objekt (nyckel: värde-par), inte en lista eller vanlig text.",
+            "service_call_failed": "Tjänsteanrop validering misslyckades: {error_detail}",
+            "missing_entry_id": "Post-ID krävs men angavs inte.",
+            "invalid_entry_id": "Ogiltigt post-ID eller post hittades inte.",
             "missing_home_id": "Hem-ID saknas från konfigurationsposten.",
             "user_data_not_available": "Användardata är inte tillgänglig. Uppdatera användardata först.",
-            "price_fetch_failed": "Kunde inte hämta prisdata. Kontrollera loggarna för detaljer."
+            "price_fetch_failed": "Misslyckades med att hämta prisdata. Kontrollera loggarna för detaljer."
         },
         "abort": {
-            "already_configured": "Alla tillgängliga Tibber-hem är redan konfigurerade. Varje hem kan endast konfigureras en gång.",
+            "already_configured": "Alla tillgängliga Tibber-hem är redan konfigurerade. Varje hem kan bara konfigureras en gång.",
             "entry_not_found": "Tibber-konfigurationspost hittades inte.",
-            "setup_complete": "Installation klar! Du kan ändra ytterligare alternativ för Tibber Prices i integrationens alternativ efter att ha stängt denna dialog.",
-            "reauth_successful": "Omautentisering lyckades. Integrationen har uppdaterats med den nya åtkomsttoken."
+            "setup_complete": "Konfiguration klar! Du kan ändra ytterligare alternativ för Tibber-priser i integrationens inställningar efter att ha stängt denna dialogruta.",
+            "reauth_successful": "Återautentisering lyckades. Integrationen har uppdaterats med den nya åtkomsttoken."
         }
     },
     "common": {
@@ -89,21 +89,21 @@
             "step": {
                 "user": {
                     "title": "Välj konfigurationspost",
-                    "description": "Välj konfigurationsposten som du vill skapa en tidsresevy för.\n\n**Tidsresevyer** låter dig se historiska prisdata som om det vore nuvarande tid. Detta är användbart för att testa automationer eller analysera tidigare prismönster.",
+                    "description": "Välj den konfigurationspost som du vill skapa en tidsresevy för.\n\n**Tidsresevyer** låter dig se historisk prisdata som om det vore nuvarande tid. Detta är användbart för att testa automationer eller analysera tidigare prismönster.",
                     "data": {
                         "parent_entry_id": "Konfigurationspost"
                     }
                 },
                 "time_offset": {
                     "title": "Konfigurera tidsförskjutning",
-                    "description": "Konfigurera hur långt tillbaka i tiden denna vy ska resa.\n\n**Rekommenderat:** Använd **≥2 dagar** förskjutning för att undvika konflikter med \"yesterday\"-entiteter som också tillhandahåller historisk data.\n\n**Exempel:**\n• **-7 dagar**: Visa priser från 7 dagar sedan\n• **-2 dagar, 3 timmar**: Visa priser från 2 dagar och 3 timmar sedan\n• **-14 dagar**: Visa priser från 2 veckor sedan",
+                    "description": "Konfigurera hur långt tillbaka i tiden denna vy ska resa.\n\n**Rekommenderat:** Använd **≥2 dagar** förskjutning för att undvika konflikter med \"igår\"-entiteter som också tillhandahåller historisk data.\n\n**Exempel:**\n• **-7 dagar**: Visa priser från 7 dagar sedan\n• **-2 dagar, 3 timmar**: Visa priser från 2 dagar och 3 timmar sedan\n• **-14 dagar**: Visa priser från 2 veckor sedan",
                     "data": {
                         "virtual_time_offset_days": "Dagar tillbaka",
                         "time_offset": "Extra tidsförskjutning"
                     },
                     "data_description": {
-                        "virtual_time_offset_days": "Hur många dagar att resa tillbaka i tiden. Skjutreglage område: 0 till 374 dagar (≈1 år). Rekommenderat: ≥2 dagar för att undvika konflikter med \"yesterday\"-entiteter.",
-                        "time_offset": "Valfri finjustering: Lägg till timmar och/eller minuter till dagförskjutningen. Tiden subtraheras automatiskt (res längre tillbaka). Obs: Sekunder ignoreras - endast minutbaserad precision stöds."
+                        "virtual_time_offset_days": "Hur många dagar ska man resa tillbaka i tiden. Skjutreglage: 0 till 374 dagar (≈1 år). Rekommenderat: ≥2 dagar för att undvika konflikter med \"igår\"-entiteter.",
+                        "time_offset": "Valfri finjustering: Lägg till timmar och/eller minuter till dagförskjutningen. Tiden subtraheras automatiskt (resa tillbaka längre). Obs: Sekunder ignoreras - endast minutnoggrannhet stöds."
                     }
                 },
                 "init": {
@@ -114,17 +114,17 @@
                         "time_offset": "Extra tidsförskjutning"
                     },
                     "data_description": {
-                        "virtual_time_offset_days": "Hur många dagar att resa tillbaka i tiden. Skjutreglage område: 0 till 374 dagar (≈1 år). Rekommenderat: ≥2 dagar för att undvika konflikter med \"yesterday\"-entiteter.",
-                        "time_offset": "Valfri finjustering: Lägg till timmar och/eller minuter till dagförskjutningen. Tiden subtraheras automatiskt (res längre tillbaka). Obs: Sekunder ignoreras - endast minutbaserad precision stöds."
+                        "virtual_time_offset_days": "Hur många dagar ska man resa tillbaka i tiden. Skjutreglage: 0 till 374 dagar (≈1 år). Rekommenderat: ≥2 dagar för att undvika konflikter med \"igår\"-entiteter.",
+                        "time_offset": "Valfri finjustering: Lägg till timmar och/eller minuter till dagförskjutningen. Tiden subtraheras automatiskt (resa tillbaka längre). Obs: Sekunder ignoreras - endast minutnoggrannhet stöds."
                     }
                 }
             },
             "error": {
-                "no_time_offset": "Minst ett tidsförskjutningsvärde måste vara negativt (endast historiska data)."
+                "no_time_offset": "Minst ett tidsförskjutningsvärde måste vara negativt (endast historisk data)."
             },
             "abort": {
-                "already_configured": "**En tidsresevy med denna exakta tidsförskjutning existerar redan.**\n\nVälj en annan förskjutning.",
-                "no_main_entries": "Inga huvudkonfigurationsposter hittades. Lägg först till ett Tibber-hem.",
+                "already_configured": "**En tidsresevy med exakt denna tidsförskjutning finns redan.**\n\nVälj en annan förskjutning.",
+                "no_main_entries": "Inga huvudkonfigurationsposter hittades. Lägg till ett Tibber-hem först.",
                 "parent_entry_not_found": "Vald konfigurationspost hittades inte."
             }
         }
@@ -132,202 +132,208 @@
     "options": {
         "step": {
             "init": {
+                "menu_options": {
+                    "general_settings": "⚙️ Allmänna inställningar",
+                    "display_settings": "💱 Valutavisning",
+                    "current_interval_price_rating": "📊 Prisbetyg",
+                    "volatility": "💨 Prisvolatilitet",
+                    "best_price": "💚 Bästa Prisperiod",
+                    "peak_price": "🔴 Topprisperiod",
+                    "price_trend": "📈 Pristrend",
+                    "chart_data_export": "📊 Diagramdataexport-sensor",
+                    "reset_to_defaults": "🔄 Återställ till standard",
+                    "finish": "⬅️ Tillbaka"
+                }
+            },
+            "general_settings": {
                 "title": "⚙️ Allmänna inställningar",
-                "description": "_{step_progress}_\n\n**Konfigurera allmänna inställningar för Tibber-prisinformation och betyg.**\n\n---\n\n**Användare:** {user_login}",
+                "description": "**Konfigurera allmänna inställningar för Tibber prisinformation och betyg.**\n\n---\n\n**Användare:** {user_login}",
                 "data": {
-                    "extended_descriptions": "Utökade beskrivningar"
+                    "extended_descriptions": "Utökade beskrivningar",
+                    "average_sensor_display": "Visa genomsnittssensor"
                 },
                 "data_description": {
-                    "extended_descriptions": "Styr om entitetsattribut inkluderar detaljerade förklaringar och användningstips.\n\n• Inaktiverad (standard): Bara kort beskrivning\n• Aktiverad: Detaljerad förklaring + praktiska användningsexempel\n\nExempel:\nInaktiverad = 1 attribut\nAktiverad = 2 extra attribut"
+                    "extended_descriptions": "Kontrollerar om entitetsattribut inkluderar detaljerade förklaringar och användningstips.\n\n• Inaktiverad (standard): Endast kort beskrivning\n• Aktiverad: Detaljerad förklaring + praktiska användningsexempel\n\nExempel:\nInaktiverad = 1 attribut\nAktiverad = 2 ytterligare attribut",
+                    "average_sensor_display": "Välj vilket statistiskt mått som ska visas i sensortillståndet för genomsnittsprissensorer. Det andra värdet visas som ett attribut. Median är mer resistent mot extremvärden, medan aritmetiskt medelvärde representerar det traditionella genomsnittet. Standard: Median"
                 },
-                "submit": "Fortsätt →"
+                "submit": "↩ Spara & tillbaka"
             },
             "display_settings": {
                 "title": "💱 Valutavisningsinställningar",
-                "description": "_{step_progress}_\n\n**Konfigurera hur elpriser visas - i basvaluta (€, kr) eller underenhet (ct, öre).**\n\n---",
+                "description": "**Konfigurera hur elpriser visas - i basvaluta (€, kr) eller underenhet (ct, øre).**\n\n---",
                 "data": {
                     "currency_display_mode": "Visningsläge"
                 },
                 "data_description": {
-                    "currency_display_mode": "Välj hur priser visas:\n\n• **Basvaluta** (€/kWh, kr/kWh): Decimalvärden (t.ex. 0,25 €/kWh) - skillnader synliga från 3:e-4:e decimalen\n• **Underenhet** (ct/kWh, öre/kWh): Större värden (t.ex. 25,00 ct/kWh) - skillnader redan synliga från 1:a decimalen\n\nStandard beror på din valuta:\n• EUR → Underenhet (cent) - tysk/nederländsk preferens\n• NOK/SEK/DKK → Basvaluta (kronor) - skandinavisk preferens\n• USD/GBP → Basvaluta\n\n**💡 Tips:** Vid val av underenhet kan du aktivera den extra sensorn \"Nuvarande elpris (Energipanel)\" (inaktiverad som standard)."
+                    "currency_display_mode": "Välj hur priser visas:\n\n• **Basvaluta** (€/kWh, kr/kWh): Decimalvärden (t.ex. 0,25 €/kWh) - skillnader synliga från 3:e-4:e decimalen\n• **Underenhetsvaluta** (ct/kWh, øre/kWh): Större värden (t.ex. 25,00 ct/kWh) - skillnader synliga från 1:a decimalen\n\nStandard beror på din valuta:\n• EUR → Underenhet (cent) - Tysk/nederländsk preferens\n• NOK/SEK/DKK → Bas (kronor) - Skandinavisk preferens\n• USD/GBP → Basvaluta\n\n**💡 Tips:** När du väljer Underenhetsvaluta kan du aktivera den extra sensorn \"Aktuellt Elpris (Energidashboard)\" (inaktiverad som standard)."
                 },
-                "submit": "Fortsätt →"
+                "submit": "↩ Spara & tillbaka"
             },
             "current_interval_price_rating": {
-                "title": "📊 Prisvärderingströsklar",
-                "description": "_{step_progress}_\n\n**Konfigurera trösklar för prisvärderingsnivåer (låg/normal/hög) baserat på jämförelse med rullande 24-timmars genomsnitt.**\n\n---",
-                "sections": {
-                    "price_rating_thresholds": {
-                        "name": "Prisvärderingströsklar",
-                        "description": "Definiera prisvärderingsnivåer.",
-                        "data": {
-                            "price_rating_threshold_low": "Låg tröskel",
-                            "price_rating_threshold_high": "Hög tröskel"
-                        },
-                        "data_description": {
-                            "price_rating_threshold_low": "Procent under det rullande 24-timmars genomsnittet som det aktuella priset måste vara för att kvalificera som 'låg' värdering. Exempel: 5 betyder minst 5% under genomsnitt. Sensorer med denna värdering indikerar gynnsamma tidsfönster. Standard: 5%",
-                            "price_rating_threshold_high": "Procent över det rullande 24-timmars genomsnittet som det aktuella priset måste vara för att kvalificera som 'hög' värdering. Exempel: 10 betyder minst 10% över genomsnitt. Sensorer med denna värdering varnar för dyra tidsfönster. Standard: 10%"
-                        }
-                    }
+                "title": "📊 Prisbetygströsklar",
+                "description": "**Konfigurera tröskelvärden för prisbetygsnivåer (låg/normal/hög) baserat på jämförelse med glidande 24-timmars genomsnitt.**",
+                "data": {
+                    "price_rating_threshold_low": "Låg tröskel",
+                    "price_rating_threshold_high": "Hög tröskel"
                 },
-                "submit": "Fortsätt →"
+                "data_description": {
+                    "price_rating_threshold_low": "Procentandel under det glidande 24-timmars genomsnittet som det aktuella priset måste vara för att kvalificera som 'lågt' betyg. Exempel: 5 betyder minst 5% under genomsnittet. Sensorer med detta betyg indikerar gynnsamma tidsfönster. Standard: 5%",
+                    "price_rating_threshold_high": "Procentandel över det glidande 24-timmars genomsnittet som det aktuella priset måste vara för att kvalificera som 'högt' betyg. Exempel: 10 betyder minst 10% över genomsnittet. Sensorer med detta betyg varnar om dyra tidsfönster. Standard: 10%"
+                },
+                "submit": "↩ Spara & tillbaka"
             },
             "best_price": {
-                "title": "💚 Bästa Pris Period Inställningar",
-                "description": "_{step_progress}_\n\nKonfigurera inställningar för **Bästa Pris Period** binär sensor. Denna sensor är aktiv under perioder med de lägsta elpriserna.\n\n---",
+                "title": "💚 Bästa Prisperiod-inställningar",
+                "description": "**Konfigurera inställningar för binärsensorn Bästa Prisperiod. Denna sensor är aktiv under perioder med lägsta elpriserna.**\n\n---",
                 "sections": {
                     "period_settings": {
-                        "name": "Periodinställningar",
-                        "description": "Konfigurera periodlängd och prisnivåbegränsningar.",
+                        "name": "Periodlängd & Nivåer",
+                        "description": "Konfigurera hur långa perioder ska vara och vilka prisnivåer som ska inkluderas.",
                         "data": {
-                            "best_price_min_period_length": "Minimal periodlängd",
+                            "best_price_min_period_length": "Minsta Periodlängd",
                             "best_price_max_level": "Prisnivåfilter",
-                            "best_price_max_level_gap_count": "Gaptolerens"
+                            "best_price_max_level_gap_count": "Gaptolerans"
                         },
                         "data_description": {
-                            "best_price_min_period_length": "Minsta varaktighet för att en period ska räknas som 'bästa pris'. Längre perioder är mer praktiska för att köra hushållsmaskiner som diskmaskiner eller värmepumpar. Bästa pris-perioder kräver minst 60 minuter (jämfört med 30 minuter för topppris-varningar) eftersom de ska ge meningsfulla tidsfönster för förbrukningsplanering, inte bara kortvariga möjligheter.",
-                            "best_price_max_level": "Visa endast bästa pris-perioder om de innehåller intervall med prisnivåer ≤ valt värde. Till exempel måste perioden om du väljer '**Billigt**' ha minst ett '**Mycket billigt**' eller '**Billigt**' intervall. Detta säkerställer att 'bästa pris'-perioder inte bara är relativt billiga för dagen, utan faktiskt billiga i absoluta termer. Välj '**Alla**' för att visa bästa priser oavsett deras absoluta prisnivå.",
-                            "best_price_max_level_gap_count": "Maximalt antal på varandra följande intervaller som får avvika med exakt ett nivåsteg från det erforderliga nivået. Till exempel: med '**Billigt**' filter och gapantal 1 accepteras sekvensen '**Billigt**, **Billigt**, **Normal**, **Billigt**' (**Normal** är ett steg över **Billigt**). Detta förhindrar att perioder delas upp av tillfälliga nivåavvikelser. **Obs:** Gaptoleransen kräver perioder ≥90 minuter (6 intervaller) för att detektera avvikare effektivt. Standard: 0 (strikt filtrering, ingen tolerans)."
+                            "best_price_min_period_length": "Minsta varaktighet för en period för att betraktas som 'bästa pris'. Längre perioder är mer praktiska för att köra apparater som diskmaskiner eller värmepumpar. Bästa prisperioder kräver 60 minuter minimum (jämfört med 30 minuter för topprisvarningar) eftersom de bör ge meningsfulla tidsfönster för förbrukningsplanering, inte bara korta möjligheter.",
+                            "best_price_max_level": "Visa endast bästa prisperioder om de innehåller intervall med prisnivåer ≤ valt värde. Till exempel betyder valet '**Billigt**' att perioden måste ha minst ett '**Mycket billigt**' eller '**Billigt**' intervall. Detta säkerställer att 'bästa pris'-perioder inte bara är relativt billiga för dagen, utan faktiskt billiga i absoluta termer. Välj '**Alla**' för att visa bästa priser oavsett deras absoluta prisnivå.",
+                            "best_price_max_level_gap_count": "Maximalt antal konsekutiva intervall som tillåts avvika med exakt ett nivåsteg från den nödvändiga nivån. Till exempel: med '**Billigt**'-filter och gapantal 1, accepteras sekvensen '**Billigt**, **Billigt**, **Normalt**, **Billigt**' (**Normalt** är ett steg över **Billigt**). Detta förhindrar att perioder delas upp av tillfälliga nivåavvikelser. **Obs:** Gaptolerans kräver perioder ≥90 minuter (6 intervall) för att upptäcka avvikare effektivt. Standard: 0 (strikt filtrering, ingen tolerans)."
                         }
                     },
                     "flexibility_settings": {
-                        "name": "Flexibilitetsinställningar",
-                        "description": "Konfigurera prisjämförelsegränser och filtrering.",
+                        "name": "Flexibilitet & Trösklar",
+                        "description": "Kontrollera hur mycket priser kan avvika och fortfarande kvalificera som 'bästa pris'.",
                         "data": {
                             "best_price_flex": "Flexibilitet",
                             "best_price_min_distance_from_avg": "Minimiavstånd"
                         },
                         "data_description": {
-                            "best_price_flex": "Maximalt över dagens minimumpris där intervaller fortfarande kvalificerar som 'bästa pris'. Rekommenderat: 15-20 med avslappning aktiverad (standard), eller 25-35 utan avslappning. Maximum: 50 (hård gräns för tillförlitlig periodigkänning).",
-                            "best_price_min_distance_from_avg": "Säkerställer att perioder är betydligt billigare än dagsgenomsnittet, inte bara marginellt under det. Detta filtrerar brus och förhindrar att något-under-genomsnittet perioder markeras som 'bästa pris' på dagar med platta priser. Högre värden = striktare filtrering (endast riktigt billiga perioder kvalificerar). Standard: 5 betyder att perioder måste vara minst 5% under dagsgenomsnittet."
+                            "best_price_flex": "Maximum över dagens minimipris som intervall kan vara och fortfarande kvalificera som 'bästa pris'. Rekommenderat: 15-20 med relaxation aktiverad (standard), eller 25-35 utan relaxation. Maximum: 50 (hård gräns för pålitlig perioddetektering).",
+                            "best_price_min_distance_from_avg": "Säkerställer att perioder är betydligt billigare än dagsgenomsnittet, inte bara marginellt under det. Detta filtrerar bort brus och förhindrar att perioder strax under genomsnittet markeras som 'bästa pris' på dagar med platta priser. Högre värden = striktare filtrering (endast verkligt billiga perioder kvalificerar). Standard: 5 betyder att perioder måste vara minst 5% under dagsgenomsnittet."
                         }
                     },
                     "relaxation_and_target_periods": {
-                        "name": "Avslappning & Målperioder",
-                        "description": "Konfigurera automatisk filteravslappning och målperiodantal. Aktivera 'Nå minimiantal' för att aktivera avslappning.",
+                        "name": "Relaxation & Målperioder",
+                        "description": "Konfigurera automatisk filterrelaxation och målperiodsantal. Aktivera 'Uppnå Minimiantal' för att aktivera relaxation.",
                         "data": {
-                            "enable_min_periods_best": "Nå minimiantal",
-                            "min_periods_best": "Minimiperioder",
-                            "relaxation_attempts_best": "Avslappningsförsök"
+                            "enable_min_periods_best": "Uppnå Minimiantal",
+                            "min_periods_best": "Minsta Perioder",
+                            "relaxation_attempts_best": "Relaxationsförsök"
                         },
                         "data_description": {
-                            "enable_min_periods_best": "När den är aktiverad kommer filter gradvis att slappas av om inte tillräckligt många perioder hittas. Detta försöker nå det önskade minimiantal perioder, vilket kan inkludera mindre optimala tidsfönster som bästa pris-perioder.",
-                            "min_periods_best": "Minimiantal bästa pris-perioder att sikta på per dag. Filter kommer att slappas av steg för steg för att försöka nå detta antal. Endast aktivt när 'Nå minimiantal' är aktiverad. Standard: 1",
-                            "relaxation_attempts_best": "Hur många flexnivåer (försök) att prova innan man ger upp. Varje försök kör alla filterkombinationer på den nya flexnivån. Fler försök ökar chansen att hitta ytterligare perioder på bekostnad av längre bearbetningstid."
+                            "enable_min_periods_best": "När aktiverad kommer filter gradvis att relaxeras om inte tillräckligt många perioder hittas. Detta försöker nå det önskade minimiantalet perioder, vilket kan inkludera mindre optimala tidsfönster som bästa-pris-perioder.",
+                            "min_periods_best": "Minsta antal bästa prisperioder att sikta på per dag. Filter kommer att relaxeras steg för steg för att försöka uppnå detta antal. Endast aktiv när 'Uppnå Minimiantal' är aktiverad. Standard: 1",
+                            "relaxation_attempts_best": "Hur många flexnivåer (försök) att prova innan man ger upp. Varje försök kör alla filterkombinationer på den nya flexnivån. Fler försök ökar chansen att hitta ytterligare perioder på bekostnad av längre behandlingstid."
                         }
                     }
                 },
-                "submit": "Fortsätt →"
+                "submit": "↩ Spara & tillbaka"
             },
             "peak_price": {
-                "title": "🔴 Topppris Period Inställningar",
-                "description": "_{step_progress}_\n\nKonfigurera inställningar för **Topppris Period** binär sensor. Denna sensor är aktiv under perioder med de högsta elpriserna.\n\n---",
+                "title": "🔴 Topprisperiod-inställningar",
+                "description": "**Konfigurera inställningar för binärsensorn Topprisperiod. Denna sensor är aktiv under perioder med högsta elpriserna.**\n\n---",
                 "sections": {
                     "period_settings": {
                         "name": "Periodinställningar",
                         "description": "Konfigurera periodlängd och prisnivåbegränsningar.",
                         "data": {
-                            "peak_price_min_period_length": "Minimal periodlängd",
+                            "peak_price_min_period_length": "Minsta Periodlängd",
                             "peak_price_min_level": "Prisnivåfilter",
-                            "peak_price_max_level_gap_count": "Gaptolerens"
+                            "peak_price_max_level_gap_count": "Gaptolerans"
                         },
                         "data_description": {
-                            "peak_price_min_period_length": "Minsta varaktighet för att en period ska räknas som 'toppris'. Topppris-varningar är tillåtna för kortare perioder (minst 30 minuter jämfört med 60 minuter för bästa pris) eftersom korta dyra toppar är värda att varna om, även om de är för korta för förbruksplanering.",
-                            "peak_price_min_level": "Visa endast topprisperioder om de innehåller intervall med prisnivåer ≥ valt värde. Till exempel måste perioden om du väljer '**Dyrt**' ha minst ett '**Dyrt**' eller '**Mycket dyrt**' intervall. Detta säkerställer att 'toppris'-perioder inte bara är relativt dyra för dagen, utan faktiskt dyra i absoluta termer (inte bara 'lite dyrare än genomsnittet på en billig dag').",
-                            "peak_price_max_level_gap_count": "Maximalt antal på varandra följande intervaller som får avvika med exakt ett nivåsteg från det erforderliga nivået. Till exempel: med '**Dyrt**' filter och gapantal 1 accepteras sekvensen '**Dyrt**, **Dyrt**, **Normal**, **Dyrt**' (**Normal** är ett steg under **Dyrt**). Detta förhindrar att perioder delas upp av tillfälliga nivåavvikelser. **Obs:** Gaptoleransen kräver perioder ≥90 minuter (6 intervaller) för att detektera avvikelser effektivt. Standard: 0 (strikt filtrering, ingen tolerans)."
+                            "peak_price_min_period_length": "Minsta varaktighet för en period för att betraktas som 'topppris'. Topprisvarningar är tillåtna för kortare perioder (30 minuters minimum jämfört med 60 minuter för bästa pris) eftersom korta dyra toppar är värda att varna om, även om de är för korta för förbrukningsplanering.",
+                            "peak_price_min_level": "Visa endast topprisperioder om de innehåller intervall med prisnivåer ≥ valt värde. Till exempel betyder valet '**Dyrt**' att perioden måste ha minst ett '**Dyrt**' eller '**Mycket dyrt**' intervall. Detta säkerställer att 'topppris'-perioder inte bara är relativt dyra för dagen, utan faktiskt dyra i absoluta termer. Välj '**Alla**' för att visa topppriser oavsett deras absoluta prisnivå.",
+                            "peak_price_max_level_gap_count": "Maximalt antal konsekutiva intervall som tillåts avvika med exakt ett nivåsteg från den nödvändiga nivån. Till exempel: med '**Dyrt**'-filter och gapantal 2, accepteras sekvensen '**Dyrt**, **Normalt**, **Normalt**, **Dyrt**' (**Normalt** är ett steg under **Dyrt**). Detta förhindrar att perioder delas upp av tillfälliga nivåavvikelser. **Obs:** Gaptolerans kräver perioder ≥90 minuter (6 intervall) för att upptäcka avvikare effektivt. Standard: 0 (strikt filtrering, ingen tolerans)."
                         }
                     },
                     "flexibility_settings": {
                         "name": "Flexibilitetsinställningar",
-                        "description": "Konfigurera prisjämförelsekriterer och filtrering.",
+                        "description": "Konfigurera prisjämförelsetrösklar och filtrering.",
                         "data": {
                             "peak_price_flex": "Flexibilitet",
                             "peak_price_min_distance_from_avg": "Minimiavstånd"
                         },
                         "data_description": {
-                            "peak_price_flex": "Maximalt under dagens maximumpris där intervaller fortfarande kvalificerar som 'toppris'. Rekommendation: -15 till -20 med avslappning aktiverad (standard), eller -25 till -35 utan avslappning. Maximum: -50 (hård gräns för tillförlitlig periodigkänning). Observera: Negativa värden anger avstånd under maximum.",
-                            "peak_price_min_distance_from_avg": "Säkerställer att perioder är betydligt dyrare än dagsgenomsnittet, inte bara marginellt över det. Detta filtrerar brus och förhindrar att något-över-genomsnittet perioder markeras som 'toppris' på dagar med platta priser. Högre värden = striktare filtrering (endast riktigt dyra perioder kvalificerar). Standard: 5 betyder att perioder måste vara minst 5% över dagsgenomsnittet."
+                            "peak_price_flex": "Maximum under dagens maximipris som intervall kan vara och fortfarande kvalificera som 'topppris'. Rekommenderat: -15 till -20 med relaxation aktiverad (standard), eller -25 till -35 utan relaxation. Maximum: -50 (hård gräns för pålitlig perioddetektering). Obs: Negativa värden indikerar avstånd under maximum.",
+                            "peak_price_min_distance_from_avg": "Säkerställer att perioder är betydligt dyrare än dagsgenomsnittet, inte bara marginellt över det. Detta filtrerar bort brus och förhindrar att perioder strax över genomsnittet markeras som 'topppris' på dagar med platta priser. Högre värden = striktare filtrering (endast verkligt dyra perioder kvalificerar). Standard: 5 betyder att perioder måste vara minst 5% över dagsgenomsnittet."
                         }
                     },
                     "relaxation_and_target_periods": {
-                        "name": "Avslappning & målperioder",
-                        "description": "Konfigurera automatisk filteravslappning och målperioder. Aktivera 'Försök uppnå minsta antal perioder' för att aktivera avslappning.",
+                        "name": "Relaxation & Målperioder",
+                        "description": "Konfigurera automatisk filterrelaxation och målperiodsantal. Aktivera 'Uppnå Minimiantal' för att aktivera relaxation.",
                         "data": {
-                            "enable_min_periods_peak": "Försök uppnå minsta antal perioder",
-                            "min_periods_peak": "Minsta antal perioder",
-                            "relaxation_attempts_peak": "Antal avslappningsförsök"
+                            "enable_min_periods_peak": "Uppnå Minimiantal",
+                            "min_periods_peak": "Minsta Perioder",
+                            "relaxation_attempts_peak": "Relaxationsförsök"
                         },
                         "data_description": {
-                            "enable_min_periods_peak": "När aktiverad kommer filtren att gradvis luckras upp om inte tillräckligt många perioder hittas. Detta försöker uppnå det önskade minsta antalet perioder för att säkerställa att du blir varnad för dyra perioder även på dagar med ovanliga prismönster.",
-                            "min_periods_peak": "Minsta antal topprisperioder att sträva efter per dag. Filtren kommer att luckras upp steg för steg för att försöka uppnå detta antal. Endast aktiv när 'Försök uppnå minsta antal perioder' är aktiverad. Standard: 1",
-                            "relaxation_attempts_peak": "Hur många gånger avslappningslogiken får försöka hitta nya kombinationer av flex och filter. Öka detta när topperioderna är svåra att hitta på grund av platta eller mycket volatila dagar. Fler försök ger större chans att hitta perioder men kräver lite mer beräkningstid."
+                            "enable_min_periods_peak": "När aktiverad kommer filter gradvis att relaxeras om inte tillräckligt många perioder hittas. Detta försöker nå det önskade minimiantalet perioder för att säkerställa att du varnas om dyra perioder även på dagar med ovanliga prismönster.",
+                            "min_periods_peak": "Minsta antal topprisperioder att sikta på per dag. Filter kommer att relaxeras steg för steg för att försöka uppnå detta antal. Endast aktiv när 'Uppnå Minimiantal' är aktiverad. Standard: 1",
+                            "relaxation_attempts_peak": "Hur många flexnivåer (försök) att prova innan man ger upp. Varje försök kör alla filterkombinationer på den nya flexnivån. Fler försök ökar chansen att hitta ytterligare toppperioder på bekostnad av längre behandlingstid."
                         }
                     }
                 },
-                "submit": "Fortsätt →"
+                "submit": "↩ Spara & tillbaka"
             },
             "price_trend": {
                 "title": "📈 Pristrendtrösklar",
-                "description": "_{step_progress}_\n\n**Konfigurera trösklar för pristrendsensorer. Dessa sensorer jämför det aktuella priset med genomsnittet av de nästa N timmarna för att avgöra om priserna stiger, faller eller är stabila.**\n\n---",
-                "sections": {
-                    "price_trend_thresholds": {
-                        "name": "Pristrendtrösklar",
-                        "description": "Definiera pristrendnivåer.",
-                        "data": {
-                            "price_trend_threshold_rising": "Stigande tröskel",
-                            "price_trend_threshold_falling": "Fallande tröskel"
-                        },
-                        "data_description": {
-                            "price_trend_threshold_rising": "Procent för genomsnittlig prisökning per timme som kvalificerar trenden som 'stigande'. Exempel: 5 betyder minst 5% ökning per timme. Sensorer med denna trend indikerar att priserna kommer att stiga snabbt. Standard: 5%",
-                            "price_trend_threshold_falling": "Procent för genomsnittlig prisminskning per timme som kvalificerar trenden som 'fallande'. Exempel: -5 betyder minst 5% minskning per timme. Sensorer med denna trend indikerar att priserna kommer att falla snabbt. Standard: -5%"
-                        }
-                    }
+                "description": "**Konfigurera tröskelvärden för pristrendsensorer. Dessa sensorer jämför aktuellt pris med genomsnittet av de nästa N timmarna för att bestämma om priserna stiger, faller eller är stabila.**",
+                "data": {
+                    "price_trend_threshold_rising": "Stigande tröskel",
+                    "price_trend_threshold_falling": "Fallande tröskel"
                 },
-                "submit": "Fortsätt →"
+                "data_description": {
+                    "price_trend_threshold_rising": "Procentandel som genomsnittet av de nästa N timmarna måste vara över det aktuella priset för att kvalificera som 'stigande' trend. Exempel: 5 betyder att genomsnittet är minst 5% högre → priserna kommer att stiga. Typiska värden: 5-15%. Standard: 5%",
+                    "price_trend_threshold_falling": "Procentandel (negativ) som genomsnittet av de nästa N timmarna måste vara under det aktuella priset för att kvalificera som 'fallande' trend. Exempel: -5 betyder att genomsnittet är minst 5% lägre → priserna kommer att falla. Typiska värden: -5 till -15%. Standard: -5%"
+                },
+                "submit": "↩ Spara & tillbaka"
             },
             "volatility": {
-                "title": "💨 Volatilitetströsklar",
-                "description": "_{step_progress}_\n\n**Konfigurera trösklar för volatilitetsklassificering. Volatilitet mäter relativ prisvariation med hjälp av variationskoefficienten (VK = standardavvikelse / medelvärde × 100%). Dessa trösklar är procentvärden som fungerar över alla prisnivåer.**\n\nAnvänds av:\n• Volatilitetssensorer (klassificering)\n• Trendsensorer (adaptiv tröskel justering: &lt;måttlig = mer känslig, ≥hög = mindre känslig)\n\n---",
-                "sections": {
-                    "volatility_thresholds": {
-                        "name": "Volatilitetströsklar",
-                        "description": "Definiera volatilitetsklassificeringsignivåer.",
-                        "data": {
-                            "volatility_threshold_moderate": "Måttlig tröskel",
-                            "volatility_threshold_high": "Hög tröskel",
-                            "volatility_threshold_very_high": "Mycket hög tröskel"
-                        },
-                        "data_description": {
-                            "volatility_threshold_moderate": "Gränsvärde för standardavvikelse (% av genomsnitt) för att klassificera prisvariation som 'måttlig'. Exempel: 10 betyder standardavvikelse ≥ 10% av genomsnitt. Detta indikerar ökad prisinstabilitet. Standard: 10%",
-                            "volatility_threshold_high": "Gränsvärde för standardavvikelse (% av genomsnitt) för att klassificera prisvariation som 'hög'. Exempel: 20 betyder standardavvikelse ≥ 20% av genomsnitt. Detta indikerar betydande prissvingningar. Standard: 20%",
-                            "volatility_threshold_very_high": "Gränsvärde för standardavvikelse (% av genomsnitt) för att klassificera prisvariation som 'mycket hög'. Exempel: 30 betyder standardavvikelse ≥ 30% av genomsnitt. Detta indikerar extrem prisinstabilitet. Standard: 30%"
-                        }
-                    }
+                "title": "💨 Prisvolatilitetströsklar",
+                "description": "**Konfigurera tröskelvärden för volatilitetsklassificering.** Volatilitet mäter relativ prisvariation med variationskoefficienten (CV = standardavvikelse / medelvärde × 100%). Dessa tröskelvärden är procentvärden som fungerar över alla prisnivåer.\n\nAnvänds av:\n• Volatilitetssensorer (klassificering)\n• Trendsensorer (adaptiv tröskeljustering: &lt;måttlig = mer känslig, ≥hög = mindre känslig)",
+                "data": {
+                    "volatility_threshold_moderate": "Måttlig tröskel",
+                    "volatility_threshold_high": "Hög tröskel",
+                    "volatility_threshold_very_high": "Mycket hög tröskel"
                 },
-                "submit": "Fortsätt →"
+                "data_description": {
+                    "volatility_threshold_moderate": "Variationskoefficient (CV) vid vilken priser anses 'måttligt volatila'. CV = (standardavvikelse / medelvärde) × 100%. Exempel: 15 betyder prisfluktuationer på ±15% runt genomsnittet. Sensorer visar denna klassificering, trendsensorer blir mer känsliga. Standard: 15%",
+                    "volatility_threshold_high": "Variationskoefficient (CV) vid vilken priser anses 'högvolatila'. Exempel: 30 betyder prisfluktuationer på ±30% runt genomsnittet. Större prishopp förväntas, trendsensorer blir mindre känsliga. Standard: 30%",
+                    "volatility_threshold_very_high": "Variationskoefficient (CV) vid vilken priser anses 'mycket högvolatila'. Exempel: 50 betyder extrema prisfluktuationer på ±50% runt genomsnittet. På sådana dagar är starka pristoppar troliga. Standard: 50%"
+                },
+                "submit": "↩ Spara & tillbaka"
             },
             "chart_data_export": {
-                "title": "📊 Diagram-dataexport Sensor",
-                "description": "_{step_progress}_\n\nDiagram-dataexport-sensorn tillhandahåller prisdata som sensorattribut.\n\n⚠️ **Observera:** Denna sensor är en legacy-funktion för kompatibilitet med äldre verktyg.\n\n**Rekommenderat för nya installationer:** Använd `tibber_prices.get_chartdata` **tjänsten direkt** - den är mer flexibel, effektiv och det moderna Home Assistant-tillvägagångssättet.\n\n**När denna sensor är meningsfull:**\n\n✅ Ditt dashboardverktyg kan **endast** läsa attribut (inga tjänsteanrop)\n✅ Du behöver statiska data som uppdateras automatiskt\n❌ **Inte för automationer:** Använd `tibber_prices.get_chartdata` direkt där - mer flexibel och effektiv!\n\n---\n\n**Aktivera sensorn:**\n\n1. Öppna **Inställningar → Enheter och tjänster → Tibber Prices**\n2. Välj ditt hem → Hitta **'Diagramdataexport'** (Diagnostik-sektionen)\n3. **Aktivera sensorn** (inaktiverad som standard)\n\n**Konfiguration (valfritt):**\n\nStandardinställningar fungerar direkt (idag+imorgon, 15-minuters intervaller, endast priser).\n\nFör anpassning, lägg till i **`configuration.yaml`**:\n\n```yaml\ntibber_prices:\n  chart_export:\n    day:\n      - today\n      - tomorrow\n    include_level: true\n    include_rating_level: true\n```\n\n**Alla parametrar:** Se `tibber_prices.get_chartdata` tjänstdokumentation",
-                "submit": "Slutför ✓"
+                "title": "📊 Diagramdataexport-sensor",
+                "description": "Diagramdataexport-sensorn tillhandahåller prisdata som sensorattribut.\n\n⚠️ **Obs:** Denna sensor är en äldre funktion för kompatibilitet med äldre verktyg.\n\n**Rekommenderat för nya konfigurationer:** Använd `tibber_prices.get_chartdata` **tjänsten direkt** - den är mer flexibel, effektiv och det moderna Home Assistant-sättet.\n\n**När denna sensor är meningsfull:**\n\n✅ Ditt instrumentpanelverktyg kan **endast** läsa attribut (inga tjänsteanrop)\n✅ Du behöver statisk data som uppdateras automatiskt\n❌ **Inte för automationer:** Använd `tibber_prices.get_chartdata` direkt där - mer flexibelt och effektivt!\n\n---\n\n**Aktivera sensorn:**\n\n1. Öppna **Inställningar → Enheter & Tjänster → Tibber-priser**\n2. Välj ditt hem → Hitta **'Diagramdataexport'** (Diagnostiksektion)\n3. **Aktivera sensorn** (inaktiverad som standard)\n\n**Konfiguration (valfritt):**\n\nStandardinställningar fungerar direkt (idag+imorgon, 15-minutersintervall, endast priser).\n\nFör anpassning, lägg till i **`configuration.yaml`**:\n\n```yaml\ntibber_prices:\n  chart_export:\n    day:\n      - today\n      - tomorrow\n    include_level: true\n    include_rating_level: true\n```\n\n**Alla parametrar:** Se `tibber_prices.get_chartdata` tjänstdokumentation",
+                "submit": "↩ Ok & tillbaka"
+            },
+            "reset_to_defaults": {
+                "title": "🔄 Återställ till standard",
+                "description": "⚠️ **Varning:** Detta kommer att återställa **ALLA** inställningar till fabriksstandard.\n\n**Vad som kommer att återställas:**\n• Alla prisbetygströsklar\n• Alla volatilitetströsklar\n• Alla pristrendtrösklar\n• Alla bästa prisperiodinställningar\n• Alla topprisperiodinställningar\n• Visningsinställningar\n• Allmänna inställningar\n\n**Vad som INTE kommer att återställas:**\n• Din Tibber API-token\n• Valt hem\n• Valuta\n\n**💡 Tips:** Detta är användbart om du vill börja om från början efter att ha experimenterat med inställningar.",
+                "data": {
+                    "confirm_reset": "Ja, återställ allt till standard"
+                },
+                "submit": "Återställ nu"
             }
         },
         "error": {
             "auth": "Tibber-åtkomsttoken är ogiltig.",
-            "connection": "Kunde inte ansluta till Tibber. Vänligen kontrollera din internetanslutning.",
-            "unknown": "Ett oväntat fel inträffade. Vänligen kontrollera loggarna för detaljer.",
-            "cannot_connect": "Kunde inte ansluta",
+            "connection": "Kan inte ansluta till Tibber. Kontrollera din internetanslutning.",
+            "unknown": "Ett oväntat fel inträffade. Kontrollera loggarna för detaljer.",
+            "cannot_connect": "Anslutning misslyckades",
             "invalid_access_token": "Ogiltig åtkomsttoken",
-            "different_home": "Åtkomsttoken är inte giltig för hem-ID:t som denna integration är konfigurerad för.",
+            "different_home": "Åtkomsttoken är inte giltig för det hem-ID som denna integration är konfigurerad för.",
+            "invalid_period_length": "Periodlängd måste vara minst 15 minuter (multiplar av 15).",
             "invalid_flex": "Flexibilitetsprocent måste vara mellan -50% och +50%",
-            "invalid_best_price_distance": "Avståndsprocent måste vara mellan -50% och 0% (negativ = under genomsnitt)",
-            "invalid_peak_price_distance": "Avståndsprocent måste vara mellan 0% och 50% (positiv = över genomsnitt)",
-            "invalid_min_periods": "Minsta antal perioder måste vara mellan 1 och 10",
-            "invalid_period_length": "Periodlängden måste vara minst 15 minuter (multiplar av 15).",
-            "invalid_gap_count": "Gaptolerans måste vara mellan 0 och 8",
-            "invalid_relaxation_attempts": "Avslappningsförsök måste vara mellan 1 och 12",
-            "invalid_price_rating_low": "Låg prisklassificeringströskel måste vara mellan -50% och -5%",
-            "invalid_price_rating_high": "Hög prisklassificeringströskel måste vara mellan 5% och 50%",
+            "invalid_best_price_distance": "Avstånds procent måste vara mellan -50% och 0% (negativ = under genomsnitt)",
+            "invalid_peak_price_distance": "Avstånds procent måste vara mellan 0% och 50% (positiv = över genomsnitt)",
+            "invalid_min_periods": "Minsta perioder måste vara mellan 1 och 10",
+            "invalid_gap_count": "Gapantal måste vara mellan 0 och 8",
+            "invalid_relaxation_attempts": "Relaxationsförsök måste vara mellan 1 och 12",
+            "invalid_price_rating_low": "Låg prisbetygströskel måste vara mellan -50% och -5%",
+            "invalid_price_rating_high": "Hög prisbetygströskel måste vara mellan 5% och 50%",
             "invalid_price_rating_thresholds": "Låg tröskel måste vara mindre än hög tröskel",
             "invalid_volatility_threshold_moderate": "Måttlig volatilitetströskel måste vara mellan 5% och 25%",
             "invalid_volatility_threshold_high": "Hög volatilitetströskel måste vara mellan 20% och 40%",
@@ -337,16 +343,19 @@
             "invalid_price_trend_falling": "Fallande trendtröskel måste vara mellan -50% och -1%"
         },
         "abort": {
-            "entry_not_found": "Tibber-konfigurationspost hittades inte."
+            "entry_not_found": "Tibber-konfigurationspost hittades inte.",
+            "reset_cancelled": "Återställning avbruten. Inga ändringar gjordes i din konfiguration.",
+            "reset_successful": "✅ Alla inställningar har återställts till fabriksstandard. Din konfiguration är nu som en ny installation.",
+            "finished": "Konfiguration slutförd."
         }
     },
     "entity": {
         "sensor": {
             "current_interval_price": {
-                "name": "Nuvarande elpris"
+                "name": "Aktuellt elpris"
             },
             "current_interval_price_base": {
-                "name": "Nuvarande elpris (Energipanel)"
+                "name": "Aktuellt elpris (Energidashboard)"
             },
             "next_interval_price": {
                 "name": "Nästa elpris"
@@ -355,17 +364,17 @@
                 "name": "Föregående elpris"
             },
             "current_hour_average_price": {
-                "name": "⌀ Timpris nuvarande"
+                "name": "⌀ Timpris aktuell"
             },
             "next_hour_average_price": {
                 "name": "⌀ Timpris nästa"
             },
             "current_interval_price_level": {
-                "name": "Nuvarande prisnivå",
+                "name": "Aktuell prisnivå",
                 "state": {
                     "very_cheap": "Mycket billigt",
                     "cheap": "Billigt",
-                    "normal": "Normal",
+                    "normal": "Normalt",
                     "expensive": "Dyrt",
                     "very_expensive": "Mycket dyrt"
                 }
@@ -375,7 +384,7 @@
                 "state": {
                     "very_cheap": "Mycket billigt",
                     "cheap": "Billigt",
-                    "normal": "Normal",
+                    "normal": "Normalt",
                     "expensive": "Dyrt",
                     "very_expensive": "Mycket dyrt"
                 }
@@ -385,17 +394,17 @@
                 "state": {
                     "very_cheap": "Mycket billigt",
                     "cheap": "Billigt",
-                    "normal": "Normal",
+                    "normal": "Normalt",
                     "expensive": "Dyrt",
                     "very_expensive": "Mycket dyrt"
                 }
             },
             "current_hour_price_level": {
-                "name": "Nuvarande timprisnivå",
+                "name": "Aktuell timprisnivå",
                 "state": {
                     "very_cheap": "Mycket billigt",
                     "cheap": "Billigt",
-                    "normal": "Normal",
+                    "normal": "Normalt",
                     "expensive": "Dyrt",
                     "very_expensive": "Mycket dyrt"
                 }
@@ -405,7 +414,7 @@
                 "state": {
                     "very_cheap": "Mycket billigt",
                     "cheap": "Billigt",
-                    "normal": "Normal",
+                    "normal": "Normalt",
                     "expensive": "Dyrt",
                     "very_expensive": "Mycket dyrt"
                 }
@@ -429,7 +438,7 @@
                 "name": "⌀ Pris imorgon"
             },
             "yesterday_price_level": {
-                "name": "Prisnivå igår",
+                "name": "Gårdagens prisnivå",
                 "state": {
                     "very_cheap": "Mycket billigt",
                     "cheap": "Billigt",
@@ -439,7 +448,7 @@
                 }
             },
             "today_price_level": {
-                "name": "Prisnivå idag",
+                "name": "Dagens prisnivå",
                 "state": {
                     "very_cheap": "Mycket billigt",
                     "cheap": "Billigt",
@@ -449,7 +458,7 @@
                 }
             },
             "tomorrow_price_level": {
-                "name": "Prisnivå imorgon",
+                "name": "Morgondagens prisnivå",
                 "state": {
                     "very_cheap": "Mycket billigt",
                     "cheap": "Billigt",
@@ -459,7 +468,7 @@
                 }
             },
             "yesterday_price_rating": {
-                "name": "Prisvärdering igår",
+                "name": "Gårdagens prisbetyg",
                 "state": {
                     "low": "Låg",
                     "normal": "Normal",
@@ -467,7 +476,7 @@
                 }
             },
             "today_price_rating": {
-                "name": "Prisvärdering idag",
+                "name": "Dagens prisbetyg",
                 "state": {
                     "low": "Låg",
                     "normal": "Normal",
@@ -475,7 +484,7 @@
                 }
             },
             "tomorrow_price_rating": {
-                "name": "Prisvärdering imorgon",
+                "name": "Morgondagens prisbetyg",
                 "state": {
                     "low": "Låg",
                     "normal": "Normal",
@@ -483,25 +492,25 @@
                 }
             },
             "trailing_price_average": {
-                "name": "⌀ Pris rullande 24t"
+                "name": "⌀ Pris glidande 24h"
             },
             "leading_price_average": {
-                "name": "⌀ Pris framåtblickande 24t"
+                "name": "⌀ Pris framåt 24h"
             },
             "trailing_price_min": {
-                "name": "Rullande 24t minimumpris"
+                "name": "Glidande 24h minimipris"
             },
             "trailing_price_max": {
-                "name": "Rullande 24t maximumpris"
+                "name": "Glidande 24h maximipris"
             },
             "leading_price_min": {
-                "name": "Framåtblickande 24t minimumpris"
+                "name": "Framåt 24h minimipris"
             },
             "leading_price_max": {
-                "name": "Framåtblickande 24t maximumpris"
+                "name": "Framåt 24h maximipris"
             },
             "current_interval_price_rating": {
-                "name": "Nuvarande prisvärdering",
+                "name": "Aktuellt prisbetyg",
                 "state": {
                     "low": "Låg",
                     "normal": "Normal",
@@ -509,7 +518,7 @@
                 }
             },
             "next_interval_price_rating": {
-                "name": "Nästa prisvärdering",
+                "name": "Nästa prisbetyg",
                 "state": {
                     "low": "Låg",
                     "normal": "Normal",
@@ -517,7 +526,7 @@
                 }
             },
             "previous_interval_price_rating": {
-                "name": "Föregående prisvärdering",
+                "name": "Föregående prisbetyg",
                 "state": {
                     "low": "Låg",
                     "normal": "Normal",
@@ -525,7 +534,7 @@
                 }
             },
             "current_hour_price_rating": {
-                "name": "Nuvarande timprisvärdering",
+                "name": "Aktuellt timprisbetyg",
                 "state": {
                     "low": "Låg",
                     "normal": "Normal",
@@ -533,7 +542,7 @@
                 }
             },
             "next_hour_price_rating": {
-                "name": "Nästa timprisvärdering",
+                "name": "Nästa timprisbetyg",
                 "state": {
                     "low": "Låg",
                     "normal": "Normal",
@@ -541,31 +550,31 @@
                 }
             },
             "next_avg_1h": {
-                "name": "⌀ Pris nästa 1t"
+                "name": "⌀ Pris nästa 1h"
             },
             "next_avg_2h": {
-                "name": "⌀ Pris nästa 2t"
+                "name": "⌀ Pris nästa 2h"
             },
             "next_avg_3h": {
-                "name": "⌀ Pris nästa 3t"
+                "name": "⌀ Pris nästa 3h"
             },
             "next_avg_4h": {
-                "name": "⌀ Pris nästa 4t"
+                "name": "⌀ Pris nästa 4h"
             },
             "next_avg_5h": {
-                "name": "⌀ Pris nästa 5t"
+                "name": "⌀ Pris nästa 5h"
             },
             "next_avg_6h": {
-                "name": "⌀ Pris nästa 6t"
+                "name": "⌀ Pris nästa 6h"
             },
             "next_avg_8h": {
-                "name": "⌀ Pris nästa 8t"
+                "name": "⌀ Pris nästa 8h"
             },
             "next_avg_12h": {
-                "name": "⌀ Pris nästa 12t"
+                "name": "⌀ Pris nästa 12h"
             },
             "price_trend_1h": {
-                "name": "Pristrend (1t)",
+                "name": "Pristrend (1h)",
                 "state": {
                     "rising": "Stigande",
                     "falling": "Fallande",
@@ -573,7 +582,7 @@
                 }
             },
             "price_trend_2h": {
-                "name": "Pristrend (2t)",
+                "name": "Pristrend (2h)",
                 "state": {
                     "rising": "Stigande",
                     "falling": "Fallande",
@@ -581,7 +590,7 @@
                 }
             },
             "price_trend_3h": {
-                "name": "Pristrend (3t)",
+                "name": "Pristrend (3h)",
                 "state": {
                     "rising": "Stigande",
                     "falling": "Fallande",
@@ -589,7 +598,7 @@
                 }
             },
             "price_trend_4h": {
-                "name": "Pristrend (4t)",
+                "name": "Pristrend (4h)",
                 "state": {
                     "rising": "Stigande",
                     "falling": "Fallande",
@@ -597,7 +606,7 @@
                 }
             },
             "price_trend_5h": {
-                "name": "Pristrend (5t)",
+                "name": "Pristrend (5h)",
                 "state": {
                     "rising": "Stigande",
                     "falling": "Fallande",
@@ -605,7 +614,7 @@
                 }
             },
             "price_trend_6h": {
-                "name": "Pristrend (6t)",
+                "name": "Pristrend (6h)",
                 "state": {
                     "rising": "Stigande",
                     "falling": "Fallande",
@@ -613,7 +622,7 @@
                 }
             },
             "price_trend_8h": {
-                "name": "Pristrend (8t)",
+                "name": "Pristrend (8h)",
                 "state": {
                     "rising": "Stigande",
                     "falling": "Fallande",
@@ -621,7 +630,7 @@
                 }
             },
             "price_trend_12h": {
-                "name": "Pristrend (12t)",
+                "name": "Pristrend (12h)",
                 "state": {
                     "rising": "Stigande",
                     "falling": "Fallande",
@@ -629,7 +638,7 @@
                 }
             },
             "current_price_trend": {
-                "name": "Nuvarande pristrend",
+                "name": "Aktuell pristrend",
                 "state": {
                     "rising": "Stigande",
                     "falling": "Fallande",
@@ -637,59 +646,59 @@
                 }
             },
             "next_price_trend_change": {
-                "name": "Nästa trendförändring"
+                "name": "Nästa pristrendändring"
             },
             "daily_rating": {
-                "name": "Daglig prisvärdering"
+                "name": "Dagligt prisbetyg"
             },
             "monthly_rating": {
-                "name": "Månatlig prisvärdering"
+                "name": "Månatligt prisbetyg"
             },
             "data_lifecycle_status": {
-                "name": "Datalivscykel-status",
+                "name": "Datalivscykelstatus",
                 "state": {
                     "cached": "Cachad",
                     "fresh": "Färsk",
                     "refreshing": "Uppdaterar",
-                    "searching_tomorrow": "Söker morgondagens data",
-                    "turnover_pending": "Midnattskifte väntar",
+                    "searching_tomorrow": "Söker morgondag",
+                    "turnover_pending": "Väntar på övergång",
                     "error": "Fel"
                 }
             },
             "today_volatility": {
-                "name": "Volatilitet idag",
+                "name": "Dagens prisvolatilitet",
                 "state": {
                     "low": "Låg",
                     "moderate": "Måttlig",
                     "high": "Hög",
-                    "very_high": "Mycket Hög"
+                    "very_high": "Mycket hög"
                 }
             },
             "tomorrow_volatility": {
-                "name": "Volatilitet imorgon",
+                "name": "Morgondagens prisvolatilitet",
                 "state": {
                     "low": "Låg",
                     "moderate": "Måttlig",
                     "high": "Hög",
-                    "very_high": "Mycket Hög"
+                    "very_high": "Mycket hög"
                 }
             },
             "next_24h_volatility": {
-                "name": "Volatilitet nästa 24t",
+                "name": "Nästa 24h prisvolatilitet",
                 "state": {
                     "low": "Låg",
                     "moderate": "Måttlig",
                     "high": "Hög",
-                    "very_high": "Mycket Hög"
+                    "very_high": "Mycket hög"
                 }
             },
             "today_tomorrow_volatility": {
-                "name": "Volatilitet idag+imorgon",
+                "name": "Idag+Imorgon prisvolatilitet",
                 "state": {
                     "low": "Låg",
                     "moderate": "Måttlig",
                     "high": "Hög",
-                    "very_high": "Mycket Hög"
+                    "very_high": "Mycket hög"
                 }
             },
             "best_price_end_time": {
@@ -729,7 +738,7 @@
                 "name": "Topppris startar om"
             },
             "home_type": {
-                "name": "Bostadstyp",
+                "name": "Hemtyp",
                 "state": {
                     "apartment": "Lägenhet",
                     "rowhouse": "Radhus",
@@ -738,10 +747,10 @@
                 }
             },
             "home_size": {
-                "name": "Boyta"
+                "name": "Hemstorlek"
             },
             "main_fuse_size": {
-                "name": "Huvudsäkring"
+                "name": "Huvudsäkringsstorlek"
             },
             "number_of_residents": {
                 "name": "Antal boende"
@@ -749,14 +758,14 @@
             "primary_heating_source": {
                 "name": "Primär värmekälla",
                 "state": {
-                    "air2air_heatpump": "Luft-till-luft-värmepump",
-                    "air2water_heatpump": "Luft-till-vatten-värmepump",
-                    "boiler": "Varmvattenberedare",
+                    "air2air_heatpump": "Luft-till-luft värmepump",
+                    "air2water_heatpump": "Luft-till-vatten värmepump",
+                    "boiler": "Panna",
                     "central_heating": "Centralvärme",
                     "district_heating": "Fjärrvärme",
                     "district": "Fjärrvärme",
-                    "electric_boiler": "Elektrisk varmvattenberedare",
-                    "electricity": "Elektricitet",
+                    "electric_boiler": "Elpanna",
+                    "electricity": "El",
                     "floor": "Golvvärme",
                     "gas": "Gas",
                     "ground_heatpump": "Bergvärmepump",
@@ -788,21 +797,21 @@
                 "name": "Momstyp"
             },
             "estimated_annual_consumption": {
-                "name": "Uppskattat årsförbrukning"
+                "name": "Beräknad årlig förbrukning"
             },
             "subscription_status": {
                 "name": "Abonnemangsstatus",
                 "state": {
                     "running": "Aktiv",
                     "ended": "Avslutad",
-                    "pending": "Väntar",
+                    "pending": "Väntande",
                     "unknown": "Okänd"
                 }
             },
             "chart_data_export": {
                 "name": "Diagramdataexport",
                 "state": {
-                    "pending": "Väntar",
+                    "pending": "Väntande",
                     "ready": "Redo",
                     "error": "Fel"
                 }
@@ -810,7 +819,7 @@
             "chart_metadata": {
                 "name": "Diagrammetadata",
                 "state": {
-                    "pending": "Väntar",
+                    "pending": "Väntande",
                     "ready": "Redo",
                     "error": "Fel"
                 }
@@ -818,10 +827,10 @@
         },
         "binary_sensor": {
             "peak_price_period": {
-                "name": "Toppris-period"
+                "name": "Topprisperiod"
             },
             "best_price_period": {
-                "name": "Bästa pris-period"
+                "name": "Bästa Prisperiod"
             },
             "connection": {
                 "name": "Tibber API-anslutning"
@@ -840,81 +849,81 @@
     "issues": {
         "new_homes_available": {
             "title": "Nya Tibber-hem upptäckta",
-            "description": "Vi upptäckte {count} nytt/nya hem på ditt Tibber-konto: {homes}. Du kan lägga till dem i Home Assistant via Tibber-integrationskonfigurationen."
+            "description": "Vi upptäckte {count} nytt/nya hem på ditt Tibber-konto: {homes}. Du kan lägga till dem i Home Assistant genom Tibber-integrationskonfigurationen."
         },
         "homes_removed": {
             "title": "Tibber-hem borttagna",
-            "description": "Vi upptäckte att {count} hem har tagits bort från ditt Tibber-konto: {homes}. Vänligen granska din Tibber-integrationskonfiguration."
+            "description": "Vi upptäckte att {count} hem har tagits bort från ditt Tibber-konto: {homes}. Granska din Tibber-integrationskonfiguration."
         },
         "tomorrow_data_missing": {
-            "title": "Prisdata för imorgon saknas för {home_name}",
-            "description": "Elprisdata för imorgon är fortfarande otillgänglig efter {warning_hour}:00. Detta är ovanligt, eftersom Tibber vanligtvis publicerar morgondagens priser på eftermiddagen (runt 13:00-14:00 CET).\n\nMöjliga orsaker:\n- Tibber har inte publicerat morgondagens priser ännu\n- Tillfälliga API-problem\n- Din elleverantör har inte skickat in priser till Tibber\n\nDetta problem kommer att lösas automatiskt när morgondagens data blir tillgänglig. Om detta fortsätter efter 20:00, vänligen kontrollera Tibber-appen eller kontakta Tibber-support."
+            "title": "Morgondagens prisdata saknas för {home_name}",
+            "description": "Morgondagens elprisdata är fortfarande otillgänglig efter {warning_hour}:00. Detta är ovanligt, eftersom Tibber vanligtvis publicerar morgondagens priser på eftermiddagen (runt 13:00-14:00 CET).\n\nMöjliga orsaker:\n- Tibber har ännu inte publicerat morgondagens priser\n- Tillfälliga API-problem\n- Din elleverantör har inte skickat priser till Tibber\n\nDetta problem löser sig automatiskt när morgondagens data blir tillgänglig. Om detta kvarstår efter 20:00, kontrollera Tibber-appen eller kontakta Tibber support."
         },
         "rate_limit_exceeded": {
             "title": "API-hastighetsgräns överskriden för {home_name}",
-            "description": "Tibber-API:et har hastighetsbegränsat denna integration efter {error_count} på varandra följande fel. Detta betyder att förfrågningar görs för ofta.\n\nIntegrationen kommer automatiskt att försöka igen med ökande fördröjningar. Detta problem kommer att lösas när hastighetsgränsen löper ut.\n\nOm detta fortsätter i flera timmar, överväg:\n- Att kontrollera om flera Home Assistant-instanser använder samma API-token\n- Att verifiera att inga andra applikationer använder din Tibber-API-token mycket\n- Att minska uppdateringsfrekvensen om du har anpassat den"
+            "description": "Tibber API har hastighetsbegränsat denna integration efter {error_count} konsekutiva fel. Detta betyder att förfrågningar görs för ofta.\n\nIntegrationen kommer automatiskt att försöka igen med ökande fördröjningar. Detta problem löser sig när hastighetsgränsen löper ut.\n\nOm detta kvarstår i flera timmar, överväg:\n- Kontrollera om flera Home Assistant-instanser använder samma API-token\n- Verifiera att inga andra applikationer använder din Tibber API-token kraftigt\n- Minska uppdateringsfrekvensen om du har anpassat den"
         },
         "home_not_found": {
-            "title": "Hemmet {home_name} hittades inte i Tibber-kontot",
-            "description": "Hemmet som konfigurerats i denna integration (post-ID: {entry_id}) är inte längre tillgängligt i ditt Tibber-konto. Detta händer vanligtvis när:\n- Hemmet togs bort från ditt Tibber-konto\n- Hemmet flyttades till ett annat Tibber-konto\n- Åtkomst till detta hem återkallades\n\nVänligen ta bort denna integrationspost och lägg till den igen om hemmet fortfarande ska övervakas. För att ta bort denna post, gå till Inställningar → Enheter och tjänster → Tibber Prices och ta bort {home_name}-konfigurationen."
+            "title": "Hem {home_name} hittades inte i Tibber-konto",
+            "description": "Hemmet som konfigurerats i denna integration (post-ID: {entry_id}) är inte längre tillgängligt i ditt Tibber-konto. Detta händer vanligtvis när:\n- Hemmet togs bort från ditt Tibber-konto\n- Hemmet flyttades till ett annat Tibber-konto\n- Åtkomst till detta hem återkallades\n\nTa bort denna integrationspost och lägg till den igen om hemmet fortfarande ska övervakas. För att ta bort denna post, gå till Inställningar → Enheter & Tjänster → Tibber-priser och radera {home_name}-konfigurationen."
         }
     },
     "services": {
         "get_price": {
             "name": "Hämta prisdata",
-            "description": "Hämta prisdata för ett specifikt tidsintervall med automatisk routing. Utvecklings- och testtjänst för price_info_for_range API-funktionen. Använder automatiskt PRICE_INFO, PRICE_INFO_RANGE eller båda baserat på tidsintervallgränsen.",
+            "description": "Hämta prisdata för ett specifikt tidsintervall med automatisk routing. Utvecklings- och testservice för price_info_for_range API-funktionen. Använder automatiskt PRICE_INFO, PRICE_INFO_RANGE eller båda baserat på tidsintervallets gränser.",
             "fields": {
                 "entry_id": {
-                    "name": "Post-ID",
-                    "description": "Konfigurationspost-ID för Tibber-integrationen."
+                    "name": "Entry-ID",
+                    "description": "Config entry-ID för Tibber-integrationen."
                 },
                 "start_time": {
                     "name": "Starttid",
-                    "description": "Start av tidsintervallet (inklusiv, tidszonskänslig)."
+                    "description": "Start för tidsintervallet (inklusivt, tidszonmedveten)."
                 },
                 "end_time": {
                     "name": "Sluttid",
-                    "description": "Slut av tidsintervallet (exklusiv, tidszonskänslig)."
+                    "description": "Slut för tidsintervallet (exklusivt, tidszonmedveten)."
                 }
             }
         },
         "get_apexcharts_yaml": {
-            "name": "Hämta ApexCharts-kort YAML",
-            "description": "⚠️ VIKTIGT: Denna tjänst genererar en GRUNDLÄGGANDE EXEMPEL-konfiguration för ApexCharts-kort som utgångspunkt. Det är INTE en komplett lösning för alla ApexCharts-funktioner. Denna integration är i första hand en DATALEVERANTÖR. Den genererade YAML demonstrerar hur du använder `get_chartdata`-tjänsten för att hämta prisdata. På grund av den segmenterade naturen hos våra data (olika tidsperioder per serie) och användningen av Home Assistants service-API istället för entitetsattribut, är många avancerade ApexCharts-funktioner (som in_header, vissa transformationer) inte kompatibla eller kräver manuell anpassning. Du är välkommen att anpassa den genererade YAML för dina specifika behov, men förstå att omfattande ApexCharts-konfigurationsstöd ligger utanför ramen för denna integration. Gemenskapsbidrag med förbättrade konfigurationer är alltid uppskattade - om du hittar en bättre inställning som fungerar, dela den gärna så att alla kan dra nytta av det! För direkt dataåtkomst för att bygga dina egna diagram, använd `get_chartdata`-tjänsten istället.",
+            "name": "Hämta ApexCharts Card YAML",
+            "description": "⚠️ VIKTIGT: Denna service genererar en GRUNDLÄGGANDE EXEMPELKONFIGURATION för ApexCharts Card som en startpunkt. Det är INTE en komplett lösning för alla ApexCharts-funktioner. Denna integration är primärt en DATALEVERANTÖR. Den genererade YAML:en demonstrerar hur man använder `get_chartdata`-servicen för att hämta prisdata. På grund av den segmenterade naturen hos vår data (olika tidsperioder per serie) och användningen av Home Assistants service-API istället för entitetsattribut är många avancerade ApexCharts-funktioner (som in_header, vissa transformationer) inte kompatibla eller kräver manuell anpassning. Du är välkommen att anpassa den genererade YAML:en för dina specifika behov, men förstå att omfattande ApexCharts-konfigurationsstöd ligger utanför denna integrations omfång. Community-bidrag med förbättrade konfigurationer uppskattas alltid - om du hittar en bättre konfiguration som fungerar, dela den så att alla kan dra nytta av den! För direkt dataåtkomst för att bygga dina egna diagram, använd `get_chartdata`-servicen istället.",
             "fields": {
                 "entry_id": {
-                    "name": "Post-ID",
-                    "description": "Konfigurationspost-ID för Tibber-integrationen."
+                    "name": "Entry-ID",
+                    "description": "Config entry-ID för Tibber-integrationen."
                 },
                 "day": {
                     "name": "Dag",
-                    "description": "Vilken dag som ska visualiseras (standard: Rullande fönster). Fasta dagalternativ (Igår/Idag/Imorgon) visar 24t-spann utan extra beroenden. Dynamiska alternativ kräver config-template-card: Rullande fönster skapar ett fast 48t-fönster som automatiskt växlar mellan igår+idag och idag+imorgon baserat på datatillgänglighet. Rullande fönster (Auto-Zoom) beter sig likadant men zoomar dessutom automatiskt in (2t tillbakablick + återstående tid till midnatt, graph_span minskar varje kvart)."
+                    "description": "Vilken dag som ska visualiseras (standard: Glidande fönster). Fasta dagalternativ (Igår/Idag/Imorgon) visar 24h-spann utan ytterligare beroenden. Dynamiska alternativ kräver config-template-card: Glidande fönster visar ett fast 48h-fönster som automatiskt skiftar mellan igår+idag och idag+imorgon baserat på datatillgänglighet. Glidande fönster (Auto-Zoom) beter sig likadant men zoomar dessutom automatiskt in (2h tillbakablick + återstående tid till midnatt, graph_span minskar var 15:e minut)."
                 },
                 "level_type": {
                     "name": "Nivåtyp",
-                    "description": "Välj vilken prisnivåklassificering som ska visualiseras: 'rating_level' (låg/normal/hög baserat på dina konfigurerade tröskelvärden) eller 'level' (Tibber API-nivåer: mycket billig/billig/normal/dyr/mycket dyr)."
+                    "description": "Välj vilken prisnivåklassificering som ska visualiseras: 'rating_level' (låg/normal/hög baserat på dina konfigurerade tröskelvärden) eller 'level' (Tibber API-nivåer: mycket billigt/billigt/normalt/dyrt/mycket dyrt)."
                 },
                 "highlight_best_price": {
                     "name": "Markera bästa prisperioder",
-                    "description": "Lägg till ett halvgenomskinligt grönt överlägg för att markera de bästa prisperioderna i diagrammet. Detta gör det enkelt att visuellt identifiera de optimala tiderna för energiförbrukning."
+                    "description": "Lägg till ett halvtransparent grönt överlag för att markera de bästa prisperioderna i diagrammet. Detta gör det enkelt att visuellt identifiera de optimala tiderna för energiförbrukning."
                 }
             }
         },
         "get_chartdata": {
             "name": "Hämta diagramdata",
-            "description": "Returnerar prisdata i ett enkelt diagramvänligt format kompatibelt med Tibber Core-integrationens outputstruktur. Perfekt för användning med populära diagramkort som ha-price-timeline-card, ApexCharts Card, Plotly Graph Card, Mini Graph Card eller den inbyggda History Graph Card. Fältnamn och datastruktur kan anpassas för att matcha diagrammets krav.",
+            "description": "Returnerar prisdata i ett enkelt diagramvänligt format som är kompatibelt med Tibber Core-integrationens utdatastruktur. Perfekt för användning med populära diagramkort som ha-price-timeline-card, ApexCharts Card, Plotly Graph Card, Mini Graph Card eller det inbyggda History Graph Card. Fältnamn och datastruktur kan anpassas för att matcha dina specifika diagramkrav.",
             "sections": {
                 "general": {
                     "name": "Allmänt",
-                    "description": "Grundalternativ för hämtning av diagramdata."
+                    "description": "Allmänna inställningar för att hämta diagramdata."
                 },
                 "selection": {
-                    "name": "Val",
-                    "description": "Välj vilka data som ska inkluderas i utdatan."
+                    "name": "Urval",
+                    "description": "Välj vilken data som ska inkluderas i utdatan."
                 },
                 "filters": {
                     "name": "Filter",
-                    "description": "Filtrera data baserat på prisnivåer, prisvärderingar eller speciella perioder."
+                    "description": "Filtrera data baserat på prisnivåer, betygsnivåer eller specialperioder."
                 },
                 "transformation": {
                     "name": "Transformera data",
@@ -925,110 +934,110 @@
                     "description": "Anpassa utdataformatet."
                 },
                 "arrays_of_arrays": {
-                    "name": "Avancerade utdatainställningar: Array av arrayer",
-                    "description": "Inställningar för utdataformat vid användning av array av arrayer."
+                    "name": "Avancerade utdatainställningar: Array av arrays",
+                    "description": "Inställningar för utdataformat när en array av arrays används."
                 },
                 "arrays_of_objects": {
                     "name": "Avancerade utdatainställningar: Array av objekt",
-                    "description": "Inställningar för utdataformat vid användning av array av objekt."
+                    "description": "Inställningar för utdataformat när en array av objekt används."
                 }
             },
             "fields": {
                 "entry_id": {
-                    "name": "Post-ID",
-                    "description": "Konfigurationspost-ID för Tibber-integrationen."
+                    "name": "Entry-ID",
+                    "description": "Config entry-ID för Tibber-integrationen."
                 },
                 "day": {
                     "name": "Dag",
-                    "description": "Vilken dag(ar) ska priser hämtas för. Du kan välja flera dagar. Om inte angivet, returneras ett rullande 2-dagars fönster: idag+imorgon (när morgondagens data är tillgänglig) eller igår+idag (när morgondagens data inte är tillgänglig ännu). Detta ger kontinuerlig diagramvisning utan luckor."
+                    "description": "Vilken/vilka dag(ar) att hämta priser för. Du kan välja flera dagar. Om inget anges returneras ett glidande 2-dagarsfönster: idag+imorgon (när morgondagens data finns tillgänglig) eller igår+idag (när morgondagens data ännu inte är tillgänglig). Detta ger kontinuerlig diagramvisning utan luckor."
                 },
                 "resolution": {
                     "name": "Upplösning",
-                    "description": "Tidsupplösning för returnerade data. Alternativ: 'interval' (standard, 15-minuters intervaller, 96 datapunkter per dag), 'hourly' (timgenomsnitt, 24 datapunkter per dag)."
+                    "description": "Tidsupplösning för returnerad data. Alternativ: 'interval' (standard, 15-minutersintervall, 96 punkter per dag), 'hourly' (timmedelvärden, 24 punkter per dag)."
                 },
                 "output_format": {
                     "name": "Utdataformat",
-                    "description": "Utdataformat för returnerade data. Alternativ: 'array_of_objects' (standard, array av objekt med anpassningsbara fältnamn), 'array_of_arrays' (array av [tidsstämpel, pris]-arrayer med avslutande null-punkt för stepline-diagram)."
+                    "description": "Utdataformat för returnerad data. Alternativ: 'array_of_objects' (standard, array av objekt med anpassningsbara fältnamn), 'array_of_arrays' (array av [tidstämpel, pris]-arrays med avslutande null-punkt för stegdiagram)."
                 },
                 "array_fields": {
                     "name": "Array-fält",
-                    "description": "Definiera vilka fält som ska inkluderas. Använd fältnamn inom måsvingar, separerade med kommatecken. Tillgängliga fält: start_time, price_per_kwh, level, rating_level, average. Fält aktiveras automatiskt även om include_*-alternativ inte är inställda. Lämna tomt för standard (endast tidsstämpel och pris)."
+                    "description": "Definiera vilka fält som ska inkluderas. Använd fältnamn inom klammerparenteser, separerade med kommatecken. Tillgängliga fält: start_time, price_per_kwh, level, rating_level, average. Fält kommer automatiskt att aktiveras även om include_*-alternativ inte är inställda. Lämna tomt för standard (endast tidstämpel och pris)."
                 },
                 "subunit_currency": {
-                    "name": "Underenhet valuta",
-                    "description": "Returnera priser i underenhet valutaenheter (öre för SEK/NOK, cent för EUR) istället för basvalutaenheter. Inaktiverad som standard."
+                    "name": "Underenhetsvaluta",
+                    "description": "Returnera priser i underenhetsvaluta (cent för EUR, øre för NOK/SEK) istället för basvalutaenheter. Inaktiverad som standard."
                 },
                 "round_decimals": {
                     "name": "Avrunda decimaler",
-                    "description": "Antal decimaler att avrunda priser till (0-10). Om inte angivet används standardprecision (4 decimaler för basvaluta, 2 för underenhet valuta)."
-                },
-                "include_level": {
-                    "name": "Inkludera prisnivå",
-                    "description": "Inkludera Tibber-prisnivåfältet (mycket billigt/billigt/normal/dyrt/mycket dyrt) i varje datapunkt."
-                },
-                "include_rating_level": {
-                    "name": "Inkludera prisvärdering",
-                    "description": "Inkludera det beräknade prisvärderingsfältet (låg/normal/hög) baserat på dina konfigurerade trösklar i varje datapunkt."
-                },
-                "include_average": {
-                    "name": "Inkludera genomsnitt",
-                    "description": "Inkludera dagligt genomsnittspris i varje datapunkt för jämförelse."
-                },
-                "level_filter": {
-                    "name": "Prisnivåfilter",
-                    "description": "Filtrera intervaller för att endast inkludera specifika Tibber-prisnivåer (mycket billigt/billigt/normal/dyrt/mycket dyrt). Om inget anges inkluderas alla nivåer."
-                },
-                "rating_level_filter": {
-                    "name": "Prisvärderingsfilter",
-                    "description": "Filtrera intervall för att endast inkludera specifika prisvärderingar (låg/normal/hög). Om inte angivet inkluderas alla värderingar."
-                },
-                "period_filter": {
-                    "name": "Periodfilter",
-                    "description": "Filtrera intervall för att endast inkludera de inom Bästa pris- eller Topp pris-perioder. Alternativ: 'best_price' (endast intervall i Bästa pris-perioder), 'peak_price' (endast intervall i Topp pris-perioder). Om inte angivet inkluderas alla intervall. Använder förberäknad perioddata från binära sensorer."
-                },
-                "insert_nulls": {
-                    "name": "Infoga NULL-värden",
-                    "description": "Kontrollera infogning av NULL-värden för filtrerad data. 'none' (standard): Inga NULL-värden, endast matchande intervall. 'segments': Lägg till NULL-punkter vid segmentgränser för rena luckor i diagram (rekommenderas för steglinjediagram). 'all': Infoga NULL för alla tidsstämplar där filtret inte matchar (användbart för kontinuerlig tidsserievisualisering)."
-                },
-                "connect_segments": {
-                    "name": "Anslut segment",
-                    "description": "[ENDAST MED 'Infoga NULL-värden'] När aktiverad, läggs anslutningspunkter till vid segmentgränser för att visuellt ansluta olika prisnivå-segment i steglinjediagram. När priset går NER läggs en punkt med lägre pris till i slutet av nuvarande segment. När priset går UPP läggs en hållpunkt till före luckan. Detta skapar mjuka visuella övergångar mellan segment istället för abrupta luckor."
-                },
-                "add_trailing_null": {
-                    "name": "Lägg till avslutande null-punkt",
-                    "description": "Lägg till en sista datapunkt med nullvärden (utom tidsstämpel) i slutet. Vissa diagrambibliotek behöver detta för att förhindra extrapolering/interpolering till visningsportens kant vid användning av trappstegsrendering. Lämna inaktiverad om inte ditt diagram kräver det."
-                },
-                "start_time_field": {
-                    "name": "Starttid-fältnamn",
-                    "description": "Anpassat namn för starttid-fältet i utdata. Standard är 'start_time' om inte angivet."
-                },
-                "end_time_field": {
-                    "name": "Sluttid-fältnamn",
-                    "description": "Anpassat namn för sluttid-fältet i utdata. Standard är 'end_time' om inte angivet. Används endast med period_filter."
-                },
-                "price_field": {
-                    "name": "Prisfältsnamn",
-                    "description": "Anpassat namn för prisfältet i utdata. Standard är 'price_per_kwh'."
-                },
-                "level_field": {
-                    "name": "Prisnivåfältsnamn",
-                    "description": "Anpassat namn för prisnivåfältet i utdata. Standard är 'level'. Används endast när include_level är aktiverad."
-                },
-                "rating_level_field": {
-                    "name": "Prisvärderingsfältsnamn",
-                    "description": "Anpassat namn för prisvärderingsfältet i utdata. Standard är 'rating_level'. Används endast när include_rating_level är aktiverad."
-                },
-                "average_field": {
-                    "name": "Genomsnittsfältsnamn",
-                    "description": "Anpassat namn för genomsnittsfältet i utdata. Standard är 'average'. Används endast när include_average är aktiverad."
-                },
-                "metadata": {
-                    "name": "Metadata",
-                    "description": "Styr metadata-inkludering i svaret. 'include' (standard): Returnerar både diagramdata och metadata med prisstatistik, valutainformation, Y-axelförslag och tidsperiod. 'only': Returnerar endast metadata utan att bearbeta diagramdata (snabbt, användbart för dynamisk Y-axel konfiguration). 'none': Returnerar endast diagramdata utan metadata."
+                    "description": "Antal decimaler att avrunda priser till (0-10). Om inget anges används standardprecision (4 decimaler för basvaluta, 2 för underenhetsvaluta)."
                 },
                 "data_key": {
                     "name": "Datanyckel",
-                    "description": "Anpassat namn för datanyckeln på toppnivå i svaret. Standard är 'data' om inte angivet."
+                    "description": "Anpassat namn för datanyckeln på toppnivå i svaret. Standard är 'data' om inget anges."
+                },
+                "include_level": {
+                    "name": "Inkludera nivå",
+                    "description": "Inkludera Tibbers prisnivåfält (mycket billigt/billigt/normalt/dyrt/mycket dyrt) i varje datapunkt."
+                },
+                "include_rating_level": {
+                    "name": "Inkludera betygsnivå",
+                    "description": "Inkludera det beräknade betygsnivåfältet (låg/normal/hög) baserat på dina konfigurerade tröskelvärden i varje datapunkt."
+                },
+                "include_average": {
+                    "name": "Inkludera medelvärde",
+                    "description": "Inkludera dagligt medelpris i varje datapunkt för jämförelse."
+                },
+                "level_filter": {
+                    "name": "Nivåfilter",
+                    "description": "Filtrera intervaller för att endast inkludera specifika Tibber-prisnivåer (mycket billigt/billigt/normalt/dyrt/mycket dyrt). Om inget anges inkluderas alla nivåer."
+                },
+                "rating_level_filter": {
+                    "name": "Betygsnivåfilter",
+                    "description": "Filtrera intervaller för att endast inkludera specifika betygsnivåer (låg/normal/hög). Om inget anges inkluderas alla betygsnivåer."
+                },
+                "period_filter": {
+                    "name": "Periodfilter",
+                    "description": "Filtrera intervaller för att endast inkludera de inom Bästa pris- eller Topppris-perioder. Alternativ: 'best_price' (endast intervaller i Bästa pris-perioder), 'peak_price' (endast intervaller i Topppris-perioder). Om inget anges inkluderas alla intervaller. Detta använder förberäknad perioddata från binära sensorer."
+                },
+                "insert_nulls": {
+                    "name": "Infoga NULL-värden",
+                    "description": "Kontrollera infogning av NULL-värden för filtrerad data. 'none' (standard): Inga NULL-värden, endast matchande intervaller. 'segments': Lägg till NULL-punkter vid segmentgränser för rena luckor i diagram (rekommenderas för stegdiagram). 'all': Infoga NULL för alla tidstämplar där filtret inte matchar (användbart för kontinuerlig tidsserievisualisering)."
+                },
+                "connect_segments": {
+                    "name": "Anslut segment",
+                    "description": "[ENDAST MED 'Infoga NULL-värden'] När aktiverad läggs anslutande punkter till vid segmentgränser för att visuellt ansluta olika prisnivåsegment i stegdiagram. När priset går NER vid en gräns läggs en punkt med det lägre priset till i slutet av det aktuella segmentet. När priset går UPP läggs en hållpunkt till innan luckan. Detta skapar smärre visuella övergångar mellan segment istället för abrupta luckor."
+                },
+                "add_trailing_null": {
+                    "name": "Lägg till avslutande null-punkt",
+                    "description": "Lägg till en sista datapunkt med null-värden (förutom tidstämpel) i slutet. Vissa diagrambibliotek behöver detta för att förhindra extrapolering/interpolering till vyportens kant när steglinje-rendering används. Lämna inaktiverad om inte ditt diagram kräver det."
+                },
+                "start_time_field": {
+                    "name": "Starttidsfältnamn",
+                    "description": "Anpassat namn för starttidsfältet i utdatan. Standard är 'start_time' om inget anges."
+                },
+                "end_time_field": {
+                    "name": "Sluttidsfältnamn",
+                    "description": "Anpassat namn för sluttidsfältet i utdatan. Standard är 'end_time' om inget anges. Används endast med period_filter."
+                },
+                "price_field": {
+                    "name": "Prisfältnamn",
+                    "description": "Anpassat namn för prisfältet i utdatan. Standard är 'price_per_kwh' om inget anges."
+                },
+                "level_field": {
+                    "name": "Nivåfältnamn",
+                    "description": "Anpassat namn för nivåfältet i utdatan. Standard är 'level' om inget anges. Används endast när include_level är aktiverad."
+                },
+                "rating_level_field": {
+                    "name": "Betygsnivåfältnamn",
+                    "description": "Anpassat namn för betygsnivåfältet i utdatan. Standard är 'rating_level' om inget anges. Används endast när include_rating_level är aktiverad."
+                },
+                "average_field": {
+                    "name": "Medelvärdesfältnamn",
+                    "description": "Anpassat namn för medelvärdesfältet i utdatan. Standard är 'average' om inget anges. Används endast när include_average är aktiverad."
+                },
+                "metadata": {
+                    "name": "Metadata",
+                    "description": "Kontrollera inkludering av metadata i svaret. 'include' (standard): Returnerar både diagramdata och metadata med prisstatistik, valutainfo, Y-axelförslag och tidsintervall. 'only': Returnerar endast metadata utan att bearbeta diagramdata (snabbt, användbart för dynamisk Y-axelkonfiguration). 'none': Returnerar endast diagramdata utan metadata."
                 }
             }
         },
@@ -1037,8 +1046,8 @@
             "description": "Tvingar en uppdatering av användardata (hem, profilinformation) från Tibber API. Detta kan vara användbart efter att ha gjort ändringar i ditt Tibber-konto eller vid felsökning av anslutningsproblem.",
             "fields": {
                 "entry_id": {
-                    "name": "Post-ID",
-                    "description": "Konfigurationspost-ID för Tibber-integrationen."
+                    "name": "Entry-ID",
+                    "description": "Config entry-ID för Tibber-integrationen."
                 }
             }
         }
@@ -1046,7 +1055,7 @@
     "selector": {
         "account_choice": {
             "options": {
-                "new_token": "Lägg till nytt Tibber-konto med API-token"
+                "new_token": "Lägg till ny Tibber-konto API-token"
             }
         },
         "day": {
@@ -1054,8 +1063,8 @@
                 "yesterday": "Igår",
                 "today": "Idag",
                 "tomorrow": "Imorgon",
-                "rolling_window": "Rullande fönster",
-                "rolling_window_autozoom": "Rullande fönster (Auto-Zoom)"
+                "rolling_window": "Glidande fönster",
+                "rolling_window_autozoom": "Glidande fönster (Auto-Zoom)"
             }
         },
         "resolution": {
@@ -1067,22 +1076,22 @@
         "output_format": {
             "options": {
                 "array_of_objects": "Array av objekt",
-                "array_of_arrays": "Array av arrayer"
+                "array_of_arrays": "Array av arrays"
             }
         },
         "level_type": {
             "options": {
-                "rating_level": "Betygsättningsnivå (låg/normal/hög)",
-                "level": "Tibber-nivå (mycket billig till mycket dyr)"
+                "rating_level": "Betygnivå (låg/normal/hög)",
+                "level": "Tibber-nivå (mycket billigt till mycket dyrt)"
             }
         },
         "level_filter": {
             "options": {
-                "very_cheap": "Mycket billig",
-                "cheap": "Billig",
-                "normal": "Normal",
-                "expensive": "Dyr",
-                "very_expensive": "Mycket dyr"
+                "very_cheap": "Mycket billigt",
+                "cheap": "Billigt",
+                "normal": "Normalt",
+                "expensive": "Dyrt",
+                "very_expensive": "Mycket dyrt"
             }
         },
         "rating_level_filter": {
@@ -1102,7 +1111,7 @@
         "period_filter": {
             "options": {
                 "best_price": "Bästa prisperioder",
-                "peak_price": "Topp prisperioder"
+                "peak_price": "Topprisperioder"
             }
         },
         "metadata": {
@@ -1133,7 +1142,7 @@
         "currency_display_mode": {
             "options": {
                 "base": "Basvaluta (€, kr)",
-                "subunit": "Underenhet valuta (ct, öre)"
+                "subunit": "Underenhetsvaluta (ct, øre)"
             }
         },
         "average_sensor_display": {

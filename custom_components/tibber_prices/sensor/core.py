@@ -289,6 +289,8 @@ class TibberPricesSensor(TibberPricesEntity, RestoreSensor):
         # Clear cached trend values when coordinator data changes
         if self.entity_description.key.startswith("price_trend_"):
             self._trend_calculator.clear_trend_cache()
+            # Also clear calculation cache (e.g., when threshold config changes)
+            self._trend_calculator.clear_calculation_cache()
 
         # Refresh chart data when coordinator updates (new price data or user data)
         if self.entity_description.key == "chart_data_export":

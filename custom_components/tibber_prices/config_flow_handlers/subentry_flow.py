@@ -125,6 +125,9 @@ class TibberPricesSubentryFlowHandler(ConfigSubentryFlow):
                 offset_desc = self._format_offset_description(offset_days, offset_hours, offset_minutes)
                 subentry_title = f"{parent_entry.title} ({offset_desc})"
 
+                # Note: Subentries inherit options from parent entry automatically
+                # Options parameter is not supported by ConfigSubentryFlow.async_create_entry()
+
                 return self.async_create_entry(
                     title=subentry_title,
                     data={

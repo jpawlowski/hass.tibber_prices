@@ -132,8 +132,22 @@
     "options": {
         "step": {
             "init": {
+                "menu_options": {
+                    "general_settings": "⚙️ General Settings",
+                    "display_settings": "💱 Currency Display",
+                    "current_interval_price_rating": "📊 Price Rating",
+                    "volatility": "💨 Price Volatility",
+                    "best_price": "💚 Best Price Period",
+                    "peak_price": "🔴 Peak Price Period",
+                    "price_trend": "📈 Price Trend",
+                    "chart_data_export": "📊 Chart Data Export Sensor",
+                    "reset_to_defaults": "🔄 Reset to Defaults",
+                    "finish": "⬅️ Back"
+                }
+            },
+            "general_settings": {
                 "title": "⚙️ General Settings",
-                "description": "_{step_progress}_\n\n**Configure general settings for Tibber Price Information & Ratings.**\n\n---\n\n**User:** {user_login}",
+                "description": "**Configure general settings for Tibber Price Information & Ratings.**\n\n---\n\n**User:** {user_login}",
                 "data": {
                     "extended_descriptions": "Extended Descriptions",
                     "average_sensor_display": "Average Sensor Display"
@@ -142,41 +156,35 @@
                     "extended_descriptions": "Controls whether entity attributes include detailed explanations and usage tips.\n\n• Disabled (default): Brief description only\n• Enabled: Detailed explanation + practical usage examples\n\nExample:\nDisabled = 1 attribute\nEnabled = 2 additional attributes",
                     "average_sensor_display": "Choose which statistical measure to display in the sensor state for average price sensors. The other value will be shown as an attribute. Median is more resistant to extreme values, while arithmetic mean represents the traditional average. Default: Median"
                 },
-                "submit": "Continue →"
+                "submit": "↩ Save & Back"
             },
             "display_settings": {
                 "title": "💱 Currency Display Settings",
-                "description": "_{step_progress}_\n\n**Configure how electricity prices are displayed - in base currency (€, kr) or subunit (ct, øre).**\n\n---",
+                "description": "**Configure how electricity prices are displayed - in base currency (€, kr) or subunit (ct, øre).**\n\n---",
                 "data": {
                     "currency_display_mode": "Display Mode"
                 },
                 "data_description": {
                     "currency_display_mode": "Choose how prices are displayed:\n\n• **Base Currency** (€/kWh, kr/kWh): Decimal values (e.g., 0.25 €/kWh) - differences visible from 3rd-4th decimal place\n• **Subunit Currency** (ct/kWh, øre/kWh): Larger values (e.g., 25.00 ct/kWh) - differences visible from 1st decimal place\n\nDefault depends on your currency:\n• EUR → Subunit (cents) - German/Dutch preference\n• NOK/SEK/DKK → Base (kroner) - Scandinavian preference\n• USD/GBP → Base currency\n\n**💡 Tip:** When selecting Subunit Currency, you can enable the additional \"Current Electricity Price (Energy Dashboard)\" sensor (disabled by default)."
                 },
-                "submit": "Continue →"
+                "submit": "↩ Save & Back"
             },
             "current_interval_price_rating": {
                 "title": "📊 Price Rating Thresholds",
-                "description": "_{step_progress}_\n\n**Configure thresholds for price rating levels (low/normal/high) based on comparison with trailing 24-hour average.**\n\n---",
-                "sections": {
-                    "price_rating_thresholds": {
-                        "name": "Price Rating Thresholds",
-                        "description": "Define price rating classification levels.",
-                        "data": {
-                            "price_rating_threshold_low": "Low Threshold",
-                            "price_rating_threshold_high": "High Threshold"
-                        },
-                        "data_description": {
-                            "price_rating_threshold_low": "Percentage below the trailing 24-hour average that the current price must be to qualify as 'low' rating. Example: 5 means at least 5% below average. Sensors with this rating indicate favorable time windows. Default: 5%",
-                            "price_rating_threshold_high": "Percentage above the trailing 24-hour average that the current price must be to qualify as 'high' rating. Example: 10 means at least 10% above average. Sensors with this rating warn about expensive time windows. Default: 10%"
-                        }
-                    }
+                "description": "**Configure thresholds for price rating levels (low/normal/high) based on comparison with trailing 24-hour average.**",
+                "data": {
+                    "price_rating_threshold_low": "Low Threshold",
+                    "price_rating_threshold_high": "High Threshold"
                 },
-                "submit": "Continue →"
+                "data_description": {
+                    "price_rating_threshold_low": "Percentage below the trailing 24-hour average that the current price must be to qualify as 'low' rating. Example: 5 means at least 5% below average. Sensors with this rating indicate favorable time windows. Default: 5%",
+                    "price_rating_threshold_high": "Percentage above the trailing 24-hour average that the current price must be to qualify as 'high' rating. Example: 10 means at least 10% above average. Sensors with this rating warn about expensive time windows. Default: 10%"
+                },
+                "submit": "↩ Save & Back"
             },
             "best_price": {
                 "title": "💚 Best Price Period Settings",
-                "description": "_{step_progress}_\n\n**Configure settings for the Best Price Period binary sensor. This sensor is active during periods with the lowest electricity prices.**\n\n---",
+                "description": "**Configure settings for the Best Price Period binary sensor. This sensor is active during periods with the lowest electricity prices.**\n\n---",
                 "sections": {
                     "period_settings": {
                         "name": "Period Duration & Levels",
@@ -219,11 +227,11 @@
                         }
                     }
                 },
-                "submit": "Continue →"
+                "submit": "↩ Save & Back"
             },
             "peak_price": {
                 "title": "🔴 Peak Price Period Settings",
-                "description": "_{step_progress}_\n\n**Configure settings for the Peak Price Period binary sensor. This sensor is active during periods with the highest electricity prices.**\n\n---",
+                "description": "**Configure settings for the Peak Price Period binary sensor. This sensor is active during periods with the highest electricity prices.**\n\n---",
                 "sections": {
                     "period_settings": {
                         "name": "Period Settings",
@@ -266,52 +274,48 @@
                         }
                     }
                 },
-                "submit": "Continue →"
+                "submit": "↩ Save & Back"
             },
             "price_trend": {
                 "title": "📈 Price Trend Thresholds",
-                "description": "_{step_progress}_\n\n**Configure thresholds for price trend sensors. These sensors compare current price with the average of the next N hours to determine if prices are rising, falling, or stable.**\n\n---",
-                "sections": {
-                    "price_trend_thresholds": {
-                        "name": "Price Trend Thresholds",
-                        "description": "Define price trend classification levels.",
-                        "data": {
-                            "price_trend_threshold_rising": "Rising Threshold",
-                            "price_trend_threshold_falling": "Falling Threshold"
-                        },
-                        "data_description": {
-                            "price_trend_threshold_rising": "Percentage that the average of the next N hours must be above the current price to qualify as 'rising' trend. Example: 5 means average is at least 5% higher → prices will rise. Typical values: 5-15%. Default: 5%",
-                            "price_trend_threshold_falling": "Percentage (negative) that the average of the next N hours must be below the current price to qualify as 'falling' trend. Example: -5 means average is at least 5% lower → prices will fall. Typical values: -5 to -15%. Default: -5%"
-                        }
-                    }
+                "description": "**Configure thresholds for price trend sensors. These sensors compare current price with the average of the next N hours to determine if prices are rising, falling, or stable.**",
+                "data": {
+                    "price_trend_threshold_rising": "Rising Threshold",
+                    "price_trend_threshold_falling": "Falling Threshold"
                 },
-                "submit": "Continue →"
-            },
-            "chart_data_export": {
-                "title": "📊 Chart Data Export Sensor",
-                "description": "_{step_progress}_\n\nThe Chart Data Export Sensor provides price data as sensor attributes.\n\n⚠️ **Note:** This sensor is a legacy feature for compatibility with older tools.\n\n**Recommended for new setups:** Use the `tibber_prices.get_chartdata` **service directly** - it's more flexible, efficient, and the modern Home Assistant approach.\n\n**When this sensor makes sense:**\n\n✅ Your dashboard tool can **only** read attributes (no service calls)\n✅ You need static data that updates automatically\n❌ **Not for automations:** Use `tibber_prices.get_chartdata` directly there - more flexible and efficient!\n\n---\n\n**Enable the sensor:**\n\n1. Open **Settings → Devices & Services → Tibber Prices**\n2. Select your home → Find **'Chart Data Export'** (Diagnostic section)\n3. **Enable the sensor** (disabled by default)\n\n**Configuration (optional):**\n\nDefault settings work out-of-the-box (today+tomorrow, 15-minute intervals, prices only).\n\nFor customization, add to **`configuration.yaml`**:\n\n```yaml\ntibber_prices:\n  chart_export:\n    day:\n      - today\n      - tomorrow\n    include_level: true\n    include_rating_level: true\n```\n\n**All parameters:** See `tibber_prices.get_chartdata` service documentation",
-                "submit": "Complete ✓"
+                "data_description": {
+                    "price_trend_threshold_rising": "Percentage that the average of the next N hours must be above the current price to qualify as 'rising' trend. Example: 5 means average is at least 5% higher → prices will rise. Typical values: 5-15%. Default: 5%",
+                    "price_trend_threshold_falling": "Percentage (negative) that the average of the next N hours must be below the current price to qualify as 'falling' trend. Example: -5 means average is at least 5% lower → prices will fall. Typical values: -5 to -15%. Default: -5%"
+                },
+                "submit": "↩ Save & Back"
             },
             "volatility": {
                 "title": "💨 Price Volatility Thresholds",
-                "description": "_{step_progress}_\n\n**Configure thresholds for volatility classification.** Volatility measures relative price variation using the coefficient of variation (CV = standard deviation / mean × 100%). These thresholds are percentage values that work across all price levels.\n\nUsed by:\n• Volatility sensors (classification)\n• Trend sensors (adaptive threshold adjustment: &lt;moderate = more sensitive, ≥high = less sensitive)\n\n---",
-                "sections": {
-                    "volatility_thresholds": {
-                        "name": "Volatility Thresholds",
-                        "description": "Define price volatility classification levels.",
-                        "data": {
-                            "volatility_threshold_moderate": "Moderate Threshold",
-                            "volatility_threshold_high": "High Threshold",
-                            "volatility_threshold_very_high": "Very High Threshold"
-                        },
-                        "data_description": {
-                            "volatility_threshold_moderate": "Coefficient of Variation (CV) at which prices are considered 'moderately volatile'. CV = (standard deviation / mean) × 100%. Example: 15 means price fluctuations of ±15% around average. Sensors show this classification, trend sensors become more sensitive. Default: 15%",
-                            "volatility_threshold_high": "Coefficient of Variation (CV) at which prices are considered 'highly volatile'. Example: 30 means price fluctuations of ±30% around average. Larger price jumps expected, trend sensors become less sensitive. Default: 30%",
-                            "volatility_threshold_very_high": "Coefficient of Variation (CV) at which prices are considered 'very highly volatile'. Example: 50 means extreme price fluctuations of ±50% around average. On such days, strong price spikes are likely. Default: 50%"
-                        }
-                    }
+                "description": "**Configure thresholds for volatility classification.** Volatility measures relative price variation using the coefficient of variation (CV = standard deviation / mean × 100%). These thresholds are percentage values that work across all price levels.\n\nUsed by:\n• Volatility sensors (classification)\n• Trend sensors (adaptive threshold adjustment: &lt;moderate = more sensitive, ≥high = less sensitive)",
+                "data": {
+                    "volatility_threshold_moderate": "Moderate Threshold",
+                    "volatility_threshold_high": "High Threshold",
+                    "volatility_threshold_very_high": "Very High Threshold"
                 },
-                "submit": "Continue →"
+                "data_description": {
+                    "volatility_threshold_moderate": "Coefficient of Variation (CV) at which prices are considered 'moderately volatile'. CV = (standard deviation / mean) × 100%. Example: 15 means price fluctuations of ±15% around average. Sensors show this classification, trend sensors become more sensitive. Default: 15%",
+                    "volatility_threshold_high": "Coefficient of Variation (CV) at which prices are considered 'highly volatile'. Example: 30 means price fluctuations of ±30% around average. Larger price jumps expected, trend sensors become less sensitive. Default: 30%",
+                    "volatility_threshold_very_high": "Coefficient of Variation (CV) at which prices are considered 'very highly volatile'. Example: 50 means extreme price fluctuations of ±50% around average. On such days, strong price spikes are likely. Default: 50%"
+                },
+                "submit": "↩ Save & Back"
+            },
+            "chart_data_export": {
+                "title": "📊 Chart Data Export Sensor",
+                "description": "The Chart Data Export Sensor provides price data as sensor attributes.\n\n⚠️ **Note:** This sensor is a legacy feature for compatibility with older tools.\n\n**Recommended for new setups:** Use the `tibber_prices.get_chartdata` **service directly** - it's more flexible, efficient, and the modern Home Assistant approach.\n\n**When this sensor makes sense:**\n\n✅ Your dashboard tool can **only** read attributes (no service calls)\n✅ You need static data that updates automatically\n❌ **Not for automations:** Use `tibber_prices.get_chartdata` directly there - more flexible and efficient!\n\n---\n\n**Enable the sensor:**\n\n1. Open **Settings → Devices & Services → Tibber Prices**\n2. Select your home → Find **'Chart Data Export'** (Diagnostic section)\n3. **Enable the sensor** (disabled by default)\n\n**Configuration (optional):**\n\nDefault settings work out-of-the-box (today+tomorrow, 15-minute intervals, prices only).\n\nFor customization, add to **`configuration.yaml`**:\n\n```yaml\ntibber_prices:\n  chart_export:\n    day:\n      - today\n      - tomorrow\n    include_level: true\n    include_rating_level: true\n```\n\n**All parameters:** See `tibber_prices.get_chartdata` service documentation",
+                "submit": "↩ Ok & Back"
+            },
+            "reset_to_defaults": {
+                "title": "🔄 Reset to Defaults",
+                "description": "⚠️ **Warning:** This will reset **ALL** settings to factory defaults.\n\n**What will be reset:**\n• All price rating thresholds\n• All volatility thresholds\n• All price trend thresholds\n• All best price period settings\n• All peak price period settings\n• Display settings\n• General settings\n\n**What will NOT be reset:**\n• Your Tibber API token\n• Selected home\n• Currency\n\n**💡 Tip:** This is useful if you want to start fresh after experimenting with settings.",
+                "data": {
+                    "confirm_reset": "Yes, reset everything to defaults"
+                },
+                "submit": "Reset Now"
             }
         },
         "error": {
@@ -339,7 +343,10 @@
             "invalid_price_trend_falling": "Falling trend threshold must be between -50% and -1%"
         },
         "abort": {
-            "entry_not_found": "Tibber configuration entry not found."
+            "entry_not_found": "Tibber configuration entry not found.",
+            "reset_cancelled": "Reset cancelled. No changes were made to your configuration.",
+            "reset_successful": "✅ All settings have been reset to factory defaults. Your configuration is now like a fresh installation.",
+            "finished": "Configuration completed."
         }
     },
     "entity": {

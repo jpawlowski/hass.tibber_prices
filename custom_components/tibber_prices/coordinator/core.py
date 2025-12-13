@@ -262,12 +262,21 @@ class TibberPricesDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         getattr(_LOGGER, level)(prefixed_message, *args, **kwargs)
 
     async def _handle_options_update(self, _hass: HomeAssistant, _config_entry: ConfigEntry) -> None:
-        """Handle options update by invalidating config caches."""
+        """Handle options update by invalidating config caches and re-transforming data."""
         self._log("debug", "Options updated, invalidating config caches")
         self._data_transformer.invalidate_config_cache()
         self._period_calculator.invalidate_config_cache()
-        # Trigger a refresh to apply new configuration
-        await self.async_request_refresh()
+
+        # Re-transform existing cached data with new configuration
+        # This updates rating_levels, volatility, and period calculations
+        # without needing to fetch new data from the API
+        if self._cached_price_data:
+            self._log("debug", "Re-transforming cached data with new configuration")
+            self.data = self._transform_data(self._cached_price_data)
+            # Notify all listeners about the updated data
+            self.async_update_listeners()
+        else:
+            self._log("warning", "No cached data available to re-transform")
 
     @callback
     def async_add_time_sensitive_listener(self, update_callback: TimeServiceCallback) -> CALLBACK_TYPE:

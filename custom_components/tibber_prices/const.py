@@ -298,6 +298,72 @@ def get_default_currency_display(currency_code: str | None) -> str:
     return DEFAULT_CURRENCY_DISPLAY.get(currency_code.upper(), DISPLAY_MODE_SUBUNIT)
 
 
+def get_default_options(currency_code: str | None) -> dict[str, Any]:
+    """
+    Get complete default options for a new config entry.
+
+    This ensures new config entries have explicitly set defaults based on their currency,
+    distinguishing them from legacy config entries that need migration.
+
+    Options structure has been flattened for single-section steps:
+    - Flat values: extended_descriptions, average_sensor_display, currency_display_mode,
+      price_rating_thresholds, volatility_thresholds, price_trend_thresholds, time offsets
+    - Nested sections (multi-section steps only): period_settings, flexibility_settings,
+      relaxation_and_target_periods
+
+    Args:
+        currency_code: ISO 4217 currency code (e.g., 'EUR', 'NOK')
+
+    Returns:
+        Dictionary with all default option values in nested section structure
+
+    """
+    return {
+        # Flat configuration values
+        CONF_EXTENDED_DESCRIPTIONS: DEFAULT_EXTENDED_DESCRIPTIONS,
+        CONF_AVERAGE_SENSOR_DISPLAY: DEFAULT_AVERAGE_SENSOR_DISPLAY,
+        CONF_CURRENCY_DISPLAY_MODE: get_default_currency_display(currency_code),
+        CONF_VIRTUAL_TIME_OFFSET_DAYS: DEFAULT_VIRTUAL_TIME_OFFSET_DAYS,
+        CONF_VIRTUAL_TIME_OFFSET_HOURS: DEFAULT_VIRTUAL_TIME_OFFSET_HOURS,
+        CONF_VIRTUAL_TIME_OFFSET_MINUTES: DEFAULT_VIRTUAL_TIME_OFFSET_MINUTES,
+        # Price rating thresholds (flat - single-section step)
+        CONF_PRICE_RATING_THRESHOLD_LOW: DEFAULT_PRICE_RATING_THRESHOLD_LOW,
+        CONF_PRICE_RATING_THRESHOLD_HIGH: DEFAULT_PRICE_RATING_THRESHOLD_HIGH,
+        # Volatility thresholds (flat - single-section step)
+        CONF_VOLATILITY_THRESHOLD_MODERATE: DEFAULT_VOLATILITY_THRESHOLD_MODERATE,
+        CONF_VOLATILITY_THRESHOLD_HIGH: DEFAULT_VOLATILITY_THRESHOLD_HIGH,
+        CONF_VOLATILITY_THRESHOLD_VERY_HIGH: DEFAULT_VOLATILITY_THRESHOLD_VERY_HIGH,
+        # Price trend thresholds (flat - single-section step)
+        CONF_PRICE_TREND_THRESHOLD_RISING: DEFAULT_PRICE_TREND_THRESHOLD_RISING,
+        CONF_PRICE_TREND_THRESHOLD_FALLING: DEFAULT_PRICE_TREND_THRESHOLD_FALLING,
+        # Nested section: Period settings (shared by best/peak price)
+        "period_settings": {
+            CONF_BEST_PRICE_MIN_PERIOD_LENGTH: DEFAULT_BEST_PRICE_MIN_PERIOD_LENGTH,
+            CONF_PEAK_PRICE_MIN_PERIOD_LENGTH: DEFAULT_PEAK_PRICE_MIN_PERIOD_LENGTH,
+            CONF_BEST_PRICE_MAX_LEVEL_GAP_COUNT: DEFAULT_BEST_PRICE_MAX_LEVEL_GAP_COUNT,
+            CONF_PEAK_PRICE_MAX_LEVEL_GAP_COUNT: DEFAULT_PEAK_PRICE_MAX_LEVEL_GAP_COUNT,
+            CONF_BEST_PRICE_MAX_LEVEL: DEFAULT_BEST_PRICE_MAX_LEVEL,
+            CONF_PEAK_PRICE_MIN_LEVEL: DEFAULT_PEAK_PRICE_MIN_LEVEL,
+        },
+        # Nested section: Flexibility settings (shared by best/peak price)
+        "flexibility_settings": {
+            CONF_BEST_PRICE_FLEX: DEFAULT_BEST_PRICE_FLEX,
+            CONF_PEAK_PRICE_FLEX: DEFAULT_PEAK_PRICE_FLEX,
+            CONF_BEST_PRICE_MIN_DISTANCE_FROM_AVG: DEFAULT_BEST_PRICE_MIN_DISTANCE_FROM_AVG,
+            CONF_PEAK_PRICE_MIN_DISTANCE_FROM_AVG: DEFAULT_PEAK_PRICE_MIN_DISTANCE_FROM_AVG,
+        },
+        # Nested section: Relaxation and target periods (shared by best/peak price)
+        "relaxation_and_target_periods": {
+            CONF_ENABLE_MIN_PERIODS_BEST: DEFAULT_ENABLE_MIN_PERIODS_BEST,
+            CONF_MIN_PERIODS_BEST: DEFAULT_MIN_PERIODS_BEST,
+            CONF_RELAXATION_ATTEMPTS_BEST: DEFAULT_RELAXATION_ATTEMPTS_BEST,
+            CONF_ENABLE_MIN_PERIODS_PEAK: DEFAULT_ENABLE_MIN_PERIODS_PEAK,
+            CONF_MIN_PERIODS_PEAK: DEFAULT_MIN_PERIODS_PEAK,
+            CONF_RELAXATION_ATTEMPTS_PEAK: DEFAULT_RELAXATION_ATTEMPTS_PEAK,
+        },
+    }
+
+
 def get_display_unit_factor(config_entry: ConfigEntry) -> int:
     """
     Get multiplication factor for converting base to display currency.

@@ -132,8 +132,22 @@
     "options": {
         "step": {
             "init": {
+                "menu_options": {
+                    "general_settings": "⚙️ Allgemeine Einstellungen",
+                    "display_settings": "💱 Währungsanzeige",
+                    "current_interval_price_rating": "📊 Preisbewertung",
+                    "volatility": "💨 Preis-Volatilität",
+                    "best_price": "💚 Bestpreis",
+                    "peak_price": "🔴 Spitzenpreis",
+                    "price_trend": "📈 Preistrend",
+                    "chart_data_export": "📊 Diagrammdaten-Export",
+                    "reset_to_defaults": "🔄 Auf Werkseinstellungen zurücksetzen",
+                    "finish": "⬅️ Zurück"
+                }
+            },
+            "general_settings": {
                 "title": "⚙️ Allgemeine Einstellungen",
-                "description": "_{step_progress}_\n\n**Konfiguriere allgemeine Einstellungen für Tibber-Preisinformationen und -bewertungen.**\n\n---\n\n**Benutzer:** {user_login}",
+                "description": "**Konfiguriere allgemeine Einstellungen für Tibber-Preisinformationen und -bewertungen.**\n\n---\n\n**Benutzer:** {user_login}",
                 "data": {
                     "extended_descriptions": "Erweiterte Beschreibungen",
                     "average_sensor_display": "Durchschnittsensor-Anzeige"
@@ -142,43 +156,35 @@
                     "extended_descriptions": "Steuert, ob Entitätsattribute ausführliche Erklärungen und Nutzungstipps enthalten.\n\n• Deaktiviert (Standard): Nur kurze Beschreibung\n• Aktiviert: Ausführliche Erklärung + praktische Nutzungsbeispiele\n\nBeispiel:\nDeaktiviert = 1 Attribut\nAktiviert = 2 zusätzliche Attribute",
                     "average_sensor_display": "Wähle aus, welcher statistische Wert im Sensorstatus für Durchschnitts-Preissensoren angezeigt wird. Der andere Wert wird als Attribut angezeigt. Der Median ist resistenter gegen Extremwerte, während das arithmetische Mittel dem traditionellen Durchschnitt entspricht. Standard: Median"
                 },
-                "submit": "Weiter →"
+                "submit": "↩ Speichern & Zurück"
             },
             "display_settings": {
                 "title": "💱 Währungsanzeige-Einstellungen",
-                "description": "_{step_progress}_\n\n**Konfiguriere, wie Strompreise angezeigt werden - in Basiswährung (€, kr) oder Unterwährungseinheit (ct, øre).**\n\n---",
+                "description": "**Konfiguriere, wie Strompreise angezeigt werden - in Basiswährung (€, kr) oder Unterwährungseinheit (ct, øre).**\n\n---",
                 "data": {
                     "currency_display_mode": "Anzeigemodus"
                 },
                 "data_description": {
                     "currency_display_mode": "Wähle, wie Preise angezeigt werden:\n\n• **Basiswährung** (€/kWh, kr/kWh): Dezimalwerte (z.B. 0,25 €/kWh) - Unterschiede sichtbar ab 3.-4. Nachkommastelle\n• **Unterwährungseinheit** (ct/kWh, øre/kWh): Größere Werte (z.B. 25,00 ct/kWh) - Unterschiede bereits ab 1. Nachkommastelle sichtbar\n\nStandard abhängig von deiner Währung:\n• EUR → Unterwährungseinheit (Cent) - deutsche/niederländische Präferenz\n• NOK/SEK/DKK → Basiswährung (Kronen) - skandinavische Präferenz\n• USD/GBP → Basiswährung\n\n**💡 Tipp:** Bei Auswahl von Unterwährungseinheit kannst du den zusätzlichen Sensor \"Aktueller Strompreis (Energie-Dashboard)\" aktivieren (standardmäßig deaktiviert)."
                 },
-                "submit": "Weiter →"
+                "submit": "↩ Speichern & Zurück"
             },
             "current_interval_price_rating": {
                 "title": "📊 Preisbewertungs-Schwellenwerte",
-                "description": "_{step_progress}_\n\n**Konfiguriere Schwellenwerte für Preisbewertungsstufen (niedrig/normal/hoch) basierend auf dem Vergleich mit dem nachlaufenden 24-Stunden-Durchschnitt.**\n\n---",
-                "sections": {
-                    "price_rating_thresholds": {
-                        "name": "Preisbewertungs-Schwellenwerte",
-                        "description": "Definiere die Einstufungen für die Preisbewertung.",
-                        "data": {
-                            "price_rating_threshold_low": "Niedrig-Schwelle",
-                            "price_rating_threshold_high": "Hoch-Schwelle",
-                            "average_sensor_display": "Durchschnitts-Sensor Anzeige"
-                        },
-                        "data_description": {
-                            "price_rating_threshold_low": "Prozentwert, um wie viel der aktuelle Preis unter dem nachlaufenden 24-Stunden-Durchschnitt liegen muss, damit er als 'niedrig' bewertet wird. Beispiel: 5 bedeutet mindestens 5% unter Durchschnitt. Sensoren mit dieser Bewertung zeigen günstige Zeitfenster an. Standard: 5%",
-                            "price_rating_threshold_high": "Prozentwert, um wie viel der aktuelle Preis über dem nachlaufenden 24-Stunden-Durchschnitt liegen muss, damit er als 'hoch' bewertet wird. Beispiel: 10 bedeutet mindestens 10% über Durchschnitt. Sensoren mit dieser Bewertung warnen vor teuren Zeitfenstern. Standard: 10%",
-                            "average_sensor_display": "Wähle, welches statistische Maß im Sensor-Status für Durchschnittspreissensoren angezeigt werden soll. Der andere Wert wird als Attribut angezeigt. Der Median ist widerstandsfähiger gegen Extremwerte, während das arithmetische Mittel den traditionellen Durchschnitt darstellt. Standard: Median"
-                        }
-                    }
+                "description": "**Konfiguriere Schwellenwerte für Preisbewertungsstufen (niedrig/normal/hoch) basierend auf dem Vergleich mit dem nachlaufenden 24-Stunden-Durchschnitt.**",
+                "data": {
+                    "price_rating_threshold_low": "Niedrig-Schwelle",
+                    "price_rating_threshold_high": "Hoch-Schwelle"
                 },
-                "submit": "Weiter →"
+                "data_description": {
+                    "price_rating_threshold_low": "Prozentwert, um wie viel der aktuelle Preis unter dem nachlaufenden 24-Stunden-Durchschnitt liegen muss, damit er als 'niedrig' bewertet wird. Beispiel: 5 bedeutet mindestens 5% unter Durchschnitt. Sensoren mit dieser Bewertung zeigen günstige Zeitfenster an. Standard: 5%",
+                    "price_rating_threshold_high": "Prozentwert, um wie viel der aktuelle Preis über dem nachlaufenden 24-Stunden-Durchschnitt liegen muss, damit er als 'hoch' bewertet wird. Beispiel: 10 bedeutet mindestens 10% über Durchschnitt. Sensoren mit dieser Bewertung warnen vor teuren Zeitfenstern. Standard: 10%"
+                },
+                "submit": "↩ Speichern & Zurück"
             },
             "best_price": {
                 "title": "💚 Bestpreis-Zeitraum Einstellungen",
-                "description": "_{step_progress}_\n\n**Konfiguration für den Bestpreis-Zeitraum mit den niedrigsten Strompreisen.**\n\n---",
+                "description": "**Konfiguration für den Bestpreis-Zeitraum mit den niedrigsten Strompreisen.**\n\n---",
                 "sections": {
                     "period_settings": {
                         "name": "Zeitraumdauer & Preisniveaus",
@@ -221,11 +227,11 @@
                         }
                     }
                 },
-                "submit": "Weiter →"
+                "submit": "↩ Speichern & Zurück"
             },
             "peak_price": {
                 "title": "🔴 Spitzenpreis-Zeitraum Einstellungen",
-                "description": "_{step_progress}_\n\n**Konfiguration für den Spitzenpreis-Zeitraum mit den höchsten Strompreisen.**\n\n---",
+                "description": "**Konfiguration für den Spitzenpreis-Zeitraum mit den höchsten Strompreisen.**\n\n---",
                 "sections": {
                     "period_settings": {
                         "name": "Zeitraum-Einstellungen",
@@ -268,52 +274,48 @@
                         }
                     }
                 },
-                "submit": "Weiter →"
+                "submit": "↩ Speichern & Zurück"
             },
             "price_trend": {
                 "title": "📈 Preistrend-Schwellenwerte",
-                "description": "_{step_progress}_\n\n**Konfiguriere Schwellenwerte für Preistrend-Sensoren. Diese Sensoren vergleichen den aktuellen Preis mit dem Durchschnitt der nächsten N Stunden, um festzustellen, ob die Preise steigen, fallen oder stabil sind.**\n\n---",
-                "sections": {
-                    "price_trend_thresholds": {
-                        "name": "Preistrend-Schwellenwerte",
-                        "description": "Definiere die Einstufungen für den Preistrend.",
-                        "data": {
-                            "price_trend_threshold_rising": "Steigend-Schwelle",
-                            "price_trend_threshold_falling": "Fallend-Schwelle"
-                        },
-                        "data_description": {
-                            "price_trend_threshold_rising": "Prozentwert, um wie viel der Durchschnitt der nächsten N Stunden über dem aktuellen Preis liegen muss, damit der Trend als 'steigend' gilt. Beispiel: 5 bedeutet Durchschnitt ist mindestens 5% höher → Preise werden steigen. Typische Werte: 5-15%. Standard: 5%",
-                            "price_trend_threshold_falling": "Prozentwert (negativ), um wie viel der Durchschnitt der nächsten N Stunden unter dem aktuellen Preis liegen muss, damit der Trend als 'fallend' gilt. Beispiel: -5 bedeutet Durchschnitt ist mindestens 5% niedriger → Preise werden fallen. Typische Werte: -5 bis -15%. Standard: -5%"
-                        }
-                    }
+                "description": "**Konfiguriere Schwellenwerte für Preistrend-Sensoren. Diese Sensoren vergleichen den aktuellen Preis mit dem Durchschnitt der nächsten N Stunden, um festzustellen, ob die Preise steigen, fallen oder stabil sind.**",
+                "data": {
+                    "price_trend_threshold_rising": "Steigend-Schwelle",
+                    "price_trend_threshold_falling": "Fallend-Schwelle"
                 },
-                "submit": "Weiter →"
+                "data_description": {
+                    "price_trend_threshold_rising": "Prozentwert, um wie viel der Durchschnitt der nächsten N Stunden über dem aktuellen Preis liegen muss, damit der Trend als 'steigend' gilt. Beispiel: 5 bedeutet Durchschnitt ist mindestens 5% höher → Preise werden steigen. Typische Werte: 5-15%. Standard: 5%",
+                    "price_trend_threshold_falling": "Prozentwert (negativ), um wie viel der Durchschnitt der nächsten N Stunden unter dem aktuellen Preis liegen muss, damit der Trend als 'fallend' gilt. Beispiel: -5 bedeutet Durchschnitt ist mindestens 5% niedriger → Preise werden fallen. Typische Werte: -5 bis -15%. Standard: -5%"
+                },
+                "submit": "↩ Speichern & Zurück"
             },
             "volatility": {
                 "title": "💨 Volatilität Schwellenwerte",
-                "description": "_{step_progress}_\n\n**Konfiguriere Schwellenwerte für die Volatilitätsklassifizierung.** Volatilität misst relative Preisschwankungen anhand des Variationskoeffizienten (VK = Standardabweichung / Durchschnitt × 100%). Diese Schwellenwerte sind Prozentwerte, die für alle Preisniveaus funktionieren.\n\nVerwendet von:\n• Volatilitätssensoren (Klassifizierung)\n• Trend-Sensoren (adaptive Schwellenanpassung: &lt;moderat = empfindlicher, ≥hoch = weniger empfindlich)\n\n---",
-                "sections": {
-                    "volatility_thresholds": {
-                        "name": "Volatilitätsschwellen",
-                        "description": "Definiere Volatilitäts-Klassifizierungsstufen.",
-                        "data": {
-                            "volatility_threshold_moderate": "Moderat-Schwelle",
-                            "volatility_threshold_high": "Hoch-Schwelle",
-                            "volatility_threshold_very_high": "Sehr hoch-Schwelle"
-                        },
-                        "data_description": {
-                            "volatility_threshold_moderate": "Variationskoeffizient (VK) ab dem Preise als 'moderat volatil' gelten. VK = (Standardabweichung / Durchschnitt) × 100%. Beispiel: 15 bedeutet Preisschwankungen von ±15% um den Durchschnitt. Sensoren zeigen diese Klassifizierung an, Trend-Sensoren werden empfindlicher. Standard: 15%",
-                            "volatility_threshold_high": "Variationskoeffizient (VK) ab dem Preise als 'hoch volatil' gelten. Beispiel: 30 bedeutet Preisschwankungen von ±30% um den Durchschnitt. Größere Preissprünge erwartet, Trend-Sensoren werden weniger empfindlich. Standard: 30%",
-                            "volatility_threshold_very_high": "Variationskoeffizient (VK) ab dem Preise als 'sehr hoch volatil' gelten. Beispiel: 50 bedeutet extreme Preisschwankungen von ±50% um den Durchschnitt. An solchen Tagen sind starke Preisspitzen wahrscheinlich. Standard: 50%"
-                        }
-                    }
+                "description": "**Konfiguriere Schwellenwerte für die Volatilitätsklassifizierung.** Volatilität misst relative Preisschwankungen anhand des Variationskoeffizienten (VK = Standardabweichung / Durchschnitt × 100%). Diese Schwellenwerte sind Prozentwerte, die für alle Preisniveaus funktionieren.\n\nVerwendet von:\n• Volatilitätssensoren (Klassifizierung)\n• Trend-Sensoren (adaptive Schwellenanpassung: &lt;moderat = empfindlicher, ≥hoch = weniger empfindlich)",
+                "data": {
+                    "volatility_threshold_moderate": "Moderat-Schwelle",
+                    "volatility_threshold_high": "Hoch-Schwelle",
+                    "volatility_threshold_very_high": "Sehr hoch-Schwelle"
                 },
-                "submit": "Weiter →"
+                "data_description": {
+                    "volatility_threshold_moderate": "Variationskoeffizient (VK) ab dem Preise als 'moderat volatil' gelten. VK = (Standardabweichung / Durchschnitt) × 100%. Beispiel: 15 bedeutet Preisschwankungen von ±15% um den Durchschnitt. Sensoren zeigen diese Klassifizierung an, Trend-Sensoren werden empfindlicher. Standard: 15%",
+                    "volatility_threshold_high": "Variationskoeffizient (VK) ab dem Preise als 'hoch volatil' gelten. Beispiel: 30 bedeutet Preisschwankungen von ±30% um den Durchschnitt. Größere Preissprünge erwartet, Trend-Sensoren werden weniger empfindlich. Standard: 30%",
+                    "volatility_threshold_very_high": "Variationskoeffizient (VK) ab dem Preise als 'sehr hoch volatil' gelten. Beispiel: 50 bedeutet extreme Preisschwankungen von ±50% um den Durchschnitt. An solchen Tagen sind starke Preisspitzen wahrscheinlich. Standard: 50%"
+                },
+                "submit": "↩ Speichern & Zurück"
             },
             "chart_data_export": {
                 "title": "📊 Chart Data Export Sensor",
-                "description": "_{step_progress}_\n\nDer Chart Data Export Sensor stellt Preisdaten als Sensor-Attribute zur Verfügung.\n\n⚠️ **Hinweis:** Dieser Sensor ist ein Legacy-Feature für Kompatibilität mit älteren Tools.\n\n**Für neue Setups empfohlen:** Nutze den `tibber_prices.get_chartdata` **Service direkt** - er ist flexibler, effizienter und der moderne Home Assistant-Ansatz.\n\n**Wann dieser Sensor sinnvoll ist:**\n\n✅ Dein Dashboard-Tool kann **nur** Attribute lesen (keine Service-Aufrufe)\n✅ Du brauchst statische Daten, die automatisch aktualisiert werden\n❌ **Nicht für Automationen:** Nutze dort direkt `tibber_prices.get_chartdata` - flexibler und effizienter!\n\n---\n\n**Sensor aktivieren:**\n\n1. Öffne **Einstellungen → Geräte & Dienste → Tibber Prices**\n2. Wähle dein Home → Finde **'Chart Data Export'** (Diagnose-Bereich)\n3. **Aktiviere den Sensor** (standardmäßig deaktiviert)\n\n**Konfiguration (optional):**\n\nStandardeinstellung funktioniert sofort (heute+morgen, 15-Minuten-Intervalle, reine Preise).\n\nFür Anpassungen füge in **`configuration.yaml`** ein:\n\n```yaml\ntibber_prices:\n  chart_export:\n    day:\n      - today\n      - tomorrow\n    include_level: true\n    include_rating_level: true\n```\n\n**Alle Parameter:** Siehe `tibber_prices.get_chartdata` Service-Dokumentation",
-                "submit": "Abschließen ✓"
+                "description": "Der Chart Data Export Sensor stellt Preisdaten als Sensor-Attribute zur Verfügung.\n\n⚠️ **Hinweis:** Dieser Sensor ist ein Legacy-Feature für Kompatibilität mit älteren Tools.\n\n**Für neue Setups empfohlen:** Nutze den `tibber_prices.get_chartdata` **Service direkt** - er ist flexibler, effizienter und der moderne Home Assistant-Ansatz.\n\n**Wann dieser Sensor sinnvoll ist:**\n\n✅ Dein Dashboard-Tool kann **nur** Attribute lesen (keine Service-Aufrufe)\n✅ Du brauchst statische Daten, die automatisch aktualisiert werden\n❌ **Nicht für Automationen:** Nutze dort direkt `tibber_prices.get_chartdata` - flexibler und effizienter!\n\n---\n\n**Sensor aktivieren:**\n\n1. Öffne **Einstellungen → Geräte & Dienste → Tibber Prices**\n2. Wähle dein Home → Finde **'Chart Data Export'** (Diagnose-Bereich)\n3. **Aktiviere den Sensor** (standardmäßig deaktiviert)\n\n**Konfiguration (optional):**\n\nStandardeinstellung funktioniert sofort (heute+morgen, 15-Minuten-Intervalle, reine Preise).\n\nFür Anpassungen füge in **`configuration.yaml`** ein:\n\n```yaml\ntibber_prices:\n  chart_export:\n    day:\n      - today\n      - tomorrow\n    include_level: true\n    include_rating_level: true\n```\n\n**Alle Parameter:** Siehe `tibber_prices.get_chartdata` Service-Dokumentation",
+                "submit": "↩ Ok & Zurück"
+            },
+            "reset_to_defaults": {
+                "title": "🔄 Auf Werkseinstellungen zurücksetzen",
+                "description": "⚠️ **Warnung:** Dies setzt **ALLE** Einstellungen auf Werkseinstellungen zurück.\n\n**Was wird zurückgesetzt:**\n• Alle Preisbewertungs-Schwellwerte\n• Alle Volatilitäts-Schwellwerte\n• Alle Preistrend-Schwellwerte\n• Alle Einstellungen für Best-Price-Perioden\n• Alle Einstellungen für Peak-Price-Perioden\n• Anzeigeeinstellungen\n• Allgemeine Einstellungen\n\n**Was wird NICHT zurückgesetzt:**\n• Dein Tibber API-Token\n• Ausgewähltes Zuhause\n• Währung\n\n**💡 Tipp:** Nützlich, wenn du nach dem Experimentieren mit Einstellungen neu beginnen möchtest.",
+                "data": {
+                    "confirm_reset": "Ja, alles auf Werkseinstellungen zurücksetzen"
+                },
+                "submit": "Jetzt zurücksetzen"
             }
         },
         "error": {
@@ -341,7 +343,10 @@
             "invalid_price_trend_falling": "Fallender Trendschwellenwert muss zwischen -50% und -1% liegen"
         },
         "abort": {
-            "entry_not_found": "Tibber Konfigurationseintrag nicht gefunden."
+            "entry_not_found": "Tibber Konfigurationseintrag nicht gefunden.",
+            "reset_cancelled": "Zurücksetzen abgebrochen. Es wurden keine Änderungen an deiner Konfiguration vorgenommen.",
+            "reset_successful": "✅ Alle Einstellungen wurden auf Werkseinstellungen zurückgesetzt. Deine Konfiguration ist jetzt wie bei einer frischen Installation.",
+            "finished": "Konfiguration abgeschlossen."
         }
     },
     "entity": {

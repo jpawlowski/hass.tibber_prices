@@ -2,15 +2,15 @@
     "config": {
         "step": {
             "account_choice": {
-                "title": "Kies account",
-                "description": "Je kunt een ander huis van een bestaande Tibber-account toevoegen of een nieuw API-token invoeren voor een ander account.",
+                "title": "Kies Account",
+                "description": "Je kunt een ander huis van een bestaand Tibber-account toevoegen of een nieuw API-token invoeren voor een ander account.",
                 "data": {
                     "account_choice": "Account"
                 },
                 "submit": "Doorgaan →"
             },
             "new_token": {
-                "title": "Voer API-token in",
+                "title": "Voer API-Token In",
                 "description": "Stel Tibber Prijsinformatie & Beoordelingen in.\n\nOm een API-toegangstoken te genereren, bezoek https://developer.tibber.com.",
                 "data": {
                     "access_token": "API-toegangstoken"
@@ -29,7 +29,7 @@
                 "data": {
                     "home_id": "Huis"
                 },
-                "title": "Kies een huis",
+                "title": "Kies een Huis",
                 "submit": "Huis selecteren"
             },
             "finish": {
@@ -41,7 +41,7 @@
                 "submit": "Huis selecteren"
             },
             "reauth_confirm": {
-                "title": "Tibber Prijs-integratie opnieuw authenticeren",
+                "title": "Tibber Price Integratie Opnieuw Authenticeren",
                 "description": "Het toegangstoken voor Tibber is niet langer geldig. Voer een nieuw API-toegangstoken in om deze integratie te blijven gebruiken.\n\nOm een nieuw API-toegangstoken te genereren, bezoek https://developer.tibber.com.",
                 "data": {
                     "access_token": "API-toegangstoken"
@@ -59,20 +59,20 @@
             "home_already_configured": "Dit huis is al geconfigureerd in een ander item. Elk huis kan slechts één keer worden geconfigureerd.",
             "no_active_subscription": "Dit huis heeft geen actief Tibber-contract. Alleen huizen met actieve elektriciteitscontracten kunnen worden toegevoegd aan Home Assistant.",
             "subscription_expired": "Het Tibber-contract voor dit huis is verlopen. Alleen huizen met actieve of toekomstige elektriciteitscontracten kunnen worden toegevoegd aan Home Assistant.",
-            "future_subscription_warning": "Let op: Het Tibber-contract voor dit huis is nog niet begonnen. De functionaliteit kan beperkt zijn totdat het contract actief wordt.",
-            "invalid_yaml_syntax": "Ongeldige YAML-syntaxis. Controleer inspringingen, dubbele punten en speciale tekens.",
-            "invalid_yaml_structure": "YAML moet een woordenboek/object zijn (sleutel: waarde-paren), geen lijst of platte tekst.",
-            "service_call_failed": "Service-aanroep validatie mislukt: {error_detail}",
-            "missing_entry_id": "Entry ID is vereist maar niet opgegeven.",
-            "invalid_entry_id": "Ongeldige entry ID of entry niet gevonden.",
-            "missing_home_id": "Huis-ID ontbreekt in de configuratie.",
-            "user_data_not_available": "Gebruikersgegevens niet beschikbaar. Vernieuw eerst de gebruikersgegevens.",
-            "price_fetch_failed": "Prijsgegevens ophalen mislukt. Controleer de logs voor details."
+            "future_subscription_warning": "Let op: Het Tibber-contract van dit huis is nog niet gestart. De functionaliteit kan beperkt zijn totdat het contract actief wordt.",
+            "invalid_yaml_syntax": "Ongeldige YAML-syntaxis. Controleer inspringing, dubbele punten en speciale tekens.",
+            "invalid_yaml_structure": "YAML moet een dictionary/object zijn (sleutel: waarde paren), geen lijst of platte tekst.",
+            "service_call_failed": "Service call validatie mislukt: {error_detail}",
+            "missing_entry_id": "Entry-ID is verplicht maar werd niet opgegeven.",
+            "invalid_entry_id": "Ongeldige entry-ID of item niet gevonden.",
+            "missing_home_id": "Huis-ID ontbreekt in het configuratie-item.",
+            "user_data_not_available": "Gebruikersgegevens zijn niet beschikbaar. Ververs eerst de gebruikersgegevens.",
+            "price_fetch_failed": "Ophalen van prijsgegevens mislukt. Controleer de logs voor details."
         },
         "abort": {
             "already_configured": "Alle beschikbare Tibber-huizen zijn al geconfigureerd. Elk huis kan slechts één keer worden geconfigureerd.",
             "entry_not_found": "Tibber-configuratie-item niet gevonden.",
-            "setup_complete": "Installatie voltooid! Je kunt extra opties voor Tibber Prices wijzigen in de integratie-opties na het sluiten van deze dialoog.",
+            "setup_complete": "Installatie voltooid! Je kunt extra opties voor Tibber Prices wijzigen in de integratie-opties na het sluiten van dit dialoogvenster.",
             "reauth_successful": "Herauthenticatie geslaagd. De integratie is bijgewerkt met het nieuwe toegangstoken."
         }
     },
@@ -83,47 +83,47 @@
         "home": {
             "entry_type": "Tijdreisweergave",
             "initiate_flow": {
-                "user": "Tijdreisweergave maken"
+                "user": "Tijdreisweergave Aanmaken"
             },
-            "title": "Tijdreisweergave maken",
+            "title": "Tijdreisweergave Aanmaken",
             "step": {
                 "user": {
-                    "title": "Configuratie-item selecteren",
-                    "description": "Selecteer het configuratie-item waarvoor je een tijdreisweergave wilt maken.\n\n**Tijdreisweergaves** stellen je in staat om historische prijsgegevens te zien alsof het de huidige tijd is. Dit is handig voor het testen van automatiseringen of het analyseren van eerdere prijspatronen.",
+                    "title": "Selecteer Configuratie-Item",
+                    "description": "Selecteer het configuratie-item waarvoor je een tijdreisweergave wilt aanmaken.\n\n**Tijdreisweergaven** laten je historische prijsgegevens zien alsof het de huidige tijd is. Dit is handig voor het testen van automatiseringen of het analyseren van prijspatronen uit het verleden.",
                     "data": {
-                        "parent_entry_id": "Configuratie-item"
+                        "parent_entry_id": "Configuratie-Item"
                     }
                 },
                 "time_offset": {
-                    "title": "Tijdverschuiving configureren",
-                    "description": "Configureer hoe ver terug in de tijd deze weergave moet reizen.\n\n**Aanbevolen:** Gebruik **≥2 dagen** verschuiving om conflicten met \"yesterday\"-entiteiten te vermijden die ook historische gegevens bieden.\n\n**Voorbeelden:**\n• **-7 dagen**: Toon prijzen van 7 dagen geleden\n• **-2 dagen, 3 uur**: Toon prijzen van 2 dagen en 3 uur geleden\n• **-14 dagen**: Toon prijzen van 2 weken geleden",
+                    "title": "Configureer Tijdverschuiving",
+                    "description": "Configureer hoe ver terug in de tijd deze weergave moet reizen.\n\n**Aanbevolen:** Gebruik **≥2 dagen** verschuiving om conflicten met \"gisteren\"-entiteiten te voorkomen die ook historische gegevens bieden.\n\n**Voorbeelden:**\n• **-7 dagen**: Bekijk prijzen van 7 dagen geleden\n• **-2 dagen, 3 uur**: Bekijk prijzen van 2 dagen en 3 uur geleden\n• **-14 dagen**: Bekijk prijzen van 2 weken geleden",
                     "data": {
-                        "virtual_time_offset_days": "Dagen terug",
-                        "time_offset": "Extra tijdverschuiving"
+                        "virtual_time_offset_days": "Dagen Terug",
+                        "time_offset": "Extra Tijdverschuiving"
                     },
                     "data_description": {
-                        "virtual_time_offset_days": "Hoeveel dagen terug in de tijd reizen. Schuifregelaar bereik: 0 tot 374 dagen (≈1 jaar). Aanbevolen: ≥2 dagen om conflicten met \"yesterday\"-entiteiten te vermijden.",
+                        "virtual_time_offset_days": "Hoeveel dagen terug in de tijd reizen. Schuifbereik: 0 tot 374 dagen (≈1 jaar). Aanbevolen: ≥2 dagen om conflicten met \"gisteren\"-entiteiten te voorkomen.",
                         "time_offset": "Optionele fijnafstemming: Voeg uren en/of minuten toe aan de dagverschuiving. De tijd wordt automatisch afgetrokken (verder terug reizen). Let op: Seconden worden genegeerd - alleen precisie op minuutniveau wordt ondersteund."
                     }
                 },
                 "init": {
-                    "title": "Tijdverschuiving opnieuw configureren",
+                    "title": "Tijdverschuiving Opnieuw Configureren",
                     "description": "Werk de tijdverschuiving voor deze tijdreisweergave bij.",
                     "data": {
-                        "virtual_time_offset_days": "Dagen terug",
-                        "time_offset": "Extra tijdverschuiving"
+                        "virtual_time_offset_days": "Dagen Terug",
+                        "time_offset": "Extra Tijdverschuiving"
                     },
                     "data_description": {
-                        "virtual_time_offset_days": "Hoeveel dagen terug in de tijd reizen. Schuifregelaar bereik: 0 tot 374 dagen (≈1 jaar). Aanbevolen: ≥2 dagen om conflicten met \"yesterday\"-entiteiten te vermijden.",
+                        "virtual_time_offset_days": "Hoeveel dagen terug in de tijd reizen. Schuifbereik: 0 tot 374 dagen (≈1 jaar). Aanbevolen: ≥2 dagen om conflicten met \"gisteren\"-entiteiten te voorkomen.",
                         "time_offset": "Optionele fijnafstemming: Voeg uren en/of minuten toe aan de dagverschuiving. De tijd wordt automatisch afgetrokken (verder terug reizen). Let op: Seconden worden genegeerd - alleen precisie op minuutniveau wordt ondersteund."
                     }
                 }
             },
             "error": {
-                "no_time_offset": "Ten minste één tijdverschuivingswaarde moet negatief zijn (alleen historische gegevens)."
+                "no_time_offset": "Minimaal één tijdverschuivingswaarde moet negatief zijn (alleen historische gegevens)."
             },
             "abort": {
-                "already_configured": "**Een tijdreis-weergave met deze exacte tijdverschuiving bestaat al.**\n\nKies een andere verschuiving.",
+                "already_configured": "**Een tijdreisweergave met exact deze tijdverschuiving bestaat al.**\n\nKies een andere verschuiving.",
                 "no_main_entries": "Geen hoofdconfiguratie-items gevonden. Voeg eerst een Tibber-huis toe.",
                 "parent_entry_not_found": "Geselecteerd configuratie-item niet gevonden."
             }
@@ -132,336 +132,343 @@
     "options": {
         "step": {
             "init": {
-                "title": "⚙️ Algemene instellingen",
-                "description": "_{step_progress}_\n\n**Configureer algemene instellingen voor Tibber-prijsinformatie en -beoordelingen.**\n\n---\n\n**Gebruiker:** {user_login}",
+                "menu_options": {
+                    "general_settings": "⚙️ Algemene Instellingen",
+                    "display_settings": "💱 Valuta Weergave",
+                    "current_interval_price_rating": "📊 Prijsbeoordeling",
+                    "volatility": "💨 Prijsvolatiliteit",
+                    "best_price": "💚 Beste Prijs Periode",
+                    "peak_price": "🔴 Piekprijs Periode",
+                    "price_trend": "📈 Prijstrend",
+                    "chart_data_export": "📊 Grafiekdata Export Sensor",
+                    "reset_to_defaults": "🔄 Standaardwaarden Herstellen",
+                    "finish": "⬅️ Terug"
+                }
+            },
+            "general_settings": {
+                "title": "⚙️ Algemene Instellingen",
+                "description": "**Configureer algemene instellingen voor Tibber Prijsinformatie & Beoordelingen.**\n\n---\n\n**Gebruiker:** {user_login}",
                 "data": {
-                    "extended_descriptions": "Uitgebreide beschrijvingen",
-                    "average_sensor_display": "Gemiddelde sensor weergave"
+                    "extended_descriptions": "Uitgebreide Beschrijvingen",
+                    "average_sensor_display": "Gemiddelde Sensor Weergave"
                 },
                 "data_description": {
                     "extended_descriptions": "Bepaalt of entiteitsattributen gedetailleerde uitleg en gebruikstips bevatten.\n\n• Uitgeschakeld (standaard): Alleen korte beschrijving\n• Ingeschakeld: Gedetailleerde uitleg + praktische gebruiksvoorbeelden\n\nVoorbeeld:\nUitgeschakeld = 1 attribuut\nIngeschakeld = 2 extra attributen",
-                    "average_sensor_display": "Kies welke statistische maat wordt weergegeven in de sensorstatus voor gemiddelde prijssensoren. De andere waarde wordt weergegeven als attribuut. Mediaan is resistenter tegen extreme waarden, terwijl het rekenkundig gemiddelde het traditionele gemiddelde vertegenwoordigt. Standaard: Mediaan"
+                    "average_sensor_display": "Kies welke statistische maat weergegeven moet worden in de sensorstatus voor gemiddelde prijssensoren. De andere waarde wordt als attribuut getoond. Mediaan is resistenter tegen extreme waarden, terwijl rekenkundig gemiddelde het traditionele gemiddelde vertegenwoordigt. Standaard: Mediaan"
                 },
-                "submit": "Doorgaan →"
+                "submit": "↩ Opslaan & Terug"
             },
             "display_settings": {
-                "title": "💱 Valuta-weergave-instellingen",
-                "description": "_{step_progress}_\n\n**Configureer hoe elektriciteitsprijzen worden weergegeven - in basisvaluta (€, kr) of subeenheid (ct, øre).**\n\n---",
+                "title": "💱 Valuta Weergave-Instellingen",
+                "description": "**Configureer hoe elektriciteitsprijzen worden weergegeven - in basisvaluta (€, kr) of subeenheid (ct, øre).**\n\n---",
                 "data": {
                     "currency_display_mode": "Weergavemodus"
                 },
                 "data_description": {
-                    "currency_display_mode": "Kies hoe prijzen worden weergegeven:\n\n• **Basisvaluta** (€/kWh, kr/kWh): Decimaalwaarden (bijv. 0,25 €/kWh) - verschillen zichtbaar vanaf 3e-4e decimaal\n• **Subeenheid** (ct/kWh, øre/kWh): Grotere waarden (bijv. 25,00 ct/kWh) - verschillen al zichtbaar vanaf 1e decimaal\n\nStandaard hangt af van jouw valuta:\n• EUR → Subeenheid (cent) - Duitse/Nederlandse voorkeur\n• NOK/SEK/DKK → Basisvaluta (kronen) - Scandinavische voorkeur\n• USD/GBP → Basisvaluta\n\n**💡 Tip:** Bij keuze van subeenheid kun je de extra sensor \"Huidige elektriciteitsprijs (Energie-dashboard)\" activeren (standaard uitgeschakeld)."
+                    "currency_display_mode": "Kies hoe prijzen worden weergegeven:\n\n• **Basisvaluta** (€/kWh, kr/kWh): Decimale waarden (bijv. 0,25 €/kWh) - verschillen zichtbaar vanaf 3e-4e decimaal\n• **Subeenheid Valuta** (ct/kWh, øre/kWh): Grotere waarden (bijv. 25,00 ct/kWh) - verschillen zichtbaar vanaf 1e decimaal\n\nStandaard hangt af van je valuta:\n• EUR → Subeenheid (cents) - Duitse/Nederlandse voorkeur\n• NOK/SEK/DKK → Basis (kronen) - Scandinavische voorkeur\n• USD/GBP → Basisvaluta\n\n**💡 Tip:** Bij selectie van Subeenheid Valuta kun je de extra \"Huidige Elektriciteitsprijs (Energie Dashboard)\" sensor inschakelen (standaard uitgeschakeld)."
                 },
-                "submit": "Doorgaan →"
+                "submit": "↩ Opslaan & Terug"
             },
             "current_interval_price_rating": {
-                "title": "📊 Prijsbeoordelingsdrempels",
-                "description": "_{step_progress}_\n\n**Configureer drempels voor prijsbeoordelingsniveaus (laag/normaal/hoog) op basis van vergelijking met het lopende 24-uurs gemiddelde.**\n\n---",
-                "sections": {
-                    "price_rating_thresholds": {
-                        "name": "Prijsbeoordelingsdrempels",
-                        "description": "Definieer prijsbeoordelingsniveaus.",
-                        "data": {
-                            "price_rating_threshold_low": "Lage drempel",
-                            "price_rating_threshold_high": "Hoge drempel"
-                        },
-                        "data_description": {
-                            "price_rating_threshold_low": "Percentage onder het lopende 24-uurs gemiddelde dat de huidige prijs moet zijn om als 'laag' te kwalificeren. Voorbeeld: 5 betekent minstens 5% onder gemiddelde. Sensoren met deze beoordeling geven gunstige tijdsvensters aan. Standaard: 5%",
-                            "price_rating_threshold_high": "Percentage boven het lopende 24-uurs gemiddelde dat de huidige prijs moet zijn om als 'hoog' te kwalificeren. Voorbeeld: 10 betekent minstens 10% boven gemiddelde. Sensoren met deze beoordeling waarschuwen voor dure tijdsvensters. Standaard: 10%"
-                        }
-                    }
+                "title": "📊 Prijsbeoordeling Drempelwaarden",
+                "description": "**Configureer drempelwaarden voor prijsbeoordelingsniveaus (laag/normaal/hoog) gebaseerd op vergelijking met het voortschrijdende 24-uurs gemiddelde.**",
+                "data": {
+                    "price_rating_threshold_low": "Lage Drempel",
+                    "price_rating_threshold_high": "Hoge Drempel"
                 },
-                "submit": "Doorgaan →"
+                "data_description": {
+                    "price_rating_threshold_low": "Percentage onder het voortschrijdende 24-uurs gemiddelde dat de huidige prijs moet zijn om te kwalificeren als 'laag' beoordelingsniveau. Voorbeeld: 5 betekent minimaal 5% onder gemiddelde. Sensoren met deze beoordeling geven gunstige tijdvensters aan. Standaard: 5%",
+                    "price_rating_threshold_high": "Percentage boven het voortschrijdende 24-uurs gemiddelde dat de huidige prijs moet zijn om te kwalificeren als 'hoog' beoordelingsniveau. Voorbeeld: 10 betekent minimaal 10% boven gemiddelde. Sensoren met deze beoordeling waarschuwen voor dure tijdvensters. Standaard: 10%"
+                },
+                "submit": "↩ Opslaan & Terug"
             },
             "best_price": {
-                "title": "💚 Beste Prijs Periode Instellingen",
-                "description": "_{step_progress}_\n\nConfigureer instellingen voor de **Beste Prijs Periode** binaire sensor. Deze sensor is actief tijdens periodes met de laagste elektriciteitsprijzen.\n\n---",
+                "title": "💚 Best Price Period Settings",
+                "description": "**Configure settings for the Best Price Period binary sensor. This sensor is active during periods with the lowest electricity prices.**\n\n---",
                 "sections": {
                     "period_settings": {
-                        "name": "Periode-instellingen",
-                        "description": "Configureer periodelengte en prijsniveaubeperkingen.",
+                        "name": "Period Duration & Levels",
+                        "description": "Configure how long periods should be and which price levels to include.",
                         "data": {
-                            "best_price_min_period_length": "Minimale periodelengte",
-                            "best_price_max_level": "Prijsniveaufilter",
-                            "best_price_max_level_gap_count": "Gaptolerantie"
+                            "best_price_min_period_length": "Minimum Period Length",
+                            "best_price_max_level": "Price Level Filter",
+                            "best_price_max_level_gap_count": "Gap Tolerance"
                         },
                         "data_description": {
-                            "best_price_min_period_length": "Minimale duur voordat een periode als 'beste prijs' wordt beschouwd. Langere periodes zijn praktischer voor apparaten zoals vaatwassers of warmtepompen. Beste prijs periodes vereisen minimaal 60 minuten (versus 30 minuten voor piekprijs waarschuwingen) omdat ze betekenisvolle tijdvensters voor verbruiksplanning moeten bieden, niet alleen korte kansen.",
-                            "best_price_max_level": "Toon alleen beste prijs periodes als ze intervallen bevatten met prijsniveaus ≤ geselecteerde waarde. Bijvoorbeeld: selecteren van '**Goedkoop**' betekent dat de periode minstens één '**Zeer goedkoop**' of '**Goedkoop**' interval moet hebben. Dit zorgt ervoor dat 'beste prijs'-periodes niet alleen relatief goedkoop zijn voor de dag, maar daadwerkelijk goedkoop in absolute termen. Selecteer '**Alle**' om beste prijzen te tonen ongeacht hun absolute prijsniveau.",
-                            "best_price_max_level_gap_count": "Maximum aantal opeenvolgende intervallen dat precies één niveaustap mag afwijken van het vereiste niveau. Bijvoorbeeld: met '**Goedkoop**' filter en gaptelling 1 wordt de reeks '**Goedkoop**, **Goedkoop**, **Normaal**, **Goedkoop**' geaccepteerd (**Normaal** is één stap boven **Goedkoop**). Dit voorkomt dat periodes worden opgesplitst door incidentele niveauafwijkingen. **Let op:** Gaptolerantie vereist periodes ≥90 minuten (6 intervallen) om afwijkingen effectief te detecteren. Standaard: 0 (strikte filtering, geen tolerantie)."
+                            "best_price_min_period_length": "Minimum duration for a period to be considered as 'best price'. Longer periods are more practical for running appliances like dishwashers or heat pumps. Best price periods require 60 minutes minimum (vs. 30 minutes for peak price warnings) because they should provide meaningful time windows for consumption planning, not just brief opportunities.",
+                            "best_price_max_level": "Only show best price periods if they contain intervals with price levels ≤ selected value. For example, selecting '**Cheap**' means the period must have at least one '**Very cheap**' or '**Cheap**' interval. This ensures 'best price' periods are not just relatively cheap for the day, but actually cheap in absolute terms. Select '**Any**' to show best prices regardless of their absolute price level.",
+                            "best_price_max_level_gap_count": "Maximaal aantal opeenvolgende intervallen toegestaan die precies één niveaustap afwijken van het vereiste niveau. Bijvoorbeeld: met '**Goedkoop**' filter en gat telling 1, wordt een reeks '**Goedkoop**, **Goedkoop**, **Normaal**, **Goedkoop**' geaccepteerd (**Normaal** is één stap boven **Goedkoop**). Dit voorkomt dat periodes worden gesplitst door incidentele niveauafwijkingen. **Let op:** Gat tolerantie vereist periodes ≥90 minuten (6 intervallen) om uitschieters effectief te detecteren. Standaard: 0 (strikte filtering, geen tolerantie)."
                         }
                     },
                     "flexibility_settings": {
-                        "name": "Flexibiliteitsinstellingen",
-                        "description": "Configureer prijsvergelijkingsdrempels en filtering.",
+                        "name": "Flexibiliteit & Drempelwaarden",
+                        "description": "Bepaal hoeveel prijzen kunnen afwijken en nog steeds als 'beste prijs' kwalificeren.",
                         "data": {
                             "best_price_flex": "Flexibiliteit",
-                            "best_price_min_distance_from_avg": "Minimale afstand"
+                            "best_price_min_distance_from_avg": "Minimale Afstand"
                         },
                         "data_description": {
-                            "best_price_flex": "Maximaal boven de dagelijkse minimumprijs waarbij intervallen nog kwalificeren als 'beste prijs'. Aanbevolen: 15-20 met versoepeling geactiveerd (standaard), of 25-35 zonder versoepeling. Maximum: 50 (harde limiet voor betrouwbare periodedetectie).",
-                            "best_price_min_distance_from_avg": "Zorgt ervoor dat periodes significant goedkoper zijn dan het daggemiddelde, niet slechts marginaal eronder. Dit filtert ruis en voorkomt dat licht-onder-gemiddelde periodes op dagen met vlakke prijzen als 'beste prijs' worden gemarkeerd. Hogere waarden = striktere filtering (alleen echt goedkope periodes kwalificeren). Standaard: 5 betekent dat periodes minimaal 5% onder het daggemiddelde moeten liggen."
+                            "best_price_flex": "Maximum boven de dagelijkse minimumprijs dat intervallen kunnen zijn en nog steeds als 'beste prijs' kwalificeren. Aanbevolen: 15-20 met relaxatie ingeschakeld (standaard), of 25-35 zonder relaxatie. Maximum: 50 (harde limiet voor betrouwbare periodedetectie).",
+                            "best_price_min_distance_from_avg": "Zorgt ervoor dat periodes significant goedkoper zijn dan het dagelijkse gemiddelde, niet slechts marginaal eronder. Dit filtert ruis en voorkomt het markeren van licht-onder-gemiddelde periodes als 'beste prijs' op dagen met vlakke prijzen. Hogere waarden = striktere filtering (alleen echt goedkope periodes kwalificeren). Standaard: 5 betekent dat periodes minimaal 5% onder het dagelijkse gemiddelde moeten zijn."
                         }
                     },
                     "relaxation_and_target_periods": {
-                        "name": "Versoepeling & Doelperiodes",
-                        "description": "Configureer automatische filterversoepeling en doelperiodetellingen. Activeer 'Minimum aantal bereiken' om versoepeling te activeren.",
+                        "name": "Relaxatie & Doelperiodes",
+                        "description": "Configureer automatische filterrelaxatie en doel periode aantallen. Schakel 'Bereik Minimum Aantal' in om relaxatie te activeren.",
                         "data": {
-                            "enable_min_periods_best": "Minimum aantal bereiken",
-                            "min_periods_best": "Minimum periodes",
-                            "relaxation_attempts_best": "Versoepeling pogingen"
+                            "enable_min_periods_best": "Bereik Minimum Aantal",
+                            "min_periods_best": "Minimale Periodes",
+                            "relaxation_attempts_best": "Relaxatie Pogingen"
                         },
                         "data_description": {
-                            "enable_min_periods_best": "Wanneer ingeschakeld worden filters geleidelijk versoepeld als er niet genoeg periodes worden gevonden. Dit probeert het gewenste minimum aantal periodes te bereiken, wat minder optimale tijdvensters kan omvatten als beste-prijs periodes.",
-                            "min_periods_best": "Minimum aantal beste prijs periodes om per dag na te streven. Filters worden stap voor stap versoepeld om deze telling te bereiken. Alleen actief wanneer 'Minimum aantal bereiken' is ingeschakeld. Standaard: 1",
-                            "relaxation_attempts_best": "Hoeveel flexniveaus (pogingen) te proberen voordat wordt opgegeven. Elke poging voert alle filtercombinaties uit op het nieuwe flexniveau. Meer pogingen vergroten de kans op het vinden van extra periodes ten koste van langere verwerkingstijd."
+                            "enable_min_periods_best": "Wanneer ingeschakeld, worden filters geleidelijk versoepeld als niet genoeg periodes worden gevonden. Dit probeert het gewenste minimum aantal periodes te bereiken, wat minder optimale tijdvensters als beste-prijs periodes kan bevatten.",
+                            "min_periods_best": "Minimaal aantal beste prijsperiodes om per dag na te streven. Filters worden stapsgewijs versoepeld om dit aantal te proberen te bereiken. Alleen actief wanneer 'Bereik Minimum Aantal' is ingeschakeld. Standaard: 1",
+                            "relaxation_attempts_best": "Hoeveel flex niveaus (pogingen) te proberen voordat opgegeven wordt. Elke poging voert alle filtercombinaties uit op het nieuwe flex niveau. Meer pogingen verhogen de kans om extra periodes te vinden ten koste van langere verwerkingstijd."
                         }
                     }
                 },
-                "submit": "Doorgaan →"
+                "submit": "↩ Opslaan & Terug"
             },
             "peak_price": {
                 "title": "🔴 Piekprijs Periode Instellingen",
-                "description": "_{step_progress}_\n\nConfigureer instellingen voor de **Piekprijs Periode** binaire sensor. Deze sensor is actief tijdens periodes met de hoogste elektriciteitsprijzen.\n\n---",
+                "description": "**Configureer instellingen voor de Piekprijs Periode binaire sensor. Deze sensor is actief tijdens periodes met de hoogste elektriciteitsprijzen.**\n\n---",
                 "sections": {
                     "period_settings": {
-                        "name": "Periode-instellingen",
-                        "description": "Configureer periodelengte en prijsniveaubeperkingen.",
+                        "name": "Periode Instellingen",
+                        "description": "Configureer periodeduur en prijsniveau beperkingen.",
                         "data": {
-                            "peak_price_min_period_length": "Minimale periodelengte",
-                            "peak_price_min_level": "Prijsniveaufilter",
-                            "peak_price_max_level_gap_count": "Gaptolerantie"
+                            "peak_price_min_period_length": "Minimale Periode Lengte",
+                            "peak_price_min_level": "Prijsniveau Filter",
+                            "peak_price_max_level_gap_count": "Gat Tolerantie"
                         },
                         "data_description": {
-                            "peak_price_min_period_length": "Minimale duur voordat een periode als 'piekprijs' wordt beschouwd. Piekprijs waarschuwingen zijn toegestaan voor kortere periodes (minimaal 30 minuten versus 60 minuten voor beste prijs) omdat korte dure pieken de moeite waard zijn om voor te waarschuwen, zelfs als ze te kort zijn voor verbruiksplanning.",
-                            "peak_price_min_level": "Toon alleen piekprijs periodes als ze intervallen bevatten met prijsniveaus ≥ geselecteerde waarde. Bijvoorbeeld: selecteren van '**Duur**' betekent dat de periode minstens één '**Duur**' of '**Zeer duur**' interval moet hebben. Dit zorgt ervoor dat 'piekprijs'-periodes niet alleen relatief duur zijn voor de dag, maar daadwerkelijk duur in absolute termen. Selecteer '**Alle**' om piekprijzen te tonen ongeacht hun absolute prijsniveau.",
-                            "peak_price_max_level_gap_count": "Maximum aantal opeenvolgende intervallen dat precies één niveaustap mag afwijken van het vereiste niveau. Bijvoorbeeld: met '**Duur**' filter en gaptelling 1 wordt de reeks '**Duur**, **Duur**, **Normaal**, **Duur**' geaccepteerd (**Normaal** is één stap onder **Duur**). Dit voorkomt dat periodes worden opgesplitst door incidentele niveauafwijkingen. **Let op:** Gaptolerantie vereist periodes ≥90 minuten (6 intervallen) om afwijkingen effectief te detecteren. Standaard: 0 (strikte filtering, geen tolerantie)."
+                            "peak_price_min_period_length": "Minimale duur voor een periode om als 'piekprijs' te worden beschouwd. Piekprijs waarschuwingen zijn toegestaan voor kortere periodes (30 minuten minimum vs. 60 minuten voor beste prijs) omdat korte dure pieken de moeite waard zijn om voor te waarschuwen, zelfs als ze te kort zijn voor verbruiksplanning.",
+                            "peak_price_min_level": "Toon alleen piekprijs periodes als ze intervallen bevatten met prijsniveaus ≥ geselecteerde waarde. Bijvoorbeeld, bij selectie '**Duur**' moet de periode minimaal één '**Duur**' of '**Zeer duur**' interval hebben. Dit zorgt ervoor dat 'piekprijs' periodes niet alleen relatief duur zijn voor de dag, maar daadwerkelijk duur in absolute termen. Selecteer '**Alles**' om piekprijzen te tonen ongeacht hun absolute prijsniveau.",
+                            "peak_price_max_level_gap_count": "Maximaal aantal opeenvolgende intervallen toegestaan die precies één niveaustap afwijken van het vereiste niveau. Bijvoorbeeld: met '**Duur**' filter en gat telling 2, wordt een reeks '**Duur**, **Normaal**, **Normaal**, **Duur**' geaccepteerd (**Normaal** is één stap onder **Duur**). Dit voorkomt dat periodes worden gesplitst door incidentele niveauafwijkingen. **Let op:** Gat tolerantie vereist periodes ≥90 minuten (6 intervallen) om uitschieters effectief te detecteren. Standaard: 0 (strikte filtering, geen tolerantie)."
                         }
                     },
                     "flexibility_settings": {
-                        "name": "Flexibiliteitsinstellingen",
-                        "description": "Configureer prijsvergelijkingscriteria en filtering.",
+                        "name": "Flexibiliteit Instellingen",
+                        "description": "Configureer drempelwaarden voor prijsvergelijking en filtering.",
                         "data": {
                             "peak_price_flex": "Flexibiliteit",
-                            "peak_price_min_distance_from_avg": "Minimale afstand"
+                            "peak_price_min_distance_from_avg": "Minimale Afstand"
                         },
                         "data_description": {
-                            "peak_price_flex": "Maximaal onder de dagelijkse maximumprijs waarbij intervallen nog kwalificeren als 'piekprijs'. Aanbeveling: -15 tot -20 met versoepeling geactiveerd (standaard), of -25 tot -35 zonder versoepeling. Maximum: -50 (harde limiet voor betrouwbare periodedetectie). Let op: Negatieve waarden geven de afstand onder het maximum aan.",
-                            "peak_price_min_distance_from_avg": "Zorgt ervoor dat periodes significant duurder zijn dan het daggemiddelde, niet slechts marginaal erboven. Dit filtert ruis en voorkomt dat licht-boven-gemiddelde periodes op dagen met vlakke prijzen als 'piekprijs' worden gemarkeerd. Hogere waarden = striktere filtering (alleen echt dure periodes kwalificeren). Standaard: 5 betekent dat periodes minimaal 5% boven het daggemiddelde moeten liggen."
+                            "peak_price_flex": "Maximum onder de dagelijkse maximumprijs dat intervallen kunnen zijn en nog steeds als 'piekprijs' kwalificeren. Aanbevolen: -15 tot -20 met relaxatie ingeschakeld (standaard), of -25 tot -35 zonder relaxatie. Maximum: -50 (harde limiet voor betrouwbare periodedetectie). Let op: Negatieve waarden geven afstand onder maximum aan.",
+                            "peak_price_min_distance_from_avg": "Zorgt ervoor dat periodes significant duurder zijn dan het dagelijkse gemiddelde, niet slechts marginaal erboven. Dit filtert ruis en voorkomt het markeren van licht-boven-gemiddelde periodes als 'piekprijs' op dagen met vlakke prijzen. Hogere waarden = striktere filtering (alleen echt dure periodes kwalificeren). Standaard: 5 betekent dat periodes minimaal 5% boven het dagelijkse gemiddelde moeten zijn."
                         }
                     },
                     "relaxation_and_target_periods": {
-                        "name": "Ontspanning en doelperiodes",
-                        "description": "Configureer automatische filterontspanning en doelperiode-aantallen. Schakel 'Probeer minimum aantal periodes te bereiken' in om ontspanning te activeren.",
+                        "name": "Relaxatie & Doelperiodes",
+                        "description": "Configureer automatische filterrelaxatie en doel periode aantallen. Schakel 'Bereik Minimum Aantal' in om relaxatie te activeren.",
                         "data": {
-                            "enable_min_periods_peak": "Probeer minimum aantal periodes te bereiken",
-                            "min_periods_peak": "Minimum aantal periodes",
-                            "relaxation_attempts_peak": "Aantal ontspanningspogingen"
+                            "enable_min_periods_peak": "Bereik Minimum Aantal",
+                            "min_periods_peak": "Minimale Periodes",
+                            "relaxation_attempts_peak": "Relaxatie Pogingen"
                         },
                         "data_description": {
-                            "enable_min_periods_peak": "Wanneer ingeschakeld worden filters geleidelijk versoepeld als er niet genoeg periodes worden gevonden. Dit probeert het gewenste minimum aantal periodes te bereiken om ervoor te zorgen dat je wordt gewaarschuwd voor dure periodes, zelfs op dagen met ongebruikelijke prijspatronen.",
-                            "min_periods_peak": "Minimum aantal piekprijsperiodes om naar te streven per dag. Filters worden stap voor stap versoepeld om dit aantal te proberen bereiken. Alleen actief wanneer 'Probeer minimum aantal periodes te bereiken' is ingeschakeld. Standaard: 1",
-                            "relaxation_attempts_peak": "Hoeveel keer de ontspanningslogica filters opnieuw mag proberen. Gebruik meer pogingen wanneer de piekperiodes moeilijk te vinden zijn door vlakke of zeer grillige dagen. Elke extra poging kost wat extra verwerkingstijd maar vergroot de kans dat periodes worden gevonden."
+                            "enable_min_periods_peak": "Wanneer ingeschakeld, worden filters geleidelijk versoepeld als niet genoeg periodes worden gevonden. Dit probeert het gewenste minimum aantal periodes te bereiken om je te waarschuwen voor dure periodes, zelfs op dagen met ongebruikelijke prijspatronen.",
+                            "min_periods_peak": "Minimaal aantal piekprijs periodes om per dag na te streven. Filters worden stapsgewijs versoepeld om dit aantal te proberen te bereiken. Alleen actief wanneer 'Bereik Minimum Aantal' is ingeschakeld. Standaard: 1",
+                            "relaxation_attempts_peak": "Hoeveel flex niveaus (pogingen) te proberen voordat opgegeven wordt. Elke poging voert alle filtercombinaties uit op het nieuwe flex niveau. Meer pogingen verhogen de kans om extra piekperiodes te vinden ten koste van langere verwerkingstijd."
                         }
                     }
                 },
-                "submit": "Doorgaan →"
+                "submit": "↩ Opslaan & Terug"
             },
             "price_trend": {
-                "title": "📈 Prijstrenddrempels",
-                "description": "_{step_progress}_\n\n**Configureer drempels voor prijstrendsensoren. Deze sensoren vergelijken de huidige prijs met het gemiddelde van de volgende N uur om te bepalen of prijzen stijgen, dalen of stabiel zijn.**\n\n---",
-                "sections": {
-                    "price_trend_thresholds": {
-                        "name": "Prijstrenddrempels",
-                        "description": "Definieer prijstrendniveaus.",
-                        "data": {
-                            "price_trend_threshold_rising": "Stijgende drempel",
-                            "price_trend_threshold_falling": "Dalende drempel"
-                        },
-                        "data_description": {
-                            "price_trend_threshold_rising": "Percentage voor gemiddelde prijsstijging per uur die de trend kwalificeert als 'stijgend'. Voorbeeld: 5 betekent minstens 5% stijging per uur. Sensoren met deze trend geven aan dat prijzen snel zullen stijgen. Standaard: 5%",
-                            "price_trend_threshold_falling": "Percentage voor gemiddelde prijsdaling per uur die de trend kwalificeert als 'dalend'. Voorbeeld: -5 betekent minstens 5% daling per uur. Sensoren met deze trend geven aan dat prijzen snel zullen dalen. Standaard: -5%"
-                        }
-                    }
+                "title": "📈 Prijstrend Drempelwaarden",
+                "description": "**Configureer drempelwaarden voor prijstrend sensoren. Deze sensoren vergelijken de huidige prijs met het gemiddelde van de volgende N uur om te bepalen of prijzen stijgen, dalen of stabiel zijn.**",
+                "data": {
+                    "price_trend_threshold_rising": "Stijgende Drempel",
+                    "price_trend_threshold_falling": "Dalende Drempel"
                 },
-                "submit": "Doorgaan →"
+                "data_description": {
+                    "price_trend_threshold_rising": "Percentage dat het gemiddelde van de volgende N uur boven de huidige prijs moet zijn om te kwalificeren als 'stijgende' trend. Voorbeeld: 5 betekent dat het gemiddelde minimaal 5% hoger is → prijzen zullen stijgen. Typische waarden: 5-15%. Standaard: 5%",
+                    "price_trend_threshold_falling": "Percentage (negatief) dat het gemiddelde van de volgende N uur onder de huidige prijs moet zijn om te kwalificeren als 'dalende' trend. Voorbeeld: -5 betekent dat het gemiddelde minimaal 5% lager is → prijzen zullen dalen. Typische waarden: -5 tot -15%. Standaard: -5%"
+                },
+                "submit": "↩ Opslaan & Terug"
             },
             "volatility": {
-                "title": "💨 Volatiliteit Drempels",
-                "description": "_{step_progress}_\n\n**Configureer drempels voor volatiliteitsclassificatie. Volatiliteit meet relatieve prijsvariatie met behulp van de variatiecoëfficiënt (VC = standaarddeviatie / gemiddelde × 100%). Deze drempels zijn percentagewaarden die werken over alle prijsniveaus.**\n\nGebruikt door:\n• Volatiliteitssensoren (classificatie)\n• Trendsensoren (adaptieve drempelaanpassing: &lt;matig = gevoeliger, ≥hoog = minder gevoelig)\n\n---",
-                "sections": {
-                    "volatility_thresholds": {
-                        "name": "Volatiliteitdrempels",
-                        "description": "Definieer volatiliteitsclassificatieniveaus.",
-                        "data": {
-                            "volatility_threshold_moderate": "Matige drempel",
-                            "volatility_threshold_high": "Hoge drempel",
-                            "volatility_threshold_very_high": "Zeer hoge drempel"
-                        },
-                        "data_description": {
-                            "volatility_threshold_moderate": "Grenswaarde voor standaardafwijking (% van gemiddelde) om prijsvariatie als 'matig' te classificeren. Voorbeeld: 10 betekent standaardafwijking ≥ 10% van gemiddelde. Dit wijst op verhoogde prijsinstabiliteit. Standaard: 10%",
-                            "volatility_threshold_high": "Grenswaarde voor standaardafwijking (% van gemiddelde) om prijsvariatie als 'hoog' te classificeren. Voorbeeld: 20 betekent standaardafwijking ≥ 20% van gemiddelde. Dit wijst op aanzienlijke prijsschommelingen. Standaard: 20%",
-                            "volatility_threshold_very_high": "Grenswaarde voor standaardafwijking (% van gemiddelde) om prijsvariatie als 'zeer hoog' te classificeren. Voorbeeld: 30 betekent standaardafwijking ≥ 30% van gemiddelde. Dit wijst op extreme prijsinstabiliteit. Standaard: 30%"
-                        }
-                    }
+                "title": "💨 Prijsvolatiliteit Drempelwaarden",
+                "description": "**Configureer drempelwaarden voor volatiliteitsclassificatie.** Volatiliteit meet relatieve prijsvariatie met de variëfficcïnt (CV = standaarddeviatie / gemiddelde × 100%). Deze drempelwaarden zijn percentagewaarden die werken over alle prijsniveaus.\n\nGebruikt door:\n• Volatiliteit sensoren (classificatie)\n• Trend sensoren (adaptieve drempelaanpassing: &lt;gematigd = gevoeliger, ≥hoog = minder gevoelig)",
+                "data": {
+                    "volatility_threshold_moderate": "Gematigde Drempel",
+                    "volatility_threshold_high": "Hoge Drempel",
+                    "volatility_threshold_very_high": "Zeer Hoge Drempel"
                 },
-                "submit": "Doorgaan →"
+                "data_description": {
+                    "volatility_threshold_moderate": "Variëfficcïnt (CV) waarbij prijzen als 'gematigd volatiel' worden beschouwd. CV = (standaarddeviatie / gemiddelde) × 100%. Voorbeeld: 15 betekent prijsschommelingen van ±15% rond gemiddelde. Sensoren tonen deze classificatie, trend sensoren worden gevoeliger. Standaard: 15%",
+                    "volatility_threshold_high": "Variëfficcïnt (CV) waarbij prijzen als 'hoog volatiel' worden beschouwd. Voorbeeld: 30 betekent prijsschommelingen van ±30% rond gemiddelde. Grotere prijssprongen verwacht, trend sensoren worden minder gevoelig. Standaard: 30%",
+                    "volatility_threshold_very_high": "Variëfficcïnt (CV) waarbij prijzen als 'zeer hoog volatiel' worden beschouwd. Voorbeeld: 50 betekent extreme prijsschommelingen van ±50% rond gemiddelde. Op zulke dagen zijn sterke prijspieken waarschijnlijk. Standaard: 50%"
+                },
+                "submit": "↩ Opslaan & Terug"
             },
             "chart_data_export": {
-                "title": "📊 Grafiek-data-export Sensor",
-                "description": "_{step_progress}_\n\nDe Grafiek-data-export sensor biedt prijsgegevens als sensorattributen.\n\n⚠️ **Let op:** Deze sensor is een legacy-functie voor compatibiliteit met oudere tools.\n\n**Aanbevolen voor nieuwe setups:** Gebruik de `tibber_prices.get_chartdata` **service direct** - deze is flexibeler, efficiënter en de moderne Home Assistant-aanpak.\n\n**Wanneer deze sensor zinvol is:**\n\n✅ Je dashboardtool kan **alleen** attributen lezen (geen service-aanroepen)\n✅ Je hebt statische data nodig die automatisch bijwerkt\n❌ **Niet voor automatiseringen:** Gebruik `tibber_prices.get_chartdata` daar direct - flexibeler en efficiënter!\n\n---\n\n**Activeer de sensor:**\n\n1. Open **Instellingen → Apparaten en diensten → Tibber Prices**\n2. Selecteer je thuis → Vind **'Grafiekgegevensexport'** (Diagnostiek-sectie)\n3. **Activeer de sensor** (standaard uitgeschakeld)\n\n**Configuratie (optioneel):**\n\nStandaardinstellingen werken direct (vandaag+morgen, 15-minuten intervallen, alleen prijzen).\n\nVoor aanpassing, voeg toe aan **`configuration.yaml`**:\n\n```yaml\ntibber_prices:\n  chart_export:\n    day:\n      - today\n      - tomorrow\n    include_level: true\n    include_rating_level: true\n```\n\n**Alle parameters:** Zie `tibber_prices.get_chartdata` servicedocumentatie",
-                "submit": "Voltooien ✓"
+                "title": "📊 Grafiekdata Export Sensor",
+                "description": "De Grafiekdata Export Sensor biedt prijsgegevens als sensor attributen.\n\n⚠️ **Let op:** Deze sensor is een legacy functie voor compatibiliteit met oudere tools.\n\n**Aanbevolen voor nieuwe setups:** Gebruik de `tibber_prices.get_chartdata` **service direct** - het is flexibeler, efficïnter, en de moderne Home Assistant aanpak.\n\n**Wanneer deze sensor zinvol is:**\n\n✅ Je dashboardtool kan **alleen** attributen lezen (geen service calls)\n✅ Je hebt statische data nodig die automatisch update\n❌ **Niet voor automatiseringen:** Gebruik `tibber_prices.get_chartdata` daar direct - flexibeler en efficïnter!\n\n---\n\n**De sensor inschakelen:**\n\n1. Open **Instellingen → Apparaten & Services → Tibber Prices**\n2. Selecteer je huis → Vind **'Chart Data Export'** (Diagnose sectie)\n3. **Schakel de sensor in** (standaard uitgeschakeld)\n\n**Configuratie (optioneel):**\n\nStandaard instellingen werken out-of-the-box (vandaag+morgen, 15-minuten intervallen, alleen prijzen).\n\nVoor aanpassing, voeg toe aan **`configuration.yaml`**:\n\n```yaml\ntibber_prices:\n  chart_export:\n    day:\n      - today\n      - tomorrow\n    include_level: true\n    include_rating_level: true\n```\n\n**Alle parameters:** Zie `tibber_prices.get_chartdata` service documentatie",
+                "submit": "↩ Ok & Terug"
+            },
+            "reset_to_defaults": {
+                "title": "🔄 Standaardwaarden Herstellen",
+                "description": "⚠️ **Waarschuwing:** Dit zal **ALLE** instellingen naar fabrieksinstellingen terugzetten.\n\n**Wat wordt gereset:**\n• Alle prijsbeoordeling drempelwaarden\n• Alle volatiliteit drempelwaarden\n• Alle prijstrend drempelwaarden\n• Alle beste prijsperiode instellingen\n• Alle piekprijs periode instellingen\n• Weergave-instellingen\n• Algemene instellingen\n\n**Wat wordt NIET gereset:**\n• Je Tibber API-token\n• Geselecteerd huis\n• Valuta\n\n**💡 Tip:** Dit is handig als je opnieuw wilt beginnen na het experimenteren met instellingen.",
+                "data": {
+                    "confirm_reset": "Ja, reset alles naar standaardwaarden"
+                },
+                "submit": "Nu Resetten"
             }
         },
         "error": {
             "auth": "Het Tibber-toegangstoken is ongeldig.",
             "connection": "Kan geen verbinding maken met Tibber. Controleer je internetverbinding.",
-            "unknown": "Er is een onverwachte fout opgetreden. Controleer de logboeken voor details.",
+            "unknown": "Er is een onverwachte fout opgetreden. Controleer de logs voor details.",
             "cannot_connect": "Verbinding mislukt",
             "invalid_access_token": "Ongeldig toegangstoken",
-            "different_home": "Het toegangstoken is niet geldig voor de huis-ID waarvoor deze integratie is geconfigureerd.",
-            "invalid_flex": "Flexibiliteitspercentage moet tussen -50% en +50% liggen",
-            "invalid_best_price_distance": "Afstandspercentage moet tussen -50% en 0% liggen (negatief = onder gemiddelde)",
-            "invalid_peak_price_distance": "Afstandspercentage moet tussen 0% en 50% liggen (positief = boven gemiddelde)",
-            "invalid_min_periods": "Minimum aantal perioden moet tussen 1 en 10 liggen",
-            "invalid_period_length": "De periodelengte moet minimaal 15 minuten zijn (veelvouden van 15).",
-            "invalid_gap_count": "Gaptolerantie moet tussen 0 en 8 liggen",
-            "invalid_relaxation_attempts": "Versoepelingspogingen moeten tussen 1 en 12 liggen",
-            "invalid_price_rating_low": "Lage prijsbeoordelingsdrempel moet tussen -50% en -5% liggen",
-            "invalid_price_rating_high": "Hoge prijsbeoordelingsdrempel moet tussen 5% en 50% liggen",
+            "different_home": "Het toegangstoken is niet geldig voor het huis-ID waarvoor deze integratie is geconfigureerd.",
+            "invalid_period_length": "Periode lengte moet minimaal 15 minuten zijn (veelvouden van 15).",
+            "invalid_flex": "Flexibiliteitspercentage moet tussen -50% en +50% zijn",
+            "invalid_best_price_distance": "Afstandspercentage moet tussen -50% en 0% zijn (negatief = onder gemiddelde)",
+            "invalid_peak_price_distance": "Afstandspercentage moet tussen 0% en 50% zijn (positief = boven gemiddelde)",
+            "invalid_min_periods": "Minimaal aantal periodes moet tussen 1 en 10 zijn",
+            "invalid_gap_count": "Gat telling moet tussen 0 en 8 zijn",
+            "invalid_relaxation_attempts": "Relaxatie pogingen moeten tussen 1 en 12 zijn",
+            "invalid_price_rating_low": "Lage prijsbeoordeling drempel moet tussen -50% en -5% zijn",
+            "invalid_price_rating_high": "Hoge prijsbeoordeling drempel moet tussen 5% en 50% zijn",
             "invalid_price_rating_thresholds": "Lage drempel moet lager zijn dan hoge drempel",
-            "invalid_volatility_threshold_moderate": "Gematigde volatiliteitsdrempel moet tussen 5% en 25% liggen",
-            "invalid_volatility_threshold_high": "Hoge volatiliteitsdrempel moet tussen 20% en 40% liggen",
-            "invalid_volatility_threshold_very_high": "Zeer hoge volatiliteitsdrempel moet tussen 35% en 80% liggen",
-            "invalid_volatility_thresholds": "Drempels moeten in oplopende volgorde zijn: gematigd < hoog < zeer hoog",
-            "invalid_price_trend_rising": "Stijgende trenddrempel moet tussen 1% en 50% liggen",
-            "invalid_price_trend_falling": "Dalende trenddrempel moet tussen -50% en -1% liggen"
+            "invalid_volatility_threshold_moderate": "Gematigde volatiliteit drempel moet tussen 5% en 25% zijn",
+            "invalid_volatility_threshold_high": "Hoge volatiliteit drempel moet tussen 20% en 40% zijn",
+            "invalid_volatility_threshold_very_high": "Zeer hoge volatiliteit drempel moet tussen 35% en 80% zijn",
+            "invalid_volatility_thresholds": "Drempelwaarden moeten in oplopende volgorde zijn: gematigd < hoog < zeer hoog",
+            "invalid_price_trend_rising": "Stijgende trend drempel moet tussen 1% en 50% zijn",
+            "invalid_price_trend_falling": "Dalende trend drempel moet tussen -50% en -1% zijn"
         },
         "abort": {
-            "entry_not_found": "Tibber-configuratie-item niet gevonden."
+            "entry_not_found": "Tibber-configuratie-item niet gevonden.",
+            "reset_cancelled": "Reset geannuleerd. Er zijn geen wijzigingen aangebracht in je configuratie.",
+            "reset_successful": "✅ Alle instellingen zijn teruggezet naar fabrieksinstellingen. Je configuratie is nu als een nieuwe installatie.",
+            "finished": "Configuratie voltooid."
         }
     },
     "entity": {
         "sensor": {
             "current_interval_price": {
-                "name": "Huidige elektriciteitsprijs"
+                "name": "Huidige Elektriciteitsprijs"
             },
             "current_interval_price_base": {
-                "name": "Huidige elektriciteitsprijs (Energie-dashboard)"
+                "name": "Huidige Elektriciteitsprijs (Energie Dashboard)"
             },
             "next_interval_price": {
-                "name": "Volgende elektriciteitsprijs"
+                "name": "Volgende Elektriciteitsprijs"
             },
             "previous_interval_price": {
-                "name": "Vorige elektriciteitsprijs"
+                "name": "Vorige Elektriciteitsprijs"
             },
             "current_hour_average_price": {
-                "name": "⌀ Uurprijs huidig"
+                "name": "⌀ Uurprijs Huidig"
             },
             "next_hour_average_price": {
-                "name": "⌀ Uurprijs volgend"
+                "name": "⌀ Uurprijs Volgend"
             },
             "current_interval_price_level": {
-                "name": "Huidig prijsniveau",
+                "name": "Huidig Prijsniveau",
                 "state": {
-                    "very_cheap": "Zeer goedkoop",
+                    "very_cheap": "Zeer Goedkoop",
                     "cheap": "Goedkoop",
                     "normal": "Normaal",
                     "expensive": "Duur",
-                    "very_expensive": "Zeer duur"
+                    "very_expensive": "Zeer Duur"
                 }
             },
             "next_interval_price_level": {
-                "name": "Volgend prijsniveau",
+                "name": "Volgend Prijsniveau",
                 "state": {
-                    "very_cheap": "Zeer goedkoop",
+                    "very_cheap": "Zeer Goedkoop",
                     "cheap": "Goedkoop",
                     "normal": "Normaal",
                     "expensive": "Duur",
-                    "very_expensive": "Zeer duur"
+                    "very_expensive": "Zeer Duur"
                 }
             },
             "previous_interval_price_level": {
-                "name": "Vorig prijsniveau",
+                "name": "Vorig Prijsniveau",
                 "state": {
-                    "very_cheap": "Zeer goedkoop",
+                    "very_cheap": "Zeer Goedkoop",
                     "cheap": "Goedkoop",
                     "normal": "Normaal",
                     "expensive": "Duur",
-                    "very_expensive": "Zeer duur"
+                    "very_expensive": "Zeer Duur"
                 }
             },
             "current_hour_price_level": {
-                "name": "Huidig uurprijsniveau",
+                "name": "Huidig Uur Prijsniveau",
                 "state": {
-                    "very_cheap": "Zeer goedkoop",
+                    "very_cheap": "Zeer Goedkoop",
                     "cheap": "Goedkoop",
                     "normal": "Normaal",
                     "expensive": "Duur",
-                    "very_expensive": "Zeer duur"
+                    "very_expensive": "Zeer Duur"
                 }
             },
             "next_hour_price_level": {
-                "name": "Volgend uurprijsniveau",
+                "name": "Volgend Uur Prijsniveau",
                 "state": {
-                    "very_cheap": "Zeer goedkoop",
+                    "very_cheap": "Zeer Goedkoop",
                     "cheap": "Goedkoop",
                     "normal": "Normaal",
                     "expensive": "Duur",
-                    "very_expensive": "Zeer duur"
+                    "very_expensive": "Zeer Duur"
                 }
             },
             "lowest_price_today": {
-                "name": "Laagste prijs vandaag"
+                "name": "Laagste Prijs Vandaag"
             },
             "highest_price_today": {
-                "name": "Hoogste prijs vandaag"
+                "name": "Hoogste Prijs Vandaag"
             },
             "average_price_today": {
-                "name": "⌀ Prijs vandaag"
+                "name": "⌀ Prijs Vandaag"
             },
             "lowest_price_tomorrow": {
-                "name": "Laagste prijs morgen"
+                "name": "Laagste Prijs Morgen"
             },
             "highest_price_tomorrow": {
-                "name": "Hoogste prijs morgen"
+                "name": "Hoogste Prijs Morgen"
             },
             "average_price_tomorrow": {
-                "name": "⌀ Prijs morgen"
+                "name": "⌀ Prijs Morgen"
             },
             "yesterday_price_level": {
-                "name": "Prijsniveau gisteren",
+                "name": "Gisteren Prijsniveau",
                 "state": {
-                    "very_cheap": "Zeer goedkoop",
+                    "very_cheap": "Zeer Goedkoop",
                     "cheap": "Goedkoop",
                     "normal": "Normaal",
                     "expensive": "Duur",
-                    "very_expensive": "Zeer duur"
+                    "very_expensive": "Zeer Duur"
                 }
             },
             "today_price_level": {
-                "name": "Prijsniveau vandaag",
+                "name": "Vandaag Prijsniveau",
                 "state": {
-                    "very_cheap": "Zeer goedkoop",
+                    "very_cheap": "Zeer Goedkoop",
                     "cheap": "Goedkoop",
                     "normal": "Normaal",
                     "expensive": "Duur",
-                    "very_expensive": "Zeer duur"
+                    "very_expensive": "Zeer Duur"
                 }
             },
             "tomorrow_price_level": {
-                "name": "Prijsniveau morgen",
+                "name": "Morgen Prijsniveau",
                 "state": {
-                    "very_cheap": "Zeer goedkoop",
+                    "very_cheap": "Zeer Goedkoop",
                     "cheap": "Goedkoop",
                     "normal": "Normaal",
                     "expensive": "Duur",
-                    "very_expensive": "Zeer duur"
+                    "very_expensive": "Zeer Duur"
                 }
             },
             "yesterday_price_rating": {
-                "name": "Prijsbeoordeling gisteren",
+                "name": "Gisteren Prijsbeoordeling",
                 "state": {
                     "low": "Laag",
                     "normal": "Normaal",
@@ -469,7 +476,7 @@
                 }
             },
             "today_price_rating": {
-                "name": "Prijsbeoordeling vandaag",
+                "name": "Vandaag Prijsbeoordeling",
                 "state": {
                     "low": "Laag",
                     "normal": "Normaal",
@@ -477,7 +484,7 @@
                 }
             },
             "tomorrow_price_rating": {
-                "name": "Prijsbeoordeling morgen",
+                "name": "Morgen Prijsbeoordeling",
                 "state": {
                     "low": "Laag",
                     "normal": "Normaal",
@@ -485,25 +492,25 @@
                 }
             },
             "trailing_price_average": {
-                "name": "⌀ Prijs voortschrijdend 24u"
+                "name": "⌀ Prijs Afgelopen 24u"
             },
             "leading_price_average": {
-                "name": "⌀ Prijs vooruitlopend 24u"
+                "name": "⌀ Prijs Komende 24u"
             },
             "trailing_price_min": {
-                "name": "24u-minimumprijs voortschrijdend"
+                "name": "Afgelopen 24u Minimumprijs"
             },
             "trailing_price_max": {
-                "name": "24u-maximumprijs voortschrijdend"
+                "name": "Afgelopen 24u Maximumprijs"
             },
             "leading_price_min": {
-                "name": "24u-minimumprijs vooruitlopend"
+                "name": "Komende 24u Minimumprijs"
             },
             "leading_price_max": {
-                "name": "24u-maximumprijs vooruitlopend"
+                "name": "Komende 24u Maximumprijs"
             },
             "current_interval_price_rating": {
-                "name": "Huidige prijsbeoordeling",
+                "name": "Huidige Prijsbeoordeling",
                 "state": {
                     "low": "Laag",
                     "normal": "Normaal",
@@ -511,7 +518,7 @@
                 }
             },
             "next_interval_price_rating": {
-                "name": "Volgende prijsbeoordeling",
+                "name": "Volgende Prijsbeoordeling",
                 "state": {
                     "low": "Laag",
                     "normal": "Normaal",
@@ -519,7 +526,7 @@
                 }
             },
             "previous_interval_price_rating": {
-                "name": "Vorige prijsbeoordeling",
+                "name": "Vorige Prijsbeoordeling",
                 "state": {
                     "low": "Laag",
                     "normal": "Normaal",
@@ -527,7 +534,7 @@
                 }
             },
             "current_hour_price_rating": {
-                "name": "Huidig uurprijsbeoordeling",
+                "name": "Huidig Uur Prijsbeoordeling",
                 "state": {
                     "low": "Laag",
                     "normal": "Normaal",
@@ -535,7 +542,7 @@
                 }
             },
             "next_hour_price_rating": {
-                "name": "Volgend uurprijsbeoordeling",
+                "name": "Volgend Uur Prijsbeoordeling",
                 "state": {
                     "low": "Laag",
                     "normal": "Normaal",
@@ -543,28 +550,28 @@
                 }
             },
             "next_avg_1h": {
-                "name": "⌀ Prijs volgende 1u"
+                "name": "⌀ Prijs Komende 1u"
             },
             "next_avg_2h": {
-                "name": "⌀ Prijs volgende 2u"
+                "name": "⌀ Prijs Komende 2u"
             },
             "next_avg_3h": {
-                "name": "⌀ Prijs volgende 3u"
+                "name": "⌀ Prijs Komende 3u"
             },
             "next_avg_4h": {
-                "name": "⌀ Prijs volgende 4u"
+                "name": "⌀ Prijs Komende 4u"
             },
             "next_avg_5h": {
-                "name": "⌀ Prijs volgende 5u"
+                "name": "⌀ Prijs Komende 5u"
             },
             "next_avg_6h": {
-                "name": "⌀ Prijs volgende 6u"
+                "name": "⌀ Prijs Komende 6u"
             },
             "next_avg_8h": {
-                "name": "⌀ Prijs volgende 8u"
+                "name": "⌀ Prijs Komende 8u"
             },
             "next_avg_12h": {
-                "name": "⌀ Prijs volgende 12u"
+                "name": "⌀ Prijs Komende 12u"
             },
             "price_trend_1h": {
                 "name": "Prijstrend (1u)",
@@ -631,7 +638,7 @@
                 }
             },
             "current_price_trend": {
-                "name": "Huidige prijstrend",
+                "name": "Huidige Prijstrend",
                 "state": {
                     "rising": "Stijgend",
                     "falling": "Dalend",
@@ -639,16 +646,27 @@
                 }
             },
             "next_price_trend_change": {
-                "name": "Volgende trendwijziging"
+                "name": "Volgende Prijstrend Wijziging"
             },
             "daily_rating": {
-                "name": "Dagelijkse prijsbeoordeling"
+                "name": "Dagelijkse Prijsbeoordeling"
             },
             "monthly_rating": {
-                "name": "Maandelijkse prijsbeoordeling"
+                "name": "Maandelijkse Prijsbeoordeling"
+            },
+            "data_lifecycle_status": {
+                "name": "Data Levenscyclus Status",
+                "state": {
+                    "cached": "Gecachet",
+                    "fresh": "Vers",
+                    "refreshing": "Vernieuwen",
+                    "searching_tomorrow": "Morgen Zoeken",
+                    "turnover_pending": "Omslag In Behandeling",
+                    "error": "Fout"
+                }
             },
             "today_volatility": {
-                "name": "Volatiliteit vandaag",
+                "name": "Vandaag Prijsvolatiliteit",
                 "state": {
                     "low": "Laag",
                     "moderate": "Gematigd",
@@ -657,7 +675,7 @@
                 }
             },
             "tomorrow_volatility": {
-                "name": "Volatiliteit morgen",
+                "name": "Morgen Prijsvolatiliteit",
                 "state": {
                     "low": "Laag",
                     "moderate": "Gematigd",
@@ -666,7 +684,7 @@
                 }
             },
             "next_24h_volatility": {
-                "name": "Volatiliteit volgende 24u",
+                "name": "Komende 24u Prijsvolatiliteit",
                 "state": {
                     "low": "Laag",
                     "moderate": "Gematigd",
@@ -675,7 +693,7 @@
                 }
             },
             "today_tomorrow_volatility": {
-                "name": "Volatiliteit vandaag+morgen",
+                "name": "Vandaag+Morgen Prijsvolatiliteit",
                 "state": {
                     "low": "Laag",
                     "moderate": "Gematigd",
@@ -684,186 +702,175 @@
                 }
             },
             "best_price_end_time": {
-                "name": "Beste prijs eindigt"
+                "name": "Beste Prijs Einde"
             },
             "best_price_period_duration": {
-                "name": "Beste prijs duur"
+                "name": "Beste Prijs Duur"
             },
             "best_price_remaining_minutes": {
-                "name": "Beste prijs resterende tijd"
+                "name": "Beste Prijs Resterende Tijd"
             },
             "best_price_progress": {
-                "name": "Beste prijs voortgang"
+                "name": "Beste Prijs Voortgang"
             },
             "best_price_next_start_time": {
-                "name": "Beste prijs start"
+                "name": "Beste Prijs Start"
             },
             "best_price_next_in_minutes": {
-                "name": "Beste prijs start over"
+                "name": "Beste Prijs Start Over"
             },
             "peak_price_end_time": {
-                "name": "Piekprijs eindigt"
+                "name": "Piekprijs Einde"
             },
             "peak_price_period_duration": {
-                "name": "Piekprijs duur"
+                "name": "Piekprijs Duur"
             },
             "peak_price_remaining_minutes": {
-                "name": "Piekprijs resterende tijd"
+                "name": "Piekprijs Resterende Tijd"
             },
             "peak_price_progress": {
-                "name": "Piekprijs voortgang"
+                "name": "Piekprijs Voortgang"
             },
             "peak_price_next_start_time": {
-                "name": "Piekprijs start"
+                "name": "Piekprijs Start"
             },
             "peak_price_next_in_minutes": {
-                "name": "Piekprijs start over"
+                "name": "Piekprijs Start Over"
             },
             "home_type": {
-                "name": "Woningtype",
+                "name": "Huistype",
                 "state": {
                     "apartment": "Appartement",
                     "rowhouse": "Rijtjeshuis",
                     "house": "Huis",
-                    "cottage": "Vakantiehuis"
+                    "cottage": "Huisje"
                 }
             },
             "home_size": {
-                "name": "Woonoppervlakte"
+                "name": "Huisgrootte"
             },
             "main_fuse_size": {
-                "name": "Hoofdzekering"
+                "name": "Hoofdzekering Grootte"
             },
             "number_of_residents": {
-                "name": "Aantal bewoners"
+                "name": "Aantal Bewoners"
             },
             "primary_heating_source": {
-                "name": "Primaire warmtebron",
+                "name": "Primaire Verwarmingsbron",
                 "state": {
-                    "air2air_heatpump": "Lucht-lucht-warmtepomp",
-                    "air2water_heatpump": "Lucht-water-warmtepomp",
+                    "air2air_heatpump": "Lucht-naar-Lucht Warmtepomp",
+                    "air2water_heatpump": "Lucht-naar-Water Warmtepomp",
                     "boiler": "Boiler",
-                    "central_heating": "Centrale verwarming",
+                    "central_heating": "Centrale Verwarming",
                     "district_heating": "Stadsverwarming",
                     "district": "Stadsverwarming",
-                    "electric_boiler": "Elektrische boiler",
+                    "electric_boiler": "Elektrische Boiler",
                     "electricity": "Elektriciteit",
                     "floor": "Vloerverwarming",
                     "gas": "Gas",
-                    "ground_heatpump": "Bodemwarmtepomp",
-                    "ground": "Bodemwarmtepomp",
+                    "ground_heatpump": "Bodem Warmtepomp",
+                    "ground": "Bodem Warmtepomp",
                     "oil": "Olie",
-                    "other": "Anders",
+                    "other": "Overig",
                     "waste": "Restwarmte"
                 }
             },
             "grid_company": {
-                "name": "Netbeheerder"
+                "name": "Netbedrijf"
             },
             "grid_area_code": {
                 "name": "Netgebiedcode"
             },
             "price_area_code": {
-                "name": "Prijszonecode"
+                "name": "Prijsgebiedcode"
             },
             "consumption_ean": {
-                "name": "Verbruiks-EAN"
+                "name": "Verbruik EAN"
             },
             "production_ean": {
-                "name": "Productie-EAN"
+                "name": "Productie EAN"
             },
             "energy_tax_type": {
-                "name": "Energiebelastingtype"
+                "name": "Energiebelasting Type"
             },
             "vat_type": {
-                "name": "BTW-type"
+                "name": "BTW Type"
             },
             "estimated_annual_consumption": {
-                "name": "Geschat jaarverbruik"
+                "name": "Geschat Jaarverbruik"
             },
             "subscription_status": {
-                "name": "Abonnementsstatus",
+                "name": "Abonnement Status",
                 "state": {
                     "running": "Actief",
                     "ended": "Beëindigd",
-                    "pending": "In afwachting",
+                    "pending": "In Afwachting",
                     "unknown": "Onbekend"
                 }
             },
             "chart_data_export": {
-                "name": "Grafiek Data Export",
+                "name": "Grafiekdata Export",
                 "state": {
-                    "pending": "In afwachting",
-                    "ready": "Klaar",
+                    "pending": "In Afwachting",
+                    "ready": "Gereed",
                     "error": "Fout"
                 }
             },
             "chart_metadata": {
-                "name": "Grafiekmetadata",
+                "name": "Grafiek Metadata",
                 "state": {
-                    "pending": "In afwachting",
-                    "ready": "Klaar",
-                    "error": "Fout"
-                }
-            },
-            "data_lifecycle_status": {
-                "name": "Datalevenscyclus-status",
-                "state": {
-                    "cached": "In cache",
-                    "fresh": "Vers",
-                    "refreshing": "Vernieuwen",
-                    "searching_tomorrow": "Zoekt morgengegevens",
-                    "turnover_pending": "Middernachtwissel in behandeling",
+                    "pending": "In Afwachting",
+                    "ready": "Gereed",
                     "error": "Fout"
                 }
             }
         },
         "binary_sensor": {
             "peak_price_period": {
-                "name": "Piekprijs-periode"
+                "name": "Piekprijs Periode"
             },
             "best_price_period": {
-                "name": "Beste prijs-periode"
+                "name": "Beste Prijs Periode"
             },
             "connection": {
-                "name": "Tibber API-verbinding"
+                "name": "Tibber API Verbinding"
             },
             "tomorrow_data_available": {
-                "name": "Gegevens van morgen beschikbaar"
+                "name": "Morgen Gegevens Beschikbaar"
             },
             "has_ventilation_system": {
-                "name": "Heeft ventilatiesysteem"
+                "name": "Heeft Ventilatiesysteem"
             },
             "realtime_consumption_enabled": {
-                "name": "Realtime verbruik ingeschakeld"
+                "name": "Realtime Verbruik Ingeschakeld"
             }
         }
     },
     "issues": {
         "new_homes_available": {
-            "title": "Nieuwe Tibber-huizen gedetecteerd",
-            "description": "We hebben {count} nieuw(e) huis/huizen op je Tibber-account gedetecteerd: {homes}. Je kunt ze toevoegen aan Home Assistant via de Tibber-integratieconfiguratie."
+            "title": "Nieuwe Tibber huizen gedetecteerd",
+            "description": "We hebben {count} nieuw(e) huis/huizen gedetecteerd op je Tibber-account: {homes}. Je kunt ze toevoegen aan Home Assistant via de Tibber integratie configuratie."
         },
         "homes_removed": {
-            "title": "Tibber-huizen verwijderd",
-            "description": "We hebben gedetecteerd dat {count} huis/huizen zijn verwijderd van je Tibber-account: {homes}. Controleer je Tibber-integratieconfiguratie."
+            "title": "Tibber huizen verwijderd",
+            "description": "We hebben gedetecteerd dat {count} huis/huizen zijn verwijderd van je Tibber-account: {homes}. Controleer je Tibber integratie configuratie."
         },
         "tomorrow_data_missing": {
-            "title": "Prijsgegevens voor morgen ontbreken voor {home_name}",
-            "description": "De elektriciteitsprijsgegevens voor morgen zijn nog steeds niet beschikbaar na {warning_hour}:00 uur. Dit is ongebruikelijk, aangezien Tibber doorgaans de prijzen voor morgen in de middag publiceert (rond 13:00-14:00 CET).\n\nMogelijke oorzaken:\n- Tibber heeft de prijzen voor morgen nog niet gepubliceerd\n- Tijdelijke API-problemen\n- Je elektriciteitsleverancier heeft nog geen prijzen aan Tibber ingediend\n\nDit probleem wordt automatisch opgelost zodra de gegevens voor morgen beschikbaar zijn. Als dit na 20:00 uur aanhoudt, controleer dan de Tibber-app of neem contact op met Tibber-ondersteuning."
+            "title": "Morgen prijsgegevens ontbreken voor {home_name}",
+            "description": "Morgen elektriciteitsprijs gegevens zijn nog steeds niet beschikbaar na {warning_hour}:00. Dit is ongebruikelijk, omdat Tibber normaal gesproken morgen prijzen publiceert in de middag (rond 13:00-14:00 CET).\n\nMogelijke oorzaken:\n- Tibber heeft morgen prijzen nog niet gepubliceerd\n- Tijdelijke API-problemen\n- Je elektriciteitsleverancier heeft nog geen prijzen ingediend bij Tibber\n\nDit probleem lost zich automatisch op zodra morgen gegevens beschikbaar worden. Als dit na 20:00 aanhoudt, controleer dan de Tibber-app of neem contact op met Tibber support."
         },
         "rate_limit_exceeded": {
-            "title": "API-snelheidslimiet overschreden voor {home_name}",
-            "description": "De Tibber-API heeft deze integratie beperkt na {error_count} opeenvolgende fouten. Dit betekent dat verzoeken te vaak worden gedaan.\n\nDe integratie zal automatisch opnieuw proberen met toenemende vertragingen. Dit probleem wordt opgelost zodra de snelheidslimiet verloopt.\n\nAls dit meerdere uren aanhoudt, overweeg dan:\n- Controleren of meerdere Home Assistant-instanties hetzelfde API-token gebruiken\n- Verifiëren dat geen andere applicaties je Tibber-API-token intensief gebruiken\n- De updatefrequentie verminderen als je deze hebt aangepast"
+            "title": "API rate limiet overschreden voor {home_name}",
+            "description": "De Tibber API heeft deze integratie beperkt na {error_count} opeenvolgende fouten. Dit betekent dat verzoeken te frequent worden gedaan.\n\nDe integratie zal automatisch opnieuw proberen met toenemende vertragingen. Dit probleem lost zich op zodra de rate limiet verloopt.\n\nAls dit meerdere uren aanhoudt, overweeg dan:\n- Te controleren of meerdere Home Assistant instanties hetzelfde API-token gebruiken\n- Te verifiëren dat geen andere applicaties intensief je Tibber API-token gebruiken\n- De update frequentie te verlagen als je deze hebt aangepast"
         },
         "home_not_found": {
             "title": "Huis {home_name} niet gevonden in Tibber-account",
-            "description": "Het huis geconfigureerd in deze integratie (entry ID: {entry_id}) is niet langer beschikbaar in je Tibber-account. Dit gebeurt meestal wanneer:\n- Het huis is verwijderd uit je Tibber-account\n- Het huis is verplaatst naar een ander Tibber-account\n- Toegang tot dit huis is ingetrokken\n\nVerwijder deze integratie-entry en voeg deze opnieuw toe als het huis nog steeds moet worden gemonitord. Om deze entry te verwijderen, ga naar Instellingen → Apparaten & Diensten → Tibber Prices en verwijder de {home_name}-configuratie."
+            "description": "Het huis geconfigureerd in deze integratie (entry ID: {entry_id}) is niet langer beschikbaar in je Tibber-account. Dit gebeurt meestal wanneer:\n- Het huis is verwijderd uit je Tibber-account\n- Het huis is verplaatst naar een ander Tibber-account\n- Toegang tot dit huis is ingetrokken\n\nVerwijder dit integratie-item en voeg het opnieuw toe als het huis nog steeds gemonitord moet worden. Om dit item te verwijderen, ga naar Instellingen → Apparaten & Services → Tibber Prices en verwijder de {home_name} configuratie."
         }
     },
     "services": {
         "get_price": {
-            "name": "Prijsgegevens ophalen",
+            "name": "Prijsgegevens Ophalen",
             "description": "Haal prijsgegevens op voor een specifiek tijdsbereik met automatische routing. Ontwikkelings- en testservice voor de price_info_for_range API-functie. Gebruikt automatisch PRICE_INFO, PRICE_INFO_RANGE of beide op basis van de tijdsbereikgrens.",
             "fields": {
                 "entry_id": {
@@ -903,7 +910,7 @@
             }
         },
         "get_chartdata": {
-            "name": "Haal grafiekgegevens op",
+            "name": "Grafiekdata Ophalen",
             "description": "Geeft prijsgegevens terug in een eenvoudig grafiekvriendelijk formaat compatibel met de Tibber Core-integratie outputstructuur. Perfect voor gebruik met populaire grafiekkaarten zoals ha-price-timeline-card, ApexCharts Card, Plotly Graph Card, Mini Graph Card of de ingebouwde History Graph Card. Veldnamen en gegevensstructuur kunnen worden aangepast aan de vereisten van je grafiek.",
             "sections": {
                 "general": {
@@ -1048,7 +1055,7 @@
     "selector": {
         "account_choice": {
             "options": {
-                "new_token": "Nieuw Tibber-account toevoegen met API-token"
+                "new_token": "Nieuw Tibber account API-token toevoegen"
             }
         },
         "day": {
@@ -1056,26 +1063,26 @@
                 "yesterday": "Gisteren",
                 "today": "Vandaag",
                 "tomorrow": "Morgen",
-                "rolling_window": "Rollend venster",
-                "rolling_window_autozoom": "Rollend venster (Auto-Zoom)"
+                "rolling_window": "Schuivend Venster",
+                "rolling_window_autozoom": "Schuivend Venster (Auto-Zoom)"
             }
         },
         "resolution": {
             "options": {
                 "interval": "Interval (15 min)",
-                "hourly": "Per uur"
+                "hourly": "Per Uur"
             }
         },
         "output_format": {
             "options": {
-                "array_of_objects": "Array van objecten",
-                "array_of_arrays": "Array van arrays"
+                "array_of_objects": "Array van Objecten",
+                "array_of_arrays": "Array van Arrays"
             }
         },
         "level_type": {
             "options": {
                 "rating_level": "Beoordelingsniveau (laag/normaal/hoog)",
-                "level": "Tibber-niveau (zeer goedkoop tot zeer duur)"
+                "level": "Tibber Niveau (zeer goedkoop tot zeer duur)"
             }
         },
         "level_filter": {
@@ -1098,18 +1105,18 @@
             "options": {
                 "none": "Geen",
                 "segments": "Segmenten",
-                "all": "Alle"
+                "all": "Alles"
             }
         },
         "period_filter": {
             "options": {
-                "best_price": "Beste prijsperioden",
-                "peak_price": "Piek prijsperioden"
+                "best_price": "Beste Prijs Periodes",
+                "peak_price": "Piekprijs Periodes"
             }
         },
         "metadata": {
             "options": {
-                "include": "Opnemen (data + metadata)",
+                "include": "Inbegrepen (data + metadata)",
                 "only": "Alleen metadata",
                 "none": "Geen (alleen data)"
             }
@@ -1117,14 +1124,14 @@
         "volatility": {
             "options": {
                 "low": "Laag",
-                "moderate": "Matig",
+                "moderate": "Gematigd",
                 "high": "Hoog",
                 "very_high": "Zeer hoog"
             }
         },
         "current_interval_price_level": {
             "options": {
-                "any": "Alle",
+                "any": "Alles",
                 "very_cheap": "Zeer goedkoop",
                 "cheap": "Goedkoop",
                 "normal": "Normaal",
@@ -1135,13 +1142,13 @@
         "currency_display_mode": {
             "options": {
                 "base": "Basisvaluta (€, kr)",
-                "subunit": "Subeenheid valuta (ct, øre)"
+                "subunit": "Subeenheid Valuta (ct, øre)"
             }
         },
         "average_sensor_display": {
             "options": {
                 "median": "Mediaan",
-                "mean": "Rekenkundig gemiddelde"
+                "mean": "Rekenkundig Gemiddelde"
             }
         }
     },

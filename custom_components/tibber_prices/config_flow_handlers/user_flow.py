@@ -20,7 +20,12 @@ from custom_components.tibber_prices.config_flow_handlers.validators import (
     TibberPricesInvalidAuthError,
     validate_api_token,
 )
-from custom_components.tibber_prices.const import DOMAIN, LOGGER, get_translation
+from custom_components.tibber_prices.const import (
+    DOMAIN,
+    LOGGER,
+    get_default_options,
+    get_translation,
+)
 from homeassistant.config_entries import (
     ConfigEntry,
     ConfigFlow,
@@ -379,6 +384,16 @@ class TibberPricesConfigFlowHandler(ConfigFlow, domain=DOMAIN):
                 "user_login": self._user_login or "N/A",
             }
 
+            # Extract currency from home data for intelligent defaults
+            currency_code = None
+            if (
+                selected_home
+                and (subscription := selected_home.get("currentSubscription"))
+                and (price_info := subscription.get("priceInfo"))
+                and (current_price := price_info.get("current"))
+            ):
+                currency_code = current_price.get("currency")
+
             # Generate entry title from home address (not appNickname)
             entry_title = self._get_entry_title(selected_home)
 
@@ -386,6 +401,7 @@ class TibberPricesConfigFlowHandler(ConfigFlow, domain=DOMAIN):
                 title=entry_title,
                 data=data,
                 description=f"{self._user_login} ({self._user_id})",
+                options=get_default_options(currency_code),
             )
 
         home_options = [

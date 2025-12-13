@@ -73,36 +73,52 @@ class TibberPricesDataTransformer:
             return self._config_cache
 
         # Build config dictionary (expensive operation)
+        options = self.config_entry.options
+
+        # Best/peak price remain nested (multi-section steps)
+        best_period_section = options.get("period_settings", {})
+        best_flex_section = options.get("flexibility_settings", {})
+        best_relax_section = options.get("relaxation_and_target_periods", {})
+        peak_period_section = options.get("period_settings", {})
+        peak_flex_section = options.get("flexibility_settings", {})
+        peak_relax_section = options.get("relaxation_and_target_periods", {})
+
         config = {
             "thresholds": self.get_threshold_percentages(),
+            # Volatility thresholds now flat (single-section step)
             "volatility_thresholds": {
-                "moderate": self.config_entry.options.get(_const.CONF_VOLATILITY_THRESHOLD_MODERATE, 15.0),
-                "high": self.config_entry.options.get(_const.CONF_VOLATILITY_THRESHOLD_HIGH, 25.0),
-                "very_high": self.config_entry.options.get(_const.CONF_VOLATILITY_THRESHOLD_VERY_HIGH, 40.0),
+                "moderate": options.get(_const.CONF_VOLATILITY_THRESHOLD_MODERATE, 15.0),
+                "high": options.get(_const.CONF_VOLATILITY_THRESHOLD_HIGH, 25.0),
+                "very_high": options.get(_const.CONF_VOLATILITY_THRESHOLD_VERY_HIGH, 40.0),
+            },
+            # Price trend thresholds now flat (single-section step)
+            "price_trend_thresholds": {
+                "rising": options.get(
+                    _const.CONF_PRICE_TREND_THRESHOLD_RISING, _const.DEFAULT_PRICE_TREND_THRESHOLD_RISING
+                ),
+                "falling": options.get(
+                    _const.CONF_PRICE_TREND_THRESHOLD_FALLING, _const.DEFAULT_PRICE_TREND_THRESHOLD_FALLING
+                ),
             },
             "best_price_config": {
-                "flex": self.config_entry.options.get(_const.CONF_BEST_PRICE_FLEX, 15.0),
-                "max_level": self.config_entry.options.get(_const.CONF_BEST_PRICE_MAX_LEVEL, "NORMAL"),
-                "min_period_length": self.config_entry.options.get(_const.CONF_BEST_PRICE_MIN_PERIOD_LENGTH, 4),
-                "min_distance_from_avg": self.config_entry.options.get(
-                    _const.CONF_BEST_PRICE_MIN_DISTANCE_FROM_AVG, -5.0
-                ),
-                "max_level_gap_count": self.config_entry.options.get(_const.CONF_BEST_PRICE_MAX_LEVEL_GAP_COUNT, 0),
-                "enable_min_periods": self.config_entry.options.get(_const.CONF_ENABLE_MIN_PERIODS_BEST, False),
-                "min_periods": self.config_entry.options.get(_const.CONF_MIN_PERIODS_BEST, 2),
-                "relaxation_attempts": self.config_entry.options.get(_const.CONF_RELAXATION_ATTEMPTS_BEST, 4),
+                "flex": best_flex_section.get(_const.CONF_BEST_PRICE_FLEX, 15.0),
+                "max_level": best_period_section.get(_const.CONF_BEST_PRICE_MAX_LEVEL, "NORMAL"),
+                "min_period_length": best_period_section.get(_const.CONF_BEST_PRICE_MIN_PERIOD_LENGTH, 4),
+                "min_distance_from_avg": best_flex_section.get(_const.CONF_BEST_PRICE_MIN_DISTANCE_FROM_AVG, -5.0),
+                "max_level_gap_count": best_period_section.get(_const.CONF_BEST_PRICE_MAX_LEVEL_GAP_COUNT, 0),
+                "enable_min_periods": best_relax_section.get(_const.CONF_ENABLE_MIN_PERIODS_BEST, False),
+                "min_periods": best_relax_section.get(_const.CONF_MIN_PERIODS_BEST, 2),
+                "relaxation_attempts": best_relax_section.get(_const.CONF_RELAXATION_ATTEMPTS_BEST, 4),
             },
             "peak_price_config": {
-                "flex": self.config_entry.options.get(_const.CONF_PEAK_PRICE_FLEX, 15.0),
-                "min_level": self.config_entry.options.get(_const.CONF_PEAK_PRICE_MIN_LEVEL, "HIGH"),
-                "min_period_length": self.config_entry.options.get(_const.CONF_PEAK_PRICE_MIN_PERIOD_LENGTH, 4),
-                "min_distance_from_avg": self.config_entry.options.get(
-                    _const.CONF_PEAK_PRICE_MIN_DISTANCE_FROM_AVG, 5.0
-                ),
-                "max_level_gap_count": self.config_entry.options.get(_const.CONF_PEAK_PRICE_MAX_LEVEL_GAP_COUNT, 0),
-                "enable_min_periods": self.config_entry.options.get(_const.CONF_ENABLE_MIN_PERIODS_PEAK, False),
-                "min_periods": self.config_entry.options.get(_const.CONF_MIN_PERIODS_PEAK, 2),
-                "relaxation_attempts": self.config_entry.options.get(_const.CONF_RELAXATION_ATTEMPTS_PEAK, 4),
+                "flex": peak_flex_section.get(_const.CONF_PEAK_PRICE_FLEX, 15.0),
+                "min_level": peak_period_section.get(_const.CONF_PEAK_PRICE_MIN_LEVEL, "HIGH"),
+                "min_period_length": peak_period_section.get(_const.CONF_PEAK_PRICE_MIN_PERIOD_LENGTH, 4),
+                "min_distance_from_avg": peak_flex_section.get(_const.CONF_PEAK_PRICE_MIN_DISTANCE_FROM_AVG, 5.0),
+                "max_level_gap_count": peak_period_section.get(_const.CONF_PEAK_PRICE_MAX_LEVEL_GAP_COUNT, 0),
+                "enable_min_periods": peak_relax_section.get(_const.CONF_ENABLE_MIN_PERIODS_PEAK, False),
+                "min_periods": peak_relax_section.get(_const.CONF_MIN_PERIODS_PEAK, 2),
+                "relaxation_attempts": peak_relax_section.get(_const.CONF_RELAXATION_ATTEMPTS_PEAK, 4),
             },
         }
 

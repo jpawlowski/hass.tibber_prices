@@ -126,14 +126,15 @@ async def _migrate_config_options(hass: HomeAssistant, entry: ConfigEntry) -> No
     migration_performed = False
     migrated = dict(entry.options)
 
-    # Migration: Set currency_display_mode to minor for existing configs
-    # New configs get currency-appropriate defaults from schema.
-    # This preserves legacy behavior where all prices were in subunit currency.
+    # Migration: Set currency_display_mode to subunit for legacy configs
+    # New configs (created after v1.1.0) get currency-appropriate defaults via get_default_options().
+    # This migration preserves legacy behavior where all prices were in subunit currency (cents/øre).
+    # Only runs for old config entries that don't have this option explicitly set.
     if CONF_CURRENCY_DISPLAY_MODE not in migrated:
         migrated[CONF_CURRENCY_DISPLAY_MODE] = DISPLAY_MODE_SUBUNIT
         migration_performed = True
         LOGGER.info(
-            "[%s] Migrated config: Set currency_display_mode=%s (legacy default for existing configs)",
+            "[%s] Migrated legacy config: Set currency_display_mode=%s (preserves pre-v1.1.0 behavior)",
             entry.title,
             DISPLAY_MODE_SUBUNIT,
         )
@@ -276,7 +277,8 @@ async def async_setup_entry(
     # https://developers.home-assistant.io/docs/integration_fetching_data#coordinated-single-api-poll-for-data-for-all-entities
     if entry.state == ConfigEntryState.SETUP_IN_PROGRESS:
         await coordinator.async_config_entry_first_refresh()
-        entry.async_on_unload(entry.add_update_listener(async_reload_entry))
+        # Note: Options update listener is registered in coordinator.__init__
+        # (handles cache invalidation + refresh without full reload)
     else:
         await coordinator.async_refresh()
 
