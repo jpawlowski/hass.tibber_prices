@@ -28,7 +28,7 @@ if TYPE_CHECKING:
 from custom_components.tibber_prices.const import get_display_unit_factor
 from custom_components.tibber_prices.coordinator.helpers import get_intervals_for_day_offsets
 from custom_components.tibber_prices.entity_utils.helpers import get_price_value
-from custom_components.tibber_prices.utils.average import calculate_median
+from custom_components.tibber_prices.utils.average import calculate_mean, calculate_median
 from custom_components.tibber_prices.utils.price import (
     aggregate_price_levels,
     aggregate_price_rating,
@@ -38,7 +38,7 @@ if TYPE_CHECKING:
     from collections.abc import Callable
 
 
-def aggregate_price_data(
+def aggregate_average_data(
     window_data: list[dict],
     config_entry: ConfigEntry,
 ) -> tuple[float | None, float | None]:
@@ -57,12 +57,12 @@ def aggregate_price_data(
     prices = [float(i["total"]) for i in window_data if "total" in i]
     if not prices:
         return None, None
-    # Calculate both average and median
-    avg = sum(prices) / len(prices)
+    # Calculate both mean and median
+    mean = calculate_mean(prices)
     median = calculate_median(prices)
     # Convert to display currency unit based on configuration
     factor = get_display_unit_factor(config_entry)
-    return round(avg * factor, 2), round(median * factor, 2) if median is not None else None
+    return round(mean * factor, 2), round(median * factor, 2) if median is not None else None
 
 
 def aggregate_level_data(window_data: list[dict]) -> str | None:
@@ -135,7 +135,7 @@ def aggregate_window_data(
     """
     # Map value types to aggregation functions
     aggregators: dict[str, Callable] = {
-        "price": lambda data: aggregate_price_data(data, config_entry)[0],  # Use only average from tuple
+        "price": lambda data: aggregate_average_data(data, config_entry)[0],  # Use only average from tuple
         "level": lambda data: aggregate_level_data(data),
         "rating": lambda data: aggregate_rating_data(data, threshold_low, threshold_high),
     }

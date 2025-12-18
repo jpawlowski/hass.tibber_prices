@@ -454,7 +454,7 @@ WINDOW_24H_SENSORS = (
 # ----------------------------------------------------------------------------
 # Calculate averages and trends for upcoming time windows
 
-FUTURE_AVG_SENSORS = (
+FUTURE_MEAN_SENSORS = (
     # Default enabled: 1h-5h
     SensorEntityDescription(
         key="next_avg_1h",
@@ -1031,7 +1031,7 @@ ENTITY_DESCRIPTIONS = (
     *DAILY_LEVEL_SENSORS,
     *DAILY_RATING_SENSORS,
     *WINDOW_24H_SENSORS,
-    *FUTURE_AVG_SENSORS,
+    *FUTURE_MEAN_SENSORS,
     *FUTURE_TREND_SENSORS,
     *VOLATILITY_SENSORS,
     *BEST_PRICE_TIMING_SENSORS,

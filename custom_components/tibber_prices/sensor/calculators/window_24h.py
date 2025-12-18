@@ -33,11 +33,11 @@ class TibberPricesWindow24hCalculator(TibberPricesBaseCalculator):
         - "leading": Next 24 hours (96 intervals after current)
 
         Args:
-            stat_func: Function from average_utils (e.g., calculate_current_trailing_avg).
+            stat_func: Function from average_utils (e.g., calculate_current_trailing_mean).
 
         Returns:
             Price value in subunit currency units (cents/øre), or None if unavailable.
-            For average functions: tuple of (avg, median) where median may be None.
+            For mean functions: tuple of (mean, median) where median may be None.
             For min/max functions: single float value.
 
         """
@@ -46,19 +46,19 @@ class TibberPricesWindow24hCalculator(TibberPricesBaseCalculator):
 
         result = stat_func(self.coordinator_data, time=self.coordinator.time)
 
-        # Check if result is a tuple (avg, median) from average functions
+        # Check if result is a tuple (mean, median) from mean functions
         if isinstance(result, tuple):
             value, median = result
             if value is None:
                 return None
             # Convert to display currency units based on config
-            avg_result = round(get_price_value(value, config_entry=self.coordinator.config_entry), 2)
+            mean_result = round(get_price_value(value, config_entry=self.coordinator.config_entry), 2)
             median_result = (
                 round(get_price_value(median, config_entry=self.coordinator.config_entry), 2)
                 if median is not None
                 else None
             )
-            return avg_result, median_result
+            return mean_result, median_result
 
         # Single value result (min/max functions)
         value = result

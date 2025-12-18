@@ -11,8 +11,8 @@ from custom_components.tibber_prices.const import (
 from custom_components.tibber_prices.coordinator.helpers import get_intervals_for_day_offsets
 from custom_components.tibber_prices.entity_utils import find_rolling_hour_center_index
 from custom_components.tibber_prices.sensor.helpers import (
+    aggregate_average_data,
     aggregate_level_data,
-    aggregate_price_data,
     aggregate_rating_data,
 )
 
@@ -108,7 +108,7 @@ class TibberPricesRollingHourCalculator(TibberPricesBaseCalculator):
 
         # Handle price aggregation - return tuple directly
         if value_type == "price":
-            return aggregate_price_data(window_data, self.config_entry)
+            return aggregate_average_data(window_data, self.config_entry)
 
         # Map other value types to aggregation functions
         aggregators = {

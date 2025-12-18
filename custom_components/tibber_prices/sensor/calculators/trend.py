@@ -17,7 +17,7 @@ from typing import TYPE_CHECKING, Any
 
 from custom_components.tibber_prices.const import get_display_unit_factor
 from custom_components.tibber_prices.coordinator.helpers import get_intervals_for_day_offsets
-from custom_components.tibber_prices.utils.average import calculate_next_n_hours_avg
+from custom_components.tibber_prices.utils.average import calculate_mean, calculate_next_n_hours_mean
 from custom_components.tibber_prices.utils.price import (
     calculate_price_trend,
     find_price_data_for_interval,
@@ -97,9 +97,9 @@ class TibberPricesTrendCalculator(TibberPricesBaseCalculator):
         # Get next interval timestamp (basis for calculation)
         next_interval_start = time.get_next_interval_start()
 
-        # Get future average price
-        future_avg, _ = calculate_next_n_hours_avg(self.coordinator.data, hours, time=self.coordinator.time)
-        if future_avg is None:
+        # Get future mean price (ignore median for trend calculation)
+        future_mean, _ = calculate_next_n_hours_mean(self.coordinator.data, hours, time=self.coordinator.time)
+        if future_mean is None:
             return None
 
         # Get configured thresholds from options
@@ -117,7 +117,7 @@ class TibberPricesTrendCalculator(TibberPricesBaseCalculator):
         # Calculate trend with volatility-adaptive thresholds
         trend_state, diff_pct = calculate_price_trend(
             current_interval_price,
-            future_avg,
+            future_mean,
             threshold_rising=threshold_rising,
             threshold_falling=threshold_falling,
             volatility_adjustment=True,  # Always enabled
@@ -141,7 +141,7 @@ class TibberPricesTrendCalculator(TibberPricesBaseCalculator):
         self._trend_attributes = {
             "timestamp": next_interval_start,
             f"trend_{hours}h_%": round(diff_pct, 1),
-            f"next_{hours}h_avg": round(future_avg * factor, 2),
+            f"next_{hours}h_avg": round(future_mean * factor, 2),
             "interval_count": lookahead_intervals,
             "threshold_rising": threshold_rising,
             "threshold_falling": threshold_falling,
@@ -282,7 +282,7 @@ class TibberPricesTrendCalculator(TibberPricesBaseCalculator):
                     later_prices.append(float(price))
 
         if later_prices:
-            return sum(later_prices) / len(later_prices)
+            return calculate_mean(later_prices)
 
         return None
 
@@ -349,11 +349,11 @@ class TibberPricesTrendCalculator(TibberPricesBaseCalculator):
 
         # Combine momentum + future outlook to get ACTUAL current trend
         if len(future_intervals) >= min_intervals_for_trend and future_prices:
-            future_avg = sum(future_prices) / len(future_prices)
+            future_mean = calculate_mean(future_prices)
             current_trend_state = self._combine_momentum_with_future(
                 current_momentum=current_momentum,
                 current_price=current_price,
-                future_avg=future_avg,
+                future_mean=future_mean,
                 context={
                     "all_intervals": all_intervals,
                     "current_index": current_index,
@@ -466,7 +466,7 @@ class TibberPricesTrendCalculator(TibberPricesBaseCalculator):
         *,
         current_momentum: str,
         current_price: float,
-        future_avg: float,
+        future_mean: float,
         context: dict,
     ) -> str:
         """
@@ -475,7 +475,7 @@ class TibberPricesTrendCalculator(TibberPricesBaseCalculator):
         Args:
             current_momentum: Current momentum direction (rising/falling/stable)
             current_price: Current interval price
-            future_avg: Average price in future window
+            future_mean: Average price in future window
             context: Dict with all_intervals, current_index, lookahead_intervals, thresholds
 
         Returns:
@@ -484,11 +484,11 @@ class TibberPricesTrendCalculator(TibberPricesBaseCalculator):
         """
         if current_momentum == "rising":
             # We're in uptrend - does it continue?
-            return "rising" if future_avg >= current_price * 0.98 else "falling"
+            return "rising" if future_mean >= current_price * 0.98 else "falling"
 
         if current_momentum == "falling":
             # We're in downtrend - does it continue?
-            return "falling" if future_avg <= current_price * 1.02 else "rising"
+            return "falling" if future_mean <= current_price * 1.02 else "rising"
 
         # current_momentum == "stable" - what's coming?
         all_intervals = context["all_intervals"]
@@ -499,7 +499,7 @@ class TibberPricesTrendCalculator(TibberPricesBaseCalculator):
         lookahead_for_volatility = all_intervals[current_index : current_index + lookahead_intervals]
         trend_state, _ = calculate_price_trend(
             current_price,
-            future_avg,
+            future_mean,
             threshold_rising=thresholds["rising"],
             threshold_falling=thresholds["falling"],
             volatility_adjustment=True,
@@ -530,13 +530,13 @@ class TibberPricesTrendCalculator(TibberPricesBaseCalculator):
         if not standard_future_prices:
             return "stable"
 
-        standard_future_avg = sum(standard_future_prices) / len(standard_future_prices)
+        standard_future_mean = calculate_mean(standard_future_prices)
         current_price = float(current_interval["total"])
 
         standard_lookahead_volatility = all_intervals[current_index : current_index + standard_lookahead]
         current_trend_3h, _ = calculate_price_trend(
             current_price,
-            standard_future_avg,
+            standard_future_mean,
             threshold_rising=thresholds["rising"],
             threshold_falling=thresholds["falling"],
             volatility_adjustment=True,
@@ -601,14 +601,14 @@ class TibberPricesTrendCalculator(TibberPricesBaseCalculator):
             if not future_prices:
                 continue
 
-            future_avg = sum(future_prices) / len(future_prices)
+            future_mean = calculate_mean(future_prices)
             price = float(interval["total"])
 
             # Calculate trend at this past point
             lookahead_for_volatility = all_intervals[i : i + intervals_in_3h]
             trend_state, _ = calculate_price_trend(
                 price,
-                future_avg,
+                future_mean,
                 threshold_rising=thresholds["rising"],
                 threshold_falling=thresholds["falling"],
                 volatility_adjustment=True,
@@ -673,14 +673,14 @@ class TibberPricesTrendCalculator(TibberPricesBaseCalculator):
             if not future_prices:
                 continue
 
-            future_avg = sum(future_prices) / len(future_prices)
+            future_mean = calculate_mean(future_prices)
             current_price = float(interval["total"])
 
             # Calculate trend at this future point
             lookahead_for_volatility = all_intervals[i : i + intervals_in_3h]
             trend_state, _ = calculate_price_trend(
                 current_price,
-                future_avg,
+                future_mean,
                 threshold_rising=thresholds["rising"],
                 threshold_falling=thresholds["falling"],
                 volatility_adjustment=True,
@@ -706,8 +706,8 @@ class TibberPricesTrendCalculator(TibberPricesBaseCalculator):
                     "minutes_until_change": minutes_until,
                     "current_price_now": round(float(current_interval["total"]) * factor, 2),
                     "price_at_change": round(current_price * factor, 2),
-                    "avg_after_change": round(future_avg * factor, 2),
-                    "trend_diff_%": round((future_avg - current_price) / current_price * 100, 1),
+                    "avg_after_change": round(future_mean * factor, 2),
+                    "trend_diff_%": round((future_mean - current_price) / current_price * 100, 1),
                 }
                 return interval_start
 

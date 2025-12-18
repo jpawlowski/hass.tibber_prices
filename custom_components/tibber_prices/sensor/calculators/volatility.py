@@ -10,6 +10,7 @@ from custom_components.tibber_prices.sensor.attributes import (
     add_volatility_type_attributes,
     get_prices_for_volatility,
 )
+from custom_components.tibber_prices.utils.average import calculate_mean
 from custom_components.tibber_prices.utils.price import calculate_volatility_level
 
 from .base import TibberPricesBaseCalculator
@@ -75,7 +76,7 @@ class TibberPricesVolatilityCalculator(TibberPricesBaseCalculator):
         price_max = max(prices_to_analyze)
         spread = price_max - price_min
         # Use arithmetic mean for volatility calculation (required for coefficient of variation)
-        price_mean = sum(prices_to_analyze) / len(prices_to_analyze)
+        price_mean = calculate_mean(prices_to_analyze)
 
         # Convert to display currency unit based on configuration
         factor = get_display_unit_factor(self.config_entry)

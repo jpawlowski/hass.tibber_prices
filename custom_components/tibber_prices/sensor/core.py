@@ -40,7 +40,7 @@ from custom_components.tibber_prices.entity_utils.icons import (
     get_dynamic_icon,
 )
 from custom_components.tibber_prices.utils.average import (
-    calculate_next_n_hours_avg,
+    calculate_next_n_hours_mean,
 )
 from custom_components.tibber_prices.utils.price import (
     calculate_volatility_level,
@@ -100,7 +100,7 @@ MIN_HOURS_FOR_LATER_HALF = 3  # Minimum hours needed to calculate later half ave
 class TibberPricesSensor(TibberPricesEntity, RestoreSensor):
     """tibber_prices Sensor class with state restoration."""
 
-    # Attributes excluded from recorder history
+    # Base attributes excluded from recorder history (shared across all sensors)
     # See: https://developers.home-assistant.io/docs/core/entity/#excluding-state-attributes-from-recorder-history
     _unrecorded_attributes = frozenset(
         {
@@ -190,7 +190,48 @@ class TibberPricesSensor(TibberPricesEntity, RestoreSensor):
         """When entity is added to hass."""
         await super().async_added_to_hass()
 
+        # Configure dynamic attribute exclusion for average sensors
+        self._configure_average_sensor_exclusions()
+
         # Restore last state if available
+        await self._restore_last_state()
+
+        # Register listeners for time-sensitive updates
+        self._register_update_listeners()
+
+        # Trigger initial chart data loads as background tasks
+        self._trigger_chart_data_loads()
+
+    def _configure_average_sensor_exclusions(self) -> None:
+        """Configure dynamic attribute exclusions for average sensors."""
+        # Dynamically exclude average attribute that matches state value
+        # (to avoid recording the same value twice: once as state, once as attribute)
+        key = self.entity_description.key
+        if key in (
+            "average_price_today",
+            "average_price_tomorrow",
+            "trailing_price_average",
+            "leading_price_average",
+            "current_hour_average_price",
+            "next_hour_average_price",
+        ) or key.startswith("next_avg_"):  # Future average sensors
+            display_mode = self.coordinator.config_entry.options.get(
+                CONF_AVERAGE_SENSOR_DISPLAY,
+                DEFAULT_AVERAGE_SENSOR_DISPLAY,
+            )
+            # Modify _state_info to add dynamic exclusion
+            if self._state_info is None:
+                self._state_info = {}
+            current_unrecorded = self._state_info.get("unrecorded_attributes", frozenset())
+            # State shows median → exclude price_median from attributes
+            # State shows mean → exclude price_mean from attributes
+            if display_mode == "median":
+                self._state_info["unrecorded_attributes"] = current_unrecorded | {"price_median"}
+            else:
+                self._state_info["unrecorded_attributes"] = current_unrecorded | {"price_mean"}
+
+    async def _restore_last_state(self) -> None:
+        """Restore last state if available."""
         if (
             (last_state := await self.async_get_last_state()) is not None
             and last_state.state not in (None, "unknown", "unavailable", "")
@@ -213,6 +254,8 @@ class TibberPricesSensor(TibberPricesEntity, RestoreSensor):
                     self._chart_metadata_response = metadata_attrs
                 self._chart_metadata_last_update = last_state.attributes.get("last_update")
 
+    def _register_update_listeners(self) -> None:
+        """Register listeners for time-sensitive updates."""
         # Register with coordinator for time-sensitive updates if applicable
         if self.entity_description.key in TIME_SENSITIVE_ENTITY_KEYS:
             self._time_sensitive_remove_listener = self.coordinator.async_add_time_sensitive_listener(
@@ -225,6 +268,8 @@ class TibberPricesSensor(TibberPricesEntity, RestoreSensor):
                 self._handle_minute_update
             )
 
+    def _trigger_chart_data_loads(self) -> None:
+        """Trigger initial chart data loads as background tasks."""
         # For chart_data_export, trigger initial service call as background task
         # (non-blocking to avoid delaying entity setup)
         if self.entity_description.key == "chart_data_export":
@@ -521,7 +566,7 @@ class TibberPricesSensor(TibberPricesEntity, RestoreSensor):
         - "leading": Next 24 hours (96 intervals after current)
 
         Args:
-            stat_func: Function from average_utils (e.g., calculate_current_trailing_avg)
+            stat_func: Function from average_utils (e.g., calculate_current_trailing_mean)
 
         Returns:
             Price value in subunit currency units (cents/øre), or None if unavailable
@@ -570,28 +615,37 @@ class TibberPricesSensor(TibberPricesEntity, RestoreSensor):
 
     def _get_next_avg_n_hours_value(self, hours: int) -> float | None:
         """
-        Get average price for next N hours starting from next interval.
+        Get mean price for next N hours starting from next interval.
 
         Args:
             hours: Number of hours to look ahead (1, 2, 3, 4, 5, 6, 8, 12)
 
         Returns:
-            Average price in subunit currency units (e.g., cents), or None if unavailable
+            Mean or median price (based on config) in subunit currency units (e.g., cents),
+            or None if unavailable
 
         """
-        avg_price, median_price = calculate_next_n_hours_avg(self.coordinator.data, hours, time=self.coordinator.time)
-        if avg_price is None:
+        mean_price, median_price = calculate_next_n_hours_mean(self.coordinator.data, hours, time=self.coordinator.time)
+        if mean_price is None:
             return None
 
         # Get display unit factor (100 for minor, 1 for major)
         factor = get_display_unit_factor(self.coordinator.config_entry)
 
-        # Store median for attributes
+        # Get user preference for display (mean or median)
+        display_pref = self.coordinator.config_entry.options.get(
+            CONF_AVERAGE_SENSOR_DISPLAY, DEFAULT_AVERAGE_SENSOR_DISPLAY
+        )
+
+        # Store both values for attributes
+        self.cached_data[f"next_avg_{hours}h_mean"] = round(mean_price * factor, 2)
         if median_price is not None:
             self.cached_data[f"next_avg_{hours}h_median"] = round(median_price * factor, 2)
 
-        # Convert from major to display currency units
-        return round(avg_price * factor, 2)
+        # Return the value chosen for state display
+        if display_pref == "median" and median_price is not None:
+            return round(median_price * factor, 2)
+        return round(mean_price * factor, 2)  # "mean"
 
     def _get_data_timestamp(self) -> datetime | None:
         """

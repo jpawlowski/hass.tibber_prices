@@ -17,13 +17,15 @@ For entity-specific utilities (icons, colors, attributes), see entity_utils/ pac
 from __future__ import annotations
 
 from .average import (
-    calculate_current_leading_avg,
     calculate_current_leading_max,
+    calculate_current_leading_mean,
     calculate_current_leading_min,
-    calculate_current_trailing_avg,
     calculate_current_trailing_max,
+    calculate_current_trailing_mean,
     calculate_current_trailing_min,
-    calculate_next_n_hours_avg,
+    calculate_mean,
+    calculate_median,
+    calculate_next_n_hours_mean,
 )
 from .price import (
     aggregate_period_levels,
@@ -44,14 +46,16 @@ __all__ = [
     "aggregate_period_ratings",
     "aggregate_price_levels",
     "aggregate_price_rating",
-    "calculate_current_leading_avg",
     "calculate_current_leading_max",
+    "calculate_current_leading_mean",
     "calculate_current_leading_min",
-    "calculate_current_trailing_avg",
     "calculate_current_trailing_max",
+    "calculate_current_trailing_mean",
     "calculate_current_trailing_min",
     "calculate_difference_percentage",
-    "calculate_next_n_hours_avg",
+    "calculate_mean",
+    "calculate_median",
+    "calculate_next_n_hours_mean",
     "calculate_price_trend",
     "calculate_rating_level",
     "calculate_trailing_average_for_interval",

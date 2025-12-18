@@ -5,12 +5,13 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 from custom_components.tibber_prices.utils.average import (
-    calculate_current_leading_avg,
     calculate_current_leading_max,
+    calculate_current_leading_mean,
     calculate_current_leading_min,
-    calculate_current_trailing_avg,
     calculate_current_trailing_max,
+    calculate_current_trailing_mean,
     calculate_current_trailing_min,
+    calculate_mean,
     calculate_median,
 )
 
@@ -131,14 +132,14 @@ def get_value_getter_mapping(  # noqa: PLR0913 - needs all calculators as parame
         "highest_price_today": lambda: daily_stat_calculator.get_daily_stat_value(day="today", stat_func=max),
         "average_price_today": lambda: daily_stat_calculator.get_daily_stat_value(
             day="today",
-            stat_func=lambda prices: (sum(prices) / len(prices), calculate_median(prices)),
+            stat_func=lambda prices: (calculate_mean(prices), calculate_median(prices)),
         ),
         # Tomorrow statistics sensors
         "lowest_price_tomorrow": lambda: daily_stat_calculator.get_daily_stat_value(day="tomorrow", stat_func=min),
         "highest_price_tomorrow": lambda: daily_stat_calculator.get_daily_stat_value(day="tomorrow", stat_func=max),
         "average_price_tomorrow": lambda: daily_stat_calculator.get_daily_stat_value(
             day="tomorrow",
-            stat_func=lambda prices: (sum(prices) / len(prices), calculate_median(prices)),
+            stat_func=lambda prices: (calculate_mean(prices), calculate_median(prices)),
         ),
         # Daily aggregated level sensors
         "yesterday_price_level": lambda: daily_stat_calculator.get_daily_aggregated_value(
@@ -163,10 +164,10 @@ def get_value_getter_mapping(  # noqa: PLR0913 - needs all calculators as parame
         # ================================================================
         # Trailing and leading average sensors
         "trailing_price_average": lambda: window_24h_calculator.get_24h_window_value(
-            stat_func=calculate_current_trailing_avg,
+            stat_func=calculate_current_trailing_mean,
         ),
         "leading_price_average": lambda: window_24h_calculator.get_24h_window_value(
-            stat_func=calculate_current_leading_avg,
+            stat_func=calculate_current_leading_mean,
         ),
         # Trailing and leading min/max sensors
         "trailing_price_min": lambda: window_24h_calculator.get_24h_window_value(

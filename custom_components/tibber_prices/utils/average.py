@@ -35,17 +35,43 @@ def calculate_median(prices: list[float]) -> float | None:
     return sorted_prices[n // 2]
 
 
-def calculate_trailing_24h_avg(all_prices: list[dict], interval_start: datetime) -> tuple[float | None, float | None]:
+def calculate_mean(prices: list[float]) -> float:
     """
-    Calculate trailing 24-hour average and median price for a given interval.
+    Calculate arithmetic mean (average) from a list of prices.
+
+    Args:
+        prices: List of price values (must not be empty)
+
+    Returns:
+        Mean price
+
+    Raises:
+        ValueError: If prices list is empty
+
+    """
+    if not prices:
+        msg = "Cannot calculate mean of empty list"
+        raise ValueError(msg)
+
+    return sum(prices) / len(prices)
+
+
+def calculate_trailing_24h_mean(
+    all_prices: list[dict],
+    interval_start: datetime,
+    *,
+    time: TibberPricesTimeService,
+) -> tuple[float | None, float | None]:
+    """
+    Calculate trailing 24-hour mean and median price for a given interval.
 
     Args:
         all_prices: List of all price data (yesterday, today, tomorrow combined)
-        interval_start: Start time of the interval to calculate average for
+        interval_start: Start time of the interval to calculate mean for
         time: TibberPricesTimeService instance (required)
 
     Returns:
-        Tuple of (average price, median price) for the 24 hours preceding the interval,
+        Tuple of (mean price, median price) for the 24 hours preceding the interval,
         or (None, None) if no data in window
 
     """
@@ -56,34 +82,39 @@ def calculate_trailing_24h_avg(all_prices: list[dict], interval_start: datetime)
     # Filter prices within the 24-hour window
     prices_in_window = []
     for price_data in all_prices:
-        starts_at = price_data["startsAt"]  # Already datetime object in local timezone
+        starts_at = time.get_interval_time(price_data)
         if starts_at is None:
             continue
         # Include intervals that start within the window (not including the current interval's end)
         if window_start <= starts_at < window_end:
             prices_in_window.append(float(price_data["total"]))
 
-    # Calculate average and median
+    # Calculate mean and median
     # CRITICAL: Return None instead of 0.0 when no data available
-    # With negative prices, 0.0 could be misinterpreted as a real average value
+    # With negative prices, 0.0 could be misinterpreted as a real mean value
     if prices_in_window:
-        avg = sum(prices_in_window) / len(prices_in_window)
+        mean = calculate_mean(prices_in_window)
         median = calculate_median(prices_in_window)
-        return avg, median
+        return mean, median
     return None, None
 
 
-def calculate_leading_24h_avg(all_prices: list[dict], interval_start: datetime) -> tuple[float | None, float | None]:
+def calculate_leading_24h_mean(
+    all_prices: list[dict],
+    interval_start: datetime,
+    *,
+    time: TibberPricesTimeService,
+) -> tuple[float | None, float | None]:
     """
-    Calculate leading 24-hour average and median price for a given interval.
+    Calculate leading 24-hour mean and median price for a given interval.
 
     Args:
         all_prices: List of all price data (yesterday, today, tomorrow combined)
-        interval_start: Start time of the interval to calculate average for
+        interval_start: Start time of the interval to calculate mean for
         time: TibberPricesTimeService instance (required)
 
     Returns:
-        Tuple of (average price, median price) for up to 24 hours following the interval,
+        Tuple of (mean price, median price) for up to 24 hours following the interval,
         or (None, None) if no data in window
 
     """
@@ -94,77 +125,79 @@ def calculate_leading_24h_avg(all_prices: list[dict], interval_start: datetime) 
     # Filter prices within the 24-hour window
     prices_in_window = []
     for price_data in all_prices:
-        starts_at = price_data["startsAt"]  # Already datetime object in local timezone
+        starts_at = time.get_interval_time(price_data)
         if starts_at is None:
             continue
         # Include intervals that start within the window
         if window_start <= starts_at < window_end:
             prices_in_window.append(float(price_data["total"]))
 
-    # Calculate average and median
+    # Calculate mean and median
     # CRITICAL: Return None instead of 0.0 when no data available
-    # With negative prices, 0.0 could be misinterpreted as a real average value
+    # With negative prices, 0.0 could be misinterpreted as a real mean value
     if prices_in_window:
-        avg = sum(prices_in_window) / len(prices_in_window)
+        mean = calculate_mean(prices_in_window)
         median = calculate_median(prices_in_window)
-        return avg, median
+        return mean, median
     return None, None
 
 
-def calculate_current_trailing_avg(
+def calculate_current_trailing_mean(
     coordinator_data: dict,
     *,
     time: TibberPricesTimeService,
-) -> float | None:
+) -> tuple[float | None, float | None]:
     """
-    Calculate the trailing 24-hour average for the current time.
+    Calculate the trailing 24-hour mean and median for the current time.
 
     Args:
         coordinator_data: The coordinator data containing priceInfo
         time: TibberPricesTimeService instance (required)
 
     Returns:
-        Current trailing 24-hour average price, or None if unavailable
+        Tuple of (mean price, median price), or (None, None) if unavailable
 
     """
     if not coordinator_data:
-        return None
+        return None, None
 
     # Get all intervals (yesterday, today, tomorrow) via helper
     all_prices = get_intervals_for_day_offsets(coordinator_data, [-1, 0, 1])
     if not all_prices:
-        return None
+        return None, None
 
     now = time.now()
-    return calculate_trailing_24h_min(all_prices, now, time=time)
+    # calculate_trailing_24h_mean returns (mean, median) tuple
+    return calculate_trailing_24h_mean(all_prices, now, time=time)
 
 
-def calculate_current_leading_avg(
+def calculate_current_leading_mean(
     coordinator_data: dict,
     *,
     time: TibberPricesTimeService,
-) -> float | None:
+) -> tuple[float | None, float | None]:
     """
-    Calculate the leading 24-hour average for the current time.
+    Calculate the leading 24-hour mean and median for the current time.
 
     Args:
         coordinator_data: The coordinator data containing priceInfo
         time: TibberPricesTimeService instance (required)
 
     Returns:
-        Current leading 24-hour average price, or None if unavailable
+        Tuple of (mean price, median price), or (None, None) if unavailable
 
     """
     if not coordinator_data:
-        return None
+        return None, None
 
     # Get all intervals (yesterday, today, tomorrow) via helper
     all_prices = get_intervals_for_day_offsets(coordinator_data, [-1, 0, 1])
     if not all_prices:
-        return None
+        return None, None
 
     now = time.now()
-    return calculate_leading_24h_min(all_prices, now, time=time)
+    # calculate_leading_24h_mean returns (mean, median) tuple
+    return calculate_leading_24h_mean(all_prices, now, time=time)
 
 
 def calculate_trailing_24h_min(
@@ -408,11 +441,7 @@ def calculate_current_leading_min(
         return None
 
     now = time.now()
-    # calculate_leading_24h_avg returns (avg, median) - we just need the avg
-    result = calculate_leading_24h_avg(all_prices, now)
-    if isinstance(result, tuple):
-        return result[0]  # Return avg only
-    return None
+    return calculate_leading_24h_min(all_prices, now, time=time)
 
 
 def calculate_current_leading_max(
@@ -443,16 +472,16 @@ def calculate_current_leading_max(
     return calculate_leading_24h_max(all_prices, now, time=time)
 
 
-def calculate_next_n_hours_avg(
+def calculate_next_n_hours_mean(
     coordinator_data: dict,
     hours: int,
     *,
     time: TibberPricesTimeService,
 ) -> tuple[float | None, float | None]:
     """
-    Calculate average and median price for the next N hours starting from the next interval.
+    Calculate mean and median price for the next N hours starting from the next interval.
 
-    This function computes the average and median of all 15-minute intervals starting from
+    This function computes the mean and median of all 15-minute intervals starting from
     the next interval (not current) up to N hours into the future.
 
     Args:
@@ -461,7 +490,7 @@ def calculate_next_n_hours_avg(
         time: TibberPricesTimeService instance (required)
 
     Returns:
-        Tuple of (average price, median price) for the next N hours,
+        Tuple of (mean price, median price) for the next N hours,
         or (None, None) if insufficient data
 
     """
@@ -506,7 +535,7 @@ def calculate_next_n_hours_avg(
     if not prices_in_window:
         return None, None
 
-    # Return average and median (prefer full period, but allow graceful degradation)
-    avg = sum(prices_in_window) / len(prices_in_window)
+    # Return mean and median (prefer full period, but allow graceful degradation)
+    mean = calculate_mean(prices_in_window)
     median = calculate_median(prices_in_window)
-    return avg, median
+    return mean, median
