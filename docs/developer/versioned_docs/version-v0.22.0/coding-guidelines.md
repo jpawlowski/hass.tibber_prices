@@ -4,7 +4,7 @@ comments: false
 
 # Coding Guidelines
 
-> **Note:** For complete coding standards, see [`AGENTS.md`](https://github.com/jpawlowski/hass.tibber_prices/blob/v0.20.0/AGENTS.md).
+> **Note:** For complete coding standards, see [`AGENTS.md`](https://github.com/jpawlowski/hass.tibber_prices/blob/main/AGENTS.md).
 
 ## Code Style
 
@@ -75,7 +75,7 @@ Many existing classes lack the `TibberPrices` prefix. Before refactoring:
 2. Use `multi_replace_string_in_file` for bulk renames
 3. Test thoroughly after each module
 
-See [`AGENTS.md`](https://github.com/jpawlowski/hass.tibber_prices/blob/v0.20.0/AGENTS.md) for complete list of classes needing rename.
+See [`AGENTS.md`](https://github.com/jpawlowski/hass.tibber_prices/blob/main/AGENTS.md) for complete list of classes needing rename.
 
 ## Import Order
 
@@ -118,4 +118,4 @@ enriched = enrich_price_info_with_differences(
 )
 ```
 
-See [`AGENTS.md`](https://github.com/jpawlowski/hass.tibber_prices/blob/v0.20.0/AGENTS.md) for complete guidelines.
+See [`AGENTS.md`](https://github.com/jpawlowski/hass.tibber_prices/blob/main/AGENTS.md) for complete guidelines.

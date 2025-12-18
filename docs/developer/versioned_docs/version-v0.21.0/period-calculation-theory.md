@@ -1106,7 +1106,7 @@ Low volatility (< 15%) means classification changes are less economically signif
 - [User Documentation: Period Calculation](https://jpawlowski.github.io/hass.tibber_prices/user/period-calculation)
 - [Architecture Overview](./architecture.md)
 - [Caching Strategy](./caching-strategy.md)
-- [AGENTS.md](https://github.com/jpawlowski/hass.tibber_prices/blob/v0.21.0/AGENTS.md) - AI assistant memory (implementation patterns)
+- [AGENTS.md](https://github.com/jpawlowski/hass.tibber_prices/blob/main/AGENTS.md) - AI assistant memory (implementation patterns)
 
 ## Changelog
 

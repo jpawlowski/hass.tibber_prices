@@ -6,7 +6,7 @@ comments: false
 
 This document provides a visual overview of the integration's architecture, focusing on end-to-end data flow and caching layers.
 
-For detailed implementation patterns, see [`AGENTS.md`](https://github.com/jpawlowski/hass.tibber_prices/blob/v0.20.0/AGENTS.md).
+For detailed implementation patterns, see [`AGENTS.md`](https://github.com/jpawlowski/hass.tibber_prices/blob/main/AGENTS.md).
 
 ---
 
@@ -355,4 +355,4 @@ Sensors organized by **calculation method** (refactored Nov 2025):
 - **[Setup Guide](./setup.md)** - Development environment setup
 - **[Testing Guide](./testing.md)** - How to test changes
 - **[Release Management](./release-management.md)** - Release workflow and versioning
-- **[AGENTS.md](https://github.com/jpawlowski/hass.tibber_prices/blob/v0.20.0/AGENTS.md)** - Complete reference for AI development
+- **[AGENTS.md](https://github.com/jpawlowski/hass.tibber_prices/blob/main/AGENTS.md)** - Complete reference for AI development

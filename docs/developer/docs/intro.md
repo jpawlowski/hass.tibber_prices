@@ -20,7 +20,7 @@ This is an independent, community-maintained custom integration for Home Assista
 
 ## 🤖 AI Documentation
 
-The main AI/Copilot documentation is in [`AGENTS.md`](https://github.com/jpawlowski/hass.tibber_prices/blob/v0.20.0/AGENTS.md). This file serves as long-term memory for AI assistants and contains:
+The main AI/Copilot documentation is in [`AGENTS.md`](https://github.com/jpawlowski/hass.tibber_prices/blob/main/AGENTS.md). This file serves as long-term memory for AI assistants and contains:
 
 -   Detailed architectural patterns
 -   Code quality rules and conventions
@@ -28,7 +28,7 @@ The main AI/Copilot documentation is in [`AGENTS.md`](https://github.com/jpawlow
 -   Common pitfalls and anti-patterns
 -   Project-specific patterns and utilities
 
-**Important:** When proposing changes to patterns or conventions, always update [`AGENTS.md`](https://github.com/jpawlowski/hass.tibber_prices/blob/v0.20.0/AGENTS.md) to keep AI guidance consistent.
+**Important:** When proposing changes to patterns or conventions, always update [`AGENTS.md`](https://github.com/jpawlowski/hass.tibber_prices/blob/main/AGENTS.md) to keep AI guidance consistent.
 
 ### AI-Assisted Development
 
@@ -61,7 +61,7 @@ This integration is developed with extensive AI assistance (GitHub Copilot, Clau
 -   Translation quality depends on AI's understanding of target language
 -   User feedback is crucial for discovering real-world issues
 
-If you're working with AI tools on this project, the [`AGENTS.md`](https://github.com/jpawlowski/hass.tibber_prices/blob/v0.20.0/AGENTS.md) file provides the context and patterns that ensure consistency.
+If you're working with AI tools on this project, the [`AGENTS.md`](https://github.com/jpawlowski/hass.tibber_prices/blob/main/AGENTS.md) file provides the context and patterns that ensure consistency.
 
 ## 🚀 Quick Start for Contributors
 
