@@ -444,4 +444,4 @@ Options Update
 
 - **[Timer Architecture](./timer-architecture.md)** - Timer system, scheduling, midnight coordination
 - **[Architecture](./architecture.md)** - Overall system design, data flow
-- **[AGENTS.md](https://github.com/jpawlowski/hass.tibber_prices/blob/v0.20.0/AGENTS.md)** - Complete reference for AI development
+- **[AGENTS.md](https://github.com/jpawlowski/hass.tibber_prices/blob/main/AGENTS.md)** - Complete reference for AI development

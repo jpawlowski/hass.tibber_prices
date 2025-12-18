@@ -1,6 +1,6 @@
 # Development Setup
 
-> **Note:** This guide is under construction. For now, please refer to [`AGENTS.md`](https://github.com/jpawlowski/hass.tibber_prices/blob/v0.20.0/AGENTS.md) for detailed setup information.
+> **Note:** This guide is under construction. For now, please refer to [`AGENTS.md`](https://github.com/jpawlowski/hass.tibber_prices/blob/main/AGENTS.md) for detailed setup information.
 
 ## Prerequisites
 
@@ -54,4 +54,4 @@ Visit http://localhost:8123
 ./scripts/release/hassfest
 ```
 
-See [`AGENTS.md`](https://github.com/jpawlowski/hass.tibber_prices/blob/v0.20.0/AGENTS.md) for detailed patterns and conventions.
+See [`AGENTS.md`](https://github.com/jpawlowski/hass.tibber_prices/blob/main/AGENTS.md) for detailed patterns and conventions.

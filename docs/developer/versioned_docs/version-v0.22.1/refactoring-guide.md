@@ -302,7 +302,7 @@ This project uses AI heavily (GitHub Copilot, Claude). The planning process supp
 -   `docs/development/`: Practical, focused, human-optimized
 -   Both stay in sync but serve different audiences
 
-See [AGENTS.md](https://github.com/jpawlowski/hass.tibber_prices/blob/v0.20.0/AGENTS.md) section "Planning Major Refactorings" for AI-specific guidance.
+See [AGENTS.md](https://github.com/jpawlowski/hass.tibber_prices/blob/main/AGENTS.md) section "Planning Major Refactorings" for AI-specific guidance.
 
 ## Tools and Resources
 
