@@ -4,10 +4,19 @@ from datetime import UTC, datetime, timedelta
 
 import pytest
 
-from custom_components.tibber_prices.utils.average import (
-    calculate_leading_24h_avg,
-    calculate_trailing_24h_avg,
+from custom_components.tibber_prices.coordinator.time_service import (
+    TibberPricesTimeService,
 )
+from custom_components.tibber_prices.utils.average import (
+    calculate_leading_24h_mean,
+    calculate_trailing_24h_mean,
+)
+
+
+@pytest.fixture
+def time_service() -> TibberPricesTimeService:
+    """Create a TibberPricesTimeService instance for testing."""
+    return TibberPricesTimeService()
 
 
 @pytest.fixture
@@ -23,7 +32,7 @@ def sample_prices() -> list[dict]:
     ]
 
 
-def test_trailing_avg_returns_none_when_empty() -> None:
+def test_trailing_avg_returns_none_when_empty(time_service: TibberPricesTimeService) -> None:
     """
     Test that calculate_trailing_24h_avg returns None when no data in window.
 
@@ -33,13 +42,13 @@ def test_trailing_avg_returns_none_when_empty() -> None:
     interval_start = datetime(2025, 11, 22, 12, 0, tzinfo=UTC)
     empty_prices: list[dict] = []
 
-    avg, _median = calculate_trailing_24h_avg(empty_prices, interval_start)
+    avg, _median = calculate_trailing_24h_mean(empty_prices, interval_start, time=time_service)
 
     assert avg is None, "Empty price list should return (None, None), not 0.0"
     assert _median is None, "Empty price list should return (None, None), not 0.0"
 
 
-def test_leading_avg_returns_none_when_empty() -> None:
+def test_leading_avg_returns_none_when_empty(time_service: TibberPricesTimeService) -> None:
     """
     Test that calculate_leading_24h_avg returns None when no data in window.
 
@@ -49,13 +58,16 @@ def test_leading_avg_returns_none_when_empty() -> None:
     interval_start = datetime(2025, 11, 22, 12, 0, tzinfo=UTC)
     empty_prices: list[dict] = []
 
-    avg, _median = calculate_leading_24h_avg(empty_prices, interval_start)
+    avg, _median = calculate_leading_24h_mean(empty_prices, interval_start, time=time_service)
 
     assert avg is None, "Empty price list should return (None, None), not 0.0"
     assert _median is None, "Empty price list should return (None, None), not 0.0"
 
 
-def test_trailing_avg_returns_none_when_no_data_in_window(sample_prices: list[dict]) -> None:
+def test_trailing_avg_returns_none_when_no_data_in_window(
+    sample_prices: list[dict],
+    time_service: TibberPricesTimeService,
+) -> None:
     """
     Test that calculate_trailing_24h_avg returns None when data exists but not in the window.
 
@@ -67,7 +79,7 @@ def test_trailing_avg_returns_none_when_no_data_in_window(sample_prices: list[di
     # For example, 2 hours after the last data point
     interval_start = datetime(2025, 11, 22, 16, 0, tzinfo=UTC)
 
-    avg, _median = calculate_trailing_24h_avg(sample_prices, interval_start)
+    avg, _median = calculate_trailing_24h_mean(sample_prices, interval_start, time=time_service)
 
     # Trailing window is 16:00 - 24h = yesterday 16:00 to today 16:00
     # Sample data is from 10:00-14:00, which IS in this window
@@ -76,7 +88,10 @@ def test_trailing_avg_returns_none_when_no_data_in_window(sample_prices: list[di
     assert avg == pytest.approx(0.0), "Average should be 0.0"
 
 
-def test_leading_avg_returns_none_when_no_data_in_window(sample_prices: list[dict]) -> None:
+def test_leading_avg_returns_none_when_no_data_in_window(
+    sample_prices: list[dict],
+    time_service: TibberPricesTimeService,
+) -> None:
     """
     Test that calculate_leading_24h_avg returns None when data exists but not in the window.
 
@@ -87,7 +102,7 @@ def test_leading_avg_returns_none_when_no_data_in_window(sample_prices: list[dic
     # Set interval_start far in the future, so 24h leading window doesn't contain the data
     interval_start = datetime(2025, 11, 23, 15, 0, tzinfo=UTC)
 
-    avg, _median = calculate_leading_24h_avg(sample_prices, interval_start)
+    avg, _median = calculate_leading_24h_mean(sample_prices, interval_start, time=time_service)
 
     # Leading window is from 15:00 today to 15:00 tomorrow
     # Sample data is from yesterday, outside this window
@@ -95,7 +110,10 @@ def test_leading_avg_returns_none_when_no_data_in_window(sample_prices: list[dic
     assert _median is None, "Should return (None, None) when no data in 24h leading window"
 
 
-def test_trailing_avg_with_negative_prices_distinguishes_zero(sample_prices: list[dict]) -> None:
+def test_trailing_avg_with_negative_prices_distinguishes_zero(
+    sample_prices: list[dict],
+    time_service: TibberPricesTimeService,
+) -> None:
     """
     Test that calculate_trailing_24h_avg correctly distinguishes 0.0 average from None.
 
@@ -105,7 +123,7 @@ def test_trailing_avg_with_negative_prices_distinguishes_zero(sample_prices: lis
     # Use base_time where we have data
     interval_start = datetime(2025, 11, 22, 12, 0, tzinfo=UTC)
 
-    avg, _median = calculate_trailing_24h_avg(sample_prices, interval_start)
+    avg, _median = calculate_trailing_24h_mean(sample_prices, interval_start, time=time_service)
 
     # Should return an actual average (negative, since we have -10, -5 in the trailing window)
     assert avg is not None, "Should return average when data exists"
@@ -113,7 +131,10 @@ def test_trailing_avg_with_negative_prices_distinguishes_zero(sample_prices: lis
     assert avg != 0.0, "With negative prices, average should not be exactly 0.0"
 
 
-def test_leading_avg_with_negative_prices_distinguishes_zero(sample_prices: list[dict]) -> None:
+def test_leading_avg_with_negative_prices_distinguishes_zero(
+    sample_prices: list[dict],
+    time_service: TibberPricesTimeService,
+) -> None:
     """
     Test that calculate_leading_24h_avg correctly distinguishes 0.0 average from None.
 
@@ -123,7 +144,7 @@ def test_leading_avg_with_negative_prices_distinguishes_zero(sample_prices: list
     # Use base_time - 2h to include all sample data in leading window
     interval_start = datetime(2025, 11, 22, 10, 0, tzinfo=UTC)
 
-    avg, _median = calculate_leading_24h_avg(sample_prices, interval_start)
+    avg, _median = calculate_leading_24h_mean(sample_prices, interval_start, time=time_service)
 
     # Should return an actual average (0.0 because average of -10, -5, 0, 5, 10 = 0.0)
     assert avg is not None, "Should return average when data exists"
@@ -131,7 +152,7 @@ def test_leading_avg_with_negative_prices_distinguishes_zero(sample_prices: list
     assert avg == 0.0, "Average of symmetric negative/positive prices should be 0.0"
 
 
-def test_trailing_avg_with_all_negative_prices() -> None:
+def test_trailing_avg_with_all_negative_prices(time_service: TibberPricesTimeService) -> None:
     """
     Test calculate_trailing_24h_avg with all negative prices.
 
@@ -145,14 +166,14 @@ def test_trailing_avg_with_all_negative_prices() -> None:
         {"startsAt": base_time - timedelta(hours=1), "total": -5.0},
     ]
 
-    avg, _median = calculate_trailing_24h_avg(all_negative, base_time)
+    avg, _median = calculate_trailing_24h_mean(all_negative, base_time, time=time_service)
 
     assert avg is not None, "Should return average for all negative prices"
     assert avg < 0, "Average should be negative"
     assert avg == pytest.approx(-10.0), "Average of -15, -10, -5 should be -10.0"
 
 
-def test_leading_avg_with_all_negative_prices() -> None:
+def test_leading_avg_with_all_negative_prices(time_service: TibberPricesTimeService) -> None:
     """
     Test calculate_leading_24h_avg with all negative prices.
 
@@ -166,14 +187,14 @@ def test_leading_avg_with_all_negative_prices() -> None:
         {"startsAt": base_time + timedelta(hours=2), "total": -15.0},
     ]
 
-    avg, _median = calculate_leading_24h_avg(all_negative, base_time)
+    avg, _median = calculate_leading_24h_mean(all_negative, base_time, time=time_service)
 
     assert avg is not None, "Should return average for all negative prices"
     assert avg < 0, "Average should be negative"
     assert avg == pytest.approx(-10.0), "Average of -5, -10, -15 should be -10.0"
 
 
-def test_trailing_avg_returns_none_with_none_timestamps() -> None:
+def test_trailing_avg_returns_none_with_none_timestamps(time_service: TibberPricesTimeService) -> None:
     """
     Test that calculate_trailing_24h_avg handles None timestamps gracefully.
 
@@ -186,13 +207,13 @@ def test_trailing_avg_returns_none_with_none_timestamps() -> None:
         {"startsAt": None, "total": 20.0},
     ]
 
-    avg, _median = calculate_trailing_24h_avg(prices_with_none, interval_start)
+    avg, _median = calculate_trailing_24h_mean(prices_with_none, interval_start, time=time_service)
 
     assert avg is None, "Should return (None, None) when all timestamps are None"
     assert _median is None, "Should return (None, None) when all timestamps are None"
 
 
-def test_leading_avg_returns_none_with_none_timestamps() -> None:
+def test_leading_avg_returns_none_with_none_timestamps(time_service: TibberPricesTimeService) -> None:
     """
     Test that calculate_leading_24h_avg handles None timestamps gracefully.
 
@@ -205,7 +226,7 @@ def test_leading_avg_returns_none_with_none_timestamps() -> None:
         {"startsAt": None, "total": 20.0},
     ]
 
-    avg, _median = calculate_leading_24h_avg(prices_with_none, interval_start)
+    avg, _median = calculate_leading_24h_mean(prices_with_none, interval_start, time=time_service)
 
     assert avg is None, "Should return (None, None) when all timestamps are None"
     assert _median is None, "Should return (None, None) when all timestamps are None"

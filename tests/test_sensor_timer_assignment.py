@@ -116,14 +116,14 @@ def test_rolling_hour_sensors_use_quarter_hour_timer() -> None:
         )
 
 
-def test_future_avg_sensors_use_quarter_hour_timer() -> None:
+def test_future_mean_sensors_use_quarter_hour_timer() -> None:
     """
-    Test that future N-hour average sensors use Timer #2.
+    Test that future N-hour mean sensors use Timer #2.
 
-    Future averages calculate rolling windows starting from "next interval",
+    Future means calculate rolling windows starting from "next interval",
     which changes every 15 minutes.
     """
-    future_avg_sensors = [
+    future_mean_sensors = [
         "next_avg_1h",
         "next_avg_2h",
         "next_avg_3h",
@@ -134,9 +134,9 @@ def test_future_avg_sensors_use_quarter_hour_timer() -> None:
         "next_avg_12h",
     ]
 
-    for sensor_key in future_avg_sensors:
+    for sensor_key in future_mean_sensors:
         assert sensor_key in TIME_SENSITIVE_ENTITY_KEYS, (
-            f"Future avg sensor '{sensor_key}' should be TIME_SENSITIVE (Timer #2)"
+            f"Future mean sensor '{sensor_key}' should be TIME_SENSITIVE (Timer #2)"
         )
 
 
