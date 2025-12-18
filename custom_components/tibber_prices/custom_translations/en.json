@@ -56,9 +56,9 @@
             "usage_tips": "Use this to avoid running appliances during peak price times"
         },
         "average_price_today": {
-            "description": "The average electricity price for today per kWh",
-            "long_description": "Shows the average price per kWh for the current day from your Tibber subscription",
-            "usage_tips": "Use this as a baseline for comparing current prices"
+            "description": "The typical electricity price for today per kWh (configurable display format)",
+            "long_description": "Shows the typical price per kWh for today. **By default, the state displays the median** (resistant to extreme spikes, showing what you can generally expect). You can change this in the integration options to show the arithmetic mean instead. The alternate value is always available as attribute `price_mean` or `price_median` for automations.",
+            "usage_tips": "Use the state value for display. For exact cost calculations in automations, use: {{ state_attr('sensor.average_price_today', 'price_mean') }}"
         },
         "lowest_price_tomorrow": {
             "description": "The lowest electricity price for tomorrow per kWh",
@@ -71,9 +71,9 @@
             "usage_tips": "Use this to avoid running appliances during tomorrow's peak price times. Helpful for planning around expensive periods."
         },
         "average_price_tomorrow": {
-            "description": "The average electricity price for tomorrow per kWh",
-            "long_description": "Shows the average price per kWh for tomorrow from your Tibber subscription. This sensor becomes unavailable until tomorrow's data is published by Tibber (typically around 13:00-14:00 CET).",
-            "usage_tips": "Use this as a baseline for comparing tomorrow's prices and planning consumption. Compare with today's average to see if tomorrow will be more or less expensive overall."
+            "description": "The typical electricity price for tomorrow per kWh (configurable display format)",
+            "long_description": "Shows the typical price per kWh for tomorrow. **By default, the state displays the median** (resistant to extreme spikes). You can change this in the integration options to show the arithmetic mean instead. The alternate value is available as attribute. This sensor becomes unavailable until tomorrow's data is published by Tibber (typically around 13:00-14:00 CET).",
+            "usage_tips": "Use this to plan tomorrow's energy consumption. For cost calculations, use: {{ state_attr('sensor.average_price_tomorrow', 'price_mean') }}"
         },
         "yesterday_price_level": {
             "description": "Aggregated price level for yesterday",
@@ -106,14 +106,14 @@
             "usage_tips": "Use this to plan tomorrow's energy consumption based on your personalized price thresholds. Compare with today to decide if you should shift consumption to tomorrow or use energy today."
         },
         "trailing_price_average": {
-            "description": "The average electricity price for the past 24 hours per kWh",
-            "long_description": "Shows the average price per kWh calculated from the past 24 hours (trailing average) from your Tibber subscription. This provides a rolling average that updates every 15 minutes based on historical data.",
-            "usage_tips": "Use this to compare current prices against recent trends. A current price significantly above this average may indicate a good time to reduce consumption."
+            "description": "The typical electricity price for the past 24 hours per kWh (configurable display format)",
+            "long_description": "Shows the typical price per kWh for the past 24 hours. **By default, the state displays the median** (resistant to extreme spikes, showing what price level was typical). You can change this in the integration options to show the arithmetic mean instead. The alternate value is available as attribute. Updates every 15 minutes.",
+            "usage_tips": "Use the state value to see the typical recent price level. For cost calculations, use: {{ state_attr('sensor.trailing_price_average', 'price_mean') }}"
         },
         "leading_price_average": {
-            "description": "The average electricity price for the next 24 hours per kWh",
-            "long_description": "Shows the average price per kWh calculated from the next 24 hours (leading average) from your Tibber subscription. This provides a forward-looking average based on available forecast data.",
-            "usage_tips": "Use this to plan energy usage. If the current price is below the leading average, it may be a good time to run energy-intensive appliances."
+            "description": "The typical electricity price for the next 24 hours per kWh (configurable display format)",
+            "long_description": "Shows the typical price per kWh for the next 24 hours. **By default, the state displays the median** (resistant to extreme spikes, showing what price level to expect). You can change this in the integration options to show the arithmetic mean instead. The alternate value is available as attribute.",
+            "usage_tips": "Use the state value to see the typical upcoming price level. For cost calculations, use: {{ state_attr('sensor.leading_price_average', 'price_mean') }}"
         },
         "trailing_price_min": {
             "description": "The minimum electricity price for the past 24 hours per kWh",

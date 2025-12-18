@@ -56,9 +56,9 @@
             "usage_tips": "Nutze dies, um den Betrieb von Geräten während Spitzenpreiszeiten zu vermeiden"
         },
         "average_price_today": {
-            "description": "Der durchschnittliche Strompreis für heute pro kWh",
-            "long_description": "Zeigt den durchschnittlichen Preis pro kWh für den aktuellen Tag von deinem Tibber-Abonnement an",
-            "usage_tips": "Nutze dies als Grundlage für den Vergleich mit aktuellen Preisen"
+            "description": "Der typische Strompreis für heute pro kWh (konfigurierbares Anzeigeformat)",
+            "long_description": "Zeigt den typischen Preis pro kWh für heute. **Standardmäßig zeigt der Status den Median** (resistent gegen extreme Preisspitzen, zeigt was du generell erwarten kannst). Du kannst dies in den Integrationsoptionen ändern, um stattdessen das arithmetische Mittel anzuzeigen. Der alternative Wert ist immer als Attribut `price_mean` oder `price_median` für Automatisierungen verfügbar.",
+            "usage_tips": "Nutze den Status-Wert für die Anzeige. Für exakte Kostenberechnungen in Automatisierungen nutze: {{ state_attr('sensor.average_price_today', 'price_mean') }}"
         },
         "lowest_price_tomorrow": {
             "description": "Der niedrigste Strompreis für morgen pro kWh",
@@ -71,9 +71,9 @@
             "usage_tips": "Nutze dies, um den Betrieb von Geräten während der teuersten Stunden morgen zu vermeiden. Plane nicht-essentielle Lasten außerhalb dieser Spitzenpreiszeiten."
         },
         "average_price_tomorrow": {
-            "description": "Der durchschnittliche Strompreis für morgen pro kWh",
-            "long_description": "Zeigt den durchschnittlichen Preis pro kWh für den morgigen Tag von deinem Tibber-Abonnement an. Dieser Sensor wird nicht verfügbar, bis die Preise für morgen von Tibber veröffentlicht werden (typischerweise zwischen 13:00 und 14:00 Uhr MEZ).",
-            "usage_tips": "Nutze dies als Grundlinie für den Vergleich mit den morgigen Preisen und zur Verbrauchsplanung. Vergleiche mit dem heutigen Durchschnitt, um zu sehen, ob morgen insgesamt teurer oder günstiger wird."
+            "description": "Der typische Strompreis für morgen pro kWh (konfigurierbares Anzeigeformat)",
+            "long_description": "Zeigt den typischen Preis pro kWh für morgen. **Standardmäßig zeigt der Status den Median** (resistent gegen extreme Preisspitzen). Du kannst dies in den Integrationsoptionen ändern, um stattdessen das arithmetische Mittel anzuzeigen. Der alternative Wert ist als Attribut verfügbar. Dieser Sensor wird nicht verfügbar, bis die Preise für morgen von Tibber veröffentlicht werden (typischerweise zwischen 13:00 und 14:00 Uhr MEZ).",
+            "usage_tips": "Nutze den Status-Wert für Anzeige und schnelle Vergleiche. Für Automatisierungen, die exakte Kostenberechnungen benötigen, nutze das Attribut `price_mean`: {{ state_attr('sensor.average_price_tomorrow', 'price_mean') }}"
         },
         "yesterday_price_level": {
             "description": "Aggregiertes Preisniveau für gestern",
@@ -106,14 +106,14 @@
             "usage_tips": "Nutze dies, um den morgigen Energieverbrauch basierend auf deinen persönlichen Preisschwellenwerten zu planen. Vergleiche mit heute, um zu entscheiden, ob du den Verbrauch auf morgen verschieben oder heute nutzen solltest."
         },
         "trailing_price_average": {
-            "description": "Der durchschnittliche Strompreis für die letzten 24 Stunden pro kWh",
-            "long_description": "Zeigt den durchschnittlichen Preis pro kWh berechnet aus den letzten 24 Stunden (nachlaufender Durchschnitt) von deinem Tibber-Abonnement an. Dies bietet einen gleitenden Durchschnitt, der alle 15 Minuten basierend auf historischen Daten aktualisiert wird.",
-            "usage_tips": "Nutze dies, um aktuelle Preise mit den jüngsten Trends zu vergleichen. Ein aktueller Preis deutlich über diesem Durchschnitt kann ein guter Zeitpunkt sein, um den Verbrauch zu reduzieren."
+            "description": "Der typische Strompreis der letzten 24 Stunden pro kWh (konfigurierbares Anzeigeformat)",
+            "long_description": "Zeigt den typischen Preis pro kWh der letzten 24 Stunden. **Standardmäßig zeigt der Status den Median** (resistent gegen extreme Spitzen, zeigt welches Preisniveau typisch war). Du kannst dies in den Integrationsoptionen ändern, um stattdessen das arithmetische Mittel anzuzeigen. Der alternative Wert ist als Attribut verfügbar. Wird alle 15 Minuten aktualisiert.",
+            "usage_tips": "Nutze den Status-Wert, um das typische aktuelle Preisniveau zu sehen. Für Kostenberechnungen nutze: {{ state_attr('sensor.trailing_price_average', 'price_mean') }}"
         },
         "leading_price_average": {
-            "description": "Der durchschnittliche Strompreis für die nächsten 24 Stunden pro kWh",
-            "long_description": "Zeigt den durchschnittlichen Preis pro kWh berechnet aus den nächsten 24 Stunden (vorlaufender Durchschnitt) von deinem Tibber-Abonnement an. Dies bietet einen vorausschauenden Durchschnitt basierend auf verfügbaren Prognosedaten.",
-            "usage_tips": "Nutze dies zur Energieverbrauchsplanung. Wenn der aktuelle Preis unter dem vorlaufenden Durchschnitt liegt, kann es ein guter Zeitpunkt sein, um energieintensive Geräte zu betreiben."
+            "description": "Der typische Strompreis für die nächsten 24 Stunden pro kWh (konfigurierbares Anzeigeformat)",
+            "long_description": "Zeigt den typischen Preis pro kWh für die nächsten 24 Stunden. **Standardmäßig zeigt der Status den Median** (resistent gegen extreme Spitzen, zeigt welches Preisniveau zu erwarten ist). Du kannst dies in den Integrationsoptionen ändern, um stattdessen das arithmetische Mittel anzuzeigen. Der alternative Wert ist als Attribut verfügbar.",
+            "usage_tips": "Nutze den Status-Wert, um das typische kommende Preisniveau zu sehen. Für Kostenberechnungen nutze: {{ state_attr('sensor.leading_price_average', 'price_mean') }}"
         },
         "trailing_price_min": {
             "description": "Der niedrigste Strompreis für die letzten 24 Stunden pro kWh",

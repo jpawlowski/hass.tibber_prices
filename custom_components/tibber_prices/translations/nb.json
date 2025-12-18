@@ -154,7 +154,7 @@
                 },
                 "data_description": {
                     "extended_descriptions": "Styrer om entitetsattributter inkluderer detaljerte forklaringer og brukstips.\n\n• Deaktivert (standard): Bare kort beskrivelse\n• Aktivert: Detaljert forklaring + praktiske brukseksempler\n\nEksempel:\nDeaktivert = 1 attributt\nAktivert = 2 ekstra attributter",
-                    "average_sensor_display": "Velg hvilket statistisk mål som skal vises i sensortilstanden for gjennomsnittspris-sensorer. Den andre verdien vises som attributt. Median er mer motstandsdyktig mot ekstremverdier, mens aritmetisk gjennomsnitt representerer tradisjonelt gjennomsnitt. Standard: Median"
+                    "average_sensor_display": "Velg hvilket statistisk mål som skal vises i sensortilstanden for gjennomsnittspris-sensorer. Den andre verdien vises som attributt.\n\n• **Median (standard)**: Viser den 'typiske' prisen, motstandsdyktig mot ekstreme topper - best for visning og menneskelig tolkning\n• **Aritmetisk gjennomsnitt**: Viser det sanne matematiske gjennomsnittet inkludert alle priser - best når du trenger eksakte kostnadsberegninger\n\nFor automatiseringer, bruk attributtet `price_mean` eller `price_median` for å få tilgang til begge verdier uavhengig av denne innstillingen."
                 },
                 "submit": "↩ Lagre & tilbake"
             },

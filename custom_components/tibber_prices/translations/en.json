@@ -154,7 +154,7 @@
                 },
                 "data_description": {
                     "extended_descriptions": "Controls whether entity attributes include detailed explanations and usage tips.\n\n• Disabled (default): Brief description only\n• Enabled: Detailed explanation + practical usage examples\n\nExample:\nDisabled = 1 attribute\nEnabled = 2 additional attributes",
-                    "average_sensor_display": "Choose which statistical measure to display in the sensor state for average price sensors. The other value will be shown as an attribute. Median is more resistant to extreme values, while arithmetic mean represents the traditional average. Default: Median"
+                    "average_sensor_display": "Choose which statistical measure to display in the sensor state for average price sensors. The other value will be shown as an attribute.\n\n• **Median (default)**: Shows the 'typical' price, resistant to extreme spikes - best for display and human interpretation\n• **Arithmetic Mean**: Shows the true mathematical average including all prices - best when you need exact cost calculations\n\nFor automations, use the attribute `price_mean` or `price_median` to access both values regardless of this setting."
                 },
                 "submit": "↩ Save & Back"
             },

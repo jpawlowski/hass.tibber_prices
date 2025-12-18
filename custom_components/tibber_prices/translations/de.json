@@ -154,7 +154,7 @@
                 },
                 "data_description": {
                     "extended_descriptions": "Steuert, ob Entitätsattribute ausführliche Erklärungen und Nutzungstipps enthalten.\n\n• Deaktiviert (Standard): Nur kurze Beschreibung\n• Aktiviert: Ausführliche Erklärung + praktische Nutzungsbeispiele\n\nBeispiel:\nDeaktiviert = 1 Attribut\nAktiviert = 2 zusätzliche Attribute",
-                    "average_sensor_display": "Wähle aus, welcher statistische Wert im Sensorstatus für Durchschnitts-Preissensoren angezeigt wird. Der andere Wert wird als Attribut angezeigt. Der Median ist resistenter gegen Extremwerte, während das arithmetische Mittel dem traditionellen Durchschnitt entspricht. Standard: Median"
+                    "average_sensor_display": "Wähle aus, welcher statistische Wert im Sensorstatus für Durchschnitts-Preissensoren angezeigt wird. Der andere Wert wird als Attribut angezeigt.\n\n• **Median (Standard)**: Zeigt den 'typischen' Preis, resistent gegen Extremwerte - ideal für Anzeige und menschliche Interpretation\n• **Arithmetisches Mittel**: Zeigt den echten mathematischen Durchschnitt inkl. aller Preise - ideal für exakte Kostenberechnungen\n\nFür Automatisierungen nutze das Attribut `price_mean` oder `price_median`, um unabhängig von dieser Einstellung auf beide Werte zuzugreifen."
                 },
                 "submit": "↩ Speichern & Zurück"
             },

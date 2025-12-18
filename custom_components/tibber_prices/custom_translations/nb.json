@@ -56,9 +56,9 @@
             "usage_tips": "Bruk dette til å unngå å kjøre apparater i toppristider"
         },
         "average_price_today": {
-            "description": "Den gjennomsnittlige elektrisitetsprisen i dag per kWh",
-            "long_description": "Viser gjennomsnittsprisen per kWh for gjeldende dag fra ditt Tibber-abonnement",
-            "usage_tips": "Bruk dette som en baseline for å sammenligne nåværende priser"
+            "description": "Typisk elektrisitetspris i dag per kWh (konfigurerbart visningsformat)",
+            "long_description": "Viser prisen per kWh for gjeldende dag fra ditt Tibber-abonnement. **Som standard viser statusen medianen** (motstandsdyktig mot ekstreme prisspiss, viser typisk prisnivå). Du kan endre dette i integrasjonsinnstillingene for å vise det aritmetiske gjennomsnittet i stedet. Den alternative verdien er tilgjengelig som attributt.",
+            "usage_tips": "Bruk dette som baseline for å sammenligne nåværende priser. For beregninger bruk: {{ state_attr('sensor.average_price_today', 'price_mean') }}"
         },
         "lowest_price_tomorrow": {
             "description": "Den laveste elektrisitetsprisen i morgen per kWh",
@@ -71,9 +71,9 @@
             "usage_tips": "Bruk dette til å unngå å kjøre apparater i morgendagens toppristider. Nyttig for å planlegge rundt dyre perioder."
         },
         "average_price_tomorrow": {
-            "description": "Den gjennomsnittlige elektrisitetsprisen i morgen per kWh",
-            "long_description": "Viser gjennomsnittsprisen per kWh for morgendagen fra ditt Tibber-abonnement. Denne sensoren blir utilgjengelig inntil morgendagens data er publisert av Tibber (vanligvis rundt 13:00-14:00 CET).",
-            "usage_tips": "Bruk dette som en baseline for å sammenligne morgendagens priser og planlegge forbruk. Sammenlign med dagens gjennomsnitt for å se om morgendagen vil være mer eller mindre dyr totalt sett."
+            "description": "Typisk elektrisitetspris i morgen per kWh (konfigurerbart visningsformat)",
+            "long_description": "Viser prisen per kWh for morgendagen fra ditt Tibber-abonnement. **Som standard viser statusen medianen** (motstandsdyktig mot ekstreme prisspiss). Du kan endre dette i integrasjonsinnstillingene for å vise det aritmetiske gjennomsnittet i stedet. Den alternative verdien er tilgjengelig som attributt. Denne sensoren blir utilgjengelig inntil morgendagens data er publisert av Tibber (vanligvis rundt 13:00-14:00 CET).",
+            "usage_tips": "Bruk dette som baseline for å sammenligne morgendagens priser og planlegge forbruk. Sammenlign med dagens median for å se om morgendagen vil være mer eller mindre dyr totalt sett."
         },
         "yesterday_price_level": {
             "description": "Aggregert prisnivå for i går",
@@ -106,14 +106,14 @@
             "usage_tips": "Bruk dette for å planlegge morgendagens energiforbruk basert på dine personlige pristerskelverdier. Sammenlign med i dag for å bestemme om du skal flytte forbruk til i morgen eller bruke energi i dag."
         },
         "trailing_price_average": {
-            "description": "Den gjennomsnittlige elektrisitetsprisen for de siste 24 timene per kWh",
-            "long_description": "Viser gjennomsnittsprisen per kWh beregnet fra de siste 24 timene (glidende gjennomsnitt) fra ditt Tibber-abonnement. Dette gir et rullende gjennomsnitt som oppdateres hvert 15. minutt basert på historiske data.",
-            "usage_tips": "Bruk dette til å sammenligne nåværende priser mot nylige trender. En nåværende pris betydelig over dette gjennomsnittet kan indikere et godt tidspunkt å redusere forbruket."
+            "description": "Typisk elektrisitetspris for de siste 24 timene per kWh (konfigurerbart visningsformat)",
+            "long_description": "Viser prisen per kWh beregnet fra de siste 24 timene. **Som standard viser statusen medianen** (motstandsdyktig mot ekstreme prisspiss, viser typisk prisnivå). Du kan endre dette i integrasjonsinnstillingene for å vise det aritmetiske gjennomsnittet i stedet. Den alternative verdien er tilgjengelig som attributt. Oppdateres hvert 15. minutt.",
+            "usage_tips": "Bruk statusverdien for å se det typiske nåværende prisnivået. For kostnadsberegninger bruk: {{ state_attr('sensor.trailing_price_average', 'price_mean') }}"
         },
         "leading_price_average": {
-            "description": "Den gjennomsnittlige elektrisitetsprisen for de neste 24 timene per kWh",
-            "long_description": "Viser gjennomsnittsprisen per kWh beregnet fra de neste 24 timene (fremtidsrettet gjennomsnitt) fra ditt Tibber-abonnement. Dette gir et fremtidsrettet gjennomsnitt basert på tilgjengelige prognosedata.",
-            "usage_tips": "Bruk dette til å planlegge energibruk. Hvis nåværende pris er under det fremtidsrettede gjennomsnittet, kan det være et godt tidspunkt å kjøre energikrevende apparater."
+            "description": "Typisk elektrisitetspris for de neste 24 timene per kWh (konfigurerbart visningsformat)",
+            "long_description": "Viser prisen per kWh beregnet fra de neste 24 timene. **Som standard viser statusen medianen** (motstandsdyktig mot ekstreme prisspiss, viser forventet prisnivå). Du kan endre dette i integrasjonsinnstillingene for å vise det aritmetiske gjennomsnittet i stedet. Den alternative verdien er tilgjengelig som attributt.",
+            "usage_tips": "Bruk statusverdien for å se det typiske kommende prisnivået. For kostnadsberegninger bruk: {{ state_attr('sensor.leading_price_average', 'price_mean') }}"
         },
         "trailing_price_min": {
             "description": "Den minste elektrisitetsprisen for de siste 24 timene per kWh",

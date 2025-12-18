@@ -154,7 +154,7 @@
                 },
                 "data_description": {
                     "extended_descriptions": "Bepaalt of entiteitsattributen gedetailleerde uitleg en gebruikstips bevatten.\n\n• Uitgeschakeld (standaard): Alleen korte beschrijving\n• Ingeschakeld: Gedetailleerde uitleg + praktische gebruiksvoorbeelden\n\nVoorbeeld:\nUitgeschakeld = 1 attribuut\nIngeschakeld = 2 extra attributen",
-                    "average_sensor_display": "Kies welke statistische maat weergegeven moet worden in de sensorstatus voor gemiddelde prijssensoren. De andere waarde wordt als attribuut getoond. Mediaan is resistenter tegen extreme waarden, terwijl rekenkundig gemiddelde het traditionele gemiddelde vertegenwoordigt. Standaard: Mediaan"
+                    "average_sensor_display": "Kies welke statistische maat weergegeven moet worden in de sensorstatus voor gemiddelde prijssensoren. De andere waarde wordt als attribuut getoond.\n\n• **Mediaan (standaard)**: Toont de 'typische' prijs, resistent tegen extreme pieken - best voor weergave en menselijke interpretatie\n• **Rekenkundig gemiddelde**: Toont het echte wiskundige gemiddelde inclusief alle prijzen - best wanneer je exacte kostenberekeningen nodig hebt\n\nVoor automatiseringen, gebruik het attribuut `price_mean` of `price_median` om toegang te krijgen tot beide waarden ongeacht deze instelling."
                 },
                 "submit": "↩ Opslaan & Terug"
             },
