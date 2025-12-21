@@ -546,6 +546,7 @@ async def handle_apexcharts_yaml(call: ServiceCall) -> dict[str, Any]:  # noqa: 
             },
             "tooltip": {
                 "enabled": True,
+                "shared": True,  # Combine tooltips from all series at same x-value
                 "enabledOnSeries": [1, 2, 3, 4, 5] if highlight_best_price else [0, 1, 2, 3, 4],
                 "marker": {
                     "show": False,
@@ -566,6 +567,10 @@ async def handle_apexcharts_yaml(call: ServiceCall) -> dict[str, Any]:  # noqa: 
                 "max": 1,
                 "show": False,  # Hide this axis (only for highlight overlay)
                 "opposite": True,
+                "apex_config": {
+                    "forceNiceScale": True,
+                    "tickAmount": 4,
+                },
             },
         ],
         "now": (
@@ -694,6 +699,8 @@ async def handle_apexcharts_yaml(call: ServiceCall) -> dict[str, Any]:  # noqa: 
                             "title": {"text": price_unit},
                             "decimalsInFloat": 0 if use_subunit else 1,
                             "forceNiceScale": True,
+                            "showAlways": True,
+                            "tickAmount": 4,
                         },
                     }
 
@@ -712,6 +719,8 @@ async def handle_apexcharts_yaml(call: ServiceCall) -> dict[str, Any]:  # noqa: 
                             "title": {"text": price_unit},
                             "decimalsInFloat": 0 if use_subunit else 1,
                             "forceNiceScale": True,
+                            "showAlways": True,
+                            "tickAmount": 4,
                         },
                     }
 
@@ -742,6 +751,10 @@ async def handle_apexcharts_yaml(call: ServiceCall) -> dict[str, Any]:  # noqa: 
                                 "max": 1,
                                 "show": False,
                                 "opposite": True,
+                                "apex_config": {
+                                    "forceNiceScale": True,
+                                    "tickAmount": 4,
+                                },
                             },
                         ],
                         "apex_config": {
@@ -851,6 +864,8 @@ async def handle_apexcharts_yaml(call: ServiceCall) -> dict[str, Any]:  # noqa: 
                         "title": {"text": price_unit},
                         "decimalsInFloat": 0 if use_subunit else 1,
                         "forceNiceScale": True,
+                        "showAlways": True,
+                        "tickAmount": 4,
                     },
                 }
 
@@ -869,6 +884,8 @@ async def handle_apexcharts_yaml(call: ServiceCall) -> dict[str, Any]:  # noqa: 
                         "title": {"text": price_unit},
                         "decimalsInFloat": 0 if use_subunit else 1,
                         "forceNiceScale": True,
+                        "showAlways": True,
+                        "tickAmount": 4,
                     },
                 }
 
@@ -901,6 +918,10 @@ async def handle_apexcharts_yaml(call: ServiceCall) -> dict[str, Any]:  # noqa: 
                             "max": 1,
                             "show": False,
                             "opposite": True,
+                            "apex_config": {
+                                "forceNiceScale": True,
+                                "tickAmount": 4,
+                            },
                         },
                     ],
                     "apex_config": {
