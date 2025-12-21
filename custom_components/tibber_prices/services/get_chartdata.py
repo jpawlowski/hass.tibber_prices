@@ -36,11 +36,13 @@ from custom_components.tibber_prices.const import (
     DOMAIN,
     PRICE_LEVEL_CHEAP,
     PRICE_LEVEL_EXPENSIVE,
+    PRICE_LEVEL_MAPPING,
     PRICE_LEVEL_NORMAL,
     PRICE_LEVEL_VERY_CHEAP,
     PRICE_LEVEL_VERY_EXPENSIVE,
     PRICE_RATING_HIGH,
     PRICE_RATING_LOW,
+    PRICE_RATING_MAPPING,
     PRICE_RATING_NORMAL,
     format_price_unit_base,
     format_price_unit_subunit,
@@ -57,6 +59,32 @@ from .helpers import get_entry_and_data, has_tomorrow_data
 
 if TYPE_CHECKING:
     from homeassistant.core import ServiceCall
+
+
+def _is_transition_to_more_expensive(
+    current_value: str | None,
+    next_value: str | None,
+    *,
+    use_rating: bool = False,
+) -> bool:
+    """
+    Check if transition from current to next level/rating is to a more expensive segment.
+
+    Args:
+        current_value: Current level or rating value
+        next_value: Next level or rating value
+        use_rating: If True, use rating hierarchy; if False, use level hierarchy
+
+    Returns:
+        True if transitioning to a more expensive segment
+
+    """
+    hierarchy = PRICE_RATING_MAPPING if use_rating else PRICE_LEVEL_MAPPING
+
+    current_rank = hierarchy.get(current_value, 0) if current_value else 0
+    next_rank = hierarchy.get(next_value, 0) if next_value else 0
+
+    return next_rank > current_rank
 
 
 def _calculate_metadata(  # noqa: PLR0912, PLR0913, PLR0915
@@ -557,6 +585,7 @@ async def handle_chartdata(call: ServiceCall) -> dict[str, Any]:  # noqa: PLR091
             # Process ALL intervals as one continuous list - no special midnight handling needed
             filter_field = "rating_level" if rating_level_filter else "level"
             filter_values = rating_level_filter if rating_level_filter else level_filter
+            use_rating = rating_level_filter is not None
 
             for i in range(len(all_prices) - 1):
                 interval = all_prices[i]
@@ -572,6 +601,8 @@ async def handle_chartdata(call: ServiceCall) -> dict[str, Any]:  # noqa: PLR091
 
                 interval_value = interval.get(filter_field)
                 next_value = next_interval.get(filter_field)
+                prev_value = all_prices[i - 1].get(filter_field) if i > 0 else None
+                prev_price = all_prices[i - 1].get("total") if i > 0 else None
 
                 # Check if current interval matches filter
                 if interval_value in filter_values:  # type: ignore[operator]
@@ -580,7 +611,16 @@ async def handle_chartdata(call: ServiceCall) -> dict[str, Any]:  # noqa: PLR091
                     if round_decimals is not None:
                         converted_price = round(converted_price, round_decimals)
 
-                    # Add current point
+                    # Check if this is the START of a new segment (previous interval had different level)
+                    # and the transition was from a CHEAPER level (price increase)
+                    is_segment_start = prev_value != interval_value and prev_value not in filter_values  # type: ignore[operator]
+                    is_from_cheaper = (
+                        _is_transition_to_more_expensive(prev_value, interval_value, use_rating=use_rating)
+                        if prev_value
+                        else False
+                    )
+
+                    # Add current point FIRST (tooltip will show here - at the actual price!)
                     data_point = {
                         start_time_field: start_time.isoformat() if hasattr(start_time, "isoformat") else start_time,
                         price_field: converted_price,
@@ -591,14 +631,42 @@ async def handle_chartdata(call: ServiceCall) -> dict[str, Any]:  # noqa: PLR091
                     if include_rating_level and "rating_level" in interval:
                         data_point[rating_level_field] = interval["rating_level"]
 
-                    # Add average if requested
                     day_key = _get_day_key_for_interval(start_time)
                     if include_average and day_key and day_key in day_averages:
                         data_point[average_field] = day_averages[day_key]
 
                     chart_data.append(data_point)
 
-                    # Check if next interval is different level (segment boundary)
+                    # AFTER the real point: Add END-BRIDGE to draw vertical line DOWN to previous price
+                    # This ensures the vertical upward transition line is drawn in THIS (more expensive) color
+                    # but the tooltip shows the actual (higher) price
+                    if connect_segments and is_segment_start and is_from_cheaper and prev_price is not None:
+                        converted_prev_price = round(prev_price * 100, 2) if subunit_currency else round(prev_price, 4)
+                        if round_decimals is not None:
+                            converted_prev_price = round(converted_prev_price, round_decimals)
+
+                        # End-bridge: draws line DOWN to previous (cheaper) price
+                        end_bridge = {
+                            start_time_field: start_time.isoformat()
+                            if hasattr(start_time, "isoformat")
+                            else start_time,
+                            price_field: converted_prev_price,  # Go DOWN to previous (cheaper) price
+                        }
+                        if include_level and "level" in interval:
+                            end_bridge[level_field] = interval["level"]  # Keep THIS level for color
+                        if include_rating_level and "rating_level" in interval:
+                            end_bridge[rating_level_field] = interval["rating_level"]
+                        if include_average and day_key and day_key in day_averages:
+                            end_bridge[average_field] = day_averages[day_key]
+                        chart_data.append(end_bridge)
+
+                        # NULL to stop this "bridge sequence" - prevents line from going to next point
+                        null_point = {start_time_field: data_point[start_time_field], price_field: None}
+                        chart_data.append(null_point)
+
+                    chart_data.append(data_point)
+
+                    # Check if next interval is different level (segment boundary = END of this segment)
                     if next_value != interval_value:
                         next_start_serialized = (
                             next_start_time.isoformat()
@@ -606,33 +674,58 @@ async def handle_chartdata(call: ServiceCall) -> dict[str, Any]:  # noqa: PLR091
                             else next_start_time
                         )
 
+                        is_to_more_expensive = _is_transition_to_more_expensive(
+                            interval_value, next_value, use_rating=use_rating
+                        )
+
                         if connect_segments and next_price is not None:
-                            # Connect segments visually by adding bridge point + NULL
-                            # Bridge point: extends current series to boundary with next price
-                            # NULL point: stops series so it doesn't continue into next segment
+                            # Connect segments visually at boundaries
+                            # Strategy: The vertical line should be drawn by the MORE EXPENSIVE segment
+                            #
+                            # - Price INCREASE (cheap → expensive): Vertical line belongs to NEXT segment
+                            #   → THIS segment just holds at current price, NEXT segment draws the bridge UP
+                            #   → We add a hold point here, the start-bridge logic handles the NEXT segment
+                            #
+                            # - Price DECREASE (expensive → cheap): Vertical line belongs to THIS segment
+                            #   → THIS segment draws the bridge DOWN to next price
 
-                            converted_next_price = (
-                                round(next_price * 100, 2) if subunit_currency else round(next_price, 4)
-                            )
-                            if round_decimals is not None:
-                                converted_next_price = round(converted_next_price, round_decimals)
+                            if is_to_more_expensive:
+                                # Transition to MORE EXPENSIVE level (price increase)
+                                # Just hold at current price - the NEXT segment will draw the upward line
+                                # via its start-bridge logic
+                                hold_point = {
+                                    start_time_field: next_start_serialized,
+                                    price_field: converted_price,  # Hold at CURRENT price
+                                }
+                                if include_level and "level" in interval:
+                                    hold_point[level_field] = interval["level"]
+                                if include_rating_level and "rating_level" in interval:
+                                    hold_point[rating_level_field] = interval["rating_level"]
+                                if include_average and day_key and day_key in day_averages:
+                                    hold_point[average_field] = day_averages[day_key]
+                                chart_data.append(hold_point)
+                            else:
+                                # Transition to LESS EXPENSIVE or SAME level (price decrease/stable)
+                                # Draw the bridge DOWN to the next price in THIS level's color
+                                converted_next_price = (
+                                    round(next_price * 100, 2) if subunit_currency else round(next_price, 4)
+                                )
+                                if round_decimals is not None:
+                                    converted_next_price = round(converted_next_price, round_decimals)
 
-                            # 1. Bridge point: boundary with next price, still current level
-                            # This makes the line go up/down to meet the next series
-                            bridge_point = {
-                                start_time_field: next_start_serialized,
-                                price_field: converted_next_price,
-                            }
-                            if include_level and "level" in interval:
-                                bridge_point[level_field] = interval["level"]
-                            if include_rating_level and "rating_level" in interval:
-                                bridge_point[rating_level_field] = interval["rating_level"]
-                            if include_average and day_key and day_key in day_averages:
-                                bridge_point[average_field] = day_averages[day_key]
-                            chart_data.append(bridge_point)
+                                bridge_point = {
+                                    start_time_field: next_start_serialized,
+                                    price_field: converted_next_price,
+                                }
+                                if include_level and "level" in interval:
+                                    bridge_point[level_field] = interval["level"]
+                                if include_rating_level and "rating_level" in interval:
+                                    bridge_point[rating_level_field] = interval["rating_level"]
+                                if include_average and day_key and day_key in day_averages:
+                                    bridge_point[average_field] = day_averages[day_key]
+                                chart_data.append(bridge_point)
 
-                            # 2. NULL point: stops the current series
-                            # Without this, ApexCharts continues drawing within the series
+                            # NULL point: stops the current series
                             null_point = {start_time_field: next_start_serialized, price_field: None}
                             chart_data.append(null_point)
                         else:
