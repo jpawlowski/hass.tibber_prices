@@ -455,19 +455,26 @@ async def handle_chartdata(call: ServiceCall) -> dict[str, Any]:  # noqa: PLR091
         all_timestamps = {interval["startsAt"] for interval in day_intervals if interval.get("startsAt")}
         all_timestamps = sorted(all_timestamps)
 
-    # Calculate average if requested
-    day_averages = {}
-    if include_average:
-        for day in days:
-            # Use helper to get intervals for this day
-            # Build minimal coordinator_data for single day query
-            # Map day key to offset: yesterday=-1, today=0, tomorrow=1
-            day_offset = {"yesterday": -1, "today": 0, "tomorrow": 1}[day]
-            day_intervals = get_intervals_for_day_offsets(coordinator.data, [day_offset])
+    # Calculate average if requested (per day for average_field)
+    # Also build a mapping from date -> day_key for later lookup
+    day_averages: dict[str, float] = {}
+    date_to_day_key: dict[Any, str] = {}  # Maps date object to "yesterday"/"today"/"tomorrow"
 
-            # Collect prices from intervals
+    for day in days:
+        # Use helper to get intervals for this day
+        # Map day key to offset: yesterday=-1, today=0, tomorrow=1
+        day_offset = {"yesterday": -1, "today": 0, "tomorrow": 1}[day]
+        day_intervals = get_intervals_for_day_offsets(coordinator.data, [day_offset])
+
+        # Build date -> day_key mapping from actual interval data
+        for interval in day_intervals:
+            start_time = interval.get("startsAt")
+            if start_time and hasattr(start_time, "date"):
+                date_to_day_key[start_time.date()] = day
+
+        # Calculate average if requested
+        if include_average:
             prices = [p["total"] for p in day_intervals if p.get("total") is not None]
-
             if prices:
                 avg = sum(prices) / len(prices)
                 # Apply same transformations as to regular prices
@@ -476,309 +483,307 @@ async def handle_chartdata(call: ServiceCall) -> dict[str, Any]:  # noqa: PLR091
                     avg = round(avg, round_decimals)
                 day_averages[day] = avg
 
-    for day in days:
-        # Use helper to get intervals for this day
-        # Map day key to offset: yesterday=-1, today=0, tomorrow=1
-        day_offset = {"yesterday": -1, "today": 0, "tomorrow": 1}[day]
-        day_prices = get_intervals_for_day_offsets(coordinator.data, [day_offset])
+    # Collect ALL intervals for the selected days as one continuous list
+    # This simplifies processing - no special midnight handling needed
+    day_offsets = [{"yesterday": -1, "today": 0, "tomorrow": 1}[day] for day in days]
+    all_prices = get_intervals_for_day_offsets(coordinator.data, day_offsets)
 
-        if resolution == "interval":
-            # Original 15-minute intervals
-            if insert_nulls == "all" and (level_filter or rating_level_filter):
-                # Mode 'all': Insert NULL for all timestamps where filter doesn't match
-                # Build a map of timestamp -> interval for quick lookup
-                interval_map = {
-                    interval.get("startsAt"): interval for interval in day_prices if interval.get("startsAt")
+    # Helper to get day key from interval timestamp for average lookup
+    def _get_day_key_for_interval(interval_start: Any) -> str | None:
+        """Determine which day key (yesterday/today/tomorrow) an interval belongs to."""
+        if not interval_start or not hasattr(interval_start, "date"):
+            return None
+        # Use pre-built mapping from actual interval data (TimeService-compatible)
+        return date_to_day_key.get(interval_start.date())
+
+    if resolution == "interval":
+        # Original 15-minute intervals
+        if insert_nulls == "all" and (level_filter or rating_level_filter):
+            # Mode 'all': Insert NULL for all timestamps where filter doesn't match
+            # Build a map of timestamp -> interval for quick lookup
+            interval_map = {interval.get("startsAt"): interval for interval in all_prices if interval.get("startsAt")}
+
+            # Process all timestamps, filling gaps with NULL
+            for start_time in all_timestamps:
+                interval = interval_map.get(start_time)
+
+                if interval is None:
+                    # No data for this timestamp - skip entirely
+                    continue
+
+                price = interval.get("total")
+                if price is None:
+                    continue
+
+                # Check if this interval matches the filter
+                matches_filter = False
+                if level_filter and "level" in interval:
+                    matches_filter = interval["level"] in level_filter
+                elif rating_level_filter and "rating_level" in interval:
+                    matches_filter = interval["rating_level"] in rating_level_filter
+
+                # If filter is set but doesn't match, insert NULL price
+                if not matches_filter:
+                    price = None
+                elif price is not None:
+                    # Convert to subunit currency (cents/øre) if requested
+                    price = round(price * 100, 2) if subunit_currency else round(price, 4)
+                    # Apply custom rounding if specified
+                    if round_decimals is not None:
+                        price = round(price, round_decimals)
+
+                data_point = {
+                    start_time_field: start_time.isoformat() if hasattr(start_time, "isoformat") else start_time,
+                    price_field: price,
                 }
 
-                # Process all timestamps, filling gaps with NULL
-                for start_time in all_timestamps:
-                    interval = interval_map.get(start_time)
+                # Add level if requested (only when price is not NULL)
+                if include_level and "level" in interval and price is not None:
+                    data_point[level_field] = interval["level"]
 
-                    if interval is None:
-                        # No data for this timestamp - skip entirely
+                # Add rating_level if requested (only when price is not NULL)
+                if include_rating_level and "rating_level" in interval and price is not None:
+                    data_point[rating_level_field] = interval["rating_level"]
+
+                # Add average if requested
+                day_key = _get_day_key_for_interval(start_time)
+                if include_average and day_key and day_key in day_averages:
+                    data_point[average_field] = day_averages[day_key]
+
+                chart_data.append(data_point)
+
+        elif insert_nulls == "segments" and (level_filter or rating_level_filter):
+            # Mode 'segments': Add NULL points at segment boundaries for clean gaps
+            # Process ALL intervals as one continuous list - no special midnight handling needed
+            filter_field = "rating_level" if rating_level_filter else "level"
+            filter_values = rating_level_filter if rating_level_filter else level_filter
+
+            for i in range(len(all_prices) - 1):
+                interval = all_prices[i]
+                next_interval = all_prices[i + 1]
+
+                start_time = interval.get("startsAt")
+                price = interval.get("total")
+                next_price = next_interval.get("total")
+                next_start_time = next_interval.get("startsAt")
+
+                if start_time is None or price is None:
+                    continue
+
+                interval_value = interval.get(filter_field)
+                next_value = next_interval.get(filter_field)
+
+                # Check if current interval matches filter
+                if interval_value in filter_values:  # type: ignore[operator]
+                    # Convert price
+                    converted_price = round(price * 100, 2) if subunit_currency else round(price, 4)
+                    if round_decimals is not None:
+                        converted_price = round(converted_price, round_decimals)
+
+                    # Add current point
+                    data_point = {
+                        start_time_field: start_time.isoformat() if hasattr(start_time, "isoformat") else start_time,
+                        price_field: converted_price,
+                    }
+
+                    if include_level and "level" in interval:
+                        data_point[level_field] = interval["level"]
+                    if include_rating_level and "rating_level" in interval:
+                        data_point[rating_level_field] = interval["rating_level"]
+
+                    # Add average if requested
+                    day_key = _get_day_key_for_interval(start_time)
+                    if include_average and day_key and day_key in day_averages:
+                        data_point[average_field] = day_averages[day_key]
+
+                    chart_data.append(data_point)
+
+                    # Check if next interval is different level (segment boundary)
+                    if next_value != interval_value:
+                        next_start_serialized = (
+                            next_start_time.isoformat()
+                            if next_start_time and hasattr(next_start_time, "isoformat")
+                            else next_start_time
+                        )
+
+                        if connect_segments and next_price is not None:
+                            # Connect segments visually by adding bridge point + NULL
+                            # Bridge point: extends current series to boundary with next price
+                            # NULL point: stops series so it doesn't continue into next segment
+
+                            converted_next_price = (
+                                round(next_price * 100, 2) if subunit_currency else round(next_price, 4)
+                            )
+                            if round_decimals is not None:
+                                converted_next_price = round(converted_next_price, round_decimals)
+
+                            # 1. Bridge point: boundary with next price, still current level
+                            # This makes the line go up/down to meet the next series
+                            bridge_point = {
+                                start_time_field: next_start_serialized,
+                                price_field: converted_next_price,
+                            }
+                            if include_level and "level" in interval:
+                                bridge_point[level_field] = interval["level"]
+                            if include_rating_level and "rating_level" in interval:
+                                bridge_point[rating_level_field] = interval["rating_level"]
+                            if include_average and day_key and day_key in day_averages:
+                                bridge_point[average_field] = day_averages[day_key]
+                            chart_data.append(bridge_point)
+
+                            # 2. NULL point: stops the current series
+                            # Without this, ApexCharts continues drawing within the series
+                            null_point = {start_time_field: next_start_serialized, price_field: None}
+                            chart_data.append(null_point)
+                        else:
+                            # Original behavior: Hold current price until next timestamp
+                            hold_point = {
+                                start_time_field: next_start_serialized,
+                                price_field: converted_price,
+                            }
+                            if include_level and "level" in interval:
+                                hold_point[level_field] = interval["level"]
+                            if include_rating_level and "rating_level" in interval:
+                                hold_point[rating_level_field] = interval["rating_level"]
+                            if include_average and day_key and day_key in day_averages:
+                                hold_point[average_field] = day_averages[day_key]
+                            chart_data.append(hold_point)
+
+                            # Add NULL point to create gap
+                            null_point = {start_time_field: next_start_serialized, price_field: None}
+                            chart_data.append(null_point)
+
+            # Handle LAST interval of the entire selection (not per-day)
+            # The main loop processes up to n-1, so we need to add the last interval
+            if all_prices:
+                last_interval = all_prices[-1]
+                last_start_time = last_interval.get("startsAt")
+                last_price = last_interval.get("total")
+                last_value = last_interval.get(filter_field)
+
+                if last_start_time and last_price is not None and last_value in filter_values:  # type: ignore[operator]
+                    # Add the last interval as a data point
+                    converted_last_price = round(last_price * 100, 2) if subunit_currency else round(last_price, 4)
+                    if round_decimals is not None:
+                        converted_last_price = round(converted_last_price, round_decimals)
+
+                    last_data_point = {
+                        start_time_field: last_start_time.isoformat()
+                        if hasattr(last_start_time, "isoformat")
+                        else last_start_time,
+                        price_field: converted_last_price,
+                    }
+                    if include_level and "level" in last_interval:
+                        last_data_point[level_field] = last_interval["level"]
+                    if include_rating_level and "rating_level" in last_interval:
+                        last_data_point[rating_level_field] = last_interval["rating_level"]
+
+                    day_key = _get_day_key_for_interval(last_start_time)
+                    if include_average and day_key and day_key in day_averages:
+                        last_data_point[average_field] = day_averages[day_key]
+                    chart_data.append(last_data_point)
+
+                    # Extend to end of selected time range (midnight after last day)
+                    last_dt = last_start_time
+                    if last_dt:
+                        # Calculate midnight after the last interval
+                        next_midnight = last_dt.replace(hour=0, minute=0, second=0, microsecond=0)
+                        next_midnight = next_midnight + timedelta(days=1)
+                        midnight_timestamp = next_midnight.isoformat()
+
+                        # Add hold point at midnight
+                        end_point = {start_time_field: midnight_timestamp, price_field: converted_last_price}
+                        if include_level and "level" in last_interval:
+                            end_point[level_field] = last_interval["level"]
+                        if include_rating_level and "rating_level" in last_interval:
+                            end_point[rating_level_field] = last_interval["rating_level"]
+                        if include_average and day_key and day_key in day_averages:
+                            end_point[average_field] = day_averages[day_key]
+                        chart_data.append(end_point)
+
+                        # Add NULL to end series
+                        null_point = {start_time_field: midnight_timestamp, price_field: None}
+                        chart_data.append(null_point)
+
+        else:
+            # Mode 'none' (default): Only return matching intervals, no NULL insertion
+            for interval in all_prices:
+                start_time = interval.get("startsAt")
+                price = interval.get("total")
+
+                if start_time is not None and price is not None:
+                    # Apply period filter if specified
+                    if (
+                        period_filter is not None
+                        and period_timestamps is not None
+                        and start_time not in period_timestamps
+                    ):
                         continue
 
-                    price = interval.get("total")
-                    if price is None:
+                    # Apply level filter if specified
+                    if level_filter is not None and "level" in interval and interval["level"] not in level_filter:
                         continue
 
-                    # Check if this interval matches the filter
-                    matches_filter = False
-                    if level_filter and "level" in interval:
-                        matches_filter = interval["level"] in level_filter
-                    elif rating_level_filter and "rating_level" in interval:
-                        matches_filter = interval["rating_level"] in rating_level_filter
+                    # Apply rating_level filter if specified
+                    if (
+                        rating_level_filter is not None
+                        and "rating_level" in interval
+                        and interval["rating_level"] not in rating_level_filter
+                    ):
+                        continue
 
-                    # If filter is set but doesn't match, insert NULL price
-                    if not matches_filter:
-                        price = None
-                    elif price is not None:
-                        # Convert to subunit currency (cents/øre) if requested
-                        price = round(price * 100, 2) if subunit_currency else round(price, 4)
-                        # Apply custom rounding if specified
-                        if round_decimals is not None:
-                            price = round(price, round_decimals)
+                    # Convert to subunit currency (cents/øre) if requested
+                    price = round(price * 100, 2) if subunit_currency else round(price, 4)
+
+                    # Apply custom rounding if specified
+                    if round_decimals is not None:
+                        price = round(price, round_decimals)
 
                     data_point = {
                         start_time_field: start_time.isoformat() if hasattr(start_time, "isoformat") else start_time,
                         price_field: price,
                     }
 
-                    # Add level if requested (only when price is not NULL)
-                    if include_level and "level" in interval and price is not None:
+                    # Add level if requested
+                    if include_level and "level" in interval:
                         data_point[level_field] = interval["level"]
 
-                    # Add rating_level if requested (only when price is not NULL)
-                    if include_rating_level and "rating_level" in interval and price is not None:
+                    # Add rating_level if requested
+                    if include_rating_level and "rating_level" in interval:
                         data_point[rating_level_field] = interval["rating_level"]
 
                     # Add average if requested
-                    if include_average and day in day_averages:
-                        data_point[average_field] = day_averages[day]
+                    day_key = _get_day_key_for_interval(start_time)
+                    if include_average and day_key and day_key in day_averages:
+                        data_point[average_field] = day_averages[day_key]
 
                     chart_data.append(data_point)
-            elif insert_nulls == "segments" and (level_filter or rating_level_filter):
-                # Mode 'segments': Add NULL points at segment boundaries for clean gaps
-                # Determine which field to check based on filter type
-                filter_field = "rating_level" if rating_level_filter else "level"
-                filter_values = rating_level_filter if rating_level_filter else level_filter
 
-                for i in range(len(day_prices) - 1):
-                    interval = day_prices[i]
-                    next_interval = day_prices[i + 1]
-
-                    start_time = interval.get("startsAt")
-                    price = interval.get("total")
-                    next_price = next_interval.get("total")
-                    next_start_time = next_interval.get("startsAt")
-
-                    if start_time is None or price is None:
-                        continue
-
-                    interval_value = interval.get(filter_field)
-                    next_value = next_interval.get(filter_field)
-
-                    # Check if current interval matches filter
-                    if interval_value in filter_values:  # type: ignore[operator]
-                        # Convert price
-                        converted_price = round(price * 100, 2) if subunit_currency else round(price, 4)
-                        if round_decimals is not None:
-                            converted_price = round(converted_price, round_decimals)
-
-                        # Add current point
-                        data_point = {
-                            start_time_field: start_time.isoformat()
-                            if hasattr(start_time, "isoformat")
-                            else start_time,
-                            price_field: converted_price,
-                        }
-
-                        if include_level and "level" in interval:
-                            data_point[level_field] = interval["level"]
-                        if include_rating_level and "rating_level" in interval:
-                            data_point[rating_level_field] = interval["rating_level"]
-                        if include_average and day in day_averages:
-                            data_point[average_field] = day_averages[day]
-
-                        chart_data.append(data_point)
-
-                        # Check if next interval is different level (segment boundary)
-                        if next_value != interval_value:
-                            next_start_serialized = (
-                                next_start_time.isoformat()
-                                if next_start_time and hasattr(next_start_time, "isoformat")
-                                else next_start_time
-                            )
-
-                            if connect_segments and next_price is not None:
-                                # Connect segments visually by adding bridge point + NULL
-                                # Bridge point: extends current series to boundary with next price
-                                # NULL point: stops series so it doesn't continue into next segment
-
-                                converted_next_price = (
-                                    round(next_price * 100, 2) if subunit_currency else round(next_price, 4)
-                                )
-                                if round_decimals is not None:
-                                    converted_next_price = round(converted_next_price, round_decimals)
-
-                                # 1. Bridge point: boundary with next price, still current level
-                                # This makes the line go up/down to meet the next series
-                                bridge_point = {
-                                    start_time_field: next_start_serialized,
-                                    price_field: converted_next_price,
-                                }
-                                if include_level and "level" in interval:
-                                    bridge_point[level_field] = interval["level"]
-                                if include_rating_level and "rating_level" in interval:
-                                    bridge_point[rating_level_field] = interval["rating_level"]
-                                if include_average and day in day_averages:
-                                    bridge_point[average_field] = day_averages[day]
-                                chart_data.append(bridge_point)
-
-                                # 2. NULL point: stops the current series
-                                # Without this, ApexCharts continues drawing within the series
-                                null_point = {start_time_field: next_start_serialized, price_field: None}
-                                chart_data.append(null_point)
-                            else:
-                                # Original behavior: Hold current price until next timestamp
-                                hold_point = {
-                                    start_time_field: next_start_serialized,
-                                    price_field: converted_price,
-                                }
-                                if include_level and "level" in interval:
-                                    hold_point[level_field] = interval["level"]
-                                if include_rating_level and "rating_level" in interval:
-                                    hold_point[rating_level_field] = interval["rating_level"]
-                                if include_average and day in day_averages:
-                                    hold_point[average_field] = day_averages[day]
-                                chart_data.append(hold_point)
-
-                                # Add NULL point to create gap
-                                null_point = {start_time_field: next_start_serialized, price_field: None}
-                                chart_data.append(null_point)
-
-                # Handle last interval of the day - extend to midnight
-                if day_prices:
-                    last_interval = day_prices[-1]
-                    last_start_time = last_interval.get("startsAt")
-                    last_price = last_interval.get("total")
-                    last_value = last_interval.get(filter_field)
-
-                    if last_start_time and last_price is not None and last_value in filter_values:  # type: ignore[operator]
-                        # Timestamp is already datetime in local timezone
-                        last_dt = last_start_time  # Already datetime object
-                        if last_dt:
-                            # Calculate next day at 00:00
-                            next_day = last_dt.replace(hour=0, minute=0, second=0, microsecond=0)
-                            next_day = next_day + timedelta(days=1)
-                            midnight_timestamp = next_day.isoformat()
-
-                            # Try to get real price from tomorrow's first interval
-                            next_day_name = None
-                            if day == "yesterday":
-                                next_day_name = "today"
-                            elif day == "today":
-                                next_day_name = "tomorrow"
-                            # For "tomorrow", we don't have a "day after tomorrow"
-
-                            midnight_price = None
-                            midnight_interval = None
-
-                            if next_day_name:
-                                # Use helper to get first interval of next day
-                                # Map day key to offset: yesterday=-1, today=0, tomorrow=1
-                                next_day_offset = {"yesterday": -1, "today": 0, "tomorrow": 1}[next_day_name]
-                                next_day_intervals = get_intervals_for_day_offsets(coordinator.data, [next_day_offset])
-                                if next_day_intervals:
-                                    first_next = next_day_intervals[0]
-                                    first_next_value = first_next.get(filter_field)
-                                    # Only use tomorrow's price if it matches the same filter
-                                    if first_next_value == last_value:
-                                        midnight_price = first_next.get("total")
-                                        midnight_interval = first_next
-
-                            # Fallback: use last interval's price if no tomorrow data or different level
-                            if midnight_price is None:
-                                midnight_price = last_price
-                                midnight_interval = last_interval
-
-                            # Convert price
-                            converted_price = (
-                                round(midnight_price * 100, 2) if subunit_currency else round(midnight_price, 4)
-                            )
-                            if round_decimals is not None:
-                                converted_price = round(converted_price, round_decimals)
-
-                            # Add point at midnight with appropriate price (extends graph to end of day)
-                            end_point = {start_time_field: midnight_timestamp, price_field: converted_price}
-                            if midnight_interval is not None:
-                                if include_level and "level" in midnight_interval:
-                                    end_point[level_field] = midnight_interval["level"]
-                                if include_rating_level and "rating_level" in midnight_interval:
-                                    end_point[rating_level_field] = midnight_interval["rating_level"]
-                            if include_average and day in day_averages:
-                                end_point[average_field] = day_averages[day]
-                            chart_data.append(end_point)
-            else:
-                # Mode 'none' (default): Only return matching intervals, no NULL insertion
-                for interval in day_prices:
-                    start_time = interval.get("startsAt")
-                    price = interval.get("total")
-
-                    if start_time is not None and price is not None:
-                        # Apply period filter if specified
-                        if (
-                            period_filter is not None
-                            and period_timestamps is not None
-                            and start_time not in period_timestamps
-                        ):
-                            continue
-
-                        # Apply level filter if specified
-                        if level_filter is not None and "level" in interval and interval["level"] not in level_filter:
-                            continue
-
-                        # Apply rating_level filter if specified
-                        if (
-                            rating_level_filter is not None
-                            and "rating_level" in interval
-                            and interval["rating_level"] not in rating_level_filter
-                        ):
-                            continue
-
-                        # Convert to subunit currency (cents/øre) if requested
-                        price = round(price * 100, 2) if subunit_currency else round(price, 4)
-
-                        # Apply custom rounding if specified
-                        if round_decimals is not None:
-                            price = round(price, round_decimals)
-
-                        data_point = {
-                            start_time_field: start_time.isoformat()
-                            if hasattr(start_time, "isoformat")
-                            else start_time,
-                            price_field: price,
-                        }
-
-                        # Add level if requested
-                        if include_level and "level" in interval:
-                            data_point[level_field] = interval["level"]
-
-                        # Add rating_level if requested
-                        if include_rating_level and "rating_level" in interval:
-                            data_point[rating_level_field] = interval["rating_level"]
-
-                        # Add average if requested
-                        if include_average and day in day_averages:
-                            data_point[average_field] = day_averages[day]
-
-                        chart_data.append(data_point)
-
-        elif resolution == "hourly":
-            # Hourly averages (4 intervals per hour: :00, :15, :30, :45)
-            chart_data.extend(
-                aggregate_hourly_exact(
-                    day_prices,
-                    start_time_field,
-                    price_field,
-                    coordinator=coordinator,
-                    use_subunit_currency=subunit_currency,
-                    round_decimals=round_decimals,
-                    include_level=include_level,
-                    include_rating_level=include_rating_level,
-                    level_filter=level_filter,
-                    rating_level_filter=rating_level_filter,
-                    include_average=include_average,
-                    level_field=level_field,
-                    rating_level_field=rating_level_field,
-                    average_field=average_field,
-                    day_average=day_averages.get(day),
-                    threshold_low=threshold_low,
-                    period_timestamps=period_timestamps,
-                    threshold_high=threshold_high,
-                )
+    elif resolution == "hourly":
+        # Hourly averages (4 intervals per hour: :00, :15, :30, :45)
+        # Process all intervals together for hourly aggregation
+        chart_data.extend(
+            aggregate_hourly_exact(
+                all_prices,
+                start_time_field,
+                price_field,
+                coordinator=coordinator,
+                use_subunit_currency=subunit_currency,
+                round_decimals=round_decimals,
+                include_level=include_level,
+                include_rating_level=include_rating_level,
+                level_filter=level_filter,
+                rating_level_filter=rating_level_filter,
+                include_average=include_average,
+                level_field=level_field,
+                rating_level_field=rating_level_field,
+                average_field=average_field,
+                day_average=None,  # Not used when processing all days together
+                threshold_low=threshold_low,
+                period_timestamps=period_timestamps,
+                threshold_high=threshold_high,
             )
+        )
 
     # Remove trailing null values ONLY for insert_nulls='segments' mode.
     # For 'all' mode, trailing nulls are intentional (show no-match until end of day).
