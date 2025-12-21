@@ -546,7 +546,7 @@ async def handle_apexcharts_yaml(call: ServiceCall) -> dict[str, Any]:  # noqa: 
             },
             "tooltip": {
                 "enabled": True,
-                "enabledOnSeries": [1, 2, 3, 4, 5],  # Enable for all price level series
+                "enabledOnSeries": [1, 2, 3, 4, 5] if highlight_best_price else [0, 1, 2, 3, 4],
                 "marker": {
                     "show": False,
                 },
