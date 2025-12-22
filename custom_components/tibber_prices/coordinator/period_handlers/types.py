@@ -15,6 +15,24 @@ from custom_components.tibber_prices.const import (
     DEFAULT_VOLATILITY_THRESHOLD_VERY_HIGH,
 )
 
+# Quality Gate: Maximum coefficient of variation (CV) allowed within a period
+# Periods with internal CV above this are considered too heterogeneous for "best price"
+# A 25% CV means the std dev is 25% of the mean - beyond this, prices vary too much
+# Example: Period with prices 0.7-0.99 kr has ~15% CV which is acceptable
+#          Period with prices 0.5-1.0 kr has ~30% CV which would be rejected
+PERIOD_MAX_CV = 25.0  # 25% max coefficient of variation within a period
+
+# Cross-Day Extension: Time window constants
+# When a period ends late in the day and tomorrow data is available,
+# we can extend it past midnight if prices remain favorable
+CROSS_DAY_LATE_PERIOD_START_HOUR = 20  # Consider periods starting at 20:00 or later for extension
+CROSS_DAY_MAX_EXTENSION_HOUR = 8  # Don't extend beyond 08:00 next day (covers typical night low)
+
+# Cross-Day Supersession: When tomorrow data arrives, late-night periods that are
+# worse than early-morning tomorrow periods become obsolete
+# A today period is "superseded" if tomorrow has a significantly better alternative
+SUPERSESSION_PRICE_IMPROVEMENT_PCT = 10.0  # Tomorrow must be at least 10% cheaper to supersede
+
 # Log indentation levels for visual hierarchy
 INDENT_L0 = ""  # Top level (calculate_periods_with_relaxation)
 INDENT_L1 = "  "  # Per-day loop
@@ -62,6 +80,7 @@ class TibberPricesPeriodStatistics(NamedTuple):
     price_max: float
     price_spread: float
     volatility: str
+    coefficient_of_variation: float | None  # CV as percentage (e.g., 15.0 for 15%)
     period_price_diff: float | None
     period_price_diff_pct: float | None
 

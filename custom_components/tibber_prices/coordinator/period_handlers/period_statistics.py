@@ -19,6 +19,7 @@ from custom_components.tibber_prices.utils.average import calculate_median
 from custom_components.tibber_prices.utils.price import (
     aggregate_period_levels,
     aggregate_period_ratings,
+    calculate_coefficient_of_variation,
     calculate_volatility_level,
 )
 
@@ -170,6 +171,7 @@ def build_period_summary_dict(
         "price_max": stats.price_max,
         "price_spread": stats.price_spread,
         "volatility": stats.volatility,
+        "coefficient_of_variation": stats.coefficient_of_variation,
         # 4. Price differences will be added below if available
         # 5. Detail information (additional context)
         "period_interval_count": period_data.period_length,
@@ -314,7 +316,10 @@ def extract_period_summaries(
         # Extract prices for volatility calculation (coefficient of variation)
         prices_for_volatility = [float(p["total"]) for p in period_price_data if "total" in p]
 
-        # Calculate volatility (categorical) and aggregated rating difference (numeric)
+        # Calculate CV (numeric) for quality gate checks
+        period_cv = calculate_coefficient_of_variation(prices_for_volatility)
+
+        # Calculate volatility (categorical) using thresholds
         volatility = calculate_volatility_level(
             prices_for_volatility,
             threshold_moderate=thresholds.threshold_volatility_moderate,
@@ -348,6 +353,7 @@ def extract_period_summaries(
             price_max=price_stats["price_max"],
             price_spread=price_stats["price_spread"],
             volatility=volatility,
+            coefficient_of_variation=round(period_cv, 1) if period_cv is not None else None,
             period_price_diff=period_price_diff,
             period_price_diff_pct=period_price_diff_pct,
         )
