@@ -11,6 +11,7 @@ if TYPE_CHECKING:
     from custom_components.tibber_prices.coordinator.time_service import TibberPricesTimeService
 
 from custom_components.tibber_prices.const import (
+    DEFAULT_PRICE_LEVEL_GAP_TOLERANCE,
     DEFAULT_PRICE_RATING_GAP_TOLERANCE,
     DEFAULT_PRICE_RATING_HYSTERESIS,
     DEFAULT_VOLATILITY_THRESHOLD_HIGH,
@@ -360,6 +361,39 @@ def _build_rating_blocks(
     return blocks
 
 
+def _build_level_blocks(
+    level_intervals: list[tuple[int, dict[str, Any], str]],
+) -> list[tuple[int, int, str, int]]:
+    """
+    Build list of contiguous price level blocks from intervals.
+
+    Args:
+        level_intervals: List of (original_idx, interval_dict, level) tuples
+
+    Returns:
+        List of (start_idx, end_idx, level, length) tuples where indices
+        refer to positions in level_intervals
+
+    """
+    blocks: list[tuple[int, int, str, int]] = []
+    if not level_intervals:
+        return blocks
+
+    block_start = 0
+    current_level = level_intervals[0][2]
+
+    for idx in range(1, len(level_intervals)):
+        if level_intervals[idx][2] != current_level:
+            # End current block
+            blocks.append((block_start, idx - 1, current_level, idx - block_start))
+            block_start = idx
+            current_level = level_intervals[idx][2]
+
+    # Don't forget the last block
+    blocks.append((block_start, len(level_intervals) - 1, current_level, len(level_intervals) - block_start))
+    return blocks
+
+
 def _calculate_gravitational_pull(
     blocks: list[tuple[int, int, str, int]],
     block_idx: int,
@@ -478,6 +512,75 @@ def _apply_rating_gap_tolerance(
         _LOGGER.debug("Gap tolerance: total %d block merges across all passes", total_corrections)
 
 
+def _apply_level_gap_tolerance(
+    all_intervals: list[dict[str, Any]],
+    gap_tolerance: int,
+) -> None:
+    """
+    Apply gap tolerance to smooth out isolated price level changes.
+
+    Similar to rating gap tolerance, but operates on Tibber's "level" field
+    (VERY_CHEAP, CHEAP, NORMAL, EXPENSIVE, VERY_EXPENSIVE). Identifies short
+    sequences of intervals (≤ gap_tolerance) and merges them into the larger
+    neighboring block.
+
+    Example with gap_tolerance=1:
+        CHEAP CHEAP CHEAP NORMAL CHEAP CHEAP → CHEAP CHEAP CHEAP CHEAP CHEAP CHEAP
+        (single NORMAL gets merged into larger CHEAP block)
+
+    Example with gap_tolerance=1 (bidirectional):
+        NORMAL NORMAL EXPENSIVE NORMAL EXPENSIVE EXPENSIVE EXPENSIVE →
+        NORMAL NORMAL EXPENSIVE EXPENSIVE EXPENSIVE EXPENSIVE EXPENSIVE
+        (single NORMAL at position 4 gets merged into larger EXPENSIVE block on the right)
+
+    Args:
+        all_intervals: List of price intervals with level already set (modified in-place)
+        gap_tolerance: Maximum number of consecutive "different" intervals to smooth out
+
+    Note:
+        - Uses same bidirectional algorithm as rating gap tolerance
+        - Compares block sizes on both sides and merges small blocks into larger neighbors
+        - If both neighbors have equal size, prefers the LEFT neighbor (earlier in time)
+        - Skips intervals without level (None)
+        - Intervals must be sorted chronologically for this to work correctly
+        - Multiple passes may be needed as merging can create new small blocks
+
+    """
+    if gap_tolerance <= 0:
+        return
+
+    # Extract intervals with valid level in chronological order
+    level_intervals: list[tuple[int, dict[str, Any], str]] = [
+        (i, interval, interval["level"])
+        for i, interval in enumerate(all_intervals)
+        if interval.get("level") is not None
+    ]
+
+    if len(level_intervals) < 3:  # noqa: PLR2004 - Minimum 3 for before/gap/after pattern
+        return
+
+    # Iteratively merge small blocks until no more changes
+    max_iterations = 10
+    total_corrections = 0
+
+    for iteration in range(max_iterations):
+        blocks = _build_level_blocks(level_intervals)
+        corrections_this_pass = _merge_small_level_blocks(blocks, level_intervals, gap_tolerance)
+        total_corrections += corrections_this_pass
+
+        if corrections_this_pass == 0:
+            break
+
+        _LOGGER.debug(
+            "Level gap tolerance pass %d: merged %d small blocks",
+            iteration + 1,
+            corrections_this_pass,
+        )
+
+    if total_corrections > 0:
+        _LOGGER.debug("Level gap tolerance: total %d block merges across all passes", total_corrections)
+
+
 def _merge_small_blocks(
     blocks: list[tuple[int, int, str, int]],
     rated_intervals: list[tuple[int, dict[str, Any], str]],
@@ -535,6 +638,63 @@ def _merge_small_blocks(
     return len(merge_decisions)
 
 
+def _merge_small_level_blocks(
+    blocks: list[tuple[int, int, str, int]],
+    level_intervals: list[tuple[int, dict[str, Any], str]],
+    gap_tolerance: int,
+) -> int:
+    """
+    Merge small price level blocks into their larger neighbors.
+
+    CRITICAL: This function collects ALL merge decisions FIRST, then applies them.
+    This prevents the order of processing from affecting outcomes. Without this,
+    earlier blocks could be merged incorrectly because the gravitational pull
+    calculation would see already-modified neighbors instead of the original state.
+
+    The merge decision is based on the FIRST LARGE BLOCK in each direction,
+    looking through any small intervening blocks. This ensures consistent
+    behavior when multiple small blocks are adjacent.
+
+    Args:
+        blocks: List of (start_idx, end_idx, level, length) tuples
+        level_intervals: List of (original_idx, interval_dict, level) tuples (modified in-place)
+        gap_tolerance: Maximum size of blocks to merge
+
+    Returns:
+        Number of blocks merged in this pass
+
+    """
+    # Phase 1: Collect all merge decisions based on ORIGINAL block state
+    merge_decisions: list[tuple[int, int, str]] = []  # (start_li_idx, end_li_idx, target_level)
+
+    for block_idx, (start, end, level, length) in enumerate(blocks):
+        if length > gap_tolerance:
+            continue
+
+        # Must have neighbors on BOTH sides (not an edge block)
+        if block_idx == 0 or block_idx == len(blocks) - 1:
+            continue
+
+        # Calculate gravitational pull from each direction
+        left_pull, left_level = _calculate_gravitational_pull(blocks, block_idx, "left", gap_tolerance)
+        right_pull, right_level = _calculate_gravitational_pull(blocks, block_idx, "right", gap_tolerance)
+
+        # Determine target level (prefer left if equal)
+        target_level = left_level if left_pull >= right_pull else right_level
+
+        if level != target_level:
+            merge_decisions.append((start, end, target_level))
+
+    # Phase 2: Apply all merge decisions
+    for start, end, target_level in merge_decisions:
+        for li_idx in range(start, end + 1):
+            original_idx, interval, _old_level = level_intervals[li_idx]
+            interval["level"] = target_level
+            level_intervals[li_idx] = (original_idx, interval, target_level)
+
+    return len(merge_decisions)
+
+
 def enrich_price_info_with_differences(  # noqa: PLR0913 - Extra params for rating stabilization
     all_intervals: list[dict[str, Any]],
     *,
@@ -542,6 +702,7 @@ def enrich_price_info_with_differences(  # noqa: PLR0913 - Extra params for rati
     threshold_high: float | None = None,
     hysteresis: float | None = None,
     gap_tolerance: int | None = None,
+    level_gap_tolerance: int | None = None,
     time: TibberPricesTimeService | None = None,  # noqa: ARG001  # Used in production (via coordinator), kept for compatibility
 ) -> list[dict[str, Any]]:
     """
@@ -558,6 +719,10 @@ def enrich_price_info_with_differences(  # noqa: PLR0913 - Extra params for rati
     remaining isolated rating changes (e.g., a single NORMAL interval surrounded
     by LOW intervals gets corrected to LOW).
 
+    Similarly, applies level gap tolerance to smooth out isolated price level changes
+    from Tibber's API (e.g., a single NORMAL interval surrounded by CHEAP intervals
+    gets corrected to CHEAP).
+
     CRITICAL: Only enriches intervals that have at least 24 hours of prior data
     available. This is determined by checking if (interval_start - earliest_interval_start) >= 24h.
     Works independently of interval density (24 vs 96 intervals/day) and handles
@@ -572,7 +737,8 @@ def enrich_price_info_with_differences(  # noqa: PLR0913 - Extra params for rati
         threshold_low: Low threshold percentage for rating_level (defaults to -10)
         threshold_high: High threshold percentage for rating_level (defaults to 10)
         hysteresis: Hysteresis percentage to prevent flickering (defaults to 2.0)
-        gap_tolerance: Max consecutive intervals to smooth out (defaults to 1, 0 = disabled)
+        gap_tolerance: Max consecutive intervals to smooth out for rating_level (defaults to 1, 0 = disabled)
+        level_gap_tolerance: Max consecutive intervals to smooth out for price level (defaults to 1, 0 = disabled)
         time: TibberPricesTimeService instance (kept for API compatibility, not used)
 
     Returns:
@@ -590,6 +756,7 @@ def enrich_price_info_with_differences(  # noqa: PLR0913 - Extra params for rati
     threshold_high = threshold_high if threshold_high is not None else 10
     hysteresis = hysteresis if hysteresis is not None else DEFAULT_PRICE_RATING_HYSTERESIS
     gap_tolerance = gap_tolerance if gap_tolerance is not None else DEFAULT_PRICE_RATING_GAP_TOLERANCE
+    level_gap_tolerance = level_gap_tolerance if level_gap_tolerance is not None else DEFAULT_PRICE_LEVEL_GAP_TOLERANCE
 
     if not all_intervals:
         return all_intervals
@@ -644,6 +811,11 @@ def enrich_price_info_with_differences(  # noqa: PLR0913 - Extra params for rati
     # This smooths out isolated rating changes that slip through hysteresis
     if gap_tolerance > 0:
         _apply_rating_gap_tolerance(all_intervals, gap_tolerance)
+
+    # Apply level gap tolerance as post-processing step
+    # This smooths out isolated price level changes from Tibber's API
+    if level_gap_tolerance > 0:
+        _apply_level_gap_tolerance(all_intervals, level_gap_tolerance)
 
     return all_intervals
 

@@ -136,6 +136,7 @@
                     "general_settings": "⚙️ Allgemeine Einstellungen",
                     "display_settings": "💱 Währungsanzeige",
                     "current_interval_price_rating": "📊 Preisbewertung",
+                    "price_level": "🏷️ Preisniveau",
                     "volatility": "💨 Preis-Volatilität",
                     "best_price": "💚 Bestpreis",
                     "peak_price": "🔴 Spitzenpreis",
@@ -320,6 +321,17 @@
                     "confirm_reset": "Ja, alles auf Werkseinstellungen zurücksetzen"
                 },
                 "submit": "Jetzt zurücksetzen"
+            },
+            "price_level": {
+                "title": "🏷️ Preisniveau-Einstellungen (von Tibber API)",
+                "description": "**Konfiguriere die Stabilisierung für Tibbers Preisniveau-Klassifizierung (sehr günstig/günstig/normal/teuer/sehr teuer).**\n\nTibbers API liefert ein Preisniveau-Feld für jedes Intervall. Diese Einstellung glättet kurze Schwankungen, um Instabilität in Automatisierungen zu verhindern.",
+                "data": {
+                    "price_level_gap_tolerance": "Gap-Toleranz"
+                },
+                "data_description": {
+                    "price_level_gap_tolerance": "Maximale Anzahl aufeinanderfolgender Intervalle, die 'geglättet' werden können, wenn sie von umgebenden Preisniveaus abweichen. Kleine isolierte Niveauänderungen werden mit dem dominanten Nachbarblock zusammengeführt. Beispiel: 1 bedeutet, dass ein einzelnes 'normal'-Intervall, umgeben von 'günstig'-Intervallen, zu 'günstig' korrigiert wird. Auf 0 setzen zum Deaktivieren. Standard: 1"
+                },
+                "submit": "↩ Speichern & Zurück"
             }
         },
         "error": {

@@ -136,6 +136,7 @@
                     "general_settings": "⚙️ Allmänna inställningar",
                     "display_settings": "💱 Valutavisning",
                     "current_interval_price_rating": "📊 Prisbetyg",
+                    "price_level": "🏷️ Prisnivå",
                     "volatility": "💨 Prisvolatilitet",
                     "best_price": "💚 Bästa Prisperiod",
                     "peak_price": "🔴 Topprisperiod",
@@ -320,6 +321,17 @@
                     "confirm_reset": "Ja, återställ allt till standard"
                 },
                 "submit": "Återställ nu"
+            },
+            "price_level": {
+                "title": "��️ Prisnivå-inställningar",
+                "description": "**Konfigurera stabilisering för Tibbers prisnivå-klassificering (mycket billig/billig/normal/dyr/mycket dyr).**\n\nTibbers API tillhandahåller ett prisnivå-fält för varje intervall. Denna inställning jämnar ut korta fluktuationer för att förhindra instabilitet i automatiseringar.",
+                "data": {
+                    "price_level_gap_tolerance": "Gap-tolerans"
+                },
+                "data_description": {
+                    "price_level_gap_tolerance": "Maximalt antal på varandra följande intervaller som kan 'jämnas ut' om de avviker från omgivande prisnivåer. Små isolerade nivåförändringar sammanfogas med det dominerande grannblocket. Exempel: 1 betyder att ett enstaka 'normal'-intervall omgivet av 'billig'-intervaller korrigeras till 'billig'. Sätt till 0 för att inaktivera. Standard: 1"
+                },
+                "submit": "↩ Spara & tillbaka"
             }
         },
         "error": {

@@ -49,6 +49,8 @@ logger:
     custom_components.tibber_prices.coordinator.period_handlers.period_overlap.details: info
     # Outlier flex capping
     custom_components.tibber_prices.coordinator.period_handlers.core.details: info
+    # Level filtering details (min_distance scaling)
+    custom_components.tibber_prices.coordinator.period_handlers.level_filtering.details: info
 
     # Interval pool details (cache operations, GC):
     # Cache lookup/miss, gap detection, fetch group additions

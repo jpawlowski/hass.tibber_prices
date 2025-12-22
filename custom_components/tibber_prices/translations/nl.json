@@ -136,6 +136,7 @@
                     "general_settings": "⚙️ Algemene Instellingen",
                     "display_settings": "💱 Valuta Weergave",
                     "current_interval_price_rating": "📊 Prijsbeoordeling",
+                    "price_level": "🏷️ Prijsniveau",
                     "volatility": "💨 Prijsvolatiliteit",
                     "best_price": "💚 Beste Prijs Periode",
                     "peak_price": "🔴 Piekprijs Periode",
@@ -320,6 +321,17 @@
                     "confirm_reset": "Ja, reset alles naar standaardwaarden"
                 },
                 "submit": "Nu Resetten"
+            },
+            "price_level": {
+                "title": "🏷️ Prijsniveau-instellingen",
+                "description": "**Configureer stabilisatie voor Tibbers prijsniveau-classificatie (zeer goedkoop/goedkoop/normaal/duur/zeer duur).**\n\nTibbers API levert een prijsniveau-veld voor elk interval. Deze instelling egaliseer korte fluctuaties om instabiliteit in automatiseringen te voorkomen.",
+                "data": {
+                    "price_level_gap_tolerance": "Gap-tolerantie"
+                },
+                "data_description": {
+                    "price_level_gap_tolerance": "Maximaal aantal opeenvolgende intervallen dat 'afgevlakt' kan worden als ze afwijken van omringende prijsniveaus. Kleine geïsoleerde niveauwijzigingen worden samengevoegd met het dominante aangrenzende blok. Voorbeeld: 1 betekent dat een enkel 'normaal'-interval omringd door 'goedkoop'-intervallen wordt gecorrigeerd naar 'goedkoop'. Stel in op 0 om uit te schakelen. Standaard: 1"
+                },
+                "submit": "↩ Opslaan & terug"
             }
         },
         "error": {

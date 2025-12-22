@@ -105,7 +105,7 @@ def merge_adjacent_periods(period1: dict, period2: dict) -> dict:
         "period2_end": period2["end"].isoformat(),
     }
 
-    _LOGGER.debug(
+    _LOGGER_DETAILS.debug(
         "%sMerged periods: %s-%s + %s-%s → %s-%s (duration: %d min)",
         INDENT_L2,
         period1["start"].strftime("%H:%M"),
@@ -145,7 +145,7 @@ def resolve_period_overlaps(
         - new_periods_count: Number of new periods added (some may have been merged)
 
     """
-    _LOGGER.debug(
+    _LOGGER_DETAILS.debug(
         "%sresolve_period_overlaps called: existing=%d, new=%d",
         INDENT_L0,
         len(existing_periods),
@@ -175,7 +175,7 @@ def resolve_period_overlaps(
                 and abs((relaxed_end - existing["end"]).total_seconds()) < tolerance_seconds
             ):
                 is_duplicate = True
-                _LOGGER.debug(
+                _LOGGER_DETAILS.debug(
                     "%sSkipping duplicate period %s-%s (already exists)",
                     INDENT_L1,
                     relaxed_start.strftime("%H:%M"),
@@ -198,7 +198,7 @@ def resolve_period_overlaps(
 
             if is_adjacent or is_overlapping:
                 periods_to_merge.append((idx, existing))
-                _LOGGER.debug(
+                _LOGGER_DETAILS.debug(
                     "%sPeriod %s-%s %s with existing period %s-%s",
                     INDENT_L1,
                     relaxed_start.strftime("%H:%M"),
@@ -212,7 +212,7 @@ def resolve_period_overlaps(
             # No merge needed - add as new period
             merged.append(relaxed)
             periods_added += 1
-            _LOGGER.debug(
+            _LOGGER_DETAILS.debug(
                 "%sAdded new period %s-%s (no overlap/adjacency)",
                 INDENT_L1,
                 relaxed_start.strftime("%H:%M"),

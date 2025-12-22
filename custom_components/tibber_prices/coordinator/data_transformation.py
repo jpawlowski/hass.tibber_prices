@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import copy
 import logging
 from typing import TYPE_CHECKING, Any
 
@@ -49,7 +50,12 @@ class TibberPricesDataTransformer:
         getattr(_LOGGER, level)(prefixed_message, *args, **kwargs)
 
     def get_threshold_percentages(self) -> dict[str, int | float]:
-        """Get threshold percentages, hysteresis and gap tolerance from config options."""
+        """
+        Get threshold percentages, hysteresis and gap tolerance for RATING_LEVEL from config options.
+
+        CRITICAL: This function is ONLY for rating_level (internal calculation: LOW/NORMAL/HIGH).
+        Do NOT use for price level (Tibber API: VERY_CHEAP/CHEAP/NORMAL/EXPENSIVE/VERY_EXPENSIVE).
+        """
         options = self.config_entry.options or {}
         return {
             "low": options.get(_const.CONF_PRICE_RATING_THRESHOLD_LOW, _const.DEFAULT_PRICE_RATING_THRESHOLD_LOW),
@@ -60,11 +66,33 @@ class TibberPricesDataTransformer:
             ),
         }
 
+    def get_level_gap_tolerance(self) -> int:
+        """
+        Get gap tolerance for PRICE LEVEL (Tibber API) from config options.
+
+        CRITICAL: This is separate from rating_level gap tolerance.
+        Price level comes from Tibber API (VERY_CHEAP/CHEAP/NORMAL/EXPENSIVE/VERY_EXPENSIVE).
+        Rating level is calculated internally (LOW/NORMAL/HIGH).
+        """
+        options = self.config_entry.options or {}
+        return options.get(_const.CONF_PRICE_LEVEL_GAP_TOLERANCE, _const.DEFAULT_PRICE_LEVEL_GAP_TOLERANCE)
+
     def invalidate_config_cache(self) -> None:
-        """Invalidate config cache when options change."""
+        """
+        Invalidate config cache AND transformation cache when options change.
+
+        CRITICAL: When options like gap_tolerance, hysteresis, or price_level_gap_tolerance
+        change, we must clear BOTH caches:
+        1. Config cache (_config_cache) - forces config rebuild on next check
+        2. Transformation cache (_cached_transformed_data) - forces data re-enrichment
+
+        This ensures that the next call to transform_data() will re-calculate
+        rating_levels and apply new gap tolerance settings to existing price data.
+        """
         self._config_cache_valid = False
         self._config_cache = None
-        self._log("debug", "Config cache invalidated")
+        self._cached_transformed_data = None  # Force re-transformation with new config
+        self._last_transformation_config = None  # Force config comparison to trigger
 
     def _get_current_transformation_config(self) -> dict[str, Any]:
         """
@@ -89,6 +117,7 @@ class TibberPricesDataTransformer:
 
         config = {
             "thresholds": self.get_threshold_percentages(),
+            "level_gap_tolerance": self.get_level_gap_tolerance(),  # Separate: Tibber's price level smoothing
             # Volatility thresholds now flat (single-section step)
             "volatility_thresholds": {
                 "moderate": options.get(_const.CONF_VOLATILITY_THRESHOLD_MODERATE, 15.0),
@@ -155,8 +184,9 @@ class TibberPricesDataTransformer:
 
         # Configuration changed - must retransform
         current_config = self._get_current_transformation_config()
-        if current_config != self._last_transformation_config:
-            self._log("debug", "Configuration changed, retransforming data")
+        config_changed = current_config != self._last_transformation_config
+
+        if config_changed:
             return True
 
         # Check for midnight turnover
@@ -181,10 +211,17 @@ class TibberPricesDataTransformer:
         source_data_timestamp = raw_data.get("timestamp")
 
         # Return cached transformed data if no retransformation needed
-        if (
-            not self._should_retransform_data(current_time, source_data_timestamp)
-            and self._cached_transformed_data is not None
-        ):
+        should_retransform = self._should_retransform_data(current_time, source_data_timestamp)
+        has_cache = self._cached_transformed_data is not None
+
+        self._log(
+            "info",
+            "transform_data: should_retransform=%s, has_cache=%s",
+            should_retransform,
+            has_cache,
+        )
+
+        if not should_retransform and has_cache:
             self._log("debug", "Using cached transformed data (no transformation needed)")
             return self._cached_transformed_data
 
@@ -192,7 +229,10 @@ class TibberPricesDataTransformer:
 
         # Extract data from single-home structure
         home_id = raw_data.get("home_id", "")
-        all_intervals = raw_data.get("price_info", [])
+        # CRITICAL: Make a deep copy of intervals to avoid modifying cached raw data
+        # The enrichment function modifies intervals in-place, which would corrupt
+        # the original API data and make re-enrichment with different settings impossible
+        all_intervals = copy.deepcopy(raw_data.get("price_info", []))
         currency = raw_data.get("currency", "EUR")
 
         if not all_intervals:
@@ -209,13 +249,16 @@ class TibberPricesDataTransformer:
 
         # Enrich price info dynamically with calculated differences and rating levels
         # (Modifies all_intervals in-place, returns same list)
-        thresholds = self.get_threshold_percentages()
+        thresholds = self.get_threshold_percentages()  # Only for rating_level
+        level_gap_tolerance = self.get_level_gap_tolerance()  # Separate: for Tibber's price level
+
         enriched_intervals = enrich_price_info_with_differences(
             all_intervals,
             threshold_low=thresholds["low"],
             threshold_high=thresholds["high"],
             hysteresis=float(thresholds["hysteresis"]),
             gap_tolerance=int(thresholds["gap_tolerance"]),
+            level_gap_tolerance=level_gap_tolerance,
             time=self.time,
         )
 

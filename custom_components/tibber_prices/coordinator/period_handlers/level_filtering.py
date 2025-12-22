@@ -181,7 +181,7 @@ def check_interval_criteria(
         if scale_factor < SCALE_FACTOR_WARNING_THRESHOLD:
             import logging  # noqa: PLC0415
 
-            _LOGGER = logging.getLogger(__name__)  # noqa: N806
+            _LOGGER = logging.getLogger(f"{__name__}.details")  # noqa: N806
             _LOGGER.debug(
                 "High flex %.1f%% detected: Reducing min_distance %.1f%% → %.1f%% (scale %.2f)",
                 flex_abs * 100,

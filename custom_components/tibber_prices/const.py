@@ -46,6 +46,7 @@ CONF_PRICE_RATING_THRESHOLD_LOW = "price_rating_threshold_low"
 CONF_PRICE_RATING_THRESHOLD_HIGH = "price_rating_threshold_high"
 CONF_PRICE_RATING_HYSTERESIS = "price_rating_hysteresis"
 CONF_PRICE_RATING_GAP_TOLERANCE = "price_rating_gap_tolerance"
+CONF_PRICE_LEVEL_GAP_TOLERANCE = "price_level_gap_tolerance"
 CONF_AVERAGE_SENSOR_DISPLAY = "average_sensor_display"  # "median" or "mean"
 CONF_PRICE_TREND_THRESHOLD_RISING = "price_trend_threshold_rising"
 CONF_PRICE_TREND_THRESHOLD_FALLING = "price_trend_threshold_falling"
@@ -96,6 +97,7 @@ DEFAULT_PRICE_RATING_THRESHOLD_LOW = -10  # Default rating threshold low percent
 DEFAULT_PRICE_RATING_THRESHOLD_HIGH = 10  # Default rating threshold high percentage
 DEFAULT_PRICE_RATING_HYSTERESIS = 2.0  # Hysteresis percentage to prevent flickering at threshold boundaries
 DEFAULT_PRICE_RATING_GAP_TOLERANCE = 1  # Max consecutive intervals to smooth out (0 = disabled)
+DEFAULT_PRICE_LEVEL_GAP_TOLERANCE = 1  # Max consecutive intervals to smooth out for price level (0 = disabled)
 DEFAULT_AVERAGE_SENSOR_DISPLAY = "median"  # Default: show median in state, mean in attributes
 DEFAULT_PRICE_TREND_THRESHOLD_RISING = 3  # Default trend threshold for rising prices (%)
 DEFAULT_PRICE_TREND_THRESHOLD_FALLING = -3  # Default trend threshold for falling prices (%, negative value)
@@ -139,6 +141,8 @@ MIN_PRICE_RATING_HYSTERESIS = 0.0  # Minimum hysteresis (0 = disabled)
 MAX_PRICE_RATING_HYSTERESIS = 5.0  # Maximum hysteresis (5% band)
 MIN_PRICE_RATING_GAP_TOLERANCE = 0  # Minimum gap tolerance (0 = disabled)
 MAX_PRICE_RATING_GAP_TOLERANCE = 4  # Maximum gap tolerance (4 intervals = 1 hour)
+MIN_PRICE_LEVEL_GAP_TOLERANCE = 0  # Minimum gap tolerance for price level (0 = disabled)
+MAX_PRICE_LEVEL_GAP_TOLERANCE = 4  # Maximum gap tolerance for price level (4 intervals = 1 hour)
 
 # Volatility threshold limits
 # MODERATE threshold: practical range 5% to 25% (entry point for noticeable fluctuation)
@@ -339,6 +343,7 @@ def get_default_options(currency_code: str | None) -> dict[str, Any]:
         CONF_PRICE_RATING_THRESHOLD_HIGH: DEFAULT_PRICE_RATING_THRESHOLD_HIGH,
         CONF_PRICE_RATING_HYSTERESIS: DEFAULT_PRICE_RATING_HYSTERESIS,
         CONF_PRICE_RATING_GAP_TOLERANCE: DEFAULT_PRICE_RATING_GAP_TOLERANCE,
+        CONF_PRICE_LEVEL_GAP_TOLERANCE: DEFAULT_PRICE_LEVEL_GAP_TOLERANCE,
         # Volatility thresholds (flat - single-section step)
         CONF_VOLATILITY_THRESHOLD_MODERATE: DEFAULT_VOLATILITY_THRESHOLD_MODERATE,
         CONF_VOLATILITY_THRESHOLD_HIGH: DEFAULT_VOLATILITY_THRESHOLD_HIGH,

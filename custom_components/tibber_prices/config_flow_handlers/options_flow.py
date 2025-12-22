@@ -15,6 +15,7 @@ from custom_components.tibber_prices.config_flow_handlers.schemas import (
     get_display_settings_schema,
     get_options_init_schema,
     get_peak_price_schema,
+    get_price_level_schema,
     get_price_rating_schema,
     get_price_trend_schema,
     get_reset_to_defaults_schema,
@@ -191,6 +192,7 @@ class TibberPricesOptionsFlowHandler(OptionsFlow):
                 "general_settings",
                 "display_settings",
                 "current_interval_price_rating",
+                "price_level",
                 "volatility",
                 "best_price",
                 "peak_price",
@@ -326,6 +328,25 @@ class TibberPricesOptionsFlowHandler(OptionsFlow):
         return self.async_show_form(
             step_id="current_interval_price_rating",
             data_schema=get_price_rating_schema(self.config_entry.options),
+            errors=errors,
+        )
+
+    async def async_step_price_level(self, user_input: dict[str, Any] | None = None) -> ConfigFlowResult:
+        """Configure Tibber price level gap tolerance (smoothing for API 'level' field)."""
+        errors: dict[str, str] = {}
+
+        if user_input is not None:
+            # No validation needed - slider constraints ensure valid range
+            # Store flat data directly in options
+            self._options.update(user_input)
+            # async_create_entry automatically handles change detection and listener triggering
+            self._save_options_if_changed()
+            # Return to menu for more changes
+            return await self.async_step_init()
+
+        return self.async_show_form(
+            step_id="price_level",
+            data_schema=get_price_level_schema(self.config_entry.options),
             errors=errors,
         )
 

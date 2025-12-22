@@ -28,6 +28,7 @@ from custom_components.tibber_prices.const import (
     CONF_PEAK_PRICE_MIN_DISTANCE_FROM_AVG,
     CONF_PEAK_PRICE_MIN_LEVEL,
     CONF_PEAK_PRICE_MIN_PERIOD_LENGTH,
+    CONF_PRICE_LEVEL_GAP_TOLERANCE,
     CONF_PRICE_RATING_GAP_TOLERANCE,
     CONF_PRICE_RATING_HYSTERESIS,
     CONF_PRICE_RATING_THRESHOLD_HIGH,
@@ -58,6 +59,7 @@ from custom_components.tibber_prices.const import (
     DEFAULT_PEAK_PRICE_MIN_DISTANCE_FROM_AVG,
     DEFAULT_PEAK_PRICE_MIN_LEVEL,
     DEFAULT_PEAK_PRICE_MIN_PERIOD_LENGTH,
+    DEFAULT_PRICE_LEVEL_GAP_TOLERANCE,
     DEFAULT_PRICE_RATING_GAP_TOLERANCE,
     DEFAULT_PRICE_RATING_HYSTERESIS,
     DEFAULT_PRICE_RATING_THRESHOLD_HIGH,
@@ -77,6 +79,7 @@ from custom_components.tibber_prices.const import (
     MAX_GAP_COUNT,
     MAX_MIN_PERIOD_LENGTH,
     MAX_MIN_PERIODS,
+    MAX_PRICE_LEVEL_GAP_TOLERANCE,
     MAX_PRICE_RATING_GAP_TOLERANCE,
     MAX_PRICE_RATING_HYSTERESIS,
     MAX_PRICE_RATING_THRESHOLD_HIGH,
@@ -89,6 +92,7 @@ from custom_components.tibber_prices.const import (
     MAX_VOLATILITY_THRESHOLD_VERY_HIGH,
     MIN_GAP_COUNT,
     MIN_PERIOD_LENGTH,
+    MIN_PRICE_LEVEL_GAP_TOLERANCE,
     MIN_PRICE_RATING_GAP_TOLERANCE,
     MIN_PRICE_RATING_HYSTERESIS,
     MIN_PRICE_RATING_THRESHOLD_HIGH,
@@ -331,6 +335,30 @@ def get_price_rating_schema(options: Mapping[str, Any]) -> vol.Schema:
                 NumberSelectorConfig(
                     min=MIN_PRICE_RATING_GAP_TOLERANCE,
                     max=MAX_PRICE_RATING_GAP_TOLERANCE,
+                    step=1,
+                    mode=NumberSelectorMode.SLIDER,
+                ),
+            ),
+        }
+    )
+
+
+def get_price_level_schema(options: Mapping[str, Any]) -> vol.Schema:
+    """Return schema for Tibber price level stabilization (gap tolerance for API level field)."""
+    return vol.Schema(
+        {
+            vol.Optional(
+                CONF_PRICE_LEVEL_GAP_TOLERANCE,
+                default=int(
+                    options.get(
+                        CONF_PRICE_LEVEL_GAP_TOLERANCE,
+                        DEFAULT_PRICE_LEVEL_GAP_TOLERANCE,
+                    )
+                ),
+            ): NumberSelector(
+                NumberSelectorConfig(
+                    min=MIN_PRICE_LEVEL_GAP_TOLERANCE,
+                    max=MAX_PRICE_LEVEL_GAP_TOLERANCE,
                     step=1,
                     mode=NumberSelectorMode.SLIDER,
                 ),
