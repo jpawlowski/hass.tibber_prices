@@ -739,7 +739,7 @@ class TibberPricesDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             return {}
         return self._transform_data(self._cached_price_data)
 
-    def _get_threshold_percentages(self) -> dict[str, int]:
+    def _get_threshold_percentages(self) -> dict[str, int | float]:
         """Get threshold percentages from config options."""
         return self._data_transformer.get_threshold_percentages()
 

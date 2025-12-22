@@ -223,7 +223,8 @@ class TibberPricesDataTransformer:
 
         if not should_retransform and has_cache:
             self._log("debug", "Using cached transformed data (no transformation needed)")
-            return self._cached_transformed_data
+            # has_cache ensures _cached_transformed_data is not None
+            return self._cached_transformed_data  # type: ignore[return-value]
 
         self._log("debug", "Transforming price data (enrichment + period calculation)")
 

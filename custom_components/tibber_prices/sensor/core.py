@@ -221,7 +221,7 @@ class TibberPricesSensor(TibberPricesEntity, RestoreSensor):
             )
             # Modify _state_info to add dynamic exclusion
             if self._state_info is None:
-                self._state_info = {}
+                self._state_info = {"unrecorded_attributes": frozenset()}
             current_unrecorded = self._state_info.get("unrecorded_attributes", frozenset())
             # State shows median → exclude price_median from attributes
             # State shows mean → exclude price_mean from attributes
