@@ -48,12 +48,16 @@ class TibberPricesDataTransformer:
         prefixed_message = f"{self._log_prefix} {message}"
         getattr(_LOGGER, level)(prefixed_message, *args, **kwargs)
 
-    def get_threshold_percentages(self) -> dict[str, int]:
-        """Get threshold percentages from config options."""
+    def get_threshold_percentages(self) -> dict[str, int | float]:
+        """Get threshold percentages, hysteresis and gap tolerance from config options."""
         options = self.config_entry.options or {}
         return {
             "low": options.get(_const.CONF_PRICE_RATING_THRESHOLD_LOW, _const.DEFAULT_PRICE_RATING_THRESHOLD_LOW),
             "high": options.get(_const.CONF_PRICE_RATING_THRESHOLD_HIGH, _const.DEFAULT_PRICE_RATING_THRESHOLD_HIGH),
+            "hysteresis": options.get(_const.CONF_PRICE_RATING_HYSTERESIS, _const.DEFAULT_PRICE_RATING_HYSTERESIS),
+            "gap_tolerance": options.get(
+                _const.CONF_PRICE_RATING_GAP_TOLERANCE, _const.DEFAULT_PRICE_RATING_GAP_TOLERANCE
+            ),
         }
 
     def invalidate_config_cache(self) -> None:
@@ -210,6 +214,8 @@ class TibberPricesDataTransformer:
             all_intervals,
             threshold_low=thresholds["low"],
             threshold_high=thresholds["high"],
+            hysteresis=float(thresholds["hysteresis"]),
+            gap_tolerance=int(thresholds["gap_tolerance"]),
             time=self.time,
         )
 

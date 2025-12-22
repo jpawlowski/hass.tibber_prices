@@ -170,15 +170,19 @@
                 "submit": "↩ Lagre & tilbake"
             },
             "current_interval_price_rating": {
-                "title": "📊 Prisvurderings-terskler",
-                "description": "**Konfigurer terskler for prisvurderingsnivåer (lav/normal/høy) basert på sammenligning med etterfølgende 24-timers gjennomsnitt.**",
+                "title": "📊 Prisvurderingsinnstillinger",
+                "description": "**Konfigurer terskler og stabilisering for prisvurderingsnivåer (lav/normal/høy) basert på sammenligning med etterfølgende 24-timers gjennomsnitt.**",
                 "data": {
                     "price_rating_threshold_low": "Lav-terskel",
-                    "price_rating_threshold_high": "Høy-terskel"
+                    "price_rating_threshold_high": "Høy-terskel",
+                    "price_rating_hysteresis": "Hysterese",
+                    "price_rating_gap_tolerance": "Gap-toleranse"
                 },
                 "data_description": {
-                    "price_rating_threshold_low": "Prosentverdi for hvor mye gjeldende pris må være under det etterfølgende 24-timers gjennomsnittet for å kvalifisere som 'lav' vurdering. Eksempel: 5 betyr minst 5% under gjennomsnitt. Sensorer med denne vurderingen indikerer gunstige tidsvinduer. Standard: 5%",
-                    "price_rating_threshold_high": "Prosentverdi for hvor mye gjeldende pris må være over det etterfølgende 24-timers gjennomsnittet for å kvalifisere som 'høy' vurdering. Eksempel: 10 betyr minst 10% over gjennomsnitt. Sensorer med denne vurderingen advarer om dyre tidsvinduer. Standard: 10%"
+                    "price_rating_threshold_low": "Prosentverdi for hvor mye gjeldende pris må være under det etterfølgende 24-timers gjennomsnittet for å kvalifisere som 'lav' vurdering. Eksempel: -10 betyr minst 10% under gjennomsnitt. Sensorer med denne vurderingen indikerer gunstige tidsvinduer. Standard: -10%",
+                    "price_rating_threshold_high": "Prosentverdi for hvor mye gjeldende pris må være over det etterfølgende 24-timers gjennomsnittet for å kvalifisere som 'høy' vurdering. Eksempel: 10 betyr minst 10% over gjennomsnitt. Sensorer med denne vurderingen advarer om dyre tidsvinduer. Standard: 10%",
+                    "price_rating_hysteresis": "Prosentbånd rundt terskler for å unngå raske tilstandsendringer. Når vurderingen allerede er LAV, må prisen stige over (terskel + hysterese) for å bytte til NORMAL. Tilsvarende krever HØY at prisen faller under (terskel - hysterese) for å forlate tilstanden. Dette gir stabilitet for automatiseringer som reagerer på vurderingsendringer. Sett til 0 for å deaktivere. Standard: 2%",
+                    "price_rating_gap_tolerance": "Maksimalt antall påfølgende intervaller som kan 'jevnes ut' hvis de avviker fra omkringliggende vurderinger. Små isolerte vurderingsendringer slås sammen med den dominerende nabogruppen. Dette gir stabilitet for automatiseringer ved å forhindre at korte vurderingstopper utløser unødvendige handlinger. Eksempel: 1 betyr at et enkelt 'normal'-intervall omgitt av 'høy'-intervaller korrigeres til 'høy'. Sett til 0 for å deaktivere. Standard: 1"
                 },
                 "submit": "↩ Lagre & tilbake"
             },

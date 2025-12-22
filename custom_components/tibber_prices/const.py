@@ -44,6 +44,8 @@ CONF_BEST_PRICE_MIN_PERIOD_LENGTH = "best_price_min_period_length"
 CONF_PEAK_PRICE_MIN_PERIOD_LENGTH = "peak_price_min_period_length"
 CONF_PRICE_RATING_THRESHOLD_LOW = "price_rating_threshold_low"
 CONF_PRICE_RATING_THRESHOLD_HIGH = "price_rating_threshold_high"
+CONF_PRICE_RATING_HYSTERESIS = "price_rating_hysteresis"
+CONF_PRICE_RATING_GAP_TOLERANCE = "price_rating_gap_tolerance"
 CONF_AVERAGE_SENSOR_DISPLAY = "average_sensor_display"  # "median" or "mean"
 CONF_PRICE_TREND_THRESHOLD_RISING = "price_trend_threshold_rising"
 CONF_PRICE_TREND_THRESHOLD_FALLING = "price_trend_threshold_falling"
@@ -133,6 +135,10 @@ MIN_PRICE_RATING_THRESHOLD_LOW = -50  # Minimum value for low rating threshold
 MAX_PRICE_RATING_THRESHOLD_LOW = -5  # Maximum value for low rating threshold (must be < HIGH)
 MIN_PRICE_RATING_THRESHOLD_HIGH = 5  # Minimum value for high rating threshold (must be > LOW)
 MAX_PRICE_RATING_THRESHOLD_HIGH = 50  # Maximum value for high rating threshold
+MIN_PRICE_RATING_HYSTERESIS = 0.0  # Minimum hysteresis (0 = disabled)
+MAX_PRICE_RATING_HYSTERESIS = 5.0  # Maximum hysteresis (5% band)
+MIN_PRICE_RATING_GAP_TOLERANCE = 0  # Minimum gap tolerance (0 = disabled)
+MAX_PRICE_RATING_GAP_TOLERANCE = 4  # Maximum gap tolerance (4 intervals = 1 hour)
 
 # Volatility threshold limits
 # MODERATE threshold: practical range 5% to 25% (entry point for noticeable fluctuation)
@@ -328,9 +334,11 @@ def get_default_options(currency_code: str | None) -> dict[str, Any]:
         CONF_VIRTUAL_TIME_OFFSET_DAYS: DEFAULT_VIRTUAL_TIME_OFFSET_DAYS,
         CONF_VIRTUAL_TIME_OFFSET_HOURS: DEFAULT_VIRTUAL_TIME_OFFSET_HOURS,
         CONF_VIRTUAL_TIME_OFFSET_MINUTES: DEFAULT_VIRTUAL_TIME_OFFSET_MINUTES,
-        # Price rating thresholds (flat - single-section step)
+        # Price rating settings (flat - single-section step)
         CONF_PRICE_RATING_THRESHOLD_LOW: DEFAULT_PRICE_RATING_THRESHOLD_LOW,
         CONF_PRICE_RATING_THRESHOLD_HIGH: DEFAULT_PRICE_RATING_THRESHOLD_HIGH,
+        CONF_PRICE_RATING_HYSTERESIS: DEFAULT_PRICE_RATING_HYSTERESIS,
+        CONF_PRICE_RATING_GAP_TOLERANCE: DEFAULT_PRICE_RATING_GAP_TOLERANCE,
         # Volatility thresholds (flat - single-section step)
         CONF_VOLATILITY_THRESHOLD_MODERATE: DEFAULT_VOLATILITY_THRESHOLD_MODERATE,
         CONF_VOLATILITY_THRESHOLD_HIGH: DEFAULT_VOLATILITY_THRESHOLD_HIGH,

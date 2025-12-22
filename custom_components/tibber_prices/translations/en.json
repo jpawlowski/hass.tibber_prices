@@ -170,15 +170,19 @@
                 "submit": "↩ Save & Back"
             },
             "current_interval_price_rating": {
-                "title": "📊 Price Rating Thresholds",
-                "description": "**Configure thresholds for price rating levels (low/normal/high) based on comparison with trailing 24-hour average.**",
+                "title": "📊 Price Rating Settings",
+                "description": "**Configure thresholds and stabilization for price rating levels (low/normal/high) based on comparison with trailing 24-hour average.**",
                 "data": {
                     "price_rating_threshold_low": "Low Threshold",
-                    "price_rating_threshold_high": "High Threshold"
+                    "price_rating_threshold_high": "High Threshold",
+                    "price_rating_hysteresis": "Hysteresis",
+                    "price_rating_gap_tolerance": "Gap Tolerance"
                 },
                 "data_description": {
-                    "price_rating_threshold_low": "Percentage below the trailing 24-hour average that the current price must be to qualify as 'low' rating. Example: 5 means at least 5% below average. Sensors with this rating indicate favorable time windows. Default: 5%",
-                    "price_rating_threshold_high": "Percentage above the trailing 24-hour average that the current price must be to qualify as 'high' rating. Example: 10 means at least 10% above average. Sensors with this rating warn about expensive time windows. Default: 10%"
+                    "price_rating_threshold_low": "Percentage below the trailing 24-hour average that the current price must be to qualify as 'low' rating. Example: -10 means at least 10% below average. Sensors with this rating indicate favorable time windows. Default: -10%",
+                    "price_rating_threshold_high": "Percentage above the trailing 24-hour average that the current price must be to qualify as 'high' rating. Example: 10 means at least 10% above average. Sensors with this rating warn about expensive time windows. Default: 10%",
+                    "price_rating_hysteresis": "Percentage band around thresholds to prevent rapid state changes. When the rating is already LOW, the price must rise above (threshold + hysteresis) to switch to NORMAL. Similarly, HIGH requires the price to fall below (threshold - hysteresis) to leave. This provides stability for automations that react to rating changes. Set to 0 to disable. Default: 2%",
+                    "price_rating_gap_tolerance": "Maximum number of consecutive intervals that can be 'smoothed out' if they differ from surrounding ratings. Small isolated rating changes are merged into the dominant neighboring block. This provides stability for automations by preventing brief rating spikes from triggering unnecessary actions. Example: 1 means a single 'normal' interval surrounded by 'high' intervals gets corrected to 'high'. Set to 0 to disable. Default: 1"
                 },
                 "submit": "↩ Save & Back"
             },

@@ -170,15 +170,19 @@
                 "submit": "↩ Spara & tillbaka"
             },
             "current_interval_price_rating": {
-                "title": "📊 Prisbetygströsklar",
-                "description": "**Konfigurera tröskelvärden för prisbetygsnivåer (låg/normal/hög) baserat på jämförelse med glidande 24-timmars genomsnitt.**",
+                "title": "📊 Prisbetyginställningar",
+                "description": "**Konfigurera tröskelvärden och stabilisering för prisbetygsnivåer (låg/normal/hög) baserat på jämförelse med glidande 24-timmars genomsnitt.**",
                 "data": {
                     "price_rating_threshold_low": "Låg tröskel",
-                    "price_rating_threshold_high": "Hög tröskel"
+                    "price_rating_threshold_high": "Hög tröskel",
+                    "price_rating_hysteresis": "Hysteres",
+                    "price_rating_gap_tolerance": "Gap-tolerans"
                 },
                 "data_description": {
-                    "price_rating_threshold_low": "Procentandel under det glidande 24-timmars genomsnittet som det aktuella priset måste vara för att kvalificera som 'lågt' betyg. Exempel: 5 betyder minst 5% under genomsnittet. Sensorer med detta betyg indikerar gynnsamma tidsfönster. Standard: 5%",
-                    "price_rating_threshold_high": "Procentandel över det glidande 24-timmars genomsnittet som det aktuella priset måste vara för att kvalificera som 'högt' betyg. Exempel: 10 betyder minst 10% över genomsnittet. Sensorer med detta betyg varnar om dyra tidsfönster. Standard: 10%"
+                    "price_rating_threshold_low": "Procentandel under det glidande 24-timmars genomsnittet som det aktuella priset måste vara för att kvalificera som 'lågt' betyg. Exempel: -10 betyder minst 10% under genomsnittet. Sensorer med detta betyg indikerar gynnsamma tidsfönster. Standard: -10%",
+                    "price_rating_threshold_high": "Procentandel över det glidande 24-timmars genomsnittet som det aktuella priset måste vara för att kvalificera som 'högt' betyg. Exempel: 10 betyder minst 10% över genomsnittet. Sensorer med detta betyg varnar om dyra tidsfönster. Standard: 10%",
+                    "price_rating_hysteresis": "Procentband runt tröskelvärden för att undvika snabba tillståndsändringar. När betyget redan är LÅGT måste priset stiga över (tröskel + hysteres) för att byta till NORMAL. Likaså kräver HÖGT att priset faller under (tröskel - hysteres) för att lämna tillståndet. Detta ger stabilitet för automatiseringar som reagerar på betygsändringar. Sätt till 0 för att inaktivera. Standard: 2%",
+                    "price_rating_gap_tolerance": "Maximalt antal på varandra följande intervaller som kan 'jämnas ut' om de avviker från omgivande betyg. Små isolerade betygsändringar sammanfogas med det dominerande grannblocket. Detta ger stabilitet för automatiseringar genom att förhindra att korta betygstoppar utlöser onödiga åtgärder. Exempel: 1 betyder att ett enstaka 'normal'-intervall omgivet av 'hög'-intervaller korrigeras till 'hög'. Sätt till 0 för att inaktivera. Standard: 1"
                 },
                 "submit": "↩ Spara & tillbaka"
             },

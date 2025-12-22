@@ -28,6 +28,8 @@ from custom_components.tibber_prices.const import (
     CONF_PEAK_PRICE_MIN_DISTANCE_FROM_AVG,
     CONF_PEAK_PRICE_MIN_LEVEL,
     CONF_PEAK_PRICE_MIN_PERIOD_LENGTH,
+    CONF_PRICE_RATING_GAP_TOLERANCE,
+    CONF_PRICE_RATING_HYSTERESIS,
     CONF_PRICE_RATING_THRESHOLD_HIGH,
     CONF_PRICE_RATING_THRESHOLD_LOW,
     CONF_PRICE_TREND_THRESHOLD_FALLING,
@@ -56,6 +58,8 @@ from custom_components.tibber_prices.const import (
     DEFAULT_PEAK_PRICE_MIN_DISTANCE_FROM_AVG,
     DEFAULT_PEAK_PRICE_MIN_LEVEL,
     DEFAULT_PEAK_PRICE_MIN_PERIOD_LENGTH,
+    DEFAULT_PRICE_RATING_GAP_TOLERANCE,
+    DEFAULT_PRICE_RATING_HYSTERESIS,
     DEFAULT_PRICE_RATING_THRESHOLD_HIGH,
     DEFAULT_PRICE_RATING_THRESHOLD_LOW,
     DEFAULT_PRICE_TREND_THRESHOLD_FALLING,
@@ -73,6 +77,8 @@ from custom_components.tibber_prices.const import (
     MAX_GAP_COUNT,
     MAX_MIN_PERIOD_LENGTH,
     MAX_MIN_PERIODS,
+    MAX_PRICE_RATING_GAP_TOLERANCE,
+    MAX_PRICE_RATING_HYSTERESIS,
     MAX_PRICE_RATING_THRESHOLD_HIGH,
     MAX_PRICE_RATING_THRESHOLD_LOW,
     MAX_PRICE_TREND_FALLING,
@@ -83,6 +89,8 @@ from custom_components.tibber_prices.const import (
     MAX_VOLATILITY_THRESHOLD_VERY_HIGH,
     MIN_GAP_COUNT,
     MIN_PERIOD_LENGTH,
+    MIN_PRICE_RATING_GAP_TOLERANCE,
+    MIN_PRICE_RATING_HYSTERESIS,
     MIN_PRICE_RATING_THRESHOLD_HIGH,
     MIN_PRICE_RATING_THRESHOLD_LOW,
     MIN_PRICE_TREND_FALLING,
@@ -257,7 +265,7 @@ def get_display_settings_schema(options: Mapping[str, Any], currency_code: str |
 
 
 def get_price_rating_schema(options: Mapping[str, Any]) -> vol.Schema:
-    """Return schema for price rating thresholds configuration."""
+    """Return schema for price rating configuration (thresholds and stabilization)."""
     return vol.Schema(
         {
             vol.Optional(
@@ -290,6 +298,39 @@ def get_price_rating_schema(options: Mapping[str, Any]) -> vol.Schema:
                     min=MIN_PRICE_RATING_THRESHOLD_HIGH,
                     max=MAX_PRICE_RATING_THRESHOLD_HIGH,
                     unit_of_measurement="%",
+                    step=1,
+                    mode=NumberSelectorMode.SLIDER,
+                ),
+            ),
+            vol.Optional(
+                CONF_PRICE_RATING_HYSTERESIS,
+                default=float(
+                    options.get(
+                        CONF_PRICE_RATING_HYSTERESIS,
+                        DEFAULT_PRICE_RATING_HYSTERESIS,
+                    )
+                ),
+            ): NumberSelector(
+                NumberSelectorConfig(
+                    min=MIN_PRICE_RATING_HYSTERESIS,
+                    max=MAX_PRICE_RATING_HYSTERESIS,
+                    unit_of_measurement="%",
+                    step=0.5,
+                    mode=NumberSelectorMode.SLIDER,
+                ),
+            ),
+            vol.Optional(
+                CONF_PRICE_RATING_GAP_TOLERANCE,
+                default=int(
+                    options.get(
+                        CONF_PRICE_RATING_GAP_TOLERANCE,
+                        DEFAULT_PRICE_RATING_GAP_TOLERANCE,
+                    )
+                ),
+            ): NumberSelector(
+                NumberSelectorConfig(
+                    min=MIN_PRICE_RATING_GAP_TOLERANCE,
+                    max=MAX_PRICE_RATING_GAP_TOLERANCE,
                     step=1,
                     mode=NumberSelectorMode.SLIDER,
                 ),

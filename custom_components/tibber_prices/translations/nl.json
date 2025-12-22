@@ -170,33 +170,37 @@
                 "submit": "↩ Opslaan & Terug"
             },
             "current_interval_price_rating": {
-                "title": "📊 Prijsbeoordeling Drempelwaarden",
-                "description": "**Configureer drempelwaarden voor prijsbeoordelingsniveaus (laag/normaal/hoog) gebaseerd op vergelijking met het voortschrijdende 24-uurs gemiddelde.**",
+                "title": "📊 Instellingen Prijsbeoordeling",
+                "description": "**Configureer drempelwaarden en stabilisatie voor prijsbeoordelingsniveaus (laag/normaal/hoog) gebaseerd op vergelijking met het voortschrijdende 24-uurs gemiddelde.**",
                 "data": {
                     "price_rating_threshold_low": "Lage Drempel",
-                    "price_rating_threshold_high": "Hoge Drempel"
+                    "price_rating_threshold_high": "Hoge Drempel",
+                    "price_rating_hysteresis": "Hysterese",
+                    "price_rating_gap_tolerance": "Gap Tolerantie"
                 },
                 "data_description": {
-                    "price_rating_threshold_low": "Percentage onder het voortschrijdende 24-uurs gemiddelde dat de huidige prijs moet zijn om te kwalificeren als 'laag' beoordelingsniveau. Voorbeeld: 5 betekent minimaal 5% onder gemiddelde. Sensoren met deze beoordeling geven gunstige tijdvensters aan. Standaard: 5%",
-                    "price_rating_threshold_high": "Percentage boven het voortschrijdende 24-uurs gemiddelde dat de huidige prijs moet zijn om te kwalificeren als 'hoog' beoordelingsniveau. Voorbeeld: 10 betekent minimaal 10% boven gemiddelde. Sensoren met deze beoordeling waarschuwen voor dure tijdvensters. Standaard: 10%"
+                    "price_rating_threshold_low": "Percentage onder het voortschrijdende 24-uurs gemiddelde dat de huidige prijs moet zijn om te kwalificeren als 'laag' beoordelingsniveau. Voorbeeld: -10 betekent minimaal 10% onder gemiddelde. Sensoren met deze beoordeling geven gunstige tijdvensters aan. Standaard: -10%",
+                    "price_rating_threshold_high": "Percentage boven het voortschrijdende 24-uurs gemiddelde dat de huidige prijs moet zijn om te kwalificeren als 'hoog' beoordelingsniveau. Voorbeeld: 10 betekent minimaal 10% boven gemiddelde. Sensoren met deze beoordeling waarschuwen voor dure tijdvensters. Standaard: 10%",
+                    "price_rating_hysteresis": "Percentageband rond drempelwaarden om snelle toestandswijzigingen te voorkomen. Wanneer de beoordeling al LAAG is, moet de prijs boven (drempel + hysterese) stijgen om naar NORMAAL te wisselen. Evenzo vereist HOOG dat de prijs onder (drempel - hysterese) daalt om de toestand te verlaten. Dit zorgt voor stabiliteit bij automatiseringen die reageren op beoordelingswijzigingen. Stel in op 0 om uit te schakelen. Standaard: 2%",
+                    "price_rating_gap_tolerance": "Maximaal aantal opeenvolgende intervallen dat 'gladgestreken' kan worden als ze afwijken van omringende beoordelingen. Kleine geïsoleerde beoordelingswijzigingen worden samengevoegd met het dominante naburige blok. Dit zorgt voor stabiliteit bij automatiseringen door te voorkomen dat korte beoordelingspieken onnodige acties activeren. Voorbeeld: 1 betekent dat een enkel 'normaal'-interval omringd door 'hoog'-intervallen gecorrigeerd wordt naar 'hoog'. Stel in op 0 om uit te schakelen. Standaard: 1"
                 },
                 "submit": "↩ Opslaan & Terug"
             },
             "best_price": {
-                "title": "💚 Best Price Period Settings",
-                "description": "**Configure settings for the Best Price Period binary sensor. This sensor is active during periods with the lowest electricity prices.**\n\n---",
+                "title": "💚 Beste Prijs Periode Instellingen",
+                "description": "**Configureer instellingen voor de Beste Prijs Periode binaire sensor. Deze sensor is actief tijdens periodes met de laagste elektriciteitsprijzen.**\n\n---",
                 "sections": {
                     "period_settings": {
-                        "name": "Period Duration & Levels",
-                        "description": "Configure how long periods should be and which price levels to include.",
+                        "name": "Periode Duur & Niveaus",
+                        "description": "Configureer hoe lang periodes moeten zijn en welke prijsniveaus moeten worden opgenomen.",
                         "data": {
-                            "best_price_min_period_length": "Minimum Period Length",
-                            "best_price_max_level": "Price Level Filter",
-                            "best_price_max_level_gap_count": "Gap Tolerance"
+                            "best_price_min_period_length": "Minimale Periode Lengte",
+                            "best_price_max_level": "Prijsniveau Filter",
+                            "best_price_max_level_gap_count": "Gat Tolerantie"
                         },
                         "data_description": {
-                            "best_price_min_period_length": "Minimum duration for a period to be considered as 'best price'. Longer periods are more practical for running appliances like dishwashers or heat pumps. Best price periods require 60 minutes minimum (vs. 30 minutes for peak price warnings) because they should provide meaningful time windows for consumption planning, not just brief opportunities.",
-                            "best_price_max_level": "Only show best price periods if they contain intervals with price levels ≤ selected value. For example, selecting '**Cheap**' means the period must have at least one '**Very cheap**' or '**Cheap**' interval. This ensures 'best price' periods are not just relatively cheap for the day, but actually cheap in absolute terms. Select '**Any**' to show best prices regardless of their absolute price level.",
+                            "best_price_min_period_length": "Minimale duur voor een periode om als 'beste prijs' te worden beschouwd. Langere periodes zijn praktischer voor apparaten zoals vaatwassers of warmtepompen. Beste prijs periodes vereisen minimaal 60 minuten (versus 30 minuten voor piekprijs waarschuwingen) omdat ze betekenisvolle tijdvensters voor verbruiksplanning moeten bieden, niet alleen korte kansen.",
+                            "best_price_max_level": "Toon alleen beste prijs periodes als ze intervallen bevatten met prijsniveaus ≤ geselecteerde waarde. Bijvoorbeeld, bij selectie '**Goedkoop**' moet de periode minimaal één '**Zeer goedkoop**' of '**Goedkoop**' interval hebben. Dit zorgt ervoor dat 'beste prijs' periodes niet alleen relatief goedkoop zijn voor de dag, maar daadwerkelijk goedkoop in absolute termen. Selecteer '**Alles**' om beste prijzen te tonen ongeacht hun absolute prijsniveau.",
                             "best_price_max_level_gap_count": "Maximaal aantal opeenvolgende intervallen toegestaan die precies één niveaustap afwijken van het vereiste niveau. Bijvoorbeeld: met '**Goedkoop**' filter en gat telling 1, wordt een reeks '**Goedkoop**, **Goedkoop**, **Normaal**, **Goedkoop**' geaccepteerd (**Normaal** is één stap boven **Goedkoop**). Dit voorkomt dat periodes worden gesplitst door incidentele niveauafwijkingen. **Let op:** Gat tolerantie vereist periodes ≥90 minuten (6 intervallen) om uitschieters effectief te detecteren. Standaard: 0 (strikte filtering, geen tolerantie)."
                         }
                     },

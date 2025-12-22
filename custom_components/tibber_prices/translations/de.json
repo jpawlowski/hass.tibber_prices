@@ -170,15 +170,19 @@
                 "submit": "↩ Speichern & Zurück"
             },
             "current_interval_price_rating": {
-                "title": "📊 Preisbewertungs-Schwellenwerte",
-                "description": "**Konfiguriere Schwellenwerte für Preisbewertungsstufen (niedrig/normal/hoch) basierend auf dem Vergleich mit dem nachlaufenden 24-Stunden-Durchschnitt.**",
+                "title": "📊 Preisbewertungs-Einstellungen",
+                "description": "**Konfiguriere Schwellenwerte und Stabilisierung für Preisbewertungsstufen (niedrig/normal/hoch) basierend auf dem Vergleich mit dem nachlaufenden 24-Stunden-Durchschnitt.**",
                 "data": {
                     "price_rating_threshold_low": "Niedrig-Schwelle",
-                    "price_rating_threshold_high": "Hoch-Schwelle"
+                    "price_rating_threshold_high": "Hoch-Schwelle",
+                    "price_rating_hysteresis": "Hysterese",
+                    "price_rating_gap_tolerance": "Lücken-Toleranz"
                 },
                 "data_description": {
-                    "price_rating_threshold_low": "Prozentwert, um wie viel der aktuelle Preis unter dem nachlaufenden 24-Stunden-Durchschnitt liegen muss, damit er als 'niedrig' bewertet wird. Beispiel: 5 bedeutet mindestens 5% unter Durchschnitt. Sensoren mit dieser Bewertung zeigen günstige Zeitfenster an. Standard: 5%",
-                    "price_rating_threshold_high": "Prozentwert, um wie viel der aktuelle Preis über dem nachlaufenden 24-Stunden-Durchschnitt liegen muss, damit er als 'hoch' bewertet wird. Beispiel: 10 bedeutet mindestens 10% über Durchschnitt. Sensoren mit dieser Bewertung warnen vor teuren Zeitfenstern. Standard: 10%"
+                    "price_rating_threshold_low": "Prozentwert, um wie viel der aktuelle Preis unter dem nachlaufenden 24-Stunden-Durchschnitt liegen muss, damit er als 'niedrig' bewertet wird. Beispiel: -10 bedeutet mindestens 10% unter Durchschnitt. Sensoren mit dieser Bewertung zeigen günstige Zeitfenster an. Standard: -10%",
+                    "price_rating_threshold_high": "Prozentwert, um wie viel der aktuelle Preis über dem nachlaufenden 24-Stunden-Durchschnitt liegen muss, damit er als 'hoch' bewertet wird. Beispiel: 10 bedeutet mindestens 10% über Durchschnitt. Sensoren mit dieser Bewertung warnen vor teuren Zeitfenstern. Standard: 10%",
+                    "price_rating_hysteresis": "Prozentband um die Schwellenwerte zur Vermeidung schneller Zustandswechsel. Wenn die Bewertung bereits NIEDRIG ist, muss der Preis über (Schwelle + Hysterese) steigen, um zu NORMAL zu wechseln. Ebenso muss bei HOCH der Preis unter (Schwelle - Hysterese) fallen, um den Zustand zu verlassen. Dies sorgt für Stabilität bei Automationen, die auf Bewertungsänderungen reagieren. Auf 0 setzen zum Deaktivieren. Standard: 2%",
+                    "price_rating_gap_tolerance": "Maximale Anzahl aufeinanderfolgender Intervalle, die 'geglättet' werden können, wenn sie sich von den umgebenden Bewertungen unterscheiden. Kleine isolierte Bewertungsänderungen werden in den dominanten Nachbarblock integriert. Dies sorgt für Stabilität bei Automationen, indem kurze Bewertungsspitzen keine unnötigen Aktionen auslösen. Beispiel: 1 bedeutet, dass ein einzelnes 'normal'-Intervall umgeben von 'hoch'-Intervallen zu 'hoch' korrigiert wird. Auf 0 setzen zum Deaktivieren. Standard: 1"
                 },
                 "submit": "↩ Speichern & Zurück"
             },
