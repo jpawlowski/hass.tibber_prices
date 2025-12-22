@@ -92,6 +92,8 @@ DEFAULT_BEST_PRICE_MIN_PERIOD_LENGTH = 60  # 60 minutes minimum period length fo
 DEFAULT_PEAK_PRICE_MIN_PERIOD_LENGTH = 30  # 30 minutes minimum period length for peak price (user-facing, minutes)
 DEFAULT_PRICE_RATING_THRESHOLD_LOW = -10  # Default rating threshold low percentage
 DEFAULT_PRICE_RATING_THRESHOLD_HIGH = 10  # Default rating threshold high percentage
+DEFAULT_PRICE_RATING_HYSTERESIS = 2.0  # Hysteresis percentage to prevent flickering at threshold boundaries
+DEFAULT_PRICE_RATING_GAP_TOLERANCE = 1  # Max consecutive intervals to smooth out (0 = disabled)
 DEFAULT_AVERAGE_SENSOR_DISPLAY = "median"  # Default: show median in state, mean in attributes
 DEFAULT_PRICE_TREND_THRESHOLD_RISING = 3  # Default trend threshold for rising prices (%)
 DEFAULT_PRICE_TREND_THRESHOLD_FALLING = -3  # Default trend threshold for falling prices (%, negative value)
