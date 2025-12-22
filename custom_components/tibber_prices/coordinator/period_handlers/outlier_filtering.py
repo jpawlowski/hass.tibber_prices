@@ -15,6 +15,7 @@ Uses statistical methods:
 from __future__ import annotations
 
 import logging
+from datetime import datetime
 from typing import NamedTuple
 
 _LOGGER = logging.getLogger(__name__)
@@ -28,6 +29,7 @@ SYMMETRY_THRESHOLD = 1.5  # Max std dev difference for symmetric spike
 RELATIVE_VOLATILITY_THRESHOLD = 2.0  # Window volatility vs context (cluster detection)
 ASYMMETRY_TAIL_WINDOW = 6  # Skip asymmetry check for last ~1.5h (6 intervals) of available data
 ZIGZAG_TAIL_WINDOW = 6  # Skip zigzag/cluster detection for last ~1.5h (6 intervals)
+EXTREMES_PROTECTION_TOLERANCE = 0.001  # Protect prices within 0.1% of daily min/max from smoothing
 
 # Module-local log indentation (each module starts at level 0)
 INDENT_L0 = ""  # All logs in this module (no indentation needed)
@@ -233,6 +235,84 @@ def _validate_spike_candidate(
     return True
 
 
+def _calculate_daily_extremes(intervals: list[dict]) -> dict[str, tuple[float, float]]:
+    """
+    Calculate daily min/max prices for each day in the interval list.
+
+    These extremes are used to protect reference prices from being smoothed.
+    The daily minimum is the reference for best_price periods, and the daily
+    maximum is the reference for peak_price periods - smoothing these would
+    break period detection.
+
+    Args:
+        intervals: List of price intervals with 'startsAt' and 'total' keys
+
+    Returns:
+        Dict mapping date strings to (min_price, max_price) tuples
+
+    """
+    daily_prices: dict[str, list[float]] = {}
+
+    for interval in intervals:
+        starts_at = interval.get("startsAt")
+        if starts_at is None:
+            continue
+
+        # Handle both datetime objects and ISO strings
+        dt = datetime.fromisoformat(starts_at) if isinstance(starts_at, str) else starts_at
+
+        date_key = dt.strftime("%Y-%m-%d")
+        price = float(interval["total"])
+        daily_prices.setdefault(date_key, []).append(price)
+
+    # Calculate min/max for each day
+    return {date_key: (min(prices), max(prices)) for date_key, prices in daily_prices.items()}
+
+
+def _is_daily_extreme(
+    interval: dict,
+    daily_extremes: dict[str, tuple[float, float]],
+    tolerance: float = EXTREMES_PROTECTION_TOLERANCE,
+) -> bool:
+    """
+    Check if an interval's price is at or very near a daily extreme.
+
+    Prices at daily extremes should never be smoothed because:
+    - Daily minimum is the reference for best_price period detection
+    - Daily maximum is the reference for peak_price period detection
+    - Smoothing these would cause periods to miss their most important intervals
+
+    Args:
+        interval: Price interval dict with 'startsAt' and 'total' keys
+        daily_extremes: Dict from _calculate_daily_extremes()
+        tolerance: Relative tolerance for matching (default 0.1%)
+
+    Returns:
+        True if the price is at or very near a daily min or max
+
+    """
+    starts_at = interval.get("startsAt")
+    if starts_at is None:
+        return False
+
+    # Handle both datetime objects and ISO strings
+    dt = datetime.fromisoformat(starts_at) if isinstance(starts_at, str) else starts_at
+
+    date_key = dt.strftime("%Y-%m-%d")
+    if date_key not in daily_extremes:
+        return False
+
+    price = float(interval["total"])
+    daily_min, daily_max = daily_extremes[date_key]
+
+    # Check if price is within tolerance of daily min or max
+    # Using relative tolerance: |price - extreme| <= extreme * tolerance
+    min_threshold = daily_min * (1 + tolerance)
+    max_threshold = daily_max * (1 - tolerance)
+
+    return price <= min_threshold or price >= max_threshold
+
+
 def filter_price_outliers(
     intervals: list[dict],
     flexibility_pct: float,
@@ -270,11 +350,30 @@ def filter_price_outliers(
     # Convert percentage to ratio once for all comparisons (e.g., 15.0 → 0.15)
     flexibility_ratio = flexibility_pct / 100
 
+    # Calculate daily extremes to protect reference prices from smoothing
+    # Daily min is the reference for best_price, daily max for peak_price
+    daily_extremes = _calculate_daily_extremes(intervals)
+    protected_count = 0
+
     result = []
     smoothed_count = 0
 
     for i, current in enumerate(intervals):
         current_price = current["total"]
+
+        # CRITICAL: Never smooth daily extremes - they are the reference prices!
+        # Smoothing the daily min would break best_price period detection,
+        # smoothing the daily max would break peak_price period detection.
+        if _is_daily_extreme(current, daily_extremes):
+            result.append(current)
+            protected_count += 1
+            _LOGGER_DETAILS.debug(
+                "%sProtected daily extreme at %s: %.2f ct/kWh (not smoothed)",
+                INDENT_L0,
+                current.get("startsAt", f"index {i}"),
+                current_price * 100,
+            )
+            continue
 
         # Get context windows (3 intervals before and after)
         context_before = intervals[max(0, i - MIN_CONTEXT_SIZE) : i]
@@ -342,13 +441,12 @@ def filter_price_outliers(
             stats["trend_slope"] * 100,
         )
 
-    if smoothed_count > 0:
+    if smoothed_count > 0 or protected_count > 0:
         _LOGGER.info(
-            "%sPrice outlier smoothing complete: %d/%d intervals smoothed (%.1f%%)",
+            "%sPrice outlier smoothing complete: %d smoothed, %d protected (daily extremes)",
             INDENT_L0,
             smoothed_count,
-            len(intervals),
-            (smoothed_count / len(intervals)) * 100,
+            protected_count,
         )
 
     return result
