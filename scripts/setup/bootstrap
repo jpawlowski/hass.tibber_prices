@@ -53,8 +53,8 @@ uv pip install --requirement requirements.txt
 ###############################################################################
 
 # HA_VERSION can be overridden from the environment, e.g.:
-#   HA_VERSION=2025.11.3 script/bootstrap
-HA_VERSION=${HA_VERSION:-"2025.11.3"}
+#   HA_VERSION=2025.12.4 script/bootstrap
+HA_VERSION=${HA_VERSION:-"2025.12.4"}
 HA_CORE_BASE_URL="https://raw.githubusercontent.com/home-assistant/core/${HA_VERSION}"
 HA_TMP_DIR="$HOME/.ha_requirements"
 
