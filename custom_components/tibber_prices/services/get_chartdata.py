@@ -223,16 +223,29 @@ def _calculate_metadata(  # noqa: PLR0912, PLR0913, PLR0915
     # Determine interval duration in minutes based on resolution
     interval_duration_minutes = 15 if resolution == "interval" else 60
 
-    # Calculate suggested yaxis bounds
-    # For subunit currency (ct, øre): integer values (floor/ceil)
-    # For base currency (€, kr): 2 decimal places precision
-    if subunit_currency:
-        yaxis_min = math.floor(combined_stats["min"]) - 1 if combined_stats else 0
-        yaxis_max = math.ceil(combined_stats["max"]) + 1 if combined_stats else 100
+    # Calculate suggested yaxis bounds with proportional padding
+    # Goal: Same visual "airiness" regardless of price range
+    # Strategy: Add padding proportional to data range (min/max spread)
+    if combined_stats:
+        data_range = combined_stats["max"] - combined_stats["min"]
+
+        # Calculate padding: ~8% of data range below min, ~15% above max
+        # These percentages match the visual spacing seen in well-scaled charts
+        padding_below = data_range * 0.08
+        padding_above = data_range * 0.15
+
+        if subunit_currency:
+            # Subunit (ct, øre): round to 1 decimal for cleaner axis labels
+            yaxis_min = round(combined_stats["min"] - padding_below, 1)
+            yaxis_max = round(combined_stats["max"] + padding_above, 1)
+        else:
+            # Base currency (€, kr): round to 2 decimals
+            yaxis_min = round(combined_stats["min"] - padding_below, 2)
+            yaxis_max = round(combined_stats["max"] + padding_above, 2)
     else:
-        # Base currency: round to 2 decimal places with padding
-        yaxis_min = round(math.floor(combined_stats["min"] * 100) / 100 - 0.01, 2) if combined_stats else 0
-        yaxis_max = round(math.ceil(combined_stats["max"] * 100) / 100 + 0.01, 2) if combined_stats else 1.0
+        # Fallback for empty data
+        yaxis_min = 0
+        yaxis_max = 100 if subunit_currency else 1.0
 
     return {
         "currency": currency_obj,
