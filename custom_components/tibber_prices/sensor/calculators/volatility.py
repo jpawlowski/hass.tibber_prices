@@ -11,7 +11,7 @@ from custom_components.tibber_prices.sensor.attributes import (
     get_prices_for_volatility,
 )
 from custom_components.tibber_prices.utils.average import calculate_mean
-from custom_components.tibber_prices.utils.price import calculate_volatility_level
+from custom_components.tibber_prices.utils.price import calculate_volatility_with_cv
 
 from .base import TibberPricesBaseCalculator
 
@@ -65,7 +65,9 @@ class TibberPricesVolatilityCalculator(TibberPricesBaseCalculator):
 
         # Get prices based on volatility type
         prices_to_analyze = get_prices_for_volatility(
-            volatility_type, self.coordinator.data, time=self.coordinator.time
+            volatility_type,
+            self.coordinator.data,
+            time=self.coordinator.time,
         )
 
         if not prices_to_analyze:
@@ -82,13 +84,14 @@ class TibberPricesVolatilityCalculator(TibberPricesBaseCalculator):
         factor = get_display_unit_factor(self.config_entry)
         spread_display = spread * factor
 
-        # Calculate volatility level with custom thresholds (pass price list, not spread)
-        volatility = calculate_volatility_level(prices_to_analyze, **thresholds)
+        # Calculate volatility level AND coefficient of variation
+        volatility, cv = calculate_volatility_with_cv(prices_to_analyze, **thresholds)
 
         # Store attributes for this sensor
         self._last_volatility_attributes = {
             "price_spread": round(spread_display, 2),
             "price_volatility": volatility,
+            "coefficient_of_variation": round(cv, 2) if cv is not None else None,
             "price_min": round(price_min * factor, 2),
             "price_max": round(price_max * factor, 2),
             "price_mean": round(price_mean * factor, 2),  # Mean used for volatility calculation

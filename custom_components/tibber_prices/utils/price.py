@@ -47,6 +47,91 @@ VOLATILITY_FACTOR_NORMAL = 1.0  # Moderate volatility → baseline
 VOLATILITY_FACTOR_INSENSITIVE = 1.4  # High volatility → noise filtering
 
 
+def calculate_coefficient_of_variation(prices: list[float]) -> float | None:
+    """
+    Calculate coefficient of variation (CV) from price list.
+
+    CV = (std_dev / mean) * 100, expressed as percentage.
+    This is a standardized measure of volatility that works across different
+    price levels and period lengths.
+
+    Used by:
+    - Volatility sensors (via calculate_volatility_with_cv)
+    - Outlier filtering (adaptive confidence level)
+    - Period statistics
+
+    Args:
+        prices: List of price values (in any unit)
+
+    Returns:
+        CV as percentage (e.g., 15.0 for 15%), or None if calculation not possible
+        (fewer than 2 prices or mean is zero)
+
+    Examples:
+        - CV ~5-10%: Very stable prices
+        - CV ~15-20%: Moderate variation
+        - CV ~30-50%: High volatility
+        - CV >50%: Extreme volatility
+
+    """
+    if len(prices) < MIN_PRICES_FOR_VOLATILITY:
+        return None
+
+    mean = statistics.mean(prices)
+    if mean == 0:
+        return None
+
+    std_dev = statistics.stdev(prices)
+    # Use abs(mean) for negative prices (Norway/Germany electricity markets)
+    return (std_dev / abs(mean)) * 100
+
+
+def calculate_volatility_with_cv(
+    prices: list[float],
+    threshold_moderate: float | None = None,
+    threshold_high: float | None = None,
+    threshold_very_high: float | None = None,
+) -> tuple[str, float | None]:
+    """
+    Calculate volatility level AND coefficient of variation from price list.
+
+    Returns both the level string (for sensor state) and the numeric CV value
+    (for sensor attributes), allowing users to see the exact volatility percentage.
+
+    Args:
+        prices: List of price values (in any unit)
+        threshold_moderate: Custom threshold for MODERATE level
+        threshold_high: Custom threshold for HIGH level
+        threshold_very_high: Custom threshold for VERY_HIGH level
+
+    Returns:
+        Tuple of (level, cv):
+        - level: "LOW", "MODERATE", "HIGH", or "VERY_HIGH" (uppercase)
+        - cv: Coefficient of variation as percentage (e.g., 15.0), or None if not calculable
+
+    """
+    cv = calculate_coefficient_of_variation(prices)
+    if cv is None:
+        return VOLATILITY_LOW, None
+
+    # Use provided thresholds or fall back to constants
+    t_moderate = threshold_moderate if threshold_moderate is not None else DEFAULT_VOLATILITY_THRESHOLD_MODERATE
+    t_high = threshold_high if threshold_high is not None else DEFAULT_VOLATILITY_THRESHOLD_HIGH
+    t_very_high = threshold_very_high if threshold_very_high is not None else DEFAULT_VOLATILITY_THRESHOLD_VERY_HIGH
+
+    # Classify based on thresholds
+    if cv < t_moderate:
+        level = VOLATILITY_LOW
+    elif cv < t_high:
+        level = VOLATILITY_MODERATE
+    elif cv < t_very_high:
+        level = VOLATILITY_HIGH
+    else:
+        level = VOLATILITY_VERY_HIGH
+
+    return level, cv
+
+
 def calculate_volatility_level(
     prices: list[float],
     threshold_moderate: float | None = None,
@@ -81,34 +166,8 @@ def calculate_volatility_level(
         Works identically for short periods (2-3 intervals) and long periods (96 intervals/day).
 
     """
-    # Need at least 2 values for standard deviation
-    if len(prices) < MIN_PRICES_FOR_VOLATILITY:
-        return VOLATILITY_LOW
-
-    # Use provided thresholds or fall back to constants
-    t_moderate = threshold_moderate if threshold_moderate is not None else DEFAULT_VOLATILITY_THRESHOLD_MODERATE
-    t_high = threshold_high if threshold_high is not None else DEFAULT_VOLATILITY_THRESHOLD_HIGH
-    t_very_high = threshold_very_high if threshold_very_high is not None else DEFAULT_VOLATILITY_THRESHOLD_VERY_HIGH
-
-    # Calculate coefficient of variation
-    # CRITICAL: Use absolute value of mean for negative prices (Norway/Germany)
-    # Negative electricity prices are valid and should have measurable volatility
-    mean = statistics.mean(prices)
-    if mean == 0:
-        # Division by zero case (all prices exactly zero)
-        return VOLATILITY_LOW
-
-    std_dev = statistics.stdev(prices)
-    coefficient_of_variation = (std_dev / abs(mean)) * 100  # As percentage, use abs(mean)
-
-    # Classify based on thresholds
-    if coefficient_of_variation < t_moderate:
-        return VOLATILITY_LOW
-    if coefficient_of_variation < t_high:
-        return VOLATILITY_MODERATE
-    if coefficient_of_variation < t_very_high:
-        return VOLATILITY_HIGH
-    return VOLATILITY_VERY_HIGH
+    level, _cv = calculate_volatility_with_cv(prices, threshold_moderate, threshold_high, threshold_very_high)
+    return level
 
 
 def calculate_trailing_average_for_interval(
