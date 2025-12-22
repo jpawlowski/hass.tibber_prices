@@ -18,18 +18,31 @@ import logging
 from datetime import datetime
 from typing import NamedTuple
 
+from custom_components.tibber_prices.utils.price import calculate_coefficient_of_variation
+
 _LOGGER = logging.getLogger(__name__)
 _LOGGER_DETAILS = logging.getLogger(__name__ + ".details")
 
 # Outlier filtering constants
 MIN_CONTEXT_SIZE = 3  # Minimum intervals needed before/after for analysis
-CONFIDENCE_LEVEL = 2.0  # Standard deviations for 95% confidence interval
 VOLATILITY_THRESHOLD = 0.05  # 5% max relative std dev for zigzag detection
 SYMMETRY_THRESHOLD = 1.5  # Max std dev difference for symmetric spike
 RELATIVE_VOLATILITY_THRESHOLD = 2.0  # Window volatility vs context (cluster detection)
 ASYMMETRY_TAIL_WINDOW = 6  # Skip asymmetry check for last ~1.5h (6 intervals) of available data
 ZIGZAG_TAIL_WINDOW = 6  # Skip zigzag/cluster detection for last ~1.5h (6 intervals)
 EXTREMES_PROTECTION_TOLERANCE = 0.001  # Protect prices within 0.1% of daily min/max from smoothing
+
+# Adaptive confidence level constants
+# Uses coefficient of variation (CV) from utils/price.py for consistency with volatility sensors
+# On flat days (low CV), we're more conservative (higher confidence = fewer smoothed)
+# On volatile days (high CV), we're more aggressive (lower confidence = more smoothed)
+CONFIDENCE_LEVEL_MIN = 1.5  # Minimum confidence (volatile days: smooth more aggressively)
+CONFIDENCE_LEVEL_MAX = 2.5  # Maximum confidence (flat days: smooth more conservatively)
+CONFIDENCE_LEVEL_DEFAULT = 2.0  # Default: 95% confidence interval (2 std devs)
+# CV thresholds for adaptive confidence (align with volatility sensor defaults)
+# These are in percentage points (e.g., 10.0 = 10% CV)
+DAILY_CV_LOW = 10.0  # ≤10% CV = flat day (use max confidence)
+DAILY_CV_HIGH = 30.0  # ≥30% CV = volatile day (use min confidence)
 
 # Module-local log indentation (each module starts at level 0)
 INDENT_L0 = ""  # All logs in this module (no indentation needed)
@@ -269,6 +282,88 @@ def _calculate_daily_extremes(intervals: list[dict]) -> dict[str, tuple[float, f
     return {date_key: (min(prices), max(prices)) for date_key, prices in daily_prices.items()}
 
 
+def _calculate_daily_cv(intervals: list[dict]) -> dict[str, float]:
+    """
+    Calculate daily coefficient of variation (CV) for each day.
+
+    Uses the same CV calculation as volatility sensors for consistency.
+    CV = (std_dev / mean) * 100, expressed as percentage.
+
+    Used to adapt the confidence level for outlier detection:
+    - Flat days (low CV): Higher confidence → fewer false positives
+    - Volatile days (high CV): Lower confidence → catch more real outliers
+
+    Args:
+        intervals: List of price intervals with 'startsAt' and 'total' keys
+
+    Returns:
+        Dict mapping date strings to CV percentage (e.g., 15.0 for 15% CV)
+
+    """
+    daily_prices: dict[str, list[float]] = {}
+
+    for interval in intervals:
+        starts_at = interval.get("startsAt")
+        if starts_at is None:
+            continue
+
+        dt = datetime.fromisoformat(starts_at) if isinstance(starts_at, str) else starts_at
+        date_key = dt.strftime("%Y-%m-%d")
+        price = float(interval["total"])
+        daily_prices.setdefault(date_key, []).append(price)
+
+    # Calculate CV using the shared function from utils/price.py
+    result = {}
+    for date_key, prices in daily_prices.items():
+        cv = calculate_coefficient_of_variation(prices)
+        result[date_key] = cv if cv is not None else 0.0
+    return result
+
+
+def _get_adaptive_confidence_level(
+    interval: dict,
+    daily_cv: dict[str, float],
+) -> float:
+    """
+    Get adaptive confidence level based on daily coefficient of variation (CV).
+
+    Maps daily CV to confidence level:
+    - Low CV (≤10%): High confidence (2.5) → conservative, fewer smoothed
+    - High CV (≥30%): Low confidence (1.5) → aggressive, more smoothed
+    - Between: Linear interpolation
+
+    Uses the same CV calculation as volatility sensors for consistency.
+
+    Args:
+        interval: Price interval dict with 'startsAt' key
+        daily_cv: Dict from _calculate_daily_cv()
+
+    Returns:
+        Confidence level multiplier for std_dev threshold
+
+    """
+    starts_at = interval.get("startsAt")
+    if starts_at is None:
+        return CONFIDENCE_LEVEL_DEFAULT
+
+    dt = datetime.fromisoformat(starts_at) if isinstance(starts_at, str) else starts_at
+    date_key = dt.strftime("%Y-%m-%d")
+
+    cv = daily_cv.get(date_key, 0.0)
+
+    # Linear interpolation between LOW and HIGH CV
+    # Low CV → high confidence (conservative)
+    # High CV → low confidence (aggressive)
+    if cv <= DAILY_CV_LOW:
+        return CONFIDENCE_LEVEL_MAX
+    if cv >= DAILY_CV_HIGH:
+        return CONFIDENCE_LEVEL_MIN
+
+    # Linear interpolation: as CV increases, confidence decreases
+    ratio = (cv - DAILY_CV_LOW) / (DAILY_CV_HIGH - DAILY_CV_LOW)
+    return CONFIDENCE_LEVEL_MAX - (ratio * (CONFIDENCE_LEVEL_MAX - CONFIDENCE_LEVEL_MIN))
+
+
 def _is_daily_extreme(
     interval: dict,
     daily_extremes: dict[str, tuple[float, float]],
@@ -340,19 +435,28 @@ def filter_price_outliers(
         Intervals with smoothed prices (marked with _smoothed flag)
 
     """
-    _LOGGER.info(
-        "%sSmoothing price outliers: %d intervals, flex=%.1f%%",
-        INDENT_L0,
-        len(intervals),
-        flexibility_pct,
-    )
-
     # Convert percentage to ratio once for all comparisons (e.g., 15.0 → 0.15)
     flexibility_ratio = flexibility_pct / 100
 
     # Calculate daily extremes to protect reference prices from smoothing
     # Daily min is the reference for best_price, daily max for peak_price
     daily_extremes = _calculate_daily_extremes(intervals)
+
+    # Calculate daily coefficient of variation (CV) for adaptive confidence levels
+    # Uses same CV calculation as volatility sensors for consistency
+    # Flat days → conservative smoothing, volatile days → aggressive smoothing
+    daily_cv = _calculate_daily_cv(intervals)
+
+    # Log CV info for debugging (CV is in percentage points, e.g., 15.0 = 15%)
+    cv_info = ", ".join(f"{date}: {cv:.1f}%" for date, cv in sorted(daily_cv.items()))
+    _LOGGER.info(
+        "%sSmoothing price outliers: %d intervals, flex=%.1f%%, daily CV: %s",
+        INDENT_L0,
+        len(intervals),
+        flexibility_pct,
+        cv_info,
+    )
+
     protected_count = 0
 
     result = []
@@ -396,8 +500,11 @@ def filter_price_outliers(
         # Calculate how far current price deviates from expected
         residual = abs(current_price - expected_price)
 
-        # Tolerance based on statistical confidence (2 std dev = 95% confidence)
-        tolerance = stats["std_dev"] * CONFIDENCE_LEVEL
+        # Adaptive confidence level based on daily CV:
+        # - Flat days (low CV): higher confidence (2.5) → fewer false positives
+        # - Volatile days (high CV): lower confidence (1.5) → catch more real spikes
+        confidence_level = _get_adaptive_confidence_level(current, daily_cv)
+        tolerance = stats["std_dev"] * confidence_level
 
         # Not a spike if within tolerance
         if residual <= tolerance:
@@ -431,14 +538,14 @@ def filter_price_outliers(
         smoothed_count += 1
 
         _LOGGER_DETAILS.debug(
-            "%sSmoothed spike at %s: %.2f → %.2f ct/kWh (residual: %.2f, tolerance: %.2f, trend_slope: %.4f)",
+            "%sSmoothed spike at %s: %.2f → %.2f ct/kWh (residual: %.2f, tolerance: %.2f, confidence: %.2f)",
             INDENT_L0,
             current.get("startsAt", f"index {i}"),
             current_price * 100,
             expected_price * 100,
             residual * 100,
             tolerance * 100,
-            stats["trend_slope"] * 100,
+            confidence_level,
         )
 
     if smoothed_count > 0 or protected_count > 0:
