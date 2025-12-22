@@ -16,8 +16,10 @@ from .period_building import (
     add_interval_ends,
     build_periods,
     calculate_reference_prices,
+    extend_periods_across_midnight,
     filter_periods_by_end_date,
     filter_periods_by_min_length,
+    filter_superseded_periods,
     split_intervals_by_day,
 )
 from .period_statistics import (
@@ -188,7 +190,7 @@ def calculate_periods(
     # Sensors filter further for today+tomorrow, services can access all cached periods
     raw_periods = filter_periods_by_end_date(raw_periods, time=time)
 
-    # Step 8: Extract lightweight period summaries (no full price data)
+    # Step 7: Extract lightweight period summaries (no full price data)
     # Note: Periods are filtered by end date to keep yesterday/today/tomorrow.
     # This preserves periods that started day-before-yesterday but end yesterday.
     thresholds = TibberPricesThresholdConfig(
@@ -205,6 +207,26 @@ def calculate_periods(
         price_context,
         thresholds,
         time=time,
+    )
+
+    # Step 8: Cross-day extension for late-night periods
+    # If a best-price period ends near midnight and tomorrow has continued low prices,
+    # extend the period across midnight to give users the full cheap window
+    period_summaries = extend_periods_across_midnight(
+        period_summaries,
+        all_prices_sorted,
+        price_context,
+        time=time,
+        reverse_sort=reverse_sort,
+    )
+
+    # Step 9: Filter superseded periods
+    # When tomorrow data is available, late-night today periods that were found via
+    # relaxation may be obsolete if tomorrow has significantly better alternatives
+    period_summaries = filter_superseded_periods(
+        period_summaries,
+        time=time,
+        reverse_sort=reverse_sort,
     )
 
     return {
