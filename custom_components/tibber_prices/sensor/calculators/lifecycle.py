@@ -2,11 +2,8 @@
 
 from __future__ import annotations
 
-from datetime import timedelta
-from typing import TYPE_CHECKING
-
-if TYPE_CHECKING:
-    from datetime import datetime
+from datetime import datetime, timedelta
+from typing import Any
 
 from custom_components.tibber_prices.coordinator.constants import UPDATE_INTERVAL
 
@@ -82,13 +79,26 @@ class TibberPricesLifecycleCalculator(TibberPricesBaseCalculator):
         # Priority 6: Default - using cached data
         return "cached"
 
-    def get_cache_age_minutes(self) -> int | None:
-        """Calculate how many minutes old the cached data is."""
-        coordinator = self.coordinator
-        if not coordinator._last_price_update:  # noqa: SLF001 - Internal state access for lifecycle tracking
+    def get_sensor_fetch_age_minutes(self) -> int | None:
+        """
+        Calculate how many minutes ago sensor data was last fetched.
+
+        Uses the Pool's last_sensor_fetch as the source of truth.
+        This only counts API fetches for sensor data (protected range),
+        not service-triggered fetches for chart data.
+
+        Returns:
+            Minutes since last sensor fetch, or None if no fetch recorded.
+
+        """
+        pool_stats = self._get_pool_stats()
+        if not pool_stats or not pool_stats.get("last_sensor_fetch"):
             return None
 
-        age = coordinator.time.now() - coordinator._last_price_update  # noqa: SLF001
+        last_fetch = pool_stats["last_sensor_fetch"]
+        # Parse ISO timestamp
+        last_fetch_dt = datetime.fromisoformat(last_fetch)
+        age = self.coordinator.time.now() - last_fetch_dt
         return int(age.total_seconds() / 60)
 
     def get_next_api_poll_time(self) -> datetime | None:
@@ -188,108 +198,6 @@ class TibberPricesLifecycleCalculator(TibberPricesBaseCalculator):
         # Next midnight
         return now_local.replace(hour=0, minute=0, second=0, microsecond=0) + timedelta(days=1)
 
-    def is_data_available(self, day_offset: int) -> bool:
-        """
-        Check if data is available for a specific day.
-
-        Args:
-            day_offset: Day offset (-1=yesterday, 0=today, 1=tomorrow)
-
-        Returns:
-            True if data exists and is not empty
-
-        """
-        if not self.has_data():
-            return False
-
-        day_data = self.get_intervals(day_offset)
-        return bool(day_data)
-
-    def get_data_completeness_status(self) -> str:
-        """
-        Get human-readable data completeness status.
-
-        Returns:
-            'complete': All data (yesterday/today/tomorrow) available
-            'missing_tomorrow': Only yesterday and today available
-            'missing_yesterday': Only today and tomorrow available
-            'partial': Only today or some other partial combination
-            'no_data': No data available at all
-
-        """
-        yesterday_available = self.is_data_available(-1)
-        today_available = self.is_data_available(0)
-        tomorrow_available = self.is_data_available(1)
-
-        if yesterday_available and today_available and tomorrow_available:
-            return "complete"
-        if yesterday_available and today_available and not tomorrow_available:
-            return "missing_tomorrow"
-        if not yesterday_available and today_available and tomorrow_available:
-            return "missing_yesterday"
-        if today_available:
-            return "partial"
-        return "no_data"
-
-    def get_cache_validity_status(self) -> str:
-        """
-        Get cache validity status.
-
-        Returns:
-            "valid": Cache is current and matches today's date
-            "stale": Cache exists but is outdated
-            "date_mismatch": Cache is from a different day
-            "empty": No cache data
-
-        """
-        coordinator = self.coordinator
-        # Check if coordinator has data (transformed, ready for entities)
-        if not self.has_data():
-            return "empty"
-
-        # Check if we have price update timestamp
-        if not coordinator._last_price_update:  # noqa: SLF001 - Internal state access for lifecycle tracking
-            return "empty"
-
-        current_time = coordinator.time.now()
-        current_local_date = coordinator.time.as_local(current_time).date()
-        last_update_local_date = coordinator.time.as_local(coordinator._last_price_update).date()  # noqa: SLF001
-
-        if current_local_date != last_update_local_date:
-            return "date_mismatch"
-
-        # Check if cache is stale (older than expected)
-        # CRITICAL: After midnight turnover, _last_price_update is set to 00:00
-        # without new API data. The data is still valid (rotated yesterday→today).
-        #
-        # Cache is considered "valid" if EITHER:
-        # 1. Within normal update interval expectations (age ≤ 2 hours), OR
-        # 2. Coordinator update cycle ran recently (within last 30 minutes)
-        #
-        # Why check _last_coordinator_update?
-        # - After midnight turnover, _last_price_update stays at 00:00
-        # - But coordinator polls every 15 minutes and validates cache
-        # - If coordinator ran recently, cache was checked and deemed valid
-        # - This prevents false "stale" status when using rotated data
-
-        age = current_time - coordinator._last_price_update  # noqa: SLF001
-
-        # If cache age is within normal expectations (≤2 hours), it's valid
-        if age <= timedelta(hours=2):
-            return "valid"
-
-        # Cache is older than 2 hours - check if coordinator validated it recently
-        # If coordinator ran within last 30 minutes, cache is considered current
-        # (even if _last_price_update is older, e.g., from midnight turnover)
-        if coordinator._last_coordinator_update:  # noqa: SLF001 - Internal state access
-            time_since_coordinator_check = current_time - coordinator._last_coordinator_update  # noqa: SLF001
-            if time_since_coordinator_check <= timedelta(minutes=30):
-                # Coordinator validated cache recently - it's current
-                return "valid"
-
-        # Cache is old AND coordinator hasn't validated recently - stale
-        return "stale"
-
     def get_api_calls_today(self) -> int:
         """Get the number of API calls made today."""
         coordinator = self.coordinator
@@ -300,3 +208,57 @@ class TibberPricesLifecycleCalculator(TibberPricesBaseCalculator):
             return 0
 
         return coordinator._api_calls_today  # noqa: SLF001
+
+    def has_tomorrow_data(self) -> bool:
+        """
+        Check if tomorrow's price data is available.
+
+        Returns:
+            True if tomorrow data exists in the pool.
+
+        """
+        return not self.coordinator._needs_tomorrow_data()  # noqa: SLF001
+
+    def get_pool_stats(self) -> dict[str, Any] | None:
+        """
+        Get interval pool statistics.
+
+        Returns:
+            Dict with pool stats or None if pool not available.
+            Contains:
+            - Sensor intervals (protected range):
+              - sensor_intervals_count: Intervals in protected range
+              - sensor_intervals_expected: Expected count (usually 384)
+              - sensor_intervals_has_gaps: True if gaps exist
+            - Cache statistics:
+              - cache_intervals_total: Total intervals in cache
+              - cache_intervals_limit: Maximum cache size
+              - cache_fill_percent: How full the cache is (%)
+              - cache_intervals_extra: Intervals outside protected range
+            - Timestamps:
+              - last_sensor_fetch: When sensor data was last fetched
+              - cache_oldest_interval: Oldest interval in cache
+              - cache_newest_interval: Newest interval in cache
+            - Metadata:
+              - fetch_groups_count: Number of API fetch batches stored
+
+        """
+        return self._get_pool_stats()
+
+    def _get_pool_stats(self) -> dict[str, Any] | None:
+        """
+        Get pool stats from coordinator.
+
+        Returns:
+            Pool statistics dict or None.
+
+        """
+        coordinator = self.coordinator
+        # Access the pool via the price data manager
+        if hasattr(coordinator, "_price_data_manager"):
+            price_data_manager = coordinator._price_data_manager  # noqa: SLF001
+            if hasattr(price_data_manager, "_interval_pool"):
+                pool = price_data_manager._interval_pool  # noqa: SLF001
+                if pool is not None:
+                    return pool.get_pool_stats()
+        return None

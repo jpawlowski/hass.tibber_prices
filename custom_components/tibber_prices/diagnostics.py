@@ -70,7 +70,7 @@ async def async_get_config_entry_diagnostics(
         },
         "cache_status": {
             "user_data_cached": coordinator._cached_user_data is not None,  # noqa: SLF001
-            "price_data_cached": coordinator._cached_price_data is not None,  # noqa: SLF001
+            "has_price_data": coordinator.data is not None and "priceInfo" in (coordinator.data or {}),
             "transformer_cache_valid": coordinator._data_transformer._cached_transformed_data is not None,  # noqa: SLF001
             "period_calculator_cache_valid": coordinator._period_calculator._cached_periods is not None,  # noqa: SLF001
         },
