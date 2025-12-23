@@ -1,4 +1,28 @@
-"""Cache management for coordinator module."""
+"""
+Cache management for coordinator persistent storage.
+
+This module handles persistent storage for the coordinator, storing:
+- user_data: Account/home metadata (required, refreshed daily)
+- Timestamps for cache validation and lifecycle tracking
+
+**Storage Architecture (as of v0.25.0):**
+
+There are TWO persistent storage files per config entry:
+
+1. `tibber_prices.{entry_id}` (this module)
+   - user_data: Account info, home metadata, timezone, currency
+   - Timestamps: last_user_update, last_midnight_check
+
+2. `tibber_prices.interval_pool.{entry_id}` (interval_pool/storage.py)
+   - Intervals: Deduplicated quarter-hourly price data (source of truth)
+   - Fetch metadata: When each interval was fetched
+   - Protected range: Which intervals to keep during cleanup
+
+**Single Source of Truth:**
+Price intervals are ONLY stored in IntervalPool. This cache stores only
+user metadata and timestamps. The IntervalPool handles all price data
+fetching, caching, and persistence independently.
+"""
 
 from __future__ import annotations
 
@@ -16,11 +40,9 @@ _LOGGER = logging.getLogger(__name__)
 
 
 class TibberPricesCacheData(NamedTuple):
-    """Cache data structure."""
+    """Cache data structure for user metadata (price data is in IntervalPool)."""
 
-    price_data: dict[str, Any] | None
     user_data: dict[str, Any] | None
-    last_price_update: datetime | None
     last_user_update: datetime | None
     last_midnight_check: datetime | None
 
@@ -31,20 +53,16 @@ async def load_cache(
     *,
     time: TibberPricesTimeService,
 ) -> TibberPricesCacheData:
-    """Load cached data from storage."""
+    """Load cached user data from storage (price data is in IntervalPool)."""
     try:
         stored = await store.async_load()
         if stored:
-            cached_price_data = stored.get("price_data")
             cached_user_data = stored.get("user_data")
 
             # Restore timestamps
-            last_price_update = None
             last_user_update = None
             last_midnight_check = None
 
-            if last_price_update_str := stored.get("last_price_update"):
-                last_price_update = time.parse_datetime(last_price_update_str)
             if last_user_update_str := stored.get("last_user_update"):
                 last_user_update = time.parse_datetime(last_user_update_str)
             if last_midnight_check_str := stored.get("last_midnight_check"):
@@ -52,9 +70,7 @@ async def load_cache(
 
             _LOGGER.debug("%s Cache loaded successfully", log_prefix)
             return TibberPricesCacheData(
-                price_data=cached_price_data,
                 user_data=cached_user_data,
-                last_price_update=last_price_update,
                 last_user_update=last_user_update,
                 last_midnight_check=last_midnight_check,
             )
@@ -64,9 +80,7 @@ async def load_cache(
         _LOGGER.warning("%s Failed to load cache: %s", log_prefix, ex)
 
     return TibberPricesCacheData(
-        price_data=None,
         user_data=None,
-        last_price_update=None,
         last_user_update=None,
         last_midnight_check=None,
     )
@@ -77,11 +91,9 @@ async def save_cache(
     cache_data: TibberPricesCacheData,
     log_prefix: str,
 ) -> None:
-    """Store cache data."""
+    """Store cache data (user metadata only, price data is in IntervalPool)."""
     data = {
-        "price_data": cache_data.price_data,
         "user_data": cache_data.user_data,
-        "last_price_update": (cache_data.last_price_update.isoformat() if cache_data.last_price_update else None),
         "last_user_update": (cache_data.last_user_update.isoformat() if cache_data.last_user_update else None),
         "last_midnight_check": (cache_data.last_midnight_check.isoformat() if cache_data.last_midnight_check else None),
     }
@@ -91,55 +103,3 @@ async def save_cache(
         _LOGGER.debug("%s Cache stored successfully", log_prefix)
     except OSError:
         _LOGGER.exception("%s Failed to store cache", log_prefix)
-
-
-def is_cache_valid(
-    cache_data: TibberPricesCacheData,
-    log_prefix: str,
-    *,
-    time: TibberPricesTimeService,
-) -> bool:
-    """
-    Validate if cached price data is still current.
-
-    Returns False if:
-    - No cached data exists
-    - Cached data is from a different calendar day (in local timezone)
-    - Midnight turnover has occurred since cache was saved
-    - Cache structure is outdated (pre-v0.15.0 multi-home format)
-
-    """
-    if cache_data.price_data is None or cache_data.last_price_update is None:
-        return False
-
-    # Check for old cache structure (multi-home format from v0.14.0)
-    # Old format: {"homes": {home_id: {...}}}
-    # New format: {"home_id": str, "price_info": [...]}
-    if "homes" in cache_data.price_data:
-        _LOGGER.info(
-            "%s Cache has old multi-home structure (v0.14.0), invalidating to fetch fresh data",
-            log_prefix,
-        )
-        return False
-
-    # Check for missing required keys in new structure
-    if "price_info" not in cache_data.price_data:
-        _LOGGER.info(
-            "%s Cache missing 'price_info' key, invalidating to fetch fresh data",
-            log_prefix,
-        )
-        return False
-
-    current_local_date = time.as_local(time.now()).date()
-    last_update_local_date = time.as_local(cache_data.last_price_update).date()
-
-    if current_local_date != last_update_local_date:
-        _LOGGER.debug(
-            "%s Cache date mismatch: cached=%s, current=%s",
-            log_prefix,
-            last_update_local_date,
-            current_local_date,
-        )
-        return False
-
-    return True

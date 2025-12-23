@@ -1838,12 +1838,12 @@ This is a Home Assistant standard to avoid naming conflicts between integrations
 # ✅ CORRECT - Integration prefix + semantic purpose
 class TibberPricesApiClient:              # Integration + semantic role
 class TibberPricesDataUpdateCoordinator:  # Integration + semantic role
-class TibberPricesDataFetcher:            # Integration + semantic role
+class TibberPricesPriceDataManager:       # Integration + semantic role
 class TibberPricesSensor:                 # Integration + entity type
 class TibberPricesEntity:                 # Integration + entity type
 
 # ❌ INCORRECT - Missing integration prefix
-class DataFetcher:         # Should be: TibberPricesDataFetcher
+class PriceDataManager:    # Should be: TibberPricesPriceDataManager
 class TimeService:         # Should be: TibberPricesTimeService
 class PeriodCalculator:    # Should be: TibberPricesPeriodCalculator
 
@@ -1855,11 +1855,11 @@ class TibberPricesSensorCalculatorTrend:   # Too verbose, import path shows loca
 **IMPORTANT:** Do NOT include package hierarchy in class names. Python's import system provides the namespace:
 ```python
 # The import path IS the full namespace:
-from custom_components.tibber_prices.coordinator.data_fetching import TibberPricesDataFetcher
+from custom_components.tibber_prices.coordinator.price_data_manager import TibberPricesPriceDataManager
 from custom_components.tibber_prices.sensor.calculators.trend import TibberPricesTrendCalculator
 
 # Adding package names to class would be redundant:
-# TibberPricesCoordinatorDataFetcher  ❌ NO - unnecessarily verbose
+# TibberPricesCoordinatorPriceDataManager  ❌ NO - unnecessarily verbose
 # TibberPricesSensorCalculatorsTrendCalculator  ❌ NO - ridiculously long
 ```
 
@@ -1905,14 +1905,14 @@ result = _InternalHelper().process()
 
 **Example of genuine private class use case:**
 ```python
-# In coordinator/data_fetching.py
+# In coordinator/price_data_manager.py
 class _ApiRetryStateMachine:
     """Internal state machine for retry logic. Never used outside this file."""
     def __init__(self, max_retries: int) -> None:
         self._attempts = 0
         self._max_retries = max_retries
 
-    # Only used by DataFetcher methods in this file
+    # Only used by PriceDataManager methods in this file
 ```
 
 In practice, most "helper" logic should be **functions**, not classes. Reserve classes for stateful components.

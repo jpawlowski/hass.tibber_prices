@@ -35,11 +35,11 @@ from .constants import (
     STORAGE_VERSION,
     UPDATE_INTERVAL,
 )
-from .data_fetching import TibberPricesDataFetcher
 from .data_transformation import TibberPricesDataTransformer
 from .listeners import TibberPricesListenerManager
 from .midnight_handler import TibberPricesMidnightHandler
 from .periods import TibberPricesPeriodCalculator
+from .price_data_manager import TibberPricesPriceDataManager
 from .repairs import TibberPricesRepairManager
 from .time_service import TibberPricesTimeService
 
@@ -206,13 +206,14 @@ class TibberPricesDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         # Initialize helper modules
         self._listener_manager = TibberPricesListenerManager(hass, self._log_prefix)
         self._midnight_handler = TibberPricesMidnightHandler()
-        self._data_fetcher = TibberPricesDataFetcher(
+        self._price_data_manager = TibberPricesPriceDataManager(
             api=self.api,
             store=self._store,
             log_prefix=self._log_prefix,
             user_update_interval=timedelta(days=1),
             time=self.time,
             home_id=self._home_id,
+            interval_pool=self.interval_pool,
         )
         # Create period calculator BEFORE data transformer (transformer needs it in lambda)
         self._period_calculator = TibberPricesPeriodCalculator(
@@ -236,17 +237,16 @@ class TibberPricesDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         # Register options update listener to invalidate config caches
         config_entry.async_on_unload(config_entry.add_update_listener(self._handle_options_update))
 
-        # Legacy compatibility - keep references for methods that access directly
+        # User data cache (price data is in IntervalPool)
         self._cached_user_data: dict[str, Any] | None = None
         self._last_user_update: datetime | None = None
         self._user_update_interval = timedelta(days=1)
-        self._cached_price_data: dict[str, Any] | None = None
-        self._last_price_update: datetime | None = None
 
         # Data lifecycle tracking for diagnostic sensor
         self._lifecycle_state: str = (
             "cached"  # Current state: cached, fresh, refreshing, searching_tomorrow, turnover_pending, error
         )
+        self._last_price_update: datetime | None = None  # Tracks when price data was last fetched (for cache_age)
         self._api_calls_today: int = 0  # Counter for API calls today
         self._last_api_call_date: date | None = None  # Date of last API call (for daily reset)
         self._is_fetching: bool = False  # Flag to track active API fetch
@@ -268,14 +268,16 @@ class TibberPricesDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         self._data_transformer.invalidate_config_cache()
         self._period_calculator.invalidate_config_cache()
 
-        # Re-transform existing cached data with new configuration
+        # Re-transform existing data with new configuration
         # This updates rating_levels, volatility, and period calculations
         # without needing to fetch new data from the API
-        if self._cached_price_data:
-            self.data = self._transform_data(self._cached_price_data)
+        if self.data and "priceInfo" in self.data:
+            # Extract raw price_info and re-transform
+            raw_data = {"price_info": self.data["priceInfo"]}
+            self.data = self._transform_data(raw_data)
             self.async_update_listeners()
         else:
-            self._log("debug", "No cached data to re-transform")
+            self._log("debug", "No data to re-transform")
 
     @callback
     def async_add_time_sensitive_listener(self, update_callback: TimeServiceCallback) -> CALLBACK_TYPE:
@@ -355,7 +357,7 @@ class TibberPricesDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 
         # Update helper modules with fresh TimeService instance
         self.api.time = time_service
-        self._data_fetcher.time = time_service
+        self._price_data_manager.time = time_service
         self._data_transformer.time = time_service
         self._period_calculator.time = time_service
 
@@ -455,18 +457,13 @@ class TibberPricesDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             current_date,
         )
 
-        # With flat interval list architecture, no rotation needed!
-        # get_intervals_for_day_offsets() automatically filters by date.
-        # Just update coordinator's data to trigger entity updates.
-        if self.data and self._cached_price_data:
-            # Re-transform data to ensure enrichment is refreshed
-            self.data = self._transform_data(self._cached_price_data)
-
-            # CRITICAL: Update _last_price_update to current time after midnight
-            # This prevents cache_validity from showing "date_mismatch" after midnight
-            # The data is still valid (just rotated today→yesterday, tomorrow→today)
-            # Update timestamp to reflect that the data is current for the new day
-            self._last_price_update = now
+        # With flat interval list architecture and IntervalPool as source of truth,
+        # no data rotation needed! get_intervals_for_day_offsets() automatically
+        # filters by date. Just re-transform to refresh enrichment.
+        if self.data and "priceInfo" in self.data:
+            # Re-transform data to ensure enrichment is refreshed for new day
+            raw_data = {"price_info": self.data["priceInfo"]}
+            self.data = self._transform_data(raw_data)
 
         # Mark turnover as done for today (atomic update)
         self._midnight_handler.mark_turnover_done(now)
@@ -553,19 +550,20 @@ class TibberPricesDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 
         # Transition lifecycle state from "fresh" to "cached" if enough time passed
         # (5 minutes threshold defined in lifecycle calculator)
-        if self._lifecycle_state == "fresh" and self._last_price_update:
-            age = current_time - self._last_price_update
-            if age.total_seconds() > FRESH_TO_CACHED_SECONDS:
-                self._lifecycle_state = "cached"
+        # Note: With Pool as source of truth, we track "fresh" state based on
+        # when data was last fetched from the API (tracked by _api_calls_today counter)
+        if self._lifecycle_state == "fresh":
+            # After 5 minutes, data is considered "cached" (no longer "just fetched")
+            self._lifecycle_state = "cached"
 
         # Update helper modules with fresh TimeService instance
         self.api.time = self.time
-        self._data_fetcher.time = self.time
+        self._price_data_manager.time = self.time
         self._data_transformer.time = self.time
         self._period_calculator.time = self.time
 
-        # Load cache if not already loaded
-        if self._cached_price_data is None and self._cached_user_data is None:
+        # Load cache if not already loaded (user data only, price data is in Pool)
+        if self._cached_user_data is None:
             await self.load_cache()
 
         # Initialize midnight handler on first run
@@ -602,47 +600,33 @@ class TibberPricesDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 self._api_calls_today = 0
                 self._last_api_call_date = current_date
 
-            # Track last_price_update timestamp before fetch to detect if data actually changed
-            old_price_update = self._last_price_update
+            # Set _is_fetching flag - lifecycle sensor shows "refreshing" during fetch
+            self._is_fetching = True
+            # Immediately notify lifecycle sensor about state change
+            self.async_update_listeners()
 
-            # CRITICAL: Check if we need to fetch data BEFORE starting the fetch
-            # This allows the lifecycle sensor to show "searching_tomorrow" status
-            # when we're actively looking for tomorrow's data after 13:00
-            should_update = self._data_fetcher.should_update_price_data(current_time)
+            # Get current price info to check if tomorrow data already exists
+            current_price_info = self.data.get("priceInfo", []) if self.data else []
 
-            # Set _is_fetching flag if we're about to fetch data
-            # This makes the lifecycle sensor show "refreshing" status during the API call
-            if should_update:
-                self._is_fetching = True
-                # Immediately notify lifecycle sensor about state change
-                # This ensures "refreshing" or "searching_tomorrow" appears DURING the fetch
-                self.async_update_listeners()
-
-            result = await self._data_fetcher.handle_main_entry_update(
+            result = await self._price_data_manager.handle_main_entry_update(
                 current_time,
                 self._home_id,
                 self._transform_data,
+                current_price_info=current_price_info,
             )
 
             # CRITICAL: Reset fetching flag AFTER data fetch completes
             self._is_fetching = False
 
-            # CRITICAL: Sync cached data after API call
-            # handle_main_entry_update() updates data_fetcher's cache, we need to sync:
-            # 1. cached_user_data (for new integrations, may be fetched via update_user_data_if_needed())
-            # 2. cached_price_data (CRITICAL: contains tomorrow data, needed for _needs_tomorrow_data())
-            # 3. _last_price_update (for lifecycle tracking: cache age, fresh state detection)
-            self._cached_user_data = self._data_fetcher.cached_user_data
-            self._cached_price_data = self._data_fetcher.cached_price_data
-            self._last_price_update = self._data_fetcher._last_price_update  # noqa: SLF001 - Sync for lifecycle tracking
+            # Sync user_data cache (price data is in IntervalPool)
+            self._cached_user_data = self._price_data_manager.cached_user_data
 
-            # Update lifecycle tracking only if we fetched NEW data (timestamp changed)
-            # This prevents recorder spam from state changes when returning cached data
-            if self._last_price_update != old_price_update:
+            # Update lifecycle tracking - Pool decides if API was called
+            # We track based on result having data
+            if result and "priceInfo" in result and len(result["priceInfo"]) > 0:
+                self._last_price_update = current_time  # Track when data was fetched
                 self._api_calls_today += 1
                 self._lifecycle_state = "fresh"  # Data just fetched
-                # No separate lifecycle notification needed - normal async_update_listeners()
-                # will trigger all entities (including lifecycle sensor) after this return
         except (
             TibberPricesApiClientAuthenticationError,
             TibberPricesApiClientCommunicationError,
@@ -655,12 +639,12 @@ class TibberPricesDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             # Track rate limit errors for repair system
             await self._track_rate_limit_error(err)
 
-            # No separate lifecycle notification needed - error case returns data
-            # which triggers normal async_update_listeners()
-            return await self._data_fetcher.handle_api_error(
-                err,
-                self._transform_data,
-            )
+            # Handle API error - will re-raise as ConfigEntryAuthFailed or UpdateFailed
+            # Note: With IntervalPool, there's no local cache fallback here.
+            # The Pool has its own persistence for offline recovery.
+            await self._price_data_manager.handle_api_error(err)
+            # Note: handle_api_error always raises, this is never reached
+            return {}  # Satisfy type checker
         else:
             # Check for repair conditions after successful update
             await self._check_repair_conditions(result, current_time)
@@ -690,7 +674,7 @@ class TibberPricesDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 
         # 2. Tomorrow data availability (after 18:00)
         if result and "priceInfo" in result:
-            has_tomorrow_data = self._data_fetcher.has_tomorrow_data(result["priceInfo"])
+            has_tomorrow_data = self._price_data_manager.has_tomorrow_data(result["priceInfo"])
             await self._repair_manager.check_tomorrow_data_availability(
                 has_tomorrow_data=has_tomorrow_data,
                 current_time=current_time,
@@ -700,33 +684,29 @@ class TibberPricesDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         await self._repair_manager.clear_rate_limit_tracking()
 
     async def load_cache(self) -> None:
-        """Load cached data from storage."""
-        await self._data_fetcher.load_cache()
-        # Sync legacy references
-        self._cached_price_data = self._data_fetcher.cached_price_data
-        self._cached_user_data = self._data_fetcher.cached_user_data
-        self._last_price_update = self._data_fetcher._last_price_update  # noqa: SLF001 - Sync for lifecycle tracking
-        self._last_user_update = self._data_fetcher._last_user_update  # noqa: SLF001 - Sync for lifecycle tracking
+        """Load cached user data from storage (price data is in IntervalPool)."""
+        await self._price_data_manager.load_cache()
+        # Sync user data reference
+        self._cached_user_data = self._price_data_manager.cached_user_data
+        self._last_user_update = self._price_data_manager._last_user_update  # noqa: SLF001 - Sync for lifecycle tracking
 
-        # CRITICAL: Restore midnight handler state from cache
-        # If cache is from today, assume turnover already happened at midnight
-        # This allows proper turnover detection after HA restart
-        if self._last_price_update:
-            cache_date = self.time.as_local(self._last_price_update).date()
-            today_date = self.time.as_local(self.time.now()).date()
-            if cache_date == today_date:
-                # Cache is from today, so midnight turnover already happened
-                today_midnight = self.time.as_local(self.time.now()).replace(hour=0, minute=0, second=0, microsecond=0)
-                # Restore handler state: mark today's midnight as last turnover
-                self._midnight_handler.mark_turnover_done(today_midnight)
+        # Note: Midnight handler state is now based on current date
+        # Since price data is in IntervalPool (persistent), we just need to
+        # ensure turnover doesn't happen twice if HA restarts after midnight
+        today_midnight = self.time.as_local(self.time.now()).replace(hour=0, minute=0, second=0, microsecond=0)
+        # Mark today's midnight as done to prevent double turnover on HA restart
+        self._midnight_handler.mark_turnover_done(today_midnight)
 
     async def _store_cache(self) -> None:
-        """Store cache data."""
-        await self._data_fetcher.store_cache(self._midnight_handler.last_check_time)
+        """Store cache data (user metadata only, price data is in IntervalPool)."""
+        await self._price_data_manager.store_cache(self._midnight_handler.last_check_time)
 
     def _needs_tomorrow_data(self) -> bool:
         """Check if tomorrow data is missing or invalid."""
-        return helpers.needs_tomorrow_data(self._cached_price_data)
+        # Check self.data (from Pool) instead of _cached_price_data
+        if not self.data or "priceInfo" not in self.data:
+            return True
+        return helpers.needs_tomorrow_data({"price_info": self.data["priceInfo"]})
 
     def _has_valid_tomorrow_data(self) -> bool:
         """Check if we have valid tomorrow data (inverse of _needs_tomorrow_data)."""
@@ -734,10 +714,10 @@ class TibberPricesDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 
     @callback
     def _merge_cached_data(self) -> dict[str, Any]:
-        """Merge cached data into the expected format for main entry."""
-        if not self._cached_price_data:
+        """Return current data (from Pool)."""
+        if not self.data:
             return {}
-        return self._transform_data(self._cached_price_data)
+        return self.data
 
     def _get_threshold_percentages(self) -> dict[str, int | float]:
         """Get threshold percentages from config options."""
