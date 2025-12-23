@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import logging
+from datetime import datetime
 from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
@@ -15,6 +16,13 @@ _LOGGER_DETAILS = logging.getLogger(__name__ + ".details")
 # Maximum number of intervals to cache
 # 1 days @ 15min resolution = 10 * 96 = 960 intervals
 MAX_CACHE_SIZE = 960
+
+
+def _normalize_starts_at(starts_at: datetime | str) -> str:
+    """Normalize startsAt to consistent format (YYYY-MM-DDTHH:MM:SS)."""
+    if isinstance(starts_at, datetime):
+        return starts_at.strftime("%Y-%m-%dT%H:%M:%S")
+    return starts_at[:19]
 
 
 class TibberPricesIntervalPoolGarbageCollector:
@@ -173,7 +181,7 @@ class TibberPricesIntervalPoolGarbageCollector:
             living_intervals = []
 
             for interval_idx, interval in enumerate(old_intervals):
-                starts_at_normalized = interval["startsAt"][:19]
+                starts_at_normalized = _normalize_starts_at(interval["startsAt"])
                 index_entry = self._index.get(starts_at_normalized)
 
                 if index_entry is not None:

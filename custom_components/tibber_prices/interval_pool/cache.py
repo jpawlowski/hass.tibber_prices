@@ -4,9 +4,14 @@ from __future__ import annotations
 
 import logging
 from datetime import datetime, timedelta
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from homeassistant.util import dt as dt_utils
+
+if TYPE_CHECKING:
+    from custom_components.tibber_prices.coordinator.time_service import (
+        TibberPricesTimeService,
+    )
 
 _LOGGER = logging.getLogger(__name__)
 _LOGGER_DETAILS = logging.getLogger(__name__ + ".details")
@@ -37,9 +42,10 @@ class TibberPricesIntervalPoolFetchGroupCache:
         Protected: 2025-11-23 00:00 to 2025-11-27 00:00
     """
 
-    def __init__(self) -> None:
-        """Initialize empty fetch group cache."""
+    def __init__(self, *, time_service: TibberPricesTimeService | None = None) -> None:
+        """Initialize empty fetch group cache with optional TimeService."""
         self._fetch_groups: list[dict[str, Any]] = []
+        self._time_service = time_service
 
         # Protected range cache (invalidated daily)
         self._protected_range_cache: tuple[str, str] | None = None
@@ -93,6 +99,11 @@ class TibberPricesIntervalPoolFetchGroupCache:
         Protected range: day-before-yesterday 00:00 to day-after-tomorrow 00:00.
         This range shifts daily automatically.
 
+        Time Machine Support:
+            If time_service was provided at init, uses time_service.now() for
+            "today" calculation. This protects the correct date range when
+            simulating a different date.
+
         Returns:
             Tuple of (start_iso, end_iso) for protected range.
             Start is inclusive, end is exclusive.
@@ -102,10 +113,11 @@ class TibberPricesIntervalPoolFetchGroupCache:
             Protected days: 2025-11-23, 2025-11-24, 2025-11-25, 2025-11-26
 
         """
-        # Check cache validity (invalidate daily)
-        now = dt_utils.now()
+        # Use TimeService if available (Time Machine support), else real time
+        now = self._time_service.now() if self._time_service else dt_utils.now()
         today_date_str = now.date().isoformat()
 
+        # Check cache validity (invalidate daily)
         if self._protected_range_cache_date == today_date_str and self._protected_range_cache:
             return self._protected_range_cache
 

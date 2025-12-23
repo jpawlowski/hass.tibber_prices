@@ -1,4 +1,4 @@
-"""Interval fetcher - gap detection and API coordination for interval pool."""
+"""Interval fetcher - coverage check and API coordination for interval pool."""
 
 from __future__ import annotations
 
@@ -38,7 +38,7 @@ TIME_TOLERANCE_MINUTES = 1
 
 
 class TibberPricesIntervalPoolFetcher:
-    """Fetch missing intervals from API based on gap detection."""
+    """Fetch missing intervals from API based on coverage check."""
 
     def __init__(
         self,
@@ -62,14 +62,14 @@ class TibberPricesIntervalPoolFetcher:
         self._index = index
         self._home_id = home_id
 
-    def detect_gaps(
+    def check_coverage(
         self,
         cached_intervals: list[dict[str, Any]],
         start_time_iso: str,
         end_time_iso: str,
     ) -> list[tuple[str, str]]:
         """
-        Detect missing time ranges that need to be fetched.
+        Check cache coverage and find missing time ranges.
 
         This method minimizes API calls by:
         1. Finding all gaps in cached intervals
@@ -130,7 +130,7 @@ class TibberPricesIntervalPoolFetcher:
         if time_diff_before_first > TIME_TOLERANCE_SECONDS:
             missing_ranges.append((start_time_iso, sorted_intervals[0]["startsAt"]))
             _LOGGER_DETAILS.debug(
-                "Gap before first cached interval: %s to %s (%.1f seconds)",
+                "Missing range before first cached interval: %s to %s (%.1f seconds)",
                 start_time_iso,
                 sorted_intervals[0]["startsAt"],
                 time_diff_before_first,
@@ -163,7 +163,7 @@ class TibberPricesIntervalPoolFetcher:
                 current_interval_end = current_dt + timedelta(minutes=expected_interval_minutes)
                 missing_ranges.append((current_interval_end.isoformat(), next_start))
                 _LOGGER_DETAILS.debug(
-                    "Gap between cached intervals: %s (ends at %s) to %s (%.1f min gap, expected %d min)",
+                    "Missing range between cached intervals: %s (ends at %s) to %s (%.1f min, expected %d min)",
                     current_start,
                     current_interval_end.isoformat(),
                     next_start,
@@ -190,7 +190,7 @@ class TibberPricesIntervalPoolFetcher:
             # Missing range starts AFTER the last cached interval ends
             missing_ranges.append((last_interval_end_dt.isoformat(), end_time_iso))
             _LOGGER_DETAILS.debug(
-                "Gap after last cached interval: %s (ends at %s) to %s (%.1f seconds, need >= %d)",
+                "Missing range after last cached interval: %s (ends at %s) to %s (%.1f seconds, need >= %d)",
                 sorted_intervals[-1]["startsAt"],
                 last_interval_end_dt.isoformat(),
                 end_time_iso,
@@ -200,7 +200,7 @@ class TibberPricesIntervalPoolFetcher:
 
         if not missing_ranges:
             _LOGGER.debug(
-                "No gaps detected - all intervals cached for range %s to %s",
+                "Full coverage - all intervals cached for range %s to %s",
                 start_time_iso,
                 end_time_iso,
             )
@@ -285,7 +285,7 @@ class TibberPricesIntervalPoolFetcher:
 
         for idx, (missing_start_iso, missing_end_iso) in enumerate(missing_ranges, start=1):
             _LOGGER_DETAILS.debug(
-                "API call %d/%d for home %s: fetching range %s to %s",
+                "Fetching from Tibber API (%d/%d) for home %s: range %s to %s",
                 idx,
                 len(missing_ranges),
                 self._home_id,
@@ -309,10 +309,9 @@ class TibberPricesIntervalPoolFetcher:
             all_fetched_intervals.append(fetched_intervals)
 
             _LOGGER_DETAILS.debug(
-                "Fetched %d intervals from API for home %s (fetch time: %s)",
+                "Received %d intervals from Tibber API for home %s",
                 len(fetched_intervals),
                 self._home_id,
-                fetch_time_iso,
             )
 
             # Notify callback if provided (for immediate caching)
