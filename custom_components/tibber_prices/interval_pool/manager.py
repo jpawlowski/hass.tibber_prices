@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+import contextlib
 import logging
 from datetime import datetime, timedelta
 from typing import TYPE_CHECKING, Any
@@ -372,13 +373,13 @@ class TibberPricesIntervalPool:
         # Add touch group to cache
         touch_group_index = self._cache.add_fetch_group(touch_intervals, fetch_time_dt)
 
-        # Update index to point to new fetch group
-        for interval_index, (starts_at_normalized, _) in enumerate(intervals_to_touch):
-            # Remove old index entry
-            self._index.remove(starts_at_normalized)
-            # Add new index entry pointing to touch group
-            interval = touch_intervals[interval_index]
-            self._index.add(interval, touch_group_index, interval_index)
+        # Update index to point to new fetch group using batch operation
+        # This is more efficient than individual remove+add calls
+        index_updates = [
+            (starts_at_normalized, touch_group_index, interval_index)
+            for interval_index, (starts_at_normalized, _) in enumerate(intervals_to_touch)
+        ]
+        self._index.update_batch(index_updates)
 
         _LOGGER.debug(
             "Touched %d cached intervals for home %s (moved to fetch group %d, fetched at %s)",
@@ -418,6 +419,36 @@ class TibberPricesIntervalPool:
         except asyncio.CancelledError:
             _LOGGER.debug("Auto-save timer cancelled (expected - new changes arrived)")
             raise
+
+    async def async_shutdown(self) -> None:
+        """
+        Clean shutdown - cancel pending background tasks.
+
+        Should be called when the config entry is unloaded to prevent
+        orphaned tasks and ensure clean resource cleanup.
+
+        """
+        _LOGGER.debug("Shutting down interval pool for home %s", self._home_id)
+
+        # Cancel debounce task if running
+        if self._save_debounce_task is not None and not self._save_debounce_task.done():
+            self._save_debounce_task.cancel()
+            with contextlib.suppress(asyncio.CancelledError):
+                await self._save_debounce_task
+            _LOGGER.debug("Cancelled pending auto-save task")
+
+        # Cancel any other background tasks
+        if self._background_tasks:
+            for task in list(self._background_tasks):
+                if not task.done():
+                    task.cancel()
+            # Wait for all tasks to complete cancellation
+            if self._background_tasks:
+                await asyncio.gather(*self._background_tasks, return_exceptions=True)
+            _LOGGER.debug("Cancelled %d background tasks", len(self._background_tasks))
+            self._background_tasks.clear()
+
+        _LOGGER.debug("Interval pool shutdown complete for home %s", self._home_id)
 
     async def _auto_save_pool_state(self) -> None:
         """Auto-save pool state to storage with lock protection."""

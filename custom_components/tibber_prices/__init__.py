@@ -298,6 +298,9 @@ async def async_unload_entry(
         await async_save_pool_state(hass, entry.entry_id, pool_state)
         LOGGER.debug("[%s] Interval pool state saved on unload", entry.title)
 
+        # Shutdown interval pool (cancels background tasks)
+        await entry.runtime_data.interval_pool.async_shutdown()
+
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
     if unload_ok and entry.runtime_data is not None:

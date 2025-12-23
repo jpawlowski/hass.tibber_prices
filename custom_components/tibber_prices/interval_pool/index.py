@@ -93,6 +93,28 @@ class TibberPricesIntervalPoolTimestampIndex:
         starts_at_normalized = self._normalize_timestamp(timestamp)
         self._index.pop(starts_at_normalized, None)
 
+    def update_batch(
+        self,
+        updates: list[tuple[str, int, int]],
+    ) -> None:
+        """
+        Update multiple index entries efficiently in a single operation.
+
+        More efficient than calling remove() + add() for each entry,
+        as it avoids repeated dict operations and normalization.
+
+        Args:
+            updates: List of (timestamp, fetch_group_index, interval_index) tuples.
+                    Timestamps will be normalized automatically.
+
+        """
+        for timestamp, fetch_group_index, interval_index in updates:
+            starts_at_normalized = self._normalize_timestamp(timestamp)
+            self._index[starts_at_normalized] = {
+                "fetch_group_index": fetch_group_index,
+                "interval_index": interval_index,
+            }
+
     def clear(self) -> None:
         """Clear entire index."""
         self._index.clear()

@@ -77,6 +77,15 @@ class TibberPricesIntervalPoolGarbageCollector:
                 self._home_id,
             )
 
+        # Phase 1.5: Remove empty fetch groups (after dead interval cleanup)
+        empty_removed = self._remove_empty_groups(fetch_groups)
+        if empty_removed > 0:
+            _LOGGER_DETAILS.debug(
+                "GC removed %d empty fetch groups (home %s)",
+                empty_removed,
+                self._home_id,
+            )
+
         # Phase 2: Count total intervals after cleanup
         total_intervals = self._cache.count_total_intervals()
 
@@ -94,7 +103,7 @@ class TibberPricesIntervalPoolGarbageCollector:
 
         if not evicted_indices:
             # All intervals are protected, cannot evict
-            return dead_count > 0
+            return dead_count > 0 or empty_removed > 0
 
         # Phase 4: Rebuild cache and index
         new_fetch_groups = [group for idx, group in enumerate(fetch_groups) if idx not in evicted_indices]
@@ -109,6 +118,35 @@ class TibberPricesIntervalPoolGarbageCollector:
         )
 
         return True
+
+    def _remove_empty_groups(self, fetch_groups: list[dict[str, Any]]) -> int:
+        """
+        Remove fetch groups with no intervals.
+
+        After dead interval cleanup, some groups may be completely empty.
+        These should be removed to prevent memory accumulation.
+
+        Note: This modifies the cache's internal list in-place and rebuilds
+        the index to maintain consistency.
+
+        Args:
+            fetch_groups: List of fetch groups (will be modified).
+
+        Returns:
+            Number of empty groups removed.
+
+        """
+        # Find non-empty groups
+        non_empty_groups = [group for group in fetch_groups if group["intervals"]]
+        removed_count = len(fetch_groups) - len(non_empty_groups)
+
+        if removed_count > 0:
+            # Update cache with filtered list
+            self._cache.set_fetch_groups(non_empty_groups)
+            # Rebuild index since group indices changed
+            self._index.rebuild(non_empty_groups)
+
+        return removed_count
 
     def _cleanup_dead_intervals(self, fetch_groups: list[dict[str, Any]]) -> int:
         """
