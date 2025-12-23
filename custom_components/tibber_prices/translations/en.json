@@ -1066,6 +1066,16 @@
                     "description": "The config entry ID for the Tibber integration."
                 }
             }
+        },
+        "debug_clear_tomorrow": {
+            "name": "Debug: Clear Tomorrow Data",
+            "description": "DEBUG/TESTING: Removes tomorrow's price data from the interval pool cache. Use this to test the tomorrow data refresh cycle without waiting for the next day. After calling this service, the lifecycle sensor will show 'searching_tomorrow' (after 13:00) and the next Timer #1 cycle will fetch new data from the API.",
+            "fields": {
+                "entry_id": {
+                    "name": "Entry ID",
+                    "description": "Optional config entry ID. If not provided, uses the first available entry."
+                }
+            }
         }
     },
     "selector": {

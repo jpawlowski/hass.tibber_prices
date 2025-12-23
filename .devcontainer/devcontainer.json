@@ -4,7 +4,8 @@
     "postCreateCommand": "bash .devcontainer/setup-git.sh && scripts/setup/setup",
     "postStartCommand": "scripts/motd",
     "containerEnv": {
-        "PYTHONASYNCIODEBUG": "1"
+        "PYTHONASYNCIODEBUG": "1",
+        "TIBBER_PRICES_DEV": "1"
     },
     "forwardPorts": [
         8123,

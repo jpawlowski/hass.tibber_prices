@@ -245,3 +245,12 @@ refresh_user_data:
       selector:
         config_entry:
           integration: tibber_prices
+
+debug_clear_tomorrow:
+  fields:
+    entry_id:
+      required: false
+      example: "1234567890abcdef"
+      selector:
+        config_entry:
+          integration: tibber_prices
