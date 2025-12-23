@@ -26,8 +26,8 @@ import pytest
 
 from custom_components.tibber_prices.api.exceptions import TibberPricesApiClientError
 from custom_components.tibber_prices.api.helpers import flatten_price_info
-from custom_components.tibber_prices.coordinator.data_fetching import (
-    TibberPricesDataFetcher,
+from custom_components.tibber_prices.coordinator.price_data_manager import (
+    TibberPricesPriceDataManager,
 )
 
 
@@ -52,16 +52,23 @@ def mock_store() -> Mock:
     return Mock()
 
 
+@pytest.fixture
+def mock_interval_pool() -> Mock:
+    """Create a mock interval pool."""
+    return Mock()
+
+
 @pytest.mark.unit
-def test_validate_user_data_complete(mock_api_client, mock_time_service, mock_store) -> None:  # noqa: ANN001
+def test_validate_user_data_complete(mock_api_client, mock_time_service, mock_store, mock_interval_pool) -> None:  # noqa: ANN001
     """Test that complete user data passes validation."""
-    fetcher = TibberPricesDataFetcher(
+    price_data_manager = TibberPricesPriceDataManager(
         api=mock_api_client,
         store=mock_store,
         log_prefix="[Test]",
         user_update_interval=timedelta(days=1),
         time=mock_time_service,
         home_id="home-123",
+        interval_pool=mock_interval_pool,
     )
 
     user_data = {
@@ -82,19 +89,22 @@ def test_validate_user_data_complete(mock_api_client, mock_time_service, mock_st
         }
     }
 
-    assert fetcher._validate_user_data(user_data, "home-123") is True  # noqa: SLF001  # noqa: SLF001
+    assert price_data_manager._validate_user_data(user_data, "home-123") is True  # noqa: SLF001  # noqa: SLF001
 
 
 @pytest.mark.unit
-def test_validate_user_data_none_subscription(mock_api_client, mock_time_service, mock_store) -> None:  # noqa: ANN001
+def test_validate_user_data_none_subscription(
+    mock_api_client: Mock, mock_time_service: Mock, mock_store: Mock, mock_interval_pool: Mock
+) -> None:
     """Test that user data without subscription (but with timezone) passes validation."""
-    fetcher = TibberPricesDataFetcher(
+    price_data_manager = TibberPricesPriceDataManager(
         api=mock_api_client,
         store=mock_store,
         log_prefix="[Test]",
         user_update_interval=timedelta(days=1),
         time=mock_time_service,
         home_id="home-123",
+        interval_pool=mock_interval_pool,
     )
 
     user_data = {
@@ -110,19 +120,22 @@ def test_validate_user_data_none_subscription(mock_api_client, mock_time_service
     }
 
     # Should pass validation - timezone is present, subscription being None is valid
-    assert fetcher._validate_user_data(user_data, "home-123") is True  # noqa: SLF001  # noqa: SLF001
+    assert price_data_manager._validate_user_data(user_data, "home-123") is True  # noqa: SLF001  # noqa: SLF001
 
 
 @pytest.mark.unit
-def test_validate_user_data_missing_timezone(mock_api_client, mock_time_service, mock_store) -> None:  # noqa: ANN001
+def test_validate_user_data_missing_timezone(
+    mock_api_client: Mock, mock_time_service: Mock, mock_store: Mock, mock_interval_pool: Mock
+) -> None:
     """Test that user data without timezone fails validation."""
-    fetcher = TibberPricesDataFetcher(
+    price_data_manager = TibberPricesPriceDataManager(
         api=mock_api_client,
         store=mock_store,
         log_prefix="[Test]",
         user_update_interval=timedelta(days=1),
         time=mock_time_service,
         home_id="home-123",
+        interval_pool=mock_interval_pool,
     )
 
     user_data = {
@@ -143,19 +156,22 @@ def test_validate_user_data_missing_timezone(mock_api_client, mock_time_service,
         }
     }
 
-    assert fetcher._validate_user_data(user_data, "home-123") is False  # noqa: SLF001  # noqa: SLF001
+    assert price_data_manager._validate_user_data(user_data, "home-123") is False  # noqa: SLF001  # noqa: SLF001
 
 
 @pytest.mark.unit
-def test_validate_user_data_subscription_without_currency(mock_api_client, mock_time_service, mock_store) -> None:  # noqa: ANN001
+def test_validate_user_data_subscription_without_currency(
+    mock_api_client: Mock, mock_time_service: Mock, mock_store: Mock, mock_interval_pool: Mock
+) -> None:
     """Test that user data with subscription but no currency fails validation."""
-    fetcher = TibberPricesDataFetcher(
+    price_data_manager = TibberPricesPriceDataManager(
         api=mock_api_client,
         store=mock_store,
         log_prefix="[Test]",
         user_update_interval=timedelta(days=1),
         time=mock_time_service,
         home_id="home-123",
+        interval_pool=mock_interval_pool,
     )
 
     user_data = {
@@ -174,19 +190,20 @@ def test_validate_user_data_subscription_without_currency(mock_api_client, mock_
         }
     }
 
-    assert fetcher._validate_user_data(user_data, "home-123") is False  # noqa: SLF001  # noqa: SLF001
+    assert price_data_manager._validate_user_data(user_data, "home-123") is False  # noqa: SLF001  # noqa: SLF001
 
 
 @pytest.mark.unit
-def test_validate_user_data_home_not_found(mock_api_client, mock_time_service, mock_store) -> None:  # noqa: ANN001
+def test_validate_user_data_home_not_found(mock_api_client, mock_time_service, mock_store, mock_interval_pool) -> None:  # noqa: ANN001
     """Test that user data without the requested home fails validation."""
-    fetcher = TibberPricesDataFetcher(
+    price_data_manager = TibberPricesPriceDataManager(
         api=mock_api_client,
         store=mock_store,
         log_prefix="[Test]",
         user_update_interval=timedelta(days=1),
         time=mock_time_service,
         home_id="home-123",
+        interval_pool=mock_interval_pool,
     )
 
     user_data = {
@@ -200,39 +217,45 @@ def test_validate_user_data_home_not_found(mock_api_client, mock_time_service, m
         }
     }
 
-    assert fetcher._validate_user_data(user_data, "home-123") is False  # noqa: SLF001  # noqa: SLF001
+    assert price_data_manager._validate_user_data(user_data, "home-123") is False  # noqa: SLF001  # noqa: SLF001
 
 
 @pytest.mark.unit
-def test_get_currency_raises_on_no_cached_data(mock_api_client, mock_time_service, mock_store) -> None:  # noqa: ANN001
+def test_get_currency_raises_on_no_cached_data(
+    mock_api_client: Mock, mock_time_service: Mock, mock_store: Mock, mock_interval_pool: Mock
+) -> None:
     """Test that _get_currency_for_home raises exception when no data cached."""
-    fetcher = TibberPricesDataFetcher(
+    price_data_manager = TibberPricesPriceDataManager(
         api=mock_api_client,
         store=mock_store,
         log_prefix="[Test]",
         user_update_interval=timedelta(days=1),
         time=mock_time_service,
         home_id="home-123",
+        interval_pool=mock_interval_pool,
     )
 
     # No cached data
     with pytest.raises(TibberPricesApiClientError, match="No user data cached"):
-        fetcher._get_currency_for_home("home-123")  # noqa: SLF001  # noqa: SLF001
+        price_data_manager._get_currency_for_home("home-123")  # noqa: SLF001  # noqa: SLF001
 
 
 @pytest.mark.unit
-def test_get_currency_raises_on_no_subscription(mock_api_client, mock_time_service, mock_store) -> None:  # noqa: ANN001
+def test_get_currency_raises_on_no_subscription(
+    mock_api_client: Mock, mock_time_service: Mock, mock_store: Mock, mock_interval_pool: Mock
+) -> None:
     """Test that _get_currency_for_home raises exception when home has no subscription."""
-    fetcher = TibberPricesDataFetcher(
+    price_data_manager = TibberPricesPriceDataManager(
         api=mock_api_client,
         store=mock_store,
         log_prefix="[Test]",
         user_update_interval=timedelta(days=1),
         time=mock_time_service,
         home_id="home-123",
+        interval_pool=mock_interval_pool,
     )
 
-    fetcher._cached_user_data = {  # noqa: SLF001  # noqa: SLF001
+    price_data_manager._cached_user_data = {  # noqa: SLF001  # noqa: SLF001
         "viewer": {
             "homes": [
                 {
@@ -244,22 +267,25 @@ def test_get_currency_raises_on_no_subscription(mock_api_client, mock_time_servi
     }
 
     with pytest.raises(TibberPricesApiClientError, match="has no active subscription"):
-        fetcher._get_currency_for_home("home-123")  # noqa: SLF001  # noqa: SLF001
+        price_data_manager._get_currency_for_home("home-123")  # noqa: SLF001  # noqa: SLF001
 
 
 @pytest.mark.unit
-def test_get_currency_extracts_valid_currency(mock_api_client, mock_time_service, mock_store) -> None:  # noqa: ANN001
+def test_get_currency_extracts_valid_currency(
+    mock_api_client: Mock, mock_time_service: Mock, mock_store: Mock, mock_interval_pool: Mock
+) -> None:
     """Test that _get_currency_for_home successfully extracts currency."""
-    fetcher = TibberPricesDataFetcher(
+    price_data_manager = TibberPricesPriceDataManager(
         api=mock_api_client,
         store=mock_store,
         log_prefix="[Test]",
         user_update_interval=timedelta(days=1),
         time=mock_time_service,
         home_id="home-123",
+        interval_pool=mock_interval_pool,
     )
 
-    fetcher._cached_user_data = {  # noqa: SLF001  # noqa: SLF001
+    price_data_manager._cached_user_data = {  # noqa: SLF001  # noqa: SLF001
         "viewer": {
             "homes": [
                 {
@@ -276,7 +302,7 @@ def test_get_currency_extracts_valid_currency(mock_api_client, mock_time_service
         }
     }
 
-    assert fetcher._get_currency_for_home("home-123") == "NOK"  # noqa: SLF001  # noqa: SLF001
+    assert price_data_manager._get_currency_for_home("home-123") == "NOK"  # noqa: SLF001  # noqa: SLF001
 
 
 @pytest.mark.unit
