@@ -39,7 +39,7 @@ automation:
       # Only act if volatility > 15% (meaningful savings)
       - condition: template
         value_template: >
-        {{ state_attr('binary_sensor.tibber_home_best_price_period', 'day_volatility_%') | float(0) > 15 }}
+          {{ state_attr('sensor.tibber_home_volatility_today', 'coefficient_of_variation') | float(0) > 15 }}
       # Optional: Ensure dishwasher is idle and door closed
       - condition: state
         entity_id: binary_sensor.dishwasher_door
@@ -50,7 +50,7 @@ automation:
           entity_id: switch.dishwasher_smart_plug
       - service: notify.mobile_app
         data:
-          message: "Dishwasher started during Best Price period ({{ states('sensor.tibber_home_current_interval_price_ct') }} ct/kWh, volatility {{ state_attr('binary_sensor.tibber_home_best_price_period', 'day_volatility_%') }}%)"
+          message: "Dishwasher started during Best Price period ({{ states('sensor.tibber_home_current_interval_price_ct') }} ct/kWh, volatility {{ state_attr('sensor.tibber_home_volatility_today', 'coefficient_of_variation') }}%)"
 ```
 
 **Why this works:**
@@ -118,7 +118,7 @@ automation:
           # Path 1: High volatility day - trust period classification
           - condition: template
             value_template: >
-            {{ state_attr('binary_sensor.tibber_home_best_price_period', 'day_volatility_%') | float(0) > 15 }}
+              {{ state_attr('sensor.tibber_home_volatility_today', 'coefficient_of_variation') | float(0) > 15 }}
           # Path 2: Low volatility but price is genuinely cheap
           - condition: numeric_state
             entity_id: sensor.tibber_home_current_interval_price_ct
@@ -131,7 +131,7 @@ automation:
         data:
           message: >
             EV charging started: {{ states('sensor.tibber_home_current_interval_price_ct') }} ct/kWh
-            (Volatility: {{ state_attr('binary_sensor.tibber_home_best_price_period', 'day_volatility_%') }}%)
+            (Volatility: {{ state_attr('sensor.tibber_home_volatility_today', 'coefficient_of_variation') }}%)
 ```
 
 **Why this works:**
@@ -159,7 +159,7 @@ automation:
       # And volatility is meaningful
       - condition: template
         value_template: >
-        {{ state_attr('binary_sensor.tibber_home_best_price_period', 'day_volatility_%') | float(0) > 15 }}
+          {{ state_attr('sensor.tibber_home_volatility_today', 'coefficient_of_variation') | float(0) > 15 }}
     action:
       - service: button.press
         target:
