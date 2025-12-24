@@ -37,9 +37,9 @@ automation:
         to: "on"
     condition:
       # Only act if volatility > 15% (meaningful savings)
-      - condition: numeric_state
-        entity_id: sensor.tibber_home_volatility_today
-        above: 15
+      - condition: template
+        value_template: >
+        {{ state_attr('binary_sensor.tibber_home_best_price_period', 'day_volatility_%') | float(0) > 15 }}
       # Optional: Ensure dishwasher is idle and door closed
       - condition: state
         entity_id: binary_sensor.dishwasher_door
@@ -50,7 +50,7 @@ automation:
           entity_id: switch.dishwasher_smart_plug
       - service: notify.mobile_app
         data:
-          message: "Dishwasher started during Best Price period ({{ states('sensor.tibber_home_current_interval_price_ct') }} ct/kWh, volatility {{ states('sensor.tibber_home_volatility_today') }}%)"
+          message: "Dishwasher started during Best Price period ({{ states('sensor.tibber_home_current_interval_price_ct') }} ct/kWh, volatility {{ state_attr('binary_sensor.tibber_home_best_price_period', 'day_volatility_%') }}%)"
 ```
 
 **Why this works:**
@@ -116,9 +116,9 @@ automation:
       - condition: or
         conditions:
           # Path 1: High volatility day - trust period classification
-          - condition: numeric_state
-            entity_id: sensor.tibber_home_volatility_today
-            above: 15
+          - condition: template
+            value_template: >
+            {{ state_attr('binary_sensor.tibber_home_best_price_period', 'day_volatility_%') | float(0) > 15 }}
           # Path 2: Low volatility but price is genuinely cheap
           - condition: numeric_state
             entity_id: sensor.tibber_home_current_interval_price_ct
@@ -131,7 +131,7 @@ automation:
         data:
           message: >
             EV charging started: {{ states('sensor.tibber_home_current_interval_price_ct') }} ct/kWh
-            (Volatility: {{ states('sensor.tibber_home_volatility_today') }}%)
+            (Volatility: {{ state_attr('binary_sensor.tibber_home_best_price_period', 'day_volatility_%') }}%)
 ```
 
 **Why this works:**
@@ -157,9 +157,9 @@ automation:
         entity_id: sensor.washing_machine_state
         state: "idle"
       # And volatility is meaningful
-      - condition: numeric_state
-        entity_id: sensor.tibber_home_volatility_today
-        above: 15
+      - condition: template
+        value_template: >
+        {{ state_attr('binary_sensor.tibber_home_best_price_period', 'day_volatility_%') | float(0) > 15 }}
     action:
       - service: button.press
         target:
