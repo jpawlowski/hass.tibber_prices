@@ -23,23 +23,23 @@ Coming soon...
 
 These examples show how to handle low-volatility days where period classifications may flip at midnight despite minimal absolute price changes.
 
-### Use Case: Only Act on High-Volatility Days
+### Use Case: Only Act on Meaningful Price Variations
 
-On days with low price variation (< 15% volatility), the difference between "cheap" and "expensive" periods is minimal. This automation only runs appliances when the savings are meaningful:
+On days with low price variation (coefficient of variation < 15%), the difference between "cheap" and "expensive" periods is minimal. This automation only runs appliances when volatility is moderate or higher, ensuring meaningful savings:
 
 ```yaml
 automation:
-  - alias: "Dishwasher - Best Price (High Volatility Only)"
+  - alias: "Dishwasher - Best Price (Moderate+ Volatility)"
     description: "Start dishwasher during Best Price period, but only on days with meaningful price differences"
     trigger:
       - platform: state
         entity_id: binary_sensor.tibber_home_best_price_period
         to: "on"
     condition:
-      # Only act if volatility > 15% (meaningful savings)
+      # Only act if volatility >= 15% (moderate or higher volatility = meaningful savings)
       - condition: template
         value_template: >
-          {{ state_attr('sensor.tibber_home_volatility_today', 'coefficient_of_variation') | float(0) > 15 }}
+          {{ state_attr('sensor.tibber_home_volatility_today', 'coefficient_of_variation') | float(0) >= 15 }}
       # Optional: Ensure dishwasher is idle and door closed
       - condition: state
         entity_id: binary_sensor.dishwasher_door
@@ -54,9 +54,15 @@ automation:
 ```
 
 **Why this works:**
-- On high-volatility days (e.g., 25% span), Best Price periods save 5-10 ct/kWh
-- On low-volatility days (e.g., 8% span), savings are only 1-2 ct/kWh
+- On moderate+ volatility days (CV ≥ 15%), Best Price periods offer worthwhile savings
+- On low-volatility days (CV < 15%), price differences are minimal (typically < 3 ct/kWh span)
 - User can manually start dishwasher on low-volatility days without automation interference
+
+**Volatility threshold guide:**
+- CV < 15%: Low volatility - minimal price variation
+- CV 15-30%: Moderate volatility - worthwhile to optimize timing
+- CV 30-50%: High volatility - significant savings potential
+- CV > 50%: Very high volatility - extreme price swings
 
 ### Use Case: Absolute Price Threshold
 
@@ -97,7 +103,7 @@ automation:
 
 ### Use Case: Combined Volatility and Price Check
 
-Most robust approach: Check both volatility and absolute price:
+Most robust approach: Check both volatility and absolute price for smart charging decisions:
 
 ```yaml
 automation:
@@ -112,13 +118,13 @@ automation:
       - condition: numeric_state
         entity_id: sensor.ev_battery_level
         below: 80
-      # Strategy: High volatility OR cheap enough
+      # Strategy: Moderate+ volatility OR cheap enough
       - condition: or
         conditions:
-          # Path 1: High volatility day - trust period classification
+          # Path 1: Moderate+ volatility day (CV >= 15%) - trust period classification
           - condition: template
             value_template: >
-              {{ state_attr('sensor.tibber_home_volatility_today', 'coefficient_of_variation') | float(0) > 15 }}
+              {{ state_attr('sensor.tibber_home_volatility_today', 'coefficient_of_variation') | float(0) >= 15 }}
           # Path 2: Low volatility but price is genuinely cheap
           - condition: numeric_state
             entity_id: sensor.tibber_home_current_interval_price_ct
@@ -135,9 +141,10 @@ automation:
 ```
 
 **Why this works:**
-- On high-volatility days (> 15%): Trust the Best Price classification
-- On low-volatility days (< 15%): Only charge if price is actually cheap (< 18 ct/kWh)
+- On moderate+ volatility days (CV ≥ 15%): Trust the Best Price classification
+- On low-volatility days (CV < 15%): Only charge if price is actually cheap (< 18 ct/kWh)
 - Handles midnight flips gracefully: Continues charging if price stays cheap
+- Adjust the 18 ct/kWh threshold based on your typical local prices
 
 ### Use Case: Ignore Period Flips During Active Period
 
@@ -156,10 +163,10 @@ automation:
       - condition: state
         entity_id: sensor.washing_machine_state
         state: "idle"
-      # And volatility is meaningful
+      # And volatility is meaningful (moderate or higher)
       - condition: template
         value_template: >
-          {{ state_attr('sensor.tibber_home_volatility_today', 'coefficient_of_variation') | float(0) > 15 }}
+          {{ state_attr('sensor.tibber_home_volatility_today', 'coefficient_of_variation') | float(0) >= 15 }}
     action:
       - service: button.press
         target:
