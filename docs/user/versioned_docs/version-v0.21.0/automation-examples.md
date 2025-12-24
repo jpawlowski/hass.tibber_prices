@@ -29,8 +29,8 @@ On days with low price variation (coefficient of variation < 15%), the differenc
 
 ```yaml
 automation:
-  - alias: "Dishwasher - Best Price (Moderate+ Volatility)"
-    description: "Start dishwasher during Best Price period, but only on days with meaningful price differences"
+  - alias: "Water Heater - Best Price (Moderate+ Volatility)"
+    description: "Heat water during Best Price period, but only on days with meaningful price differences"
     trigger:
       - platform: state
         entity_id: binary_sensor.tibber_home_best_price_period
@@ -40,23 +40,24 @@ automation:
       - condition: template
         value_template: >
           {{ state_attr('sensor.tibber_home_volatility_today', 'coefficient_of_variation') | float(0) >= 15 }}
-      # Optional: Ensure dishwasher is idle and door closed
-      - condition: state
-        entity_id: binary_sensor.dishwasher_door
-        state: "off"
+      # Optional: Check water temperature is below target
+      - condition: numeric_state
+        entity_id: sensor.water_heater_temperature
+        below: 55
     action:
       - service: switch.turn_on
         target:
-          entity_id: switch.dishwasher_smart_plug
+          entity_id: switch.water_heater
       - service: notify.mobile_app
         data:
-          message: "Dishwasher started during Best Price period ({{ states('sensor.tibber_home_current_interval_price_ct') }} ct/kWh, volatility {{ state_attr('sensor.tibber_home_volatility_today', 'coefficient_of_variation') }}%)"
+          message: "Water heater started during Best Price period ({{ states('sensor.tibber_home_current_interval_price_ct') }} ct/kWh, volatility {{ state_attr('sensor.tibber_home_volatility_today', 'coefficient_of_variation') }}%)"
 ```
 
 **Why this works:**
 - On moderate+ volatility days (CV >= 15%), Best Price periods offer worthwhile savings
 - On low-volatility days (CV < 15%), price differences are minimal (typically < 3 ct/kWh span)
-- User can manually start dishwasher on low-volatility days without automation interference
+- Water heaters are ideal for price-based automation: high consumption (2-3 kW), thermal storage allows flexible timing
+- User can manually boost temperature anytime if needed
 
 **Volatility threshold guide:**
 - CV < 15%: Low volatility - minimal price variation
@@ -148,58 +149,79 @@ automation:
 
 ### Use Case: Ignore Period Flips During Active Period
 
-Prevent automations from stopping mid-cycle when a period flips at midnight:
+Prevent automations from stopping mid-cycle when a period flips at midnight. Ideal for devices that run continuously for several hours:
 
 ```yaml
 automation:
-  - alias: "Washing Machine - Complete Cycle"
-    description: "Start washing machine during Best Price, ignore midnight flips"
+  - alias: "Pool Pump - Complete Filtration Cycle"
+    description: "Run pool pump during Best Price period, ignore midnight flips"
     trigger:
       - platform: state
         entity_id: binary_sensor.tibber_home_best_price_period
         to: "on"
     condition:
-      # Only start if washing machine is idle
+      # Only start if pump is off
       - condition: state
-        entity_id: sensor.washing_machine_state
-        state: "idle"
+        entity_id: switch.pool_pump
+        state: "off"
       # And volatility is meaningful (moderate or higher)
       - condition: template
         value_template: >
           {{ state_attr('sensor.tibber_home_volatility_today', 'coefficient_of_variation') | float(0) >= 15 }}
+      # And we haven't run today yet
+      - condition: state
+        entity_id: input_boolean.pool_pump_auto_started_today
+        state: "off"
     action:
-      - service: button.press
+      - service: switch.turn_on
         target:
-          entity_id: button.washing_machine_eco_program
+          entity_id: switch.pool_pump
       # Create input_boolean to track active cycle
       - service: input_boolean.turn_on
         target:
-          entity_id: input_boolean.washing_machine_auto_started
+          entity_id: input_boolean.pool_pump_auto_started_today
+      - service: notify.mobile_app
+        data:
+          message: "Pool pump started during Best Price period"
 
-  # Separate automation: Clear flag when cycle completes
-  - alias: "Washing Machine - Cycle Complete"
+  # Separate automation: Turn off after configured runtime
+  - alias: "Pool Pump - Stop After Runtime"
     trigger:
       - platform: state
-        entity_id: sensor.washing_machine_state
-        to: "finished"
+        entity_id: switch.pool_pump
+        to: "on"
+        for:
+          hours: 6  # Typical pool filtration cycle
     condition:
-      # Only clear flag if we auto-started it
+      # Only stop if we auto-started it
       - condition: state
-        entity_id: input_boolean.washing_machine_auto_started
+        entity_id: input_boolean.pool_pump_auto_started_today
         state: "on"
+    action:
+      - service: switch.turn_off
+        target:
+          entity_id: switch.pool_pump
+      - service: notify.mobile_app
+        data:
+          message: "Pool pump filtration cycle complete"
+
+  # Reset daily flag at midnight
+  - alias: "Pool Pump - Reset Daily Flag"
+    trigger:
+      - platform: time
+        at: "00:00:00"
     action:
       - service: input_boolean.turn_off
         target:
-          entity_id: input_boolean.washing_machine_auto_started
-      - service: notify.mobile_app
-        data:
-          message: "Washing cycle complete"
+          entity_id: input_boolean.pool_pump_auto_started_today
 ```
 
 **Why this works:**
-- Uses `input_boolean` to track auto-started cycles
-- Won't trigger multiple times if period flips during the 2-3 hour wash cycle
+- Uses `input_boolean` to track auto-started cycles and prevent multiple runs per day
+- Won't trigger multiple times if period flips during the 6-hour filtration cycle
+- Pool pumps are ideal: high consumption (1-2 kW), flexible timing, run for several hours
 - Only triggers on "off" → "on" transitions, not during "on" → "on" continuity
+- Handles midnight boundary gracefully - continues running if started before midnight
 
 ### Use Case: Per-Period Day Volatility
 
