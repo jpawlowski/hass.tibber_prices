@@ -25,12 +25,12 @@ These examples show how to handle low-volatility days where period classificatio
 
 ### Use Case: Only Act on Meaningful Price Variations
 
-On days with low price variation (coefficient of variation < 15%), the difference between "cheap" and "expensive" periods is minimal. This automation only runs appliances when volatility is moderate or higher, ensuring meaningful savings:
+On days with low price variation (coefficient of variation < 15%), the difference between "cheap" and "expensive" periods is minimal. This automation only charges devices when volatility is moderate or higher, ensuring meaningful savings:
 
 ```yaml
 automation:
-  - alias: "Water Heater - Best Price (Moderate+ Volatility)"
-    description: "Heat water during Best Price period, but only on days with meaningful price differences"
+  - alias: "Home Battery - Charge During Best Price (Moderate+ Volatility)"
+    description: "Charge home battery during Best Price periods, but only on days with meaningful price differences"
     trigger:
       - platform: state
         entity_id: binary_sensor.tibber_home_best_price_period
@@ -40,24 +40,24 @@ automation:
       - condition: template
         value_template: >
           {{ state_attr('sensor.tibber_home_volatility_today', 'coefficient_of_variation') | float(0) >= 15 }}
-      # Optional: Check water temperature is below target
+      # Only charge if battery has capacity
       - condition: numeric_state
-        entity_id: sensor.water_heater_temperature
-        below: 55
+        entity_id: sensor.home_battery_level
+        below: 90
     action:
       - service: switch.turn_on
         target:
-          entity_id: switch.water_heater
+          entity_id: switch.home_battery_charge
       - service: notify.mobile_app
         data:
-          message: "Water heater started during Best Price period ({{ states('sensor.tibber_home_current_interval_price_ct') }} ct/kWh, volatility {{ state_attr('sensor.tibber_home_volatility_today', 'coefficient_of_variation') }}%)"
+          message: "Home battery charging during Best Price period ({{ states('sensor.tibber_home_current_interval_price_ct') }} ct/kWh, volatility {{ state_attr('sensor.tibber_home_volatility_today', 'coefficient_of_variation') }}%)"
 ```
 
 **Why this works:**
 - On moderate+ volatility days (CV ≥ 15%), Best Price periods offer worthwhile savings
 - On low-volatility days (CV < 15%), price differences are minimal (typically < 3 ct/kWh span)
-- Water heaters are ideal for price-based automation: high consumption (2-3 kW), thermal storage allows flexible timing
-- User can manually boost temperature anytime if needed
+- Home batteries are ideal for price-based automation: high consumption (5-10 kW), purpose-built for price arbitrage
+- Battery can discharge during peak prices for additional savings or grid support
 
 **Volatility threshold guide:**
 - CV < 15%: Low volatility - minimal price variation
