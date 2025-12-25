@@ -303,9 +303,9 @@
                     "volatility_threshold_very_high": "Veldig høy terskel"
                 },
                 "data_description": {
-                    "volatility_threshold_moderate": "Grenseverdi for standardavvik (% av gjennomsnitt) for å klassifisere prisvariasjonen som 'moderat'. Eksempel: 10 betyr standardavvik ≥ 10% av gjennomsnitt. Dette indikerer økt prisustabilitet. Standard: 10%",
-                    "volatility_threshold_high": "Grenseverdi for standardavvik (% av gjennomsnitt) for å klassifisere prisvariasjonen som 'høy'. Eksempel: 20 betyr standardavvik ≥ 20% av gjennomsnitt. Dette indikerer betydelige prissvingninger. Standard: 20%",
-                    "volatility_threshold_very_high": "Grenseverdi for standardavvik (% av gjennomsnitt) for å klassifisere prisvariasjonen som 'veldig høy'. Eksempel: 30 betyr standardavvik ≥ 30% av gjennomsnitt. Dette indikerer ekstrem prisustabilitet. Standard: 30%"
+                    "volatility_threshold_moderate": "Variasjonskoeffisient (VK) der prisene anses som 'moderat volatile'. VK = (standardavvik / gjennomsnitt) × 100%. Eksempel: 15 betyr prissvingninger på ±15% rundt gjennomsnittet. Sensorer viser denne klassifiseringen, trendsensorer blir mer følsomme. Standard: 15%",
+                    "volatility_threshold_high": "Variasjonskoeffisient (VK) der prisene anses som 'svært volatile'. Eksempel: 30 betyr prissvingninger på ±30% rundt gjennomsnittet. Større prishopp forventes, trendsensorer blir mindre følsomme. Standard: 30%",
+                    "volatility_threshold_very_high": "Variasjonskoeffisient (VK) der prisene anses som 'veldig svært volatile'. Eksempel: 50 betyr ekstreme prissvingninger på ±50% rundt gjennomsnittet. På slike dager er sterke pristoppsannsynlige. Standard: 50%"
                 },
                 "submit": "↩ Lagre & tilbake"
             },

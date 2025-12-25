@@ -290,24 +290,24 @@
             "long_description": "Toont het tijdstempel van het laatst beschikbare prijsgegevensinterval van je Tibber-abonnement"
         },
         "today_volatility": {
-            "description": "Prijsvolatiliteitsclassificatie voor vandaag",
-            "long_description": "Toont hoeveel elektriciteitsprijzen variëren gedurende vandaag op basis van de spreiding (verschil tussen hoogste en laagste prijs). Classificatie: laag = spreiding < 5ct, matig = 5-15ct, hoog = 15-30ct, zeer hoog = >30ct.",
-            "usage_tips": "Gebruik dit om te bepalen of prijsgebaseerde optimalisatie de moeite waard is. Bijvoorbeeld, met een balkonbatterij met 15% efficiëntieverlies is optimalisatie alleen zinvol wanneer volatiliteit ten minste matig is. Maak automatiseringen die volatiliteit controleren voordat je laad-/ontlaadcycli plant."
+            "description": "Hoeveel de stroomprijzen vandaag schommelen",
+            "long_description": "Geeft aan of de prijzen vandaag stabiel blijven of grote schommelingen hebben. Lage volatiliteit betekent vrij constante prijzen – timing maakt weinig uit. Hoge volatiliteit betekent duidelijke prijsverschillen gedurende de dag – goede kans om verbruik naar goedkopere periodes te verschuiven. `price_coefficient_variation_%` toont het percentage, `price_spread` de absolute prijsspanne.",
+            "usage_tips": "Gebruik dit om te beslissen of optimaliseren de moeite waard is. Bij lage volatiliteit kun je apparaten op elk moment laten draaien. Bij hoge volatiliteit bespaar je merkbaar door Best Price-periodes te volgen."
         },
         "tomorrow_volatility": {
-            "description": "Prijsvolatiliteitsclassificatie voor morgen",
-            "long_description": "Toont hoeveel elektriciteitsprijzen zullen variëren gedurende morgen op basis van de spreiding (verschil tussen hoogste en laagste prijs). Wordt onbeschikbaar totdat de gegevens van morgen zijn gepubliceerd (meestal 13:00-14:00 CET).",
-            "usage_tips": "Gebruik dit voor vooruitplanning van het energieverbruik van morgen. Als morgen hoog of zeer hoog volatiliteit heeft, is het de moeite waard om de timing van energieverbruik te optimaliseren. Bij laag kun je apparaten op elk moment gebruiken zonder significante kostenverschillen."
+            "description": "Hoeveel de stroomprijzen morgen zullen schommelen",
+            "long_description": "Geeft aan of de prijzen morgen stabiel blijven of grote schommelingen hebben. Beschikbaar zodra de gegevens voor morgen zijn gepubliceerd (meestal 13:00–14:00 CET). Lage volatiliteit betekent vrij constante prijzen – timing is niet kritisch. Hoge volatiliteit betekent duidelijke prijsverschillen gedurende de dag – goede kans om energie-intensieve taken te plannen. `price_coefficient_variation_%` toont het percentage, `price_spread` de absolute prijsspanne.",
+            "usage_tips": "Gebruik dit om het verbruik van morgen te plannen. Hoge volatiliteit? Plan flexibele lasten in Best Price-periodes. Lage volatiliteit? Laat apparaten draaien wanneer het jou uitkomt."
         },
         "next_24h_volatility": {
-            "description": "Prijsvolatiliteitsclassificatie voor de rollende volgende 24 uur",
-            "long_description": "Toont hoeveel elektriciteitsprijzen variëren in de volgende 24 uur vanaf nu (rollend venster). Dit overschrijdt daggrenzen en wordt elke 15 minuten bijgewerkt, wat een vooruitkijkende volatiliteitsbeoordeling biedt onafhankelijk van kalenderdagen.",
-            "usage_tips": "Beste sensor voor realtime optimalisatiebeslissingen. In tegenstelling tot vandaag/morgen-sensoren die om middernacht wisselen, biedt deze een continue 24-uurs volatiliteitsbeoordeling. Gebruik voor batterijlaadstrategieën die over daggrenzen heen gaan."
+            "description": "Hoeveel de prijzen de komende 24 uur zullen schommelen",
+            "long_description": "Geeft de prijsvolatiliteit aan voor een rollend 24-uursvenster vanaf nu (wordt elke 15 minuten bijgewerkt). Lage volatiliteit betekent vrij constante prijzen. Hoge volatiliteit betekent merkbare prijsschommelingen en dus optimalisatiemogelijkheden. In tegenstelling tot vandaag/morgen-sensoren overschrijdt deze daggrenzen en geeft een doorlopende vooruitblik. `price_coefficient_variation_%` toont het percentage, `price_spread` de absolute prijsspanne.",
+            "usage_tips": "Het beste voor beslissingen in real-time. Gebruik bij het plannen van batterijladen of andere flexibele lasten die over middernacht kunnen lopen. Biedt een consistent 24-uurs beeld, los van de kalenderdag."
         },
         "today_tomorrow_volatility": {
-            "description": "Gecombineerde prijsvolatiliteitsclassificatie voor vandaag en morgen",
-            "long_description": "Toont volatiliteit over zowel vandaag als morgen gecombineerd (wanneer de gegevens van morgen beschikbaar zijn). Biedt een uitgebreid overzicht van prijsvariatie over maximaal 48 uur. Valt terug op alleen vandaag wanneer de gegevens van morgen nog niet beschikbaar zijn.",
-            "usage_tips": "Gebruik dit voor meerdaagse planning en om te begrijpen of prijskansen bestaan over de daggrenzen heen. De attributen 'today_volatility' en 'tomorrow_volatility' tonen individuele dagbijdragen. Handig voor het plannen van laadsessies die middernacht kunnen overschrijden."
+            "description": "Gecombineerde prijsvolatiliteit voor vandaag en morgen",
+            "long_description": "Geeft de totale volatiliteit weer wanneer vandaag en morgen samen worden bekeken (zodra morgengegevens beschikbaar zijn). Toont of er duidelijke prijsverschillen over de daggrens heen zijn. Valt terug naar alleen vandaag als morgengegevens ontbreken. Handig voor meerdaagse optimalisatie. `price_coefficient_variation_%` toont het percentage, `price_spread` de absolute prijsspanne.",
+            "usage_tips": "Gebruik voor taken die meerdere dagen beslaan. Kijk of de prijsverschillen groot genoeg zijn om plannen op te baseren. De afzonderlijke dag-sensoren tonen per-dag bijdragen als je meer detail wilt."
         },
         "data_lifecycle_status": {
             "description": "Huidige status van prijsgegevenslevenscyclus en caching",

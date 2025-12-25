@@ -290,29 +290,29 @@
             "long_description": "Visar tidsstämpeln för det senaste tillgängliga prisdataintervallet från ditt Tibber-abonnemang"
         },
         "today_volatility": {
-            "description": "Prisvolatilitetsklassificering för idag",
-            "long_description": "Visar hur mycket elpriserna varierar under dagen baserat på spridningen (skillnaden mellan högsta och lägsta pris). Klassificering: låg = spridning < 5 öre, måttlig = 5-15 öre, hög = 15-30 öre, mycket hög = >30 öre.",
-            "usage_tips": "Använd detta för att avgöra om prisbaserad optimering är värt besväret. Till exempel, med ett balkongbatteri som har 15% effektivitetsförlust är optimering endast meningsfull när volatiliteten är åtminstone måttlig. Skapa automationer som kontrollerar volatiliteten innan laddnings-/urladdningscykler planeras."
+            "description": "Prisvolatilitetsklassificering för idag, baserat på variationskoefficienten.",
+            "long_description": "Visar prisvolatiliteten för idag, beräknad med hjälp av variationskoefficienten (VK). Sensorns tillstånd är en klassificering (Låg, Måttlig, Hög, Mycket Hög) baserat på VK. Det exakta VK-värdet är tillgängligt i attributet `price_coefficient_variation_%`.",
+            "usage_tips": "Använd detta för att avgöra om prisbaserad optimering är värt besväret. Till exempel, med ett balkongbatteri som har 15% effektivitetsförlust är optimering endast meningsfull när volatiliteten är åtminstone måttlig. Skapa automationer som kontrollerar tillståndet på denna sensor innan du schemalägger laddnings- eller urladdningscykler."
+        },
+        "today_volatility": {
+            "description": "Hur mycket elpriserna varierar idag",
+            "long_description": "Visar om dagens priser är stabila eller har stora svängningar. Låg volatilitet innebär ganska jämna priser – timing spelar liten roll. Hög volatilitet innebär tydliga prisskillnader under dagen – bra tillfälle att flytta förbrukning till billigare perioder. `price_coefficient_variation_%` visar procentvärdet, `price_spread` visar den absoluta prisspannet.",
+            "usage_tips": "Använd detta för att avgöra om optimering är värt besväret. Vid låg volatilitet kan du köra enheter när som helst. Vid hög volatilitet sparar du märkbart genom att följa Best Price-perioder."
         },
         "tomorrow_volatility": {
-            "description": "Prisvolatilitetsklassificering för imorgon",
-            "long_description": "Visar hur mycket elpriserna kommer att variera under morgondagen baserat på spridningen (skillnaden mellan högsta och lägsta pris). Blir otillgänglig tills morgondagens data publiceras (vanligtvis 13:00-14:00 CET).",
-            "usage_tips": "Använd detta för förhandsplanering av morgondagens energianvändning. Om morgondagen har hög eller mycket hög volatilitet är det värt att optimera energiförbrukningstiming. Vid låg volatilitet kan du köra enheter när som helst utan betydande kostnadsskillnader."
+            "description": "Hur mycket elpriserna kommer att variera i morgon",
+            "long_description": "Visar om priserna i morgon blir stabila eller får stora svängningar. Tillgänglig när morgondagens data är publicerad (vanligen 13:00–14:00 CET). Låg volatilitet innebär ganska jämna priser – timing är inte kritisk. Hög volatilitet innebär tydliga prisskillnader under dagen – bra läge att planera energikrävande uppgifter. `price_coefficient_variation_%` visar procentvärdet, `price_spread` visar den absoluta prisspannet.",
+            "usage_tips": "Använd för att planera morgondagens förbrukning. Hög volatilitet? Planera flexibla laster i Best Price-perioder. Låg volatilitet? Kör enheter när det passar dig."
         },
         "next_24h_volatility": {
-            "description": "Prisvolatilitetsklassificering för rullande nästa 24 timmar",
-            "long_description": "Visar hur mycket elpriserna varierar under de nästa 24 timmarna från nu (rullande fönster). Detta korsar daggränser och uppdateras var 15:e minut, vilket ger en framåtblickande volatilitetsbedömning oberoende av kalenderdagar.",
-            "usage_tips": "Bästa sensorn för realtidsoptimeringsbeslut. Till skillnad från idag/imorgon-sensorer som växlar vid midnatt ger detta en kontinuerlig 24t volatilitetsbedömning. Använd för batteriladningsstrategier som sträcker sig över daggränser."
+            "description": "Hur mycket priserna varierar de kommande 24 timmarna",
+            "long_description": "Visar prisvolatilitet för ett rullande 24-timmarsfönster från nu (uppdateras var 15:e minut). Låg volatilitet innebär ganska jämna priser. Hög volatilitet innebär märkbara prissvängningar och därmed optimeringsmöjligheter. Till skillnad från idag/i morgon-sensorer korsar den här dagsgränser och ger en kontinuerlig framåtblickande bedömning. `price_coefficient_variation_%` visar procentvärdet, `price_spread` visar den absoluta prisspannet.",
+            "usage_tips": "Bäst för beslut i realtid. Använd vid planering av batteriladdning eller andra flexibla laster som kan gå över midnatt. Ger en konsekvent 24h-bild oberoende av kalenderdag."
         },
         "today_tomorrow_volatility": {
-            "description": "Kombinerad prisvolatilitetsklassificering för idag och imorgon",
-            "long_description": "Visar volatilitet över både idag och imorgon kombinerat (när morgondagens data är tillgänglig). Ger en utökad vy av prisvariation över upp till 48 timmar. Faller tillbaka till endast idag när morgondagens data inte är tillgänglig ännu.",
-            "usage_tips": "Använd detta för flerdagarsplanering och för att förstå om prismöjligheter existerar över dagsgränsen. Attributen 'today_volatility' och 'tomorrow_volatility' visar individuella dagsbidrag. Användbart för planering av laddningssessioner som kan sträcka sig över midnatt."
-        },
-        "data_lifecycle_status": {
-            "description": "Aktuell status för prisdatalivscykel och cachning",
-            "long_description": "Visar om integrationen använder cachad data eller färsk data från API:et. Visar aktuell livscykelstatus: 'cached' (använder lagrad data), 'fresh' (nyss hämtad från API), 'refreshing' (hämtar för närvarande), 'searching_tomorrow' (söker aktivt efter morgondagens data efter 13:00), 'turnover_pending' (inom 15 minuter före midnatt, 23:45-00:00), eller 'error' (hämtning misslyckades). Inkluderar omfattande attribut som cache-ålder, nästa API-polling, datafullständighet och API-anropsstatistik.",
-            "usage_tips": "Använd denna diagnostiksensor för att förstå datafärskhet och API-anropsmönster. Kontrollera 'cache_age'-attributet för att se hur gammal den aktuella datan är. Övervaka 'next_api_poll' för att veta när nästa uppdatering är schemalagd. Använd 'data_completeness' för att se om data för igår/idag/imorgon är tillgänglig. Räknaren 'api_calls_today' hjälper till att spåra API-användning. Perfekt för felsökning eller förståelse av integrationens beteende."
+            "description": "Kombinerad prisvolatilitet för idag och imorgon",
+            "long_description": "Visar den samlade volatiliteten när idag och imorgon ses tillsammans (när morgondatan finns). Visar om det finns tydliga prisskillnader över dagsgränsen. Faller tillbaka till endast idag om morgondatan saknas. Nyttig för flerdagarsoptimering. `price_coefficient_variation_%` visar procentvärdet, `price_spread` visar den absoluta prisspannet.",
+            "usage_tips": "Använd för uppgifter som sträcker sig över flera dagar. Kontrollera om prisskillnaderna är stora nog för att planera efter. De enskilda dag-sensorerna visar bidrag per dag om du behöver mer detaljer."
         },
         "best_price_end_time": {
             "description": "När nuvarande eller nästa billigperiod slutar",

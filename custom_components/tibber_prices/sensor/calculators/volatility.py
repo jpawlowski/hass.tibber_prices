@@ -4,7 +4,15 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from custom_components.tibber_prices.const import get_display_unit_factor
+from custom_components.tibber_prices.const import (
+    CONF_VOLATILITY_THRESHOLD_HIGH,
+    CONF_VOLATILITY_THRESHOLD_MODERATE,
+    CONF_VOLATILITY_THRESHOLD_VERY_HIGH,
+    DEFAULT_VOLATILITY_THRESHOLD_HIGH,
+    DEFAULT_VOLATILITY_THRESHOLD_MODERATE,
+    DEFAULT_VOLATILITY_THRESHOLD_VERY_HIGH,
+    get_display_unit_factor,
+)
 from custom_components.tibber_prices.entity_utils import add_icon_color_attribute
 from custom_components.tibber_prices.sensor.attributes import (
     add_volatility_type_attributes,
@@ -58,9 +66,15 @@ class TibberPricesVolatilityCalculator(TibberPricesBaseCalculator):
 
         # Get volatility thresholds from config
         thresholds = {
-            "threshold_moderate": self.config.get("volatility_threshold_moderate", 5.0),
-            "threshold_high": self.config.get("volatility_threshold_high", 15.0),
-            "threshold_very_high": self.config.get("volatility_threshold_very_high", 30.0),
+            "threshold_moderate": self.config.get(
+                CONF_VOLATILITY_THRESHOLD_MODERATE,
+                DEFAULT_VOLATILITY_THRESHOLD_MODERATE,
+            ),
+            "threshold_high": self.config.get(CONF_VOLATILITY_THRESHOLD_HIGH, DEFAULT_VOLATILITY_THRESHOLD_HIGH),
+            "threshold_very_high": self.config.get(
+                CONF_VOLATILITY_THRESHOLD_VERY_HIGH,
+                DEFAULT_VOLATILITY_THRESHOLD_VERY_HIGH,
+            ),
         }
 
         # Get prices based on volatility type
@@ -90,11 +104,11 @@ class TibberPricesVolatilityCalculator(TibberPricesBaseCalculator):
         # Store attributes for this sensor
         self._last_volatility_attributes = {
             "price_spread": round(spread_display, 2),
-            "price_volatility": volatility,
-            "coefficient_of_variation": round(cv, 2) if cv is not None else None,
+            "price_coefficient_variation_%": round(cv, 2) if cv is not None else None,
+            "price_volatility": volatility.lower(),
             "price_min": round(price_min * factor, 2),
             "price_max": round(price_max * factor, 2),
-            "price_mean": round(price_mean * factor, 2),  # Mean used for volatility calculation
+            "price_mean": round(price_mean * factor, 2),
             "interval_count": len(prices_to_analyze),
         }
 

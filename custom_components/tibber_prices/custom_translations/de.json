@@ -290,24 +290,24 @@
             "long_description": "Zeigt den Zeitstempel des letzten verfügbaren Preisdatenintervalls von deinem Tibber-Abonnement"
         },
         "today_volatility": {
-            "description": "Preisvolatilitätsklassifizierung für heute",
-            "long_description": "Zeigt, wie stark die Strompreise im Laufe des heutigen Tages variieren, basierend auf der Spannweite (Differenz zwischen höchstem und niedrigstem Preis). Klassifizierung: niedrig = Spannweite < 5ct, moderat = 5-15ct, hoch = 15-30ct, sehr hoch = >30ct.",
-            "usage_tips": "Verwende dies, um zu entscheiden, ob preisbasierte Optimierung lohnenswert ist. Zum Beispiel lohnt sich bei einer Balkonbatterie mit 15% Effizienzverlusten die Optimierung nur, wenn die Volatilität mindestens moderat ist. Erstelle Automatisierungen, die die Volatilität prüfen, bevor Lade-/Entladezyklen geplant werden."
+            "description": "Wie stark sich die Strompreise heute verändern",
+            "long_description": "Zeigt, ob die heutigen Preise stabil bleiben oder stark schwanken. Niedrige Volatilität bedeutet recht konstante Preise – Timing ist kaum wichtig. Hohe Volatilität bedeutet spürbare Preisunterschiede über den Tag – gute Chance, den Verbrauch auf günstigere Zeiten zu verschieben. `price_coefficient_variation_%` zeigt den Prozentwert, `price_spread` die absolute Preisspanne.",
+            "usage_tips": "Nutze dies, um zu entscheiden, ob Optimierung sich lohnt. Bei niedriger Volatilität kannst du Geräte jederzeit laufen lassen. Bei hoher Volatilität sparst du spürbar, wenn du Best-Price-Perioden nutzt."
         },
         "tomorrow_volatility": {
-            "description": "Preisvolatilitätsklassifizierung für morgen",
-            "long_description": "Zeigt, wie stark die Strompreise im Laufe des morgigen Tages variieren werden, basierend auf der Spannweite (Differenz zwischen höchstem und niedrigstem Preis). Wird nicht verfügbar, bis morgige Daten veröffentlicht sind (typischerweise 13:00-14:00 MEZ).",
-            "usage_tips": "Verwende dies zur Vorausplanung des morgigen Energieverbrauchs. Bei hoher oder sehr hoher Volatilität morgen lohnt sich die Optimierung des Energieverbrauchs. Bei niedriger Volatilität kannst du Geräte jederzeit ohne wesentliche Kostenunterschiede betreiben."
+            "description": "Wie stark sich die Strompreise morgen verändern werden",
+            "long_description": "Zeigt, ob die Preise morgen stabil bleiben oder stark schwanken. Verfügbar, sobald die morgigen Daten veröffentlicht sind (typischerweise 13:00–14:00 MEZ). Niedrige Volatilität bedeutet recht konstante Preise – Timing ist nicht kritisch. Hohe Volatilität bedeutet deutliche Preisunterschiede über den Tag – gute Gelegenheit, energieintensive Aufgaben zu planen. `price_coefficient_variation_%` zeigt den Prozentwert, `price_spread` die absolute Preisspanne.",
+            "usage_tips": "Nutze dies für die Planung des morgigen Energieverbrauchs. Hohe Volatilität? Plane flexible Lasten in Best-Price-Perioden. Niedrige Volatilität? Lass Geräte laufen, wann es dir passt."
         },
         "next_24h_volatility": {
-            "description": "Preisvolatilitätsklassifizierung für die rollierenden nächsten 24 Stunden",
-            "long_description": "Zeigt, wie stark die Strompreise in den nächsten 24 Stunden ab jetzt variieren (rollierendes Fenster). Dies überschreitet Tagesgrenzen und aktualisiert sich alle 15 Minuten, wodurch eine vorausschauende Volatilitätsbewertung unabhängig von Kalendertagen bereitgestellt wird.",
-            "usage_tips": "Bester Sensor für Echtzeitoptimierungsentscheidungen. Im Gegensatz zu Heute/Morgen-Sensoren, die um Mitternacht wechseln, bietet dies eine kontinuierliche 24h-Volatilitätsbewertung. Verwende dies für Batterielade-Strategien, die Tagesgrenzen überschreiten."
+            "description": "Wie stark sich die Preise in den nächsten 24 Stunden verändern",
+            "long_description": "Zeigt die Preisvolatilität für ein rollierendes 24-Stunden-Fenster ab jetzt (aktualisiert alle 15 Minuten). Niedrige Volatilität bedeutet recht konstante Preise. Hohe Volatilität bedeutet spürbare Preisschwankungen und damit Chancen zur Optimierung. Im Unterschied zu Heute/Morgen-Sensoren überschreitet dieser Tagesgrenzen und liefert eine durchgängige Vorhersage. `price_coefficient_variation_%` zeigt den Prozentwert, `price_spread` die absolute Preisspanne.",
+            "usage_tips": "Am besten für Entscheidungen in Echtzeit. Nutze dies für Batterieladestrategien oder andere flexible Lasten, die über Mitternacht laufen könnten. Bietet eine konsistente 24h-Perspektive unabhängig vom Kalendertag."
         },
         "today_tomorrow_volatility": {
-            "description": "Kombinierte Preisvolatilitätsklassifizierung für heute und morgen",
-            "long_description": "Zeigt die Volatilität über heute und morgen zusammen (wenn morgige Daten verfügbar sind). Bietet eine erweiterte Ansicht der Preisvariation über bis zu 48 Stunden. Fällt auf Nur-Heute zurück, wenn morgige Daten noch nicht verfügbar sind.",
-            "usage_tips": "Verwende dies für Mehrtagsplanung und um zu verstehen, ob Preismöglichkeiten über die Tagesgrenze hinweg bestehen. Die Attribute 'today_volatility' und 'tomorrow_volatility' zeigen individuelle Tagesbeiträge. Nützlich für die Planung von Ladesitzungen, die Mitternacht überschreiten könnten."
+            "description": "Kombinierte Preisvolatilität für heute und morgen",
+            "long_description": "Zeigt die Gesamtvolatilität, wenn heute und morgen gemeinsam betrachtet werden (sobald die morgigen Daten verfügbar sind). Zeigt, ob über die Tagesgrenze hinweg deutliche Preisunterschiede bestehen. Fällt auf nur-heute zurück, wenn morgige Daten noch fehlen. Hilfreich für mehrtägige Optimierung. `price_coefficient_variation_%` zeigt den Prozentwert, `price_spread` die absolute Preisspanne.",
+            "usage_tips": "Nutze dies für Aufgaben, die sich über mehrere Tage erstrecken. Prüfe, ob die Preisunterschiede groß genug für eine Planung sind. Die einzelnen Tages-Sensoren zeigen die Beiträge pro Tag, falls du mehr Details brauchst."
         },
         "data_lifecycle_status": {
             "description": "Aktueller Status des Preisdaten-Lebenszyklus und der Zwischenspeicherung",

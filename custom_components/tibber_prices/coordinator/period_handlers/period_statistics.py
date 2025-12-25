@@ -170,8 +170,8 @@ def build_period_summary_dict(
         "price_min": stats.price_min,
         "price_max": stats.price_max,
         "price_spread": stats.price_spread,
+        "price_coefficient_variation_%": stats.coefficient_of_variation,
         "volatility": stats.volatility,
-        "coefficient_of_variation": stats.coefficient_of_variation,
         # 4. Price differences will be added below if available
         # 5. Detail information (additional context)
         "period_interval_count": period_data.period_length,

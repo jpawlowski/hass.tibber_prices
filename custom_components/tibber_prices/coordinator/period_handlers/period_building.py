@@ -550,7 +550,7 @@ def _build_extended_period(
     extended["price_max"] = max(combined_prices)
     extended["price_mean"] = sum(combined_prices) / len(combined_prices)
     extended["price_spread"] = extended["price_max"] - extended["price_min"]
-    extended["coefficient_of_variation"] = round(combined_cv, 1)
+    extended["price_coefficient_variation_%"] = round(combined_cv, 1)
 
     return extended
 

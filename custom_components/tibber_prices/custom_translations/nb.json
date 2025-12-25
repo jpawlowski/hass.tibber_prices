@@ -290,24 +290,24 @@
             "long_description": "Viser tidsstempelet for siste tilgjengelige prisdataintervall fra ditt Tibber-abonnement"
         },
         "today_volatility": {
-            "description": "Prisvolatilitetsklassifisering for i dag",
-            "long_description": "Viser hvor mye strømprisene varierer gjennom dagen basert på spredningen (forskjellen mellom høyeste og laveste pris). Klassifisering: lav = spredning < 5øre, moderat = 5-15øre, høy = 15-30øre, veldig høy = >30øre.",
-            "usage_tips": "Bruk dette til å bestemme om prisbasert optimalisering er verdt det. For eksempel, med et balkongbatteri som har 15% effektivitetstap, er optimalisering kun meningsfull når volatiliteten er minst moderat. Opprett automatiseringer som sjekker volatilitet før planlegging av lade-/utladingssykluser."
+            "description": "Hvor mye strømprisene endrer seg i dag",
+            "long_description": "Viser om dagens priser er stabile eller har store svingninger. Lav volatilitet betyr ganske jevne priser – timing betyr lite. Høy volatilitet betyr tydelige prisforskjeller gjennom dagen – en god sjanse til å flytte forbruk til billigere perioder. `price_coefficient_variation_%` viser prosentverdien, `price_spread` viser den absolutte prisspennet.",
+            "usage_tips": "Bruk dette for å avgjøre om optimalisering er verdt innsatsen. Ved lav volatilitet kan du kjøre enheter når som helst. Ved høy volatilitet sparer du merkbart ved å følge Best Price-perioder."
         },
         "tomorrow_volatility": {
-            "description": "Prisvolatilitetsklassifisering for i morgen",
-            "long_description": "Viser hvor mye strømprisene vil variere gjennom morgendagen basert på spredningen (forskjellen mellom høyeste og laveste pris). Blir utilgjengelig til morgendagens data er publisert (typisk 13:00-14:00 CET).",
-            "usage_tips": "Bruk dette til forhåndsplanlegging av morgendagens energiforbruk. Hvis morgendagen har høy eller veldig høy volatilitet, er det verdt å optimalisere tidspunktet for energiforbruk. Hvis lav, kan du kjøre enheter når som helst uten betydelige kostnadsforskjeller."
+            "description": "Hvor mye strømprisene vil endre seg i morgen",
+            "long_description": "Viser om prisene i morgen blir stabile eller får store svingninger. Tilgjengelig når morgendagens data er publisert (vanligvis 13:00–14:00 CET). Lav volatilitet betyr jevne priser – timing er ikke kritisk. Høy volatilitet betyr tydelige prisforskjeller gjennom dagen – en god mulighet til å planlegge energikrevende oppgaver. `price_coefficient_variation_%` viser prosentverdien, `price_spread` viser den absolutte prisspennet.",
+            "usage_tips": "Bruk dette til å planlegge morgendagens forbruk. Høy volatilitet? Planlegg fleksible laster i Best Price-perioder. Lav volatilitet? Kjør enheter når det passer deg."
         },
         "next_24h_volatility": {
-            "description": "Prisvolatilitetsklassifisering for de rullerende neste 24 timene",
-            "long_description": "Viser hvor mye strømprisene varierer i de neste 24 timene fra nå (rullerende vindu). Dette krysser daggrenser og oppdateres hvert 15. minutt, og gir en fremoverskuende volatilitetsvurdering uavhengig av kalenderdager.",
-            "usage_tips": "Beste sensor for sanntids optimaliseringsbeslutninger. I motsetning til dagens/morgendagens sensorer som bytter ved midnatt, gir denne kontinuerlig 24t volatilitetsvurdering. Bruk til batteriladingsstrategier som spenner over daggrenser."
+            "description": "Hvor mye prisene endrer seg de neste 24 timene",
+            "long_description": "Viser prisvolatilitet for et rullerende 24-timers vindu fra nå (oppdateres hvert 15. minutt). Lav volatilitet betyr jevne priser. Høy volatilitet betyr merkbare prissvingninger og mulighet for optimalisering. I motsetning til i dag/i morgen-sensorer krysser denne daggrenser og gir en kontinuerlig fremoverskuende vurdering. `price_coefficient_variation_%` viser prosentverdien, `price_spread` viser den absolutte prisspennet.",
+            "usage_tips": "Best for beslutninger i sanntid. Bruk når du planlegger batterilading eller andre fleksible laster som kan gå over midnatt. Gir et konsistent 24t-bilde uavhengig av kalenderdag."
         },
         "today_tomorrow_volatility": {
-            "description": "Kombinert prisvolatilitetsklassifisering for i dag og i morgen",
-            "long_description": "Viser volatilitet på tvers av både i dag og i morgen kombinert (når morgendagens data er tilgjengelig). Gir en utvidet visning av prisvariasjoner som spenner over opptil 48 timer. Faller tilbake til bare i dag når morgendagens data ikke er tilgjengelig ennå.",
-            "usage_tips": "Bruk dette for flersdagers planlegging og for å forstå om prismuligheter eksisterer på tvers av dags grensen. Attributtene 'today_volatility' og 'tomorrow_volatility' viser individuelle dagbidrag. Nyttig for planlegging av ladeøkter som kan strekke seg over midnatt."
+            "description": "Kombinert prisvolatilitet for i dag og i morgen",
+            "long_description": "Viser samlet volatilitet når i dag og i morgen sees sammen (når morgendata er tilgjengelig). Viser om det finnes klare prisforskjeller over dagsgrensen. Faller tilbake til kun i dag hvis morgendata mangler. Nyttig for flerdagers optimalisering. `price_coefficient_variation_%` viser prosentverdien, `price_spread` viser den absolutte prisspennet.",
+            "usage_tips": "Bruk for oppgaver som går over flere dager. Sjekk om prisforskjellene er store nok til å planlegge etter. De enkelte dagssensorene viser bidrag per dag om du trenger mer detalj."
         },
         "data_lifecycle_status": {
             "description": "Gjeldende tilstand for prisdatalivssyklus og hurtigbufring",

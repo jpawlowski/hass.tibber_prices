@@ -207,6 +207,8 @@ def add_price_attributes(attributes: dict, current_period: dict, factor: int) ->
         attributes["price_max"] = round(current_period["price_max"] * factor, precision)
     if "price_spread" in current_period:
         attributes["price_spread"] = round(current_period["price_spread"] * factor, precision)
+    if "price_coefficient_variation_%" in current_period:
+        attributes["price_coefficient_variation_%"] = current_period["price_coefficient_variation_%"]
     if "volatility" in current_period:
         attributes["volatility"] = current_period["volatility"]  # Volatility is not a price, keep as-is
 

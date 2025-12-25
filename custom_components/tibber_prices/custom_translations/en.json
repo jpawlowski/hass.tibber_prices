@@ -290,24 +290,24 @@
             "long_description": "Shows the timestamp of the latest available price data interval from your Tibber subscription"
         },
         "today_volatility": {
-            "description": "Price volatility classification for today",
-            "long_description": "Shows how much electricity prices vary throughout today based on the spread (difference between highest and lowest price). Classification: low = spread < 5ct, moderate = 5-15ct, high = 15-30ct, very high = >30ct.",
-            "usage_tips": "Use this to decide if price-based optimization is worthwhile. For example, with a balcony battery that has 15% efficiency losses, optimization only makes sense when volatility is at least moderate. Create automations that check volatility before scheduling charging/discharging cycles."
+            "description": "How much electricity prices change throughout today",
+            "long_description": "Indicates whether today's prices are stable or have big swings. Low volatility means prices stay fairly consistent—timing doesn't matter much. High volatility means significant price differences throughout the day—great opportunity to shift consumption to cheaper periods. Check `price_coefficient_variation_%` for the variance percentage and `price_spread` for the absolute price span.",
+            "usage_tips": "Use this to decide if optimization is worth your effort. On low-volatility days, you can run devices anytime. On high-volatility days, following Best Price periods saves meaningful money."
         },
         "tomorrow_volatility": {
-            "description": "Price volatility classification for tomorrow",
-            "long_description": "Shows how much electricity prices will vary throughout tomorrow based on the spread (difference between highest and lowest price). Becomes unavailable until tomorrow's data is published (typically 13:00-14:00 CET).",
-            "usage_tips": "Use this for advance planning of tomorrow's energy usage. If tomorrow has high or very high volatility, it's worth optimizing energy consumption timing. If low, you can run devices anytime without significant cost differences."
+            "description": "How much electricity prices will change tomorrow",
+            "long_description": "Indicates whether tomorrow's prices will be stable or have big swings. Available once tomorrow's data is published (typically 13:00-14:00 CET). Low volatility means prices stay fairly consistent—timing isn't critical. High volatility means significant price differences throughout the day—good opportunity for scheduling energy-intensive activities. Check `price_coefficient_variation_%` for the variance percentage and `price_spread` for the absolute price span.",
+            "usage_tips": "Use for planning tomorrow's energy consumption. High volatility? Schedule flexible loads during Best Price periods. Low volatility? Run devices whenever is convenient."
         },
         "next_24h_volatility": {
-            "description": "Price volatility classification for the rolling next 24 hours",
-            "long_description": "Shows how much electricity prices vary in the next 24 hours from now (rolling window). This crosses day boundaries and updates every 15 minutes, providing a forward-looking volatility assessment independent of calendar days.",
-            "usage_tips": "Best sensor for real-time optimization decisions. Unlike today/tomorrow sensors that switch at midnight, this provides continuous 24h volatility assessment. Use for battery charging strategies that span across day boundaries."
+            "description": "How much prices will change over the next 24 hours",
+            "long_description": "Indicates price volatility for a rolling 24-hour window from now (updates every 15 minutes). Low volatility means prices stay fairly consistent. High volatility means significant price swings offer optimization opportunities. Unlike today/tomorrow sensors, this crosses day boundaries and provides a continuous forward-looking assessment. Check `price_coefficient_variation_%` for the variance percentage and `price_spread` for the absolute price span.",
+            "usage_tips": "Best for real-time decisions. Use when planning battery charging strategies or other flexible loads that might span across midnight. Provides consistent 24h perspective regardless of calendar day."
         },
         "today_tomorrow_volatility": {
-            "description": "Combined price volatility classification for today and tomorrow",
-            "long_description": "Shows volatility across both today and tomorrow combined (when tomorrow's data is available). Provides an extended view of price variation spanning up to 48 hours. Falls back to today-only when tomorrow's data isn't available yet.",
-            "usage_tips": "Use this for multi-day planning and to understand if price opportunities exist across the day boundary. The 'today_volatility' and 'tomorrow_volatility' breakdown attributes show individual day contributions. Useful for scheduling charging sessions that might span midnight."
+            "description": "Combined price volatility across today and tomorrow",
+            "long_description": "Shows overall price volatility when considering both today and tomorrow together (when available). Indicates whether there are significant price differences across the day boundary. Falls back to today-only when tomorrow's data isn't available yet. Useful for understanding multi-day optimization opportunities. Check `price_coefficient_variation_%` for the variance percentage and `price_spread` for the absolute price span.",
+            "usage_tips": "Use for planning tasks that span multiple days. Check if prices vary enough to make scheduling worthwhile. The individual day volatility sensors show breakdown per day if you need more detail."
         },
         "data_lifecycle_status": {
             "description": "Current state of price data lifecycle and caching",
