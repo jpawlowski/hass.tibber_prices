@@ -2,6 +2,8 @@
 
 Beautiful dashboard layouts using Tibber Prices sensors.
 
+> **Entity ID tip:** `<home_name>` is a placeholder for your Tibber home display name in Home Assistant. Entity IDs are derived from the displayed name (localized), so the exact slug may differ. Example suffixes below use the English display names (en.json) as a baseline. You can find the real ID in **Settings → Devices & Services → Entities** (or **Developer Tools → States**).
+
 ## Basic Price Display Card
 
 Simple card showing current price with dynamic color:
@@ -10,12 +12,12 @@ Simple card showing current price with dynamic color:
 type: entities
 title: Current Electricity Price
 entities:
-  - entity: sensor.tibber_home_current_interval_price
+  - entity: sensor.<home_name>_current_electricity_price
     name: Current Price
     icon: mdi:flash
-  - entity: sensor.tibber_home_current_interval_rating
+  - entity: sensor.<home_name>_current_price_rating
     name: Price Rating
-  - entity: sensor.tibber_home_next_interval_price
+  - entity: sensor.<home_name>_next_electricity_price
     name: Next Price
 ```
 
@@ -27,11 +29,11 @@ Show when best/peak price periods are active:
 type: horizontal-stack
 cards:
   - type: entity
-    entity: binary_sensor.tibber_home_best_price_period
+    entity: binary_sensor.<home_name>_best_price_period
     name: Best Price Active
     icon: mdi:currency-eur-off
   - type: entity
-    entity: binary_sensor.tibber_home_peak_price_period
+    entity: binary_sensor.<home_name>_peak_price_period
     name: Peak Price Active
     icon: mdi:alert
 ```
@@ -42,7 +44,7 @@ cards:
 
 ```yaml
 type: custom:button-card
-entity: sensor.tibber_home_current_interval_level
+entity: sensor.<home_name>_current_price_level
 name: Price Level
 show_state: true
 styles:
@@ -69,16 +71,16 @@ type: vertical-stack
 cards:
   - type: custom:mini-graph-card
     entities:
-      - entity: sensor.tibber_home_current_interval_price
+      - entity: sensor.<home_name>_current_electricity_price
     name: Today's Prices
     hours_to_show: 24
     points_per_hour: 4
 
   - type: glance
     entities:
-      - entity: sensor.tibber_home_best_price_start_time
+      - entity: sensor.<home_name>_best_price_start
         name: Best Period Starts
-      - entity: binary_sensor.tibber_home_best_price_period
+      - entity: binary_sensor.<home_name>_best_price_period
         name: Active Now
 ```
 
@@ -99,17 +101,17 @@ cards:
       - type: entities
         title: Current Status
         entities:
-          - sensor.tibber_home_current_interval_price
-          - sensor.tibber_home_current_interval_rating
+          - sensor.<home_name>_current_electricity_price
+          - sensor.<home_name>_current_price_rating
 
   - type: vertical-stack
     cards:
       - type: entities
         title: Statistics
         entities:
-          - sensor.tibber_home_daily_avg_today
-          - sensor.tibber_home_daily_min_today
-          - sensor.tibber_home_daily_max_today
+          - sensor.<home_name>_price_today
+          - sensor.<home_name>_today_s_lowest_price
+          - sensor.<home_name>_today_s_highest_price
 ```
 
 ## Icon Color Integration
@@ -120,15 +122,15 @@ Using the `icon_color` attribute for dynamic colors:
 type: custom:mushroom-chips-card
 chips:
   - type: entity
-    entity: sensor.tibber_home_current_interval_price
-    icon_color: "{{ state_attr('sensor.tibber_home_current_interval_price', 'icon_color') }}"
+    entity: sensor.<home_name>_current_electricity_price
+    icon_color: "{{ state_attr('sensor.<home_name>_current_electricity_price', 'icon_color') }}"
 
   - type: entity
-    entity: binary_sensor.tibber_home_best_price_period
+    entity: binary_sensor.<home_name>_best_price_period
     icon_color: green
 
   - type: entity
-    entity: binary_sensor.tibber_home_peak_price_period
+    entity: binary_sensor.<home_name>_peak_price_period
     icon_color: red
 ```
 
@@ -143,7 +145,7 @@ type: picture-elements
 image: /local/electricity_dashboard_bg.png
 elements:
   - type: state-label
-    entity: sensor.tibber_home_current_interval_price
+    entity: sensor.<home_name>_current_electricity_price
     style:
       top: 20%
       left: 50%
@@ -151,7 +153,7 @@ elements:
       font-weight: bold
 
   - type: state-badge
-    entity: binary_sensor.tibber_home_best_price_period
+    entity: binary_sensor.<home_name>_best_price_period
     style:
       top: 40%
       left: 30%
@@ -170,7 +172,7 @@ card:
   title: All Price Sensors
 filter:
   include:
-    - entity_id: "sensor.tibber_*_price"
+    - entity_id: "sensor.<home_name>_*_price"
   exclude:
     - state: unavailable
 sort:

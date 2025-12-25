@@ -2,6 +2,8 @@
 
 Many sensors in the Tibber Prices integration automatically change their icon based on their current state. This provides instant visual feedback about price levels, trends, and periods without needing to read the actual values.
 
+> **Entity ID tip:** `<home_name>` is a placeholder for your Tibber home display name in Home Assistant. Entity IDs are derived from the displayed name (localized), so the exact slug may differ. Example suffixes below use the English display names (en.json) as a baseline. You can find the real ID in **Settings → Devices & Services → Entities** (or **Developer Tools → States**).
+
 ## What are Dynamic Icons?
 
 Instead of having a fixed icon, some sensors update their icon to reflect their current state:
@@ -18,15 +20,15 @@ The icons change automatically - no configuration needed!
 To see which icon a sensor currently uses:
 
 1. Go to **Developer Tools** → **States** in Home Assistant
-2. Search for your sensor (e.g., `sensor.tibber_home_current_interval_price_level`)
+2. Search for your sensor (e.g., `sensor.<home_name>_current_price_level`)
 3. Look at the icon displayed in the entity row
 4. Change conditions (wait for price changes) and check if the icon updates
 
 **Common sensor types with dynamic icons:**
 
--   Price level sensors (e.g., `current_interval_price_level`)
--   Price rating sensors (e.g., `current_interval_price_rating`)
--   Volatility sensors (e.g., `volatility_today`)
+-   Price level sensors (e.g., `current_price_level`)
+-   Price rating sensors (e.g., `current_price_rating`)
+-   Volatility sensors (e.g., `today_s_price_volatility`)
 -   Binary sensors (e.g., `best_price_period`, `peak_price_period`)
 
 ## Using Dynamic Icons in Your Dashboard
@@ -38,10 +40,10 @@ Dynamic icons work automatically in standard Home Assistant cards:
 ```yaml
 type: entities
 entities:
-    - entity: sensor.tibber_home_current_interval_price_level
-    - entity: sensor.tibber_home_current_interval_price_rating
-    - entity: sensor.tibber_home_volatility_today
-    - entity: binary_sensor.tibber_home_best_price_period
+    - entity: sensor.<home_name>_current_price_level
+    - entity: sensor.<home_name>_current_price_rating
+    - entity: sensor.<home_name>_today_s_price_volatility
+    - entity: binary_sensor.<home_name>_best_price_period
 ```
 
 The icons will update automatically as the sensor states change.
@@ -51,11 +53,11 @@ The icons will update automatically as the sensor states change.
 ```yaml
 type: glance
 entities:
-    - entity: sensor.tibber_home_current_interval_price_level
+    - entity: sensor.<home_name>_current_price_level
       name: Price Level
-    - entity: sensor.tibber_home_current_interval_price_rating
+    - entity: sensor.<home_name>_current_price_rating
       name: Rating
-    - entity: binary_sensor.tibber_home_best_price_period
+    - entity: binary_sensor.<home_name>_best_price_period
       name: Best Price
 ```
 
@@ -63,7 +65,7 @@ entities:
 
 ```yaml
 type: custom:button-card
-entity: sensor.tibber_home_current_interval_price_level
+entity: sensor.<home_name>_current_price_level
 name: Current Price Level
 show_state: true
 # Icon updates automatically - no need to specify it!
@@ -73,7 +75,7 @@ show_state: true
 
 ```yaml
 type: custom:mushroom-entity-card
-entity: sensor.tibber_home_volatility_today
+entity: sensor.<home_name>_today_s_price_volatility
 name: Price Volatility
 # Icon changes automatically based on volatility level
 ```
@@ -87,7 +89,7 @@ If you want to use a fixed icon instead of the dynamic one:
 ```yaml
 type: entities
 entities:
-    - entity: sensor.tibber_home_current_interval_price_level
+    - entity: sensor.<home_name>_current_price_level
       icon: mdi:lightning-bolt # Fixed icon, won't change
 ```
 
@@ -95,7 +97,7 @@ entities:
 
 ```yaml
 type: custom:button-card
-entity: sensor.tibber_home_current_interval_price_rating
+entity: sensor.<home_name>_current_price_rating
 name: Price Rating
 icon: mdi:chart-line # Fixed icon overrides dynamic behavior
 show_state: true
@@ -109,7 +111,7 @@ Dynamic icons work great together with dynamic colors! See the **[Dynamic Icon C
 
 ```yaml
 type: custom:button-card
-entity: sensor.tibber_home_current_interval_price_level
+entity: sensor.<home_name>_current_price_level
 name: Current Price
 show_state: true
 # Icon changes automatically (cheap/expensive cash icons)
@@ -137,7 +139,7 @@ Binary sensors may have different icons for different states:
     -   Has upcoming periods: Timer/waiting icon
     -   No upcoming periods: Sleep/inactive icon
 
-**Example:** `binary_sensor.tibber_home_best_price_period`
+**Example:** `binary_sensor.<home_name>_best_price_period`
 
 -   When ON: Shows a piggy bank (good time to save money)
 -   When OFF with future periods: Shows a timer (waiting for next period)

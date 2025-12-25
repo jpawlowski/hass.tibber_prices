@@ -10,6 +10,8 @@ Many sensors in the Tibber Prices integration provide an `icon_color` attribute 
 
 > **Related:** Many sensors also automatically change their **icon** based on state. See the **[Dynamic Icons Guide](dynamic-icons.md)** for details.
 
+> **Entity ID tip:** `<home_name>` is a placeholder for your Tibber home display name in Home Assistant. Entity IDs are derived from the displayed name (localized), so the exact slug may differ. Example suffixes below use the English display names (en.json) as a baseline. You can find the real ID in **Settings → Devices & Services → Entities** (or **Developer Tools → States**).
+
 ## What is icon_color?
 
 The `icon_color` attribute contains a **CSS variable name** (not a direct color value) that changes based on the sensor's state. For example:
@@ -33,15 +35,15 @@ You can use the `icon_color` attribute directly in your card templates, or inter
 Many sensors provide the `icon_color` attribute for dynamic styling. To see if a sensor has this attribute:
 
 1. Go to **Developer Tools** → **States** in Home Assistant
-2. Search for your sensor (e.g., `sensor.tibber_home_current_interval_price_level`)
+2. Search for your sensor (e.g., `sensor.<home_name>_current_price_level`)
 3. Look for `icon_color` in the attributes section
 
 **Common sensor types with icon_color:**
 
--   Price level sensors (e.g., `current_interval_price_level`)
--   Price rating sensors (e.g., `current_interval_price_rating`)
--   Volatility sensors (e.g., `volatility_today`)
--   Price trend sensors (e.g., `price_trend_next_3h`)
+-   Price level sensors (e.g., `current_price_level`)
+-   Price rating sensors (e.g., `current_price_rating`)
+-   Volatility sensors (e.g., `today_s_price_volatility`)
+-   Price trend sensors (e.g., `price_trend_3h`)
 -   Binary sensors (e.g., `best_price_period`, `peak_price_period`)
 -   Timing sensors (e.g., `best_price_time_until_start`, `best_price_progress`)
 
@@ -97,7 +99,7 @@ The [custom:button-card](https://github.com/custom-cards/button-card) from HACS 
 
 ```yaml
 type: custom:button-card
-entity: sensor.tibber_home_current_interval_price_level
+entity: sensor.<home_name>_current_price_level
 name: Current Price Level
 show_state: true
 icon: mdi:cash
@@ -113,7 +115,7 @@ styles:
 
 ```yaml
 type: custom:button-card
-entity: sensor.tibber_home_current_interval_price_level
+entity: sensor.<home_name>_current_price_level
 name: Current Price Level
 show_state: true
 icon: mdi:cash
@@ -138,16 +140,16 @@ Use Home Assistant's built-in entities card with card_mod for icon and state col
 ```yaml
 type: entities
 entities:
-    - entity: sensor.tibber_home_current_interval_price_level
+    - entity: sensor.<home_name>_current_price_level
 card_mod:
     style:
         hui-generic-entity-row:
             $: |
                 state-badge {
-                  color: {{ state_attr('sensor.tibber_home_current_interval_price_level', 'icon_color') }} !important;
+                  color: {{ state_attr('sensor.<home_name>_current_price_level', 'icon_color') }} !important;
                 }
                 .info {
-                  color: {{ state_attr('sensor.tibber_home_current_interval_price_level', 'icon_color') }} !important;
+                  color: {{ state_attr('sensor.<home_name>_current_price_level', 'icon_color') }} !important;
                 }
 ```
 
@@ -159,13 +161,13 @@ The [Mushroom cards](https://github.com/piitaya/lovelace-mushroom) support card_
 
 ```yaml
 type: custom:mushroom-entity-card
-entity: binary_sensor.tibber_home_best_price_period
+entity: binary_sensor.<home_name>_best_price_period
 name: Best Price Period
 icon: mdi:piggy-bank
 card_mod:
     style: |
         ha-card {
-          --card-mod-icon-color: {{ state_attr('binary_sensor.tibber_home_best_price_period', 'icon_color') }};
+          --card-mod-icon-color: {{ state_attr('binary_sensor.<home_name>_best_price_period', 'icon_color') }};
         }
 ```
 
@@ -173,13 +175,13 @@ card_mod:
 
 ```yaml
 type: custom:mushroom-entity-card
-entity: sensor.tibber_home_current_interval_price_level
+entity: sensor.<home_name>_current_price_level
 name: Price Level
 card_mod:
     style: |
         ha-card {
-          --card-mod-icon-color: {{ state_attr('sensor.tibber_home_current_interval_price_level', 'icon_color') }};
-          --primary-text-color: {{ state_attr('sensor.tibber_home_current_interval_price_level', 'icon_color') }};
+          --card-mod-icon-color: {{ state_attr('sensor.<home_name>_current_price_level', 'icon_color') }};
+          --primary-text-color: {{ state_attr('sensor.<home_name>_current_price_level', 'icon_color') }};
         }
 ```
 
@@ -190,19 +192,19 @@ Combine multiple sensors with dynamic colors:
 ```yaml
 type: glance
 entities:
-    - entity: sensor.tibber_home_current_interval_price_level
-    - entity: sensor.tibber_home_volatility_today
-    - entity: binary_sensor.tibber_home_best_price_period
+    - entity: sensor.<home_name>_current_price_level
+    - entity: sensor.<home_name>_today_s_price_volatility
+    - entity: binary_sensor.<home_name>_best_price_period
 card_mod:
     style: |
         ha-card div.entity:nth-child(1) state-badge {
-          color: {{ state_attr('sensor.tibber_home_current_interval_price_level', 'icon_color') }} !important;
+          color: {{ state_attr('sensor.<home_name>_current_price_level', 'icon_color') }} !important;
         }
         ha-card div.entity:nth-child(2) state-badge {
-          color: {{ state_attr('sensor.tibber_home_volatility_today', 'icon_color') }} !important;
+          color: {{ state_attr('sensor.<home_name>_today_s_price_volatility', 'icon_color') }} !important;
         }
         ha-card div.entity:nth-child(3) state-badge {
-          color: {{ state_attr('binary_sensor.tibber_home_best_price_period', 'icon_color') }} !important;
+          color: {{ state_attr('binary_sensor.<home_name>_best_price_period', 'icon_color') }} !important;
         }
 ```
 
@@ -217,7 +219,7 @@ cards:
     - type: horizontal-stack
       cards:
           - type: custom:button-card
-            entity: sensor.tibber_home_current_interval_price_level
+            entity: sensor.<home_name>_current_price_level
             name: Price Level
             show_state: true
             styles:
@@ -228,7 +230,7 @@ cards:
                           ]]]
 
           - type: custom:button-card
-            entity: sensor.tibber_home_current_interval_price_rating
+            entity: sensor.<home_name>_current_price_rating
             name: Price Rating
             show_state: true
             styles:
@@ -242,7 +244,7 @@ cards:
     - type: horizontal-stack
       cards:
           - type: custom:button-card
-            entity: binary_sensor.tibber_home_best_price_period
+            entity: binary_sensor.<home_name>_best_price_period
             name: Best Price Period
             show_state: true
             icon: mdi:piggy-bank
@@ -254,7 +256,7 @@ cards:
                           ]]]
 
           - type: custom:button-card
-            entity: binary_sensor.tibber_home_peak_price_period
+            entity: binary_sensor.<home_name>_peak_price_period
             name: Peak Price Period
             show_state: true
             icon: mdi:alert-circle
@@ -269,7 +271,7 @@ cards:
     - type: horizontal-stack
       cards:
           - type: custom:button-card
-            entity: sensor.tibber_home_volatility_today
+            entity: sensor.<home_name>_today_s_price_volatility
             name: Volatility
             show_state: true
             styles:
@@ -280,7 +282,7 @@ cards:
                           ]]]
 
           - type: custom:button-card
-            entity: sensor.tibber_home_price_trend_next_3h
+            entity: sensor.<home_name>_price_trend_3h
             name: Next 3h Trend
             show_state: true
             styles:
@@ -331,7 +333,7 @@ Instead of using `icon_color`, read the sensor state and apply your own colors:
 
 ```yaml
 type: custom:button-card
-entity: sensor.tibber_home_current_interval_price_level
+entity: sensor.<home_name>_current_price_level
 name: Current Price Level
 show_state: true
 icon: mdi:cash
@@ -353,7 +355,7 @@ styles:
 
 ```yaml
 type: custom:button-card
-entity: binary_sensor.tibber_home_best_price_period
+entity: binary_sensor.<home_name>_best_price_period
 name: Best Price Period
 show_state: true
 icon: mdi:piggy-bank
@@ -375,7 +377,7 @@ styles:
 
 ```yaml
 type: custom:button-card
-entity: sensor.tibber_home_volatility_today
+entity: sensor.<home_name>_today_s_price_volatility
 name: Volatility Today
 show_state: true
 styles:
@@ -395,7 +397,7 @@ styles:
 
 ```yaml
 type: custom:button-card
-entity: sensor.tibber_home_current_interval_price_rating
+entity: sensor.<home_name>_current_price_rating
 name: Price Rating
 show_state: true
 styles:

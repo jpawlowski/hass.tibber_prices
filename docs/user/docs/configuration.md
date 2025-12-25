@@ -2,6 +2,8 @@
 
 > **Note:** This guide is under construction. For detailed setup instructions, please refer to the [main README](https://github.com/jpawlowski/hass.tibber_prices/blob/main/README.md).
 
+> **Entity ID tip:** `<home_name>` is a placeholder for your Tibber home display name in Home Assistant. Entity IDs are derived from the displayed name (localized), so the exact slug may differ. Example suffixes below use the English display names (en.json) as a baseline. You can find the real ID in **Settings → Devices & Services → Entities** (or **Developer Tools → States**).
+
 ## Initial Setup
 
 Coming soon...
@@ -46,8 +48,8 @@ The median tells you the price was **typically** around 13 ct/kWh (4 out of 5 ho
 
 ```yaml
 # These attributes work regardless of display setting:
-{{ state_attr('sensor.tibber_home_average_price_today', 'price_median') }}
-{{ state_attr('sensor.tibber_home_average_price_today', 'price_mean') }}
+{{ state_attr('sensor.<home_name>_price_today', 'price_median') }}
+{{ state_attr('sensor.<home_name>_price_today', 'price_mean') }}
 ```
 
 This means:

@@ -4,6 +4,8 @@ This guide showcases the different chart configurations available through the `t
 
 > **Quick Start:** Call the action with your desired parameters, copy the generated YAML, and paste it into your Lovelace dashboard!
 
+> **Entity ID tip:** `<home_name>` is a placeholder for your Tibber home display name in Home Assistant. Entity IDs are derived from the displayed name (localized), so the exact slug may differ. Example suffixes below use the English display names (en.json) as a baseline. You can find the real ID in **Settings → Devices & Services → Entities** (or **Developer Tools → States**).
+
 ## Overview
 
 The integration can generate 4 different chart modes, each optimized for specific use cases:
@@ -177,7 +179,7 @@ Rolling window modes (2 & 3) automatically integrate with the `chart_metadata` s
 
 **Requirements:**
 
-- ✅ The `sensor.tibber_home_chart_metadata` must be **enabled** (it's enabled by default!)
+- ✅ The `sensor.<home_name>_chart_metadata` must be **enabled** (it's enabled by default!)
 - ✅ That's it! The generated YAML automatically uses the sensor for dynamic scaling
 
 **Important:** Do NOT disable the `chart_metadata` sensor if you want optimal Y-axis scaling in rolling window modes!
@@ -271,7 +273,7 @@ Wrap in a vertical stack for dashboard integration:
 type: vertical-stack
 cards:
     - type: entity
-      entity: sensor.tibber_home_current_interval_price
+      entity: sensor.<home_name>_current_electricity_price
     - type: custom:apexcharts-card
       # ... generated chart config
 ```

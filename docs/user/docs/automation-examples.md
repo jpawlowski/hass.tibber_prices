@@ -13,6 +13,16 @@
 
 ---
 
+> **Important Note:** The following examples are intended as templates to illustrate the logic. They are **not** suitable for direct copy & paste without adaptation.
+>
+> Please make sure you:
+> 1.  Replace the **Entity IDs** (e.g., `sensor.<home_name>_...`, `switch.pool_pump`) with the IDs of your own devices and sensors.
+> 2.  Adapt the logic to your specific devices (e.g., heat pump, EV, water boiler).
+>
+> These examples provide a good starting point but must be tailored to your individual Home Assistant setup.
+>
+> **Entity ID tip:** `<home_name>` is a placeholder for your Tibber home display name in Home Assistant. Entity IDs are derived from the displayed name (localized), so the exact slug may differ. Example suffixes below use the English display names (en.json) as a baseline. You can find the real ID in **Settings → Devices & Services → Entities** (or **Developer Tools → States**).
+
 ## Price-Based Automations
 
 Coming soon...
@@ -21,215 +31,128 @@ Coming soon...
 
 ## Volatility-Aware Automations
 
-These examples show how to handle low-volatility days where period classifications may flip at midnight despite minimal absolute price changes.
+These examples show how to create robust automations that only act when price differences are meaningful, avoiding unnecessary actions on days with flat prices.
 
-### Use Case: Only Act on High-Volatility Days
+### Use Case: Only Act on Meaningful Price Variations
 
-On days with low price variation (< 15% volatility), the difference between "cheap" and "expensive" periods is minimal. This automation only runs appliances when the savings are meaningful:
+On days with low price variation, the difference between "cheap" and "expensive" periods can be just a fraction of a cent. This automation charges a home battery only when the volatility is high enough to result in actual savings.
 
-```yaml
-automation:
-  - alias: "Dishwasher - Best Price (High Volatility Only)"
-    description: "Start dishwasher during Best Price period, but only on days with meaningful price differences"
-    trigger:
-      - platform: state
-        entity_id: binary_sensor.tibber_home_best_price_period
-        to: "on"
-    condition:
-      # Only act if volatility > 15% (meaningful savings)
-      - condition: numeric_state
-        entity_id: sensor.tibber_home_volatility_today
-        above: 15
-      # Optional: Ensure dishwasher is idle and door closed
-      - condition: state
-        entity_id: binary_sensor.dishwasher_door
-        state: "off"
-    action:
-      - service: switch.turn_on
-        target:
-          entity_id: switch.dishwasher_smart_plug
-      - service: notify.mobile_app
-        data:
-          message: "Dishwasher started during Best Price period ({{ states('sensor.tibber_home_current_interval_price_ct') }} ct/kWh, volatility {{ states('sensor.tibber_home_volatility_today') }}%)"
-```
-
-**Why this works:**
-- On high-volatility days (e.g., 25% span), Best Price periods save 5-10 ct/kWh
-- On low-volatility days (e.g., 8% span), savings are only 1-2 ct/kWh
-- User can manually start dishwasher on low-volatility days without automation interference
-
-### Use Case: Absolute Price Threshold
-
-Instead of relying on relative classification, check if the absolute price is cheap enough:
+**Best Practice:** Instead of checking a numeric percentage, this automation checks the sensor's classified state. This makes the automation simpler and respects the volatility thresholds you have configured centrally in the integration's options.
 
 ```yaml
 automation:
-  - alias: "Water Heater - Cheap Enough"
-    description: "Heat water when price is below absolute threshold, regardless of period classification"
-    trigger:
-      - platform: state
-        entity_id: binary_sensor.tibber_home_best_price_period
-        to: "on"
-    condition:
-      # Absolute threshold: Only run if < 20 ct/kWh
-      - condition: numeric_state
-        entity_id: sensor.tibber_home_current_interval_price_ct
-        below: 20
-      # Optional: Check water temperature
-      - condition: numeric_state
-        entity_id: sensor.water_heater_temperature
-        below: 55  # Only heat if below 55°C
-    action:
-      - service: switch.turn_on
-        target:
-          entity_id: switch.water_heater
-      - delay:
-          hours: 2  # Heat for 2 hours
-      - service: switch.turn_off
-        target:
-          entity_id: switch.water_heater
-```
-
-**Why this works:**
-- Period classification can flip at midnight on low-volatility days
-- Absolute threshold (20 ct/kWh) is stable across midnight boundary
-- User sets their own "cheap enough" price based on local rates
-
-### Use Case: Combined Volatility and Price Check
-
-Most robust approach: Check both volatility and absolute price:
-
-```yaml
-automation:
-  - alias: "EV Charging - Smart Strategy"
-    description: "Charge EV using volatility-aware logic"
-    trigger:
-      - platform: state
-        entity_id: binary_sensor.tibber_home_best_price_period
-        to: "on"
-    condition:
-      # Check battery level
-      - condition: numeric_state
-        entity_id: sensor.ev_battery_level
-        below: 80
-      # Strategy: High volatility OR cheap enough
-      - condition: or
-        conditions:
-          # Path 1: High volatility day - trust period classification
+    - alias: "Home Battery - Charge During Best Price (Moderate+ Volatility)"
+      description: "Charge home battery during Best Price periods, but only on days with meaningful price differences"
+      trigger:
+          - platform: state
+            entity_id: binary_sensor.<home_name>_best_price_period
+            to: "on"
+      condition:
+          # Best Practice: Check the classified volatility level.
+          # This ensures the automation respects the thresholds you set in the config options.
+          # We use the 'price_volatility' attribute for a language-independent check.
+          # 'low' means minimal savings, so we only run if it's NOT low.
+          - condition: template
+            value_template: >
+                {{ state_attr('sensor.<home_name>_today_s_price_volatility', 'price_volatility') != 'low' }}
+          # Only charge if battery has capacity
           - condition: numeric_state
-            entity_id: sensor.tibber_home_volatility_today
-            above: 15
-          # Path 2: Low volatility but price is genuinely cheap
+            entity_id: sensor.home_battery_level
+            below: 90
+      action:
+          - service: switch.turn_on
+            target:
+                entity_id: switch.home_battery_charge
+          - service: notify.mobile_app
+            data:
+                message: >
+                  Home battery charging started. Price: {{ states('sensor.<home_name>_current_electricity_price') }} {{ state_attr('sensor.<home_name>_current_electricity_price', 'unit_of_measurement') }}.
+                  Today's volatility is {{ state_attr('sensor.<home_name>_today_s_price_volatility', 'price_volatility') }}.
+
+```
+
+**Why this works:**
+
+-   The automation only runs if volatility is `moderate`, `high`, or `very_high`.
+-   If you adjust your volatility thresholds in the future, this automation adapts automatically without any changes.
+-   It uses the `price_volatility` attribute, ensuring it works correctly regardless of your Home Assistant's display language.
+
+### Use Case: Combined Volatility and Absolute Price Check
+
+This is the most robust approach. It trusts the "Best Price" classification on volatile days but adds a backup absolute price check for low-volatility days. This handles situations where prices are globally low, even if the daily variation is minimal.
+
+```yaml
+automation:
+    - alias: "EV Charging - Smart Strategy"
+      description: "Charge EV using volatility-aware logic"
+      trigger:
+          - platform: state
+            entity_id: binary_sensor.<home_name>_best_price_period
+            to: "on"
+      condition:
+          # Check battery level
           - condition: numeric_state
-            entity_id: sensor.tibber_home_current_interval_price_ct
-            below: 18
-    action:
-      - service: switch.turn_on
-        target:
-          entity_id: switch.ev_charger
-      - service: notify.mobile_app
-        data:
-          message: >
-            EV charging started: {{ states('sensor.tibber_home_current_interval_price_ct') }} ct/kWh
-            (Volatility: {{ states('sensor.tibber_home_volatility_today') }}%)
+            entity_id: sensor.ev_battery_level
+            below: 80
+          # Strategy: Moderate+ volatility OR the price is genuinely cheap
+          - condition: or
+            conditions:
+                # Path 1: Volatility is not 'low', so we trust the 'Best Price' period classification.
+                - condition: template
+                  value_template: >
+                      {{ state_attr('sensor.<home_name>_today_s_price_volatility', 'price_volatility') != 'low' }}
+                # Path 2: Volatility is low, but we charge anyway if the price is below an absolute cheapness threshold.
+                - condition: numeric_state
+                  entity_id: sensor.<home_name>_current_electricity_price
+                  below: 0.18
+      action:
+          - service: switch.turn_on
+            target:
+                entity_id: switch.ev_charger
+          - service: notify.mobile_app
+            data:
+                message: >
+                    EV charging started. Price: {{ states('sensor.<home_name>_current_electricity_price') }} {{ state_attr('sensor.<home_name>_current_electricity_price', 'unit_of_measurement') }}.
+                    Today's volatility is {{ state_attr('sensor.<home_name>_today_s_price_volatility', 'price_volatility') }}.
 ```
 
 **Why this works:**
-- On high-volatility days (> 15%): Trust the Best Price classification
-- On low-volatility days (< 15%): Only charge if price is actually cheap (< 18 ct/kWh)
-- Handles midnight flips gracefully: Continues charging if price stays cheap
 
-### Use Case: Ignore Period Flips During Active Period
+-   On days with meaningful price swings, it charges during any `Best Price` period.
+-   On days with flat prices, it still charges if the price drops below your personal "cheap enough" threshold (e.g., 0.18 €/kWh or 18 ct/kWh).
+-   This gracefully handles midnight period flips, as the absolute price check will likely remain true if prices stay low.
 
-Prevent automations from stopping mid-cycle when a period flips at midnight:
+### Use Case: Using the Period's Own Volatility Attribute
+
+For maximum simplicity, you can use the attributes of the `best_price_period` sensor itself. It contains the volatility classification for the day the period belongs to. This is especially useful for periods that span across midnight.
 
 ```yaml
 automation:
-  - alias: "Washing Machine - Complete Cycle"
-    description: "Start washing machine during Best Price, ignore midnight flips"
-    trigger:
-      - platform: state
-        entity_id: binary_sensor.tibber_home_best_price_period
-        to: "on"
-    condition:
-      # Only start if washing machine is idle
-      - condition: state
-        entity_id: sensor.washing_machine_state
-        state: "idle"
-      # And volatility is meaningful
-      - condition: numeric_state
-        entity_id: sensor.tibber_home_volatility_today
-        above: 15
-    action:
-      - service: button.press
-        target:
-          entity_id: button.washing_machine_eco_program
-      # Create input_boolean to track active cycle
-      - service: input_boolean.turn_on
-        target:
-          entity_id: input_boolean.washing_machine_auto_started
-
-  # Separate automation: Clear flag when cycle completes
-  - alias: "Washing Machine - Cycle Complete"
-    trigger:
-      - platform: state
-        entity_id: sensor.washing_machine_state
-        to: "finished"
-    condition:
-      # Only clear flag if we auto-started it
-      - condition: state
-        entity_id: input_boolean.washing_machine_auto_started
-        state: "on"
-    action:
-      - service: input_boolean.turn_off
-        target:
-          entity_id: input_boolean.washing_machine_auto_started
-      - service: notify.mobile_app
-        data:
-          message: "Washing cycle complete"
+    - alias: "Heat Pump - Smart Heating Using Period's Volatility"
+      trigger:
+          - platform: state
+            entity_id: binary_sensor.<home_name>_best_price_period
+            to: "on"
+      condition:
+          # Best Practice: Check if the period's own volatility attribute is not 'low'.
+          # This correctly handles periods that start today but end tomorrow.
+          - condition: template
+            value_template: >
+                {{ state_attr('binary_sensor.<home_name>_best_price_period', 'volatility') != 'low' }}
+      action:
+          - service: climate.set_temperature
+            target:
+                entity_id: climate.heat_pump
+            data:
+                temperature: 22 # Boost temperature during cheap period
 ```
 
 **Why this works:**
-- Uses `input_boolean` to track auto-started cycles
-- Won't trigger multiple times if period flips during the 2-3 hour wash cycle
-- Only triggers on "off" → "on" transitions, not during "on" → "on" continuity
 
-### Use Case: Per-Period Day Volatility
-
-The simplest approach: Use the period's day volatility attribute directly:
-
-```yaml
-automation:
-  - alias: "Heat Pump - Smart Heating"
-    trigger:
-      - platform: state
-        entity_id: binary_sensor.tibber_home_best_price_period
-        to: "on"
-    condition:
-      # Check if the PERIOD'S DAY has meaningful volatility
-      - condition: template
-        value_template: >
-          {{ state_attr('binary_sensor.tibber_home_best_price_period', 'day_volatility_%') | float(0) > 15 }}
-    action:
-      - service: climate.set_temperature
-        target:
-          entity_id: climate.heat_pump
-        data:
-          temperature: 22  # Boost temperature during cheap period
-```
-
-**Available per-period attributes:**
-- `day_volatility_%`: Percentage volatility of the period's day (e.g., 8.2 for 8.2%)
-- `day_price_min`: Minimum price of the day in minor currency (ct/øre)
-- `day_price_max`: Maximum price of the day in minor currency (ct/øre)
-- `day_price_span`: Absolute difference (max - min) in minor currency (ct/øre)
-
-These attributes are available on both `binary_sensor.tibber_home_best_price_period` and `binary_sensor.tibber_home_peak_price_period`.
-
-**Why this works:**
-- Each period knows its day's volatility
-- No need to query separate sensors
-- Template checks if saving is meaningful (> 15% volatility)
+-   Each detected period has its own `volatility` attribute (`low`, `moderate`, etc.).
+-   This is the simplest way to check for meaningful savings for that specific period.
+-   The attribute name on the binary sensor is `volatility` (lowercase) and its value is also lowercase.
+-   It also contains other useful attributes like `price_mean`, `price_spread`, and the `price_coefficient_variation_%` for that period.
 
 ---
 
@@ -252,10 +175,12 @@ The `tibber_prices.get_apexcharts_yaml` service generates basic ApexCharts card 
 ### Prerequisites
 
 **Required:**
-- [ApexCharts Card](https://github.com/RomRider/apexcharts-card) - Install via HACS
+
+-   [ApexCharts Card](https://github.com/RomRider/apexcharts-card) - Install via HACS
 
 **Optional (for rolling window mode):**
-- [Config Template Card](https://github.com/iantrich/config-template-card) - Install via HACS
+
+-   [Config Template Card](https://github.com/iantrich/config-template-card) - Install via HACS
 
 ### Installation
 
@@ -270,8 +195,8 @@ The `tibber_prices.get_apexcharts_yaml` service generates basic ApexCharts card 
 service: tibber_prices.get_apexcharts_yaml
 data:
     entry_id: YOUR_ENTRY_ID
-    day: today  # or "yesterday", "tomorrow"
-    level_type: rating_level  # or "level" for 5-level view
+    day: today # or "yesterday", "tomorrow"
+    level_type: rating_level # or "level" for 5-level view
 response_variable: apexcharts_config
 ```
 
@@ -285,15 +210,16 @@ For a dynamic chart that automatically adapts to data availability:
 service: tibber_prices.get_apexcharts_yaml
 data:
     entry_id: YOUR_ENTRY_ID
-    day: rolling_window  # Or omit for same behavior (default)
+    day: rolling_window # Or omit for same behavior (default)
     level_type: rating_level
 response_variable: apexcharts_config
 ```
 
 **Behavior:**
-- **When tomorrow data available** (typically after ~13:00): Shows today + tomorrow
-- **When tomorrow data not available**: Shows yesterday + today
-- **Fixed 48h span:** Always shows full 48 hours
+
+-   **When tomorrow data available** (typically after ~13:00): Shows today + tomorrow
+-   **When tomorrow data not available**: Shows yesterday + today
+-   **Fixed 48h span:** Always shows full 48 hours
 
 **Auto-Zoom Variant:**
 
@@ -308,17 +234,17 @@ data:
 response_variable: apexcharts_config
 ```
 
-- Same data loading as rolling window
-- **Progressive zoom:** Graph span starts at ~26h in the morning and decreases to ~14h by midnight
-- **Updates every 15 minutes:** Always shows 2h lookback + remaining time until midnight
+-   Same data loading as rolling window
+-   **Progressive zoom:** Graph span starts at ~26h in the morning and decreases to ~14h by midnight
+-   **Updates every 15 minutes:** Always shows 2h lookback + remaining time until midnight
 
 **Note:** Rolling window modes require Config Template Card to dynamically adjust the time range.
 
 ### Features
 
-- Color-coded price levels/ratings (green = cheap, yellow = normal, red = expensive)
-- Best price period highlighting (semi-transparent green overlay)
-- Automatic NULL insertion for clean gaps
-- Translated labels based on your Home Assistant language
-- Interactive zoom and pan
-- Live marker showing current time
+-   Color-coded price levels/ratings (green = cheap, yellow = normal, red = expensive)
+-   Best price period highlighting (semi-transparent green overlay)
+-   Automatic NULL insertion for clean gaps
+-   Translated labels based on your Home Assistant language
+-   Interactive zoom and pan
+-   Live marker showing current time

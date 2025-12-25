@@ -6,6 +6,8 @@ You can still call them from automations, scripts, and dashboards the same way a
 
 ## Available Actions
 
+> **Entity ID tip:** `<home_name>` is a placeholder for your Tibber home display name in Home Assistant. Entity IDs are derived from the displayed name (localized), so the exact slug may differ. Example suffixes below use the English display names (en.json) as a baseline. You can find the real ID in **Settings → Devices & Services → Entities** (or **Developer Tools → States**).
+
 ### tibber_prices.get_chartdata
 
 **Purpose:** Returns electricity price data in chart-friendly formats for visualization and analysis.
@@ -192,8 +194,8 @@ response_variable: config
 # Use in dashboard:
 type: custom:config-template-card
 entities:
-    - sensor.tibber_home_tomorrow_data
-    - sensor.tibber_home_chart_metadata  # For dynamic Y-axis
+    - binary_sensor.<home_name>_tomorrow_s_data_available
+    - sensor.<home_name>_chart_metadata  # For dynamic Y-axis
 card:
     # ... paste generated config
 ```
@@ -245,7 +247,7 @@ data:
 
 ## Migration from Chart Data Export Sensor
 
-If you're still using the `sensor.tibber_home_chart_data_export` sensor, consider migrating to the `tibber_prices.get_chartdata` action:
+If you're still using the `sensor.<home_name>_chart_data_export` sensor, consider migrating to the `tibber_prices.get_chartdata` action:
 
 **Benefits:**
 

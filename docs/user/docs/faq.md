@@ -112,6 +112,8 @@ If you see unexpected units, check your configuration in the integration options
 
 ## Automation Questions
 
+> **Entity ID tip:** `<home_name>` is a placeholder for your Tibber home display name in Home Assistant. Entity IDs are derived from the displayed name (localized), so the exact slug may differ. Example suffixes below use the English display names (en.json) as a baseline. You can find the real ID in **Settings → Devices & Services → Entities** (or **Developer Tools → States**).
+
 ### How do I run dishwasher during cheap period?
 
 ```yaml
@@ -119,7 +121,7 @@ automation:
   - alias: "Dishwasher during Best Price"
     trigger:
       - platform: state
-        entity_id: binary_sensor.tibber_home_best_price_period
+        entity_id: binary_sensor.<home_name>_best_price_period
         to: "on"
     condition:
       - condition: time
@@ -141,7 +143,7 @@ automation:
   - alias: "Disable charging during peak prices"
     trigger:
       - platform: state
-        entity_id: binary_sensor.tibber_home_peak_price_period
+        entity_id: binary_sensor.<home_name>_peak_price_period
         to: "on"
     action:
       - service: switch.turn_off

@@ -2,6 +2,8 @@
 
 Learn how Best Price and Peak Price periods work, and how to configure them for your needs.
 
+> **Entity ID tip:** `<home_name>` is a placeholder for your Tibber home display name in Home Assistant. Entity IDs are derived from the displayed name (localized), so the exact slug may differ. Example suffixes below use the English display names (en.json) as a baseline. You can find the real ID in **Settings → Devices & Services → Entities** (or **Developer Tools → States**).
+
 ## Table of Contents
 
 -   [Quick Start](#quick-start)
@@ -445,7 +447,7 @@ best_price_min_distance_from_avg: 5 # (default)
 automation:
     - trigger:
           - platform: state
-            entity_id: binary_sensor.tibber_home_best_price_period
+            entity_id: binary_sensor.<home_name>_best_price_period
             to: "on"
       action:
           - service: switch.turn_on
@@ -459,7 +461,7 @@ automation:
 
 ### No Periods Found
 
-**Symptom:** `binary_sensor.tibber_home_best_price_period` never turns "on"
+**Symptom:** `binary_sensor.<home_name>_best_price_period` never turns "on"
 
 **Common Solutions:**
 
@@ -510,7 +512,7 @@ automation:
 **Key attributes to check:**
 
 ```yaml
-# Entity: binary_sensor.tibber_home_best_price_period
+# Entity: binary_sensor.<home_name>_best_price_period
 
 # When "on" (period active):
 start: "2025-11-11T02:00:00+01:00"  # Period start time
@@ -579,8 +581,8 @@ Check the volatility sensors to understand if a period flip is meaningful:
 
 ```yaml
 # Check daily volatility (available in integration)
-sensor.tibber_home_volatility_today: 8.2%     # Low volatility
-sensor.tibber_home_volatility_tomorrow: 7.9%  # Also low
+sensor.<home_name>_today_s_price_volatility: 8.2%     # Low volatility
+sensor.<home_name>_tomorrow_s_price_volatility: 7.9%  # Also low
 
 # Low volatility (< 15%) means:
 # - Small absolute price differences between periods
@@ -598,11 +600,11 @@ automation:
   - alias: "Dishwasher - Best Price (High Volatility Only)"
     trigger:
       - platform: state
-        entity_id: binary_sensor.tibber_home_best_price_period
+        entity_id: binary_sensor.<home_name>_best_price_period
         to: "on"
     condition:
       - condition: numeric_state
-        entity_id: sensor.tibber_home_volatility_today
+        entity_id: sensor.<home_name>_today_s_price_volatility
         above: 15  # Only act if volatility > 15%
     action:
       - service: switch.turn_on
@@ -613,11 +615,11 @@ automation:
   - alias: "Heat Water - Cheap Enough"
     trigger:
       - platform: state
-        entity_id: binary_sensor.tibber_home_best_price_period
+        entity_id: binary_sensor.<home_name>_best_price_period
         to: "on"
     condition:
       - condition: numeric_state
-        entity_id: sensor.tibber_home_current_interval_price_ct
+        entity_id: sensor.<home_name>_current_electricity_price
         below: 20  # Absolute threshold: < 20 ct/kWh
     action:
       - service: switch.turn_on
@@ -628,13 +630,13 @@ automation:
   - alias: "EV Charging - Volatility-Aware"
     trigger:
       - platform: state
-        entity_id: binary_sensor.tibber_home_best_price_period
+        entity_id: binary_sensor.<home_name>_best_price_period
         to: "on"
     condition:
       # Check if the period's day has meaningful volatility
       - condition: template
         value_template: >
-          {{ state_attr('binary_sensor.tibber_home_best_price_period', 'day_volatility_%') | float(0) > 15 }}
+          {{ state_attr('binary_sensor.<home_name>_best_price_period', 'day_volatility_%') | float(0) > 15 }}
     action:
       - service: switch.turn_on
         entity_id: switch.ev_charger
@@ -645,7 +647,7 @@ automation:
 Each period sensor exposes day volatility and price statistics:
 
 ```yaml
-binary_sensor.tibber_home_best_price_period:
+binary_sensor.<home_name>_best_price_period:
   day_volatility_%: 8.2         # Volatility % of the period's day
   day_price_min: 1800.0          # Minimum price of the day (ct/kWh)
   day_price_max: 2200.0          # Maximum price of the day (ct/kWh)

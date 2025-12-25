@@ -8,6 +8,8 @@ comments: false
 
 > **Tip:** Many sensors have dynamic icons and colors! See the **[Dynamic Icons Guide](dynamic-icons.md)** and **[Dynamic Icon Colors Guide](icon-colors.md)** to enhance your dashboards.
 
+> **Entity ID tip:** `<home_name>` is a placeholder for your Tibber home display name in Home Assistant. Entity IDs are derived from the displayed name (localized), so the exact slug may differ. Example suffixes below use the English display names (en.json) as a baseline. You can find the real ID in **Settings → Devices & Services → Entities** (or **Developer Tools → States**).
+
 ## Binary Sensors
 
 ### Best Price Period & Peak Price Period
@@ -83,9 +85,9 @@ sensor:
       daily_price_analysis:
         friendly_name: "Daily Price Analysis"
         value_template: >
-          {% set median = state_attr('sensor.tibber_home_average_price_today', 'price_median') %}
-          {% set mean = state_attr('sensor.tibber_home_average_price_today', 'price_mean') %}
-          {% set current = states('sensor.tibber_home_current_interval_price') | float %}
+          {% set median = state_attr('sensor.<home_name>_price_today', 'price_median') %}
+          {% set mean = state_attr('sensor.<home_name>_price_today', 'price_mean') %}
+          {% set current = states('sensor.<home_name>_current_electricity_price') | float %}
 
           {% if current < median %}
             Below typical ({{ ((1 - current/median) * 100) | round(1) }}% cheaper)
@@ -107,14 +109,14 @@ automation:
   - alias: "Start Dishwasher When Cheap"
     trigger:
       - platform: state
-        entity_id: binary_sensor.tibber_home_best_price_period
+        entity_id: binary_sensor.<home_name>_best_price_period
         to: "on"
     condition:
       # Only if current price is at least 20% below typical (median)
       - condition: template
         value_template: >
-          {% set current = states('sensor.tibber_home_current_interval_price') | float %}
-          {% set median = state_attr('sensor.tibber_home_average_price_today', 'price_median') | float %}
+          {% set current = states('sensor.<home_name>_current_electricity_price') | float %}
+          {% set median = state_attr('sensor.<home_name>_price_today', 'price_median') | float %}
           {{ current < (median * 0.8) }}
     action:
       - service: switch.turn_on
@@ -134,7 +136,7 @@ automation:
     action:
       # Calculate expected daily heating cost
       - variables:
-          mean_price: "{{ state_attr('sensor.tibber_home_average_price_today', 'price_mean') | float }}"
+          mean_price: "{{ state_attr('sensor.<home_name>_price_today', 'price_mean') | float }}"
           heating_kwh_per_day: 15  # Estimated consumption
           daily_cost: "{{ (mean_price * heating_kwh_per_day / 100) | round(2) }}"
       - service: notify.mobile_app
@@ -157,8 +159,8 @@ automation:
       # Start charging if current price < 90% of recent 24h average
       - condition: template
         value_template: >
-          {% set current = states('sensor.tibber_home_current_interval_price') | float %}
-          {% set trailing_avg = state_attr('sensor.tibber_home_trailing_price_average', 'price_median') | float %}
+          {% set current = states('sensor.<home_name>_current_electricity_price') | float %}
+          {% set trailing_avg = state_attr('sensor.<home_name>_price_trailing_24h', 'price_median') | float %}
           {{ current < (trailing_avg * 0.9) }}
       # And battery < 80%
       - condition: numeric_state
@@ -203,9 +205,103 @@ All average sensors provide these attributes:
 
 
 
-## Statistical Sensors
+## Volatility Sensors
 
-Coming soon...
+Volatility sensors help you understand how much electricity prices fluctuate over a given period. Instead of just looking at the absolute price, they measure the **relative price variation**, which is a great indicator of whether it's a good day for price-based energy optimization.
+
+The calculation is based on the **Coefficient of Variation (CV)**, a standardized statistical measure defined as:
+
+`CV = (Standard Deviation / aAithmetic Mean) * 100%`
+
+This results in a percentage that shows how much prices deviate from the average. A low CV means stable prices, while a high CV indicates significant price swings and thus, a high potential for saving money by shifting consumption.
+
+The sensor's state can be `low`, `moderate`, `high`, or `very_high`, based on configurable thresholds.
+
+### Available Volatility Sensors
+
+| Sensor | Description | Time Window |
+|---|---|---|
+| **Today's Price Volatility** | Volatility for the current calendar day | 00:00 - 23:59 today |
+| **Tomorrow's Price Volatility** | Volatility for the next calendar day | 00:00 - 23:59 tomorrow |
+| **Next 24h Price Volatility** | Volatility for the next 24 hours from now | Rolling 24h forward |
+| **Today + Tomorrow Price Volatility** | Volatility across both today and tomorrow | Up to 48 hours |
+
+### Configuration
+
+You can adjust the CV thresholds that determine the volatility level:
+1. Go to **Settings → Devices & Services → Tibber Prices**.
+2. Click **Configure**.
+3. Go to the **Price Volatility Thresholds** step.
+
+Default thresholds are:
+- **Moderate:** 15%
+- **High:** 30%
+- **Very High:** 50%
+
+### Key Attributes
+
+All volatility sensors provide these attributes:
+
+| Attribute | Description | Example |
+|---|---|---|
+| `price_coefficient_variation_%` | The calculated Coefficient of Variation | `23.5` |
+| `price_spread` | The difference between the highest and lowest price | `12.3` |
+| `price_min` | The lowest price in the period | `10.2` |
+| `price_max` | The highest price in the period | `22.5` |
+| `price_mean` | The arithmetic mean of all prices in the period | `15.1` |
+| `interval_count` | Number of price intervals included in the calculation | `96` |
+
+### Usage in Automations & Best Practices
+
+You can use the volatility sensor to decide if a price-based optimization is worth it. For example, if your solar battery has conversion losses, you might only want to charge and discharge it on days with high volatility.
+
+**Best Practice: Use the `price_volatility` Attribute**
+
+For automations, it is strongly recommended to use the `price_volatility` attribute instead of the sensor's main state.
+
+- **Why?** The main `state` of the sensor is translated into your Home Assistant language (e.g., "Hoch" in German). If you change your system language, automations based on this state will break. The `price_volatility` attribute is **always in lowercase English** (`"low"`, `"moderate"`, `"high"`, `"very_high"`) and therefore provides a stable, language-independent value.
+
+**Good Example (Robust Automation):**
+This automation triggers only if the volatility is classified as `high` or `very_high`, respecting your central settings and working independently of the system language.
+```yaml
+automation:
+  - alias: "Enable battery optimization only on volatile days"
+    trigger:
+      - platform: template
+        value_template: >
+          {{ state_attr('sensor.<home_name>_today_s_price_volatility', 'price_volatility') in ['high', 'very_high'] }}
+    action:
+      - service: input_boolean.turn_on
+        entity_id: input_boolean.battery_optimization_enabled
+```
+
+---
+
+**Avoid Hard-Coding Numeric Thresholds**
+
+You might be tempted to use the numeric `price_coefficient_variation_%` attribute directly in your automations. This is not recommended.
+
+- **Why?** The integration provides central configuration options for the volatility thresholds. By using the classified `price_volatility` attribute, your automations automatically adapt if you decide to change what you consider "high" volatility (e.g., changing the threshold from 30% to 35%). Hard-coding values means you would have to find and update them in every single automation.
+
+**Bad Example (Brittle Automation):**
+This automation uses a hard-coded value. If you later change the "High" threshold in the integration's options to 35%, this automation will not respect that change and might trigger at the wrong time.
+```yaml
+automation:
+  - alias: "Brittle - Enable battery optimization"
+    trigger:
+      #
+      # BAD: Avoid hard-coding numeric values
+      #
+      - platform: numeric_state
+        entity_id: sensor.<home_name>_today_s_price_volatility
+        attribute: price_coefficient_variation_%
+        above: 30
+    action:
+      - service: input_boolean.turn_on
+        entity_id: input_boolean.battery_optimization_enabled
+```
+
+By following the "Good Example", your automations become simpler, more readable, and much easier to maintain.
 
 ## Rating Sensors
 
@@ -215,7 +311,7 @@ Coming soon...
 
 ### Chart Metadata
 
-**Entity ID:** `sensor.tibber_home_NAME_chart_metadata`
+**Entity ID:** `sensor.<home_name>_chart_metadata`
 
 > **✨ New Feature**: This sensor provides dynamic chart configuration metadata for optimal visualization. Perfect for use with the `get_apexcharts_yaml` action!
 
@@ -247,7 +343,7 @@ See the **[Chart Examples Guide](chart-examples.md)** for practical examples!
 
 ### Chart Data Export
 
-**Entity ID:** `sensor.tibber_home_NAME_chart_data_export`
+**Entity ID:** `sensor.<home_name>_chart_data_export`
 **Default State:** Disabled (must be manually enabled)
 
 > **⚠️ Legacy Feature**: This sensor is maintained for backward compatibility. For new integrations, use the **`tibber_prices.get_chartdata`** service instead, which offers more flexibility and better performance.
@@ -295,7 +391,7 @@ See the `tibber_prices.get_chartdata` service documentation below for a complete
 # ApexCharts card consuming the sensor
 type: custom:apexcharts-card
 series:
-    - entity: sensor.tibber_home_chart_data_export
+    - entity: sensor.<home_name>_chart_data_export
       data_generator: |
           return entity.attributes.data;
 ```
@@ -308,7 +404,7 @@ If you're currently using this sensor, consider migrating to the service:
 # Old approach (sensor)
 - service: apexcharts_card.update
   data:
-      entity: sensor.tibber_home_chart_data_export
+      entity: sensor.<home_name>_chart_data_export
 
 # New approach (service)
 - service: tibber_prices.get_chartdata
