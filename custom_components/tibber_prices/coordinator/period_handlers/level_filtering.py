@@ -155,9 +155,12 @@ def check_interval_criteria(
             in_flex = price >= flex_threshold
         else:
             # Best price: accept prices <= (ref_price + flex_amount)
-            # Prices must be CLOSE TO or AT the minimum
+            # Accept ALL low prices up to the flex threshold, not just those >= minimum
+            # This ensures that if there are multiple low-price intervals, all that meet
+            # the threshold are included, regardless of whether they're before or after
+            # the daily minimum in the chronological sequence.
             flex_threshold = criteria.ref_price + flex_amount
-            in_flex = price >= criteria.ref_price and price <= flex_threshold
+            in_flex = price <= flex_threshold
 
     # ============================================================
     # MIN_DISTANCE FILTER: Check if price is far enough from average
