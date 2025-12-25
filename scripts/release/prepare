@@ -54,6 +54,15 @@ if ! echo "$VERSION" | grep -qE '^[0-9]+\.[0-9]+\.[0-9]+(b[0-9]+)?$'; then
     die "Invalid version format: $VERSION\nExpected format: X.Y.Z or X.Y.ZbN (e.g., 0.3.0, 1.0.0, 0.25.0b0)"
 fi
 
+IS_PRERELEASE=false
+if [[ $VERSION =~ b[0-9]+$ ]]; then
+    IS_PRERELEASE=true
+    log_header "Documentation guardrail"
+    log_step "Detected beta/prerelease version ($VERSION)"
+    log_step "Skip Docusaurus versioning: leave docs on 'next'"
+    log_step "Only version docs on final stable releases"
+fi
+
 TAG="v$VERSION"
 MANIFEST="custom_components/tibber_prices/manifest.json"
 

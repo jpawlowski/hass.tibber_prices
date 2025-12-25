@@ -33,6 +33,17 @@ jobs:
         with:
           fetch-depth: 0  # Needed for version timestamps
 
+      - name: Detect prerelease tag (beta/rc)
+        id: taginfo
+        run: |
+          if [[ "${GITHUB_REF}" =~ ^refs/tags/v[0-9]+\.[0-9]+\.[0-9]+(b[0-9]+|rc[0-9]+)$ ]]; then
+            echo "is_prerelease=true" >> "$GITHUB_OUTPUT"
+            echo "Detected prerelease tag: ${GITHUB_REF}"
+          else
+            echo "is_prerelease=false" >> "$GITHUB_OUTPUT"
+            echo "Stable tag or branch: ${GITHUB_REF}"
+          fi
+
       - uses: actions/setup-node@v6
         with:
           node-version: 24
@@ -47,7 +58,7 @@ jobs:
         run: npm ci
 
       - name: Create user docs version snapshot on tag
-        if: startsWith(github.ref, 'refs/tags/v')
+        if: startsWith(github.ref, 'refs/tags/v') && steps.taginfo.outputs.is_prerelease != 'true'
         working-directory: docs/user
         run: |
           TAG_VERSION=${GITHUB_REF#refs/tags/}
@@ -61,7 +72,7 @@ jobs:
           fi
 
       - name: Cleanup old user docs versions
-        if: startsWith(github.ref, 'refs/tags/v')
+        if: startsWith(github.ref, 'refs/tags/v') && steps.taginfo.outputs.is_prerelease != 'true'
         working-directory: docs/user
         run: |
           chmod +x ../cleanup-old-versions.sh
@@ -80,7 +91,7 @@ jobs:
         run: npm ci
 
       - name: Create developer docs version snapshot on tag
-        if: startsWith(github.ref, 'refs/tags/v')
+        if: startsWith(github.ref, 'refs/tags/v') && steps.taginfo.outputs.is_prerelease != 'true'
         working-directory: docs/developer
         run: |
           TAG_VERSION=${GITHUB_REF#refs/tags/}
@@ -94,7 +105,7 @@ jobs:
           fi
 
       - name: Cleanup old developer docs versions
-        if: startsWith(github.ref, 'refs/tags/v')
+        if: startsWith(github.ref, 'refs/tags/v') && steps.taginfo.outputs.is_prerelease != 'true'
         working-directory: docs/developer
         run: |
           chmod +x ../cleanup-old-versions.sh
@@ -118,7 +129,7 @@ jobs:
 
       # COMMIT VERSION SNAPSHOTS
       - name: Commit version snapshots back to repository
-        if: startsWith(github.ref, 'refs/tags/v')
+        if: startsWith(github.ref, 'refs/tags/v') && steps.taginfo.outputs.is_prerelease != 'true'
         run: |
           TAG_VERSION=${GITHUB_REF#refs/tags/}
 
