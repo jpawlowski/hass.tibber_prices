@@ -135,10 +135,20 @@ jobs:
           FEAT=$(echo "$COMMITS" | grep -cE "^feat(\(.+\))?:" || true)
           FIX=$(echo "$COMMITS" | grep -cE "^fix(\(.+\))?:" || true)
 
-          # Parse versions
+          parse_version() {
+            local version="$1"
+            if [[ $version =~ ^([0-9]+)\.([0-9]+)\.([0-9]+)(b[0-9]+)?$ ]]; then
+              echo "${BASH_REMATCH[1]} ${BASH_REMATCH[2]} ${BASH_REMATCH[3]} ${BASH_REMATCH[4]}"
+            else
+              echo "Invalid version format: $version" >&2
+              exit 1
+            fi
+          }
+
+          # Parse versions (support beta/prerelease suffix like 0.25.0b0)
           PREV_VERSION="${PREV_TAG#v}"
-          IFS='.' read -r PREV_MAJOR PREV_MINOR PREV_PATCH <<< "$PREV_VERSION"
-          IFS='.' read -r MAJOR MINOR PATCH <<< "$TAG_VERSION"
+          read -r PREV_MAJOR PREV_MINOR PREV_PATCH PREV_PRERELEASE <<< "$(parse_version "$PREV_VERSION")"
+          read -r MAJOR MINOR PATCH PRERELEASE <<< "$(parse_version "$TAG_VERSION")"
 
           WARNING=""
           SUGGESTION=""
@@ -245,7 +255,7 @@ jobs:
           name: ${{ steps.release_notes.outputs.title }}
           body: ${{ steps.release_notes.outputs.notes }}
           draft: false
-          prerelease: false
+          prerelease: ${{ contains(github.ref, 'b') }}
           generate_release_notes: false  # We provide our own
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
