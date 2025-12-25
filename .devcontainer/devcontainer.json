@@ -38,7 +38,9 @@
                 "ms-python.vscode-pylance",
                 "ms-vscode-remote.remote-containers",
                 "redhat.vscode-yaml",
-                "ryanluker.vscode-coverage-gutters"
+                "ryanluker.vscode-coverage-gutters",
+                "Google.geminicodeassist",
+                "openai.chatgpt"
             ],
             "settings": {
                 "editor.tabSize": 4,
