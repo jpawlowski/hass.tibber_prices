@@ -9,9 +9,10 @@
 #   ./scripts/release/prepare [VERSION|--suggest]
 #
 # Examples:
-#   ./scripts/release/prepare --suggest  # Show version suggestion
-#   ./scripts/release/prepare 0.3.0      # Bump to version 0.3.0
-#   ./scripts/release/prepare 1.0.0      # Bump to version 1.0.0
+#   ./scripts/release/prepare --suggest   # Show version suggestion
+#   ./scripts/release/prepare 0.3.0       # Bump to version 0.3.0
+#   ./scripts/release/prepare 1.0.0       # Bump to version 1.0.0
+#   ./scripts/release/prepare 0.25.0b0    # Bump to beta version 0.25.0b0
 
 set -euo pipefail
 
@@ -42,15 +43,15 @@ fi
 # Parse version argument
 VERSION="${1:-}"
 if [[ -z $VERSION ]]; then
-    die "No version specified.\n\nUsage: $0 VERSION\n\nExamples:\n  $0 0.3.0      # Bump to version 0.3.0\n  $0 1.0.0      # Bump to version 1.0.0"
+    die "No version specified.\n\nUsage: $0 VERSION\n\nExamples:\n  $0 0.3.0      # Bump to version 0.3.0\n  $0 1.0.0      # Bump to version 1.0.0\n  $0 0.25.0b0   # Bump to beta version 0.25.0b0"
 fi
 
 # Strip 'v' prefix if present
 VERSION="${VERSION#v}"
 
-# Validate version format (X.Y.Z)
-if ! echo "$VERSION" | grep -qE '^[0-9]+\.[0-9]+\.[0-9]+$'; then
-    die "Invalid version format: $VERSION\nExpected format: X.Y.Z (e.g., 0.3.0, 1.0.0)"
+# Validate version format (X.Y.Z or X.Y.ZbN for prerelease/beta)
+if ! echo "$VERSION" | grep -qE '^[0-9]+\.[0-9]+\.[0-9]+(b[0-9]+)?$'; then
+    die "Invalid version format: $VERSION\nExpected format: X.Y.Z or X.Y.ZbN (e.g., 0.3.0, 1.0.0, 0.25.0b0)"
 fi
 
 TAG="v$VERSION"

@@ -55,12 +55,20 @@ log_header "Analyzing commits since $FROM_TAG"
 echo ""
 
 # Parse current version (from the tag we're analyzing from)
-CURRENT_VERSION="${FROM_TAG#v}"
-MAJOR=$(echo "$CURRENT_VERSION" | cut -d. -f1)
-MINOR=$(echo "$CURRENT_VERSION" | cut -d. -f2)
-PATCH=$(echo "$CURRENT_VERSION" | cut -d. -f3)
+parse_version() {
+    local version="$1"
 
-printf "Current released version: %bv%s.%s.%s%b\n" "$BOLD" "$MAJOR" "$MINOR" "$PATCH" "$NC"
+    if [[ $version =~ ^([0-9]+)\.([0-9]+)\.([0-9]+)(b[0-9]+)?$ ]]; then
+        echo "${BASH_REMATCH[1]} ${BASH_REMATCH[2]} ${BASH_REMATCH[3]} ${BASH_REMATCH[4]}"
+    else
+        die "Unsupported version format: $version\nExpected formats: X.Y.Z or X.Y.ZbN (e.g., 0.3.0, 1.0.0, 0.25.0b0)"
+    fi
+}
+
+CURRENT_VERSION="${FROM_TAG#v}"
+read -r MAJOR MINOR PATCH PRERELEASE <<< "$(parse_version "$CURRENT_VERSION")"
+
+printf "Current released version: %bv%s.%s.%s%s%b\n" "$BOLD" "$MAJOR" "$MINOR" "$PATCH" "$PRERELEASE" "$NC"
 if [[ $MANIFEST_VERSION != "$CURRENT_VERSION" ]]; then
     log_warning "Manifest.json version: $MANIFEST_VERSION (not yet tagged)"
 fi
