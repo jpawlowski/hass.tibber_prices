@@ -608,7 +608,7 @@ class TibberPricesDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             # Get current price info to check if tomorrow data already exists
             current_price_info = self.data.get("priceInfo", []) if self.data else []
 
-            result = await self._price_data_manager.handle_main_entry_update(
+            result, api_called = await self._price_data_manager.handle_main_entry_update(
                 current_time,
                 self._home_id,
                 self._transform_data,
@@ -621,12 +621,22 @@ class TibberPricesDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             # Sync user_data cache (price data is in IntervalPool)
             self._cached_user_data = self._price_data_manager.cached_user_data
 
-            # Update lifecycle tracking - Pool decides if API was called
-            # We track based on result having data
-            if result and "priceInfo" in result and len(result["priceInfo"]) > 0:
-                self._last_price_update = current_time  # Track when data was fetched
+            # Update lifecycle tracking - ONLY if API was actually called
+            # (not when returning cached data)
+            if api_called and result and "priceInfo" in result and len(result["priceInfo"]) > 0:
+                self._last_price_update = current_time  # Track when data was fetched from API
                 self._api_calls_today += 1
                 self._lifecycle_state = "fresh"  # Data just fetched
+                _LOGGER.debug(
+                    "API call completed: Fetched %d intervals, updating lifecycle to 'fresh'",
+                    len(result["priceInfo"]),
+                )
+            elif not api_called:
+                # Using cached data - lifecycle stays as is (cached/searching_tomorrow/etc.)
+                _LOGGER.debug(
+                    "Using cached data: %d intervals from pool, no API call made",
+                    len(result.get("priceInfo", [])),
+                )
         except (
             TibberPricesApiClientAuthenticationError,
             TibberPricesApiClientCommunicationError,

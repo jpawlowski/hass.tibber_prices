@@ -118,7 +118,7 @@ class TibberPricesIntervalPool:
         user_data: dict[str, Any],
         start_time: datetime,
         end_time: datetime,
-    ) -> list[dict[str, Any]]:
+    ) -> tuple[list[dict[str, Any]], bool]:
         """
         Get price intervals for time range (cached + fetch missing).
 
@@ -139,8 +139,10 @@ class TibberPricesIntervalPool:
             end_time: End of range (exclusive, timezone-aware).
 
         Returns:
-            List of price interval dicts, sorted by startsAt.
-            Contains ALL intervals in requested range (cached + fetched).
+            Tuple of (intervals, api_called):
+            - intervals: List of price interval dicts, sorted by startsAt.
+                        Contains ALL intervals in requested range (cached + fetched).
+            - api_called: True if API was called to fetch missing data, False if all from cache.
 
         Raises:
             TibberPricesApiClientError: If API calls fail or validation errors.
@@ -200,15 +202,19 @@ class TibberPricesIntervalPool:
         # This ensures we return exactly what user requested, filtering out extra intervals
         final_result = self._get_cached_intervals(start_time_iso, end_time_iso)
 
+        # Track if API was called (True if any missing ranges were fetched)
+        api_called = len(missing_ranges) > 0
+
         _LOGGER_DETAILS.debug(
-            "Pool returning %d intervals for home %s (from cache: %d, fetched from API: %d ranges)",
+            "Pool returning %d intervals for home %s (from cache: %d, fetched from API: %d ranges, api_called=%s)",
             len(final_result),
             self._home_id,
             len(cached_intervals),
             len(missing_ranges),
+            api_called,
         )
 
-        return final_result
+        return final_result, api_called
 
     async def get_sensor_data(
         self,
@@ -217,7 +223,7 @@ class TibberPricesIntervalPool:
         home_timezone: str | None = None,
         *,
         include_tomorrow: bool = True,
-    ) -> list[dict[str, Any]]:
+    ) -> tuple[list[dict[str, Any]], bool]:
         """
         Get price intervals for sensor data (day-before-yesterday to end-of-tomorrow).
 
@@ -247,8 +253,10 @@ class TibberPricesIntervalPool:
                              DOES NOT affect returned data - always returns full range.
 
         Returns:
-            List of price interval dicts for the 4-day window (including any cached
-            tomorrow data), sorted by startsAt.
+            Tuple of (intervals, api_called):
+            - intervals: List of price interval dicts for the 4-day window (including any cached
+                        tomorrow data), sorted by startsAt.
+            - api_called: True if API was called to fetch missing data, False if all from cache.
 
         """
         # Determine timezone
@@ -286,7 +294,7 @@ class TibberPricesIntervalPool:
         )
 
         # Fetch data (may be partial if include_tomorrow=False)
-        await self.get_intervals(
+        _intervals, api_called = await self.get_intervals(
             api_client=api_client,
             user_data=user_data,
             start_time=day_before_yesterday,
@@ -295,10 +303,12 @@ class TibberPricesIntervalPool:
 
         # Return FULL protected range (including any cached tomorrow data)
         # This ensures cached tomorrow data is available even when include_tomorrow=False
-        return self._get_cached_intervals(
+        final_intervals = self._get_cached_intervals(
             day_before_yesterday.isoformat(),
             end_of_tomorrow.isoformat(),
         )
+
+        return final_intervals, api_called
 
     def get_pool_stats(self) -> dict[str, Any]:
         """

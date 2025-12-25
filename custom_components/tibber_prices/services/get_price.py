@@ -145,12 +145,14 @@ async def handle_get_price(call: ServiceCall) -> ServiceResponse:
 
         # Call the interval pool to get intervals (with intelligent caching)
         # Single-home architecture: pool knows its home_id, no parameter needed
-        price_info = await pool.get_intervals(
+        price_info, _api_called = await pool.get_intervals(
             api_client=api_client,
             user_data=user_data,
             start_time=start_time,
             end_time=end_time,
         )
+        # Note: We ignore api_called flag here - service always returns requested data
+        # regardless of whether it came from cache or was fetched fresh from API
 
     except Exception as error:
         _LOGGER.exception("Error fetching price data")

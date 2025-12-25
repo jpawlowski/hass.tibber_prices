@@ -287,7 +287,7 @@ class TibberPricesPriceDataManager:
         current_time: datetime,
         *,
         include_tomorrow: bool = True,
-    ) -> dict[str, Any]:
+    ) -> tuple[dict[str, Any], bool]:
         """
         Fetch data for a single home via pool.
 
@@ -297,15 +297,23 @@ class TibberPricesPriceDataManager:
             include_tomorrow: If True, request tomorrow's data too. If False,
                              only request up to end of today.
 
+        Returns:
+            Tuple of (data_dict, api_called):
+            - data_dict: Dictionary with timestamp, home_id, price_info, currency.
+            - api_called: True if API was called to fetch missing data.
+
         """
         if not home_id:
             self._log("warning", "No home ID provided - cannot fetch price data")
-            return {
-                "timestamp": current_time,
-                "home_id": "",
-                "price_info": [],
-                "currency": "EUR",
-            }
+            return (
+                {
+                    "timestamp": current_time,
+                    "home_id": "",
+                    "price_info": [],
+                    "currency": "EUR",
+                },
+                False,  # No API call made
+            )
 
         # Ensure we have user_data before fetching price data
         # This is critical for timezone-aware cursor calculation
@@ -336,26 +344,35 @@ class TibberPricesPriceDataManager:
             raise TibberPricesApiClientError(msg)
 
         # Retrieve price data via IntervalPool (single source of truth)
-        price_info = await self._fetch_via_pool(home_id, include_tomorrow=include_tomorrow)
+        price_info, api_called = await self._fetch_via_pool(home_id, include_tomorrow=include_tomorrow)
 
         # Extract currency for this home from user_data
         currency = self._get_currency_for_home(home_id)
 
-        self._log("debug", "Successfully fetched data for home %s (%d intervals)", home_id, len(price_info))
+        self._log(
+            "debug",
+            "Successfully fetched data for home %s (%d intervals, api_called=%s)",
+            home_id,
+            len(price_info),
+            api_called,
+        )
 
-        return {
-            "timestamp": current_time,
-            "home_id": home_id,
-            "price_info": price_info,
-            "currency": currency,
-        }
+        return (
+            {
+                "timestamp": current_time,
+                "home_id": home_id,
+                "price_info": price_info,
+                "currency": currency,
+            },
+            api_called,
+        )
 
     async def _fetch_via_pool(
         self,
         home_id: str,
         *,
         include_tomorrow: bool = True,
-    ) -> list[dict[str, Any]]:
+    ) -> tuple[list[dict[str, Any]], bool]:
         """
         Retrieve price data via IntervalPool.
 
@@ -375,12 +392,14 @@ class TibberPricesPriceDataManager:
                              tomorrow data yet.
 
         Returns:
-            List of price interval dicts.
+            Tuple of (intervals, api_called):
+            - intervals: List of price interval dicts.
+            - api_called: True if API was called to fetch missing data.
 
         """
         # user_data is guaranteed by fetch_home_data(), but needed for type narrowing
         if self._cached_user_data is None:
-            return []
+            return [], False  # No data, no API call
 
         self._log(
             "debug",
@@ -388,11 +407,13 @@ class TibberPricesPriceDataManager:
             home_id,
             include_tomorrow,
         )
-        return await self._interval_pool.get_sensor_data(
+        intervals, api_called = await self._interval_pool.get_sensor_data(
             api_client=self.api,
             user_data=self._cached_user_data,
             include_tomorrow=include_tomorrow,
         )
+
+        return intervals, api_called
 
     def _get_currency_for_home(self, home_id: str) -> str:
         """
@@ -463,7 +484,7 @@ class TibberPricesPriceDataManager:
         transform_fn: Callable[[dict[str, Any]], dict[str, Any]],
         *,
         current_price_info: list[dict[str, Any]] | None = None,
-    ) -> dict[str, Any]:
+    ) -> tuple[dict[str, Any], bool]:
         """
         Handle update for main entry - fetch data for this home.
 
@@ -485,6 +506,11 @@ class TibberPricesPriceDataManager:
             current_price_info: Current price intervals (from coordinator.data["priceInfo"]).
                                Used to check if tomorrow data already exists.
 
+        Returns:
+            Tuple of (transformed_data, api_called):
+            - transformed_data: Transformed data dict for coordinator.
+            - api_called: True if API was called to fetch missing data.
+
         """
         # Update user data if needed (daily check)
         user_data_updated = await self.update_user_data_if_needed(current_time)
@@ -497,7 +523,7 @@ class TibberPricesPriceDataManager:
             # Return a special marker in the result that coordinator can check
             result = transform_fn({})
             result["_home_not_found"] = True  # Special marker for coordinator
-            return result
+            return result, False  # No API call made (home doesn't exist)
 
         # Determine if we should request tomorrow data
         include_tomorrow = self.should_fetch_tomorrow_data(current_price_info)
@@ -509,7 +535,7 @@ class TibberPricesPriceDataManager:
             home_id,
             include_tomorrow,
         )
-        raw_data = await self.fetch_home_data(home_id, current_time, include_tomorrow=include_tomorrow)
+        raw_data, api_called = await self.fetch_home_data(home_id, current_time, include_tomorrow=include_tomorrow)
 
         # Parse timestamps immediately after fetch
         raw_data = helpers.parse_all_timestamps(raw_data, time=self.time)
@@ -519,7 +545,7 @@ class TibberPricesPriceDataManager:
             await self.store_cache()
 
         # Transform for main entry
-        return transform_fn(raw_data)
+        return transform_fn(raw_data), api_called
 
     async def handle_api_error(
         self,
