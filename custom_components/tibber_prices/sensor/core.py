@@ -177,6 +177,9 @@ class TibberPricesSensor(TibberPricesEntity, RestoreSensor):
         self._value_getter: Callable | None = self._get_value_getter()
         self._time_sensitive_remove_listener: Callable | None = None
         self._minute_update_remove_listener: Callable | None = None
+        # Lifecycle sensor state change detection (for recorder optimization)
+        # Store as Any because native_value can be str/float/datetime depending on sensor type
+        self._last_lifecycle_state: Any = None
         # Chart data export (for chart_data_export sensor) - from binary_sensor
         self._chart_data_last_update = None  # Track last service call timestamp
         self._chart_data_error = None  # Track last service call error
@@ -312,7 +315,18 @@ class TibberPricesSensor(TibberPricesEntity, RestoreSensor):
         # Clear trend calculation cache for trend sensors
         elif self.entity_description.key in ("current_price_trend", "next_price_trend_change"):
             self._trend_calculator.clear_calculation_cache()
-        self.async_write_ha_state()
+
+        # For lifecycle sensor: Only write state if it actually changed (state-change filter)
+        # This enables precise detection at quarter-hour boundaries (23:45 turnover_pending,
+        # 13:00 searching_tomorrow, 00:00 turnover complete) without recorder spam
+        if self.entity_description.key == "data_lifecycle_status":
+            current_state = self.native_value
+            if current_state != self._last_lifecycle_state:
+                self._last_lifecycle_state = current_state
+                self.async_write_ha_state()
+            # If state didn't change, skip write to recorder
+        else:
+            self.async_write_ha_state()
 
     @callback
     def _handle_minute_update(self, time_service: TibberPricesTimeService) -> None:
@@ -347,7 +361,16 @@ class TibberPricesSensor(TibberPricesEntity, RestoreSensor):
             # Schedule async refresh as a task (we're in a callback)
             self.hass.async_create_task(self._refresh_chart_metadata())
 
-        super()._handle_coordinator_update()
+        # For lifecycle sensor: Only write state if it actually changed (event-based filter)
+        # Prevents excessive recorder entries while keeping quarter-hour update capability
+        if self.entity_description.key == "data_lifecycle_status":
+            current_state = self.native_value
+            if current_state != self._last_lifecycle_state:
+                self._last_lifecycle_state = current_state
+                super()._handle_coordinator_update()
+            # If state didn't change, skip write to recorder
+        else:
+            super()._handle_coordinator_update()
 
     def _get_value_getter(self) -> Callable | None:
         """Return the appropriate value getter method based on the sensor type."""

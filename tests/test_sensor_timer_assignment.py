@@ -257,17 +257,27 @@ def test_timing_sensors_use_minute_timer() -> None:
         )
 
 
-def test_lifecycle_sensor_uses_quarter_hour_timer() -> None:
+def test_lifecycle_sensor_uses_quarter_hour_timer_with_state_filter() -> None:
     """
-    Test that data lifecycle status sensor uses Timer #2.
+    Test that data lifecycle status sensor uses Timer #2 WITH state-change filtering.
 
-    The lifecycle sensor needs quarter-hour updates to detect:
-    - Turnover pending at 23:45 (quarter-hour boundary)
-    - Turnover completed after midnight API update
+    The lifecycle sensor needs quarter-hour precision for detecting:
+    - 23:45: turnover_pending (last interval before midnight)
+    - 00:00: turnover complete (after midnight API update)
+    - 13:00: searching_tomorrow (when tomorrow data search begins)
+
+    To prevent recorder spam, it uses state-change filtering in both:
+    - _handle_coordinator_update() (Timer #1)
+    - _handle_time_sensitive_update() (Timer #2)
+
+    State is only written to recorder if it actually changed.
+    This reduces recorder entries from ~96/day to ~10-15/day.
     """
+    # Lifecycle sensor MUST be in TIME_SENSITIVE_ENTITY_KEYS for quarter-hour precision
     assert "data_lifecycle_status" in TIME_SENSITIVE_ENTITY_KEYS, (
-        "Lifecycle sensor needs quarter-hour updates to detect turnover_pending\n"
-        "at 23:45 (last interval before midnight)"
+        "Lifecycle sensor needs quarter-hour updates for precise state transitions\n"
+        "at 23:45 (turnover_pending), 00:00 (turnover complete), 13:00 (searching_tomorrow).\n"
+        "State-change filter in _handle_time_sensitive_update() prevents recorder spam."
     )
 
 

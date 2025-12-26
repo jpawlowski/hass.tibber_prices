@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from datetime import datetime, timedelta
-from typing import Any
 
 from custom_components.tibber_prices.coordinator.constants import UPDATE_INTERVAL
 
@@ -13,10 +12,6 @@ from .base import TibberPricesBaseCalculator
 FRESH_DATA_THRESHOLD_MINUTES = 5  # Data is "fresh" within 5 minutes of API fetch
 TOMORROW_CHECK_HOUR = 13  # After 13:00, we actively check for tomorrow data
 TURNOVER_WARNING_SECONDS = 900  # Warn 15 minutes before midnight (last quarter-hour: 23:45-00:00)
-
-# Constants for 15-minute update boundaries (Timer #1)
-QUARTER_HOUR_BOUNDARIES = [0, 15, 30, 45]  # Minutes when Timer #1 can trigger
-LAST_HOUR_OF_DAY = 23
 
 
 class TibberPricesLifecycleCalculator(TibberPricesBaseCalculator):
@@ -78,28 +73,6 @@ class TibberPricesLifecycleCalculator(TibberPricesBaseCalculator):
 
         # Priority 6: Default - using cached data
         return "cached"
-
-    def get_sensor_fetch_age_minutes(self) -> int | None:
-        """
-        Calculate how many minutes ago sensor data was last fetched.
-
-        Uses the Pool's last_sensor_fetch as the source of truth.
-        This only counts API fetches for sensor data (protected range),
-        not service-triggered fetches for chart data.
-
-        Returns:
-            Minutes since last sensor fetch, or None if no fetch recorded.
-
-        """
-        pool_stats = self._get_pool_stats()
-        if not pool_stats or not pool_stats.get("last_sensor_fetch"):
-            return None
-
-        last_fetch = pool_stats["last_sensor_fetch"]
-        # Parse ISO timestamp
-        last_fetch_dt = datetime.fromisoformat(last_fetch)
-        age = self.coordinator.time.now() - last_fetch_dt
-        return int(age.total_seconds() / 60)
 
     def get_next_api_poll_time(self) -> datetime | None:
         """
@@ -189,15 +162,6 @@ class TibberPricesLifecycleCalculator(TibberPricesBaseCalculator):
         # Fallback: If we don't know timer offset yet, assume 13:00:00
         return tomorrow_13
 
-    def get_next_midnight_turnover_time(self) -> datetime:
-        """Calculate when the next midnight turnover will occur."""
-        coordinator = self.coordinator
-        current_time = coordinator.time.now()
-        now_local = coordinator.time.as_local(current_time)
-
-        # Next midnight
-        return now_local.replace(hour=0, minute=0, second=0, microsecond=0) + timedelta(days=1)
-
     def get_api_calls_today(self) -> int:
         """Get the number of API calls made today."""
         coordinator = self.coordinator
@@ -218,47 +182,3 @@ class TibberPricesLifecycleCalculator(TibberPricesBaseCalculator):
 
         """
         return not self.coordinator._needs_tomorrow_data()  # noqa: SLF001
-
-    def get_pool_stats(self) -> dict[str, Any] | None:
-        """
-        Get interval pool statistics.
-
-        Returns:
-            Dict with pool stats or None if pool not available.
-            Contains:
-            - Sensor intervals (protected range):
-              - sensor_intervals_count: Intervals in protected range
-              - sensor_intervals_expected: Expected count (usually 384)
-              - sensor_intervals_has_gaps: True if gaps exist
-            - Cache statistics:
-              - cache_intervals_total: Total intervals in cache
-              - cache_intervals_limit: Maximum cache size
-              - cache_fill_percent: How full the cache is (%)
-              - cache_intervals_extra: Intervals outside protected range
-            - Timestamps:
-              - last_sensor_fetch: When sensor data was last fetched
-              - cache_oldest_interval: Oldest interval in cache
-              - cache_newest_interval: Newest interval in cache
-            - Metadata:
-              - fetch_groups_count: Number of API fetch batches stored
-
-        """
-        return self._get_pool_stats()
-
-    def _get_pool_stats(self) -> dict[str, Any] | None:
-        """
-        Get pool stats from coordinator.
-
-        Returns:
-            Pool statistics dict or None.
-
-        """
-        coordinator = self.coordinator
-        # Access the pool via the price data manager
-        if hasattr(coordinator, "_price_data_manager"):
-            price_data_manager = coordinator._price_data_manager  # noqa: SLF001
-            if hasattr(price_data_manager, "_interval_pool"):
-                pool = price_data_manager._interval_pool  # noqa: SLF001
-                if pool is not None:
-                    return pool.get_pool_stats()
-        return None

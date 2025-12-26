@@ -11,7 +11,6 @@ from homeassistant.helpers.storage import Store
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 if TYPE_CHECKING:
-    from collections.abc import Callable
     from datetime import date, datetime
 
     from homeassistant.config_entries import ConfigEntry
@@ -242,16 +241,19 @@ class TibberPricesDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         self._last_user_update: datetime | None = None
         self._user_update_interval = timedelta(days=1)
 
-        # Data lifecycle tracking for diagnostic sensor
+        # Data lifecycle tracking
+        # Note: _lifecycle_state is used for DIAGNOSTICS only (diagnostics.py export).
+        # The lifecycle SENSOR calculates its state dynamically in get_lifecycle_state(),
+        # using: _is_fetching, last_exception, time calculations, _needs_tomorrow_data(),
+        # and _last_price_update. It does NOT read _lifecycle_state!
         self._lifecycle_state: str = (
-            "cached"  # Current state: cached, fresh, refreshing, searching_tomorrow, turnover_pending, error
+            "cached"  # For diagnostics: cached, fresh, refreshing, searching_tomorrow, turnover_pending, error
         )
-        self._last_price_update: datetime | None = None  # Tracks when price data was last fetched (for cache_age)
+        self._last_price_update: datetime | None = None  # When price data was last fetched from API
         self._api_calls_today: int = 0  # Counter for API calls today
         self._last_api_call_date: date | None = None  # Date of last API call (for daily reset)
-        self._is_fetching: bool = False  # Flag to track active API fetch
+        self._is_fetching: bool = False  # Flag to track active API fetch (read by lifecycle sensor)
         self._last_coordinator_update: datetime | None = None  # When Timer #1 last ran (_async_update_data)
-        self._lifecycle_callbacks: list[Callable[[], None]] = []  # Push-update callbacks for lifecycle sensor
 
         # Start timers
         self._listener_manager.schedule_quarter_hour_refresh(self._handle_quarter_hour_refresh)
@@ -550,8 +552,9 @@ class TibberPricesDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 
         # Transition lifecycle state from "fresh" to "cached" if enough time passed
         # (5 minutes threshold defined in lifecycle calculator)
-        # Note: With Pool as source of truth, we track "fresh" state based on
-        # when data was last fetched from the API (tracked by _api_calls_today counter)
+        # Note: This updates _lifecycle_state for diagnostics only.
+        # The lifecycle sensor calculates its state dynamically in get_lifecycle_state(),
+        # checking _last_price_update timestamp directly.
         if self._lifecycle_state == "fresh":
             # After 5 minutes, data is considered "cached" (no longer "just fetched")
             self._lifecycle_state = "cached"
@@ -601,9 +604,8 @@ class TibberPricesDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 self._last_api_call_date = current_date
 
             # Set _is_fetching flag - lifecycle sensor shows "refreshing" during fetch
+            # Note: Lifecycle sensor reads this flag directly in get_lifecycle_state()
             self._is_fetching = True
-            # Immediately notify lifecycle sensor about state change
-            self.async_update_listeners()
 
             # Get current price info to check if tomorrow data already exists
             current_price_info = self.data.get("priceInfo", []) if self.data else []
@@ -631,6 +633,8 @@ class TibberPricesDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                     "API call completed: Fetched %d intervals, updating lifecycle to 'fresh'",
                     len(result["priceInfo"]),
                 )
+                # Note: _lifecycle_state is for diagnostics only.
+                # Lifecycle sensor calculates state dynamically from _last_price_update.
             elif not api_called:
                 # Using cached data - lifecycle stays as is (cached/searching_tomorrow/etc.)
                 _LOGGER.debug(
@@ -644,7 +648,8 @@ class TibberPricesDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         ) as err:
             # Reset lifecycle state on error
             self._is_fetching = False
-            self._lifecycle_state = "error"
+            self._lifecycle_state = "error"  # For diagnostics
+            # Note: Lifecycle sensor detects errors via coordinator.last_exception
 
             # Track rate limit errors for repair system
             await self._track_rate_limit_error(err)
