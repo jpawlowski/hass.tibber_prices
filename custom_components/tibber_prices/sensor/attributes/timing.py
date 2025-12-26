@@ -13,6 +13,17 @@ if TYPE_CHECKING:
 TIMER_30_SEC_BOUNDARY = 30
 
 
+def _hours_to_minutes(state_value: Any) -> int | None:
+    """Convert hour-based state back to rounded minutes for attributes."""
+    if state_value is None:
+        return None
+
+    try:
+        return round(float(state_value) * 60)
+    except (TypeError, ValueError):
+        return None
+
+
 def _is_timing_or_volatility_sensor(key: str) -> bool:
     """Check if sensor is a timing or volatility sensor."""
     return key.endswith("_volatility") or (
@@ -68,6 +79,17 @@ def add_period_timing_attributes(
         timestamp = now.replace(second=second, microsecond=0)
 
     attributes["timestamp"] = timestamp
+
+    # Add minute-precision attributes for hour-based states to keep automation-friendly values
+    minute_value = _hours_to_minutes(state_value)
+
+    if minute_value is not None:
+        if key.endswith("period_duration"):
+            attributes["period_duration_minutes"] = minute_value
+        elif key.endswith("remaining_minutes"):
+            attributes["remaining_minutes"] = minute_value
+        elif key.endswith("next_in_minutes"):
+            attributes["next_in_minutes"] = minute_value
 
     # Add icon_color for dynamic styling
     add_icon_color_attribute(attributes, key=key, state_value=state_value)

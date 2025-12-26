@@ -731,9 +731,9 @@ BEST_PRICE_TIMING_SENSORS = (
         name="Best Price Period Duration",
         icon="mdi:timer",
         device_class=SensorDeviceClass.DURATION,
-        native_unit_of_measurement=UnitOfTime.MINUTES,
-        state_class=None,  # Changes with each period: no statistics
-        suggested_display_precision=0,
+        native_unit_of_measurement=UnitOfTime.HOURS,
+        state_class=None,  # Duration not needed in long-term statistics
+        suggested_display_precision=2,
         entity_registry_enabled_default=False,
     ),
     SensorEntityDescription(
@@ -741,9 +741,10 @@ BEST_PRICE_TIMING_SENSORS = (
         translation_key="best_price_remaining_minutes",
         name="Best Price Remaining Time",
         icon="mdi:timer-sand",
-        native_unit_of_measurement=UnitOfTime.MINUTES,
-        state_class=None,  # Countdown timer: no statistics
-        suggested_display_precision=0,
+        device_class=SensorDeviceClass.DURATION,
+        native_unit_of_measurement=UnitOfTime.HOURS,
+        state_class=None,  # Countdown timers excluded from statistics
+        suggested_display_precision=2,
     ),
     SensorEntityDescription(
         key="best_price_progress",
@@ -767,9 +768,10 @@ BEST_PRICE_TIMING_SENSORS = (
         translation_key="best_price_next_in_minutes",
         name="Best Price Starts In",
         icon="mdi:timer-outline",
-        native_unit_of_measurement=UnitOfTime.MINUTES,
-        state_class=None,  # Countdown timer: no statistics
-        suggested_display_precision=0,
+        device_class=SensorDeviceClass.DURATION,
+        native_unit_of_measurement=UnitOfTime.HOURS,
+        state_class=None,  # Next-start timers excluded from statistics
+        suggested_display_precision=2,
     ),
 )
 
@@ -788,9 +790,9 @@ PEAK_PRICE_TIMING_SENSORS = (
         name="Peak Price Period Duration",
         icon="mdi:timer",
         device_class=SensorDeviceClass.DURATION,
-        native_unit_of_measurement=UnitOfTime.MINUTES,
-        state_class=None,  # Changes with each period: no statistics
-        suggested_display_precision=0,
+        native_unit_of_measurement=UnitOfTime.HOURS,
+        state_class=None,  # Duration not needed in long-term statistics
+        suggested_display_precision=2,
         entity_registry_enabled_default=False,
     ),
     SensorEntityDescription(
@@ -798,9 +800,10 @@ PEAK_PRICE_TIMING_SENSORS = (
         translation_key="peak_price_remaining_minutes",
         name="Peak Price Remaining Time",
         icon="mdi:timer-sand",
-        native_unit_of_measurement=UnitOfTime.MINUTES,
-        state_class=None,  # Countdown timer: no statistics
-        suggested_display_precision=0,
+        device_class=SensorDeviceClass.DURATION,
+        native_unit_of_measurement=UnitOfTime.HOURS,
+        state_class=None,  # Countdown timers excluded from statistics
+        suggested_display_precision=2,
     ),
     SensorEntityDescription(
         key="peak_price_progress",
@@ -824,9 +827,10 @@ PEAK_PRICE_TIMING_SENSORS = (
         translation_key="peak_price_next_in_minutes",
         name="Peak Price Starts In",
         icon="mdi:timer-outline",
-        native_unit_of_measurement=UnitOfTime.MINUTES,
-        state_class=None,  # Countdown timer: no statistics
-        suggested_display_precision=0,
+        device_class=SensorDeviceClass.DURATION,
+        native_unit_of_measurement=UnitOfTime.HOURS,
+        state_class=None,  # Next-start timers excluded from statistics
+        suggested_display_precision=2,
     ),
 )
 

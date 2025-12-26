@@ -316,39 +316,49 @@
             "usage_tips": "Gebruik deze diagnostische sensor om gegevensfrisheid en API-aanroeppatronen te begrijpen. Controleer het 'cache_age'-attribuut om te zien hoe oud de huidige gegevens zijn. Monitor 'next_api_poll' om te weten wanneer de volgende update is gepland. Gebruik 'data_completeness' om te zien of gisteren/vandaag/morgen gegevens beschikbaar zijn. De 'api_calls_today'-teller helpt API-gebruik bij te houden. Perfect voor probleemoplossing of begrip van integratiegedrag."
         },
         "best_price_end_time": {
-            "description": "Wanneer de huidige of volgende goedkope periode eindigt",
-            "long_description": "Toont het eindtijdstempel van de huidige goedkope periode wanneer actief, of het einde van de volgende periode wanneer geen periode actief is. Toont altijd een nuttige tijdreferentie voor planning. Geeft alleen 'Onbekend' terug wanneer geen periodes zijn geconfigureerd.",
-            "usage_tips": "Gebruik dit om een aftelling weer te geven zoals 'Goedkope periode eindigt over 2 uur' (wanneer actief) of 'Volgende goedkope periode eindigt om 14:00' (wanneer inactief). Home Assistant toont automatisch relatieve tijd voor tijdstempelsensoren."
+            "description": "Totale lengte van huidige of volgende voordelige periode (state in uren, attribuut in minuten)",
+            "long_description": "Toont hoe lang de voordelige periode duurt. State gebruikt uren (float) voor een leesbare UI; attribuut `period_duration_minutes` behoudt afgeronde minuten voor automatiseringen. Actief → duur van de huidige periode, anders de volgende.",
+            "usage_tips": "UI kan 1,5 u tonen terwijl `period_duration_minutes` = 90 voor automatiseringen blijft."
+        },
+        "best_price_period_duration": {
+            "description": "Lengte van huidige/volgende goedkope periode",
+            "long_description": "Totale duur van huidige of volgende goedkope periode. De state wordt weergegeven in uren (bijv. 1,5 u) voor gemakkelijk aflezen in de UI, terwijl het attribuut `period_duration_minutes` dezelfde waarde in minuten levert (bijv. 90) voor automatiseringen. Deze waarde vertegenwoordigt de **volledige geplande duur** van de periode en is constant gedurende de gehele periode, zelfs als de resterende tijd (remaining_minutes) afneemt.",
+            "usage_tips": "Combineer met remaining_minutes om te berekenen wanneer langlopende apparaten moeten worden gestopt: Periode is `period_duration_minutes - remaining_minutes` minuten geleden gestart. Dit attribuut ondersteunt energie-optimalisatiestrategieën door te helpen bij het plannen van hoog-verbruiksactiviteiten binnen goedkope periodes."
         },
         "best_price_remaining_minutes": {
-            "description": "Resterende minuten in huidige goedkope periode (0 wanneer inactief)",
-            "long_description": "Toont hoeveel minuten er nog over zijn in de huidige goedkope periode. Geeft 0 terug wanneer geen periode actief is. Werkt elke minuut bij. Controleer binary_sensor.best_price_period om te zien of een periode momenteel actief is.",
-            "usage_tips": "Perfect voor automatiseringen: 'Als remaining_minutes > 0 EN remaining_minutes < 30, start wasmachine nu'. De waarde 0 maakt het gemakkelijk om te controleren of een periode actief is (waarde > 0) of niet (waarde = 0)."
+            "description": "Resterende tijd in huidige goedkope periode",
+            "long_description": "Toont hoeveel tijd er nog overblijft in de huidige goedkope periode. De state wordt weergegeven in uren (bijv. 0,75 u) voor gemakkelijk aflezen in dashboards, terwijl het attribuut `remaining_minutes` dezelfde tijd in minuten levert (bijv. 45) voor automatiseringsvoorwaarden. **Afteltimer**: Deze waarde neemt elke minuut af tijdens een actieve periode. Geeft 0 terug wanneer geen goedkope periode actief is. Werkt elke minuut bij.",
+            "usage_tips": "Voor automatiseringen: Gebruik attribuut `remaining_minutes` zoals 'Als remaining_minutes > 60, start vaatwasser nu (genoeg tijd om te voltooien)' of 'Als remaining_minutes < 15, rond huidige cyclus binnenkort af'. UI toont gebruiksvriendelijke uren (bijv. 1,25 u). Waarde 0 geeft aan dat geen goedkope periode actief is."
         },
         "best_price_progress": {
             "description": "Voortgang door huidige goedkope periode (0% wanneer inactief)",
-            "long_description": "Toont de voortgang door de huidige goedkope periode als 0-100%. Geeft 0% terug wanneer geen periode actief is. Werkt elke minuut bij. 0% betekent periode net gestart, 100% betekent het eindigt bijna.",
-            "usage_tips": "Geweldig voor visuele voortgangsbalken. Gebruik in automatiseringen: 'Als progress > 0 EN progress > 75, stuur melding dat goedkope periode bijna eindigt'. Waarde 0 geeft aan dat er geen actieve periode is."
+            "long_description": "Toont voortgang door de huidige goedkope periode als 0-100%. Geeft 0% terug wanneer geen periode actief is. Werkt elke minuut bij. 0% betekent periode net gestart, 100% betekent dat deze bijna eindigt.",
+            "usage_tips": "Geweldig voor visuele voortgangsbalken. Gebruik in automatiseringen: 'Als progress > 0 EN progress > 75, stuur melding dat goedkope periode bijna eindigt'. Waarde 0 geeft aan dat geen periode actief is."
         },
         "best_price_next_start_time": {
-            "description": "Wanneer de volgende goedkope periode begint",
-            "long_description": "Toont wanneer de volgende komende goedkope periode begint. Tijdens een actieve periode toont dit de start van de VOLGENDE periode na de huidige. Geeft alleen 'Onbekend' terug wanneer geen toekomstige periodes zijn geconfigureerd.",
-            "usage_tips": "Altijd nuttig voor vooruitplanning: 'Volgende goedkope periode begint over 3 uur' (of je nu in een periode zit of niet). Combineer met automatiseringen: 'Wanneer volgende starttijd over 10 minuten is, stuur melding om wasmachine voor te bereiden'."
+            "description": "Totale lengte van huidige of volgende dure periode (state in uren, attribuut in minuten)",
+            "long_description": "Toont hoe lang de dure periode duurt. State gebruikt uren (float) voor de UI; attribuut `period_duration_minutes` behoudt afgeronde minuten voor automatiseringen. Actief → duur van de huidige periode, anders de volgende.",
+            "usage_tips": "UI kan 0,75 u tonen terwijl `period_duration_minutes` = 45 voor automatiseringen blijft."
         },
         "best_price_next_in_minutes": {
-            "description": "Minuten tot volgende goedkope periode begint (0 bij overgang)",
-            "long_description": "Toont minuten tot de volgende goedkope periode begint. Tijdens een actieve periode toont dit de tijd tot de periode NA de huidige. Geeft 0 terug tijdens korte overgangsmomenten. Werkt elke minuut bij.",
-            "usage_tips": "Perfect voor 'wacht tot goedkope periode' automatiseringen: 'Als next_in_minutes > 0 EN next_in_minutes < 15, wacht voordat vaatwasser wordt gestart'. Waarde > 0 geeft altijd aan dat een toekomstige periode is gepland."
+            "description": "Resterende tijd in huidige dure periode (state in uren, attribuut in minuten)",
+            "long_description": "Toont hoeveel tijd er nog over is. State gebruikt uren (float); attribuut `remaining_minutes` behoudt afgeronde minuten voor automatiseringen. Geeft 0 terug wanneer er geen periode actief is. Werkt elke minuut bij.",
+            "usage_tips": "Gebruik `remaining_minutes` voor drempels (bijv. > 60) terwijl de state in uren goed leesbaar blijft."
         },
         "peak_price_end_time": {
-            "description": "Wanneer de huidige of volgende dure periode eindigt",
-            "long_description": "Toont het eindtijdstempel van de huidige dure periode wanneer actief, of het einde van de volgende periode wanneer geen periode actief is. Toont altijd een nuttige tijdreferentie voor planning. Geeft alleen 'Onbekend' terug wanneer geen periodes zijn geconfigureerd.",
-            "usage_tips": "Gebruik dit om 'Dure periode eindigt over 1 uur' weer te geven (wanneer actief) of 'Volgende dure periode eindigt om 18:00' (wanneer inactief). Combineer met automatiseringen om activiteiten te hervatten na piek."
+            "description": "Tijd tot volgende dure periode (state in uren, attribuut in minuten)",
+            "long_description": "Toont hoe lang het duurt tot de volgende dure periode start. State gebruikt uren (float); attribuut `next_in_minutes` behoudt afgeronde minuten voor automatiseringen. Tijdens een actieve periode is dit de tijd tot de periode na de huidige. 0 tijdens korte overgangen. Werkt elke minuut bij.",
+            "usage_tips": "Gebruik `next_in_minutes` in automatiseringen (bijv. < 10) terwijl de state in uren leesbaar blijft."
+        },
+        "peak_price_period_duration": {
+            "description": "Totale duur van huidige of volgende dure periode in minuten",
+            "long_description": "Toont de totale duur van de dure periode in minuten. Tijdens een actieve periode toont dit de volledige lengte van de huidige periode. Wanneer geen periode actief is, toont dit de duur van de volgende komende periode. Voorbeeld: '60 minuten' voor een 1-uur periode.",
+            "usage_tips": "Gebruik om energiebesparende maatregelen te plannen: 'Als duration > 120, verlaag verwarmingstemperatuur agressiever (lange dure periode)'. Helpt bij het inschatten hoeveel energieverbruik moet worden verminderd."
         },
         "peak_price_remaining_minutes": {
-            "description": "Resterende minuten in huidige dure periode (0 wanneer inactief)",
-            "long_description": "Toont hoeveel minuten er nog over zijn in de huidige dure periode. Geeft 0 terug wanneer geen periode actief is. Werkt elke minuut bij. Controleer binary_sensor.peak_price_period om te zien of een periode momenteel actief is.",
-            "usage_tips": "Gebruik in automatiseringen: 'Als remaining_minutes > 60, annuleer uitgestelde laadronde'. Waarde 0 maakt het gemakkelijk om onderscheid te maken tussen actieve (waarde > 0) en inactieve (waarde = 0) periodes."
+            "description": "Resterende tijd in huidige dure periode",
+            "long_description": "Toont hoeveel tijd er nog overblijft in de huidige dure periode. De state wordt weergegeven in uren (bijv. 0,75 u) voor gemakkelijk aflezen in dashboards, terwijl het attribuut `remaining_minutes` dezelfde tijd in minuten levert (bijv. 45) voor automatiseringsvoorwaarden. **Afteltimer**: Deze waarde neemt elke minuut af tijdens een actieve periode. Geeft 0 terug wanneer geen dure periode actief is. Werkt elke minuut bij.",
+            "usage_tips": "Voor automatiseringen: Gebruik attribuut `remaining_minutes` zoals 'Als remaining_minutes > 60, annuleer uitgestelde laadronde' of 'Als remaining_minutes < 15, hervat normaal gebruik binnenkort'. UI toont gebruiksvriendelijke uren (bijv. 1,0 u). Waarde 0 geeft aan dat geen dure periode actief is."
         },
         "peak_price_progress": {
             "description": "Voortgang door huidige dure periode (0% wanneer inactief)",
@@ -361,19 +371,9 @@
             "usage_tips": "Altijd nuttig voor planning: 'Volgende dure periode begint over 2 uur'. Automatisering: 'Wanneer volgende starttijd over 30 minuten is, verlaag verwarmingstemperatuur preventief'."
         },
         "peak_price_next_in_minutes": {
-            "description": "Minuten tot volgende dure periode begint (0 bij overgang)",
-            "long_description": "Toont minuten tot de volgende dure periode begint. Tijdens een actieve periode toont dit de tijd tot de periode NA de huidige. Geeft 0 terug tijdens korte overgangsmomenten. Werkt elke minuut bij.",
-            "usage_tips": "Preventieve automatisering: 'Als next_in_minutes > 0 EN next_in_minutes < 10, voltooi huidige laadcyclus nu voordat prijzen stijgen'."
-        },
-        "best_price_period_duration": {
-            "description": "Totale duur van huidige of volgende goedkope periode in minuten",
-            "long_description": "Toont de totale duur van de goedkope periode in minuten. Tijdens een actieve periode toont dit de volledige lengte van de huidige periode. Wanneer geen periode actief is, toont dit de duur van de volgende komende periode. Voorbeeld: '90 minuten' voor een 1,5-uur periode.",
-            "usage_tips": "Combineer met remaining_minutes voor taakplanning: 'Als duration = 120 EN remaining_minutes > 90, start wasmachine (genoeg tijd om te voltooien)'. Nuttig om te begrijpen of periodes lang genoeg zijn voor energie-intensieve taken."
-        },
-        "peak_price_period_duration": {
-            "description": "Totale duur van huidige of volgende dure periode in minuten",
-            "long_description": "Toont de totale duur van de dure periode in minuten. Tijdens een actieve periode toont dit de volledige lengte van de huidige periode. Wanneer geen periode actief is, toont dit de duur van de volgende komende periode. Voorbeeld: '60 minuten' voor een 1-uur periode.",
-            "usage_tips": "Gebruik om energiebesparende maatregelen te plannen: 'Als duration > 120, verlaag verwarmingstemperatuur agressiever (lange dure periode)'. Helpt bij het inschatten hoeveel energieverbruik moet worden verminderd."
+            "description": "Tijd tot volgende dure periode",
+            "long_description": "Toont hoe lang het duurt tot de volgende dure periode. De state wordt weergegeven in uren (bijv. 0,5 u) voor dashboards, terwijl het attribuut `next_in_minutes` minuten levert (bijv. 30) voor automatiseringsvoorwaarden. Tijdens een actieve periode toont dit de tijd tot de periode NA de huidige. Geeft 0 terug tijdens korte overgangsmomenten. Werkt elke minuut bij.",
+            "usage_tips": "Voor automatiseringen: Gebruik attribuut `next_in_minutes` zoals 'Als next_in_minutes > 0 EN next_in_minutes < 10, voltooi huidige laadcyclus nu voordat prijzen stijgen'. Waarde > 0 geeft altijd aan dat een toekomstige dure periode is gepland."
         },
         "home_type": {
             "description": "Type woning (appartement, huis enz.)",

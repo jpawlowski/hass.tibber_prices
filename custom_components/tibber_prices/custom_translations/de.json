@@ -321,14 +321,14 @@
             "usage_tips": "Nutze dies, um einen Countdown wie 'Günstiger Zeitraum endet in 2 Stunden' (wenn aktiv) oder 'Nächster günstiger Zeitraum endet um 14:00' (wenn inaktiv) anzuzeigen. Home Assistant zeigt automatisch relative Zeit für Zeitstempel-Sensoren an."
         },
         "best_price_period_duration": {
-            "description": "Gesamtlänge des aktuellen oder nächsten günstigen Zeitraums in Minuten",
-            "long_description": "Zeigt, wie lange der günstige Zeitraum insgesamt dauert. Während eines aktiven Zeitraums zeigt dies die Dauer des aktuellen Zeitraums. Wenn kein Zeitraum aktiv ist, zeigt dies die Dauer des nächsten kommenden Zeitraums. Gibt nur 'Unbekannt' zurück, wenn keine Zeiträume ermittelt wurden.",
-            "usage_tips": "Nützlich für Planung: 'Der nächste günstige Zeitraum dauert 90 Minuten' oder 'Der aktuelle günstige Zeitraum ist 120 Minuten lang'. Kombiniere mit remaining_minutes, um zu berechnen, wann langlaufende Geräte gestartet werden sollten."
+            "description": "Gesamtlänge des aktuellen oder nächsten günstigen Zeitraums",
+            "long_description": "Zeigt, wie lange der günstige Zeitraum insgesamt dauert. Der State wird in Stunden angezeigt (z. B. 1,5 h) für eine einfache Lesbarkeit in der UI, während das Attribut `period_duration_minutes` denselben Wert in Minuten bereitstellt (z. B. 90) für Automationen. Während eines aktiven Zeitraums zeigt dies die Dauer des aktuellen Zeitraums. Wenn kein Zeitraum aktiv ist, zeigt dies die Dauer des nächsten kommenden Zeitraums. Gibt nur 'Unbekannt' zurück, wenn keine Zeiträume ermittelt wurden.",
+            "usage_tips": "Für Anzeige: State-Wert (Stunden) in Dashboards nutzen. Für Automationen: Attribut `period_duration_minutes` verwenden, um zu prüfen, ob genug Zeit für langläufige Geräte ist (z. B. 'Wenn period_duration_minutes >= 90, starte Waschmaschine')."
         },
         "best_price_remaining_minutes": {
-            "description": "Verbleibende Minuten im aktuellen günstigen Zeitraum (0 wenn inaktiv)",
-            "long_description": "Zeigt, wie viele Minuten im aktuellen günstigen Zeitraum noch verbleiben. Gibt 0 zurück, wenn kein Zeitraum aktiv ist. Aktualisiert sich jede Minute. Prüfe binary_sensor.best_price_period, um zu sehen, ob ein Zeitraum aktuell aktiv ist.",
-            "usage_tips": "Perfekt für Automatisierungen: 'Wenn remaining_minutes > 0 UND remaining_minutes < 30, starte Waschmaschine jetzt'. Der Wert 0 macht es einfach zu prüfen, ob ein Zeitraum aktiv ist (Wert > 0) oder nicht (Wert = 0)."
+            "description": "Verbleibende Zeit im aktuellen günstigen Zeitraum",
+            "long_description": "Zeigt, wie viel Zeit im aktuellen günstigen Zeitraum noch verbleibt. Der State wird in Stunden angezeigt (z. B. 0,5 h) für eine einfache Lesbarkeit, während das Attribut `remaining_minutes` Minuten bereitstellt (z. B. 30) für Automationslogik. Gibt 0 zurück, wenn kein Zeitraum aktiv ist. Aktualisiert sich jede Minute. Prüfe binary_sensor.best_price_period, um zu sehen, ob ein Zeitraum aktuell aktiv ist.",
+            "usage_tips": "Für Automationen: Attribut `remaining_minutes` mit numerischen Vergleichen nutzen wie 'Wenn remaining_minutes > 0 UND remaining_minutes < 30, starte Waschmaschine jetzt'. Der Wert 0 macht es einfach zu prüfen, ob ein Zeitraum aktiv ist (Wert > 0) oder nicht (Wert = 0)."
         },
         "best_price_progress": {
             "description": "Fortschritt durch aktuellen günstigen Zeitraum (0% wenn inaktiv)",
@@ -341,9 +341,9 @@
             "usage_tips": "Immer nützlich für Vorausplanung: 'Nächster günstiger Zeitraum startet in 3 Stunden' (egal, ob du gerade in einem Zeitraum bist oder nicht). Kombiniere mit Automatisierungen: 'Wenn nächste Startzeit in 10 Minuten ist, sende Benachrichtigung zur Vorbereitung der Waschmaschine'."
         },
         "best_price_next_in_minutes": {
-            "description": "Minuten bis nächster günstiger Zeitraum startet (0 beim Übergang)",
-            "long_description": "Zeigt Minuten bis der nächste günstige Zeitraum startet. Während eines aktiven Zeitraums zeigt dies die Zeit bis zum Zeitraum nach dem aktuellen. Gibt 0 während kurzer Übergangsphasen zurück. Aktualisiert sich jede Minute.",
-            "usage_tips": "Perfekt für 'warte bis günstiger Zeitraum' Automatisierungen: 'Wenn next_in_minutes > 0 UND next_in_minutes < 15, warte, bevor du die Geschirrspülmaschine startest'. Wert > 0 zeigt immer an, dass ein zukünftiger Zeitraum geplant ist."
+            "description": "Zeit bis zum nächsten günstigen Zeitraum",
+            "long_description": "Zeigt, wie lange es bis zum nächsten günstigen Zeitraum dauert. Der State wird in Stunden angezeigt (z. B. 2,25 h) für Dashboards, während das Attribut `next_in_minutes` Minuten bereitstellt (z. B. 135) für Automationsbedingungen. Während eines aktiven Zeitraums zeigt dies die Zeit bis zum Zeitraum nach dem aktuellen. Gibt 0 während kurzer Übergangsphasen zurück. Aktualisiert sich jede Minute.",
+            "usage_tips": "Für Automationen: Attribut `next_in_minutes` nutzen wie 'Wenn next_in_minutes > 0 UND next_in_minutes < 15, warte, bevor du die Geschirrspülmaschine startest'. Wert > 0 zeigt immer an, dass ein zukünftiger Zeitraum geplant ist."
         },
         "peak_price_end_time": {
             "description": "Wann der aktuelle oder nächste teure Zeitraum endet",
@@ -351,14 +351,14 @@
             "usage_tips": "Nutze dies, um 'Teurer Zeitraum endet in 1 Stunde' (wenn aktiv) oder 'Nächster teurer Zeitraum endet um 18:00' (wenn inaktiv) anzuzeigen. Kombiniere mit Automatisierungen, um den Betrieb nach der Spitzenzeit fortzusetzen."
         },
         "peak_price_period_duration": {
-            "description": "Gesamtlänge des aktuellen oder nächsten teuren Zeitraums in Minuten",
-            "long_description": "Zeigt, wie lange der teure Zeitraum insgesamt dauert. Während eines aktiven Zeitraums zeigt dies die Dauer des aktuellen Zeitraums. Wenn kein Zeitraum aktiv ist, zeigt dies die Dauer des nächsten kommenden Zeitraums. Gibt nur 'Unbekannt' zurück, wenn keine Zeiträume ermittelt wurden.",
-            "usage_tips": "Nützlich für Planung: 'Der nächste teure Zeitraum dauert 60 Minuten' oder 'Der aktuelle Spitzenzeitraum ist 90 Minuten lang'. Kombiniere mit remaining_minutes, um zu entscheiden, ob die Spitze abgewartet oder der Betrieb fortgesetzt werden soll."
+            "description": "Länge des aktuellen/nächsten teuren Zeitraums",
+            "long_description": "Gesamtdauer des aktuellen oder nächsten teuren Zeitraums. Der State wird in Stunden angezeigt (z. B. 1,5 h) für leichtes Ablesen in der UI, während das Attribut `period_duration_minutes` denselben Wert in Minuten bereitstellt (z. B. 90) für Automationen. Dieser Wert repräsentiert die **volle geplante Dauer** des Zeitraums und ist konstant während des gesamten Zeitraums, auch wenn die verbleibende Zeit (remaining_minutes) abnimmt.",
+            "usage_tips": "Kombiniere mit remaining_minutes, um zu berechnen, wann langlaufende Geräte gestoppt werden sollen: Zeitraum begann vor `period_duration_minutes - remaining_minutes` Minuten. Dieses Attribut unterstützt Energiespar-Strategien, indem es hilft, Hochverbrauchsaktivitäten außerhalb teurer Perioden zu planen."
         },
         "peak_price_remaining_minutes": {
-            "description": "Verbleibende Minuten im aktuellen teuren Zeitraum (0 wenn inaktiv)",
-            "long_description": "Zeigt, wie viele Minuten im aktuellen teuren Zeitraum noch verbleiben. Gibt 0 zurück, wenn kein Zeitraum aktiv ist. Aktualisiert sich jede Minute. Prüfe binary_sensor.peak_price_period, um zu sehen, ob ein Zeitraum aktuell aktiv ist.",
-            "usage_tips": "Nutze in Automatisierungen: 'Wenn remaining_minutes > 60, breche aufgeschobene Ladesitzung ab'. Wert 0 macht es einfach zu unterscheiden zwischen aktivem (Wert > 0) und inaktivem (Wert = 0) Zeitraum."
+            "description": "Verbleibende Zeit im aktuellen teuren Zeitraum",
+            "long_description": "Zeigt, wie viel Zeit im aktuellen teuren Zeitraum noch verbleibt. Der State wird in Stunden angezeigt (z. B. 0,75 h) für einfaches Ablesen in Dashboards, während das Attribut `remaining_minutes` dieselbe Zeit in Minuten liefert (z. B. 45) für Automationsbedingungen. **Countdown-Timer**: Dieser Wert dekrementiert jede Minute während eines aktiven Zeitraums. Gibt 0 zurück, wenn kein teurer Zeitraum aktiv ist. Aktualisiert sich minütlich.",
+            "usage_tips": "Für Automationen: Nutze Attribut `remaining_minutes` wie 'Wenn remaining_minutes > 60, setze Heizung auf Energiesparmodus' oder 'Wenn remaining_minutes < 15, erhöhe Temperatur wieder'. UI zeigt benutzerfreundliche Stunden (z. B. 1,25 h). Wert 0 zeigt an, dass kein teurer Zeitraum aktiv ist."
         },
         "peak_price_progress": {
             "description": "Fortschritt durch aktuellen teuren Zeitraum (0% wenn inaktiv)",
@@ -371,9 +371,9 @@
             "usage_tips": "Immer nützlich für Planung: 'Nächster teurer Zeitraum startet in 2 Stunden'. Automatisierung: 'Wenn nächste Startzeit in 30 Minuten ist, reduziere Heiztemperatur vorsorglich'."
         },
         "peak_price_next_in_minutes": {
-            "description": "Minuten bis nächster teurer Zeitraum startet (0 beim Übergang)",
-            "long_description": "Zeigt Minuten bis der nächste teure Zeitraum startet. Während eines aktiven Zeitraums zeigt dies die Zeit bis zum Zeitraum nach dem aktuellen. Gibt 0 während kurzer Übergangsphasen zurück. Aktualisiert sich jede Minute.",
-            "usage_tips": "Präventive Automatisierung: 'Wenn next_in_minutes > 0 UND next_in_minutes < 10, beende aktuellen Ladezyklus jetzt, bevor die Preise steigen'."
+            "description": "Zeit bis zum nächsten teuren Zeitraum",
+            "long_description": "Zeigt, wie lange es bis zum nächsten teuren Zeitraum dauert. Der State wird in Stunden angezeigt (z. B. 2,25 h) für Dashboards, während das Attribut `next_in_minutes` Minuten bereitstellt (z. B. 135) für Automationsbedingungen. Während eines aktiven Zeitraums zeigt dies die Zeit bis zum Zeitraum nach dem aktuellen. Gibt 0 während kurzer Übergangsphasen zurück. Aktualisiert sich jede Minute.",
+            "usage_tips": "Für Automationen: Attribut `next_in_minutes` nutzen wie 'Wenn next_in_minutes > 0 UND next_in_minutes < 10, reduziere Heizung vorsorglich bevor der teure Zeitraum beginnt'. Wert > 0 zeigt immer an, dass ein zukünftiger teurer Zeitraum geplant ist."
         },
         "home_type": {
             "description": "Art der Wohnung (Wohnung, Haus usw.)",

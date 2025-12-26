@@ -417,8 +417,8 @@ def test_timer_constants_are_comprehensive() -> None:
         "data_last_updated",  # Timestamp of last update, not time-dependent
         "next_24h_volatility",  # Uses fixed 24h window from current time, updated on API data
         "current_interval_price_base",  # Duplicate of current_interval_price (just different unit)
-        "best_price_period_duration",  # Duration in minutes, doesn't change minute-by-minute
-        "peak_price_period_duration",  # Duration in minutes, doesn't change minute-by-minute
+        "best_price_period_duration",  # Duration state in hours (static per period), no minute-by-minute timer
+        "peak_price_period_duration",  # Duration state in hours (static per period), no minute-by-minute timer
     }
 
     potentially_missing = [

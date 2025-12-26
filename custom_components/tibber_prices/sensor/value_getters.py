@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, cast
 
 from custom_components.tibber_prices.utils.average import (
     calculate_current_leading_max,
@@ -70,6 +70,14 @@ def get_value_getter_mapping(  # noqa: PLR0913 - needs all calculators as parame
         Dictionary mapping entity keys to their value getter callables.
 
     """
+
+    def _minutes_to_hours(value: float | None) -> float | None:
+        """Convert minutes to hours for duration-oriented sensors."""
+        if value is None:
+            return None
+
+        return value / 60
+
     return {
         # ================================================================
         # INTERVAL-BASED SENSORS - via IntervalCalculator
@@ -243,11 +251,17 @@ def get_value_getter_mapping(  # noqa: PLR0913 - needs all calculators as parame
         "best_price_end_time": lambda: timing_calculator.get_period_timing_value(
             period_type="best_price", value_type="end_time"
         ),
-        "best_price_period_duration": lambda: timing_calculator.get_period_timing_value(
-            period_type="best_price", value_type="period_duration"
+        "best_price_period_duration": lambda: _minutes_to_hours(
+            cast(
+                "float | None",
+                timing_calculator.get_period_timing_value(period_type="best_price", value_type="period_duration"),
+            )
         ),
-        "best_price_remaining_minutes": lambda: timing_calculator.get_period_timing_value(
-            period_type="best_price", value_type="remaining_minutes"
+        "best_price_remaining_minutes": lambda: _minutes_to_hours(
+            cast(
+                "float | None",
+                timing_calculator.get_period_timing_value(period_type="best_price", value_type="remaining_minutes"),
+            )
         ),
         "best_price_progress": lambda: timing_calculator.get_period_timing_value(
             period_type="best_price", value_type="progress"
@@ -255,18 +269,27 @@ def get_value_getter_mapping(  # noqa: PLR0913 - needs all calculators as parame
         "best_price_next_start_time": lambda: timing_calculator.get_period_timing_value(
             period_type="best_price", value_type="next_start_time"
         ),
-        "best_price_next_in_minutes": lambda: timing_calculator.get_period_timing_value(
-            period_type="best_price", value_type="next_in_minutes"
+        "best_price_next_in_minutes": lambda: _minutes_to_hours(
+            cast(
+                "float | None",
+                timing_calculator.get_period_timing_value(period_type="best_price", value_type="next_in_minutes"),
+            )
         ),
         # Peak Price timing sensors
         "peak_price_end_time": lambda: timing_calculator.get_period_timing_value(
             period_type="peak_price", value_type="end_time"
         ),
-        "peak_price_period_duration": lambda: timing_calculator.get_period_timing_value(
-            period_type="peak_price", value_type="period_duration"
+        "peak_price_period_duration": lambda: _minutes_to_hours(
+            cast(
+                "float | None",
+                timing_calculator.get_period_timing_value(period_type="peak_price", value_type="period_duration"),
+            )
         ),
-        "peak_price_remaining_minutes": lambda: timing_calculator.get_period_timing_value(
-            period_type="peak_price", value_type="remaining_minutes"
+        "peak_price_remaining_minutes": lambda: _minutes_to_hours(
+            cast(
+                "float | None",
+                timing_calculator.get_period_timing_value(period_type="peak_price", value_type="remaining_minutes"),
+            )
         ),
         "peak_price_progress": lambda: timing_calculator.get_period_timing_value(
             period_type="peak_price", value_type="progress"
@@ -274,8 +297,11 @@ def get_value_getter_mapping(  # noqa: PLR0913 - needs all calculators as parame
         "peak_price_next_start_time": lambda: timing_calculator.get_period_timing_value(
             period_type="peak_price", value_type="next_start_time"
         ),
-        "peak_price_next_in_minutes": lambda: timing_calculator.get_period_timing_value(
-            period_type="peak_price", value_type="next_in_minutes"
+        "peak_price_next_in_minutes": lambda: _minutes_to_hours(
+            cast(
+                "float | None",
+                timing_calculator.get_period_timing_value(period_type="peak_price", value_type="next_in_minutes"),
+            )
         ),
         # Chart data export sensor
         "chart_data_export": get_chart_data_export_value,

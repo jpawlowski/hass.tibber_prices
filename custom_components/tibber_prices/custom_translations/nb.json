@@ -316,39 +316,49 @@
             "usage_tips": "Bruk denne diagnosesensoren for å forstå dataferskhet og API-anropsmønstre. Sjekk 'cache_age'-attributtet for å se hvor gamle de nåværende dataene er. Overvåk 'next_api_poll' for å vite når neste oppdatering er planlagt. Bruk 'data_completeness' for å se om data for i går/i dag/i morgen er tilgjengelig. 'api_calls_today'-telleren hjelper med å spore API-bruk. Perfekt for feilsøking eller forståelse av integrasjonens oppførsel."
         },
         "best_price_end_time": {
-            "description": "Når gjeldende eller neste billigperiode slutter",
-            "long_description": "Viser sluttidspunktet for gjeldende billigperiode når aktiv, eller slutten av neste periode når ingen periode er aktiv. Viser alltid en nyttig tidsreferanse for planlegging. Returnerer 'Ukjent' bare når ingen perioder er konfigurert.",
-            "usage_tips": "Bruk dette til å vise en nedtelling som 'Billigperiode slutter om 2 timer' (når aktiv) eller 'Neste billigperiode slutter kl 14:00' (når inaktiv). Home Assistant viser automatisk relativ tid for tidsstempelsensorer."
+            "description": "Total lengde på nåværende eller neste billigperiode (state i timer, attributt i minutter)",
+            "long_description": "Viser hvor lenge billigperioden varer. State bruker timer (desimal) for lesbar UI; attributtet `period_duration_minutes` beholder avrundede minutter for automasjoner. Aktiv → varighet for gjeldende periode, ellers neste.",
+            "usage_tips": "UI kan vise 1,5 t mens `period_duration_minutes` = 90 for automasjoner."
+        },
+        "best_price_period_duration": {
+            "description": "Lengde på gjeldende/neste billigperiode",
+            "long_description": "Total varighet av gjeldende eller neste billigperiode. State vises i timer (f.eks. 1,5 t) for enkel lesing i UI, mens attributtet `period_duration_minutes` gir samme verdi i minutter (f.eks. 90) for automasjoner. Denne verdien representerer den **fulle planlagte varigheten** av perioden og er konstant gjennom hele perioden, selv om gjenværende tid (remaining_minutes) reduseres.",
+            "usage_tips": "Kombiner med remaining_minutes for å beregne når langvarige enheter skal stoppes: Perioden startet for `period_duration_minutes - remaining_minutes` minutter siden. Dette attributtet støtter energioptimeringsstrategier ved å hjelpe til med å planlegge høyforbruksaktiviteter innenfor billige perioder."
         },
         "best_price_remaining_minutes": {
-            "description": "Gjenværende minutter i gjeldende billigperiode (0 når inaktiv)",
-            "long_description": "Viser hvor mange minutter som er igjen i gjeldende billigperiode. Returnerer 0 når ingen periode er aktiv. Oppdateres hvert minutt. Sjekk binary_sensor.best_price_period for å se om en periode er aktiv.",
-            "usage_tips": "Perfekt for automatiseringer: 'Hvis remaining_minutes > 0 OG remaining_minutes < 30, start vaskemaskin nå'. Verdien 0 gjør det enkelt å sjekke om en periode er aktiv (verdi > 0) eller ikke (verdi = 0)."
+            "description": "Gjenværende tid i gjeldende billigperiode",
+            "long_description": "Viser hvor mye tid som gjenstår i gjeldende billigperiode. State vises i timer (f.eks. 0,75 t) for enkel lesing i dashboards, mens attributtet `remaining_minutes` gir samme tid i minutter (f.eks. 45) for automasjonsbetingelser. **Nedtellingstimer**: Denne verdien reduseres hvert minutt under en aktiv periode. Returnerer 0 når ingen billigperiode er aktiv. Oppdateres hvert minutt.",
+            "usage_tips": "For automasjoner: Bruk attributtet `remaining_minutes` som 'Hvis remaining_minutes > 60, start oppvaskmaskinen nå (nok tid til å fullføre)' eller 'Hvis remaining_minutes < 15, fullfør gjeldende syklus snart'. UI viser brukervennlige timer (f.eks. 1,25 t). Verdi 0 indikerer ingen aktiv billigperiode."
         },
         "best_price_progress": {
             "description": "Fremdrift gjennom gjeldende billigperiode (0% når inaktiv)",
-            "long_description": "Viser fremdrift gjennom gjeldende billigperiode som 0-100%. Returnerer 0% når ingen periode er aktiv. Oppdateres hvert minutt. 0% betyr periode nettopp startet, 100% betyr den snart slutter.",
-            "usage_tips": "Flott for visuelle fremdriftslinjer. Bruk i automatiseringer: 'Hvis progress > 0 OG progress > 75, send varsel om at billigperiode snart slutter'. Verdi 0 indikerer ingen aktiv periode."
+            "long_description": "Viser fremdrift gjennom gjeldende billigperiode som 0-100%. Returnerer 0% når ingen periode er aktiv. Oppdateres hvert minutt. 0% betyr perioden nettopp startet, 100% betyr den slutter snart.",
+            "usage_tips": "Flott for visuelle fremgangsindikatorer. Bruk i automatiseringer: 'Hvis progress > 0 OG progress > 75, send varsel om at billigperioden snart slutter'. Verdi 0 indikerer ingen aktiv periode."
         },
         "best_price_next_start_time": {
-            "description": "Når neste billigperiode starter",
-            "long_description": "Viser når neste kommende billigperiode starter. Under en aktiv periode viser dette starten av NESTE periode etter den gjeldende. Returnerer 'Ukjent' bare når ingen fremtidige perioder er konfigurert.",
-            "usage_tips": "Alltid nyttig for planlegging: 'Neste billigperiode starter om 3 timer' (enten du er i en periode nå eller ikke). Kombiner med automatiseringer: 'Når neste starttid er om 10 minutter, send varsel for å forberede vaskemaskin'."
+            "description": "Total lengde på nåværende eller neste dyr-periode (state i timer, attributt i minutter)",
+            "long_description": "Viser hvor lenge den dyre perioden varer. State bruker timer (desimal) for UI; attributtet `period_duration_minutes` beholder avrundede minutter for automasjoner. Aktiv → varighet for gjeldende periode, ellers neste.",
+            "usage_tips": "UI kan vise 0,75 t mens `period_duration_minutes` = 45 for automasjoner."
         },
         "best_price_next_in_minutes": {
-            "description": "Minutter til neste billigperiode starter (0 ved overgang)",
-            "long_description": "Viser minutter til neste billigperiode starter. Under en aktiv periode viser dette tiden til perioden ETTER den gjeldende. Returnerer 0 under korte overgangsmomenter. Oppdateres hvert minutt.",
-            "usage_tips": "Perfekt for 'vent til billigperiode' automatiseringer: 'Hvis next_in_minutes > 0 OG next_in_minutes < 15, vent før oppvaskmaskin startes'. Verdi > 0 indikerer alltid at en fremtidig periode er planlagt."
+            "description": "Tid til neste billigperiode",
+            "long_description": "Viser hvor lenge til neste billigperiode. State vises i timer (f.eks. 2,25 t) for dashboards, mens attributtet `next_in_minutes` gir minutter (f.eks. 135) for automasjonsbetingelser. Under en aktiv periode viser dette tiden til perioden ETTER den gjeldende. Returnerer 0 under korte overgangsmomenter. Oppdateres hvert minutt.",
+            "usage_tips": "For automasjoner: Bruk attributtet `next_in_minutes` som 'Hvis next_in_minutes > 0 OG next_in_minutes < 15, vent før start av oppvaskmaskin'. Verdi > 0 indikerer alltid at en fremtidig periode er planlagt."
         },
         "peak_price_end_time": {
-            "description": "Når gjeldende eller neste dyrperiode slutter",
-            "long_description": "Viser sluttidspunktet for gjeldende dyrperiode når aktiv, eller slutten av neste periode når ingen periode er aktiv. Viser alltid en nyttig tidsreferanse for planlegging. Returnerer 'Ukjent' bare når ingen perioder er konfigurert.",
-            "usage_tips": "Bruk dette til å vise 'Dyrperiode slutter om 1 time' (når aktiv) eller 'Neste dyrperiode slutter kl 18:00' (når inaktiv). Kombiner med automatiseringer for å gjenoppta drift etter topp."
+            "description": "Tid til neste dyr-periode (state i timer, attributt i minutter)",
+            "long_description": "Viser hvor lenge til neste dyre periode starter. State bruker timer (desimal); attributtet `next_in_minutes` beholder avrundede minutter for automasjoner. Under aktiv periode viser dette tiden til perioden etter den nåværende. 0 i korte overgangsøyeblikk. Oppdateres hvert minutt.",
+            "usage_tips": "Bruk `next_in_minutes` i automasjoner (f.eks. < 10) mens state er lett å lese i timer."
+        },
+        "peak_price_period_duration": {
+            "description": "Lengde på gjeldende/neste dyr periode",
+            "long_description": "Total varighet av gjeldende eller neste dyre periode. State vises i timer (f.eks. 1,5 t) for enkel lesing i UI, mens attributtet `period_duration_minutes` gir samme verdi i minutter (f.eks. 90) for automasjoner. Denne verdien representerer den **fulle planlagte varigheten** av perioden og er konstant gjennom hele perioden, selv om gjenværende tid (remaining_minutes) reduseres.",
+            "usage_tips": "Kombiner med remaining_minutes for å beregne når langvarige enheter skal stoppes: Perioden startet for `period_duration_minutes - remaining_minutes` minutter siden. Dette attributtet støtter energisparingsstrategier ved å hjelpe til med å planlegge høyforbruksaktiviteter utenfor dyre perioder."
         },
         "peak_price_remaining_minutes": {
-            "description": "Gjenværende minutter i gjeldende dyrperiode (0 når inaktiv)",
-            "long_description": "Viser hvor mange minutter som er igjen i gjeldende dyrperiode. Returnerer 0 når ingen periode er aktiv. Oppdateres hvert minutt. Sjekk binary_sensor.peak_price_period for å se om en periode er aktiv.",
-            "usage_tips": "Bruk i automatiseringer: 'Hvis remaining_minutes > 60, avbryt utsatt ladeøkt'. Verdi 0 gjør det enkelt å skille mellom aktive (verdi > 0) og inaktive (verdi = 0) perioder."
+            "description": "Gjenværende tid i gjeldende dyre periode",
+            "long_description": "Viser hvor mye tid som gjenstår i gjeldende dyre periode. State vises i timer (f.eks. 0,75 t) for enkel lesing i dashboards, mens attributtet `remaining_minutes` gir samme tid i minutter (f.eks. 45) for automasjonsbetingelser. **Nedtellingstimer**: Denne verdien reduseres hvert minutt under en aktiv periode. Returnerer 0 når ingen dyr periode er aktiv. Oppdateres hvert minutt.",
+            "usage_tips": "For automasjoner: Bruk attributtet `remaining_minutes` som 'Hvis remaining_minutes > 60, avbryt utsatt ladeøkt' eller 'Hvis remaining_minutes < 15, fortsett normal drift snart'. UI viser brukervennlige timer (f.eks. 1,0 t). Verdi 0 indikerer ingen aktiv dyr periode."
         },
         "peak_price_progress": {
             "description": "Fremdrift gjennom gjeldende dyrperiode (0% når inaktiv)",
@@ -361,19 +371,9 @@
             "usage_tips": "Alltid nyttig for planlegging: 'Neste dyrperiode starter om 2 timer'. Automatisering: 'Når neste starttid er om 30 minutter, reduser varmetemperatur forebyggende'."
         },
         "peak_price_next_in_minutes": {
-            "description": "Minutter til neste dyrperiode starter (0 ved overgang)",
-            "long_description": "Viser minutter til neste dyrperiode starter. Under en aktiv periode viser dette tiden til perioden ETTER den gjeldende. Returnerer 0 under korte overgangsmomenter. Oppdateres hvert minutt.",
-            "usage_tips": "Forebyggende automatisering: 'Hvis next_in_minutes > 0 OG next_in_minutes < 10, fullfør gjeldende ladesyklus nå før prisene øker'."
-        },
-        "best_price_period_duration": {
-            "description": "Total varighet av gjeldende eller neste billigperiode i minutter",
-            "long_description": "Viser den totale varigheten av billigperioden i minutter. Under en aktiv periode viser dette hele varigheten av gjeldende periode. Når ingen periode er aktiv, viser dette varigheten av neste kommende periode. Eksempel: '90 minutter' for en 1,5-timers periode.",
-            "usage_tips": "Kombiner med remaining_minutes for å planlegge oppgaver: 'Hvis duration = 120 OG remaining_minutes > 90, start vaskemaskin (nok tid til å fullføre)'. Nyttig for å forstå om perioder er lange nok for strømkrevende oppgaver."
-        },
-        "peak_price_period_duration": {
-            "description": "Total varighet av gjeldende eller neste dyrperiode i minutter",
-            "long_description": "Viser den totale varigheten av dyrperioden i minutter. Under en aktiv periode viser dette hele varigheten av gjeldende periode. Når ingen periode er aktiv, viser dette varigheten av neste kommende periode. Eksempel: '60 minutter' for en 1-times periode.",
-            "usage_tips": "Bruk til å planlegge energibesparelsestiltak: 'Hvis duration > 120, reduser varmetemperatur mer aggressivt (lang dyr periode)'. Hjelper med å vurdere hvor mye energiforbruk må reduseres."
+            "description": "Tid til neste dyre periode",
+            "long_description": "Viser hvor lenge til neste dyre periode starter. State vises i timer (f.eks. 0,5 t) for dashboards, mens attributtet `next_in_minutes` gir minutter (f.eks. 30) for automasjonsbetingelser. Under en aktiv periode viser dette tiden til perioden ETTER den gjeldende. Returnerer 0 under korte overgangsmomenter. Oppdateres hvert minutt.",
+            "usage_tips": "For automasjoner: Bruk attributtet `next_in_minutes` som 'Hvis next_in_minutes > 0 OG next_in_minutes < 10, fullfør gjeldende ladesyklus nå før prisene øker'. Verdi > 0 indikerer alltid at en fremtidig dyr periode er planlagt."
         },
         "home_type": {
             "description": "Type bolig (leilighet, hus osv.)",

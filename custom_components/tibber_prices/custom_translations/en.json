@@ -321,14 +321,14 @@
             "usage_tips": "Use this to display a countdown like 'Cheap period ends in 2 hours' (when active) or 'Next cheap period ends at 14:00' (when inactive). Home Assistant automatically shows relative time for timestamp sensors."
         },
         "best_price_period_duration": {
-            "description": "Total length of current or next best price period in minutes",
-            "long_description": "Shows how long the best price period lasts in total. During an active period, shows the duration of the current period. When no period is active, shows the duration of the next upcoming period. Returns 'Unknown' only when no periods are configured.",
-            "usage_tips": "Useful for planning: 'The next cheap period lasts 90 minutes' or 'Current cheap period is 120 minutes long'. Combine with remaining_minutes to calculate when to start long-running appliances."
+            "description": "Total length of current or next best price period",
+            "long_description": "Shows how long the best price period lasts in total. The state is displayed in hours (e.g., 1.5 h) for easy reading in the UI, while the `period_duration_minutes` attribute provides the same value in minutes (e.g., 90) for use in automations. During an active period, shows the duration of the current period. When no period is active, shows the duration of the next upcoming period. Returns 'Unknown' only when no periods are configured.",
+            "usage_tips": "For display: Use the state value (hours) in dashboards. For automations: Use `period_duration_minutes` attribute to check if there's enough time for long-running tasks (e.g., 'If period_duration_minutes >= 90, start washing machine')."
         },
         "best_price_remaining_minutes": {
-            "description": "Minutes remaining in current best price period (0 when inactive)",
-            "long_description": "Shows how many minutes are left in the current best price period. Returns 0 when no period is active. Updates every minute. Check binary_sensor.best_price_period to see if a period is currently active.",
-            "usage_tips": "Perfect for automations: 'If remaining_minutes > 0 AND remaining_minutes < 30, start washing machine now'. The value 0 makes it easy to check if a period is active (value > 0) or not (value = 0)."
+            "description": "Time remaining in current best price period",
+            "long_description": "Shows how much time is left in the current best price period. The state displays in hours (e.g., 0.5 h) for easy reading, while the `remaining_minutes` attribute provides minutes (e.g., 30) for automation logic. Returns 0 when no period is active. Updates every minute. Check binary_sensor.best_price_period to see if a period is currently active.",
+            "usage_tips": "For automations: Use `remaining_minutes` attribute with numeric comparisons like 'If remaining_minutes > 0 AND remaining_minutes < 30, start washing machine now'. The value 0 makes it easy to check if a period is active (value > 0) or not (value = 0)."
         },
         "best_price_progress": {
             "description": "Progress through current best price period (0% when inactive)",
@@ -341,9 +341,9 @@
             "usage_tips": "Always useful for planning ahead: 'Next cheap period starts in 3 hours' (whether you're in a period now or not). Combine with automations: 'When next start time is in 10 minutes, send notification to prepare washing machine'."
         },
         "best_price_next_in_minutes": {
-            "description": "Minutes until next best price period starts (0 when in transition)",
-            "long_description": "Shows minutes until the next best price period starts. During an active period, shows time until the period AFTER the current one. Returns 0 during brief transition moments. Updates every minute.",
-            "usage_tips": "Perfect for 'wait until cheap period' automations: 'If next_in_minutes > 0 AND next_in_minutes < 15, wait before starting dishwasher'. Value > 0 always indicates a future period is scheduled."
+            "description": "Time until next best price period starts",
+            "long_description": "Shows how long until the next best price period starts. The state displays in hours (e.g., 2.25 h) for dashboards, while the `next_in_minutes` attribute provides minutes (e.g., 135) for automation conditions. During an active period, shows time until the period AFTER the current one. Returns 0 during brief transition moments. Updates every minute.",
+            "usage_tips": "For automations: Use `next_in_minutes` attribute like 'If next_in_minutes > 0 AND next_in_minutes < 15, wait before starting dishwasher'. Value > 0 always indicates a future period is scheduled."
         },
         "peak_price_end_time": {
             "description": "When the current or next peak price period ends",
@@ -351,14 +351,14 @@
             "usage_tips": "Use this to display 'Expensive period ends in 1 hour' (when active) or 'Next expensive period ends at 18:00' (when inactive). Combine with automations to resume operations after peak."
         },
         "peak_price_period_duration": {
-            "description": "Total length of current or next peak price period in minutes",
-            "long_description": "Shows how long the peak price period lasts in total. During an active period, shows the duration of the current period. When no period is active, shows the duration of the next upcoming period. Returns 'Unknown' only when no periods are configured.",
-            "usage_tips": "Useful for planning: 'The next expensive period lasts 60 minutes' or 'Current peak is 90 minutes long'. Combine with remaining_minutes to decide whether to wait out the peak or proceed with operations."
+            "description": "Total length of current or next peak price period",
+            "long_description": "Shows how long the peak price period lasts in total. The state is displayed in hours (e.g., 0.75 h) for easy reading in the UI, while the `period_duration_minutes` attribute provides the same value in minutes (e.g., 45) for use in automations. During an active period, shows the duration of the current period. When no period is active, shows the duration of the next upcoming period. Returns 'Unknown' only when no periods are configured.",
+            "usage_tips": "For display: Use the state value (hours) in dashboards. For automations: Use `period_duration_minutes` attribute to decide whether to wait out the peak or proceed (e.g., 'If period_duration_minutes <= 60, pause operations')."
         },
         "peak_price_remaining_minutes": {
-            "description": "Minutes remaining in current peak price period (0 when inactive)",
-            "long_description": "Shows how many minutes are left in the current peak price period. Returns 0 when no period is active. Updates every minute. Check binary_sensor.peak_price_period to see if a period is currently active.",
-            "usage_tips": "Use in automations: 'If remaining_minutes > 60, cancel deferred charging session'. Value 0 makes it easy to distinguish active (value > 0) from inactive (value = 0) periods."
+            "description": "Time remaining in current peak price period",
+            "long_description": "Shows how much time is left in the current peak price period. The state displays in hours (e.g., 1.0 h) for easy reading, while the `remaining_minutes` attribute provides minutes (e.g., 60) for automation logic. Returns 0 when no period is active. Updates every minute. Check binary_sensor.peak_price_period to see if a period is currently active.",
+            "usage_tips": "For automations: Use `remaining_minutes` attribute like 'If remaining_minutes > 60, cancel deferred charging session'. Value 0 makes it easy to distinguish active (value > 0) from inactive (value = 0) periods."
         },
         "peak_price_progress": {
             "description": "Progress through current peak price period (0% when inactive)",
@@ -371,9 +371,9 @@
             "usage_tips": "Always useful for planning: 'Next expensive period starts in 2 hours'. Automation: 'When next start time is in 30 minutes, reduce heating temperature preemptively'."
         },
         "peak_price_next_in_minutes": {
-            "description": "Minutes until next peak price period starts (0 when in transition)",
-            "long_description": "Shows minutes until the next peak price period starts. During an active period, shows time until the period AFTER the current one. Returns 0 during brief transition moments. Updates every minute.",
-            "usage_tips": "Pre-emptive automation: 'If next_in_minutes > 0 AND next_in_minutes < 10, complete current charging cycle now before prices increase'."
+            "description": "Time until next peak price period starts",
+            "long_description": "Shows how long until the next peak price period starts. The state displays in hours (e.g., 0.5 h) for dashboards, while the `next_in_minutes` attribute provides minutes (e.g., 30) for automation conditions. During an active period, shows time until the period AFTER the current one. Returns 0 during brief transition moments. Updates every minute.",
+            "usage_tips": "For automations: Use `next_in_minutes` attribute like 'If next_in_minutes > 0 AND next_in_minutes < 10, complete current charging cycle now before prices increase'."
         },
         "home_type": {
             "description": "Type of home (apartment, house, etc.)",
