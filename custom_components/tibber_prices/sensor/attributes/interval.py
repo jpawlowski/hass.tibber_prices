@@ -23,6 +23,72 @@ from .helpers import add_alternate_average_attribute
 from .metadata import get_current_interval_data
 
 
+def _get_interval_data_for_attributes(
+    key: str,
+    coordinator: TibberPricesDataUpdateCoordinator,
+    attributes: dict,
+    *,
+    time: TibberPricesTimeService,
+) -> dict | None:
+    """
+    Get interval data and set timestamp based on sensor type.
+
+    Refactored to reduce branch complexity in main function.
+
+    Args:
+        key: The sensor entity key
+        coordinator: The data update coordinator
+        attributes: Attributes dict to update with timestamp if needed
+        time: TibberPricesTimeService instance
+
+    Returns:
+        Interval data if found, None otherwise
+
+    """
+    now = time.now()
+
+    # Current/next price sensors - override timestamp with interval's startsAt
+    next_sensors = ["next_interval_price", "next_interval_price_level", "next_interval_price_rating"]
+    prev_sensors = ["previous_interval_price", "previous_interval_price_level", "previous_interval_price_rating"]
+    next_hour = ["next_hour_average_price", "next_hour_price_level", "next_hour_price_rating"]
+    curr_interval = ["current_interval_price", "current_interval_price_base"]
+    curr_hour = ["current_hour_average_price", "current_hour_price_level", "current_hour_price_rating"]
+
+    if key in next_sensors:
+        target_time = time.get_next_interval_start()
+        interval_data = find_price_data_for_interval(coordinator.data, target_time, time=time)
+        if interval_data:
+            attributes["timestamp"] = interval_data["startsAt"]
+        return interval_data
+
+    if key in prev_sensors:
+        target_time = time.get_interval_offset_time(-1)
+        interval_data = find_price_data_for_interval(coordinator.data, target_time, time=time)
+        if interval_data:
+            attributes["timestamp"] = interval_data["startsAt"]
+        return interval_data
+
+    if key in next_hour:
+        target_time = now + timedelta(hours=1)
+        interval_data = find_price_data_for_interval(coordinator.data, target_time, time=time)
+        if interval_data:
+            attributes["timestamp"] = interval_data["startsAt"]
+        return interval_data
+
+    # Current interval sensors (both variants)
+    if key in curr_interval:
+        interval_data = get_current_interval_data(coordinator, time=time)
+        if interval_data and "startsAt" in interval_data:
+            attributes["timestamp"] = interval_data["startsAt"]
+        return interval_data
+
+    # Current hour sensors - keep default timestamp
+    if key in curr_hour:
+        return get_current_interval_data(coordinator, time=time)
+
+    return None
+
+
 def add_current_interval_price_attributes(  # noqa: PLR0913
     attributes: dict,
     key: str,
@@ -46,62 +112,16 @@ def add_current_interval_price_attributes(  # noqa: PLR0913
         config_entry: Config entry for user preferences
 
     """
-    now = time.now()
-
-    # Determine which interval to use based on sensor type
-    next_interval_sensors = [
-        "next_interval_price",
-        "next_interval_price_level",
-        "next_interval_price_rating",
-    ]
-    previous_interval_sensors = [
-        "previous_interval_price",
-        "previous_interval_price_level",
-        "previous_interval_price_rating",
-    ]
-    next_hour_sensors = [
-        "next_hour_average_price",
-        "next_hour_price_level",
-        "next_hour_price_rating",
-    ]
-    current_hour_sensors = [
-        "current_hour_average_price",
-        "current_hour_price_level",
-        "current_hour_price_rating",
-    ]
-
-    # Set interval data based on sensor type
-    # For sensors showing data from OTHER intervals (next/previous), override timestamp with that interval's startsAt
-    # For current interval sensors, keep the default platform timestamp (calculation time)
-    interval_data = None
-    if key in next_interval_sensors:
-        target_time = time.get_next_interval_start()
-        interval_data = find_price_data_for_interval(coordinator.data, target_time, time=time)
-        # Override timestamp with the NEXT interval's startsAt (when that interval starts)
-        if interval_data:
-            attributes["timestamp"] = interval_data["startsAt"]
-    elif key in previous_interval_sensors:
-        target_time = time.get_interval_offset_time(-1)
-        interval_data = find_price_data_for_interval(coordinator.data, target_time, time=time)
-        # Override timestamp with the PREVIOUS interval's startsAt
-        if interval_data:
-            attributes["timestamp"] = interval_data["startsAt"]
-    elif key in next_hour_sensors:
-        target_time = now + timedelta(hours=1)
-        interval_data = find_price_data_for_interval(coordinator.data, target_time, time=time)
-        # Override timestamp with the center of the next rolling hour window
-        if interval_data:
-            attributes["timestamp"] = interval_data["startsAt"]
-    elif key in current_hour_sensors:
-        current_interval_data = get_current_interval_data(coordinator, time=time)
-        # Keep default timestamp (when calculation was made) for current hour sensors
-    else:
-        current_interval_data = get_current_interval_data(coordinator, time=time)
-        interval_data = current_interval_data  # Use current_interval_data as interval_data for current_interval_price
-        # Keep default timestamp (current calculation time) for current interval sensors
+    # Get interval data and handle timestamp overrides
+    interval_data = _get_interval_data_for_attributes(key, coordinator, attributes, time=time)
 
     # Add icon_color for price sensors (based on their price level)
-    if key in ["current_interval_price", "next_interval_price", "previous_interval_price"]:
+    if key in [
+        "current_interval_price",
+        "current_interval_price_base",
+        "next_interval_price",
+        "previous_interval_price",
+    ]:
         # For interval-based price sensors, get level from interval_data
         if interval_data and "level" in interval_data:
             level = interval_data["level"]

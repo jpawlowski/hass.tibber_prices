@@ -197,7 +197,7 @@ def get_price_sensor_icon(
         return None
 
     # Only current price sensors get dynamic icons
-    if key == "current_interval_price":
+    if key in ("current_interval_price", "current_interval_price_base"):
         level = get_price_level_for_icon(coordinator_data, interval_offset=0, time=time)
         if level:
             return PRICE_LEVEL_CASH_ICON_MAPPING.get(level.upper())

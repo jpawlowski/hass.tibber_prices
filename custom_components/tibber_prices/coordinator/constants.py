@@ -31,6 +31,7 @@ TIME_SENSITIVE_ENTITY_KEYS = frozenset(
     {
         # Current/next/previous price sensors
         "current_interval_price",
+        "current_interval_price_base",
         "next_interval_price",
         "previous_interval_price",
         # Current/next/previous price levels
