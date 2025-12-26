@@ -2,7 +2,8 @@
     "apexcharts": {
         "title_rating_level": "Preisphasen Tagesverlauf",
         "title_level": "Preisniveau",
-        "best_price_period_name": "Beste Preisperiode",
+        "best_price_period_name": "Bestpreis-Zeitraum",
+        "peak_price_period_name": "Spitzenpreis-Zeitraum",
         "notification": {
             "metadata_sensor_unavailable": {
                 "title": "Tibber Prices: ApexCharts YAML mit eingeschränkter Funktionalität generiert",

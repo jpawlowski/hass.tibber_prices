@@ -3,6 +3,7 @@
         "title_rating_level": "Prisfaser dagsfremdrift",
         "title_level": "Prisnivå",
         "best_price_period_name": "Beste prisperiode",
+        "peak_price_period_name": "Toppprisperiode",
         "notification": {
             "metadata_sensor_unavailable": {
                 "title": "Tibber Prices: ApexCharts YAML generert med begrenset funksjonalitet",

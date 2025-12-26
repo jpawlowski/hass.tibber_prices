@@ -64,6 +64,7 @@ APEXCHARTS_SERVICE_SCHEMA = vol.Schema(
         vol.Optional("day"): vol.In(["yesterday", "today", "tomorrow", "rolling_window", "rolling_window_autozoom"]),
         vol.Optional("level_type", default="rating_level"): vol.In(["rating_level", "level"]),
         vol.Optional("highlight_best_price", default=True): cv.boolean,
+        vol.Optional("highlight_peak_price", default=False): cv.boolean,
     }
 )
 
@@ -296,6 +297,7 @@ async def handle_apexcharts_yaml(call: ServiceCall) -> dict[str, Any]:  # noqa: 
     day = call.data.get("day")  # Can be None (rolling window mode)
     level_type = call.data.get("level_type", "rating_level")
     highlight_best_price = call.data.get("highlight_best_price", True)
+    highlight_peak_price = call.data.get("highlight_peak_price", False)
 
     # Get user's language from hass config
     user_language = hass.config.language or "en"
@@ -333,8 +335,13 @@ async def handle_apexcharts_yaml(call: ServiceCall) -> dict[str, Any]:  # noqa: 
         ]
     series = []
 
-    # Get translated name for best price periods (needed for layer)
+    # Get translated names for overlays (best/peak)
     best_price_name = get_translation(["apexcharts", "best_price_period_name"], user_language) or "Best Price Period"
+    peak_price_name = get_translation(["apexcharts", "peak_price_period_name"], user_language) or "Peak Price Period"
+
+    # Track overlays added for tooltip index calculation later
+    best_overlay_added = False
+    peak_overlay_added = False
 
     # Add best price period highlight overlay FIRST (so it renders behind all other series)
     if highlight_best_price and entity_map:
@@ -379,6 +386,45 @@ async def handle_apexcharts_yaml(call: ServiceCall) -> dict[str, Any]:  # noqa: 
                 "stroke_width": 0,
             }
         )
+        best_overlay_added = True
+
+    # Add peak price period highlight overlay (renders behind series as well)
+    if highlight_peak_price and entity_map:
+        # Conditionally include day parameter (omit for rolling window mode)
+        day_param = "" if day in ("rolling_window", "rolling_window_autozoom", None) else f"day: ['{day}'], "
+        subunit_param = "true" if use_subunit else "false"
+        peak_price_generator = (
+            f"const response = await hass.callWS({{ "
+            f"type: 'call_service', "
+            f"domain: 'tibber_prices', "
+            f"service: 'get_chartdata', "
+            f"return_response: true, "
+            f"service_data: {{ entry_id: '{entry_id}', {day_param}"
+            f"period_filter: 'peak_price', "
+            f"output_format: 'array_of_arrays', insert_nulls: 'segments', subunit_currency: {subunit_param} }} }}); "
+            f"const originalData = response.response.data; "
+            f"return originalData.map((point, i) => {{ "
+            f"const result = [point[0], point[1] === null ? null : 1]; "
+            f"result.originalPrice = point[1]; "
+            f"return result; "
+            f"}});"
+        )
+
+        peak_price_entity = next(iter(entity_map.values()))
+
+        series.append(
+            {
+                "entity": peak_price_entity,
+                "name": peak_price_name,
+                "type": "area",
+                "color": "rgba(231, 76, 60, 0.06)",  # Subtle red overlay for peak price
+                "yaxis_id": "highlight",
+                "show": {"legend_value": False, "in_header": False, "in_legend": False},
+                "data_generator": peak_price_generator,
+                "stroke_width": 0,
+            }
+        )
+        peak_overlay_added = True
 
     # Only create series for levels that have a matching entity (filter out missing levels)
     for level_key, color in series_levels:
@@ -547,7 +593,8 @@ async def handle_apexcharts_yaml(call: ServiceCall) -> dict[str, Any]:  # noqa: 
             "tooltip": {
                 "enabled": True,
                 "shared": True,  # Combine tooltips from all series at same x-value
-                "enabledOnSeries": [1, 2, 3, 4, 5] if highlight_best_price else [0, 1, 2, 3, 4],
+                # enabledOnSeries will be set dynamically below based on overlays
+                "enabledOnSeries": [],
                 "marker": {
                     "show": False,
                 },
@@ -583,6 +630,10 @@ async def handle_apexcharts_yaml(call: ServiceCall) -> dict[str, Any]:  # noqa: 
         },
         "series": series,
     }
+
+    # Dynamically set tooltip enabledOnSeries to exclude overlay indices
+    overlay_count = (1 if best_overlay_added else 0) + (1 if peak_overlay_added else 0)
+    result["apex_config"]["tooltip"]["enabledOnSeries"] = list(range(overlay_count, len(series)))
 
     # For rolling window mode and today_tomorrow, wrap in config-template-card for dynamic config
     if use_template:

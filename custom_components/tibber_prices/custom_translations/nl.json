@@ -3,6 +3,7 @@
         "title_rating_level": "Prijsfasen dagverloop",
         "title_level": "Prijsniveau",
         "best_price_period_name": "Beste prijsperiode",
+        "peak_price_period_name": "Piekprijsperiode",
         "notification": {
             "metadata_sensor_unavailable": {
                 "title": "Tibber Prices: ApexCharts YAML gegenereerd met beperkte functionaliteit",

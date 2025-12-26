@@ -52,6 +52,12 @@ get_apexcharts_yaml:
       example: true
       selector:
         boolean:
+    highlight_peak_price:
+      required: false
+      default: false
+      example: false
+      selector:
+        boolean:
 get_chartdata:
   fields:
     general:
