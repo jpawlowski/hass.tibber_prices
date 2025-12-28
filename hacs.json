@@ -1,11 +1,5 @@
 {
     "name": "Tibber Price Information & Ratings",
     "homeassistant": "2025.10.0",
-    "hacs": "2.0.5",
-    "country": [
-        "DE",
-        "NL",
-        "NO",
-        "SE"
-    ]
+    "hacs": "2.0.5"
 }
