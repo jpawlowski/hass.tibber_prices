@@ -54,7 +54,12 @@ from custom_components.tibber_prices.coordinator.helpers import (
 )
 from homeassistant.exceptions import ServiceValidationError
 
-from .formatters import aggregate_hourly_exact, get_period_data, normalize_level_filter, normalize_rating_level_filter
+from .formatters import (
+    aggregate_to_hourly,
+    get_period_data,
+    normalize_level_filter,
+    normalize_rating_level_filter,
+)
 from .helpers import get_entry_and_data, has_tomorrow_data
 
 if TYPE_CHECKING:
@@ -529,6 +534,19 @@ async def handle_chartdata(call: ServiceCall) -> dict[str, Any]:  # noqa: PLR091
     day_offsets = [{"yesterday": -1, "today": 0, "tomorrow": 1}[day] for day in days]
     all_prices = get_intervals_for_day_offsets(coordinator.data, day_offsets)
 
+    # For hourly resolution, aggregate BEFORE processing
+    # This keeps the same data format (startsAt, total, level, rating_level)
+    # so all subsequent code (filters, insert_nulls, etc.) works unchanged
+    if resolution == "hourly":
+        all_prices = aggregate_to_hourly(
+            all_prices,
+            coordinator=coordinator,
+            threshold_low=threshold_low,
+            threshold_high=threshold_high,
+        )
+        # Also update all_timestamps for insert_nulls='all' mode
+        all_timestamps = sorted({interval["startsAt"] for interval in all_prices if interval.get("startsAt")})
+
     # Helper to get day key from interval timestamp for average lookup
     def _get_day_key_for_interval(interval_start: Any) -> str | None:
         """Determine which day key (yesterday/today/tomorrow) an interval belongs to."""
@@ -537,8 +555,9 @@ async def handle_chartdata(call: ServiceCall) -> dict[str, Any]:  # noqa: PLR091
         # Use pre-built mapping from actual interval data (TimeService-compatible)
         return date_to_day_key.get(interval_start.date())
 
-    if resolution == "interval":
-        # Original 15-minute intervals
+    # Process price data - same logic handles both interval and hourly resolution
+    # (hourly data was already aggregated above, but has the same format)
+    if resolution in ("interval", "hourly"):
         if insert_nulls == "all" and (level_filter or rating_level_filter):
             # Mode 'all': Insert NULL for all timestamps where filter doesn't match
             # Build a map of timestamp -> interval for quick lookup
@@ -864,32 +883,6 @@ async def handle_chartdata(call: ServiceCall) -> dict[str, Any]:  # noqa: PLR091
                         data_point[average_field] = day_averages[day_key]
 
                     chart_data.append(data_point)
-
-    elif resolution == "hourly":
-        # Hourly averages (4 intervals per hour: :00, :15, :30, :45)
-        # Process all intervals together for hourly aggregation
-        chart_data.extend(
-            aggregate_hourly_exact(
-                all_prices,
-                start_time_field,
-                price_field,
-                coordinator=coordinator,
-                use_subunit_currency=subunit_currency,
-                round_decimals=round_decimals,
-                include_level=include_level,
-                include_rating_level=include_rating_level,
-                level_filter=level_filter,
-                rating_level_filter=rating_level_filter,
-                include_average=include_average,
-                level_field=level_field,
-                rating_level_field=rating_level_field,
-                average_field=average_field,
-                day_average=None,  # Not used when processing all days together
-                threshold_low=threshold_low,
-                period_timestamps=period_timestamps,
-                threshold_high=threshold_high,
-            )
-        )
 
     # Remove trailing null values ONLY for insert_nulls='segments' mode.
     # For 'all' mode, trailing nulls are intentional (show no-match until end of day).

@@ -948,6 +948,14 @@
                 "highlight_best_price": {
                     "name": "Fremhev beste prisperioder",
                     "description": "Legg til et halvgjennomsiktig grønt overlegg for å fremheve de beste prisperiodene i diagrammet. Dette gjør det enkelt å visuelt identifisere de optimale tidene for energiforbruk."
+                },
+                "highlight_peak_price": {
+                    "name": "Fremhev høyeste prisperioder",
+                    "description": "Legg til et halvgjennomsiktig rødt overlegg for å fremheve de høyeste prisperiodene i diagrammet. Dette gjør det enkelt å visuelt identifisere tidene når energi er dyrest."
+                },
+                "resolution": {
+                    "name": "Oppløsning",
+                    "description": "Tidsoppløsning for diagramdata. 'interval' (standard): Opprinnelige 15-minutters intervaller (96 punkter per dag). 'hourly': Aggregerte timeverdier med et rullende 60-minutters vindu (24 punkter per dag) for et ryddigere og mindre rotete diagram."
                 }
             }
         },

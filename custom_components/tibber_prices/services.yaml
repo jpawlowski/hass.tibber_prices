@@ -46,6 +46,16 @@ get_apexcharts_yaml:
             - rating_level
             - level
           translation_key: level_type
+    resolution:
+      required: false
+      default: interval
+      example: interval
+      selector:
+        select:
+          options:
+            - interval
+            - hourly
+          translation_key: resolution
     highlight_best_price:
       required: false
       default: true

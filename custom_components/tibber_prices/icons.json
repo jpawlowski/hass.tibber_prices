@@ -16,7 +16,15 @@
             }
         },
         "get_apexcharts_yaml": {
-            "service": "mdi:chart-line"
+            "service": "mdi:chart-line",
+            "sections": {
+                "entry_id": "mdi:identifier",
+                "day": "mdi:calendar-range",
+                "level_type": "mdi:format-list-bulleted-type",
+                "resolution": "mdi:timer-sand",
+                "highlight_best_price": "mdi:battery-charging-low",
+                "highlight_peak_price": "mdi:battery-alert"
+            }
         },
         "refresh_user_data": {
             "service": "mdi:refresh"

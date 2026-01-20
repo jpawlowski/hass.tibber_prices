@@ -948,6 +948,14 @@
                 "highlight_best_price": {
                     "name": "Markera bästa prisperioder",
                     "description": "Lägg till ett halvtransparent grönt överlag för att markera de bästa prisperioderna i diagrammet. Detta gör det enkelt att visuellt identifiera de optimala tiderna för energiförbrukning."
+                },
+                "highlight_peak_price": {
+                    "name": "Markera högsta prisperioder",
+                    "description": "Lägg till ett halvtransparent rött överlag för att markera de högsta prisperioderna i diagrammet. Detta gör det enkelt att visuellt identifiera tiderna när energi är som dyrast."
+                },
+                "resolution": {
+                    "name": "Upplösning",
+                    "description": "Tidsupplösning för diagramdata. 'interval' (standard): Ursprungliga 15-minutersintervall (96 punkter per dag). 'hourly': Aggregerade timvärden med ett rullande 60-minutersfönster (24 punkter per dag) för ett renare och mindre rörigt diagram."
                 }
             }
         },

@@ -63,6 +63,7 @@ APEXCHARTS_SERVICE_SCHEMA = vol.Schema(
         vol.Required(ATTR_ENTRY_ID): cv.string,
         vol.Optional("day"): vol.In(["yesterday", "today", "tomorrow", "rolling_window", "rolling_window_autozoom"]),
         vol.Optional("level_type", default="rating_level"): vol.In(["rating_level", "level"]),
+        vol.Optional("resolution", default="interval"): vol.In(["interval", "hourly"]),
         vol.Optional("highlight_best_price", default=True): cv.boolean,
         vol.Optional("highlight_peak_price", default=False): cv.boolean,
     }
@@ -296,6 +297,7 @@ async def handle_apexcharts_yaml(call: ServiceCall) -> dict[str, Any]:  # noqa: 
 
     day = call.data.get("day")  # Can be None (rolling window mode)
     level_type = call.data.get("level_type", "rating_level")
+    resolution = call.data.get("resolution", "interval")
     highlight_best_price = call.data.get("highlight_best_price", True)
     highlight_peak_price = call.data.get("highlight_peak_price", False)
 
@@ -361,7 +363,7 @@ async def handle_apexcharts_yaml(call: ServiceCall) -> dict[str, Any]:  # noqa: 
             f"service: 'get_chartdata', "
             f"return_response: true, "
             f"service_data: {{ entry_id: '{entry_id}', {day_param}"
-            f"period_filter: 'best_price', "
+            f"period_filter: 'best_price', resolution: '{resolution}', "
             f"output_format: 'array_of_arrays', insert_nulls: 'segments', subunit_currency: {subunit_param} }} }}); "
             f"const originalData = response.response.data; "
             f"return originalData.map((point, i) => {{ "
@@ -400,7 +402,7 @@ async def handle_apexcharts_yaml(call: ServiceCall) -> dict[str, Any]:  # noqa: 
             f"service: 'get_chartdata', "
             f"return_response: true, "
             f"service_data: {{ entry_id: '{entry_id}', {day_param}"
-            f"period_filter: 'peak_price', "
+            f"period_filter: 'peak_price', resolution: '{resolution}', "
             f"output_format: 'array_of_arrays', insert_nulls: 'segments', subunit_currency: {subunit_param} }} }}); "
             f"const originalData = response.response.data; "
             f"return originalData.map((point, i) => {{ "
@@ -455,7 +457,7 @@ async def handle_apexcharts_yaml(call: ServiceCall) -> dict[str, Any]:  # noqa: 
                 f"domain: 'tibber_prices', "
                 f"service: 'get_chartdata', "
                 f"return_response: true, "
-                f"service_data: {{ entry_id: '{entry_id}', {day_param}{filter_param}, "
+                f"service_data: {{ entry_id: '{entry_id}', {day_param}{filter_param}, resolution: '{resolution}', "
                 f"output_format: 'array_of_arrays', insert_nulls: 'segments', subunit_currency: {subunit_param}, "
                 f"connect_segments: true }} }}); "
                 f"return response.response.data;"
@@ -468,7 +470,7 @@ async def handle_apexcharts_yaml(call: ServiceCall) -> dict[str, Any]:  # noqa: 
                 f"domain: 'tibber_prices', "
                 f"service: 'get_chartdata', "
                 f"return_response: true, "
-                f"service_data: {{ entry_id: '{entry_id}', {day_param}{filter_param}, "
+                f"service_data: {{ entry_id: '{entry_id}', {day_param}{filter_param}, resolution: '{resolution}', "
                 f"output_format: 'array_of_arrays', insert_nulls: 'segments', subunit_currency: {subunit_param}, "
                 f"connect_segments: true }} }}); "
                 f"return response.response.data;"

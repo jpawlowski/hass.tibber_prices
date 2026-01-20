@@ -948,6 +948,14 @@
                 "highlight_best_price": {
                     "name": "Beste prijsperiodes markeren",
                     "description": "Voeg een halfdo0rzichtige groene overlay toe om de beste prijsperiodes in de grafiek te markeren. Dit maakt het gemakkelijk om visueel de optimale tijden voor energieverbruik te identificeren."
+                },
+                "highlight_peak_price": {
+                    "name": "Piekprijsperiodes markeren",
+                    "description": "Voeg een halfdoorzichtige rode overlay toe om de piekprijsperiodes in de grafiek te markeren. Dit maakt het gemakkelijk om visueel de tijden te identificeren wanneer energie het duurst is."
+                },
+                "resolution": {
+                    "name": "Resolutie",
+                    "description": "Tijdresolutie voor de grafiekdata. 'interval' (standaard): Originele 15-minutenintervallen (96 punten per dag). 'hourly': Geaggregeerde uurwaarden met een rollend 60-minutenvenster (24 punten per dag) voor een overzichtelijkere grafiek."
                 }
             }
         },

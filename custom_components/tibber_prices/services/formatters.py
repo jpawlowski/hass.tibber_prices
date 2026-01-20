@@ -24,6 +24,8 @@ from datetime import datetime, time
 from typing import Any
 
 from custom_components.tibber_prices.const import (
+    CONF_AVERAGE_SENSOR_DISPLAY,
+    DEFAULT_AVERAGE_SENSOR_DISPLAY,
     DEFAULT_PRICE_RATING_THRESHOLD_HIGH,
     DEFAULT_PRICE_RATING_THRESHOLD_LOW,
     get_translation,
@@ -32,6 +34,7 @@ from custom_components.tibber_prices.coordinator.helpers import (
     get_intervals_for_day_offsets,
 )
 from custom_components.tibber_prices.sensor.helpers import aggregate_level_data, aggregate_rating_data
+from custom_components.tibber_prices.utils.average import calculate_mean, calculate_median
 
 
 def normalize_level_filter(value: list[str] | None) -> list[str] | None:
@@ -46,6 +49,99 @@ def normalize_rating_level_filter(value: list[str] | None) -> list[str] | None:
     if value is None:
         return None
     return [v.upper() for v in value]
+
+
+def aggregate_to_hourly(  # noqa: PLR0912
+    intervals: list[dict],
+    coordinator: Any,
+    threshold_low: float = DEFAULT_PRICE_RATING_THRESHOLD_LOW,
+    threshold_high: float = DEFAULT_PRICE_RATING_THRESHOLD_HIGH,
+) -> list[dict]:
+    """
+    Aggregate 15-minute intervals to hourly using rolling 5-interval window.
+
+    Preserves original field names (startsAt, total, level, rating_level) so the
+    aggregated data can be processed by the same code path as interval data.
+
+    Uses the same methodology as sensor rolling hour calculations:
+    - 5-interval window: 2 before + center + 2 after (60 minutes total)
+    - Center interval is at :00 of each hour
+    - Respects user's CONF_AVERAGE_SENSOR_DISPLAY setting (mean vs median)
+
+    Example for 10:00 data point:
+    - Window includes: 09:30, 09:45, 10:00, 10:15, 10:30
+
+    Args:
+        intervals: List of 15-minute price intervals with startsAt, total, level, rating_level
+        coordinator: Data update coordinator instance
+        threshold_low: Rating level threshold (low/normal boundary)
+        threshold_high: Rating level threshold (normal/high boundary)
+
+    Returns:
+        List of hourly data points with same structure as input (startsAt, total, level, rating_level)
+
+    """
+    if not intervals:
+        return []
+
+    # Get user's average display preference (mean or median)
+    average_display = coordinator.config_entry.options.get(CONF_AVERAGE_SENSOR_DISPLAY, DEFAULT_AVERAGE_SENSOR_DISPLAY)
+    use_median = average_display == "median"
+
+    hourly_data = []
+
+    # Iterate through all intervals, only process those at :00
+    for i, interval in enumerate(intervals):
+        start_time = interval.get("startsAt")
+
+        if not start_time:
+            continue
+
+        # Check if this is the start of an hour (:00)
+        if start_time.minute != 0:
+            continue
+
+        # Collect 5-interval rolling window: -2, -1, 0, +1, +2
+        window_prices: list[float] = []
+        window_intervals: list[dict] = []
+
+        for offset in range(-2, 3):  # -2, -1, 0, +1, +2
+            target_idx = i + offset
+            if 0 <= target_idx < len(intervals):
+                target_interval = intervals[target_idx]
+                price = target_interval.get("total")
+                if price is not None:
+                    window_prices.append(price)
+                    window_intervals.append(target_interval)
+
+        # Calculate aggregated price based on user preference
+        if window_prices:
+            aggregated_price = calculate_median(window_prices) if use_median else calculate_mean(window_prices)
+
+            if aggregated_price is None:
+                continue
+
+            # Build data point with original field names
+            data_point: dict[str, Any] = {
+                "startsAt": start_time,
+                "total": aggregated_price,
+            }
+
+            # Add aggregated level
+            if window_intervals:
+                aggregated_level = aggregate_level_data(window_intervals)
+                if aggregated_level:
+                    data_point["level"] = aggregated_level.upper()
+
+            # Add aggregated rating_level
+            if window_intervals:
+                aggregated_rating = aggregate_rating_data(window_intervals, threshold_low, threshold_high)
+                if aggregated_rating:
+                    data_point["rating_level"] = aggregated_rating.upper()
+
+            hourly_data.append(data_point)
+
+    return hourly_data
 
 
 def aggregate_hourly_exact(  # noqa: PLR0913, PLR0912, PLR0915

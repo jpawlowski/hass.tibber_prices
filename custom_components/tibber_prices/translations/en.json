@@ -948,6 +948,14 @@
                 "highlight_best_price": {
                     "name": "Highlight Best Price Periods",
                     "description": "Add a semi-transparent green overlay to highlight the best price periods on the chart. This makes it easy to visually identify the optimal times for energy consumption."
+                },
+                "highlight_peak_price": {
+                    "name": "Highlight Peak Price Periods",
+                    "description": "Add a semi-transparent red overlay to highlight the peak price periods on the chart. This makes it easy to visually identify times when energy is most expensive."
+                },
+                "resolution": {
+                    "name": "Resolution",
+                    "description": "Time resolution for the chart data. 'interval' (default): Original 15-minute intervals (96 points per day). 'hourly': Aggregated hourly values using a rolling 60-minute window (24 points per day) for a cleaner, less cluttered chart."
                 }
             }
         },

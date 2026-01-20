@@ -948,6 +948,14 @@
                 "highlight_best_price": {
                     "name": "Bestpreis-Zeiträume hervorheben",
                     "description": "Füge eine halbtransparente grüne Überlagerung hinzu, um die Bestpreis-Zeiträume im Diagramm hervorzuheben. Dies erleichtert die visuelle Identifizierung der optimalen Zeiten für den Energieverbrauch."
+                },
+                "highlight_peak_price": {
+                    "name": "Spitzenpreis-Zeiträume hervorheben",
+                    "description": "Füge eine halbtransparente rote Überlagerung hinzu, um die Spitzenpreis-Zeiträume im Diagramm hervorzuheben. Dies erleichtert die visuelle Identifizierung der Zeiten, in denen Energie am teuersten ist."
+                },
+                "resolution": {
+                    "name": "Auflösung",
+                    "description": "Zeitauflösung für die Diagrammdaten. 'interval' (Standard): Originale 15-Minuten-Intervalle (96 Punkte pro Tag). 'hourly': Aggregierte Stundenwerte mit einem rollierenden 60-Minuten-Fenster (24 Punkte pro Tag) für ein übersichtlicheres Diagramm."
                 }
             }
         },
