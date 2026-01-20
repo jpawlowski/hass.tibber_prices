@@ -89,14 +89,21 @@ def test_validate_user_data_complete(mock_api_client, mock_time_service, mock_st
         }
     }
 
-    assert price_data_manager._validate_user_data(user_data, "home-123") is True  # noqa: SLF001  # noqa: SLF001
+    assert price_data_manager._validate_user_data(user_data, "home-123") is True  # noqa: SLF001
 
 
 @pytest.mark.unit
 def test_validate_user_data_none_subscription(
     mock_api_client: Mock, mock_time_service: Mock, mock_store: Mock, mock_interval_pool: Mock
 ) -> None:
-    """Test that user data without subscription (but with timezone) passes validation."""
+    """
+    Test that user data without subscription fails validation.
+
+    Currency is required for the integration to function - if the API returns
+    data without a subscription, we cannot extract the currency and must reject
+    the data. This ensures we keep using previously cached valid data instead
+    of accepting incomplete API responses.
+    """
     price_data_manager = TibberPricesPriceDataManager(
         api=mock_api_client,
         store=mock_store,
@@ -119,8 +126,8 @@ def test_validate_user_data_none_subscription(
         }
     }
 
-    # Should pass validation - timezone is present, subscription being None is valid
-    assert price_data_manager._validate_user_data(user_data, "home-123") is True  # noqa: SLF001  # noqa: SLF001
+    # Should FAIL validation - subscription is required for currency
+    assert price_data_manager._validate_user_data(user_data, "home-123") is False  # noqa: SLF001
 
 
 @pytest.mark.unit
@@ -217,7 +224,71 @@ def test_validate_user_data_home_not_found(mock_api_client, mock_time_service, m
         }
     }
 
-    assert price_data_manager._validate_user_data(user_data, "home-123") is False  # noqa: SLF001  # noqa: SLF001
+    assert price_data_manager._validate_user_data(user_data, "home-123") is False  # noqa: SLF001
+
+
+@pytest.mark.unit
+def test_validate_user_data_rejects_missing_subscription(
+    mock_api_client: Mock, mock_time_service: Mock, mock_store: Mock, mock_interval_pool: Mock
+) -> None:
+    """Test that validation rejects user data when subscription is missing."""
+    price_data_manager = TibberPricesPriceDataManager(
+        api=mock_api_client,
+        store=mock_store,
+        log_prefix="[Test]",
+        user_update_interval=timedelta(days=1),
+        time=mock_time_service,
+        home_id="home-123",
+        interval_pool=mock_interval_pool,
+    )
+
+    # User data with missing subscription (temporary API issue)
+    user_data = {
+        "viewer": {
+            "homes": [
+                {
+                    "id": "home-123",
+                    "timeZone": "Europe/Berlin",
+                    "currentSubscription": None,  # No subscription - should be rejected
+                }
+            ]
+        }
+    }
+
+    # Validation should reject this data
+    assert price_data_manager._validate_user_data(user_data, "home-123") is False  # noqa: SLF001
+
+
+@pytest.mark.unit
+def test_validate_user_data_rejects_missing_price_info(
+    mock_api_client: Mock, mock_time_service: Mock, mock_store: Mock, mock_interval_pool: Mock
+) -> None:
+    """Test that validation rejects user data when priceInfo is missing."""
+    price_data_manager = TibberPricesPriceDataManager(
+        api=mock_api_client,
+        store=mock_store,
+        log_prefix="[Test]",
+        user_update_interval=timedelta(days=1),
+        time=mock_time_service,
+        home_id="home-123",
+        interval_pool=mock_interval_pool,
+    )
+
+    user_data = {
+        "viewer": {
+            "homes": [
+                {
+                    "id": "home-123",
+                    "timeZone": "Europe/Berlin",
+                    "currentSubscription": {
+                        "priceInfo": None,  # Missing priceInfo
+                    },
+                }
+            ]
+        }
+    }
+
+    assert price_data_manager._validate_user_data(user_data, "home-123") is False  # noqa: SLF001
 
 
 @pytest.mark.unit
@@ -237,7 +308,7 @@ def test_get_currency_raises_on_no_cached_data(
 
     # No cached data
     with pytest.raises(TibberPricesApiClientError, match="No user data cached"):
-        price_data_manager._get_currency_for_home("home-123")  # noqa: SLF001  # noqa: SLF001
+        price_data_manager._get_currency_for_home("home-123")  # noqa: SLF001
 
 
 @pytest.mark.unit
@@ -255,7 +326,7 @@ def test_get_currency_raises_on_no_subscription(
         interval_pool=mock_interval_pool,
     )
 
-    price_data_manager._cached_user_data = {  # noqa: SLF001  # noqa: SLF001
+    price_data_manager._cached_user_data = {  # noqa: SLF001
         "viewer": {
             "homes": [
                 {
@@ -267,7 +338,7 @@ def test_get_currency_raises_on_no_subscription(
     }
 
     with pytest.raises(TibberPricesApiClientError, match="has no active subscription"):
-        price_data_manager._get_currency_for_home("home-123")  # noqa: SLF001  # noqa: SLF001
+        price_data_manager._get_currency_for_home("home-123")  # noqa: SLF001
 
 
 @pytest.mark.unit
@@ -285,7 +356,7 @@ def test_get_currency_extracts_valid_currency(
         interval_pool=mock_interval_pool,
     )
 
-    price_data_manager._cached_user_data = {  # noqa: SLF001  # noqa: SLF001
+    price_data_manager._cached_user_data = {  # noqa: SLF001
         "viewer": {
             "homes": [
                 {
@@ -302,7 +373,7 @@ def test_get_currency_extracts_valid_currency(
         }
     }
 
-    assert price_data_manager._get_currency_for_home("home-123") == "NOK"  # noqa: SLF001  # noqa: SLF001
+    assert price_data_manager._get_currency_for_home("home-123") == "NOK"  # noqa: SLF001
 
 
 @pytest.mark.unit

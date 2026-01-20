@@ -218,21 +218,43 @@ class TibberPricesPriceDataManager:
                     self._log("warning", "User data validation failed: Home %s missing timezone", home_id)
                     return False
 
-                # Currency is critical - if home has subscription, must have currency
+                # Currency is REQUIRED - we cannot function without it
+                # The currency is nested in currentSubscription.priceInfo.current.currency
                 subscription = home.get("currentSubscription")
-                if subscription and subscription is not None:
-                    price_info = subscription.get("priceInfo")
-                    if price_info and price_info is not None:
-                        current = price_info.get("current")
-                        if current and current is not None:
-                            currency = current.get("currency")
-                            if not currency:
-                                self._log(
-                                    "warning",
-                                    "User data validation failed: Home %s has subscription but no currency",
-                                    home_id,
-                                )
-                                return False
+                if not subscription:
+                    self._log(
+                        "warning",
+                        "User data validation failed: Home %s has no active subscription",
+                        home_id,
+                    )
+                    return False
+
+                price_info = subscription.get("priceInfo")
+                if not price_info:
+                    self._log(
+                        "warning",
+                        "User data validation failed: Home %s subscription has no priceInfo",
+                        home_id,
+                    )
+                    return False
+
+                current = price_info.get("current")
+                if not current:
+                    self._log(
+                        "warning",
+                        "User data validation failed: Home %s priceInfo has no current data",
+                        home_id,
+                    )
+                    return False
+
+                currency = current.get("currency")
+                if not currency:
+                    self._log(
+                        "warning",
+                        "User data validation failed: Home %s has no currency",
+                        home_id,
+                    )
+                    return False
 
                 break
 
@@ -419,6 +441,10 @@ class TibberPricesPriceDataManager:
         """
         Get currency for a specific home from cached user_data.
 
+        Note: The cached user_data is validated before storage, so if we have
+        cached data it should contain valid currency. This method extracts
+        the currency from the nested structure.
+
         Returns:
             Currency code (e.g., "EUR", "NOK", "SEK").
 
@@ -444,7 +470,7 @@ class TibberPricesPriceDataManager:
                 currency = current.get("currency")
 
                 if not currency:
-                    # Home without active subscription - cannot determine currency
+                    # This should not happen if validation worked correctly
                     msg = f"Home {home_id} has no active subscription - currency unavailable"
                     self._log("error", msg)
                     raise TibberPricesApiClientError(msg)
