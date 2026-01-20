@@ -2,6 +2,7 @@
     "apexcharts": {
         "title_rating_level": "Prijsfasen dagverloop",
         "title_level": "Prijsniveau",
+        "hourly_suffix": "(Ø per uur)",
         "best_price_period_name": "Beste prijsperiode",
         "peak_price_period_name": "Piekprijsperiode",
         "notification": {

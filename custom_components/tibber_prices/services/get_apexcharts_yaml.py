@@ -314,6 +314,10 @@ async def handle_apexcharts_yaml(call: ServiceCall) -> dict[str, Any]:  # noqa: 
     use_subunit = display_mode == DISPLAY_MODE_SUBUNIT
     price_unit = get_display_unit_string(config_entry, currency)
 
+    # Add average symbol suffix for hourly resolution (suffix to avoid confusion with øre/öre)
+    if resolution == "hourly":
+        price_unit = f"{price_unit} (Ø)"
+
     # Get entity registry for mapping
     entity_registry = async_get_entity_registry(hass)
 
@@ -531,6 +535,11 @@ async def handle_apexcharts_yaml(call: ServiceCall) -> dict[str, Any]:  # noqa: 
     if day and day not in ("rolling_window", "rolling_window_autozoom"):
         day_translated = get_translation(["selector", "day", "options", day], user_language) or day.capitalize()
         title = f"{title} - {day_translated}"
+
+    # Add hourly suffix to title when using hourly resolution
+    if resolution == "hourly":
+        hourly_suffix = get_translation(["apexcharts", "hourly_suffix"], user_language) or "(Ø hourly)"
+        title = f"{title} {hourly_suffix}"
 
     # Configure span based on selected day
     # For rolling window modes, use config-template-card for dynamic config

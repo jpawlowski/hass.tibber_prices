@@ -2,6 +2,7 @@
     "apexcharts": {
         "title_rating_level": "Preisphasen Tagesverlauf",
         "title_level": "Preisniveau",
+        "hourly_suffix": "(Ø stündlich)",
         "best_price_period_name": "Bestpreis-Zeitraum",
         "peak_price_period_name": "Spitzenpreis-Zeitraum",
         "notification": {

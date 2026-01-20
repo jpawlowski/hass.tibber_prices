@@ -2,6 +2,7 @@
     "apexcharts": {
         "title_rating_level": "Price Phases Daily Progress",
         "title_level": "Price Level",
+        "hourly_suffix": "(Ø hourly)",
         "best_price_period_name": "Best Price Period",
         "peak_price_period_name": "Peak Price Period",
         "notification": {

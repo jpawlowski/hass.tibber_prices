@@ -2,6 +2,7 @@
     "apexcharts": {
         "title_rating_level": "Prisfaser dagsfremdrift",
         "title_level": "Prisnivå",
+        "hourly_suffix": "(Ø per time)",
         "best_price_period_name": "Beste prisperiode",
         "peak_price_period_name": "Toppprisperiode",
         "notification": {
