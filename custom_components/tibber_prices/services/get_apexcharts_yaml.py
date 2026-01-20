@@ -338,8 +338,15 @@ async def handle_apexcharts_yaml(call: ServiceCall) -> dict[str, Any]:  # noqa: 
     series = []
 
     # Get translated names for overlays (best/peak)
-    best_price_name = get_translation(["apexcharts", "best_price_period_name"], user_language) or "Best Price Period"
-    peak_price_name = get_translation(["apexcharts", "peak_price_period_name"], user_language) or "Peak Price Period"
+    # Include triangle icons for visual distinction in legend
+    # ▼ (U+25BC) = down/minimum = best price periods
+    # ▲ (U+25B2) = up/maximum = peak price periods
+    best_price_name = "▼ " + (
+        get_translation(["apexcharts", "best_price_period_name"], user_language) or "Best Price Period"
+    )
+    peak_price_name = "▲ " + (
+        get_translation(["apexcharts", "peak_price_period_name"], user_language) or "Peak Price Period"
+    )
 
     # Track overlays added for tooltip index calculation later
     best_overlay_added = False
@@ -376,6 +383,11 @@ async def handle_apexcharts_yaml(call: ServiceCall) -> dict[str, Any]:  # noqa: 
         # Use first entity from entity_map (reuse existing entity to avoid extra header entries)
         best_price_entity = next(iter(entity_map.values()))
 
+        # Legend toggle logic:
+        # - Only best price selected: no legend (in_legend: False)
+        # - Both selected: show in legend, toggleable (in_legend: True)
+        best_price_in_legend = highlight_peak_price  # Only show in legend if peak is also enabled
+
         series.append(
             {
                 "entity": best_price_entity,
@@ -383,7 +395,7 @@ async def handle_apexcharts_yaml(call: ServiceCall) -> dict[str, Any]:  # noqa: 
                 "type": "area",
                 "color": "rgba(46, 204, 113, 0.05)",  # Ultra-subtle green overlay (barely visible)
                 "yaxis_id": "highlight",  # Use separate Y-axis (0-1) for full-height overlay
-                "show": {"legend_value": False, "in_header": False, "in_legend": False},
+                "show": {"legend_value": False, "in_header": False, "in_legend": best_price_in_legend},
                 "data_generator": best_price_generator,
                 "stroke_width": 0,
             }
@@ -414,6 +426,7 @@ async def handle_apexcharts_yaml(call: ServiceCall) -> dict[str, Any]:  # noqa: 
 
         peak_price_entity = next(iter(entity_map.values()))
 
+        # Peak price: always show in legend when enabled (for toggle), start hidden by default
         series.append(
             {
                 "entity": peak_price_entity,
@@ -421,7 +434,12 @@ async def handle_apexcharts_yaml(call: ServiceCall) -> dict[str, Any]:  # noqa: 
                 "type": "area",
                 "color": "rgba(231, 76, 60, 0.06)",  # Subtle red overlay for peak price
                 "yaxis_id": "highlight",
-                "show": {"legend_value": False, "in_header": False, "in_legend": False},
+                "show": {
+                    "legend_value": False,
+                    "in_header": False,
+                    "in_legend": True,
+                    "hidden_by_default": True,  # Start hidden, user can toggle via legend
+                },
                 "data_generator": peak_price_generator,
                 "stroke_width": 0,
             }
@@ -479,10 +497,13 @@ async def handle_apexcharts_yaml(call: ServiceCall) -> dict[str, Any]:  # noqa: 
         # rating_level LOW/HIGH: Show raw state in header (entity state = min/max price of day)
         # rating_level NORMAL: Hide from header (not meaningful as extrema)
         # level (VERY_CHEAP/CHEAP/etc): Hide from header (entity state is aggregated value)
+        # Price level series are hidden from legend only when best/peak overlays are enabled
+        # (to keep legend clean for toggle-only items)
+        hide_from_legend = highlight_best_price or highlight_peak_price
         if level_type == "rating_level" and level_key in (PRICE_RATING_LOW, PRICE_RATING_HIGH):
-            show_config = {"legend_value": False, "in_header": "raw"}
+            show_config = {"legend_value": False, "in_header": "raw", "in_legend": not hide_from_legend}
         else:
-            show_config = {"legend_value": False, "in_header": False}
+            show_config = {"legend_value": False, "in_header": False, "in_legend": not hide_from_legend}
 
         series.append(
             {
@@ -570,10 +591,23 @@ async def handle_apexcharts_yaml(call: ServiceCall) -> dict[str, Any]:  # noqa: 
                 },
             },
             "dataLabels": {"enabled": False},
+            # Legend is shown only when peak price is enabled (for toggling visibility)
+            # - Only best price: no legend needed
+            # - Peak price (with or without best): show legend for toggle
             "legend": {
-                "show": False,
+                "show": highlight_peak_price,
                 "position": "bottom",
                 "horizontalAlign": "center",
+                # Custom markers only when overlays are enabled (hide color dots, use text icons)
+                # Without overlays: use default markers so user can enable legend with just show: true
+                **(
+                    {
+                        "markers": {"size": 0},
+                        "itemMargin": {"horizontal": 15},
+                    }
+                    if highlight_peak_price
+                    else {}
+                ),
             },
             "grid": {
                 "show": True,
@@ -636,6 +670,11 @@ async def handle_apexcharts_yaml(call: ServiceCall) -> dict[str, Any]:  # noqa: 
     # Dynamically set tooltip enabledOnSeries to exclude overlay indices
     overlay_count = (1 if best_overlay_added else 0) + (1 if peak_overlay_added else 0)
     result["apex_config"]["tooltip"]["enabledOnSeries"] = list(range(overlay_count, len(series)))
+
+    # Enable hidden_by_default experimental feature when peak price is enabled
+    # This allows peak price overlay to start hidden but be toggled via legend click
+    if highlight_peak_price:
+        result["experimental"] = {"hidden_by_default": True}
 
     # For rolling window mode and today_tomorrow, wrap in config-template-card for dynamic config
     if use_template:
