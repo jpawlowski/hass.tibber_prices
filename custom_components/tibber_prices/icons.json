@@ -20,6 +20,28 @@
         },
         "refresh_user_data": {
             "service": "mdi:refresh"
+        },
+        "find_best_start": {
+            "service": "mdi:clock-start",
+            "sections": {
+                "window": "mdi:calendar-range",
+                "job": "mdi:washing-machine",
+                "costing": "mdi:cash-multiple",
+                "pv": "mdi:solar-power",
+                "preferences": "mdi:tune"
+            }
+        },
+        "plan_charging": {
+            "service": "mdi:battery-charging",
+            "sections": {
+                "window": "mdi:calendar-range",
+                "charge": "mdi:ev-station",
+                "pv": "mdi:solar-power",
+                "preferences": "mdi:tune"
+            }
+        },
+        "debug_clear_tomorrow": {
+            "service": "mdi:bug"
         }
     }
 }

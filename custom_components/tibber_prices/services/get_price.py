@@ -41,7 +41,7 @@ GET_PRICE_SERVICE_NAME = "get_price"
 
 GET_PRICE_SERVICE_SCHEMA = vol.Schema(
     {
-        vol.Required("entry_id"): cv.string,
+        vol.Optional("entry_id"): cv.string,
         vol.Required("start_time"): cv.datetime,
         vol.Required("end_time"): cv.datetime,
     }
@@ -75,7 +75,7 @@ async def handle_get_price(call: ServiceCall) -> ServiceResponse:
 
     """
     hass: HomeAssistant = call.hass
-    entry_id: str = call.data["entry_id"]
+    entry_id: str | None = call.data.get("entry_id")
     start_time: datetime = call.data["start_time"]
     end_time: datetime = call.data["end_time"]
 

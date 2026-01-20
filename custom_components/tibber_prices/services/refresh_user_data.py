@@ -27,6 +27,7 @@ from custom_components.tibber_prices.api import (
     TibberPricesApiClientError,
 )
 from homeassistant.exceptions import ServiceValidationError
+from homeassistant.helpers import config_validation as cv
 
 from .helpers import get_entry_and_data
 
@@ -40,7 +41,7 @@ ATTR_ENTRY_ID: Final = "entry_id"
 # Service schema
 REFRESH_USER_DATA_SERVICE_SCHEMA: Final = vol.Schema(
     {
-        vol.Required(ATTR_ENTRY_ID): str,
+        vol.Optional(ATTR_ENTRY_ID): cv.string,
     }
 )
 
@@ -66,12 +67,6 @@ async def handle_refresh_user_data(call: ServiceCall) -> dict[str, Any]:
     """
     entry_id = call.data.get(ATTR_ENTRY_ID)
     hass = call.hass
-
-    if not entry_id:
-        return {
-            "success": False,
-            "message": "Entry ID is required",
-        }
 
     # Get the entry and coordinator
     try:

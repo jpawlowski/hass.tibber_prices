@@ -53,6 +53,7 @@ from custom_components.tibber_prices.coordinator.helpers import (
     get_intervals_for_day_offsets,
 )
 from homeassistant.exceptions import ServiceValidationError
+from homeassistant.helpers import config_validation as cv
 
 from .formatters import aggregate_hourly_exact, get_period_data, normalize_level_filter, normalize_rating_level_filter
 from .helpers import get_entry_and_data, has_tomorrow_data
@@ -265,7 +266,7 @@ ATTR_ENTRY_ID: Final = "entry_id"
 # Service schema
 CHARTDATA_SERVICE_SCHEMA: Final = vol.Schema(
     {
-        vol.Required(ATTR_ENTRY_ID): str,
+        vol.Optional(ATTR_ENTRY_ID): cv.string,
         vol.Optional(ATTR_DAY): vol.All(vol.Coerce(list), [vol.In(["yesterday", "today", "tomorrow"])]),
         vol.Optional("resolution", default="interval"): vol.In(["interval", "hourly"]),
         vol.Optional("output_format", default="array_of_objects"): vol.In(["array_of_objects", "array_of_arrays"]),
@@ -333,16 +334,14 @@ async def handle_chartdata(call: ServiceCall) -> dict[str, Any]:  # noqa: PLR091
         Dictionary with chart data in requested format
 
     Raises:
-        ServiceValidationError: If entry_id is missing or invalid
+        ServiceValidationError: If entry_id cannot be resolved or is invalid
 
     """
     hass = call.hass
-    entry_id_raw = call.data.get(ATTR_ENTRY_ID)
-    if entry_id_raw is None:
-        raise ServiceValidationError(translation_domain=DOMAIN, translation_key="missing_entry_id")
-    entry_id: str = str(entry_id_raw)
+    entry_id = call.data.get(ATTR_ENTRY_ID)  # Optional - auto-resolved if single entry
 
     # Get coordinator to check data availability
+    # get_entry_and_data auto-resolves entry_id if only one entry exists
     _, coordinator, _ = get_entry_and_data(hass, entry_id)
 
     days_raw = call.data.get(ATTR_DAY)

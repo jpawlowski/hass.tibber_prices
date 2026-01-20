@@ -25,7 +25,6 @@ import voluptuous as vol
 from custom_components.tibber_prices.const import (
     CONF_CURRENCY_DISPLAY_MODE,
     DISPLAY_MODE_SUBUNIT,
-    DOMAIN,
     PRICE_LEVEL_CHEAP,
     PRICE_LEVEL_EXPENSIVE,
     PRICE_LEVEL_NORMAL,
@@ -37,7 +36,6 @@ from custom_components.tibber_prices.const import (
     get_display_unit_string,
     get_translation,
 )
-from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_registry import (
     EntityRegistry,
@@ -60,7 +58,7 @@ ATTR_ENTRY_ID: Final = "entry_id"
 # Service schema
 APEXCHARTS_SERVICE_SCHEMA = vol.Schema(
     {
-        vol.Required(ATTR_ENTRY_ID): cv.string,
+        vol.Optional(ATTR_ENTRY_ID): cv.string,
         vol.Optional("day"): vol.In(["yesterday", "today", "tomorrow", "rolling_window", "rolling_window_autozoom"]),
         vol.Optional("level_type", default="rating_level"): vol.In(["rating_level", "level"]),
         vol.Optional("highlight_best_price", default=True): cv.boolean,
@@ -285,14 +283,11 @@ async def handle_apexcharts_yaml(call: ServiceCall) -> dict[str, Any]:  # noqa: 
         Dictionary with ApexCharts card configuration
 
     Raises:
-        ServiceValidationError: If entry_id is missing or invalid
+        ServiceValidationError: If entry_id cannot be resolved or is invalid
 
     """
     hass = call.hass
-    entry_id_raw = call.data.get(ATTR_ENTRY_ID)
-    if entry_id_raw is None:
-        raise ServiceValidationError(translation_domain=DOMAIN, translation_key="missing_entry_id")
-    entry_id: str = str(entry_id_raw)
+    entry_id = call.data.get(ATTR_ENTRY_ID)  # Optional - auto-resolved if single entry
 
     day = call.data.get("day")  # Can be None (rolling window mode)
     level_type = call.data.get("level_type", "rating_level")
@@ -303,7 +298,9 @@ async def handle_apexcharts_yaml(call: ServiceCall) -> dict[str, Any]:  # noqa: 
     user_language = hass.config.language or "en"
 
     # Get coordinator to access price data (for currency) and config entry for display settings
+    # get_entry_and_data auto-resolves entry_id if only one entry exists
     config_entry, coordinator, _ = get_entry_and_data(hass, entry_id)
+    entry_id = config_entry.entry_id  # Use resolved entry_id for entity lookups
     # Get currency from coordinator data
     currency = coordinator.data.get("currency", "EUR")
 

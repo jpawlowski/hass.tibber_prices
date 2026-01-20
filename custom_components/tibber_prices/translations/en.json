@@ -63,7 +63,9 @@
             "invalid_yaml_syntax": "Invalid YAML syntax. Please check indentation, colons, and special characters.",
             "invalid_yaml_structure": "YAML must be a dictionary/object (key: value pairs), not a list or plain text.",
             "service_call_failed": "Service call validation failed: {error_detail}",
+            "no_entries_configured": "No Tibber Prices entries configured. Please set up the integration first.",
             "missing_entry_id": "Entry ID is required but was not provided.",
+            "multiple_entries_require_entry_id": "Multiple Tibber homes configured. Please specify which one to use with the entry_id parameter. Available entries: {entries}",
             "invalid_entry_id": "Invalid entry ID or entry not found.",
             "missing_home_id": "Home ID is missing from the configuration entry.",
             "user_data_not_available": "User data is not available. Please refresh user data first.",
@@ -891,7 +893,7 @@
             "fields": {
                 "entry_id": {
                     "name": "Entry ID",
-                    "description": "The config entry ID for the Tibber integration."
+                    "description": "Optional if only one Tibber home is configured. Required when multiple homes are set up to specify which one to use."
                 },
                 "start_time": {
                     "name": "Start Time",
@@ -909,7 +911,7 @@
             "fields": {
                 "entry_id": {
                     "name": "Entry ID",
-                    "description": "The config entry ID for the Tibber integration."
+                    "description": "Optional if only one Tibber home is configured. Required when multiple homes are set up to specify which one to use."
                 },
                 "day": {
                     "name": "Day",
@@ -961,7 +963,7 @@
             "fields": {
                 "entry_id": {
                     "name": "Entry ID",
-                    "description": "The config entry ID for the Tibber integration."
+                    "description": "Optional if only one Tibber home is configured. Required when multiple homes are set up to specify which one to use."
                 },
                 "day": {
                     "name": "Day",
@@ -1063,7 +1065,163 @@
             "fields": {
                 "entry_id": {
                     "name": "Entry ID",
-                    "description": "The config entry ID for the Tibber integration."
+                    "description": "Optional if only one Tibber home is configured. Required when multiple homes are set up to specify which one to use."
+                }
+            }
+        },
+        "find_best_start": {
+            "name": "Find Best Start Time",
+            "description": "Finds the optimal start time for appliances that run once and cannot be interrupted (e.g., washing machine, dishwasher, dryer). Evaluates all possible start times within the window and returns the one with the lowest average electricity price or expected cost.",
+            "sections": {
+                "window": {
+                    "name": "Time Window",
+                    "description": "Define when the appliance can be started."
+                },
+                "job": {
+                    "name": "Job Settings",
+                    "description": "Configure the appliance's run duration."
+                },
+                "costing": {
+                    "name": "Cost Estimation",
+                    "description": "Optional: Provide energy consumption to calculate actual costs instead of just comparing prices."
+                },
+                "pv": {
+                    "name": "Solar Power",
+                    "description": "Optional: Account for solar generation to reduce grid import estimates."
+                },
+                "preferences": {
+                    "name": "Preferences",
+                    "description": "How to handle ties when multiple slots have the same price."
+                }
+            },
+            "fields": {
+                "entry_id": {
+                    "name": "Entry ID",
+                    "description": "Optional if only one Tibber home is configured. Required when multiple homes are set up to specify which one to use."
+                },
+                "start": {
+                    "name": "Start Time",
+                    "description": "Earliest allowed start time. Accepts HH:MM (e.g., '14:00') or ISO datetime. Defaults to now if not specified."
+                },
+                "end": {
+                    "name": "End Time",
+                    "description": "Latest time by which the appliance must finish. Accepts HH:MM (e.g., '23:00') or ISO datetime. If HH:MM is earlier than start, it's interpreted as the next day."
+                },
+                "horizon_hours": {
+                    "name": "Horizon",
+                    "description": "Maximum look-ahead in hours (1-72). Limits how far into the future to search. Default: 36 hours."
+                },
+                "duration_minutes": {
+                    "name": "Duration",
+                    "description": "How long the appliance runs in minutes (15-1440). For best results, use a multiple of 15."
+                },
+                "rounding": {
+                    "name": "Rounding",
+                    "description": "How to round duration to 15-minute intervals. 'ceil' (default): round up, 'floor': round down, 'nearest': round to nearest."
+                },
+                "estimate_energy_kwh": {
+                    "name": "Estimated Energy",
+                    "description": "Expected energy consumption in kWh. When provided, enables actual cost calculation instead of price-only comparison."
+                },
+                "estimate_avg_power_w": {
+                    "name": "Estimated Power",
+                    "description": "Alternative to energy: average power draw in Watts. Automatically converted to energy based on the duration."
+                },
+                "pv_entity_id": {
+                    "name": "PV Power Entity",
+                    "description": "Sensor entity providing current solar power output in Watts. Used to estimate reduced grid import."
+                },
+                "prefer_earlier_start_on_tie": {
+                    "name": "Prefer Earlier Start",
+                    "description": "When multiple time slots have identical costs, prefer starting earlier rather than later."
+                },
+                "include_current_interval": {
+                    "name": "Include Current Interval",
+                    "description": "Allow the currently running 15-minute interval as a potential start time. If disabled, only future intervals are considered. Enabling this may result in starting slightly late (up to 14 minutes into the interval) but can avoid waiting for a later slot."
+                }
+            }
+        },
+        "plan_charging": {
+            "name": "Plan Charging",
+            "description": "Creates an optimized charging schedule for energy storage systems (EV, home battery, balcony battery). Finds the cheapest intervals within the time window. Can either find one continuous charging block or split charging across multiple cheap periods.",
+            "sections": {
+                "window": {
+                    "name": "Time Window",
+                    "description": "Define when charging is allowed to occur."
+                },
+                "charge": {
+                    "name": "Charging Parameters",
+                    "description": "Configure power limits and energy targets."
+                },
+                "pv": {
+                    "name": "Solar Power",
+                    "description": "Optional: Account for solar generation to reduce grid import estimates."
+                },
+                "preferences": {
+                    "name": "Preferences",
+                    "description": "Fine-tune the charging schedule optimization."
+                }
+            },
+            "fields": {
+                "entry_id": {
+                    "name": "Entry ID",
+                    "description": "Optional if only one Tibber home is configured. Required when multiple homes are set up to specify which one to use."
+                },
+                "start": {
+                    "name": "Start Time",
+                    "description": "Earliest allowed charging start. Accepts HH:MM (e.g., '00:00') or ISO datetime. Defaults to now if not specified."
+                },
+                "end": {
+                    "name": "End Time",
+                    "description": "Time by which charging must be complete (ready by). Accepts HH:MM (e.g., '06:00') or ISO datetime. If HH:MM is earlier than start, it's interpreted as the next day."
+                },
+                "horizon_hours": {
+                    "name": "Horizon",
+                    "description": "Maximum look-ahead in hours (1-72). Default: 36 hours."
+                },
+                "energy_target_kwh": {
+                    "name": "Energy Target",
+                    "description": "Amount of energy to charge in kWh. Specify either this OR duration, not both."
+                },
+                "duration_minutes": {
+                    "name": "Duration",
+                    "description": "Fixed charging duration in minutes. Specify either this OR energy target, not both."
+                },
+                "max_power_w": {
+                    "name": "Maximum Power",
+                    "description": "Maximum charging power in Watts. Required."
+                },
+                "min_power_w": {
+                    "name": "Minimum Power",
+                    "description": "Minimum charging power in Watts. Used when throttling the final slot to hit an exact energy target. Default: 0."
+                },
+                "allow_split": {
+                    "name": "Allow Split Charging",
+                    "description": "When enabled, charging can be split across multiple non-contiguous cheap periods for better prices. When disabled (default), finds one continuous charging block."
+                },
+                "rounding": {
+                    "name": "Rounding",
+                    "description": "How to round duration to 15-minute intervals. 'ceil' (default): round up, 'floor': round down, 'nearest': round to nearest."
+                },
+                "efficiency": {
+                    "name": "Efficiency",
+                    "description": "Charging efficiency factor (0.01-1.0). Accounts for conversion losses: efficiency = energy_stored / grid_energy_drawn. Default: 1.0 (no losses)."
+                },
+                "pv_entity_id": {
+                    "name": "PV Power Entity",
+                    "description": "Sensor entity providing current solar power output in Watts. Used to estimate reduced grid import."
+                },
+                "prefer_fewer_splits": {
+                    "name": "Prefer Fewer Splits",
+                    "description": "When split charging is enabled, prefer fewer longer sessions over many short ones."
+                },
+                "prefer_earlier_completion": {
+                    "name": "Prefer Earlier Completion",
+                    "description": "When multiple schedules have the same total cost, prefer the one that finishes earlier."
+                },
+                "include_current_interval": {
+                    "name": "Include Current Interval",
+                    "description": "Allow the currently running 15-minute interval as a potential start time. If disabled, only future intervals are considered. Enabling this may result in starting slightly late (up to 14 minutes into the interval) but can avoid waiting for a later slot."
                 }
             }
         },
@@ -1175,6 +1333,13 @@
             "options": {
                 "median": "Median",
                 "mean": "Arithmetic Mean"
+            }
+        },
+        "rounding": {
+            "options": {
+                "ceil": "Round Up (ceil)",
+                "floor": "Round Down (floor)",
+                "nearest": "Round to Nearest"
             }
         }
     },

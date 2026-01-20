@@ -1,7 +1,7 @@
 get_price:
   fields:
     entry_id:
-      required: true
+      required: false
       example: "1234567890abcdef"
       selector:
         config_entry:
@@ -19,7 +19,7 @@ get_price:
 get_apexcharts_yaml:
   fields:
     entry_id:
-      required: true
+      required: false
       example: "1234567890abcdef"
       selector:
         config_entry:
@@ -63,7 +63,7 @@ get_chartdata:
     general:
       fields:
         entry_id:
-          required: true
+          required: false
           example: "1234567890abcdef"
           selector:
             config_entry:
@@ -246,11 +246,232 @@ get_chartdata:
 refresh_user_data:
   fields:
     entry_id:
-      required: true
+      required: false
       example: "1234567890abcdef"
       selector:
         config_entry:
           integration: tibber_prices
+find_best_start:
+  fields:
+    entry_id:
+      required: false
+      example: "1234567890abcdef"
+      selector:
+        config_entry:
+          integration: tibber_prices
+    window:
+      collapsed: false
+      fields:
+        start:
+          required: false
+          example: "14:00"
+          selector:
+            time:
+        end:
+          required: false
+          example: "23:00"
+          selector:
+            time:
+        horizon_hours:
+          required: false
+          default: 36
+          selector:
+            number:
+              min: 1
+              max: 72
+              mode: box
+              unit_of_measurement: h
+    job:
+      collapsed: false
+      fields:
+        duration_minutes:
+          required: true
+          example: 120
+          selector:
+            number:
+              min: 15
+              max: 1440
+              step: 15
+              mode: box
+              unit_of_measurement: min
+        rounding:
+          required: false
+          default: ceil
+          selector:
+            select:
+              options:
+                - nearest
+                - floor
+                - ceil
+              translation_key: rounding
+    costing:
+      collapsed: true
+      fields:
+        estimate_energy_kwh:
+          required: false
+          example: 1.2
+          selector:
+            number:
+              min: 0.01
+              max: 100
+              step: 0.01
+              mode: box
+              unit_of_measurement: kWh
+        estimate_avg_power_w:
+          required: false
+          example: 600
+          selector:
+            number:
+              min: 1
+              max: 50000
+              step: 1
+              mode: box
+              unit_of_measurement: W
+    pv:
+      collapsed: true
+      fields:
+        pv_entity_id:
+          required: false
+          selector:
+            entity:
+              domain: sensor
+    preferences:
+      collapsed: true
+      fields:
+        prefer_earlier_start_on_tie:
+          required: false
+          default: true
+          selector:
+            boolean:
+        include_current_interval:
+          required: false
+          default: true
+          selector:
+            boolean:
+plan_charging:
+  fields:
+    entry_id:
+      required: false
+      example: "1234567890abcdef"
+      selector:
+        config_entry:
+          integration: tibber_prices
+    window:
+      collapsed: false
+      fields:
+        start:
+          required: false
+          example: "00:00"
+          selector:
+            time:
+        end:
+          required: false
+          example: "06:00"
+          selector:
+            time:
+        horizon_hours:
+          required: false
+          default: 36
+          selector:
+            number:
+              min: 1
+              max: 72
+              mode: box
+              unit_of_measurement: h
+    charge:
+      collapsed: false
+      fields:
+        energy_target_kwh:
+          required: false
+          example: 2.0
+          selector:
+            number:
+              min: 0.01
+              max: 200
+              step: 0.01
+              mode: box
+              unit_of_measurement: kWh
+        duration_minutes:
+          required: false
+          example: 120
+          selector:
+            number:
+              min: 15
+              max: 1440
+              step: 15
+              mode: box
+              unit_of_measurement: min
+        max_power_w:
+          required: true
+          example: 1200
+          selector:
+            number:
+              min: 1
+              max: 50000
+              step: 1
+              mode: box
+              unit_of_measurement: W
+        min_power_w:
+          required: false
+          default: 0
+          selector:
+            number:
+              min: 0
+              max: 50000
+              step: 1
+              mode: box
+              unit_of_measurement: W
+        allow_split:
+          required: false
+          default: false
+          selector:
+            boolean:
+        rounding:
+          required: false
+          default: ceil
+          selector:
+            select:
+              options:
+                - nearest
+                - floor
+                - ceil
+              translation_key: rounding
+        efficiency:
+          required: false
+          default: 1.0
+          example: 0.92
+          selector:
+            number:
+              min: 0.01
+              max: 1.0
+              step: 0.01
+              mode: box
+    pv:
+      collapsed: true
+      fields:
+        pv_entity_id:
+          required: false
+          selector:
+            entity:
+              domain: sensor
+    preferences:
+      collapsed: true
+      fields:
+        prefer_fewer_splits:
+          required: false
+          default: true
+          selector:
+            boolean:
+        prefer_earlier_completion:
+          required: false
+          default: true
+          selector:
+            boolean:
+        include_current_interval:
+          required: false
+          default: true
+          selector:
+            boolean:
 
 debug_clear_tomorrow:
   fields:
