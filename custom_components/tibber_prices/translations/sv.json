@@ -283,14 +283,18 @@
             },
             "price_trend": {
                 "title": "📈 Pristrendtrösklar",
-                "description": "**Konfigurera tröskelvärden för pristrendsensorer. Dessa sensorer jämför aktuellt pris med genomsnittet av de nästa N timmarna för att bestämma om priserna stiger, faller eller är stabila.**",
+                "description": "**Konfigurera tröskelvärden för pristrendsensorer. Dessa sensorer jämför aktuellt pris med genomsnittet av de nästa N timmarna för att bestämma om priserna stiger kraftigt, stiger, är stabila, faller eller faller kraftigt.**",
                 "data": {
                     "price_trend_threshold_rising": "Stigande tröskel",
-                    "price_trend_threshold_falling": "Fallande tröskel"
+                    "price_trend_threshold_strongly_rising": "Kraftigt stigande tröskel",
+                    "price_trend_threshold_falling": "Fallande tröskel",
+                    "price_trend_threshold_strongly_falling": "Kraftigt fallande tröskel"
                 },
                 "data_description": {
-                    "price_trend_threshold_rising": "Procentandel som genomsnittet av de nästa N timmarna måste vara över det aktuella priset för att kvalificera som 'stigande' trend. Exempel: 5 betyder att genomsnittet är minst 5% högre → priserna kommer att stiga. Typiska värden: 5-15%. Standard: 5%",
-                    "price_trend_threshold_falling": "Procentandel (negativ) som genomsnittet av de nästa N timmarna måste vara under det aktuella priset för att kvalificera som 'fallande' trend. Exempel: -5 betyder att genomsnittet är minst 5% lägre → priserna kommer att falla. Typiska värden: -5 till -15%. Standard: -5%"
+                    "price_trend_threshold_rising": "Procentandel som genomsnittet av de nästa N timmarna måste vara över det aktuella priset för att kvalificera som 'stigande' trend. Exempel: 3 betyder att genomsnittet är minst 3% högre → priserna kommer att stiga. Typiska värden: 3-10%. Standard: 3%",
+                    "price_trend_threshold_strongly_rising": "Procentandel som genomsnittet av de nästa N timmarna måste vara över det aktuella priset för att kvalificera som 'kraftigt stigande' trend. Måste vara högre än stigande tröskel. Typiska värden: 6-20%. Standard: 6%",
+                    "price_trend_threshold_falling": "Procentandel (negativ) som genomsnittet av de nästa N timmarna måste vara under det aktuella priset för att kvalificera som 'fallande' trend. Exempel: -3 betyder att genomsnittet är minst 3% lägre → priserna kommer att falla. Typiska värden: -3 till -10%. Standard: -3%",
+                    "price_trend_threshold_strongly_falling": "Procentandel (negativ) som genomsnittet av de nästa N timmarna måste vara under det aktuella priset för att kvalificera som 'kraftigt fallande' trend. Måste vara lägre (mer negativ) än fallande tröskel. Typiska värden: -6 till -20%. Standard: -6%"
                 },
                 "submit": "↩ Spara & tillbaka"
             },
@@ -356,7 +360,11 @@
             "invalid_volatility_threshold_very_high": "Mycket hög volatilitetströskel måste vara mellan 35% och 80%",
             "invalid_volatility_thresholds": "Trösklar måste vara i stigande ordning: måttlig < hög < mycket hög",
             "invalid_price_trend_rising": "Stigande trendtröskel måste vara mellan 1% och 50%",
-            "invalid_price_trend_falling": "Fallande trendtröskel måste vara mellan -50% och -1%"
+            "invalid_price_trend_falling": "Fallande trendtröskel måste vara mellan -50% och -1%",
+            "invalid_price_trend_strongly_rising": "Kraftigt stigande trendtröskel måste vara mellan 2% och 100%",
+            "invalid_price_trend_strongly_falling": "Kraftigt fallande trendtröskel måste vara mellan -100% och -2%",
+            "invalid_trend_strongly_rising_less_than_rising": "Kraftigt stigande-tröskel måste vara högre än stigande-tröskel",
+            "invalid_trend_strongly_falling_greater_than_falling": "Kraftigt fallande-tröskel måste vara lägre (mer negativ) än fallande-tröskel"
         },
         "abort": {
             "entry_not_found": "Tibber-konfigurationspost hittades inte.",
@@ -592,73 +600,91 @@
             "price_trend_1h": {
                 "name": "Pristrend (1h)",
                 "state": {
+                    "strongly_rising": "Kraftigt stigande",
                     "rising": "Stigande",
+                    "stable": "Stabil",
                     "falling": "Fallande",
-                    "stable": "Stabil"
+                    "strongly_falling": "Kraftigt fallande"
                 }
             },
             "price_trend_2h": {
                 "name": "Pristrend (2h)",
                 "state": {
+                    "strongly_rising": "Kraftigt stigande",
                     "rising": "Stigande",
+                    "stable": "Stabil",
                     "falling": "Fallande",
-                    "stable": "Stabil"
+                    "strongly_falling": "Kraftigt fallande"
                 }
             },
             "price_trend_3h": {
                 "name": "Pristrend (3h)",
                 "state": {
+                    "strongly_rising": "Kraftigt stigande",
                     "rising": "Stigande",
+                    "stable": "Stabil",
                     "falling": "Fallande",
-                    "stable": "Stabil"
+                    "strongly_falling": "Kraftigt fallande"
                 }
             },
             "price_trend_4h": {
                 "name": "Pristrend (4h)",
                 "state": {
+                    "strongly_rising": "Kraftigt stigande",
                     "rising": "Stigande",
+                    "stable": "Stabil",
                     "falling": "Fallande",
-                    "stable": "Stabil"
+                    "strongly_falling": "Kraftigt fallande"
                 }
             },
             "price_trend_5h": {
                 "name": "Pristrend (5h)",
                 "state": {
+                    "strongly_rising": "Kraftigt stigande",
                     "rising": "Stigande",
+                    "stable": "Stabil",
                     "falling": "Fallande",
-                    "stable": "Stabil"
+                    "strongly_falling": "Kraftigt fallande"
                 }
             },
             "price_trend_6h": {
                 "name": "Pristrend (6h)",
                 "state": {
+                    "strongly_rising": "Kraftigt stigande",
                     "rising": "Stigande",
+                    "stable": "Stabil",
                     "falling": "Fallande",
-                    "stable": "Stabil"
+                    "strongly_falling": "Kraftigt fallande"
                 }
             },
             "price_trend_8h": {
                 "name": "Pristrend (8h)",
                 "state": {
+                    "strongly_rising": "Kraftigt stigande",
                     "rising": "Stigande",
+                    "stable": "Stabil",
                     "falling": "Fallande",
-                    "stable": "Stabil"
+                    "strongly_falling": "Kraftigt fallande"
                 }
             },
             "price_trend_12h": {
                 "name": "Pristrend (12h)",
                 "state": {
+                    "strongly_rising": "Kraftigt stigande",
                     "rising": "Stigande",
+                    "stable": "Stabil",
                     "falling": "Fallande",
-                    "stable": "Stabil"
+                    "strongly_falling": "Kraftigt fallande"
                 }
             },
             "current_price_trend": {
                 "name": "Aktuell pristrend",
                 "state": {
+                    "strongly_rising": "Kraftigt stigande",
                     "rising": "Stigande",
+                    "stable": "Stabil",
                     "falling": "Fallande",
-                    "stable": "Stabil"
+                    "strongly_falling": "Kraftigt fallande"
                 }
             },
             "next_price_trend_change": {

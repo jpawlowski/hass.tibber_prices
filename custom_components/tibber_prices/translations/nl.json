@@ -283,14 +283,18 @@
             },
             "price_trend": {
                 "title": "📈 Prijstrend Drempelwaarden",
-                "description": "**Configureer drempelwaarden voor prijstrend sensoren. Deze sensoren vergelijken de huidige prijs met het gemiddelde van de volgende N uur om te bepalen of prijzen stijgen, dalen of stabiel zijn.**",
+                "description": "**Configureer drempelwaarden voor prijstrend sensoren. Deze sensoren vergelijken de huidige prijs met het gemiddelde van de volgende N uur om te bepalen of prijzen sterk stijgen, stijgen, stabiel zijn, dalen of sterk dalen.**",
                 "data": {
                     "price_trend_threshold_rising": "Stijgende Drempel",
-                    "price_trend_threshold_falling": "Dalende Drempel"
+                    "price_trend_threshold_strongly_rising": "Sterk Stijgende Drempel",
+                    "price_trend_threshold_falling": "Dalende Drempel",
+                    "price_trend_threshold_strongly_falling": "Sterk Dalende Drempel"
                 },
                 "data_description": {
-                    "price_trend_threshold_rising": "Percentage dat het gemiddelde van de volgende N uur boven de huidige prijs moet zijn om te kwalificeren als 'stijgende' trend. Voorbeeld: 5 betekent dat het gemiddelde minimaal 5% hoger is → prijzen zullen stijgen. Typische waarden: 5-15%. Standaard: 5%",
-                    "price_trend_threshold_falling": "Percentage (negatief) dat het gemiddelde van de volgende N uur onder de huidige prijs moet zijn om te kwalificeren als 'dalende' trend. Voorbeeld: -5 betekent dat het gemiddelde minimaal 5% lager is → prijzen zullen dalen. Typische waarden: -5 tot -15%. Standaard: -5%"
+                    "price_trend_threshold_rising": "Percentage dat het gemiddelde van de volgende N uur boven de huidige prijs moet zijn om te kwalificeren als 'stijgende' trend. Voorbeeld: 3 betekent dat het gemiddelde minimaal 3% hoger is → prijzen zullen stijgen. Typische waarden: 3-10%. Standaard: 3%",
+                    "price_trend_threshold_strongly_rising": "Percentage dat het gemiddelde van de volgende N uur boven de huidige prijs moet zijn om te kwalificeren als 'sterk stijgende' trend. Moet hoger zijn dan stijgende drempel. Typische waarden: 6-20%. Standaard: 6%",
+                    "price_trend_threshold_falling": "Percentage (negatief) dat het gemiddelde van de volgende N uur onder de huidige prijs moet zijn om te kwalificeren als 'dalende' trend. Voorbeeld: -3 betekent dat het gemiddelde minimaal 3% lager is → prijzen zullen dalen. Typische waarden: -3 tot -10%. Standaard: -3%",
+                    "price_trend_threshold_strongly_falling": "Percentage (negatief) dat het gemiddelde van de volgende N uur onder de huidige prijs moet zijn om te kwalificeren als 'sterk dalende' trend. Moet lager (meer negatief) zijn dan dalende drempel. Typische waarden: -6 tot -20%. Standaard: -6%"
                 },
                 "submit": "↩ Opslaan & Terug"
             },
@@ -356,7 +360,11 @@
             "invalid_volatility_threshold_very_high": "Zeer hoge volatiliteit drempel moet tussen 35% en 80% zijn",
             "invalid_volatility_thresholds": "Drempelwaarden moeten in oplopende volgorde zijn: gematigd < hoog < zeer hoog",
             "invalid_price_trend_rising": "Stijgende trend drempel moet tussen 1% en 50% zijn",
-            "invalid_price_trend_falling": "Dalende trend drempel moet tussen -50% en -1% zijn"
+            "invalid_price_trend_falling": "Dalende trend drempel moet tussen -50% en -1% zijn",
+            "invalid_price_trend_strongly_rising": "Sterk stijgende trend drempel moet tussen 2% en 100% zijn",
+            "invalid_price_trend_strongly_falling": "Sterk dalende trend drempel moet tussen -100% en -2% zijn",
+            "invalid_trend_strongly_rising_less_than_rising": "Sterk stijgende drempel moet hoger zijn dan stijgende drempel",
+            "invalid_trend_strongly_falling_greater_than_falling": "Sterk dalende drempel moet lager (meer negatief) zijn dan dalende drempel"
         },
         "abort": {
             "entry_not_found": "Tibber-configuratie-item niet gevonden.",
@@ -592,73 +600,91 @@
             "price_trend_1h": {
                 "name": "Prijstrend (1u)",
                 "state": {
+                    "strongly_rising": "Sterk stijgend",
                     "rising": "Stijgend",
+                    "stable": "Stabiel",
                     "falling": "Dalend",
-                    "stable": "Stabiel"
+                    "strongly_falling": "Sterk dalend"
                 }
             },
             "price_trend_2h": {
                 "name": "Prijstrend (2u)",
                 "state": {
+                    "strongly_rising": "Sterk stijgend",
                     "rising": "Stijgend",
+                    "stable": "Stabiel",
                     "falling": "Dalend",
-                    "stable": "Stabiel"
+                    "strongly_falling": "Sterk dalend"
                 }
             },
             "price_trend_3h": {
                 "name": "Prijstrend (3u)",
                 "state": {
+                    "strongly_rising": "Sterk stijgend",
                     "rising": "Stijgend",
+                    "stable": "Stabiel",
                     "falling": "Dalend",
-                    "stable": "Stabiel"
+                    "strongly_falling": "Sterk dalend"
                 }
             },
             "price_trend_4h": {
                 "name": "Prijstrend (4u)",
                 "state": {
+                    "strongly_rising": "Sterk stijgend",
                     "rising": "Stijgend",
+                    "stable": "Stabiel",
                     "falling": "Dalend",
-                    "stable": "Stabiel"
+                    "strongly_falling": "Sterk dalend"
                 }
             },
             "price_trend_5h": {
                 "name": "Prijstrend (5u)",
                 "state": {
+                    "strongly_rising": "Sterk stijgend",
                     "rising": "Stijgend",
+                    "stable": "Stabiel",
                     "falling": "Dalend",
-                    "stable": "Stabiel"
+                    "strongly_falling": "Sterk dalend"
                 }
             },
             "price_trend_6h": {
                 "name": "Prijstrend (6u)",
                 "state": {
+                    "strongly_rising": "Sterk stijgend",
                     "rising": "Stijgend",
+                    "stable": "Stabiel",
                     "falling": "Dalend",
-                    "stable": "Stabiel"
+                    "strongly_falling": "Sterk dalend"
                 }
             },
             "price_trend_8h": {
                 "name": "Prijstrend (8u)",
                 "state": {
+                    "strongly_rising": "Sterk stijgend",
                     "rising": "Stijgend",
+                    "stable": "Stabiel",
                     "falling": "Dalend",
-                    "stable": "Stabiel"
+                    "strongly_falling": "Sterk dalend"
                 }
             },
             "price_trend_12h": {
                 "name": "Prijstrend (12u)",
                 "state": {
+                    "strongly_rising": "Sterk stijgend",
                     "rising": "Stijgend",
+                    "stable": "Stabiel",
                     "falling": "Dalend",
-                    "stable": "Stabiel"
+                    "strongly_falling": "Sterk dalend"
                 }
             },
             "current_price_trend": {
                 "name": "Huidige Prijstrend",
                 "state": {
+                    "strongly_rising": "Sterk stijgend",
                     "rising": "Stijgend",
+                    "stable": "Stabiel",
                     "falling": "Dalend",
-                    "stable": "Stabiel"
+                    "strongly_falling": "Sterk dalend"
                 }
             },
             "next_price_trend_change": {

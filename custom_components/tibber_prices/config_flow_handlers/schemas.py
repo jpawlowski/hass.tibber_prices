@@ -35,6 +35,8 @@ from custom_components.tibber_prices.const import (
     CONF_PRICE_RATING_THRESHOLD_LOW,
     CONF_PRICE_TREND_THRESHOLD_FALLING,
     CONF_PRICE_TREND_THRESHOLD_RISING,
+    CONF_PRICE_TREND_THRESHOLD_STRONGLY_FALLING,
+    CONF_PRICE_TREND_THRESHOLD_STRONGLY_RISING,
     CONF_RELAXATION_ATTEMPTS_BEST,
     CONF_RELAXATION_ATTEMPTS_PEAK,
     CONF_VIRTUAL_TIME_OFFSET_DAYS,
@@ -66,6 +68,8 @@ from custom_components.tibber_prices.const import (
     DEFAULT_PRICE_RATING_THRESHOLD_LOW,
     DEFAULT_PRICE_TREND_THRESHOLD_FALLING,
     DEFAULT_PRICE_TREND_THRESHOLD_RISING,
+    DEFAULT_PRICE_TREND_THRESHOLD_STRONGLY_FALLING,
+    DEFAULT_PRICE_TREND_THRESHOLD_STRONGLY_RISING,
     DEFAULT_RELAXATION_ATTEMPTS_BEST,
     DEFAULT_RELAXATION_ATTEMPTS_PEAK,
     DEFAULT_VIRTUAL_TIME_OFFSET_DAYS,
@@ -86,6 +90,8 @@ from custom_components.tibber_prices.const import (
     MAX_PRICE_RATING_THRESHOLD_LOW,
     MAX_PRICE_TREND_FALLING,
     MAX_PRICE_TREND_RISING,
+    MAX_PRICE_TREND_STRONGLY_FALLING,
+    MAX_PRICE_TREND_STRONGLY_RISING,
     MAX_RELAXATION_ATTEMPTS,
     MAX_VOLATILITY_THRESHOLD_HIGH,
     MAX_VOLATILITY_THRESHOLD_MODERATE,
@@ -99,6 +105,8 @@ from custom_components.tibber_prices.const import (
     MIN_PRICE_RATING_THRESHOLD_LOW,
     MIN_PRICE_TREND_FALLING,
     MIN_PRICE_TREND_RISING,
+    MIN_PRICE_TREND_STRONGLY_FALLING,
+    MIN_PRICE_TREND_STRONGLY_RISING,
     MIN_RELAXATION_ATTEMPTS,
     MIN_VOLATILITY_THRESHOLD_HIGH,
     MIN_VOLATILITY_THRESHOLD_MODERATE,
@@ -746,6 +754,23 @@ def get_price_trend_schema(options: Mapping[str, Any]) -> vol.Schema:
                 ),
             ),
             vol.Optional(
+                CONF_PRICE_TREND_THRESHOLD_STRONGLY_RISING,
+                default=int(
+                    options.get(
+                        CONF_PRICE_TREND_THRESHOLD_STRONGLY_RISING,
+                        DEFAULT_PRICE_TREND_THRESHOLD_STRONGLY_RISING,
+                    )
+                ),
+            ): NumberSelector(
+                NumberSelectorConfig(
+                    min=MIN_PRICE_TREND_STRONGLY_RISING,
+                    max=MAX_PRICE_TREND_STRONGLY_RISING,
+                    step=1,
+                    unit_of_measurement="%",
+                    mode=NumberSelectorMode.SLIDER,
+                ),
+            ),
+            vol.Optional(
                 CONF_PRICE_TREND_THRESHOLD_FALLING,
                 default=int(
                     options.get(
@@ -757,6 +782,23 @@ def get_price_trend_schema(options: Mapping[str, Any]) -> vol.Schema:
                 NumberSelectorConfig(
                     min=MIN_PRICE_TREND_FALLING,
                     max=MAX_PRICE_TREND_FALLING,
+                    step=1,
+                    unit_of_measurement="%",
+                    mode=NumberSelectorMode.SLIDER,
+                ),
+            ),
+            vol.Optional(
+                CONF_PRICE_TREND_THRESHOLD_STRONGLY_FALLING,
+                default=int(
+                    options.get(
+                        CONF_PRICE_TREND_THRESHOLD_STRONGLY_FALLING,
+                        DEFAULT_PRICE_TREND_THRESHOLD_STRONGLY_FALLING,
+                    )
+                ),
+            ): NumberSelector(
+                NumberSelectorConfig(
+                    min=MIN_PRICE_TREND_STRONGLY_FALLING,
+                    max=MAX_PRICE_TREND_STRONGLY_FALLING,
                     step=1,
                     unit_of_measurement="%",
                     mode=NumberSelectorMode.SLIDER,

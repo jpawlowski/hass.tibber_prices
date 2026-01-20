@@ -283,14 +283,18 @@
             },
             "price_trend": {
                 "title": "📈 Preistrend-Schwellenwerte",
-                "description": "**Konfiguriere Schwellenwerte für Preistrend-Sensoren. Diese Sensoren vergleichen den aktuellen Preis mit dem Durchschnitt der nächsten N Stunden, um festzustellen, ob die Preise steigen, fallen oder stabil sind.**",
+                "description": "**Konfiguriere Schwellenwerte für Preistrend-Sensoren.** Diese Sensoren vergleichen den aktuellen Preis mit dem Durchschnitt der nächsten N Stunden, um festzustellen, ob die Preise steigen, fallen oder stabil sind.\n\n**5-Stufen-Skala:** Nutzt stark_fallend (-2), fallend (-1), stabil (0), steigend (+1), stark_steigend (+2) für Automations-Vergleiche über das trend_value Attribut.",
                 "data": {
                     "price_trend_threshold_rising": "Steigend-Schwelle",
-                    "price_trend_threshold_falling": "Fallend-Schwelle"
+                    "price_trend_threshold_strongly_rising": "Stark steigend-Schwelle",
+                    "price_trend_threshold_falling": "Fallend-Schwelle",
+                    "price_trend_threshold_strongly_falling": "Stark fallend-Schwelle"
                 },
                 "data_description": {
-                    "price_trend_threshold_rising": "Prozentwert, um wie viel der Durchschnitt der nächsten N Stunden über dem aktuellen Preis liegen muss, damit der Trend als 'steigend' gilt. Beispiel: 5 bedeutet Durchschnitt ist mindestens 5% höher → Preise werden steigen. Typische Werte: 5-15%. Standard: 5%",
-                    "price_trend_threshold_falling": "Prozentwert (negativ), um wie viel der Durchschnitt der nächsten N Stunden unter dem aktuellen Preis liegen muss, damit der Trend als 'fallend' gilt. Beispiel: -5 bedeutet Durchschnitt ist mindestens 5% niedriger → Preise werden fallen. Typische Werte: -5 bis -15%. Standard: -5%"
+                    "price_trend_threshold_rising": "Prozentwert, um wie viel der Durchschnitt der nächsten N Stunden über dem aktuellen Preis liegen muss, damit der Trend als 'steigend' gilt. Beispiel: 3 bedeutet Durchschnitt ist mindestens 3% höher → Preise werden steigen. Typische Werte: 3-10%. Standard: 3%",
+                    "price_trend_threshold_strongly_rising": "Prozentwert für 'stark steigend'-Trend. Muss höher sein als die steigend-Schwelle. Beispiel: 6 bedeutet Durchschnitt ist mindestens 6% höher → Preise werden deutlich steigen. Typische Werte: 6-15%. Standard: 6%",
+                    "price_trend_threshold_falling": "Prozentwert (negativ), um wie viel der Durchschnitt der nächsten N Stunden unter dem aktuellen Preis liegen muss, damit der Trend als 'fallend' gilt. Beispiel: -3 bedeutet Durchschnitt ist mindestens 3% niedriger → Preise werden fallen. Typische Werte: -3 bis -10%. Standard: -3%",
+                    "price_trend_threshold_strongly_falling": "Prozentwert (negativ) für 'stark fallend'-Trend. Muss niedriger (negativer) sein als die fallend-Schwelle. Beispiel: -6 bedeutet Durchschnitt ist mindestens 6% niedriger → Preise werden deutlich fallen. Typische Werte: -6 bis -15%. Standard: -6%"
                 },
                 "submit": "↩ Speichern & Zurück"
             },
@@ -356,7 +360,11 @@
             "invalid_volatility_threshold_very_high": "Sehr hohe Volatilitätsschwelle muss zwischen 35% und 80% liegen",
             "invalid_volatility_thresholds": "Schwellenwerte müssen aufsteigend sein: moderat < hoch < sehr hoch",
             "invalid_price_trend_rising": "Steigender Trendschwellenwert muss zwischen 1% und 50% liegen",
-            "invalid_price_trend_falling": "Fallender Trendschwellenwert muss zwischen -50% und -1% liegen"
+            "invalid_price_trend_falling": "Fallender Trendschwellenwert muss zwischen -50% und -1% liegen",
+            "invalid_price_trend_strongly_rising": "Stark steigender Trendschwellenwert muss zwischen 2% und 100% liegen",
+            "invalid_price_trend_strongly_falling": "Stark fallender Trendschwellenwert muss zwischen -100% und -2% liegen",
+            "invalid_trend_strongly_rising_less_than_rising": "Stark steigend-Schwelle muss größer als steigend-Schwelle sein",
+            "invalid_trend_strongly_falling_greater_than_falling": "Stark fallend-Schwelle muss kleiner (negativer) als fallend-Schwelle sein"
         },
         "abort": {
             "entry_not_found": "Tibber Konfigurationseintrag nicht gefunden.",
@@ -592,73 +600,91 @@
             "price_trend_1h": {
                 "name": "Preistrend (1h)",
                 "state": {
+                    "strongly_rising": "Stark steigend",
                     "rising": "Steigend",
+                    "stable": "Stabil",
                     "falling": "Fallend",
-                    "stable": "Stabil"
+                    "strongly_falling": "Stark fallend"
                 }
             },
             "price_trend_2h": {
                 "name": "Preistrend (2h)",
                 "state": {
+                    "strongly_rising": "Stark steigend",
                     "rising": "Steigend",
+                    "stable": "Stabil",
                     "falling": "Fallend",
-                    "stable": "Stabil"
+                    "strongly_falling": "Stark fallend"
                 }
             },
             "price_trend_3h": {
                 "name": "Preistrend (3h)",
                 "state": {
+                    "strongly_rising": "Stark steigend",
                     "rising": "Steigend",
+                    "stable": "Stabil",
                     "falling": "Fallend",
-                    "stable": "Stabil"
+                    "strongly_falling": "Stark fallend"
                 }
             },
             "price_trend_4h": {
                 "name": "Preistrend (4h)",
                 "state": {
+                    "strongly_rising": "Stark steigend",
                     "rising": "Steigend",
+                    "stable": "Stabil",
                     "falling": "Fallend",
-                    "stable": "Stabil"
+                    "strongly_falling": "Stark fallend"
                 }
             },
             "price_trend_5h": {
                 "name": "Preistrend (5h)",
                 "state": {
+                    "strongly_rising": "Stark steigend",
                     "rising": "Steigend",
+                    "stable": "Stabil",
                     "falling": "Fallend",
-                    "stable": "Stabil"
+                    "strongly_falling": "Stark fallend"
                 }
             },
             "price_trend_6h": {
                 "name": "Preistrend (6h)",
                 "state": {
+                    "strongly_rising": "Stark steigend",
                     "rising": "Steigend",
+                    "stable": "Stabil",
                     "falling": "Fallend",
-                    "stable": "Stabil"
+                    "strongly_falling": "Stark fallend"
                 }
             },
             "price_trend_8h": {
                 "name": "Preistrend (8h)",
                 "state": {
+                    "strongly_rising": "Stark steigend",
                     "rising": "Steigend",
+                    "stable": "Stabil",
                     "falling": "Fallend",
-                    "stable": "Stabil"
+                    "strongly_falling": "Stark fallend"
                 }
             },
             "price_trend_12h": {
                 "name": "Preistrend (12h)",
                 "state": {
+                    "strongly_rising": "Stark steigend",
                     "rising": "Steigend",
+                    "stable": "Stabil",
                     "falling": "Fallend",
-                    "stable": "Stabil"
+                    "strongly_falling": "Stark fallend"
                 }
             },
             "current_price_trend": {
                 "name": "Aktueller Preistrend",
                 "state": {
+                    "strongly_rising": "Stark steigend",
                     "rising": "Steigend",
+                    "stable": "Stabil",
                     "falling": "Fallend",
-                    "stable": "Stabil"
+                    "strongly_falling": "Stark fallend"
                 }
             },
             "next_price_trend_change": {

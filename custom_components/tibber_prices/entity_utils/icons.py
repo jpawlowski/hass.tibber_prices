@@ -85,19 +85,25 @@ def get_dynamic_icon(
 
 
 def get_trend_icon(key: str, value: Any) -> str | None:
-    """Get icon for trend sensors."""
+    """Get icon for trend sensors using 5-level trend scale."""
     # Handle next_price_trend_change TIMESTAMP sensor differently
     # (icon based on attributes, not value which is a timestamp)
     if key == "next_price_trend_change":
         return None  # Will be handled by sensor's icon property using attributes
 
-    if not key.startswith("price_trend_") or not isinstance(value, str):
+    if not key.startswith("price_trend_") and key != "current_price_trend":
         return None
 
+    if not isinstance(value, str):
+        return None
+
+    # 5-level trend icons: strongly uses double arrows, normal uses single
     trend_icons = {
-        "rising": "mdi:trending-up",
-        "falling": "mdi:trending-down",
-        "stable": "mdi:trending-neutral",
+        "strongly_rising": "mdi:chevron-double-up",  # Strong upward movement
+        "rising": "mdi:trending-up",  # Normal upward trend
+        "stable": "mdi:trending-neutral",  # No significant change
+        "falling": "mdi:trending-down",  # Normal downward trend
+        "strongly_falling": "mdi:chevron-double-down",  # Strong downward movement
     }
     return trend_icons.get(value)
 

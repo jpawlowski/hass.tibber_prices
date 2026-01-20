@@ -105,6 +105,8 @@ class TibberPricesTrendCalculator(TibberPricesBaseCalculator):
         # Get configured thresholds from options
         threshold_rising = self.config.get("price_trend_threshold_rising", 5.0)
         threshold_falling = self.config.get("price_trend_threshold_falling", -5.0)
+        threshold_strongly_rising = self.config.get("price_trend_threshold_strongly_rising", 6.0)
+        threshold_strongly_falling = self.config.get("price_trend_threshold_strongly_falling", -6.0)
         volatility_threshold_moderate = self.config.get("volatility_threshold_moderate", 15.0)
         volatility_threshold_high = self.config.get("volatility_threshold_high", 30.0)
 
@@ -115,11 +117,13 @@ class TibberPricesTrendCalculator(TibberPricesBaseCalculator):
         lookahead_intervals = self.coordinator.time.minutes_to_intervals(hours * 60)
 
         # Calculate trend with volatility-adaptive thresholds
-        trend_state, diff_pct = calculate_price_trend(
+        trend_state, diff_pct, trend_value = calculate_price_trend(
             current_interval_price,
             future_mean,
             threshold_rising=threshold_rising,
             threshold_falling=threshold_falling,
+            threshold_strongly_rising=threshold_strongly_rising,
+            threshold_strongly_falling=threshold_strongly_falling,
             volatility_adjustment=True,  # Always enabled
             lookahead_intervals=lookahead_intervals,
             all_intervals=all_intervals,
@@ -127,11 +131,14 @@ class TibberPricesTrendCalculator(TibberPricesBaseCalculator):
             volatility_threshold_high=volatility_threshold_high,
         )
 
-        # Determine icon color based on trend state
+        # Determine icon color based on trend state (5-level scale)
+        # Strongly rising/falling uses more intense colors
         icon_color = {
-            "rising": "var(--error-color)",  # Red/Orange for rising prices (expensive)
-            "falling": "var(--success-color)",  # Green for falling prices (cheaper)
+            "strongly_rising": "var(--error-color)",  # Red for strongly rising (very expensive)
+            "rising": "var(--warning-color)",  # Orange/Yellow for rising prices
             "stable": "var(--state-icon-color)",  # Default gray for stable prices
+            "falling": "var(--success-color)",  # Green for falling prices (cheaper)
+            "strongly_falling": "var(--success-color)",  # Green for strongly falling (great deal)
         }.get(trend_state, "var(--state-icon-color)")
 
         # Convert prices to display currency unit based on configuration
@@ -140,6 +147,7 @@ class TibberPricesTrendCalculator(TibberPricesBaseCalculator):
         # Store attributes in sensor-specific dictionary AND cache the trend value
         self._trend_attributes = {
             "timestamp": next_interval_start,
+            "trend_value": trend_value,
             f"trend_{hours}h_%": round(diff_pct, 1),
             f"next_{hours}h_avg": round(future_mean * factor, 2),
             "interval_count": lookahead_intervals,
@@ -414,6 +422,8 @@ class TibberPricesTrendCalculator(TibberPricesBaseCalculator):
         return {
             "rising": self.config.get("price_trend_threshold_rising", 5.0),
             "falling": self.config.get("price_trend_threshold_falling", -5.0),
+            "strongly_rising": self.config.get("price_trend_threshold_strongly_rising", 6.0),
+            "strongly_falling": self.config.get("price_trend_threshold_strongly_falling", -6.0),
             "moderate": self.config.get("volatility_threshold_moderate", 15.0),
             "high": self.config.get("volatility_threshold_high", 30.0),
         }
@@ -428,7 +438,7 @@ class TibberPricesTrendCalculator(TibberPricesBaseCalculator):
             current_index: Index of current interval
 
         Returns:
-            Momentum direction: "rising", "falling", or "stable"
+            Momentum direction: "strongly_rising", "rising", "stable", "falling", or "strongly_falling"
 
         """
         # Look back 1 hour (4 intervals) for quick reaction
@@ -451,15 +461,25 @@ class TibberPricesTrendCalculator(TibberPricesBaseCalculator):
         weighted_sum = sum(price * weight for price, weight in zip(trailing_prices, weights, strict=True))
         weighted_avg = weighted_sum / sum(weights)
 
-        # Calculate momentum with 3% threshold
+        # Calculate momentum with thresholds
+        # Using same logic as 5-level trend: 3% for normal, 6% (2x) for strong
         momentum_threshold = 0.03
-        diff = (current_price - weighted_avg) / weighted_avg
+        strong_momentum_threshold = 0.06
+        diff = (current_price - weighted_avg) / abs(weighted_avg) if weighted_avg != 0 else 0
 
-        if diff > momentum_threshold:
-            return "rising"
-        if diff < -momentum_threshold:
-            return "falling"
-        return "stable"
+        # Determine momentum level based on thresholds
+        if diff >= strong_momentum_threshold:
+            momentum = "strongly_rising"
+        elif diff > momentum_threshold:
+            momentum = "rising"
+        elif diff <= -strong_momentum_threshold:
+            momentum = "strongly_falling"
+        elif diff < -momentum_threshold:
+            momentum = "falling"
+        else:
+            momentum = "stable"
+
+        return momentum
 
     def _combine_momentum_with_future(
         self,
@@ -472,43 +492,60 @@ class TibberPricesTrendCalculator(TibberPricesBaseCalculator):
         """
         Combine momentum analysis with future outlook to determine final trend.
 
+        Uses 5-level scale: strongly_rising, rising, stable, falling, strongly_falling.
+        Momentum intensity is preserved when future confirms the trend direction.
+
         Args:
-            current_momentum: Current momentum direction (rising/falling/stable)
+            current_momentum: Current momentum direction (5-level scale)
             current_price: Current interval price
             future_mean: Average price in future window
             context: Dict with all_intervals, current_index, lookahead_intervals, thresholds
 
         Returns:
-            Final trend direction: "rising", "falling", or "stable"
+            Final trend direction (5-level scale)
 
         """
-        if current_momentum == "rising":
-            # We're in uptrend - does it continue?
-            return "rising" if future_mean >= current_price * 0.98 else "falling"
-
-        if current_momentum == "falling":
-            # We're in downtrend - does it continue?
-            return "falling" if future_mean <= current_price * 1.02 else "rising"
-
-        # current_momentum == "stable" - what's coming?
+        # Use calculate_price_trend for consistency with 5-level logic
         all_intervals = context["all_intervals"]
         current_index = context["current_index"]
         lookahead_intervals = context["lookahead_intervals"]
         thresholds = context["thresholds"]
 
         lookahead_for_volatility = all_intervals[current_index : current_index + lookahead_intervals]
-        trend_state, _ = calculate_price_trend(
+        future_trend, _, _ = calculate_price_trend(
             current_price,
             future_mean,
             threshold_rising=thresholds["rising"],
             threshold_falling=thresholds["falling"],
+            threshold_strongly_rising=thresholds["strongly_rising"],
+            threshold_strongly_falling=thresholds["strongly_falling"],
             volatility_adjustment=True,
             lookahead_intervals=lookahead_intervals,
             all_intervals=lookahead_for_volatility,
             volatility_threshold_moderate=thresholds["moderate"],
             volatility_threshold_high=thresholds["high"],
         )
-        return trend_state
+
+        # Check if momentum and future trend are aligned (same direction)
+        momentum_rising = current_momentum in ("rising", "strongly_rising")
+        momentum_falling = current_momentum in ("falling", "strongly_falling")
+        future_rising = future_trend in ("rising", "strongly_rising")
+        future_falling = future_trend in ("falling", "strongly_falling")
+
+        if momentum_rising and future_rising:
+            # Both indicate rising - use the stronger signal
+            if current_momentum == "strongly_rising" or future_trend == "strongly_rising":
+                return "strongly_rising"
+            return "rising"
+
+        if momentum_falling and future_falling:
+            # Both indicate falling - use the stronger signal
+            if current_momentum == "strongly_falling" or future_trend == "strongly_falling":
+                return "strongly_falling"
+            return "falling"
+
+        # Conflicting signals or stable momentum - trust future trend calculation
+        return future_trend
 
     def _calculate_standard_trend(
         self,
@@ -534,11 +571,13 @@ class TibberPricesTrendCalculator(TibberPricesBaseCalculator):
         current_price = float(current_interval["total"])
 
         standard_lookahead_volatility = all_intervals[current_index : current_index + standard_lookahead]
-        current_trend_3h, _ = calculate_price_trend(
+        current_trend_3h, _, _ = calculate_price_trend(
             current_price,
             standard_future_mean,
             threshold_rising=thresholds["rising"],
             threshold_falling=thresholds["falling"],
+            threshold_strongly_rising=thresholds["strongly_rising"],
+            threshold_strongly_falling=thresholds["strongly_falling"],
             volatility_adjustment=True,
             lookahead_intervals=standard_lookahead,
             all_intervals=standard_lookahead_volatility,
@@ -606,11 +645,13 @@ class TibberPricesTrendCalculator(TibberPricesBaseCalculator):
 
             # Calculate trend at this past point
             lookahead_for_volatility = all_intervals[i : i + intervals_in_3h]
-            trend_state, _ = calculate_price_trend(
+            trend_state, _, _ = calculate_price_trend(
                 price,
                 future_mean,
                 threshold_rising=thresholds["rising"],
                 threshold_falling=thresholds["falling"],
+                threshold_strongly_rising=thresholds["strongly_rising"],
+                threshold_strongly_falling=thresholds["strongly_falling"],
                 volatility_adjustment=True,
                 lookahead_intervals=intervals_in_3h,
                 all_intervals=lookahead_for_volatility,
@@ -678,11 +719,13 @@ class TibberPricesTrendCalculator(TibberPricesBaseCalculator):
 
             # Calculate trend at this future point
             lookahead_for_volatility = all_intervals[i : i + intervals_in_3h]
-            trend_state, _ = calculate_price_trend(
+            trend_state, _, _ = calculate_price_trend(
                 current_price,
                 future_mean,
                 threshold_rising=thresholds["rising"],
                 threshold_falling=thresholds["falling"],
+                threshold_strongly_rising=thresholds["strongly_rising"],
+                threshold_strongly_falling=thresholds["strongly_falling"],
                 volatility_adjustment=True,
                 lookahead_intervals=intervals_in_3h,
                 all_intervals=lookahead_for_volatility,

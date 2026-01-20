@@ -283,14 +283,18 @@
             },
             "price_trend": {
                 "title": "📈 Pristrendterskler",
-                "description": "**Konfigurer terskler for pristrendsensorer. Disse sensorene sammenligner nåværende pris med gjennomsnittet av de neste N timene for å bestemme om prisene stiger, faller eller er stabile.**",
+                "description": "**Konfigurer terskler for pristrendsensorer. Disse sensorene sammenligner nåværende pris med gjennomsnittet av de neste N timene for å bestemme om prisene stiger sterkt, stiger, er stabile, faller eller faller sterkt.**",
                 "data": {
                     "price_trend_threshold_rising": "Stigende terskel",
-                    "price_trend_threshold_falling": "Fallende terskel"
+                    "price_trend_threshold_strongly_rising": "Sterkt stigende terskel",
+                    "price_trend_threshold_falling": "Fallende terskel",
+                    "price_trend_threshold_strongly_falling": "Sterkt fallende terskel"
                 },
                 "data_description": {
-                    "price_trend_threshold_rising": "Prosentverdi som gjennomsnittet av de neste N timene må være over den nåværende prisen for å kvalifisere som 'stigende' trend. Eksempel: 5 betyr gjennomsnittet er minst 5% høyere → prisene vil stige. Typiske verdier: 5-15%. Standard: 5%",
-                    "price_trend_threshold_falling": "Prosentverdi (negativ) som gjennomsnittet av de neste N timene må være under den nåværende prisen for å kvalifisere som 'synkende' trend. Eksempel: -5 betyr gjennomsnittet er minst 5% lavere → prisene vil falle. Typiske verdier: -5 til -15%. Standard: -5%"
+                    "price_trend_threshold_rising": "Prosentverdi som gjennomsnittet av de neste N timene må være over den nåværende prisen for å kvalifisere som 'stigende' trend. Eksempel: 3 betyr gjennomsnittet er minst 3% høyere → prisene vil stige. Typiske verdier: 3-10%. Standard: 3%",
+                    "price_trend_threshold_strongly_rising": "Prosentverdi som gjennomsnittet av de neste N timene må være over den nåværende prisen for å kvalifisere som 'sterkt stigende' trend. Må være høyere enn stigende terskel. Typiske verdier: 6-20%. Standard: 6%",
+                    "price_trend_threshold_falling": "Prosentverdi (negativ) som gjennomsnittet av de neste N timene må være under den nåværende prisen for å kvalifisere som 'synkende' trend. Eksempel: -3 betyr gjennomsnittet er minst 3% lavere → prisene vil falle. Typiske verdier: -3 til -10%. Standard: -3%",
+                    "price_trend_threshold_strongly_falling": "Prosentverdi (negativ) som gjennomsnittet av de neste N timene må være under den nåværende prisen for å kvalifisere som 'sterkt synkende' trend. Må være lavere (mer negativ) enn fallende terskel. Typiske verdier: -6 til -20%. Standard: -6%"
                 },
                 "submit": "↩ Lagre & tilbake"
             },
@@ -356,7 +360,11 @@
             "invalid_volatility_threshold_very_high": "Svært høy volatilitetsgrense må være mellom 35% og 80%",
             "invalid_volatility_thresholds": "Grensene må være i stigende rekkefølge: moderat < høy < svært høy",
             "invalid_price_trend_rising": "Stigende trendgrense må være mellom 1% og 50%",
-            "invalid_price_trend_falling": "Fallende trendgrense må være mellom -50% og -1%"
+            "invalid_price_trend_falling": "Fallende trendgrense må være mellom -50% og -1%",
+            "invalid_price_trend_strongly_rising": "Sterkt stigende trendgrense må være mellom 2% og 100%",
+            "invalid_price_trend_strongly_falling": "Sterkt fallende trendgrense må være mellom -100% og -2%",
+            "invalid_trend_strongly_rising_less_than_rising": "Sterkt stigende-grense må være høyere enn stigende-grense",
+            "invalid_trend_strongly_falling_greater_than_falling": "Sterkt fallende-grense må være lavere (mer negativ) enn fallende-grense"
         },
         "abort": {
             "entry_not_found": "Tibber-konfigurasjonsoppføring ikke funnet.",
@@ -592,73 +600,91 @@
             "price_trend_1h": {
                 "name": "Pristrend (1t)",
                 "state": {
+                    "strongly_rising": "Sterkt stigende",
                     "rising": "Stigende",
+                    "stable": "Stabil",
                     "falling": "Fallende",
-                    "stable": "Stabil"
+                    "strongly_falling": "Sterkt fallende"
                 }
             },
             "price_trend_2h": {
                 "name": "Pristrend (2t)",
                 "state": {
+                    "strongly_rising": "Sterkt stigende",
                     "rising": "Stigende",
+                    "stable": "Stabil",
                     "falling": "Fallende",
-                    "stable": "Stabil"
+                    "strongly_falling": "Sterkt fallende"
                 }
             },
             "price_trend_3h": {
                 "name": "Pristrend (3t)",
                 "state": {
+                    "strongly_rising": "Sterkt stigende",
                     "rising": "Stigende",
+                    "stable": "Stabil",
                     "falling": "Fallende",
-                    "stable": "Stabil"
+                    "strongly_falling": "Sterkt fallende"
                 }
             },
             "price_trend_4h": {
                 "name": "Pristrend (4t)",
                 "state": {
+                    "strongly_rising": "Sterkt stigende",
                     "rising": "Stigende",
+                    "stable": "Stabil",
                     "falling": "Fallende",
-                    "stable": "Stabil"
+                    "strongly_falling": "Sterkt fallende"
                 }
             },
             "price_trend_5h": {
                 "name": "Pristrend (5t)",
                 "state": {
+                    "strongly_rising": "Sterkt stigende",
                     "rising": "Stigende",
+                    "stable": "Stabil",
                     "falling": "Fallende",
-                    "stable": "Stabil"
+                    "strongly_falling": "Sterkt fallende"
                 }
             },
             "price_trend_6h": {
                 "name": "Pristrend (6t)",
                 "state": {
+                    "strongly_rising": "Sterkt stigende",
                     "rising": "Stigende",
+                    "stable": "Stabil",
                     "falling": "Fallende",
-                    "stable": "Stabil"
+                    "strongly_falling": "Sterkt fallende"
                 }
             },
             "price_trend_8h": {
                 "name": "Pristrend (8t)",
                 "state": {
+                    "strongly_rising": "Sterkt stigende",
                     "rising": "Stigende",
+                    "stable": "Stabil",
                     "falling": "Fallende",
-                    "stable": "Stabil"
+                    "strongly_falling": "Sterkt fallende"
                 }
             },
             "price_trend_12h": {
                 "name": "Pristrend (12t)",
                 "state": {
+                    "strongly_rising": "Sterkt stigende",
                     "rising": "Stigende",
+                    "stable": "Stabil",
                     "falling": "Fallende",
-                    "stable": "Stabil"
+                    "strongly_falling": "Sterkt fallende"
                 }
             },
             "current_price_trend": {
                 "name": "Nåværende pristrend",
                 "state": {
+                    "strongly_rising": "Sterkt stigende",
                     "rising": "Stigende",
+                    "stable": "Stabil",
                     "falling": "Fallende",
-                    "stable": "Stabil"
+                    "strongly_falling": "Sterkt fallende"
                 }
             },
             "next_price_trend_change": {

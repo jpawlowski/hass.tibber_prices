@@ -294,14 +294,18 @@
             },
             "price_trend": {
                 "title": "📈 Price Trend Thresholds",
-                "description": "**Configure thresholds for price trend sensors. These sensors compare current price with the average of the next N hours to determine if prices are rising, falling, or stable.**",
+                "description": "**Configure thresholds for price trend sensors.** These sensors compare current price with the average of the next N hours to determine if prices are rising, falling, or stable.\n\n**5-Level Scale:** Uses strongly_falling (-2), falling (-1), stable (0), rising (+1), strongly_rising (+2) for automation comparisons via trend_value attribute.",
                 "data": {
                     "price_trend_threshold_rising": "Rising Threshold",
-                    "price_trend_threshold_falling": "Falling Threshold"
+                    "price_trend_threshold_strongly_rising": "Strongly Rising Threshold",
+                    "price_trend_threshold_falling": "Falling Threshold",
+                    "price_trend_threshold_strongly_falling": "Strongly Falling Threshold"
                 },
                 "data_description": {
-                    "price_trend_threshold_rising": "Percentage that the average of the next N hours must be above the current price to qualify as 'rising' trend. Example: 5 means average is at least 5% higher → prices will rise. Typical values: 5-15%. Default: 5%",
-                    "price_trend_threshold_falling": "Percentage (negative) that the average of the next N hours must be below the current price to qualify as 'falling' trend. Example: -5 means average is at least 5% lower → prices will fall. Typical values: -5 to -15%. Default: -5%"
+                    "price_trend_threshold_rising": "Percentage that the average of the next N hours must be above the current price to qualify as 'rising' trend. Example: 3 means average is at least 3% higher → prices will rise. Typical values: 3-10%. Default: 3%",
+                    "price_trend_threshold_strongly_rising": "Percentage for 'strongly rising' trend. Must be higher than rising threshold. Example: 6 means average is at least 6% higher → prices will rise significantly. Typical values: 6-15%. Default: 6%",
+                    "price_trend_threshold_falling": "Percentage (negative) that the average of the next N hours must be below the current price to qualify as 'falling' trend. Example: -3 means average is at least 3% lower → prices will fall. Typical values: -3 to -10%. Default: -3%",
+                    "price_trend_threshold_strongly_falling": "Percentage (negative) for 'strongly falling' trend. Must be lower (more negative) than falling threshold. Example: -6 means average is at least 6% lower → prices will fall significantly. Typical values: -6 to -15%. Default: -6%"
                 },
                 "submit": "↩ Save & Back"
             },
@@ -356,7 +360,11 @@
             "invalid_volatility_threshold_very_high": "Very high volatility threshold must be between 35% and 80%",
             "invalid_volatility_thresholds": "Thresholds must be in ascending order: moderate < high < very high",
             "invalid_price_trend_rising": "Rising trend threshold must be between 1% and 50%",
-            "invalid_price_trend_falling": "Falling trend threshold must be between -50% and -1%"
+            "invalid_price_trend_falling": "Falling trend threshold must be between -50% and -1%",
+            "invalid_price_trend_strongly_rising": "Strongly rising trend threshold must be between 2% and 100%",
+            "invalid_price_trend_strongly_falling": "Strongly falling trend threshold must be between -100% and -2%",
+            "invalid_trend_strongly_rising_less_than_rising": "Strongly rising threshold must be greater than rising threshold",
+            "invalid_trend_strongly_falling_greater_than_falling": "Strongly falling threshold must be less (more negative) than falling threshold"
         },
         "abort": {
             "entry_not_found": "Tibber configuration entry not found.",
@@ -592,73 +600,91 @@
             "price_trend_1h": {
                 "name": "Price Trend (1h)",
                 "state": {
+                    "strongly_rising": "Strongly Rising",
                     "rising": "Rising",
+                    "stable": "Stable",
                     "falling": "Falling",
-                    "stable": "Stable"
+                    "strongly_falling": "Strongly Falling"
                 }
             },
             "price_trend_2h": {
                 "name": "Price Trend (2h)",
                 "state": {
+                    "strongly_rising": "Strongly Rising",
                     "rising": "Rising",
+                    "stable": "Stable",
                     "falling": "Falling",
-                    "stable": "Stable"
+                    "strongly_falling": "Strongly Falling"
                 }
             },
             "price_trend_3h": {
                 "name": "Price Trend (3h)",
                 "state": {
+                    "strongly_rising": "Strongly Rising",
                     "rising": "Rising",
+                    "stable": "Stable",
                     "falling": "Falling",
-                    "stable": "Stable"
+                    "strongly_falling": "Strongly Falling"
                 }
             },
             "price_trend_4h": {
                 "name": "Price Trend (4h)",
                 "state": {
+                    "strongly_rising": "Strongly Rising",
                     "rising": "Rising",
+                    "stable": "Stable",
                     "falling": "Falling",
-                    "stable": "Stable"
+                    "strongly_falling": "Strongly Falling"
                 }
             },
             "price_trend_5h": {
                 "name": "Price Trend (5h)",
                 "state": {
+                    "strongly_rising": "Strongly Rising",
                     "rising": "Rising",
+                    "stable": "Stable",
                     "falling": "Falling",
-                    "stable": "Stable"
+                    "strongly_falling": "Strongly Falling"
                 }
             },
             "price_trend_6h": {
                 "name": "Price Trend (6h)",
                 "state": {
+                    "strongly_rising": "Strongly Rising",
                     "rising": "Rising",
+                    "stable": "Stable",
                     "falling": "Falling",
-                    "stable": "Stable"
+                    "strongly_falling": "Strongly Falling"
                 }
             },
             "price_trend_8h": {
                 "name": "Price Trend (8h)",
                 "state": {
+                    "strongly_rising": "Strongly Rising",
                     "rising": "Rising",
+                    "stable": "Stable",
                     "falling": "Falling",
-                    "stable": "Stable"
+                    "strongly_falling": "Strongly Falling"
                 }
             },
             "price_trend_12h": {
                 "name": "Price Trend (12h)",
                 "state": {
+                    "strongly_rising": "Strongly Rising",
                     "rising": "Rising",
+                    "stable": "Stable",
                     "falling": "Falling",
-                    "stable": "Stable"
+                    "strongly_falling": "Strongly Falling"
                 }
             },
             "current_price_trend": {
                 "name": "Current Price Trend",
                 "state": {
+                    "strongly_rising": "Strongly Rising",
                     "rising": "Rising",
+                    "stable": "Stable",
                     "falling": "Falling",
-                    "stable": "Stable"
+                    "strongly_falling": "Strongly Falling"
                 }
             },
             "next_price_trend_change": {

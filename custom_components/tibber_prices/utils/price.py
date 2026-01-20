@@ -20,6 +20,12 @@ from custom_components.tibber_prices.const import (
     PRICE_LEVEL_MAPPING,
     PRICE_LEVEL_NORMAL,
     PRICE_RATING_NORMAL,
+    PRICE_TREND_FALLING,
+    PRICE_TREND_MAPPING,
+    PRICE_TREND_RISING,
+    PRICE_TREND_STABLE,
+    PRICE_TREND_STRONGLY_FALLING,
+    PRICE_TREND_STRONGLY_RISING,
     VOLATILITY_HIGH,
     VOLATILITY_LOW,
     VOLATILITY_MODERATE,
@@ -1130,14 +1136,26 @@ def calculate_price_trend(  # noqa: PLR0913 - All parameters are necessary for v
     threshold_rising: float = 3.0,
     threshold_falling: float = -3.0,
     *,
+    threshold_strongly_rising: float = 6.0,
+    threshold_strongly_falling: float = -6.0,
     volatility_adjustment: bool = True,
     lookahead_intervals: int | None = None,
     all_intervals: list[dict[str, Any]] | None = None,
     volatility_threshold_moderate: float = DEFAULT_VOLATILITY_THRESHOLD_MODERATE,
     volatility_threshold_high: float = DEFAULT_VOLATILITY_THRESHOLD_HIGH,
-) -> tuple[str, float]:
+) -> tuple[str, float, int]:
     """
     Calculate price trend by comparing current price with future average.
+
+    Uses a 5-level trend scale with integer values for automation comparisons:
+    - strongly_falling (-2): difference <= strongly_falling_threshold
+    - falling (-1): difference <= falling_threshold
+    - stable (0): difference between thresholds
+    - rising (+1): difference >= rising_threshold
+    - strongly_rising (+2): difference >= strongly_rising_threshold
+
+    The strong thresholds are independently configurable (not derived from base
+    thresholds), allowing fine-grained control over trend sensitivity.
 
     Supports volatility-adaptive thresholds: when enabled, the effective threshold
     is adjusted based on price volatility in the lookahead period. This makes the
@@ -1152,6 +1170,8 @@ def calculate_price_trend(  # noqa: PLR0913 - All parameters are necessary for v
         future_average: Average price of future intervals
         threshold_rising: Base threshold for rising trend (%, positive, default 3%)
         threshold_falling: Base threshold for falling trend (%, negative, default -3%)
+        threshold_strongly_rising: Threshold for strongly rising (%, positive, default 6%)
+        threshold_strongly_falling: Threshold for strongly falling (%, negative, default -6%)
         volatility_adjustment: Enable volatility-adaptive thresholds (default True)
         lookahead_intervals: Number of intervals in trend period for volatility calc
         all_intervals: Price intervals (today + tomorrow) for volatility calculation
@@ -1159,9 +1179,10 @@ def calculate_price_trend(  # noqa: PLR0913 - All parameters are necessary for v
         volatility_threshold_high: User-configured high volatility threshold (%)
 
     Returns:
-        Tuple of (trend_state, difference_percentage)
-        trend_state: "rising" | "falling" | "stable"
+        Tuple of (trend_state, difference_percentage, trend_value)
+        trend_state: PRICE_TREND_* constant (e.g., "strongly_rising")
         difference_percentage: % change from current to future ((future - current) / current * 100)
+        trend_value: Integer value from -2 to +2 for automation comparisons
 
     Note:
         Volatility adjustment factor:
@@ -1172,12 +1193,13 @@ def calculate_price_trend(  # noqa: PLR0913 - All parameters are necessary for v
     """
     if current_interval_price == 0:
         # Avoid division by zero - return stable trend
-        return "stable", 0.0
+        return PRICE_TREND_STABLE, 0.0, PRICE_TREND_MAPPING[PRICE_TREND_STABLE]
 
     # Apply volatility adjustment if enabled and data available
     effective_rising = threshold_rising
     effective_falling = threshold_falling
-    volatility_factor = 1.0
+    effective_strongly_rising = threshold_strongly_rising
+    effective_strongly_falling = threshold_strongly_falling
 
     if volatility_adjustment and lookahead_intervals and all_intervals:
         volatility_factor = _calculate_lookahead_volatility_factor(
@@ -1185,22 +1207,25 @@ def calculate_price_trend(  # noqa: PLR0913 - All parameters are necessary for v
         )
         effective_rising = threshold_rising * volatility_factor
         effective_falling = threshold_falling * volatility_factor
+        effective_strongly_rising = threshold_strongly_rising * volatility_factor
+        effective_strongly_falling = threshold_strongly_falling * volatility_factor
 
     # Calculate percentage difference from current to future
     # CRITICAL: Use abs() for negative prices to get correct percentage direction
     # Example: current=-10, future=-5 → diff=5, pct=5/abs(-10)*100=+50% (correctly shows rising)
-    if current_interval_price == 0:
-        # Edge case: avoid division by zero
-        diff_pct = 0.0
-    else:
-        diff_pct = ((future_average - current_interval_price) / abs(current_interval_price)) * 100
+    diff_pct = ((future_average - current_interval_price) / abs(current_interval_price)) * 100
 
-    # Determine trend based on effective thresholds
-    if diff_pct >= effective_rising:
-        trend = "rising"
+    # Determine trend based on effective thresholds (5-level scale)
+    # Check "strongly" conditions first (more extreme), then regular conditions
+    if diff_pct >= effective_strongly_rising:
+        trend = PRICE_TREND_STRONGLY_RISING
+    elif diff_pct >= effective_rising:
+        trend = PRICE_TREND_RISING
+    elif diff_pct <= effective_strongly_falling:
+        trend = PRICE_TREND_STRONGLY_FALLING
     elif diff_pct <= effective_falling:
-        trend = "falling"
+        trend = PRICE_TREND_FALLING
     else:
-        trend = "stable"
+        trend = PRICE_TREND_STABLE
 
-    return trend, diff_pct
+    return trend, diff_pct, PRICE_TREND_MAPPING[trend]

@@ -987,11 +987,13 @@ class TibberPricesSensor(TibberPricesEntity, RestoreSensor):
         key = self.entity_description.key
         value = self.native_value
 
-        # Icon mapping for trend directions
+        # Icon mapping for trend directions (5-level scale)
         trend_icons = {
+            "strongly_rising": "mdi:chevron-double-up",
             "rising": "mdi:trending-up",
-            "falling": "mdi:trending-down",
             "stable": "mdi:trending-neutral",
+            "falling": "mdi:trending-down",
+            "strongly_falling": "mdi:chevron-double-down",
         }
 
         # Special handling for next_price_trend_change: Icon based on direction attribute

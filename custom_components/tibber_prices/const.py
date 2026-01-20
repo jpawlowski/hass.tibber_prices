@@ -50,6 +50,8 @@ CONF_PRICE_LEVEL_GAP_TOLERANCE = "price_level_gap_tolerance"
 CONF_AVERAGE_SENSOR_DISPLAY = "average_sensor_display"  # "median" or "mean"
 CONF_PRICE_TREND_THRESHOLD_RISING = "price_trend_threshold_rising"
 CONF_PRICE_TREND_THRESHOLD_FALLING = "price_trend_threshold_falling"
+CONF_PRICE_TREND_THRESHOLD_STRONGLY_RISING = "price_trend_threshold_strongly_rising"
+CONF_PRICE_TREND_THRESHOLD_STRONGLY_FALLING = "price_trend_threshold_strongly_falling"
 CONF_VOLATILITY_THRESHOLD_MODERATE = "volatility_threshold_moderate"
 CONF_VOLATILITY_THRESHOLD_HIGH = "volatility_threshold_high"
 CONF_VOLATILITY_THRESHOLD_VERY_HIGH = "volatility_threshold_very_high"
@@ -101,6 +103,10 @@ DEFAULT_PRICE_LEVEL_GAP_TOLERANCE = 1  # Max consecutive intervals to smooth out
 DEFAULT_AVERAGE_SENSOR_DISPLAY = "median"  # Default: show median in state, mean in attributes
 DEFAULT_PRICE_TREND_THRESHOLD_RISING = 3  # Default trend threshold for rising prices (%)
 DEFAULT_PRICE_TREND_THRESHOLD_FALLING = -3  # Default trend threshold for falling prices (%, negative value)
+# Strong trend thresholds default to 2x the base threshold.
+# These are independently configurable to allow fine-tuning of "strongly" detection.
+DEFAULT_PRICE_TREND_THRESHOLD_STRONGLY_RISING = 6  # Default strong rising threshold (%)
+DEFAULT_PRICE_TREND_THRESHOLD_STRONGLY_FALLING = -6  # Default strong falling threshold (%, negative value)
 # Default volatility thresholds (relative values using coefficient of variation)
 # Coefficient of variation = (standard_deviation / mean) * 100%
 # These thresholds are unitless and work across different price levels
@@ -161,6 +167,11 @@ MIN_PRICE_TREND_RISING = 1  # Minimum rising trend threshold
 MAX_PRICE_TREND_RISING = 50  # Maximum rising trend threshold
 MIN_PRICE_TREND_FALLING = -50  # Minimum falling trend threshold (negative)
 MAX_PRICE_TREND_FALLING = -1  # Maximum falling trend threshold (negative)
+# Strong trend thresholds have higher ranges to allow detection of significant moves
+MIN_PRICE_TREND_STRONGLY_RISING = 2  # Minimum strongly rising threshold (must be > rising)
+MAX_PRICE_TREND_STRONGLY_RISING = 100  # Maximum strongly rising threshold
+MIN_PRICE_TREND_STRONGLY_FALLING = -100  # Minimum strongly falling threshold (negative)
+MAX_PRICE_TREND_STRONGLY_FALLING = -2  # Maximum strongly falling threshold (must be < falling)
 
 # Gap count and relaxation limits
 MIN_GAP_COUNT = 0  # Minimum gap count
@@ -447,6 +458,14 @@ VOLATILITY_MODERATE = "MODERATE"
 VOLATILITY_HIGH = "HIGH"
 VOLATILITY_VERY_HIGH = "VERY_HIGH"
 
+# Price trend constants (calculated values with 5-level scale)
+# Used by trend sensors: momentary, short-term, mid-term, long-term
+PRICE_TREND_STRONGLY_FALLING = "strongly_falling"
+PRICE_TREND_FALLING = "falling"
+PRICE_TREND_STABLE = "stable"
+PRICE_TREND_RISING = "rising"
+PRICE_TREND_STRONGLY_RISING = "strongly_rising"
+
 # Sensor options (lowercase versions for ENUM device class)
 # NOTE: These constants define the valid enum options, but they are not used directly
 # in sensor/definitions.py due to import timing issues. Instead, the options are defined inline
@@ -470,6 +489,15 @@ VOLATILITY_OPTIONS = [
     VOLATILITY_MODERATE.lower(),
     VOLATILITY_HIGH.lower(),
     VOLATILITY_VERY_HIGH.lower(),
+]
+
+# Trend options for enum sensors (lowercase versions for ENUM device class)
+PRICE_TREND_OPTIONS = [
+    PRICE_TREND_STRONGLY_FALLING,
+    PRICE_TREND_FALLING,
+    PRICE_TREND_STABLE,
+    PRICE_TREND_RISING,
+    PRICE_TREND_STRONGLY_RISING,
 ]
 
 # Valid options for best price maximum level filter
@@ -512,6 +540,16 @@ PRICE_RATING_MAPPING = {
     PRICE_RATING_LOW: -1,
     PRICE_RATING_NORMAL: 0,
     PRICE_RATING_HIGH: 1,
+}
+
+# Mapping for comparing price trends (used for sorting and automation comparisons)
+# Values range from -2 (strongly falling) to +2 (strongly rising), with 0 = stable
+PRICE_TREND_MAPPING = {
+    PRICE_TREND_STRONGLY_FALLING: -2,
+    PRICE_TREND_FALLING: -1,
+    PRICE_TREND_STABLE: 0,
+    PRICE_TREND_RISING: 1,
+    PRICE_TREND_STRONGLY_RISING: 2,
 }
 
 # Icon mapping for price levels (dynamic icons based on level)

@@ -20,6 +20,8 @@ from custom_components.tibber_prices.const import (
     MAX_PRICE_RATING_THRESHOLD_LOW,
     MAX_PRICE_TREND_FALLING,
     MAX_PRICE_TREND_RISING,
+    MAX_PRICE_TREND_STRONGLY_FALLING,
+    MAX_PRICE_TREND_STRONGLY_RISING,
     MAX_RELAXATION_ATTEMPTS,
     MAX_VOLATILITY_THRESHOLD_HIGH,
     MAX_VOLATILITY_THRESHOLD_MODERATE,
@@ -30,6 +32,8 @@ from custom_components.tibber_prices.const import (
     MIN_PRICE_RATING_THRESHOLD_LOW,
     MIN_PRICE_TREND_FALLING,
     MIN_PRICE_TREND_RISING,
+    MIN_PRICE_TREND_STRONGLY_FALLING,
+    MIN_PRICE_TREND_STRONGLY_RISING,
     MIN_RELAXATION_ATTEMPTS,
     MIN_VOLATILITY_THRESHOLD_HIGH,
     MIN_VOLATILITY_THRESHOLD_MODERATE,
@@ -337,3 +341,31 @@ def validate_price_trend_falling(threshold: int) -> bool:
 
     """
     return MIN_PRICE_TREND_FALLING <= threshold <= MAX_PRICE_TREND_FALLING
+
+
+def validate_price_trend_strongly_rising(threshold: int) -> bool:
+    """
+    Validate strongly rising price trend threshold.
+
+    Args:
+        threshold: Strongly rising trend threshold percentage (2 to 100)
+
+    Returns:
+        True if threshold is valid (MIN_PRICE_TREND_STRONGLY_RISING to MAX_PRICE_TREND_STRONGLY_RISING)
+
+    """
+    return MIN_PRICE_TREND_STRONGLY_RISING <= threshold <= MAX_PRICE_TREND_STRONGLY_RISING
+
+
+def validate_price_trend_strongly_falling(threshold: int) -> bool:
+    """
+    Validate strongly falling price trend threshold.
+
+    Args:
+        threshold: Strongly falling trend threshold percentage (-100 to -2)
+
+    Returns:
+        True if threshold is valid (MIN_PRICE_TREND_STRONGLY_FALLING to MAX_PRICE_TREND_STRONGLY_FALLING)
+
+    """
+    return MIN_PRICE_TREND_STRONGLY_FALLING <= threshold <= MAX_PRICE_TREND_STRONGLY_FALLING

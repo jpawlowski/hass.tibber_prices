@@ -548,7 +548,7 @@ FUTURE_TREND_SENSORS = (
         icon="mdi:trending-up",  # Dynamic: trending-up/trending-down/trending-neutral based on current trend
         device_class=SensorDeviceClass.ENUM,
         state_class=None,  # Enum values: no statistics
-        options=["rising", "falling", "stable"],
+        options=["strongly_falling", "falling", "stable", "rising", "strongly_rising"],
         entity_registry_enabled_default=True,
     ),
     # Next trend change sensor (when will trend change?)
@@ -570,7 +570,7 @@ FUTURE_TREND_SENSORS = (
         icon="mdi:trending-up",  # Dynamic: shows trending-up/trending-down/trending-neutral based on trend value
         device_class=SensorDeviceClass.ENUM,
         state_class=None,  # Enum values: no statistics
-        options=["rising", "falling", "stable"],
+        options=["strongly_falling", "falling", "stable", "rising", "strongly_rising"],
         entity_registry_enabled_default=True,
     ),
     SensorEntityDescription(
@@ -580,7 +580,7 @@ FUTURE_TREND_SENSORS = (
         icon="mdi:trending-up",  # Dynamic: shows trending-up/trending-down/trending-neutral based on trend value
         device_class=SensorDeviceClass.ENUM,
         state_class=None,  # Enum values: no statistics
-        options=["rising", "falling", "stable"],
+        options=["strongly_falling", "falling", "stable", "rising", "strongly_rising"],
         entity_registry_enabled_default=True,
     ),
     SensorEntityDescription(
@@ -590,7 +590,7 @@ FUTURE_TREND_SENSORS = (
         icon="mdi:trending-up",  # Dynamic: shows trending-up/trending-down/trending-neutral based on trend value
         device_class=SensorDeviceClass.ENUM,
         state_class=None,  # Enum values: no statistics
-        options=["rising", "falling", "stable"],
+        options=["strongly_falling", "falling", "stable", "rising", "strongly_rising"],
         entity_registry_enabled_default=True,
     ),
     SensorEntityDescription(
@@ -600,7 +600,7 @@ FUTURE_TREND_SENSORS = (
         icon="mdi:trending-up",  # Dynamic: shows trending-up/trending-down/trending-neutral based on trend value
         device_class=SensorDeviceClass.ENUM,
         state_class=None,  # Enum values: no statistics
-        options=["rising", "falling", "stable"],
+        options=["strongly_falling", "falling", "stable", "rising", "strongly_rising"],
         entity_registry_enabled_default=True,
     ),
     SensorEntityDescription(
@@ -610,7 +610,7 @@ FUTURE_TREND_SENSORS = (
         icon="mdi:trending-up",  # Dynamic: shows trending-up/trending-down/trending-neutral based on trend value
         device_class=SensorDeviceClass.ENUM,
         state_class=None,  # Enum values: no statistics
-        options=["rising", "falling", "stable"],
+        options=["strongly_falling", "falling", "stable", "rising", "strongly_rising"],
         entity_registry_enabled_default=True,
     ),
     # Disabled by default: 6h, 8h, 12h
@@ -621,7 +621,7 @@ FUTURE_TREND_SENSORS = (
         icon="mdi:trending-up",  # Dynamic: shows trending-up/trending-down/trending-neutral based on trend value
         device_class=SensorDeviceClass.ENUM,
         state_class=None,  # Enum values: no statistics
-        options=["rising", "falling", "stable"],
+        options=["strongly_falling", "falling", "stable", "rising", "strongly_rising"],
         entity_registry_enabled_default=False,
     ),
     SensorEntityDescription(
@@ -631,7 +631,7 @@ FUTURE_TREND_SENSORS = (
         icon="mdi:trending-up",  # Dynamic: shows trending-up/trending-down/trending-neutral based on trend value
         device_class=SensorDeviceClass.ENUM,
         state_class=None,  # Enum values: no statistics
-        options=["rising", "falling", "stable"],
+        options=["strongly_falling", "falling", "stable", "rising", "strongly_rising"],
         entity_registry_enabled_default=False,
     ),
     SensorEntityDescription(
@@ -641,7 +641,7 @@ FUTURE_TREND_SENSORS = (
         icon="mdi:trending-up",  # Dynamic: shows trending-up/trending-down/trending-neutral based on trend value
         device_class=SensorDeviceClass.ENUM,
         state_class=None,  # Enum values: no statistics
-        options=["rising", "falling", "stable"],
+        options=["strongly_falling", "falling", "stable", "rising", "strongly_rising"],
         entity_registry_enabled_default=False,
     ),
 )

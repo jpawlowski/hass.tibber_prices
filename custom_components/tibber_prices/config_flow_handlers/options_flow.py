@@ -33,6 +33,8 @@ from custom_components.tibber_prices.config_flow_handlers.validators import (
     validate_price_rating_thresholds,
     validate_price_trend_falling,
     validate_price_trend_rising,
+    validate_price_trend_strongly_falling,
+    validate_price_trend_strongly_rising,
     validate_relaxation_attempts,
     validate_volatility_threshold_high,
     validate_volatility_threshold_moderate,
@@ -54,6 +56,8 @@ from custom_components.tibber_prices.const import (
     CONF_PRICE_RATING_THRESHOLD_LOW,
     CONF_PRICE_TREND_THRESHOLD_FALLING,
     CONF_PRICE_TREND_THRESHOLD_RISING,
+    CONF_PRICE_TREND_THRESHOLD_STRONGLY_FALLING,
+    CONF_PRICE_TREND_THRESHOLD_STRONGLY_RISING,
     CONF_RELAXATION_ATTEMPTS_BEST,
     CONF_RELAXATION_ATTEMPTS_PEAK,
     CONF_VOLATILITY_THRESHOLD_HIGH,
@@ -492,6 +496,34 @@ class TibberPricesOptionsFlowHandler(OptionsFlow):
                 user_input[CONF_PRICE_TREND_THRESHOLD_FALLING]
             ):
                 errors[CONF_PRICE_TREND_THRESHOLD_FALLING] = "invalid_price_trend_falling"
+
+            # Validate strongly rising trend threshold
+            if CONF_PRICE_TREND_THRESHOLD_STRONGLY_RISING in user_input and not validate_price_trend_strongly_rising(
+                user_input[CONF_PRICE_TREND_THRESHOLD_STRONGLY_RISING]
+            ):
+                errors[CONF_PRICE_TREND_THRESHOLD_STRONGLY_RISING] = "invalid_price_trend_strongly_rising"
+
+            # Validate strongly falling trend threshold
+            if CONF_PRICE_TREND_THRESHOLD_STRONGLY_FALLING in user_input and not validate_price_trend_strongly_falling(
+                user_input[CONF_PRICE_TREND_THRESHOLD_STRONGLY_FALLING]
+            ):
+                errors[CONF_PRICE_TREND_THRESHOLD_STRONGLY_FALLING] = "invalid_price_trend_strongly_falling"
+
+            # Cross-validation: Ensure rising < strongly_rising and falling > strongly_falling
+            if not errors:
+                rising = user_input.get(CONF_PRICE_TREND_THRESHOLD_RISING)
+                strongly_rising = user_input.get(CONF_PRICE_TREND_THRESHOLD_STRONGLY_RISING)
+                falling = user_input.get(CONF_PRICE_TREND_THRESHOLD_FALLING)
+                strongly_falling = user_input.get(CONF_PRICE_TREND_THRESHOLD_STRONGLY_FALLING)
+
+                if rising is not None and strongly_rising is not None and rising >= strongly_rising:
+                    errors[CONF_PRICE_TREND_THRESHOLD_STRONGLY_RISING] = (
+                        "invalid_trend_strongly_rising_less_than_rising"
+                    )
+                if falling is not None and strongly_falling is not None and falling <= strongly_falling:
+                    errors[CONF_PRICE_TREND_THRESHOLD_STRONGLY_FALLING] = (
+                        "invalid_trend_strongly_falling_greater_than_falling"
+                    )
 
             if not errors:
                 # Store flat data directly in options (no section wrapping)

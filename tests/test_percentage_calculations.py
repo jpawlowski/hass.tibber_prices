@@ -99,20 +99,26 @@ def test_bug10_trend_diff_negative_current_price() -> None:
     future_average = -0.05
     threshold_rising = 10.0
     threshold_falling = -10.0
+    threshold_strongly_rising = 20.0
+    threshold_strongly_falling = -20.0
 
-    trend, diff_pct = calculate_price_trend(
+    trend, diff_pct, trend_value = calculate_price_trend(
         current_interval_price=current_interval_price,
         future_average=future_average,
         threshold_rising=threshold_rising,
         threshold_falling=threshold_falling,
+        threshold_strongly_rising=threshold_strongly_rising,
+        threshold_strongly_falling=threshold_strongly_falling,
         volatility_adjustment=False,  # Disable to simplify test
     )
 
     # Difference: -5 - (-10) = 5 ct
     # Percentage: 5 / abs(-10) * 100 = +50% (correctly shows rising)
+    # With 5-level scale: +50% >= 20% strongly_rising threshold => strongly_rising
     assert diff_pct > 0, "Percentage should be positive (price rising toward zero)"
     assert diff_pct == pytest.approx(50.0, abs=0.1), "Should be +50%"
-    assert trend == "rising", "Trend should be 'rising' (above 10% threshold)"
+    assert trend == "strongly_rising", "Trend should be 'strongly_rising' (above strongly_rising threshold)"
+    assert trend_value == 2, "Trend value should be 2 for strongly_rising"
 
 
 def test_bug10_trend_diff_negative_falling_deeper() -> None:
@@ -126,20 +132,26 @@ def test_bug10_trend_diff_negative_falling_deeper() -> None:
     future_average = -0.15  # -15 ct (more negative = cheaper)
     threshold_rising = 10.0
     threshold_falling = -10.0
+    threshold_strongly_rising = 20.0
+    threshold_strongly_falling = -20.0
 
-    trend, diff_pct = calculate_price_trend(
+    trend, diff_pct, trend_value = calculate_price_trend(
         current_interval_price=current_interval_price,
         future_average=future_average,
         threshold_rising=threshold_rising,
         threshold_falling=threshold_falling,
+        threshold_strongly_rising=threshold_strongly_rising,
+        threshold_strongly_falling=threshold_strongly_falling,
         volatility_adjustment=False,
     )
 
     # Difference: -15 - (-10) = -5 ct
     # Percentage: -5 / abs(-10) * 100 = -50% (correctly shows falling)
+    # With 5-level scale: -50% <= -20% strongly_falling threshold => strongly_falling
     assert diff_pct < 0, "Percentage should be negative (price falling deeper)"
     assert diff_pct == pytest.approx(-50.0, abs=0.1), "Should be -50%"
-    assert trend == "falling", "Trend should be 'falling' (below -10% threshold)"
+    assert trend == "strongly_falling", "Trend should be 'strongly_falling' (below strongly_falling threshold)"
+    assert trend_value == -2, "Trend value should be -2 for strongly_falling"
 
 
 def test_bug10_trend_diff_zero_current_price() -> None:
@@ -152,18 +164,23 @@ def test_bug10_trend_diff_zero_current_price() -> None:
     future_average = 0.05
     threshold_rising = 10.0
     threshold_falling = -10.0
+    threshold_strongly_rising = 20.0
+    threshold_strongly_falling = -20.0
 
-    trend, diff_pct = calculate_price_trend(
+    trend, diff_pct, trend_value = calculate_price_trend(
         current_interval_price=current_interval_price,
         future_average=future_average,
         threshold_rising=threshold_rising,
         threshold_falling=threshold_falling,
+        threshold_strongly_rising=threshold_strongly_rising,
+        threshold_strongly_falling=threshold_strongly_falling,
         volatility_adjustment=False,
     )
 
     # Edge case: current=0 → diff_pct should be 0.0 (avoid division by zero)
     assert diff_pct == 0.0, "Should return 0.0 to avoid division by zero"
     assert trend == "stable", "Should be stable when diff is 0%"
+    assert trend_value == 0, "Trend value should be 0 for stable"
 
 
 def test_bug10_trend_diff_positive_prices_unchanged() -> None:
@@ -176,19 +193,25 @@ def test_bug10_trend_diff_positive_prices_unchanged() -> None:
     future_average = 0.15  # 15 ct (rising)
     threshold_rising = 10.0
     threshold_falling = -10.0
+    threshold_strongly_rising = 20.0
+    threshold_strongly_falling = -20.0
 
-    trend, diff_pct = calculate_price_trend(
+    trend, diff_pct, trend_value = calculate_price_trend(
         current_interval_price=current_interval_price,
         future_average=future_average,
         threshold_rising=threshold_rising,
         threshold_falling=threshold_falling,
+        threshold_strongly_rising=threshold_strongly_rising,
+        threshold_strongly_falling=threshold_strongly_falling,
         volatility_adjustment=False,
     )
 
     # Difference: 15 - 10 = 5 ct
     # Percentage: 5 / 10 * 100 = +50%
+    # With 5-level scale: +50% >= 20% strongly_rising threshold => strongly_rising
     assert diff_pct == pytest.approx(50.0, abs=0.1), "Should be +50%"
-    assert trend == "rising", "Should be rising"
+    assert trend == "strongly_rising", "Should be strongly_rising (above strongly_rising threshold)"
+    assert trend_value == 2, "Trend value should be 2 for strongly_rising"
 
 
 def test_bug11_later_half_diff_calculation_note() -> None:
