@@ -172,7 +172,7 @@
             },
             "current_interval_price_rating": {
                 "title": "📊 Price Rating Settings",
-                "description": "**Configure thresholds and stabilization for price rating levels (low/normal/high) based on comparison with trailing 24-hour average.**",
+                "description": "**Configure thresholds and stabilization for price rating levels (low/normal/high) based on comparison with trailing 24-hour average.**{entity_warning}",
                 "data": {
                     "price_rating_threshold_low": "Low Threshold",
                     "price_rating_threshold_high": "High Threshold",
@@ -189,7 +189,7 @@
             },
             "price_level": {
                 "title": "🏷️ Price Level Settings",
-                "description": "**Configure stabilization for Tibber's price level classification (very cheap/cheap/normal/expensive/very expensive).**\n\nTibber's API provides a price level field for each interval. This setting smooths out brief fluctuations to prevent automation instability.",
+                "description": "**Configure stabilization for Tibber's price level classification (very cheap/cheap/normal/expensive/very expensive).**\n\nTibber's API provides a price level field for each interval. This setting smooths out brief fluctuations to prevent automation instability.{entity_warning}",
                 "data": {
                     "price_level_gap_tolerance": "Gap Tolerance"
                 },
@@ -200,7 +200,7 @@
             },
             "best_price": {
                 "title": "💚 Best Price Period Settings",
-                "description": "**Configure settings for the Best Price Period binary sensor. This sensor is active during periods with the lowest electricity prices.**\n\n---",
+                "description": "**Configure settings for the Best Price Period binary sensor. This sensor is active during periods with the lowest electricity prices.**{entity_warning}\n\n---",
                 "sections": {
                     "period_settings": {
                         "name": "Period Duration & Levels",
@@ -247,7 +247,7 @@
             },
             "peak_price": {
                 "title": "🔴 Peak Price Period Settings",
-                "description": "**Configure settings for the Peak Price Period binary sensor. This sensor is active during periods with the highest electricity prices.**\n\n---",
+                "description": "**Configure settings for the Peak Price Period binary sensor. This sensor is active during periods with the highest electricity prices.**{entity_warning}\n\n---",
                 "sections": {
                     "period_settings": {
                         "name": "Period Settings",
@@ -294,7 +294,7 @@
             },
             "price_trend": {
                 "title": "📈 Price Trend Thresholds",
-                "description": "**Configure thresholds for price trend sensors.** These sensors compare current price with the average of the next N hours to determine if prices are rising, falling, or stable.\n\n**5-Level Scale:** Uses strongly_falling (-2), falling (-1), stable (0), rising (+1), strongly_rising (+2) for automation comparisons via trend_value attribute.",
+                "description": "**Configure thresholds for price trend sensors.** These sensors compare current price with the average of the next N hours to determine if prices are rising, falling, or stable.\n\n**5-Level Scale:** Uses strongly_falling (-2), falling (-1), stable (0), rising (+1), strongly_rising (+2) for automation comparisons via trend_value attribute.{entity_warning}",
                 "data": {
                     "price_trend_threshold_rising": "Rising Threshold",
                     "price_trend_threshold_strongly_rising": "Strongly Rising Threshold",
@@ -311,7 +311,7 @@
             },
             "volatility": {
                 "title": "💨 Price Volatility Thresholds",
-                "description": "**Configure thresholds for volatility classification.** Volatility measures relative price variation using the coefficient of variation (CV = standard deviation / mean × 100%). These thresholds are percentage values that work across all price levels.\n\nUsed by:\n• Volatility sensors (classification)\n• Trend sensors (adaptive threshold adjustment: &lt;moderate = more sensitive, ≥high = less sensitive)",
+                "description": "**Configure thresholds for volatility classification.** Volatility measures relative price variation using the coefficient of variation (CV = standard deviation / mean × 100%). These thresholds are percentage values that work across all price levels.\n\nUsed by:\n• Volatility sensors (classification)\n• Trend sensors (adaptive threshold adjustment: &lt;moderate = more sensitive, ≥high = less sensitive){entity_warning}",
                 "data": {
                     "volatility_threshold_moderate": "Moderate Threshold",
                     "volatility_threshold_high": "High Threshold",
@@ -326,7 +326,7 @@
             },
             "chart_data_export": {
                 "title": "📊 Chart Data Export Sensor",
-                "description": "The Chart Data Export Sensor provides price data as sensor attributes.\n\n⚠️ **Note:** This sensor is a legacy feature for compatibility with older tools.\n\n**Recommended for new setups:** Use the `tibber_prices.get_chartdata` **service directly** - it's more flexible, efficient, and the modern Home Assistant approach.\n\n**When this sensor makes sense:**\n\n✅ Your dashboard tool can **only** read attributes (no service calls)\n✅ You need static data that updates automatically\n❌ **Not for automations:** Use `tibber_prices.get_chartdata` directly there - more flexible and efficient!\n\n---\n\n**Enable the sensor:**\n\n1. Open **Settings → Devices & Services → Tibber Prices**\n2. Select your home → Find **'Chart Data Export'** (Diagnostic section)\n3. **Enable the sensor** (disabled by default)\n\n**Configuration (optional):**\n\nDefault settings work out-of-the-box (today+tomorrow, 15-minute intervals, prices only).\n\nFor customization, add to **`configuration.yaml`**:\n\n```yaml\ntibber_prices:\n  chart_export:\n    day:\n      - today\n      - tomorrow\n    include_level: true\n    include_rating_level: true\n```\n\n**All parameters:** See `tibber_prices.get_chartdata` service documentation",
+                "description": "The Chart Data Export Sensor provides price data as sensor attributes.\n\n⚠️ **Note:** This sensor is a legacy feature for compatibility with older tools.\n\n**Recommended for new setups:** Use the `tibber_prices.get_chartdata` **service directly** - it's more flexible, efficient, and the modern Home Assistant approach.\n\n**When this sensor makes sense:**\n\n✅ Your dashboard tool can **only** read attributes (no service calls)\n✅ You need static data that updates automatically\n❌ **Not for automations:** Use `tibber_prices.get_chartdata` directly there - more flexible and efficient!\n\n---\n\n{sensor_status_info}",
                 "submit": "↩ Ok & Back"
             },
             "reset_to_defaults": {

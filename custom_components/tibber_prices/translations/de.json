@@ -172,7 +172,7 @@
             },
             "current_interval_price_rating": {
                 "title": "📊 Preisbewertungs-Einstellungen",
-                "description": "**Konfiguriere Schwellenwerte und Stabilisierung für Preisbewertungsstufen (niedrig/normal/hoch) basierend auf dem Vergleich mit dem nachlaufenden 24-Stunden-Durchschnitt.**",
+                "description": "**Konfiguriere Schwellenwerte und Stabilisierung für Preisbewertungsstufen (niedrig/normal/hoch) basierend auf dem Vergleich mit dem nachlaufenden 24-Stunden-Durchschnitt.**{entity_warning}",
                 "data": {
                     "price_rating_threshold_low": "Niedrig-Schwelle",
                     "price_rating_threshold_high": "Hoch-Schwelle",
@@ -189,7 +189,7 @@
             },
             "best_price": {
                 "title": "💚 Bestpreis-Zeitraum Einstellungen",
-                "description": "**Konfiguration für den Bestpreis-Zeitraum mit den niedrigsten Strompreisen.**\n\n---",
+                "description": "**Konfiguration für den Bestpreis-Zeitraum mit den niedrigsten Strompreisen.**{entity_warning}\n\n---",
                 "sections": {
                     "period_settings": {
                         "name": "Zeitraumdauer & Preisniveaus",
@@ -236,7 +236,7 @@
             },
             "peak_price": {
                 "title": "🔴 Spitzenpreis-Zeitraum Einstellungen",
-                "description": "**Konfiguration für den Spitzenpreis-Zeitraum mit den höchsten Strompreisen.**\n\n---",
+                "description": "**Konfiguration für den Spitzenpreis-Zeitraum mit den höchsten Strompreisen.**{entity_warning}\n\n---",
                 "sections": {
                     "period_settings": {
                         "name": "Zeitraum-Einstellungen",
@@ -283,7 +283,7 @@
             },
             "price_trend": {
                 "title": "📈 Preistrend-Schwellenwerte",
-                "description": "**Konfiguriere Schwellenwerte für Preistrend-Sensoren.** Diese Sensoren vergleichen den aktuellen Preis mit dem Durchschnitt der nächsten N Stunden, um festzustellen, ob die Preise steigen, fallen oder stabil sind.\n\n**5-Stufen-Skala:** Nutzt stark_fallend (-2), fallend (-1), stabil (0), steigend (+1), stark_steigend (+2) für Automations-Vergleiche über das trend_value Attribut.",
+                "description": "**Konfiguriere Schwellenwerte für Preistrend-Sensoren.** Diese Sensoren vergleichen den aktuellen Preis mit dem Durchschnitt der nächsten N Stunden, um festzustellen, ob die Preise steigen, fallen oder stabil sind.\n\n**5-Stufen-Skala:** Nutzt stark_fallend (-2), fallend (-1), stabil (0), steigend (+1), stark_steigend (+2) für Automations-Vergleiche über das trend_value Attribut.{entity_warning}",
                 "data": {
                     "price_trend_threshold_rising": "Steigend-Schwelle",
                     "price_trend_threshold_strongly_rising": "Stark steigend-Schwelle",
@@ -300,7 +300,7 @@
             },
             "volatility": {
                 "title": "💨 Volatilität Schwellenwerte",
-                "description": "**Konfiguriere Schwellenwerte für die Volatilitätsklassifizierung.** Volatilität misst relative Preisschwankungen anhand des Variationskoeffizienten (VK = Standardabweichung / Durchschnitt × 100%). Diese Schwellenwerte sind Prozentwerte, die für alle Preisniveaus funktionieren.\n\nVerwendet von:\n• Volatilitätssensoren (Klassifizierung)\n• Trend-Sensoren (adaptive Schwellenanpassung: &lt;moderat = empfindlicher, ≥hoch = weniger empfindlich)",
+                "description": "**Konfiguriere Schwellenwerte für die Volatilitätsklassifizierung.** Volatilität misst relative Preisschwankungen anhand des Variationskoeffizienten (VK = Standardabweichung / Durchschnitt × 100%). Diese Schwellenwerte sind Prozentwerte, die für alle Preisniveaus funktionieren.\n\nVerwendet von:\n• Volatilitätssensoren (Klassifizierung)\n• Trend-Sensoren (adaptive Schwellenanpassung: &lt;moderat = empfindlicher, ≥hoch = weniger empfindlich){entity_warning}",
                 "data": {
                     "volatility_threshold_moderate": "Moderat-Schwelle",
                     "volatility_threshold_high": "Hoch-Schwelle",
@@ -315,7 +315,7 @@
             },
             "chart_data_export": {
                 "title": "📊 Chart Data Export Sensor",
-                "description": "Der Chart Data Export Sensor stellt Preisdaten als Sensor-Attribute zur Verfügung.\n\n⚠️ **Hinweis:** Dieser Sensor ist ein Legacy-Feature für Kompatibilität mit älteren Tools.\n\n**Für neue Setups empfohlen:** Nutze den `tibber_prices.get_chartdata` **Service direkt** - er ist flexibler, effizienter und der moderne Home Assistant-Ansatz.\n\n**Wann dieser Sensor sinnvoll ist:**\n\n✅ Dein Dashboard-Tool kann **nur** Attribute lesen (keine Service-Aufrufe)\n✅ Du brauchst statische Daten, die automatisch aktualisiert werden\n❌ **Nicht für Automationen:** Nutze dort direkt `tibber_prices.get_chartdata` - flexibler und effizienter!\n\n---\n\n**Sensor aktivieren:**\n\n1. Öffne **Einstellungen → Geräte & Dienste → Tibber Prices**\n2. Wähle dein Home → Finde **'Chart Data Export'** (Diagnose-Bereich)\n3. **Aktiviere den Sensor** (standardmäßig deaktiviert)\n\n**Konfiguration (optional):**\n\nStandardeinstellung funktioniert sofort (heute+morgen, 15-Minuten-Intervalle, reine Preise).\n\nFür Anpassungen füge in **`configuration.yaml`** ein:\n\n```yaml\ntibber_prices:\n  chart_export:\n    day:\n      - today\n      - tomorrow\n    include_level: true\n    include_rating_level: true\n```\n\n**Alle Parameter:** Siehe `tibber_prices.get_chartdata` Service-Dokumentation",
+                "description": "Der Chart Data Export Sensor stellt Preisdaten als Sensor-Attribute zur Verfügung.\n\n⚠️ **Hinweis:** Dieser Sensor ist ein Legacy-Feature für Kompatibilität mit älteren Tools.\n\n**Für neue Setups empfohlen:** Nutze den `tibber_prices.get_chartdata` **Service direkt** - er ist flexibler, effizienter und der moderne Home Assistant-Ansatz.\n\n**Wann dieser Sensor sinnvoll ist:**\n\n✅ Dein Dashboard-Tool kann **nur** Attribute lesen (keine Service-Aufrufe)\n✅ Du brauchst statische Daten, die automatisch aktualisiert werden\n❌ **Nicht für Automationen:** Nutze dort direkt `tibber_prices.get_chartdata` - flexibler und effizienter!\n\n---\n\n{sensor_status_info}",
                 "submit": "↩ Ok & Zurück"
             },
             "reset_to_defaults": {
@@ -328,7 +328,7 @@
             },
             "price_level": {
                 "title": "🏷️ Preisniveau-Einstellungen (von Tibber API)",
-                "description": "**Konfiguriere die Stabilisierung für Tibbers Preisniveau-Klassifizierung (sehr günstig/günstig/normal/teuer/sehr teuer).**\n\nTibbers API liefert ein Preisniveau-Feld für jedes Intervall. Diese Einstellung glättet kurze Schwankungen, um Instabilität in Automatisierungen zu verhindern.",
+                "description": "**Konfiguriere die Stabilisierung für Tibbers Preisniveau-Klassifizierung (sehr günstig/günstig/normal/teuer/sehr teuer).**\n\nTibbers API liefert ein Preisniveau-Feld für jedes Intervall. Diese Einstellung glättet kurze Schwankungen, um Instabilität in Automatisierungen zu verhindern.{entity_warning}",
                 "data": {
                     "price_level_gap_tolerance": "Gap-Toleranz"
                 },

@@ -9,6 +9,11 @@ from typing import TYPE_CHECKING, Any
 if TYPE_CHECKING:
     from collections.abc import Mapping
 
+from custom_components.tibber_prices.config_flow_handlers.entity_check import (
+    check_chart_data_export_enabled,
+    check_relevant_entities_enabled,
+    format_sensor_names_for_warning,
+)
 from custom_components.tibber_prices.config_flow_handlers.schemas import (
     get_best_price_schema,
     get_chart_data_export_schema,
@@ -183,6 +188,34 @@ class TibberPricesOptionsFlowHandler(OptionsFlow):
             return True
         return False
 
+    def _get_entity_warning_placeholders(self, step_id: str) -> dict[str, str]:
+        """
+        Get description placeholders for entity availability warning.
+
+        Checks if any relevant entities for the step are enabled.
+        If not, adds a warning placeholder to display in the form description.
+
+        Args:
+            step_id: The options flow step ID
+
+        Returns:
+            Dictionary with placeholder keys for the form description
+
+        """
+        has_enabled, example_sensors = check_relevant_entities_enabled(self.hass, self.config_entry, step_id)
+
+        if has_enabled:
+            # No warning needed - return empty placeholder
+            return {"entity_warning": ""}
+
+        # Build warning message with example sensor names
+        sensor_names = format_sensor_names_for_warning(example_sensors)
+        return {
+            "entity_warning": f"\n\n⚠️ **Note:** No sensors affected by these settings are currently enabled. "
+            f"To use these settings, first enable relevant sensors like *{sensor_names}* "
+            f"in **Settings → Devices & Services → Tibber Prices → Entities**."
+        }
+
     async def async_step_init(self, _user_input: dict[str, Any] | None = None) -> ConfigFlowResult:
         """Manage the options - show menu."""
         # Always reload options from config_entry to get latest saved state
@@ -333,6 +366,7 @@ class TibberPricesOptionsFlowHandler(OptionsFlow):
             step_id="current_interval_price_rating",
             data_schema=get_price_rating_schema(self.config_entry.options),
             errors=errors,
+            description_placeholders=self._get_entity_warning_placeholders("current_interval_price_rating"),
         )
 
     async def async_step_price_level(self, user_input: dict[str, Any] | None = None) -> ConfigFlowResult:
@@ -352,6 +386,7 @@ class TibberPricesOptionsFlowHandler(OptionsFlow):
             step_id="price_level",
             data_schema=get_price_level_schema(self.config_entry.options),
             errors=errors,
+            description_placeholders=self._get_entity_warning_placeholders("price_level"),
         )
 
     async def async_step_best_price(self, user_input: dict[str, Any] | None = None) -> ConfigFlowResult:
@@ -415,6 +450,7 @@ class TibberPricesOptionsFlowHandler(OptionsFlow):
             step_id="best_price",
             data_schema=get_best_price_schema(self.config_entry.options),
             errors=errors,
+            description_placeholders=self._get_entity_warning_placeholders("best_price"),
         )
 
     async def async_step_peak_price(self, user_input: dict[str, Any] | None = None) -> ConfigFlowResult:
@@ -475,6 +511,7 @@ class TibberPricesOptionsFlowHandler(OptionsFlow):
             step_id="peak_price",
             data_schema=get_peak_price_schema(self.config_entry.options),
             errors=errors,
+            description_placeholders=self._get_entity_warning_placeholders("peak_price"),
         )
 
     async def async_step_price_trend(self, user_input: dict[str, Any] | None = None) -> ConfigFlowResult:
@@ -537,6 +574,7 @@ class TibberPricesOptionsFlowHandler(OptionsFlow):
             step_id="price_trend",
             data_schema=get_price_trend_schema(self.config_entry.options),
             errors=errors,
+            description_placeholders=self._get_entity_warning_placeholders("price_trend"),
         )
 
     async def async_step_chart_data_export(self, user_input: dict[str, Any] | None = None) -> ConfigFlowResult:
@@ -545,10 +583,44 @@ class TibberPricesOptionsFlowHandler(OptionsFlow):
             # No changes to save - just return to menu
             return await self.async_step_init()
 
-        # Show info-only form (no input fields)
+        # Check if the chart data export sensor is enabled
+        is_enabled = check_chart_data_export_enabled(self.hass, self.config_entry)
+
+        # Show info-only form with status-dependent description
         return self.async_show_form(
             step_id="chart_data_export",
             data_schema=get_chart_data_export_schema(self.config_entry.options),
+            description_placeholders={
+                "sensor_status_info": self._get_chart_export_status_info(is_enabled=is_enabled),
+            },
+        )
+
+    def _get_chart_export_status_info(self, *, is_enabled: bool) -> str:
+        """Get the status info block for chart data export sensor."""
+        if is_enabled:
+            return (
+                "✅ **Status: Sensor is enabled**\n\n"
+                "The Chart Data Export sensor is currently active and providing data as attributes.\n\n"
+                "**Configuration (optional):**\n\n"
+                "Default settings work out-of-the-box (today+tomorrow, 15-minute intervals, prices only).\n\n"
+                "For customization, add to **`configuration.yaml`**:\n\n"
+                "```yaml\n"
+                "tibber_prices:\n"
+                "  chart_export:\n"
+                "    day:\n"
+                "      - today\n"
+                "      - tomorrow\n"
+                "    include_level: true\n"
+                "    include_rating_level: true\n"
+                "```\n\n"
+                "**All parameters:** See `tibber_prices.get_chartdata` service documentation"
+            )
+        return (
+            "❌ **Status: Sensor is disabled**\n\n"
+            "**Enable the sensor:**\n\n"
+            "1. Open **Settings → Devices & Services → Tibber Prices**\n"
+            "2. Select your home → Find **'Chart Data Export'** (Diagnostic section)\n"
+            "3. **Enable the sensor** (disabled by default)"
         )
 
     async def async_step_volatility(self, user_input: dict[str, Any] | None = None) -> ConfigFlowResult:
@@ -607,4 +679,5 @@ class TibberPricesOptionsFlowHandler(OptionsFlow):
             step_id="volatility",
             data_schema=get_volatility_schema(self.config_entry.options),
             errors=errors,
+            description_placeholders=self._get_entity_warning_placeholders("volatility"),
         )

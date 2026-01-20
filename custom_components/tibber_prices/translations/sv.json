@@ -172,7 +172,7 @@
             },
             "current_interval_price_rating": {
                 "title": "📊 Prisbetyginställningar",
-                "description": "**Konfigurera tröskelvärden och stabilisering för prisbetygsnivåer (låg/normal/hög) baserat på jämförelse med glidande 24-timmars genomsnitt.**",
+                "description": "**Konfigurera tröskelvärden och stabilisering för prisbetygsnivåer (låg/normal/hög) baserat på jämförelse med glidande 24-timmars genomsnitt.**{entity_warning}",
                 "data": {
                     "price_rating_threshold_low": "Låg tröskel",
                     "price_rating_threshold_high": "Hög tröskel",
@@ -189,7 +189,7 @@
             },
             "best_price": {
                 "title": "💚 Bästa Prisperiod-inställningar",
-                "description": "**Konfigurera inställningar för binärsensorn Bästa Prisperiod. Denna sensor är aktiv under perioder med lägsta elpriserna.**\n\n---",
+                "description": "**Konfigurera inställningar för binärsensorn Bästa Prisperiod. Denna sensor är aktiv under perioder med lägsta elpriserna.**{entity_warning}\n\n---",
                 "sections": {
                     "period_settings": {
                         "name": "Periodlängd & Nivåer",
@@ -236,7 +236,7 @@
             },
             "peak_price": {
                 "title": "🔴 Topprisperiod-inställningar",
-                "description": "**Konfigurera inställningar för binärsensorn Topprisperiod. Denna sensor är aktiv under perioder med högsta elpriserna.**\n\n---",
+                "description": "**Konfigurera inställningar för binärsensorn Topprisperiod. Denna sensor är aktiv under perioder med högsta elpriserna.**{entity_warning}\n\n---",
                 "sections": {
                     "period_settings": {
                         "name": "Periodinställningar",
@@ -283,7 +283,7 @@
             },
             "price_trend": {
                 "title": "📈 Pristrendtrösklar",
-                "description": "**Konfigurera tröskelvärden för pristrendsensorer. Dessa sensorer jämför aktuellt pris med genomsnittet av de nästa N timmarna för att bestämma om priserna stiger kraftigt, stiger, är stabila, faller eller faller kraftigt.**",
+                "description": "**Konfigurera tröskelvärden för pristrendsensorer. Dessa sensorer jämför aktuellt pris med genomsnittet av de nästa N timmarna för att bestämma om priserna stiger kraftigt, stiger, är stabila, faller eller faller kraftigt.**{entity_warning}",
                 "data": {
                     "price_trend_threshold_rising": "Stigande tröskel",
                     "price_trend_threshold_strongly_rising": "Kraftigt stigande tröskel",
@@ -300,7 +300,7 @@
             },
             "volatility": {
                 "title": "💨 Prisvolatilitetströsklar",
-                "description": "**Konfigurera tröskelvärden för volatilitetsklassificering.** Volatilitet mäter relativ prisvariation med variationskoefficienten (CV = standardavvikelse / medelvärde × 100%). Dessa tröskelvärden är procentvärden som fungerar över alla prisnivåer.\n\nAnvänds av:\n• Volatilitetssensorer (klassificering)\n• Trendsensorer (adaptiv tröskeljustering: &lt;måttlig = mer känslig, ≥hög = mindre känslig)",
+                "description": "**Konfigurera tröskelvärden för volatilitetsklassificering.** Volatilitet mäter relativ prisvariation med variationskoefficienten (CV = standardavvikelse / medelvärde × 100%). Dessa tröskelvärden är procentvärden som fungerar över alla prisnivåer.\n\nAnvänds av:\n• Volatilitetssensorer (klassificering)\n• Trendsensorer (adaptiv tröskeljustering: &lt;måttlig = mer känslig, ≥hög = mindre känslig){entity_warning}",
                 "data": {
                     "volatility_threshold_moderate": "Måttlig tröskel",
                     "volatility_threshold_high": "Hög tröskel",
@@ -315,7 +315,7 @@
             },
             "chart_data_export": {
                 "title": "📊 Diagramdataexport-sensor",
-                "description": "Diagramdataexport-sensorn tillhandahåller prisdata som sensorattribut.\n\n⚠️ **Obs:** Denna sensor är en äldre funktion för kompatibilitet med äldre verktyg.\n\n**Rekommenderat för nya konfigurationer:** Använd `tibber_prices.get_chartdata` **tjänsten direkt** - den är mer flexibel, effektiv och det moderna Home Assistant-sättet.\n\n**När denna sensor är meningsfull:**\n\n✅ Ditt instrumentpanelverktyg kan **endast** läsa attribut (inga tjänsteanrop)\n✅ Du behöver statisk data som uppdateras automatiskt\n❌ **Inte för automationer:** Använd `tibber_prices.get_chartdata` direkt där - mer flexibelt och effektivt!\n\n---\n\n**Aktivera sensorn:**\n\n1. Öppna **Inställningar → Enheter & Tjänster → Tibber-priser**\n2. Välj ditt hem → Hitta **'Diagramdataexport'** (Diagnostiksektion)\n3. **Aktivera sensorn** (inaktiverad som standard)\n\n**Konfiguration (valfritt):**\n\nStandardinställningar fungerar direkt (idag+imorgon, 15-minutersintervall, endast priser).\n\nFör anpassning, lägg till i **`configuration.yaml`**:\n\n```yaml\ntibber_prices:\n  chart_export:\n    day:\n      - today\n      - tomorrow\n    include_level: true\n    include_rating_level: true\n```\n\n**Alla parametrar:** Se `tibber_prices.get_chartdata` tjänstdokumentation",
+                "description": "Diagramdataexport-sensorn tillhandahåller prisdata som sensorattribut.\n\n⚠️ **Obs:** Denna sensor är en äldre funktion för kompatibilitet med äldre verktyg.\n\n**Rekommenderat för nya konfigurationer:** Använd `tibber_prices.get_chartdata` **tjänsten direkt** - den är mer flexibel, effektiv och det moderna Home Assistant-sättet.\n\n**När denna sensor är meningsfull:**\n\n✅ Ditt instrumentpanelverktyg kan **endast** läsa attribut (inga tjänsteanrop)\n✅ Du behöver statisk data som uppdateras automatiskt\n❌ **Inte för automationer:** Använd `tibber_prices.get_chartdata` direkt där - mer flexibelt och effektivt!\n\n---\n\n{sensor_status_info}",
                 "submit": "↩ Ok & tillbaka"
             },
             "reset_to_defaults": {
@@ -327,8 +327,8 @@
                 "submit": "Återställ nu"
             },
             "price_level": {
-                "title": "��️ Prisnivå-inställningar",
-                "description": "**Konfigurera stabilisering för Tibbers prisnivå-klassificering (mycket billig/billig/normal/dyr/mycket dyr).**\n\nTibbers API tillhandahåller ett prisnivå-fält för varje intervall. Denna inställning jämnar ut korta fluktuationer för att förhindra instabilitet i automatiseringar.",
+                "title": "🏷️ Prisnivå-inställningar",
+                "description": "**Konfigurera stabilisering för Tibbers prisnivå-klassificering (mycket billig/billig/normal/dyr/mycket dyr).**\n\nTibbers API tillhandahåller ett prisnivå-fält för varje intervall. Denna inställning jämnar ut korta fluktuationer för att förhindra instabilitet i automatiseringar.{entity_warning}",
                 "data": {
                     "price_level_gap_tolerance": "Gap-tolerans"
                 },

@@ -172,7 +172,7 @@
             },
             "current_interval_price_rating": {
                 "title": "📊 Instellingen Prijsbeoordeling",
-                "description": "**Configureer drempelwaarden en stabilisatie voor prijsbeoordelingsniveaus (laag/normaal/hoog) gebaseerd op vergelijking met het voortschrijdende 24-uurs gemiddelde.**",
+                "description": "**Configureer drempelwaarden en stabilisatie voor prijsbeoordelingsniveaus (laag/normaal/hoog) gebaseerd op vergelijking met het voortschrijdende 24-uurs gemiddelde.**{entity_warning}",
                 "data": {
                     "price_rating_threshold_low": "Lage Drempel",
                     "price_rating_threshold_high": "Hoge Drempel",
@@ -189,7 +189,7 @@
             },
             "best_price": {
                 "title": "💚 Beste Prijs Periode Instellingen",
-                "description": "**Configureer instellingen voor de Beste Prijs Periode binaire sensor. Deze sensor is actief tijdens periodes met de laagste elektriciteitsprijzen.**\n\n---",
+                "description": "**Configureer instellingen voor de Beste Prijs Periode binaire sensor. Deze sensor is actief tijdens periodes met de laagste elektriciteitsprijzen.**{entity_warning}\n\n---",
                 "sections": {
                     "period_settings": {
                         "name": "Periode Duur & Niveaus",
@@ -236,7 +236,7 @@
             },
             "peak_price": {
                 "title": "🔴 Piekprijs Periode Instellingen",
-                "description": "**Configureer instellingen voor de Piekprijs Periode binaire sensor. Deze sensor is actief tijdens periodes met de hoogste elektriciteitsprijzen.**\n\n---",
+                "description": "**Configureer instellingen voor de Piekprijs Periode binaire sensor. Deze sensor is actief tijdens periodes met de hoogste elektriciteitsprijzen.**{entity_warning}\n\n---",
                 "sections": {
                     "period_settings": {
                         "name": "Periode Instellingen",
@@ -283,7 +283,7 @@
             },
             "price_trend": {
                 "title": "📈 Prijstrend Drempelwaarden",
-                "description": "**Configureer drempelwaarden voor prijstrend sensoren. Deze sensoren vergelijken de huidige prijs met het gemiddelde van de volgende N uur om te bepalen of prijzen sterk stijgen, stijgen, stabiel zijn, dalen of sterk dalen.**",
+                "description": "**Configureer drempelwaarden voor prijstrend sensoren. Deze sensoren vergelijken de huidige prijs met het gemiddelde van de volgende N uur om te bepalen of prijzen sterk stijgen, stijgen, stabiel zijn, dalen of sterk dalen.**{entity_warning}",
                 "data": {
                     "price_trend_threshold_rising": "Stijgende Drempel",
                     "price_trend_threshold_strongly_rising": "Sterk Stijgende Drempel",
@@ -300,7 +300,7 @@
             },
             "volatility": {
                 "title": "💨 Prijsvolatiliteit Drempelwaarden",
-                "description": "**Configureer drempelwaarden voor volatiliteitsclassificatie.** Volatiliteit meet relatieve prijsvariatie met de variëfficcïnt (CV = standaarddeviatie / gemiddelde × 100%). Deze drempelwaarden zijn percentagewaarden die werken over alle prijsniveaus.\n\nGebruikt door:\n• Volatiliteit sensoren (classificatie)\n• Trend sensoren (adaptieve drempelaanpassing: &lt;gematigd = gevoeliger, ≥hoog = minder gevoelig)",
+                "description": "**Configureer drempelwaarden voor volatiliteitsclassificatie.** Volatiliteit meet relatieve prijsvariatie met de variëfficcïnt (CV = standaarddeviatie / gemiddelde × 100%). Deze drempelwaarden zijn percentagewaarden die werken over alle prijsniveaus.\n\nGebruikt door:\n• Volatiliteit sensoren (classificatie)\n• Trend sensoren (adaptieve drempelaanpassing: &lt;gematigd = gevoeliger, ≥hoog = minder gevoelig){entity_warning}",
                 "data": {
                     "volatility_threshold_moderate": "Gematigde Drempel",
                     "volatility_threshold_high": "Hoge Drempel",
@@ -315,7 +315,7 @@
             },
             "chart_data_export": {
                 "title": "📊 Grafiekdata Export Sensor",
-                "description": "De Grafiekdata Export Sensor biedt prijsgegevens als sensor attributen.\n\n⚠️ **Let op:** Deze sensor is een legacy functie voor compatibiliteit met oudere tools.\n\n**Aanbevolen voor nieuwe setups:** Gebruik de `tibber_prices.get_chartdata` **service direct** - het is flexibeler, efficïnter, en de moderne Home Assistant aanpak.\n\n**Wanneer deze sensor zinvol is:**\n\n✅ Je dashboardtool kan **alleen** attributen lezen (geen service calls)\n✅ Je hebt statische data nodig die automatisch update\n❌ **Niet voor automatiseringen:** Gebruik `tibber_prices.get_chartdata` daar direct - flexibeler en efficïnter!\n\n---\n\n**De sensor inschakelen:**\n\n1. Open **Instellingen → Apparaten & Services → Tibber Prices**\n2. Selecteer je huis → Vind **'Chart Data Export'** (Diagnose sectie)\n3. **Schakel de sensor in** (standaard uitgeschakeld)\n\n**Configuratie (optioneel):**\n\nStandaard instellingen werken out-of-the-box (vandaag+morgen, 15-minuten intervallen, alleen prijzen).\n\nVoor aanpassing, voeg toe aan **`configuration.yaml`**:\n\n```yaml\ntibber_prices:\n  chart_export:\n    day:\n      - today\n      - tomorrow\n    include_level: true\n    include_rating_level: true\n```\n\n**Alle parameters:** Zie `tibber_prices.get_chartdata` service documentatie",
+                "description": "De Grafiekdata Export Sensor biedt prijsgegevens als sensor attributen.\n\n⚠️ **Let op:** Deze sensor is een legacy functie voor compatibiliteit met oudere tools.\n\n**Aanbevolen voor nieuwe setups:** Gebruik de `tibber_prices.get_chartdata` **service direct** - het is flexibeler, efficïnter, en de moderne Home Assistant aanpak.\n\n**Wanneer deze sensor zinvol is:**\n\n✅ Je dashboardtool kan **alleen** attributen lezen (geen service calls)\n✅ Je hebt statische data nodig die automatisch update\n❌ **Niet voor automatiseringen:** Gebruik `tibber_prices.get_chartdata` daar direct - flexibeler en efficïnter!\n\n---\n\n{sensor_status_info}",
                 "submit": "↩ Ok & Terug"
             },
             "reset_to_defaults": {
@@ -328,7 +328,7 @@
             },
             "price_level": {
                 "title": "🏷️ Prijsniveau-instellingen",
-                "description": "**Configureer stabilisatie voor Tibbers prijsniveau-classificatie (zeer goedkoop/goedkoop/normaal/duur/zeer duur).**\n\nTibbers API levert een prijsniveau-veld voor elk interval. Deze instelling egaliseer korte fluctuaties om instabiliteit in automatiseringen te voorkomen.",
+                "description": "**Configureer stabilisatie voor Tibbers prijsniveau-classificatie (zeer goedkoop/goedkoop/normaal/duur/zeer duur).**\n\nTibbers API levert een prijsniveau-veld voor elk interval. Deze instelling egaliseer korte fluctuaties om instabiliteit in automatiseringen te voorkomen.{entity_warning}",
                 "data": {
                     "price_level_gap_tolerance": "Gap-tolerantie"
                 },
