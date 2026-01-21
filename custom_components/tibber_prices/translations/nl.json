@@ -80,22 +80,20 @@
         "step_progress": "{step_num} / {total_steps}",
         "override_warning_template": "⚠️ {fields} wordt beheerd door configuratie-entiteit",
         "override_warning_and": "en",
-        "override_field_labels": {
-            "best_price_min_period_length": "Minimale periodelengte",
-            "best_price_max_level_gap_count": "Gaptolerantie",
-            "best_price_flex": "Flexibiliteit",
-            "best_price_min_distance_from_avg": "Minimale afstand",
-            "enable_min_periods_best": "Minimum aantal bereiken",
-            "min_periods_best": "Minimale periodes",
-            "relaxation_attempts_best": "Ontspanningspogingen",
-            "peak_price_min_period_length": "Minimale periodelengte",
-            "peak_price_max_level_gap_count": "Gaptolerantie",
-            "peak_price_flex": "Flexibiliteit",
-            "peak_price_min_distance_from_avg": "Minimale afstand",
-            "enable_min_periods_peak": "Minimum aantal bereiken",
-            "min_periods_peak": "Minimale periodes",
-            "relaxation_attempts_peak": "Ontspanningspogingen"
-        }
+        "override_field_label_best_price_min_period_length": "Minimale periodelengte",
+        "override_field_label_best_price_max_level_gap_count": "Gaptolerantie",
+        "override_field_label_best_price_flex": "Flexibiliteit",
+        "override_field_label_best_price_min_distance_from_avg": "Minimale afstand",
+        "override_field_label_enable_min_periods_best": "Minimum aantal bereiken",
+        "override_field_label_min_periods_best": "Minimale periodes",
+        "override_field_label_relaxation_attempts_best": "Ontspanningspogingen",
+        "override_field_label_peak_price_min_period_length": "Minimale periodelengte",
+        "override_field_label_peak_price_max_level_gap_count": "Gaptolerantie",
+        "override_field_label_peak_price_flex": "Flexibiliteit",
+        "override_field_label_peak_price_min_distance_from_avg": "Minimale afstand",
+        "override_field_label_enable_min_periods_peak": "Minimum aantal bereiken",
+        "override_field_label_min_periods_peak": "Minimale periodes",
+        "override_field_label_relaxation_attempts_peak": "Ontspanningspogingen"
     },
     "config_subentries": {
         "home": {

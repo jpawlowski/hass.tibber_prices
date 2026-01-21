@@ -80,22 +80,20 @@
         "step_progress": "{step_num} / {total_steps}",
         "override_warning_template": "⚠️ {fields} wird durch Konfigurations-Entität gesteuert",
         "override_warning_and": "und",
-        "override_field_labels": {
-            "best_price_min_period_length": "Mindestperiodenlänge",
-            "best_price_max_level_gap_count": "Lückentoleranz",
-            "best_price_flex": "Flexibilität",
-            "best_price_min_distance_from_avg": "Mindestabstand",
-            "enable_min_periods_best": "Mindestzahl erreichen",
-            "min_periods_best": "Mindestperioden",
-            "relaxation_attempts_best": "Lockerungsversuche",
-            "peak_price_min_period_length": "Mindestperiodenlänge",
-            "peak_price_max_level_gap_count": "Lückentoleranz",
-            "peak_price_flex": "Flexibilität",
-            "peak_price_min_distance_from_avg": "Mindestabstand",
-            "enable_min_periods_peak": "Mindestzahl erreichen",
-            "min_periods_peak": "Mindestperioden",
-            "relaxation_attempts_peak": "Lockerungsversuche"
-        }
+        "override_field_label_best_price_min_period_length": "Mindestperiodenlänge",
+        "override_field_label_best_price_max_level_gap_count": "Lückentoleranz",
+        "override_field_label_best_price_flex": "Flexibilität",
+        "override_field_label_best_price_min_distance_from_avg": "Mindestabstand",
+        "override_field_label_enable_min_periods_best": "Mindestzahl erreichen",
+        "override_field_label_min_periods_best": "Mindestperioden",
+        "override_field_label_relaxation_attempts_best": "Lockerungsversuche",
+        "override_field_label_peak_price_min_period_length": "Mindestperiodenlänge",
+        "override_field_label_peak_price_max_level_gap_count": "Lückentoleranz",
+        "override_field_label_peak_price_flex": "Flexibilität",
+        "override_field_label_peak_price_min_distance_from_avg": "Mindestabstand",
+        "override_field_label_enable_min_periods_peak": "Mindestzahl erreichen",
+        "override_field_label_min_periods_peak": "Mindestperioden",
+        "override_field_label_relaxation_attempts_peak": "Lockerungsversuche"
     },
     "config_subentries": {
         "home": {

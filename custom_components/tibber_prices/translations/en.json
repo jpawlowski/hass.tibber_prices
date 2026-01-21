@@ -80,22 +80,20 @@
         "step_progress": "{step_num} / {total_steps}",
         "override_warning_template": "⚠️ {fields} controlled by config entity",
         "override_warning_and": "and",
-        "override_field_labels": {
-            "best_price_min_period_length": "Minimum Period Length",
-            "best_price_max_level_gap_count": "Gap Tolerance",
-            "best_price_flex": "Flexibility",
-            "best_price_min_distance_from_avg": "Minimum Distance",
-            "enable_min_periods_best": "Achieve Minimum Count",
-            "min_periods_best": "Minimum Periods",
-            "relaxation_attempts_best": "Relaxation Attempts",
-            "peak_price_min_period_length": "Minimum Period Length",
-            "peak_price_max_level_gap_count": "Gap Tolerance",
-            "peak_price_flex": "Flexibility",
-            "peak_price_min_distance_from_avg": "Minimum Distance",
-            "enable_min_periods_peak": "Achieve Minimum Count",
-            "min_periods_peak": "Minimum Periods",
-            "relaxation_attempts_peak": "Relaxation Attempts"
-        }
+        "override_field_label_best_price_min_period_length": "Minimum Period Length",
+        "override_field_label_best_price_max_level_gap_count": "Gap Tolerance",
+        "override_field_label_best_price_flex": "Flexibility",
+        "override_field_label_best_price_min_distance_from_avg": "Minimum Distance",
+        "override_field_label_enable_min_periods_best": "Achieve Minimum Count",
+        "override_field_label_min_periods_best": "Minimum Periods",
+        "override_field_label_relaxation_attempts_best": "Relaxation Attempts",
+        "override_field_label_peak_price_min_period_length": "Minimum Period Length",
+        "override_field_label_peak_price_max_level_gap_count": "Gap Tolerance",
+        "override_field_label_peak_price_flex": "Flexibility",
+        "override_field_label_peak_price_min_distance_from_avg": "Minimum Distance",
+        "override_field_label_enable_min_periods_peak": "Achieve Minimum Count",
+        "override_field_label_min_periods_peak": "Minimum Periods",
+        "override_field_label_relaxation_attempts_peak": "Relaxation Attempts"
     },
     "config_subentries": {
         "home": {

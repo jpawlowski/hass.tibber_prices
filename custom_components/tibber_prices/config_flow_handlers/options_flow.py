@@ -357,16 +357,23 @@ class TibberPricesOptionsFlowHandler(OptionsFlow):
         """
         Load override translations from common section.
 
+        Uses the system language setting from Home Assistant.
+        Note: HA Options Flow does not provide user_id in context,
+        so we cannot determine the individual user's language preference.
+
         Returns:
             Dictionary with override_warning_template, override_warning_and,
-            and override_field_labels keys
+            and override_field_label_* keys for each config field.
 
         """
-        language = self.hass.config.language
+        # Use system language - HA Options Flow context doesn't include user_id
+        language = self.hass.config.language or "en"
+        _LOGGER.debug("Loading override translations for language: %s", language)
         translations: dict[str, Any] = {}
 
-        # Load template, and connector, and field labels from common section
+        # Load template and connector from common section
         template = await async_get_translation(self.hass, ["common", "override_warning_template"], language)
+        _LOGGER.debug("Loaded template: %s", template)
         if template:
             translations["override_warning_template"] = template
 
@@ -374,9 +381,28 @@ class TibberPricesOptionsFlowHandler(OptionsFlow):
         if and_connector:
             translations["override_warning_and"] = and_connector
 
-        field_labels = await async_get_translation(self.hass, ["common", "override_field_labels"], language)
-        if field_labels:
-            translations["override_field_labels"] = field_labels
+        # Load flat field label translations
+        field_keys = [
+            "best_price_min_period_length",
+            "best_price_max_level_gap_count",
+            "best_price_flex",
+            "best_price_min_distance_from_avg",
+            "enable_min_periods_best",
+            "min_periods_best",
+            "relaxation_attempts_best",
+            "peak_price_min_period_length",
+            "peak_price_max_level_gap_count",
+            "peak_price_flex",
+            "peak_price_min_distance_from_avg",
+            "enable_min_periods_peak",
+            "min_periods_peak",
+            "relaxation_attempts_peak",
+        ]
+        for field_key in field_keys:
+            translation_key = f"override_field_label_{field_key}"
+            label = await async_get_translation(self.hass, ["common", translation_key], language)
+            if label:
+                translations[translation_key] = label
 
         return translations
 

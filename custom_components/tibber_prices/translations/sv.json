@@ -80,22 +80,20 @@
         "step_progress": "{step_num} / {total_steps}",
         "override_warning_template": "⚠️ {fields} styrs av konfigurationsentitet",
         "override_warning_and": "och",
-        "override_field_labels": {
-            "best_price_min_period_length": "Minsta periodlängd",
-            "best_price_max_level_gap_count": "Glappstolerans",
-            "best_price_flex": "Flexibilitet",
-            "best_price_min_distance_from_avg": "Minsta avstånd",
-            "enable_min_periods_best": "Uppnå minsta antal",
-            "min_periods_best": "Minimiperioder",
-            "relaxation_attempts_best": "Avslappningsförsök",
-            "peak_price_min_period_length": "Minsta periodlängd",
-            "peak_price_max_level_gap_count": "Glappstolerans",
-            "peak_price_flex": "Flexibilitet",
-            "peak_price_min_distance_from_avg": "Minsta avstånd",
-            "enable_min_periods_peak": "Uppnå minsta antal",
-            "min_periods_peak": "Minimiperioder",
-            "relaxation_attempts_peak": "Avslappningsförsök"
-        }
+        "override_field_label_best_price_min_period_length": "Minsta periodlängd",
+        "override_field_label_best_price_max_level_gap_count": "Glappstolerans",
+        "override_field_label_best_price_flex": "Flexibilitet",
+        "override_field_label_best_price_min_distance_from_avg": "Minsta avstånd",
+        "override_field_label_enable_min_periods_best": "Uppnå minsta antal",
+        "override_field_label_min_periods_best": "Minimiperioder",
+        "override_field_label_relaxation_attempts_best": "Avslappningsförsök",
+        "override_field_label_peak_price_min_period_length": "Minsta periodlängd",
+        "override_field_label_peak_price_max_level_gap_count": "Glappstolerans",
+        "override_field_label_peak_price_flex": "Flexibilitet",
+        "override_field_label_peak_price_min_distance_from_avg": "Minsta avstånd",
+        "override_field_label_enable_min_periods_peak": "Uppnå minsta antal",
+        "override_field_label_min_periods_peak": "Minimiperioder",
+        "override_field_label_relaxation_attempts_peak": "Avslappningsförsök"
     },
     "config_subentries": {
         "home": {

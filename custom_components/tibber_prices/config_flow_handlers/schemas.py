@@ -245,14 +245,13 @@ def get_section_override_warning(
     section_keys = SECTION_CONFIG_KEYS.get(step_id, {}).get(section_id, [])
     overridden_fields = []
 
-    # Get field labels from translations or use fallback
-    field_labels = DEFAULT_FIELD_LABELS
-    if translations and "override_field_labels" in translations:
-        field_labels = translations["override_field_labels"]
-
     for config_key in section_keys:
         if is_field_overridden(config_key, section_id, overrides):
-            label = field_labels.get(config_key, config_key)
+            # Try to get translated label from flat keys, fallback to DEFAULT_FIELD_LABELS
+            translation_key = f"override_field_label_{config_key}"
+            label = (translations.get(translation_key) if translations else None) or DEFAULT_FIELD_LABELS.get(
+                config_key, config_key
+            )
             overridden_fields.append(label)
 
     if not overridden_fields:
