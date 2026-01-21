@@ -489,6 +489,80 @@
             "usage_tips": "Använd detta för att verifiera att realtidsförbrukningen är tillgänglig. Aktivera meddelanden om detta oväntat ändras till 'av', vilket indikerar potentiella hårdvaru- eller anslutningsproblem."
         }
     },
+    "number": {
+        "best_price_flex_override": {
+            "description": "Maximal procent över daglig minimumpris som intervaller kan ha och fortfarande kvalificera som 'bästa pris'. Rekommenderas: 15-20 med lättnad aktiverad (standard), eller 25-35 utan lättnad. Maximum: 50 (hårt tak för tillförlitlig perioddetektering).",
+            "long_description": "När denna entitet är aktiverad överskriver värdet 'Flexibilitet'-inställningen från alternativ-dialogen för bästa pris-periodberäkningar.",
+            "usage_tips": "Aktivera denna entitet för att dynamiskt justera bästa pris-detektering via automatiseringar, t.ex. högre flexibilitet för kritiska laster eller striktare krav för flexibla apparater."
+        },
+        "best_price_min_distance_override": {
+            "description": "Minsta procentuella avstånd under dagligt genomsnitt. Intervaller måste vara så långt under genomsnittet för att kvalificera som 'bästa pris'. Hjälper att skilja äkta lågprisperioder från genomsnittspriser.",
+            "long_description": "När denna entitet är aktiverad överskriver värdet 'Minimiavstånd'-inställningen från alternativ-dialogen för bästa pris-periodberäkningar.",
+            "usage_tips": "Öka värdet för striktare bästa pris-kriterier. Minska om för få perioder detekteras."
+        },
+        "best_price_min_period_length_override": {
+            "description": "Minsta periodlängd i 15-minuters intervaller. Perioder kortare än detta rapporteras inte. Exempel: 2 = minst 30 minuter.",
+            "long_description": "När denna entitet är aktiverad överskriver värdet 'Minsta periodlängd'-inställningen från alternativ-dialogen för bästa pris-periodberäkningar.",
+            "usage_tips": "Anpassa till typisk apparatkörtid: 2 (30 min) för snabbprogram, 4-8 (1-2 timmar) för normala cykler, 8+ för långa ECO-program."
+        },
+        "best_price_min_periods_override": {
+            "description": "Minsta antal bästa pris-perioder att hitta dagligen. När lättnad är aktiverad kommer systemet automatiskt att justera kriterierna för att uppnå detta antal.",
+            "long_description": "När denna entitet är aktiverad överskriver värdet 'Minsta antal perioder'-inställningen från alternativ-dialogen för bästa pris-periodberäkningar.",
+            "usage_tips": "Ställ in detta på antalet tidskritiska uppgifter du har dagligen. Exempel: 2 för två tvattmaskinskörningar."
+        },
+        "best_price_relaxation_attempts_override": {
+            "description": "Antal försök att gradvis lätta på kriterierna för att uppnå minsta periodantal. Varje försök ökar flexibiliteten med 3 procent. Vid 0 används endast baskriterier.",
+            "long_description": "När denna entitet är aktiverad överskriver värdet 'Lättnadsförsök'-inställningen från alternativ-dialogen för bästa pris-periodberäkningar.",
+            "usage_tips": "Högre värden gör perioddetektering mer adaptiv för dagar med stabila priser. Ställ in på 0 för att tvinga strikta kriterier utan lättnad."
+        },
+        "best_price_gap_count_override": {
+            "description": "Maximalt antal dyrare intervaller som kan tillåtas mellan billiga intervaller medan de fortfarande räknas som en sammanhängande period. Vid 0 måste billiga intervaller vara påföljande.",
+            "long_description": "När denna entitet är aktiverad överskriver värdet 'Glaptolerans'-inställningen från alternativ-dialogen för bästa pris-periodberäkningar.",
+            "usage_tips": "Öka detta för apparater med variabel last (t.ex. värmepumpar) som kan tolerera korta dyrare intervaller. Ställ in på 0 för kontinuerligt billiga perioder."
+        },
+        "peak_price_flex_override": {
+            "description": "Maximal procent under daglig maximumpris som intervaller kan ha och fortfarande kvalificera som 'topppris'. Samma rekommendationer som för bästa pris-flexibilitet.",
+            "long_description": "När denna entitet är aktiverad överskriver värdet 'Flexibilitet'-inställningen från alternativ-dialogen för topppris-periodberäkningar.",
+            "usage_tips": "Använd detta för att justera topppris-tröskeln vid körtid för automatiseringar som undviker förbrukning under dyra timmar."
+        },
+        "peak_price_min_distance_override": {
+            "description": "Minsta procentuella avstånd över dagligt genomsnitt. Intervaller måste vara så långt över genomsnittet för att kvalificera som 'topppris'.",
+            "long_description": "När denna entitet är aktiverad överskriver värdet 'Minimiavstånd'-inställningen från alternativ-dialogen för topppris-periodberäkningar.",
+            "usage_tips": "Öka värdet för att endast fånga extrema pristoppar. Minska för att inkludera fler högpristider."
+        },
+        "peak_price_min_period_length_override": {
+            "description": "Minsta periodlängd i 15-minuters intervaller för topppriser. Kortare pristoppar rapporteras inte som perioder.",
+            "long_description": "När denna entitet är aktiverad överskriver värdet 'Minsta periodlängd'-inställningen från alternativ-dialogen för topppris-periodberäkningar.",
+            "usage_tips": "Kortare värden fångar korta pristoppar. Längre värden fokuserar på ihållande högprisperioder."
+        },
+        "peak_price_min_periods_override": {
+            "description": "Minsta antal topppris-perioder att hitta dagligen.",
+            "long_description": "När denna entitet är aktiverad överskriver värdet 'Minsta antal perioder'-inställningen från alternativ-dialogen för topppris-periodberäkningar.",
+            "usage_tips": "Ställ in detta baserat på hur många högprisperioder du vill fånga per dag för automatiseringar."
+        },
+        "peak_price_relaxation_attempts_override": {
+            "description": "Antal försök att lätta på kriterierna för att uppnå minsta antal topppris-perioder.",
+            "long_description": "När denna entitet är aktiverad överskriver värdet 'Lättnadsförsök'-inställningen från alternativ-dialogen för topppris-periodberäkningar.",
+            "usage_tips": "Öka detta om inga perioder hittas på dagar med stabila priser. Ställ in på 0 för att tvinga strikta kriterier."
+        },
+        "peak_price_gap_count_override": {
+            "description": "Maximalt antal billigare intervaller som kan tillåtas mellan dyra intervaller medan de fortfarande räknas som en topppris-period.",
+            "long_description": "När denna entitet är aktiverad överskriver värdet 'Glaptolerans'-inställningen från alternativ-dialogen för topppris-periodberäkningar.",
+            "usage_tips": "Högre värden fångar längre högprisperioder även med korta prisdipp. Ställ in på 0 för strikt sammanhängande topppriser."
+        }
+    },
+    "switch": {
+        "best_price_enable_relaxation_override": {
+            "description": "När aktiverad lättas kriterierna automatiskt för att uppnå minsta periodantal. När inaktiverad rapporteras endast perioder som uppfyller strikta kriterier (möjligen noll perioder på dagar med stabila priser).",
+            "long_description": "När denna entitet är aktiverad överskriver värdet 'Uppnå minimiantal'-inställningen från alternativ-dialogen för bästa pris-periodberäkningar.",
+            "usage_tips": "Aktivera detta för garanterade dagliga automatiseringsmöjligheter. Inaktivera om du endast vill ha riktigt billiga perioder, även om det innebär inga perioder vissa dagar."
+        },
+        "peak_price_enable_relaxation_override": {
+            "description": "När aktiverad lättas kriterierna automatiskt för att uppnå minsta periodantal. När inaktiverad rapporteras endast äkta pristoppar.",
+            "long_description": "När denna entitet är aktiverad överskriver värdet 'Uppnå minimiantal'-inställningen från alternativ-dialogen för topppris-periodberäkningar.",
+            "usage_tips": "Aktivera detta för konsekventa topppris-varningar. Inaktivera för att endast fånga extrema pristoppar."
+        }
+    },
     "home_types": {
         "APARTMENT": "Lägenhet",
         "ROWHOUSE": "Radhus",

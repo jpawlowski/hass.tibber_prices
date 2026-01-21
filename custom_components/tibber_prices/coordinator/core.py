@@ -218,6 +218,7 @@ class TibberPricesDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         self._period_calculator = TibberPricesPeriodCalculator(
             config_entry=config_entry,
             log_prefix=self._log_prefix,
+            get_config_override_fn=self.get_config_override,
         )
         self._data_transformer = TibberPricesDataTransformer(
             config_entry=config_entry,
@@ -255,6 +256,11 @@ class TibberPricesDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         self._is_fetching: bool = False  # Flag to track active API fetch (read by lifecycle sensor)
         self._last_coordinator_update: datetime | None = None  # When Timer #1 last ran (_async_update_data)
 
+        # Runtime config overrides from config entities (number/switch)
+        # Structure: {"section_name": {"config_key": value, ...}, ...}
+        # When set, these override the corresponding options from config_entry.options
+        self._config_overrides: dict[str, dict[str, Any]] = {}
+
         # Start timers
         self._listener_manager.schedule_quarter_hour_refresh(self._handle_quarter_hour_refresh)
         self._listener_manager.schedule_minute_refresh(self._handle_minute_refresh)
@@ -275,6 +281,114 @@ class TibberPricesDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         # without needing to fetch new data from the API
         if self.data and "priceInfo" in self.data:
             # Extract raw price_info and re-transform
+            raw_data = {"price_info": self.data["priceInfo"]}
+            self.data = self._transform_data(raw_data)
+            self.async_update_listeners()
+        else:
+            self._log("debug", "No data to re-transform")
+
+    # =========================================================================
+    # Runtime Config Override Methods (for number/switch entities)
+    # =========================================================================
+
+    def set_config_override(self, config_key: str, config_section: str, value: Any) -> None:
+        """
+        Set a runtime config override value.
+
+        These overrides take precedence over options from config_entry.options
+        and are used by number/switch entities for runtime configuration.
+
+        Args:
+            config_key: The configuration key (e.g., CONF_BEST_PRICE_FLEX)
+            config_section: The section in options (e.g., "flexibility_settings")
+            value: The override value
+
+        """
+        if config_section not in self._config_overrides:
+            self._config_overrides[config_section] = {}
+        self._config_overrides[config_section][config_key] = value
+        self._log(
+            "debug",
+            "Config override set: %s.%s = %s",
+            config_section,
+            config_key,
+            value,
+        )
+
+    def remove_config_override(self, config_key: str, config_section: str) -> None:
+        """
+        Remove a runtime config override value.
+
+        After removal, the value from config_entry.options will be used again.
+
+        Args:
+            config_key: The configuration key to remove
+            config_section: The section the key belongs to
+
+        """
+        if config_section in self._config_overrides:
+            self._config_overrides[config_section].pop(config_key, None)
+            # Clean up empty sections
+            if not self._config_overrides[config_section]:
+                del self._config_overrides[config_section]
+        self._log(
+            "debug",
+            "Config override removed: %s.%s",
+            config_section,
+            config_key,
+        )
+
+    def get_config_override(self, config_key: str, config_section: str) -> Any | None:
+        """
+        Get a runtime config override value if set.
+
+        Args:
+            config_key: The configuration key to check
+            config_section: The section the key belongs to
+
+        Returns:
+            The override value if set, None otherwise
+
+        """
+        return self._config_overrides.get(config_section, {}).get(config_key)
+
+    def has_config_override(self, config_key: str, config_section: str) -> bool:
+        """
+        Check if a runtime config override is set.
+
+        Args:
+            config_key: The configuration key to check
+            config_section: The section the key belongs to
+
+        Returns:
+            True if an override is set, False otherwise
+
+        """
+        return config_key in self._config_overrides.get(config_section, {})
+
+    def get_active_overrides(self) -> dict[str, dict[str, Any]]:
+        """
+        Get all active config overrides.
+
+        Returns:
+            Dictionary of all active overrides by section
+
+        """
+        return self._config_overrides.copy()
+
+    async def async_handle_config_override_update(self) -> None:
+        """
+        Handle config override change by invalidating caches and re-transforming data.
+
+        This is called by number/switch entities when their values change.
+        Uses the same logic as options update to ensure consistent behavior.
+        """
+        self._log("debug", "Config override update triggered, re-transforming data")
+        self._data_transformer.invalidate_config_cache()
+        self._period_calculator.invalidate_config_cache()
+
+        # Re-transform existing data with new configuration
+        if self.data and "priceInfo" in self.data:
             raw_data = {"price_info": self.data["priceInfo"]}
             self.data = self._transform_data(raw_data)
             self.async_update_listeners()

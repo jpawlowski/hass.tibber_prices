@@ -119,6 +119,8 @@ from homeassistant.data_entry_flow import section
 from homeassistant.helpers import selector
 from homeassistant.helpers.selector import (
     BooleanSelector,
+    ConstantSelector,
+    ConstantSelectorConfig,
     NumberSelector,
     NumberSelectorConfig,
     NumberSelectorMode,
@@ -130,6 +132,156 @@ from homeassistant.helpers.selector import (
     TextSelectorConfig,
     TextSelectorType,
 )
+
+# Type alias for config override structure: {section: {config_key: value}}
+ConfigOverrides = dict[str, dict[str, Any]]
+
+
+def is_field_overridden(
+    config_key: str,
+    config_section: str,  # noqa: ARG001 - kept for API compatibility
+    overrides: ConfigOverrides | None,
+) -> bool:
+    """
+    Check if a config field has an active runtime override.
+
+    Args:
+        config_key: The configuration key to check (e.g., "best_price_flex")
+        config_section: Unused, kept for API compatibility
+        overrides: Dictionary of active overrides (with "_enabled" key)
+
+    Returns:
+        True if this field is being overridden by a config entity, False otherwise
+
+    """
+    if overrides is None:
+        return False
+    # Check if key is in the _enabled section (from entity registry check)
+    return config_key in overrides.get("_enabled", {})
+
+
+# Override translations structure from common section
+# This will be loaded at runtime and passed to schema functions
+OverrideTranslations = dict[str, Any]  # Type alias
+
+# Fallback labels when translations not available
+# Used only as fallback - translations should be loaded from common.override_field_labels
+DEFAULT_FIELD_LABELS: dict[str, str] = {
+    # Best Price
+    CONF_BEST_PRICE_MIN_PERIOD_LENGTH: "Minimum Period Length",
+    CONF_BEST_PRICE_MAX_LEVEL_GAP_COUNT: "Gap Tolerance",
+    CONF_BEST_PRICE_FLEX: "Flexibility",
+    CONF_BEST_PRICE_MIN_DISTANCE_FROM_AVG: "Minimum Distance",
+    CONF_ENABLE_MIN_PERIODS_BEST: "Achieve Minimum Count",
+    CONF_MIN_PERIODS_BEST: "Minimum Periods",
+    CONF_RELAXATION_ATTEMPTS_BEST: "Relaxation Attempts",
+    # Peak Price
+    CONF_PEAK_PRICE_MIN_PERIOD_LENGTH: "Minimum Period Length",
+    CONF_PEAK_PRICE_MAX_LEVEL_GAP_COUNT: "Gap Tolerance",
+    CONF_PEAK_PRICE_FLEX: "Flexibility",
+    CONF_PEAK_PRICE_MIN_DISTANCE_FROM_AVG: "Minimum Distance",
+    CONF_ENABLE_MIN_PERIODS_PEAK: "Achieve Minimum Count",
+    CONF_MIN_PERIODS_PEAK: "Minimum Periods",
+    CONF_RELAXATION_ATTEMPTS_PEAK: "Relaxation Attempts",
+}
+
+# Section to config keys mapping for override detection
+SECTION_CONFIG_KEYS: dict[str, dict[str, list[str]]] = {
+    "best_price": {
+        "period_settings": [
+            CONF_BEST_PRICE_MIN_PERIOD_LENGTH,
+            CONF_BEST_PRICE_MAX_LEVEL_GAP_COUNT,
+        ],
+        "flexibility_settings": [
+            CONF_BEST_PRICE_FLEX,
+            CONF_BEST_PRICE_MIN_DISTANCE_FROM_AVG,
+        ],
+        "relaxation_and_target_periods": [
+            CONF_ENABLE_MIN_PERIODS_BEST,
+            CONF_MIN_PERIODS_BEST,
+            CONF_RELAXATION_ATTEMPTS_BEST,
+        ],
+    },
+    "peak_price": {
+        "period_settings": [
+            CONF_PEAK_PRICE_MIN_PERIOD_LENGTH,
+            CONF_PEAK_PRICE_MAX_LEVEL_GAP_COUNT,
+        ],
+        "flexibility_settings": [
+            CONF_PEAK_PRICE_FLEX,
+            CONF_PEAK_PRICE_MIN_DISTANCE_FROM_AVG,
+        ],
+        "relaxation_and_target_periods": [
+            CONF_ENABLE_MIN_PERIODS_PEAK,
+            CONF_MIN_PERIODS_PEAK,
+            CONF_RELAXATION_ATTEMPTS_PEAK,
+        ],
+    },
+}
+
+
+def get_section_override_warning(
+    step_id: str,
+    section_id: str,
+    overrides: ConfigOverrides | None,
+    translations: OverrideTranslations | None = None,
+) -> dict[vol.Optional, ConstantSelector] | None:
+    """
+    Return a warning constant selector if any fields in the section are overridden.
+
+    Args:
+        step_id: The step ID (best_price or peak_price)
+        section_id: The section ID within the step
+        overrides: Active runtime overrides from coordinator
+        translations: Override translations from common section (optional)
+
+    Returns:
+        Dict with override warning selector if any fields overridden, None otherwise
+
+    """
+    if not overrides:
+        return None
+
+    section_keys = SECTION_CONFIG_KEYS.get(step_id, {}).get(section_id, [])
+    overridden_fields = []
+
+    # Get field labels from translations or use fallback
+    field_labels = DEFAULT_FIELD_LABELS
+    if translations and "override_field_labels" in translations:
+        field_labels = translations["override_field_labels"]
+
+    for config_key in section_keys:
+        if is_field_overridden(config_key, section_id, overrides):
+            label = field_labels.get(config_key, config_key)
+            overridden_fields.append(label)
+
+    if not overridden_fields:
+        return None
+
+    # Get translated "and" connector or use fallback
+    and_connector = " and "
+    if translations and "override_warning_and" in translations:
+        and_connector = f" {translations['override_warning_and']} "
+
+    # Build warning message with list of overridden fields
+    if len(overridden_fields) == 1:
+        fields_text = overridden_fields[0]
+    else:
+        fields_text = ", ".join(overridden_fields[:-1]) + and_connector + overridden_fields[-1]
+
+    # Get translated warning template or use fallback
+    warning_template = "⚠️ {fields} controlled by config entity"
+    if translations and "override_warning_template" in translations:
+        warning_template = translations["override_warning_template"]
+
+    return {
+        vol.Optional("_override_warning"): ConstantSelector(
+            ConstantSelectorConfig(
+                value=True,
+                label=warning_template.format(fields=fields_text),
+            )
+        ),
+    }
 
 
 def get_user_schema(access_token: str | None = None) -> vol.Schema:
@@ -434,298 +586,322 @@ def get_volatility_schema(options: Mapping[str, Any]) -> vol.Schema:
     )
 
 
-def get_best_price_schema(options: Mapping[str, Any]) -> vol.Schema:
-    """Return schema for best price period configuration with collapsible sections."""
+def get_best_price_schema(
+    options: Mapping[str, Any],
+    overrides: ConfigOverrides | None = None,
+    translations: OverrideTranslations | None = None,
+) -> vol.Schema:
+    """
+    Return schema for best price period configuration with collapsible sections.
+
+    Args:
+        options: Current options from config entry
+        overrides: Active runtime overrides from coordinator. Fields with active
+                   overrides will be replaced with a constant placeholder.
+        translations: Override translations from common section (optional)
+
+    Returns:
+        Voluptuous schema for the best price configuration form
+
+    """
     period_settings = options.get("period_settings", {})
+    flexibility_settings = options.get("flexibility_settings", {})
+    relaxation_settings = options.get("relaxation_and_target_periods", {})
+
+    # Get current values for override display
+    min_period_length = int(
+        period_settings.get(CONF_BEST_PRICE_MIN_PERIOD_LENGTH, DEFAULT_BEST_PRICE_MIN_PERIOD_LENGTH)
+    )
+    max_level_gap_count = int(
+        period_settings.get(CONF_BEST_PRICE_MAX_LEVEL_GAP_COUNT, DEFAULT_BEST_PRICE_MAX_LEVEL_GAP_COUNT)
+    )
+    best_price_flex = int(flexibility_settings.get(CONF_BEST_PRICE_FLEX, DEFAULT_BEST_PRICE_FLEX))
+    min_distance = int(
+        flexibility_settings.get(CONF_BEST_PRICE_MIN_DISTANCE_FROM_AVG, DEFAULT_BEST_PRICE_MIN_DISTANCE_FROM_AVG)
+    )
+    enable_min_periods = relaxation_settings.get(CONF_ENABLE_MIN_PERIODS_BEST, DEFAULT_ENABLE_MIN_PERIODS_BEST)
+    min_periods = int(relaxation_settings.get(CONF_MIN_PERIODS_BEST, DEFAULT_MIN_PERIODS_BEST))
+    relaxation_attempts = int(relaxation_settings.get(CONF_RELAXATION_ATTEMPTS_BEST, DEFAULT_RELAXATION_ATTEMPTS_BEST))
+
+    # Build section schemas with optional override warnings
+    period_warning = get_section_override_warning("best_price", "period_settings", overrides, translations) or {}
+    period_fields: dict[vol.Optional | vol.Required, Any] = {
+        **period_warning,  # type: ignore[misc]
+        vol.Optional(
+            CONF_BEST_PRICE_MIN_PERIOD_LENGTH,
+            default=min_period_length,
+        ): NumberSelector(
+            NumberSelectorConfig(
+                min=MIN_PERIOD_LENGTH,
+                max=MAX_MIN_PERIOD_LENGTH,
+                step=15,
+                unit_of_measurement="min",
+                mode=NumberSelectorMode.SLIDER,
+            )
+        ),
+        vol.Optional(
+            CONF_BEST_PRICE_MAX_LEVEL,
+            default=period_settings.get(
+                CONF_BEST_PRICE_MAX_LEVEL,
+                DEFAULT_BEST_PRICE_MAX_LEVEL,
+            ),
+        ): SelectSelector(
+            SelectSelectorConfig(
+                options=BEST_PRICE_MAX_LEVEL_OPTIONS,
+                mode=SelectSelectorMode.DROPDOWN,
+                translation_key="current_interval_price_level",
+            ),
+        ),
+        vol.Optional(
+            CONF_BEST_PRICE_MAX_LEVEL_GAP_COUNT,
+            default=max_level_gap_count,
+        ): NumberSelector(
+            NumberSelectorConfig(
+                min=MIN_GAP_COUNT,
+                max=MAX_GAP_COUNT,
+                step=1,
+                mode=NumberSelectorMode.SLIDER,
+            )
+        ),
+    }
+
+    flexibility_warning = (
+        get_section_override_warning("best_price", "flexibility_settings", overrides, translations) or {}
+    )
+    flexibility_fields: dict[vol.Optional | vol.Required, Any] = {
+        **flexibility_warning,  # type: ignore[misc]
+        vol.Optional(
+            CONF_BEST_PRICE_FLEX,
+            default=best_price_flex,
+        ): NumberSelector(
+            NumberSelectorConfig(
+                min=0,
+                max=50,
+                step=1,
+                unit_of_measurement="%",
+                mode=NumberSelectorMode.SLIDER,
+            )
+        ),
+        vol.Optional(
+            CONF_BEST_PRICE_MIN_DISTANCE_FROM_AVG,
+            default=min_distance,
+        ): NumberSelector(
+            NumberSelectorConfig(
+                min=-50,
+                max=0,
+                step=1,
+                unit_of_measurement="%",
+                mode=NumberSelectorMode.SLIDER,
+            )
+        ),
+    }
+
+    relaxation_warning = (
+        get_section_override_warning("best_price", "relaxation_and_target_periods", overrides, translations) or {}
+    )
+    relaxation_fields: dict[vol.Optional | vol.Required, Any] = {
+        **relaxation_warning,  # type: ignore[misc]
+        vol.Optional(
+            CONF_ENABLE_MIN_PERIODS_BEST,
+            default=enable_min_periods,
+        ): BooleanSelector(selector.BooleanSelectorConfig()),
+        vol.Optional(
+            CONF_MIN_PERIODS_BEST,
+            default=min_periods,
+        ): NumberSelector(
+            NumberSelectorConfig(
+                min=1,
+                max=MAX_MIN_PERIODS,
+                step=1,
+                mode=NumberSelectorMode.SLIDER,
+            )
+        ),
+        vol.Optional(
+            CONF_RELAXATION_ATTEMPTS_BEST,
+            default=relaxation_attempts,
+        ): NumberSelector(
+            NumberSelectorConfig(
+                min=MIN_RELAXATION_ATTEMPTS,
+                max=MAX_RELAXATION_ATTEMPTS,
+                step=1,
+                mode=NumberSelectorMode.SLIDER,
+            )
+        ),
+    }
+
     return vol.Schema(
         {
             vol.Required("period_settings"): section(
-                vol.Schema(
-                    {
-                        vol.Optional(
-                            CONF_BEST_PRICE_MIN_PERIOD_LENGTH,
-                            default=int(
-                                period_settings.get(
-                                    CONF_BEST_PRICE_MIN_PERIOD_LENGTH,
-                                    DEFAULT_BEST_PRICE_MIN_PERIOD_LENGTH,
-                                )
-                            ),
-                        ): NumberSelector(
-                            NumberSelectorConfig(
-                                min=MIN_PERIOD_LENGTH,
-                                max=MAX_MIN_PERIOD_LENGTH,
-                                step=15,
-                                unit_of_measurement="min",
-                                mode=NumberSelectorMode.SLIDER,
-                            ),
-                        ),
-                        vol.Optional(
-                            CONF_BEST_PRICE_MAX_LEVEL,
-                            default=period_settings.get(
-                                CONF_BEST_PRICE_MAX_LEVEL,
-                                DEFAULT_BEST_PRICE_MAX_LEVEL,
-                            ),
-                        ): SelectSelector(
-                            SelectSelectorConfig(
-                                options=BEST_PRICE_MAX_LEVEL_OPTIONS,
-                                mode=SelectSelectorMode.DROPDOWN,
-                                translation_key="current_interval_price_level",
-                            ),
-                        ),
-                        vol.Optional(
-                            CONF_BEST_PRICE_MAX_LEVEL_GAP_COUNT,
-                            default=int(
-                                period_settings.get(
-                                    CONF_BEST_PRICE_MAX_LEVEL_GAP_COUNT,
-                                    DEFAULT_BEST_PRICE_MAX_LEVEL_GAP_COUNT,
-                                )
-                            ),
-                        ): NumberSelector(
-                            NumberSelectorConfig(
-                                min=MIN_GAP_COUNT,
-                                max=MAX_GAP_COUNT,
-                                step=1,
-                                mode=NumberSelectorMode.SLIDER,
-                            ),
-                        ),
-                    }
-                ),
+                vol.Schema(period_fields),
                 {"collapsed": False},
             ),
             vol.Required("flexibility_settings"): section(
-                vol.Schema(
-                    {
-                        vol.Optional(
-                            CONF_BEST_PRICE_FLEX,
-                            default=int(
-                                options.get("flexibility_settings", {}).get(
-                                    CONF_BEST_PRICE_FLEX,
-                                    DEFAULT_BEST_PRICE_FLEX,
-                                )
-                            ),
-                        ): NumberSelector(
-                            NumberSelectorConfig(
-                                min=0,
-                                max=50,
-                                step=1,
-                                unit_of_measurement="%",
-                                mode=NumberSelectorMode.SLIDER,
-                            ),
-                        ),
-                        vol.Optional(
-                            CONF_BEST_PRICE_MIN_DISTANCE_FROM_AVG,
-                            default=int(
-                                options.get("flexibility_settings", {}).get(
-                                    CONF_BEST_PRICE_MIN_DISTANCE_FROM_AVG,
-                                    DEFAULT_BEST_PRICE_MIN_DISTANCE_FROM_AVG,
-                                )
-                            ),
-                        ): NumberSelector(
-                            NumberSelectorConfig(
-                                min=-50,
-                                max=0,
-                                step=1,
-                                unit_of_measurement="%",
-                                mode=NumberSelectorMode.SLIDER,
-                            ),
-                        ),
-                    }
-                ),
+                vol.Schema(flexibility_fields),
                 {"collapsed": True},
             ),
             vol.Required("relaxation_and_target_periods"): section(
-                vol.Schema(
-                    {
-                        vol.Optional(
-                            CONF_ENABLE_MIN_PERIODS_BEST,
-                            default=options.get("relaxation_and_target_periods", {}).get(
-                                CONF_ENABLE_MIN_PERIODS_BEST,
-                                DEFAULT_ENABLE_MIN_PERIODS_BEST,
-                            ),
-                        ): BooleanSelector(),
-                        vol.Optional(
-                            CONF_MIN_PERIODS_BEST,
-                            default=int(
-                                options.get("relaxation_and_target_periods", {}).get(
-                                    CONF_MIN_PERIODS_BEST,
-                                    DEFAULT_MIN_PERIODS_BEST,
-                                )
-                            ),
-                        ): NumberSelector(
-                            NumberSelectorConfig(
-                                min=1,
-                                max=MAX_MIN_PERIODS,
-                                step=1,
-                                mode=NumberSelectorMode.SLIDER,
-                            ),
-                        ),
-                        vol.Optional(
-                            CONF_RELAXATION_ATTEMPTS_BEST,
-                            default=int(
-                                options.get("relaxation_and_target_periods", {}).get(
-                                    CONF_RELAXATION_ATTEMPTS_BEST,
-                                    DEFAULT_RELAXATION_ATTEMPTS_BEST,
-                                )
-                            ),
-                        ): NumberSelector(
-                            NumberSelectorConfig(
-                                min=MIN_RELAXATION_ATTEMPTS,
-                                max=MAX_RELAXATION_ATTEMPTS,
-                                step=1,
-                                mode=NumberSelectorMode.SLIDER,
-                            ),
-                        ),
-                    }
-                ),
+                vol.Schema(relaxation_fields),
                 {"collapsed": True},
             ),
         }
     )
 
 
-def get_peak_price_schema(options: Mapping[str, Any]) -> vol.Schema:
-    """Return schema for peak price period configuration with collapsible sections."""
+def get_peak_price_schema(
+    options: Mapping[str, Any],
+    overrides: ConfigOverrides | None = None,
+    translations: OverrideTranslations | None = None,
+) -> vol.Schema:
+    """
+    Return schema for peak price period configuration with collapsible sections.
+
+    Args:
+        options: Current options from config entry
+        overrides: Active runtime overrides from coordinator. Fields with active
+                   overrides will be replaced with a constant placeholder.
+        translations: Override translations from common section (optional)
+
+    Returns:
+        Voluptuous schema for the peak price configuration form
+
+    """
     period_settings = options.get("period_settings", {})
+    flexibility_settings = options.get("flexibility_settings", {})
+    relaxation_settings = options.get("relaxation_and_target_periods", {})
+
+    # Get current values for override display
+    min_period_length = int(
+        period_settings.get(CONF_PEAK_PRICE_MIN_PERIOD_LENGTH, DEFAULT_PEAK_PRICE_MIN_PERIOD_LENGTH)
+    )
+    max_level_gap_count = int(
+        period_settings.get(CONF_PEAK_PRICE_MAX_LEVEL_GAP_COUNT, DEFAULT_PEAK_PRICE_MAX_LEVEL_GAP_COUNT)
+    )
+    peak_price_flex = int(flexibility_settings.get(CONF_PEAK_PRICE_FLEX, DEFAULT_PEAK_PRICE_FLEX))
+    min_distance = int(
+        flexibility_settings.get(CONF_PEAK_PRICE_MIN_DISTANCE_FROM_AVG, DEFAULT_PEAK_PRICE_MIN_DISTANCE_FROM_AVG)
+    )
+    enable_min_periods = relaxation_settings.get(CONF_ENABLE_MIN_PERIODS_PEAK, DEFAULT_ENABLE_MIN_PERIODS_PEAK)
+    min_periods = int(relaxation_settings.get(CONF_MIN_PERIODS_PEAK, DEFAULT_MIN_PERIODS_PEAK))
+    relaxation_attempts = int(relaxation_settings.get(CONF_RELAXATION_ATTEMPTS_PEAK, DEFAULT_RELAXATION_ATTEMPTS_PEAK))
+
+    # Build section schemas with optional override warnings
+    period_warning = get_section_override_warning("peak_price", "period_settings", overrides, translations) or {}
+    period_fields: dict[vol.Optional | vol.Required, Any] = {
+        **period_warning,  # type: ignore[misc]
+        vol.Optional(
+            CONF_PEAK_PRICE_MIN_PERIOD_LENGTH,
+            default=min_period_length,
+        ): NumberSelector(
+            NumberSelectorConfig(
+                min=MIN_PERIOD_LENGTH,
+                max=MAX_MIN_PERIOD_LENGTH,
+                step=15,
+                unit_of_measurement="min",
+                mode=NumberSelectorMode.SLIDER,
+            )
+        ),
+        vol.Optional(
+            CONF_PEAK_PRICE_MIN_LEVEL,
+            default=period_settings.get(
+                CONF_PEAK_PRICE_MIN_LEVEL,
+                DEFAULT_PEAK_PRICE_MIN_LEVEL,
+            ),
+        ): SelectSelector(
+            SelectSelectorConfig(
+                options=PEAK_PRICE_MIN_LEVEL_OPTIONS,
+                mode=SelectSelectorMode.DROPDOWN,
+                translation_key="current_interval_price_level",
+            ),
+        ),
+        vol.Optional(
+            CONF_PEAK_PRICE_MAX_LEVEL_GAP_COUNT,
+            default=max_level_gap_count,
+        ): NumberSelector(
+            NumberSelectorConfig(
+                min=MIN_GAP_COUNT,
+                max=MAX_GAP_COUNT,
+                step=1,
+                mode=NumberSelectorMode.SLIDER,
+            )
+        ),
+    }
+
+    flexibility_warning = (
+        get_section_override_warning("peak_price", "flexibility_settings", overrides, translations) or {}
+    )
+    flexibility_fields: dict[vol.Optional | vol.Required, Any] = {
+        **flexibility_warning,  # type: ignore[misc]
+        vol.Optional(
+            CONF_PEAK_PRICE_FLEX,
+            default=peak_price_flex,
+        ): NumberSelector(
+            NumberSelectorConfig(
+                min=-50,
+                max=0,
+                step=1,
+                unit_of_measurement="%",
+                mode=NumberSelectorMode.SLIDER,
+            )
+        ),
+        vol.Optional(
+            CONF_PEAK_PRICE_MIN_DISTANCE_FROM_AVG,
+            default=min_distance,
+        ): NumberSelector(
+            NumberSelectorConfig(
+                min=0,
+                max=50,
+                step=1,
+                unit_of_measurement="%",
+                mode=NumberSelectorMode.SLIDER,
+            )
+        ),
+    }
+
+    relaxation_warning = (
+        get_section_override_warning("peak_price", "relaxation_and_target_periods", overrides, translations) or {}
+    )
+    relaxation_fields: dict[vol.Optional | vol.Required, Any] = {
+        **relaxation_warning,  # type: ignore[misc]
+        vol.Optional(
+            CONF_ENABLE_MIN_PERIODS_PEAK,
+            default=enable_min_periods,
+        ): BooleanSelector(selector.BooleanSelectorConfig()),
+        vol.Optional(
+            CONF_MIN_PERIODS_PEAK,
+            default=min_periods,
+        ): NumberSelector(
+            NumberSelectorConfig(
+                min=1,
+                max=MAX_MIN_PERIODS,
+                step=1,
+                mode=NumberSelectorMode.SLIDER,
+            )
+        ),
+        vol.Optional(
+            CONF_RELAXATION_ATTEMPTS_PEAK,
+            default=relaxation_attempts,
+        ): NumberSelector(
+            NumberSelectorConfig(
+                min=MIN_RELAXATION_ATTEMPTS,
+                max=MAX_RELAXATION_ATTEMPTS,
+                step=1,
+                mode=NumberSelectorMode.SLIDER,
+            )
+        ),
+    }
+
     return vol.Schema(
         {
             vol.Required("period_settings"): section(
-                vol.Schema(
-                    {
-                        vol.Optional(
-                            CONF_PEAK_PRICE_MIN_PERIOD_LENGTH,
-                            default=int(
-                                period_settings.get(
-                                    CONF_PEAK_PRICE_MIN_PERIOD_LENGTH,
-                                    DEFAULT_PEAK_PRICE_MIN_PERIOD_LENGTH,
-                                )
-                            ),
-                        ): NumberSelector(
-                            NumberSelectorConfig(
-                                min=MIN_PERIOD_LENGTH,
-                                max=MAX_MIN_PERIOD_LENGTH,
-                                step=15,
-                                unit_of_measurement="min",
-                                mode=NumberSelectorMode.SLIDER,
-                            ),
-                        ),
-                        vol.Optional(
-                            CONF_PEAK_PRICE_MIN_LEVEL,
-                            default=period_settings.get(
-                                CONF_PEAK_PRICE_MIN_LEVEL,
-                                DEFAULT_PEAK_PRICE_MIN_LEVEL,
-                            ),
-                        ): SelectSelector(
-                            SelectSelectorConfig(
-                                options=PEAK_PRICE_MIN_LEVEL_OPTIONS,
-                                mode=SelectSelectorMode.DROPDOWN,
-                                translation_key="current_interval_price_level",
-                            ),
-                        ),
-                        vol.Optional(
-                            CONF_PEAK_PRICE_MAX_LEVEL_GAP_COUNT,
-                            default=int(
-                                period_settings.get(
-                                    CONF_PEAK_PRICE_MAX_LEVEL_GAP_COUNT,
-                                    DEFAULT_PEAK_PRICE_MAX_LEVEL_GAP_COUNT,
-                                )
-                            ),
-                        ): NumberSelector(
-                            NumberSelectorConfig(
-                                min=MIN_GAP_COUNT,
-                                max=MAX_GAP_COUNT,
-                                step=1,
-                                mode=NumberSelectorMode.SLIDER,
-                            ),
-                        ),
-                    }
-                ),
+                vol.Schema(period_fields),
                 {"collapsed": False},
             ),
             vol.Required("flexibility_settings"): section(
-                vol.Schema(
-                    {
-                        vol.Optional(
-                            CONF_PEAK_PRICE_FLEX,
-                            default=int(
-                                options.get("flexibility_settings", {}).get(
-                                    CONF_PEAK_PRICE_FLEX,
-                                    DEFAULT_PEAK_PRICE_FLEX,
-                                )
-                            ),
-                        ): NumberSelector(
-                            NumberSelectorConfig(
-                                min=-50,
-                                max=0,
-                                step=1,
-                                unit_of_measurement="%",
-                                mode=NumberSelectorMode.SLIDER,
-                            ),
-                        ),
-                        vol.Optional(
-                            CONF_PEAK_PRICE_MIN_DISTANCE_FROM_AVG,
-                            default=int(
-                                options.get("flexibility_settings", {}).get(
-                                    CONF_PEAK_PRICE_MIN_DISTANCE_FROM_AVG,
-                                    DEFAULT_PEAK_PRICE_MIN_DISTANCE_FROM_AVG,
-                                )
-                            ),
-                        ): NumberSelector(
-                            NumberSelectorConfig(
-                                min=0,
-                                max=50,
-                                step=1,
-                                unit_of_measurement="%",
-                                mode=NumberSelectorMode.SLIDER,
-                            ),
-                        ),
-                    }
-                ),
+                vol.Schema(flexibility_fields),
                 {"collapsed": True},
             ),
             vol.Required("relaxation_and_target_periods"): section(
-                vol.Schema(
-                    {
-                        vol.Optional(
-                            CONF_ENABLE_MIN_PERIODS_PEAK,
-                            default=options.get("relaxation_and_target_periods", {}).get(
-                                CONF_ENABLE_MIN_PERIODS_PEAK,
-                                DEFAULT_ENABLE_MIN_PERIODS_PEAK,
-                            ),
-                        ): BooleanSelector(),
-                        vol.Optional(
-                            CONF_MIN_PERIODS_PEAK,
-                            default=int(
-                                options.get("relaxation_and_target_periods", {}).get(
-                                    CONF_MIN_PERIODS_PEAK,
-                                    DEFAULT_MIN_PERIODS_PEAK,
-                                )
-                            ),
-                        ): NumberSelector(
-                            NumberSelectorConfig(
-                                min=1,
-                                max=MAX_MIN_PERIODS,
-                                step=1,
-                                mode=NumberSelectorMode.SLIDER,
-                            ),
-                        ),
-                        vol.Optional(
-                            CONF_RELAXATION_ATTEMPTS_PEAK,
-                            default=int(
-                                options.get("relaxation_and_target_periods", {}).get(
-                                    CONF_RELAXATION_ATTEMPTS_PEAK,
-                                    DEFAULT_RELAXATION_ATTEMPTS_PEAK,
-                                )
-                            ),
-                        ): NumberSelector(
-                            NumberSelectorConfig(
-                                min=MIN_RELAXATION_ATTEMPTS,
-                                max=MAX_RELAXATION_ATTEMPTS,
-                                step=1,
-                                mode=NumberSelectorMode.SLIDER,
-                            ),
-                        ),
-                    }
-                ),
+                vol.Schema(relaxation_fields),
                 {"collapsed": True},
             ),
         }

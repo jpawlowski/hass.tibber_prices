@@ -489,6 +489,80 @@
             "usage_tips": "Bruk dette for å bekrefte at sanntidsforbruksdata er tilgjengelig. Aktiver varsler hvis dette endres til 'av' uventet, noe som indikerer potensielle maskinvare- eller tilkoblingsproblemer."
         }
     },
+    "number": {
+        "best_price_flex_override": {
+            "description": "Maksimal prosent over daglig minimumspris som intervaller kan ha og fortsatt kvalifisere som 'beste pris'. Anbefalt: 15-20 med lemping aktivert (standard), eller 25-35 uten lemping. Maksimum: 50 (tak for pålitelig periodedeteksjon).",
+            "long_description": "Når denne entiteten er aktivert, overstyrer verdien 'Fleksibilitet'-innstillingen fra alternativer-dialogen for beste pris-periodeberegninger.",
+            "usage_tips": "Aktiver denne entiteten for å dynamisk justere beste pris-deteksjon via automatiseringer, f.eks. høyere fleksibilitet for kritiske laster eller strengere krav for fleksible apparater."
+        },
+        "best_price_min_distance_override": {
+            "description": "Minimum prosentavstand under daglig gjennomsnitt. Intervaller må være så langt under gjennomsnittet for å kvalifisere som 'beste pris'. Hjelper med å skille ekte lavprisperioder fra gjennomsnittspriser.",
+            "long_description": "Når denne entiteten er aktivert, overstyrer verdien 'Minimumsavstand'-innstillingen fra alternativer-dialogen for beste pris-periodeberegninger.",
+            "usage_tips": "Øk verdien for strengere beste pris-kriterier. Reduser hvis for få perioder blir oppdaget."
+        },
+        "best_price_min_period_length_override": {
+            "description": "Minimum periodelengde i 15-minutters intervaller. Perioder kortere enn dette blir ikke rapportert. Eksempel: 2 = minimum 30 minutter.",
+            "long_description": "Når denne entiteten er aktivert, overstyrer verdien 'Minimum periodelengde'-innstillingen fra alternativer-dialogen for beste pris-periodeberegninger.",
+            "usage_tips": "Juster til typisk apparatkjøretid: 2 (30 min) for hurtigprogrammer, 4-8 (1-2 timer) for normale sykluser, 8+ for lange ECO-programmer."
+        },
+        "best_price_min_periods_override": {
+            "description": "Minimum antall beste pris-perioder å finne daglig. Når lemping er aktivert, vil systemet automatisk justere kriterier for å oppnå dette antallet.",
+            "long_description": "Når denne entiteten er aktivert, overstyrer verdien 'Minimum perioder'-innstillingen fra alternativer-dialogen for beste pris-periodeberegninger.",
+            "usage_tips": "Sett dette til antall tidskritiske oppgaver du har daglig. Eksempel: 2 for to vaskemaskinkjøringer."
+        },
+        "best_price_relaxation_attempts_override": {
+            "description": "Antall forsøk på å gradvis lempe kriteriene for å oppnå minimum periodeantall. Hvert forsøk øker fleksibiliteten med 3 prosent. Ved 0 brukes kun basiskriterier.",
+            "long_description": "Når denne entiteten er aktivert, overstyrer verdien 'Lemping forsøk'-innstillingen fra alternativer-dialogen for beste pris-periodeberegninger.",
+            "usage_tips": "Høyere verdier gjør periodedeteksjon mer adaptiv for dager med stabile priser. Sett til 0 for å tvinge strenge kriterier uten lemping."
+        },
+        "best_price_gap_count_override": {
+            "description": "Maksimalt antall dyrere intervaller som kan tillates mellom billige intervaller mens de fortsatt regnes som en sammenhengende periode. Ved 0 må billige intervaller være påfølgende.",
+            "long_description": "Når denne entiteten er aktivert, overstyrer verdien 'Gaptoleranse'-innstillingen fra alternativer-dialogen for beste pris-periodeberegninger.",
+            "usage_tips": "Øk dette for apparater med variabel last (f.eks. varmepumper) som kan tåle korte dyrere intervaller. Sett til 0 for kontinuerlige billige perioder."
+        },
+        "peak_price_flex_override": {
+            "description": "Maksimal prosent under daglig maksimumspris som intervaller kan ha og fortsatt kvalifisere som 'topppris'. Samme anbefalinger som for beste pris-fleksibilitet.",
+            "long_description": "Når denne entiteten er aktivert, overstyrer verdien 'Fleksibilitet'-innstillingen fra alternativer-dialogen for topppris-periodeberegninger.",
+            "usage_tips": "Bruk dette for å justere topppris-terskelen ved kjøretid for automatiseringer som unngår forbruk under dyre timer."
+        },
+        "peak_price_min_distance_override": {
+            "description": "Minimum prosentavstand over daglig gjennomsnitt. Intervaller må være så langt over gjennomsnittet for å kvalifisere som 'topppris'.",
+            "long_description": "Når denne entiteten er aktivert, overstyrer verdien 'Minimumsavstand'-innstillingen fra alternativer-dialogen for topppris-periodeberegninger.",
+            "usage_tips": "Øk verdien for kun å fange ekstreme pristopper. Reduser for å inkludere flere høypristider."
+        },
+        "peak_price_min_period_length_override": {
+            "description": "Minimum periodelengde i 15-minutters intervaller for topppriser. Kortere pristopper rapporteres ikke som perioder.",
+            "long_description": "Når denne entiteten er aktivert, overstyrer verdien 'Minimum periodelengde'-innstillingen fra alternativer-dialogen for topppris-periodeberegninger.",
+            "usage_tips": "Kortere verdier fanger korte pristopper. Lengre verdier fokuserer på vedvarende høyprisperioder."
+        },
+        "peak_price_min_periods_override": {
+            "description": "Minimum antall topppris-perioder å finne daglig.",
+            "long_description": "Når denne entiteten er aktivert, overstyrer verdien 'Minimum perioder'-innstillingen fra alternativer-dialogen for topppris-periodeberegninger.",
+            "usage_tips": "Sett dette basert på hvor mange høyprisperioder du vil fange per dag for automatiseringer."
+        },
+        "peak_price_relaxation_attempts_override": {
+            "description": "Antall forsøk på å lempe kriteriene for å oppnå minimum antall topppris-perioder.",
+            "long_description": "Når denne entiteten er aktivert, overstyrer verdien 'Lemping forsøk'-innstillingen fra alternativer-dialogen for topppris-periodeberegninger.",
+            "usage_tips": "Øk dette hvis ingen perioder blir funnet på dager med stabile priser. Sett til 0 for å tvinge strenge kriterier."
+        },
+        "peak_price_gap_count_override": {
+            "description": "Maksimalt antall billigere intervaller som kan tillates mellom dyre intervaller mens de fortsatt regnes som en topppris-periode.",
+            "long_description": "Når denne entiteten er aktivert, overstyrer verdien 'Gaptoleranse'-innstillingen fra alternativer-dialogen for topppris-periodeberegninger.",
+            "usage_tips": "Høyere verdier fanger lengre høyprisperioder selv med korte prisdykk. Sett til 0 for strengt sammenhengende topppriser."
+        }
+    },
+    "switch": {
+        "best_price_enable_relaxation_override": {
+            "description": "Når aktivert, lempes kriteriene automatisk for å oppnå minimum periodeantall. Når deaktivert, rapporteres kun perioder som oppfyller strenge kriterier (muligens null perioder på dager med stabile priser).",
+            "long_description": "Når denne entiteten er aktivert, overstyrer verdien 'Oppnå minimumsantall'-innstillingen fra alternativer-dialogen for beste pris-periodeberegninger.",
+            "usage_tips": "Aktiver dette for garanterte daglige automatiseringsmuligheter. Deaktiver hvis du kun vil ha virkelig billige perioder, selv om det betyr ingen perioder på noen dager."
+        },
+        "peak_price_enable_relaxation_override": {
+            "description": "Når aktivert, lempes kriteriene automatisk for å oppnå minimum periodeantall. Når deaktivert, rapporteres kun ekte pristopper.",
+            "long_description": "Når denne entiteten er aktivert, overstyrer verdien 'Oppnå minimumsantall'-innstillingen fra alternativer-dialogen for topppris-periodeberegninger.",
+            "usage_tips": "Aktiver dette for konsistente topppris-varsler. Deaktiver for kun å fange ekstreme pristopper."
+        }
+    },
     "home_types": {
         "APARTMENT": "Leilighet",
         "ROWHOUSE": "Rekkehus",

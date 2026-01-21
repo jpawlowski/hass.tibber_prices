@@ -489,6 +489,80 @@
             "usage_tips": "Verwende dies, um zu überprüfen, ob Echtzeit-Verbrauchsdaten verfügbar sind. Aktiviere Benachrichtigungen, falls dies unerwartet auf 'Aus' wechselt, was auf potenzielle Hardware- oder Verbindungsprobleme hinweist."
         }
     },
+    "number": {
+        "best_price_flex_override": {
+            "description": "Maximaler Prozentsatz über dem Tagesminimumpreis, den Intervalle haben können und trotzdem als 'Bestpreis' gelten. Empfohlen: 15-20 mit Lockerung aktiviert (Standard), oder 25-35 ohne Lockerung. Maximum: 50 (Obergrenze für zuverlässige Periodenerkennung).",
+            "long_description": "Wenn diese Entität aktiviert ist, überschreibt ihr Wert die Einstellung 'Flexibilität' aus dem Optionen-Dialog für die Bestpreis-Periodenberechnung.",
+            "usage_tips": "Aktiviere diese Entität, um die Bestpreiserkennung dynamisch über Automatisierungen anzupassen, z.B. höhere Flexibilität bei kritischen Lasten oder engere Anforderungen für flexible Geräte."
+        },
+        "best_price_min_distance_override": {
+            "description": "Minimaler prozentualer Abstand unter dem Tagesdurchschnitt. Intervalle müssen so weit unter dem Durchschnitt liegen, um als 'Bestpreis' zu gelten. Hilft, echte Niedrigpreis-Perioden von durchschnittlichen Preisen zu unterscheiden.",
+            "long_description": "Wenn diese Entität aktiviert ist, überschreibt ihr Wert die Einstellung 'Mindestabstand' aus dem Optionen-Dialog für die Bestpreis-Periodenberechnung.",
+            "usage_tips": "Erhöhe den Wert, wenn du strengere Bestpreis-Kriterien möchtest. Verringere ihn, wenn zu wenige Perioden erkannt werden."
+        },
+        "best_price_min_period_length_override": {
+            "description": "Minimale Periodenl\u00e4nge in 15-Minuten-Intervallen. Perioden kürzer als diese werden nicht gemeldet. Beispiel: 2 = mindestens 30 Minuten.",
+            "long_description": "Wenn diese Entität aktiviert ist, überschreibt ihr Wert die Einstellung 'Mindestperiodenlänge' aus dem Optionen-Dialog für die Bestpreis-Periodenberechnung.",
+            "usage_tips": "Passe an die typische Laufzeit deiner Geräte an: 2 (30 Min) für Schnellprogramme, 4-8 (1-2 Std) für normale Zyklen, 8+ für lange ECO-Programme."
+        },
+        "best_price_min_periods_override": {
+            "description": "Minimale Anzahl an Bestpreis-Perioden, die täglich gefunden werden sollen. Wenn Lockerung aktiviert ist, wird das System die Kriterien automatisch anpassen, um diese Zahl zu erreichen.",
+            "long_description": "Wenn diese Entität aktiviert ist, überschreibt ihr Wert die Einstellung 'Mindestperioden' aus dem Optionen-Dialog für die Bestpreis-Periodenberechnung.",
+            "usage_tips": "Setze dies auf die Anzahl zeitkritischer Aufgaben, die du täglich hast. Beispiel: 2 für zwei Waschmaschinenladungen."
+        },
+        "best_price_relaxation_attempts_override": {
+            "description": "Anzahl der Versuche, die Kriterien schrittweise zu lockern, um die Mindestperiodenanzahl zu erreichen. Jeder Versuch erhöht die Flexibilität um 3 Prozent. Bei 0 werden nur Basis-Kriterien verwendet.",
+            "long_description": "Wenn diese Entität aktiviert ist, überschreibt ihr Wert die Einstellung 'Lockerungsversuche' aus dem Optionen-Dialog für die Bestpreis-Periodenberechnung.",
+            "usage_tips": "Höhere Werte machen die Periodenerkennung anpassungsfähiger an Tage mit stabilen Preisen. Setze auf 0, um strenge Kriterien ohne Lockerung zu erzwingen."
+        },
+        "best_price_gap_count_override": {
+            "description": "Maximale Anzahl teurerer Intervalle, die zwischen günstigen Intervallen erlaubt sind und trotzdem als eine zusammenhängende Periode gelten. Bei 0 müssen günstige Intervalle aufeinander folgen.",
+            "long_description": "Wenn diese Entität aktiviert ist, überschreibt ihr Wert die Einstellung 'Lückentoleranz' aus dem Optionen-Dialog für die Bestpreis-Periodenberechnung.",
+            "usage_tips": "Erhöhe dies für Geräte mit variabler Last (z.B. Wärmepumpen), die kurze teurere Intervalle tolerieren können. Setze auf 0 für kontinuierliche günstige Perioden."
+        },
+        "peak_price_flex_override": {
+            "description": "Maximaler Prozentsatz unter dem Tagesmaximumpreis, den Intervalle haben können und trotzdem als 'Spitzenpreis' gelten. Gleiche Empfehlungen wie für Bestpreis-Flexibilität.",
+            "long_description": "Wenn diese Entität aktiviert ist, überschreibt ihr Wert die Einstellung 'Flexibilität' aus dem Optionen-Dialog für die Spitzenpreis-Periodenberechnung.",
+            "usage_tips": "Nutze dies, um den Spitzenpreis-Schwellenwert zur Laufzeit für Automatisierungen anzupassen, die den Verbrauch während teurer Stunden vermeiden."
+        },
+        "peak_price_min_distance_override": {
+            "description": "Minimaler prozentualer Abstand über dem Tagesdurchschnitt. Intervalle müssen so weit über dem Durchschnitt liegen, um als 'Spitzenpreis' zu gelten.",
+            "long_description": "Wenn diese Entität aktiviert ist, überschreibt ihr Wert die Einstellung 'Mindestabstand' aus dem Optionen-Dialog für die Spitzenpreis-Periodenberechnung.",
+            "usage_tips": "Erhöhe den Wert, um nur extreme Preisspitzen zu erfassen. Verringere ihn, um mehr Hochpreiszeiten einzubeziehen."
+        },
+        "peak_price_min_period_length_override": {
+            "description": "Minimale Periodenl\u00e4nge in 15-Minuten-Intervallen für Spitzenpreise. Kürzere Preisspitzen werden nicht als Perioden gemeldet.",
+            "long_description": "Wenn diese Entität aktiviert ist, überschreibt ihr Wert die Einstellung 'Mindestperiodenlänge' aus dem Optionen-Dialog für die Spitzenpreis-Periodenberechnung.",
+            "usage_tips": "Kürzere Werte erfassen kurze Preisspitzen. Längere Werte fokussieren auf anhaltende Hochpreisphasen."
+        },
+        "peak_price_min_periods_override": {
+            "description": "Minimale Anzahl an Spitzenpreis-Perioden, die täglich gefunden werden sollen.",
+            "long_description": "Wenn diese Entität aktiviert ist, überschreibt ihr Wert die Einstellung 'Mindestperioden' aus dem Optionen-Dialog für die Spitzenpreis-Periodenberechnung.",
+            "usage_tips": "Setze dies basierend darauf, wie viele Hochpreisphasen du pro Tag für Automatisierungen erfassen möchtest."
+        },
+        "peak_price_relaxation_attempts_override": {
+            "description": "Anzahl der Versuche, die Kriterien zu lockern, um die Mindestanzahl an Spitzenpreis-Perioden zu erreichen.",
+            "long_description": "Wenn diese Entität aktiviert ist, überschreibt ihr Wert die Einstellung 'Lockerungsversuche' aus dem Optionen-Dialog für die Spitzenpreis-Periodenberechnung.",
+            "usage_tips": "Erhöhe dies, wenn an Tagen mit stabilen Preisen keine Perioden gefunden werden. Setze auf 0, um strenge Kriterien zu erzwingen."
+        },
+        "peak_price_gap_count_override": {
+            "description": "Maximale Anzahl günstigerer Intervalle, die zwischen teuren Intervallen erlaubt sind und trotzdem als eine Spitzenpreis-Periode gelten.",
+            "long_description": "Wenn diese Entität aktiviert ist, überschreibt ihr Wert die Einstellung 'Lückentoleranz' aus dem Optionen-Dialog für die Spitzenpreis-Periodenberechnung.",
+            "usage_tips": "Höhere Werte erfassen längere Hochpreisphasen auch mit kurzen Preiseinbrüchen. Setze auf 0, um strikt zusammenhängende Spitzenpreise zu erfassen."
+        }
+    },
+    "switch": {
+        "best_price_enable_relaxation_override": {
+            "description": "Wenn aktiviert, werden die Kriterien automatisch gelockert, um die Mindestperiodenanzahl zu erreichen. Wenn deaktiviert, werden nur Perioden gemeldet, die die strengen Kriterien erfüllen (möglicherweise null Perioden bei stabilen Preisen).",
+            "long_description": "Wenn diese Entität aktiviert ist, überschreibt ihr Wert die Einstellung 'Mindestanzahl erreichen' aus dem Optionen-Dialog für die Bestpreis-Periodenberechnung.",
+            "usage_tips": "Aktiviere dies für garantierte tägliche Automatisierungsmöglichkeiten. Deaktiviere es, wenn du nur wirklich günstige Zeiträume willst, auch wenn das bedeutet, dass an manchen Tagen keine Perioden gefunden werden."
+        },
+        "peak_price_enable_relaxation_override": {
+            "description": "Wenn aktiviert, werden die Kriterien automatisch gelockert, um die Mindestperiodenanzahl zu erreichen. Wenn deaktiviert, werden nur echte Preisspitzen gemeldet.",
+            "long_description": "Wenn diese Entität aktiviert ist, überschreibt ihr Wert die Einstellung 'Mindestanzahl erreichen' aus dem Optionen-Dialog für die Spitzenpreis-Periodenberechnung.",
+            "usage_tips": "Aktiviere dies für konsistente Spitzenpreis-Warnungen. Deaktiviere es, um nur extreme Preisspitzen zu erfassen."
+        }
+    },
     "home_types": {
         "APARTMENT": "Wohnung",
         "ROWHOUSE": "Reihenhaus",

@@ -47,6 +47,8 @@ if TYPE_CHECKING:
 PLATFORMS: list[Platform] = [
     Platform.SENSOR,
     Platform.BINARY_SENSOR,
+    Platform.NUMBER,
+    Platform.SWITCH,
 ]
 
 # Configuration schema for configuration.yaml

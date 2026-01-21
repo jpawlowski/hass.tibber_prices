@@ -489,6 +489,80 @@
             "usage_tips": "Use this to verify that realtime consumption data is available. Enable notifications if this changes to 'off' unexpectedly, indicating potential hardware or connectivity issues."
         }
     },
+    "number": {
+        "best_price_flex_override": {
+            "description": "Maximum above the daily minimum price that intervals can be and still qualify as 'best price'. Recommended: 15-20 with relaxation enabled (default), or 25-35 without relaxation. Maximum: 50 (hard cap for reliable period detection).",
+            "long_description": "When this entity is enabled, its value overrides the 'Flexibility' setting from the options flow for best price period calculations.",
+            "usage_tips": "Enable this entity to dynamically adjust best price detection via automations. Higher values create longer periods, lower values are stricter."
+        },
+        "best_price_min_distance_override": {
+            "description": "Ensures periods are significantly cheaper than the daily average, not just marginally below it. This filters out noise and prevents marking slightly-below-average periods as 'best price' on days with flat prices. Higher values = stricter filtering (only truly cheap periods qualify).",
+            "long_description": "When this entity is enabled, its value overrides the 'Minimum Distance' setting from the options flow for best price period calculations.",
+            "usage_tips": "Use in automations to adjust how much better than average the best price periods must be. Higher values require prices to be further below average."
+        },
+        "best_price_min_period_length_override": {
+            "description": "Minimum duration for a period to be considered as 'best price'. Longer periods are more practical for running appliances like dishwashers or heat pumps. Best price periods require 60 minutes minimum (vs. 30 minutes for peak price warnings) because they should provide meaningful time windows for consumption planning.",
+            "long_description": "When this entity is enabled, its value overrides the 'Minimum Period Length' setting from the options flow for best price period calculations.",
+            "usage_tips": "Increase when your appliances need longer uninterrupted run times (e.g., washing machines, dishwashers)."
+        },
+        "best_price_min_periods_override": {
+            "description": "Minimum number of best price periods to aim for per day. Filters will be relaxed step-by-step to try achieving this count. Only active when 'Achieve Minimum Count' is enabled.",
+            "long_description": "When this entity is enabled, its value overrides the 'Minimum Periods' setting from the options flow for best price period calculations.",
+            "usage_tips": "Adjust dynamically based on how many times per day you need cheap electricity windows."
+        },
+        "best_price_relaxation_attempts_override": {
+            "description": "How many flex levels (attempts) to try before giving up. Each attempt runs all filter combinations at the new flex level. More attempts increase the chance of finding additional periods at the cost of longer processing time.",
+            "long_description": "When this entity is enabled, its value overrides the 'Relaxation Attempts' setting from the options flow for best price period calculations.",
+            "usage_tips": "Increase when periods are hard to find. Decrease for stricter price filtering."
+        },
+        "best_price_gap_count_override": {
+            "description": "Maximum number of consecutive intervals allowed that deviate by exactly one level step from the required level. This prevents periods from being split by occasional level deviations. Gap tolerance requires periods ≥90 minutes (6 intervals) to detect outliers effectively.",
+            "long_description": "When this entity is enabled, its value overrides the 'Gap Tolerance' setting from the options flow for best price period calculations.",
+            "usage_tips": "Increase to allow longer periods with occasional price spikes. Keep low for stricter continuous cheap periods."
+        },
+        "peak_price_flex_override": {
+            "description": "Maximum below the daily maximum price that intervals can be and still qualify as 'peak price'. Recommended: -15 to -20 with relaxation enabled (default), or -25 to -35 without relaxation. Maximum: -50 (hard cap for reliable period detection). Note: Negative values indicate distance below maximum.",
+            "long_description": "When this entity is enabled, its value overrides the 'Flexibility' setting from the options flow for peak price period calculations.",
+            "usage_tips": "Enable this entity to dynamically adjust peak price detection via automations. Higher values create longer peak periods."
+        },
+        "peak_price_min_distance_override": {
+            "description": "Ensures periods are significantly more expensive than the daily average, not just marginally above it. This filters out noise and prevents marking slightly-above-average periods as 'peak price' on days with flat prices. Higher values = stricter filtering (only truly expensive periods qualify).",
+            "long_description": "When this entity is enabled, its value overrides the 'Minimum Distance' setting from the options flow for peak price period calculations.",
+            "usage_tips": "Use in automations to adjust how much higher than average the peak price periods must be."
+        },
+        "peak_price_min_period_length_override": {
+            "description": "Minimum duration for a period to be considered as 'peak price'. Peak price warnings are allowed for shorter periods (30 minutes minimum vs. 60 minutes for best price) because brief expensive spikes are worth alerting about, even if they're too short for consumption planning.",
+            "long_description": "When this entity is enabled, its value overrides the 'Minimum Period Length' setting from the options flow for peak price period calculations.",
+            "usage_tips": "Increase to filter out brief price spikes, focusing on sustained expensive periods."
+        },
+        "peak_price_min_periods_override": {
+            "description": "Minimum number of peak price periods to aim for per day. Filters will be relaxed step-by-step to try achieving this count. Only active when 'Achieve Minimum Count' is enabled.",
+            "long_description": "When this entity is enabled, its value overrides the 'Minimum Periods' setting from the options flow for peak price period calculations.",
+            "usage_tips": "Adjust based on how many peak periods you want to identify and avoid."
+        },
+        "peak_price_relaxation_attempts_override": {
+            "description": "How many flex levels (attempts) to try before giving up. Each attempt runs all filter combinations at the new flex level. More attempts increase the chance of finding additional peak periods at the cost of longer processing time.",
+            "long_description": "When this entity is enabled, its value overrides the 'Relaxation Attempts' setting from the options flow for peak price period calculations.",
+            "usage_tips": "Increase when peak periods are hard to detect. Decrease for stricter peak price filtering."
+        },
+        "peak_price_gap_count_override": {
+            "description": "Maximum number of consecutive intervals allowed that deviate by exactly one level step from the required level. This prevents periods from being split by occasional level deviations. Gap tolerance requires periods ≥90 minutes (6 intervals) to detect outliers effectively.",
+            "long_description": "When this entity is enabled, its value overrides the 'Gap Tolerance' setting from the options flow for peak price period calculations.",
+            "usage_tips": "Increase to identify sustained expensive periods with brief dips. Keep low for stricter continuous peak detection."
+        }
+    },
+    "switch": {
+        "best_price_enable_relaxation_override": {
+            "description": "When enabled, filters will be gradually relaxed if not enough periods are found. This attempts to reach the desired minimum number of periods, which may include less optimal time windows as best-price periods.",
+            "long_description": "When this entity is enabled, its value overrides the 'Achieve Minimum Count' setting from the options flow for best price period calculations.",
+            "usage_tips": "Turn OFF to disable relaxation and use strict filtering only. Turn ON to allow the algorithm to relax criteria to find more periods."
+        },
+        "peak_price_enable_relaxation_override": {
+            "description": "When enabled, filters will be gradually relaxed if not enough periods are found. This attempts to reach the desired minimum number of periods to ensure you're warned about expensive periods even on days with unusual price patterns.",
+            "long_description": "When this entity is enabled, its value overrides the 'Achieve Minimum Count' setting from the options flow for peak price period calculations.",
+            "usage_tips": "Turn OFF to disable relaxation and use strict filtering only. Turn ON to allow the algorithm to relax criteria to find more peak periods."
+        }
+    },
     "home_types": {
         "APARTMENT": "Apartment",
         "ROWHOUSE": "Rowhouse",

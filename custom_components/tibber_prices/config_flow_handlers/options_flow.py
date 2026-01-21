@@ -15,6 +15,7 @@ from custom_components.tibber_prices.config_flow_handlers.entity_check import (
     format_sensor_names_for_warning,
 )
 from custom_components.tibber_prices.config_flow_handlers.schemas import (
+    ConfigOverrides,
     get_best_price_schema,
     get_chart_data_export_schema,
     get_display_settings_schema,
@@ -72,9 +73,11 @@ from custom_components.tibber_prices.const import (
     DEFAULT_VOLATILITY_THRESHOLD_MODERATE,
     DEFAULT_VOLATILITY_THRESHOLD_VERY_HIGH,
     DOMAIN,
+    async_get_translation,
     get_default_options,
 )
 from homeassistant.config_entries import ConfigFlowResult, OptionsFlow
+from homeassistant.helpers import entity_registry as er
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -215,6 +218,167 @@ class TibberPricesOptionsFlowHandler(OptionsFlow):
             f"To use these settings, first enable relevant sensors like *{sensor_names}* "
             f"in **Settings → Devices & Services → Tibber Prices → Entities**."
         }
+
+    def _get_enabled_config_entities(self) -> set[str]:
+        """
+        Get config keys that have their config entity enabled.
+
+        Checks the entity registry for number/switch entities that override
+        config values. Returns the config_key for each enabled entity.
+
+        Returns:
+            Set of config keys (e.g., "best_price_flex", "enable_min_periods_best")
+
+        """
+        enabled_keys: set[str] = set()
+        ent_reg = er.async_get(self.hass)
+
+        _LOGGER.debug(
+            "Checking for enabled config override entities for entry %s",
+            self.config_entry.entry_id,
+        )
+
+        # Map entity keys to their config keys
+        # Entity keys are defined in number/definitions.py and switch/definitions.py
+        override_entities = {
+            # Number entities (best price)
+            "number.best_price_flex_override": "best_price_flex",
+            "number.best_price_min_distance_override": "best_price_min_distance_from_avg",
+            "number.best_price_min_period_length_override": "best_price_min_period_length",
+            "number.best_price_min_periods_override": "min_periods_best",
+            "number.best_price_relaxation_attempts_override": "relaxation_attempts_best",
+            "number.best_price_gap_count_override": "best_price_max_level_gap_count",
+            # Number entities (peak price)
+            "number.peak_price_flex_override": "peak_price_flex",
+            "number.peak_price_min_distance_override": "peak_price_min_distance_from_avg",
+            "number.peak_price_min_period_length_override": "peak_price_min_period_length",
+            "number.peak_price_min_periods_override": "min_periods_peak",
+            "number.peak_price_relaxation_attempts_override": "relaxation_attempts_peak",
+            "number.peak_price_gap_count_override": "peak_price_max_level_gap_count",
+            # Switch entities
+            "switch.best_price_enable_relaxation_override": "enable_min_periods_best",
+            "switch.peak_price_enable_relaxation_override": "enable_min_periods_peak",
+        }
+
+        # Check each possible override entity
+        for entity_id_suffix, config_key in override_entities.items():
+            # Entity IDs include device name, so we need to search by unique_id pattern
+            # The unique_id follows pattern: {config_entry_id}_{entity_key}
+            domain, entity_key = entity_id_suffix.split(".", 1)
+
+            # Find entity by iterating through registry
+            for entity_entry in ent_reg.entities.values():
+                if (
+                    entity_entry.domain == domain
+                    and entity_entry.config_entry_id == self.config_entry.entry_id
+                    and entity_entry.unique_id
+                    and entity_entry.unique_id.endswith(entity_key)
+                    and not entity_entry.disabled
+                ):
+                    _LOGGER.debug(
+                        "Found enabled config override entity: %s -> config_key=%s",
+                        entity_entry.entity_id,
+                        config_key,
+                    )
+                    enabled_keys.add(config_key)
+                    break
+
+        _LOGGER.debug("Enabled config override keys: %s", enabled_keys)
+        return enabled_keys
+
+    def _get_active_overrides(self) -> ConfigOverrides:
+        """
+        Build override dict from enabled config entities.
+
+        Returns a dict structure compatible with schema functions.
+        """
+        enabled_keys = self._get_enabled_config_entities()
+        if not enabled_keys:
+            _LOGGER.debug("No enabled config override entities found")
+            return {}
+
+        # Build structure expected by schema: {section: {key: True}}
+        # Section doesn't matter for read_only check, we just need the key present
+        overrides: ConfigOverrides = {"_enabled": {}}
+        for key in enabled_keys:
+            overrides["_enabled"][key] = True
+
+        _LOGGER.debug("Active overrides structure: %s", overrides)
+        return overrides
+
+    def _get_override_warning_placeholder(self, step_id: str, overrides: ConfigOverrides) -> dict[str, str]:
+        """
+        Get description placeholder for config override warning.
+
+        Args:
+            step_id: The options flow step ID (e.g., "best_price", "peak_price")
+            overrides: Active overrides dictionary
+
+        Returns:
+            Dictionary with 'override_warning' placeholder
+
+        """
+        # Define which config keys belong to each step
+        step_keys: dict[str, set[str]] = {
+            "best_price": {
+                "best_price_flex",
+                "best_price_min_distance_from_avg",
+                "best_price_min_period_length",
+                "min_periods_best",
+                "relaxation_attempts_best",
+                "enable_min_periods_best",
+            },
+            "peak_price": {
+                "peak_price_flex",
+                "peak_price_min_distance_from_avg",
+                "peak_price_min_period_length",
+                "min_periods_peak",
+                "relaxation_attempts_peak",
+                "enable_min_periods_peak",
+            },
+        }
+
+        keys_to_check = step_keys.get(step_id, set())
+        enabled_keys = overrides.get("_enabled", {})
+        override_count = sum(1 for k in enabled_keys if k in keys_to_check)
+
+        if override_count > 0:
+            field_word = "field is" if override_count == 1 else "fields are"
+            return {
+                "override_warning": (
+                    f"\n\n🔒 **{override_count} {field_word} managed by configuration entities** "
+                    "(grayed out). Disable the config entity to edit here, "
+                    "or change the value directly via the entity."
+                )
+            }
+        return {"override_warning": ""}
+
+    async def _get_override_translations(self) -> dict[str, Any]:
+        """
+        Load override translations from common section.
+
+        Returns:
+            Dictionary with override_warning_template, override_warning_and,
+            and override_field_labels keys
+
+        """
+        language = self.hass.config.language
+        translations: dict[str, Any] = {}
+
+        # Load template, and connector, and field labels from common section
+        template = await async_get_translation(self.hass, ["common", "override_warning_template"], language)
+        if template:
+            translations["override_warning_template"] = template
+
+        and_connector = await async_get_translation(self.hass, ["common", "override_warning_and"], language)
+        if and_connector:
+            translations["override_warning_and"] = and_connector
+
+        field_labels = await async_get_translation(self.hass, ["common", "override_field_labels"], language)
+        if field_labels:
+            translations["override_field_labels"] = field_labels
+
+        return translations
 
     async def async_step_init(self, _user_input: dict[str, Any] | None = None) -> ConfigFlowResult:
         """Manage the options - show menu."""
@@ -446,11 +610,22 @@ class TibberPricesOptionsFlowHandler(OptionsFlow):
             # Return to menu for more changes
             return await self.async_step_init()
 
+        overrides = self._get_active_overrides()
+        placeholders = self._get_entity_warning_placeholders("best_price")
+        placeholders.update(self._get_override_warning_placeholder("best_price", overrides))
+
+        # Load translations for override warnings
+        override_translations = await self._get_override_translations()
+
         return self.async_show_form(
             step_id="best_price",
-            data_schema=get_best_price_schema(self.config_entry.options),
+            data_schema=get_best_price_schema(
+                self.config_entry.options,
+                overrides=overrides,
+                translations=override_translations,
+            ),
             errors=errors,
-            description_placeholders=self._get_entity_warning_placeholders("best_price"),
+            description_placeholders=placeholders,
         )
 
     async def async_step_peak_price(self, user_input: dict[str, Any] | None = None) -> ConfigFlowResult:
@@ -507,11 +682,22 @@ class TibberPricesOptionsFlowHandler(OptionsFlow):
             # Return to menu for more changes
             return await self.async_step_init()
 
+        overrides = self._get_active_overrides()
+        placeholders = self._get_entity_warning_placeholders("peak_price")
+        placeholders.update(self._get_override_warning_placeholder("peak_price", overrides))
+
+        # Load translations for override warnings
+        override_translations = await self._get_override_translations()
+
         return self.async_show_form(
             step_id="peak_price",
-            data_schema=get_peak_price_schema(self.config_entry.options),
+            data_schema=get_peak_price_schema(
+                self.config_entry.options,
+                overrides=overrides,
+                translations=override_translations,
+            ),
             errors=errors,
-            description_placeholders=self._get_entity_warning_placeholders("peak_price"),
+            description_placeholders=placeholders,
         )
 
     async def async_step_price_trend(self, user_input: dict[str, Any] | None = None) -> ConfigFlowResult:

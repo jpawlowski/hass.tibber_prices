@@ -489,6 +489,80 @@
             "usage_tips": "Gebruik dit om te verifiëren dat realtimeverbruiksgegevens beschikbaar zijn. Schakel meldingen in als dit onverwacht verandert naar 'uit', wat wijst op mogelijke hardware- of verbindingsproblemen."
         }
     },
+    "number": {
+        "best_price_flex_override": {
+            "description": "Maximaal percentage boven de dagelijkse minimumprijs dat intervallen kunnen hebben en nog steeds als 'beste prijs' kwalificeren. Aanbevolen: 15-20 met versoepeling ingeschakeld (standaard), of 25-35 zonder versoepeling. Maximum: 50 (harde limiet voor betrouwbare periodedetectie).",
+            "long_description": "Wanneer deze entiteit is ingeschakeld, overschrijft de waarde de 'Flexibiliteit'-instelling uit de opties-dialoog voor beste prijs-periodeberekeningen.",
+            "usage_tips": "Schakel deze entiteit in om beste prijs-detectie dynamisch aan te passen via automatiseringen, bijv. hogere flexibiliteit voor kritieke lasten of strengere eisen voor flexibele apparaten."
+        },
+        "best_price_min_distance_override": {
+            "description": "Minimale procentuele afstand onder het daggemiddelde. Intervallen moeten zo ver onder het gemiddelde liggen om als 'beste prijs' te kwalificeren. Helpt echte lage prijsperioden te onderscheiden van gemiddelde prijzen.",
+            "long_description": "Wanneer deze entiteit is ingeschakeld, overschrijft de waarde de 'Minimale afstand'-instelling uit de opties-dialoog voor beste prijs-periodeberekeningen.",
+            "usage_tips": "Verhoog de waarde voor strengere beste prijs-criteria. Verlaag als te weinig perioden worden gedetecteerd."
+        },
+        "best_price_min_period_length_override": {
+            "description": "Minimale periodelengte in 15-minuten intervallen. Perioden korter dan dit worden niet gerapporteerd. Voorbeeld: 2 = minimaal 30 minuten.",
+            "long_description": "Wanneer deze entiteit is ingeschakeld, overschrijft de waarde de 'Minimale periodelengte'-instelling uit de opties-dialoog voor beste prijs-periodeberekeningen.",
+            "usage_tips": "Pas aan op typische apparaatlooptijd: 2 (30 min) voor snelle programma's, 4-8 (1-2 uur) voor normale cycli, 8+ voor lange ECO-programma's."
+        },
+        "best_price_min_periods_override": {
+            "description": "Minimum aantal beste prijs-perioden om dagelijks te vinden. Wanneer versoepeling is ingeschakeld, past het systeem automatisch de criteria aan om dit aantal te bereiken.",
+            "long_description": "Wanneer deze entiteit is ingeschakeld, overschrijft de waarde de 'Minimum periodes'-instelling uit de opties-dialoog voor beste prijs-periodeberekeningen.",
+            "usage_tips": "Stel dit in op het aantal tijdkritieke taken dat je dagelijks hebt. Voorbeeld: 2 voor twee wasladingen."
+        },
+        "best_price_relaxation_attempts_override": {
+            "description": "Aantal pogingen om de criteria geleidelijk te versoepelen om het minimum aantal perioden te bereiken. Elke poging verhoogt de flexibiliteit met 3 procent. Bij 0 worden alleen basiscriteria gebruikt.",
+            "long_description": "Wanneer deze entiteit is ingeschakeld, overschrijft de waarde de 'Versoepeling pogingen'-instelling uit de opties-dialoog voor beste prijs-periodeberekeningen.",
+            "usage_tips": "Hogere waarden maken periodedetectie adaptiever voor dagen met stabiele prijzen. Stel in op 0 om strikte criteria af te dwingen zonder versoepeling."
+        },
+        "best_price_gap_count_override": {
+            "description": "Maximum aantal duurdere intervallen dat mag worden toegestaan tussen goedkope intervallen terwijl ze nog steeds als één aaneengesloten periode tellen. Bij 0 moeten goedkope intervallen opeenvolgend zijn.",
+            "long_description": "Wanneer deze entiteit is ingeschakeld, overschrijft de waarde de 'Gap tolerantie'-instelling uit de opties-dialoog voor beste prijs-periodeberekeningen.",
+            "usage_tips": "Verhoog dit voor apparaten met variabele belasting (bijv. warmtepompen) die korte duurdere intervallen kunnen tolereren. Stel in op 0 voor continu goedkope perioden."
+        },
+        "peak_price_flex_override": {
+            "description": "Maximaal percentage onder de dagelijkse maximumprijs dat intervallen kunnen hebben en nog steeds als 'piekprijs' kwalificeren. Dezelfde aanbevelingen als voor beste prijs-flexibiliteit.",
+            "long_description": "Wanneer deze entiteit is ingeschakeld, overschrijft de waarde de 'Flexibiliteit'-instelling uit de opties-dialoog voor piekprijs-periodeberekeningen.",
+            "usage_tips": "Gebruik dit om de piekprijs-drempel tijdens runtime aan te passen voor automatiseringen die verbruik tijdens dure uren vermijden."
+        },
+        "peak_price_min_distance_override": {
+            "description": "Minimale procentuele afstand boven het daggemiddelde. Intervallen moeten zo ver boven het gemiddelde liggen om als 'piekprijs' te kwalificeren.",
+            "long_description": "Wanneer deze entiteit is ingeschakeld, overschrijft de waarde de 'Minimale afstand'-instelling uit de opties-dialoog voor piekprijs-periodeberekeningen.",
+            "usage_tips": "Verhoog de waarde om alleen extreme prijspieken te vangen. Verlaag om meer dure tijden mee te nemen."
+        },
+        "peak_price_min_period_length_override": {
+            "description": "Minimale periodelengte in 15-minuten intervallen voor piekprijzen. Kortere prijspieken worden niet als perioden gerapporteerd.",
+            "long_description": "Wanneer deze entiteit is ingeschakeld, overschrijft de waarde de 'Minimale periodelengte'-instelling uit de opties-dialoog voor piekprijs-periodeberekeningen.",
+            "usage_tips": "Kortere waarden vangen korte prijspieken. Langere waarden focussen op aanhoudende dure perioden."
+        },
+        "peak_price_min_periods_override": {
+            "description": "Minimum aantal piekprijs-perioden om dagelijks te vinden.",
+            "long_description": "Wanneer deze entiteit is ingeschakeld, overschrijft de waarde de 'Minimum periodes'-instelling uit de opties-dialoog voor piekprijs-periodeberekeningen.",
+            "usage_tips": "Stel dit in op basis van hoeveel dure perioden je per dag wilt vangen voor automatiseringen."
+        },
+        "peak_price_relaxation_attempts_override": {
+            "description": "Aantal pogingen om de criteria te versoepelen om het minimum aantal piekprijs-perioden te bereiken.",
+            "long_description": "Wanneer deze entiteit is ingeschakeld, overschrijft de waarde de 'Versoepeling pogingen'-instelling uit de opties-dialoog voor piekprijs-periodeberekeningen.",
+            "usage_tips": "Verhoog dit als geen perioden worden gevonden op dagen met stabiele prijzen. Stel in op 0 om strikte criteria af te dwingen."
+        },
+        "peak_price_gap_count_override": {
+            "description": "Maximum aantal goedkopere intervallen dat mag worden toegestaan tussen dure intervallen terwijl ze nog steeds als één piekprijs-periode tellen.",
+            "long_description": "Wanneer deze entiteit is ingeschakeld, overschrijft de waarde de 'Gap tolerantie'-instelling uit de opties-dialoog voor piekprijs-periodeberekeningen.",
+            "usage_tips": "Hogere waarden vangen langere dure perioden zelfs met korte prijsdips. Stel in op 0 voor strikt aaneengesloten piekprijzen."
+        }
+    },
+    "switch": {
+        "best_price_enable_relaxation_override": {
+            "description": "Indien ingeschakeld, worden criteria automatisch versoepeld om het minimum aantal perioden te bereiken. Indien uitgeschakeld, worden alleen perioden gerapporteerd die aan strikte criteria voldoen (mogelijk nul perioden op dagen met stabiele prijzen).",
+            "long_description": "Wanneer deze entiteit is ingeschakeld, overschrijft de waarde de 'Minimum aantal bereiken'-instelling uit de opties-dialoog voor beste prijs-periodeberekeningen.",
+            "usage_tips": "Schakel dit in voor gegarandeerde dagelijkse automatiseringsmogelijkheden. Schakel uit als je alleen echt goedkope perioden wilt, ook als dat betekent dat er op sommige dagen geen perioden zijn."
+        },
+        "peak_price_enable_relaxation_override": {
+            "description": "Indien ingeschakeld, worden criteria automatisch versoepeld om het minimum aantal perioden te bereiken. Indien uitgeschakeld, worden alleen echte prijspieken gerapporteerd.",
+            "long_description": "Wanneer deze entiteit is ingeschakeld, overschrijft de waarde de 'Minimum aantal bereiken'-instelling uit de opties-dialoog voor piekprijs-periodeberekeningen.",
+            "usage_tips": "Schakel dit in voor consistente piekprijs-waarschuwingen. Schakel uit om alleen extreme prijspieken te vangen."
+        }
+    },
     "home_types": {
         "APARTMENT": "Appartement",
         "ROWHOUSE": "Rijhuis",

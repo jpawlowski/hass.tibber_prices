@@ -77,7 +77,25 @@
         }
     },
     "common": {
-        "step_progress": "{step_num} / {total_steps}"
+        "step_progress": "{step_num} / {total_steps}",
+        "override_warning_template": "⚠️ {fields} styres av konfigurasjons-entitet",
+        "override_warning_and": "og",
+        "override_field_labels": {
+            "best_price_min_period_length": "Minste periodelengde",
+            "best_price_max_level_gap_count": "Gaptoleranse",
+            "best_price_flex": "Fleksibilitet",
+            "best_price_min_distance_from_avg": "Minimumsavstand",
+            "enable_min_periods_best": "Oppnå minimum antall",
+            "min_periods_best": "Minimumperioder",
+            "relaxation_attempts_best": "Avslapningsforsøk",
+            "peak_price_min_period_length": "Minste periodelengde",
+            "peak_price_max_level_gap_count": "Gaptoleranse",
+            "peak_price_flex": "Fleksibilitet",
+            "peak_price_min_distance_from_avg": "Minimumsavstand",
+            "enable_min_periods_peak": "Oppnå minimum antall",
+            "min_periods_peak": "Minimumperioder",
+            "relaxation_attempts_peak": "Avslapningsforsøk"
+        }
     },
     "config_subentries": {
         "home": {
@@ -189,7 +207,7 @@
             },
             "best_price": {
                 "title": "💚 Beste Prisperiode Innstillinger",
-                "description": "**Konfigurer innstillinger for Beste Prisperiode binærsensor. Denne sensoren er aktiv i perioder med de laveste strømprisene.**{entity_warning}\n\n---",
+                "description": "**Konfigurer innstillinger for Beste Prisperiode binærsensor. Denne sensoren er aktiv i perioder med de laveste strømprisene.**{entity_warning}{override_warning}\n\n---",
                 "sections": {
                     "period_settings": {
                         "name": "Periodeinnstillinger",
@@ -236,7 +254,7 @@
             },
             "peak_price": {
                 "title": "🔴 Toppprisperiode Innstillinger",
-                "description": "**Konfigurer innstillinger for Toppprisperiode binærsensor. Denne sensoren er aktiv i perioder med de høyeste strømprisene.**{entity_warning}\n\n---",
+                "description": "**Konfigurer innstillinger for Toppprisperiode binærsensor. Denne sensoren er aktiv i perioder med de høyeste strømprisene.**{entity_warning}{override_warning}\n\n---",
                 "sections": {
                     "period_settings": {
                         "name": "Periodeinnstillinger",
@@ -885,6 +903,52 @@
             },
             "realtime_consumption_enabled": {
                 "name": "Sanntidsforbruk aktivert"
+            }
+        },
+        "number": {
+            "best_price_flex_override": {
+                "name": "Beste pris: Fleksibilitet"
+            },
+            "best_price_min_distance_override": {
+                "name": "Beste pris: Minimumsavstand"
+            },
+            "best_price_min_period_length_override": {
+                "name": "Beste pris: Minimum periodelengde"
+            },
+            "best_price_min_periods_override": {
+                "name": "Beste pris: Minimum perioder"
+            },
+            "best_price_relaxation_attempts_override": {
+                "name": "Beste pris: Lemping forsøk"
+            },
+            "best_price_gap_count_override": {
+                "name": "Beste pris: Gaptoleranse"
+            },
+            "peak_price_flex_override": {
+                "name": "Topppris: Fleksibilitet"
+            },
+            "peak_price_min_distance_override": {
+                "name": "Topppris: Minimumsavstand"
+            },
+            "peak_price_min_period_length_override": {
+                "name": "Topppris: Minimum periodelengde"
+            },
+            "peak_price_min_periods_override": {
+                "name": "Topppris: Minimum perioder"
+            },
+            "peak_price_relaxation_attempts_override": {
+                "name": "Topppris: Lemping forsøk"
+            },
+            "peak_price_gap_count_override": {
+                "name": "Topppris: Gaptoleranse"
+            }
+        },
+        "switch": {
+            "best_price_enable_relaxation_override": {
+                "name": "Beste pris: Oppnå minimumsantall"
+            },
+            "peak_price_enable_relaxation_override": {
+                "name": "Topppris: Oppnå minimumsantall"
             }
         }
     },

@@ -13,6 +13,8 @@ from typing import TYPE_CHECKING, Any
 from custom_components.tibber_prices import const as _const
 
 if TYPE_CHECKING:
+    from collections.abc import Callable
+
     from custom_components.tibber_prices.coordinator.time_service import TibberPricesTimeService
     from homeassistant.config_entries import ConfigEntry
 
@@ -32,6 +34,7 @@ class TibberPricesPeriodCalculator:
         self,
         config_entry: ConfigEntry,
         log_prefix: str,
+        get_config_override_fn: Callable[[str, str], Any | None] | None = None,
     ) -> None:
         """Initialize the period calculator."""
         self.config_entry = config_entry
@@ -39,10 +42,39 @@ class TibberPricesPeriodCalculator:
         self.time: TibberPricesTimeService  # Set by coordinator before first use
         self._config_cache: dict[str, dict[str, Any]] | None = None
         self._config_cache_valid = False
+        self._get_config_override = get_config_override_fn
 
         # Period calculation cache
         self._cached_periods: dict[str, Any] | None = None
         self._last_periods_hash: str | None = None
+
+    def _get_option(
+        self,
+        config_key: str,
+        config_section: str,
+        default: Any,
+    ) -> Any:
+        """
+        Get a config option, checking overrides first.
+
+        Args:
+            config_key: The configuration key
+            config_section: The section in options (e.g., "flexibility_settings")
+            default: Default value if not set
+
+        Returns:
+            Override value if set, otherwise options value, otherwise default
+
+        """
+        # Check overrides first
+        if self._get_config_override is not None:
+            override = self._get_config_override(config_key, config_section)
+            if override is not None:
+                return override
+
+        # Fall back to options
+        section = self.config_entry.options.get(config_section, {})
+        return section.get(config_key, default)
 
     def _log(self, level: str, message: str, *args: object, **kwargs: object) -> None:
         """Log with calculator-specific prefix."""
@@ -112,7 +144,7 @@ class TibberPricesPeriodCalculator:
         Get period calculation configuration from config options.
 
         Uses cached config to avoid multiple options.get() calls.
-        Cache is invalidated when config_entry.options change.
+        Cache is invalidated when config_entry.options change or override entities update.
         """
         cache_key = "peak" if reverse_sort else "best"
 
@@ -124,36 +156,44 @@ class TibberPricesPeriodCalculator:
         if self._config_cache is None:
             self._config_cache = {}
 
-        options = self.config_entry.options
-
-        # Get nested sections from options
+        # Get config values, checking overrides first
         # CRITICAL: Best/Peak price settings are stored in nested sections:
         # - period_settings: min_period_length, max_level, gap_count
         # - flexibility_settings: flex, min_distance_from_avg
-        # These settings are ONLY in options (not in data), structured since initial config flow
-        period_settings = options.get("period_settings", {})
-        flexibility_settings = options.get("flexibility_settings", {})
+        # Override entities can override any of these values at runtime
 
         if reverse_sort:
             # Peak price configuration
-            flex = flexibility_settings.get(_const.CONF_PEAK_PRICE_FLEX, _const.DEFAULT_PEAK_PRICE_FLEX)
-            min_distance_from_avg = flexibility_settings.get(
+            flex = self._get_option(
+                _const.CONF_PEAK_PRICE_FLEX,
+                "flexibility_settings",
+                _const.DEFAULT_PEAK_PRICE_FLEX,
+            )
+            min_distance_from_avg = self._get_option(
                 _const.CONF_PEAK_PRICE_MIN_DISTANCE_FROM_AVG,
+                "flexibility_settings",
                 _const.DEFAULT_PEAK_PRICE_MIN_DISTANCE_FROM_AVG,
             )
-            min_period_length = period_settings.get(
+            min_period_length = self._get_option(
                 _const.CONF_PEAK_PRICE_MIN_PERIOD_LENGTH,
+                "period_settings",
                 _const.DEFAULT_PEAK_PRICE_MIN_PERIOD_LENGTH,
             )
         else:
             # Best price configuration
-            flex = flexibility_settings.get(_const.CONF_BEST_PRICE_FLEX, _const.DEFAULT_BEST_PRICE_FLEX)
-            min_distance_from_avg = flexibility_settings.get(
+            flex = self._get_option(
+                _const.CONF_BEST_PRICE_FLEX,
+                "flexibility_settings",
+                _const.DEFAULT_BEST_PRICE_FLEX,
+            )
+            min_distance_from_avg = self._get_option(
                 _const.CONF_BEST_PRICE_MIN_DISTANCE_FROM_AVG,
+                "flexibility_settings",
                 _const.DEFAULT_BEST_PRICE_MIN_DISTANCE_FROM_AVG,
             )
-            min_period_length = period_settings.get(
+            min_period_length = self._get_option(
                 _const.CONF_BEST_PRICE_MIN_PERIOD_LENGTH,
+                "period_settings",
                 _const.DEFAULT_BEST_PRICE_MIN_PERIOD_LENGTH,
             )
 
@@ -610,9 +650,10 @@ class TibberPricesPeriodCalculator:
 
         # Get relaxation configuration for best price
         # CRITICAL: Relaxation settings are stored in nested section 'relaxation_and_target_periods'
-        relaxation_and_target_periods = self.config_entry.options.get("relaxation_and_target_periods", {})
-        enable_relaxation_best = relaxation_and_target_periods.get(
+        # Override entities can override any of these values at runtime
+        enable_relaxation_best = self._get_option(
             _const.CONF_ENABLE_MIN_PERIODS_BEST,
+            "relaxation_and_target_periods",
             _const.DEFAULT_ENABLE_MIN_PERIODS_BEST,
         )
 
@@ -623,12 +664,14 @@ class TibberPricesPeriodCalculator:
             show_best_price = bool(all_prices)
         else:
             show_best_price = self.should_show_periods(price_info, reverse_sort=False) if all_prices else False
-        min_periods_best = relaxation_and_target_periods.get(
+        min_periods_best = self._get_option(
             _const.CONF_MIN_PERIODS_BEST,
+            "relaxation_and_target_periods",
             _const.DEFAULT_MIN_PERIODS_BEST,
         )
-        relaxation_attempts_best = relaxation_and_target_periods.get(
+        relaxation_attempts_best = self._get_option(
             _const.CONF_RELAXATION_ATTEMPTS_BEST,
+            "relaxation_and_target_periods",
             _const.DEFAULT_RELAXATION_ATTEMPTS_BEST,
         )
 
@@ -637,13 +680,14 @@ class TibberPricesPeriodCalculator:
             best_config = self.get_period_config(reverse_sort=False)
             # Get level filter configuration from period_settings section
             # CRITICAL: max_level and gap_count are stored in nested section 'period_settings'
-            period_settings = self.config_entry.options.get("period_settings", {})
-            max_level_best = period_settings.get(
+            max_level_best = self._get_option(
                 _const.CONF_BEST_PRICE_MAX_LEVEL,
+                "period_settings",
                 _const.DEFAULT_BEST_PRICE_MAX_LEVEL,
             )
-            gap_count_best = period_settings.get(
+            gap_count_best = self._get_option(
                 _const.CONF_BEST_PRICE_MAX_LEVEL_GAP_COUNT,
+                "period_settings",
                 _const.DEFAULT_BEST_PRICE_MAX_LEVEL_GAP_COUNT,
             )
             best_period_config = TibberPricesPeriodConfig(
@@ -687,8 +731,10 @@ class TibberPricesPeriodCalculator:
 
         # Get relaxation configuration for peak price
         # CRITICAL: Relaxation settings are stored in nested section 'relaxation_and_target_periods'
-        enable_relaxation_peak = relaxation_and_target_periods.get(
+        # Override entities can override any of these values at runtime
+        enable_relaxation_peak = self._get_option(
             _const.CONF_ENABLE_MIN_PERIODS_PEAK,
+            "relaxation_and_target_periods",
             _const.DEFAULT_ENABLE_MIN_PERIODS_PEAK,
         )
 
@@ -699,12 +745,14 @@ class TibberPricesPeriodCalculator:
             show_peak_price = bool(all_prices)
         else:
             show_peak_price = self.should_show_periods(price_info, reverse_sort=True) if all_prices else False
-        min_periods_peak = relaxation_and_target_periods.get(
+        min_periods_peak = self._get_option(
             _const.CONF_MIN_PERIODS_PEAK,
+            "relaxation_and_target_periods",
             _const.DEFAULT_MIN_PERIODS_PEAK,
         )
-        relaxation_attempts_peak = relaxation_and_target_periods.get(
+        relaxation_attempts_peak = self._get_option(
             _const.CONF_RELAXATION_ATTEMPTS_PEAK,
+            "relaxation_and_target_periods",
             _const.DEFAULT_RELAXATION_ATTEMPTS_PEAK,
         )
 
@@ -713,12 +761,14 @@ class TibberPricesPeriodCalculator:
             peak_config = self.get_period_config(reverse_sort=True)
             # Get level filter configuration from period_settings section
             # CRITICAL: min_level and gap_count are stored in nested section 'period_settings'
-            min_level_peak = period_settings.get(
+            min_level_peak = self._get_option(
                 _const.CONF_PEAK_PRICE_MIN_LEVEL,
+                "period_settings",
                 _const.DEFAULT_PEAK_PRICE_MIN_LEVEL,
             )
-            gap_count_peak = period_settings.get(
+            gap_count_peak = self._get_option(
                 _const.CONF_PEAK_PRICE_MAX_LEVEL_GAP_COUNT,
+                "period_settings",
                 _const.DEFAULT_PEAK_PRICE_MAX_LEVEL_GAP_COUNT,
             )
             peak_period_config = TibberPricesPeriodConfig(
