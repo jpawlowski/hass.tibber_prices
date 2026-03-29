@@ -464,17 +464,30 @@ class TibberPricesIntervalPool:
         start_time_dt = datetime.fromisoformat(start_time_iso)
         end_time_dt = datetime.fromisoformat(end_time_iso)
 
+        # CRITICAL: Use NAIVE local timestamps for iteration.
+        #
+        # Index keys are naive local timestamps (timezone stripped via [:19]).
+        # When start and end span a DST transition, they have different UTC offsets
+        # (e.g., start=+01:00 CET, end=+02:00 CEST). Using fixed-offset datetimes
+        # from fromisoformat() causes the loop to compare UTC values for the end
+        # boundary, ending 1 hour early on spring-forward days (or 1 hour late on
+        # fall-back days).
+        #
+        # By iterating in naive local time, we match the index key format exactly
+        # and the end boundary comparison works correctly regardless of DST.
+        current_naive = start_time_dt.replace(tzinfo=None)
+        end_naive = end_time_dt.replace(tzinfo=None)
+
         # Use index to find intervals: iterate through expected timestamps
         result = []
-        current_dt = start_time_dt
 
         # Determine interval step (15 min post-2025-10-01, 60 min pre)
-        resolution_change_dt = datetime(2025, 10, 1, tzinfo=start_time_dt.tzinfo)
-        interval_minutes = INTERVAL_QUARTER_HOURLY if current_dt >= resolution_change_dt else INTERVAL_HOURLY
+        resolution_change_naive = datetime(2025, 10, 1)  # noqa: DTZ001
+        interval_minutes = INTERVAL_QUARTER_HOURLY if current_naive >= resolution_change_naive else INTERVAL_HOURLY
 
-        while current_dt < end_time_dt:
+        while current_naive < end_naive:
             # Check if this timestamp exists in index (O(1) lookup)
-            current_dt_key = current_dt.isoformat()[:19]
+            current_dt_key = current_naive.isoformat()[:19]
             location = self._index.get(current_dt_key)
 
             if location is not None:
@@ -487,10 +500,10 @@ class TibberPricesIntervalPool:
                 result.append(dict(interval))
 
             # Move to next expected interval
-            current_dt += timedelta(minutes=interval_minutes)
+            current_naive += timedelta(minutes=interval_minutes)
 
             # Handle resolution change boundary
-            if interval_minutes == INTERVAL_HOURLY and current_dt >= resolution_change_dt:
+            if interval_minutes == INTERVAL_HOURLY and current_naive >= resolution_change_naive:
                 interval_minutes = INTERVAL_QUARTER_HOURLY
 
         _LOGGER_DETAILS.debug(
