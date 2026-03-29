@@ -76,7 +76,7 @@ if git rev-parse "$TAG" >/dev/null 2>&1; then
     die "Tag $TAG already exists locally\\nTo remove it: git tag -d $TAG"
 fi
 
-if git ls-remote --tags origin | grep -q "refs/tags/$TAG"; then
+if git ls-remote --tags origin | grep -q "refs/tags/${TAG}$"; then
     die "Tag $TAG already exists on remote"
 fi
 
