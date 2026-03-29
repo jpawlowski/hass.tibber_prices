@@ -11,14 +11,14 @@
             },
             "new_token": {
                 "title": "Ange API-token",
-                "description": "Konfigurera Tibber Prisinformation & Betyg.\n\nFör att generera en API-åtkomsttoken, besök https://developer.tibber.com.",
+                "description": "Konfigurera Tibber Prisinformation & Betyg.\n\nFör att generera en API-åtkomsttoken, besök [{tibber_url}]({tibber_url}).",
                 "data": {
                     "access_token": "API-åtkomsttoken"
                 },
                 "submit": "Validera token"
             },
             "user": {
-                "description": "Konfigurera Tibber Prisinformation & Betyg.\n\nFör att generera en API-åtkomsttoken, besök https://developer.tibber.com.",
+                "description": "Konfigurera Tibber Prisinformation & Betyg.\n\nFör att generera en API-åtkomsttoken, besök [{tibber_url}]({tibber_url}).",
                 "data": {
                     "access_token": "API-åtkomsttoken"
                 },
@@ -42,7 +42,7 @@
             },
             "reauth_confirm": {
                 "title": "Återautentisera Tibber-prisintegration",
-                "description": "Åtkomsttoken för Tibber är inte längre giltig. Ange en ny API-åtkomsttoken för att fortsätta använda denna integration.\n\nFör att generera en ny API-åtkomsttoken, besök https://developer.tibber.com.",
+                "description": "Åtkomsttoken för Tibber är inte längre giltig. Ange en ny API-åtkomsttoken för att fortsätta använda denna integration.\n\nFör att generera en ny API-åtkomsttoken, besök [{tibber_url}]({tibber_url}).",
                 "data": {
                     "access_token": "API-åtkomsttoken"
                 },

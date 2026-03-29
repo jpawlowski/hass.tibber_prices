@@ -11,14 +11,14 @@
             },
             "new_token": {
                 "title": "Voer API-Token In",
-                "description": "Stel Tibber Prijsinformatie & Beoordelingen in.\n\nOm een API-toegangstoken te genereren, bezoek https://developer.tibber.com.",
+                "description": "Stel Tibber Prijsinformatie & Beoordelingen in.\n\nOm een API-toegangstoken te genereren, bezoek [{tibber_url}]({tibber_url}).",
                 "data": {
                     "access_token": "API-toegangstoken"
                 },
                 "submit": "Token valideren"
             },
             "user": {
-                "description": "Stel Tibber Prijsinformatie & Beoordelingen in.\n\nOm een API-toegangstoken te genereren, bezoek https://developer.tibber.com.",
+                "description": "Stel Tibber Prijsinformatie & Beoordelingen in.\n\nOm een API-toegangstoken te genereren, bezoek [{tibber_url}]({tibber_url}).",
                 "data": {
                     "access_token": "API-toegangstoken"
                 },
@@ -42,7 +42,7 @@
             },
             "reauth_confirm": {
                 "title": "Tibber Price Integratie Opnieuw Authenticeren",
-                "description": "Het toegangstoken voor Tibber is niet langer geldig. Voer een nieuw API-toegangstoken in om deze integratie te blijven gebruiken.\n\nOm een nieuw API-toegangstoken te genereren, bezoek https://developer.tibber.com.",
+                "description": "Het toegangstoken voor Tibber is niet langer geldig. Voer een nieuw API-toegangstoken in om deze integratie te blijven gebruiken.\n\nOm een nieuw API-toegangstoken te genereren, bezoek [{tibber_url}]({tibber_url}).",
                 "data": {
                     "access_token": "API-toegangstoken"
                 },

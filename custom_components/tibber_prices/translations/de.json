@@ -11,14 +11,14 @@
             },
             "new_token": {
                 "title": "API-Token eingeben",
-                "description": "Richte Tibber Preisinformationen & Bewertungen ein.\n\nUm einen API-Zugriffstoken zu generieren, besuche https://developer.tibber.com.",
+                "description": "Richte Tibber Preisinformationen & Bewertungen ein.\n\nUm einen API-Zugriffstoken zu generieren, besuche [{tibber_url}]({tibber_url}).",
                 "data": {
                     "access_token": "API-Zugriffstoken"
                 },
                 "submit": "Token validieren"
             },
             "user": {
-                "description": "Richte Tibber Preisinformationen & Bewertungen ein.\n\nUm einen API-Zugriffstoken zu generieren, besuche https://developer.tibber.com.",
+                "description": "Richte Tibber Preisinformationen & Bewertungen ein.\n\nUm einen API-Zugriffstoken zu generieren, besuche [{tibber_url}]({tibber_url}).",
                 "data": {
                     "access_token": "API-Zugriffstoken"
                 },
@@ -42,7 +42,7 @@
             },
             "reauth_confirm": {
                 "title": "Tibber Preis-Integration erneut authentifizieren",
-                "description": "Der Zugriffstoken für Tibber ist nicht mehr gültig. Bitte gib einen neuen API-Zugriffstoken ein, um diese Integration weiter zu nutzen.\n\nUm einen neuen API-Zugriffstoken zu generieren, besuche https://developer.tibber.com.",
+                "description": "Der Zugriffstoken für Tibber ist nicht mehr gültig. Bitte gib einen neuen API-Zugriffstoken ein, um diese Integration weiter zu nutzen.\n\nUm einen neuen API-Zugriffstoken zu generieren, besuche [{tibber_url}]({tibber_url}).",
                 "data": {
                     "access_token": "API-Zugriffstoken"
                 },

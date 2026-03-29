@@ -11,14 +11,14 @@
             },
             "new_token": {
                 "title": "Enter API Token",
-                "description": "Set up Tibber Price Information & Ratings.\n\nTo generate an API access token, visit https://developer.tibber.com.",
+                "description": "Set up Tibber Price Information & Ratings.\n\nTo generate an API access token, visit [{tibber_url}]({tibber_url}).",
                 "data": {
                     "access_token": "API access token"
                 },
                 "submit": "Validate Token"
             },
             "user": {
-                "description": "Set up Tibber Price Information & Ratings.\n\nTo generate an API access token, visit https://developer.tibber.com.",
+                "description": "Set up Tibber Price Information & Ratings.\n\nTo generate an API access token, visit [{tibber_url}]({tibber_url}).",
                 "data": {
                     "access_token": "API access token"
                 },
@@ -42,7 +42,7 @@
             },
             "reauth_confirm": {
                 "title": "Reauthenticate Tibber Price Integration",
-                "description": "The access token for Tibber is no longer valid. Please enter a new API access token to continue using this integration.\n\nTo generate a new API access token, visit https://developer.tibber.com.",
+                "description": "The access token for Tibber is no longer valid. Please enter a new API access token to continue using this integration.\n\nTo generate a new API access token, visit [{tibber_url}]({tibber_url}).",
                 "data": {
                     "access_token": "API access token"
                 },

@@ -11,14 +11,14 @@
             },
             "new_token": {
                 "title": "Skriv inn API-token",
-                "description": "Sett opp Tibber Prisinformasjon & Vurderinger.\n\nFor å generere et API-tilgangstoken, besøk https://developer.tibber.com.",
+                "description": "Sett opp Tibber Prisinformasjon & Vurderinger.\n\nFor å generere et API-tilgangstoken, besøk [{tibber_url}]({tibber_url}).",
                 "data": {
                     "access_token": "API-tilgangstoken"
                 },
                 "submit": "Valider token"
             },
             "user": {
-                "description": "Sett opp Tibber Prisinformasjon & Vurderinger.\n\nFor å generere et API-tilgangstoken, besøk https://developer.tibber.com.",
+                "description": "Sett opp Tibber Prisinformasjon & Vurderinger.\n\nFor å generere et API-tilgangstoken, besøk [{tibber_url}]({tibber_url}).",
                 "data": {
                     "access_token": "API-tilgangstoken"
                 },
@@ -42,7 +42,7 @@
             },
             "reauth_confirm": {
                 "title": "Autentiser Tibber Prisintegrasjonen på nytt",
-                "description": "Tilgangstokenet for Tibber er ikke lenger gyldig. Vennligst oppgi et nytt API-tilgangstoken for å fortsette å bruke denne integrasjonen.\n\nFor å generere et nytt API-tilgangstoken, besøk https://developer.tibber.com.",
+                "description": "Tilgangstokenet for Tibber er ikke lenger gyldig. Vennligst oppgi et nytt API-tilgangstoken for å fortsette å bruke denne integrasjonen.\n\nFor å generere et nytt API-tilgangstoken, besøk [{tibber_url}]({tibber_url}).",
                 "data": {
                     "access_token": "API-tilgangstoken"
                 },

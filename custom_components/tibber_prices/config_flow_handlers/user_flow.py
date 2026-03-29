@@ -141,6 +141,7 @@ class TibberPricesConfigFlowHandler(ConfigFlow, domain=DOMAIN):
             step_id="reauth_confirm",
             data_schema=get_reauth_confirm_schema(),
             errors=_errors,
+            description_placeholders={"tibber_url": "https://developer.tibber.com"},
         )
 
     async def async_step_user(
@@ -291,6 +292,7 @@ class TibberPricesConfigFlowHandler(ConfigFlow, domain=DOMAIN):
             step_id="new_token",
             data_schema=get_user_schema((user_input or {}).get(CONF_ACCESS_TOKEN)),
             errors=_errors,
+            description_placeholders={"tibber_url": "https://developer.tibber.com"},
         )
 
     async def async_step_select_home(self, user_input: dict | None = None) -> ConfigFlowResult:  # noqa: PLR0911
