@@ -1,6 +1,6 @@
 {
     "name": "jpawlowski/hass.tibber_prices",
-    "image": "mcr.microsoft.com/devcontainers/python:3.13",
+    "image": "mcr.microsoft.com/devcontainers/python:3.14",
     "postCreateCommand": "bash .devcontainer/setup-git.sh && scripts/setup/setup",
     "postStartCommand": "scripts/motd",
     "containerEnv": {
@@ -70,7 +70,7 @@
                 ],
                 "python.defaultInterpreterPath": "${workspaceFolder}/.venv/bin/python",
                 "python.analysis.extraPaths": [
-                    "${workspaceFolder}/.venv/lib/python3.13/site-packages"
+                    "${workspaceFolder}/.venv/lib/python3.14/site-packages"
                 ],
                 "python.terminal.activateEnvironment": true,
                 "python.terminal.activateEnvInCurrentTerminal": true,
