@@ -39,7 +39,8 @@ fi
 # if no venv, create one
 if [[ ! -d $HOME/.venv ]]; then
     log_header "Creating virtual environment"
-    uv venv "$HOME/.venv"
+    # Use the Python interpreter from PATH (respects actions/setup-python or local pyenv)
+    uv venv --python "$(which python)" "$HOME/.venv"
     ln -s "$HOME/.venv/" .venv
 fi
 # shellcheck source=/dev/null
