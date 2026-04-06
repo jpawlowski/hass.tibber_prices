@@ -382,20 +382,28 @@ class TibberPricesIntervalPool:
         Get statistics for sensor intervals (protected range).
 
         Protected range: day-before-yesterday 00:00 to day-after-tomorrow 00:00.
-        Expected: 4 days * 24 hours * 4 intervals = 384 intervals.
+        Expected: ~480 intervals (5 days x 96 quarter-hourly slots).
 
         Returns:
             Dict with count, expected, and has_gaps.
+
+        Note on DST:
+            expected_count is derived from UTC-duration arithmetic and will be
+            off by ±4 on spring-forward/fall-back days.  has_gaps uses a
+            separate UTC-aware consecutive-interval check that is immune to this.
 
         """
         start_iso, end_iso = self._cache.get_protected_range()
         start_dt = datetime.fromisoformat(start_iso)
         end_dt = datetime.fromisoformat(end_iso)
 
-        # Count expected intervals (15-min resolution)
+        # Nominal expected count for diagnostics. On spring-forward days this
+        # over-estimates by 4 (the 4 non-existent 02:xx local slots); on
+        # fall-back days it under-estimates by 4. The has_gaps flag is
+        # determined independently via UTC-aware logic below.
         expected_count = int((end_dt - start_dt).total_seconds() / (15 * 60))
 
-        # Count actual intervals in range
+        # Count actual intervals by naive-key iteration (matches index format)
         actual_count = 0
         current_dt = start_dt
 
@@ -408,8 +416,83 @@ class TibberPricesIntervalPool:
         return {
             "count": actual_count,
             "expected": expected_count,
-            "has_gaps": actual_count < expected_count,
+            "has_gaps": self._has_real_gaps_in_range(start_iso, end_iso),
         }
+
+    def _has_real_gaps_in_range(self, start_iso: str, end_iso: str) -> bool:
+        """
+        Check for coverage gaps using UTC-aware consecutive-interval comparison.
+
+        The naive key-counting approach in _get_sensor_interval_stats() visits
+        'phantom' timestamps that don't exist on DST spring-forward days
+        (e.g. 02:00-02:45 when clocks jump 02:00→03:00).  Those slots are
+        permanently absent from the index, producing a false positive every
+        spring-forward day until the next HA restart.
+
+        This method avoids the problem by comparing consecutive cached intervals
+        via their UTC times: the jump from 01:45+01:00 (CET) to 03:00+02:00
+        (CEST) is exactly 15 minutes in UTC, so no gap is reported.
+
+        Boundary comparisons (first/last interval vs start/end of protected
+        range) use the naive 19-char local time representation to stay
+        consistent with the fixed-offset arithmetic used by get_protected_range().
+
+        Args:
+            start_iso: ISO start of the protected range (inclusive).
+            end_iso: ISO end of the protected range (exclusive).
+
+        Returns:
+            True if a real gap exists, False if the range is fully covered.
+
+        """
+        from datetime import UTC  # noqa: PLC0415 - UTC constant needed here only
+
+        cached_intervals = self._get_cached_intervals(start_iso, end_iso)
+
+        if not cached_intervals:
+            return True
+
+        resolution_change_utc = datetime(2025, 10, 1, tzinfo=UTC)
+        # 1-minute tolerance for scheduling jitter / minor timestamp variations
+        tolerance_s = 60
+
+        # Sort by actual UTC time so ordering is correct across DST boundaries
+        sorted_intervals = sorted(
+            cached_intervals,
+            key=lambda x: datetime.fromisoformat(x["startsAt"]),
+        )
+
+        # --- Boundary check: gap before first interval ---
+        # Compare naive local times so we don't confuse a legitimate +01:00/+02:00
+        # offset mismatch (caused by fixed-offset arithmetic in get_protected_range)
+        # with a real missing hour.
+        first_naive_str = sorted_intervals[0]["startsAt"][:19]
+        start_naive_str = start_iso[:19]
+        # datetime.fromisoformat on a naive string → naive datetime (intentional)
+        first_naive_dt = datetime.fromisoformat(first_naive_str)
+        start_naive_dt = datetime.fromisoformat(start_naive_str)
+        if (first_naive_dt - start_naive_dt).total_seconds() > 15 * 60 + tolerance_s:
+            return True
+
+        # --- Interior check: gap between consecutive intervals (UTC-based) ---
+        for i in range(len(sorted_intervals) - 1):
+            current_dt = datetime.fromisoformat(sorted_intervals[i]["startsAt"])
+            next_dt = datetime.fromisoformat(sorted_intervals[i + 1]["startsAt"])
+            diff_s = (next_dt - current_dt).total_seconds()
+            expected_s = 900 if current_dt.astimezone(UTC) >= resolution_change_utc else 3600
+            if diff_s > expected_s + tolerance_s:
+                return True  # Real gap between consecutive intervals
+
+        # --- Boundary check: gap after last interval ---
+        # Same naive-time logic as the start boundary.
+        last_naive_str = sorted_intervals[-1]["startsAt"][:19]
+        end_naive_str = end_iso[:19]
+        last_naive_dt = datetime.fromisoformat(last_naive_str)
+        end_naive_dt = datetime.fromisoformat(end_naive_str)
+        last_dt_utc = datetime.fromisoformat(sorted_intervals[-1]["startsAt"])
+        expected_last_s = 900 if last_dt_utc.astimezone(UTC) >= resolution_change_utc else 3600
+        last_end_naive_dt = last_naive_dt + timedelta(seconds=expected_last_s)
+        return (end_naive_dt - last_end_naive_dt).total_seconds() >= expected_last_s
 
     def _has_gaps_in_protected_range(self) -> bool:
         """
