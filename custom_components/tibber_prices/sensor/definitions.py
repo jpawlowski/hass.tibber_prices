@@ -82,7 +82,7 @@ INTERVAL_PRICE_SENSORS = (
         name="Next Price",
         icon="mdi:cash",  # Dynamic: shows cash-multiple/plus/cash/minus/remove based on price level
         device_class=SensorDeviceClass.MONETARY,
-        state_class=SensorStateClass.TOTAL,  # MONETARY requires TOTAL or None
+        state_class=None,  # Future value: historical chart not useful
         suggested_display_precision=2,
     ),
     SensorEntityDescription(
@@ -91,7 +91,7 @@ INTERVAL_PRICE_SENSORS = (
         name="Previous Electricity Price",
         icon="mdi:cash-refund",  # Static: arrow back indicates "past"
         device_class=SensorDeviceClass.MONETARY,
-        state_class=SensorStateClass.TOTAL,  # MONETARY requires TOTAL or None
+        state_class=None,  # Past snapshot: historical chart not useful
         entity_registry_enabled_default=False,
         suggested_display_precision=2,
     ),
@@ -180,7 +180,7 @@ ROLLING_HOUR_PRICE_SENSORS = (
         name="Current Hour Average Price",
         icon="mdi:cash",  # Dynamic: shows cash-multiple/plus/cash/minus/remove based on aggregated price level
         device_class=SensorDeviceClass.MONETARY,
-        state_class=SensorStateClass.TOTAL,  # MONETARY requires TOTAL or None
+        state_class=None,  # Rolling derived value: historical chart not useful
         suggested_display_precision=2,
     ),
     SensorEntityDescription(
@@ -189,7 +189,7 @@ ROLLING_HOUR_PRICE_SENSORS = (
         name="Next Hour Average Price",
         icon="mdi:cash-fast",  # Dynamic: shows cash-multiple/plus/cash/minus/remove based on aggregated price level
         device_class=SensorDeviceClass.MONETARY,
-        state_class=SensorStateClass.TOTAL,  # MONETARY requires TOTAL or None
+        state_class=None,  # Future derived value: historical chart not useful
         suggested_display_precision=2,
     ),
 )
@@ -258,7 +258,7 @@ DAILY_STAT_SENSORS = (
         name="Today's Lowest Price",
         icon="mdi:arrow-collapse-down",
         device_class=SensorDeviceClass.MONETARY,
-        state_class=SensorStateClass.TOTAL,  # MONETARY requires TOTAL or None
+        state_class=None,  # Daily snapshot: stays constant most of the day
         suggested_display_precision=2,
     ),
     SensorEntityDescription(
@@ -267,7 +267,7 @@ DAILY_STAT_SENSORS = (
         name="Today's Highest Price",
         icon="mdi:arrow-collapse-up",
         device_class=SensorDeviceClass.MONETARY,
-        state_class=SensorStateClass.TOTAL,  # MONETARY requires TOTAL or None
+        state_class=None,  # Daily snapshot: stays constant most of the day
         suggested_display_precision=2,
     ),
     SensorEntityDescription(
@@ -276,7 +276,7 @@ DAILY_STAT_SENSORS = (
         name="Today's Average Price",
         icon="mdi:chart-line",
         device_class=SensorDeviceClass.MONETARY,
-        state_class=SensorStateClass.TOTAL,  # MONETARY requires TOTAL or None
+        state_class=SensorStateClass.TOTAL,  # Keep TOTAL: useful to track daily avg over weeks/months
         suggested_display_precision=2,
     ),
     SensorEntityDescription(
@@ -285,7 +285,7 @@ DAILY_STAT_SENSORS = (
         name="Tomorrow's Lowest Price",
         icon="mdi:arrow-collapse-down",
         device_class=SensorDeviceClass.MONETARY,
-        state_class=SensorStateClass.TOTAL,  # MONETARY requires TOTAL or None
+        state_class=None,  # Future data: historical chart not useful
         suggested_display_precision=2,
     ),
     SensorEntityDescription(
@@ -294,7 +294,7 @@ DAILY_STAT_SENSORS = (
         name="Tomorrow's Highest Price",
         icon="mdi:arrow-collapse-up",
         device_class=SensorDeviceClass.MONETARY,
-        state_class=SensorStateClass.TOTAL,  # MONETARY requires TOTAL or None
+        state_class=None,  # Future data: historical chart not useful
         suggested_display_precision=2,
     ),
     SensorEntityDescription(
@@ -303,7 +303,7 @@ DAILY_STAT_SENSORS = (
         name="Tomorrow's Average Price",
         icon="mdi:chart-line",
         device_class=SensorDeviceClass.MONETARY,
-        state_class=SensorStateClass.TOTAL,  # MONETARY requires TOTAL or None
+        state_class=None,  # Future data: historical chart not useful
         suggested_display_precision=2,
     ),
 )
@@ -393,7 +393,7 @@ WINDOW_24H_SENSORS = (
         name="Trailing 24h Average Price",
         icon="mdi:chart-line",
         device_class=SensorDeviceClass.MONETARY,
-        state_class=SensorStateClass.TOTAL,  # MONETARY requires TOTAL or None
+        state_class=None,  # Rolling window: value shifts every 15min, history chart misleading
         entity_registry_enabled_default=False,
         suggested_display_precision=2,
     ),
@@ -403,7 +403,7 @@ WINDOW_24H_SENSORS = (
         name="Leading 24h Average Price",
         icon="mdi:chart-line-variant",
         device_class=SensorDeviceClass.MONETARY,
-        state_class=SensorStateClass.TOTAL,  # MONETARY requires TOTAL or None
+        state_class=None,  # Rolling window: value shifts every 15min, history chart misleading
         entity_registry_enabled_default=False,  # Advanced use case
         suggested_display_precision=2,
     ),
@@ -413,7 +413,7 @@ WINDOW_24H_SENSORS = (
         name="Trailing 24h Minimum Price",
         icon="mdi:arrow-collapse-down",
         device_class=SensorDeviceClass.MONETARY,
-        state_class=SensorStateClass.TOTAL,  # MONETARY requires TOTAL or None
+        state_class=None,  # Rolling window: value shifts every 15min, history chart misleading
         entity_registry_enabled_default=False,
         suggested_display_precision=2,
     ),
@@ -423,7 +423,7 @@ WINDOW_24H_SENSORS = (
         name="Trailing 24h Maximum Price",
         icon="mdi:arrow-collapse-up",
         device_class=SensorDeviceClass.MONETARY,
-        state_class=SensorStateClass.TOTAL,  # MONETARY requires TOTAL or None
+        state_class=None,  # Rolling window: value shifts every 15min, history chart misleading
         entity_registry_enabled_default=False,
         suggested_display_precision=2,
     ),
@@ -433,7 +433,7 @@ WINDOW_24H_SENSORS = (
         name="Leading 24h Minimum Price",
         icon="mdi:arrow-collapse-down",
         device_class=SensorDeviceClass.MONETARY,
-        state_class=SensorStateClass.TOTAL,  # MONETARY requires TOTAL or None
+        state_class=None,  # Rolling window: value shifts every 15min, history chart misleading
         entity_registry_enabled_default=False,  # Advanced use case
         suggested_display_precision=2,
     ),
@@ -443,7 +443,7 @@ WINDOW_24H_SENSORS = (
         name="Leading 24h Maximum Price",
         icon="mdi:arrow-collapse-up",
         device_class=SensorDeviceClass.MONETARY,
-        state_class=SensorStateClass.TOTAL,  # MONETARY requires TOTAL or None
+        state_class=None,  # Rolling window: value shifts every 15min, history chart misleading
         entity_registry_enabled_default=False,  # Advanced use case
         suggested_display_precision=2,
     ),
@@ -462,7 +462,7 @@ FUTURE_MEAN_SENSORS = (
         name="Next 1h Average Price",
         icon="mdi:chart-line",
         device_class=SensorDeviceClass.MONETARY,
-        state_class=SensorStateClass.TOTAL,  # MONETARY requires TOTAL or None
+        state_class=None,  # Future forecast: historical chart not useful
         suggested_display_precision=2,
         entity_registry_enabled_default=True,
     ),
@@ -472,7 +472,7 @@ FUTURE_MEAN_SENSORS = (
         name="Next 2h Average Price",
         icon="mdi:chart-line",
         device_class=SensorDeviceClass.MONETARY,
-        state_class=SensorStateClass.TOTAL,  # MONETARY requires TOTAL or None
+        state_class=None,  # Future forecast: historical chart not useful
         suggested_display_precision=2,
         entity_registry_enabled_default=True,
     ),
@@ -482,7 +482,7 @@ FUTURE_MEAN_SENSORS = (
         name="Next 3h Average Price",
         icon="mdi:chart-line",
         device_class=SensorDeviceClass.MONETARY,
-        state_class=SensorStateClass.TOTAL,  # MONETARY requires TOTAL or None
+        state_class=None,  # Future forecast: historical chart not useful
         suggested_display_precision=2,
         entity_registry_enabled_default=True,
     ),
@@ -492,7 +492,7 @@ FUTURE_MEAN_SENSORS = (
         name="Next 4h Average Price",
         icon="mdi:chart-line",
         device_class=SensorDeviceClass.MONETARY,
-        state_class=SensorStateClass.TOTAL,  # MONETARY requires TOTAL or None
+        state_class=None,  # Future forecast: historical chart not useful
         suggested_display_precision=2,
         entity_registry_enabled_default=True,
     ),
@@ -502,7 +502,7 @@ FUTURE_MEAN_SENSORS = (
         name="Next 5h Average Price",
         icon="mdi:chart-line",
         device_class=SensorDeviceClass.MONETARY,
-        state_class=SensorStateClass.TOTAL,  # MONETARY requires TOTAL or None
+        state_class=None,  # Future forecast: historical chart not useful
         suggested_display_precision=2,
         entity_registry_enabled_default=True,
     ),
@@ -513,7 +513,7 @@ FUTURE_MEAN_SENSORS = (
         name="Next 6h Average Price",
         icon="mdi:chart-line",
         device_class=SensorDeviceClass.MONETARY,
-        state_class=SensorStateClass.TOTAL,  # MONETARY requires TOTAL or None
+        state_class=None,  # Future forecast: historical chart not useful
         suggested_display_precision=2,
         entity_registry_enabled_default=False,
     ),
@@ -523,7 +523,7 @@ FUTURE_MEAN_SENSORS = (
         name="Next 8h Average Price",
         icon="mdi:chart-line",
         device_class=SensorDeviceClass.MONETARY,
-        state_class=SensorStateClass.TOTAL,  # MONETARY requires TOTAL or None
+        state_class=None,  # Future forecast: historical chart not useful
         suggested_display_precision=2,
         entity_registry_enabled_default=False,
     ),
@@ -533,7 +533,7 @@ FUTURE_MEAN_SENSORS = (
         name="Next 12h Average Price",
         icon="mdi:chart-line",
         device_class=SensorDeviceClass.MONETARY,
-        state_class=SensorStateClass.TOTAL,  # MONETARY requires TOTAL or None
+        state_class=None,  # Future forecast: historical chart not useful
         suggested_display_precision=2,
         entity_registry_enabled_default=False,
     ),
