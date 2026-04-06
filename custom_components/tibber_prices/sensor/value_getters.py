@@ -217,7 +217,7 @@ def get_value_getter_mapping(  # noqa: PLR0913 - needs all calculators as parame
         # Diagnostic sensors
         "data_timestamp": get_data_timestamp,
         # Data lifecycle status sensor
-        "data_lifecycle_status": lambda: lifecycle_calculator.get_lifecycle_state(),
+        "data_lifecycle_status": lifecycle_calculator.get_lifecycle_state,
         # Home metadata sensors (via MetadataCalculator)
         "home_type": lambda: metadata_calculator.get_home_metadata_value("type"),
         "home_size": lambda: metadata_calculator.get_home_metadata_value("size"),

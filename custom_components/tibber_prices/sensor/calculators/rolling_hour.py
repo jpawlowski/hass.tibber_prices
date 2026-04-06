@@ -112,7 +112,7 @@ class TibberPricesRollingHourCalculator(TibberPricesBaseCalculator):
 
         # Map other value types to aggregation functions
         aggregators = {
-            "level": lambda data: aggregate_level_data(data),
+            "level": aggregate_level_data,
             "rating": lambda data: aggregate_rating_data(data, threshold_low, threshold_high),
         }
 

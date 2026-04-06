@@ -136,7 +136,7 @@ def aggregate_window_data(
     # Map value types to aggregation functions
     aggregators: dict[str, Callable] = {
         "price": lambda data: aggregate_average_data(data, config_entry)[0],  # Use only average from tuple
-        "level": lambda data: aggregate_level_data(data),
+        "level": aggregate_level_data,
         "rating": lambda data: aggregate_rating_data(data, threshold_low, threshold_high),
     }
 
