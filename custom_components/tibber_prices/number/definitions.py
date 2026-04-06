@@ -42,7 +42,6 @@ BEST_PRICE_NUMBER_ENTITIES = (
     TibberPricesNumberEntityDescription(
         key="best_price_flex_override",
         translation_key="best_price_flex_override",
-        name="Best Price: Flexibility",
         icon="mdi:arrow-down-bold-circle",
         entity_category=EntityCategory.CONFIG,
         entity_registry_enabled_default=False,
@@ -59,7 +58,6 @@ BEST_PRICE_NUMBER_ENTITIES = (
     TibberPricesNumberEntityDescription(
         key="best_price_min_distance_override",
         translation_key="best_price_min_distance_override",
-        name="Best Price: Minimum Distance",
         icon="mdi:arrow-down-bold-circle",
         entity_category=EntityCategory.CONFIG,
         entity_registry_enabled_default=False,
@@ -76,7 +74,6 @@ BEST_PRICE_NUMBER_ENTITIES = (
     TibberPricesNumberEntityDescription(
         key="best_price_min_period_length_override",
         translation_key="best_price_min_period_length_override",
-        name="Best Price: Minimum Period Length",
         icon="mdi:arrow-down-bold-circle",
         entity_category=EntityCategory.CONFIG,
         entity_registry_enabled_default=False,
@@ -93,7 +90,6 @@ BEST_PRICE_NUMBER_ENTITIES = (
     TibberPricesNumberEntityDescription(
         key="best_price_min_periods_override",
         translation_key="best_price_min_periods_override",
-        name="Best Price: Minimum Periods",
         icon="mdi:arrow-down-bold-circle",
         entity_category=EntityCategory.CONFIG,
         entity_registry_enabled_default=False,
@@ -109,7 +105,6 @@ BEST_PRICE_NUMBER_ENTITIES = (
     TibberPricesNumberEntityDescription(
         key="best_price_relaxation_attempts_override",
         translation_key="best_price_relaxation_attempts_override",
-        name="Best Price: Relaxation Attempts",
         icon="mdi:arrow-down-bold-circle",
         entity_category=EntityCategory.CONFIG,
         entity_registry_enabled_default=False,
@@ -125,7 +120,6 @@ BEST_PRICE_NUMBER_ENTITIES = (
     TibberPricesNumberEntityDescription(
         key="best_price_gap_count_override",
         translation_key="best_price_gap_count_override",
-        name="Best Price: Gap Tolerance",
         icon="mdi:arrow-down-bold-circle",
         entity_category=EntityCategory.CONFIG,
         entity_registry_enabled_default=False,
@@ -148,7 +142,6 @@ PEAK_PRICE_NUMBER_ENTITIES = (
     TibberPricesNumberEntityDescription(
         key="peak_price_flex_override",
         translation_key="peak_price_flex_override",
-        name="Peak Price: Flexibility",
         icon="mdi:arrow-up-bold-circle",
         entity_category=EntityCategory.CONFIG,
         entity_registry_enabled_default=False,
@@ -165,7 +158,6 @@ PEAK_PRICE_NUMBER_ENTITIES = (
     TibberPricesNumberEntityDescription(
         key="peak_price_min_distance_override",
         translation_key="peak_price_min_distance_override",
-        name="Peak Price: Minimum Distance",
         icon="mdi:arrow-up-bold-circle",
         entity_category=EntityCategory.CONFIG,
         entity_registry_enabled_default=False,
@@ -182,7 +174,6 @@ PEAK_PRICE_NUMBER_ENTITIES = (
     TibberPricesNumberEntityDescription(
         key="peak_price_min_period_length_override",
         translation_key="peak_price_min_period_length_override",
-        name="Peak Price: Minimum Period Length",
         icon="mdi:arrow-up-bold-circle",
         entity_category=EntityCategory.CONFIG,
         entity_registry_enabled_default=False,
@@ -199,7 +190,6 @@ PEAK_PRICE_NUMBER_ENTITIES = (
     TibberPricesNumberEntityDescription(
         key="peak_price_min_periods_override",
         translation_key="peak_price_min_periods_override",
-        name="Peak Price: Minimum Periods",
         icon="mdi:arrow-up-bold-circle",
         entity_category=EntityCategory.CONFIG,
         entity_registry_enabled_default=False,
@@ -215,7 +205,6 @@ PEAK_PRICE_NUMBER_ENTITIES = (
     TibberPricesNumberEntityDescription(
         key="peak_price_relaxation_attempts_override",
         translation_key="peak_price_relaxation_attempts_override",
-        name="Peak Price: Relaxation Attempts",
         icon="mdi:arrow-up-bold-circle",
         entity_category=EntityCategory.CONFIG,
         entity_registry_enabled_default=False,
@@ -231,7 +220,6 @@ PEAK_PRICE_NUMBER_ENTITIES = (
     TibberPricesNumberEntityDescription(
         key="peak_price_gap_count_override",
         translation_key="peak_price_gap_count_override",
-        name="Peak Price: Gap Tolerance",
         icon="mdi:arrow-up-bold-circle",
         entity_category=EntityCategory.CONFIG,
         entity_registry_enabled_default=False,
