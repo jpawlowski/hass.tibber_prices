@@ -384,6 +384,81 @@ Recommendation: Use 15-20% with relaxation enabled, or 25-35% without relaxation
 
 ---
 
+## Flat Day and Low-Price Adaptations
+
+These three mechanisms handle pathological price situations where standard filters produce misleading or impossible results. All are hardcoded (not user-configurable) because they correct mathematical defects rather than expressing user preferences.
+
+### 1. Adaptive min_periods for Flat Days
+
+**File:** `coordinator/period_handlers/relaxation.py` → `_compute_day_effective_min()`
+
+**Trigger:** Coefficient of Variation (CV) of a day's prices ≤ `LOW_CV_FLAT_DAY_THRESHOLD` (10%)
+
+**Problem:** When all prices are nearly identical (e.g. 28–32 ct, CV=5.4%), requiring 2 distinct "best price" windows is geometrically impossible. Even after exhausting all 11 relaxation phases, only 1 period exists because there is no second cheap cluster.
+
+**Solution:** Before the baseline counting loop, compute per-day effective min_periods:
+```python
+if day_cv <= 10%:
+    day_effective_min[day] = 1   # Flat day: 1 period is enough
+else:
+    day_effective_min[day] = min_periods  # Normal day: respect config
+```
+
+**Scope:** Best Price only (`reverse_sort=False`). Peak Price always runs full relaxation because the genuinely most expensive window must be identified even on flat days.
+
+**Transparency:** The count of flat days is stored in `metadata["relaxation"]["flat_days_detected"]` and surfaced as a sensor attribute.
+
+### 2. min_distance Scaling on Absolute Low-Price Days
+
+**File:** `coordinator/period_handlers/level_filtering.py` → `check_interval_criteria()`
+
+**Trigger:** `criteria.avg_price < LOW_PRICE_AVG_THRESHOLD` (0.10 EUR)
+
+**Problem:** On solar surplus days (avg 2–5 ct/kWh), a percentage-based min_distance like 5% means only 0.1 ct absolute separation is required. The filter either accepts almost the entire day (if ref_price is 2 ct, 5% = 0.1 ct – nearly everything qualifies) or blocks everything (if the spread is within that 0.1 ct band).
+
+**Solution:** Linear scaling toward zero as avg_price approaches zero:
+```
+scale_factor = avg_price / LOW_PRICE_AVG_THRESHOLD
+adjusted_min_distance = original_min_distance × scale_factor
+```
+
+| avg_price | scale | Effect on 5% min_distance |
+|---|---|---|
+| ≥ 10 ct (0.10 EUR) | 100% | 5% (full distance) |
+| 5 ct (0.05 EUR) | 50% | 2.5% |
+| 2 ct (0.02 EUR) | 20% | 1% |
+| 0 ct | 0% | 0% (disabled) |
+
+### 3. CV Quality Gate Bypass for Absolute Low-Price Periods
+
+**File:** `coordinator/period_handlers/relaxation.py` → `_check_period_quality()`, and `coordinator/period_handlers/period_overlap.py` → `_check_merge_quality_gate()`
+
+**Trigger:** Period mean price < `LOW_PRICE_QUALITY_BYPASS_THRESHOLD` (0.10 EUR)
+
+**Problem:** A period at 0.5–4 ct has high *relative* variation (CV ≈ 70–80%), but the absolute differences are fractions of a cent. The quality gate (CV ≤ `PERIOD_MAX_CV`) with a relative metric would wrongly reject this as a "heterogeneous" period.
+
+**Distinguishes from flat normal days:** A flat day at 33–36 ct also has low absolute range, but mean is 34.5 ct (>> 0.10 EUR threshold). The bypass only applies when the mean itself is below the threshold – i.e. the day is genuinely cheap in absolute terms.
+
+**Solution:** Short-circuit the quality gate check:
+```python
+period_mean = sum(period_prices) / len(period_prices)
+if period_mean < LOW_PRICE_QUALITY_BYPASS_THRESHOLD:
+    return True, cv  # Bypass: absolute price level is very low
+passes = cv <= PERIOD_MAX_CV
+```
+
+The same bypass is applied in `_check_merge_quality_gate()` using the combined period's mean price.
+
+### Why These Are Hardcoded
+
+All three thresholds are internal correctness guards, not user preferences:
+
+1. **Currency-relative:** 0.10 EUR works across EUR, NOK, SEK etc. because Tibber prices in those currencies have similar nominal order of magnitude. A user setting this would need to understand currency-denominated physics.
+2. **Mathematical necessity:** Disabling them reverts to pre-fix behavior (worst case: 0 periods on V-shape days).
+3. **No valid configuration reason:** There is no scenario where a user benefits from "I want the CV gate to reject my 2 ct period" or "I want the full min_distance on a 3 ct average day".
+
+---
+
 ## Relaxation Strategy
 
 ### Purpose
@@ -737,6 +812,59 @@ DEBUG: After build_periods: 1 raw period found
 DEBUG: Day 2025-11-11: Baseline insufficient (1 < 2), starting relaxation
 ```
 
+### Scenario 2b: Flat Day with Adaptive min_periods
+
+**Price Range:** 28 - 32 ct/kWh (CV ≈ 5.4%, very flat)
+**Average:** 30 ct/kWh, Min: 28.5 ct/kWh
+**Configuration:** `min_periods_best: 2`, relaxation enabled
+
+**Problem without adaptation:**
+Relaxation would exhaust all 11 phases trying to find a second period. All prices are equally cheap – finding two distinct windows is geometrically impossible.
+
+**Implemented behavior:**
+`_compute_day_effective_min()` detects CV ≤ 10% and sets `day_effective_min = 1` for this day. The result is accepted after finding the single cheapest cluster.
+
+**Expected Logs:**
+```
+DEBUG:   Day 2025-11-11: flat price profile (CV=5.4% ≤ 10.0%) → min_periods relaxed to 1
+INFO: Adaptive min_periods: 1 flat day(s) (CV ≤ 10%) need only 1 period instead of 2
+INFO: Day 2025-11-11: Baseline satisfied (1 period, effective minimum is 1)
+```
+
+**Sensor Attributes:**
+```yaml
+min_periods_configured: 2    # User's setting
+periods_found_total: 1       # Actual result
+flat_days_detected: 1        # Explains the difference
+```
+
+**Why not for Peak Price?**
+Peak price always runs full relaxation. On a flat day, the integration still needs to identify the genuinely most expensive window (even if the absolute difference is small). Skipping relaxation would mean accepting any arbitrarily-chosen interval as "peak".
+
+### Scenario 2c: Absolute Low-Price Day (e.g. Solar Surplus)
+
+**Price Range:** 0.5 - 4.2 ct/kWh (V-shape from solar generation)
+**Average:** 2.1 ct/kWh, Min: 0.5 ct/kWh
+**Configuration:** `min_periods_best: 2`, 5% min_distance
+
+**Problems without fixes:**
+1. **min_distance conflict:** 5% of 2.1 ct = 0.105 ct minimum distance. Only prices ≤ 1.995 ct qualify. The daily minimum is 0.5 ct – well within range. But the *relative* threshold becomes meaninglessly tiny: the entire day could qualify.
+2. **CV quality gate:** Prices 0.5–4.2 ct show high relative variation (CV ≈ 70-80%), but the absolute differences are fractions of a cent. The quality gate would wrongly reject valid periods.
+
+**Implemented behavior:**
+
+*`LOW_PRICE_AVG_THRESHOLD = 0.10 EUR` (level_filtering.py):*
+When `avg_price < 0.10 EUR`, min_distance is scaled linearly to 0. At avg=2.1 ct (0.021 EUR), scale ≈ 21% → min_distance effectively 1%. Prevents the distance filter from blocking the entire day or accepting the entire day.
+
+*`LOW_PRICE_QUALITY_BYPASS_THRESHOLD = 0.10 EUR` (relaxation.py):*
+When period mean < 0.10 EUR, the CV quality gate is bypassed entirely. A period at 0.5–2 ct with CV=60% is practically homogeneous from a cost perspective.
+
+**Expected Logs:**
+```
+DEBUG:   Low-price day (avg=0.021 EUR < 0.10 threshold): min_distance scaled 5% → 1.1%
+DEBUG:   Period 02:00-05:00: mean=0.009 EUR < bypass threshold → quality gate bypassed
+```
+
 ### Scenario 3: Extreme Day (High Volatility)
 
 **Price Range:** 5 - 40 ct/kWh (700% variation)
@@ -815,6 +943,25 @@ When debugging period calculation issues:
    - Look for "Outlier detected" messages
    - Check `period_interval_smoothed_count` attribute
    - If no smoothing but periods fragmented: Not isolated spikes, but legitimate price levels
+
+6. **Check Flat Day / Low-Price Adaptations**
+   - Sensor shows `flat_days_detected: N` → CV ≤ 10%, adaptive min_periods reduced target to 1
+   - Sensor shows `relaxation_incomplete: true` without `flat_days_detected` → check filter settings
+   - Low absolute prices (avg < 10 ct): min_distance is auto-scaled, CV quality gate is bypassed
+   - To confirm: Enable DEBUG logging for `custom_components.tibber_prices.coordinator.period_handlers.relaxation.details`
+   - Look for: `"flat price profile (CV=X.X% ≤ 10.0%) → min_periods relaxed to 1"`
+   - Look for: `"Low-price day (avg=0.0XX EUR < 0.10 threshold): min_distance scaled X% → Y%"`
+
+**Diagnostic Sensor Attributes Summary:**
+
+| Attribute | Type | When shown | Meaning |
+|---|---|---|---|
+| `min_periods_configured` | int | Always | User's configured target per day |
+| `periods_found_total` | int | Always | Actual periods found across all days |
+| `flat_days_detected` | int | Only when > 0 | Days where CV ≤ 10% reduced target to 1 |
+| `relaxation_incomplete` | bool | Only when true | Relaxation exhausted, target not reached |
+| `relaxation_active` | bool | Only when true | This specific period needed relaxed filters |
+| `relaxation_level` | string | Only when active | Flex% and filter combo that succeeded |
 
 ---
 

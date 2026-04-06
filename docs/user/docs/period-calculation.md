@@ -12,9 +12,12 @@ Learn how Best Price and Peak Price periods work, and how to configure them for 
 -   [Understanding Relaxation](#understanding-relaxation)
 -   [Common Scenarios](#common-scenarios)
 -   [Troubleshooting](#troubleshooting)
+    -   [Fewer Periods Than Configured](#fewer-periods-than-configured)
     -   [No Periods Found](#no-periods-found)
     -   [Periods Split Into Small Pieces](#periods-split-into-small-pieces)
+    -   [Understanding Sensor Attributes](#understanding-sensor-attributes)
     -   [Midnight Price Classification Changes](#midnight-price-classification-changes)
+-   [Advanced Topics](#advanced-topics)
 -   [Advanced Topics](#advanced-topics)
 
 ---
@@ -459,6 +462,40 @@ automation:
 
 ## Troubleshooting
 
+### Fewer Periods Than Configured
+
+**Symptom:** You configured `min_periods_best: 2` but the sensor shows fewer periods on some days, and the attributes contain `flat_days_detected: 1` or `relaxation_incomplete: true`.
+
+**If `flat_days_detected` is present:**
+
+This is **expected behavior** on days with very uniform electricity prices. When prices vary by less than ~10% across the day (e.g. on sunny spring days with high solar generation), there is no meaningful second "cheap window" – all hours are equally cheap. The integration automatically reduces the target to 1 period for that day.
+
+```yaml
+min_periods_configured: 2
+periods_found_total: 1
+flat_days_detected: 1    # Uniform prices today → 1 period is the right answer
+```
+
+You don't need to change anything. This is the integration protecting you from artificial periods.
+
+**If `relaxation_incomplete` is present (without `flat_days_detected`):**
+
+Relaxation tried all configured attempts but couldn't reach your target. Options:
+
+1. **Increase relaxation attempts** (tries more flexibility levels before giving up)
+   ```yaml
+   relaxation_attempts_best: 12  # Default: 11
+   ```
+
+2. **Reduce minimum period count**
+   ```yaml
+   min_periods_best: 1  # Only require 1 period per day
+   ```
+
+3. **Check filter settings** – very strict `best_price_min_distance_from_avg` values block relaxation
+
+---
+
 ### No Periods Found
 
 **Symptom:** `binary_sensor.<home_name>_best_price_period` never turns "on"
@@ -526,10 +563,63 @@ rating_level: "LOW"                  # All intervals have LOW rating
 relaxation_active: true              # This day needed relaxation
 relaxation_level: "price_diff_18.0%+level_any"  # Found at 18% flex, level filter removed
 
+# Calculation summary (always shown – diagnostic overview of this calculation run):
+min_periods_configured: 2           # What you configured as target
+periods_found_total: 3              # What was actually found across all days
+
 # Optional (only shown when relevant):
 period_interval_smoothed_count: 2    # Number of price spikes smoothed
 period_interval_level_gap_count: 1   # Number of "mediocre" intervals tolerated
+flat_days_detected: 1               # Days where prices were so flat that 1 period is enough
+relaxation_incomplete: true         # Some days couldn't reach the configured target
 ```
+
+#### What the diagnostic attributes mean
+
+**`min_periods_configured` / `periods_found_total`**
+
+These two values together quickly show whether the calculation achieved its goal:
+
+```yaml
+min_periods_configured: 2   # You asked for 2 periods per day
+periods_found_total: 6      # 3 days × 2 periods = fully satisfied ✅
+```
+
+```yaml
+min_periods_configured: 2
+periods_found_total: 5      # 3 days, but one day got only 1 period
+```
+
+Note that `periods_found_total` counts **all periods across today and tomorrow** – so 4 on a two-day view means 2 per day on average.
+
+**`flat_days_detected`**
+
+This is the most important diagnostic for days with very uniform prices (e.g. sunny spring/summer days with high solar generation):
+
+```yaml
+min_periods_configured: 2
+periods_found_total: 1
+flat_days_detected: 1       # ← This explains why you got 1 instead of 2
+```
+
+When prices barely change across the day – typically a variation of less than 10% – the integration automatically reduces the target from your configured value to 1. There is no meaningful second "best price window" when all prices are essentially equal.
+
+**This is expected and correct behavior**, not a problem. It prevents the sensor from generating artificial periods that don't represent genuinely cheaper windows.
+
+**`relaxation_incomplete`**
+
+This flag appears when even after all relaxation attempts, at least one day could not reach the configured minimum number of periods:
+
+```yaml
+min_periods_configured: 2
+periods_found_total: 1
+relaxation_incomplete: true  # ← Relaxation tried everything, still short
+```
+
+This is most common on very flat days (see above) or with very strict filter settings. If you see this repeatedly on normal days, consider:
+- Reducing `min_periods_best` to 1
+- Increasing `relaxation_attempts_best`
+- Checking if your `best_price_min_distance_from_avg` is too high
 
 ### Midnight Price Classification Changes
 
