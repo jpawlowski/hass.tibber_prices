@@ -34,6 +34,11 @@ INTERVAL_QUARTER_HOURLY = 15
 # Debounce delay for auto-save (seconds)
 DEBOUNCE_DELAY_SECONDS = 3.0
 
+# Maximum UTC difference (seconds) between two intervals that share the same naive
+# local timestamp to still be considered a true duplicate (not a DST fall-back pair).
+# True duplicates differ by 0 s; DST fall-back pairs differ by ~3600 s.
+_DST_COLLISION_MAX_SAME_UTC_S = 60
+
 
 def _normalize_starts_at(starts_at: datetime | str) -> str:
     """Normalize startsAt to consistent format (YYYY-MM-DDTHH:MM:SS)."""
@@ -111,6 +116,15 @@ class TibberPricesIntervalPool:
         self._background_tasks: set[asyncio.Task] = set()
         self._save_debounce_task: asyncio.Task | None = None
         self._save_lock = asyncio.Lock()
+
+        # DST fall-back extra intervals.
+        # On DST fall-back nights (e.g. last Sunday October in EU), wall-clock
+        # 02:00-02:45 occurs twice: once in CEST (+02:00) and once in CET (+01:00).
+        # The main index uses naive 19-char keys, so the second batch collides.
+        # To avoid discarding the CET hour's price data, we store the colliding
+        # entries here keyed by their normalized timestamp.
+        # Structure: {"2026-10-25T02:00:00": [{"startsAt": "...+01:00", ...}], ...}
+        self._dst_extras: dict[str, list[dict[str, Any]]] = {}
 
     async def get_intervals(
         self,
@@ -582,6 +596,12 @@ class TibberPricesIntervalPool:
                 # (e.g., parse_all_timestamps() converts startsAt to datetime in-place)
                 result.append(dict(interval))
 
+                # Also yield DST fall-back extras for this naive timestamp.
+                # On fall-back day, 02:xx occurs in both CEST and CET; the CET
+                # version was stored in _dst_extras instead of being discarded.
+                if current_dt_key in self._dst_extras:
+                    result.extend(dict(extra) for extra in self._dst_extras[current_dt_key])
+
             # Move to next expected interval
             current_naive += timedelta(minutes=interval_minutes)
 
@@ -598,6 +618,47 @@ class TibberPricesIntervalPool:
         )
 
         return result
+
+    def _handle_index_collision(
+        self,
+        starts_at_normalized: str,
+        interval: dict[str, Any],
+    ) -> bool:
+        """
+        Handle a key collision when adding an interval.
+
+        A collision occurs when a new interval shares the same naive local key as one
+        already in the index.  Two cases:
+
+        * **True duplicate**: the UTC times are ≤ ``_DST_COLLISION_MAX_SAME_UTC_S``
+          apart → normal re-fetch; caller should *touch* the existing entry.
+        * **DST fall-back collision**: the UTC times differ by ~3600 s → the same
+          local clock time occurs twice (CEST then CET).  Store the new interval in
+          ``_dst_extras`` so both are preserved.
+
+        Returns:
+            ``True`` if this was a DST fall-back collision (extra stored internally).
+            ``False`` if this was a true duplicate (caller should touch existing entry).
+
+        """
+        location = self._index.get(starts_at_normalized)
+        if location is None:
+            return False
+        fetch_groups = self._cache.get_fetch_groups()
+        existing_interval = fetch_groups[location["fetch_group_index"]]["intervals"][location["interval_index"]]
+        existing_dt = datetime.fromisoformat(existing_interval["startsAt"])
+        new_dt = datetime.fromisoformat(interval["startsAt"])
+        if abs((new_dt - existing_dt).total_seconds()) > _DST_COLLISION_MAX_SAME_UTC_S:
+            # Different UTC time → DST fall-back collision: preserve both
+            self._dst_extras.setdefault(starts_at_normalized, []).append(dict(interval))
+            _LOGGER.debug(
+                "DST fall-back: stored extra interval %s alongside %s for home %s",
+                interval["startsAt"],
+                existing_interval["startsAt"],
+                self._home_id,
+            )
+            return True
+        return False
 
     def _add_intervals(
         self,
@@ -633,6 +694,9 @@ class TibberPricesIntervalPool:
             starts_at_normalized = _normalize_starts_at(interval["startsAt"])
             if not self._index.contains(starts_at_normalized):
                 new_intervals.append(interval)
+            elif self._handle_index_collision(starts_at_normalized, interval):
+                # DST fall-back: extra stored inside _handle_index_collision, skip touch
+                pass
             else:
                 intervals_to_touch.append((starts_at_normalized, interval))
                 _LOGGER_DETAILS.debug(
@@ -675,6 +739,11 @@ class TibberPricesIntervalPool:
 
         # Run GC to evict old fetch groups if needed
         gc_changed_data = self._gc.run_gc()
+
+        # After GC, prune DST extras whose main index entry was evicted.
+        # (Extras are only meaningful while their CEST counterpart is still indexed.)
+        if gc_changed_data and self._dst_extras:
+            self._dst_extras = {key: extras for key, extras in self._dst_extras.items() if self._index.contains(key)}
 
         # Schedule debounced auto-save if data changed
         data_changed = len(new_intervals) > 0 or len(intervals_to_touch) > 0 or gc_changed_data
@@ -848,6 +917,9 @@ class TibberPricesIntervalPool:
             "version": 1,
             "home_id": self._home_id,
             "fetch_groups": serialized_fetch_groups,
+            # DST fall-back extras: CET duplicates of fall-back 02:xx intervals.
+            # Only non-empty on/after fall-back nights; typically {} all year.
+            "dst_extras": self._dst_extras,
         }
 
     @classmethod
@@ -909,5 +981,9 @@ class TibberPricesIntervalPool:
             home_id,
             total_intervals,
         )
+
+        # Restore DST fall-back extras (CET duplicates of fall-back 02:xx intervals).
+        # Typically empty ({}) except in the days following a fall-back night.
+        manager._dst_extras = data.get("dst_extras", {})
 
         return manager
