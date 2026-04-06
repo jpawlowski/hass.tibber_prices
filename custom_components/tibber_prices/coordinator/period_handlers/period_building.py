@@ -112,6 +112,19 @@ def build_periods(  # noqa: PLR0913, PLR0915, PLR0912 - Complex period building 
     intervals_filtered_by_flex = 0
     intervals_filtered_by_min_distance = 0
 
+    # Pre-compute criteria per day (flex/min_distance/reverse_sort are constant throughout;
+    # only ref_price and avg_price vary by day — max 3 entries: yesterday/today/tomorrow)
+    criteria_by_day: dict[date, TibberPricesIntervalCriteria] = {
+        day: TibberPricesIntervalCriteria(
+            ref_price=ref_prices[day],
+            avg_price=avg_prices[day],
+            flex=flex,
+            min_distance_from_avg=min_distance_from_avg,
+            reverse_sort=reverse_sort,
+        )
+        for day in ref_prices
+    }
+
     for price_data in all_prices:
         starts_at = time.get_interval_time(price_data)
         if starts_at is None:
@@ -133,13 +146,7 @@ def build_periods(  # noqa: PLR0913, PLR0915, PLR0912 - Complex period building 
         ref_date = date_key
 
         # Check flex and minimum distance criteria (using smoothed price and interval's own day reference)
-        criteria = TibberPricesIntervalCriteria(
-            ref_price=ref_prices[ref_date],
-            avg_price=avg_prices[ref_date],
-            flex=flex,
-            min_distance_from_avg=min_distance_from_avg,
-            reverse_sort=reverse_sort,
-        )
+        criteria = criteria_by_day[ref_date]
         in_flex, meets_min_distance = check_interval_criteria(price_for_criteria, criteria)
 
         # Track why intervals are filtered

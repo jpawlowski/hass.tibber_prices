@@ -5,7 +5,7 @@ from __future__ import annotations
 import asyncio
 import contextlib
 import logging
-from datetime import datetime, timedelta
+from datetime import UTC, datetime, timedelta
 from typing import TYPE_CHECKING, Any
 from zoneinfo import ZoneInfo
 
@@ -459,8 +459,6 @@ class TibberPricesIntervalPool:
             True if a real gap exists, False if the range is fully covered.
 
         """
-        from datetime import UTC  # noqa: PLC0415 - UTC constant needed here only
-
         cached_intervals = self._get_cached_intervals(start_iso, end_iso)
 
         if not cached_intervals:
@@ -582,14 +580,13 @@ class TibberPricesIntervalPool:
         resolution_change_naive = datetime(2025, 10, 1)  # noqa: DTZ001
         interval_minutes = INTERVAL_QUARTER_HOURLY if current_naive >= resolution_change_naive else INTERVAL_HOURLY
 
+        fetch_groups = self._cache.get_fetch_groups()
         while current_naive < end_naive:
             # Check if this timestamp exists in index (O(1) lookup)
             current_dt_key = current_naive.isoformat()[:19]
             location = self._index.get(current_dt_key)
 
             if location is not None:
-                # Get interval from fetch group
-                fetch_groups = self._cache.get_fetch_groups()
                 fetch_group = fetch_groups[location["fetch_group_index"]]
                 interval = fetch_group["intervals"][location["interval_index"]]
                 # CRITICAL: Return shallow copy to prevent external mutations
