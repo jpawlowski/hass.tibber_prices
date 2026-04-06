@@ -796,7 +796,7 @@ DIAGNOSTIC_SENSORS = (
         icon="mdi:ruler-square",
         entity_category=EntityCategory.DIAGNOSTIC,
         native_unit_of_measurement=UnitOfArea.SQUARE_METERS,
-        state_class=SensorStateClass.MEASUREMENT,
+        state_class=None,  # Static user metadata: no statistics useful
         entity_registry_enabled_default=False,
         suggested_display_precision=0,
     ),
@@ -807,7 +807,7 @@ DIAGNOSTIC_SENSORS = (
         entity_category=EntityCategory.DIAGNOSTIC,
         native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
         device_class=SensorDeviceClass.CURRENT,
-        state_class=SensorStateClass.MEASUREMENT,
+        state_class=None,  # Static user metadata: no statistics useful
         entity_registry_enabled_default=False,
         suggested_display_precision=0,
     ),
@@ -816,7 +816,7 @@ DIAGNOSTIC_SENSORS = (
         translation_key="number_of_residents",
         icon="mdi:account-group",
         entity_category=EntityCategory.DIAGNOSTIC,
-        state_class=SensorStateClass.MEASUREMENT,
+        state_class=None,  # Static user metadata: no statistics useful
         entity_registry_enabled_default=False,
         suggested_display_precision=0,
     ),
@@ -902,7 +902,7 @@ DIAGNOSTIC_SENSORS = (
         entity_category=EntityCategory.DIAGNOSTIC,
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
-        state_class=SensorStateClass.TOTAL,
+        state_class=None,  # Static Tibber estimate, not an actual accumulating counter
         suggested_display_precision=0,
     ),
     # Subscription data
