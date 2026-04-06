@@ -214,7 +214,7 @@ def build_sensor_attributes(
         )
         return None
     else:
-        return attributes if attributes else None
+        return attributes or None
 
 
 def build_extra_state_attributes(  # noqa: PLR0913
@@ -287,7 +287,7 @@ def build_extra_state_attributes(  # noqa: PLR0913
         if sensor_attrs:
             attributes.update({k: v for k, v in sensor_attrs.items() if k not in ("timestamp", "error")})
 
-        return attributes if attributes else None
+        return attributes or None
 
     # For all other sensors: standard behavior
     # Start with default timestamp (datetime object - HA serializes automatically)
@@ -322,4 +322,4 @@ def build_extra_state_attributes(  # noqa: PLR0913
         position="end",
     )
 
-    return attributes if attributes else None
+    return attributes or None

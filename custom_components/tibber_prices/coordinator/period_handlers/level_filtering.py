@@ -133,20 +133,30 @@ def check_interval_criteria(
     # - Peak price (reverse_sort=True): daily MAXIMUM
     # - Best price (reverse_sort=False): daily MINIMUM
     #
-    # Flex band calculation (using absolute values):
-    # - Peak price: [max - max*flex, max] → accept prices near the maximum
-    # - Best price: [min, min + min*flex] → accept prices near the minimum
+    # Flex base = max(price_span, abs(ref_price)):
+    # - On V-shape days (tiny minimum, large span): span wins → meaningful flex band
+    # - On flat days (large minimum, small span): ref_price wins → same as before
     #
-    # Examples with flex=20%:
-    # - Peak: max=30 ct → accept [24, 30] ct (prices ≥ 24 ct)
-    # - Best: min=10 ct → accept [10, 12] ct (prices ≤ 12 ct)
+    # WHY NOT plain ref_price * flex: When daily_min is a single low outlier
+    # (e.g., min=1 ct, avg=19 ct), the flex band collapses to near-zero
+    # (1 ct * 15% = 0.15 ct) and no period of sufficient length can be found.
+    #
+    # WHY NOT plain span * flex: On flat days (e.g., min=30 ct, span=3 ct),
+    # this makes the band much narrower than before, breaking existing behaviour.
+    #
+    # Examples with flex=15%:
+    # - V-shape: min=1 ct, avg=19 ct → span=18 ct → flex_base=18 → threshold=1+2.7=3.7 ct  (spans fixed)
+    # - Flat:    min=30 ct, avg=33 ct → span=3 ct  → flex_base=30 → threshold=30+4.5=34.5 ct (unchanged)
+    # - Normal:  min=10 ct, avg=20 ct → span=10 ct → flex_base=10 → threshold=10+1.5=11.5 ct (unchanged)
 
-    if criteria.ref_price == 0:
-        # Zero reference: flex has no effect, use strict equality
+    price_span = abs(criteria.avg_price - criteria.ref_price)
+    flex_base = max(price_span, abs(criteria.ref_price))
+
+    if flex_base == 0:
+        # Degenerate case: all prices are zero → only exact zero qualifies
         in_flex = price == 0
     else:
-        # Calculate flex amount using absolute value
-        flex_amount = abs(criteria.ref_price) * flex_abs
+        flex_amount = flex_base * flex_abs
 
         if criteria.reverse_sort:
             # Peak price: accept prices >= (ref_price - flex_amount)

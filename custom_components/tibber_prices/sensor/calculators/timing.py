@@ -104,9 +104,9 @@ class TibberPricesTimingCalculator(TibberPricesBaseCalculator):
             ),
             "period_duration": lambda: self._calc_period_duration(current_period, next_period),
             "next_start_time": lambda: next_period.get("start") if next_period else None,
-            "remaining_minutes": lambda: (self._calc_remaining_minutes(current_period) if current_period else 0),
+            "remaining_minutes": lambda: self._calc_remaining_minutes(current_period) if current_period else 0,
             "progress": lambda: self._calc_progress_with_grace_period(current_period, previous_period, now),
-            "next_in_minutes": lambda: (self._calc_next_in_minutes(next_period) if next_period else None),
+            "next_in_minutes": lambda: self._calc_next_in_minutes(next_period) if next_period else None,
         }
 
         calculator = calculators.get(value_type)

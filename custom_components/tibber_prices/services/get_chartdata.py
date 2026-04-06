@@ -616,7 +616,7 @@ async def handle_chartdata(call: ServiceCall) -> dict[str, Any]:  # noqa: PLR091
             # Mode 'segments': Add NULL points at segment boundaries for clean gaps
             # Process ALL intervals as one continuous list - no special midnight handling needed
             filter_field = "rating_level" if rating_level_filter else "level"
-            filter_values = rating_level_filter if rating_level_filter else level_filter
+            filter_values = rating_level_filter or level_filter
             use_rating = rating_level_filter is not None
 
             for i in range(len(all_prices) - 1):

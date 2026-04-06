@@ -97,7 +97,7 @@ class TibberPricesConfigNumber(RestoreNumber, NumberEntity):
             name=home_name,
             manufacturer="Tibber",
             model=translated_model,
-            serial_number=home_id if home_id else None,
+            serial_number=home_id or None,
             configuration_url="https://developer.tibber.com/explorer",
         )
 
@@ -233,7 +233,7 @@ class TibberPricesConfigNumber(RestoreNumber, NumberEntity):
         if description:
             attrs["description"] = description
 
-        return attrs if attrs else None
+        return attrs or None
 
     @callback
     def async_registry_entry_updated(self) -> None:

@@ -445,7 +445,7 @@ async def build_async_extra_state_attributes(  # noqa: PLR0913
         position="end",
     )
 
-    return attributes if attributes else None
+    return attributes or None
 
 
 def build_sync_extra_state_attributes(  # noqa: PLR0913
@@ -508,4 +508,4 @@ def build_sync_extra_state_attributes(  # noqa: PLR0913
         position="end",
     )
 
-    return attributes if attributes else None
+    return attributes or None

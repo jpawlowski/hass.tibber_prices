@@ -43,7 +43,7 @@ def add_next_avg_attributes(  # noqa: PLR0913
     """
     # Extract hours from sensor key (e.g., "next_avg_3h" -> 3)
     try:
-        hours = int(key.split("_")[-1].replace("h", ""))
+        hours = int(key.rsplit("_", maxsplit=1)[-1].replace("h", ""))
     except (ValueError, AttributeError):
         return
 

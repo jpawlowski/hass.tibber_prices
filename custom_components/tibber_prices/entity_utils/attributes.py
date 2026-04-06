@@ -95,7 +95,7 @@ def add_description_attributes(  # noqa: PLR0913, PLR0912
         get_entity_description,
     )
 
-    language = hass.config.language if hass.config.language else "en"
+    language = hass.config.language or "en"
 
     # Build description dict
     desc_attrs: dict[str, str] = {}
@@ -186,7 +186,7 @@ async def async_add_description_attributes(  # noqa: PLR0913, PLR0912
         async_get_entity_description,
     )
 
-    language = hass.config.language if hass.config.language else "en"
+    language = hass.config.language or "en"
 
     # Build description dict
     desc_attrs: dict[str, str] = {}
