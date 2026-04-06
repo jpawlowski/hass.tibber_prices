@@ -138,8 +138,13 @@ def get_price_intervals_attributes(
                 current_period = period
                 break
 
+    # Extract calculation metadata for diagnostic attributes
+    period_metadata = period_data.get("metadata", {})
+
     # Build final attributes (use filtered_periods for display)
-    return build_final_attributes_simple(current_period, filtered_periods, time=time, config_entry=config_entry)
+    return build_final_attributes_simple(
+        current_period, filtered_periods, time=time, config_entry=config_entry, period_metadata=period_metadata
+    )
 
 
 def build_no_periods_result(*, time: TibberPricesTimeService) -> dict:
@@ -269,6 +274,39 @@ def add_relaxation_attributes(attributes: dict, current_period: dict) -> None:
             attributes["relaxation_threshold_applied_%"] = current_period["relaxation_threshold_applied_%"]
 
 
+def add_calculation_summary_attributes(attributes: dict, period_metadata: dict) -> None:
+    """
+    Add calculation summary attributes (priority 7).
+
+    Provides diagnostic visibility into the period calculation: how many periods
+    were requested vs. found, whether any flat days triggered adaptive min_periods,
+    and whether relaxation could not satisfy all days.
+
+    Only adds non-default/interesting values to avoid clutter:
+    - min_periods_configured: always added (useful reference for automations)
+    - periods_found_total: always added
+    - flat_days_detected: only when > 0 (explains why fewer periods than configured)
+    - relaxation_incomplete: only when True (diagnostic flag for troubleshooting)
+
+    """
+    relaxation_meta = period_metadata.get("relaxation", {})
+    if not relaxation_meta:
+        return
+
+    if "min_periods_requested" in relaxation_meta:
+        attributes["min_periods_configured"] = relaxation_meta["min_periods_requested"]
+
+    if "periods_found" in relaxation_meta:
+        attributes["periods_found_total"] = relaxation_meta["periods_found"]
+
+    flat_days = relaxation_meta.get("flat_days_detected", 0)
+    if flat_days > 0:
+        attributes["flat_days_detected"] = flat_days
+
+    if relaxation_meta.get("relaxation_incomplete"):
+        attributes["relaxation_incomplete"] = True
+
+
 def _convert_periods_to_display_units(period_summaries: list[dict], factor: int) -> list[dict]:
     """
     Convert price values in periods array to display units.
@@ -314,6 +352,7 @@ def build_final_attributes_simple(
     *,
     time: TibberPricesTimeService,
     config_entry: TibberPricesConfigEntry,
+    period_metadata: dict | None = None,
 ) -> dict:
     """
     Build the final attributes dictionary from coordinator's period summaries.
@@ -331,14 +370,17 @@ def build_final_attributes_simple(
     4. Price differences (period_price_diff_from_daily_min, period_price_diff_from_daily_min_%)
     5. Detail information (period_interval_count, period_position, periods_total, periods_remaining)
     6. Relaxation information (relaxation_active, relaxation_level, relaxation_threshold_original_%,
-       relaxation_threshold_applied_%) - only if period was relaxed
-    7. Meta information (periods list)
+       relaxation_threshold_applied_%) - only if current period was relaxed
+    7. Calculation summary (min_periods_configured, periods_found_total, flat_days_detected,
+       relaxation_incomplete) - diagnostic info about the overall calculation
+    8. Meta information (periods list)
 
     Args:
         current_period: The current or next period (already complete from coordinator)
         period_summaries: All period summaries from coordinator
         time: TibberPricesTimeService instance (required)
         config_entry: Config entry for display unit configuration
+        period_metadata: Metadata from coordinator's period calculation (relaxation diagnostics)
 
     Returns:
         Complete attributes dict with all fields
@@ -370,19 +412,27 @@ def build_final_attributes_simple(
         # 5. Detail information
         add_detail_attributes(attributes, current_period)
 
-        # 6. Relaxation information (only if period was relaxed)
+        # 6. Relaxation information (only if current period was relaxed)
         add_relaxation_attributes(attributes, current_period)
 
-        # 7. Meta information (periods array - prices converted to display units)
+        # 7. Calculation summary (diagnostic: min_periods_configured, periods_found_total, etc.)
+        if period_metadata:
+            add_calculation_summary_attributes(attributes, period_metadata)
+
+        # 8. Meta information (periods array - prices converted to display units)
         attributes["periods"] = _convert_periods_to_display_units(period_summaries, factor)
 
         return attributes
 
     # No current/next period found - return all periods with timestamp (prices converted)
-    return {
+    # Still add calculation summary so diagnostics are accessible even between periods
+    result: dict = {
         "timestamp": timestamp,
-        "periods": _convert_periods_to_display_units(period_summaries, factor),
     }
+    if period_metadata:
+        add_calculation_summary_attributes(result, period_metadata)
+    result["periods"] = _convert_periods_to_display_units(period_summaries, factor)
+    return result
 
 
 async def build_async_extra_state_attributes(  # noqa: PLR0913

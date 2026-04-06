@@ -18,7 +18,7 @@ Both `TibberPricesSensor` and `TibberPricesBinarySensor` implement `_unrecorded_
 ```python
 class TibberPricesSensor(TibberPricesEntity, SensorEntity):
     """tibber_prices Sensor class."""
-    
+
     _unrecorded_attributes = frozenset(
         {
             "description",
@@ -111,13 +111,14 @@ class TibberPricesSensor(TibberPricesEntity, SensorEntity):
 
 ### 5. Temporary/Time-Bound Data
 
-**Attributes:** `next_api_poll`, `next_midnight_turnover`, `last_api_fetch`, `last_cache_update`, `last_turnover`, `last_error`, `error`
+**Attributes:** `timestamp`, `next_api_poll`, `next_midnight_turnover`, `last_api_fetch`, `last_cache_update`, `last_turnover`, `last_error`, `error`
 
 **Reason:**
-- Only relevant at moment of reading
-- Won't be valid after some time
+- `timestamp` is the rounded-quarter reference time used at the moment of the state write — it's stale as soon as the next update fires and has no analytical value in history
+- `next_api_poll`, `next_midnight_turnover` etc. are only relevant at the moment of reading; they're superseded by the next update
 - Similar to `entity_picture` in HA core image entities
-- Superseded by next update
+
+**Note:** The entity's `native_value` (the actual price/state) is always recorded by HA as the entity state itself — independently of `_unrecorded_attributes`. So excluding `timestamp` does not create a gap in the time-series; the state row already carries the recording timestamp.
 
 **Impact:** ~200-400 bytes saved per state change
 
@@ -152,8 +153,7 @@ class TibberPricesSensor(TibberPricesEntity, SensorEntity):
 These attributes **remain in history** because they provide essential analytical value:
 
 ### Time-Series Core
-- `timestamp` - Critical for time-series analysis (ALWAYS FIRST)
-- All price values - Core sensor states
+- All price values - Core sensor states (the entity's `native_value` is always recorded separately)
 
 ### Diagnostics & Tracking
 - `cache_age_minutes` - Numeric value for diagnostics tracking over time
@@ -208,11 +208,11 @@ For a typical installation with:
 
 - **Sensor Platform**: `custom_components/tibber_prices/sensor/core.py`
   - Class: `TibberPricesSensor`
-  - 47 attributes excluded
+  - 46 attributes excluded
 
 - **Binary Sensor Platform**: `custom_components/tibber_prices/binary_sensor/core.py`
   - Class: `TibberPricesBinarySensor`
-  - 30 attributes excluded
+  - 29 attributes excluded
 
 ## When to Update _unrecorded_attributes
 
@@ -266,12 +266,12 @@ After modifying `_unrecorded_attributes`:
 
 **SQL Query to check attribute presence:**
 ```sql
-SELECT 
+SELECT
     state_id,
     attributes
-FROM states 
+FROM states
 WHERE entity_id = 'sensor.tibber_home_current_interval_price'
-ORDER BY last_updated DESC 
+ORDER BY last_updated DESC
 LIMIT 5;
 ```
 
