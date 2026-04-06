@@ -161,12 +161,27 @@ def _check_merge_quality_gate(periods_to_merge: list[tuple[int, dict]], relaxed:
 
     Returns True if merge is allowed, False if blocked by Quality Gate.
     """
+    from .relaxation import LOW_PRICE_QUALITY_BYPASS_THRESHOLD  # noqa: PLC0415
     from .types import PERIOD_MAX_CV  # noqa: PLC0415
 
     relaxed_start = relaxed["start"]
     relaxed_end = relaxed["end"]
 
     for _idx, existing in periods_to_merge:
+        # Low absolute price bypass: if the combined price level is very cheap,
+        # the quality gate is bypassed (same logic as in _check_period_quality).
+        # Estimated combined mean = (combined_min + combined_max) / 2
+        r_min = relaxed.get("price_min")
+        r_max = relaxed.get("price_max")
+        e_min = existing.get("price_min")
+        e_max = existing.get("price_max")
+        if None not in (r_min, r_max, e_min, e_max):
+            combined_min = min(float(r_min), float(e_min))  # type: ignore[arg-type]
+            combined_max = max(float(r_max), float(e_max))  # type: ignore[arg-type]
+            combined_mean = (combined_min + combined_max) / 2
+            if combined_mean < LOW_PRICE_QUALITY_BYPASS_THRESHOLD:
+                continue  # Very low absolute price → allow merge, check next pair
+
         estimated_cv = _estimate_merged_cv(existing, relaxed)
         if estimated_cv is not None and estimated_cv > PERIOD_MAX_CV:
             _LOGGER.debug(

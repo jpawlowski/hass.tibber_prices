@@ -25,6 +25,14 @@ INDENT_L0 = ""  # Entry point / main function
 FLEX_SCALING_THRESHOLD = 0.20  # 20% - start adjusting min_distance
 SCALE_FACTOR_WARNING_THRESHOLD = 0.8  # Log when reduction > 20%
 
+# Low absolute price threshold for min_distance scaling (in major currency unit, e.g. EUR/NOK)
+# When the daily average price is below this, percentage-based min_distance becomes unreliable:
+# even the daily minimum may not fall far enough below average in relative terms.
+# Scale min_distance linearly to 0 as avg_price approaches 0.
+# Value: 0.10 EUR/NOK = 10 ct/øre.
+# At avg ≥ 0.10: full min_distance. At avg = 0.05: 50% min_distance. At avg = 0: 0%.
+LOW_PRICE_AVG_THRESHOLD = 0.10  # EUR/NOK major unit (= 10 ct/øre in subunit)
+
 
 def check_level_with_gap_tolerance(
     interval_level: int,
@@ -202,6 +210,23 @@ def check_interval_criteria(
                 adjusted_min_distance,
                 scale_factor,
             )
+
+    # ============================================================
+    # ABSOLUTE LOW-PRICE SCALING: Reduce min_distance when avg is very low
+    # ============================================================
+    # Problem: On days where the entire price level is extremely low (e.g., avg=3 ct),
+    # even the daily minimum might not fall 5% below the average in relative terms.
+    # Example: avg=3 ct, min_distance=5% → threshold=2.85 ct.
+    #          If min=2.9 ct, no interval qualifies despite being genuinely cheap.
+    #
+    # Solution: Scale min_distance linearly to 0 as avg_price approaches 0.
+    # At avg=10 ct → full min_distance; at avg=5 ct → 50%; at avg=0 ct → 0%.
+    #
+    # This is currency-agnostic: 10 ct EUR and 10 øre NOK are both
+    # "very low price territory" for their respective markets.
+    if criteria.avg_price < LOW_PRICE_AVG_THRESHOLD and LOW_PRICE_AVG_THRESHOLD > 0:
+        low_price_scale = max(0.0, criteria.avg_price / LOW_PRICE_AVG_THRESHOLD)
+        adjusted_min_distance = adjusted_min_distance * low_price_scale
 
     # Calculate threshold from average (using normalized positive distance)
     # - Peak price: threshold = avg * (1 + distance/100) → prices must be ABOVE avg+distance

@@ -40,6 +40,23 @@ FLEX_HIGH_THRESHOLD_RELAXATION = 0.30  # 30% - WARNING: base flex too high for r
 MIN_DURATION_FALLBACK_MINIMUM = 30  # Minimum period length to try (30 min = 2 intervals)
 MIN_DURATION_FALLBACK_STEP = 15  # Reduce by 15 min (1 interval) each step
 
+# Low absolute price threshold for quality gate bypass (in major currency unit, e.g. EUR/NOK)
+# When the MEAN price of a period is below this level, the CV quality gate is bypassed.
+# Relative CV is unreliable at very low absolute prices: a range of 1-4 ct shows CV≈50%
+# but is practically homogeneous from a cost perspective.
+# Value: LOW_PRICE_AVG_THRESHOLD (subunit) / 100 = 10 ct / 100 = 0.10 EUR/NOK
+LOW_PRICE_QUALITY_BYPASS_THRESHOLD = 0.10  # EUR/NOK major unit (= 10 ct/øre)
+
+# Span-to-ref ratio threshold for suppressing flex warnings on V-shape days.
+# When span / ref_price < this on ANY available day, the warning is shown.
+# Below 0.5 means span < 50% of ref_price → "normal" day (high flex is genuinely risky).
+# Above 0.5 means V-shape day (span-based formula already compensates → warning less relevant).
+FLEX_WARNING_VSHAPE_RATIO = 0.5  # span/ref_price ratio below which a day is considered "normal"
+# On flat price days (low variation), it is unrealistic to require multiple distinct
+# best/peak price periods. Requiring 2+ periods would force relaxation to create
+# artificial periods that don't represent genuine price structure.
+LOW_CV_FLAT_DAY_THRESHOLD = 10.0  # %: days with CV ≤ this need only 1 period
+
 
 def _check_period_quality(
     period: dict, all_prices: list[dict], *, time: TibberPricesTimeService
@@ -94,6 +111,16 @@ def _check_period_quality(
     cv = calculate_coefficient_of_variation(period_prices)
     if cv is None:
         return True, None
+
+    # Low absolute price bypass: when the MEAN period price is very cheap (below
+    # LOW_PRICE_QUALITY_BYPASS_THRESHOLD), relative CV becomes unreliable.
+    # Example: period at 1-4 ct (mean 2 ct) shows CV≈50% but is practically
+    # homogeneous from a cost perspective; the quality gate should not reject it.
+    # Using mean (not range) to distinguish genuinely cheap days from flat-priced
+    # normal days: a flat day at 33-36 ct has a small range BUT a high mean → no bypass.
+    period_mean = sum(period_prices) / len(period_prices)
+    if period_mean < LOW_PRICE_QUALITY_BYPASS_THRESHOLD:
+        return True, cv  # Passes quality gate: absolute price level is very low
 
     passes = cv <= PERIOD_MAX_CV
     return passes, cv
@@ -418,6 +445,79 @@ def _try_min_duration_fallback(
     return None, metadata
 
 
+def _compute_day_effective_min(
+    prices_by_day: dict,
+    min_periods: int,
+    *,
+    enable_relaxation: bool,
+    reverse_sort: bool,
+) -> tuple[dict, int]:
+    """
+    Compute per-day effective min_periods with flat-day adaptation.
+
+    On days with very low price variation (CV ≤ LOW_CV_FLAT_DAY_THRESHOLD),
+    requiring multiple distinct cheapest/peak periods is unrealistic. Finding
+    ONE period is sufficient because there is no meaningful price structure that
+    would create natural multiple periods.
+
+    This applies ONLY to BEST PRICE periods (reverse_sort=False). For PEAK PRICE
+    periods, full relaxation should run even on flat days because identifying the
+    genuinely most expensive window requires the complete filter evaluation.
+    (Design decision: if the user explicitly disabled relaxation, honour the
+    configured min_periods exactly regardless.)
+
+    Args:
+        prices_by_day: Dict of date → list of price dicts
+        min_periods: Configured minimum periods per day
+        enable_relaxation: Whether relaxation is enabled
+        reverse_sort: True for peak price (no adaptation), False for best price
+
+    Returns:
+        Tuple of (dict of date → effective min_periods for that day, count of flat days detected)
+
+    """
+    day_effective_min = {}
+    flat_day_count = 0
+    min_prices_for_cv = 2  # Need at least 2 prices to calculate CV
+
+    for day, day_prices in prices_by_day.items():
+        if not enable_relaxation or min_periods <= 1 or reverse_sort:
+            # Relaxation disabled, already 1, or peak price: no adaptation
+            day_effective_min[day] = min_periods
+            continue
+
+        price_values = [float(p["total"]) for p in day_prices if p.get("total") is not None]
+
+        if len(price_values) < min_prices_for_cv:
+            day_effective_min[day] = min_periods
+            continue
+
+        day_cv = calculate_coefficient_of_variation(price_values)
+
+        if day_cv is not None and day_cv <= LOW_CV_FLAT_DAY_THRESHOLD:
+            day_effective_min[day] = 1
+            flat_day_count += 1
+            _LOGGER_DETAILS.debug(
+                "%sDay %s: flat price profile (CV=%.1f%% ≤ %.1f%%) → min_periods relaxed to 1",
+                INDENT_L1,
+                day,
+                day_cv,
+                LOW_CV_FLAT_DAY_THRESHOLD,
+            )
+        else:
+            day_effective_min[day] = min_periods
+
+    if flat_day_count > 0:
+        _LOGGER.info(
+            "Adaptive min_periods: %d flat day(s) (CV ≤ %.0f%%) need only 1 period instead of %d",
+            flat_day_count,
+            LOW_CV_FLAT_DAY_THRESHOLD,
+            min_periods,
+        )
+
+    return day_effective_min, flat_day_count
+
+
 def calculate_periods_with_relaxation(  # noqa: PLR0912, PLR0913, PLR0915 - Per-day relaxation requires many parameters and branches
     all_prices: list[dict],
     *,
@@ -549,6 +649,55 @@ def calculate_periods_with_relaxation(  # noqa: PLR0912, PLR0913, PLR0915 - Per-
     prices_by_day = group_prices_by_day(all_prices, time=time)
     total_days = len(prices_by_day)
 
+    # =========================================================================
+    # SPAN-AWARE FLEX WARNINGS
+    # =========================================================================
+    # With the span-based flex formula (flex_base = max(span, ref_price)), a high
+    # configured base_flex is less problematic on V-shape days (single low outlier)
+    # where span dominates. However, on normal days (span ≈ ref_price), high base_flex
+    # leaves little room for relaxation to escalate effectively.
+    #
+    # We only warn when relaxation is enabled AND the flex is high on typical days.
+    # V-shape days have span >> ref_price; normal days have span ≈ ref_price.
+    # We use the MEAN span/ref ratio across available days as a proxy:
+    # - Ratio near 1.0 → span ≈ ref (normal day, warning is relevant)
+    # - Ratio >> 1.0 → span >> ref (V-shape day, warning less relevant)
+    # Threshold: if any day has span/ref < 0.5 (i.e., span < 50% of ref_price),
+    # the spread is not extreme enough to suppress the warning.
+    if enable_relaxation and prices_by_day:
+        base_flex = abs(config.flex)
+        if base_flex >= FLEX_WARNING_THRESHOLD_RELAXATION:
+            # Check whether any available day is "normal enough" to make the warning relevant
+            any_normal_day = False
+            for day_prices in prices_by_day.values():
+                prices = [float(p["total"]) for p in day_prices if p.get("total") is not None]
+                if len(prices) >= 2:  # noqa: PLR2004
+                    day_min = min(prices)
+                    day_avg = sum(prices) / len(prices)
+                    span = abs(day_avg - day_min)
+                    if day_min > 0 and span / day_min < FLEX_WARNING_VSHAPE_RATIO:
+                        any_normal_day = True
+                        break
+
+            if any_normal_day:
+                if base_flex >= FLEX_HIGH_THRESHOLD_RELAXATION:
+                    _LOGGER.warning(
+                        "Base flex %.0f%% is too high for relaxation mode. "
+                        "Relaxation escalates in 3%% steps from your base - starting at %.0f%% "
+                        "means only ~%.0f steps remain before the 50%% hard limit. "
+                        "Recommendation: Use 15-20%% base flex with relaxation enabled.",
+                        base_flex * 100,
+                        base_flex * 100,
+                        (MAX_FLEX_HARD_LIMIT - base_flex) / 0.03,
+                    )
+                else:
+                    _LOGGER.info(
+                        "Base flex %.0f%% is high for relaxation mode (recommended: 15-20%%). "
+                        "Only ~%.0f relaxation steps remain to 50%% hard limit.",
+                        base_flex * 100,
+                        (MAX_FLEX_HARD_LIMIT - base_flex) / 0.03,
+                    )
+
     _LOGGER.info(
         "Calculating baseline periods for %d days...",
         total_days,
@@ -567,21 +716,31 @@ def calculate_periods_with_relaxation(  # noqa: PLR0912, PLR0913, PLR0915 - Per-
 
     # Count periods per day for min_periods check
     periods_by_day = group_periods_by_day(all_periods)
+    # Pre-compute per-day effective min_periods (adaptive for flat days)
+    # On flat price days (low CV), 1 period is sufficient - enforcing min_periods > 1
+    # would only produce artificial additional periods of no practical value.
+    # NOTE: Only applied for best price (reverse_sort=False); peak price always uses
+    # full relaxation to properly identify the genuinely most expensive window.
+    day_effective_min, flat_days_count = _compute_day_effective_min(
+        prices_by_day, min_periods, enable_relaxation=enable_relaxation, reverse_sort=config.reverse_sort
+    )
+
     days_meeting_requirement = 0
 
     for day in sorted(prices_by_day.keys()):
         day_periods = periods_by_day.get(day, [])
         period_count = len(day_periods)
+        effective_min = day_effective_min.get(day, min_periods)
 
         _LOGGER_DETAILS.debug(
             "%sDay %s baseline: Found %d periods%s",
             INDENT_L1,
             day,
             period_count,
-            f" (need {min_periods})" if enable_relaxation else "",
+            f" (need {effective_min})" if enable_relaxation else "",
         )
 
-        if period_count >= min_periods:
+        if period_count >= effective_min:
             days_meeting_requirement += 1
 
     # Check if relaxation is needed
@@ -620,7 +779,7 @@ def calculate_periods_with_relaxation(  # noqa: PLR0912, PLR0913, PLR0915 - Per-
         for day in sorted(prices_by_day.keys()):
             day_periods = periods_by_day.get(day, [])
             period_count = len(day_periods)
-            if period_count >= min_periods:
+            if period_count >= day_effective_min.get(day, min_periods):
                 days_meeting_requirement += 1
 
         # === MIN DURATION FALLBACK ===
@@ -650,7 +809,7 @@ def calculate_periods_with_relaxation(  # noqa: PLR0912, PLR0913, PLR0915 - Per-
                 for day in sorted(prices_by_day.keys()):
                     day_periods = periods_by_day.get(day, [])
                     period_count = len(day_periods)
-                    if period_count >= min_periods:
+                    if period_count >= day_effective_min.get(day, min_periods):
                         days_meeting_requirement += 1
 
     elif enable_relaxation:
@@ -692,6 +851,7 @@ def calculate_periods_with_relaxation(  # noqa: PLR0912, PLR0913, PLR0915 - Per-
         "days_processed": total_days,
         "days_meeting_requirement": days_meeting_requirement,
         "relaxation_incomplete": days_meeting_requirement < total_days,
+        "flat_days_detected": flat_days_count,  # Days where adaptive min_periods (CV-based) reduced target to 1
     }
 
     return final_result
