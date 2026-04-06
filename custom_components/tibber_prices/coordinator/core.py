@@ -223,9 +223,7 @@ class TibberPricesDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         self._data_transformer = TibberPricesDataTransformer(
             config_entry=config_entry,
             log_prefix=self._log_prefix,
-            calculate_periods_fn=lambda price_info: self._period_calculator.calculate_periods_for_price_info(
-                price_info
-            ),
+            calculate_periods_fn=self._period_calculator.calculate_periods_for_price_info,
             time=self.time,
         )
         self._repair_manager = TibberPricesRepairManager(
@@ -280,8 +278,14 @@ class TibberPricesDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         # This updates rating_levels, volatility, and period calculations
         # without needing to fetch new data from the API
         if self.data and "priceInfo" in self.data:
-            # Extract raw price_info and re-transform
-            raw_data = {"price_info": self.data["priceInfo"]}
+            # Extract raw price_info and re-transform.
+            # CRITICAL: Preserve currency and home_id so non-EUR users don't see
+            # wrong units (e.g. EUR instead of NOK/SEK) until the next API poll.
+            raw_data = {
+                "price_info": self.data["priceInfo"],
+                "currency": self.data.get("currency", "EUR"),
+                "home_id": self._home_id,
+            }
             self.data = self._transform_data(raw_data)
             self.async_update_listeners()
         else:
@@ -387,9 +391,14 @@ class TibberPricesDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         self._data_transformer.invalidate_config_cache()
         self._period_calculator.invalidate_config_cache()
 
-        # Re-transform existing data with new configuration
+        # Re-transform existing data with new configuration.
+        # CRITICAL: Preserve currency and home_id (same fix as _handle_options_update).
         if self.data and "priceInfo" in self.data:
-            raw_data = {"price_info": self.data["priceInfo"]}
+            raw_data = {
+                "price_info": self.data["priceInfo"],
+                "currency": self.data.get("currency", "EUR"),
+                "home_id": self._home_id,
+            }
             self.data = self._transform_data(raw_data)
             self.async_update_listeners()
         else:
@@ -577,8 +586,13 @@ class TibberPricesDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         # no data rotation needed! get_intervals_for_day_offsets() automatically
         # filters by date. Just re-transform to refresh enrichment.
         if self.data and "priceInfo" in self.data:
-            # Re-transform data to ensure enrichment is refreshed for new day
-            raw_data = {"price_info": self.data["priceInfo"]}
+            # Re-transform data to ensure enrichment is refreshed for new day.
+            # CRITICAL: Preserve currency and home_id (same fix as _handle_options_update).
+            raw_data = {
+                "price_info": self.data["priceInfo"],
+                "currency": self.data.get("currency", "EUR"),
+                "home_id": self._home_id,
+            }
             self.data = self._transform_data(raw_data)
 
         # Mark turnover as done for today (atomic update)
