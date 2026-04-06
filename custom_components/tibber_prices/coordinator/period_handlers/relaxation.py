@@ -217,11 +217,6 @@ def group_periods_by_day(periods: list[dict]) -> dict[date, list[dict]]:
         while current_date <= end_date:
             periods_by_day.setdefault(current_date, []).append(period)
             # Move to next day
-            from datetime import timedelta  # noqa: PLC0415
-
-            current_date = current_date + timedelta(days=1)
-
-    return periods_by_day
 
 
 def mark_periods_with_relaxation(
