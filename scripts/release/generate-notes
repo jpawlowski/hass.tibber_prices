@@ -222,9 +222,15 @@ ${COMMITS}
 - Explanations or rationale for your choices
 - Meta-commentary about the process
 - Analysis of why you chose the title
-- Any text after the last release note section
+- Any text after the footer
 
-End the output after the last release note item. Nothing more."
+**Always end the output with this exact footer (after the last release note section):**
+
+---
+
+If this release saved you some money on your electricity bill, a coffee would be much appreciated! ☕
+
+[![Buy Me A Coffee](https://img.buymeacoffee.com/button-api/?text=Buy%20me%20a%20coffee&emoji=☕&slug=jpawlowski&button_colour=FFDD00&font_colour=000000&font_family=Cookie&outline_colour=000000&coffee_colour=ffffff)](https://www.buymeacoffee.com/jpawlowski)"
 
     # Save prompt to temp file for copilot
     TEMP_PROMPT=$(mktemp)
