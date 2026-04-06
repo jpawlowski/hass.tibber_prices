@@ -104,141 +104,155 @@ generate_with_copilot() {
     # This helps the AI understand which commits touched which files
     COMMITS=$(git log --pretty=format:"%h | %s%n%b%n" --stat --compact-summary "${FROM_TAG}..${TO_TAG}")
 
+    # Get code diff for user-facing files to give the AI real context about what changed.
+    # Limited to ~8KB to keep the prompt manageable.
+    DIFF_CONTEXT=$(git diff --unified=2 --diff-filter=AM \
+        -- "custom_components/tibber_prices/sensor/" \
+        -- "custom_components/tibber_prices/binary_sensor/" \
+        -- "custom_components/tibber_prices/config_flow_handlers/" \
+        -- "custom_components/tibber_prices/services/" \
+        -- "custom_components/tibber_prices/translations/" \
+        -- "custom_components/tibber_prices/number/" \
+        -- "custom_components/tibber_prices/switch/" \
+        "${FROM_TAG}..${TO_TAG}" 2>/dev/null | head -c 8000 || true)
+
     if [[ -z $COMMITS ]]; then
         log_info "${YELLOW}No commits found between ${FROM_TAG} and ${TO_TAG}${NC}"
         exit 0
     fi
 
     # Create prompt for Copilot
-    PROMPT="You are tasked with generating professional release notes in GitHub-flavored Markdown from conventional commits.
+    PROMPT="You are writing a GitHub release announcement for a Home Assistant integration called **Tibber Prices**.
 
-**CRITICAL Format Requirements:**
+## YOUR AUDIENCE
+Home Assistant users — people who automate their home and build dashboards. They are NOT developers.
+They do not understand technical terms like: coordinator, entity, async, refactor, TypedDict, module,
+class, iterator, cache, pool, BaseCalculator, interval_pool, or any Python/software engineering terminology.
 
-1. **START with a single-line title using '# ' (H1 heading):**
-   - Analyze ALL commits and create a SHORT, descriptive title (max 5-7 words)
+## WHAT THIS INTEGRATION DOES
+It fetches electricity prices from Tibber and provides sensors to Home Assistant, so users can:
+- See the current electricity price on their dashboard
+- Automate appliances to run during cheapest hours (dishwasher, washing machine, heat pump, EV charging)
+- Get alerts when prices are unusually high or low
+- Find the best time window in the day for flexible loads
 
-   **HOW TO CHOOSE THE TITLE:**
-   Step 1: Scan commit scopes and identify USER-FACING changes:
-     - feat(sensors): ✅ User feature (they see new sensors)
-     - feat(config_flow): ✅ User feature (they use config UI)
-     - feat(services): ✅ User feature (they call services)
-     - fix(translations): ✅ User fix (they see corrected text)
-     - feat(release): ❌ Developer tool (users don't see this)
-     - feat(ci): ❌ Infrastructure (users don't care)
-     - docs: ❌ Documentation (nice but not a feature)
+## YOUR GOAL
+Translate technical changes into real user benefits. Write as a product manager telling
+users what they can now DO, what was BROKEN and is now FIXED, or why the integration
+is now more RELIABLE.
 
-   Step 2: Among user-facing changes, prioritize by impact:
-     - New sensor types > Config improvements > Bug fixes > Translations
-     - Multiple related sensors = name the feature domain (e.g., \"Price Volatility Analysis\")
-     - Major config flow changes = \"Enhanced Configuration Experience\"
+## WRITING RULES — FOLLOW STRICTLY
 
-   Step 3: Ignore developer/internal changes for title selection:
-     - Even if there are 10 release/ci/docs commits, they don't appear in title
-     - Title must reflect what USERS experience when they upgrade
+**Rule 1 — No jargon, ever.**
+NEVER use: coordinator, entity, async, class, module, package, cache invalidation, refactor, pool,
+iterator, TypedDict, BaseCalculator, interval_pool, config entry, data class, state machine.
+Always rephrase as a user experience.
 
-   **EXAMPLE DECISION PROCESS:**
-   Given these commits:
-     - feat(sensors): Add 4 volatility sensors with classification
-     - feat(release): Add automated release notes generation
-     - fix(translations): Fix hassfest validation errors
-     - docs: Restructure documentation
+**Rule 2 — Second person, present tense.**
+Write: \"You can now see...\", \"Your automations will...\", \"The setup wizard now...\"
 
-   WRONG title: \"Release Automation & Documentation\" (developer-focused!)
-   RIGHT title: \"Price Volatility Analysis Features\" (user sees new sensors!)
+**Rule 3 — Bug fixes: describe the SYMPTOM, not the technical cause.**
+  ❌ \"Fix timezone-aware datetime comparison at resolution boundary\"
+  ✅ \"Fixed: Price data was missing or showed wrong values when switching to/from daylight saving time\"
+  ❌ \"Restore missing while-loop increment preventing indefinite hang during period calculation\"
+  ✅ \"Fixed: The integration could occasionally freeze when calculating the cheapest time windows\"
 
-   **GOOD TITLES (user-focused):**
-   - \"# Advanced Price Analysis Features\" (new sensors = user feature)
-   - \"# Enhanced Configuration Experience\" (config flow = user-facing)
-   - \"# Improved Reliability & Performance\" (stability = user benefit)
+**Rule 4 — New features: lead with what the user can DO.**
+  ❌ \"Add volatility calculator with BaseCalculator integration\"
+  ✅ \"New sensors show how stable today's prices are — useful for deciding whether to run flexible appliances now or wait\"
 
-   **BAD TITLES (avoid these):**
-   - \"# Release Automation\" (developers don't read release notes!)
-   - \"# Developer Experience\" (not user-facing!)
-   - \"# New Features & Bug Fixes\" (boring, says nothing)
+**Rule 5 — Refactoring without user impact: omit completely.**
+Only mention internal changes if they improve actual reliability or stability that users
+would notice. If so, group them under \"⚡ More Reliable\" as a brief single line.
+NEVER write a refactoring bullet per commit.
 
-   Keep it exciting but professional. Do NOT include version number.
+**Rule 6 — Combine related commits into one story.**
+Do NOT list every commit as a separate bullet. Group related commits into a single
+paragraph or bullet that tells the complete story. Use multiple commit links for the group.
 
-2. **After title, use '### ' (H3 headings) for sections:**
-   - ### 🎉 New Features (for feat commits)
-   - ### 🐛 Bug Fixes (for fix commits)
-   - ### 📚 Documentation (for docs commits)
-   - ### 📦 Dependencies (for chore(deps) commits)
-   - ### 🔧 Maintenance & Refactoring (for refactor/chore commits)
-   - ### 🧪 Testing (for test commits)
+**Rule 7 — Use Impact: sections.**
+Commit bodies may contain an \"Impact:\" line — this is the user-facing description.
+Prioritize it over the commit subject line.
 
-3. **Smart grouping**: If multiple commits address the same logical change:
-   - Combine them into one release note entry
-   - Link all related commits: ([hash1](url1), [hash2](url2))
-   - Use a descriptive summary that captures the overall change
+**Rule 8 — Imagine explaining to your neighbor.**
+Before writing each bullet, ask: \"Would my neighbor who uses Home Assistant to automate their
+home understand this?\" If not, rephrase.
 
-4. Extract 'Impact:' sections from commit bodies as user-friendly descriptions
+## OUTPUT FORMAT
 
-5. Format each item as: - **scope**: Description ([hash](https://github.com/${GITHUB_REPO}/commit/hash))
+Start with: # [Short, exciting title — max 6 words, NO version number]
 
-6. **Exclude from release notes (but still consider for context):**
-   - Manifest.json version bumps: chore(release): bump version
-   - Development environment: feat/fix/chore(devcontainer), feat/fix/chore(vscode), feat/fix/chore(scripts)
-   - CI/CD infrastructure: feat/fix/chore/ci(ci), feat/fix/chore(workflow), feat/fix/chore(actions)
-   - IMPORTANT: These should NEVER influence the title choice, even if they're the majority!
+Then sections using ### (H3 headings):
 
-7. **Include in release notes (these CAN influence title):**
-   - Dependency updates: chore(deps) - these ARE relevant for users
-   - Any user-facing changes regardless of scope (sensors, config, services, binary_sensor, etc.)
-   - Bug fixes that users experience (translations, api, coordinator, etc.)
+- ### 🎉 What's New
+  (New sensors, new config options, new automations possible — use this for feat commits with real user benefit)
 
-8. **Understanding the file paths (use this to assess importance):**
-   - custom_components/tibber_prices/sensor/ = User-facing sensors (HIGH priority for title)
-   - custom_components/tibber_prices/binary_sensor.py = User-facing binary sensors (HIGH priority)
-   - custom_components/tibber_prices/config_flow.py = User-facing configuration (HIGH priority)
-   - custom_components/tibber_prices/services.py = User-facing services (HIGH priority)
-   - custom_components/tibber_prices/translations/*.json = User-facing translations (MEDIUM priority)
-   - scripts/ = Developer tools (LOW priority, exclude from title)
-   - .github/workflows/ = CI/CD automation (LOW priority, exclude from title)
-   - docs/ = Documentation (LOW priority, exclude from title)
+- ### 🐛 Fixed
+  (Bugs users experienced — describe what was wrong, what is better now)
 
-   **Key insight:** Large changes (100+ lines) in custom_components/tibber_prices/ are usually important user features!
+- ### ⚡ More Reliable
+  (Performance improvements OR refactoring that improves stability — only when users would notice)
 
-9. **Output structure example:**
-   # Title Here
+- ### 📦 Updated Dependencies
+  (Dependency bumps — keep brief, one line per group)
 
-   ### 🎉 New Features
+Skip any section that has no content.
 
-   - **scope**: description ([abc123](url))
-
-   ### 🐛 Bug Fixes
-   ...
-
----
-
-**Now, here are the commits to analyze (between ${FROM_TAG} and ${TO_TAG}):**
-
-${COMMITS}
-
----
-
-**Generate the release notes now. Start with '# ' title, then use '### ' for sections.**
-
-**IMPORTANT: Output ONLY the release notes in Markdown format. Do NOT include:**
-- Explanations or rationale for your choices
-- Meta-commentary about the process
-- Analysis of why you chose the title
-- Any text after the footer
-
-**Always end the output with this exact footer (after the last release note section):**
+After the last section, ALWAYS end with this exact footer, no modifications:
 
 ---
 
 If this release saved you some money on your electricity bill, a coffee would be much appreciated! ☕
 
-[![Buy Me A Coffee](https://img.buymeacoffee.com/button-api/?text=Buy%20me%20a%20coffee&emoji=☕&slug=jpawlowski&button_colour=FFDD00&font_colour=000000&font_family=Cookie&outline_colour=000000&coffee_colour=ffffff)](https://www.buymeacoffee.com/jpawlowski)"
+[![Buy Me A Coffee](https://img.buymeacoffee.com/button-api/?text=Buy%20me%20a%20coffee&emoji=☕&slug=jpawlowski&button_colour=FFDD00&font_colour=000000&font_family=Cookie&outline_colour=000000&coffee_colour=ffffff)](https://www.buymeacoffee.com/jpawlowski)
+
+## TITLE SELECTION
+- Find the most user-impactful change: new sensors > bug fixes affecting data quality > reliability improvements > UI improvements > translations
+- Ignore dev/CI/docs commits for the title
+- Make it sound exciting: \"Smarter Cheap-Period Detection\", \"Reliable DST Price Data\", \"New Price Stability Sensors\"
+- Example: if DST price data was wrong and now fixed → title = \"Reliable Prices Around Clock Changes\"
+
+## WHAT TO INCLUDE vs SKIP
+✅ Include: Changes to what sensors show, bugs fixing wrong data, config UI improvements,
+   automation reliability, dependency updates
+❌ Skip: Script/CI/workflow changes, version bumps, pure code reorganization,
+   documentation commits, test changes
+
+## FILE PATH GUIDE (for assessing importance)
+- sensor/ = Price sensors users see → HIGH
+- binary_sensor/ = On/off sensors for automations → HIGH
+- config_flow_handlers/ or config_flow/ = Setup wizard users interact with → HIGH
+- services/ = Actions users trigger → HIGH
+- translations/ = Labels users see in the UI → MEDIUM
+- number/ or switch/ = Controls users interact with → HIGH
+- coordinator/ = Data fetching/processing (rarely user-visible unless fixing data bugs) → LOW-MEDIUM
+- scripts/, .github/, docs/ = Developer-only → SKIP
+
+---
+
+**Commits to analyze (${FROM_TAG} → ${TO_TAG}):**
+
+${COMMITS}
+
+---
+
+**Code diff for user-facing files (use this to understand WHAT actually changed — but always translate to user language):**
+
+${DIFF_CONTEXT}
+
+---
+
+Output ONLY the release notes. Start directly with the # title.
+End after the Buy Me A Coffee button. No meta-commentary, no explanations."
 
     # Save prompt to temp file for copilot
     TEMP_PROMPT=$(mktemp)
     echo "$PROMPT" > "$TEMP_PROMPT"
 
-    # Use Claude Haiku 4.5 for faster, cheaper generation (same quality for structured tasks)
-    # Can override with: COPILOT_MODEL=claude-sonnet-4.5 ./scripts/release/generate-notes
-    COPILOT_MODEL="${COPILOT_MODEL:-claude-haiku-4.5}"
+    # Use Claude Sonnet for better user-focused, plain-language release notes.
+    # Haiku tends to echo technical commit language; Sonnet better translates to user benefits.
+    # Can override with: COPILOT_MODEL=claude-haiku-4.5 ./scripts/release/generate-notes
+    COPILOT_MODEL="${COPILOT_MODEL:-claude-sonnet-4-6}"
 
     # Call copilot CLI (it will handle authentication interactively)
     copilot --model "$COPILOT_MODEL" < "$TEMP_PROMPT" || {
