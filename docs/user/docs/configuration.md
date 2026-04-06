@@ -129,7 +129,7 @@ Each configuration entity includes a detailed description attribute explaining w
 **Note:** For **Number entities**, Home Assistant displays a history graph by default, which hides the attributes panel. To view the `description` attribute:
 
 1. Go to **Developer Tools → States**
-2. Search for the entity (e.g., `number.<home_name>_best_price_flexibility_override`)
+2. Search for the entity (e.g., `number.<home_name>_best_price_flexibility`)
 3. Expand the attributes section to see the full description
 
 **Switch entities** display their attributes normally in the entity details view.
@@ -148,7 +148,7 @@ automation:
     action:
       - service: number.set_value
         target:
-          entity_id: number.<home_name>_best_price_flexibility_override
+          entity_id: number.<home_name>_best_price_flexibility
         data:
           value: 10  # Stricter than default 15%
 ```
@@ -169,13 +169,25 @@ recorder:
   exclude:
     entity_globs:
       # Exclude all Tibber Prices configuration entities
-      - number.*_best_price_*_override
-      - number.*_peak_price_*_override
-      - switch.*_best_price_*_override
-      - switch.*_peak_price_*_override
+      - number.*_best_price_*
+      - number.*_peak_price_*
+      - switch.*_best_price_*
+      - switch.*_peak_price_*
 ```
 
 This is especially useful if:
 - You rarely change these settings
 - You want the smallest possible database footprint
 - You don't need to see the history graph for these entities
+
+#### Price Sensor Statistics
+
+The integration also minimizes long-term statistics growth for price sensors. Only 3 sensors write to the HA statistics database (which is never auto-purged):
+
+- **Current Electricity Price** — Long-term price trend over weeks/months
+- **Current Electricity Price (Energy Dashboard)** — Required for Energy Dashboard integration
+- **Today's Average Price** — Seasonal price comparison
+
+All other price sensors (forecasts, rolling averages, daily min/max, future averages) have long-term statistics disabled. Their **state history** (the step chart in the History panel) still works normally for ~10 days — only the smooth statistics line-chart on the entity detail page is absent for these sensors.
+
+No configuration changes are needed — this optimization is built into the integration.

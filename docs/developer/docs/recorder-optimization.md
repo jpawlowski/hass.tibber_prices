@@ -283,6 +283,73 @@ LIMIT 5;
 - ✅ Attributes still available via `entity.attributes` in templates/automations
 - ✅ Only prevents **storage** in Recorder, not runtime availability
 
+## Long-Term Statistics Optimization (`state_class`)
+
+**This is a second, independent mechanism** that controls writes to the HA `statistics` and `statistics_short_term` tables — distinct from `_unrecorded_attributes`, which only affects the `state_attributes` table.
+
+### Why This Matters
+
+- The `state_attributes` table (controlled by `_unrecorded_attributes`) is **auto-purged** after ~10 days
+- The `statistics`/`statistics_short_term` tables (controlled by `state_class`) are **never auto-purged** — they grow unbounded
+
+This makes `state_class=TOTAL` on many sensors the primary cause of long-term database bloat for users with long-running installations.
+
+### HA Constraint: MONETARY Device Class
+
+For sensors with `device_class=SensorDeviceClass.MONETARY`, only two `state_class` values are valid:
+
+| `state_class` | Statistics written | Frontend effect |
+|---|---|---|
+| `TOTAL` | ✅ Yes — unbounded growth | Statistics line-chart on entity detail page |
+| `None` | ❌ No | States timeline only (History panel, "Show More") |
+| `MEASUREMENT` | ❌ Blocked by hassfest | — |
+
+`MEASUREMENT` causes a hassfest validation error for MONETARY sensors, leaving only `TOTAL` or `None`.
+
+### Implementation Decision
+
+Only 3 of 26 MONETARY sensors keep `state_class=TOTAL` — those where long-term history is genuinely useful:
+
+| Sensor | Reason |
+|---|---|
+| `current_interval_price` | Long-term price trend (weeks/months) |
+| `current_interval_price_base` | Required for Energy Dashboard |
+| `average_price_today` | Seasonal daily average tracking |
+
+All other 23 MONETARY sensors use `state_class=None`:
+- Forecast/future sensors (`next_avg_*h`)
+- Daily snapshots (`lowest/highest_price_today/tomorrow`)
+- Rolling windows (`trailing/leading_24h_*`)
+- Next/previous interval sensors
+
+**Effect of `state_class=None`:**
+- ✅ Short-term state history (States timeline, ~10 days) still works normally
+- ✅ Templates, automations, and attributes are unaffected
+- ❌ Statistics line-chart removed from entity detail page for these sensors
+- ❌ No writes to `statistics`/`statistics_short_term` tables
+
+### Expected Impact
+
+Going from 26 → 3 sensors writing to the statistics tables:
+- **~88% reduction** in statistics table writes
+- Prevents the primary cause of long-term database bloat
+- Existing statistics data is retained (only new writes stop)
+
+### Relationship to `_unrecorded_attributes`
+
+These are two independent mechanisms targeting different tables:
+
+| Mechanism | Table affected | Purged? | Controls |
+|---|---|---|---|
+| `_unrecorded_attributes` | `state_attributes` | ✅ ~10 days | Which attributes are stored per state write |
+| `state_class=None` | `statistics`, `statistics_short_term` | ❌ Never | Whether long-term statistics are written at all |
+
+Both optimizations work together. `_unrecorded_attributes` reduces the size of each state write; `state_class=None` eliminates an entire category of unbounded writes.
+
+### Implementation File
+
+- **`custom_components/tibber_prices/sensor/definitions.py`** — `state_class` set per-sensor in `SensorEntityDescription`
+
 ## References
 
 - [HA Developer Docs - Excluding State Attributes](https://developers.home-assistant.io/docs/core/entity/#excluding-state-attributes-from-recorder-history)
