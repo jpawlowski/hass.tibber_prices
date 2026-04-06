@@ -20,9 +20,7 @@ _LOGGER = logging.getLogger(__name__)
 _LOGGER_DETAILS = logging.getLogger(__name__ + ".details")
 
 # Resolution change date (hourly before, quarter-hourly after)
-# Use UTC for constant - timezone adjusted at runtime when comparing
 RESOLUTION_CHANGE_DATETIME = datetime(2025, 10, 1, tzinfo=UTC)
-RESOLUTION_CHANGE_ISO = "2025-10-01T00:00:00"
 
 # Interval lengths in minutes
 INTERVAL_HOURLY = 60
@@ -224,20 +222,33 @@ class TibberPricesIntervalPoolFetcher:
 
         """
         split_ranges = []
+        boundary = RESOLUTION_CHANGE_DATETIME
+        boundary_iso = boundary.isoformat()
 
         for start_iso, end_iso in ranges:
+            start_dt = datetime.fromisoformat(start_iso)
+            end_dt = datetime.fromisoformat(end_iso)
+
+            # Normalise to UTC for a timezone-aware comparison.  The boundary is
+            # stored in UTC; naive strings (which should not appear here) are
+            # treated as UTC defensively.
+            if start_dt.tzinfo is None:
+                start_dt = start_dt.replace(tzinfo=UTC)
+            if end_dt.tzinfo is None:
+                end_dt = end_dt.replace(tzinfo=UTC)
+
             # Check if range crosses the boundary
-            if start_iso < RESOLUTION_CHANGE_ISO < end_iso:
+            if start_dt < boundary < end_dt:
                 # Split into two ranges: before and after boundary
-                split_ranges.append((start_iso, RESOLUTION_CHANGE_ISO))
-                split_ranges.append((RESOLUTION_CHANGE_ISO, end_iso))
+                split_ranges.append((start_iso, boundary_iso))
+                split_ranges.append((boundary_iso, end_iso))
                 _LOGGER_DETAILS.debug(
-                    "Split range at resolution boundary: (%s, %s) → (%s, %s) + (%s, %s)",
+                    "Split range at resolution boundary: (%s, %s) -> (%s, %s) + (%s, %s)",
                     start_iso,
                     end_iso,
                     start_iso,
-                    RESOLUTION_CHANGE_ISO,
-                    RESOLUTION_CHANGE_ISO,
+                    boundary_iso,
+                    boundary_iso,
                     end_iso,
                 )
             else:
