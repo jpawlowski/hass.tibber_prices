@@ -108,5 +108,7 @@ MINUTE_UPDATE_ENTITY_KEYS = frozenset(
         "peak_price_remaining_minutes",
         "peak_price_progress",
         "peak_price_next_in_minutes",
+        # Trend change countdown sensor (needs minute updates)
+        "trend_change_in_minutes",
     }
 )

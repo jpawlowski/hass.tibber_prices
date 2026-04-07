@@ -205,6 +205,7 @@ def get_value_getter_mapping(  # noqa: PLR0913 - needs all calculators as parame
         # Current and next trend change sensors
         "current_price_trend": trend_calculator.get_current_trend_value,
         "next_price_trend_change": trend_calculator.get_next_trend_change_value,
+        "trend_change_in_minutes": lambda: _minutes_to_hours(trend_calculator.get_trend_change_in_minutes_value()),
         # Price trend sensors
         "price_trend_1h": lambda: trend_calculator.get_price_trend_value(hours=1),
         "price_trend_2h": lambda: trend_calculator.get_price_trend_value(hours=2),

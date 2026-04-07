@@ -517,6 +517,17 @@ FUTURE_TREND_SENSORS = (
         state_class=None,  # Timestamp: no statistics
         entity_registry_enabled_default=True,
     ),
+    # Trend change countdown sensor (how long until trend changes?)
+    SensorEntityDescription(
+        key="trend_change_in_minutes",
+        translation_key="trend_change_in_minutes",
+        icon="mdi:timer-outline",
+        device_class=SensorDeviceClass.DURATION,
+        native_unit_of_measurement=UnitOfTime.HOURS,
+        state_class=None,  # Countdown timer: no statistics
+        suggested_display_precision=2,
+        entity_registry_enabled_default=True,
+    ),
     # Price trend forecast sensors (will prices be higher/lower in X hours?)
     # Default enabled: 1h-5h
     SensorEntityDescription(

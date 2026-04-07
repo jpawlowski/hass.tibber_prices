@@ -448,7 +448,7 @@ def test_timer_group_sizes() -> None:
     """
     # As of Nov 2025
     expected_time_sensitive_min = 40  # At least 40 sensors
-    expected_minute_update = 6  # Exactly 6 timing sensors
+    expected_minute_update = 7  # Exactly 7 timing sensors
 
     assert len(TIME_SENSITIVE_ENTITY_KEYS) >= expected_time_sensitive_min, (
         f"Expected at least {expected_time_sensitive_min} TIME_SENSITIVE sensors, got {len(TIME_SENSITIVE_ENTITY_KEYS)}"

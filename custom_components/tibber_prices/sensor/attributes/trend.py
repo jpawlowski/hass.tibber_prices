@@ -37,3 +37,6 @@ def _add_cached_trend_attributes(attributes: dict, key: str, cached_data: dict) 
         # Add cached attributes (timestamp already set by platform)
         # State contains the timestamp of the trend change itself
         attributes.update(cached_data["trend_change_attributes"])
+    elif key == "trend_change_in_minutes" and cached_data.get("trend_change_attributes"):
+        # Duration sensor shares same cached attributes as the timestamp sensor
+        attributes.update(cached_data["trend_change_attributes"])

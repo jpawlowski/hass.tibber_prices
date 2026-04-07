@@ -120,6 +120,22 @@ class TibberPricesSensor(TibberPricesEntity, RestoreSensor):
             "cache_validity",
             "data_completeness",
             "data_status",
+            "threshold_rising_%",
+            "threshold_rising_strongly_%",
+            "threshold_falling_%",
+            "threshold_falling_strongly_%",
+            "volatility_factor",
+            "interval_count",
+            "price_direction_since",
+            "price_now",
+            "trend_diff_%",
+            # Dynamic keys for second_half diff (all trend hour variants)
+            "second_half_3h_diff_from_current_%",
+            "second_half_4h_diff_from_current_%",
+            "second_half_5h_diff_from_current_%",
+            "second_half_6h_diff_from_current_%",
+            "second_half_8h_diff_from_current_%",
+            "second_half_12h_diff_from_current_%",
             # Static/Rarely Changing
             "tomorrow_expected_after",
             "level_value",
@@ -313,7 +329,11 @@ class TibberPricesSensor(TibberPricesEntity, RestoreSensor):
         if self.entity_description.key.startswith("price_trend_"):
             self._trend_calculator.clear_trend_cache()
         # Clear trend calculation cache for trend sensors
-        elif self.entity_description.key in ("current_price_trend", "next_price_trend_change"):
+        elif self.entity_description.key in (
+            "current_price_trend",
+            "next_price_trend_change",
+            "trend_change_in_minutes",
+        ):
             self._trend_calculator.clear_calculation_cache()
 
         # For lifecycle sensor: Only write state if it actually changed (state-change filter)
