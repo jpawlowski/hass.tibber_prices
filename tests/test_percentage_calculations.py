@@ -102,7 +102,7 @@ def test_bug10_trend_diff_negative_current_price() -> None:
     threshold_strongly_rising = 20.0
     threshold_strongly_falling = -20.0
 
-    trend, diff_pct, trend_value = calculate_price_trend(
+    trend, diff_pct, trend_value, _ = calculate_price_trend(
         current_interval_price=current_interval_price,
         future_average=future_average,
         threshold_rising=threshold_rising,
@@ -135,7 +135,7 @@ def test_bug10_trend_diff_negative_falling_deeper() -> None:
     threshold_strongly_rising = 20.0
     threshold_strongly_falling = -20.0
 
-    trend, diff_pct, trend_value = calculate_price_trend(
+    trend, diff_pct, trend_value, _ = calculate_price_trend(
         current_interval_price=current_interval_price,
         future_average=future_average,
         threshold_rising=threshold_rising,
@@ -167,7 +167,7 @@ def test_bug10_trend_diff_zero_current_price() -> None:
     threshold_strongly_rising = 20.0
     threshold_strongly_falling = -20.0
 
-    trend, diff_pct, trend_value = calculate_price_trend(
+    trend, diff_pct, trend_value, _ = calculate_price_trend(
         current_interval_price=current_interval_price,
         future_average=future_average,
         threshold_rising=threshold_rising,
@@ -196,7 +196,7 @@ def test_bug10_trend_diff_positive_prices_unchanged() -> None:
     threshold_strongly_rising = 20.0
     threshold_strongly_falling = -20.0
 
-    trend, diff_pct, trend_value = calculate_price_trend(
+    trend, diff_pct, trend_value, _ = calculate_price_trend(
         current_interval_price=current_interval_price,
         future_average=future_average,
         threshold_rising=threshold_rising,

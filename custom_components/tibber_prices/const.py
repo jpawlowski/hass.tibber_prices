@@ -52,6 +52,9 @@ CONF_PRICE_TREND_THRESHOLD_RISING = "price_trend_threshold_rising"
 CONF_PRICE_TREND_THRESHOLD_FALLING = "price_trend_threshold_falling"
 CONF_PRICE_TREND_THRESHOLD_STRONGLY_RISING = "price_trend_threshold_strongly_rising"
 CONF_PRICE_TREND_THRESHOLD_STRONGLY_FALLING = "price_trend_threshold_strongly_falling"
+CONF_PRICE_TREND_CHANGE_CONFIRMATION = "price_trend_change_confirmation"
+CONF_PRICE_TREND_MIN_PRICE_CHANGE = "price_trend_min_price_change"
+CONF_PRICE_TREND_MIN_PRICE_CHANGE_STRONGLY = "price_trend_min_price_change_strongly"
 CONF_VOLATILITY_THRESHOLD_MODERATE = "volatility_threshold_moderate"
 CONF_VOLATILITY_THRESHOLD_HIGH = "volatility_threshold_high"
 CONF_VOLATILITY_THRESHOLD_VERY_HIGH = "volatility_threshold_very_high"
@@ -103,10 +106,15 @@ DEFAULT_PRICE_LEVEL_GAP_TOLERANCE = 1  # Max consecutive intervals to smooth out
 DEFAULT_AVERAGE_SENSOR_DISPLAY = "median"  # Default: show median in state, mean in attributes
 DEFAULT_PRICE_TREND_THRESHOLD_RISING = 3  # Default trend threshold for rising prices (%)
 DEFAULT_PRICE_TREND_THRESHOLD_FALLING = -3  # Default trend threshold for falling prices (%, negative value)
-# Strong trend thresholds default to 2x the base threshold.
-# These are independently configurable to allow fine-tuning of "strongly" detection.
-DEFAULT_PRICE_TREND_THRESHOLD_STRONGLY_RISING = 6  # Default strong rising threshold (%)
-DEFAULT_PRICE_TREND_THRESHOLD_STRONGLY_FALLING = -6  # Default strong falling threshold (%, negative value)
+# Strong trend thresholds default to 3x the base threshold for perceptual scaling.
+# The non-linear ratio (3% → 9%) ensures "strongly" feels significantly different from "rising/falling".
+DEFAULT_PRICE_TREND_THRESHOLD_STRONGLY_RISING = 9  # Default strong rising threshold (%)
+DEFAULT_PRICE_TREND_THRESHOLD_STRONGLY_FALLING = -9  # Default strong falling threshold (%, negative value)
+DEFAULT_PRICE_TREND_CHANGE_CONFIRMATION = 3  # Default consecutive intervals to confirm trend change (3 x 15min = 45min)
+DEFAULT_PRICE_TREND_MIN_PRICE_CHANGE = 0.005  # Minimum absolute price change for trend (in base currency, e.g. EUR/NOK)
+DEFAULT_PRICE_TREND_MIN_PRICE_CHANGE_STRONGLY = (
+    0.015  # Minimum absolute price change for strong trend (in base currency)
+)
 # Default volatility thresholds (relative values using coefficient of variation)
 # Coefficient of variation = (standard_deviation / mean) * 100%
 # These thresholds are unitless and work across different price levels
@@ -172,6 +180,14 @@ MIN_PRICE_TREND_STRONGLY_RISING = 2  # Minimum strongly rising threshold (must b
 MAX_PRICE_TREND_STRONGLY_RISING = 100  # Maximum strongly rising threshold
 MIN_PRICE_TREND_STRONGLY_FALLING = -100  # Minimum strongly falling threshold (negative)
 MAX_PRICE_TREND_STRONGLY_FALLING = -2  # Maximum strongly falling threshold (must be < falling)
+# Trend change confirmation limits (consecutive 15-min intervals)
+MIN_PRICE_TREND_CHANGE_CONFIRMATION = 2  # Minimum: 2 intervals (30 min) - fast but more noise
+MAX_PRICE_TREND_CHANGE_CONFIRMATION = 6  # Maximum: 6 intervals (90 min) - very stable but slow
+# Minimum absolute price change thresholds (noise floor, in base currency e.g. EUR/NOK)
+MIN_PRICE_TREND_MIN_PRICE_CHANGE = 0.0  # 0 = disabled (pure percentage mode)
+MAX_PRICE_TREND_MIN_PRICE_CHANGE = 0.05  # 5 ct / 5 øre equivalent
+MIN_PRICE_TREND_MIN_PRICE_CHANGE_STRONGLY = 0.0  # 0 = disabled
+MAX_PRICE_TREND_MIN_PRICE_CHANGE_STRONGLY = 0.10  # 10 ct / 10 øre equivalent
 
 # Gap count and relaxation limits
 MIN_GAP_COUNT = 0  # Minimum gap count
@@ -362,6 +378,11 @@ def get_default_options(currency_code: str | None) -> dict[str, Any]:
         # Price trend thresholds (flat - single-section step)
         CONF_PRICE_TREND_THRESHOLD_RISING: DEFAULT_PRICE_TREND_THRESHOLD_RISING,
         CONF_PRICE_TREND_THRESHOLD_FALLING: DEFAULT_PRICE_TREND_THRESHOLD_FALLING,
+        CONF_PRICE_TREND_THRESHOLD_STRONGLY_RISING: DEFAULT_PRICE_TREND_THRESHOLD_STRONGLY_RISING,
+        CONF_PRICE_TREND_THRESHOLD_STRONGLY_FALLING: DEFAULT_PRICE_TREND_THRESHOLD_STRONGLY_FALLING,
+        CONF_PRICE_TREND_CHANGE_CONFIRMATION: DEFAULT_PRICE_TREND_CHANGE_CONFIRMATION,
+        CONF_PRICE_TREND_MIN_PRICE_CHANGE: DEFAULT_PRICE_TREND_MIN_PRICE_CHANGE,
+        CONF_PRICE_TREND_MIN_PRICE_CHANGE_STRONGLY: DEFAULT_PRICE_TREND_MIN_PRICE_CHANGE_STRONGLY,
         # Nested section: Period settings (shared by best/peak price)
         "period_settings": {
             CONF_BEST_PRICE_MIN_PERIOD_LENGTH: DEFAULT_BEST_PRICE_MIN_PERIOD_LENGTH,
