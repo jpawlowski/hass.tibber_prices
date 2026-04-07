@@ -229,43 +229,81 @@ h1, h2, h3, h4, h5, h6 {
 
 /* ── Mermaid diagram zoom / lightbox ──────────────────────────── */
 
-/* Wrapper that holds the diagram + the expand button */
+/* Wrapper — entire diagram is the click target */
 .mermaid-zoom-wrapper {
   position: relative;
   display: block;
+  cursor: zoom-in;
+  border-radius: var(--ifm-card-border-radius, 0.5rem);
+  /* Clip the hover overlay to the same rounded corners */
+  overflow: hidden;
 }
 
-/* Expand button — hidden until the diagram is hovered */
-.mermaid-zoom-btn {
+/* Semi-transparent tint that fades in on hover */
+.mermaid-zoom-hint {
   position: absolute;
-  top: 0.5rem;
-  right: 0.5rem;
+  inset: 0;
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 1.75rem;
-  height: 1.75rem;
-  padding: 0;
-  background: var(--ifm-background-surface-color);
-  border: 1px solid var(--ifm-color-emphasis-300);
-  border-radius: 0.4rem;
-  color: var(--ifm-color-emphasis-600);
-  cursor: pointer;
+  pointer-events: none;
   opacity: 0;
-  transition: opacity 0.15s ease, background 0.15s ease, color 0.15s ease,
-    border-color 0.15s ease;
+  background: rgba(0, 0, 0, 0);
+  transition: opacity 0.2s ease, background 0.2s ease;
   z-index: 1;
 }
 
-.mermaid-zoom-wrapper:hover .mermaid-zoom-btn,
-.mermaid-zoom-btn:focus-visible {
+.mermaid-zoom-wrapper:hover .mermaid-zoom-hint,
+.mermaid-zoom-wrapper:focus-visible .mermaid-zoom-hint {
   opacity: 1;
+  background: rgba(0, 0, 0, 0.06);
 }
 
-.mermaid-zoom-btn:hover {
-  background: var(--ifm-color-primary);
-  border-color: var(--ifm-color-primary);
-  color: #fff;
+[data-theme='dark'] .mermaid-zoom-wrapper:hover .mermaid-zoom-hint,
+[data-theme='dark'] .mermaid-zoom-wrapper:focus-visible .mermaid-zoom-hint {
+  background: rgba(255, 255, 255, 0.06);
+}
+
+/* Centered pill badge inside the tint */
+.mermaid-zoom-hint-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.35rem 0.8rem;
+  background: var(--ifm-background-surface-color);
+  border: 1px solid var(--ifm-color-emphasis-300);
+  border-radius: 2rem;
+  color: var(--ifm-color-emphasis-800);
+  font-size: 0.78rem;
+  font-weight: 600;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.18);
+  transform: translateY(4px);
+  transition: transform 0.2s ease;
+}
+
+.mermaid-zoom-wrapper:hover .mermaid-zoom-hint-badge,
+.mermaid-zoom-wrapper:focus-visible .mermaid-zoom-hint-badge {
+  transform: translateY(0);
+}
+
+/* Focus ring for keyboard users */
+.mermaid-zoom-wrapper:focus-visible {
+  outline: 2px solid var(--ifm-color-primary);
+  outline-offset: 2px;
+}
+
+/* Touch devices: no hover state — show badge permanently so users know it's tappable */
+@media (hover: none) {
+  .mermaid-zoom-hint {
+    opacity: 1;
+    background: transparent;
+  }
+
+  .mermaid-zoom-hint-badge {
+    transform: translateY(0);
+    /* Slightly more opaque so it reads well without hover context */
+    opacity: 0.85;
+  }
 }
 
 /* Full-screen backdrop */

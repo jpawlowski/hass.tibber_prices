@@ -8,6 +8,7 @@ type Props = WrapperProps<typeof MermaidType>;
 
 export default function MermaidWrapper(props: Props): React.JSX.Element {
   const containerRef = useRef<HTMLDivElement>(null);
+  const lightboxRef = useRef<HTMLDivElement>(null);
   const [overlayOpen, setOverlayOpen] = useState(false);
   const [svgMarkup, setSvgMarkup] = useState('');
   const [mounted, setMounted] = useState(false);
@@ -33,14 +34,43 @@ export default function MermaidWrapper(props: Props): React.JSX.Element {
     setOverlayOpen(false);
   }, []);
 
-  // Keyboard + body-scroll lock while overlay is open
+  // Keyboard + body-scroll lock + focus trap while overlay is open
   useEffect(() => {
     if (!overlayOpen) return;
+
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') handleClose();
+      if (e.key === 'Escape') {
+        handleClose();
+        return;
+      }
+      // Focus trap: keep Tab/Shift+Tab inside the lightbox
+      if (e.key === 'Tab' && lightboxRef.current) {
+        const focusable = lightboxRef.current.querySelectorAll<HTMLElement>(
+          'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+        );
+        const first = focusable[0];
+        const last = focusable[focusable.length - 1];
+        if (e.shiftKey) {
+          if (document.activeElement === first) {
+            e.preventDefault();
+            last?.focus();
+          }
+        } else {
+          if (document.activeElement === last) {
+            e.preventDefault();
+            first?.focus();
+          }
+        }
+      }
     };
+
     document.addEventListener('keydown', onKey);
     document.body.style.overflow = 'hidden';
+
+    // Move focus into the lightbox on open
+    const closeBtn = lightboxRef.current?.querySelector<HTMLElement>('button');
+    closeBtn?.focus();
+
     return () => {
       document.removeEventListener('keydown', onKey);
       document.body.style.overflow = '';
@@ -48,37 +78,49 @@ export default function MermaidWrapper(props: Props): React.JSX.Element {
   }, [overlayOpen, handleClose]);
 
   return (
-    <div ref={containerRef} className="mermaid-zoom-wrapper">
+    <div
+      ref={containerRef}
+      className="mermaid-zoom-wrapper"
+      onClick={handleOpen}
+      role="button"
+      tabIndex={0}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          handleOpen();
+        }
+      }}
+      aria-label="View diagram enlarged"
+    >
       <OriginalMermaid {...props} />
-      <button
-        className="mermaid-zoom-btn"
-        onClick={handleOpen}
-        aria-label="View diagram enlarged"
-        title="View enlarged"
-      >
-        {/* Expand / fullscreen icon */}
-        <svg
-          viewBox="0 0 24 24"
-          width="15"
-          height="15"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="2.5"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          aria-hidden="true"
-        >
-          <polyline points="15 3 21 3 21 9" />
-          <polyline points="9 21 3 21 3 15" />
-          <line x1="21" y1="3" x2="14" y2="10" />
-          <line x1="3" y1="21" x2="10" y2="14" />
-        </svg>
-      </button>
+      {/* Hover hint — pointer-events:none so it never swallows clicks */}
+      <div className="mermaid-zoom-hint" aria-hidden="true">
+        <div className="mermaid-zoom-hint-badge">
+          <svg
+            viewBox="0 0 24 24"
+            width="14"
+            height="14"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2.5"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            aria-hidden="true"
+          >
+            <circle cx="11" cy="11" r="8" />
+            <line x1="21" y1="21" x2="16.65" y2="16.65" />
+            <line x1="11" y1="8" x2="11" y2="14" />
+            <line x1="8" y1="11" x2="14" y2="11" />
+          </svg>
+          Enlarge
+        </div>
+      </div>
 
       {mounted &&
         overlayOpen &&
         createPortal(
           <div
+            ref={lightboxRef}
             className="mermaid-lightbox"
             role="dialog"
             aria-modal="true"
@@ -95,6 +137,7 @@ export default function MermaidWrapper(props: Props): React.JSX.Element {
               className="mermaid-lightbox-close"
               onClick={handleClose}
               aria-label="Close enlarged view"
+              title="Close (Esc)"
             >
               <svg
                 viewBox="0 0 24 24"
