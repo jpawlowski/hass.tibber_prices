@@ -6,6 +6,14 @@ This guide showcases the different chart configurations available through the `t
 
 > **Entity ID tip:** `<home_name>` is a placeholder for your Tibber home display name in Home Assistant. Entity IDs are derived from the displayed name (localized), so the exact slug may differ. Example suffixes below use the English display names (en.json) as a baseline. You can find the real ID in **Settings → Devices & Services → Entities** (or **Developer Tools → States**).
 
+:::info Finding your Entry ID (`entry_id`)
+Every example below contains `entry_id: YOUR_ENTRY_ID`. This value identifies which Tibber home (integration instance) the action targets.
+
+**In the Action UI (Developer Tools → Actions or the automation editor):** The `entry_id` field is a **dropdown** — just select your Tibber home and HA fills in the correct ID automatically.
+
+**In YAML:** Go to **Settings → Devices & Services**, find the **Tibber Prices** card, open the **⋮** (three-dot) menu, and choose **"Copy Config Entry ID"**. Paste the copied value in place of `YOUR_ENTRY_ID`.
+:::
+
 ## Overview
 
 The integration can generate 4 different chart modes, each optimized for specific use cases:

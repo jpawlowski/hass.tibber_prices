@@ -4,6 +4,30 @@ Home Assistant now surfaces these backend service endpoints as **Actions** in th
 
 You can still call them from automations, scripts, and dashboards the same way as before (`service: tibber_prices.get_chartdata`, etc.), just remember that the frontend officially lists them as actions.
 
+## Finding Your Entry ID
+
+Every action requires an `entry_id` parameter that tells Home Assistant which Tibber home (integration instance) to use. If you only have one home, there is still exactly one entry ID — you just need to know where to find it.
+
+### In the Action UI — no lookup needed
+
+When you use the action through the Home Assistant interface (Developer Tools → Actions, or the Action picker inside the automation / script editor), the `entry_id` field renders as a **dropdown list** showing all your configured Tibber Prices instances. Just select your home from the drop-down and Home Assistant fills in the correct ID automatically. You never have to deal with the raw ID string.
+
+### In YAML — copy from the integration menu
+
+When you write YAML directly (automations, scripts, Lovelace dashboard cards), you need the actual ID string. The quickest way to get it:
+
+1. Go to **Settings → Devices & Services**
+2. Find the **Tibber Prices** integration card
+3. Click the **⋮** (three-dot) menu on the card
+4. Choose **"Copy Config Entry ID"**
+5. Paste the value wherever you see `YOUR_ENTRY_ID` in the YAML examples
+
+The ID looks like a long alphanumeric string, for example `01JKPC7AB3EF4GH5IJ6KL7MN8P`.
+
+:::tip Multiple homes?
+If you have configured more than one Tibber home, each home has its own entry ID. Repeat the steps above for each integration card to get the individual IDs.
+:::
+
 ## Available Actions
 
 > **Entity ID tip:** `<home_name>` is a placeholder for your Tibber home display name in Home Assistant. Entity IDs are derived from the displayed name (localized), so the exact slug may differ. Example suffixes below use the English display names (en.json) as a baseline. You can find the real ID in **Settings → Devices & Services → Entities** (or **Developer Tools → States**).

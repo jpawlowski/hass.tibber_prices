@@ -467,6 +467,14 @@ automation:
 
 The `tibber_prices.get_apexcharts_yaml` service generates basic ApexCharts card configuration examples for visualizing electricity prices.
 
+:::info Finding your Entry ID (`entry_id`)
+The examples below contain `entry_id: YOUR_ENTRY_ID`. This value identifies which Tibber home (integration instance) the action targets.
+
+**In the Action UI (Developer Tools → Actions or the automation editor):** The `entry_id` field is a **dropdown** — just select your Tibber home and HA fills in the correct ID automatically.
+
+**In YAML:** Go to **Settings → Devices & Services**, find the **Tibber Prices** card, open the **⋮** (three-dot) menu, and choose **"Copy Config Entry ID"**. Paste the copied value in place of `YOUR_ENTRY_ID`.
+:::
+
 ### Prerequisites
 
 **Required:**

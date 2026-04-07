@@ -24,6 +24,11 @@ Quick reference for terms used throughout the documentation.
 
 ## C
 
+**Config Entry ID** (also: `entry_id`)
+: A unique identifier assigned by Home Assistant to each configured integration instance. When this integration is used with multiple Tibber homes, each home gets its own Config Entry ID. All actions (`get_chartdata`, `get_apexcharts_yaml`, etc.) require this value as the `entry_id` parameter so that Home Assistant knows which home to query.
+  - **In the Action UI**: The field appears as a dropdown — select your home and HA fills in the ID automatically.
+  - **In YAML**: Go to **Settings → Devices & Services**, find the **Tibber Prices** card, open the **⋮** menu, and choose **"Copy Config Entry ID"**.
+
 **Currency Display Mode**
 : Configurable setting for how prices are shown. Choose base currency (€, kr) or subunit (ct, øre). Smart defaults apply: EUR → subunit, NOK/SEK/DKK → base.
 
