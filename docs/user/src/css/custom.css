@@ -306,10 +306,18 @@ h1, h2, h3, h4, h5, h6 {
   to   { transform: scale(1);    opacity: 1; }
 }
 
-.mermaid-lightbox-inner svg {
+.mermaid-lightbox-inner > svg {
   display: block;
   width: 100%;
   height: auto;
+  /* Solid themed background — auto-switches with light/dark mode */
+  background: var(--ifm-background-color);
+  border-radius: calc(var(--ifm-card-border-radius, 0.5rem) - 2px);
+}
+
+/* Override Mermaid's hardcoded background rect (sequence diagrams, etc.) */
+.mermaid-lightbox-inner svg .background {
+  fill: var(--ifm-background-color) !important;
 }
 
 /* Close button (top-right corner of the card) */
