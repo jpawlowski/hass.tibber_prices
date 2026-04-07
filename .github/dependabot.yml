@@ -11,6 +11,32 @@ updates:
     schedule:
       interval: "daily"
 
+  - package-ecosystem: "npm"
+    directory: "/docs/user"
+    schedule:
+      interval: "weekly"
+    groups:
+      docusaurus:
+        patterns:
+          - "@docusaurus/*"
+      react:
+        patterns:
+          - "react"
+          - "react-dom"
+
+  - package-ecosystem: "npm"
+    directory: "/docs/developer"
+    schedule:
+      interval: "weekly"
+    groups:
+      docusaurus:
+        patterns:
+          - "@docusaurus/*"
+      react:
+        patterns:
+          - "react"
+          - "react-dom"
+
   - package-ecosystem: "pip"
     directory: "/"
     schedule:
