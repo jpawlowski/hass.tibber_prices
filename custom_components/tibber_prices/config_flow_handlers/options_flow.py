@@ -60,6 +60,8 @@ from custom_components.tibber_prices.const import (
     CONF_PEAK_PRICE_MIN_PERIOD_LENGTH,
     CONF_PRICE_RATING_THRESHOLD_HIGH,
     CONF_PRICE_RATING_THRESHOLD_LOW,
+    CONF_PRICE_TREND_MIN_PRICE_CHANGE,
+    CONF_PRICE_TREND_MIN_PRICE_CHANGE_STRONGLY,
     CONF_PRICE_TREND_THRESHOLD_FALLING,
     CONF_PRICE_TREND_THRESHOLD_RISING,
     CONF_PRICE_TREND_THRESHOLD_STRONGLY_FALLING,
@@ -74,7 +76,10 @@ from custom_components.tibber_prices.const import (
     DEFAULT_VOLATILITY_THRESHOLD_VERY_HIGH,
     DOMAIN,
     async_get_translation,
+    format_price_unit_base,
+    format_price_unit_subunit,
     get_default_options,
+    get_display_unit_factor,
 )
 from homeassistant.config_entries import ConfigFlowResult, OptionsFlow
 from homeassistant.helpers import entity_registry as er
@@ -730,6 +735,9 @@ class TibberPricesOptionsFlowHandler(OptionsFlow):
         """Configure price trend thresholds."""
         errors: dict[str, str] = {}
 
+        # Get display factor for currency conversion
+        display_factor = get_display_unit_factor(self.config_entry)
+
         if user_input is not None:
             # Schema is now flattened - fields come directly in user_input
             # Store them flat in options (no nested structure)
@@ -775,6 +783,15 @@ class TibberPricesOptionsFlowHandler(OptionsFlow):
                     )
 
             if not errors:
+                # Convert min_price_change values from display unit to base currency for storage
+                # (dividing by 1 is a no-op for base currency mode)
+                user_input[CONF_PRICE_TREND_MIN_PRICE_CHANGE] = round(
+                    user_input[CONF_PRICE_TREND_MIN_PRICE_CHANGE] / display_factor, 6
+                )
+                user_input[CONF_PRICE_TREND_MIN_PRICE_CHANGE_STRONGLY] = round(
+                    user_input[CONF_PRICE_TREND_MIN_PRICE_CHANGE_STRONGLY] / display_factor, 6
+                )
+
                 # Store flat data directly in options (no section wrapping)
                 self._options.update(user_input)
                 # async_create_entry automatically handles change detection and listener triggering
@@ -782,9 +799,20 @@ class TibberPricesOptionsFlowHandler(OptionsFlow):
             # Return to menu for more changes
             return await self.async_step_init()
 
+        # Get currency code for unit label on sliders
+        currency_code = self.config_entry.data.get("currency", None)
+        if display_factor > 1:
+            price_unit = format_price_unit_subunit(currency_code)
+        else:
+            price_unit = format_price_unit_base(currency_code)
+
         return self.async_show_form(
             step_id="price_trend",
-            data_schema=get_price_trend_schema(self.config_entry.options),
+            data_schema=get_price_trend_schema(
+                self.config_entry.options,
+                display_factor=display_factor,
+                price_unit=price_unit,
+            ),
             errors=errors,
             description_placeholders=self._get_entity_warning_placeholders("price_trend"),
         )

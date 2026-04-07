@@ -21,11 +21,15 @@ from homeassistant.loader import async_get_loaded_integration
 from .api import TibberPricesApiClient
 from .const import (
     CONF_CURRENCY_DISPLAY_MODE,
+    CONF_PRICE_TREND_MIN_PRICE_CHANGE,
+    CONF_PRICE_TREND_MIN_PRICE_CHANGE_STRONGLY,
     DATA_CHART_CONFIG,
     DATA_CHART_METADATA_CONFIG,
     DISPLAY_MODE_SUBUNIT,
     DOMAIN,
     LOGGER,
+    MAX_PRICE_TREND_MIN_PRICE_CHANGE,
+    MAX_PRICE_TREND_MIN_PRICE_CHANGE_STRONGLY,
     async_load_standard_translations,
     async_load_translations,
 )
@@ -140,6 +144,29 @@ async def _migrate_config_options(hass: HomeAssistant, entry: ConfigEntry) -> No
             entry.title,
             DISPLAY_MODE_SUBUNIT,
         )
+
+    # Migration: Convert min_price_change from display currency (ct/øre) to base currency (EUR/NOK)
+    # Before this change, values were stored in display units. Now always stored in base currency.
+    # Detection: If either value exceeds its new max, both are in old format and need conversion.
+    # Old range: 0-5.0 ct / 0-10.0 ct, New range: 0-0.05 EUR / 0-0.10 EUR
+    normal_val = migrated.get(CONF_PRICE_TREND_MIN_PRICE_CHANGE)
+    strongly_val = migrated.get(CONF_PRICE_TREND_MIN_PRICE_CHANGE_STRONGLY)
+    old_format_detected = (normal_val is not None and normal_val > MAX_PRICE_TREND_MIN_PRICE_CHANGE) or (
+        strongly_val is not None and strongly_val > MAX_PRICE_TREND_MIN_PRICE_CHANGE_STRONGLY
+    )
+    if old_format_detected:
+        for key in (CONF_PRICE_TREND_MIN_PRICE_CHANGE, CONF_PRICE_TREND_MIN_PRICE_CHANGE_STRONGLY):
+            if key in migrated and migrated[key] > 0:
+                old_val = migrated[key]
+                migrated[key] = round(old_val / 100, 6)
+                migration_performed = True
+                LOGGER.info(
+                    "[%s] Migrated config: %s = %s -> %s (converted to base currency)",
+                    entry.title,
+                    key,
+                    old_val,
+                    migrated[key],
+                )
 
     # Save migrated options if any changes were made
     if migration_performed:

@@ -33,6 +33,9 @@ from custom_components.tibber_prices.const import (
     CONF_PRICE_RATING_HYSTERESIS,
     CONF_PRICE_RATING_THRESHOLD_HIGH,
     CONF_PRICE_RATING_THRESHOLD_LOW,
+    CONF_PRICE_TREND_CHANGE_CONFIRMATION,
+    CONF_PRICE_TREND_MIN_PRICE_CHANGE,
+    CONF_PRICE_TREND_MIN_PRICE_CHANGE_STRONGLY,
     CONF_PRICE_TREND_THRESHOLD_FALLING,
     CONF_PRICE_TREND_THRESHOLD_RISING,
     CONF_PRICE_TREND_THRESHOLD_STRONGLY_FALLING,
@@ -66,6 +69,9 @@ from custom_components.tibber_prices.const import (
     DEFAULT_PRICE_RATING_HYSTERESIS,
     DEFAULT_PRICE_RATING_THRESHOLD_HIGH,
     DEFAULT_PRICE_RATING_THRESHOLD_LOW,
+    DEFAULT_PRICE_TREND_CHANGE_CONFIRMATION,
+    DEFAULT_PRICE_TREND_MIN_PRICE_CHANGE,
+    DEFAULT_PRICE_TREND_MIN_PRICE_CHANGE_STRONGLY,
     DEFAULT_PRICE_TREND_THRESHOLD_FALLING,
     DEFAULT_PRICE_TREND_THRESHOLD_RISING,
     DEFAULT_PRICE_TREND_THRESHOLD_STRONGLY_FALLING,
@@ -88,7 +94,10 @@ from custom_components.tibber_prices.const import (
     MAX_PRICE_RATING_HYSTERESIS,
     MAX_PRICE_RATING_THRESHOLD_HIGH,
     MAX_PRICE_RATING_THRESHOLD_LOW,
+    MAX_PRICE_TREND_CHANGE_CONFIRMATION,
     MAX_PRICE_TREND_FALLING,
+    MAX_PRICE_TREND_MIN_PRICE_CHANGE,
+    MAX_PRICE_TREND_MIN_PRICE_CHANGE_STRONGLY,
     MAX_PRICE_TREND_RISING,
     MAX_PRICE_TREND_STRONGLY_FALLING,
     MAX_PRICE_TREND_STRONGLY_RISING,
@@ -103,7 +112,10 @@ from custom_components.tibber_prices.const import (
     MIN_PRICE_RATING_HYSTERESIS,
     MIN_PRICE_RATING_THRESHOLD_HIGH,
     MIN_PRICE_RATING_THRESHOLD_LOW,
+    MIN_PRICE_TREND_CHANGE_CONFIRMATION,
     MIN_PRICE_TREND_FALLING,
+    MIN_PRICE_TREND_MIN_PRICE_CHANGE,
+    MIN_PRICE_TREND_MIN_PRICE_CHANGE_STRONGLY,
     MIN_PRICE_TREND_RISING,
     MIN_PRICE_TREND_STRONGLY_FALLING,
     MIN_PRICE_TREND_STRONGLY_RISING,
@@ -907,8 +919,16 @@ def get_peak_price_schema(
     )
 
 
-def get_price_trend_schema(options: Mapping[str, Any]) -> vol.Schema:
+def get_price_trend_schema(
+    options: Mapping[str, Any],
+    *,
+    display_factor: int = 1,
+    price_unit: str = "",
+) -> vol.Schema:
     """Return schema for price trend thresholds configuration."""
+    # Scale min_price_change values for display (stored in base currency, shown in display unit)
+    step = 0.1 if display_factor > 1 else 0.001
+
     return vol.Schema(
         {
             vol.Optional(
@@ -976,6 +996,64 @@ def get_price_trend_schema(options: Mapping[str, Any]) -> vol.Schema:
                     max=MAX_PRICE_TREND_STRONGLY_FALLING,
                     step=1,
                     unit_of_measurement="%",
+                    mode=NumberSelectorMode.SLIDER,
+                ),
+            ),
+            vol.Optional(
+                CONF_PRICE_TREND_CHANGE_CONFIRMATION,
+                default=int(
+                    options.get(
+                        CONF_PRICE_TREND_CHANGE_CONFIRMATION,
+                        DEFAULT_PRICE_TREND_CHANGE_CONFIRMATION,
+                    )
+                ),
+            ): NumberSelector(
+                NumberSelectorConfig(
+                    min=MIN_PRICE_TREND_CHANGE_CONFIRMATION,
+                    max=MAX_PRICE_TREND_CHANGE_CONFIRMATION,
+                    step=1,
+                    mode=NumberSelectorMode.SLIDER,
+                ),
+            ),
+            vol.Optional(
+                CONF_PRICE_TREND_MIN_PRICE_CHANGE,
+                default=round(
+                    float(
+                        options.get(
+                            CONF_PRICE_TREND_MIN_PRICE_CHANGE,
+                            DEFAULT_PRICE_TREND_MIN_PRICE_CHANGE,
+                        )
+                    )
+                    * display_factor,
+                    3,
+                ),
+            ): NumberSelector(
+                NumberSelectorConfig(
+                    min=MIN_PRICE_TREND_MIN_PRICE_CHANGE * display_factor,
+                    max=MAX_PRICE_TREND_MIN_PRICE_CHANGE * display_factor,
+                    step=step,
+                    unit_of_measurement=price_unit,
+                    mode=NumberSelectorMode.SLIDER,
+                ),
+            ),
+            vol.Optional(
+                CONF_PRICE_TREND_MIN_PRICE_CHANGE_STRONGLY,
+                default=round(
+                    float(
+                        options.get(
+                            CONF_PRICE_TREND_MIN_PRICE_CHANGE_STRONGLY,
+                            DEFAULT_PRICE_TREND_MIN_PRICE_CHANGE_STRONGLY,
+                        )
+                    )
+                    * display_factor,
+                    3,
+                ),
+            ): NumberSelector(
+                NumberSelectorConfig(
+                    min=MIN_PRICE_TREND_MIN_PRICE_CHANGE_STRONGLY * display_factor,
+                    max=MAX_PRICE_TREND_MIN_PRICE_CHANGE_STRONGLY * display_factor,
+                    step=step,
+                    unit_of_measurement=price_unit,
                     mode=NumberSelectorMode.SLIDER,
                 ),
             ),
