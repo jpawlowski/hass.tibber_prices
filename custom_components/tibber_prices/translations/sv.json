@@ -304,13 +304,19 @@
                     "price_trend_threshold_rising": "Stigande tröskel",
                     "price_trend_threshold_strongly_rising": "Kraftigt stigande tröskel",
                     "price_trend_threshold_falling": "Fallande tröskel",
-                    "price_trend_threshold_strongly_falling": "Kraftigt fallande tröskel"
+                    "price_trend_threshold_strongly_falling": "Kraftigt fallande tröskel",
+                    "price_trend_change_confirmation": "Trendändringsbekräftelse",
+                    "price_trend_min_price_change": "Min. prisändring (trend)",
+                    "price_trend_min_price_change_strongly": "Min. prisändring (stark trend)"
                 },
                 "data_description": {
                     "price_trend_threshold_rising": "Procentandel som genomsnittet av de nästa N timmarna måste vara över det aktuella priset för att kvalificera som 'stigande' trend. Exempel: 3 betyder att genomsnittet är minst 3% högre → priserna kommer att stiga. Typiska värden: 3-10%. Standard: 3%",
-                    "price_trend_threshold_strongly_rising": "Procentandel som genomsnittet av de nästa N timmarna måste vara över det aktuella priset för att kvalificera som 'kraftigt stigande' trend. Måste vara högre än stigande tröskel. Typiska värden: 6-20%. Standard: 6%",
+                    "price_trend_threshold_strongly_rising": "Procentandel som genomsnittet av de nästa N timmarna måste vara över det aktuella priset för att kvalificera som 'kraftigt stigande' trend. Måste vara högre än stigande tröskel. Typiska värden: 6-20%. Standard: 9%",
                     "price_trend_threshold_falling": "Procentandel (negativ) som genomsnittet av de nästa N timmarna måste vara under det aktuella priset för att kvalificera som 'fallande' trend. Exempel: -3 betyder att genomsnittet är minst 3% lägre → priserna kommer att falla. Typiska värden: -3 till -10%. Standard: -3%",
-                    "price_trend_threshold_strongly_falling": "Procentandel (negativ) som genomsnittet av de nästa N timmarna måste vara under det aktuella priset för att kvalificera som 'kraftigt fallande' trend. Måste vara lägre (mer negativ) än fallande tröskel. Typiska värden: -6 till -20%. Standard: -6%"
+                    "price_trend_threshold_strongly_falling": "Procentandel (negativ) som genomsnittet av de nästa N timmarna måste vara under det aktuella priset för att kvalificera som 'kraftigt fallande' trend. Måste vara lägre (mer negativ) än fallande tröskel. Typiska värden: -6 till -20%. Standard: -9%",
+                    "price_trend_change_confirmation": "Antal på varandra följande 15-minutersintervall som måste bekräfta en ny trendriktning innan en trendändring rapporteras. Högre värden innebär mer stabilitet och färre falska ändringar, lägre värden innebär snabbare upptäckt. Intervall: 2 (30 min) till 6 (90 min). Standard: 3 (45 min)",
+                    "price_trend_min_price_change": "Minsta absoluta prisskillnad (i ct/öre) som krävs för en 'stigande' eller 'fallande' trend. Förhindrar att minimala prisändringar utlöser trender vid låga prisnivåer. Sätt till 0 för att inaktivera (rent procentläge). Standard: 0,5",
+                    "price_trend_min_price_change_strongly": "Minsta absoluta prisskillnad (i ct/öre) som krävs för en 'kraftigt stigande' eller 'kraftigt fallande' trend. Bör vara högre än det vanliga trendminimumet. Sätt till 0 för att inaktivera. Standard: 1,5"
                 },
                 "submit": "↩ Spara & tillbaka"
             },
@@ -705,6 +711,9 @@
             },
             "next_price_trend_change": {
                 "name": "Nästa pristrendändring"
+            },
+            "trend_change_in_minutes": {
+                "name": "Trendändring om"
             },
             "daily_rating": {
                 "name": "Dagligt prisbetyg"

@@ -304,13 +304,19 @@
                     "price_trend_threshold_rising": "Steigend-Schwelle",
                     "price_trend_threshold_strongly_rising": "Stark steigend-Schwelle",
                     "price_trend_threshold_falling": "Fallend-Schwelle",
-                    "price_trend_threshold_strongly_falling": "Stark fallend-Schwelle"
+                    "price_trend_threshold_strongly_falling": "Stark fallend-Schwelle",
+                    "price_trend_change_confirmation": "Trendwechsel-Bestätigung",
+                    "price_trend_min_price_change": "Mind. Preisänderung (Trend)",
+                    "price_trend_min_price_change_strongly": "Mind. Preisänderung (Starker Trend)"
                 },
                 "data_description": {
                     "price_trend_threshold_rising": "Prozentwert, um wie viel der Durchschnitt der nächsten N Stunden über dem aktuellen Preis liegen muss, damit der Trend als 'steigend' gilt. Beispiel: 3 bedeutet Durchschnitt ist mindestens 3% höher → Preise werden steigen. Typische Werte: 3-10%. Standard: 3%",
-                    "price_trend_threshold_strongly_rising": "Prozentwert für 'stark steigend'-Trend. Muss höher sein als die steigend-Schwelle. Beispiel: 6 bedeutet Durchschnitt ist mindestens 6% höher → Preise werden deutlich steigen. Typische Werte: 6-15%. Standard: 6%",
+                    "price_trend_threshold_strongly_rising": "Prozentwert für 'stark steigend'-Trend. Muss höher sein als die steigend-Schwelle. Beispiel: 9 bedeutet Durchschnitt ist mindestens 9% höher → Preise werden deutlich steigen. Typische Werte: 6-20%. Standard: 9%",
                     "price_trend_threshold_falling": "Prozentwert (negativ), um wie viel der Durchschnitt der nächsten N Stunden unter dem aktuellen Preis liegen muss, damit der Trend als 'fallend' gilt. Beispiel: -3 bedeutet Durchschnitt ist mindestens 3% niedriger → Preise werden fallen. Typische Werte: -3 bis -10%. Standard: -3%",
-                    "price_trend_threshold_strongly_falling": "Prozentwert (negativ) für 'stark fallend'-Trend. Muss niedriger (negativer) sein als die fallend-Schwelle. Beispiel: -6 bedeutet Durchschnitt ist mindestens 6% niedriger → Preise werden deutlich fallen. Typische Werte: -6 bis -15%. Standard: -6%"
+                    "price_trend_threshold_strongly_falling": "Prozentwert (negativ) für 'stark fallend'-Trend. Muss niedriger (negativer) sein als die fallend-Schwelle. Beispiel: -9 bedeutet Durchschnitt ist mindestens 9% niedriger → Preise werden deutlich fallen. Typische Werte: -6 bis -20%. Standard: -9%",
+                    "price_trend_change_confirmation": "Anzahl aufeinanderfolgender 15-Minuten-Intervalle, die eine neue Trendrichtung bestätigen müssen, bevor ein Trendwechsel gemeldet wird. Höhere Werte bedeuten mehr Stabilität und weniger Fehlsignale, niedrigere Werte bedeuten schnellere Erkennung. Bereich: 2 (30 min) bis 6 (90 min). Standard: 3 (45 min)",
+                    "price_trend_min_price_change": "Mindest-Preisdifferenz (in ct/øre), die für einen 'steigend'- oder 'fallend'-Trend erforderlich ist. Verhindert, dass minimale Preisänderungen bei niedrigem Preisniveau Trends auslösen. Auf 0 setzen zum Deaktivieren (reiner Prozentmodus). Standard: 0,5",
+                    "price_trend_min_price_change_strongly": "Mindest-Preisdifferenz (in ct/øre), die für einen 'stark steigend'- oder 'stark fallend'-Trend erforderlich ist. Sollte höher als das reguläre Trend-Minimum sein. Auf 0 setzen zum Deaktivieren. Standard: 1,5"
                 },
                 "submit": "↩ Speichern & Zurück"
             },
@@ -705,6 +711,9 @@
             },
             "next_price_trend_change": {
                 "name": "Nächste Trendänderung"
+            },
+            "trend_change_in_minutes": {
+                "name": "Trendänderung in"
             },
             "daily_rating": {
                 "name": "Tägliche Preisbewertung"

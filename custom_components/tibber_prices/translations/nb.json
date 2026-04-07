@@ -304,13 +304,19 @@
                     "price_trend_threshold_rising": "Stigende terskel",
                     "price_trend_threshold_strongly_rising": "Sterkt stigende terskel",
                     "price_trend_threshold_falling": "Fallende terskel",
-                    "price_trend_threshold_strongly_falling": "Sterkt fallende terskel"
+                    "price_trend_threshold_strongly_falling": "Sterkt fallende terskel",
+                    "price_trend_change_confirmation": "Trendendringsbekreftelse",
+                    "price_trend_min_price_change": "Min. prisendring (trend)",
+                    "price_trend_min_price_change_strongly": "Min. prisendring (sterk trend)"
                 },
                 "data_description": {
                     "price_trend_threshold_rising": "Prosentverdi som gjennomsnittet av de neste N timene må være over den nåværende prisen for å kvalifisere som 'stigende' trend. Eksempel: 3 betyr gjennomsnittet er minst 3% høyere → prisene vil stige. Typiske verdier: 3-10%. Standard: 3%",
-                    "price_trend_threshold_strongly_rising": "Prosentverdi som gjennomsnittet av de neste N timene må være over den nåværende prisen for å kvalifisere som 'sterkt stigende' trend. Må være høyere enn stigende terskel. Typiske verdier: 6-20%. Standard: 6%",
+                    "price_trend_threshold_strongly_rising": "Prosentverdi som gjennomsnittet av de neste N timene må være over den nåværende prisen for å kvalifisere som 'sterkt stigende' trend. Må være høyere enn stigende terskel. Typiske verdier: 6-20%. Standard: 9%",
                     "price_trend_threshold_falling": "Prosentverdi (negativ) som gjennomsnittet av de neste N timene må være under den nåværende prisen for å kvalifisere som 'synkende' trend. Eksempel: -3 betyr gjennomsnittet er minst 3% lavere → prisene vil falle. Typiske verdier: -3 til -10%. Standard: -3%",
-                    "price_trend_threshold_strongly_falling": "Prosentverdi (negativ) som gjennomsnittet av de neste N timene må være under den nåværende prisen for å kvalifisere som 'sterkt synkende' trend. Må være lavere (mer negativ) enn fallende terskel. Typiske verdier: -6 til -20%. Standard: -6%"
+                    "price_trend_threshold_strongly_falling": "Prosentverdi (negativ) som gjennomsnittet av de neste N timene må være under den nåværende prisen for å kvalifisere som 'sterkt synkende' trend. Må være lavere (mer negativ) enn fallende terskel. Typiske verdier: -6 til -20%. Standard: -9%",
+                    "price_trend_change_confirmation": "Antall påfølgende 15-minutters intervaller som må bekrefte en ny trendretning før en trendendring rapporteres. Høyere verdier betyr mer stabilitet og færre falske endringer, lavere verdier betyr raskere oppdagelse. Område: 2 (30 min) til 6 (90 min). Standard: 3 (45 min)",
+                    "price_trend_min_price_change": "Minste absolutte prisdifferanse (i ct/øre) som kreves for en 'stigende' eller 'synkende' trend. Forhindrer at minimale prisendringer utløser trender ved lave prisnivåer. Sett til 0 for å deaktivere (ren prosentmodus). Standard: 0,5",
+                    "price_trend_min_price_change_strongly": "Minste absolutte prisdifferanse (i ct/øre) som kreves for en 'sterkt stigende' eller 'sterkt synkende' trend. Bør være høyere enn det vanlige trendminimum. Sett til 0 for å deaktivere. Standard: 1,5"
                 },
                 "submit": "↩ Lagre & tilbake"
             },
@@ -705,6 +711,9 @@
             },
             "next_price_trend_change": {
                 "name": "Neste trendendring"
+            },
+            "trend_change_in_minutes": {
+                "name": "Trendendring om"
             },
             "daily_rating": {
                 "name": "Daglig prisvurdering"

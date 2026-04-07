@@ -315,13 +315,19 @@
                     "price_trend_threshold_rising": "Rising Threshold",
                     "price_trend_threshold_strongly_rising": "Strongly Rising Threshold",
                     "price_trend_threshold_falling": "Falling Threshold",
-                    "price_trend_threshold_strongly_falling": "Strongly Falling Threshold"
+                    "price_trend_threshold_strongly_falling": "Strongly Falling Threshold",
+                    "price_trend_change_confirmation": "Trend Change Confirmation",
+                    "price_trend_min_price_change": "Min. Price Change (Trend)",
+                    "price_trend_min_price_change_strongly": "Min. Price Change (Strong Trend)"
                 },
                 "data_description": {
                     "price_trend_threshold_rising": "Percentage that the average of the next N hours must be above the current price to qualify as 'rising' trend. Example: 3 means average is at least 3% higher → prices will rise. Typical values: 3-10%. Default: 3%",
-                    "price_trend_threshold_strongly_rising": "Percentage for 'strongly rising' trend. Must be higher than rising threshold. Example: 6 means average is at least 6% higher → prices will rise significantly. Typical values: 6-15%. Default: 6%",
+                    "price_trend_threshold_strongly_rising": "Percentage for 'strongly rising' trend. Must be higher than rising threshold. Example: 9 means average is at least 9% higher → prices will rise significantly. Typical values: 6-20%. Default: 9%",
                     "price_trend_threshold_falling": "Percentage (negative) that the average of the next N hours must be below the current price to qualify as 'falling' trend. Example: -3 means average is at least 3% lower → prices will fall. Typical values: -3 to -10%. Default: -3%",
-                    "price_trend_threshold_strongly_falling": "Percentage (negative) for 'strongly falling' trend. Must be lower (more negative) than falling threshold. Example: -6 means average is at least 6% lower → prices will fall significantly. Typical values: -6 to -15%. Default: -6%"
+                    "price_trend_threshold_strongly_falling": "Percentage (negative) for 'strongly falling' trend. Must be lower (more negative) than falling threshold. Example: -9 means average is at least 9% lower → prices will fall significantly. Typical values: -6 to -20%. Default: -9%",
+                    "price_trend_change_confirmation": "Number of consecutive 15-minute intervals that must confirm a new trend direction before reporting a trend change. Higher values mean more stability and fewer false changes, lower values mean faster detection. Range: 2 (30 min) to 6 (90 min). Default: 3 (45 min)",
+                    "price_trend_min_price_change": "Minimum absolute price difference (in ct/øre) required for a 'rising' or 'falling' trend. Prevents tiny price changes from triggering trends at low price levels. Set to 0 to disable (pure percentage mode). Default: 0.5",
+                    "price_trend_min_price_change_strongly": "Minimum absolute price difference (in ct/øre) required for a 'strongly rising' or 'strongly falling' trend. Should be higher than the regular trend minimum. Set to 0 to disable. Default: 1.5"
                 },
                 "submit": "↩ Save & Back"
             },
@@ -705,6 +711,9 @@
             },
             "next_price_trend_change": {
                 "name": "Next Price Trend Change"
+            },
+            "trend_change_in_minutes": {
+                "name": "Trend Change In"
             },
             "daily_rating": {
                 "name": "Daily Price Rating"

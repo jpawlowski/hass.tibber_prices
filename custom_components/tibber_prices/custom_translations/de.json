@@ -229,43 +229,43 @@
         },
         "price_trend_1h": {
             "description": "Preistrend für die nächste Stunde",
-            "long_description": "Vergleicht aktuellen Intervallpreis mit Durchschnitt der nächsten 1 Stunde (4 Intervalle). Steigend wenn Zukunft >5% höher, fallend wenn >5% niedriger, sonst stabil.",
-            "usage_tips": "Relative Optimierung: 'fallend' = warten, Preise sinken. 'steigend' = jetzt handeln oder du zahlst mehr. 'stabil' = Preis spielt gerade keine große Rolle. Funktioniert unabhängig vom absoluten Preisniveau."
+            "long_description": "Vergleicht deinen aktuellen Preis mit dem Durchschnitt aller Intervalle der nächsten Stunde (4 Intervalle). Alle Trend-Sensoren (1h–12h) haben dieselbe Basis: dein aktueller Preis — sie unterscheiden sich nur im Zeitfenster. Größere Fenster umfassen mehr Zukunftsstunden und glätten kurzfristige Spitzen. Steigend/fallend ab ±3%, stark ab ±9% (konfigurierbar, volatilitätsadaptiv).",
+            "usage_tips": "Entscheidungshilfe: 'steigend' = JETZT HANDELN, dein aktueller Preis ist günstiger als die nächste Stunde. 'fallend' = WARTEN, günstigere Preise kommen. 'stabil' = Timing egal. Häufiges Missverständnis: 'steigend' bedeutet NICHT 'zu spät' — es heißt, jetzt ist gerade ein guter Preis! Funktioniert unabhängig vom absoluten Preisniveau."
         },
         "price_trend_2h": {
             "description": "Preistrend für die nächsten 2 Stunden",
-            "long_description": "Vergleicht aktuellen Intervallpreis mit Durchschnitt der nächsten 2 Stunden (8 Intervalle). Steigend wenn Zukunft >5% höher, fallend wenn >5% niedriger, sonst stabil.",
-            "usage_tips": "Relative Optimierung: Ideal für Haushaltsgeräte. 'fallend' bedeutet bessere Preise kommen in 2h - verschiebe wenn möglich. Findet bestes Timing in deinem verfügbaren Zeitfenster, unabhängig von der Saison."
+            "long_description": "Vergleicht deinen aktuellen Preis mit dem Durchschnitt aller Intervalle der nächsten 2 Stunden (8 Intervalle) — das gesamte Zeitfenster ab jetzt, nicht nur der spätere Teil. Steigend/fallend ab ±3%, stark ab ±9% (konfigurierbar, volatilitätsadaptiv).",
+            "usage_tips": "Haushaltsgeräte: 'steigend' = jetzt starten, du hast gerade einen guten Preis. 'fallend' = bessere Preise kommen in 2h, verschiebe wenn möglich. 'stabil' = egal, starte nach Bedarf. Nicht auf 'stabil' warten — bei 'steigend' ist JETZT der beste Zeitpunkt."
         },
         "price_trend_3h": {
             "description": "Preistrend für die nächsten 3 Stunden",
-            "long_description": "Vergleicht aktuellen Intervallpreis mit Durchschnitt der nächsten 3 Stunden (12 Intervalle). Steigend wenn Zukunft >5% höher, fallend wenn >5% niedriger, sonst stabil.",
-            "usage_tips": "Relative Optimierung: Für Eco-Programme. 'fallend' bedeutet Preise sinken >5% - lohnt sich zu warten. Funktioniert in jeder Saison. Kombiniere mit avg-Sensor für Preisobergrenze: nur wenn avg < dein Limit UND Trend nicht 'fallend'."
+            "long_description": "Vergleicht deinen aktuellen Preis mit dem Durchschnitt aller Intervalle der nächsten 3 Stunden (12 Intervalle) — das gesamte Zeitfenster ab jetzt, nicht nur der spätere Teil. Steigend/fallend ab ±3%, stark ab ±9% (konfigurierbar, volatilitätsadaptiv).",
+            "usage_tips": "Eco-Programme: 'steigend' = Eco-Zyklus jetzt starten, Preise steigen ab hier. 'fallend' = warten, günstigeres Fenster kommt. Kombiniere mit avg-Sensor: starte wenn Trend 'steigend' oder 'stabil' UND avg < dein Limit. Funktioniert in jeder Saison."
         },
         "price_trend_4h": {
             "description": "Preistrend für die nächsten 4 Stunden",
-            "long_description": "Vergleicht aktuellen Intervallpreis mit Durchschnitt der nächsten 4 Stunden (16 Intervalle). Steigend wenn Zukunft >5% höher, fallend wenn >5% niedriger, sonst stabil.",
-            "usage_tips": "Relative Optimierung: Wärmepumpen/Batterie-Entscheidungen. 'fallend' bedeutet besseres Ladefenster kommt. Findet immer relative beste Zeit - ob Preise 10 Cent oder 50 Cent sind. Nutze avg-Sensor für absolute Grenze."
+            "long_description": "Vergleicht deinen aktuellen Preis mit dem Durchschnitt aller Intervalle der nächsten 4 Stunden (16 Intervalle) — das gesamte Zeitfenster ab jetzt, nicht nur der spätere Teil. Steigend/fallend ab ±3%, stark ab ±9% (konfigurierbar, volatilitätsadaptiv).",
+            "usage_tips": "Wärmepumpe/Batterie: 'steigend' = jetzt laden, du bist an einem relativen Tiefpunkt. 'fallend' = warten auf besseres Ladefenster. 'stabil' = laden nach Bedarf. Funktioniert unabhängig vom Preisniveau — findet relative beste Zeit ob 10 oder 50 Cent."
         },
         "price_trend_5h": {
             "description": "Preistrend für die nächsten 5 Stunden",
-            "long_description": "Vergleicht aktuellen Intervallpreis mit Durchschnitt der nächsten 5 Stunden (20 Intervalle). Steigend wenn Zukunft >5% höher, fallend wenn >5% niedriger, sonst stabil.",
-            "usage_tips": "Relative Optimierung: Erweiterte Betriebszyklen. Passt sich dem Markt an - findet bestes relatives Timing in jedem Preisumfeld. 'stabil/steigend' = guter Zeitpunkt zum Starten in deinem Planungsfenster."
+            "long_description": "Vergleicht deinen aktuellen Preis mit dem Durchschnitt aller Intervalle der nächsten 5 Stunden (20 Intervalle) — das gesamte Zeitfenster ab jetzt, nicht nur der spätere Teil. Steigend/fallend ab ±3%, stark ab ±9% (konfigurierbar, volatilitätsadaptiv).",
+            "usage_tips": "Erweiterte Zyklen: 'steigend' oder 'stabil' = guter Zeitpunkt zum Starten, Preise werden nicht günstiger. 'fallend' = warten wenn dein Zeitplan es erlaubt. Passt sich dem Markt an — findet bestes relatives Timing in jedem Preisumfeld."
         },
         "price_trend_6h": {
             "description": "Preistrend für die nächsten 6 Stunden",
-            "long_description": "Vergleicht aktuellen Intervallpreis mit Durchschnitt der nächsten 6 Stunden (24 Intervalle). Steigend wenn Zukunft >5% höher, fallend wenn >5% niedriger, sonst stabil.",
-            "usage_tips": "Relative Optimierung: Abendentscheidungen. 'fallend' = Preise verbessern sich deutlich wenn du wartest. Keine festen Schwellenwerte nötig - passt sich automatisch an Winter/Sommer-Preisniveaus an."
+            "long_description": "Vergleicht deinen aktuellen Preis mit dem Durchschnitt aller Intervalle der nächsten 6 Stunden (24 Intervalle) — das gesamte Zeitfenster ab jetzt, nicht nur der spätere Teil. Steigend/fallend ab ±3%, stark ab ±9% (konfigurierbar, volatilitätsadaptiv).",
+            "usage_tips": "Abendentscheidungen: 'steigend' = Strom jetzt nutzen, solange er relativ günstig ist. 'fallend' = Abend-/Nachtpreise werden besser, warte wenn möglich. Passt sich automatisch an Winter/Sommer-Preisniveaus an — keine festen Schwellenwerte nötig."
         },
         "price_trend_8h": {
             "description": "Preistrend für die nächsten 8 Stunden",
-            "long_description": "Vergleicht aktuellen Intervallpreis mit Durchschnitt der nächsten 8 Stunden (32 Intervalle). Steigend wenn Zukunft >5% höher, fallend wenn >5% niedriger, sonst stabil.",
-            "usage_tips": "Relative Optimierung: Nachtplanung. 'fallend' bedeutet Warten auf Nacht lohnt sich (>5% günstiger). Funktioniert ganzjährig ohne manuelle Schwellenwert-Anpassungen. Starte wenn 'stabil' oder 'steigend'."
+            "long_description": "Vergleicht deinen aktuellen Preis mit dem Durchschnitt aller Intervalle der nächsten 8 Stunden (32 Intervalle) — das gesamte Zeitfenster ab jetzt, nicht nur der spätere Teil. Steigend/fallend ab ±3%, stark ab ±9% (konfigurierbar, volatilitätsadaptiv).",
+            "usage_tips": "Nachtplanung: 'steigend' = heute Nacht/morgen wird teurer, Strom jetzt nutzen. 'fallend' = Nachtpreise werden günstiger, Warten lohnt sich. 'stabil' = starte nach Bedarf. Funktioniert ganzjährig ohne manuelle Schwellenwert-Anpassungen."
         },
         "price_trend_12h": {
             "description": "Preistrend für die nächsten 12 Stunden",
-            "long_description": "Vergleicht aktuellen Intervallpreis mit Durchschnitt der nächsten 12 Stunden (48 Intervalle). Steigend wenn Zukunft >5% höher, fallend wenn >5% niedriger, sonst stabil.",
-            "usage_tips": "Relative Optimierung: Langfristige strategische Entscheidungen. 'fallend' = deutlich bessere Preise kommen heute Nacht/morgen. Findet optimales Timing in jeder Marktsituation. Am besten kombiniert mit avg-Sensor Preisobergrenze."
+            "long_description": "Vergleicht deinen aktuellen Preis mit dem Durchschnitt aller Intervalle der nächsten 12 Stunden (48 Intervalle) — das gesamte Zeitfenster ab jetzt, nicht nur der spätere Teil. Steigend/fallend ab ±3%, stark ab ±9% (konfigurierbar, volatilitätsadaptiv).",
+            "usage_tips": "Strategische Entscheidungen: 'steigend' = du bist an einem Tiefpunkt, guter Zeitpunkt für stromintensive Aufgaben. 'fallend' = deutlich bessere Preise kommen, warte wenn möglich. Am besten kombiniert mit avg-Sensor für absolute Preisobergrenzen."
         },
         "current_price_trend": {
             "description": "Aktuelle Preistrend-Richtung und wie lange sie anhält",
@@ -274,8 +274,13 @@
         },
         "next_price_trend_change": {
             "description": "Wann die nächste bedeutende Preistrend-Änderung eintreten wird",
-            "long_description": "Scannt die nächsten 24 Stunden (96 Intervalle), um zu finden, wann sich der Preistrend (steigend/fallend/stabil) vom aktuellen Momentum ändern wird. Bestimmt zuerst den aktuellen Trend mit gewichtetem 1h-Rückblick (erkennt laufende Trends), dann findet es die Umkehr. Verwendet volatilitätsadaptive Schwellwerte (3% Momentum-Erkennung, marktangepasster Zukunftsvergleich). Gibt den Zeitstempel zurück, wann die Änderung erwartet wird.",
+            "long_description": "Scannt die nächsten 24 Stunden (96 Intervalle), um zu finden, wann sich die Preistrend-Richtung ändern wird. Nur Richtungswechsel zählen: steigend/stark steigend bilden eine Gruppe, fallend/stark fallend eine andere, stabil ist eigenständig. Ein Wechsel von steigend zu stark steigend ist KEIN Trendwechsel. Verwendet volatilitätsadaptive Schwellwerte (Standard: ±3%/±9%) mit Hysterese (Standard: 3 aufeinanderfolgende Intervalle). Gibt den Zeitstempel zurück, wann die Änderung erwartet wird.",
             "usage_tips": "Ereignisbasierte Automation: Aktionen WENN Trend wechselt auslösen, nicht IN X Stunden. Beispiel: 'E-Auto laden wenn nächste Trendänderung fallende Preise zeigt' oder 'Spülmaschine vor Preisanstieg starten'. Ergänzt Zeitfenster-Sensoren (price_trend_Xh), die beantworten 'WERDEN Preise in X Stunden höher sein?'"
+        },
+        "trend_change_in_minutes": {
+            "description": "Zeit bis zur nächsten Preistrend-Änderung",
+            "long_description": "Zeigt an, wie lange es bis zur nächsten bedeutenden Preistrend-Änderung dauert. Der Wert wird in Stunden angezeigt (z.B. 2,25 h) für Dashboards. Teilt die gleiche Analyse wie der Zeitstempel-Sensor 'Nächste Trendänderung', stellt sie aber als Countdown-Dauer dar. Aktualisiert sich jede Minute für präzise Countdowns. Zeigt 'Unbekannt' wenn keine Trendänderung in den nächsten 24 Stunden erwartet wird.",
+            "usage_tips": "Dashboard-Countdown: Zeige 'Trendänderung in 1,5 h' als Live-Countdown. Für Automationen: 'Wenn trend_change_in_minutes < 0,25 (15 Min), auf Preisrichtungswechsel vorbereiten'. Ergänzt 'Nächste Trendänderung' (Zeitstempel) — verwende den Zeitstempel für 'WANN' und diesen Sensor für 'WIE LANGE'."
         },
         "daily_rating": {
             "description": "Wie sich die heutigen Preise mit historischen Daten vergleichen",

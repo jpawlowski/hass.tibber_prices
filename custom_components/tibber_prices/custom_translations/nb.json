@@ -229,43 +229,43 @@
         },
         "price_trend_1h": {
             "description": "Pristrend for neste time",
-            "long_description": "Sammenligner nåværende intervallpris med gjennomsnitt av neste 1 time (4 intervaller). Stigende hvis fremtiden er >5% høyere, fallende hvis >5% lavere, ellers stabil.",
-            "usage_tips": "Relativ optimalisering: 'fallende' = vent, prisene faller. 'stigende' = handle nå eller du betaler mer. 'stabil' = prisen spiller ikke så stor rolle nå. Fungerer uavhengig av absolutt prisnivå."
+            "long_description": "Sammenligner din nåværende pris med gjennomsnittet av alle intervaller den neste timen (4 intervaller). Alle trendsensorer (1t–12t) har samme utgangspunkt: din nåværende pris — de skiller seg bare i vindustørrelse. Større vinduer dekker flere fremtidige timer og jevner ut kortsiktige topper. Stigende/fallende ved ±3%, sterkt ved ±9% (konfigurerbart, volatilitetstilpasset).",
+            "usage_tips": "Beslutningshjelp: 'stigende' = HANDLE NÅ, din nåværende pris er gunstigere enn neste time. 'fallende' = VENT, billigere priser kommer. 'stabil' = timing spiller ingen rolle. Vanlig misforståelse: 'stigende' betyr IKKE 'for sent' — det betyr at nå er en god pris! Fungerer uavhengig av absolutt prisnivå."
         },
         "price_trend_2h": {
             "description": "Pristrend for neste 2 timer",
-            "long_description": "Sammenligner nåværende intervallpris med gjennomsnitt av neste 2 timer (8 intervaller). Stigende hvis fremtiden er >5% høyere, fallende hvis >5% lavere, ellers stabil.",
-            "usage_tips": "Relativ optimalisering: Ideelt for apparater. 'fallende' betyr bedre priser kommer om 2t - utsett hvis mulig. Finner beste timing innenfor ditt tilgjengelige vindu, uavhengig av sesong."
+            "long_description": "Sammenligner din nåværende pris med gjennomsnittet av alle intervaller de neste 2 timene (8 intervaller) — hele vinduet fra nå, ikke bare den senere delen. Stigende/fallende ved ±3%, sterkt ved ±9% (konfigurerbart, volatilitetstilpasset).",
+            "usage_tips": "Apparater: 'stigende' = start nå, du har en god pris. 'fallende' = bedre priser kommer om 2t, utsett hvis mulig. 'stabil' = spiller ingen rolle, start når det passer. Ikke vent på 'stabil' — ved 'stigende' er NÅ det beste tidspunktet."
         },
         "price_trend_3h": {
             "description": "Pristrend for neste 3 timer",
-            "long_description": "Sammenligner nåværende intervallpris med gjennomsnitt av neste 3 timer (12 intervaller). Stigende hvis fremtiden er >5% høyere, fallende hvis >5% lavere, ellers stabil.",
-            "usage_tips": "Relativ optimalisering: For Eco-programmer. 'fallende' betyr priser faller >5% - verdt å vente. Fungerer i enhver sesong. Kombiner med avg-sensor for pristak: kun når avg < din grense OG trend ikke 'fallende'."
+            "long_description": "Sammenligner din nåværende pris med gjennomsnittet av alle intervaller de neste 3 timene (12 intervaller) — hele vinduet fra nå, ikke bare den senere delen. Stigende/fallende ved ±3%, sterkt ved ±9% (konfigurerbart, volatilitetstilpasset).",
+            "usage_tips": "Eco-programmer: 'stigende' = start eco-syklusen nå, prisene stiger herfra. 'fallende' = vent, billigere vindu kommer. Kombiner med avg-sensor: start når trend er 'stigende' eller 'stabil' OG avg < din grense. Fungerer i enhver sesong."
         },
         "price_trend_4h": {
             "description": "Pristrend for neste 4 timer",
-            "long_description": "Sammenligner nåværende intervallpris med gjennomsnitt av neste 4 timer (16 intervaller). Stigende hvis fremtiden er >5% høyere, fallende hvis >5% lavere, ellers stabil.",
-            "usage_tips": "Relativ optimalisering: Varmepumpe/batteribeslutninger. 'fallende' betyr bedre ladevindu kommer. Finner alltid relativ beste tid - enten prisene er 10 cent eller 50 cent. Bruk avg-sensor for absolutt grense."
+            "long_description": "Sammenligner din nåværende pris med gjennomsnittet av alle intervaller de neste 4 timene (16 intervaller) — hele vinduet fra nå, ikke bare den senere delen. Stigende/fallende ved ±3%, sterkt ved ±9% (konfigurerbart, volatilitetstilpasset).",
+            "usage_tips": "Varmepumpe/batteri: 'stigende' = lad nå, du er på et relativt lavpunkt. 'fallende' = vent på bedre ladevindu. 'stabil' = lad etter behov. Fungerer uavhengig av prisnivå — finner relativ beste tid enten prisene er 10 eller 50 øre."
         },
         "price_trend_5h": {
             "description": "Pristrend for neste 5 timer",
-            "long_description": "Sammenligner nåværende intervallpris med gjennomsnitt av neste 5 timer (20 intervaller). Stigende hvis fremtiden er >5% høyere, fallende hvis >5% lavere, ellers stabil.",
-            "usage_tips": "Relativ optimalisering: Utvidede operasjoner. Tilpasser seg markedet - finner beste relative timing i ethvert prismiljø. 'stabil/stigende' = godt tidspunkt å starte innenfor ditt planleggingsvindu."
+            "long_description": "Sammenligner din nåværende pris med gjennomsnittet av alle intervaller de neste 5 timene (20 intervaller) — hele vinduet fra nå, ikke bare den senere delen. Stigende/fallende ved ±3%, sterkt ved ±9% (konfigurerbart, volatilitetstilpasset).",
+            "usage_tips": "Utvidede sykluser: 'stigende' eller 'stabil' = godt tidspunkt å starte, prisene blir ikke billigere. 'fallende' = vent hvis planen din tillater det. Tilpasser seg markedet — finner beste relative timing i ethvert prismiljø."
         },
         "price_trend_6h": {
             "description": "Pristrend for neste 6 timer",
-            "long_description": "Sammenligner nåværende intervallpris med gjennomsnitt av neste 6 timer (24 intervaller). Stigende hvis fremtiden er >5% høyere, fallende hvis >5% lavere, ellers stabil.",
-            "usage_tips": "Relativ optimalisering: Kveldsbeslutninger. 'fallende' = prisene forbedres betydelig hvis du venter. Ingen faste terskler nødvendig - justerer automatisk til vinter/sommer prisnivåer."
+            "long_description": "Sammenligner din nåværende pris med gjennomsnittet av alle intervaller de neste 6 timene (24 intervaller) — hele vinduet fra nå, ikke bare den senere delen. Stigende/fallende ved ±3%, sterkt ved ±9% (konfigurerbart, volatilitetstilpasset).",
+            "usage_tips": "Kveldsbeslutninger: 'stigende' = bruk strøm nå mens den er relativt billig. 'fallende' = kvelds-/nattprisene blir bedre, vent hvis mulig. Justerer automatisk til vinter/sommer prisnivåer — ingen faste terskler nødvendig."
         },
         "price_trend_8h": {
             "description": "Pristrend for neste 8 timer",
-            "long_description": "Sammenligner nåværende intervallpris med gjennomsnitt av neste 8 timer (32 intervaller). Stigende hvis fremtiden er >5% høyere, fallende hvis >5% lavere, ellers stabil.",
-            "usage_tips": "Relativ optimalisering: Nattplanlegging. 'fallende' betyr at å vente til natten lønner seg (>5% billigere). Fungerer hele året uten manuelle terskeljusteringer. Start når 'stabil' eller 'stigende'."
+            "long_description": "Sammenligner din nåværende pris med gjennomsnittet av alle intervaller de neste 8 timene (32 intervaller) — hele vinduet fra nå, ikke bare den senere delen. Stigende/fallende ved ±3%, sterkt ved ±9% (konfigurerbart, volatilitetstilpasset).",
+            "usage_tips": "Nattplanlegging: 'stigende' = i natt/i morgen blir dyrere, bruk strøm nå. 'fallende' = nattprisene blir billigere, verdt å vente. 'stabil' = start etter behov. Fungerer hele året uten manuelle terskeljusteringer."
         },
         "price_trend_12h": {
             "description": "Pristrend for de neste 12 timene",
-            "long_description": "Sammenligner nåværende intervallpris med gjennomsnittet av de neste 12 timene (48 intervaller). Økende hvis framtidig pris er >5% høyere, synkende hvis >5% lavere, ellers stabil.",
-            "usage_tips": "Relativ optimalisering: Langsiktige strategiske beslutninger. 'synkende' = betydelig bedre priser kommer i natt/i morgen. Finner optimal timing i enhver markedssituasjon. Best kombinert med prisgrense fra avg-sensor."
+            "long_description": "Sammenligner din nåværende pris med gjennomsnittet av alle intervaller de neste 12 timene (48 intervaller) — hele vinduet fra nå, ikke bare den senere delen. Stigende/fallende ved ±3%, sterkt ved ±9% (konfigurerbart, volatilitetstilpasset).",
+            "usage_tips": "Strategiske beslutninger: 'stigende' = du er på et lavpunkt, godt tidspunkt for strømkrevende oppgaver. 'fallende' = betydelig bedre priser kommer, vent hvis mulig. Best kombinert med avg-sensor for absolutte prisgrenser."
         },
         "current_price_trend": {
             "description": "Nåværende pristrend-retning og hvor lenge den varer",
@@ -274,8 +274,13 @@
         },
         "next_price_trend_change": {
             "description": "Når neste betydelige pristrendendring vil skje",
-            "long_description": "Skanner de neste 24 timene (96 intervaller) for å finne når pristrenden (økende/synkende/stabil) vil endre seg fra nåværende momentum. Bestemmer først nåværende trend med vektet 1t tilbakeblikk (gjenkjenner pågående trender), deretter finner den reverseringen. Bruker volatilitetsadaptive terskelverdier (3 % momentum-deteksjon, markedsjustert fremtidssammenligning). Returnerer tidsstempelet når endringen forventes.",
+            "long_description": "Skanner de neste 24 timene (96 intervaller) for å finne når pristrend-retningen vil endre seg. Kun retningsendringer teller: stigende/sterkt stigende er én gruppe, fallende/sterkt fallende en annen, stabil er egen. En endring fra stigende til sterkt stigende er IKKE en trendendring. Bruker volatilitetstilpassede terskelverdier (standard: ±3%/±9%) med hysterese (standard: 3 påfølgende intervaller). Returnerer tidsstempelet når endringen forventes.",
             "usage_tips": "Hendelsesbasert automatisering: Utløs handlinger NÅR trenden endres, ikke OM X timer. Eksempel: 'Lad EV når neste trendendring viser synkende priser' eller 'Start oppvaskmaskin før prisene stiger'. Kompletterer tidsvindu-sensorer (price_trend_Xh) som svarer på 'VIL prisene være høyere om X timer?'"
+        },
+        "trend_change_in_minutes": {
+            "description": "Tid til neste pristrendendring",
+            "long_description": "Viser hvor lenge det er til neste betydelige pristrendendring inntreffer. Verdien vises i timer (f.eks. 2,25 t) for dashboards. Deler samme analyse som tidsstempel-sensoren 'Neste trendendring', men presenterer den som en nedtellingsvarighet. Oppdateres hvert minutt for nøyaktige nedtellinger. Viser 'Ukjent' når ingen trendendring forventes i løpet av de neste 24 timene.",
+            "usage_tips": "Dashboard-nedtelling: Vis 'Trendendring om 1,5 t' som live nedtelling. For automatiseringer: 'Hvis trend_change_in_minutes < 0,25 (15 min), forbered på prisretningsendring'. Kompletterer 'Neste trendendring' (tidsstempel) — bruk tidsstempelet for 'NÅR' og denne sensoren for 'HVOR LENGE'."
         },
         "daily_rating": {
             "description": "Hvordan dagens priser sammenlignes med historiske data",

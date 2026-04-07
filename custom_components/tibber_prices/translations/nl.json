@@ -304,13 +304,19 @@
                     "price_trend_threshold_rising": "Stijgende Drempel",
                     "price_trend_threshold_strongly_rising": "Sterk Stijgende Drempel",
                     "price_trend_threshold_falling": "Dalende Drempel",
-                    "price_trend_threshold_strongly_falling": "Sterk Dalende Drempel"
+                    "price_trend_threshold_strongly_falling": "Sterk Dalende Drempel",
+                    "price_trend_change_confirmation": "Trendverandering Bevestiging",
+                    "price_trend_min_price_change": "Min. Prijsverandering (Trend)",
+                    "price_trend_min_price_change_strongly": "Min. Prijsverandering (Sterke Trend)"
                 },
                 "data_description": {
                     "price_trend_threshold_rising": "Percentage dat het gemiddelde van de volgende N uur boven de huidige prijs moet zijn om te kwalificeren als 'stijgende' trend. Voorbeeld: 3 betekent dat het gemiddelde minimaal 3% hoger is → prijzen zullen stijgen. Typische waarden: 3-10%. Standaard: 3%",
-                    "price_trend_threshold_strongly_rising": "Percentage dat het gemiddelde van de volgende N uur boven de huidige prijs moet zijn om te kwalificeren als 'sterk stijgende' trend. Moet hoger zijn dan stijgende drempel. Typische waarden: 6-20%. Standaard: 6%",
+                    "price_trend_threshold_strongly_rising": "Percentage dat het gemiddelde van de volgende N uur boven de huidige prijs moet zijn om te kwalificeren als 'sterk stijgende' trend. Moet hoger zijn dan stijgende drempel. Typische waarden: 6-20%. Standaard: 9%",
                     "price_trend_threshold_falling": "Percentage (negatief) dat het gemiddelde van de volgende N uur onder de huidige prijs moet zijn om te kwalificeren als 'dalende' trend. Voorbeeld: -3 betekent dat het gemiddelde minimaal 3% lager is → prijzen zullen dalen. Typische waarden: -3 tot -10%. Standaard: -3%",
-                    "price_trend_threshold_strongly_falling": "Percentage (negatief) dat het gemiddelde van de volgende N uur onder de huidige prijs moet zijn om te kwalificeren als 'sterk dalende' trend. Moet lager (meer negatief) zijn dan dalende drempel. Typische waarden: -6 tot -20%. Standaard: -6%"
+                    "price_trend_threshold_strongly_falling": "Percentage (negatief) dat het gemiddelde van de volgende N uur onder de huidige prijs moet zijn om te kwalificeren als 'sterk dalende' trend. Moet lager (meer negatief) zijn dan dalende drempel. Typische waarden: -6 tot -20%. Standaard: -9%",
+                    "price_trend_change_confirmation": "Aantal opeenvolgende 15-minuten intervallen dat een nieuwe trendrichting moet bevestigen voordat een trendverandering wordt gemeld. Hogere waarden betekenen meer stabiliteit en minder valse veranderingen, lagere waarden betekenen snellere detectie. Bereik: 2 (30 min) tot 6 (90 min). Standaard: 3 (45 min)",
+                    "price_trend_min_price_change": "Minimaal absoluut prijsverschil (in ct/øre) vereist voor een 'stijgende' of 'dalende' trend. Voorkomt dat minimale prijswijzigingen trends veroorzaken bij lage prijsniveaus. Stel in op 0 om te deactiveren (pure percentagemodus). Standaard: 0,5",
+                    "price_trend_min_price_change_strongly": "Minimaal absoluut prijsverschil (in ct/øre) vereist voor een 'sterk stijgende' of 'sterk dalende' trend. Moet hoger zijn dan het reguliere trendminimum. Stel in op 0 om te deactiveren. Standaard: 1,5"
                 },
                 "submit": "↩ Opslaan & Terug"
             },
@@ -705,6 +711,9 @@
             },
             "next_price_trend_change": {
                 "name": "Volgende Prijstrend Wijziging"
+            },
+            "trend_change_in_minutes": {
+                "name": "Trendwijziging over"
             },
             "daily_rating": {
                 "name": "Dagelijkse Prijsbeoordeling"
