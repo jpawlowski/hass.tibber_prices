@@ -1,0 +1,67 @@
+{
+  "tutorialSidebar": [
+    "intro",
+    {
+      "type": "category",
+      "label": "🚀 Getting Started",
+      "items": [
+        "installation",
+        "configuration"
+      ],
+      "collapsible": true,
+      "collapsed": false
+    },
+    {
+      "type": "category",
+      "label": "📖 Core Concepts",
+      "items": [
+        "concepts",
+        "glossary"
+      ],
+      "collapsible": true,
+      "collapsed": false
+    },
+    {
+      "type": "category",
+      "label": "📊 Features",
+      "items": [
+        "sensors",
+        "period-calculation",
+        "dynamic-icons",
+        "icon-colors",
+        "actions"
+      ],
+      "collapsible": true,
+      "collapsed": false
+    },
+    {
+      "type": "category",
+      "label": "🎨 Visualization",
+      "items": [
+        "dashboard-examples",
+        "chart-examples"
+      ],
+      "collapsible": true,
+      "collapsed": false
+    },
+    {
+      "type": "category",
+      "label": "🤖 Automation",
+      "items": [
+        "automation-examples"
+      ],
+      "collapsible": true,
+      "collapsed": false
+    },
+    {
+      "type": "category",
+      "label": "🔧 Help & Support",
+      "items": [
+        "faq",
+        "troubleshooting"
+      ],
+      "collapsible": true,
+      "collapsed": false
+    }
+  ]
+}
