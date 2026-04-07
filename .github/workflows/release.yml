@@ -181,8 +181,10 @@ jobs:
             echo "Commits analyzed: Breaking=$BREAKING, Features=$FEAT, Fixes=$FIX"
 
             # Set output for later steps (using heredoc for multi-line)
+            # Use random delimiter to avoid collision if content contains 'EOF'
+            WARN_DELIM=$(openssl rand -hex 16)
             {
-              echo "warning<<EOF"
+              echo "warning<<${WARN_DELIM}"
               echo "$WARNING"
               echo ""
               echo "$SUGGESTION"
@@ -195,7 +197,7 @@ jobs:
               echo "3. Push the corrected tag: \`git push origin v<suggested-version>\`"
               echo ""
               echo "**This tag will be automatically deleted in the next step.**"
-              echo "EOF"
+              echo "${WARN_DELIM}"
             } >> $GITHUB_OUTPUT
           else
             echo "✓ Version bump looks appropriate for the changes"
@@ -242,10 +244,12 @@ jobs:
           echo "title=$TITLE" >> $GITHUB_OUTPUT
 
           # Output for GitHub Actions
+          # Use random delimiter to avoid collision if release notes contain 'EOF'
+          NOTES_DELIM=$(openssl rand -hex 16)
           {
-            echo 'notes<<EOF'
+            echo "notes<<${NOTES_DELIM}"
             cat release-notes.md
-            echo EOF
+            echo "${NOTES_DELIM}"
           } >> $GITHUB_OUTPUT
 
       - name: Create GitHub Release
