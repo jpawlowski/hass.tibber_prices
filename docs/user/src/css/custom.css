@@ -290,7 +290,7 @@ h1, h2, h3, h4, h5, h6 {
 /* The white/dark card containing the diagram */
 .mermaid-lightbox-inner {
   position: relative;
-  max-width: min(90vw, 1200px);
+  width: min(90vw, 1200px);
   max-height: 85vh;
   overflow: auto;
   padding: 1.5rem;
