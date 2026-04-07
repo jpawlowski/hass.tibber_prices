@@ -237,6 +237,15 @@ h1, h2, h3, h4, h5, h6 {
   border-radius: var(--ifm-card-border-radius, 0.5rem);
   /* Clip the hover overlay to the same rounded corners */
   overflow: hidden;
+  /* Solid background so the SVG is never transparent against the page */
+  background: var(--ifm-background-color);
+}
+
+/* Ensure the SVG itself also has a solid background (covers Mermaid inline styles) */
+.mermaid-zoom-wrapper svg {
+  display: block;
+  background: var(--ifm-background-color);
+  border-radius: inherit;
 }
 
 /* Semi-transparent tint that fades in on hover */
@@ -348,13 +357,21 @@ h1, h2, h3, h4, h5, h6 {
   display: block;
   width: 100%;
   height: auto;
-  /* Solid themed background — auto-switches with light/dark mode */
-  background: var(--ifm-background-color);
+  /* !important: overrides any inline background Mermaid bakes into the SVG */
+  background: var(--ifm-background-color) !important;
   border-radius: calc(var(--ifm-card-border-radius, 0.5rem) - 2px);
 }
 
-/* Override Mermaid's hardcoded background rect (sequence diagrams, etc.) */
-.mermaid-lightbox-inner svg .background {
+/*
+ * Override Mermaid's hardcoded background rects.
+ * Mermaid uses several class names depending on diagram type and version:
+ *   .background  — sequence diagrams
+ *   .bb          — class/state diagrams
+ * The first <rect> child is used as a background fill by all diagram types.
+ */
+.mermaid-lightbox-inner svg .background,
+.mermaid-lightbox-inner svg .bb,
+.mermaid-lightbox-inner svg > rect:first-child {
   fill: var(--ifm-background-color) !important;
 }
 

@@ -25,7 +25,13 @@ export default function MermaidWrapper(props: Props): React.JSX.Element {
     const clone = svg.cloneNode(true) as SVGElement;
     clone.removeAttribute('width');
     clone.removeAttribute('height');
-    clone.style.cssText = 'width:100%;height:auto;display:block;';
+    // Bake in the current page background so the SVG is never transparent,
+    // even if Mermaid's internal <style> or <rect> elements override CSS.
+    const bg =
+      getComputedStyle(document.documentElement)
+        .getPropertyValue('--ifm-background-color')
+        .trim() || '#ffffff';
+    clone.style.cssText = `width:100%;height:auto;display:block;background:${bg};`;
     setSvgMarkup(clone.outerHTML);
     setOverlayOpen(true);
   }, []);
@@ -125,7 +131,7 @@ export default function MermaidWrapper(props: Props): React.JSX.Element {
             role="dialog"
             aria-modal="true"
             aria-label="Enlarged diagram"
-            onClick={handleClose}
+            onClick={(e) => { e.stopPropagation(); handleClose(); }}
           >
             <div
               className="mermaid-lightbox-inner"
@@ -135,7 +141,7 @@ export default function MermaidWrapper(props: Props): React.JSX.Element {
             />
             <button
               className="mermaid-lightbox-close"
-              onClick={handleClose}
+              onClick={(e) => { e.stopPropagation(); handleClose(); }}
               aria-label="Close enlarged view"
               title="Close (Esc)"
             >
