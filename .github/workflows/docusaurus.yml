@@ -137,8 +137,8 @@ jobs:
           git config user.email "github-actions[bot]@users.noreply.github.com"
 
           # Add version files from both docs
-          git add docs/user/versioned_docs/ docs/user/versions.json 2>/dev/null || true
-          git add docs/developer/versioned_docs/ docs/developer/versions.json 2>/dev/null || true
+          git add docs/user/versioned_docs/ docs/user/versioned_sidebars/ docs/user/versions.json 2>/dev/null || true
+          git add docs/developer/versioned_docs/ docs/developer/versioned_sidebars/ docs/developer/versions.json 2>/dev/null || true
 
           # Commit if there are changes
           if git diff --staged --quiet; then
