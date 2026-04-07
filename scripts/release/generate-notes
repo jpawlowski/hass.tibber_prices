@@ -252,7 +252,7 @@ End after the Buy Me A Coffee button. No meta-commentary, no explanations."
     # Use Claude Sonnet for better user-focused, plain-language release notes.
     # Haiku tends to echo technical commit language; Sonnet better translates to user benefits.
     # Can override with: COPILOT_MODEL=claude-haiku-4.5 ./scripts/release/generate-notes
-    COPILOT_MODEL="${COPILOT_MODEL:-claude-sonnet-4-6}"
+    COPILOT_MODEL="${COPILOT_MODEL:-claude-sonnet-4.6}"
 
     # Call copilot CLI (it will handle authentication interactively)
     copilot --model "$COPILOT_MODEL" < "$TEMP_PROMPT" || {
