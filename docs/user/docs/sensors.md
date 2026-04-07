@@ -4,8 +4,6 @@ comments: false
 
 # Sensors
 
-> **Note:** This guide is under construction. For now, please refer to the [main README](https://github.com/jpawlowski/hass.tibber_prices/blob/main/README.md) for available sensors.
-
 > **Tip:** Many sensors have dynamic icons and colors! See the **[Dynamic Icons Guide](dynamic-icons.md)** and **[Dynamic Icon Colors Guide](icon-colors.md)** to enhance your dashboards.
 
 > **Entity ID tip:** `<home_name>` is a placeholder for your Tibber home display name in Home Assistant. Entity IDs are derived from the displayed name (localized), so the exact slug may differ. Example suffixes below use the English display names (en.json) as a baseline. You can find the real ID in **Settings → Devices & Services → Entities** (or **Developer Tools → States**).
@@ -305,7 +303,466 @@ By following the "Good Example", your automations become simpler, more readable,
 
 ## Rating Sensors
 
-Coming soon...
+Rating sensors classify prices relative to the **trailing 24-hour average**, answering: "Is the current price cheap, normal, or expensive compared to recent history?"
+
+### How Ratings Work
+
+The integration calculates a **percentage difference** between the current price and the trailing 24-hour average:
+
+```
+difference = ((current_price - trailing_avg) / abs(trailing_avg)) × 100%
+```
+
+This percentage is then classified:
+
+| Rating | Condition (default) | Meaning |
+|--------|---------------------|---------|
+| **LOW** | difference ≤ -10% | Significantly below recent average |
+| **NORMAL** | -10% < difference < +10% | Within normal range |
+| **HIGH** | difference ≥ +10% | Significantly above recent average |
+
+**Hysteresis** (default 2%) prevents flickering: once a rating enters LOW, it must cross -8% (not -10%) to return to NORMAL. This avoids rapid switching at threshold boundaries.
+
+```mermaid
+stateDiagram-v2
+    direction LR
+
+    LOW: 🟢 LOW<br/><small>price ≤ −10%</small>
+    NORMAL: 🟡 NORMAL<br/><small>−10% … +10%</small>
+    HIGH: 🔴 HIGH<br/><small>price ≥ +10%</small>
+
+    LOW --> NORMAL: crosses −8%<br/><small>(hysteresis)</small>
+    NORMAL --> LOW: drops below −10%
+    NORMAL --> HIGH: rises above +10%
+    HIGH --> NORMAL: crosses +8%<br/><small>(hysteresis)</small>
+```
+
+> **The 2% gap** between entering (−10%) and leaving (−8%) a state prevents the sensor from flickering back and forth when prices hover near a threshold.
+
+### Available Rating Sensors
+
+| Sensor | Scope | Description |
+|--------|-------|-------------|
+| **Current Price Rating** | Current interval | Rating of the current 15-minute price |
+| **Next Price Rating** | Next interval | Rating for the upcoming 15-minute price |
+| **Previous Price Rating** | Previous interval | Rating for the past 15-minute price |
+| **Current Hour Price Rating** | Rolling 5-interval | Smoothed rating around the current hour |
+| **Next Hour Price Rating** | Rolling 5-interval | Smoothed rating around the next hour |
+| **Yesterday's Price Rating** | Calendar day | Aggregated rating for yesterday |
+| **Today's Price Rating** | Calendar day | Aggregated rating for today |
+| **Tomorrow's Price Rating** | Calendar day | Aggregated rating for tomorrow |
+
+### Ratings vs Levels
+
+The integration provides **two** classification systems that serve different purposes:
+
+| | Ratings | Levels |
+|--|---------|--------|
+| **Source** | Calculated by integration | Provided by Tibber API |
+| **Scale** | 3 levels (LOW, NORMAL, HIGH) | 5 levels (VERY_CHEAP → VERY_EXPENSIVE) |
+| **Basis** | Trailing 24h average | Daily min/max range |
+| **Best for** | Automations (simple thresholds) | Dashboard displays (fine granularity) |
+| **Configurable** | Yes (thresholds) | Gap tolerance only |
+| **Automation attribute** | `rating_level` (always lowercase English) | `level` (always uppercase English) |
+
+**Which to use?**
+
+- **Automations**: Use **ratings** (3 simple states, configurable thresholds, hysteresis)
+- **Dashboards**: Use **levels** (5 color-coded states, more visual granularity)
+- **Advanced automations**: Combine both (e.g., "LOW rating AND VERY_CHEAP level")
+
+### Key Attributes
+
+| Attribute | Description | Example |
+|-----------|-------------|---------|
+| `rating_level` | Language-independent rating (always lowercase) | `low` |
+| `difference` | Percentage difference from trailing average | `-12.5` |
+| `trailing_avg_24h` | The reference average used for classification | `22.3` |
+
+### Usage in Automations
+
+**Best Practice:** Always use the `rating_level` attribute (lowercase English) instead of the sensor state (which is translated to your HA language):
+
+```yaml
+# ✅ Correct — language-independent
+condition:
+    - condition: template
+      value_template: >
+          {{ state_attr('sensor.<home_name>_current_price_rating', 'rating_level') == 'low' }}
+
+# ❌ Avoid — breaks when HA language changes
+condition:
+    - condition: state
+      entity_id: sensor.<home_name>_current_price_rating
+      state: "Low"  # "Niedrig" in German, "Lav" in Norwegian...
+```
+
+### Configuration
+
+Rating thresholds can be adjusted in the options flow:
+
+1. Go to **Settings → Devices & Services → Tibber Prices → Configure**
+2. Navigate to **Price Rating Thresholds**
+3. Adjust LOW/HIGH thresholds, hysteresis, and gap tolerance
+
+See [Configuration](configuration.md#step-3-price-rating-thresholds) for details.
+
+## Level Sensors
+
+Level sensors show the **Tibber API's own price classification** with a 5-level scale:
+
+| Level | Meaning | Numeric Value |
+|-------|---------|---------------|
+| **VERY_CHEAP** | Exceptionally low | -2 |
+| **CHEAP** | Below average | -1 |
+| **NORMAL** | Typical range | 0 |
+| **EXPENSIVE** | Above average | +1 |
+| **VERY_EXPENSIVE** | Exceptionally high | +2 |
+
+### Available Level Sensors
+
+| Sensor | Scope |
+|--------|-------|
+| **Current Price Level** | Current interval |
+| **Next Price Level** | Next interval |
+| **Previous Price Level** | Previous interval |
+| **Current Hour Price Level** | Rolling 5-interval window |
+| **Next Hour Price Level** | Rolling 5-interval window |
+| **Yesterday's Price Level** | Calendar day (aggregated) |
+| **Today's Price Level** | Calendar day (aggregated) |
+| **Tomorrow's Price Level** | Calendar day (aggregated) |
+
+**Gap tolerance** smoothing is applied to prevent isolated level flickers (e.g., a single NORMAL between two CHEAPs → corrected to CHEAP). Configure in [options flow](configuration.md#step-4-price-level-gap-tolerance).
+
+## Min/Max Sensors
+
+These sensors show the lowest and highest prices for calendar days and rolling windows:
+
+### Daily Min/Max
+
+| Sensor | Description |
+|--------|-------------|
+| **Today's Lowest Price** | Minimum price today (00:00–23:59) |
+| **Today's Highest Price** | Maximum price today (00:00–23:59) |
+| **Tomorrow's Lowest Price** | Minimum price tomorrow |
+| **Tomorrow's Highest Price** | Maximum price tomorrow |
+
+### 24-Hour Rolling Min/Max
+
+| Sensor | Description |
+|--------|-------------|
+| **Trailing Price Min** | Lowest price in the last 24 hours |
+| **Trailing Price Max** | Highest price in the last 24 hours |
+| **Leading Price Min** | Lowest price in the next 24 hours |
+| **Leading Price Max** | Highest price in the next 24 hours |
+
+### Key Attributes
+
+All min/max sensors include:
+
+| Attribute | Description |
+|-----------|-------------|
+| `timestamp` | When the extreme price occurs/occurred |
+| `price_diff_from_daily_min` | Difference from daily minimum |
+| `price_diff_from_daily_min_%` | Percentage difference |
+
+## Timing Sensors
+
+Timing sensors provide **real-time information about Best Price and Peak Price periods**: when they start, end, how long they last, and your progress through them.
+
+```mermaid
+stateDiagram-v2
+    direction LR
+
+    IDLE: ⏸️ IDLE<br/><small>No active period</small>
+    ACTIVE: ▶️ ACTIVE<br/><small>In period</small>
+    GRACE: ⏳ GRACE<br/><small>60s buffer</small>
+
+    IDLE --> ACTIVE: period starts
+    ACTIVE --> GRACE: period ends
+    GRACE --> IDLE: 60s elapsed
+    GRACE --> ACTIVE: new period starts<br/><small>(within grace)</small>
+```
+
+**IDLE** = waiting for next period (shows countdown via `next_in_minutes`). **ACTIVE** = inside a period (shows `progress` 0–100% and `remaining_minutes`). **GRACE** = short buffer after a period ends, allowing back-to-back periods to merge seamlessly.
+
+### Available Timing Sensors
+
+For each period type (Best Price and Peak Price):
+
+| Sensor | When Period Active | When No Active Period |
+|--------|-------------------|----------------------|
+| **End Time** | Current period's end time | Next period's end time |
+| **Period Duration** | Current period length (minutes) | Next period length |
+| **Remaining Minutes** | Minutes until current period ends | 0 |
+| **Progress** | 0–100% through current period | 0 |
+| **Next Start Time** | When next-next period starts | When next period starts |
+| **Next In Minutes** | Minutes to next-next period | Minutes to next period |
+
+### Usage Examples
+
+**Show countdown to next cheap window:**
+
+```yaml
+type: custom:mushroom-entity-card
+entity: sensor.<home_name>_best_price_next_in_minutes
+name: Next Cheap Window
+icon: mdi:clock-fast
+```
+
+**Display period progress bar:**
+
+```yaml
+type: custom:bar-card
+entity: sensor.<home_name>_best_price_progress
+name: Best Price Progress
+min: 0
+max: 100
+severity:
+    - from: 0
+      to: 50
+      color: green
+    - from: 50
+      to: 80
+      color: orange
+    - from: 80
+      to: 100
+      color: red
+```
+
+**Automation: notify when period is almost over:**
+
+```yaml
+automation:
+    - alias: "Warn: Best Price Ending Soon"
+      trigger:
+          - platform: numeric_state
+            entity_id: sensor.<home_name>_best_price_remaining_minutes
+            below: 15
+      condition:
+          - condition: numeric_state
+            entity_id: sensor.<home_name>_best_price_remaining_minutes
+            above: 0
+      action:
+          - service: notify.mobile_app
+            data:
+                title: "Best Price Ending Soon"
+                message: "Only {{ states('sensor.<home_name>_best_price_remaining_minutes') }} minutes left!"
+```
+
+## Trend Sensors
+
+Trend sensors help you understand **where prices are heading**. They answer the question: "Should I use electricity now, or wait?"
+
+The integration provides two families of trend sensors for different use cases:
+
+### Simple Trend Sensors (1h–12h)
+
+These sensors compare the **current price** with the **average price** of the next N hours:
+
+| Sensor | Compares Against |
+|--------|-----------------|
+| **Price Trend (1h)** | Average of next 1 hour |
+| **Price Trend (2h)** | Average of next 2 hours |
+| **Price Trend (3h)** | Average of next 3 hours |
+| **Price Trend (4h)** | Average of next 4 hours |
+| **Price Trend (5h)** | Average of next 5 hours |
+| **Price Trend (6h)** | Average of next 6 hours |
+| **Price Trend (8h)** | Average of next 8 hours |
+| **Price Trend (12h)** | Average of next 12 hours |
+
+:::info Same Starting Point — All Sensors Use Your Current Price
+All trend sensors share the **same base: your current 15-minute price**. They differ only in how far ahead they average. The windows **overlap** — the 3h average includes ALL intervals from the 1h and 2h windows, plus one more hour.
+
+**This means:**
+- `price_trend_3h` shows "current price vs. average of the **entire** next 3 hours" — **not** "what happens between hour 2 and hour 3"
+- If 1h shows `falling` but 6h shows `rising`: near-term prices are below your current price, but looking at the full 6h window (which includes expensive evening hours), the overall average is above your current price
+- Larger windows smooth out short-term fluctuations — a 30-minute price spike affects the 1h average more than the 6h average
+:::
+
+**States:** Each sensor has one of five states:
+
+```mermaid
+stateDiagram-v2
+    direction LR
+
+    SF: ⬇️⬇️ strongly_falling<br/><small>−2 · future ≤ −9%</small>
+    F: ⬇️ falling<br/><small>−1 · future ≤ −3%</small>
+    S: ➡️ stable<br/><small>0 · within ±3%</small>
+    R: ⬆️ rising<br/><small>+1 · future ≥ +3%</small>
+    SR: ⬆️⬆️ strongly_rising<br/><small>+2 · future ≥ +9%</small>
+
+    SF --> F: price recovers
+    F --> S: approaches average
+    S --> R: future rises
+    R --> SR: accelerates
+    SR --> R: slows down
+    R --> S: stabilizes
+    S --> F: future drops
+    F --> SF: accelerates
+```
+
+| State | Meaning | `trend_value` |
+|-------|---------|---------------|
+| `strongly_falling` | Prices will drop significantly | -2 |
+| `falling` | Prices will drop | -1 |
+| `stable` | Prices staying roughly the same | 0 |
+| `rising` | Prices will increase | +1 |
+| `strongly_rising` | Prices will increase significantly | +2 |
+
+**Key attributes:**
+
+| Attribute | Description | Example |
+|-----------|-------------|---------|
+| `trend_value` | Numeric value for automations (-2 to +2) | `-1` |
+| `trend_Nh_%` | Percentage difference from current price | `-12.3` |
+| `next_Nh_avg` | Average price in the future window | `18.5` |
+| `second_half_Nh_avg` | Average price in later half of window | `16.2` |
+| `threshold_rising_%` | Active rising threshold after volatility adjustment | `3.0` |
+| `threshold_rising_strongly_%` | Active strongly-rising threshold after volatility adjustment | `4.8` |
+| `threshold_falling_%` | Active falling threshold after volatility adjustment | `-3.0` |
+| `threshold_falling_strongly_%` | Active strongly-falling threshold after volatility adjustment | `-4.8` |
+| `volatility_factor` | Applied multiplier (0.6 = low, 1.0 = moderate, 1.4 = high volatility) | `0.8` |
+
+**Tip:** The `trend_value` attribute (`-2` to `+2`) is ideal for automations — use numeric comparisons instead of matching translated state strings.
+
+### Current Price Trend
+
+**Entity ID:** `sensor.<home_name>_current_price_trend`
+
+This sensor shows the **currently active trend direction** based on a 3-hour future outlook with volatility-adaptive thresholds.
+
+Unlike the simple trend sensors that always compare current price vs future average, the current price trend represents the **ongoing trend** — it remains stable between updates and only changes when the underlying price direction actually shifts.
+
+**States:** Same 5-level scale as simple trends.
+
+**Key attributes:**
+
+| Attribute | Description | Example |
+|-----------|-------------|---------|
+| `previous_direction` | Price direction before the current trend started | `falling` |
+| `price_direction_duration_minutes` | How long prices have been moving in this direction | `45` |
+| `price_direction_since` | Timestamp when prices started moving in this direction | `2025-11-08T14:00:00+01:00` |
+
+### Next Price Trend Change
+
+**Entity ID:** `sensor.<home_name>_next_price_trend_change`
+
+This sensor predicts **when the current trend will change** by scanning future intervals. It requires 3 consecutive intervals (configurable: 2–6) confirming the new trend before reporting a change (hysteresis), which prevents false alarms from short-lived price spikes.
+
+**Important:** Only **direction changes** count as trend changes. The five states are grouped into three directions:
+
+| Direction | States |
+|-----------|--------|
+| **falling** | `strongly_falling`, `falling` |
+| **stable** | `stable` |
+| **rising** | `rising`, `strongly_rising` |
+
+A change from `rising` to `strongly_rising` (same direction) is **not** reported as a trend change — only actual reversals like `rising` → `stable` or `falling` → `rising`.
+
+**State:** Timestamp of the next trend change (or unavailable if no change predicted).
+
+**Key attributes:**
+
+| Attribute | Description | Example |
+|-----------|-------------|---------|
+| `direction` | What the trend will change TO | `rising` |
+| `from_direction` | Current trend (will change FROM) | `falling` |
+| `minutes_until_change` | Minutes until trend changes | `90` |
+| `price_at_change` | Price at the change point | `13.8` |
+| `price_avg_after_change` | Average price after change | `18.1` |
+| `threshold_rising_%` | Active rising threshold after volatility adjustment | `3.0` |
+| `threshold_rising_strongly_%` | Active strongly-rising threshold after volatility adjustment | `4.8` |
+| `threshold_falling_%` | Active falling threshold after volatility adjustment | `-3.0` |
+| `threshold_falling_strongly_%` | Active strongly-falling threshold after volatility adjustment | `-4.8` |
+| `volatility_factor` | Applied multiplier (0.6 = low, 1.0 = moderate, 1.4 = high volatility) | `0.8` |
+
+### How to Use Trend Sensors for Decisions
+
+:::danger Common Misconception — Don't "Wait for Stable"!
+A natural intuition is to treat trend states like a stock ticker:
+
+- ❌ "It's **falling** → I'll wait until it reaches **stable** (the bottom)"
+- ❌ "It's **rising** → too late, I missed the best price"
+- ❌ "It's **stable** → now is the perfect time to act!"
+
+**This is wrong.** Trend sensors don't show a trajectory — they show a **comparison** between your current price and future prices. The correct interpretation is the opposite:
+
+| State | What the Sensor Calculates | ✅ Correct Action |
+|-------|---------------------------|-------------------|
+| `falling` | Current price **higher** than future average | **WAIT** — cheaper prices are coming |
+| `strongly_falling` | Current price **much higher** than future average | **DEFINITELY WAIT** — significant savings ahead |
+| `stable` | Current price **≈ equal** to future average | **Timing doesn't matter** — start whenever convenient |
+| `rising` | Current price **lower** than future average | **ACT NOW** — it only gets more expensive |
+| `strongly_rising` | Current price **much lower** than future average | **ACT IMMEDIATELY** — best price right now |
+
+**"Rising" is NOT "too late" — it means NOW is the best time because prices will be higher later.**
+:::
+
+#### Basic Automation Pattern
+
+For most appliances (dishwasher, washing machine, dryer), a single trend sensor is enough:
+
+```yaml
+# Example: Start dishwasher when prices are favorable
+trigger:
+  - platform: state
+    entity_id: sensor.my_home_price_trend_3h
+condition:
+  - condition: numeric_state
+    entity_id: sensor.my_home_price_trend_3h
+    attribute: trend_value
+    # rising (1) or strongly_rising (2) = act now
+    above: 0
+action:
+  - service: switch.turn_on
+    target:
+      entity_id: switch.dishwasher
+```
+
+#### Combining Multiple Windows
+
+When short-term and long-term trends disagree, you get richer insight:
+
+| 1h Trend | 6h Trend | Interpretation | Recommendation |
+|----------|----------|---------------|----------------|
+| `rising` | `rising` | Prices going up across the board | **Start now** |
+| `falling` | `falling` | Prices dropping across the board | **Wait** |
+| `falling` | `rising` | Brief dip, then expensive evening | **Wait briefly**, then start during the dip |
+| `rising` | `falling` | Short spike, but cheaper hours ahead | **Wait** if you can — better prices coming |
+| `stable` | any | Short-term doesn't matter | Use the **longer window** for your decision |
+
+#### Dashboard Quick-Glance
+
+On your dashboard, trend sensors give an instant overview:
+
+- 🟢 All **falling/strongly_falling** → "Relax, prices are dropping — wait"
+- 🔴 All **rising/strongly_rising** → "Start everything you can — it only gets more expensive"
+- 🟡 **Mixed** → Compare short-term vs. long-term sensors, or check the Best Price Period sensor
+
+### Trend Sensors vs Average Sensors
+
+Both sensor families provide future price information, but serve different purposes:
+
+| | Trend Sensors | Average Sensors |
+|--|---------------|-----------------|
+| **Purpose** | Dashboard display, quick visual overview | Automations, precise numeric comparisons |
+| **Output** | Classification (falling/stable/rising) | Exact price values (ct/kWh) |
+| **Best for** | "Should I worry about prices?" | "Is the future average below 15 ct?" |
+| **Use in** | Dashboard icons, status displays | Template conditions, numeric thresholds |
+
+**Design principle:** Use **trend sensors** (enum) for visual feedback at a glance, use **average sensors** (numeric) for precise decision-making in automations.
+
+### Configuration
+
+Trend thresholds can be adjusted in the options flow:
+
+1. Go to **Settings → Devices & Services → Tibber Prices**
+2. Click **Configure** on your home
+3. Navigate to **📈 Price Trend Thresholds**
+4. Adjust the rising/falling and strongly rising/falling percentages
+
+The thresholds are **volatility-adaptive**: on days with high price volatility, thresholds are widened automatically to prevent constant state changes. This means the trend sensors give more stable readings during volatile market conditions.
 
 ## Diagnostic Sensors
 

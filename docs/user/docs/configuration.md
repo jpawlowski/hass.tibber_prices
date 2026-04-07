@@ -1,12 +1,131 @@
 # Configuration
 
-> **Note:** This guide is under construction. For detailed setup instructions, please refer to the [main README](https://github.com/jpawlowski/hass.tibber_prices/blob/main/README.md).
-
-> **Entity ID tip:** `<home_name>` is a placeholder for your Tibber home display name in Home Assistant. Entity IDs are derived from the displayed name (localized), so the exact slug may differ. Example suffixes below use the English display names (en.json) as a baseline. You can find the real ID in **Settings → Devices & Services → Entities** (or **Developer Tools → States**).
+> **Entity ID tip:** `<home_name>` is a placeholder for your Tibber home display name in Home Assistant. Entity IDs are derived from the displayed name (localized), so the exact slug may differ. You can find the real ID in **Settings → Devices & Services → Entities** (or **Developer Tools → States**).
 
 ## Initial Setup
 
-Coming soon...
+After [installing](installation.md) the integration:
+
+1. Go to **Settings → Devices & Services**
+2. Click **+ Add Integration**
+3. Search for **Tibber Price Information & Ratings**
+4. **Enter your API token** from [developer.tibber.com](https://developer.tibber.com/settings/access-token)
+5. **Select your Tibber home** from the dropdown (if you have multiple)
+6. Click **Submit** — the integration starts fetching price data
+
+The integration will immediately create sensors for your home. Data typically arrives within 1–2 minutes.
+
+### Adding Additional Homes
+
+If you have multiple Tibber homes (e.g., different locations):
+
+1. Go to **Settings → Devices & Services → Tibber Prices**
+2. Click **Configure** → **Add another home**
+3. Select the additional home from the dropdown
+4. Each home gets its own set of sensors with unique entity IDs
+
+## Options Flow (Configuration Wizard)
+
+After initial setup, configure the integration through a multi-step wizard:
+
+**Settings → Devices & Services → Tibber Prices → Configure**
+
+```mermaid
+flowchart LR
+    S1["① General"] --> S2["② Currency"]
+    S2 --> S3["③ Ratings"]
+    S3 --> S4["④ Levels"]
+    S4 --> S5["⑤ Volatility"]
+    S5 --> S6["⑥ Best Price"]
+    S6 --> S7["⑦ Peak Price"]
+    S7 --> S8["⑧ Trends"]
+    S8 --> S9["⑨ Chart"]
+
+    style S1 fill:#e6f7ff,stroke:#00b9e7,stroke-width:2px
+    style S6 fill:#e6fff5,stroke:#00c853,stroke-width:2px
+    style S7 fill:#fff0f0,stroke:#ff5252,stroke-width:2px
+```
+
+All steps have sensible defaults — you can click through without changes and fine-tune later.
+
+### Step 1: General Settings
+
+- **Extended entity descriptions**: Show `description`, `long_description`, and `usage_tips` attributes on all sensors (useful for learning, can be disabled later to reduce attribute clutter)
+- **Average sensor display**: Choose **Median** (typical price, spike-resistant) or **Mean** (mathematical average for cost calculations)
+
+### Step 2: Currency Display
+
+- **Base currency**: Shows prices as €/kWh, kr/kWh (e.g., 0.25 €/kWh)
+- **Subunit**: Shows prices as ct/kWh, øre/kWh (e.g., 25.00 ct/kWh)
+- Smart defaults: EUR → subunit (cents), NOK/SEK/DKK → base currency (kroner)
+
+### Step 3: Price Rating Thresholds
+
+Configure how the integration classifies prices relative to the 24-hour trailing average:
+
+| Setting | Default | Description |
+|---------|---------|-------------|
+| **Low threshold** | -10% | Prices this much below average → **LOW** rating |
+| **High threshold** | +10% | Prices this much above average → **HIGH** rating |
+| **Hysteresis** | 2% | Prevents flickering at threshold boundaries |
+| **Gap tolerance** | 1 | Smooth isolated rating blocks (e.g., lone NORMAL between two LOWs) |
+
+### Step 4: Price Level Gap Tolerance
+
+- **Gap tolerance** for Tibber's API-provided levels (VERY_CHEAP through VERY_EXPENSIVE)
+- Smooths isolated level flickers: a single NORMAL surrounded by CHEAP → corrected to CHEAP
+- Default: 1 interval tolerance
+
+### Step 5: Price Volatility Thresholds
+
+Configure the Coefficient of Variation (CV) boundaries:
+
+| Level | Default | Meaning |
+|-------|---------|---------|
+| **Moderate** | 15% | Noticeable price variation, some optimization potential |
+| **High** | 30% | Significant price swings, good for timing optimization |
+| **Very High** | 50% | Extreme volatility, maximum optimization benefit |
+
+### Step 6: Best Price Period
+
+Configure detection of favorable price windows. Three collapsible sections:
+
+**Period Settings:**
+- Minimum period length (default: 30 min)
+- Maximum price level to include (default: CHEAP)
+- Gap tolerance: how many expensive intervals to bridge (default: 1)
+
+**Flexibility Settings:**
+- Flex percentage (default: 15%): how far above the daily minimum a price can be to qualify
+- Minimum distance from daily average (default: 5%): ensures periods are meaningfully cheaper
+
+**Relaxation & Target:**
+- Enable minimum period target (default: on)
+- Target periods per day (default: 2)
+- Relaxation attempts (default: 11): steps to loosen criteria if target not met
+
+See [Period Calculation](period-calculation.md) for an in-depth explanation.
+
+### Step 7: Peak Price Period
+
+Mirrors Best Price configuration but for expensive windows. Detects periods to **avoid** consumption.
+
+### Step 8: Price Trend Thresholds
+
+Configure when trend sensors report rising/falling:
+
+| Setting | Default | Description |
+|---------|---------|-------------|
+| **Rising** | 3% | Future average this much above current → "rising" |
+| **Strongly rising** | 9% | Future average far above current → "strongly_rising" |
+| **Falling** | -3% | Future average this much below current → "falling" |
+| **Strongly falling** | -9% | Future average far below current → "strongly_falling" |
+
+Thresholds are [volatility-adaptive](sensors.md#trend-sensors): automatically widened on volatile days to prevent constant state changes.
+
+### Step 9: Chart Data Export (Legacy)
+
+Information page for the legacy chart data export sensor. For new setups, use the [get_chartdata action](actions.md) instead.
 
 ## Configuration Options
 

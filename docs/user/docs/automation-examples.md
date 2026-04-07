@@ -1,7 +1,5 @@
 # Automation Examples
 
-> **Note:** This guide is under construction.
-
 > **Tip:** For dashboard examples with dynamic icons and colors, see the **[Dynamic Icons Guide](dynamic-icons.md)** and **[Dynamic Icon Colors Guide](icon-colors.md)**.
 
 ## Table of Contents
@@ -25,7 +23,245 @@
 
 ## Price-Based Automations
 
-Coming soon...
+### Understanding V-Shaped Price Days
+
+Some days have a **V-shaped** or **U-shaped** price curve: prices drop to very cheap levels (often rated VERY_CHEAP) for an extended period, then rise again. This is common during sunny midday hours (solar surplus) or low-demand nights.
+
+**The challenge:** The Best Price Period might only cover 1–2 hours (the absolute cheapest window), but prices could remain favorable for 4–6 hours. If you only rely on the Best Price Period binary sensor, you miss out on the surrounding cheap hours.
+
+**The solution:** Combine multiple sensors to ride the full cheap wave:
+
+```mermaid
+gantt
+    title V-Shaped Price Day — Best Price vs Full Cheap Window
+    dateFormat HH:mm
+    axisFormat %H:%M
+
+    section Price Level
+    NORMAL              :done,    n1, 06:00, 2h
+    CHEAP               :active,  c1, 08:00, 2h
+    VERY CHEAP          :crit,    vc, 10:00, 2h
+    CHEAP               :active,  c2, 12:00, 2h
+    NORMAL              :done,    n2, 14:00, 2h
+    EXPENSIVE           :         e1, 16:00, 2h
+
+    section Detected
+    Best Price Period   :crit,    bp, 10:00, 2h
+
+    section Your Goal
+    Run while cheap + trend OK :active, goal, 08:00, 6h
+```
+
+> **Key insight:** The Best Price Period covers only the absolute minimum (2h). By combining the period sensor with price level and trend, you can extend device runtime to the full 6h cheap window.
+
+### Use Case: Ride the Full Cheap Wave
+
+This automation starts a flexible load when the best price period begins, but keeps it running as long as prices remain favorable — even after the period ends.
+
+```yaml
+automation:
+    - alias: "Heat Pump - Extended Cheap Period"
+      description: "Run heat pump during the full cheap price window, not just best-price period"
+      mode: restart
+
+      trigger:
+          # Start: Best price period begins
+          - platform: state
+            entity_id: binary_sensor.<home_name>_best_price_period
+            to: "on"
+            id: best_price_on
+          # Re-evaluate: Every 15 minutes while running
+          - platform: state
+            entity_id: sensor.<home_name>_current_electricity_price
+            id: price_update
+
+      condition:
+          # Continue running while EITHER condition is true:
+          - condition: or
+            conditions:
+                # Path 1: We're in a best price period
+                - condition: state
+                  entity_id: binary_sensor.<home_name>_best_price_period
+                  state: "on"
+                # Path 2: Price is still cheap AND trend is not rising
+                - condition: and
+                  conditions:
+                      - condition: template
+                        value_template: >
+                            {% set level = state_attr('sensor.<home_name>_current_electricity_price', 'rating_level') %}
+                            {{ level in ['VERY_CHEAP', 'CHEAP'] }}
+                      - condition: template
+                        value_template: >
+                            {% set trend = state_attr('sensor.<home_name>_current_price_trend', 'trend_value') | int(0) %}
+                            {{ trend <= 0 }}
+
+      action:
+          - service: climate.set_temperature
+            target:
+                entity_id: climate.heat_pump
+            data:
+                temperature: 22
+```
+
+**How it works:**
+
+1. Starts when the best price period triggers
+2. On each price update, rechecks conditions
+3. Keeps running while prices are CHEAP or VERY_CHEAP **and** the trend is not rising
+4. Stops when either prices climb above CHEAP or the trend turns to rising
+
+### Use Case: Pre-Emptive Start Before Best Price
+
+Use the trend to start slightly before the cheapest period — useful for appliances with warm-up time:
+
+```yaml
+automation:
+    - alias: "Water Heater - Pre-Heat Before Cheapest"
+      trigger:
+          - platform: state
+            entity_id: sensor.<home_name>_current_electricity_price
+      condition:
+          # Conditions: Prices are falling AND we're approaching cheap levels
+          - condition: template
+            value_template: >
+                {% set trend_value = state_attr('sensor.<home_name>_price_trend_3h', 'trend_value') | int(0) %}
+                {% set level = state_attr('sensor.<home_name>_current_electricity_price', 'rating_level') %}
+                {{ trend_value <= -1 and level in ['CHEAP', 'NORMAL'] }}
+          # AND: The next 3 hours will be cheaper on average
+          - condition: template
+            value_template: >
+                {% set current = states('sensor.<home_name>_current_electricity_price') | float %}
+                {% set future_avg = state_attr('sensor.<home_name>_price_trend_3h', 'next_3h_avg') | float %}
+                {{ future_avg < current }}
+      action:
+          - service: water_heater.set_temperature
+            target:
+                entity_id: water_heater.boiler
+            data:
+                temperature: 60
+```
+
+### Use Case: Protect Against Rising Prices
+
+Stop or reduce consumption when prices are climbing:
+
+```yaml
+automation:
+    - alias: "EV Charger - Stop When Prices Rising"
+      trigger:
+          - platform: template
+            value_template: >
+                {{ state_attr('sensor.<home_name>_current_price_trend', 'trend_value') | int(0) >= 1 }}
+      condition:
+          # Only stop if price is already above typical level
+          - condition: template
+            value_template: >
+                {% set level = state_attr('sensor.<home_name>_current_electricity_price', 'rating_level') %}
+                {{ level in ['NORMAL', 'EXPENSIVE', 'VERY_EXPENSIVE'] }}
+      action:
+          - service: switch.turn_off
+            target:
+                entity_id: switch.ev_charger
+          - service: notify.mobile_app
+            data:
+                message: >
+                    EV charging paused — prices are {{ states('sensor.<home_name>_current_price_trend') }}
+                    and currently at {{ states('sensor.<home_name>_current_electricity_price') }}
+                    {{ state_attr('sensor.<home_name>_current_electricity_price', 'unit_of_measurement') }}.
+                    Next trend change in ~{{ state_attr('sensor.<home_name>_next_price_trend_change', 'minutes_until_change') }} minutes.
+```
+
+### Use Case: Multi-Window Trend Strategy for Flexible Loads
+
+Combine short-term and long-term trend sensors for smarter decisions. This example manages a heat pump boost:
+
+- If **both** windows say `rising` → prices only go up from here, boost now
+- If short-term is `falling` but long-term is `rising` → brief dip coming, wait for it then boost
+- If **both** say `falling` → prices are dropping, definitely wait
+- If long-term says `falling` → cheaper hours ahead, no rush
+
+```yaml
+automation:
+    - alias: "Heat Pump - Smart Boost Using Multi-Window Trends"
+      description: >
+          Combines 1h (short-term) and 6h (long-term) trend windows.
+          Rising = current price is LOWER than future average = act now.
+          Falling = current price is HIGHER than future average = wait.
+      trigger:
+          - platform: state
+            entity_id: sensor.<home_name>_price_trend_1h
+          - platform: state
+            entity_id: sensor.<home_name>_price_trend_6h
+      condition:
+          # Only consider if best price period is NOT active
+          # (if it IS active, a separate automation handles it)
+          - condition: state
+            entity_id: binary_sensor.<home_name>_best_price_period
+            state: "off"
+      action:
+          - choose:
+                # Case 1: Both rising → prices only go up, boost NOW
+                - conditions:
+                      - condition: template
+                        value_template: >
+                            {% set t1 = state_attr('sensor.<home_name>_price_trend_1h', 'trend_value') | int(0) %}
+                            {% set t6 = state_attr('sensor.<home_name>_price_trend_6h', 'trend_value') | int(0) %}
+                            {{ t1 >= 1 and t6 >= 1 }}
+                  sequence:
+                      - service: climate.set_temperature
+                        target:
+                            entity_id: climate.heat_pump
+                        data:
+                            temperature: 22
+                # Case 2: 1h falling + 6h rising → brief dip, wait then act
+                - conditions:
+                      - condition: template
+                        value_template: >
+                            {% set t1 = state_attr('sensor.<home_name>_price_trend_1h', 'trend_value') | int(0) %}
+                            {% set t6 = state_attr('sensor.<home_name>_price_trend_6h', 'trend_value') | int(0) %}
+                            {{ t1 <= -1 and t6 >= 1 }}
+                  sequence:
+                      # Short-term dip — wait for it to bottom out
+                      - service: climate.set_temperature
+                        target:
+                            entity_id: climate.heat_pump
+                        data:
+                            temperature: 20
+                # Case 3: 6h falling → cheaper hours ahead, reduce now
+                - conditions:
+                      - condition: template
+                        value_template: >
+                            {% set t6 = state_attr('sensor.<home_name>_price_trend_6h', 'trend_value') | int(0) %}
+                            {{ t6 <= -1 }}
+                  sequence:
+                      - service: climate.set_temperature
+                        target:
+                            entity_id: climate.heat_pump
+                        data:
+                            temperature: 19
+            # Default: stable on both → maintain normal operation
+            default:
+                - service: climate.set_temperature
+                  target:
+                      entity_id: climate.heat_pump
+                  data:
+                      temperature: 20.5
+```
+
+:::tip Why "rising" means "act now"
+A common misconception: **"rising" does NOT mean "too late"**. It means your current price is **lower** than the future average — so right now is actually a good time. See [How to Use Trend Sensors for Decisions](#how-to-use-trend-sensors-for-decisions) in the sensor documentation for details.
+:::
+
+### Sensor Combination Quick Reference
+
+| What You Want | Sensors to Combine |
+|---|---|
+| **"Is it cheap right now?"** | `rating_level` attribute (VERY_CHEAP, CHEAP) |
+| **"Will prices go up or down?"** | `current_price_trend` state (falling/stable/rising) |
+| **"When will the trend change?"** | `next_price_trend_change` state (timestamp) |
+| **"How cheap will it get?"** | `next_Nh_avg` attribute on trend sensors |
+| **"Is the price drop meaningful?"** | `today_s_price_volatility` (not low = meaningful) |
+| **"Ride the full cheap wave"** | `rating_level` + `current_price_trend` + `best_price_period` |
 
 ---
 
@@ -158,7 +394,66 @@ automation:
 
 ## Best Hour Detection
 
-Coming soon...
+### Use Case: Find the Best Time to Run an Appliance
+
+Use future average sensors to determine the cheapest upcoming window for a timed appliance (e.g., dishwasher with 2-hour ECO program):
+
+```yaml
+automation:
+    - alias: "Dishwasher - Schedule for Cheapest 2h Window"
+      trigger:
+          # Check when tomorrow's data arrives (typically 13:00-14:00)
+          - platform: state
+            entity_id: sensor.<home_name>_price_tomorrow
+            attribute: price_mean
+      condition:
+          # Only if tomorrow data is available
+          - condition: template
+            value_template: >
+                {{ state_attr('sensor.<home_name>_price_tomorrow', 'price_mean') is not none }}
+      action:
+          # Compare different future windows to find cheapest start
+          - variables:
+              next_2h: "{{ state_attr('sensor.<home_name>_price_trend_2h', 'next_2h_avg') | float(999) }}"
+              next_4h: "{{ state_attr('sensor.<home_name>_price_trend_4h', 'next_4h_avg') | float(999) }}"
+              daily_avg: "{{ state_attr('sensor.<home_name>_price_today', 'price_median') | float(999) }}"
+          - service: notify.mobile_app
+            data:
+                title: "Dishwasher Scheduling"
+                message: >
+                    Next 2h avg: {{ next_2h }} ct/kWh
+                    Next 4h avg: {{ next_4h }} ct/kWh
+                    Today's typical: {{ daily_avg }} ct/kWh
+                    {% if next_2h < daily_avg * 0.8 %}
+                    → Now is a great time to start!
+                    {% else %}
+                    → Consider waiting for a cheaper window.
+                    {% endif %}
+```
+
+### Use Case: Notify When Cheapest Window Starts
+
+Get a push notification when the best price period begins:
+
+```yaml
+automation:
+    - alias: "Notify - Cheap Window Started"
+      trigger:
+          - platform: state
+            entity_id: binary_sensor.<home_name>_best_price_period
+            to: "on"
+      action:
+          - service: notify.mobile_app
+            data:
+                title: "⚡ Cheap Electricity Now!"
+                message: >
+                    Best price period started.
+                    Current price: {{ states('sensor.<home_name>_current_electricity_price') }}
+                    {{ state_attr('sensor.<home_name>_current_electricity_price', 'unit_of_measurement') }}.
+                    Duration: {{ state_attr('binary_sensor.<home_name>_best_price_period', 'duration_minutes') }} minutes.
+                    Average period price: {{ state_attr('binary_sensor.<home_name>_best_price_period', 'price_mean') }}
+                    {{ state_attr('sensor.<home_name>_current_electricity_price', 'unit_of_measurement') }}.
+```
 
 ---
 

@@ -2,6 +2,42 @@
 
 Understanding the fundamental concepts behind the Tibber Prices integration.
 
+## How Data Flows
+
+```mermaid
+flowchart LR
+    subgraph API["☁️ Tibber API"]
+        raw["Raw prices<br/>(quarter-hourly)"]
+    end
+
+    subgraph Integration["⚙️ Integration"]
+        direction TB
+        enrich["Enrichment<br/><small>24h averages, differences</small>"]
+        classify["Classification"]
+        enrich --> classify
+    end
+
+    subgraph Sensors["📊 Your Sensors"]
+        direction TB
+        prices["Price sensors<br/><small>current, min, max, avg</small>"]
+        ratings["Ratings & Levels<br/><small>LOW / NORMAL / HIGH</small>"]
+        periods["Periods<br/><small>best & peak windows</small>"]
+        trends["Trends & Volatility<br/><small>falling / stable / rising</small>"]
+    end
+
+    raw -->|every 15 min| enrich
+    classify --> prices
+    classify --> ratings
+    classify --> periods
+    classify --> trends
+
+    style API fill:#e6f7ff,stroke:#00b9e7,stroke-width:2px
+    style Integration fill:#fff9e6,stroke:#ffb800,stroke-width:2px
+    style Sensors fill:#e6fff5,stroke:#00c853,stroke-width:2px
+```
+
+The integration fetches raw quarter-hourly prices from Tibber, enriches them with statistical context (averages, differences), and exposes the results as sensors you can use in automations and dashboards.
+
 ## Price Intervals
 
 The integration works with **quarter-hourly intervals** (15 minutes):
@@ -49,6 +85,17 @@ The integration enriches every interval with context:
 - **Volatility** - Price stability indicator (LOW, MEDIUM, HIGH)
 
 This helps you understand if current prices are exceptional or typical.
+
+## V-Shaped and U-Shaped Price Days
+
+Some days show distinctive price curve shapes:
+
+- **V-shaped**: Prices drop sharply, hit a brief minimum, then rise sharply again (common during short midday solar surplus)
+- **U-shaped**: Prices drop to a low level and stay there for an extended period before rising (common during nighttime or extended low-demand periods)
+
+**Why this matters:** On these days, the Best Price Period may be short (1–2 hours, covering only the absolute minimum), but prices can remain favorable for 4–6 hours. By combining [trend sensors](sensors.md#trend-sensors) with [price levels](sensors.md#core-price-sensors) in automations, you can ride the full cheap wave instead of only using the detected period.
+
+See [Automation Examples → V-Shaped Days](automation-examples.md#understanding-v-shaped-price-days) for practical patterns.
 
 ## Multi-Home Support
 

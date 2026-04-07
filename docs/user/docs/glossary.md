@@ -92,7 +92,16 @@ Quick reference for terms used throughout the documentation.
 **Leading Average**
 : Average price over the next 24 hours from current interval.
 
+**Trend**
+: Directional price movement indicator. Simple trends compare current price to future averages (1h–12h). Current trend represents the ongoing price direction using a 3-hour outlook. Uses a 5-level scale: strongly_falling, falling, stable, rising, strongly_rising.
+
+**Trend Hysteresis**
+: Stability mechanism for trend change prediction. Requires 2 consecutive intervals confirming a different trend before reporting a change. Prevents false alarms from single-interval price spikes.
+
 ## V
+
+**V-Shaped Day**
+: Day with a V- or U-shaped price curve where prices drop to very cheap levels for an extended period. The Best Price Period covers only the absolute minimum, but favorable conditions may last much longer. See [V-Shaped Days](concepts.md#v-shaped-and-u-shaped-price-days).
 
 **Volatility**
 : Measure of price stability (LOW, MEDIUM, HIGH). High volatility = large price swings = good for timing optimization.

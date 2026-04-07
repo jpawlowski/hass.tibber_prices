@@ -78,6 +78,27 @@ The integration sets different **initial defaults** because the features serve d
 
 Each day, the integration analyzes all 96 quarter-hourly price intervals and identifies **continuous time ranges** that meet specific criteria.
 
+```mermaid
+flowchart TD
+    A["96 intervals per day"] --> B{"① Flexibility<br/><small>Close to MIN/MAX?</small>"}
+    B -->|Yes| C{"② Distance<br/><small>Meaningfully different<br/>from average?</small>"}
+    B -->|No| X1["❌ excluded"]
+    C -->|Yes| D{"③ Duration<br/><small>≥ 60 min?</small>"}
+    C -->|No| X2["❌ excluded"]
+    D -->|Yes| E{"④ Level filter<br/><small>(optional)</small>"}
+    D -->|No| X3["❌ too short"]
+    E -->|Pass| F["⑤ Spike smoothing"]
+    E -->|Fail| X4["❌ filtered"]
+    F --> G["✅ Period found"]
+
+    style A fill:#e6f7ff,stroke:#00b9e7,stroke-width:2px
+    style G fill:#e6fff5,stroke:#00c853,stroke-width:2px
+    style X1 fill:#fff0f0,stroke:#ff5252,stroke-width:1px,color:#999
+    style X2 fill:#fff0f0,stroke:#ff5252,stroke-width:1px,color:#999
+    style X3 fill:#fff0f0,stroke:#ff5252,stroke-width:1px,color:#999
+    style X4 fill:#fff0f0,stroke:#ff5252,stroke-width:1px,color:#999
+```
+
 Think of it like this:
 
 1. **Find potential windows** - Times close to the daily MIN (Best Price) or MAX (Peak Price)
@@ -378,29 +399,43 @@ Relaxation uses a **matrix approach** - trying _N_ flexibility levels (your conf
 
 For each day, the system tries:
 
-**Flexibility Levels (Attempts):**
+```mermaid
+flowchart TD
+    Start["Start: base flex<br/><small>(e.g. 15%)</small>"] --> A1
 
-1. Attempt 1 = Original flex (e.g., 15%)
-2. Attempt 2 = +3% step (18%)
-3. Attempt 3 = +3% step (21%)
-4. Attempt 4 = +3% step (24%)
-5. … Attempts 5-11 (default) continue adding +3% each time
-6. … Additional attempts keep extending the same pattern up to the 12-attempt maximum (up to 51%)
+    subgraph Attempt1["Attempt 1 — flex 15%"]
+        A1["Your filters"] -->|not enough| A2["Level = any"]
+    end
 
-**2 Filter Combinations (per flexibility level):**
+    A2 -->|not enough| B1
 
-1. Original filters (your configured level filter)
-2. Remove level filter (level=any)
+    subgraph Attempt2["Attempt 2 — flex 18%"]
+        B1["Your filters"] -->|not enough| B2["Level = any"]
+    end
 
-**Example progression:**
+    B2 -->|not enough| C1
 
+    subgraph Attempt3["Attempt 3 — flex 21%"]
+        C1["Your filters"] --> C2["Level = any"]
+    end
+
+    C1 -->|"✅ enough"| Done
+    A1 -->|"✅ enough"| Done
+    A2 -->|"✅ enough"| Done
+    B1 -->|"✅ enough"| Done
+    B2 -->|"✅ enough"| Done
+    C2 -->|"✅ / not enough → next …"| Done
+
+    Done["✅ Done<br/><small>stops at first success</small>"]
+
+    style Start fill:#e6f7ff,stroke:#00b9e7,stroke-width:2px
+    style Done fill:#e6fff5,stroke:#00c853,stroke-width:2px
+    style Attempt1 fill:#f0f9ff,stroke:#00b9e7
+    style Attempt2 fill:#fff9e6,stroke:#ffb800
+    style Attempt3 fill:#fff0f0,stroke:#ff8a80
 ```
-Flex 15% + Original filters → Not enough periods
-Flex 15% + Level=any        → Not enough periods
-Flex 18% + Original filters → Not enough periods
-Flex 18% + Level=any        → SUCCESS! Found 2 periods ✓
-(stops here - no need to try more)
-```
+
+Each attempt adds +3% flexibility and tries two filter combinations. The system **stops as soon as enough periods are found** — it doesn't keep trying the full matrix.
 
 ### Choosing the Number of Attempts
 
