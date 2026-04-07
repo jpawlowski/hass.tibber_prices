@@ -344,6 +344,7 @@ EOF
     fi
 
     git-cliff --config "$CLIFF_CONFIG" "${FROM_TAG}..${TO_TAG}"
+    echo ""  # Ensure output ends with newline (cliff.toml trim=true removes trailing newline)
 
     if [ "$CLIFF_CONFIG" = "/tmp/cliff.toml" ]; then
         rm -f /tmp/cliff.toml

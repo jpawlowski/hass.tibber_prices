@@ -249,6 +249,7 @@ jobs:
           {
             echo "notes<<${NOTES_DELIM}"
             cat release-notes.md
+            printf '\n'  # Ensure content ends with newline (git-cliff trim=true removes it)
             echo "${NOTES_DELIM}"
           } >> $GITHUB_OUTPUT
 
