@@ -14,6 +14,21 @@ export default function DocItemFooterWrapper(props) {
       <DocItemFooter {...props} />
       {enableComments && (
         <div style={{ marginTop: '3rem' }}>
+          <p style={{
+            fontSize: '0.85rem',
+            color: 'var(--ifm-color-emphasis-600)',
+            marginBottom: '0.75rem',
+          }}>
+            💬 <strong>Comments are page-specific.</strong> For a new question or idea,{' '}
+            <a
+              href="https://github.com/jpawlowski/hass.tibber_prices/discussions/new/choose"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              open a dedicated Discussion on GitHub
+            </a>{' '}
+            so it gets its own thread and proper visibility.
+          </p>
           <GiscusComponent />
         </div>
       )}
