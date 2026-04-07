@@ -249,7 +249,7 @@ automation:
 ```
 
 :::tip Why "rising" means "act now"
-A common misconception: **"rising" does NOT mean "too late"**. It means your current price is **lower** than the future average — so right now is actually a good time. See [How to Use Trend Sensors for Decisions](#how-to-use-trend-sensors-for-decisions) in the sensor documentation for details.
+A common misconception: **"rising" does NOT mean "too late"**. It means your current price is **lower** than the future average — so right now is actually a good time. See [How to Use Trend Sensors for Decisions](sensors.md#how-to-use-trend-sensors-for-decisions) in the sensor documentation for details.
 :::
 
 ### Sensor Combination Quick Reference
