@@ -226,3 +226,113 @@ h1, h2, h3, h4, h5, h6 {
 [data-theme='dark'] .bmc-logo-dark {
   display: block;
 }
+
+/* ── Mermaid diagram zoom / lightbox ──────────────────────────── */
+
+/* Wrapper that holds the diagram + the expand button */
+.mermaid-zoom-wrapper {
+  position: relative;
+  display: block;
+}
+
+/* Expand button — hidden until the diagram is hovered */
+.mermaid-zoom-btn {
+  position: absolute;
+  top: 0.5rem;
+  right: 0.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.75rem;
+  height: 1.75rem;
+  padding: 0;
+  background: var(--ifm-background-surface-color);
+  border: 1px solid var(--ifm-color-emphasis-300);
+  border-radius: 0.4rem;
+  color: var(--ifm-color-emphasis-600);
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.15s ease, background 0.15s ease, color 0.15s ease,
+    border-color 0.15s ease;
+  z-index: 1;
+}
+
+.mermaid-zoom-wrapper:hover .mermaid-zoom-btn,
+.mermaid-zoom-btn:focus-visible {
+  opacity: 1;
+}
+
+.mermaid-zoom-btn:hover {
+  background: var(--ifm-color-primary);
+  border-color: var(--ifm-color-primary);
+  color: #fff;
+}
+
+/* Full-screen backdrop */
+.mermaid-lightbox {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.75);
+  backdrop-filter: blur(4px);
+  cursor: zoom-out;
+  animation: mermaid-fadein 0.15s ease;
+}
+
+@keyframes mermaid-fadein {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+/* The white/dark card containing the diagram */
+.mermaid-lightbox-inner {
+  position: relative;
+  max-width: min(90vw, 1200px);
+  max-height: 85vh;
+  overflow: auto;
+  padding: 1.5rem;
+  background: var(--ifm-background-color);
+  border-radius: var(--ifm-card-border-radius);
+  box-shadow: 0 25px 50px rgba(0, 0, 0, 0.4);
+  cursor: default;
+  animation: mermaid-scalein 0.15s ease;
+}
+
+@keyframes mermaid-scalein {
+  from { transform: scale(0.95); opacity: 0; }
+  to   { transform: scale(1);    opacity: 1; }
+}
+
+.mermaid-lightbox-inner svg {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+/* Close button (top-right corner of the card) */
+.mermaid-lightbox-close {
+  position: absolute;
+  top: 0.5rem;
+  right: 0.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.75rem;
+  height: 1.75rem;
+  padding: 0;
+  background: var(--ifm-background-surface-color);
+  border: 1px solid var(--ifm-color-emphasis-300);
+  border-radius: 0.4rem;
+  color: var(--ifm-color-emphasis-700);
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+}
+
+.mermaid-lightbox-close:hover {
+  background: var(--ifm-color-danger);
+  border-color: var(--ifm-color-danger);
+  color: #fff;
+}
