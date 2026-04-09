@@ -219,6 +219,16 @@ get_chartdata:
           default: false
           selector:
             boolean:
+        include_energy:
+          required: false
+          default: false
+          selector:
+            boolean:
+        include_tax:
+          required: false
+          default: false
+          selector:
+            boolean:
         start_time_field:
           required: false
           example: time
@@ -243,6 +253,14 @@ get_chartdata:
           selector:
             text:
         average_field:
+          required: false
+          selector:
+            text:
+        energy_field:
+          required: false
+          selector:
+            text:
+        tax_field:
           required: false
           selector:
             text:

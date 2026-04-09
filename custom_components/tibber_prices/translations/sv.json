@@ -1178,6 +1178,14 @@
                     "name": "Inkludera medelvärde",
                     "description": "Inkludera dagligt medelpris i varje datapunkt för jämförelse."
                 },
+                "include_energy": {
+                    "name": "Inkludera energipris",
+                    "description": "Inkludera rått energi-/spotpris (exklusive skatter och avgifter) i varje datapunkt. Detta är 'energy'-fältet från Tibber-API:et, användbart för inmatnings-/nettomätningsberäkningar."
+                },
+                "include_tax": {
+                    "name": "Inkludera skatt",
+                    "description": "Inkludera skattedelen av priset i varje datapunkt. Detta är 'tax'-fältet från Tibber-API:et, som representerar avgifter, skatter och nätavgifter."
+                },
                 "level_filter": {
                     "name": "Nivåfilter",
                     "description": "Filtrera intervaller för att endast inkludera specifika Tibber-prisnivåer (mycket billigt/billigt/normalt/dyrt/mycket dyrt). Om inget anges inkluderas alla nivåer."
@@ -1225,6 +1233,14 @@
                 "average_field": {
                     "name": "Medelvärdesfältnamn",
                     "description": "Anpassat namn för medelvärdesfältet i utdatan. Standard är 'average' om inget anges. Används endast när include_average är aktiverad."
+                },
+                "energy_field": {
+                    "name": "Energiprisfältnamn",
+                    "description": "Anpassat namn för energiprisfältet i utdatan. Standard är 'energy_price' om inget anges. Används endast när include_energy är aktiverad."
+                },
+                "tax_field": {
+                    "name": "Skattefältnamn",
+                    "description": "Anpassat namn för skattefältet i utdatan. Standard är 'tax' om inget anges. Används endast när include_tax är aktiverad."
                 },
                 "metadata": {
                     "name": "Metadata",

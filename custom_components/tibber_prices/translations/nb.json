@@ -1174,6 +1174,14 @@
                     "name": "Inkluder gjennomsnitt",
                     "description": "Inkluder daglig gjennomsnittspris i hvert datapunkt for sammenligning."
                 },
+                "include_energy": {
+                    "name": "Inkluder energipris",
+                    "description": "Inkluder rå energi-/spotpris (ekskludert skatter og avgifter) i hvert datapunkt. Dette er 'energy'-feltet fra Tibber-APIet, nyttig for innmatings-/nettomålingsberegninger."
+                },
+                "include_tax": {
+                    "name": "Inkluder skatt",
+                    "description": "Inkluder skatteandelen av prisen i hvert datapunkt. Dette er 'tax'-feltet fra Tibber-APIet, som representerer avgifter, skatter og nettleie."
+                },
                 "level_filter": {
                     "name": "Prisnivåfilter",
                     "description": "Filtrer intervaller for å bare inkludere spesifikke Tibber-prisnivåer (veldig billig/billig/normal/dyr/veldig dyr). Hvis ikke angitt, inkluderes alle nivåer."
@@ -1221,6 +1229,14 @@
                 "average_field": {
                     "name": "Gjennomsnittsfelt-navn",
                     "description": "Tilpasset navn for gjennomsnittsfeltet i utdata. Standard er 'average'. Brukes bare når include_average er aktivert."
+                },
+                "energy_field": {
+                    "name": "Energiprisfelt-navn",
+                    "description": "Tilpasset navn for energiprisfeltet i utdata. Standard er 'energy_price'. Brukes bare når include_energy er aktivert."
+                },
+                "tax_field": {
+                    "name": "Skattefelt-navn",
+                    "description": "Tilpasset navn for skattefeltet i utdata. Standard er 'tax'. Brukes bare når include_tax er aktivert."
                 },
                 "metadata": {
                     "name": "Metadata",

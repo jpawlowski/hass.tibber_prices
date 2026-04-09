@@ -1174,6 +1174,14 @@
                     "name": "Gemiddelde opnemen",
                     "description": "Dagelijkse gemiddelde prijs opnemen in elk gegevenspunt ter vergelijking."
                 },
+                "include_energy": {
+                    "name": "Energieprijs opnemen",
+                    "description": "De kale energie-/spotprijs (exclusief belastingen en heffingen) opnemen in elk gegevenspunt. Dit is het 'energy'-veld uit de Tibber-API, handig voor teruglever-/salderingsberekeningen."
+                },
+                "include_tax": {
+                    "name": "Belasting opnemen",
+                    "description": "Het belastingdeel van de prijs opnemen in elk gegevenspunt. Dit is het 'tax'-veld uit de Tibber-API, dat heffingen, belastingen en netwerkkosten vertegenwoordigt."
+                },
                 "level_filter": {
                     "name": "Prijsniveaufilter",
                     "description": "Intervallen filteren om alleen specifieke Tibber-prijsniveaus op te nemen (zeer goedkoop/goedkoop/normaal/duur/zeer duur). Indien niet opgegeven, worden alle niveaus opgenomen."
@@ -1221,6 +1229,14 @@
                 "average_field": {
                     "name": "Gemiddelde veld-naam",
                     "description": "Aangepaste naam voor het gemiddelde veld in de uitvoer. Standaard is 'average'. Alleen gebruikt wanneer include_average is ingeschakeld."
+                },
+                "energy_field": {
+                    "name": "Energieprijs veld-naam",
+                    "description": "Aangepaste naam voor het energieprijsveld in de uitvoer. Standaard is 'energy_price'. Alleen gebruikt wanneer include_energy is ingeschakeld."
+                },
+                "tax_field": {
+                    "name": "Belasting veld-naam",
+                    "description": "Aangepaste naam voor het belastingveld in de uitvoer. Standaard is 'tax'. Alleen gebruikt wanneer include_tax is ingeschakeld."
                 },
                 "metadata": {
                     "name": "Metadata",

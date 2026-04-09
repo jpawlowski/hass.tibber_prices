@@ -1174,6 +1174,14 @@
                     "name": "Durchschnitt einschließen",
                     "description": "Den Tagesdurchschnittspreis in jedem Datenpunkt zum Vergleich einschließen."
                 },
+                "include_energy": {
+                    "name": "Energiepreis einschließen",
+                    "description": "Den reinen Energie-/Spotpreis (ohne Steuern und Gebühren) in jedem Datenpunkt einschließen. Dies ist das 'energy'-Feld aus der Tibber-API, nützlich für Einspeisungs-/Salderungsberechnungen."
+                },
+                "include_tax": {
+                    "name": "Steueranteil einschließen",
+                    "description": "Den Steueranteil des Preises in jedem Datenpunkt einschließen. Dies ist das 'tax'-Feld aus der Tibber-API, das Gebühren, Steuern und Netzentgelte darstellt."
+                },
                 "level_filter": {
                     "name": "Preisniveau-Filter",
                     "description": "Intervalle filtern, um nur bestimmte Tibber-Preisniveaus einzuschließen (sehr günstig/günstig/normal/teuer/sehr teuer). Falls nicht angegeben, werden alle Niveaus eingeschlossen."
@@ -1221,6 +1229,14 @@
                 "average_field": {
                     "name": "Durchschnitts-Feldname",
                     "description": "Benutzerdefinierter Name für das Durchschnitts-Feld in der Ausgabe. Standard ist 'average', falls nicht angegeben. Wird nur verwendet, wenn include_average aktiviert ist."
+                },
+                "energy_field": {
+                    "name": "Energiepreis-Feldname",
+                    "description": "Benutzerdefinierter Name für das Energiepreis-Feld in der Ausgabe. Standard ist 'energy_price', falls nicht angegeben. Wird nur verwendet, wenn include_energy aktiviert ist."
+                },
+                "tax_field": {
+                    "name": "Steuer-Feldname",
+                    "description": "Benutzerdefinierter Name für das Steuer-Feld in der Ausgabe. Standard ist 'tax', falls nicht angegeben. Wird nur verwendet, wenn include_tax aktiviert ist."
                 },
                 "metadata": {
                     "name": "Metadaten",

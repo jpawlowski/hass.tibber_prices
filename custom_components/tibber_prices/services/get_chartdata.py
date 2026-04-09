@@ -280,6 +280,8 @@ CHARTDATA_SERVICE_SCHEMA: Final = vol.Schema(
         vol.Optional("include_level", default=False): bool,
         vol.Optional("include_rating_level", default=False): bool,
         vol.Optional("include_average", default=False): bool,
+        vol.Optional("include_energy", default=False): bool,
+        vol.Optional("include_tax", default=False): bool,
         vol.Optional("level_filter"): vol.All(
             vol.Coerce(list),
             normalize_level_filter,
@@ -310,6 +312,8 @@ CHARTDATA_SERVICE_SCHEMA: Final = vol.Schema(
         vol.Optional("level_field", default="level"): str,
         vol.Optional("rating_level_field", default="rating_level"): str,
         vol.Optional("average_field", default="average"): str,
+        vol.Optional("energy_field", default="energy_price"): str,
+        vol.Optional("tax_field", default="tax"): str,
         vol.Optional("data_key", default="data"): str,
         vol.Optional("metadata", default="include"): vol.In(["include", "only", "none"]),
     }
@@ -368,6 +372,8 @@ async def handle_chartdata(call: ServiceCall) -> dict[str, Any]:  # noqa: PLR091
     level_field = call.data.get("level_field", "level")
     rating_level_field = call.data.get("rating_level_field", "rating_level")
     average_field = call.data.get("average_field", "average")
+    energy_field = call.data.get("energy_field", "energy_price")
+    tax_field = call.data.get("tax_field", "tax")
     data_key = call.data.get("data_key", "data")
     resolution = call.data.get("resolution", "interval")
     output_format = call.data.get("output_format", "array_of_objects")
@@ -377,6 +383,8 @@ async def handle_chartdata(call: ServiceCall) -> dict[str, Any]:  # noqa: PLR091
     include_level = call.data.get("include_level", False)
     include_rating_level = call.data.get("include_rating_level", False)
     include_average = call.data.get("include_average", False)
+    include_energy = call.data.get("include_energy", False)
+    include_tax = call.data.get("include_tax", False)
     insert_nulls = call.data.get("insert_nulls", "none")
     connect_segments = call.data.get("connect_segments", False)
     add_trailing_null = call.data.get("add_trailing_null", False)
@@ -432,6 +440,10 @@ async def handle_chartdata(call: ServiceCall) -> dict[str, Any]:  # noqa: PLR091
             include_rating_level = True
         if average_field in array_fields_template:
             include_average = True
+        if energy_field in array_fields_template:
+            include_energy = True
+        if tax_field in array_fields_template:
+            include_tax = True
 
     # Get thresholds from config for rating aggregation
     threshold_low = coordinator.config_entry.options.get(
@@ -469,6 +481,25 @@ async def handle_chartdata(call: ServiceCall) -> dict[str, Any]:  # noqa: PLR091
     # === NORMAL HANDLING: Interval Data ===
     # Get price data for all requested days
     chart_data = []
+
+    def _add_energy_tax_fields(data_point: dict, interval: dict, price: float | None) -> None:
+        """Add energy and tax fields to a data point if requested and price is not None."""
+        if price is None:
+            return
+        if include_energy and "energy" in interval:
+            energy_val = interval["energy"]
+            if energy_val is not None:
+                energy_val = round(float(energy_val) * 100, 2) if subunit_currency else round(float(energy_val), 4)
+                if round_decimals is not None:
+                    energy_val = round(energy_val, round_decimals)
+                data_point[energy_field] = energy_val
+        if include_tax and "tax" in interval:
+            tax_val = interval["tax"]
+            if tax_val is not None:
+                tax_val = round(float(tax_val) * 100, 2) if subunit_currency else round(float(tax_val), 4)
+                if round_decimals is not None:
+                    tax_val = round(tax_val, round_decimals)
+                data_point[tax_field] = tax_val
 
     # Build set of timestamps that match period_filter if specified
     period_timestamps = None
@@ -610,6 +641,9 @@ async def handle_chartdata(call: ServiceCall) -> dict[str, Any]:  # noqa: PLR091
                 if include_average and day_key and day_key in day_averages:
                     data_point[average_field] = day_averages[day_key]
 
+                # Add energy/tax if requested
+                _add_energy_tax_fields(data_point, interval, price)
+
                 chart_data.append(data_point)
 
         elif insert_nulls == "segments" and (level_filter or rating_level_filter):
@@ -666,6 +700,8 @@ async def handle_chartdata(call: ServiceCall) -> dict[str, Any]:  # noqa: PLR091
                     day_key = _get_day_key_for_interval(start_time)
                     if include_average and day_key and day_key in day_averages:
                         data_point[average_field] = day_averages[day_key]
+
+                    _add_energy_tax_fields(data_point, interval, converted_price)
 
                     chart_data.append(data_point)
 
@@ -806,6 +842,9 @@ async def handle_chartdata(call: ServiceCall) -> dict[str, Any]:  # noqa: PLR091
                     day_key = _get_day_key_for_interval(last_start_time)
                     if include_average and day_key and day_key in day_averages:
                         last_data_point[average_field] = day_averages[day_key]
+
+                    _add_energy_tax_fields(last_data_point, last_interval, converted_last_price)
+
                     chart_data.append(last_data_point)
 
                     # Extend to end of selected time range (midnight after last day)
@@ -881,6 +920,8 @@ async def handle_chartdata(call: ServiceCall) -> dict[str, Any]:  # noqa: PLR091
                     day_key = _get_day_key_for_interval(start_time)
                     if include_average and day_key and day_key in day_averages:
                         data_point[average_field] = day_averages[day_key]
+
+                    _add_energy_tax_fields(data_point, interval, price)
 
                     chart_data.append(data_point)
 

@@ -1178,6 +1178,14 @@
                     "name": "Include Average",
                     "description": "Include the daily average price in each data point for comparison."
                 },
+                "include_energy": {
+                    "name": "Include Energy Price",
+                    "description": "Include the raw energy/spot price (excluding taxes and fees) in each data point. This is the 'energy' field from the Tibber API, useful for feed-in/net metering calculations."
+                },
+                "include_tax": {
+                    "name": "Include Tax",
+                    "description": "Include the tax component of the price in each data point. This is the 'tax' field from the Tibber API, representing fees, taxes, and grid charges."
+                },
                 "level_filter": {
                     "name": "Level Filter",
                     "description": "Filter intervals to include only specific Tibber price levels (very cheap/cheap/normal/expensive/very expensive). If not specified, all levels are included."
@@ -1225,6 +1233,14 @@
                 "average_field": {
                     "name": "Average Field Name",
                     "description": "Custom name for the average field in the output. Defaults to 'average' if not specified. Only used when include_average is enabled."
+                },
+                "energy_field": {
+                    "name": "Energy Field Name",
+                    "description": "Custom name for the energy price field in the output. Defaults to 'energy_price' if not specified. Only used when include_energy is enabled."
+                },
+                "tax_field": {
+                    "name": "Tax Field Name",
+                    "description": "Custom name for the tax field in the output. Defaults to 'tax' if not specified. Only used when include_tax is enabled."
                 },
                 "metadata": {
                     "name": "Metadata",
