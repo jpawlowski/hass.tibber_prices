@@ -26,6 +26,9 @@ const config: Config = {
     hooks: {
       onBrokenMarkdownLinks: 'warn',
     },
+    mdx1Compat: {
+      admonitions: true,
+    },
   },
 
   themes: ['@docusaurus/theme-mermaid'],
