@@ -15,6 +15,7 @@ from custom_components.tibber_prices.sensor.helpers import (
     aggregate_level_data,
     aggregate_rating_data,
 )
+from custom_components.tibber_prices.utils.average import calculate_median
 
 from .base import TibberPricesBaseCalculator
 
@@ -44,6 +45,10 @@ class TibberPricesDailyStatCalculator(TibberPricesBaseCalculator):
         """
         super().__init__(coordinator)
         self._last_extreme_interval: dict | None = None
+        self._last_energy_mean: float | None = None
+        self._last_energy_median: float | None = None
+        self._last_tax_mean: float | None = None
+        self._last_tax_median: float | None = None
 
     def get_daily_stat_value(
         self,
@@ -107,6 +112,8 @@ class TibberPricesDailyStatCalculator(TibberPricesBaseCalculator):
             # Store the interval (for avg, use first interval as reference)
             if price_intervals:
                 self._last_extreme_interval = price_intervals[0]["interval"]
+            # Compute and cache energy/tax averages for attribute builders
+            self._cache_energy_tax_averages(price_intervals)
             # Convert to display currency units based on config
             avg_result = round(get_price_value(value, config_entry=self.coordinator.config_entry), 2)
             median_result = (
@@ -198,3 +205,34 @@ class TibberPricesDailyStatCalculator(TibberPricesBaseCalculator):
 
         """
         return self._last_extreme_interval
+
+    def get_last_energy_tax_averages(
+        self,
+    ) -> tuple[float | None, float | None, float | None, float | None]:
+        """
+        Get cached mean and median energy and tax values from last average calculation.
+
+        Returns:
+            Tuple of (energy_mean, energy_median, tax_mean, tax_median) in base currency,
+            or (None, None, None, None).
+
+        """
+        return self._last_energy_mean, self._last_energy_median, self._last_tax_mean, self._last_tax_median
+
+    def _cache_energy_tax_averages(self, price_intervals: list[dict]) -> None:
+        """Compute and cache energy/tax mean and median from price intervals."""
+        energy_prices: list[float] = []
+        tax_prices: list[float] = []
+        for pi in price_intervals:
+            interval = pi["interval"]
+            energy = interval.get("energy")
+            if energy is not None:
+                energy_prices.append(float(energy))
+            tax = interval.get("tax")
+            if tax is not None:
+                tax_prices.append(float(tax))
+
+        self._last_energy_mean = sum(energy_prices) / len(energy_prices) if energy_prices else None
+        self._last_energy_median = calculate_median(energy_prices) if energy_prices else None
+        self._last_tax_mean = sum(tax_prices) / len(tax_prices) if tax_prices else None
+        self._last_tax_median = calculate_median(tax_prices) if tax_prices else None

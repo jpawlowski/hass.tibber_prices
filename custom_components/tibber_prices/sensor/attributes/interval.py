@@ -8,6 +8,7 @@ from typing import TYPE_CHECKING, Any
 from custom_components.tibber_prices.const import (
     PRICE_LEVEL_MAPPING,
     PRICE_RATING_MAPPING,
+    get_display_unit_factor,
 )
 from custom_components.tibber_prices.entity_utils import add_icon_color_attribute
 from custom_components.tibber_prices.utils.price import find_price_data_for_interval
@@ -89,6 +90,38 @@ def _get_interval_data_for_attributes(
     return None
 
 
+def _add_energy_tax_attributes(
+    attributes: dict,
+    interval_data: dict | None,
+    *,
+    config_entry: TibberPricesConfigEntry,
+) -> None:
+    """
+    Add energy_price and tax attributes from interval data.
+
+    The API provides `energy` (raw spot price) and `tax` (tax component) in base
+    currency. These are converted to display units using the same factor as `total`.
+
+    Args:
+        attributes: Dictionary to add attributes to
+        interval_data: Price interval data dict (may contain energy/tax fields)
+        config_entry: Config entry for display unit preference
+
+    """
+    if not interval_data:
+        return
+
+    factor = get_display_unit_factor(config_entry)
+
+    energy = interval_data.get("energy")
+    if energy is not None:
+        attributes["energy_price"] = round(float(energy) * factor, 2)
+
+    tax = interval_data.get("tax")
+    if tax is not None:
+        attributes["tax"] = round(float(tax) * factor, 2)
+
+
 def add_current_interval_price_attributes(  # noqa: PLR0913
     attributes: dict,
     key: str,
@@ -126,6 +159,9 @@ def add_current_interval_price_attributes(  # noqa: PLR0913
         if interval_data and "level" in interval_data:
             level = interval_data["level"]
             add_icon_color_attribute(attributes, key="price_level", state_value=level)
+
+        # Add energy_price and tax attributes from raw API data
+        _add_energy_tax_attributes(attributes, interval_data, config_entry=config_entry)
     elif key in ["current_hour_average_price", "next_hour_average_price"]:
         # For hour-based price sensors, get level from cached_data
         level = cached_data.get("rolling_hour_level")

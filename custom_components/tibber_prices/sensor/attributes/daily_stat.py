@@ -4,7 +4,10 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from custom_components.tibber_prices.const import PRICE_RATING_MAPPING
+from custom_components.tibber_prices.const import (
+    PRICE_RATING_MAPPING,
+    get_display_unit_factor,
+)
 from custom_components.tibber_prices.coordinator.helpers import (
     get_intervals_for_day_offsets,
 )
@@ -17,6 +20,43 @@ if TYPE_CHECKING:
     from custom_components.tibber_prices.data import TibberPricesConfigEntry
 
 from .helpers import add_alternate_average_attribute
+
+
+def _add_energy_tax_from_interval(
+    attributes: dict,
+    interval_data: dict,
+    *,
+    config_entry: TibberPricesConfigEntry,
+) -> None:
+    """Add energy_price and tax from a single interval dict."""
+    factor = get_display_unit_factor(config_entry)
+    energy = interval_data.get("energy")
+    if energy is not None:
+        attributes["energy_price"] = round(float(energy) * factor, 2)
+    tax = interval_data.get("tax")
+    if tax is not None:
+        attributes["tax"] = round(float(tax) * factor, 2)
+
+
+def _add_energy_tax_averages_from_cache(
+    attributes: dict,
+    cached_data: dict,
+    *,
+    config_entry: TibberPricesConfigEntry,
+) -> None:
+    """Add cached mean/median energy_price and tax values."""
+    energy_mean, energy_median, tax_mean, tax_median = cached_data.get(
+        "last_energy_tax_averages", (None, None, None, None)
+    )
+    factor = get_display_unit_factor(config_entry)
+    if energy_mean is not None:
+        attributes["energy_price_mean"] = round(float(energy_mean) * factor, 2)
+    if energy_median is not None:
+        attributes["energy_price_median"] = round(float(energy_median) * factor, 2)
+    if tax_mean is not None:
+        attributes["tax_mean"] = round(float(tax_mean) * factor, 2)
+    if tax_median is not None:
+        attributes["tax_median"] = round(float(tax_median) * factor, 2)
 
 
 def _get_day_midnight_timestamp(key: str, *, time: TibberPricesTimeService) -> datetime:
@@ -117,7 +157,7 @@ def add_statistics_attributes(
             )
         return
 
-    # Extreme value sensors - show when the extreme occurs
+    # Extreme value sensors - show when the extreme occurs + energy/tax breakdown
     extreme_sensors = {
         "lowest_price_today",
         "highest_price_today",
@@ -125,10 +165,13 @@ def add_statistics_attributes(
         "highest_price_tomorrow",
     }
     if key in extreme_sensors:
-        if cached_data.get("last_extreme_interval"):
-            extreme_starts_at = cached_data["last_extreme_interval"].get("startsAt")
+        extreme_interval = cached_data.get("last_extreme_interval")
+        if extreme_interval:
+            extreme_starts_at = extreme_interval.get("startsAt")
             if extreme_starts_at:
                 attributes["timestamp"] = extreme_starts_at
+            # Add energy_price and tax from the extreme interval
+            _add_energy_tax_from_interval(attributes, extreme_interval, config_entry=config_entry)
         return
 
     # Daily average sensors - show midnight to indicate whole day + add alternate value
@@ -142,6 +185,8 @@ def add_statistics_attributes(
             key,  # base_key = key itself ("average_price_today" or "average_price_tomorrow")
             config_entry=config_entry,
         )
+        # Add energy/tax averages from cached calculator data
+        _add_energy_tax_averages_from_cache(attributes, cached_data, config_entry=config_entry)
         return
 
     # Daily aggregated level/rating sensors - show midnight to indicate whole day
