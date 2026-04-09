@@ -96,6 +96,9 @@ LAST_HOUR_OF_DAY = 23
 MAX_FORECAST_INTERVALS = 8  # Show up to 8 future intervals (2 hours with 15-min intervals)
 MIN_HOURS_FOR_LATER_HALF = 3  # Minimum hours needed to calculate later half average
 
+# Sentinel for _last_written_value: forces first write after init or coordinator update
+_SENTINEL = object()
+
 
 class TibberPricesSensor(TibberPricesEntity, RestoreSensor):
     """tibber_prices Sensor class with state restoration."""
@@ -199,9 +202,12 @@ class TibberPricesSensor(TibberPricesEntity, RestoreSensor):
         self._value_getter: Callable | None = self._get_value_getter()
         self._time_sensitive_remove_listener: Callable | None = None
         self._minute_update_remove_listener: Callable | None = None
-        # Lifecycle sensor state change detection (for recorder optimization)
-        # Store as Any because native_value can be str/float/datetime depending on sensor type
-        self._last_lifecycle_state: Any = None
+        # State change detection for call-avoidance optimization.
+        # Skips expensive async_write_ha_state() (property eval + attribute building)
+        # when native_value hasn't changed. HA's state machine has its own change detection,
+        # but it only runs AFTER all properties and attributes are evaluated.
+        # Store as Any because native_value can be str/float/datetime depending on sensor type.
+        self._last_written_value: Any = _SENTINEL
         # Chart data export (for chart_data_export sensor) - from binary_sensor
         self._chart_data_last_update = None  # Track last service call timestamp
         self._chart_data_error = None  # Track last service call error
@@ -342,17 +348,10 @@ class TibberPricesSensor(TibberPricesEntity, RestoreSensor):
         ):
             self._trend_calculator.clear_calculation_cache()
 
-        # For lifecycle sensor: Only write state if it actually changed (state-change filter)
-        # This enables precise detection at quarter-hour boundaries (23:45 turnover_pending,
-        # 13:00 searching_tomorrow, 00:00 turnover complete) without recorder spam
-        if self.entity_description.key == "data_lifecycle_status":
-            current_state = self.native_value
-            if current_state != self._last_lifecycle_state:
-                self._last_lifecycle_state = current_state
-                self.async_write_ha_state()
-            # If state didn't change, skip write to recorder
-        else:
-            self.async_write_ha_state()
+        # Call-avoidance: Skip expensive async_write_ha_state() when value unchanged.
+        # This runs 4x/hour for ~45 entities. Many (enum levels, ratings, trends) stay
+        # constant across multiple quarter-hour intervals.
+        self._write_if_changed()
 
     @callback
     def _handle_minute_update(self, time_service: TibberPricesTimeService) -> None:
@@ -366,7 +365,28 @@ class TibberPricesSensor(TibberPricesEntity, RestoreSensor):
         # Store TimeService from Timer #3 for calculations during this update cycle
         self.coordinator.time = time_service
 
-        self.async_write_ha_state()
+        # Call-avoidance: Skip expensive async_write_ha_state() when value unchanged.
+        # This runs 120x/hour for 7 countdown/progress entities. Many calls are redundant:
+        # - Progress (precision=0) changes only every ~72s for a 2h period
+        # - When no period is active, remaining_minutes/progress stay at 0 indefinitely
+        self._write_if_changed()
+
+    @callback
+    def _write_if_changed(self) -> None:
+        """
+        Write state only if native_value changed since last write.
+
+        Call-avoidance optimization: evaluates native_value (cheap) once,
+        then skips the expensive async_write_ha_state() call if the value
+        is unchanged. async_write_ha_state() evaluates ALL properties
+        (native_value, extra_state_attributes, icon, available, etc.) and
+        builds the full attribute dict every time — even when HA's own
+        state machine would ultimately discard the identical update.
+        """
+        current_value = self.native_value
+        if current_value != self._last_written_value:
+            self._last_written_value = current_value
+            self.async_write_ha_state()
 
     @callback
     def _handle_coordinator_update(self) -> None:
@@ -387,16 +407,10 @@ class TibberPricesSensor(TibberPricesEntity, RestoreSensor):
             # Schedule async refresh as a task (we're in a callback)
             self.hass.async_create_task(self._refresh_chart_metadata())
 
-        # For lifecycle sensor: Only write state if it actually changed (event-based filter)
-        # Prevents excessive recorder entries while keeping quarter-hour update capability
-        if self.entity_description.key == "data_lifecycle_status":
-            current_state = self.native_value
-            if current_state != self._last_lifecycle_state:
-                self._last_lifecycle_state = current_state
-                super()._handle_coordinator_update()
-            # If state didn't change, skip write to recorder
-        else:
-            super()._handle_coordinator_update()
+        # Coordinator updates bring new API data — always write to ensure fresh state.
+        # Reset _last_written_value so timer-based handlers also write next cycle.
+        self._last_written_value = _SENTINEL
+        super()._handle_coordinator_update()
 
     def _get_value_getter(self) -> Callable | None:
         """Return the appropriate value getter method based on the sensor type."""

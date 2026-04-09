@@ -33,6 +33,10 @@ if TYPE_CHECKING:
     from custom_components.tibber_prices.coordinator.time_service import TibberPricesTimeService
 
 
+# Sentinel for _last_written_state: forces first write after init or coordinator update
+_SENTINEL = object()
+
+
 class TibberPricesBinarySensor(TibberPricesEntity, BinarySensorEntity, RestoreEntity):
     """tibber_prices binary_sensor class with state restoration."""
 
@@ -85,6 +89,8 @@ class TibberPricesBinarySensor(TibberPricesEntity, BinarySensorEntity, RestoreEn
         self._attr_unique_id = f"{coordinator.config_entry.entry_id}_{entity_description.key}"
         self._state_getter: Callable | None = self._get_value_getter()
         self._time_sensitive_remove_listener: Callable | None = None
+        # State change detection for call-avoidance optimization (see sensor/core.py for rationale)
+        self._last_written_state: bool | None | object = _SENTINEL
 
     async def async_added_to_hass(self) -> None:
         """When entity is added to hass."""
@@ -122,7 +128,12 @@ class TibberPricesBinarySensor(TibberPricesEntity, BinarySensorEntity, RestoreEn
         # Store TimeService from Timer #2 for calculations during this update cycle
         self.coordinator.time = time_service
 
-        self.async_write_ha_state()
+        # Call-avoidance: period binary sensors only change at period boundaries,
+        # not every 15 minutes. Skip expensive async_write_ha_state() when unchanged.
+        current_state = self.is_on
+        if current_state != self._last_written_state:
+            self._last_written_state = current_state
+            self.async_write_ha_state()
 
     def _get_value_getter(self) -> Callable | None:
         """Return the appropriate value getter method based on the sensor type."""
@@ -306,12 +317,9 @@ class TibberPricesBinarySensor(TibberPricesEntity, BinarySensorEntity, RestoreEn
     @callback
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
-        # All binary sensors get push updates when coordinator has new data:
-        # - tomorrow_data_available: Reflects new data availability immediately after API fetch
-        # - connection: Reflects connection state changes immediately
-        # - chart_data_export: Updates chart data when price data changes
-        # - peak_price_period, best_price_period: Update when periods change (also get Timer #2 updates)
-        # - data_lifecycle_status: Gets both push and Timer #2 updates
+        # Coordinator updates bring new API data — always write to ensure fresh state.
+        # Reset _last_written_state so timer-based handlers also write next cycle.
+        self._last_written_state = _SENTINEL
         self.async_write_ha_state()
 
     @property
