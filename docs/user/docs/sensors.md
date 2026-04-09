@@ -470,7 +470,7 @@ All min/max sensors include:
 
 Many price sensors expose the **raw energy price** (spot price) and the **tax component** as additional attributes. These are sourced directly from the Tibber API's `energy` and `tax` fields, which together make up the `total` price you see in the sensor state:
 
-$$\text{total} = \text{energy} + \text{tax}$$
+`total = energy + tax`
 
 ### Where These Attributes Appear
 
