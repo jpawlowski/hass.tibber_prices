@@ -1,0 +1,43 @@
+#!/usr/bin/env bash
+# Build only Docusaurus site(s) impacted by current staged file set.
+
+set -euo pipefail
+
+REPO_ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
+cd "$REPO_ROOT"
+
+build_user=false
+build_developer=false
+
+for file in "$@"; do
+    case "$file" in
+        docs/user/*)
+            build_user=true
+            ;;
+        docs/developer/*)
+            build_developer=true
+            ;;
+    esac
+done
+
+if [[ "$build_user" == false && "$build_developer" == false ]]; then
+    exit 0
+fi
+
+if [[ "$build_user" == true ]]; then
+    echo "Building user docs (docs/user)..."
+    (
+        cd docs/user
+        npm run build
+    )
+fi
+
+if [[ "$build_developer" == true ]]; then
+    echo "Building developer docs (docs/developer)..."
+    (
+        cd docs/developer
+        npm run build
+    )
+fi
+
+echo "Docusaurus build check passed for changed docs site(s)."

@@ -21,3 +21,12 @@ repos:
         language: system
         types: [python]
         require_serial: true
+
+      # Build changed Docusaurus site(s) to catch MDX/build errors early
+      - id: docusaurus-build-changed-sites
+        name: docusaurus build (changed sites)
+        entry: bash scripts/docs/build-changed-sites
+        language: system
+        files: ^docs/(user|developer)/
+        pass_filenames: true
+        require_serial: true
