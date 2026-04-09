@@ -134,6 +134,42 @@ data:
 
 For detailed parameter descriptions, open **Developer Tools → Actions** (the UI label) and select `tibber_prices.get_chartdata`. The inline documentation is still stored in `services.yaml` because actions are backed by services.
 
+#### Energy & Tax Fields in get_chartdata {#energy--tax-fields-in-get_chartdata}
+
+You can include the raw energy price (spot price) and/or tax component in chart data output. This is useful for visualizing how the total price is composed over time, or for feed-in calculations.
+
+| Parameter | Description | Default |
+|-----------|-------------|---------|
+| `include_energy` | Include raw energy/spot price per data point | `false` |
+| `include_tax` | Include tax/fees component per data point | `false` |
+| `energy_field` | Custom field name for energy price | `energy_price` |
+| `tax_field` | Custom field name for tax | `tax` |
+
+**Example: Chart with price composition**
+
+```yaml
+service: tibber_prices.get_chartdata
+data:
+    entry_id: YOUR_ENTRY_ID
+    day: ["today", "tomorrow"]
+    include_energy: true
+    include_tax: true
+response_variable: chart_data
+```
+
+Returns data points like:
+
+```json
+{
+    "start_time": "2025-11-17T14:00:00+01:00",
+    "price_per_kwh": 25.34,
+    "energy_price": 12.18,
+    "tax": 13.16
+}
+```
+
+**Use case — Solar feed-in chart:** Overlay the energy price (what you earn by exporting) alongside the total price to visualize the best export windows. See [Sensors — Energy Price & Tax Breakdown](sensors.md#energy-price--tax-breakdown) for more use cases.
+
 ---
 
 ### tibber_prices.get_apexcharts_yaml

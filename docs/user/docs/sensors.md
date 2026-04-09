@@ -466,6 +466,93 @@ All min/max sensors include:
 | `price_diff_from_daily_min` | Difference from daily minimum |
 | `price_diff_from_daily_min_%` | Percentage difference |
 
+## Energy Price & Tax Breakdown
+
+Many price sensors expose the **raw energy price** (spot price) and the **tax component** as additional attributes. These are sourced directly from the Tibber API's `energy` and `tax` fields, which together make up the `total` price you see in the sensor state:
+
+$$\text{total} = \text{energy} + \text{tax}$$
+
+### Where These Attributes Appear
+
+| Sensor Group | Attributes | Description |
+|---|---|---|
+| **Current/Next/Previous Interval Price** | `energy_price`, `tax` | Raw values for that specific 15-minute interval |
+| **Today's/Tomorrow's Min/Max Price** | `energy_price`, `tax` | Values from the interval with the extreme price |
+| **Today's/Tomorrow's Average Price** | `energy_price_mean`, `energy_price_median`, `tax_mean`, `tax_median` | Mean and median values across all intervals of the day |
+
+:::note Transition After Update
+After updating the integration, the `energy_price` and `tax` attributes will appear gradually as new price data is fetched from the Tibber API. Existing cached intervals (up to ~2 days old) won't have these fields yet — the attributes will simply be absent until fresh data replaces them. No action needed.
+:::
+
+### Use Cases
+
+#### Solar Feed-In & Net Metering (Saldering)
+
+In countries like the Netherlands, solar feed-in compensation is based on the **raw energy/spot price**, not the total consumer price. The `energy_price` attribute gives you exactly this value — no more reverse-engineering from the total price with fragile template calculations.
+
+```yaml
+# Example: Decide whether to export solar power or consume it
+# Compare energy price (what you'd earn by exporting) vs. total price (what you'd pay)
+automation:
+    - alias: "Solar: Export or Consume"
+      trigger:
+          - platform: numeric_state
+            entity_id: sensor.solar_production_power
+            above: 2000  # Producing more than 2 kW
+      condition:
+          - condition: template
+            value_template: >
+                {% set energy = state_attr('sensor.<home_name>_current_electricity_price', 'energy_price') %}
+                {% set total = states('sensor.<home_name>_current_electricity_price') | float %}
+                {# Export when energy price is high relative to total — you earn more #}
+                {{ energy is not none and energy > (total * 0.4) }}
+      action:
+          - service: switch.turn_off
+            entity_id: switch.battery_charging  # Don't charge battery, export instead
+```
+
+#### Price Composition Analysis
+
+Understand how your electricity price is structured — useful for comparing across days or spotting trends in market prices vs. fees:
+
+```yaml
+# Template sensor showing tax share
+template:
+    - sensor:
+          - name: "Electricity Tax Share"
+            unit_of_measurement: "%"
+            state: >
+                {% set tax = state_attr('sensor.<home_name>_current_electricity_price', 'tax') %}
+                {% set total = states('sensor.<home_name>_current_electricity_price') | float %}
+                {% if tax is not none and total > 0 %}
+                  {{ ((tax / total) * 100) | round(1) }}
+                {% else %}
+                  unavailable
+                {% endif %}
+```
+
+#### Dashboard: Daily Cost Breakdown
+
+Show users how today's average price splits into energy vs. tax:
+
+```yaml
+# Mushroom chips card showing the split
+type: custom:mushroom-chips-card
+chips:
+    - type: template
+      icon: mdi:flash
+      content: >
+          ⚡ {{ state_attr('sensor.<home_name>_price_today', 'energy_price_mean') | round(1) }} ct
+    - type: template
+      icon: mdi:receipt-text
+      content: >
+          🏛️ {{ state_attr('sensor.<home_name>_price_today', 'tax_mean') | round(1) }} ct
+```
+
+### In Chart Data Actions
+
+The `energy_price` and `tax` fields are also available in the `get_chartdata` action. See [Actions — Energy & Tax Fields](#energy--tax-fields-in-get_chartdata) for details.
+
 ## Timing Sensors
 
 Timing sensors provide **real-time information about Best Price and Peak Price periods**: when they start, end, how long they last, and your progress through them.
