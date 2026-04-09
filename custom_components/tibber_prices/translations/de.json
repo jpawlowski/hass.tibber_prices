@@ -619,8 +619,8 @@
             "next_avg_12h": {
                 "name": "⌀ Preis nächste 12h"
             },
-            "price_trend_1h": {
-                "name": "Preistrend (1h)",
+            "price_outlook_1h": {
+                "name": "Preisausblick (1h)",
                 "state": {
                     "strongly_rising": "Stark steigend",
                     "rising": "Steigend",
@@ -629,8 +629,8 @@
                     "strongly_falling": "Stark fallend"
                 }
             },
-            "price_trend_2h": {
-                "name": "Preistrend (2h)",
+            "price_outlook_2h": {
+                "name": "Preisausblick (2h)",
                 "state": {
                     "strongly_rising": "Stark steigend",
                     "rising": "Steigend",
@@ -639,8 +639,8 @@
                     "strongly_falling": "Stark fallend"
                 }
             },
-            "price_trend_3h": {
-                "name": "Preistrend (3h)",
+            "price_outlook_3h": {
+                "name": "Preisausblick (3h)",
                 "state": {
                     "strongly_rising": "Stark steigend",
                     "rising": "Steigend",
@@ -649,8 +649,8 @@
                     "strongly_falling": "Stark fallend"
                 }
             },
-            "price_trend_4h": {
-                "name": "Preistrend (4h)",
+            "price_outlook_4h": {
+                "name": "Preisausblick (4h)",
                 "state": {
                     "strongly_rising": "Stark steigend",
                     "rising": "Steigend",
@@ -659,8 +659,8 @@
                     "strongly_falling": "Stark fallend"
                 }
             },
-            "price_trend_5h": {
-                "name": "Preistrend (5h)",
+            "price_outlook_5h": {
+                "name": "Preisausblick (5h)",
                 "state": {
                     "strongly_rising": "Stark steigend",
                     "rising": "Steigend",
@@ -669,8 +669,8 @@
                     "strongly_falling": "Stark fallend"
                 }
             },
-            "price_trend_6h": {
-                "name": "Preistrend (6h)",
+            "price_outlook_6h": {
+                "name": "Preisausblick (6h)",
                 "state": {
                     "strongly_rising": "Stark steigend",
                     "rising": "Steigend",
@@ -679,8 +679,8 @@
                     "strongly_falling": "Stark fallend"
                 }
             },
-            "price_trend_8h": {
-                "name": "Preistrend (8h)",
+            "price_outlook_8h": {
+                "name": "Preisausblick (8h)",
                 "state": {
                     "strongly_rising": "Stark steigend",
                     "rising": "Steigend",
@@ -689,8 +689,78 @@
                     "strongly_falling": "Stark fallend"
                 }
             },
-            "price_trend_12h": {
-                "name": "Preistrend (12h)",
+            "price_outlook_12h": {
+                "name": "Preisausblick (12h)",
+                "state": {
+                    "strongly_rising": "Stark steigend",
+                    "rising": "Steigend",
+                    "stable": "Stabil",
+                    "falling": "Fallend",
+                    "strongly_falling": "Stark fallend"
+                }
+            },
+            "price_trajectory_2h": {
+                "name": "Preisverlauf (2h)",
+                "state": {
+                    "strongly_rising": "Stark steigend",
+                    "rising": "Steigend",
+                    "stable": "Stabil",
+                    "falling": "Fallend",
+                    "strongly_falling": "Stark fallend"
+                }
+            },
+            "price_trajectory_3h": {
+                "name": "Preisverlauf (3h)",
+                "state": {
+                    "strongly_rising": "Stark steigend",
+                    "rising": "Steigend",
+                    "stable": "Stabil",
+                    "falling": "Fallend",
+                    "strongly_falling": "Stark fallend"
+                }
+            },
+            "price_trajectory_4h": {
+                "name": "Preisverlauf (4h)",
+                "state": {
+                    "strongly_rising": "Stark steigend",
+                    "rising": "Steigend",
+                    "stable": "Stabil",
+                    "falling": "Fallend",
+                    "strongly_falling": "Stark fallend"
+                }
+            },
+            "price_trajectory_5h": {
+                "name": "Preisverlauf (5h)",
+                "state": {
+                    "strongly_rising": "Stark steigend",
+                    "rising": "Steigend",
+                    "stable": "Stabil",
+                    "falling": "Fallend",
+                    "strongly_falling": "Stark fallend"
+                }
+            },
+            "price_trajectory_6h": {
+                "name": "Preisverlauf (6h)",
+                "state": {
+                    "strongly_rising": "Stark steigend",
+                    "rising": "Steigend",
+                    "stable": "Stabil",
+                    "falling": "Fallend",
+                    "strongly_falling": "Stark fallend"
+                }
+            },
+            "price_trajectory_8h": {
+                "name": "Preisverlauf (8h)",
+                "state": {
+                    "strongly_rising": "Stark steigend",
+                    "rising": "Steigend",
+                    "stable": "Stabil",
+                    "falling": "Fallend",
+                    "strongly_falling": "Stark fallend"
+                }
+            },
+            "price_trajectory_12h": {
+                "name": "Preisverlauf (12h)",
                 "state": {
                     "strongly_rising": "Stark steigend",
                     "rising": "Steigend",

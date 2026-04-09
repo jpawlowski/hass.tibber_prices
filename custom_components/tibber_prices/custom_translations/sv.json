@@ -227,45 +227,80 @@
             "long_description": "Visar genomsnittspriset för nästa 48 intervaller (12 timmar) från och med nästa 15-minuters intervall.",
             "usage_tips": "Absolut priströskel: Strategiska beslut med pristak. Fortsätt endast om 12t genomsnitt är under ditt maximalt acceptabla pris. Bra för uppskjutbara stora laster."
         },
-        "price_trend_1h": {
-            "description": "Pristrend för nästa timme",
-            "long_description": "Jämför ditt nuvarande pris med genomsnittet av alla intervaller under nästa timme (4 intervaller). Alla trendsensorer (1t–12t) delar samma utgångspunkt: ditt nuvarande pris — de skiljer sig bara i fönsterstorlek. Större fönster täcker fler framtida timmar och jämnar ut kortsiktiga toppar. Stigande/fallande vid ±3%, kraftigt vid ±9% (konfigurerbart, volatilitetsadaptivt).",
-            "usage_tips": "Beslutsstöd: 'stigande' = AGERA NU, ditt nuvarande pris är billigare än nästa timme. 'fallande' = VÄNTA, billigare priser kommer. 'stabil' = timing spelar ingen roll. Vanligt missförstånd: 'stigande' betyder INTE 'för sent' — det betyder att nu är ett bra pris! Fungerar oberoende av absolut prisnivå."
+        "price_outlook_1h": {
+            "description": "Prisöversikt för nästa timme",
+            "long_description": "Jämför ditt nuvarande pris med genomsnittet av alla intervaller under nästa timme (4 intervaller). Alla översiktssensorer (1h–12h) delar samma utgångspunkt: ditt nuvarande pris — de skiljer sig bara i fönsterstorlek. Stigande/fallande vid ±3%, kraftigt vid ±9% (konfigurerbart, volatilitetsadaptivt).",
+            "usage_tips": "Beslutstöd: 'stigande' = AGERA NU, ditt nuvarande pris är billigare än fönstergenomsnittet. 'fallande' = VÄNTA, fönstergenomsnittet är billigare än nu. 'stabil' = timing spelar ingen roll."
         },
-        "price_trend_2h": {
-            "description": "Pristrend för nästa 2 timmar",
-            "long_description": "Jämför ditt nuvarande pris med genomsnittet av alla intervaller under de nästa 2 timmarna (8 intervaller) — hela fönstret från nu, inte bara den senare delen. Stigande/fallande vid ±3%, kraftigt vid ±9% (konfigurerbart, volatilitetsadaptivt).",
-            "usage_tips": "Apparater: 'stigande' = starta nu, du har ett bra pris. 'fallande' = bättre priser kommer om 2t, skjut upp om möjligt. 'stabil' = spelar ingen roll, starta när det passar. Vänta inte på 'stabil' — vid 'stigande' är NU den bästa tiden."
+        "price_outlook_2h": {
+            "description": "Prisöversikt för nästa 2 timmar",
+            "long_description": "Jämför ditt nuvarande pris med genomsnittet av alla intervaller under de nästa 2 timmarna (8 intervaller). 'stigande' = nuvarande pris under 2h-fönstergenomsnittet; 'fallande' = fönstergenomsnittet är billigare än nu. Stigande/fallande vid ±3%, kraftigt vid ±9%.",
+            "usage_tips": "Apparater: 'stigande' = starta nu, du har ett bra pris jämfört med nästa 2h. Kombinera med price_trajectory_2h för att se om priserna fortfarande faller eller redan stiger."
         },
-        "price_trend_3h": {
-            "description": "Pristrend för nästa 3 timmar",
-            "long_description": "Jämför ditt nuvarande pris med genomsnittet av alla intervaller under de nästa 3 timmarna (12 intervaller) — hela fönstret från nu, inte bara den senare delen. Stigande/fallande vid ±3%, kraftigt vid ±9% (konfigurerbart, volatilitetsadaptivt).",
-            "usage_tips": "Eco-program: 'stigande' = starta eco-cykeln nu, priserna stiger härifrån. 'fallande' = vänta, billigare fönster kommer. Kombinera med avg-sensor: starta när trend är 'stigande' eller 'stabil' OCH avg < din gräns. Fungerar under alla säsonger."
+        "price_outlook_3h": {
+            "description": "Prisöversikt för nästa 3 timmar",
+            "long_description": "Jämför ditt nuvarande pris med genomsnittet av alla intervaller under de nästa 3 timmarna (12 intervaller). 'stigande' = nuvarande pris under 3h-fönstergenomsnittet; 'fallande' = fönstergenomsnittet är billigare än nu. Stigande/fallande vid ±3%, kraftigt vid ±9%.",
+            "usage_tips": "Eco-program: 'stigande' = starta eco-cykeln nu, priser är i genomsnitt högre i fönstret. 'fallande' = vänta, billigare genomsnittligt fönster kommer."
         },
-        "price_trend_4h": {
-            "description": "Pristrend för nästa 4 timmar",
-            "long_description": "Jämför ditt nuvarande pris med genomsnittet av alla intervaller under de nästa 4 timmarna (16 intervaller) — hela fönstret från nu, inte bara den senare delen. Stigande/fallande vid ±3%, kraftigt vid ±9% (konfigurerbart, volatilitetsadaptivt).",
-            "usage_tips": "Värmepump/batteri: 'stigande' = ladda nu, du är på en relativ lågpunkt. 'fallande' = vänta på bättre laddningsfönster. 'stabil' = ladda efter behov. Fungerar oavsett prisnivå — hittar relativ bästa tid oavsett om priserna är 10 eller 50 öre."
+        "price_outlook_4h": {
+            "description": "Prisöversikt för nästa 4 timmar",
+            "long_description": "Jämför ditt nuvarande pris med genomsnittet av alla intervaller under de nästa 4 timmarna (16 intervaller). 'stigande' = nuvarande pris under 4h-fönstergenomsnittet; 'fallande' = fönstergenomsnittet är billigare än nu. Stigande/fallande vid ±3%, kraftigt vid ±9%.",
+            "usage_tips": "Värmepump/batteri: 'stigande' = ladda nu, du är på en relativ lågpunkt. Kombinera med price_trajectory_4h för att se om priserna fortfarande faller eller redan stiger."
         },
-        "price_trend_5h": {
-            "description": "Pristrend för nästa 5 timmar",
-            "long_description": "Jämför ditt nuvarande pris med genomsnittet av alla intervaller under de nästa 5 timmarna (20 intervaller) — hela fönstret från nu, inte bara den senare delen. Stigande/fallande vid ±3%, kraftigt vid ±9% (konfigurerbart, volatilitetsadaptivt).",
-            "usage_tips": "Utökade cykler: 'stigande' eller 'stabil' = bra tid att starta, priserna blir inte billigare. 'fallande' = vänta om din planering tillåter det. Anpassar sig till marknaden — hittar bästa relativa timing i vilken prismiljö som helst."
+        "price_outlook_5h": {
+            "description": "Prisöversikt för nästa 5 timmar",
+            "long_description": "Jämför ditt nuvarande pris med genomsnittet av alla intervaller under de nästa 5 timmarna (20 intervaller). 'stigande' = nuvarande pris under 5h-fönstergenomsnittet; 'fallande' = fönstergenomsnittet är billigare än nu. Stigande/fallande vid ±3%, kraftigt vid ±9%.",
+            "usage_tips": "Utökade cykler: 'stigande' eller 'stabil' = bra tid att starta. 'fallande' = vänta om din planering tillåter det."
         },
-        "price_trend_6h": {
-            "description": "Pristrend för nästa 6 timmar",
-            "long_description": "Jämför ditt nuvarande pris med genomsnittet av alla intervaller under de nästa 6 timmarna (24 intervaller) — hela fönstret från nu, inte bara den senare delen. Stigande/fallande vid ±3%, kraftigt vid ±9% (konfigurerbart, volatilitetsadaptivt).",
-            "usage_tips": "Kvällsbeslut: 'stigande' = använd el nu medan den är relativt billig. 'fallande' = kvälls-/nattpriserna blir bättre, vänta om möjligt. Justerar automatiskt till vinter/sommar prisnivåer — inga fasta trösklar behövs."
+        "price_outlook_6h": {
+            "description": "Prisöversikt för nästa 6 timmar",
+            "long_description": "Jämför ditt nuvarande pris med genomsnittet av alla intervaller under de nästa 6 timmarna (24 intervaller). 'stigande' = nuvarande pris under 6h-fönstergenomsnittet; 'fallande' = fönstergenomsnittet är billigare än nu. Stigande/fallande vid ±3%, kraftigt vid ±9%.",
+            "usage_tips": "Kvällsbeslut: 'stigande' = använd el nu medan den är relativt billig. 'fallande' = kvälls-/nattpriserna blir bättre i genomsnitt, vänta om möjligt."
         },
-        "price_trend_8h": {
-            "description": "Pristrend för nästa 8 timmar",
-            "long_description": "Jämför ditt nuvarande pris med genomsnittet av alla intervaller under de nästa 8 timmarna (32 intervaller) — hela fönstret från nu, inte bara den senare delen. Stigande/fallande vid ±3%, kraftigt vid ±9% (konfigurerbart, volatilitetsadaptivt).",
-            "usage_tips": "Nattplanering: 'stigande' = ikväll/imorgon blir dyrare, använd el nu. 'fallande' = nattpriserna blir billigare, värt att vänta. 'stabil' = starta efter behov. Fungerar året runt utan manuella tröskeljusteringar."
+        "price_outlook_8h": {
+            "description": "Prisöversikt för nästa 8 timmar",
+            "long_description": "Jämför ditt nuvarande pris med genomsnittet av alla intervaller under de nästa 8 timmarna (32 intervaller). 'stigande' = nuvarande pris under 8h-fönstergenomsnittet; 'fallande' = fönstergenomsnittet är billigare än nu. Stigande/fallande vid ±3%, kraftigt vid ±9%.",
+            "usage_tips": "Nattplanering: 'stigande' = ikväll/imorgon blir dyrare i genomsnitt, använd el nu. 'fallande' = nattpriserna blir billigare, värt att vänta."
         },
-        "price_trend_12h": {
-            "description": "Pristrend för nästa 12 timmar",
-            "long_description": "Jämför ditt nuvarande pris med genomsnittet av alla intervaller under de nästa 12 timmarna (48 intervaller) — hela fönstret från nu, inte bara den senare delen. Stigande/fallande vid ±3%, kraftigt vid ±9% (konfigurerbart, volatilitetsadaptivt).",
-            "usage_tips": "Strategiska beslut: 'stigande' = du är på en lågpunkt, bra tid för strömkrävande uppgifter. 'fallande' = avsevärt bättre priser kommer, vänta om möjligt. Bäst kombinerad med avg-sensor för absoluta prisgränser."
+        "price_outlook_12h": {
+            "description": "Prisöversikt för nästa 12 timmar",
+            "long_description": "Jämför ditt nuvarande pris med genomsnittet av alla intervaller under de nästa 12 timmarna (48 intervaller). 'stigande' = nuvarande pris under 12h-fönstergenomsnittet; 'fallande' = fönstergenomsnittet är billigare än nu. Stigande/fallande vid ±3%, kraftigt vid ±9%.",
+            "usage_tips": "Strategiska beslut: 'stigande' = du är på en lågpunkt relativt till nästa 12h, bra tid för strömkrävande uppgifter. 'fallande' = avsevärt bättre genomsnittspriser kommer."
+        },
+        "price_trajectory_2h": {
+            "description": "Prisutveckling inom nästa 2-timmars fönster",
+            "long_description": "Compares the average of the first hour with the average of the second hour within the next 2-hour window. 'rising' = second half more expensive than first half. 'falling' = second half cheaper. Rising/falling at ±3%, strongly at ±9% (configurable, volatility-adaptive).",
+            "usage_tips": "At a price minimum: price_outlook_2h may show 'falling' (window average is below current), but price_trajectory_2h shows 'rising' (second half more expensive) — revealing the upcoming reversal. 'outlook: falling + trajectory: rising' = you're AT the minimum, act now."
+        },
+        "price_trajectory_3h": {
+            "description": "Prisutveckling inom nästa 3-timmars fönster",
+            "long_description": "Compares the average of the first 1.5 hours with the average of the second 1.5 hours within the next 3-hour window. 'rising' = prices are climbing; 'falling' = prices are dropping. Rising/falling at ±3%, strongly at ±9%.",
+            "usage_tips": "Appliance timing: 'outlook: strongly_falling + trajectory: rising' = you're at or past the minimum, prices are already recovering — start now."
+        },
+        "price_trajectory_4h": {
+            "description": "Prisutveckling inom nästa 4-timmars fönster",
+            "long_description": "Compares the average of the first 2 hours with the average of the second 2 hours within the next 4-hour window. 'rising' = prices are climbing; 'falling' = prices are dropping. Complements price_outlook_4h. Rising/falling at ±3%, strongly at ±9%.",
+            "usage_tips": "Heat pump charging: 'rising' = first half is cheaper, charge now. 'falling' = second half is cheaper, wait. Combine with outlook: if both rising, very strong signal to act now."
+        },
+        "price_trajectory_5h": {
+            "description": "Prisutveckling inom nästa 5-timmars fönster",
+            "long_description": "Compares the average of the first 2.5 hours with the average of the second 2.5 hours within the next 5-hour window. 'rising' = prices are climbing; 'falling' = prices are dropping. Rising/falling at ±3%, strongly at ±9%.",
+            "usage_tips": "Long cycles: 'outlook: rising + trajectory: rising' = clear signal to start now. 'outlook: falling + trajectory: rising' = you're near the bottom, good time to start."
+        },
+        "price_trajectory_6h": {
+            "description": "Prisutveckling inom nästa 6-timmars fönster",
+            "long_description": "Compares the average of the first 3 hours with the average of the second 3 hours within the next 6-hour window. 'rising' = prices are climbing; 'falling' = prices are dropping. Rising/falling at ±3%, strongly at ±9%.",
+            "usage_tips": "Evening/overnight planning: 'falling' at evening peak = overnight will be cheaper, postpone. 'rising' in the morning = current morning prices are the low."
+        },
+        "price_trajectory_8h": {
+            "description": "Prisutveckling inom nästa 8-timmars fönster",
+            "long_description": "Compares the average of the first 4 hours with the average of the second 4 hours within the next 8-hour window. 'rising' = prices are climbing; 'falling' = prices are dropping. Rising/falling at ±3%, strongly at ±9%.",
+            "usage_tips": "Overnight charging: 'rising' during evening = first half of night is cheapest, start charging earlier. 'falling' = second half will be cheapest, delay start."
+        },
+        "price_trajectory_12h": {
+            "description": "Prisutveckling inom nästa 12-timmars fönster",
+            "long_description": "Compares the average of the first 6 hours with the average of the second 6 hours within the next 12-hour window. 'rising' = prices are climbing; 'falling' = prices are dropping. Rising/falling at ±3%, strongly at ±9%.",
+            "usage_tips": "Day-ahead planning: 'rising' at midnight = first half of day is cheaper, schedule morning loads. 'falling' = afternoon/evening scheduling is better."
         },
         "current_price_trend": {
             "description": "Nuvarande pristrend-riktning och hur länge den varar",
@@ -275,7 +310,7 @@
         "next_price_trend_change": {
             "description": "När nästa betydande pristrendändring kommer att inträffa",
             "long_description": "Skannar de nästa 24 timmarna (96 intervaller) för att hitta när pristrend-riktningen kommer att ändras. Bara riktningsändringar räknas: stigande/kraftigt stigande är en grupp, fallande/kraftigt fallande en annan, stabil är egen. En ändring från stigande till kraftigt stigande är INTE en trendändring. Använder volatilitetsadaptiva tröskelvärden (standard: ±3%/±9%) med hysteres (standard: 3 på varandra följande intervaller). Returnerar tidstämpeln när ändringen förväntas.",
-            "usage_tips": "Händelsestyrd automatisering: Utlös åtgärder NÄR trenden ändras, inte OM X timmar. Exempel: 'Ladda EV när nästa trendändring visar fallande priser' eller 'Starta diskmaskin innan priserna stiger'. Kompletterar tidsfönster-sensorer (price_trend_Xh) som svarar på 'KOMMER priserna att vara högre om X timmar?'"
+            "usage_tips": "Händelsestyrd automatisering: Utlös åtgärder NÄR trenden ändras, inte OM X timmar. Exempel: 'Ladda EV när nästa trendändring visar fallande priser' eller 'Starta diskmaskin innan priserna stiger'. Kompletterar tidsfönster-sensorer (price_outlook_Xh) som svarar på 'KOMMER priserna att vara högre om X timmar?'"
         },
         "trend_change_in_minutes": {
             "description": "Tid till nästa pristrendändring",

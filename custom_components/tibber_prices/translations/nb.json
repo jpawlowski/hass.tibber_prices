@@ -619,8 +619,8 @@
             "next_avg_12h": {
                 "name": "⌀ Pris neste 12t"
             },
-            "price_trend_1h": {
-                "name": "Pristrend (1t)",
+            "price_outlook_1h": {
+                "name": "Prisutblikk (1t)",
                 "state": {
                     "strongly_rising": "Sterkt stigende",
                     "rising": "Stigende",
@@ -629,8 +629,8 @@
                     "strongly_falling": "Sterkt fallende"
                 }
             },
-            "price_trend_2h": {
-                "name": "Pristrend (2t)",
+            "price_outlook_2h": {
+                "name": "Prisutblikk (2t)",
                 "state": {
                     "strongly_rising": "Sterkt stigende",
                     "rising": "Stigende",
@@ -639,8 +639,8 @@
                     "strongly_falling": "Sterkt fallende"
                 }
             },
-            "price_trend_3h": {
-                "name": "Pristrend (3t)",
+            "price_outlook_3h": {
+                "name": "Prisutblikk (3t)",
                 "state": {
                     "strongly_rising": "Sterkt stigende",
                     "rising": "Stigende",
@@ -649,8 +649,8 @@
                     "strongly_falling": "Sterkt fallende"
                 }
             },
-            "price_trend_4h": {
-                "name": "Pristrend (4t)",
+            "price_outlook_4h": {
+                "name": "Prisutblikk (4t)",
                 "state": {
                     "strongly_rising": "Sterkt stigende",
                     "rising": "Stigende",
@@ -659,8 +659,8 @@
                     "strongly_falling": "Sterkt fallende"
                 }
             },
-            "price_trend_5h": {
-                "name": "Pristrend (5t)",
+            "price_outlook_5h": {
+                "name": "Prisutblikk (5t)",
                 "state": {
                     "strongly_rising": "Sterkt stigende",
                     "rising": "Stigende",
@@ -669,8 +669,8 @@
                     "strongly_falling": "Sterkt fallende"
                 }
             },
-            "price_trend_6h": {
-                "name": "Pristrend (6t)",
+            "price_outlook_6h": {
+                "name": "Prisutblikk (6t)",
                 "state": {
                     "strongly_rising": "Sterkt stigende",
                     "rising": "Stigende",
@@ -679,8 +679,8 @@
                     "strongly_falling": "Sterkt fallende"
                 }
             },
-            "price_trend_8h": {
-                "name": "Pristrend (8t)",
+            "price_outlook_8h": {
+                "name": "Prisutblikk (8t)",
                 "state": {
                     "strongly_rising": "Sterkt stigende",
                     "rising": "Stigende",
@@ -689,8 +689,78 @@
                     "strongly_falling": "Sterkt fallende"
                 }
             },
-            "price_trend_12h": {
-                "name": "Pristrend (12t)",
+            "price_outlook_12h": {
+                "name": "Prisutblikk (12t)",
+                "state": {
+                    "strongly_rising": "Sterkt stigende",
+                    "rising": "Stigende",
+                    "stable": "Stabil",
+                    "falling": "Fallende",
+                    "strongly_falling": "Sterkt fallende"
+                }
+            },
+            "price_trajectory_2h": {
+                "name": "Prisforløp (2t)",
+                "state": {
+                    "strongly_rising": "Sterkt stigende",
+                    "rising": "Stigende",
+                    "stable": "Stabil",
+                    "falling": "Fallende",
+                    "strongly_falling": "Sterkt fallende"
+                }
+            },
+            "price_trajectory_3h": {
+                "name": "Prisforløp (3t)",
+                "state": {
+                    "strongly_rising": "Sterkt stigende",
+                    "rising": "Stigende",
+                    "stable": "Stabil",
+                    "falling": "Fallende",
+                    "strongly_falling": "Sterkt fallende"
+                }
+            },
+            "price_trajectory_4h": {
+                "name": "Prisforløp (4t)",
+                "state": {
+                    "strongly_rising": "Sterkt stigende",
+                    "rising": "Stigende",
+                    "stable": "Stabil",
+                    "falling": "Fallende",
+                    "strongly_falling": "Sterkt fallende"
+                }
+            },
+            "price_trajectory_5h": {
+                "name": "Prisforløp (5t)",
+                "state": {
+                    "strongly_rising": "Sterkt stigende",
+                    "rising": "Stigende",
+                    "stable": "Stabil",
+                    "falling": "Fallende",
+                    "strongly_falling": "Sterkt fallende"
+                }
+            },
+            "price_trajectory_6h": {
+                "name": "Prisforløp (6t)",
+                "state": {
+                    "strongly_rising": "Sterkt stigende",
+                    "rising": "Stigende",
+                    "stable": "Stabil",
+                    "falling": "Fallende",
+                    "strongly_falling": "Sterkt fallende"
+                }
+            },
+            "price_trajectory_8h": {
+                "name": "Prisforløp (8t)",
+                "state": {
+                    "strongly_rising": "Sterkt stigende",
+                    "rising": "Stigende",
+                    "stable": "Stabil",
+                    "falling": "Fallende",
+                    "strongly_falling": "Sterkt fallende"
+                }
+            },
+            "price_trajectory_12h": {
+                "name": "Prisforløp (12t)",
                 "state": {
                     "strongly_rising": "Sterkt stigende",
                     "rising": "Stigende",

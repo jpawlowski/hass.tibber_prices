@@ -227,45 +227,80 @@
             "long_description": "Zeigt den Durchschnittspreis für die nächsten 48 Intervalle (12 Stunden) beginnend ab dem nächsten 15-Minuten-Intervall.",
             "usage_tips": "Absolute Preisschwelle: Strategische Entscheidungen mit Preisobergrenzen. Fahre nur fort, wenn der 12h-Durchschnitt unter deinem maximal akzeptablen Preis liegt. Gut für verschiebbare Großlasten."
         },
-        "price_trend_1h": {
-            "description": "Preistrend für die nächste Stunde",
-            "long_description": "Vergleicht deinen aktuellen Preis mit dem Durchschnitt aller Intervalle der nächsten Stunde (4 Intervalle). Alle Trend-Sensoren (1h–12h) haben dieselbe Basis: dein aktueller Preis — sie unterscheiden sich nur im Zeitfenster. Größere Fenster umfassen mehr Zukunftsstunden und glätten kurzfristige Spitzen. Steigend/fallend ab ±3%, stark ab ±9% (konfigurierbar, volatilitätsadaptiv).",
-            "usage_tips": "Entscheidungshilfe: 'steigend' = JETZT HANDELN, dein aktueller Preis ist günstiger als die nächste Stunde. 'fallend' = WARTEN, günstigere Preise kommen. 'stabil' = Timing egal. Häufiges Missverständnis: 'steigend' bedeutet NICHT 'zu spät' — es heißt, jetzt ist gerade ein guter Preis! Funktioniert unabhängig vom absoluten Preisniveau."
+        "price_outlook_1h": {
+            "description": "Preisausblick für die nächste Stunde",
+            "long_description": "Vergleicht deinen aktuellen Preis mit dem Durchschnitt aller Intervalle der nächsten Stunde (4 Intervalle). Alle Ausblick-Sensoren (1h–12h) haben dieselbe Basis: dein aktueller Preis — sie unterscheiden sich nur im Zeitfenster. Größere Fenster umfassen mehr Zukunftsstunden und glätten kurzfristige Spitzen. Steigend/fallend ab ±3%, stark ab ±9% (konfigurierbar, volatilitätsadaptiv).",
+            "usage_tips": "Entscheidungshilfe: 'steigend' = JETZT HANDELN, dein aktueller Preis ist günstiger als der Stunden-Durchschnitt. 'fallend' = WARTEN, der Fenster-Durchschnitt ist günstiger als jetzt. 'stabil' = Timing egal. Häufiges Missverständnis: 'steigend' bedeutet NICHT 'zu spät' — es heißt, jetzt ist gerade ein guter Preis! Funktioniert unabhängig vom absoluten Preisniveau."
         },
-        "price_trend_2h": {
-            "description": "Preistrend für die nächsten 2 Stunden",
-            "long_description": "Vergleicht deinen aktuellen Preis mit dem Durchschnitt aller Intervalle der nächsten 2 Stunden (8 Intervalle) — das gesamte Zeitfenster ab jetzt, nicht nur der spätere Teil. Steigend/fallend ab ±3%, stark ab ±9% (konfigurierbar, volatilitätsadaptiv).",
-            "usage_tips": "Haushaltsgeräte: 'steigend' = jetzt starten, du hast gerade einen guten Preis. 'fallend' = bessere Preise kommen in 2h, verschiebe wenn möglich. 'stabil' = egal, starte nach Bedarf. Nicht auf 'stabil' warten — bei 'steigend' ist JETZT der beste Zeitpunkt."
+        "price_outlook_2h": {
+            "description": "Preisausblick für die nächsten 2 Stunden",
+            "long_description": "Vergleicht deinen aktuellen Preis mit dem Durchschnitt aller Intervalle der nächsten 2 Stunden (8 Intervalle). 'steigend' = aktueller Preis liegt unter dem 2h-Fenster-Durchschnitt; 'fallend' = Fenster-Durchschnitt ist günstiger als jetzt. Steigend/fallend ab ±3%, stark ab ±9% (konfigurierbar, volatilitätsadaptiv).",
+            "usage_tips": "Haushaltsgeräte: 'steigend' = jetzt starten, du hast gerade einen guten Preis. 'fallend' = bessere Preise kommen im 2h-Fenster, verschiebe wenn möglich. 'stabil' = egal, starte nach Bedarf. Kombiniere mit price_trajectory_2h um zu unterscheiden ob Preise noch fallen oder schon steigen."
         },
-        "price_trend_3h": {
-            "description": "Preistrend für die nächsten 3 Stunden",
-            "long_description": "Vergleicht deinen aktuellen Preis mit dem Durchschnitt aller Intervalle der nächsten 3 Stunden (12 Intervalle) — das gesamte Zeitfenster ab jetzt, nicht nur der spätere Teil. Steigend/fallend ab ±3%, stark ab ±9% (konfigurierbar, volatilitätsadaptiv).",
-            "usage_tips": "Eco-Programme: 'steigend' = Eco-Zyklus jetzt starten, Preise steigen ab hier. 'fallend' = warten, günstigeres Fenster kommt. Kombiniere mit avg-Sensor: starte wenn Trend 'steigend' oder 'stabil' UND avg < dein Limit. Funktioniert in jeder Saison."
+        "price_outlook_3h": {
+            "description": "Preisausblick für die nächsten 3 Stunden",
+            "long_description": "Vergleicht deinen aktuellen Preis mit dem Durchschnitt aller Intervalle der nächsten 3 Stunden (12 Intervalle). 'steigend' = aktueller Preis liegt unter dem 3h-Fenster-Durchschnitt; 'fallend' = Fenster-Durchschnitt ist günstiger als jetzt. Steigend/fallend ab ±3%, stark ab ±9% (konfigurierbar, volatilitätsadaptiv).",
+            "usage_tips": "Eco-Programme: 'steigend' = Eco-Zyklus jetzt starten, Preise steigen im Fenster-Durchschnitt. 'fallend' = warten, günstigeres Fenster kommt. Kombiniere mit avg-Sensor: starte wenn Ausblick 'steigend' oder 'stabil' UND avg < dein Limit."
         },
-        "price_trend_4h": {
-            "description": "Preistrend für die nächsten 4 Stunden",
-            "long_description": "Vergleicht deinen aktuellen Preis mit dem Durchschnitt aller Intervalle der nächsten 4 Stunden (16 Intervalle) — das gesamte Zeitfenster ab jetzt, nicht nur der spätere Teil. Steigend/fallend ab ±3%, stark ab ±9% (konfigurierbar, volatilitätsadaptiv).",
-            "usage_tips": "Wärmepumpe/Batterie: 'steigend' = jetzt laden, du bist an einem relativen Tiefpunkt. 'fallend' = warten auf besseres Ladefenster. 'stabil' = laden nach Bedarf. Funktioniert unabhängig vom Preisniveau — findet relative beste Zeit ob 10 oder 50 Cent."
+        "price_outlook_4h": {
+            "description": "Preisausblick für die nächsten 4 Stunden",
+            "long_description": "Vergleicht deinen aktuellen Preis mit dem Durchschnitt aller Intervalle der nächsten 4 Stunden (16 Intervalle). 'steigend' = aktueller Preis liegt unter dem 4h-Fenster-Durchschnitt; 'fallend' = Fenster-Durchschnitt ist günstiger als jetzt. Steigend/fallend ab ±3%, stark ab ±9% (konfigurierbar, volatilitätsadaptiv).",
+            "usage_tips": "Wärmepumpe/Batterie: 'steigend' = jetzt laden, du bist an einem relativen Tiefpunkt. 'fallend' = warten auf besseres Fenster im Durchschnitt. Wichtig: 'stark fallend' an einem Preistief bedeutet das Fenster ist im Schnitt günstiger — kombiniere mit price_trajectory_4h um zu sehen ob die Preise noch fallen oder schon aufsteigen."
         },
-        "price_trend_5h": {
-            "description": "Preistrend für die nächsten 5 Stunden",
-            "long_description": "Vergleicht deinen aktuellen Preis mit dem Durchschnitt aller Intervalle der nächsten 5 Stunden (20 Intervalle) — das gesamte Zeitfenster ab jetzt, nicht nur der spätere Teil. Steigend/fallend ab ±3%, stark ab ±9% (konfigurierbar, volatilitätsadaptiv).",
-            "usage_tips": "Erweiterte Zyklen: 'steigend' oder 'stabil' = guter Zeitpunkt zum Starten, Preise werden nicht günstiger. 'fallend' = warten wenn dein Zeitplan es erlaubt. Passt sich dem Markt an — findet bestes relatives Timing in jedem Preisumfeld."
+        "price_outlook_5h": {
+            "description": "Preisausblick für die nächsten 5 Stunden",
+            "long_description": "Vergleicht deinen aktuellen Preis mit dem Durchschnitt aller Intervalle der nächsten 5 Stunden (20 Intervalle). 'steigend' = aktueller Preis liegt unter dem 5h-Fenster-Durchschnitt; 'fallend' = Fenster-Durchschnitt ist günstiger als jetzt. Steigend/fallend ab ±3%, stark ab ±9% (konfigurierbar, volatilitätsadaptiv).",
+            "usage_tips": "Erweiterte Zyklen: 'steigend' oder 'stabil' = guter Zeitpunkt zum Starten, Preise werden im Fenster-Schnitt nicht günstiger. 'fallend' = warten wenn dein Zeitplan es erlaubt."
         },
-        "price_trend_6h": {
-            "description": "Preistrend für die nächsten 6 Stunden",
-            "long_description": "Vergleicht deinen aktuellen Preis mit dem Durchschnitt aller Intervalle der nächsten 6 Stunden (24 Intervalle) — das gesamte Zeitfenster ab jetzt, nicht nur der spätere Teil. Steigend/fallend ab ±3%, stark ab ±9% (konfigurierbar, volatilitätsadaptiv).",
-            "usage_tips": "Abendentscheidungen: 'steigend' = Strom jetzt nutzen, solange er relativ günstig ist. 'fallend' = Abend-/Nachtpreise werden besser, warte wenn möglich. Passt sich automatisch an Winter/Sommer-Preisniveaus an — keine festen Schwellenwerte nötig."
+        "price_outlook_6h": {
+            "description": "Preisausblick für die nächsten 6 Stunden",
+            "long_description": "Vergleicht deinen aktuellen Preis mit dem Durchschnitt aller Intervalle der nächsten 6 Stunden (24 Intervalle). 'steigend' = aktueller Preis liegt unter dem 6h-Fenster-Durchschnitt; 'fallend' = Fenster-Durchschnitt ist günstiger als jetzt. Steigend/fallend ab ±3%, stark ab ±9% (konfigurierbar, volatilitätsadaptiv).",
+            "usage_tips": "Abendentscheidungen: 'steigend' = Strom jetzt nutzen, solange er relativ günstig ist. 'fallend' = Abend-/Nachtpreise werden im Durchschnitt besser, warte wenn möglich."
         },
-        "price_trend_8h": {
-            "description": "Preistrend für die nächsten 8 Stunden",
-            "long_description": "Vergleicht deinen aktuellen Preis mit dem Durchschnitt aller Intervalle der nächsten 8 Stunden (32 Intervalle) — das gesamte Zeitfenster ab jetzt, nicht nur der spätere Teil. Steigend/fallend ab ±3%, stark ab ±9% (konfigurierbar, volatilitätsadaptiv).",
-            "usage_tips": "Nachtplanung: 'steigend' = heute Nacht/morgen wird teurer, Strom jetzt nutzen. 'fallend' = Nachtpreise werden günstiger, Warten lohnt sich. 'stabil' = starte nach Bedarf. Funktioniert ganzjährig ohne manuelle Schwellenwert-Anpassungen."
+        "price_outlook_8h": {
+            "description": "Preisausblick für die nächsten 8 Stunden",
+            "long_description": "Vergleicht deinen aktuellen Preis mit dem Durchschnitt aller Intervalle der nächsten 8 Stunden (32 Intervalle). 'steigend' = aktueller Preis liegt unter dem 8h-Fenster-Durchschnitt; 'fallend' = Fenster-Durchschnitt ist günstiger als jetzt. Steigend/fallend ab ±3%, stark ab ±9% (konfigurierbar, volatilitätsadaptiv).",
+            "usage_tips": "Nachtplanung: 'steigend' = heute Nacht/morgen wird im Schnitt teurer, Strom jetzt nutzen. 'fallend' = Nachtpreise werden im Schnitt günstiger, Warten lohnt sich."
         },
-        "price_trend_12h": {
-            "description": "Preistrend für die nächsten 12 Stunden",
-            "long_description": "Vergleicht deinen aktuellen Preis mit dem Durchschnitt aller Intervalle der nächsten 12 Stunden (48 Intervalle) — das gesamte Zeitfenster ab jetzt, nicht nur der spätere Teil. Steigend/fallend ab ±3%, stark ab ±9% (konfigurierbar, volatilitätsadaptiv).",
-            "usage_tips": "Strategische Entscheidungen: 'steigend' = du bist an einem Tiefpunkt, guter Zeitpunkt für stromintensive Aufgaben. 'fallend' = deutlich bessere Preise kommen, warte wenn möglich. Am besten kombiniert mit avg-Sensor für absolute Preisobergrenzen."
+        "price_outlook_12h": {
+            "description": "Preisausblick für die nächsten 12 Stunden",
+            "long_description": "Vergleicht deinen aktuellen Preis mit dem Durchschnitt aller Intervalle der nächsten 12 Stunden (48 Intervalle). 'steigend' = aktueller Preis liegt unter dem 12h-Fenster-Durchschnitt; 'fallend' = Fenster-Durchschnitt ist günstiger als jetzt. Steigend/fallend ab ±3%, stark ab ±9% (konfigurierbar, volatilitätsadaptiv).",
+            "usage_tips": "Strategische Entscheidungen: 'steigend' = du bist an einem Tiefpunkt relativ zu den nächsten 12h, guter Zeitpunkt für stromintensive Aufgaben. 'fallend' = deutlich bessere Preise kommen im Schnitt, warte wenn möglich."
+        },
+        "price_trajectory_2h": {
+            "description": "Preisverlauf innerhalb des nächsten 2-Stunden-Fensters",
+            "long_description": "Compares the average of the first hour (4 intervals) with the average of the second hour (4 intervals) within the next 2-hour window. 'rising' = second half more expensive than first half — prices are climbing within the window. 'falling' = second half cheaper — prices are dropping within the window. Rising/falling at ±3%, strongly at ±9% (configurable, volatility-adaptive).",
+            "usage_tips": "At a price minimum: price_outlook_2h may show 'falling' (window average is below current), but price_trajectory_2h shows 'rising' (second half more expensive than first) — revealing the upcoming reversal. Power combination: 'outlook: falling + trajectory: rising' = you're AT the minimum, act now."
+        },
+        "price_trajectory_3h": {
+            "description": "Preisverlauf innerhalb des nächsten 3-Stunden-Fensters",
+            "long_description": "Compares the average of the first 1.5 hours with the average of the second 1.5 hours within the next 3-hour window. 'rising' = prices are climbing over the 3h window; 'falling' = prices are dropping. Reveals the direction of price movement independent of the current price level. Rising/falling at ±3%, strongly at ±9% (configurable, volatility-adaptive).",
+            "usage_tips": "Appliance timing: 'outlook: strongly_falling + trajectory: rising' = you're at or past the minimum, the window average is low but prices are already recovering — start now."
+        },
+        "price_trajectory_4h": {
+            "description": "Preisverlauf innerhalb des nächsten 4-Stunden-Fensters",
+            "long_description": "Compares the average of the first 2 hours with the average of the second 2 hours within the next 4-hour window. 'rising' = prices are climbing over the 4h window; 'falling' = prices are dropping. Complementary to price_outlook_4h: outlook answers 'is NOW cheap vs the window average?', trajectory answers 'are prices rising or falling within the window?'. Rising/falling at ±3%, strongly at ±9% (configurable, volatility-adaptive).",
+            "usage_tips": "Heat pump charging: 'rising' = first half window is cheaper, charge now before prices climb. 'falling' = second half window is cheaper, wait if you can. Combine with outlook: if both rising, very strong signal to act now."
+        },
+        "price_trajectory_5h": {
+            "description": "Preisverlauf innerhalb des nächsten 5-Stunden-Fensters",
+            "long_description": "Compares the average of the first 2.5 hours with the average of the second 2.5 hours within the next 5-hour window. 'rising' = prices are climbing over the 5h window; 'falling' = prices are dropping. Rising/falling at ±3%, strongly at ±9% (configurable, volatility-adaptive).",
+            "usage_tips": "Eco/long cycles: 'outlook: rising + trajectory: rising' = clear signal to start now. 'outlook: falling + trajectory: rising' = you're near the bottom, good time to start before costs climb."
+        },
+        "price_trajectory_6h": {
+            "description": "Preisverlauf innerhalb des nächsten 6-Stunden-Fensters",
+            "long_description": "Compares the average of the first 3 hours with the average of the second 3 hours within the next 6-hour window. 'rising' = prices are climbing over the 6h window; 'falling' = prices are dropping. Rising/falling at ±3%, strongly at ±9% (configurable, volatility-adaptive).",
+            "usage_tips": "Evening/overnight planning: 'falling' at evening peak = overnight will be cheaper, postpone. 'rising' in the morning = current morning prices are the day's low — good time for high consumption."
+        },
+        "price_trajectory_8h": {
+            "description": "Preisverlauf innerhalb des nächsten 8-Stunden-Fensters",
+            "long_description": "Compares the average of the first 4 hours with the average of the second 4 hours within the next 8-hour window. 'rising' = prices are climbing over the 8h window; 'falling' = prices are dropping. Rising/falling at ±3%, strongly at ±9% (configurable, volatility-adaptive).",
+            "usage_tips": "Overnight charging: 'rising' during evening = first half of night is cheapest, start charging earlier. 'falling' = second half of night will be cheapest, delay start."
+        },
+        "price_trajectory_12h": {
+            "description": "Preisverlauf innerhalb des nächsten 12-Stunden-Fensters",
+            "long_description": "Compares the average of the first 6 hours with the average of the second 6 hours within the next 12-hour window. 'rising' = prices are climbing over the 12h window; 'falling' = prices are dropping. Rising/falling at ±3%, strongly at ±9% (configurable, volatility-adaptive).",
+            "usage_tips": "Day-ahead planning: 'rising' at midnight = first half of day is cheaper, schedule morning loads. 'falling' = prices drop in the second part of the day, afternoon/evening scheduling is better."
         },
         "current_price_trend": {
             "description": "Aktuelle Preistrend-Richtung und wie lange sie anhält",

@@ -619,8 +619,8 @@
             "next_avg_12h": {
                 "name": "⌀ Prijs Komende 12u"
             },
-            "price_trend_1h": {
-                "name": "Prijstrend (1u)",
+            "price_outlook_1h": {
+                "name": "Prijsvooruitzicht (1u)",
                 "state": {
                     "strongly_rising": "Sterk stijgend",
                     "rising": "Stijgend",
@@ -629,8 +629,8 @@
                     "strongly_falling": "Sterk dalend"
                 }
             },
-            "price_trend_2h": {
-                "name": "Prijstrend (2u)",
+            "price_outlook_2h": {
+                "name": "Prijsvooruitzicht (2u)",
                 "state": {
                     "strongly_rising": "Sterk stijgend",
                     "rising": "Stijgend",
@@ -639,8 +639,8 @@
                     "strongly_falling": "Sterk dalend"
                 }
             },
-            "price_trend_3h": {
-                "name": "Prijstrend (3u)",
+            "price_outlook_3h": {
+                "name": "Prijsvooruitzicht (3u)",
                 "state": {
                     "strongly_rising": "Sterk stijgend",
                     "rising": "Stijgend",
@@ -649,8 +649,8 @@
                     "strongly_falling": "Sterk dalend"
                 }
             },
-            "price_trend_4h": {
-                "name": "Prijstrend (4u)",
+            "price_outlook_4h": {
+                "name": "Prijsvooruitzicht (4u)",
                 "state": {
                     "strongly_rising": "Sterk stijgend",
                     "rising": "Stijgend",
@@ -659,8 +659,8 @@
                     "strongly_falling": "Sterk dalend"
                 }
             },
-            "price_trend_5h": {
-                "name": "Prijstrend (5u)",
+            "price_outlook_5h": {
+                "name": "Prijsvooruitzicht (5u)",
                 "state": {
                     "strongly_rising": "Sterk stijgend",
                     "rising": "Stijgend",
@@ -669,8 +669,8 @@
                     "strongly_falling": "Sterk dalend"
                 }
             },
-            "price_trend_6h": {
-                "name": "Prijstrend (6u)",
+            "price_outlook_6h": {
+                "name": "Prijsvooruitzicht (6u)",
                 "state": {
                     "strongly_rising": "Sterk stijgend",
                     "rising": "Stijgend",
@@ -679,8 +679,8 @@
                     "strongly_falling": "Sterk dalend"
                 }
             },
-            "price_trend_8h": {
-                "name": "Prijstrend (8u)",
+            "price_outlook_8h": {
+                "name": "Prijsvooruitzicht (8u)",
                 "state": {
                     "strongly_rising": "Sterk stijgend",
                     "rising": "Stijgend",
@@ -689,8 +689,78 @@
                     "strongly_falling": "Sterk dalend"
                 }
             },
-            "price_trend_12h": {
-                "name": "Prijstrend (12u)",
+            "price_outlook_12h": {
+                "name": "Prijsvooruitzicht (12u)",
+                "state": {
+                    "strongly_rising": "Sterk stijgend",
+                    "rising": "Stijgend",
+                    "stable": "Stabiel",
+                    "falling": "Dalend",
+                    "strongly_falling": "Sterk dalend"
+                }
+            },
+            "price_trajectory_2h": {
+                "name": "Prijstrajectorie (2u)",
+                "state": {
+                    "strongly_rising": "Sterk stijgend",
+                    "rising": "Stijgend",
+                    "stable": "Stabiel",
+                    "falling": "Dalend",
+                    "strongly_falling": "Sterk dalend"
+                }
+            },
+            "price_trajectory_3h": {
+                "name": "Prijstrajectorie (3u)",
+                "state": {
+                    "strongly_rising": "Sterk stijgend",
+                    "rising": "Stijgend",
+                    "stable": "Stabiel",
+                    "falling": "Dalend",
+                    "strongly_falling": "Sterk dalend"
+                }
+            },
+            "price_trajectory_4h": {
+                "name": "Prijstrajectorie (4u)",
+                "state": {
+                    "strongly_rising": "Sterk stijgend",
+                    "rising": "Stijgend",
+                    "stable": "Stabiel",
+                    "falling": "Dalend",
+                    "strongly_falling": "Sterk dalend"
+                }
+            },
+            "price_trajectory_5h": {
+                "name": "Prijstrajectorie (5u)",
+                "state": {
+                    "strongly_rising": "Sterk stijgend",
+                    "rising": "Stijgend",
+                    "stable": "Stabiel",
+                    "falling": "Dalend",
+                    "strongly_falling": "Sterk dalend"
+                }
+            },
+            "price_trajectory_6h": {
+                "name": "Prijstrajectorie (6u)",
+                "state": {
+                    "strongly_rising": "Sterk stijgend",
+                    "rising": "Stijgend",
+                    "stable": "Stabiel",
+                    "falling": "Dalend",
+                    "strongly_falling": "Sterk dalend"
+                }
+            },
+            "price_trajectory_8h": {
+                "name": "Prijstrajectorie (8u)",
+                "state": {
+                    "strongly_rising": "Sterk stijgend",
+                    "rising": "Stijgend",
+                    "stable": "Stabiel",
+                    "falling": "Dalend",
+                    "strongly_falling": "Sterk dalend"
+                }
+            },
+            "price_trajectory_12h": {
+                "name": "Prijstrajectorie (12u)",
                 "state": {
                     "strongly_rising": "Sterk stijgend",
                     "rising": "Stijgend",

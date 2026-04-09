@@ -227,45 +227,80 @@
             "long_description": "Toont de gemiddelde prijs voor de volgende 48 intervallen (12 uur) vanaf het volgende 15-minuten interval.",
             "usage_tips": "Absolute prijsdrempel: Strategische beslissingen met prijslimieten. Ga alleen door als 12u gemiddelde onder je maximaal acceptabele prijs is. Goed voor uitgestelde grote belastingen."
         },
-        "price_trend_1h": {
-            "description": "Prijstrend voor het volgende uur",
-            "long_description": "Vergelijkt je huidige prijs met het gemiddelde van alle intervallen in het volgende uur (4 intervallen). Alle trendsensoren (1u–12u) delen hetzelfde uitgangspunt: je huidige prijs — ze verschillen alleen in venstergrootte. Grotere vensters omvatten meer toekomstige uren en vlakken kortstondige pieken af. Stijgend/dalend bij ±3%, sterk bij ±9% (configureerbaar, volatiliteitsadaptief).",
-            "usage_tips": "Beslissingshulp: 'stijgend' = HANDEL NU, je huidige prijs is goedkoper dan het volgende uur. 'dalend' = WACHT, goedkopere prijzen komen. 'stabiel' = timing maakt niet uit. Veelvoorkomend misverstand: 'stijgend' betekent NIET 'te laat' — het betekent dat nu een goede prijs is! Werkt onafhankelijk van absoluut prijsniveau."
+        "price_outlook_1h": {
+            "description": "Prijsvooruitzicht voor het volgende uur",
+            "long_description": "Vergelijkt je huidige prijs met het gemiddelde van alle intervallen in het volgende uur (4 intervallen). Alle vooruitzicht-sensoren (1u–12u) delen hetzelfde uitgangspunt: je huidige prijs — ze verschillen alleen in venstergrootte. Stijgend/dalend bij ±3%, sterk bij ±9% (configureerbaar, volatiliteitsadaptief).",
+            "usage_tips": "Beslissingshulp: 'stijgend' = HANDEL NU, je huidige prijs is goedkoper dan het venstergemiddelde. 'dalend' = WACHT, het venstergemiddelde is goedkoper dan nu. 'stabiel' = timing maakt niet uit."
         },
-        "price_trend_2h": {
-            "description": "Prijstrend voor de volgende 2 uur",
-            "long_description": "Vergelijkt je huidige prijs met het gemiddelde van alle intervallen in de volgende 2 uur (8 intervallen) — het hele venster vanaf nu, niet alleen het latere deel. Stijgend/dalend bij ±3%, sterk bij ±9% (configureerbaar, volatiliteitsadaptief).",
-            "usage_tips": "Apparaten: 'stijgend' = start nu, je hebt een goede prijs. 'dalend' = betere prijzen komen over 2u, stel uit indien mogelijk. 'stabiel' = maakt niet uit, start wanneer het uitkomt. Wacht niet op 'stabiel' — bij 'stijgend' is NU het beste moment."
+        "price_outlook_2h": {
+            "description": "Prijsvooruitzicht voor de volgende 2 uur",
+            "long_description": "Vergelijkt je huidige prijs met het gemiddelde van alle intervallen in de volgende 2 uur (8 intervallen). 'stijgend' = huidige prijs is onder het 2u-venstergemiddelde; 'dalend' = venstergemiddelde is goedkoper dan nu. Stijgend/dalend bij ±3%, sterk bij ±9% (configureerbaar, volatiliteitsadaptief).",
+            "usage_tips": "Apparaten: 'stijgend' = start nu, je hebt een goede prijs t.o.v. de volgende 2u. 'dalend' = betere gemiddelde prijzen komen, stel uit indien mogelijk. Combineer met price_trajectory_2h om te onderscheiden of prijzen nog dalen of al stijgen."
         },
-        "price_trend_3h": {
-            "description": "Prijstrend voor de volgende 3 uur",
-            "long_description": "Vergelijkt je huidige prijs met het gemiddelde van alle intervallen in de volgende 3 uur (12 intervallen) — het hele venster vanaf nu, niet alleen het latere deel. Stijgend/dalend bij ±3%, sterk bij ±9% (configureerbaar, volatiliteitsadaptief).",
-            "usage_tips": "Eco-programma's: 'stijgend' = start de eco-cyclus nu, prijzen stijgen vanaf hier. 'dalend' = wacht, goedkoper venster komt. Combineer met avg-sensor: start wanneer trend 'stijgend' of 'stabiel' EN avg < je limiet. Werkt in elk seizoen."
+        "price_outlook_3h": {
+            "description": "Prijsvooruitzicht voor de volgende 3 uur",
+            "long_description": "Vergelijkt je huidige prijs met het gemiddelde van alle intervallen in de volgende 3 uur (12 intervallen). 'stijgend' = huidige prijs is onder het 3u-venstergemiddelde; 'dalend' = venstergemiddelde is goedkoper dan nu. Stijgend/dalend bij ±3%, sterk bij ±9%.",
+            "usage_tips": "Eco-programma's: 'stijgend' = start de eco-cyclus nu, prijzen zijn gemiddeld hoger in het venster. 'dalend' = wacht, goedkoper gemiddeld venster komt."
         },
-        "price_trend_4h": {
-            "description": "Prijstrend voor de volgende 4 uur",
-            "long_description": "Vergelijkt je huidige prijs met het gemiddelde van alle intervallen in de volgende 4 uur (16 intervallen) — het hele venster vanaf nu, niet alleen het latere deel. Stijgend/dalend bij ±3%, sterk bij ±9% (configureerbaar, volatiliteitsadaptief).",
-            "usage_tips": "Warmtepomp/batterij: 'stijgend' = laad nu, je zit op een relatief dieptepunt. 'dalend' = wacht op beter laadvenster. 'stabiel' = laad wanneer nodig. Werkt ongeacht prijsniveau — vindt relatief beste tijd of prijzen nu 10 of 50 cent zijn."
+        "price_outlook_4h": {
+            "description": "Prijsvooruitzicht voor de volgende 4 uur",
+            "long_description": "Vergelijkt je huidige prijs met het gemiddelde van alle intervallen in de volgende 4 uur (16 intervallen). 'stijgend' = huidige prijs is onder het 4u-venstergemiddelde; 'dalend' = venstergemiddelde is goedkoper dan nu. Stijgend/dalend bij ±3%, sterk bij ±9%.",
+            "usage_tips": "Warmtepomp/batterij: 'stijgend' = laad nu, je zit op een relatief dieptepunt. Combineer met price_trajectory_4h om te zien of prijzen nog dalen of al stijgen."
         },
-        "price_trend_5h": {
-            "description": "Prijstrend voor de volgende 5 uur",
-            "long_description": "Vergelijkt je huidige prijs met het gemiddelde van alle intervallen in de volgende 5 uur (20 intervallen) — het hele venster vanaf nu, niet alleen het latere deel. Stijgend/dalend bij ±3%, sterk bij ±9% (configureerbaar, volatiliteitsadaptief).",
-            "usage_tips": "Uitgebreide cycli: 'stijgend' of 'stabiel' = goed moment om te starten, prijzen worden niet goedkoper. 'dalend' = wacht als je planning het toelaat. Past zich aan de markt aan — vindt beste relatieve timing in elke prijsomgeving."
+        "price_outlook_5h": {
+            "description": "Prijsvooruitzicht voor de volgende 5 uur",
+            "long_description": "Vergelijkt je huidige prijs met het gemiddelde van alle intervallen in de volgende 5 uur (20 intervallen). 'stijgend' = huidige prijs is onder het 5u-venstergemiddelde; 'dalend' = venstergemiddelde is goedkoper dan nu. Stijgend/dalend bij ±3%, sterk bij ±9%.",
+            "usage_tips": "Uitgebreide cycli: 'stijgend' of 'stabiel' = goed moment om te starten. 'dalend' = wacht als je planning het toelaat."
         },
-        "price_trend_6h": {
-            "description": "Prijstrend voor de volgende 6 uur",
-            "long_description": "Vergelijkt je huidige prijs met het gemiddelde van alle intervallen in de volgende 6 uur (24 intervallen) — het hele venster vanaf nu, niet alleen het latere deel. Stijgend/dalend bij ±3%, sterk bij ±9% (configureerbaar, volatiliteitsadaptief).",
-            "usage_tips": "Avandbeslissingen: 'stijgend' = gebruik stroom nu terwijl het relatief goedkoop is. 'dalend' = avond-/nachtprijzen worden beter, wacht indien mogelijk. Past automatisch aan winter/zomer prijsniveaus aan — geen vaste drempels nodig."
+        "price_outlook_6h": {
+            "description": "Prijsvooruitzicht voor de volgende 6 uur",
+            "long_description": "Vergelijkt je huidige prijs met het gemiddelde van alle intervallen in de volgende 6 uur (24 intervallen). 'stijgend' = huidige prijs is onder het 6u-venstergemiddelde; 'dalend' = venstergemiddelde is goedkoper dan nu. Stijgend/dalend bij ±3%, sterk bij ±9%.",
+            "usage_tips": "Avandbeslissingen: 'stijgend' = gebruik stroom nu terwijl het relatief goedkoop is. 'dalend' = avond-/nachtprijzen worden gemiddeld beter, wacht indien mogelijk."
         },
-        "price_trend_8h": {
-            "description": "Prijstrend voor de volgende 8 uur",
-            "long_description": "Vergelijkt je huidige prijs met het gemiddelde van alle intervallen in de volgende 8 uur (32 intervallen) — het hele venster vanaf nu, niet alleen het latere deel. Stijgend/dalend bij ±3%, sterk bij ±9% (configureerbaar, volatiliteitsadaptief).",
-            "usage_tips": "Nachtplanning: 'stijgend' = vanavond/morgen wordt duurder, gebruik stroom nu. 'dalend' = nachtprijzen worden goedkoper, wachten loont. 'stabiel' = start wanneer het uitkomt. Werkt het hele jaar door zonder handmatige drempelaanpassingen."
+        "price_outlook_8h": {
+            "description": "Prijsvooruitzicht voor de volgende 8 uur",
+            "long_description": "Vergelijkt je huidige prijs met het gemiddelde van alle intervallen in de volgende 8 uur (32 intervallen). 'stijgend' = huidige prijs is onder het 8u-venstergemiddelde; 'dalend' = venstergemiddelde is goedkoper dan nu. Stijgend/dalend bij ±3%, sterk bij ±9%.",
+            "usage_tips": "Nachtplanning: 'stijgend' = vanavond/morgen wordt gemiddeld duurder, gebruik stroom nu. 'dalend' = nachtprijzen worden goedkoper, wachten loont."
         },
-        "price_trend_12h": {
-            "description": "Prijstrend voor de komende 12 uur",
-            "long_description": "Vergelijkt je huidige prijs met het gemiddelde van alle intervallen in de komende 12 uur (48 intervallen) — het hele venster vanaf nu, niet alleen het latere deel. Stijgend/dalend bij ±3%, sterk bij ±9% (configureerbaar, volatiliteitsadaptief).",
-            "usage_tips": "Strategische beslissingen: 'stijgend' = je zit op een dieptepunt, goed moment voor stroomintensieve taken. 'dalend' = aanzienlijk betere prijzen komen, wacht indien mogelijk. Het beste gecombineerd met avg-sensor voor absolute prijslimieten."
+        "price_outlook_12h": {
+            "description": "Prijsvooruitzicht voor de komende 12 uur",
+            "long_description": "Vergelijkt je huidige prijs met het gemiddelde van alle intervallen in de komende 12 uur (48 intervallen). 'stijgend' = huidige prijs is onder het 12u-venstergemiddelde; 'dalend' = venstergemiddelde is goedkoper dan nu. Stijgend/dalend bij ±3%, sterk bij ±9%.",
+            "usage_tips": "Strategische beslissingen: 'stijgend' = je zit op een dieptepunt t.o.v. de volgende 12u, goed moment voor stroomintensieve taken. 'dalend' = aanzienlijk betere gemiddelde prijzen komen."
+        },
+        "price_trajectory_2h": {
+            "description": "Prijsrichting binnen het volgende 2-uurs venster",
+            "long_description": "Compares the average of the first hour with the average of the second hour within the next 2-hour window. 'rising' = second half more expensive than first half. 'falling' = second half cheaper. Rising/falling at ±3%, strongly at ±9% (configurable, volatility-adaptive).",
+            "usage_tips": "At a price minimum: price_outlook_2h may show 'falling' (window average is below current), but price_trajectory_2h shows 'rising' (second half more expensive) — revealing the upcoming reversal. 'outlook: falling + trajectory: rising' = you're AT the minimum, act now."
+        },
+        "price_trajectory_3h": {
+            "description": "Prijsrichting binnen het volgende 3-uurs venster",
+            "long_description": "Compares the average of the first 1.5 hours with the average of the second 1.5 hours within the next 3-hour window. 'rising' = prices are climbing; 'falling' = prices are dropping. Rising/falling at ±3%, strongly at ±9%.",
+            "usage_tips": "Appliance timing: 'outlook: strongly_falling + trajectory: rising' = you're at or past the minimum, prices are already recovering — start now."
+        },
+        "price_trajectory_4h": {
+            "description": "Prijsrichting binnen het volgende 4-uurs venster",
+            "long_description": "Compares the average of the first 2 hours with the average of the second 2 hours within the next 4-hour window. 'rising' = prices are climbing; 'falling' = prices are dropping. Complements price_outlook_4h. Rising/falling at ±3%, strongly at ±9%.",
+            "usage_tips": "Heat pump charging: 'rising' = first half is cheaper, charge now. 'falling' = second half is cheaper, wait. Combine with outlook: if both rising, very strong signal to act now."
+        },
+        "price_trajectory_5h": {
+            "description": "Prijsrichting binnen het volgende 5-uurs venster",
+            "long_description": "Compares the average of the first 2.5 hours with the average of the second 2.5 hours within the next 5-hour window. 'rising' = prices are climbing; 'falling' = prices are dropping. Rising/falling at ±3%, strongly at ±9%.",
+            "usage_tips": "Long cycles: 'outlook: rising + trajectory: rising' = clear signal to start now. 'outlook: falling + trajectory: rising' = you're near the bottom, good time to start."
+        },
+        "price_trajectory_6h": {
+            "description": "Prijsrichting binnen het volgende 6-uurs venster",
+            "long_description": "Compares the average of the first 3 hours with the average of the second 3 hours within the next 6-hour window. 'rising' = prices are climbing; 'falling' = prices are dropping. Rising/falling at ±3%, strongly at ±9%.",
+            "usage_tips": "Evening/overnight planning: 'falling' at evening peak = overnight will be cheaper, postpone. 'rising' in the morning = current morning prices are the low."
+        },
+        "price_trajectory_8h": {
+            "description": "Prijsrichting binnen het volgende 8-uurs venster",
+            "long_description": "Compares the average of the first 4 hours with the average of the second 4 hours within the next 8-hour window. 'rising' = prices are climbing; 'falling' = prices are dropping. Rising/falling at ±3%, strongly at ±9%.",
+            "usage_tips": "Overnight charging: 'rising' during evening = first half of night is cheapest, start charging earlier. 'falling' = second half will be cheapest, delay start."
+        },
+        "price_trajectory_12h": {
+            "description": "Prijsrichting binnen het volgende 12-uurs venster",
+            "long_description": "Compares the average of the first 6 hours with the average of the second 6 hours within the next 12-hour window. 'rising' = prices are climbing; 'falling' = prices are dropping. Rising/falling at ±3%, strongly at ±9%.",
+            "usage_tips": "Day-ahead planning: 'rising' at midnight = first half of day is cheaper, schedule morning loads. 'falling' = afternoon/evening scheduling is better."
         },
         "current_price_trend": {
             "description": "Huidige prijstrend-richting en hoe lang deze aanhoudt",
@@ -275,7 +310,7 @@
         "next_price_trend_change": {
             "description": "Wanneer de volgende significante prijstrendwijziging zal plaatsvinden",
             "long_description": "Scant de komende 24 uur (96 intervallen) om te vinden wanneer de prijstrend-richting zal veranderen. Alleen richtingswijzigingen tellen: stijgend/sterk stijgend vormen één groep, dalend/sterk dalend een andere, stabiel is apart. Een verandering van stijgend naar sterk stijgend is GEEN trendwijziging. Gebruikt volatiliteit-adaptieve drempelwaarden (standaard: ±3%/±9%) met hysterese (standaard: 3 opeenvolgende intervallen). Retourneert het tijdstempel wanneer de wijziging wordt verwacht.",
-            "usage_tips": "Gebeurtenisgestuurde automatisering: Trigger acties WANNEER trend wijzigt, niet OVER X uur. Voorbeeld: 'Laad EV wanneer volgende trendwijziging dalende prijzen toont' of 'Start vaatwasser voordat prijzen stijgen'. Vult tijdvenster-sensors aan (price_trend_Xh) die beantwoorden 'ZULLEN prijzen over X uur hoger zijn?'"
+            "usage_tips": "Gebeurtenisgestuurde automatisering: Trigger acties WANNEER trend wijzigt, niet OVER X uur. Voorbeeld: 'Laad EV wanneer volgende trendwijziging dalende prijzen toont' of 'Start vaatwasser voordat prijzen stijgen'. Vult tijdvenster-sensors aan (price_outlook_Xh) die beantwoorden 'ZULLEN prijzen over X uur hoger zijn?'"
         },
         "trend_change_in_minutes": {
             "description": "Tijd tot de volgende prijstrendwijziging",
