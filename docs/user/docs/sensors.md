@@ -552,32 +552,35 @@ automation:
 
 ## Trend Sensors
 
-Trend sensors help you understand **where prices are heading**. They answer the question: "Should I use electricity now, or wait?"
+Trend sensors help you understand **whether to act now or wait**. The integration provides two complementary families:
 
-The integration provides two families of trend sensors for different use cases:
+- **Price Outlook Sensors (1h–12h):** Compare current price vs. future window average — "Is now cheaper than the next Nh on average?"
+- **Price Trajectory Sensors (2h–12h):** Compare first half vs. second half of the window — "Are prices rising or falling *within* the window?"
 
-### Simple Trend Sensors (1h–12h)
+### Price Outlook Sensors (1h–12h)
 
 These sensors compare the **current price** with the **average price** of the next N hours:
 
 | Sensor | Compares Against |
 |--------|-----------------|
-| **Price Trend (1h)** | Average of next 1 hour |
-| **Price Trend (2h)** | Average of next 2 hours |
-| **Price Trend (3h)** | Average of next 3 hours |
-| **Price Trend (4h)** | Average of next 4 hours |
-| **Price Trend (5h)** | Average of next 5 hours |
-| **Price Trend (6h)** | Average of next 6 hours |
-| **Price Trend (8h)** | Average of next 8 hours |
-| **Price Trend (12h)** | Average of next 12 hours |
+| **Price Outlook (1h)** | Average of next 1 hour |
+| **Price Outlook (2h)** | Average of next 2 hours |
+| **Price Outlook (3h)** | Average of next 3 hours |
+| **Price Outlook (4h)** | Average of next 4 hours |
+| **Price Outlook (5h)** | Average of next 5 hours |
+| **Price Outlook (6h)** | Average of next 6 hours |
+| **Price Outlook (8h)** | Average of next 8 hours |
+| **Price Outlook (12h)** | Average of next 12 hours |
 
-:::info Same Starting Point — All Sensors Use Your Current Price
-All trend sensors share the **same base: your current 15-minute price**. They differ only in how far ahead they average. The windows **overlap** — the 3h average includes ALL intervals from the 1h and 2h windows, plus one more hour.
+:::info Same Starting Point — All Outlook Sensors Use Your Current Price
+All outlook sensors share the **same base: your current 15-minute price**. They differ only in how far ahead they average. The windows **overlap** — the 3h average includes ALL intervals from the 1h and 2h windows, plus one more hour.
 
 **This means:**
-- `price_trend_3h` shows "current price vs. average of the **entire** next 3 hours" — **not** "what happens between hour 2 and hour 3"
+- `price_outlook_3h` shows "current price vs. average of the **entire** next 3 hours" — **not** "what happens between hour 2 and hour 3"
 - If 1h shows `falling` but 6h shows `rising`: near-term prices are below your current price, but looking at the full 6h window (which includes expensive evening hours), the overall average is above your current price
 - Larger windows smooth out short-term fluctuations — a 30-minute price spike affects the 1h average more than the 6h average
+
+**⚠️ At a price minimum, outlook sensors can be misleading!** If you're at the minimum and prices are about to rise, `price_outlook_3h` may still show `strongly_falling` because the cheap minimum pulls the 3h average below your current high price. Use `price_trajectory_3h` to see the direction *within* the window.
 :::
 
 **States:** Each sensor has one of five states:
@@ -625,6 +628,42 @@ stateDiagram-v2
 | `volatility_factor` | Applied multiplier (0.6 = low, 1.0 = moderate, 1.4 = high volatility) | `0.8` |
 
 **Tip:** The `trend_value` attribute (`-2` to `+2`) is ideal for automations — use numeric comparisons instead of matching translated state strings.
+
+### Price Trajectory Sensors (2h–12h)
+
+These sensors compare the **first half** of the future window against the **second half** — revealing the price *direction within* the window.
+
+| Sensor | Compares |
+|--------|----------|
+| **Price Trajectory (2h)** | Avg of hour 1 vs avg of hour 2 |
+| **Price Trajectory (3h)** | Avg of first 1.5h vs avg of second 1.5h |
+| **Price Trajectory (4h)** | Avg of first 2h vs avg of second 2h |
+| **Price Trajectory (5h)** | Avg of first 2.5h vs avg of second 2.5h |
+| **Price Trajectory (6h)** | Avg of first 3h vs avg of second 3h |
+| **Price Trajectory (8h)** | Avg of first 4h vs avg of second 4h |
+| **Price Trajectory (12h)** | Avg of first 6h vs avg of second 6h |
+
+**States:** Same 5-level scale as outlook sensors (`strongly_falling` → `strongly_rising`).
+
+:::info Why trajectory sensors complement outlook sensors
+**At a price minimum** — the exact moment you should act — `price_outlook_3h` may show `strongly_falling` because the cheap minimum pulls the entire 3h average below your current high price. But `price_trajectory_3h` shows `rising` because the second half (after the minimum) is more expensive than the first half.
+
+| Combination | Interpretation |
+|-------------|----------------|
+| Outlook `falling` + Trajectory `rising` | **You're AT the minimum** — act now |
+| Outlook `falling` + Trajectory `falling` | Prices still dropping — wait |
+| Outlook `rising` + Trajectory `rising` | Strong signal to act now |
+| Outlook `rising` + Trajectory `falling` | Short spike, then cheaper — wait |
+:::
+
+**Key attributes:**
+
+| Attribute | Description | Example |
+|-----------|-------------|---------|
+| `trend_value` | Numeric value for automations (-2 to +2) | `1` |
+| `first_half_avg` | Average price in first half of window | `12.4` |
+| `second_half_avg` | Average price in second half of window | `18.1` |
+| `half_diff_%` | Percentage difference (second vs first half) | `46.0` |
 
 ### Current Price Trend
 
@@ -701,16 +740,16 @@ A natural intuition is to treat trend states like a stock ticker:
 
 #### Basic Automation Pattern
 
-For most appliances (dishwasher, washing machine, dryer), a single trend sensor is enough:
+For most appliances (dishwasher, washing machine, dryer), a single outlook sensor is enough:
 
 ```yaml
 # Example: Start dishwasher when prices are favorable
 trigger:
   - platform: state
-    entity_id: sensor.my_home_price_trend_3h
+    entity_id: sensor.my_home_price_outlook_3h
 condition:
   - condition: numeric_state
-    entity_id: sensor.my_home_price_trend_3h
+    entity_id: sensor.my_home_price_outlook_3h
     attribute: trend_value
     # rising (1) or strongly_rising (2) = act now
     above: 0
@@ -724,7 +763,7 @@ action:
 
 When short-term and long-term trends disagree, you get richer insight:
 
-| 1h Trend | 6h Trend | Interpretation | Recommendation |
+| 1h Outlook | 6h Outlook | Interpretation | Recommendation |
 |----------|----------|---------------|----------------|
 | `rising` | `rising` | Prices going up across the board | **Start now** |
 | `falling` | `falling` | Prices dropping across the board | **Wait** |
@@ -740,12 +779,12 @@ On your dashboard, trend sensors give an instant overview:
 - 🔴 All **rising/strongly_rising** → "Start everything you can — it only gets more expensive"
 - 🟡 **Mixed** → Compare short-term vs. long-term sensors, or check the Best Price Period sensor
 
-### Trend Sensors vs Average Sensors
+### Outlook & Trajectory Sensors vs Average Sensors
 
 Both sensor families provide future price information, but serve different purposes:
 
-| | Trend Sensors | Average Sensors |
-|--|---------------|-----------------|
+| | Outlook/Trajectory Sensors | Average Sensors |
+|--|---------------------------|-----------------|
 | **Purpose** | Dashboard display, quick visual overview | Automations, precise numeric comparisons |
 | **Output** | Classification (falling/stable/rising) | Exact price values (ct/kWh) |
 | **Best for** | "Should I worry about prices?" | "Is the future average below 15 ct?" |

@@ -124,14 +124,14 @@ automation:
           # Conditions: Prices are falling AND we're approaching cheap levels
           - condition: template
             value_template: >
-                {% set trend_value = state_attr('sensor.<home_name>_price_trend_3h', 'trend_value') | int(0) %}
+                {% set trend_value = state_attr('sensor.<home_name>_price_outlook_3h', 'trend_value') | int(0) %}
                 {% set level = state_attr('sensor.<home_name>_current_electricity_price', 'rating_level') %}
                 {{ trend_value <= -1 and level in ['CHEAP', 'NORMAL'] }}
           # AND: The next 3 hours will be cheaper on average
           - condition: template
             value_template: >
                 {% set current = states('sensor.<home_name>_current_electricity_price') | float %}
-                {% set future_avg = state_attr('sensor.<home_name>_price_trend_3h', 'next_3h_avg') | float %}
+                {% set future_avg = state_attr('sensor.<home_name>_price_outlook_3h', 'next_3h_avg') | float %}
                 {{ future_avg < current }}
       action:
           - service: water_heater.set_temperature
@@ -189,9 +189,9 @@ automation:
           Falling = current price is HIGHER than future average = wait.
       trigger:
           - platform: state
-            entity_id: sensor.<home_name>_price_trend_1h
+            entity_id: sensor.<home_name>_price_outlook_1h
           - platform: state
-            entity_id: sensor.<home_name>_price_trend_6h
+            entity_id: sensor.<home_name>_price_outlook_6h
       condition:
           # Only consider if best price period is NOT active
           # (if it IS active, a separate automation handles it)
@@ -204,8 +204,8 @@ automation:
                 - conditions:
                       - condition: template
                         value_template: >
-                            {% set t1 = state_attr('sensor.<home_name>_price_trend_1h', 'trend_value') | int(0) %}
-                            {% set t6 = state_attr('sensor.<home_name>_price_trend_6h', 'trend_value') | int(0) %}
+                            {% set t1 = state_attr('sensor.<home_name>_price_outlook_1h', 'trend_value') | int(0) %}
+                            {% set t6 = state_attr('sensor.<home_name>_price_outlook_6h', 'trend_value') | int(0) %}
                             {{ t1 >= 1 and t6 >= 1 }}
                   sequence:
                       - service: climate.set_temperature
@@ -217,8 +217,8 @@ automation:
                 - conditions:
                       - condition: template
                         value_template: >
-                            {% set t1 = state_attr('sensor.<home_name>_price_trend_1h', 'trend_value') | int(0) %}
-                            {% set t6 = state_attr('sensor.<home_name>_price_trend_6h', 'trend_value') | int(0) %}
+                            {% set t1 = state_attr('sensor.<home_name>_price_outlook_1h', 'trend_value') | int(0) %}
+                            {% set t6 = state_attr('sensor.<home_name>_price_outlook_6h', 'trend_value') | int(0) %}
                             {{ t1 <= -1 and t6 >= 1 }}
                   sequence:
                       # Short-term dip — wait for it to bottom out
@@ -231,7 +231,7 @@ automation:
                 - conditions:
                       - condition: template
                         value_template: >
-                            {% set t6 = state_attr('sensor.<home_name>_price_trend_6h', 'trend_value') | int(0) %}
+                            {% set t6 = state_attr('sensor.<home_name>_price_outlook_6h', 'trend_value') | int(0) %}
                             {{ t6 <= -1 }}
                   sequence:
                       - service: climate.set_temperature
@@ -414,8 +414,8 @@ automation:
       action:
           # Compare different future windows to find cheapest start
           - variables:
-              next_2h: "{{ state_attr('sensor.<home_name>_price_trend_2h', 'next_2h_avg') | float(999) }}"
-              next_4h: "{{ state_attr('sensor.<home_name>_price_trend_4h', 'next_4h_avg') | float(999) }}"
+              next_2h: "{{ state_attr('sensor.<home_name>_price_outlook_2h', 'next_2h_avg') | float(999) }}"
+              next_4h: "{{ state_attr('sensor.<home_name>_price_outlook_4h', 'next_4h_avg') | float(999) }}"
               daily_avg: "{{ state_attr('sensor.<home_name>_price_today', 'price_median') | float(999) }}"
           - service: notify.mobile_app
             data:

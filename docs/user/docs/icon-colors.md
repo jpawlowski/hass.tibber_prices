@@ -43,7 +43,7 @@ Many sensors provide the `icon_color` attribute for dynamic styling. To see if a
 -   Price level sensors (e.g., `current_price_level`)
 -   Price rating sensors (e.g., `current_price_rating`)
 -   Volatility sensors (e.g., `today_s_price_volatility`)
--   Price trend sensors (e.g., `price_trend_3h`)
+-   Price outlook sensors (e.g., `price_outlook_3h`)
 -   Binary sensors (e.g., `best_price_period`, `peak_price_period`)
 -   Timing sensors (e.g., `best_price_time_until_start`, `best_price_progress`)
 
@@ -282,8 +282,8 @@ cards:
                           ]]]
 
           - type: custom:button-card
-            entity: sensor.<home_name>_price_trend_3h
-            name: Next 3h Trend
+            entity: sensor.<home_name>_price_outlook_3h
+            name: Next 3h Outlook
             show_state: true
             styles:
                 icon:
