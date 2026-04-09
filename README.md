@@ -1,7 +1,7 @@
 # Tibber Prices - Custom Home Assistant Integration
 
 <p align="center">
-  <img src="images/header.svg" alt="Tibber Prices Custom Integration for Tibber" width="600">
+  <img src="https://raw.githubusercontent.com/jpawlowski/hass.tibber_prices/main/images/header.svg" alt="Tibber Prices Custom Integration for Tibber" width="600">
 </p>
 
 [![GitHub Release][releases-shield]][releases]
@@ -11,7 +11,7 @@
 [![hacs][hacsbadge]][hacs]
 [![Project Maintenance][maintenance-shield]][user_profile]
 
-<a href="https://www.buymeacoffee.com/jpawlowski" target="_blank"><img src="images/bmc-button.svg" alt="Buy Me A Coffee" height="41" width="174"></a>
+<a href="https://www.buymeacoffee.com/jpawlowski" target="_blank"><img src="https://raw.githubusercontent.com/jpawlowski/hass.tibber_prices/main/images/bmc-button.svg" alt="Buy Me A Coffee" height="41" width="174"></a>
 
 > **⚠️ Not affiliated with Tibber**
 > This is an independent, community-maintained custom integration for Home Assistant. It is **not** an official Tibber product and is **not** affiliated with or endorsed by Tibber AS.
@@ -332,7 +332,7 @@ template:
 
 All sensors feature dynamic icons that change based on price levels, providing instant visual feedback in your dashboards.
 
-<img src="docs/user/static/img/entities-overview.jpg" width="400" alt="Entity list showing dynamic icons for different price states">
+<img src="https://raw.githubusercontent.com/jpawlowski/hass.tibber_prices/main/docs/user/static/img/entities-overview.jpg" width="400" alt="Entity list showing dynamic icons for different price states">
 
 _Dynamic icons adapt to price levels, trends, and period states - showing CHEAP prices, FALLING trend, and active Best Price Period_
 
@@ -352,7 +352,7 @@ The integration provides custom actions (they still appear as services under the
 
 The integration includes built-in support for creating price visualization cards with automatic Y-axis scaling and color-coded series.
 
-<img src="docs/user/static/img/charts/rolling-window.jpg" width="600" alt="Example: Dynamic 48h rolling window chart">
+<img src="https://raw.githubusercontent.com/jpawlowski/hass.tibber_prices/main/docs/user/static/img/charts/rolling-window.jpg" width="600" alt="Example: Dynamic 48h rolling window chart">
 
 _Optional: Dynamic 48h chart with automatic Y-axis scaling - generated via `get_apexcharts_yaml` action_
 
