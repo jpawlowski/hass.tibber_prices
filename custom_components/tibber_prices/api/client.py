@@ -230,12 +230,12 @@ class TibberPricesApiClient:
                         priceInfoRange(resolution:QUARTER_HOURLY, first:192, after: "{cursor}") {{
                             pageInfo{{ count }}
                             edges{{node{{
-                                startsAt total level
+                                startsAt total energy tax level
                             }}}}
                         }}
                         priceInfo(resolution:QUARTER_HOURLY) {{
-                            today{{startsAt total level}}
-                            tomorrow{{startsAt total level}}
+                            today{{startsAt total energy tax level}}
+                            tomorrow{{startsAt total energy tax level}}
                         }}
                     }}
                 }}
@@ -500,7 +500,7 @@ class TibberPricesApiClient:
                             edges{{
                                 cursor
                                 node{{
-                                    startsAt total level
+                                    startsAt total energy tax level
                                 }}
                             }}
                         }}

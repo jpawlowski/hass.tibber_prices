@@ -103,6 +103,8 @@ def aggregate_to_hourly(  # noqa: PLR0912
 
         # Collect 5-interval rolling window: -2, -1, 0, +1, +2
         window_prices: list[float] = []
+        window_energy_prices: list[float] = []
+        window_tax_prices: list[float] = []
         window_intervals: list[dict] = []
 
         for offset in range(-2, 3):  # -2, -1, 0, +1, +2
@@ -113,6 +115,12 @@ def aggregate_to_hourly(  # noqa: PLR0912
                 if price is not None:
                     window_prices.append(price)
                     window_intervals.append(target_interval)
+                    energy = target_interval.get("energy")
+                    tax = target_interval.get("tax")
+                    if energy is not None:
+                        window_energy_prices.append(energy)
+                    if tax is not None:
+                        window_tax_prices.append(tax)
 
         # Calculate aggregated price based on user preference
         if window_prices:
@@ -126,6 +134,20 @@ def aggregate_to_hourly(  # noqa: PLR0912
                 "startsAt": start_time,
                 "total": aggregated_price,
             }
+
+            # Add aggregated energy and tax prices
+            if window_energy_prices:
+                aggregated_energy = (
+                    calculate_median(window_energy_prices) if use_median else calculate_mean(window_energy_prices)
+                )
+                if aggregated_energy is not None:
+                    data_point["energy"] = aggregated_energy
+            if window_tax_prices:
+                aggregated_tax = (
+                    calculate_median(window_tax_prices) if use_median else calculate_mean(window_tax_prices)
+                )
+                if aggregated_tax is not None:
+                    data_point["tax"] = aggregated_tax
 
             # Add aggregated level
             if window_intervals:
