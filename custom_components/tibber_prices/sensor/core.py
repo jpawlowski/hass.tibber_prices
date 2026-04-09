@@ -326,7 +326,7 @@ class TibberPricesSensor(TibberPricesEntity, RestoreSensor):
         self.coordinator.time = time_service
 
         # Clear cached trend values on time-sensitive updates
-        if self.entity_description.key.startswith("price_trend_"):
+        if self.entity_description.key.startswith(("price_outlook_", "price_trajectory_")):
             self._trend_calculator.clear_trend_cache()
         # Clear trend calculation cache for trend sensors
         elif self.entity_description.key in (
@@ -366,7 +366,7 @@ class TibberPricesSensor(TibberPricesEntity, RestoreSensor):
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
         # Clear cached trend values when coordinator data changes
-        if self.entity_description.key.startswith("price_trend_"):
+        if self.entity_description.key.startswith(("price_outlook_", "price_trajectory_")):
             self._trend_calculator.clear_trend_cache()
             # Also clear calculation cache (e.g., when threshold config changes)
             self._trend_calculator.clear_calculation_cache()
@@ -1140,6 +1140,7 @@ class TibberPricesSensor(TibberPricesEntity, RestoreSensor):
         cached_data.update(
             {
                 "trend_attributes": self._trend_calculator.get_trend_attributes(),
+                "trajectory_attributes": self._trend_calculator.get_trajectory_attributes(),
                 "current_trend_attributes": self._trend_calculator.get_current_trend_attributes(),
                 "trend_change_attributes": self._trend_calculator.get_trend_change_attributes(),
                 "volatility_attributes": self._volatility_calculator.get_volatility_attributes(),

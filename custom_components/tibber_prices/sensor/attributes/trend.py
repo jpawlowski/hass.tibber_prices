@@ -28,8 +28,10 @@ def _add_timing_or_volatility_attributes(
 
 def _add_cached_trend_attributes(attributes: dict, key: str, cached_data: dict) -> None:
     """Add cached trend attributes if available."""
-    if key.startswith("price_trend_") and cached_data.get("trend_attributes"):
+    if key.startswith("price_outlook_") and cached_data.get("trend_attributes"):
         attributes.update(cached_data["trend_attributes"])
+    elif key.startswith("price_trajectory_") and cached_data.get("trajectory_attributes"):
+        attributes.update(cached_data["trajectory_attributes"])
     elif key == "current_price_trend" and cached_data.get("current_trend_attributes"):
         # Add cached attributes (timestamp already set by platform)
         attributes.update(cached_data["current_trend_attributes"])

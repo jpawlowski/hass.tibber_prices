@@ -529,11 +529,11 @@ FUTURE_TREND_SENSORS = (
         suggested_display_precision=2,
         entity_registry_enabled_default=True,
     ),
-    # Price trend forecast sensors (will prices be higher/lower in X hours?)
+    # Price outlook forecast sensors (is the average of the next Xh cheaper/more expensive than now?)
     # Default enabled: 1h-5h
     SensorEntityDescription(
-        key="price_trend_1h",
-        translation_key="price_trend_1h",
+        key="price_outlook_1h",
+        translation_key="price_outlook_1h",
         icon="mdi:trending-up",  # Dynamic: shows trending-up/trending-down/trending-neutral based on trend value
         device_class=SensorDeviceClass.ENUM,
         state_class=None,  # Enum values: no statistics
@@ -541,8 +541,8 @@ FUTURE_TREND_SENSORS = (
         entity_registry_enabled_default=True,
     ),
     SensorEntityDescription(
-        key="price_trend_2h",
-        translation_key="price_trend_2h",
+        key="price_outlook_2h",
+        translation_key="price_outlook_2h",
         icon="mdi:trending-up",  # Dynamic: shows trending-up/trending-down/trending-neutral based on trend value
         device_class=SensorDeviceClass.ENUM,
         state_class=None,  # Enum values: no statistics
@@ -550,8 +550,8 @@ FUTURE_TREND_SENSORS = (
         entity_registry_enabled_default=True,
     ),
     SensorEntityDescription(
-        key="price_trend_3h",
-        translation_key="price_trend_3h",
+        key="price_outlook_3h",
+        translation_key="price_outlook_3h",
         icon="mdi:trending-up",  # Dynamic: shows trending-up/trending-down/trending-neutral based on trend value
         device_class=SensorDeviceClass.ENUM,
         state_class=None,  # Enum values: no statistics
@@ -559,8 +559,8 @@ FUTURE_TREND_SENSORS = (
         entity_registry_enabled_default=True,
     ),
     SensorEntityDescription(
-        key="price_trend_4h",
-        translation_key="price_trend_4h",
+        key="price_outlook_4h",
+        translation_key="price_outlook_4h",
         icon="mdi:trending-up",  # Dynamic: shows trending-up/trending-down/trending-neutral based on trend value
         device_class=SensorDeviceClass.ENUM,
         state_class=None,  # Enum values: no statistics
@@ -568,8 +568,8 @@ FUTURE_TREND_SENSORS = (
         entity_registry_enabled_default=True,
     ),
     SensorEntityDescription(
-        key="price_trend_5h",
-        translation_key="price_trend_5h",
+        key="price_outlook_5h",
+        translation_key="price_outlook_5h",
         icon="mdi:trending-up",  # Dynamic: shows trending-up/trending-down/trending-neutral based on trend value
         device_class=SensorDeviceClass.ENUM,
         state_class=None,  # Enum values: no statistics
@@ -578,8 +578,8 @@ FUTURE_TREND_SENSORS = (
     ),
     # Disabled by default: 6h, 8h, 12h
     SensorEntityDescription(
-        key="price_trend_6h",
-        translation_key="price_trend_6h",
+        key="price_outlook_6h",
+        translation_key="price_outlook_6h",
         icon="mdi:trending-up",  # Dynamic: shows trending-up/trending-down/trending-neutral based on trend value
         device_class=SensorDeviceClass.ENUM,
         state_class=None,  # Enum values: no statistics
@@ -587,8 +587,8 @@ FUTURE_TREND_SENSORS = (
         entity_registry_enabled_default=False,
     ),
     SensorEntityDescription(
-        key="price_trend_8h",
-        translation_key="price_trend_8h",
+        key="price_outlook_8h",
+        translation_key="price_outlook_8h",
         icon="mdi:trending-up",  # Dynamic: shows trending-up/trending-down/trending-neutral based on trend value
         device_class=SensorDeviceClass.ENUM,
         state_class=None,  # Enum values: no statistics
@@ -596,8 +596,89 @@ FUTURE_TREND_SENSORS = (
         entity_registry_enabled_default=False,
     ),
     SensorEntityDescription(
-        key="price_trend_12h",
-        translation_key="price_trend_12h",
+        key="price_outlook_12h",
+        translation_key="price_outlook_12h",
+        icon="mdi:trending-up",  # Dynamic: shows trending-up/trending-down/trending-neutral based on trend value
+        device_class=SensorDeviceClass.ENUM,
+        state_class=None,  # Enum values: no statistics
+        options=["strongly_falling", "falling", "stable", "rising", "strongly_rising"],
+        entity_registry_enabled_default=False,
+    ),
+)
+
+# ----------------------------------------------------------------------------
+# 5b. PRICE TRAJECTORY SENSORS (first-half vs second-half window comparison)
+# ----------------------------------------------------------------------------
+# These sensors reveal turning points: is the price rising or falling WITHIN
+# the window? Complements price_outlook_Xh sensors.
+#
+# Example at a price minimum (12:00):
+# - price_outlook_4h: "strongly_falling" (Ø next 4h is below current high)
+# - price_trajectory_4h: "rising" (second half avg > first half avg)
+# → Combined: act now, reversal is coming within the window.
+#
+# Coverage starts at 2h (minimum for meaningful first/second half split).
+# Default enabled: 2h-5h
+
+PRICE_TRAJECTORY_SENSORS = (
+    SensorEntityDescription(
+        key="price_trajectory_2h",
+        translation_key="price_trajectory_2h",
+        icon="mdi:trending-up",  # Dynamic: shows trending-up/trending-down/trending-neutral based on trend value
+        device_class=SensorDeviceClass.ENUM,
+        state_class=None,  # Enum values: no statistics
+        options=["strongly_falling", "falling", "stable", "rising", "strongly_rising"],
+        entity_registry_enabled_default=True,
+    ),
+    SensorEntityDescription(
+        key="price_trajectory_3h",
+        translation_key="price_trajectory_3h",
+        icon="mdi:trending-up",  # Dynamic: shows trending-up/trending-down/trending-neutral based on trend value
+        device_class=SensorDeviceClass.ENUM,
+        state_class=None,  # Enum values: no statistics
+        options=["strongly_falling", "falling", "stable", "rising", "strongly_rising"],
+        entity_registry_enabled_default=True,
+    ),
+    SensorEntityDescription(
+        key="price_trajectory_4h",
+        translation_key="price_trajectory_4h",
+        icon="mdi:trending-up",  # Dynamic: shows trending-up/trending-down/trending-neutral based on trend value
+        device_class=SensorDeviceClass.ENUM,
+        state_class=None,  # Enum values: no statistics
+        options=["strongly_falling", "falling", "stable", "rising", "strongly_rising"],
+        entity_registry_enabled_default=True,
+    ),
+    SensorEntityDescription(
+        key="price_trajectory_5h",
+        translation_key="price_trajectory_5h",
+        icon="mdi:trending-up",  # Dynamic: shows trending-up/trending-down/trending-neutral based on trend value
+        device_class=SensorDeviceClass.ENUM,
+        state_class=None,  # Enum values: no statistics
+        options=["strongly_falling", "falling", "stable", "rising", "strongly_rising"],
+        entity_registry_enabled_default=True,
+    ),
+    # Disabled by default: 6h, 8h, 12h
+    SensorEntityDescription(
+        key="price_trajectory_6h",
+        translation_key="price_trajectory_6h",
+        icon="mdi:trending-up",  # Dynamic: shows trending-up/trending-down/trending-neutral based on trend value
+        device_class=SensorDeviceClass.ENUM,
+        state_class=None,  # Enum values: no statistics
+        options=["strongly_falling", "falling", "stable", "rising", "strongly_rising"],
+        entity_registry_enabled_default=False,
+    ),
+    SensorEntityDescription(
+        key="price_trajectory_8h",
+        translation_key="price_trajectory_8h",
+        icon="mdi:trending-up",  # Dynamic: shows trending-up/trending-down/trending-neutral based on trend value
+        device_class=SensorDeviceClass.ENUM,
+        state_class=None,  # Enum values: no statistics
+        options=["strongly_falling", "falling", "stable", "rising", "strongly_rising"],
+        entity_registry_enabled_default=False,
+    ),
+    SensorEntityDescription(
+        key="price_trajectory_12h",
+        translation_key="price_trajectory_12h",
         icon="mdi:trending-up",  # Dynamic: shows trending-up/trending-down/trending-neutral based on trend value
         device_class=SensorDeviceClass.ENUM,
         state_class=None,  # Enum values: no statistics
@@ -970,6 +1051,7 @@ ENTITY_DESCRIPTIONS = (
     *WINDOW_24H_SENSORS,
     *FUTURE_MEAN_SENSORS,
     *FUTURE_TREND_SENSORS,
+    *PRICE_TRAJECTORY_SENSORS,
     *VOLATILITY_SENSORS,
     *BEST_PRICE_TIMING_SENSORS,
     *PEAK_PRICE_TIMING_SENSORS,

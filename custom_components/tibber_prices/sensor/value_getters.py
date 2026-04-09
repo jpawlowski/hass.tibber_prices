@@ -206,15 +206,23 @@ def get_value_getter_mapping(  # noqa: PLR0913 - needs all calculators as parame
         "current_price_trend": trend_calculator.get_current_trend_value,
         "next_price_trend_change": trend_calculator.get_next_trend_change_value,
         "trend_change_in_minutes": lambda: _minutes_to_hours(trend_calculator.get_trend_change_in_minutes_value()),
-        # Price trend sensors
-        "price_trend_1h": lambda: trend_calculator.get_price_trend_value(hours=1),
-        "price_trend_2h": lambda: trend_calculator.get_price_trend_value(hours=2),
-        "price_trend_3h": lambda: trend_calculator.get_price_trend_value(hours=3),
-        "price_trend_4h": lambda: trend_calculator.get_price_trend_value(hours=4),
-        "price_trend_5h": lambda: trend_calculator.get_price_trend_value(hours=5),
-        "price_trend_6h": lambda: trend_calculator.get_price_trend_value(hours=6),
-        "price_trend_8h": lambda: trend_calculator.get_price_trend_value(hours=8),
-        "price_trend_12h": lambda: trend_calculator.get_price_trend_value(hours=12),
+        # Price outlook sensors (current price vs average of next Xh)
+        "price_outlook_1h": lambda: trend_calculator.get_price_outlook_value(hours=1),
+        "price_outlook_2h": lambda: trend_calculator.get_price_outlook_value(hours=2),
+        "price_outlook_3h": lambda: trend_calculator.get_price_outlook_value(hours=3),
+        "price_outlook_4h": lambda: trend_calculator.get_price_outlook_value(hours=4),
+        "price_outlook_5h": lambda: trend_calculator.get_price_outlook_value(hours=5),
+        "price_outlook_6h": lambda: trend_calculator.get_price_outlook_value(hours=6),
+        "price_outlook_8h": lambda: trend_calculator.get_price_outlook_value(hours=8),
+        "price_outlook_12h": lambda: trend_calculator.get_price_outlook_value(hours=12),
+        # Price trajectory sensors (first-half vs second-half window, reveals turning points)
+        "price_trajectory_2h": lambda: trend_calculator.get_price_trajectory_value(hours=2),
+        "price_trajectory_3h": lambda: trend_calculator.get_price_trajectory_value(hours=3),
+        "price_trajectory_4h": lambda: trend_calculator.get_price_trajectory_value(hours=4),
+        "price_trajectory_5h": lambda: trend_calculator.get_price_trajectory_value(hours=5),
+        "price_trajectory_6h": lambda: trend_calculator.get_price_trajectory_value(hours=6),
+        "price_trajectory_8h": lambda: trend_calculator.get_price_trajectory_value(hours=8),
+        "price_trajectory_12h": lambda: trend_calculator.get_price_trajectory_value(hours=12),
         # Diagnostic sensors
         "data_timestamp": get_data_timestamp,
         # Data lifecycle status sensor

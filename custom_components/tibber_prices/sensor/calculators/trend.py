@@ -2,13 +2,14 @@
 Trend calculator for price trend analysis sensors.
 
 This module handles all trend-related calculations:
-- Simple price trends (1h-12h future comparison)
+- Price outlook (1h-12h): Current price vs average of the next N hours
+- Price trajectory (2h-12h): First-half vs second-half average in the window (shows turning points)
 - Current trend (pure future-based 3h outlook with volatility adjustment)
 - Next trend change prediction (with configurable N-interval hysteresis, default 3)
 - Trend duration tracking (lightweight price direction scan with noise tolerance)
 
 Caching strategy:
-- Simple trends: Cached per sensor update to ensure consistency between state and attributes
+- Outlook/Trajectory: Cached per sensor update to ensure consistency between state and attributes
 - Current trend + next change: Cached centrally for 60s to avoid duplicate calculations
 """
 
@@ -31,7 +32,7 @@ if TYPE_CHECKING:
     )
 
 # Constants
-MIN_HOURS_FOR_LATER_HALF = 3  # Minimum hours needed to calculate later half average
+MIN_HOURS_FOR_LATER_HALF = 1  # Minimum hours needed to calculate half-window averages (activates at 2h+)
 
 
 class TibberPricesTrendCalculator(TibberPricesBaseCalculator):
@@ -39,9 +40,10 @@ class TibberPricesTrendCalculator(TibberPricesBaseCalculator):
     Calculator for price trend sensors.
 
     Handles three types of trend analysis:
-    1. Simple trends (price_trend_1h-12h): Current vs next N hours average
-    2. Current trend (current_price_trend): Pure future-based 3h outlook with volatility adjustment
-    3. Next change (next_price_trend_change): Scan forward with configurable N-interval hysteresis (default 3)
+    1. Outlook sensors (price_outlook_1h-12h): Current vs next N hours average
+    2. Trajectory sensors (price_trajectory_2h-12h): First half vs second half of window
+    3. Current trend (current_price_trend): Pure future-based 3h outlook with volatility adjustment
+    4. Next change (next_price_trend_change): Scan forward with configurable N-interval hysteresis (default 3)
 
     Caching:
     - Simple trends: Per-sensor cache (_cached_trend_value, _trend_attributes)
@@ -62,9 +64,10 @@ class TibberPricesTrendCalculator(TibberPricesBaseCalculator):
     def __init__(self, coordinator: "TibberPricesDataUpdateCoordinator") -> None:
         """Initialize trend calculator with caching state."""
         super().__init__(coordinator)
-        # Per-sensor trend caches (for price_trend_Nh sensors)
+        # Per-sensor caches (for price_outlook_Xh and price_trajectory_Xh sensors)
         self._cached_trend_value: str | None = None
         self._trend_attributes: dict[str, Any] = {}
+        self._trajectory_attributes: dict[str, Any] = {}
         # Centralized trend calculation cache (for current_price_trend + next_price_trend_change)
         self._trend_calculation_cache: dict[str, Any] | None = None
         self._trend_calculation_timestamp: datetime | None = None
@@ -72,11 +75,12 @@ class TibberPricesTrendCalculator(TibberPricesBaseCalculator):
         self._current_trend_attributes: dict[str, Any] | None = None
         self._trend_change_attributes: dict[str, Any] | None = None
 
-    def get_price_trend_value(self, *, hours: int) -> str | None:
+    def get_price_outlook_value(self, *, hours: int) -> str | None:
         """
-        Calculate price trend comparing current interval vs next N hours average.
+        Calculate price outlook comparing current interval vs average of the next N hours.
 
-        This is for simple trend sensors (price_trend_1h through price_trend_12h).
+        This is for price_outlook_Xh sensors. Answers: "Is the average of the next Xh
+        cheaper or more expensive than right now?"
         Results are cached per sensor to ensure consistency between state and attributes.
 
         Args:
@@ -284,9 +288,130 @@ class TibberPricesTrendCalculator(TibberPricesBaseCalculator):
 
         return trend_info["minutes_until_change"]
 
+    def get_price_trajectory_value(self, *, hours: int) -> str | None:
+        """
+        Calculate price trajectory by comparing first-half vs second-half window average.
+
+        This is for price_trajectory_Xh sensors. Answers: "Are prices rising or falling
+        within the next Xh window?" — revealing turning points that price_outlook_Xh misses.
+
+        Example at a price minimum (12:00):
+        - price_outlook_4h: "strongly_falling" (Ø next 4h is below current high)
+        - price_trajectory_4h: "rising" (second half is more expensive than first half)
+        → Combined signal: act now, reversal is coming within the window.
+
+        Args:
+            hours: Number of hours in the window (must be >= 2)
+
+        Returns:
+            Trend state: "rising" | "falling" | "stable", or None if unavailable
+
+        """
+        if hours < 2:  # noqa: PLR2004
+            return None
+
+        if not self.has_data():
+            return None
+
+        current_interval = self.coordinator.get_current_interval()
+        if not current_interval or "total" not in current_interval:
+            return None
+
+        current_interval_price = float(current_interval["total"])
+        time = self.coordinator.time
+        current_starts_at = time.get_interval_time(current_interval)
+        if current_starts_at is None:
+            return None
+
+        next_interval_start = time.get_next_interval_start()
+
+        # Get first-half and second-half averages
+        first_half_avg = self._calculate_first_half_average(hours, next_interval_start)
+        second_half_avg = self._calculate_later_half_average(hours, next_interval_start)
+
+        if first_half_avg is None or second_half_avg is None:
+            return None
+
+        # Get configured thresholds (same as outlook sensors for consistency)
+        threshold_rising = self.config.get("price_trend_threshold_rising", 3.0)
+        threshold_falling = self.config.get("price_trend_threshold_falling", -3.0)
+        threshold_strongly_rising = self.config.get("price_trend_threshold_strongly_rising", 9.0)
+        threshold_strongly_falling = self.config.get("price_trend_threshold_strongly_falling", -9.0)
+        volatility_threshold_moderate = self.config.get("volatility_threshold_moderate", 15.0)
+        volatility_threshold_high = self.config.get("volatility_threshold_high", 30.0)
+        min_abs_diff = self.config.get("price_trend_min_price_change", 0.005)
+        min_abs_diff_strongly = self.config.get("price_trend_min_price_change_strongly", 0.015)
+
+        # Build volatility window from full outlook period
+        today_prices = self.intervals_today
+        tomorrow_prices = self.intervals_tomorrow
+        all_intervals = today_prices + tomorrow_prices
+        lookahead_intervals = self.coordinator.time.minutes_to_intervals(hours * 60)
+
+        current_idx = None
+        for idx, interval in enumerate(all_intervals):
+            if time.get_interval_time(interval) == current_starts_at:
+                current_idx = idx
+                break
+
+        if current_idx is not None:
+            volatility_window = all_intervals[current_idx : current_idx + lookahead_intervals]
+        else:
+            volatility_window = all_intervals[:lookahead_intervals]
+
+        # Compare first half vs second half: does price rise or fall across the window?
+        trajectory_state, diff_pct, trend_value, vol_factor = calculate_price_trend(
+            first_half_avg,
+            second_half_avg,
+            threshold_rising=threshold_rising,
+            threshold_falling=threshold_falling,
+            threshold_strongly_rising=threshold_strongly_rising,
+            threshold_strongly_falling=threshold_strongly_falling,
+            min_abs_diff=min_abs_diff,
+            min_abs_diff_strongly=min_abs_diff_strongly,
+            volatility_adjustment=True,
+            lookahead_intervals=lookahead_intervals,
+            all_intervals=volatility_window,
+            volatility_threshold_moderate=volatility_threshold_moderate,
+            volatility_threshold_high=volatility_threshold_high,
+        )
+
+        factor = get_display_unit_factor(self.config_entry)
+        time_obj = self.coordinator.time
+        total_intervals = time_obj.minutes_to_intervals(hours * 60)
+        first_half_count = total_intervals // 2
+        second_half_count = total_intervals - first_half_count
+
+        self._trajectory_attributes = {
+            "timestamp": next_interval_start,
+            "trend_value": trend_value,
+            f"trajectory_{hours}h_%": round(diff_pct, 1),
+            f"first_half_{hours}h_avg": round(first_half_avg * factor, 2),
+            f"second_half_{hours}h_avg": round(second_half_avg * factor, 2),
+            f"first_half_{hours}h_diff_from_current_%": round(
+                ((first_half_avg - current_interval_price) / abs(current_interval_price)) * 100, 1
+            )
+            if current_interval_price != 0
+            else None,
+            f"second_half_{hours}h_diff_from_current_%": round(
+                ((second_half_avg - current_interval_price) / abs(current_interval_price)) * 100, 1
+            )
+            if current_interval_price != 0
+            else None,
+            "first_half_interval_count": first_half_count,
+            "second_half_interval_count": second_half_count,
+            "volatility_factor": vol_factor,
+        }
+
+        return trajectory_state
+
     def get_trend_attributes(self) -> dict[str, Any]:
-        """Get cached trend attributes for simple trend sensors (price_trend_Nh)."""
+        """Get cached outlook attributes for price_outlook_Xh sensors."""
         return self._trend_attributes
+
+    def get_trajectory_attributes(self) -> dict[str, Any]:
+        """Get cached trajectory attributes for price_trajectory_Xh sensors."""
+        return self._trajectory_attributes
 
     def get_current_trend_attributes(self) -> dict[str, Any] | None:
         """Get cached attributes for current_price_trend sensor."""
@@ -297,9 +422,10 @@ class TibberPricesTrendCalculator(TibberPricesBaseCalculator):
         return self._trend_change_attributes
 
     def clear_trend_cache(self) -> None:
-        """Clear simple trend cache (called on coordinator update)."""
+        """Clear outlook/trajectory trend cache (called on coordinator update)."""
         self._cached_trend_value = None
         self._trend_attributes = {}
+        self._trajectory_attributes = {}
 
     def clear_calculation_cache(self) -> None:
         """Clear centralized trend calculation cache (called on coordinator update)."""
@@ -309,6 +435,54 @@ class TibberPricesTrendCalculator(TibberPricesBaseCalculator):
     # ========================================================================
     # PRIVATE HELPER METHODS
     # ========================================================================
+
+    def _calculate_first_half_average(self, hours: int, next_interval_start: datetime) -> float | None:
+        """
+        Calculate average price for the first half of the future time window.
+
+        This is the counterpart to _calculate_later_half_average and together they
+        enable trajectory calculation (first half vs second half comparison).
+
+        Args:
+            hours: Total hours in the prediction window
+            next_interval_start: Start timestamp of the next interval
+
+        Returns:
+            Average price for the first half intervals, or None if insufficient data
+
+        """
+        if not self.has_data():
+            return None
+
+        today_prices = self.intervals_today
+        tomorrow_prices = self.intervals_tomorrow
+        all_prices = today_prices + tomorrow_prices
+
+        if not all_prices:
+            return None
+
+        time = self.coordinator.time
+        total_intervals = time.minutes_to_intervals(hours * 60)
+        first_half_intervals = total_intervals // 2
+        interval_duration = time.get_interval_duration()
+        first_half_end = next_interval_start + (interval_duration * first_half_intervals)
+
+        # Collect prices in the first half: [next_interval_start, first_half_end)
+        first_prices = []
+        for price_data in all_prices:
+            starts_at = time.get_interval_time(price_data)
+            if starts_at is None:
+                continue
+
+            if next_interval_start <= starts_at < first_half_end:
+                price = price_data.get("total")
+                if price is not None:
+                    first_prices.append(float(price))
+
+        if first_prices:
+            return calculate_mean(first_prices)
+
+        return None
 
     def _calculate_later_half_average(self, hours: int, next_interval_start: datetime) -> float | None:
         """
