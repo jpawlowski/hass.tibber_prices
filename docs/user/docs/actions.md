@@ -134,7 +134,7 @@ data:
 
 For detailed parameter descriptions, open **Developer Tools → Actions** (the UI label) and select `tibber_prices.get_chartdata`. The inline documentation is still stored in `services.yaml` because actions are backed by services.
 
-#### Energy & Tax Fields in get_chartdata {#energy--tax-fields-in-get_chartdata}
+#### Energy & Tax Fields in get_chartdata
 
 You can include the raw energy price (spot price) and/or tax component in chart data output. This is useful for visualizing how the total price is composed over time, or for feed-in calculations.
 

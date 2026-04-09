@@ -551,7 +551,7 @@ chips:
 
 ### In Chart Data Actions
 
-The `energy_price` and `tax` fields are also available in the `get_chartdata` action. See [Actions — Energy & Tax Fields](#energy--tax-fields-in-get_chartdata) for details.
+The `energy_price` and `tax` fields are also available in the `get_chartdata` action. See [Actions — Energy & Tax Fields](./actions.md#energy--tax-fields-in-get_chartdata) for details.
 
 ## Timing Sensors
 
