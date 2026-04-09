@@ -313,7 +313,7 @@ After successful refactoring:
 -   Platform modules: `__init__.py`, `sensor.py` (deprecated, now `sensor/`), `binary_sensor.py` (deprecated, now `binary_sensor/`), future platforms
 -   Core integration files: `const.py`, `manifest.json`, `services.yaml`, `diagnostics.py`, `data.py`
 -   Translation directories: `translations/`, `custom_translations/`
--   Brand images: `brand/` (icon.png, dark_icon.png, logo.png, dark_logo.png + `@2x` variants) — served via HA brands proxy API (HA ≥ 2026.3), silently ignored on older versions
+-   Brand images: `brand/` (icon.png, dark_icon.png, logo.png, dark_logo.png + `@2x` variants) — served via HA brands proxy API (HA ≥ 2026.4), silently ignored on older versions
 
 **❌ PROHIBITED in root:**
 -   Utility modules (use `/utils/` package instead)
