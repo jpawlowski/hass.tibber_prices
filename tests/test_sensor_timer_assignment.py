@@ -143,7 +143,7 @@ def test_future_mean_sensors_use_quarter_hour_timer() -> None:
 
 def test_trend_sensors_use_quarter_hour_timer() -> None:
     """
-    Test that price trend sensors use Timer #2.
+    Test that price outlook/trajectory sensors use Timer #2.
 
     Trend analysis depends on current interval position and
     needs updates at quarter-hour boundaries.
@@ -151,14 +151,21 @@ def test_trend_sensors_use_quarter_hour_timer() -> None:
     trend_sensors = [
         "current_price_trend",
         "next_price_trend_change",
-        "price_trend_1h",
-        "price_trend_2h",
-        "price_trend_3h",
-        "price_trend_4h",
-        "price_trend_5h",
-        "price_trend_6h",
-        "price_trend_8h",
-        "price_trend_12h",
+        "price_outlook_1h",
+        "price_outlook_2h",
+        "price_outlook_3h",
+        "price_outlook_4h",
+        "price_outlook_5h",
+        "price_outlook_6h",
+        "price_outlook_8h",
+        "price_outlook_12h",
+        "price_trajectory_2h",
+        "price_trajectory_3h",
+        "price_trajectory_4h",
+        "price_trajectory_5h",
+        "price_trajectory_6h",
+        "price_trajectory_8h",
+        "price_trajectory_12h",
     ]
 
     for sensor_key in trend_sensors:
