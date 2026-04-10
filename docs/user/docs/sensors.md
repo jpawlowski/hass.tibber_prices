@@ -549,6 +549,10 @@ chips:
           🏛️ {{ state_attr('sensor.<home_name>_price_today', 'tax_mean') | round(1) }} ct
 ```
 
+### Country-Specific Calculations
+
+The composition of the `tax` field varies by country (Norway, Sweden, Germany, Netherlands each have different fee structures). For detailed examples of how to build country-specific calculations using `input_number` helpers and template sensors — including **Dutch solar feed-in compensation (saldering)** — see the **[Community Examples](community-examples.md#country-specific-price-calculations)** page.
+
 ### In Chart Data Actions
 
 The `energy_price` and `tax` fields are also available in the `get_chartdata` action. See [Actions — Energy & Tax Fields](./actions.md#energy--tax-fields-in-get_chartdata) for details.

@@ -52,7 +52,14 @@ const sidebars: SidebarsConfig = {
     },
     {
       type: 'category',
-      label: '🔧 Help & Support',
+      label: '� Community',
+      items: ['community-examples'],
+      collapsible: true,
+      collapsed: false,
+    },
+    {
+      type: 'category',
+      label: '�🔧 Help & Support',
       items: ['faq', 'troubleshooting'],
       collapsible: true,
       collapsed: false,
