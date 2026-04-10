@@ -1049,6 +1049,10 @@
         "home_not_found": {
             "title": "Zuhause {home_name} nicht im Tibber-Konto gefunden",
             "description": "Das in dieser Integration konfigurierte Zuhause (Eintrag-ID: {entry_id}) ist nicht mehr in deinem Tibber-Konto verfügbar. Dies passiert normalerweise, wenn:\n- Das Zuhause aus deinem Tibber-Konto gelöscht wurde\n- Das Zuhause zu einem anderen Tibber-Konto verschoben wurde\n- Der Zugriff auf dieses Zuhause widerrufen wurde\n\nBitte entferne diesen Integrationseintrag und füge ihn erneut hinzu, falls das Zuhause weiterhin überwacht werden soll. Um diesen Eintrag zu entfernen, gehe zu Einstellungen → Geräte & Dienste → Tibber Prices und lösche die Konfiguration {home_name}."
+        },
+        "entity_migration": {
+            "title": "Tibber Prices: Aktion nach Update erforderlich ({home_name})",
+            "description": "Dieses Update enthält Breaking Changes, die automatisch angewendet wurden.\n\n**Umbenannte Entitäten ({count})**\n\nDie folgenden Entity-Keys wurden umbenannt. Deine bestehenden Entity-IDs und Automationen bleiben erhalten:\n\n{entity_list}\n\n**Geänderte Dauer-Sensorwerte**\n\nAlle Dauer-Sensoren (verbleibende Zeit, startet in, Periodendauer, Trendänderungs-Countdown) geben ihren Zustandswert jetzt in **Minuten** statt Stunden an. Die Anzeigeeinheit in Dashboards bleibt standardmäßig Stunden.\n\nWenn du Automationen mit numerischen Vergleichen auf diesen Sensoren hast, aktualisiere deine Schwellwerte:\n- Alt: `state < 0.25` (15 Minuten als Stunden)\n- Neu: `state < 15` (15 Minuten)\n\nSchließe diesen Hinweis, nachdem du deine Automationen überprüft hast."
         }
     },
     "services": {

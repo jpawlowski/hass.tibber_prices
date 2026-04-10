@@ -1049,6 +1049,10 @@
         "home_not_found": {
             "title": "Hjemmet {home_name} ble ikke funnet i Tibber-kontoen",
             "description": "Hjemmet konfigurert i denne integrasjonen (oppførings-ID: {entry_id}) er ikke lenger tilgjengelig i Tibber-kontoen din. Dette skjer vanligvis når:\n- Hjemmet ble slettet fra Tibber-kontoen din\n- Hjemmet ble flyttet til en annen Tibber-konto\n- Tilgang til dette hjemmet ble tilbakekalt\n\nVennligst fjern denne integrasjonsoppføringen og legg den til på nytt hvis hjemmet fortsatt skal overvåkes. For å fjerne denne oppføringen, gå til Innstillinger → Enheter og tjenester → Tibber Prices og slett {home_name}-konfigurasjonen."
+        },
+        "entity_migration": {
+            "title": "Tibber Prices: Handling kreves etter oppdatering ({home_name})",
+            "description": "Denne oppdateringen inkluderer endringer som ble brukt automatisk.\n\n**Omdøpte entiteter ({count})**\n\nFølgende entity-nøkler ble omdøpt. Dine eksisterende entity-ID-er og automatiseringer forblir intakte:\n\n{entity_list}\n\n**Endrede varighetssensorverdier**\n\nAlle varighetssensorer (gjenværende tid, starter om, periodevarighet, trendendrings-nedtelling) rapporterer nå tilstandsverdien i **minutter** i stedet for timer. Visningsenheten i dashboards forblir timer som standard.\n\nHvis du har automatiseringer med numeriske sammenligninger på disse sensorene, oppdater tersklene:\n- Gammelt: `state < 0.25` (15 minutter som timer)\n- Nytt: `state < 15` (15 minutter)\n\nAvvis dette varselet etter å ha gjennomgått automatiseringene dine."
         }
     },
     "services": {

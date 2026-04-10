@@ -41,6 +41,7 @@ from .interval_pool import (
     async_remove_pool_storage,
     async_save_pool_state,
 )
+from .migrations import check_entity_migrations
 from .services import async_setup_services
 
 if TYPE_CHECKING:
@@ -221,6 +222,9 @@ async def async_setup_entry(
 
     # Migrate config options if needed (e.g., set default currency display mode for existing configs)
     await _migrate_config_options(hass, entry)
+
+    # Check for entity migrations (renames, breaking changes) and create repairs
+    check_entity_migrations(hass, entry)
 
     # Preload translations to populate the cache
     await async_load_translations(hass, "en")

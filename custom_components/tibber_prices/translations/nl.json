@@ -1049,6 +1049,10 @@
         "home_not_found": {
             "title": "Huis {home_name} niet gevonden in Tibber-account",
             "description": "Het huis geconfigureerd in deze integratie (entry ID: {entry_id}) is niet langer beschikbaar in je Tibber-account. Dit gebeurt meestal wanneer:\n- Het huis is verwijderd uit je Tibber-account\n- Het huis is verplaatst naar een ander Tibber-account\n- Toegang tot dit huis is ingetrokken\n\nVerwijder dit integratie-item en voeg het opnieuw toe als het huis nog steeds gemonitord moet worden. Om dit item te verwijderen, ga naar Instellingen → Apparaten & Services → Tibber Prices en verwijder de {home_name} configuratie."
+        },
+        "entity_migration": {
+            "title": "Tibber Prices: Actie vereist na update ({home_name})",
+            "description": "Deze update bevat wijzigingen die automatisch zijn toegepast.\n\n**Hernoemde entiteiten ({count})**\n\nDe volgende entity-sleutels zijn hernoemd. Je bestaande entity-ID's en automatiseringen blijven intact:\n\n{entity_list}\n\n**Gewijzigde duur-sensorwaarden**\n\nAlle duur-sensoren (resterende tijd, start over, periodeduur, trendwijzigings-aftelling) rapporteren hun statuswaarde nu in **minuten** in plaats van uren. De weergave-eenheid in dashboards blijft standaard uren.\n\nAls je automatiseringen hebt met numerieke vergelijkingen op deze sensoren, werk dan je drempelwaarden bij:\n- Oud: `state < 0.25` (15 minuten als uren)\n- Nieuw: `state < 15` (15 minuten)\n\nSluit deze melding nadat je je automatiseringen hebt gecontroleerd."
         }
     },
     "services": {

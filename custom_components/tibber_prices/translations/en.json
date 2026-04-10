@@ -1049,6 +1049,10 @@
         "home_not_found": {
             "title": "Home {home_name} not found in Tibber account",
             "description": "The home configured in this integration (entry ID: {entry_id}) is no longer available in your Tibber account. This typically happens when:\n- The home was deleted from your Tibber account\n- The home was moved to a different Tibber account\n- Access to this home was revoked\n\nPlease remove this integration entry and re-add it if the home should still be monitored. To remove this entry, go to Settings → Devices & Services → Tibber Prices and delete the {home_name} configuration."
+        },
+        "entity_migration": {
+            "title": "Tibber Prices: Action required after update ({home_name})",
+            "description": "This update includes breaking changes that were applied automatically.\n\n**Renamed Entities ({count})**\n\nThe following entity keys were renamed. Your existing entity IDs and automations remain intact:\n\n{entity_list}\n\n**Duration Sensor Value Change**\n\nAll duration sensors (remaining time, starts in, period duration, trend change countdown) now report their state value in **minutes** instead of hours. The display unit in dashboards remains hours by default.\n\nIf you have automations using numeric comparisons on these sensors, update your thresholds:\n- Old: `state < 0.25` (15 minutes as hours)\n- New: `state < 15` (15 minutes)\n\nDismiss this notice after reviewing your automations."
         }
     },
     "services": {
