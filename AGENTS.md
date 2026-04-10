@@ -311,7 +311,7 @@ After successful refactoring:
 
 **✅ ALLOWED in root:**
 -   Platform modules: `__init__.py`, `sensor.py` (deprecated, now `sensor/`), `binary_sensor.py` (deprecated, now `binary_sensor/`), future platforms
--   Core integration files: `const.py`, `manifest.json`, `services.yaml`, `diagnostics.py`, `data.py`
+-   Core integration files: `const.py`, `manifest.json`, `services.yaml`, `diagnostics.py`, `data.py`, `migrations.py`
 -   Translation directories: `translations/`, `custom_translations/`
 -   Brand images: `brand/` (icon.png, dark_icon.png, logo.png, dark_logo.png + `@2x` variants) — served via HA brands proxy API (HA ≥ 2026.4), silently ignored on older versions
 
@@ -517,6 +517,7 @@ custom_components/tibber_prices/
 │   ├── definitions.py    #   ENTITY_DESCRIPTIONS, constants
 │   └── attributes.py     #   Attribute builders
 ├── entity.py             # Base TibberPricesEntity class
+├── migrations.py         # Entity migration & breaking change repairs
 ├── entity_utils/         # Shared entity helpers (both platforms)
 │   ├── __init__.py       #   Package exports
 │   ├── icons.py          #   Icon mapping logic
@@ -1824,6 +1825,15 @@ All entities MUST implement these patterns for proper HA integration:
 
 **Why this matters**: Without `available`, entities show stale data during errors. Without state restore, history has gaps after HA restart. Without `force_update`, repeated state changes aren't visible in history.
 
+**6. Entity Migration & Breaking Change Repairs:**
+When renaming entity keys or changing sensor value units/semantics across releases:
+
+- **Auto-migration** (`migrations.py`): Add old→new mapping to `ENTITY_KEY_RENAMES` dict. The `check_entity_migrations()` callback (called in `async_setup_entry` after `_migrate_config_options`) auto-updates `unique_id` in the entity registry while preserving `entity_id`, history, and user customizations.
+- **Repair issues**: After migration, a persistent repair (`is_persistent=True`) is created via `ir.async_create_issue()` informing users about breaking changes. Users must dismiss manually after reviewing automations.
+- **Partial migration handling**: If new entity already exists (e.g., user added manually), the old entity is removed instead of migrated.
+- **Separation of concerns**: `migrations.py` handles one-time upgrade migrations. `coordinator/repairs.py` handles runtime repairs (API issues, missing data). `__init__.py _migrate_config_options()` handles config option format changes.
+- **Duration sensor pattern**: Use `native_unit_of_measurement=UnitOfTime.MINUTES` + `suggested_unit_of_measurement=UnitOfTime.HOURS` — HA auto-converts for display, state value stays in minutes for intuitive automations (`state < 15` instead of `state < 0.25`).
+
 ## Code Quality Rules
 
 **CRITICAL: See "Linting Best Practices" section for comprehensive type checking (Pyright) and linting (Ruff) guidelines.**
@@ -2719,6 +2729,8 @@ After the sensor.py refactoring (completed Nov 2025), sensors are organized by *
 4. **Add translation keys** to `/translations/en.json` and `/custom_translations/en.json`
 
 5. **Sync all language files** (de, nb, nl, sv)
+
+6. **If renaming**: Add old→new key mapping to `ENTITY_KEY_RENAMES` in `migrations.py` for auto-migration
 
 **See** `sensor/definitions.py` for sensor grouping examples and `sensor/core.py` for handler implementations.
 
