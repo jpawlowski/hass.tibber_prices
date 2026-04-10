@@ -312,10 +312,10 @@
             "long_description": "Scant de komende 24 uur (96 intervallen) om te vinden wanneer de prijstrend-richting zal veranderen. Alleen richtingswijzigingen tellen: stijgend/sterk stijgend vormen één groep, dalend/sterk dalend een andere, stabiel is apart. Een verandering van stijgend naar sterk stijgend is GEEN trendwijziging. Gebruikt volatiliteit-adaptieve drempelwaarden (standaard: ±3%/±9%) met hysterese (standaard: 3 opeenvolgende intervallen). Retourneert het tijdstempel wanneer de wijziging wordt verwacht.",
             "usage_tips": "Gebeurtenisgestuurde automatisering: Trigger acties WANNEER trend wijzigt, niet OVER X uur. Voorbeeld: 'Laad EV wanneer volgende trendwijziging dalende prijzen toont' of 'Start vaatwasser voordat prijzen stijgen'. Vult tijdvenster-sensors aan (price_outlook_Xh) die beantwoorden 'ZULLEN prijzen over X uur hoger zijn?'"
         },
-        "trend_change_in_minutes": {
+        "next_price_trend_change_in": {
             "description": "Tijd tot de volgende prijstrendwijziging",
             "long_description": "Toont hoe lang het duurt tot de volgende significante prijstrendwijziging plaatsvindt. De waarde wordt weergegeven in uren (bijv. 2,25 u) voor dashboards. Deelt dezelfde analyse als de tijdstempel-sensor 'Volgende Prijstrend Wijziging', maar presenteert het als een aftelduur. Wordt elke minuut bijgewerkt voor nauwkeurige aftellingen. Toont 'Onbekend' wanneer geen trendwijziging wordt verwacht in de komende 24 uur.",
-            "usage_tips": "Dashboard-aftelling: Toon 'Trendwijziging over 1,5 u' als live aftelling. Voor automatiseringen: 'Als trend_change_in_minutes < 0,25 (15 min), bereid je voor op prijsrichtingswijziging'. Vult 'Volgende Prijstrend Wijziging' (tijdstempel) aan — gebruik het tijdstempel voor 'WANNEER' en deze sensor voor 'HOE LANG'."
+            "usage_tips": "Dashboard-aftelling: Toon 'Trendwijziging over 1,5 u' als live aftelling. Voor automatiseringen: 'Als next_price_trend_change_in < 0,25 (15 min), bereid je voor op prijsrichtingswijziging'. Vult 'Volgende Prijstrend Wijziging' (tijdstempel) aan — gebruik het tijdstempel voor 'WANNEER' en deze sensor voor 'HOE LANG'."
         },
         "daily_rating": {
             "description": "Hoe de prijzen van vandaag zich verhouden tot historische gegevens",

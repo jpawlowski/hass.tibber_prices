@@ -782,8 +782,8 @@
             "next_price_trend_change": {
                 "name": "Nästa pristrendändring"
             },
-            "trend_change_in_minutes": {
-                "name": "Trendändring om"
+            "next_price_trend_change_in": {
+                "name": "Nästa pristrendändring om"
             },
             "daily_rating": {
                 "name": "Dagligt prisbetyg"

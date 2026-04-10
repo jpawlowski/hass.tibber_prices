@@ -344,7 +344,7 @@ class TibberPricesSensor(TibberPricesEntity, RestoreSensor):
         elif self.entity_description.key in (
             "current_price_trend",
             "next_price_trend_change",
-            "trend_change_in_minutes",
+            "next_price_trend_change_in",
         ):
             self._trend_calculator.clear_calculation_cache()
 

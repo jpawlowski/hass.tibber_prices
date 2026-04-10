@@ -312,10 +312,10 @@
             "long_description": "Scannt die nächsten 24 Stunden (96 Intervalle), um zu finden, wann sich die Preistrend-Richtung ändern wird. Nur Richtungswechsel zählen: steigend/stark steigend bilden eine Gruppe, fallend/stark fallend eine andere, stabil ist eigenständig. Ein Wechsel von steigend zu stark steigend ist KEIN Trendwechsel. Verwendet volatilitätsadaptive Schwellwerte (Standard: ±3%/±9%) mit Hysterese (Standard: 3 aufeinanderfolgende Intervalle). Gibt den Zeitstempel zurück, wann die Änderung erwartet wird.",
             "usage_tips": "Ereignisbasierte Automation: Aktionen WENN Trend wechselt auslösen, nicht IN X Stunden. Beispiel: 'E-Auto laden wenn nächste Trendänderung fallende Preise zeigt' oder 'Spülmaschine vor Preisanstieg starten'. Ergänzt Zeitfenster-Sensoren (price_trend_Xh), die beantworten 'WERDEN Preise in X Stunden höher sein?'"
         },
-        "trend_change_in_minutes": {
+        "next_price_trend_change_in": {
             "description": "Zeit bis zur nächsten Preistrend-Änderung",
             "long_description": "Zeigt an, wie lange es bis zur nächsten bedeutenden Preistrend-Änderung dauert. Der Wert wird in Stunden angezeigt (z.B. 2,25 h) für Dashboards. Teilt die gleiche Analyse wie der Zeitstempel-Sensor 'Nächste Trendänderung', stellt sie aber als Countdown-Dauer dar. Aktualisiert sich jede Minute für präzise Countdowns. Zeigt 'Unbekannt' wenn keine Trendänderung in den nächsten 24 Stunden erwartet wird.",
-            "usage_tips": "Dashboard-Countdown: Zeige 'Trendänderung in 1,5 h' als Live-Countdown. Für Automationen: 'Wenn trend_change_in_minutes < 0,25 (15 Min), auf Preisrichtungswechsel vorbereiten'. Ergänzt 'Nächste Trendänderung' (Zeitstempel) — verwende den Zeitstempel für 'WANN' und diesen Sensor für 'WIE LANGE'."
+            "usage_tips": "Dashboard-Countdown: Zeige 'Trendänderung in 1,5 h' als Live-Countdown. Für Automationen: 'Wenn next_price_trend_change_in < 0,25 (15 Min), auf Preisrichtungswechsel vorbereiten'. Ergänzt 'Nächste Trendänderung' (Zeitstempel) — verwende den Zeitstempel für 'WANN' und diesen Sensor für 'WIE LANGE'."
         },
         "daily_rating": {
             "description": "Wie sich die heutigen Preise mit historischen Daten vergleichen",

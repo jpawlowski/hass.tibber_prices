@@ -312,10 +312,10 @@
             "long_description": "Skannar de nästa 24 timmarna (96 intervaller) för att hitta när pristrend-riktningen kommer att ändras. Bara riktningsändringar räknas: stigande/kraftigt stigande är en grupp, fallande/kraftigt fallande en annan, stabil är egen. En ändring från stigande till kraftigt stigande är INTE en trendändring. Använder volatilitetsadaptiva tröskelvärden (standard: ±3%/±9%) med hysteres (standard: 3 på varandra följande intervaller). Returnerar tidstämpeln när ändringen förväntas.",
             "usage_tips": "Händelsestyrd automatisering: Utlös åtgärder NÄR trenden ändras, inte OM X timmar. Exempel: 'Ladda EV när nästa trendändring visar fallande priser' eller 'Starta diskmaskin innan priserna stiger'. Kompletterar tidsfönster-sensorer (price_outlook_Xh) som svarar på 'KOMMER priserna att vara högre om X timmar?'"
         },
-        "trend_change_in_minutes": {
+        "next_price_trend_change_in": {
             "description": "Tid till nästa pristrendändring",
             "long_description": "Visar hur lång tid det är kvar till nästa betydande pristrendändring inträffar. Värdet visas i timmar (t.ex. 2,25 h) för dashboards. Delar samma analys som tidstämpel-sensorn 'Nästa pristrendändring' men presenterar det som en nedtellningsvaraktighet. Uppdateras varje minut för noggranna nedtellningar. Visar 'Okänd' när ingen trendändring förväntas inom de närmaste 24 timmarna.",
-            "usage_tips": "Dashboard-nedtellning: Visa 'Trendändring om 1,5 h' som live nedtellning. För automatiseringar: 'Om trend_change_in_minutes < 0,25 (15 min), förbered för prisriktningsändring'. Kompletterar 'Nästa pristrendändring' (tidstämpel) — använd tidstämpeln för 'NÄR' och denna sensor för 'HUR LÄNGE'."
+            "usage_tips": "Dashboard-nedtellning: Visa 'Trendändring om 1,5 h' som live nedtellning. För automatiseringar: 'Om next_price_trend_change_in < 0,25 (15 min), förbered för prisriktningsändring'. Kompletterar 'Nästa pristrendändring' (tidstämpel) — använd tidstämpeln för 'NÄR' och denna sensor för 'HUR LÄNGE'."
         },
         "daily_rating": {
             "description": "Hur dagens priser jämförs med historiska data",
