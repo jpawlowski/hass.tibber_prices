@@ -606,13 +606,13 @@ class TibberPricesTrendCalculator(TibberPricesBaseCalculator):
         if trend_start_time:
             time = self.coordinator.time
             # Duration is negative of minutes_until (time in the past)
-            trend_duration_minutes = -int(time.minutes_until(trend_start_time))
+            trend_duration_minutes = -time.minutes_until_rounded(trend_start_time)
 
         # Calculate minutes until change
         minutes_until_change = None
         if next_change_time:
             time = self.coordinator.time
-            minutes_until_change = int(time.minutes_until(next_change_time))
+            minutes_until_change = time.minutes_until_rounded(next_change_time)
 
         result = {
             "current_trend_state": current_trend_state,
@@ -891,7 +891,7 @@ class TibberPricesTrendCalculator(TibberPricesBaseCalculator):
                     change_time = time.get_interval_time(change_interval)
                     if change_time:
                         change_price = float(change_interval["total"])
-                        minutes_until = int(time.minutes_until(change_time))
+                        minutes_until = time.minutes_until_rounded(change_time)
                         factor = get_display_unit_factor(self.config_entry)
                         vf = first_change["vol_factor"]
 
