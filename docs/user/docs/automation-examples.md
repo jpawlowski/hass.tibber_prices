@@ -19,7 +19,7 @@
 >
 > These examples provide a good starting point but must be tailored to your individual Home Assistant setup.
 >
-> **Entity ID tip:** `<home_name>` is a placeholder for your Tibber home display name in Home Assistant. Entity IDs are derived from the displayed name (localized), so the exact slug may differ. Example suffixes below use the English display names (en.json) as a baseline. You can find the real ID in **Settings → Devices & Services → Entities** (or **Developer Tools → States**).
+> **Entity ID tip:** `<home_name>` is a placeholder for your Tibber home display name in Home Assistant. Entity IDs are derived from the displayed name (localized), so the exact slug may differ. **Can't find a sensor?** Use the **[Entity Reference (All Languages)](sensor-reference.md)** to search by name in your language.
 
 ## Price-Based Automations
 
@@ -277,10 +277,10 @@ A common misconception: **"rising" does NOT mean "too late"**. It means your cur
 | What You Want | Sensors to Combine |
 |---|---|
 | **"Is it cheap right now?"** | `rating_level` attribute (VERY_CHEAP, CHEAP) |
-| **"Will prices go up or down?"** | `current_price_trend` state (falling/stable/rising) |
-| **"When will the trend change?"** | `next_price_trend_change` state (timestamp) |
+| **"Will prices go up or down?"** | <EntityRef id="current_price_trend" noStrong>`current_price_trend`</EntityRef> state |
+| **"When will the trend change?"** | <EntityRef id="next_price_trend_change" noStrong>`next_price_trend_change`</EntityRef> state |
 | **"How cheap will it get?"** | `next_Nh_avg` attribute on trend sensors |
-| **"Is the price drop meaningful?"** | `today_s_price_volatility` (not low = meaningful) |
+| **"Is the price drop meaningful?"** | <EntityRef id="today_volatility" noStrong>`today_s_price_volatility`</EntityRef> |
 | **"Ride the full cheap wave"** | `rating_level` + `current_price_trend` + `best_price_period` |
 
 ---
@@ -513,11 +513,11 @@ automation:
 The `tibber_prices.get_apexcharts_yaml` service generates basic ApexCharts card configuration examples for visualizing electricity prices.
 
 :::info Finding your Entry ID (`entry_id`)
-The examples below contain `entry_id: YOUR_ENTRY_ID`. This value identifies which Tibber home (integration instance) the action targets.
+The examples below contain `entry_id: YOUR_CONFIG_ENTRY_ID`. This value identifies which Tibber home (integration instance) the action targets.
 
 **In the Action UI (Developer Tools → Actions or the automation editor):** The `entry_id` field is a **dropdown** — just select your Tibber home and HA fills in the correct ID automatically.
 
-**In YAML:** Go to **Settings → Devices & Services**, find the **Tibber Prices** card, open the **⋮** (three-dot) menu, and choose **"Copy Config Entry ID"**. Paste the copied value in place of `YOUR_ENTRY_ID`.
+**In YAML:** Go to **Settings → Devices & Services**, find the **Tibber Prices** card, open the **⋮** (three-dot) menu, and choose **"Copy Config Entry ID"**. Paste the copied value in place of `YOUR_CONFIG_ENTRY_ID`.
 :::
 
 ### Prerequisites
@@ -542,7 +542,7 @@ The examples below contain `entry_id: YOUR_ENTRY_ID`. This value identifies whic
 # Generate configuration via automation/script
 service: tibber_prices.get_apexcharts_yaml
 data:
-    entry_id: YOUR_ENTRY_ID
+    entry_id: YOUR_CONFIG_ENTRY_ID
     day: today # or "yesterday", "tomorrow"
     level_type: rating_level # or "level" for 5-level view
 response_variable: apexcharts_config
@@ -557,7 +557,7 @@ For a dynamic chart that automatically adapts to data availability:
 ```yaml
 service: tibber_prices.get_apexcharts_yaml
 data:
-    entry_id: YOUR_ENTRY_ID
+    entry_id: YOUR_CONFIG_ENTRY_ID
     day: rolling_window # Or omit for same behavior (default)
     level_type: rating_level
 response_variable: apexcharts_config
@@ -576,7 +576,7 @@ For progressive zoom-in throughout the day:
 ```yaml
 service: tibber_prices.get_apexcharts_yaml
 data:
-    entry_id: YOUR_ENTRY_ID
+    entry_id: YOUR_CONFIG_ENTRY_ID
     day: rolling_window_autozoom
     level_type: rating_level
 response_variable: apexcharts_config

@@ -1,0 +1,581 @@
+#!/usr/bin/env python3
+"""
+Generate the multi-language sensor reference page from translation files.
+
+Reads entity translations from all language files and entity definitions
+to produce a searchable reference table in docs/user/docs/sensor-reference.md.
+
+Usage:
+    scripts/docs/generate-sensor-reference           # Generate/update the file
+    scripts/docs/generate-sensor-reference --check    # Verify file is up-to-date (CI)
+"""
+
+from __future__ import annotations
+
+import json
+import re
+import sys
+from collections import OrderedDict
+from pathlib import Path
+
+# ---------------------------------------------------------------------------
+# Paths
+# ---------------------------------------------------------------------------
+
+REPO_ROOT = Path(__file__).resolve().parent.parent.parent
+TRANSLATIONS_DIR = REPO_ROOT / "custom_components" / "tibber_prices" / "translations"
+OUTPUT_FILE = REPO_ROOT / "docs" / "user" / "docs" / "sensor-reference.md"
+
+LANGUAGES = OrderedDict(
+    [
+        ("en", "🇬🇧 English"),
+        ("de", "🇩🇪 Deutsch"),
+        ("nb", "🇳🇴 Norsk"),
+        ("nl", "🇳🇱 Nederlands"),
+        ("sv", "🇸🇪 Svenska"),
+    ]
+)
+
+# ---------------------------------------------------------------------------
+# Definitions files (for entity_registry_enabled_default extraction)
+# ---------------------------------------------------------------------------
+
+DEFINITIONS_FILES: dict[str, Path] = {
+    "sensor": REPO_ROOT / "custom_components" / "tibber_prices" / "sensor" / "definitions.py",
+    "binary_sensor": REPO_ROOT / "custom_components" / "tibber_prices" / "binary_sensor" / "definitions.py",
+    "number": REPO_ROOT / "custom_components" / "tibber_prices" / "number" / "definitions.py",
+    "switch": REPO_ROOT / "custom_components" / "tibber_prices" / "switch" / "definitions.py",
+}
+
+# ---------------------------------------------------------------------------
+# Category mapping: translation_key → (category_name, sort_order)
+#
+# Keys not listed here will appear in an "Other" category at the end.
+# Order within a category follows insertion order in this dict.
+# ---------------------------------------------------------------------------
+
+SENSOR_CATEGORIES: OrderedDict[str, list[str]] = OrderedDict(
+    [
+        (
+            "Core Price Sensors",
+            [
+                "current_interval_price",
+                "current_interval_price_base",
+                "next_interval_price",
+                "previous_interval_price",
+            ],
+        ),
+        (
+            "Hourly Average Sensors",
+            [
+                "current_hour_average_price",
+                "next_hour_average_price",
+            ],
+        ),
+        (
+            "Daily Statistics",
+            [
+                "lowest_price_today",
+                "highest_price_today",
+                "average_price_today",
+                "lowest_price_tomorrow",
+                "highest_price_tomorrow",
+                "average_price_tomorrow",
+            ],
+        ),
+        (
+            "24h Window Sensors",
+            [
+                "trailing_price_average",
+                "leading_price_average",
+                "trailing_price_min",
+                "trailing_price_max",
+                "leading_price_min",
+                "leading_price_max",
+            ],
+        ),
+        (
+            "Future Price Averages",
+            [
+                "next_avg_1h",
+                "next_avg_2h",
+                "next_avg_3h",
+                "next_avg_4h",
+                "next_avg_5h",
+                "next_avg_6h",
+                "next_avg_8h",
+                "next_avg_12h",
+            ],
+        ),
+        (
+            "Price Level Sensors",
+            [
+                "current_interval_price_level",
+                "next_interval_price_level",
+                "previous_interval_price_level",
+                "current_hour_price_level",
+                "next_hour_price_level",
+                "yesterday_price_level",
+                "today_price_level",
+                "tomorrow_price_level",
+            ],
+        ),
+        (
+            "Price Rating Sensors",
+            [
+                "current_interval_price_rating",
+                "next_interval_price_rating",
+                "previous_interval_price_rating",
+                "current_hour_price_rating",
+                "next_hour_price_rating",
+                "yesterday_price_rating",
+                "today_price_rating",
+                "tomorrow_price_rating",
+                "daily_rating",
+                "monthly_rating",
+            ],
+        ),
+        (
+            "Price Outlook & Trend",
+            [
+                "current_price_trend",
+                "next_price_trend_change",
+                "next_price_trend_change_in",
+                "price_outlook_1h",
+                "price_outlook_2h",
+                "price_outlook_3h",
+                "price_outlook_4h",
+                "price_outlook_5h",
+                "price_outlook_6h",
+                "price_outlook_8h",
+                "price_outlook_12h",
+                "price_trajectory_2h",
+                "price_trajectory_3h",
+                "price_trajectory_4h",
+                "price_trajectory_5h",
+                "price_trajectory_6h",
+                "price_trajectory_8h",
+                "price_trajectory_12h",
+            ],
+        ),
+        (
+            "Volatility Sensors",
+            [
+                "today_volatility",
+                "tomorrow_volatility",
+                "next_24h_volatility",
+                "today_tomorrow_volatility",
+            ],
+        ),
+        (
+            "Best Price Timing",
+            [
+                "best_price_end_time",
+                "best_price_period_duration",
+                "best_price_remaining_minutes",
+                "best_price_progress",
+                "best_price_next_start_time",
+                "best_price_next_in_minutes",
+            ],
+        ),
+        (
+            "Peak Price Timing",
+            [
+                "peak_price_end_time",
+                "peak_price_period_duration",
+                "peak_price_remaining_minutes",
+                "peak_price_progress",
+                "peak_price_next_start_time",
+                "peak_price_next_in_minutes",
+            ],
+        ),
+        (
+            "Home & Metering Metadata",
+            [
+                "home_type",
+                "home_size",
+                "main_fuse_size",
+                "number_of_residents",
+                "primary_heating_source",
+                "grid_company",
+                "grid_area_code",
+                "price_area_code",
+                "consumption_ean",
+                "production_ean",
+                "energy_tax_type",
+                "vat_type",
+                "estimated_annual_consumption",
+                "subscription_status",
+            ],
+        ),
+        (
+            "Data & Diagnostics",
+            [
+                "data_lifecycle_status",
+                "chart_data_export",
+                "chart_metadata",
+            ],
+        ),
+    ]
+)
+
+BINARY_SENSOR_CATEGORIES: OrderedDict[str, list[str]] = OrderedDict(
+    [
+        (
+            "Binary Sensors",
+            [
+                "best_price_period",
+                "peak_price_period",
+                "connection",
+                "tomorrow_data_available",
+                "has_ventilation_system",
+                "realtime_consumption_enabled",
+            ],
+        ),
+    ]
+)
+
+NUMBER_CATEGORIES: OrderedDict[str, list[str]] = OrderedDict(
+    [
+        (
+            "Best Price Configuration",
+            [
+                "best_price_flex_override",
+                "best_price_min_distance_override",
+                "best_price_min_period_length_override",
+                "best_price_min_periods_override",
+                "best_price_relaxation_attempts_override",
+                "best_price_gap_count_override",
+            ],
+        ),
+        (
+            "Peak Price Configuration",
+            [
+                "peak_price_flex_override",
+                "peak_price_min_distance_override",
+                "peak_price_min_period_length_override",
+                "peak_price_min_periods_override",
+                "peak_price_relaxation_attempts_override",
+                "peak_price_gap_count_override",
+            ],
+        ),
+    ]
+)
+
+SWITCH_CATEGORIES: OrderedDict[str, list[str]] = OrderedDict(
+    [
+        (
+            "Switches",
+            [
+                "best_price_enable_relaxation_override",
+                "peak_price_enable_relaxation_override",
+            ],
+        ),
+    ]
+)
+
+
+# ---------------------------------------------------------------------------
+# Data loading
+# ---------------------------------------------------------------------------
+
+
+def load_translations() -> dict[str, dict[str, dict[str, dict]]]:
+    """
+    Load entity translations from all language files.
+
+    Returns: {lang: {platform: {key: {"name": "..."}}}}
+    """
+    result: dict[str, dict[str, dict[str, dict]]] = {}
+    for lang in LANGUAGES:
+        filepath = TRANSLATIONS_DIR / f"{lang}.json"
+        with filepath.open(encoding="utf-8") as f:
+            data = json.load(f)
+        entity_section = data.get("entity", {})
+        result[lang] = {}
+        for platform in ("sensor", "binary_sensor", "number", "switch"):
+            result[lang][platform] = entity_section.get(platform, {})
+    return result
+
+
+def extract_disabled_entities(definitions_path: Path) -> set[str]:
+    """
+    Extract entity keys that have entity_registry_enabled_default=False.
+
+    Uses regex parsing — no Python import needed.
+    """
+    disabled: set[str] = set()
+    if not definitions_path.exists():
+        return disabled
+
+    text = definitions_path.read_text(encoding="utf-8")
+
+    # Find all key= assignments, then check if the block before the next
+    # key= contains entity_registry_enabled_default=False.
+    key_pattern = re.compile(r'key="([^"]+)"')
+    disabled_pattern = re.compile(r"entity_registry_enabled_default\s*=\s*False")
+
+    keys_with_pos = [(m.group(1), m.start()) for m in key_pattern.finditer(text)]
+
+    for i, (key, start) in enumerate(keys_with_pos):
+        # Get the text between this key and the next key (or end of file)
+        end = keys_with_pos[i + 1][1] if i + 1 < len(keys_with_pos) else len(text)
+        block = text[start:end]
+
+        if disabled_pattern.search(block):
+            disabled.add(key)
+        # If neither pattern found, default is True (enabled)
+
+    return disabled
+
+
+def load_all_disabled() -> dict[str, set[str]]:
+    """Load disabled-by-default entity keys for all platforms."""
+    result: dict[str, set[str]] = {}
+    for platform, path in DEFINITIONS_FILES.items():
+        result[platform] = extract_disabled_entities(path)
+    return result
+
+
+def scan_doc_refs() -> dict[str, list[str]]:
+    """
+    Scan doc markdown files for EntityRef usage.
+
+    Returns: {entity_key: [doc_slug, ...]}
+    """
+    refs: dict[str, list[str]] = {}
+    docs_dir = REPO_ROOT / "docs" / "user" / "docs"
+    entity_ref_pattern = re.compile(r'<EntityRef\s[^>]*?\bid="([^"]+)"')
+    also_pattern = re.compile(r'\balso="([^"]+)"')
+
+    for md_file in sorted(docs_dir.glob("*.md")):
+        if md_file.name == "sensor-reference.md":
+            continue
+        slug = md_file.stem
+        text = md_file.read_text(encoding="utf-8")
+        for match in entity_ref_pattern.finditer(text):
+            key = match.group(1)
+            refs.setdefault(key, [])
+            if slug not in refs[key]:
+                refs[key].append(slug)
+            # Check for 'also' prop in the same tag
+            tag_end = text.find(">", match.start())
+            if tag_end != -1:
+                tag_text = text[match.start() : tag_end]
+                also_match = also_pattern.search(tag_text)
+                if also_match:
+                    also_key = also_match.group(1)
+                    refs.setdefault(also_key, [])
+                    if slug not in refs[also_key]:
+                        refs[also_key].append(slug)
+
+    return refs
+
+
+# ---------------------------------------------------------------------------
+# Markdown generation
+# ---------------------------------------------------------------------------
+
+FRONTMATTER = """\
+---
+comments: false
+---
+
+"""
+
+INTRO = """\
+# Entity Reference (All Languages)
+
+<EntitySearch />
+
+## How to Find Your Entity in Home Assistant
+
+**Entity ID pattern:** `sensor.<home_name>_<suffix>`
+
+- `<home_name>` is generated from your Tibber home display name (lowercase, spaces replaced with underscores)
+- `<suffix>` is shown in the **Entity ID suffix** column below
+
+**Three ways to find an entity:**
+
+1. **Search above** — Type the entity name in your language to filter the tables below
+2. **Device page** — Go to **Settings → Devices & Services → Tibber Prices** →
+   click your home device → all entities are listed
+3. **Developer Tools** — Go to **Developer Tools → States** →
+   type `tibber` in the filter
+
+:::tip
+You can also use your browser's built-in search (**Ctrl+F** / **Cmd+F**) to search the full page text.
+:::
+
+**Enabled by default:** The ✅ column shows whether a sensor is enabled by default.
+Sensors marked ❌ must be enabled manually via
+**Settings → Devices & Services → Entities** → find the entity → toggle **Enabled**.
+
+**Detailed documentation:** See the **[Sensors Guide](sensors.md)** for detailed
+explanations of each sensor's purpose, attributes, and automation examples.
+
+---
+
+"""
+
+
+def generate_table(
+    categories: OrderedDict[str, list[str]],
+    platform: str,
+    translations: dict[str, dict[str, dict[str, dict]]],
+    disabled: dict[str, set[str]],
+    doc_refs: dict[str, list[str]],
+) -> str:
+    """Generate a grouped Markdown table for one platform."""
+    lines: list[str] = []
+    platform_disabled = disabled.get(platform, set())
+
+    lang_codes = list(LANGUAGES.keys())
+    lang_headers = list(LANGUAGES.values())
+
+    # Collect uncategorized keys
+    all_categorized: set[str] = set()
+    for keys in categories.values():
+        all_categorized.update(keys)
+
+    # Get all keys from English translations for this platform
+    en_keys = set(translations.get("en", {}).get(platform, {}).keys())
+    uncategorized = en_keys - all_categorized
+
+    for category_name, keys in categories.items():
+        lines.append(f"### {category_name}\n")
+        lines.append("")
+
+        # Table header
+        header = "| Entity ID suffix | " + " | ".join(lang_headers) + " | Default |"
+        separator = "|---|" + "|".join(["---"] * len(lang_codes)) + "|---|"
+        lines.append(header)
+        lines.append(separator)
+
+        for key in keys:
+            names: list[str] = []
+            for lang in lang_codes:
+                platform_trans = translations.get(lang, {}).get(platform, {})
+                entity_data = platform_trans.get(key, {})
+                name = entity_data.get("name", "—")
+                names.append(name)
+
+            enabled = "❌" if key in platform_disabled else "✅"
+            ref_list = doc_refs.get(key, [])
+            data_refs_attr = f' data-refs="{",".join(ref_list)}"' if ref_list else ""
+            anchor = f'<span id="ref-{key}" class="entity-anchor"{data_refs_attr}></span>'
+            row = f"| {anchor}`{key}` | " + " | ".join(names) + f" | {enabled} |"
+            lines.append(row)
+
+        lines.append("")
+
+    # Add uncategorized keys if any
+    if uncategorized:
+        lines.append("### Other\n")
+        lines.append("")
+
+        header = "| Entity ID suffix | " + " | ".join(lang_headers) + " | Default |"
+        separator = "|---|" + "|".join(["---"] * len(lang_codes)) + "|---|"
+        lines.append(header)
+        lines.append(separator)
+
+        for key in sorted(uncategorized):
+            names = []
+            for lang in lang_codes:
+                platform_trans = translations.get(lang, {}).get(platform, {})
+                entity_data = platform_trans.get(key, {})
+                name = entity_data.get("name", "—")
+                names.append(name)
+
+            enabled = "❌" if key in platform_disabled else "✅"
+            ref_list = doc_refs.get(key, [])
+            data_refs_attr = f' data-refs="{",".join(ref_list)}"' if ref_list else ""
+            anchor = f'<span id="ref-{key}" class="entity-anchor"{data_refs_attr}></span>'
+            row = f"| {anchor}`{key}` | " + " | ".join(names) + f" | {enabled} |"
+            lines.append(row)
+
+        lines.append("")
+
+    return "\n".join(lines)
+
+
+def generate_full_document(
+    translations: dict[str, dict[str, dict[str, dict]]],
+    disabled: dict[str, set[str]],
+) -> str:
+    """Generate the complete sensor-reference.md content."""
+    doc_refs = scan_doc_refs()
+    parts: list[str] = []
+
+    parts.append(FRONTMATTER)
+    parts.append(INTRO)
+
+    # Sensors
+    parts.append("## Sensors\n\n")
+    parts.append(generate_table(SENSOR_CATEGORIES, "sensor", translations, disabled, doc_refs))
+
+    # Binary Sensors
+    parts.append("## Binary Sensors\n\n")
+    parts.append(generate_table(BINARY_SENSOR_CATEGORIES, "binary_sensor", translations, disabled, doc_refs))
+
+    # Number Entities
+    parts.append("## Number Entities (Configuration Overrides)\n\n")
+    parts.append(
+        "> These entities allow runtime adjustment of period calculation parameters without "
+        "changing the integration configuration. All are **disabled by default**.\n\n"
+    )
+    parts.append(generate_table(NUMBER_CATEGORIES, "number", translations, disabled, doc_refs))
+
+    # Switch Entities
+    parts.append("## Switch Entities (Configuration Overrides)\n\n")
+    parts.append(
+        "> These switches control whether the relaxation algorithm is active for period detection. "
+        "All are **disabled by default**.\n\n"
+    )
+    parts.append(generate_table(SWITCH_CATEGORIES, "switch", translations, disabled, doc_refs))
+
+    return "".join(parts)
+
+
+# ---------------------------------------------------------------------------
+# Main
+# ---------------------------------------------------------------------------
+
+
+def main() -> int:
+    """Generate or check the sensor-reference.md file."""
+    check_mode = "--check" in sys.argv
+
+    translations = load_translations()
+    disabled = load_all_disabled()
+    content = generate_full_document(translations, disabled)
+
+    if check_mode:
+        if not OUTPUT_FILE.exists():
+            print(f"✗ Sensor reference not found: {OUTPUT_FILE}")
+            print("  Run: scripts/docs/generate-sensor-reference")
+            return 1
+
+        existing = OUTPUT_FILE.read_text(encoding="utf-8")
+        if existing == content:
+            print("✓ Sensor reference is up to date")
+            return 0
+        print(f"✗ Sensor reference is outdated: {OUTPUT_FILE}")
+        print("  Run: scripts/docs/generate-sensor-reference")
+        return 1
+
+    OUTPUT_FILE.parent.mkdir(parents=True, exist_ok=True)
+    OUTPUT_FILE.write_text(content, encoding="utf-8")
+
+    # Count entities
+    total = 0
+    for platform in ("sensor", "binary_sensor", "number", "switch"):
+        count = len(translations.get("en", {}).get(platform, {}))
+        total += count
+
+    print(f"✓ Generated {OUTPUT_FILE.relative_to(REPO_ROOT)} ({total} entities, {len(LANGUAGES)} languages)")
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())

@@ -32,7 +32,7 @@ const sidebars: SidebarsConfig = {
     {
       type: 'category',
       label: '📊 Features',
-      items: ['sensors', 'period-calculation', 'dynamic-icons', 'icon-colors', 'actions'],
+      items: ['sensors', 'sensor-reference', 'period-calculation', 'dynamic-icons', 'icon-colors', 'actions'],
       collapsible: true,
       collapsed: false,
     },
@@ -52,14 +52,14 @@ const sidebars: SidebarsConfig = {
     },
     {
       type: 'category',
-      label: '� Community',
+      label: '👥 Community',
       items: ['community-examples'],
       collapsible: true,
       collapsed: false,
     },
     {
       type: 'category',
-      label: '�🔧 Help & Support',
+      label: '🔧 Help & Support',
       items: ['faq', 'troubleshooting'],
       collapsible: true,
       collapsed: false,

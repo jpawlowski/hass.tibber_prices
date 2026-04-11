@@ -20,7 +20,7 @@ When you write YAML directly (automations, scripts, Lovelace dashboard cards), y
 2. Find the **Tibber Prices** integration card
 3. Click the **⋮** (three-dot) menu on the card
 4. Choose **"Copy Config Entry ID"**
-5. Paste the value wherever you see `YOUR_ENTRY_ID` in the YAML examples
+5. Paste the value wherever you see `YOUR_CONFIG_ENTRY_ID` in the YAML examples
 
 The ID looks like a long alphanumeric string, for example `01JKPC7AB3EF4GH5IJ6KL7MN8P`.
 
@@ -29,8 +29,6 @@ If you have configured more than one Tibber home, each home has its own entry ID
 :::
 
 ## Available Actions
-
-> **Entity ID tip:** `<home_name>` is a placeholder for your Tibber home display name in Home Assistant. Entity IDs are derived from the displayed name (localized), so the exact slug may differ. Example suffixes below use the English display names (en.json) as a baseline. You can find the real ID in **Settings → Devices & Services → Entities** (or **Developer Tools → States**).
 
 ### tibber_prices.get_chartdata
 
@@ -51,7 +49,7 @@ If you have configured more than one Tibber home, each home has its own entry ID
 ```yaml
 service: tibber_prices.get_chartdata
 data:
-    entry_id: YOUR_ENTRY_ID
+    entry_id: YOUR_CONFIG_ENTRY_ID
     day: ["today", "tomorrow"]
     output_format: array_of_objects
 response_variable: chart_data
@@ -92,7 +90,7 @@ Omit the `day` parameter to get a dynamic 48-hour rolling window that automatica
 ```yaml
 service: tibber_prices.get_chartdata
 data:
-    entry_id: YOUR_ENTRY_ID
+    entry_id: YOUR_CONFIG_ENTRY_ID
     # Omit 'day' for rolling window
     output_format: array_of_objects
 response_variable: chart_data
@@ -111,7 +109,7 @@ Get best price periods as summaries instead of intervals:
 ```yaml
 service: tibber_prices.get_chartdata
 data:
-    entry_id: YOUR_ENTRY_ID
+    entry_id: YOUR_CONFIG_ENTRY_ID
     period_filter: best_price # or peak_price
     day: ["today", "tomorrow"]
     include_level: true
@@ -124,7 +122,7 @@ response_variable: periods
 ```yaml
 service: tibber_prices.get_chartdata
 data:
-    entry_id: YOUR_ENTRY_ID
+    entry_id: YOUR_CONFIG_ENTRY_ID
     level_filter: ["VERY_CHEAP", "CHEAP"] # Only cheap periods
     rating_level_filter: ["LOW"] # Only low-rated prices
     insert_nulls: segments # Add nulls at segment boundaries
@@ -150,7 +148,7 @@ You can include the raw energy price (spot price) and/or tax component in chart 
 ```yaml
 service: tibber_prices.get_chartdata
 data:
-    entry_id: YOUR_ENTRY_ID
+    entry_id: YOUR_CONFIG_ENTRY_ID
     day: ["today", "tomorrow"]
     include_energy: true
     include_tax: true
@@ -201,7 +199,7 @@ Returns data points like:
 ```yaml
 service: tibber_prices.get_apexcharts_yaml
 data:
-    entry_id: YOUR_ENTRY_ID
+    entry_id: YOUR_CONFIG_ENTRY_ID
     day: today  # Optional: yesterday, today, tomorrow, rolling_window, rolling_window_autozoom
     level_type: rating_level  # or "level" for 5-level classification
     highlight_best_price: true  # Show best price period overlays
@@ -230,7 +228,7 @@ Rolling window configurations automatically integrate with the `chart_metadata` 
 ```yaml
 service: tibber_prices.get_apexcharts_yaml
 data:
-    entry_id: YOUR_ENTRY_ID
+    entry_id: YOUR_CONFIG_ENTRY_ID
     day: today
     level_type: rating_level
 response_variable: config
@@ -245,7 +243,7 @@ type: custom:apexcharts-card
 ```yaml
 service: tibber_prices.get_apexcharts_yaml
 data:
-    entry_id: YOUR_ENTRY_ID
+    entry_id: YOUR_CONFIG_ENTRY_ID
     # Omit 'day' for rolling window (or use 'rolling_window')
     level_type: level  # 5-level classification
     highlight_best_price: true
@@ -298,7 +296,7 @@ Use the response in Lovelace dashboards by copying the generated YAML.
 ```yaml
 service: tibber_prices.refresh_user_data
 data:
-    entry_id: YOUR_ENTRY_ID
+    entry_id: YOUR_CONFIG_ENTRY_ID
 ```
 
 **Note:** User data is cached for 24 hours. Trigger this action only when you need immediate updates (e.g., after changing Tibber subscriptions).

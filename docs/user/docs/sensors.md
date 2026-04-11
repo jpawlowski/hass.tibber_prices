@@ -6,7 +6,7 @@ comments: false
 
 > **Tip:** Many sensors have dynamic icons and colors! See the **[Dynamic Icons Guide](dynamic-icons.md)** and **[Dynamic Icon Colors Guide](icon-colors.md)** to enhance your dashboards.
 
-> **Entity ID tip:** `<home_name>` is a placeholder for your Tibber home display name in Home Assistant. Entity IDs are derived from the displayed name (localized), so the exact slug may differ. Example suffixes below use the English display names (en.json) as a baseline. You can find the real ID in **Settings → Devices & Services → Entities** (or **Developer Tools → States**).
+> **Entity ID tip:** `<home_name>` is a placeholder for your Tibber home display name in Home Assistant. Entity IDs are derived from the displayed name (localized), so the exact slug may differ. **Can't find a sensor?** Use the **[Entity Reference (All Languages)](sensor-reference.md)** to search by name in your language.
 
 ## Binary Sensors
 
@@ -16,8 +16,8 @@ These binary sensors indicate when you're in a detected best or peak price perio
 
 **Quick overview:**
 
--   **Best Price Period**: Turns ON during periods with significantly lower prices than the daily average
--   **Peak Price Period**: Turns ON during periods with significantly higher prices than the daily average
+-   <EntityRef id="best_price_period">Best Price Period</EntityRef>: Turns ON during periods with significantly lower prices than the daily average
+-   <EntityRef id="peak_price_period">Peak Price Period</EntityRef>: Turns ON during periods with significantly higher prices than the daily average
 
 Both sensors include rich attributes with period details, intervals, relaxation status, and more.
 
@@ -31,13 +31,13 @@ The integration provides several sensors that calculate average electricity pric
 
 | Sensor | Description | Time Window |
 |--------|-------------|-------------|
-| **Average Price Today** | Typical price for current calendar day | 00:00 - 23:59 today |
-| **Average Price Tomorrow** | Typical price for next calendar day | 00:00 - 23:59 tomorrow |
-| **Trailing Price Average** | Typical price for last 24 hours | Rolling 24h backward |
-| **Leading Price Average** | Typical price for next 24 hours | Rolling 24h forward |
-| **Current Hour Average** | Smoothed price around current time | 5 intervals (~75 min) |
-| **Next Hour Average** | Smoothed price around next hour | 5 intervals (~75 min) |
-| **Next N Hours Average** | Future price forecast | 1h, 2h, 3h, 4h, 5h, 6h, 8h, 12h |
+| <EntityRef id="average_price_today">Average Price Today</EntityRef> | Typical price for current calendar day | 00:00 - 23:59 today |
+| <EntityRef id="average_price_tomorrow">Average Price Tomorrow</EntityRef> | Typical price for next calendar day | 00:00 - 23:59 tomorrow |
+| <EntityRef id="trailing_price_average">Trailing Price Average</EntityRef> | Typical price for last 24 hours | Rolling 24h backward |
+| <EntityRef id="leading_price_average">Leading Price Average</EntityRef> | Typical price for next 24 hours | Rolling 24h forward |
+| <EntityRef id="current_hour_average_price">Current Hour Average</EntityRef> | Smoothed price around current time | 5 intervals (~75 min) |
+| <EntityRef id="next_hour_average_price">Next Hour Average</EntityRef> | Smoothed price around next hour | 5 intervals (~75 min) |
+| **Next N Hours Average** (`next_avg_1h`–`next_avg_12h`) | Future price forecast | 1h, 2h, 3h, 4h, 5h, 6h, 8h, 12h |
 
 #### Configurable Display: Median vs Mean
 
@@ -234,10 +234,10 @@ The sensor's state can be `low`, `moderate`, `high`, or `very_high`, based on co
 
 | Sensor | Description | Time Window |
 |---|---|---|
-| **Today's Price Volatility** | Volatility for the current calendar day | 00:00 - 23:59 today |
-| **Tomorrow's Price Volatility** | Volatility for the next calendar day | 00:00 - 23:59 tomorrow |
-| **Next 24h Price Volatility** | Volatility for the next 24 hours from now | Rolling 24h forward |
-| **Today + Tomorrow Price Volatility** | Volatility across both today and tomorrow | Up to 48 hours |
+| <EntityRef id="today_volatility">Today's Price Volatility</EntityRef> | Volatility for the current calendar day | 00:00 - 23:59 today |
+| <EntityRef id="tomorrow_volatility">Tomorrow's Price Volatility</EntityRef> | Volatility for the next calendar day | 00:00 - 23:59 tomorrow |
+| **Next 24h Price Volatility** (`next_24h_volatility`) | Volatility for the next 24 hours from now | Rolling 24h forward |
+| <EntityRef id="today_tomorrow_volatility">Today + Tomorrow Price Volatility</EntityRef> | Volatility across both today and tomorrow | Up to 48 hours |
 
 ### Configuration
 
@@ -358,14 +358,14 @@ stateDiagram-v2
 
 | Sensor | Scope | Description |
 |--------|-------|-------------|
-| **Current Price Rating** | Current interval | Rating of the current 15-minute price |
-| **Next Price Rating** | Next interval | Rating for the upcoming 15-minute price |
-| **Previous Price Rating** | Previous interval | Rating for the past 15-minute price |
-| **Current Hour Price Rating** | Rolling 5-interval | Smoothed rating around the current hour |
-| **Next Hour Price Rating** | Rolling 5-interval | Smoothed rating around the next hour |
-| **Yesterday's Price Rating** | Calendar day | Aggregated rating for yesterday |
-| **Today's Price Rating** | Calendar day | Aggregated rating for today |
-| **Tomorrow's Price Rating** | Calendar day | Aggregated rating for tomorrow |
+| <EntityRef id="current_interval_price_rating">Current Price Rating</EntityRef> | Current interval | Rating of the current 15-minute price |
+| <EntityRef id="next_interval_price_rating">Next Price Rating</EntityRef> | Next interval | Rating for the upcoming 15-minute price |
+| <EntityRef id="previous_interval_price_rating">Previous Price Rating</EntityRef> | Previous interval | Rating for the past 15-minute price |
+| <EntityRef id="current_hour_price_rating">Current Hour Price Rating</EntityRef> | Rolling 5-interval | Smoothed rating around the current hour |
+| <EntityRef id="next_hour_price_rating">Next Hour Price Rating</EntityRef> | Rolling 5-interval | Smoothed rating around the next hour |
+| <EntityRef id="yesterday_price_rating">Yesterday's Price Rating</EntityRef> | Calendar day | Aggregated rating for yesterday |
+| <EntityRef id="today_price_rating">Today's Price Rating</EntityRef> | Calendar day | Aggregated rating for today |
+| <EntityRef id="tomorrow_price_rating">Tomorrow's Price Rating</EntityRef> | Calendar day | Aggregated rating for tomorrow |
 
 ### Ratings vs Levels
 
@@ -438,14 +438,14 @@ Level sensors show the **Tibber API's own price classification** with a 5-level 
 
 | Sensor | Scope |
 |--------|-------|
-| **Current Price Level** | Current interval |
-| **Next Price Level** | Next interval |
-| **Previous Price Level** | Previous interval |
-| **Current Hour Price Level** | Rolling 5-interval window |
-| **Next Hour Price Level** | Rolling 5-interval window |
-| **Yesterday's Price Level** | Calendar day (aggregated) |
-| **Today's Price Level** | Calendar day (aggregated) |
-| **Tomorrow's Price Level** | Calendar day (aggregated) |
+| <EntityRef id="current_interval_price_level">Current Price Level</EntityRef> | Current interval |
+| <EntityRef id="next_interval_price_level">Next Price Level</EntityRef> | Next interval |
+| <EntityRef id="previous_interval_price_level">Previous Price Level</EntityRef> | Previous interval |
+| <EntityRef id="current_hour_price_level">Current Hour Price Level</EntityRef> | Rolling 5-interval window |
+| <EntityRef id="next_hour_price_level">Next Hour Price Level</EntityRef> | Rolling 5-interval window |
+| <EntityRef id="yesterday_price_level">Yesterday's Price Level</EntityRef> | Calendar day (aggregated) |
+| <EntityRef id="today_price_level">Today's Price Level</EntityRef> | Calendar day (aggregated) |
+| <EntityRef id="tomorrow_price_level">Tomorrow's Price Level</EntityRef> | Calendar day (aggregated) |
 
 **Gap tolerance** smoothing is applied to prevent isolated level flickers (e.g., a single NORMAL between two CHEAPs → corrected to CHEAP). Configure in [options flow](configuration.md#step-4-price-level-gap-tolerance).
 
@@ -457,19 +457,19 @@ These sensors show the lowest and highest prices for calendar days and rolling w
 
 | Sensor | Description |
 |--------|-------------|
-| **Today's Lowest Price** | Minimum price today (00:00–23:59) |
-| **Today's Highest Price** | Maximum price today (00:00–23:59) |
-| **Tomorrow's Lowest Price** | Minimum price tomorrow |
-| **Tomorrow's Highest Price** | Maximum price tomorrow |
+| <EntityRef id="lowest_price_today">Today's Lowest Price</EntityRef> | Minimum price today (00:00–23:59) |
+| <EntityRef id="highest_price_today">Today's Highest Price</EntityRef> | Maximum price today (00:00–23:59) |
+| <EntityRef id="lowest_price_tomorrow">Tomorrow's Lowest Price</EntityRef> | Minimum price tomorrow |
+| <EntityRef id="highest_price_tomorrow">Tomorrow's Highest Price</EntityRef> | Maximum price tomorrow |
 
 ### 24-Hour Rolling Min/Max
 
 | Sensor | Description |
 |--------|-------------|
-| **Trailing Price Min** | Lowest price in the last 24 hours |
-| **Trailing Price Max** | Highest price in the last 24 hours |
-| **Leading Price Min** | Lowest price in the next 24 hours |
-| **Leading Price Max** | Highest price in the next 24 hours |
+| <EntityRef id="trailing_price_min">Trailing Price Min</EntityRef> | Lowest price in the last 24 hours |
+| <EntityRef id="trailing_price_max">Trailing Price Max</EntityRef> | Highest price in the last 24 hours |
+| <EntityRef id="leading_price_min">Leading Price Min</EntityRef> | Lowest price in the next 24 hours |
+| <EntityRef id="leading_price_max">Leading Price Max</EntityRef> | Highest price in the next 24 hours |
 
 ### Key Attributes
 
@@ -608,12 +608,12 @@ For each period type (Best Price and Peak Price):
 
 | Sensor | When Period Active | When No Active Period |
 |--------|-------------------|----------------------|
-| **End Time** | Current period's end time | Next period's end time |
-| **Period Duration** | Current period length (minutes) | Next period length |
-| **Remaining Minutes** | Minutes until current period ends | 0 |
-| **Progress** | 0–100% through current period | 0 |
-| **Next Start Time** | When next-next period starts | When next period starts |
-| **Next In Minutes** | Minutes to next-next period | Minutes to next period |
+| <EntityRef id="best_price_end_time" also="peak_price_end_time">End Time</EntityRef> | Current period's end time | Next period's end time |
+| <EntityRef id="best_price_period_duration" also="peak_price_period_duration">Period Duration</EntityRef> | Current period length (minutes) | Next period length |
+| <EntityRef id="best_price_remaining_minutes" also="peak_price_remaining_minutes">Remaining Minutes</EntityRef> | Minutes until current period ends | 0 |
+| <EntityRef id="best_price_progress" also="peak_price_progress">Progress</EntityRef> | 0–100% through current period | 0 |
+| <EntityRef id="best_price_next_start_time" also="peak_price_next_start_time">Next Start Time</EntityRef> | When next-next period starts | When next period starts |
+| <EntityRef id="best_price_next_in_minutes" also="peak_price_next_in_minutes">Next In Minutes</EntityRef> | Minutes to next-next period | Minutes to next period |
 
 ### Usage Examples
 
@@ -689,14 +689,14 @@ These sensors compare the **current price** with the **average price** of the ne
 
 | Sensor | Compares Against |
 |--------|-----------------|
-| **Price Outlook (1h)** | Average of next 1 hour |
-| **Price Outlook (2h)** | Average of next 2 hours |
-| **Price Outlook (3h)** | Average of next 3 hours |
-| **Price Outlook (4h)** | Average of next 4 hours |
-| **Price Outlook (5h)** | Average of next 5 hours |
-| **Price Outlook (6h)** | Average of next 6 hours |
-| **Price Outlook (8h)** | Average of next 8 hours |
-| **Price Outlook (12h)** | Average of next 12 hours |
+| **Price Outlook (1h)** (`price_outlook_1h`) | Average of next 1 hour |
+| **Price Outlook (2h)** (`price_outlook_2h`) | Average of next 2 hours |
+| **Price Outlook (3h)** (`price_outlook_3h`) | Average of next 3 hours |
+| **Price Outlook (4h)** (`price_outlook_4h`) | Average of next 4 hours |
+| **Price Outlook (5h)** (`price_outlook_5h`) | Average of next 5 hours |
+| **Price Outlook (6h)** (`price_outlook_6h`) | Average of next 6 hours |
+| **Price Outlook (8h)** (`price_outlook_8h`) | Average of next 8 hours |
+| **Price Outlook (12h)** (`price_outlook_12h`) | Average of next 12 hours |
 
 :::info Same Starting Point — All Outlook Sensors Use Your Current Price
 All outlook sensors share the **same base: your current 15-minute price**. They differ only in how far ahead they average. The windows **overlap** — the 3h average includes ALL intervals from the 1h and 2h windows, plus one more hour.
@@ -761,13 +761,13 @@ These sensors compare the **first half** of the future window against the **seco
 
 | Sensor | Compares |
 |--------|----------|
-| **Price Trajectory (2h)** | Avg of hour 1 vs avg of hour 2 |
-| **Price Trajectory (3h)** | Avg of first 1.5h vs avg of second 1.5h |
-| **Price Trajectory (4h)** | Avg of first 2h vs avg of second 2h |
-| **Price Trajectory (5h)** | Avg of first 2.5h vs avg of second 2.5h |
-| **Price Trajectory (6h)** | Avg of first 3h vs avg of second 3h |
-| **Price Trajectory (8h)** | Avg of first 4h vs avg of second 4h |
-| **Price Trajectory (12h)** | Avg of first 6h vs avg of second 6h |
+| **Price Trajectory (2h)** (`price_trajectory_2h`) | Avg of hour 1 vs avg of hour 2 |
+| **Price Trajectory (3h)** (`price_trajectory_3h`) | Avg of first 1.5h vs avg of second 1.5h |
+| **Price Trajectory (4h)** (`price_trajectory_4h`) | Avg of first 2h vs avg of second 2h |
+| **Price Trajectory (5h)** (`price_trajectory_5h`) | Avg of first 2.5h vs avg of second 2.5h |
+| **Price Trajectory (6h)** (`price_trajectory_6h`) | Avg of first 3h vs avg of second 3h |
+| **Price Trajectory (8h)** (`price_trajectory_8h`) | Avg of first 4h vs avg of second 4h |
+| **Price Trajectory (12h)** (`price_trajectory_12h`) | Avg of first 6h vs avg of second 6h |
 
 **States:** Same 5-level scale as outlook sensors (`strongly_falling` → `strongly_rising`).
 
@@ -1031,7 +1031,7 @@ If you're currently using this sensor, consider migrating to the service:
 # New approach (service)
 - service: tibber_prices.get_chartdata
   data:
-      entry_id: YOUR_ENTRY_ID
+      entry_id: YOUR_CONFIG_ENTRY_ID
       day: ["today", "tomorrow"]
       output_format: array_of_objects
   response_variable: chart_data

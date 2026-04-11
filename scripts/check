@@ -27,5 +27,9 @@ fi
 "$SCRIPT_DIR/type-check"
 echo ""
 "$SCRIPT_DIR/lint-check"
+echo ""
+
+log_header "Checking sensor reference freshness..."
+python3 "$SCRIPT_DIR/docs/generate-sensor-reference" --check
 
 log_success "All checks passed"

@@ -2,7 +2,7 @@
 
 Learn how Best Price and Peak Price periods work, and how to configure them for your needs.
 
-> **Entity ID tip:** `<home_name>` is a placeholder for your Tibber home display name in Home Assistant. Entity IDs are derived from the displayed name (localized), so the exact slug may differ. Example suffixes below use the English display names (en.json) as a baseline. You can find the real ID in **Settings → Devices & Services → Entities** (or **Developer Tools → States**).
+> **Entity ID tip:** `<home_name>` is a placeholder for your Tibber home display name in Home Assistant. Entity IDs are derived from the displayed name (localized), so the exact slug may differ. **Can't find a sensor?** Use the **[Entity Reference (All Languages)](sensor-reference.md)** to search by name in your language.
 
 ## Table of Contents
 
@@ -28,8 +28,8 @@ Learn how Best Price and Peak Price periods work, and how to configure them for 
 
 The integration finds time windows when electricity is especially **cheap** (Best Price) or **expensive** (Peak Price):
 
--   **Best Price Periods** 🟢 - When to run your dishwasher, charge your EV, or heat water
--   **Peak Price Periods** 🔴 - When to reduce consumption or defer non-essential loads
+-   <EntityRef id="best_price_period">Best Price Periods</EntityRef> 🟢 - When to run your dishwasher, charge your EV, or heat water
+-   <EntityRef id="peak_price_period">Peak Price Periods</EntityRef> 🔴 - When to reduce consumption or defer non-essential loads
 
 ### Default Behavior
 

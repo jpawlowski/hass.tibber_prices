@@ -52,6 +52,15 @@ jobs:
             docs/user/package-lock.json
             docs/developer/package-lock.json
 
+      # VERIFY GENERATED DOCS
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.14'
+
+      - name: Verify sensor reference is up-to-date
+        run: python3 scripts/docs/generate-sensor-reference --check
+
       # USER DOCS BUILD
       - name: Install user docs dependencies
         working-directory: docs/user

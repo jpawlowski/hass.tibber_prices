@@ -2,7 +2,7 @@
 
 Many sensors in the Tibber Prices integration automatically change their icon based on their current state. This provides instant visual feedback about price levels, trends, and periods without needing to read the actual values.
 
-> **Entity ID tip:** `<home_name>` is a placeholder for your Tibber home display name in Home Assistant. Entity IDs are derived from the displayed name (localized), so the exact slug may differ. Example suffixes below use the English display names (en.json) as a baseline. You can find the real ID in **Settings → Devices & Services → Entities** (or **Developer Tools → States**).
+> **Entity ID tip:** `<home_name>` is a placeholder for your Tibber home display name in Home Assistant. Entity IDs are derived from the displayed name (localized), so the exact slug may differ. **Can't find a sensor?** Use the **[Entity Reference (All Languages)](sensor-reference.md)** to search by name in your language.
 
 ## What are Dynamic Icons?
 
@@ -26,9 +26,9 @@ To see which icon a sensor currently uses:
 
 **Common sensor types with dynamic icons:**
 
--   Price level sensors (e.g., `current_price_level`)
--   Price rating sensors (e.g., `current_price_rating`)
--   Volatility sensors (e.g., `today_s_price_volatility`)
+-   Price level sensors (e.g., `current_price_level` → `current_interval_price_level`)
+-   Price rating sensors (e.g., `current_price_rating` → `current_interval_price_rating`)
+-   Volatility sensors (e.g., `today_s_price_volatility` → `today_volatility`)
 -   Binary sensors (e.g., `best_price_period`, `peak_price_period`)
 
 ## Using Dynamic Icons in Your Dashboard

@@ -1,6 +1,6 @@
 # Configuration
 
-> **Entity ID tip:** `<home_name>` is a placeholder for your Tibber home display name in Home Assistant. Entity IDs are derived from the displayed name (localized), so the exact slug may differ. You can find the real ID in **Settings → Devices & Services → Entities** (or **Developer Tools → States**).
+> **Entity ID tip:** `<home_name>` is a placeholder for your Tibber home display name in Home Assistant. Entity IDs are derived from the displayed name (localized), so the exact slug may differ. **Can't find a sensor?** Use the **[Entity Reference (All Languages)](sensor-reference.md)** to search by name in your language.
 
 ## Initial Setup
 
@@ -214,25 +214,25 @@ When enabled, these entities override the corresponding Options Flow settings:
 
 | Entity | Type | Range | Description |
 |--------|------|-------|-------------|
-| **Best Price: Flexibility** | Number | 0-50% | Maximum above daily minimum for "best price" intervals |
-| **Best Price: Minimum Distance** | Number | -50-0% | Required distance below daily average |
-| **Best Price: Minimum Period Length** | Number | 15-180 min | Shortest period duration to consider |
-| **Best Price: Minimum Periods** | Number | 1-10 | Target number of periods per day |
-| **Best Price: Relaxation Attempts** | Number | 1-12 | Steps to try when relaxing criteria |
-| **Best Price: Gap Tolerance** | Number | 0-8 | Consecutive intervals allowed above threshold |
-| **Best Price: Achieve Minimum Count** | Switch | On/Off | Enable relaxation algorithm |
+| <EntityRef id="best_price_flex_override">Best Price: Flexibility</EntityRef> | Number | 0-50% | Maximum above daily minimum for "best price" intervals |
+| <EntityRef id="best_price_min_distance_override">Best Price: Minimum Distance</EntityRef> | Number | -50-0% | Required distance below daily average |
+| <EntityRef id="best_price_min_period_length_override">Best Price: Minimum Period Length</EntityRef> | Number | 15-180 min | Shortest period duration to consider |
+| <EntityRef id="best_price_min_periods_override">Best Price: Minimum Periods</EntityRef> | Number | 1-10 | Target number of periods per day |
+| <EntityRef id="best_price_relaxation_attempts_override">Best Price: Relaxation Attempts</EntityRef> | Number | 1-12 | Steps to try when relaxing criteria |
+| <EntityRef id="best_price_gap_tolerance_override">Best Price: Gap Tolerance</EntityRef> | Number | 0-8 | Consecutive intervals allowed above threshold |
+| <EntityRef id="best_price_achieve_min_count_override">Best Price: Achieve Minimum Count</EntityRef> | Switch | On/Off | Enable relaxation algorithm |
 
 #### Peak Price Period Settings
 
 | Entity | Type | Range | Description |
 |--------|------|-------|-------------|
-| **Peak Price: Flexibility** | Number | -50-0% | Maximum below daily maximum for "peak price" intervals |
-| **Peak Price: Minimum Distance** | Number | 0-50% | Required distance above daily average |
-| **Peak Price: Minimum Period Length** | Number | 15-180 min | Shortest period duration to consider |
-| **Peak Price: Minimum Periods** | Number | 1-10 | Target number of periods per day |
-| **Peak Price: Relaxation Attempts** | Number | 1-12 | Steps to try when relaxing criteria |
-| **Peak Price: Gap Tolerance** | Number | 0-8 | Consecutive intervals allowed below threshold |
-| **Peak Price: Achieve Minimum Count** | Switch | On/Off | Enable relaxation algorithm |
+| <EntityRef id="peak_price_flex_override">Peak Price: Flexibility</EntityRef> | Number | -50-0% | Maximum below daily maximum for "peak price" intervals |
+| <EntityRef id="peak_price_min_distance_override">Peak Price: Minimum Distance</EntityRef> | Number | 0-50% | Required distance above daily average |
+| <EntityRef id="peak_price_min_period_length_override">Peak Price: Minimum Period Length</EntityRef> | Number | 15-180 min | Shortest period duration to consider |
+| <EntityRef id="peak_price_min_periods_override">Peak Price: Minimum Periods</EntityRef> | Number | 1-10 | Target number of periods per day |
+| <EntityRef id="peak_price_relaxation_attempts_override">Peak Price: Relaxation Attempts</EntityRef> | Number | 1-12 | Steps to try when relaxing criteria |
+| <EntityRef id="peak_price_gap_tolerance_override">Peak Price: Gap Tolerance</EntityRef> | Number | 0-8 | Consecutive intervals allowed below threshold |
+| <EntityRef id="peak_price_achieve_min_count_override">Peak Price: Achieve Minimum Count</EntityRef> | Switch | On/Off | Enable relaxation algorithm |
 
 ### How Runtime Overrides Work
 

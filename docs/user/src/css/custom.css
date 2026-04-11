@@ -4,6 +4,440 @@
  * work well for content-centric websites.
  */
 
+/* ── EntityRef component ──────────────────────────────────────── */
+
+/* The link wrapping the entity name */
+.entity-ref {
+  text-decoration: none;
+  color: inherit;
+  border-bottom: 1.5px dotted var(--ifm-color-primary);
+  transition: border-color 0.15s ease, color 0.15s ease;
+}
+
+.entity-ref:hover {
+  border-bottom-style: solid;
+  color: var(--ifm-color-primary);
+  text-decoration: none;
+}
+
+/* Small arrow indicator after the name */
+.entity-ref::after {
+  content: '\2197'; /* ↗ */
+  display: inline-block;
+  font-size: 0.6em;
+  vertical-align: super;
+  margin-left: 0.15em;
+  opacity: 0.4;
+  transition: opacity 0.15s ease;
+}
+
+.entity-ref:hover::after {
+  opacity: 1;
+}
+
+/* Inside tables, keep the indicator subtle */
+td .entity-ref::after {
+  font-size: 0.55em;
+}
+
+/* ── EntitySearch component ────────────────────────────────────── */
+
+.entity-search {
+  position: sticky;
+  top: calc(var(--ifm-navbar-height) + 0.5rem);
+  z-index: 10;
+  margin-bottom: 1.5rem;
+  padding: 0.75rem 1rem;
+  background: var(--ifm-background-surface-color);
+  border: 1px solid var(--ifm-color-emphasis-200);
+  border-radius: var(--ifm-global-radius);
+  box-shadow: var(--ifm-global-shadow-md);
+  backdrop-filter: blur(12px);
+}
+
+[data-theme='dark'] .entity-search {
+  background: rgba(36, 36, 36, 0.92);
+  border-color: var(--ifm-color-emphasis-300);
+}
+
+.entity-search-input-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.entity-search-icon {
+  position: absolute;
+  left: 0.75rem;
+  color: var(--ifm-color-emphasis-500);
+  pointer-events: none;
+  flex-shrink: 0;
+}
+
+.entity-search-input {
+  width: 100%;
+  padding: 0.6rem 2.5rem 0.6rem 2.5rem;
+  border: 1.5px solid var(--ifm-color-emphasis-300);
+  border-radius: calc(var(--ifm-global-radius) - 2px);
+  background: var(--ifm-background-color);
+  color: var(--ifm-font-color-base);
+  font-size: 0.95rem;
+  font-family: var(--ifm-font-family-base);
+  outline: none;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.entity-search-input::placeholder {
+  color: var(--ifm-color-emphasis-500);
+}
+
+.entity-search-input:focus {
+  border-color: var(--ifm-color-primary);
+  box-shadow: 0 0 0 3px rgba(0, 185, 231, 0.15);
+}
+
+[data-theme='dark'] .entity-search-input:focus {
+  box-shadow: 0 0 0 3px rgba(0, 212, 255, 0.15);
+}
+
+.entity-search-clear {
+  position: absolute;
+  right: 0.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.5rem;
+  height: 1.5rem;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  background: var(--ifm-color-emphasis-200);
+  color: var(--ifm-color-emphasis-700);
+  font-size: 0.75rem;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.entity-search-clear:hover {
+  background: var(--ifm-color-emphasis-300);
+  color: var(--ifm-color-emphasis-900);
+}
+
+.entity-search-status {
+  margin-top: 0.4rem;
+  font-size: 0.8rem;
+  color: var(--ifm-color-emphasis-600);
+  padding-left: 0.25rem;
+}
+
+.entity-search-no-results {
+  color: var(--ifm-color-danger);
+}
+
+/* ── Results dropdown ─────────────────────────────────────────── */
+
+.entity-search-results-container {
+  margin-top: 0.5rem;
+}
+
+.entity-search-results {
+  list-style: none;
+  margin: 0;
+  padding: 0.25rem 0;
+  max-height: 24rem;
+  overflow-y: auto;
+  border: 1px solid var(--ifm-color-emphasis-200);
+  border-radius: calc(var(--ifm-global-radius) - 2px);
+  background: var(--ifm-background-color);
+}
+
+[data-theme='dark'] .entity-search-results {
+  border-color: var(--ifm-color-emphasis-300);
+}
+
+.entity-search-result-item {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+  padding: 0.45rem 0.75rem;
+  cursor: pointer;
+  transition: background 0.1s ease;
+  flex-wrap: wrap;
+}
+
+.entity-search-result-item:hover,
+.entity-search-result-item.active {
+  background: var(--ifm-color-primary-lightest);
+  color: var(--ifm-font-color-base);
+}
+
+[data-theme='dark'] .entity-search-result-item:hover,
+[data-theme='dark'] .entity-search-result-item.active {
+  background: rgba(0, 212, 255, 0.12);
+}
+
+.entity-search-result-name {
+  font-weight: 600;
+  font-size: 0.9rem;
+  white-space: nowrap;
+}
+
+.entity-search-result-key {
+  font-size: 0.75rem;
+  opacity: 0.6;
+  white-space: nowrap;
+}
+
+.entity-search-result-translation {
+  font-size: 0.8rem;
+  color: var(--ifm-color-emphasis-600);
+  margin-left: auto;
+  text-align: right;
+  white-space: nowrap;
+}
+
+.entity-search-more {
+  color: var(--ifm-color-emphasis-500);
+}
+
+/* ── Jump highlight (triggered by clicking a result) ──────────── */
+
+tr.entity-search-jump-highlight {
+  animation: entity-jump-flash 1.8s ease forwards;
+}
+
+@keyframes entity-jump-flash {
+  0%   { background-color: rgba(0, 185, 231, 0.45); }
+  30%  { background-color: rgba(0, 185, 231, 0.25); }
+  100% { background-color: rgba(0, 185, 231, 0.13); }
+}
+
+[data-theme='dark'] tr.entity-search-jump-highlight {
+  animation: entity-jump-flash-dark 1.8s ease forwards;
+}
+
+@keyframes entity-jump-flash-dark {
+  0%   { background-color: rgba(0, 212, 255, 0.40); }
+  30%  { background-color: rgba(0, 212, 255, 0.20); }
+  100% { background-color: rgba(0, 212, 255, 0.13); }
+}
+
+/* Row filtering states */
+tr.entity-search-hidden {
+  opacity: 0.08;
+  transition: opacity 0.2s ease;
+}
+
+tr.entity-search-match {
+  transition: opacity 0.2s ease;
+}
+
+/* Dim sections with no matches */
+.entity-search-section-hidden {
+  opacity: 0.15;
+  transition: opacity 0.2s ease;
+}
+
+/* ── Filter chips ─────────────────────────────────────────────── */
+
+.entity-search-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin-bottom: 0.6rem;
+  align-items: center;
+}
+
+.entity-search-chip {
+  padding: 0.25rem 0.7rem;
+  border: 1.5px solid var(--ifm-color-emphasis-300);
+  border-radius: 2rem;
+  background: transparent;
+  color: var(--ifm-color-emphasis-700);
+  font-size: 0.8rem;
+  font-family: var(--ifm-font-family-base);
+  cursor: pointer;
+  transition: all 0.15s ease;
+  white-space: nowrap;
+}
+
+.entity-search-chip:hover {
+  border-color: var(--ifm-color-primary);
+  color: var(--ifm-color-primary);
+  background: rgba(0, 185, 231, 0.06);
+}
+
+.entity-search-chip.active {
+  border-color: var(--ifm-color-primary);
+  background: var(--ifm-color-primary);
+  color: white;
+}
+
+[data-theme='dark'] .entity-search-chip.active {
+  background: var(--ifm-color-primary-dark);
+}
+
+.entity-search-shortcut-hint {
+  margin-left: auto;
+  font-size: 0.75rem;
+  color: var(--ifm-color-emphasis-400);
+  white-space: nowrap;
+}
+
+.entity-search-shortcut-hint kbd {
+  display: inline-block;
+  padding: 0.05rem 0.35rem;
+  border: 1px solid var(--ifm-color-emphasis-300);
+  border-radius: 0.25rem;
+  background: var(--ifm-color-emphasis-100);
+  font-family: var(--ifm-font-family-monospace);
+  font-size: 0.75rem;
+  color: var(--ifm-color-emphasis-600);
+  line-height: 1.4;
+  vertical-align: baseline;
+}
+
+/* ── Copy entity ID button ────────────────────────────────────── */
+
+.entity-copy-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.4rem;
+  height: 1.4rem;
+  margin-left: 0.35rem;
+  padding: 0;
+  border: none;
+  border-radius: 0.25rem;
+  background: transparent;
+  color: var(--ifm-color-emphasis-400);
+  font-size: 0.8rem;
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.15s ease, color 0.15s ease, background 0.15s ease;
+  vertical-align: middle;
+}
+
+tr:hover .entity-copy-btn {
+  opacity: 1;
+}
+
+/* Always visible on touch devices (no hover) */
+@media (hover: none) {
+  .entity-copy-btn {
+    opacity: 0.6;
+  }
+}
+
+.entity-copy-btn:hover {
+  background: var(--ifm-color-emphasis-200);
+  color: var(--ifm-color-emphasis-700);
+}
+
+.entity-copy-btn.copied {
+  color: var(--ifm-color-success);
+  opacity: 1;
+}
+
+/* ── Doc back-links ───────────────────────────────────────────── */
+
+.entity-back-links {
+  margin-left: 0.25rem;
+  white-space: nowrap;
+}
+
+.entity-back-link {
+  display: inline-block;
+  font-size: 0.7rem;
+  text-decoration: none;
+  opacity: 0;
+  transition: opacity 0.15s ease;
+  margin-left: 0.1rem;
+  vertical-align: middle;
+}
+
+tr:hover .entity-back-link {
+  opacity: 0.7;
+}
+
+.entity-back-link:hover {
+  opacity: 1 !important;
+}
+
+@media (hover: none) {
+  .entity-back-link {
+    opacity: 0.5;
+  }
+}
+
+/* ── Match highlighting ──────────────────────────────────────── */
+
+mark.entity-match {
+  background-color: rgba(255, 184, 0, 0.35);
+  color: inherit;
+  padding: 0.05em 0.1em;
+  border-radius: 2px;
+}
+
+[data-theme='dark'] mark.entity-match {
+  background-color: rgba(255, 184, 0, 0.3);
+}
+
+/* ── Mobile responsive ────────────────────────────────────────── */
+
+@media (max-width: 768px) {
+  .entity-search {
+    position: relative;
+    top: auto;
+  }
+
+  .entity-search-chips {
+    overflow-x: auto;
+    flex-wrap: nowrap;
+    -webkit-overflow-scrolling: touch;
+    padding-bottom: 0.2rem;
+  }
+
+  .entity-search-shortcut-hint {
+    display: none;
+  }
+
+  .entity-search-results {
+    max-height: 16rem;
+  }
+}
+
+/* ── Sensor-reference :target highlighting ────────────────────── */
+
+/* Scroll offset so the targeted row isn't hidden behind the navbar */
+.entity-anchor {
+  scroll-margin-top: 5rem;
+}
+
+/* Highlight the table row that was navigated to (stays visible) */
+tr:has(.entity-anchor:target) {
+  animation: entity-highlight-pulse 2s ease forwards;
+}
+
+@keyframes entity-highlight-pulse {
+  0%   { background-color: rgba(0, 185, 231, 0.35); }
+  100% { background-color: rgba(0, 185, 231, 0.13); }
+}
+
+[data-theme='dark'] tr:has(.entity-anchor:target) {
+  animation: entity-highlight-pulse-dark 2s ease forwards;
+}
+
+@keyframes entity-highlight-pulse-dark {
+  0%   { background-color: rgba(0, 212, 255, 0.30); }
+  100% { background-color: rgba(0, 212, 255, 0.13); }
+}
+
+/* Smooth scrolling for anchor navigation */
+html {
+  scroll-behavior: smooth;
+}
+
 /* Modern font stack */
 :root {
   --ifm-font-family-base: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;

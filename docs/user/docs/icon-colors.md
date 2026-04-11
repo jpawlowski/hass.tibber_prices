@@ -10,7 +10,7 @@ Many sensors in the Tibber Prices integration provide an `icon_color` attribute 
 
 > **Related:** Many sensors also automatically change their **icon** based on state. See the **[Dynamic Icons Guide](dynamic-icons.md)** for details.
 
-> **Entity ID tip:** `<home_name>` is a placeholder for your Tibber home display name in Home Assistant. Entity IDs are derived from the displayed name (localized), so the exact slug may differ. Example suffixes below use the English display names (en.json) as a baseline. You can find the real ID in **Settings → Devices & Services → Entities** (or **Developer Tools → States**).
+> **Entity ID tip:** `<home_name>` is a placeholder for your Tibber home display name in Home Assistant. Entity IDs are derived from the displayed name (localized), so the exact slug may differ. **Can't find a sensor?** Use the **[Entity Reference (All Languages)](sensor-reference.md)** to search by name in your language.
 
 ## What is icon_color?
 
@@ -40,12 +40,12 @@ Many sensors provide the `icon_color` attribute for dynamic styling. To see if a
 
 **Common sensor types with icon_color:**
 
--   Price level sensors (e.g., `current_price_level`)
--   Price rating sensors (e.g., `current_price_rating`)
--   Volatility sensors (e.g., `today_s_price_volatility`)
+-   Price level sensors (e.g., `current_price_level` → `current_interval_price_level`)
+-   Price rating sensors (e.g., `current_price_rating` → `current_interval_price_rating`)
+-   Volatility sensors (e.g., `today_s_price_volatility` → `today_volatility`)
 -   Price outlook sensors (e.g., `price_outlook_3h`)
 -   Binary sensors (e.g., `best_price_period`, `peak_price_period`)
--   Timing sensors (e.g., `best_price_time_until_start`, `best_price_progress`)
+-   Timing sensors (e.g., `best_price_time_until_start` → `best_price_next_in_minutes`, `best_price_progress`)
 
 The colors adapt to the sensor's state - cheaper prices typically show green, expensive prices red, and neutral states gray.
 
