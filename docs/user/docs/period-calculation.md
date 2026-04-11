@@ -72,6 +72,14 @@ The integration sets different **initial defaults** because the features serve d
 
 Each day, the integration analyzes all 96 quarter-hourly price intervals and identifies **continuous time ranges** that meet specific criteria.
 
+:::info What "Best Price" means
+A Best Price Period is the **cheapest contiguous block** of time — a stretch of consecutive intervals where prices stay close to the daily minimum. It is **not** a fixed-length sliding window that shifts to center around the minimum.
+
+On a V-shaped day (prices drop sharply to a minimum, then rise again), the period therefore starts **at** the low point, not before it — because the intervals leading up to the minimum did not yet meet the price criteria. Only the intervals near the bottom of the V qualify as a coherent cheap block.
+
+**For flexible loads** (e.g., heat pump, battery charging): you can easily ride the full cheap wave by combining the period sensor with the price level and trend sensors. See [V-Shaped Price Days in Automation Examples](./automation-examples.md#understanding-v-shaped-price-days).
+:::
+
 ```mermaid
 flowchart TD
     A["96 intervals per day"] --> B{"① Flexibility<br/><small>Close to MIN/MAX?</small>"}
@@ -363,6 +371,10 @@ Sometimes strict filters find too few periods. **Relaxation automatically loosen
 ---
 
 ## Common Scenarios
+
+:::tip V-shaped price days
+On days with a sharp price dip (e.g. solar midday surplus), the Best Price Period covers only the absolute minimum. The surrounding cheap hours are intentional — the integration shows you the cheapest contiguous block, not a fixed-length window centered on the minimum. To run a device during the full cheap window, see [Understanding V-Shaped Price Days](./automation-examples.md#understanding-v-shaped-price-days) in the Automation Examples.
+:::
 
 ### Scenario 1: Simple Best Price (Default)
 
