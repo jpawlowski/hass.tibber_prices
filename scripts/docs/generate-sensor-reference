@@ -337,37 +337,66 @@ def load_all_disabled() -> dict[str, set[str]]:
     return result
 
 
+def _heading_to_anchor(heading_text: str) -> str:
+    """Convert a Markdown heading to a Docusaurus-style anchor slug."""
+    text = heading_text.strip().lower()
+    # Remove inline code backticks and common Markdown formatting
+    text = re.sub(r"[`*_]", "", text)
+    # Replace non-alphanumeric (except hyphens) with hyphens
+    text = re.sub(r"[^a-z0-9-]+", "-", text)
+    # Collapse multiple hyphens and strip leading/trailing hyphens
+    return re.sub(r"-{2,}", "-", text).strip("-")
+
+
 def scan_doc_refs() -> dict[str, list[str]]:
     """
     Scan doc markdown files for EntityRef usage.
 
-    Returns: {entity_key: [doc_slug, ...]}
+    Returns: {entity_key: [doc_slug#anchor, ...]}
+    Each value includes the section anchor of the nearest heading above the EntityRef.
     """
     refs: dict[str, list[str]] = {}
     docs_dir = REPO_ROOT / "docs" / "user" / "docs"
     entity_ref_pattern = re.compile(r'<EntityRef\s[^>]*?\bid="([^"]+)"')
     also_pattern = re.compile(r'\balso="([^"]+)"')
+    heading_pattern = re.compile(r"^(#{2,6})\s+(.+)$", re.MULTILINE)
 
     for md_file in sorted(docs_dir.glob("*.md")):
         if md_file.name == "sensor-reference.md":
             continue
         slug = md_file.stem
         text = md_file.read_text(encoding="utf-8")
+
+        # Build list of (position, anchor) for all headings in this file
+        headings: list[tuple[int, str]] = [
+            (h_match.start(), _heading_to_anchor(h_match.group(2))) for h_match in heading_pattern.finditer(text)
+        ]
+
+        def _ref_with_anchor(pos: int, *, _headings: list[tuple[int, str]] = headings, _slug: str = slug) -> str:
+            """Return 'slug#anchor' for the nearest heading above pos."""
+            anchor = ""
+            for h_pos, h_anchor in reversed(_headings):
+                if h_pos < pos:
+                    anchor = h_anchor
+                    break
+            return f"{_slug}#{anchor}" if anchor else _slug
+
+        def _add_ref(key: str, ref: str) -> None:
+            refs.setdefault(key, [])
+            if ref not in refs[key]:
+                refs[key].append(ref)
+
         for match in entity_ref_pattern.finditer(text):
             key = match.group(1)
-            refs.setdefault(key, [])
-            if slug not in refs[key]:
-                refs[key].append(slug)
+            ref = _ref_with_anchor(match.start())
+            _add_ref(key, ref)
             # Check for 'also' prop in the same tag
             tag_end = text.find(">", match.start())
             if tag_end != -1:
                 tag_text = text[match.start() : tag_end]
                 also_match = also_pattern.search(tag_text)
                 if also_match:
-                    also_key = also_match.group(1)
-                    refs.setdefault(also_key, [])
-                    if slug not in refs[also_key]:
-                        refs[also_key].append(slug)
+                    _add_ref(also_match.group(1), ref)
 
     return refs
 
@@ -411,7 +440,7 @@ You can also use your browser's built-in search (**Ctrl+F** / **Cmd+F**) to sear
 Sensors marked ❌ must be enabled manually via
 **Settings → Devices & Services → Entities** → find the entity → toggle **Enabled**.
 
-**Detailed documentation:** See the **[Sensors Guide](sensors.md)** for detailed
+**Detailed documentation:** See the **[Sensors Overview](sensors-overview.md)** for detailed
 explanations of each sensor's purpose, attributes, and automation examples.
 
 ---

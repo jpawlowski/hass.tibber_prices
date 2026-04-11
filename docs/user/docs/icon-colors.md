@@ -484,6 +484,6 @@ styles:
 
 ## See Also
 
--   [Sensors Reference](sensors.md) - Complete list of available sensors
+-   [Sensors Overview](sensors-overview.md) - Complete list of available sensors
 -   [Automation Examples](automation-examples.md) - Use color-coded sensors in automations
 -   [Configuration Guide](configuration.md) - Adjust thresholds for price levels and ratings

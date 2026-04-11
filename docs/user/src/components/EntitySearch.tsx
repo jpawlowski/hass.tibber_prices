@@ -27,9 +27,16 @@ const MAX_RESULTS = 12;
 
 /** Display names for doc page back-links (from data-refs attribute). */
 const DOC_NAMES: Record<string, string> = {
-  sensors: 'Sensors Guide',
+  'sensors-overview': 'Sensors Overview',
+  'sensors-average': 'Average Sensors',
+  'sensors-ratings-levels': 'Ratings & Levels',
+  'sensors-volatility': 'Volatility',
+  'sensors-trends': 'Trends',
+  'sensors-timing': 'Timing',
+  'sensors-energy-tax': 'Energy & Tax',
   configuration: 'Configuration',
   'period-calculation': 'Period Calculation',
+  'period-relaxation': 'Relaxation',
   'automation-examples': 'Automation Examples',
   actions: 'Actions',
 };
@@ -151,9 +158,10 @@ export default function EntitySearch(): React.ReactElement {
       if (docRefs.length > 0 && firstCell && !firstCell.querySelector('.entity-back-links')) {
         const span = document.createElement('span');
         span.className = 'entity-back-links';
-        docRefs.forEach((slug) => {
+        docRefs.forEach((ref) => {
+          const slug = ref.split('#')[0];
           const a = document.createElement('a');
-          a.href = slug;
+          a.href = ref;
           a.className = 'entity-back-link';
           a.title = DOC_NAMES[slug] ?? slug;
           a.setAttribute('aria-label', `View in: ${DOC_NAMES[slug] ?? slug}`);

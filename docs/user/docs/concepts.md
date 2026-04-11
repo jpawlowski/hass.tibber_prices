@@ -93,7 +93,7 @@ Some days show distinctive price curve shapes:
 - **V-shaped**: Prices drop sharply, hit a brief minimum, then rise sharply again (common during short midday solar surplus)
 - **U-shaped**: Prices drop to a low level and stay there for an extended period before rising (common during nighttime or extended low-demand periods)
 
-**Why this matters:** On these days, the Best Price Period may be short (1–2 hours, covering only the absolute minimum), but prices can remain favorable for 4–6 hours. By combining [trend sensors](sensors.md#trend-sensors) with [price levels](sensors.md#core-price-sensors) in automations, you can ride the full cheap wave instead of only using the detected period.
+**Why this matters:** On these days, the Best Price Period may be short (1–2 hours, covering only the absolute minimum), but prices can remain favorable for 4–6 hours. By combining [trend sensors](sensors-trends.md) with [price levels](sensors-ratings-levels.md) in automations, you can ride the full cheap wave instead of only using the detected period.
 
 See [Automation Examples → V-Shaped Days](automation-examples.md#understanding-v-shaped-price-days) for practical patterns.
 
@@ -110,5 +110,5 @@ Each home gets its own set of sensors with unique entity IDs.
 
 💡 **Next Steps:**
 - [Glossary](glossary.md) - Detailed term definitions
-- [Sensors](sensors.md) - How to use sensor data
+- [Sensors Overview](sensors-overview.md) - How to use sensor data
 - [Automation Examples](automation-examples.md) - Practical use cases

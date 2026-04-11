@@ -176,5 +176,5 @@ The exact icons are chosen to be intuitive and meaningful in the Home Assistant 
 ## See Also
 
 -   [Dynamic Icon Colors](icon-colors.md) - Color your icons based on state
--   [Sensors Reference](sensors.md) - Complete list of available sensors
+-   [Sensors Overview](sensors-overview.md) - Complete list of available sensors
 -   [Automation Examples](automation-examples.md) - Use dynamic icons in automations

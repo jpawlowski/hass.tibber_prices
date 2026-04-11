@@ -121,7 +121,7 @@ Configure when trend sensors report rising/falling:
 | **Falling** | -3% | Future average this much below current → "falling" |
 | **Strongly falling** | -9% | Future average far below current → "strongly_falling" |
 
-Thresholds are [volatility-adaptive](sensors.md#trend-sensors): automatically widened on volatile days to prevent constant state changes.
+Thresholds are [volatility-adaptive](sensors-trends.md): automatically widened on volatile days to prevent constant state changes.
 
 ### Step 9: Chart Data Export (Legacy)
 
@@ -184,7 +184,7 @@ This setting applies to:
 - Hourly smoothed prices (current hour, next hour)
 - Future forecast sensors (next 1h, 2h, 3h, ... 12h)
 
-See the **[Sensors Guide](sensors.md#average-price-sensors)** for detailed examples.
+See the **[Average Sensors](sensors-average.md)** for detailed examples.
 
 #### Choosing Your Display
 

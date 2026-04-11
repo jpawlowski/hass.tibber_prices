@@ -166,7 +166,7 @@ Returns data points like:
 }
 ```
 
-**Use case — Solar feed-in chart:** Overlay the energy price (what you earn by exporting) alongside the total price to visualize the best export windows. See [Sensors — Energy Price & Tax Breakdown](sensors.md#energy-price--tax-breakdown) for more use cases.
+**Use case — Solar feed-in chart:** Overlay the energy price (what you earn by exporting) alongside the total price to visualize the best export windows. See [Energy & Tax Attributes](sensors-energy-tax.md) for more use cases.
 
 ---
 

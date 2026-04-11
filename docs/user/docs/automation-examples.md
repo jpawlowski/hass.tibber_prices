@@ -7,7 +7,7 @@
 -   [Price-Based Automations](#price-based-automations)
 -   [Volatility-Aware Automations](#volatility-aware-automations)
 -   [Best Hour Detection](#best-hour-detection)
--   [ApexCharts Cards](#apexcharts-cards)
+-   [Charts & Visualizations](#charts--visualizations)
 
 ---
 
@@ -269,7 +269,7 @@ automation:
 </details>
 
 :::tip Why "rising" means "act now"
-A common misconception: **"rising" does NOT mean "too late"**. It means your current price is **lower** than the future average — so right now is actually a good time. See [How to Use Trend Sensors for Decisions](sensors.md#how-to-use-trend-sensors-for-decisions) in the sensor documentation for details.
+A common misconception: **"rising" does NOT mean "too late"**. It means your current price is **lower** than the future average — so right now is actually a good time. See [How to Use Trend Sensors for Decisions](sensors-trends.md#how-to-use-trend-sensors-for-decisions) in the sensor documentation for details.
 :::
 
 ### Sensor Combination Quick Reference
@@ -502,97 +502,6 @@ automation:
 
 ---
 
-## ApexCharts Cards
+## Charts & Visualizations
 
-> ⚠️ **IMPORTANT:** The `tibber_prices.get_apexcharts_yaml` service generates a **basic example configuration** as a starting point. It is NOT a complete solution for all ApexCharts features.
->
-> This integration is primarily a **data provider**. Due to technical limitations (segmented time periods, service API usage), many advanced ApexCharts features require manual customization or may not be compatible.
->
-> **For advanced customization:** Use the `get_chartdata` service directly to build charts tailored to your specific needs. Community contributions with improved configurations are welcome!
-
-The `tibber_prices.get_apexcharts_yaml` service generates basic ApexCharts card configuration examples for visualizing electricity prices.
-
-:::info Finding your Entry ID (`entry_id`)
-The examples below contain `entry_id: YOUR_CONFIG_ENTRY_ID`. This value identifies which Tibber home (integration instance) the action targets.
-
-**In the Action UI (Developer Tools → Actions or the automation editor):** The `entry_id` field is a **dropdown** — just select your Tibber home and HA fills in the correct ID automatically.
-
-**In YAML:** Go to **Settings → Devices & Services**, find the **Tibber Prices** card, open the **⋮** (three-dot) menu, and choose **"Copy Config Entry ID"**. Paste the copied value in place of `YOUR_CONFIG_ENTRY_ID`.
-:::
-
-### Prerequisites
-
-**Required:**
-
--   [ApexCharts Card](https://github.com/RomRider/apexcharts-card) - Install via HACS
-
-**Optional (for rolling window mode):**
-
--   [Config Template Card](https://github.com/iantrich/config-template-card) - Install via HACS
-
-### Installation
-
-1. Open HACS → Frontend
-2. Search for "ApexCharts Card" and install
-3. (Optional) Search for "Config Template Card" and install if you want rolling window mode
-
-### Example: Fixed Day View
-
-```yaml
-# Generate configuration via automation/script
-service: tibber_prices.get_apexcharts_yaml
-data:
-    entry_id: YOUR_CONFIG_ENTRY_ID
-    day: today # or "yesterday", "tomorrow"
-    level_type: rating_level # or "level" for 5-level view
-response_variable: apexcharts_config
-```
-
-Then copy the generated YAML into your Lovelace dashboard.
-
-### Example: Rolling 48h Window
-
-For a dynamic chart that automatically adapts to data availability:
-
-```yaml
-service: tibber_prices.get_apexcharts_yaml
-data:
-    entry_id: YOUR_CONFIG_ENTRY_ID
-    day: rolling_window # Or omit for same behavior (default)
-    level_type: rating_level
-response_variable: apexcharts_config
-```
-
-**Behavior:**
-
--   **When tomorrow data available** (typically after ~13:00): Shows today + tomorrow
--   **When tomorrow data not available**: Shows yesterday + today
--   **Fixed 48h span:** Always shows full 48 hours
-
-**Auto-Zoom Variant:**
-
-For progressive zoom-in throughout the day:
-
-```yaml
-service: tibber_prices.get_apexcharts_yaml
-data:
-    entry_id: YOUR_CONFIG_ENTRY_ID
-    day: rolling_window_autozoom
-    level_type: rating_level
-response_variable: apexcharts_config
-```
-
--   Same data loading as rolling window
--   **Progressive zoom:** Graph span starts at ~26h in the morning and decreases to ~14h by midnight
--   **Updates every 15 minutes:** Always shows 2h lookback + remaining time until midnight
-
-**Note:** Rolling window modes require Config Template Card to dynamically adjust the time range.
-
-### Features
-
--   Color-coded price levels/ratings (green = cheap, yellow = normal, red = expensive)
--   Best price period highlighting (semi-transparent green overlay)
--   Automatic NULL insertion for clean gaps
--   Translated labels based on your Home Assistant language
--   Interactive zoom and pan
--   Live marker showing current time
+> **Looking for chart configurations?** See the **[Chart Examples Guide](chart-examples.md)** for ApexCharts card configurations, rolling window modes, and more.

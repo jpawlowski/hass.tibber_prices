@@ -15,7 +15,7 @@ This is an independent, community-maintained custom integration. It is **not** a
 -   **[Installation](installation.md)** - How to install via HACS and configure the integration
 -   **[Configuration](configuration.md)** - Setting up your Tibber API token and price thresholds
 -   **[Period Calculation](period-calculation.md)** - How Best/Peak Price periods are calculated and configured
--   **[Sensors](sensors.md)** - Available sensors, their states, and attributes
+-   **[Sensors](sensors-overview.md)** - Available sensors, their states, and attributes
 -   **[Dynamic Icons](dynamic-icons.md)** - State-based automatic icon changes
 -   **[Dynamic Icon Colors](icon-colors.md)** - Using icon_color attribute for color-coded dashboards
 -   **[Actions](actions.md)** - Custom actions (service endpoints) and how to use them

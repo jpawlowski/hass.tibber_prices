@@ -291,7 +291,7 @@ cards:
 ## Next Steps
 
 - **[Actions Guide](actions.md)**: Complete documentation of `get_apexcharts_yaml` parameters
-- **[Chart Metadata Sensor](sensors.md#chart-metadata)**: Learn about dynamic Y-axis scaling
+- **[Chart Metadata Sensor](sensors-overview.md#chart-metadata)**: Learn about dynamic Y-axis scaling
 - **[Period Calculation Guide](period-calculation.md)**: Configure best price period detection
 
 ---

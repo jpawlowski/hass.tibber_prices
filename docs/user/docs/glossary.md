@@ -115,5 +115,5 @@ Quick reference for terms used throughout the documentation.
 
 💡 **See Also:**
 - [Core Concepts](concepts.md) - In-depth explanations
-- [Sensors](sensors.md) - How sensors use these concepts
+- [Sensors Overview](sensors-overview.md) - How sensors use these concepts
 - [Period Calculation](period-calculation.md) - Deep dive into period detection
