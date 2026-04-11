@@ -135,10 +135,11 @@ const config: Config = {
     docs: {
       sidebar: {
         hideable: true,
-        autoCollapseCategories: true,
+        autoCollapseCategories: false,
       },
     },
     navbar: {
+      hideOnScroll: true,
       title: 'Tibber Prices HA',
       logo: {
         alt: 'Tibber Prices Integration Logo',

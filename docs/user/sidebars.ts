@@ -18,6 +18,7 @@ const sidebars: SidebarsConfig = {
     {
       type: 'category',
       label: '🚀 Getting Started',
+      link: { type: 'doc', id: 'installation' },
       items: ['installation', 'configuration'],
       collapsible: true,
       collapsed: false,
@@ -25,6 +26,7 @@ const sidebars: SidebarsConfig = {
     {
       type: 'category',
       label: '📖 Core Concepts',
+      link: { type: 'doc', id: 'concepts' },
       items: ['concepts', 'glossary'],
       collapsible: true,
       collapsed: false,
@@ -32,6 +34,7 @@ const sidebars: SidebarsConfig = {
     {
       type: 'category',
       label: '📊 Sensors',
+      link: { type: 'doc', id: 'sensors-overview' },
       items: [
         'sensors-overview',
         'sensors-average',
@@ -47,6 +50,7 @@ const sidebars: SidebarsConfig = {
     {
       type: 'category',
       label: '⏰ Price Periods',
+      link: { type: 'doc', id: 'period-calculation' },
       items: ['period-calculation', 'period-relaxation'],
       collapsible: true,
       collapsed: false,
@@ -54,6 +58,7 @@ const sidebars: SidebarsConfig = {
     {
       type: 'category',
       label: '🎨 Dashboards & Charts',
+      link: { type: 'doc', id: 'dashboard-examples' },
       items: ['dynamic-icons', 'icon-colors', 'dashboard-examples', 'chart-examples'],
       collapsible: true,
       collapsed: false,
@@ -61,6 +66,7 @@ const sidebars: SidebarsConfig = {
     {
       type: 'category',
       label: '🤖 Automations',
+      link: { type: 'doc', id: 'automation-examples' },
       items: ['automation-examples'],
       collapsible: true,
       collapsed: false,
@@ -68,6 +74,7 @@ const sidebars: SidebarsConfig = {
     {
       type: 'category',
       label: '📖 Reference',
+      link: { type: 'doc', id: 'sensor-reference' },
       items: ['sensor-reference', 'actions'],
       collapsible: true,
       collapsed: false,
@@ -75,6 +82,7 @@ const sidebars: SidebarsConfig = {
     {
       type: 'category',
       label: '👥 Community',
+      link: { type: 'doc', id: 'community-examples' },
       items: ['community-examples'],
       collapsible: true,
       collapsed: false,
@@ -82,6 +90,7 @@ const sidebars: SidebarsConfig = {
     {
       type: 'category',
       label: '🔧 Help & Support',
+      link: { type: 'doc', id: 'faq' },
       items: ['faq', 'troubleshooting'],
       collapsible: true,
       collapsed: false,
