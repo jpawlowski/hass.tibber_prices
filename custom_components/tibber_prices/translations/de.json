@@ -244,11 +244,13 @@
             "description": "Erkannte Bestpreisperioden optional an beiden Rändern erweitern, um angrenzende sehr günstige Intervalle aufzunehmen.",
             "data": {
               "best_price_extend_to_very_cheap": "Auf sehr günstige Intervalle erweitern",
-              "best_price_max_extension_intervals": "Maximale Erweiterungsintervalle"
+              "best_price_max_extension_intervals": "Maximale Erweiterungsintervalle",
+              "best_price_geometric_flex": "Geometrischer Flex-Bonus"
             },
             "data_description": {
               "best_price_extend_to_very_cheap": "Wenn aktiviert, erweitern sich erkannte Bestpreisperioden nach außen, um angrenzende Intervalle mit dem Preisniveau 'Sehr günstig' aufzunehmen. So werden extrem günstige Intervalle an den Rändern erkannter Perioden besser erfasst.",
-              "best_price_max_extension_intervals": "Maximale Anzahl zusätzlicher Intervalle pro Seite (linker und rechter Rand). Jedes Intervall dauert 15 Minuten. Beispiel: 4 Intervalle = bis zu 1 Stunde Erweiterung pro Rand. Standard: 4"
+              "best_price_max_extension_intervals": "Maximale Anzahl zusätzlicher Intervalle pro Seite (linker und rechter Rand). Jedes Intervall dauert 15 Minuten. Beispiel: 4 Intervalle = bis zu 1 Stunde Erweiterung pro Rand. Standard: 4",
+              "best_price_geometric_flex": "Zusätzlicher Flex-Prozentsatz für Intervalle, die in ein erkanntes Preistal (V-Form) fallen. Wenn für den Tag ein Tal-Muster erkannt wird, erhalten Intervalle innerhalb der Talzone diese zusätzliche Toleranz, damit der Periodendetektor sie eher einschließt. 0 = deaktiviert. Standard: 0"
             }
           }
         },
@@ -303,11 +305,13 @@
             "description": "Erkannte Spitzenpreisperioden optional an beiden Rändern erweitern, um angrenzende sehr teure Intervalle aufzunehmen.",
             "data": {
               "peak_price_extend_to_very_expensive": "Auf sehr teure Intervalle erweitern",
-              "peak_price_max_extension_intervals": "Maximale Erweiterungsintervalle"
+              "peak_price_max_extension_intervals": "Maximale Erweiterungsintervalle",
+              "peak_price_geometric_flex": "Geometrischer Flex-Bonus"
             },
             "data_description": {
               "peak_price_extend_to_very_expensive": "Wenn aktiviert, erweitern sich erkannte Spitzenpreisperioden nach außen, um angrenzende Intervalle mit dem Preisniveau 'Sehr teuer' aufzunehmen. So werden extrem teure Intervalle an den Rändern erkannter Perioden besser erfasst.",
-              "peak_price_max_extension_intervals": "Maximale Anzahl zusätzlicher Intervalle pro Seite (linker und rechter Rand). Jedes Intervall dauert 15 Minuten. Beispiel: 4 Intervalle = bis zu 1 Stunde Erweiterung pro Rand. Standard: 4"
+              "peak_price_max_extension_intervals": "Maximale Anzahl zusätzlicher Intervalle pro Seite (linker und rechter Rand). Jedes Intervall dauert 15 Minuten. Beispiel: 4 Intervalle = bis zu 1 Stunde Erweiterung pro Rand. Standard: 4",
+              "peak_price_geometric_flex": "Zusätzlicher Flex-Prozentsatz für Intervalle, die in einen erkannten Preisplateau (Λ-Form) fallen. Wenn für den Tag ein Gipfel-Muster erkannt wird, erhalten Intervalle innerhalb der Gipfelzone diese zusätzliche Toleranz, damit der Periodendetektor sie eher einschließt. 0 = deaktiviert. Standard: 0"
             }
           }
         },

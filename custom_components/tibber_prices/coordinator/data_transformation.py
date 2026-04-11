@@ -28,7 +28,7 @@ class TibberPricesDataTransformer:
         self,
         config_entry: ConfigEntry,
         log_prefix: str,
-        calculate_periods_fn: Callable[[dict[str, Any]], dict[str, Any]],
+        calculate_periods_fn: Callable[[dict[str, Any], dict[str, Any] | None], dict[str, Any]],
         time: TibberPricesTimeService,
     ) -> None:
         """Initialize the data transformer."""
@@ -271,15 +271,18 @@ class TibberPricesDataTransformer:
             "currency": currency,
         }
 
-        # Calculate periods (best price and peak price)
-        if "priceInfo" in transformed_data:
-            transformed_data["pricePeriods"] = self._calculate_periods_fn(transformed_data["priceInfo"])
-
         # Detect day patterns (yesterday / today / tomorrow)
+        # IMPORTANT: Must be computed BEFORE pricePeriods so geometric flex can use pattern data
         transformed_data["dayPatterns"] = detect_day_patterns(
             transformed_data["priceInfo"],
             time=self.time,
         )
+
+        # Calculate periods (best price and peak price)
+        if "priceInfo" in transformed_data:
+            transformed_data["pricePeriods"] = self._calculate_periods_fn(
+                transformed_data["priceInfo"], transformed_data.get("dayPatterns")
+            )
 
         # Cache the transformed data
         self._cached_transformed_data = transformed_data

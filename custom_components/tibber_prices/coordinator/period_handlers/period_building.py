@@ -14,6 +14,7 @@ if TYPE_CHECKING:
 from .level_filtering import (
     apply_level_filter,
     check_interval_criteria,
+    compute_geometric_flex_bonus,
 )
 from .types import TibberPricesIntervalCriteria
 
@@ -83,6 +84,8 @@ def build_periods(  # noqa: PLR0913, PLR0915, PLR0912 - Complex period building 
     avg_prices = price_context["avg_prices"]
     flex = price_context["flex"]
     min_distance_from_avg = price_context["min_distance_from_avg"]
+    geometric_extra_flex: float = float(price_context.get("geometric_extra_flex", 0.0))
+    day_patterns_by_date: dict[date, dict[str, Any]] | None = price_context.get("day_patterns_by_date")
 
     # Calculate level_order if level_filter is active
     level_order = None
@@ -147,7 +150,20 @@ def build_periods(  # noqa: PLR0913, PLR0915, PLR0912 - Complex period building 
 
         # Check flex and minimum distance criteria (using smoothed price and interval's own day reference)
         criteria = criteria_by_day[ref_date]
-        in_flex, meets_min_distance = check_interval_criteria(price_for_criteria, criteria)
+
+        # Compute geometric flex bonus if pattern-aware expansion is enabled
+        geo_bonus = 0.0
+        if geometric_extra_flex > 0 and day_patterns_by_date is not None:
+            day_pattern_for_date = day_patterns_by_date.get(ref_date)
+            geo_bonus = compute_geometric_flex_bonus(
+                starts_at,
+                day_pattern_for_date,
+                extra_flex=geometric_extra_flex,
+                reverse_sort=reverse_sort,
+            )
+
+        effective_criteria = criteria._replace(flex=criteria.flex + geo_bonus) if geo_bonus > 0 else criteria
+        in_flex, meets_min_distance = check_interval_criteria(price_for_criteria, effective_criteria)
 
         # Track why intervals are filtered
         if not in_flex:
@@ -159,7 +175,7 @@ def build_periods(  # noqa: PLR0913, PLR0915, PLR0912 - Complex period building 
         smoothing_was_impactful = False
         if price_data.get("_smoothed", False):
             # Check if original price would have passed the same criteria
-            in_flex_original, meets_min_distance_original = check_interval_criteria(price_original, criteria)
+            in_flex_original, meets_min_distance_original = check_interval_criteria(price_original, effective_criteria)
             # Smoothing was impactful if original would have failed but smoothed passed
             smoothing_was_impactful = (in_flex and meets_min_distance) and not (
                 in_flex_original and meets_min_distance_original
@@ -184,6 +200,7 @@ def build_periods(  # noqa: PLR0913, PLR0915, PLR0912 - Complex period building 
                     # Only True if smoothing changed whether the interval qualified for period inclusion
                     "smoothing_was_impactful": smoothing_was_impactful,
                     "is_level_gap": is_level_gap,  # Track if kept due to level gap tolerance
+                    "geometric_bonus_applied": geo_bonus > 0,  # True if interval is in geometric zone
                 }
             )
         elif current_period:

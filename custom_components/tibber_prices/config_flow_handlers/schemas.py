@@ -14,6 +14,7 @@ from custom_components.tibber_prices.const import (
     CONF_AVERAGE_SENSOR_DISPLAY,
     CONF_BEST_PRICE_EXTEND_TO_VERY_CHEAP,
     CONF_BEST_PRICE_FLEX,
+    CONF_BEST_PRICE_GEOMETRIC_FLEX,
     CONF_BEST_PRICE_MAX_EXTENSION_INTERVALS,
     CONF_BEST_PRICE_MAX_LEVEL,
     CONF_BEST_PRICE_MAX_LEVEL_GAP_COUNT,
@@ -27,6 +28,7 @@ from custom_components.tibber_prices.const import (
     CONF_MIN_PERIODS_PEAK,
     CONF_PEAK_PRICE_EXTEND_TO_VERY_EXPENSIVE,
     CONF_PEAK_PRICE_FLEX,
+    CONF_PEAK_PRICE_GEOMETRIC_FLEX,
     CONF_PEAK_PRICE_MAX_EXTENSION_INTERVALS,
     CONF_PEAK_PRICE_MAX_LEVEL_GAP_COUNT,
     CONF_PEAK_PRICE_MIN_DISTANCE_FROM_AVG,
@@ -55,6 +57,7 @@ from custom_components.tibber_prices.const import (
     DEFAULT_AVERAGE_SENSOR_DISPLAY,
     DEFAULT_BEST_PRICE_EXTEND_TO_VERY_CHEAP,
     DEFAULT_BEST_PRICE_FLEX,
+    DEFAULT_BEST_PRICE_GEOMETRIC_FLEX,
     DEFAULT_BEST_PRICE_MAX_EXTENSION_INTERVALS,
     DEFAULT_BEST_PRICE_MAX_LEVEL,
     DEFAULT_BEST_PRICE_MAX_LEVEL_GAP_COUNT,
@@ -67,6 +70,7 @@ from custom_components.tibber_prices.const import (
     DEFAULT_MIN_PERIODS_PEAK,
     DEFAULT_PEAK_PRICE_EXTEND_TO_VERY_EXPENSIVE,
     DEFAULT_PEAK_PRICE_FLEX,
+    DEFAULT_PEAK_PRICE_GEOMETRIC_FLEX,
     DEFAULT_PEAK_PRICE_MAX_EXTENSION_INTERVALS,
     DEFAULT_PEAK_PRICE_MAX_LEVEL_GAP_COUNT,
     DEFAULT_PEAK_PRICE_MIN_DISTANCE_FROM_AVG,
@@ -96,6 +100,7 @@ from custom_components.tibber_prices.const import (
     DISPLAY_MODE_SUBUNIT,
     MAX_EXTENSION_INTERVALS,
     MAX_GAP_COUNT,
+    MAX_GEOMETRIC_FLEX,
     MAX_MIN_PERIOD_LENGTH,
     MAX_MIN_PERIODS,
     MAX_PRICE_LEVEL_GAP_TOLERANCE,
@@ -649,6 +654,7 @@ def get_best_price_schema(
     max_extension_intervals_best = int(
         extension_settings.get(CONF_BEST_PRICE_MAX_EXTENSION_INTERVALS, DEFAULT_BEST_PRICE_MAX_EXTENSION_INTERVALS)
     )
+    geometric_flex_best = int(extension_settings.get(CONF_BEST_PRICE_GEOMETRIC_FLEX, DEFAULT_BEST_PRICE_GEOMETRIC_FLEX))
 
     # Build section schemas with optional override warnings
     period_warning = get_section_override_warning("best_price", "period_settings", overrides, translations) or {}
@@ -788,6 +794,18 @@ def get_best_price_schema(
                                 mode=NumberSelectorMode.SLIDER,
                             )
                         ),
+                        vol.Optional(
+                            CONF_BEST_PRICE_GEOMETRIC_FLEX,
+                            default=geometric_flex_best,
+                        ): NumberSelector(
+                            NumberSelectorConfig(
+                                min=0,
+                                max=MAX_GEOMETRIC_FLEX,
+                                step=1,
+                                unit_of_measurement="%",
+                                mode=NumberSelectorMode.SLIDER,
+                            )
+                        ),
                     }
                 ),
                 {"collapsed": True},
@@ -839,6 +857,7 @@ def get_peak_price_schema(
     max_extension_intervals_peak = int(
         extension_settings.get(CONF_PEAK_PRICE_MAX_EXTENSION_INTERVALS, DEFAULT_PEAK_PRICE_MAX_EXTENSION_INTERVALS)
     )
+    geometric_flex_peak = int(extension_settings.get(CONF_PEAK_PRICE_GEOMETRIC_FLEX, DEFAULT_PEAK_PRICE_GEOMETRIC_FLEX))
 
     # Build section schemas with optional override warnings
     period_warning = get_section_override_warning("peak_price", "period_settings", overrides, translations) or {}
@@ -975,6 +994,18 @@ def get_peak_price_schema(
                                 min=1,
                                 max=MAX_EXTENSION_INTERVALS,
                                 step=1,
+                                mode=NumberSelectorMode.SLIDER,
+                            )
+                        ),
+                        vol.Optional(
+                            CONF_PEAK_PRICE_GEOMETRIC_FLEX,
+                            default=geometric_flex_peak,
+                        ): NumberSelector(
+                            NumberSelectorConfig(
+                                min=0,
+                                max=MAX_GEOMETRIC_FLEX,
+                                step=1,
+                                unit_of_measurement="%",
                                 mode=NumberSelectorMode.SLIDER,
                             )
                         ),

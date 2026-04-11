@@ -255,11 +255,13 @@
             "description": "Optionally extend detected best price periods at both edges to absorb adjacent very cheap intervals.",
             "data": {
               "best_price_extend_to_very_cheap": "Extend to Very Cheap Intervals",
-              "best_price_max_extension_intervals": "Maximum Extension Intervals"
+              "best_price_max_extension_intervals": "Maximum Extension Intervals",
+              "best_price_geometric_flex": "Geometric Flex Bonus"
             },
             "data_description": {
               "best_price_extend_to_very_cheap": "When enabled, detected best price periods expand outward to absorb adjacent intervals with a 'Very cheap' price level. This widens low-price windows to better capture extremely cheap intervals at the edges of detected periods.",
-              "best_price_max_extension_intervals": "Maximum number of additional intervals to absorb per side (left and right edge). Each interval is 15 minutes. Example: 4 intervals = up to 1 hour extension per edge. Default: 4"
+              "best_price_max_extension_intervals": "Maximum number of additional intervals to absorb per side (left and right edge). Each interval is 15 minutes. Example: 4 intervals = up to 1 hour extension per edge. Default: 4",
+              "best_price_geometric_flex": "Extra flex percentage applied to intervals that fall inside a detected price valley (V-shape). When a valley pattern is detected for the day, intervals within the valley zone get this additional tolerance, making the period detector more likely to include them. 0 = disabled. Default: 0"
             }
           }
         },
@@ -314,11 +316,13 @@
             "description": "Optionally extend detected peak price periods at both edges to absorb adjacent very expensive intervals.",
             "data": {
               "peak_price_extend_to_very_expensive": "Extend to Very Expensive Intervals",
-              "peak_price_max_extension_intervals": "Maximum Extension Intervals"
+              "peak_price_max_extension_intervals": "Maximum Extension Intervals",
+              "peak_price_geometric_flex": "Geometric Flex Bonus"
             },
             "data_description": {
               "peak_price_extend_to_very_expensive": "When enabled, detected peak price periods expand outward to absorb adjacent intervals with a 'Very expensive' price level. This widens high-price windows to better capture extremely expensive intervals at the edges of detected periods.",
-              "peak_price_max_extension_intervals": "Maximum number of additional intervals to absorb per side (left and right edge). Each interval is 15 minutes. Example: 4 intervals = up to 1 hour extension per edge. Default: 4"
+              "peak_price_max_extension_intervals": "Maximum number of additional intervals to absorb per side (left and right edge). Each interval is 15 minutes. Example: 4 intervals = up to 1 hour extension per edge. Default: 4",
+              "peak_price_geometric_flex": "Extra flex percentage applied to intervals that fall inside a detected price peak (Λ-shape). When a peak pattern is detected for the day, intervals within the peak zone get this additional tolerance, making the period detector more likely to include them. 0 = disabled. Default: 0"
             }
           }
         },

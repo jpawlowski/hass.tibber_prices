@@ -11,9 +11,11 @@ See docs/development/period-calculation-theory.md for detailed explanation.
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
+    from datetime import datetime
+
     from .types import TibberPricesIntervalCriteria
 
 from custom_components.tibber_prices.const import PRICE_LEVEL_MAPPING
@@ -241,3 +243,54 @@ def check_interval_criteria(
         meets_min_distance = price <= min_distance_threshold
 
     return in_flex, meets_min_distance
+
+
+def compute_geometric_flex_bonus(
+    interval_time: datetime,
+    day_pattern: dict[str, Any] | None,
+    *,
+    extra_flex: float,
+    reverse_sort: bool,
+) -> float:
+    """
+    Return extra flex if interval falls within the valley/peak geometric zone.
+
+    For best price (reverse_sort=False): widens flex inside the VALLEY zone
+    defined by [valley_start, valley_end] knee points.
+    For peak price (reverse_sort=True): widens flex inside the PEAK zone
+    defined by [peak_start, peak_end] knee points.
+
+    Args:
+        interval_time: Timezone-aware datetime of the interval's start.
+        day_pattern: DayPatternDict for the interval's calendar day, or None.
+        extra_flex: Additional flex to add (decimal, e.g. 0.10 for 10%).
+        reverse_sort: True for peak price, False for best price.
+
+    Returns:
+        ``extra_flex`` if the interval is inside the geometric zone, else ``0.0``.
+
+    """
+    if not day_pattern or extra_flex <= 0:
+        return 0.0
+
+    pattern = day_pattern.get("pattern", "")
+
+    if reverse_sort:
+        # Peak price: expand inside PEAK (Λ-shape) zone
+        if pattern != "peak":
+            return 0.0
+        zone_start = day_pattern.get("peak_start")
+        zone_end = day_pattern.get("peak_end")
+    else:
+        # Best price: expand inside VALLEY (V/U-shape) zone
+        if pattern != "valley":
+            return 0.0
+        zone_start = day_pattern.get("valley_start")
+        zone_end = day_pattern.get("valley_end")
+
+    if zone_start is None or zone_end is None:
+        return 0.0
+
+    if zone_start <= interval_time <= zone_end:
+        return extra_flex
+    return 0.0

@@ -38,6 +38,7 @@ def calculate_periods(
     *,
     config: TibberPricesPeriodConfig,
     time: TibberPricesTimeService,
+    day_patterns_by_date: dict | None = None,
 ) -> dict[str, Any]:
     """
     Calculate price periods (best or peak) from price data.
@@ -59,6 +60,7 @@ def calculate_periods(
         config: Period configuration containing reverse_sort, flex, min_distance_from_avg,
                 min_period_length, threshold_low, and threshold_high.
         time: TibberPricesTimeService instance (required).
+        day_patterns_by_date: Optional dict mapping date → day pattern dict for geometric flex bonus.
 
     Returns:
         Dict with:
@@ -156,6 +158,8 @@ def calculate_periods(
         "intervals_by_day": intervals_by_day,  # Needed for day volatility calculation
         "flex": flex,
         "min_distance_from_avg": min_distance_from_avg,
+        "geometric_extra_flex": config.geometric_extra_flex,  # Extra flex for geometric zone
+        "day_patterns_by_date": day_patterns_by_date,  # Pattern data keyed by date (may be None)
     }
     raw_periods = build_periods(
         all_prices_smoothed,  # Use smoothed prices for period formation

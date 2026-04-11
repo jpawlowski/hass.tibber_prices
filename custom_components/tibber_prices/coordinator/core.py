@@ -875,9 +875,11 @@ class TibberPricesDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         """Get threshold percentages from config options."""
         return self._data_transformer.get_threshold_percentages()
 
-    def _calculate_periods_for_price_info(self, price_info: dict[str, Any]) -> dict[str, Any]:
+    def _calculate_periods_for_price_info(
+        self, price_info: dict[str, Any], day_patterns: dict[str, Any] | None = None
+    ) -> dict[str, Any]:
         """Calculate periods (best price and peak price) for the given price info."""
-        return self._period_calculator.calculate_periods_for_price_info(price_info)
+        return self._period_calculator.calculate_periods_for_price_info(price_info, day_patterns)
 
     def _transform_data(self, raw_data: dict[str, Any]) -> dict[str, Any]:
         """Transform raw data for main entry (aggregated view of all homes)."""

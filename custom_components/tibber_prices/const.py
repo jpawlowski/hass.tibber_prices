@@ -70,8 +70,10 @@ CONF_MIN_PERIODS_PEAK = "min_periods_peak"
 CONF_RELAXATION_ATTEMPTS_PEAK = "relaxation_attempts_peak"
 CONF_BEST_PRICE_EXTEND_TO_VERY_CHEAP = "best_price_extend_to_very_cheap"
 CONF_BEST_PRICE_MAX_EXTENSION_INTERVALS = "best_price_max_extension_intervals"
+CONF_BEST_PRICE_GEOMETRIC_FLEX = "best_price_geometric_flex"
 CONF_PEAK_PRICE_EXTEND_TO_VERY_EXPENSIVE = "peak_price_extend_to_very_expensive"
 CONF_PEAK_PRICE_MAX_EXTENSION_INTERVALS = "peak_price_max_extension_intervals"
+CONF_PEAK_PRICE_GEOMETRIC_FLEX = "peak_price_geometric_flex"
 
 ATTRIBUTION = "Data provided by Tibber"
 
@@ -137,8 +139,10 @@ DEFAULT_MIN_PERIODS_PEAK = 2  # Default: require at least 2 peak price periods (
 DEFAULT_RELAXATION_ATTEMPTS_PEAK = 11  # Default: 11 steps allows escalation from 20% to 50% (3% increment per step)
 DEFAULT_BEST_PRICE_EXTEND_TO_VERY_CHEAP = False  # Default: disabled (opt-in feature)
 DEFAULT_BEST_PRICE_MAX_EXTENSION_INTERVALS = 4  # Default: up to 4 intervals (1 hour) per side
+DEFAULT_BEST_PRICE_GEOMETRIC_FLEX = 0  # Default: 0% (disabled); positive int % (e.g. 10 = 10%)
 DEFAULT_PEAK_PRICE_EXTEND_TO_VERY_EXPENSIVE = False  # Default: disabled (opt-in feature)
 DEFAULT_PEAK_PRICE_MAX_EXTENSION_INTERVALS = 4  # Default: up to 4 intervals (1 hour) per side
+DEFAULT_PEAK_PRICE_GEOMETRIC_FLEX = 0  # Default: 0% (disabled); positive int % (e.g. 10 = 10%)
 
 # Validation limits (used in GUI schemas and server-side validation)
 # These ensure consistency between frontend and backend validation
@@ -148,6 +152,7 @@ MAX_GAP_COUNT = 8  # Maximum gap count for level filtering (GUI slider limit)
 MAX_MIN_PERIODS = 10  # Maximum number of minimum periods per day (GUI slider limit)
 MAX_RELAXATION_ATTEMPTS = 12  # Maximum relaxation attempts (GUI slider limit)
 MAX_EXTENSION_INTERVALS = 12  # Maximum extension intervals per side (GUI slider limit = 3 hours)
+MAX_GEOMETRIC_FLEX = 25  # Maximum geometric flex bonus percentage (GUI slider limit)
 MIN_PERIOD_LENGTH = 15  # Minimum period length in minutes (1 quarter hour)
 MAX_MIN_PERIOD_LENGTH = 180  # Maximum for minimum period length setting (3 hours - realistic for required minimum)
 
@@ -420,8 +425,10 @@ def get_default_options(currency_code: str | None) -> dict[str, Any]:
         "extension_settings": {
             CONF_BEST_PRICE_EXTEND_TO_VERY_CHEAP: DEFAULT_BEST_PRICE_EXTEND_TO_VERY_CHEAP,
             CONF_BEST_PRICE_MAX_EXTENSION_INTERVALS: DEFAULT_BEST_PRICE_MAX_EXTENSION_INTERVALS,
+            CONF_BEST_PRICE_GEOMETRIC_FLEX: DEFAULT_BEST_PRICE_GEOMETRIC_FLEX,
             CONF_PEAK_PRICE_EXTEND_TO_VERY_EXPENSIVE: DEFAULT_PEAK_PRICE_EXTEND_TO_VERY_EXPENSIVE,
             CONF_PEAK_PRICE_MAX_EXTENSION_INTERVALS: DEFAULT_PEAK_PRICE_MAX_EXTENSION_INTERVALS,
+            CONF_PEAK_PRICE_GEOMETRIC_FLEX: DEFAULT_PEAK_PRICE_GEOMETRIC_FLEX,
         },
     }
 

@@ -244,11 +244,13 @@
             "description": "Utvid eventuelt oppdagede bestprisperioder ved begge ender for å inkludere tilstøtende svært billige intervaller.",
             "data": {
               "best_price_extend_to_very_cheap": "Utvid til svært billige intervaller",
-              "best_price_max_extension_intervals": "Maksimale utvidelsesintervaller"
+              "best_price_max_extension_intervals": "Maksimale utvidelsesintervaller",
+              "best_price_geometric_flex": "Geometrisk fleksbonus"
             },
             "data_description": {
               "best_price_extend_to_very_cheap": "Når aktivert, utvider oppdagede bestprisperioder seg utover for å inkludere tilstøtende intervaller med prisnivået 'Svært billig'. Dette fanger opp ekstremt billige intervaller ved kantene av oppdagede perioder.",
-              "best_price_max_extension_intervals": "Maksimalt antall ekstra intervaller per side (venstre og høyre kant). Hvert intervall er 15 minutter. Eksempel: 4 intervaller = opptil 1 times utvidelse per kant. Standard: 4"
+              "best_price_max_extension_intervals": "Maksimalt antall ekstra intervaller per side (venstre og høyre kant). Hvert intervall er 15 minutter. Eksempel: 4 intervaller = opptil 1 times utvidelse per kant. Standard: 4",
+              "best_price_geometric_flex": "Ekstra fleksprosent for intervaller som faller innenfor en oppdaget prisdal (V-form). Når et dal-mønster oppdages for dagen, får intervaller innen dalsonen denne ekstra toleransen, slik at periodevarslingssystemet er mer tilbøyelig til å inkludere dem. 0 = deaktivert. Standard: 0"
             }
           }
         },
@@ -303,11 +305,13 @@
             "description": "Utvid eventuelt oppdagede topprisperioder ved begge ender for å inkludere tilstøtende svært dyre intervaller.",
             "data": {
               "peak_price_extend_to_very_expensive": "Utvid til svært dyre intervaller",
-              "peak_price_max_extension_intervals": "Maksimale utvidelsesintervaller"
+              "peak_price_max_extension_intervals": "Maksimale utvidelsesintervaller",
+              "peak_price_geometric_flex": "Geometrisk fleksbonus"
             },
             "data_description": {
               "peak_price_extend_to_very_expensive": "Når aktivert, utvider oppdagede topprisperioder seg utover for å inkludere tilstøtende intervaller med prisnivået 'Svært dyrt'. Dette fanger opp ekstremt dyre intervaller ved kantene av oppdagede perioder.",
-              "peak_price_max_extension_intervals": "Maksimalt antall ekstra intervaller per side (venstre og høyre kant). Hvert intervall er 15 minutter. Eksempel: 4 intervaller = opptil 1 times utvidelse per kant. Standard: 4"
+              "peak_price_max_extension_intervals": "Maksimalt antall ekstra intervaller per side (venstre og høyre kant). Hvert intervall er 15 minutter. Eksempel: 4 intervaller = opptil 1 times utvidelse per kant. Standard: 4",
+              "peak_price_geometric_flex": "Ekstra fleksprosent for intervaller som faller innenfor en oppdaget pristopp (Λ-form). Når et topp-mønster oppdages for dagen, får intervaller innen toppsonene denne ekstra toleransen, slik at periodevarslingssystemet er mer tilbøyelig til å inkludere dem. 0 = deaktivert. Standard: 0"
             }
           }
         },

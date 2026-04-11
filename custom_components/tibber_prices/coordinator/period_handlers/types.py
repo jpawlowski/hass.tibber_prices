@@ -58,6 +58,7 @@ class TibberPricesPeriodConfig(NamedTuple):
     gap_count: int = 0  # Number of allowed consecutive deviating intervals
     extend_to_extreme: bool = False  # Extend periods into adjacent VERY_CHEAP/VERY_EXPENSIVE intervals
     max_extension_intervals: int = 0  # Max intervals this extension may add per side (0 = disabled)
+    geometric_extra_flex: float = 0.0  # Extra flex (decimal) for intervals inside the valley/peak zone (0.0 = disabled)
 
 
 class TibberPricesPeriodData(NamedTuple):

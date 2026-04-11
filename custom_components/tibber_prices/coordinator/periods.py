@@ -8,6 +8,7 @@ gap tolerance, and coordination of the period_handlers calculation functions.
 from __future__ import annotations
 
 import logging
+from datetime import date, timedelta
 from typing import TYPE_CHECKING, Any
 
 from custom_components.tibber_prices import const as _const
@@ -259,6 +260,25 @@ class TibberPricesPeriodCalculator:
 
         config["extend_to_extreme"] = extend_to_extreme
         config["max_extension_intervals"] = max_extension_intervals
+
+        # Geometric flex bonus (intervals inside valley/peak zone get extra flex)
+        if reverse_sort:
+            geometric_flex_pct = int(
+                self._get_option(
+                    _const.CONF_PEAK_PRICE_GEOMETRIC_FLEX,
+                    "extension_settings",
+                    _const.DEFAULT_PEAK_PRICE_GEOMETRIC_FLEX,
+                )
+            )
+        else:
+            geometric_flex_pct = int(
+                self._get_option(
+                    _const.CONF_BEST_PRICE_GEOMETRIC_FLEX,
+                    "extension_settings",
+                    _const.DEFAULT_BEST_PRICE_GEOMETRIC_FLEX,
+                )
+            )
+        config["geometric_extra_flex"] = geometric_flex_pct / 100
 
         # Cache the result
         self._config_cache[cache_key] = config
@@ -633,6 +653,7 @@ class TibberPricesPeriodCalculator:
     def calculate_periods_for_price_info(
         self,
         price_info: dict[str, Any],
+        day_patterns: dict[str, Any] | None = None,
     ) -> dict[str, Any]:
         """
         Calculate periods (best price and peak price) for the given price info.
@@ -656,6 +677,19 @@ class TibberPricesPeriodCalculator:
         # (periods calculated today for yesterday match periods calculated yesterday)
         coordinator_data = {"priceInfo": price_info}
         all_prices = get_intervals_for_day_offsets(coordinator_data, [-2, -1, 0, 1])
+
+        # Convert day_patterns (keyed by "yesterday"/"today"/"tomorrow") to date-keyed dict
+        # Needed for geometric valley/peak zone flex bonus in period calculation
+        today_date = self.time.now().date()
+        day_patterns_by_date: dict[date, dict[str, Any]] | None = (
+            {
+                today_date + timedelta(days=ofs): pat
+                for ofs, lbl in ((-1, "yesterday"), (0, "today"), (1, "tomorrow"))
+                if (pat := day_patterns.get(lbl)) is not None
+            }
+            if day_patterns
+            else None
+        )
 
         # Get rating thresholds from config (flat in options, not in sections)
         # CRITICAL: Price rating thresholds are stored FLAT in options (no sections)
@@ -739,6 +773,7 @@ class TibberPricesPeriodCalculator:
                 gap_count=gap_count_best,
                 extend_to_extreme=best_config["extend_to_extreme"],
                 max_extension_intervals=best_config["max_extension_intervals"],
+                geometric_extra_flex=best_config["geometric_extra_flex"],
             )
             best_periods = calculate_periods_with_relaxation(
                 all_prices,
@@ -753,6 +788,7 @@ class TibberPricesPeriodCalculator:
                 ),
                 time=self.time,
                 config_entry=self.config_entry,
+                day_patterns_by_date=day_patterns_by_date,
             )
         else:
             best_periods = {
@@ -822,6 +858,7 @@ class TibberPricesPeriodCalculator:
                 gap_count=gap_count_peak,
                 extend_to_extreme=peak_config["extend_to_extreme"],
                 max_extension_intervals=peak_config["max_extension_intervals"],
+                geometric_extra_flex=peak_config["geometric_extra_flex"],
             )
             peak_periods = calculate_periods_with_relaxation(
                 all_prices,
@@ -836,6 +873,7 @@ class TibberPricesPeriodCalculator:
                 ),
                 time=self.time,
                 config_entry=self.config_entry,
+                day_patterns_by_date=day_patterns_by_date,
             )
         else:
             peak_periods = {

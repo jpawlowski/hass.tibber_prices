@@ -220,6 +220,17 @@ def build_period_summary_dict(
     return summary
 
 
+def _add_interval_flag_counts(summary: dict, period: list[dict]) -> None:
+    """Add optional interval flag counts to period summary."""
+    if (count := sum(1 for i in period if i.get("smoothing_was_impactful", False))) > 0:
+        summary["period_interval_smoothed_count"] = count
+    if (count := sum(1 for i in period if i.get("is_level_gap", False))) > 0:
+        summary["period_interval_level_gap_count"] = count
+    if (count := sum(1 for i in period if i.get("geometric_bonus_applied", False))) > 0:
+        summary["geometric_extension_active"] = True
+        summary["geometric_extension_intervals"] = count
+
+
 def extract_period_summaries(
     periods: list[list[dict]],
     all_prices: list[dict],
@@ -328,12 +339,6 @@ def extract_period_summaries(
         ).lower()
         rating_difference_pct = calculate_aggregated_rating_difference(period_price_data)
 
-        # Count how many intervals in this period benefited from smoothing (i.e., would have been excluded)
-        smoothed_impactful_count = sum(1 for interval in period if interval.get("smoothing_was_impactful", False))
-
-        # Count how many intervals were kept due to level filter gap tolerance
-        level_gap_count = sum(1 for interval in period if interval.get("is_level_gap", False))
-
         # Build period data and statistics objects
         period_data = TibberPricesPeriodData(
             start_time=start_time,
@@ -363,13 +368,8 @@ def extract_period_summaries(
             period_data, stats, reverse_sort=thresholds.reverse_sort, price_context=price_context
         )
 
-        # Add smoothing information if any intervals benefited from smoothing
-        if smoothed_impactful_count > 0:
-            summary["period_interval_smoothed_count"] = smoothed_impactful_count
-
-        # Add level gap tolerance information if any intervals were kept as gaps
-        if level_gap_count > 0:
-            summary["period_interval_level_gap_count"] = level_gap_count
+        # Add optional interval flag counts (smoothing, level gaps, geometric extension)
+        _add_interval_flag_counts(summary, period)
 
         summaries.append(summary)
 
