@@ -44,6 +44,7 @@ from .daily_stat import add_statistics_attributes
 from .future import add_next_avg_attributes, get_future_prices
 from .interval import add_current_interval_price_attributes
 from .lifecycle import build_lifecycle_attributes
+from .metadata import get_day_pattern_attributes
 from .timing import _is_timing_or_volatility_sensor
 from .trend import _add_cached_trend_attributes, _add_timing_or_volatility_attributes
 from .volatility import add_volatility_type_attributes, get_prices_for_volatility
@@ -72,7 +73,7 @@ __all__ = [
 ]
 
 
-def build_sensor_attributes(
+def build_sensor_attributes(  # noqa: PLR0912
     key: str,
     coordinator: TibberPricesDataUpdateCoordinator,
     native_value: Any,
@@ -188,6 +189,12 @@ def build_sensor_attributes(
                 attributes.update(lifecycle_attrs)
         elif _is_timing_or_volatility_sensor(key):
             _add_timing_or_volatility_attributes(attributes, key, cached_data, native_value, time=time)
+
+        elif key in ("day_pattern_yesterday", "day_pattern_today", "day_pattern_tomorrow"):
+            day = key.removeprefix("day_pattern_")
+            day_attrs = get_day_pattern_attributes(coordinator, day)
+            if day_attrs:
+                attributes.update(day_attrs)
 
         # For current_interval_price_level, add the original level as attribute
         if key == "current_interval_price_level" and cached_data.get("last_price_level") is not None:

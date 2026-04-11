@@ -937,6 +937,45 @@
                     "unknown": "Unknown"
                 }
             },
+            "day_pattern_yesterday": {
+                "name": "Yesterday's Price Pattern",
+                "state": {
+                    "valley": "Valley",
+                    "peak": "Peak",
+                    "double_valley": "Double Valley",
+                    "double_peak": "Double Peak",
+                    "flat": "Flat",
+                    "rising": "Rising",
+                    "falling": "Falling",
+                    "mixed": "Mixed"
+                }
+            },
+            "day_pattern_today": {
+                "name": "Today's Price Pattern",
+                "state": {
+                    "valley": "Valley",
+                    "peak": "Peak",
+                    "double_valley": "Double Valley",
+                    "double_peak": "Double Peak",
+                    "flat": "Flat",
+                    "rising": "Rising",
+                    "falling": "Falling",
+                    "mixed": "Mixed"
+                }
+            },
+            "day_pattern_tomorrow": {
+                "name": "Tomorrow's Price Pattern",
+                "state": {
+                    "valley": "Valley",
+                    "peak": "Peak",
+                    "double_valley": "Double Valley",
+                    "double_peak": "Double Peak",
+                    "flat": "Flat",
+                    "rising": "Rising",
+                    "falling": "Falling",
+                    "mixed": "Mixed"
+                }
+            },
             "chart_data_export": {
                 "name": "Chart Data Export",
                 "state": {

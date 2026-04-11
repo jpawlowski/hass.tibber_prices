@@ -113,3 +113,27 @@ class TibberPricesMetadataCalculator(TibberPricesBaseCalculator):
             return value.lower()
 
         return value
+
+    def get_day_pattern_value(self, day: str) -> str | None:
+        """
+        Get the detected price pattern for a calendar day.
+
+        Args:
+            day: One of "yesterday", "today", or "tomorrow".
+
+        Returns:
+            Pattern string (e.g. "valley", "peak", "flat") or None if not available.
+
+        """
+        if not self.coordinator.data:
+            return None
+
+        day_patterns = self.coordinator.data.get("dayPatterns")
+        if not day_patterns:
+            return None
+
+        day_data = day_patterns.get(day)
+        if not day_data:
+            return None
+
+        return day_data.get("pattern")

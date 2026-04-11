@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, NamedTuple
+from typing import TYPE_CHECKING, NamedTuple, TypedDict
 
 if TYPE_CHECKING:
     from datetime import datetime
@@ -104,3 +104,60 @@ class TibberPricesIntervalCriteria(NamedTuple):
     flex: float
     min_distance_from_avg: float
     reverse_sort: bool
+
+
+# ─── Day pattern constants ─────────────────────────────────────────────────────
+
+DAY_PATTERN_VALLEY = "valley"  # Single price minimum (U/V-shape)
+DAY_PATTERN_PEAK = "peak"  # Single price maximum (Λ-shape)
+DAY_PATTERN_DOUBLE_VALLEY = "double_valley"  # Two minima, W-shape
+DAY_PATTERN_DOUBLE_PEAK = "double_peak"  # Two peaks,  M-shape
+DAY_PATTERN_FLAT = "flat"  # No significant variation
+DAY_PATTERN_RISING = "rising"  # Persistently rising throughout the day
+DAY_PATTERN_FALLING = "falling"  # Persistently falling throughout the day
+DAY_PATTERN_MIXED = "mixed"  # Multiple extrema with no clear pattern
+
+# Ordered list used to populate SensorDeviceClass.ENUM options=
+ALL_DAY_PATTERNS: list[str] = [
+    DAY_PATTERN_VALLEY,
+    DAY_PATTERN_PEAK,
+    DAY_PATTERN_DOUBLE_VALLEY,
+    DAY_PATTERN_DOUBLE_PEAK,
+    DAY_PATTERN_FLAT,
+    DAY_PATTERN_RISING,
+    DAY_PATTERN_FALLING,
+    DAY_PATTERN_MIXED,
+]
+
+# Segment type constants
+DAY_SEGMENT_RISING = "rising"
+DAY_SEGMENT_FALLING = "falling"
+DAY_SEGMENT_FLAT = "flat"
+
+
+# ─── Day pattern TypedDicts ────────────────────────────────────────────────────
+
+
+class SegmentDict(TypedDict):
+    """One monotone price segment within a calendar day."""
+
+    type: str  # "rising" | "falling" | "flat"
+    start: str | None  # ISO datetime of first interval in segment
+    end: str | None  # ISO datetime of last interval in segment
+    price_min: float  # Minimum price in segment
+    price_max: float  # Maximum price in segment
+    price_mean: float  # Mean price in segment
+
+
+class DayPatternDict(TypedDict):
+    """Detected price pattern for one calendar day."""
+
+    pattern: str  # One of the DAY_PATTERN_* constants
+    confidence: float  # 0.0 - 1.0
+    day_cv_percent: float  # Coefficient of variation for the day (%)
+    segments: list[SegmentDict]  # Monotone segments
+    extreme_time: str | None  # ISO datetime of primary extremum (valley/peak)
+    valley_start: str | None  # ISO datetime of left knee (VALLEY pattern only)
+    valley_end: str | None  # ISO datetime of right knee (VALLEY pattern only)
+    peak_start: str | None  # ISO datetime of left knee  (PEAK pattern only)
+    peak_end: str | None  # ISO datetime of right knee (PEAK pattern only)

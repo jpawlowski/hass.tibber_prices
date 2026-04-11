@@ -486,6 +486,21 @@
             "long_description": "Viser om Tibber-abonnementet ditt for øyeblikket er aktivt, avsluttet eller venter på aktivering. En status 'Aktiv' betyr at du aktivt mottar strøm gjennom Tibber.",
             "usage_tips": "Bruk dette til å overvåke abonnementsstatusen din. Sett opp varsler hvis statusen endres fra 'Aktiv' for å sikre uavbrutt tjeneste."
         },
+        "day_pattern_yesterday": {
+            "description": "Oppdaget prismønster for gårsdagens strømpriser",
+            "long_description": "Klassifiserer i går i et prismønster: Dal (billig midt på dagen), Topp (dyrt midt på dagen), Dobbel dal (to billige perioder), Dobbel topp (to dyre perioder), Flat (liten variasjon), Stigende, Fallende eller Blandet. Konfidensen og CV-attributtene viser hvor pålitelig mønsteret ble oppdaget.",
+            "usage_tips": "Bruk gårsdagens mønster til å forbedre automatikaene dine: et Dalmønster gjentar seg ofte neste dag og antyder at du bør forhåndsplanlegge billige middagstimer."
+        },
+        "day_pattern_today": {
+            "description": "Oppdaget prismønster for dagens strømpriser",
+            "long_description": "Klassifiserer i dag i et prismønster: Dal (billig midt på dagen), Topp (dyrt midt på dagen), Dobbel dal (W-form), Dobbel topp (M-form), Flat, Stigende, Fallende eller Blandet. Attributter inkluderer konfidensverdi (0–1), variasjonskoeffisient, knepunktstider og dagsegmenter.",
+            "usage_tips": "Bruk dagens mønster til å flytte forbruk. Daldag: kjør oppvaskmaskin, vaskemaskin eller lad elbilen rundt billige middagstimer. Toppdag: kjør apparater tidlig morgen eller sent kveld. Bruk valley_start og valley_end for presise automatikaer."
+        },
+        "day_pattern_tomorrow": {
+            "description": "Oppdaget prismønster for morgendagens strømpriser",
+            "long_description": "Klassifiserer i morgen (når data er tilgjengelig, typisk etter kl. 13) i et prismønster med samme algoritme som i dag. Attributtene valley_start/valley_end eller peak_start/peak_end gir knepunktstider.",
+            "usage_tips": "Sett opp kveldsautomasjonar som leser morgendagens mønster og forhåndskonfigurerer varmepumpe, billader eller varmtvannsberedere. Kombiner med tomorrow_data_available-binærsensoren."
+        },
         "chart_data_export": {
             "description": "Dataeksport for dashboardintegrasjoner",
             "long_description": "Denne sensoren kaller get_chartdata-tjenesten med din konfigurerte YAML-konfigurasjon og eksponerer resultatet som entitetsattributter. Status viser 'ready' når data er tilgjengelig, 'error' ved feil, eller 'pending' før første kall. Perfekt for dashboardintegrasjoner som ApexCharts som trenger å lese prisdata fra entitetsattributter.",

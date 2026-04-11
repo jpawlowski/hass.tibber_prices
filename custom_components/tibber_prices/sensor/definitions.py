@@ -865,7 +865,70 @@ PEAK_PRICE_TIMING_SENSORS = (
     ),
 )
 
-# 8. DIAGNOSTIC SENSORS (data availability and metadata)
+# 8. DAY PATTERN SENSORS (price shape classification per calendar day)
+# ----------------------------------------------------------------------------
+
+DAY_PATTERN_SENSORS = (
+    SensorEntityDescription(
+        key="day_pattern_yesterday",
+        translation_key="day_pattern_yesterday",
+        icon="mdi:chart-bell-curve",
+        device_class=SensorDeviceClass.ENUM,
+        options=[
+            "valley",
+            "peak",
+            "double_valley",
+            "double_peak",
+            "flat",
+            "rising",
+            "falling",
+            "mixed",
+        ],
+        state_class=None,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+    ),
+    SensorEntityDescription(
+        key="day_pattern_today",
+        translation_key="day_pattern_today",
+        icon="mdi:chart-bell-curve",
+        device_class=SensorDeviceClass.ENUM,
+        options=[
+            "valley",
+            "peak",
+            "double_valley",
+            "double_peak",
+            "flat",
+            "rising",
+            "falling",
+            "mixed",
+        ],
+        state_class=None,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=True,
+    ),
+    SensorEntityDescription(
+        key="day_pattern_tomorrow",
+        translation_key="day_pattern_tomorrow",
+        icon="mdi:chart-bell-curve",
+        device_class=SensorDeviceClass.ENUM,
+        options=[
+            "valley",
+            "peak",
+            "double_valley",
+            "double_peak",
+            "flat",
+            "rising",
+            "falling",
+            "mixed",
+        ],
+        state_class=None,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+    ),
+)
+
+# 9. DIAGNOSTIC SENSORS (data availability and metadata)
 # ----------------------------------------------------------------------------
 
 DIAGNOSTIC_SENSORS = (
@@ -1055,5 +1118,6 @@ ENTITY_DESCRIPTIONS = (
     *VOLATILITY_SENSORS,
     *BEST_PRICE_TIMING_SENSORS,
     *PEAK_PRICE_TIMING_SENSORS,
+    *DAY_PATTERN_SENSORS,
     *DIAGNOSTIC_SENSORS,
 )

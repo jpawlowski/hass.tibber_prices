@@ -937,6 +937,45 @@
                     "unknown": "Okänd"
                 }
             },
+            "day_pattern_yesterday": {
+                "name": "Prismönster Igår",
+                "state": {
+                    "valley": "Dal",
+                    "peak": "Topp",
+                    "double_valley": "Dubbeldal",
+                    "double_peak": "Dubbeltopp",
+                    "flat": "Flat",
+                    "rising": "Stigande",
+                    "falling": "Fallande",
+                    "mixed": "Blandad"
+                }
+            },
+            "day_pattern_today": {
+                "name": "Prismönster Idag",
+                "state": {
+                    "valley": "Dal",
+                    "peak": "Topp",
+                    "double_valley": "Dubbeldal",
+                    "double_peak": "Dubbeltopp",
+                    "flat": "Flat",
+                    "rising": "Stigande",
+                    "falling": "Fallande",
+                    "mixed": "Blandad"
+                }
+            },
+            "day_pattern_tomorrow": {
+                "name": "Prismönster Imorgon",
+                "state": {
+                    "valley": "Dal",
+                    "peak": "Topp",
+                    "double_valley": "Dubbeldal",
+                    "double_peak": "Dubbeltopp",
+                    "flat": "Flat",
+                    "rising": "Stigande",
+                    "falling": "Fallande",
+                    "mixed": "Blandad"
+                }
+            },
             "chart_data_export": {
                 "name": "Diagramdataexport",
                 "state": {

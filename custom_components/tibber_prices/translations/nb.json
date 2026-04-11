@@ -937,6 +937,45 @@
                     "unknown": "Ukjent"
                 }
             },
+            "day_pattern_yesterday": {
+                "name": "Prismønster i går",
+                "state": {
+                    "valley": "Dal",
+                    "peak": "Topp",
+                    "double_valley": "Dobbel dal",
+                    "double_peak": "Dobbel topp",
+                    "flat": "Flat",
+                    "rising": "Stigende",
+                    "falling": "Fallende",
+                    "mixed": "Blandet"
+                }
+            },
+            "day_pattern_today": {
+                "name": "Prismønster i dag",
+                "state": {
+                    "valley": "Dal",
+                    "peak": "Topp",
+                    "double_valley": "Dobbel dal",
+                    "double_peak": "Dobbel topp",
+                    "flat": "Flat",
+                    "rising": "Stigende",
+                    "falling": "Fallende",
+                    "mixed": "Blandet"
+                }
+            },
+            "day_pattern_tomorrow": {
+                "name": "Prismønster i morgen",
+                "state": {
+                    "valley": "Dal",
+                    "peak": "Topp",
+                    "double_valley": "Dobbel dal",
+                    "double_peak": "Dobbel topp",
+                    "flat": "Flat",
+                    "rising": "Stigende",
+                    "falling": "Fallende",
+                    "mixed": "Blandet"
+                }
+            },
             "chart_data_export": {
                 "name": "Diagramdataeksport",
                 "state": {

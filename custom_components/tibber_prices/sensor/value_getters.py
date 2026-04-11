@@ -238,6 +238,10 @@ def get_value_getter_mapping(  # noqa: PLR0913 - needs all calculators as parame
         ),
         # Subscription sensors (via MetadataCalculator)
         "subscription_status": lambda: metadata_calculator.get_subscription_value("status"),
+        # Day pattern sensors (via MetadataCalculator)
+        "day_pattern_yesterday": lambda: metadata_calculator.get_day_pattern_value("yesterday"),
+        "day_pattern_today": lambda: metadata_calculator.get_day_pattern_value("today"),
+        "day_pattern_tomorrow": lambda: metadata_calculator.get_day_pattern_value("tomorrow"),
         # Volatility sensors (via VolatilityCalculator)
         "today_volatility": lambda: volatility_calculator.get_volatility_value(volatility_type="today"),
         "tomorrow_volatility": lambda: volatility_calculator.get_volatility_value(volatility_type="tomorrow"),

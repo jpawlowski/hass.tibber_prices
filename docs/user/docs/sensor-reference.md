@@ -208,6 +208,15 @@ explanations of each sensor's purpose, attributes, and automation examples.
 | <span id="ref-data_lifecycle_status" class="entity-anchor"></span>`data_lifecycle_status` | Data Lifecycle Status | Datenlebenszyklus-Status | Datalivssyklus-status | Data Levenscyclus Status | Datalivscykelstatus | ✅ |
 | <span id="ref-chart_data_export" class="entity-anchor"></span>`chart_data_export` | Chart Data Export | Diagramm-Datenexport | Diagramdataeksport | Grafiekdata Export | Diagramdataexport | ❌ |
 | <span id="ref-chart_metadata" class="entity-anchor"></span>`chart_metadata` | Chart Metadata | Diagramm-Metadaten | Diagrammetadata | Grafiek Metadata | Diagrammetadata | ✅ |
+
+### Other
+
+
+| Entity ID suffix | 🇬🇧 English | 🇩🇪 Deutsch | 🇳🇴 Norsk | 🇳🇱 Nederlands | 🇸🇪 Svenska | Default |
+|---|---|---|---|---|---|---|
+| <span id="ref-day_pattern_today" class="entity-anchor"></span>`day_pattern_today` | Today's Price Pattern | Preismuster Heute | Prismønster i dag | Prijspatroon Vandaag | Prismönster Idag | ✅ |
+| <span id="ref-day_pattern_tomorrow" class="entity-anchor"></span>`day_pattern_tomorrow` | Tomorrow's Price Pattern | Preismuster Morgen | Prismønster i morgen | Prijspatroon Morgen | Prismönster Imorgon | ❌ |
+| <span id="ref-day_pattern_yesterday" class="entity-anchor"></span>`day_pattern_yesterday` | Yesterday's Price Pattern | Preismuster Gestern | Prismønster i går | Prijspatroon Gisteren | Prismönster Igår | ❌ |
 ## Binary Sensors
 
 ### Binary Sensors

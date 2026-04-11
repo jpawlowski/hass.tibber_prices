@@ -937,6 +937,45 @@
                     "unknown": "Onbekend"
                 }
             },
+            "day_pattern_yesterday": {
+                "name": "Prijspatroon Gisteren",
+                "state": {
+                    "valley": "Dal",
+                    "peak": "Piek",
+                    "double_valley": "Dubbel Dal",
+                    "double_peak": "Dubbele Piek",
+                    "flat": "Vlak",
+                    "rising": "Stijgend",
+                    "falling": "Dalend",
+                    "mixed": "Gemengd"
+                }
+            },
+            "day_pattern_today": {
+                "name": "Prijspatroon Vandaag",
+                "state": {
+                    "valley": "Dal",
+                    "peak": "Piek",
+                    "double_valley": "Dubbel Dal",
+                    "double_peak": "Dubbele Piek",
+                    "flat": "Vlak",
+                    "rising": "Stijgend",
+                    "falling": "Dalend",
+                    "mixed": "Gemengd"
+                }
+            },
+            "day_pattern_tomorrow": {
+                "name": "Prijspatroon Morgen",
+                "state": {
+                    "valley": "Dal",
+                    "peak": "Piek",
+                    "double_valley": "Dubbel Dal",
+                    "double_peak": "Dubbele Piek",
+                    "flat": "Vlak",
+                    "rising": "Stijgend",
+                    "falling": "Dalend",
+                    "mixed": "Gemengd"
+                }
+            },
             "chart_data_export": {
                 "name": "Grafiekdata Export",
                 "state": {

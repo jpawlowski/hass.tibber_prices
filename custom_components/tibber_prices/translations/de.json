@@ -937,6 +937,45 @@
                     "unknown": "Unbekannt"
                 }
             },
+            "day_pattern_yesterday": {
+                "name": "Preismuster Gestern",
+                "state": {
+                    "valley": "Tal",
+                    "peak": "Gipfel",
+                    "double_valley": "Doppeltal",
+                    "double_peak": "Doppelgipfel",
+                    "flat": "Flach",
+                    "rising": "Steigend",
+                    "falling": "Fallend",
+                    "mixed": "Gemischt"
+                }
+            },
+            "day_pattern_today": {
+                "name": "Preismuster Heute",
+                "state": {
+                    "valley": "Tal",
+                    "peak": "Gipfel",
+                    "double_valley": "Doppeltal",
+                    "double_peak": "Doppelgipfel",
+                    "flat": "Flach",
+                    "rising": "Steigend",
+                    "falling": "Fallend",
+                    "mixed": "Gemischt"
+                }
+            },
+            "day_pattern_tomorrow": {
+                "name": "Preismuster Morgen",
+                "state": {
+                    "valley": "Tal",
+                    "peak": "Gipfel",
+                    "double_valley": "Doppeltal",
+                    "double_peak": "Doppelgipfel",
+                    "flat": "Flach",
+                    "rising": "Steigend",
+                    "falling": "Fallend",
+                    "mixed": "Gemischt"
+                }
+            },
             "chart_data_export": {
                 "name": "Diagramm-Datenexport",
                 "state": {

@@ -486,6 +486,21 @@
             "long_description": "Zeigt, ob dein Tibber-Abonnement derzeit aktiv ist, beendet wurde oder auf Aktivierung wartet. Ein Status 'Aktiv' bedeutet, dass du aktiv Strom über Tibber beziehst.",
             "usage_tips": "Nutze dies zur Überwachung deines Abonnementstatus. Richte Benachrichtigungen ein, wenn sich der Status von 'Aktiv' ändert, um einen unterbrechungsfreien Service sicherzustellen."
         },
+        "day_pattern_yesterday": {
+            "description": "Erkanntes Preismuster der gestrigen Strompreise",
+            "long_description": "Klassifiziert gestern in ein Preismuster: Tal (günstig in der Mitte), Gipfel (teuer in der Mitte), Doppeltal (zwei günstige Perioden), Doppelgipfel (zwei teure Perioden), Flach (geringe Variation), Steigend, Fallend oder Gemischt. Die Konfidenz- und CV-Attribute zeigen, wie verlässlich das Muster erkannt wurde.",
+            "usage_tips": "Nutze das gestrige Muster für Automationen: Ein Tal-Tag wiederholt sich oft am nächsten Tag und deutet darauf hin, dass Verbraucher auf die günstigen Mittagsstunden verschoben werden sollten."
+        },
+        "day_pattern_today": {
+            "description": "Erkanntes Preismuster der heutigen Strompreise",
+            "long_description": "Klassifiziert heute in ein Preismuster: Tal (günstig mittags), Gipfel (teuer mittags), Doppeltal (W-Form), Doppelgipfel (M-Form), Flach, Steigend, Fallend oder Gemischt. Attribute enthalten Konfidenz (0–1), Variationskoeffizient, Knickpunktzeiten und Tagessegmente.",
+            "usage_tips": "Nutze das Tagesmuster, um Verbraucher zu verschieben. Tal-Tag: Spülmaschine, Waschmaschine oder E-Auto-Laden in die günstige Mittagszeit legen. Gipfel-Tag: früh morgens oder spät abends waschen. Die Attribute valley_start und valley_end ermöglichen minutengenaue Automationen."
+        },
+        "day_pattern_tomorrow": {
+            "description": "Erkanntes Preismuster der morgigen Strompreise",
+            "long_description": "Klassifiziert morgen (sobald Daten verfügbar sind, typisch nach 13 Uhr) in ein Preismuster mit demselben Algorithmus wie heute. Die Attribute valley_start/valley_end oder peak_start/peak_end geben Knickpunktzeiten für das primäre Extremum an.",
+            "usage_tips": "Richte Abendautomationen ein, die das morgige Muster lesen und Wärmepumpe, Autolader oder Warmwasserbereiter für den nächsten Tag vorkonfigurieren. Kombiniere mit dem tomorrow_data_available Binärsensor."
+        },
         "chart_data_export": {
             "description": "Datenexport für Dashboard-Integrationen",
             "long_description": "Dieser Sensor ruft den get_chartdata-Service mit deiner konfigurierten YAML-Konfiguration auf und stellt das Ergebnis als Entity-Attribute bereit. Der Status zeigt 'ready' wenn Daten verfügbar sind, 'error' bei Fehlern, oder 'pending' vor dem ersten Aufruf. Perfekt für Dashboard-Integrationen wie ApexCharts, die Preisdaten aus Entity-Attributen lesen.",

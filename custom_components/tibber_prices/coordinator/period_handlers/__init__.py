@@ -19,6 +19,9 @@ from __future__ import annotations
 # Re-export main API functions
 from .core import calculate_periods
 
+# Re-export day pattern detection
+from .day_pattern import detect_day_patterns
+
 # Re-export outlier filtering
 from .outlier_filtering import filter_price_outliers
 
@@ -27,12 +30,23 @@ from .relaxation import calculate_periods_with_relaxation
 
 # Re-export constants and types
 from .types import (
+    ALL_DAY_PATTERNS,
+    DAY_PATTERN_DOUBLE_PEAK,
+    DAY_PATTERN_DOUBLE_VALLEY,
+    DAY_PATTERN_FALLING,
+    DAY_PATTERN_FLAT,
+    DAY_PATTERN_MIXED,
+    DAY_PATTERN_PEAK,
+    DAY_PATTERN_RISING,
+    DAY_PATTERN_VALLEY,
     INDENT_L0,
     INDENT_L1,
     INDENT_L2,
     INDENT_L3,
     INDENT_L4,
     INDENT_L5,
+    DayPatternDict,
+    SegmentDict,
     TibberPricesIntervalCriteria,
     TibberPricesPeriodConfig,
     TibberPricesPeriodData,
@@ -41,12 +55,23 @@ from .types import (
 )
 
 __all__ = [
+    "ALL_DAY_PATTERNS",
+    "DAY_PATTERN_DOUBLE_PEAK",
+    "DAY_PATTERN_DOUBLE_VALLEY",
+    "DAY_PATTERN_FALLING",
+    "DAY_PATTERN_FLAT",
+    "DAY_PATTERN_MIXED",
+    "DAY_PATTERN_PEAK",
+    "DAY_PATTERN_RISING",
+    "DAY_PATTERN_VALLEY",
     "INDENT_L0",
     "INDENT_L1",
     "INDENT_L2",
     "INDENT_L3",
     "INDENT_L4",
     "INDENT_L5",
+    "DayPatternDict",
+    "SegmentDict",
     "TibberPricesIntervalCriteria",
     "TibberPricesPeriodConfig",
     "TibberPricesPeriodData",
@@ -54,5 +79,6 @@ __all__ = [
     "TibberPricesThresholdConfig",
     "calculate_periods",
     "calculate_periods_with_relaxation",
+    "detect_day_patterns",
     "filter_price_outliers",
 ]

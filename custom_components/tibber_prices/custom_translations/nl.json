@@ -486,6 +486,21 @@
             "long_description": "Geeft aan of je Tibber-abonnement momenteel actief is, beëindigd of wacht op activering. Een 'Actief'-status betekent dat je actief elektriciteit via Tibber afneemt.",
             "usage_tips": "Gebruik dit om je abonnementsstatus te monitoren. Stel meldingen in als de status verandert van 'Actief' om ononderbroken service te waarborgen."
         },
+        "day_pattern_yesterday": {
+            "description": "Gedetecteerd prijspatroon van gisterens elektriciteitsprijzen",
+            "long_description": "Classificeert gisteren in een prijspatroon: Dal (goedkoop in het midden), Piek (duur in het midden), Dubbel Dal (twee goedkope perioden), Dubbele Piek (twee dure perioden), Vlak (weinig variatie), Stijgend, Dalend of Gemengd. De confidence- en CV-attributen tonen hoe betrouwbaar het patroon is gedetecteerd.",
+            "usage_tips": "Gebruik het patroon van gisteren om automations te verfijnen: een Daldag herhaalt zich vaak de volgende dag en suggereert om goedkope middaguren in te plannen."
+        },
+        "day_pattern_today": {
+            "description": "Gedetecteerd prijspatroon van de huidige elektriciteitsprijzen",
+            "long_description": "Classificeert vandaag in een prijspatroon: Dal (goedkoop 's middags), Piek (duur 's middags), Dubbel Dal (W-vorm), Dubbele Piek (M-vorm), Vlak, Stijgend, Dalend of Gemengd. Attributen omvatten confidence (0–1), variatiecoëfficiënt, kniepunttijden en dagsegmenten.",
+            "usage_tips": "Gebruik het dagpatroon om verbruik te verschuiven. Daldag: draai vaatwasser, wasmachine of laad de EV 's middags. Piekdag: gebruik apparaten vroeg in de ochtend of laat in de avond. Gebruik valley_start en valley_end voor precieze automations."
+        },
+        "day_pattern_tomorrow": {
+            "description": "Gedetecteerd prijspatroon van de elektriciteitsprijzen van morgen",
+            "long_description": "Classificeert morgen (zodra data beschikbaar is, doorgaans na 13:00) in een prijspatroon met hetzelfde algoritme als vandaag. De attributen valley_start/valley_end of peak_start/peak_end geven kniepunttijden voor het primaire extremum.",
+            "usage_tips": "Stel avondautomations in die het patroon van morgen lezen en warmtepomp, autolader of boiler vooraf configureren. Combineer met de tomorrow_data_available binaire sensor."
+        },
         "chart_data_export": {
             "description": "Data-export voor dashboard-integraties",
             "long_description": "Deze sensor roept de get_chartdata-service aan met jouw geconfigureerde YAML-configuratie en stelt het resultaat beschikbaar als entiteitsattributen. De status toont 'ready' wanneer data beschikbaar is, 'error' bij fouten, of 'pending' voor de eerste aanroep. Perfekt voor dashboard-integraties zoals ApexCharts die prijsgegevens uit entiteitsattributen moeten lezen.",

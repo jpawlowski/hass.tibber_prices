@@ -7,6 +7,7 @@ import logging
 from typing import TYPE_CHECKING, Any
 
 from custom_components.tibber_prices import const as _const
+from custom_components.tibber_prices.coordinator.period_handlers.day_pattern import detect_day_patterns
 from custom_components.tibber_prices.utils.price import enrich_price_info_with_differences
 
 if TYPE_CHECKING:
@@ -273,6 +274,12 @@ class TibberPricesDataTransformer:
         # Calculate periods (best price and peak price)
         if "priceInfo" in transformed_data:
             transformed_data["pricePeriods"] = self._calculate_periods_fn(transformed_data["priceInfo"])
+
+        # Detect day patterns (yesterday / today / tomorrow)
+        transformed_data["dayPatterns"] = detect_day_patterns(
+            transformed_data["priceInfo"],
+            time=self.time,
+        )
 
         # Cache the transformed data
         self._cached_transformed_data = transformed_data

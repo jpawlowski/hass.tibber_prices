@@ -486,6 +486,21 @@
             "long_description": "Shows whether your Tibber subscription is currently running, has ended, or is pending activation. A status of 'running' means you're actively receiving electricity through Tibber.",
             "usage_tips": "Use this to monitor your subscription status. Set up alerts if status changes from 'running' to ensure uninterrupted service."
         },
+        "day_pattern_yesterday": {
+            "description": "Detected price shape of yesterday's electricity prices",
+            "long_description": "Classifies yesterday into a price shape: Valley (cheap in the middle), Peak (expensive in the middle), Double Valley (two cheap periods), Double Peak (two expensive periods), Flat (little variation), Rising, Falling, or Mixed. The confidence and CV attributes indicate how reliably the pattern was detected.",
+            "usage_tips": "Use yesterday's pattern to refine automations: a Valley day often repeats the next day, suggesting you should pre-schedule cheap-hour loads. Pair with the confidence attribute to filter unreliable detections."
+        },
+        "day_pattern_today": {
+            "description": "Detected price shape of today's electricity prices",
+            "long_description": "Classifies today into a price shape: Valley (cheap in the middle of the day), Peak (expensive in the middle), Double Valley (W-shape, two cheap windows), Double Peak (M-shape, two expensive peaks), Flat (prices barely move), Rising (prices climb through the day), Falling (prices drop through the day), or Mixed. Attributes include confidence (0\u20131), coefficient of variation, knee-point times, and intra-day segments.",
+            "usage_tips": "Use today's pattern to decide when to shift loads. A Valley day means cheap prices around midday \u2014 ideal for running the dishwasher, washing machine, or charging the EV. A Peak day means expensive midday \u2014 run appliances early morning or late evening. Use valley_start and valley_end attributes to schedule automations precisely."
+        },
+        "day_pattern_tomorrow": {
+            "description": "Detected price shape of tomorrow's electricity prices",
+            "long_description": "Classifies tomorrow (once data is available, typically after 13:00) into a price shape using the same algorithm as today. The valley_start / valley_end or peak_start / peak_end attributes give knee-point times for the primary extremum so you can pre-schedule loads the evening before.",
+            "usage_tips": "Set up evening automations that read tomorrow's pattern and pre-configure heat pump schedules, car charging timers, or water heater settings for the following day. Pair with the tomorrow_data_available binary sensor to trigger the automation only when data is ready."
+        },
         "chart_data_export": {
             "description": "Data export for dashboard integrations",
             "long_description": "This binary sensor calls the get_chartdata service with your configured YAML parameters and exposes the result as entity attributes. The state is 'on' when the service call succeeds and data is available, 'off' when the call fails or no configuration is set. Perfect for dashboard integrations like ApexCharts that need to read price data from entity attributes.",
