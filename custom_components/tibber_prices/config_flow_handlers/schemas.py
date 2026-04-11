@@ -12,7 +12,9 @@ import voluptuous as vol
 from custom_components.tibber_prices.const import (
     BEST_PRICE_MAX_LEVEL_OPTIONS,
     CONF_AVERAGE_SENSOR_DISPLAY,
+    CONF_BEST_PRICE_EXTEND_TO_VERY_CHEAP,
     CONF_BEST_PRICE_FLEX,
+    CONF_BEST_PRICE_MAX_EXTENSION_INTERVALS,
     CONF_BEST_PRICE_MAX_LEVEL,
     CONF_BEST_PRICE_MAX_LEVEL_GAP_COUNT,
     CONF_BEST_PRICE_MIN_DISTANCE_FROM_AVG,
@@ -23,7 +25,9 @@ from custom_components.tibber_prices.const import (
     CONF_EXTENDED_DESCRIPTIONS,
     CONF_MIN_PERIODS_BEST,
     CONF_MIN_PERIODS_PEAK,
+    CONF_PEAK_PRICE_EXTEND_TO_VERY_EXPENSIVE,
     CONF_PEAK_PRICE_FLEX,
+    CONF_PEAK_PRICE_MAX_EXTENSION_INTERVALS,
     CONF_PEAK_PRICE_MAX_LEVEL_GAP_COUNT,
     CONF_PEAK_PRICE_MIN_DISTANCE_FROM_AVG,
     CONF_PEAK_PRICE_MIN_LEVEL,
@@ -49,7 +53,9 @@ from custom_components.tibber_prices.const import (
     CONF_VOLATILITY_THRESHOLD_MODERATE,
     CONF_VOLATILITY_THRESHOLD_VERY_HIGH,
     DEFAULT_AVERAGE_SENSOR_DISPLAY,
+    DEFAULT_BEST_PRICE_EXTEND_TO_VERY_CHEAP,
     DEFAULT_BEST_PRICE_FLEX,
+    DEFAULT_BEST_PRICE_MAX_EXTENSION_INTERVALS,
     DEFAULT_BEST_PRICE_MAX_LEVEL,
     DEFAULT_BEST_PRICE_MAX_LEVEL_GAP_COUNT,
     DEFAULT_BEST_PRICE_MIN_DISTANCE_FROM_AVG,
@@ -59,7 +65,9 @@ from custom_components.tibber_prices.const import (
     DEFAULT_EXTENDED_DESCRIPTIONS,
     DEFAULT_MIN_PERIODS_BEST,
     DEFAULT_MIN_PERIODS_PEAK,
+    DEFAULT_PEAK_PRICE_EXTEND_TO_VERY_EXPENSIVE,
     DEFAULT_PEAK_PRICE_FLEX,
+    DEFAULT_PEAK_PRICE_MAX_EXTENSION_INTERVALS,
     DEFAULT_PEAK_PRICE_MAX_LEVEL_GAP_COUNT,
     DEFAULT_PEAK_PRICE_MIN_DISTANCE_FROM_AVG,
     DEFAULT_PEAK_PRICE_MIN_LEVEL,
@@ -86,6 +94,7 @@ from custom_components.tibber_prices.const import (
     DEFAULT_VOLATILITY_THRESHOLD_VERY_HIGH,
     DISPLAY_MODE_BASE,
     DISPLAY_MODE_SUBUNIT,
+    MAX_EXTENSION_INTERVALS,
     MAX_GAP_COUNT,
     MAX_MIN_PERIOD_LENGTH,
     MAX_MIN_PERIODS,
@@ -618,6 +627,7 @@ def get_best_price_schema(
     period_settings = options.get("period_settings", {})
     flexibility_settings = options.get("flexibility_settings", {})
     relaxation_settings = options.get("relaxation_and_target_periods", {})
+    extension_settings = options.get("extension_settings", {})
 
     # Get current values for override display
     min_period_length = int(
@@ -633,6 +643,12 @@ def get_best_price_schema(
     enable_min_periods = relaxation_settings.get(CONF_ENABLE_MIN_PERIODS_BEST, DEFAULT_ENABLE_MIN_PERIODS_BEST)
     min_periods = int(relaxation_settings.get(CONF_MIN_PERIODS_BEST, DEFAULT_MIN_PERIODS_BEST))
     relaxation_attempts = int(relaxation_settings.get(CONF_RELAXATION_ATTEMPTS_BEST, DEFAULT_RELAXATION_ATTEMPTS_BEST))
+    extend_to_very_cheap = bool(
+        extension_settings.get(CONF_BEST_PRICE_EXTEND_TO_VERY_CHEAP, DEFAULT_BEST_PRICE_EXTEND_TO_VERY_CHEAP)
+    )
+    max_extension_intervals_best = int(
+        extension_settings.get(CONF_BEST_PRICE_MAX_EXTENSION_INTERVALS, DEFAULT_BEST_PRICE_MAX_EXTENSION_INTERVALS)
+    )
 
     # Build section schemas with optional override warnings
     period_warning = get_section_override_warning("best_price", "period_settings", overrides, translations) or {}
@@ -754,6 +770,28 @@ def get_best_price_schema(
                 vol.Schema(relaxation_fields),
                 {"collapsed": True},
             ),
+            vol.Required("extension_settings"): section(
+                vol.Schema(
+                    {
+                        vol.Optional(
+                            CONF_BEST_PRICE_EXTEND_TO_VERY_CHEAP,
+                            default=extend_to_very_cheap,
+                        ): BooleanSelector(selector.BooleanSelectorConfig()),
+                        vol.Optional(
+                            CONF_BEST_PRICE_MAX_EXTENSION_INTERVALS,
+                            default=max_extension_intervals_best,
+                        ): NumberSelector(
+                            NumberSelectorConfig(
+                                min=1,
+                                max=MAX_EXTENSION_INTERVALS,
+                                step=1,
+                                mode=NumberSelectorMode.SLIDER,
+                            )
+                        ),
+                    }
+                ),
+                {"collapsed": True},
+            ),
         }
     )
 
@@ -779,6 +817,7 @@ def get_peak_price_schema(
     period_settings = options.get("period_settings", {})
     flexibility_settings = options.get("flexibility_settings", {})
     relaxation_settings = options.get("relaxation_and_target_periods", {})
+    extension_settings = options.get("extension_settings", {})
 
     # Get current values for override display
     min_period_length = int(
@@ -794,6 +833,12 @@ def get_peak_price_schema(
     enable_min_periods = relaxation_settings.get(CONF_ENABLE_MIN_PERIODS_PEAK, DEFAULT_ENABLE_MIN_PERIODS_PEAK)
     min_periods = int(relaxation_settings.get(CONF_MIN_PERIODS_PEAK, DEFAULT_MIN_PERIODS_PEAK))
     relaxation_attempts = int(relaxation_settings.get(CONF_RELAXATION_ATTEMPTS_PEAK, DEFAULT_RELAXATION_ATTEMPTS_PEAK))
+    extend_to_very_expensive = bool(
+        extension_settings.get(CONF_PEAK_PRICE_EXTEND_TO_VERY_EXPENSIVE, DEFAULT_PEAK_PRICE_EXTEND_TO_VERY_EXPENSIVE)
+    )
+    max_extension_intervals_peak = int(
+        extension_settings.get(CONF_PEAK_PRICE_MAX_EXTENSION_INTERVALS, DEFAULT_PEAK_PRICE_MAX_EXTENSION_INTERVALS)
+    )
 
     # Build section schemas with optional override warnings
     period_warning = get_section_override_warning("peak_price", "period_settings", overrides, translations) or {}
@@ -913,6 +958,28 @@ def get_peak_price_schema(
             ),
             vol.Required("relaxation_and_target_periods"): section(
                 vol.Schema(relaxation_fields),
+                {"collapsed": True},
+            ),
+            vol.Required("extension_settings"): section(
+                vol.Schema(
+                    {
+                        vol.Optional(
+                            CONF_PEAK_PRICE_EXTEND_TO_VERY_EXPENSIVE,
+                            default=extend_to_very_expensive,
+                        ): BooleanSelector(selector.BooleanSelectorConfig()),
+                        vol.Optional(
+                            CONF_PEAK_PRICE_MAX_EXTENSION_INTERVALS,
+                            default=max_extension_intervals_peak,
+                        ): NumberSelector(
+                            NumberSelectorConfig(
+                                min=1,
+                                max=MAX_EXTENSION_INTERVALS,
+                                step=1,
+                                mode=NumberSelectorMode.SLIDER,
+                            )
+                        ),
+                    }
+                ),
                 {"collapsed": True},
             ),
         }

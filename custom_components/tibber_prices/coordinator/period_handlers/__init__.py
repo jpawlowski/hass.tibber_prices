@@ -28,6 +28,9 @@ from .outlier_filtering import filter_price_outliers
 # Re-export relaxation
 from .relaxation import calculate_periods_with_relaxation
 
+# Re-export shape extension
+from .shape_extension import extend_periods_for_shape
+
 # Re-export constants and types
 from .types import (
     ALL_DAY_PATTERNS,
@@ -80,5 +83,6 @@ __all__ = [
     "calculate_periods",
     "calculate_periods_with_relaxation",
     "detect_day_patterns",
+    "extend_periods_for_shape",
     "filter_price_outliers",
 ]

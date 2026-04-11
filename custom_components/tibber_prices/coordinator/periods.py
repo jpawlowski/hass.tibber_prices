@@ -225,6 +225,41 @@ class TibberPricesPeriodCalculator:
             "min_period_length": int(min_period_length),
         }
 
+        # Extension settings (stored in 'extension_settings' nested section)
+        if reverse_sort:
+            extend_to_extreme = bool(
+                self._get_option(
+                    _const.CONF_PEAK_PRICE_EXTEND_TO_VERY_EXPENSIVE,
+                    "extension_settings",
+                    _const.DEFAULT_PEAK_PRICE_EXTEND_TO_VERY_EXPENSIVE,
+                )
+            )
+            max_extension_intervals = int(
+                self._get_option(
+                    _const.CONF_PEAK_PRICE_MAX_EXTENSION_INTERVALS,
+                    "extension_settings",
+                    _const.DEFAULT_PEAK_PRICE_MAX_EXTENSION_INTERVALS,
+                )
+            )
+        else:
+            extend_to_extreme = bool(
+                self._get_option(
+                    _const.CONF_BEST_PRICE_EXTEND_TO_VERY_CHEAP,
+                    "extension_settings",
+                    _const.DEFAULT_BEST_PRICE_EXTEND_TO_VERY_CHEAP,
+                )
+            )
+            max_extension_intervals = int(
+                self._get_option(
+                    _const.CONF_BEST_PRICE_MAX_EXTENSION_INTERVALS,
+                    "extension_settings",
+                    _const.DEFAULT_BEST_PRICE_MAX_EXTENSION_INTERVALS,
+                )
+            )
+
+        config["extend_to_extreme"] = extend_to_extreme
+        config["max_extension_intervals"] = max_extension_intervals
+
         # Cache the result
         self._config_cache[cache_key] = config
         self._config_cache_valid = True
@@ -702,6 +737,8 @@ class TibberPricesPeriodCalculator:
                 threshold_volatility_very_high=threshold_volatility_very_high,
                 level_filter=max_level_best,
                 gap_count=gap_count_best,
+                extend_to_extreme=best_config["extend_to_extreme"],
+                max_extension_intervals=best_config["max_extension_intervals"],
             )
             best_periods = calculate_periods_with_relaxation(
                 all_prices,
@@ -783,6 +820,8 @@ class TibberPricesPeriodCalculator:
                 threshold_volatility_very_high=threshold_volatility_very_high,
                 level_filter=min_level_peak,
                 gap_count=gap_count_peak,
+                extend_to_extreme=peak_config["extend_to_extreme"],
+                max_extension_intervals=peak_config["max_extension_intervals"],
             )
             peak_periods = calculate_periods_with_relaxation(
                 all_prices,

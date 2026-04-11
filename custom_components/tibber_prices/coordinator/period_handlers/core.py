@@ -25,6 +25,7 @@ from .period_building import (
 from .period_statistics import (
     extract_period_summaries,
 )
+from .shape_extension import extend_periods_for_shape
 from .types import TibberPricesThresholdConfig
 
 # Flex limits to prevent degenerate behavior (see docs/development/period-calculation-theory.md)
@@ -208,6 +209,20 @@ def calculate_periods(
         thresholds,
         time=time,
     )
+
+    # Step 7.5: Extend periods into adjacent VERY_CHEAP / VERY_EXPENSIVE intervals
+    # This is an opt-in feature (disabled by default) that adds contiguous
+    # extreme-level intervals on each side of an already-found period.
+    if config.extend_to_extreme and config.max_extension_intervals > 0:
+        period_summaries = extend_periods_for_shape(
+            period_summaries,
+            all_prices_sorted,
+            price_context,
+            reverse_sort=reverse_sort,
+            max_extension_intervals=config.max_extension_intervals,
+            thresholds=thresholds,
+            time=time,
+        )
 
     # Step 8: Cross-day extension for late-night periods
     # If a best-price period ends near midnight and tomorrow has continued low prices,

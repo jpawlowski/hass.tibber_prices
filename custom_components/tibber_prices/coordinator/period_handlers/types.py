@@ -56,6 +56,8 @@ class TibberPricesPeriodConfig(NamedTuple):
     threshold_volatility_very_high: float = DEFAULT_VOLATILITY_THRESHOLD_VERY_HIGH
     level_filter: str | None = None  # "any", "cheap", "expensive", etc. or None
     gap_count: int = 0  # Number of allowed consecutive deviating intervals
+    extend_to_extreme: bool = False  # Extend periods into adjacent VERY_CHEAP/VERY_EXPENSIVE intervals
+    max_extension_intervals: int = 0  # Max intervals this extension may add per side (0 = disabled)
 
 
 class TibberPricesPeriodData(NamedTuple):
