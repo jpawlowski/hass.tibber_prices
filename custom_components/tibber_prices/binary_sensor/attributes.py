@@ -257,6 +257,52 @@ def add_detail_attributes(attributes: dict, current_period: dict) -> None:
         attributes["periods_remaining"] = current_period["periods_remaining"]
 
 
+def add_period_count_attributes(
+    attributes: dict,
+    period_summaries: list[dict],
+    time: TibberPricesTimeService,
+) -> None:
+    """
+    Add per-day period count attributes (priority 5.5).
+
+    Counts how many periods fall on today and tomorrow so automations can check
+    things like "only charge if there are at least 2 cheap periods today".
+
+    Args:
+        attributes: Target dict to add attributes to
+        period_summaries: All period summaries (already filtered to today+tomorrow)
+        time: TibberPricesTimeService instance for date comparison
+
+    """
+    now = time.now()
+    today = time.get_local_date()
+    tomorrow = time.get_local_date(offset_days=1)
+
+    count_today = 0
+    count_tomorrow = 0
+
+    for period in period_summaries:
+        start = period.get("start")
+        if start is None:
+            continue
+        if hasattr(start, "date"):
+            period_date = start.date()
+        else:
+            from datetime import datetime  # noqa: PLC0415
+
+            period_date = datetime.fromisoformat(str(start)).date()
+
+        if period_date == today:
+            count_today += 1
+        elif period_date == tomorrow:
+            count_tomorrow += 1
+
+    _ = now  # used for clarity only
+    if count_today > 0 or count_tomorrow > 0:
+        attributes["period_count_today"] = count_today
+        attributes["period_count_tomorrow"] = count_tomorrow
+
+
 def add_relaxation_attributes(attributes: dict, current_period: dict) -> None:
     """
     Add relaxation information attributes (priority 6).
@@ -412,6 +458,9 @@ def build_final_attributes_simple(
         # 5. Detail information
         add_detail_attributes(attributes, current_period)
 
+        # 5.5 Per-day period counts (how many cheap/peak periods per day)
+        add_period_count_attributes(attributes, period_summaries, time)
+
         # 6. Relaxation information (only if current period was relaxed)
         add_relaxation_attributes(attributes, current_period)
 
@@ -429,6 +478,7 @@ def build_final_attributes_simple(
     result: dict = {
         "timestamp": timestamp,
     }
+    add_period_count_attributes(result, period_summaries, time)
     if period_metadata:
         add_calculation_summary_attributes(result, period_metadata)
     result["periods"] = _convert_periods_to_display_units(period_summaries, factor)

@@ -270,7 +270,7 @@ ATTR_ENTRY_ID: Final = "entry_id"
 # Service schema
 CHARTDATA_SERVICE_SCHEMA: Final = vol.Schema(
     {
-        vol.Required(ATTR_ENTRY_ID): str,
+        vol.Optional(ATTR_ENTRY_ID, default=""): str,
         vol.Optional(ATTR_DAY): vol.All(vol.Coerce(list), [vol.In(["yesterday", "today", "tomorrow"])]),
         vol.Optional("resolution", default="interval"): vol.In(["interval", "hourly"]),
         vol.Optional("output_format", default="array_of_objects"): vol.In(["array_of_objects", "array_of_arrays"]),
@@ -346,10 +346,7 @@ async def handle_chartdata(call: ServiceCall) -> dict[str, Any]:  # noqa: PLR091
 
     """
     hass = call.hass
-    entry_id_raw = call.data.get(ATTR_ENTRY_ID)
-    if entry_id_raw is None:
-        raise ServiceValidationError(translation_domain=DOMAIN, translation_key="missing_entry_id")
-    entry_id: str = str(entry_id_raw)
+    entry_id: str = call.data.get(ATTR_ENTRY_ID, "")
 
     # Get coordinator to check data availability
     _, coordinator, _ = get_entry_and_data(hass, entry_id)
@@ -392,6 +389,39 @@ async def handle_chartdata(call: ServiceCall) -> dict[str, Any]:  # noqa: PLR091
     # Filter values are already normalized to uppercase by schema validators
     level_filter = call.data.get("level_filter")
     rating_level_filter = call.data.get("rating_level_filter")
+
+    # --- Parameter dependency validation ---
+
+    # level_filter and rating_level_filter are mutually exclusive
+    if level_filter and rating_level_filter:
+        raise ServiceValidationError(
+            translation_domain=DOMAIN,
+            translation_key="level_and_rating_filter_conflict",
+        )
+
+    has_filter = bool(level_filter or rating_level_filter)
+
+    # insert_nulls modes "segments"/"all" require a level or rating filter
+    if insert_nulls != "none" and not has_filter:
+        raise ServiceValidationError(
+            translation_domain=DOMAIN,
+            translation_key="insert_nulls_requires_filter",
+            translation_placeholders={"mode": insert_nulls},
+        )
+
+    # connect_segments requires insert_nulls="segments" (with a filter)
+    if connect_segments and insert_nulls != "segments":
+        raise ServiceValidationError(
+            translation_domain=DOMAIN,
+            translation_key="connect_segments_requires_segments_mode",
+        )
+
+    # array_fields is only meaningful with array_of_arrays format
+    if call.data.get("array_fields") and output_format != "array_of_arrays":
+        raise ServiceValidationError(
+            translation_domain=DOMAIN,
+            translation_key="array_fields_requires_array_format",
+        )
 
     # === METADATA-ONLY MODE ===
     # Early return: calculate and return only metadata, skip all data processing

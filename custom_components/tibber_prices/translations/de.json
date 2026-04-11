@@ -59,15 +59,7 @@
             "home_already_configured": "Dieses Zuhause ist bereits in einem anderen Eintrag konfiguriert. Jedes Zuhause kann nur einmal konfiguriert werden.",
             "no_active_subscription": "Dieses Zuhause hat keinen aktiven Tibber-Vertrag. Nur Häuser mit aktivem Stromvertrag können zu Home Assistant hinzugefügt werden.",
             "subscription_expired": "Der Tibber-Vertrag für dieses Zuhause ist abgelaufen. Nur Häuser mit aktivem oder zukünftigem Stromvertrag können zu Home Assistant hinzugefügt werden.",
-            "future_subscription_warning": "Hinweis: Der Tibber-Vertrag für dieses Zuhause hat noch nicht begonnen. Die Funktionalität ist möglicherweise eingeschränkt, bis der Vertrag aktiv wird.",
-            "invalid_yaml_syntax": "Ungültige YAML-Syntax. Bitte überprüfe Einrückungen, Doppelpunkte und Sonderzeichen.",
-            "invalid_yaml_structure": "YAML muss ein Dictionary/Objekt sein (Schlüssel: Wert-Paare), keine Liste oder reiner Text.",
-            "service_call_failed": "Service-Aufruf-Validierung fehlgeschlagen: {error_detail}",
-            "missing_entry_id": "Eintrag-ID wird benötigt, wurde aber nicht bereitgestellt.",
-            "invalid_entry_id": "Ungültige Eintrag-ID oder Eintrag nicht gefunden.",
-            "missing_home_id": "Home-ID fehlt in der Konfiguration.",
-            "user_data_not_available": "Benutzerdaten nicht verfügbar. Bitte aktualisiere zuerst die Benutzerdaten.",
-            "price_fetch_failed": "Preisdaten konnten nicht abgerufen werden. Bitte prüfe die Logs für Details."
+            "future_subscription_warning": "Hinweis: Der Tibber-Vertrag für dieses Zuhause hat noch nicht begonnen. Die Funktionalität ist möglicherweise eingeschränkt, bis der Vertrag aktiv wird."
         },
         "abort": {
             "already_configured": "Alle verfügbaren Tibber-Zuhause sind bereits konfiguriert. Jedes Zuhause kann nur einmal konfiguriert werden.",
@@ -1055,6 +1047,62 @@
             "description": "Dieses Update enthält Breaking Changes, die automatisch angewendet wurden.\n\n**Umbenannte Entitäten ({count})**\n\nDie folgenden Entity-Keys wurden umbenannt. Deine bestehenden Entity-IDs und Automationen bleiben erhalten:\n\n{entity_list}\n\n**Geänderte Dauer-Sensorwerte**\n\nAlle Dauer-Sensoren (verbleibende Zeit, startet in, Periodendauer, Trendänderungs-Countdown) geben ihren Zustandswert jetzt in **Minuten** statt Stunden an. Die Anzeigeeinheit in Dashboards bleibt standardmäßig Stunden.\n\nWenn du Automationen mit numerischen Vergleichen auf diesen Sensoren hast, aktualisiere deine Schwellwerte:\n- Alt: `state < 0.25` (15 Minuten als Stunden)\n- Neu: `state < 15` (15 Minuten)\n\nSchließe diesen Hinweis, nachdem du deine Automationen überprüft hast."
         }
     },
+    "exceptions": {
+        "no_entries_found": {
+            "message": "Keine Tibber Prices Integrationseinträge gefunden. Bitte richte die Integration zuerst ein."
+        },
+        "multiple_entries_no_entry_id": {
+            "message": "Mehrere Tibber Prices Einträge gefunden. Bitte gib 'entry_id' an, um den gewünschten Eintrag auszuwählen."
+        },
+        "invalid_entry_id": {
+            "message": "Ungültige oder nicht verfügbare Konfigurations-Entry. Bitte überprüfe die Entry-ID und stelle sicher, dass die Integration geladen ist."
+        },
+        "missing_home_id": {
+            "message": "Home-ID nicht im Konfigurationseintrag gefunden. Bitte konfiguriere die Integration neu."
+        },
+        "user_data_not_available": {
+            "message": "Benutzerdaten sind noch nicht verfügbar. Bitte warte, bis das erste Datenupdate abgeschlossen ist."
+        },
+        "timezone_not_found": {
+            "message": "Zeitzone des Zuhauses konnte nicht ermittelt werden. Bitte überprüfe die Konfiguration in deinem Tibber-Konto."
+        },
+        "end_before_start": {
+            "message": "Endzeit muss nach der Startzeit liegen."
+        },
+        "price_fetch_failed": {
+            "message": "Preisdaten konnten nicht von der Tibber-API abgerufen werden. Bitte versuche es später erneut."
+        },
+        "invalid_search_scope": {
+            "message": "Ungültiger Suchbereich. Gültige Werte sind: today, tomorrow, remaining_today, next_24h, next_48h."
+        },
+        "scope_conflicts_with_range": {
+            "message": "search_scope kann nicht mit expliziten Bereichsparametern kombiniert werden: {params}. Verwende entweder search_scope ODER explizite Start-/Endparameter."
+        },
+        "day_offset_requires_time": {
+            "message": "{offset_param} erfordert, dass {time_param} gesetzt ist. Der Tagesoffset ändert nur das Datum eines expliziten Zeitparameters."
+        },
+        "min_level_exceeds_max": {
+            "message": "min_price_level '{min_level}' ist höher als max_price_level '{max_level}'. Das Mindestlevel muss gleich oder niedriger als das Maximallevel sein."
+        },
+        "power_profile_length_mismatch": {
+            "message": "power_profile hat {profile_length} Einträge, aber die Dauer erfordert {interval_count} Intervalle ({duration_minutes} Minuten). Das power_profile muss genau einen Eintrag pro 15-Minuten-Intervall haben."
+        },
+        "level_and_rating_filter_conflict": {
+            "message": "level_filter und rating_level_filter können nicht gleichzeitig verwendet werden. Verwende nur einen Filtertyp pro Anfrage."
+        },
+        "insert_nulls_requires_filter": {
+            "message": "insert_nulls-Modus '{mode}' erfordert einen level_filter oder rating_level_filter zur Segmentdefinition. Ohne Filter verwende insert_nulls: none."
+        },
+        "connect_segments_requires_segments_mode": {
+            "message": "connect_segments erfordert, dass insert_nulls auf 'segments' gesetzt ist. Setze insert_nulls: segments, um Segmentverbindung zu nutzen."
+        },
+        "array_fields_requires_array_format": {
+            "message": "array_fields kann nur mit output_format: array_of_arrays verwendet werden. Ändere das Ausgabeformat oder entferne array_fields."
+        },
+        "invalid_array_fields": {
+            "message": "Ungültige array_fields-Vorlage. Verwende Feldnamen in geschweiften Klammern, z.B. '{start_time}, {price_per_kwh}, {level}'."
+        }
+    },
     "services": {
         "get_price": {
             "name": "Preisdaten abrufen",
@@ -1261,6 +1309,474 @@
                     "description": "Die Konfigurationseintrag-ID für die Tibber-Integration."
                 }
             }
+        },
+        "find_cheapest_block": {
+            "name": "Günstigsten Block finden",
+            "description": "Findet das günstigste zusammenhängende Zeitfenster einer bestimmten Dauer. Gedacht für Geräteplanung: Spülmaschine, Waschmaschine, Trockner usw. Gibt das günstigste Fenster mit Start-/Endzeiten und Preisstatistiken zurück.",
+            "sections": {
+                "search_range": {
+                    "name": "Suchbereich",
+                    "description": "Zeitfenster fuer die Suche festlegen."
+                },
+                "time_alternatives": {
+                    "name": "Alternative Zeitbereich-Optionen",
+                    "description": "Alternative Moeglichkeiten zum Festlegen des Suchbereichs ueber Tageszeit und Offsets."
+                },
+                "price_filter": {
+                    "name": "Preisstufen-Filter",
+                    "description": "Suche auf Intervalle innerhalb des angegebenen Preisstufen-Bereichs einschraenken."
+                },
+                "output": {
+                    "name": "Ausgabeoptionen",
+                    "description": "Kostenabschaetzung und Vergleichsausgabe steuern."
+                }
+            },
+            "fields": {
+                "entry_id": {
+                    "name": "Eintrag-ID",
+                    "description": "Die Konfigurationseintrag-ID für die Tibber-Integration."
+                },
+                "duration": {
+                    "name": "Dauer",
+                    "description": "Länge des gewünschten zusammenhängenden Fensters. Wird automatisch auf die nächste Viertelstunde aufgerundet. Maximum: 12 Stunden."
+                },
+                "search_start": {
+                    "name": "Suchbeginn",
+                    "description": "Beginn des Suchbereichs als exaktes Datum und Uhrzeit. Höchste Priorität — überschreibt alle anderen Startoptionen. Standardmäßig jetzt, wenn nicht angegeben."
+                },
+                "search_end": {
+                    "name": "Suchende",
+                    "description": "Ende des Suchbereichs als exaktes Datum und Uhrzeit. Höchste Priorität — überschreibt alle anderen Endoptionen. Standardmäßig Ende von morgen, wenn nicht angegeben."
+                },
+                "search_start_time": {
+                    "name": "Suchbeginn-Uhrzeit",
+                    "description": "Alternative: Suche ab dieser Uhrzeit starten. Mit Tages-Versatz kombinieren. Wird ignoriert, wenn Suchbeginn (Datum/Uhrzeit) gesetzt ist."
+                },
+                "search_start_day_offset": {
+                    "name": "Suchbeginn Tages-Versatz",
+                    "description": "Tages-Versatz für Suchbeginn-Uhrzeit. -7 bis 2: -1 = gestern, 0 = heute, 1 = morgen. Negative Werte suchen in der Vergangenheit. Nur mit Suchbeginn-Uhrzeit verwendet."
+                },
+                "search_end_time": {
+                    "name": "Suchende-Uhrzeit",
+                    "description": "Alternative: Suche bis zu dieser Uhrzeit. Mit Tages-Versatz kombinieren. Wird ignoriert, wenn Suchende (Datum/Uhrzeit) gesetzt ist."
+                },
+                "search_end_day_offset": {
+                    "name": "Suchende Tages-Versatz",
+                    "description": "Tages-Versatz für Suchende-Uhrzeit. -7 bis 2: -1 = gestern, 0 = heute, 1 = morgen. Negative Werte suchen in der Vergangenheit. Nur mit Suchende-Uhrzeit verwendet."
+                },
+                "search_start_offset_minutes": {
+                    "name": "Suchbeginn-Versatz (Minuten)",
+                    "description": "Alternative: Suche startet in dieser Anzahl Minuten ab jetzt. Positiv = Zukunft (60 = in 1 Stunde), negativ = Vergangenheit (-60 = vor 1 Stunde). Wird ignoriert, wenn Suchbeginn oder Suchbeginn-Uhrzeit gesetzt ist."
+                },
+                "search_end_offset_minutes": {
+                    "name": "Suchende-Versatz (Minuten)",
+                    "description": "Alternative: Suche endet in dieser Anzahl Minuten ab jetzt. Positiv = Zukunft (480 = in 8 Stunden), negativ = Vergangenheit (-60 = vor 1 Stunde). Wird ignoriert, wenn Suchende oder Suchende-Uhrzeit gesetzt ist."
+                },
+                "include_current_interval": {
+                    "name": "Aktuelles Intervall einbeziehen",
+                    "description": "Das aktuell laufende 15-Minuten-Intervall in die Suche einbeziehen. Wenn aktiviert (Standard), beginnt die Suche am Anfang des aktuellen Intervalls, sodass es Teil des Ergebnisses sein kann."
+                },
+                "use_base_unit": {
+                    "name": "Basiswährung verwenden",
+                    "description": "Preise in Basiswährung (EUR, NOK) statt der konfigurierten Anzeigeeinheit (ct, øre) erzwingen. Nützlich für Berechnungen."
+                },
+                "search_scope": {
+                    "name": "Suchbereich (Shortcut)",
+                    "description": "Kurzwahl fuer haeufige Suchbereiche. Ueberschreibt alle anderen Zeitbereich-Optionen. today/tomorrow = ganzer Kalendertag, remaining_today = jetzt bis Mitternacht, next_24h/next_48h = rollierendes Fenster ab jetzt."
+                },
+                "max_price_level": {
+                    "name": "Maximale Preisstufe",
+                    "description": "Nur Intervalle bis zu dieser Tibber-Preisstufe beruecksichtigen. very_cheap = restriktivste, very_expensive = keine Einschraenkung."
+                },
+                "min_price_level": {
+                    "name": "Minimale Preisstufe",
+                    "description": "Nur Intervalle ab dieser Tibber-Preisstufe beruecksichtigen. Nuetzlich fuer find_most_expensive, um wirklich teure Intervalle zu fokussieren."
+                },
+                "include_comparison_details": {
+                    "name": "Vergleichsdetails einschliessen",
+                    "description": "Das price_comparison-Ergebnis um zusaetzliche Felder ergaenzen: comparison_price_min, comparison_price_max und (nur Block) comparison_window_end."
+                },
+                "power_profile": {
+                    "name": "Leistungsprofil",
+                    "description": "Variable Leistungsaufnahme in Watt pro 15-Minuten-Intervall. Wenn gesetzt, gibt estimated_total_cost den tatsaechlichen Verbrauch statt einer festen 1-kW-Last an."
+                }
+            }
+        },
+        "find_most_expensive_block": {
+            "name": "Teuersten Block finden",
+            "description": "Findet das teuerste zusammenhängende Zeitfenster einer bestimmten Dauer. Nützlich zur Erkennung von Spitzenpreiszeiträumen, die vermieden werden sollten. Gibt das teuerste Fenster mit Start-/Endzeiten und Preisstatistiken zurück.",
+            "sections": {
+                "search_range": {
+                    "name": "Suchbereich",
+                    "description": "Zeitfenster fuer die Suche festlegen."
+                },
+                "time_alternatives": {
+                    "name": "Alternative Zeitbereich-Optionen",
+                    "description": "Alternative Moeglichkeiten zum Festlegen des Suchbereichs ueber Tageszeit und Offsets."
+                },
+                "price_filter": {
+                    "name": "Preisstufen-Filter",
+                    "description": "Suche auf Intervalle innerhalb des angegebenen Preisstufen-Bereichs einschraenken."
+                },
+                "output": {
+                    "name": "Ausgabeoptionen",
+                    "description": "Kostenabschaetzung und Vergleichsausgabe steuern."
+                }
+            },
+            "fields": {
+                "entry_id": {
+                    "name": "Eintrag-ID",
+                    "description": "Die Konfigurationseintrag-ID für die Tibber-Integration."
+                },
+                "duration": {
+                    "name": "Dauer",
+                    "description": "Länge des gewünschten zusammenhängenden Fensters. Wird automatisch auf die nächste Viertelstunde aufgerundet. Maximum: 12 Stunden."
+                },
+                "search_start": {
+                    "name": "Suchbeginn",
+                    "description": "Beginn des Suchbereichs als exaktes Datum und Uhrzeit. Höchste Priorität — überschreibt alle anderen Startoptionen. Standardmäßig jetzt, wenn nicht angegeben."
+                },
+                "search_end": {
+                    "name": "Suchende",
+                    "description": "Ende des Suchbereichs als exaktes Datum und Uhrzeit. Höchste Priorität — überschreibt alle anderen Endoptionen. Standardmäßig Ende von morgen, wenn nicht angegeben."
+                },
+                "search_start_time": {
+                    "name": "Suchbeginn-Uhrzeit",
+                    "description": "Alternative: Suche ab dieser Uhrzeit starten. Mit Tages-Versatz kombinieren. Wird ignoriert, wenn Suchbeginn (Datum/Uhrzeit) gesetzt ist."
+                },
+                "search_start_day_offset": {
+                    "name": "Suchbeginn Tages-Versatz",
+                    "description": "Tages-Versatz für Suchbeginn-Uhrzeit. -7 bis 2: -1 = gestern, 0 = heute, 1 = morgen. Negative Werte suchen in der Vergangenheit. Nur mit Suchbeginn-Uhrzeit verwendet."
+                },
+                "search_end_time": {
+                    "name": "Suchende-Uhrzeit",
+                    "description": "Alternative: Suche bis zu dieser Uhrzeit. Mit Tages-Versatz kombinieren. Wird ignoriert, wenn Suchende (Datum/Uhrzeit) gesetzt ist."
+                },
+                "search_end_day_offset": {
+                    "name": "Suchende Tages-Versatz",
+                    "description": "Tages-Versatz für Suchende-Uhrzeit. -7 bis 2: -1 = gestern, 0 = heute, 1 = morgen. Negative Werte suchen in der Vergangenheit. Nur mit Suchende-Uhrzeit verwendet."
+                },
+                "search_start_offset_minutes": {
+                    "name": "Suchbeginn-Versatz (Minuten)",
+                    "description": "Alternative: Suche startet in dieser Anzahl Minuten ab jetzt. Positiv = Zukunft (60 = in 1 Stunde), negativ = Vergangenheit (-60 = vor 1 Stunde). Wird ignoriert, wenn Suchbeginn oder Suchbeginn-Uhrzeit gesetzt ist."
+                },
+                "search_end_offset_minutes": {
+                    "name": "Suchende-Versatz (Minuten)",
+                    "description": "Alternative: Suche endet in dieser Anzahl Minuten ab jetzt. Positiv = Zukunft (480 = in 8 Stunden), negativ = Vergangenheit (-60 = vor 1 Stunde). Wird ignoriert, wenn Suchende oder Suchende-Uhrzeit gesetzt ist."
+                },
+                "include_current_interval": {
+                    "name": "Aktuelles Intervall einbeziehen",
+                    "description": "Das aktuell laufende 15-Minuten-Intervall in die Suche einbeziehen. Wenn aktiviert (Standard), beginnt die Suche am Anfang des aktuellen Intervalls, sodass es Teil des Ergebnisses sein kann."
+                },
+                "use_base_unit": {
+                    "name": "Basiswährung verwenden",
+                    "description": "Preise in Basiswährung (EUR, NOK) statt der konfigurierten Anzeigeeinheit (ct, øre) erzwingen. Nützlich für Berechnungen."
+                },
+                "search_scope": {
+                    "name": "Suchbereich (Shortcut)",
+                    "description": "Kurzwahl fuer haeufige Suchbereiche. Ueberschreibt alle anderen Zeitbereich-Optionen. today/tomorrow = ganzer Kalendertag, remaining_today = jetzt bis Mitternacht, next_24h/next_48h = rollierendes Fenster ab jetzt."
+                },
+                "max_price_level": {
+                    "name": "Maximale Preisstufe",
+                    "description": "Nur Intervalle bis zu dieser Tibber-Preisstufe beruecksichtigen. very_cheap = restriktivste, very_expensive = keine Einschraenkung."
+                },
+                "min_price_level": {
+                    "name": "Minimale Preisstufe",
+                    "description": "Nur Intervalle ab dieser Tibber-Preisstufe beruecksichtigen. Nuetzlich fuer find_most_expensive, um wirklich teure Intervalle zu fokussieren."
+                },
+                "include_comparison_details": {
+                    "name": "Vergleichsdetails einschliessen",
+                    "description": "Das price_comparison-Ergebnis um zusaetzliche Felder ergaenzen: comparison_price_min, comparison_price_max und (nur Block) comparison_window_end."
+                },
+                "power_profile": {
+                    "name": "Leistungsprofil",
+                    "description": "Variable Leistungsaufnahme in Watt pro 15-Minuten-Intervall. Wenn gesetzt, gibt estimated_total_cost den tatsaechlichen Verbrauch statt einer festen 1-kW-Last an."
+                }
+            }
+        },
+        "find_cheapest_hours": {
+            "name": "Günstigste Stunden finden",
+            "description": "Findet die günstigsten Intervalle für eine bestimmte Gesamtdauer, nicht unbedingt zusammenhängend. Gedacht für flexible Lasten: Batterieladung, E-Auto, Warmwasserspeicher. Gibt einen Zeitplan mit Intervallen gruppiert in zusammenhängende Segmente zurück.",
+            "sections": {
+                "search_range": {
+                    "name": "Suchbereich",
+                    "description": "Zeitfenster fuer die Suche festlegen."
+                },
+                "time_alternatives": {
+                    "name": "Alternative Zeitbereich-Optionen",
+                    "description": "Alternative Moeglichkeiten zum Festlegen des Suchbereichs ueber Tageszeit und Offsets."
+                },
+                "price_filter": {
+                    "name": "Preisstufen-Filter",
+                    "description": "Suche auf Intervalle innerhalb des angegebenen Preisstufen-Bereichs einschraenken."
+                },
+                "output": {
+                    "name": "Ausgabeoptionen",
+                    "description": "Kostenabschaetzung und Vergleichsausgabe steuern."
+                }
+            },
+            "fields": {
+                "entry_id": {
+                    "name": "Eintrag-ID",
+                    "description": "Die Konfigurationseintrag-ID für die Tibber-Integration."
+                },
+                "duration": {
+                    "name": "Dauer",
+                    "description": "Benötigte günstige Gesamtzeit. Wird automatisch auf die nächste Viertelstunde aufgerundet. Maximum: 24 Stunden."
+                },
+                "search_start": {
+                    "name": "Suchbeginn",
+                    "description": "Beginn des Suchbereichs als exaktes Datum und Uhrzeit. Höchste Priorität — überschreibt alle anderen Startoptionen. Standardmäßig jetzt, wenn nicht angegeben."
+                },
+                "search_end": {
+                    "name": "Suchende",
+                    "description": "Ende des Suchbereichs als exaktes Datum und Uhrzeit. Höchste Priorität — überschreibt alle anderen Endoptionen. Standardmäßig Ende von morgen, wenn nicht angegeben."
+                },
+                "search_start_time": {
+                    "name": "Suchbeginn-Uhrzeit",
+                    "description": "Alternative: Suche ab dieser Uhrzeit starten. Mit Tages-Versatz kombinieren. Wird ignoriert, wenn Suchbeginn (Datum/Uhrzeit) gesetzt ist."
+                },
+                "search_start_day_offset": {
+                    "name": "Suchbeginn Tages-Versatz",
+                    "description": "Tages-Versatz für Suchbeginn-Uhrzeit. -7 bis 2: -1 = gestern, 0 = heute, 1 = morgen. Negative Werte suchen in der Vergangenheit. Nur mit Suchbeginn-Uhrzeit verwendet."
+                },
+                "search_end_time": {
+                    "name": "Suchende-Uhrzeit",
+                    "description": "Alternative: Suche bis zu dieser Uhrzeit. Mit Tages-Versatz kombinieren. Wird ignoriert, wenn Suchende (Datum/Uhrzeit) gesetzt ist."
+                },
+                "search_end_day_offset": {
+                    "name": "Suchende Tages-Versatz",
+                    "description": "Tages-Versatz für Suchende-Uhrzeit. -7 bis 2: -1 = gestern, 0 = heute, 1 = morgen. Negative Werte suchen in der Vergangenheit. Nur mit Suchende-Uhrzeit verwendet."
+                },
+                "search_start_offset_minutes": {
+                    "name": "Suchbeginn-Versatz (Minuten)",
+                    "description": "Alternative: Suche startet in dieser Anzahl Minuten ab jetzt. Positiv = Zukunft (60 = in 1 Stunde), negativ = Vergangenheit (-60 = vor 1 Stunde). Wird ignoriert, wenn Suchbeginn oder Suchbeginn-Uhrzeit gesetzt ist."
+                },
+                "search_end_offset_minutes": {
+                    "name": "Suchende-Versatz (Minuten)",
+                    "description": "Alternative: Suche endet in dieser Anzahl Minuten ab jetzt. Positiv = Zukunft (480 = in 8 Stunden), negativ = Vergangenheit (-60 = vor 1 Stunde). Wird ignoriert, wenn Suchende oder Suchende-Uhrzeit gesetzt ist."
+                },
+                "include_current_interval": {
+                    "name": "Aktuelles Intervall einbeziehen",
+                    "description": "Das aktuell laufende 15-Minuten-Intervall in die Suche einbeziehen. Wenn aktiviert (Standard), beginnt die Suche am Anfang des aktuellen Intervalls, sodass es Teil des Ergebnisses sein kann."
+                },
+                "min_segment_duration": {
+                    "name": "Minimale Segmentdauer",
+                    "description": "Minimale zusammenhängende Laufzeit. Verhindert schnelles Ein-/Ausschalten bei Geräten mit Mindestlaufzeiten. Wird automatisch auf die nächste Viertelstunde aufgerundet. Standard: 15 Minuten. Maximum: 4 Stunden."
+                },
+                "use_base_unit": {
+                    "name": "Basiswährung verwenden",
+                    "description": "Preise in Basiswährung (EUR, NOK) statt der konfigurierten Anzeigeeinheit (ct, øre) erzwingen. Nützlich für Berechnungen."
+                },
+                "search_scope": {
+                    "name": "Suchbereich (Shortcut)",
+                    "description": "Kurzwahl fuer haeufige Suchbereiche. Ueberschreibt alle anderen Zeitbereich-Optionen. today/tomorrow = ganzer Kalendertag, remaining_today = jetzt bis Mitternacht, next_24h/next_48h = rollierendes Fenster ab jetzt."
+                },
+                "max_price_level": {
+                    "name": "Maximale Preisstufe",
+                    "description": "Nur Intervalle bis zu dieser Tibber-Preisstufe beruecksichtigen. very_cheap = restriktivste, very_expensive = keine Einschraenkung."
+                },
+                "min_price_level": {
+                    "name": "Minimale Preisstufe",
+                    "description": "Nur Intervalle ab dieser Tibber-Preisstufe beruecksichtigen. Nuetzlich fuer find_most_expensive, um wirklich teure Intervalle zu fokussieren."
+                },
+                "include_comparison_details": {
+                    "name": "Vergleichsdetails einschliessen",
+                    "description": "Das price_comparison-Ergebnis um zusaetzliche Felder ergaenzen: comparison_price_min, comparison_price_max und (nur Block) comparison_window_end."
+                },
+                "power_profile": {
+                    "name": "Leistungsprofil",
+                    "description": "Variable Leistungsaufnahme in Watt pro 15-Minuten-Intervall. Wenn gesetzt, gibt estimated_total_cost den tatsaechlichen Verbrauch statt einer festen 1-kW-Last an."
+                }
+            }
+        },
+        "find_most_expensive_hours": {
+            "name": "Teuerste Stunden finden",
+            "description": "Findet die teuersten Intervalle für eine bestimmte Gesamtdauer, nicht unbedingt zusammenhängend. Nützlich zur Erkennung von Spitzenpreiszeiträumen, die vermieden werden sollten. Gibt einen Zeitplan mit Intervallen gruppiert in zusammenhängende Segmente zurück.",
+            "sections": {
+                "search_range": {
+                    "name": "Suchbereich",
+                    "description": "Zeitfenster fuer die Suche festlegen."
+                },
+                "time_alternatives": {
+                    "name": "Alternative Zeitbereich-Optionen",
+                    "description": "Alternative Moeglichkeiten zum Festlegen des Suchbereichs ueber Tageszeit und Offsets."
+                },
+                "price_filter": {
+                    "name": "Preisstufen-Filter",
+                    "description": "Suche auf Intervalle innerhalb des angegebenen Preisstufen-Bereichs einschraenken."
+                },
+                "output": {
+                    "name": "Ausgabeoptionen",
+                    "description": "Kostenabschaetzung und Vergleichsausgabe steuern."
+                }
+            },
+            "fields": {
+                "entry_id": {
+                    "name": "Eintrag-ID",
+                    "description": "Die Konfigurationseintrag-ID für die Tibber-Integration."
+                },
+                "duration": {
+                    "name": "Dauer",
+                    "description": "Zu findende teure Gesamtzeit. Wird automatisch auf die nächste Viertelstunde aufgerundet. Maximum: 24 Stunden."
+                },
+                "search_start": {
+                    "name": "Suchbeginn",
+                    "description": "Beginn des Suchbereichs als exaktes Datum und Uhrzeit. Höchste Priorität — überschreibt alle anderen Startoptionen. Standardmäßig jetzt, wenn nicht angegeben."
+                },
+                "search_end": {
+                    "name": "Suchende",
+                    "description": "Ende des Suchbereichs als exaktes Datum und Uhrzeit. Höchste Priorität — überschreibt alle anderen Endoptionen. Standardmäßig Ende von morgen, wenn nicht angegeben."
+                },
+                "search_start_time": {
+                    "name": "Suchbeginn-Uhrzeit",
+                    "description": "Alternative: Suche ab dieser Uhrzeit starten. Mit Tages-Versatz kombinieren. Wird ignoriert, wenn Suchbeginn (Datum/Uhrzeit) gesetzt ist."
+                },
+                "search_start_day_offset": {
+                    "name": "Suchbeginn Tages-Versatz",
+                    "description": "Tages-Versatz für Suchbeginn-Uhrzeit. -7 bis 2: -1 = gestern, 0 = heute, 1 = morgen. Negative Werte suchen in der Vergangenheit. Nur mit Suchbeginn-Uhrzeit verwendet."
+                },
+                "search_end_time": {
+                    "name": "Suchende-Uhrzeit",
+                    "description": "Alternative: Suche bis zu dieser Uhrzeit. Mit Tages-Versatz kombinieren. Wird ignoriert, wenn Suchende (Datum/Uhrzeit) gesetzt ist."
+                },
+                "search_end_day_offset": {
+                    "name": "Suchende Tages-Versatz",
+                    "description": "Tages-Versatz für Suchende-Uhrzeit. -7 bis 2: -1 = gestern, 0 = heute, 1 = morgen. Negative Werte suchen in der Vergangenheit. Nur mit Suchende-Uhrzeit verwendet."
+                },
+                "search_start_offset_minutes": {
+                    "name": "Suchbeginn-Versatz (Minuten)",
+                    "description": "Alternative: Suche startet in dieser Anzahl Minuten ab jetzt. Positiv = Zukunft (60 = in 1 Stunde), negativ = Vergangenheit (-60 = vor 1 Stunde). Wird ignoriert, wenn Suchbeginn oder Suchbeginn-Uhrzeit gesetzt ist."
+                },
+                "search_end_offset_minutes": {
+                    "name": "Suchende-Versatz (Minuten)",
+                    "description": "Alternative: Suche endet in dieser Anzahl Minuten ab jetzt. Positiv = Zukunft (480 = in 8 Stunden), negativ = Vergangenheit (-60 = vor 1 Stunde). Wird ignoriert, wenn Suchende oder Suchende-Uhrzeit gesetzt ist."
+                },
+                "include_current_interval": {
+                    "name": "Aktuelles Intervall einbeziehen",
+                    "description": "Das aktuell laufende 15-Minuten-Intervall in die Suche einbeziehen. Wenn aktiviert (Standard), beginnt die Suche am Anfang des aktuellen Intervalls, sodass es Teil des Ergebnisses sein kann."
+                },
+                "min_segment_duration": {
+                    "name": "Minimale Segmentdauer",
+                    "description": "Minimale zusammenhängende Laufzeit. Verhindert schnelles Ein-/Ausschalten bei Geräten mit Mindestlaufzeiten. Wird automatisch auf die nächste Viertelstunde aufgerundet. Standard: 15 Minuten. Maximum: 4 Stunden."
+                },
+                "use_base_unit": {
+                    "name": "Basiswährung verwenden",
+                    "description": "Preise in Basiswährung (EUR, NOK) statt der konfigurierten Anzeigeeinheit (ct, øre) erzwingen. Nützlich für Berechnungen."
+                },
+                "search_scope": {
+                    "name": "Suchbereich (Shortcut)",
+                    "description": "Kurzwahl fuer haeufige Suchbereiche. Ueberschreibt alle anderen Zeitbereich-Optionen. today/tomorrow = ganzer Kalendertag, remaining_today = jetzt bis Mitternacht, next_24h/next_48h = rollierendes Fenster ab jetzt."
+                },
+                "max_price_level": {
+                    "name": "Maximale Preisstufe",
+                    "description": "Nur Intervalle bis zu dieser Tibber-Preisstufe beruecksichtigen. very_cheap = restriktivste, very_expensive = keine Einschraenkung."
+                },
+                "min_price_level": {
+                    "name": "Minimale Preisstufe",
+                    "description": "Nur Intervalle ab dieser Tibber-Preisstufe beruecksichtigen. Nuetzlich fuer find_most_expensive, um wirklich teure Intervalle zu fokussieren."
+                },
+                "include_comparison_details": {
+                    "name": "Vergleichsdetails einschliessen",
+                    "description": "Das price_comparison-Ergebnis um zusaetzliche Felder ergaenzen: comparison_price_min, comparison_price_max und (nur Block) comparison_window_end."
+                },
+                "power_profile": {
+                    "name": "Leistungsprofil",
+                    "description": "Variable Leistungsaufnahme in Watt pro 15-Minuten-Intervall. Wenn gesetzt, gibt estimated_total_cost den tatsaechlichen Verbrauch statt einer festen 1-kW-Last an."
+                }
+            }
+        },
+        "find_cheapest_schedule": {
+            "name": "Guenstigstes Programm planen",
+            "description": "Plant mehrere Geraete optimal ohne Zeitueberschneidung. Jede Aufgabe erhaelt das guenstigste verfuegbare zusammenhaengende Zeitfenster.",
+            "sections": {
+                "scheduling_options": {
+                    "name": "Planungsoptionen",
+                    "description": "Aufgaben und Puffer zwischen den Geraeteaufzeiten konfigurieren."
+                },
+                "search_range": {
+                    "name": "Suchbereich",
+                    "description": "Zeitfenster fuer die Suche festlegen."
+                },
+                "time_alternatives": {
+                    "name": "Alternative Zeitbereich-Optionen",
+                    "description": "Alternative Moeglichkeiten zum Festlegen des Suchbereichs ueber Tageszeit und Offsets."
+                },
+                "price_filter": {
+                    "name": "Preisstufen-Filter",
+                    "description": "Suche auf Intervalle innerhalb des angegebenen Preisstufen-Bereichs einschraenken."
+                },
+                "output": {
+                    "name": "Ausgabeoptionen",
+                    "description": "Kostenabschaetzung und Vergleichsausgabe steuern."
+                }
+            },
+            "fields": {
+                "entry_id": {
+                    "name": "Eintrag-ID",
+                    "description": "Die Konfigurationseintrag-ID für die Tibber-Integration."
+                },
+                "tasks": {
+                    "name": "Aufgaben",
+                    "description": "Liste der zu planenden Aufgaben. Jede Aufgabe benoetigt name (Text) und duration (hh:mm:ss). Optional: power_profile (Watt pro 15-min-Intervall). Maximal 4 Aufgaben."
+                },
+                "gap_minutes": {
+                    "name": "Pause zwischen Aufgaben (Minuten)",
+                    "description": "Mindestpause in Minuten zwischen aufeinanderfolgenden Aufgaben. Wird auf 15 Minuten aufgerundet. Standard: 0 (keine Pause)."
+                },
+                "search_scope": {
+                    "name": "Suchbereich (Shortcut)",
+                    "description": "Kurzwahl fuer haeufige Suchbereiche. Ueberschreibt alle anderen Zeitbereich-Optionen. today/tomorrow = ganzer Kalendertag, remaining_today = jetzt bis Mitternacht, next_24h/next_48h = rollierendes Fenster ab jetzt."
+                },
+                "search_start": {
+                    "name": "Suchbeginn",
+                    "description": "Beginn des Suchbereichs als exaktes Datum und Uhrzeit. Höchste Priorität — überschreibt alle anderen Startoptionen. Standardmäßig jetzt, wenn nicht angegeben."
+                },
+                "search_end": {
+                    "name": "Suchende",
+                    "description": "Ende des Suchbereichs als exaktes Datum und Uhrzeit. Höchste Priorität — überschreibt alle anderen Endoptionen. Standardmäßig Ende von morgen, wenn nicht angegeben."
+                },
+                "search_start_time": {
+                    "name": "Suchbeginn-Uhrzeit",
+                    "description": "Alternative: Suche ab dieser Uhrzeit starten. Mit Tages-Versatz kombinieren. Wird ignoriert, wenn Suchbeginn (Datum/Uhrzeit) gesetzt ist."
+                },
+                "search_start_day_offset": {
+                    "name": "Suchbeginn Tages-Versatz",
+                    "description": "Tages-Versatz für Suchbeginn-Uhrzeit. -7 bis 2: -1 = gestern, 0 = heute, 1 = morgen. Negative Werte suchen in der Vergangenheit. Nur mit Suchbeginn-Uhrzeit verwendet."
+                },
+                "search_end_time": {
+                    "name": "Suchende-Uhrzeit",
+                    "description": "Alternative: Suche bis zu dieser Uhrzeit. Mit Tages-Versatz kombinieren. Wird ignoriert, wenn Suchende (Datum/Uhrzeit) gesetzt ist."
+                },
+                "search_end_day_offset": {
+                    "name": "Suchende Tages-Versatz",
+                    "description": "Tages-Versatz für Suchende-Uhrzeit. -7 bis 2: -1 = gestern, 0 = heute, 1 = morgen. Negative Werte suchen in der Vergangenheit. Nur mit Suchende-Uhrzeit verwendet."
+                },
+                "search_start_offset_minutes": {
+                    "name": "Suchbeginn-Versatz (Minuten)",
+                    "description": "Alternative: Suche startet in dieser Anzahl Minuten ab jetzt. Positiv = Zukunft (60 = in 1 Stunde), negativ = Vergangenheit (-60 = vor 1 Stunde). Wird ignoriert, wenn Suchbeginn oder Suchbeginn-Uhrzeit gesetzt ist."
+                },
+                "search_end_offset_minutes": {
+                    "name": "Suchende-Versatz (Minuten)",
+                    "description": "Alternative: Suche endet in dieser Anzahl Minuten ab jetzt. Positiv = Zukunft (480 = in 8 Stunden), negativ = Vergangenheit (-60 = vor 1 Stunde). Wird ignoriert, wenn Suchende oder Suchende-Uhrzeit gesetzt ist."
+                },
+                "include_current_interval": {
+                    "name": "Aktuelles Intervall einbeziehen",
+                    "description": "Das aktuell laufende 15-Minuten-Intervall in die Suche einbeziehen. Wenn aktiviert (Standard), beginnt die Suche am Anfang des aktuellen Intervalls, sodass es Teil des Ergebnisses sein kann."
+                },
+                "max_price_level": {
+                    "name": "Maximale Preisstufe",
+                    "description": "Nur Intervalle bis zu dieser Tibber-Preisstufe beruecksichtigen. very_cheap = restriktivste, very_expensive = keine Einschraenkung."
+                },
+                "min_price_level": {
+                    "name": "Minimale Preisstufe",
+                    "description": "Nur Intervalle ab dieser Tibber-Preisstufe beruecksichtigen. Nuetzlich fuer find_most_expensive, um wirklich teure Intervalle zu fokussieren."
+                },
+                "use_base_unit": {
+                    "name": "Basiswährung verwenden",
+                    "description": "Preise in Basiswährung (EUR, NOK) statt der konfigurierten Anzeigeeinheit (ct, øre) erzwingen. Nützlich für Berechnungen."
+                }
+            }
         }
     },
     "selector": {
@@ -1360,6 +1876,15 @@
             "options": {
                 "median": "Median",
                 "mean": "Arithmetisches Mittel"
+            }
+        },
+        "search_scope": {
+            "options": {
+                "today": "Heute",
+                "tomorrow": "Morgen",
+                "remaining_today": "Rest heute",
+                "next_24h": "Naechste 24 Stunden",
+                "next_48h": "Naechste 48 Stunden"
             }
         }
     },

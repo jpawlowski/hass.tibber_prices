@@ -59,15 +59,7 @@
             "home_already_configured": "Detta hem är redan konfigurerat i en annan post. Varje hem kan bara konfigureras en gång.",
             "no_active_subscription": "Detta hem har inget aktivt Tibber-avtal. Endast hem med aktiva elavtal kan läggas till i Home Assistant.",
             "subscription_expired": "Tibber-avtalet för detta hem har löpt ut. Endast hem med aktiva eller framtida elavtal kan läggas till i Home Assistant.",
-            "future_subscription_warning": "Obs: Detta hems Tibber-avtal har inte börjat ännu. Funktionaliteten kan vara begränsad tills avtalet blir aktivt.",
-            "invalid_yaml_syntax": "Ogiltig YAML-syntax. Kontrollera indragning, kolon och specialtecken.",
-            "invalid_yaml_structure": "YAML måste vara en ordbok/objekt (nyckel: värde-par), inte en lista eller vanlig text.",
-            "service_call_failed": "Tjänsteanrop validering misslyckades: {error_detail}",
-            "missing_entry_id": "Post-ID krävs men angavs inte.",
-            "invalid_entry_id": "Ogiltigt post-ID eller post hittades inte.",
-            "missing_home_id": "Hem-ID saknas från konfigurationsposten.",
-            "user_data_not_available": "Användardata är inte tillgänglig. Uppdatera användardata först.",
-            "price_fetch_failed": "Misslyckades med att hämta prisdata. Kontrollera loggarna för detaljer."
+            "future_subscription_warning": "Obs: Detta hems Tibber-avtal har inte börjat ännu. Funktionaliteten kan vara begränsad tills avtalet blir aktivt."
         },
         "abort": {
             "already_configured": "Alla tillgängliga Tibber-hem är redan konfigurerade. Varje hem kan bara konfigureras en gång.",
@@ -1055,6 +1047,62 @@
             "description": "Denna uppdatering innehåller ändringar som tillämpades automatiskt.\n\n**Omdöpta entiteter ({count})**\n\nFöljande entity-nycklar döptes om automatiskt. Dina befintliga entity-ID:n och automatiseringar förblir intakta:\n\n{entity_list}\n\n**Ändrade varaktighetssensorvärden**\n\nAlla varaktighetssensorer (återstående tid, startar om, periodvaraktighet, trendändrings-nedräkning) rapporterar nu sitt tillståndsvärde i **minuter** istället för timmar. Visningsenheten i dashboards förblir timmar som standard.\n\nOm du har automatiseringar med numeriska jämförelser på dessa sensorer, uppdatera dina tröskelvärden:\n- Gammalt: `state < 0.25` (15 minuter som timmar)\n- Nytt: `state < 15` (15 minuter)\n\nStäng detta meddelande efter att du har granskat dina automatiseringar."
         }
     },
+    "exceptions": {
+        "no_entries_found": {
+            "message": "Inga Tibber Prices integrationsposter hittades. Konfigurera integrationen först."
+        },
+        "multiple_entries_no_entry_id": {
+            "message": "Flera Tibber Prices poster hittades. Ange 'entry_id' för att välja vilken post som ska användas."
+        },
+        "invalid_entry_id": {
+            "message": "Ogiltig eller otillgänglig konfigurationspost. Kontrollera post-ID:t och se till att integrationen är laddad."
+        },
+        "missing_home_id": {
+            "message": "Hem-ID hittades inte i konfigurationsposten. Konfigurera om integrationen."
+        },
+        "user_data_not_available": {
+            "message": "Användardata är inte tillgänglig ännu. Vänta tills den första datauppdateringen är klar."
+        },
+        "timezone_not_found": {
+            "message": "Kunde inte fastställa hemmets tidszon. Kontrollera hemkonfigurationen i ditt Tibber-konto."
+        },
+        "end_before_start": {
+            "message": "Sluttid måste vara efter starttid."
+        },
+        "price_fetch_failed": {
+            "message": "Kunde inte hämta prisdata från Tibber API. Försök igen senare."
+        },
+        "invalid_search_scope": {
+            "message": "Ogiltigt sökområde. Giltiga värden är: today, tomorrow, remaining_today, next_24h, next_48h."
+        },
+        "scope_conflicts_with_range": {
+            "message": "search_scope kan inte kombineras med explicita områdesparametrar: {params}. Använd antingen search_scope ELLER explicita start-/slutparametrar."
+        },
+        "day_offset_requires_time": {
+            "message": "{offset_param} kräver att {time_param} är satt. Dagsförskjutning ändrar bara datumet för en explicit tidsparameter."
+        },
+        "min_level_exceeds_max": {
+            "message": "min_price_level '{min_level}' är högre än max_price_level '{max_level}'. Miniminivån måste vara lika med eller lägre än maximinivån."
+        },
+        "power_profile_length_mismatch": {
+            "message": "power_profile har {profile_length} poster men varaktigheten kräver {interval_count} intervaller ({duration_minutes} minuter). power_profile måste ha exakt en post per 15-minutersintervall."
+        },
+        "level_and_rating_filter_conflict": {
+            "message": "level_filter och rating_level_filter kan inte användas tillsammans. Använd bara en filtertyp per begäran."
+        },
+        "insert_nulls_requires_filter": {
+            "message": "insert_nulls-läge '{mode}' kräver ett level_filter eller rating_level_filter för att definiera segment. Utan filter, använd insert_nulls: none."
+        },
+        "connect_segments_requires_segments_mode": {
+            "message": "connect_segments kräver att insert_nulls är satt till 'segments'. Ställ in insert_nulls: segments för att använda segmentanslutning."
+        },
+        "array_fields_requires_array_format": {
+            "message": "array_fields kan bara användas med output_format: array_of_arrays. Ändra utdataformatet eller ta bort array_fields."
+        },
+        "invalid_array_fields": {
+            "message": "Ogiltig array_fields-mall. Använd fältnamn inom klammerparenteser, t.ex. '{start_time}, {price_per_kwh}, {level}'."
+        }
+    },
     "services": {
         "get_price": {
             "name": "Hämta prisdata",
@@ -1261,6 +1309,474 @@
                     "description": "Config entry-ID för Tibber-integrationen."
                 }
             }
+        },
+        "find_cheapest_block": {
+            "name": "Hitta billigaste blocket",
+            "description": "Hittar det billigaste sammanhängande tidsfönstret med en given varaktighet. Designat för apparatschemaläggning: diskmaskin, tvättmaskin, torktumlare osv. Returnerar det billigaste fönstret med start-/sluttider och prisstatistik.",
+            "sections": {
+                "search_range": {
+                    "name": "Soekomraade",
+                    "description": "Definiera tidsfoenstret att soeka inom."
+                },
+                "time_alternatives": {
+                    "name": "Alternativa tidsinstaellningar",
+                    "description": "Alternativa saett att definiera soekomraadet via tidpunkt och offset."
+                },
+                "price_filter": {
+                    "name": "Prisnivaaefilter",
+                    "description": "Begraensa soekningen till intervall inom det angivna prisnivaaeintervallet."
+                },
+                "output": {
+                    "name": "Utdataalternativ",
+                    "description": "Styr kostnadsuppskattning och jaemfoerelseresultat."
+                }
+            },
+            "fields": {
+                "entry_id": {
+                    "name": "Entry-ID",
+                    "description": "Config entry-ID för Tibber-integrationen."
+                },
+                "duration": {
+                    "name": "Varaktighet",
+                    "description": "Längd på det önskade sammanhängande fönstret. Avrundas automatiskt uppåt till närmaste kvart. Maximum: 12 timmar."
+                },
+                "search_start": {
+                    "name": "Sökstart",
+                    "description": "Start av sökintervallet som exakt datum och tid. Högsta prioritet — åsidosätter alla andra startalternativ. Standard är nu om inte angivet."
+                },
+                "search_end": {
+                    "name": "Sökslut",
+                    "description": "Slut av sökintervallet som exakt datum och tid. Högsta prioritet — åsidosätter alla andra slutalternativ. Standard är slutet av imorgon om inte angivet."
+                },
+                "search_start_time": {
+                    "name": "Sökstart-klockslag",
+                    "description": "Alternativ: Börja söka från detta klockslag. Kombinera med dagförskjutning. Ignoreras om Sökstart (datum/tid) är satt."
+                },
+                "search_start_day_offset": {
+                    "name": "Sökstart dagförskjutning",
+                    "description": "Dagförskjutning för Sökstart-klockslag. -7 till 2: -1 = igår, 0 = idag, 1 = imorgon. Negativa värden söker i det förflutna. Används bara med Sökstart-klockslag."
+                },
+                "search_end_time": {
+                    "name": "Sökslut-klockslag",
+                    "description": "Alternativ: Sök till detta klockslag. Kombinera med dagförskjutning. Ignoreras om Sökslut (datum/tid) är satt."
+                },
+                "search_end_day_offset": {
+                    "name": "Sökslut dagförskjutning",
+                    "description": "Dagförskjutning för Sökslut-klockslag. -7 till 2: -1 = igår, 0 = idag, 1 = imorgon. Negativa värden söker i det förflutna. Används bara med Sökslut-klockslag."
+                },
+                "search_start_offset_minutes": {
+                    "name": "Sökstart-förskjutning (minuter)",
+                    "description": "Alternativ: Börja söka detta antal minuter från nu. Positivt = framtid (60 = om 1 timme), negativt = förflutet (-60 = 1 timme sedan). Ignoreras om Sökstart eller Sökstart-klockslag är satt."
+                },
+                "search_end_offset_minutes": {
+                    "name": "Sökslut-förskjutning (minuter)",
+                    "description": "Alternativ: Sluta söka detta antal minuter från nu. Positivt = framtid (480 = om 8 timmar), negativt = förflutet (-60 = 1 timme sedan). Ignoreras om Sökslut eller Sökslut-klockslag är satt."
+                },
+                "include_current_interval": {
+                    "name": "Inkludera aktuellt intervall",
+                    "description": "Inkludera det pågående 15-minutersintervallet i sökningen. När aktiverat (standard), börjar sökningen vid början av det aktuella intervallet så att det kan vara en del av resultatet."
+                },
+                "use_base_unit": {
+                    "name": "Använd basvaluta",
+                    "description": "Tvinga priser i basvaluta (EUR, NOK) istället för konfigurerad visningsenhet (ct, öre). Användbart för beräkningar."
+                },
+                "search_scope": {
+                    "name": "Soekumfaang (genvaeg)",
+                    "description": "Genvaeg foer vanliga soekomraaden. Aasidosaetter alla andra tidsalternativ. today/tomorrow = hela kalenderdagen, remaining_today = nu till midnatt, next_24h/next_48h = rullande foenster fraen nu."
+                },
+                "max_price_level": {
+                    "name": "Maximal prisnivaae",
+                    "description": "Ta bara med intervall paa eller under denna Tibber-prisnivaae. very_cheap = mest restriktivt, very_expensive = ingen begraensning."
+                },
+                "min_price_level": {
+                    "name": "Minimal prisnivaae",
+                    "description": "Ta bara med intervall paa eller oever denna Tibber-prisnivaae. Anvaendbart foer find_most_expensive foer att fokusera paa verkligt dyra intervall."
+                },
+                "include_comparison_details": {
+                    "name": "Inkludera jaemfoerelsdetaljer",
+                    "description": "Berika price_comparison-resultatet med ytterligare faelt: comparison_price_min, comparison_price_max och (endast block) comparison_window_end."
+                },
+                "power_profile": {
+                    "name": "Effektprofil",
+                    "description": "Variabel effektfoerbruekning i watt per 15-minutersintervall. Om instaellt, aaterspeglar estimated_total_cost faktisk foerbruekning istaellet foer en fast 1 kW-last."
+                }
+            }
+        },
+        "find_most_expensive_block": {
+            "name": "Hitta dyraste blocket",
+            "description": "Hittar det dyraste sammanhängande tidsfönstret med en given varaktighet. Användbart för att identifiera topprisperioder som bör undvikas. Returnerar det dyraste fönstret med start-/sluttider och prisstatistik.",
+            "sections": {
+                "search_range": {
+                    "name": "Soekomraade",
+                    "description": "Definiera tidsfoenstret att soeka inom."
+                },
+                "time_alternatives": {
+                    "name": "Alternativa tidsinstaellningar",
+                    "description": "Alternativa saett att definiera soekomraadet via tidpunkt och offset."
+                },
+                "price_filter": {
+                    "name": "Prisnivaaefilter",
+                    "description": "Begraensa soekningen till intervall inom det angivna prisnivaaeintervallet."
+                },
+                "output": {
+                    "name": "Utdataalternativ",
+                    "description": "Styr kostnadsuppskattning och jaemfoerelseresultat."
+                }
+            },
+            "fields": {
+                "entry_id": {
+                    "name": "Entry-ID",
+                    "description": "Config entry-ID för Tibber-integrationen."
+                },
+                "duration": {
+                    "name": "Varaktighet",
+                    "description": "Längd på det önskade sammanhängande fönstret. Avrundas automatiskt uppåt till närmaste kvart. Maximum: 12 timmar."
+                },
+                "search_start": {
+                    "name": "Sökstart",
+                    "description": "Start av sökintervallet som exakt datum och tid. Högsta prioritet — åsidosätter alla andra startalternativ. Standard är nu om inte angivet."
+                },
+                "search_end": {
+                    "name": "Sökslut",
+                    "description": "Slut av sökintervallet som exakt datum och tid. Högsta prioritet — åsidosätter alla andra slutalternativ. Standard är slutet av imorgon om inte angivet."
+                },
+                "search_start_time": {
+                    "name": "Sökstart-klockslag",
+                    "description": "Alternativ: Börja söka från detta klockslag. Kombinera med dagförskjutning. Ignoreras om Sökstart (datum/tid) är satt."
+                },
+                "search_start_day_offset": {
+                    "name": "Sökstart dagförskjutning",
+                    "description": "Dagförskjutning för Sökstart-klockslag. -7 till 2: -1 = igår, 0 = idag, 1 = imorgon. Negativa värden söker i det förflutna. Används bara med Sökstart-klockslag."
+                },
+                "search_end_time": {
+                    "name": "Sökslut-klockslag",
+                    "description": "Alternativ: Sök till detta klockslag. Kombinera med dagförskjutning. Ignoreras om Sökslut (datum/tid) är satt."
+                },
+                "search_end_day_offset": {
+                    "name": "Sökslut dagförskjutning",
+                    "description": "Dagförskjutning för Sökslut-klockslag. -7 till 2: -1 = igår, 0 = idag, 1 = imorgon. Negativa värden söker i det förflutna. Används bara med Sökslut-klockslag."
+                },
+                "search_start_offset_minutes": {
+                    "name": "Sökstart-förskjutning (minuter)",
+                    "description": "Alternativ: Börja söka detta antal minuter från nu. Positivt = framtid (60 = om 1 timme), negativt = förflutet (-60 = 1 timme sedan). Ignoreras om Sökstart eller Sökstart-klockslag är satt."
+                },
+                "search_end_offset_minutes": {
+                    "name": "Sökslut-förskjutning (minuter)",
+                    "description": "Alternativ: Sluta söka detta antal minuter från nu. Positivt = framtid (480 = om 8 timmar), negativt = förflutet (-60 = 1 timme sedan). Ignoreras om Sökslut eller Sökslut-klockslag är satt."
+                },
+                "include_current_interval": {
+                    "name": "Inkludera aktuellt intervall",
+                    "description": "Inkludera det pågående 15-minutersintervallet i sökningen. När aktiverat (standard), börjar sökningen vid början av det aktuella intervallet så att det kan vara en del av resultatet."
+                },
+                "use_base_unit": {
+                    "name": "Använd basvaluta",
+                    "description": "Tvinga priser i basvaluta (EUR, NOK) istället för konfigurerad visningsenhet (ct, öre). Användbart för beräkningar."
+                },
+                "search_scope": {
+                    "name": "Soekumfaang (genvaeg)",
+                    "description": "Genvaeg foer vanliga soekomraaden. Aasidosaetter alla andra tidsalternativ. today/tomorrow = hela kalenderdagen, remaining_today = nu till midnatt, next_24h/next_48h = rullande foenster fraen nu."
+                },
+                "max_price_level": {
+                    "name": "Maximal prisnivaae",
+                    "description": "Ta bara med intervall paa eller under denna Tibber-prisnivaae. very_cheap = mest restriktivt, very_expensive = ingen begraensning."
+                },
+                "min_price_level": {
+                    "name": "Minimal prisnivaae",
+                    "description": "Ta bara med intervall paa eller oever denna Tibber-prisnivaae. Anvaendbart foer find_most_expensive foer att fokusera paa verkligt dyra intervall."
+                },
+                "include_comparison_details": {
+                    "name": "Inkludera jaemfoerelsdetaljer",
+                    "description": "Berika price_comparison-resultatet med ytterligare faelt: comparison_price_min, comparison_price_max och (endast block) comparison_window_end."
+                },
+                "power_profile": {
+                    "name": "Effektprofil",
+                    "description": "Variabel effektfoerbruekning i watt per 15-minutersintervall. Om instaellt, aaterspeglar estimated_total_cost faktisk foerbruekning istaellet foer en fast 1 kW-last."
+                }
+            }
+        },
+        "find_cheapest_hours": {
+            "name": "Hitta billigaste timmarna",
+            "description": "Hittar de billigaste intervallen för en given total varaktighet, inte nödvändigtvis sammanhängande. Designat för flexibla laster: batteriladdning, elbil, varmvattenberedare. Returnerar ett schema av intervaller grupperade i sammanhängande segment.",
+            "sections": {
+                "search_range": {
+                    "name": "Soekomraade",
+                    "description": "Definiera tidsfoenstret att soeka inom."
+                },
+                "time_alternatives": {
+                    "name": "Alternativa tidsinstaellningar",
+                    "description": "Alternativa saett att definiera soekomraadet via tidpunkt och offset."
+                },
+                "price_filter": {
+                    "name": "Prisnivaaefilter",
+                    "description": "Begraensa soekningen till intervall inom det angivna prisnivaaeintervallet."
+                },
+                "output": {
+                    "name": "Utdataalternativ",
+                    "description": "Styr kostnadsuppskattning och jaemfoerelseresultat."
+                }
+            },
+            "fields": {
+                "entry_id": {
+                    "name": "Entry-ID",
+                    "description": "Config entry-ID för Tibber-integrationen."
+                },
+                "duration": {
+                    "name": "Varaktighet",
+                    "description": "Behövd billig total tid. Avrundas automatiskt uppåt till närmaste kvart. Maximum: 24 timmar."
+                },
+                "search_start": {
+                    "name": "Sökstart",
+                    "description": "Start av sökintervallet som exakt datum och tid. Högsta prioritet — åsidosätter alla andra startalternativ. Standard är nu om inte angivet."
+                },
+                "search_end": {
+                    "name": "Sökslut",
+                    "description": "Slut av sökintervallet som exakt datum och tid. Högsta prioritet — åsidosätter alla andra slutalternativ. Standard är slutet av imorgon om inte angivet."
+                },
+                "search_start_time": {
+                    "name": "Sökstart-klockslag",
+                    "description": "Alternativ: Börja söka från detta klockslag. Kombinera med dagförskjutning. Ignoreras om Sökstart (datum/tid) är satt."
+                },
+                "search_start_day_offset": {
+                    "name": "Sökstart dagförskjutning",
+                    "description": "Dagförskjutning för Sökstart-klockslag. -7 till 2: -1 = igår, 0 = idag, 1 = imorgon. Negativa värden söker i det förflutna. Används bara med Sökstart-klockslag."
+                },
+                "search_end_time": {
+                    "name": "Sökslut-klockslag",
+                    "description": "Alternativ: Sök till detta klockslag. Kombinera med dagförskjutning. Ignoreras om Sökslut (datum/tid) är satt."
+                },
+                "search_end_day_offset": {
+                    "name": "Sökslut dagförskjutning",
+                    "description": "Dagförskjutning för Sökslut-klockslag. -7 till 2: -1 = igår, 0 = idag, 1 = imorgon. Negativa värden söker i det förflutna. Används bara med Sökslut-klockslag."
+                },
+                "search_start_offset_minutes": {
+                    "name": "Sökstart-förskjutning (minuter)",
+                    "description": "Alternativ: Börja söka detta antal minuter från nu. Positivt = framtid (60 = om 1 timme), negativt = förflutet (-60 = 1 timme sedan). Ignoreras om Sökstart eller Sökstart-klockslag är satt."
+                },
+                "search_end_offset_minutes": {
+                    "name": "Sökslut-förskjutning (minuter)",
+                    "description": "Alternativ: Sluta söka detta antal minuter från nu. Positivt = framtid (480 = om 8 timmar), negativt = förflutet (-60 = 1 timme sedan). Ignoreras om Sökslut eller Sökslut-klockslag är satt."
+                },
+                "include_current_interval": {
+                    "name": "Inkludera aktuellt intervall",
+                    "description": "Inkludera det pågående 15-minutersintervallet i sökningen. När aktiverat (standard), börjar sökningen vid början av det aktuella intervallet så att det kan vara en del av resultatet."
+                },
+                "min_segment_duration": {
+                    "name": "Minsta segmentvaraktighet",
+                    "description": "Minsta sammanhängande körtid. Förhindrar snabb av/på-cykling för enheter med minsta körtider. Avrundas automatiskt uppåt till närmaste kvart. Standard: 15 minuter. Maximum: 4 timmar."
+                },
+                "use_base_unit": {
+                    "name": "Använd basvaluta",
+                    "description": "Tvinga priser i basvaluta (EUR, NOK) istället för konfigurerad visningsenhet (ct, öre). Användbart för beräkningar."
+                },
+                "search_scope": {
+                    "name": "Soekumfaang (genvaeg)",
+                    "description": "Genvaeg foer vanliga soekomraaden. Aasidosaetter alla andra tidsalternativ. today/tomorrow = hela kalenderdagen, remaining_today = nu till midnatt, next_24h/next_48h = rullande foenster fraen nu."
+                },
+                "max_price_level": {
+                    "name": "Maximal prisnivaae",
+                    "description": "Ta bara med intervall paa eller under denna Tibber-prisnivaae. very_cheap = mest restriktivt, very_expensive = ingen begraensning."
+                },
+                "min_price_level": {
+                    "name": "Minimal prisnivaae",
+                    "description": "Ta bara med intervall paa eller oever denna Tibber-prisnivaae. Anvaendbart foer find_most_expensive foer att fokusera paa verkligt dyra intervall."
+                },
+                "include_comparison_details": {
+                    "name": "Inkludera jaemfoerelsdetaljer",
+                    "description": "Berika price_comparison-resultatet med ytterligare faelt: comparison_price_min, comparison_price_max och (endast block) comparison_window_end."
+                },
+                "power_profile": {
+                    "name": "Effektprofil",
+                    "description": "Variabel effektfoerbruekning i watt per 15-minutersintervall. Om instaellt, aaterspeglar estimated_total_cost faktisk foerbruekning istaellet foer en fast 1 kW-last."
+                }
+            }
+        },
+        "find_most_expensive_hours": {
+            "name": "Hitta dyraste timmarna",
+            "description": "Hittar de dyraste intervallen för en given total varaktighet, inte nödvändigtvis sammanhängande. Användbart för att identifiera topprisperioder som bör undvikas. Returnerar ett schema av intervaller grupperade i sammanhängande segment.",
+            "sections": {
+                "search_range": {
+                    "name": "Soekomraade",
+                    "description": "Definiera tidsfoenstret att soeka inom."
+                },
+                "time_alternatives": {
+                    "name": "Alternativa tidsinstaellningar",
+                    "description": "Alternativa saett att definiera soekomraadet via tidpunkt och offset."
+                },
+                "price_filter": {
+                    "name": "Prisnivaaefilter",
+                    "description": "Begraensa soekningen till intervall inom det angivna prisnivaaeintervallet."
+                },
+                "output": {
+                    "name": "Utdataalternativ",
+                    "description": "Styr kostnadsuppskattning och jaemfoerelseresultat."
+                }
+            },
+            "fields": {
+                "entry_id": {
+                    "name": "Entry-ID",
+                    "description": "Config entry-ID för Tibber-integrationen."
+                },
+                "duration": {
+                    "name": "Varaktighet",
+                    "description": "Dyr total tid att hitta. Avrundas automatiskt uppåt till närmaste kvart. Maximum: 24 timmar."
+                },
+                "search_start": {
+                    "name": "Sökstart",
+                    "description": "Start av sökintervallet som exakt datum och tid. Högsta prioritet — åsidosätter alla andra startalternativ. Standard är nu om inte angivet."
+                },
+                "search_end": {
+                    "name": "Sökslut",
+                    "description": "Slut av sökintervallet som exakt datum och tid. Högsta prioritet — åsidosätter alla andra slutalternativ. Standard är slutet av imorgon om inte angivet."
+                },
+                "search_start_time": {
+                    "name": "Sökstart-klockslag",
+                    "description": "Alternativ: Börja söka från detta klockslag. Kombinera med dagförskjutning. Ignoreras om Sökstart (datum/tid) är satt."
+                },
+                "search_start_day_offset": {
+                    "name": "Sökstart dagförskjutning",
+                    "description": "Dagförskjutning för Sökstart-klockslag. -7 till 2: -1 = igår, 0 = idag, 1 = imorgon. Negativa värden söker i det förflutna. Används bara med Sökstart-klockslag."
+                },
+                "search_end_time": {
+                    "name": "Sökslut-klockslag",
+                    "description": "Alternativ: Sök till detta klockslag. Kombinera med dagförskjutning. Ignoreras om Sökslut (datum/tid) är satt."
+                },
+                "search_end_day_offset": {
+                    "name": "Sökslut dagförskjutning",
+                    "description": "Dagförskjutning för Sökslut-klockslag. -7 till 2: -1 = igår, 0 = idag, 1 = imorgon. Negativa värden söker i det förflutna. Används bara med Sökslut-klockslag."
+                },
+                "search_start_offset_minutes": {
+                    "name": "Sökstart-förskjutning (minuter)",
+                    "description": "Alternativ: Börja söka detta antal minuter från nu. Positivt = framtid (60 = om 1 timme), negativt = förflutet (-60 = 1 timme sedan). Ignoreras om Sökstart eller Sökstart-klockslag är satt."
+                },
+                "search_end_offset_minutes": {
+                    "name": "Sökslut-förskjutning (minuter)",
+                    "description": "Alternativ: Sluta söka detta antal minuter från nu. Positivt = framtid (480 = om 8 timmar), negativt = förflutet (-60 = 1 timme sedan). Ignoreras om Sökslut eller Sökslut-klockslag är satt."
+                },
+                "include_current_interval": {
+                    "name": "Inkludera aktuellt intervall",
+                    "description": "Inkludera det pågående 15-minutersintervallet i sökningen. När aktiverat (standard), börjar sökningen vid början av det aktuella intervallet så att det kan vara en del av resultatet."
+                },
+                "min_segment_duration": {
+                    "name": "Minsta segmentvaraktighet",
+                    "description": "Minsta sammanhängande körtid. Förhindrar snabb av/på-cykling för enheter med minsta körtider. Avrundas automatiskt uppåt till närmaste kvart. Standard: 15 minuter. Maximum: 4 timmar."
+                },
+                "use_base_unit": {
+                    "name": "Använd basvaluta",
+                    "description": "Tvinga priser i basvaluta (EUR, NOK) istället för konfigurerad visningsenhet (ct, öre). Användbart för beräkningar."
+                },
+                "search_scope": {
+                    "name": "Soekumfaang (genvaeg)",
+                    "description": "Genvaeg foer vanliga soekomraaden. Aasidosaetter alla andra tidsalternativ. today/tomorrow = hela kalenderdagen, remaining_today = nu till midnatt, next_24h/next_48h = rullande foenster fraen nu."
+                },
+                "max_price_level": {
+                    "name": "Maximal prisnivaae",
+                    "description": "Ta bara med intervall paa eller under denna Tibber-prisnivaae. very_cheap = mest restriktivt, very_expensive = ingen begraensning."
+                },
+                "min_price_level": {
+                    "name": "Minimal prisnivaae",
+                    "description": "Ta bara med intervall paa eller oever denna Tibber-prisnivaae. Anvaendbart foer find_most_expensive foer att fokusera paa verkligt dyra intervall."
+                },
+                "include_comparison_details": {
+                    "name": "Inkludera jaemfoerelsdetaljer",
+                    "description": "Berika price_comparison-resultatet med ytterligare faelt: comparison_price_min, comparison_price_max och (endast block) comparison_window_end."
+                },
+                "power_profile": {
+                    "name": "Effektprofil",
+                    "description": "Variabel effektfoerbruekning i watt per 15-minutersintervall. Om instaellt, aaterspeglar estimated_total_cost faktisk foerbruekning istaellet foer en fast 1 kW-last."
+                }
+            }
+        },
+        "find_cheapest_schedule": {
+            "name": "Hitta billigaste schema",
+            "description": "Schemalaggar flera apparater optimalt utan tidsoeverlapp. Varje uppgift tilldelas det billigaste tillgaengliga sammanhangande tidsfoenster.",
+            "sections": {
+                "scheduling_options": {
+                    "name": "Schemalagningsalternativ",
+                    "description": "Konfigurera uppgifter och pauser mellan dem."
+                },
+                "search_range": {
+                    "name": "Soekomraade",
+                    "description": "Definiera tidsfoenstret att soeka inom."
+                },
+                "time_alternatives": {
+                    "name": "Alternativa tidsinstaellningar",
+                    "description": "Alternativa saett att definiera soekomraadet via tidpunkt och offset."
+                },
+                "price_filter": {
+                    "name": "Prisnivaaefilter",
+                    "description": "Begraensa soekningen till intervall inom det angivna prisnivaaeintervallet."
+                },
+                "output": {
+                    "name": "Utdataalternativ",
+                    "description": "Styr kostnadsuppskattning och jaemfoerelseresultat."
+                }
+            },
+            "fields": {
+                "entry_id": {
+                    "name": "Entry-ID",
+                    "description": "Config entry-ID för Tibber-integrationen."
+                },
+                "tasks": {
+                    "name": "Uppgifter",
+                    "description": "Lista med uppgifter att schemalagga. Varje uppgift kraever name (text) och duration (hh:mm:ss). Valfritt power_profile (watt per 15-min-intervall). Maximalt 4 uppgifter."
+                },
+                "gap_minutes": {
+                    "name": "Paus mellan uppgifter (minuter)",
+                    "description": "Minsta paus i minuter mellan paa varandra foeoljande schemalagda uppgifter. Avrundas uppaat till 15 minuter. Standard: 0 (ingen paus)."
+                },
+                "search_scope": {
+                    "name": "Soekumfaang (genvaeg)",
+                    "description": "Genvaeg foer vanliga soekomraaden. Aasidosaetter alla andra tidsalternativ. today/tomorrow = hela kalenderdagen, remaining_today = nu till midnatt, next_24h/next_48h = rullande foenster fraen nu."
+                },
+                "search_start": {
+                    "name": "Sökstart",
+                    "description": "Start av sökintervallet som exakt datum och tid. Högsta prioritet — åsidosätter alla andra startalternativ. Standard är nu om inte angivet."
+                },
+                "search_end": {
+                    "name": "Sökslut",
+                    "description": "Slut av sökintervallet som exakt datum och tid. Högsta prioritet — åsidosätter alla andra slutalternativ. Standard är slutet av imorgon om inte angivet."
+                },
+                "search_start_time": {
+                    "name": "Sökstart-klockslag",
+                    "description": "Alternativ: Börja söka från detta klockslag. Kombinera med dagförskjutning. Ignoreras om Sökstart (datum/tid) är satt."
+                },
+                "search_start_day_offset": {
+                    "name": "Sökstart dagförskjutning",
+                    "description": "Dagförskjutning för Sökstart-klockslag. -7 till 2: -1 = igår, 0 = idag, 1 = imorgon. Negativa värden söker i det förflutna. Används bara med Sökstart-klockslag."
+                },
+                "search_end_time": {
+                    "name": "Sökslut-klockslag",
+                    "description": "Alternativ: Sök till detta klockslag. Kombinera med dagförskjutning. Ignoreras om Sökslut (datum/tid) är satt."
+                },
+                "search_end_day_offset": {
+                    "name": "Sökslut dagförskjutning",
+                    "description": "Dagförskjutning för Sökslut-klockslag. -7 till 2: -1 = igår, 0 = idag, 1 = imorgon. Negativa värden söker i det förflutna. Används bara med Sökslut-klockslag."
+                },
+                "search_start_offset_minutes": {
+                    "name": "Sökstart-förskjutning (minuter)",
+                    "description": "Alternativ: Börja söka detta antal minuter från nu. Positivt = framtid (60 = om 1 timme), negativt = förflutet (-60 = 1 timme sedan). Ignoreras om Sökstart eller Sökstart-klockslag är satt."
+                },
+                "search_end_offset_minutes": {
+                    "name": "Sökslut-förskjutning (minuter)",
+                    "description": "Alternativ: Sluta söka detta antal minuter från nu. Positivt = framtid (480 = om 8 timmar), negativt = förflutet (-60 = 1 timme sedan). Ignoreras om Sökslut eller Sökslut-klockslag är satt."
+                },
+                "include_current_interval": {
+                    "name": "Inkludera aktuellt intervall",
+                    "description": "Inkludera det pågående 15-minutersintervallet i sökningen. När aktiverat (standard), börjar sökningen vid början av det aktuella intervallet så att det kan vara en del av resultatet."
+                },
+                "max_price_level": {
+                    "name": "Maximal prisnivaae",
+                    "description": "Ta bara med intervall paa eller under denna Tibber-prisnivaae. very_cheap = mest restriktivt, very_expensive = ingen begraensning."
+                },
+                "min_price_level": {
+                    "name": "Minimal prisnivaae",
+                    "description": "Ta bara med intervall paa eller oever denna Tibber-prisnivaae. Anvaendbart foer find_most_expensive foer att fokusera paa verkligt dyra intervall."
+                },
+                "use_base_unit": {
+                    "name": "Använd basvaluta",
+                    "description": "Tvinga priser i basvaluta (EUR, NOK) istället för konfigurerad visningsenhet (ct, öre). Användbart för beräkningar."
+                }
+            }
         }
     },
     "selector": {
@@ -1360,6 +1876,15 @@
             "options": {
                 "median": "Median",
                 "mean": "Aritmetiskt medelvärde"
+            }
+        },
+        "search_scope": {
+            "options": {
+                "today": "Idag",
+                "tomorrow": "Imorgon",
+                "remaining_today": "Aaterstoden av idag",
+                "next_24h": "Naesta 24 timmar",
+                "next_48h": "Naesta 48 timmar"
             }
         }
     },

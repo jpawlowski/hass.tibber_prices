@@ -25,6 +25,31 @@ from typing import TYPE_CHECKING
 from custom_components.tibber_prices.const import DOMAIN
 from homeassistant.core import SupportsResponse, callback
 
+from .find_cheapest_block import (
+    FIND_CHEAPEST_BLOCK_SERVICE_NAME,
+    FIND_CHEAPEST_BLOCK_SERVICE_SCHEMA,
+    handle_find_cheapest_block,
+)
+from .find_cheapest_hours import (
+    FIND_CHEAPEST_HOURS_SERVICE_NAME,
+    FIND_CHEAPEST_HOURS_SERVICE_SCHEMA,
+    handle_find_cheapest_hours,
+)
+from .find_cheapest_schedule import (
+    FIND_CHEAPEST_SCHEDULE_SERVICE_NAME,
+    FIND_CHEAPEST_SCHEDULE_SERVICE_SCHEMA,
+    handle_find_cheapest_schedule,
+)
+from .find_most_expensive_block import (
+    FIND_MOST_EXPENSIVE_BLOCK_SERVICE_NAME,
+    FIND_MOST_EXPENSIVE_BLOCK_SERVICE_SCHEMA,
+    handle_find_most_expensive_block,
+)
+from .find_most_expensive_hours import (
+    FIND_MOST_EXPENSIVE_HOURS_SERVICE_NAME,
+    FIND_MOST_EXPENSIVE_HOURS_SERVICE_SCHEMA,
+    handle_find_most_expensive_hours,
+)
 from .get_apexcharts_yaml import (
     APEXCHARTS_SERVICE_SCHEMA,
     APEXCHARTS_YAML_SERVICE_NAME,
@@ -71,6 +96,41 @@ def async_setup_services(hass: HomeAssistant) -> None:
         GET_PRICE_SERVICE_NAME,
         handle_get_price,
         schema=GET_PRICE_SERVICE_SCHEMA,
+        supports_response=SupportsResponse.ONLY,
+    )
+    hass.services.async_register(
+        DOMAIN,
+        FIND_CHEAPEST_BLOCK_SERVICE_NAME,
+        handle_find_cheapest_block,
+        schema=FIND_CHEAPEST_BLOCK_SERVICE_SCHEMA,
+        supports_response=SupportsResponse.ONLY,
+    )
+    hass.services.async_register(
+        DOMAIN,
+        FIND_CHEAPEST_HOURS_SERVICE_NAME,
+        handle_find_cheapest_hours,
+        schema=FIND_CHEAPEST_HOURS_SERVICE_SCHEMA,
+        supports_response=SupportsResponse.ONLY,
+    )
+    hass.services.async_register(
+        DOMAIN,
+        FIND_CHEAPEST_SCHEDULE_SERVICE_NAME,
+        handle_find_cheapest_schedule,
+        schema=FIND_CHEAPEST_SCHEDULE_SERVICE_SCHEMA,
+        supports_response=SupportsResponse.ONLY,
+    )
+    hass.services.async_register(
+        DOMAIN,
+        FIND_MOST_EXPENSIVE_BLOCK_SERVICE_NAME,
+        handle_find_most_expensive_block,
+        schema=FIND_MOST_EXPENSIVE_BLOCK_SERVICE_SCHEMA,
+        supports_response=SupportsResponse.ONLY,
+    )
+    hass.services.async_register(
+        DOMAIN,
+        FIND_MOST_EXPENSIVE_HOURS_SERVICE_NAME,
+        handle_find_most_expensive_hours,
+        schema=FIND_MOST_EXPENSIVE_HOURS_SERVICE_SCHEMA,
         supports_response=SupportsResponse.ONLY,
     )
     hass.services.async_register(

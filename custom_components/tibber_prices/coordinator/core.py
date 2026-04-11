@@ -788,6 +788,18 @@ class TibberPricesDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         else:
             # Check for repair conditions after successful update
             await self._check_repair_conditions(result, current_time)
+
+            # Fire event when new data was fetched from API (not cached)
+            if api_called and result and "priceInfo" in result and len(result["priceInfo"]) > 0:
+                self.hass.bus.async_fire(
+                    "tibber_prices_data_updated",
+                    {
+                        "home_id": self._home_id,
+                        "entry_id": self.config_entry.entry_id,
+                        "interval_count": len(result["priceInfo"]),
+                    },
+                )
+
             return result
 
     async def _track_rate_limit_error(self, error: Exception) -> None:

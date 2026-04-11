@@ -59,15 +59,7 @@
             "home_already_configured": "Dit huis is al geconfigureerd in een ander item. Elk huis kan slechts één keer worden geconfigureerd.",
             "no_active_subscription": "Dit huis heeft geen actief Tibber-contract. Alleen huizen met actieve elektriciteitscontracten kunnen worden toegevoegd aan Home Assistant.",
             "subscription_expired": "Het Tibber-contract voor dit huis is verlopen. Alleen huizen met actieve of toekomstige elektriciteitscontracten kunnen worden toegevoegd aan Home Assistant.",
-            "future_subscription_warning": "Let op: Het Tibber-contract van dit huis is nog niet gestart. De functionaliteit kan beperkt zijn totdat het contract actief wordt.",
-            "invalid_yaml_syntax": "Ongeldige YAML-syntaxis. Controleer inspringing, dubbele punten en speciale tekens.",
-            "invalid_yaml_structure": "YAML moet een dictionary/object zijn (sleutel: waarde paren), geen lijst of platte tekst.",
-            "service_call_failed": "Service call validatie mislukt: {error_detail}",
-            "missing_entry_id": "Entry-ID is verplicht maar werd niet opgegeven.",
-            "invalid_entry_id": "Ongeldige entry-ID of item niet gevonden.",
-            "missing_home_id": "Huis-ID ontbreekt in het configuratie-item.",
-            "user_data_not_available": "Gebruikersgegevens zijn niet beschikbaar. Ververs eerst de gebruikersgegevens.",
-            "price_fetch_failed": "Ophalen van prijsgegevens mislukt. Controleer de logs voor details."
+            "future_subscription_warning": "Let op: Het Tibber-contract van dit huis is nog niet gestart. De functionaliteit kan beperkt zijn totdat het contract actief wordt."
         },
         "abort": {
             "already_configured": "Alle beschikbare Tibber-huizen zijn al geconfigureerd. Elk huis kan slechts één keer worden geconfigureerd.",
@@ -1055,6 +1047,62 @@
             "description": "Deze update bevat wijzigingen die automatisch zijn toegepast.\n\n**Hernoemde entiteiten ({count})**\n\nDe volgende entity-sleutels zijn hernoemd. Je bestaande entity-ID's en automatiseringen blijven intact:\n\n{entity_list}\n\n**Gewijzigde duur-sensorwaarden**\n\nAlle duur-sensoren (resterende tijd, start over, periodeduur, trendwijzigings-aftelling) rapporteren hun statuswaarde nu in **minuten** in plaats van uren. De weergave-eenheid in dashboards blijft standaard uren.\n\nAls je automatiseringen hebt met numerieke vergelijkingen op deze sensoren, werk dan je drempelwaarden bij:\n- Oud: `state < 0.25` (15 minuten als uren)\n- Nieuw: `state < 15` (15 minuten)\n\nSluit deze melding nadat je je automatiseringen hebt gecontroleerd."
         }
     },
+    "exceptions": {
+        "no_entries_found": {
+            "message": "Geen Tibber Prices integratie-items gevonden. Stel de integratie eerst in."
+        },
+        "multiple_entries_no_entry_id": {
+            "message": "Meerdere Tibber Prices items gevonden. Geef 'entry_id' op om het gewenste item te selecteren."
+        },
+        "invalid_entry_id": {
+            "message": "Ongeldige of niet-beschikbare configuratie-item. Controleer de item-ID en zorg dat de integratie geladen is."
+        },
+        "missing_home_id": {
+            "message": "Huis-ID niet gevonden in het configuratie-item. Configureer de integratie opnieuw."
+        },
+        "user_data_not_available": {
+            "message": "Gebruikersgegevens zijn nog niet beschikbaar. Wacht tot de eerste gegevensupdate is voltooid."
+        },
+        "timezone_not_found": {
+            "message": "Kon de tijdzone van het huis niet bepalen. Controleer de huisconfiguratie in je Tibber-account."
+        },
+        "end_before_start": {
+            "message": "Eindtijd moet na de starttijd liggen."
+        },
+        "price_fetch_failed": {
+            "message": "Kon prijsgegevens niet ophalen bij de Tibber API. Probeer het later opnieuw."
+        },
+        "invalid_search_scope": {
+            "message": "Ongeldig zoekbereik. Geldige waarden zijn: today, tomorrow, remaining_today, next_24h, next_48h."
+        },
+        "scope_conflicts_with_range": {
+            "message": "search_scope kan niet gecombineerd worden met expliciete bereikparameters: {params}. Gebruik search_scope OF expliciete start-/eindparameters."
+        },
+        "day_offset_requires_time": {
+            "message": "{offset_param} vereist dat {time_param} ingesteld is. Dagoffset wijzigt alleen de datum van een expliciete tijdparameter."
+        },
+        "min_level_exceeds_max": {
+            "message": "min_price_level '{min_level}' is hoger dan max_price_level '{max_level}'. Het minimumniveau moet gelijk aan of lager zijn dan het maximumniveau."
+        },
+        "power_profile_length_mismatch": {
+            "message": "power_profile heeft {profile_length} items maar de duur vereist {interval_count} intervallen ({duration_minutes} minuten). Het power_profile moet precies één item per 15-minuten-interval hebben."
+        },
+        "level_and_rating_filter_conflict": {
+            "message": "level_filter en rating_level_filter kunnen niet samen gebruikt worden. Gebruik slechts één filtertype per verzoek."
+        },
+        "insert_nulls_requires_filter": {
+            "message": "insert_nulls-modus '{mode}' vereist een level_filter of rating_level_filter om segmenten te definiëren. Zonder filter, gebruik insert_nulls: none."
+        },
+        "connect_segments_requires_segments_mode": {
+            "message": "connect_segments vereist dat insert_nulls op 'segments' staat. Stel insert_nulls: segments in om segmentverbinding te gebruiken."
+        },
+        "array_fields_requires_array_format": {
+            "message": "array_fields kan alleen gebruikt worden met output_format: array_of_arrays. Wijzig het uitvoerformaat of verwijder array_fields."
+        },
+        "invalid_array_fields": {
+            "message": "Ongeldig array_fields-sjabloon. Gebruik veldnamen tussen accolades, bijv. '{start_time}, {price_per_kwh}, {level}'."
+        }
+    },
     "services": {
         "get_price": {
             "name": "Prijsgegevens Ophalen",
@@ -1261,6 +1309,474 @@
                     "description": "De config-item-ID voor de Tibber-integratie."
                 }
             }
+        },
+        "find_cheapest_block": {
+            "name": "Goedkoopste blok vinden",
+            "description": "Vindt het goedkoopste aaneengesloten tijdvenster van een bepaalde duur. Ontworpen voor apparaatplanning: vaatwasser, wasmachine, droger enz. Retourneert het goedkoopste venster met start-/eindtijden en prijsstatistieken.",
+            "sections": {
+                "search_range": {
+                    "name": "Zoekbereik",
+                    "description": "Definieer het tijdvenster voor het zoeken."
+                },
+                "time_alternatives": {
+                    "name": "Alternatieve tijdbereiksopties",
+                    "description": "Alternatieve manieren om het zoekbereik te definieren via tijdstip en offsets."
+                },
+                "price_filter": {
+                    "name": "Prijsniveau-filter",
+                    "description": "Beperk het zoeken tot intervallen binnen het opgegeven prijsniveaubereik."
+                },
+                "output": {
+                    "name": "Uitvoeropties",
+                    "description": "Stuur kostnadsraming en vergelijkingsuitvoer."
+                }
+            },
+            "fields": {
+                "entry_id": {
+                    "name": "Item-ID",
+                    "description": "De config-item-ID voor de Tibber-integratie."
+                },
+                "duration": {
+                    "name": "Duur",
+                    "description": "Lengte van het gewenste aaneengesloten venster. Automatisch afgerond naar het volgende kwartier. Maximum: 12 uur."
+                },
+                "search_start": {
+                    "name": "Zoekstart",
+                    "description": "Begin van het zoekbereik als exacte datum en tijd. Hoogste prioriteit — overschrijft alle andere startopties. Standaard is nu als niet opgegeven."
+                },
+                "search_end": {
+                    "name": "Zoekeinde",
+                    "description": "Einde van het zoekbereik als exacte datum en tijd. Hoogste prioriteit — overschrijft alle andere eindopties. Standaard is einde van morgen als niet opgegeven."
+                },
+                "search_start_time": {
+                    "name": "Zoekstart-tijd",
+                    "description": "Alternatief: Start zoeken vanaf dit tijdstip. Combineer met dagoffset. Wordt genegeerd als Zoekstart (datum/tijd) is ingesteld."
+                },
+                "search_start_day_offset": {
+                    "name": "Zoekstart dagoffset",
+                    "description": "Dagoffset voor Zoekstart-tijd. -7 tot 2: -1 = gisteren, 0 = vandaag, 1 = morgen. Negatieve waarden zoeken in het verleden. Wordt alleen gebruikt met Zoekstart-tijd."
+                },
+                "search_end_time": {
+                    "name": "Zoekeinde-tijd",
+                    "description": "Alternatief: Zoek tot dit tijdstip. Combineer met dagoffset. Wordt genegeerd als Zoekeinde (datum/tijd) is ingesteld."
+                },
+                "search_end_day_offset": {
+                    "name": "Zoekeinde dagoffset",
+                    "description": "Dagoffset voor Zoekeinde-tijd. -7 tot 2: -1 = gisteren, 0 = vandaag, 1 = morgen. Negatieve waarden zoeken in het verleden. Wordt alleen gebruikt met Zoekeinde-tijd."
+                },
+                "search_start_offset_minutes": {
+                    "name": "Zoekstart-offset (minuten)",
+                    "description": "Alternatief: Start met zoeken over dit aantal minuten vanaf nu. Positief = toekomst (60 = over 1 uur), negatief = verleden (-60 = 1 uur geleden). Wordt genegeerd als Zoekstart of Zoekstart-tijd is ingesteld."
+                },
+                "search_end_offset_minutes": {
+                    "name": "Zoekeinde-offset (minuten)",
+                    "description": "Alternatief: Stop met zoeken over dit aantal minuten vanaf nu. Positief = toekomst (480 = over 8 uur), negatief = verleden (-60 = 1 uur geleden). Wordt genegeerd als Zoekeinde of Zoekeinde-tijd is ingesteld."
+                },
+                "include_current_interval": {
+                    "name": "Huidig interval opnemen",
+                    "description": "Het huidige lopende 15-minuten interval opnemen in de zoekopdracht. Indien ingeschakeld (standaard), begint de zoekopdracht aan het begin van het huidige interval zodat het deel kan uitmaken van het resultaat."
+                },
+                "use_base_unit": {
+                    "name": "Basisvaluta gebruiken",
+                    "description": "Forceer prijzen in basisvaluta (EUR, NOK) in plaats van de geconfigureerde weergave-eenheid (ct, øre). Handig voor berekeningen."
+                },
+                "search_scope": {
+                    "name": "Zoekbereik (snelkoppeling)",
+                    "description": "Snelkoppeling voor veelgebruikte zoekbereiken. Overschrijft alle andere tijdopties. today/tomorrow = volledige kalenderdag, remaining_today = nu tot middernacht, next_24h/next_48h = rolling venster vanaf nu."
+                },
+                "max_price_level": {
+                    "name": "Maximaal prijsniveau",
+                    "description": "Overweeg alleen intervallen op of onder dit Tibber-prijsniveau. very_cheap = meest restrictief, very_expensive = geen beperking."
+                },
+                "min_price_level": {
+                    "name": "Minimaal prijsniveau",
+                    "description": "Overweeg alleen intervallen op of boven dit Tibber-prijsniveau. Nuttig voor find_most_expensive om te focussen op echt dure intervallen."
+                },
+                "include_comparison_details": {
+                    "name": "Vergelijkingsdetails meenemen",
+                    "description": "Verrijk het price_comparison-resultaat met extra velden: comparison_price_min, comparison_price_max en (alleen blok) comparison_window_end."
+                },
+                "power_profile": {
+                    "name": "Vermogensprofiel",
+                    "description": "Variabel vermogensverbruik in watt per 15-minuten-interval. Indien ingesteld, weerspiegelt estimated_total_cost het werkelijke verbruik."
+                }
+            }
+        },
+        "find_most_expensive_block": {
+            "name": "Duurste blok vinden",
+            "description": "Vindt het duurste aaneengesloten tijdvenster van een bepaalde duur. Nuttig voor het identificeren van piekprijsperioden die vermeden moeten worden. Retourneert het duurste venster met start-/eindtijden en prijsstatistieken.",
+            "sections": {
+                "search_range": {
+                    "name": "Zoekbereik",
+                    "description": "Definieer het tijdvenster voor het zoeken."
+                },
+                "time_alternatives": {
+                    "name": "Alternatieve tijdbereiksopties",
+                    "description": "Alternatieve manieren om het zoekbereik te definieren via tijdstip en offsets."
+                },
+                "price_filter": {
+                    "name": "Prijsniveau-filter",
+                    "description": "Beperk het zoeken tot intervallen binnen het opgegeven prijsniveaubereik."
+                },
+                "output": {
+                    "name": "Uitvoeropties",
+                    "description": "Stuur kostnadsraming en vergelijkingsuitvoer."
+                }
+            },
+            "fields": {
+                "entry_id": {
+                    "name": "Item-ID",
+                    "description": "De config-item-ID voor de Tibber-integratie."
+                },
+                "duration": {
+                    "name": "Duur",
+                    "description": "Lengte van het gewenste aaneengesloten venster. Automatisch afgerond naar het volgende kwartier. Maximum: 12 uur."
+                },
+                "search_start": {
+                    "name": "Zoekstart",
+                    "description": "Begin van het zoekbereik als exacte datum en tijd. Hoogste prioriteit — overschrijft alle andere startopties. Standaard is nu als niet opgegeven."
+                },
+                "search_end": {
+                    "name": "Zoekeinde",
+                    "description": "Einde van het zoekbereik als exacte datum en tijd. Hoogste prioriteit — overschrijft alle andere eindopties. Standaard is einde van morgen als niet opgegeven."
+                },
+                "search_start_time": {
+                    "name": "Zoekstart-tijd",
+                    "description": "Alternatief: Start zoeken vanaf dit tijdstip. Combineer met dagoffset. Wordt genegeerd als Zoekstart (datum/tijd) is ingesteld."
+                },
+                "search_start_day_offset": {
+                    "name": "Zoekstart dagoffset",
+                    "description": "Dagoffset voor Zoekstart-tijd. -7 tot 2: -1 = gisteren, 0 = vandaag, 1 = morgen. Negatieve waarden zoeken in het verleden. Wordt alleen gebruikt met Zoekstart-tijd."
+                },
+                "search_end_time": {
+                    "name": "Zoekeinde-tijd",
+                    "description": "Alternatief: Zoek tot dit tijdstip. Combineer met dagoffset. Wordt genegeerd als Zoekeinde (datum/tijd) is ingesteld."
+                },
+                "search_end_day_offset": {
+                    "name": "Zoekeinde dagoffset",
+                    "description": "Dagoffset voor Zoekeinde-tijd. -7 tot 2: -1 = gisteren, 0 = vandaag, 1 = morgen. Negatieve waarden zoeken in het verleden. Wordt alleen gebruikt met Zoekeinde-tijd."
+                },
+                "search_start_offset_minutes": {
+                    "name": "Zoekstart-offset (minuten)",
+                    "description": "Alternatief: Start met zoeken over dit aantal minuten vanaf nu. Positief = toekomst (60 = over 1 uur), negatief = verleden (-60 = 1 uur geleden). Wordt genegeerd als Zoekstart of Zoekstart-tijd is ingesteld."
+                },
+                "search_end_offset_minutes": {
+                    "name": "Zoekeinde-offset (minuten)",
+                    "description": "Alternatief: Stop met zoeken over dit aantal minuten vanaf nu. Positief = toekomst (480 = over 8 uur), negatief = verleden (-60 = 1 uur geleden). Wordt genegeerd als Zoekeinde of Zoekeinde-tijd is ingesteld."
+                },
+                "include_current_interval": {
+                    "name": "Huidig interval opnemen",
+                    "description": "Het huidige lopende 15-minuten interval opnemen in de zoekopdracht. Indien ingeschakeld (standaard), begint de zoekopdracht aan het begin van het huidige interval zodat het deel kan uitmaken van het resultaat."
+                },
+                "use_base_unit": {
+                    "name": "Basisvaluta gebruiken",
+                    "description": "Forceer prijzen in basisvaluta (EUR, NOK) in plaats van de geconfigureerde weergave-eenheid (ct, øre). Handig voor berekeningen."
+                },
+                "search_scope": {
+                    "name": "Zoekbereik (snelkoppeling)",
+                    "description": "Snelkoppeling voor veelgebruikte zoekbereiken. Overschrijft alle andere tijdopties. today/tomorrow = volledige kalenderdag, remaining_today = nu tot middernacht, next_24h/next_48h = rolling venster vanaf nu."
+                },
+                "max_price_level": {
+                    "name": "Maximaal prijsniveau",
+                    "description": "Overweeg alleen intervallen op of onder dit Tibber-prijsniveau. very_cheap = meest restrictief, very_expensive = geen beperking."
+                },
+                "min_price_level": {
+                    "name": "Minimaal prijsniveau",
+                    "description": "Overweeg alleen intervallen op of boven dit Tibber-prijsniveau. Nuttig voor find_most_expensive om te focussen op echt dure intervallen."
+                },
+                "include_comparison_details": {
+                    "name": "Vergelijkingsdetails meenemen",
+                    "description": "Verrijk het price_comparison-resultaat met extra velden: comparison_price_min, comparison_price_max en (alleen blok) comparison_window_end."
+                },
+                "power_profile": {
+                    "name": "Vermogensprofiel",
+                    "description": "Variabel vermogensverbruik in watt per 15-minuten-interval. Indien ingesteld, weerspiegelt estimated_total_cost het werkelijke verbruik."
+                }
+            }
+        },
+        "find_cheapest_hours": {
+            "name": "Goedkoopste uren vinden",
+            "description": "Vindt de goedkoopste intervallen voor een bepaalde totale duur, niet noodzakelijk aaneengesloten. Ontworpen voor flexibele belastingen: batterijladen, elektrisch voertuig, warmwaterboiler. Retourneert een schema van intervallen gegroepeerd in aaneengesloten segmenten.",
+            "sections": {
+                "search_range": {
+                    "name": "Zoekbereik",
+                    "description": "Definieer het tijdvenster voor het zoeken."
+                },
+                "time_alternatives": {
+                    "name": "Alternatieve tijdbereiksopties",
+                    "description": "Alternatieve manieren om het zoekbereik te definieren via tijdstip en offsets."
+                },
+                "price_filter": {
+                    "name": "Prijsniveau-filter",
+                    "description": "Beperk het zoeken tot intervallen binnen het opgegeven prijsniveaubereik."
+                },
+                "output": {
+                    "name": "Uitvoeropties",
+                    "description": "Stuur kostnadsraming en vergelijkingsuitvoer."
+                }
+            },
+            "fields": {
+                "entry_id": {
+                    "name": "Item-ID",
+                    "description": "De config-item-ID voor de Tibber-integratie."
+                },
+                "duration": {
+                    "name": "Duur",
+                    "description": "Benodigde goedkope totale tijd. Automatisch afgerond naar het volgende kwartier. Maximum: 24 uur."
+                },
+                "search_start": {
+                    "name": "Zoekstart",
+                    "description": "Begin van het zoekbereik als exacte datum en tijd. Hoogste prioriteit — overschrijft alle andere startopties. Standaard is nu als niet opgegeven."
+                },
+                "search_end": {
+                    "name": "Zoekeinde",
+                    "description": "Einde van het zoekbereik als exacte datum en tijd. Hoogste prioriteit — overschrijft alle andere eindopties. Standaard is einde van morgen als niet opgegeven."
+                },
+                "search_start_time": {
+                    "name": "Zoekstart-tijd",
+                    "description": "Alternatief: Start zoeken vanaf dit tijdstip. Combineer met dagoffset. Wordt genegeerd als Zoekstart (datum/tijd) is ingesteld."
+                },
+                "search_start_day_offset": {
+                    "name": "Zoekstart dagoffset",
+                    "description": "Dagoffset voor Zoekstart-tijd. -7 tot 2: -1 = gisteren, 0 = vandaag, 1 = morgen. Negatieve waarden zoeken in het verleden. Wordt alleen gebruikt met Zoekstart-tijd."
+                },
+                "search_end_time": {
+                    "name": "Zoekeinde-tijd",
+                    "description": "Alternatief: Zoek tot dit tijdstip. Combineer met dagoffset. Wordt genegeerd als Zoekeinde (datum/tijd) is ingesteld."
+                },
+                "search_end_day_offset": {
+                    "name": "Zoekeinde dagoffset",
+                    "description": "Dagoffset voor Zoekeinde-tijd. -7 tot 2: -1 = gisteren, 0 = vandaag, 1 = morgen. Negatieve waarden zoeken in het verleden. Wordt alleen gebruikt met Zoekeinde-tijd."
+                },
+                "search_start_offset_minutes": {
+                    "name": "Zoekstart-offset (minuten)",
+                    "description": "Alternatief: Start met zoeken over dit aantal minuten vanaf nu. Positief = toekomst (60 = over 1 uur), negatief = verleden (-60 = 1 uur geleden). Wordt genegeerd als Zoekstart of Zoekstart-tijd is ingesteld."
+                },
+                "search_end_offset_minutes": {
+                    "name": "Zoekeinde-offset (minuten)",
+                    "description": "Alternatief: Stop met zoeken over dit aantal minuten vanaf nu. Positief = toekomst (480 = over 8 uur), negatief = verleden (-60 = 1 uur geleden). Wordt genegeerd als Zoekeinde of Zoekeinde-tijd is ingesteld."
+                },
+                "include_current_interval": {
+                    "name": "Huidig interval opnemen",
+                    "description": "Het huidige lopende 15-minuten interval opnemen in de zoekopdracht. Indien ingeschakeld (standaard), begint de zoekopdracht aan het begin van het huidige interval zodat het deel kan uitmaken van het resultaat."
+                },
+                "min_segment_duration": {
+                    "name": "Minimale segmentduur",
+                    "description": "Minimale aaneengesloten looptijd. Voorkomt snel aan-/uitschakelen bij apparaten met minimale looptijden. Automatisch afgerond naar het volgende kwartier. Standaard: 15 minuten. Maximum: 4 uur."
+                },
+                "use_base_unit": {
+                    "name": "Basisvaluta gebruiken",
+                    "description": "Forceer prijzen in basisvaluta (EUR, NOK) in plaats van de geconfigureerde weergave-eenheid (ct, øre). Handig voor berekeningen."
+                },
+                "search_scope": {
+                    "name": "Zoekbereik (snelkoppeling)",
+                    "description": "Snelkoppeling voor veelgebruikte zoekbereiken. Overschrijft alle andere tijdopties. today/tomorrow = volledige kalenderdag, remaining_today = nu tot middernacht, next_24h/next_48h = rolling venster vanaf nu."
+                },
+                "max_price_level": {
+                    "name": "Maximaal prijsniveau",
+                    "description": "Overweeg alleen intervallen op of onder dit Tibber-prijsniveau. very_cheap = meest restrictief, very_expensive = geen beperking."
+                },
+                "min_price_level": {
+                    "name": "Minimaal prijsniveau",
+                    "description": "Overweeg alleen intervallen op of boven dit Tibber-prijsniveau. Nuttig voor find_most_expensive om te focussen op echt dure intervallen."
+                },
+                "include_comparison_details": {
+                    "name": "Vergelijkingsdetails meenemen",
+                    "description": "Verrijk het price_comparison-resultaat met extra velden: comparison_price_min, comparison_price_max en (alleen blok) comparison_window_end."
+                },
+                "power_profile": {
+                    "name": "Vermogensprofiel",
+                    "description": "Variabel vermogensverbruik in watt per 15-minuten-interval. Indien ingesteld, weerspiegelt estimated_total_cost het werkelijke verbruik."
+                }
+            }
+        },
+        "find_most_expensive_hours": {
+            "name": "Duurste uren vinden",
+            "description": "Vindt de duurste intervallen voor een bepaalde totale duur, niet noodzakelijk aaneengesloten. Nuttig voor het identificeren van piekprijsperioden die vermeden moeten worden. Retourneert een schema van intervallen gegroepeerd in aaneengesloten segmenten.",
+            "sections": {
+                "search_range": {
+                    "name": "Zoekbereik",
+                    "description": "Definieer het tijdvenster voor het zoeken."
+                },
+                "time_alternatives": {
+                    "name": "Alternatieve tijdbereiksopties",
+                    "description": "Alternatieve manieren om het zoekbereik te definieren via tijdstip en offsets."
+                },
+                "price_filter": {
+                    "name": "Prijsniveau-filter",
+                    "description": "Beperk het zoeken tot intervallen binnen het opgegeven prijsniveaubereik."
+                },
+                "output": {
+                    "name": "Uitvoeropties",
+                    "description": "Stuur kostnadsraming en vergelijkingsuitvoer."
+                }
+            },
+            "fields": {
+                "entry_id": {
+                    "name": "Item-ID",
+                    "description": "De config-item-ID voor de Tibber-integratie."
+                },
+                "duration": {
+                    "name": "Duur",
+                    "description": "Te vinden dure totale tijd. Automatisch afgerond naar het volgende kwartier. Maximum: 24 uur."
+                },
+                "search_start": {
+                    "name": "Zoekstart",
+                    "description": "Begin van het zoekbereik als exacte datum en tijd. Hoogste prioriteit — overschrijft alle andere startopties. Standaard is nu als niet opgegeven."
+                },
+                "search_end": {
+                    "name": "Zoekeinde",
+                    "description": "Einde van het zoekbereik als exacte datum en tijd. Hoogste prioriteit — overschrijft alle andere eindopties. Standaard is einde van morgen als niet opgegeven."
+                },
+                "search_start_time": {
+                    "name": "Zoekstart-tijd",
+                    "description": "Alternatief: Start zoeken vanaf dit tijdstip. Combineer met dagoffset. Wordt genegeerd als Zoekstart (datum/tijd) is ingesteld."
+                },
+                "search_start_day_offset": {
+                    "name": "Zoekstart dagoffset",
+                    "description": "Dagoffset voor Zoekstart-tijd. -7 tot 2: -1 = gisteren, 0 = vandaag, 1 = morgen. Negatieve waarden zoeken in het verleden. Wordt alleen gebruikt met Zoekstart-tijd."
+                },
+                "search_end_time": {
+                    "name": "Zoekeinde-tijd",
+                    "description": "Alternatief: Zoek tot dit tijdstip. Combineer met dagoffset. Wordt genegeerd als Zoekeinde (datum/tijd) is ingesteld."
+                },
+                "search_end_day_offset": {
+                    "name": "Zoekeinde dagoffset",
+                    "description": "Dagoffset voor Zoekeinde-tijd. -7 tot 2: -1 = gisteren, 0 = vandaag, 1 = morgen. Negatieve waarden zoeken in het verleden. Wordt alleen gebruikt met Zoekeinde-tijd."
+                },
+                "search_start_offset_minutes": {
+                    "name": "Zoekstart-offset (minuten)",
+                    "description": "Alternatief: Start met zoeken over dit aantal minuten vanaf nu. Positief = toekomst (60 = over 1 uur), negatief = verleden (-60 = 1 uur geleden). Wordt genegeerd als Zoekstart of Zoekstart-tijd is ingesteld."
+                },
+                "search_end_offset_minutes": {
+                    "name": "Zoekeinde-offset (minuten)",
+                    "description": "Alternatief: Stop met zoeken over dit aantal minuten vanaf nu. Positief = toekomst (480 = over 8 uur), negatief = verleden (-60 = 1 uur geleden). Wordt genegeerd als Zoekeinde of Zoekeinde-tijd is ingesteld."
+                },
+                "include_current_interval": {
+                    "name": "Huidig interval opnemen",
+                    "description": "Het huidige lopende 15-minuten interval opnemen in de zoekopdracht. Indien ingeschakeld (standaard), begint de zoekopdracht aan het begin van het huidige interval zodat het deel kan uitmaken van het resultaat."
+                },
+                "min_segment_duration": {
+                    "name": "Minimale segmentduur",
+                    "description": "Minimale aaneengesloten looptijd. Voorkomt snel aan-/uitschakelen bij apparaten met minimale looptijden. Automatisch afgerond naar het volgende kwartier. Standaard: 15 minuten. Maximum: 4 uur."
+                },
+                "use_base_unit": {
+                    "name": "Basisvaluta gebruiken",
+                    "description": "Forceer prijzen in basisvaluta (EUR, NOK) in plaats van de geconfigureerde weergave-eenheid (ct, øre). Handig voor berekeningen."
+                },
+                "search_scope": {
+                    "name": "Zoekbereik (snelkoppeling)",
+                    "description": "Snelkoppeling voor veelgebruikte zoekbereiken. Overschrijft alle andere tijdopties. today/tomorrow = volledige kalenderdag, remaining_today = nu tot middernacht, next_24h/next_48h = rolling venster vanaf nu."
+                },
+                "max_price_level": {
+                    "name": "Maximaal prijsniveau",
+                    "description": "Overweeg alleen intervallen op of onder dit Tibber-prijsniveau. very_cheap = meest restrictief, very_expensive = geen beperking."
+                },
+                "min_price_level": {
+                    "name": "Minimaal prijsniveau",
+                    "description": "Overweeg alleen intervallen op of boven dit Tibber-prijsniveau. Nuttig voor find_most_expensive om te focussen op echt dure intervallen."
+                },
+                "include_comparison_details": {
+                    "name": "Vergelijkingsdetails meenemen",
+                    "description": "Verrijk het price_comparison-resultaat met extra velden: comparison_price_min, comparison_price_max en (alleen blok) comparison_window_end."
+                },
+                "power_profile": {
+                    "name": "Vermogensprofiel",
+                    "description": "Variabel vermogensverbruik in watt per 15-minuten-interval. Indien ingesteld, weerspiegelt estimated_total_cost het werkelijke verbruik."
+                }
+            }
+        },
+        "find_cheapest_schedule": {
+            "name": "Goedkoopste schema vinden",
+            "description": "Plant meerdere apparaten optimaal zonder tijdoverlap. Elke taak krijgt het goedkoopste beschikbare aaneengesloten tijdvenster.",
+            "sections": {
+                "scheduling_options": {
+                    "name": "Planningsopties",
+                    "description": "Configureer taken en tussenpozen."
+                },
+                "search_range": {
+                    "name": "Zoekbereik",
+                    "description": "Definieer het tijdvenster voor het zoeken."
+                },
+                "time_alternatives": {
+                    "name": "Alternatieve tijdbereiksopties",
+                    "description": "Alternatieve manieren om het zoekbereik te definieren via tijdstip en offsets."
+                },
+                "price_filter": {
+                    "name": "Prijsniveau-filter",
+                    "description": "Beperk het zoeken tot intervallen binnen het opgegeven prijsniveaubereik."
+                },
+                "output": {
+                    "name": "Uitvoeropties",
+                    "description": "Stuur kostnadsraming en vergelijkingsuitvoer."
+                }
+            },
+            "fields": {
+                "entry_id": {
+                    "name": "Item-ID",
+                    "description": "De config-item-ID voor de Tibber-integratie."
+                },
+                "tasks": {
+                    "name": "Taken",
+                    "description": "Lijst van in te plannen taken. Elke taak heeft name (tekst) en duration (hh:mm:ss). Optioneel power_profile (watt per 15-min-interval). Maximaal 4 taken."
+                },
+                "gap_minutes": {
+                    "name": "Tussenpose tussen taken (minuten)",
+                    "description": "Minimale tussenpose in minuten tussen opeenvolgende ingeplande taken. Afgerond omhoog tot 15 minuten. Standaard: 0 (geen tussenpose)."
+                },
+                "search_scope": {
+                    "name": "Zoekbereik (snelkoppeling)",
+                    "description": "Snelkoppeling voor veelgebruikte zoekbereiken. Overschrijft alle andere tijdopties. today/tomorrow = volledige kalenderdag, remaining_today = nu tot middernacht, next_24h/next_48h = rolling venster vanaf nu."
+                },
+                "search_start": {
+                    "name": "Zoekstart",
+                    "description": "Begin van het zoekbereik als exacte datum en tijd. Hoogste prioriteit — overschrijft alle andere startopties. Standaard is nu als niet opgegeven."
+                },
+                "search_end": {
+                    "name": "Zoekeinde",
+                    "description": "Einde van het zoekbereik als exacte datum en tijd. Hoogste prioriteit — overschrijft alle andere eindopties. Standaard is einde van morgen als niet opgegeven."
+                },
+                "search_start_time": {
+                    "name": "Zoekstart-tijd",
+                    "description": "Alternatief: Start zoeken vanaf dit tijdstip. Combineer met dagoffset. Wordt genegeerd als Zoekstart (datum/tijd) is ingesteld."
+                },
+                "search_start_day_offset": {
+                    "name": "Zoekstart dagoffset",
+                    "description": "Dagoffset voor Zoekstart-tijd. -7 tot 2: -1 = gisteren, 0 = vandaag, 1 = morgen. Negatieve waarden zoeken in het verleden. Wordt alleen gebruikt met Zoekstart-tijd."
+                },
+                "search_end_time": {
+                    "name": "Zoekeinde-tijd",
+                    "description": "Alternatief: Zoek tot dit tijdstip. Combineer met dagoffset. Wordt genegeerd als Zoekeinde (datum/tijd) is ingesteld."
+                },
+                "search_end_day_offset": {
+                    "name": "Zoekeinde dagoffset",
+                    "description": "Dagoffset voor Zoekeinde-tijd. -7 tot 2: -1 = gisteren, 0 = vandaag, 1 = morgen. Negatieve waarden zoeken in het verleden. Wordt alleen gebruikt met Zoekeinde-tijd."
+                },
+                "search_start_offset_minutes": {
+                    "name": "Zoekstart-offset (minuten)",
+                    "description": "Alternatief: Start met zoeken over dit aantal minuten vanaf nu. Positief = toekomst (60 = over 1 uur), negatief = verleden (-60 = 1 uur geleden). Wordt genegeerd als Zoekstart of Zoekstart-tijd is ingesteld."
+                },
+                "search_end_offset_minutes": {
+                    "name": "Zoekeinde-offset (minuten)",
+                    "description": "Alternatief: Stop met zoeken over dit aantal minuten vanaf nu. Positief = toekomst (480 = over 8 uur), negatief = verleden (-60 = 1 uur geleden). Wordt genegeerd als Zoekeinde of Zoekeinde-tijd is ingesteld."
+                },
+                "include_current_interval": {
+                    "name": "Huidig interval opnemen",
+                    "description": "Het huidige lopende 15-minuten interval opnemen in de zoekopdracht. Indien ingeschakeld (standaard), begint de zoekopdracht aan het begin van het huidige interval zodat het deel kan uitmaken van het resultaat."
+                },
+                "max_price_level": {
+                    "name": "Maximaal prijsniveau",
+                    "description": "Overweeg alleen intervallen op of onder dit Tibber-prijsniveau. very_cheap = meest restrictief, very_expensive = geen beperking."
+                },
+                "min_price_level": {
+                    "name": "Minimaal prijsniveau",
+                    "description": "Overweeg alleen intervallen op of boven dit Tibber-prijsniveau. Nuttig voor find_most_expensive om te focussen op echt dure intervallen."
+                },
+                "use_base_unit": {
+                    "name": "Basisvaluta gebruiken",
+                    "description": "Forceer prijzen in basisvaluta (EUR, NOK) in plaats van de geconfigureerde weergave-eenheid (ct, øre). Handig voor berekeningen."
+                }
+            }
         }
     },
     "selector": {
@@ -1360,6 +1876,15 @@
             "options": {
                 "median": "Mediaan",
                 "mean": "Rekenkundig Gemiddelde"
+            }
+        },
+        "search_scope": {
+            "options": {
+                "today": "Vandaag",
+                "tomorrow": "Morgen",
+                "remaining_today": "Rest van vandaag",
+                "next_24h": "Komende 24 uur",
+                "next_48h": "Komende 48 uur"
             }
         }
     },

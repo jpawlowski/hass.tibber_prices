@@ -1,7 +1,7 @@
 get_price:
   fields:
     entry_id:
-      required: true
+      required: false
       example: "1234567890abcdef"
       selector:
         config_entry:
@@ -19,7 +19,7 @@ get_price:
 get_apexcharts_yaml:
   fields:
     entry_id:
-      required: true
+      required: false
       example: "1234567890abcdef"
       selector:
         config_entry:
@@ -73,7 +73,7 @@ get_chartdata:
     general:
       fields:
         entry_id:
-          required: true
+          required: false
           example: "1234567890abcdef"
           selector:
             config_entry:
@@ -274,12 +274,772 @@ get_chartdata:
 refresh_user_data:
   fields:
     entry_id:
-      required: true
+      required: false
       example: "1234567890abcdef"
       selector:
         config_entry:
           integration: tibber_prices
 
+find_cheapest_block:
+  fields:
+    entry_id:
+      required: false
+      example: "1234567890abcdef"
+      selector:
+        config_entry:
+          integration: tibber_prices
+    duration:
+      required: true
+      selector:
+        duration:
+    search_range:
+      fields:
+        search_scope:
+          required: false
+          selector:
+            select:
+              options:
+                - today
+                - tomorrow
+                - remaining_today
+                - next_24h
+                - next_48h
+              translation_key: search_scope
+        search_start:
+          required: false
+          example: "2026-04-11T06:00:00+02:00"
+          selector:
+            datetime:
+        search_end:
+          required: false
+          example: "2026-04-12T00:00:00+02:00"
+          selector:
+            datetime:
+    time_alternatives:
+      collapsed: true
+      fields:
+        search_start_time:
+          required: false
+          example: "06:00:00"
+          selector:
+            time:
+        search_start_day_offset:
+          required: false
+          default: 0
+          selector:
+            number:
+              min: -7
+              max: 2
+              mode: box
+        search_end_time:
+          required: false
+          example: "23:00:00"
+          selector:
+            time:
+        search_end_day_offset:
+          required: false
+          default: 0
+          selector:
+            number:
+              min: -7
+              max: 2
+              mode: box
+        search_start_offset_minutes:
+          required: false
+          example: 60
+          selector:
+            number:
+              min: -10080
+              max: 10080
+              unit_of_measurement: min
+              mode: box
+        search_end_offset_minutes:
+          required: false
+          example: 480
+          selector:
+            number:
+              min: -10080
+              max: 10080
+              unit_of_measurement: min
+              mode: box
+        include_current_interval:
+          required: false
+          default: true
+          selector:
+            boolean:
+    price_filter:
+      collapsed: true
+      fields:
+        max_price_level:
+          required: false
+          selector:
+            select:
+              options:
+                - very_cheap
+                - cheap
+                - normal
+                - expensive
+                - very_expensive
+              translation_key: level_filter
+        min_price_level:
+          required: false
+          selector:
+            select:
+              options:
+                - very_cheap
+                - cheap
+                - normal
+                - expensive
+                - very_expensive
+              translation_key: level_filter
+    output:
+      collapsed: true
+      fields:
+        power_profile:
+          required: false
+          selector:
+            object:
+        include_comparison_details:
+          required: false
+          default: false
+          selector:
+            boolean:
+        use_base_unit:
+          required: false
+          default: false
+          selector:
+            boolean:
+
+find_most_expensive_block:
+  fields:
+    entry_id:
+      required: false
+      example: "1234567890abcdef"
+      selector:
+        config_entry:
+          integration: tibber_prices
+    duration:
+      required: true
+      selector:
+        duration:
+    search_range:
+      fields:
+        search_scope:
+          required: false
+          selector:
+            select:
+              options:
+                - today
+                - tomorrow
+                - remaining_today
+                - next_24h
+                - next_48h
+              translation_key: search_scope
+        search_start:
+          required: false
+          example: "2026-04-11T06:00:00+02:00"
+          selector:
+            datetime:
+        search_end:
+          required: false
+          example: "2026-04-12T00:00:00+02:00"
+          selector:
+            datetime:
+    time_alternatives:
+      collapsed: true
+      fields:
+        search_start_time:
+          required: false
+          example: "06:00:00"
+          selector:
+            time:
+        search_start_day_offset:
+          required: false
+          default: 0
+          selector:
+            number:
+              min: -7
+              max: 2
+              mode: box
+        search_end_time:
+          required: false
+          example: "23:00:00"
+          selector:
+            time:
+        search_end_day_offset:
+          required: false
+          default: 0
+          selector:
+            number:
+              min: -7
+              max: 2
+              mode: box
+        search_start_offset_minutes:
+          required: false
+          example: 60
+          selector:
+            number:
+              min: -10080
+              max: 10080
+              unit_of_measurement: min
+              mode: box
+        search_end_offset_minutes:
+          required: false
+          example: 480
+          selector:
+            number:
+              min: -10080
+              max: 10080
+              unit_of_measurement: min
+              mode: box
+        include_current_interval:
+          required: false
+          default: true
+          selector:
+            boolean:
+    price_filter:
+      collapsed: true
+      fields:
+        max_price_level:
+          required: false
+          selector:
+            select:
+              options:
+                - very_cheap
+                - cheap
+                - normal
+                - expensive
+                - very_expensive
+              translation_key: level_filter
+        min_price_level:
+          required: false
+          selector:
+            select:
+              options:
+                - very_cheap
+                - cheap
+                - normal
+                - expensive
+                - very_expensive
+              translation_key: level_filter
+    output:
+      collapsed: true
+      fields:
+        power_profile:
+          required: false
+          selector:
+            object:
+        include_comparison_details:
+          required: false
+          default: false
+          selector:
+            boolean:
+        use_base_unit:
+          required: false
+          default: false
+          selector:
+            boolean:
+
+find_cheapest_hours:
+  fields:
+    entry_id:
+      required: false
+      example: "1234567890abcdef"
+      selector:
+        config_entry:
+          integration: tibber_prices
+    duration:
+      required: true
+      selector:
+        duration:
+    min_segment_duration:
+      required: false
+      selector:
+        duration:
+    search_range:
+      fields:
+        search_scope:
+          required: false
+          selector:
+            select:
+              options:
+                - today
+                - tomorrow
+                - remaining_today
+                - next_24h
+                - next_48h
+              translation_key: search_scope
+        search_start:
+          required: false
+          example: "2026-04-11T06:00:00+02:00"
+          selector:
+            datetime:
+        search_end:
+          required: false
+          example: "2026-04-12T00:00:00+02:00"
+          selector:
+            datetime:
+    time_alternatives:
+      collapsed: true
+      fields:
+        search_start_time:
+          required: false
+          example: "06:00:00"
+          selector:
+            time:
+        search_start_day_offset:
+          required: false
+          default: 0
+          selector:
+            number:
+              min: -7
+              max: 2
+              mode: box
+        search_end_time:
+          required: false
+          example: "23:00:00"
+          selector:
+            time:
+        search_end_day_offset:
+          required: false
+          default: 0
+          selector:
+            number:
+              min: -7
+              max: 2
+              mode: box
+        search_start_offset_minutes:
+          required: false
+          example: 60
+          selector:
+            number:
+              min: -10080
+              max: 10080
+              unit_of_measurement: min
+              mode: box
+        search_end_offset_minutes:
+          required: false
+          example: 480
+          selector:
+            number:
+              min: -10080
+              max: 10080
+              unit_of_measurement: min
+              mode: box
+        include_current_interval:
+          required: false
+          default: true
+          selector:
+            boolean:
+    price_filter:
+      collapsed: true
+      fields:
+        max_price_level:
+          required: false
+          selector:
+            select:
+              options:
+                - very_cheap
+                - cheap
+                - normal
+                - expensive
+                - very_expensive
+              translation_key: level_filter
+        min_price_level:
+          required: false
+          selector:
+            select:
+              options:
+                - very_cheap
+                - cheap
+                - normal
+                - expensive
+                - very_expensive
+              translation_key: level_filter
+    output:
+      collapsed: true
+      fields:
+        power_profile:
+          required: false
+          selector:
+            object:
+        include_comparison_details:
+          required: false
+          default: false
+          selector:
+            boolean:
+        use_base_unit:
+          required: false
+          default: false
+          selector:
+            boolean:
+
+find_most_expensive_hours:
+  fields:
+    entry_id:
+      required: false
+      example: "1234567890abcdef"
+      selector:
+        config_entry:
+          integration: tibber_prices
+    duration:
+      required: true
+      selector:
+        duration:
+    min_segment_duration:
+      required: false
+      selector:
+        duration:
+    search_range:
+      fields:
+        search_scope:
+          required: false
+          selector:
+            select:
+              options:
+                - today
+                - tomorrow
+                - remaining_today
+                - next_24h
+                - next_48h
+              translation_key: search_scope
+        search_start:
+          required: false
+          example: "2026-04-11T06:00:00+02:00"
+          selector:
+            datetime:
+        search_end:
+          required: false
+          example: "2026-04-12T00:00:00+02:00"
+          selector:
+            datetime:
+    time_alternatives:
+      collapsed: true
+      fields:
+        search_start_time:
+          required: false
+          example: "06:00:00"
+          selector:
+            time:
+        search_start_day_offset:
+          required: false
+          default: 0
+          selector:
+            number:
+              min: -7
+              max: 2
+              mode: box
+        search_end_time:
+          required: false
+          example: "23:00:00"
+          selector:
+            time:
+        search_end_day_offset:
+          required: false
+          default: 0
+          selector:
+            number:
+              min: -7
+              max: 2
+              mode: box
+        search_start_offset_minutes:
+          required: false
+          example: 60
+          selector:
+            number:
+              min: -10080
+              max: 10080
+              unit_of_measurement: min
+              mode: box
+        search_end_offset_minutes:
+          required: false
+          example: 480
+          selector:
+            number:
+              min: -10080
+              max: 10080
+              unit_of_measurement: min
+              mode: box
+        include_current_interval:
+          required: false
+          default: true
+          selector:
+            boolean:
+    price_filter:
+      collapsed: true
+      fields:
+        max_price_level:
+          required: false
+          selector:
+            select:
+              options:
+                - very_cheap
+                - cheap
+                - normal
+                - expensive
+                - very_expensive
+              translation_key: level_filter
+        min_price_level:
+          required: false
+          selector:
+            select:
+              options:
+                - very_cheap
+                - cheap
+                - normal
+                - expensive
+                - very_expensive
+              translation_key: level_filter
+    output:
+      collapsed: true
+      fields:
+        power_profile:
+          required: false
+          selector:
+            object:
+        include_comparison_details:
+          required: false
+          default: false
+          selector:
+            boolean:
+        use_base_unit:
+          required: false
+          default: false
+          selector:
+            boolean:
+
+find_cheapest_schedule:
+  fields:
+    entry_id:
+      required: false
+      example: "1234567890abcdef"
+      selector:
+        config_entry:
+          integration: tibber_prices
+    tasks:
+      required: true
+      example: '[{"name": "dishwasher", "duration": "02:00:00"}, {"name": "washing_machine", "duration": "01:30:00"}]'
+      selector:
+        object:
+    scheduling_options:
+      fields:
+        gap_minutes:
+          required: false
+          default: 0
+          selector:
+            number:
+              min: 0
+              max: 120
+              unit_of_measurement: min
+              mode: box
+    search_range:
+      fields:
+        search_scope:
+          required: false
+          selector:
+            select:
+              options:
+                - today
+                - tomorrow
+                - remaining_today
+                - next_24h
+                - next_48h
+              translation_key: search_scope
+        search_start:
+          required: false
+          example: "2026-04-11T06:00:00+02:00"
+          selector:
+            datetime:
+        search_end:
+          required: false
+          example: "2026-04-12T00:00:00+02:00"
+          selector:
+            datetime:
+    time_alternatives:
+      collapsed: true
+      fields:
+        search_start_time:
+          required: false
+          example: "06:00:00"
+          selector:
+            time:
+        search_start_day_offset:
+          required: false
+          default: 0
+          selector:
+            number:
+              min: -7
+              max: 2
+              mode: box
+        search_end_time:
+          required: false
+          example: "23:00:00"
+          selector:
+            time:
+        search_end_day_offset:
+          required: false
+          default: 0
+          selector:
+            number:
+              min: -7
+              max: 2
+              mode: box
+        search_start_offset_minutes:
+          required: false
+          example: 60
+          selector:
+            number:
+              min: -10080
+              max: 10080
+              unit_of_measurement: min
+              mode: box
+        search_end_offset_minutes:
+          required: false
+          example: 480
+          selector:
+            number:
+              min: -10080
+              max: 10080
+              unit_of_measurement: min
+              mode: box
+    price_filter:
+      collapsed: true
+      fields:
+        max_price_level:
+          required: false
+          selector:
+            select:
+              options:
+                - very_cheap
+                - cheap
+                - normal
+                - expensive
+                - very_expensive
+              translation_key: level_filter
+        min_price_level:
+          required: false
+          selector:
+            select:
+              options:
+                - very_cheap
+                - cheap
+                - normal
+                - expensive
+                - very_expensive
+              translation_key: level_filter
+    output:
+      collapsed: true
+      fields:
+        use_base_unit:
+          required: false
+          default: false
+          selector:
+            boolean:
+
+
+    search_start:
+      required: false
+      example: "2026-04-11T06:00:00+02:00"
+      selector:
+        datetime:
+    search_end:
+      required: false
+      example: "2026-04-12T00:00:00+02:00"
+      selector:
+        datetime:
+    search_start_time:
+      required: false
+      example: "06:00:00"
+      selector:
+        time:
+    search_start_day_offset:
+      required: false
+      default: 0
+      selector:
+        number:
+          min: -7
+          max: 2
+          mode: box
+    search_end_time:
+      required: false
+      example: "23:00:00"
+      selector:
+        time:
+    search_end_day_offset:
+      required: false
+      default: 0
+      selector:
+        number:
+          min: -7
+          max: 2
+          mode: box
+    search_start_offset_minutes:
+      required: false
+      example: 60
+      selector:
+        number:
+          min: -10080
+          max: 10080
+          unit_of_measurement: min
+          mode: box
+    search_end_offset_minutes:
+      required: false
+      example: 480
+      selector:
+        number:
+          min: -10080
+          max: 10080
+          unit_of_measurement: min
+          mode: box
+    search_scope:
+      required: false
+      selector:
+        select:
+          options:
+            - today
+            - tomorrow
+            - remaining_today
+            - next_24h
+            - next_48h
+    max_price_level:
+      required: false
+      selector:
+        select:
+          options:
+            - very_cheap
+            - cheap
+            - normal
+            - expensive
+            - very_expensive
+    min_price_level:
+      required: false
+      selector:
+        select:
+          options:
+            - very_cheap
+            - cheap
+            - normal
+            - expensive
+            - very_expensive
+    include_comparison_details:
+      required: false
+      default: false
+      selector:
+        boolean:
+    power_profile:
+      required: false
+      selector:
+        object:
+    include_current_interval:
+      required: false
+      default: true
+      selector:
+        boolean:
+    use_base_unit:
+      required: false
+      default: false
+      selector:
+        boolean:
 debug_clear_tomorrow:
   fields:
     entry_id:
