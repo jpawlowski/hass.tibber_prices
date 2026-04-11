@@ -843,7 +843,14 @@ If you notice commands failing or missing dependencies:
 ./scripts/type-check  # Run Pyright type checking
 ./scripts/lint-check  # Run Ruff linting (check-only, CI mode)
 ./scripts/lint        # Run Ruff linting with auto-fix
-./scripts/check       # Run both type-check + lint-check (recommended before commits)
+./scripts/check       # Run both type-check + lint-check + sensor reference freshness (recommended before commits)
+```
+
+**Documentation generation:**
+
+```bash
+./scripts/docs/generate-sensor-reference          # Regenerate sensor-reference.md from translation files
+./scripts/docs/generate-sensor-reference --check   # Verify reference is current (used in CI)
 ```
 
 **Local validation:**
@@ -2098,6 +2105,8 @@ Public entry points → direct helpers (call order) → pure utilities. Prefix p
 -   **UI translations**: Multi-language support exists in `/translations/` and `/custom_translations/` (de, en, nb, nl, sv) for UI strings only
 -   **Why English-only docs**: Ensures maintainability, accessibility to global community, and consistency with Home Assistant ecosystem
 -   **Entity names in documentation**: Use **translated display names** from `/translations/en.json` (what users see), not internal entity IDs. Example: "Best Price Period" not "sensor.tibber_home_best_price_period" (add entity ID as comment if needed for clarity).
+-   **Entity reference annotations**: When mentioning entity display names in docs, add the `translation_key` (= entity ID suffix) on first mention per section: `**Display Name** (\`translation_key\`)`. This helps users find entities regardless of UI language. See `docs/user/docs/sensor-reference.md` for the auto-generated multi-language lookup table.
+-   **Entity ID tip boxes**: All doc pages with entity ID examples should include the standardized tip box linking to `sensor-reference.md`. Use the same wording as in existing pages (search for "Entity ID tip" for the template).
 
 **Examples and use cases:**
 
@@ -2707,6 +2716,8 @@ After the sensor.py refactoring (completed Nov 2025), sensors are organized by *
     - **Future forecast**: N-hour windows starting from next interval
     - **Volatility**: Statistical analysis of price variation
     - **Diagnostic**: System information and metadata
+
+**IMPORTANT — After adding/renaming entities**: Run `./scripts/docs/generate-sensor-reference` to regenerate the multi-language sensor reference table. The `scripts/check` and CI will fail if the reference is stale.
 
 2. **Add entity description** to appropriate sensor group in `sensor/definitions.py`:
 
