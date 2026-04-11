@@ -1,4 +1,4 @@
-# Scheduling Services
+# Scheduling Actions
 
 Find the cheapest (or most expensive) time windows for your appliances — automatically. These actions analyze real Tibber price data and return optimal scheduling recommendations.
 
@@ -64,6 +64,9 @@ data:
 
 For full control, specify exact datetime values:
 
+<details>
+<summary>Show YAML example (explicit start and end datetimes)</summary>
+
 ```yaml
 service: tibber_prices.find_cheapest_block
 data:
@@ -72,9 +75,14 @@ data:
   search_end: "2026-04-12T06:00:00+02:00"
 ```
 
+</details>
+
 ### Time-of-Day with Day Offset
 
 Schedule relative to today using time + day offset:
+
+<details>
+<summary>Show YAML example (time-of-day with day offset)</summary>
 
 ```yaml
 service: tibber_prices.find_cheapest_block
@@ -85,9 +93,14 @@ data:
   search_end_day_offset: 1            # 06:00 tomorrow
 ```
 
+</details>
+
 ### Minute Offsets from Now
 
 For relative searches:
+
+<details>
+<summary>Show YAML example (relative minute offsets)</summary>
 
 ```yaml
 service: tibber_prices.find_cheapest_block
@@ -96,6 +109,8 @@ data:
   search_start_offset_minutes: 0      # Starting now
   search_end_offset_minutes: 480      # Next 8 hours
 ```
+
+</details>
 
 ### Default Behavior
 
@@ -137,6 +152,9 @@ data:
 
 By default, cost estimates assume a constant 1 kW load. If your appliance has variable power draw, provide a power profile — **one watt value per 15-minute interval**:
 
+<details>
+<summary>Show YAML example (power profile per 15-minute interval)</summary>
+
 ```yaml
 # Washing machine: high power for heating, then less
 service: tibber_prices.find_cheapest_block
@@ -150,6 +168,8 @@ data:
     - 1500  # Interval 5: Spin cycle
     - 500   # Interval 6: Final rinse
 ```
+
+  </details>
 
 The service then calculates `estimated_total_cost` using the actual power draw per interval instead of flat 1 kW, and adds `estimated_load_kwh` (total energy consumed) to the response.
 
@@ -177,6 +197,9 @@ response_variable: result
 
 ### Example with All Options
 
+<details>
+<summary>Show YAML example (find_cheapest_block with all options)</summary>
+
 ```yaml
 service: tibber_prices.find_cheapest_block
 data:
@@ -188,6 +211,8 @@ data:
   include_current_interval: false
 response_variable: result
 ```
+
+</details>
 
 ### Response
 
@@ -243,6 +268,9 @@ response_variable: result
 
 ### Use in Automations
 
+<details>
+<summary>Show YAML automation example (start dishwasher at cheapest time)</summary>
+
 ```yaml
 automation:
   - alias: "Start dishwasher at cheapest time"
@@ -269,6 +297,8 @@ automation:
             target:
               entity_id: switch.dishwasher_smart_plug
 ```
+
+</details>
 
 ---
 
@@ -400,6 +430,9 @@ response_variable: result
 
 ### With Gap and Power Profiles
 
+<details>
+<summary>Show YAML example (multi-appliance schedule with gaps and power profiles)</summary>
+
 ```yaml
 service: tibber_prices.find_cheapest_schedule
 data:
@@ -419,6 +452,8 @@ data:
   search_end_day_offset: 1
 response_variable: result
 ```
+
+</details>
 
 ### Response
 
@@ -557,6 +592,9 @@ response_variable: peak
 
 Schedule dishwasher + washing machine to run overnight at cheapest prices, with a 15-minute gap between them:
 
+<details>
+<summary>Show YAML automation example (overnight appliance scheduling)</summary>
+
 ```yaml
 automation:
   - alias: "Schedule overnight appliances"
@@ -587,7 +625,12 @@ automation:
                 Total cost: {{ schedule.total_estimated_cost | round(2) }} ct
 ```
 
+</details>
+
 ### EV Charging During Cheapest 4 Hours
+
+<details>
+<summary>Show YAML automation example (EV charging in cheapest 4 hours)</summary>
 
 ```yaml
 automation:
@@ -620,7 +663,12 @@ automation:
 
 ```
 
+</details>
+
 ### Peak Price Warning
+
+<details>
+<summary>Show YAML automation example (peak price warning)</summary>
 
 ```yaml
 automation:
@@ -646,6 +694,8 @@ automation:
                 Average price: {{ peak.window.price_mean | round(1) }} ct/kWh
 ```
 
+</details>
+
 ---
 
 ## Technical Notes
@@ -658,12 +708,17 @@ All durations are rounded **up** to the nearest 15 minutes because Tibber price 
 
 Add `include_comparison_details: true` to `find_cheapest_block` or `find_cheapest_hours` to get extra fields in the comparison:
 
+<details>
+<summary>Show YAML example (comparison details enabled)</summary>
+
 ```yaml
 service: tibber_prices.find_cheapest_block
 data:
   duration: "02:00:00"
   include_comparison_details: true
 ```
+
+</details>
 
 This adds `comparison_price_min`, `comparison_price_max`, and `comparison_window_end` to the `price_comparison` object.
 

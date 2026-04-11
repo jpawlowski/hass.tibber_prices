@@ -18,7 +18,7 @@ This is an independent, community-maintained custom integration. It is **not** a
 -   **[Sensors](sensors-overview.md)** - Available sensors, their states, and attributes
 -   **[Dynamic Icons](dynamic-icons.md)** - State-based automatic icon changes
 -   **[Dynamic Icon Colors](icon-colors.md)** - Using icon_color attribute for color-coded dashboards
--   **[Actions](actions.md)** - Custom actions (service endpoints) and how to use them
+-   **[Actions](actions.md)** - Scheduling, chart, and data actions for automations and dashboards
 -   **[Chart Examples](chart-examples.md)** - ✨ ApexCharts visualizations with screenshots
 -   **[Automation Examples](automation-examples.md)** - Ready-to-use automation recipes
 -   **[Troubleshooting](troubleshooting.md)** - Common issues and solutions

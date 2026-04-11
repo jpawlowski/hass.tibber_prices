@@ -73,9 +73,17 @@ const sidebars: SidebarsConfig = {
     },
     {
       type: 'category',
+      label: '⚡ Actions',
+      link: { type: 'doc', id: 'actions' },
+      items: ['actions', 'scheduling-actions', 'chart-actions', 'data-actions'],
+      collapsible: true,
+      collapsed: false,
+    },
+    {
+      type: 'category',
       label: '📖 Reference',
       link: { type: 'doc', id: 'sensor-reference' },
-      items: ['sensor-reference', 'actions', 'scheduling-services'],
+      items: ['sensor-reference'],
       collapsible: true,
       collapsed: false,
     },

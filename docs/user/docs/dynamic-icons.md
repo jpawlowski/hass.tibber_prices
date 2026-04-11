@@ -2,7 +2,9 @@
 
 Many sensors in the Tibber Prices integration automatically change their icon based on their current state. This provides instant visual feedback about price levels, trends, and periods without needing to read the actual values.
 
-> **Entity ID tip:** `<home_name>` is a placeholder for your Tibber home display name in Home Assistant. Entity IDs are derived from the displayed name (localized), so the exact slug may differ. **Can't find a sensor?** Use the **[Entity Reference (All Languages)](sensor-reference.md)** to search by name in your language.
+:::tip Entity ID tip
+`<home_name>` is a placeholder for your Tibber home display name in Home Assistant. Entity IDs are derived from the displayed name (localized), so the exact slug may differ. **Can't find a sensor?** Use the **[Entity Reference (All Languages)](sensor-reference.md)** to search by name in your language.
+:::
 
 ## What are Dynamic Icons?
 
@@ -50,6 +52,9 @@ The icons will update automatically as the sensor states change.
 
 ### Glance Card
 
+<details>
+<summary>Show YAML example (Glance card)</summary>
+
 ```yaml
 type: glance
 entities:
@@ -61,7 +66,12 @@ entities:
       name: Best Price
 ```
 
+</details>
+
 ### Custom Button Card
+
+<details>
+<summary>Show YAML example (custom button card)</summary>
 
 ```yaml
 type: custom:button-card
@@ -71,7 +81,12 @@ show_state: true
 # Icon updates automatically - no need to specify it!
 ```
 
+</details>
+
 ### Mushroom Entity Card
+
+<details>
+<summary>Show YAML example (Mushroom entity card)</summary>
 
 ```yaml
 type: custom:mushroom-entity-card
@@ -80,11 +95,16 @@ name: Price Volatility
 # Icon changes automatically based on volatility level
 ```
 
+</details>
+
 ## Overriding Dynamic Icons
 
 If you want to use a fixed icon instead of the dynamic one:
 
 ### In Entity Cards
+
+<details>
+<summary>Show YAML example (fixed icon in entity card)</summary>
 
 ```yaml
 type: entities
@@ -93,7 +113,12 @@ entities:
       icon: mdi:lightning-bolt # Fixed icon, won't change
 ```
 
+</details>
+
 ### In Custom Button Card
+
+<details>
+<summary>Show YAML example (fixed icon in button card)</summary>
 
 ```yaml
 type: custom:button-card
@@ -103,11 +128,16 @@ icon: mdi:chart-line # Fixed icon overrides dynamic behavior
 show_state: true
 ```
 
+</details>
+
 ## Combining with Dynamic Colors
 
 Dynamic icons work great together with dynamic colors! See the **[Dynamic Icon Colors Guide](icon-colors.md)** for examples.
 
 **Example: Dynamic icon AND color**
+
+<details>
+<summary>Show YAML example (dynamic icon + dynamic color)</summary>
 
 ```yaml
 type: custom:button-card
@@ -122,6 +152,8 @@ styles:
                 return entity.attributes.icon_color || 'var(--state-icon-color)';
               ]]]
 ```
+
+</details>
 
 This gives you both:
 

@@ -1,8 +1,8 @@
-# Actions (Services)
+# Actions Overview
 
-Home Assistant now surfaces these backend service endpoints as **Actions** in the UI (for example, Developer Tools → Actions or the Action editor inside dashboards). Behind the scenes they are still Home Assistant services that use the `service:` key, but this guide uses the word “action” whenever we refer to the user interface.
+Tibber Prices provides **actions** (formerly called "services") that you can use in automations, scripts, and dashboards. Home Assistant surfaces them in **Developer Tools → Actions** and in the automation/script editor.
 
-You can still call them from automations, scripts, and dashboards the same way as before (`service: tibber_prices.get_chartdata`, etc.), just remember that the frontend officially lists them as actions.
+Behind the scenes, YAML still uses the `service:` key — but the UI calls them "actions".
 
 ## Finding Your Config Entry ID
 
@@ -28,362 +28,40 @@ The ID looks like a long alphanumeric string, for example `01JKPC7AB3EF4GH5IJ6KL
 If you have configured more than one Tibber home, each home has its own config entry ID. Repeat the steps above for each integration card to get the individual IDs.
 :::
 
-## Available Actions
+## All Actions at a Glance
 
-### Scheduling Services
+### Scheduling Actions
 
-Find the cheapest (or most expensive) time windows for your appliances:
+Find the cheapest (or most expensive) time windows for your appliances. Ideal for automating when to run devices based on real price data.
+
+| Action | Description | Best For |
+|--------|-------------|----------|
+| [`find_cheapest_block`](scheduling-actions.md#find-cheapest-block) | Cheapest contiguous window | Dishwasher, washing machine, dryer |
+| [`find_cheapest_hours`](scheduling-actions.md#find-cheapest-hours) | Cheapest N hours (non-contiguous OK) | EV charging, battery storage, pool pump |
+| [`find_cheapest_schedule`](scheduling-actions.md#find-cheapest-schedule) | Multiple appliances, no overlap | Dishwasher + washing machine overnight |
+| [`find_most_expensive_block`](scheduling-actions.md#find-most-expensive-block) | Most expensive contiguous window | Peak avoidance, battery discharge |
+| [`find_most_expensive_hours`](scheduling-actions.md#find-most-expensive-hours) | Most expensive N hours | Demand response, consumption shifting |
+
+**→ [Scheduling Actions — Full Guide](scheduling-actions.md)** with parameters, response formats, decision flowchart, and automation examples.
+
+### Chart & Visualization Actions
+
+Generate chart-ready data and ApexCharts configurations for your dashboards.
 
 | Action | Description |
 |--------|-------------|
-| `find_cheapest_block` | Cheapest contiguous window (dishwasher, dryer) |
-| `find_cheapest_hours` | Cheapest N hours, non-contiguous OK (EV, battery) |
-| `find_cheapest_schedule` | Multiple appliances, no overlap |
-| `find_most_expensive_block` | Most expensive contiguous window (peak avoidance) |
-| `find_most_expensive_hours` | Most expensive N hours (battery discharge) |
+| [`get_chartdata`](chart-actions.md#tibber_pricesget_chartdata) | Price data in chart-friendly formats (arrays, filtering, rolling windows) |
+| [`get_apexcharts_yaml`](chart-actions.md#tibber_pricesget_apexcharts_yaml) | Auto-generated ApexCharts card configuration with color-coded price levels |
 
-**→ See [Scheduling Services](scheduling-services.md) for full documentation, parameters, response formats, and automation examples.**
+**→ [Chart & Visualization Actions — Full Guide](chart-actions.md)** with parameters, examples, rolling window modes, and migration guide.
 
-### Data & Chart Services
+### Data & Utility Actions
 
-### tibber_prices.get_chartdata
+Fetch raw price data or refresh cached information.
 
-**Purpose:** Returns electricity price data in chart-friendly formats for visualization and analysis.
+| Action | Description |
+|--------|-------------|
+| [`get_price`](data-actions.md#tibber_pricesget_price) | Fetch raw price intervals for any time range (with intelligent caching) |
+| [`refresh_user_data`](data-actions.md#tibber_pricesrefresh_user_data) | Force-refresh user data (homes, subscriptions) from Tibber API |
 
-**Key Features:**
-
--   **Flexible Output Formats**: Array of objects or array of arrays
--   **Time Range Selection**: Filter by day (yesterday, today, tomorrow)
--   **Price Filtering**: Filter by price level or rating
--   **Period Support**: Return best/peak price period summaries instead of intervals
--   **Resolution Control**: Interval (15-minute) or hourly aggregation
--   **Customizable Field Names**: Rename output fields to match your chart library
--   **Currency Control**: Override integration default - use base (€/kWh, kr/kWh) or subunit (ct/kWh, øre/kWh)
-
-**Basic Example:**
-
-```yaml
-service: tibber_prices.get_chartdata
-data:
-    entry_id: YOUR_CONFIG_ENTRY_ID
-    day: ["today", "tomorrow"]
-    output_format: array_of_objects
-response_variable: chart_data
-```
-
-**Response Format:**
-
-```json
-{
-    "data": [
-        {
-            "start_time": "2025-11-17T00:00:00+01:00",
-            "price_per_kwh": 0.2534
-        },
-        {
-            "start_time": "2025-11-17T00:15:00+01:00",
-            "price_per_kwh": 0.2498
-        }
-    ]
-}
-```
-
-**Common Parameters:**
-
-| Parameter        | Description                                 | Default                 |
-| ---------------- | ------------------------------------------- | ----------------------- |
-| `entry_id`       | Config entry ID (optional — auto-selects if only one home) | Auto |
-| `day`            | Days to include: yesterday, today, tomorrow | `["today", "tomorrow"]` |
-| `output_format`  | `array_of_objects` or `array_of_arrays`     | `array_of_objects`      |
-| `resolution`     | `interval` (15-min) or `hourly`             | `interval`              |
-| `subunit_currency` | Override display mode: `true` for subunit (ct/øre), `false` for base (€/kr) | Integration setting |
-| `round_decimals` | Decimal places (0-10)                       | 2 (subunit) or 4 (base) |
-
-**Rolling Window Mode:**
-
-Omit the `day` parameter to get a dynamic 48-hour rolling window that automatically adapts to data availability:
-
-```yaml
-service: tibber_prices.get_chartdata
-data:
-    entry_id: YOUR_CONFIG_ENTRY_ID
-    # Omit 'day' for rolling window
-    output_format: array_of_objects
-response_variable: chart_data
-```
-
-**Behavior:**
--   **When tomorrow data available** (typically after ~13:00): Returns today + tomorrow
--   **When tomorrow data not available**: Returns yesterday + today
-
-This is useful for charts that should always show a 48-hour window without manual day selection.
-
-**Period Filter Example:**
-
-Get best price periods as summaries instead of intervals:
-
-```yaml
-service: tibber_prices.get_chartdata
-data:
-    entry_id: YOUR_CONFIG_ENTRY_ID
-    period_filter: best_price # or peak_price
-    day: ["today", "tomorrow"]
-    include_level: true
-    include_rating_level: true
-response_variable: periods
-```
-
-**Advanced Filtering:**
-
-```yaml
-service: tibber_prices.get_chartdata
-data:
-    entry_id: YOUR_CONFIG_ENTRY_ID
-    level_filter: ["VERY_CHEAP", "CHEAP"] # Only cheap periods
-    rating_level_filter: ["LOW"] # Only low-rated prices
-    insert_nulls: segments # Add nulls at segment boundaries
-```
-
-**Complete Documentation:**
-
-For detailed parameter descriptions, open **Developer Tools → Actions** (the UI label) and select `tibber_prices.get_chartdata`. The inline documentation is still stored in `services.yaml` because actions are backed by services.
-
-#### Energy & Tax Fields in get_chartdata
-
-You can include the raw energy price (spot price) and/or tax component in chart data output. This is useful for visualizing how the total price is composed over time, or for feed-in calculations.
-
-| Parameter | Description | Default |
-|-----------|-------------|---------|
-| `include_energy` | Include raw energy/spot price per data point | `false` |
-| `include_tax` | Include tax/fees component per data point | `false` |
-| `energy_field` | Custom field name for energy price | `energy_price` |
-| `tax_field` | Custom field name for tax | `tax` |
-
-**Example: Chart with price composition**
-
-```yaml
-service: tibber_prices.get_chartdata
-data:
-    entry_id: YOUR_CONFIG_ENTRY_ID
-    day: ["today", "tomorrow"]
-    include_energy: true
-    include_tax: true
-response_variable: chart_data
-```
-
-Returns data points like:
-
-```json
-{
-    "start_time": "2025-11-17T14:00:00+01:00",
-    "price_per_kwh": 25.34,
-    "energy_price": 12.18,
-    "tax": 13.16
-}
-```
-
-**Use case — Solar feed-in chart:** Overlay the energy price (what you earn by exporting) alongside the total price to visualize the best export windows. See [Energy & Tax Attributes](sensors-energy-tax.md) for more use cases.
-
----
-
-### tibber_prices.get_apexcharts_yaml
-
-> ⚠️ **IMPORTANT:** This action generates a **basic example configuration** as a starting point, NOT a complete solution for all ApexCharts features.
->
-> This integration is primarily a **data provider**. The generated YAML demonstrates how to use the `get_chartdata` action to fetch price data. Due to the segmented nature of our data (different time periods per series) and the use of Home Assistant's service API instead of entity attributes, many advanced ApexCharts features (like `in_header`, certain transformations) are **not compatible** or require manual customization.
->
-> **You are welcome to customize** the generated YAML for your specific needs, but comprehensive ApexCharts configuration support is beyond the scope of this integration. Community contributions with improved configurations are always appreciated!
->
-> **For custom solutions:** Use the `get_chartdata` action directly to build your own charts with full control over the data format and visualization.
-
-**Purpose:** Generates a basic ApexCharts card YAML configuration example for visualizing electricity prices with automatic color-coding by price level.
-
-**Prerequisites:**
-- [ApexCharts Card](https://github.com/RomRider/apexcharts-card) (required for all configurations)
-- [Config Template Card](https://github.com/iantrich/config-template-card) (required only for rolling window modes - enables dynamic Y-axis scaling)
-
-**✨ Key Features:**
-
-- **Automatic Color-Coded Series**: Separate series for each price level (VERY_CHEAP, CHEAP, NORMAL, EXPENSIVE, VERY_EXPENSIVE) or rating (LOW, NORMAL, HIGH)
-- **Dynamic Y-Axis Scaling**: Rolling window modes automatically use `chart_metadata` sensor for optimal Y-axis bounds
-- **Best Price Period Highlights**: Optional vertical bands showing detected best price periods
-- **Translated Labels**: Automatically uses your Home Assistant language setting
-- **Clean Gap Visualization**: Proper NULL insertion for missing data segments
-
-**Quick Example:**
-
-```yaml
-service: tibber_prices.get_apexcharts_yaml
-data:
-    entry_id: YOUR_CONFIG_ENTRY_ID
-    day: today  # Optional: yesterday, today, tomorrow, rolling_window, rolling_window_autozoom
-    level_type: rating_level  # or "level" for 5-level classification
-    highlight_best_price: true  # Show best price period overlays
-response_variable: apexcharts_config
-```
-
-**Day Parameter Options:**
-
-- **Fixed days** (`yesterday`, `today`, `tomorrow`): Static 24-hour views, no additional dependencies
-- **Rolling Window** (default when omitted or `rolling_window`): Dynamic 48-hour window that automatically shifts between yesterday+today and today+tomorrow based on data availability
-  - **✨ Includes dynamic Y-axis scaling** via `chart_metadata` sensor
-- **Rolling Window (Auto-Zoom)** (`rolling_window_autozoom`): Same as rolling window, but additionally zooms in progressively (2h lookback + remaining time until midnight, graph span decreases every 15 minutes)
-  - **✨ Includes dynamic Y-axis scaling** via `chart_metadata` sensor
-
-**Dynamic Y-Axis Scaling (Rolling Window Modes):**
-
-Rolling window configurations automatically integrate with the `chart_metadata` sensor for optimal chart appearance:
-
-- **Automatic bounds**: Y-axis min/max adjust to data range
-- **No manual configuration**: Works out of the box if sensor is enabled
-- **Fallback behavior**: If sensor is disabled, uses ApexCharts auto-scaling
-- **Real-time updates**: Y-axis adapts when price data changes
-
-**Example: Today's Prices (Static View)**
-
-```yaml
-service: tibber_prices.get_apexcharts_yaml
-data:
-    entry_id: YOUR_CONFIG_ENTRY_ID
-    day: today
-    level_type: rating_level
-response_variable: config
-
-# Use in dashboard:
-type: custom:apexcharts-card
-# ... paste generated config
-```
-
-**Example: Rolling 48h Window (Dynamic View)**
-
-```yaml
-service: tibber_prices.get_apexcharts_yaml
-data:
-    entry_id: YOUR_CONFIG_ENTRY_ID
-    # Omit 'day' for rolling window (or use 'rolling_window')
-    level_type: level  # 5-level classification
-    highlight_best_price: true
-response_variable: config
-
-# Use in dashboard:
-type: custom:config-template-card
-entities:
-    - binary_sensor.<home_name>_tomorrow_s_data_available
-    - sensor.<home_name>_chart_metadata  # For dynamic Y-axis
-card:
-    # ... paste generated config
-```
-
-**Screenshots:**
-
-_Screenshots coming soon for all 4 modes: today, tomorrow, rolling_window, rolling_window_autozoom_
-
-**Level Type Options:**
-
-- **`rating_level`** (default): 3 series (LOW, NORMAL, HIGH) - based on your personal thresholds
-- **`level`**: 5 series (VERY_CHEAP, CHEAP, NORMAL, EXPENSIVE, VERY_EXPENSIVE) - absolute price ranges
-
-**Best Price Period Highlights:**
-
-When `highlight_best_price: true`:
-- Vertical bands overlay the chart showing detected best price periods
-- Tooltip shows "Best Price Period" label when hovering over highlighted areas
-- Only appears when best price periods are configured and detected
-
-**Important Notes:**
-
-- **Config Template Card** is only required for rolling window modes (enables dynamic Y-axis)
-- Fixed day views (`today`, `tomorrow`, `yesterday`) work with ApexCharts Card alone
-- Generated YAML is a starting point - customize colors, styling, features as needed
-- All labels are automatically translated to your Home Assistant language
-
-Use the response in Lovelace dashboards by copying the generated YAML.
-
-**Documentation:** Refer to **Developer Tools → Actions** for descriptions of the fields exposed by this action.
-
----
-
-### tibber_prices.refresh_user_data
-
-**Purpose:** Forces an immediate refresh of user data (homes, subscriptions) from the Tibber API.
-
-**Example:**
-
-```yaml
-service: tibber_prices.refresh_user_data
-data:
-    entry_id: YOUR_CONFIG_ENTRY_ID
-```
-
-**Note:** User data is cached for 24 hours. Trigger this action only when you need immediate updates (e.g., after changing Tibber subscriptions).
-
----
-
-### tibber_prices.get_price
-
-**Purpose:** Fetches raw price interval data for any time range. Uses intelligent caching — only intervals not already cached are fetched from the Tibber API.
-
-**Parameters:**
-
-| Parameter | Description | Required |
-|-----------|-------------|----------|
-| `entry_id` | Config entry ID | Yes |
-| `start_time` | Start of the time range | Yes |
-| `end_time` | End of the time range | Yes |
-
-**Example:**
-
-```yaml
-service: tibber_prices.get_price
-data:
-    entry_id: YOUR_CONFIG_ENTRY_ID
-    start_time: "2025-11-01T00:00:00"
-    end_time: "2025-11-02T00:00:00"
-response_variable: price_data
-```
-
-**Response Format:**
-
-```json
-{
-    "home_id": "abc-123",
-    "start_time": "2025-11-01T00:00:00+01:00",
-    "end_time": "2025-11-02T00:00:00+01:00",
-    "interval_count": 96,
-    "price_info": [
-        {
-            "startsAt": "2025-11-01T00:00:00+01:00",
-            "total": 0.2534,
-            "energy": 0.1218,
-            "tax": 0.1316
-        }
-    ]
-}
-```
-
-**Use cases:**
-- Fetching historical price data for analysis
-- Comparing prices across arbitrary date ranges
-- Building custom charts with historical data
-
-**Note:** Times are automatically converted to your Tibber home's timezone. The interval pool caches previously fetched intervals, so repeated calls for the same range are fast.
-
----
-
-## Migration from Chart Data Export Sensor
-
-If you're still using the `sensor.<home_name>_chart_data_export` sensor, consider migrating to the `tibber_prices.get_chartdata` action:
-
-**Benefits:**
-
--   No HA restart required for configuration changes
--   More flexible filtering and formatting options
--   Better performance (on-demand instead of polling)
--   Future-proof (active development)
-
-**Migration Steps:**
-
-1. Note your current sensor configuration (Step 7 in Options Flow)
-2. Create automation/script that calls `tibber_prices.get_chartdata` with the same parameters
-3. Test the new approach
-4. Disable the old sensor when satisfied
+**→ [Data & Utility Actions — Full Guide](data-actions.md)** with parameters and response formats.

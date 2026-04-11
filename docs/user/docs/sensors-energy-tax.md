@@ -1,6 +1,8 @@
 # Energy & Tax Attributes
 
-> **Entity ID tip:** `<home_name>` is a placeholder for your Tibber home display name in Home Assistant. Entity IDs are derived from the displayed name (localized), so the exact slug may differ. **Can't find a sensor?** Use the **[Entity Reference (All Languages)](sensor-reference.md)** to search by name in your language.
+:::tip Entity ID tip
+`<home_name>` is a placeholder for your Tibber home display name in Home Assistant. Entity IDs are derived from the displayed name (localized), so the exact slug may differ. **Can't find a sensor?** Use the **[Entity Reference (All Languages)](sensor-reference.md)** to search by name in your language.
+:::
 
 Most price sensors include **energy price** and **tax** attributes that break down the total price into its components:
 
@@ -107,4 +109,4 @@ The composition of the `tax` field varies by country (Norway, Sweden, Germany, N
 
 ## In Chart Data Actions
 
-The `energy_price` and `tax` fields are also available in the `get_chartdata` action. See [Actions — Energy & Tax Fields](./actions.md#energy--tax-fields-in-get_chartdata) for details.
+The `energy_price` and `tax` fields are also available in the `get_chartdata` action. See [Chart Actions — Energy & Tax Fields](./chart-actions.md#energy--tax-fields) for details.

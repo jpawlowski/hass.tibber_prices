@@ -1,6 +1,8 @@
 # Understanding Relaxation
 
-> **Entity ID tip:** `<home_name>` is a placeholder for your Tibber home display name in Home Assistant. Entity IDs are derived from the displayed name (localized), so the exact slug may differ. **Can't find a sensor?** Use the **[Entity Reference (All Languages)](sensor-reference.md)** to search by name in your language.
+:::tip Entity ID tip
+`<home_name>` is a placeholder for your Tibber home display name in Home Assistant. Entity IDs are derived from the displayed name (localized), so the exact slug may differ. **Can't find a sensor?** Use the **[Entity Reference (All Languages)](sensor-reference.md)** to search by name in your language.
+:::
 
 Relaxation is the automatic filter-loosening mechanism that ensures your [Best/Peak Price periods](period-calculation.md) always find results — even on days with unusual price patterns.
 

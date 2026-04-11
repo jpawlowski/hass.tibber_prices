@@ -4,7 +4,9 @@ This guide showcases the different chart configurations available through the `t
 
 > **Quick Start:** Call the action with your desired parameters, copy the generated YAML, and paste it into your Lovelace dashboard!
 
-> **Entity ID tip:** `<home_name>` is a placeholder for your Tibber home display name in Home Assistant. Entity IDs are derived from the displayed name (localized), so the exact slug may differ. **Can't find a sensor?** Use the **[Entity Reference (All Languages)](sensor-reference.md)** to search by name in your language.
+:::tip Entity ID tip
+`<home_name>` is a placeholder for your Tibber home display name in Home Assistant. Entity IDs are derived from the displayed name (localized), so the exact slug may differ. **Can't find a sensor?** Use the **[Entity Reference (All Languages)](sensor-reference.md)** to search by name in your language.
+:::
 
 :::info Finding your Entry ID (`entry_id`)
 Every example below contains `entry_id: YOUR_CONFIG_ENTRY_ID`. This value identifies which Tibber home (integration instance) the action targets.
@@ -69,6 +71,9 @@ data:
 **Dependencies:** ApexCharts Card + Config Template Card
 
 **Generate:**
+<details>
+<summary>Show YAML example (generate rolling 48h window)</summary>
+
 ```yaml
 service: tibber_prices.get_apexcharts_yaml
 data:
@@ -77,6 +82,8 @@ data:
     level_type: rating_level
     highlight_best_price: true
 ```
+
+  </details>
 
 **Screenshot:**
 
@@ -103,6 +110,9 @@ data:
 **Dependencies:** ApexCharts Card + Config Template Card
 
 **Generate:**
+<details>
+<summary>Show YAML example (generate rolling auto-zoom)</summary>
+
 ```yaml
 service: tibber_prices.get_apexcharts_yaml
 data:
@@ -111,6 +121,8 @@ data:
     level_type: rating_level
     highlight_best_price: true
 ```
+
+  </details>
 
 **Screenshot:**
 
@@ -250,6 +262,9 @@ Price
 
 Edit the `colors` array in the generated YAML:
 
+<details>
+<summary>Show YAML example (custom color palette)</summary>
+
 ```yaml
 apex_config:
     colors:
@@ -258,9 +273,14 @@ apex_config:
         - "#FF0000"  # Change HIGH/VERY_EXPENSIVE color
 ```
 
+</details>
+
 ### Changing Chart Height
 
 Add to the card configuration:
+
+<details>
+<summary>Show YAML example (custom chart height)</summary>
 
 ```yaml
 type: custom:apexcharts-card
@@ -273,9 +293,14 @@ apex_config:
         height: 400  # Adjust height in pixels
 ```
 
+</details>
+
 ### Combining with Other Cards
 
 Wrap in a vertical stack for dashboard integration:
+
+<details>
+<summary>Show YAML example (vertical stack integration)</summary>
 
 ```yaml
 type: vertical-stack
@@ -286,11 +311,13 @@ cards:
       # ... generated chart config
 ```
 
+</details>
+
 ---
 
 ## Next Steps
 
-- **[Actions Guide](actions.md)**: Complete documentation of `get_apexcharts_yaml` parameters
+- **[Chart Actions Guide](chart-actions.md)**: Complete documentation of `get_apexcharts_yaml` parameters
 - **[Chart Metadata Sensor](sensors-overview.md#chart-metadata)**: Learn about dynamic Y-axis scaling
 - **[Period Calculation Guide](period-calculation.md)**: Configure best price period detection
 

@@ -86,6 +86,9 @@ Restart Home Assistant for the change to take effect.
 
 For specific subsystems, you can enable logging selectively:
 
+<details>
+<summary>Show YAML example (targeted subsystem logging)</summary>
+
 ```yaml
 logger:
     default: warning
@@ -103,6 +106,8 @@ logger:
         custom_components.tibber_prices.sensor: debug
 ```
 
+    </details>
+
 ### Temporary Debug Logging (No Restart)
 
 You can also enable debug logging temporarily from the HA UI:
@@ -110,9 +115,14 @@ You can also enable debug logging temporarily from the HA UI:
 1. Go to **Developer Tools → Services**
 2. Call service: `logger.set_level`
 3. Data:
+   <details>
+   <summary>Show YAML example (temporary logger.set_level payload)</summary>
+
     ```yaml
     custom_components.tibber_prices: debug
     ```
+
+   </details>
 
 This resets when HA restarts.
 

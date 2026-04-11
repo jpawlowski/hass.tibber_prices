@@ -2,7 +2,9 @@
 
 Learn how Best Price and Peak Price periods work, and how to configure them for your needs.
 
-> **Entity ID tip:** `<home_name>` is a placeholder for your Tibber home display name in Home Assistant. Entity IDs are derived from the displayed name (localized), so the exact slug may differ. **Can't find a sensor?** Use the **[Entity Reference (All Languages)](sensor-reference.md)** to search by name in your language.
+:::tip Entity ID tip
+`<home_name>` is a placeholder for your Tibber home display name in Home Assistant. Entity IDs are derived from the displayed name (localized), so the exact slug may differ. **Can't find a sensor?** Use the **[Entity Reference (All Languages)](sensor-reference.md)** to search by name in your language.
+:::
 
 ## Table of Contents
 
@@ -262,10 +264,15 @@ peak_price_min_distance_from_avg: 5
 **Default:** `any` (disabled)
 **Options:** `any` | `cheap` | `very_cheap` (Best Price) | `expensive` | `very_expensive` (Peak Price)
 
+<details>
+<summary>Show YAML example (level filter)</summary>
+
 ```yaml
 best_price_max_level: any      # Show any period below average
 best_price_max_level: cheap    # Only show if at least one interval is CHEAP
 ```
+
+</details>
 
 **Use case:** "Only notify me when prices are objectively cheap/expensive"
 
@@ -277,10 +284,15 @@ best_price_max_level: cheap    # Only show if at least one interval is CHEAP
 **Default:** 0 (strict)
 **Range:** 0-10
 
+<details>
+<summary>Show YAML example (gap tolerance)</summary>
+
 ```yaml
 best_price_max_level: cheap
 best_price_max_level_gap_count: 2 # Allow up to 2 NORMAL intervals per period
 ```
+
+</details>
 
 **Use case:** "Don't split periods just because one interval isn't perfectly CHEAP"
 
@@ -292,11 +304,16 @@ When you're not happy with the default behavior, adjust settings in this order:
 
 If you're not finding enough periods:
 
+<details>
+<summary>Show YAML example (relaxation defaults)</summary>
+
 ```yaml
 enable_min_periods_best: true   # Already default!
 min_periods_best: 2             # Already default!
 relaxation_attempts_best: 11    # Already default!
 ```
+
+</details>
 
 **Why start here?** Relaxation automatically finds the right balance for each day. Much easier than manual tuning.
 
@@ -304,11 +321,16 @@ relaxation_attempts_best: 11    # Already default!
 
 If periods are too short/long for your use case:
 
+<details>
+<summary>Show YAML example (longer or shorter periods)</summary>
+
 ```yaml
 best_price_min_period_length: 90  # Increase from 60 for longer periods
 # OR
 best_price_min_period_length: 45  # Decrease from 60 for shorter periods
 ```
+
+</details>
 
 **Safe to change:** This only affects duration, not price selection logic.
 
@@ -316,11 +338,16 @@ best_price_min_period_length: 45  # Decrease from 60 for shorter periods
 
 If you consistently want more/fewer periods:
 
+<details>
+<summary>Show YAML example (flexibility tuning)</summary>
+
 ```yaml
 best_price_flex: 20  # Increase from 15% for more periods
 # OR
 best_price_flex: 10  # Decrease from 15% for stricter selection
 ```
+
+</details>
 
 **⚠️ Watch out:** Values >25% may conflict with distance filter. Use relaxation instead.
 
@@ -328,9 +355,14 @@ best_price_flex: 10  # Decrease from 15% for stricter selection
 
 Only if periods seem "mediocre" (not really cheap/expensive):
 
+<details>
+<summary>Show YAML example (distance from average)</summary>
+
 ```yaml
 best_price_min_distance_from_avg: 10  # Increase from 5% for stricter quality
 ```
+
+</details>
 
 **⚠️ Careful:** High values (>10%) can make it impossible to find periods on flat price days.
 
@@ -338,9 +370,14 @@ best_price_min_distance_from_avg: 10  # Increase from 5% for stricter quality
 
 Only if you want absolute quality requirements:
 
+<details>
+<summary>Show YAML example (strict level filter)</summary>
+
 ```yaml
 best_price_max_level: cheap  # Only show objectively CHEAP periods
 ```
+
+</details>
 
 **⚠️ Very strict:** Many days may have zero qualifying periods. **Always enable relaxation when using this!**
 
@@ -397,6 +434,9 @@ best_price_min_distance_from_avg: 5 # (default)
 
 **Automation example:**
 
+<details>
+<summary>Show YAML automation example (run dishwasher in best price period)</summary>
+
 ```yaml
 automation:
     - trigger:
@@ -408,6 +448,8 @@ automation:
             target:
                 entity_id: switch.dishwasher
 ```
+
+</details>
 
 ---
 
@@ -421,11 +463,16 @@ automation:
 
 This is **expected behavior** on days with very uniform electricity prices. When prices vary by less than ~10% across the day (e.g. on sunny spring days with high solar generation), there is no meaningful second "cheap window" – all hours are equally cheap. The integration automatically reduces the target to 1 period for that day.
 
+<details>
+<summary>Show YAML example (flat day detection)</summary>
+
 ```yaml
 min_periods_configured: 2
 periods_found_total: 1
 flat_days_detected: 1    # Uniform prices today → 1 period is the right answer
 ```
+
+</details>
 
 You don't need to change anything. This is the integration protecting you from artificial periods.
 
@@ -434,14 +481,24 @@ You don't need to change anything. This is the integration protecting you from a
 Relaxation tried all configured attempts but couldn't reach your target. Options:
 
 1. **Increase relaxation attempts** (tries more flexibility levels before giving up)
+  <details>
+  <summary>Show YAML example (increase relaxation attempts)</summary>
+
    ```yaml
    relaxation_attempts_best: 12  # Default: 11
    ```
 
+  </details>
+
 2. **Reduce minimum period count**
+  <details>
+  <summary>Show YAML example (reduce min periods)</summary>
+
    ```yaml
    min_periods_best: 1  # Only require 1 period per day
    ```
+
+  </details>
 
 3. **Check filter settings** – very strict `best_price_min_distance_from_avg` values block relaxation
 
@@ -454,24 +511,39 @@ Relaxation tried all configured attempts but couldn't reach your target. Options
 **Common Solutions:**
 
 1. **Check if relaxation is enabled**
+  <details>
+  <summary>Show YAML example (relaxation enabled)</summary>
+
    ```yaml
    enable_min_periods_best: true  # Should be true (default)
    min_periods_best: 2  # Try to find at least 2 periods
    ```
+
+  </details>
 
 2. **If still no periods, check filters**
    - Look at sensor attributes: `relaxation_active` and `relaxation_level`
    - If relaxation exhausted all attempts: Filters too strict or flat price day
 
 3. **Try increasing flexibility slightly**
+  <details>
+  <summary>Show YAML example (increase flexibility)</summary>
+
    ```yaml
    best_price_flex: 20  # Increase from default 15%
    ```
 
+  </details>
+
 4. **Or reduce period length requirement**
+  <details>
+  <summary>Show YAML example (reduce period length)</summary>
+
    ```yaml
    best_price_min_period_length: 45  # Reduce from default 60 minutes
    ```
+
+  </details>
 
 ### Periods Split Into Small Pieces
 
@@ -480,15 +552,25 @@ Relaxation tried all configured attempts but couldn't reach your target. Options
 **Common Solutions:**
 
 1. **If using level filter, add gap tolerance**
+  <details>
+  <summary>Show YAML example (level gap tolerance)</summary>
+
    ```yaml
    best_price_max_level: cheap
    best_price_max_level_gap_count: 2  # Allow 2 NORMAL intervals
    ```
 
+  </details>
+
 2. **Slightly increase flexibility**
+  <details>
+  <summary>Show YAML example (wider flexibility)</summary>
+
    ```yaml
    best_price_flex: 20  # From 15% → captures wider price range
    ```
+
+  </details>
 
 3. **Check for price spikes**
    - Automatic smoothing should handle this
@@ -536,6 +618,9 @@ relaxation_incomplete: true         # Some days couldn't reach the configured ta
 
 These two values together quickly show whether the calculation achieved its goal:
 
+<details>
+<summary>Show YAML examples (configured target vs. found periods)</summary>
+
 ```yaml
 min_periods_configured: 2   # You asked for 2 periods per day
 periods_found_total: 6      # 3 days × 2 periods = fully satisfied ✅
@@ -546,17 +631,24 @@ min_periods_configured: 2
 periods_found_total: 5      # 3 days, but one day got only 1 period
 ```
 
+</details>
+
 Note that `periods_found_total` counts **all periods across today and tomorrow** – so 4 on a two-day view means 2 per day on average.
 
 **`flat_days_detected`**
 
 This is the most important diagnostic for days with very uniform prices (e.g. sunny spring/summer days with high solar generation):
 
+<details>
+<summary>Show YAML example (flat_days_detected)</summary>
+
 ```yaml
 min_periods_configured: 2
 periods_found_total: 1
 flat_days_detected: 1       # ← This explains why you got 1 instead of 2
 ```
+
+</details>
 
 When prices barely change across the day – typically a variation of less than 10% – the integration automatically reduces the target from your configured value to 1. There is no meaningful second "best price window" when all prices are essentially equal.
 
@@ -566,11 +658,16 @@ When prices barely change across the day – typically a variation of less than 
 
 This flag appears when even after all relaxation attempts, at least one day could not reach the configured minimum number of periods:
 
+<details>
+<summary>Show YAML example (relaxation_incomplete)</summary>
+
 ```yaml
 min_periods_configured: 2
 periods_found_total: 1
 relaxation_incomplete: true  # ← Relaxation tried everything, still short
 ```
+
+</details>
 
 This is most common on very flat days (see above) or with very strict filter settings. If you see this repeatedly on normal days, consider:
 - Reducing `min_periods_best` to 1
@@ -630,6 +727,9 @@ Daily average: 19 ct/kWh
 
 Check the volatility sensors to understand if a period flip is meaningful:
 
+<details>
+<summary>Show YAML example (daily volatility check)</summary>
+
 ```yaml
 # Check daily volatility (available in integration)
 sensor.<home_name>_today_s_price_volatility: 8.2%     # Low volatility
@@ -640,6 +740,8 @@ sensor.<home_name>_tomorrow_s_price_volatility: 7.9%  # Also low
 # - Classification changes may not be economically significant
 # - Consider ignoring period classification on such days
 ```
+
+</details>
 
 **Handling in Automations:**
 
@@ -702,6 +804,9 @@ automation:
 
 Each period sensor exposes day volatility and price statistics:
 
+<details>
+<summary>Show YAML example (per-period volatility attributes)</summary>
+
 ```yaml
 binary_sensor.<home_name>_best_price_period:
   day_volatility_%: 8.2         # Volatility % of the period's day
@@ -709,6 +814,8 @@ binary_sensor.<home_name>_best_price_period:
   day_price_max: 2200.0          # Maximum price of the day (ct/kWh)
   day_price_span: 400.0          # Difference (max - min) in ct
 ```
+
+</details>
 
 These attributes allow automations to check: "Is the classification meaningful on this particular day?"
 
@@ -724,7 +831,7 @@ These attributes allow automations to check: "Is the classification meaningful o
 For advanced configuration patterns and technical deep-dive, see:
 
 -   [Automation Examples](./automation-examples.md) - Real-world automation patterns
--   [Actions](./actions.md) - Using the `tibber_prices.get_chartdata` action for custom visualizations
+-   [Chart Actions](./chart-actions.md) - Using the `tibber_prices.get_chartdata` action for custom visualizations
 
 ### Quick Reference
 

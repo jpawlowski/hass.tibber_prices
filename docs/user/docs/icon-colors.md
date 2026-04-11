@@ -10,7 +10,9 @@ Many sensors in the Tibber Prices integration provide an `icon_color` attribute 
 
 > **Related:** Many sensors also automatically change their **icon** based on state. See the **[Dynamic Icons Guide](dynamic-icons.md)** for details.
 
-> **Entity ID tip:** `<home_name>` is a placeholder for your Tibber home display name in Home Assistant. Entity IDs are derived from the displayed name (localized), so the exact slug may differ. **Can't find a sensor?** Use the **[Entity Reference (All Languages)](sensor-reference.md)** to search by name in your language.
+:::tip Entity ID tip
+`<home_name>` is a placeholder for your Tibber home display name in Home Assistant. Entity IDs are derived from the displayed name (localized), so the exact slug may differ. **Can't find a sensor?** Use the **[Entity Reference (All Languages)](sensor-reference.md)** to search by name in your language.
+:::
 
 ## What is icon_color?
 
@@ -65,6 +67,9 @@ The colors adapt to the sensor's state - cheaper prices typically show green, ex
 
 **Example of when NOT to use icon_color:**
 
+<details>
+<summary>Show YAML comparison (complex conversion vs direct state logic)</summary>
+
 ```yaml
 # ❌ DON'T: Converting icon_color requires if/else anyway
 card:
@@ -86,6 +91,8 @@ card:
         return 'transparent';
       ]]]
 ```
+
+</details>
 
 The advantage of `icon_color` is simplicity - if you need complex logic, you lose that advantage.
 
@@ -113,6 +120,9 @@ styles:
 
 **Example: Icon AND state value with same color**
 
+<details>
+<summary>Show YAML example (button-card icon + state text in same color)</summary>
+
 ```yaml
 type: custom:button-card
 entity: sensor.<home_name>_current_price_level
@@ -132,6 +142,8 @@ styles:
               ]]]
         - font-weight: bold
 ```
+
+          </details>
 
 ### Method 2: Entities Card with card_mod
 
@@ -164,6 +176,9 @@ The [Mushroom cards](https://github.com/piitaya/lovelace-mushroom) support card_
 
 **Icon color only:**
 
+<details>
+<summary>Show YAML example (Mushroom icon color only)</summary>
+
 ```yaml
 type: custom:mushroom-entity-card
 entity: binary_sensor.<home_name>_best_price_period
@@ -175,6 +190,8 @@ card_mod:
           --card-mod-icon-color: {{ state_attr('binary_sensor.<home_name>_best_price_period', 'icon_color') }};
         }
 ```
+
+</details>
 
 **Icon and state value:**
 
@@ -334,6 +351,9 @@ If you want to override the theme colors with your own, you have two options:
 
 Define custom colors in your theme configuration (`themes.yaml`):
 
+<details>
+<summary>Show YAML example (theme-level color overrides)</summary>
+
 ```yaml
 my_custom_theme:
     # Override standard variables
@@ -342,6 +362,8 @@ my_custom_theme:
     warning-color: "#F57C00" # Custom orange
     info-color: "#0288D1" # Custom blue
 ```
+
+  </details>
 
 The `icon_color` attribute will automatically use your custom theme colors.
 

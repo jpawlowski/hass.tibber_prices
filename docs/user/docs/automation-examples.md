@@ -7,7 +7,7 @@
 -   [Price-Based Automations](#price-based-automations)
 -   [Volatility-Aware Automations](#volatility-aware-automations)
 -   [Best Hour Detection](#best-hour-detection)
--   [Scheduling Services](#scheduling-services)
+-   [Scheduling Actions](#scheduling-actions)
 -   [Charts & Visualizations](#charts--visualizations)
 
 ---
@@ -20,7 +20,9 @@
 >
 > These examples provide a good starting point but must be tailored to your individual Home Assistant setup.
 >
-> **Entity ID tip:** `<home_name>` is a placeholder for your Tibber home display name in Home Assistant. Entity IDs are derived from the displayed name (localized), so the exact slug may differ. **Can't find a sensor?** Use the **[Entity Reference (All Languages)](sensor-reference.md)** to search by name in your language.
+:::tip Entity ID tip
+`<home_name>` is a placeholder for your Tibber home display name in Home Assistant. Entity IDs are derived from the displayed name (localized), so the exact slug may differ. **Can't find a sensor?** Use the **[Entity Reference (All Languages)](sensor-reference.md)** to search by name in your language.
+:::
 
 ## Price-Based Automations
 
@@ -503,9 +505,9 @@ automation:
 
 ---
 
-## Scheduling Services
+## Scheduling Actions
 
-> **Looking for service-based scheduling?** The **[Scheduling Services Guide](scheduling-services.md)** covers `find_cheapest_block`, `find_cheapest_hours`, `find_cheapest_schedule`, and their "most expensive" counterparts — ideal for automations that need to find optimal time windows dynamically (e.g., EV charging, heat pump scheduling, appliance timing).
+> **Looking for scheduling actions?** The **[Scheduling Actions Guide](scheduling-actions.md)** covers `find_cheapest_block`, `find_cheapest_hours`, `find_cheapest_schedule`, and their "most expensive" counterparts — ideal for automations that need to find optimal time windows dynamically (e.g., EV charging, heat pump scheduling, appliance timing).
 
 ---
 

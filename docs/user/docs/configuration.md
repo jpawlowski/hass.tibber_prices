@@ -1,6 +1,8 @@
 # Configuration
 
-> **Entity ID tip:** `<home_name>` is a placeholder for your Tibber home display name in Home Assistant. Entity IDs are derived from the displayed name (localized), so the exact slug may differ. **Can't find a sensor?** Use the **[Entity Reference (All Languages)](sensor-reference.md)** to search by name in your language.
+:::tip Entity ID tip
+`<home_name>` is a placeholder for your Tibber home display name in Home Assistant. Entity IDs are derived from the displayed name (localized), so the exact slug may differ. **Can't find a sensor?** Use the **[Entity Reference (All Languages)](sensor-reference.md)** to search by name in your language.
+:::
 
 ## Initial Setup
 
@@ -125,7 +127,7 @@ Thresholds are [volatility-adaptive](sensors-trends.md): automatically widened o
 
 ### Step 9: Chart Data Export (Legacy)
 
-Information page for the legacy chart data export sensor. For new setups, use the [get_chartdata action](actions.md) instead.
+Information page for the legacy chart data export sensor. For new setups, use the [get_chartdata action](chart-actions.md) instead.
 
 ## Configuration Options
 
@@ -165,11 +167,16 @@ The median tells you the price was **typically** around 13 ct/kWh (4 out of 5 ho
 
 **Both values are always available as attributes**, regardless of your display choice:
 
+<details>
+<summary>Show YAML example (median and mean attributes)</summary>
+
 ```yaml
 # These attributes work regardless of display setting:
 {{ state_attr('sensor.<home_name>_price_today', 'price_median') }}
 {{ state_attr('sensor.<home_name>_price_today', 'price_mean') }}
 ```
+
+</details>
 
 This means:
 - ✅ You can change the display anytime without breaking automations
@@ -255,6 +262,9 @@ Each configuration entity includes a detailed description attribute explaining w
 
 ### Example: Seasonal Automation
 
+<details>
+<summary>Show YAML example (seasonal runtime override)</summary>
+
 ```yaml
 automation:
   - alias: "Winter: Stricter Best Price Detection"
@@ -272,6 +282,8 @@ automation:
           value: 10  # Stricter than default 15%
 ```
 
+</details>
+
 ### Recorder Optimization (Optional)
 
 These configuration entities are designed to minimize database impact:
@@ -283,6 +295,9 @@ If you frequently adjust these settings via automations or want to track configu
 
 However, if you prefer to **completely exclude** these entities from the recorder (no history graph, no database entries), add this to your `configuration.yaml`:
 
+<details>
+<summary>Show YAML example (exclude runtime config entities from recorder)</summary>
+
 ```yaml
 recorder:
   exclude:
@@ -293,6 +308,8 @@ recorder:
       - switch.*_best_price_*
       - switch.*_peak_price_*
 ```
+
+    </details>
 
 This is especially useful if:
 - You rarely change these settings
