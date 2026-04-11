@@ -583,6 +583,9 @@ Relaxation tried all configured attempts but couldn't reach your target. Options
 
 **Key attributes to check:**
 
+<details>
+<summary>Show YAML: Sensor attribute reference for best_price_period</summary>
+
 ```yaml
 # Entity: binary_sensor.<home_name>_best_price_period
 
@@ -608,6 +611,8 @@ period_interval_level_gap_count: 1   # Number of "mediocre" intervals tolerated
 flat_days_detected: 1               # Days where prices were so flat that 1 period is enough
 relaxation_incomplete: true         # Some days couldn't reach the configured target
 ```
+
+</details>
 
 #### What the diagnostic attributes mean
 
@@ -678,6 +683,9 @@ This is **mathematically correct behavior** caused by how electricity prices are
 
 **Example:**
 
+<details>
+<summary>Show YAML: How identical prices can flip between best/peak across midnight</summary>
+
 ```yaml
 # Day 1 (low volatility, narrow range)
 Price range: 18-22 ct/kWh (4 ct span)
@@ -694,6 +702,8 @@ Daily average: 19 ct/kWh
 # - Day 1: Near the bottom of the range
 # - Day 2: Near the middle/top of the range
 ```
+
+</details>
 
 **When This Occurs:**
 - **Low-volatility days:** When price span is narrow (< 5 ct/kWh)
@@ -718,6 +728,9 @@ sensor.<home_name>_tomorrow_s_price_volatility: 7.9%  # Also low
 **Handling in Automations:**
 
 You can make your automations volatility-aware:
+
+<details>
+<summary>Show YAML: 3 automation strategies for volatility-aware period control</summary>
 
 ```yaml
 # Option 1: Only act on high-volatility days
@@ -766,6 +779,8 @@ automation:
       - service: switch.turn_on
         entity_id: switch.ev_charger
 ```
+
+</details>
 
 **Available Per-Period Attributes:**
 

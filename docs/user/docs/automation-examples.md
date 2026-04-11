@@ -58,6 +58,9 @@ gantt
 
 This automation starts a flexible load when the best price period begins, but keeps it running as long as prices remain favorable — even after the period ends.
 
+<details>
+<summary>Show YAML: Heat pump — extended cheap period</summary>
+
 ```yaml
 automation:
     - alias: "Heat Pump - Extended Cheap Period"
@@ -103,6 +106,8 @@ automation:
                 temperature: 22
 ```
 
+</details>
+
 **How it works:**
 
 1. Starts when the best price period triggers
@@ -113,6 +118,9 @@ automation:
 ### Use Case: Pre-Emptive Start Before Best Price
 
 Use the trend to start slightly before the cheapest period — useful for appliances with warm-up time:
+
+<details>
+<summary>Show YAML: Water heater — pre-heat before cheapest window</summary>
 
 ```yaml
 automation:
@@ -141,9 +149,14 @@ automation:
                 temperature: 60
 ```
 
+</details>
+
 ### Use Case: Protect Against Rising Prices
 
 Stop or reduce consumption when prices are climbing:
+
+<details>
+<summary>Show YAML: EV charger — stop when prices rising</summary>
 
 ```yaml
 automation:
@@ -171,6 +184,8 @@ automation:
                     Next trend change in ~{{ state_attr('sensor.<home_name>_next_price_trend_change', 'minutes_until_change') }} minutes.
 ```
 
+</details>
+
 ### Use Case: Multi-Window Trend Strategy for Flexible Loads
 
 Combine short-term and long-term trend sensors for smarter decisions. This example manages a heat pump boost:
@@ -179,6 +194,9 @@ Combine short-term and long-term trend sensors for smarter decisions. This examp
 - If short-term is `falling` but long-term is `rising` → brief dip coming, wait for it then boost
 - If **both** say `falling` → prices are dropping, definitely wait
 - If long-term says `falling` → cheaper hours ahead, no rush
+
+<details>
+<summary>Show YAML: Heat pump — multi-window trend strategy</summary>
 
 ```yaml
 automation:
@@ -248,6 +266,8 @@ automation:
                       temperature: 20.5
 ```
 
+</details>
+
 :::tip Why "rising" means "act now"
 A common misconception: **"rising" does NOT mean "too late"**. It means your current price is **lower** than the future average — so right now is actually a good time. See [How to Use Trend Sensors for Decisions](sensors.md#how-to-use-trend-sensors-for-decisions) in the sensor documentation for details.
 :::
@@ -274,6 +294,9 @@ These examples show how to create robust automations that only act when price di
 On days with low price variation, the difference between "cheap" and "expensive" periods can be just a fraction of a cent. This automation charges a home battery only when the volatility is high enough to result in actual savings.
 
 **Best Practice:** Instead of checking a numeric percentage, this automation checks the sensor's classified state. This makes the automation simpler and respects the volatility thresholds you have configured centrally in the integration's options.
+
+<details>
+<summary>Show YAML: Home battery — charge on best price (volatility-aware)</summary>
 
 ```yaml
 automation:
@@ -307,6 +330,8 @@ automation:
 
 ```
 
+</details>
+
 **Why this works:**
 
 -   The automation only runs if volatility is `moderate`, `high`, or `very_high`.
@@ -316,6 +341,9 @@ automation:
 ### Use Case: Combined Volatility and Absolute Price Check
 
 This is the most robust approach. It trusts the "Best Price" classification on volatile days but adds a backup absolute price check for low-volatility days. This handles situations where prices are globally low, even if the daily variation is minimal.
+
+<details>
+<summary>Show YAML: EV charging — combined volatility + absolute price strategy</summary>
 
 ```yaml
 automation:
@@ -352,6 +380,8 @@ automation:
                     Today's volatility is {{ state_attr('sensor.<home_name>_today_s_price_volatility', 'price_volatility') }}.
 ```
 
+</details>
+
 **Why this works:**
 
 -   On days with meaningful price swings, it charges during any `Best Price` period.
@@ -361,6 +391,9 @@ automation:
 ### Use Case: Using the Period's Own Volatility Attribute
 
 For maximum simplicity, you can use the attributes of the `best_price_period` sensor itself. It contains the volatility classification for the day the period belongs to. This is especially useful for periods that span across midnight.
+
+<details>
+<summary>Show YAML: Heat pump — smart heating using period volatility attribute</summary>
 
 ```yaml
 automation:
@@ -383,6 +416,8 @@ automation:
                 temperature: 22 # Boost temperature during cheap period
 ```
 
+</details>
+
 **Why this works:**
 
 -   Each detected period has its own `volatility` attribute (`low`, `moderate`, etc.).
@@ -397,6 +432,9 @@ automation:
 ### Use Case: Find the Best Time to Run an Appliance
 
 Use future average sensors to determine the cheapest upcoming window for a timed appliance (e.g., dishwasher with 2-hour ECO program):
+
+<details>
+<summary>Show YAML: Dishwasher — schedule for cheapest 2h window</summary>
 
 ```yaml
 automation:
@@ -431,9 +469,14 @@ automation:
                     {% endif %}
 ```
 
+</details>
+
 ### Use Case: Notify When Cheapest Window Starts
 
 Get a push notification when the best price period begins:
+
+<details>
+<summary>Show YAML: Notification — when cheap window starts</summary>
 
 ```yaml
 automation:
@@ -454,6 +497,8 @@ automation:
                     Average period price: {{ state_attr('binary_sensor.<home_name>_best_price_period', 'price_mean') }}
                     {{ state_attr('sensor.<home_name>_current_electricity_price', 'unit_of_measurement') }}.
 ```
+
+</details>
 
 ---
 

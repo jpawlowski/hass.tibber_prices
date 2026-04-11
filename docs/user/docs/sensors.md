@@ -102,6 +102,9 @@ sensor:
 
 Run dishwasher only when price is significantly below the daily typical level:
 
+<details>
+<summary>Show YAML: Automation — start dishwasher when cheap</summary>
+
 ```yaml
 automation:
   - alias: "Start Dishwasher When Cheap"
@@ -121,9 +124,14 @@ automation:
         entity_id: switch.dishwasher
 ```
 
+</details>
+
 **Example 2: Cost-aware heating control**
 
 Use mean for actual cost calculations:
+
+<details>
+<summary>Show YAML: Automation — cost-aware heating control</summary>
 
 ```yaml
 automation:
@@ -143,9 +151,14 @@ automation:
           message: "Expected cost today: €{{ daily_cost }} (avg price: {{ mean_price }} ct/kWh)"
 ```
 
+</details>
+
 **Example 3: Smart charging based on rolling average**
 
 Use trailing average to understand recent price trends:
+
+<details>
+<summary>Show YAML: Automation — EV charging based on rolling average</summary>
 
 ```yaml
 automation:
@@ -168,6 +181,8 @@ automation:
       - service: switch.turn_on
         entity_id: switch.ev_charger
 ```
+
+</details>
 
 #### Key Attributes
 
@@ -490,6 +505,9 @@ After updating the integration, the `energy_price` and `tax` attributes will app
 
 In countries like the Netherlands, solar feed-in compensation is based on the **raw energy/spot price**, not the total consumer price. The `energy_price` attribute gives you exactly this value — no more reverse-engineering from the total price with fragile template calculations.
 
+<details>
+<summary>Show YAML: Automation — solar export or consume decision</summary>
+
 ```yaml
 # Example: Decide whether to export solar power or consume it
 # Compare energy price (what you'd earn by exporting) vs. total price (what you'd pay)
@@ -511,9 +529,14 @@ automation:
             entity_id: switch.battery_charging  # Don't charge battery, export instead
 ```
 
+</details>
+
 #### Price Composition Analysis
 
 Understand how your electricity price is structured — useful for comparing across days or spotting trends in market prices vs. fees:
+
+<details>
+<summary>Show YAML: Template sensor — electricity tax share percentage</summary>
 
 ```yaml
 # Template sensor showing tax share
@@ -530,6 +553,8 @@ template:
                   unavailable
                 {% endif %}
 ```
+
+</details>
 
 #### Dashboard: Daily Cost Breakdown
 
@@ -603,6 +628,9 @@ icon: mdi:clock-fast
 
 **Display period progress bar:**
 
+<details>
+<summary>Show YAML: Bar card for period progress</summary>
+
 ```yaml
 type: custom:bar-card
 entity: sensor.<home_name>_best_price_progress
@@ -621,7 +649,12 @@ severity:
       color: red
 ```
 
+</details>
+
 **Automation: notify when period is almost over:**
+
+<details>
+<summary>Show YAML: Automation — notify when best price period is ending</summary>
 
 ```yaml
 automation:
@@ -640,6 +673,8 @@ automation:
                 title: "Best Price Ending Soon"
                 message: "Only {{ states('sensor.<home_name>_best_price_remaining_minutes') }} minutes left!"
 ```
+
+</details>
 
 ## Trend Sensors
 

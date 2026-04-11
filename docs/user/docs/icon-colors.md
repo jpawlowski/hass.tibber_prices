@@ -137,6 +137,9 @@ styles:
 
 Use Home Assistant's built-in entities card with card_mod for icon and state colors:
 
+<details>
+<summary>Show YAML: Entities card with card_mod</summary>
+
 ```yaml
 type: entities
 entities:
@@ -152,6 +155,8 @@ card_mod:
                   color: {{ state_attr('sensor.<home_name>_current_price_level', 'icon_color') }} !important;
                 }
 ```
+
+</details>
 
 ### Method 3: Mushroom Cards
 
@@ -173,6 +178,9 @@ card_mod:
 
 **Icon and state value:**
 
+<details>
+<summary>Show YAML: Mushroom card — icon and state value with same color</summary>
+
 ```yaml
 type: custom:mushroom-entity-card
 entity: sensor.<home_name>_current_price_level
@@ -185,9 +193,14 @@ card_mod:
         }
 ```
 
+</details>
+
 ### Method 4: Glance Card with card_mod
 
 Combine multiple sensors with dynamic colors:
+
+<details>
+<summary>Show YAML: Glance card with card_mod for multiple sensors</summary>
 
 ```yaml
 type: glance
@@ -208,9 +221,14 @@ card_mod:
         }
 ```
 
+</details>
+
 ## Complete Dashboard Example
 
 Here's a complete example combining multiple sensors with dynamic colors:
+
+<details>
+<summary>Show YAML: Complete dashboard with dynamic colors for all sensor types</summary>
 
 ```yaml
 type: vertical-stack
@@ -293,6 +311,8 @@ cards:
                           ]]]
 ```
 
+</details>
+
 ## CSS Color Variables
 
 The integration uses Home Assistant's standard CSS variables for theme compatibility:
@@ -331,6 +351,9 @@ Instead of using `icon_color`, read the sensor state and apply your own colors:
 
 **Example: Custom colors for price level**
 
+<details>
+<summary>Show YAML: Price level — 5-color JavaScript mapping</summary>
+
 ```yaml
 type: custom:button-card
 entity: sensor.<home_name>_current_price_level
@@ -351,7 +374,12 @@ styles:
               ]]]
 ```
 
+</details>
+
 **Example: Custom colors for binary sensor**
+
+<details>
+<summary>Show YAML: Binary sensor — on/off color + background highlight</summary>
 
 ```yaml
 type: custom:button-card
@@ -373,7 +401,12 @@ styles:
               ]]]
 ```
 
+</details>
+
 **Example: Custom colors for volatility**
+
+<details>
+<summary>Show YAML: Volatility sensor — 4-level color mapping</summary>
 
 ```yaml
 type: custom:button-card
@@ -393,7 +426,12 @@ styles:
               ]]]
 ```
 
+</details>
+
 **Example: Custom colors for price rating**
+
+<details>
+<summary>Show YAML: Price rating — 3-state color mapping</summary>
 
 ```yaml
 type: custom:button-card
@@ -411,6 +449,8 @@ styles:
                 return 'var(--state-icon-color)';
               ]]]
 ```
+
+</details>
 
 ### Which Approach Should You Use?
 

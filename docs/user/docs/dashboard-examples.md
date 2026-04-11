@@ -42,6 +42,9 @@ cards:
 
 ### Price Level Card
 
+<details>
+<summary>Show YAML: Price level card with color gradients (custom:button-card)</summary>
+
 ```yaml
 type: custom:button-card
 entity: sensor.<home_name>_current_price_level
@@ -60,11 +63,16 @@ styles:
         ]]]
 ```
 
+</details>
+
 ## Lovelace Layouts
 
 ### Compact Mobile View
 
 Optimized for mobile devices:
+
+<details>
+<summary>Show YAML: Compact mobile layout</summary>
 
 ```yaml
 type: vertical-stack
@@ -84,9 +92,14 @@ cards:
         name: Active Now
 ```
 
+</details>
+
 ### Desktop Dashboard
 
 Full-width layout for desktop:
+
+<details>
+<summary>Show YAML: Desktop 3-column grid layout</summary>
 
 ```yaml
 type: grid
@@ -114,9 +127,14 @@ cards:
           - sensor.<home_name>_today_s_highest_price
 ```
 
+</details>
+
 ## Icon Color Integration
 
 Using the `icon_color` attribute for dynamic colors:
+
+<details>
+<summary>Show YAML: Dynamic icon colors with mushroom chips</summary>
 
 ```yaml
 type: custom:mushroom-chips-card
@@ -134,11 +152,16 @@ chips:
     icon_color: red
 ```
 
+</details>
+
 See [Icon Colors](icon-colors.md) for detailed color mapping.
 
 ## Picture Elements Dashboard
 
 Advanced interactive dashboard:
+
+<details>
+<summary>Show YAML: Picture elements interactive dashboard</summary>
 
 ```yaml
 type: picture-elements
@@ -161,9 +184,14 @@ elements:
   # Add more elements...
 ```
 
+</details>
+
 ## Auto-Entities Dynamic Lists
 
 Automatically list all price sensors:
+
+<details>
+<summary>Show YAML: Auto-entities card for all price sensors</summary>
 
 ```yaml
 type: custom:auto-entities
@@ -179,6 +207,8 @@ sort:
   method: state
   numeric: true
 ```
+
+</details>
 
 ---
 
