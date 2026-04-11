@@ -134,7 +134,7 @@ class TibberPricesEntity(CoordinatorEntity[TibberPricesDataUpdateCoordinator]):
                     home_name = f"{home_name}, {city}"
             else:
                 home_name = "Tibber Home"
-        except (KeyError, IndexError, TypeError):
+        except KeyError, IndexError, TypeError:
             return "Tibber Home", None
         else:
             return home_name, home_type

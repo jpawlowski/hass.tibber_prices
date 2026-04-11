@@ -20,7 +20,7 @@ def _hours_to_minutes(state_value: Any) -> int | None:
 
     try:
         return round(float(state_value) * 60)
-    except (TypeError, ValueError):
+    except TypeError, ValueError:
         return None
 
 

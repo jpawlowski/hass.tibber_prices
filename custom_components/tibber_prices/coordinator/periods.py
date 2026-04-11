@@ -205,7 +205,7 @@ class TibberPricesPeriodCalculator:
         # Internal calculations always use positive values with reverse_sort flag
         try:
             flex = abs(float(flex)) / 100  # Always positive internally
-        except (TypeError, ValueError):
+        except TypeError, ValueError:
             flex = (
                 abs(_const.DEFAULT_BEST_PRICE_FLEX) / 100
                 if not reverse_sort

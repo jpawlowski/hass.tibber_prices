@@ -14,9 +14,12 @@ The calculator provides smart defaults:
     - No more periods → 0 for numeric values, None for timestamps
 """
 
-from datetime import datetime
+from typing import TYPE_CHECKING
 
 from .base import TibberPricesBaseCalculator  # Constants
+
+if TYPE_CHECKING:
+    from datetime import datetime
 
 PROGRESS_GRACE_PERIOD_SECONDS = 60  # Show 100% for 1 minute after period ends
 

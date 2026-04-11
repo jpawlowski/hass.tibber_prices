@@ -211,7 +211,7 @@ def _check_custom_cards_installed(hass: Any) -> dict[str, bool]:
                         installed_cards["apexcharts-card"] = True
                     if "config-template-card" in url:
                         installed_cards["config-template-card"] = True
-        except (AttributeError, TypeError):
+        except AttributeError, TypeError:
             # Fallback: can't determine, assume not installed
             pass
 

@@ -13,7 +13,6 @@ Caching strategy:
 - Current trend + next change: Cached centrally for 60s to avoid duplicate calculations
 """
 
-from datetime import datetime
 from typing import TYPE_CHECKING, Any, ClassVar
 
 from custom_components.tibber_prices.const import get_display_unit_factor
@@ -27,6 +26,8 @@ from custom_components.tibber_prices.utils.price import (
 from .base import TibberPricesBaseCalculator
 
 if TYPE_CHECKING:
+    from datetime import datetime
+
     from custom_components.tibber_prices.coordinator import (
         TibberPricesDataUpdateCoordinator,
     )

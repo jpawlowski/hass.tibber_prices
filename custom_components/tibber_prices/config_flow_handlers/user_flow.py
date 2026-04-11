@@ -458,7 +458,7 @@ class TibberPricesConfigFlowHandler(ConfigFlow, domain=DOMAIN):
                 valid_to_dt = datetime.fromisoformat(valid_to)
                 if valid_to_dt < datetime.now(valid_to_dt.tzinfo):
                     return "expired"
-            except (ValueError, AttributeError):
+            except ValueError, AttributeError:
                 pass  # If parsing fails, continue with other checks
 
         # Check validFrom (contract start date)
@@ -468,7 +468,7 @@ class TibberPricesConfigFlowHandler(ConfigFlow, domain=DOMAIN):
                 valid_from_dt = datetime.fromisoformat(valid_from)
                 if valid_from_dt > datetime.now(valid_from_dt.tzinfo):
                     return "future"
-            except (ValueError, AttributeError):
+            except ValueError, AttributeError:
                 pass  # If parsing fails, assume active
 
         return "active"
