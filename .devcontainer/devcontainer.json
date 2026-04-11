@@ -136,9 +136,20 @@
         },
         "ghcr.io/devcontainers-extra/features/apt-packages:1": {
             "packages": [
+                "bat",
+                "eza",
+                "fd-find",
                 "ffmpeg",
+                "fzf",
+                "git-delta",
+                "hyperfine",
+                "httpie",
+                "ipython3",
+                "jq",
                 "libturbojpeg0",
-                "libpcap-dev"
+                "libpcap-dev",
+                "ripgrep",
+                "yq"
             ]
         }
     }

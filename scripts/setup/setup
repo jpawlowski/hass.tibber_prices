@@ -47,6 +47,24 @@ fi
 
 "$SCRIPT_DIR/bootstrap"
 
+# Setup Debian compatibility symlinks for common CLI tool names.
+mkdir -p "$HOME/.local/bin"
+
+# Debian package fd-find provides `fdfind`, but most workflows expect `fd`.
+if command -v fdfind >/dev/null 2>&1; then
+    ln -sf "$(command -v fdfind)" "$HOME/.local/bin/fd"
+fi
+
+# Debian package bat provides `batcat`, but most workflows expect `bat`.
+if command -v batcat >/dev/null 2>&1; then
+    ln -sf "$(command -v batcat)" "$HOME/.local/bin/bat"
+fi
+
+# Ensure user-local bin directory is available in interactive shells.
+if ! grep -q '\$HOME/.local/bin' "$HOME/.zshrc" 2>/dev/null; then
+    printf '\n# Added by scripts/setup/setup\nexport PATH="$HOME/.local/bin:$PATH"\n' >> "$HOME/.zshrc"
+fi
+
 # Install HACS for testing with other custom components
 echo ""
 log_header "Installing HACS in dev environment"

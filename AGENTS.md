@@ -783,6 +783,12 @@ When debugging period calculation issues:
 -   **git-cliff**: Template-based release notes (fast, reliable, installed via cargo in `scripts/setup/setup`)
 -   Manual grep/awk parsing as fallback (always available)
 
+**Agent Productivity CLI Tools (DevContainer):**
+
+-   Expected available tools: `rg`, `fd`, `fzf`, `jq`, `yq`, `bat`, `eza`, `delta`, `hyperfine`, `ipython`, `http`
+-   Debian package notes: `fd-find` provides `fdfind`, `bat` may be `batcat`
+-   Setup creates compatibility symlinks for `fd` and `bat` in `scripts/setup/setup`
+
 **When generating shell commands:**
 
 1. **Prefer development scripts** (they handle .venv automatically)
