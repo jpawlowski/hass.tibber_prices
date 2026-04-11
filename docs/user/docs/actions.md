@@ -303,6 +303,57 @@ data:
 
 ---
 
+### tibber_prices.get_price
+
+**Purpose:** Fetches raw price interval data for any time range. Uses intelligent caching — only intervals not already cached are fetched from the Tibber API.
+
+**Parameters:**
+
+| Parameter | Description | Required |
+|-----------|-------------|----------|
+| `entry_id` | Integration entry ID | Yes |
+| `start_time` | Start of the time range | Yes |
+| `end_time` | End of the time range | Yes |
+
+**Example:**
+
+```yaml
+service: tibber_prices.get_price
+data:
+    entry_id: YOUR_CONFIG_ENTRY_ID
+    start_time: "2025-11-01T00:00:00"
+    end_time: "2025-11-02T00:00:00"
+response_variable: price_data
+```
+
+**Response Format:**
+
+```json
+{
+    "home_id": "abc-123",
+    "start_time": "2025-11-01T00:00:00+01:00",
+    "end_time": "2025-11-02T00:00:00+01:00",
+    "interval_count": 96,
+    "price_info": [
+        {
+            "startsAt": "2025-11-01T00:00:00+01:00",
+            "total": 0.2534,
+            "energy": 0.1218,
+            "tax": 0.1316
+        }
+    ]
+}
+```
+
+**Use cases:**
+- Fetching historical price data for analysis
+- Comparing prices across arbitrary date ranges
+- Building custom charts with historical data
+
+**Note:** Times are automatically converted to your Tibber home's timezone. The interval pool caches previously fetched intervals, so repeated calls for the same range are fast.
+
+---
+
 ## Migration from Chart Data Export Sensor
 
 If you're still using the `sensor.<home_name>_chart_data_export` sensor, consider migrating to the `tibber_prices.get_chartdata` action:

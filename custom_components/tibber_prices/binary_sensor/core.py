@@ -207,11 +207,8 @@ class TibberPricesBinarySensor(TibberPricesEntity, BinarySensorEntity, RestoreEn
         # Get expected intervals for tomorrow (handles DST)
         expected_intervals = self.coordinator.time.get_expected_intervals_for_day(tomorrow_date)
 
-        if interval_count == expected_intervals:
-            return True
-        if interval_count == 0:
-            return False
-        return False
+        # True only when ALL intervals are available (partial = not available)
+        return interval_count == expected_intervals
 
     @property
     def available(self) -> bool:

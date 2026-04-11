@@ -176,6 +176,35 @@ A change from `rising` to `strongly_rising` (same direction) is **not** reported
 
 ---
 
+## Next Price Trend Change In (Countdown)
+
+**Entity ID:** `sensor.<home_name>_next_price_trend_change_in`
+
+A **countdown timer** companion to the Next Price Trend Change sensor above. Instead of a timestamp, it shows **how many minutes** remain until the trend changes direction.
+
+**State:** Duration in minutes until the next trend change (displayed in hours via HA unit conversion). Unavailable if no change is predicted.
+
+**Use cases:**
+- Dashboard countdown: "Trend changes in 1.5 h"
+- Automation trigger: "If trend change is less than 15 minutes away, prepare for price direction change"
+
+**Example automation:**
+
+```yaml
+trigger:
+  - platform: numeric_state
+    entity_id: sensor.<home_name>_next_price_trend_change_in
+    below: 0.25  # 15 minutes (displayed in hours)
+action:
+  - service: notify.mobile_app
+    data:
+      message: "Price trend is about to change direction!"
+```
+
+**Tip:** Use this sensor for "HOW LONG" and the Next Price Trend Change sensor (timestamp) for "WHEN".
+
+---
+
 ## How to Use Trend Sensors for Decisions
 
 :::danger Common Misconception — Don't "Wait for Stable"!

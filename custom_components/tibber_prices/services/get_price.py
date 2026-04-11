@@ -1,17 +1,12 @@
 """
 Service handler for get_price service.
 
-This service provides direct access to the interval pool for testing and development
-purposes. It uses intelligent caching to minimize API calls by fetching only missing
-intervals from the API.
+This service fetches raw price interval data for any time range using the
+interval pool's intelligent caching. Only intervals not already cached are
+fetched from the Tibber API.
 
 Functions:
     handle_get_price: Service handler for fetching price data
-
-Used for:
-    - Testing interval pool caching logic
-    - Development and debugging of historical data queries
-    - Verifying gap detection and cache hit/miss behavior
 
 """
 

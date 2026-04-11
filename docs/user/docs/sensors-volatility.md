@@ -39,6 +39,7 @@ All volatility sensors provide these attributes:
 
 | Attribute | Description | Example |
 |---|---|---|
+| `price_volatility` | Volatility level (language-independent, always English) | `"moderate"` |
 | `price_coefficient_variation_%` | The calculated Coefficient of Variation | `23.5` |
 | `price_spread` | The difference between the highest and lowest price | `12.3` |
 | `price_min` | The lowest price in the period | `10.2` |

@@ -183,9 +183,7 @@ class TibberPricesTimingCalculator(TibberPricesBaseCalculator):
             return future_periods[1]
 
         # Default: return first future period
-        return future_periods[0] if future_periods else None
-
-        return None
+        return future_periods[0]
 
     def _calc_remaining_minutes(self, period: dict) -> int:
         """

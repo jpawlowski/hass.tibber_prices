@@ -91,7 +91,7 @@ Configure the Coefficient of Variation (CV) boundaries:
 Configure detection of favorable price windows. Three collapsible sections:
 
 **Period Settings:**
-- Minimum period length (default: 30 min)
+- Minimum period length (default: 60 min)
 - Maximum price level to include (default: CHEAP)
 - Gap tolerance: how many expensive intervals to bridge (default: 1)
 
@@ -131,7 +131,7 @@ Information page for the legacy chart data export sensor. For new setups, use th
 
 ### Average Sensor Display Settings
 
-**Location:** Settings → Devices & Services → Tibber Prices → Configure → Step 6
+**Location:** Settings → Devices & Services → Tibber Prices → Configure → **General Settings**
 
 The integration allows you to choose how average price sensors display their values. This setting affects all average sensors (daily, 24h rolling, hourly smoothed, and future forecasts).
 
