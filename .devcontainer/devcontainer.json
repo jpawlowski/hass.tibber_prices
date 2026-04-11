@@ -134,6 +134,9 @@
             "version": "latest",
             "profile": "minimal"
         },
+        "ghcr.io/devcontainer-community/devcontainer-features/yq:1": {
+            "version": "latest"
+        },
         "ghcr.io/devcontainers-extra/features/apt-packages:1": {
             "packages": [
                 "bat",
@@ -142,14 +145,21 @@
                 "ffmpeg",
                 "fzf",
                 "git-delta",
-                "hyperfine",
                 "httpie",
+                "hyperfine",
                 "ipython3",
+                "jo",
                 "jq",
-                "libturbojpeg0",
                 "libpcap-dev",
+                "libturbojpeg0",
+                "miller",
+                "moreutils",
                 "ripgrep",
-                "yq"
+                "shellcheck",
+                "shfmt",
+                "sqlite3",
+                "tree",
+                "yamllint"
             ]
         }
     }

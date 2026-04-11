@@ -50,15 +50,27 @@ fi
 # Setup Debian compatibility symlinks for common CLI tool names.
 mkdir -p "$HOME/.local/bin"
 
-# Debian package fd-find provides `fdfind`, but most workflows expect `fd`.
-if command -v fdfind >/dev/null 2>&1; then
-    ln -sf "$(command -v fdfind)" "$HOME/.local/bin/fd"
-fi
+# Generalized function to create command aliases for Debian compatibility
+ensure_command_alias() {
+    local expected_cmd="$1"
+    local actual_cmd="$2"
 
-# Debian package bat provides `batcat`, but most workflows expect `bat`.
-if command -v batcat >/dev/null 2>&1; then
-    ln -sf "$(command -v batcat)" "$HOME/.local/bin/bat"
-fi
+    if command -v "$actual_cmd" >/dev/null 2>&1; then
+        actual_path="$(command -v "$actual_cmd")"
+        ln -sf "$actual_path" "$HOME/.local/bin/$expected_cmd" 2>/dev/null || true
+    fi
+}
+
+# Create command aliases for Debian compatibility
+# Debian package names differ from expected spellings
+ensure_command_alias "bat" "batcat"
+ensure_command_alias "fd" "fdfind"
+ensure_command_alias "fd-find" "fdfind"
+ensure_command_alias "delta" "git-delta"
+ensure_command_alias "http" "httpie"
+ensure_command_alias "ipython" "ipython3"
+ensure_command_alias "mlr" "miller"
+ensure_command_alias "rg" "ripgrep"
 
 # Ensure user-local bin directory is available in interactive shells.
 if ! grep -q '\$HOME/.local/bin' "$HOME/.zshrc" 2>/dev/null; then

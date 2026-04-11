@@ -785,9 +785,11 @@ When debugging period calculation issues:
 
 **Agent Productivity CLI Tools (DevContainer):**
 
--   Expected available tools: `rg`, `fd`, `fzf`, `jq`, `yq`, `bat`, `eza`, `delta`, `hyperfine`, `ipython`, `http`
--   Debian package notes: `fd-find` provides `fdfind`, `bat` may be `batcat`
--   Setup creates compatibility symlinks for `fd` and `bat` in `scripts/setup/setup`
+The devcontainer provides common agent-facing CLI tools: `bat`, `delta`/`git-delta`, `eza`, `fd`/`fdfind`, `fzf`, `http`/`httpie`, `hyperfine`, `ipython`, `jq`, `jo`, `mlr`/`miller`, `rg`/`ripgrep`, `shellcheck`, `shfmt`, `sponge`, `sqlite3`, `tree`, `yq`, and `yamllint`. Prefer these explicit container tools over assuming a VS Code extension exposes an equivalent CLI on `PATH`.
+
+**CLI Compatibility Notes:**
+
+Some commands are available via compatibility aliases because Debian package names differ from what agents often expect. Prefer these stable spellings: `bat`, `fd`, `git-delta`, `http`, `ipython`, `miller`, and `ripgrep`. `yq` is installed as the Mike Farah variant, so standard `yq eval`/`yq e` syntax is expected. Setup creates compatibility symlinks automatically in `scripts/setup/setup`.
 
 **When generating shell commands:**
 
