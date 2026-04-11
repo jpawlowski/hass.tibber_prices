@@ -6,7 +6,7 @@ You can still call them from automations, scripts, and dashboards the same way a
 
 ## Finding Your Entry ID
 
-Every action requires an `entry_id` parameter that tells Home Assistant which Tibber home (integration instance) to use. If you only have one home, there is still exactly one entry ID — you just need to know where to find it.
+Most actions accept an optional `entry_id` parameter that tells Home Assistant which Tibber home (integration instance) to use. **If you only have one home configured, you can omit `entry_id` entirely** — the integration auto-selects your only entry. If you have multiple homes, you need to specify which one.
 
 ### In the Action UI — no lookup needed
 
@@ -29,6 +29,22 @@ If you have configured more than one Tibber home, each home has its own entry ID
 :::
 
 ## Available Actions
+
+### Scheduling Services
+
+Find the cheapest (or most expensive) time windows for your appliances:
+
+| Action | Description |
+|--------|-------------|
+| `find_cheapest_block` | Cheapest contiguous window (dishwasher, dryer) |
+| `find_cheapest_hours` | Cheapest N hours, non-contiguous OK (EV, battery) |
+| `find_cheapest_schedule` | Multiple appliances, no overlap |
+| `find_most_expensive_block` | Most expensive contiguous window (peak avoidance) |
+| `find_most_expensive_hours` | Most expensive N hours (battery discharge) |
+
+**→ See [Scheduling Services](scheduling-services.md) for full documentation, parameters, response formats, and automation examples.**
+
+### Data & Chart Services
 
 ### tibber_prices.get_chartdata
 
@@ -76,7 +92,7 @@ response_variable: chart_data
 
 | Parameter        | Description                                 | Default                 |
 | ---------------- | ------------------------------------------- | ----------------------- |
-| `entry_id`       | Integration entry ID (required)             | -                       |
+| `entry_id`       | Integration entry ID (optional — auto-selects if only one home) | Auto |
 | `day`            | Days to include: yesterday, today, tomorrow | `["today", "tomorrow"]` |
 | `output_format`  | `array_of_objects` or `array_of_arrays`     | `array_of_objects`      |
 | `resolution`     | `interval` (15-min) or `hourly`             | `interval`              |

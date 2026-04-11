@@ -7,6 +7,7 @@
 -   [Price-Based Automations](#price-based-automations)
 -   [Volatility-Aware Automations](#volatility-aware-automations)
 -   [Best Hour Detection](#best-hour-detection)
+-   [Scheduling Services](#scheduling-services)
 -   [Charts & Visualizations](#charts--visualizations)
 
 ---
@@ -499,6 +500,12 @@ automation:
 ```
 
 </details>
+
+---
+
+## Scheduling Services
+
+> **Looking for service-based scheduling?** The **[Scheduling Services Guide](scheduling-services.md)** covers `find_cheapest_block`, `find_cheapest_hours`, `find_cheapest_schedule`, and their "most expensive" counterparts — ideal for automations that need to find optimal time windows dynamically (e.g., EV charging, heat pump scheduling, appliance timing).
 
 ---
 

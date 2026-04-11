@@ -1,0 +1,678 @@
+# Scheduling Services
+
+Find the cheapest (or most expensive) time windows for your appliances — automatically. These actions analyze real Tibber price data and return optimal scheduling recommendations.
+
+:::tip Entity ID tip
+`<home_name>` is a placeholder for your Tibber home display name in Home Assistant. Entity IDs are derived from the displayed name (localized), so the exact slug may differ. **Can't find a sensor?** Use the **[Entity Reference (All Languages)](sensor-reference.md)** to search by name in your language.
+:::
+
+## Overview
+
+| Action | What It Does | Best For |
+|--------|-------------|----------|
+| [`find_cheapest_block`](#find-cheapest-block) | Finds the cheapest **contiguous** time window | Dishwasher, washing machine, dryer |
+| [`find_cheapest_hours`](#find-cheapest-hours) | Finds the cheapest intervals (can be **non-contiguous**) | EV charging, battery storage, water heater |
+| [`find_cheapest_schedule`](#find-cheapest-schedule) | Schedules **multiple appliances** without overlap | Dishwasher + washing machine + dryer overnight |
+| [`find_most_expensive_block`](#find-most-expensive-block) | Finds the most expensive contiguous window | Avoid running appliances during peak prices |
+| [`find_most_expensive_hours`](#find-most-expensive-hours) | Finds the most expensive intervals | Battery discharge optimization, peak avoidance |
+
+## Choosing the Right Action
+
+```mermaid
+flowchart TD
+    A["How many appliances?"] -->|One| B["Must it run uninterrupted?"]
+    A -->|Multiple, no overlap| F["find_cheapest_schedule"]
+    B -->|"Yes (dishwasher, dryer)"| C["find_cheapest_block"]
+    B -->|"No (EV, battery, water heater)"| D["find_cheapest_hours"]
+    C --> E["Need the opposite?<br/>→ find_most_expensive_block"]
+    D --> G["Need the opposite?<br/>→ find_most_expensive_hours"]
+```
+
+**Rules of thumb:**
+
+- **Dishwasher, washing machine, dryer** → `find_cheapest_block` (must run X hours straight)
+- **EV charging, battery, pool pump** → `find_cheapest_hours` (total runtime matters, not continuity)
+- **Multiple appliances sharing a circuit** → `find_cheapest_schedule` (prevents overlap + manages gaps)
+- **"When should I NOT run this?"** → `find_most_expensive_block` or `find_most_expensive_hours`
+
+---
+
+## Search Range
+
+All scheduling actions share the same flexible search range options. You can define _when_ to look for cheap prices in several ways:
+
+### Quick Scopes
+
+The simplest approach — use `search_scope` for common time ranges:
+
+| Scope | Start | End |
+|-------|-------|-----|
+| `today` | 00:00 today | 00:00 tomorrow |
+| `tomorrow` | 00:00 tomorrow | 00:00 day after tomorrow |
+| `remaining_today` | Now | 00:00 tomorrow |
+| `next_24h` | Now | Now + 24 hours |
+| `next_48h` | Now | Now + 48 hours |
+
+```yaml
+service: tibber_prices.find_cheapest_block
+data:
+  duration: "02:00:00"
+  search_scope: tomorrow
+```
+
+### Explicit Start/End
+
+For full control, specify exact datetime values:
+
+```yaml
+service: tibber_prices.find_cheapest_block
+data:
+  duration: "02:00:00"
+  search_start: "2026-04-11T22:00:00+02:00"
+  search_end: "2026-04-12T06:00:00+02:00"
+```
+
+### Time-of-Day with Day Offset
+
+Schedule relative to today using time + day offset:
+
+```yaml
+service: tibber_prices.find_cheapest_block
+data:
+  duration: "02:00:00"
+  search_start_time: "22:00:00"       # 22:00 today
+  search_end_time: "06:00:00"
+  search_end_day_offset: 1            # 06:00 tomorrow
+```
+
+### Minute Offsets from Now
+
+For relative searches:
+
+```yaml
+service: tibber_prices.find_cheapest_block
+data:
+  duration: "01:30:00"
+  search_start_offset_minutes: 0      # Starting now
+  search_end_offset_minutes: 480      # Next 8 hours
+```
+
+### Default Behavior
+
+If you omit all range parameters, the search covers **now until the end of tomorrow** — the maximum window with available price data.
+
+:::caution Don't mix scopes with explicit ranges
+`search_scope` cannot be combined with explicit range parameters (`search_start`, `search_end`, etc.). Use one approach or the other.
+:::
+
+---
+
+## Common Parameters
+
+These parameters are available across all scheduling actions:
+
+| Parameter | Description | Default |
+|-----------|-------------|---------|
+| `entry_id` | Integration entry ID. Auto-selects if you only have one home. | Auto |
+| `include_current_interval` | Include the currently running 15-minute interval in the search? | `true` |
+| `min_price_level` | Only consider intervals at or above this Tibber level | — |
+| `max_price_level` | Only consider intervals at or below this Tibber level | — |
+| `power_profile` | Watt values per 15-min interval for accurate cost estimates | — |
+| `use_base_unit` | Use base currency (EUR, NOK) instead of subunit (ct, øre) | `false` |
+
+### Price Level Filtering
+
+Restrict the search to specific Tibber price levels. Levels from lowest to highest: `very_cheap`, `cheap`, `normal`, `expensive`, `very_expensive`.
+
+```yaml
+# Only search within cheap or very cheap intervals
+service: tibber_prices.find_cheapest_block
+data:
+  duration: "02:00:00"
+  search_scope: next_24h
+  max_price_level: cheap    # Exclude normal, expensive, very_expensive
+```
+
+### Power Profile
+
+By default, cost estimates assume a constant 1 kW load. If your appliance has variable power draw, provide a power profile — **one watt value per 15-minute interval**:
+
+```yaml
+# Washing machine: high power for heating, then less
+service: tibber_prices.find_cheapest_block
+data:
+  duration: "01:30:00"     # 6 intervals × 15 min
+  power_profile:
+    - 2200  # Interval 1: Heating water (2.2 kW)
+    - 2200  # Interval 2: Heating continues
+    - 800   # Interval 3: Washing cycle
+    - 800   # Interval 4: Washing cycle
+    - 1500  # Interval 5: Spin cycle
+    - 500   # Interval 6: Final rinse
+```
+
+The service then calculates `estimated_total_cost` using the actual power draw per interval instead of flat 1 kW, and adds `estimated_load_kwh` (total energy consumed) to the response.
+
+:::info Duration and profile must match
+The number of entries in `power_profile` must exactly match the number of 15-minute intervals in `duration`. A 2-hour duration needs 8 entries.
+:::
+
+---
+
+## Find Cheapest Block
+
+Finds the single cheapest **contiguous** time window of a given duration.
+
+**Use when:** Your appliance must run uninterrupted for a fixed time.
+
+### Basic Example
+
+```yaml
+service: tibber_prices.find_cheapest_block
+data:
+  duration: "02:00:00"
+  search_scope: next_24h
+response_variable: result
+```
+
+### Example with All Options
+
+```yaml
+service: tibber_prices.find_cheapest_block
+data:
+  duration: "02:00:00"
+  search_scope: next_24h
+  max_price_level: normal
+  power_profile: [2200, 2200, 800, 800, 1500, 500, 400, 200]
+  include_comparison_details: true
+  include_current_interval: false
+response_variable: result
+```
+
+### Response
+
+```json
+{
+  "home_id": "abc-123",
+  "search_start": "2026-04-11T14:00:00+02:00",
+  "search_end": "2026-04-12T14:00:00+02:00",
+  "duration_minutes_requested": 120,
+  "duration_minutes": 120,
+  "currency": "EUR",
+  "price_unit": "ct/kWh",
+  "window_found": true,
+  "window": {
+    "start": "2026-04-12T02:00:00+02:00",
+    "end": "2026-04-12T04:00:00+02:00",
+    "duration_minutes": 120,
+    "interval_count": 8,
+    "price_mean": 14.25,
+    "price_median": 13.90,
+    "price_min": 12.00,
+    "price_max": 16.80,
+    "price_spread": 4.80,
+    "estimated_total_cost": 28.50,
+    "intervals": [
+      {
+        "starts_at": "2026-04-12T02:00:00+02:00",
+        "ends_at": "2026-04-12T02:15:00+02:00",
+        "price": 12.00,
+        "level": "very_cheap",
+        "rating_level": "low"
+      }
+    ]
+  },
+  "price_comparison": {
+    "comparison_price_mean": 32.10,
+    "price_difference": 17.85,
+    "comparison_window_start": "2026-04-11T18:00:00+02:00"
+  }
+}
+```
+
+**Key response fields:**
+
+| Field | Description |
+|-------|-------------|
+| `window_found` | `true` if a window was found, `false` if no intervals match the criteria |
+| `window.start` / `window.end` | When to start and stop the appliance |
+| `window.price_mean` | Average price during the window |
+| `window.estimated_total_cost` | Estimated cost (assumes 1 kW unless `power_profile` provided) |
+| `price_comparison` | How this window compares to the most expensive alternative |
+| `price_comparison.price_difference` | How much cheaper this window is vs. the most expensive option |
+
+### Use in Automations
+
+```yaml
+automation:
+  - alias: "Start dishwasher at cheapest time"
+    trigger:
+      - platform: time
+        at: "20:00:00"
+    action:
+      - service: tibber_prices.find_cheapest_block
+        data:
+          duration: "02:00:00"
+          search_start_time: "20:00:00"
+          search_end_time: "06:00:00"
+          search_end_day_offset: 1
+        response_variable: result
+      - if: "{{ result.window_found }}"
+        then:
+          - service: automation.turn_on
+            target:
+              entity_id: automation.run_dishwasher
+          - delay:
+              hours: "{{ ((result.window.start | as_datetime - now()) .total_seconds() / 3600) | int }}"
+              minutes: "{{ (((result.window.start | as_datetime - now()).total_seconds() % 3600) / 60) | int }}"
+          - service: switch.turn_on
+            target:
+              entity_id: switch.dishwasher_smart_plug
+```
+
+---
+
+## Find Cheapest Hours
+
+Finds the cheapest N minutes of intervals within a search range. Intervals **do not need to be contiguous** — the service picks the cheapest individual 15-minute slots and groups them into segments.
+
+**Use when:** Your device can pause and resume freely (EV charger, battery storage, pool pump).
+
+### Basic Example
+
+```yaml
+service: tibber_prices.find_cheapest_hours
+data:
+  duration: "04:00:00"
+  search_scope: next_24h
+response_variable: result
+```
+
+### With Minimum Segment Duration
+
+Some devices shouldn't cycle on/off too rapidly. Use `min_segment_duration` to ensure each contiguous run is at least a minimum length:
+
+```yaml
+# EV charger: 3 hours total, but each charging session at least 30 min
+service: tibber_prices.find_cheapest_hours
+data:
+  duration: "03:00:00"
+  min_segment_duration: "00:30:00"
+  search_scope: next_24h
+response_variable: result
+```
+
+### Response
+
+```json
+{
+  "home_id": "abc-123",
+  "search_start": "2026-04-11T14:00:00+02:00",
+  "search_end": "2026-04-12T14:00:00+02:00",
+  "total_minutes_requested": 240,
+  "total_minutes": 240,
+  "currency": "EUR",
+  "price_unit": "ct/kWh",
+  "intervals_found": true,
+  "schedule": {
+    "total_minutes": 240,
+    "interval_count": 16,
+    "price_mean": 13.50,
+    "price_median": 13.20,
+    "price_min": 10.80,
+    "price_max": 16.30,
+    "price_spread": 5.50,
+    "estimated_total_cost": 54.00,
+    "segment_count": 3,
+    "segments": [
+      {
+        "start": "2026-04-11T23:00:00+02:00",
+        "end": "2026-04-12T00:30:00+02:00",
+        "duration_minutes": 90,
+        "interval_count": 6,
+        "price_mean": 11.20,
+        "intervals": []
+      },
+      {
+        "start": "2026-04-12T02:00:00+02:00",
+        "end": "2026-04-12T03:15:00+02:00",
+        "duration_minutes": 75,
+        "interval_count": 5,
+        "price_mean": 12.80,
+        "intervals": []
+      },
+      {
+        "start": "2026-04-12T05:00:00+02:00",
+        "end": "2026-04-12T06:15:00+02:00",
+        "duration_minutes": 75,
+        "interval_count": 5,
+        "price_mean": 16.00,
+        "intervals": []
+      }
+    ],
+    "intervals": []
+  },
+  "price_comparison": {
+    "comparison_price_mean": 28.50,
+    "price_difference": 15.00
+  }
+}
+```
+
+**Key response fields:**
+
+| Field | Description |
+|-------|-------------|
+| `intervals_found` | `true` if enough cheap intervals were found |
+| `schedule.segment_count` | How many separate contiguous runs the schedule has |
+| `schedule.segments[]` | Each continuous "on" period with its own start/end and price stats |
+| `schedule.intervals[]` | All selected intervals in chronological order |
+
+---
+
+## Find Cheapest Schedule
+
+Schedules **multiple appliances** within the same search range, ensuring they don't overlap. Each appliance gets its own cheapest contiguous time window.
+
+**Use when:** You have multiple appliances sharing a circuit or you want to avoid running them at the same time (e.g., limited main fuse capacity).
+
+### How It Works
+
+1. Tasks are sorted by duration (longest first — harder to place)
+2. The longest task claims the cheapest contiguous block
+3. Those intervals are marked as **unavailable**
+4. The next task finds the cheapest block in the **remaining** intervals
+5. Optional gap between tasks ensures a pause (e.g., for shared plumbing or circuit recovery)
+
+### Basic Example
+
+```yaml
+service: tibber_prices.find_cheapest_schedule
+data:
+  tasks:
+    - name: dishwasher
+      duration: "02:00:00"
+    - name: washing_machine
+      duration: "01:30:00"
+  search_scope: next_24h
+response_variable: result
+```
+
+### With Gap and Power Profiles
+
+```yaml
+service: tibber_prices.find_cheapest_schedule
+data:
+  tasks:
+    - name: dishwasher
+      duration: "02:00:00"
+      power_profile: [2200, 2200, 800, 800, 1500, 500, 400, 200]
+    - name: washing_machine
+      duration: "01:30:00"
+      power_profile: [2000, 2000, 800, 800, 1200, 500]
+    - name: dryer
+      duration: "01:00:00"
+      power_profile: [2500, 2500, 2000, 1500]
+  gap_minutes: 15
+  search_start_time: "22:00:00"
+  search_end_time: "07:00:00"
+  search_end_day_offset: 1
+response_variable: result
+```
+
+### Response
+
+```json
+{
+  "home_id": "abc-123",
+  "search_start": "2026-04-11T22:00:00+02:00",
+  "search_end": "2026-04-12T07:00:00+02:00",
+  "currency": "EUR",
+  "price_unit": "ct/kWh",
+  "all_tasks_scheduled": true,
+  "unscheduled_tasks": null,
+  "tasks": [
+    {
+      "name": "dishwasher",
+      "start": "2026-04-12T00:00:00+02:00",
+      "end": "2026-04-12T02:00:00+02:00",
+      "duration_minutes_requested": 120,
+      "duration_minutes": 120,
+      "price_mean": 12.30,
+      "price_median": 12.10,
+      "price_min": 10.50,
+      "price_max": 14.20,
+      "price_spread": 3.70,
+      "estimated_total_cost": 24.60,
+      "intervals": []
+    },
+    {
+      "name": "washing_machine",
+      "start": "2026-04-12T02:15:00+02:00",
+      "end": "2026-04-12T03:45:00+02:00",
+      "duration_minutes_requested": 90,
+      "duration_minutes": 90,
+      "price_mean": 13.80,
+      "price_median": 13.50,
+      "price_min": 12.00,
+      "price_max": 16.10,
+      "price_spread": 4.10,
+      "estimated_total_cost": 20.70,
+      "intervals": []
+    },
+    {
+      "name": "dryer",
+      "start": "2026-04-12T04:00:00+02:00",
+      "end": "2026-04-12T05:00:00+02:00",
+      "duration_minutes_requested": 60,
+      "duration_minutes": 60,
+      "price_mean": 14.50,
+      "price_median": 14.30,
+      "price_min": 13.80,
+      "price_max": 15.40,
+      "price_spread": 1.60,
+      "estimated_total_cost": 14.50,
+      "intervals": []
+    }
+  ],
+  "total_estimated_cost": 59.80
+}
+```
+
+**Key response fields:**
+
+| Field | Description |
+|-------|-------------|
+| `all_tasks_scheduled` | `true` if every task found a slot, `false` if some couldn't fit |
+| `unscheduled_tasks` | List of task names that couldn't be placed (or `null` if all succeeded) |
+| `tasks[]` | Each task with its assigned time window and price statistics |
+| `tasks[].start` / `tasks[].end` | When to start and stop each appliance |
+| `total_estimated_cost` | Combined cost across all tasks |
+
+### Why Not Just Call find_cheapest_block Multiple Times?
+
+If you call `find_cheapest_block` separately for each appliance, they might all find the **same** cheap time window. `find_cheapest_schedule` solves this by tracking which intervals are already claimed — each appliance gets its own non-overlapping slot.
+
+### Gap Minutes
+
+Use `gap_minutes` to add a mandatory pause between appliances:
+
+- **Shared plumbing**: 15 min gap between dishwasher and washing machine
+- **Circuit protection**: 30 min gap to let cables cool down
+- **Heat pump compressor**: 15–30 min cool-down between cycles
+
+The gap is rounded up to the nearest 15 minutes (quarter-hour granularity).
+
+---
+
+## Find Most Expensive Block
+
+The opposite of `find_cheapest_block` — finds the most expensive contiguous window.
+
+**Parameters:** Identical to `find_cheapest_block`.
+
+**Response:** Same structure. The `price_comparison` compares against the cheapest block.
+
+```yaml
+service: tibber_prices.find_most_expensive_block
+data:
+  duration: "02:00:00"
+  search_scope: tomorrow
+response_variable: peak
+```
+
+**Use cases:**
+- "When should I definitely NOT run my washing machine?"
+- Schedule battery discharge during peak prices
+- Send notifications before expensive periods start
+
+---
+
+## Find Most Expensive Hours
+
+The opposite of `find_cheapest_hours` — finds the most expensive intervals (non-contiguous).
+
+**Parameters:** Identical to `find_cheapest_hours` (including `min_segment_duration`).
+
+**Response:** Same structure. The `price_comparison` compares against the cheapest hours.
+
+```yaml
+service: tibber_prices.find_most_expensive_hours
+data:
+  duration: "04:00:00"
+  search_scope: tomorrow
+response_variable: peak
+```
+
+**Use cases:**
+- Battery discharge optimization: sell stored energy during the most expensive 4 hours
+- Demand response: reduce consumption during the most expensive periods
+- Peak avoidance alerts: notify before expensive intervals start
+
+---
+
+## Practical Examples
+
+### Overnight Appliance Scheduling
+
+Schedule dishwasher + washing machine to run overnight at cheapest prices, with a 15-minute gap between them:
+
+```yaml
+automation:
+  - alias: "Schedule overnight appliances"
+    trigger:
+      - platform: time
+        at: "21:00:00"
+    action:
+      - service: tibber_prices.find_cheapest_schedule
+        data:
+          tasks:
+            - name: dishwasher
+              duration: "02:00:00"
+            - name: washing_machine
+              duration: "01:30:00"
+          gap_minutes: 15
+          search_start_time: "22:00:00"
+          search_end_time: "06:00:00"
+          search_end_day_offset: 1
+        response_variable: schedule
+      - if: "{{ schedule.all_tasks_scheduled }}"
+        then:
+          - service: notify.mobile_app
+            data:
+              title: "Appliance Schedule Ready"
+              message: >
+                Dishwasher: {{ schedule.tasks[0].start | as_datetime | as_local }}
+                Washing machine: {{ schedule.tasks[1].start | as_datetime | as_local }}
+                Total cost: {{ schedule.total_estimated_cost | round(2) }} ct
+```
+
+### EV Charging During Cheapest 4 Hours
+
+```yaml
+automation:
+  - alias: "Smart EV charging"
+    trigger:
+      - platform: time
+        at: "18:00:00"
+    condition:
+      - condition: numeric_state
+        entity_id: sensor.ev_battery_level
+        below: 80
+    action:
+      - service: tibber_prices.find_cheapest_hours
+        data:
+          duration: "04:00:00"
+          min_segment_duration: "00:30:00"
+          search_start_time: "18:00:00"
+          search_end_time: "07:00:00"
+          search_end_day_offset: 1
+        response_variable: charging
+      - if: "{{ charging.intervals_found }}"
+        then:
+          - service: notify.mobile_app
+            data:
+              title: "EV Charging Plan"
+              message: >
+                {{ charging.schedule.segment_count }} charging sessions planned.
+                Average price: {{ charging.schedule.price_mean | round(1) }} ct/kWh
+                Savings vs. peak: {{ charging.price_comparison.price_difference | round(1) }} ct/kWh
+
+```
+
+### Peak Price Warning
+
+```yaml
+automation:
+  - alias: "Peak price warning"
+    trigger:
+      - platform: time
+        at: "08:00:00"
+    action:
+      - service: tibber_prices.find_most_expensive_block
+        data:
+          duration: "02:00:00"
+          search_scope: today
+        response_variable: peak
+      - if: "{{ peak.window_found }}"
+        then:
+          - service: notify.mobile_app
+            data:
+              title: "⚡ Expensive Period Today"
+              message: >
+                Avoid high-power appliances between
+                {{ peak.window.start | as_datetime | as_local }}
+                and {{ peak.window.end | as_datetime | as_local }}.
+                Average price: {{ peak.window.price_mean | round(1) }} ct/kWh
+```
+
+---
+
+## Technical Notes
+
+### Duration Rounding
+
+All durations are rounded **up** to the nearest 15 minutes because Tibber price data has quarter-hourly resolution. A 20-minute duration becomes 30 minutes (2 intervals). A 2-hour duration stays at 120 minutes (8 intervals).
+
+### Comparison Details
+
+Add `include_comparison_details: true` to `find_cheapest_block` or `find_cheapest_hours` to get extra fields in the comparison:
+
+```yaml
+service: tibber_prices.find_cheapest_block
+data:
+  duration: "02:00:00"
+  include_comparison_details: true
+```
+
+This adds `comparison_price_min`, `comparison_price_max`, and `comparison_window_end` to the `price_comparison` object.
+
+### Response When No Window Found
+
+If no intervals match your criteria (e.g., the search range is too short, all intervals are filtered out by price level), the response indicates failure:
+
+- `find_cheapest_block`: `"window_found": false, "window": null`
+- `find_cheapest_hours`: `"intervals_found": false, "schedule": null`
+- `find_cheapest_schedule`: `"all_tasks_scheduled": false, "unscheduled_tasks": ["task_name"]`
+
+Always check these fields in your automations before using the results.

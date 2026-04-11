@@ -75,7 +75,7 @@ const sidebars: SidebarsConfig = {
       type: 'category',
       label: '📖 Reference',
       link: { type: 'doc', id: 'sensor-reference' },
-      items: ['sensor-reference', 'actions'],
+      items: ['sensor-reference', 'actions', 'scheduling-services'],
       collapsible: true,
       collapsed: false,
     },
