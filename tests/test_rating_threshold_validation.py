@@ -1,14 +1,17 @@
 """Tests for Bug #6: Rating threshold validation in calculate_rating_level()."""
 
 import logging
+from typing import TYPE_CHECKING
 
 import pytest
-from _pytest.logging import LogCaptureFixture
 
 from custom_components.tibber_prices.utils.price import (
     _apply_rating_gap_tolerance,
     calculate_rating_level,
 )
+
+if TYPE_CHECKING:
+    from _pytest.logging import LogCaptureFixture
 
 
 @pytest.fixture
