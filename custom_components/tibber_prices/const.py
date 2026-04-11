@@ -68,7 +68,6 @@ CONF_RELAXATION_ATTEMPTS_BEST = "relaxation_attempts_best"
 CONF_ENABLE_MIN_PERIODS_PEAK = "enable_min_periods_peak"
 CONF_MIN_PERIODS_PEAK = "min_periods_peak"
 CONF_RELAXATION_ATTEMPTS_PEAK = "relaxation_attempts_peak"
-CONF_CHART_DATA_CONFIG = "chart_data_config"  # YAML config for chart data export
 
 ATTRIBUTION = "Data provided by Tibber"
 
@@ -486,40 +485,6 @@ PRICE_TREND_FALLING = "falling"
 PRICE_TREND_STABLE = "stable"
 PRICE_TREND_RISING = "rising"
 PRICE_TREND_STRONGLY_RISING = "strongly_rising"
-
-# Sensor options (lowercase versions for ENUM device class)
-# NOTE: These constants define the valid enum options, but they are not used directly
-# in sensor/definitions.py due to import timing issues. Instead, the options are defined inline
-# in the SensorEntityDescription objects. Keep these in sync with sensor/definitions.py!
-PRICE_LEVEL_OPTIONS = [
-    PRICE_LEVEL_VERY_CHEAP.lower(),
-    PRICE_LEVEL_CHEAP.lower(),
-    PRICE_LEVEL_NORMAL.lower(),
-    PRICE_LEVEL_EXPENSIVE.lower(),
-    PRICE_LEVEL_VERY_EXPENSIVE.lower(),
-]
-
-PRICE_RATING_OPTIONS = [
-    PRICE_RATING_LOW.lower(),
-    PRICE_RATING_NORMAL.lower(),
-    PRICE_RATING_HIGH.lower(),
-]
-
-VOLATILITY_OPTIONS = [
-    VOLATILITY_LOW.lower(),
-    VOLATILITY_MODERATE.lower(),
-    VOLATILITY_HIGH.lower(),
-    VOLATILITY_VERY_HIGH.lower(),
-]
-
-# Trend options for enum sensors (lowercase versions for ENUM device class)
-PRICE_TREND_OPTIONS = [
-    PRICE_TREND_STRONGLY_FALLING,
-    PRICE_TREND_FALLING,
-    PRICE_TREND_STABLE,
-    PRICE_TREND_RISING,
-    PRICE_TREND_STRONGLY_RISING,
-]
 
 # Valid options for best price maximum level filter
 # Sorted from cheap to expensive: user selects "up to how expensive"
@@ -1017,26 +982,6 @@ def get_price_level_translation(
 
     """
     return get_translation(["sensor", "current_interval_price_level", "price_levels", level], language)
-
-
-async def async_get_home_type_translation(
-    hass: HomeAssistant,
-    home_type: str,
-    language: str = "en",
-) -> str | None:
-    """
-    Get a localized translation for a home type asynchronously.
-
-    Args:
-        hass: HomeAssistant instance
-        home_type: The home type (e.g., APARTMENT, HOUSE, etc.)
-        language: The language code (defaults to English)
-
-    Returns:
-        The localized home type if found, None otherwise
-
-    """
-    return await async_get_translation(hass, ["home_types", home_type], language)
 
 
 def get_home_type_translation(

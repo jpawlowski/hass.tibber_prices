@@ -44,9 +44,6 @@ from .time_service import TibberPricesTimeService
 
 _LOGGER = logging.getLogger(__name__)
 
-# Lifecycle state transition thresholds
-FRESH_TO_CACHED_SECONDS = 300  # 5 minutes
-
 
 def get_connection_state(coordinator: TibberPricesDataUpdateCoordinator) -> bool | None:
     """

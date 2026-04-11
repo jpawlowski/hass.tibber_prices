@@ -95,7 +95,7 @@ INTERVAL_PRICE_SENSORS = (
 
 # NOTE: Enum options are defined inline (not imported from const.py) to avoid
 # import timing issues with Home Assistant's entity platform initialization.
-# Keep in sync with PRICE_LEVEL_OPTIONS in const.py!
+# Keep in sync with PRICE_LEVEL_* constants in const.py!
 INTERVAL_LEVEL_SENSORS = (
     SensorEntityDescription(
         key="current_interval_price_level",
@@ -126,7 +126,7 @@ INTERVAL_LEVEL_SENSORS = (
 
 # NOTE: Enum options are defined inline (not imported from const.py) to avoid
 # import timing issues with Home Assistant's entity platform initialization.
-# Keep in sync with PRICE_RATING_OPTIONS in const.py!
+# Keep in sync with PRICE_RATING_* constants in const.py!
 INTERVAL_RATING_SENSORS = (
     SensorEntityDescription(
         key="current_interval_price_rating",
@@ -184,7 +184,7 @@ ROLLING_HOUR_PRICE_SENSORS = (
 
 # NOTE: Enum options are defined inline (not imported from const.py) to avoid
 # import timing issues with Home Assistant's entity platform initialization.
-# Keep in sync with PRICE_LEVEL_OPTIONS in const.py!
+# Keep in sync with PRICE_LEVEL_* constants in const.py!
 ROLLING_HOUR_LEVEL_SENSORS = (
     SensorEntityDescription(
         key="current_hour_price_level",
@@ -206,7 +206,7 @@ ROLLING_HOUR_LEVEL_SENSORS = (
 
 # NOTE: Enum options are defined inline (not imported from const.py) to avoid
 # import timing issues with Home Assistant's entity platform initialization.
-# Keep in sync with PRICE_RATING_OPTIONS in const.py!
+# Keep in sync with PRICE_RATING_* constants in const.py!
 ROLLING_HOUR_RATING_SENSORS = (
     SensorEntityDescription(
         key="current_hour_price_rating",
@@ -288,7 +288,7 @@ DAILY_STAT_SENSORS = (
 
 # NOTE: Enum options are defined inline (not imported from const.py) to avoid
 # import timing issues with Home Assistant's entity platform initialization.
-# Keep in sync with PRICE_LEVEL_OPTIONS in const.py!
+# Keep in sync with PRICE_LEVEL_* constants in const.py!
 DAILY_LEVEL_SENSORS = (
     SensorEntityDescription(
         key="yesterday_price_level",
@@ -319,7 +319,7 @@ DAILY_LEVEL_SENSORS = (
 
 # NOTE: Enum options are defined inline (not imported from const.py) to avoid
 # import timing issues with Home Assistant's entity platform initialization.
-# Keep in sync with PRICE_RATING_OPTIONS in const.py!
+# Keep in sync with PRICE_RATING_* constants in const.py!
 DAILY_RATING_SENSORS = (
     SensorEntityDescription(
         key="yesterday_price_rating",
@@ -692,7 +692,7 @@ PRICE_TRAJECTORY_SENSORS = (
 # ----------------------------------------------------------------------------
 # NOTE: Enum options are defined inline (not imported from const.py) to avoid
 # import timing issues with Home Assistant's entity platform initialization.
-# Keep in sync with VOLATILITY_OPTIONS in const.py!
+# Keep in sync with VOLATILITY_* constants in const.py!
 
 VOLATILITY_SENSORS = (
     SensorEntityDescription(
