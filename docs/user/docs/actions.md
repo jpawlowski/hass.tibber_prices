@@ -4,9 +4,9 @@ Home Assistant now surfaces these backend service endpoints as **Actions** in th
 
 You can still call them from automations, scripts, and dashboards the same way as before (`service: tibber_prices.get_chartdata`, etc.), just remember that the frontend officially lists them as actions.
 
-## Finding Your Entry ID
+## Finding Your Config Entry ID
 
-Every action requires an `entry_id` parameter that tells Home Assistant which Tibber home (integration instance) to use. If you only have one home, there is still exactly one entry ID — you just need to know where to find it.
+Most actions accept an optional `entry_id` parameter that identifies the **config entry** (= integration instance) of the Tibber home you want to query. **If you only have one home configured, you can omit `entry_id` entirely** — the integration auto-selects your only config entry. If you have multiple homes, you need to specify which one.
 
 ### In the Action UI — no lookup needed
 
@@ -25,10 +25,26 @@ When you write YAML directly (automations, scripts, Lovelace dashboard cards), y
 The ID looks like a long alphanumeric string, for example `01JKPC7AB3EF4GH5IJ6KL7MN8P`.
 
 :::tip Multiple homes?
-If you have configured more than one Tibber home, each home has its own entry ID. Repeat the steps above for each integration card to get the individual IDs.
+If you have configured more than one Tibber home, each home has its own config entry ID. Repeat the steps above for each integration card to get the individual IDs.
 :::
 
 ## Available Actions
+
+### Scheduling Services
+
+Find the cheapest (or most expensive) time windows for your appliances:
+
+| Action | Description |
+|--------|-------------|
+| `find_cheapest_block` | Cheapest contiguous window (dishwasher, dryer) |
+| `find_cheapest_hours` | Cheapest N hours, non-contiguous OK (EV, battery) |
+| `find_cheapest_schedule` | Multiple appliances, no overlap |
+| `find_most_expensive_block` | Most expensive contiguous window (peak avoidance) |
+| `find_most_expensive_hours` | Most expensive N hours (battery discharge) |
+
+**→ See [Scheduling Services](scheduling-services.md) for full documentation, parameters, response formats, and automation examples.**
+
+### Data & Chart Services
 
 ### tibber_prices.get_chartdata
 
@@ -76,7 +92,7 @@ response_variable: chart_data
 
 | Parameter        | Description                                 | Default                 |
 | ---------------- | ------------------------------------------- | ----------------------- |
-| `entry_id`       | Integration entry ID (required)             | -                       |
+| `entry_id`       | Config entry ID (optional — auto-selects if only one home) | Auto |
 | `day`            | Days to include: yesterday, today, tomorrow | `["today", "tomorrow"]` |
 | `output_format`  | `array_of_objects` or `array_of_arrays`     | `array_of_objects`      |
 | `resolution`     | `interval` (15-min) or `hourly`             | `interval`              |
@@ -311,7 +327,7 @@ data:
 
 | Parameter | Description | Required |
 |-----------|-------------|----------|
-| `entry_id` | Integration entry ID | Yes |
+| `entry_id` | Config entry ID | Yes |
 | `start_time` | Start of the time range | Yes |
 | `end_time` | End of the time range | Yes |
 
