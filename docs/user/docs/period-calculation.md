@@ -838,8 +838,3 @@ The Tibber API provides price levels for each 15-minute interval:
 -   `NORMAL` - Around average
 -   `EXPENSIVE` - Above average
 -   `VERY_EXPENSIVE` - Significantly above average
-
----
-
-**Last updated:** November 20, 2025
-**Integration version:** 2.0+
