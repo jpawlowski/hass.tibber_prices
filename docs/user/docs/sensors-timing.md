@@ -39,6 +39,9 @@ For each period type (Best Price and Peak Price):
 
 ### Show Countdown to Next Cheap Window
 
+<details>
+<summary>Show YAML: Countdown to Next Cheap Window</summary>
+
 ```yaml
 type: custom:mushroom-entity-card
 entity: sensor.<home_name>_best_price_next_in_minutes
@@ -46,10 +49,12 @@ name: Next Cheap Window
 icon: mdi:clock-fast
 ```
 
+</details>
+
 ### Display Period Progress Bar
 
 <details>
-<summary>Show YAML: Bar card for period progress</summary>
+<summary>Show YAML: Display Period Progress Bar</summary>
 
 ```yaml
 type: custom:bar-card
@@ -74,7 +79,7 @@ severity:
 ### Notify When Period Is Almost Over
 
 <details>
-<summary>Show YAML: Automation — notify when best price period is ending</summary>
+<summary>Show YAML: Period Ending Notification</summary>
 
 ```yaml
 automation:

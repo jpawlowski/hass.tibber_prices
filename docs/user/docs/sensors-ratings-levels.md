@@ -33,9 +33,14 @@ Rating sensors classify prices relative to the **trailing 24-hour average**, ans
 
 The integration calculates a **percentage difference** between the current price and the trailing 24-hour average:
 
+<details>
+<summary>Show formula: How Ratings Work</summary>
+
 ```
 difference = ((current_price - trailing_avg) / abs(trailing_avg)) × 100%
 ```
+
+</details>
 
 This percentage is then classified:
 
@@ -88,6 +93,9 @@ stateDiagram-v2
 
 **Best Practice:** Always use the `rating_level` attribute (lowercase English) instead of the sensor state (which is translated to your HA language):
 
+<details>
+<summary>Show YAML: Usage in Automations</summary>
+
 ```yaml
 # ✅ Correct — language-independent
 condition:
@@ -101,6 +109,8 @@ condition:
       entity_id: sensor.<home_name>_current_price_rating
       state: "Low"  # "Niedrig" in German, "Lav" in Norwegian...
 ```
+
+</details>
 
 ### Configuration
 

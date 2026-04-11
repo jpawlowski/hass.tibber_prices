@@ -41,6 +41,9 @@ The integration can generate 4 different chart modes, each optimized for specifi
 **Dependencies:** ApexCharts Card only
 
 **Generate:**
+<details>
+<summary>Show YAML: Today's Prices (Static)</summary>
+
 ```yaml
 service: tibber_prices.get_apexcharts_yaml
 data:
@@ -49,6 +52,8 @@ data:
     level_type: rating_level
     highlight_best_price: true
 ```
+
+</details>
 
 **Screenshot:**
 
@@ -72,7 +77,7 @@ data:
 
 **Generate:**
 <details>
-<summary>Show YAML example (generate rolling 48h window)</summary>
+<summary>Show YAML: Rolling 48h Window</summary>
 
 ```yaml
 service: tibber_prices.get_apexcharts_yaml
@@ -111,7 +116,7 @@ data:
 
 **Generate:**
 <details>
-<summary>Show YAML example (generate rolling auto-zoom)</summary>
+<summary>Show YAML: Rolling Auto-Zoom</summary>
 
 ```yaml
 service: tibber_prices.get_apexcharts_yaml
@@ -177,6 +182,9 @@ Based on **absolute price ranges** (calculated from daily min/max):
 Rolling window modes (2 & 3) automatically integrate with the `chart_metadata` sensor for optimal visualization:
 
 **Without chart_metadata sensor (disabled):**
+<details>
+<summary>Show chart illustration: Without Chart Metadata</summary>
+
 ```
 ┌─────────────────────┐
 │                     │ ← Lots of empty space
@@ -187,7 +195,12 @@ Rolling window modes (2 & 3) automatically integrate with the `chart_metadata` s
 0              100 ct
 ```
 
+</details>
+
 **With chart_metadata sensor (enabled):**
+<details>
+<summary>Show chart illustration: With Chart Metadata</summary>
+
 ```
 ┌─────────────────────┐
 │      ___            │ ← Y-axis fitted to data
@@ -196,6 +209,8 @@ Rolling window modes (2 & 3) automatically integrate with the `chart_metadata` s
 ├─────────────────────┤
 18             28 ct   ← Optimal range
 ```
+
+</details>
 
 **Requirements:**
 
@@ -213,6 +228,9 @@ Rolling window modes (2 & 3) automatically integrate with the `chart_metadata` s
 When `highlight_best_price: true`, vertical bands overlay the chart showing detected best price periods:
 
 **Example:**
+<details>
+<summary>Show chart illustration: Best Price Period Highlights</summary>
+
 ```
 Price
   │
@@ -225,6 +243,8 @@ Price
   └─────────────────────── Time
        06:00  12:00  18:00
 ```
+
+</details>
 
 **Features:**
 - Automatic detection based on your configuration (see [Period Calculation Guide](period-calculation.md))
@@ -239,18 +259,28 @@ Price
 ### Required for All Modes
 
 - **[ApexCharts Card](https://github.com/RomRider/apexcharts-card)**: Core visualization library
+<details>
+<summary>Show shell command: Prerequisite for All Modes</summary>
+
   ```bash
   # Install via HACS
   HACS → Frontend → Search "ApexCharts Card" → Download
   ```
 
+</details>
+
 ### Required for Rolling Window Modes Only
 
 - **[Config Template Card](https://github.com/iantrich/config-template-card)**: Enables dynamic configuration
+<details>
+<summary>Show shell command: Rolling Window Prerequisite</summary>
+
   ```bash
   # Install via HACS
   HACS → Frontend → Search "Config Template Card" → Download
   ```
+
+</details>
 
 **Note:** Fixed day views (`today`, `tomorrow`) work with ApexCharts Card alone!
 
@@ -263,7 +293,7 @@ Price
 Edit the `colors` array in the generated YAML:
 
 <details>
-<summary>Show YAML example (custom color palette)</summary>
+<summary>Show YAML: Custom Color Palette</summary>
 
 ```yaml
 apex_config:
@@ -280,7 +310,7 @@ apex_config:
 Add to the card configuration:
 
 <details>
-<summary>Show YAML example (custom chart height)</summary>
+<summary>Show YAML: Custom Chart Height</summary>
 
 ```yaml
 type: custom:apexcharts-card
@@ -300,7 +330,7 @@ apex_config:
 Wrap in a vertical stack for dashboard integration:
 
 <details>
-<summary>Show YAML example (vertical stack integration)</summary>
+<summary>Show YAML: Vertical Stack Integration</summary>
 
 ```yaml
 type: vertical-stack

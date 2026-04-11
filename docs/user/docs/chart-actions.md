@@ -24,6 +24,9 @@ Actions for generating chart data and ApexCharts configurations from your Tibber
 
 **Basic Example:**
 
+<details>
+<summary>Show YAML: Chart Data Action</summary>
+
 ```yaml
 service: tibber_prices.get_chartdata
 data:
@@ -33,7 +36,12 @@ data:
 response_variable: chart_data
 ```
 
+</details>
+
 **Response Format:**
+
+<details>
+<summary>Show JSON: Chart Data Response</summary>
 
 ```json
 {
@@ -49,6 +57,8 @@ response_variable: chart_data
     ]
 }
 ```
+
+</details>
 
 **Common Parameters:**
 
@@ -66,7 +76,7 @@ response_variable: chart_data
 Omit the `day` parameter to get a dynamic 48-hour rolling window that automatically adapts to data availability:
 
 <details>
-<summary>Show YAML example (rolling window mode)</summary>
+<summary>Show YAML: Rolling Window Mode</summary>
 
 ```yaml
 service: tibber_prices.get_chartdata
@@ -90,7 +100,7 @@ This is useful for charts that should always show a 48-hour window without manua
 Get best price periods as summaries instead of intervals:
 
 <details>
-<summary>Show YAML example (period filter)</summary>
+<summary>Show YAML: Period Filter</summary>
 
 ```yaml
 service: tibber_prices.get_chartdata
@@ -108,7 +118,7 @@ response_variable: periods
 **Advanced Filtering:**
 
 <details>
-<summary>Show YAML example (advanced filtering)</summary>
+<summary>Show YAML: Advanced Filtering</summary>
 
 ```yaml
 service: tibber_prices.get_chartdata
@@ -139,7 +149,7 @@ You can include the raw energy price (spot price) and/or tax component in chart 
 **Example: Chart with price composition**
 
 <details>
-<summary>Show YAML example (include energy and tax fields)</summary>
+<summary>Show YAML: Energy and Tax Fields</summary>
 
 ```yaml
 service: tibber_prices.get_chartdata
@@ -155,6 +165,9 @@ response_variable: chart_data
 
 Returns data points like:
 
+<details>
+<summary>Show JSON: Returns data points like</summary>
+
 ```json
 {
     "start_time": "2025-11-17T14:00:00+01:00",
@@ -163,6 +176,8 @@ Returns data points like:
     "tax": 13.16
 }
 ```
+
+</details>
 
 **Use case — Solar feed-in chart:** Overlay the energy price (what you earn by exporting) alongside the total price to visualize the best export windows. See [Energy & Tax Attributes](sensors-energy-tax.md) for more use cases.
 
@@ -194,6 +209,9 @@ Returns data points like:
 
 **Quick Example:**
 
+<details>
+<summary>Show YAML: Quick Example</summary>
+
 ```yaml
 service: tibber_prices.get_apexcharts_yaml
 data:
@@ -203,6 +221,8 @@ data:
     highlight_best_price: true  # Show best price period overlays
 response_variable: apexcharts_config
 ```
+
+</details>
 
 **Day Parameter Options:**
 
@@ -224,7 +244,7 @@ Rolling window configurations automatically integrate with the `chart_metadata` 
 **Example: Today's Prices (Static View)**
 
 <details>
-<summary>Show YAML example (today, static view)</summary>
+<summary>Show YAML: Today Static View</summary>
 
 ```yaml
 service: tibber_prices.get_apexcharts_yaml
@@ -244,7 +264,7 @@ type: custom:apexcharts-card
 **Example: Rolling 48h Window (Dynamic View)**
 
 <details>
-<summary>Show YAML example (rolling 48h dynamic view)</summary>
+<summary>Show YAML: Rolling 48h Dynamic View</summary>
 
 ```yaml
 service: tibber_prices.get_apexcharts_yaml

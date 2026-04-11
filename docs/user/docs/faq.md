@@ -118,6 +118,9 @@ If you see unexpected units, check your configuration in the integration options
 
 ### How do I run dishwasher during cheap period?
 
+<details>
+<summary>Show YAML: Dishwasher During Cheap Period</summary>
+
 ```yaml
 automation:
   - alias: "Dishwasher during Best Price"
@@ -134,11 +137,16 @@ automation:
           entity_id: switch.dishwasher
 ```
 
+</details>
+
 See [Automation Examples](automation-examples.md) for more recipes.
 
 ### Can I avoid peak prices automatically?
 
 Yes! Use Peak Price Period binary sensor:
+
+<details>
+<summary>Show YAML: Avoid Peak Prices Automatically</summary>
 
 ```yaml
 automation:
@@ -152,6 +160,8 @@ automation:
         target:
           entity_id: switch.ev_charger
 ```
+
+</details>
 
 ---
 

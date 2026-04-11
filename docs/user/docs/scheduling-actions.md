@@ -53,6 +53,9 @@ The simplest approach — use `search_scope` for common time ranges:
 | `next_24h` | Now | Now + 24 hours |
 | `next_48h` | Now | Now + 48 hours |
 
+<details>
+<summary>Show YAML: Quick Scopes</summary>
+
 ```yaml
 service: tibber_prices.find_cheapest_block
 data:
@@ -60,12 +63,14 @@ data:
   search_scope: tomorrow
 ```
 
+</details>
+
 ### Explicit Start/End
 
 For full control, specify exact datetime values:
 
 <details>
-<summary>Show YAML example (explicit start and end datetimes)</summary>
+<summary>Show YAML: Explicit Start and End</summary>
 
 ```yaml
 service: tibber_prices.find_cheapest_block
@@ -82,7 +87,7 @@ data:
 Schedule relative to today using time + day offset:
 
 <details>
-<summary>Show YAML example (time-of-day with day offset)</summary>
+<summary>Show YAML: Time of Day with Offset</summary>
 
 ```yaml
 service: tibber_prices.find_cheapest_block
@@ -100,7 +105,7 @@ data:
 For relative searches:
 
 <details>
-<summary>Show YAML example (relative minute offsets)</summary>
+<summary>Show YAML: Relative Minute Offsets</summary>
 
 ```yaml
 service: tibber_prices.find_cheapest_block
@@ -139,6 +144,9 @@ These parameters are available across all scheduling actions:
 
 Restrict the search to specific Tibber price levels. Levels from lowest to highest: `very_cheap`, `cheap`, `normal`, `expensive`, `very_expensive`.
 
+<details>
+<summary>Show YAML: Price Level Filtering</summary>
+
 ```yaml
 # Only search within cheap or very cheap intervals
 service: tibber_prices.find_cheapest_block
@@ -148,12 +156,14 @@ data:
   max_price_level: cheap    # Exclude normal, expensive, very_expensive
 ```
 
+</details>
+
 ### Power Profile
 
 By default, cost estimates assume a constant 1 kW load. If your appliance has variable power draw, provide a power profile — **one watt value per 15-minute interval**:
 
 <details>
-<summary>Show YAML example (power profile per 15-minute interval)</summary>
+<summary>Show YAML: Power Profile</summary>
 
 ```yaml
 # Washing machine: high power for heating, then less
@@ -187,6 +197,9 @@ Finds the single cheapest **contiguous** time window of a given duration.
 
 ### Basic Example
 
+<details>
+<summary>Show YAML: Find Cheapest Block</summary>
+
 ```yaml
 service: tibber_prices.find_cheapest_block
 data:
@@ -195,10 +208,12 @@ data:
 response_variable: result
 ```
 
+</details>
+
 ### Example with All Options
 
 <details>
-<summary>Show YAML example (find_cheapest_block with all options)</summary>
+<summary>Show YAML: Cheapest Block with All Options</summary>
 
 ```yaml
 service: tibber_prices.find_cheapest_block
@@ -215,6 +230,9 @@ response_variable: result
 </details>
 
 ### Response
+
+<details>
+<summary>Show JSON: Cheapest Block Example Response</summary>
 
 ```json
 {
@@ -255,6 +273,8 @@ response_variable: result
 }
 ```
 
+</details>
+
 **Key response fields:**
 
 | Field | Description |
@@ -269,7 +289,7 @@ response_variable: result
 ### Use in Automations
 
 <details>
-<summary>Show YAML automation example (start dishwasher at cheapest time)</summary>
+<summary>Show YAML: Dishwasher Automation</summary>
 
 ```yaml
 automation:
@@ -310,6 +330,9 @@ Finds the cheapest N minutes of intervals within a search range. Intervals **do 
 
 ### Basic Example
 
+<details>
+<summary>Show YAML: Find Cheapest Hours</summary>
+
 ```yaml
 service: tibber_prices.find_cheapest_hours
 data:
@@ -318,9 +341,14 @@ data:
 response_variable: result
 ```
 
+</details>
+
 ### With Minimum Segment Duration
 
 Some devices shouldn't cycle on/off too rapidly. Use `min_segment_duration` to ensure each contiguous run is at least a minimum length:
+
+<details>
+<summary>Show YAML: With Minimum Segment Duration</summary>
 
 ```yaml
 # EV charger: 3 hours total, but each charging session at least 30 min
@@ -332,7 +360,12 @@ data:
 response_variable: result
 ```
 
+</details>
+
 ### Response
+
+<details>
+<summary>Show JSON: Cheapest Hours Example Response</summary>
 
 ```json
 {
@@ -389,6 +422,8 @@ response_variable: result
 }
 ```
 
+</details>
+
 **Key response fields:**
 
 | Field | Description |
@@ -416,6 +451,9 @@ Schedules **multiple appliances** within the same search range, ensuring they do
 
 ### Basic Example
 
+<details>
+<summary>Show YAML: Find Cheapest Schedule</summary>
+
 ```yaml
 service: tibber_prices.find_cheapest_schedule
 data:
@@ -428,10 +466,12 @@ data:
 response_variable: result
 ```
 
+</details>
+
 ### With Gap and Power Profiles
 
 <details>
-<summary>Show YAML example (multi-appliance schedule with gaps and power profiles)</summary>
+<summary>Show YAML: With Gap and Power Profiles</summary>
 
 ```yaml
 service: tibber_prices.find_cheapest_schedule
@@ -456,6 +496,9 @@ response_variable: result
 </details>
 
 ### Response
+
+<details>
+<summary>Show JSON: Cheapest Schedule Example Response</summary>
 
 ```json
 {
@@ -514,6 +557,8 @@ response_variable: result
 }
 ```
 
+</details>
+
 **Key response fields:**
 
 | Field | Description |
@@ -548,6 +593,9 @@ The opposite of `find_cheapest_block` — finds the most expensive contiguous wi
 
 **Response:** Same structure. The `price_comparison` compares against the cheapest block.
 
+<details>
+<summary>Show YAML: Find Most Expensive Block</summary>
+
 ```yaml
 service: tibber_prices.find_most_expensive_block
 data:
@@ -555,6 +603,8 @@ data:
   search_scope: tomorrow
 response_variable: peak
 ```
+
+</details>
 
 **Use cases:**
 - "When should I definitely NOT run my washing machine?"
@@ -571,6 +621,9 @@ The opposite of `find_cheapest_hours` — finds the most expensive intervals (no
 
 **Response:** Same structure. The `price_comparison` compares against the cheapest hours.
 
+<details>
+<summary>Show YAML: Find Most Expensive Hours</summary>
+
 ```yaml
 service: tibber_prices.find_most_expensive_hours
 data:
@@ -578,6 +631,8 @@ data:
   search_scope: tomorrow
 response_variable: peak
 ```
+
+</details>
 
 **Use cases:**
 - Battery discharge optimization: sell stored energy during the most expensive 4 hours
@@ -593,7 +648,7 @@ response_variable: peak
 Schedule dishwasher + washing machine to run overnight at cheapest prices, with a 15-minute gap between them:
 
 <details>
-<summary>Show YAML automation example (overnight appliance scheduling)</summary>
+<summary>Show YAML: Overnight Appliance Scheduling</summary>
 
 ```yaml
 automation:
@@ -630,7 +685,7 @@ automation:
 ### EV Charging During Cheapest 4 Hours
 
 <details>
-<summary>Show YAML automation example (EV charging in cheapest 4 hours)</summary>
+<summary>Show YAML: EV Charging in Cheapest 4 Hours</summary>
 
 ```yaml
 automation:
@@ -668,7 +723,7 @@ automation:
 ### Peak Price Warning
 
 <details>
-<summary>Show YAML automation example (peak price warning)</summary>
+<summary>Show YAML: Peak Price Warning</summary>
 
 ```yaml
 automation:
@@ -709,7 +764,7 @@ All durations are rounded **up** to the nearest 15 minutes because Tibber price 
 Add `include_comparison_details: true` to `find_cheapest_block` or `find_cheapest_hours` to get extra fields in the comparison:
 
 <details>
-<summary>Show YAML example (comparison details enabled)</summary>
+<summary>Show YAML: Comparison Details</summary>
 
 ```yaml
 service: tibber_prices.find_cheapest_block

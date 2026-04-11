@@ -156,6 +156,9 @@ See the `tibber_prices.get_chartdata` action documentation for a complete list o
 
 **Example Usage:**
 
+<details>
+<summary>Show YAML: Example Usage</summary>
+
 ```yaml
 # ApexCharts card consuming the sensor
 type: custom:apexcharts-card
@@ -165,9 +168,14 @@ series:
           return entity.attributes.data;
 ```
 
+</details>
+
 **Migration Path:**
 
 If you're currently using this sensor, consider migrating to the action:
+
+<details>
+<summary>Show YAML: Chart Data Export</summary>
 
 ```yaml
 # Old approach (sensor)
@@ -183,3 +191,5 @@ If you're currently using this sensor, consider migrating to the action:
       output_format: array_of_objects
   response_variable: chart_data
 ```
+
+</details>

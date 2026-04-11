@@ -27,6 +27,9 @@ All average sensors support **two different calculation methods** for the state 
 
 **Why two values matter:**
 
+<details>
+<summary>Show YAML: Why two values matter</summary>
+
 ```yaml
 # Example price data for one day:
 # Prices: 10, 12, 13, 15, 80 ct/kWh (one extreme spike)
@@ -34,6 +37,8 @@ All average sensors support **two different calculation methods** for the state 
 # Median = 13 ct/kWh    ← "Typical" price level (middle value)
 # Mean = 26 ct/kWh      ← Mathematical average (affected by spike)
 ```
+
+</details>
 
 The median shows you what price level was **typical** during that period, while the mean shows the actual **average cost** if you consumed evenly throughout the period.
 
@@ -53,6 +58,9 @@ You can choose which value is displayed in the sensor state:
 ## Using Both Values in Automations
 
 Both `price_mean` and `price_median` are always available as attributes:
+
+<details>
+<summary>Show YAML: Mean and Median in Automations</summary>
 
 ```yaml
 # Example: Get both values regardless of display setting
@@ -75,6 +83,8 @@ sensor:
           {% endif %}
 ```
 
+</details>
+
 ## Practical Examples
 
 **Example 1: Smart dishwasher control**
@@ -82,7 +92,7 @@ sensor:
 Run dishwasher only when price is significantly below the daily typical level:
 
 <details>
-<summary>Show YAML: Automation — start dishwasher when cheap</summary>
+<summary>Show YAML: Practical Examples</summary>
 
 ```yaml
 automation:
@@ -110,7 +120,7 @@ automation:
 Use mean for actual cost calculations:
 
 <details>
-<summary>Show YAML: Automation — cost-aware heating control</summary>
+<summary>Show YAML: Mean for Cost Calculations</summary>
 
 ```yaml
 automation:
@@ -137,7 +147,7 @@ automation:
 Use trailing average to understand recent price trends:
 
 <details>
-<summary>Show YAML: Automation — EV charging based on rolling average</summary>
+<summary>Show YAML: Practical Examples</summary>
 
 ```yaml
 automation:

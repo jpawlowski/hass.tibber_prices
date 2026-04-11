@@ -68,7 +68,7 @@ The colors adapt to the sensor's state - cheaper prices typically show green, ex
 **Example of when NOT to use icon_color:**
 
 <details>
-<summary>Show YAML comparison (complex conversion vs direct state logic)</summary>
+<summary>Show YAML: Conversion vs Direct State Logic</summary>
 
 ```yaml
 # ❌ DON'T: Converting icon_color requires if/else anyway
@@ -104,6 +104,9 @@ The [custom:button-card](https://github.com/custom-cards/button-card) from HACS 
 
 **Example: Icon color only**
 
+<details>
+<summary>Show YAML: Icon color only</summary>
+
 ```yaml
 type: custom:button-card
 entity: sensor.<home_name>_current_price_level
@@ -118,10 +121,12 @@ styles:
               ]]]
 ```
 
+</details>
+
 **Example: Icon AND state value with same color**
 
 <details>
-<summary>Show YAML example (button-card icon + state text in same color)</summary>
+<summary>Show YAML: Button Card Icon and State Text</summary>
 
 ```yaml
 type: custom:button-card
@@ -150,7 +155,7 @@ styles:
 Use Home Assistant's built-in entities card with card_mod for icon and state colors:
 
 <details>
-<summary>Show YAML: Entities card with card_mod</summary>
+<summary>Show YAML: Entities Card with card-mod</summary>
 
 ```yaml
 type: entities
@@ -177,7 +182,7 @@ The [Mushroom cards](https://github.com/piitaya/lovelace-mushroom) support card_
 **Icon color only:**
 
 <details>
-<summary>Show YAML example (Mushroom icon color only)</summary>
+<summary>Show YAML: Mushroom Icon Color Only</summary>
 
 ```yaml
 type: custom:mushroom-entity-card
@@ -196,7 +201,7 @@ card_mod:
 **Icon and state value:**
 
 <details>
-<summary>Show YAML: Mushroom card — icon and state value with same color</summary>
+<summary>Show YAML: Icon and state value</summary>
 
 ```yaml
 type: custom:mushroom-entity-card
@@ -217,7 +222,7 @@ card_mod:
 Combine multiple sensors with dynamic colors:
 
 <details>
-<summary>Show YAML: Glance card with card_mod for multiple sensors</summary>
+<summary>Show YAML: Multi-Sensor Dynamic Colors</summary>
 
 ```yaml
 type: glance
@@ -245,7 +250,7 @@ card_mod:
 Here's a complete example combining multiple sensors with dynamic colors:
 
 <details>
-<summary>Show YAML: Complete dashboard with dynamic colors for all sensor types</summary>
+<summary>Show YAML: Complete Dashboard Example</summary>
 
 ```yaml
 type: vertical-stack
@@ -352,7 +357,7 @@ If you want to override the theme colors with your own, you have two options:
 Define custom colors in your theme configuration (`themes.yaml`):
 
 <details>
-<summary>Show YAML example (theme-level color overrides)</summary>
+<summary>Show YAML: Theme-Level Color Overrides</summary>
 
 ```yaml
 my_custom_theme:
@@ -374,7 +379,7 @@ Instead of using `icon_color`, read the sensor state and apply your own colors:
 **Example: Custom colors for price level**
 
 <details>
-<summary>Show YAML: Price level — 5-color JavaScript mapping</summary>
+<summary>Show YAML: Custom colors for price level</summary>
 
 ```yaml
 type: custom:button-card
@@ -401,7 +406,7 @@ styles:
 **Example: Custom colors for binary sensor**
 
 <details>
-<summary>Show YAML: Binary sensor — on/off color + background highlight</summary>
+<summary>Show YAML: Custom colors for binary sensor</summary>
 
 ```yaml
 type: custom:button-card
@@ -428,7 +433,7 @@ styles:
 **Example: Custom colors for volatility**
 
 <details>
-<summary>Show YAML: Volatility sensor — 4-level color mapping</summary>
+<summary>Show YAML: Custom colors for volatility</summary>
 
 ```yaml
 type: custom:button-card
@@ -453,7 +458,7 @@ styles:
 **Example: Custom colors for price rating**
 
 <details>
-<summary>Show YAML: Price rating — 3-state color mapping</summary>
+<summary>Show YAML: Custom colors for price rating</summary>
 
 ```yaml
 type: custom:button-card

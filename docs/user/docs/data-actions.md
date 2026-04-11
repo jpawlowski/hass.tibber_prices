@@ -19,7 +19,7 @@ Actions for fetching raw price data and managing integration state.
 **Example:**
 
 <details>
-<summary>Show YAML example (get_price)</summary>
+<summary>Show YAML: Get Price</summary>
 
 ```yaml
 service: tibber_prices.get_price
@@ -33,6 +33,9 @@ response_variable: price_data
 </details>
 
 **Response Format:**
+
+<details>
+<summary>Show JSON: Get Price Response</summary>
 
 ```json
 {
@@ -51,6 +54,8 @@ response_variable: price_data
 }
 ```
 
+</details>
+
 **Use cases:**
 - Fetching historical price data for analysis
 - Comparing prices across arbitrary date ranges
@@ -67,7 +72,7 @@ response_variable: price_data
 **Example:**
 
 <details>
-<summary>Show YAML example (refresh_user_data)</summary>
+<summary>Show YAML: Refresh User Data</summary>
 
 ```yaml
 service: tibber_prices.refresh_user_data

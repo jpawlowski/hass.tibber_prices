@@ -14,11 +14,16 @@ Sometimes, strict filters find too few periods (or none). **Relaxation automatic
 
 ## How to Enable
 
+<details>
+<summary>Show YAML: Enable Relaxation</summary>
+
 ```yaml
 enable_min_periods_best: true
 min_periods_best: 2 # Try to find at least 2 periods per day
 relaxation_attempts_best: 11 # Flex levels to test (default: 11 steps = 22 filter combinations)
 ```
+
+</details>
 
 **Good news:** Relaxation is **enabled by default** with sensible settings. Most users don't need to change anything here!
 
@@ -99,17 +104,25 @@ Each attempt adds +3% flexibility and tries two filter combinations. The system 
 
 **Critical:** Each day relaxes **independently**:
 
+<details>
+<summary>Show formula: Each day relaxes independently</summary>
+
 ```
 Day 1: Finds 2 periods with flex 15% (original) → No relaxation needed
 Day 2: Needs flex 21% + level=any → Uses relaxed settings
 Day 3: Finds 2 periods with flex 15% (original) → No relaxation needed
 ```
 
+</details>
+
 **Why?** Price patterns vary daily. Some days have clear cheap/expensive windows (strict filters work), others don't (relaxation needed).
 
 ## Diagnosing Relaxation Behavior
 
 Check the period sensor attributes to understand what happened:
+
+<details>
+<summary>Show YAML: Diagnosing Relaxation Behavior</summary>
 
 ```yaml
 # Entity: binary_sensor.<home_name>_best_price_period
@@ -119,6 +132,8 @@ relaxation_level: "price_diff_18.0%+level_any"    # Found at 18% flex, level fil
 min_periods_configured: 2                         # Your target
 periods_found_total: 3                            # What was actually found
 ```
+
+</details>
 
 | Attribute | Meaning |
 |-----------|---------|

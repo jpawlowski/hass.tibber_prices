@@ -57,6 +57,9 @@ The integration sets different **initial defaults** because the features serve d
 
 ### Example Timeline
 
+<details>
+<summary>Show example: Timeline</summary>
+
 ```
 00:00 ████████████████ Best Price Period (cheap prices)
 04:00 ░░░░░░░░░░░░░░░░ Normal
@@ -65,6 +68,8 @@ The integration sets different **initial defaults** because the features serve d
 16:00 ████████████████ Peak Price Period (expensive prices)
 20:00 ████████████████ Best Price Period (cheap prices)
 ```
+
+</details>
 
 ---
 
@@ -116,13 +121,21 @@ Think of it like this:
 
 **Best Price:** How much MORE than the daily minimum can a price be?
 
+<details>
+<summary>Show example: Search Range Flexibility</summary>
+
 ```
 Daily MIN: 20 ct/kWh
 Flexibility: 15% (default)
 → Search for times ≤ 23 ct/kWh (20 + 15%)
 ```
 
+</details>
+
 **Peak Price:** How much LESS than the daily maximum can a price be?
+
+<details>
+<summary>Show example: Peak Price Flexibility</summary>
 
 ```
 Daily MAX: 40 ct/kWh
@@ -130,11 +143,16 @@ Flexibility: -15% (default)
 → Search for times ≥ 34 ct/kWh (40 - 15%)
 ```
 
+</details>
+
 **Why flexibility?** Prices rarely stay at exactly MIN/MAX. Flexibility lets you capture realistic time windows.
 
 #### 2. Ensure Quality (Distance from Average)
 
 Periods must be meaningfully different from the daily average:
+
+<details>
+<summary>Show example: Distance from Average</summary>
 
 ```
 Daily AVG: 30 ct/kWh
@@ -144,11 +162,16 @@ Best Price: Must be ≤ 28.5 ct/kWh (30 - 5%)
 Peak Price: Must be ≥ 31.5 ct/kWh (30 + 5%)
 ```
 
+</details>
+
 **Why?** This prevents marking mediocre times as "best" just because they're slightly below average.
 
 #### 3. Check Duration
 
 Periods must be long enough to be practical:
+
+<details>
+<summary>Show example: Minimum Period Duration</summary>
 
 ```
 Default: 60 minutes minimum
@@ -156,6 +179,8 @@ Default: 60 minutes minimum
 45-minute period → Discarded
 90-minute period → Kept ✓
 ```
+
+</details>
 
 #### 4. Apply Optional Filters
 
@@ -167,12 +192,17 @@ You can optionally require:
 
 Isolated price spikes are automatically detected and smoothed to prevent unnecessary period fragmentation:
 
+<details>
+<summary>Show example: Automatic Price Spike Smoothing</summary>
+
 ```
 Original prices: 18, 19, 35, 20, 19 ct   ← 35 ct is an isolated outlier
 Smoothed:        18, 19, 19, 20, 19 ct   ← Spike replaced with trend prediction
 
 Result: Continuous period 00:00-01:15 instead of split periods
 ```
+
+</details>
 
 **Important:**
 -   Original prices are always preserved (min/max/avg show real values)
@@ -182,6 +212,9 @@ Result: Continuous period 00:00-01:15 instead of split periods
 ### Visual Example
 
 **Timeline for a typical day:**
+
+<details>
+<summary>Show example: Timeline</summary>
 
 ```
 Hour:  00  01  02  03  04  05  06  07  08  09  10  11  12  13  14  15  16  17  18  19  20  21  22  23
@@ -198,6 +231,8 @@ Peak Price (-15% flex = ≥29.75 ct):
                               06:00-11:00 (5h)
 ```
 
+</details>
+
 ---
 
 ## Configuration Guide
@@ -210,10 +245,15 @@ Peak Price (-15% flex = ≥29.75 ct):
 **Default:** 15% (Best Price), -15% (Peak Price)
 **Range:** 0-100%
 
+<details>
+<summary>Show YAML: Flexibility</summary>
+
 ```yaml
 best_price_flex: 15 # Can be up to 15% more expensive than daily MIN
 peak_price_flex: -15 # Can be up to 15% less expensive than daily MAX
 ```
+
+</details>
 
 **When to adjust:**
 
@@ -228,10 +268,15 @@ peak_price_flex: -15 # Can be up to 15% less expensive than daily MAX
 **Default:** 60 minutes (Best Price), 30 minutes (Peak Price)
 **Range:** 15-240 minutes
 
+<details>
+<summary>Show YAML: Minimum Period Length</summary>
+
 ```yaml
 best_price_min_period_length: 60
 peak_price_min_period_length: 30
 ```
+
+</details>
 
 **When to adjust:**
 
@@ -244,10 +289,15 @@ peak_price_min_period_length: 30
 **Default:** 5%
 **Range:** 0-20%
 
+<details>
+<summary>Show YAML: Distance from Average</summary>
+
 ```yaml
 best_price_min_distance_from_avg: 5
 peak_price_min_distance_from_avg: 5
 ```
+
+</details>
 
 **When to adjust:**
 
@@ -265,7 +315,7 @@ peak_price_min_distance_from_avg: 5
 **Options:** `any` | `cheap` | `very_cheap` (Best Price) | `expensive` | `very_expensive` (Peak Price)
 
 <details>
-<summary>Show YAML example (level filter)</summary>
+<summary>Show YAML: Level Filter</summary>
 
 ```yaml
 best_price_max_level: any      # Show any period below average
@@ -285,7 +335,7 @@ best_price_max_level: cheap    # Only show if at least one interval is CHEAP
 **Range:** 0-10
 
 <details>
-<summary>Show YAML example (gap tolerance)</summary>
+<summary>Show YAML: Gap Tolerance</summary>
 
 ```yaml
 best_price_max_level: cheap
@@ -305,7 +355,7 @@ When you're not happy with the default behavior, adjust settings in this order:
 If you're not finding enough periods:
 
 <details>
-<summary>Show YAML example (relaxation defaults)</summary>
+<summary>Show YAML: Relaxation Defaults</summary>
 
 ```yaml
 enable_min_periods_best: true   # Already default!
@@ -322,7 +372,7 @@ relaxation_attempts_best: 11    # Already default!
 If periods are too short/long for your use case:
 
 <details>
-<summary>Show YAML example (longer or shorter periods)</summary>
+<summary>Show YAML: Longer or Shorter Periods</summary>
 
 ```yaml
 best_price_min_period_length: 90  # Increase from 60 for longer periods
@@ -339,7 +389,7 @@ best_price_min_period_length: 45  # Decrease from 60 for shorter periods
 If you consistently want more/fewer periods:
 
 <details>
-<summary>Show YAML example (flexibility tuning)</summary>
+<summary>Show YAML: Flexibility Tuning</summary>
 
 ```yaml
 best_price_flex: 20  # Increase from 15% for more periods
@@ -356,7 +406,7 @@ best_price_flex: 10  # Decrease from 15% for stricter selection
 Only if periods seem "mediocre" (not really cheap/expensive):
 
 <details>
-<summary>Show YAML example (distance from average)</summary>
+<summary>Show YAML: Distance from Average</summary>
 
 ```yaml
 best_price_min_distance_from_avg: 10  # Increase from 5% for stricter quality
@@ -371,7 +421,7 @@ best_price_min_distance_from_avg: 10  # Increase from 5% for stricter quality
 Only if you want absolute quality requirements:
 
 <details>
-<summary>Show YAML example (strict level filter)</summary>
+<summary>Show YAML: Strict Level Filter</summary>
 
 ```yaml
 best_price_max_level: cheap  # Only show objectively CHEAP periods
@@ -419,12 +469,17 @@ On days with a sharp price dip (e.g. solar midday surplus), the Best Price Perio
 
 **Configuration:**
 
+<details>
+<summary>Show YAML: Simple Best Price</summary>
+
 ```yaml
 # Use defaults - no configuration needed!
 best_price_flex: 15 # (default)
 best_price_min_period_length: 60 # (default)
 best_price_min_distance_from_avg: 5 # (default)
 ```
+
+</details>
 
 **What you get:**
 
@@ -435,7 +490,7 @@ best_price_min_distance_from_avg: 5 # (default)
 **Automation example:**
 
 <details>
-<summary>Show YAML automation example (run dishwasher in best price period)</summary>
+<summary>Show YAML: Dishwasher in Best Price Period</summary>
 
 ```yaml
 automation:
@@ -464,7 +519,7 @@ automation:
 This is **expected behavior** on days with very uniform electricity prices. When prices vary by less than ~10% across the day (e.g. on sunny spring days with high solar generation), there is no meaningful second "cheap window" – all hours are equally cheap. The integration automatically reduces the target to 1 period for that day.
 
 <details>
-<summary>Show YAML example (flat day detection)</summary>
+<summary>Show YAML: Flat Day Detection</summary>
 
 ```yaml
 min_periods_configured: 2
@@ -582,7 +637,7 @@ Relaxation tried all configured attempts but couldn't reach your target. Options
 **Key attributes to check:**
 
 <details>
-<summary>Show YAML: Sensor attribute reference for best_price_period</summary>
+<summary>Show YAML: Key attributes to check</summary>
 
 ```yaml
 # Entity: binary_sensor.<home_name>_best_price_period
@@ -619,7 +674,7 @@ relaxation_incomplete: true         # Some days couldn't reach the configured ta
 These two values together quickly show whether the calculation achieved its goal:
 
 <details>
-<summary>Show YAML examples (configured target vs. found periods)</summary>
+<summary>Show YAML: Configured Target vs Found Periods</summary>
 
 ```yaml
 min_periods_configured: 2   # You asked for 2 periods per day
@@ -640,7 +695,7 @@ Note that `periods_found_total` counts **all periods across today and tomorrow**
 This is the most important diagnostic for days with very uniform prices (e.g. sunny spring/summer days with high solar generation):
 
 <details>
-<summary>Show YAML example (flat_days_detected)</summary>
+<summary>Show YAML: Flat Days Detected Attribute</summary>
 
 ```yaml
 min_periods_configured: 2
@@ -659,7 +714,7 @@ When prices barely change across the day – typically a variation of less than 
 This flag appears when even after all relaxation attempts, at least one day could not reach the configured minimum number of periods:
 
 <details>
-<summary>Show YAML example (relaxation_incomplete)</summary>
+<summary>Show YAML: Relaxation Incomplete Attribute</summary>
 
 ```yaml
 min_periods_configured: 2
@@ -697,7 +752,7 @@ This is **mathematically correct behavior** caused by how electricity prices are
 **Example:**
 
 <details>
-<summary>Show YAML: How identical prices can flip between best/peak across midnight</summary>
+<summary>Show YAML: Midnight Price Classification Changes</summary>
 
 ```yaml
 # Day 1 (low volatility, narrow range)
@@ -728,7 +783,7 @@ Daily average: 19 ct/kWh
 Check the volatility sensors to understand if a period flip is meaningful:
 
 <details>
-<summary>Show YAML example (daily volatility check)</summary>
+<summary>Show YAML: Daily Volatility Check</summary>
 
 ```yaml
 # Check daily volatility (available in integration)
@@ -748,7 +803,7 @@ sensor.<home_name>_tomorrow_s_price_volatility: 7.9%  # Also low
 You can make your automations volatility-aware:
 
 <details>
-<summary>Show YAML: 3 automation strategies for volatility-aware period control</summary>
+<summary>Show YAML: Volatility-Aware Automation</summary>
 
 ```yaml
 # Option 1: Only act on high-volatility days
@@ -805,7 +860,7 @@ automation:
 Each period sensor exposes day volatility and price statistics:
 
 <details>
-<summary>Show YAML example (per-period volatility attributes)</summary>
+<summary>Show YAML: Per-Period Volatility Attributes</summary>
 
 ```yaml
 binary_sensor.<home_name>_best_price_period:

@@ -39,6 +39,9 @@ To see which icon a sensor currently uses:
 
 Dynamic icons work automatically in standard Home Assistant cards:
 
+<details>
+<summary>Show YAML: Standard Entity Cards</summary>
+
 ```yaml
 type: entities
 entities:
@@ -48,12 +51,14 @@ entities:
     - entity: binary_sensor.<home_name>_best_price_period
 ```
 
+</details>
+
 The icons will update automatically as the sensor states change.
 
 ### Glance Card
 
 <details>
-<summary>Show YAML example (Glance card)</summary>
+<summary>Show YAML: Glance Card</summary>
 
 ```yaml
 type: glance
@@ -71,7 +76,7 @@ entities:
 ### Custom Button Card
 
 <details>
-<summary>Show YAML example (custom button card)</summary>
+<summary>Show YAML: Custom Button Card</summary>
 
 ```yaml
 type: custom:button-card
@@ -86,7 +91,7 @@ show_state: true
 ### Mushroom Entity Card
 
 <details>
-<summary>Show YAML example (Mushroom entity card)</summary>
+<summary>Show YAML: Mushroom Entity Card</summary>
 
 ```yaml
 type: custom:mushroom-entity-card
@@ -104,7 +109,7 @@ If you want to use a fixed icon instead of the dynamic one:
 ### In Entity Cards
 
 <details>
-<summary>Show YAML example (fixed icon in entity card)</summary>
+<summary>Show YAML: Fixed Icon in Entity Card</summary>
 
 ```yaml
 type: entities
@@ -118,7 +123,7 @@ entities:
 ### In Custom Button Card
 
 <details>
-<summary>Show YAML example (fixed icon in button card)</summary>
+<summary>Show YAML: Fixed Icon in Button Card</summary>
 
 ```yaml
 type: custom:button-card
@@ -137,7 +142,7 @@ Dynamic icons work great together with dynamic colors! See the **[Dynamic Icon C
 **Example: Dynamic icon AND color**
 
 <details>
-<summary>Show YAML example (dynamic icon + dynamic color)</summary>
+<summary>Show YAML: Dynamic Icon and Color</summary>
 
 ```yaml
 type: custom:button-card

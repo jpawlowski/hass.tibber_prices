@@ -154,9 +154,14 @@ The integration allows you to choose how average price sensors display their val
 #### Why This Matters
 
 Consider a day with these hourly prices:
+<details>
+<summary>Show example: Mean vs Median</summary>
+
 ```
 10, 12, 13, 15, 80 ct/kWh
 ```
+
+</details>
 
 - **Median = 13 ct/kWh** ← "Typical" price (middle value, ignores spike)
 - **Mean = 26 ct/kWh** ← Average cost (spike pulls it up)
@@ -168,7 +173,7 @@ The median tells you the price was **typically** around 13 ct/kWh (4 out of 5 ho
 **Both values are always available as attributes**, regardless of your display choice:
 
 <details>
-<summary>Show YAML example (median and mean attributes)</summary>
+<summary>Show YAML: Median and Mean Attributes</summary>
 
 ```yaml
 # These attributes work regardless of display setting:
@@ -263,7 +268,7 @@ Each configuration entity includes a detailed description attribute explaining w
 ### Example: Seasonal Automation
 
 <details>
-<summary>Show YAML example (seasonal runtime override)</summary>
+<summary>Show YAML: Seasonal Runtime Override</summary>
 
 ```yaml
 automation:
@@ -296,7 +301,7 @@ If you frequently adjust these settings via automations or want to track configu
 However, if you prefer to **completely exclude** these entities from the recorder (no history graph, no database entries), add this to your `configuration.yaml`:
 
 <details>
-<summary>Show YAML example (exclude runtime config entities from recorder)</summary>
+<summary>Show YAML: Exclude Runtime Config Entities</summary>
 
 ```yaml
 recorder:

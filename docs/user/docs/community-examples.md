@@ -62,7 +62,7 @@ Create `input_number` helpers in Home Assistant for each fee component. This way
 | Verkoopvergoeding | `input_number.verkoopvergoeding` | 0 | 1 | 0.0001 | €/kWh | 0.0205 |
 
 <details>
-<summary>Alternative: YAML configuration for input_number helpers</summary>
+<summary>Show YAML: Input Number Helpers</summary>
 
 If you prefer YAML configuration over the UI, add these to your `configuration.yaml`:
 
@@ -105,7 +105,7 @@ input_number:
 These template sensors calculate what you **earn** per kWh when feeding solar power back to the grid.
 
 <details>
-<summary>Show YAML: Template sensors for feed-in with and without saldering</summary>
+<summary>Show YAML: Feed-In Compensation Sensors</summary>
 
 ```yaml
 template:
@@ -156,7 +156,7 @@ template:
 Now you can use these sensors to make smarter decisions about when to export solar power vs. charge a battery:
 
 <details>
-<summary>Show YAML: Smart export automation</summary>
+<summary>Show YAML: Feed-In Automation</summary>
 
 ```yaml
 automation:
@@ -188,7 +188,7 @@ automation:
 To understand the financial impact of the saldering phase-out, you can create a dashboard comparing both scenarios side by side:
 
 <details>
-<summary>Show YAML: Dashboard comparison card</summary>
+<summary>Show YAML: Preparing for the End of Saldering</summary>
 
 ```yaml
 type: entities
@@ -233,7 +233,7 @@ In Germany, the electricity price includes numerous components bundled into `tax
 A simple template sensor showing what percentage of your total price is the actual energy cost:
 
 <details>
-<summary>Show YAML: Spot price share template sensor</summary>
+<summary>Show YAML: Spot Price Share</summary>
 
 ```yaml
 template:

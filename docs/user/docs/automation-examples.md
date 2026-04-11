@@ -62,7 +62,7 @@ gantt
 This automation starts a flexible load when the best price period begins, but keeps it running as long as prices remain favorable — even after the period ends.
 
 <details>
-<summary>Show YAML: Heat pump — extended cheap period</summary>
+<summary>Show YAML: Ride the Full Cheap Wave</summary>
 
 ```yaml
 automation:
@@ -123,7 +123,7 @@ automation:
 Use the trend to start slightly before the cheapest period — useful for appliances with warm-up time:
 
 <details>
-<summary>Show YAML: Water heater — pre-heat before cheapest window</summary>
+<summary>Show YAML: Pre-Emptive Start</summary>
 
 ```yaml
 automation:
@@ -159,7 +159,7 @@ automation:
 Stop or reduce consumption when prices are climbing:
 
 <details>
-<summary>Show YAML: EV charger — stop when prices rising</summary>
+<summary>Show YAML: Protect Against Rising Prices</summary>
 
 ```yaml
 automation:
@@ -199,7 +199,7 @@ Combine short-term and long-term trend sensors for smarter decisions. This examp
 - If long-term says `falling` → cheaper hours ahead, no rush
 
 <details>
-<summary>Show YAML: Heat pump — multi-window trend strategy</summary>
+<summary>Show YAML: Multi-Window Trend Strategy</summary>
 
 ```yaml
 automation:
@@ -299,7 +299,7 @@ On days with low price variation, the difference between "cheap" and "expensive"
 **Best Practice:** Instead of checking a numeric percentage, this automation checks the sensor's classified state. This makes the automation simpler and respects the volatility thresholds you have configured centrally in the integration's options.
 
 <details>
-<summary>Show YAML: Home battery — charge on best price (volatility-aware)</summary>
+<summary>Show YAML: Meaningful Price Variations</summary>
 
 ```yaml
 automation:
@@ -346,7 +346,7 @@ automation:
 This is the most robust approach. It trusts the "Best Price" classification on volatile days but adds a backup absolute price check for low-volatility days. This handles situations where prices are globally low, even if the daily variation is minimal.
 
 <details>
-<summary>Show YAML: EV charging — combined volatility + absolute price strategy</summary>
+<summary>Show YAML: Volatility and Absolute Price Check</summary>
 
 ```yaml
 automation:
@@ -396,7 +396,7 @@ automation:
 For maximum simplicity, you can use the attributes of the `best_price_period` sensor itself. It contains the volatility classification for the day the period belongs to. This is especially useful for periods that span across midnight.
 
 <details>
-<summary>Show YAML: Heat pump — smart heating using period volatility attribute</summary>
+<summary>Show YAML: Period Volatility Attribute</summary>
 
 ```yaml
 automation:
@@ -437,7 +437,7 @@ automation:
 Use future average sensors to determine the cheapest upcoming window for a timed appliance (e.g., dishwasher with 2-hour ECO program):
 
 <details>
-<summary>Show YAML: Dishwasher — schedule for cheapest 2h window</summary>
+<summary>Show YAML: Best Time for an Appliance</summary>
 
 ```yaml
 automation:
@@ -479,7 +479,7 @@ automation:
 Get a push notification when the best price period begins:
 
 <details>
-<summary>Show YAML: Notification — when cheap window starts</summary>
+<summary>Show YAML: Cheap Window Notification</summary>
 
 ```yaml
 automation:

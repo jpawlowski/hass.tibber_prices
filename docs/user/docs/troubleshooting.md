@@ -73,12 +73,17 @@ When reporting issues, debug logs help identify the problem quickly.
 
 Add this to your `configuration.yaml`:
 
+<details>
+<summary>Show YAML: configuration.yaml Logging</summary>
+
 ```yaml
 logger:
     default: warning
     logs:
         custom_components.tibber_prices: debug
 ```
+
+</details>
 
 Restart Home Assistant for the change to take effect.
 
@@ -87,7 +92,7 @@ Restart Home Assistant for the change to take effect.
 For specific subsystems, you can enable logging selectively:
 
 <details>
-<summary>Show YAML example (targeted subsystem logging)</summary>
+<summary>Show YAML: Targeted Subsystem Logging</summary>
 
 ```yaml
 logger:

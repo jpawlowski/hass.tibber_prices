@@ -192,6 +192,9 @@ A **countdown timer** companion to the Next Price Trend Change sensor above. Ins
 
 **Example automation:**
 
+<details>
+<summary>Show YAML: Example automation</summary>
+
 ```yaml
 trigger:
   - platform: numeric_state
@@ -202,6 +205,8 @@ action:
     data:
       message: "Price trend is about to change direction!"
 ```
+
+</details>
 
 **Tip:** Use this sensor for "HOW LONG" and the Next Price Trend Change sensor (timestamp) for "WHEN".
 
@@ -233,6 +238,9 @@ A natural intuition is to treat trend states like a stock ticker:
 
 For most appliances (dishwasher, washing machine, dryer), a single outlook sensor is enough:
 
+<details>
+<summary>Show YAML: Basic Automation Pattern</summary>
+
 ```yaml
 # Example: Start dishwasher when prices are favorable
 trigger:
@@ -249,6 +257,8 @@ action:
     target:
       entity_id: switch.dishwasher
 ```
+
+</details>
 
 ### Combining Multiple Windows
 

@@ -10,6 +10,9 @@ Beautiful dashboard layouts using Tibber Prices sensors.
 
 Simple card showing current price with dynamic color:
 
+<details>
+<summary>Show YAML: Current Price Card</summary>
+
 ```yaml
 type: entities
 title: Current Electricity Price
@@ -23,9 +26,14 @@ entities:
     name: Next Price
 ```
 
+</details>
+
 ## Period Status Cards
 
 Show when best/peak price periods are active:
+
+<details>
+<summary>Show YAML: Best and Peak Period Card</summary>
 
 ```yaml
 type: horizontal-stack
@@ -40,12 +48,14 @@ cards:
     icon: mdi:alert
 ```
 
+</details>
+
 ## Custom Button Card Examples
 
 ### Price Level Card
 
 <details>
-<summary>Show YAML: Price level card with color gradients (custom:button-card)</summary>
+<summary>Show YAML: Price Level Card</summary>
 
 ```yaml
 type: custom:button-card
@@ -74,7 +84,7 @@ styles:
 Optimized for mobile devices:
 
 <details>
-<summary>Show YAML: Compact mobile layout</summary>
+<summary>Show YAML: Optimized for mobile devices</summary>
 
 ```yaml
 type: vertical-stack
@@ -101,7 +111,7 @@ cards:
 Full-width layout for desktop:
 
 <details>
-<summary>Show YAML: Desktop 3-column grid layout</summary>
+<summary>Show YAML: Full-width layout for desktop</summary>
 
 ```yaml
 type: grid
@@ -136,7 +146,7 @@ cards:
 Using the `icon_color` attribute for dynamic colors:
 
 <details>
-<summary>Show YAML: Dynamic icon colors with mushroom chips</summary>
+<summary>Show YAML: Icon Color Integration</summary>
 
 ```yaml
 type: custom:mushroom-chips-card
@@ -163,7 +173,7 @@ See [Icon Colors](icon-colors.md) for detailed color mapping.
 Advanced interactive dashboard:
 
 <details>
-<summary>Show YAML: Picture elements interactive dashboard</summary>
+<summary>Show YAML: Advanced interactive dashboard</summary>
 
 ```yaml
 type: picture-elements
@@ -193,7 +203,7 @@ elements:
 Automatically list all price sensors:
 
 <details>
-<summary>Show YAML: Auto-entities card for all price sensors</summary>
+<summary>Show YAML: Auto-Entities Sensor List</summary>
 
 ```yaml
 type: custom:auto-entities

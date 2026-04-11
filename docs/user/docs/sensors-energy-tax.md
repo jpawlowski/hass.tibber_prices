@@ -6,9 +6,14 @@
 
 Most price sensors include **energy price** and **tax** attributes that break down the total price into its components:
 
+<details>
+<summary>Show formula</summary>
+
 ```
 total = energy_price + tax
 ```
+
+</details>
 
 These attributes appear on **all price sensors that display a raw price** (not on percentage, level, or trend sensors). The `energy_price` is the raw spot/market price, while `tax` includes all fees, surcharges, and taxes added by your electricity provider.
 
@@ -35,7 +40,7 @@ After updating the integration, the `energy_price` and `tax` attributes will app
 In countries like the Netherlands, solar feed-in compensation is based on the **raw energy/spot price**, not the total consumer price. The `energy_price` attribute gives you exactly this value — no more reverse-engineering from the total price with fragile template calculations.
 
 <details>
-<summary>Show YAML: Automation — solar export or consume decision</summary>
+<summary>Show YAML: Solar Feed-In and Net Metering</summary>
 
 ```yaml
 # Example: Decide whether to export solar power or consume it
@@ -65,7 +70,7 @@ automation:
 Understand how your electricity price is structured — useful for comparing across days or spotting trends in market prices vs. fees:
 
 <details>
-<summary>Show YAML: Template sensor — electricity tax share percentage</summary>
+<summary>Show YAML: Price Composition Analysis</summary>
 
 ```yaml
 # Template sensor showing tax share
@@ -89,6 +94,9 @@ template:
 
 Show users how today's average price splits into energy vs. tax:
 
+<details>
+<summary>Show YAML: Daily Cost Breakdown</summary>
+
 ```yaml
 # Mushroom chips card showing the split
 type: custom:mushroom-chips-card
@@ -102,6 +110,8 @@ chips:
       content: >
           🏛️ {{ state_attr('sensor.<home_name>_price_today', 'tax_mean') | round(1) }} ct
 ```
+
+</details>
 
 ## Country-Specific Calculations
 

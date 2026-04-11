@@ -61,6 +61,9 @@ For automations, it is strongly recommended to use the `price_volatility` attrib
 
 **Good Example (Robust Automation):**
 This automation triggers only if the volatility is classified as `high` or `very_high`, respecting your central settings and working independently of the system language.
+<details>
+<summary>Show YAML: Good Example (Robust Automation)</summary>
+
 ```yaml
 automation:
   - alias: "Enable battery optimization only on volatile days"
@@ -73,6 +76,8 @@ automation:
         entity_id: input_boolean.battery_optimization_enabled
 ```
 
+</details>
+
 ---
 
 ### Avoid Hard-Coding Numeric Thresholds
@@ -83,6 +88,9 @@ You might be tempted to use the numeric `price_coefficient_variation_%` attribut
 
 **Bad Example (Brittle Automation):**
 This automation uses a hard-coded value. If you later change the "High" threshold in the integration's options to 35%, this automation will not respect that change and might trigger at the wrong time.
+<details>
+<summary>Show YAML: Bad Example (Brittle Automation)</summary>
+
 ```yaml
 automation:
   - alias: "Brittle - Enable battery optimization"
@@ -98,5 +106,7 @@ automation:
       - service: input_boolean.turn_on
         entity_id: input_boolean.battery_optimization_enabled
 ```
+
+</details>
 
 By following the "Good Example", your automations become simpler, more readable, and much easier to maintain.
