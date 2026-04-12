@@ -1,12 +1,17 @@
 """
-Shape-based period extension: extend periods into adjacent VERY_CHEAP/VERY_EXPENSIVE intervals.
+Shape-based period extension: extend periods into adjacent cheap/expensive intervals.
 
 After periods are identified by the core algorithm, this module optionally extends
-each period's boundaries to include any directly-adjacent intervals that carry the
-most extreme price level relevant to the period type:
+each period's boundaries to include any directly-adjacent intervals that carry a
+favourable price level relevant to the period type:
 
-- Best price periods  → extend into VERY_CHEAP neighbouring intervals
-- Peak price periods  → extend into VERY_EXPENSIVE neighbouring intervals
+- Best price periods  → extend into VERY_CHEAP neighbours; fall back to CHEAP
+                        on each side where no VERY_CHEAP neighbour exists.
+- Peak price periods  → extend into VERY_EXPENSIVE neighbours; fall back to
+                        EXPENSIVE on each side where no VERY_EXPENSIVE exists.
+
+The fallback is evaluated **per side independently**: one side may extend via
+VERY_CHEAP while the other side falls back to CHEAP.
 
 Extension is purely additive and opt-in (disabled by default).  It does not affect
 the core period-finding logic; periods that would not normally be found are not
@@ -20,6 +25,8 @@ from datetime import timedelta
 from typing import TYPE_CHECKING, Any
 
 from custom_components.tibber_prices.const import (
+    PRICE_LEVEL_CHEAP,
+    PRICE_LEVEL_EXPENSIVE,
     PRICE_LEVEL_VERY_CHEAP,
     PRICE_LEVEL_VERY_EXPENSIVE,
 )
@@ -55,13 +62,17 @@ def extend_periods_for_shape(  # noqa: PLR0913 - Extension requires all context 
     time: TibberPricesTimeService,
 ) -> list[dict[str, Any]]:
     """
-    Extend each period into adjacent VERY_CHEAP or VERY_EXPENSIVE intervals.
+    Extend each period into adjacent cheap/expensive intervals.
 
-    For best price periods (reverse_sort=False): extend into VERY_CHEAP neighbours.
-    For peak price periods (reverse_sort=True): extend into VERY_EXPENSIVE neighbours.
+    For best price periods (reverse_sort=False):
+        Primary: extend into VERY_CHEAP neighbours.
+        Fallback: extend into CHEAP neighbours (per side, only if no VERY_CHEAP found).
+    For peak price periods (reverse_sort=True):
+        Primary: extend into VERY_EXPENSIVE neighbours.
+        Fallback: extend into EXPENSIVE neighbours (per side, only if no VERY_EXPENSIVE found).
 
     Only intervals that are directly contiguous with the period and carry the
-    target level are added.  At most *max_extension_intervals* are consumed on
+    required level are added.  At most *max_extension_intervals* are consumed on
     each side independently.  Period statistics are fully recalculated after
     any extension.
 
@@ -82,7 +93,12 @@ def extend_periods_for_shape(  # noqa: PLR0913 - Extension requires all context 
     if not periods or max_extension_intervals <= 0:
         return periods
 
-    target_level = PRICE_LEVEL_VERY_EXPENSIVE if reverse_sort else PRICE_LEVEL_VERY_CHEAP
+    if reverse_sort:
+        primary_level = PRICE_LEVEL_VERY_EXPENSIVE
+        fallback_level = PRICE_LEVEL_EXPENSIVE
+    else:
+        primary_level = PRICE_LEVEL_VERY_CHEAP
+        fallback_level = PRICE_LEVEL_CHEAP
 
     # Build a lookup dict: local datetime → full interval dict
     interval_index: dict[datetime, dict[str, Any]] = {}
@@ -95,7 +111,8 @@ def extend_periods_for_shape(  # noqa: PLR0913 - Extension requires all context 
         _extend_period_edges(
             period,
             interval_index,
-            target_level=target_level,
+            primary_level=primary_level,
+            fallback_level=fallback_level,
             max_intervals=max_extension_intervals,
             thresholds=thresholds,
             price_context=price_context,
@@ -107,25 +124,72 @@ def extend_periods_for_shape(  # noqa: PLR0913 - Extension requires all context 
 # ── private helpers ────────────────────────────────────────────────────────────
 
 
-def _extend_period_edges(  # noqa: PLR0913, PLR0912, PLR0915 - Period edge extension requires many args, branches, and statements
+def _walk_contiguous(
+    interval_index: dict[datetime, dict[str, Any]],
+    start_cursor: datetime,
+    step: timedelta,
+    target_level: str,
+    max_intervals: int,
+) -> list[dict[str, Any]]:
+    """
+    Walk contiguously from *start_cursor* in direction *step*, collecting intervals.
+
+    Stops when the next interval is missing from the index, does not carry
+    *target_level*, or the *max_intervals* cap is reached.
+
+    Args:
+        interval_index: Lookup map of ``{starts_at_datetime: interval_dict}``.
+        start_cursor: First position to check (already offset from the period edge).
+        step: ``+_INTERVAL_DURATION`` for rightward, ``-_INTERVAL_DURATION`` for leftward.
+        target_level: Required ``level`` value (e.g. ``"VERY_CHEAP"``).
+        max_intervals: Maximum intervals to collect.
+
+    Returns:
+        Collected intervals in chronological order (reversed for leftward walks).
+
+    """
+    additions: list[dict[str, Any]] = []
+    cursor = start_cursor
+    for _ in range(max_intervals):
+        iv = interval_index.get(cursor)
+        if iv is None or iv.get("level") != target_level:
+            break
+        additions.append(iv)
+        cursor += step
+
+    # For leftward walks the list was built newest-first; reverse to chronological
+    if step < timedelta(0):
+        additions.reverse()
+
+    return additions
+
+
+def _extend_period_edges(  # noqa: PLR0913 - Period edge extension requires many args
     period: dict[str, Any],
     interval_index: dict[datetime, dict[str, Any]],
     *,
-    target_level: str,
+    primary_level: str,
+    fallback_level: str,
     max_intervals: int,
     thresholds: TibberPricesThresholdConfig,
     price_context: dict[str, Any],
 ) -> dict[str, Any]:
     """
-    Consume adjacent target-level intervals on both edges of a period.
+    Consume adjacent intervals on both edges of a period.
+
+    Each side is evaluated independently:
+    1. Try extending into *primary_level* neighbours (VERY_CHEAP / VERY_EXPENSIVE).
+    2. If no primary-level neighbours were found on that side, fall back to
+       *fallback_level* neighbours (CHEAP / EXPENSIVE).
 
     The original period dict is never mutated; a new dict is returned.
-    If no extension is possible, the original dict is returned unchanged.
+    If no extension is possible on either side, the original dict is returned.
 
     Args:
         period: Period summary dict with ``start`` and ``end`` datetime keys.
         interval_index: Lookup map of ``{starts_at_datetime: interval_dict}``.
-        target_level: ``"VERY_CHEAP"`` or ``"VERY_EXPENSIVE"``.
+        primary_level: Preferred level (``"VERY_CHEAP"`` or ``"VERY_EXPENSIVE"``).
+        fallback_level: Fallback level (``"CHEAP"`` or ``"EXPENSIVE"``).
         max_intervals: Maximum intervals that may be added on each side.
         thresholds: Threshold config for aggregation helpers.
         price_context: Reference prices / averages per calendar day.
@@ -139,25 +203,21 @@ def _extend_period_edges(  # noqa: PLR0913, PLR0912, PLR0915 - Period edge exten
     # ``end`` is the exclusive boundary: the last included interval starts at
     # ``end - _INTERVAL_DURATION``.
 
+    backward_step = -_INTERVAL_DURATION
+    forward_step = _INTERVAL_DURATION
+
     # ── walk LEFT (earlier than period start) ─────────────────────────────────
-    left_additions: list[dict[str, Any]] = []
-    cursor = start - _INTERVAL_DURATION
-    for _ in range(max_intervals):
-        iv = interval_index.get(cursor)
-        if iv is None or iv.get("level") != target_level:
-            break
-        left_additions.insert(0, iv)
-        cursor -= _INTERVAL_DURATION
+    left_cursor = start - _INTERVAL_DURATION
+    left_additions = _walk_contiguous(interval_index, left_cursor, backward_step, primary_level, max_intervals)
+    if not left_additions:
+        # Fallback: no primary-level neighbours on this side → try fallback level
+        left_additions = _walk_contiguous(interval_index, left_cursor, backward_step, fallback_level, max_intervals)
 
     # ── walk RIGHT (later than period end) ────────────────────────────────────
-    right_additions: list[dict[str, Any]] = []
-    cursor = end  # first interval AFTER the period
-    for _ in range(max_intervals):
-        iv = interval_index.get(cursor)
-        if iv is None or iv.get("level") != target_level:
-            break
-        right_additions.append(iv)
-        cursor += _INTERVAL_DURATION
+    right_additions = _walk_contiguous(interval_index, end, forward_step, primary_level, max_intervals)
+    if not right_additions:
+        # Fallback: no primary-level neighbours on this side → try fallback level
+        right_additions = _walk_contiguous(interval_index, end, forward_step, fallback_level, max_intervals)
 
     total_added = len(left_additions) + len(right_additions)
     if total_added == 0:
@@ -199,7 +259,7 @@ def _extend_period_edges(  # noqa: PLR0913, PLR0912, PLR0915 - Period edge exten
             cv_pct = round(statistics.stdev(prices_for_vol) / mean_p * 100, 1)
 
     # ── assemble updated period dict (keep structural fields, update statistics) ─
-    reverse_sort = target_level == PRICE_LEVEL_VERY_EXPENSIVE
+    reverse_sort = primary_level == PRICE_LEVEL_VERY_EXPENSIVE
     updated: dict[str, Any] = {
         **period,
         # Time fields
