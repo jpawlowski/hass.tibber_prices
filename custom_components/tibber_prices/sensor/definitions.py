@@ -1018,7 +1018,6 @@ DAY_PATTERN_SENSORS = (
             "mixed",
         ],
         state_class=None,
-        entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
     ),
     SensorEntityDescription(
@@ -1037,7 +1036,6 @@ DAY_PATTERN_SENSORS = (
             "mixed",
         ],
         state_class=None,
-        entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=True,
     ),
     SensorEntityDescription(
@@ -1056,7 +1054,6 @@ DAY_PATTERN_SENSORS = (
             "mixed",
         ],
         state_class=None,
-        entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
     ),
 )
