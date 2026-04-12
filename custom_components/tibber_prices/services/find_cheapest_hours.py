@@ -84,6 +84,23 @@ _COMMON_HOURS_SCHEMA = {
 FIND_CHEAPEST_HOURS_SERVICE_SCHEMA = vol.Schema(_COMMON_HOURS_SCHEMA)
 
 
+def _determine_no_intervals_reason(
+    price_info: list[dict],
+    filtered_price_info: list[dict],
+    total_intervals: int,
+    *,
+    level_filter_active: bool,
+) -> str:
+    """Classify why no interval selection could be found."""
+    if not price_info:
+        return "no_data_in_range"
+    if level_filter_active and not filtered_price_info:
+        return "no_intervals_matching_level_filter"
+    if len(filtered_price_info) < total_intervals:
+        return "insufficient_intervals_after_filter"
+    return "insufficient_intervals_for_constraints"
+
+
 def _build_found_response(  # noqa: PLR0913
     *,
     result: dict,
@@ -207,6 +224,7 @@ async def _handle_find_hours(
     min_price_level: str | None = call.data.get("min_price_level")
     include_comparison_details: bool = call.data.get("include_comparison_details", False)
     power_profile: list[int] | None = call.data.get("power_profile")
+    level_filter_active = min_price_level is not None or max_price_level is not None
 
     total_minutes_requested = int(duration_td.total_seconds() / 60)
     min_segment_minutes_requested = int(min_segment_td.total_seconds() / 60) if min_segment_td else INTERVAL_MINUTES
@@ -283,9 +301,16 @@ async def _handle_find_hours(
     result = find_cheapest_n_intervals(filtered_price_info, total_intervals, min_segment_intervals, reverse=reverse)
 
     if result is None:
+        reason = _determine_no_intervals_reason(
+            price_info,
+            filtered_price_info,
+            total_intervals,
+            level_filter_active=level_filter_active,
+        )
         _LOGGER.info(
-            "%s: not enough intervals (need %d, have %d after level filter)",
+            "%s: no interval selection found (reason=%s, need %d, have %d after level filter)",
             service_label,
+            reason,
             total_intervals,
             len(filtered_price_info),
         )
@@ -300,6 +325,7 @@ async def _handle_find_hours(
             "currency": currency,
             "price_unit": price_unit,
             "intervals_found": False,
+            "reason": reason,
             "schedule": None,
         }
 

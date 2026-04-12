@@ -1387,7 +1387,7 @@
     },
     "find_cheapest_block": {
       "name": "Find Cheapest Block",
-      "description": "Finds the cheapest contiguous time window of a given duration. Designed for appliance scheduling: dishwasher, washing machine, dryer, etc. Returns the single cheapest window with start/end times and price statistics.",
+      "description": "Finds the cheapest contiguous time window of a given duration. Designed for appliance scheduling: dishwasher, washing machine, dryer, etc. Returns the single cheapest window with start/end times and price statistics. If no window is found, the response includes a stable reason code in the reason field (for example: no_data_in_range, no_intervals_matching_level_filter, insufficient_intervals_after_filter, insufficient_contiguous_window).",
       "sections": {
         "search_range": {
           "name": "Search Range",
@@ -1571,7 +1571,7 @@
     },
     "find_cheapest_hours": {
       "name": "Find Cheapest Hours",
-      "description": "Finds the cheapest intervals totaling a given duration, not necessarily contiguous. Designed for flexible loads: battery charging, EV, water heater. Returns a schedule of intervals grouped into contiguous segments.",
+      "description": "Finds the cheapest intervals totaling a given duration, not necessarily contiguous. Designed for flexible loads: battery charging, EV, water heater. Returns a schedule of intervals grouped into contiguous segments. If no schedule is found, the response includes a stable reason code in the reason field (for example: no_data_in_range, no_intervals_matching_level_filter, insufficient_intervals_after_filter, insufficient_intervals_for_constraints).",
       "sections": {
         "search_range": {
           "name": "Search Range",
@@ -1763,7 +1763,7 @@
     },
     "find_cheapest_schedule": {
       "name": "Find Cheapest Schedule",
-      "description": "Schedules multiple appliances optimally without time overlap. Each task gets the cheapest available contiguous window; tasks are placed greedily in ascending cost order. Returns a per-task schedule with start/end times and price stats.",
+      "description": "Schedules multiple appliances optimally without time overlap. Each task gets the cheapest available contiguous window; tasks are placed greedily in ascending cost order. Returns a per-task schedule with start/end times and price stats. If scheduling is incomplete, the response includes a stable reason code in the reason field (for example: no_data_in_range, no_intervals_matching_level_filter, insufficient_contiguous_window, insufficient_contiguous_window_for_some_tasks).",
       "sections": {
         "scheduling_options": {
           "name": "Scheduling Options",
@@ -1846,6 +1846,10 @@
         "min_price_level": {
           "name": "Minimum Price Level",
           "description": "Only consider intervals at or above this Tibber price level. Useful for find_most_expensive to focus on truly expensive intervals."
+        },
+        "include_comparison_details": {
+          "name": "Include Comparison Details",
+          "description": "Add per-task price_comparison details (comparison_price_min, comparison_price_max, comparison_window_end) to compare each selected task window against the opposite extreme window of the same duration."
         },
         "use_base_unit": {
           "name": "Use Base Currency Unit",

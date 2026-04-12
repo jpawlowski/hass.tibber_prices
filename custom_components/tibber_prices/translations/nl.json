@@ -1847,6 +1847,10 @@
           "name": "Minimaal prijsniveau",
           "description": "Overweeg alleen intervallen op of boven dit Tibber-prijsniveau. Nuttig voor find_most_expensive om te focussen op echt dure intervallen."
         },
+        "include_comparison_details": {
+          "name": "Vergelijkingsdetails opnemen",
+          "description": "Voegt per taak extra price_comparison-details toe (comparison_price_min, comparison_price_max, comparison_window_end) om het gekozen venster te vergelijken met het tegenovergestelde extreme venster met dezelfde duur."
+        },
         "use_base_unit": {
           "name": "Basisvaluta gebruiken",
           "description": "Forceer prijzen in basisvaluta (EUR, NOK) in plaats van de geconfigureerde weergave-eenheid (ct, øre). Handig voor berekeningen."

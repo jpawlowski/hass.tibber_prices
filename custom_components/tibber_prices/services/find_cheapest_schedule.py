@@ -22,6 +22,7 @@ from custom_components.tibber_prices.const import (
 )
 from custom_components.tibber_prices.utils.price_window import (
     calculate_window_statistics,
+    find_cheapest_contiguous_window,
 )
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import config_validation as cv
@@ -83,9 +84,75 @@ FIND_CHEAPEST_SCHEDULE_SERVICE_SCHEMA = vol.Schema(
         vol.Optional("search_scope"): vol.In(VALID_SEARCH_SCOPES),
         vol.Optional("max_price_level"): vol.In([lvl.lower() for lvl in PRICE_LEVEL_ORDER]),
         vol.Optional("min_price_level"): vol.In([lvl.lower() for lvl in PRICE_LEVEL_ORDER]),
+        vol.Optional("include_comparison_details", default=False): cv.boolean,
         vol.Optional("use_base_unit", default=False): cv.boolean,
     }
 )
+
+
+def _compute_task_price_comparison(
+    task_intervals: list[dict[str, Any]],
+    full_price_info: list[dict[str, Any]],
+    unit_factor: int,
+    *,
+    include_details: bool,
+) -> dict[str, float | str | None] | None:
+    """Compute per-task comparison against most expensive window of same duration."""
+    duration_intervals = len(task_intervals)
+    comparison_result = find_cheapest_contiguous_window(full_price_info, duration_intervals, reverse=True)
+    if comparison_result is None:
+        return None
+
+    task_stats = calculate_window_statistics(task_intervals, unit_factor=unit_factor, round_decimals=4)
+    comparison_stats = calculate_window_statistics(
+        comparison_result["intervals"], unit_factor=unit_factor, round_decimals=4
+    )
+    task_mean = task_stats.get("price_mean")
+    comparison_mean = comparison_stats.get("price_mean")
+    if task_mean is None or comparison_mean is None:
+        return None
+
+    comparison_window_start = comparison_result["intervals"][0]["startsAt"]
+    if not isinstance(comparison_window_start, str):
+        comparison_window_start = comparison_window_start.isoformat()
+
+    result: dict[str, float | str | None] = {
+        "comparison_price_mean": comparison_mean,
+        "price_difference": abs(round(float(comparison_mean) - float(task_mean), 4)),
+        "comparison_window_start": comparison_window_start,
+    }
+
+    if include_details:
+        result["comparison_price_min"] = comparison_stats.get("price_min")
+        result["comparison_price_max"] = comparison_stats.get("price_max")
+        last_start = comparison_result["intervals"][-1]["startsAt"]
+        if not isinstance(last_start, str):
+            last_start = last_start.isoformat()
+        result["comparison_window_end"] = (
+            datetime.fromisoformat(last_start) + timedelta(minutes=INTERVAL_MINUTES)
+        ).isoformat()
+
+    return result
+
+
+def _determine_schedule_reason(
+    *,
+    all_tasks_scheduled: bool,
+    assignments_count: int,
+    price_info: list[dict[str, Any]],
+    filtered_price_info: list[dict[str, Any]],
+    level_filter_active: bool,
+) -> str | None:
+    """Classify schedule outcome reason for automation-friendly no-result handling."""
+    if all_tasks_scheduled:
+        return None
+    if not price_info:
+        return "no_data_in_range"
+    if level_filter_active and not filtered_price_info:
+        return "no_intervals_matching_level_filter"
+    if assignments_count == 0:
+        return "insufficient_contiguous_window"
+    return "insufficient_contiguous_window_for_some_tasks"
 
 
 def _find_cheapest_window_in_pool(
@@ -156,6 +223,8 @@ async def handle_find_cheapest_schedule(call: ServiceCall) -> ServiceResponse:  
     use_base_unit: bool = call.data.get("use_base_unit", False)
     max_price_level: str | None = call.data.get("max_price_level")
     min_price_level: str | None = call.data.get("min_price_level")
+    include_comparison_details: bool = call.data.get("include_comparison_details", False)
+    level_filter_active = min_price_level is not None or max_price_level is not None
 
     # Round gap up to nearest quarter interval
     gap_intervals = math.ceil(gap_minutes / INTERVAL_MINUTES) if gap_minutes > 0 else 0
@@ -236,6 +305,13 @@ async def handle_find_cheapest_schedule(call: ServiceCall) -> ServiceResponse:  
     filtered_price_info = filter_intervals_by_price_level(price_info, min_price_level, max_price_level)
 
     if not filtered_price_info:
+        reason = _determine_schedule_reason(
+            all_tasks_scheduled=False,
+            assignments_count=0,
+            price_info=price_info,
+            filtered_price_info=filtered_price_info,
+            level_filter_active=level_filter_active,
+        )
         return {
             "home_id": home_id,
             "search_start": search_start.isoformat(),
@@ -243,6 +319,7 @@ async def handle_find_cheapest_schedule(call: ServiceCall) -> ServiceResponse:  
             "currency": currency,
             "price_unit": price_unit,
             "all_tasks_scheduled": False,
+            "reason": reason,
             "tasks": [],
             "total_estimated_cost": None,
         }
@@ -295,6 +372,12 @@ async def handle_find_cheapest_schedule(call: ServiceCall) -> ServiceResponse:  
                 "duration_minutes": task["duration_minutes"],
                 **stats,
                 "intervals": task_response_intervals,
+                "price_comparison": _compute_task_price_comparison(
+                    task_intervals,
+                    price_info,
+                    unit_factor,
+                    include_details=include_comparison_details,
+                ),
             }
         )
 
@@ -308,6 +391,13 @@ async def handle_find_cheapest_schedule(call: ServiceCall) -> ServiceResponse:  
     total_estimated_cost = round(sum(total_cost_values), 4) if total_cost_values else None
 
     all_scheduled = len(unscheduled) == 0
+    reason = _determine_schedule_reason(
+        all_tasks_scheduled=all_scheduled,
+        assignments_count=len(assignments),
+        price_info=price_info,
+        filtered_price_info=filtered_price_info,
+        level_filter_active=level_filter_active,
+    )
 
     _LOGGER.info(
         "%s: scheduled %d/%d tasks, total_cost=%s",
@@ -324,6 +414,7 @@ async def handle_find_cheapest_schedule(call: ServiceCall) -> ServiceResponse:  
         "currency": currency,
         "price_unit": price_unit,
         "all_tasks_scheduled": all_scheduled,
+        "reason": reason,
         "unscheduled_tasks": unscheduled or None,
         "tasks": assignments,
         "total_estimated_cost": total_estimated_cost,

@@ -1847,6 +1847,10 @@
           "name": "Minimale Preisstufe",
           "description": "Nur Intervalle ab dieser Tibber-Preisstufe beruecksichtigen. Nuetzlich fuer find_most_expensive, um wirklich teure Intervalle zu fokussieren."
         },
+        "include_comparison_details": {
+          "name": "Vergleichsdetails einbeziehen",
+          "description": "Fuegt pro Aufgabe zusaetzliche price_comparison-Details hinzu (comparison_price_min, comparison_price_max, comparison_window_end), um das gefundene Zeitfenster mit dem gegenteiligen Extremfenster gleicher Dauer zu vergleichen."
+        },
         "use_base_unit": {
           "name": "Basiswährung verwenden",
           "description": "Preise in Basiswährung (EUR, NOK) statt der konfigurierten Anzeigeeinheit (ct, øre) erzwingen. Nützlich für Berechnungen."

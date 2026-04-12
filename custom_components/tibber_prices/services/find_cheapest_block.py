@@ -126,6 +126,23 @@ def _compute_price_comparison(
     return result
 
 
+def _determine_no_window_reason(
+    price_info: list[dict],
+    filtered_price_info: list[dict],
+    duration_intervals: int,
+    *,
+    level_filter_active: bool,
+) -> str:
+    """Classify why no block window could be found."""
+    if not price_info:
+        return "no_data_in_range"
+    if level_filter_active and not filtered_price_info:
+        return "no_intervals_matching_level_filter"
+    if len(filtered_price_info) < duration_intervals:
+        return "insufficient_intervals_after_filter"
+    return "insufficient_contiguous_window"
+
+
 async def _handle_find_block(  # noqa: PLR0915
     call: ServiceCall,
     *,
@@ -146,6 +163,7 @@ async def _handle_find_block(  # noqa: PLR0915
     min_price_level: str | None = call.data.get("min_price_level")
     include_comparison_details: bool = call.data.get("include_comparison_details", False)
     power_profile: list[int] | None = call.data.get("power_profile")
+    level_filter_active = min_price_level is not None or max_price_level is not None
 
     duration_minutes_requested = int(duration_td.total_seconds() / 60)
     # Round up to nearest quarter-hour interval
@@ -217,9 +235,16 @@ async def _handle_find_block(  # noqa: PLR0915
     result = find_cheapest_contiguous_window(filtered_price_info, duration_intervals, reverse=reverse)
 
     if result is None:
+        reason = _determine_no_window_reason(
+            price_info,
+            filtered_price_info,
+            duration_intervals,
+            level_filter_active=level_filter_active,
+        )
         _LOGGER.info(
-            "%s: no window found (need %d intervals, have %d after level filter)",
+            "%s: no window found (reason=%s, need %d intervals, have %d after level filter)",
             service_label,
+            reason,
             duration_intervals,
             len(filtered_price_info),
         )
@@ -232,6 +257,7 @@ async def _handle_find_block(  # noqa: PLR0915
             "currency": currency,
             "price_unit": price_unit,
             "window_found": False,
+            "reason": reason,
             "window": None,
         }
 

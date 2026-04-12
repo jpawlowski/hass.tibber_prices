@@ -1847,6 +1847,10 @@
           "name": "Minimal prisnivaae",
           "description": "Ta bara med intervall paa eller oever denna Tibber-prisnivaae. Anvaendbart foer find_most_expensive foer att fokusera paa verkligt dyra intervall."
         },
+        "include_comparison_details": {
+          "name": "Inkludera jaemfoerelsedetaljer",
+          "description": "Laegger till extra price_comparison-detaljer per uppgift (comparison_price_min, comparison_price_max, comparison_window_end) foer att jaemfoera valt foenster med motsatt extremfoenster med samma laengd."
+        },
         "use_base_unit": {
           "name": "Använd basvaluta",
           "description": "Tvinga priser i basvaluta (EUR, NOK) istället för konfigurerad visningsenhet (ct, öre). Användbart för beräkningar."

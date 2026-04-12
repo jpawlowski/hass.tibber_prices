@@ -930,6 +930,11 @@ find_cheapest_schedule:
     output:
       collapsed: true
       fields:
+        include_comparison_details:
+          required: false
+          default: false
+          selector:
+            boolean:
         use_base_unit:
           required: false
           default: false
