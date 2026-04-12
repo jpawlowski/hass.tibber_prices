@@ -176,6 +176,44 @@ A change from `rising` to `strongly_rising` (same direction) is **not** reported
 | `threshold_falling_strongly_%` | Active strongly-falling threshold after volatility adjustment | `-4.8` |
 | `volatility_factor` | Applied multiplier (0.6 = low, 1.0 = moderate, 1.4 = high volatility) | `0.8` |
 
+:::info How the detection works — 3-hour lookahead mean
+At each future 15-minute interval, the sensor does a single comparison:
+
+> **interval price** vs. **average price of the following 3 hours**
+
+If that 3-hour-ahead average has moved in the opposite direction from the current trend, the interval counts as a "candidate" for a trend change. Once 3 consecutive candidates are found (hysteresis), the sensor reports the first one as the change timestamp.
+
+**Why a 3-hour average and not the next price?**
+A single future price is noisy — one cheap or expensive interval doesn't mean the trend has reversed. Averaging the next 3 hours smooths out spikes and gives a stable signal about where prices are broadly heading.
+:::
+
+:::caution On V-shaped price days — expect an early signal
+On days with a sharp V-shaped curve (price drops steeply to a minimum, then rises steeply), this sensor typically fires **30–60 minutes before the exact price minimum**.
+
+**Why?** When the price is still falling toward the bottom, the 3-hour lookahead window already reaches across the minimum and starts including the rising prices on the other side. As soon as those rising prices pull the 3-hour average above the current falling price, the sensor detects "trend changing to rising" — even though the cheapest interval is still 2–4 steps ahead.
+
+**Timeline example — V-shaped day:**
+
+```
+Time    Price    3h-ahead avg    Signal
+13:00   24 ct    18 ct           falling (avg still below current)
+13:15   20 ct    17 ct           falling
+13:30   16 ct    17 ct           ← avg crosses above current → RISING signal ✓
+13:45   13 ct    18 ct           (actual minimum — sensor already fired earlier)
+14:00   16 ct    20 ct
+14:15   21 ct    22 ct
+```
+
+**What to use instead if you need the exact minimum:**
+Compare with the [Best Price Period](sensors-timing.md) start time — it finds the actual cheapest window, not the first moment the direction looks like it's changing.
+
+| Goal | Use |
+|------|-----|
+| "When will prices broadly start rising?" | **Next Price Trend Change** (may fire early) |
+| "When is the cheapest interval / window to run my appliance?" | **Best Price Period** (`best_price_period`, `best_price_next_start_time`) |
+| "Am I at the minimum right now?" | **Outlook `falling` + Trajectory `rising`** combination |
+:::
+
 ---
 
 ## Next Price Trend Change In (Countdown)

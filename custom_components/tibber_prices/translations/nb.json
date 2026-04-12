@@ -1190,7 +1190,7 @@
       "message": "{offset_param} krever at {time_param} er satt. Dagsforskyvning endrer kun datoen til en eksplisitt tidsparameter."
     },
     "min_level_exceeds_max": {
-      "message": "min_price_level '{min_level}' er høyere enn max_price_level '{max_level}'. Minimumsnivået må være lik eller lavere enn maksimumsnivået."
+      "message": "min_price_level {min_level} er høyere enn max_price_level {max_level}. Minimumsnivået må være lik eller lavere enn maksimumsnivået."
     },
     "power_profile_length_mismatch": {
       "message": "power_profile har {profile_length} oppføringer, men varigheten krever {interval_count} intervaller ({duration_minutes} minutter). power_profile må ha nøyaktig én oppføring per 15-minutters intervall."
@@ -1199,7 +1199,7 @@
       "message": "level_filter og rating_level_filter kan ikke brukes sammen. Bruk kun én filtertype per forespørsel."
     },
     "insert_nulls_requires_filter": {
-      "message": "insert_nulls-modus '{mode}' krever en level_filter eller rating_level_filter for å definere segmenter. Uten filter, bruk insert_nulls: none."
+      "message": "insert_nulls-modus {mode} krever en level_filter eller rating_level_filter for å definere segmenter. Uten filter, bruk insert_nulls: none."
     },
     "connect_segments_requires_segments_mode": {
       "message": "connect_segments krever at insert_nulls er satt til 'segments'. Sett insert_nulls: segments for å bruke segmentforbindelse."
@@ -1999,6 +1999,5 @@
         "next_48h": "Neste 48 timer"
       }
     }
-  },
-  "title": "Tibber Prisinformasjon & Vurderinger"
+  }
 }

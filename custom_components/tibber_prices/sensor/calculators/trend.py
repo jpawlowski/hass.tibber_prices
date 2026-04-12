@@ -797,9 +797,25 @@ class TibberPricesTrendCalculator(TibberPricesBaseCalculator):
         """
         Scan future intervals for trend change with hysteresis.
 
+        Detection mechanic: For each future interval i, the sensor compares the price
+        of interval i to the AVERAGE price of the following 3 hours (intervals i+1..i+12).
+        A trend change is signalled when that 3h-ahead mean has already moved in the
+        opposite direction from the current trend.
+
         Requires N consecutive intervals (configurable, default 3) showing a different
         trend before confirming a change. This prevents false positives from short-lived
         price spikes.
+
+        Behaviour on V-shaped price days:
+            On a sharp price drop toward a minimum, the 3h lookahead window begins
+            including rising-flank prices before the actual minimum is reached. Once
+            those rising prices push the 3h average above the current price, the scan
+            reports a trend change. This typically fires 30-60 minutes before the exact
+            price minimum - intentional, because the sensor answers "when will the
+            broad direction change?" rather than "when is the exact turning point?".
+            Users who need the precise minimum should compare with the Best Price
+            period start (``best_price_next_start_time``), which uses the actual
+            cheapest window.
 
         Args:
             all_intervals: List of all price intervals

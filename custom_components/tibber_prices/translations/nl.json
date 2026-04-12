@@ -1190,7 +1190,7 @@
       "message": "{offset_param} vereist dat {time_param} ingesteld is. Dagoffset wijzigt alleen de datum van een expliciete tijdparameter."
     },
     "min_level_exceeds_max": {
-      "message": "min_price_level '{min_level}' is hoger dan max_price_level '{max_level}'. Het minimumniveau moet gelijk aan of lager zijn dan het maximumniveau."
+      "message": "min_price_level {min_level} is hoger dan max_price_level {max_level}. Het minimumniveau moet gelijk aan of lager zijn dan het maximumniveau."
     },
     "power_profile_length_mismatch": {
       "message": "power_profile heeft {profile_length} items maar de duur vereist {interval_count} intervallen ({duration_minutes} minuten). Het power_profile moet precies één item per 15-minuten-interval hebben."
@@ -1199,7 +1199,7 @@
       "message": "level_filter en rating_level_filter kunnen niet samen gebruikt worden. Gebruik slechts één filtertype per verzoek."
     },
     "insert_nulls_requires_filter": {
-      "message": "insert_nulls-modus '{mode}' vereist een level_filter of rating_level_filter om segmenten te definiëren. Zonder filter, gebruik insert_nulls: none."
+      "message": "insert_nulls-modus {mode} vereist een level_filter of rating_level_filter om segmenten te definiëren. Zonder filter, gebruik insert_nulls: none."
     },
     "connect_segments_requires_segments_mode": {
       "message": "connect_segments vereist dat insert_nulls op 'segments' staat. Stel insert_nulls: segments in om segmentverbinding te gebruiken."
@@ -1999,6 +1999,5 @@
         "next_48h": "Komende 48 uur"
       }
     }
-  },
-  "title": "Tibber Prijsinformatie & Beoordelingen"
+  }
 }

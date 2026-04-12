@@ -1190,7 +1190,7 @@
       "message": "{offset_param} requires {time_param} to be set. Day offset only modifies the date of an explicit time parameter."
     },
     "min_level_exceeds_max": {
-      "message": "min_price_level '{min_level}' is higher than max_price_level '{max_level}'. The minimum level must be equal to or lower than the maximum level."
+      "message": "min_price_level {min_level} is higher than max_price_level {max_level}. The minimum level must be equal to or lower than the maximum level."
     },
     "power_profile_length_mismatch": {
       "message": "power_profile has {profile_length} entries but the duration requires {interval_count} intervals ({duration_minutes} minutes). The power_profile must have exactly one entry per 15-minute interval."
@@ -1199,7 +1199,7 @@
       "message": "level_filter and rating_level_filter cannot be used together. Use only one filter type per request."
     },
     "insert_nulls_requires_filter": {
-      "message": "insert_nulls mode '{mode}' requires a level_filter or rating_level_filter to define segments. Without a filter, use insert_nulls: none."
+      "message": "insert_nulls mode {mode} requires a level_filter or rating_level_filter to define segments. Without a filter, use insert_nulls: none."
     },
     "connect_segments_requires_segments_mode": {
       "message": "connect_segments requires insert_nulls to be set to 'segments'. Set insert_nulls: segments to use segment connection."
@@ -2009,6 +2009,5 @@
         "next_48h": "Next 48 Hours"
       }
     }
-  },
-  "title": "Tibber Price Information & Ratings"
+  }
 }
