@@ -1,7 +1,7 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "title": "Home Assistant Translation File Schema",
-  "description": "Schema for Home Assistant custom integration translation files based on https://developers.home-assistant.io/docs/internationalization/core",
+  "title": "Home Assistant Custom Integration Translation (strings.json)",
+  "description": "JSON schema for Home Assistant custom integration translation files (strings.json and translations/*.json). Defines translations for config flows, entities, services, device automations, and more. Based on the official Home Assistant internationalization specification: https://developers.home-assistant.io/docs/internationalization/core",
   "type": "object",
   "properties": {
     "title": {
@@ -187,13 +187,17 @@
           },
           "sections": {
             "type": "object",
-            "description": "Collapsible section labels",
+            "description": "Collapsible section labels and descriptions",
             "additionalProperties": {
               "type": "object",
               "properties": {
                 "name": {
                   "type": "string",
                   "description": "Section name"
+                },
+                "description": {
+                  "type": "string",
+                  "description": "Section description (optional, supports Markdown)"
                 }
               }
             }

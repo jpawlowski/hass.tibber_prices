@@ -1,0 +1,611 @@
+# YAML Schema for Home Assistant services.yaml
+# Based on: https://developers.home-assistant.io/docs/dev_101_services/
+$schema: http://json-schema.org/draft-07/schema#
+title: Home Assistant Service Actions Definition
+description: Schema for Home Assistant services.yaml file that defines service actions for custom integrations
+
+type: object
+patternProperties:
+  "^[a-z][a-z0-9_]*$":
+    type: object
+    description: Service action definition (key is the service action name)
+    additionalProperties: false
+    properties:
+      name:
+        type: string
+        description: User-visible name of the service action (translated via strings.json)
+
+      description:
+        type: string
+        description: User-visible description of the service action (translated via strings.json). Supports Markdown.
+
+      target:
+        type: object
+        description: Allows users to specify entities by entity, device, or area. Do NOT define entity_id in fields if target is specified.
+        additionalProperties: false
+        properties:
+          entity:
+            type: object
+            description: Entity selector configuration
+            additionalProperties: false
+            properties:
+              domain:
+                oneOf:
+                  - type: string
+                  - type: array
+                    items:
+                      type: string
+                description: Filter entities by domain(s)
+
+              integration:
+                type: string
+                description: Filter entities by integration
+
+              device_class:
+                oneOf:
+                  - type: string
+                  - type: array
+                    items:
+                      type: string
+                description: Filter entities by device class(es)
+
+              supported_features:
+                type: array
+                description: Filter by required supported features. Each item is either a single feature or a list of features (AND logic).
+                items:
+                  oneOf:
+                    - type: string
+                    - type: number
+                    - type: array
+                      items:
+                        oneOf:
+                          - type: string
+                          - type: number
+
+          device:
+            type: object
+            description: Device selector configuration
+            additionalProperties: false
+            properties:
+              integration:
+                type: string
+                description: Filter devices by integration
+
+              manufacturer:
+                type: string
+                description: Filter devices by manufacturer
+
+              model:
+                type: string
+                description: Filter devices by model
+
+          area:
+            type: object
+            description: Area selector configuration
+            additionalProperties: false
+
+      fields:
+        type: object
+        description: Input fields for the service action
+        additionalProperties: false
+        patternProperties:
+          "^[a-z][a-z0-9_]*$":
+            type: object
+            description: Service action field definition
+            additionalProperties: false
+            properties:
+              name:
+                type: string
+                description: User-visible field name (translated via strings.json)
+
+              description:
+                type: string
+                description: User-visible field description (translated via strings.json)
+
+              required:
+                type: boolean
+                default: false
+                description: Whether the field is required
+
+              advanced:
+                type: boolean
+                default: false
+                description: Advanced fields are only shown when advanced mode is enabled
+
+              example:
+                description: Example value for this field
+
+              default:
+                description: Default field value if not provided
+
+              selector:
+                type: object
+                description: Selector to control the input UI (https://www.home-assistant.io/docs/blueprint/selectors/)
+                additionalProperties: true
+                properties:
+                  # Common selectors
+                  action:
+                    type: [object, "null"]
+                    description: Action sequence selector
+                    additionalProperties: true
+
+                  boolean:
+                    type: [object, "null"]
+                    description: Toggle switch selector
+                    additionalProperties: true
+
+                  condition:
+                    type: [object, "null"]
+                    description: Condition selector
+                    additionalProperties: true
+
+                  entity:
+                    type: object
+                    description: Entity selector with filtering options
+                    additionalProperties: false
+                    properties:
+                      domain:
+                        oneOf:
+                          - type: string
+                          - type: array
+                            items:
+                              type: string
+                      integration:
+                        type: string
+                      device_class:
+                        oneOf:
+                          - type: string
+                          - type: array
+                            items:
+                              type: string
+                      supported_features:
+                        type: array
+                        items:
+                          oneOf:
+                            - type: string
+                            - type: number
+                      multiple:
+                        type: boolean
+                      exclude_entities:
+                        type: array
+                        items:
+                          type: string
+                      include_entities:
+                        type: array
+                        items:
+                          type: string
+
+                  device:
+                    type: object
+                    description: Device selector with filtering options
+                    additionalProperties: false
+                    properties:
+                      integration:
+                        type: string
+                      manufacturer:
+                        type: string
+                      model:
+                        type: string
+                      multiple:
+                        type: boolean
+                      entity:
+                        type: object
+                        properties:
+                          domain:
+                            oneOf:
+                              - type: string
+                              - type: array
+                                items:
+                                  type: string
+                          device_class:
+                            oneOf:
+                              - type: string
+                              - type: array
+                                items:
+                                  type: string
+
+                  area:
+                    type: object
+                    description: Area selector with filtering options
+                    additionalProperties: false
+                    properties:
+                      multiple:
+                        type: boolean
+                      entity:
+                        type: object
+                        properties:
+                          domain:
+                            oneOf:
+                              - type: string
+                              - type: array
+                                items:
+                                  type: string
+                          integration:
+                            type: string
+                      device:
+                        type: object
+                        properties:
+                          integration:
+                            type: string
+                          manufacturer:
+                            type: string
+
+                  target:
+                    type: object
+                    description: Target selector (entity/device/area combined)
+                    additionalProperties: false
+                    properties:
+                      entity:
+                        type: object
+                        properties:
+                          domain:
+                            oneOf:
+                              - type: string
+                              - type: array
+                                items:
+                                  type: string
+                          device_class:
+                            oneOf:
+                              - type: string
+                              - type: array
+                                items:
+                                  type: string
+
+                  number:
+                    type: object
+                    description: Number input selector
+                    additionalProperties: false
+                    properties:
+                      min:
+                        type: number
+                      max:
+                        type: number
+                      step:
+                        oneOf:
+                          - type: number
+                          - type: string
+                            enum: ["any"]
+                      unit_of_measurement:
+                        type: string
+                      mode:
+                        type: string
+                        enum: ["box", "slider"]
+
+                  text:
+                    type: [object, "null"]
+                    description: Text input selector
+                    additionalProperties: false
+                    properties:
+                      multiline:
+                        type: boolean
+                      type:
+                        type: string
+                        enum:
+                          [
+                            "color",
+                            "date",
+                            "datetime-local",
+                            "email",
+                            "month",
+                            "number",
+                            "password",
+                            "search",
+                            "tel",
+                            "text",
+                            "time",
+                            "url",
+                            "week",
+                          ]
+                      multiple:
+                        type: boolean
+                      prefix:
+                        type: string
+                      suffix:
+                        type: string
+
+                  select:
+                    type: object
+                    description: Selection dropdown/list selector
+                    additionalProperties: false
+                    properties:
+                      options:
+                        oneOf:
+                          - type: array
+                            items:
+                              type: string
+                          - type: array
+                            items:
+                              type: object
+                              properties:
+                                label:
+                                  type: string
+                                value:
+                                  type: string
+                      multiple:
+                        type: boolean
+                      custom_value:
+                        type: boolean
+                      mode:
+                        type: string
+                        enum: ["list", "dropdown"]
+                      sort:
+                        type: boolean
+                      translation_key:
+                        type: string
+                    required:
+                      - options
+
+                  time:
+                    type: [object, "null"]
+                    description: Time picker selector
+                    additionalProperties: true
+
+                  date:
+                    type: [object, "null"]
+                    description: Date picker selector
+                    additionalProperties: true
+
+                  datetime:
+                    type: [object, "null"]
+                    description: Date & time picker selector
+                    additionalProperties: true
+
+                  duration:
+                    type: object
+                    description: Duration selector (days, hours, minutes, seconds)
+                    additionalProperties: false
+                    properties:
+                      enable_day:
+                        type: boolean
+                      enable_millisecond:
+                        type: boolean
+
+                  color_temp:
+                    type: object
+                    description: Color temperature selector
+                    additionalProperties: false
+                    properties:
+                      unit:
+                        type: string
+                        enum: ["kelvin", "mired"]
+                      min:
+                        type: integer
+                      max:
+                        type: integer
+
+                  color_rgb:
+                    type: [object, "null"]
+                    description: RGB color picker selector
+                    additionalProperties: true
+
+                  icon:
+                    type: object
+                    description: Icon picker selector
+                    additionalProperties: false
+                    properties:
+                      placeholder:
+                        type: string
+
+                  template:
+                    type: [object, "null"]
+                    description: Jinja2 template input selector
+                    additionalProperties: true
+
+                  object:
+                    type: object
+                    description: YAML object input selector
+                    additionalProperties: false
+                    properties:
+                      multiple:
+                        type: boolean
+
+                  trigger:
+                    type: [object, "null"]
+                    description: Trigger configuration selector
+                    additionalProperties: true
+
+                  location:
+                    type: object
+                    description: Location/coordinates picker selector
+                    additionalProperties: false
+                    properties:
+                      radius:
+                        type: boolean
+                      icon:
+                        type: string
+
+                  media:
+                    type: object
+                    description: Media picker selector
+                    additionalProperties: false
+                    properties:
+                      accept:
+                        type: array
+                        items:
+                          type: string
+
+                  theme:
+                    type: object
+                    description: Theme selector
+                    additionalProperties: false
+                    properties:
+                      include_default:
+                        type: boolean
+
+                  # Additional selectors (simplified)
+                  addon:
+                    type: object
+                    description: Add-on selector (HAOS only)
+                    additionalProperties: true
+
+                  assist_pipeline:
+                    type: object
+                    description: Assist pipeline selector
+                    additionalProperties: true
+
+                  attribute:
+                    type: object
+                    description: Attribute selector
+                    additionalProperties: false
+                    properties:
+                      entity_id:
+                        type: string
+                    required:
+                      - entity_id
+
+                  backup_location:
+                    type: object
+                    description: Backup location selector (HAOS only)
+                    additionalProperties: true
+
+                  config_entry:
+                    type: object
+                    description: Configuration entry selector
+                    additionalProperties: false
+                    properties:
+                      integration:
+                        type: string
+
+                  constant:
+                    type: object
+                    description: Constant value selector
+                    additionalProperties: false
+                    properties:
+                      value:
+                        description: The constant value
+                      label:
+                        type: string
+                    required:
+                      - value
+
+                  conversation_agent:
+                    type: object
+                    description: Conversation agent selector
+                    additionalProperties: false
+                    properties:
+                      language:
+                        type: string
+
+                  country:
+                    type: object
+                    description: Country selector
+                    additionalProperties: false
+                    properties:
+                      countries:
+                        type: array
+                        items:
+                          type: string
+                      no_sort:
+                        type: boolean
+
+                  floor:
+                    type: object
+                    description: Floor selector
+                    additionalProperties: false
+                    properties:
+                      multiple:
+                        type: boolean
+
+                  label:
+                    type: object
+                    description: Label selector
+                    additionalProperties: false
+                    properties:
+                      multiple:
+                        type: boolean
+
+                  language:
+                    type: object
+                    description: Language selector
+                    additionalProperties: false
+                    properties:
+                      languages:
+                        type: array
+                        items:
+                          type: string
+                      native_name:
+                        type: boolean
+                      no_sort:
+                        type: boolean
+
+                  qr_code:
+                    type: object
+                    description: QR code display (no return value)
+                    additionalProperties: false
+                    properties:
+                      data:
+                        description: Data to encode in QR code
+                      scale:
+                        type: integer
+                      error_correction_level:
+                        type: string
+                        enum: ["low", "medium", "quartile", "high"]
+                    required:
+                      - data
+
+                  state:
+                    type: object
+                    description: State selector
+                    additionalProperties: false
+                    properties:
+                      entity_id:
+                        type: string
+                      multiple:
+                        type: boolean
+
+                  statistic:
+                    type: object
+                    description: Statistic selector
+                    additionalProperties: false
+                    properties:
+                      multiple:
+                        type: boolean
+
+              filter:
+                type: object
+                description: Filter to show field only if selected entities match criteria
+                additionalProperties: false
+                properties:
+                  supported_features:
+                    type: array
+                    description: Show field if at least one selected entity supports at least one listed feature
+                    items:
+                      oneOf:
+                        - type: string
+                        - type: number
+
+                  attribute:
+                    type: object
+                    description: Show field if at least one selected entity's attribute matches one of the listed values
+                    patternProperties:
+                      ".*":
+                        type: array
+                        items:
+                          oneOf:
+                            - type: string
+                            - type: number
+                            - type: boolean
+                oneOf:
+                  - required: [supported_features]
+                  - required: [attribute]
+
+      # Collapsible sections for grouping fields (e.g., advanced_fields)
+      advanced_fields:
+        type: object
+        description: Collapsible section for advanced fields
+        additionalProperties: false
+        properties:
+          collapsed:
+            type: boolean
+            default: false
+            description: Whether the section is initially collapsed
+
+          fields:
+            type: object
+            description: Advanced fields in this section
+            additionalProperties: false
+            patternProperties:
+              "^[a-z][a-z0-9_]*$":
+                $ref: "#/patternProperties/^[a-z][a-z0-9_]*$/properties/fields/patternProperties/^[a-z][a-z0-9_]*$"
+
+additionalProperties: false

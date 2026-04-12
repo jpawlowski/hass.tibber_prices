@@ -1,10 +1,14 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "title": "Home Assistant integration manifest",
-  "description": "The manifest for a Home Assistant integration",
+  "title": "Home Assistant Custom Integration manifest for HACS",
+  "description": "The manifest.json schema for Home Assistant custom integrations distributed via HACS (Home Assistant Community Store). Extends the official Home Assistant manifest schema with HACS-specific requirements like version and issue_tracker fields.",
   "type": "object",
   "if": {
-    "properties": { "integration_type": { "const": "virtual" } },
+    "properties": {
+      "integration_type": {
+        "const": "virtual"
+      }
+    },
     "required": ["integration_type"]
   },
   "then": {
@@ -129,7 +133,9 @@
                 "properties": {
                   "description": "The properties of the Zeroconf advertisement to filter.",
                   "type": "object",
-                  "additionalProperties": { "type": "string" }
+                  "additionalProperties": {
+                    "type": "string"
+                  }
                 }
               },
               "required": ["type"],
@@ -160,7 +166,9 @@
               "type": "string"
             }
           },
-          "additionalProperties": { "type": "string" }
+          "additionalProperties": {
+            "type": "string"
+          }
         }
       },
       "bluetooth": {
@@ -300,9 +308,13 @@
         }
       },
       "documentation": {
-        "description": "The website containing the documentation for the integration. It has to be in the format \"https://www.home-assistant.io/integrations/[domain]\"\nhttps://developers.home-assistant.io/docs/creating_integration_manifest/#documentation",
+        "description": "The website containing the documentation for the integration. For core integrations, it should be \"https://www.home-assistant.io/integrations/[domain]\". Custom integrations can use any URL.\nhttps://developers.home-assistant.io/docs/creating_integration_manifest/#documentation",
         "type": "string",
-        "pattern": "^https://www.home-assistant.io/integrations/[0-9a-z_]+$",
+        "format": "uri"
+      },
+      "issue_tracker": {
+        "description": "The issue tracker of your integration, where users can report issues. For custom integrations, this is typically a GitHub issues URL.\nhttps://developers.home-assistant.io/docs/creating_integration_manifest/#issue-tracker",
+        "type": "string",
         "format": "uri"
       },
       "quality_scale": {
@@ -375,15 +387,31 @@
       "single_config_entry": {
         "description": "Whether the integration only supports a single config entry.\nhttps://developers.home-assistant.io/docs/creating_integration_manifest/#single-config-entry-only",
         "const": true
+      },
+      "version": {
+        "description": "The version of the integration. Required for custom integrations, should be omitted for core integrations.\nhttps://developers.home-assistant.io/docs/creating_integration_manifest/#version",
+        "type": "string",
+        "pattern": "^([0-9]+)\\.([0-9]+)\\.([0-9]+)(?:[-\\.]([0-9A-Za-z-]+(?:\\.[0-9A-Za-z-]+)*))?(?:\\+[0-9A-Za-z-]+)?$"
       }
     },
     "additionalProperties": false,
-    "required": ["domain", "name", "codeowners", "documentation"],
+    "required": [
+      "domain",
+      "name",
+      "codeowners",
+      "documentation",
+      "issue_tracker",
+      "version"
+    ],
     "dependencies": {
       "mqtt": {
         "anyOf": [
-          { "required": ["dependencies"] },
-          { "required": ["after_dependencies"] }
+          {
+            "required": ["dependencies"]
+          },
+          {
+            "required": ["after_dependencies"]
+          }
         ]
       }
     }

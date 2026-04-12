@@ -1,0 +1,591 @@
+# YAML Schema for Home Assistant configuration.yaml
+# Based on: https://www.home-assistant.io/docs/configuration/
+$schema: http://json-schema.org/draft-07/schema#
+title: Home Assistant Configuration
+description: Basic schema for Home Assistant configuration.yaml. This covers core configuration structure but individual integrations have their own specific schemas.
+
+type: object
+
+properties:
+  homeassistant:
+    type: object
+    description: Core Home Assistant configuration
+    properties:
+      name:
+        type: string
+        description: Name of the location
+
+      latitude:
+        type: number
+        description: Latitude of your location
+
+      longitude:
+        type: number
+        description: Longitude of your location
+
+      elevation:
+        type: number
+        description: Elevation in meters
+
+      unit_system:
+        type: string
+        enum: [metric, imperial, us_customary]
+        description: Unit system to use
+
+      temperature_unit:
+        type: string
+        enum: [C, F]
+        description: Temperature unit (overrides unit_system)
+
+      time_zone:
+        type: string
+        description: Time zone (e.g., Europe/Berlin)
+
+      currency:
+        type: string
+        description: Currency code (e.g., EUR, USD)
+
+      country:
+        type: string
+        description: Country code (ISO 3166-1 alpha-2, e.g., DE, US)
+
+      language:
+        type: string
+        description: Language code (e.g., en, de)
+
+      internal_url:
+        type: string
+        format: uri
+        description: Internal URL for Home Assistant
+
+      external_url:
+        type: string
+        format: uri
+        description: External URL for Home Assistant
+
+      allowlist_external_dirs:
+        type: array
+        items:
+          type: string
+        description: List of directories that are allowed for external access
+
+      allowlist_external_urls:
+        type: array
+        items:
+          type: string
+          format: uri
+        description: List of external URLs that are allowed
+
+      packages:
+        type: object
+        description: Split configuration into packages
+        additionalProperties: true
+
+      customize:
+        type: object
+        description: Customize entities
+        additionalProperties: true
+
+      customize_domain:
+        type: object
+        description: Customize all entities in a domain
+        additionalProperties: true
+
+      customize_glob:
+        type: object
+        description: Customize entities using glob patterns
+        additionalProperties: true
+
+      auth_providers:
+        type: array
+        description: Authentication providers
+        items:
+          type: object
+
+      auth_mfa_modules:
+        type: array
+        description: Multi-factor authentication modules
+        items:
+          type: object
+
+      debug:
+        type: boolean
+        description: Enable debug mode
+
+      media_dirs:
+        type: object
+        description: Media directories
+        additionalProperties:
+          type: string
+
+  default_config:
+    description: Load default integrations. Set to empty object {} to include default_config.
+    oneOf:
+      - type: object
+        additionalProperties: false
+      - type: "null"
+
+  # Common integrations
+  http:
+    description: HTTP integration configuration (https://www.home-assistant.io/integrations/http/)
+    type: [object, "null"]
+    properties:
+      server_host:
+        oneOf:
+          - type: string
+            format: ipv4
+          - type: string
+            format: ipv6
+          - type: array
+            items:
+              type: string
+        description: Host to bind to (e.g., 0.0.0.0 for all interfaces)
+
+      server_port:
+        type: integer
+        minimum: 1
+        maximum: 65535
+        description: Port to bind to
+
+      base_url:
+        type: string
+        format: uri
+        description: Base URL for external access (deprecated, use homeassistant.external_url)
+
+      ssl_certificate:
+        type: string
+        description: Path to SSL certificate
+
+      ssl_key:
+        type: string
+        description: Path to SSL private key
+
+      cors_allowed_origins:
+        type: array
+        items:
+          type: string
+        description: List of allowed CORS origins
+
+      use_x_forwarded_for:
+        type: boolean
+        description: Enable X-Forwarded-For header processing
+
+      trusted_proxies:
+        type: array
+        items:
+          type: string
+        description: List of trusted proxy IP addresses
+
+      ip_ban_enabled:
+        type: boolean
+        description: Enable automatic IP banning
+
+      login_attempts_threshold:
+        type: integer
+        minimum: 1
+        description: Number of failed login attempts before ban
+
+  api:
+    description: API integration
+    oneOf:
+      - type: object
+        additionalProperties: false
+      - type: "null"
+
+  analytics:
+    description: Analytics configuration (https://www.home-assistant.io/integrations/analytics/)
+    oneOf:
+      - type: object
+        additionalProperties: false
+      - type: "null"
+
+  logger:
+    type: object
+    description: Logger configuration (https://www.home-assistant.io/integrations/logger/)
+    properties:
+      default:
+        type: string
+        enum: [notset, debug, info, warning, error, critical]
+        description: Default log level for all components
+
+      logs:
+        type: object
+        description: Per-component log levels (e.g., homeassistant.components.http, custom_components.your_integration)
+        patternProperties:
+          "^(homeassistant\\.components\\.[a-z0-9_.]+|homeassistant\\.[a-z0-9_.]+|custom_components\\.[a-z0-9_.]+|[a-z0-9_.]+)$":
+            type: string
+            enum: [notset, debug, info, warning, error, critical]
+        additionalProperties: false
+
+      filters:
+        type: object
+        description: Filter log messages
+        additionalProperties: true
+
+  recorder:
+    description: Recorder (database) configuration (https://www.home-assistant.io/integrations/recorder/)
+    oneOf:
+      - type: object
+        properties:
+          db_url:
+            type: string
+            description: Database URL (e.g., sqlite:///path/to/file.db, postgresql://...)
+            format: uri
+
+          purge_keep_days:
+            type: integer
+            minimum: 1
+            description: Number of days to keep history
+
+          commit_interval:
+            type: integer
+            minimum: 1
+            description: Seconds between database commits
+
+          auto_purge:
+            type: boolean
+            description: Automatically purge old data
+
+          auto_repack:
+            type: boolean
+            description: Automatically repack database (SQLite only)
+
+          exclude:
+            type: object
+            description: Exclude entities/domains from recording
+            properties:
+              domains:
+                type: array
+                items:
+                  type: string
+                description: Domain names to exclude (e.g., sun, backup)
+
+              entities:
+                type: array
+                items:
+                  type: string
+                description: Specific entities to exclude
+
+              entity_globs:
+                type: array
+                items:
+                  type: string
+                description: Entity glob patterns to exclude (e.g., sensor.time*)
+
+              event_types:
+                type: array
+                items:
+                  type: string
+                description: Event types to exclude (e.g., call_service)
+
+          include:
+            type: object
+            description: Include only specific entities/domains
+            properties:
+              domains:
+                type: array
+                items:
+                  type: string
+                description: Domain names to include
+
+              entities:
+                type: array
+                items:
+                  type: string
+                description: Specific entities to include
+
+              entity_globs:
+                type: array
+                items:
+                  type: string
+                description: Entity glob patterns to include
+      - type: "null"
+
+  history:
+    description: History configuration (https://www.home-assistant.io/integrations/history/)
+    oneOf:
+      - type: object
+        properties:
+          exclude:
+            type: object
+            description: Exclude entities from history
+            properties:
+              domains:
+                type: array
+                items:
+                  type: string
+              entities:
+                type: array
+                items:
+                  type: string
+              entity_globs:
+                type: array
+                items:
+                  type: string
+
+          include:
+            type: object
+            description: Include only specific entities in history
+            properties:
+              domains:
+                type: array
+                items:
+                  type: string
+              entities:
+                type: array
+                items:
+                  type: string
+              entity_globs:
+                type: array
+                items:
+                  type: string
+      - type: "null"
+
+  logbook:
+    description: Logbook configuration (https://www.home-assistant.io/integrations/logbook/)
+    oneOf:
+      - type: object
+        properties:
+          exclude:
+            type: object
+            description: Exclude entities from logbook
+            properties:
+              domains:
+                type: array
+                items:
+                  type: string
+              entities:
+                type: array
+                items:
+                  type: string
+              entity_globs:
+                type: array
+                items:
+                  type: string
+
+          include:
+            type: object
+            description: Include only specific entities in logbook
+            properties:
+              domains:
+                type: array
+                items:
+                  type: string
+              entities:
+                type: array
+                items:
+                  type: string
+              entity_globs:
+                type: array
+                items:
+                  type: string
+      - type: "null"
+
+  frontend:
+    description: Frontend configuration (https://www.home-assistant.io/integrations/frontend/)
+    oneOf:
+      - type: object
+        properties:
+          themes:
+            type: object
+            description: Custom themes
+            additionalProperties: true
+
+          extra_module_url:
+            type: array
+            description: Additional JavaScript modules to load
+            items:
+              type: string
+              format: uri
+
+          extra_js_url_es5:
+            type: array
+            description: Additional ES5 JavaScript modules
+            items:
+              type: string
+              format: uri
+
+          development_repo:
+            type: string
+            description: Path to frontend development repository
+      - type: "null"
+
+  config:
+    description: Configuration panel
+    oneOf:
+      - type: object
+        additionalProperties: false
+      - type: "null"
+
+  map:
+    description: Map panel
+    oneOf:
+      - type: object
+        additionalProperties: false
+      - type: "null"
+
+  sun:
+    description: Sun integration
+    oneOf:
+      - type: object
+        additionalProperties: false
+      - type: "null"
+
+  system_health:
+    description: System health integration
+    oneOf:
+      - type: object
+        additionalProperties: false
+      - type: "null"
+
+  mobile_app:
+    description: Mobile app integration (https://www.home-assistant.io/integrations/mobile_app/)
+    oneOf:
+      - type: object
+        additionalProperties: false
+      - type: "null"
+
+  # Development integrations
+  debugpy:
+    description: Python debugger integration for development (https://www.home-assistant.io/integrations/debugpy/)
+    oneOf:
+      - type: object
+        properties:
+          start:
+            type: boolean
+            description: Auto-start debugger on Home Assistant start
+          wait:
+            type: boolean
+            description: Wait for debugger to attach before continuing
+          port:
+            type: integer
+            minimum: 1
+            maximum: 65535
+            description: Port for debugger
+          host:
+            type: string
+            description: Host to bind debugger to
+      - type: "null"
+
+  webhook:
+    description: Webhook integration (https://www.home-assistant.io/integrations/webhook/)
+    oneOf:
+      - type: object
+        additionalProperties: false
+      - type: "null"
+
+  my:
+    description: My Home Assistant integration (https://www.home-assistant.io/integrations/my/)
+    oneOf:
+      - type: object
+        additionalProperties: false
+      - type: "null"
+
+  conversation:
+    description: Conversation/voice assistant integration (https://www.home-assistant.io/integrations/conversation/)
+    oneOf:
+      - type: object
+        properties:
+          intents:
+            type: object
+            description: Custom conversation intents
+            additionalProperties: true
+      - type: "null"
+
+  person:
+    type: array
+    description: Person configuration
+    items:
+      type: object
+
+  zone:
+    type: array
+    description: Zone configuration
+    items:
+      type: object
+
+  automation:
+    description: Automation configuration (https://www.home-assistant.io/integrations/automation/)
+    oneOf:
+      - type: string
+        pattern: "^!include"
+        description: Include from external file (e.g., !include automations.yaml)
+      - type: array
+        description: List of automations
+        items:
+          type: object
+      - type: object
+        description: Named automations
+        additionalProperties: true
+      - type: "null"
+
+  script:
+    description: Script configuration (https://www.home-assistant.io/integrations/script/)
+    oneOf:
+      - type: string
+        pattern: "^!include"
+        description: Include from external file (e.g., !include scripts.yaml)
+      - type: object
+        description: Named scripts
+        additionalProperties: true
+      - type: "null"
+
+  scene:
+    description: Scene configuration (https://www.home-assistant.io/integrations/scene/)
+    oneOf:
+      - type: string
+        pattern: "^!include"
+        description: Include from external file (e.g., !include scenes.yaml)
+      - type: array
+        description: List of scenes
+        items:
+          type: object
+      - type: object
+        description: Named scenes
+        additionalProperties: true
+      - type: "null"
+
+  input_boolean:
+    type: object
+    description: Input boolean helpers
+
+  input_number:
+    type: object
+    description: Input number helpers
+
+  input_datetime:
+    type: object
+    description: Input datetime helpers
+
+  input_text:
+    type: object
+    description: Input text helpers
+
+  input_select:
+    type: object
+    description: Input select helpers
+
+  input_button:
+    type: object
+    description: Input button helpers
+
+  counter:
+    type: object
+    description: Counter helpers
+
+  timer:
+    type: object
+    description: Timer helpers
+
+  group:
+    type: object
+    description: Group configuration
+
+  template:
+    type: array
+    description: Template entities
+    items:
+      type: object
+
+# Allow any integration not explicitly defined
+additionalProperties: true
