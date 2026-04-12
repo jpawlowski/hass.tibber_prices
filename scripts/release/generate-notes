@@ -316,7 +316,7 @@ is now more RELIABLE.
 - Use commit text as context, not as absolute truth
 - If commit text conflicts with final file list or final diff, trust final state
 - Revert commits indicate earlier changes may be superseded
-- Commits listed as "explicitly skipped" are non-user-facing by author intent and must not be mentioned
+- Commits listed as \"explicitly skipped\" are non-user-facing by author intent and must not be mentioned
 
 ## WRITING RULES — FOLLOW STRICTLY
 
