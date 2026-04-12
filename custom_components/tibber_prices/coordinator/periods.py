@@ -280,6 +280,40 @@ class TibberPricesPeriodCalculator:
             )
         config["geometric_extra_flex"] = geometric_flex_pct / 100
 
+        # Segment forcing (force at least segment_min_periods per W/M-shape segment)
+        if reverse_sort:
+            segment_forcing = bool(
+                self._get_option(
+                    _const.CONF_PEAK_PRICE_SEGMENT_FORCING,
+                    "extension_settings",
+                    _const.DEFAULT_PEAK_PRICE_SEGMENT_FORCING,
+                )
+            )
+            segment_min_periods = int(
+                self._get_option(
+                    _const.CONF_PEAK_PRICE_SEGMENT_MIN_PERIODS,
+                    "extension_settings",
+                    _const.DEFAULT_PEAK_PRICE_SEGMENT_MIN_PERIODS,
+                )
+            )
+        else:
+            segment_forcing = bool(
+                self._get_option(
+                    _const.CONF_BEST_PRICE_SEGMENT_FORCING,
+                    "extension_settings",
+                    _const.DEFAULT_BEST_PRICE_SEGMENT_FORCING,
+                )
+            )
+            segment_min_periods = int(
+                self._get_option(
+                    _const.CONF_BEST_PRICE_SEGMENT_MIN_PERIODS,
+                    "extension_settings",
+                    _const.DEFAULT_BEST_PRICE_SEGMENT_MIN_PERIODS,
+                )
+            )
+        config["segment_forcing"] = segment_forcing
+        config["segment_min_periods"] = segment_min_periods
+
         # Cache the result
         self._config_cache[cache_key] = config
         self._config_cache_valid = True
@@ -774,6 +808,8 @@ class TibberPricesPeriodCalculator:
                 extend_to_extreme=best_config["extend_to_extreme"],
                 max_extension_intervals=best_config["max_extension_intervals"],
                 geometric_extra_flex=best_config["geometric_extra_flex"],
+                segment_forcing=best_config["segment_forcing"],
+                segment_min_periods=best_config["segment_min_periods"],
             )
             best_periods = calculate_periods_with_relaxation(
                 all_prices,
@@ -859,6 +895,8 @@ class TibberPricesPeriodCalculator:
                 extend_to_extreme=peak_config["extend_to_extreme"],
                 max_extension_intervals=peak_config["max_extension_intervals"],
                 geometric_extra_flex=peak_config["geometric_extra_flex"],
+                segment_forcing=peak_config["segment_forcing"],
+                segment_min_periods=peak_config["segment_min_periods"],
             )
             peak_periods = calculate_periods_with_relaxation(
                 all_prices,

@@ -245,12 +245,16 @@
             "data": {
               "best_price_extend_to_very_cheap": "Auf sehr günstige Intervalle erweitern",
               "best_price_max_extension_intervals": "Maximale Erweiterungsintervalle",
-              "best_price_geometric_flex": "Geometrischer Flex-Bonus"
+              "best_price_geometric_flex": "Geometrischer Flex-Bonus",
+              "best_price_segment_forcing": "W-Form-Segment-Erzwingung",
+              "best_price_segment_min_periods": "Perioden pro Segment"
             },
             "data_description": {
               "best_price_extend_to_very_cheap": "Wenn aktiviert, erweitern sich erkannte Bestpreisperioden nach außen, um angrenzende Intervalle mit dem Preisniveau 'Sehr günstig' aufzunehmen. So werden extrem günstige Intervalle an den Rändern erkannter Perioden besser erfasst.",
               "best_price_max_extension_intervals": "Maximale Anzahl zusätzlicher Intervalle pro Seite (linker und rechter Rand). Jedes Intervall dauert 15 Minuten. Beispiel: 4 Intervalle = bis zu 1 Stunde Erweiterung pro Rand. Standard: 4",
-              "best_price_geometric_flex": "Zusätzlicher Flex-Prozentsatz für Intervalle, die in ein erkanntes Preistal (V-Form) fallen. Wenn für den Tag ein Tal-Muster erkannt wird, erhalten Intervalle innerhalb der Talzone diese zusätzliche Toleranz, damit der Periodendetektor sie eher einschließt. 0 = deaktiviert. Standard: 0"
+              "best_price_geometric_flex": "Zusätzlicher Flex-Prozentsatz für Intervalle, die in ein erkanntes Preistal (V-Form) fallen. Wenn für den Tag ein Tal-Muster erkannt wird, erhalten Intervalle innerhalb der Talzone diese zusätzliche Toleranz, damit der Periodendetektor sie eher einschließt. 0 = deaktiviert. Standard: 0",
+              "best_price_segment_forcing": "Wenn aktiviert, werden Tage mit W-förmigem Preiskurve (zwei Täler, getrennt durch einen zentralen Gipfel) an diesem Gipfel geteilt. Die Periodenerkennung läuft unabhängig für jede Talseite, um sicherzustellen, dass jedes Tal die erforderliche Anzahl von Perioden erhält.",
+              "best_price_segment_min_periods": "Mindestanzahl erforderlicher Bestpreisperioden pro Talseite bei aktivierter W-Form-Segment-Erzwingung. Jede Seite muss unabhängig mindestens diese Anzahl Perioden liefern. Standard: 1"
             }
           }
         },
@@ -306,12 +310,16 @@
             "data": {
               "peak_price_extend_to_very_expensive": "Auf sehr teure Intervalle erweitern",
               "peak_price_max_extension_intervals": "Maximale Erweiterungsintervalle",
-              "peak_price_geometric_flex": "Geometrischer Flex-Bonus"
+              "peak_price_geometric_flex": "Geometrischer Flex-Bonus",
+              "peak_price_segment_forcing": "M-Form-Segment-Erzwingung",
+              "peak_price_segment_min_periods": "Perioden pro Segment"
             },
             "data_description": {
               "peak_price_extend_to_very_expensive": "Wenn aktiviert, erweitern sich erkannte Spitzenpreisperioden nach außen, um angrenzende Intervalle mit dem Preisniveau 'Sehr teuer' aufzunehmen. So werden extrem teure Intervalle an den Rändern erkannter Perioden besser erfasst.",
               "peak_price_max_extension_intervals": "Maximale Anzahl zusätzlicher Intervalle pro Seite (linker und rechter Rand). Jedes Intervall dauert 15 Minuten. Beispiel: 4 Intervalle = bis zu 1 Stunde Erweiterung pro Rand. Standard: 4",
-              "peak_price_geometric_flex": "Zusätzlicher Flex-Prozentsatz für Intervalle, die in einen erkannten Preisplateau (Λ-Form) fallen. Wenn für den Tag ein Gipfel-Muster erkannt wird, erhalten Intervalle innerhalb der Gipfelzone diese zusätzliche Toleranz, damit der Periodendetektor sie eher einschließt. 0 = deaktiviert. Standard: 0"
+              "peak_price_geometric_flex": "Zusätzlicher Flex-Prozentsatz für Intervalle, die in einen erkannten Preisplateau (Λ-Form) fallen. Wenn für den Tag ein Gipfel-Muster erkannt wird, erhalten Intervalle innerhalb der Gipfelzone diese zusätzliche Toleranz, damit der Periodendetektor sie eher einschließt. 0 = deaktiviert. Standard: 0",
+              "peak_price_segment_forcing": "Wenn aktiviert, werden Tage mit M-förmigem Preiskurve (zwei Gipfel, getrennt durch ein zentrales Tal) an diesem Tal geteilt. Die Periodenerkennung läuft unabhängig für jede Gipfelseite, um sicherzustellen, dass jeder Gipfel die erforderliche Anzahl von Perioden erhält.",
+              "peak_price_segment_min_periods": "Mindestanzahl erforderlicher Spitzenpreisperioden pro Gipfelseite bei aktivierter M-Form-Segment-Erzwingung. Jede Seite muss unabhängig mindestens diese Anzahl Perioden liefern. Standard: 1"
             }
           }
         },

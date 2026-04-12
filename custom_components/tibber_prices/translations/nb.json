@@ -245,12 +245,16 @@
             "data": {
               "best_price_extend_to_very_cheap": "Utvid til svært billige intervaller",
               "best_price_max_extension_intervals": "Maksimale utvidelsesintervaller",
-              "best_price_geometric_flex": "Geometrisk fleksbonus"
+              "best_price_geometric_flex": "Geometrisk fleksbonus",
+              "best_price_segment_forcing": "W-form segment-tvinging",
+              "best_price_segment_min_periods": "Perioder per segment"
             },
             "data_description": {
               "best_price_extend_to_very_cheap": "Når aktivert, utvider oppdagede bestprisperioder seg utover for å inkludere tilstøtende intervaller med prisnivået 'Svært billig'. Dette fanger opp ekstremt billige intervaller ved kantene av oppdagede perioder.",
               "best_price_max_extension_intervals": "Maksimalt antall ekstra intervaller per side (venstre og høyre kant). Hvert intervall er 15 minutter. Eksempel: 4 intervaller = opptil 1 times utvidelse per kant. Standard: 4",
-              "best_price_geometric_flex": "Ekstra fleksprosent for intervaller som faller innenfor en oppdaget prisdal (V-form). Når et dal-mønster oppdages for dagen, får intervaller innen dalsonen denne ekstra toleransen, slik at periodevarslingssystemet er mer tilbøyelig til å inkludere dem. 0 = deaktivert. Standard: 0"
+              "best_price_geometric_flex": "Ekstra fleksprosent for intervaller som faller innenfor en oppdaget prisdal (V-form). Når et dal-mønster oppdages for dagen, får intervaller innen dalsonen denne ekstra toleransen, slik at periodevarslingssystemet er mer tilbøyelig til å inkludere dem. 0 = deaktivert. Standard: 0",
+              "best_price_segment_forcing": "Når aktivert deles dager med W-formet priskurve (to daler adskilt av en sentral topp) ved den sentrale toppen. Periodedetektor kjøres uavhengig for hver dalside for å sikre at hvert dal får det påkrevde antallet perioder.",
+              "best_price_segment_min_periods": "Minimum antall bestprisperioder per dalside når W-form segment-tvinging er aktivert. Hver side må uavhengig produsere minst dette antallet perioder. Standard: 1"
             }
           }
         },
@@ -306,12 +310,16 @@
             "data": {
               "peak_price_extend_to_very_expensive": "Utvid til svært dyre intervaller",
               "peak_price_max_extension_intervals": "Maksimale utvidelsesintervaller",
-              "peak_price_geometric_flex": "Geometrisk fleksbonus"
+              "peak_price_geometric_flex": "Geometrisk fleksbonus",
+              "peak_price_segment_forcing": "M-form segment-tvinging",
+              "peak_price_segment_min_periods": "Perioder per segment"
             },
             "data_description": {
               "peak_price_extend_to_very_expensive": "Når aktivert, utvider oppdagede topprisperioder seg utover for å inkludere tilstøtende intervaller med prisnivået 'Svært dyrt'. Dette fanger opp ekstremt dyre intervaller ved kantene av oppdagede perioder.",
               "peak_price_max_extension_intervals": "Maksimalt antall ekstra intervaller per side (venstre og høyre kant). Hvert intervall er 15 minutter. Eksempel: 4 intervaller = opptil 1 times utvidelse per kant. Standard: 4",
-              "peak_price_geometric_flex": "Ekstra fleksprosent for intervaller som faller innenfor en oppdaget pristopp (Λ-form). Når et topp-mønster oppdages for dagen, får intervaller innen toppsonene denne ekstra toleransen, slik at periodevarslingssystemet er mer tilbøyelig til å inkludere dem. 0 = deaktivert. Standard: 0"
+              "peak_price_geometric_flex": "Ekstra fleksprosent for intervaller som faller innenfor en oppdaget pristopp (Λ-form). Når et topp-mønster oppdages for dagen, får intervaller innen toppsonene denne ekstra toleransen, slik at periodevarslingssystemet er mer tilbøyelig til å inkludere dem. 0 = deaktivert. Standard: 0",
+              "peak_price_segment_forcing": "Når aktivert deles dager med M-formet priskurve (to topper adskilt av et sentralt dal) ved det sentrale dalet. Periodedetektor kjøres uavhengig for hver toppside for å sikre at hver topp får det påkrevde antallet perioder.",
+              "peak_price_segment_min_periods": "Minimum antall topprisperioder per toppside når M-form segment-tvinging er aktivert. Hver side må uavhengig produsere minst dette antallet perioder. Standard: 1"
             }
           }
         },

@@ -245,12 +245,16 @@
             "data": {
               "best_price_extend_to_very_cheap": "Uitbreiden met zeer goedkope intervallen",
               "best_price_max_extension_intervals": "Maximale uitbreidingsintervallen",
-              "best_price_geometric_flex": "Geometrische Flex Bonus"
+              "best_price_geometric_flex": "Geometrische Flex Bonus",
+              "best_price_segment_forcing": "W-vorm segmentverstrekking",
+              "best_price_segment_min_periods": "Periodes per segment"
             },
             "data_description": {
               "best_price_extend_to_very_cheap": "Indien ingeschakeld, breiden gedetecteerde beste-prijsperioden zich uit aan de randen om aangrenzende intervallen met prijsniveau 'Zeer goedkoop' op te nemen. Dit vangt extreem goedkope intervallen op aan de randen van gedetecteerde perioden.",
               "best_price_max_extension_intervals": "Maximaal aantal extra intervallen per kant (linker en rechter rand). Elk interval is 15 minuten. Voorbeeld: 4 intervallen = maximaal 1 uur uitbreiding per rand. Standaard: 4",
-              "best_price_geometric_flex": "Extra flex percentage voor intervallen die binnen een gedetecteerde prijsdal (V-vorm) vallen. Wanneer een dal-patroon wordt gedetecteerd voor de dag, krijgen intervallen binnen de dalzone deze extra tolerantie, waardoor de periodedetector ze eerder opneemt. 0 = uitgeschakeld. Standaard: 0"
+              "best_price_geometric_flex": "Extra flex percentage voor intervallen die binnen een gedetecteerde prijsdal (V-vorm) vallen. Wanneer een dal-patroon wordt gedetecteerd voor de dag, krijgen intervallen binnen de dalzone deze extra tolerantie, waardoor de periodedetector ze eerder opneemt. 0 = uitgeschakeld. Standaard: 0",
+              "best_price_segment_forcing": "Wanneer ingeschakeld worden dagen met een W-vormige prijscurve (twee dalen gescheiden door een centrale piek) gesplitst op de centrale piek. Periodedetectie wordt onafhankelijk uitgevoerd voor elke dalzijde, zodat elk dal het vereiste aantal perioden heeft.",
+              "best_price_segment_min_periods": "Minimaal aantal beste-prijsperioden per dalzijde wanneer W-vorm segmentverstrekking is ingeschakeld. Elke zijde moet onafhankelijk minimaal dit aantal perioden opleveren. Standaard: 1"
             }
           }
         },
@@ -306,12 +310,16 @@
             "data": {
               "peak_price_extend_to_very_expensive": "Uitbreiden met zeer dure intervallen",
               "peak_price_max_extension_intervals": "Maximale uitbreidingsintervallen",
-              "peak_price_geometric_flex": "Geometrische Flex Bonus"
+              "peak_price_geometric_flex": "Geometrische Flex Bonus",
+              "peak_price_segment_forcing": "M-vorm segmentverstrekking",
+              "peak_price_segment_min_periods": "Periodes per segment"
             },
             "data_description": {
               "peak_price_extend_to_very_expensive": "Indien ingeschakeld, breiden gedetecteerde piekprijsperioden zich uit aan de randen om aangrenzende intervallen met prijsniveau 'Zeer duur' op te nemen. Dit vangt extreem dure intervallen op aan de randen van gedetecteerde perioden.",
               "peak_price_max_extension_intervals": "Maximaal aantal extra intervallen per kant (linker en rechter rand). Elk interval is 15 minuten. Voorbeeld: 4 intervallen = maximaal 1 uur uitbreiding per rand. Standaard: 4",
-              "peak_price_geometric_flex": "Extra flex percentage voor intervallen die binnen een gedetecteerde prijspiek (Λ-vorm) vallen. Wanneer een piek-patroon wordt gedetecteerd voor de dag, krijgen intervallen binnen de piekzone deze extra tolerantie, waardoor de periodedetector ze eerder opneemt. 0 = uitgeschakeld. Standaard: 0"
+              "peak_price_geometric_flex": "Extra flex percentage voor intervallen die binnen een gedetecteerde prijspiek (Λ-vorm) vallen. Wanneer een piek-patroon wordt gedetecteerd voor de dag, krijgen intervallen binnen de piekzone deze extra tolerantie, waardoor de periodedetector ze eerder opneemt. 0 = uitgeschakeld. Standaard: 0",
+              "peak_price_segment_forcing": "Wanneer ingeschakeld worden dagen met een M-vormige prijscurve (twee pieken gescheiden door een centrale dal) gesplitst op de centrale dal. Periodedetectie wordt onafhankelijk uitgevoerd voor elke piekzijde, zodat elke piek het vereiste aantal perioden heeft.",
+              "peak_price_segment_min_periods": "Minimaal aantal piekprijsperioden per piekzijde wanneer M-vorm segmentverstrekking is ingeschakeld. Elke zijde moet onafhankelijk minimaal dit aantal perioden opleveren. Standaard: 1"
             }
           }
         },

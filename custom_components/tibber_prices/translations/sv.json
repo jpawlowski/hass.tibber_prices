@@ -245,12 +245,16 @@
             "data": {
               "best_price_extend_to_very_cheap": "Utvidga till mycket billiga intervall",
               "best_price_max_extension_intervals": "Maximalt antal utvidgningsintervall",
-              "best_price_geometric_flex": "Geometrisk flexbonus"
+              "best_price_geometric_flex": "Geometrisk flexbonus",
+              "best_price_segment_forcing": "W-form segmenttvingning",
+              "best_price_segment_min_periods": "Perioder per segment"
             },
             "data_description": {
               "best_price_extend_to_very_cheap": "När aktiverat utvidgas hittade bästa-prisperioder utåt för att inkludera angränsande intervall med prisnivån 'Mycket billig'. Detta fångar upp extremt billiga intervall vid kanterna av hittade perioder.",
               "best_price_max_extension_intervals": "Maximalt antal extra intervall per sida (vänster och höger kant). Varje intervall är 15 minuter. Exempel: 4 intervall = upp till 1 timmes utvidgning per kant. Standard: 4",
-              "best_price_geometric_flex": "Extra flexprocentandel för intervall som faller inom en detekterad prisdal (V-form). När ett dalmönster detekteras för dagen får intervall inom dalzonen denna extra tolerans, vilket gör att perioddektorn är mer benägen att inkludera dem. 0 = inaktiverad. Standard: 0"
+              "best_price_geometric_flex": "Extra flexprocentandel för intervall som faller inom en detekterad prisdal (V-form). När ett dalmönster detekteras för dagen får intervall inom dalzonen denna extra tolerans, vilket gör att perioddektorn är mer benägen att inkludera dem. 0 = inaktiverad. Standard: 0",
+              "best_price_segment_forcing": "När aktiverat delas dagar med W-formad priskurva (två dalar åtskilda av en central topp) vid den centrala toppen. Periodedetektering körs oberoende för varje dalsida för att säkerställa att varje dal får det erforderliga antalet perioder.",
+              "best_price_segment_min_periods": "Minsta antal bästa-prisperioder per dalsida när W-form segmenttvingning är aktiverat. Varje sida måste oberoende producera minst detta antal perioder. Standard: 1"
             }
           }
         },
@@ -306,12 +310,16 @@
             "data": {
               "peak_price_extend_to_very_expensive": "Utvidga till mycket dyra intervall",
               "peak_price_max_extension_intervals": "Maximalt antal utvidgningsintervall",
-              "peak_price_geometric_flex": "Geometrisk flexbonus"
+              "peak_price_geometric_flex": "Geometrisk flexbonus",
+              "peak_price_segment_forcing": "M-form segmenttvingning",
+              "peak_price_segment_min_periods": "Perioder per segment"
             },
             "data_description": {
               "peak_price_extend_to_very_expensive": "När aktiverat utvidgas hittade topprisperioder utåt för att inkludera angränsande intervall med prisnivån 'Mycket dyr'. Detta fångar upp extremt dyra intervall vid kanterna av hittade perioder.",
               "peak_price_max_extension_intervals": "Maximalt antal extra intervall per sida (vänster och höger kant). Varje intervall är 15 minuter. Exempel: 4 intervall = upp till 1 timmes utvidgning per kant. Standard: 4",
-              "peak_price_geometric_flex": "Extra flexprocentandel för intervall som faller inom en detekterad prispeak (Λ-form). När ett peak-mönster detekteras för dagen får intervall inom peakzonen denna extra tolerans, vilket gör att perioddetektor är mer benägen att inkludera dem. 0 = inaktiverad. Standard: 0"
+              "peak_price_geometric_flex": "Extra flexprocentandel för intervall som faller inom en detekterad prispeak (Λ-form). När ett peak-mönster detekteras för dagen får intervall inom peakzonen denna extra tolerans, vilket gör att perioddetektor är mer benägen att inkludera dem. 0 = inaktiverad. Standard: 0",
+              "peak_price_segment_forcing": "När aktiverat delas dagar med M-formad priskurva (två toppar åtskilda av en central dal) vid den centrala dalen. Periodedetektering körs oberoende för varje toppsida för att säkerställa att varje topp får det erforderliga antalet perioder.",
+              "peak_price_segment_min_periods": "Minsta antal topprisperioder per toppsida när M-form segmenttvingning är aktiverat. Varje sida måste oberoende producera minst detta antal perioder. Standard: 1"
             }
           }
         },
