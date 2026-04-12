@@ -845,13 +845,38 @@ If you notice commands failing or missing dependencies:
 ./scripts/clean --minimal # Only critical issues (.egg-info) - used by develop
 ```
 
-**Type checking and linting:**
+**Script selection — which to use when:**
+
+During development, prefer scripts that automatically fix and format code. Reserve check-only scripts for CI/CD and final validation before sharing changes.
+
+_Preferred development flow (auto-healing):_
 
 ```bash
-./scripts/type-check  # Run Pyright type checking
-./scripts/lint-check  # Run Ruff linting (check-only, CI mode)
-./scripts/lint        # Run Ruff linting with auto-fix
-./scripts/check       # Run both type-check + lint-check + sensor reference freshness (recommended before commits)
+./scripts/format-all  # Format Python + non-Python (JSON, JSONC, Markdown, YAML, shell scripts)
+./scripts/lint-fix    # Python lint auto-fixes (Ruff check --fix)
+./scripts/lint-all    # One command: format-all + lint-fix (broad formatting plus Python lint fixes)
+```
+
+_Check-only flow (CI/CD-oriented):_
+
+```bash
+./scripts/lint-check  # Ruff format-check + lint-check, Python scope only
+./scripts/check       # type-check + lint-check + sensor reference freshness (recommended before commits)
+./scripts/check-all   # Python checks + non-Python formatting checks (full CI parity)
+```
+
+_Agent behavior rules:_
+- If asked to "fix", "format", "auto-heal", or "make it pass" → start with fix/format scripts.
+- If asked only to "verify", "validate", or "CI parity" → use check scripts.
+- After applying fixes, run the relevant check script once to confirm a clean state.
+- Do not rely only on editor format-on-save for project consistency.
+
+_Additional single-purpose scripts:_
+
+```bash
+./scripts/format      # Format Python only (Ruff format)
+./scripts/type-check  # Run Pyright type checking only
+./scripts/lint        # Python format + lint-fix in one step (delegates to format then lint-fix)
 ```
 
 **Documentation generation:**
@@ -916,371 +941,25 @@ When changes are complete and ready for testing:
 
 ## Git Workflow Guidance
 
-**Purpose:** Maintain clean, atomic commits that enable future release note generation while preserving technical accuracy.
-
-**Why This Matters:**
-
--   Commits stay **technical** (for developers, describe what changed and why)
--   Commits are **structured** (Conventional Commits format with "Impact:" sections)
--   Release notes are **user-friendly** (AI translates commits into user language later)
--   Clean history enables automatic release note generation from commit messages
-
-**Critical Principles:**
-
-1. **AI suggests commits, NEVER executes them** - User maintains full control of git operations
-2. **Commits are for developers** - Technical language, implementation details, code changes
-3. **Release notes are for users** - AI will translate commit history into user-friendly format later
-4. **Suggest conservatively** - Only at clear feature boundaries, not after every change
-5. **Trust session memory** - Don't check `git status`, recall what was accomplished this session
-
-### When to Suggest Commits
-
-**Suggest commits at clear feature boundaries:**
-
-| Scenario                                      | Suggest? | Example                                                                                              |
-| --------------------------------------------- | -------- | ---------------------------------------------------------------------------------------------------- |
-| Feature complete and tested                   | ✅ YES   | "Optional: Before we start the next feature, you might want to commit the translation system fixes?" |
-| Bug fixed with verification                   | ✅ YES   | "Optional: This bug fix is complete and verified. Ready to commit before moving on?"                 |
-| Multiple related files changed (logical unit) | ✅ YES   | "Optional: All 5 translation files updated. This forms a logical commit."                            |
-| About to start unrelated work                 | ✅ YES   | "Optional: Before we start refactoring the API client, commit the current sensor changes?"           |
-| User explicitly asks what's uncommitted       | ✅ YES   | Provide summary of changes and suggest commit message                                                |
-| Iterating on same feature                     | ❌ NO    | Don't suggest between attempts/refinements                                                           |
-| Debugging in progress                         | ❌ NO    | Wait until root cause found and fixed                                                                |
-| User declined previous commit suggestion      | ❌ NO    | Respect their workflow preference                                                                    |
-
-**Suggestion Language:**
-
--   Use "Optional:" prefix to make it clear this is not required
--   Ask, don't assume: "Want to commit?" not "You should commit"
--   Accept graceful decline: If user says no or ignores, don't mention again for that boundary
--   Provide commit message: Include full Conventional Commit format with "Impact:" section
--   **Specify files to stage**: When suggesting commits, list exact files for `git add`
--   **Split when logical**: If session has multiple unrelated changes, suggest separate commits with specific file lists
-
-**Commit Splitting Guidelines:**
-
-Split into multiple commits when:
-
--   Different areas affected (config flow + docs + environment)
--   Different change types (fix + feat + docs)
--   Different impact scope (user-facing vs. developer-only)
--   Changes can work independently
-
-Combine into single commit when:
-
--   Tightly coupled changes (translations + code using them)
--   Single feature across files (sensor + translations + service)
--   Dependency chain (A requires B to function)
--   Small scope (2-3 related files telling one story)
-
-**Example - Single Commit:**
-
-> Optional: Ruff configuration migration complete. Ready to commit?
->
-> **Stage these files:**
->
-> ```bash
-> git add pyproject.toml AGENTS.md
-> ```
->
-> **Commit message:**
->
-> ```
-> refactor: migrate ruff config from .ruff.toml to pyproject.toml
->
-> Consolidated ruff configuration into pyproject.toml following modern Python
-> conventions and integration_blueprint pattern.
->
-> Updated all references in AGENTS.md from .ruff.toml to
-> pyproject.toml under [tool.ruff] section.
->
-> Impact: Aligns with modern Python tooling standards. No user-visible changes.
-> ```
-
-**Example - Multiple Commits:**
-
-> Optional: Two separate improvements ready. Suggest splitting:
->
-> **Commit 1: Translation Fix**
->
-> ```bash
-> git add custom_components/tibber_prices/config_flow/
-> git add custom_components/tibber_prices/translations/*.json
-> ```
->
-> ```
-> fix(config_flow): use flat selector structure for translation_key
->
-> SelectOptionDict with label parameter was overriding translation_key,
-> causing config flow to fail at step 4.
->
-> Changed to plain string lists with translation_key parameter,
-> following HA pattern: selector.{translation_key}.options.{value}
->
-> Updated all 5 language files (de, en, nb, nl, sv).
->
-> Impact: Config flow works through all 6 steps with translated options.
-> ```
->
-> **Commit 2: Documentation**
->
-> ```bash
-> git add AGENTS.md
-> ```
->
-> ```
-> docs(patterns): document selector translation structure
->
-> Added correct translation pattern for SelectSelector based on
-> official HA documentation and debugging session.
->
-> Documents flat selector.{translation_key}.options.{value} structure
-> and common pitfall of SelectOptionDict overriding translations.
->
-> Impact: Future sessions generate correct selector translations.
-> ```
->
-> Want to commit separately or combine?
-
-### Conventional Commits Format
-
-**Reference:** Follow [Conventional Commits v1.0.0](https://www.conventionalcommits.org/en/v1.0.0/) specification.
-
-**Structure:**
-
-```
-<type>[optional scope]: <description>
-
-[optional body]
-
-[optional footer(s)]
-```
-
-**Required Elements:**
-
--   **type**: Lowercase, communicates intent (feat, fix, docs, etc.)
--   **description**: Short summary (max 50-72 chars), imperative mood ("add" not "added"), lowercase start, no period
-
-**Optional Elements:**
-
--   **scope**: Parentheses after type, e.g., `feat(sensors):` - lowercase, specific area of change
--   **body**: Detailed explanation, wrap at 72 chars, explain WHAT and WHY (not HOW - code shows that)
--   **footer**: Breaking changes, issue references, or custom fields
-
-**Breaking Changes:**
-
-Use `BREAKING CHANGE:` footer or `!` after type/scope:
-```
-feat(api)!: drop support for legacy endpoint
-
-BREAKING CHANGE: The /v1/prices endpoint has been removed. Use /v2/prices instead.
-```
-
-**Types (Conventional Commits standard):**
-
--   `feat`: New feature (appears in release notes as "New Features")
--   `fix`: Bug fix (appears in release notes as "Bug Fixes")
--   `docs`: Documentation only (appears in release notes as "Documentation")
--   `style`: Code style/formatting (no behavior change, omitted from release notes)
--   `refactor`: Code restructure without behavior change (may or may not appear in release notes)
--   `perf`: Performance improvement (appears in release notes)
--   `test`: Test changes only (omitted from release notes)
--   `build`: Build system/dependencies (omitted from release notes)
--   `ci`: CI configuration (omitted from release notes)
--   `chore`: Maintenance tasks (usually omitted from release notes)
-
-**Scope (project-specific, optional but recommended):**
-
--   `translations`: Translation system changes
--   `config_flow`: Configuration flow changes
--   `sensors`: Sensor implementation
--   `binary_sensors`: Binary sensor implementation
--   `api`: API client changes
--   `coordinator`: Data coordinator changes
--   `services`: Service implementations
--   `docs`: Documentation files
-
-**Custom Footer - Impact Section:**
-
-Add `Impact:` footer for release note generation context (project-specific addition):
-
-```
-feat(services): add rolling window support
-
-Implement dynamic 48h window that adapts to data availability.
-
-Impact: Users can create auto-adapting price charts without manual
-day selection. Requires config-template-card for ApexCharts mode.
-```
-
-**Best Practices:**
-
--   **Subject line**: Max 50 chars (hard limit 72), lowercase, imperative mood
--   **Body**: Wrap at 72 chars, optional but useful for complex changes
--   **Blank line**: Required between subject and body
--   **Impact footer**: Optional but recommended for user-facing changes
-
-### Technical Commit Message Examples
-
-**Example 1: Bug Fix**
-
-```
-fix(config_flow): use flat selector structure for translation_key
-
-SelectOptionDict with label parameter was overriding translation_key,
-causing config flow to fail at step 4 with "Unknown error occurred".
-
-Changed to use plain string lists with translation_key parameter,
-following official HA pattern: selector.{translation_key}.options.{value}
-
-Updated all 5 language files (de, en, nb, nl, sv) with correct
-structure.
-
-Impact: Config flow now works through all 6 steps with properly
-translated dropdown options. Users can complete setup without
-encountering errors.
-```
-
-**Example 2: Documentation**
-
-```
-docs(workflow): add git commit guidance for release notes
-
-Added comprehensive "Git Workflow Guidance" section to AGENTS.md
-documenting when AI should suggest commits, Conventional Commits format, and
-how to structure technical messages that enable future release note generation.
-
-Key additions:
-- Commit boundary detection decision table
-- When NOT to suggest commits (during iteration/debugging)
-- Conventional Commits format with types and scopes
-- Technical commit message examples with "Impact:" sections
-- Release note generation guidelines for future use
-
-Impact: AI can now help maintain clean, atomic commits structured for
-automatic release note generation while preserving technical accuracy.
-```
-
-**Example 3: Feature**
-
-```
-feat(environment): add VS Code Python environment configuration
-
-Added .vscode/settings.json with universal Python/Ruff settings and updated
-.devcontainer/devcontainer.json to use workspace .venv interpreter.
-
-Changes:
-- .devcontainer/devcontainer.json: Set python.defaultInterpreterPath to .venv
-- .devcontainer/devcontainer.json: Added python.analysis.extraPaths
-- .vscode/settings.json: Created with Pylance and Ruff configuration
-- Removed deprecated ruff.lint.args and ruff.format.args
-
-Impact: Pylance now resolves homeassistant.* imports correctly and provides
-full autocomplete for Home Assistant APIs. Developers get proper IDE support
-without manual interpreter selection.
-```
-
-**Example 4: Refactor**
-
-```
-refactor: migrate ruff config from .ruff.toml to pyproject.toml
-
-Consolidated ruff configuration into pyproject.toml following modern Python
-conventions and integration_blueprint pattern.
-
-Updated all references in AGENTS.md from .ruff.toml to
-pyproject.toml under [tool.ruff] section.
-
-Impact: Aligns with modern Python tooling standards. No user-visible changes.
-```
-
-### "Impact:" Section Guidelines
-
-The "Impact:" section bridges technical commits and future release notes:
-
-**What to Include:**
-
--   **User-visible effects**: What changes for end users of the integration
--   **Developer benefits**: What improves for contributors/maintainers
--   **Context for translation**: Information that helps future AI translate this into user-friendly release note
--   **Omit "Impact:" if**: Internal refactor with zero user/dev impact (e.g., rename private variable)
-
-**Examples:**
-
-✅ **Good Impact Sections:**
-
--   "Config flow now works through all 6 steps without errors"
--   "Pylance provides full autocomplete for Home Assistant APIs"
--   "AI maintains clean commit history for release note generation"
--   "Aligns with HA 2025.x translation schema requirements"
--   "Reduces API calls by 70% through intelligent caching"
-
-❌ **Poor Impact Sections:**
-
--   "Code is better now" (vague, not actionable)
--   "Fixed the bug" (redundant with commit type)
--   "Updated file X" (describes action, not impact)
--   "This should work" (uncertain, commits should be verified)
-
-### Release Note Generation (Future Use)
-
-**When generating release notes from commits:**
-
-1. **Filter by type**:
-    - Include: `feat`, `fix`, `docs` (if significant)
-    - Maybe include: `refactor` (if user-visible)
-    - Exclude: `chore`, `test`, `style`
-2. **Group by type**:
-    - "New Features" (feat)
-    - "Bug Fixes" (fix)
-    - "Documentation" (docs)
-    - "Improvements" (refactor with user impact)
-3. **Translate to user language**:
-    - Technical: "fix(config_flow): use flat selector structure" → User: "Fixed configuration wizard failing at step 4"
-    - Technical: "feat(environment): add VS Code configuration" → User: "Improved developer experience with better IDE support"
-4. **Use "Impact:" as source**:
-    - Extract user-visible effects from Impact sections
-    - Preserve context (why it matters)
-    - Rewrite in present tense, active voice
-5. **Add examples if helpful**:
-    - Show before/after for UI changes
-    - Demonstrate new capabilities with code snippets
-    - Link to documentation for complex features
-
-**Example Release Note (Generated from Commits):**
-
-> **Tibber Prices 2.0.1**
->
-> **Bug Fixes**
->
-> -   Fixed configuration wizard failing at step 4 when selecting price thresholds. Dropdown options now appear correctly with proper translations.
->
-> **Improvements**
->
-> -   Improved developer environment setup with automatic Python path detection and full Home Assistant API autocomplete in VS Code
-
-### Philosophy
-
-**User Controls Workflow:**
-
--   User decides when to commit
--   User writes final commit message (AI provides suggestion)
--   User manages branches, PRs, and releases
--   AI is an assistant, not a driver
-
-**AI Suggests at Boundaries:**
-
--   Suggests when logical unit complete
--   Provides structured commit message
--   Accepts decline without repeating
--   Trusts session memory over `git status`
-
-**Commits Enable Release Notes:**
-
--   Technical accuracy preserved (for developers)
--   Structure enables automation (Conventional Commits)
--   Impact sections provide user context (for release notes)
--   Future AI translates into user-friendly format
+**Purpose:** Keep commit guidance centralized and avoid duplicated/contradictory rules.
+
+**Authoritative commit-message instructions:**
+- Use `.github/instructions/commit-messages.instructions.md` for commit type/scope, Impact footer style, and release-notes skip trailers.
+
+**Critical behavior rules (still enforced here):**
+1. **Commit execution**: Only run `git commit` when the user explicitly asks to commit. A one-time request to commit does not authorize future commits without asking again.
+2. **Commit message generation**: When the user asks only for a commit message, generate the message and stop — do not run `git commit`. The user will commit themselves.
+3. **git push**: Never suggest or execute `git push`. The user always handles pushing themselves.
+4. Suggest commits only at clear feature boundaries (not during active debugging/iteration).
+5. Use "Optional:" phrasing for unsolicited commit suggestions and respect a declined suggestion.
+6. When suggesting commits, include exact files to stage.
+
+**Internal/unreleased fixes:**
+- If a fix never affected released users, mark commit body with one trailer so release notes can exclude it:
+  - `Release-Notes: skip`
+  - `User-Impact: none`
+  - `Released-Bug: no`
+- To check if introducing code was released, use: `./scripts/release/check-if-released <commit-hash>`
 
 ### Release Notes Generation
 

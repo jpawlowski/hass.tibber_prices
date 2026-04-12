@@ -72,6 +72,14 @@ Impact: <user-visible effects>
 
 **Types:** `feat`, `fix`, `docs`, `refactor`, `chore`, `test`
 
+For full commit-message rules (including release-note skip trailers for internal/unreleased fixes), see:
+- `.github/instructions/commit-messages.instructions.md`
+
+Important trailers for commits that should NOT appear in release notes:
+- `Release-Notes: skip`
+- `User-Impact: none`
+- `Released-Bug: no`
+
 **Example:**
 ```bash
 git commit -m "feat(sensors): add daily average price sensor
@@ -81,7 +89,7 @@ Added new sensor that calculates average price for the entire day.
 Impact: Users can now track daily average prices for cost analysis."
 ```
 
-See [`AGENTS.md`](AGENTS.md) section "Git Workflow Guidance" for detailed guidelines.
+See `.github/instructions/commit-messages.instructions.md` for detailed commit-message guidelines.
 
 ## Submitting Changes
 
