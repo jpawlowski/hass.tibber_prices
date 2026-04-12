@@ -378,7 +378,6 @@ class TibberPricesOptionsFlowHandler(OptionsFlow):
 
         # Load template and connector from common section
         template = await async_get_translation(self.hass, ["common", "override_warning_template"], language)
-        _LOGGER.debug("Loaded template: %s", template)
         if template:
             translations["override_warning_template"] = template
 
@@ -645,8 +644,8 @@ class TibberPricesOptionsFlowHandler(OptionsFlow):
         placeholders = self._get_entity_warning_placeholders("best_price")
         placeholders.update(self._get_override_warning_placeholder("best_price", overrides))
 
-        # Load translations for override warnings
-        override_translations = await self._get_override_translations()
+        # Load translations for override warnings only when overrides are active
+        override_translations = await self._get_override_translations() if overrides else {}
 
         return self.async_show_form(
             step_id="best_price",
@@ -717,8 +716,8 @@ class TibberPricesOptionsFlowHandler(OptionsFlow):
         placeholders = self._get_entity_warning_placeholders("peak_price")
         placeholders.update(self._get_override_warning_placeholder("peak_price", overrides))
 
-        # Load translations for override warnings
-        override_translations = await self._get_override_translations()
+        # Load translations for override warnings only when overrides are active
+        override_translations = await self._get_override_translations() if overrides else {}
 
         return self.async_show_form(
             step_id="peak_price",
