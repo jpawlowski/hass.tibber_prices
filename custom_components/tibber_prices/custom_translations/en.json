@@ -351,6 +351,21 @@
             "long_description": "Shows overall price volatility when considering both today and tomorrow together (when available). Indicates whether there are significant price differences across the day boundary. Falls back to today-only when tomorrow's data isn't available yet. Useful for understanding multi-day optimization opportunities. Check `price_coefficient_variation_%` for the variance percentage and `price_spread` for the absolute price span.",
             "usage_tips": "Use for planning tasks that span multiple days. Check if prices vary enough to make scheduling worthwhile. The individual day volatility sensors show breakdown per day if you need more detail."
         },
+        "price_rank_today": {
+            "description": "Where the current price sits in today's ranking — its percentile rank (0% = cheapest moment)",
+            "long_description": "Shows how cheap or expensive the current price is compared to all of today's 96 quarter-hour slots. 0% means this is the cheapest moment of the day — every other slot costs more. 50% means half of today's slots are cheaper. ~99% means it's the most expensive slot of the day. Formula (percentile rank): how many slots are cheaper ÷ total slots × 100. Attributes: `current_price`, `prices_below_count`, `interval_count`, `reference_min`, `reference_max`, `reference_mean`.",
+            "usage_tips": "Ideal for automations: 'If price_rank_today < 25, start dishwasher' (cheapest quarter of the day). Or 'If price_rank_today > 75, pause heat pump' (most expensive quarter). A value of 0 guarantees you're at the cheapest slot of the day."
+        },
+        "price_rank_tomorrow": {
+            "description": "Where the current price sits in tomorrow's percentile ranking (0% = cheapest of tomorrow)",
+            "long_description": "Shows how the current price compares to all of tomorrow's 96 quarter-hour slots — its percentile rank within tomorrow's distribution. Useful for deciding whether to wait until tomorrow. 0% means the current price is cheaper than every slot tomorrow. Returns 'Unknown' until tomorrow's data arrives (typically after 13:00). Attributes: `current_price`, `prices_below_count`, `interval_count`, `reference_min`, `reference_max`, `reference_mean`.",
+            "usage_tips": "Use to decide whether to wait: 'If price_rank_tomorrow < 10, tomorrow has even cheaper slots — postpone the task'. Best combined with a binary sensor to confirm the task can actually run tomorrow."
+        },
+        "price_rank_today_tomorrow": {
+            "description": "Percentile rank across today and tomorrow combined (0% = cheapest of the two-day window)",
+            "long_description": "Shows how cheap or expensive the current price is compared to all slots across today and tomorrow together (up to 192 quarter-hour slots when both days are available) — the percentile rank within the two-day distribution. Gives the broadest view for flexible tasks. Falls back to today-only when tomorrow's data isn't available yet. 0% = cheapest of the combined two-day window. Attributes: `current_price`, `prices_below_count`, `interval_count`, `reference_min`, `reference_max`, `reference_mean`.",
+            "usage_tips": "The broadest signal for 'is now a good time?'. Use 'If price_rank_today_tomorrow < 20, run energy-intensive task now'. Especially valuable when tasks can wait a full day — a value near 0 across two days is a genuinely exceptional price."
+        },
         "data_lifecycle_status": {
             "description": "Current state of price data lifecycle and caching",
             "long_description": "Shows whether the integration is using cached data or fresh data from the API. Displays current lifecycle state: 'cached' (using stored data), 'fresh' (just fetched from API), 'refreshing' (currently fetching), 'searching_tomorrow' (actively polling for tomorrow's data after 13:00), 'turnover_pending' (within 15 minutes of midnight, 23:45-00:00), or 'error' (fetch failed). Includes comprehensive attributes like cache age, next API poll time, data completeness, and API call statistics.",
@@ -493,8 +508,8 @@
         },
         "day_pattern_today": {
             "description": "Detected price shape of today's electricity prices",
-            "long_description": "Classifies today into a price shape: Valley (cheap in the middle of the day), Peak (expensive in the middle), Double Valley (W-shape, two cheap windows), Double Peak (M-shape, two expensive peaks), Flat (prices barely move), Rising (prices climb through the day), Falling (prices drop through the day), or Mixed. Attributes include confidence (0\u20131), coefficient of variation, knee-point times, and intra-day segments.",
-            "usage_tips": "Use today's pattern to decide when to shift loads. A Valley day means cheap prices around midday \u2014 ideal for running the dishwasher, washing machine, or charging the EV. A Peak day means expensive midday \u2014 run appliances early morning or late evening. Use valley_start and valley_end attributes to schedule automations precisely."
+            "long_description": "Classifies today into a price shape: Valley (cheap in the middle of the day), Peak (expensive in the middle), Double Valley (W-shape, two cheap windows), Double Peak (M-shape, two expensive peaks), Flat (prices barely move), Rising (prices climb through the day), Falling (prices drop through the day), or Mixed. Attributes include confidence (0–1), coefficient of variation, knee-point times, and intra-day segments.",
+            "usage_tips": "Use today's pattern to decide when to shift loads. A Valley day means cheap prices around midday — ideal for running the dishwasher, washing machine, or charging the EV. A Peak day means expensive midday — run appliances early morning or late evening. Use valley_start and valley_end attributes to schedule automations precisely."
         },
         "day_pattern_tomorrow": {
             "description": "Detected price shape of tomorrow's electricity prices",

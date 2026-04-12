@@ -351,6 +351,21 @@
             "long_description": "Zeigt die Gesamtvolatilität, wenn heute und morgen gemeinsam betrachtet werden (sobald die morgigen Daten verfügbar sind). Zeigt, ob über die Tagesgrenze hinweg deutliche Preisunterschiede bestehen. Fällt auf nur-heute zurück, wenn morgige Daten noch fehlen. Hilfreich für mehrtägige Optimierung. `price_coefficient_variation_%` zeigt den Prozentwert, `price_spread` die absolute Preisspanne.",
             "usage_tips": "Nutze dies für Aufgaben, die sich über mehrere Tage erstrecken. Prüfe, ob die Preisunterschiede groß genug für eine Planung sind. Die einzelnen Tages-Sensoren zeigen die Beiträge pro Tag, falls du mehr Details brauchst."
         },
+        "price_rank_today": {
+            "description": "Position des aktuellen Preises in der heutigen Rangliste — sein Perzentilrang (0 % = günstigster Moment)",
+            "long_description": "Zeigt, wie günstig oder teuer der aktuelle Preis im Vergleich zu allen 96 Viertelstunden-Slots von heute ist. 0 % bedeutet: Dies ist der günstigste Moment des Tages — jeder andere Slot kostet mehr. 50 % bedeutet, dass die Hälfte der Slots günstiger ist. ~99 % bedeutet: teuerster Slot des Tages. Formel (Perzentilrang): Wie viele Slots sind günstiger ÷ Gesamt-Slots × 100. Attribute: `current_price`, `prices_below_count`, `interval_count`, `reference_min`, `reference_max`, `reference_mean`.",
+            "usage_tips": "Ideal für Automatisierungen: 'Wenn Preisrang heute < 25, Geschirrspüler starten' (günstigstes Viertel des Tages). Oder 'Wenn Preisrang heute > 75, Wärmepumpe pausieren' (teuerstes Viertel). Wert 0 garantiert den günstigsten Slot des Tages."
+        },
+        "price_rank_tomorrow": {
+            "description": "Perzentilrang des aktuellen Preises in der morgigen Rangliste (0 % = günstigster von morgen)",
+            "long_description": "Zeigt, wie der aktuelle Preis im Vergleich zu allen 96 Viertelstunden-Slots von morgen abschneidet — sein Perzentilrang innerhalb der morgigen Preisverteilung. Nützlich, um zu entscheiden, ob es sich lohnt, bis morgen zu warten. 0 % bedeutet, dass der aktuelle Preis günstiger als jeder morgige Slot ist. Gibt 'Unbekannt' zurück, bis die morgigen Daten vorliegen (in der Regel nach 13:00 Uhr). Attribute: `current_price`, `prices_below_count`, `interval_count`, `reference_min`, `reference_max`, `reference_mean`.",
+            "usage_tips": "Nutze zur Entscheidung, ob Warten sinnvoll ist: 'Wenn Preisrang morgen < 10, morgen gibt es noch günstigere Slots — Aufgabe verschieben'. Am besten mit einem Binärsensor kombinieren, der sicherstellt, dass die Aufgabe morgen durchgeführt werden kann."
+        },
+        "price_rank_today_tomorrow": {
+            "description": "Perzentilrang des aktuellen Preises über heute+morgen zusammen (0 % = günstigstes des Zweitages-Fensters)",
+            "long_description": "Zeigt, wie günstig oder teuer der aktuelle Preis im Vergleich zu allen Slots von heute und morgen zusammen ist — sein Perzentilrang innerhalb der Zweitages-Verteilung (bis zu 192 Slots, wenn beide Tage verfügbar). Gibt den breitesten Überblick für flexible Aufgaben. Fällt auf nur-heute zurück, wenn morgige Daten noch fehlen. 0 % = günstigstes des kombinierten Fensters. Attribute: `current_price`, `prices_below_count`, `interval_count`, `reference_min`, `reference_max`, `reference_mean`.",
+            "usage_tips": "Das breiteste Signal für 'Ist jetzt ein guter Zeitpunkt?'. Nutze 'Wenn Preisrang heute+morgen < 20, energieintensive Aufgabe jetzt ausführen'. Besonders wertvoll, wenn Aufgaben einen Tag lang warten können — ein Wert nahe 0 über zwei Tage ist ein wirklich außergewöhnlicher Preis."
+        },
         "data_lifecycle_status": {
             "description": "Aktueller Status des Preisdaten-Lebenszyklus und der Zwischenspeicherung",
             "long_description": "Zeigt an, ob die Integration zwischengespeicherte Daten oder frische Daten von der API verwendet. Zeigt aktuellen Lebenszyklus-Status: 'cached' (verwendet gespeicherte Daten), 'fresh' (gerade von API abgerufen), 'refreshing' (wird gerade abgerufen), 'searching_tomorrow' (sucht aktiv nach Morgendaten nach 13:00 Uhr), 'turnover_pending' (innerhalb 15 Minuten vor Mitternacht, 23:45-00:00) oder 'error' (Abruf fehlgeschlagen). Enthält umfassende Attribute wie Cache-Alter, nächste API-Abfragezeit, Datenvollständigkeit und API-Aufruf-Statistiken.",
@@ -556,7 +571,7 @@
             "usage_tips": "Erhöhe den Wert, wenn du strengere Bestpreis-Kriterien möchtest. Verringere ihn, wenn zu wenige Perioden erkannt werden."
         },
         "best_price_min_period_length_override": {
-            "description": "Minimale Periodenl\u00e4nge in 15-Minuten-Intervallen. Perioden kürzer als diese werden nicht gemeldet. Beispiel: 2 = mindestens 30 Minuten.",
+            "description": "Minimale Periodenlänge in 15-Minuten-Intervallen. Perioden kürzer als diese werden nicht gemeldet. Beispiel: 2 = mindestens 30 Minuten.",
             "long_description": "Wenn diese Entität aktiviert ist, überschreibt ihr Wert die Einstellung 'Mindestperiodenlänge' aus dem Optionen-Dialog für die Bestpreis-Periodenberechnung.",
             "usage_tips": "Passe an die typische Laufzeit deiner Geräte an: 2 (30 Min) für Schnellprogramme, 4-8 (1-2 Std) für normale Zyklen, 8+ für lange ECO-Programme."
         },
@@ -586,7 +601,7 @@
             "usage_tips": "Erhöhe den Wert, um nur extreme Preisspitzen zu erfassen. Verringere ihn, um mehr Hochpreiszeiten einzubeziehen."
         },
         "peak_price_min_period_length_override": {
-            "description": "Minimale Periodenl\u00e4nge in 15-Minuten-Intervallen für Spitzenpreise. Kürzere Preisspitzen werden nicht als Perioden gemeldet.",
+            "description": "Minimale Periodenlänge in 15-Minuten-Intervallen für Spitzenpreise. Kürzere Preisspitzen werden nicht als Perioden gemeldet.",
             "long_description": "Wenn diese Entität aktiviert ist, überschreibt ihr Wert die Einstellung 'Mindestperiodenlänge' aus dem Optionen-Dialog für die Spitzenpreis-Periodenberechnung.",
             "usage_tips": "Kürzere Werte erfassen kurze Preisspitzen. Längere Werte fokussieren auf anhaltende Hochpreisphasen."
         },

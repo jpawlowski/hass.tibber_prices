@@ -351,6 +351,21 @@
             "long_description": "Viser samlet volatilitet når i dag og i morgen sees sammen (når morgendata er tilgjengelig). Viser om det finnes klare prisforskjeller over dagsgrensen. Faller tilbake til kun i dag hvis morgendata mangler. Nyttig for flerdagers optimalisering. `price_coefficient_variation_%` viser prosentverdien, `price_spread` viser den absolutte prisspennet.",
             "usage_tips": "Bruk for oppgaver som går over flere dager. Sjekk om prisforskjellene er store nok til å planlegge etter. De enkelte dagssensorene viser bidrag per dag om du trenger mer detalj."
         },
+        "price_rank_today": {
+            "description": "Den gjeldende prisens posisjon i dagens rangering — dens persentilrang (0 % = billigste øyeblikk)",
+            "long_description": "Viser hvor billig eller dyr den gjeldende prisen er sammenlignet med alle 96 kvartersintervaller for i dag. 0 % betyr at dette er dagens billigste øyeblikk — alle andre intervaller koster mer. 50 % betyr at halvparten av intervallene er billigere. ~99 % betyr: dyreste intervall på dagen. Formel (persentilrang): Hvor mange intervaller er billigere ÷ totalt antall × 100. Attributter: `current_price`, `prices_below_count`, `interval_count`, `reference_min`, `reference_max`, `reference_mean`.",
+            "usage_tips": "Ideelt for automasjoner: 'Hvis prisrang < 25, start oppvaskmaskin' (billigste fjerdedel av dagen). Eller 'Hvis prisrang > 75, sett varmepumpen på pause' (dyreste fjerdedel). Verdien 0 garanterer at du er på dagens billigste intervall."
+        },
+        "price_rank_tomorrow": {
+            "description": "Persentilrang for gjeldende pris i morgendagens rangering (0 % = billigst i morgen)",
+            "long_description": "Viser hvordan den gjeldende prisen sammenlignes med alle 96 kvartersintervaller for i morgen — dens persentilrang innenfor morgendagens prisfordeling. Nyttig for å avgjere om det lønner seg å vente til i morgen. 0 % betyr at gjeldende pris er billigere enn alle morgendagens intervaller. Returnerer 'Ukjent' til morgendagens data ankommer (typisk etter 13:00). Attributter: `current_price`, `prices_below_count`, `interval_count`, `reference_min`, `reference_max`, `reference_mean`.",
+            "usage_tips": "Bruk for å avgjøre om det lønner seg å vente: 'Hvis prisrang i morgen < 10, finnes det enda billigere tidspunkter i morgen — utsett oppgaven'. Best kombinert med en binærsensor som bekrefter at oppgaven faktisk kan utføres i morgen."
+        },
+        "price_rank_today_tomorrow": {
+            "description": "Persentilrang for gjeldende pris over i dag+i morgen kombinert (0 % = billigst i todagersvinduet)",
+            "long_description": "Viser hvor billig eller dyr den gjeldende prisen er sammenlignet med alle intervaller for i dag og i morgen kombinert — dens persentilrang innenfor todagersfordelingen (opptil 192 intervaller når begge dagene er tilgjengelige). Gir det bredeste todagers-oversikten for fleksible oppgaver. Faller tilbake til kun i dag når morgendagens data mangler. 0 % = billigst i det kombinerte vinduet. Attributter: `current_price`, `prices_below_count`, `interval_count`, `reference_min`, `reference_max`, `reference_mean`.",
+            "usage_tips": "Det bredeste signalet for 'Er nå et godt tidspunkt?'. Bruk 'Hvis prisrang i dag+i morgen < 20, kjør energikrevende oppgave nå'. Spesielt verdifullt når oppgaver kan vente en hel dag — en verdi nær 0 over to dager er en virkelig eksepsjonell pris."
+        },
         "data_lifecycle_status": {
             "description": "Gjeldende tilstand for prisdatalivssyklus og hurtigbufring",
             "long_description": "Viser om integrasjonen bruker hurtigbufrede data eller ferske data fra API-et. Viser gjeldende livssyklustilstand: 'cached' (bruker lagrede data), 'fresh' (nettopp hentet fra API), 'refreshing' (henter for øyeblikket), 'searching_tomorrow' (søker aktivt etter morgendagens data etter 13:00), 'turnover_pending' (innen 15 minutter før midnatt, 23:45-00:00), eller 'error' (henting mislyktes). Inkluderer omfattende attributter som cache-alder, neste API-spørring, datafullstendighet og API-anropsstatistikk.",

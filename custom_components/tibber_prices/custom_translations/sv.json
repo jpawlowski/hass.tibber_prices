@@ -351,6 +351,21 @@
             "long_description": "Visar den samlade volatiliteten när idag och imorgon ses tillsammans (när morgondatan finns). Visar om det finns tydliga prisskillnader över dagsgränsen. Faller tillbaka till endast idag om morgondatan saknas. Nyttig för flerdagarsoptimering. `price_coefficient_variation_%` visar procentvärdet, `price_spread` visar den absoluta prisspannet.",
             "usage_tips": "Använd för uppgifter som sträcker sig över flera dagar. Kontrollera om prisskillnaderna är stora nog för att planera efter. De enskilda dag-sensorerna visar bidrag per dag om du behöver mer detaljer."
         },
+        "price_rank_today": {
+            "description": "Den aktuella prisens position i dagens ranking — dess percentilrang (0% = billigast)",
+            "long_description": "Visar hur billig eller dyr den aktuella prisen är jämfört med alla 96 kvartersintervall för idag. 0% innebär att detta är dagens billigaste ögonblick — varje annat slot kostar mer. 50% innebär att hälften av dagens slots är billigare. ~99% innebär det dyraste slot på dagen. Formel (percentilrang): hur många slots är billigare ÷ totalt antal × 100. Attribut: `current_price`, `prices_below_count`, `interval_count`, `reference_min`, `reference_max`, `reference_mean`.",
+            "usage_tips": "Perfekt för automatiseringar: 'Om prisrang < 25, starta diskmaskin' (billigaste fjärdedelen av dagen). Eller 'Om prisrang > 75, pausa värmepump' (dyraste fjärdedelen). Värde 0 garanterar att du är på dagens billigaste intervall."
+        },
+        "price_rank_tomorrow": {
+            "description": "Percentilrang för aktuellt pris i morgondagens ranking (0% = billigast imorgon)",
+            "long_description": "Visar hur den aktuella prisen jämförs med alla 96 kvartersintervall för imorgon — dess percentilrang inom morgondagens prisfördelning. Användbart för att avgöra om det lönar sig att vänta till imorgon. 0% innebär att den aktuella prisen är billigare än varje intervall imorgon. Returnerar 'Okänt' tills morgondagens data anlänger (typiskt efter 13:00). Attribut: `current_price`, `prices_below_count`, `interval_count`, `reference_min`, `reference_max`, `reference_mean`.",
+            "usage_tips": "Använd för att avgöra om det lönar sig att vänta: 'Om prisrang imorgon < 10, finns det ännu billigare slots imorgon — skjut upp uppgiften'. Bäst kombinerat med en binär sensor som bekräftar att uppgiften kan utföras imorgon."
+        },
+        "price_rank_today_tomorrow": {
+            "description": "Percentilrang för aktuellt pris över idag och imorgon kombinerat (0% = billigast i tvådagarsfönstret)",
+            "long_description": "Visar hur billig eller dyr den aktuella prisen är jämfört med alla slots för idag och imorgon tillsammans — dess percentilrang inom tvådagarsfördelningen (upp till 192 intervall när båda dagarna är tillgängliga). Ger den bredaste tvådagarsvyn för flexibla uppgifter. Faller tillbaka till enbart idag när morgondagens data inte är tillgänglig än. 0% = billigast i det kombinerade fönstret. Attribut: `current_price`, `prices_below_count`, `interval_count`, `reference_min`, `reference_max`, `reference_mean`.",
+            "usage_tips": "Det bredaste signalet för 'Passar det bra nu?'. Använd 'Om prisrang idag+imorgon < 20, kör energikrävande uppgift nu'. Särskilt värdefullt när uppgifter kan vänta en hel dag — ett värde nära 0 över två dagar är ett verkligt exceptionellt pris."
+        },
         "data_lifecycle_status": {
             "description": "Gjeldende tilstand for prisdatalivssyklus og hurtigbufring",
             "long_description": "Viser om integrasjonen bruker hurtigbufrede data eller ferske data fra API-et. Viser gjeldende livssyklustilstand: 'cached' (bruker lagrede data), 'fresh' (nettopp hentet fra API), 'refreshing' (henter for øyeblikket), 'searching_tomorrow' (søker aktivt etter morgendagens data etter 13:00), 'turnover_pending' (innen 15 minutter før midnatt, 23:45-00:00), eller 'error' (henting mislyktes). Inkluderer omfattende attributter som cache-alder, neste API-spørring, datafullstendighet og API-anropsstatistikk.",

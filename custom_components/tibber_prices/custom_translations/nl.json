@@ -351,6 +351,21 @@
             "long_description": "Geeft de totale volatiliteit weer wanneer vandaag en morgen samen worden bekeken (zodra morgengegevens beschikbaar zijn). Toont of er duidelijke prijsverschillen over de daggrens heen zijn. Valt terug naar alleen vandaag als morgengegevens ontbreken. Handig voor meerdaagse optimalisatie. `price_coefficient_variation_%` toont het percentage, `price_spread` de absolute prijsspanne.",
             "usage_tips": "Gebruik voor taken die meerdere dagen beslaan. Kijk of de prijsverschillen groot genoeg zijn om plannen op te baseren. De afzonderlijke dag-sensoren tonen per-dag bijdragen als je meer detail wilt."
         },
+        "price_rank_today": {
+            "description": "De positie van de huidige prijs in de ranglijst van vandaag — zijn percentielrang (0% = goedkoopst)",
+            "long_description": "Toont hoe goedkoop of duur de huidige prijs is ten opzichte van alle 96 kwartiersslots van vandaag. 0% betekent dat dit het goedkoopste moment van de dag is — elk ander slot kost meer. 50% betekent dat de helft van de slots goedkoper is. ~99% betekent het duurste slot van de dag. Formule (percentielrang): hoeveel slots zijn goedkoper ÷ totaal aantal × 100. Attributen: `current_price`, `prices_below_count`, `interval_count`, `reference_min`, `reference_max`, `reference_mean`.",
+            "usage_tips": "Ideaal voor automatiseringen: 'Als prijsrang < 25, start vaatwasser' (goedkoopste kwart van de dag). Of 'Als prijsrang > 75, pauzeer warmtepomp' (duurste kwart). Waarde 0 garandeert dat je op het goedkoopste slot van de dag zit."
+        },
+        "price_rank_tomorrow": {
+            "description": "Percentielrang van de huidige prijs in de ranglijst van morgen (0% = goedkoopst van morgen)",
+            "long_description": "Toont hoe de huidige prijs zich verhoudt tot alle 96 kwartiersslots van morgen — zijn percentielrang binnen de verdeling van morgen. Handig om te beslissen of het loont om tot morgen te wachten. 0% betekent dat de huidige prijs goedkoper is dan elk slot van morgen. Geeft 'Onbekend' terug totdat de gegevens van morgen arriveren (meestal na 13:00). Attributen: `current_price`, `prices_below_count`, `interval_count`, `reference_min`, `reference_max`, `reference_mean`.",
+            "usage_tips": "Gebruik om te beslissen of wachten loont: 'Als prijsrang morgen < 10, zijn er morgen nog goedkopere slots — taak uitstellen'. Het beste gecombineerd met een binaire sensor die bevestigt dat de taak morgen daadwerkelijk uitgevoerd kan worden."
+        },
+        "price_rank_today_tomorrow": {
+            "description": "Percentielrang van de huidige prijs over vandaag en morgen gecombineerd (0% = goedkoopst van het tweedaagse venster)",
+            "long_description": "Toont hoe goedkoop of duur de huidige prijs is ten opzichte van alle slots van vandaag en morgen samen — zijn percentielrang binnen de tweedaagse verdeling (tot 192 slots wanneer beide dagen beschikbaar zijn). Geeft het breedste overzicht voor flexibele taken. Valt terug naar alleen vandaag als de gegevens van morgen nog niet beschikbaar zijn. 0% = goedkoopst van het gecombineerde venster. Attributen: `current_price`, `prices_below_count`, `interval_count`, `reference_min`, `reference_max`, `reference_mean`.",
+            "usage_tips": "Het breedste signaal voor 'Is dit nu een goed moment?'. Gebruik 'Als prijsrang vandaag+morgen < 20, voer energieverbruikende taak nu uit'. Bijzonder waardevol als taken een dag kunnen wachten — een waarde dicht bij 0 over twee dagen is een werkelijk uitzonderlijke prijs."
+        },
         "data_lifecycle_status": {
             "description": "Huidige status van prijsgegevenslevenscyclus en caching",
             "long_description": "Toont of de integratie gebruikmaakt van gecachte gegevens of verse gegevens van de API. Toont huidige levenscyclusstatus: 'cached' (gebruikt opgeslagen gegevens), 'fresh' (net opgehaald van API), 'refreshing' (momenteel aan het ophalen), 'searching_tomorrow' (actief aan het zoeken naar morgengegevens na 13:00), 'turnover_pending' (binnen 15 minuten voor middernacht, 23:45-00:00), of 'error' (ophalen mislukt). Bevat uitgebreide attributen zoals cache-leeftijd, volgende API-poll-tijd, gegevensvolledigheid en API-aanroepstatistieken.",
