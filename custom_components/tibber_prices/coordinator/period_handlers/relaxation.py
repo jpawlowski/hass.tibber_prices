@@ -12,7 +12,7 @@ if TYPE_CHECKING:
 
     from custom_components.tibber_prices.coordinator.time_service import TibberPricesTimeService
 
-from custom_components.tibber_prices.utils.price import calculate_coefficient_of_variation
+from custom_components.tibber_prices.utils.price import calculate_coefficient_of_variation, calculate_iqr_stats
 
 from .period_overlap import (
     recalculate_period_metadata,
@@ -51,7 +51,10 @@ FLEX_WARNING_VSHAPE_RATIO = 0.5  # span/ref_price ratio below which a day is con
 # On flat price days (low variation), it is unrealistic to require multiple distinct
 # best/peak price periods. Requiring 2+ periods would force relaxation to create
 # artificial periods that don't represent genuine price structure.
-LOW_CV_FLAT_DAY_THRESHOLD = 10.0  # %: days with CV ≤ this need only 1 period
+LOW_CV_FLAT_DAY_THRESHOLD = 10.0  # %: fallback when IQR% not available (near-zero or negative median)
+# IQR% ≤ 15% ≈ CV ≤ 10% for clean data, but also catches "flat + isolated spike" days correctly:
+# a single spike inflates CV to 15-25% while leaving IQR% near 0-5%.
+LOW_IQR_PCT_FLAT_DAY_THRESHOLD = 15.0  # %: days with IQR% ≤ this need only 1 period
 
 
 def _check_period_quality(
@@ -448,10 +451,13 @@ def _compute_day_effective_min(
     """
     Compute per-day effective min_periods with flat-day adaptation.
 
-    On days with very low price variation (CV ≤ LOW_CV_FLAT_DAY_THRESHOLD),
+    On days with very low price variation (IQR% ≤ LOW_IQR_PCT_FLAT_DAY_THRESHOLD),
     requiring multiple distinct cheapest/peak periods is unrealistic. Finding
     ONE period is sufficient because there is no meaningful price structure that
     would create natural multiple periods.
+
+    Uses IQR% as primary metric (robust to isolated price spikes) with CV as
+    fallback when IQR% is undefined (near-zero or negative median prices).
 
     This applies ONLY to BEST PRICE periods (reverse_sort=False). For PEAK PRICE
     periods, full relaxation should run even on flat days because identifying the
@@ -471,7 +477,6 @@ def _compute_day_effective_min(
     """
     day_effective_min = {}
     flat_day_count = 0
-    min_prices_for_cv = 2  # Need at least 2 prices to calculate CV
 
     for day, day_prices in prices_by_day.items():
         if not enable_relaxation or min_periods <= 1 or reverse_sort:
@@ -481,30 +486,46 @@ def _compute_day_effective_min(
 
         price_values = [float(p["total"]) for p in day_prices if p.get("total") is not None]
 
-        if len(price_values) < min_prices_for_cv:
+        if len(price_values) < 2:  # noqa: PLR2004 - need at least 2 prices for any metric
             day_effective_min[day] = min_periods
             continue
 
-        day_cv = calculate_coefficient_of_variation(price_values)
+        # Primary flat-day metric: IQR% is robust to isolated price spikes.
+        # A single spike inflates CV to 15-25% while leaving IQR% near 0-5%,
+        # so IQR correctly identifies "flat core + spike" days as flat.
+        iqr_stats = calculate_iqr_stats(price_values)
+        iqr_pct = iqr_stats["iqr_pct"] if iqr_stats else None
 
-        if day_cv is not None and day_cv <= LOW_CV_FLAT_DAY_THRESHOLD:
+        is_flat = False
+        flat_metric = ""
+
+        if iqr_pct is not None:
+            is_flat = iqr_pct <= LOW_IQR_PCT_FLAT_DAY_THRESHOLD
+            flat_metric = f"IQR%={iqr_pct:.1f}% ≤ {LOW_IQR_PCT_FLAT_DAY_THRESHOLD:.0f}%"
+        else:
+            # IQR% undefined (near-zero or negative median): fall back to CV
+            day_cv = calculate_coefficient_of_variation(price_values)
+            if day_cv is not None:
+                is_flat = day_cv <= LOW_CV_FLAT_DAY_THRESHOLD
+                flat_metric = f"CV={day_cv:.1f}% ≤ {LOW_CV_FLAT_DAY_THRESHOLD:.0f}% (IQR% N/A)"
+
+        if is_flat:
             day_effective_min[day] = 1
             flat_day_count += 1
             _LOGGER_DETAILS.debug(
-                "%sDay %s: flat price profile (CV=%.1f%% ≤ %.1f%%) → min_periods relaxed to 1",
+                "%sDay %s: flat price profile (%s) → min_periods relaxed to 1",
                 INDENT_L1,
                 day,
-                day_cv,
-                LOW_CV_FLAT_DAY_THRESHOLD,
+                flat_metric,
             )
         else:
             day_effective_min[day] = min_periods
 
     if flat_day_count > 0:
         _LOGGER.info(
-            "Adaptive min_periods: %d flat day(s) (CV ≤ %.0f%%) need only 1 period instead of %d",
+            "Adaptive min_periods: %d flat day(s) (IQR%% ≤ %.0f%%) need only 1 period instead of %d",
             flat_day_count,
-            LOW_CV_FLAT_DAY_THRESHOLD,
+            LOW_IQR_PCT_FLAT_DAY_THRESHOLD,
             min_periods,
         )
 
