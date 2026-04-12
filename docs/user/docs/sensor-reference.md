@@ -217,6 +217,9 @@ explanations of each sensor's purpose, attributes, and automation examples.
 | <span id="ref-day_pattern_today" class="entity-anchor"></span>`day_pattern_today` | Today's Price Pattern | Preismuster Heute | Prismønster i dag | Prijspatroon Vandaag | Prismönster Idag | ✅ |
 | <span id="ref-day_pattern_tomorrow" class="entity-anchor"></span>`day_pattern_tomorrow` | Tomorrow's Price Pattern | Preismuster Morgen | Prismønster i morgen | Prijspatroon Morgen | Prismönster Imorgon | ❌ |
 | <span id="ref-day_pattern_yesterday" class="entity-anchor"></span>`day_pattern_yesterday` | Yesterday's Price Pattern | Preismuster Gestern | Prismønster i går | Prijspatroon Gisteren | Prismönster Igår | ❌ |
+| <span id="ref-price_rank_today" class="entity-anchor" data-refs="sensors-volatility#available-sensors"></span>`price_rank_today` | Today's Price Rank | Preisrang heute | Prisrang i dag | Prijsrang vandaag | Prisrang idag | ✅ |
+| <span id="ref-price_rank_today_tomorrow" class="entity-anchor" data-refs="sensors-volatility#available-sensors"></span>`price_rank_today_tomorrow` | Today+Tomorrow Price Rank | Preisrang heute+morgen | Prisrang i dag+i morgen | Prijsrang vandaag+morgen | Prisrang idag+imorgon | ❌ |
+| <span id="ref-price_rank_tomorrow" class="entity-anchor" data-refs="sensors-volatility#available-sensors"></span>`price_rank_tomorrow` | Tomorrow's Price Rank | Preisrang morgen | Prisrang i morgen | Prijsrang morgen | Prisrang imorgon | ❌ |
 ## Binary Sensors
 
 ### Binary Sensors
