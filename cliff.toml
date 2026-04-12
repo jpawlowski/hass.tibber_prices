@@ -5,13 +5,19 @@
 # Template for the changelog body
 header = ""
 body = """
-{% for group, commits in commits | group_by(attribute="group") %}
-    ### {{ group | striptags | trim | upper_first }}
-    {% for commit in commits %}
-        - {% if commit.scope %}**{{ commit.scope }}**: {% endif %}{{ commit.message | upper_first }}\
-          {% if commit.breaking %} [**BREAKING**]{% endif %} \
-          ([{{ commit.id | truncate(length=7, end="") }}](https://github.com/jpawlowski/hass.tibber_prices/commit/{{ commit.id }}))
-    {% endfor %}
+{% for group, commits in commits | group_by(attribute="group") -%}
+### {{ group | striptags | trim | upper_first }}
+{% for commit in commits -%}
+{% set impact_text = "" -%}
+{% set footers = commit.footers | default(value=[]) -%}
+{% for footer in footers -%}
+{% if footer.token == "Impact" -%}
+{% set impact_text = footer.value -%}
+{% endif -%}
+{% endfor -%}
+- {% if impact_text %}{{ impact_text | trim | upper_first }}{% else %}{% if commit.scope %}**{{ commit.scope }}**: {% endif %}{{ commit.message | upper_first }}{% endif %}{% if commit.breaking %} [**BREAKING**]{% endif %} ([{{ commit.id | truncate(length=7, end="") }}](https://github.com/jpawlowski/hass.tibber_prices/commit/{{ commit.id }}))
+{% endfor %}
+
 {% endfor %}
 
 ---
@@ -25,7 +31,8 @@ trim = true
 [git]
 # Parse conventional commits
 conventional_commits = true
-# Include all commits (even non-conventional)
+# Keep unconventional commits in parsing pipeline; parser rules decide what to skip.
+# This avoids noisy parse-error warnings on older commit history.
 filter_unconventional = false
 split_commits = false
 
@@ -33,22 +40,28 @@ split_commits = false
 commit_parsers = [
     # Skip manifest.json version bumps (release housekeeping)
     { message = "^chore\\(release\\): bump version", skip = true },
+    # Skip explicit revert commits; final net state should drive release notes
+    { message = "^revert", skip = true },
     # Skip development environment changes (not user-relevant)
     { message = "^(feat|fix|chore|refactor)\\((devcontainer|vscode|scripts|dev-env|environment)\\):", skip = true },
     # Skip CI/CD infrastructure changes (not user-relevant)
     { message = "^(feat|fix|chore|ci)\\((ci|workflow|actions|github-actions)\\):", skip = true },
-    # Keep dependency updates - these ARE relevant for users
-    { message = "^chore\\(deps\\):", group = "📦 Dependencies" },
-    # Regular commit types
-    { message = "^feat", group = "🎉 New Features" },
-    { message = "^fix", group = "🐛 Bug Fixes" },
-    { message = "^docs?", group = "📚 Documentation" },
-    { message = "^perf", group = "⚡ Performance" },
-    { message = "^refactor", group = "🔧 Maintenance & Refactoring" },
-    { message = "^style", group = "🎨 Styling" },
-    { message = "^test", group = "🧪 Testing" },
-    { message = "^chore", group = "🔧 Maintenance & Refactoring" },
-    { message = "^build", group = "📦 Build" },
+    # Skip non-user-facing fix scopes
+    { message = "^fix\\((docs|lint|types|tests?|ci|workflow|scripts|devcontainer|vscode|build|release)\\):", skip = true },
+    # User-facing categories aligned with AI output style
+    { message = "^feat", group = "🎉 What's New" },
+    { message = "^fix", group = "🐛 Fixed" },
+    { message = "^perf", group = "⚡ More Reliable" },
+    { message = "^chore\\(deps\\):", group = "📦 Updated Dependencies" },
+    # Skip mostly developer-facing categories
+    { message = "^docs?", skip = true },
+    { message = "^refactor", skip = true },
+    { message = "^style", skip = true },
+    { message = "^test", skip = true },
+    { message = "^build", skip = true },
+    { message = "^chore", skip = true },
+    # Final fallback to avoid ungrouped commits
+    { message = ".*", skip = true },
 ]
 
 # Protect breaking changes
@@ -56,5 +69,5 @@ commit_preprocessors = [
     { pattern = '\((\w+\s)?#([0-9]+)\)', replace = "([#${2}](https://github.com/jpawlowski/hass.tibber_prices/issues/${2}))" },
 ]
 
-# Filter out commits
-filter_commits = false
+# Apply commit parser filtering rules
+filter_commits = true

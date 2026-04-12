@@ -43,6 +43,156 @@ fi
 BACKEND="${RELEASE_NOTES_BACKEND:-auto}"
 USE_AI="${USE_AI:-true}"
 GITHUB_REPO="${GITHUB_REPOSITORY:-jpawlowski/hass.tibber_prices}"
+RELEASE_NOTES_COMPACT_DIFF="${RELEASE_NOTES_COMPACT_DIFF:-true}"
+RELEASE_NOTES_DIFF_MAX_BYTES="${RELEASE_NOTES_DIFF_MAX_BYTES:-8000}"
+RELEASE_NOTES_CLIFF_FILTER_PATHS="${RELEASE_NOTES_CLIFF_FILTER_PATHS:-true}"
+RELEASE_NOTES_CLIFF_SINGLE_RELEASE="${RELEASE_NOTES_CLIFF_SINGLE_RELEASE:-true}"
+RELEASE_NOTES_TRAILER_SKIP_FILTER="${RELEASE_NOTES_TRAILER_SKIP_FILTER:-true}"
+
+# Commits explicitly marked to be excluded from release notes.
+RELEASE_NOTES_SKIP_COMMITS=()
+
+# User-facing paths for AI diff context
+USER_FACING_PATHS=(
+    "custom_components/tibber_prices/sensor/"
+    "custom_components/tibber_prices/binary_sensor/"
+    "custom_components/tibber_prices/config_flow_handlers/"
+    "custom_components/tibber_prices/services/"
+    "custom_components/tibber_prices/translations/"
+    "custom_components/tibber_prices/number/"
+    "custom_components/tibber_prices/switch/"
+)
+
+# Parse common truthy values from environment variables
+is_truthy() {
+    case "${1,,}" in
+        1 | true | yes | on)
+            return 0
+            ;;
+        *)
+            return 1
+            ;;
+    esac
+}
+
+# Determine if commit body explicitly marks commit as non-user-facing for release notes.
+# Supported trailers (case-insensitive):
+# - Release-Notes: skip
+# - User-Impact: none
+# - Released-Bug: no
+commit_marked_for_release_notes_skip() {
+    local commit_hash="$1"
+    local body
+
+    body=$(git show -s --format=%B "$commit_hash" 2>/dev/null || true)
+
+    if printf "%s\n" "$body" | grep -Eiq '^[[:space:]]*release[ -]notes:[[:space:]]*skip([[:space:]]|$)'; then
+        return 0
+    fi
+
+    if printf "%s\n" "$body" | grep -Eiq '^[[:space:]]*user-impact:[[:space:]]*none([[:space:]]|$)'; then
+        return 0
+    fi
+
+    if printf "%s\n" "$body" | grep -Eiq '^[[:space:]]*released-bug:[[:space:]]*no([[:space:]]|$)'; then
+        return 0
+    fi
+
+    return 1
+}
+
+collect_release_notes_skip_commits() {
+    RELEASE_NOTES_SKIP_COMMITS=()
+
+    if ! is_truthy "$RELEASE_NOTES_TRAILER_SKIP_FILTER"; then
+        return
+    fi
+
+    while IFS= read -r commit_hash; do
+        if commit_marked_for_release_notes_skip "$commit_hash"; then
+            RELEASE_NOTES_SKIP_COMMITS+=("$commit_hash")
+        fi
+    done < <(git rev-list --reverse "${FROM_TAG}..${TO_TAG}")
+}
+
+is_release_notes_skipped_commit() {
+    local target_hash="$1"
+    local skip_hash
+
+    for skip_hash in "${RELEASE_NOTES_SKIP_COMMITS[@]}"; do
+        if [[ "$skip_hash" == "$target_hash" ]]; then
+            return 0
+        fi
+    done
+
+    return 1
+}
+
+build_copilot_commits_context() {
+    local commit_hash=""
+    local output=""
+    local subject=""
+    local body=""
+    local short_hash=""
+    local stat=""
+
+    while IFS= read -r commit_hash; do
+        if is_release_notes_skipped_commit "$commit_hash"; then
+            continue
+        fi
+
+        short_hash=$(git rev-parse --short "$commit_hash")
+        subject=$(git show -s --format=%s "$commit_hash")
+        body=$(git show -s --format=%b "$commit_hash")
+        stat=$(git show --stat --compact-summary --format='' "$commit_hash" 2>/dev/null || true)
+
+        output+="${short_hash} | ${subject}"$'\n'
+        if [[ -n "$body" ]]; then
+            output+="${body}"$'\n'
+        fi
+        if [[ -n "$stat" ]]; then
+            output+="${stat}"$'\n'
+        fi
+        output+=$'\n'
+    done < <(git rev-list --reverse "${FROM_TAG}..${TO_TAG}")
+
+    printf "%s" "$output"
+}
+
+# Build AI diff context with compact formatting by default to save tokens.
+# Set RELEASE_NOTES_COMPACT_DIFF=false to use the legacy full patch context format.
+build_diff_context() {
+    local diff_context=""
+
+    if is_truthy "$RELEASE_NOTES_COMPACT_DIFF"; then
+        if ! diff_context=$(
+            set -o pipefail
+            git diff --unified=0 --no-color --minimal --patience --diff-filter=AM \
+                "${FROM_TAG}..${TO_TAG}" -- "${USER_FACING_PATHS[@]}" 2>/dev/null \
+                | awk '
+                    /^diff --git / { print; next }
+                    /^--- / || /^\+\+\+ / || /^@@ / { print; next }
+                    /^[+-]/ {
+                        sub(/[ \t]+$/, "", $0)
+                        print
+                        next
+                    }
+                ' \
+                | head -c "$RELEASE_NOTES_DIFF_MAX_BYTES"
+        ); then
+            log_info "${YELLOW}Warning: compact diff generation failed, falling back to legacy diff context${NC}"
+            diff_context=$(git diff --unified=2 --diff-filter=AM \
+                "${FROM_TAG}..${TO_TAG}" -- "${USER_FACING_PATHS[@]}" 2>/dev/null \
+                | head -c "$RELEASE_NOTES_DIFF_MAX_BYTES" || true)
+        fi
+    else
+        diff_context=$(git diff --unified=2 --diff-filter=AM \
+            "${FROM_TAG}..${TO_TAG}" -- "${USER_FACING_PATHS[@]}" 2>/dev/null \
+            | head -c "$RELEASE_NOTES_DIFF_MAX_BYTES" || true)
+    fi
+
+    echo "$diff_context"
+}
 
 # Parse arguments
 FROM_TAG="${1:-$(git describe --tags --abbrev=0 2>/dev/null || echo "")}"
@@ -52,6 +202,11 @@ if [[ -z $FROM_TAG ]]; then
     echo -e "${RED}Error: No tags found in repository${NC}" >&2
     echo "Usage: $0 [FROM_TAG] [TO_TAG]" >&2
     exit 1
+fi
+
+collect_release_notes_skip_commits
+if [[ ${#RELEASE_NOTES_SKIP_COMMITS[@]} -gt 0 ]]; then
+    log_info "${YELLOW}Skipping ${#RELEASE_NOTES_SKIP_COMMITS[@]} commit(s) marked as non-user-facing via trailers${NC}"
 fi
 
 log_info "${BLUE}==> Generating release notes: ${FROM_TAG}..${TO_TAG}${NC}"
@@ -100,21 +255,36 @@ generate_with_copilot() {
     log_info "${YELLOW}Note: This will use one premium request from your monthly quota${NC}"
     log_info ""
 
-    # Get commit log for the range with file statistics
-    # This helps the AI understand which commits touched which files
-    COMMITS=$(git log --pretty=format:"%h | %s%n%b%n" --stat --compact-summary "${FROM_TAG}..${TO_TAG}")
+    # Get filtered commit log for the range with file statistics (oldest -> newest).
+    # Commits explicitly marked as non-user-facing are excluded.
+    COMMITS=$(build_copilot_commits_context)
+
+    # Final repository-level changed file list (net state from FROM_TAG to TO_TAG).
+    # This is useful when commit history contains back-and-forth changes.
+    FINAL_FILE_CHANGES=$(git diff --name-status "${FROM_TAG}..${TO_TAG}" 2>/dev/null || true)
+
+    # Revert commits are useful chronology hints (earlier changes may be superseded).
+    REVERT_COMMITS=$(git log --reverse --pretty=format:"%h | %s" "${FROM_TAG}..${TO_TAG}" \
+        | grep -Ei '\|[[:space:]]*revert\b' || true)
+
+    if [[ -z $FINAL_FILE_CHANGES ]]; then
+        FINAL_FILE_CHANGES="(none)"
+    fi
+
+    if [[ -z $REVERT_COMMITS ]]; then
+        REVERT_COMMITS="(none)"
+    fi
+
+    if [[ ${#RELEASE_NOTES_SKIP_COMMITS[@]} -gt 0 ]]; then
+        SKIPPED_COMMITS_CONTEXT=$(printf "%s\n" "${RELEASE_NOTES_SKIP_COMMITS[@]}" | xargs -I{} git show -s --format='%h | %s' {} 2>/dev/null || true)
+    else
+        SKIPPED_COMMITS_CONTEXT="(none)"
+    fi
 
     # Get code diff for user-facing files to give the AI real context about what changed.
-    # Limited to ~8KB to keep the prompt manageable.
-    DIFF_CONTEXT=$(git diff --unified=2 --diff-filter=AM \
-        -- "custom_components/tibber_prices/sensor/" \
-        -- "custom_components/tibber_prices/binary_sensor/" \
-        -- "custom_components/tibber_prices/config_flow_handlers/" \
-        -- "custom_components/tibber_prices/services/" \
-        -- "custom_components/tibber_prices/translations/" \
-        -- "custom_components/tibber_prices/number/" \
-        -- "custom_components/tibber_prices/switch/" \
-        "${FROM_TAG}..${TO_TAG}" 2>/dev/null | head -c 8000 || true)
+    # Compact mode is enabled by default to reduce prompt tokens without reducing semantic signal.
+    # Toggle: RELEASE_NOTES_COMPACT_DIFF=false
+    DIFF_CONTEXT=$(build_diff_context)
 
     if [[ -z $COMMITS ]]; then
         log_info "${YELLOW}No commits found between ${FROM_TAG} and ${TO_TAG}${NC}"
@@ -140,6 +310,13 @@ It fetches electricity prices from Tibber and provides sensors to Home Assistant
 Translate technical changes into real user benefits. Write as a product manager telling
 users what they can now DO, what was BROKEN and is now FIXED, or why the integration
 is now more RELIABLE.
+
+## SOURCE OF TRUTH (IMPORTANT)
+- Primary source: final net repository state from ${FROM_TAG} to ${TO_TAG}
+- Use commit text as context, not as absolute truth
+- If commit text conflicts with final file list or final diff, trust final state
+- Revert commits indicate earlier changes may be superseded
+- Commits listed as "explicitly skipped" are non-user-facing by author intent and must not be mentioned
 
 ## WRITING RULES — FOLLOW STRICTLY
 
@@ -236,6 +413,24 @@ ${COMMITS}
 
 ---
 
+**Final changed files (net state, source of truth):**
+
+${FINAL_FILE_CHANGES}
+
+---
+
+**Revert commits in range (chronology hints):**
+
+${REVERT_COMMITS}
+
+---
+
+**Commits explicitly skipped by trailer (do not mention):**
+
+${SKIPPED_COMMITS_CONTEXT}
+
+---
+
 **Code diff for user-facing files (use this to understand WHAT actually changed — but always translate to user language):**
 
 ${DIFF_CONTEXT}
@@ -275,29 +470,28 @@ End after the Buy Me A Coffee button. No meta-commentary, no explanations."
 generate_with_gitcliff() {
     log_info "${BLUE}==> Generating with git-cliff${NC}"
 
-    # Analyze commits to generate smart title
-    FROM_TAG_SHORT="${FROM_TAG}"
-    TO_TAG_SHORT="${TO_TAG}"
+    # Analyze commits to generate a title aligned with current user-facing groups
     COMMITS_LOG=$(git log --pretty=format:"%s" "${FROM_TAG}..${TO_TAG}" 2>/dev/null || echo "")
 
-    # Count user-facing changes (exclude dev/ci/docs)
-    FEAT_COUNT=$(echo "$COMMITS_LOG" | grep -cE "^feat\((sensors|binary_sensor|config_flow|services|coordinator|api)\):" || true)
-    FIX_COUNT=$(echo "$COMMITS_LOG" | grep -cE "^fix\((sensors|binary_sensor|config_flow|services|coordinator|api|translations)\):" || true)
-    PERF_COUNT=$(echo "$COMMITS_LOG" | grep -cE "^perf\(" || true)
+    WHATS_NEW_COUNT=$(echo "$COMMITS_LOG" | grep -cE "^feat(\(|:)" || true)
+    FIXED_COUNT=$(echo "$COMMITS_LOG" | grep -cE "^fix(\(|:)" || true)
+    RELIABLE_COUNT=$(echo "$COMMITS_LOG" | grep -cE "^perf(\(|:)" || true)
+    DEPS_COUNT=$(echo "$COMMITS_LOG" | grep -cE "^chore\(deps\):" || true)
 
-    # Generate intelligent title based on changes
-    if [ $PERF_COUNT -gt 0 ]; then
-        TITLE="# Performance & Reliability Improvements"
-    elif [ $FEAT_COUNT -gt 2 ]; then
-        TITLE="# New Features & Enhancements"
-    elif [ $FEAT_COUNT -gt 0 ] && [ $FIX_COUNT -gt 0 ]; then
-        TITLE="# New Features & Bug Fixes"
-    elif [ $FEAT_COUNT -gt 0 ]; then
-        TITLE="# New Features"
-    elif [ $FIX_COUNT -gt 2 ]; then
-        TITLE="# Bug Fixes & Improvements"
-    elif [ $FIX_COUNT -gt 0 ]; then
-        TITLE="# Bug Fixes"
+    if [ "$WHATS_NEW_COUNT" -gt 0 ] && [ "$FIXED_COUNT" -gt 0 ]; then
+        TITLE="# What's New & Fixed"
+    elif [ "$WHATS_NEW_COUNT" -gt 0 ] && [ "$RELIABLE_COUNT" -gt 0 ]; then
+        TITLE="# What's New & More Reliable"
+    elif [ "$WHATS_NEW_COUNT" -gt 0 ]; then
+        TITLE="# What's New"
+    elif [ "$FIXED_COUNT" -gt 0 ] && [ "$RELIABLE_COUNT" -gt 0 ]; then
+        TITLE="# Fixed & More Reliable"
+    elif [ "$FIXED_COUNT" -gt 0 ]; then
+        TITLE="# Fixed"
+    elif [ "$RELIABLE_COUNT" -gt 0 ]; then
+        TITLE="# More Reliable"
+    elif [ "$DEPS_COUNT" -gt 0 ]; then
+        TITLE="# Dependency Updates"
     else
         TITLE="# Release Updates"
     fi
@@ -326,24 +520,114 @@ conventional_commits = true
 filter_unconventional = false
 split_commits = false
 commit_parsers = [
-    { message = "^feat", group = "🎉 New Features" },
-    { message = "^fix", group = "🐛 Bug Fixes" },
-    { message = "^doc", group = "📚 Documentation" },
-    { message = "^perf", group = "⚡ Performance" },
-    { message = "^refactor", group = "🔧 Maintenance & Refactoring" },
-    { message = "^style", group = "🎨 Styling" },
-    { message = "^test", group = "🧪 Testing" },
-    { message = "^chore", group = "🔧 Maintenance & Refactoring" },
-    { message = "^ci", group = "🔄 CI/CD" },
-    { message = "^build", group = "📦 Build" },
+    { message = "^chore\\(release\\): bump version", skip = true },
+    { message = "^revert", skip = true },
+    { message = "^(feat|fix|chore|refactor)\\((devcontainer|vscode|scripts|dev-env|environment)\\):", skip = true },
+    { message = "^(feat|fix|chore|ci)\\((ci|workflow|actions|github-actions)\\):", skip = true },
+    { message = "^fix\\((docs|lint|types|tests?|ci|workflow|scripts|devcontainer|vscode|build|release)\\):", skip = true },
+    { message = "^feat", group = "🎉 What's New" },
+    { message = "^fix", group = "🐛 Fixed" },
+    { message = "^perf", group = "⚡ More Reliable" },
+    { message = "^chore\\(deps\\):", group = "📦 Updated Dependencies" },
+    { message = "^docs?", skip = true },
+    { message = "^refactor", skip = true },
+    { message = "^style", skip = true },
+    { message = "^test", skip = true },
+    { message = "^build", skip = true },
+    { message = "^chore", skip = true },
+    { message = ".*", skip = true },
 ]
+filter_commits = true
 EOF
         CLIFF_CONFIG="/tmp/cliff.toml"
     else
         CLIFF_CONFIG="cliff.toml"
     fi
 
-    git-cliff --config "$CLIFF_CONFIG" "${FROM_TAG}..${TO_TAG}"
+    CLIFF_CMD=(git-cliff --config "$CLIFF_CONFIG")
+
+    # Restrict changelog to user-facing integration files by default.
+    # Toggle with: RELEASE_NOTES_CLIFF_FILTER_PATHS=false
+    if is_truthy "$RELEASE_NOTES_CLIFF_FILTER_PATHS"; then
+        CLIFF_CMD+=(--include-path "custom_components/tibber_prices/**")
+    fi
+
+    # Exclude commits explicitly marked as non-user-facing.
+    if [[ ${#RELEASE_NOTES_SKIP_COMMITS[@]} -gt 0 ]]; then
+        for skip_hash in "${RELEASE_NOTES_SKIP_COMMITS[@]}"; do
+            CLIFF_CMD+=(--skip-commit "$skip_hash")
+        done
+    fi
+
+    CLIFF_CMD+=("${FROM_TAG}..${TO_TAG}")
+
+    CLIFF_OUTPUT=$("${CLIFF_CMD[@]}")
+
+    # In unusual ranges, git-cliff can emit multiple release blocks.
+    # Keep only the first block by default to match this script's single-release intent.
+    # Toggle with: RELEASE_NOTES_CLIFF_SINGLE_RELEASE=false
+    if is_truthy "$RELEASE_NOTES_CLIFF_SINGLE_RELEASE"; then
+        BMAC_COUNT=$(printf "%s" "$CLIFF_OUTPUT" | grep -c "buymeacoffee.com/jpawlowski" || true)
+        if [[ $BMAC_COUNT -gt 1 ]]; then
+            log_info "${YELLOW}Notice: Multiple release blocks detected; keeping the first block${NC}"
+            CLIFF_OUTPUT=$(printf "%s" "$CLIFF_OUTPUT" | awk '
+                /https:\/\/www\.buymeacoffee\.com\/jpawlowski/ {
+                    line = $0
+                    marker = "https://www.buymeacoffee.com/jpawlowski)"
+                    marker_pos = index(line, marker)
+                    if (marker_pos > 0) {
+                        line = substr(line, 1, marker_pos + length(marker) - 1)
+                    }
+                    print line
+                    exit
+                }
+                { print }
+            ')
+        fi
+    fi
+
+    # Normalize spacing from template edge-cases:
+    # - remove blank lines between consecutive bullet points
+    # - collapse multiple blank lines to a single blank line
+    CLIFF_OUTPUT=$(printf "%s" "$CLIFF_OUTPUT" | awk '
+        {
+            lines[NR] = $0
+        }
+        END {
+            blank_streak = 0
+            for (i = 1; i <= NR; i++) {
+                line = lines[i]
+                next_line = (i < NR) ? lines[i + 1] : ""
+
+                if (line ~ /^[[:space:]]*$/) {
+                    prev_line = (out_count > 0) ? out[out_count] : ""
+                    prev_is_bullet = prev_line ~ /^- /
+                    next_is_bullet = next_line ~ /^- /
+
+                    # Skip blank separators between bullet items
+                    if (prev_is_bullet && next_is_bullet) {
+                        continue
+                    }
+
+                    blank_streak++
+                    if (blank_streak > 1) {
+                        continue
+                    }
+                } else {
+                    blank_streak = 0
+                }
+
+                out_count++
+                out[out_count] = line
+            }
+
+            for (i = 1; i <= out_count; i++) {
+                print out[i]
+            }
+        }
+    ')
+
+    printf "%s\n" "$CLIFF_OUTPUT"
     echo ""  # Ensure output ends with newline (cliff.toml trim=true removes trailing newline)
 
     if [ "$CLIFF_CONFIG" = "/tmp/cliff.toml" ]; then
@@ -362,27 +646,28 @@ generate_with_manual() {
         exit 0
     fi
 
-    # Analyze commits to generate smart title
+    # Analyze commits to generate title aligned with user-facing groups
     COMMITS_LOG=$(git log --pretty=format:"%s" "${FROM_TAG}..${TO_TAG}" 2>/dev/null || echo "")
 
-    # Count user-facing changes (exclude dev/ci/docs)
-    FEAT_COUNT=$(echo "$COMMITS_LOG" | grep -cE "^feat\((sensors|binary_sensor|config_flow|services|coordinator|api)\):" || true)
-    FIX_COUNT=$(echo "$COMMITS_LOG" | grep -cE "^fix\((sensors|binary_sensor|config_flow|services|coordinator|api|translations)\):" || true)
-    PERF_COUNT=$(echo "$COMMITS_LOG" | grep -cE "^perf\(" || true)
+    WHATS_NEW_COUNT=$(echo "$COMMITS_LOG" | grep -cE "^feat(\(|:)" || true)
+    FIXED_COUNT=$(echo "$COMMITS_LOG" | grep -cE "^fix(\(|:)" || true)
+    RELIABLE_COUNT=$(echo "$COMMITS_LOG" | grep -cE "^perf(\(|:)" || true)
+    DEPS_COUNT=$(echo "$COMMITS_LOG" | grep -cE "^chore\(deps\):" || true)
 
-    # Generate intelligent title based on changes
-    if [ $PERF_COUNT -gt 0 ]; then
-        echo "# Performance & Reliability Improvements"
-    elif [ $FEAT_COUNT -gt 2 ]; then
-        echo "# New Features & Enhancements"
-    elif [ $FEAT_COUNT -gt 0 ] && [ $FIX_COUNT -gt 0 ]; then
-        echo "# New Features & Bug Fixes"
-    elif [ $FEAT_COUNT -gt 0 ]; then
-        echo "# New Features"
-    elif [ $FIX_COUNT -gt 2 ]; then
-        echo "# Bug Fixes & Improvements"
-    elif [ $FIX_COUNT -gt 0 ]; then
-        echo "# Bug Fixes"
+    if [ "$WHATS_NEW_COUNT" -gt 0 ] && [ "$FIXED_COUNT" -gt 0 ]; then
+        echo "# What's New & Fixed"
+    elif [ "$WHATS_NEW_COUNT" -gt 0 ] && [ "$RELIABLE_COUNT" -gt 0 ]; then
+        echo "# What's New & More Reliable"
+    elif [ "$WHATS_NEW_COUNT" -gt 0 ]; then
+        echo "# What's New"
+    elif [ "$FIXED_COUNT" -gt 0 ] && [ "$RELIABLE_COUNT" -gt 0 ]; then
+        echo "# Fixed & More Reliable"
+    elif [ "$FIXED_COUNT" -gt 0 ]; then
+        echo "# Fixed"
+    elif [ "$RELIABLE_COUNT" -gt 0 ]; then
+        echo "# More Reliable"
+    elif [ "$DEPS_COUNT" -gt 0 ]; then
+        echo "# Dependency Updates"
     else
         echo "# Release Updates"
     fi
@@ -390,99 +675,98 @@ generate_with_manual() {
 
     # Create temporary files for each category
     TMPDIR=$(mktemp -d)
-    FEAT_FILE="${TMPDIR}/feat"
-    FIX_FILE="${TMPDIR}/fix"
-    DOCS_FILE="${TMPDIR}/docs"
-    REFACTOR_FILE="${TMPDIR}/refactor"
-    TEST_FILE="${TMPDIR}/test"
-    OTHER_FILE="${TMPDIR}/other"
+    WHATS_NEW_FILE="${TMPDIR}/whats_new"
+    FIXED_FILE="${TMPDIR}/fixed"
+    RELIABLE_FILE="${TMPDIR}/reliable"
+    DEPS_FILE="${TMPDIR}/deps"
 
-    touch "$FEAT_FILE" "$FIX_FILE" "$DOCS_FILE" "$REFACTOR_FILE" "$TEST_FILE" "$OTHER_FILE"
+    touch "$WHATS_NEW_FILE" "$FIXED_FILE" "$RELIABLE_FILE" "$DEPS_FILE"
 
     # Process commits
-    git log --pretty=format:"%h %s" "${FROM_TAG}..${TO_TAG}" | while read -r hash subject; do
+    git log --pretty=format:"%H %s" "${FROM_TAG}..${TO_TAG}" | while read -r hash subject; do
+        if is_release_notes_skipped_commit "$hash"; then
+            continue
+        fi
+
+        short_hash=$(git rev-parse --short "$hash")
         # Simple type extraction (before colon)
         TYPE=""
-        if echo "$subject" | grep -q '^feat'; then
-            TYPE="feat"
-        elif echo "$subject" | grep -q '^fix'; then
-            TYPE="fix"
-        elif echo "$subject" | grep -q '^docs'; then
-            TYPE="docs"
-        elif echo "$subject" | grep -q '^refactor\|^chore'; then
-            TYPE="refactor"
-        elif echo "$subject" | grep -q '^test'; then
-            TYPE="test"
+        # Skip non-user-facing scope changes to align with git-cliff behavior
+        if echo "$subject" | grep -qE '^(feat|fix|chore|refactor)\([^)]*(devcontainer|vscode|scripts|dev-env|environment)[^)]*\):'; then
+            TYPE="skip"
+        elif echo "$subject" | grep -qE '^(feat|fix|chore|ci)\([^)]*(ci|workflow|actions|github-actions)[^)]*\):'; then
+            TYPE="skip"
+        elif echo "$subject" | grep -qE '^revert'; then
+            TYPE="skip"
         else
-            TYPE="other"
+            if echo "$subject" | grep -qE '^feat(\(|:)'; then
+                TYPE="whats_new"
+            elif echo "$subject" | grep -qE '^fix(\(|:)'; then
+                # Skip non-user-facing fix scopes to align with cliff filtering
+                if echo "$subject" | grep -qE '^fix\((docs|lint|types|tests?|ci|workflow|scripts|devcontainer|vscode|build|release)\):'; then
+                    TYPE="skip"
+                else
+                    TYPE="fixed"
+                fi
+            elif echo "$subject" | grep -qE '^perf(\(|:)'; then
+                TYPE="reliable"
+            elif echo "$subject" | grep -qE '^chore\(deps\):'; then
+                TYPE="deps"
+            else
+                TYPE="skip"
+            fi
         fi
 
         # Create markdown line
-        LINE="- ${subject} ([${hash}](https://github.com/jpawlowski/hass.tibber_prices/commit/${hash}))"
+        LINE="- ${subject} ([${short_hash}](https://github.com/jpawlowski/hass.tibber_prices/commit/${hash}))"
 
         # Append to appropriate file
         case "$TYPE" in
-            feat)
-                echo "$LINE" >> "$FEAT_FILE"
+            whats_new)
+                echo "$LINE" >> "$WHATS_NEW_FILE"
                 ;;
-            fix)
-                echo "$LINE" >> "$FIX_FILE"
+            fixed)
+                echo "$LINE" >> "$FIXED_FILE"
                 ;;
-            docs)
-                echo "$LINE" >> "$DOCS_FILE"
+            reliable)
+                echo "$LINE" >> "$RELIABLE_FILE"
                 ;;
-            refactor)
-                echo "$LINE" >> "$REFACTOR_FILE"
+            deps)
+                echo "$LINE" >> "$DEPS_FILE"
                 ;;
-            test)
-                echo "$LINE" >> "$TEST_FILE"
+            skip)
                 ;;
             *)
-                echo "$LINE" >> "$OTHER_FILE"
                 ;;
         esac
     done
 
     # Output grouped by category
-    if [ -s "$FEAT_FILE" ]; then
-        echo "### 🎉 New Features"
+    if [ -s "$WHATS_NEW_FILE" ]; then
+        echo "### 🎉 What's New"
         echo ""
-        cat "$FEAT_FILE"
-        echo ""
-    fi
-
-    if [ -s "$FIX_FILE" ]; then
-        echo "### 🐛 Bug Fixes"
-        echo ""
-        cat "$FIX_FILE"
+        cat "$WHATS_NEW_FILE"
         echo ""
     fi
 
-    if [ -s "$DOCS_FILE" ]; then
-        echo "### 📚 Documentation"
+    if [ -s "$FIXED_FILE" ]; then
+        echo "### 🐛 Fixed"
         echo ""
-        cat "$DOCS_FILE"
-        echo ""
-    fi
-
-    if [ -s "$REFACTOR_FILE" ]; then
-        echo "### 🔧 Maintenance & Refactoring"
-        echo ""
-        cat "$REFACTOR_FILE"
+        cat "$FIXED_FILE"
         echo ""
     fi
 
-    if [ -s "$TEST_FILE" ]; then
-        echo "### 🧪 Testing"
+    if [ -s "$RELIABLE_FILE" ]; then
+        echo "### ⚡ More Reliable"
         echo ""
-        cat "$TEST_FILE"
+        cat "$RELIABLE_FILE"
         echo ""
     fi
 
-    if [ -s "$OTHER_FILE" ]; then
-        echo "### 📝 Other Changes"
+    if [ -s "$DEPS_FILE" ]; then
+        echo "### 📦 Updated Dependencies"
         echo ""
-        cat "$OTHER_FILE"
+        cat "$DEPS_FILE"
         echo ""
     fi
 
@@ -668,9 +952,4 @@ else
 fi
 
 rm -f "$TEMP_NOTES" "$TEMP_BODY"
-    exit 0
-fi
-
-# If no auto-update, just show success message
-echo ""
-log_info "${GREEN}==> Release notes generated successfully!${NC}"
+exit 0
