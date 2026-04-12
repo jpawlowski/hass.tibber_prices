@@ -639,7 +639,6 @@ def calculate_periods_with_relaxation(  # noqa: PLR0912, PLR0913, PLR0915 - Per-
                     "relaxation_active": False,
                     "relaxation_attempted": False,
                     "min_periods_requested": min_periods if enable_relaxation else 0,
-                    "periods_found": 0,
                 },
             },
             "reference_data": {},
@@ -840,8 +839,6 @@ def calculate_periods_with_relaxation(  # noqa: PLR0912, PLR0913, PLR0915 - Per-
     final_result = baseline_result.copy()
     final_result["periods"] = all_periods
 
-    total_periods = len(all_periods)
-
     # Add relaxation info to metadata
     if "metadata" not in final_result:
         final_result["metadata"] = {}
@@ -849,7 +846,6 @@ def calculate_periods_with_relaxation(  # noqa: PLR0912, PLR0913, PLR0915 - Per-
         "relaxation_active": relaxation_was_needed,
         "relaxation_attempted": relaxation_was_needed,
         "min_periods_requested": min_periods,
-        "periods_found": total_periods,
         "phases_used": list(set(all_phases_used)),  # Unique phases used across all days
         "days_processed": total_days,
         "days_meeting_requirement": days_meeting_requirement,
@@ -1023,5 +1019,4 @@ def relax_all_prices(  # noqa: PLR0913 - Comprehensive filter relaxation require
 
     return final_result, {
         "phases_used": phases_used,
-        "periods_found": len(existing_periods),
     }

@@ -104,7 +104,7 @@ class PeriodSummary(TypedDict, total=False):
     # Detail information (priority 5)
     period_interval_count: int  # Number of intervals in period
     period_position: int  # Period position (1-based)
-    periods_total: int  # Total number of periods
+    period_count_total: int  # Total number of periods
     periods_remaining: int  # Remaining periods after this one
 
     # Relaxation information (priority 6 - only if period was relaxed)
@@ -125,7 +125,7 @@ class PeriodAttributes(BaseAttributes, total=False):
     2. Core decision attributes (level, rating_level, rating_difference_%)
     3. Price statistics (price_mean, price_median, price_min, price_max, price_spread, volatility)
     4. Price comparison (period_price_diff_from_daily_min, period_price_diff_from_daily_min_%)
-    5. Detail information (period_interval_count, period_position, periods_total, periods_remaining)
+    5. Detail information (period_interval_count, period_position, period_count_total, periods_remaining)
     6. Relaxation information (only if period was relaxed)
     7. Meta information (periods list)
     """
@@ -155,7 +155,7 @@ class PeriodAttributes(BaseAttributes, total=False):
     # Detail information (priority 5)
     period_interval_count: int  # Number of intervals in current/next period
     period_position: int  # Period position (1-based)
-    periods_total: int  # Total number of periods found
+    period_count_total: int  # Total number of periods found
     periods_remaining: int  # Remaining periods after current/next one
 
     # Relaxation information (priority 6 - only if period was relaxed)

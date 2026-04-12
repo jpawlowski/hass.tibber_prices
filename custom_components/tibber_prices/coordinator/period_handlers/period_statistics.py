@@ -178,7 +178,7 @@ def build_period_summary_dict(
         # 5. Detail information (additional context)
         "period_interval_count": period_data.period_length,
         "period_position": period_data.period_idx,
-        "periods_total": period_data.total_periods,
+        "period_count_total": period_data.total_periods,
         "periods_remaining": period_data.total_periods - period_data.period_idx,
     }
 

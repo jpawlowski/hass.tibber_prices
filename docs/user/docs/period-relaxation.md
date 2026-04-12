@@ -130,7 +130,7 @@ Check the period sensor attributes to understand what happened:
 relaxation_active: true                           # This day needed relaxation
 relaxation_level: "price_diff_18.0%+level_any"    # Found at 18% flex, level filter removed
 min_periods_configured: 2                         # Your target
-periods_found_total: 3                            # What was actually found
+period_count_today: 3                             # What was actually found today
 ```
 
 </details>

@@ -523,7 +523,7 @@ This is **expected behavior** on days with very uniform electricity prices. When
 
 ```yaml
 min_periods_configured: 2
-periods_found_total: 1
+period_count_today: 1
 flat_days_detected: 1    # Uniform prices today → 1 period is the right answer
 ```
 
@@ -656,7 +656,8 @@ relaxation_level: "price_diff_18.0%+level_any"  # Found at 18% flex, level filte
 
 # Calculation summary (always shown – diagnostic overview of this calculation run):
 min_periods_configured: 2           # What you configured as target
-periods_found_total: 3              # What was actually found across all days
+period_count_today: 2               # How many periods are scheduled today
+period_count_tomorrow: 2            # How many periods are scheduled tomorrow (when data available)
 
 # Optional (only shown when relevant):
 period_interval_smoothed_count: 2    # Number of price spikes smoothed
@@ -669,7 +670,7 @@ relaxation_incomplete: true         # Some days couldn't reach the configured ta
 
 #### What the diagnostic attributes mean
 
-**`min_periods_configured` / `periods_found_total`**
+**`min_periods_configured` / `period_count_today`**
 
 These two values together quickly show whether the calculation achieved its goal:
 
@@ -678,17 +679,17 @@ These two values together quickly show whether the calculation achieved its goal
 
 ```yaml
 min_periods_configured: 2   # You asked for 2 periods per day
-periods_found_total: 6      # 3 days × 2 periods = fully satisfied ✅
+period_count_today: 2       # ✅ Today: target reached
+period_count_tomorrow: 2    # ✅ Tomorrow: target reached
 ```
 
 ```yaml
 min_periods_configured: 2
-periods_found_total: 5      # 3 days, but one day got only 1 period
+period_count_today: 1       # ⚠️ Today: only 1 period found
+period_count_tomorrow: 2    # ✅ Tomorrow: target reached
 ```
 
 </details>
-
-Note that `periods_found_total` counts **all periods across today and tomorrow** – so 4 on a two-day view means 2 per day on average.
 
 **`flat_days_detected`**
 
@@ -699,7 +700,7 @@ This is the most important diagnostic for days with very uniform prices (e.g. su
 
 ```yaml
 min_periods_configured: 2
-periods_found_total: 1
+period_count_today: 1
 flat_days_detected: 1       # ← This explains why you got 1 instead of 2
 ```
 
@@ -718,7 +719,7 @@ This flag appears when even after all relaxation attempts, at least one day coul
 
 ```yaml
 min_periods_configured: 2
-periods_found_total: 1
+period_count_today: 1
 relaxation_incomplete: true  # ← Relaxation tried everything, still short
 ```
 

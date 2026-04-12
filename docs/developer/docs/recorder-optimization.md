@@ -137,7 +137,7 @@ class TibberPricesSensor(TibberPricesEntity, SensorEntity):
 
 ### 7. Redundant/Derived Data
 
-**Attributes:** `price_spread`, `volatility`, `diff_%`, `rating_difference_%`, `period_price_diff_from_daily_min`, `period_price_diff_from_daily_min_%`, `periods_total`, `periods_remaining`
+**Attributes:** `price_spread`, `volatility`, `diff_%`, `rating_difference_%`, `period_price_diff_from_daily_min`, `period_price_diff_from_daily_min_%`, `period_count_total`, `periods_remaining`
 
 **Reason:**
 - Can be calculated from other attributes
@@ -146,7 +146,7 @@ class TibberPricesSensor(TibberPricesEntity, SensorEntity):
 
 **Impact:** ~100-200 bytes saved per state change
 
-**Example:** `price_spread = price_max - price_min` (both are recorded, so spread can be calculated)
+**Example:** `price_spread = price_max - price_min` (both are recorded, so spread can be calculated). `periods_remaining = period_count_total - period_position` (both components are recorded).
 
 ## Attributes That ARE Recorded
 
@@ -166,6 +166,8 @@ These attributes **remain in history** because they provide essential analytical
 ### Period Data
 - `start`, `end`, `duration_minutes` - Core period timing
 - `price_mean`, `price_median`, `price_min`, `price_max` - Core price statistics
+- `period_position` - Position of current period in the day's sequence
+- `period_count_today`, `period_count_tomorrow` - How many periods per day (useful in automations)
 
 ### High-Level Status
 - `relaxation_active` - Whether relaxation was used (boolean, useful for analyzing when periods needed relaxation)

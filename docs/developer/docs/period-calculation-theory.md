@@ -834,8 +834,7 @@ INFO: Day 2025-11-11: Baseline satisfied (1 period, effective minimum is 1)
 **Sensor Attributes:**
 ```yaml
 min_periods_configured: 2    # User's setting
-periods_found_total: 1       # Actual result
-flat_days_detected: 1        # Explains the difference
+flat_days_detected: 1        # Explains why only 1 period found
 ```
 
 **Why not for Peak Price?**
@@ -957,7 +956,6 @@ When debugging period calculation issues:
 | Attribute | Type | When shown | Meaning |
 |---|---|---|---|
 | `min_periods_configured` | int | Always | User's configured target per day |
-| `periods_found_total` | int | Always | Actual periods found across all days |
 | `flat_days_detected` | int | Only when > 0 | Days where CV ≤ 10% reduced target to 1 |
 | `relaxation_incomplete` | bool | Only when true | Relaxation exhausted, target not reached |
 | `relaxation_active` | bool | Only when true | This specific period needed relaxed filters |

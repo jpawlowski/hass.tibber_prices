@@ -64,7 +64,6 @@ class TibberPricesBinarySensor(TibberPricesEntity, BinarySensorEntity, RestoreEn
             "relaxation_threshold_applied_%",
             # Calculation Summary (diagnostic, changes daily → not useful in history)
             "min_periods_configured",
-            "periods_found_total",
             "flat_days_detected",
             "relaxation_incomplete",
             # Redundant/Derived
@@ -73,7 +72,7 @@ class TibberPricesBinarySensor(TibberPricesEntity, BinarySensorEntity, RestoreEn
             "rating_difference_%",
             "period_price_diff_from_daily_min",
             "period_price_diff_from_daily_min_%",
-            "periods_total",
+            "period_count_total",
             "periods_remaining",
         }
     )

@@ -119,6 +119,19 @@ def get_price_intervals_attributes(
     if not filtered_periods:
         return build_no_periods_result(time=time)
 
+    # Recalculate position metadata after filtering (coordinator stamped values include yesterday)
+    # Use shallow copies so coordinator dicts are not mutated
+    total_filtered = len(filtered_periods)
+    filtered_periods = [
+        period
+        | {
+            "period_position": i,
+            "period_count_total": total_filtered,
+            "periods_remaining": total_filtered - i,
+        }
+        for i, period in enumerate(filtered_periods, 1)
+    ]
+
     # Find current or next period based on current time
     current_period = None
 
@@ -251,8 +264,8 @@ def add_detail_attributes(attributes: dict, current_period: dict) -> None:
         attributes["period_interval_count"] = current_period["period_interval_count"]
     if "period_position" in current_period:
         attributes["period_position"] = current_period["period_position"]
-    if "periods_total" in current_period:
-        attributes["periods_total"] = current_period["periods_total"]
+    if "period_count_total" in current_period:
+        attributes["period_count_total"] = current_period["period_count_total"]
     if "periods_remaining" in current_period:
         attributes["periods_remaining"] = current_period["periods_remaining"]
 
@@ -298,9 +311,8 @@ def add_period_count_attributes(
             count_tomorrow += 1
 
     _ = now  # used for clarity only
-    if count_today > 0 or count_tomorrow > 0:
-        attributes["period_count_today"] = count_today
-        attributes["period_count_tomorrow"] = count_tomorrow
+    attributes["period_count_today"] = count_today
+    attributes["period_count_tomorrow"] = count_tomorrow
 
 
 def add_relaxation_attributes(attributes: dict, current_period: dict) -> None:
@@ -324,13 +336,11 @@ def add_calculation_summary_attributes(attributes: dict, period_metadata: dict) 
     """
     Add calculation summary attributes (priority 7).
 
-    Provides diagnostic visibility into the period calculation: how many periods
-    were requested vs. found, whether any flat days triggered adaptive min_periods,
-    and whether relaxation could not satisfy all days.
+    Provides diagnostic visibility into the period calculation: whether any flat days
+    triggered adaptive min_periods, and whether relaxation could not satisfy all days.
 
     Only adds non-default/interesting values to avoid clutter:
     - min_periods_configured: always added (useful reference for automations)
-    - periods_found_total: always added
     - flat_days_detected: only when > 0 (explains why fewer periods than configured)
     - relaxation_incomplete: only when True (diagnostic flag for troubleshooting)
 
@@ -341,9 +351,6 @@ def add_calculation_summary_attributes(attributes: dict, period_metadata: dict) 
 
     if "min_periods_requested" in relaxation_meta:
         attributes["min_periods_configured"] = relaxation_meta["min_periods_requested"]
-
-    if "periods_found" in relaxation_meta:
-        attributes["periods_found_total"] = relaxation_meta["periods_found"]
 
     flat_days = relaxation_meta.get("flat_days_detected", 0)
     if flat_days > 0:
@@ -414,10 +421,10 @@ def build_final_attributes_simple(
     2. Core decision attributes (level, rating_level, rating_difference_%)
     3. Price statistics (price_mean, price_median, price_min, price_max, price_spread, volatility)
     4. Price differences (period_price_diff_from_daily_min, period_price_diff_from_daily_min_%)
-    5. Detail information (period_interval_count, period_position, periods_total, periods_remaining)
+    5. Detail information (period_interval_count, period_position, period_count_total, periods_remaining)
     6. Relaxation information (relaxation_active, relaxation_level, relaxation_threshold_original_%,
        relaxation_threshold_applied_%) - only if current period was relaxed
-    7. Calculation summary (min_periods_configured, periods_found_total, flat_days_detected,
+    7. Calculation summary (min_periods_configured, flat_days_detected,
        relaxation_incomplete) - diagnostic info about the overall calculation
     8. Meta information (periods list)
 
@@ -464,7 +471,7 @@ def build_final_attributes_simple(
         # 6. Relaxation information (only if current period was relaxed)
         add_relaxation_attributes(attributes, current_period)
 
-        # 7. Calculation summary (diagnostic: min_periods_configured, periods_found_total, etc.)
+        # 7. Calculation summary (diagnostic: min_periods_configured, flat_days_detected, etc.)
         if period_metadata:
             add_calculation_summary_attributes(attributes, period_metadata)
 
