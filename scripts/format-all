@@ -1,0 +1,54 @@
+#!/bin/bash
+
+# script/format-all: Format Python and non-Python files
+#
+# Runs the Python formatter workflow and then formats common non-Python files
+# with Prettier and shell scripts with shfmt.
+#
+# Usage:
+#   ./scripts/format-all
+#
+# Examples:
+#   ./scripts/format-all
+
+set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+cd "$SCRIPT_DIR/.."
+
+# shellcheck source=scripts/.lib/output.sh
+source "$SCRIPT_DIR/.lib/output.sh"
+
+collect_shell_files() {
+    local files=()
+    local file shebang
+
+    while IFS= read -r -d '' file; do
+        shebang="$(head -n 1 "$file" 2>/dev/null || true)"
+        if [[ $shebang =~ ^\#\!.*(ba|z|k)?sh([[:space:]]|$) ]]; then
+            files+=("$file")
+        fi
+    done < <(find scripts .devcontainer -type f -print0)
+
+    if [[ ${#files[@]} -eq 0 ]]; then
+        return 0
+    fi
+
+    printf '%s\0' "${files[@]}"
+}
+
+log_header "Formatting Python files"
+"$SCRIPT_DIR/format"
+
+log_header "Formatting JSON/JSONC/Markdown with Prettier"
+npx --yes prettier --write "**/*.{json,jsonc,md,yml,yaml}"
+
+log_header "Formatting shell scripts with shfmt"
+mapfile -d '' -t shell_files < <(collect_shell_files)
+if [[ ${#shell_files[@]} -gt 0 ]]; then
+    shfmt -w "${shell_files[@]}"
+else
+    log_info "No shell files found"
+fi
+
+log_success "All formatting completed"

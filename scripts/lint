@@ -1,9 +1,10 @@
 #!/bin/bash
 
-# script/lint: Run linting tools and apply formatting
+# script/lint: Run format and lint-fix in one command
 #
-# Runs Ruff format and Ruff check with auto-fix enabled. Automatically cleans up
-# any accidental package installations after running.
+# Convenience wrapper that runs scripts/format and scripts/lint-fix in sequence.
+# This preserves the previous behavior while exposing explicit 3-mode workflows:
+# check, fix, and format.
 #
 # Usage:
 #   ./scripts/lint
@@ -16,21 +17,5 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 cd "$SCRIPT_DIR/.."
 
-# shellcheck source=scripts/.lib/output.sh
-source "$SCRIPT_DIR/.lib/output.sh"
-
-if [[ -z ${VIRTUAL_ENV:-} ]]; then
-    # shellcheck source=/dev/null
-    source "$HOME/.venv/bin/activate"
-fi
-
-log_header "Running Ruff format"
-uv run --active ruff format .
-
-log_header "Running Ruff check"
-uv run --active ruff check . --fix
-
-# Clean up any accidental package installation from uv run
-"$SCRIPT_DIR/clean" --minimal
-
-log_success "Linting completed"
+"$SCRIPT_DIR/format"
+"$SCRIPT_DIR/lint-fix"

@@ -1,0 +1,54 @@
+#!/bin/bash
+
+# script/check-all: Run full checks for Python and non-Python files
+#
+# Runs project checks and validates formatting/lint state for common
+# non-Python files.
+#
+# Usage:
+#   ./scripts/check-all
+#
+# Examples:
+#   ./scripts/check-all
+
+set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+cd "$SCRIPT_DIR/.."
+
+# shellcheck source=scripts/.lib/output.sh
+source "$SCRIPT_DIR/.lib/output.sh"
+
+collect_shell_files() {
+    local files=()
+    local file shebang
+
+    while IFS= read -r -d '' file; do
+        shebang="$(head -n 1 "$file" 2>/dev/null || true)"
+        if [[ $shebang =~ ^\#\!.*(ba|z|k)?sh([[:space:]]|$) ]]; then
+            files+=("$file")
+        fi
+    done < <(find scripts .devcontainer -type f -print0)
+
+    if [[ ${#files[@]} -eq 0 ]]; then
+        return 0
+    fi
+
+    printf '%s\0' "${files[@]}"
+}
+
+log_header "Running Python checks"
+"$SCRIPT_DIR/check"
+
+log_header "Checking JSON/JSONC/Markdown with Prettier"
+npx --yes prettier --check "**/*.{json,jsonc,md,yml,yaml}"
+
+log_header "Checking shell formatting with shfmt"
+mapfile -d '' -t shell_files < <(collect_shell_files)
+if [[ ${#shell_files[@]} -gt 0 ]]; then
+    shfmt -d "${shell_files[@]}"
+else
+    log_info "No shell files found"
+fi
+
+log_success "All checks passed"

@@ -1,0 +1,19 @@
+#!/bin/bash
+
+# script/lint-all: Apply lint and formatting fixes across file types
+#
+# Runs Python lint/format workflow and then applies non-Python formatting.
+#
+# Usage:
+#   ./scripts/lint-all
+#
+# Examples:
+#   ./scripts/lint-all
+
+set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+cd "$SCRIPT_DIR/.."
+
+"$SCRIPT_DIR/format-all"
+"$SCRIPT_DIR/lint-fix"
