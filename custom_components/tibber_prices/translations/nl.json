@@ -866,6 +866,15 @@
           "very_high": "Zeer Hoog"
         }
       },
+      "price_rank_today": {
+        "name": "Prijsrang vandaag"
+      },
+      "price_rank_tomorrow": {
+        "name": "Prijsrang morgen"
+      },
+      "price_rank_today_tomorrow": {
+        "name": "Prijsrang vandaag+morgen"
+      },
       "best_price_end_time": {
         "name": "Beste Prijs Einde"
       },

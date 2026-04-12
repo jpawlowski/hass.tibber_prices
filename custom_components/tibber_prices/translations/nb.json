@@ -866,6 +866,15 @@
           "very_high": "Svært Høy"
         }
       },
+      "price_rank_today": {
+        "name": "Prisrang i dag"
+      },
+      "price_rank_tomorrow": {
+        "name": "Prisrang i morgen"
+      },
+      "price_rank_today_tomorrow": {
+        "name": "Prisrang i dag+i morgen"
+      },
       "best_price_end_time": {
         "name": "Beste pris slutter"
       },

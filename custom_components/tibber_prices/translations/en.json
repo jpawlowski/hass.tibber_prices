@@ -866,6 +866,15 @@
           "very_high": "Very High"
         }
       },
+      "price_rank_today": {
+        "name": "Today's Price Rank"
+      },
+      "price_rank_tomorrow": {
+        "name": "Tomorrow's Price Rank"
+      },
+      "price_rank_today_tomorrow": {
+        "name": "Today+Tomorrow Price Rank"
+      },
       "best_price_end_time": {
         "name": "Best Price End"
       },

@@ -866,6 +866,15 @@
           "very_high": "Mycket hög"
         }
       },
+      "price_rank_today": {
+        "name": "Prisrang idag"
+      },
+      "price_rank_tomorrow": {
+        "name": "Prisrang imorgon"
+      },
+      "price_rank_today_tomorrow": {
+        "name": "Prisrang idag+imorgon"
+      },
       "best_price_end_time": {
         "name": "Bästa pris slutar"
       },
