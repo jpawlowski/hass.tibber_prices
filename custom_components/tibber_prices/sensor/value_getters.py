@@ -250,10 +250,42 @@ def get_value_getter_mapping(  # noqa: PLR0913 - needs all calculators as parame
             volatility_type="today_tomorrow"
         ),
         # Price rank sensors (via VolatilityCalculator - reuses same price extraction)
-        "price_rank_today": lambda: volatility_calculator.get_percentile_rank_value(percentile_type="today"),
-        "price_rank_tomorrow": lambda: volatility_calculator.get_percentile_rank_value(percentile_type="tomorrow"),
-        "price_rank_today_tomorrow": lambda: volatility_calculator.get_percentile_rank_value(
-            percentile_type="today_tomorrow"
+        # Current interval rank
+        "current_interval_price_rank_today": lambda: volatility_calculator.get_percentile_rank_value(
+            subject="current_interval", percentile_type="today"
+        ),
+        "current_interval_price_rank_tomorrow": lambda: volatility_calculator.get_percentile_rank_value(
+            subject="current_interval", percentile_type="tomorrow"
+        ),
+        "current_interval_price_rank_today_tomorrow": lambda: volatility_calculator.get_percentile_rank_value(
+            subject="current_interval", percentile_type="today_tomorrow"
+        ),
+        # Next interval rank
+        "next_interval_price_rank_today": lambda: volatility_calculator.get_percentile_rank_value(
+            subject="next_interval", percentile_type="today"
+        ),
+        "next_interval_price_rank_today_tomorrow": lambda: volatility_calculator.get_percentile_rank_value(
+            subject="next_interval", percentile_type="today_tomorrow"
+        ),
+        # Previous interval rank
+        "previous_interval_price_rank_today": lambda: volatility_calculator.get_percentile_rank_value(
+            subject="previous_interval", percentile_type="today"
+        ),
+        "previous_interval_price_rank_today_tomorrow": lambda: volatility_calculator.get_percentile_rank_value(
+            subject="previous_interval", percentile_type="today_tomorrow"
+        ),
+        # Rolling-hour rank (1h average)
+        "current_hour_price_rank_today": lambda: volatility_calculator.get_percentile_rank_value(
+            subject="current_hour", percentile_type="today"
+        ),
+        "current_hour_price_rank_today_tomorrow": lambda: volatility_calculator.get_percentile_rank_value(
+            subject="current_hour", percentile_type="today_tomorrow"
+        ),
+        "next_hour_price_rank_today": lambda: volatility_calculator.get_percentile_rank_value(
+            subject="next_hour", percentile_type="today"
+        ),
+        "next_hour_price_rank_today_tomorrow": lambda: volatility_calculator.get_percentile_rank_value(
+            subject="next_hour", percentile_type="today_tomorrow"
         ),
         # ================================================================
         # BEST/PEAK PRICE TIMING SENSORS - via TimingCalculator

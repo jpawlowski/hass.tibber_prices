@@ -866,15 +866,6 @@
           "very_high": "Svært Høy"
         }
       },
-      "price_rank_today": {
-        "name": "Prisrang i dag"
-      },
-      "price_rank_tomorrow": {
-        "name": "Prisrang i morgen"
-      },
-      "price_rank_today_tomorrow": {
-        "name": "Prisrang i dag+i morgen"
-      },
       "best_price_end_time": {
         "name": "Beste pris slutter"
       },
@@ -1036,6 +1027,39 @@
           "ready": "Klar",
           "error": "Feil"
         }
+      },
+      "current_interval_price_rank_today": {
+        "name": "Aktuell prisrang (i dag)"
+      },
+      "current_interval_price_rank_tomorrow": {
+        "name": "Aktuell prisrang (i morgen)"
+      },
+      "current_interval_price_rank_today_tomorrow": {
+        "name": "Aktuell prisrang (i dag+i morgen)"
+      },
+      "next_interval_price_rank_today": {
+        "name": "Neste prisrang (i dag)"
+      },
+      "next_interval_price_rank_today_tomorrow": {
+        "name": "Neste prisrang (i dag+i morgen)"
+      },
+      "previous_interval_price_rank_today": {
+        "name": "Forrige prisrang (i dag)"
+      },
+      "previous_interval_price_rank_today_tomorrow": {
+        "name": "Forrige prisrang (i dag+i morgen)"
+      },
+      "current_hour_price_rank_today": {
+        "name": "⌀ Timesprisrang nå (i dag)"
+      },
+      "current_hour_price_rank_today_tomorrow": {
+        "name": "⌀ Timesprisrang nå (i dag+i morgen)"
+      },
+      "next_hour_price_rank_today": {
+        "name": "⌀ Timesprisrang neste (i dag)"
+      },
+      "next_hour_price_rank_today_tomorrow": {
+        "name": "⌀ Timesprisrang neste (i dag+i morgen)"
       }
     },
     "binary_sensor": {

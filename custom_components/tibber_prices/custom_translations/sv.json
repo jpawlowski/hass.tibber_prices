@@ -1,653 +1,693 @@
 {
-    "apexcharts": {
-        "title_rating_level": "Prisfaser dagsprogress",
-        "title_level": "Prisnivå",
-        "hourly_suffix": "(Ø per timme)",
-        "best_price_period_name": "Bästa prisperiod",
-        "peak_price_period_name": "Toppprisperiod",
-        "notification": {
-            "metadata_sensor_unavailable": {
-                "title": "Tibber Prices: ApexCharts YAML genererad med begränsad funktionalitet",
-                "message": "Du har precis genererat en ApexCharts-kortkonfiguration via Utvecklarverktyg. Diagram-metadata-sensorn är inaktiverad, så den genererade YAML:en visar bara **grundläggande funktionalitet** (auto-skalning, fast gradient vid 50%).\n\n**För full funktionalitet** (optimerad skalning, dynamiska gradientfärger):\n1. [Öppna Tibber Prices-integrationen](https://my.home-assistant.io/redirect/integration/?domain=tibber_prices)\n2. Aktivera 'Chart Metadata'-sensorn\n3. **Generera YAML:en igen** via Utvecklarverktyg\n4. **Ersätt den gamla YAML:en** i din instrumentpanel med den nya versionen\n\n⚠️ Det räcker inte att bara aktivera sensorn - du måste regenerera och ersätta YAML-koden!"
-            },
-            "missing_cards": {
-                "title": "Tibber Prices: ApexCharts YAML kan inte användas",
-                "message": "Du har precis genererat en ApexCharts-kortkonfiguration via Utvecklarverktyg, men den genererade YAML:en **kommer inte att fungera** eftersom nödvändiga anpassade kort saknas.\n\n**Saknade kort:**\n{cards}\n\n**För att använda den genererade YAML:en:**\n1. Klicka på länkarna ovan för att installera de saknade korten från HACS\n2. Starta om Home Assistant (ibland nödvändigt)\n3. **Generera YAML:en igen** via Utvecklarverktyg\n4. Lägg till YAML:en i din instrumentpanel\n\n⚠️ Den nuvarande YAML-koden fungerar inte förrän alla kort är installerade!"
-            }
-        }
+  "apexcharts": {
+    "title_rating_level": "Prisfaser dagsprogress",
+    "title_level": "Prisnivå",
+    "hourly_suffix": "(Ø per timme)",
+    "best_price_period_name": "Bästa prisperiod",
+    "peak_price_period_name": "Toppprisperiod",
+    "notification": {
+      "metadata_sensor_unavailable": {
+        "title": "Tibber Prices: ApexCharts YAML genererad med begränsad funktionalitet",
+        "message": "Du har precis genererat en ApexCharts-kortkonfiguration via Utvecklarverktyg. Diagram-metadata-sensorn är inaktiverad, så den genererade YAML:en visar bara **grundläggande funktionalitet** (auto-skalning, fast gradient vid 50%).\n\n**För full funktionalitet** (optimerad skalning, dynamiska gradientfärger):\n1. [Öppna Tibber Prices-integrationen](https://my.home-assistant.io/redirect/integration/?domain=tibber_prices)\n2. Aktivera 'Chart Metadata'-sensorn\n3. **Generera YAML:en igen** via Utvecklarverktyg\n4. **Ersätt den gamla YAML:en** i din instrumentpanel med den nya versionen\n\n⚠️ Det räcker inte att bara aktivera sensorn - du måste regenerera och ersätta YAML-koden!"
+      },
+      "missing_cards": {
+        "title": "Tibber Prices: ApexCharts YAML kan inte användas",
+        "message": "Du har precis genererat en ApexCharts-kortkonfiguration via Utvecklarverktyg, men den genererade YAML:en **kommer inte att fungera** eftersom nödvändiga anpassade kort saknas.\n\n**Saknade kort:**\n{cards}\n\n**För att använda den genererade YAML:en:**\n1. Klicka på länkarna ovan för att installera de saknade korten från HACS\n2. Starta om Home Assistant (ibland nödvändigt)\n3. **Generera YAML:en igen** via Utvecklarverktyg\n4. Lägg till YAML:en i din instrumentpanel\n\n⚠️ Den nuvarande YAML-koden fungerar inte förrän alla kort är installerade!"
+      }
+    }
+  },
+  "sensor": {
+    "current_interval_price": {
+      "description": "Det nuvarande elpriset per kWh",
+      "long_description": "Visar nuvarande pris per kWh från ditt Tibber-abonnemang",
+      "usage_tips": "Använd detta för att spåra priser eller skapa automationer som körs när el är billig"
     },
-    "sensor": {
-        "current_interval_price": {
-            "description": "Det nuvarande elpriset per kWh",
-            "long_description": "Visar nuvarande pris per kWh från ditt Tibber-abonnemang",
-            "usage_tips": "Använd detta för att spåra priser eller skapa automationer som körs när el är billig"
-        },
-        "current_interval_price_base": {
-            "description": "Nuvarande elpris i huvudvaluta (EUR/kWh, NOK/kWh, osv.) för Energipanelen",
-            "long_description": "Visar nuvarande pris per kWh i huvudvaluta-enheter (t.ex. EUR/kWh istället för ct/kWh, NOK/kWh istället för øre/kWh). Denna sensor är speciellt utformad för användning med Home Assistants Energipanel, som kräver priser i standardvalutaenheter.",
-            "usage_tips": "Använd denna sensor när du konfigurerar Energipanelen under Inställningar → Instrumentpaneler → Energi. Välj denna sensor som 'Entitet med nuvarande pris' för att automatiskt beräkna dina energikostnader. Energipanelen multiplicerar din energiförbrukning (kWh) med detta pris för att visa totala kostnader."
-        },
-        "next_interval_price": {
-            "description": "Nästa intervalls elpris per kWh",
-            "long_description": "Visar priset för nästa 15-minuters intervall från ditt Tibber-abonnemang",
-            "usage_tips": "Använd detta för att förbereda dig för kommande prisändringar eller schemalägga enheter att köras under billigare intervaller"
-        },
-        "previous_interval_price": {
-            "description": "Föregående intervalls elpris per kWh",
-            "long_description": "Visar priset för föregående 15-minuters intervall från ditt Tibber-abonnemang",
-            "usage_tips": "Använd detta för att granska tidigare prisändringar eller spåra prishistorik"
-        },
-        "current_hour_average_price": {
-            "description": "Rullande 5-intervalls genomsnittspris per kWh",
-            "long_description": "Visar genomsnittspriset per kWh beräknat från 5 intervaller: 2 föregående, nuvarande och 2 nästa intervaller (ungefär 75 minuter totalt). Detta ger ett utjämnat 'timpris' som anpassar sig när tiden går, istället för att vara fixerat till klockslag.",
-            "usage_tips": "Använd detta för en stabilare prisindikator som jämnar ut kortsiktiga fluktuationer medan den fortfarande är responsiv till prisändringar. Bättre än fasta timpriser för konsumtionsbeslut."
-        },
-        "next_hour_average_price": {
-            "description": "Rullande 5-intervalls genomsnittspris för nästa timme per kWh",
-            "long_description": "Visar genomsnittspriset per kWh beräknat från 5 intervaller centrerade en timme framåt: ungefär intervaller +2 till +6 från nu (täcker minuter +30 till +105). Detta ger ett framåtblickande utjämnat 'timpris' för konsumtionsplanering.",
-            "usage_tips": "Använd detta för att förutse prisändringar nästa timme. Användbart för att schemalägga högkonsumtionsaktiviteter som laddning av elfordon, körning av diskmaskiner eller värmesystem."
-        },
-        "lowest_price_today": {
-            "description": "Det lägsta elpriset för idag per kWh",
-            "long_description": "Visar det lägsta priset per kWh för nuvarande dag från ditt Tibber-abonnemang",
-            "usage_tips": "Använd detta för att jämföra nuvarande priser med den billigaste tiden på dagen"
-        },
-        "highest_price_today": {
-            "description": "Det högsta elpriset för idag per kWh",
-            "long_description": "Visar det högsta priset per kWh för nuvarande dag från ditt Tibber-abonnemang",
-            "usage_tips": "Använd detta för att undvika att köra apparater under topppristider"
-        },
-        "average_price_today": {
-            "description": "Typiskt elpris för idag per kWh (konfigurerbart visningsformat)",
-            "long_description": "Visar priset per kWh för nuvarande dag från ditt Tibber-abonnemang. **Som standard visar statusen medianen** (motståndskraftig mot extrema prispikar, visar typisk prisnåvå). Du kan ändra detta i integrationsinstllningarna för att visa det aritmetiska medelvärdet istället. Det alternativa värdet är tillgängligt som attribut.",
-            "usage_tips": "Använd detta som baslinje för att jämföra nuvarande priser. För beräkningar använd: {{ state_attr('sensor.average_price_today', 'price_mean') }}"
-        },
-        "lowest_price_tomorrow": {
-            "description": "Det lägsta elpriset för imorgon per kWh",
-            "long_description": "Visar det lägsta priset per kWh för morgondagen från ditt Tibber-abonnemang. Denna sensor blir otillgänglig tills morgondagens data publiceras av Tibber (vanligtvis runt 13:00-14:00 CET).",
-            "usage_tips": "Använd detta för att planera energikrävande aktiviteter för morgondagens billigaste tid. Perfekt för förhandsplanering av uppvärmning, EV-laddning eller apparater."
-        },
-        "highest_price_tomorrow": {
-            "description": "Det högsta elpriset för imorgon per kWh",
-            "long_description": "Visar det högsta priset per kWh för morgondagen från ditt Tibber-abonnemang. Denna sensor blir otillgänglig tills morgondagens data publiceras av Tibber (vanligtvis runt 13:00-14:00 CET).",
-            "usage_tips": "Använd detta för att undvika att köra apparater under morgondagens topppristider. Användbart för att planera runt dyra perioder."
-        },
-        "average_price_tomorrow": {
-            "description": "Typiskt elpris för imorgon per kWh (konfigurerbart visningsformat)",
-            "long_description": "Visar priset per kWh för morgondagen från ditt Tibber-abonnemang. **Som standard visar statusen medianen** (motståndskraftig mot extrema prispikar). Du kan ändra detta i integrationsinstllningarna för att visa det aritmetiska medelvärdet istället. Det alternativa värdet är tillgängligt som attribut. Denna sensor blir otillgänglig tills morgondagens data publiceras av Tibber (vanligtvis runt 13:00-14:00 CET).",
-            "usage_tips": "Använd detta som baslinje för att jämföra morgondagens priser och planera konsumtion. Jämför med dagens median för att se om morgondagen kommer att bli dyrare eller billigare totalt sett."
-        },
-        "yesterday_price_level": {
-            "description": "Aggregerad prisnivå för igår",
-            "long_description": "Visar den aggregerade prisnivån för alla intervall igår. Använder samma logik som timsensorerna för att bestämma den totala prisnivån för hela dagen.",
-            "usage_tips": "Använd detta för att förstå den övergripande prissituationen igår. Jämför med idag för att se dagliga trender."
-        },
-        "today_price_level": {
-            "description": "Aggregerad prisnivå för idag",
-            "long_description": "Visar den aggregerade prisnivån för alla intervall idag. Använder samma logik som timsensorerna för att bestämma den totala prisnivån för hela dagen.",
-            "usage_tips": "Använd detta för att förstå dagens prissituation snabbt. Praktiskt för snabba bedömningar om dagen i allmänhet är billig eller dyr."
-        },
-        "tomorrow_price_level": {
-            "description": "Aggregerad prisnivå för imorgon",
-            "long_description": "Visar den aggregerade prisnivån för alla intervall imorgon. Använder samma logik som timsensorerna för att bestämma den totala prisnivån för hela dagen. Denna sensor blir otillgänglig tills morgondagens data publiceras av Tibber (vanligtvis runt 13:00-14:00 CET).",
-            "usage_tips": "Använd detta för att förstå imorgonens prissituation. Jämför med idag för att se om imorgon blir mer eller mindre gynnsamt för energiförbrukning."
-        },
-        "yesterday_price_rating": {
-            "description": "Aggregerad prisvärdering för igår",
-            "long_description": "Visar den aggregerade prisvärderingen (låg/normal/hög) för alla intervall igår, baserat på dina konfigurerade tröskelvärden. Använder samma logik som timsensorerna för att bestämma den totala värderingen för hela dagen.",
-            "usage_tips": "Använd detta för att förstå igårens prissituation i förhållande till dina personliga tröskelvärden. Jämför med idag för trendanalys."
-        },
-        "today_price_rating": {
-            "description": "Aggregerad prisvärdering för idag",
-            "long_description": "Visar den aggregerade prisvärderingen (låg/normal/hög) för alla intervall idag, baserat på dina konfigurerade tröskelvärden. Använder samma logik som timsensorerna för att bestämme den totala värderingen för hela dagen.",
-            "usage_tips": "Använd detta för att snabbt bedöma dagens prissituation i förhållande till dina personliga tröskelvärden. Hjälper till att fatta förbrukningsbeslut för innevarande dag."
-        },
-        "tomorrow_price_rating": {
-            "description": "Aggregerad prisvärdering för imorgon",
-            "long_description": "Visar den aggregerade prisvärderingen (låg/normal/hög) för alla intervall imorgon, baserat på dina konfigurerade tröskelvärden. Använder samma logik som timsensorerna för att bestämma den totala värderingen för hela dagen. Denna sensor blir otillgänglig tills morgondagens data publiceras av Tibber (vanligtvis runt 13:00-14:00 CET).",
-            "usage_tips": "Använd detta för att planera imorgonens energiförbrukning baserat på dina personliga priströskelvärden. Jämför med idag för att avgöra om du ska skjuta upp förbrukning till imorgon eller använda energi idag."
-        },
-        "trailing_price_average": {
-            "description": "Typiskt elpris för de senaste 24 timmarna per kWh (konfigurerbart visningsformat)",
-            "long_description": "Visar priset per kWh beräknat från de senaste 24 timmarna. **Som standard visar statusen medianen** (motståndskraftig mot extrema prispikar, visar typisk prisnåvå). Du kan ändra detta i integrationsinstllningarna för att visa det aritmetiska medelvärdet istället. Det alternativa värdet är tillgängligt som attribut. Uppdateras var 15:e minut.",
-            "usage_tips": "Använd statusvärdet för att se den typiska nuvarande prisnåvån. För kostnadsberäkningar använd: {{ state_attr('sensor.trailing_price_average', 'price_mean') }}"
-        },
-        "leading_price_average": {
-            "description": "Typiskt elpris för nästa 24 timmar per kWh (konfigurerbart visningsformat)",
-            "long_description": "Visar priset per kWh beräknat från nästa 24 timmar. **Som standard visar statusen medianen** (motståndskraftig mot extrema prispikar, visar förväntad prisnåvå). Du kan ändra detta i integrationsinstllningarna för att visa det aritmetiska medelvärdet istället. Det alternativa värdet är tillgängligt som attribut.",
-            "usage_tips": "Använd statusvärdet för att se den typiska kommande prisnåvån. För kostnadsberäkningar använd: {{ state_attr('sensor.leading_price_average', 'price_mean') }}"
-        },
-        "trailing_price_min": {
-            "description": "Det minsta elpriset för de senaste 24 timmarna per kWh",
-            "long_description": "Visar minimipriset per kWh från de senaste 24 timmarna (rullande minimum) från ditt Tibber-abonnemang. Detta ger det lägsta priset som setts de senaste 24 timmarna.",
-            "usage_tips": "Använd detta för att se den bästa prismöjligheten du hade de senaste 24 timmarna och jämför med nuvarande priser."
-        },
-        "trailing_price_max": {
-            "description": "Det maximala elpriset för de senaste 24 timmarna per kWh",
-            "long_description": "Visar maximipriset per kWh från de senaste 24 timmarna (rullande maximum) från ditt Tibber-abonnemang. Detta ger det högsta priset som setts de senaste 24 timmarna.",
-            "usage_tips": "Använd detta för att se topppriset de senaste 24 timmarna och bedöma prisvolatilitet."
-        },
-        "leading_price_min": {
-            "description": "Det minsta elpriset för nästa 24 timmar per kWh",
-            "long_description": "Visar minimipriset per kWh från nästa 24 timmar (framåtblickande minimum) från ditt Tibber-abonnemang. Detta ger det lägsta priset som förväntas nästa 24 timmar baserat på prognosdata.",
-            "usage_tips": "Använd detta för att identifiera den bästa prismöjligheten som kommer och planera energikrävande uppgifter därefter."
-        },
-        "leading_price_max": {
-            "description": "Det maximala elpriset för nästa 24 timmar per kWh",
-            "long_description": "Visar maximipriset per kWh från nästa 24 timmar (framåtblickande maximum) från ditt Tibber-abonnemang. Detta ger det högsta priset som förväntas nästa 24 timmar baserat på prognosdata.",
-            "usage_tips": "Använd detta för att undvika att köra apparater under kommande toppprisperioder."
-        },
-        "current_interval_price_level": {
-            "description": "Den nuvarande prisnivåklassificeringen",
-            "long_description": "Visar Tibbers klassificering av nuvarande pris jämfört med historiska priser",
-            "usage_tips": "Använd detta för att skapa automationer baserade på relativa prisnivåer istället för absoluta priser"
-        },
-        "next_interval_price_level": {
-            "description": "Prisnivå för nästa 15-minuters intervall",
-            "long_description": "Visar prisnivåklassificeringen för kommande intervall. Hjälper att förutse kortsiktiga prisändringar för omedelbar planering.",
-            "usage_tips": "Använd för snabba beslut om att starta eller stoppa högeffektsenheter inom de kommande minuterna."
-        },
-        "previous_interval_price_level": {
-            "description": "Prisnivå för föregående 15-minuters intervall",
-            "long_description": "Visar prisnivåklassificeringen för senaste intervallet. Användbart för historisk jämförelse och förståelse av senaste pristrender.",
-            "usage_tips": "Använd för att jämföra nuvarande vs senaste prisnivåer eller analysera konsumtionsmönster mot historiska priser."
-        },
-        "current_hour_price_level": {
-            "description": "Aggregerad prisnivå för nuvarande rullande timme (5 intervaller)",
-            "long_description": "Visar median prisnivå över 5 intervaller (2 före, nuvarande, 2 efter) som täcker ungefär 75 minuter. Ger en stabilare prisnivåindikator som jämnar ut kortsiktiga fluktuationer.",
-            "usage_tips": "Använd för planeringsbeslut på medellång sikt där du vill undvika att reagera på korta pristoppar eller -fall."
-        },
-        "next_hour_price_level": {
-            "description": "Aggregerad prisnivå för nästa rullande timme (5 intervaller framåt)",
-            "long_description": "Visar median prisnivå över 5 intervaller centrerade en timme framåt. Hjälper att planera konsumtion baserat på kommande pristrender istället för ögonblickliga framtida priser.",
-            "usage_tips": "Använd för att schemalägga aktiviteter för nästa timme baserat på en utjämnad prisnivåprognos."
-        },
-        "current_interval_price_rating": {
-            "description": "Hur nuvarande intervalls pris jämförs med historiska data",
-            "long_description": "Visar hur nuvarande intervalls pris jämförs med historiska prisdata som en procentsats",
-            "usage_tips": "En positiv procentsats betyder att nuvarande pris är över genomsnittet, negativ betyder under genomsnittet"
-        },
-        "next_interval_price_rating": {
-            "description": "Prisvärdering för nästa 15-minuters intervall",
-            "long_description": "Visar hur nästa intervalls pris jämförs med det rullande 24-timmars genomsnittet. Hjälper att förutse om kommande priser är över eller under den senaste trenden.",
-            "usage_tips": "Använd för att fatta snabba beslut om att starta aktiviteter i nästa intervall baserat på relativ prisposition."
-        },
-        "previous_interval_price_rating": {
-            "description": "Prisvärdering för föregående 15-minuters intervall",
-            "long_description": "Visar hur senaste intervalls pris jämfördes med det rullande genomsnittet. Användbart för att förstå senaste prisbeteende.",
-            "usage_tips": "Använd för att analysera hur prisvärderingar förändrades över tid eller validera tidigare konsumtionsbeslut."
-        },
-        "current_hour_price_rating": {
-            "description": "Aggregerad prisvärdering för nuvarande rullande timme (5 intervaller)",
-            "long_description": "Visar genomsnittlig värdering över 5 intervaller (2 före, nuvarande, 2 efter). Baserad på genomsnittlig procentuell skillnad från rullande 24t genomsnitt, vilket ger en utjämnad värderingsindikator.",
-            "usage_tips": "Använd för stabil prisvärdering på medellång sikt som inte överreagerar på korta prisavvikelser."
-        },
-        "next_hour_price_rating": {
-            "description": "Aggregerad prisvärdering för nästa rullande timme (5 intervaller framåt)",
-            "long_description": "Visar genomsnittlig värdering för 5 intervaller centrerade en timme framåt. Hjälper att förstå om nästa timme generellt kommer att ligga över eller under genomsnittlig prissättning.",
-            "usage_tips": "Använd för att bestämma om du ska vänta en timme innan du startar högkonsumtionsaktiviteter."
-        },
-        "next_avg_1h": {
-            "description": "Genomsnittspris för nästa 1 timme (endast framåt från nästa intervall)",
-            "long_description": "Framåtblickande genomsnitt: Visar genomsnitt av nästa 4 intervaller (1 timme) från och med NÄSTA 15-minuters intervall (inte inklusive nuvarande). Skiljer sig från current_hour_average_price som inkluderar tidigare intervaller. Använd för absolut priströskelpla nering.",
-            "usage_tips": "Absolut priströskel: Starta endast apparater när genomsnittet stannar under ditt maximalt acceptabla pris (t.ex. under 0,25 EUR/kWh). Kombinera med trendsensor för optimal timing. Obs: Detta är INTE en ersättning för timpriser - använd current_hour_average_price för det."
-        },
-        "next_avg_2h": {
-            "description": "Genomsnittspris för nästa 2 timmar",
-            "long_description": "Visar genomsnittspriset för nästa 8 intervaller (2 timmar) från och med nästa 15-minuters intervall.",
-            "usage_tips": "Absolut priströskel: Sätt ett maximalt acceptabelt genomsnittspris för standardapparater som tvättmaskiner. Säkerställer att du aldrig betalar mer än din gräns."
-        },
-        "next_avg_3h": {
-            "description": "Genomsnittspris för nästa 3 timmar",
-            "long_description": "Visar genomsnittspriset för nästa 12 intervaller (3 timmar) från och med nästa 15-minuters intervall.",
-            "usage_tips": "Absolut priströskel: För EU Eco-program (diskmaskiner, 3-4t körtid). Starta endast när 3t genomsnitt är under din prisgräns. Använd med trendsensor för att hitta bästa ögonblick inom acceptabelt prisområde."
-        },
-        "next_avg_4h": {
-            "description": "Genomsnittspris för nästa 4 timmar",
-            "long_description": "Visar genomsnittspriset för nästa 16 intervaller (4 timmar) från och med nästa 15-minuters intervall.",
-            "usage_tips": "Absolut priströskel: Sätt maximalt acceptabelt pris för värmepumpar eller varmvattenberedare. Förhindrar drift under dyra perioder oavsett relativa trender."
-        },
-        "next_avg_5h": {
-            "description": "Genomsnittspris för nästa 5 timmar",
-            "long_description": "Visar genomsnittspriset för nästa 20 intervaller (5 timmar) från och med nästa 15-minuters intervall.",
-            "usage_tips": "Absolut priströskel: Brygga mellan kort och lång sikt planering. Använd för utökade cykler med hårda prisgränser (t.ex. poolpumpar, utökade uppvärmningscykler)."
-        },
-        "next_avg_6h": {
-            "description": "Genomsnittspris för nästa 6 timmar",
-            "long_description": "Visar genomsnittspriset för nästa 24 intervaller (6 timmar) från och med nästa 15-minuters intervall.",
-            "usage_tips": "Absolut priströskel: Kvällsplanering med pristak. Schemalägg endast uppgifter om 6t genomsnitt stannar under dina maximalt acceptabla kostnader."
-        },
-        "next_avg_8h": {
-            "description": "Genomsnittspris för nästa 8 timmar",
-            "long_description": "Visar genomsnittspriset för nästa 32 intervaller (8 timmar) från och med nästa 15-minuters intervall.",
-            "usage_tips": "Absolut priströskel: Nattliga driftsbeslut. Sätt hårda prisgränser för nattliga laster (batteriladdning, termisk lagring). Överskrid aldrig din budget."
-        },
-        "next_avg_12h": {
-            "description": "Genomsnittspris för nästa 12 timmar",
-            "long_description": "Visar genomsnittspriset för nästa 48 intervaller (12 timmar) från och med nästa 15-minuters intervall.",
-            "usage_tips": "Absolut priströskel: Strategiska beslut med pristak. Fortsätt endast om 12t genomsnitt är under ditt maximalt acceptabla pris. Bra för uppskjutbara stora laster."
-        },
-        "price_outlook_1h": {
-            "description": "Prisöversikt för nästa timme",
-            "long_description": "Jämför ditt nuvarande pris med genomsnittet av alla intervaller under nästa timme (4 intervaller). Alla översiktssensorer (1h–12h) delar samma utgångspunkt: ditt nuvarande pris — de skiljer sig bara i fönsterstorlek. Stigande/fallande vid ±3%, kraftigt vid ±9% (konfigurerbart, volatilitetsadaptivt).",
-            "usage_tips": "Beslutstöd: 'stigande' = AGERA NU, ditt nuvarande pris är billigare än fönstergenomsnittet. 'fallande' = VÄNTA, fönstergenomsnittet är billigare än nu. 'stabil' = timing spelar ingen roll."
-        },
-        "price_outlook_2h": {
-            "description": "Prisöversikt för nästa 2 timmar",
-            "long_description": "Jämför ditt nuvarande pris med genomsnittet av alla intervaller under de nästa 2 timmarna (8 intervaller). 'stigande' = nuvarande pris under 2h-fönstergenomsnittet; 'fallande' = fönstergenomsnittet är billigare än nu. Stigande/fallande vid ±3%, kraftigt vid ±9%.",
-            "usage_tips": "Apparater: 'stigande' = starta nu, du har ett bra pris jämfört med nästa 2h. Kombinera med price_trajectory_2h för att se om priserna fortfarande faller eller redan stiger."
-        },
-        "price_outlook_3h": {
-            "description": "Prisöversikt för nästa 3 timmar",
-            "long_description": "Jämför ditt nuvarande pris med genomsnittet av alla intervaller under de nästa 3 timmarna (12 intervaller). 'stigande' = nuvarande pris under 3h-fönstergenomsnittet; 'fallande' = fönstergenomsnittet är billigare än nu. Stigande/fallande vid ±3%, kraftigt vid ±9%.",
-            "usage_tips": "Eco-program: 'stigande' = starta eco-cykeln nu, priser är i genomsnitt högre i fönstret. 'fallande' = vänta, billigare genomsnittligt fönster kommer."
-        },
-        "price_outlook_4h": {
-            "description": "Prisöversikt för nästa 4 timmar",
-            "long_description": "Jämför ditt nuvarande pris med genomsnittet av alla intervaller under de nästa 4 timmarna (16 intervaller). 'stigande' = nuvarande pris under 4h-fönstergenomsnittet; 'fallande' = fönstergenomsnittet är billigare än nu. Stigande/fallande vid ±3%, kraftigt vid ±9%.",
-            "usage_tips": "Värmepump/batteri: 'stigande' = ladda nu, du är på en relativ lågpunkt. Kombinera med price_trajectory_4h för att se om priserna fortfarande faller eller redan stiger."
-        },
-        "price_outlook_5h": {
-            "description": "Prisöversikt för nästa 5 timmar",
-            "long_description": "Jämför ditt nuvarande pris med genomsnittet av alla intervaller under de nästa 5 timmarna (20 intervaller). 'stigande' = nuvarande pris under 5h-fönstergenomsnittet; 'fallande' = fönstergenomsnittet är billigare än nu. Stigande/fallande vid ±3%, kraftigt vid ±9%.",
-            "usage_tips": "Utökade cykler: 'stigande' eller 'stabil' = bra tid att starta. 'fallande' = vänta om din planering tillåter det."
-        },
-        "price_outlook_6h": {
-            "description": "Prisöversikt för nästa 6 timmar",
-            "long_description": "Jämför ditt nuvarande pris med genomsnittet av alla intervaller under de nästa 6 timmarna (24 intervaller). 'stigande' = nuvarande pris under 6h-fönstergenomsnittet; 'fallande' = fönstergenomsnittet är billigare än nu. Stigande/fallande vid ±3%, kraftigt vid ±9%.",
-            "usage_tips": "Kvällsbeslut: 'stigande' = använd el nu medan den är relativt billig. 'fallande' = kvälls-/nattpriserna blir bättre i genomsnitt, vänta om möjligt."
-        },
-        "price_outlook_8h": {
-            "description": "Prisöversikt för nästa 8 timmar",
-            "long_description": "Jämför ditt nuvarande pris med genomsnittet av alla intervaller under de nästa 8 timmarna (32 intervaller). 'stigande' = nuvarande pris under 8h-fönstergenomsnittet; 'fallande' = fönstergenomsnittet är billigare än nu. Stigande/fallande vid ±3%, kraftigt vid ±9%.",
-            "usage_tips": "Nattplanering: 'stigande' = ikväll/imorgon blir dyrare i genomsnitt, använd el nu. 'fallande' = nattpriserna blir billigare, värt att vänta."
-        },
-        "price_outlook_12h": {
-            "description": "Prisöversikt för nästa 12 timmar",
-            "long_description": "Jämför ditt nuvarande pris med genomsnittet av alla intervaller under de nästa 12 timmarna (48 intervaller). 'stigande' = nuvarande pris under 12h-fönstergenomsnittet; 'fallande' = fönstergenomsnittet är billigare än nu. Stigande/fallande vid ±3%, kraftigt vid ±9%.",
-            "usage_tips": "Strategiska beslut: 'stigande' = du är på en lågpunkt relativt till nästa 12h, bra tid för strömkrävande uppgifter. 'fallande' = avsevärt bättre genomsnittspriser kommer."
-        },
-        "price_trajectory_2h": {
-            "description": "Prisutveckling inom nästa 2-timmars fönster",
-            "long_description": "Compares the average of the first hour with the average of the second hour within the next 2-hour window. 'rising' = second half more expensive than first half. 'falling' = second half cheaper. Rising/falling at ±3%, strongly at ±9% (configurable, volatility-adaptive).",
-            "usage_tips": "At a price minimum: price_outlook_2h may show 'falling' (window average is below current), but price_trajectory_2h shows 'rising' (second half more expensive) — revealing the upcoming reversal. 'outlook: falling + trajectory: rising' = you're AT the minimum, act now."
-        },
-        "price_trajectory_3h": {
-            "description": "Prisutveckling inom nästa 3-timmars fönster",
-            "long_description": "Compares the average of the first 1.5 hours with the average of the second 1.5 hours within the next 3-hour window. 'rising' = prices are climbing; 'falling' = prices are dropping. Rising/falling at ±3%, strongly at ±9%.",
-            "usage_tips": "Appliance timing: 'outlook: strongly_falling + trajectory: rising' = you're at or past the minimum, prices are already recovering — start now."
-        },
-        "price_trajectory_4h": {
-            "description": "Prisutveckling inom nästa 4-timmars fönster",
-            "long_description": "Compares the average of the first 2 hours with the average of the second 2 hours within the next 4-hour window. 'rising' = prices are climbing; 'falling' = prices are dropping. Complements price_outlook_4h. Rising/falling at ±3%, strongly at ±9%.",
-            "usage_tips": "Heat pump charging: 'rising' = first half is cheaper, charge now. 'falling' = second half is cheaper, wait. Combine with outlook: if both rising, very strong signal to act now."
-        },
-        "price_trajectory_5h": {
-            "description": "Prisutveckling inom nästa 5-timmars fönster",
-            "long_description": "Compares the average of the first 2.5 hours with the average of the second 2.5 hours within the next 5-hour window. 'rising' = prices are climbing; 'falling' = prices are dropping. Rising/falling at ±3%, strongly at ±9%.",
-            "usage_tips": "Long cycles: 'outlook: rising + trajectory: rising' = clear signal to start now. 'outlook: falling + trajectory: rising' = you're near the bottom, good time to start."
-        },
-        "price_trajectory_6h": {
-            "description": "Prisutveckling inom nästa 6-timmars fönster",
-            "long_description": "Compares the average of the first 3 hours with the average of the second 3 hours within the next 6-hour window. 'rising' = prices are climbing; 'falling' = prices are dropping. Rising/falling at ±3%, strongly at ±9%.",
-            "usage_tips": "Evening/overnight planning: 'falling' at evening peak = overnight will be cheaper, postpone. 'rising' in the morning = current morning prices are the low."
-        },
-        "price_trajectory_8h": {
-            "description": "Prisutveckling inom nästa 8-timmars fönster",
-            "long_description": "Compares the average of the first 4 hours with the average of the second 4 hours within the next 8-hour window. 'rising' = prices are climbing; 'falling' = prices are dropping. Rising/falling at ±3%, strongly at ±9%.",
-            "usage_tips": "Overnight charging: 'rising' during evening = first half of night is cheapest, start charging earlier. 'falling' = second half will be cheapest, delay start."
-        },
-        "price_trajectory_12h": {
-            "description": "Prisutveckling inom nästa 12-timmars fönster",
-            "long_description": "Compares the average of the first 6 hours with the average of the second 6 hours within the next 12-hour window. 'rising' = prices are climbing; 'falling' = prices are dropping. Rising/falling at ±3%, strongly at ±9%.",
-            "usage_tips": "Day-ahead planning: 'rising' at midnight = first half of day is cheaper, schedule morning loads. 'falling' = afternoon/evening scheduling is better."
-        },
-        "current_price_trend": {
-            "description": "Nuvarande pristrend-riktning och hur länge den varar",
-            "long_description": "Visar nuvarande pristrend (stigande/fallande/stabil) genom att kombinera historiskt momentum (viktad 1h tillbakablick) med framtidsutsikt. Känner igen pågående trender tidigare än endast framtidsanalys. Använder ±3 % momentum-tröskel och volatilitetsanpassad framtidsjämförelse. Beräknar dynamiskt till nästa trendändring (eller 3t standard om ingen ändring på 24t). Status visar nuvarande riktning, attribut visar när den ändras och vad som kommer härnäst.",
-            "usage_tips": "Statusvisning: Dashboard-synlighet av 'vad händer nu till när'. Perfekt synkroniserad med next_price_trend_change. Exempel: Badge som visar 'Stigande i 2,5t' eller 'Fallande till 16:45'. Bättre än tidsfönster-sensorer eftersom den förstår att du REDAN är i en trend, inte bara förutsäger framtida ändringar. Använd för snabb visuell överblick, inte automationsutlösare."
-        },
-        "next_price_trend_change": {
-            "description": "När nästa betydande pristrendändring kommer att inträffa",
-            "long_description": "Skannar de nästa 24 timmarna (96 intervaller) för att hitta när pristrend-riktningen kommer att ändras. Bara riktningsändringar räknas: stigande/kraftigt stigande är en grupp, fallande/kraftigt fallande en annan, stabil är egen. En ändring från stigande till kraftigt stigande är INTE en trendändring. Använder volatilitetsadaptiva tröskelvärden (standard: ±3%/±9%) med hysteres (standard: 3 på varandra följande intervaller). Returnerar tidstämpeln när ändringen förväntas.",
-            "usage_tips": "Händelsestyrd automatisering: Utlös åtgärder NÄR trenden ändras, inte OM X timmar. Exempel: 'Ladda EV när nästa trendändring visar fallande priser' eller 'Starta diskmaskin innan priserna stiger'. Kompletterar tidsfönster-sensorer (price_outlook_Xh) som svarar på 'KOMMER priserna att vara högre om X timmar?'"
-        },
-        "next_price_trend_change_in": {
-            "description": "Tid till nästa pristrendändring",
-            "long_description": "Visar hur lång tid det är kvar till nästa betydande pristrendändring inträffar. Värdet visas i timmar (t.ex. 2,25 h) för dashboards. Delar samma analys som tidstämpel-sensorn 'Nästa pristrendändring' men presenterar det som en nedtellningsvaraktighet. Uppdateras varje minut för noggranna nedtellningar. Visar 'Okänd' när ingen trendändring förväntas inom de närmaste 24 timmarna.",
-            "usage_tips": "Dashboard-nedtellning: Visa 'Trendändring om 1,5 h' som live nedtellning. För automatiseringar: 'Om next_price_trend_change_in < 0,25 (15 min), förbered för prisriktningsändring'. Kompletterar 'Nästa pristrendändring' (tidstämpel) — använd tidstämpeln för 'NÄR' och denna sensor för 'HUR LÄNGE'."
-        },
-        "daily_rating": {
-            "description": "Hur dagens priser jämförs med historiska data",
-            "long_description": "Visar hur dagens priser jämförs med historiska prisdata som en procentsats",
-            "usage_tips": "En positiv procentsats betyder att dagens priser är över genomsnittet, negativ betyder under genomsnittet"
-        },
-        "monthly_rating": {
-            "description": "Hur denna månads priser jämförs med historiska data",
-            "long_description": "Visar hur denna månads priser jämförs med historiska prisdata som en procentsats",
-            "usage_tips": "En positiv procentsats betyder att denna månads priser är över genomsnittet, negativ betyder under genomsnittet"
-        },
-        "data_timestamp": {
-            "description": "Tidsstämpel för senaste tillgängliga prisdataintervall",
-            "long_description": "Visar tidsstämpeln för det senaste tillgängliga prisdataintervallet från ditt Tibber-abonnemang"
-        },
-        "today_volatility": {
-            "description": "Hur mycket elpriserna varierar idag",
-            "long_description": "Visar om dagens priser är stabila eller har stora svängningar. Låg volatilitet innebär ganska jämna priser – timing spelar liten roll. Hög volatilitet innebär tydliga prisskillnader under dagen – bra tillfälle att flytta förbrukning till billigare perioder. `price_coefficient_variation_%` visar procentvärdet, `price_spread` visar den absoluta prisspannet.",
-            "usage_tips": "Använd detta för att avgöra om optimering är värt besväret. Vid låg volatilitet kan du köra enheter när som helst. Vid hög volatilitet sparar du märkbart genom att följa Best Price-perioder."
-        },
-        "tomorrow_volatility": {
-            "description": "Hur mycket elpriserna kommer att variera i morgon",
-            "long_description": "Visar om priserna i morgon blir stabila eller får stora svängningar. Tillgänglig när morgondagens data är publicerad (vanligen 13:00–14:00 CET). Låg volatilitet innebär ganska jämna priser – timing är inte kritisk. Hög volatilitet innebär tydliga prisskillnader under dagen – bra läge att planera energikrävande uppgifter. `price_coefficient_variation_%` visar procentvärdet, `price_spread` visar den absoluta prisspannet.",
-            "usage_tips": "Använd för att planera morgondagens förbrukning. Hög volatilitet? Planera flexibla laster i Best Price-perioder. Låg volatilitet? Kör enheter när det passar dig."
-        },
-        "next_24h_volatility": {
-            "description": "Hur mycket priserna varierar de kommande 24 timmarna",
-            "long_description": "Visar prisvolatilitet för ett rullande 24-timmarsfönster från nu (uppdateras var 15:e minut). Låg volatilitet innebär ganska jämna priser. Hög volatilitet innebär märkbara prissvängningar och därmed optimeringsmöjligheter. Till skillnad från idag/i morgon-sensorer korsar den här dagsgränser och ger en kontinuerlig framåtblickande bedömning. `price_coefficient_variation_%` visar procentvärdet, `price_spread` visar den absoluta prisspannet.",
-            "usage_tips": "Bäst för beslut i realtid. Använd vid planering av batteriladdning eller andra flexibla laster som kan gå över midnatt. Ger en konsekvent 24h-bild oberoende av kalenderdag."
-        },
-        "today_tomorrow_volatility": {
-            "description": "Kombinerad prisvolatilitet för idag och imorgon",
-            "long_description": "Visar den samlade volatiliteten när idag och imorgon ses tillsammans (när morgondatan finns). Visar om det finns tydliga prisskillnader över dagsgränsen. Faller tillbaka till endast idag om morgondatan saknas. Nyttig för flerdagarsoptimering. `price_coefficient_variation_%` visar procentvärdet, `price_spread` visar den absoluta prisspannet.",
-            "usage_tips": "Använd för uppgifter som sträcker sig över flera dagar. Kontrollera om prisskillnaderna är stora nog för att planera efter. De enskilda dag-sensorerna visar bidrag per dag om du behöver mer detaljer."
-        },
-        "price_rank_today": {
-            "description": "Den aktuella prisens position i dagens ranking — dess percentilrang (0% = billigast)",
-            "long_description": "Visar hur billig eller dyr den aktuella prisen är jämfört med alla 96 kvartersintervall för idag. 0% innebär att detta är dagens billigaste ögonblick — varje annat slot kostar mer. 50% innebär att hälften av dagens slots är billigare. ~99% innebär det dyraste slot på dagen. Formel (percentilrang): hur många slots är billigare ÷ totalt antal × 100. Attribut: `current_price`, `prices_below_count`, `interval_count`, `reference_min`, `reference_max`, `reference_mean`.",
-            "usage_tips": "Perfekt för automatiseringar: 'Om prisrang < 25, starta diskmaskin' (billigaste fjärdedelen av dagen). Eller 'Om prisrang > 75, pausa värmepump' (dyraste fjärdedelen). Värde 0 garanterar att du är på dagens billigaste intervall."
-        },
-        "price_rank_tomorrow": {
-            "description": "Percentilrang för aktuellt pris i morgondagens ranking (0% = billigast imorgon)",
-            "long_description": "Visar hur den aktuella prisen jämförs med alla 96 kvartersintervall för imorgon — dess percentilrang inom morgondagens prisfördelning. Användbart för att avgöra om det lönar sig att vänta till imorgon. 0% innebär att den aktuella prisen är billigare än varje intervall imorgon. Returnerar 'Okänt' tills morgondagens data anlänger (typiskt efter 13:00). Attribut: `current_price`, `prices_below_count`, `interval_count`, `reference_min`, `reference_max`, `reference_mean`.",
-            "usage_tips": "Använd för att avgöra om det lönar sig att vänta: 'Om prisrang imorgon < 10, finns det ännu billigare slots imorgon — skjut upp uppgiften'. Bäst kombinerat med en binär sensor som bekräftar att uppgiften kan utföras imorgon."
-        },
-        "price_rank_today_tomorrow": {
-            "description": "Percentilrang för aktuellt pris över idag och imorgon kombinerat (0% = billigast i tvådagarsfönstret)",
-            "long_description": "Visar hur billig eller dyr den aktuella prisen är jämfört med alla slots för idag och imorgon tillsammans — dess percentilrang inom tvådagarsfördelningen (upp till 192 intervall när båda dagarna är tillgängliga). Ger den bredaste tvådagarsvyn för flexibla uppgifter. Faller tillbaka till enbart idag när morgondagens data inte är tillgänglig än. 0% = billigast i det kombinerade fönstret. Attribut: `current_price`, `prices_below_count`, `interval_count`, `reference_min`, `reference_max`, `reference_mean`.",
-            "usage_tips": "Det bredaste signalet för 'Passar det bra nu?'. Använd 'Om prisrang idag+imorgon < 20, kör energikrävande uppgift nu'. Särskilt värdefullt när uppgifter kan vänta en hel dag — ett värde nära 0 över två dagar är ett verkligt exceptionellt pris."
-        },
-        "data_lifecycle_status": {
-            "description": "Gjeldende tilstand for prisdatalivssyklus og hurtigbufring",
-            "long_description": "Viser om integrasjonen bruker hurtigbufrede data eller ferske data fra API-et. Viser gjeldende livssyklustilstand: 'cached' (bruker lagrede data), 'fresh' (nettopp hentet fra API), 'refreshing' (henter for øyeblikket), 'searching_tomorrow' (søker aktivt etter morgendagens data etter 13:00), 'turnover_pending' (innen 15 minutter før midnatt, 23:45-00:00), eller 'error' (henting mislyktes). Inkluderer omfattende attributter som cache-alder, neste API-spørring, datafullstendighet og API-anropsstatistikk.",
-            "usage_tips": "Bruk denne diagnosesensoren for å forstå dataferskhet og API-anropsmønstre. Sjekk 'cache_age'-attributtet for å se hvor gamle de nåværende dataene er. Overvåk 'next_api_poll' for å vite når neste oppdatering er planlagt. Bruk 'data_completeness' for å se om data for i går/i dag/i morgen er tilgjengelig. 'api_calls_today'-telleren hjelper med å spore API-bruk. Perfekt for feilsøking eller forståelse av integrasjonens oppførsel."
-        },
-        "best_price_end_time": {
-            "description": "Total längd för nuvarande eller nästa billigperiod (state i timmar, attribut i minuter)",
-            "long_description": "Visar hur länge billigperioden varar. State använder timmar (decimal) för en läsbar UI; attributet `period_duration_minutes` behåller avrundade minuter för automationer. Aktiv → varaktighet för aktuell period, annars nästa.",
-            "usage_tips": "UI kan visa 1,5 h medan `period_duration_minutes` = 90 för automationer."
-        },
-        "best_price_period_duration": {
-            "description": "Längd på nuvarande/nästa billigperiod",
-            "long_description": "Total längd av nuvarande eller nästa billigperiod. State visas i timmar (t.ex. 1,5 h) för enkel avläsning i UI, medan attributet `period_duration_minutes` ger samma värde i minuter (t.ex. 90) för automationer. Detta värde representerar den **fullständigt planerade längden** av perioden och är konstant under hela perioden, även när återstående tid (remaining_minutes) minskar.",
-            "usage_tips": "Kombinera med remaining_minutes för att beräkna när långvariga enheter ska stoppas: Perioden startade för `period_duration_minutes - remaining_minutes` minuter sedan. Detta attribut stöder energioptimeringsstrategier genom att hjälpa till med att planera högförbruksaktiviteter inom billiga perioder."
-        },
-        "best_price_remaining_minutes": {
-            "description": "Tid kvar i nuvarande billigperiod",
-            "long_description": "Visar hur mycket tid som återstår i nuvarande billigperiod. State visas i timmar (t.ex. 0,75 h) för enkel avläsning i instrumentpaneler, medan attributet `remaining_minutes` ger samma tid i minuter (t.ex. 45) för automationsvillkor. **Nedräkningstimer**: Detta värde minskar varje minut under en aktiv period. Returnerar 0 när ingen billigperiod är aktiv. Uppdateras varje minut.",
-            "usage_tips": "För automationer: Använd attribut `remaining_minutes` som 'Om remaining_minutes > 60, starta diskmaskin nu (tillräckligt med tid för att slutföra)' eller 'Om remaining_minutes < 15, avsluta nuvarande cykel snart'. UI visar användarvänliga timmar (t.ex. 1,25 h). Värde 0 indikerar ingen aktiv billigperiod."
-        },
-        "best_price_progress": {
-            "description": "Framsteg genom nuvarande billigperiod (0% när inaktiv)",
-            "long_description": "Visar framsteg genom nuvarande billigperiod som 0-100%. Returnerar 0% när ingen period är aktiv. Uppdateras varje minut. 0% betyder att perioden just startade, 100% betyder att den snart slutar.",
-            "usage_tips": "Perfekt för visuella framstegsindikatorer. Använd i automationer: 'Om progress > 0 OCH progress > 75, skicka avisering om att billigperioden snart slutar'. Värde 0 indikerar ingen aktiv period."
-        },
-        "best_price_next_start_time": {
-            "description": "Total längd för nuvarande eller nästa dyrperiod (state i timmar, attribut i minuter)",
-            "long_description": "Visar hur länge den dyra perioden varar. State använder timmar (decimal) för UI; attributet `period_duration_minutes` behåller avrundade minuter för automationer. Aktiv → varaktighet för aktuell period, annars nästa.",
-            "usage_tips": "UI kan visa 0,75 h medan `period_duration_minutes` = 45 för automationer."
-        },
-        "best_price_next_in_minutes": {
-            "description": "Tid kvar i nuvarande dyrperiod (state i timmar, attribut i minuter)",
-            "long_description": "Visar hur mycket tid som återstår. State använder timmar (decimal); attributet `remaining_minutes` behåller avrundade minuter för automationer. Returnerar 0 när ingen period är aktiv. Uppdateras varje minut.",
-            "usage_tips": "Använd `remaining_minutes` för trösklar (t.ex. > 60) medan state är lätt att läsa i timmar."
-        },
-        "peak_price_end_time": {
-            "description": "Tid tills nästa dyrperiod startar (state i timmar, attribut i minuter)",
-            "long_description": "Visar hur länge tills nästa dyrperiod startar. State använder timmar (decimal); attributet `next_in_minutes` behåller avrundade minuter för automationer. Under en aktiv period visar detta tiden till perioden efter den aktuella. 0 under korta övergångar. Uppdateras varje minut.",
-            "usage_tips": "Använd `next_in_minutes` i automationer (t.ex. < 10) medan state är lätt att läsa i timmar."
-        },
-        "peak_price_period_duration": {
-            "description": "Längd på nuvarande/nästa dyrperiod",
-            "long_description": "Total längd av nuvarande eller nästa dyrperiod. State visas i timmar (t.ex. 1,5 h) för enkel avläsning i UI, medan attributet `period_duration_minutes` ger samma värde i minuter (t.ex. 90) för automationer. Detta värde representerar den **fullständigt planerade längden** av perioden och är konstant under hela perioden, även när återstående tid (remaining_minutes) minskar.",
-            "usage_tips": "Kombinera med remaining_minutes för att beräkna när långvariga enheter ska stoppas: Perioden startade för `period_duration_minutes - remaining_minutes` minuter sedan. Detta attribut stöder energibesparingsstrategier genom att hjälpa till med att planera högförbruksaktiviteter utanför dyra perioder."
-        },
-        "peak_price_remaining_minutes": {
-            "description": "Tid kvar i nuvarande dyrperiod",
-            "long_description": "Visar hur mycket tid som återstår i nuvarande dyrperiod. State visas i timmar (t.ex. 0,75 h) för enkel avläsning i instrumentpaneler, medan attributet `remaining_minutes` ger samma tid i minuter (t.ex. 45) för automationsvillkor. **Nedräkningstimer**: Detta värde minskar varje minut under en aktiv period. Returnerar 0 när ingen dyrperiod är aktiv. Uppdateras varje minut.",
-            "usage_tips": "För automationer: Använd attribut `remaining_minutes` som 'Om remaining_minutes > 60, avbryt uppskjuten laddningssession' eller 'Om remaining_minutes < 15, återuppta normal drift snart'. UI visar användarvänliga timmar (t.ex. 1,0 h). Värde 0 indikerar ingen aktiv dyrperiod."
-        },
-        "peak_price_progress": {
-            "description": "Framsteg genom nuvarande dyrperiod (0% när inaktiv)",
-            "long_description": "Visar framsteg genom nuvarande dyrperiod som 0-100%. Returnerar 0% när ingen period är aktiv. Uppdateras varje minut.",
-            "usage_tips": "Visuell framstegsindikator i instrumentpaneler. Automation: 'Om progress > 0 OCH progress > 90, förbered normal värmeplanering'. Värde 0 indikerar ingen aktiv period."
-        },
-        "peak_price_next_start_time": {
-            "description": "När nästa dyrperiod startar",
-            "long_description": "Visar när nästa kommande dyrperiod startar. Under en aktiv period visar detta starten av NÄSTA period efter den nuvarande. Returnerar 'Okänt' endast när inga framtida perioder är konfigurerade.",
-            "usage_tips": "Alltid användbart för planering: 'Nästa dyrperiod startar om 2 timmar'. Automation: 'När nästa starttid är om 30 minuter, minska värmetemperatur förebyggande'."
-        },
-        "peak_price_next_in_minutes": {
-            "description": "Tid till nästa dyrperiod",
-            "long_description": "Visar hur länge till nästa dyrperiod. State visas i timmar (t.ex. 0,5 h) för instrumentpaneler, medan attributet `next_in_minutes` ger minuter (t.ex. 30) för automationsvillkor. Under en aktiv period visar detta tiden till perioden EFTER den nuvarande. Returnerar 0 under korta övergångsmoment. Uppdateras varje minut.",
-            "usage_tips": "För automationer: Använd attribut `next_in_minutes` som 'Om next_in_minutes > 0 OCH next_in_minutes < 10, slutför nuvarande laddcykel nu innan priserna ökar'. Värde > 0 indikerar alltid att en framtida dyrperiod är planerad."
-        },
-        "home_type": {
-            "description": "Bostadstyp (lägenhet, hus osv.)",
-            "long_description": "Visar bostadstypen som konfigurerats i ditt Tibber-konto. Denna metadata kan vara användbar för att kategorisera energiförbrukningsmönster.",
-            "usage_tips": "Använd detta för att organisera ditt smarthussystem eller för analysändamål."
-        },
-        "home_size": {
-            "description": "Boyta i kvadratmeter",
-            "long_description": "Visar storleken på din bostad i kvadratmeter som konfigurerats i ditt Tibber-konto. Kan användas för att beräkna energiförbrukning per kvadratmeter.",
-            "usage_tips": "Använd detta i energieffektivitetsberäkningar: 'Min bostad använder X kWh per kvadratmeter per år'."
-        },
-        "main_fuse_size": {
-            "description": "Huvudsäkringsstorlek i ampere",
-            "long_description": "Visar kapaciteten på din huvudsäkring i ampere. Detta bestämmer den maximala elektriska belastningen din bostad kan hantera samtidigt.",
-            "usage_tips": "Använd detta för att förhindra överbelastning: 'Om total strömförbrukning närmar sig säkringsstorleken, skjut upp start av ytterligare apparater'."
-        },
-        "number_of_residents": {
-            "description": "Antal personer som bor i bostaden",
-            "long_description": "Visar antalet boende som konfigurerats i ditt Tibber-konto. Användbart för beräkningar av energiförbrukning per person.",
-            "usage_tips": "Använd detta för hushållets energianalyser: 'Energiförbrukning per person per dag'."
-        },
-        "primary_heating_source": {
-            "description": "Primär värmesystemtyp",
-            "long_description": "Visar typen av värmesystem som används i din bostad som konfigurerats i ditt Tibber-konto. Detta kan vara en värmepump, elektrisk uppvärmning, gas, olja eller andra värmekällor.",
-            "usage_tips": "Använd detta för att kategorisera värmerelaterade automationer eller för energiförbrukningsanalys efter värmetyp."
-        },
-        "grid_company": {
-            "description": "Namn på din elnätsoperatör",
-            "long_description": "Visar namnet på företaget som driver elnätet i ditt område. Detta är distributionssystemoperatören (DSO) som ansvarar för att leverera elektricitet till ditt hem.",
-            "usage_tips": "Användbart för administrativa ändamål och felsökning av nätrelaterade problem."
-        },
-        "grid_area_code": {
-            "description": "Nätområdets identifieringskod",
-            "long_description": "Visar koden som identifierar ditt elnätsområde. Denna kod används av nätoperatören för routing- och faktureringsändamål.",
-            "usage_tips": "Använd detta som administrativ referens eller vid kontakt med din nätoperatör."
-        },
-        "price_area_code": {
-            "description": "Elprisområdeskod",
-            "long_description": "Visar koden för ditt elprisområde (t.ex. NO1, NO2, SE3, DK1). Olika områden har olika grossistelpriser baserat på regionalt utbud och efterfrågan.",
-            "usage_tips": "Använd detta för att förstå vilket prisområde du befinner dig i. Användbart vid jämförelse av priser med andra eller analys av regionala prismönster."
-        },
-        "consumption_ean": {
-            "description": "EAN-kod för elförbrukningsmätning",
-            "long_description": "Visar European Article Number (EAN)-koden som unikt identifierar din elförbrukningsmätare. Denna 18-siffriga kod används för fakturerings- och administrativa ändamål.",
-            "usage_tips": "Använd detta vid kommunikation med din elleverantör eller för administrativ dokumentation."
-        },
-        "production_ean": {
-            "description": "EAN-kod för elproduktionsmätning",
-            "long_description": "Visar European Article Number (EAN)-koden för din elproduktionsmätare (om du har solpaneler eller annan produktion). Denna kod spårar elektricitet du matar tillbaka till nätet.",
-            "usage_tips": "Relevant om du har solpaneler eller annan elproduktion. Använd för administrativa ändamål och vid krav på inmatningsersättning."
-        },
-        "energy_tax_type": {
-            "description": "Typ av energiskatt som tillämpas",
-            "long_description": "Visar energiskattekategorin som tillämpas på din elförbrukning. Skattesatser varierar per land och ibland per konsumenttyp (privat, kommersiell osv.).",
-            "usage_tips": "Använd detta för att förstå uppdelningen av din elräkning och för totala kostnadsberäkningar."
-        },
-        "vat_type": {
-            "description": "Momskategori (mervärdesskatt)",
-            "long_description": "Visar momskategorin som tillämpas på din elförbrukning. Momssatser varierar per land och kan skilja sig för elektricitet jämfört med andra varor och tjänster.",
-            "usage_tips": "Använd detta för att förstå din elräkning och beräkna totala kostnader inklusive skatter."
-        },
-        "estimated_annual_consumption": {
-            "description": "Uppskattat årligt elförbrukning i kWh",
-            "long_description": "Visar din uppskattade årliga elförbrukning i kilowattimmar som beräknats eller konfigurerats i ditt Tibber-konto. Denna uppskattning används för att jämföra faktisk förbrukning med förväntade värden.",
-            "usage_tips": "Använd detta för att spåra om din faktiska förbrukning är över eller under förväntningarna. Jämför månatlig förbrukning med 1/12 av detta värde för att identifiera ovanliga mönster."
-        },
-        "subscription_status": {
-            "description": "Status för ditt Tibber-abonnemang",
-            "long_description": "Visar om ditt Tibber-abonnemang för närvarande är aktivt, har avslutats eller väntar på aktivering. En status 'Aktiv' betyder att du aktivt tar emot elektricitet genom Tibber.",
-            "usage_tips": "Använd detta för att övervaka din abonnemangsstatus. Ställ in varningar om statusen ändras från 'Aktiv' för att säkerställa oavbruten service."
-        },
-        "day_pattern_yesterday": {
-            "description": "Detekterat prismönster för gårdagens elpriser",
-            "long_description": "Klassificerar igår i ett prismönster: Dal (billigt på mitten), Topp (dyrt på mitten), Dubbeldal (W-form, två billiga perioder), Dubbeltopp (M-form, två dyra toppar), Flat (liten variation), Stigande, Fallande eller Blandad. Konfidensen och CV-attributen visar hur tillförlitligt mönstret detekterades.",
-            "usage_tips": "Använd gårdagens mönster för att förfina automationer: ett Dalmönster upprepas ofta nästa dag och tyder på att du bör förplanera billiga middagstimmar."
-        },
-        "day_pattern_today": {
-            "description": "Detekterat prismönster för dagens elpriser",
-            "long_description": "Klassificerar idag i ett prismönster: Dal (billigt på middagen), Topp (dyrt på middagen), Dubbeldal (W-form), Dubbeltopp (M-form), Flat, Stigande, Fallande eller Blandad. Attributen inkluderar konfidenspoäng (0–1), variationskoefficient, knäpunkttider och dagsegment.",
-            "usage_tips": "Använd dagens mönster för att flytta förbrukning. Daldag: kör diskmaskinen, tvättmaskinen eller ladda elbilen på middagen. Toppdag: kör apparater tidigt på morgonen eller sent på kvällen. Använd valley_start och valley_end för precisa automationer."
-        },
-        "day_pattern_tomorrow": {
-            "description": "Detekterat prismönster för morgondagens elpriser",
-            "long_description": "Klassificerar imorgon (när data finns tillgänglig, vanligtvis efter 13:00) i ett prismönster med samma algoritm som idag. Attributen valley_start/valley_end eller peak_start/peak_end ger knäpunkttider för det primära extremvärdet.",
-            "usage_tips": "Ställ in kvällsautomationer som läser morgondagens mönster och förkonfigurerar värmepump, billaddare eller varmvattenberedare. Kombinera med tomorrow_data_available-binärsensorn."
-        },
-        "chart_data_export": {
-            "description": "Dataexport för dashboard-integrationer",
-            "long_description": "Denna sensor anropar get_chartdata-tjänsten med din konfigurerade YAML-konfiguration och exponerar resultatet som entitetsattribut. Statusen visar 'ready' när data är tillgänglig, 'error' vid fel, eller 'pending' före första anropet. Perfekt för dashboard-integrationer som ApexCharts som behöver läsa prisdata från entitetsattribut.",
-            "usage_tips": "Konfigurera YAML-parametrarna i integrationsalternativen för att matcha ditt get_chartdata-tjänstanrop. Sensorn uppdateras automatiskt när prisdata uppdateras (vanligtvis efter midnatt och när morgondagens data anländer). Få tillgång till tjänstesvarsdata direkt från entitetens attribut - strukturen matchar exakt vad get_chartdata returnerar."
-        },
-        "chart_metadata": {
-            "description": "Lättviktig metadata för diagramkonfiguration",
-            "long_description": "Tillhandahåller väsentliga diagramkonfigurationsvärden som sensorattribut. Användbart för vilket diagramkort som helst som behöver Y-axelgränser. Sensorn anropar get_chartdata med endast-metadata-läge (ingen databehandling) och extraherar: yaxis_min, yaxis_max (föreslagen Y-axelomfång för optimal skalning). Statusen återspeglar tjänstanropsresultatet: 'ready' vid framgång, 'error' vid fel, 'pending' under initialisering.",
-            "usage_tips": "Konfigurera via configuration.yaml under tibber_prices.chart_metadata_config (valfritt: day, subunit_currency, resolution). Sensorn uppdateras automatiskt vid pris dataändringar. Få tillgång till metadata från attribut: yaxis_min, yaxis_max. Använd med config-template-card eller vilket verktyg som helst som läser entitetsattribut - perfekt för dynamisk diagramkonfiguration utan manuella beräkningar."
-        }
+    "current_interval_price_base": {
+      "description": "Nuvarande elpris i huvudvaluta (EUR/kWh, NOK/kWh, osv.) för Energipanelen",
+      "long_description": "Visar nuvarande pris per kWh i huvudvaluta-enheter (t.ex. EUR/kWh istället för ct/kWh, NOK/kWh istället för øre/kWh). Denna sensor är speciellt utformad för användning med Home Assistants Energipanel, som kräver priser i standardvalutaenheter.",
+      "usage_tips": "Använd denna sensor när du konfigurerar Energipanelen under Inställningar → Instrumentpaneler → Energi. Välj denna sensor som 'Entitet med nuvarande pris' för att automatiskt beräkna dina energikostnader. Energipanelen multiplicerar din energiförbrukning (kWh) med detta pris för att visa totala kostnader."
     },
-    "binary_sensor": {
-        "tomorrow_data_available": {
-            "description": "Om prisdata för morgondagen är tillgänglig",
-            "long_description": "Indikerar om prisdata för följande dag har mottagits från Tibber",
-            "usage_tips": "Använd detta för att kontrollera om morgondagens priser är tillgängliga för planering"
-        },
-        "peak_price_period": {
-            "description": "Om nuvarande intervall är bland de dyraste på dagen",
-            "long_description": "Aktiveras när nuvarande pris ligger i topp 20% av dagens priser",
-            "usage_tips": "Använd detta för att undvika att köra högkonsumtionsapparater under dyra intervaller"
-        },
-        "best_price_period": {
-            "description": "Om nuvarande intervall är bland de billigaste på dagen",
-            "long_description": "Aktiveras när nuvarande pris ligger i botten 20% av dagens priser",
-            "usage_tips": "Använd detta för att köra högkonsumtionsapparater under de billigaste intervallerna"
-        },
-        "connection": {
-            "description": "Om anslutningen till Tibber API fungerar",
-            "long_description": "Indikerar om integrationen framgångsrikt kan ansluta till Tibber API",
-            "usage_tips": "Använd detta för att övervaka anslutningsstatus till Tibber API"
-        },
-        "has_ventilation_system": {
-            "description": "Om din bostad har ventilationssystem",
-            "long_description": "Indikerar om ett ventilationssystem är registrerat för din bostad i Tibber-kontot. Ventilationssystem kan vara betydande elförbrukare som kan dra nytta av smart schemaläggning.",
-            "usage_tips": "Använd detta för att aktivera ventilationsspecifika automationer eller energiövervakning. Om aktivt, överväg att schemalägga ventilation under lågprisperioder."
-        },
-        "realtime_consumption_enabled": {
-            "description": "Om realtidsförbrukningsövervakning är aktiv",
-            "long_description": "Indikerar om realtidsövervakning av elförbrukning är aktiverad och aktiv för ditt Tibber-hem. Detta kräver kompatibel mätutrustning (t.ex. Tibber Pulse) och en aktiv prenumeration.",
-            "usage_tips": "Använd detta för att verifiera att realtidsförbrukningen är tillgänglig. Aktivera meddelanden om detta oväntat ändras till 'av', vilket indikerar potentiella hårdvaru- eller anslutningsproblem."
-        }
+    "next_interval_price": {
+      "description": "Nästa intervalls elpris per kWh",
+      "long_description": "Visar priset för nästa 15-minuters intervall från ditt Tibber-abonnemang",
+      "usage_tips": "Använd detta för att förbereda dig för kommande prisändringar eller schemalägga enheter att köras under billigare intervaller"
     },
-    "number": {
-        "best_price_flex_override": {
-            "description": "Maximal procent över daglig minimumpris som intervaller kan ha och fortfarande kvalificera som 'bästa pris'. Rekommenderas: 15-20 med lättnad aktiverad (standard), eller 25-35 utan lättnad. Maximum: 50 (hårt tak för tillförlitlig perioddetektering).",
-            "long_description": "När denna entitet är aktiverad överskriver värdet 'Flexibilitet'-inställningen från alternativ-dialogen för bästa pris-periodberäkningar.",
-            "usage_tips": "Aktivera denna entitet för att dynamiskt justera bästa pris-detektering via automatiseringar, t.ex. högre flexibilitet för kritiska laster eller striktare krav för flexibla apparater."
-        },
-        "best_price_min_distance_override": {
-            "description": "Minsta procentuella avstånd under dagligt genomsnitt. Intervaller måste vara så långt under genomsnittet för att kvalificera som 'bästa pris'. Hjälper att skilja äkta lågprisperioder från genomsnittspriser.",
-            "long_description": "När denna entitet är aktiverad överskriver värdet 'Minimiavstånd'-inställningen från alternativ-dialogen för bästa pris-periodberäkningar.",
-            "usage_tips": "Öka värdet för striktare bästa pris-kriterier. Minska om för få perioder detekteras."
-        },
-        "best_price_min_period_length_override": {
-            "description": "Minsta periodlängd i 15-minuters intervaller. Perioder kortare än detta rapporteras inte. Exempel: 2 = minst 30 minuter.",
-            "long_description": "När denna entitet är aktiverad överskriver värdet 'Minsta periodlängd'-inställningen från alternativ-dialogen för bästa pris-periodberäkningar.",
-            "usage_tips": "Anpassa till typisk apparatkörtid: 2 (30 min) för snabbprogram, 4-8 (1-2 timmar) för normala cykler, 8+ för långa ECO-program."
-        },
-        "best_price_min_periods_override": {
-            "description": "Minsta antal bästa pris-perioder att hitta dagligen. När lättnad är aktiverad kommer systemet automatiskt att justera kriterierna för att uppnå detta antal.",
-            "long_description": "När denna entitet är aktiverad överskriver värdet 'Minsta antal perioder'-inställningen från alternativ-dialogen för bästa pris-periodberäkningar.",
-            "usage_tips": "Ställ in detta på antalet tidskritiska uppgifter du har dagligen. Exempel: 2 för två tvattmaskinskörningar."
-        },
-        "best_price_relaxation_attempts_override": {
-            "description": "Antal försök att gradvis lätta på kriterierna för att uppnå minsta periodantal. Varje försök ökar flexibiliteten med 3 procent. Vid 0 används endast baskriterier.",
-            "long_description": "När denna entitet är aktiverad överskriver värdet 'Lättnadsförsök'-inställningen från alternativ-dialogen för bästa pris-periodberäkningar.",
-            "usage_tips": "Högre värden gör perioddetektering mer adaptiv för dagar med stabila priser. Ställ in på 0 för att tvinga strikta kriterier utan lättnad."
-        },
-        "best_price_gap_count_override": {
-            "description": "Maximalt antal dyrare intervaller som kan tillåtas mellan billiga intervaller medan de fortfarande räknas som en sammanhängande period. Vid 0 måste billiga intervaller vara påföljande.",
-            "long_description": "När denna entitet är aktiverad överskriver värdet 'Glaptolerans'-inställningen från alternativ-dialogen för bästa pris-periodberäkningar.",
-            "usage_tips": "Öka detta för apparater med variabel last (t.ex. värmepumpar) som kan tolerera korta dyrare intervaller. Ställ in på 0 för kontinuerligt billiga perioder."
-        },
-        "peak_price_flex_override": {
-            "description": "Maximal procent under daglig maximumpris som intervaller kan ha och fortfarande kvalificera som 'topppris'. Samma rekommendationer som för bästa pris-flexibilitet.",
-            "long_description": "När denna entitet är aktiverad överskriver värdet 'Flexibilitet'-inställningen från alternativ-dialogen för topppris-periodberäkningar.",
-            "usage_tips": "Använd detta för att justera topppris-tröskeln vid körtid för automatiseringar som undviker förbrukning under dyra timmar."
-        },
-        "peak_price_min_distance_override": {
-            "description": "Minsta procentuella avstånd över dagligt genomsnitt. Intervaller måste vara så långt över genomsnittet för att kvalificera som 'topppris'.",
-            "long_description": "När denna entitet är aktiverad överskriver värdet 'Minimiavstånd'-inställningen från alternativ-dialogen för topppris-periodberäkningar.",
-            "usage_tips": "Öka värdet för att endast fånga extrema pristoppar. Minska för att inkludera fler högpristider."
-        },
-        "peak_price_min_period_length_override": {
-            "description": "Minsta periodlängd i 15-minuters intervaller för topppriser. Kortare pristoppar rapporteras inte som perioder.",
-            "long_description": "När denna entitet är aktiverad överskriver värdet 'Minsta periodlängd'-inställningen från alternativ-dialogen för topppris-periodberäkningar.",
-            "usage_tips": "Kortare värden fångar korta pristoppar. Längre värden fokuserar på ihållande högprisperioder."
-        },
-        "peak_price_min_periods_override": {
-            "description": "Minsta antal topppris-perioder att hitta dagligen.",
-            "long_description": "När denna entitet är aktiverad överskriver värdet 'Minsta antal perioder'-inställningen från alternativ-dialogen för topppris-periodberäkningar.",
-            "usage_tips": "Ställ in detta baserat på hur många högprisperioder du vill fånga per dag för automatiseringar."
-        },
-        "peak_price_relaxation_attempts_override": {
-            "description": "Antal försök att lätta på kriterierna för att uppnå minsta antal topppris-perioder.",
-            "long_description": "När denna entitet är aktiverad överskriver värdet 'Lättnadsförsök'-inställningen från alternativ-dialogen för topppris-periodberäkningar.",
-            "usage_tips": "Öka detta om inga perioder hittas på dagar med stabila priser. Ställ in på 0 för att tvinga strikta kriterier."
-        },
-        "peak_price_gap_count_override": {
-            "description": "Maximalt antal billigare intervaller som kan tillåtas mellan dyra intervaller medan de fortfarande räknas som en topppris-period.",
-            "long_description": "När denna entitet är aktiverad överskriver värdet 'Glaptolerans'-inställningen från alternativ-dialogen för topppris-periodberäkningar.",
-            "usage_tips": "Högre värden fångar längre högprisperioder även med korta prisdipp. Ställ in på 0 för strikt sammanhängande topppriser."
-        }
+    "previous_interval_price": {
+      "description": "Föregående intervalls elpris per kWh",
+      "long_description": "Visar priset för föregående 15-minuters intervall från ditt Tibber-abonnemang",
+      "usage_tips": "Använd detta för att granska tidigare prisändringar eller spåra prishistorik"
     },
-    "switch": {
-        "best_price_enable_relaxation_override": {
-            "description": "När aktiverad lättas kriterierna automatiskt för att uppnå minsta periodantal. När inaktiverad rapporteras endast perioder som uppfyller strikta kriterier (möjligen noll perioder på dagar med stabila priser).",
-            "long_description": "När denna entitet är aktiverad överskriver värdet 'Uppnå minimiantal'-inställningen från alternativ-dialogen för bästa pris-periodberäkningar.",
-            "usage_tips": "Aktivera detta för garanterade dagliga automatiseringsmöjligheter. Inaktivera om du endast vill ha riktigt billiga perioder, även om det innebär inga perioder vissa dagar."
-        },
-        "peak_price_enable_relaxation_override": {
-            "description": "När aktiverad lättas kriterierna automatiskt för att uppnå minsta periodantal. När inaktiverad rapporteras endast äkta pristoppar.",
-            "long_description": "När denna entitet är aktiverad överskriver värdet 'Uppnå minimiantal'-inställningen från alternativ-dialogen för topppris-periodberäkningar.",
-            "usage_tips": "Aktivera detta för konsekventa topppris-varningar. Inaktivera för att endast fånga extrema pristoppar."
-        }
+    "current_hour_average_price": {
+      "description": "Rullande 5-intervalls genomsnittspris per kWh",
+      "long_description": "Visar genomsnittspriset per kWh beräknat från 5 intervaller: 2 föregående, nuvarande och 2 nästa intervaller (ungefär 75 minuter totalt). Detta ger ett utjämnat 'timpris' som anpassar sig när tiden går, istället för att vara fixerat till klockslag.",
+      "usage_tips": "Använd detta för en stabilare prisindikator som jämnar ut kortsiktiga fluktuationer medan den fortfarande är responsiv till prisändringar. Bättre än fasta timpriser för konsumtionsbeslut."
     },
-    "home_types": {
-        "APARTMENT": "Lägenhet",
-        "ROWHOUSE": "Radhus",
-        "HOUSE": "Hus",
-        "COTTAGE": "Stuga"
+    "next_hour_average_price": {
+      "description": "Rullande 5-intervalls genomsnittspris för nästa timme per kWh",
+      "long_description": "Visar genomsnittspriset per kWh beräknat från 5 intervaller centrerade en timme framåt: ungefär intervaller +2 till +6 från nu (täcker minuter +30 till +105). Detta ger ett framåtblickande utjämnat 'timpris' för konsumtionsplanering.",
+      "usage_tips": "Använd detta för att förutse prisändringar nästa timme. Användbart för att schemalägga högkonsumtionsaktiviteter som laddning av elfordon, körning av diskmaskiner eller värmesystem."
     },
-    "time_units": {
-        "day": "{count} dag",
-        "days": "{count} dagar",
-        "hour": "{count} timme",
-        "hours": "{count} timmar",
-        "minute": "{count} minut",
-        "minutes": "{count} minuter",
-        "ago": "{parts} sedan",
-        "now": "nu"
+    "lowest_price_today": {
+      "description": "Det lägsta elpriset för idag per kWh",
+      "long_description": "Visar det lägsta priset per kWh för nuvarande dag från ditt Tibber-abonnemang",
+      "usage_tips": "Använd detta för att jämföra nuvarande priser med den billigaste tiden på dagen"
     },
-    "attribution": "Data tillhandahålls av Tibber"
+    "highest_price_today": {
+      "description": "Det högsta elpriset för idag per kWh",
+      "long_description": "Visar det högsta priset per kWh för nuvarande dag från ditt Tibber-abonnemang",
+      "usage_tips": "Använd detta för att undvika att köra apparater under topppristider"
+    },
+    "average_price_today": {
+      "description": "Typiskt elpris för idag per kWh (konfigurerbart visningsformat)",
+      "long_description": "Visar priset per kWh för nuvarande dag från ditt Tibber-abonnemang. **Som standard visar statusen medianen** (motståndskraftig mot extrema prispikar, visar typisk prisnåvå). Du kan ändra detta i integrationsinstllningarna för att visa det aritmetiska medelvärdet istället. Det alternativa värdet är tillgängligt som attribut.",
+      "usage_tips": "Använd detta som baslinje för att jämföra nuvarande priser. För beräkningar använd: {{ state_attr('sensor.average_price_today', 'price_mean') }}"
+    },
+    "lowest_price_tomorrow": {
+      "description": "Det lägsta elpriset för imorgon per kWh",
+      "long_description": "Visar det lägsta priset per kWh för morgondagen från ditt Tibber-abonnemang. Denna sensor blir otillgänglig tills morgondagens data publiceras av Tibber (vanligtvis runt 13:00-14:00 CET).",
+      "usage_tips": "Använd detta för att planera energikrävande aktiviteter för morgondagens billigaste tid. Perfekt för förhandsplanering av uppvärmning, EV-laddning eller apparater."
+    },
+    "highest_price_tomorrow": {
+      "description": "Det högsta elpriset för imorgon per kWh",
+      "long_description": "Visar det högsta priset per kWh för morgondagen från ditt Tibber-abonnemang. Denna sensor blir otillgänglig tills morgondagens data publiceras av Tibber (vanligtvis runt 13:00-14:00 CET).",
+      "usage_tips": "Använd detta för att undvika att köra apparater under morgondagens topppristider. Användbart för att planera runt dyra perioder."
+    },
+    "average_price_tomorrow": {
+      "description": "Typiskt elpris för imorgon per kWh (konfigurerbart visningsformat)",
+      "long_description": "Visar priset per kWh för morgondagen från ditt Tibber-abonnemang. **Som standard visar statusen medianen** (motståndskraftig mot extrema prispikar). Du kan ändra detta i integrationsinstllningarna för att visa det aritmetiska medelvärdet istället. Det alternativa värdet är tillgängligt som attribut. Denna sensor blir otillgänglig tills morgondagens data publiceras av Tibber (vanligtvis runt 13:00-14:00 CET).",
+      "usage_tips": "Använd detta som baslinje för att jämföra morgondagens priser och planera konsumtion. Jämför med dagens median för att se om morgondagen kommer att bli dyrare eller billigare totalt sett."
+    },
+    "yesterday_price_level": {
+      "description": "Aggregerad prisnivå för igår",
+      "long_description": "Visar den aggregerade prisnivån för alla intervall igår. Använder samma logik som timsensorerna för att bestämma den totala prisnivån för hela dagen.",
+      "usage_tips": "Använd detta för att förstå den övergripande prissituationen igår. Jämför med idag för att se dagliga trender."
+    },
+    "today_price_level": {
+      "description": "Aggregerad prisnivå för idag",
+      "long_description": "Visar den aggregerade prisnivån för alla intervall idag. Använder samma logik som timsensorerna för att bestämma den totala prisnivån för hela dagen.",
+      "usage_tips": "Använd detta för att förstå dagens prissituation snabbt. Praktiskt för snabba bedömningar om dagen i allmänhet är billig eller dyr."
+    },
+    "tomorrow_price_level": {
+      "description": "Aggregerad prisnivå för imorgon",
+      "long_description": "Visar den aggregerade prisnivån för alla intervall imorgon. Använder samma logik som timsensorerna för att bestämma den totala prisnivån för hela dagen. Denna sensor blir otillgänglig tills morgondagens data publiceras av Tibber (vanligtvis runt 13:00-14:00 CET).",
+      "usage_tips": "Använd detta för att förstå imorgonens prissituation. Jämför med idag för att se om imorgon blir mer eller mindre gynnsamt för energiförbrukning."
+    },
+    "yesterday_price_rating": {
+      "description": "Aggregerad prisvärdering för igår",
+      "long_description": "Visar den aggregerade prisvärderingen (låg/normal/hög) för alla intervall igår, baserat på dina konfigurerade tröskelvärden. Använder samma logik som timsensorerna för att bestämma den totala värderingen för hela dagen.",
+      "usage_tips": "Använd detta för att förstå igårens prissituation i förhållande till dina personliga tröskelvärden. Jämför med idag för trendanalys."
+    },
+    "today_price_rating": {
+      "description": "Aggregerad prisvärdering för idag",
+      "long_description": "Visar den aggregerade prisvärderingen (låg/normal/hög) för alla intervall idag, baserat på dina konfigurerade tröskelvärden. Använder samma logik som timsensorerna för att bestämme den totala värderingen för hela dagen.",
+      "usage_tips": "Använd detta för att snabbt bedöma dagens prissituation i förhållande till dina personliga tröskelvärden. Hjälper till att fatta förbrukningsbeslut för innevarande dag."
+    },
+    "tomorrow_price_rating": {
+      "description": "Aggregerad prisvärdering för imorgon",
+      "long_description": "Visar den aggregerade prisvärderingen (låg/normal/hög) för alla intervall imorgon, baserat på dina konfigurerade tröskelvärden. Använder samma logik som timsensorerna för att bestämma den totala värderingen för hela dagen. Denna sensor blir otillgänglig tills morgondagens data publiceras av Tibber (vanligtvis runt 13:00-14:00 CET).",
+      "usage_tips": "Använd detta för att planera imorgonens energiförbrukning baserat på dina personliga priströskelvärden. Jämför med idag för att avgöra om du ska skjuta upp förbrukning till imorgon eller använda energi idag."
+    },
+    "trailing_price_average": {
+      "description": "Typiskt elpris för de senaste 24 timmarna per kWh (konfigurerbart visningsformat)",
+      "long_description": "Visar priset per kWh beräknat från de senaste 24 timmarna. **Som standard visar statusen medianen** (motståndskraftig mot extrema prispikar, visar typisk prisnåvå). Du kan ändra detta i integrationsinstllningarna för att visa det aritmetiska medelvärdet istället. Det alternativa värdet är tillgängligt som attribut. Uppdateras var 15:e minut.",
+      "usage_tips": "Använd statusvärdet för att se den typiska nuvarande prisnåvån. För kostnadsberäkningar använd: {{ state_attr('sensor.trailing_price_average', 'price_mean') }}"
+    },
+    "leading_price_average": {
+      "description": "Typiskt elpris för nästa 24 timmar per kWh (konfigurerbart visningsformat)",
+      "long_description": "Visar priset per kWh beräknat från nästa 24 timmar. **Som standard visar statusen medianen** (motståndskraftig mot extrema prispikar, visar förväntad prisnåvå). Du kan ändra detta i integrationsinstllningarna för att visa det aritmetiska medelvärdet istället. Det alternativa värdet är tillgängligt som attribut.",
+      "usage_tips": "Använd statusvärdet för att se den typiska kommande prisnåvån. För kostnadsberäkningar använd: {{ state_attr('sensor.leading_price_average', 'price_mean') }}"
+    },
+    "trailing_price_min": {
+      "description": "Det minsta elpriset för de senaste 24 timmarna per kWh",
+      "long_description": "Visar minimipriset per kWh från de senaste 24 timmarna (rullande minimum) från ditt Tibber-abonnemang. Detta ger det lägsta priset som setts de senaste 24 timmarna.",
+      "usage_tips": "Använd detta för att se den bästa prismöjligheten du hade de senaste 24 timmarna och jämför med nuvarande priser."
+    },
+    "trailing_price_max": {
+      "description": "Det maximala elpriset för de senaste 24 timmarna per kWh",
+      "long_description": "Visar maximipriset per kWh från de senaste 24 timmarna (rullande maximum) från ditt Tibber-abonnemang. Detta ger det högsta priset som setts de senaste 24 timmarna.",
+      "usage_tips": "Använd detta för att se topppriset de senaste 24 timmarna och bedöma prisvolatilitet."
+    },
+    "leading_price_min": {
+      "description": "Det minsta elpriset för nästa 24 timmar per kWh",
+      "long_description": "Visar minimipriset per kWh från nästa 24 timmar (framåtblickande minimum) från ditt Tibber-abonnemang. Detta ger det lägsta priset som förväntas nästa 24 timmar baserat på prognosdata.",
+      "usage_tips": "Använd detta för att identifiera den bästa prismöjligheten som kommer och planera energikrävande uppgifter därefter."
+    },
+    "leading_price_max": {
+      "description": "Det maximala elpriset för nästa 24 timmar per kWh",
+      "long_description": "Visar maximipriset per kWh från nästa 24 timmar (framåtblickande maximum) från ditt Tibber-abonnemang. Detta ger det högsta priset som förväntas nästa 24 timmar baserat på prognosdata.",
+      "usage_tips": "Använd detta för att undvika att köra apparater under kommande toppprisperioder."
+    },
+    "current_interval_price_level": {
+      "description": "Den nuvarande prisnivåklassificeringen",
+      "long_description": "Visar Tibbers klassificering av nuvarande pris jämfört med historiska priser",
+      "usage_tips": "Använd detta för att skapa automationer baserade på relativa prisnivåer istället för absoluta priser"
+    },
+    "next_interval_price_level": {
+      "description": "Prisnivå för nästa 15-minuters intervall",
+      "long_description": "Visar prisnivåklassificeringen för kommande intervall. Hjälper att förutse kortsiktiga prisändringar för omedelbar planering.",
+      "usage_tips": "Använd för snabba beslut om att starta eller stoppa högeffektsenheter inom de kommande minuterna."
+    },
+    "previous_interval_price_level": {
+      "description": "Prisnivå för föregående 15-minuters intervall",
+      "long_description": "Visar prisnivåklassificeringen för senaste intervallet. Användbart för historisk jämförelse och förståelse av senaste pristrender.",
+      "usage_tips": "Använd för att jämföra nuvarande vs senaste prisnivåer eller analysera konsumtionsmönster mot historiska priser."
+    },
+    "current_hour_price_level": {
+      "description": "Aggregerad prisnivå för nuvarande rullande timme (5 intervaller)",
+      "long_description": "Visar median prisnivå över 5 intervaller (2 före, nuvarande, 2 efter) som täcker ungefär 75 minuter. Ger en stabilare prisnivåindikator som jämnar ut kortsiktiga fluktuationer.",
+      "usage_tips": "Använd för planeringsbeslut på medellång sikt där du vill undvika att reagera på korta pristoppar eller -fall."
+    },
+    "next_hour_price_level": {
+      "description": "Aggregerad prisnivå för nästa rullande timme (5 intervaller framåt)",
+      "long_description": "Visar median prisnivå över 5 intervaller centrerade en timme framåt. Hjälper att planera konsumtion baserat på kommande pristrender istället för ögonblickliga framtida priser.",
+      "usage_tips": "Använd för att schemalägga aktiviteter för nästa timme baserat på en utjämnad prisnivåprognos."
+    },
+    "current_interval_price_rating": {
+      "description": "Hur nuvarande intervalls pris jämförs med historiska data",
+      "long_description": "Visar hur nuvarande intervalls pris jämförs med historiska prisdata som en procentsats",
+      "usage_tips": "En positiv procentsats betyder att nuvarande pris är över genomsnittet, negativ betyder under genomsnittet"
+    },
+    "next_interval_price_rating": {
+      "description": "Prisvärdering för nästa 15-minuters intervall",
+      "long_description": "Visar hur nästa intervalls pris jämförs med det rullande 24-timmars genomsnittet. Hjälper att förutse om kommande priser är över eller under den senaste trenden.",
+      "usage_tips": "Använd för att fatta snabba beslut om att starta aktiviteter i nästa intervall baserat på relativ prisposition."
+    },
+    "previous_interval_price_rating": {
+      "description": "Prisvärdering för föregående 15-minuters intervall",
+      "long_description": "Visar hur senaste intervalls pris jämfördes med det rullande genomsnittet. Användbart för att förstå senaste prisbeteende.",
+      "usage_tips": "Använd för att analysera hur prisvärderingar förändrades över tid eller validera tidigare konsumtionsbeslut."
+    },
+    "current_hour_price_rating": {
+      "description": "Aggregerad prisvärdering för nuvarande rullande timme (5 intervaller)",
+      "long_description": "Visar genomsnittlig värdering över 5 intervaller (2 före, nuvarande, 2 efter). Baserad på genomsnittlig procentuell skillnad från rullande 24t genomsnitt, vilket ger en utjämnad värderingsindikator.",
+      "usage_tips": "Använd för stabil prisvärdering på medellång sikt som inte överreagerar på korta prisavvikelser."
+    },
+    "next_hour_price_rating": {
+      "description": "Aggregerad prisvärdering för nästa rullande timme (5 intervaller framåt)",
+      "long_description": "Visar genomsnittlig värdering för 5 intervaller centrerade en timme framåt. Hjälper att förstå om nästa timme generellt kommer att ligga över eller under genomsnittlig prissättning.",
+      "usage_tips": "Använd för att bestämma om du ska vänta en timme innan du startar högkonsumtionsaktiviteter."
+    },
+    "next_avg_1h": {
+      "description": "Genomsnittspris för nästa 1 timme (endast framåt från nästa intervall)",
+      "long_description": "Framåtblickande genomsnitt: Visar genomsnitt av nästa 4 intervaller (1 timme) från och med NÄSTA 15-minuters intervall (inte inklusive nuvarande). Skiljer sig från current_hour_average_price som inkluderar tidigare intervaller. Använd för absolut priströskelpla nering.",
+      "usage_tips": "Absolut priströskel: Starta endast apparater när genomsnittet stannar under ditt maximalt acceptabla pris (t.ex. under 0,25 EUR/kWh). Kombinera med trendsensor för optimal timing. Obs: Detta är INTE en ersättning för timpriser - använd current_hour_average_price för det."
+    },
+    "next_avg_2h": {
+      "description": "Genomsnittspris för nästa 2 timmar",
+      "long_description": "Visar genomsnittspriset för nästa 8 intervaller (2 timmar) från och med nästa 15-minuters intervall.",
+      "usage_tips": "Absolut priströskel: Sätt ett maximalt acceptabelt genomsnittspris för standardapparater som tvättmaskiner. Säkerställer att du aldrig betalar mer än din gräns."
+    },
+    "next_avg_3h": {
+      "description": "Genomsnittspris för nästa 3 timmar",
+      "long_description": "Visar genomsnittspriset för nästa 12 intervaller (3 timmar) från och med nästa 15-minuters intervall.",
+      "usage_tips": "Absolut priströskel: För EU Eco-program (diskmaskiner, 3-4t körtid). Starta endast när 3t genomsnitt är under din prisgräns. Använd med trendsensor för att hitta bästa ögonblick inom acceptabelt prisområde."
+    },
+    "next_avg_4h": {
+      "description": "Genomsnittspris för nästa 4 timmar",
+      "long_description": "Visar genomsnittspriset för nästa 16 intervaller (4 timmar) från och med nästa 15-minuters intervall.",
+      "usage_tips": "Absolut priströskel: Sätt maximalt acceptabelt pris för värmepumpar eller varmvattenberedare. Förhindrar drift under dyra perioder oavsett relativa trender."
+    },
+    "next_avg_5h": {
+      "description": "Genomsnittspris för nästa 5 timmar",
+      "long_description": "Visar genomsnittspriset för nästa 20 intervaller (5 timmar) från och med nästa 15-minuters intervall.",
+      "usage_tips": "Absolut priströskel: Brygga mellan kort och lång sikt planering. Använd för utökade cykler med hårda prisgränser (t.ex. poolpumpar, utökade uppvärmningscykler)."
+    },
+    "next_avg_6h": {
+      "description": "Genomsnittspris för nästa 6 timmar",
+      "long_description": "Visar genomsnittspriset för nästa 24 intervaller (6 timmar) från och med nästa 15-minuters intervall.",
+      "usage_tips": "Absolut priströskel: Kvällsplanering med pristak. Schemalägg endast uppgifter om 6t genomsnitt stannar under dina maximalt acceptabla kostnader."
+    },
+    "next_avg_8h": {
+      "description": "Genomsnittspris för nästa 8 timmar",
+      "long_description": "Visar genomsnittspriset för nästa 32 intervaller (8 timmar) från och med nästa 15-minuters intervall.",
+      "usage_tips": "Absolut priströskel: Nattliga driftsbeslut. Sätt hårda prisgränser för nattliga laster (batteriladdning, termisk lagring). Överskrid aldrig din budget."
+    },
+    "next_avg_12h": {
+      "description": "Genomsnittspris för nästa 12 timmar",
+      "long_description": "Visar genomsnittspriset för nästa 48 intervaller (12 timmar) från och med nästa 15-minuters intervall.",
+      "usage_tips": "Absolut priströskel: Strategiska beslut med pristak. Fortsätt endast om 12t genomsnitt är under ditt maximalt acceptabla pris. Bra för uppskjutbara stora laster."
+    },
+    "price_outlook_1h": {
+      "description": "Prisöversikt för nästa timme",
+      "long_description": "Jämför ditt nuvarande pris med genomsnittet av alla intervaller under nästa timme (4 intervaller). Alla översiktssensorer (1h–12h) delar samma utgångspunkt: ditt nuvarande pris — de skiljer sig bara i fönsterstorlek. Stigande/fallande vid ±3%, kraftigt vid ±9% (konfigurerbart, volatilitetsadaptivt).",
+      "usage_tips": "Beslutstöd: 'stigande' = AGERA NU, ditt nuvarande pris är billigare än fönstergenomsnittet. 'fallande' = VÄNTA, fönstergenomsnittet är billigare än nu. 'stabil' = timing spelar ingen roll."
+    },
+    "price_outlook_2h": {
+      "description": "Prisöversikt för nästa 2 timmar",
+      "long_description": "Jämför ditt nuvarande pris med genomsnittet av alla intervaller under de nästa 2 timmarna (8 intervaller). 'stigande' = nuvarande pris under 2h-fönstergenomsnittet; 'fallande' = fönstergenomsnittet är billigare än nu. Stigande/fallande vid ±3%, kraftigt vid ±9%.",
+      "usage_tips": "Apparater: 'stigande' = starta nu, du har ett bra pris jämfört med nästa 2h. Kombinera med price_trajectory_2h för att se om priserna fortfarande faller eller redan stiger."
+    },
+    "price_outlook_3h": {
+      "description": "Prisöversikt för nästa 3 timmar",
+      "long_description": "Jämför ditt nuvarande pris med genomsnittet av alla intervaller under de nästa 3 timmarna (12 intervaller). 'stigande' = nuvarande pris under 3h-fönstergenomsnittet; 'fallande' = fönstergenomsnittet är billigare än nu. Stigande/fallande vid ±3%, kraftigt vid ±9%.",
+      "usage_tips": "Eco-program: 'stigande' = starta eco-cykeln nu, priser är i genomsnitt högre i fönstret. 'fallande' = vänta, billigare genomsnittligt fönster kommer."
+    },
+    "price_outlook_4h": {
+      "description": "Prisöversikt för nästa 4 timmar",
+      "long_description": "Jämför ditt nuvarande pris med genomsnittet av alla intervaller under de nästa 4 timmarna (16 intervaller). 'stigande' = nuvarande pris under 4h-fönstergenomsnittet; 'fallande' = fönstergenomsnittet är billigare än nu. Stigande/fallande vid ±3%, kraftigt vid ±9%.",
+      "usage_tips": "Värmepump/batteri: 'stigande' = ladda nu, du är på en relativ lågpunkt. Kombinera med price_trajectory_4h för att se om priserna fortfarande faller eller redan stiger."
+    },
+    "price_outlook_5h": {
+      "description": "Prisöversikt för nästa 5 timmar",
+      "long_description": "Jämför ditt nuvarande pris med genomsnittet av alla intervaller under de nästa 5 timmarna (20 intervaller). 'stigande' = nuvarande pris under 5h-fönstergenomsnittet; 'fallande' = fönstergenomsnittet är billigare än nu. Stigande/fallande vid ±3%, kraftigt vid ±9%.",
+      "usage_tips": "Utökade cykler: 'stigande' eller 'stabil' = bra tid att starta. 'fallande' = vänta om din planering tillåter det."
+    },
+    "price_outlook_6h": {
+      "description": "Prisöversikt för nästa 6 timmar",
+      "long_description": "Jämför ditt nuvarande pris med genomsnittet av alla intervaller under de nästa 6 timmarna (24 intervaller). 'stigande' = nuvarande pris under 6h-fönstergenomsnittet; 'fallande' = fönstergenomsnittet är billigare än nu. Stigande/fallande vid ±3%, kraftigt vid ±9%.",
+      "usage_tips": "Kvällsbeslut: 'stigande' = använd el nu medan den är relativt billig. 'fallande' = kvälls-/nattpriserna blir bättre i genomsnitt, vänta om möjligt."
+    },
+    "price_outlook_8h": {
+      "description": "Prisöversikt för nästa 8 timmar",
+      "long_description": "Jämför ditt nuvarande pris med genomsnittet av alla intervaller under de nästa 8 timmarna (32 intervaller). 'stigande' = nuvarande pris under 8h-fönstergenomsnittet; 'fallande' = fönstergenomsnittet är billigare än nu. Stigande/fallande vid ±3%, kraftigt vid ±9%.",
+      "usage_tips": "Nattplanering: 'stigande' = ikväll/imorgon blir dyrare i genomsnitt, använd el nu. 'fallande' = nattpriserna blir billigare, värt att vänta."
+    },
+    "price_outlook_12h": {
+      "description": "Prisöversikt för nästa 12 timmar",
+      "long_description": "Jämför ditt nuvarande pris med genomsnittet av alla intervaller under de nästa 12 timmarna (48 intervaller). 'stigande' = nuvarande pris under 12h-fönstergenomsnittet; 'fallande' = fönstergenomsnittet är billigare än nu. Stigande/fallande vid ±3%, kraftigt vid ±9%.",
+      "usage_tips": "Strategiska beslut: 'stigande' = du är på en lågpunkt relativt till nästa 12h, bra tid för strömkrävande uppgifter. 'fallande' = avsevärt bättre genomsnittspriser kommer."
+    },
+    "price_trajectory_2h": {
+      "description": "Prisutveckling inom nästa 2-timmars fönster",
+      "long_description": "Compares the average of the first hour with the average of the second hour within the next 2-hour window. 'rising' = second half more expensive than first half. 'falling' = second half cheaper. Rising/falling at ±3%, strongly at ±9% (configurable, volatility-adaptive).",
+      "usage_tips": "At a price minimum: price_outlook_2h may show 'falling' (window average is below current), but price_trajectory_2h shows 'rising' (second half more expensive) — revealing the upcoming reversal. 'outlook: falling + trajectory: rising' = you're AT the minimum, act now."
+    },
+    "price_trajectory_3h": {
+      "description": "Prisutveckling inom nästa 3-timmars fönster",
+      "long_description": "Compares the average of the first 1.5 hours with the average of the second 1.5 hours within the next 3-hour window. 'rising' = prices are climbing; 'falling' = prices are dropping. Rising/falling at ±3%, strongly at ±9%.",
+      "usage_tips": "Appliance timing: 'outlook: strongly_falling + trajectory: rising' = you're at or past the minimum, prices are already recovering — start now."
+    },
+    "price_trajectory_4h": {
+      "description": "Prisutveckling inom nästa 4-timmars fönster",
+      "long_description": "Compares the average of the first 2 hours with the average of the second 2 hours within the next 4-hour window. 'rising' = prices are climbing; 'falling' = prices are dropping. Complements price_outlook_4h. Rising/falling at ±3%, strongly at ±9%.",
+      "usage_tips": "Heat pump charging: 'rising' = first half is cheaper, charge now. 'falling' = second half is cheaper, wait. Combine with outlook: if both rising, very strong signal to act now."
+    },
+    "price_trajectory_5h": {
+      "description": "Prisutveckling inom nästa 5-timmars fönster",
+      "long_description": "Compares the average of the first 2.5 hours with the average of the second 2.5 hours within the next 5-hour window. 'rising' = prices are climbing; 'falling' = prices are dropping. Rising/falling at ±3%, strongly at ±9%.",
+      "usage_tips": "Long cycles: 'outlook: rising + trajectory: rising' = clear signal to start now. 'outlook: falling + trajectory: rising' = you're near the bottom, good time to start."
+    },
+    "price_trajectory_6h": {
+      "description": "Prisutveckling inom nästa 6-timmars fönster",
+      "long_description": "Compares the average of the first 3 hours with the average of the second 3 hours within the next 6-hour window. 'rising' = prices are climbing; 'falling' = prices are dropping. Rising/falling at ±3%, strongly at ±9%.",
+      "usage_tips": "Evening/overnight planning: 'falling' at evening peak = overnight will be cheaper, postpone. 'rising' in the morning = current morning prices are the low."
+    },
+    "price_trajectory_8h": {
+      "description": "Prisutveckling inom nästa 8-timmars fönster",
+      "long_description": "Compares the average of the first 4 hours with the average of the second 4 hours within the next 8-hour window. 'rising' = prices are climbing; 'falling' = prices are dropping. Rising/falling at ±3%, strongly at ±9%.",
+      "usage_tips": "Overnight charging: 'rising' during evening = first half of night is cheapest, start charging earlier. 'falling' = second half will be cheapest, delay start."
+    },
+    "price_trajectory_12h": {
+      "description": "Prisutveckling inom nästa 12-timmars fönster",
+      "long_description": "Compares the average of the first 6 hours with the average of the second 6 hours within the next 12-hour window. 'rising' = prices are climbing; 'falling' = prices are dropping. Rising/falling at ±3%, strongly at ±9%.",
+      "usage_tips": "Day-ahead planning: 'rising' at midnight = first half of day is cheaper, schedule morning loads. 'falling' = afternoon/evening scheduling is better."
+    },
+    "current_price_trend": {
+      "description": "Nuvarande pristrend-riktning och hur länge den varar",
+      "long_description": "Visar nuvarande pristrend (stigande/fallande/stabil) genom att kombinera historiskt momentum (viktad 1h tillbakablick) med framtidsutsikt. Känner igen pågående trender tidigare än endast framtidsanalys. Använder ±3 % momentum-tröskel och volatilitetsanpassad framtidsjämförelse. Beräknar dynamiskt till nästa trendändring (eller 3t standard om ingen ändring på 24t). Status visar nuvarande riktning, attribut visar när den ändras och vad som kommer härnäst.",
+      "usage_tips": "Statusvisning: Dashboard-synlighet av 'vad händer nu till när'. Perfekt synkroniserad med next_price_trend_change. Exempel: Badge som visar 'Stigande i 2,5t' eller 'Fallande till 16:45'. Bättre än tidsfönster-sensorer eftersom den förstår att du REDAN är i en trend, inte bara förutsäger framtida ändringar. Använd för snabb visuell överblick, inte automationsutlösare."
+    },
+    "next_price_trend_change": {
+      "description": "När nästa betydande pristrendändring kommer att inträffa",
+      "long_description": "Skannar de nästa 24 timmarna (96 intervaller) för att hitta när pristrend-riktningen kommer att ändras. Bara riktningsändringar räknas: stigande/kraftigt stigande är en grupp, fallande/kraftigt fallande en annan, stabil är egen. En ändring från stigande till kraftigt stigande är INTE en trendändring. Använder volatilitetsadaptiva tröskelvärden (standard: ±3%/±9%) med hysteres (standard: 3 på varandra följande intervaller). Returnerar tidstämpeln när ändringen förväntas.",
+      "usage_tips": "Händelsestyrd automatisering: Utlös åtgärder NÄR trenden ändras, inte OM X timmar. Exempel: 'Ladda EV när nästa trendändring visar fallande priser' eller 'Starta diskmaskin innan priserna stiger'. Kompletterar tidsfönster-sensorer (price_outlook_Xh) som svarar på 'KOMMER priserna att vara högre om X timmar?'"
+    },
+    "next_price_trend_change_in": {
+      "description": "Tid till nästa pristrendändring",
+      "long_description": "Visar hur lång tid det är kvar till nästa betydande pristrendändring inträffar. Värdet visas i timmar (t.ex. 2,25 h) för dashboards. Delar samma analys som tidstämpel-sensorn 'Nästa pristrendändring' men presenterar det som en nedtellningsvaraktighet. Uppdateras varje minut för noggranna nedtellningar. Visar 'Okänd' när ingen trendändring förväntas inom de närmaste 24 timmarna.",
+      "usage_tips": "Dashboard-nedtellning: Visa 'Trendändring om 1,5 h' som live nedtellning. För automatiseringar: 'Om next_price_trend_change_in < 0,25 (15 min), förbered för prisriktningsändring'. Kompletterar 'Nästa pristrendändring' (tidstämpel) — använd tidstämpeln för 'NÄR' och denna sensor för 'HUR LÄNGE'."
+    },
+    "daily_rating": {
+      "description": "Hur dagens priser jämförs med historiska data",
+      "long_description": "Visar hur dagens priser jämförs med historiska prisdata som en procentsats",
+      "usage_tips": "En positiv procentsats betyder att dagens priser är över genomsnittet, negativ betyder under genomsnittet"
+    },
+    "monthly_rating": {
+      "description": "Hur denna månads priser jämförs med historiska data",
+      "long_description": "Visar hur denna månads priser jämförs med historiska prisdata som en procentsats",
+      "usage_tips": "En positiv procentsats betyder att denna månads priser är över genomsnittet, negativ betyder under genomsnittet"
+    },
+    "data_timestamp": {
+      "description": "Tidsstämpel för senaste tillgängliga prisdataintervall",
+      "long_description": "Visar tidsstämpeln för det senaste tillgängliga prisdataintervallet från ditt Tibber-abonnemang"
+    },
+    "today_volatility": {
+      "description": "Hur mycket elpriserna varierar idag",
+      "long_description": "Visar om dagens priser är stabila eller har stora svängningar. Låg volatilitet innebär ganska jämna priser – timing spelar liten roll. Hög volatilitet innebär tydliga prisskillnader under dagen – bra tillfälle att flytta förbrukning till billigare perioder. `price_coefficient_variation_%` visar procentvärdet, `price_spread` visar den absoluta prisspannet.",
+      "usage_tips": "Använd detta för att avgöra om optimering är värt besväret. Vid låg volatilitet kan du köra enheter när som helst. Vid hög volatilitet sparar du märkbart genom att följa Best Price-perioder."
+    },
+    "tomorrow_volatility": {
+      "description": "Hur mycket elpriserna kommer att variera i morgon",
+      "long_description": "Visar om priserna i morgon blir stabila eller får stora svängningar. Tillgänglig när morgondagens data är publicerad (vanligen 13:00–14:00 CET). Låg volatilitet innebär ganska jämna priser – timing är inte kritisk. Hög volatilitet innebär tydliga prisskillnader under dagen – bra läge att planera energikrävande uppgifter. `price_coefficient_variation_%` visar procentvärdet, `price_spread` visar den absoluta prisspannet.",
+      "usage_tips": "Använd för att planera morgondagens förbrukning. Hög volatilitet? Planera flexibla laster i Best Price-perioder. Låg volatilitet? Kör enheter när det passar dig."
+    },
+    "next_24h_volatility": {
+      "description": "Hur mycket priserna varierar de kommande 24 timmarna",
+      "long_description": "Visar prisvolatilitet för ett rullande 24-timmarsfönster från nu (uppdateras var 15:e minut). Låg volatilitet innebär ganska jämna priser. Hög volatilitet innebär märkbara prissvängningar och därmed optimeringsmöjligheter. Till skillnad från idag/i morgon-sensorer korsar den här dagsgränser och ger en kontinuerlig framåtblickande bedömning. `price_coefficient_variation_%` visar procentvärdet, `price_spread` visar den absoluta prisspannet.",
+      "usage_tips": "Bäst för beslut i realtid. Använd vid planering av batteriladdning eller andra flexibla laster som kan gå över midnatt. Ger en konsekvent 24h-bild oberoende av kalenderdag."
+    },
+    "today_tomorrow_volatility": {
+      "description": "Kombinerad prisvolatilitet för idag och imorgon",
+      "long_description": "Visar den samlade volatiliteten när idag och imorgon ses tillsammans (när morgondatan finns). Visar om det finns tydliga prisskillnader över dagsgränsen. Faller tillbaka till endast idag om morgondatan saknas. Nyttig för flerdagarsoptimering. `price_coefficient_variation_%` visar procentvärdet, `price_spread` visar den absoluta prisspannet.",
+      "usage_tips": "Använd för uppgifter som sträcker sig över flera dagar. Kontrollera om prisskillnaderna är stora nog för att planera efter. De enskilda dag-sensorerna visar bidrag per dag om du behöver mer detaljer."
+    },
+    "data_lifecycle_status": {
+      "description": "Gjeldende tilstand for prisdatalivssyklus og hurtigbufring",
+      "long_description": "Viser om integrasjonen bruker hurtigbufrede data eller ferske data fra API-et. Viser gjeldende livssyklustilstand: 'cached' (bruker lagrede data), 'fresh' (nettopp hentet fra API), 'refreshing' (henter for øyeblikket), 'searching_tomorrow' (søker aktivt etter morgendagens data etter 13:00), 'turnover_pending' (innen 15 minutter før midnatt, 23:45-00:00), eller 'error' (henting mislyktes). Inkluderer omfattende attributter som cache-alder, neste API-spørring, datafullstendighet og API-anropsstatistikk.",
+      "usage_tips": "Bruk denne diagnosesensoren for å forstå dataferskhet og API-anropsmønstre. Sjekk 'cache_age'-attributtet for å se hvor gamle de nåværende dataene er. Overvåk 'next_api_poll' for å vite når neste oppdatering er planlagt. Bruk 'data_completeness' for å se om data for i går/i dag/i morgen er tilgjengelig. 'api_calls_today'-telleren hjelper med å spore API-bruk. Perfekt for feilsøking eller forståelse av integrasjonens oppførsel."
+    },
+    "best_price_end_time": {
+      "description": "Total längd för nuvarande eller nästa billigperiod (state i timmar, attribut i minuter)",
+      "long_description": "Visar hur länge billigperioden varar. State använder timmar (decimal) för en läsbar UI; attributet `period_duration_minutes` behåller avrundade minuter för automationer. Aktiv → varaktighet för aktuell period, annars nästa.",
+      "usage_tips": "UI kan visa 1,5 h medan `period_duration_minutes` = 90 för automationer."
+    },
+    "best_price_period_duration": {
+      "description": "Längd på nuvarande/nästa billigperiod",
+      "long_description": "Total längd av nuvarande eller nästa billigperiod. State visas i timmar (t.ex. 1,5 h) för enkel avläsning i UI, medan attributet `period_duration_minutes` ger samma värde i minuter (t.ex. 90) för automationer. Detta värde representerar den **fullständigt planerade längden** av perioden och är konstant under hela perioden, även när återstående tid (remaining_minutes) minskar.",
+      "usage_tips": "Kombinera med remaining_minutes för att beräkna när långvariga enheter ska stoppas: Perioden startade för `period_duration_minutes - remaining_minutes` minuter sedan. Detta attribut stöder energioptimeringsstrategier genom att hjälpa till med att planera högförbruksaktiviteter inom billiga perioder."
+    },
+    "best_price_remaining_minutes": {
+      "description": "Tid kvar i nuvarande billigperiod",
+      "long_description": "Visar hur mycket tid som återstår i nuvarande billigperiod. State visas i timmar (t.ex. 0,75 h) för enkel avläsning i instrumentpaneler, medan attributet `remaining_minutes` ger samma tid i minuter (t.ex. 45) för automationsvillkor. **Nedräkningstimer**: Detta värde minskar varje minut under en aktiv period. Returnerar 0 när ingen billigperiod är aktiv. Uppdateras varje minut.",
+      "usage_tips": "För automationer: Använd attribut `remaining_minutes` som 'Om remaining_minutes > 60, starta diskmaskin nu (tillräckligt med tid för att slutföra)' eller 'Om remaining_minutes < 15, avsluta nuvarande cykel snart'. UI visar användarvänliga timmar (t.ex. 1,25 h). Värde 0 indikerar ingen aktiv billigperiod."
+    },
+    "best_price_progress": {
+      "description": "Framsteg genom nuvarande billigperiod (0% när inaktiv)",
+      "long_description": "Visar framsteg genom nuvarande billigperiod som 0-100%. Returnerar 0% när ingen period är aktiv. Uppdateras varje minut. 0% betyder att perioden just startade, 100% betyder att den snart slutar.",
+      "usage_tips": "Perfekt för visuella framstegsindikatorer. Använd i automationer: 'Om progress > 0 OCH progress > 75, skicka avisering om att billigperioden snart slutar'. Värde 0 indikerar ingen aktiv period."
+    },
+    "best_price_next_start_time": {
+      "description": "Total längd för nuvarande eller nästa dyrperiod (state i timmar, attribut i minuter)",
+      "long_description": "Visar hur länge den dyra perioden varar. State använder timmar (decimal) för UI; attributet `period_duration_minutes` behåller avrundade minuter för automationer. Aktiv → varaktighet för aktuell period, annars nästa.",
+      "usage_tips": "UI kan visa 0,75 h medan `period_duration_minutes` = 45 för automationer."
+    },
+    "best_price_next_in_minutes": {
+      "description": "Tid kvar i nuvarande dyrperiod (state i timmar, attribut i minuter)",
+      "long_description": "Visar hur mycket tid som återstår. State använder timmar (decimal); attributet `remaining_minutes` behåller avrundade minuter för automationer. Returnerar 0 när ingen period är aktiv. Uppdateras varje minut.",
+      "usage_tips": "Använd `remaining_minutes` för trösklar (t.ex. > 60) medan state är lätt att läsa i timmar."
+    },
+    "peak_price_end_time": {
+      "description": "Tid tills nästa dyrperiod startar (state i timmar, attribut i minuter)",
+      "long_description": "Visar hur länge tills nästa dyrperiod startar. State använder timmar (decimal); attributet `next_in_minutes` behåller avrundade minuter för automationer. Under en aktiv period visar detta tiden till perioden efter den aktuella. 0 under korta övergångar. Uppdateras varje minut.",
+      "usage_tips": "Använd `next_in_minutes` i automationer (t.ex. < 10) medan state är lätt att läsa i timmar."
+    },
+    "peak_price_period_duration": {
+      "description": "Längd på nuvarande/nästa dyrperiod",
+      "long_description": "Total längd av nuvarande eller nästa dyrperiod. State visas i timmar (t.ex. 1,5 h) för enkel avläsning i UI, medan attributet `period_duration_minutes` ger samma värde i minuter (t.ex. 90) för automationer. Detta värde representerar den **fullständigt planerade längden** av perioden och är konstant under hela perioden, även när återstående tid (remaining_minutes) minskar.",
+      "usage_tips": "Kombinera med remaining_minutes för att beräkna när långvariga enheter ska stoppas: Perioden startade för `period_duration_minutes - remaining_minutes` minuter sedan. Detta attribut stöder energibesparingsstrategier genom att hjälpa till med att planera högförbruksaktiviteter utanför dyra perioder."
+    },
+    "peak_price_remaining_minutes": {
+      "description": "Tid kvar i nuvarande dyrperiod",
+      "long_description": "Visar hur mycket tid som återstår i nuvarande dyrperiod. State visas i timmar (t.ex. 0,75 h) för enkel avläsning i instrumentpaneler, medan attributet `remaining_minutes` ger samma tid i minuter (t.ex. 45) för automationsvillkor. **Nedräkningstimer**: Detta värde minskar varje minut under en aktiv period. Returnerar 0 när ingen dyrperiod är aktiv. Uppdateras varje minut.",
+      "usage_tips": "För automationer: Använd attribut `remaining_minutes` som 'Om remaining_minutes > 60, avbryt uppskjuten laddningssession' eller 'Om remaining_minutes < 15, återuppta normal drift snart'. UI visar användarvänliga timmar (t.ex. 1,0 h). Värde 0 indikerar ingen aktiv dyrperiod."
+    },
+    "peak_price_progress": {
+      "description": "Framsteg genom nuvarande dyrperiod (0% när inaktiv)",
+      "long_description": "Visar framsteg genom nuvarande dyrperiod som 0-100%. Returnerar 0% när ingen period är aktiv. Uppdateras varje minut.",
+      "usage_tips": "Visuell framstegsindikator i instrumentpaneler. Automation: 'Om progress > 0 OCH progress > 90, förbered normal värmeplanering'. Värde 0 indikerar ingen aktiv period."
+    },
+    "peak_price_next_start_time": {
+      "description": "När nästa dyrperiod startar",
+      "long_description": "Visar när nästa kommande dyrperiod startar. Under en aktiv period visar detta starten av NÄSTA period efter den nuvarande. Returnerar 'Okänt' endast när inga framtida perioder är konfigurerade.",
+      "usage_tips": "Alltid användbart för planering: 'Nästa dyrperiod startar om 2 timmar'. Automation: 'När nästa starttid är om 30 minuter, minska värmetemperatur förebyggande'."
+    },
+    "peak_price_next_in_minutes": {
+      "description": "Tid till nästa dyrperiod",
+      "long_description": "Visar hur länge till nästa dyrperiod. State visas i timmar (t.ex. 0,5 h) för instrumentpaneler, medan attributet `next_in_minutes` ger minuter (t.ex. 30) för automationsvillkor. Under en aktiv period visar detta tiden till perioden EFTER den nuvarande. Returnerar 0 under korta övergångsmoment. Uppdateras varje minut.",
+      "usage_tips": "För automationer: Använd attribut `next_in_minutes` som 'Om next_in_minutes > 0 OCH next_in_minutes < 10, slutför nuvarande laddcykel nu innan priserna ökar'. Värde > 0 indikerar alltid att en framtida dyrperiod är planerad."
+    },
+    "home_type": {
+      "description": "Bostadstyp (lägenhet, hus osv.)",
+      "long_description": "Visar bostadstypen som konfigurerats i ditt Tibber-konto. Denna metadata kan vara användbar för att kategorisera energiförbrukningsmönster.",
+      "usage_tips": "Använd detta för att organisera ditt smarthussystem eller för analysändamål."
+    },
+    "home_size": {
+      "description": "Boyta i kvadratmeter",
+      "long_description": "Visar storleken på din bostad i kvadratmeter som konfigurerats i ditt Tibber-konto. Kan användas för att beräkna energiförbrukning per kvadratmeter.",
+      "usage_tips": "Använd detta i energieffektivitetsberäkningar: 'Min bostad använder X kWh per kvadratmeter per år'."
+    },
+    "main_fuse_size": {
+      "description": "Huvudsäkringsstorlek i ampere",
+      "long_description": "Visar kapaciteten på din huvudsäkring i ampere. Detta bestämmer den maximala elektriska belastningen din bostad kan hantera samtidigt.",
+      "usage_tips": "Använd detta för att förhindra överbelastning: 'Om total strömförbrukning närmar sig säkringsstorleken, skjut upp start av ytterligare apparater'."
+    },
+    "number_of_residents": {
+      "description": "Antal personer som bor i bostaden",
+      "long_description": "Visar antalet boende som konfigurerats i ditt Tibber-konto. Användbart för beräkningar av energiförbrukning per person.",
+      "usage_tips": "Använd detta för hushållets energianalyser: 'Energiförbrukning per person per dag'."
+    },
+    "primary_heating_source": {
+      "description": "Primär värmesystemtyp",
+      "long_description": "Visar typen av värmesystem som används i din bostad som konfigurerats i ditt Tibber-konto. Detta kan vara en värmepump, elektrisk uppvärmning, gas, olja eller andra värmekällor.",
+      "usage_tips": "Använd detta för att kategorisera värmerelaterade automationer eller för energiförbrukningsanalys efter värmetyp."
+    },
+    "grid_company": {
+      "description": "Namn på din elnätsoperatör",
+      "long_description": "Visar namnet på företaget som driver elnätet i ditt område. Detta är distributionssystemoperatören (DSO) som ansvarar för att leverera elektricitet till ditt hem.",
+      "usage_tips": "Användbart för administrativa ändamål och felsökning av nätrelaterade problem."
+    },
+    "grid_area_code": {
+      "description": "Nätområdets identifieringskod",
+      "long_description": "Visar koden som identifierar ditt elnätsområde. Denna kod används av nätoperatören för routing- och faktureringsändamål.",
+      "usage_tips": "Använd detta som administrativ referens eller vid kontakt med din nätoperatör."
+    },
+    "price_area_code": {
+      "description": "Elprisområdeskod",
+      "long_description": "Visar koden för ditt elprisområde (t.ex. NO1, NO2, SE3, DK1). Olika områden har olika grossistelpriser baserat på regionalt utbud och efterfrågan.",
+      "usage_tips": "Använd detta för att förstå vilket prisområde du befinner dig i. Användbart vid jämförelse av priser med andra eller analys av regionala prismönster."
+    },
+    "consumption_ean": {
+      "description": "EAN-kod för elförbrukningsmätning",
+      "long_description": "Visar European Article Number (EAN)-koden som unikt identifierar din elförbrukningsmätare. Denna 18-siffriga kod används för fakturerings- och administrativa ändamål.",
+      "usage_tips": "Använd detta vid kommunikation med din elleverantör eller för administrativ dokumentation."
+    },
+    "production_ean": {
+      "description": "EAN-kod för elproduktionsmätning",
+      "long_description": "Visar European Article Number (EAN)-koden för din elproduktionsmätare (om du har solpaneler eller annan produktion). Denna kod spårar elektricitet du matar tillbaka till nätet.",
+      "usage_tips": "Relevant om du har solpaneler eller annan elproduktion. Använd för administrativa ändamål och vid krav på inmatningsersättning."
+    },
+    "energy_tax_type": {
+      "description": "Typ av energiskatt som tillämpas",
+      "long_description": "Visar energiskattekategorin som tillämpas på din elförbrukning. Skattesatser varierar per land och ibland per konsumenttyp (privat, kommersiell osv.).",
+      "usage_tips": "Använd detta för att förstå uppdelningen av din elräkning och för totala kostnadsberäkningar."
+    },
+    "vat_type": {
+      "description": "Momskategori (mervärdesskatt)",
+      "long_description": "Visar momskategorin som tillämpas på din elförbrukning. Momssatser varierar per land och kan skilja sig för elektricitet jämfört med andra varor och tjänster.",
+      "usage_tips": "Använd detta för att förstå din elräkning och beräkna totala kostnader inklusive skatter."
+    },
+    "estimated_annual_consumption": {
+      "description": "Uppskattat årligt elförbrukning i kWh",
+      "long_description": "Visar din uppskattade årliga elförbrukning i kilowattimmar som beräknats eller konfigurerats i ditt Tibber-konto. Denna uppskattning används för att jämföra faktisk förbrukning med förväntade värden.",
+      "usage_tips": "Använd detta för att spåra om din faktiska förbrukning är över eller under förväntningarna. Jämför månatlig förbrukning med 1/12 av detta värde för att identifiera ovanliga mönster."
+    },
+    "subscription_status": {
+      "description": "Status för ditt Tibber-abonnemang",
+      "long_description": "Visar om ditt Tibber-abonnemang för närvarande är aktivt, har avslutats eller väntar på aktivering. En status 'Aktiv' betyder att du aktivt tar emot elektricitet genom Tibber.",
+      "usage_tips": "Använd detta för att övervaka din abonnemangsstatus. Ställ in varningar om statusen ändras från 'Aktiv' för att säkerställa oavbruten service."
+    },
+    "day_pattern_yesterday": {
+      "description": "Detekterat prismönster för gårdagens elpriser",
+      "long_description": "Klassificerar igår i ett prismönster: Dal (billigt på mitten), Topp (dyrt på mitten), Dubbeldal (W-form, två billiga perioder), Dubbeltopp (M-form, två dyra toppar), Flat (liten variation), Stigande, Fallande eller Blandad. Konfidensen och CV-attributen visar hur tillförlitligt mönstret detekterades.",
+      "usage_tips": "Använd gårdagens mönster för att förfina automationer: ett Dalmönster upprepas ofta nästa dag och tyder på att du bör förplanera billiga middagstimmar."
+    },
+    "day_pattern_today": {
+      "description": "Detekterat prismönster för dagens elpriser",
+      "long_description": "Klassificerar idag i ett prismönster: Dal (billigt på middagen), Topp (dyrt på middagen), Dubbeldal (W-form), Dubbeltopp (M-form), Flat, Stigande, Fallande eller Blandad. Attributen inkluderar konfidenspoäng (0–1), variationskoefficient, knäpunkttider och dagsegment.",
+      "usage_tips": "Använd dagens mönster för att flytta förbrukning. Daldag: kör diskmaskinen, tvättmaskinen eller ladda elbilen på middagen. Toppdag: kör apparater tidigt på morgonen eller sent på kvällen. Använd valley_start och valley_end för precisa automationer."
+    },
+    "day_pattern_tomorrow": {
+      "description": "Detekterat prismönster för morgondagens elpriser",
+      "long_description": "Klassificerar imorgon (när data finns tillgänglig, vanligtvis efter 13:00) i ett prismönster med samma algoritm som idag. Attributen valley_start/valley_end eller peak_start/peak_end ger knäpunkttider för det primära extremvärdet.",
+      "usage_tips": "Ställ in kvällsautomationer som läser morgondagens mönster och förkonfigurerar värmepump, billaddare eller varmvattenberedare. Kombinera med tomorrow_data_available-binärsensorn."
+    },
+    "chart_data_export": {
+      "description": "Dataexport för dashboard-integrationer",
+      "long_description": "Denna sensor anropar get_chartdata-tjänsten med din konfigurerade YAML-konfiguration och exponerar resultatet som entitetsattribut. Statusen visar 'ready' när data är tillgänglig, 'error' vid fel, eller 'pending' före första anropet. Perfekt för dashboard-integrationer som ApexCharts som behöver läsa prisdata från entitetsattribut.",
+      "usage_tips": "Konfigurera YAML-parametrarna i integrationsalternativen för att matcha ditt get_chartdata-tjänstanrop. Sensorn uppdateras automatiskt när prisdata uppdateras (vanligtvis efter midnatt och när morgondagens data anländer). Få tillgång till tjänstesvarsdata direkt från entitetens attribut - strukturen matchar exakt vad get_chartdata returnerar."
+    },
+    "chart_metadata": {
+      "description": "Lättviktig metadata för diagramkonfiguration",
+      "long_description": "Tillhandahåller väsentliga diagramkonfigurationsvärden som sensorattribut. Användbart för vilket diagramkort som helst som behöver Y-axelgränser. Sensorn anropar get_chartdata med endast-metadata-läge (ingen databehandling) och extraherar: yaxis_min, yaxis_max (föreslagen Y-axelomfång för optimal skalning). Statusen återspeglar tjänstanropsresultatet: 'ready' vid framgång, 'error' vid fel, 'pending' under initialisering.",
+      "usage_tips": "Konfigurera via configuration.yaml under tibber_prices.chart_metadata_config (valfritt: day, subunit_currency, resolution). Sensorn uppdateras automatiskt vid pris dataändringar. Få tillgång till metadata från attribut: yaxis_min, yaxis_max. Använd med config-template-card eller vilket verktyg som helst som läser entitetsattribut - perfekt för dynamisk diagramkonfiguration utan manuella beräkningar."
+    },
+    "current_interval_price_rank_today": {
+      "description": "Var det aktuella intervallpriset placerar sig i dagens rangordning — percentilrang (0 % = billigaste tillfället)",
+      "long_description": "Visar hur billigt eller dyrt det aktuella kvartspriset är jämfört med alla 96 kvartsslotar idag. 0 % innebär att detta är det billigaste tillfället under dagen. 50 % innebär att hälften av dagens slotar är billigare. ca. 99 % innebär det dyraste slottet. Formel: antal billigare slotar ÷ totalt antal × 100. Attribut: `current_price`, `prices_below_count`, `interval_count`, `reference_min`, `reference_max`, `reference_mean`.",
+      "usage_tips": "Idealiskt för automatiseringar: 'Om current_interval_price_rank_today < 25, starta diskmaskinen'. Ett värde på 0 garanterar att du är på det billigaste slottet under dagen."
+    },
+    "current_interval_price_rank_tomorrow": {
+      "description": "Percentilrang för aktuellt intervallpris i morgondagens rangordning (0 % = billigaste imorgon)",
+      "long_description": "Visar hur det aktuella intervallpriset jämförs med alla 96 kvartslotar imorgon. 0 % innebär att det aktuella priset är billigare än varje slot imorgon. Returnerar 'Okänd' tills morgondagens data är tillgänglig (vanligtvis efter kl. 13:00). Attribut: `current_price`, `prices_below_count`, `interval_count`, `reference_min`, `reference_max`, `reference_mean`.",
+      "usage_tips": "Används för att avgöra om väntan lönar sig: 'Om current_interval_price_rank_tomorrow < 10, finns det ännu billigare slotar imorgon — skjut upp uppgiften'."
+    },
+    "current_interval_price_rank_today_tomorrow": {
+      "description": "Percentilrang för aktuellt intervallpris över idag+imorgon sammantaget (0 % = billigaste i tvådagarsperioden)",
+      "long_description": "Visar hur billigt eller dyrt det aktuella intervallpriset är jämfört med alla slotar idag och imorgon tillsammans (upp till 192 kvartsslotar). Faller tillbaka på enbart idag när morgondagens data inte är tillgänglig. Attribut: `current_price`, `prices_below_count`, `interval_count`, `reference_min`, `reference_max`, `reference_mean`.",
+      "usage_tips": "Den bredaste signalen för 'är det ett bra tillfälle nu?'. Använd 'Om current_interval_price_rank_today_tomorrow < 20, kör energikrävande uppgift nu'."
+    },
+    "next_interval_price_rank_today": {
+      "description": "Percentilrang för nästa intervalls pris i dagens rangordning (0 % = billigaste tillfället idag)",
+      "long_description": "Visar percentilrangen för det kommande kvartalet inom dagens 96 slotar. Ger en förhandstitt innan nästa intervall börjar. Attribut: `next_price`, `prices_below_count`, `interval_count`, `reference_min`, `reference_max`, `reference_mean`.",
+      "usage_tips": "För förberedelse: 'Om next_interval_price_rank_today < 15, börja förvärmningen nu så att enheten körs under nästa billiga slot'."
+    },
+    "next_interval_price_rank_today_tomorrow": {
+      "description": "Percentilrang för nästa intervalls pris över idag+imorgon sammantaget (0 % = billigaste i tvådagarsperioden)",
+      "long_description": "Visar percentilrangen för det kommande kvartalet inom den kombinerade idag+imorgon-poolen (upp till 192 slotar). Faller tillbaka på enbart idag. Attribut: `next_price`, `prices_below_count`, `interval_count`, `reference_min`, `reference_max`, `reference_mean`.",
+      "usage_tips": "Bredaste framtidsskick: 'Om next_interval_price_rank_today_tomorrow < 10, är nästa intervall bland de billigaste i tvådagarsfönstret'."
+    },
+    "previous_interval_price_rank_today": {
+      "description": "Percentilrang för föregående intervalls pris i dagens rangordning (0 % = billigaste tillfället idag)",
+      "long_description": "Visar percentilrangen för det nyligen avslutade kvartalet inom dagens 96 slotar. Användbart för loggning. Attribut: `previous_price`, `prices_below_count`, `interval_count`, `reference_min`, `reference_max`, `reference_mean`.",
+      "usage_tips": "För retrospektiva automatiseringar: 'Registrera prisnivån för det förra intervallet i energirapporter'."
+    },
+    "previous_interval_price_rank_today_tomorrow": {
+      "description": "Percentilrang för föregående intervalls pris över idag+imorgon sammantaget (0 % = billigaste i tvådagarsperioden)",
+      "long_description": "Visar percentilrangen för det nyligen avslutade kvartalet inom den kombinerade idag+imorgon-poolen (upp till 192 slotar). Faller tillbaka på enbart idag. Attribut: `previous_price`, `prices_below_count`, `interval_count`, `reference_min`, `reference_max`, `reference_mean`.",
+      "usage_tips": "För retrospektiva jämförelser inom ett tvådagarsfönster."
+    },
+    "current_hour_price_rank_today": {
+      "description": "Percentilrang för aktuellt rullande timgenom­snittspris i dagens rangordning (0 % = billigaste timmen idag)",
+      "long_description": "Visar var det rullande 5-intervallets genomsnitt (2 intervall före + aktuellt + 2 efter, ca. 1 timme) placerar sig i dagens prisrangordning. Jämnar ut korta pristoppar. Attribut: `current_hour_avg_price`, `prices_below_count`, `interval_count`, `reference_min`, `reference_max`, `reference_mean`.",
+      "usage_tips": "För uppgifter som tar ungefär en timme: 'Om current_hour_price_rank_today < 20, är detta en billig timme — starta tvättmaskinen'."
+    },
+    "current_hour_price_rank_today_tomorrow": {
+      "description": "Rullande timgenomsnittsprisrang över idag+imorgon sammantaget (0 % = billigaste timmen i tvådagarsfönstret)",
+      "long_description": "Visar var det rullande 5-intervallets genomsnitt (±2 intervall, ca. 1 timme) placerar sig i den kombinerade idag+imorgon-rangordningen (upp till 192 slotar). Faller tillbaka på enbart idag. Attribut: `current_hour_avg_price`, `prices_below_count`, `interval_count`, `reference_min`, `reference_max`, `reference_mean`.",
+      "usage_tips": "Bredaste timsignal: 'Om current_hour_price_rank_today_tomorrow < 15, är detta en av de billigaste timmarna i tvådagarsfönstret'."
+    },
+    "next_hour_price_rank_today": {
+      "description": "Percentilrang för nästa rullande timgenom­snittspris i dagens rangordning (0 % = billigaste timmen idag)",
+      "long_description": "Visar var det 5-intervallsgenomsnitt centrerat på nästa intervall placerar sig i dagens prisrangordning. Möjliggör planering en timme framåt. Attribut: `next_hour_avg_price`, `prices_below_count`, `interval_count`, `reference_min`, `reference_max`, `reference_mean`.",
+      "usage_tips": "Planera en timme framåt: 'Om next_hour_price_rank_today < 20, är den kommande timmen billig — starta en uppgift nu'."
+    },
+    "next_hour_price_rank_today_tomorrow": {
+      "description": "Nästa rullande timgenom­snittsprisrang över idag+imorgon sammantaget (0 % = billigaste timmen i tvådagarsfönstret)",
+      "long_description": "Visar var det 5-intervallsgenomsnitt centrerat på nästa intervall placerar sig i den kombinerade idag+imorgon-rangordningen (upp till 192 slotar). Faller tillbaka på enbart idag. Attribut: `next_hour_avg_price`, `prices_below_count`, `interval_count`, `reference_min`, `reference_max`, `reference_mean`.",
+      "usage_tips": "Bredaste timframtidsskick: 'Om next_hour_price_rank_today_tomorrow < 10, är den kommande timmen bland de billigaste i tvådagarsfönstret'."
+    }
+  },
+  "binary_sensor": {
+    "tomorrow_data_available": {
+      "description": "Om prisdata för morgondagen är tillgänglig",
+      "long_description": "Indikerar om prisdata för följande dag har mottagits från Tibber",
+      "usage_tips": "Använd detta för att kontrollera om morgondagens priser är tillgängliga för planering"
+    },
+    "peak_price_period": {
+      "description": "Om nuvarande intervall är bland de dyraste på dagen",
+      "long_description": "Aktiveras när nuvarande pris ligger i topp 20% av dagens priser",
+      "usage_tips": "Använd detta för att undvika att köra högkonsumtionsapparater under dyra intervaller"
+    },
+    "best_price_period": {
+      "description": "Om nuvarande intervall är bland de billigaste på dagen",
+      "long_description": "Aktiveras när nuvarande pris ligger i botten 20% av dagens priser",
+      "usage_tips": "Använd detta för att köra högkonsumtionsapparater under de billigaste intervallerna"
+    },
+    "connection": {
+      "description": "Om anslutningen till Tibber API fungerar",
+      "long_description": "Indikerar om integrationen framgångsrikt kan ansluta till Tibber API",
+      "usage_tips": "Använd detta för att övervaka anslutningsstatus till Tibber API"
+    },
+    "has_ventilation_system": {
+      "description": "Om din bostad har ventilationssystem",
+      "long_description": "Indikerar om ett ventilationssystem är registrerat för din bostad i Tibber-kontot. Ventilationssystem kan vara betydande elförbrukare som kan dra nytta av smart schemaläggning.",
+      "usage_tips": "Använd detta för att aktivera ventilationsspecifika automationer eller energiövervakning. Om aktivt, överväg att schemalägga ventilation under lågprisperioder."
+    },
+    "realtime_consumption_enabled": {
+      "description": "Om realtidsförbrukningsövervakning är aktiv",
+      "long_description": "Indikerar om realtidsövervakning av elförbrukning är aktiverad och aktiv för ditt Tibber-hem. Detta kräver kompatibel mätutrustning (t.ex. Tibber Pulse) och en aktiv prenumeration.",
+      "usage_tips": "Använd detta för att verifiera att realtidsförbrukningen är tillgänglig. Aktivera meddelanden om detta oväntat ändras till 'av', vilket indikerar potentiella hårdvaru- eller anslutningsproblem."
+    }
+  },
+  "number": {
+    "best_price_flex_override": {
+      "description": "Maximal procent över daglig minimumpris som intervaller kan ha och fortfarande kvalificera som 'bästa pris'. Rekommenderas: 15-20 med lättnad aktiverad (standard), eller 25-35 utan lättnad. Maximum: 50 (hårt tak för tillförlitlig perioddetektering).",
+      "long_description": "När denna entitet är aktiverad överskriver värdet 'Flexibilitet'-inställningen från alternativ-dialogen för bästa pris-periodberäkningar.",
+      "usage_tips": "Aktivera denna entitet för att dynamiskt justera bästa pris-detektering via automatiseringar, t.ex. högre flexibilitet för kritiska laster eller striktare krav för flexibla apparater."
+    },
+    "best_price_min_distance_override": {
+      "description": "Minsta procentuella avstånd under dagligt genomsnitt. Intervaller måste vara så långt under genomsnittet för att kvalificera som 'bästa pris'. Hjälper att skilja äkta lågprisperioder från genomsnittspriser.",
+      "long_description": "När denna entitet är aktiverad överskriver värdet 'Minimiavstånd'-inställningen från alternativ-dialogen för bästa pris-periodberäkningar.",
+      "usage_tips": "Öka värdet för striktare bästa pris-kriterier. Minska om för få perioder detekteras."
+    },
+    "best_price_min_period_length_override": {
+      "description": "Minsta periodlängd i 15-minuters intervaller. Perioder kortare än detta rapporteras inte. Exempel: 2 = minst 30 minuter.",
+      "long_description": "När denna entitet är aktiverad överskriver värdet 'Minsta periodlängd'-inställningen från alternativ-dialogen för bästa pris-periodberäkningar.",
+      "usage_tips": "Anpassa till typisk apparatkörtid: 2 (30 min) för snabbprogram, 4-8 (1-2 timmar) för normala cykler, 8+ för långa ECO-program."
+    },
+    "best_price_min_periods_override": {
+      "description": "Minsta antal bästa pris-perioder att hitta dagligen. När lättnad är aktiverad kommer systemet automatiskt att justera kriterierna för att uppnå detta antal.",
+      "long_description": "När denna entitet är aktiverad överskriver värdet 'Minsta antal perioder'-inställningen från alternativ-dialogen för bästa pris-periodberäkningar.",
+      "usage_tips": "Ställ in detta på antalet tidskritiska uppgifter du har dagligen. Exempel: 2 för två tvattmaskinskörningar."
+    },
+    "best_price_relaxation_attempts_override": {
+      "description": "Antal försök att gradvis lätta på kriterierna för att uppnå minsta periodantal. Varje försök ökar flexibiliteten med 3 procent. Vid 0 används endast baskriterier.",
+      "long_description": "När denna entitet är aktiverad överskriver värdet 'Lättnadsförsök'-inställningen från alternativ-dialogen för bästa pris-periodberäkningar.",
+      "usage_tips": "Högre värden gör perioddetektering mer adaptiv för dagar med stabila priser. Ställ in på 0 för att tvinga strikta kriterier utan lättnad."
+    },
+    "best_price_gap_count_override": {
+      "description": "Maximalt antal dyrare intervaller som kan tillåtas mellan billiga intervaller medan de fortfarande räknas som en sammanhängande period. Vid 0 måste billiga intervaller vara påföljande.",
+      "long_description": "När denna entitet är aktiverad överskriver värdet 'Glaptolerans'-inställningen från alternativ-dialogen för bästa pris-periodberäkningar.",
+      "usage_tips": "Öka detta för apparater med variabel last (t.ex. värmepumpar) som kan tolerera korta dyrare intervaller. Ställ in på 0 för kontinuerligt billiga perioder."
+    },
+    "peak_price_flex_override": {
+      "description": "Maximal procent under daglig maximumpris som intervaller kan ha och fortfarande kvalificera som 'topppris'. Samma rekommendationer som för bästa pris-flexibilitet.",
+      "long_description": "När denna entitet är aktiverad överskriver värdet 'Flexibilitet'-inställningen från alternativ-dialogen för topppris-periodberäkningar.",
+      "usage_tips": "Använd detta för att justera topppris-tröskeln vid körtid för automatiseringar som undviker förbrukning under dyra timmar."
+    },
+    "peak_price_min_distance_override": {
+      "description": "Minsta procentuella avstånd över dagligt genomsnitt. Intervaller måste vara så långt över genomsnittet för att kvalificera som 'topppris'.",
+      "long_description": "När denna entitet är aktiverad överskriver värdet 'Minimiavstånd'-inställningen från alternativ-dialogen för topppris-periodberäkningar.",
+      "usage_tips": "Öka värdet för att endast fånga extrema pristoppar. Minska för att inkludera fler högpristider."
+    },
+    "peak_price_min_period_length_override": {
+      "description": "Minsta periodlängd i 15-minuters intervaller för topppriser. Kortare pristoppar rapporteras inte som perioder.",
+      "long_description": "När denna entitet är aktiverad överskriver värdet 'Minsta periodlängd'-inställningen från alternativ-dialogen för topppris-periodberäkningar.",
+      "usage_tips": "Kortare värden fångar korta pristoppar. Längre värden fokuserar på ihållande högprisperioder."
+    },
+    "peak_price_min_periods_override": {
+      "description": "Minsta antal topppris-perioder att hitta dagligen.",
+      "long_description": "När denna entitet är aktiverad överskriver värdet 'Minsta antal perioder'-inställningen från alternativ-dialogen för topppris-periodberäkningar.",
+      "usage_tips": "Ställ in detta baserat på hur många högprisperioder du vill fånga per dag för automatiseringar."
+    },
+    "peak_price_relaxation_attempts_override": {
+      "description": "Antal försök att lätta på kriterierna för att uppnå minsta antal topppris-perioder.",
+      "long_description": "När denna entitet är aktiverad överskriver värdet 'Lättnadsförsök'-inställningen från alternativ-dialogen för topppris-periodberäkningar.",
+      "usage_tips": "Öka detta om inga perioder hittas på dagar med stabila priser. Ställ in på 0 för att tvinga strikta kriterier."
+    },
+    "peak_price_gap_count_override": {
+      "description": "Maximalt antal billigare intervaller som kan tillåtas mellan dyra intervaller medan de fortfarande räknas som en topppris-period.",
+      "long_description": "När denna entitet är aktiverad överskriver värdet 'Glaptolerans'-inställningen från alternativ-dialogen för topppris-periodberäkningar.",
+      "usage_tips": "Högre värden fångar längre högprisperioder även med korta prisdipp. Ställ in på 0 för strikt sammanhängande topppriser."
+    }
+  },
+  "switch": {
+    "best_price_enable_relaxation_override": {
+      "description": "När aktiverad lättas kriterierna automatiskt för att uppnå minsta periodantal. När inaktiverad rapporteras endast perioder som uppfyller strikta kriterier (möjligen noll perioder på dagar med stabila priser).",
+      "long_description": "När denna entitet är aktiverad överskriver värdet 'Uppnå minimiantal'-inställningen från alternativ-dialogen för bästa pris-periodberäkningar.",
+      "usage_tips": "Aktivera detta för garanterade dagliga automatiseringsmöjligheter. Inaktivera om du endast vill ha riktigt billiga perioder, även om det innebär inga perioder vissa dagar."
+    },
+    "peak_price_enable_relaxation_override": {
+      "description": "När aktiverad lättas kriterierna automatiskt för att uppnå minsta periodantal. När inaktiverad rapporteras endast äkta pristoppar.",
+      "long_description": "När denna entitet är aktiverad överskriver värdet 'Uppnå minimiantal'-inställningen från alternativ-dialogen för topppris-periodberäkningar.",
+      "usage_tips": "Aktivera detta för konsekventa topppris-varningar. Inaktivera för att endast fånga extrema pristoppar."
+    }
+  },
+  "home_types": {
+    "APARTMENT": "Lägenhet",
+    "ROWHOUSE": "Radhus",
+    "HOUSE": "Hus",
+    "COTTAGE": "Stuga"
+  },
+  "time_units": {
+    "day": "{count} dag",
+    "days": "{count} dagar",
+    "hour": "{count} timme",
+    "hours": "{count} timmar",
+    "minute": "{count} minut",
+    "minutes": "{count} minuter",
+    "ago": "{parts} sedan",
+    "now": "nu"
+  },
+  "attribution": "Data tillhandahålls av Tibber"
 }

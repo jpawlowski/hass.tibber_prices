@@ -139,44 +139,81 @@ The `price_spike_count` attribute (Tukey fence method: Q25 − 1.5×IQR to Q75 +
 
 ## Price Rank Sensors (Percentile Rank)
 
-The price rank sensors answer the simple question: **"Is the current price cheap or expensive compared to the rest of the day?"**
+The price rank sensors answer the simple question: **"Is this price cheap or expensive compared to the rest of the day?"**
 
-Unlike the volatility sensors (which measure the _shape_ of the entire price distribution), price rank sensors place the _current price_ within that distribution — technically its **percentile rank**. A value of **0% means cheapest interval of the day**, while a value near **99% means most expensive**.
+Unlike the volatility sensors (which measure the _shape_ of the entire price distribution), price rank sensors place a _specific price_ within that distribution — technically its **percentile rank**. A value of **0% means cheapest interval of the reference set**, while a value near **99% means most expensive**.
+
+Each sensor ranks a different **subject price** against a **reference window**:
+
+- **Subject** — Which price is being ranked: current interval, next interval, previous interval, or the rolling hourly average
+- **Reference window** — Which pool of slots to compare against: today only, tomorrow only, or today+tomorrow combined
 
 ### How It Works (Percentile Rank Formula)
 
 ```
-Price rank (percentile rank) = (number of intervals strictly cheaper than now) ÷ total intervals × 100
+Price rank (percentile rank) = (number of intervals strictly cheaper than subject) ÷ total intervals × 100
 ```
 
 The cheapest interval always returns 0% — you can use `state == 0` to detect the absolute cheapest moment.
 
 ### Available Sensors
 
-| Sensor                                                                          | Reference Set                                   | Enabled by Default |
-| ------------------------------------------------------------------------------- | ----------------------------------------------- | ------------------ |
-| <EntityRef id="price_rank_today">Today's Price Rank</EntityRef>                 | All of today's 96 quarter-hour intervals        | ✅ Yes             |
-| <EntityRef id="price_rank_tomorrow">Tomorrow's Price Rank</EntityRef>           | All of tomorrow's 96 intervals (once available) | ❌ No              |
-| <EntityRef id="price_rank_today_tomorrow">Today+Tomorrow Price Rank</EntityRef> | Combined pool (up to 192 intervals)             | ❌ No              |
+**Current interval** (price of the active quarter-hour):
+
+| Sensor                                                                                                                        | Reference Set                          | Enabled by Default |
+| ----------------------------------------------------------------------------------------------------------------------------- | -------------------------------------- | ------------------ |
+| <EntityRef id="current_interval_price_rank_today">Current Price Rank (Today)</EntityRef>                                      | Today's 96 quarter-hour intervals      | ✅ Yes             |
+| <EntityRef id="current_interval_price_rank_tomorrow">Current Price Rank (Tomorrow)</EntityRef>                                | Tomorrow's 96 intervals (once avail.)  | ❌ No              |
+| <EntityRef id="current_interval_price_rank_today_tomorrow">Current Price Rank (Today+Tomorrow)</EntityRef>                    | Combined pool (up to 192 intervals)    | ❌ No              |
+
+**Next interval** (price of the upcoming quarter-hour):
+
+| Sensor                                                                                                                        | Reference Set                          | Enabled by Default |
+| ----------------------------------------------------------------------------------------------------------------------------- | -------------------------------------- | ------------------ |
+| <EntityRef id="next_interval_price_rank_today">Next Price Rank (Today)</EntityRef>                                            | Today's 96 quarter-hour intervals      | ❌ No              |
+| <EntityRef id="next_interval_price_rank_today_tomorrow">Next Price Rank (Today+Tomorrow)</EntityRef>                          | Combined pool (up to 192 intervals)    | ❌ No              |
+
+**Previous interval** (price of the just-ended quarter-hour):
+
+| Sensor                                                                                                                        | Reference Set                          | Enabled by Default |
+| ----------------------------------------------------------------------------------------------------------------------------- | -------------------------------------- | ------------------ |
+| <EntityRef id="previous_interval_price_rank_today">Last Price Rank (Today)</EntityRef>                                        | Today's 96 quarter-hour intervals      | ❌ No              |
+| <EntityRef id="previous_interval_price_rank_today_tomorrow">Last Price Rank (Today+Tomorrow)</EntityRef>                      | Combined pool (up to 192 intervals)    | ❌ No              |
+
+**Rolling hourly average** (5-interval window, ~1 hour):
+
+| Sensor                                                                                                                        | Reference Set                          | Enabled by Default |
+| ----------------------------------------------------------------------------------------------------------------------------- | -------------------------------------- | ------------------ |
+| <EntityRef id="current_hour_price_rank_today">⌀ Hourly Price Current Rank (Today)</EntityRef>                                 | Today's 96 quarter-hour intervals      | ❌ No              |
+| <EntityRef id="current_hour_price_rank_today_tomorrow">⌀ Hourly Price Current Rank (Today+Tomorrow)</EntityRef>               | Combined pool (up to 192 intervals)    | ❌ No              |
+| <EntityRef id="next_hour_price_rank_today">⌀ Hourly Price Next Rank (Today)</EntityRef>                                       | Today's 96 quarter-hour intervals      | ❌ No              |
+| <EntityRef id="next_hour_price_rank_today_tomorrow">⌀ Hourly Price Next Rank (Today+Tomorrow)</EntityRef>                     | Combined pool (up to 192 intervals)    | ❌ No              |
 
 ### Key Attributes
 
-All price rank sensors share these attributes:
+All price rank sensors share most of these attributes. The price attribute key reflects the subject:
 
-| Attribute            | Description                                   | Example |
-| -------------------- | --------------------------------------------- | ------- |
-| `current_price`      | The price being ranked                        | `14.2`  |
-| `prices_below_count` | How many intervals are strictly cheaper       | `23`    |
-| `interval_count`     | Total intervals in the reference set          | `96`    |
-| `reference_min`      | The cheapest price in the reference set       | `8.1`   |
-| `reference_max`      | The most expensive price in the reference set | `27.3`  |
-| `reference_mean`     | Average price of the reference set            | `15.8`  |
+| Attribute                | Description                                              | Subject            |
+| ------------------------ | -------------------------------------------------------- | ------------------ |
+| `current_price`          | The price being ranked (current interval)                | Current interval   |
+| `next_price`             | The price being ranked (next interval)                   | Next interval      |
+| `previous_price`         | The price being ranked (previous interval)               | Previous interval  |
+| `current_hour_avg_price` | The rolling average being ranked (current hour)          | Current hour avg   |
+| `next_hour_avg_price`    | The rolling average being ranked (next hour)             | Next hour avg      |
+| `prices_below_count`     | How many reference intervals are strictly cheaper        | All sensors        |
+| `interval_count`         | Total intervals in the reference set                     | All sensors        |
+| `reference_min`          | The cheapest price in the reference set                  | All sensors        |
+| `reference_max`          | The most expensive price in the reference set            | All sensors        |
+| `reference_mean`         | Average price of the reference set                       | All sensors        |
 
 ### When to Use Which Sensor
 
-- **`price_rank_today`** — For same-day scheduling. "Is now within the cheapest quarter of today? (< 25%)"
-- **`price_rank_tomorrow`** — To compare today's price against what tomorrow offers. "Is it worth waiting until tomorrow?"
-- **`price_rank_today_tomorrow`** — Broadest view for flexible tasks. "Is this among the cheapest moments of a 48-hour window?"
+- **Current (Today)** — Same-day scheduling. "Is the active quarter-hour within the cheapest 25% of today?"
+- **Next (Today)** — Prepare for the next interval. "Should I pre-heat now so the device runs in the coming cheap slot?"
+- **Current (Today+Tomorrow)** — Broadest view for flexible tasks. "Is this among the cheapest moments of a 48-hour window?"
+- **Current (Tomorrow)** — Decide whether to wait until tomorrow. "Is today's price worse than what tomorrow offers?"
+- **⌀ Hourly Current (Today)** — For tasks that take about an hour. "Is this hour cheap enough to start a 60-minute cycle?"
+- **⌀ Hourly Next (Today)** — One-hour look-ahead. "Will the upcoming hour be cheap enough to start now?"
 
 ### Usage in Automations
 
@@ -188,7 +225,7 @@ automation:
     - alias: "Start dishwasher at cheapest time of day"
       trigger:
           - platform: numeric_state
-            entity_id: sensor.<home_name>_today_s_price_rank
+            entity_id: sensor.<home_name>_current_price_rank_today
             below: 25
       condition:
           - condition: state
@@ -214,10 +251,32 @@ automation:
           # Only postpone if tomorrow's cheapest quartile is better than the current price
           - condition: template
             value_template: >
-                {{ states('sensor.<home_name>_tomorrow_s_price_rank') | float(100) < 25 }}
+                {{ states('sensor.<home_name>_current_price_rank_tomorrow') | float(100) < 25 }}
       action:
           - service: input_boolean.turn_off
             entity_id: input_boolean.ev_charge_tonight
+```
+
+</details>
+
+<details>
+<summary>Show YAML: Pre-heat when the next interval is cheap</summary>
+
+```yaml
+automation:
+    - alias: "Pre-heat if next interval is top quartile cheapest"
+      trigger:
+          - platform: time_pattern
+            minutes: "/15"
+      condition:
+          - condition: numeric_state
+            entity_id: sensor.<home_name>_next_price_rank_today
+            below: 25
+      action:
+          - service: climate.set_hvac_mode
+            entity_id: climate.living_room
+            data:
+                hvac_mode: heat
 ```
 
 </details>

@@ -866,15 +866,6 @@
           "very_high": "Sehr hoch"
         }
       },
-      "price_rank_today": {
-        "name": "Preisrang heute"
-      },
-      "price_rank_tomorrow": {
-        "name": "Preisrang morgen"
-      },
-      "price_rank_today_tomorrow": {
-        "name": "Preisrang heute+morgen"
-      },
       "best_price_end_time": {
         "name": "Bestpreis endet"
       },
@@ -1036,6 +1027,39 @@
           "ready": "Bereit",
           "error": "Fehler"
         }
+      },
+      "current_interval_price_rank_today": {
+        "name": "Aktueller Preisrang (heute)"
+      },
+      "current_interval_price_rank_tomorrow": {
+        "name": "Aktueller Preisrang (morgen)"
+      },
+      "current_interval_price_rank_today_tomorrow": {
+        "name": "Aktueller Preisrang (heute+morgen)"
+      },
+      "next_interval_price_rank_today": {
+        "name": "Nächster Preisrang (heute)"
+      },
+      "next_interval_price_rank_today_tomorrow": {
+        "name": "Nächster Preisrang (heute+morgen)"
+      },
+      "previous_interval_price_rank_today": {
+        "name": "Letzter Preisrang (heute)"
+      },
+      "previous_interval_price_rank_today_tomorrow": {
+        "name": "Letzter Preisrang (heute+morgen)"
+      },
+      "current_hour_price_rank_today": {
+        "name": "⌀ Stündlicher Preisrang Aktuell (heute)"
+      },
+      "current_hour_price_rank_today_tomorrow": {
+        "name": "⌀ Stündlicher Preisrang Aktuell (heute+morgen)"
+      },
+      "next_hour_price_rank_today": {
+        "name": "⌀ Stündlicher Preisrang Nächste (heute)"
+      },
+      "next_hour_price_rank_today_tomorrow": {
+        "name": "⌀ Stündlicher Preisrang Nächste (heute+morgen)"
       }
     },
     "binary_sensor": {

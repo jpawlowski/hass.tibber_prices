@@ -100,6 +100,22 @@ MIN_HOURS_FOR_LATER_HALF = 3  # Minimum hours needed to calculate later half ave
 _SENTINEL = object()
 
 
+def _extract_percentile_rank_type(key: str) -> str | None:
+    """
+    Extract the reference-window type from a price rank sensor key.
+
+    Returns "today_tomorrow", "tomorrow", or "today" based on the key suffix.
+    Returns None if the key is not a price rank sensor key.
+    """
+    if "_rank_today_tomorrow" in key:
+        return "today_tomorrow"
+    if "_rank_tomorrow" in key:
+        return "tomorrow"
+    if "_rank_today" in key:
+        return "today"
+    return None
+
+
 class TibberPricesSensor(TibberPricesEntity, RestoreSensor):
     """tibber_prices Sensor class with state restoration."""
 
@@ -1165,7 +1181,7 @@ class TibberPricesSensor(TibberPricesEntity, RestoreSensor):
                 "trend_change_attributes": self._trend_calculator.get_trend_change_attributes(),
                 "volatility_attributes": self._volatility_calculator.get_volatility_attributes(),
                 "percentile_rank_attributes": self._volatility_calculator.get_percentile_rank_attributes(),
-                "percentile_rank_type": key.removeprefix("price_rank_") if key.startswith("price_rank_") else None,
+                "percentile_rank_type": _extract_percentile_rank_type(key),
                 "coordinator_data": self.coordinator.data,
                 "last_extreme_interval": self._daily_stat_calculator.get_last_extreme_interval(),
                 "last_energy_tax_averages": self._daily_stat_calculator.get_last_energy_tax_averages(),

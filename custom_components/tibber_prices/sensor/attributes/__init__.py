@@ -191,7 +191,7 @@ def build_sensor_attributes(  # noqa: PLR0912
         elif _is_timing_or_volatility_sensor(key):
             _add_timing_or_volatility_attributes(attributes, key, cached_data, native_value, time=time)
 
-        elif key in ("price_rank_today", "price_rank_tomorrow", "price_rank_today_tomorrow"):
+        elif "_price_rank_" in key:
             add_percentile_rank_attributes(attributes, cached_data, time=time)
 
         elif key in ("day_pattern_yesterday", "day_pattern_today", "day_pattern_tomorrow"):

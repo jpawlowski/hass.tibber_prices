@@ -1,653 +1,693 @@
 {
-    "apexcharts": {
-        "title_rating_level": "Preisphasen Tagesverlauf",
-        "title_level": "Preisniveau",
-        "hourly_suffix": "(Ø stündlich)",
-        "best_price_period_name": "Bestpreis-Zeitraum",
-        "peak_price_period_name": "Spitzenpreis-Zeitraum",
-        "notification": {
-            "metadata_sensor_unavailable": {
-                "title": "Tibber Prices: ApexCharts YAML mit eingeschränkter Funktionalität generiert",
-                "message": "Du hast gerade eine ApexCharts-Card-Konfiguration über die Entwicklerwerkzeuge generiert. Der Chart-Metadaten-Sensor ist aktuell deaktiviert, daher zeigt das generierte YAML nur **Basisfunktionalität** (Auto-Skalierung, fester Gradient bei 50%).\n\n**Für volle Funktionalität** (optimierte Skalierung, dynamische Verlaufsfarben):\n1. [Tibber Prices Integration öffnen](https://my.home-assistant.io/redirect/integration/?domain=tibber_prices)\n2. Aktiviere den 'Chart Metadata' Sensor\n3. **Generiere das YAML erneut** über die Entwicklerwerkzeuge\n4. **Ersetze den alten YAML-Code** in deinem Dashboard durch die neue Version\n\n⚠️ Nur den Sensor zu aktivieren reicht nicht - du musst das YAML neu generieren und ersetzen!"
-            },
-            "missing_cards": {
-                "title": "Tibber Prices: ApexCharts YAML kann nicht verwendet werden",
-                "message": "Du hast gerade eine ApexCharts-Card-Konfiguration über die Entwicklerwerkzeuge generiert, aber das generierte YAML **funktioniert nicht**, weil erforderliche Custom Cards fehlen.\n\n**Fehlende Cards:**\n{cards}\n\n**Um das generierte YAML zu nutzen:**\n1. Klicke auf die obigen Links, um die fehlenden Cards über HACS zu installieren\n2. Starte Home Assistant neu (manchmal erforderlich)\n3. **Generiere das YAML erneut** über die Entwicklerwerkzeuge\n4. Füge das YAML zu deinem Dashboard hinzu\n\n⚠️ Der aktuelle YAML-Code funktioniert nicht, bis alle Cards installiert sind!"
-            }
-        }
+  "apexcharts": {
+    "title_rating_level": "Preisphasen Tagesverlauf",
+    "title_level": "Preisniveau",
+    "hourly_suffix": "(Ø stündlich)",
+    "best_price_period_name": "Bestpreis-Zeitraum",
+    "peak_price_period_name": "Spitzenpreis-Zeitraum",
+    "notification": {
+      "metadata_sensor_unavailable": {
+        "title": "Tibber Prices: ApexCharts YAML mit eingeschränkter Funktionalität generiert",
+        "message": "Du hast gerade eine ApexCharts-Card-Konfiguration über die Entwicklerwerkzeuge generiert. Der Chart-Metadaten-Sensor ist aktuell deaktiviert, daher zeigt das generierte YAML nur **Basisfunktionalität** (Auto-Skalierung, fester Gradient bei 50%).\n\n**Für volle Funktionalität** (optimierte Skalierung, dynamische Verlaufsfarben):\n1. [Tibber Prices Integration öffnen](https://my.home-assistant.io/redirect/integration/?domain=tibber_prices)\n2. Aktiviere den 'Chart Metadata' Sensor\n3. **Generiere das YAML erneut** über die Entwicklerwerkzeuge\n4. **Ersetze den alten YAML-Code** in deinem Dashboard durch die neue Version\n\n⚠️ Nur den Sensor zu aktivieren reicht nicht - du musst das YAML neu generieren und ersetzen!"
+      },
+      "missing_cards": {
+        "title": "Tibber Prices: ApexCharts YAML kann nicht verwendet werden",
+        "message": "Du hast gerade eine ApexCharts-Card-Konfiguration über die Entwicklerwerkzeuge generiert, aber das generierte YAML **funktioniert nicht**, weil erforderliche Custom Cards fehlen.\n\n**Fehlende Cards:**\n{cards}\n\n**Um das generierte YAML zu nutzen:**\n1. Klicke auf die obigen Links, um die fehlenden Cards über HACS zu installieren\n2. Starte Home Assistant neu (manchmal erforderlich)\n3. **Generiere das YAML erneut** über die Entwicklerwerkzeuge\n4. Füge das YAML zu deinem Dashboard hinzu\n\n⚠️ Der aktuelle YAML-Code funktioniert nicht, bis alle Cards installiert sind!"
+      }
+    }
+  },
+  "sensor": {
+    "current_interval_price": {
+      "description": "Der aktuelle Strompreis pro kWh",
+      "long_description": "Zeigt den aktuellen Preis pro kWh von deinem Tibber-Abonnement an",
+      "usage_tips": "Nutze dies, um Preise zu verfolgen oder Automatisierungen zu erstellen, die bei günstigem Strom ausgeführt werden"
     },
-    "sensor": {
-        "current_interval_price": {
-            "description": "Der aktuelle Strompreis pro kWh",
-            "long_description": "Zeigt den aktuellen Preis pro kWh von deinem Tibber-Abonnement an",
-            "usage_tips": "Nutze dies, um Preise zu verfolgen oder Automatisierungen zu erstellen, die bei günstigem Strom ausgeführt werden"
-        },
-        "current_interval_price_base": {
-            "description": "Aktueller Strompreis in Hauptwährung (EUR/kWh, NOK/kWh, etc.) für Energie-Dashboard",
-            "long_description": "Zeigt den aktuellen Preis pro kWh in Hauptwährungseinheiten an (z.B. EUR/kWh statt ct/kWh, NOK/kWh statt øre/kWh). Dieser Sensor ist speziell für die Verwendung mit dem Energie-Dashboard von Home Assistant konzipiert, das Preise in Standard-Währungseinheiten benötigt.",
-            "usage_tips": "Verwende diesen Sensor beim Konfigurieren des Energie-Dashboards unter Einstellungen → Dashboards → Energie. Wähle diesen Sensor als 'Entität mit dem aktuellen Preis' aus, um deine Energiekosten automatisch zu berechnen. Das Energie-Dashboard multipliziert deinen Energieverbrauch (kWh) mit diesem Preis, um die Gesamtkosten anzuzeigen."
-        },
-        "next_interval_price": {
-            "description": "Der Strompreis für das nächste 15-Minuten-Intervall pro kWh",
-            "long_description": "Zeigt den Preis für das nächste 15-Minuten-Intervall von deinem Tibber-Abonnement an",
-            "usage_tips": "Nutze dies, um dich auf kommende Preisänderungen vorzubereiten oder Geräte während günstigerer Intervalle zu planen"
-        },
-        "previous_interval_price": {
-            "description": "Der Strompreis für das vorherige 15-Minuten-Intervall pro kWh",
-            "long_description": "Zeigt den Preis für das vorherige 15-Minuten-Intervall von deinem Tibber-Abonnement an",
-            "usage_tips": "Nutze dies, um vergangene Preisänderungen zu überprüfen oder den Preisverlauf zu verfolgen"
-        },
-        "current_hour_average_price": {
-            "description": "Gleitender 5-Intervall-Durchschnittspreis pro kWh",
-            "long_description": "Zeigt den durchschnittlichen Preis pro kWh berechnet aus 5 Intervallen: 2 vorherige, aktuelles und 2 nächste Intervalle (ca. 75 Minuten insgesamt). Dies bietet einen geglätteten 'Stundenpreis', der sich mit der Zeit anpasst, anstatt an feste Uhrzeiten gebunden zu sein.",
-            "usage_tips": "Nutze dies für einen stabileren Preisindikator, der kurzfristige Schwankungen glättet und dennoch auf Preisänderungen reagiert. Besser als feste Stundenpreise für Verbrauchsentscheidungen."
-        },
-        "next_hour_average_price": {
-            "description": "Gleitender 5-Intervall-Durchschnittspreis für nächste Stunde pro kWh",
-            "long_description": "Zeigt den durchschnittlichen Preis pro kWh berechnet aus 5 Intervallen, die eine Stunde voraus zentriert sind: ungefähr Intervalle +2 bis +6 von jetzt (Minuten +30 bis +105 abdeckend). Dies bietet einen vorausschauenden geglätteten 'Stundenpreis' zur Verbrauchsplanung.",
-            "usage_tips": "Nutze dies, um Preisänderungen in der nächsten Stunde vorherzusehen. Hilfreich für die Planung von verbrauchsintensiven Aktivitäten wie Elektrofahrzeug-Laden, Geschirrspüler oder Heizsysteme."
-        },
-        "lowest_price_today": {
-            "description": "Der niedrigste Strompreis für heute pro kWh",
-            "long_description": "Zeigt den niedrigsten Preis pro kWh für den aktuellen Tag von deinem Tibber-Abonnement an",
-            "usage_tips": "Nutze dies, um aktuelle Preise mit der günstigsten Zeit des Tages zu vergleichen"
-        },
-        "highest_price_today": {
-            "description": "Der höchste Strompreis für heute pro kWh",
-            "long_description": "Zeigt den höchsten Preis pro kWh für den aktuellen Tag von deinem Tibber-Abonnement an",
-            "usage_tips": "Nutze dies, um den Betrieb von Geräten während Spitzenpreiszeiten zu vermeiden"
-        },
-        "average_price_today": {
-            "description": "Der typische Strompreis für heute pro kWh (konfigurierbares Anzeigeformat)",
-            "long_description": "Zeigt den typischen Preis pro kWh für heute. **Standardmäßig zeigt der Status den Median** (resistent gegen extreme Preisspitzen, zeigt was du generell erwarten kannst). Du kannst dies in den Integrationsoptionen ändern, um stattdessen das arithmetische Mittel anzuzeigen. Der alternative Wert ist immer als Attribut `price_mean` oder `price_median` für Automatisierungen verfügbar.",
-            "usage_tips": "Nutze den Status-Wert für die Anzeige. Für exakte Kostenberechnungen in Automatisierungen nutze: {{ state_attr('sensor.average_price_today', 'price_mean') }}"
-        },
-        "lowest_price_tomorrow": {
-            "description": "Der niedrigste Strompreis für morgen pro kWh",
-            "long_description": "Zeigt den niedrigsten Preis pro kWh für den morgigen Tag von deinem Tibber-Abonnement an. Dieser Sensor wird nicht verfügbar, bis die Preise für morgen von Tibber veröffentlicht werden (typischerweise zwischen 13:00 und 14:00 Uhr MEZ).",
-            "usage_tips": "Nutze dies zur Planung energieintensiver Aktivitäten wie das Laden von Elektrofahrzeugen oder das Aufheizen von Warmwasserspeichern für morgen. Wenn der morgige Mindestpreis deutlich niedriger ist als der heutige, kannst du den Verbrauch verschieben."
-        },
-        "highest_price_tomorrow": {
-            "description": "Der höchste Strompreis für morgen pro kWh",
-            "long_description": "Zeigt den höchsten Preis pro kWh für den morgigen Tag von deinem Tibber-Abonnement an. Dieser Sensor wird nicht verfügbar, bis die Preise für morgen von Tibber veröffentlicht werden (typischerweise zwischen 13:00 und 14:00 Uhr MEZ).",
-            "usage_tips": "Nutze dies, um den Betrieb von Geräten während der teuersten Stunden morgen zu vermeiden. Plane nicht-essentielle Lasten außerhalb dieser Spitzenpreiszeiten."
-        },
-        "average_price_tomorrow": {
-            "description": "Der typische Strompreis für morgen pro kWh (konfigurierbares Anzeigeformat)",
-            "long_description": "Zeigt den typischen Preis pro kWh für morgen. **Standardmäßig zeigt der Status den Median** (resistent gegen extreme Preisspitzen). Du kannst dies in den Integrationsoptionen ändern, um stattdessen das arithmetische Mittel anzuzeigen. Der alternative Wert ist als Attribut verfügbar. Dieser Sensor wird nicht verfügbar, bis die Preise für morgen von Tibber veröffentlicht werden (typischerweise zwischen 13:00 und 14:00 Uhr MEZ).",
-            "usage_tips": "Nutze den Status-Wert für Anzeige und schnelle Vergleiche. Für Automatisierungen, die exakte Kostenberechnungen benötigen, nutze das Attribut `price_mean`: {{ state_attr('sensor.average_price_tomorrow', 'price_mean') }}"
-        },
-        "yesterday_price_level": {
-            "description": "Aggregiertes Preisniveau für gestern",
-            "long_description": "Zeigt das aggregierte Preisniveau für alle Intervalle von gestern. Verwendet die gleiche Logik wie die Stundensensoren, um das Gesamtpreisniveau für den ganzen Tag zu ermitteln.",
-            "usage_tips": "Nutze dies, um die gestrige Preissituation zu verstehen. Vergleiche mit heute, um tägliche Trends zu sehen."
-        },
-        "today_price_level": {
-            "description": "Aggregiertes Preisniveau für heute",
-            "long_description": "Zeigt das aggregierte Preisniveau für alle Intervalle von heute. Verwendet die gleiche Logik wie die Stundensensoren, um das Gesamtpreisniveau für den ganzen Tag zu ermitteln.",
-            "usage_tips": "Nutze dies, um die heutige Preissituation auf einen Blick zu verstehen. Hilfreich für schnelle Einschätzungen, ob heute generell günstig oder teuer ist."
-        },
-        "tomorrow_price_level": {
-            "description": "Aggregiertes Preisniveau für morgen",
-            "long_description": "Zeigt das aggregierte Preisniveau für alle Intervalle von morgen. Verwendet die gleiche Logik wie die Stundensensoren, um das Gesamtpreisniveau für den ganzen Tag zu ermitteln. Dieser Sensor wird nicht verfügbar, bis die Preise für morgen von Tibber veröffentlicht werden (typischerweise zwischen 13:00 und 14:00 Uhr MEZ).",
-            "usage_tips": "Nutze dies, um die morgige Preissituation zu verstehen. Vergleiche mit heute, um zu sehen, ob morgen günstiger oder teurer für den Energieverbrauch wird."
-        },
-        "yesterday_price_rating": {
-            "description": "Aggregierte Preisbewertung für gestern",
-            "long_description": "Zeigt die aggregierte Preisbewertung (niedrig/normal/hoch) für alle Intervalle von gestern, basierend auf deinen konfigurierten Schwellenwerten. Verwendet die gleiche Logik wie die Stundensensoren, um die Gesamtbewertung für den ganzen Tag zu ermitteln.",
-            "usage_tips": "Nutze dies, um die gestrige Preissituation relativ zu deinen persönlichen Schwellenwerten zu verstehen. Vergleiche mit heute für Trendanalysen."
-        },
-        "today_price_rating": {
-            "description": "Aggregierte Preisbewertung für heute",
-            "long_description": "Zeigt die aggregierte Preisbewertung (niedrig/normal/hoch) für alle Intervalle von heute, basierend auf deinen konfigurierten Schwellenwerten. Verwendet die gleiche Logik wie die Stundensensoren, um die Gesamtbewertung für den ganzen Tag zu ermitteln.",
-            "usage_tips": "Nutze dies, um die heutige Preissituation relativ zu deinen persönlichen Schwellenwerten schnell einzuschätzen. Hilft bei Verbrauchsentscheidungen für den aktuellen Tag."
-        },
-        "tomorrow_price_rating": {
-            "description": "Aggregierte Preisbewertung für morgen",
-            "long_description": "Zeigt die aggregierte Preisbewertung (niedrig/normal/hoch) für alle Intervalle von morgen, basierend auf deinen konfigurierten Schwellenwerten. Verwendet die gleiche Logik wie die Stundensensoren, um die Gesamtbewertung für den ganzen Tag zu ermitteln. Dieser Sensor wird nicht verfügbar, bis die Preise für morgen von Tibber veröffentlicht werden (typischerweise zwischen 13:00 und 14:00 Uhr MEZ).",
-            "usage_tips": "Nutze dies, um den morgigen Energieverbrauch basierend auf deinen persönlichen Preisschwellenwerten zu planen. Vergleiche mit heute, um zu entscheiden, ob du den Verbrauch auf morgen verschieben oder heute nutzen solltest."
-        },
-        "trailing_price_average": {
-            "description": "Der typische Strompreis der letzten 24 Stunden pro kWh (konfigurierbares Anzeigeformat)",
-            "long_description": "Zeigt den typischen Preis pro kWh der letzten 24 Stunden. **Standardmäßig zeigt der Status den Median** (resistent gegen extreme Spitzen, zeigt welches Preisniveau typisch war). Du kannst dies in den Integrationsoptionen ändern, um stattdessen das arithmetische Mittel anzuzeigen. Der alternative Wert ist als Attribut verfügbar. Wird alle 15 Minuten aktualisiert.",
-            "usage_tips": "Nutze den Status-Wert, um das typische aktuelle Preisniveau zu sehen. Für Kostenberechnungen nutze: {{ state_attr('sensor.trailing_price_average', 'price_mean') }}"
-        },
-        "leading_price_average": {
-            "description": "Der typische Strompreis für die nächsten 24 Stunden pro kWh (konfigurierbares Anzeigeformat)",
-            "long_description": "Zeigt den typischen Preis pro kWh für die nächsten 24 Stunden. **Standardmäßig zeigt der Status den Median** (resistent gegen extreme Spitzen, zeigt welches Preisniveau zu erwarten ist). Du kannst dies in den Integrationsoptionen ändern, um stattdessen das arithmetische Mittel anzuzeigen. Der alternative Wert ist als Attribut verfügbar.",
-            "usage_tips": "Nutze den Status-Wert, um das typische kommende Preisniveau zu sehen. Für Kostenberechnungen nutze: {{ state_attr('sensor.leading_price_average', 'price_mean') }}"
-        },
-        "trailing_price_min": {
-            "description": "Der niedrigste Strompreis für die letzten 24 Stunden pro kWh",
-            "long_description": "Zeigt den niedrigsten Preis pro kWh aus den letzten 24 Stunden (nachlaufendes Minimum) von deinem Tibber-Abonnement an. Dies bietet den niedrigsten Preis, der in den letzten 24 Stunden gesehen wurde.",
-            "usage_tips": "Nutze dies, um die beste Preisgelegenheit zu sehen, die du in den letzten 24 Stunden hattest, und vergleiche sie mit den aktuellen Preisen."
-        },
-        "trailing_price_max": {
-            "description": "Der höchste Strompreis für die letzten 24 Stunden pro kWh",
-            "long_description": "Zeigt den höchsten Preis pro kWh aus den letzten 24 Stunden (nachlaufendes Maximum) von deinem Tibber-Abonnement an. Dies bietet den höchsten Preis, der in den letzten 24 Stunden gesehen wurde.",
-            "usage_tips": "Nutze dies, um den Spitzenpreis in den letzten 24 Stunden zu sehen und die Preisvolatilität zu bewerten."
-        },
-        "leading_price_min": {
-            "description": "Der niedrigste Strompreis für die nächsten 24 Stunden pro kWh",
-            "long_description": "Zeigt den niedrigsten Preis pro kWh für die nächsten 24 Stunden (vorlaufendes Minimum) von deinem Tibber-Abonnement an. Dies bietet den niedrigsten erwarteten Preis in den nächsten 24 Stunden basierend auf Prognosedaten.",
-            "usage_tips": "Nutze dies, um die beste kommende Preisgelegenheit zu identifizieren und energieintensive Aufgaben entsprechend zu planen."
-        },
-        "leading_price_max": {
-            "description": "Der höchste Strompreis für die nächsten 24 Stunden pro kWh",
-            "long_description": "Zeigt den höchsten Preis pro kWh für die nächsten 24 Stunden (vorlaufendes Maximum) von deinem Tibber-Abonnement an. Dies bietet den höchsten erwarteten Preis in den nächsten 24 Stunden basierend auf Prognosedaten.",
-            "usage_tips": "Nutze dies, um den Betrieb von Geräten während kommender Spitzenpreiszeiten zu vermeiden."
-        },
-        "current_interval_price_level": {
-            "description": "Die aktuelle Preislevelklassifikation",
-            "long_description": "Zeigt die Klassifizierung von Tibber für den aktuellen Preis im Vergleich zu historischen Preisen an",
-            "usage_tips": "Nutze dies, um Automatisierungen auf Basis des relativen Preisniveaus anstelle der absoluten Preise zu erstellen"
-        },
-        "next_interval_price_level": {
-            "description": "Preisniveau für das nächste 15-Minuten-Intervall",
-            "long_description": "Zeigt die Preisniveau-Klassifizierung für das kommende Intervall an. Hilft bei der Antizipation kurzfristiger Preisänderungen für sofortige Planung.",
-            "usage_tips": "Nutze dies für schnelle Entscheidungen über das Starten oder Stoppen von Hochleistungsgeräten in den nächsten Minuten."
-        },
-        "previous_interval_price_level": {
-            "description": "Preisniveau für das vorherige 15-Minuten-Intervall",
-            "long_description": "Zeigt die Preisniveau-Klassifizierung für das letzte Intervall an. Nützlich für historische Vergleiche und das Verständnis jüngster Preistrends.",
-            "usage_tips": "Nutze dies, um aktuelle mit kürzlichen Preisniveaus zu vergleichen oder Verbrauchsmuster gegen historische Preise zu analysieren."
-        },
-        "current_hour_price_level": {
-            "description": "Aggregiertes Preisniveau für aktuelle gleitende Stunde (5 Intervalle)",
-            "long_description": "Zeigt das mediane Preisniveau über 5 Intervalle (2 vorherige, aktuelles, 2 nächste) mit ca. 75 Minuten Abdeckung. Bietet einen stabileren Preisniveau-Indikator, der kurzfristige Schwankungen glättet.",
-            "usage_tips": "Nutze dies für mittelfristige Planungsentscheidungen, wenn du nicht auf kurze Preisspitzen oder -einbrüche reagieren möchtest."
-        },
-        "next_hour_price_level": {
-            "description": "Aggregiertes Preisniveau für nächste gleitende Stunde (5 Intervalle voraus)",
-            "long_description": "Zeigt das mediane Preisniveau über 5 Intervalle, die eine Stunde voraus zentriert sind. Hilft bei der Verbrauchsplanung basierend auf kommenden Preistrends statt momentanen zukünftigen Preisen.",
-            "usage_tips": "Nutze dies, um Aktivitäten für die nächste Stunde basierend auf einer geglätteten Preisniveau-Prognose zu planen."
-        },
-        "current_interval_price_rating": {
-            "description": "Wie sich der Preis des aktuellen Intervalls mit historischen Daten vergleicht",
-            "long_description": "Zeigt, wie sich der Preis des aktuellen Intervalls im Vergleich zu historischen Preisdaten als Prozentsatz verhält",
-            "usage_tips": "Ein positiver Prozentsatz bedeutet, dass der aktuelle Preis überdurchschnittlich ist, negativ bedeutet unterdurchschnittlich"
-        },
-        "next_interval_price_rating": {
-            "description": "Preisbewertung für das nächste 15-Minuten-Intervall",
-            "long_description": "Zeigt, wie sich der Preis des nächsten Intervalls im Vergleich zum gleitenden 24-Stunden-Durchschnitt verhält. Hilft vorherzusehen, ob kommende Preise über oder unter dem jüngsten Trend liegen.",
-            "usage_tips": "Nutze dies für schnelle Entscheidungen über das Starten von Aktivitäten im nächsten Intervall basierend auf der relativen Preisposition."
-        },
-        "previous_interval_price_rating": {
-            "description": "Preisbewertung für das vorherige 15-Minuten-Intervall",
-            "long_description": "Zeigt, wie sich der Preis des letzten Intervalls im Vergleich zum gleitenden Durchschnitt verhielt. Nützlich für das Verständnis des jüngsten Preisverhaltens.",
-            "usage_tips": "Nutze dies zur Analyse, wie sich Preisbewertungen im Laufe der Zeit verändert haben oder um vergangene Verbrauchsentscheidungen zu validieren."
-        },
-        "current_hour_price_rating": {
-            "description": "Aggregierte Preisbewertung für aktuelle gleitende Stunde (5 Intervalle)",
-            "long_description": "Zeigt die durchschnittliche Bewertung über 5 Intervalle (2 vorherige, aktuelles, 2 nächste). Basierend auf der durchschnittlichen prozentualen Abweichung vom gleitenden 24h-Durchschnitt, bietet dies einen geglätteten Bewertungsindikator.",
-            "usage_tips": "Nutze dies für stabile mittelfristige Preisbewertung, die nicht auf kurze Preisanomalien überreagiert."
-        },
-        "next_hour_price_rating": {
-            "description": "Aggregierte Preisbewertung für nächste gleitende Stunde (5 Intervalle voraus)",
-            "long_description": "Zeigt die gemittelte Bewertung für 5 Intervalle, die eine Stunde voraus zentriert sind. Hilft zu verstehen, ob die nächste Stunde generell über oder unter durchschnittlicher Preisgestaltung liegen wird.",
-            "usage_tips": "Nutze dies, um zu entscheiden, ob du eine Stunde warten solltest, bevor du verbrauchsintensive Aktivitäten startest."
-        },
-        "next_avg_1h": {
-            "description": "Durchschnittspreis für die nächste 1 Stunde (vorwärts-blickend ab nächstem Intervall)",
-            "long_description": "Vorwärts-blickender Durchschnitt: Zeigt den Durchschnitt der nächsten 4 Intervalle (1 Stunde) beginnend ab dem NÄCHSTEN 15-Minuten-Intervall (aktuelles nicht inkludiert). Unterscheidet sich von current_hour_average_price, das vergangene Intervalle einbezieht. Nutze dies für absolute Preisschwellen-Planung.",
-            "usage_tips": "Absolute Preisschwelle: Starte Geräte nur, wenn der Durchschnitt unter deinem maximal akzeptablen Preis bleibt (z.B. unter 0,25 EUR/kWh). Kombiniere mit Trend-Sensor für optimales Timing. Hinweis: Dies ist KEIN Ersatz für Stundenpreise - nutze current_hour_average_price dafür."
-        },
-        "next_avg_2h": {
-            "description": "Durchschnittspreis für die nächsten 2 Stunden",
-            "long_description": "Zeigt den Durchschnittspreis für die nächsten 8 Intervalle (2 Stunden) beginnend ab dem nächsten 15-Minuten-Intervall.",
-            "usage_tips": "Absolute Preisschwelle: Lege einen maximal akzeptablen Durchschnittspreis für Standard-Geräte wie Waschmaschinen fest. Stellt sicher, dass du nie mehr als dein Limit zahlst."
-        },
-        "next_avg_3h": {
-            "description": "Durchschnittspreis für die nächsten 3 Stunden",
-            "long_description": "Zeigt den Durchschnittspreis für die nächsten 12 Intervalle (3 Stunden) beginnend ab dem nächsten 15-Minuten-Intervall.",
-            "usage_tips": "Absolute Preisschwelle: Für EU Eco-Programme (Spülmaschinen, 3-4h Laufzeit). Starte nur, wenn der 3h-Durchschnitt unter deinem Preislimit liegt. Nutze mit Trend-Sensor um den besten Moment im akzeptablen Preisbereich zu finden."
-        },
-        "next_avg_4h": {
-            "description": "Durchschnittspreis für die nächsten 4 Stunden",
-            "long_description": "Zeigt den Durchschnittspreis für die nächsten 16 Intervalle (4 Stunden) beginnend ab dem nächsten 15-Minuten-Intervall.",
-            "usage_tips": "Absolute Preisschwelle: Lege maximal akzeptablen Preis für Wärmepumpen oder Warmwasserbereiter fest. Verhindert Betrieb während teurer Zeiträume unabhängig von relativen Trends."
-        },
-        "next_avg_5h": {
-            "description": "Durchschnittspreis für die nächsten 5 Stunden",
-            "long_description": "Zeigt den Durchschnittspreis für die nächsten 20 Intervalle (5 Stunden) beginnend ab dem nächsten 15-Minuten-Intervall.",
-            "usage_tips": "Absolute Preisschwelle: Brücke zwischen kurz- und langfristiger Planung. Nutze für erweiterte Zyklen mit harten Preislimits (z.B. Pool-Pumpen, verlängerte Heizzyklen)."
-        },
-        "next_avg_6h": {
-            "description": "Durchschnittspreis für die nächsten 6 Stunden",
-            "long_description": "Zeigt den Durchschnittspreis für die nächsten 24 Intervalle (6 Stunden) beginnend ab dem nächsten 15-Minuten-Intervall.",
-            "usage_tips": "Absolute Preisschwelle: Abendplanung mit Preisobergrenzen. Plane Aufgaben nur, wenn der 6h-Durchschnitt unter deinen maximal akzeptablen Kosten bleibt."
-        },
-        "next_avg_8h": {
-            "description": "Durchschnittspreis für die nächsten 8 Stunden",
-            "long_description": "Zeigt den Durchschnittspreis für die nächsten 32 Intervalle (8 Stunden) beginnend ab dem nächsten 15-Minuten-Intervall.",
-            "usage_tips": "Absolute Preisschwelle: Entscheidungen für Nachtbetrieb. Lege harte Preislimits für Nachtlasten fest (Batterieladung, Wärmespeicher). Überschreite niemals dein Budget."
-        },
-        "next_avg_12h": {
-            "description": "Durchschnittspreis für die nächsten 12 Stunden",
-            "long_description": "Zeigt den Durchschnittspreis für die nächsten 48 Intervalle (12 Stunden) beginnend ab dem nächsten 15-Minuten-Intervall.",
-            "usage_tips": "Absolute Preisschwelle: Strategische Entscheidungen mit Preisobergrenzen. Fahre nur fort, wenn der 12h-Durchschnitt unter deinem maximal akzeptablen Preis liegt. Gut für verschiebbare Großlasten."
-        },
-        "price_outlook_1h": {
-            "description": "Preisausblick für die nächste Stunde",
-            "long_description": "Vergleicht deinen aktuellen Preis mit dem Durchschnitt aller Intervalle der nächsten Stunde (4 Intervalle). Alle Ausblick-Sensoren (1h–12h) haben dieselbe Basis: dein aktueller Preis — sie unterscheiden sich nur im Zeitfenster. Größere Fenster umfassen mehr Zukunftsstunden und glätten kurzfristige Spitzen. Steigend/fallend ab ±3%, stark ab ±9% (konfigurierbar, volatilitätsadaptiv).",
-            "usage_tips": "Entscheidungshilfe: 'steigend' = JETZT HANDELN, dein aktueller Preis ist günstiger als der Stunden-Durchschnitt. 'fallend' = WARTEN, der Fenster-Durchschnitt ist günstiger als jetzt. 'stabil' = Timing egal. Häufiges Missverständnis: 'steigend' bedeutet NICHT 'zu spät' — es heißt, jetzt ist gerade ein guter Preis! Funktioniert unabhängig vom absoluten Preisniveau."
-        },
-        "price_outlook_2h": {
-            "description": "Preisausblick für die nächsten 2 Stunden",
-            "long_description": "Vergleicht deinen aktuellen Preis mit dem Durchschnitt aller Intervalle der nächsten 2 Stunden (8 Intervalle). 'steigend' = aktueller Preis liegt unter dem 2h-Fenster-Durchschnitt; 'fallend' = Fenster-Durchschnitt ist günstiger als jetzt. Steigend/fallend ab ±3%, stark ab ±9% (konfigurierbar, volatilitätsadaptiv).",
-            "usage_tips": "Haushaltsgeräte: 'steigend' = jetzt starten, du hast gerade einen guten Preis. 'fallend' = bessere Preise kommen im 2h-Fenster, verschiebe wenn möglich. 'stabil' = egal, starte nach Bedarf. Kombiniere mit price_trajectory_2h um zu unterscheiden ob Preise noch fallen oder schon steigen."
-        },
-        "price_outlook_3h": {
-            "description": "Preisausblick für die nächsten 3 Stunden",
-            "long_description": "Vergleicht deinen aktuellen Preis mit dem Durchschnitt aller Intervalle der nächsten 3 Stunden (12 Intervalle). 'steigend' = aktueller Preis liegt unter dem 3h-Fenster-Durchschnitt; 'fallend' = Fenster-Durchschnitt ist günstiger als jetzt. Steigend/fallend ab ±3%, stark ab ±9% (konfigurierbar, volatilitätsadaptiv).",
-            "usage_tips": "Eco-Programme: 'steigend' = Eco-Zyklus jetzt starten, Preise steigen im Fenster-Durchschnitt. 'fallend' = warten, günstigeres Fenster kommt. Kombiniere mit avg-Sensor: starte wenn Ausblick 'steigend' oder 'stabil' UND avg < dein Limit."
-        },
-        "price_outlook_4h": {
-            "description": "Preisausblick für die nächsten 4 Stunden",
-            "long_description": "Vergleicht deinen aktuellen Preis mit dem Durchschnitt aller Intervalle der nächsten 4 Stunden (16 Intervalle). 'steigend' = aktueller Preis liegt unter dem 4h-Fenster-Durchschnitt; 'fallend' = Fenster-Durchschnitt ist günstiger als jetzt. Steigend/fallend ab ±3%, stark ab ±9% (konfigurierbar, volatilitätsadaptiv).",
-            "usage_tips": "Wärmepumpe/Batterie: 'steigend' = jetzt laden, du bist an einem relativen Tiefpunkt. 'fallend' = warten auf besseres Fenster im Durchschnitt. Wichtig: 'stark fallend' an einem Preistief bedeutet das Fenster ist im Schnitt günstiger — kombiniere mit price_trajectory_4h um zu sehen ob die Preise noch fallen oder schon aufsteigen."
-        },
-        "price_outlook_5h": {
-            "description": "Preisausblick für die nächsten 5 Stunden",
-            "long_description": "Vergleicht deinen aktuellen Preis mit dem Durchschnitt aller Intervalle der nächsten 5 Stunden (20 Intervalle). 'steigend' = aktueller Preis liegt unter dem 5h-Fenster-Durchschnitt; 'fallend' = Fenster-Durchschnitt ist günstiger als jetzt. Steigend/fallend ab ±3%, stark ab ±9% (konfigurierbar, volatilitätsadaptiv).",
-            "usage_tips": "Erweiterte Zyklen: 'steigend' oder 'stabil' = guter Zeitpunkt zum Starten, Preise werden im Fenster-Schnitt nicht günstiger. 'fallend' = warten wenn dein Zeitplan es erlaubt."
-        },
-        "price_outlook_6h": {
-            "description": "Preisausblick für die nächsten 6 Stunden",
-            "long_description": "Vergleicht deinen aktuellen Preis mit dem Durchschnitt aller Intervalle der nächsten 6 Stunden (24 Intervalle). 'steigend' = aktueller Preis liegt unter dem 6h-Fenster-Durchschnitt; 'fallend' = Fenster-Durchschnitt ist günstiger als jetzt. Steigend/fallend ab ±3%, stark ab ±9% (konfigurierbar, volatilitätsadaptiv).",
-            "usage_tips": "Abendentscheidungen: 'steigend' = Strom jetzt nutzen, solange er relativ günstig ist. 'fallend' = Abend-/Nachtpreise werden im Durchschnitt besser, warte wenn möglich."
-        },
-        "price_outlook_8h": {
-            "description": "Preisausblick für die nächsten 8 Stunden",
-            "long_description": "Vergleicht deinen aktuellen Preis mit dem Durchschnitt aller Intervalle der nächsten 8 Stunden (32 Intervalle). 'steigend' = aktueller Preis liegt unter dem 8h-Fenster-Durchschnitt; 'fallend' = Fenster-Durchschnitt ist günstiger als jetzt. Steigend/fallend ab ±3%, stark ab ±9% (konfigurierbar, volatilitätsadaptiv).",
-            "usage_tips": "Nachtplanung: 'steigend' = heute Nacht/morgen wird im Schnitt teurer, Strom jetzt nutzen. 'fallend' = Nachtpreise werden im Schnitt günstiger, Warten lohnt sich."
-        },
-        "price_outlook_12h": {
-            "description": "Preisausblick für die nächsten 12 Stunden",
-            "long_description": "Vergleicht deinen aktuellen Preis mit dem Durchschnitt aller Intervalle der nächsten 12 Stunden (48 Intervalle). 'steigend' = aktueller Preis liegt unter dem 12h-Fenster-Durchschnitt; 'fallend' = Fenster-Durchschnitt ist günstiger als jetzt. Steigend/fallend ab ±3%, stark ab ±9% (konfigurierbar, volatilitätsadaptiv).",
-            "usage_tips": "Strategische Entscheidungen: 'steigend' = du bist an einem Tiefpunkt relativ zu den nächsten 12h, guter Zeitpunkt für stromintensive Aufgaben. 'fallend' = deutlich bessere Preise kommen im Schnitt, warte wenn möglich."
-        },
-        "price_trajectory_2h": {
-            "description": "Preisverlauf innerhalb des nächsten 2-Stunden-Fensters",
-            "long_description": "Compares the average of the first hour (4 intervals) with the average of the second hour (4 intervals) within the next 2-hour window. 'rising' = second half more expensive than first half — prices are climbing within the window. 'falling' = second half cheaper — prices are dropping within the window. Rising/falling at ±3%, strongly at ±9% (configurable, volatility-adaptive).",
-            "usage_tips": "At a price minimum: price_outlook_2h may show 'falling' (window average is below current), but price_trajectory_2h shows 'rising' (second half more expensive than first) — revealing the upcoming reversal. Power combination: 'outlook: falling + trajectory: rising' = you're AT the minimum, act now."
-        },
-        "price_trajectory_3h": {
-            "description": "Preisverlauf innerhalb des nächsten 3-Stunden-Fensters",
-            "long_description": "Compares the average of the first 1.5 hours with the average of the second 1.5 hours within the next 3-hour window. 'rising' = prices are climbing over the 3h window; 'falling' = prices are dropping. Reveals the direction of price movement independent of the current price level. Rising/falling at ±3%, strongly at ±9% (configurable, volatility-adaptive).",
-            "usage_tips": "Appliance timing: 'outlook: strongly_falling + trajectory: rising' = you're at or past the minimum, the window average is low but prices are already recovering — start now."
-        },
-        "price_trajectory_4h": {
-            "description": "Preisverlauf innerhalb des nächsten 4-Stunden-Fensters",
-            "long_description": "Compares the average of the first 2 hours with the average of the second 2 hours within the next 4-hour window. 'rising' = prices are climbing over the 4h window; 'falling' = prices are dropping. Complementary to price_outlook_4h: outlook answers 'is NOW cheap vs the window average?', trajectory answers 'are prices rising or falling within the window?'. Rising/falling at ±3%, strongly at ±9% (configurable, volatility-adaptive).",
-            "usage_tips": "Heat pump charging: 'rising' = first half window is cheaper, charge now before prices climb. 'falling' = second half window is cheaper, wait if you can. Combine with outlook: if both rising, very strong signal to act now."
-        },
-        "price_trajectory_5h": {
-            "description": "Preisverlauf innerhalb des nächsten 5-Stunden-Fensters",
-            "long_description": "Compares the average of the first 2.5 hours with the average of the second 2.5 hours within the next 5-hour window. 'rising' = prices are climbing over the 5h window; 'falling' = prices are dropping. Rising/falling at ±3%, strongly at ±9% (configurable, volatility-adaptive).",
-            "usage_tips": "Eco/long cycles: 'outlook: rising + trajectory: rising' = clear signal to start now. 'outlook: falling + trajectory: rising' = you're near the bottom, good time to start before costs climb."
-        },
-        "price_trajectory_6h": {
-            "description": "Preisverlauf innerhalb des nächsten 6-Stunden-Fensters",
-            "long_description": "Compares the average of the first 3 hours with the average of the second 3 hours within the next 6-hour window. 'rising' = prices are climbing over the 6h window; 'falling' = prices are dropping. Rising/falling at ±3%, strongly at ±9% (configurable, volatility-adaptive).",
-            "usage_tips": "Evening/overnight planning: 'falling' at evening peak = overnight will be cheaper, postpone. 'rising' in the morning = current morning prices are the day's low — good time for high consumption."
-        },
-        "price_trajectory_8h": {
-            "description": "Preisverlauf innerhalb des nächsten 8-Stunden-Fensters",
-            "long_description": "Compares the average of the first 4 hours with the average of the second 4 hours within the next 8-hour window. 'rising' = prices are climbing over the 8h window; 'falling' = prices are dropping. Rising/falling at ±3%, strongly at ±9% (configurable, volatility-adaptive).",
-            "usage_tips": "Overnight charging: 'rising' during evening = first half of night is cheapest, start charging earlier. 'falling' = second half of night will be cheapest, delay start."
-        },
-        "price_trajectory_12h": {
-            "description": "Preisverlauf innerhalb des nächsten 12-Stunden-Fensters",
-            "long_description": "Compares the average of the first 6 hours with the average of the second 6 hours within the next 12-hour window. 'rising' = prices are climbing over the 12h window; 'falling' = prices are dropping. Rising/falling at ±3%, strongly at ±9% (configurable, volatility-adaptive).",
-            "usage_tips": "Day-ahead planning: 'rising' at midnight = first half of day is cheaper, schedule morning loads. 'falling' = prices drop in the second part of the day, afternoon/evening scheduling is better."
-        },
-        "current_price_trend": {
-            "description": "Aktuelle Preistrend-Richtung und wie lange sie anhält",
-            "long_description": "Zeigt den aktuellen Preistrend (steigend/fallend/stabil) durch Kombination von historischem Momentum (gewichteter 1h-Rückblick) mit Zukunftsausblick. Erkennt laufende Trends früher als reine Zukunftsanalyse. Nutzt ±3% Momentum-Schwelle und volatilitätsabhängigen Zukunftsvergleich. Berechnet dynamisch bis zur nächsten Trendänderung (oder 3h Standard, falls keine Änderung in 24h). Der Status zeigt die aktuelle Richtung, Attribute zeigen, wann sich der Trend ändert und was als Nächstes kommt.",
-            "usage_tips": "Status-Anzeige: Dashboard-Sichtbarkeit von 'was passiert jetzt bis wann'. Perfekt synchronisiert mit next_price_trend_change. Beispiel: Badge mit 'Steigend für 2,5h' oder 'Fallend bis 16:45'. Besser als Zeitfenster-Sensoren, weil es versteht, dass du dich BEREITS in einem Trend befindest, nicht nur zukünftige Änderungen vorhersagt. Nutze für schnelle visuelle Übersicht, nicht für Automations-Trigger."
-        },
-        "next_price_trend_change": {
-            "description": "Wann die nächste bedeutende Preistrend-Änderung eintreten wird",
-            "long_description": "Scannt die nächsten 24 Stunden (96 Intervalle), um zu finden, wann sich die Preistrend-Richtung ändern wird. Nur Richtungswechsel zählen: steigend/stark steigend bilden eine Gruppe, fallend/stark fallend eine andere, stabil ist eigenständig. Ein Wechsel von steigend zu stark steigend ist KEIN Trendwechsel. Verwendet volatilitätsadaptive Schwellwerte (Standard: ±3%/±9%) mit Hysterese (Standard: 3 aufeinanderfolgende Intervalle). Gibt den Zeitstempel zurück, wann die Änderung erwartet wird.",
-            "usage_tips": "Ereignisbasierte Automation: Aktionen WENN Trend wechselt auslösen, nicht IN X Stunden. Beispiel: 'E-Auto laden wenn nächste Trendänderung fallende Preise zeigt' oder 'Spülmaschine vor Preisanstieg starten'. Ergänzt Zeitfenster-Sensoren (price_trend_Xh), die beantworten 'WERDEN Preise in X Stunden höher sein?'"
-        },
-        "next_price_trend_change_in": {
-            "description": "Zeit bis zur nächsten Preistrend-Änderung",
-            "long_description": "Zeigt an, wie lange es bis zur nächsten bedeutenden Preistrend-Änderung dauert. Der Wert wird in Stunden angezeigt (z.B. 2,25 h) für Dashboards. Teilt die gleiche Analyse wie der Zeitstempel-Sensor 'Nächste Trendänderung', stellt sie aber als Countdown-Dauer dar. Aktualisiert sich jede Minute für präzise Countdowns. Zeigt 'Unbekannt' wenn keine Trendänderung in den nächsten 24 Stunden erwartet wird.",
-            "usage_tips": "Dashboard-Countdown: Zeige 'Trendänderung in 1,5 h' als Live-Countdown. Für Automationen: 'Wenn next_price_trend_change_in < 0,25 (15 Min), auf Preisrichtungswechsel vorbereiten'. Ergänzt 'Nächste Trendänderung' (Zeitstempel) — verwende den Zeitstempel für 'WANN' und diesen Sensor für 'WIE LANGE'."
-        },
-        "daily_rating": {
-            "description": "Wie sich die heutigen Preise mit historischen Daten vergleichen",
-            "long_description": "Zeigt, wie sich die heutigen Preise im Vergleich zu historischen Preisdaten als Prozentsatz verhält",
-            "usage_tips": "Ein positiver Prozentsatz bedeutet, dass die heutigen Preise überdurchschnittlich sind, negativ bedeutet unterdurchschnittlich"
-        },
-        "monthly_rating": {
-            "description": "Wie sich die Preise dieses Monats mit historischen Daten vergleichen",
-            "long_description": "Zeigt, wie sich die Preise dieses Monats im Vergleich zu historischen Preisdaten als Prozentsatz verhält",
-            "usage_tips": "Ein positiver Prozentsatz bedeutet, dass die Preise dieses Monats überdurchschnittlich sind, negativ bedeutet unterdurchschnittlich"
-        },
-        "data_timestamp": {
-            "description": "Zeitstempel des letzten verfügbaren Preisintervalls",
-            "long_description": "Zeigt den Zeitstempel des letzten verfügbaren Preisdatenintervalls von deinem Tibber-Abonnement"
-        },
-        "today_volatility": {
-            "description": "Wie stark sich die Strompreise heute verändern",
-            "long_description": "Zeigt, ob die heutigen Preise stabil bleiben oder stark schwanken. Niedrige Volatilität bedeutet recht konstante Preise – Timing ist kaum wichtig. Hohe Volatilität bedeutet spürbare Preisunterschiede über den Tag – gute Chance, den Verbrauch auf günstigere Zeiten zu verschieben. `price_coefficient_variation_%` zeigt den Prozentwert, `price_spread` die absolute Preisspanne.",
-            "usage_tips": "Nutze dies, um zu entscheiden, ob Optimierung sich lohnt. Bei niedriger Volatilität kannst du Geräte jederzeit laufen lassen. Bei hoher Volatilität sparst du spürbar, wenn du Best-Price-Perioden nutzt."
-        },
-        "tomorrow_volatility": {
-            "description": "Wie stark sich die Strompreise morgen verändern werden",
-            "long_description": "Zeigt, ob die Preise morgen stabil bleiben oder stark schwanken. Verfügbar, sobald die morgigen Daten veröffentlicht sind (typischerweise 13:00–14:00 MEZ). Niedrige Volatilität bedeutet recht konstante Preise – Timing ist nicht kritisch. Hohe Volatilität bedeutet deutliche Preisunterschiede über den Tag – gute Gelegenheit, energieintensive Aufgaben zu planen. `price_coefficient_variation_%` zeigt den Prozentwert, `price_spread` die absolute Preisspanne.",
-            "usage_tips": "Nutze dies für die Planung des morgigen Energieverbrauchs. Hohe Volatilität? Plane flexible Lasten in Best-Price-Perioden. Niedrige Volatilität? Lass Geräte laufen, wann es dir passt."
-        },
-        "next_24h_volatility": {
-            "description": "Wie stark sich die Preise in den nächsten 24 Stunden verändern",
-            "long_description": "Zeigt die Preisvolatilität für ein rollierendes 24-Stunden-Fenster ab jetzt (aktualisiert alle 15 Minuten). Niedrige Volatilität bedeutet recht konstante Preise. Hohe Volatilität bedeutet spürbare Preisschwankungen und damit Chancen zur Optimierung. Im Unterschied zu Heute/Morgen-Sensoren überschreitet dieser Tagesgrenzen und liefert eine durchgängige Vorhersage. `price_coefficient_variation_%` zeigt den Prozentwert, `price_spread` die absolute Preisspanne.",
-            "usage_tips": "Am besten für Entscheidungen in Echtzeit. Nutze dies für Batterieladestrategien oder andere flexible Lasten, die über Mitternacht laufen könnten. Bietet eine konsistente 24h-Perspektive unabhängig vom Kalendertag."
-        },
-        "today_tomorrow_volatility": {
-            "description": "Kombinierte Preisvolatilität für heute und morgen",
-            "long_description": "Zeigt die Gesamtvolatilität, wenn heute und morgen gemeinsam betrachtet werden (sobald die morgigen Daten verfügbar sind). Zeigt, ob über die Tagesgrenze hinweg deutliche Preisunterschiede bestehen. Fällt auf nur-heute zurück, wenn morgige Daten noch fehlen. Hilfreich für mehrtägige Optimierung. `price_coefficient_variation_%` zeigt den Prozentwert, `price_spread` die absolute Preisspanne.",
-            "usage_tips": "Nutze dies für Aufgaben, die sich über mehrere Tage erstrecken. Prüfe, ob die Preisunterschiede groß genug für eine Planung sind. Die einzelnen Tages-Sensoren zeigen die Beiträge pro Tag, falls du mehr Details brauchst."
-        },
-        "price_rank_today": {
-            "description": "Position des aktuellen Preises in der heutigen Rangliste — sein Perzentilrang (0 % = günstigster Moment)",
-            "long_description": "Zeigt, wie günstig oder teuer der aktuelle Preis im Vergleich zu allen 96 Viertelstunden-Slots von heute ist. 0 % bedeutet: Dies ist der günstigste Moment des Tages — jeder andere Slot kostet mehr. 50 % bedeutet, dass die Hälfte der Slots günstiger ist. ~99 % bedeutet: teuerster Slot des Tages. Formel (Perzentilrang): Wie viele Slots sind günstiger ÷ Gesamt-Slots × 100. Attribute: `current_price`, `prices_below_count`, `interval_count`, `reference_min`, `reference_max`, `reference_mean`.",
-            "usage_tips": "Ideal für Automatisierungen: 'Wenn Preisrang heute < 25, Geschirrspüler starten' (günstigstes Viertel des Tages). Oder 'Wenn Preisrang heute > 75, Wärmepumpe pausieren' (teuerstes Viertel). Wert 0 garantiert den günstigsten Slot des Tages."
-        },
-        "price_rank_tomorrow": {
-            "description": "Perzentilrang des aktuellen Preises in der morgigen Rangliste (0 % = günstigster von morgen)",
-            "long_description": "Zeigt, wie der aktuelle Preis im Vergleich zu allen 96 Viertelstunden-Slots von morgen abschneidet — sein Perzentilrang innerhalb der morgigen Preisverteilung. Nützlich, um zu entscheiden, ob es sich lohnt, bis morgen zu warten. 0 % bedeutet, dass der aktuelle Preis günstiger als jeder morgige Slot ist. Gibt 'Unbekannt' zurück, bis die morgigen Daten vorliegen (in der Regel nach 13:00 Uhr). Attribute: `current_price`, `prices_below_count`, `interval_count`, `reference_min`, `reference_max`, `reference_mean`.",
-            "usage_tips": "Nutze zur Entscheidung, ob Warten sinnvoll ist: 'Wenn Preisrang morgen < 10, morgen gibt es noch günstigere Slots — Aufgabe verschieben'. Am besten mit einem Binärsensor kombinieren, der sicherstellt, dass die Aufgabe morgen durchgeführt werden kann."
-        },
-        "price_rank_today_tomorrow": {
-            "description": "Perzentilrang des aktuellen Preises über heute+morgen zusammen (0 % = günstigstes des Zweitages-Fensters)",
-            "long_description": "Zeigt, wie günstig oder teuer der aktuelle Preis im Vergleich zu allen Slots von heute und morgen zusammen ist — sein Perzentilrang innerhalb der Zweitages-Verteilung (bis zu 192 Slots, wenn beide Tage verfügbar). Gibt den breitesten Überblick für flexible Aufgaben. Fällt auf nur-heute zurück, wenn morgige Daten noch fehlen. 0 % = günstigstes des kombinierten Fensters. Attribute: `current_price`, `prices_below_count`, `interval_count`, `reference_min`, `reference_max`, `reference_mean`.",
-            "usage_tips": "Das breiteste Signal für 'Ist jetzt ein guter Zeitpunkt?'. Nutze 'Wenn Preisrang heute+morgen < 20, energieintensive Aufgabe jetzt ausführen'. Besonders wertvoll, wenn Aufgaben einen Tag lang warten können — ein Wert nahe 0 über zwei Tage ist ein wirklich außergewöhnlicher Preis."
-        },
-        "data_lifecycle_status": {
-            "description": "Aktueller Status des Preisdaten-Lebenszyklus und der Zwischenspeicherung",
-            "long_description": "Zeigt an, ob die Integration zwischengespeicherte Daten oder frische Daten von der API verwendet. Zeigt aktuellen Lebenszyklus-Status: 'cached' (verwendet gespeicherte Daten), 'fresh' (gerade von API abgerufen), 'refreshing' (wird gerade abgerufen), 'searching_tomorrow' (sucht aktiv nach Morgendaten nach 13:00 Uhr), 'turnover_pending' (innerhalb 15 Minuten vor Mitternacht, 23:45-00:00) oder 'error' (Abruf fehlgeschlagen). Enthält umfassende Attribute wie Cache-Alter, nächste API-Abfragezeit, Datenvollständigkeit und API-Aufruf-Statistiken.",
-            "usage_tips": "Verwende diesen Diagnosesensor, um Datenaktualität und API-Aufrufmuster zu verstehen. Prüfe das 'cache_age'-Attribut, um zu sehen, wie alt die aktuellen Daten sind. Überwache 'next_api_poll', um zu wissen, wann das nächste Update geplant ist. Verwende 'data_completeness', um zu sehen, ob Daten für gestern/heute/morgen verfügbar sind. Der 'api_calls_today'-Zähler hilft, die API-Nutzung zu verfolgen. Perfekt zur Fehlersuche oder zum Verständnis des Integrationsverhaltens."
-        },
-        "best_price_end_time": {
-            "description": "Wann der aktuelle oder nächste günstige Zeitraum endet",
-            "long_description": "Zeigt den Endzeitstempel des aktuellen günstigen Zeitraums an, wenn dieser aktiv ist, oder das Ende des nächsten Zeitraums, wenn kein Zeitraum aktiv ist. Zeigt immer eine nützliche Zeitreferenz zur Planung. Gibt nur 'Unbekannt' zurück, wenn keine Zeiträume ermittelt wurden.",
-            "usage_tips": "Nutze dies, um einen Countdown wie 'Günstiger Zeitraum endet in 2 Stunden' (wenn aktiv) oder 'Nächster günstiger Zeitraum endet um 14:00' (wenn inaktiv) anzuzeigen. Home Assistant zeigt automatisch relative Zeit für Zeitstempel-Sensoren an."
-        },
-        "best_price_period_duration": {
-            "description": "Gesamtlänge des aktuellen oder nächsten günstigen Zeitraums",
-            "long_description": "Zeigt, wie lange der günstige Zeitraum insgesamt dauert. Der State wird in Stunden angezeigt (z. B. 1,5 h) für eine einfache Lesbarkeit in der UI, während das Attribut `period_duration_minutes` denselben Wert in Minuten bereitstellt (z. B. 90) für Automationen. Während eines aktiven Zeitraums zeigt dies die Dauer des aktuellen Zeitraums. Wenn kein Zeitraum aktiv ist, zeigt dies die Dauer des nächsten kommenden Zeitraums. Gibt nur 'Unbekannt' zurück, wenn keine Zeiträume ermittelt wurden.",
-            "usage_tips": "Für Anzeige: State-Wert (Stunden) in Dashboards nutzen. Für Automationen: Attribut `period_duration_minutes` verwenden, um zu prüfen, ob genug Zeit für langläufige Geräte ist (z. B. 'Wenn period_duration_minutes >= 90, starte Waschmaschine')."
-        },
-        "best_price_remaining_minutes": {
-            "description": "Verbleibende Zeit im aktuellen günstigen Zeitraum",
-            "long_description": "Zeigt, wie viel Zeit im aktuellen günstigen Zeitraum noch verbleibt. Der State wird in Stunden angezeigt (z. B. 0,5 h) für eine einfache Lesbarkeit, während das Attribut `remaining_minutes` Minuten bereitstellt (z. B. 30) für Automationslogik. Gibt 0 zurück, wenn kein Zeitraum aktiv ist. Aktualisiert sich jede Minute. Prüfe binary_sensor.best_price_period, um zu sehen, ob ein Zeitraum aktuell aktiv ist.",
-            "usage_tips": "Für Automationen: Attribut `remaining_minutes` mit numerischen Vergleichen nutzen wie 'Wenn remaining_minutes > 0 UND remaining_minutes < 30, starte Waschmaschine jetzt'. Der Wert 0 macht es einfach zu prüfen, ob ein Zeitraum aktiv ist (Wert > 0) oder nicht (Wert = 0)."
-        },
-        "best_price_progress": {
-            "description": "Fortschritt durch aktuellen günstigen Zeitraum (0% wenn inaktiv)",
-            "long_description": "Zeigt den Fortschritt durch den aktuellen günstigen Zeitraum als 0–100%. Gibt 0% zurück, wenn kein Zeitraum aktiv ist. Aktualisiert sich jede Minute. 0% bedeutet Zeitraum gerade gestartet, 100% bedeutet, er endet gleich.",
-            "usage_tips": "Super für visuelle Fortschrittsbalken. Nutze in Automatisierungen: 'Wenn progress > 0 UND progress > 75, sende Benachrichtigung, dass günstiger Zeitraum bald endet'. Wert 0 zeigt keinen aktiven Zeitraum an."
-        },
-        "best_price_next_start_time": {
-            "description": "Wann der nächste günstige Zeitraum startet",
-            "long_description": "Zeigt, wann der nächste kommende günstige Zeitraum startet. Während eines aktiven Zeitraums zeigt dies den Start des nächsten Zeitraums nach dem aktuellen. Gibt nur 'Unbekannt' zurück, wenn keine zukünftigen Zeiträume ermittelt wurden.",
-            "usage_tips": "Immer nützlich für Vorausplanung: 'Nächster günstiger Zeitraum startet in 3 Stunden' (egal, ob du gerade in einem Zeitraum bist oder nicht). Kombiniere mit Automatisierungen: 'Wenn nächste Startzeit in 10 Minuten ist, sende Benachrichtigung zur Vorbereitung der Waschmaschine'."
-        },
-        "best_price_next_in_minutes": {
-            "description": "Zeit bis zum nächsten günstigen Zeitraum",
-            "long_description": "Zeigt, wie lange es bis zum nächsten günstigen Zeitraum dauert. Der State wird in Stunden angezeigt (z. B. 2,25 h) für Dashboards, während das Attribut `next_in_minutes` Minuten bereitstellt (z. B. 135) für Automationsbedingungen. Während eines aktiven Zeitraums zeigt dies die Zeit bis zum Zeitraum nach dem aktuellen. Gibt 0 während kurzer Übergangsphasen zurück. Aktualisiert sich jede Minute.",
-            "usage_tips": "Für Automationen: Attribut `next_in_minutes` nutzen wie 'Wenn next_in_minutes > 0 UND next_in_minutes < 15, warte, bevor du die Geschirrspülmaschine startest'. Wert > 0 zeigt immer an, dass ein zukünftiger Zeitraum geplant ist."
-        },
-        "peak_price_end_time": {
-            "description": "Wann der aktuelle oder nächste teure Zeitraum endet",
-            "long_description": "Zeigt den Endzeitstempel des aktuellen teuren Zeitraums an, wenn dieser aktiv ist, oder das Ende des nächsten Zeitraums, wenn kein Zeitraum aktiv ist. Zeigt immer eine nützliche Zeitreferenz zur Planung. Gibt nur 'Unbekannt' zurück, wenn keine Zeiträume ermittelt wurden.",
-            "usage_tips": "Nutze dies, um 'Teurer Zeitraum endet in 1 Stunde' (wenn aktiv) oder 'Nächster teurer Zeitraum endet um 18:00' (wenn inaktiv) anzuzeigen. Kombiniere mit Automatisierungen, um den Betrieb nach der Spitzenzeit fortzusetzen."
-        },
-        "peak_price_period_duration": {
-            "description": "Länge des aktuellen/nächsten teuren Zeitraums",
-            "long_description": "Gesamtdauer des aktuellen oder nächsten teuren Zeitraums. Der State wird in Stunden angezeigt (z. B. 1,5 h) für leichtes Ablesen in der UI, während das Attribut `period_duration_minutes` denselben Wert in Minuten bereitstellt (z. B. 90) für Automationen. Dieser Wert repräsentiert die **volle geplante Dauer** des Zeitraums und ist konstant während des gesamten Zeitraums, auch wenn die verbleibende Zeit (remaining_minutes) abnimmt.",
-            "usage_tips": "Kombiniere mit remaining_minutes, um zu berechnen, wann langlaufende Geräte gestoppt werden sollen: Zeitraum begann vor `period_duration_minutes - remaining_minutes` Minuten. Dieses Attribut unterstützt Energiespar-Strategien, indem es hilft, Hochverbrauchsaktivitäten außerhalb teurer Perioden zu planen."
-        },
-        "peak_price_remaining_minutes": {
-            "description": "Verbleibende Zeit im aktuellen teuren Zeitraum",
-            "long_description": "Zeigt, wie viel Zeit im aktuellen teuren Zeitraum noch verbleibt. Der State wird in Stunden angezeigt (z. B. 0,75 h) für einfaches Ablesen in Dashboards, während das Attribut `remaining_minutes` dieselbe Zeit in Minuten liefert (z. B. 45) für Automationsbedingungen. **Countdown-Timer**: Dieser Wert dekrementiert jede Minute während eines aktiven Zeitraums. Gibt 0 zurück, wenn kein teurer Zeitraum aktiv ist. Aktualisiert sich minütlich.",
-            "usage_tips": "Für Automationen: Nutze Attribut `remaining_minutes` wie 'Wenn remaining_minutes > 60, setze Heizung auf Energiesparmodus' oder 'Wenn remaining_minutes < 15, erhöhe Temperatur wieder'. UI zeigt benutzerfreundliche Stunden (z. B. 1,25 h). Wert 0 zeigt an, dass kein teurer Zeitraum aktiv ist."
-        },
-        "peak_price_progress": {
-            "description": "Fortschritt durch aktuellen teuren Zeitraum (0% wenn inaktiv)",
-            "long_description": "Zeigt den Fortschritt durch den aktuellen teuren Zeitraum als 0–100%. Gibt 0% zurück, wenn kein Zeitraum aktiv ist. Aktualisiert sich jede Minute. 0% bedeutet Zeitraum gerade gestartet, 100% bedeutet, er endet gleich.",
-            "usage_tips": "Visueller Fortschrittsindikator in Dashboards. Automatisierung: 'Wenn progress > 0 UND progress > 90, bereite normale Heizplanung vor'. Wert 0 zeigt keinen aktiven Zeitraum an."
-        },
-        "peak_price_next_start_time": {
-            "description": "Wann der nächste teure Zeitraum startet",
-            "long_description": "Zeigt, wann der nächste kommende teure Zeitraum startet. Während eines aktiven Zeitraums zeigt dies den Start des nächsten Zeitraums nach dem aktuellen. Gibt nur 'Unbekannt' zurück, wenn kein zukünftiger Zeitraum ermittelt wurde.",
-            "usage_tips": "Immer nützlich für Planung: 'Nächster teurer Zeitraum startet in 2 Stunden'. Automatisierung: 'Wenn nächste Startzeit in 30 Minuten ist, reduziere Heiztemperatur vorsorglich'."
-        },
-        "peak_price_next_in_minutes": {
-            "description": "Zeit bis zum nächsten teuren Zeitraum",
-            "long_description": "Zeigt, wie lange es bis zum nächsten teuren Zeitraum dauert. Der State wird in Stunden angezeigt (z. B. 2,25 h) für Dashboards, während das Attribut `next_in_minutes` Minuten bereitstellt (z. B. 135) für Automationsbedingungen. Während eines aktiven Zeitraums zeigt dies die Zeit bis zum Zeitraum nach dem aktuellen. Gibt 0 während kurzer Übergangsphasen zurück. Aktualisiert sich jede Minute.",
-            "usage_tips": "Für Automationen: Attribut `next_in_minutes` nutzen wie 'Wenn next_in_minutes > 0 UND next_in_minutes < 10, reduziere Heizung vorsorglich bevor der teure Zeitraum beginnt'. Wert > 0 zeigt immer an, dass ein zukünftiger teurer Zeitraum geplant ist."
-        },
-        "home_type": {
-            "description": "Art der Wohnung (Wohnung, Haus usw.)",
-            "long_description": "Zeigt den Wohnungstyp, wie in deinem Tibber-Konto konfiguriert. Diese Metadaten können nützlich sein, um Energieverbrauchsmuster zu kategorisieren.",
-            "usage_tips": "Nutze dies zur Organisation deines Smart-Home-Systems oder für Analysezwecke."
-        },
-        "home_size": {
-            "description": "Wohnfläche in Quadratmetern",
-            "long_description": "Zeigt die Größe deiner Wohnung in Quadratmetern, wie in deinem Tibber-Konto konfiguriert. Kann verwendet werden, um den Energieverbrauch pro Quadratmeter zu berechnen.",
-            "usage_tips": "Nutze dies für Energieeffizienzberechnungen: 'Meine Wohnung verbraucht X kWh pro Quadratmeter pro Jahr'."
-        },
-        "main_fuse_size": {
-            "description": "Hauptsicherungsgröße in Ampere",
-            "long_description": "Zeigt die Kapazität deiner Hauptsicherung in Ampere. Dies bestimmt die maximale elektrische Last, die deine Wohnung gleichzeitig bewältigen kann.",
-            "usage_tips": "Nutze dies zur Überlastungsvermeidung: 'Wenn der Gesamtstromverbrauch sich der Sicherungsgröße nähert, verschiebe das Starten zusätzlicher Geräte'."
-        },
-        "number_of_residents": {
-            "description": "Anzahl der im Haushalt lebenden Personen",
-            "long_description": "Zeigt die Anzahl der Bewohner, wie in deinem Tibber-Konto konfiguriert. Nützlich für Pro-Kopf-Energieverbrauchsberechnungen.",
-            "usage_tips": "Nutze dies für Haushalts-Energieanalysen: 'Energieverbrauch pro Person pro Tag'."
-        },
-        "primary_heating_source": {
-            "description": "Primärer Heizungstyp",
-            "long_description": "Zeigt den Typ des in deiner Wohnung verwendeten Heizsystems, wie in deinem Tibber-Konto konfiguriert. Dies kann eine Wärmepumpe, Elektroheizung, Gas, Öl oder andere Heizquellen sein.",
-            "usage_tips": "Nutze dies zur Kategorisierung heizungsbezogener Automatisierungen oder für Energieverbrauchsanalysen nach Heizungsart."
-        },
-        "grid_company": {
-            "description": "Name deines Stromnetzbetreibers",
-            "long_description": "Zeigt den Namen des Unternehmens, das das Stromnetz in deiner Region betreibt. Dies ist der Verteilnetzbetreiber (VNB), der für die Stromlieferung zu deinem Haus verantwortlich ist.",
-            "usage_tips": "Nützlich für administrative Zwecke und zur Behebung netzbezogener Probleme."
-        },
-        "grid_area_code": {
-            "description": "Netzgebiets-Kennziffer",
-            "long_description": "Zeigt den Code, der dein Stromnetzgebiet identifiziert. Dieser Code wird vom Netzbetreiber für Routing- und Abrechnungszwecke verwendet.",
-            "usage_tips": "Nutze dies als administrative Referenz oder bei der Kontaktaufnahme mit deinem Netzbetreiber."
-        },
-        "price_area_code": {
-            "description": "Strompreis-Zonencode",
-            "long_description": "Zeigt den Code für deine Strompreiszone (z.B. NO1, NO2, SE3, DK1). Verschiedene Zonen haben unterschiedliche Großhandelsstrompreise basierend auf regionalem Angebot und Nachfrage.",
-            "usage_tips": "Nutze dies, um zu verstehen, in welcher Preisregion du dich befindest. Nützlich beim Preisvergleich mit anderen oder bei der Analyse regionaler Preismuster."
-        },
-        "consumption_ean": {
-            "description": "EAN-Code für Stromverbrauchsmessung",
-            "long_description": "Zeigt die Europäische Artikelnummer (EAN), die deinen Stromverbrauchszähler eindeutig identifiziert. Dieser 18-stellige Code wird für Abrechnungs- und Verwaltungszwecke verwendet.",
-            "usage_tips": "Nutze dies bei der Kommunikation mit deinem Stromanbieter oder für administrative Dokumentation."
-        },
-        "production_ean": {
-            "description": "EAN-Code für Stromerzeugungsmessung",
-            "long_description": "Zeigt die Europäische Artikelnummer (EAN) für deinen Stromerzeugungszähler (wenn du Solarpanels oder andere Erzeugung hast). Dieser Code verfolgt Strom, den du ins Netz einspeist.",
-            "usage_tips": "Relevant, wenn du Solarpanels oder andere Stromerzeugung hast. Nutze für administrative Zwecke und bei der Beantragung von Einspeisevergütung."
-        },
-        "energy_tax_type": {
-            "description": "Art der angewandten Energiesteuer",
-            "long_description": "Zeigt die Energiesteuerkategorie, die auf deinen Stromverbrauch angewendet wird. Steuersätze variieren nach Land und manchmal nach Verbrauchertyp (privat, gewerblich usw.).",
-            "usage_tips": "Nutze dies zum Verständnis der Aufschlüsselung deiner Stromrechnung und für Gesamtkostenberechnungen."
-        },
-        "vat_type": {
-            "description": "Mehrwertsteuerkategorie",
-            "long_description": "Zeigt die Mehrwertsteuerkategorie, die auf deinen Stromverbrauch angewendet wird. Mehrwertsteuersätze variieren nach Land und können für Strom anders sein als für andere Waren und Dienstleistungen.",
-            "usage_tips": "Nutze dies zum Verständnis deiner Stromrechnung und zur Berechnung der Gesamtkosten inklusive Steuern."
-        },
-        "estimated_annual_consumption": {
-            "description": "Geschätzter jährlicher Stromverbrauch in kWh",
-            "long_description": "Zeigt deinen geschätzten jährlichen Stromverbrauch in Kilowattstunden, wie in deinem Tibber-Konto berechnet oder konfiguriert. Diese Schätzung wird verwendet, um den tatsächlichen Verbrauch mit den erwarteten Werten zu vergleichen.",
-            "usage_tips": "Nutze dies, um zu verfolgen, ob dein tatsächlicher Verbrauch über oder unter den Erwartungen liegt. Vergleiche den monatlichen Verbrauch mit 1/12 dieses Wertes, um ungewöhnliche Muster zu identifizieren."
-        },
-        "subscription_status": {
-            "description": "Status deines Tibber-Abonnements",
-            "long_description": "Zeigt, ob dein Tibber-Abonnement derzeit aktiv ist, beendet wurde oder auf Aktivierung wartet. Ein Status 'Aktiv' bedeutet, dass du aktiv Strom über Tibber beziehst.",
-            "usage_tips": "Nutze dies zur Überwachung deines Abonnementstatus. Richte Benachrichtigungen ein, wenn sich der Status von 'Aktiv' ändert, um einen unterbrechungsfreien Service sicherzustellen."
-        },
-        "day_pattern_yesterday": {
-            "description": "Erkanntes Preismuster der gestrigen Strompreise",
-            "long_description": "Klassifiziert gestern in ein Preismuster: Tal (günstig in der Mitte), Gipfel (teuer in der Mitte), Doppeltal (zwei günstige Perioden), Doppelgipfel (zwei teure Perioden), Flach (geringe Variation), Steigend, Fallend oder Gemischt. Die Konfidenz- und CV-Attribute zeigen, wie verlässlich das Muster erkannt wurde.",
-            "usage_tips": "Nutze das gestrige Muster für Automationen: Ein Tal-Tag wiederholt sich oft am nächsten Tag und deutet darauf hin, dass Verbraucher auf die günstigen Mittagsstunden verschoben werden sollten."
-        },
-        "day_pattern_today": {
-            "description": "Erkanntes Preismuster der heutigen Strompreise",
-            "long_description": "Klassifiziert heute in ein Preismuster: Tal (günstig mittags), Gipfel (teuer mittags), Doppeltal (W-Form), Doppelgipfel (M-Form), Flach, Steigend, Fallend oder Gemischt. Attribute enthalten Konfidenz (0–1), Variationskoeffizient, Knickpunktzeiten und Tagessegmente.",
-            "usage_tips": "Nutze das Tagesmuster, um Verbraucher zu verschieben. Tal-Tag: Spülmaschine, Waschmaschine oder E-Auto-Laden in die günstige Mittagszeit legen. Gipfel-Tag: früh morgens oder spät abends waschen. Die Attribute valley_start und valley_end ermöglichen minutengenaue Automationen."
-        },
-        "day_pattern_tomorrow": {
-            "description": "Erkanntes Preismuster der morgigen Strompreise",
-            "long_description": "Klassifiziert morgen (sobald Daten verfügbar sind, typisch nach 13 Uhr) in ein Preismuster mit demselben Algorithmus wie heute. Die Attribute valley_start/valley_end oder peak_start/peak_end geben Knickpunktzeiten für das primäre Extremum an.",
-            "usage_tips": "Richte Abendautomationen ein, die das morgige Muster lesen und Wärmepumpe, Autolader oder Warmwasserbereiter für den nächsten Tag vorkonfigurieren. Kombiniere mit dem tomorrow_data_available Binärsensor."
-        },
-        "chart_data_export": {
-            "description": "Datenexport für Dashboard-Integrationen",
-            "long_description": "Dieser Sensor ruft den get_chartdata-Service mit deiner konfigurierten YAML-Konfiguration auf und stellt das Ergebnis als Entity-Attribute bereit. Der Status zeigt 'ready' wenn Daten verfügbar sind, 'error' bei Fehlern, oder 'pending' vor dem ersten Aufruf. Perfekt für Dashboard-Integrationen wie ApexCharts, die Preisdaten aus Entity-Attributen lesen.",
-            "usage_tips": "Konfiguriere die YAML-Parameter in den Integrationsoptionen entsprechend deinem get_chartdata-Service-Aufruf. Der Sensor aktualisiert automatisch bei Preisdaten-Updates (typischerweise nach Mitternacht und wenn morgige Daten eintreffen). Greife auf die Service-Response-Daten direkt über die Entity-Attribute zu - die Struktur entspricht exakt dem, was get_chartdata zurückgibt."
-        },
-        "chart_metadata": {
-            "description": "Leichtgewichtige Metadaten für Diagrammkonfiguration",
-            "long_description": "Liefert wesentliche Diagrammkonfigurationswerte als Sensor-Attribute. Nützlich für jede Diagrammkarte, die Y-Achsen-Grenzen benötigt. Der Sensor ruft get_chartdata im Nur-Metadaten-Modus auf (keine Datenverarbeitung) und extrahiert: yaxis_min, yaxis_max (vorgeschlagener Y-Achsenbereich für optimale Skalierung). Der Status spiegelt das Service-Call-Ergebnis wider: 'ready' bei Erfolg, 'error' bei Fehler, 'pending' während der Initialisierung.",
-            "usage_tips": "Konfiguriere über configuration.yaml unter tibber_prices.chart_metadata_config (optional: day, subunit_currency, resolution). Der Sensor aktualisiert sich automatisch bei Preisdatenänderungen. Greife auf Metadaten aus Attributen zu: yaxis_min, yaxis_max. Verwende mit config-template-card oder jedem Tool, das Entity-Attribute liest - perfekt für dynamische Diagrammkonfiguration ohne manuelle Berechnungen."
-        }
+    "current_interval_price_base": {
+      "description": "Aktueller Strompreis in Hauptwährung (EUR/kWh, NOK/kWh, etc.) für Energie-Dashboard",
+      "long_description": "Zeigt den aktuellen Preis pro kWh in Hauptwährungseinheiten an (z.B. EUR/kWh statt ct/kWh, NOK/kWh statt øre/kWh). Dieser Sensor ist speziell für die Verwendung mit dem Energie-Dashboard von Home Assistant konzipiert, das Preise in Standard-Währungseinheiten benötigt.",
+      "usage_tips": "Verwende diesen Sensor beim Konfigurieren des Energie-Dashboards unter Einstellungen → Dashboards → Energie. Wähle diesen Sensor als 'Entität mit dem aktuellen Preis' aus, um deine Energiekosten automatisch zu berechnen. Das Energie-Dashboard multipliziert deinen Energieverbrauch (kWh) mit diesem Preis, um die Gesamtkosten anzuzeigen."
     },
-    "binary_sensor": {
-        "tomorrow_data_available": {
-            "description": "Ob Preisdaten für morgen verfügbar sind",
-            "long_description": "Gibt an, ob Preisdaten für den folgenden Tag von Tibber empfangen wurden",
-            "usage_tips": "Nutze dies, um zu überprüfen, ob die Preise für morgen für die Planung verfügbar sind"
-        },
-        "peak_price_period": {
-            "description": "Ob das aktuelle Intervall zu den teuersten des Tages gehört",
-            "long_description": "Wird aktiviert, wenn der aktuelle Preis in den oberen 20% der heutigen Preise liegt",
-            "usage_tips": "Nutze dies, um den Betrieb von Geräten mit hohem Verbrauch während teurer Intervalle zu vermeiden"
-        },
-        "best_price_period": {
-            "description": "Ob das aktuelle Intervall zu den günstigsten des Tages gehört",
-            "long_description": "Wird aktiviert, wenn der aktuelle Preis in den unteren 20% der heutigen Preise liegt",
-            "usage_tips": "Nutze dies, um Geräte mit hohem Verbrauch während der günstigsten Intervalle zu betreiben"
-        },
-        "connection": {
-            "description": "Ob die Verbindung zur Tibber API funktioniert",
-            "long_description": "Zeigt an, ob die Integration erfolgreich eine Verbindung zur Tibber API herstellen kann",
-            "usage_tips": "Nutze dies, um den Verbindungsstatus zur Tibber API zu überwachen"
-        },
-        "has_ventilation_system": {
-            "description": "Ob deine Wohnung über eine Lüftungsanlage verfügt",
-            "long_description": "Zeigt an, ob eine Lüftungsanlage für deine Wohnung im Tibber-Konto registriert ist. Lüftungsanlagen können erhebliche Stromverbraucher sein, die von intelligenter Planung profitieren können.",
-            "usage_tips": "Nutze dies, um lüftungsspezifische Automatisierungen oder Energieüberwachung zu aktivieren. Falls aktiv, erwäge die Planung der Lüftung während Niedrigpreisphasen."
-        },
-        "realtime_consumption_enabled": {
-            "description": "Ob die Echtzeit-Verbrauchsüberwachung aktiv ist",
-            "long_description": "Zeigt an, ob die Echtzeit-Stromverbrauchsüberwachung für dein Tibber-Zuhause aktiviert und aktiv ist. Dies erfordert kompatible Messhardware (z. B. Tibber Pulse) und ein aktives Abonnement.",
-            "usage_tips": "Verwende dies, um zu überprüfen, ob Echtzeit-Verbrauchsdaten verfügbar sind. Aktiviere Benachrichtigungen, falls dies unerwartet auf 'Aus' wechselt, was auf potenzielle Hardware- oder Verbindungsprobleme hinweist."
-        }
+    "next_interval_price": {
+      "description": "Der Strompreis für das nächste 15-Minuten-Intervall pro kWh",
+      "long_description": "Zeigt den Preis für das nächste 15-Minuten-Intervall von deinem Tibber-Abonnement an",
+      "usage_tips": "Nutze dies, um dich auf kommende Preisänderungen vorzubereiten oder Geräte während günstigerer Intervalle zu planen"
     },
-    "number": {
-        "best_price_flex_override": {
-            "description": "Maximaler Prozentsatz über dem Tagesminimumpreis, den Intervalle haben können und trotzdem als 'Bestpreis' gelten. Empfohlen: 15-20 mit Lockerung aktiviert (Standard), oder 25-35 ohne Lockerung. Maximum: 50 (Obergrenze für zuverlässige Periodenerkennung).",
-            "long_description": "Wenn diese Entität aktiviert ist, überschreibt ihr Wert die Einstellung 'Flexibilität' aus dem Optionen-Dialog für die Bestpreis-Periodenberechnung.",
-            "usage_tips": "Aktiviere diese Entität, um die Bestpreiserkennung dynamisch über Automatisierungen anzupassen, z.B. höhere Flexibilität bei kritischen Lasten oder engere Anforderungen für flexible Geräte."
-        },
-        "best_price_min_distance_override": {
-            "description": "Minimaler prozentualer Abstand unter dem Tagesdurchschnitt. Intervalle müssen so weit unter dem Durchschnitt liegen, um als 'Bestpreis' zu gelten. Hilft, echte Niedrigpreis-Perioden von durchschnittlichen Preisen zu unterscheiden.",
-            "long_description": "Wenn diese Entität aktiviert ist, überschreibt ihr Wert die Einstellung 'Mindestabstand' aus dem Optionen-Dialog für die Bestpreis-Periodenberechnung.",
-            "usage_tips": "Erhöhe den Wert, wenn du strengere Bestpreis-Kriterien möchtest. Verringere ihn, wenn zu wenige Perioden erkannt werden."
-        },
-        "best_price_min_period_length_override": {
-            "description": "Minimale Periodenlänge in 15-Minuten-Intervallen. Perioden kürzer als diese werden nicht gemeldet. Beispiel: 2 = mindestens 30 Minuten.",
-            "long_description": "Wenn diese Entität aktiviert ist, überschreibt ihr Wert die Einstellung 'Mindestperiodenlänge' aus dem Optionen-Dialog für die Bestpreis-Periodenberechnung.",
-            "usage_tips": "Passe an die typische Laufzeit deiner Geräte an: 2 (30 Min) für Schnellprogramme, 4-8 (1-2 Std) für normale Zyklen, 8+ für lange ECO-Programme."
-        },
-        "best_price_min_periods_override": {
-            "description": "Minimale Anzahl an Bestpreis-Perioden, die täglich gefunden werden sollen. Wenn Lockerung aktiviert ist, wird das System die Kriterien automatisch anpassen, um diese Zahl zu erreichen.",
-            "long_description": "Wenn diese Entität aktiviert ist, überschreibt ihr Wert die Einstellung 'Mindestperioden' aus dem Optionen-Dialog für die Bestpreis-Periodenberechnung.",
-            "usage_tips": "Setze dies auf die Anzahl zeitkritischer Aufgaben, die du täglich hast. Beispiel: 2 für zwei Waschmaschinenladungen."
-        },
-        "best_price_relaxation_attempts_override": {
-            "description": "Anzahl der Versuche, die Kriterien schrittweise zu lockern, um die Mindestperiodenanzahl zu erreichen. Jeder Versuch erhöht die Flexibilität um 3 Prozent. Bei 0 werden nur Basis-Kriterien verwendet.",
-            "long_description": "Wenn diese Entität aktiviert ist, überschreibt ihr Wert die Einstellung 'Lockerungsversuche' aus dem Optionen-Dialog für die Bestpreis-Periodenberechnung.",
-            "usage_tips": "Höhere Werte machen die Periodenerkennung anpassungsfähiger an Tage mit stabilen Preisen. Setze auf 0, um strenge Kriterien ohne Lockerung zu erzwingen."
-        },
-        "best_price_gap_count_override": {
-            "description": "Maximale Anzahl teurerer Intervalle, die zwischen günstigen Intervallen erlaubt sind und trotzdem als eine zusammenhängende Periode gelten. Bei 0 müssen günstige Intervalle aufeinander folgen.",
-            "long_description": "Wenn diese Entität aktiviert ist, überschreibt ihr Wert die Einstellung 'Lückentoleranz' aus dem Optionen-Dialog für die Bestpreis-Periodenberechnung.",
-            "usage_tips": "Erhöhe dies für Geräte mit variabler Last (z.B. Wärmepumpen), die kurze teurere Intervalle tolerieren können. Setze auf 0 für kontinuierliche günstige Perioden."
-        },
-        "peak_price_flex_override": {
-            "description": "Maximaler Prozentsatz unter dem Tagesmaximumpreis, den Intervalle haben können und trotzdem als 'Spitzenpreis' gelten. Gleiche Empfehlungen wie für Bestpreis-Flexibilität.",
-            "long_description": "Wenn diese Entität aktiviert ist, überschreibt ihr Wert die Einstellung 'Flexibilität' aus dem Optionen-Dialog für die Spitzenpreis-Periodenberechnung.",
-            "usage_tips": "Nutze dies, um den Spitzenpreis-Schwellenwert zur Laufzeit für Automatisierungen anzupassen, die den Verbrauch während teurer Stunden vermeiden."
-        },
-        "peak_price_min_distance_override": {
-            "description": "Minimaler prozentualer Abstand über dem Tagesdurchschnitt. Intervalle müssen so weit über dem Durchschnitt liegen, um als 'Spitzenpreis' zu gelten.",
-            "long_description": "Wenn diese Entität aktiviert ist, überschreibt ihr Wert die Einstellung 'Mindestabstand' aus dem Optionen-Dialog für die Spitzenpreis-Periodenberechnung.",
-            "usage_tips": "Erhöhe den Wert, um nur extreme Preisspitzen zu erfassen. Verringere ihn, um mehr Hochpreiszeiten einzubeziehen."
-        },
-        "peak_price_min_period_length_override": {
-            "description": "Minimale Periodenlänge in 15-Minuten-Intervallen für Spitzenpreise. Kürzere Preisspitzen werden nicht als Perioden gemeldet.",
-            "long_description": "Wenn diese Entität aktiviert ist, überschreibt ihr Wert die Einstellung 'Mindestperiodenlänge' aus dem Optionen-Dialog für die Spitzenpreis-Periodenberechnung.",
-            "usage_tips": "Kürzere Werte erfassen kurze Preisspitzen. Längere Werte fokussieren auf anhaltende Hochpreisphasen."
-        },
-        "peak_price_min_periods_override": {
-            "description": "Minimale Anzahl an Spitzenpreis-Perioden, die täglich gefunden werden sollen.",
-            "long_description": "Wenn diese Entität aktiviert ist, überschreibt ihr Wert die Einstellung 'Mindestperioden' aus dem Optionen-Dialog für die Spitzenpreis-Periodenberechnung.",
-            "usage_tips": "Setze dies basierend darauf, wie viele Hochpreisphasen du pro Tag für Automatisierungen erfassen möchtest."
-        },
-        "peak_price_relaxation_attempts_override": {
-            "description": "Anzahl der Versuche, die Kriterien zu lockern, um die Mindestanzahl an Spitzenpreis-Perioden zu erreichen.",
-            "long_description": "Wenn diese Entität aktiviert ist, überschreibt ihr Wert die Einstellung 'Lockerungsversuche' aus dem Optionen-Dialog für die Spitzenpreis-Periodenberechnung.",
-            "usage_tips": "Erhöhe dies, wenn an Tagen mit stabilen Preisen keine Perioden gefunden werden. Setze auf 0, um strenge Kriterien zu erzwingen."
-        },
-        "peak_price_gap_count_override": {
-            "description": "Maximale Anzahl günstigerer Intervalle, die zwischen teuren Intervallen erlaubt sind und trotzdem als eine Spitzenpreis-Periode gelten.",
-            "long_description": "Wenn diese Entität aktiviert ist, überschreibt ihr Wert die Einstellung 'Lückentoleranz' aus dem Optionen-Dialog für die Spitzenpreis-Periodenberechnung.",
-            "usage_tips": "Höhere Werte erfassen längere Hochpreisphasen auch mit kurzen Preiseinbrüchen. Setze auf 0, um strikt zusammenhängende Spitzenpreise zu erfassen."
-        }
+    "previous_interval_price": {
+      "description": "Der Strompreis für das vorherige 15-Minuten-Intervall pro kWh",
+      "long_description": "Zeigt den Preis für das vorherige 15-Minuten-Intervall von deinem Tibber-Abonnement an",
+      "usage_tips": "Nutze dies, um vergangene Preisänderungen zu überprüfen oder den Preisverlauf zu verfolgen"
     },
-    "switch": {
-        "best_price_enable_relaxation_override": {
-            "description": "Wenn aktiviert, werden die Kriterien automatisch gelockert, um die Mindestperiodenanzahl zu erreichen. Wenn deaktiviert, werden nur Perioden gemeldet, die die strengen Kriterien erfüllen (möglicherweise null Perioden bei stabilen Preisen).",
-            "long_description": "Wenn diese Entität aktiviert ist, überschreibt ihr Wert die Einstellung 'Mindestanzahl erreichen' aus dem Optionen-Dialog für die Bestpreis-Periodenberechnung.",
-            "usage_tips": "Aktiviere dies für garantierte tägliche Automatisierungsmöglichkeiten. Deaktiviere es, wenn du nur wirklich günstige Zeiträume willst, auch wenn das bedeutet, dass an manchen Tagen keine Perioden gefunden werden."
-        },
-        "peak_price_enable_relaxation_override": {
-            "description": "Wenn aktiviert, werden die Kriterien automatisch gelockert, um die Mindestperiodenanzahl zu erreichen. Wenn deaktiviert, werden nur echte Preisspitzen gemeldet.",
-            "long_description": "Wenn diese Entität aktiviert ist, überschreibt ihr Wert die Einstellung 'Mindestanzahl erreichen' aus dem Optionen-Dialog für die Spitzenpreis-Periodenberechnung.",
-            "usage_tips": "Aktiviere dies für konsistente Spitzenpreis-Warnungen. Deaktiviere es, um nur extreme Preisspitzen zu erfassen."
-        }
+    "current_hour_average_price": {
+      "description": "Gleitender 5-Intervall-Durchschnittspreis pro kWh",
+      "long_description": "Zeigt den durchschnittlichen Preis pro kWh berechnet aus 5 Intervallen: 2 vorherige, aktuelles und 2 nächste Intervalle (ca. 75 Minuten insgesamt). Dies bietet einen geglätteten 'Stundenpreis', der sich mit der Zeit anpasst, anstatt an feste Uhrzeiten gebunden zu sein.",
+      "usage_tips": "Nutze dies für einen stabileren Preisindikator, der kurzfristige Schwankungen glättet und dennoch auf Preisänderungen reagiert. Besser als feste Stundenpreise für Verbrauchsentscheidungen."
     },
-    "home_types": {
-        "APARTMENT": "Wohnung",
-        "ROWHOUSE": "Reihenhaus",
-        "HOUSE": "Haus",
-        "COTTAGE": "Ferienhaus"
+    "next_hour_average_price": {
+      "description": "Gleitender 5-Intervall-Durchschnittspreis für nächste Stunde pro kWh",
+      "long_description": "Zeigt den durchschnittlichen Preis pro kWh berechnet aus 5 Intervallen, die eine Stunde voraus zentriert sind: ungefähr Intervalle +2 bis +6 von jetzt (Minuten +30 bis +105 abdeckend). Dies bietet einen vorausschauenden geglätteten 'Stundenpreis' zur Verbrauchsplanung.",
+      "usage_tips": "Nutze dies, um Preisänderungen in der nächsten Stunde vorherzusehen. Hilfreich für die Planung von verbrauchsintensiven Aktivitäten wie Elektrofahrzeug-Laden, Geschirrspüler oder Heizsysteme."
     },
-    "time_units": {
-        "day": "{count} Tag",
-        "days": "{count} Tagen",
-        "hour": "{count} Stunde",
-        "hours": "{count} Stunden",
-        "minute": "{count} Minute",
-        "minutes": "{count} Minuten",
-        "ago": "vor {parts}",
-        "now": "jetzt"
+    "lowest_price_today": {
+      "description": "Der niedrigste Strompreis für heute pro kWh",
+      "long_description": "Zeigt den niedrigsten Preis pro kWh für den aktuellen Tag von deinem Tibber-Abonnement an",
+      "usage_tips": "Nutze dies, um aktuelle Preise mit der günstigsten Zeit des Tages zu vergleichen"
     },
-    "attribution": "Daten bereitgestellt von Tibber"
+    "highest_price_today": {
+      "description": "Der höchste Strompreis für heute pro kWh",
+      "long_description": "Zeigt den höchsten Preis pro kWh für den aktuellen Tag von deinem Tibber-Abonnement an",
+      "usage_tips": "Nutze dies, um den Betrieb von Geräten während Spitzenpreiszeiten zu vermeiden"
+    },
+    "average_price_today": {
+      "description": "Der typische Strompreis für heute pro kWh (konfigurierbares Anzeigeformat)",
+      "long_description": "Zeigt den typischen Preis pro kWh für heute. **Standardmäßig zeigt der Status den Median** (resistent gegen extreme Preisspitzen, zeigt was du generell erwarten kannst). Du kannst dies in den Integrationsoptionen ändern, um stattdessen das arithmetische Mittel anzuzeigen. Der alternative Wert ist immer als Attribut `price_mean` oder `price_median` für Automatisierungen verfügbar.",
+      "usage_tips": "Nutze den Status-Wert für die Anzeige. Für exakte Kostenberechnungen in Automatisierungen nutze: {{ state_attr('sensor.average_price_today', 'price_mean') }}"
+    },
+    "lowest_price_tomorrow": {
+      "description": "Der niedrigste Strompreis für morgen pro kWh",
+      "long_description": "Zeigt den niedrigsten Preis pro kWh für den morgigen Tag von deinem Tibber-Abonnement an. Dieser Sensor wird nicht verfügbar, bis die Preise für morgen von Tibber veröffentlicht werden (typischerweise zwischen 13:00 und 14:00 Uhr MEZ).",
+      "usage_tips": "Nutze dies zur Planung energieintensiver Aktivitäten wie das Laden von Elektrofahrzeugen oder das Aufheizen von Warmwasserspeichern für morgen. Wenn der morgige Mindestpreis deutlich niedriger ist als der heutige, kannst du den Verbrauch verschieben."
+    },
+    "highest_price_tomorrow": {
+      "description": "Der höchste Strompreis für morgen pro kWh",
+      "long_description": "Zeigt den höchsten Preis pro kWh für den morgigen Tag von deinem Tibber-Abonnement an. Dieser Sensor wird nicht verfügbar, bis die Preise für morgen von Tibber veröffentlicht werden (typischerweise zwischen 13:00 und 14:00 Uhr MEZ).",
+      "usage_tips": "Nutze dies, um den Betrieb von Geräten während der teuersten Stunden morgen zu vermeiden. Plane nicht-essentielle Lasten außerhalb dieser Spitzenpreiszeiten."
+    },
+    "average_price_tomorrow": {
+      "description": "Der typische Strompreis für morgen pro kWh (konfigurierbares Anzeigeformat)",
+      "long_description": "Zeigt den typischen Preis pro kWh für morgen. **Standardmäßig zeigt der Status den Median** (resistent gegen extreme Preisspitzen). Du kannst dies in den Integrationsoptionen ändern, um stattdessen das arithmetische Mittel anzuzeigen. Der alternative Wert ist als Attribut verfügbar. Dieser Sensor wird nicht verfügbar, bis die Preise für morgen von Tibber veröffentlicht werden (typischerweise zwischen 13:00 und 14:00 Uhr MEZ).",
+      "usage_tips": "Nutze den Status-Wert für Anzeige und schnelle Vergleiche. Für Automatisierungen, die exakte Kostenberechnungen benötigen, nutze das Attribut `price_mean`: {{ state_attr('sensor.average_price_tomorrow', 'price_mean') }}"
+    },
+    "yesterday_price_level": {
+      "description": "Aggregiertes Preisniveau für gestern",
+      "long_description": "Zeigt das aggregierte Preisniveau für alle Intervalle von gestern. Verwendet die gleiche Logik wie die Stundensensoren, um das Gesamtpreisniveau für den ganzen Tag zu ermitteln.",
+      "usage_tips": "Nutze dies, um die gestrige Preissituation zu verstehen. Vergleiche mit heute, um tägliche Trends zu sehen."
+    },
+    "today_price_level": {
+      "description": "Aggregiertes Preisniveau für heute",
+      "long_description": "Zeigt das aggregierte Preisniveau für alle Intervalle von heute. Verwendet die gleiche Logik wie die Stundensensoren, um das Gesamtpreisniveau für den ganzen Tag zu ermitteln.",
+      "usage_tips": "Nutze dies, um die heutige Preissituation auf einen Blick zu verstehen. Hilfreich für schnelle Einschätzungen, ob heute generell günstig oder teuer ist."
+    },
+    "tomorrow_price_level": {
+      "description": "Aggregiertes Preisniveau für morgen",
+      "long_description": "Zeigt das aggregierte Preisniveau für alle Intervalle von morgen. Verwendet die gleiche Logik wie die Stundensensoren, um das Gesamtpreisniveau für den ganzen Tag zu ermitteln. Dieser Sensor wird nicht verfügbar, bis die Preise für morgen von Tibber veröffentlicht werden (typischerweise zwischen 13:00 und 14:00 Uhr MEZ).",
+      "usage_tips": "Nutze dies, um die morgige Preissituation zu verstehen. Vergleiche mit heute, um zu sehen, ob morgen günstiger oder teurer für den Energieverbrauch wird."
+    },
+    "yesterday_price_rating": {
+      "description": "Aggregierte Preisbewertung für gestern",
+      "long_description": "Zeigt die aggregierte Preisbewertung (niedrig/normal/hoch) für alle Intervalle von gestern, basierend auf deinen konfigurierten Schwellenwerten. Verwendet die gleiche Logik wie die Stundensensoren, um die Gesamtbewertung für den ganzen Tag zu ermitteln.",
+      "usage_tips": "Nutze dies, um die gestrige Preissituation relativ zu deinen persönlichen Schwellenwerten zu verstehen. Vergleiche mit heute für Trendanalysen."
+    },
+    "today_price_rating": {
+      "description": "Aggregierte Preisbewertung für heute",
+      "long_description": "Zeigt die aggregierte Preisbewertung (niedrig/normal/hoch) für alle Intervalle von heute, basierend auf deinen konfigurierten Schwellenwerten. Verwendet die gleiche Logik wie die Stundensensoren, um die Gesamtbewertung für den ganzen Tag zu ermitteln.",
+      "usage_tips": "Nutze dies, um die heutige Preissituation relativ zu deinen persönlichen Schwellenwerten schnell einzuschätzen. Hilft bei Verbrauchsentscheidungen für den aktuellen Tag."
+    },
+    "tomorrow_price_rating": {
+      "description": "Aggregierte Preisbewertung für morgen",
+      "long_description": "Zeigt die aggregierte Preisbewertung (niedrig/normal/hoch) für alle Intervalle von morgen, basierend auf deinen konfigurierten Schwellenwerten. Verwendet die gleiche Logik wie die Stundensensoren, um die Gesamtbewertung für den ganzen Tag zu ermitteln. Dieser Sensor wird nicht verfügbar, bis die Preise für morgen von Tibber veröffentlicht werden (typischerweise zwischen 13:00 und 14:00 Uhr MEZ).",
+      "usage_tips": "Nutze dies, um den morgigen Energieverbrauch basierend auf deinen persönlichen Preisschwellenwerten zu planen. Vergleiche mit heute, um zu entscheiden, ob du den Verbrauch auf morgen verschieben oder heute nutzen solltest."
+    },
+    "trailing_price_average": {
+      "description": "Der typische Strompreis der letzten 24 Stunden pro kWh (konfigurierbares Anzeigeformat)",
+      "long_description": "Zeigt den typischen Preis pro kWh der letzten 24 Stunden. **Standardmäßig zeigt der Status den Median** (resistent gegen extreme Spitzen, zeigt welches Preisniveau typisch war). Du kannst dies in den Integrationsoptionen ändern, um stattdessen das arithmetische Mittel anzuzeigen. Der alternative Wert ist als Attribut verfügbar. Wird alle 15 Minuten aktualisiert.",
+      "usage_tips": "Nutze den Status-Wert, um das typische aktuelle Preisniveau zu sehen. Für Kostenberechnungen nutze: {{ state_attr('sensor.trailing_price_average', 'price_mean') }}"
+    },
+    "leading_price_average": {
+      "description": "Der typische Strompreis für die nächsten 24 Stunden pro kWh (konfigurierbares Anzeigeformat)",
+      "long_description": "Zeigt den typischen Preis pro kWh für die nächsten 24 Stunden. **Standardmäßig zeigt der Status den Median** (resistent gegen extreme Spitzen, zeigt welches Preisniveau zu erwarten ist). Du kannst dies in den Integrationsoptionen ändern, um stattdessen das arithmetische Mittel anzuzeigen. Der alternative Wert ist als Attribut verfügbar.",
+      "usage_tips": "Nutze den Status-Wert, um das typische kommende Preisniveau zu sehen. Für Kostenberechnungen nutze: {{ state_attr('sensor.leading_price_average', 'price_mean') }}"
+    },
+    "trailing_price_min": {
+      "description": "Der niedrigste Strompreis für die letzten 24 Stunden pro kWh",
+      "long_description": "Zeigt den niedrigsten Preis pro kWh aus den letzten 24 Stunden (nachlaufendes Minimum) von deinem Tibber-Abonnement an. Dies bietet den niedrigsten Preis, der in den letzten 24 Stunden gesehen wurde.",
+      "usage_tips": "Nutze dies, um die beste Preisgelegenheit zu sehen, die du in den letzten 24 Stunden hattest, und vergleiche sie mit den aktuellen Preisen."
+    },
+    "trailing_price_max": {
+      "description": "Der höchste Strompreis für die letzten 24 Stunden pro kWh",
+      "long_description": "Zeigt den höchsten Preis pro kWh aus den letzten 24 Stunden (nachlaufendes Maximum) von deinem Tibber-Abonnement an. Dies bietet den höchsten Preis, der in den letzten 24 Stunden gesehen wurde.",
+      "usage_tips": "Nutze dies, um den Spitzenpreis in den letzten 24 Stunden zu sehen und die Preisvolatilität zu bewerten."
+    },
+    "leading_price_min": {
+      "description": "Der niedrigste Strompreis für die nächsten 24 Stunden pro kWh",
+      "long_description": "Zeigt den niedrigsten Preis pro kWh für die nächsten 24 Stunden (vorlaufendes Minimum) von deinem Tibber-Abonnement an. Dies bietet den niedrigsten erwarteten Preis in den nächsten 24 Stunden basierend auf Prognosedaten.",
+      "usage_tips": "Nutze dies, um die beste kommende Preisgelegenheit zu identifizieren und energieintensive Aufgaben entsprechend zu planen."
+    },
+    "leading_price_max": {
+      "description": "Der höchste Strompreis für die nächsten 24 Stunden pro kWh",
+      "long_description": "Zeigt den höchsten Preis pro kWh für die nächsten 24 Stunden (vorlaufendes Maximum) von deinem Tibber-Abonnement an. Dies bietet den höchsten erwarteten Preis in den nächsten 24 Stunden basierend auf Prognosedaten.",
+      "usage_tips": "Nutze dies, um den Betrieb von Geräten während kommender Spitzenpreiszeiten zu vermeiden."
+    },
+    "current_interval_price_level": {
+      "description": "Die aktuelle Preislevelklassifikation",
+      "long_description": "Zeigt die Klassifizierung von Tibber für den aktuellen Preis im Vergleich zu historischen Preisen an",
+      "usage_tips": "Nutze dies, um Automatisierungen auf Basis des relativen Preisniveaus anstelle der absoluten Preise zu erstellen"
+    },
+    "next_interval_price_level": {
+      "description": "Preisniveau für das nächste 15-Minuten-Intervall",
+      "long_description": "Zeigt die Preisniveau-Klassifizierung für das kommende Intervall an. Hilft bei der Antizipation kurzfristiger Preisänderungen für sofortige Planung.",
+      "usage_tips": "Nutze dies für schnelle Entscheidungen über das Starten oder Stoppen von Hochleistungsgeräten in den nächsten Minuten."
+    },
+    "previous_interval_price_level": {
+      "description": "Preisniveau für das vorherige 15-Minuten-Intervall",
+      "long_description": "Zeigt die Preisniveau-Klassifizierung für das letzte Intervall an. Nützlich für historische Vergleiche und das Verständnis jüngster Preistrends.",
+      "usage_tips": "Nutze dies, um aktuelle mit kürzlichen Preisniveaus zu vergleichen oder Verbrauchsmuster gegen historische Preise zu analysieren."
+    },
+    "current_hour_price_level": {
+      "description": "Aggregiertes Preisniveau für aktuelle gleitende Stunde (5 Intervalle)",
+      "long_description": "Zeigt das mediane Preisniveau über 5 Intervalle (2 vorherige, aktuelles, 2 nächste) mit ca. 75 Minuten Abdeckung. Bietet einen stabileren Preisniveau-Indikator, der kurzfristige Schwankungen glättet.",
+      "usage_tips": "Nutze dies für mittelfristige Planungsentscheidungen, wenn du nicht auf kurze Preisspitzen oder -einbrüche reagieren möchtest."
+    },
+    "next_hour_price_level": {
+      "description": "Aggregiertes Preisniveau für nächste gleitende Stunde (5 Intervalle voraus)",
+      "long_description": "Zeigt das mediane Preisniveau über 5 Intervalle, die eine Stunde voraus zentriert sind. Hilft bei der Verbrauchsplanung basierend auf kommenden Preistrends statt momentanen zukünftigen Preisen.",
+      "usage_tips": "Nutze dies, um Aktivitäten für die nächste Stunde basierend auf einer geglätteten Preisniveau-Prognose zu planen."
+    },
+    "current_interval_price_rating": {
+      "description": "Wie sich der Preis des aktuellen Intervalls mit historischen Daten vergleicht",
+      "long_description": "Zeigt, wie sich der Preis des aktuellen Intervalls im Vergleich zu historischen Preisdaten als Prozentsatz verhält",
+      "usage_tips": "Ein positiver Prozentsatz bedeutet, dass der aktuelle Preis überdurchschnittlich ist, negativ bedeutet unterdurchschnittlich"
+    },
+    "next_interval_price_rating": {
+      "description": "Preisbewertung für das nächste 15-Minuten-Intervall",
+      "long_description": "Zeigt, wie sich der Preis des nächsten Intervalls im Vergleich zum gleitenden 24-Stunden-Durchschnitt verhält. Hilft vorherzusehen, ob kommende Preise über oder unter dem jüngsten Trend liegen.",
+      "usage_tips": "Nutze dies für schnelle Entscheidungen über das Starten von Aktivitäten im nächsten Intervall basierend auf der relativen Preisposition."
+    },
+    "previous_interval_price_rating": {
+      "description": "Preisbewertung für das vorherige 15-Minuten-Intervall",
+      "long_description": "Zeigt, wie sich der Preis des letzten Intervalls im Vergleich zum gleitenden Durchschnitt verhielt. Nützlich für das Verständnis des jüngsten Preisverhaltens.",
+      "usage_tips": "Nutze dies zur Analyse, wie sich Preisbewertungen im Laufe der Zeit verändert haben oder um vergangene Verbrauchsentscheidungen zu validieren."
+    },
+    "current_hour_price_rating": {
+      "description": "Aggregierte Preisbewertung für aktuelle gleitende Stunde (5 Intervalle)",
+      "long_description": "Zeigt die durchschnittliche Bewertung über 5 Intervalle (2 vorherige, aktuelles, 2 nächste). Basierend auf der durchschnittlichen prozentualen Abweichung vom gleitenden 24h-Durchschnitt, bietet dies einen geglätteten Bewertungsindikator.",
+      "usage_tips": "Nutze dies für stabile mittelfristige Preisbewertung, die nicht auf kurze Preisanomalien überreagiert."
+    },
+    "next_hour_price_rating": {
+      "description": "Aggregierte Preisbewertung für nächste gleitende Stunde (5 Intervalle voraus)",
+      "long_description": "Zeigt die gemittelte Bewertung für 5 Intervalle, die eine Stunde voraus zentriert sind. Hilft zu verstehen, ob die nächste Stunde generell über oder unter durchschnittlicher Preisgestaltung liegen wird.",
+      "usage_tips": "Nutze dies, um zu entscheiden, ob du eine Stunde warten solltest, bevor du verbrauchsintensive Aktivitäten startest."
+    },
+    "next_avg_1h": {
+      "description": "Durchschnittspreis für die nächste 1 Stunde (vorwärts-blickend ab nächstem Intervall)",
+      "long_description": "Vorwärts-blickender Durchschnitt: Zeigt den Durchschnitt der nächsten 4 Intervalle (1 Stunde) beginnend ab dem NÄCHSTEN 15-Minuten-Intervall (aktuelles nicht inkludiert). Unterscheidet sich von current_hour_average_price, das vergangene Intervalle einbezieht. Nutze dies für absolute Preisschwellen-Planung.",
+      "usage_tips": "Absolute Preisschwelle: Starte Geräte nur, wenn der Durchschnitt unter deinem maximal akzeptablen Preis bleibt (z.B. unter 0,25 EUR/kWh). Kombiniere mit Trend-Sensor für optimales Timing. Hinweis: Dies ist KEIN Ersatz für Stundenpreise - nutze current_hour_average_price dafür."
+    },
+    "next_avg_2h": {
+      "description": "Durchschnittspreis für die nächsten 2 Stunden",
+      "long_description": "Zeigt den Durchschnittspreis für die nächsten 8 Intervalle (2 Stunden) beginnend ab dem nächsten 15-Minuten-Intervall.",
+      "usage_tips": "Absolute Preisschwelle: Lege einen maximal akzeptablen Durchschnittspreis für Standard-Geräte wie Waschmaschinen fest. Stellt sicher, dass du nie mehr als dein Limit zahlst."
+    },
+    "next_avg_3h": {
+      "description": "Durchschnittspreis für die nächsten 3 Stunden",
+      "long_description": "Zeigt den Durchschnittspreis für die nächsten 12 Intervalle (3 Stunden) beginnend ab dem nächsten 15-Minuten-Intervall.",
+      "usage_tips": "Absolute Preisschwelle: Für EU Eco-Programme (Spülmaschinen, 3-4h Laufzeit). Starte nur, wenn der 3h-Durchschnitt unter deinem Preislimit liegt. Nutze mit Trend-Sensor um den besten Moment im akzeptablen Preisbereich zu finden."
+    },
+    "next_avg_4h": {
+      "description": "Durchschnittspreis für die nächsten 4 Stunden",
+      "long_description": "Zeigt den Durchschnittspreis für die nächsten 16 Intervalle (4 Stunden) beginnend ab dem nächsten 15-Minuten-Intervall.",
+      "usage_tips": "Absolute Preisschwelle: Lege maximal akzeptablen Preis für Wärmepumpen oder Warmwasserbereiter fest. Verhindert Betrieb während teurer Zeiträume unabhängig von relativen Trends."
+    },
+    "next_avg_5h": {
+      "description": "Durchschnittspreis für die nächsten 5 Stunden",
+      "long_description": "Zeigt den Durchschnittspreis für die nächsten 20 Intervalle (5 Stunden) beginnend ab dem nächsten 15-Minuten-Intervall.",
+      "usage_tips": "Absolute Preisschwelle: Brücke zwischen kurz- und langfristiger Planung. Nutze für erweiterte Zyklen mit harten Preislimits (z.B. Pool-Pumpen, verlängerte Heizzyklen)."
+    },
+    "next_avg_6h": {
+      "description": "Durchschnittspreis für die nächsten 6 Stunden",
+      "long_description": "Zeigt den Durchschnittspreis für die nächsten 24 Intervalle (6 Stunden) beginnend ab dem nächsten 15-Minuten-Intervall.",
+      "usage_tips": "Absolute Preisschwelle: Abendplanung mit Preisobergrenzen. Plane Aufgaben nur, wenn der 6h-Durchschnitt unter deinen maximal akzeptablen Kosten bleibt."
+    },
+    "next_avg_8h": {
+      "description": "Durchschnittspreis für die nächsten 8 Stunden",
+      "long_description": "Zeigt den Durchschnittspreis für die nächsten 32 Intervalle (8 Stunden) beginnend ab dem nächsten 15-Minuten-Intervall.",
+      "usage_tips": "Absolute Preisschwelle: Entscheidungen für Nachtbetrieb. Lege harte Preislimits für Nachtlasten fest (Batterieladung, Wärmespeicher). Überschreite niemals dein Budget."
+    },
+    "next_avg_12h": {
+      "description": "Durchschnittspreis für die nächsten 12 Stunden",
+      "long_description": "Zeigt den Durchschnittspreis für die nächsten 48 Intervalle (12 Stunden) beginnend ab dem nächsten 15-Minuten-Intervall.",
+      "usage_tips": "Absolute Preisschwelle: Strategische Entscheidungen mit Preisobergrenzen. Fahre nur fort, wenn der 12h-Durchschnitt unter deinem maximal akzeptablen Preis liegt. Gut für verschiebbare Großlasten."
+    },
+    "price_outlook_1h": {
+      "description": "Preisausblick für die nächste Stunde",
+      "long_description": "Vergleicht deinen aktuellen Preis mit dem Durchschnitt aller Intervalle der nächsten Stunde (4 Intervalle). Alle Ausblick-Sensoren (1h–12h) haben dieselbe Basis: dein aktueller Preis — sie unterscheiden sich nur im Zeitfenster. Größere Fenster umfassen mehr Zukunftsstunden und glätten kurzfristige Spitzen. Steigend/fallend ab ±3%, stark ab ±9% (konfigurierbar, volatilitätsadaptiv).",
+      "usage_tips": "Entscheidungshilfe: 'steigend' = JETZT HANDELN, dein aktueller Preis ist günstiger als der Stunden-Durchschnitt. 'fallend' = WARTEN, der Fenster-Durchschnitt ist günstiger als jetzt. 'stabil' = Timing egal. Häufiges Missverständnis: 'steigend' bedeutet NICHT 'zu spät' — es heißt, jetzt ist gerade ein guter Preis! Funktioniert unabhängig vom absoluten Preisniveau."
+    },
+    "price_outlook_2h": {
+      "description": "Preisausblick für die nächsten 2 Stunden",
+      "long_description": "Vergleicht deinen aktuellen Preis mit dem Durchschnitt aller Intervalle der nächsten 2 Stunden (8 Intervalle). 'steigend' = aktueller Preis liegt unter dem 2h-Fenster-Durchschnitt; 'fallend' = Fenster-Durchschnitt ist günstiger als jetzt. Steigend/fallend ab ±3%, stark ab ±9% (konfigurierbar, volatilitätsadaptiv).",
+      "usage_tips": "Haushaltsgeräte: 'steigend' = jetzt starten, du hast gerade einen guten Preis. 'fallend' = bessere Preise kommen im 2h-Fenster, verschiebe wenn möglich. 'stabil' = egal, starte nach Bedarf. Kombiniere mit price_trajectory_2h um zu unterscheiden ob Preise noch fallen oder schon steigen."
+    },
+    "price_outlook_3h": {
+      "description": "Preisausblick für die nächsten 3 Stunden",
+      "long_description": "Vergleicht deinen aktuellen Preis mit dem Durchschnitt aller Intervalle der nächsten 3 Stunden (12 Intervalle). 'steigend' = aktueller Preis liegt unter dem 3h-Fenster-Durchschnitt; 'fallend' = Fenster-Durchschnitt ist günstiger als jetzt. Steigend/fallend ab ±3%, stark ab ±9% (konfigurierbar, volatilitätsadaptiv).",
+      "usage_tips": "Eco-Programme: 'steigend' = Eco-Zyklus jetzt starten, Preise steigen im Fenster-Durchschnitt. 'fallend' = warten, günstigeres Fenster kommt. Kombiniere mit avg-Sensor: starte wenn Ausblick 'steigend' oder 'stabil' UND avg < dein Limit."
+    },
+    "price_outlook_4h": {
+      "description": "Preisausblick für die nächsten 4 Stunden",
+      "long_description": "Vergleicht deinen aktuellen Preis mit dem Durchschnitt aller Intervalle der nächsten 4 Stunden (16 Intervalle). 'steigend' = aktueller Preis liegt unter dem 4h-Fenster-Durchschnitt; 'fallend' = Fenster-Durchschnitt ist günstiger als jetzt. Steigend/fallend ab ±3%, stark ab ±9% (konfigurierbar, volatilitätsadaptiv).",
+      "usage_tips": "Wärmepumpe/Batterie: 'steigend' = jetzt laden, du bist an einem relativen Tiefpunkt. 'fallend' = warten auf besseres Fenster im Durchschnitt. Wichtig: 'stark fallend' an einem Preistief bedeutet das Fenster ist im Schnitt günstiger — kombiniere mit price_trajectory_4h um zu sehen ob die Preise noch fallen oder schon aufsteigen."
+    },
+    "price_outlook_5h": {
+      "description": "Preisausblick für die nächsten 5 Stunden",
+      "long_description": "Vergleicht deinen aktuellen Preis mit dem Durchschnitt aller Intervalle der nächsten 5 Stunden (20 Intervalle). 'steigend' = aktueller Preis liegt unter dem 5h-Fenster-Durchschnitt; 'fallend' = Fenster-Durchschnitt ist günstiger als jetzt. Steigend/fallend ab ±3%, stark ab ±9% (konfigurierbar, volatilitätsadaptiv).",
+      "usage_tips": "Erweiterte Zyklen: 'steigend' oder 'stabil' = guter Zeitpunkt zum Starten, Preise werden im Fenster-Schnitt nicht günstiger. 'fallend' = warten wenn dein Zeitplan es erlaubt."
+    },
+    "price_outlook_6h": {
+      "description": "Preisausblick für die nächsten 6 Stunden",
+      "long_description": "Vergleicht deinen aktuellen Preis mit dem Durchschnitt aller Intervalle der nächsten 6 Stunden (24 Intervalle). 'steigend' = aktueller Preis liegt unter dem 6h-Fenster-Durchschnitt; 'fallend' = Fenster-Durchschnitt ist günstiger als jetzt. Steigend/fallend ab ±3%, stark ab ±9% (konfigurierbar, volatilitätsadaptiv).",
+      "usage_tips": "Abendentscheidungen: 'steigend' = Strom jetzt nutzen, solange er relativ günstig ist. 'fallend' = Abend-/Nachtpreise werden im Durchschnitt besser, warte wenn möglich."
+    },
+    "price_outlook_8h": {
+      "description": "Preisausblick für die nächsten 8 Stunden",
+      "long_description": "Vergleicht deinen aktuellen Preis mit dem Durchschnitt aller Intervalle der nächsten 8 Stunden (32 Intervalle). 'steigend' = aktueller Preis liegt unter dem 8h-Fenster-Durchschnitt; 'fallend' = Fenster-Durchschnitt ist günstiger als jetzt. Steigend/fallend ab ±3%, stark ab ±9% (konfigurierbar, volatilitätsadaptiv).",
+      "usage_tips": "Nachtplanung: 'steigend' = heute Nacht/morgen wird im Schnitt teurer, Strom jetzt nutzen. 'fallend' = Nachtpreise werden im Schnitt günstiger, Warten lohnt sich."
+    },
+    "price_outlook_12h": {
+      "description": "Preisausblick für die nächsten 12 Stunden",
+      "long_description": "Vergleicht deinen aktuellen Preis mit dem Durchschnitt aller Intervalle der nächsten 12 Stunden (48 Intervalle). 'steigend' = aktueller Preis liegt unter dem 12h-Fenster-Durchschnitt; 'fallend' = Fenster-Durchschnitt ist günstiger als jetzt. Steigend/fallend ab ±3%, stark ab ±9% (konfigurierbar, volatilitätsadaptiv).",
+      "usage_tips": "Strategische Entscheidungen: 'steigend' = du bist an einem Tiefpunkt relativ zu den nächsten 12h, guter Zeitpunkt für stromintensive Aufgaben. 'fallend' = deutlich bessere Preise kommen im Schnitt, warte wenn möglich."
+    },
+    "price_trajectory_2h": {
+      "description": "Preisverlauf innerhalb des nächsten 2-Stunden-Fensters",
+      "long_description": "Compares the average of the first hour (4 intervals) with the average of the second hour (4 intervals) within the next 2-hour window. 'rising' = second half more expensive than first half — prices are climbing within the window. 'falling' = second half cheaper — prices are dropping within the window. Rising/falling at ±3%, strongly at ±9% (configurable, volatility-adaptive).",
+      "usage_tips": "At a price minimum: price_outlook_2h may show 'falling' (window average is below current), but price_trajectory_2h shows 'rising' (second half more expensive than first) — revealing the upcoming reversal. Power combination: 'outlook: falling + trajectory: rising' = you're AT the minimum, act now."
+    },
+    "price_trajectory_3h": {
+      "description": "Preisverlauf innerhalb des nächsten 3-Stunden-Fensters",
+      "long_description": "Compares the average of the first 1.5 hours with the average of the second 1.5 hours within the next 3-hour window. 'rising' = prices are climbing over the 3h window; 'falling' = prices are dropping. Reveals the direction of price movement independent of the current price level. Rising/falling at ±3%, strongly at ±9% (configurable, volatility-adaptive).",
+      "usage_tips": "Appliance timing: 'outlook: strongly_falling + trajectory: rising' = you're at or past the minimum, the window average is low but prices are already recovering — start now."
+    },
+    "price_trajectory_4h": {
+      "description": "Preisverlauf innerhalb des nächsten 4-Stunden-Fensters",
+      "long_description": "Compares the average of the first 2 hours with the average of the second 2 hours within the next 4-hour window. 'rising' = prices are climbing over the 4h window; 'falling' = prices are dropping. Complementary to price_outlook_4h: outlook answers 'is NOW cheap vs the window average?', trajectory answers 'are prices rising or falling within the window?'. Rising/falling at ±3%, strongly at ±9% (configurable, volatility-adaptive).",
+      "usage_tips": "Heat pump charging: 'rising' = first half window is cheaper, charge now before prices climb. 'falling' = second half window is cheaper, wait if you can. Combine with outlook: if both rising, very strong signal to act now."
+    },
+    "price_trajectory_5h": {
+      "description": "Preisverlauf innerhalb des nächsten 5-Stunden-Fensters",
+      "long_description": "Compares the average of the first 2.5 hours with the average of the second 2.5 hours within the next 5-hour window. 'rising' = prices are climbing over the 5h window; 'falling' = prices are dropping. Rising/falling at ±3%, strongly at ±9% (configurable, volatility-adaptive).",
+      "usage_tips": "Eco/long cycles: 'outlook: rising + trajectory: rising' = clear signal to start now. 'outlook: falling + trajectory: rising' = you're near the bottom, good time to start before costs climb."
+    },
+    "price_trajectory_6h": {
+      "description": "Preisverlauf innerhalb des nächsten 6-Stunden-Fensters",
+      "long_description": "Compares the average of the first 3 hours with the average of the second 3 hours within the next 6-hour window. 'rising' = prices are climbing over the 6h window; 'falling' = prices are dropping. Rising/falling at ±3%, strongly at ±9% (configurable, volatility-adaptive).",
+      "usage_tips": "Evening/overnight planning: 'falling' at evening peak = overnight will be cheaper, postpone. 'rising' in the morning = current morning prices are the day's low — good time for high consumption."
+    },
+    "price_trajectory_8h": {
+      "description": "Preisverlauf innerhalb des nächsten 8-Stunden-Fensters",
+      "long_description": "Compares the average of the first 4 hours with the average of the second 4 hours within the next 8-hour window. 'rising' = prices are climbing over the 8h window; 'falling' = prices are dropping. Rising/falling at ±3%, strongly at ±9% (configurable, volatility-adaptive).",
+      "usage_tips": "Overnight charging: 'rising' during evening = first half of night is cheapest, start charging earlier. 'falling' = second half of night will be cheapest, delay start."
+    },
+    "price_trajectory_12h": {
+      "description": "Preisverlauf innerhalb des nächsten 12-Stunden-Fensters",
+      "long_description": "Compares the average of the first 6 hours with the average of the second 6 hours within the next 12-hour window. 'rising' = prices are climbing over the 12h window; 'falling' = prices are dropping. Rising/falling at ±3%, strongly at ±9% (configurable, volatility-adaptive).",
+      "usage_tips": "Day-ahead planning: 'rising' at midnight = first half of day is cheaper, schedule morning loads. 'falling' = prices drop in the second part of the day, afternoon/evening scheduling is better."
+    },
+    "current_price_trend": {
+      "description": "Aktuelle Preistrend-Richtung und wie lange sie anhält",
+      "long_description": "Zeigt den aktuellen Preistrend (steigend/fallend/stabil) durch Kombination von historischem Momentum (gewichteter 1h-Rückblick) mit Zukunftsausblick. Erkennt laufende Trends früher als reine Zukunftsanalyse. Nutzt ±3% Momentum-Schwelle und volatilitätsabhängigen Zukunftsvergleich. Berechnet dynamisch bis zur nächsten Trendänderung (oder 3h Standard, falls keine Änderung in 24h). Der Status zeigt die aktuelle Richtung, Attribute zeigen, wann sich der Trend ändert und was als Nächstes kommt.",
+      "usage_tips": "Status-Anzeige: Dashboard-Sichtbarkeit von 'was passiert jetzt bis wann'. Perfekt synchronisiert mit next_price_trend_change. Beispiel: Badge mit 'Steigend für 2,5h' oder 'Fallend bis 16:45'. Besser als Zeitfenster-Sensoren, weil es versteht, dass du dich BEREITS in einem Trend befindest, nicht nur zukünftige Änderungen vorhersagt. Nutze für schnelle visuelle Übersicht, nicht für Automations-Trigger."
+    },
+    "next_price_trend_change": {
+      "description": "Wann die nächste bedeutende Preistrend-Änderung eintreten wird",
+      "long_description": "Scannt die nächsten 24 Stunden (96 Intervalle), um zu finden, wann sich die Preistrend-Richtung ändern wird. Nur Richtungswechsel zählen: steigend/stark steigend bilden eine Gruppe, fallend/stark fallend eine andere, stabil ist eigenständig. Ein Wechsel von steigend zu stark steigend ist KEIN Trendwechsel. Verwendet volatilitätsadaptive Schwellwerte (Standard: ±3%/±9%) mit Hysterese (Standard: 3 aufeinanderfolgende Intervalle). Gibt den Zeitstempel zurück, wann die Änderung erwartet wird.",
+      "usage_tips": "Ereignisbasierte Automation: Aktionen WENN Trend wechselt auslösen, nicht IN X Stunden. Beispiel: 'E-Auto laden wenn nächste Trendänderung fallende Preise zeigt' oder 'Spülmaschine vor Preisanstieg starten'. Ergänzt Zeitfenster-Sensoren (price_trend_Xh), die beantworten 'WERDEN Preise in X Stunden höher sein?'"
+    },
+    "next_price_trend_change_in": {
+      "description": "Zeit bis zur nächsten Preistrend-Änderung",
+      "long_description": "Zeigt an, wie lange es bis zur nächsten bedeutenden Preistrend-Änderung dauert. Der Wert wird in Stunden angezeigt (z.B. 2,25 h) für Dashboards. Teilt die gleiche Analyse wie der Zeitstempel-Sensor 'Nächste Trendänderung', stellt sie aber als Countdown-Dauer dar. Aktualisiert sich jede Minute für präzise Countdowns. Zeigt 'Unbekannt' wenn keine Trendänderung in den nächsten 24 Stunden erwartet wird.",
+      "usage_tips": "Dashboard-Countdown: Zeige 'Trendänderung in 1,5 h' als Live-Countdown. Für Automationen: 'Wenn next_price_trend_change_in < 0,25 (15 Min), auf Preisrichtungswechsel vorbereiten'. Ergänzt 'Nächste Trendänderung' (Zeitstempel) — verwende den Zeitstempel für 'WANN' und diesen Sensor für 'WIE LANGE'."
+    },
+    "daily_rating": {
+      "description": "Wie sich die heutigen Preise mit historischen Daten vergleichen",
+      "long_description": "Zeigt, wie sich die heutigen Preise im Vergleich zu historischen Preisdaten als Prozentsatz verhält",
+      "usage_tips": "Ein positiver Prozentsatz bedeutet, dass die heutigen Preise überdurchschnittlich sind, negativ bedeutet unterdurchschnittlich"
+    },
+    "monthly_rating": {
+      "description": "Wie sich die Preise dieses Monats mit historischen Daten vergleichen",
+      "long_description": "Zeigt, wie sich die Preise dieses Monats im Vergleich zu historischen Preisdaten als Prozentsatz verhält",
+      "usage_tips": "Ein positiver Prozentsatz bedeutet, dass die Preise dieses Monats überdurchschnittlich sind, negativ bedeutet unterdurchschnittlich"
+    },
+    "data_timestamp": {
+      "description": "Zeitstempel des letzten verfügbaren Preisintervalls",
+      "long_description": "Zeigt den Zeitstempel des letzten verfügbaren Preisdatenintervalls von deinem Tibber-Abonnement"
+    },
+    "today_volatility": {
+      "description": "Wie stark sich die Strompreise heute verändern",
+      "long_description": "Zeigt, ob die heutigen Preise stabil bleiben oder stark schwanken. Niedrige Volatilität bedeutet recht konstante Preise – Timing ist kaum wichtig. Hohe Volatilität bedeutet spürbare Preisunterschiede über den Tag – gute Chance, den Verbrauch auf günstigere Zeiten zu verschieben. `price_coefficient_variation_%` zeigt den Prozentwert, `price_spread` die absolute Preisspanne.",
+      "usage_tips": "Nutze dies, um zu entscheiden, ob Optimierung sich lohnt. Bei niedriger Volatilität kannst du Geräte jederzeit laufen lassen. Bei hoher Volatilität sparst du spürbar, wenn du Best-Price-Perioden nutzt."
+    },
+    "tomorrow_volatility": {
+      "description": "Wie stark sich die Strompreise morgen verändern werden",
+      "long_description": "Zeigt, ob die Preise morgen stabil bleiben oder stark schwanken. Verfügbar, sobald die morgigen Daten veröffentlicht sind (typischerweise 13:00–14:00 MEZ). Niedrige Volatilität bedeutet recht konstante Preise – Timing ist nicht kritisch. Hohe Volatilität bedeutet deutliche Preisunterschiede über den Tag – gute Gelegenheit, energieintensive Aufgaben zu planen. `price_coefficient_variation_%` zeigt den Prozentwert, `price_spread` die absolute Preisspanne.",
+      "usage_tips": "Nutze dies für die Planung des morgigen Energieverbrauchs. Hohe Volatilität? Plane flexible Lasten in Best-Price-Perioden. Niedrige Volatilität? Lass Geräte laufen, wann es dir passt."
+    },
+    "next_24h_volatility": {
+      "description": "Wie stark sich die Preise in den nächsten 24 Stunden verändern",
+      "long_description": "Zeigt die Preisvolatilität für ein rollierendes 24-Stunden-Fenster ab jetzt (aktualisiert alle 15 Minuten). Niedrige Volatilität bedeutet recht konstante Preise. Hohe Volatilität bedeutet spürbare Preisschwankungen und damit Chancen zur Optimierung. Im Unterschied zu Heute/Morgen-Sensoren überschreitet dieser Tagesgrenzen und liefert eine durchgängige Vorhersage. `price_coefficient_variation_%` zeigt den Prozentwert, `price_spread` die absolute Preisspanne.",
+      "usage_tips": "Am besten für Entscheidungen in Echtzeit. Nutze dies für Batterieladestrategien oder andere flexible Lasten, die über Mitternacht laufen könnten. Bietet eine konsistente 24h-Perspektive unabhängig vom Kalendertag."
+    },
+    "today_tomorrow_volatility": {
+      "description": "Kombinierte Preisvolatilität für heute und morgen",
+      "long_description": "Zeigt die Gesamtvolatilität, wenn heute und morgen gemeinsam betrachtet werden (sobald die morgigen Daten verfügbar sind). Zeigt, ob über die Tagesgrenze hinweg deutliche Preisunterschiede bestehen. Fällt auf nur-heute zurück, wenn morgige Daten noch fehlen. Hilfreich für mehrtägige Optimierung. `price_coefficient_variation_%` zeigt den Prozentwert, `price_spread` die absolute Preisspanne.",
+      "usage_tips": "Nutze dies für Aufgaben, die sich über mehrere Tage erstrecken. Prüfe, ob die Preisunterschiede groß genug für eine Planung sind. Die einzelnen Tages-Sensoren zeigen die Beiträge pro Tag, falls du mehr Details brauchst."
+    },
+    "data_lifecycle_status": {
+      "description": "Aktueller Status des Preisdaten-Lebenszyklus und der Zwischenspeicherung",
+      "long_description": "Zeigt an, ob die Integration zwischengespeicherte Daten oder frische Daten von der API verwendet. Zeigt aktuellen Lebenszyklus-Status: 'cached' (verwendet gespeicherte Daten), 'fresh' (gerade von API abgerufen), 'refreshing' (wird gerade abgerufen), 'searching_tomorrow' (sucht aktiv nach Morgendaten nach 13:00 Uhr), 'turnover_pending' (innerhalb 15 Minuten vor Mitternacht, 23:45-00:00) oder 'error' (Abruf fehlgeschlagen). Enthält umfassende Attribute wie Cache-Alter, nächste API-Abfragezeit, Datenvollständigkeit und API-Aufruf-Statistiken.",
+      "usage_tips": "Verwende diesen Diagnosesensor, um Datenaktualität und API-Aufrufmuster zu verstehen. Prüfe das 'cache_age'-Attribut, um zu sehen, wie alt die aktuellen Daten sind. Überwache 'next_api_poll', um zu wissen, wann das nächste Update geplant ist. Verwende 'data_completeness', um zu sehen, ob Daten für gestern/heute/morgen verfügbar sind. Der 'api_calls_today'-Zähler hilft, die API-Nutzung zu verfolgen. Perfekt zur Fehlersuche oder zum Verständnis des Integrationsverhaltens."
+    },
+    "best_price_end_time": {
+      "description": "Wann der aktuelle oder nächste günstige Zeitraum endet",
+      "long_description": "Zeigt den Endzeitstempel des aktuellen günstigen Zeitraums an, wenn dieser aktiv ist, oder das Ende des nächsten Zeitraums, wenn kein Zeitraum aktiv ist. Zeigt immer eine nützliche Zeitreferenz zur Planung. Gibt nur 'Unbekannt' zurück, wenn keine Zeiträume ermittelt wurden.",
+      "usage_tips": "Nutze dies, um einen Countdown wie 'Günstiger Zeitraum endet in 2 Stunden' (wenn aktiv) oder 'Nächster günstiger Zeitraum endet um 14:00' (wenn inaktiv) anzuzeigen. Home Assistant zeigt automatisch relative Zeit für Zeitstempel-Sensoren an."
+    },
+    "best_price_period_duration": {
+      "description": "Gesamtlänge des aktuellen oder nächsten günstigen Zeitraums",
+      "long_description": "Zeigt, wie lange der günstige Zeitraum insgesamt dauert. Der State wird in Stunden angezeigt (z. B. 1,5 h) für eine einfache Lesbarkeit in der UI, während das Attribut `period_duration_minutes` denselben Wert in Minuten bereitstellt (z. B. 90) für Automationen. Während eines aktiven Zeitraums zeigt dies die Dauer des aktuellen Zeitraums. Wenn kein Zeitraum aktiv ist, zeigt dies die Dauer des nächsten kommenden Zeitraums. Gibt nur 'Unbekannt' zurück, wenn keine Zeiträume ermittelt wurden.",
+      "usage_tips": "Für Anzeige: State-Wert (Stunden) in Dashboards nutzen. Für Automationen: Attribut `period_duration_minutes` verwenden, um zu prüfen, ob genug Zeit für langläufige Geräte ist (z. B. 'Wenn period_duration_minutes >= 90, starte Waschmaschine')."
+    },
+    "best_price_remaining_minutes": {
+      "description": "Verbleibende Zeit im aktuellen günstigen Zeitraum",
+      "long_description": "Zeigt, wie viel Zeit im aktuellen günstigen Zeitraum noch verbleibt. Der State wird in Stunden angezeigt (z. B. 0,5 h) für eine einfache Lesbarkeit, während das Attribut `remaining_minutes` Minuten bereitstellt (z. B. 30) für Automationslogik. Gibt 0 zurück, wenn kein Zeitraum aktiv ist. Aktualisiert sich jede Minute. Prüfe binary_sensor.best_price_period, um zu sehen, ob ein Zeitraum aktuell aktiv ist.",
+      "usage_tips": "Für Automationen: Attribut `remaining_minutes` mit numerischen Vergleichen nutzen wie 'Wenn remaining_minutes > 0 UND remaining_minutes < 30, starte Waschmaschine jetzt'. Der Wert 0 macht es einfach zu prüfen, ob ein Zeitraum aktiv ist (Wert > 0) oder nicht (Wert = 0)."
+    },
+    "best_price_progress": {
+      "description": "Fortschritt durch aktuellen günstigen Zeitraum (0% wenn inaktiv)",
+      "long_description": "Zeigt den Fortschritt durch den aktuellen günstigen Zeitraum als 0–100%. Gibt 0% zurück, wenn kein Zeitraum aktiv ist. Aktualisiert sich jede Minute. 0% bedeutet Zeitraum gerade gestartet, 100% bedeutet, er endet gleich.",
+      "usage_tips": "Super für visuelle Fortschrittsbalken. Nutze in Automatisierungen: 'Wenn progress > 0 UND progress > 75, sende Benachrichtigung, dass günstiger Zeitraum bald endet'. Wert 0 zeigt keinen aktiven Zeitraum an."
+    },
+    "best_price_next_start_time": {
+      "description": "Wann der nächste günstige Zeitraum startet",
+      "long_description": "Zeigt, wann der nächste kommende günstige Zeitraum startet. Während eines aktiven Zeitraums zeigt dies den Start des nächsten Zeitraums nach dem aktuellen. Gibt nur 'Unbekannt' zurück, wenn keine zukünftigen Zeiträume ermittelt wurden.",
+      "usage_tips": "Immer nützlich für Vorausplanung: 'Nächster günstiger Zeitraum startet in 3 Stunden' (egal, ob du gerade in einem Zeitraum bist oder nicht). Kombiniere mit Automatisierungen: 'Wenn nächste Startzeit in 10 Minuten ist, sende Benachrichtigung zur Vorbereitung der Waschmaschine'."
+    },
+    "best_price_next_in_minutes": {
+      "description": "Zeit bis zum nächsten günstigen Zeitraum",
+      "long_description": "Zeigt, wie lange es bis zum nächsten günstigen Zeitraum dauert. Der State wird in Stunden angezeigt (z. B. 2,25 h) für Dashboards, während das Attribut `next_in_minutes` Minuten bereitstellt (z. B. 135) für Automationsbedingungen. Während eines aktiven Zeitraums zeigt dies die Zeit bis zum Zeitraum nach dem aktuellen. Gibt 0 während kurzer Übergangsphasen zurück. Aktualisiert sich jede Minute.",
+      "usage_tips": "Für Automationen: Attribut `next_in_minutes` nutzen wie 'Wenn next_in_minutes > 0 UND next_in_minutes < 15, warte, bevor du die Geschirrspülmaschine startest'. Wert > 0 zeigt immer an, dass ein zukünftiger Zeitraum geplant ist."
+    },
+    "peak_price_end_time": {
+      "description": "Wann der aktuelle oder nächste teure Zeitraum endet",
+      "long_description": "Zeigt den Endzeitstempel des aktuellen teuren Zeitraums an, wenn dieser aktiv ist, oder das Ende des nächsten Zeitraums, wenn kein Zeitraum aktiv ist. Zeigt immer eine nützliche Zeitreferenz zur Planung. Gibt nur 'Unbekannt' zurück, wenn keine Zeiträume ermittelt wurden.",
+      "usage_tips": "Nutze dies, um 'Teurer Zeitraum endet in 1 Stunde' (wenn aktiv) oder 'Nächster teurer Zeitraum endet um 18:00' (wenn inaktiv) anzuzeigen. Kombiniere mit Automatisierungen, um den Betrieb nach der Spitzenzeit fortzusetzen."
+    },
+    "peak_price_period_duration": {
+      "description": "Länge des aktuellen/nächsten teuren Zeitraums",
+      "long_description": "Gesamtdauer des aktuellen oder nächsten teuren Zeitraums. Der State wird in Stunden angezeigt (z. B. 1,5 h) für leichtes Ablesen in der UI, während das Attribut `period_duration_minutes` denselben Wert in Minuten bereitstellt (z. B. 90) für Automationen. Dieser Wert repräsentiert die **volle geplante Dauer** des Zeitraums und ist konstant während des gesamten Zeitraums, auch wenn die verbleibende Zeit (remaining_minutes) abnimmt.",
+      "usage_tips": "Kombiniere mit remaining_minutes, um zu berechnen, wann langlaufende Geräte gestoppt werden sollen: Zeitraum begann vor `period_duration_minutes - remaining_minutes` Minuten. Dieses Attribut unterstützt Energiespar-Strategien, indem es hilft, Hochverbrauchsaktivitäten außerhalb teurer Perioden zu planen."
+    },
+    "peak_price_remaining_minutes": {
+      "description": "Verbleibende Zeit im aktuellen teuren Zeitraum",
+      "long_description": "Zeigt, wie viel Zeit im aktuellen teuren Zeitraum noch verbleibt. Der State wird in Stunden angezeigt (z. B. 0,75 h) für einfaches Ablesen in Dashboards, während das Attribut `remaining_minutes` dieselbe Zeit in Minuten liefert (z. B. 45) für Automationsbedingungen. **Countdown-Timer**: Dieser Wert dekrementiert jede Minute während eines aktiven Zeitraums. Gibt 0 zurück, wenn kein teurer Zeitraum aktiv ist. Aktualisiert sich minütlich.",
+      "usage_tips": "Für Automationen: Nutze Attribut `remaining_minutes` wie 'Wenn remaining_minutes > 60, setze Heizung auf Energiesparmodus' oder 'Wenn remaining_minutes < 15, erhöhe Temperatur wieder'. UI zeigt benutzerfreundliche Stunden (z. B. 1,25 h). Wert 0 zeigt an, dass kein teurer Zeitraum aktiv ist."
+    },
+    "peak_price_progress": {
+      "description": "Fortschritt durch aktuellen teuren Zeitraum (0% wenn inaktiv)",
+      "long_description": "Zeigt den Fortschritt durch den aktuellen teuren Zeitraum als 0–100%. Gibt 0% zurück, wenn kein Zeitraum aktiv ist. Aktualisiert sich jede Minute. 0% bedeutet Zeitraum gerade gestartet, 100% bedeutet, er endet gleich.",
+      "usage_tips": "Visueller Fortschrittsindikator in Dashboards. Automatisierung: 'Wenn progress > 0 UND progress > 90, bereite normale Heizplanung vor'. Wert 0 zeigt keinen aktiven Zeitraum an."
+    },
+    "peak_price_next_start_time": {
+      "description": "Wann der nächste teure Zeitraum startet",
+      "long_description": "Zeigt, wann der nächste kommende teure Zeitraum startet. Während eines aktiven Zeitraums zeigt dies den Start des nächsten Zeitraums nach dem aktuellen. Gibt nur 'Unbekannt' zurück, wenn kein zukünftiger Zeitraum ermittelt wurde.",
+      "usage_tips": "Immer nützlich für Planung: 'Nächster teurer Zeitraum startet in 2 Stunden'. Automatisierung: 'Wenn nächste Startzeit in 30 Minuten ist, reduziere Heiztemperatur vorsorglich'."
+    },
+    "peak_price_next_in_minutes": {
+      "description": "Zeit bis zum nächsten teuren Zeitraum",
+      "long_description": "Zeigt, wie lange es bis zum nächsten teuren Zeitraum dauert. Der State wird in Stunden angezeigt (z. B. 2,25 h) für Dashboards, während das Attribut `next_in_minutes` Minuten bereitstellt (z. B. 135) für Automationsbedingungen. Während eines aktiven Zeitraums zeigt dies die Zeit bis zum Zeitraum nach dem aktuellen. Gibt 0 während kurzer Übergangsphasen zurück. Aktualisiert sich jede Minute.",
+      "usage_tips": "Für Automationen: Attribut `next_in_minutes` nutzen wie 'Wenn next_in_minutes > 0 UND next_in_minutes < 10, reduziere Heizung vorsorglich bevor der teure Zeitraum beginnt'. Wert > 0 zeigt immer an, dass ein zukünftiger teurer Zeitraum geplant ist."
+    },
+    "home_type": {
+      "description": "Art der Wohnung (Wohnung, Haus usw.)",
+      "long_description": "Zeigt den Wohnungstyp, wie in deinem Tibber-Konto konfiguriert. Diese Metadaten können nützlich sein, um Energieverbrauchsmuster zu kategorisieren.",
+      "usage_tips": "Nutze dies zur Organisation deines Smart-Home-Systems oder für Analysezwecke."
+    },
+    "home_size": {
+      "description": "Wohnfläche in Quadratmetern",
+      "long_description": "Zeigt die Größe deiner Wohnung in Quadratmetern, wie in deinem Tibber-Konto konfiguriert. Kann verwendet werden, um den Energieverbrauch pro Quadratmeter zu berechnen.",
+      "usage_tips": "Nutze dies für Energieeffizienzberechnungen: 'Meine Wohnung verbraucht X kWh pro Quadratmeter pro Jahr'."
+    },
+    "main_fuse_size": {
+      "description": "Hauptsicherungsgröße in Ampere",
+      "long_description": "Zeigt die Kapazität deiner Hauptsicherung in Ampere. Dies bestimmt die maximale elektrische Last, die deine Wohnung gleichzeitig bewältigen kann.",
+      "usage_tips": "Nutze dies zur Überlastungsvermeidung: 'Wenn der Gesamtstromverbrauch sich der Sicherungsgröße nähert, verschiebe das Starten zusätzlicher Geräte'."
+    },
+    "number_of_residents": {
+      "description": "Anzahl der im Haushalt lebenden Personen",
+      "long_description": "Zeigt die Anzahl der Bewohner, wie in deinem Tibber-Konto konfiguriert. Nützlich für Pro-Kopf-Energieverbrauchsberechnungen.",
+      "usage_tips": "Nutze dies für Haushalts-Energieanalysen: 'Energieverbrauch pro Person pro Tag'."
+    },
+    "primary_heating_source": {
+      "description": "Primärer Heizungstyp",
+      "long_description": "Zeigt den Typ des in deiner Wohnung verwendeten Heizsystems, wie in deinem Tibber-Konto konfiguriert. Dies kann eine Wärmepumpe, Elektroheizung, Gas, Öl oder andere Heizquellen sein.",
+      "usage_tips": "Nutze dies zur Kategorisierung heizungsbezogener Automatisierungen oder für Energieverbrauchsanalysen nach Heizungsart."
+    },
+    "grid_company": {
+      "description": "Name deines Stromnetzbetreibers",
+      "long_description": "Zeigt den Namen des Unternehmens, das das Stromnetz in deiner Region betreibt. Dies ist der Verteilnetzbetreiber (VNB), der für die Stromlieferung zu deinem Haus verantwortlich ist.",
+      "usage_tips": "Nützlich für administrative Zwecke und zur Behebung netzbezogener Probleme."
+    },
+    "grid_area_code": {
+      "description": "Netzgebiets-Kennziffer",
+      "long_description": "Zeigt den Code, der dein Stromnetzgebiet identifiziert. Dieser Code wird vom Netzbetreiber für Routing- und Abrechnungszwecke verwendet.",
+      "usage_tips": "Nutze dies als administrative Referenz oder bei der Kontaktaufnahme mit deinem Netzbetreiber."
+    },
+    "price_area_code": {
+      "description": "Strompreis-Zonencode",
+      "long_description": "Zeigt den Code für deine Strompreiszone (z.B. NO1, NO2, SE3, DK1). Verschiedene Zonen haben unterschiedliche Großhandelsstrompreise basierend auf regionalem Angebot und Nachfrage.",
+      "usage_tips": "Nutze dies, um zu verstehen, in welcher Preisregion du dich befindest. Nützlich beim Preisvergleich mit anderen oder bei der Analyse regionaler Preismuster."
+    },
+    "consumption_ean": {
+      "description": "EAN-Code für Stromverbrauchsmessung",
+      "long_description": "Zeigt die Europäische Artikelnummer (EAN), die deinen Stromverbrauchszähler eindeutig identifiziert. Dieser 18-stellige Code wird für Abrechnungs- und Verwaltungszwecke verwendet.",
+      "usage_tips": "Nutze dies bei der Kommunikation mit deinem Stromanbieter oder für administrative Dokumentation."
+    },
+    "production_ean": {
+      "description": "EAN-Code für Stromerzeugungsmessung",
+      "long_description": "Zeigt die Europäische Artikelnummer (EAN) für deinen Stromerzeugungszähler (wenn du Solarpanels oder andere Erzeugung hast). Dieser Code verfolgt Strom, den du ins Netz einspeist.",
+      "usage_tips": "Relevant, wenn du Solarpanels oder andere Stromerzeugung hast. Nutze für administrative Zwecke und bei der Beantragung von Einspeisevergütung."
+    },
+    "energy_tax_type": {
+      "description": "Art der angewandten Energiesteuer",
+      "long_description": "Zeigt die Energiesteuerkategorie, die auf deinen Stromverbrauch angewendet wird. Steuersätze variieren nach Land und manchmal nach Verbrauchertyp (privat, gewerblich usw.).",
+      "usage_tips": "Nutze dies zum Verständnis der Aufschlüsselung deiner Stromrechnung und für Gesamtkostenberechnungen."
+    },
+    "vat_type": {
+      "description": "Mehrwertsteuerkategorie",
+      "long_description": "Zeigt die Mehrwertsteuerkategorie, die auf deinen Stromverbrauch angewendet wird. Mehrwertsteuersätze variieren nach Land und können für Strom anders sein als für andere Waren und Dienstleistungen.",
+      "usage_tips": "Nutze dies zum Verständnis deiner Stromrechnung und zur Berechnung der Gesamtkosten inklusive Steuern."
+    },
+    "estimated_annual_consumption": {
+      "description": "Geschätzter jährlicher Stromverbrauch in kWh",
+      "long_description": "Zeigt deinen geschätzten jährlichen Stromverbrauch in Kilowattstunden, wie in deinem Tibber-Konto berechnet oder konfiguriert. Diese Schätzung wird verwendet, um den tatsächlichen Verbrauch mit den erwarteten Werten zu vergleichen.",
+      "usage_tips": "Nutze dies, um zu verfolgen, ob dein tatsächlicher Verbrauch über oder unter den Erwartungen liegt. Vergleiche den monatlichen Verbrauch mit 1/12 dieses Wertes, um ungewöhnliche Muster zu identifizieren."
+    },
+    "subscription_status": {
+      "description": "Status deines Tibber-Abonnements",
+      "long_description": "Zeigt, ob dein Tibber-Abonnement derzeit aktiv ist, beendet wurde oder auf Aktivierung wartet. Ein Status 'Aktiv' bedeutet, dass du aktiv Strom über Tibber beziehst.",
+      "usage_tips": "Nutze dies zur Überwachung deines Abonnementstatus. Richte Benachrichtigungen ein, wenn sich der Status von 'Aktiv' ändert, um einen unterbrechungsfreien Service sicherzustellen."
+    },
+    "day_pattern_yesterday": {
+      "description": "Erkanntes Preismuster der gestrigen Strompreise",
+      "long_description": "Klassifiziert gestern in ein Preismuster: Tal (günstig in der Mitte), Gipfel (teuer in der Mitte), Doppeltal (zwei günstige Perioden), Doppelgipfel (zwei teure Perioden), Flach (geringe Variation), Steigend, Fallend oder Gemischt. Die Konfidenz- und CV-Attribute zeigen, wie verlässlich das Muster erkannt wurde.",
+      "usage_tips": "Nutze das gestrige Muster für Automationen: Ein Tal-Tag wiederholt sich oft am nächsten Tag und deutet darauf hin, dass Verbraucher auf die günstigen Mittagsstunden verschoben werden sollten."
+    },
+    "day_pattern_today": {
+      "description": "Erkanntes Preismuster der heutigen Strompreise",
+      "long_description": "Klassifiziert heute in ein Preismuster: Tal (günstig mittags), Gipfel (teuer mittags), Doppeltal (W-Form), Doppelgipfel (M-Form), Flach, Steigend, Fallend oder Gemischt. Attribute enthalten Konfidenz (0–1), Variationskoeffizient, Knickpunktzeiten und Tagessegmente.",
+      "usage_tips": "Nutze das Tagesmuster, um Verbraucher zu verschieben. Tal-Tag: Spülmaschine, Waschmaschine oder E-Auto-Laden in die günstige Mittagszeit legen. Gipfel-Tag: früh morgens oder spät abends waschen. Die Attribute valley_start und valley_end ermöglichen minutengenaue Automationen."
+    },
+    "day_pattern_tomorrow": {
+      "description": "Erkanntes Preismuster der morgigen Strompreise",
+      "long_description": "Klassifiziert morgen (sobald Daten verfügbar sind, typisch nach 13 Uhr) in ein Preismuster mit demselben Algorithmus wie heute. Die Attribute valley_start/valley_end oder peak_start/peak_end geben Knickpunktzeiten für das primäre Extremum an.",
+      "usage_tips": "Richte Abendautomationen ein, die das morgige Muster lesen und Wärmepumpe, Autolader oder Warmwasserbereiter für den nächsten Tag vorkonfigurieren. Kombiniere mit dem tomorrow_data_available Binärsensor."
+    },
+    "chart_data_export": {
+      "description": "Datenexport für Dashboard-Integrationen",
+      "long_description": "Dieser Sensor ruft den get_chartdata-Service mit deiner konfigurierten YAML-Konfiguration auf und stellt das Ergebnis als Entity-Attribute bereit. Der Status zeigt 'ready' wenn Daten verfügbar sind, 'error' bei Fehlern, oder 'pending' vor dem ersten Aufruf. Perfekt für Dashboard-Integrationen wie ApexCharts, die Preisdaten aus Entity-Attributen lesen.",
+      "usage_tips": "Konfiguriere die YAML-Parameter in den Integrationsoptionen entsprechend deinem get_chartdata-Service-Aufruf. Der Sensor aktualisiert automatisch bei Preisdaten-Updates (typischerweise nach Mitternacht und wenn morgige Daten eintreffen). Greife auf die Service-Response-Daten direkt über die Entity-Attribute zu - die Struktur entspricht exakt dem, was get_chartdata zurückgibt."
+    },
+    "chart_metadata": {
+      "description": "Leichtgewichtige Metadaten für Diagrammkonfiguration",
+      "long_description": "Liefert wesentliche Diagrammkonfigurationswerte als Sensor-Attribute. Nützlich für jede Diagrammkarte, die Y-Achsen-Grenzen benötigt. Der Sensor ruft get_chartdata im Nur-Metadaten-Modus auf (keine Datenverarbeitung) und extrahiert: yaxis_min, yaxis_max (vorgeschlagener Y-Achsenbereich für optimale Skalierung). Der Status spiegelt das Service-Call-Ergebnis wider: 'ready' bei Erfolg, 'error' bei Fehler, 'pending' während der Initialisierung.",
+      "usage_tips": "Konfiguriere über configuration.yaml unter tibber_prices.chart_metadata_config (optional: day, subunit_currency, resolution). Der Sensor aktualisiert sich automatisch bei Preisdatenänderungen. Greife auf Metadaten aus Attributen zu: yaxis_min, yaxis_max. Verwende mit config-template-card oder jedem Tool, das Entity-Attribute liest - perfekt für dynamische Diagrammkonfiguration ohne manuelle Berechnungen."
+    },
+    "current_interval_price_rank_today": {
+      "description": "Position des aktuellen Intervallpreises in der heutigen Rangliste — Perzentilrang (0 % = günstigster Moment)",
+      "long_description": "Zeigt, wie günstig oder teuer der aktuelle Viertelstunden-Intervallpreis im Vergleich zu allen 96 heutigen Slots ist. 0 % bedeutet: Dieser Moment ist der günstigste des Tages. 50 % bedeutet: Die Hälfte der Slots ist günstiger. ca. 99 % bedeutet: Dieser Slot ist der teuerste des Tages. Formel (Perzentilrang): Anzahl günstigerer Slots ÷ Gesamtanzahl × 100. Attribute: `current_price`, `prices_below_count`, `interval_count`, `reference_min`, `reference_max`, `reference_mean`.",
+      "usage_tips": "Ideal für Automationen: 'Wenn current_interval_price_rank_today < 25, Spülmaschine starten' (günstigstes Viertel des Tages). Oder 'Wenn current_interval_price_rank_today > 75, Wärmepumpe pausieren'. Ein Wert von 0 garantiert den günstigsten Slot des Tages."
+    },
+    "current_interval_price_rank_tomorrow": {
+      "description": "Perzentilrang des aktuellen Intervallpreises in der morgigen Rangliste (0 % = günstigster von morgen)",
+      "long_description": "Zeigt, wie der aktuelle Intervallpreis im Vergleich zu allen 96 morgigen Viertelstunden-Slots abschneidet. Nützlich, um zu entscheiden, ob man bis morgen warten soll. 0 % bedeutet: Der aktuelle Preis ist günstiger als jeder morgige Slot. Gibt 'Unbekannt' zurück, bis die morgigen Daten verfügbar sind (typischerweise nach 13:00 Uhr). Attribute: `current_price`, `prices_below_count`, `interval_count`, `reference_min`, `reference_max`, `reference_mean`.",
+      "usage_tips": "Warten lohnt sich? 'Wenn current_interval_price_rank_tomorrow < 10, gibt es morgen noch günstigere Slots — Aufgabe verschieben'. Am besten mit einem Binärsensor kombinieren."
+    },
+    "current_interval_price_rank_today_tomorrow": {
+      "description": "Perzentilrang des aktuellen Intervallpreises über heute+morgen zusammen (0 % = günstigstes des Zweitages-Fensters)",
+      "long_description": "Zeigt, wie günstig oder teuer der aktuelle Intervallpreis im Vergleich zu allen Slots über heute und morgen zusammen ist (bis zu 192 Viertelstunden-Slots). Fällt auf nur heute zurück, wenn morgige Daten noch nicht verfügbar sind. 0 % = günstigster Slot des kombinierten Zweitages-Fensters. Attribute: `current_price`, `prices_below_count`, `interval_count`, `reference_min`, `reference_max`, `reference_mean`.",
+      "usage_tips": "Das breiteste Signal für 'Ist jetzt ein guter Zeitpunkt?'. Verwende 'Wenn current_interval_price_rank_today_tomorrow < 20, energieintensive Aufgabe jetzt starten'."
+    },
+    "next_interval_price_rank_today": {
+      "description": "Perzentilrang des nächsten Intervallpreises in der heutigen Rangliste (0 % = günstigster Moment heute)",
+      "long_description": "Zeigt den Perzentilrang des nächsten Viertelstunden-Intervalls innerhalb der 96 heutigen Slots. Ermöglicht einen Blick voraus, bevor das nächste Intervall beginnt. Attribute: `next_price`, `prices_below_count`, `interval_count`, `reference_min`, `reference_max`, `reference_mean`.",
+      "usage_tips": "Für Vorbereitung: 'Wenn next_interval_price_rank_today < 15, jetzt vorheizen, damit das Gerät im nächsten günstigen Slot läuft'."
+    },
+    "next_interval_price_rank_today_tomorrow": {
+      "description": "Perzentilrang des nächsten Intervallpreises über heute+morgen zusammen (0 % = günstigstes des Zweitages-Fensters)",
+      "long_description": "Zeigt den Perzentilrang des nächsten Viertelstunden-Intervalls innerhalb des kombinierten heute+morgen-Pools (bis zu 192 Slots). Fällt auf nur heute zurück, wenn morgige Daten nicht verfügbar sind. Attribute: `next_price`, `prices_below_count`, `interval_count`, `reference_min`, `reference_max`, `reference_mean`.",
+      "usage_tips": "Weitester Vorausblick: 'Wenn next_interval_price_rank_today_tomorrow < 10, ist das nächste Intervall eines der günstigsten im Zweitages-Fenster'."
+    },
+    "previous_interval_price_rank_today": {
+      "description": "Perzentilrang des letzten Intervallpreises in der heutigen Rangliste (0 % = günstigster Moment heute)",
+      "long_description": "Zeigt den Perzentilrang des gerade beendeten Viertelstunden-Intervalls innerhalb der 96 heutigen Slots. Nützlich für Protokollierung. Attribute: `previous_price`, `prices_below_count`, `interval_count`, `reference_min`, `reference_max`, `reference_mean`.",
+      "usage_tips": "Für retrospektive Automationen: 'Preisniveau des letzten Intervalls für Energieberichte aufzeichnen'."
+    },
+    "previous_interval_price_rank_today_tomorrow": {
+      "description": "Perzentilrang des letzten Intervallpreises über heute+morgen zusammen (0 % = günstigstes des Zweitages-Fensters)",
+      "long_description": "Zeigt den Perzentilrang des gerade beendeten Viertelstunden-Intervalls innerhalb des kombinierten heute+morgen-Pools (bis zu 192 Slots). Fällt auf nur heute zurück. Attribute: `previous_price`, `prices_below_count`, `interval_count`, `reference_min`, `reference_max`, `reference_mean`.",
+      "usage_tips": "Für retrospektive Vergleiche über ein Zweitages-Fenster."
+    },
+    "current_hour_price_rank_today": {
+      "description": "Perzentilrang des gleitenden Stunden-Durchschnittspreises in der heutigen Rangliste (0 % = günstigste Stunde heute)",
+      "long_description": "Zeigt, wo der gleitende 5-Intervall-Durchschnitt (2 Intervalle vor + aktuell + 2 danach, ca. 1 Stunde) in der heutigen Preisrangliste liegt. Glättet kurze Preisspitzen für eine breitere Einschätzung. Attribute: `current_hour_avg_price`, `prices_below_count`, `interval_count`, `reference_min`, `reference_max`, `reference_mean`.",
+      "usage_tips": "Für Aufgaben, die ca. eine Stunde dauern: 'Wenn current_hour_price_rank_today < 20, ist jetzt eine günstige Stunde — Waschmaschine starten'."
+    },
+    "current_hour_price_rank_today_tomorrow": {
+      "description": "Gleitender Stunden-Durchschnittspreisrang über heute+morgen zusammen (0 % = günstigste Stunde im Zweitages-Fenster)",
+      "long_description": "Zeigt, wo der gleitende 5-Intervall-Durchschnitt (±2 Intervalle, ca. 1 Stunde) in der kombinierten heute+morgen-Rangliste liegt (bis zu 192 Slots). Fällt auf nur heute zurück. Attribute: `current_hour_avg_price`, `prices_below_count`, `interval_count`, `reference_min`, `reference_max`, `reference_mean`.",
+      "usage_tips": "Weitestes Stundensignal: 'Wenn current_hour_price_rank_today_tomorrow < 15, ist dies eine der günstigsten Stunden im Zweitages-Fenster'."
+    },
+    "next_hour_price_rank_today": {
+      "description": "Perzentilrang des nächsten gleitenden Stunden-Durchschnittspreises in der heutigen Rangliste (0 % = günstigste Stunde heute)",
+      "long_description": "Zeigt, wo der auf das nächste Intervall zentrierte gleitende 5-Intervall-Durchschnitt in der heutigen Preisrangliste liegt. Ermöglicht Planung eine Stunde im Voraus. Attribute: `next_hour_avg_price`, `prices_below_count`, `interval_count`, `reference_min`, `reference_max`, `reference_mean`.",
+      "usage_tips": "Eine Stunde vorausplanen: 'Wenn next_hour_price_rank_today < 20, ist die kommende Stunde günstig — Aufgabe jetzt starten'."
+    },
+    "next_hour_price_rank_today_tomorrow": {
+      "description": "Nächster gleitender Stunden-Durchschnittspreisrang über heute+morgen zusammen (0 % = günstigste Stunde im Zweitages-Fenster)",
+      "long_description": "Zeigt, wo der auf das nächste Intervall zentrierte gleitende 5-Intervall-Durchschnitt in der kombinierten heute+morgen-Rangliste liegt (bis zu 192 Slots). Fällt auf nur heute zurück. Attribute: `next_hour_avg_price`, `prices_below_count`, `interval_count`, `reference_min`, `reference_max`, `reference_mean`.",
+      "usage_tips": "Weitester Stundenvorausblick: 'Wenn next_hour_price_rank_today_tomorrow < 10, ist die kommende Stunde eine der günstigsten im Zweitages-Fenster'."
+    }
+  },
+  "binary_sensor": {
+    "tomorrow_data_available": {
+      "description": "Ob Preisdaten für morgen verfügbar sind",
+      "long_description": "Gibt an, ob Preisdaten für den folgenden Tag von Tibber empfangen wurden",
+      "usage_tips": "Nutze dies, um zu überprüfen, ob die Preise für morgen für die Planung verfügbar sind"
+    },
+    "peak_price_period": {
+      "description": "Ob das aktuelle Intervall zu den teuersten des Tages gehört",
+      "long_description": "Wird aktiviert, wenn der aktuelle Preis in den oberen 20% der heutigen Preise liegt",
+      "usage_tips": "Nutze dies, um den Betrieb von Geräten mit hohem Verbrauch während teurer Intervalle zu vermeiden"
+    },
+    "best_price_period": {
+      "description": "Ob das aktuelle Intervall zu den günstigsten des Tages gehört",
+      "long_description": "Wird aktiviert, wenn der aktuelle Preis in den unteren 20% der heutigen Preise liegt",
+      "usage_tips": "Nutze dies, um Geräte mit hohem Verbrauch während der günstigsten Intervalle zu betreiben"
+    },
+    "connection": {
+      "description": "Ob die Verbindung zur Tibber API funktioniert",
+      "long_description": "Zeigt an, ob die Integration erfolgreich eine Verbindung zur Tibber API herstellen kann",
+      "usage_tips": "Nutze dies, um den Verbindungsstatus zur Tibber API zu überwachen"
+    },
+    "has_ventilation_system": {
+      "description": "Ob deine Wohnung über eine Lüftungsanlage verfügt",
+      "long_description": "Zeigt an, ob eine Lüftungsanlage für deine Wohnung im Tibber-Konto registriert ist. Lüftungsanlagen können erhebliche Stromverbraucher sein, die von intelligenter Planung profitieren können.",
+      "usage_tips": "Nutze dies, um lüftungsspezifische Automatisierungen oder Energieüberwachung zu aktivieren. Falls aktiv, erwäge die Planung der Lüftung während Niedrigpreisphasen."
+    },
+    "realtime_consumption_enabled": {
+      "description": "Ob die Echtzeit-Verbrauchsüberwachung aktiv ist",
+      "long_description": "Zeigt an, ob die Echtzeit-Stromverbrauchsüberwachung für dein Tibber-Zuhause aktiviert und aktiv ist. Dies erfordert kompatible Messhardware (z. B. Tibber Pulse) und ein aktives Abonnement.",
+      "usage_tips": "Verwende dies, um zu überprüfen, ob Echtzeit-Verbrauchsdaten verfügbar sind. Aktiviere Benachrichtigungen, falls dies unerwartet auf 'Aus' wechselt, was auf potenzielle Hardware- oder Verbindungsprobleme hinweist."
+    }
+  },
+  "number": {
+    "best_price_flex_override": {
+      "description": "Maximaler Prozentsatz über dem Tagesminimumpreis, den Intervalle haben können und trotzdem als 'Bestpreis' gelten. Empfohlen: 15-20 mit Lockerung aktiviert (Standard), oder 25-35 ohne Lockerung. Maximum: 50 (Obergrenze für zuverlässige Periodenerkennung).",
+      "long_description": "Wenn diese Entität aktiviert ist, überschreibt ihr Wert die Einstellung 'Flexibilität' aus dem Optionen-Dialog für die Bestpreis-Periodenberechnung.",
+      "usage_tips": "Aktiviere diese Entität, um die Bestpreiserkennung dynamisch über Automatisierungen anzupassen, z.B. höhere Flexibilität bei kritischen Lasten oder engere Anforderungen für flexible Geräte."
+    },
+    "best_price_min_distance_override": {
+      "description": "Minimaler prozentualer Abstand unter dem Tagesdurchschnitt. Intervalle müssen so weit unter dem Durchschnitt liegen, um als 'Bestpreis' zu gelten. Hilft, echte Niedrigpreis-Perioden von durchschnittlichen Preisen zu unterscheiden.",
+      "long_description": "Wenn diese Entität aktiviert ist, überschreibt ihr Wert die Einstellung 'Mindestabstand' aus dem Optionen-Dialog für die Bestpreis-Periodenberechnung.",
+      "usage_tips": "Erhöhe den Wert, wenn du strengere Bestpreis-Kriterien möchtest. Verringere ihn, wenn zu wenige Perioden erkannt werden."
+    },
+    "best_price_min_period_length_override": {
+      "description": "Minimale Periodenlänge in 15-Minuten-Intervallen. Perioden kürzer als diese werden nicht gemeldet. Beispiel: 2 = mindestens 30 Minuten.",
+      "long_description": "Wenn diese Entität aktiviert ist, überschreibt ihr Wert die Einstellung 'Mindestperiodenlänge' aus dem Optionen-Dialog für die Bestpreis-Periodenberechnung.",
+      "usage_tips": "Passe an die typische Laufzeit deiner Geräte an: 2 (30 Min) für Schnellprogramme, 4-8 (1-2 Std) für normale Zyklen, 8+ für lange ECO-Programme."
+    },
+    "best_price_min_periods_override": {
+      "description": "Minimale Anzahl an Bestpreis-Perioden, die täglich gefunden werden sollen. Wenn Lockerung aktiviert ist, wird das System die Kriterien automatisch anpassen, um diese Zahl zu erreichen.",
+      "long_description": "Wenn diese Entität aktiviert ist, überschreibt ihr Wert die Einstellung 'Mindestperioden' aus dem Optionen-Dialog für die Bestpreis-Periodenberechnung.",
+      "usage_tips": "Setze dies auf die Anzahl zeitkritischer Aufgaben, die du täglich hast. Beispiel: 2 für zwei Waschmaschinenladungen."
+    },
+    "best_price_relaxation_attempts_override": {
+      "description": "Anzahl der Versuche, die Kriterien schrittweise zu lockern, um die Mindestperiodenanzahl zu erreichen. Jeder Versuch erhöht die Flexibilität um 3 Prozent. Bei 0 werden nur Basis-Kriterien verwendet.",
+      "long_description": "Wenn diese Entität aktiviert ist, überschreibt ihr Wert die Einstellung 'Lockerungsversuche' aus dem Optionen-Dialog für die Bestpreis-Periodenberechnung.",
+      "usage_tips": "Höhere Werte machen die Periodenerkennung anpassungsfähiger an Tage mit stabilen Preisen. Setze auf 0, um strenge Kriterien ohne Lockerung zu erzwingen."
+    },
+    "best_price_gap_count_override": {
+      "description": "Maximale Anzahl teurerer Intervalle, die zwischen günstigen Intervallen erlaubt sind und trotzdem als eine zusammenhängende Periode gelten. Bei 0 müssen günstige Intervalle aufeinander folgen.",
+      "long_description": "Wenn diese Entität aktiviert ist, überschreibt ihr Wert die Einstellung 'Lückentoleranz' aus dem Optionen-Dialog für die Bestpreis-Periodenberechnung.",
+      "usage_tips": "Erhöhe dies für Geräte mit variabler Last (z.B. Wärmepumpen), die kurze teurere Intervalle tolerieren können. Setze auf 0 für kontinuierliche günstige Perioden."
+    },
+    "peak_price_flex_override": {
+      "description": "Maximaler Prozentsatz unter dem Tagesmaximumpreis, den Intervalle haben können und trotzdem als 'Spitzenpreis' gelten. Gleiche Empfehlungen wie für Bestpreis-Flexibilität.",
+      "long_description": "Wenn diese Entität aktiviert ist, überschreibt ihr Wert die Einstellung 'Flexibilität' aus dem Optionen-Dialog für die Spitzenpreis-Periodenberechnung.",
+      "usage_tips": "Nutze dies, um den Spitzenpreis-Schwellenwert zur Laufzeit für Automatisierungen anzupassen, die den Verbrauch während teurer Stunden vermeiden."
+    },
+    "peak_price_min_distance_override": {
+      "description": "Minimaler prozentualer Abstand über dem Tagesdurchschnitt. Intervalle müssen so weit über dem Durchschnitt liegen, um als 'Spitzenpreis' zu gelten.",
+      "long_description": "Wenn diese Entität aktiviert ist, überschreibt ihr Wert die Einstellung 'Mindestabstand' aus dem Optionen-Dialog für die Spitzenpreis-Periodenberechnung.",
+      "usage_tips": "Erhöhe den Wert, um nur extreme Preisspitzen zu erfassen. Verringere ihn, um mehr Hochpreiszeiten einzubeziehen."
+    },
+    "peak_price_min_period_length_override": {
+      "description": "Minimale Periodenlänge in 15-Minuten-Intervallen für Spitzenpreise. Kürzere Preisspitzen werden nicht als Perioden gemeldet.",
+      "long_description": "Wenn diese Entität aktiviert ist, überschreibt ihr Wert die Einstellung 'Mindestperiodenlänge' aus dem Optionen-Dialog für die Spitzenpreis-Periodenberechnung.",
+      "usage_tips": "Kürzere Werte erfassen kurze Preisspitzen. Längere Werte fokussieren auf anhaltende Hochpreisphasen."
+    },
+    "peak_price_min_periods_override": {
+      "description": "Minimale Anzahl an Spitzenpreis-Perioden, die täglich gefunden werden sollen.",
+      "long_description": "Wenn diese Entität aktiviert ist, überschreibt ihr Wert die Einstellung 'Mindestperioden' aus dem Optionen-Dialog für die Spitzenpreis-Periodenberechnung.",
+      "usage_tips": "Setze dies basierend darauf, wie viele Hochpreisphasen du pro Tag für Automatisierungen erfassen möchtest."
+    },
+    "peak_price_relaxation_attempts_override": {
+      "description": "Anzahl der Versuche, die Kriterien zu lockern, um die Mindestanzahl an Spitzenpreis-Perioden zu erreichen.",
+      "long_description": "Wenn diese Entität aktiviert ist, überschreibt ihr Wert die Einstellung 'Lockerungsversuche' aus dem Optionen-Dialog für die Spitzenpreis-Periodenberechnung.",
+      "usage_tips": "Erhöhe dies, wenn an Tagen mit stabilen Preisen keine Perioden gefunden werden. Setze auf 0, um strenge Kriterien zu erzwingen."
+    },
+    "peak_price_gap_count_override": {
+      "description": "Maximale Anzahl günstigerer Intervalle, die zwischen teuren Intervallen erlaubt sind und trotzdem als eine Spitzenpreis-Periode gelten.",
+      "long_description": "Wenn diese Entität aktiviert ist, überschreibt ihr Wert die Einstellung 'Lückentoleranz' aus dem Optionen-Dialog für die Spitzenpreis-Periodenberechnung.",
+      "usage_tips": "Höhere Werte erfassen längere Hochpreisphasen auch mit kurzen Preiseinbrüchen. Setze auf 0, um strikt zusammenhängende Spitzenpreise zu erfassen."
+    }
+  },
+  "switch": {
+    "best_price_enable_relaxation_override": {
+      "description": "Wenn aktiviert, werden die Kriterien automatisch gelockert, um die Mindestperiodenanzahl zu erreichen. Wenn deaktiviert, werden nur Perioden gemeldet, die die strengen Kriterien erfüllen (möglicherweise null Perioden bei stabilen Preisen).",
+      "long_description": "Wenn diese Entität aktiviert ist, überschreibt ihr Wert die Einstellung 'Mindestanzahl erreichen' aus dem Optionen-Dialog für die Bestpreis-Periodenberechnung.",
+      "usage_tips": "Aktiviere dies für garantierte tägliche Automatisierungsmöglichkeiten. Deaktiviere es, wenn du nur wirklich günstige Zeiträume willst, auch wenn das bedeutet, dass an manchen Tagen keine Perioden gefunden werden."
+    },
+    "peak_price_enable_relaxation_override": {
+      "description": "Wenn aktiviert, werden die Kriterien automatisch gelockert, um die Mindestperiodenanzahl zu erreichen. Wenn deaktiviert, werden nur echte Preisspitzen gemeldet.",
+      "long_description": "Wenn diese Entität aktiviert ist, überschreibt ihr Wert die Einstellung 'Mindestanzahl erreichen' aus dem Optionen-Dialog für die Spitzenpreis-Periodenberechnung.",
+      "usage_tips": "Aktiviere dies für konsistente Spitzenpreis-Warnungen. Deaktiviere es, um nur extreme Preisspitzen zu erfassen."
+    }
+  },
+  "home_types": {
+    "APARTMENT": "Wohnung",
+    "ROWHOUSE": "Reihenhaus",
+    "HOUSE": "Haus",
+    "COTTAGE": "Ferienhaus"
+  },
+  "time_units": {
+    "day": "{count} Tag",
+    "days": "{count} Tagen",
+    "hour": "{count} Stunde",
+    "hours": "{count} Stunden",
+    "minute": "{count} Minute",
+    "minutes": "{count} Minuten",
+    "ago": "vor {parts}",
+    "now": "jetzt"
+  },
+  "attribution": "Daten bereitgestellt von Tibber"
 }

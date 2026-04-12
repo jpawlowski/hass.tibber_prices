@@ -753,21 +753,24 @@ VOLATILITY_SENSORS = (
 #   - today_tomorrow:  192 combined intervals when tomorrow is available
 #
 # Use case: "Is now the right time to run a large appliance?"
-# - price_rank_today < 25 → bottom quartile, great time to use energy
-# - price_rank_today > 75 → top quartile, consider delaying consumption
+# - current_interval_price_rank_today < 25 → bottom quartile, great time to use energy
+# - current_interval_price_rank_today > 75 → top quartile, consider delaying consumption
 
 PERCENTILE_RANK_SENSORS = (
+    # ----------------------------------------------------------------
+    # Current interval rank sensors
+    # ----------------------------------------------------------------
     SensorEntityDescription(
-        key="price_rank_today",
-        translation_key="price_rank_today",
+        key="current_interval_price_rank_today",
+        translation_key="current_interval_price_rank_today",
         icon="mdi:percent",
         native_unit_of_measurement=PERCENTAGE,
         state_class=None,  # Position metric: no statistics
         suggested_display_precision=0,
     ),
     SensorEntityDescription(
-        key="price_rank_tomorrow",
-        translation_key="price_rank_tomorrow",
+        key="current_interval_price_rank_tomorrow",
+        translation_key="current_interval_price_rank_tomorrow",
         icon="mdi:percent",
         native_unit_of_measurement=PERCENTAGE,
         state_class=None,  # Position metric: no statistics
@@ -775,13 +778,94 @@ PERCENTILE_RANK_SENSORS = (
         entity_registry_enabled_default=False,  # Available once tomorrow's data arrives
     ),
     SensorEntityDescription(
-        key="price_rank_today_tomorrow",
-        translation_key="price_rank_today_tomorrow",
+        key="current_interval_price_rank_today_tomorrow",
+        translation_key="current_interval_price_rank_today_tomorrow",
         icon="mdi:percent",
         native_unit_of_measurement=PERCENTAGE,
         state_class=None,  # Position metric: no statistics
         suggested_display_precision=0,
         entity_registry_enabled_default=False,  # Advanced overview use case
+    ),
+    # ----------------------------------------------------------------
+    # Next interval rank sensors
+    # ----------------------------------------------------------------
+    SensorEntityDescription(
+        key="next_interval_price_rank_today",
+        translation_key="next_interval_price_rank_today",
+        icon="mdi:percent",
+        native_unit_of_measurement=PERCENTAGE,
+        state_class=None,
+        suggested_display_precision=0,
+        entity_registry_enabled_default=False,
+    ),
+    SensorEntityDescription(
+        key="next_interval_price_rank_today_tomorrow",
+        translation_key="next_interval_price_rank_today_tomorrow",
+        icon="mdi:percent",
+        native_unit_of_measurement=PERCENTAGE,
+        state_class=None,
+        suggested_display_precision=0,
+        entity_registry_enabled_default=False,
+    ),
+    # ----------------------------------------------------------------
+    # Previous interval rank sensors
+    # ----------------------------------------------------------------
+    SensorEntityDescription(
+        key="previous_interval_price_rank_today",
+        translation_key="previous_interval_price_rank_today",
+        icon="mdi:percent",
+        native_unit_of_measurement=PERCENTAGE,
+        state_class=None,
+        suggested_display_precision=0,
+        entity_registry_enabled_default=False,
+    ),
+    SensorEntityDescription(
+        key="previous_interval_price_rank_today_tomorrow",
+        translation_key="previous_interval_price_rank_today_tomorrow",
+        icon="mdi:percent",
+        native_unit_of_measurement=PERCENTAGE,
+        state_class=None,
+        suggested_display_precision=0,
+        entity_registry_enabled_default=False,
+    ),
+    # ----------------------------------------------------------------
+    # Rolling-hour rank sensors (rank of 1h rolling average)
+    # ----------------------------------------------------------------
+    SensorEntityDescription(
+        key="current_hour_price_rank_today",
+        translation_key="current_hour_price_rank_today",
+        icon="mdi:percent",
+        native_unit_of_measurement=PERCENTAGE,
+        state_class=None,
+        suggested_display_precision=0,
+        entity_registry_enabled_default=False,
+    ),
+    SensorEntityDescription(
+        key="current_hour_price_rank_today_tomorrow",
+        translation_key="current_hour_price_rank_today_tomorrow",
+        icon="mdi:percent",
+        native_unit_of_measurement=PERCENTAGE,
+        state_class=None,
+        suggested_display_precision=0,
+        entity_registry_enabled_default=False,
+    ),
+    SensorEntityDescription(
+        key="next_hour_price_rank_today",
+        translation_key="next_hour_price_rank_today",
+        icon="mdi:percent",
+        native_unit_of_measurement=PERCENTAGE,
+        state_class=None,
+        suggested_display_precision=0,
+        entity_registry_enabled_default=False,
+    ),
+    SensorEntityDescription(
+        key="next_hour_price_rank_today_tomorrow",
+        translation_key="next_hour_price_rank_today_tomorrow",
+        icon="mdi:percent",
+        native_unit_of_measurement=PERCENTAGE,
+        state_class=None,
+        suggested_display_precision=0,
+        entity_registry_enabled_default=False,
     ),
 )
 

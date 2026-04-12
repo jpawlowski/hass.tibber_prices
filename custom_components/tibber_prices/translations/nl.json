@@ -866,15 +866,6 @@
           "very_high": "Zeer Hoog"
         }
       },
-      "price_rank_today": {
-        "name": "Prijsrang vandaag"
-      },
-      "price_rank_tomorrow": {
-        "name": "Prijsrang morgen"
-      },
-      "price_rank_today_tomorrow": {
-        "name": "Prijsrang vandaag+morgen"
-      },
       "best_price_end_time": {
         "name": "Beste Prijs Einde"
       },
@@ -1036,6 +1027,39 @@
           "ready": "Gereed",
           "error": "Fout"
         }
+      },
+      "current_interval_price_rank_today": {
+        "name": "Huidige prijsrang (vandaag)"
+      },
+      "current_interval_price_rank_tomorrow": {
+        "name": "Huidige prijsrang (morgen)"
+      },
+      "current_interval_price_rank_today_tomorrow": {
+        "name": "Huidige prijsrang (vandaag+morgen)"
+      },
+      "next_interval_price_rank_today": {
+        "name": "Volgende prijsrang (vandaag)"
+      },
+      "next_interval_price_rank_today_tomorrow": {
+        "name": "Volgende prijsrang (vandaag+morgen)"
+      },
+      "previous_interval_price_rank_today": {
+        "name": "Vorige prijsrang (vandaag)"
+      },
+      "previous_interval_price_rank_today_tomorrow": {
+        "name": "Vorige prijsrang (vandaag+morgen)"
+      },
+      "current_hour_price_rank_today": {
+        "name": "⌀ Uurlijkse prijsrang huidig (vandaag)"
+      },
+      "current_hour_price_rank_today_tomorrow": {
+        "name": "⌀ Uurlijkse prijsrang huidig (vandaag+morgen)"
+      },
+      "next_hour_price_rank_today": {
+        "name": "⌀ Uurlijkse prijsrang volgende (vandaag)"
+      },
+      "next_hour_price_rank_today_tomorrow": {
+        "name": "⌀ Uurlijkse prijsrang volgende (vandaag+morgen)"
       }
     },
     "binary_sensor": {

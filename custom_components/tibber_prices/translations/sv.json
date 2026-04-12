@@ -866,15 +866,6 @@
           "very_high": "Mycket hög"
         }
       },
-      "price_rank_today": {
-        "name": "Prisrang idag"
-      },
-      "price_rank_tomorrow": {
-        "name": "Prisrang imorgon"
-      },
-      "price_rank_today_tomorrow": {
-        "name": "Prisrang idag+imorgon"
-      },
       "best_price_end_time": {
         "name": "Bästa pris slutar"
       },
@@ -1036,6 +1027,39 @@
           "ready": "Redo",
           "error": "Fel"
         }
+      },
+      "current_interval_price_rank_today": {
+        "name": "Aktuellt prisrang (idag)"
+      },
+      "current_interval_price_rank_tomorrow": {
+        "name": "Aktuellt prisrang (imorgon)"
+      },
+      "current_interval_price_rank_today_tomorrow": {
+        "name": "Aktuellt prisrang (idag+imorgon)"
+      },
+      "next_interval_price_rank_today": {
+        "name": "Nästa prisrang (idag)"
+      },
+      "next_interval_price_rank_today_tomorrow": {
+        "name": "Nästa prisrang (idag+imorgon)"
+      },
+      "previous_interval_price_rank_today": {
+        "name": "Förra prisrang (idag)"
+      },
+      "previous_interval_price_rank_today_tomorrow": {
+        "name": "Förra prisrang (idag+imorgon)"
+      },
+      "current_hour_price_rank_today": {
+        "name": "⌀ Timprisrang aktuell (idag)"
+      },
+      "current_hour_price_rank_today_tomorrow": {
+        "name": "⌀ Timprisrang aktuell (idag+imorgon)"
+      },
+      "next_hour_price_rank_today": {
+        "name": "⌀ Timprisrang nästa (idag)"
+      },
+      "next_hour_price_rank_today_tomorrow": {
+        "name": "⌀ Timprisrang nästa (idag+imorgon)"
       }
     },
     "binary_sensor": {
