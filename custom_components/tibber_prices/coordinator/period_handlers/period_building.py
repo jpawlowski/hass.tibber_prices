@@ -62,6 +62,7 @@ def build_periods(  # noqa: PLR0913, PLR0915, PLR0912 - Complex period building 
     level_filter: str | None = None,
     gap_count: int = 0,
     time: TibberPricesTimeService,
+    time_range: tuple[datetime, datetime] | None = None,
 ) -> list[list[dict]]:
     """
     Build periods, allowing periods to cross midnight (day boundary).
@@ -78,6 +79,10 @@ def build_periods(  # noqa: PLR0913, PLR0915, PLR0912 - Complex period building 
         level_filter: Level filter string ("cheap", "expensive", "any", None)
         gap_count: Number of allowed consecutive intervals deviating by exactly 1 level step
         time: TibberPricesTimeService instance (required)
+        time_range: Optional (start_inclusive, end_exclusive) window. When set, only intervals
+            within [start, end) are considered as period candidates. Reference prices
+            (from price_context) remain day-wide and are unaffected by this filter.
+            Used by Phase 4 segment forcing to restrict detection to one segment side.
 
     """
     ref_prices = price_context["ref_prices"]
@@ -132,6 +137,11 @@ def build_periods(  # noqa: PLR0913, PLR0915, PLR0912 - Complex period building 
         starts_at = time.get_interval_time(price_data)
         if starts_at is None:
             continue
+
+        # Filter by time range if specified (Phase 4 segment forcing)
+        if time_range is not None and not (time_range[0] <= starts_at < time_range[1]):
+            continue
+
         date_key = starts_at.date()
 
         # Use smoothed price for criteria checks (flex/distance)

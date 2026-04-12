@@ -5,6 +5,8 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
+    from datetime import datetime
+
     from custom_components.tibber_prices.coordinator.time_service import TibberPricesTimeService
 
     from .types import TibberPricesPeriodConfig
@@ -31,6 +33,7 @@ from .types import TibberPricesThresholdConfig
 # Flex limits to prevent degenerate behavior (see docs/development/period-calculation-theory.md)
 MAX_SAFE_FLEX = 0.50  # 50% - hard cap: above this, period detection becomes unreliable
 MAX_OUTLIER_FLEX = 0.25  # 25% - cap for outlier filtering: above this, spike detection too permissive
+MIN_SEGMENT_FORCING_INTERVALS = 8  # Minimum intervals per day half to attempt segment forcing (< 2 hours is too few)
 
 
 def calculate_periods(
@@ -39,6 +42,7 @@ def calculate_periods(
     config: TibberPricesPeriodConfig,
     time: TibberPricesTimeService,
     day_patterns_by_date: dict | None = None,
+    time_range: tuple[datetime, datetime] | None = None,
 ) -> dict[str, Any]:
     """
     Calculate price periods (best or peak) from price data.
@@ -61,6 +65,9 @@ def calculate_periods(
                 min_period_length, threshold_low, and threshold_high.
         time: TibberPricesTimeService instance (required).
         day_patterns_by_date: Optional dict mapping date → day pattern dict for geometric flex bonus.
+        time_range: Optional (start_inclusive, end_exclusive) window passed through to
+            build_periods(). When set, only intervals within [start, end) are considered
+            as period candidates. Used by Phase 4 segment forcing.
 
     Returns:
         Dict with:
@@ -168,6 +175,7 @@ def calculate_periods(
         level_filter=config.level_filter,
         gap_count=config.gap_count,
         time=time,
+        time_range=time_range,
     )
 
     _LOGGER.debug(
@@ -177,6 +185,24 @@ def calculate_periods(
         abs(flex) * 100,
         config.level_filter or "None",
     )
+
+    # Step 3.5: Segment forcing for W/M-shaped days (opt-in, default disabled)
+    # For days detected as W-shape (DOUBLE_VALLEY for best) or M-shape (DOUBLE_PEAK for peak),
+    # ensures each price valley/peak segment has at least segment_min_periods periods.
+    if config.segment_forcing and day_patterns_by_date:
+        raw_periods = _apply_segment_forcing(
+            all_prices_smoothed,
+            raw_periods,
+            price_context,
+            config,
+            day_patterns_by_date=day_patterns_by_date,
+            time=time,
+        )
+        _LOGGER.debug(
+            "%sAfter segment_forcing: %d periods total",
+            INDENT_L0,
+            len(raw_periods),
+        )
 
     # Step 4: Filter by minimum length
     raw_periods = filter_periods_by_min_length(raw_periods, min_period_length, time=time)
@@ -264,3 +290,168 @@ def calculate_periods(
             "avg_prices": {k.isoformat(): v for k, v in avg_price_by_day.items()},
         },
     }
+
+
+# ─── Segment forcing helpers ──────────────────────────────────────────────────
+
+
+def _period_belongs_to_side(
+    period: list[dict],
+    side_times: set,
+    time: "TibberPricesTimeService",
+) -> bool:
+    """Return True if the majority of a period's intervals are in side_times."""
+    if not period:
+        return False
+    in_side = sum(1 for iv in period if time.get_interval_time(iv) in side_times)
+    return in_side * 2 >= len(period)
+
+
+def _apply_segment_forcing(  # noqa: PLR0913
+    all_prices_smoothed: list[dict],
+    periods: list[list[dict]],
+    price_context: dict[str, Any],
+    config: "TibberPricesPeriodConfig",
+    *,
+    day_patterns_by_date: dict,
+    time: "TibberPricesTimeService",
+) -> list[list[dict]]:
+    """
+    Force at least segment_min_periods periods per segment for W/M-shaped days.
+
+    For DOUBLE_VALLEY days (best price): splits at the central price peak and
+    ensures each valley side has the required number of periods.
+    For DOUBLE_PEAK days (peak price): splits at the central price valley and
+    ensures each peak side has the required number of periods.
+
+    Args:
+        all_prices_smoothed: Outlier-filtered prices used for period building.
+        periods: Already-found periods from the global build_periods call.
+        price_context: Context dict with reference/average prices + filter settings.
+        config: Period configuration including segment_forcing parameters.
+        day_patterns_by_date: Detected day patterns keyed by date.
+        time: TibberPricesTimeService instance.
+
+    Returns:
+        Updated periods list with any new segment-forced periods appended.
+
+    """
+    import logging  # noqa: PLC0415
+
+    from .period_building import build_periods  # noqa: PLC0415
+    from .types import DAY_PATTERN_DOUBLE_PEAK, DAY_PATTERN_DOUBLE_VALLEY, INDENT_L1, INDENT_L2  # noqa: PLC0415
+
+    _LOGGER = logging.getLogger(__name__)  # noqa: N806
+
+    reverse_sort = config.reverse_sort
+    target_pattern = DAY_PATTERN_DOUBLE_PEAK if reverse_sort else DAY_PATTERN_DOUBLE_VALLEY
+    segment_min_periods = config.segment_min_periods
+
+    merged_periods = list(periods)
+
+    for day_date, day_pattern in day_patterns_by_date.items():
+        if day_pattern is None or day_pattern.get("pattern") != target_pattern:
+            continue
+
+        # Collect and sort this day's intervals
+        day_intervals = sorted(
+            (
+                iv
+                for iv in all_prices_smoothed
+                if (t := time.get_interval_time(iv)) is not None and t.date() == day_date
+            ),
+            key=time.get_interval_time,  # type: ignore[arg-type]
+        )
+        if len(day_intervals) < MIN_SEGMENT_FORCING_INTERVALS:  # need at least a few intervals per segment
+            continue
+
+        # Find the central extremum in the middle 50% of the day
+        # DOUBLE_VALLEY → central peak = highest price between the two valleys
+        # DOUBLE_PEAK   → central valley = lowest price between the two peaks
+        n = len(day_intervals)
+        middle = day_intervals[n // 4 : 3 * n // 4]
+        if not middle:
+            continue
+
+        if not reverse_sort:
+            split_iv = max(middle, key=lambda iv: iv.get("total") or 0)
+        else:
+            split_iv = min(middle, key=lambda iv: iv.get("total") or float("inf"))
+
+        split_time = time.get_interval_time(split_iv)
+        if split_time is None:
+            continue
+
+        side_a = [iv for iv in day_intervals if (t := time.get_interval_time(iv)) is not None and t <= split_time]
+        side_b = [iv for iv in day_intervals if (t := time.get_interval_time(iv)) is not None and t > split_time]
+
+        _LOGGER.debug(
+            "%sSegment forcing %s (%s): split at %s (%d+%d intervals)",
+            INDENT_L1,
+            day_date,
+            target_pattern,
+            split_time.strftime("%H:%M"),
+            len(side_a),
+            len(side_b),
+        )
+
+        for side_name, side_intervals in (("A", side_a), ("B", side_b)):
+            side_times = {time.get_interval_time(iv) for iv in side_intervals}
+            count_in_side = sum(1 for p in merged_periods if _period_belongs_to_side(p, side_times, time))
+
+            _LOGGER.debug(
+                "%sSide %s: %d existing periods (need %d)",
+                INDENT_L2,
+                side_name,
+                count_in_side,
+                segment_min_periods,
+            )
+
+            if count_in_side >= segment_min_periods:
+                continue
+
+            # Run period detection restricted to this segment side via time_range.
+            # The full all_prices_smoothed (including other days) is passed so that
+            # reference price context remains day-wide; time_range restricts which
+            # intervals are EVALUATED as period candidates to this side only.
+            sorted_side = sorted(side_intervals, key=time.get_interval_time)  # type: ignore[arg-type]
+            side_start = time.get_interval_time(sorted_side[0])
+            # end = one interval duration past the last interval's start
+            side_end = time.get_interval_time(sorted_side[-1])
+            if side_start is None or side_end is None:
+                continue
+            side_end = side_end + time.get_interval_duration()
+            new_raw = build_periods(
+                all_prices_smoothed,
+                price_context,
+                reverse_sort=reverse_sort,
+                level_filter=config.level_filter,
+                gap_count=config.gap_count,
+                time=time,
+                time_range=(side_start, side_end),
+            )
+
+            # Add non-duplicate periods; flag them with segment_forced=True
+            added = 0
+            for new_period in new_raw:
+                new_times = {time.get_interval_time(iv) for iv in new_period if time.get_interval_time(iv) is not None}
+                is_dup = any(
+                    bool(
+                        new_times
+                        & {time.get_interval_time(iv) for iv in existing if time.get_interval_time(iv) is not None}
+                    )
+                    for existing in merged_periods
+                )
+                if not is_dup:
+                    merged_periods.append([{**iv, "segment_forced": True} for iv in new_period])
+                    added += 1
+
+            _LOGGER.debug(
+                "%sSide %s: added %d forced periods (%d candidates from restricted run)",
+                INDENT_L2,
+                side_name,
+                added,
+                len(new_raw),
+            )
+
+    return merged_periods

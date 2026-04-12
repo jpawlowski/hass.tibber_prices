@@ -8,7 +8,7 @@ from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
     from collections.abc import Callable
-    from datetime import date
+    from datetime import date, datetime
 
     from custom_components.tibber_prices.coordinator.time_service import TibberPricesTimeService
 
@@ -22,6 +22,7 @@ from .types import (
     INDENT_L0,
     INDENT_L1,
     INDENT_L2,
+    LOW_PRICE_QUALITY_BYPASS_THRESHOLD,
     PERIOD_MAX_CV,
     TibberPricesPeriodConfig,
 )
@@ -41,12 +42,6 @@ FLEX_HIGH_THRESHOLD_RELAXATION = 0.30  # 30% - WARNING: base flex too high for r
 MIN_DURATION_FALLBACK_MINIMUM = 30  # Minimum period length to try (30 min = 2 intervals)
 MIN_DURATION_FALLBACK_STEP = 15  # Reduce by 15 min (1 interval) each step
 
-# Low absolute price threshold for quality gate bypass (in major currency unit, e.g. EUR/NOK)
-# When the MEAN price of a period is below this level, the CV quality gate is bypassed.
-# Relative CV is unreliable at very low absolute prices: a range of 1-4 ct shows CV≈50%
-# but is practically homogeneous from a cost perspective.
-# Value: LOW_PRICE_AVG_THRESHOLD (subunit) / 100 = 10 ct / 100 = 0.10 EUR/NOK
-LOW_PRICE_QUALITY_BYPASS_THRESHOLD = 0.10  # EUR/NOK major unit (= 10 ct/øre)
 
 # Span-to-ref ratio threshold for suppressing flex warnings on V-shape days.
 # When span / ref_price < this on ANY available day, the warning is shown.
@@ -527,6 +522,7 @@ def calculate_periods_with_relaxation(  # noqa: PLR0912, PLR0913, PLR0915 - Per-
     time: TibberPricesTimeService,
     config_entry: Any,  # ConfigEntry type
     day_patterns_by_date: dict | None = None,
+    time_range: tuple[datetime, datetime] | None = None,
 ) -> dict[str, Any]:
     """
     Calculate periods with optional per-day filter relaxation.
@@ -555,6 +551,9 @@ def calculate_periods_with_relaxation(  # noqa: PLR0912, PLR0913, PLR0915 - Per-
         config_entry: Config entry to get display unit configuration.
         day_patterns_by_date: Optional dict mapping date → day pattern dict. Used for
             geometric flex bonus in period detection. Passed through to calculate_periods().
+        time_range: Optional (start_inclusive, end_exclusive) datetime window. When set,
+            only intervals within [start, end) are considered as period candidates.
+            Passed through to calculate_periods(). Used by Phase 4 segment forcing.
 
     Returns:
         Dict with same format as calculate_periods() output:
@@ -712,7 +711,9 @@ def calculate_periods_with_relaxation(  # noqa: PLR0912, PLR0913, PLR0915 - Per-
     # === BASELINE CALCULATION (process ALL prices together, including yesterday) ===
     # Periods that ended before yesterday will be filtered out later by filter_periods_by_end_date()
     # This keeps yesterday/today/tomorrow periods in the cache
-    baseline_result = calculate_periods(all_prices, config=config, time=time, day_patterns_by_date=day_patterns_by_date)
+    baseline_result = calculate_periods(
+        all_prices, config=config, time=time, day_patterns_by_date=day_patterns_by_date, time_range=time_range
+    )
     all_periods = baseline_result["periods"]
 
     # Count periods per day for min_periods check
@@ -955,7 +956,10 @@ def relax_all_prices(  # noqa: PLR0913 - Comprehensive filter relaxation require
 
         # Process ALL prices together (allows midnight crossing)
         result = calculate_periods(
-            all_prices, config=relaxed_config, time=time, day_patterns_by_date=day_patterns_by_date
+            all_prices,
+            config=relaxed_config,
+            time=time,
+            day_patterns_by_date=day_patterns_by_date,
         )
         new_periods = result["periods"]
 

@@ -22,6 +22,13 @@ from custom_components.tibber_prices.const import (
 #          Period with prices 0.5-1.0 kr has ~30% CV which would be rejected
 PERIOD_MAX_CV = 25.0  # 25% max coefficient of variation within a period
 
+# Low absolute price threshold for quality gate bypass (in major currency unit, e.g. EUR/NOK)
+# When the MEAN price of a period is below this level, the CV quality gate is bypassed.
+# Relative CV is unreliable at very low absolute prices: a range of 1-4 ct shows CV≈50%
+# but is practically homogeneous from a cost perspective.
+# Value: 10 ct / 100 = 0.10 EUR/NOK
+LOW_PRICE_QUALITY_BYPASS_THRESHOLD = 0.10  # EUR/NOK major unit (= 10 ct/øre)
+
 # Cross-Day Extension: Time window constants
 # When a period ends late in the day and tomorrow data is available,
 # we can extend it past midnight if prices remain favorable
@@ -59,6 +66,8 @@ class TibberPricesPeriodConfig(NamedTuple):
     extend_to_extreme: bool = False  # Extend periods into adjacent VERY_CHEAP/VERY_EXPENSIVE intervals
     max_extension_intervals: int = 0  # Max intervals this extension may add per side (0 = disabled)
     geometric_extra_flex: float = 0.0  # Extra flex (decimal) for intervals inside the valley/peak zone (0.0 = disabled)
+    segment_forcing: bool = False  # Force at least segment_min_periods in each W/M-shape segment
+    segment_min_periods: int = 1  # Minimum periods required per segment when segment_forcing is True
 
 
 class TibberPricesPeriodData(NamedTuple):

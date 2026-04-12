@@ -23,6 +23,8 @@ from custom_components.tibber_prices.utils.price import (
     calculate_volatility_level,
 )
 
+from .types import LOW_PRICE_QUALITY_BYPASS_THRESHOLD, PERIOD_MAX_CV
+
 
 def calculate_period_price_diff(
     price_mean: float,
@@ -220,18 +222,57 @@ def build_period_summary_dict(
     return summary
 
 
-def _add_interval_flag_counts(summary: dict, period: list[dict]) -> None:
-    """Add optional interval flag counts to period summary."""
+def _strip_geo_from_edges(period: list[dict]) -> list[dict]:
+    """
+    Remove geo-bonus intervals from leading and trailing edges of a period.
+
+    Used by Phase 3 CV gate: when a period with geometric extension fails the CV quality
+    gate, the edge intervals that were included only via geo-bonus flex are stripped to
+    restore the period's unextended (tighter) boundaries.
+
+    Geo-bonus intervals in the MIDDLE of a period are preserved (they represent
+    intervals genuinely inside the valley/peak zone, not boundary extensions).
+
+    Returns an empty list only when all intervals are geo-bonus (degenerate case).
+    """
+    start = 0
+    end = len(period)
+    while start < end and period[start].get("geometric_bonus_applied", False):
+        start += 1
+    while end > start and period[end - 1].get("geometric_bonus_applied", False):
+        end -= 1
+    return period[start:end]
+
+
+def _add_interval_flag_counts(summary: dict, period: list[dict], *, geo_extension_status: str | None = None) -> None:
+    """
+    Add optional interval flag counts to period summary.
+
+    Args:
+        summary: Period summary dict to augment in-place.
+        period: Raw interval list (may already be stripped of geo-bonus edges).
+        geo_extension_status: "active" if geometric extension passed the CV gate,
+            "attempted" if it was tried but CV gate failed and period was reverted.
+
+    """
     if (count := sum(1 for i in period if i.get("smoothing_was_impactful", False))) > 0:
         summary["period_interval_smoothed_count"] = count
     if (count := sum(1 for i in period if i.get("is_level_gap", False))) > 0:
         summary["period_interval_level_gap_count"] = count
-    if (count := sum(1 for i in period if i.get("geometric_bonus_applied", False))) > 0:
+    # Geometric extension: distinguish "active" (CV passed) from "attempted" (CV failed → reverted)
+    if geo_extension_status == "active":
+        count = sum(1 for i in period if i.get("geometric_bonus_applied", False))
         summary["geometric_extension_active"] = True
         summary["geometric_extension_intervals"] = count
+    elif geo_extension_status == "attempted":
+        # CV gate failed: geo extension was tried but period was reverted to base boundaries.
+        # The summary uses unextended (stripped) boundaries; this flag marks the attempt.
+        summary["geometric_extension_attempted"] = True
+    if any(i.get("segment_forced", False) for i in period):
+        summary["segment_forced"] = True
 
 
-def extract_period_summaries(
+def extract_period_summaries(  # noqa: PLR0912, PLR0915 - CV pre-check for geo-extension adds necessary branches/statements
     periods: list[list[dict]],
     all_prices: list[dict],
     price_context: dict[str, Any],
@@ -279,6 +320,34 @@ def extract_period_summaries(
     for period_idx, period in enumerate(periods, 1):
         if not period:
             continue
+
+        # Phase 3: Geometric extension CV gate check
+        # If this period contains geo-bonus intervals, pre-check whether the full period
+        # passes the CV quality gate. If it fails, revert to base boundaries by stripping
+        # geo-bonus intervals from the edges and mark with geometric_extension_attempted.
+        geo_extension_status: str | None = None
+        if any(iv.get("geometric_bonus_applied", False) for iv in period):
+            full_prices: list[float] = []
+            for iv in period:
+                start_iv = iv.get("interval_start")
+                if start_iv:
+                    p = price_lookup.get(start_iv.isoformat())
+                    if p:
+                        full_prices.append(float(p["total"]))
+            if full_prices:
+                full_cv = calculate_coefficient_of_variation(full_prices)
+                cv_fails = (
+                    full_cv is not None
+                    and sum(full_prices) / len(full_prices) >= LOW_PRICE_QUALITY_BYPASS_THRESHOLD
+                    and full_cv > PERIOD_MAX_CV
+                )
+                if cv_fails:
+                    base_period = _strip_geo_from_edges(period)
+                    if base_period:
+                        period = base_period  # noqa: PLW2901 - intentional period replacement
+                    geo_extension_status = "attempted"
+                else:
+                    geo_extension_status = "active"
 
         first_interval = period[0]
         last_interval = period[-1]
@@ -369,7 +438,7 @@ def extract_period_summaries(
         )
 
         # Add optional interval flag counts (smoothing, level gaps, geometric extension)
-        _add_interval_flag_counts(summary, period)
+        _add_interval_flag_counts(summary, period, geo_extension_status=geo_extension_status)
 
         summaries.append(summary)
 
