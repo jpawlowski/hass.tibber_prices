@@ -16,8 +16,23 @@ system_health:
 # Note: Diagnostics integration cannot be disabled, but without analytics
 # and with internal_url set, no data is sent externally
 
-# Core integrations needed for development
+# Core integrations
 http:
+  # Development server settings for Codespaces/DevContainer
+  server_host: "0.0.0.0"
+  # Disable IP banning for development to avoid lockouts
+  ip_ban_enabled: false
+  # Allow access from Codespaces reverse proxy
+  use_x_forwarded_for: true
+  trusted_proxies:
+    - 127.0.0.0/8
+    - ::1
+    - 192.168.0.0/16
+    - 172.16.0.0/12
+    - 10.0.0.0/8
+  # CORS for development
+  cors_allowed_origins:
+    - "*"
 
 automation:
 
