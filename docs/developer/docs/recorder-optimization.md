@@ -137,7 +137,7 @@ class TibberPricesSensor(TibberPricesEntity, SensorEntity):
 
 ### 7. Redundant/Derived Data
 
-**Attributes:** `price_spread`, `volatility`, `diff_%`, `rating_difference_%`, `period_price_diff_from_daily_min`, `period_price_diff_from_daily_min_%`, `period_count_total`, `periods_remaining`
+**Attributes:** `price_spread`, `volatility`, `diff_%`, `rating_difference_%`, `period_price_diff_from_daily_min`, `period_price_diff_from_daily_min_%`, `period_count_total`, `period_count_remaining`
 
 **Reason:**
 - Can be calculated from other attributes
@@ -146,7 +146,7 @@ class TibberPricesSensor(TibberPricesEntity, SensorEntity):
 
 **Impact:** ~100-200 bytes saved per state change
 
-**Example:** `price_spread = price_max - price_min` (both are recorded, so spread can be calculated). `periods_remaining = period_count_total - period_position` (both components are recorded).
+**Example:** `price_spread = price_max - price_min` (both are recorded, so spread can be calculated). `period_count_remaining = period_count_total - period_position` (both components are recorded).
 
 ## Attributes That ARE Recorded
 

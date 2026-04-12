@@ -56,7 +56,7 @@ def recalculate_period_metadata(periods: list[dict], *, time: TibberPricesTimeSe
     """
     Recalculate period metadata after merging periods.
 
-    Updates period_position, period_count_total, and periods_remaining for all periods
+    Updates period_position, period_count_total, and period_count_remaining for all periods
     based on chronological order.
 
     This must be called after resolve_period_overlaps() to ensure metadata
@@ -79,7 +79,7 @@ def recalculate_period_metadata(periods: list[dict], *, time: TibberPricesTimeSe
     for position, period in enumerate(periods, 1):
         period["period_position"] = position
         period["period_count_total"] = total_periods
-        period["periods_remaining"] = total_periods - position
+        period["period_count_remaining"] = total_periods - position
 
 
 def merge_adjacent_periods(period1: dict, period2: dict) -> dict:

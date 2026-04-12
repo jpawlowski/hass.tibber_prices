@@ -127,7 +127,7 @@ def get_price_intervals_attributes(
         | {
             "period_position": i,
             "period_count_total": total_filtered,
-            "periods_remaining": total_filtered - i,
+            "period_count_remaining": total_filtered - i,
         }
         for i, period in enumerate(filtered_periods, 1)
     ]
@@ -266,8 +266,8 @@ def add_detail_attributes(attributes: dict, current_period: dict) -> None:
         attributes["period_position"] = current_period["period_position"]
     if "period_count_total" in current_period:
         attributes["period_count_total"] = current_period["period_count_total"]
-    if "periods_remaining" in current_period:
-        attributes["periods_remaining"] = current_period["periods_remaining"]
+    if "period_count_remaining" in current_period:
+        attributes["period_count_remaining"] = current_period["period_count_remaining"]
 
 
 def add_period_count_attributes(
@@ -421,7 +421,7 @@ def build_final_attributes_simple(
     2. Core decision attributes (level, rating_level, rating_difference_%)
     3. Price statistics (price_mean, price_median, price_min, price_max, price_spread, volatility)
     4. Price differences (period_price_diff_from_daily_min, period_price_diff_from_daily_min_%)
-    5. Detail information (period_interval_count, period_position, period_count_total, periods_remaining)
+    5. Detail information (period_interval_count, period_position, period_count_total, period_count_remaining)
     6. Relaxation information (relaxation_active, relaxation_level, relaxation_threshold_original_%,
        relaxation_threshold_applied_%) - only if current period was relaxed
     7. Calculation summary (min_periods_configured, flat_days_detected,

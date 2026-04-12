@@ -179,7 +179,7 @@ def build_period_summary_dict(
         "period_interval_count": period_data.period_length,
         "period_position": period_data.period_idx,
         "period_count_total": period_data.total_periods,
-        "periods_remaining": period_data.total_periods - period_data.period_idx,
+        "period_count_remaining": period_data.total_periods - period_data.period_idx,
     }
 
     # Add period price difference attributes based on sensor type (step 4)

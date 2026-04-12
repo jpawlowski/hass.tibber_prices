@@ -173,7 +173,7 @@ class TibberPricesSensor(TibberPricesEntity, RestoreSensor):
             "period_price_diff_from_daily_min",
             "period_price_diff_from_daily_min_%",
             "period_count_total",
-            "periods_remaining",
+            "period_count_remaining",
         }
     )
 
