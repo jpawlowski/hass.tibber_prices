@@ -1,0 +1,11 @@
+# CODEOWNERS
+#
+# This file defines code owners for this repository.
+# Code owners are automatically requested for review when a pull request
+# modifies files they own.
+#
+# See: https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners
+#
+# NOTE: This file is updated automatically by initialize.sh when using the blueprint.
+
+* @jpawlowski
