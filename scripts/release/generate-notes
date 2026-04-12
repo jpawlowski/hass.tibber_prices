@@ -66,12 +66,12 @@ USER_FACING_PATHS=(
 # Parse common truthy values from environment variables
 is_truthy() {
     case "${1,,}" in
-        1 | true | yes | on)
-            return 0
-            ;;
-        *)
-            return 1
-            ;;
+    1 | true | yes | on)
+        return 0
+        ;;
+    *)
+        return 1
+        ;;
     esac
 }
 
@@ -168,8 +168,8 @@ build_diff_context() {
         if ! diff_context=$(
             set -o pipefail
             git diff --unified=0 --no-color --minimal --patience --diff-filter=AM \
-                "${FROM_TAG}..${TO_TAG}" -- "${USER_FACING_PATHS[@]}" 2>/dev/null \
-                | awk '
+                "${FROM_TAG}..${TO_TAG}" -- "${USER_FACING_PATHS[@]}" 2>/dev/null |
+                awk '
                     /^diff --git / { print; next }
                     /^--- / || /^\+\+\+ / || /^@@ / { print; next }
                     /^[+-]/ {
@@ -177,18 +177,18 @@ build_diff_context() {
                         print
                         next
                     }
-                ' \
-                | head -c "$RELEASE_NOTES_DIFF_MAX_BYTES"
+                ' |
+                head -c "$RELEASE_NOTES_DIFF_MAX_BYTES"
         ); then
             log_info "${YELLOW}Warning: compact diff generation failed, falling back to legacy diff context${NC}"
             diff_context=$(git diff --unified=2 --diff-filter=AM \
-                "${FROM_TAG}..${TO_TAG}" -- "${USER_FACING_PATHS[@]}" 2>/dev/null \
-                | head -c "$RELEASE_NOTES_DIFF_MAX_BYTES" || true)
+                "${FROM_TAG}..${TO_TAG}" -- "${USER_FACING_PATHS[@]}" 2>/dev/null |
+                head -c "$RELEASE_NOTES_DIFF_MAX_BYTES" || true)
         fi
     else
         diff_context=$(git diff --unified=2 --diff-filter=AM \
-            "${FROM_TAG}..${TO_TAG}" -- "${USER_FACING_PATHS[@]}" 2>/dev/null \
-            | head -c "$RELEASE_NOTES_DIFF_MAX_BYTES" || true)
+            "${FROM_TAG}..${TO_TAG}" -- "${USER_FACING_PATHS[@]}" 2>/dev/null |
+            head -c "$RELEASE_NOTES_DIFF_MAX_BYTES" || true)
     fi
 
     echo "$diff_context"
@@ -264,8 +264,8 @@ generate_with_copilot() {
     FINAL_FILE_CHANGES=$(git diff --name-status "${FROM_TAG}..${TO_TAG}" 2>/dev/null || true)
 
     # Revert commits are useful chronology hints (earlier changes may be superseded).
-    REVERT_COMMITS=$(git log --reverse --pretty=format:"%h | %s" "${FROM_TAG}..${TO_TAG}" \
-        | grep -Ei '\|[[:space:]]*revert\b' || true)
+    REVERT_COMMITS=$(git log --reverse --pretty=format:"%h | %s" "${FROM_TAG}..${TO_TAG}" |
+        grep -Ei '\|[[:space:]]*revert\b' || true)
 
     if [[ -z $FINAL_FILE_CHANGES ]]; then
         FINAL_FILE_CHANGES="(none)"
@@ -442,7 +442,7 @@ End after the Buy Me A Coffee button. No meta-commentary, no explanations."
 
     # Save prompt to temp file for copilot
     TEMP_PROMPT=$(mktemp)
-    echo "$PROMPT" > "$TEMP_PROMPT"
+    echo "$PROMPT" >"$TEMP_PROMPT"
 
     # Use Claude Sonnet for better user-focused, plain-language release notes.
     # Haiku tends to echo technical commit language; Sonnet better translates to user benefits.
@@ -450,7 +450,7 @@ End after the Buy Me A Coffee button. No meta-commentary, no explanations."
     COPILOT_MODEL="${COPILOT_MODEL:-claude-sonnet-4.6}"
 
     # Call copilot CLI (it will handle authentication interactively)
-    copilot --model "$COPILOT_MODEL" < "$TEMP_PROMPT" || {
+    copilot --model "$COPILOT_MODEL" <"$TEMP_PROMPT" || {
         echo ""
         log_info "${YELLOW}Warning: GitHub Copilot CLI failed or was not authenticated${NC}"
         log_info "${YELLOW}Falling back to git-cliff${NC}"
@@ -501,7 +501,7 @@ generate_with_gitcliff() {
 
     # Create temporary cliff.toml if not exists
     if [ ! -f "cliff.toml" ]; then
-        cat > /tmp/cliff.toml <<'EOF'
+        cat >/tmp/cliff.toml <<'EOF'
 [changelog]
 header = ""
 body = """
@@ -628,7 +628,7 @@ EOF
     ')
 
     printf "%s\n" "$CLIFF_OUTPUT"
-    echo ""  # Ensure output ends with newline (cliff.toml trim=true removes trailing newline)
+    echo "" # Ensure output ends with newline (cliff.toml trim=true removes trailing newline)
 
     if [ "$CLIFF_CONFIG" = "/tmp/cliff.toml" ]; then
         rm -f /tmp/cliff.toml
@@ -722,22 +722,20 @@ generate_with_manual() {
 
         # Append to appropriate file
         case "$TYPE" in
-            whats_new)
-                echo "$LINE" >> "$WHATS_NEW_FILE"
-                ;;
-            fixed)
-                echo "$LINE" >> "$FIXED_FILE"
-                ;;
-            reliable)
-                echo "$LINE" >> "$RELIABLE_FILE"
-                ;;
-            deps)
-                echo "$LINE" >> "$DEPS_FILE"
-                ;;
-            skip)
-                ;;
-            *)
-                ;;
+        whats_new)
+            echo "$LINE" >>"$WHATS_NEW_FILE"
+            ;;
+        fixed)
+            echo "$LINE" >>"$FIXED_FILE"
+            ;;
+        reliable)
+            echo "$LINE" >>"$RELIABLE_FILE"
+            ;;
+        deps)
+            echo "$LINE" >>"$DEPS_FILE"
+            ;;
+        skip) ;;
+        *) ;;
         esac
     done
 
@@ -797,49 +795,49 @@ fi
 
 # Validate backend availability
 case "$BACKEND" in
-    copilot)
-        if ! command -v copilot >/dev/null 2>&1; then
-            echo -e "${RED}Error: GitHub Copilot CLI not found${NC}" >&2
-            echo "Install: npm install -g @github/copilot" >&2
-            echo "See: https://github.com/github/copilot-cli" >&2
-            exit 1
-        fi
-        ;;
-    git-cliff)
-        if ! command -v git-cliff >/dev/null 2>&1; then
-            echo -e "${RED}Error: git-cliff not found${NC}" >&2
-            echo "Install: https://git-cliff.org/docs/installation" >&2
-            exit 1
-        fi
-        ;;
+copilot)
+    if ! command -v copilot >/dev/null 2>&1; then
+        echo -e "${RED}Error: GitHub Copilot CLI not found${NC}" >&2
+        echo "Install: npm install -g @github/copilot" >&2
+        echo "See: https://github.com/github/copilot-cli" >&2
+        exit 1
+    fi
+    ;;
+git-cliff)
+    if ! command -v git-cliff >/dev/null 2>&1; then
+        echo -e "${RED}Error: git-cliff not found${NC}" >&2
+        echo "Install: https://git-cliff.org/docs/installation" >&2
+        exit 1
+    fi
+    ;;
 esac
 
 # Generate to temp file if auto-update is possible, else stdout
 if [ "$AUTO_UPDATE_AVAILABLE" = "true" ]; then
     TEMP_NOTES=$(mktemp)
     case "$BACKEND" in
-        copilot)
-            generate_with_copilot > "$TEMP_NOTES"
-            ;;
-        git-cliff)
-            generate_with_gitcliff > "$TEMP_NOTES"
-            ;;
-        manual)
-            generate_with_manual > "$TEMP_NOTES"
-            ;;
+    copilot)
+        generate_with_copilot >"$TEMP_NOTES"
+        ;;
+    git-cliff)
+        generate_with_gitcliff >"$TEMP_NOTES"
+        ;;
+    manual)
+        generate_with_manual >"$TEMP_NOTES"
+        ;;
     esac
 else
     # No auto-update, just output to stdout
     case "$BACKEND" in
-        copilot)
-            generate_with_copilot
-            ;;
-        git-cliff)
-            generate_with_gitcliff
-            ;;
-        manual)
-            generate_with_manual
-            ;;
+    copilot)
+        generate_with_copilot
+        ;;
+    git-cliff)
+        generate_with_gitcliff
+        ;;
+    manual)
+        generate_with_manual
+        ;;
     esac
 
     echo "" >&2
@@ -903,7 +901,7 @@ fi
 
 # Save body (without H1 title) to temp file for GitHub
 TEMP_BODY=$(mktemp)
-echo "$NOTES_BODY" > "$TEMP_BODY"
+echo "$NOTES_BODY" >"$TEMP_BODY"
 
 # Show the generated notes (with title for preview)
 if [ -n "$EXTRACTED_TITLE" ]; then

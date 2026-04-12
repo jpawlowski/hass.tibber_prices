@@ -51,15 +51,15 @@ if grep -q '^\[alias\]' ~/.gitconfig.host; then
 
     # First, collect all aliases from host config
     TEMP_ALIASES=$(mktemp)
-    sed -n '/^\[alias\]/,/^\[/p' ~/.gitconfig.host | \
-        grep -v '^\[' | \
-        grep -v '^$' | \
+    sed -n '/^\[alias\]/,/^\[/p' ~/.gitconfig.host |
+        grep -v '^\[' |
+        grep -v '^$' |
         while IFS= read -r line; do
             # Skip aliases with macOS-specific paths
             if echo "$line" | grep -q -E '/(Applications|usr/local)'; then
                 continue
             fi
-            echo "$line" >> "$TEMP_ALIASES"
+            echo "$line" >>"$TEMP_ALIASES"
         done
 
     # Apply each alias (git config --global overwrites existing values = idempotent)
@@ -68,8 +68,8 @@ if grep -q '^\[alias\]' ~/.gitconfig.host; then
             ALIAS_NAME=$(echo "$line" | awk '{print $1}')
             ALIAS_VALUE=$(echo "$line" | sed "s/^$ALIAS_NAME = //")
             git config --global "alias.$ALIAS_NAME" "$ALIAS_VALUE" 2>/dev/null || true
-        done < "$TEMP_ALIASES"
-        echo "  Synced $(wc -l < "$TEMP_ALIASES") aliases"
+        done <"$TEMP_ALIASES"
+        echo "  Synced $(wc -l <"$TEMP_ALIASES") aliases"
     fi
 
     rm -f "$TEMP_ALIASES"

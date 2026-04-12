@@ -94,7 +94,7 @@ require_command "jq" "apt-get install jq (or brew install jq)"
 cp "$MANIFEST" "$MANIFEST.backup"
 
 # Update version with jq
-if ! jq ".version = \"$VERSION\"" "$MANIFEST" > "$MANIFEST.tmp"; then
+if ! jq ".version = \"$VERSION\"" "$MANIFEST" >"$MANIFEST.tmp"; then
     mv "$MANIFEST.backup" "$MANIFEST"
     die "Failed to update manifest.json"
 fi

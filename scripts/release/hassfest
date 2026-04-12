@@ -37,7 +37,7 @@ fi
 
 # Check 2: manifest.json syntax
 printf "%b Checking manifest.json syntax...%b\n" "$BOLD" "$NC"
-if ! python -m json.tool "$INTEGRATION_PATH/manifest.json" > /dev/null 2>&1; then
+if ! python -m json.tool "$INTEGRATION_PATH/manifest.json" >/dev/null 2>&1; then
     log_result 1 "manifest.json has invalid JSON syntax"
     ERRORS=$((ERRORS + 1))
 else
@@ -49,7 +49,7 @@ printf "%b Checking translation files syntax...%b\n" "$BOLD" "$NC"
 for lang_file in "$INTEGRATION_PATH"/translations/*.json; do
     if [[ -f $lang_file ]]; then
         lang=$(basename "$lang_file")
-        if ! python -m json.tool "$lang_file" > /dev/null 2>&1; then
+        if ! python -m json.tool "$lang_file" >/dev/null 2>&1; then
             log_result 1 "$lang has invalid JSON syntax"
             ERRORS=$((ERRORS + 1))
         else
@@ -64,7 +64,7 @@ if [[ -d $INTEGRATION_PATH/custom_translations ]]; then
     for lang_file in "$INTEGRATION_PATH"/custom_translations/*.json; do
         if [[ -f $lang_file ]]; then
             lang=$(basename "$lang_file")
-            if ! python -m json.tool "$lang_file" > /dev/null 2>&1; then
+            if ! python -m json.tool "$lang_file" >/dev/null 2>&1; then
                 log_result 1 "custom_translations/$lang has invalid JSON syntax"
                 ERRORS=$((ERRORS + 1))
             else

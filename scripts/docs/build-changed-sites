@@ -11,12 +11,12 @@ build_developer=false
 
 for file in "$@"; do
     case "$file" in
-        docs/user/*)
-            build_user=true
-            ;;
-        docs/developer/*)
-            build_developer=true
-            ;;
+    docs/user/*)
+        build_user=true
+        ;;
+    docs/developer/*)
+        build_developer=true
+        ;;
     esac
 done
 

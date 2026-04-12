@@ -74,7 +74,7 @@ ensure_command_alias "rg" "ripgrep"
 
 # Ensure user-local bin directory is available in interactive shells.
 if ! grep -q '\$HOME/.local/bin' "$HOME/.zshrc" 2>/dev/null; then
-    printf '\n# Added by scripts/setup/setup\nexport PATH="$HOME/.local/bin:$PATH"\n' >> "$HOME/.zshrc"
+    printf '\n# Added by scripts/setup/setup\nexport PATH="$HOME/.local/bin:$PATH"\n' >>"$HOME/.zshrc"
 fi
 
 # Install HACS for testing with other custom components
@@ -104,9 +104,9 @@ fi
 # Download and extract HACS (stable release ZIP)
 cd config/custom_components
 log_step "Downloading HACS"
-if wget -q https://github.com/hacs/integration/releases/latest/download/hacs.zip && \
-   unzip -q hacs.zip -d hacs && \
-   rm hacs.zip; then
+if wget -q https://github.com/hacs/integration/releases/latest/download/hacs.zip &&
+    unzip -q hacs.zip -d hacs &&
+    rm hacs.zip; then
     cd ../..
 
     # Install HACS Python dependencies
