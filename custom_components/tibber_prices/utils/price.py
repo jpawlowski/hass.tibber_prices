@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import bisect
 import logging
 import statistics
 from datetime import datetime, timedelta
@@ -174,6 +175,104 @@ def calculate_volatility_level(
     """
     level, _cv = calculate_volatility_with_cv(prices, threshold_moderate, threshold_high, threshold_very_high)
     return level
+
+
+MIN_PRICES_FOR_IQR = 4  # Minimum price values needed for meaningful IQR calculation
+
+
+def calculate_iqr_stats(prices: list[float]) -> dict[str, Any] | None:
+    """
+    Calculate Interquartile Range (IQR) statistics from a price list.
+
+    IQR = Q75 - Q25, representing the spread of the central 50% of prices.
+    This is more robust to outliers than coefficient of variation because
+    extreme values (price spikes or negative prices) don't distort the result.
+
+    Args:
+        prices: List of price values (in any unit, e.g. EUR or NOK per kWh)
+
+    Returns:
+        Dict with keys:
+            - q25: 25th percentile (lower quartile)
+            - median: 50th percentile (median)
+            - q75: 75th percentile (upper quartile)
+            - iqr: Interquartile range (q75 - q25)
+            - iqr_pct: Relative IQR as percentage of median (None if median is 0)
+            - outlier_count: Intervals outside Tukey fences [Q25 - 1.5xIQR, Q75 + 1.5xIQR]
+        Returns None if fewer than MIN_PRICES_FOR_IQR prices are provided.
+
+    Examples:
+        - iqr_pct ~5%: Very tight price band, stability similar to CV
+        - iqr_pct ~20%: Moderate spread in the core price range
+        - iqr_pct ~50%: Wide core spread, significant optimization potential
+        - outlier_count > 0: Isolated price spikes/dips exist (CV-heavy days)
+
+    """
+    if len(prices) < MIN_PRICES_FOR_IQR:
+        return None
+
+    quartiles = statistics.quantiles(prices, n=4)  # Returns [Q25, Q50, Q75]
+    q25 = quartiles[0]
+    median = quartiles[1]
+    q75 = quartiles[2]
+    iqr = q75 - q25
+
+    # Relative IQR: normalized by median for cross-price-level comparison
+    iqr_pct = (iqr / abs(median) * 100) if median != 0 else None
+
+    # Tukey fence outlier detection (standard method)
+    lower_fence = q25 - 1.5 * iqr
+    upper_fence = q75 + 1.5 * iqr
+    outlier_count = sum(1 for p in prices if p < lower_fence or p > upper_fence)
+
+    return {
+        "q25": q25,
+        "median": median,
+        "q75": q75,
+        "iqr": iqr,
+        "iqr_pct": iqr_pct,
+        "outlier_count": outlier_count,
+    }
+
+
+def calculate_percentile_rank(current_price: float, prices: list[float]) -> float | None:
+    """
+    Calculate where the current price ranks among a reference price set.
+
+    Returns the percentage of prices in the reference set that are strictly
+    cheaper than current_price. A value of 0% means the current price is at
+    or below the cheapest reference price; ~99% means nearly everything is
+    cheaper (current price near the maximum).
+
+    The current interval's own price is included in today's reference set,
+    so the cheapest interval of the day always returns 0%.
+
+    Args:
+        current_price: The price to rank (any unit, must match prices unit)
+        prices: Reference price list to rank against
+
+    Returns:
+        Percentile rank as float 0.0-100.0 (1 decimal precision), or None if
+        reference list is empty.
+
+    Examples (8 intervals: [8, 10, 12, 15, 15, 18, 20, 22]):
+        - current=8:  0/8 x 100 =  0.0%  (cheapest)
+        - current=15: 3/8 x 100 = 37.5%  (above 3 cheaper intervals)
+        - current=22: 7/8 x 100 = 87.5%  (most expensive)
+
+    Note:
+        Equal prices: All duplicate prices at the current level are counted as
+        "not below" the current price (bisect_left semantics). This matches
+        automation logic: "is now cheap?" returns False if current == minimum
+        is debatable but ensures 0% always means strictly cheapest.
+
+    """
+    if not prices:
+        return None
+
+    sorted_prices = sorted(prices)
+    count_below = bisect.bisect_left(sorted_prices, current_price)
+    return round(count_below / len(sorted_prices) * 100, 1)
 
 
 def calculate_trailing_average_for_interval(

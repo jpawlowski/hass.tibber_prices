@@ -164,3 +164,54 @@ def add_volatility_type_attributes(
         # Add time window info
         now = time.now()
         volatility_attributes["timestamp"] = now
+
+
+def add_percentile_rank_attributes(
+    attributes: dict,
+    cached_data: dict,
+    *,
+    time: TibberPricesTimeService,
+) -> None:
+    """
+    Add attributes for percentile rank sensors.
+
+    Sets the timestamp based on the percentile type stored in cached_data:
+    - "today" / "today_tomorrow": today's first interval start (midnight context)
+    - "tomorrow": tomorrow's first interval start
+
+    Args:
+        attributes: Dictionary to add attributes to
+        cached_data: Dictionary containing cached sensor data (percentile_rank_attributes,
+                     percentile_rank_type, coordinator_data)
+        time: TibberPricesTimeService instance (required)
+
+    """
+    from datetime import timedelta  # noqa: PLC0415 - local import to avoid circular
+
+    rank_attrs = cached_data.get("percentile_rank_attributes")
+    if rank_attrs:
+        attributes.update(rank_attrs)
+
+    # Set timestamp based on period type
+    percentile_type = cached_data.get("percentile_rank_type", "today")
+    coordinator_data = cached_data.get("coordinator_data")
+
+    if coordinator_data:
+        from custom_components.tibber_prices.coordinator.helpers import (  # noqa: PLC0415
+            get_intervals_for_day_offsets,
+        )
+
+        all_intervals = get_intervals_for_day_offsets(coordinator_data, [-1, 0, 1])
+        now = time.now()
+        today_date = now.date()
+        tomorrow_date = (now + timedelta(days=1)).date()
+
+        if percentile_type == "tomorrow":
+            tomorrow_data = [p for p in all_intervals if p.get("startsAt") and p["startsAt"].date() == tomorrow_date]
+            if tomorrow_data:
+                attributes["timestamp"] = tomorrow_data[0].get("startsAt")
+        else:
+            # today / today_tomorrow → use today's midnight
+            today_data = [p for p in all_intervals if p.get("startsAt") and p["startsAt"].date() == today_date]
+            if today_data:
+                attributes["timestamp"] = today_data[0].get("startsAt")

@@ -47,7 +47,7 @@ from .lifecycle import build_lifecycle_attributes
 from .metadata import get_day_pattern_attributes
 from .timing import _is_timing_or_volatility_sensor
 from .trend import _add_cached_trend_attributes, _add_timing_or_volatility_attributes
-from .volatility import add_volatility_type_attributes, get_prices_for_volatility
+from .volatility import add_percentile_rank_attributes, add_volatility_type_attributes, get_prices_for_volatility
 from .window_24h import add_average_price_attributes
 
 __all__ = [
@@ -65,6 +65,7 @@ __all__ = [
     "TrendAttributes",
     "VolatilityAttributes",
     "Window24hAttributes",
+    "add_percentile_rank_attributes",
     "add_volatility_type_attributes",
     "build_extra_state_attributes",
     "build_sensor_attributes",
@@ -189,6 +190,9 @@ def build_sensor_attributes(  # noqa: PLR0912
                 attributes.update(lifecycle_attrs)
         elif _is_timing_or_volatility_sensor(key):
             _add_timing_or_volatility_attributes(attributes, key, cached_data, native_value, time=time)
+
+        elif key in ("price_rank_today", "price_rank_tomorrow", "price_rank_today_tomorrow"):
+            add_percentile_rank_attributes(attributes, cached_data, time=time)
 
         elif key in ("day_pattern_yesterday", "day_pattern_today", "day_pattern_tomorrow"):
             day = key.removeprefix("day_pattern_")

@@ -737,6 +737,55 @@ VOLATILITY_SENSORS = (
 )
 
 # ----------------------------------------------------------------------------
+# 6b. PRICE PERCENTILE RANK SENSORS
+# ----------------------------------------------------------------------------
+# These sensors show where the current price ranks within a reference period.
+# The state (0-100%) answers: "What percentage of reference prices are cheaper
+# than the current price?"
+#
+# 0%  = current price is the cheapest in the reference period
+# 50% = half the prices are cheaper (current price at median level)
+# ~99% = almost everything is cheaper (current price near the maximum)
+#
+# Reference periods:
+#   - today:           96 intervals of today (local calendar day)
+#   - tomorrow:        96 intervals of tomorrow (once data is available)
+#   - today_tomorrow:  192 combined intervals when tomorrow is available
+#
+# Use case: "Is now the right time to run a large appliance?"
+# - price_rank_today < 25 → bottom quartile, great time to use energy
+# - price_rank_today > 75 → top quartile, consider delaying consumption
+
+PERCENTILE_RANK_SENSORS = (
+    SensorEntityDescription(
+        key="price_rank_today",
+        translation_key="price_rank_today",
+        icon="mdi:percent",
+        native_unit_of_measurement=PERCENTAGE,
+        state_class=None,  # Position metric: no statistics
+        suggested_display_precision=0,
+    ),
+    SensorEntityDescription(
+        key="price_rank_tomorrow",
+        translation_key="price_rank_tomorrow",
+        icon="mdi:percent",
+        native_unit_of_measurement=PERCENTAGE,
+        state_class=None,  # Position metric: no statistics
+        suggested_display_precision=0,
+        entity_registry_enabled_default=False,  # Available once tomorrow's data arrives
+    ),
+    SensorEntityDescription(
+        key="price_rank_today_tomorrow",
+        translation_key="price_rank_today_tomorrow",
+        icon="mdi:percent",
+        native_unit_of_measurement=PERCENTAGE,
+        state_class=None,  # Position metric: no statistics
+        suggested_display_precision=0,
+        entity_registry_enabled_default=False,  # Advanced overview use case
+    ),
+)
+
+# ----------------------------------------------------------------------------
 # 7. BEST/PEAK PRICE TIMING SENSORS (period-based time tracking)
 # ----------------------------------------------------------------------------
 # These sensors track time relative to best_price/peak_price binary sensor periods.
@@ -1116,6 +1165,7 @@ ENTITY_DESCRIPTIONS = (
     *FUTURE_TREND_SENSORS,
     *PRICE_TRAJECTORY_SENSORS,
     *VOLATILITY_SENSORS,
+    *PERCENTILE_RANK_SENSORS,
     *BEST_PRICE_TIMING_SENSORS,
     *PEAK_PRICE_TIMING_SENSORS,
     *DAY_PATTERN_SENSORS,

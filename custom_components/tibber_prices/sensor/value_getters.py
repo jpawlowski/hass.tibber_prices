@@ -249,6 +249,12 @@ def get_value_getter_mapping(  # noqa: PLR0913 - needs all calculators as parame
         "today_tomorrow_volatility": lambda: volatility_calculator.get_volatility_value(
             volatility_type="today_tomorrow"
         ),
+        # Price rank sensors (via VolatilityCalculator - reuses same price extraction)
+        "price_rank_today": lambda: volatility_calculator.get_percentile_rank_value(percentile_type="today"),
+        "price_rank_tomorrow": lambda: volatility_calculator.get_percentile_rank_value(percentile_type="tomorrow"),
+        "price_rank_today_tomorrow": lambda: volatility_calculator.get_percentile_rank_value(
+            percentile_type="today_tomorrow"
+        ),
         # ================================================================
         # BEST/PEAK PRICE TIMING SENSORS - via TimingCalculator
         # ================================================================
