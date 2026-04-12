@@ -21,6 +21,7 @@ Prices are automatically classified into **rating levels**:
 - **VERY_EXPENSIVE** - Exceptionally high prices (avoid heavy loads)
 
 Rating is based on **statistical analysis** comparing current price to:
+
 - Daily average
 - Trailing 24-hour average
 - User-configured thresholds
@@ -33,6 +34,7 @@ Rating is based on **statistical analysis** comparing current price to:
 - **Peak Price Period** - Time windows with highest prices (to avoid or shift consumption)
 
 Periods can:
+
 - Span multiple hours
 - Cross midnight boundaries
 - Adapt based on your configuration (flex, min_distance, rating levels)
@@ -53,6 +55,7 @@ This helps you understand if current prices are exceptional or typical.
 ## Multi-Home Support
 
 You can add multiple Tibber homes to track prices for:
+
 - Different locations
 - Different electricity contracts
 - Comparison between regions
@@ -62,6 +65,7 @@ Each home gets its own set of sensors with unique entity IDs.
 ---
 
 💡 **Next Steps:**
+
 - [Glossary](glossary.md) - Detailed term definitions
 - [Sensors](sensors.md) - How to use sensor data
 - [Automation Examples](automation-examples.md) - Practical use cases

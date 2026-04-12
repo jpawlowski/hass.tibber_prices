@@ -6,19 +6,19 @@ Learn how Best Price and Peak Price periods work, and how to configure them for 
 
 ## Table of Contents
 
--   [Quick Start](#quick-start)
--   [How It Works](#how-it-works)
--   [Configuration Guide](#configuration-guide)
--   [Understanding Relaxation](#understanding-relaxation)
--   [Common Scenarios](#common-scenarios)
--   [Troubleshooting](#troubleshooting)
-    -   [Fewer Periods Than Configured](#fewer-periods-than-configured)
-    -   [No Periods Found](#no-periods-found)
-    -   [Periods Split Into Small Pieces](#periods-split-into-small-pieces)
-    -   [Understanding Sensor Attributes](#understanding-sensor-attributes)
-    -   [Midnight Price Classification Changes](#midnight-price-classification-changes)
--   [Advanced Topics](#advanced-topics)
--   [Advanced Topics](#advanced-topics)
+- [Quick Start](#quick-start)
+- [How It Works](#how-it-works)
+- [Configuration Guide](#configuration-guide)
+- [Understanding Relaxation](#understanding-relaxation)
+- [Common Scenarios](#common-scenarios)
+- [Troubleshooting](#troubleshooting)
+    - [Fewer Periods Than Configured](#fewer-periods-than-configured)
+    - [No Periods Found](#no-periods-found)
+    - [Periods Split Into Small Pieces](#periods-split-into-small-pieces)
+    - [Understanding Sensor Attributes](#understanding-sensor-attributes)
+    - [Midnight Price Classification Changes](#midnight-price-classification-changes)
+- [Advanced Topics](#advanced-topics)
+- [Advanced Topics](#advanced-topics)
 
 ---
 
@@ -28,8 +28,8 @@ Learn how Best Price and Peak Price periods work, and how to configure them for 
 
 The integration finds time windows when electricity is especially **cheap** (Best Price) or **expensive** (Peak Price):
 
--   **Best Price Periods** 🟢 - When to run your dishwasher, charge your EV, or heat water
--   **Peak Price Periods** 🔴 - When to reduce consumption or defer non-essential loads
+- **Best Price Periods** 🟢 - When to run your dishwasher, charge your EV, or heat water
+- **Peak Price Periods** 🔴 - When to reduce consumption or defer non-essential loads
 
 ### Default Behavior
 
@@ -47,16 +47,19 @@ Out of the box, the integration:
 The integration sets different **initial defaults** because the features serve different purposes:
 
 **Best Price (60 min, 15% flex):**
+
 - Longer duration ensures appliances can complete their cycles
 - Stricter flex (15%) focuses on genuinely cheap times
 - Use case: Running dishwasher, EV charging, water heating
 
 **Peak Price (30 min, 20% flex):**
+
 - Shorter duration acceptable for early warnings
 - More flexible (20%) catches price spikes earlier
 - Use case: Alerting to expensive periods, even brief ones
 
 **You can adjust all these values** in the configuration if the defaults don't fit your use case. The asymmetric defaults simply provide good starting points for typical scenarios.
+
 </details>
 
 ### Example Timeline
@@ -157,7 +160,7 @@ Default: 60 minutes minimum
 
 You can optionally require:
 
--   **Absolute quality** (level filter) - "Only show if prices are CHEAP/EXPENSIVE (not just below/above average)"
+- **Absolute quality** (level filter) - "Only show if prices are CHEAP/EXPENSIVE (not just below/above average)"
 
 #### 5. Automatic Price Spike Smoothing
 
@@ -171,9 +174,10 @@ Result: Continuous period 00:00-01:15 instead of split periods
 ```
 
 **Important:**
--   Original prices are always preserved (min/max/avg show real values)
--   Smoothing only affects which intervals are combined into periods
--   The attribute `period_interval_smoothed_count` shows if smoothing was active
+
+- Original prices are always preserved (min/max/avg show real values)
+- Smoothing only affects which intervals are combined into periods
+- The attribute `period_interval_smoothed_count` shows if smoothing was active
 
 ### Visual Example
 
@@ -213,8 +217,8 @@ peak_price_flex: -15 # Can be up to 15% less expensive than daily MAX
 
 **When to adjust:**
 
--   **Increase (20-25%)** → Find more/longer periods
--   **Decrease (5-10%)** → Find only the very best/worst times
+- **Increase (20-25%)** → Find more/longer periods
+- **Decrease (5-10%)** → Find only the very best/worst times
 
 **💡 Tip:** Very high flexibility (>30%) is rarely useful. **Recommendation:** Start with 15-20% and enable relaxation – it adapts automatically to each day's price pattern.
 
@@ -231,8 +235,8 @@ peak_price_min_period_length: 30
 
 **When to adjust:**
 
--   **Increase (90-120 min)** → Only show longer periods (e.g., for heat pump cycles)
--   **Decrease (30-45 min)** → Show shorter windows (e.g., for quick tasks)
+- **Increase (90-120 min)** → Only show longer periods (e.g., for heat pump cycles)
+- **Decrease (30-45 min)** → Show shorter windows (e.g., for quick tasks)
 
 #### Distance from Average
 
@@ -247,8 +251,8 @@ peak_price_min_distance_from_avg: 5
 
 **When to adjust:**
 
--   **Increase (5-10%)** → Only show clearly better times
--   **Decrease (0-1%)** → Show any time below/above average
+- **Increase (5-10%)** → Only show clearly better times
+- **Decrease (0-1%)** → Show any time below/above average
 
 **ℹ️ Note:** Both flexibility and distance filters must be satisfied. When using high flexibility values (>30%), the distance filter may become the limiting factor. For best results, use moderate flexibility (15-20%) with relaxation enabled.
 
@@ -291,9 +295,9 @@ When you're not happy with the default behavior, adjust settings in this order:
 If you're not finding enough periods:
 
 ```yaml
-enable_min_periods_best: true   # Already default!
-min_periods_best: 2             # Already default!
-relaxation_attempts_best: 11    # Already default!
+enable_min_periods_best: true # Already default!
+min_periods_best: 2 # Already default!
+relaxation_attempts_best: 11 # Already default!
 ```
 
 **Why start here?** Relaxation automatically finds the right balance for each day. Much easier than manual tuning.
@@ -327,7 +331,7 @@ best_price_flex: 10  # Decrease from 15% for stricter selection
 Only if periods seem "mediocre" (not really cheap/expensive):
 
 ```yaml
-best_price_min_distance_from_avg: 10  # Increase from 5% for stricter quality
+best_price_min_distance_from_avg: 10 # Increase from 5% for stricter quality
 ```
 
 **⚠️ Careful:** High values (>10%) can make it impossible to find periods on flat price days.
@@ -337,7 +341,7 @@ best_price_min_distance_from_avg: 10  # Increase from 5% for stricter quality
 Only if you want absolute quality requirements:
 
 ```yaml
-best_price_max_level: cheap  # Only show objectively CHEAP periods
+best_price_max_level: cheap # Only show objectively CHEAP periods
 ```
 
 **⚠️ Very strict:** Many days may have zero qualifying periods. **Always enable relaxation when using this!**
@@ -376,11 +380,13 @@ Set the matching `relaxation_attempts_peak` value when tuning Peak Price periods
 ### Why Relaxation Is Better Than Manual Tweaking
 
 **Problem with manual settings:**
+
 - You set flex to 25% → Works great on Monday (volatile prices)
 - Same 25% flex on Tuesday (flat prices) → Finds "best price" periods that aren't really cheap
 - You're stuck with one setting for all days
 
 **Solution with relaxation:**
+
 - Monday (volatile): Uses flex 15% (original) → Finds 2 perfect periods ✓
 - Tuesday (flat): Escalates to flex 21% → Finds 2 decent periods ✓
 - Wednesday (mixed): Uses flex 18% → Finds 2 good periods ✓
@@ -392,6 +398,7 @@ Set the matching `relaxation_attempts_peak` value when tuning Peak Price periods
 Relaxation uses a **matrix approach** - trying _N_ flexibility levels (your configured **relaxation attempts**) with 2 filter combinations per level. With the default of 11 attempts, that means 11 flex levels × 2 filter combinations = **22 total filter-combination tries per day**; fewer attempts mean fewer flex increases, while more attempts extend the search further before giving up.
 
 **Important:** The flexibility increment is **fixed at 3% per step** (hard-coded for reliability). This means:
+
 - Base flex 15% → 18% → 21% → 24% → ... → 48% (with 11 attempts)
 - Base flex 20% → 23% → 26% → 29% → ... → 50% (with 11 attempts)
 
@@ -439,10 +446,10 @@ Each attempt adds +3% flexibility and tries two filter combinations. The system 
 
 ### Choosing the Number of Attempts
 
--   **Default (11 attempts)** balances speed and completeness for most grids (22 combinations per day for both Best and Peak)
--   **Lower (4-8 attempts)** if you only want mild relaxation and keep processing time minimal (reaches ~27-39% flex)
--   **Higher (12 attempts)** for extremely volatile days when you must reach near the 50% maximum (24 combinations)
--   Remember: each additional attempt adds two more filter combinations because every new flex level still runs both filter overrides (original + level=any)
+- **Default (11 attempts)** balances speed and completeness for most grids (22 combinations per day for both Best and Peak)
+- **Lower (4-8 attempts)** if you only want mild relaxation and keep processing time minimal (reaches ~27-39% flex)
+- **Higher (12 attempts)** for extremely volatile days when you must reach near the 50% maximum (24 combinations)
+- Remember: each additional attempt adds two more filter combinations because every new flex level still runs both filter overrides (original + level=any)
 
 #### Per-Day Independence
 
@@ -475,9 +482,9 @@ best_price_min_distance_from_avg: 5 # (default)
 
 **What you get:**
 
--   1-3 periods per day with prices ≤ MIN + 15%
--   Each period at least 1 hour long
--   All periods at least 5% cheaper than daily average
+- 1-3 periods per day with prices ≤ MIN + 15%
+- Each period at least 1 hour long
+- All periods at least 5% cheaper than daily average
 
 **Automation example:**
 
@@ -508,7 +515,7 @@ This is **expected behavior** on days with very uniform electricity prices. When
 ```yaml
 min_periods_configured: 2
 periods_found_total: 1
-flat_days_detected: 1    # Uniform prices today → 1 period is the right answer
+flat_days_detected: 1 # Uniform prices today → 1 period is the right answer
 ```
 
 You don't need to change anything. This is the integration protecting you from artificial periods.
@@ -518,14 +525,16 @@ You don't need to change anything. This is the integration protecting you from a
 Relaxation tried all configured attempts but couldn't reach your target. Options:
 
 1. **Increase relaxation attempts** (tries more flexibility levels before giving up)
-   ```yaml
-   relaxation_attempts_best: 12  # Default: 11
-   ```
+
+    ```yaml
+    relaxation_attempts_best: 12 # Default: 11
+    ```
 
 2. **Reduce minimum period count**
-   ```yaml
-   min_periods_best: 1  # Only require 1 period per day
-   ```
+
+    ```yaml
+    min_periods_best: 1 # Only require 1 period per day
+    ```
 
 3. **Check filter settings** – very strict `best_price_min_distance_from_avg` values block relaxation
 
@@ -538,24 +547,26 @@ Relaxation tried all configured attempts but couldn't reach your target. Options
 **Common Solutions:**
 
 1. **Check if relaxation is enabled**
-   ```yaml
-   enable_min_periods_best: true  # Should be true (default)
-   min_periods_best: 2  # Try to find at least 2 periods
-   ```
+
+    ```yaml
+    enable_min_periods_best: true # Should be true (default)
+    min_periods_best: 2 # Try to find at least 2 periods
+    ```
 
 2. **If still no periods, check filters**
-   - Look at sensor attributes: `relaxation_active` and `relaxation_level`
-   - If relaxation exhausted all attempts: Filters too strict or flat price day
+    - Look at sensor attributes: `relaxation_active` and `relaxation_level`
+    - If relaxation exhausted all attempts: Filters too strict or flat price day
 
 3. **Try increasing flexibility slightly**
-   ```yaml
-   best_price_flex: 20  # Increase from default 15%
-   ```
+
+    ```yaml
+    best_price_flex: 20 # Increase from default 15%
+    ```
 
 4. **Or reduce period length requirement**
-   ```yaml
-   best_price_min_period_length: 45  # Reduce from default 60 minutes
-   ```
+    ```yaml
+    best_price_min_period_length: 45 # Reduce from default 60 minutes
+    ```
 
 ### Periods Split Into Small Pieces
 
@@ -564,20 +575,22 @@ Relaxation tried all configured attempts but couldn't reach your target. Options
 **Common Solutions:**
 
 1. **If using level filter, add gap tolerance**
-   ```yaml
-   best_price_max_level: cheap
-   best_price_max_level_gap_count: 2  # Allow 2 NORMAL intervals
-   ```
+
+    ```yaml
+    best_price_max_level: cheap
+    best_price_max_level_gap_count: 2 # Allow 2 NORMAL intervals
+    ```
 
 2. **Slightly increase flexibility**
-   ```yaml
-   best_price_flex: 20  # From 15% → captures wider price range
-   ```
+
+    ```yaml
+    best_price_flex: 20 # From 15% → captures wider price range
+    ```
 
 3. **Check for price spikes**
-   - Automatic smoothing should handle this
-   - Check attribute: `period_interval_smoothed_count`
-   - If 0: Not isolated spikes, but real price levels
+    - Automatic smoothing should handle this
+    - Check attribute: `period_interval_smoothed_count`
+    - If 0: Not isolated spikes, but real price levels
 
 ### Understanding Sensor Attributes
 
@@ -587,26 +600,26 @@ Relaxation tried all configured attempts but couldn't reach your target. Options
 # Entity: binary_sensor.<home_name>_best_price_period
 
 # When "on" (period active):
-start: "2025-11-11T02:00:00+01:00"  # Period start time
-end: "2025-11-11T05:00:00+01:00"    # Period end time
-duration_minutes: 180                # Duration in minutes
-price_mean: 18.5                     # Arithmetic mean price in the period
-price_median: 18.3                   # Median price in the period
-rating_level: "LOW"                  # All intervals have LOW rating
+start: "2025-11-11T02:00:00+01:00" # Period start time
+end: "2025-11-11T05:00:00+01:00" # Period end time
+duration_minutes: 180 # Duration in minutes
+price_mean: 18.5 # Arithmetic mean price in the period
+price_median: 18.3 # Median price in the period
+rating_level: "LOW" # All intervals have LOW rating
 
 # Relaxation info (shows if filter loosening was needed):
-relaxation_active: true              # This day needed relaxation
-relaxation_level: "price_diff_18.0%+level_any"  # Found at 18% flex, level filter removed
+relaxation_active: true # This day needed relaxation
+relaxation_level: "price_diff_18.0%+level_any" # Found at 18% flex, level filter removed
 
 # Calculation summary (always shown – diagnostic overview of this calculation run):
-min_periods_configured: 2           # What you configured as target
-periods_found_total: 3              # What was actually found across all days
+min_periods_configured: 2 # What you configured as target
+periods_found_total: 3 # What was actually found across all days
 
 # Optional (only shown when relevant):
-period_interval_smoothed_count: 2    # Number of price spikes smoothed
-period_interval_level_gap_count: 1   # Number of "mediocre" intervals tolerated
-flat_days_detected: 1               # Days where prices were so flat that 1 period is enough
-relaxation_incomplete: true         # Some days couldn't reach the configured target
+period_interval_smoothed_count: 2 # Number of price spikes smoothed
+period_interval_level_gap_count: 1 # Number of "mediocre" intervals tolerated
+flat_days_detected: 1 # Days where prices were so flat that 1 period is enough
+relaxation_incomplete: true # Some days couldn't reach the configured target
 ```
 
 #### What the diagnostic attributes mean
@@ -616,13 +629,13 @@ relaxation_incomplete: true         # Some days couldn't reach the configured ta
 These two values together quickly show whether the calculation achieved its goal:
 
 ```yaml
-min_periods_configured: 2   # You asked for 2 periods per day
-periods_found_total: 6      # 3 days × 2 periods = fully satisfied ✅
+min_periods_configured: 2 # You asked for 2 periods per day
+periods_found_total: 6 # 3 days × 2 periods = fully satisfied ✅
 ```
 
 ```yaml
 min_periods_configured: 2
-periods_found_total: 5      # 3 days, but one day got only 1 period
+periods_found_total: 5 # 3 days, but one day got only 1 period
 ```
 
 Note that `periods_found_total` counts **all periods across today and tomorrow** – so 4 on a two-day view means 2 per day on average.
@@ -634,7 +647,7 @@ This is the most important diagnostic for days with very uniform prices (e.g. su
 ```yaml
 min_periods_configured: 2
 periods_found_total: 1
-flat_days_detected: 1       # ← This explains why you got 1 instead of 2
+flat_days_detected: 1 # ← This explains why you got 1 instead of 2
 ```
 
 When prices barely change across the day – typically a variation of less than 10% – the integration automatically reduces the target from your configured value to 1. There is no meaningful second "best price window" when all prices are essentially equal.
@@ -648,10 +661,11 @@ This flag appears when even after all relaxation attempts, at least one day coul
 ```yaml
 min_periods_configured: 2
 periods_found_total: 1
-relaxation_incomplete: true  # ← Relaxation tried everything, still short
+relaxation_incomplete: true # ← Relaxation tried everything, still short
 ```
 
 This is most common on very flat days (see above) or with very strict filter settings. If you see this repeatedly on normal days, consider:
+
 - Reducing `min_periods_best` to 1
 - Increasing `relaxation_attempts_best`
 - Checking if your `best_price_min_distance_from_avg` is too high
@@ -665,12 +679,14 @@ This is most common on very flat days (see above) or with very strict filter set
 This is **mathematically correct behavior** caused by how electricity prices are set in the day-ahead market:
 
 **Market Timing:**
+
 - The EPEX SPOT Day-Ahead auction closes at **12:00 CET** each day
 - **All prices** for the next day (00:00-23:45) are set at this moment
 - Late-day intervals (23:45) are priced **~36 hours before delivery**
 - Early-day intervals (00:00) are priced **~12 hours before delivery**
 
 **Why Prices Jump at Midnight:**
+
 1. **Forecast Uncertainty:** Weather, demand, and renewable generation forecasts are more uncertain 36 hours ahead than 12 hours ahead
 2. **Risk Buffer:** Late-day prices include a risk premium for this uncertainty
 3. **Independent Days:** Each day has its own min/max/avg calculated from its 96 intervals
@@ -696,6 +712,7 @@ Daily average: 19 ct/kWh
 ```
 
 **When This Occurs:**
+
 - **Low-volatility days:** When price span is narrow (< 5 ct/kWh)
 - **Stable weather:** Similar conditions across multiple days
 - **Market transitions:** Switching between high/low demand seasons
@@ -706,8 +723,9 @@ Check the volatility sensors to understand if a period flip is meaningful:
 
 ```yaml
 # Check daily volatility (available in integration)
-sensor.<home_name>_today_s_price_volatility: 8.2%     # Low volatility
-sensor.<home_name>_tomorrow_s_price_volatility: 7.9%  # Also low
+sensor.<home_name>_today_s_price_volatility: 8.2% # Low volatility
+sensor.<home_name>_tomorrow_s_price_volatility: 7.9% # Also low
+
 
 # Low volatility (< 15%) means:
 # - Small absolute price differences between periods
@@ -773,15 +791,16 @@ Each period sensor exposes day volatility and price statistics:
 
 ```yaml
 binary_sensor.<home_name>_best_price_period:
-  day_volatility_%: 8.2         # Volatility % of the period's day
-  day_price_min: 1800.0          # Minimum price of the day (ct/kWh)
-  day_price_max: 2200.0          # Maximum price of the day (ct/kWh)
-  day_price_span: 400.0          # Difference (max - min) in ct
+    day_volatility_%: 8.2 # Volatility % of the period's day
+    day_price_min: 1800.0 # Minimum price of the day (ct/kWh)
+    day_price_max: 2200.0 # Maximum price of the day (ct/kWh)
+    day_price_span: 400.0 # Difference (max - min) in ct
 ```
 
 These attributes allow automations to check: "Is the classification meaningful on this particular day?"
 
 **Summary:**
+
 - ✅ **Expected behavior:** Periods are evaluated per-day, midnight is a natural boundary
 - ✅ **Market reality:** Late-day prices have more uncertainty than early-day prices
 - ✅ **Solution:** Use volatility sensors, absolute price thresholds, or per-period day volatility attributes
@@ -792,8 +811,8 @@ These attributes allow automations to check: "Is the classification meaningful o
 
 For advanced configuration patterns and technical deep-dive, see:
 
--   [Automation Examples](./automation-examples.md) - Real-world automation patterns
--   [Actions](./actions.md) - Using the `tibber_prices.get_chartdata` action for custom visualizations
+- [Automation Examples](./automation-examples.md) - Real-world automation patterns
+- [Actions](./actions.md) - Using the `tibber_prices.get_chartdata` action for custom visualizations
 
 ### Quick Reference
 
@@ -818,11 +837,11 @@ The Tibber API provides price levels for each 15-minute interval:
 
 **Levels (based on trailing 24h average):**
 
--   `VERY_CHEAP` - Significantly below average
--   `CHEAP` - Below average
--   `NORMAL` - Around average
--   `EXPENSIVE` - Above average
--   `VERY_EXPENSIVE` - Significantly above average
+- `VERY_CHEAP` - Significantly below average
+- `CHEAP` - Below average
+- `NORMAL` - Around average
+- `EXPENSIVE` - Above average
+- `VERY_EXPENSIVE` - Significantly above average
 
 ---
 

@@ -5,6 +5,7 @@ Guidelines for maintaining and improving integration performance.
 ## Performance Goals
 
 Target metrics:
+
 - **Coordinator update**: &lt;500ms (typical: 200-300ms)
 - **Sensor update**: &lt;10ms per sensor
 - **Period calculation**: &lt;100ms (typical: 20-50ms)
@@ -64,6 +65,7 @@ python -m aioprof homeassistant -c config
 ### Caching
 
 **1. Persistent Cache** (API data):
+
 ```python
 # Already implemented in coordinator/cache.py
 store = Store(hass, STORAGE_VERSION, STORAGE_KEY)
@@ -71,6 +73,7 @@ data = await store.async_load()
 ```
 
 **2. Translation Cache** (in-memory):
+
 ```python
 # Already implemented in const.py
 _TRANSLATION_CACHE: dict[str, dict] = {}
@@ -83,6 +86,7 @@ def get_translation(path: str, language: str) -> dict:
 ```
 
 **3. Config Cache** (invalidated on options change):
+
 ```python
 class DataTransformer:
     def __init__(self):
@@ -100,6 +104,7 @@ class DataTransformer:
 ### Lazy Loading
 
 **Load data only when needed:**
+
 ```python
 @property
 def extra_state_attributes(self) -> dict | None:
@@ -113,6 +118,7 @@ def extra_state_attributes(self) -> dict | None:
 ### Bulk Operations
 
 **Process multiple items at once:**
+
 ```python
 # ❌ Slow - loop with individual operations
 for interval in intervals:
@@ -126,6 +132,7 @@ results = enrich_intervals_bulk(intervals)
 ### Async Best Practices
 
 **1. Concurrent API calls:**
+
 ```python
 # ❌ Sequential (slow)
 user_data = await fetch_user_data()
@@ -139,6 +146,7 @@ user_data, price_data = await asyncio.gather(
 ```
 
 **2. Don't block event loop:**
+
 ```python
 # ❌ Blocking
 result = heavy_computation()  # Blocks for seconds
@@ -152,6 +160,7 @@ result = await hass.async_add_executor_job(heavy_computation)
 ### Avoid Memory Leaks
 
 **1. Clear references:**
+
 ```python
 class Coordinator:
     async def async_shutdown(self):
@@ -162,6 +171,7 @@ class Coordinator:
 ```
 
 **2. Use weak references for callbacks:**
+
 ```python
 import weakref
 
@@ -176,6 +186,7 @@ class Manager:
 ### Efficient Data Structures
 
 **Use appropriate types:**
+
 ```python
 # ❌ List for lookups (O(n))
 if timestamp in timestamp_list:
@@ -197,11 +208,13 @@ results = (x for x in items if condition(x))
 ### Minimize API Calls
 
 **Already implemented:**
+
 - Cache valid until midnight
 - User data cached for 24h
 - Only poll when tomorrow data expected
 
 **Monitor API usage:**
+
 ```python
 _LOGGER.debug("API call: %s (cache_age=%s)",
               endpoint, cache_age)
@@ -210,6 +223,7 @@ _LOGGER.debug("API call: %s (cache_age=%s)",
 ### Smart Updates
 
 **Only update when needed:**
+
 ```python
 async def _async_update_data(self) -> dict:
     """Fetch data from API."""
@@ -226,6 +240,7 @@ async def _async_update_data(self) -> dict:
 ### State Class Selection
 
 **Affects long-term statistics storage:**
+
 ```python
 # ❌ MEASUREMENT for prices (stores every change)
 state_class=SensorStateClass.MEASUREMENT  # ~35K records/year
@@ -240,6 +255,7 @@ state_class=SensorStateClass.TOTAL  # For cumulative values
 ### Attribute Size
 
 **Keep attributes minimal:**
+
 ```python
 # ❌ Large nested structures (KB per update)
 attributes = {
@@ -317,6 +333,7 @@ _LOGGER.debug("Current memory usage: %.2f MB", memory_mb)
 ---
 
 💡 **Related:**
+
 - [Caching Strategy](caching-strategy.md) - Cache layers
 - [Architecture](architecture.md) - System design
 - [Debugging](debugging.md) - Profiling tools

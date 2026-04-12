@@ -6,16 +6,17 @@
 
 ## Table of Contents
 
--   [Price-Based Automations](#price-based-automations)
--   [Volatility-Aware Automations](#volatility-aware-automations)
--   [Best Hour Detection](#best-hour-detection)
--   [ApexCharts Cards](#apexcharts-cards)
+- [Price-Based Automations](#price-based-automations)
+- [Volatility-Aware Automations](#volatility-aware-automations)
+- [Best Hour Detection](#best-hour-detection)
+- [ApexCharts Cards](#apexcharts-cards)
 
 ---
 
 > **Important Note:** The following examples are intended as templates to illustrate the logic. They are **not** suitable for direct copy & paste without adaptation.
 >
 > Please make sure you:
+>
 > 1.  Replace the **Entity IDs** (e.g., `sensor.<home_name>_...`, `switch.pool_pump`) with the IDs of your own devices and sensors.
 > 2.  Adapt the logic to your specific devices (e.g., heat pump, EV, water boiler).
 >
@@ -66,16 +67,15 @@ automation:
           - service: notify.mobile_app
             data:
                 message: >
-                  Home battery charging started. Price: {{ states('sensor.<home_name>_current_electricity_price') }} {{ state_attr('sensor.<home_name>_current_electricity_price', 'unit_of_measurement') }}.
-                  Today's volatility is {{ state_attr('sensor.<home_name>_today_s_price_volatility', 'price_volatility') }}.
-
+                    Home battery charging started. Price: {{ states('sensor.<home_name>_current_electricity_price') }} {{ state_attr('sensor.<home_name>_current_electricity_price', 'unit_of_measurement') }}.
+                    Today's volatility is {{ state_attr('sensor.<home_name>_today_s_price_volatility', 'price_volatility') }}.
 ```
 
 **Why this works:**
 
--   The automation only runs if volatility is `moderate`, `high`, or `very_high`.
--   If you adjust your volatility thresholds in the future, this automation adapts automatically without any changes.
--   It uses the `price_volatility` attribute, ensuring it works correctly regardless of your Home Assistant's display language.
+- The automation only runs if volatility is `moderate`, `high`, or `very_high`.
+- If you adjust your volatility thresholds in the future, this automation adapts automatically without any changes.
+- It uses the `price_volatility` attribute, ensuring it works correctly regardless of your Home Assistant's display language.
 
 ### Use Case: Combined Volatility and Absolute Price Check
 
@@ -118,9 +118,9 @@ automation:
 
 **Why this works:**
 
--   On days with meaningful price swings, it charges during any `Best Price` period.
--   On days with flat prices, it still charges if the price drops below your personal "cheap enough" threshold (e.g., 0.18 €/kWh or 18 ct/kWh).
--   This gracefully handles midnight period flips, as the absolute price check will likely remain true if prices stay low.
+- On days with meaningful price swings, it charges during any `Best Price` period.
+- On days with flat prices, it still charges if the price drops below your personal "cheap enough" threshold (e.g., 0.18 €/kWh or 18 ct/kWh).
+- This gracefully handles midnight period flips, as the absolute price check will likely remain true if prices stay low.
 
 ### Use Case: Using the Period's Own Volatility Attribute
 
@@ -149,10 +149,10 @@ automation:
 
 **Why this works:**
 
--   Each detected period has its own `volatility` attribute (`low`, `moderate`, etc.).
--   This is the simplest way to check for meaningful savings for that specific period.
--   The attribute name on the binary sensor is `volatility` (lowercase) and its value is also lowercase.
--   It also contains other useful attributes like `price_mean`, `price_spread`, and the `price_coefficient_variation_%` for that period.
+- Each detected period has its own `volatility` attribute (`low`, `moderate`, etc.).
+- This is the simplest way to check for meaningful savings for that specific period.
+- The attribute name on the binary sensor is `volatility` (lowercase) and its value is also lowercase.
+- It also contains other useful attributes like `price_mean`, `price_spread`, and the `price_coefficient_variation_%` for that period.
 
 ---
 
@@ -176,11 +176,11 @@ The `tibber_prices.get_apexcharts_yaml` service generates basic ApexCharts card 
 
 **Required:**
 
--   [ApexCharts Card](https://github.com/RomRider/apexcharts-card) - Install via HACS
+- [ApexCharts Card](https://github.com/RomRider/apexcharts-card) - Install via HACS
 
 **Optional (for rolling window mode):**
 
--   [Config Template Card](https://github.com/iantrich/config-template-card) - Install via HACS
+- [Config Template Card](https://github.com/iantrich/config-template-card) - Install via HACS
 
 ### Installation
 
@@ -217,9 +217,9 @@ response_variable: apexcharts_config
 
 **Behavior:**
 
--   **When tomorrow data available** (typically after ~13:00): Shows today + tomorrow
--   **When tomorrow data not available**: Shows yesterday + today
--   **Fixed 48h span:** Always shows full 48 hours
+- **When tomorrow data available** (typically after ~13:00): Shows today + tomorrow
+- **When tomorrow data not available**: Shows yesterday + today
+- **Fixed 48h span:** Always shows full 48 hours
 
 **Auto-Zoom Variant:**
 
@@ -234,17 +234,17 @@ data:
 response_variable: apexcharts_config
 ```
 
--   Same data loading as rolling window
--   **Progressive zoom:** Graph span starts at ~26h in the morning and decreases to ~14h by midnight
--   **Updates every 15 minutes:** Always shows 2h lookback + remaining time until midnight
+- Same data loading as rolling window
+- **Progressive zoom:** Graph span starts at ~26h in the morning and decreases to ~14h by midnight
+- **Updates every 15 minutes:** Always shows 2h lookback + remaining time until midnight
 
 **Note:** Rolling window modes require Config Template Card to dynamically adjust the time range.
 
 ### Features
 
--   Color-coded price levels/ratings (green = cheap, yellow = normal, red = expensive)
--   Best price period highlighting (semi-transparent green overlay)
--   Automatic NULL insertion for clean gaps
--   Translated labels based on your Home Assistant language
--   Interactive zoom and pan
--   Live marker showing current time
+- Color-coded price levels/ratings (green = cheap, yellow = normal, red = expensive)
+- Best price period highlighting (semi-transparent green overlay)
+- Automatic NULL insertion for clean gaps
+- Translated labels based on your Home Assistant language
+- Interactive zoom and pan
+- Live marker showing current time

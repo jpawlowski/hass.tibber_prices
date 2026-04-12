@@ -4,9 +4,9 @@
 
 ## Prerequisites
 
--   VS Code with Dev Container support
--   Docker installed and running
--   GitHub account (for Tibber API token)
+- VS Code with Dev Container support
+- Docker installed and running
+- GitHub account (for Tibber API token)
 
 ## Quick Setup
 
@@ -26,11 +26,11 @@ code .
 
 The DevContainer includes:
 
--   Python 3.13 with `.venv` at `/home/vscode/.venv/`
--   `uv` package manager (fast, modern Python tooling)
--   Home Assistant development dependencies
--   Ruff linter/formatter
--   Git, GitHub CLI, Node.js, Rust toolchain
+- Python 3.13 with `.venv` at `/home/vscode/.venv/`
+- `uv` package manager (fast, modern Python tooling)
+- Home Assistant development dependencies
+- Ruff linter/formatter
+- Git, GitHub CLI, Node.js, Rust toolchain
 
 ## Running the Integration
 

@@ -16,10 +16,10 @@
 2. Go to **Integrations**
 3. Click the **⋮** menu (top right) → **Custom repositories**
 4. Add the repository URL:
-   ```
-   https://github.com/jpawlowski/hass.tibber_prices
-   ```
-   Category: **Integration**
+    ```
+    https://github.com/jpawlowski/hass.tibber_prices
+    ```
+    Category: **Integration**
 5. Click **Add**
 6. Find **Tibber Price Information & Ratings** in the integration list
 7. Click **Download**
@@ -42,16 +42,16 @@ If you prefer not to use HACS:
 1. Download the [latest release](https://github.com/jpawlowski/hass.tibber_prices/releases/latest) from GitHub
 2. Extract the `custom_components/tibber_prices/` folder
 3. Copy it to your Home Assistant `config/custom_components/` directory:
-   ```
-   config/
-   └── custom_components/
-       └── tibber_prices/
-           ├── __init__.py
-           ├── manifest.json
-           ├── sensor/
-           ├── binary_sensor/
-           └── ...
-   ```
+    ```
+    config/
+    └── custom_components/
+        └── tibber_prices/
+            ├── __init__.py
+            ├── manifest.json
+            ├── sensor/
+            ├── binary_sensor/
+            └── ...
+    ```
 4. **Restart Home Assistant**
 5. Continue with [Configuration](configuration.md)
 

@@ -14,10 +14,10 @@ Welcome! This guide helps you contribute to the Tibber Prices integration.
 
 1. Fork the repository on GitHub
 2. Clone your fork:
-   ```bash
-   git clone https://github.com/YOUR_USERNAME/hass.tibber_prices.git
-   cd hass.tibber_prices
-   ```
+    ```bash
+    git clone https://github.com/YOUR_USERNAME/hass.tibber_prices.git
+    cd hass.tibber_prices
+    ```
 3. Open in VS Code
 4. Click "Reopen in Container" when prompted
 
@@ -34,6 +34,7 @@ git checkout -b fix/issue-123-description
 ```
 
 **Branch naming:**
+
 - `feature/` - New features
 - `fix/` - Bug fixes
 - `docs/` - Documentation only
@@ -45,6 +46,7 @@ git checkout -b fix/issue-123-description
 Edit code, following [Coding Guidelines](coding-guidelines.md).
 
 **Run checks frequently:**
+
 ```bash
 ./scripts/type-check  # Pyright type checking
 ./scripts/lint        # Ruff linting (auto-fix)
@@ -78,6 +80,7 @@ async def test_your_feature(hass, coordinator):
 ```
 
 Run your test:
+
 ```bash
 ./scripts/test tests/test_your_feature.py -v
 ```
@@ -97,6 +100,7 @@ Impact: Users can predict when prices will stabilize or continue fluctuating."
 ```
 
 **Commit types:**
+
 - `feat:` - New feature
 - `fix:` - Bug fix
 - `docs:` - Documentation
@@ -105,6 +109,7 @@ Impact: Users can predict when prices will stabilize or continue fluctuating."
 - `chore:` - Maintenance
 
 **Add scope when relevant:**
+
 - `feat(sensors):` - Sensor platform
 - `fix(coordinator):` - Data coordinator
 - `docs(user):` - User documentation
@@ -124,32 +129,40 @@ Then open Pull Request on GitHub.
 Title: Short, descriptive (50 chars max)
 
 Description should include:
+
 ```markdown
 ## What
+
 Brief description of changes
 
 ## Why
+
 Problem being solved or feature rationale
 
 ## How
+
 Implementation approach
 
 ## Testing
+
 - [ ] Manual testing in Home Assistant
 - [ ] Unit tests added/updated
 - [ ] Type checking passes
 - [ ] Linting passes
 
 ## Breaking Changes
+
 (If any - describe migration path)
 
 ## Related Issues
+
 Closes #123
 ```
 
 ### PR Checklist
 
 Before submitting:
+
 - [ ] Code follows [Coding Guidelines](coding-guidelines.md)
 - [ ] All tests pass (`./scripts/test`)
 - [ ] Type checking passes (`./scripts/type-check`)
@@ -170,6 +183,7 @@ Before submitting:
 ### What Reviewers Look For
 
 ✅ **Good:**
+
 - Clear, self-explanatory code
 - Appropriate comments for complex logic
 - Tests covering edge cases
@@ -177,6 +191,7 @@ Before submitting:
 - Follows existing patterns
 
 ❌ **Avoid:**
+
 - Large PRs (>500 lines) - split into smaller ones
 - Mixing unrelated changes
 - Missing tests for new features
@@ -193,6 +208,7 @@ Before submitting:
 ## Finding Issues to Work On
 
 Good first issues are labeled:
+
 - `good first issue` - Beginner-friendly
 - `help wanted` - Maintainers welcome contributions
 - `documentation` - Docs improvements
@@ -210,6 +226,7 @@ Be respectful, constructive, and patient. We're all volunteers! 🙏
 ---
 
 💡 **Related:**
+
 - [Setup Guide](setup.md) - DevContainer setup
 - [Coding Guidelines](coding-guidelines.md) - Style guide
 - [Testing](testing.md) - Writing tests

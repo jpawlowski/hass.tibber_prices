@@ -10,9 +10,9 @@ Add to `configuration.yaml`:
 
 ```yaml
 logger:
-  default: info
-  logs:
-    custom_components.tibber_prices: debug
+    default: info
+    logs:
+        custom_components.tibber_prices: debug
 ```
 
 Restart Home Assistant to apply.
@@ -20,6 +20,7 @@ Restart Home Assistant to apply.
 ### Key Log Messages
 
 **Coordinator Updates:**
+
 ```
 [custom_components.tibber_prices.coordinator] Successfully fetched price data
 [custom_components.tibber_prices.coordinator] Cache valid, using cached data
@@ -27,6 +28,7 @@ Restart Home Assistant to apply.
 ```
 
 **Period Calculation:**
+
 ```
 [custom_components.tibber_prices.coordinator.periods] Calculating BEST PRICE periods: flex=15.0%
 [custom_components.tibber_prices.coordinator.periods] Day 2024-12-06: Found 2 periods
@@ -34,6 +36,7 @@ Restart Home Assistant to apply.
 ```
 
 **API Errors:**
+
 ```
 [custom_components.tibber_prices.api] API request failed: Unauthorized
 [custom_components.tibber_prices.api] Retrying (attempt 2/3) after 2.0s
@@ -47,26 +50,27 @@ Restart Home Assistant to apply.
 
 ```json
 {
-  "version": "0.2.0",
-  "configurations": [
-    {
-      "name": "Home Assistant",
-      "type": "debugpy",
-      "request": "launch",
-      "module": "homeassistant",
-      "args": ["-c", "config", "--debug"],
-      "justMyCode": false,
-      "env": {
-        "PYTHONPATH": "${workspaceFolder}/.venv/lib/python3.13/site-packages"
-      }
-    }
-  ]
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Home Assistant",
+            "type": "debugpy",
+            "request": "launch",
+            "module": "homeassistant",
+            "args": ["-c", "config", "--debug"],
+            "justMyCode": false,
+            "env": {
+                "PYTHONPATH": "${workspaceFolder}/.venv/lib/python3.13/site-packages"
+            }
+        }
+    ]
 }
 ```
 
 ### Set Breakpoints
 
 **Coordinator update:**
+
 ```python
 # coordinator/core.py
 async def _async_update_data(self) -> dict:
@@ -75,6 +79,7 @@ async def _async_update_data(self) -> dict:
 ```
 
 **Period calculation:**
+
 ```python
 # coordinator/period_handlers/core.py
 def calculate_periods(...) -> list[dict]:
@@ -91,6 +96,7 @@ def calculate_periods(...) -> list[dict]:
 ```
 
 **Flags:**
+
 - `-v` - Verbose output
 - `-s` - Show print statements
 - `-k pattern` - Run tests matching pattern
@@ -102,6 +108,7 @@ Set breakpoint in test file, use "Debug Test" CodeLens.
 ### Useful Test Patterns
 
 **Print coordinator data:**
+
 ```python
 def test_something(coordinator):
     print(f"Coordinator data: {coordinator.data}")
@@ -109,6 +116,7 @@ def test_something(coordinator):
 ```
 
 **Inspect period attributes:**
+
 ```python
 def test_periods(hass, coordinator):
     periods = coordinator.data.get('best_price_periods', [])
@@ -122,11 +130,13 @@ def test_periods(hass, coordinator):
 ### Integration Not Loading
 
 **Check:**
+
 ```bash
 grep "tibber_prices" config/home-assistant.log
 ```
 
 **Common causes:**
+
 - Syntax error in Python code → Check logs for traceback
 - Missing dependency → Run `uv sync`
 - Wrong file permissions → `chmod +x scripts/*`
@@ -134,12 +144,14 @@ grep "tibber_prices" config/home-assistant.log
 ### Sensors Not Updating
 
 **Check coordinator state:**
+
 ```python
 # In Developer Tools > Template
 {{ states.sensor.tibber_home_current_interval_price.last_updated }}
 ```
 
 **Debug in code:**
+
 ```python
 # Add logging in sensor/core.py
 _LOGGER.debug("Updating sensor %s: old=%s new=%s",
@@ -149,6 +161,7 @@ _LOGGER.debug("Updating sensor %s: old=%s new=%s",
 ### Period Calculation Wrong
 
 **Enable detailed period logs:**
+
 ```python
 # coordinator/period_handlers/period_building.py
 _LOGGER.debug("Candidate intervals: %s",
@@ -156,6 +169,7 @@ _LOGGER.debug("Candidate intervals: %s",
 ```
 
 **Check filter statistics:**
+
 ```
 [period_building] Flex filter blocked: 45 intervals
 [period_building] Min distance blocked: 12 intervals
@@ -200,6 +214,7 @@ python -m pstats profile.stats
 ### Remote Debugging with debugpy
 
 Add to coordinator code:
+
 ```python
 import debugpy
 debugpy.listen(5678)
@@ -212,11 +227,13 @@ Connect from VS Code with remote attach configuration.
 ### IPython REPL
 
 Install in container:
+
 ```bash
 uv pip install ipython
 ```
 
 Add breakpoint:
+
 ```python
 from IPython import embed
 embed()  # Drops into interactive shell
@@ -225,6 +242,7 @@ embed()  # Drops into interactive shell
 ---
 
 💡 **Related:**
+
 - [Testing Guide](testing.md) - Writing and running tests
 - [Setup Guide](setup.md) - Development environment
 - [Architecture](architecture.md) - Code structure

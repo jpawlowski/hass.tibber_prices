@@ -29,6 +29,7 @@ class TibberPricesSensor(TibberPricesEntity, SensorEntity):
 ```
 
 **Key Points:**
+
 - Must be a **class attribute** (not instance attribute)
 - Use `frozenset` for immutability and performance
 - Applied automatically by Home Assistant's Recorder component
@@ -40,6 +41,7 @@ class TibberPricesSensor(TibberPricesEntity, SensorEntity):
 **Attributes:** `description`, `usage_tips`
 
 **Reason:** Static, large text strings (100-500 chars each) that:
+
 - Never change or change very rarely
 - Don't provide analytical value in history
 - Consume significant database space when recorded every state change
@@ -50,6 +52,7 @@ class TibberPricesSensor(TibberPricesEntity, SensorEntity):
 ### 2. Large Nested Structures
 
 **Attributes:**
+
 - `periods` (binary_sensor) - Array of all period summaries
 - `data` (chart_data_export) - Complete price data arrays
 - `trend_attributes` - Detailed trend analysis
@@ -58,6 +61,7 @@ class TibberPricesSensor(TibberPricesEntity, SensorEntity):
 - `volatility_attributes` - Detailed volatility breakdown
 
 **Reason:** Complex nested data structures that are:
+
 - Serialized to JSON for storage (expensive)
 - Create large database rows (2-20 KB each)
 - Slow down history queries
@@ -66,20 +70,21 @@ class TibberPricesSensor(TibberPricesEntity, SensorEntity):
 **Impact:** ~10-30 KB saved per state change for affected sensors
 
 **Example - periods array:**
+
 ```json
 {
-  "periods": [
-    {
-      "start": "2025-12-07T06:00:00+01:00",
-      "end": "2025-12-07T08:00:00+01:00",
-      "duration_minutes": 120,
-      "price_mean": 18.5,
-      "price_median": 18.3,
-      "price_min": 17.2,
-      "price_max": 19.8,
-      // ... 10+ more attributes × 10-20 periods
-    }
-  ]
+    "periods": [
+        {
+            "start": "2025-12-07T06:00:00+01:00",
+            "end": "2025-12-07T08:00:00+01:00",
+            "duration_minutes": 120,
+            "price_mean": 18.5,
+            "price_median": 18.3,
+            "price_min": 17.2,
+            "price_max": 19.8
+            // ... 10+ more attributes × 10-20 periods
+        }
+    ]
 }
 ```
 
@@ -88,6 +93,7 @@ class TibberPricesSensor(TibberPricesEntity, SensorEntity):
 **Attributes:** `icon_color`, `cache_age`, `cache_validity`, `data_completeness`, `data_status`
 
 **Reason:**
+
 - Change every update cycle (every 15 minutes or more frequently)
 - Don't provide long-term analytical value
 - Create state changes even when core values haven't changed
@@ -103,6 +109,7 @@ class TibberPricesSensor(TibberPricesEntity, SensorEntity):
 **Attributes:** `tomorrow_expected_after`, `level_value`, `rating_value`, `level_id`, `rating_id`, `currency`, `resolution`, `yaxis_min`, `yaxis_max`
 
 **Reason:**
+
 - Configuration values that rarely change
 - Wastes space when recorded repeatedly
 - Can be derived from other attributes or from entity state
@@ -114,6 +121,7 @@ class TibberPricesSensor(TibberPricesEntity, SensorEntity):
 **Attributes:** `next_api_poll`, `next_midnight_turnover`, `last_api_fetch`, `last_cache_update`, `last_turnover`, `last_error`, `error`
 
 **Reason:**
+
 - Only relevant at moment of reading
 - Won't be valid after some time
 - Similar to `entity_picture` in HA core image entities
@@ -128,6 +136,7 @@ class TibberPricesSensor(TibberPricesEntity, SensorEntity):
 **Attributes:** `relaxation_level`, `relaxation_threshold_original_%`, `relaxation_threshold_applied_%`
 
 **Reason:**
+
 - Detailed technical information not needed for historical analysis
 - Only useful for debugging during active development
 - Boolean `relaxation_active` is kept for high-level analysis
@@ -139,6 +148,7 @@ class TibberPricesSensor(TibberPricesEntity, SensorEntity):
 **Attributes:** `price_spread`, `volatility`, `diff_%`, `rating_difference_%`, `period_price_diff_from_daily_min`, `period_price_diff_from_daily_min_%`, `periods_total`, `periods_remaining`
 
 **Reason:**
+
 - Can be calculated from other attributes
 - Redundant information
 - Doesn't add analytical value to history
@@ -152,22 +162,27 @@ class TibberPricesSensor(TibberPricesEntity, SensorEntity):
 These attributes **remain in history** because they provide essential analytical value:
 
 ### Time-Series Core
+
 - `timestamp` - Critical for time-series analysis (ALWAYS FIRST)
 - All price values - Core sensor states
 
 ### Diagnostics & Tracking
+
 - `cache_age_minutes` - Numeric value for diagnostics tracking over time
 - `updates_today` - Tracking API usage patterns
 
 ### Data Completeness
+
 - `interval_count`, `intervals_available` - Data completeness metrics
 - `yesterday_available`, `today_available`, `tomorrow_available` - Boolean status
 
 ### Period Data
+
 - `start`, `end`, `duration_minutes` - Core period timing
 - `price_mean`, `price_median`, `price_min`, `price_max` - Core price statistics
 
 ### High-Level Status
+
 - `relaxation_active` - Whether relaxation was used (boolean, useful for analyzing when periods needed relaxation)
 
 ## Expected Database Impact
@@ -175,6 +190,7 @@ These attributes **remain in history** because they provide essential analytical
 ### Space Savings
 
 **Per state change:**
+
 - Before: ~3-8 KB average
 - After: ~0.5-1.5 KB average
 - **Reduction: 60-85%**
@@ -196,6 +212,7 @@ These attributes **remain in history** because they provide essential analytical
 ### Real-World Impact
 
 For a typical installation with:
+
 - 80+ sensors
 - Updates every 15 minutes
 - ~10 sensors updating every minute
@@ -207,14 +224,14 @@ For a typical installation with:
 ## Implementation Files
 
 - **Sensor Platform**: `custom_components/tibber_prices/sensor/core.py`
-  - Class: `TibberPricesSensor`
-  - 47 attributes excluded
+    - Class: `TibberPricesSensor`
+    - 47 attributes excluded
 
 - **Binary Sensor Platform**: `custom_components/tibber_prices/binary_sensor/core.py`
-  - Class: `TibberPricesBinarySensor`
-  - 30 attributes excluded
+    - Class: `TibberPricesBinarySensor`
+    - 30 attributes excluded
 
-## When to Update _unrecorded_attributes
+## When to Update \_unrecorded_attributes
 
 ### Add to Exclusion List When:
 
@@ -236,24 +253,24 @@ For a typical installation with:
 When adding a new attribute, ask:
 
 1. **Will this be useful in history queries 1 week from now?**
-   - No → Exclude
-   - Yes → Keep
+    - No → Exclude
+    - Yes → Keep
 
 2. **Can this be calculated from other recorded attributes?**
-   - Yes → Exclude
-   - No → Keep
+    - Yes → Exclude
+    - No → Keep
 
 3. **Is this primarily for current UI display?**
-   - Yes → Exclude
-   - No → Keep
+    - Yes → Exclude
+    - No → Keep
 
 4. **Does this change frequently without indicating state change?**
-   - Yes → Exclude
-   - No → Keep
+    - Yes → Exclude
+    - No → Keep
 
 5. **Is this larger than 100 bytes and not essential for analysis?**
-   - Yes → Exclude
-   - No → Keep
+    - Yes → Exclude
+    - No → Keep
 
 ## Testing
 
@@ -265,6 +282,7 @@ After modifying `_unrecorded_attributes`:
 4. **Confirm excluded attributes** don't appear in new state writes
 
 **SQL Query to check attribute presence:**
+
 ```sql
 SELECT
     state_id,

@@ -19,12 +19,14 @@ The integration allows you to choose how average price sensors display their val
 #### Display Modes
 
 **Median (Default):**
+
 - Shows the "middle value" when all prices are sorted
 - **Resistant to extreme spikes** - one expensive hour doesn't skew the result
 - Best for understanding **typical price levels**
 - Example: "What was the typical price today?"
 
 **Arithmetic Mean:**
+
 - Shows the mathematical average of all prices
 - **Includes effect of spikes** - reflects actual cost if consuming evenly
 - Best for **cost calculations and budgeting**
@@ -33,6 +35,7 @@ The integration allows you to choose how average price sensors display their val
 #### Why This Matters
 
 Consider a day with these hourly prices:
+
 ```
 10, 12, 13, 15, 80 ct/kWh
 ```
@@ -53,6 +56,7 @@ The median tells you the price was **typically** around 13 ct/kWh (4 out of 5 ho
 ```
 
 This means:
+
 - ✅ You can change the display anytime without breaking automations
 - ✅ Automations can use both values for different purposes
 - ✅ No need to create template sensors for the "other" value
@@ -60,6 +64,7 @@ This means:
 #### Affected Sensors
 
 This setting applies to:
+
 - Daily average sensors (today, tomorrow)
 - 24-hour rolling averages (trailing, leading)
 - Hourly smoothed prices (current hour, next hour)
@@ -70,12 +75,14 @@ See the **[Sensors Guide](sensors.md#average-price-sensors)** for detailed examp
 #### Choosing Your Display
 
 **Choose Median if:**
+
 - 👥 You show prices to users ("What's today like?")
 - 📊 You want dashboard values that represent typical conditions
 - 🎯 You compare price levels across days
 - 🔍 You analyze volatility (comparing typical vs extremes)
 
 **Choose Mean if:**
+
 - 💰 You calculate costs and budgets
 - 📈 You forecast energy expenses
 - 🧮 You need mathematical accuracy for financial planning
@@ -93,27 +100,27 @@ When enabled, these entities override the corresponding Options Flow settings:
 
 #### Best Price Period Settings
 
-| Entity | Type | Range | Description |
-|--------|------|-------|-------------|
-| **Best Price: Flexibility** | Number | 0-50% | Maximum above daily minimum for "best price" intervals |
-| **Best Price: Minimum Distance** | Number | -50-0% | Required distance below daily average |
-| **Best Price: Minimum Period Length** | Number | 15-180 min | Shortest period duration to consider |
-| **Best Price: Minimum Periods** | Number | 1-10 | Target number of periods per day |
-| **Best Price: Relaxation Attempts** | Number | 1-12 | Steps to try when relaxing criteria |
-| **Best Price: Gap Tolerance** | Number | 0-8 | Consecutive intervals allowed above threshold |
-| **Best Price: Achieve Minimum Count** | Switch | On/Off | Enable relaxation algorithm |
+| Entity                                | Type   | Range      | Description                                            |
+| ------------------------------------- | ------ | ---------- | ------------------------------------------------------ |
+| **Best Price: Flexibility**           | Number | 0-50%      | Maximum above daily minimum for "best price" intervals |
+| **Best Price: Minimum Distance**      | Number | -50-0%     | Required distance below daily average                  |
+| **Best Price: Minimum Period Length** | Number | 15-180 min | Shortest period duration to consider                   |
+| **Best Price: Minimum Periods**       | Number | 1-10       | Target number of periods per day                       |
+| **Best Price: Relaxation Attempts**   | Number | 1-12       | Steps to try when relaxing criteria                    |
+| **Best Price: Gap Tolerance**         | Number | 0-8        | Consecutive intervals allowed above threshold          |
+| **Best Price: Achieve Minimum Count** | Switch | On/Off     | Enable relaxation algorithm                            |
 
 #### Peak Price Period Settings
 
-| Entity | Type | Range | Description |
-|--------|------|-------|-------------|
-| **Peak Price: Flexibility** | Number | -50-0% | Maximum below daily maximum for "peak price" intervals |
-| **Peak Price: Minimum Distance** | Number | 0-50% | Required distance above daily average |
-| **Peak Price: Minimum Period Length** | Number | 15-180 min | Shortest period duration to consider |
-| **Peak Price: Minimum Periods** | Number | 1-10 | Target number of periods per day |
-| **Peak Price: Relaxation Attempts** | Number | 1-12 | Steps to try when relaxing criteria |
-| **Peak Price: Gap Tolerance** | Number | 0-8 | Consecutive intervals allowed below threshold |
-| **Peak Price: Achieve Minimum Count** | Switch | On/Off | Enable relaxation algorithm |
+| Entity                                | Type   | Range      | Description                                            |
+| ------------------------------------- | ------ | ---------- | ------------------------------------------------------ |
+| **Peak Price: Flexibility**           | Number | -50-0%     | Maximum below daily maximum for "peak price" intervals |
+| **Peak Price: Minimum Distance**      | Number | 0-50%      | Required distance above daily average                  |
+| **Peak Price: Minimum Period Length** | Number | 15-180 min | Shortest period duration to consider                   |
+| **Peak Price: Minimum Periods**       | Number | 1-10       | Target number of periods per day                       |
+| **Peak Price: Relaxation Attempts**   | Number | 1-12       | Steps to try when relaxing criteria                    |
+| **Peak Price: Gap Tolerance**         | Number | 0-8        | Consecutive intervals allowed below threshold          |
+| **Peak Price: Achieve Minimum Count** | Switch | On/Off     | Enable relaxation algorithm                            |
 
 ### How Runtime Overrides Work
 
@@ -138,24 +145,25 @@ Each configuration entity includes a detailed description attribute explaining w
 
 ```yaml
 automation:
-  - alias: "Winter: Stricter Best Price Detection"
-    trigger:
-      - platform: time
-        at: "00:00:00"
-    condition:
-      - condition: template
-        value_template: "{{ now().month in [11, 12, 1, 2] }}"
-    action:
-      - service: number.set_value
-        target:
-          entity_id: number.<home_name>_best_price_flexibility
-        data:
-          value: 10  # Stricter than default 15%
+    - alias: "Winter: Stricter Best Price Detection"
+      trigger:
+          - platform: time
+            at: "00:00:00"
+      condition:
+          - condition: template
+            value_template: "{{ now().month in [11, 12, 1, 2] }}"
+      action:
+          - service: number.set_value
+            target:
+                entity_id: number.<home_name>_best_price_flexibility
+            data:
+                value: 10 # Stricter than default 15%
 ```
 
 ### Recorder Optimization (Optional)
 
 These configuration entities are designed to minimize database impact:
+
 - **EntityCategory.CONFIG** - Excluded from Long-Term Statistics
 - All attributes excluded from history recording
 - Only state value changes are recorded
@@ -166,16 +174,17 @@ However, if you prefer to **completely exclude** these entities from the recorde
 
 ```yaml
 recorder:
-  exclude:
-    entity_globs:
-      # Exclude all Tibber Prices configuration entities
-      - number.*_best_price_*
-      - number.*_peak_price_*
-      - switch.*_best_price_*
-      - switch.*_peak_price_*
+    exclude:
+        entity_globs:
+            # Exclude all Tibber Prices configuration entities
+            - number.*_best_price_*
+            - number.*_peak_price_*
+            - switch.*_best_price_*
+            - switch.*_peak_price_*
 ```
 
 This is especially useful if:
+
 - You rarely change these settings
 - You want the smallest possible database footprint
 - You don't need to see the history graph for these entities

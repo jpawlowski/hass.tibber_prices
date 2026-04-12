@@ -17,12 +17,14 @@ The integration allows you to choose how average price sensors display their val
 #### Display Modes
 
 **Median (Default):**
+
 - Shows the "middle value" when all prices are sorted
 - **Resistant to extreme spikes** - one expensive hour doesn't skew the result
 - Best for understanding **typical price levels**
 - Example: "What was the typical price today?"
 
 **Arithmetic Mean:**
+
 - Shows the mathematical average of all prices
 - **Includes effect of spikes** - reflects actual cost if consuming evenly
 - Best for **cost calculations and budgeting**
@@ -31,6 +33,7 @@ The integration allows you to choose how average price sensors display their val
 #### Why This Matters
 
 Consider a day with these hourly prices:
+
 ```
 10, 12, 13, 15, 80 ct/kWh
 ```
@@ -51,6 +54,7 @@ The median tells you the price was **typically** around 13 ct/kWh (4 out of 5 ho
 ```
 
 This means:
+
 - ✅ You can change the display anytime without breaking automations
 - ✅ Automations can use both values for different purposes
 - ✅ No need to create template sensors for the "other" value
@@ -58,6 +62,7 @@ This means:
 #### Affected Sensors
 
 This setting applies to:
+
 - Daily average sensors (today, tomorrow)
 - 24-hour rolling averages (trailing, leading)
 - Hourly smoothed prices (current hour, next hour)
@@ -68,12 +73,14 @@ See the **[Sensors Guide](sensors.md#average-price-sensors)** for detailed examp
 #### Choosing Your Display
 
 **Choose Median if:**
+
 - 👥 You show prices to users ("What's today like?")
 - 📊 You want dashboard values that represent typical conditions
 - 🎯 You compare price levels across days
 - 🔍 You analyze volatility (comparing typical vs extremes)
 
 **Choose Mean if:**
+
 - 💰 You calculate costs and budgets
 - 📈 You forecast energy expenses
 - 🧮 You need mathematical accuracy for financial planning

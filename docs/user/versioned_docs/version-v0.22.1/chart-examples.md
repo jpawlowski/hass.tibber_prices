@@ -8,14 +8,15 @@ This guide showcases the different chart configurations available through the `t
 
 The integration can generate 4 different chart modes, each optimized for specific use cases:
 
-| Mode | Description | Best For | Dependencies |
-|------|-------------|----------|--------------|
-| **Today** | Static 24h view of today's prices | Quick daily overview | ApexCharts Card |
-| **Tomorrow** | Static 24h view of tomorrow's prices | Planning tomorrow | ApexCharts Card |
-| **Rolling Window** | Dynamic 48h view (today+tomorrow or yesterday+today) | Always-current overview | ApexCharts + Config Template Card |
-| **Rolling Window Auto-Zoom** | Dynamic view that zooms in as day progresses | Real-time focus on remaining day | ApexCharts + Config Template Card |
+| Mode                         | Description                                          | Best For                         | Dependencies                      |
+| ---------------------------- | ---------------------------------------------------- | -------------------------------- | --------------------------------- |
+| **Today**                    | Static 24h view of today's prices                    | Quick daily overview             | ApexCharts Card                   |
+| **Tomorrow**                 | Static 24h view of tomorrow's prices                 | Planning tomorrow                | ApexCharts Card                   |
+| **Rolling Window**           | Dynamic 48h view (today+tomorrow or yesterday+today) | Always-current overview          | ApexCharts + Config Template Card |
+| **Rolling Window Auto-Zoom** | Dynamic view that zooms in as day progresses         | Real-time focus on remaining day | ApexCharts + Config Template Card |
 
 **Screenshots available for:**
+
 - ✅ Today (static) - Representative of all fixed day views
 - ✅ Rolling Window - Shows dynamic Y-axis scaling
 - ✅ Rolling Window Auto-Zoom - Shows progressive zoom effect
@@ -29,6 +30,7 @@ The integration can generate 4 different chart modes, each optimized for specifi
 **Dependencies:** ApexCharts Card only
 
 **Generate:**
+
 ```yaml
 service: tibber_prices.get_apexcharts_yaml
 data:
@@ -43,6 +45,7 @@ data:
 ![Today's Prices - Static 24h View](/img/charts/today.jpg)
 
 **Key Features:**
+
 - ✅ Color-coded price levels (LOW, NORMAL, HIGH)
 - ✅ Best price period highlights (vertical bands)
 - ✅ Static 24-hour view (00:00 - 23:59)
@@ -59,6 +62,7 @@ data:
 **Dependencies:** ApexCharts Card + Config Template Card
 
 **Generate:**
+
 ```yaml
 service: tibber_prices.get_apexcharts_yaml
 data:
@@ -73,6 +77,7 @@ data:
 ![Rolling 48h Window with Dynamic Y-Axis Scaling](/img/charts/rolling-window.jpg)
 
 **Key Features:**
+
 - ✅ **Dynamic Y-axis scaling** via `chart_metadata` sensor
 - ✅ Automatic data selection: today+tomorrow (when available) or yesterday+today
 - ✅ Always shows 48 hours of data
@@ -80,6 +85,7 @@ data:
 - ✅ Color gradients for visual appeal
 
 **How it works:**
+
 - Before ~13:00: Shows yesterday + today
 - After ~13:00: Shows today + tomorrow
 - Y-axis automatically adjusts to data range for optimal visualization
@@ -93,6 +99,7 @@ data:
 **Dependencies:** ApexCharts Card + Config Template Card
 
 **Generate:**
+
 ```yaml
 service: tibber_prices.get_apexcharts_yaml
 data:
@@ -107,6 +114,7 @@ data:
 ![Rolling Window Auto-Zoom - Progressive Zoom Effect](/img/charts/rolling-window-autozoom.jpg)
 
 **Key Features:**
+
 - ✅ **Progressive zoom:** Graph span decreases every 15 minutes
 - ✅ **Dynamic Y-axis scaling** via `chart_metadata` sensor
 - ✅ Always shows: 2 hours lookback + remaining time until midnight
@@ -114,6 +122,7 @@ data:
 - ✅ Example: At 18:00, shows 16:00 → 00:00 (8h window)
 
 **How it works:**
+
 - 00:00: Shows full 48h window (same as rolling window)
 - 06:00: Shows 04:00 → midnight (20h window)
 - 12:00: Shows 10:00 → midnight (14h window)
@@ -155,6 +164,7 @@ Based on **absolute price ranges** (calculated from daily min/max):
 Rolling window modes (2 & 3) automatically integrate with the `chart_metadata` sensor for optimal visualization:
 
 **Without chart_metadata sensor (disabled):**
+
 ```
 ┌─────────────────────┐
 │                     │ ← Lots of empty space
@@ -166,6 +176,7 @@ Rolling window modes (2 & 3) automatically integrate with the `chart_metadata` s
 ```
 
 **With chart_metadata sensor (enabled):**
+
 ```
 ┌─────────────────────┐
 │      ___            │ ← Y-axis fitted to data
@@ -191,6 +202,7 @@ Rolling window modes (2 & 3) automatically integrate with the `chart_metadata` s
 When `highlight_best_price: true`, vertical bands overlay the chart showing detected best price periods:
 
 **Example:**
+
 ```
 Price
   │
@@ -205,6 +217,7 @@ Price
 ```
 
 **Features:**
+
 - Automatic detection based on your configuration (see [Period Calculation Guide](period-calculation.md))
 - Tooltip shows "Best Price Period" label
 - Only appears when periods are configured and detected
@@ -217,18 +230,18 @@ Price
 ### Required for All Modes
 
 - **[ApexCharts Card](https://github.com/RomRider/apexcharts-card)**: Core visualization library
-  ```bash
-  # Install via HACS
-  HACS → Frontend → Search "ApexCharts Card" → Download
-  ```
+    ```bash
+    # Install via HACS
+    HACS → Frontend → Search "ApexCharts Card" → Download
+    ```
 
 ### Required for Rolling Window Modes Only
 
 - **[Config Template Card](https://github.com/iantrich/config-template-card)**: Enables dynamic configuration
-  ```bash
-  # Install via HACS
-  HACS → Frontend → Search "Config Template Card" → Download
-  ```
+    ```bash
+    # Install via HACS
+    HACS → Frontend → Search "Config Template Card" → Download
+    ```
 
 **Note:** Fixed day views (`today`, `tomorrow`) work with ApexCharts Card alone!
 
@@ -243,9 +256,9 @@ Edit the `colors` array in the generated YAML:
 ```yaml
 apex_config:
     colors:
-        - "#00FF00"  # Change LOW/VERY_CHEAP color
-        - "#0000FF"  # Change NORMAL color
-        - "#FF0000"  # Change HIGH/VERY_EXPENSIVE color
+        - "#00FF00" # Change LOW/VERY_CHEAP color
+        - "#0000FF" # Change NORMAL color
+        - "#FF0000" # Change HIGH/VERY_EXPENSIVE color
 ```
 
 ### Changing Chart Height
@@ -260,7 +273,7 @@ header:
     title: My Custom Title
 apex_config:
     chart:
-        height: 400  # Adjust height in pixels
+        height: 400 # Adjust height in pixels
 ```
 
 ### Combining with Other Cards
@@ -292,14 +305,14 @@ cards:
 
 1. **Today View (Static)** - Representative of all fixed day views (yesterday/today/tomorrow)
 
-   ![Today View](/img/charts/today.jpg)
+    ![Today View](/img/charts/today.jpg)
 
 2. **Rolling Window (Dynamic)** - Shows dynamic Y-axis scaling and 48h window
 
-   ![Rolling Window](/img/charts/rolling-window.jpg)
+    ![Rolling Window](/img/charts/rolling-window.jpg)
 
 3. **Rolling Window Auto-Zoom (Dynamic)** - Shows progressive zoom effect
 
-   ![Rolling Window Auto-Zoom](/img/charts/rolling-window-autozoom.jpg)
+    ![Rolling Window Auto-Zoom](/img/charts/rolling-window-autozoom.jpg)
 
 **Note:** Tomorrow view is visually identical to Today view (same chart type, just different data).

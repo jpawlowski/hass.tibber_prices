@@ -4,10 +4,10 @@ This is a **Home Assistant custom component** for Tibber electricity price data,
 
 ## Documentation Metadata
 
--   **Last Major Update**: 2025-01-21
--   **Last Architecture Review**: 2025-01-21 (Phase 1: Added TypedDict documentation system, improved BaseCalculator with 8 helper methods. Phase 2: Documented Import Architecture - Hybrid Pattern (Trend/Volatility build own attributes), verified no circular dependencies, confirmed optimal TYPE_CHECKING usage across all 8 calculators.)
--   **Last Code Example Cleanup**: 2025-11-18 (Removed redundant implementation details from AGENTS.md, added guidelines for when to include code examples)
--   **Documentation Status**: ✅ Current (verified against codebase)
+- **Last Major Update**: 2025-01-21
+- **Last Architecture Review**: 2025-01-21 (Phase 1: Added TypedDict documentation system, improved BaseCalculator with 8 helper methods. Phase 2: Documented Import Architecture - Hybrid Pattern (Trend/Volatility build own attributes), verified no circular dependencies, confirmed optimal TYPE_CHECKING usage across all 8 calculators.)
+- **Last Code Example Cleanup**: 2025-11-18 (Removed redundant implementation details from AGENTS.md, added guidelines for when to include code examples)
+- **Documentation Status**: ✅ Current (verified against codebase)
 
 _Note: When proposing significant updates to this file, update the metadata above with the new date and brief description of changes._
 
@@ -21,22 +21,22 @@ When working with the codebase, Copilot MUST actively maintain consistency betwe
 
 **Documentation Organization:**
 
--   **This file** (`AGENTS.md`): AI/Developer long-term memory, patterns, conventions
--   **`docs/user/`**: Docusaurus site for end-users (installation, configuration, usage examples)
-    -   Markdown files in `docs/user/docs/*.md`
-    -   Navigation managed via `docs/user/sidebars.ts`
--   **`docs/developer/`**: Docusaurus site for contributors (architecture, development guides)
-    -   Markdown files in `docs/developer/docs/*.md`
-    -   Navigation managed via `docs/developer/sidebars.ts`
--   **`README.md`**: Project overview with links to documentation sites
+- **This file** (`AGENTS.md`): AI/Developer long-term memory, patterns, conventions
+- **`docs/user/`**: Docusaurus site for end-users (installation, configuration, usage examples)
+    - Markdown files in `docs/user/docs/*.md`
+    - Navigation managed via `docs/user/sidebars.ts`
+- **`docs/developer/`**: Docusaurus site for contributors (architecture, development guides)
+    - Markdown files in `docs/developer/docs/*.md`
+    - Navigation managed via `docs/developer/sidebars.ts`
+- **`README.md`**: Project overview with links to documentation sites
 
 **Automatic Inconsistency Detection:**
 
--   When code changes affect documented patterns, examples, file paths, function names, or architectural decisions **in this file**, IMMEDIATELY flag the inconsistency
--   If a documented function is renamed, moved, or deleted → suggest documentation update
--   If file structure changes (files moved/renamed/deleted) → suggest path updates
--   If implementation patterns change (e.g., new translation structure, different caching approach) → suggest pattern documentation update
--   If new learnings emerge during debugging or development → suggest adding to documentation
+- When code changes affect documented patterns, examples, file paths, function names, or architectural decisions **in this file**, IMMEDIATELY flag the inconsistency
+- If a documented function is renamed, moved, or deleted → suggest documentation update
+- If file structure changes (files moved/renamed/deleted) → suggest path updates
+- If implementation patterns change (e.g., new translation structure, different caching approach) → suggest pattern documentation update
+- If new learnings emerge during debugging or development → suggest adding to documentation
 
 **Documentation Update Process:**
 
@@ -48,19 +48,18 @@ When working with the codebase, Copilot MUST actively maintain consistency betwe
 
 **When to discuss in chat vs. direct file changes:**
 
--   **Make direct changes when:**
+- **Make direct changes when:**
+    - Clear, straightforward task (fix bug, add function, update config)
+    - Single approach is obvious
+    - User request is specific ("add X", "change Y to Z")
+    - Quick iteration is needed (user can review diff and iterate)
 
-    -   Clear, straightforward task (fix bug, add function, update config)
-    -   Single approach is obvious
-    -   User request is specific ("add X", "change Y to Z")
-    -   Quick iteration is needed (user can review diff and iterate)
-
--   **Discuss/show in chat first when:**
-    -   Multiple valid approaches exist (architectural decision)
-    -   Significant refactoring affecting many files
-    -   Unclear requirements need clarification
-    -   Trade-offs need discussion (performance vs. readability, etc.)
-    -   User asks open-ended question ("how should we...", "what's the best way...")
+- **Discuss/show in chat first when:**
+    - Multiple valid approaches exist (architectural decision)
+    - Significant refactoring affecting many files
+    - Unclear requirements need clarification
+    - Trade-offs need discussion (performance vs. readability, etc.)
+    - User asks open-ended question ("how should we...", "what's the best way...")
 
 **Goal:** Save time. File edits with VS Code tracking are fast for simple changes. Chat discussion is better for decisions requiring input before committing to an approach.
 
@@ -72,19 +71,19 @@ When working with the codebase, Copilot MUST actively maintain consistency betwe
 
 ✅ **DO include examples for:**
 
--   **Architectural patterns** - Show WHY a design decision was made (e.g., "direct method pattern vs Callable pattern")
--   **Non-obvious patterns** - Illustrate unusual HA-specific patterns not documented elsewhere (e.g., selector translation structure)
--   **Decision rationale** - Demonstrate trade-offs between approaches (e.g., performance comparison with metrics)
--   **Configuration patterns** - Show structure of config files when format is critical (e.g., git-cliff.toml template)
--   **Best practices vs anti-patterns** - Side-by-side comparison of ✅ correct vs ❌ wrong approaches
+- **Architectural patterns** - Show WHY a design decision was made (e.g., "direct method pattern vs Callable pattern")
+- **Non-obvious patterns** - Illustrate unusual HA-specific patterns not documented elsewhere (e.g., selector translation structure)
+- **Decision rationale** - Demonstrate trade-offs between approaches (e.g., performance comparison with metrics)
+- **Configuration patterns** - Show structure of config files when format is critical (e.g., git-cliff.toml template)
+- **Best practices vs anti-patterns** - Side-by-side comparison of ✅ correct vs ❌ wrong approaches
 
 ❌ **DON'T include examples for:**
 
--   **Implementation details** - Code that duplicates what's in actual source files (e.g., full function implementations)
--   **API usage** - Standard library or HA API calls that are documented elsewhere (just reference the actual files)
--   **Entity definitions** - Complete SensorEntityDescription examples (just describe the pattern)
--   **Translation JSON** - Full translation file examples (just show the key structure pattern)
--   **Service schemas** - Complete schema definitions (reference services.py instead)
+- **Implementation details** - Code that duplicates what's in actual source files (e.g., full function implementations)
+- **API usage** - Standard library or HA API calls that are documented elsewhere (just reference the actual files)
+- **Entity definitions** - Complete SensorEntityDescription examples (just describe the pattern)
+- **Translation JSON** - Full translation file examples (just show the key structure pattern)
+- **Service schemas** - Complete schema definitions (reference services.py instead)
 
 **Style for code examples:**
 
@@ -138,31 +137,31 @@ This prevents AGENTS.md from becoming outdated when code evolves, while still pr
 
 🔴 **HIGH Confidence** - Factual inconsistencies (flag immediately):
 
--   ✅ Documented function/class renamed, moved, or deleted
--   ✅ File paths changed (files moved/renamed/deleted)
--   ✅ Example code references non-existent code
--   ✅ Breaking changes to documented APIs or patterns
+- ✅ Documented function/class renamed, moved, or deleted
+- ✅ File paths changed (files moved/renamed/deleted)
+- ✅ Example code references non-existent code
+- ✅ Breaking changes to documented APIs or patterns
 
 🟡 **MEDIUM Confidence** - Possible changes (ask for clarification):
 
--   ✅ Implementation pattern changed (might be intentional refactor)
--   ✅ New approach observed alongside documented old approach (unclear which is preferred)
--   ✅ Documented pattern still works but seems outdated
+- ✅ Implementation pattern changed (might be intentional refactor)
+- ✅ New approach observed alongside documented old approach (unclear which is preferred)
+- ✅ Documented pattern still works but seems outdated
 
 🟢 **LOW Confidence** - Suggestions for additions (propose when valuable):
 
--   ✅ New architectural pattern discovered during debugging (like the selector translation structure fix)
--   ✅ Important learnings that would help future sessions
--   ✅ User expressed wish for documentation
--   ✅ HA best practice learned that applies to this project
+- ✅ New architectural pattern discovered during debugging (like the selector translation structure fix)
+- ✅ Important learnings that would help future sessions
+- ✅ User expressed wish for documentation
+- ✅ HA best practice learned that applies to this project
 
 **Do NOT Propose Updates For:**
 
--   ❌ Temporary debugging code or experimental changes
--   ❌ Minor implementation details that don't affect understanding
--   ❌ Private helper function internals (unless part of documented pattern)
--   ❌ TODO comments (unless they represent architectural decisions)
--   ❌ Variable names or internal state (unless part of public API)
+- ❌ Temporary debugging code or experimental changes
+- ❌ Minor implementation details that don't affect understanding
+- ❌ Private helper function internals (unless part of documented pattern)
+- ❌ TODO comments (unless they represent architectural decisions)
+- ❌ Variable names or internal state (unless part of public API)
 
 **Update Proposal Format:**
 Include confidence level and impact in proposals:
@@ -190,44 +189,39 @@ This ensures the documentation stays accurate and useful as the codebase evolves
 
 Create a detailed plan when:
 
--   🔴 **Major refactoring** (>5 files, >500 lines changed)
--   🔴 **Architectural changes** (new packages, module restructuring)
--   🔴 **Breaking changes** (API changes, config format migrations)
--   🟡 **Complex features** (multiple moving parts, unclear best approach)
+- 🔴 **Major refactoring** (>5 files, >500 lines changed)
+- 🔴 **Architectural changes** (new packages, module restructuring)
+- 🔴 **Breaking changes** (API changes, config format migrations)
+- 🟡 **Complex features** (multiple moving parts, unclear best approach)
 
 Skip planning for:
 
--   🟢 Bug fixes (straightforward, <100 lines)
--   🟢 Small features (<3 files, clear approach)
--   🟢 Documentation updates
--   🟢 Cosmetic changes (formatting, renaming)
+- 🟢 Bug fixes (straightforward, <100 lines)
+- 🟢 Small features (<3 files, clear approach)
+- 🟢 Documentation updates
+- 🟢 Cosmetic changes (formatting, renaming)
 
 **Planning Document Lifecycle:**
 
 1. **Planning Phase** (WIP in `/planning/`)
-
     - Create `planning/<feature>-refactoring-plan.md`
     - Iterate freely (git-ignored, no commit pressure)
     - AI can help refine without polluting git history
     - Multiple revisions until plan is solid
 
 2. **Implementation Phase** (Active work)
-
     - Use plan as reference during coding
     - Update plan if issues discovered
     - Track progress through phases
     - Test after each phase
 
 3. **Completion Phase** (After implementation)
-
     - **Option A**: Move to `docs/development/` if lasting value
-
         - Example: `planning/module-splitting-plan.md` → `docs/development/module-splitting-plan.md`
         - Update status to "✅ COMPLETED"
         - Commit as historical reference
 
     - **Option B**: Delete if superseded
-
         - Plan served its purpose
         - Code and AGENTS.md are source of truth
 
@@ -246,34 +240,34 @@ Skip planning for:
 
 ## Problem Statement
 
--   What's the issue?
--   Why does it need fixing?
--   Current pain points
+- What's the issue?
+- Why does it need fixing?
+- Current pain points
 
 ## Proposed Solution
 
--   High-level approach
--   File structure (before/after)
--   Module responsibilities
+- High-level approach
+- File structure (before/after)
+- Module responsibilities
 
 ## Migration Strategy
 
--   Phase-by-phase breakdown
--   File lifecycle (CREATE/MODIFY/DELETE/RENAME)
--   Dependencies between phases
--   Testing checkpoints
+- Phase-by-phase breakdown
+- File lifecycle (CREATE/MODIFY/DELETE/RENAME)
+- Dependencies between phases
+- Testing checkpoints
 
 ## Risks & Mitigation
 
--   What could go wrong?
--   How to prevent it?
--   Rollback strategy
+- What could go wrong?
+- How to prevent it?
+- Rollback strategy
 
 ## Success Criteria
 
--   Measurable improvements
--   Testing requirements
--   Verification steps
+- Measurable improvements
+- Testing requirements
+- Verification steps
 ```
 
 **Example**: See `docs/development/module-splitting-plan.md` for a completed plan (moved from `planning/` after successful implementation).
@@ -290,18 +284,18 @@ After successful refactoring:
 
 ✅ **DO:**
 
--   Iterate freely in `/planning/` (git-ignored)
--   Break complex changes into clear phases
--   Document file lifecycle explicitly
--   Include code examples and patterns
--   Plan testing after each phase
+- Iterate freely in `/planning/` (git-ignored)
+- Break complex changes into clear phases
+- Document file lifecycle explicitly
+- Include code examples and patterns
+- Plan testing after each phase
 
 ❌ **DON'T:**
 
--   Start coding before plan is solid
--   Skip the "Why?" section
--   Commit `/planning/` files (they're ignored!)
--   Over-plan trivial changes
+- Start coding before plan is solid
+- Skip the "Why?" section
+- Commit `/planning/` files (they're ignored!)
+- Over-plan trivial changes
 
 ## File Organization and Structure Policy
 
@@ -310,64 +304,67 @@ After successful refactoring:
 **Root Directory (`custom_components/tibber_prices/`):**
 
 **✅ ALLOWED in root:**
--   Platform modules: `__init__.py`, `sensor.py` (deprecated, now `sensor/`), `binary_sensor.py` (deprecated, now `binary_sensor/`), future platforms
--   Core integration files: `const.py`, `manifest.json`, `services.yaml`, `diagnostics.py`, `data.py`, `migrations.py`
--   Translation directories: `translations/`, `custom_translations/`
--   Brand images: `brand/` (icon.png, dark_icon.png, logo.png, dark_logo.png + `@2x` variants) — served via HA brands proxy API (HA ≥ 2026.4), silently ignored on older versions
+
+- Platform modules: `__init__.py`, `sensor.py` (deprecated, now `sensor/`), `binary_sensor.py` (deprecated, now `binary_sensor/`), future platforms
+- Core integration files: `const.py`, `manifest.json`, `services.yaml`, `diagnostics.py`, `data.py`, `migrations.py`
+- Translation directories: `translations/`, `custom_translations/`
+- Brand images: `brand/` (icon.png, dark_icon.png, logo.png, dark_logo.png + `@2x` variants) — served via HA brands proxy API (HA ≥ 2026.4), silently ignored on older versions
 
 **❌ PROHIBITED in root:**
--   Utility modules (use `/utils/` package instead)
--   Helper functions (use `/utils/` or appropriate package)
--   Data transformation logic (use `/utils/` or `/coordinator/`)
--   Any `*_utils.py` or `*_helpers.py` files
+
+- Utility modules (use `/utils/` package instead)
+- Helper functions (use `/utils/` or appropriate package)
+- Data transformation logic (use `/utils/` or `/coordinator/`)
+- Any `*_utils.py` or `*_helpers.py` files
 
 **Organized Packages:**
 
 1. **`/utils/`** - Pure data transformation functions (stateless)
-   -   `average.py` - Average and time-window calculations
-   -   `price.py` - Price enrichment, volatility, rating calculations
-   -   **Pattern**: Import as `from ..utils.average import function_name`
+    - `average.py` - Average and time-window calculations
+    - `price.py` - Price enrichment, volatility, rating calculations
+    - **Pattern**: Import as `from ..utils.average import function_name`
 
 2. **`/entity_utils/`** - Entity-specific utilities
-   -   `icons.py` - Dynamic icon selection logic
-   -   `colors.py` - Icon color mapping
-   -   `attributes.py` - Common attribute builders
-   -   **Pattern**: Import as `from ..entity_utils import function_name`
+    - `icons.py` - Dynamic icon selection logic
+    - `colors.py` - Icon color mapping
+    - `attributes.py` - Common attribute builders
+    - **Pattern**: Import as `from ..entity_utils import function_name`
 
 3. **`/coordinator/`** - DataUpdateCoordinator and related logic
-   -   `core.py` - Main coordinator class
-   -   `cache.py` - Persistent storage handling
-   -   `data_transformation.py` - Raw data → enriched data
-   -   `period_handlers/` - Period calculation sub-package
-   -   **Pattern**: Coordinator-specific implementations
+    - `core.py` - Main coordinator class
+    - `cache.py` - Persistent storage handling
+    - `data_transformation.py` - Raw data → enriched data
+    - `period_handlers/` - Period calculation sub-package
+    - **Pattern**: Coordinator-specific implementations
 
 4. **`/sensor/`** - Sensor platform package
-   -   `core.py` - Entity class (1,268 lines - manages 80+ sensor types)
-   -   `definitions.py` - Entity descriptions
-   -   `helpers.py` - Sensor-specific helpers
-   -   `calculators/` - Value calculation package (8 specialized calculators, 1,838 lines)
-   -   `attributes/` - Attribute builders package (8 specialized modules, 1,209 lines)
-   -   **Pattern**: Calculator Pattern (business logic separated from presentation)
-   -   **Architecture**: Two-tier (Calculators handle computation → Attributes handle state presentation)
+    - `core.py` - Entity class (1,268 lines - manages 80+ sensor types)
+    - `definitions.py` - Entity descriptions
+    - `helpers.py` - Sensor-specific helpers
+    - `calculators/` - Value calculation package (8 specialized calculators, 1,838 lines)
+    - `attributes/` - Attribute builders package (8 specialized modules, 1,209 lines)
+    - **Pattern**: Calculator Pattern (business logic separated from presentation)
+    - **Architecture**: Two-tier (Calculators handle computation → Attributes handle state presentation)
 
 5. **`/binary_sensor/`** - Binary sensor platform package
-   -   Same structure as `/sensor/`
+    - Same structure as `/sensor/`
 
 6. **`/config_flow_handlers/`** - Configuration flow package
-   -   `user_flow.py` - Initial setup flow
-   -   `subentry_flow.py` - Add additional homes
-   -   `options_flow.py` - Reconfiguration
-   -   `schemas.py` - Form schemas
-   -   `validators.py` - Input validation
+    - `user_flow.py` - Initial setup flow
+    - `subentry_flow.py` - Add additional homes
+    - `options_flow.py` - Reconfiguration
+    - `schemas.py` - Form schemas
+    - `validators.py` - Input validation
 
 7. **`/api/`** - External API communication
-   -   `client.py` - GraphQL client
-   -   `queries.py` - Query definitions
-   -   `exceptions.py` - API-specific exceptions
+    - `client.py` - GraphQL client
+    - `queries.py` - Query definitions
+    - `exceptions.py` - API-specific exceptions
 
 **When Adding New Files:**
 
 **Before creating a new file in root, ask:**
+
 1. Is this a new HA platform? → OK in root (e.g., `switch.py`, `number.py`)
 2. Is this a utility/helper? → Goes in `/utils/` or `/entity_utils/`
 3. Is this coordinator-related? → Goes in `/coordinator/`
@@ -388,9 +385,8 @@ After successful refactoring:
 
 **Key Patterns:**
 
--   **Dual translation system**: Standard HA translations in `/translations/` (config flow, UI strings per HA schema), supplemental in `/custom_translations/` (entity descriptions not supported by HA schema). Both must stay in sync. Use `async_load_translations()` and `async_load_standard_translations()` from `const.py`. When to use which: `/translations/` is bound to official HA schema requirements; anything else goes in `/custom_translations/` (requires manual translation loading). **Schema reference**: `/schemas/json/translation_schema.json` provides the structure for `/translations/*.json` files based on [HA's translation documentation](https://developers.home-assistant.io/docs/internationalization/core).
-
-    -   **Select selector translations**: Use `selector.{translation_key}.options.{value}` structure (NOT `selector.select.{translation_key}`). Translation keys map to JSON in `/translations/*.json` following the HA schema structure.
+- **Dual translation system**: Standard HA translations in `/translations/` (config flow, UI strings per HA schema), supplemental in `/custom_translations/` (entity descriptions not supported by HA schema). Both must stay in sync. Use `async_load_translations()` and `async_load_standard_translations()` from `const.py`. When to use which: `/translations/` is bound to official HA schema requirements; anything else goes in `/custom_translations/` (requires manual translation loading). **Schema reference**: `/schemas/json/translation_schema.json` provides the structure for `/translations/*.json` files based on [HA's translation documentation](https://developers.home-assistant.io/docs/internationalization/core).
+    - **Select selector translations**: Use `selector.{translation_key}.options.{value}` structure (NOT `selector.select.{translation_key}`). Translation keys map to JSON in `/translations/*.json` following the HA schema structure.
 
         **CRITICAL Rules:**
         - When using `translation_key`, pass options as **plain string list**, NOT `SelectOptionDict`
@@ -400,36 +396,36 @@ After successful refactoring:
 
         See `config_flow/schemas.py` for implementation examples.
 
--   **Price data enrichment**: All quarter-hourly price intervals get augmented with `trailing_avg_24h`, `difference`, and `rating_level` fields via `enrich_price_info_with_differences()` in `utils/price.py`. This adds statistical analysis (24h trailing average, percentage difference from average, rating classification) to each 15-minute interval. See `utils/price.py` for enrichment logic.
--   **Sensor organization (refactored Nov 2025)**: The `sensor/` package uses **Calculator Pattern** for separation of concerns:
-    -   **Calculator Package** (`sensor/calculators/`): 8 specialized calculators handle business logic (1,838 lines total)
-        -   `base.py` - Abstract BaseCalculator with coordinator access
-        -   `interval.py` - Single interval calculations (current/next/previous)
-        -   `rolling_hour.py` - 5-interval rolling windows
-        -   `daily_stat.py` - Calendar day min/max/avg statistics
-        -   `window_24h.py` - Trailing/leading 24h windows
-        -   `volatility.py` - Price volatility analysis
-        -   `trend.py` - Complex trend analysis with caching (640 lines)
-        -   `timing.py` - Best/peak price period timing
-        -   `metadata.py` - Home/metering metadata
-    -   **Attributes Package** (`sensor/attributes/`): 8 specialized modules handle state presentation (1,209 lines total)
-        -   Modules match calculator types: `interval.py`, `daily_stat.py`, `window_24h.py`, `volatility.py`, `trend.py`, `timing.py`, `future.py`, `metadata.py`
-        -   `__init__.py` - Routing logic + unified builders (`build_sensor_attributes`, `build_extra_state_attributes`)
-    -   **Core Entity** (`sensor/core.py`): 1,268 lines managing 80+ sensor types
-        -   Instantiates all calculators in `__init__`
-        -   Delegates value calculations to appropriate calculator
-        -   Uses unified handler methods: `_get_interval_value()`, `_get_rolling_hour_value()`, `_get_daily_stat_value()`, `_get_24h_window_value()`
-        -   Handler mapping dictionary routes entity keys to value getters
-    -   **Architecture Benefits**: 42% line reduction in core.py (2,170 → 1,268 lines), clear separation of concerns, improved testability, reusable components
-    -   **See "Common Tasks" section** for detailed patterns and examples
--   **Quarter-hour precision**: Entities update on 00/15/30/45-minute boundaries via `schedule_quarter_hour_refresh()` in `coordinator/listeners.py`, not just on data fetch intervals. Uses `async_track_utc_time_change(minute=[0, 15, 30, 45], second=0)` for absolute-time scheduling. Smart boundary tolerance (±2 seconds) in `sensor/helpers.py` → `round_to_nearest_quarter_hour()` handles HA scheduling jitter: if HA triggers at 14:59:58 → rounds to 15:00:00 (next interval), if HA restarts at 14:59:30 → stays at 14:45:00 (current interval). This ensures current price sensors update without waiting for the next API poll, while preventing premature data display during normal operation.
--   **Currency handling**: Multi-currency support with base/sub units (e.g., EUR/ct, NOK/øre) via `get_currency_info()` and `format_price_unit_*()` in `const.py`.
--   **Intelligent caching strategy**: Minimizes API calls while ensuring data freshness:
-    -   User data cached for 24h (rarely changes)
-    -   Price data validated against calendar day - cleared on midnight turnover to force fresh fetch
-    -   Cache survives HA restarts via `Store` persistence
-    -   API polling intensifies only when tomorrow's data expected (afternoons)
-    -   Stale cache detection via `_is_cache_valid()` prevents using yesterday's data as today's
+- **Price data enrichment**: All quarter-hourly price intervals get augmented with `trailing_avg_24h`, `difference`, and `rating_level` fields via `enrich_price_info_with_differences()` in `utils/price.py`. This adds statistical analysis (24h trailing average, percentage difference from average, rating classification) to each 15-minute interval. See `utils/price.py` for enrichment logic.
+- **Sensor organization (refactored Nov 2025)**: The `sensor/` package uses **Calculator Pattern** for separation of concerns:
+    - **Calculator Package** (`sensor/calculators/`): 8 specialized calculators handle business logic (1,838 lines total)
+        - `base.py` - Abstract BaseCalculator with coordinator access
+        - `interval.py` - Single interval calculations (current/next/previous)
+        - `rolling_hour.py` - 5-interval rolling windows
+        - `daily_stat.py` - Calendar day min/max/avg statistics
+        - `window_24h.py` - Trailing/leading 24h windows
+        - `volatility.py` - Price volatility analysis
+        - `trend.py` - Complex trend analysis with caching (640 lines)
+        - `timing.py` - Best/peak price period timing
+        - `metadata.py` - Home/metering metadata
+    - **Attributes Package** (`sensor/attributes/`): 8 specialized modules handle state presentation (1,209 lines total)
+        - Modules match calculator types: `interval.py`, `daily_stat.py`, `window_24h.py`, `volatility.py`, `trend.py`, `timing.py`, `future.py`, `metadata.py`
+        - `__init__.py` - Routing logic + unified builders (`build_sensor_attributes`, `build_extra_state_attributes`)
+    - **Core Entity** (`sensor/core.py`): 1,268 lines managing 80+ sensor types
+        - Instantiates all calculators in `__init__`
+        - Delegates value calculations to appropriate calculator
+        - Uses unified handler methods: `_get_interval_value()`, `_get_rolling_hour_value()`, `_get_daily_stat_value()`, `_get_24h_window_value()`
+        - Handler mapping dictionary routes entity keys to value getters
+    - **Architecture Benefits**: 42% line reduction in core.py (2,170 → 1,268 lines), clear separation of concerns, improved testability, reusable components
+    - **See "Common Tasks" section** for detailed patterns and examples
+- **Quarter-hour precision**: Entities update on 00/15/30/45-minute boundaries via `schedule_quarter_hour_refresh()` in `coordinator/listeners.py`, not just on data fetch intervals. Uses `async_track_utc_time_change(minute=[0, 15, 30, 45], second=0)` for absolute-time scheduling. Smart boundary tolerance (±2 seconds) in `sensor/helpers.py` → `round_to_nearest_quarter_hour()` handles HA scheduling jitter: if HA triggers at 14:59:58 → rounds to 15:00:00 (next interval), if HA restarts at 14:59:30 → stays at 14:45:00 (current interval). This ensures current price sensors update without waiting for the next API poll, while preventing premature data display during normal operation.
+- **Currency handling**: Multi-currency support with base/sub units (e.g., EUR/ct, NOK/øre) via `get_currency_info()` and `format_price_unit_*()` in `const.py`.
+- **Intelligent caching strategy**: Minimizes API calls while ensuring data freshness:
+    - User data cached for 24h (rarely changes)
+    - Price data validated against calendar day - cleared on midnight turnover to force fresh fetch
+    - Cache survives HA restarts via `Store` persistence
+    - API polling intensifies only when tomorrow's data expected (afternoons)
+    - Stale cache detection via `_is_cache_valid()` prevents using yesterday's data as today's
 
 **Multi-Layer Caching (Performance Optimization)**:
 
@@ -460,6 +456,7 @@ The integration uses **4 distinct caching layers** with automatic invalidation:
     - **Why**: Avoid expensive calculation (~100-500ms) when data unchanged (70% CPU saving)
 
 **Cache Invalidation Coordination**:
+
 - Options change → Explicit `invalidate_config_cache()` on both DataTransformer and PeriodCalculator
 - Midnight turnover → Clear persistent + transformation cache, period cache auto-invalidates via hash
 - Tomorrow data arrival → Hash mismatch triggers period recalculation only
@@ -542,6 +539,7 @@ custom_components/tibber_prices/
 ### Dependency Flow (Calculator Pattern)
 
 **Clean Separation:**
+
 ```
 sensor/calculators/  → sensor/attributes/  (Volatility only - Hybrid Pattern)
 sensor/calculators/  → sensor/helpers/     (DailyStat, RollingHour - Pure functions)
@@ -553,6 +551,7 @@ sensor/helpers/      ✗  (NO imports from calculators/)
 ```
 
 **Why this works:**
+
 - **One-way dependencies**: Calculators can import from attributes/helpers, but NOT vice versa
 - **No circular imports**: Reverse direction is empty (verified Jan 2025)
 - **Clean testing**: Each layer can be tested independently
@@ -562,13 +561,15 @@ sensor/helpers/      ✗  (NO imports from calculators/)
 **Background:** During Nov 2025 refactoring, Trend and Volatility calculators retained attribute-building logic to avoid duplicating complex calculations. This creates a **backwards dependency** (calculator → attributes) but is INTENTIONAL.
 
 **Pattern:**
+
 1. **Calculator** computes value AND builds attribute dict
 2. **Core** stores attributes in `cached_data` dict
 3. **Attributes package** retrieves cached attributes via:
-   - `_add_cached_trend_attributes()` for trend sensors
-   - `_add_timing_or_volatility_attributes()` for volatility sensors
+    - `_add_cached_trend_attributes()` for trend sensors
+    - `_add_timing_or_volatility_attributes()` for volatility sensors
 
 **Example (Volatility):**
+
 ```python
 # sensor/calculators/volatility.py
 from custom_components.tibber_prices.sensor.attributes import (
@@ -591,6 +592,7 @@ def get_volatility_attributes(self) -> dict | None:
 ```
 
 **Trade-offs:**
+
 - ✅ **Pro**: Complex logic stays in ONE place (no duplication)
 - ✅ **Pro**: Calculator has full context for attribute decisions
 - ❌ **Con**: Violates strict separation (calculator builds attributes)
@@ -603,6 +605,7 @@ def get_volatility_attributes(self) -> dict | None:
 All calculator modules use `TYPE_CHECKING` correctly:
 
 **Pattern:**
+
 ```python
 # Runtime imports (used in function bodies)
 from custom_components.tibber_prices.const import CONF_PRICE_RATING_THRESHOLD_HIGH
@@ -617,23 +620,27 @@ if TYPE_CHECKING:
 ```
 
 **Rules:**
+
 - ✅ **Runtime imports**: Functions, classes, constants used in code → OUTSIDE TYPE_CHECKING
 - ✅ **Type-only imports**: Only used in type hints → INSIDE TYPE_CHECKING
 - ✅ **Coordinator import**: Always in base.py, inherited by all calculators
 
 **Verified Status (Jan 2025):**
+
 - All 8 calculators (base, interval, rolling_hour, daily_stat, window_24h, volatility, trend, timing, metadata) use TYPE_CHECKING correctly
 - No optimization needed - imports are already categorized optimally
 
 ### Import Anti-Patterns to Avoid
 
 ❌ **DON'T:**
+
 - Import from higher layers (attributes/helpers importing from calculators)
 - Use runtime imports for type-only dependencies
 - Create circular dependencies between packages
 - Import entire modules when only needing one function
 
 ✅ **DO:**
+
 - Follow one-way dependency flow (calculators → attributes/helpers)
 - Use TYPE_CHECKING for type-only imports
 - Import specific items: `from .helpers import aggregate_price_data`
@@ -646,6 +653,7 @@ if TYPE_CHECKING:
 **Core Challenge:**
 
 The period calculation applies **three independent filters** that ALL must pass:
+
 1. **Flex filter**: `price ≤ daily_min × (1 + flex)`
 2. **Min_Distance filter**: `price ≤ daily_avg × (1 - min_distance/100)`
 3. **Level filter**: `rating_level IN [allowed_levels]`
@@ -655,6 +663,7 @@ The period calculation applies **three independent filters** that ALL must pass:
 When `daily_min × (1 + flex) > daily_avg × (1 - min_distance/100)`, the flex filter permits intervals that the min_distance filter blocks, causing zero periods despite high flexibility.
 
 Example: daily_min=10 ct, daily_avg=20 ct, flex=50%, min_distance=5%
+
 - Flex allows: ≤15 ct
 - Distance allows: ≤19 ct
 - But combined: Only intervals ≤15 ct AND ≤19 ct AND matching level → Distance becomes dominant constraint
@@ -662,34 +671,36 @@ Example: daily_min=10 ct, daily_avg=20 ct, flex=50%, min_distance=5%
 **Solutions Implemented (Nov 2025):**
 
 1. **Hard Caps on Flex** (`coordinator/period_handlers/core.py`):
-   - `MAX_SAFE_FLEX = 0.50` (50% overall maximum)
-   - `MAX_OUTLIER_FLEX = 0.25` (25% for price spike detection)
-   - Warns users when base flex exceeds thresholds (INFO at 25%, WARNING at 30%)
+    - `MAX_SAFE_FLEX = 0.50` (50% overall maximum)
+    - `MAX_OUTLIER_FLEX = 0.25` (25% for price spike detection)
+    - Warns users when base flex exceeds thresholds (INFO at 25%, WARNING at 30%)
 
 2. **Relaxation Increment Cap** (`coordinator/period_handlers/relaxation.py`):
-   - Maximum 3% increment per relaxation step (prevents explosion from high base flex)
-   - Example: Base flex 40% → increments as 43%, 46%, 49% (capped at 50%)
-   - Without cap: 40% × 1.25 = 50% step → reaches 100% in 6 steps
+    - Maximum 3% increment per relaxation step (prevents explosion from high base flex)
+    - Example: Base flex 40% → increments as 43%, 46%, 49% (capped at 50%)
+    - Without cap: 40% × 1.25 = 50% step → reaches 100% in 6 steps
 
 3. **Dynamic Min_Distance Scaling** (`coordinator/period_handlers/level_filtering.py`):
-   - Reduces min_distance proportionally as flex increases above 20%
-   - Formula: `scale_factor = max(0.25, 1.0 - ((flex - 0.20) × 2.5))`
-   - Example: flex=30% → scale=0.75 → min_distance reduced by 25%
-   - Minimum scaling: 25% of original (prevents complete removal)
+    - Reduces min_distance proportionally as flex increases above 20%
+    - Formula: `scale_factor = max(0.25, 1.0 - ((flex - 0.20) × 2.5))`
+    - Example: flex=30% → scale=0.75 → min_distance reduced by 25%
+    - Minimum scaling: 25% of original (prevents complete removal)
 
 4. **Enhanced Debug Logging** (`coordinator/period_handlers/period_building.py`):
-   - Tracks exact counts of intervals filtered by flex, min_distance, and level
-   - Shows which filter blocked the most candidates
-   - Enables diagnosis of configuration issues
+    - Tracks exact counts of intervals filtered by flex, min_distance, and level
+    - Shows which filter blocked the most candidates
+    - Enables diagnosis of configuration issues
 
 **Configuration Guidance:**
 
 **Recommended Flex Ranges:**
+
 - **With relaxation enabled**: 10-20% base flex (relaxation will escalate as needed)
 - **Without relaxation**: 20-35% direct flex (no automatic escalation)
 - **Anti-pattern**: Base flex >30% with relaxation enabled → causes rapid escalation and filter conflicts
 
 **Key Constants** (defined in `coordinator/period_handlers/core.py`):
+
 ```python
 MAX_SAFE_FLEX = 0.50                      # 50% absolute maximum
 MAX_OUTLIER_FLEX = 0.25                   # 25% for stable outlier detection
@@ -698,6 +709,7 @@ FLEX_HIGH_THRESHOLD_RELAXATION = 0.30     # WARNING at 30% base flex
 ```
 
 **Relaxation Strategy** (`coordinator/period_handlers/relaxation.py`):
+
 - Per-day independent loops (each day escalates separately based on its needs)
 - Hard cap: 3% absolute maximum increment per step (prevents explosion from high base flex)
 - Default configuration: 11 flex levels (15% base → 18% → 21% → ... → 48% max)
@@ -705,6 +717,7 @@ FLEX_HIGH_THRESHOLD_RELAXATION = 0.30     # WARNING at 30% base flex
 - Each flex level tries all filter combinations before increasing flex further
 
 **Period Boundary Behavior** (`coordinator/period_handlers/period_building.py`):
+
 - Periods can **cross midnight** (day boundaries) naturally
 - Reference price locked to **period start day** for consistency across the entire period
 - Pattern: "Uses reference price from start day of the period for consistency" (same as period statistics)
@@ -712,6 +725,7 @@ FLEX_HIGH_THRESHOLD_RELAXATION = 0.30     # WARNING at 30% base flex
 - This prevents artificial splits at midnight when prices remain favorable across the boundary
 
 **Default Configuration Values** (`const.py`):
+
 ```python
 DEFAULT_BEST_PRICE_FLEX = 15              # 15% base - optimal for relaxation mode
 DEFAULT_PEAK_PRICE_FLEX = -20             # 20% base (negative for peak detection)
@@ -722,6 +736,7 @@ DEFAULT_RELAXATION_ATTEMPTS_PEAK = 11     # 11 steps: 20% → 50% (3% increment 
 The relaxation increment is **hard-coded at 3% per step** in `relaxation.py` for reliability and predictability. This prevents configuration issues with high base flex values while still allowing sufficient escalation to the 50% hard maximum.
 
 **Dynamic Scaling Table** (min_distance adjustment):
+
 ```
 Flex    Scale   Example (min_distance=5%)
 -------------------------------------------
@@ -737,12 +752,14 @@ Flex    Scale   Example (min_distance=5%)
 **Testing Scenarios:**
 
 When debugging period calculation issues:
+
 1. Check flex value: Is base flex >30%? Reduce to 15-20% if using relaxation
 2. Check logs for "scaled min_distance": Is it reducing too much? May need lower base flex
 3. Check filter statistics: Which filter blocks most intervals? (flex, distance, or level)
 4. Check relaxation warnings: INFO at 25%, WARNING at 30% indicate suboptimal config
 
 **See:**
+
 - **Theory documentation**: `docs/developer/docs/period-calculation-theory.md` (comprehensive mathematical analysis, conflict conditions, configuration pitfalls)
 - **Implementation**: `coordinator/period_handlers/` package (core.py, relaxation.py, level_filtering.py, period_building.py)
 - **User guide**: `docs/user/docs/period-calculation.md` (simplified user-facing explanations)
@@ -751,14 +768,14 @@ When debugging period calculation issues:
 
 **Python Virtual Environment:**
 
--   Project uses `.venv` located at `/home/vscode/.venv/` (outside workspace)
--   Symlinked into workspace root as `.venv` → `/home/vscode/.venv/`
--   **Why outside workspace?** Project folder is bind-mounted from host, which doesn't support hardlinks required by `uv`
+- Project uses `.venv` located at `/home/vscode/.venv/` (outside workspace)
+- Symlinked into workspace root as `.venv` → `/home/vscode/.venv/`
+- **Why outside workspace?** Project folder is bind-mounted from host, which doesn't support hardlinks required by `uv`
 
 **Package Manager:**
 
--   Uses `uv` (modern, fast Python package manager)
--   **Always use `uv` commands**, not `pip` directly:
+- Uses `uv` (modern, fast Python package manager)
+- **Always use `uv` commands**, not `pip` directly:
 
     ```bash
     # ✅ Correct
@@ -772,16 +789,16 @@ When debugging period calculation issues:
 
 **Development Scripts:**
 
--   All scripts in `./scripts/` automatically use the correct `.venv`
--   No need to manually activate venv or specify Python path
--   Examples: `./scripts/lint`, `./scripts/develop`, `./scripts/lint-check`
--   Release management: `./scripts/release/prepare`, `./scripts/release/generate-notes`
+- All scripts in `./scripts/` automatically use the correct `.venv`
+- No need to manually activate venv or specify Python path
+- Examples: `./scripts/lint`, `./scripts/develop`, `./scripts/lint-check`
+- Release management: `./scripts/release/prepare`, `./scripts/release/generate-notes`
 
 **Release Note Backends (auto-installed in DevContainer):**
 
--   **Rust toolchain**: Minimal Rust installation via DevContainer feature
--   **git-cliff**: Template-based release notes (fast, reliable, installed via cargo in `scripts/setup/setup`)
--   Manual grep/awk parsing as fallback (always available)
+- **Rust toolchain**: Minimal Rust installation via DevContainer feature
+- **git-cliff**: Template-based release notes (fast, reliable, installed via cargo in `scripts/setup/setup`)
+- Manual grep/awk parsing as fallback (always available)
 
 **Agent Productivity CLI Tools (DevContainer):**
 
@@ -807,9 +824,9 @@ Some commands are available via compatibility aliases because Debian package nam
 
 **Debugging Environment Issues:**
 
--   If `import homeassistant` fails: Check if `.venv` symlink exists and points to correct location
--   If packages missing: Run `uv sync` to install dependencies from `pyproject.toml`
--   If wrong Python version: Verify `.venv/bin/python --version` (should be 3.13+)
+- If `import homeassistant` fails: Check if `.venv` symlink exists and points to correct location
+- If packages missing: Run `uv sync` to install dependencies from `pyproject.toml`
+- If wrong Python version: Verify `.venv/bin/python --version` (should be 3.13+)
 
 ## Development Workflow
 
@@ -826,9 +843,9 @@ If you notice commands failing or missing dependencies:
 
 **If user insists on local development without container**, warn that:
 
--   You'll need to adapt commands for their local setup
--   Some features (like `.venv` symlink) won't work as documented
--   Support will be limited (not the intended workflow)
+- You'll need to adapt commands for their local setup
+- Some features (like `.venv` symlink) won't work as documented
+- Support will be limited (not the intended workflow)
 
 **Start dev environment:**
 
@@ -866,6 +883,7 @@ _Check-only flow (CI/CD-oriented):_
 ```
 
 _Agent behavior rules:_
+
 - If asked to "fix", "format", "auto-heal", or "make it pass" → start with fix/format scripts.
 - If asked only to "verify", "validate", or "CI parity" → use check scripts.
 - After applying fixes, run the relevant check script once to confirm a clean state.
@@ -913,7 +931,6 @@ When changes are complete and ready for testing:
 
 1. **Ask user to test**, don't execute `./scripts/develop` yourself
 2. **Provide specific test guidance** based on what changed in this session:
-
     - Which UI screens to check (e.g., "Open config flow, step 3")
     - What behavior to verify (e.g., "Dropdown should show translated values")
     - What errors to watch for (e.g., "Check logs for JSON parsing errors")
@@ -934,19 +951,21 @@ When changes are complete and ready for testing:
 
 **What NOT to do:**
 
--   ❌ Don't execute `./scripts/develop` automatically
--   ❌ Don't suggest exhaustive testing of unrelated features
--   ❌ Don't check `git status` to determine what changed (trust session memory)
--   ❌ Don't assume user needs reminding to commit (they manage their own workflow)
+- ❌ Don't execute `./scripts/develop` automatically
+- ❌ Don't suggest exhaustive testing of unrelated features
+- ❌ Don't check `git status` to determine what changed (trust session memory)
+- ❌ Don't assume user needs reminding to commit (they manage their own workflow)
 
 ## Git Workflow Guidance
 
 **Purpose:** Keep commit guidance centralized and avoid duplicated/contradictory rules.
 
 **Authoritative commit-message instructions:**
+
 - Use `.github/instructions/commit-messages.instructions.md` for commit type/scope, Impact footer style, and release-notes skip trailers.
 
 **Critical behavior rules (still enforced here):**
+
 1. **Commit execution**: Only run `git commit` when the user explicitly asks to commit. A one-time request to commit does not authorize future commits without asking again.
 2. **Commit message generation**: When the user asks only for a commit message, generate the message and stop — do not run `git commit`. The user will commit themselves.
 3. **git push**: Never suggest or execute `git push`. The user always handles pushing themselves.
@@ -955,10 +974,11 @@ When changes are complete and ready for testing:
 6. When suggesting commits, include exact files to stage.
 
 **Internal/unreleased fixes:**
+
 - If a fix never affected released users, mark commit body with one trailer so release notes can exclude it:
-  - `Release-Notes: skip`
-  - `User-Impact: none`
-  - `Released-Bug: no`
+    - `Release-Notes: skip`
+    - `User-Impact: none`
+    - `Released-Bug: no`
 - To check if introducing code was released, use: `./scripts/release/check-if-released <commit-hash>`
 
 ### Release Notes Generation
@@ -966,21 +986,18 @@ When changes are complete and ready for testing:
 **Multiple Options Available:**
 
 1. **Helper Script** (recommended, foolproof)
-
     - Script: `./scripts/release/prepare VERSION`
     - Bumps manifest.json version → commits → creates tag locally
     - You review and push when ready
     - Example: `./scripts/release/prepare 0.3.0`
 
 2. **Auto-Tag Workflow** (safety net)
-
     - Workflow: `.github/workflows/auto-tag.yml`
     - Triggers on manifest.json changes
     - Automatically creates tag if it doesn't exist
     - Prevents "forgot to tag" mistakes
 
 3. **Local Script** (testing, preview, and updating releases)
-
     - Script: `./scripts/release/generate-notes [FROM_TAG] [TO_TAG]`
     - Parses Conventional Commits between tags
     - Supports multiple backends (auto-detected):
@@ -1006,7 +1023,6 @@ When changes are complete and ready for testing:
     ```
 
 4. **GitHub UI Button** (manual, PR-based)
-
     - Uses `.github/release.yml` configuration
     - Click "Generate release notes" when creating release
     - Works best with PRs that have labels
@@ -1070,14 +1086,14 @@ If you want better release notes after the automated release:
 
 **Semantic Versioning Rules:**
 
--   **Pre-1.0 (0.x.y)**:
-    -   Breaking changes → bump MINOR (0.x.0)
-    -   New features → bump MINOR (0.x.0)
-    -   Bug fixes → bump PATCH (0.0.x)
--   **Post-1.0 (x.y.z)**:
-    -   Breaking changes → bump MAJOR (x.0.0)
-    -   New features → bump MINOR (0.x.0)
-    -   Bug fixes → bump PATCH (0.0.x)
+- **Pre-1.0 (0.x.y)**:
+    - Breaking changes → bump MINOR (0.x.0)
+    - New features → bump MINOR (0.x.0)
+    - Bug fixes → bump PATCH (0.0.x)
+- **Post-1.0 (x.y.z)**:
+    - Breaking changes → bump MAJOR (x.0.0)
+    - New features → bump MINOR (0.x.0)
+    - Bug fixes → bump PATCH (0.0.x)
 
 **Alternative: Manual Bump (with Auto-Tag Safety Net):**
 
@@ -1118,28 +1134,26 @@ USE_AI=false ./scripts/release/generate-notes
 
 **Backend Comparison:**
 
--   **GitHub Copilot CLI** (`copilot`):
+- **GitHub Copilot CLI** (`copilot`):
+    - ✅ AI-powered semantic understanding
+    - ✅ Smart grouping of related commits into single release notes
+    - ✅ Interprets "Impact:" sections for user-friendly descriptions
+    - ✅ Multiple commits can be combined with all links: ([hash1](url1), [hash2](url2))
+    - ⚠️ Uses premium request quota
+    - ⚠️ Output may vary between runs
 
-    -   ✅ AI-powered semantic understanding
-    -   ✅ Smart grouping of related commits into single release notes
-    -   ✅ Interprets "Impact:" sections for user-friendly descriptions
-    -   ✅ Multiple commits can be combined with all links: ([hash1](url1), [hash2](url2))
-    -   ⚠️ Uses premium request quota
-    -   ⚠️ Output may vary between runs
+- **git-cliff** (template-based):
+    - ✅ Fast and consistent
+    - ✅ 1:1 commit to release note line mapping
+    - ✅ Highly configurable via `cliff.toml`
+    - ❌ No semantic understanding
+    - ❌ Cannot intelligently group related commits
 
--   **git-cliff** (template-based):
-
-    -   ✅ Fast and consistent
-    -   ✅ 1:1 commit to release note line mapping
-    -   ✅ Highly configurable via `cliff.toml`
-    -   ❌ No semantic understanding
-    -   ❌ Cannot intelligently group related commits
-
--   **manual** (grep/awk):
-    -   ✅ Always available (no dependencies)
-    -   ✅ Basic commit categorization
-    -   ❌ No commit grouping
-    -   ❌ Basic formatting only
+- **manual** (grep/awk):
+    - ✅ Always available (no dependencies)
+    - ✅ Basic commit categorization
+    - ❌ No commit grouping
+    - ❌ Basic formatting only
 
 **Output Format:**
 
@@ -1148,17 +1162,17 @@ All backends produce GitHub-flavored Markdown with consistent structure:
 ```markdown
 ## 🎉 New Features
 
--   **scope**: Description ([commit_hash](link))
-    User-visible impact from "Impact:" section
+- **scope**: Description ([commit_hash](link))
+  User-visible impact from "Impact:" section
 
--   **scope**: Combined description ([hash1](link1), [hash2](link2)) # AI backend only
-    Multiple related commits grouped together
+- **scope**: Combined description ([hash1](link1), [hash2](link2)) # AI backend only
+  Multiple related commits grouped together
 ```
 
 ## 🐛 Bug Fixes
 
--   **scope**: Description ([commit_hash](link))
-    User-visible impact
+- **scope**: Description ([commit_hash](link))
+  User-visible impact
 
 ## 📚 Documentation
 
@@ -1177,16 +1191,16 @@ cargo install git-cliff  # or download binary from releases
 
 **When to Use Which:**
 
--   **GitHub Button**: When working with PRs, quick manual releases
--   **Local Script**: Before committing to test release notes, manual review needed
--   **CI/CD**: Automatic releases on tag push (production workflow)
+- **GitHub Button**: When working with PRs, quick manual releases
+- **Local Script**: Before committing to test release notes, manual review needed
+- **CI/CD**: Automatic releases on tag push (production workflow)
 
 **Format Requirements:**
 
--   **HACS**: No specific format required, uses GitHub releases as-is
--   **Home Assistant**: No specific format required for custom integrations
--   **Markdown**: Standard GitHub-flavored Markdown supported
--   **HTML**: Can include `<ha-alert>` tags for special notices (HA update entities only)
+- **HACS**: No specific format required, uses GitHub releases as-is
+- **Home Assistant**: No specific format required for custom integrations
+- **Markdown**: Standard GitHub-flavored Markdown supported
+- **HTML**: Can include `<ha-alert>` tags for special notices (HA update entities only)
 
 **Validate integration:**
 
@@ -1223,6 +1237,7 @@ python -m json.tool custom_components/tibber_prices/translations/de.json > /dev/
 This project uses **two complementary tools** with different responsibilities:
 
 **Pyright (Type Checker)** - Catches type safety issues:
+
 - ✅ Type mismatches (`str` passed where `int` expected)
 - ✅ None-safety violations (`Optional[T]` used as `T`)
 - ✅ Missing/wrong type annotations
@@ -1232,6 +1247,7 @@ This project uses **two complementary tools** with different responsibilities:
 - 🔍 **Always run first** - catches design issues early
 
 **Ruff (Linter + Formatter)** - Enforces code style and patterns:
+
 - ✅ Code formatting (line length, indentation, quotes)
 - ✅ Import ordering (stdlib → third-party → local)
 - ✅ Unused imports/variables
@@ -1358,11 +1374,13 @@ def get_timestamp() -> str:
 ### Pyright Configuration
 
 Project uses `typeCheckingMode = "basic"` in `pyproject.toml`:
+
 - Balanced between strictness and pragmatism
 - Catches real bugs without excessive noise
 - Compatible with Home Assistant's typing style
 
 **Key settings:**
+
 ```toml
 [tool.pyright]
 include = ["custom_components/tibber_prices"]
@@ -1374,6 +1392,7 @@ typeCheckingMode = "basic"
 **CRITICAL: When generating code, always aim for Pyright `basic` mode compliance:**
 
 ✅ **DO:**
+
 - Add type hints to all function signatures (parameters + return types)
 - Use proper type annotations: `dict[str, Any]`, `list[dict]`, `str | None`
 - Handle Optional types explicitly (None-checks before use)
@@ -1381,6 +1400,7 @@ typeCheckingMode = "basic"
 - Prefer explicit returns over implicit `None`
 
 ❌ **DON'T:**
+
 - Leave functions without return type hints
 - Ignore potential `None` values in Optional types
 - Use `Any` as escape hatch (only when truly needed)
@@ -1399,6 +1419,7 @@ typeCheckingMode = "basic"
 3. **Home Assistant API has incomplete typing**
 
 **ALWAYS include explanation:**
+
 ```python
 # ✅ GOOD - Explains why ignore is needed
 result = tz.localize(dt)  # type: ignore[attr-defined]  # pytz-specific method
@@ -1410,6 +1431,7 @@ result = tz.localize(dt)  # type: ignore
 ### Integration with VS Code
 
 Pylance (VS Code's Python language server) uses the same Pyright engine:
+
 - **Red squiggles** = Type errors (must fix)
 - **Yellow squiggles** = Warnings (should fix)
 - Hover for details, Cmd/Ctrl+Click for definitions
@@ -1430,17 +1452,17 @@ The `./scripts/type-check` script runs the same checks in terminal, ensuring CI/
 
 Calling `ruff` or `uv run ruff` directly can cause unintended side effects:
 
--   May install the integration as a Python package (creates `.egg-info`, etc.)
--   HA will then load the **installed** version instead of the **development** version from `custom_components/`
--   Causes confusing behavior where code changes don't take effect
+- May install the integration as a Python package (creates `.egg-info`, etc.)
+- HA will then load the **installed** version instead of the **development** version from `custom_components/`
+- Causes confusing behavior where code changes don't take effect
 
 **About `__pycache__` directories:**
 
--   **Normal and expected** when Home Assistant runs - this is Python's bytecode cache for faster loading
--   **Not a problem** in development - speeds up HA startup
--   **Already in `.gitignore`** - won't be committed
--   **Only problematic** if the package gets installed in `.venv` (then HA loads installed version, not dev version)
--   `./scripts/develop`, `./scripts/lint`, and `./scripts/lint-check` automatically clean up accidental installations
+- **Normal and expected** when Home Assistant runs - this is Python's bytecode cache for faster loading
+- **Not a problem** in development - speeds up HA startup
+- **Already in `.gitignore`** - won't be committed
+- **Only problematic** if the package gets installed in `.venv` (then HA loads installed version, not dev version)
+- `./scripts/develop`, `./scripts/lint`, and `./scripts/lint-check` automatically clean up accidental installations
 
 **Exception:** If you need to run `ruff` with custom flags not supported by our scripts:
 
@@ -1462,20 +1484,20 @@ Calling `ruff` or `uv run ruff` directly can cause unintended side effects:
 
 **Note on pip vs. uv pip:**
 
--   `scripts/clean` uses **both** `pip` and `uv pip` for maximum compatibility
--   Regular `pip uninstall` has cleaner output (no "Using Python X.Y..." messages)
--   `uv pip uninstall` is used as fallback for robustness
--   Both are needed because different commands may install via different methods
+- `scripts/clean` uses **both** `pip` and `uv pip` for maximum compatibility
+- Regular `pip uninstall` has cleaner output (no "Using Python X.Y..." messages)
+- `uv pip uninstall` is used as fallback for robustness
+- Both are needed because different commands may install via different methods
 
 **Ruff Configuration:**
 
--   Max line length: **120** chars (not 88 from Ruff's default)
--   Max complexity: **25** (McCabe)
--   Target: Python 3.13
--   No unused imports/variables (`F401`, `F841`)
--   No mutable default args (`B008`)
--   Use `_LOGGER` not `print()` (`T201`)
--   `pyproject.toml` (under `[tool.ruff]`) has full configuration
+- Max line length: **120** chars (not 88 from Ruff's default)
+- Max complexity: **25** (McCabe)
+- Target: Python 3.13
+- No unused imports/variables (`F401`, `F841`)
+- No mutable default args (`B008`)
+- Use `_LOGGER` not `print()` (`T201`)
+- `pyproject.toml` (under `[tool.ruff]`) has full configuration
 
 ## Critical Project-Specific Patterns
 
@@ -1539,6 +1561,7 @@ When renaming entity keys or changing sensor value units/semantics across releas
 This is a Home Assistant standard to avoid naming conflicts between integrations and ensure clear ownership of classes.
 
 **Naming Pattern:**
+
 ```python
 # ✅ CORRECT - Integration prefix + semantic purpose
 class TibberPricesApiClient:              # Integration + semantic role
@@ -1558,6 +1581,7 @@ class TibberPricesSensorCalculatorTrend:   # Too verbose, import path shows loca
 ```
 
 **IMPORTANT:** Do NOT include package hierarchy in class names. Python's import system provides the namespace:
+
 ```python
 # The import path IS the full namespace:
 from custom_components.tibber_prices.coordinator.price_data_manager import TibberPricesPriceDataManager
@@ -1569,6 +1593,7 @@ from custom_components.tibber_prices.sensor.calculators.trend import TibberPrice
 ```
 
 **Home Assistant Core follows this pattern:**
+
 - `TibberDataCoordinator` (not `TibberCoordinatorDataCoordinator`)
 - `MetWeatherData` (not `MetCoordinatorWeatherData`)
 - `MetDataUpdateCoordinator` (not `MetCoordinatorDataUpdateCoordinator`)
@@ -1576,6 +1601,7 @@ from custom_components.tibber_prices.sensor.calculators.trend import TibberPrice
 Use semantic prefixes that describe the PURPOSE, not the package location.
 
 **When prefix is required:**
+
 - ✅ All public classes (used across multiple modules)
 - ✅ All exception classes
 - ✅ All coordinator classes
@@ -1584,6 +1610,7 @@ Use semantic prefixes that describe the PURPOSE, not the package location.
 - ✅ All data classes (dataclasses, NamedTuples) used as public APIs
 
 **When prefix can be omitted:**
+
 - 🟡 Private helper classes used only within a single module (prefix class name with `_` underscore)
 - 🟡 Type aliases and callbacks (e.g., `TimeServiceCallback` is acceptable)
 - 🟡 Small NamedTuples used only for internal function returns (e.g., within calculators)
@@ -1593,6 +1620,7 @@ Use semantic prefixes that describe the PURPOSE, not the package location.
 **Private Classes (Module-Internal):**
 
 If you create a helper class that is ONLY used within a single module file:
+
 ```python
 # ✅ CORRECT - Private class with underscore prefix
 class _InternalHelper:
@@ -1604,11 +1632,13 @@ result = _InternalHelper().process()
 ```
 
 **When to use private classes:**
+
 - ❌ **DON'T** use for code organization alone - if it deserves a class, it's usually public
 - ✅ **DO** use for internal implementation details (e.g., state machines, internal builders)
 - ✅ **DO** use for temporary refactoring helpers (mark as `# TODO: Make public` if it grows)
 
 **Example of genuine private class use case:**
+
 ```python
 # In coordinator/price_data_manager.py
 class _ApiRetryStateMachine:
@@ -1628,21 +1658,21 @@ In practice, most "helper" logic should be **functions**, not classes. Reserve c
 
 We use **Ruff** (which replaces Black, Flake8, isort, and more) as our linter and formatter:
 
--   Max line length: **120** chars (not 88 from Ruff's default)
--   Max complexity: **25** (McCabe)
--   Target: Python 3.13
--   No unused imports/variables (`F401`, `F841`)
--   No mutable default args (`B008`)
--   Use `_LOGGER` not `print()` (`T201`)
+- Max line length: **120** chars (not 88 from Ruff's default)
+- Max complexity: **25** (McCabe)
+- Target: Python 3.13
+- No unused imports/variables (`F401`, `F841`)
+- No mutable default args (`B008`)
+- Use `_LOGGER` not `print()` (`T201`)
 
 **Pyright config (`pyproject.toml` under `[tool.pyright]`):**
 
 We use **Pyright** for static type checking:
 
--   Type checking mode: **basic** (balanced strictness)
--   Target: Python 3.13
--   Validates type annotations, None-safety, attribute access
--   Integrated with VS Code via Pylance extension
+- Type checking mode: **basic** (balanced strictness)
+- Target: Python 3.13
+- Validates type annotations, None-safety, attribute access
+- Integrated with VS Code via Pylance extension
 
 **Import order (enforced by isort):**
 
@@ -1652,19 +1682,19 @@ We use **Pyright** for static type checking:
 
 **Import best practices:**
 
--   Prefer Home Assistant utilities over stdlib equivalents: `from homeassistant.util import dt as dt_util` instead of `import datetime`
--   Import only specific stdlib types when needed for type hints: `from datetime import date, datetime, timedelta`
--   Use `dt_util` for all datetime operations (parsing, timezone conversion, current time)
--   Avoid aliasing stdlib modules with same names as HA utilities (e.g., `import datetime as dt` conflicts with `dt_util`)
+- Prefer Home Assistant utilities over stdlib equivalents: `from homeassistant.util import dt as dt_util` instead of `import datetime`
+- Import only specific stdlib types when needed for type hints: `from datetime import date, datetime, timedelta`
+- Use `dt_util` for all datetime operations (parsing, timezone conversion, current time)
+- Avoid aliasing stdlib modules with same names as HA utilities (e.g., `import datetime as dt` conflicts with `dt_util`)
 
 **Error handling best practices:**
 
--   Keep try blocks minimal - only wrap code that can throw exceptions
--   Process data **after** the try/except block, not inside
--   Catch specific exceptions, avoid bare `except Exception:` (allowed only in config flows and background tasks)
--   Use `ConfigEntryNotReady` for temporary failures (device offline)
--   Use `ConfigEntryAuthFailed` for auth issues
--   Use `ServiceValidationError` for user input errors in services
+- Keep try blocks minimal - only wrap code that can throw exceptions
+- Process data **after** the try/except block, not inside
+- Catch specific exceptions, avoid bare `except Exception:` (allowed only in config flows and background tasks)
+- Use `ConfigEntryNotReady` for temporary failures (device offline)
+- Use `ConfigEntryAuthFailed` for auth issues
+- Use `ServiceValidationError` for user input errors in services
 
 **Logging guidelines:**
 
@@ -1672,34 +1702,32 @@ We use **Pyright** for static type checking:
 
 **Why good logging matters beyond debugging:**
 
--   Clear logs become the foundation for good documentation (see "Documentation Writing Strategy")
--   If you spend hours making logs explain the logic, that clarity transfers directly to user docs
--   Logs show state transitions and decisions that users need to understand
--   Pattern: Good hierarchical logs → Easy to extract examples and explanations for documentation
+- Clear logs become the foundation for good documentation (see "Documentation Writing Strategy")
+- If you spend hours making logs explain the logic, that clarity transfers directly to user docs
+- Logs show state transitions and decisions that users need to understand
+- Pattern: Good hierarchical logs → Easy to extract examples and explanations for documentation
 
 **Log Level Strategy:**
 
--   **INFO Level** - User-facing results and high-level progress:
+- **INFO Level** - User-facing results and high-level progress:
+    - Compact 1-line summaries (no multi-line blocks)
+    - Important results only (success/failure outcomes)
+    - No indentation (scannability)
+    - Example: `"Calculating BEST PRICE periods: relaxation=ON, target=2/day, flex=15.0%"`
+    - Example: `"Day 2025-11-11: Success after 1 relaxation phase (2 periods)"`
 
-    -   Compact 1-line summaries (no multi-line blocks)
-    -   Important results only (success/failure outcomes)
-    -   No indentation (scannability)
-    -   Example: `"Calculating BEST PRICE periods: relaxation=ON, target=2/day, flex=15.0%"`
-    -   Example: `"Day 2025-11-11: Success after 1 relaxation phase (2 periods)"`
+- **DEBUG Level** - Detailed execution trace:
+    - Full context headers with all relevant configuration
+    - Step-by-step progression through logic
+    - Hierarchical indentation to show call depth/logic structure
+    - Intermediate results and calculations
+    - Example: `"  Day 2025-11-11: Found 1 baseline period (need 2)"`
+    - Example: `"    Phase 1: flex 20.25% + original filters"`
 
--   **DEBUG Level** - Detailed execution trace:
-
-    -   Full context headers with all relevant configuration
-    -   Step-by-step progression through logic
-    -   Hierarchical indentation to show call depth/logic structure
-    -   Intermediate results and calculations
-    -   Example: `"  Day 2025-11-11: Found 1 baseline period (need 2)"`
-    -   Example: `"    Phase 1: flex 20.25% + original filters"`
-
--   **WARNING Level** - Problems and unexpected states:
-    -   Top-level important messages (no indentation)
-    -   Clear indication of what went wrong
-    -   Example: `"Day 2025-11-11: All relaxation phases exhausted, still only 1 period found"`
+- **WARNING Level** - Problems and unexpected states:
+    - Top-level important messages (no indentation)
+    - Clear indication of what went wrong
+    - Example: `"Day 2025-11-11: All relaxation phases exhausted, still only 1 period found"`
 
 **Hierarchical Indentation Pattern:**
 
@@ -1726,10 +1754,10 @@ _LOGGER.debug("%sExtended baseline period from %s to %s", INDENT_L4, old_end, ne
 
 **Why indentation?**
 
--   Makes call stack and decision tree visible at a glance
--   Enables quick problem localization (which phase/step failed?)
--   Shows parent-child relationships between operations
--   Distinguishes between sequential steps vs nested logic
+- Makes call stack and decision tree visible at a glance
+- Enables quick problem localization (which phase/step failed?)
+- Shows parent-child relationships between operations
+- Distinguishes between sequential steps vs nested logic
 
 **Configuration Context:**
 
@@ -1763,143 +1791,138 @@ for day_date, day_intervals in intervals_by_day.items():
 
 **General Rules:**
 
--   Use lazy logging: `_LOGGER.debug("Message with %s", variable)` (never f-strings in log calls - Ruff G004)
--   No periods at end of log messages
--   No integration name in messages (added automatically by HA)
--   Always include relevant identifiers (day, phase, period) for context
--   Log BEFORE and AFTER state changes to show transitions
--   Use consistent terminology (e.g., "baseline" vs "relaxed", "extended" vs "replaced")
+- Use lazy logging: `_LOGGER.debug("Message with %s", variable)` (never f-strings in log calls - Ruff G004)
+- No periods at end of log messages
+- No integration name in messages (added automatically by HA)
+- Always include relevant identifiers (day, phase, period) for context
+- Log BEFORE and AFTER state changes to show transitions
+- Use consistent terminology (e.g., "baseline" vs "relaxed", "extended" vs "replaced")
 
 **Function organization:**
 Public entry points → direct helpers (call order) → pure utilities. Prefix private helpers with `_`.
 
 **Legacy/Backwards compatibility:**
 
--   **Do NOT add legacy migration code** unless the change was already released in a version tag
--   **Check if released**: Use `./scripts/release/check-if-released <commit-hash>` to verify if code is in any `v*.*.*` tag
--   **Example**: If introducing breaking config change in commit `abc123`, run `./scripts/release/check-if-released abc123`:
-    -   ✓ NOT RELEASED → No migration needed, just use new code
-    -   ✗ ALREADY RELEASED → Migration may be needed for users upgrading from that version
--   **Rule**: Only add backwards compatibility for changes that shipped to users via HACS/GitHub releases
--   **Prefer breaking changes over complexity**: If migration code would be complex or clutter the codebase, prefer documenting the breaking change in release notes (Home Assistant style). Only add simple migrations (e.g., `.lower()` call, key rename) when trivial.
+- **Do NOT add legacy migration code** unless the change was already released in a version tag
+- **Check if released**: Use `./scripts/release/check-if-released <commit-hash>` to verify if code is in any `v*.*.*` tag
+- **Example**: If introducing breaking config change in commit `abc123`, run `./scripts/release/check-if-released abc123`:
+    - ✓ NOT RELEASED → No migration needed, just use new code
+    - ✗ ALREADY RELEASED → Migration may be needed for users upgrading from that version
+- **Rule**: Only add backwards compatibility for changes that shipped to users via HACS/GitHub releases
+- **Prefer breaking changes over complexity**: If migration code would be complex or clutter the codebase, prefer documenting the breaking change in release notes (Home Assistant style). Only add simple migrations (e.g., `.lower()` call, key rename) when trivial.
 
 **Translation sync:** When updating `/translations/en.json`, update ALL language files (`de.json`, etc.) with same keys (placeholder values OK).
 
 **Documentation language:**
 
--   **CRITICAL**: All user-facing documentation (`README.md`, `docs/user/docs/`, `docs/developer/docs/`) MUST be written in **English**
--   **Code comments**: Always use English for code comments and docstrings
--   **UI translations**: Multi-language support exists in `/translations/` and `/custom_translations/` (de, en, nb, nl, sv) for UI strings only
--   **Why English-only docs**: Ensures maintainability, accessibility to global community, and consistency with Home Assistant ecosystem
--   **Entity names in documentation**: Use **translated display names** from `/translations/en.json` (what users see), not internal entity IDs. Example: "Best Price Period" not "sensor.tibber_home_best_price_period" (add entity ID as comment if needed for clarity).
--   **Entity reference annotations**: When mentioning entity display names in docs, add the `translation_key` (= entity ID suffix) on first mention per section: `**Display Name** (\`translation_key\`)`. This helps users find entities regardless of UI language. See `docs/user/docs/sensor-reference.md` for the auto-generated multi-language lookup table.
--   **Entity ID tip boxes**: All doc pages with entity ID examples should include the standardized tip box linking to `sensor-reference.md`. Use the same wording as in existing pages (search for "Entity ID tip" for the template).
+- **CRITICAL**: All user-facing documentation (`README.md`, `docs/user/docs/`, `docs/developer/docs/`) MUST be written in **English**
+- **Code comments**: Always use English for code comments and docstrings
+- **UI translations**: Multi-language support exists in `/translations/` and `/custom_translations/` (de, en, nb, nl, sv) for UI strings only
+- **Why English-only docs**: Ensures maintainability, accessibility to global community, and consistency with Home Assistant ecosystem
+- **Entity names in documentation**: Use **translated display names** from `/translations/en.json` (what users see), not internal entity IDs. Example: "Best Price Period" not "sensor.tibber_home_best_price_period" (add entity ID as comment if needed for clarity).
+- **Entity reference annotations**: When mentioning entity display names in docs, add the `translation_key` (= entity ID suffix) on first mention per section: `**Display Name** (\`translation_key\`)`. This helps users find entities regardless of UI language. See `docs/user/docs/sensor-reference.md` for the auto-generated multi-language lookup table.
+- **Entity ID tip boxes**: All doc pages with entity ID examples should include the standardized tip box linking to `sensor-reference.md`. Use the same wording as in existing pages (search for "Entity ID tip" for the template).
 
 **Examples and use cases:**
 
--   **Regional context**: Tibber operates primarily in European markets (Norway, Sweden, Germany, Netherlands). Examples should reflect European context:
-    -   ✅ Use cases: Heat pump, dishwasher, washing machine, electric vehicle charging, water heater
-    -   ✅ Appliances: Common in European homes (heat pumps for heating/cooling, instantaneous water heaters)
-    -   ✅ Energy patterns: European pricing structures (often lower overnight rates, higher daytime rates)
-    -   ✅ Optimization strategies: ECO programs with long run times, heat pump defrost cycles, smart water heating
-    -   ❌ Avoid: US-centric examples (central air conditioning as primary cooling, 240V dryers, different voltage standards)
-    -   ❌ Avoid: US appliance behavior assumptions (e.g., dishwashers requiring hot water connection due to 120V limitations)
--   **Technical differences**: European appliances operate differently due to 230V power supply:
-    -   Dishwashers: Built-in heaters, ECO programs (long duration, low energy), cold water connection standard
-    -   Washing machines: Fast heating cycles, higher temperature options (60°C, 90°C programs common)
-    -   Heat pumps: Primary heating source (not just cooling), complex defrost cycles, weather-dependent operation
--   **Units and formats**: Use European conventions where appropriate:
-    -   Prices: ct/kWh or øre/kWh (as provided by Tibber API)
-    -   Time: 24-hour format (00:00-23:59)
-    -   Dates: ISO 8601 format (YYYY-MM-DD)
+- **Regional context**: Tibber operates primarily in European markets (Norway, Sweden, Germany, Netherlands). Examples should reflect European context:
+    - ✅ Use cases: Heat pump, dishwasher, washing machine, electric vehicle charging, water heater
+    - ✅ Appliances: Common in European homes (heat pumps for heating/cooling, instantaneous water heaters)
+    - ✅ Energy patterns: European pricing structures (often lower overnight rates, higher daytime rates)
+    - ✅ Optimization strategies: ECO programs with long run times, heat pump defrost cycles, smart water heating
+    - ❌ Avoid: US-centric examples (central air conditioning as primary cooling, 240V dryers, different voltage standards)
+    - ❌ Avoid: US appliance behavior assumptions (e.g., dishwashers requiring hot water connection due to 120V limitations)
+- **Technical differences**: European appliances operate differently due to 230V power supply:
+    - Dishwashers: Built-in heaters, ECO programs (long duration, low energy), cold water connection standard
+    - Washing machines: Fast heating cycles, higher temperature options (60°C, 90°C programs common)
+    - Heat pumps: Primary heating source (not just cooling), complex defrost cycles, weather-dependent operation
+- **Units and formats**: Use European conventions where appropriate:
+    - Prices: ct/kWh or øre/kWh (as provided by Tibber API)
+    - Time: 24-hour format (00:00-23:59)
+    - Dates: ISO 8601 format (YYYY-MM-DD)
 
 **Language style and tone:**
 
--   **Informal address**: Always use informal "you" forms (German: "du" not "Sie", Dutch: "je/jouw" not "u/uw"). This applies to all translations.
--   **Gender-neutral language**: Use gender-neutral formulations where possible, but keep them natural - avoid forced or artificial constructions.
--   **Documentation tone**: English documentation should use a friendly, approachable tone. Avoid overly formal constructions like "It is recommended that you..." - prefer "We recommend..." or "You can...".
--   **Imperative mood**: Use direct imperatives for instructions: "Configure the integration" not "You should configure the integration".
--   **Language-specific notes**:
-    -   German: Use "du" (informal) and gender-neutral imperatives (e.g., "Konfiguriere" instead of "Konfigurieren Sie")
-    -   Dutch: Use "je/jouw" (informal) instead of "u/uw" (formal)
-    -   Swedish/Norwegian: Already use informal address by default (no formal "Ni"/"De" in modern usage)
-    -   English: Already gender-neutral and appropriately informal
+- **Informal address**: Always use informal "you" forms (German: "du" not "Sie", Dutch: "je/jouw" not "u/uw"). This applies to all translations.
+- **Gender-neutral language**: Use gender-neutral formulations where possible, but keep them natural - avoid forced or artificial constructions.
+- **Documentation tone**: English documentation should use a friendly, approachable tone. Avoid overly formal constructions like "It is recommended that you..." - prefer "We recommend..." or "You can...".
+- **Imperative mood**: Use direct imperatives for instructions: "Configure the integration" not "You should configure the integration".
+- **Language-specific notes**:
+    - German: Use "du" (informal) and gender-neutral imperatives (e.g., "Konfiguriere" instead of "Konfigurieren Sie")
+    - Dutch: Use "je/jouw" (informal) instead of "u/uw" (formal)
+    - Swedish/Norwegian: Already use informal address by default (no formal "Ni"/"De" in modern usage)
+    - English: Already gender-neutral and appropriately informal
 
 **User Documentation Quality:**
 
 When writing or updating user-facing documentation (`docs/user/docs/` or `docs/developer/docs/`), follow these principles learned from real user feedback:
 
--   **Clarity over completeness**: Users want to understand concepts, not read technical specifications
-    -   ✅ Good: "Relaxation automatically loosens filters until enough periods are found"
-    -   ❌ Bad: "The relaxation algorithm implements a 4×4 matrix strategy with multiplicative flex increments"
--   **Visual examples**: Use timeline diagrams, code blocks with comments, before/after comparisons
-    -   ✅ Show what a "period" looks like on a 24-hour timeline
-    -   ✅ Include automation examples with real entity names
--   **Use-case driven**: Start with "what can I do with this?" not "how does it work internally"
-    -   ✅ Structure: Quick Start → Common Scenarios → Configuration Guide → Advanced Topics
-    -   ❌ Avoid: Starting with mathematical formulas or algorithm descriptions
--   **Practical troubleshooting**: Address real problems users encounter
-    -   ✅ "No periods found → Try: increase flex from 15% to 20%"
-    -   ❌ Avoid: Generic "check your configuration" without specific guidance
--   **Progressive disclosure**: Basic concepts first, advanced details later
-    -   ✅ Main doc covers 80% use cases in simple terms
-    -   ✅ Link to advanced/technical docs for edge cases
-    -   ❌ Don't mix basic explanations with deep technical details
--   **When code changed significantly**: Verify documentation still matches
-    -   If relaxation strategy changed from 3 phases to 4×4 matrix → documentation MUST reflect this
-    -   If metadata format changed → update all examples showing attributes
-    -   If per-day independence was added → explain why some days relax differently
+- **Clarity over completeness**: Users want to understand concepts, not read technical specifications
+    - ✅ Good: "Relaxation automatically loosens filters until enough periods are found"
+    - ❌ Bad: "The relaxation algorithm implements a 4×4 matrix strategy with multiplicative flex increments"
+- **Visual examples**: Use timeline diagrams, code blocks with comments, before/after comparisons
+    - ✅ Show what a "period" looks like on a 24-hour timeline
+    - ✅ Include automation examples with real entity names
+- **Use-case driven**: Start with "what can I do with this?" not "how does it work internally"
+    - ✅ Structure: Quick Start → Common Scenarios → Configuration Guide → Advanced Topics
+    - ❌ Avoid: Starting with mathematical formulas or algorithm descriptions
+- **Practical troubleshooting**: Address real problems users encounter
+    - ✅ "No periods found → Try: increase flex from 15% to 20%"
+    - ❌ Avoid: Generic "check your configuration" without specific guidance
+- **Progressive disclosure**: Basic concepts first, advanced details later
+    - ✅ Main doc covers 80% use cases in simple terms
+    - ✅ Link to advanced/technical docs for edge cases
+    - ❌ Don't mix basic explanations with deep technical details
+- **When code changed significantly**: Verify documentation still matches
+    - If relaxation strategy changed from 3 phases to 4×4 matrix → documentation MUST reflect this
+    - If metadata format changed → update all examples showing attributes
+    - If per-day independence was added → explain why some days relax differently
 
 **Documentation Writing Strategy:**
 
 Understanding **how** good documentation emerges is as important as knowing what makes it good:
 
--   **Live Understanding vs. Code Analysis**
+- **Live Understanding vs. Code Analysis**
+    - ✅ **DO:** Write docs during/after active development
+        - When implementing complex logic, document it while the "why" is fresh
+        - Use real examples from debugging sessions (actual logs, real data)
+        - Document decisions as they're made, not after the fact
+    - ❌ **DON'T:** Write docs from cold code analysis
+        - Reading code shows "what", not "why"
+        - Missing context: Which alternatives were considered?
+        - No user perspective: What's actually confusing?
 
-    -   ✅ **DO:** Write docs during/after active development
-        -   When implementing complex logic, document it while the "why" is fresh
-        -   Use real examples from debugging sessions (actual logs, real data)
-        -   Document decisions as they're made, not after the fact
-    -   ❌ **DON'T:** Write docs from cold code analysis
-        -   Reading code shows "what", not "why"
-        -   Missing context: Which alternatives were considered?
-        -   No user perspective: What's actually confusing?
-
--   **User Feedback Loop**
-
-    -   Key insight: Documentation improves when users question it
-    -   Pattern:
+- **User Feedback Loop**
+    - Key insight: Documentation improves when users question it
+    - Pattern:
         1. User asks: "Does this still match the code?"
         2. AI realizes: "Oh, the 3-phase model is outdated"
         3. Together we trace through real behavior
         4. Documentation gets rewritten with correct mental model
-    -   Why it works: User questions force critical thinking, real confusion points get addressed
+    - Why it works: User questions force critical thinking, real confusion points get addressed
 
--   **Log-Driven Documentation**
+- **Log-Driven Documentation**
+    - Observation: When logs explain logic clearly, documentation becomes easier
+    - Why: Logs show state transitions ("Baseline insufficient → Starting relaxation"), decisions ("Replaced period X with larger Y"), and are already written for humans
+    - Pattern: If you spent hours making logs clear → use that clarity in documentation too
 
-    -   Observation: When logs explain logic clearly, documentation becomes easier
-    -   Why: Logs show state transitions ("Baseline insufficient → Starting relaxation"), decisions ("Replaced period X with larger Y"), and are already written for humans
-    -   Pattern: If you spent hours making logs clear → use that clarity in documentation too
+- **Concrete Examples > Abstract Descriptions**
+    - ✅ **Good:** "Day 2025-11-11 found 2 periods at flex=12.0% +volatility_any (stopped early, no need to try higher flex)"
+    - ❌ **Bad:** "The relaxation algorithm uses a configurable threshold multiplier with filter combination strategies"
+    - Use real data from debug sessions, show actual attribute values, demonstrate with timeline diagrams
 
--   **Concrete Examples > Abstract Descriptions**
+- **Context Accumulation in Long Sessions**
+    - Advantage: AI builds mental model incrementally, sees evolution of logic (not just final state), understands trade-offs
+    - Disadvantage of short sessions: Cold start every time, missing "why" context, documentation becomes spec-writing
+    - Lesson: Complex documentation benefits from focused, uninterrupted work with accumulated context
 
-    -   ✅ **Good:** "Day 2025-11-11 found 2 periods at flex=12.0% +volatility_any (stopped early, no need to try higher flex)"
-    -   ❌ **Bad:** "The relaxation algorithm uses a configurable threshold multiplier with filter combination strategies"
-    -   Use real data from debug sessions, show actual attribute values, demonstrate with timeline diagrams
-
--   **Context Accumulation in Long Sessions**
-
-    -   Advantage: AI builds mental model incrementally, sees evolution of logic (not just final state), understands trade-offs
-    -   Disadvantage of short sessions: Cold start every time, missing "why" context, documentation becomes spec-writing
-    -   Lesson: Complex documentation benefits from focused, uninterrupted work with accumulated context
-
--   **Document the "Why", Not Just the "What"**
-    -   Every complex pattern should answer:
+- **Document the "Why", Not Just the "What"**
+    - Every complex pattern should answer:
         1. **What** does it do? (quick summary)
         2. **Why** was it designed this way? (alternatives considered)
         3. **How** does a user benefit? (practical impact)
         4. **When** does it fail? (known limitations)
-    -   Example: "Replacement Logic: Larger periods replace smaller overlapping ones because users want ONE long cheap period, not multiple short overlapping ones."
+    - Example: "Replacement Logic: Larger periods replace smaller overlapping ones because users want ONE long cheap period, not multiple short overlapping ones."
 
 ## Ruff Code Style Guidelines
 
@@ -2079,11 +2102,11 @@ result = [  # Use regular loop instead
 
 **Common Ruff Auto-fixes:**
 
--   Unused imports → removed automatically
--   Unused variables → prefixed with `_` if intentional: `_unused = value`
--   Mutable default args → use `None` with `if x is None: x = []`
--   `== True` / `== False` → simplified to `if x:` / `if not x:`
--   Long lines → Ruff suggests breaks but may need manual adjustment
+- Unused imports → removed automatically
+- Unused variables → prefixed with `_` if intentional: `_unused = value`
+- Mutable default args → use `None` with `if x is None: x = []`
+- `== True` / `== False` → simplified to `if x:` / `if not x:`
+- Long lines → Ruff suggests breaks but may need manual adjustment
 
 ## Attribute Naming Conventions
 
@@ -2150,8 +2173,8 @@ The `timestamp` attribute **MUST always be first** in every sensor's attributes.
 
 All sensors (both `sensor` and `binary_sensor` platforms) automatically receive a default `timestamp` attribute set to the **current time rounded to the nearest quarter hour** (00, 15, 30, or 45 minutes). This is handled using unified attribute builder functions:
 
--   **Sensor platform**: `sensor/attributes.py` → `build_extra_state_attributes()` (called from `sensor/core.py` → `extra_state_attributes` property)
--   **Binary sensor platform**: `binary_sensor/attributes.py` → `build_async_extra_state_attributes()` and `build_sync_extra_state_attributes()` (called from `binary_sensor/core.py` properties)
+- **Sensor platform**: `sensor/attributes.py` → `build_extra_state_attributes()` (called from `sensor/core.py` → `extra_state_attributes` property)
+- **Binary sensor platform**: `binary_sensor/attributes.py` → `build_async_extra_state_attributes()` and `build_sync_extra_state_attributes()` (called from `binary_sensor/core.py` properties)
 
 Both platforms use the same pattern: a `build_*_extra_state_attributes()` function that generates the default timestamp, merges sensor-specific attributes, and ensures timestamp ordering.
 
@@ -2161,19 +2184,19 @@ The rounding uses `round_to_nearest_quarter_hour()` from `average_utils.py`, whi
 
 Individual sensors can override the default timestamp to reflect different time contexts:
 
--   **Current interval sensors**: Use default (rounded quarter) - represents when calculation was made
--   **Next interval sensors**: Override with next interval's `startsAt` - shows when that interval starts
--   **Previous interval sensors**: Override with previous interval's `startsAt` - shows when that interval started
--   **Statistical sensors (min/max)**: Override with extreme interval's `startsAt` - shows when the extreme price occurs
--   **Daily average sensors**: Override with midnight (00:00) of that day - shows the value applies to the whole day
--   **Daily aggregated sensors**: Override with midnight (00:00) of that day - shows the value applies to the whole day
--   **Daily volatility sensors**: Override with day start (00:00 of yesterday/today/tomorrow) - shows which day's data is analyzed
--   **Next 24h volatility sensor**: Override with current time (not rounded) - shows the exact start of the 24h window
--   **Future forecast sensors**: Override with first interval's `startsAt` - shows when the forecast window begins
--   **Timing sensors** (`best_price_end_time`, etc.): Override with minute-precise or quarter-rounded time - shows current calculation time with appropriate precision
--   **Period sensors**: Use default (rounded quarter) - represents when period state was determined (via binary_sensor attribute functions)
--   **Chart data export**: Overrides with service call timestamp (when data was requested)
--   **Data timestamp sensor**: Overrides with API's data timestamp (when data was fetched from Tibber)
+- **Current interval sensors**: Use default (rounded quarter) - represents when calculation was made
+- **Next interval sensors**: Override with next interval's `startsAt` - shows when that interval starts
+- **Previous interval sensors**: Override with previous interval's `startsAt` - shows when that interval started
+- **Statistical sensors (min/max)**: Override with extreme interval's `startsAt` - shows when the extreme price occurs
+- **Daily average sensors**: Override with midnight (00:00) of that day - shows the value applies to the whole day
+- **Daily aggregated sensors**: Override with midnight (00:00) of that day - shows the value applies to the whole day
+- **Daily volatility sensors**: Override with day start (00:00 of yesterday/today/tomorrow) - shows which day's data is analyzed
+- **Next 24h volatility sensor**: Override with current time (not rounded) - shows the exact start of the 24h window
+- **Future forecast sensors**: Override with first interval's `startsAt` - shows when the forecast window begins
+- **Timing sensors** (`best_price_end_time`, etc.): Override with minute-precise or quarter-rounded time - shows current calculation time with appropriate precision
+- **Period sensors**: Use default (rounded quarter) - represents when period state was determined (via binary_sensor attribute functions)
+- **Chart data export**: Overrides with service call timestamp (when data was requested)
+- **Data timestamp sensor**: Overrides with API's data timestamp (when data was fetched from Tibber)
 
 **Key Principles:** The timestamp represents one of these concepts:
 
@@ -2214,6 +2237,7 @@ def _get_sensor_attributes(self) -> dict | None:
 ```
 
 **Why direct method over Callable pattern?**
+
 - **Simpler**: No lambda/Callable indirection, clearer stack traces
 - **More HA-standard**: Most Core integrations use direct methods
 - **Better performance**: ~2x faster (~0.1-0.5μs vs 0.2-0.8μs per call)
@@ -2225,6 +2249,7 @@ def _get_sensor_attributes(self) -> dict | None:
 Both platforms now use **identical signatures and patterns** (unified Nov 2025):
 
 **Sensor Platform (`sensor/attributes.py`):**
+
 ```python
 def build_extra_state_attributes(
     entity_key: str,
@@ -2243,6 +2268,7 @@ def build_extra_state_attributes(
 ```
 
 **Binary Sensor Platform (`binary_sensor/attributes.py`):**
+
 ```python
 async def build_async_extra_state_attributes(
     entity_key: str,
@@ -2262,6 +2288,7 @@ def build_sync_extra_state_attributes(...) -> dict | None:
 ```
 
 **Key Points:**
+
 - **Architectural consistency**: Both platforms use direct method pattern (not Callable)
 - **Naming consistency**: Both use `_get_sensor_attributes()` method name
 - **Parameter consistency**: Both builders accept `sensor_attrs` parameter
@@ -2299,13 +2326,13 @@ This ensures timestamp is always the first key in the attribute dict, regardless
 
 **Rationale:**
 
--   **Time first**: Users need to know when/for which interval the data applies before interpreting values
--   **Decisions next**: Core attributes for automation logic (is it cheap/expensive?)
--   **Prices after**: Actual values to display or use in calculations
--   **Differences optionally**: Contextual comparisons if relevant
--   **Details follow**: Supplementary information for deeper analysis
--   **Meta last**: Complex nested data and technical information
--   **Descriptions always last**: Human-readable help text from `custom_translations/` (must always be defined; `description` always shown, `long_description` and `usage_tips` shown only when user enables `CONF_EXTENDED_DESCRIPTIONS`)
+- **Time first**: Users need to know when/for which interval the data applies before interpreting values
+- **Decisions next**: Core attributes for automation logic (is it cheap/expensive?)
+- **Prices after**: Actual values to display or use in calculations
+- **Differences optionally**: Contextual comparisons if relevant
+- **Details follow**: Supplementary information for deeper analysis
+- **Meta last**: Complex nested data and technical information
+- **Descriptions always last**: Human-readable help text from `custom_translations/` (must always be defined; `description` always shown, `long_description` and `usage_tips` shown only when user enables `CONF_EXTENDED_DESCRIPTIONS`)
 
 **In Practice:**
 
@@ -2337,45 +2364,45 @@ This ensures timestamp is always the first key in the attribute dict, regardless
 
 **Time-based Attributes:**
 
--   Use `next_*` for future calculations starting from the next interval (not "future\_\*")
--   Use `trailing_*` for backward-looking calculations
--   Use `leading_*` for forward-looking calculations
--   Always include the time span: `next_3h_avg`, `trailing_24h_max`
--   For multi-part periods, be specific: `second_half_6h_avg` (not "later_half")
+- Use `next_*` for future calculations starting from the next interval (not "future\_\*")
+- Use `trailing_*` for backward-looking calculations
+- Use `leading_*` for forward-looking calculations
+- Always include the time span: `next_3h_avg`, `trailing_24h_max`
+- For multi-part periods, be specific: `second_half_6h_avg` (not "later_half")
 
 **Counting Attributes:**
 
--   Use singular `_count` for counting items: `interval_count`, `period_count`
--   Exception: `intervals_available` is a status indicator (how many are available), not a count of items being processed
--   Prefer singular form: `interval_count` over `intervals_count` (the word "count" already implies plurality)
+- Use singular `_count` for counting items: `interval_count`, `period_count`
+- Exception: `intervals_available` is a status indicator (how many are available), not a count of items being processed
+- Prefer singular form: `interval_count` over `intervals_count` (the word "count" already implies plurality)
 
 **Difference/Comparison Attributes:**
 
--   Use `_diff` suffix (not "difference")
--   Always specify what is being compared: `price_diff_from_daily_min`, `second_half_3h_diff_from_current`
--   For percentages, use `_diff_%` suffix with underscore: `price_diff_from_max_%`
+- Use `_diff` suffix (not "difference")
+- Always specify what is being compared: `price_diff_from_daily_min`, `second_half_3h_diff_from_current`
+- For percentages, use `_diff_%` suffix with underscore: `price_diff_from_max_%`
 
 **Duration Attributes:**
 
--   Be specific about scope: `remaining_minutes_in_period` (not "after_interval")
--   Pattern: `{remaining/elapsed}_{unit}_in_{scope}`
+- Be specific about scope: `remaining_minutes_in_period` (not "after_interval")
+- Pattern: `{remaining/elapsed}_{unit}_in_{scope}`
 
 **Status/Boolean Attributes:**
 
--   Use descriptive suffixes: `data_available` (not just "available")
--   Qualify generic terms: `data_status` (not just "status")
--   Pattern: `{what}_{status_type}` like `tomorrow_data_status`
+- Use descriptive suffixes: `data_available` (not just "available")
+- Qualify generic terms: `data_status` (not just "status")
+- Pattern: `{what}_{status_type}` like `tomorrow_data_status`
 
 **Grouped/Nested Data:**
 
--   Describe the grouping: `intervals_by_hour` (not just "hours")
--   Pattern: `{items}_{grouping_method}`
+- Describe the grouping: `intervals_by_hour` (not just "hours")
+- Pattern: `{items}_{grouping_method}`
 
 **Price-Related Attributes:**
 
--   Period statistics: `price_mean` (arithmetic mean), `price_median` (median value)
--   Reference comparisons: `period_price_diff_from_daily_min` (period mean vs daily min)
--   Interval-specific: `interval_price_diff_from_daily_max` (current interval vs daily max)
+- Period statistics: `price_mean` (arithmetic mean), `price_median` (median value)
+- Reference comparisons: `period_price_diff_from_daily_min` (period mean vs daily min)
+- Interval-specific: `interval_price_diff_from_daily_max` (current interval vs daily max)
 
 ### Before Adding New Attributes
 
@@ -2395,7 +2422,6 @@ If the answer to any is "no", make the name more explicit.
 After the sensor.py refactoring (completed Nov 2025), sensors are organized by **calculation method** rather than feature type. Follow these steps:
 
 1. **Determine calculation pattern** - Choose which group your sensor belongs to:
-
     - **Interval-based**: Uses time offset from current interval (e.g., current/next/previous)
     - **Rolling hour**: Aggregates 5-interval window (2 before + center + 2 after)
     - **Daily statistics**: Min/max/avg within calendar day boundaries
@@ -2407,7 +2433,6 @@ After the sensor.py refactoring (completed Nov 2025), sensors are organized by *
 **IMPORTANT — After adding/renaming entities**: Run `./scripts/docs/generate-sensor-reference` to regenerate the multi-language sensor reference table. The `scripts/check` and CI will fail if the reference is stale.
 
 2. **Add entity description** to appropriate sensor group in `sensor/definitions.py`:
-
     - `INTERVAL_PRICE_SENSORS`, `INTERVAL_LEVEL_SENSORS`, or `INTERVAL_RATING_SENSORS`
     - `ROLLING_HOUR_PRICE_SENSORS`, `ROLLING_HOUR_LEVEL_SENSORS`, or `ROLLING_HOUR_RATING_SENSORS`
     - `DAILY_STAT_SENSORS`
@@ -2417,7 +2442,6 @@ After the sensor.py refactoring (completed Nov 2025), sensors are organized by *
     - `DIAGNOSTIC_SENSORS`
 
 3. **Add handler mapping** in `sensor/core.py` → `_get_value_getter()` method:
-
     - For interval-based: Use `_get_interval_value(interval_offset, value_type)`
     - For rolling hour: Use `_get_rolling_hour_value(hour_offset, value_type)`
     - For daily stats: Use `_get_daily_stat_value(day, stat_func)`
@@ -2436,28 +2460,25 @@ After the sensor.py refactoring (completed Nov 2025), sensors are organized by *
 
 The refactoring consolidated duplicate logic into unified methods in `sensor/core.py`:
 
--   **`_get_interval_value(interval_offset, value_type, in_euro=False)`**
+- **`_get_interval_value(interval_offset, value_type, in_euro=False)`**
+    - Replaces: `_get_interval_price_value()`, `_get_interval_level_value()`, `_get_interval_rating_value()`
+    - Handles: All interval-based sensors (current/next/previous)
+    - Returns: Price (float), level (str), or rating (str) based on value_type
 
-    -   Replaces: `_get_interval_price_value()`, `_get_interval_level_value()`, `_get_interval_rating_value()`
-    -   Handles: All interval-based sensors (current/next/previous)
-    -   Returns: Price (float), level (str), or rating (str) based on value_type
+- **`_get_rolling_hour_value(hour_offset, value_type)`**
+    - Replaces: `_get_rolling_hour_average_value()`, `_get_rolling_hour_level_value()`, `_get_rolling_hour_rating_value()`
+    - Handles: All 5-interval rolling hour windows
+    - Returns: Aggregated value (average price, aggregated level/rating)
 
--   **`_get_rolling_hour_value(hour_offset, value_type)`**
+- **`_get_daily_stat_value(day, stat_func)`**
+    - Replaces: `_get_statistics_value()` (calendar day portion)
+    - Handles: Min/max/avg for calendar days (today/tomorrow)
+    - Returns: Price in subunit currency units (cents/øre)
 
-    -   Replaces: `_get_rolling_hour_average_value()`, `_get_rolling_hour_level_value()`, `_get_rolling_hour_rating_value()`
-    -   Handles: All 5-interval rolling hour windows
-    -   Returns: Aggregated value (average price, aggregated level/rating)
-
--   **`_get_daily_stat_value(day, stat_func)`**
-
-    -   Replaces: `_get_statistics_value()` (calendar day portion)
-    -   Handles: Min/max/avg for calendar days (today/tomorrow)
-    -   Returns: Price in subunit currency units (cents/øre)
-
--   **`_get_24h_window_value(stat_func)`**
-    -   Replaces: `_get_average_value()`, `_get_minmax_value()`
-    -   Handles: Trailing/leading 24h window statistics
-    -   Returns: Price in subunit currency units (cents/øre)
+- **`_get_24h_window_value(stat_func)`**
+    - Replaces: `_get_average_value()`, `_get_minmax_value()`
+    - Handles: Trailing/leading 24h window statistics
+    - Returns: Price in subunit currency units (cents/øre)
 
 Legacy wrapper methods still exist for backward compatibility but will be removed in a future cleanup phase.
 
@@ -2481,13 +2502,11 @@ Edit `utils/price.py` or `utils/average.py`. These are stateless pure functions 
 The config flow is split into three separate flow handlers:
 
 1. **User Flow** (`config_flow/user_flow.py`) - Initial setup and reauth
-
     - `async_step_user()` - API token input
     - `async_step_select_home()` - Home selection
     - `async_step_reauth()` / `async_step_reauth_confirm()` - Reauth flow
 
 2. **Subentry Flow** (`config_flow/subentry_flow.py`) - Add additional homes
-
     - `async_step_user()` - Select from available homes
     - `async_step_init()` - Subentry options
 
@@ -2526,34 +2545,34 @@ When encountering unfamiliar HA patterns (especially UI/config flow/translation 
 
 **1. Check Official HA Documentation First:**
 
--   **Config Flow**: https://developers.home-assistant.io/docs/config_entries_config_flow_handler
--   **Translations**: https://developers.home-assistant.io/docs/internationalization/core
--   **Selectors**: https://developers.home-assistant.io/docs/blueprint/selectors
--   **Data Entry Flow**: https://developers.home-assistant.io/docs/data_entry_flow_index
+- **Config Flow**: https://developers.home-assistant.io/docs/config_entries_config_flow_handler
+- **Translations**: https://developers.home-assistant.io/docs/internationalization/core
+- **Selectors**: https://developers.home-assistant.io/docs/blueprint/selectors
+- **Data Entry Flow**: https://developers.home-assistant.io/docs/data_entry_flow_index
 
 **2. Search HA Core Codebase:**
 
--   Repository: https://github.com/home-assistant/core
--   Look for similar patterns in core integrations (use GitHub search)
--   Check `homeassistant/helpers/` for utility patterns
--   Example: Search for `translation_key` usage to see real-world examples
+- Repository: https://github.com/home-assistant/core
+- Look for similar patterns in core integrations (use GitHub search)
+- Check `homeassistant/helpers/` for utility patterns
+- Example: Search for `translation_key` usage to see real-world examples
 
 **3. Test Incrementally:**
 
--   Make small changes, test each one
--   Don't assume complex solutions work without verification
--   Ask user to test with `./scripts/develop` when needed
+- Make small changes, test each one
+- Don't assume complex solutions work without verification
+- Ask user to test with `./scripts/develop` when needed
 
 **Real Example from This Project:**
 During translation implementation, we tried several incorrect structures:
 
--   ❌ `selector.select.options.{field_name}` (didn't work)
--   ❌ `selector.select.{translation_key}` (didn't work)
--   ❌ `options.step.{step_id}.data.{field}.options` (overly complex)
+- ❌ `selector.select.options.{field_name}` (didn't work)
+- ❌ `selector.select.{translation_key}` (didn't work)
+- ❌ `options.step.{step_id}.data.{field}.options` (overly complex)
 
 Only after consulting the official HA docs did we discover the correct pattern:
 
--   ✅ `selector.{translation_key}.options.{value}` (simple, flat structure)
+- ✅ `selector.{translation_key}.options.{value}` (simple, flat structure)
 
 **Lesson:** When stuck, consult official docs first - don't guess at complex nested structures.
 
@@ -2561,29 +2580,32 @@ Only after consulting the official HA docs did we discover the correct pattern:
 
 **Never do these:**
 
--   ❌ **Blocking operations in event loop**: Use `aiohttp` with `async_get_clientsession(hass)`, not `requests.get()`. Use `await asyncio.sleep()`, not `time.sleep()`.
--   ❌ **Processing data inside try block**: Move data processing outside exception handlers. Only API calls belong in try blocks.
--   ❌ **Hardcoded strings (not translatable)**: Use `translation_key` instead of `_attr_name = "Temperature Sensor"`.
--   ❌ **Accessing hass.data directly in tests**: Use proper fixtures.
--   ❌ **User-configurable polling intervals**: Integration determines this, not users.
--   ❌ **Using standard library datetime**: Use `dt_util.now()` instead of `datetime.now()`.
+- ❌ **Blocking operations in event loop**: Use `aiohttp` with `async_get_clientsession(hass)`, not `requests.get()`. Use `await asyncio.sleep()`, not `time.sleep()`.
+- ❌ **Processing data inside try block**: Move data processing outside exception handlers. Only API calls belong in try blocks.
+- ❌ **Hardcoded strings (not translatable)**: Use `translation_key` instead of `_attr_name = "Temperature Sensor"`.
+- ❌ **Accessing hass.data directly in tests**: Use proper fixtures.
+- ❌ **User-configurable polling intervals**: Integration determines this, not users.
+- ❌ **Using standard library datetime**: Use `dt_util.now()` instead of `datetime.now()`.
 
 **See code for correct patterns:**
--   Async operations: `api/client.py`
--   Exception handling: `coordinator/core.py`
--   Translations: `sensor/definitions.py` (translation_key usage)
--   Test fixtures: `tests/conftest.py`
--   Time handling: Any file importing `dt_util`
+
+- Async operations: `api/client.py`
+- Exception handling: `coordinator/core.py`
+- Translations: `sensor/definitions.py` (translation_key usage)
+- Test fixtures: `tests/conftest.py`
+- Time handling: Any file importing `dt_util`
 
 ## Recorder History Optimization
 
 **CRITICAL: Always exclude non-essential attributes from Recorder to prevent database bloat.**
 
 **Implementation:**
+
 - Use `_unrecorded_attributes = frozenset({...})` as **class attribute** in entity classes
 - See `sensor/core.py` and `binary_sensor/core.py` for current implementation
 
 **What to exclude:**
+
 1. **Descriptions/help text** - `description`, `usage_tips` (static, large)
 2. **Large nested structures** - `periods`, `data`, `*_attributes` dicts (>1KB)
 3. **Frequently changing diagnostics** - `icon_color`, `cache_age`, status strings
@@ -2592,14 +2614,15 @@ Only after consulting the official HA docs did we discover the correct pattern:
 6. **Redundant/derived data** - `price_spread`, `diff_%` (calculable from other attrs)
 
 **What to keep:**
+
 - `timestamp` (always), all price values, `cache_age_minutes`, `updates_today`
 - Period timing (`start`, `end`, `duration_minutes`), price statistics
 - Boolean status flags, `relaxation_active`
 
 **When adding new attributes:**
+
 - Will this be useful in history 1 week from now? No → Exclude
 - Can this be calculated from other attributes? Yes → Exclude
 - Is this >100 bytes and not essential? Yes → Exclude
 
 **See:** `docs/developer/docs/recorder-optimization.md` for detailed categories and impact analysis
-

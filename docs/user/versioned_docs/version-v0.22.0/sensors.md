@@ -16,8 +16,8 @@ These binary sensors indicate when you're in a detected best or peak price perio
 
 **Quick overview:**
 
--   **Best Price Period**: Turns ON during periods with significantly lower prices than the daily average
--   **Peak Price Period**: Turns ON during periods with significantly higher prices than the daily average
+- **Best Price Period**: Turns ON during periods with significantly lower prices than the daily average
+- **Peak Price Period**: Turns ON during periods with significantly higher prices than the daily average
 
 Both sensors include rich attributes with period details, intervals, relaxation status, and more.
 
@@ -45,19 +45,19 @@ This diagnostic sensor provides essential chart configuration values as sensor a
 
 **Key Features:**
 
--   **Dynamic Y-Axis Bounds**: Automatically calculates optimal `yaxis_min` and `yaxis_max` for your price data
--   **Automatic Updates**: Refreshes when price data changes (coordinator updates)
--   **Lightweight**: Metadata-only mode (no data processing) for fast response
--   **State Indicator**: Shows `pending` (initialization), `ready` (data available), or `error` (service call failed)
+- **Dynamic Y-Axis Bounds**: Automatically calculates optimal `yaxis_min` and `yaxis_max` for your price data
+- **Automatic Updates**: Refreshes when price data changes (coordinator updates)
+- **Lightweight**: Metadata-only mode (no data processing) for fast response
+- **State Indicator**: Shows `pending` (initialization), `ready` (data available), or `error` (service call failed)
 
 **Attributes:**
 
--   **`timestamp`**: When the metadata was last fetched
--   **`yaxis_min`**: Suggested minimum value for Y-axis (optimal scaling)
--   **`yaxis_max`**: Suggested maximum value for Y-axis (optimal scaling)
--   **`currency`**: Currency code (e.g., "EUR", "NOK")
--   **`resolution`**: Interval duration in minutes (usually 15)
--   **`error`**: Error message if service call failed
+- **`timestamp`**: When the metadata was last fetched
+- **`yaxis_min`**: Suggested minimum value for Y-axis (optimal scaling)
+- **`yaxis_max`**: Suggested maximum value for Y-axis (optimal scaling)
+- **`currency`**: Currency code (e.g., "EUR", "NOK")
+- **`resolution`**: Interval duration in minutes (usually 15)
+- **`error`**: Error message if service call failed
 
 **Usage:**
 
@@ -78,24 +78,24 @@ This diagnostic sensor provides cached chart-friendly price data that can be con
 
 **Key Features:**
 
--   **Configurable via Options Flow**: Service parameters can be configured through the integration's options menu (Step 7 of 7)
--   **Automatic Updates**: Data refreshes on coordinator updates (every 15 minutes)
--   **Attribute-Based Output**: Chart data is stored in sensor attributes for easy access
--   **State Indicator**: Shows `pending` (before first call), `ready` (data available), or `error` (service call failed)
+- **Configurable via Options Flow**: Service parameters can be configured through the integration's options menu (Step 7 of 7)
+- **Automatic Updates**: Data refreshes on coordinator updates (every 15 minutes)
+- **Attribute-Based Output**: Chart data is stored in sensor attributes for easy access
+- **State Indicator**: Shows `pending` (before first call), `ready` (data available), or `error` (service call failed)
 
 **Important Notes:**
 
--   ⚠️ Disabled by default - must be manually enabled in entity settings
--   ⚠️ Consider using the service instead for better control and flexibility
--   ⚠️ Configuration updates require HA restart
+- ⚠️ Disabled by default - must be manually enabled in entity settings
+- ⚠️ Consider using the service instead for better control and flexibility
+- ⚠️ Configuration updates require HA restart
 
 **Attributes:**
 
 The sensor exposes chart data with metadata in attributes:
 
--   **`timestamp`**: When the data was last fetched
--   **`error`**: Error message if service call failed
--   **`data`** (or custom name): Array of price data points in configured format
+- **`timestamp`**: When the data was last fetched
+- **`error`**: Error message if service call failed
+- **`data`** (or custom name): Array of price data points in configured format
 
 **Configuration:**
 

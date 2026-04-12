@@ -10,11 +10,11 @@ This document explains the timer/scheduler system in the Tibber Prices integrati
 
 The integration uses **three independent timer mechanisms** for different purposes:
 
-| Timer | Type | Interval | Purpose | Trigger Method |
-|-------|------|----------|---------|----------------|
-| **Timer #1** | HA built-in | 15 minutes | API data updates | `DataUpdateCoordinator` |
-| **Timer #2** | Custom | :00, :15, :30, :45 | Entity state refresh | `async_track_utc_time_change()` |
-| **Timer #3** | Custom | Every minute | Countdown/progress | `async_track_utc_time_change()` |
+| Timer        | Type        | Interval           | Purpose              | Trigger Method                  |
+| ------------ | ----------- | ------------------ | -------------------- | ------------------------------- |
+| **Timer #1** | HA built-in | 15 minutes         | API data updates     | `DataUpdateCoordinator`         |
+| **Timer #2** | Custom      | :00, :15, :30, :45 | Entity state refresh | `async_track_utc_time_change()` |
+| **Timer #3** | Custom      | Every minute       | Countdown/progress   | `async_track_utc_time_change()` |
 
 **Key principle:** Timer #1 (HA) controls **data fetching**, Timer #2 controls **entity updates**, Timer #3 controls **timing displays**.
 
@@ -27,6 +27,7 @@ The integration uses **three independent timer mechanisms** for different purpos
 **Type:** Home Assistant's built-in `DataUpdateCoordinator` with `UPDATE_INTERVAL = 15 minutes`
 
 **What it is:**
+
 - HA provides this timer system automatically when you inherit from `DataUpdateCoordinator`
 - Triggers `_async_update_data()` method every 15 minutes
 - **Not** synchronized to clock boundaries (each installation has different start time)
@@ -53,16 +54,19 @@ async def _async_update_data(self) -> TibberPricesData:
 ```
 
 **Load Distribution:**
+
 - Each HA installation starts Timer #1 at different times → natural distribution
 - Tomorrow data check adds 0-30s random delay → prevents "thundering herd" on Tibber API
 - Result: API load spread over ~30 minutes instead of all at once
 
 **Midnight Coordination:**
+
 - Atomic check: `_check_midnight_turnover_needed(now)` compares dates only (no side effects)
 - If midnight turnover needed → performs it and returns early
 - Timer #2 will see turnover already done and skip gracefully
 
 **Why we use HA's timer:**
+
 - Automatic restart after HA restart
 - Built-in retry logic for temporary failures
 - Standard HA integration pattern
@@ -79,6 +83,7 @@ async def _async_update_data(self) -> TibberPricesData:
 **Purpose:** Update time-sensitive entity states at interval boundaries **without waiting for API poll**
 
 **Problem it solves:**
+
 - Timer #1 runs every 15 minutes but NOT synchronized to clock (:03, :18, :33, :48)
 - Current price changes at :00, :15, :30, :45 → entities would show stale data for up to 15 minutes
 - Example: 14:00 new price, but Timer #1 ran at 13:58 → next update at 14:13 → users see old price until 14:13
@@ -100,22 +105,26 @@ async def _handle_quarter_hour_refresh(self, now: datetime) -> None:
 ```
 
 **Smart Boundary Tolerance:**
+
 - Uses `round_to_nearest_quarter_hour()` with ±2 second tolerance
 - HA may schedule timer at 14:59:58 → rounds to 15:00:00 (shows new interval)
 - HA restart at 14:59:30 → stays at 14:45:00 (shows current interval)
 - See [Architecture](./architecture.md#3-quarter-hour-precision) for details
 
 **Absolute Time Scheduling:**
+
 - `async_track_utc_time_change()` plans for **all future boundaries** (15:00, 15:15, 15:30, ...)
 - NOT relative delays ("in 15 minutes")
 - If triggered at 14:59:58 → next trigger is 15:15:00, NOT 15:00:00 (prevents double updates)
 
 **Which entities listen:**
+
 - All sensors that depend on "current interval" (e.g., `current_interval_price`, `next_interval_price`)
 - Binary sensors that check "is now in period?" (e.g., `best_price_period_active`)
 - ~50-60 entities out of 120+ total
 
 **Why custom timer:**
+
 - HA's built-in coordinator doesn't support exact boundary timing
 - We need **absolute time** triggers, not periodic intervals
 - Allows fast entity updates without expensive data transformation
@@ -140,6 +149,7 @@ async def _handle_minute_refresh(self, now: datetime) -> None:
 ```
 
 **Which entities listen:**
+
 - `best_price_remaining_minutes` - Countdown timer
 - `peak_price_remaining_minutes` - Countdown timer
 - `best_price_progress` - Progress bar (0-100%)
@@ -147,11 +157,13 @@ async def _handle_minute_refresh(self, now: datetime) -> None:
 - ~10 entities total
 
 **Why custom timer:**
+
 - Users want smooth countdowns (not jumping 15 minutes at a time)
 - Progress bars need minute-by-minute updates
 - Very lightweight (no data processing, just state recalculation)
 
 **Why NOT every second:**
+
 - Minute precision sufficient for countdown UX
 - Reduces CPU load (60× fewer updates than seconds)
 - Home Assistant best practice (avoid sub-minute updates)
@@ -194,6 +206,7 @@ class ListenerManager:
 ```
 
 **Why this pattern:**
+
 - Decouples timer logic from entity logic
 - One timer can notify many entities efficiently
 - Entities can unregister when removed (cleanup)
@@ -279,11 +292,13 @@ class ListenerManager:
 ### Reason 1: Load Distribution on Tibber API
 
 If all installations used synchronized timers:
+
 - ❌ Everyone fetches at 13:00:00 → Tibber API overload
 - ❌ Everyone fetches at 14:00:00 → Tibber API overload
 - ❌ "Thundering herd" problem
 
 With HA's unsynchronized timer:
+
 - ✅ Installation A: 13:03:12, 13:18:12, 13:33:12, ...
 - ✅ Installation B: 13:07:45, 13:22:45, 13:37:45, ...
 - ✅ Installation C: 13:11:28, 13:26:28, 13:41:28, ...
@@ -316,6 +331,7 @@ def _should_update_price_data(self) -> str:
 **Most Timer #1 cycles:** Fast path (~2ms), no API call, just returns cached data.
 
 **API fetch only when:**
+
 - Tomorrow data missing/invalid (after 13:00)
 - Cache expired (midnight turnover)
 - Explicit user refresh
@@ -339,6 +355,7 @@ def _should_update_price_data(self) -> str:
 ## Performance Characteristics
 
 ### Timer #1 (DataUpdateCoordinator)
+
 - **Triggers:** Every 15 minutes (unsynchronized)
 - **Fast path:** ~2ms (cache check, return existing data)
 - **Slow path:** ~600ms (API fetch + transform + calculate)
@@ -346,12 +363,14 @@ def _should_update_price_data(self) -> str:
 - **API calls:** ~1-2 times/day (cached otherwise)
 
 ### Timer #2 (Quarter-Hour Refresh)
+
 - **Triggers:** 96 times/day (exact boundaries)
 - **Processing:** ~5ms (notify 60 entities)
 - **No API calls:** Uses cached/transformed data
 - **No transformation:** Just entity state updates
 
 ### Timer #3 (Minute Refresh)
+
 - **Triggers:** 1440 times/day (every minute)
 - **Processing:** ~1ms (notify 10 entities)
 - **No API calls:** No data processing at all
@@ -393,16 +412,16 @@ _LOGGER.setLevel(logging.DEBUG)
 ### Common Issues
 
 1. **Timer #2 not triggering:**
-   - Check: `schedule_quarter_hour_refresh()` called in `__init__`?
-   - Check: `_quarter_hour_timer_cancel` properly stored?
+    - Check: `schedule_quarter_hour_refresh()` called in `__init__`?
+    - Check: `_quarter_hour_timer_cancel` properly stored?
 
 2. **Double updates at midnight:**
-   - Should NOT happen (atomic coordination)
-   - Check: Both timers use same date comparison logic?
+    - Should NOT happen (atomic coordination)
+    - Check: Both timers use same date comparison logic?
 
 3. **API overload:**
-   - Check: Random delay working? (0-30s jitter on tomorrow check)
-   - Check: Cache validation logic correct?
+    - Check: Random delay working? (0-30s jitter on tomorrow check)
+    - Check: Cache validation logic correct?
 
 ---
 
@@ -417,17 +436,20 @@ _LOGGER.setLevel(logging.DEBUG)
 ## Summary
 
 **Three independent timers:**
+
 1. **Timer #1** (HA built-in, 15 min, unsynchronized) → Data fetching (when needed)
 2. **Timer #2** (Custom, :00/:15/:30/:45) → Entity state updates (always)
 3. **Timer #3** (Custom, every minute) → Countdown/progress (always)
 
 **Key insights:**
+
 - Timer #1 unsynchronized = good (load distribution on API)
 - Timer #2 synchronized = good (user sees correct data immediately)
 - Timer #3 synchronized = good (smooth countdown UX)
 - All three coordinate gracefully (atomic midnight checks, no conflicts)
 
 **"Listener" terminology:**
+
 - Timer = mechanism that triggers
 - Listener = callback that gets called
 - Observer pattern = entities register, coordinator notifies

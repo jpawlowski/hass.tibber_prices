@@ -6,10 +6,10 @@ Many sensors in the Tibber Prices integration automatically change their icon ba
 
 Instead of having a fixed icon, some sensors update their icon to reflect their current state:
 
--   **Price level sensors** show different cash/money icons depending on whether prices are cheap or expensive
--   **Price rating sensors** show thumbs up/down based on how the current price compares to average
--   **Volatility sensors** show different chart types based on price stability
--   **Binary sensors** show different icons when ON vs OFF (e.g., piggy bank when in best price period)
+- **Price level sensors** show different cash/money icons depending on whether prices are cheap or expensive
+- **Price rating sensors** show thumbs up/down based on how the current price compares to average
+- **Volatility sensors** show different chart types based on price stability
+- **Binary sensors** show different icons when ON vs OFF (e.g., piggy bank when in best price period)
 
 The icons change automatically - no configuration needed!
 
@@ -24,10 +24,10 @@ To see which icon a sensor currently uses:
 
 **Common sensor types with dynamic icons:**
 
--   Price level sensors (e.g., `current_interval_price_level`)
--   Price rating sensors (e.g., `current_interval_price_rating`)
--   Volatility sensors (e.g., `volatility_today`)
--   Binary sensors (e.g., `best_price_period`, `peak_price_period`)
+- Price level sensors (e.g., `current_interval_price_level`)
+- Price rating sensors (e.g., `current_interval_price_rating`)
+- Volatility sensors (e.g., `volatility_today`)
+- Binary sensors (e.g., `best_price_period`, `peak_price_period`)
 
 ## Using Dynamic Icons in Your Dashboard
 
@@ -123,8 +123,8 @@ styles:
 
 This gives you both:
 
--   ✅ Different icon based on state (e.g., cash-plus when cheap, cash-remove when expensive)
--   ✅ Different color based on state (e.g., green when cheap, red when expensive)
+- ✅ Different icon based on state (e.g., cash-plus when cheap, cash-remove when expensive)
+- ✅ Different color based on state (e.g., green when cheap, red when expensive)
 
 ## Icon Behavior Details
 
@@ -132,24 +132,24 @@ This gives you both:
 
 Binary sensors may have different icons for different states:
 
--   **ON state**: Typically shows an active/alert icon
--   **OFF state**: May show different icons depending on whether future periods exist
-    -   Has upcoming periods: Timer/waiting icon
-    -   No upcoming periods: Sleep/inactive icon
+- **ON state**: Typically shows an active/alert icon
+- **OFF state**: May show different icons depending on whether future periods exist
+    - Has upcoming periods: Timer/waiting icon
+    - No upcoming periods: Sleep/inactive icon
 
 **Example:** `binary_sensor.tibber_home_best_price_period`
 
--   When ON: Shows a piggy bank (good time to save money)
--   When OFF with future periods: Shows a timer (waiting for next period)
--   When OFF without future periods: Shows a sleep icon (no periods expected soon)
+- When ON: Shows a piggy bank (good time to save money)
+- When OFF with future periods: Shows a timer (waiting for next period)
+- When OFF without future periods: Shows a sleep icon (no periods expected soon)
 
 ### State-Based Icons
 
 Sensors with text states (like `cheap`, `normal`, `expensive`) typically show icons that match the meaning:
 
--   Lower/better values → More positive icons
--   Higher/worse values → More cautionary icons
--   Normal/average values → Neutral icons
+- Lower/better values → More positive icons
+- Higher/worse values → More cautionary icons
+- Normal/average values → Neutral icons
 
 The exact icons are chosen to be intuitive and meaningful in the Home Assistant ecosystem.
 
@@ -157,22 +157,22 @@ The exact icons are chosen to be intuitive and meaningful in the Home Assistant 
 
 **Icon not changing:**
 
--   Wait for the sensor state to actually change (prices update every 15 minutes)
--   Check in Developer Tools → States that the sensor state is changing
--   If you've set a custom icon in your card, it will override the dynamic icon
+- Wait for the sensor state to actually change (prices update every 15 minutes)
+- Check in Developer Tools → States that the sensor state is changing
+- If you've set a custom icon in your card, it will override the dynamic icon
 
 **Want to see the icon code:**
 
--   Look at the entity in Developer Tools → States
--   The `icon` attribute shows the current Material Design icon code (e.g., `mdi:cash-plus`)
+- Look at the entity in Developer Tools → States
+- The `icon` attribute shows the current Material Design icon code (e.g., `mdi:cash-plus`)
 
 **Want different icons:**
 
--   You can override icons in your card configuration (see examples above)
--   Or create a template sensor with your own icon logic
+- You can override icons in your card configuration (see examples above)
+- Or create a template sensor with your own icon logic
 
 ## See Also
 
--   [Dynamic Icon Colors](icon-colors.md) - Color your icons based on state
--   [Sensors Reference](sensors.md) - Complete list of available sensors
--   [Automation Examples](automation-examples.md) - Use dynamic icons in automations
+- [Dynamic Icon Colors](icon-colors.md) - Color your icons based on state
+- [Sensors Reference](sensors.md) - Complete list of available sensors
+- [Automation Examples](automation-examples.md) - Use dynamic icons in automations

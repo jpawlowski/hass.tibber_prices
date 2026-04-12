@@ -18,14 +18,14 @@ For detailed developer documentation, see [docs/development/](docs/development/)
 
 1. **Fork the repository** on GitHub
 2. **Clone your fork**:
-   ```bash
-   git clone https://github.com/YOUR_USERNAME/hass.tibber_prices.git
-   cd hass.tibber_prices
-   ```
+    ```bash
+    git clone https://github.com/YOUR_USERNAME/hass.tibber_prices.git
+    cd hass.tibber_prices
+    ```
 3. **Open in DevContainer** (recommended):
-   - Open in VS Code
-   - Click "Reopen in Container" when prompted
-   - Or manually: `Ctrl+Shift+P` → "Dev Containers: Reopen in Container"
+    - Open in VS Code
+    - Click "Reopen in Container" when prompted
+    - Or manually: `Ctrl+Shift+P` → "Dev Containers: Reopen in Container"
 
 See [Development Setup](docs/development/setup.md) for detailed instructions.
 
@@ -73,14 +73,17 @@ Impact: <user-visible effects>
 **Types:** `feat`, `fix`, `docs`, `refactor`, `chore`, `test`
 
 For full commit-message rules (including release-note skip trailers for internal/unreleased fixes), see:
+
 - `.github/instructions/commit-messages.instructions.md`
 
 Important trailers for commits that should NOT appear in release notes:
+
 - `Release-Notes: skip`
 - `User-Impact: none`
 - `Released-Bug: no`
 
 **Example:**
+
 ```bash
 git commit -m "feat(sensors): add daily average price sensor
 
@@ -97,9 +100,9 @@ See `.github/instructions/commit-messages.instructions.md` for detailed commit-m
 
 1. **Push your branch** to your fork
 2. **Create a Pull Request** on GitHub with:
-   - Clear title describing the change
-   - Detailed description with context
-   - Reference related issues (`Fixes #123`)
+    - Clear title describing the change
+    - Detailed description with context
+    - Reference related issues (`Fixes #123`)
 3. **Wait for review** and address feedback
 
 ### PR Requirements
@@ -119,6 +122,7 @@ See `.github/instructions/commit-messages.instructions.md` for detailed commit-m
 - **Python version**: 3.13+
 
 Always run before committing:
+
 ```bash
 ./scripts/lint
 ```
@@ -137,13 +141,14 @@ See [Coding Guidelines](docs/developer/docs/coding-guidelines.md) for complete d
 Documentation is organized in two Docusaurus sites:
 
 - **User docs** (`docs/user/`): Installation, configuration, usage guides
-  - Markdown files in `docs/user/docs/*.md`
-  - Navigation via `docs/user/sidebars.ts`
+    - Markdown files in `docs/user/docs/*.md`
+    - Navigation via `docs/user/sidebars.ts`
 - **Developer docs** (`docs/developer/`): Architecture, patterns, contribution guides
-  - Markdown files in `docs/developer/docs/*.md`
-  - Navigation via `docs/developer/sidebars.ts`
+    - Markdown files in `docs/developer/docs/*.md`
+    - Navigation via `docs/developer/sidebars.ts`
 
 **When adding new documentation:**
+
 1. Place file in appropriate `docs/*/docs/` directory
 2. Add to corresponding `sidebars.ts` for navigation
 3. Update translations when changing `translations/en.json` (update ALL language files)
@@ -153,6 +158,7 @@ Documentation is organized in two Docusaurus sites:
 Report bugs via [GitHub Issues](../../issues/new/choose).
 
 **Great bug reports include:**
+
 - Quick summary and background
 - Steps to reproduce (be specific!)
 - Expected vs. actual behavior

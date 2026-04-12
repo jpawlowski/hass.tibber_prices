@@ -112,6 +112,7 @@ In CI/CD (`$CI` or `$GITHUB_ACTIONS`), AI is automatically disabled.
 **In DevContainer (automatic):**
 
 git-cliff is automatically installed when the DevContainer is built:
+
 - **Rust toolchain**: Installed via `ghcr.io/devcontainers/features/rust:1` (minimal profile)
 - **git-cliff**: Installed via cargo in `scripts/setup/setup`
 
@@ -120,6 +121,7 @@ Simply rebuild the container (VS Code: "Dev Containers: Rebuild Container") and 
 **Manual installation (outside DevContainer):**
 
 **git-cliff** (template-based):
+
 ```bash
 # See: https://git-cliff.org/docs/installation
 
@@ -190,13 +192,13 @@ All methods produce GitHub-flavored Markdown with emoji categories:
 
 ## 🎯 When to Use Which
 
-| Method | Use Case | Pros | Cons |
-|--------|----------|------|------|
-| **Helper Script** | Normal releases | Foolproof, automatic | Requires script |
-| **Auto-Tag Workflow** | Forgot script | Safety net, automatic tagging | Still need manifest bump |
-| **GitHub Button** | Manual quick release | Easy, no script | Limited categorization |
-| **Local Script** | Testing release notes | Preview before release | Manual process |
-| **CI/CD** | After tag push | Fully automatic | Needs tag first |
+| Method                | Use Case              | Pros                          | Cons                     |
+| --------------------- | --------------------- | ----------------------------- | ------------------------ |
+| **Helper Script**     | Normal releases       | Foolproof, automatic          | Requires script          |
+| **Auto-Tag Workflow** | Forgot script         | Safety net, automatic tagging | Still need manifest bump |
+| **GitHub Button**     | Manual quick release  | Easy, no script               | Limited categorization   |
+| **Local Script**      | Testing release notes | Preview before release        | Manual process           |
+| **CI/CD**             | After tag push        | Fully automatic               | Needs tag first          |
 
 ---
 
@@ -219,6 +221,7 @@ git push origin main v0.3.0
 ```
 
 **What happens:**
+
 1. Script bumps manifest.json → commits → creates tag locally
 2. You push commit + tag together
 3. Release workflow sees tag → generates notes → creates release
@@ -242,6 +245,7 @@ git push
 ```
 
 **What happens:**
+
 1. You push manifest.json change
 2. Auto-Tag workflow detects change → creates tag automatically
 3. Release workflow sees new tag → creates release
@@ -263,6 +267,7 @@ git push origin main v0.3.0
 ```
 
 **What happens:**
+
 1. You create and push tag manually
 2. Release workflow creates release
 3. Auto-Tag workflow skips (tag already exists)
@@ -282,19 +287,24 @@ git push origin main v0.3.0
 ## 🛡️ Safety Features
 
 ### 1. **Version Validation**
+
 Both helper script and auto-tag workflow validate version format (X.Y.Z).
 
 ### 2. **No Duplicate Tags**
+
 - Helper script checks if tag exists (local + remote)
 - Auto-tag workflow checks if tag exists before creating
 
 ### 3. **Atomic Operations**
+
 Helper script creates commit + tag locally. You decide when to push.
 
 ### 4. **Version Bumps Filtered**
+
 Release notes automatically exclude `chore(release): bump version` commits.
 
 ### 5. **Rollback Instructions**
+
 Helper script shows how to undo if you change your mind.
 
 ---
@@ -330,6 +340,7 @@ git push -f origin main v0.3.0
 **Auto-tag didn't create tag:**
 
 Check workflow runs in GitHub Actions. Common causes:
+
 - Tag already exists remotely
 - Invalid version format in manifest.json
 - manifest.json not in the commit that was pushed
@@ -348,13 +359,14 @@ Check workflow runs in GitHub Actions. Common causes:
 ## 💡 Tips
 
 1. **Conventional Commits:** Use proper commit format for best results:
-   ```
-   feat(scope): Add new feature
 
-   Detailed description of what changed.
+    ```
+    feat(scope): Add new feature
 
-   Impact: Users can now do X and Y.
-   ```
+    Detailed description of what changed.
+
+    Impact: Users can now do X and Y.
+    ```
 
 2. **Impact Section:** Add `Impact:` in commit body for user-friendly descriptions
 

@@ -4,16 +4,17 @@
 
 ## Table of Contents
 
--   [Price-Based Automations](#price-based-automations)
--   [Volatility-Aware Automations](#volatility-aware-automations)
--   [Best Hour Detection](#best-hour-detection)
--   [ApexCharts Cards](#apexcharts-cards)
+- [Price-Based Automations](#price-based-automations)
+- [Volatility-Aware Automations](#volatility-aware-automations)
+- [Best Hour Detection](#best-hour-detection)
+- [ApexCharts Cards](#apexcharts-cards)
 
 ---
 
 > **Important Note:** The following examples are intended as templates to illustrate the logic. They are **not** suitable for direct copy & paste without adaptation.
 >
 > Please make sure you:
+>
 > 1.  Replace the **Entity IDs** (e.g., `sensor.<home_name>_...`, `switch.pool_pump`) with the IDs of your own devices and sensors.
 > 2.  Adapt the logic to your specific devices (e.g., heat pump, EV, water boiler).
 >
@@ -254,14 +255,14 @@ A common misconception: **"rising" does NOT mean "too late"**. It means your cur
 
 ### Sensor Combination Quick Reference
 
-| What You Want | Sensors to Combine |
-|---|---|
-| **"Is it cheap right now?"** | `rating_level` attribute (VERY_CHEAP, CHEAP) |
-| **"Will prices go up or down?"** | `current_price_trend` state (falling/stable/rising) |
-| **"When will the trend change?"** | `next_price_trend_change` state (timestamp) |
-| **"How cheap will it get?"** | `next_Nh_avg` attribute on trend sensors |
-| **"Is the price drop meaningful?"** | `today_s_price_volatility` (not low = meaningful) |
-| **"Ride the full cheap wave"** | `rating_level` + `current_price_trend` + `best_price_period` |
+| What You Want                       | Sensors to Combine                                           |
+| ----------------------------------- | ------------------------------------------------------------ |
+| **"Is it cheap right now?"**        | `rating_level` attribute (VERY_CHEAP, CHEAP)                 |
+| **"Will prices go up or down?"**    | `current_price_trend` state (falling/stable/rising)          |
+| **"When will the trend change?"**   | `next_price_trend_change` state (timestamp)                  |
+| **"How cheap will it get?"**        | `next_Nh_avg` attribute on trend sensors                     |
+| **"Is the price drop meaningful?"** | `today_s_price_volatility` (not low = meaningful)            |
+| **"Ride the full cheap wave"**      | `rating_level` + `current_price_trend` + `best_price_period` |
 
 ---
 
@@ -302,16 +303,15 @@ automation:
           - service: notify.mobile_app
             data:
                 message: >
-                  Home battery charging started. Price: {{ states('sensor.<home_name>_current_electricity_price') }} {{ state_attr('sensor.<home_name>_current_electricity_price', 'unit_of_measurement') }}.
-                  Today's volatility is {{ state_attr('sensor.<home_name>_today_s_price_volatility', 'price_volatility') }}.
-
+                    Home battery charging started. Price: {{ states('sensor.<home_name>_current_electricity_price') }} {{ state_attr('sensor.<home_name>_current_electricity_price', 'unit_of_measurement') }}.
+                    Today's volatility is {{ state_attr('sensor.<home_name>_today_s_price_volatility', 'price_volatility') }}.
 ```
 
 **Why this works:**
 
--   The automation only runs if volatility is `moderate`, `high`, or `very_high`.
--   If you adjust your volatility thresholds in the future, this automation adapts automatically without any changes.
--   It uses the `price_volatility` attribute, ensuring it works correctly regardless of your Home Assistant's display language.
+- The automation only runs if volatility is `moderate`, `high`, or `very_high`.
+- If you adjust your volatility thresholds in the future, this automation adapts automatically without any changes.
+- It uses the `price_volatility` attribute, ensuring it works correctly regardless of your Home Assistant's display language.
 
 ### Use Case: Combined Volatility and Absolute Price Check
 
@@ -354,9 +354,9 @@ automation:
 
 **Why this works:**
 
--   On days with meaningful price swings, it charges during any `Best Price` period.
--   On days with flat prices, it still charges if the price drops below your personal "cheap enough" threshold (e.g., 0.18 €/kWh or 18 ct/kWh).
--   This gracefully handles midnight period flips, as the absolute price check will likely remain true if prices stay low.
+- On days with meaningful price swings, it charges during any `Best Price` period.
+- On days with flat prices, it still charges if the price drops below your personal "cheap enough" threshold (e.g., 0.18 €/kWh or 18 ct/kWh).
+- This gracefully handles midnight period flips, as the absolute price check will likely remain true if prices stay low.
 
 ### Use Case: Using the Period's Own Volatility Attribute
 
@@ -385,10 +385,10 @@ automation:
 
 **Why this works:**
 
--   Each detected period has its own `volatility` attribute (`low`, `moderate`, etc.).
--   This is the simplest way to check for meaningful savings for that specific period.
--   The attribute name on the binary sensor is `volatility` (lowercase) and its value is also lowercase.
--   It also contains other useful attributes like `price_mean`, `price_spread`, and the `price_coefficient_variation_%` for that period.
+- Each detected period has its own `volatility` attribute (`low`, `moderate`, etc.).
+- This is the simplest way to check for meaningful savings for that specific period.
+- The attribute name on the binary sensor is `volatility` (lowercase) and its value is also lowercase.
+- It also contains other useful attributes like `price_mean`, `price_spread`, and the `price_coefficient_variation_%` for that period.
 
 ---
 
@@ -414,9 +414,9 @@ automation:
       action:
           # Compare different future windows to find cheapest start
           - variables:
-              next_2h: "{{ state_attr('sensor.<home_name>_price_outlook_2h', 'next_2h_avg') | float(999) }}"
-              next_4h: "{{ state_attr('sensor.<home_name>_price_outlook_4h', 'next_4h_avg') | float(999) }}"
-              daily_avg: "{{ state_attr('sensor.<home_name>_price_today', 'price_median') | float(999) }}"
+                next_2h: "{{ state_attr('sensor.<home_name>_price_outlook_2h', 'next_2h_avg') | float(999) }}"
+                next_4h: "{{ state_attr('sensor.<home_name>_price_outlook_4h', 'next_4h_avg') | float(999) }}"
+                daily_avg: "{{ state_attr('sensor.<home_name>_price_today', 'price_median') | float(999) }}"
           - service: notify.mobile_app
             data:
                 title: "Dishwasher Scheduling"
@@ -479,11 +479,11 @@ The examples below contain `entry_id: YOUR_ENTRY_ID`. This value identifies whic
 
 **Required:**
 
--   [ApexCharts Card](https://github.com/RomRider/apexcharts-card) - Install via HACS
+- [ApexCharts Card](https://github.com/RomRider/apexcharts-card) - Install via HACS
 
 **Optional (for rolling window mode):**
 
--   [Config Template Card](https://github.com/iantrich/config-template-card) - Install via HACS
+- [Config Template Card](https://github.com/iantrich/config-template-card) - Install via HACS
 
 ### Installation
 
@@ -520,9 +520,9 @@ response_variable: apexcharts_config
 
 **Behavior:**
 
--   **When tomorrow data available** (typically after ~13:00): Shows today + tomorrow
--   **When tomorrow data not available**: Shows yesterday + today
--   **Fixed 48h span:** Always shows full 48 hours
+- **When tomorrow data available** (typically after ~13:00): Shows today + tomorrow
+- **When tomorrow data not available**: Shows yesterday + today
+- **Fixed 48h span:** Always shows full 48 hours
 
 **Auto-Zoom Variant:**
 
@@ -537,17 +537,17 @@ data:
 response_variable: apexcharts_config
 ```
 
--   Same data loading as rolling window
--   **Progressive zoom:** Graph span starts at ~26h in the morning and decreases to ~14h by midnight
--   **Updates every 15 minutes:** Always shows 2h lookback + remaining time until midnight
+- Same data loading as rolling window
+- **Progressive zoom:** Graph span starts at ~26h in the morning and decreases to ~14h by midnight
+- **Updates every 15 minutes:** Always shows 2h lookback + remaining time until midnight
 
 **Note:** Rolling window modes require Config Template Card to dynamically adjust the time range.
 
 ### Features
 
--   Color-coded price levels/ratings (green = cheap, yellow = normal, red = expensive)
--   Best price period highlighting (semi-transparent green overlay)
--   Automatic NULL insertion for clean gaps
--   Translated labels based on your Home Assistant language
--   Interactive zoom and pan
--   Live marker showing current time
+- Color-coded price levels/ratings (green = cheap, yellow = normal, red = expensive)
+- Best price period highlighting (semi-transparent green overlay)
+- Automatic NULL insertion for clean gaps
+- Translated labels based on your Home Assistant language
+- Interactive zoom and pan
+- Live marker showing current time

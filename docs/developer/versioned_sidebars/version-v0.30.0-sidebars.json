@@ -41,19 +41,14 @@
     {
       "type": "category",
       "label": "📝 Contributing",
-      "items": [
-        "contributing"
-      ],
+      "items": ["contributing"],
       "collapsible": true,
       "collapsed": false
     },
     {
       "type": "category",
       "label": "🚀 Release",
-      "items": [
-        "release-management",
-        "testing"
-      ],
+      "items": ["release-management", "testing"],
       "collapsible": true,
       "collapsed": false
     }

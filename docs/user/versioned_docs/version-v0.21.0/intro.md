@@ -12,16 +12,16 @@ This is an independent, community-maintained custom integration. It is **not** a
 
 ## 📚 Documentation
 
--   **[Installation](installation.md)** - How to install via HACS and configure the integration
--   **[Configuration](configuration.md)** - Setting up your Tibber API token and price thresholds
--   **[Period Calculation](period-calculation.md)** - How Best/Peak Price periods are calculated and configured
--   **[Sensors](sensors.md)** - Available sensors, their states, and attributes
--   **[Dynamic Icons](dynamic-icons.md)** - State-based automatic icon changes
--   **[Dynamic Icon Colors](icon-colors.md)** - Using icon_color attribute for color-coded dashboards
--   **[Actions](actions.md)** - Custom actions (service endpoints) and how to use them
--   **[Chart Examples](chart-examples.md)** - ✨ ApexCharts visualizations with screenshots
--   **[Automation Examples](automation-examples.md)** - Ready-to-use automation recipes
--   **[Troubleshooting](troubleshooting.md)** - Common issues and solutions
+- **[Installation](installation.md)** - How to install via HACS and configure the integration
+- **[Configuration](configuration.md)** - Setting up your Tibber API token and price thresholds
+- **[Period Calculation](period-calculation.md)** - How Best/Peak Price periods are calculated and configured
+- **[Sensors](sensors.md)** - Available sensors, their states, and attributes
+- **[Dynamic Icons](dynamic-icons.md)** - State-based automatic icon changes
+- **[Dynamic Icon Colors](icon-colors.md)** - Using icon_color attribute for color-coded dashboards
+- **[Actions](actions.md)** - Custom actions (service endpoints) and how to use them
+- **[Chart Examples](chart-examples.md)** - ✨ ApexCharts visualizations with screenshots
+- **[Automation Examples](automation-examples.md)** - Ready-to-use automation recipes
+- **[Troubleshooting](troubleshooting.md)** - Common issues and solutions
 
 ## 🚀 Quick Start
 
@@ -33,26 +33,26 @@ This is an independent, community-maintained custom integration. It is **not** a
 
 ## ✨ Key Features
 
--   **Quarter-hourly precision** - 15-minute intervals for accurate price tracking
--   **Statistical analysis** - Trailing/leading 24h averages for context
--   **Price ratings** - LOW/NORMAL/HIGH classification based on your thresholds
--   **Best/Peak hour detection** - Automatic detection of cheapest/peak periods with configurable filters ([learn how](period-calculation.md))
--   **Beautiful ApexCharts** - Auto-generated chart configurations with dynamic Y-axis scaling ([see examples](chart-examples.md))
--   **Chart metadata sensor** - Dynamic chart configuration for optimal visualization
--   **Multi-currency support** - EUR, NOK, SEK with proper minor units (ct, øre, öre)
+- **Quarter-hourly precision** - 15-minute intervals for accurate price tracking
+- **Statistical analysis** - Trailing/leading 24h averages for context
+- **Price ratings** - LOW/NORMAL/HIGH classification based on your thresholds
+- **Best/Peak hour detection** - Automatic detection of cheapest/peak periods with configurable filters ([learn how](period-calculation.md))
+- **Beautiful ApexCharts** - Auto-generated chart configurations with dynamic Y-axis scaling ([see examples](chart-examples.md))
+- **Chart metadata sensor** - Dynamic chart configuration for optimal visualization
+- **Multi-currency support** - EUR, NOK, SEK with proper minor units (ct, øre, öre)
 
 ## 🔗 Useful Links
 
--   [GitHub Repository](https://github.com/jpawlowski/hass.tibber_prices)
--   [Issue Tracker](https://github.com/jpawlowski/hass.tibber_prices/issues)
--   [Release Notes](https://github.com/jpawlowski/hass.tibber_prices/releases)
--   [Home Assistant Community](https://community.home-assistant.io/)
+- [GitHub Repository](https://github.com/jpawlowski/hass.tibber_prices)
+- [Issue Tracker](https://github.com/jpawlowski/hass.tibber_prices/issues)
+- [Release Notes](https://github.com/jpawlowski/hass.tibber_prices/releases)
+- [Home Assistant Community](https://community.home-assistant.io/)
 
 ## 🤝 Need Help?
 
--   Check the [Troubleshooting Guide](troubleshooting.md)
--   Search [existing issues](https://github.com/jpawlowski/hass.tibber_prices/issues)
--   Open a [new issue](https://github.com/jpawlowski/hass.tibber_prices/issues/new) if needed
+- Check the [Troubleshooting Guide](troubleshooting.md)
+- Search [existing issues](https://github.com/jpawlowski/hass.tibber_prices/issues)
+- Open a [new issue](https://github.com/jpawlowski/hass.tibber_prices/issues/new) if needed
 
 ---
 

@@ -22,8 +22,8 @@
 
 **[📚 Complete Documentation](https://jpawlowski.github.io/hass.tibber_prices/)** — Installation, guides, examples, and full sensor reference:
 
--   **[👤 User Documentation](https://jpawlowski.github.io/hass.tibber_prices/user/)** — Setup, sensors, automations, dashboards
--   **[🔧 Developer Documentation](https://jpawlowski.github.io/hass.tibber_prices/developer/)** — Architecture, contributing, development
+- **[👤 User Documentation](https://jpawlowski.github.io/hass.tibber_prices/user/)** — Setup, sensors, automations, dashboards
+- **[🔧 Developer Documentation](https://jpawlowski.github.io/hass.tibber_prices/developer/)** — Architecture, contributing, development
 
 **Quick Links:**
 [Installation](https://jpawlowski.github.io/hass.tibber_prices/user/installation) · [Sensor Reference](https://jpawlowski.github.io/hass.tibber_prices/user/sensor-reference) · [Charts](https://jpawlowski.github.io/hass.tibber_prices/user/chart-examples) · [Automations](https://jpawlowski.github.io/hass.tibber_prices/user/automation-examples) · [FAQ](https://jpawlowski.github.io/hass.tibber_prices/user/faq) · [Changelog](https://github.com/jpawlowski/hass.tibber_prices/releases)
@@ -34,39 +34,39 @@ Most Tibber integrations give you a single price sensor. This one gives you a **
 
 ### 🔮 Know What's Coming
 
--   **Quarter-hourly precision** — 15-minute interval prices, not just hourly averages
--   **Price forecasts** — See average prices for the next 1h, 2h, 3h, ... up to 12h ahead
--   **Trend analysis** — Know if prices are rising, falling, or stable — and when the next trend change happens
--   **Price trajectory** — Detect turning points before they happen (first-half vs second-half window comparison)
--   **Price outlook** — Instantly see if the next hours will be cheaper or more expensive than now
+- **Quarter-hourly precision** — 15-minute interval prices, not just hourly averages
+- **Price forecasts** — See average prices for the next 1h, 2h, 3h, ... up to 12h ahead
+- **Trend analysis** — Know if prices are rising, falling, or stable — and when the next trend change happens
+- **Price trajectory** — Detect turning points before they happen (first-half vs second-half window comparison)
+- **Price outlook** — Instantly see if the next hours will be cheaper or more expensive than now
 
 ### ⚡ Automate Smartly
 
--   **Best Price & Peak Price Periods** — Intelligent binary sensors that detect the cheapest and most expensive periods of the day, with configurable flexibility, relaxation strategies, and gap tolerance ([how it works](https://jpawlowski.github.io/hass.tibber_prices/user/period-calculation))
--   **Period timing sensors** — Duration, end time, remaining minutes, progress percentage, and countdown to next period — everything you need for advanced automations
--   **Runtime configuration** — Adjust period detection parameters on the fly via switches and number entities, without restarting — perfect for automations that adapt to your schedule
--   **5-level price classification** — VERY_CHEAP, CHEAP, NORMAL, EXPENSIVE, VERY_EXPENSIVE from Tibber's API
--   **3-level price ratings** — LOW, NORMAL, HIGH based on 24h trailing average comparison
+- **Best Price & Peak Price Periods** — Intelligent binary sensors that detect the cheapest and most expensive periods of the day, with configurable flexibility, relaxation strategies, and gap tolerance ([how it works](https://jpawlowski.github.io/hass.tibber_prices/user/period-calculation))
+- **Period timing sensors** — Duration, end time, remaining minutes, progress percentage, and countdown to next period — everything you need for advanced automations
+- **Runtime configuration** — Adjust period detection parameters on the fly via switches and number entities, without restarting — perfect for automations that adapt to your schedule
+- **5-level price classification** — VERY_CHEAP, CHEAP, NORMAL, EXPENSIVE, VERY_EXPENSIVE from Tibber's API
+- **3-level price ratings** — LOW, NORMAL, HIGH based on 24h trailing average comparison
 
 ### 📊 Visualize Beautifully
 
--   **Auto-generated ApexCharts** — One action call generates a complete chart configuration with dynamic Y-axis scaling and color-coded price levels ([see examples](https://jpawlowski.github.io/hass.tibber_prices/user/chart-examples))
--   **Dynamic icons & colors** — Every sensor adapts its icon and color to the current price state — cheap prices glow green, expensive ones turn red ([icon guide](https://jpawlowski.github.io/hass.tibber_prices/user/dynamic-icons))
--   **Chart data export** — Flexible data API with filtering, resolution control, and multiple output formats for any visualization card
+- **Auto-generated ApexCharts** — One action call generates a complete chart configuration with dynamic Y-axis scaling and color-coded price levels ([see examples](https://jpawlowski.github.io/hass.tibber_prices/user/chart-examples))
+- **Dynamic icons & colors** — Every sensor adapts its icon and color to the current price state — cheap prices glow green, expensive ones turn red ([icon guide](https://jpawlowski.github.io/hass.tibber_prices/user/dynamic-icons))
+- **Chart data export** — Flexible data API with filtering, resolution control, and multiple output formats for any visualization card
 
 ### 📈 Understand Your Market
 
--   **Volatility analysis** — Know if today's prices are stable or wild (low/moderate/high/very_high)
--   **Daily & rolling statistics** — Min, max, average, median for today, tomorrow, trailing 24h, and leading 24h
--   **Energy & tax breakdown** — See spot price vs. tax components as sensor attributes
--   **Multi-currency support** — EUR, NOK, SEK, DKK, USD, GBP with configurable base/subunit display (€ vs ct, kr vs øre)
+- **Volatility analysis** — Know if today's prices are stable or wild (low/moderate/high/very_high)
+- **Daily & rolling statistics** — Min, max, average, median for today, tomorrow, trailing 24h, and leading 24h
+- **Energy & tax breakdown** — See spot price vs. tax components as sensor attributes
+- **Multi-currency support** — EUR, NOK, SEK, DKK, USD, GBP with configurable base/subunit display (€ vs ct, kr vs øre)
 
 ### 🛡️ Built for Reliability
 
--   **Intelligent caching** — Multi-layer caching minimizes API calls, survives HA restarts, auto-invalidates at midnight
--   **High-performance interval pool** — O(1) timestamp lookups, gap detection, auto-fetching of missing data
--   **Quarter-hour precision updates** — Sensors refresh at :00/:15/:30/:45 boundaries, independent of API polling
--   **Official API only** — Uses Tibber's [`priceInfo`](https://developer.tibber.com/docs/reference#priceinfo) and [`priceInfoRange`](https://developer.tibber.com/docs/reference#subscription) endpoints. All ratings and statistics are calculated locally.
+- **Intelligent caching** — Multi-layer caching minimizes API calls, survives HA restarts, auto-invalidates at midnight
+- **High-performance interval pool** — O(1) timestamp lookups, gap detection, auto-fetching of missing data
+- **Quarter-hour precision updates** — Sensors refresh at :00/:15/:30/:45 boundaries, independent of API polling
+- **Official API only** — Uses Tibber's [`priceInfo`](https://developer.tibber.com/docs/reference#priceinfo) and [`priceInfoRange`](https://developer.tibber.com/docs/reference#subscription) endpoints. All ratings and statistics are calculated locally.
 
 ## 🚀 Quick Start
 
@@ -91,9 +91,9 @@ Or manually: **Settings** → **Devices & Services** → **+ Add Integration** �
 
 ### Step 3: Done!
 
--   **100+ sensors** are now available (key sensors enabled by default, advanced ones ready to enable)
--   Explore entities in **Settings** → **Devices & Services** → **Tibber Price Information & Ratings**
--   Start building automations, dashboards, and energy-saving workflows
+- **100+ sensors** are now available (key sensors enabled by default, advanced ones ready to enable)
+- Explore entities in **Settings** → **Devices & Services** → **Tibber Price Information & Ratings**
+- Start building automations, dashboards, and energy-saving workflows
 
 📖 **[Full Installation Guide →](https://jpawlowski.github.io/hass.tibber_prices/user/installation)**
 
@@ -103,18 +103,18 @@ The integration provides **100+ entities** across sensors, binary sensors, switc
 
 <img src="https://raw.githubusercontent.com/jpawlowski/hass.tibber_prices/main/docs/user/static/img/entities-overview.jpg" width="400" alt="Entity list showing dynamic icons for different price states">
 
-| Category | Highlights | Count |
-|----------|-----------|-------|
-| **💰 Prices** | Current, next & previous interval price + rolling hour averages | 6+ |
-| **📊 Statistics** | Daily min/max/avg for today & tomorrow, 24h trailing & leading windows | 12+ |
-| **🔮 Forecasts** | Next 1h–12h average prices, price outlook & trajectory sensors | 20+ |
-| **📈 Trends** | Current trend direction, next trend change time & countdown | 3 |
-| **📉 Volatility** | Today, tomorrow, next 24h & combined volatility levels | 4 |
-| **🏷️ Levels & Ratings** | 5-level (API) and 3-level (computed) classification per interval, hour & day | 12+ |
-| **⏰ Period Timing** | Best/peak: end time, duration, remaining, progress, next start | 10+ |
-| **🔌 Binary Sensors** | Best price period, peak price period, tomorrow data available, API connection | 4+ |
-| **🎛️ Runtime Config** | Switches & numbers to adjust period detection live — no restart needed | 14 |
-| **🔧 Diagnostics** | Data lifecycle status, home metadata, grid info, subscription status | 15+ |
+| Category                | Highlights                                                                    | Count |
+| ----------------------- | ----------------------------------------------------------------------------- | ----- |
+| **💰 Prices**           | Current, next & previous interval price + rolling hour averages               | 6+    |
+| **📊 Statistics**       | Daily min/max/avg for today & tomorrow, 24h trailing & leading windows        | 12+   |
+| **🔮 Forecasts**        | Next 1h–12h average prices, price outlook & trajectory sensors                | 20+   |
+| **📈 Trends**           | Current trend direction, next trend change time & countdown                   | 3     |
+| **📉 Volatility**       | Today, tomorrow, next 24h & combined volatility levels                        | 4     |
+| **🏷️ Levels & Ratings** | 5-level (API) and 3-level (computed) classification per interval, hour & day  | 12+   |
+| **⏰ Period Timing**    | Best/peak: end time, duration, remaining, progress, next start                | 10+   |
+| **🔌 Binary Sensors**   | Best price period, peak price period, tomorrow data available, API connection | 4+    |
+| **🎛️ Runtime Config**   | Switches & numbers to adjust period detection live — no restart needed        | 14    |
+| **🔧 Diagnostics**      | Data lifecycle status, home metadata, grid info, subscription status          | 15+   |
 
 > **Every sensor includes rich attributes** — timestamps, detailed descriptions, and context data. Enable **Extended Descriptions** in the integration options to get `long_description` and `usage_tips` on every entity.
 
@@ -168,17 +168,17 @@ Generate beautiful price charts with a single action call — dynamic Y-axis, co
 
 ## ❓ Help & Support
 
--   📖 **[FAQ](https://jpawlowski.github.io/hass.tibber_prices/user/faq)** — Common questions answered
--   🔧 **[Troubleshooting](https://jpawlowski.github.io/hass.tibber_prices/user/troubleshooting)** — Solving common issues
--   🐛 **[Report an Issue](https://github.com/jpawlowski/hass.tibber_prices/issues/new)** — Found a bug? Let us know
+- 📖 **[FAQ](https://jpawlowski.github.io/hass.tibber_prices/user/faq)** — Common questions answered
+- 🔧 **[Troubleshooting](https://jpawlowski.github.io/hass.tibber_prices/user/troubleshooting)** — Solving common issues
+- 🐛 **[Report an Issue](https://github.com/jpawlowski/hass.tibber_prices/issues/new)** — Found a bug? Let us know
 
 ## 🤝 Contributing
 
 Contributions are welcome! See the [Contributing Guidelines](CONTRIBUTING.md) and [Developer Documentation](https://jpawlowski.github.io/hass.tibber_prices/developer/) to get started.
 
--   **[Developer Setup](https://jpawlowski.github.io/hass.tibber_prices/developer/setup)** — DevContainer-based development environment
--   **[Architecture Guide](https://jpawlowski.github.io/hass.tibber_prices/developer/architecture)** — Understand the codebase
--   **[Release Management](https://jpawlowski.github.io/hass.tibber_prices/developer/release-management)** — Release process and versioning
+- **[Developer Setup](https://jpawlowski.github.io/hass.tibber_prices/developer/setup)** — DevContainer-based development environment
+- **[Architecture Guide](https://jpawlowski.github.io/hass.tibber_prices/developer/architecture)** — Understand the codebase
+- **[Release Management](https://jpawlowski.github.io/hass.tibber_prices/developer/release-management)** — Release process and versioning
 
 ## 🤖 Development Note
 

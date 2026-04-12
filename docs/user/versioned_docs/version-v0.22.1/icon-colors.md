@@ -14,17 +14,17 @@ Many sensors in the Tibber Prices integration provide an `icon_color` attribute 
 
 The `icon_color` attribute contains a **CSS variable name** (not a direct color value) that changes based on the sensor's state. For example:
 
--   **Price level sensors**: `var(--success-color)` for cheap, `var(--error-color)` for expensive
--   **Binary sensors**: `var(--success-color)` when in best price period, `var(--error-color)` during peak price
--   **Volatility**: `var(--success-color)` for low volatility, `var(--error-color)` for very high
+- **Price level sensors**: `var(--success-color)` for cheap, `var(--error-color)` for expensive
+- **Binary sensors**: `var(--success-color)` when in best price period, `var(--error-color)` during peak price
+- **Volatility**: `var(--success-color)` for low volatility, `var(--error-color)` for very high
 
 ### Why CSS Variables?
 
 Using CSS variables like `var(--success-color)` instead of hardcoded colors (like `#00ff00`) has important advantages:
 
--   ✅ **Automatic theme adaptation** - Colors change with light/dark mode
--   ✅ **Consistent with your theme** - Uses your theme's color scheme
--   ✅ **Future-proof** - Works with custom themes and future HA updates
+- ✅ **Automatic theme adaptation** - Colors change with light/dark mode
+- ✅ **Consistent with your theme** - Uses your theme's color scheme
+- ✅ **Future-proof** - Works with custom themes and future HA updates
 
 You can use the `icon_color` attribute directly in your card templates, or interpret the sensor state yourself if you prefer custom colors (see examples below).
 
@@ -38,12 +38,12 @@ Many sensors provide the `icon_color` attribute for dynamic styling. To see if a
 
 **Common sensor types with icon_color:**
 
--   Price level sensors (e.g., `current_interval_price_level`)
--   Price rating sensors (e.g., `current_interval_price_rating`)
--   Volatility sensors (e.g., `volatility_today`)
--   Price trend sensors (e.g., `price_trend_next_3h`)
--   Binary sensors (e.g., `best_price_period`, `peak_price_period`)
--   Timing sensors (e.g., `best_price_time_until_start`, `best_price_progress`)
+- Price level sensors (e.g., `current_interval_price_level`)
+- Price rating sensors (e.g., `current_interval_price_rating`)
+- Volatility sensors (e.g., `volatility_today`)
+- Price trend sensors (e.g., `price_trend_next_3h`)
+- Binary sensors (e.g., `best_price_period`, `peak_price_period`)
+- Timing sensors (e.g., `best_price_time_until_start`, `best_price_progress`)
 
 The colors adapt to the sensor's state - cheaper prices typically show green, expensive prices red, and neutral states gray.
 
@@ -51,15 +51,15 @@ The colors adapt to the sensor's state - cheaper prices typically show green, ex
 
 **Use `icon_color` when:**
 
--   ✅ You can apply the CSS variable directly (icons, text colors, borders)
--   ✅ Your card supports CSS variable substitution
--   ✅ You want simple, clean code without if/else logic
+- ✅ You can apply the CSS variable directly (icons, text colors, borders)
+- ✅ Your card supports CSS variable substitution
+- ✅ You want simple, clean code without if/else logic
 
 **Use the state value directly when:**
 
--   ⚠️ You need to convert the color (e.g., CSS variable → RGBA with transparency)
--   ⚠️ You need different colors than what `icon_color` provides
--   ⚠️ You're building complex conditional logic anyway
+- ⚠️ You need to convert the color (e.g., CSS variable → RGBA with transparency)
+- ⚠️ You need different colors than what `icon_color` provides
+- ⚠️ You're building complex conditional logic anyway
 
 **Example of when NOT to use icon_color:**
 
@@ -295,12 +295,12 @@ cards:
 
 The integration uses Home Assistant's standard CSS variables for theme compatibility:
 
--   `var(--success-color)` - Green (good/cheap/low)
--   `var(--info-color)` - Blue (informational)
--   `var(--warning-color)` - Orange (caution/expensive)
--   `var(--error-color)` - Red (alert/very expensive/high)
--   `var(--state-icon-color)` - Gray (neutral/normal)
--   `var(--disabled-color)` - Light gray (no data/inactive)
+- `var(--success-color)` - Green (good/cheap/low)
+- `var(--info-color)` - Blue (informational)
+- `var(--warning-color)` - Orange (caution/expensive)
+- `var(--error-color)` - Red (alert/very expensive/high)
+- `var(--state-icon-color)` - Gray (neutral/normal)
+- `var(--disabled-color)` - Light gray (no data/inactive)
 
 These automatically adapt to your theme's light/dark mode and custom color schemes.
 
@@ -426,22 +426,22 @@ styles:
 
 **Icons not changing color:**
 
--   Make sure you're using a card that supports custom styling (like custom:button-card or card_mod)
--   Check that the entity actually has the `icon_color` attribute (inspect in Developer Tools → States)
--   Verify your Home Assistant theme supports the CSS variables
+- Make sure you're using a card that supports custom styling (like custom:button-card or card_mod)
+- Check that the entity actually has the `icon_color` attribute (inspect in Developer Tools → States)
+- Verify your Home Assistant theme supports the CSS variables
 
 **Colors look wrong:**
 
--   The colors are theme-dependent. Try switching themes to see if they appear correctly
--   Some custom themes may override the standard CSS variables with unexpected colors
+- The colors are theme-dependent. Try switching themes to see if they appear correctly
+- Some custom themes may override the standard CSS variables with unexpected colors
 
 **Want different colors?**
 
--   You can override the colors in your theme configuration
--   Or use conditional logic in your card templates based on the state value instead of `icon_color`
+- You can override the colors in your theme configuration
+- Or use conditional logic in your card templates based on the state value instead of `icon_color`
 
 ## See Also
 
--   [Sensors Reference](sensors.md) - Complete list of available sensors
--   [Automation Examples](automation-examples.md) - Use color-coded sensors in automations
--   [Configuration Guide](configuration.md) - Adjust thresholds for price levels and ratings
+- [Sensors Reference](sensors.md) - Complete list of available sensors
+- [Automation Examples](automation-examples.md) - Use color-coded sensors in automations
+- [Configuration Guide](configuration.md) - Adjust thresholds for price levels and ratings

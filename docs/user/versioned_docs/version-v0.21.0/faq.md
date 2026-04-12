@@ -30,6 +30,7 @@ Yes! Use the **"Add another home"** option:
 ### Does this work without a Tibber subscription?
 
 No, you need:
+
 - Active Tibber electricity contract
 - API token from [developer.tibber.com](https://developer.tibber.com/)
 
@@ -40,10 +41,12 @@ The integration is free, but requires Tibber as your electricity provider.
 ### What are good values for price thresholds?
 
 **Default values work for most users:**
+
 - High Price Threshold: 30% above average
 - Low Price Threshold: 15% below average
 
 **Adjust if:**
+
 - You're in a market with high volatility → increase thresholds
 - You want more sensitive ratings → decrease thresholds
 - Seasonal changes → review every few months
@@ -51,6 +54,7 @@ The integration is free, but requires Tibber as your electricity provider.
 ### How do I optimize Best Price Period detection?
 
 **Key parameters:**
+
 - **Flex**: 15-20% is optimal (default 15%)
 - **Min Distance**: 5-10% recommended (default 5%)
 - **Rating Levels**: Start with "CHEAP + VERY_CHEAP" (default)
@@ -61,12 +65,14 @@ See [Period Calculation](period-calculation.md) for detailed tuning guide.
 ### Why do I sometimes only get 1 period instead of 2?
 
 This happens on **high-price days** when:
+
 - Few intervals meet your criteria
 - Relaxation is disabled
 - Flex is too low
 - Min Distance is too strict
 
 **Solutions:**
+
 1. Enable relaxation (recommended)
 2. Increase flex to 20-25%
 3. Reduce min_distance to 3-5%
@@ -77,6 +83,7 @@ This happens on **high-price days** when:
 ### Sensors show "unavailable"
 
 **Common causes:**
+
 1. **API Token invalid** → Check token at developer.tibber.com
 2. **No internet connection** → Check HA network
 3. **Tibber API down** → Check [status.tibber.com](https://status.tibber.com)
@@ -85,6 +92,7 @@ This happens on **high-price days** when:
 ### Best Price Period is ON all day
 
 This means **all intervals meet your criteria** (very cheap day!):
+
 - Not an error - enjoy the low prices!
 - Consider tightening filters (lower flex, higher min_distance)
 - Or add automation to only run during first detected period
@@ -92,6 +100,7 @@ This means **all intervals meet your criteria** (very cheap day!):
 ### Prices are in wrong currency
 
 Integration uses currency from your Tibber subscription:
+
 - EUR → displays in ct/kWh
 - NOK/SEK → displays in øre/kWh
 
@@ -100,6 +109,7 @@ Cannot be changed (tied to your electricity contract).
 ### Tomorrow data not appearing at all
 
 **Check:**
+
 1. Your Tibber home has hourly price contract (not fixed price)
 2. API token has correct permissions
 3. Integration logs for API errors (`/config/home-assistant.log`)
@@ -111,18 +121,18 @@ Cannot be changed (tied to your electricity contract).
 
 ```yaml
 automation:
-  - alias: "Dishwasher during Best Price"
-    trigger:
-      - platform: state
-        entity_id: binary_sensor.tibber_home_best_price_period
-        to: "on"
-    condition:
-      - condition: time
-        after: "20:00:00"  # Only start after 8 PM
-    action:
-      - service: switch.turn_on
-        target:
-          entity_id: switch.dishwasher
+    - alias: "Dishwasher during Best Price"
+      trigger:
+          - platform: state
+            entity_id: binary_sensor.tibber_home_best_price_period
+            to: "on"
+      condition:
+          - condition: time
+            after: "20:00:00" # Only start after 8 PM
+      action:
+          - service: switch.turn_on
+            target:
+                entity_id: switch.dishwasher
 ```
 
 See [Automation Examples](automation-examples.md) for more recipes.
@@ -133,19 +143,20 @@ Yes! Use Peak Price Period binary sensor:
 
 ```yaml
 automation:
-  - alias: "Disable charging during peak prices"
-    trigger:
-      - platform: state
-        entity_id: binary_sensor.tibber_home_peak_price_period
-        to: "on"
-    action:
-      - service: switch.turn_off
-        target:
-          entity_id: switch.ev_charger
+    - alias: "Disable charging during peak prices"
+      trigger:
+          - platform: state
+            entity_id: binary_sensor.tibber_home_peak_price_period
+            to: "on"
+      action:
+          - service: switch.turn_off
+            target:
+                entity_id: switch.ev_charger
 ```
 
 ---
 
 💡 **Still need help?**
+
 - [Troubleshooting Guide](troubleshooting.md)
 - [GitHub Issues](https://github.com/jpawlowski/hass.tibber_prices/issues)

@@ -8,22 +8,22 @@ Not every code change needs a detailed plan. Create a refactoring plan when:
 
 🔴 **Major changes requiring planning:**
 
--   Splitting modules into packages (>5 files affected, >500 lines moved)
--   Architectural changes (new packages, module restructuring)
--   Breaking changes (API changes, config format migrations)
+- Splitting modules into packages (>5 files affected, >500 lines moved)
+- Architectural changes (new packages, module restructuring)
+- Breaking changes (API changes, config format migrations)
 
 🟡 **Medium changes that might benefit from planning:**
 
--   Complex features with multiple moving parts
--   Changes affecting many files (>3 files, unclear best approach)
--   Refactorings with unclear scope
+- Complex features with multiple moving parts
+- Changes affecting many files (>3 files, unclear best approach)
+- Refactorings with unclear scope
 
 🟢 **Small changes - no planning needed:**
 
--   Bug fixes (straightforward, `<`100 lines)
--   Small features (`<`3 files, clear approach)
--   Documentation updates
--   Cosmetic changes (formatting, renaming)
+- Bug fixes (straightforward, `<`100 lines)
+- Small features (`<`3 files, clear approach)
+- Documentation updates
+- Cosmetic changes (formatting, renaming)
 
 ## The Planning Process
 
@@ -51,34 +51,34 @@ Every planning document should include:
 
 ## Problem Statement
 
--   What's the issue?
--   Why does it need fixing?
--   Current pain points
+- What's the issue?
+- Why does it need fixing?
+- Current pain points
 
 ## Proposed Solution
 
--   High-level approach
--   File structure (before/after)
--   Module responsibilities
+- High-level approach
+- File structure (before/after)
+- Module responsibilities
 
 ## Migration Strategy
 
--   Phase-by-phase breakdown
--   File lifecycle (CREATE/MODIFY/DELETE/RENAME)
--   Dependencies between phases
--   Testing checkpoints
+- Phase-by-phase breakdown
+- File lifecycle (CREATE/MODIFY/DELETE/RENAME)
+- Dependencies between phases
+- Testing checkpoints
 
 ## Risks & Mitigation
 
--   What could go wrong?
--   How to prevent it?
--   Rollback strategy
+- What could go wrong?
+- How to prevent it?
+- Rollback strategy
 
 ## Success Criteria
 
--   Measurable improvements
--   Testing requirements
--   Verification steps
+- Measurable improvements
+- Testing requirements
+- Verification steps
 ```
 
 See `planning/README.md` for detailed template explanation.
@@ -87,19 +87,19 @@ See `planning/README.md` for detailed template explanation.
 
 Since `planning/` is git-ignored:
 
--   Draft multiple versions
--   Get AI assistance without commit pressure
--   Refine until the plan is solid
--   No need to clean up intermediate versions
+- Draft multiple versions
+- Get AI assistance without commit pressure
+- Refine until the plan is solid
+- No need to clean up intermediate versions
 
 ### 4. Implementation Phase
 
 Once plan is approved:
 
--   Follow the phases defined in the plan
--   Test after each phase (don't skip!)
--   Update plan if issues discovered
--   Track progress through phase status
+- Follow the phases defined in the plan
+- Test after each phase (don't skip!)
+- Update plan if issues discovered
+- Track progress through phase status
 
 ### 5. After Completion
 
@@ -134,13 +134,13 @@ The **sensor/ package refactoring** (Nov 2025) is a successful example:
 
 **Before:**
 
--   `sensor.py` - 2,574 lines, hard to navigate
+- `sensor.py` - 2,574 lines, hard to navigate
 
 **After:**
 
--   `sensor/` package with 5 focused modules
--   Each module `<`800 lines
--   Clear separation of concerns
+- `sensor/` package with 5 focused modules
+- Each module `<`800 lines
+- Clear separation of concerns
 
 **Process:**
 
@@ -153,10 +153,10 @@ The **sensor/ package refactoring** (Nov 2025) is a successful example:
 
 **Key learnings:**
 
--   Temporary `_impl.py` files avoid Python package conflicts
--   Test after EVERY phase (don't accumulate changes)
--   Clear file lifecycle (CREATE/MODIFY/DELETE/RENAME)
--   Phase-by-phase approach enables safe rollback
+- Temporary `_impl.py` files avoid Python package conflicts
+- Test after EVERY phase (don't accumulate changes)
+- Clear file lifecycle (CREATE/MODIFY/DELETE/RENAME)
+- Phase-by-phase approach enables safe rollback
 
 **Note:** The complete module splitting plan was documented during implementation but has been superseded by the actual code structure.
 
@@ -166,11 +166,11 @@ The **sensor/ package refactoring** (Nov 2025) is a successful example:
 
 Breaking refactorings into phases:
 
--   ✅ Enables testing after each change (catch bugs early)
--   ✅ Allows rollback to last good state
--   ✅ Makes progress visible
--   ✅ Reduces cognitive load (focus on one thing)
--   ❌ Takes more time (but worth it!)
+- ✅ Enables testing after each change (catch bugs early)
+- ✅ Allows rollback to last good state
+- ✅ Makes progress visible
+- ✅ Reduces cognitive load (focus on one thing)
+- ❌ Takes more time (but worth it!)
 
 ### Phase Structure
 
@@ -191,8 +191,8 @@ Each phase should:
 
 **File Lifecycle**:
 
--   ✨ CREATE `sensor/helpers.py` (utility functions)
--   ✏️ MODIFY `sensor/core.py` (import from helpers.py)
+- ✨ CREATE `sensor/helpers.py` (utility functions)
+- ✏️ MODIFY `sensor/core.py` (import from helpers.py)
 
 **Steps**:
 
@@ -205,10 +205,10 @@ Each phase should:
 
 **Success criteria**:
 
--   ✅ All pure functions moved
--   ✅ `./scripts/lint-check` passes
--   ✅ HA starts successfully
--   ✅ All entities work correctly
+- ✅ All pure functions moved
+- ✅ `./scripts/lint-check` passes
+- ✅ HA starts successfully
+- ✅ All entities work correctly
 ```
 
 ## Testing Strategy
@@ -238,13 +238,13 @@ Minimum testing checklist:
 
 After completing all phases:
 
--   Test all entities (sensors, binary sensors)
--   Test configuration flow (add/modify/remove)
--   Test options flow (change settings)
--   Test services (custom service calls)
--   Test error handling (disconnect API, invalid data)
--   Test caching (restart HA, verify cache loads)
--   Test time-based updates (quarter-hour refresh)
+- Test all entities (sensors, binary sensors)
+- Test configuration flow (add/modify/remove)
+- Test options flow (change settings)
+- Test services (custom service calls)
+- Test error handling (disconnect API, invalid data)
+- Test caching (restart HA, verify cache loads)
+- Test time-based updates (quarter-hour refresh)
 
 ## Common Pitfalls
 
@@ -286,21 +286,21 @@ This project uses AI heavily (GitHub Copilot, Claude). The planning process supp
 
 **AI reads from:**
 
--   `AGENTS.md` - Long-term memory, patterns, conventions (AI-focused)
--   `docs/development/` - Human-readable guides (human-focused)
--   `planning/` - Active refactoring plans (shared context)
+- `AGENTS.md` - Long-term memory, patterns, conventions (AI-focused)
+- `docs/development/` - Human-readable guides (human-focused)
+- `planning/` - Active refactoring plans (shared context)
 
 **AI updates:**
 
--   `AGENTS.md` - When patterns change
--   `planning/*.md` - During refactoring implementation
--   `docs/development/` - After successful completion
+- `AGENTS.md` - When patterns change
+- `planning/*.md` - During refactoring implementation
+- `docs/development/` - After successful completion
 
 **Why separate AGENTS.md and docs/development/?**
 
--   `AGENTS.md`: Technical, comprehensive, AI-optimized
--   `docs/development/`: Practical, focused, human-optimized
--   Both stay in sync but serve different audiences
+- `AGENTS.md`: Technical, comprehensive, AI-optimized
+- `docs/development/`: Practical, focused, human-optimized
+- Both stay in sync but serve different audiences
 
 See [AGENTS.md](https://github.com/jpawlowski/hass.tibber_prices/blob/v0.24.0/AGENTS.md) section "Planning Major Refactorings" for AI-specific guidance.
 
@@ -308,16 +308,16 @@ See [AGENTS.md](https://github.com/jpawlowski/hass.tibber_prices/blob/v0.24.0/AG
 
 ### Planning Directory
 
--   `planning/` - Git-ignored workspace for drafts
--   `planning/README.md` - Detailed planning documentation
--   `planning/*.md` - Active refactoring plans
+- `planning/` - Git-ignored workspace for drafts
+- `planning/README.md` - Detailed planning documentation
+- `planning/*.md` - Active refactoring plans
 
 ### Example Plans
 
--   `docs/development/module-splitting-plan.md` - ✅ Completed, archived
--   `planning/config-flow-refactoring-plan.md` - 🔄 Planned (1013 lines → 4 modules)
--   `planning/binary-sensor-refactoring-plan.md` - 🔄 Planned (644 lines → 4 modules)
--   `planning/coordinator-refactoring-plan.md` - 🔄 Planned (1446 lines, high complexity)
+- `docs/development/module-splitting-plan.md` - ✅ Completed, archived
+- `planning/config-flow-refactoring-plan.md` - 🔄 Planned (1013 lines → 4 modules)
+- `planning/binary-sensor-refactoring-plan.md` - 🔄 Planned (644 lines → 4 modules)
+- `planning/coordinator-refactoring-plan.md` - 🔄 Planned (1446 lines, high complexity)
 
 ### Helper Scripts
 
@@ -341,21 +341,21 @@ Simple rule: If you can't describe the entire change in 3 sentences, create a pl
 
 Good plan level:
 
--   Lists all files affected (CREATE/MODIFY/DELETE)
--   Defines phases with clear boundaries
--   Includes testing strategy
--   Estimates time per phase
+- Lists all files affected (CREATE/MODIFY/DELETE)
+- Defines phases with clear boundaries
+- Includes testing strategy
+- Estimates time per phase
 
 Too detailed:
 
--   Exact code snippets for every change
--   Line-by-line instructions
+- Exact code snippets for every change
+- Line-by-line instructions
 
 Too vague:
 
--   "Refactor sensor.py to be better"
--   No phase breakdown
--   No testing strategy
+- "Refactor sensor.py to be better"
+- No phase breakdown
+- No testing strategy
 
 ### Q: What if the plan changes during implementation?
 
@@ -363,9 +363,9 @@ Too vague:
 
 If you discover:
 
--   Better approach → Update "Proposed Solution"
--   More phases needed → Add to "Migration Strategy"
--   New risks → Update "Risks & Mitigation"
+- Better approach → Update "Proposed Solution"
+- More phases needed → Add to "Migration Strategy"
+- New risks → Update "Risks & Mitigation"
 
 Document WHY the plan changed (helps future refactorings).
 
@@ -373,9 +373,9 @@ Document WHY the plan changed (helps future refactorings).
 
 **A:** No! Use judgment:
 
--   **Small changes (`<`100 lines, clear approach)**: Just do it, no plan needed
--   **Medium changes (unclear scope)**: Write rough outline, refine if needed
--   **Large changes (>500 lines, >5 files)**: Full planning process
+- **Small changes (`<`100 lines, clear approach)**: Just do it, no plan needed
+- **Medium changes (unclear scope)**: Write rough outline, refine if needed
+- **Large changes (>500 lines, >5 files)**: Full planning process
 
 ### Q: How do I know when a refactoring is successful?
 
@@ -383,12 +383,12 @@ Document WHY the plan changed (helps future refactorings).
 
 Typical criteria:
 
--   ✅ All linting checks pass
--   ✅ HA starts without errors
--   ✅ All entities functional
--   ✅ No regressions (existing features work)
--   ✅ Code easier to understand/modify
--   ✅ Documentation updated
+- ✅ All linting checks pass
+- ✅ HA starts without errors
+- ✅ All entities functional
+- ✅ No regressions (existing features work)
+- ✅ Code easier to understand/modify
+- ✅ Documentation updated
 
 If you can't tick all boxes, the refactoring isn't done.
 
@@ -409,6 +409,6 @@ If you can't tick all boxes, the refactoring isn't done.
 
 **Next steps:**
 
--   Read `planning/README.md` for detailed template
--   Check `docs/development/module-splitting-plan.md` for real example
--   Browse `planning/` for active refactoring plans
+- Read `planning/README.md` for detailed template
+- Check `docs/development/module-splitting-plan.md` for real example
+- Browse `planning/` for active refactoring plans

@@ -13,10 +13,10 @@ Before running tests or committing changes, validate the integration structure:
 
 This lightweight script checks:
 
--   ✓ `config_flow.py` exists
--   ✓ `manifest.json` is valid JSON with required fields
--   ✓ Translation files have valid JSON syntax
--   ✓ All Python files compile without syntax errors
+- ✓ `config_flow.py` exists
+- ✓ `manifest.json` is valid JSON with required fields
+- ✓ Translation files have valid JSON syntax
+- ✓ All Python files compile without syntax errors
 
 **Note:** Full hassfest validation runs in GitHub Actions on push.
 
@@ -42,10 +42,10 @@ pytest --cov=custom_components.tibber_prices tests/
 
 Then test in Home Assistant UI:
 
--   Configuration flow
--   Sensor states and attributes
--   Services
--   Translation strings
+- Configuration flow
+- Sensor states and attributes
+- Services
+- Translation strings
 
 ## Test Guidelines
 

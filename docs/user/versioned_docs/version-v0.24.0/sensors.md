@@ -16,8 +16,8 @@ These binary sensors indicate when you're in a detected best or peak price perio
 
 **Quick overview:**
 
--   **Best Price Period**: Turns ON during periods with significantly lower prices than the daily average
--   **Peak Price Period**: Turns ON during periods with significantly higher prices than the daily average
+- **Best Price Period**: Turns ON during periods with significantly lower prices than the daily average
+- **Peak Price Period**: Turns ON during periods with significantly higher prices than the daily average
 
 Both sensors include rich attributes with period details, intervals, relaxation status, and more.
 
@@ -29,15 +29,15 @@ The integration provides several sensors that calculate average electricity pric
 
 #### Available Average Sensors
 
-| Sensor | Description | Time Window |
-|--------|-------------|-------------|
-| **Average Price Today** | Typical price for current calendar day | 00:00 - 23:59 today |
-| **Average Price Tomorrow** | Typical price for next calendar day | 00:00 - 23:59 tomorrow |
-| **Trailing Price Average** | Typical price for last 24 hours | Rolling 24h backward |
-| **Leading Price Average** | Typical price for next 24 hours | Rolling 24h forward |
-| **Current Hour Average** | Smoothed price around current time | 5 intervals (~75 min) |
-| **Next Hour Average** | Smoothed price around next hour | 5 intervals (~75 min) |
-| **Next N Hours Average** | Future price forecast | 1h, 2h, 3h, 4h, 5h, 6h, 8h, 12h |
+| Sensor                     | Description                            | Time Window                     |
+| -------------------------- | -------------------------------------- | ------------------------------- |
+| **Average Price Today**    | Typical price for current calendar day | 00:00 - 23:59 today             |
+| **Average Price Tomorrow** | Typical price for next calendar day    | 00:00 - 23:59 tomorrow          |
+| **Trailing Price Average** | Typical price for last 24 hours        | Rolling 24h backward            |
+| **Leading Price Average**  | Typical price for next 24 hours        | Rolling 24h forward             |
+| **Current Hour Average**   | Smoothed price around current time     | 5 intervals (~75 min)           |
+| **Next Hour Average**      | Smoothed price around next hour        | 5 intervals (~75 min)           |
+| **Next N Hours Average**   | Future price forecast                  | 1h, 2h, 3h, 4h, 5h, 6h, 8h, 12h |
 
 #### Configurable Display: Median vs Mean
 
@@ -66,8 +66,8 @@ You can choose which value is displayed in the sensor state:
 2. Click **Configure** on your home
 3. Navigate to **Step 6: Average Sensor Display Settings**
 4. Choose between:
-   - **Median** (default) - Shows typical price level, resistant to spikes
-   - **Arithmetic Mean** - Shows actual mathematical average
+    - **Median** (default) - Shows typical price level, resistant to spikes
+    - **Arithmetic Mean** - Shows actual mathematical average
 
 **Important:** Both values are **always available** as sensor attributes, regardless of your choice! This ensures your automations continue to work if you change the display setting.
 
@@ -78,22 +78,22 @@ Both `price_mean` and `price_median` are always available as attributes:
 ```yaml
 # Example: Get both values regardless of display setting
 sensor:
-  - platform: template
-    sensors:
-      daily_price_analysis:
-        friendly_name: "Daily Price Analysis"
-        value_template: >
-          {% set median = state_attr('sensor.tibber_home_average_price_today', 'price_median') %}
-          {% set mean = state_attr('sensor.tibber_home_average_price_today', 'price_mean') %}
-          {% set current = states('sensor.tibber_home_current_interval_price') | float %}
+    - platform: template
+      sensors:
+          daily_price_analysis:
+              friendly_name: "Daily Price Analysis"
+              value_template: >
+                  {% set median = state_attr('sensor.tibber_home_average_price_today', 'price_median') %}
+                  {% set mean = state_attr('sensor.tibber_home_average_price_today', 'price_mean') %}
+                  {% set current = states('sensor.tibber_home_current_interval_price') | float %}
 
-          {% if current < median %}
-            Below typical ({{ ((1 - current/median) * 100) | round(1) }}% cheaper)
-          {% elif current < mean %}
-            Typical price range
-          {% else %}
-            Above average ({{ ((current/mean - 1) * 100) | round(1) }}% more expensive)
-          {% endif %}
+                  {% if current < median %}
+                    Below typical ({{ ((1 - current/median) * 100) | round(1) }}% cheaper)
+                  {% elif current < mean %}
+                    Typical price range
+                  {% else %}
+                    Above average ({{ ((current/mean - 1) * 100) | round(1) }}% more expensive)
+                  {% endif %}
 ```
 
 #### Practical Examples
@@ -104,21 +104,21 @@ Run dishwasher only when price is significantly below the daily typical level:
 
 ```yaml
 automation:
-  - alias: "Start Dishwasher When Cheap"
-    trigger:
-      - platform: state
-        entity_id: binary_sensor.tibber_home_best_price_period
-        to: "on"
-    condition:
-      # Only if current price is at least 20% below typical (median)
-      - condition: template
-        value_template: >
-          {% set current = states('sensor.tibber_home_current_interval_price') | float %}
-          {% set median = state_attr('sensor.tibber_home_average_price_today', 'price_median') | float %}
-          {{ current < (median * 0.8) }}
-    action:
-      - service: switch.turn_on
-        entity_id: switch.dishwasher
+    - alias: "Start Dishwasher When Cheap"
+      trigger:
+          - platform: state
+            entity_id: binary_sensor.tibber_home_best_price_period
+            to: "on"
+      condition:
+          # Only if current price is at least 20% below typical (median)
+          - condition: template
+            value_template: >
+                {% set current = states('sensor.tibber_home_current_interval_price') | float %}
+                {% set median = state_attr('sensor.tibber_home_average_price_today', 'price_median') | float %}
+                {{ current < (median * 0.8) }}
+      action:
+          - service: switch.turn_on
+            entity_id: switch.dishwasher
 ```
 
 **Example 2: Cost-aware heating control**
@@ -127,20 +127,20 @@ Use mean for actual cost calculations:
 
 ```yaml
 automation:
-  - alias: "Heating Budget Control"
-    trigger:
-      - platform: time
-        at: "06:00:00"
-    action:
-      # Calculate expected daily heating cost
-      - variables:
-          mean_price: "{{ state_attr('sensor.tibber_home_average_price_today', 'price_mean') | float }}"
-          heating_kwh_per_day: 15  # Estimated consumption
-          daily_cost: "{{ (mean_price * heating_kwh_per_day / 100) | round(2) }}"
-      - service: notify.mobile_app
-        data:
-          title: "Heating Cost Estimate"
-          message: "Expected cost today: €{{ daily_cost }} (avg price: {{ mean_price }} ct/kWh)"
+    - alias: "Heating Budget Control"
+      trigger:
+          - platform: time
+            at: "06:00:00"
+      action:
+          # Calculate expected daily heating cost
+          - variables:
+                mean_price: "{{ state_attr('sensor.tibber_home_average_price_today', 'price_mean') | float }}"
+                heating_kwh_per_day: 15 # Estimated consumption
+                daily_cost: "{{ (mean_price * heating_kwh_per_day / 100) | round(2) }}"
+          - service: notify.mobile_app
+            data:
+                title: "Heating Cost Estimate"
+                message: "Expected cost today: €{{ daily_cost }} (avg price: {{ mean_price }} ct/kWh)"
 ```
 
 **Example 3: Smart charging based on rolling average**
@@ -149,59 +149,60 @@ Use trailing average to understand recent price trends:
 
 ```yaml
 automation:
-  - alias: "EV Charging - Price Trend Based"
-    trigger:
-      - platform: state
-        entity_id: sensor.ev_battery_level
-    condition:
-      # Start charging if current price < 90% of recent 24h average
-      - condition: template
-        value_template: >
-          {% set current = states('sensor.tibber_home_current_interval_price') | float %}
-          {% set trailing_avg = state_attr('sensor.tibber_home_trailing_price_average', 'price_median') | float %}
-          {{ current < (trailing_avg * 0.9) }}
-      # And battery < 80%
-      - condition: numeric_state
-        entity_id: sensor.ev_battery_level
-        below: 80
-    action:
-      - service: switch.turn_on
-        entity_id: switch.ev_charger
+    - alias: "EV Charging - Price Trend Based"
+      trigger:
+          - platform: state
+            entity_id: sensor.ev_battery_level
+      condition:
+          # Start charging if current price < 90% of recent 24h average
+          - condition: template
+            value_template: >
+                {% set current = states('sensor.tibber_home_current_interval_price') | float %}
+                {% set trailing_avg = state_attr('sensor.tibber_home_trailing_price_average', 'price_median') | float %}
+                {{ current < (trailing_avg * 0.9) }}
+          # And battery < 80%
+          - condition: numeric_state
+            entity_id: sensor.ev_battery_level
+            below: 80
+      action:
+          - service: switch.turn_on
+            entity_id: switch.ev_charger
 ```
 
 #### Key Attributes
 
 All average sensors provide these attributes:
 
-| Attribute | Description | Example |
-|-----------|-------------|---------|
-| `price_mean` | Arithmetic mean (always available) | 25.3 ct/kWh |
-| `price_median` | Median value (always available) | 22.1 ct/kWh |
-| `interval_count` | Number of intervals included | 96 |
-| `timestamp` | Reference time for calculation | 2025-12-18T00:00:00+01:00 |
+| Attribute        | Description                        | Example                   |
+| ---------------- | ---------------------------------- | ------------------------- |
+| `price_mean`     | Arithmetic mean (always available) | 25.3 ct/kWh               |
+| `price_median`   | Median value (always available)    | 22.1 ct/kWh               |
+| `interval_count` | Number of intervals included       | 96                        |
+| `timestamp`      | Reference time for calculation     | 2025-12-18T00:00:00+01:00 |
 
 **Note:** The `price_mean` and `price_median` attributes are **always present** regardless of which value you configured for display. This ensures automation compatibility when changing the display setting.
 
 #### When to Use Which Value
 
 **Use Median for:**
+
 - ✅ Comparing "typical" price levels across days
 - ✅ Determining if current price is unusually high/low
 - ✅ User-facing displays ("What was today like?")
 - ✅ Volatility analysis (comparing typical vs extremes)
 
 **Use Mean for:**
+
 - ✅ Cost calculations and budgeting
 - ✅ Energy cost estimations
 - ✅ Comparing actual average costs between periods
 - ✅ Financial planning and forecasting
 
 **Both values tell different stories:**
+
 - High median + much higher mean = Expensive spikes occurred
 - Low median + higher mean = Generally cheap with occasional spikes
 - Similar median and mean = Stable prices (low volatility)
-
-
 
 ## Statistical Sensors
 
@@ -223,19 +224,19 @@ This diagnostic sensor provides essential chart configuration values as sensor a
 
 **Key Features:**
 
--   **Dynamic Y-Axis Bounds**: Automatically calculates optimal `yaxis_min` and `yaxis_max` for your price data
--   **Automatic Updates**: Refreshes when price data changes (coordinator updates)
--   **Lightweight**: Metadata-only mode (no data processing) for fast response
--   **State Indicator**: Shows `pending` (initialization), `ready` (data available), or `error` (service call failed)
+- **Dynamic Y-Axis Bounds**: Automatically calculates optimal `yaxis_min` and `yaxis_max` for your price data
+- **Automatic Updates**: Refreshes when price data changes (coordinator updates)
+- **Lightweight**: Metadata-only mode (no data processing) for fast response
+- **State Indicator**: Shows `pending` (initialization), `ready` (data available), or `error` (service call failed)
 
 **Attributes:**
 
--   **`timestamp`**: When the metadata was last fetched
--   **`yaxis_min`**: Suggested minimum value for Y-axis (optimal scaling)
--   **`yaxis_max`**: Suggested maximum value for Y-axis (optimal scaling)
--   **`currency`**: Currency code (e.g., "EUR", "NOK")
--   **`resolution`**: Interval duration in minutes (usually 15)
--   **`error`**: Error message if service call failed
+- **`timestamp`**: When the metadata was last fetched
+- **`yaxis_min`**: Suggested minimum value for Y-axis (optimal scaling)
+- **`yaxis_max`**: Suggested maximum value for Y-axis (optimal scaling)
+- **`currency`**: Currency code (e.g., "EUR", "NOK")
+- **`resolution`**: Interval duration in minutes (usually 15)
+- **`error`**: Error message if service call failed
 
 **Usage:**
 
@@ -256,24 +257,24 @@ This diagnostic sensor provides cached chart-friendly price data that can be con
 
 **Key Features:**
 
--   **Configurable via Options Flow**: Service parameters can be configured through the integration's options menu (Step 7 of 7)
--   **Automatic Updates**: Data refreshes on coordinator updates (every 15 minutes)
--   **Attribute-Based Output**: Chart data is stored in sensor attributes for easy access
--   **State Indicator**: Shows `pending` (before first call), `ready` (data available), or `error` (service call failed)
+- **Configurable via Options Flow**: Service parameters can be configured through the integration's options menu (Step 7 of 7)
+- **Automatic Updates**: Data refreshes on coordinator updates (every 15 minutes)
+- **Attribute-Based Output**: Chart data is stored in sensor attributes for easy access
+- **State Indicator**: Shows `pending` (before first call), `ready` (data available), or `error` (service call failed)
 
 **Important Notes:**
 
--   ⚠️ Disabled by default - must be manually enabled in entity settings
--   ⚠️ Consider using the service instead for better control and flexibility
--   ⚠️ Configuration updates require HA restart
+- ⚠️ Disabled by default - must be manually enabled in entity settings
+- ⚠️ Consider using the service instead for better control and flexibility
+- ⚠️ Configuration updates require HA restart
 
 **Attributes:**
 
 The sensor exposes chart data with metadata in attributes:
 
--   **`timestamp`**: When the data was last fetched
--   **`error`**: Error message if service call failed
--   **`data`** (or custom name): Array of price data points in configured format
+- **`timestamp`**: When the data was last fetched
+- **`error`**: Error message if service call failed
+- **`data`** (or custom name): Array of price data points in configured format
 
 **Configuration:**
 

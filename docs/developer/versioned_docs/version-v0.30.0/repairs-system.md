@@ -7,6 +7,7 @@ The Tibber Prices integration includes a proactive repair notification system th
 The repairs system is implemented in `coordinator/repairs.py` via the `TibberPricesRepairManager` class, which is instantiated in the coordinator and integrated into the update cycle.
 
 **Design Principles:**
+
 - **Proactive**: Detect issues before they become critical
 - **User-friendly**: Clear explanations with actionable guidance
 - **Auto-clearing**: Repairs automatically disappear when conditions resolve
@@ -19,10 +20,12 @@ The repairs system is implemented in `coordinator/repairs.py` via the `TibberPri
 **Issue ID:** `tomorrow_data_missing_{entry_id}`
 
 **When triggered:**
+
 - Current time is after 18:00 (configurable via `TOMORROW_DATA_WARNING_HOUR`)
 - Tomorrow's electricity price data is still not available
 
 **When cleared:**
+
 - Tomorrow's data becomes available
 - Automatically checks on every successful API update
 
@@ -30,6 +33,7 @@ The repairs system is implemented in `coordinator/repairs.py` via the `TibberPri
 Users cannot plan ahead for tomorrow's electricity usage optimization. Automations relying on tomorrow's prices will not work.
 
 **Implementation:**
+
 ```python
 # In coordinator update cycle
 has_tomorrow_data = self._data_fetcher.has_tomorrow_data(result["priceInfo"])
@@ -40,6 +44,7 @@ await self._repair_manager.check_tomorrow_data_availability(
 ```
 
 **Translation placeholders:**
+
 - `home_name`: Name of the affected home
 - `warning_hour`: Hour after which warning appears (default: 18)
 
@@ -48,10 +53,12 @@ await self._repair_manager.check_tomorrow_data_availability(
 **Issue ID:** `rate_limit_exceeded_{entry_id}`
 
 **When triggered:**
+
 - Integration encounters 3 or more consecutive rate limit errors (HTTP 429)
 - Threshold configurable via `RATE_LIMIT_WARNING_THRESHOLD`
 
 **When cleared:**
+
 - Successful API call completes (no rate limit error)
 - Error counter resets to 0
 
@@ -59,6 +66,7 @@ await self._repair_manager.check_tomorrow_data_availability(
 API requests are being throttled, causing stale data. Updates may be delayed until rate limit expires.
 
 **Implementation:**
+
 ```python
 # In error handler
 is_rate_limit = (
@@ -74,6 +82,7 @@ await self._repair_manager.clear_rate_limit_tracking()
 ```
 
 **Translation placeholders:**
+
 - `home_name`: Name of the affected home
 - `error_count`: Number of consecutive rate limit errors
 
@@ -82,10 +91,12 @@ await self._repair_manager.clear_rate_limit_tracking()
 **Issue ID:** `home_not_found_{entry_id}`
 
 **When triggered:**
+
 - Home configured in this integration is no longer present in Tibber account
 - Detected during user data refresh (daily check)
 
 **When cleared:**
+
 - Home reappears in Tibber account (unlikely - manual cleanup expected)
 - Integration entry is removed (shutdown cleanup)
 
@@ -93,6 +104,7 @@ await self._repair_manager.clear_rate_limit_tracking()
 Integration cannot fetch data for a non-existent home. User must remove the config entry and re-add if needed.
 
 **Implementation:**
+
 ```python
 # After user data update
 home_exists = self._data_fetcher._check_home_exists(home_id)
@@ -103,6 +115,7 @@ else:
 ```
 
 **Translation placeholders:**
+
 - `home_name`: Name of the missing home
 - `entry_id`: Config entry ID for reference
 
@@ -153,6 +166,7 @@ Each repair type maintains internal state to avoid redundant operations:
 ### Lifecycle Integration
 
 **Coordinator Initialization:**
+
 ```python
 self._repair_manager = TibberPricesRepairManager(
     hass=hass,
@@ -162,6 +176,7 @@ self._repair_manager = TibberPricesRepairManager(
 ```
 
 **Update Cycle Integration:**
+
 ```python
 # Success path - check conditions
 if result and "priceInfo" in result:
@@ -178,6 +193,7 @@ if is_rate_limit:
 ```
 
 **Shutdown Cleanup:**
+
 ```python
 async def async_shutdown(self) -> None:
     """Shut down coordinator and clean up."""
@@ -196,24 +212,27 @@ Repairs use Home Assistant's standard translation system. Translations are defin
 - `/translations/sv.json`
 
 **Structure:**
+
 ```json
 {
-  "issues": {
-    "tomorrow_data_missing": {
-      "title": "Tomorrow's price data missing for {home_name}",
-      "description": "Detailed explanation with multiple paragraphs...\n\nPossible causes:\n- Cause 1\n- Cause 2"
+    "issues": {
+        "tomorrow_data_missing": {
+            "title": "Tomorrow's price data missing for {home_name}",
+            "description": "Detailed explanation with multiple paragraphs...\n\nPossible causes:\n- Cause 1\n- Cause 2"
+        }
     }
-  }
 }
 ```
 
 ## Home Assistant Integration
 
 Repairs appear in:
+
 - **Settings → System → Repairs** (main repairs panel)
 - **Notifications** (bell icon in UI shows repair count)
 
 Repair properties:
+
 - **`is_fixable=False`**: No automated fix available (user action required)
 - **`severity=IssueSeverity.WARNING`**: Yellow warning level (not critical)
 - **`translation_key`**: References `issues.{key}` in translation files
@@ -228,6 +247,7 @@ Repair properties:
 4. When tomorrow data arrives (next API fetch), repair clears
 
 **Manual trigger:**
+
 ```python
 # Temporarily set warning hour to current hour for testing
 TOMORROW_DATA_WARNING_HOUR = datetime.now().hour
@@ -240,6 +260,7 @@ TOMORROW_DATA_WARNING_HOUR = datetime.now().hour
 3. Successful API call clears the repair
 
 **Manual test:**
+
 - Reduce API polling interval to trigger rate limiting
 - Or temporarily return HTTP 429 in API client
 
@@ -263,6 +284,7 @@ To add a new repair type:
 7. **Document** in this file
 
 **Example template:**
+
 ```python
 async def check_new_condition(self, *, param: bool) -> None:
     """Check new condition and create/clear repair."""

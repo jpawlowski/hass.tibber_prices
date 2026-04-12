@@ -8,10 +8,10 @@ comments: false
 
 ## Code Style
 
--   **Formatter/Linter**: Ruff (replaces Black, Flake8, isort)
--   **Max line length**: 120 characters
--   **Max complexity**: 25 (McCabe)
--   **Target**: Python 3.13
+- **Formatter/Linter**: Ruff (replaces Black, Flake8, isort)
+- **Max line length**: 120 characters
+- **Max complexity**: 25 (McCabe)
+- **Target**: Python 3.13
 
 Run before committing:
 
@@ -41,12 +41,14 @@ class TimeService:
 ```
 
 **When prefix is required:**
+
 - Public classes used across multiple modules
 - All exception classes
 - All coordinator and entity classes
 - Data classes (dataclasses, NamedTuples) used as public APIs
 
 **When prefix can be omitted:**
+
 - Private helper classes within a single module (prefix with `_` underscore)
 - Type aliases and callbacks (e.g., `TimeServiceCallback`)
 - Small internal NamedTuples for function returns
@@ -71,6 +73,7 @@ class DataFetcher:  # Should be TibberPricesDataFetcher
 **Current Technical Debt:**
 
 Many existing classes lack the `TibberPrices` prefix. Before refactoring:
+
 1. Document the plan in `/planning/class-naming-refactoring.md`
 2. Use `multi_replace_string_in_file` for bulk renames
 3. Test thoroughly after each module

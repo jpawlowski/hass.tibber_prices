@@ -12,13 +12,13 @@ You can still call them from automations, scripts, and dashboards the same way a
 
 **Key Features:**
 
--   **Flexible Output Formats**: Array of objects or array of arrays
--   **Time Range Selection**: Filter by day (yesterday, today, tomorrow)
--   **Price Filtering**: Filter by price level or rating
--   **Period Support**: Return best/peak price period summaries instead of intervals
--   **Resolution Control**: Interval (15-minute) or hourly aggregation
--   **Customizable Field Names**: Rename output fields to match your chart library
--   **Currency Control**: Major (EUR/NOK) or minor (ct/øre) units
+- **Flexible Output Formats**: Array of objects or array of arrays
+- **Time Range Selection**: Filter by day (yesterday, today, tomorrow)
+- **Price Filtering**: Filter by price level or rating
+- **Period Support**: Return best/peak price period summaries instead of intervals
+- **Resolution Control**: Interval (15-minute) or hourly aggregation
+- **Customizable Field Names**: Rename output fields to match your chart library
+- **Currency Control**: Major (EUR/NOK) or minor (ct/øre) units
 
 **Basic Example:**
 
@@ -50,14 +50,14 @@ response_variable: chart_data
 
 **Common Parameters:**
 
-| Parameter        | Description                                 | Default                 |
-| ---------------- | ------------------------------------------- | ----------------------- |
-| `entry_id`       | Integration entry ID (required)             | -                       |
-| `day`            | Days to include: yesterday, today, tomorrow | `["today", "tomorrow"]` |
-| `output_format`  | `array_of_objects` or `array_of_arrays`     | `array_of_objects`      |
-| `resolution`     | `interval` (15-min) or `hourly`             | `interval`              |
+| Parameter          | Description                                 | Default                 |
+| ------------------ | ------------------------------------------- | ----------------------- |
+| `entry_id`         | Integration entry ID (required)             | -                       |
+| `day`              | Days to include: yesterday, today, tomorrow | `["today", "tomorrow"]` |
+| `output_format`    | `array_of_objects` or `array_of_arrays`     | `array_of_objects`      |
+| `resolution`       | `interval` (15-min) or `hourly`             | `interval`              |
 | `subunit_currency` | Return prices in ct/øre instead of EUR/NOK  | `false`                 |
-| `round_decimals` | Decimal places (0-10)                       | 4 (major) or 2 (minor)  |
+| `round_decimals`   | Decimal places (0-10)                       | 4 (major) or 2 (minor)  |
 
 **Rolling Window Mode:**
 
@@ -73,8 +73,9 @@ response_variable: chart_data
 ```
 
 **Behavior:**
--   **When tomorrow data available** (typically after ~13:00): Returns today + tomorrow
--   **When tomorrow data not available**: Returns yesterday + today
+
+- **When tomorrow data available** (typically after ~13:00): Returns today + tomorrow
+- **When tomorrow data not available**: Returns yesterday + today
 
 This is useful for charts that should always show a 48-hour window without manual day selection.
 
@@ -123,6 +124,7 @@ For detailed parameter descriptions, open **Developer Tools → Actions** (the U
 **Purpose:** Generates a basic ApexCharts card YAML configuration example for visualizing electricity prices with automatic color-coding by price level.
 
 **Prerequisites:**
+
 - [ApexCharts Card](https://github.com/RomRider/apexcharts-card) (required for all configurations)
 - [Config Template Card](https://github.com/iantrich/config-template-card) (required only for rolling window modes - enables dynamic Y-axis scaling)
 
@@ -140,9 +142,9 @@ For detailed parameter descriptions, open **Developer Tools → Actions** (the U
 service: tibber_prices.get_apexcharts_yaml
 data:
     entry_id: YOUR_ENTRY_ID
-    day: today  # Optional: yesterday, today, tomorrow, rolling_window, rolling_window_autozoom
-    level_type: rating_level  # or "level" for 5-level classification
-    highlight_best_price: true  # Show best price period overlays
+    day: today # Optional: yesterday, today, tomorrow, rolling_window, rolling_window_autozoom
+    level_type: rating_level # or "level" for 5-level classification
+    highlight_best_price: true # Show best price period overlays
 response_variable: apexcharts_config
 ```
 
@@ -150,9 +152,9 @@ response_variable: apexcharts_config
 
 - **Fixed days** (`yesterday`, `today`, `tomorrow`): Static 24-hour views, no additional dependencies
 - **Rolling Window** (default when omitted or `rolling_window`): Dynamic 48-hour window that automatically shifts between yesterday+today and today+tomorrow based on data availability
-  - **✨ Includes dynamic Y-axis scaling** via `chart_metadata` sensor
+    - **✨ Includes dynamic Y-axis scaling** via `chart_metadata` sensor
 - **Rolling Window (Auto-Zoom)** (`rolling_window_autozoom`): Same as rolling window, but additionally zooms in progressively (2h lookback + remaining time until midnight, graph span decreases every 15 minutes)
-  - **✨ Includes dynamic Y-axis scaling** via `chart_metadata` sensor
+    - **✨ Includes dynamic Y-axis scaling** via `chart_metadata` sensor
 
 **Dynamic Y-Axis Scaling (Rolling Window Modes):**
 
@@ -185,7 +187,7 @@ service: tibber_prices.get_apexcharts_yaml
 data:
     entry_id: YOUR_ENTRY_ID
     # Omit 'day' for rolling window (or use 'rolling_window')
-    level_type: level  # 5-level classification
+    level_type: level # 5-level classification
     highlight_best_price: true
 response_variable: config
 
@@ -193,7 +195,7 @@ response_variable: config
 type: custom:config-template-card
 entities:
     - sensor.tibber_home_tomorrow_data
-    - sensor.tibber_home_chart_metadata  # For dynamic Y-axis
+    - sensor.tibber_home_chart_metadata # For dynamic Y-axis
 card:
     # ... paste generated config
 ```
@@ -210,6 +212,7 @@ _Screenshots coming soon for all 4 modes: today, tomorrow, rolling_window, rolli
 **Best Price Period Highlights:**
 
 When `highlight_best_price: true`:
+
 - Vertical bands overlay the chart showing detected best price periods
 - Tooltip shows "Best Price Period" label when hovering over highlighted areas
 - Only appears when best price periods are configured and detected
@@ -249,10 +252,10 @@ If you're still using the `sensor.tibber_home_chart_data_export` sensor, conside
 
 **Benefits:**
 
--   No HA restart required for configuration changes
--   More flexible filtering and formatting options
--   Better performance (on-demand instead of polling)
--   Future-proof (active development)
+- No HA restart required for configuration changes
+- More flexible filtering and formatting options
+- Better performance (on-demand instead of polling)
+- Future-proof (active development)
 
 **Migration Steps:**
 

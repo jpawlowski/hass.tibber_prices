@@ -12,6 +12,7 @@ comments: false
 ## 🎯 Why Are These Tests Critical?
 
 Home Assistant integrations run **continuously** in the background. Resource leaks lead to:
+
 - **Memory Leaks**: RAM usage grows over days/weeks until HA becomes unstable
 - **Callback Leaks**: Listeners remain registered after entity removal → CPU load increases
 - **Timer Leaks**: Timers continue running after unload → unnecessary background tasks
@@ -26,6 +27,7 @@ Home Assistant integrations run **continuously** in the background. Resource lea
 #### 1.1 Listener Cleanup ✅
 
 **What is tested:**
+
 - Time-sensitive listeners are correctly removed (`async_add_time_sensitive_listener()`)
 - Minute-update listeners are correctly removed (`async_add_minute_update_listener()`)
 - Lifecycle callbacks are correctly unregistered (`register_lifecycle_callback()`)
@@ -33,11 +35,13 @@ Home Assistant integrations run **continuously** in the background. Resource lea
 - Binary sensor cleanup removes ALL registered listeners
 
 **Why critical:**
+
 - Each registered listener holds references to Entity + Coordinator
 - Without cleanup: Entities are not freed by GC → Memory Leak
 - With 80+ sensors × 3 listener types = 240+ callbacks that must be cleanly removed
 
 **Code Locations:**
+
 - `coordinator/listeners.py` → `async_add_time_sensitive_listener()`, `async_add_minute_update_listener()`
 - `coordinator/core.py` → `register_lifecycle_callback()`
 - `sensor/core.py` → `async_will_remove_from_hass()`
@@ -46,32 +50,38 @@ Home Assistant integrations run **continuously** in the background. Resource lea
 #### 1.2 Timer Cleanup ✅
 
 **What is tested:**
+
 - Quarter-hour timer is cancelled and reference cleared
 - Minute timer is cancelled and reference cleared
 - Both timers are cancelled together
 - Cleanup works even when timers are `None`
 
 **Why critical:**
+
 - Uncancelled timers continue running after integration unload
 - HA's `async_track_utc_time_change()` creates persistent callbacks
 - Without cleanup: Timers keep firing → CPU load + unnecessary coordinator updates
 
 **Code Locations:**
+
 - `coordinator/listeners.py` → `cancel_timers()`
 - `coordinator/core.py` → `async_shutdown()`
 
 #### 1.3 Config Entry Cleanup ✅
 
 **What is tested:**
+
 - Options update listener is registered via `async_on_unload()`
 - Cleanup function is correctly passed to `async_on_unload()`
 
 **Why critical:**
+
 - `entry.add_update_listener()` registers permanent callback
 - Without `async_on_unload()`: Listener remains active after reload → duplicate updates
 - Pattern: `entry.async_on_unload(entry.add_update_listener(handler))`
 
 **Code Locations:**
+
 - `coordinator/core.py` → `__init__()` (listener registration)
 - `__init__.py` → `async_unload_entry()`
 
@@ -82,16 +92,19 @@ Home Assistant integrations run **continuously** in the background. Resource lea
 #### 2.1 Config Cache Invalidation
 
 **What is tested:**
+
 - DataTransformer config cache is invalidated on options change
 - PeriodCalculator config + period cache is invalidated
 - Trend calculator cache is cleared on coordinator update
 
 **Why critical:**
+
 - Stale config → Sensors use old user settings
 - Stale period cache → Incorrect best/peak price periods
 - Stale trend cache → Outdated trend analysis
 
 **Code Locations:**
+
 - `coordinator/data_transformation.py` → `invalidate_config_cache()`
 - `coordinator/periods.py` → `invalidate_config_cache()`
 - `sensor/calculators/trend.py` → `clear_trend_cache()`
@@ -103,15 +116,18 @@ Home Assistant integrations run **continuously** in the background. Resource lea
 #### 3.1 Persistent Storage Removal
 
 **What is tested:**
+
 - Storage file is deleted on config entry removal
 - Cache is saved on shutdown (no data loss)
 
 **Why critical:**
+
 - Without storage removal: Old files remain after uninstallation
 - Without cache save on shutdown: Data loss on HA restart
 - Storage path: `.storage/tibber_prices.{entry_id}`
 
 **Code Locations:**
+
 - `__init__.py` → `async_remove_entry()`
 - `coordinator/core.py` → `async_shutdown()`
 
@@ -120,12 +136,14 @@ Home Assistant integrations run **continuously** in the background. Resource lea
 **File:** `tests/test_timer_scheduling.py`
 
 **What is tested:**
+
 - Quarter-hour timer is registered with correct parameters
 - Minute timer is registered with correct parameters
 - Timers can be re-scheduled (override old timer)
 - Midnight turnover detection works correctly
 
 **Why critical:**
+
 - Wrong timer parameters → Entities update at wrong times
 - Without timer override on re-schedule → Multiple parallel timers → Performance problem
 
@@ -134,12 +152,14 @@ Home Assistant integrations run **continuously** in the background. Resource lea
 **File:** `tests/test_sensor_timer_assignment.py`
 
 **What is tested:**
+
 - All `TIME_SENSITIVE_ENTITY_KEYS` are valid entity keys
 - All `MINUTE_UPDATE_ENTITY_KEYS` are valid entity keys
 - Both lists are disjoint (no overlap)
 - Sensor and binary sensor platforms are checked
 
 **Why critical:**
+
 - Wrong timer assignment → Sensors update at wrong times
 - Overlap → Duplicate updates → Performance problem
 
@@ -150,10 +170,12 @@ These patterns were analyzed and classified as **not critical**:
 ### 6. Async Task Management
 
 **Current Status:** Fire-and-forget pattern for short tasks
+
 - `sensor/core.py` → Chart data refresh (short-lived, max 1-2 seconds)
 - `coordinator/core.py` → Cache storage (short-lived, max 100ms)
 
 **Why no tests needed:**
+
 - No long-running tasks (all < 2 seconds)
 - HA's event loop handles short tasks automatically
 - Task exceptions are already logged
@@ -163,6 +185,7 @@ These patterns were analyzed and classified as **not critical**:
 ### 7. API Session Cleanup
 
 **Current Status:** ✅ Correctly implemented
+
 - `async_get_clientsession(hass)` is used (shared session)
 - No new sessions are created
 - HA manages session lifecycle automatically
@@ -172,6 +195,7 @@ These patterns were analyzed and classified as **not critical**:
 ### 8. Translation Cache Memory
 
 **Current Status:** ✅ Bounded cache
+
 - Max ~5-10 languages × 5KB = 50KB total
 - Module-level cache without re-loading
 - Practically no memory issue
@@ -181,11 +205,13 @@ These patterns were analyzed and classified as **not critical**:
 ### 9. Coordinator Data Structure Integrity
 
 **Current Status:** Manually tested via `./scripts/develop`
+
 - Midnight turnover works correctly (observed over several days)
 - Missing keys are handled via `.get()` with defaults
 - 80+ sensors access `coordinator.data` without errors
 
 **Structure:**
+
 ```python
 coordinator.data = {
     "user_data": {...},
@@ -197,6 +223,7 @@ coordinator.data = {
 ### 10. Service Response Memory
 
 **Current Status:** HA's response lifecycle
+
 - HA automatically frees service responses after return
 - ApexCharts ~20KB response is one-time per call
 - No response accumulation in integration code
@@ -207,29 +234,30 @@ coordinator.data = {
 
 ### ✅ Implemented Tests (41 total)
 
-| Category | Status | Tests | File | Coverage |
-|----------|--------|-------|------|----------|
-| Listener Cleanup | ✅ | 5 | `test_resource_cleanup.py` | 100% |
-| Timer Cleanup | ✅ | 4 | `test_resource_cleanup.py` | 100% |
-| Config Entry Cleanup | ✅ | 1 | `test_resource_cleanup.py` | 100% |
-| Cache Invalidation | ✅ | 3 | `test_resource_cleanup.py` | 100% |
-| Storage Cleanup | ✅ | 1 | `test_resource_cleanup.py` | 100% |
-| Storage Persistence | ✅ | 2 | `test_coordinator_shutdown.py` | 100% |
-| Timer Scheduling | ✅ | 8 | `test_timer_scheduling.py` | 100% |
-| Sensor-Timer Assignment | ✅ | 17 | `test_sensor_timer_assignment.py` | 100% |
-| **TOTAL** | **✅** | **41** | | **100% (critical)** |
+| Category                | Status | Tests  | File                              | Coverage            |
+| ----------------------- | ------ | ------ | --------------------------------- | ------------------- |
+| Listener Cleanup        | ✅     | 5      | `test_resource_cleanup.py`        | 100%                |
+| Timer Cleanup           | ✅     | 4      | `test_resource_cleanup.py`        | 100%                |
+| Config Entry Cleanup    | ✅     | 1      | `test_resource_cleanup.py`        | 100%                |
+| Cache Invalidation      | ✅     | 3      | `test_resource_cleanup.py`        | 100%                |
+| Storage Cleanup         | ✅     | 1      | `test_resource_cleanup.py`        | 100%                |
+| Storage Persistence     | ✅     | 2      | `test_coordinator_shutdown.py`    | 100%                |
+| Timer Scheduling        | ✅     | 8      | `test_timer_scheduling.py`        | 100%                |
+| Sensor-Timer Assignment | ✅     | 17     | `test_sensor_timer_assignment.py` | 100%                |
+| **TOTAL**               | **✅** | **41** |                                   | **100% (critical)** |
 
 ### 📋 Analyzed but Not Implemented (Nice-to-Have)
 
-| Category | Status | Rationale |
-|----------|--------|-----------|
-| Async Task Management | 📋 | Fire-and-forget pattern used (no long-running tasks) |
-| API Session Cleanup | ✅ | Pattern correct (`async_get_clientsession` used) |
-| Translation Cache | ✅ | Cache size bounded (~50KB max for 10 languages) |
-| Data Structure Integrity | 📋 | Would add test time without finding real issues |
-| Service Response Memory | 📋 | HA automatically frees service responses |
+| Category                 | Status | Rationale                                            |
+| ------------------------ | ------ | ---------------------------------------------------- |
+| Async Task Management    | 📋     | Fire-and-forget pattern used (no long-running tasks) |
+| API Session Cleanup      | ✅     | Pattern correct (`async_get_clientsession` used)     |
+| Translation Cache        | ✅     | Cache size bounded (~50KB max for 10 languages)      |
+| Data Structure Integrity | 📋     | Would add test time without finding real issues      |
+| Service Response Memory  | 📋     | HA automatically frees service responses             |
 
 **Legend:**
+
 - ✅ = Fully tested or pattern verified correct
 - 📋 = Analyzed, low priority for testing (no known issues)
 
@@ -238,6 +266,7 @@ coordinator.data = {
 ### ✅ All Critical Patterns Tested
 
 All essential memory leak prevention patterns are covered by 41 tests:
+
 - ✅ Listeners are correctly removed (no callback leaks)
 - ✅ Timers are cancelled (no background task leaks)
 - ✅ Config entry cleanup works (no dangling listeners)

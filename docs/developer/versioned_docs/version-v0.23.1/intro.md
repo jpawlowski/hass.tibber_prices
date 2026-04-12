@@ -8,25 +8,25 @@ This is an independent, community-maintained custom integration for Home Assista
 
 ## 📚 Developer Guides
 
--   **[Setup](setup.md)** - DevContainer, environment setup, and dependencies
--   **[Architecture](architecture.md)** - Code structure, patterns, and conventions
--   **[Period Calculation Theory](period-calculation-theory.md)** - Mathematical foundations, Flex/Distance interaction, Relaxation strategy
--   **[Timer Architecture](timer-architecture.md)** - Timer system, scheduling, coordination (3 independent timers)
--   **[Caching Strategy](caching-strategy.md)** - Cache layers, invalidation, debugging
--   **[Testing](testing.md)** - How to run tests and write new test cases
--   **[Release Management](release-management.md)** - Release workflow and versioning process
--   **[Coding Guidelines](coding-guidelines.md)** - Style guide, linting, and best practices
--   **[Refactoring Guide](refactoring-guide.md)** - How to plan and execute major refactorings
+- **[Setup](setup.md)** - DevContainer, environment setup, and dependencies
+- **[Architecture](architecture.md)** - Code structure, patterns, and conventions
+- **[Period Calculation Theory](period-calculation-theory.md)** - Mathematical foundations, Flex/Distance interaction, Relaxation strategy
+- **[Timer Architecture](timer-architecture.md)** - Timer system, scheduling, coordination (3 independent timers)
+- **[Caching Strategy](caching-strategy.md)** - Cache layers, invalidation, debugging
+- **[Testing](testing.md)** - How to run tests and write new test cases
+- **[Release Management](release-management.md)** - Release workflow and versioning process
+- **[Coding Guidelines](coding-guidelines.md)** - Style guide, linting, and best practices
+- **[Refactoring Guide](refactoring-guide.md)** - How to plan and execute major refactorings
 
 ## 🤖 AI Documentation
 
 The main AI/Copilot documentation is in [`AGENTS.md`](https://github.com/jpawlowski/hass.tibber_prices/blob/v0.23.1/AGENTS.md). This file serves as long-term memory for AI assistants and contains:
 
--   Detailed architectural patterns
--   Code quality rules and conventions
--   Development workflow guidance
--   Common pitfalls and anti-patterns
--   Project-specific patterns and utilities
+- Detailed architectural patterns
+- Code quality rules and conventions
+- Development workflow guidance
+- Common pitfalls and anti-patterns
+- Project-specific patterns and utilities
 
 **Important:** When proposing changes to patterns or conventions, always update [`AGENTS.md`](https://github.com/jpawlowski/hass.tibber_prices/blob/v0.23.1/AGENTS.md) to keep AI guidance consistent.
 
@@ -34,32 +34,32 @@ The main AI/Copilot documentation is in [`AGENTS.md`](https://github.com/jpawlow
 
 This integration is developed with extensive AI assistance (GitHub Copilot, Claude, and other AI tools). The AI handles:
 
--   **Pattern Recognition**: Understanding and applying Home Assistant best practices
--   **Code Generation**: Implementing features with proper type hints, error handling, and documentation
--   **Refactoring**: Maintaining consistency across the codebase during structural changes
--   **Translation Management**: Keeping 5 language files synchronized
--   **Documentation**: Generating and maintaining comprehensive documentation
+- **Pattern Recognition**: Understanding and applying Home Assistant best practices
+- **Code Generation**: Implementing features with proper type hints, error handling, and documentation
+- **Refactoring**: Maintaining consistency across the codebase during structural changes
+- **Translation Management**: Keeping 5 language files synchronized
+- **Documentation**: Generating and maintaining comprehensive documentation
 
 **Quality Assurance:**
 
--   Automated linting with Ruff (120-char line length, max complexity 25)
--   Home Assistant's type checking and validation
--   Real-world testing in development environment
--   Code review by maintainer before merging
+- Automated linting with Ruff (120-char line length, max complexity 25)
+- Home Assistant's type checking and validation
+- Real-world testing in development environment
+- Code review by maintainer before merging
 
 **Benefits:**
 
--   Rapid feature development while maintaining quality
--   Consistent code patterns across all modules
--   Comprehensive documentation maintained alongside code
--   Quick bug fixes with proper understanding of context
+- Rapid feature development while maintaining quality
+- Consistent code patterns across all modules
+- Comprehensive documentation maintained alongside code
+- Quick bug fixes with proper understanding of context
 
 **Limitations:**
 
--   AI may occasionally miss edge cases or subtle bugs
--   Some complex Home Assistant patterns may need human review
--   Translation quality depends on AI's understanding of target language
--   User feedback is crucial for discovering real-world issues
+- AI may occasionally miss edge cases or subtle bugs
+- Some complex Home Assistant patterns may need human review
+- Translation quality depends on AI's understanding of target language
+- User feedback is crucial for discovering real-world issues
 
 If you're working with AI tools on this project, the [`AGENTS.md`](https://github.com/jpawlowski/hass.tibber_prices/blob/v0.23.1/AGENTS.md) file provides the context and patterns that ensure consistency.
 
@@ -80,15 +80,15 @@ If you're working with AI tools on this project, the [`AGENTS.md`](https://githu
 
 The project includes several helper scripts in `./scripts/`:
 
--   `bootstrap` - Initial setup of dependencies
--   `develop` - Start Home Assistant in debug mode (auto-cleans .egg-info)
--   `clean` - Remove build artifacts and caches
--   `lint` - Auto-fix code issues with ruff
--   `lint-check` - Check code without modifications (CI mode)
--   `hassfest` - Validate integration structure (JSON, Python syntax, required files)
--   `setup` - Install development tools (git-cliff, @github/copilot)
--   `prepare-release` - Prepare a new release (bump version, create tag)
--   `generate-release-notes` - Generate release notes from commits
+- `bootstrap` - Initial setup of dependencies
+- `develop` - Start Home Assistant in debug mode (auto-cleans .egg-info)
+- `clean` - Remove build artifacts and caches
+- `lint` - Auto-fix code issues with ruff
+- `lint-check` - Check code without modifications (CI mode)
+- `hassfest` - Validate integration structure (JSON, Python syntax, required files)
+- `setup` - Install development tools (git-cliff, @github/copilot)
+- `prepare-release` - Prepare a new release (bump version, create tag)
+- `generate-release-notes` - Generate release notes from commits
 
 ## 📦 Project Structure
 
@@ -121,23 +121,23 @@ custom_components/tibber_prices/
 
 **DataUpdateCoordinator Pattern:**
 
--   Centralized data fetching and caching
--   Automatic entity updates on data changes
--   Persistent storage via `Store`
--   Quarter-hour boundary refresh scheduling
+- Centralized data fetching and caching
+- Automatic entity updates on data changes
+- Persistent storage via `Store`
+- Quarter-hour boundary refresh scheduling
 
 **Price Data Enrichment:**
 
--   Raw API data is enriched with statistical analysis
--   Trailing/leading 24h averages calculated per interval
--   Price differences and ratings added
--   All via pure functions in `price_utils.py`
+- Raw API data is enriched with statistical analysis
+- Trailing/leading 24h averages calculated per interval
+- Price differences and ratings added
+- All via pure functions in `price_utils.py`
 
 **Translation System:**
 
--   Dual system: `/translations/` (HA schema) + `/custom_translations/` (extended)
--   Both must stay in sync across all languages (de, en, nb, nl, sv)
--   Async loading at integration setup
+- Dual system: `/translations/` (HA schema) + `/custom_translations/` (extended)
+- Both must stay in sync across all languages (de, en, nb, nl, sv)
+- Async loading at integration setup
 
 ## 🧪 Testing
 
@@ -159,18 +159,19 @@ pytest --cov=custom_components.tibber_prices tests/
 
 Documentation is organized in two Docusaurus sites:
 
--   **User docs** (`docs/user/`): Installation, configuration, usage guides
-    -   Markdown files in `docs/user/docs/*.md`
-    -   Navigation managed via `docs/user/sidebars.ts`
--   **Developer docs** (`docs/developer/`): Architecture, patterns, contribution guides
-    -   Markdown files in `docs/developer/docs/*.md`
-    -   Navigation managed via `docs/developer/sidebars.ts`
--   **AI guidance**: `AGENTS.md` (patterns, conventions, long-term memory)
+- **User docs** (`docs/user/`): Installation, configuration, usage guides
+    - Markdown files in `docs/user/docs/*.md`
+    - Navigation managed via `docs/user/sidebars.ts`
+- **Developer docs** (`docs/developer/`): Architecture, patterns, contribution guides
+    - Markdown files in `docs/developer/docs/*.md`
+    - Navigation managed via `docs/developer/sidebars.ts`
+- **AI guidance**: `AGENTS.md` (patterns, conventions, long-term memory)
 
 **Best practices:**
--   Use clear examples and code snippets
--   Keep docs up-to-date with code changes
--   Add new pages to appropriate `sidebars.ts` for navigation
+
+- Use clear examples and code snippets
+- Keep docs up-to-date with code changes
+- Add new pages to appropriate `sidebars.ts` for navigation
 
 ## 🤝 Contributing
 
