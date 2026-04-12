@@ -7,11 +7,7 @@
     "PYTHONASYNCIODEBUG": "1",
     "TIBBER_PRICES_DEV": "1"
   },
-  "forwardPorts": [
-    8123,
-    3000,
-    3001
-  ],
+  "forwardPorts": [8123, 3000, 3001],
   "portsAttributes": {
     "8123": {
       "label": "Home Assistant",
@@ -56,9 +52,7 @@
           "reportUnusedCoroutine": "none",
           "reportMissingTypeStubs": "none"
         },
-        "python.analysis.include": [
-          "custom_components/tibber_prices"
-        ],
+        "python.analysis.include": ["custom_components/tibber_prices"],
         "python.analysis.exclude": [
           "**/.venv/**",
           "**/venv/**",
@@ -74,9 +68,7 @@
         ],
         "python.terminal.activateEnvironment": true,
         "python.terminal.activateEnvInCurrentTerminal": true,
-        "python.testing.pytestArgs": [
-          "--no-cov"
-        ],
+        "python.testing.pytestArgs": ["--no-cov"],
         "[json]": {
           "editor.defaultFormatter": "esbenp.prettier-vscode",
           "editor.formatOnSave": true,
@@ -112,15 +104,11 @@
         "markdown.validate.fragmentLinks.enabled": "ignore",
         "json.schemas": [
           {
-            "fileMatch": [
-              "homeassistant/components/*/manifest.json"
-            ],
+            "fileMatch": ["homeassistant/components/*/manifest.json"],
             "url": "${containerWorkspaceFolder}/schemas/json/manifest_schema.json"
           },
           {
-            "fileMatch": [
-              "homeassistant/components/*/translations/*.json"
-            ],
+            "fileMatch": ["homeassistant/components/*/translations/*.json"],
             "url": "${containerWorkspaceFolder}/schemas/json/translation_schema.json"
           }
         ],

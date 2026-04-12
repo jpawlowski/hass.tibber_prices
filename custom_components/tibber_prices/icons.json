@@ -1,79 +1,79 @@
 {
-    "services": {
-        "get_price": {
-            "service": "mdi:table-search"
-        },
-        "get_chartdata": {
-            "service": "mdi:chart-bar",
-            "sections": {
-                "general": "mdi:identifier",
-                "selection": "mdi:calendar-range",
-                "filters": "mdi:filter-variant",
-                "transformation": "mdi:tune",
-                "format": "mdi:file-table",
-                "arrays_of_objects": "mdi:code-json",
-                "arrays_of_arrays": "mdi:code-brackets"
-            }
-        },
-        "get_apexcharts_yaml": {
-            "service": "mdi:chart-line",
-            "sections": {
-                "entry_id": "mdi:identifier",
-                "day": "mdi:calendar-range",
-                "level_type": "mdi:format-list-bulleted-type",
-                "resolution": "mdi:timer-sand",
-                "highlight_best_price": "mdi:battery-charging-low",
-                "highlight_peak_price": "mdi:battery-alert"
-            }
-        },
-        "refresh_user_data": {
-            "service": "mdi:refresh"
-        },
-        "find_cheapest_block": {
-            "service": "mdi:washing-machine",
-            "sections": {
-                "search_range": "mdi:calendar-search",
-                "time_alternatives": "mdi:clock-time-eight-outline",
-                "price_filter": "mdi:filter-variant",
-                "output": "mdi:tune-variant"
-            }
-        },
-        "find_most_expensive_block": {
-            "service": "mdi:lightning-bolt-circle",
-            "sections": {
-                "search_range": "mdi:calendar-search",
-                "time_alternatives": "mdi:clock-time-eight-outline",
-                "price_filter": "mdi:filter-variant",
-                "output": "mdi:tune-variant"
-            }
-        },
-        "find_cheapest_hours": {
-            "service": "mdi:ev-station",
-            "sections": {
-                "search_range": "mdi:calendar-search",
-                "time_alternatives": "mdi:clock-time-eight-outline",
-                "price_filter": "mdi:filter-variant",
-                "output": "mdi:tune-variant"
-            }
-        },
-        "find_most_expensive_hours": {
-            "service": "mdi:flash-alert",
-            "sections": {
-                "search_range": "mdi:calendar-search",
-                "time_alternatives": "mdi:clock-time-eight-outline",
-                "price_filter": "mdi:filter-variant",
-                "output": "mdi:tune-variant"
-            }
-        },
-        "find_cheapest_schedule": {
-            "service": "mdi:calendar-check",
-            "sections": {
-                "scheduling_options": "mdi:format-list-numbered",
-                "search_range": "mdi:calendar-search",
-                "time_alternatives": "mdi:clock-time-eight-outline",
-                "price_filter": "mdi:filter-variant",
-                "output": "mdi:tune-variant"
-            }
-        }
+  "services": {
+    "get_price": {
+      "service": "mdi:table-search"
+    },
+    "get_chartdata": {
+      "service": "mdi:chart-bar",
+      "sections": {
+        "general": "mdi:identifier",
+        "selection": "mdi:calendar-range",
+        "filters": "mdi:filter-variant",
+        "transformation": "mdi:tune",
+        "format": "mdi:file-table",
+        "arrays_of_objects": "mdi:code-json",
+        "arrays_of_arrays": "mdi:code-brackets"
+      }
+    },
+    "get_apexcharts_yaml": {
+      "service": "mdi:chart-line",
+      "sections": {
+        "entry_id": "mdi:identifier",
+        "day": "mdi:calendar-range",
+        "level_type": "mdi:format-list-bulleted-type",
+        "resolution": "mdi:timer-sand",
+        "highlight_best_price": "mdi:battery-charging-low",
+        "highlight_peak_price": "mdi:battery-alert"
+      }
+    },
+    "refresh_user_data": {
+      "service": "mdi:refresh"
+    },
+    "find_cheapest_block": {
+      "service": "mdi:washing-machine",
+      "sections": {
+        "search_range": "mdi:calendar-search",
+        "time_alternatives": "mdi:clock-time-eight-outline",
+        "price_filter": "mdi:filter-variant",
+        "output": "mdi:tune-variant"
+      }
+    },
+    "find_most_expensive_block": {
+      "service": "mdi:lightning-bolt-circle",
+      "sections": {
+        "search_range": "mdi:calendar-search",
+        "time_alternatives": "mdi:clock-time-eight-outline",
+        "price_filter": "mdi:filter-variant",
+        "output": "mdi:tune-variant"
+      }
+    },
+    "find_cheapest_hours": {
+      "service": "mdi:ev-station",
+      "sections": {
+        "search_range": "mdi:calendar-search",
+        "time_alternatives": "mdi:clock-time-eight-outline",
+        "price_filter": "mdi:filter-variant",
+        "output": "mdi:tune-variant"
+      }
+    },
+    "find_most_expensive_hours": {
+      "service": "mdi:flash-alert",
+      "sections": {
+        "search_range": "mdi:calendar-search",
+        "time_alternatives": "mdi:clock-time-eight-outline",
+        "price_filter": "mdi:filter-variant",
+        "output": "mdi:tune-variant"
+      }
+    },
+    "find_cheapest_schedule": {
+      "service": "mdi:calendar-check",
+      "sections": {
+        "scheduling_options": "mdi:format-list-numbered",
+        "search_range": "mdi:calendar-search",
+        "time_alternatives": "mdi:clock-time-eight-outline",
+        "price_filter": "mdi:filter-variant",
+        "output": "mdi:tune-variant"
+      }
     }
+  }
 }
