@@ -1199,7 +1199,7 @@
       "message": "level_filter og rating_level_filter kan ikke brukes sammen. Bruk kun én filtertype per forespørsel."
     },
     "insert_nulls_requires_filter": {
-      "message": "insert_nulls-modus {mode} krever en level_filter eller rating_level_filter for å definere segmenter. Uten filter, bruk insert_nulls: none."
+      "message": "insert_nulls-modus {mode} krever en level_filter, rating_level_filter eller period_filter for å definere segmenter. Uten filter, bruk insert_nulls: none."
     },
     "connect_segments_requires_segments_mode": {
       "message": "connect_segments krever at insert_nulls er satt til 'segments'. Sett insert_nulls: segments for å bruke segmentforbindelse."

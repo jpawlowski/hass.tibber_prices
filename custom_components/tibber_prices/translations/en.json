@@ -1199,7 +1199,7 @@
       "message": "level_filter and rating_level_filter cannot be used together. Use only one filter type per request."
     },
     "insert_nulls_requires_filter": {
-      "message": "insert_nulls mode {mode} requires a level_filter or rating_level_filter to define segments. Without a filter, use insert_nulls: none."
+      "message": "insert_nulls mode {mode} requires a level_filter, rating_level_filter, or period_filter to define segments. Without a filter, use insert_nulls: none."
     },
     "connect_segments_requires_segments_mode": {
       "message": "connect_segments requires insert_nulls to be set to 'segments'. Set insert_nulls: segments to use segment connection."

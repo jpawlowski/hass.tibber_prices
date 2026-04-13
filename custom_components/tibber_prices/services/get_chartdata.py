@@ -399,9 +399,9 @@ async def handle_chartdata(call: ServiceCall) -> dict[str, Any]:  # noqa: PLR091
             translation_key="level_and_rating_filter_conflict",
         )
 
-    has_filter = bool(level_filter or rating_level_filter)
+    has_filter = bool(level_filter or rating_level_filter or period_filter)
 
-    # insert_nulls modes "segments"/"all" require a level or rating filter
+    # insert_nulls modes "segments"/"all" require a level, rating, or period filter
     if insert_nulls != "none" and not has_filter:
         raise ServiceValidationError(
             translation_domain=DOMAIN,
