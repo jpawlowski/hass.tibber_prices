@@ -255,7 +255,7 @@ jobs:
 
       - name: Create GitHub Release
         if: steps.version_check.outputs.warning == ''
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@v3
         with:
           name: ${{ steps.release_notes.outputs.title }}
           body: ${{ steps.release_notes.outputs.notes }}
