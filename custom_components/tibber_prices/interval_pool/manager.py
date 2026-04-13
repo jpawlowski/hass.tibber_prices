@@ -9,7 +9,10 @@ from datetime import UTC, datetime, timedelta
 from typing import TYPE_CHECKING, Any
 from zoneinfo import ZoneInfo
 
-from custom_components.tibber_prices.api.exceptions import TibberPricesApiClientError
+from custom_components.tibber_prices.api.exceptions import (
+    TibberPricesApiClientCommunicationError,
+    TibberPricesApiClientError,
+)
 from homeassistant.util import dt as dt_utils
 
 from .cache import TibberPricesIntervalPoolFetchGroupCache
@@ -201,23 +204,41 @@ class TibberPricesIntervalPool:
             )
 
         # Fetch missing ranges from API
+        api_fetch_failed = False
         if missing_ranges:
             fetch_time_iso = dt_utils.now().isoformat()
 
-            # Fetch with callback for immediate caching
-            await self._fetcher.fetch_missing_ranges(
-                api_client=api_client,
-                user_data=user_data,
-                missing_ranges=missing_ranges,
-                on_intervals_fetched=lambda intervals, _: self._add_intervals(intervals, fetch_time_iso),
-            )
+            try:
+                # Fetch with callback for immediate caching
+                await self._fetcher.fetch_missing_ranges(
+                    api_client=api_client,
+                    user_data=user_data,
+                    missing_ranges=missing_ranges,
+                    on_intervals_fetched=lambda intervals, _: self._add_intervals(intervals, fetch_time_iso),
+                )
+            except TibberPricesApiClientCommunicationError as err:
+                if cached_intervals:
+                    # Transient API error (e.g. 503) but we have cached data - use it as
+                    # fallback so the coordinator can finish initializing. The next regular
+                    # update cycle will retry the API automatically.
+                    _LOGGER.warning(
+                        "API temporarily unavailable for home %s (%s) - using %d cached intervals as fallback",
+                        self._home_id,
+                        err,
+                        len(cached_intervals),
+                    )
+                    api_fetch_failed = True
+                else:
+                    # No cached data at all - re-raise so the caller can decide
+                    raise
 
         # After caching all API responses, read from cache again to get final result
         # This ensures we return exactly what user requested, filtering out extra intervals
         final_result = self._get_cached_intervals(start_time_iso, end_time_iso)
 
-        # Track if API was called (True if any missing ranges were fetched)
-        api_called = len(missing_ranges) > 0
+        # Track if API was called (True if any missing ranges were attempted)
+        # If fetch failed but we fell back to cache, treat as "no API call succeeded"
+        api_called = len(missing_ranges) > 0 and not api_fetch_failed
 
         _LOGGER_DETAILS.debug(
             "Pool returning %d intervals for home %s (from cache: %d, fetched from API: %d ranges, api_called=%s)",
