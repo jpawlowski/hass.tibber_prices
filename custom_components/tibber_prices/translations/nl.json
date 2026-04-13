@@ -1175,7 +1175,7 @@
       "message": "Kon de tijdzone van het huis niet bepalen. Controleer de huisconfiguratie in je Tibber-account."
     },
     "end_before_start": {
-      "message": "Eindtijd moet na de starttijd liggen."
+      "message": "Het eindtijdstip ({search_end}) moet na het starttijdstip ({search_start}) liggen. Controleer je tijdparameters en eventuele day-offsets."
     },
     "price_fetch_failed": {
       "message": "Kon prijsgegevens niet ophalen bij de Tibber API. Probeer het later opnieuw."
@@ -1208,7 +1208,28 @@
       "message": "array_fields kan alleen gebruikt worden met output_format: array_of_arrays. Wijzig het uitvoerformaat of verwijder array_fields."
     },
     "invalid_array_fields": {
-      "message": "Ongeldig array_fields-sjabloon. Gebruik veldnamen tussen accolades, bijv. '{start_time}, {price_per_kwh}, {level}'."
+      "message": "De waarde '{template}' voor array_fields is ongeldig. Veldnamen moeten tussen accolades staan, bijv. '{start_time}, {price_per_kwh}, {level}'."
+    },
+    "min_segment_exceeds_duration": {
+      "message": "min_segment_duration ({min_segment_minutes} min) mag de totale duur ({duration_minutes} min) niet overschrijden. Verklein min_segment_duration of vergroot duration."
+    },
+    "start_time_conflict": {
+      "message": "search_start en search_start_time specificeren beide het starttijdstip — gebruik slechts één van beide. Kies search_start voor een exacte datum/tijd of search_start_time voor een tijdstip op de dag."
+    },
+    "end_time_conflict": {
+      "message": "search_end en search_end_time specificeren beide het eindtijdstip — gebruik slechts één van beide. Kies search_end voor een exacte datum/tijd of search_end_time voor een tijdstip op de dag."
+    },
+    "insert_nulls_all_with_period_filter": {
+      "message": "insert_nulls: all wordt niet ondersteund met period_filter. Gebruik insert_nulls: segments — dit voegt lege ruimtes in tussen afzonderlijke perioden in de grafiek."
+    },
+    "connect_segments_with_period_filter": {
+      "message": "connect_segments kan niet worden gebruikt met period_filter. Perioden zijn al aaneengesloten — connect_segments heeft alleen effect met level_filter of rating_level_filter."
+    },
+    "duplicate_task_names": {
+      "message": "Taaknamen moeten uniek zijn. Duplicaat: {names}. Geef elke taak een andere naam zodat de resultaten aan de juiste taak gekoppeld kunnen worden."
+    },
+    "tasks_exceed_search_window": {
+      "message": "De totale taaktijd inclusief pauzes ({total_minutes} min) overschrijdt het zoekvenster ({window_minutes} min). Verklein de taakduur, verlaag gap_minutes of vergroot het zoekbereik."
     }
   },
   "services": {

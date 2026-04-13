@@ -202,7 +202,7 @@ def _build_found_response(  # noqa: PLR0913
     }
 
 
-async def _handle_find_hours(
+async def _handle_find_hours(  # noqa: PLR0915
     call: ServiceCall,
     *,
     reverse: bool = False,
@@ -258,6 +258,15 @@ async def _handle_find_hours(
     min_segment_intervals = min_segment_minutes // INTERVAL_MINUTES
 
     # Validate parameter combinations
+    if min_segment_minutes > total_minutes:
+        raise ServiceValidationError(
+            translation_domain=DOMAIN,
+            translation_key="min_segment_exceeds_duration",
+            translation_placeholders={
+                "min_segment_minutes": str(min_segment_minutes),
+                "duration_minutes": str(total_minutes),
+            },
+        )
     validate_price_level_range(min_price_level, max_price_level)
     validate_power_profile_length(power_profile, total_intervals)
 

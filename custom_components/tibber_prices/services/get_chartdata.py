@@ -409,11 +409,25 @@ async def handle_chartdata(call: ServiceCall) -> dict[str, Any]:  # noqa: PLR091
             translation_placeholders={"mode": insert_nulls},
         )
 
+    # insert_nulls="all" is only implemented for level/rating filters, not period_filter
+    if insert_nulls == "all" and period_filter and not (level_filter or rating_level_filter):
+        raise ServiceValidationError(
+            translation_domain=DOMAIN,
+            translation_key="insert_nulls_all_with_period_filter",
+        )
+
     # connect_segments requires insert_nulls="segments" (with a filter)
     if connect_segments and insert_nulls != "segments":
         raise ServiceValidationError(
             translation_domain=DOMAIN,
             translation_key="connect_segments_requires_segments_mode",
+        )
+
+    # connect_segments is not applicable to period_filter (periods are already contiguous)
+    if connect_segments and period_filter:
+        raise ServiceValidationError(
+            translation_domain=DOMAIN,
+            translation_key="connect_segments_with_period_filter",
         )
 
     # array_fields is only meaningful with array_of_arrays format
@@ -675,6 +689,58 @@ async def handle_chartdata(call: ServiceCall) -> dict[str, Any]:  # noqa: PLR091
                 _add_energy_tax_fields(data_point, interval, price)
 
                 chart_data.append(data_point)
+
+        elif insert_nulls == "segments" and period_filter is not None and period_timestamps is not None:
+            # Mode 'segments' with period_filter: Insert NULL separators at period boundaries
+            # so that separate best/peak price periods appear as distinct areas in the chart,
+            # rather than one continuous area spanning the gaps between periods.
+            prev_start_time: Any | None = None
+
+            for interval in all_prices:
+                start_time = interval.get("startsAt")
+                price = interval.get("total")
+
+                if start_time is None or price is None:
+                    continue
+
+                start_str = start_time.isoformat() if hasattr(start_time, "isoformat") else start_time
+
+                if start_str not in period_timestamps:
+                    # Leaving a period — close the previous segment with a NULL
+                    if prev_start_time is not None:
+                        chart_data.append({start_time_field: start_str, price_field: None})
+                        prev_start_time = None
+                    continue
+
+                # Still inside a period — check for a temporal gap (new disjoint period starting)
+                if prev_start_time is not None:
+                    interval_duration = coordinator.time.get_interval_duration()
+                    expected = prev_start_time + interval_duration
+                    if start_time != expected:
+                        prev_str = (
+                            prev_start_time.isoformat() if hasattr(prev_start_time, "isoformat") else prev_start_time
+                        )
+                        chart_data.append({start_time_field: prev_str, price_field: None})
+
+                converted_price = round(price * 100, 2) if subunit_currency else round(price, 4)
+                if round_decimals is not None:
+                    converted_price = round(converted_price, round_decimals)
+
+                data_point: dict = {
+                    start_time_field: start_str,
+                    price_field: converted_price,
+                }
+                if include_level and "level" in interval:
+                    data_point[level_field] = interval["level"]
+                if include_rating_level and "rating_level" in interval:
+                    data_point[rating_level_field] = interval["rating_level"]
+                day_key = _get_day_key_for_interval(start_time)
+                if include_average and day_key and day_key in day_averages:
+                    data_point[average_field] = day_averages[day_key]
+                _add_energy_tax_fields(data_point, interval, converted_price)
+
+                chart_data.append(data_point)
+                prev_start_time = start_time
 
         elif insert_nulls == "segments" and (level_filter or rating_level_filter):
             # Mode 'segments': Add NULL points at segment boundaries for clean gaps

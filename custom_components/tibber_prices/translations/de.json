@@ -1175,7 +1175,7 @@
       "message": "Zeitzone des Zuhauses konnte nicht ermittelt werden. Bitte überprüfe die Konfiguration in deinem Tibber-Konto."
     },
     "end_before_start": {
-      "message": "Endzeit muss nach der Startzeit liegen."
+      "message": "Der Endzeitpunkt ({search_end}) muss nach dem Startzeitpunkt ({search_start}) liegen. Überprüfe die Zeit-Parameter und eventuelle Day-Offsets."
     },
     "price_fetch_failed": {
       "message": "Preisdaten konnten nicht von der Tibber-API abgerufen werden. Bitte versuche es später erneut."
@@ -1208,7 +1208,28 @@
       "message": "array_fields kann nur mit output_format: array_of_arrays verwendet werden. Ändere das Ausgabeformat oder entferne array_fields."
     },
     "invalid_array_fields": {
-      "message": "Ungültige array_fields-Vorlage. Verwende Feldnamen in geschweiften Klammern, z.B. '{start_time}, {price_per_kwh}, {level}'."
+      "message": "Der Wert '{template}' für array_fields ist ungültig. Feldnamen müssen in geschweifte Klammern eingeschlossen sein, z.B. '{start_time}, {price_per_kwh}, {level}'."
+    },
+    "min_segment_exceeds_duration": {
+      "message": "min_segment_duration ({min_segment_minutes} Min.) darf die Gesamtdauer ({duration_minutes} Min.) nicht überschreiten. Reduziere min_segment_duration oder erhöhe duration."
+    },
+    "start_time_conflict": {
+      "message": "search_start und search_start_time definieren beide den Startzeitpunkt — verwende nur einen. Nutze search_start für ein genaues Datum/Uhrzeit oder search_start_time für eine Tageszeit."
+    },
+    "end_time_conflict": {
+      "message": "search_end und search_end_time definieren beide den Endzeitpunkt — verwende nur einen. Nutze search_end für ein genaues Datum/Uhrzeit oder search_end_time für eine Tageszeit."
+    },
+    "insert_nulls_all_with_period_filter": {
+      "message": "insert_nulls: all wird mit period_filter nicht unterstützt. Verwende stattdessen insert_nulls: segments — das fügt Lücken zwischen einzelnen Perioden im Diagramm ein."
+    },
+    "connect_segments_with_period_filter": {
+      "message": "connect_segments kann nicht zusammen mit period_filter verwendet werden. Perioden sind bereits zusammenhängend — connect_segments wirkt nur bei level_filter oder rating_level_filter."
+    },
+    "duplicate_task_names": {
+      "message": "Aufgabennamen müssen eindeutig sein. Doppelt vergeben: {names}. Vergib unterschiedliche Namen, damit die Ergebnisse den richtigen Aufgaben zugeordnet werden können."
+    },
+    "tasks_exceed_search_window": {
+      "message": "Die Gesamtdauer aller Aufgaben inklusive Pausen ({total_minutes} Min.) überschreitet das Suchfenster ({window_minutes} Min.). Reduziere die Aufgabendauern, verringere gap_minutes oder erweitere den Suchzeitraum."
     }
   },
   "services": {

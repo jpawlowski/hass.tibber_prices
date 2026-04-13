@@ -1175,7 +1175,7 @@
       "message": "Could not determine the home timezone. Please verify the home configuration in your Tibber account."
     },
     "end_before_start": {
-      "message": "End time must be after start time."
+      "message": "End time ({search_end}) must be after start time ({search_start}). Check your time parameters and any day offsets."
     },
     "price_fetch_failed": {
       "message": "Failed to fetch price data from the Tibber API. Please try again later."
@@ -1208,7 +1208,28 @@
       "message": "array_fields can only be used with output_format: array_of_arrays. Change the output format or remove array_fields."
     },
     "invalid_array_fields": {
-      "message": "Invalid array_fields template. Use field names in curly braces, e.g. '{start_time}, {price_per_kwh}, {level}'."
+      "message": "The array_fields value '{template}' is invalid. Field names must be wrapped in curly braces, e.g. '{start_time}, {price_per_kwh}, {level}'."
+    },
+    "min_segment_exceeds_duration": {
+      "message": "min_segment_duration ({min_segment_minutes} min) cannot exceed the total duration ({duration_minutes} min). Reduce min_segment_duration or increase duration."
+    },
+    "start_time_conflict": {
+      "message": "search_start and search_start_time both specify the start time — use only one. Choose search_start for an exact datetime or search_start_time for a time of day."
+    },
+    "end_time_conflict": {
+      "message": "search_end and search_end_time both specify the end time — use only one. Choose search_end for an exact datetime or search_end_time for a time of day."
+    },
+    "insert_nulls_all_with_period_filter": {
+      "message": "insert_nulls: all is not supported with period_filter. Use insert_nulls: segments instead — this adds gaps between separate periods in the chart."
+    },
+    "connect_segments_with_period_filter": {
+      "message": "connect_segments cannot be used with period_filter. Periods are already contiguous — connect_segments only has effect with level_filter or rating_level_filter."
+    },
+    "duplicate_task_names": {
+      "message": "Task names must be unique. Duplicate: {names}. Give each task a different name so the results can be matched to the correct task."
+    },
+    "tasks_exceed_search_window": {
+      "message": "Total task time including gaps ({total_minutes} min) exceeds the search window ({window_minutes} min). Reduce task durations, lower gap_minutes, or extend the search range."
     }
   },
   "services": {

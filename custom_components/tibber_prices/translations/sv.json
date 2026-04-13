@@ -1175,7 +1175,7 @@
       "message": "Kunde inte fastställa hemmets tidszon. Kontrollera hemkonfigurationen i ditt Tibber-konto."
     },
     "end_before_start": {
-      "message": "Sluttid måste vara efter starttid."
+      "message": "Sluttidpunkten ({search_end}) måste vara efter starttidpunkten ({search_start}). Kontrollera tidsparametrarna och eventuella day-offsets."
     },
     "price_fetch_failed": {
       "message": "Kunde inte hämta prisdata från Tibber API. Försök igen senare."
@@ -1208,7 +1208,28 @@
       "message": "array_fields kan bara användas med output_format: array_of_arrays. Ändra utdataformatet eller ta bort array_fields."
     },
     "invalid_array_fields": {
-      "message": "Ogiltig array_fields-mall. Använd fältnamn inom klammerparenteser, t.ex. '{start_time}, {price_per_kwh}, {level}'."
+      "message": "Värdet '{template}' för array_fields är ogiltigt. Fältnamn måste omges av klammerparenteser, t.ex. '{start_time}, {price_per_kwh}, {level}'."
+    },
+    "min_segment_exceeds_duration": {
+      "message": "min_segment_duration ({min_segment_minutes} min) får inte överstiga den totala varaktigheten ({duration_minutes} min). Minska min_segment_duration eller öka duration."
+    },
+    "start_time_conflict": {
+      "message": "search_start och search_start_time anger båda starttidpunkten — använd bara en. Välj search_start för exakt datum/tid eller search_start_time för en tid på dagen."
+    },
+    "end_time_conflict": {
+      "message": "search_end och search_end_time anger båda sluttidpunkten — använd bara en. Välj search_end för exakt datum/tid eller search_end_time för en tid på dagen."
+    },
+    "insert_nulls_all_with_period_filter": {
+      "message": "insert_nulls: all stöds inte med period_filter. Använd insert_nulls: segments istället — det lägger till tomrum mellan separata perioder i diagrammet."
+    },
+    "connect_segments_with_period_filter": {
+      "message": "connect_segments kan inte användas med period_filter. Perioder är redan sammanhängande — connect_segments har bara effekt med level_filter eller rating_level_filter."
+    },
+    "duplicate_task_names": {
+      "message": "Uppgiftsnamn måste vara unika. Duplikat: {names}. Ge varje uppgift ett unikt namn så att resultaten kan matchas till rätt uppgift."
+    },
+    "tasks_exceed_search_window": {
+      "message": "Total uppgiftstid inklusive pauser ({total_minutes} min) överstiger sökfönstret ({window_minutes} min). Minska uppgiftslängderna, sänk gap_minutes eller utöka sökintervallet."
     }
   },
   "services": {

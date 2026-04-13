@@ -95,6 +95,18 @@ def validate_search_params(call_data: dict[str, Any]) -> None:
                 translation_placeholders={"params": ", ".join(sorted(conflicting))},
             )
 
+    # search_start and search_start_time are mutually exclusive start-time specifications
+    if "search_start" in call_data and "search_start_time" in call_data:
+        raise ServiceValidationError(
+            translation_domain=DOMAIN,
+            translation_key="start_time_conflict",
+        )
+    if "search_end" in call_data and "search_end_time" in call_data:
+        raise ServiceValidationError(
+            translation_domain=DOMAIN,
+            translation_key="end_time_conflict",
+        )
+
     # day_offset without matching time parameter is meaningless
     # Schema defaults provide 0, but user explicitly setting non-zero without time is an error.
     # We detect explicit usage by checking for non-default values when time is absent.
@@ -488,6 +500,10 @@ def resolve_search_range(
         raise ServiceValidationError(
             translation_domain=DOMAIN,
             translation_key="end_before_start",
+            translation_placeholders={
+                "search_start": search_start.strftime("%Y-%m-%d %H:%M %z"),
+                "search_end": search_end.strftime("%Y-%m-%d %H:%M %z"),
+            },
         )
 
     return search_start, search_end

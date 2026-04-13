@@ -226,6 +226,16 @@ async def handle_find_cheapest_schedule(call: ServiceCall) -> ServiceResponse:  
     include_comparison_details: bool = call.data.get("include_comparison_details", False)
     level_filter_active = min_price_level is not None or max_price_level is not None
 
+    # Validate task names are unique (before any expensive operations)
+    task_names = [t["name"] for t in tasks_raw]
+    duplicate_names = sorted({n for n in task_names if task_names.count(n) > 1})
+    if duplicate_names:
+        raise ServiceValidationError(
+            translation_domain=DOMAIN,
+            translation_key="duplicate_task_names",
+            translation_placeholders={"names": ", ".join(duplicate_names)},
+        )
+
     # Round gap up to nearest quarter interval
     gap_intervals = math.ceil(gap_minutes / INTERVAL_MINUTES) if gap_minutes > 0 else 0
 
@@ -268,6 +278,21 @@ async def handle_find_cheapest_schedule(call: ServiceCall) -> ServiceResponse:  
 
     # Validate parameter combinations
     validate_price_level_range(min_price_level, max_price_level)
+
+    # Validate that total task time + gaps fits within the search window
+    window_minutes = int((search_end - search_start).total_seconds() / 60)
+    total_task_minutes = sum(t["duration_minutes"] for t in tasks)
+    total_gap_minutes = gap_intervals * INTERVAL_MINUTES * max(0, len(tasks) - 1)
+    required_minutes = total_task_minutes + total_gap_minutes
+    if required_minutes > window_minutes:
+        raise ServiceValidationError(
+            translation_domain=DOMAIN,
+            translation_key="tasks_exceed_search_window",
+            translation_placeholders={
+                "total_minutes": str(required_minutes),
+                "window_minutes": str(window_minutes),
+            },
+        )
 
     _LOGGER.info(
         "%s called: %d tasks, gap=%dmin, range=%s to %s",
