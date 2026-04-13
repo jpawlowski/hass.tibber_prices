@@ -1208,7 +1208,7 @@
       "message": "array_fields kan alleen gebruikt worden met output_format: array_of_arrays. Wijzig het uitvoerformaat of verwijder array_fields."
     },
     "invalid_array_fields": {
-      "message": "De waarde '{template}' voor array_fields is ongeldig. Veldnamen moeten tussen accolades staan, bijv. '{start_time}, {price_per_kwh}, {level}'."
+      "message": "De waarde {template} voor array_fields is ongeldig. Veldnamen moeten tussen accolades staan, bijv. '{start_time}, {price_per_kwh}, {level}'."
     },
     "min_segment_exceeds_duration": {
       "message": "min_segment_duration ({min_segment_minutes} min) mag de totale duur ({duration_minutes} min) niet overschrijden. Verklein min_segment_duration of vergroot duration."

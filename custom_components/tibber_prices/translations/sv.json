@@ -1208,7 +1208,7 @@
       "message": "array_fields kan bara användas med output_format: array_of_arrays. Ändra utdataformatet eller ta bort array_fields."
     },
     "invalid_array_fields": {
-      "message": "Värdet '{template}' för array_fields är ogiltigt. Fältnamn måste omges av klammerparenteser, t.ex. '{start_time}, {price_per_kwh}, {level}'."
+      "message": "Värdet {template} för array_fields är ogiltigt. Fältnamn måste omges av klammerparenteser, t.ex. '{start_time}, {price_per_kwh}, {level}'."
     },
     "min_segment_exceeds_duration": {
       "message": "min_segment_duration ({min_segment_minutes} min) får inte överstiga den totala varaktigheten ({duration_minutes} min). Minska min_segment_duration eller öka duration."
