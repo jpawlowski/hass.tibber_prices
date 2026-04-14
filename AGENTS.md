@@ -1803,12 +1803,14 @@ Public entry points → direct helpers (call order) → pure utilities. Prefix p
 
 **Legacy/Backwards compatibility:**
 
-- **Do NOT add legacy migration code** unless the change was already released in a version tag
-- **Check if released**: Use `./scripts/release/check-if-released <commit-hash>` to verify if code is in any `v*.*.*` tag
+- **Do NOT add legacy migration code** unless the change was already released in a **public version tag** (pre-release tags like `v1.0.0-rc.1` do NOT count)
+- **Uncommitted changes never need migration** — if the feature has never been committed, it has never reached any user
+- **New features never need migration** — if all commits introducing the feature are newer than the last public version tag, no user has ever seen the old behaviour
+- **Check if released**: Use `./scripts/release/check-if-released <commit-hash>` to verify if code is in any public `v*.*.*` tag (ignores pre-release tags)
 - **Example**: If introducing breaking config change in commit `abc123`, run `./scripts/release/check-if-released abc123`:
   - ✓ NOT RELEASED → No migration needed, just use new code
   - ✗ ALREADY RELEASED → Migration may be needed for users upgrading from that version
-- **Rule**: Only add backwards compatibility for changes that shipped to users via HACS/GitHub releases
+- **Rule**: Only add backwards compatibility for changes that shipped to users via HACS/GitHub releases under a public version tag
 - **Prefer breaking changes over complexity**: If migration code would be complex or clutter the codebase, prefer documenting the breaking change in release notes (Home Assistant style). Only add simple migrations (e.g., `.lower()` call, key rename) when trivial.
 
 **Translation sync:** When updating `/translations/en.json`, update ALL language files (`de.json`, etc.) with same keys (placeholder values OK).
