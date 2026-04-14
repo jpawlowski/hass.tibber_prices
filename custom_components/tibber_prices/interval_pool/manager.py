@@ -4,8 +4,8 @@ from __future__ import annotations
 
 import asyncio
 import contextlib
-import logging
 from datetime import UTC, datetime, timedelta
+import logging
 from typing import TYPE_CHECKING, Any
 from zoneinfo import ZoneInfo
 
@@ -13,7 +13,7 @@ from custom_components.tibber_prices.api.exceptions import (
     TibberPricesApiClientCommunicationError,
     TibberPricesApiClientError,
 )
-from homeassistant.util import dt as dt_utils
+from homeassistant.util import dt as dt_util
 
 from .cache import TibberPricesIntervalPoolFetchGroupCache
 from .fetcher import TibberPricesIntervalPoolFetcher
@@ -23,9 +23,7 @@ from .storage import async_save_pool_state
 
 if TYPE_CHECKING:
     from custom_components.tibber_prices.api.client import TibberPricesApiClient
-    from custom_components.tibber_prices.coordinator.time_service import (
-        TibberPricesTimeService,
-    )
+    from custom_components.tibber_prices.coordinator.time_service import TibberPricesTimeService
 
 _LOGGER = logging.getLogger(__name__)
 _LOGGER_DETAILS = logging.getLogger(__name__ + ".details")
@@ -101,7 +99,7 @@ class TibberPricesIntervalPool:
             hass: HomeAssistant instance for auto-save (optional).
             entry_id: Config entry ID for auto-save (optional).
             time_service: TimeService for time-travel support (optional).
-                         If None, uses real time (dt_utils.now()).
+                         If None, uses real time (dt_util.now()).
 
         """
         self._home_id = home_id
@@ -206,7 +204,7 @@ class TibberPricesIntervalPool:
         # Fetch missing ranges from API
         api_fetch_failed = False
         if missing_ranges:
-            fetch_time_iso = dt_utils.now().isoformat()
+            fetch_time_iso = dt_util.now().isoformat()
 
             try:
                 # Fetch with callback for immediate caching
@@ -301,7 +299,7 @@ class TibberPricesIntervalPool:
 
         # Calculate range in home's timezone
         tz = ZoneInfo(tz_str) if tz_str else None
-        now = self._time_service.now() if self._time_service else dt_utils.now()
+        now = self._time_service.now() if self._time_service else dt_util.now()
         now_local = now.astimezone(tz) if tz else now
 
         # Day before yesterday 00:00 (start) - same for both fetch and return
@@ -598,7 +596,7 @@ class TibberPricesIntervalPool:
         result = []
 
         # Determine interval step (15 min post-2025-10-01, 60 min pre)
-        resolution_change_naive = datetime(2025, 10, 1)  # noqa: DTZ001
+        resolution_change_naive = datetime(2025, 10, 1)
         interval_minutes = INTERVAL_QUARTER_HOURLY if current_naive >= resolution_change_naive else INTERVAL_HOURLY
 
         fetch_groups = self._cache.get_fetch_groups()

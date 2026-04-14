@@ -15,12 +15,8 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from custom_components.tibber_prices.coordinator.constants import (
-    QUARTER_HOUR_BOUNDARIES,
-)
-from custom_components.tibber_prices.coordinator.listeners import (
-    TibberPricesListenerManager,
-)
+from custom_components.tibber_prices.coordinator.constants import QUARTER_HOUR_BOUNDARIES
+from custom_components.tibber_prices.coordinator.listeners import TibberPricesListenerManager
 from homeassistant.core import HomeAssistant
 
 

@@ -25,12 +25,8 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
-    from custom_components.tibber_prices.coordinator.core import (
-        TibberPricesDataUpdateCoordinator,
-    )
-    from custom_components.tibber_prices.sensor.calculators.lifecycle import (
-        TibberPricesLifecycleCalculator,
-    )
+    from custom_components.tibber_prices.coordinator.core import TibberPricesDataUpdateCoordinator
+    from custom_components.tibber_prices.sensor.calculators.lifecycle import TibberPricesLifecycleCalculator
 
 
 def build_lifecycle_attributes(

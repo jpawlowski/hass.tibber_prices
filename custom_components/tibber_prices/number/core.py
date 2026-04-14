@@ -11,19 +11,13 @@ from __future__ import annotations
 import logging
 from typing import TYPE_CHECKING, Any
 
-from custom_components.tibber_prices.const import (
-    DOMAIN,
-    get_home_type_translation,
-    get_translation,
-)
+from custom_components.tibber_prices.const import DOMAIN, get_home_type_translation, get_translation
 from homeassistant.components.number import NumberEntity, RestoreNumber
 from homeassistant.core import callback
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 
 if TYPE_CHECKING:
-    from custom_components.tibber_prices.coordinator import (
-        TibberPricesDataUpdateCoordinator,
-    )
+    from custom_components.tibber_prices.coordinator import TibberPricesDataUpdateCoordinator
 
     from .definitions import TibberPricesNumberEntityDescription
 

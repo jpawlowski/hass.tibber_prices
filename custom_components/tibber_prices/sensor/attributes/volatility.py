@@ -16,7 +16,7 @@ def add_volatility_attributes(
     attributes: dict,
     cached_data: dict,
     *,
-    time: TibberPricesTimeService,  # noqa: ARG001
+    time: TibberPricesTimeService,
 ) -> None:
     """
     Add attributes for volatility sensors.
@@ -197,9 +197,7 @@ def add_percentile_rank_attributes(
     coordinator_data = cached_data.get("coordinator_data")
 
     if coordinator_data:
-        from custom_components.tibber_prices.coordinator.helpers import (  # noqa: PLC0415
-            get_intervals_for_day_offsets,
-        )
+        from custom_components.tibber_prices.coordinator.helpers import get_intervals_for_day_offsets  # noqa: PLC0415
 
         all_intervals = get_intervals_for_day_offsets(coordinator_data, [-1, 0, 1])
         now = time.now()

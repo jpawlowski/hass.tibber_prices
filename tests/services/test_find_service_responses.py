@@ -11,9 +11,11 @@ if TYPE_CHECKING:
 
 import pytest
 
-from custom_components.tibber_prices.services import find_cheapest_block as block_module
-from custom_components.tibber_prices.services import find_cheapest_hours as hours_module
-from custom_components.tibber_prices.services import find_cheapest_schedule as schedule_module
+from custom_components.tibber_prices.services import (
+    find_cheapest_block as block_module,
+    find_cheapest_hours as hours_module,
+    find_cheapest_schedule as schedule_module,
+)
 from custom_components.tibber_prices.services.find_cheapest_block import (
     _determine_no_window_reason,
     handle_find_cheapest_block,

@@ -5,10 +5,7 @@ from typing import TYPE_CHECKING
 
 import pytest
 
-from custom_components.tibber_prices.utils.price import (
-    _apply_rating_gap_tolerance,
-    calculate_rating_level,
-)
+from custom_components.tibber_prices.utils.price import _apply_rating_gap_tolerance, calculate_rating_level
 
 if TYPE_CHECKING:
     from _pytest.logging import LogCaptureFixture

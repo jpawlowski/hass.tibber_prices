@@ -9,11 +9,7 @@ if TYPE_CHECKING:
 
     from custom_components.tibber_prices.coordinator.time_service import TibberPricesTimeService
 
-    from .types import (
-        TibberPricesPeriodData,
-        TibberPricesPeriodStatistics,
-        TibberPricesThresholdConfig,
-    )
+    from .types import TibberPricesPeriodData, TibberPricesPeriodStatistics, TibberPricesThresholdConfig
 
 from custom_components.tibber_prices.utils.average import calculate_median
 from custom_components.tibber_prices.utils.price import (
@@ -272,7 +268,7 @@ def _add_interval_flag_counts(summary: dict, period: list[dict], *, geo_extensio
         summary["segment_forced"] = True
 
 
-def extract_period_summaries(  # noqa: PLR0912, PLR0915 - CV pre-check for geo-extension adds necessary branches/statements
+def extract_period_summaries(
     periods: list[list[dict]],
     all_prices: list[dict],
     price_context: dict[str, Any],
@@ -302,10 +298,7 @@ def extract_period_summaries(  # noqa: PLR0912, PLR0915 - CV pre-check for geo-e
         time: TibberPricesTimeService instance (required).
 
     """
-    from .types import (  # noqa: PLC0415 - Avoid circular import
-        TibberPricesPeriodData,
-        TibberPricesPeriodStatistics,
-    )
+    from .types import TibberPricesPeriodData, TibberPricesPeriodStatistics  # noqa: PLC0415 - Avoid circular import
 
     # Build lookup dictionary for full price data by timestamp
     price_lookup: dict[str, dict] = {}
@@ -344,7 +337,7 @@ def extract_period_summaries(  # noqa: PLR0912, PLR0915 - CV pre-check for geo-e
                 if cv_fails:
                     base_period = _strip_geo_from_edges(period)
                     if base_period:
-                        period = base_period  # noqa: PLW2901 - intentional period replacement
+                        period = base_period
                     geo_extension_status = "attempted"
                 else:
                     geo_extension_status = "active"

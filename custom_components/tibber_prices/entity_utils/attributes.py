@@ -10,7 +10,7 @@ if TYPE_CHECKING:
     from ..data import TibberPricesConfigEntry  # noqa: TID252
 
 
-def add_description_attributes(  # noqa: PLR0913, PLR0912
+def add_description_attributes(
     attributes: dict,
     platform: str,
     translation_key: str | None,
@@ -113,7 +113,7 @@ def add_description_attributes(  # noqa: PLR0913, PLR0912
             attributes[key] = value
 
 
-async def async_add_description_attributes(  # noqa: PLR0913, PLR0912
+async def async_add_description_attributes(
     attributes: dict,
     platform: str,
     translation_key: str | None,

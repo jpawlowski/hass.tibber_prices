@@ -6,9 +6,7 @@ from datetime import UTC, datetime
 
 import pytest
 
-from custom_components.tibber_prices.coordinator.time_service import (
-    TibberPricesTimeService,
-)
+from custom_components.tibber_prices.coordinator.time_service import TibberPricesTimeService
 
 # =============================================================================
 # Quarter-Hour Rounding with Boundary Tolerance (CRITICAL)

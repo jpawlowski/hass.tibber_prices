@@ -2,10 +2,7 @@
 
 from __future__ import annotations
 
-from homeassistant.components.binary_sensor import (
-    BinarySensorDeviceClass,
-    BinarySensorEntityDescription,
-)
+from homeassistant.components.binary_sensor import BinarySensorDeviceClass, BinarySensorEntityDescription
 from homeassistant.const import EntityCategory
 
 # Period lookahead removed - icons show "waiting" state if ANY future periods exist

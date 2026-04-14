@@ -8,25 +8,21 @@ machine, dryer).
 
 from __future__ import annotations
 
+from datetime import datetime, timedelta
 import logging
 import math
-from datetime import datetime, timedelta
 from typing import TYPE_CHECKING
 
 import voluptuous as vol
 
-from custom_components.tibber_prices.const import (
-    DOMAIN,
-    get_display_unit_factor,
-    get_display_unit_string,
-)
+from custom_components.tibber_prices.const import DOMAIN, get_display_unit_factor, get_display_unit_string
 from custom_components.tibber_prices.utils.price_window import (
     calculate_window_statistics,
     find_cheapest_contiguous_window,
 )
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import config_validation as cv
-from homeassistant.util import dt as dt_utils
+from homeassistant.util import dt as dt_util
 
 from .helpers import (
     INTERVAL_MINUTES,
@@ -143,7 +139,7 @@ def _determine_no_window_reason(
     return "insufficient_contiguous_window"
 
 
-async def _handle_find_block(  # noqa: PLR0915
+async def _handle_find_block(
     call: ServiceCall,
     *,
     reverse: bool = False,
@@ -187,7 +183,7 @@ async def _handle_find_block(  # noqa: PLR0915
     home_tz = ZoneInfo(home_timezone)
 
     # Resolve search range (priority: explicit datetime > time+offset > minutes offset > default)
-    now = dt_utils.now().astimezone(home_tz)
+    now = dt_util.now().astimezone(home_tz)
     search_start, search_end = resolve_search_range(call.data, now, home_tz)
 
     duration_intervals = duration_minutes // INTERVAL_MINUTES

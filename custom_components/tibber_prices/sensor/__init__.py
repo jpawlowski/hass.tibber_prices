@@ -17,10 +17,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from custom_components.tibber_prices.const import (
-    CONF_CURRENCY_DISPLAY_MODE,
-    DISPLAY_MODE_BASE,
-)
+from custom_components.tibber_prices.const import CONF_CURRENCY_DISPLAY_MODE, DISPLAY_MODE_BASE
 
 from .core import TibberPricesSensor
 from .definitions import ENTITY_DESCRIPTIONS

@@ -14,12 +14,8 @@ from zoneinfo import ZoneInfo
 
 import pytest
 
-from custom_components.tibber_prices.coordinator.data_transformation import (
-    TibberPricesDataTransformer,
-)
-from custom_components.tibber_prices.coordinator.time_service import (
-    TibberPricesTimeService,
-)
+from custom_components.tibber_prices.coordinator.data_transformation import TibberPricesDataTransformer
+from custom_components.tibber_prices.coordinator.time_service import TibberPricesTimeService
 from homeassistant.util import dt as dt_util
 
 

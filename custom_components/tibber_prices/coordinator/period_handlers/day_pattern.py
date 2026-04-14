@@ -344,7 +344,7 @@ def _deduplicate_extrema(extrema: list[dict[str, Any]]) -> list[dict[str, Any]]:
 # ─── pattern classification ───────────────────────────────────────────────────
 
 
-def _classify_pattern(  # noqa: PLR0911, PLR0912
+def _classify_pattern(
     extrema: list[dict[str, Any]],
     cv_pct: float,
     times: list[datetime],
@@ -399,7 +399,7 @@ def _classify_pattern(  # noqa: PLR0911, PLR0912
         return DAY_PATTERN_PEAK, confidence
 
     # ── two extrema ─────────────────────────────────────────────────────────────
-    if n_extrema == 2:  # noqa: PLR2004
+    if n_extrema == 2:
         if types == ["max", "min"]:
             return DAY_PATTERN_FALLING, 0.7
         if types == ["min", "max"]:
@@ -410,7 +410,7 @@ def _classify_pattern(  # noqa: PLR0911, PLR0912
             return DAY_PATTERN_DOUBLE_PEAK, 0.65
 
     # ── three extrema ────────────────────────────────────────────────────────────
-    if n_extrema == 3:  # noqa: PLR2004
+    if n_extrema == 3:
         # min-max-min → W-shape
         if types == ["min", "max", "min"]:
             return DAY_PATTERN_DOUBLE_VALLEY, 0.75
@@ -498,7 +498,7 @@ def _find_knee_on_flank(
     # Normalise so that start=(0,0) and end=(1,1)
     px_range = float(length)
     py_range = p_end - p_start
-    if abs(py_range) < 1e-9:  # noqa: PLR2004
+    if abs(py_range) < 1e-9:
         return None  # Flat flank - no knee
 
     max_dist = 0.0

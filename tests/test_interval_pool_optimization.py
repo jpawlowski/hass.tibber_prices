@@ -23,7 +23,7 @@ from unittest.mock import AsyncMock, MagicMock
 import pytest
 
 from custom_components.tibber_prices.interval_pool import TibberPricesIntervalPool
-from homeassistant.util import dt as dt_utils
+from homeassistant.util import dt as dt_util
 
 pytest_plugins = ("pytest_homeassistant_custom_component",)
 
@@ -63,7 +63,7 @@ async def test_no_cache_single_api_call() -> None:
             "_calculate_day_before_yesterday_midnight",
         ]
     )
-    start = dt_utils.now().replace(hour=10, minute=0, second=0, microsecond=0)
+    start = dt_util.now().replace(hour=10, minute=0, second=0, microsecond=0)
     end = start + timedelta(hours=2)  # 8 intervals
 
     # Create mock response
@@ -71,7 +71,7 @@ async def test_no_cache_single_api_call() -> None:
     api_client.async_get_price_info_for_range = AsyncMock(return_value=mock_intervals)
     api_client._extract_home_timezones = MagicMock(return_value={"home123": "Europe/Berlin"})  # noqa: SLF001
     # Mock boundary calculation (returns day before yesterday midnight)
-    dby_midnight = (dt_utils.now() - timedelta(days=2)).replace(hour=0, minute=0, second=0, microsecond=0)
+    dby_midnight = (dt_util.now() - timedelta(days=2)).replace(hour=0, minute=0, second=0, microsecond=0)
     api_client._calculate_day_before_yesterday_midnight = MagicMock(return_value=dby_midnight)  # noqa: SLF001
     # Mock the actual price info fetching methods (they call async_get_price_info_for_range internally)
     api_client.async_get_price_info = AsyncMock(return_value={"priceInfo": mock_intervals})
@@ -103,7 +103,7 @@ async def test_full_cache_zero_api_calls() -> None:
             "_calculate_day_before_yesterday_midnight",
         ]
     )
-    start = dt_utils.now().replace(hour=10, minute=0, second=0, microsecond=0)
+    start = dt_util.now().replace(hour=10, minute=0, second=0, microsecond=0)
     end = start + timedelta(hours=2)  # 8 intervals
 
     # Pre-populate cache
@@ -111,7 +111,7 @@ async def test_full_cache_zero_api_calls() -> None:
     api_client.async_get_price_info_for_range = AsyncMock(return_value=mock_intervals)
     api_client._extract_home_timezones = MagicMock(return_value={"home123": "Europe/Berlin"})  # noqa: SLF001
     # Mock boundary calculation (returns day before yesterday midnight)
-    dby_midnight = (dt_utils.now() - timedelta(days=2)).replace(hour=0, minute=0, second=0, microsecond=0)
+    dby_midnight = (dt_util.now() - timedelta(days=2)).replace(hour=0, minute=0, second=0, microsecond=0)
     api_client._calculate_day_before_yesterday_midnight = MagicMock(return_value=dby_midnight)  # noqa: SLF001
     # Mock the actual price info fetching methods (they call async_get_price_info_for_range internally)
     api_client.async_get_price_info = AsyncMock(return_value={"priceInfo": mock_intervals})
@@ -146,7 +146,7 @@ async def test_single_gap_single_api_call() -> None:
             "_calculate_day_before_yesterday_midnight",
         ]
     )
-    start = dt_utils.now().replace(hour=10, minute=0, second=0, microsecond=0)
+    start = dt_util.now().replace(hour=10, minute=0, second=0, microsecond=0)
     end = start + timedelta(hours=3)  # 12 intervals total
 
     user_data = {"timeZone": "Europe/Berlin"}
@@ -198,7 +198,7 @@ async def test_multiple_gaps_multiple_api_calls() -> None:
             "_calculate_day_before_yesterday_midnight",
         ]
     )
-    start = dt_utils.now().replace(hour=10, minute=0, second=0, microsecond=0)
+    start = dt_util.now().replace(hour=10, minute=0, second=0, microsecond=0)
     end = start + timedelta(hours=4)  # 16 intervals total
 
     user_data = {"timeZone": "Europe/Berlin"}
@@ -270,7 +270,7 @@ async def test_partial_overlap_minimal_fetch() -> None:
             "_calculate_day_before_yesterday_midnight",
         ]
     )
-    start = dt_utils.now().replace(hour=10, minute=0, second=0, microsecond=0)
+    start = dt_util.now().replace(hour=10, minute=0, second=0, microsecond=0)
 
     user_data = {"timeZone": "Europe/Berlin"}
 
@@ -314,7 +314,7 @@ async def test_detect_missing_ranges_optimization() -> None:
         ]
     )
 
-    start = dt_utils.now().replace(hour=10, minute=0, second=0, microsecond=0)
+    start = dt_util.now().replace(hour=10, minute=0, second=0, microsecond=0)
     end = start + timedelta(hours=4)
 
     user_data = {"timeZone": "Europe/Berlin"}
@@ -337,7 +337,7 @@ async def test_detect_missing_ranges_optimization() -> None:
     pool._fetch_groups = [  # noqa: SLF001
         {
             "intervals": cached,
-            "fetch_time": dt_utils.now().isoformat(),
+            "fetch_time": dt_util.now().isoformat(),
         }
     ]
     pool._timestamp_index = {interval["startsAt"]: idx for idx, interval in enumerate(cached)}  # noqa: SLF001

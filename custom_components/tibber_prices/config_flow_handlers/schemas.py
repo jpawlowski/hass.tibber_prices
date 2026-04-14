@@ -174,7 +174,7 @@ ConfigOverrides = dict[str, dict[str, Any]]
 
 def is_field_overridden(
     config_key: str,
-    config_section: str,  # noqa: ARG001 - kept for API compatibility
+    config_section: str,
     overrides: ConfigOverrides | None,
 ) -> bool:
     """

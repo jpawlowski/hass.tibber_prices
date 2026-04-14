@@ -50,11 +50,7 @@ from .find_most_expensive_hours import (
     FIND_MOST_EXPENSIVE_HOURS_SERVICE_SCHEMA,
     handle_find_most_expensive_hours,
 )
-from .get_apexcharts_yaml import (
-    APEXCHARTS_SERVICE_SCHEMA,
-    APEXCHARTS_YAML_SERVICE_NAME,
-    handle_apexcharts_yaml,
-)
+from .get_apexcharts_yaml import APEXCHARTS_SERVICE_SCHEMA, APEXCHARTS_YAML_SERVICE_NAME, handle_apexcharts_yaml
 from .get_chartdata import CHARTDATA_SERVICE_NAME, CHARTDATA_SERVICE_SCHEMA, handle_chartdata
 from .get_price import GET_PRICE_SERVICE_NAME, GET_PRICE_SERVICE_SCHEMA, handle_get_price
 from .refresh_user_data import (

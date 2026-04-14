@@ -7,8 +7,8 @@ gap tolerance, and coordination of the period_handlers calculation functions.
 
 from __future__ import annotations
 
-import logging
 from datetime import date, timedelta
+import logging
 from typing import TYPE_CHECKING, Any
 
 from custom_components.tibber_prices import const as _const
@@ -20,10 +20,7 @@ if TYPE_CHECKING:
     from homeassistant.config_entries import ConfigEntry
 
 from .helpers import get_intervals_for_day_offsets
-from .period_handlers import (
-    TibberPricesPeriodConfig,
-    calculate_periods_with_relaxation,
-)
+from .period_handlers import TibberPricesPeriodConfig, calculate_periods_with_relaxation
 
 _LOGGER = logging.getLogger(__name__)
 

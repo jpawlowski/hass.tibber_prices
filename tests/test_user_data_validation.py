@@ -26,9 +26,7 @@ import pytest
 
 from custom_components.tibber_prices.api.exceptions import TibberPricesApiClientError
 from custom_components.tibber_prices.api.helpers import flatten_price_info
-from custom_components.tibber_prices.coordinator.price_data_manager import (
-    TibberPricesPriceDataManager,
-)
+from custom_components.tibber_prices.coordinator.price_data_manager import TibberPricesPriceDataManager
 
 
 @pytest.fixture
@@ -59,7 +57,7 @@ def mock_interval_pool() -> Mock:
 
 
 @pytest.mark.unit
-def test_validate_user_data_complete(mock_api_client, mock_time_service, mock_store, mock_interval_pool) -> None:  # noqa: ANN001
+def test_validate_user_data_complete(mock_api_client, mock_time_service, mock_store, mock_interval_pool) -> None:
     """Test that complete user data passes validation."""
     price_data_manager = TibberPricesPriceDataManager(
         api=mock_api_client,
@@ -201,7 +199,7 @@ def test_validate_user_data_subscription_without_currency(
 
 
 @pytest.mark.unit
-def test_validate_user_data_home_not_found(mock_api_client, mock_time_service, mock_store, mock_interval_pool) -> None:  # noqa: ANN001
+def test_validate_user_data_home_not_found(mock_api_client, mock_time_service, mock_store, mock_interval_pool) -> None:
     """Test that user data without the requested home fails validation."""
     price_data_manager = TibberPricesPriceDataManager(
         api=mock_api_client,

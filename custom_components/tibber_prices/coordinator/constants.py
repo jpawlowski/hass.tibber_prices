@@ -93,6 +93,18 @@ TIME_SENSITIVE_ENTITY_KEYS = frozenset(
         "best_price_next_start_time",
         "peak_price_end_time",
         "peak_price_next_start_time",
+        # Price rank sensors (rank of current/next/previous interval within a day scope)
+        "current_interval_price_rank_today",
+        "current_interval_price_rank_tomorrow",
+        "current_interval_price_rank_today_tomorrow",
+        "current_hour_price_rank_today",
+        "current_hour_price_rank_today_tomorrow",
+        "next_interval_price_rank_today",
+        "next_interval_price_rank_today_tomorrow",
+        "next_hour_price_rank_today",
+        "next_hour_price_rank_today_tomorrow",
+        "previous_interval_price_rank_today",
+        "previous_interval_price_rank_today_tomorrow",
         # Lifecycle sensor needs quarter-hour precision for state transitions:
         # - 23:45: turnover_pending (last interval before midnight)
         # - 00:00: turnover complete (after midnight API update)

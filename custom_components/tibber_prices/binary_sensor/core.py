@@ -9,10 +9,7 @@ from custom_components.tibber_prices.coordinator.core import get_connection_stat
 from custom_components.tibber_prices.coordinator.helpers import get_intervals_for_day_offsets
 from custom_components.tibber_prices.entity import TibberPricesEntity
 from custom_components.tibber_prices.entity_utils import get_binary_sensor_icon
-from homeassistant.components.binary_sensor import (
-    BinarySensorEntity,
-    BinarySensorEntityDescription,
-)
+from homeassistant.components.binary_sensor import BinarySensorEntity, BinarySensorEntityDescription
 from homeassistant.core import callback
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.restore_state import RestoreEntity
@@ -27,9 +24,7 @@ from .attributes import (
 if TYPE_CHECKING:
     from collections.abc import Callable
 
-    from custom_components.tibber_prices.coordinator import (
-        TibberPricesDataUpdateCoordinator,
-    )
+    from custom_components.tibber_prices.coordinator import TibberPricesDataUpdateCoordinator
     from custom_components.tibber_prices.coordinator.time_service import TibberPricesTimeService
 
 

@@ -26,8 +26,8 @@ source of truth. This module only caches user_data for daily refresh cycle.
 
 from __future__ import annotations
 
-import logging
 from datetime import timedelta
+import logging
 from typing import TYPE_CHECKING, Any
 
 from custom_components.tibber_prices.api import (
@@ -71,7 +71,7 @@ class TibberPricesPriceDataManager:
     This class orchestrates WHEN to fetch and processes the results.
     """
 
-    def __init__(  # noqa: PLR0913
+    def __init__(
         self,
         api: TibberPricesApiClient,
         store: Any,
@@ -178,7 +178,7 @@ class TibberPricesPriceDataManager:
         )
         await cache.save_cache(self._store, cache_data, self._log_prefix)
 
-    def _validate_user_data(self, user_data: dict, home_id: str) -> bool:  # noqa: PLR0911
+    def _validate_user_data(self, user_data: dict, home_id: str) -> bool:
         """
         Validate user data completeness.
 

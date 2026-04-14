@@ -20,9 +20,7 @@ Supporting modules:
 from __future__ import annotations
 
 # Phase 3: Import flow handlers from their new modular structure
-from custom_components.tibber_prices.config_flow_handlers.options_flow import (
-    TibberPricesOptionsFlowHandler,
-)
+from custom_components.tibber_prices.config_flow_handlers.options_flow import TibberPricesOptionsFlowHandler
 from custom_components.tibber_prices.config_flow_handlers.schemas import (
     get_best_price_schema,
     get_options_init_schema,
@@ -36,12 +34,8 @@ from custom_components.tibber_prices.config_flow_handlers.schemas import (
     get_user_schema,
     get_volatility_schema,
 )
-from custom_components.tibber_prices.config_flow_handlers.subentry_flow import (
-    TibberPricesSubentryFlowHandler,
-)
-from custom_components.tibber_prices.config_flow_handlers.user_flow import (
-    TibberPricesConfigFlowHandler,
-)
+from custom_components.tibber_prices.config_flow_handlers.subentry_flow import TibberPricesSubentryFlowHandler
+from custom_components.tibber_prices.config_flow_handlers.user_flow import TibberPricesConfigFlowHandler
 from custom_components.tibber_prices.config_flow_handlers.validators import (
     TibberPricesCannotConnectError,
     TibberPricesInvalidAuthError,

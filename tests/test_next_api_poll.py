@@ -14,9 +14,7 @@ from zoneinfo import ZoneInfo
 import pytest
 
 from custom_components.tibber_prices.coordinator.constants import UPDATE_INTERVAL
-from custom_components.tibber_prices.sensor.calculators.lifecycle import (
-    TibberPricesLifecycleCalculator,
-)
+from custom_components.tibber_prices.sensor.calculators.lifecycle import TibberPricesLifecycleCalculator
 
 
 @pytest.mark.unit

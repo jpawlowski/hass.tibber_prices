@@ -2,11 +2,11 @@
 
 from __future__ import annotations
 
-import logging
 from datetime import UTC, datetime, timedelta
+import logging
 from typing import TYPE_CHECKING, Any
 
-from homeassistant.util import dt as dt_utils
+from homeassistant.util import dt as dt_util
 
 if TYPE_CHECKING:
     from collections.abc import Callable
@@ -287,11 +287,9 @@ class TibberPricesIntervalPoolFetcher:
 
         """
         # Import here to avoid circular dependency
-        from custom_components.tibber_prices.interval_pool.routing import (  # noqa: PLC0415
-            get_price_intervals_for_range,
-        )
+        from custom_components.tibber_prices.interval_pool.routing import get_price_intervals_for_range  # noqa: PLC0415
 
-        fetch_time_iso = dt_utils.now().isoformat()
+        fetch_time_iso = dt_util.now().isoformat()
         all_fetched_intervals = []
 
         for idx, (missing_start_iso, missing_end_iso) in enumerate(missing_ranges, start=1):

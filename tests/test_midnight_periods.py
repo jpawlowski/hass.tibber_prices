@@ -7,9 +7,7 @@ from zoneinfo import ZoneInfo
 
 import pytest
 
-from custom_components.tibber_prices.coordinator.period_handlers.relaxation import (
-    group_periods_by_day,
-)
+from custom_components.tibber_prices.coordinator.period_handlers.relaxation import group_periods_by_day
 
 
 @pytest.fixture

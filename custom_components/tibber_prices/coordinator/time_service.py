@@ -43,8 +43,8 @@ scheduling delays. It is NOT used for Timer #1's offset tracking.
 
 from __future__ import annotations
 
-import math
 from datetime import datetime, timedelta
+import math
 from typing import TYPE_CHECKING
 
 from homeassistant.util import dt as dt_util

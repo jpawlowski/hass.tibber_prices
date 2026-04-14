@@ -492,7 +492,7 @@ def build_final_attributes_simple(
     return result
 
 
-async def build_async_extra_state_attributes(  # noqa: PLR0913
+async def build_async_extra_state_attributes(
     entity_key: str,
     translation_key: str | None,
     hass: HomeAssistant,
@@ -555,7 +555,7 @@ async def build_async_extra_state_attributes(  # noqa: PLR0913
     return attributes or None
 
 
-def build_sync_extra_state_attributes(  # noqa: PLR0913
+def build_sync_extra_state_attributes(
     entity_key: str,
     translation_key: str | None,
     hass: HomeAssistant,

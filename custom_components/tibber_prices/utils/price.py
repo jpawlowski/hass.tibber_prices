@@ -3,9 +3,9 @@
 from __future__ import annotations
 
 import bisect
+from datetime import datetime, timedelta
 import logging
 import statistics
-from datetime import datetime, timedelta
 from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
@@ -353,7 +353,7 @@ def calculate_difference_percentage(
     return ((current_interval_price - trailing_average) / abs(trailing_average)) * 100
 
 
-def calculate_rating_level(  # noqa: PLR0911 - Multiple returns justified by clear hysteresis state machine
+def calculate_rating_level(
     difference: float | None,
     threshold_low: float,
     threshold_high: float,
@@ -435,7 +435,7 @@ def calculate_rating_level(  # noqa: PLR0911 - Multiple returns justified by cle
     return PRICE_RATING_NORMAL
 
 
-def _process_price_interval(  # noqa: PLR0913 - Extra params needed for hysteresis
+def _process_price_interval(
     price_interval: dict[str, Any],
     all_prices: list[dict[str, Any]],
     threshold_low: float,
@@ -651,7 +651,7 @@ def _apply_rating_gap_tolerance(
         if interval.get("rating_level") is not None
     ]
 
-    if len(rated_intervals) < 3:  # noqa: PLR2004 - Minimum 3 for before/gap/after pattern
+    if len(rated_intervals) < 3:
         return
 
     # Iteratively merge small blocks until no more changes
@@ -720,7 +720,7 @@ def _apply_level_gap_tolerance(
         if interval.get("level") is not None
     ]
 
-    if len(level_intervals) < 3:  # noqa: PLR2004 - Minimum 3 for before/gap/after pattern
+    if len(level_intervals) < 3:
         return
 
     # Iteratively merge small blocks until no more changes
@@ -859,7 +859,7 @@ def _merge_small_level_blocks(
     return len(merge_decisions)
 
 
-def enrich_price_info_with_differences(  # noqa: PLR0913 - Extra params for rating stabilization
+def enrich_price_info_with_differences(
     all_intervals: list[dict[str, Any]],
     *,
     threshold_low: float | None = None,
@@ -867,7 +867,7 @@ def enrich_price_info_with_differences(  # noqa: PLR0913 - Extra params for rati
     hysteresis: float | None = None,
     gap_tolerance: int | None = None,
     level_gap_tolerance: int | None = None,
-    time: TibberPricesTimeService | None = None,  # noqa: ARG001  # Used in production (via coordinator), kept for compatibility
+    time: TibberPricesTimeService | None = None,  # Used in production (via coordinator), kept for compatibility
 ) -> list[dict[str, Any]]:
     """
     Enrich price intervals with calculated 'difference' and 'rating_level' values.
@@ -1229,7 +1229,7 @@ def _calculate_lookahead_volatility_factor(
     return factor
 
 
-def calculate_price_trend(  # noqa: PLR0913 - All parameters are necessary for volatility-adaptive calculation
+def calculate_price_trend(
     current_interval_price: float,
     future_average: float,
     threshold_rising: float = 3.0,

@@ -4,9 +4,7 @@ from datetime import UTC, datetime
 
 import pytest
 
-from custom_components.tibber_prices.coordinator.period_handlers.period_statistics import (
-    calculate_period_price_diff,
-)
+from custom_components.tibber_prices.coordinator.period_handlers.period_statistics import calculate_period_price_diff
 from custom_components.tibber_prices.utils.price import calculate_price_trend
 
 

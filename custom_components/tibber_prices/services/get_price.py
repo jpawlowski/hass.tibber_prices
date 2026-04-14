@@ -21,7 +21,7 @@ import voluptuous as vol
 from custom_components.tibber_prices.const import DOMAIN
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import config_validation as cv
-from homeassistant.util import dt as dt_utils
+from homeassistant.util import dt as dt_util
 
 from .helpers import get_entry_and_data
 
@@ -116,13 +116,13 @@ async def handle_get_price(call: ServiceCall) -> ServiceResponse:
 
     if start_time.tzinfo is None:
         # Step 1: Localize to HA server timezone
-        start_time = dt_utils.as_local(start_time)
+        start_time = dt_util.as_local(start_time)
     # Step 2: Convert to home timezone
     start_time = start_time.astimezone(home_tz)
 
     if end_time.tzinfo is None:
         # Step 1: Localize to HA server timezone
-        end_time = dt_utils.as_local(end_time)
+        end_time = dt_util.as_local(end_time)
     # Step 2: Convert to home timezone
     end_time = end_time.astimezone(home_tz)
 

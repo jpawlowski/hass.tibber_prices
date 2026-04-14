@@ -8,19 +8,14 @@ This test verifies that:
 4. Calculations that depend on averages use mean internally (not affected by display setting)
 """
 
-import statistics
 from datetime import UTC, datetime, timedelta
+import statistics
 from unittest.mock import Mock
 
 import pytest
 
-from custom_components.tibber_prices.const import (
-    CONF_AVERAGE_SENSOR_DISPLAY,
-    DEFAULT_AVERAGE_SENSOR_DISPLAY,
-)
-from custom_components.tibber_prices.sensor.attributes.helpers import (
-    add_alternate_average_attribute,
-)
+from custom_components.tibber_prices.const import CONF_AVERAGE_SENSOR_DISPLAY, DEFAULT_AVERAGE_SENSOR_DISPLAY
+from custom_components.tibber_prices.sensor.attributes.helpers import add_alternate_average_attribute
 from custom_components.tibber_prices.utils.average import calculate_mean, calculate_median
 
 

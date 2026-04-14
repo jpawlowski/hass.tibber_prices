@@ -18,19 +18,8 @@ Organization by calculation pattern:
 
 from __future__ import annotations
 
-from homeassistant.components.sensor import (
-    SensorDeviceClass,
-    SensorEntityDescription,
-    SensorStateClass,
-)
-from homeassistant.const import (
-    PERCENTAGE,
-    EntityCategory,
-    UnitOfArea,
-    UnitOfElectricCurrent,
-    UnitOfEnergy,
-    UnitOfTime,
-)
+from homeassistant.components.sensor import SensorDeviceClass, SensorEntityDescription, SensorStateClass
+from homeassistant.const import PERCENTAGE, EntityCategory, UnitOfArea, UnitOfElectricCurrent, UnitOfEnergy, UnitOfTime
 
 # ============================================================================
 # SENSOR DEFINITIONS - Grouped by calculation method

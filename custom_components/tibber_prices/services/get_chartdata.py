@@ -21,9 +21,9 @@ Response: JSON with chart-ready data
 
 from __future__ import annotations
 
+from datetime import datetime, timedelta
 import math
 import re
-from datetime import datetime, timedelta
 from typing import TYPE_CHECKING, Any, Final
 
 import voluptuous as vol
@@ -49,17 +49,10 @@ from custom_components.tibber_prices.const import (
     get_currency_info,
     get_currency_name,
 )
-from custom_components.tibber_prices.coordinator.helpers import (
-    get_intervals_for_day_offsets,
-)
+from custom_components.tibber_prices.coordinator.helpers import get_intervals_for_day_offsets
 from homeassistant.exceptions import ServiceValidationError
 
-from .formatters import (
-    aggregate_to_hourly,
-    get_period_data,
-    normalize_level_filter,
-    normalize_rating_level_filter,
-)
+from .formatters import aggregate_to_hourly, get_period_data, normalize_level_filter, normalize_rating_level_filter
 from .helpers import get_entry_and_data, has_tomorrow_data
 
 if TYPE_CHECKING:
@@ -92,7 +85,7 @@ def _is_transition_to_more_expensive(
     return next_rank > current_rank
 
 
-def _calculate_metadata(  # noqa: PLR0912, PLR0913, PLR0915
+def _calculate_metadata(
     chart_data: list[dict[str, Any]],
     price_field: str,
     start_time_field: str,
@@ -320,7 +313,7 @@ CHARTDATA_SERVICE_SCHEMA: Final = vol.Schema(
 )
 
 
-async def handle_chartdata(call: ServiceCall) -> dict[str, Any]:  # noqa: PLR0912, PLR0915, C901
+async def handle_chartdata(call: ServiceCall) -> dict[str, Any]:  # noqa: C901
     """
     Return price data in chart-friendly format.
 

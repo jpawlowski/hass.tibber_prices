@@ -8,16 +8,9 @@ from unittest.mock import Mock
 
 import pytest
 
-from custom_components.tibber_prices.binary_sensor.core import (
-    TibberPricesBinarySensor,
-)
-from custom_components.tibber_prices.coordinator.core import (
-    TibberPricesDataUpdateCoordinator,
-    get_connection_state,
-)
-from custom_components.tibber_prices.sensor.calculators.lifecycle import (
-    TibberPricesLifecycleCalculator,
-)
+from custom_components.tibber_prices.binary_sensor.core import TibberPricesBinarySensor
+from custom_components.tibber_prices.coordinator.core import TibberPricesDataUpdateCoordinator, get_connection_state
+from custom_components.tibber_prices.sensor.calculators.lifecycle import TibberPricesLifecycleCalculator
 from homeassistant.components.binary_sensor import BinarySensorEntityDescription
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import UpdateFailed

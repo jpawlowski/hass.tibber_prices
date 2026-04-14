@@ -16,7 +16,7 @@ if TYPE_CHECKING:
 
 
 async def async_get_config_entry_diagnostics(
-    hass: HomeAssistant,  # noqa: ARG001
+    hass: HomeAssistant,
     entry: TibberPricesConfigEntry,
 ) -> dict[str, Any]:
     """Return diagnostics for a config entry."""

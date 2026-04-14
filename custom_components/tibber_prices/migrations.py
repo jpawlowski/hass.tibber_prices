@@ -17,8 +17,7 @@ import logging
 from typing import TYPE_CHECKING
 
 from homeassistant.core import callback
-from homeassistant.helpers import entity_registry as er
-from homeassistant.helpers import issue_registry as ir
+from homeassistant.helpers import entity_registry as er, issue_registry as ir
 
 from .const import DOMAIN
 

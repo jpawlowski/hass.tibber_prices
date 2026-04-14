@@ -15,10 +15,7 @@ Ensures:
 from custom_components.tibber_prices.binary_sensor.definitions import (
     ENTITY_DESCRIPTIONS as BINARY_SENSOR_ENTITY_DESCRIPTIONS,
 )
-from custom_components.tibber_prices.coordinator.constants import (
-    MINUTE_UPDATE_ENTITY_KEYS,
-    TIME_SENSITIVE_ENTITY_KEYS,
-)
+from custom_components.tibber_prices.coordinator.constants import MINUTE_UPDATE_ENTITY_KEYS, TIME_SENSITIVE_ENTITY_KEYS
 from custom_components.tibber_prices.sensor.definitions import ENTITY_DESCRIPTIONS
 
 

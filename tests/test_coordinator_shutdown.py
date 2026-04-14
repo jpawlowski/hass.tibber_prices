@@ -5,9 +5,7 @@ from unittest.mock import AsyncMock, MagicMock
 import pytest
 
 # Import at module level to avoid PLC0415
-from custom_components.tibber_prices.coordinator.core import (
-    TibberPricesDataUpdateCoordinator,
-)
+from custom_components.tibber_prices.coordinator.core import TibberPricesDataUpdateCoordinator
 
 
 @pytest.mark.asyncio

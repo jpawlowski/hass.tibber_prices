@@ -8,25 +8,21 @@ each task claims the cheapest available contiguous window in the remaining pool.
 
 from __future__ import annotations
 
+from datetime import datetime, timedelta
 import logging
 import math
-from datetime import datetime, timedelta
 from typing import TYPE_CHECKING, Any
 
 import voluptuous as vol
 
-from custom_components.tibber_prices.const import (
-    DOMAIN,
-    get_display_unit_factor,
-    get_display_unit_string,
-)
+from custom_components.tibber_prices.const import DOMAIN, get_display_unit_factor, get_display_unit_string
 from custom_components.tibber_prices.utils.price_window import (
     calculate_window_statistics,
     find_cheapest_contiguous_window,
 )
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import config_validation as cv
-from homeassistant.util import dt as dt_utils
+from homeassistant.util import dt as dt_util
 
 from .helpers import (
     INTERVAL_MINUTES,
@@ -213,7 +209,7 @@ def _find_cheapest_window_in_pool(
     return (best_start, best_start + duration_intervals)
 
 
-async def handle_find_cheapest_schedule(call: ServiceCall) -> ServiceResponse:  # noqa: PLR0915
+async def handle_find_cheapest_schedule(call: ServiceCall) -> ServiceResponse:
     """Handle find_cheapest_schedule service call."""
     service_label = "find_cheapest_schedule"
     hass: HomeAssistant = call.hass
@@ -255,7 +251,7 @@ async def handle_find_cheapest_schedule(call: ServiceCall) -> ServiceResponse:  
 
     home_tz = ZoneInfo(home_timezone)
 
-    now = dt_utils.now().astimezone(home_tz)
+    now = dt_util.now().astimezone(home_tz)
     search_start, search_end = resolve_search_range(call.data, now, home_tz)
 
     # Resolve task durations (round up to intervals)

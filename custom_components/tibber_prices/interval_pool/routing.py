@@ -7,7 +7,7 @@ This module handles intelligent routing between different Tibber API endpoints:
 - PRICE_INFO_RANGE: Historical data (before "day before yesterday midnight")
 - Automatic splitting and merging when range spans the boundary
 
-CRITICAL: Uses REAL TIME (dt_utils.now()) for API boundary calculation,
+CRITICAL: Uses REAL TIME (dt_util.now()) for API boundary calculation,
 NOT TimeService.now() which may be shifted for internal simulation.
 """
 
@@ -17,7 +17,7 @@ import logging
 from typing import TYPE_CHECKING, Any
 
 from custom_components.tibber_prices.api.exceptions import TibberPricesApiClientError
-from homeassistant.util import dt as dt_utils
+from homeassistant.util import dt as dt_util
 
 if TYPE_CHECKING:
     from datetime import datetime
@@ -43,7 +43,7 @@ async def get_price_intervals_for_range(
     - PRICE_INFO: For intervals from "day before yesterday midnight" onwards
     - Both: If range spans across the boundary, splits the request
 
-    CRITICAL: Uses REAL TIME (dt_utils.now()) for API boundary calculation,
+    CRITICAL: Uses REAL TIME (dt_util.now()) for API boundary calculation,
     NOT TimeService.now() which may be shifted for internal simulation.
     This ensures predictable API responses.
 
@@ -173,7 +173,7 @@ def _parse_timestamp(timestamp_str: str) -> datetime:
         ValueError: If timestamp string cannot be parsed.
 
     """
-    result = dt_utils.parse_datetime(timestamp_str)
+    result = dt_util.parse_datetime(timestamp_str)
     if result is None:
         msg = f"Failed to parse timestamp: {timestamp_str}"
         raise ValueError(msg)

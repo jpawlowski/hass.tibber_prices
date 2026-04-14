@@ -57,7 +57,7 @@ class TibberPricesRepairManager:
 
     async def check_tomorrow_data_availability(
         self,
-        has_tomorrow_data: bool,  # noqa: FBT001 - Clear meaning in context
+        has_tomorrow_data: bool,
         current_time: datetime,
     ) -> None:
         """

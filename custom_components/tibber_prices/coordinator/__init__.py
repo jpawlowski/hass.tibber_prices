@@ -16,11 +16,7 @@ Main components:
 - period_handlers/: Period calculation sub-package
 """
 
-from .constants import (
-    MINUTE_UPDATE_ENTITY_KEYS,
-    STORAGE_VERSION,
-    TIME_SENSITIVE_ENTITY_KEYS,
-)
+from .constants import MINUTE_UPDATE_ENTITY_KEYS, STORAGE_VERSION, TIME_SENSITIVE_ENTITY_KEYS
 from .core import TibberPricesDataUpdateCoordinator
 from .time_service import TibberPricesTimeService
 

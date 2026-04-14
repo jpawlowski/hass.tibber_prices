@@ -14,8 +14,8 @@ Uses statistical methods:
 
 from __future__ import annotations
 
-import logging
 from datetime import datetime
+import logging
 from typing import NamedTuple
 
 from custom_components.tibber_prices.utils.price import calculate_coefficient_of_variation

@@ -13,10 +13,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from homeassistant.components.number import (
-    NumberEntityDescription,
-    NumberMode,
-)
+from homeassistant.components.number import NumberEntityDescription, NumberMode
 from homeassistant.const import PERCENTAGE, EntityCategory
 
 

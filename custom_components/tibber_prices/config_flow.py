@@ -7,9 +7,7 @@ The actual implementation is in the config_flow_handlers package.
 
 from __future__ import annotations
 
-from .config_flow_handlers.options_flow import (
-    TibberPricesOptionsFlowHandler as OptionsFlowHandler,
-)
+from .config_flow_handlers.options_flow import TibberPricesOptionsFlowHandler as OptionsFlowHandler
 from .config_flow_handlers.schemas import (
     get_best_price_schema,
     get_options_init_schema,
@@ -23,9 +21,7 @@ from .config_flow_handlers.schemas import (
     get_user_schema,
     get_volatility_schema,
 )
-from .config_flow_handlers.subentry_flow import (
-    TibberPricesSubentryFlowHandler as SubentryFlowHandler,
-)
+from .config_flow_handlers.subentry_flow import TibberPricesSubentryFlowHandler as SubentryFlowHandler
 from .config_flow_handlers.user_flow import TibberPricesConfigFlowHandler as ConfigFlow
 from .config_flow_handlers.validators import (
     TibberPricesCannotConnectError,

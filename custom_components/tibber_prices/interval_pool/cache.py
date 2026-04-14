@@ -2,16 +2,14 @@
 
 from __future__ import annotations
 
-import logging
 from datetime import datetime, timedelta
+import logging
 from typing import TYPE_CHECKING, Any
 
-from homeassistant.util import dt as dt_utils
+from homeassistant.util import dt as dt_util
 
 if TYPE_CHECKING:
-    from custom_components.tibber_prices.coordinator.time_service import (
-        TibberPricesTimeService,
-    )
+    from custom_components.tibber_prices.coordinator.time_service import TibberPricesTimeService
 
 _LOGGER = logging.getLogger(__name__)
 _LOGGER_DETAILS = logging.getLogger(__name__ + ".details")
@@ -114,7 +112,7 @@ class TibberPricesIntervalPoolFetchGroupCache:
 
         """
         # Use TimeService if available (Time Machine support), else real time
-        now = self._time_service.now() if self._time_service else dt_utils.now()
+        now = self._time_service.now() if self._time_service else dt_util.now()
         today_date_str = now.date().isoformat()
 
         # Check cache validity (invalidate daily)

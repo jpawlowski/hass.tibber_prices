@@ -30,9 +30,7 @@ from custom_components.tibber_prices.const import (
     DEFAULT_PRICE_RATING_THRESHOLD_LOW,
     get_translation,
 )
-from custom_components.tibber_prices.coordinator.helpers import (
-    get_intervals_for_day_offsets,
-)
+from custom_components.tibber_prices.coordinator.helpers import get_intervals_for_day_offsets
 from custom_components.tibber_prices.sensor.helpers import aggregate_level_data, aggregate_rating_data
 from custom_components.tibber_prices.utils.average import calculate_mean, calculate_median
 
@@ -51,7 +49,7 @@ def normalize_rating_level_filter(value: list[str] | None) -> list[str] | None:
     return [v.upper() for v in value]
 
 
-def aggregate_to_hourly(  # noqa: PLR0912
+def aggregate_to_hourly(
     intervals: list[dict],
     coordinator: Any,
     threshold_low: float = DEFAULT_PRICE_RATING_THRESHOLD_LOW,
@@ -166,7 +164,7 @@ def aggregate_to_hourly(  # noqa: PLR0912
     return hourly_data
 
 
-def aggregate_hourly_exact(  # noqa: PLR0913, PLR0912, PLR0915
+def aggregate_hourly_exact(
     intervals: list[dict],
     start_time_field: str,
     price_field: str,
@@ -316,7 +314,7 @@ def aggregate_hourly_exact(  # noqa: PLR0913, PLR0912, PLR0915
     return hourly_data
 
 
-def get_period_data(  # noqa: PLR0913, PLR0912, PLR0915
+def get_period_data(
     *,
     coordinator: Any,
     period_filter: str,

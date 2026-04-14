@@ -7,9 +7,7 @@ from typing import TYPE_CHECKING
 from custom_components.tibber_prices.coordinator.helpers import get_intervals_for_day_offsets
 
 if TYPE_CHECKING:
-    from custom_components.tibber_prices.coordinator.core import (
-        TibberPricesDataUpdateCoordinator,
-    )
+    from custom_components.tibber_prices.coordinator.core import TibberPricesDataUpdateCoordinator
     from custom_components.tibber_prices.coordinator.time_service import TibberPricesTimeService
     from custom_components.tibber_prices.data import TibberPricesConfigEntry
 
@@ -43,7 +41,7 @@ def _update_extreme_interval(extreme_interval: dict | None, price_data: dict, ke
     return price_data if is_new_extreme else extreme_interval
 
 
-def add_average_price_attributes(  # noqa: PLR0913
+def add_average_price_attributes(
     attributes: dict,
     key: str,
     coordinator: TibberPricesDataUpdateCoordinator,

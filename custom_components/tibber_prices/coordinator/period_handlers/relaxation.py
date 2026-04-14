@@ -2,8 +2,8 @@
 
 from __future__ import annotations
 
-import logging
 from datetime import timedelta
+import logging
 from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
@@ -14,10 +14,7 @@ if TYPE_CHECKING:
 
 from custom_components.tibber_prices.utils.price import calculate_coefficient_of_variation, calculate_iqr_stats
 
-from .period_overlap import (
-    recalculate_period_metadata,
-    resolve_period_overlaps,
-)
+from .period_overlap import recalculate_period_metadata, resolve_period_overlaps
 from .types import (
     INDENT_L0,
     INDENT_L1,
@@ -486,7 +483,7 @@ def _compute_day_effective_min(
 
         price_values = [float(p["total"]) for p in day_prices if p.get("total") is not None]
 
-        if len(price_values) < 2:  # noqa: PLR2004 - need at least 2 prices for any metric
+        if len(price_values) < 2:
             day_effective_min[day] = min_periods
             continue
 
@@ -532,7 +529,7 @@ def _compute_day_effective_min(
     return day_effective_min, flat_day_count
 
 
-def calculate_periods_with_relaxation(  # noqa: PLR0912, PLR0913, PLR0915 - Per-day relaxation requires many parameters and branches
+def calculate_periods_with_relaxation(
     all_prices: list[dict],
     *,
     config: TibberPricesPeriodConfig,
@@ -584,12 +581,8 @@ def calculate_periods_with_relaxation(  # noqa: PLR0912, PLR0913, PLR0915 - Per-
 
     """
     # Import here to avoid circular dependency
-    from .core import (  # noqa: PLC0415
-        calculate_periods,
-    )
-    from .period_building import (  # noqa: PLC0415
-        filter_superseded_periods,
-    )
+    from .core import calculate_periods  # noqa: PLC0415
+    from .period_building import filter_superseded_periods  # noqa: PLC0415
 
     # Compact INFO-level summary
     period_type = "PEAK PRICE" if config.reverse_sort else "BEST PRICE"
@@ -691,7 +684,7 @@ def calculate_periods_with_relaxation(  # noqa: PLR0912, PLR0913, PLR0915 - Per-
             any_normal_day = False
             for day_prices in prices_by_day.values():
                 prices = [float(p["total"]) for p in day_prices if p.get("total") is not None]
-                if len(prices) >= 2:  # noqa: PLR2004
+                if len(prices) >= 2:
                     day_min = min(prices)
                     day_avg = sum(prices) / len(prices)
                     span = abs(day_avg - day_min)
@@ -877,7 +870,7 @@ def calculate_periods_with_relaxation(  # noqa: PLR0912, PLR0913, PLR0915 - Per-
     return final_result
 
 
-def relax_all_prices(  # noqa: PLR0913 - Comprehensive filter relaxation requires many parameters and statements
+def relax_all_prices(
     all_prices: list[dict],
     config: TibberPricesPeriodConfig,
     min_periods: int,
@@ -914,9 +907,7 @@ def relax_all_prices(  # noqa: PLR0913 - Comprehensive filter relaxation require
 
     """
     # Import here to avoid circular dependency
-    from .core import (  # noqa: PLC0415
-        calculate_periods,
-    )
+    from .core import calculate_periods  # noqa: PLC0415
 
     flex_increment = 0.03  # 3% per step (hard-coded for reliability)
     base_flex = abs(config.flex)

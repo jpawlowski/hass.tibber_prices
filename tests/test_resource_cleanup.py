@@ -4,15 +4,9 @@ from unittest.mock import AsyncMock, MagicMock, Mock
 
 import pytest
 
-from custom_components.tibber_prices.binary_sensor.core import (
-    TibberPricesBinarySensor,
-)
-from custom_components.tibber_prices.coordinator.core import (
-    TibberPricesDataUpdateCoordinator,
-)
-from custom_components.tibber_prices.coordinator.listeners import (
-    TibberPricesListenerManager,
-)
+from custom_components.tibber_prices.binary_sensor.core import TibberPricesBinarySensor
+from custom_components.tibber_prices.coordinator.core import TibberPricesDataUpdateCoordinator
+from custom_components.tibber_prices.coordinator.listeners import TibberPricesListenerManager
 from custom_components.tibber_prices.sensor.core import TibberPricesSensor
 
 
@@ -200,15 +194,9 @@ class TestConfigEntryCleanup:
         from custom_components.tibber_prices.coordinator.data_transformation import (  # noqa: PLC0415
             TibberPricesDataTransformer,
         )
-        from custom_components.tibber_prices.coordinator.listeners import (  # noqa: PLC0415
-            TibberPricesListenerManager,
-        )
-        from custom_components.tibber_prices.coordinator.periods import (  # noqa: PLC0415
-            TibberPricesPeriodCalculator,
-        )
-        from custom_components.tibber_prices.coordinator.time_service import (  # noqa: PLC0415
-            TibberPricesTimeService,
-        )
+        from custom_components.tibber_prices.coordinator.listeners import TibberPricesListenerManager  # noqa: PLC0415
+        from custom_components.tibber_prices.coordinator.periods import TibberPricesPeriodCalculator  # noqa: PLC0415
+        from custom_components.tibber_prices.coordinator.time_service import TibberPricesTimeService  # noqa: PLC0415
 
         coordinator.time = TibberPricesTimeService(hass)
         coordinator._listener_manager = object.__new__(TibberPricesListenerManager)  # noqa: SLF001
@@ -257,9 +245,7 @@ class TestCacheInvalidation:
 
     def test_period_cache_invalidated_on_options_change(self) -> None:
         """Test that period calculation cache is cleared when options change."""
-        from custom_components.tibber_prices.coordinator.periods import (  # noqa: PLC0415
-            TibberPricesPeriodCalculator,
-        )
+        from custom_components.tibber_prices.coordinator.periods import TibberPricesPeriodCalculator  # noqa: PLC0415
 
         # Create calculator with cached data
         calculator = object.__new__(TibberPricesPeriodCalculator)

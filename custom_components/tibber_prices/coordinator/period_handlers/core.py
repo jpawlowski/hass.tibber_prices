@@ -11,9 +11,7 @@ if TYPE_CHECKING:
 
     from .types import TibberPricesPeriodConfig
 
-from .outlier_filtering import (
-    filter_price_outliers,
-)
+from .outlier_filtering import filter_price_outliers
 from .period_building import (
     add_interval_ends,
     build_periods,
@@ -24,9 +22,7 @@ from .period_building import (
     filter_superseded_periods,
     split_intervals_by_day,
 )
-from .period_statistics import (
-    extract_period_summaries,
-)
+from .period_statistics import extract_period_summaries
 from .shape_extension import extend_periods_for_shape
 from .types import TibberPricesThresholdConfig
 
@@ -81,7 +77,7 @@ def calculate_periods(
 
     from .types import INDENT_L0  # noqa: PLC0415
 
-    _LOGGER = logging.getLogger(__name__)  # noqa: N806
+    _LOGGER = logging.getLogger(__name__)
 
     # Extract config values
     reverse_sort = config.reverse_sort
@@ -141,7 +137,7 @@ def calculate_periods(
     # User's flex setting still applies to period criteria (in_flex check).
 
     # Import details logger locally (core.py imports logger locally in function)
-    _LOGGER_DETAILS = logging.getLogger(__name__ + ".details")  # noqa: N806
+    _LOGGER_DETAILS = logging.getLogger(__name__ + ".details")
 
     outlier_flex = min(abs(flex) * 100, MAX_OUTLIER_FLEX * 100)
     if abs(flex) * 100 > MAX_OUTLIER_FLEX * 100:
@@ -298,7 +294,7 @@ def calculate_periods(
 def _period_belongs_to_side(
     period: list[dict],
     side_times: set,
-    time: "TibberPricesTimeService",
+    time: TibberPricesTimeService,
 ) -> bool:
     """Return True if the majority of a period's intervals are in side_times."""
     if not period:
@@ -307,14 +303,14 @@ def _period_belongs_to_side(
     return in_side * 2 >= len(period)
 
 
-def _apply_segment_forcing(  # noqa: PLR0913
+def _apply_segment_forcing(
     all_prices_smoothed: list[dict],
     periods: list[list[dict]],
     price_context: dict[str, Any],
-    config: "TibberPricesPeriodConfig",
+    config: TibberPricesPeriodConfig,
     *,
     day_patterns_by_date: dict,
-    time: "TibberPricesTimeService",
+    time: TibberPricesTimeService,
 ) -> list[list[dict]]:
     """
     Force at least segment_min_periods periods per segment for W/M-shaped days.
@@ -341,7 +337,7 @@ def _apply_segment_forcing(  # noqa: PLR0913
     from .period_building import build_periods  # noqa: PLC0415
     from .types import DAY_PATTERN_DOUBLE_PEAK, DAY_PATTERN_DOUBLE_VALLEY, INDENT_L1, INDENT_L2  # noqa: PLC0415
 
-    _LOGGER = logging.getLogger(__name__)  # noqa: N806
+    _LOGGER = logging.getLogger(__name__)
 
     reverse_sort = config.reverse_sort
     target_pattern = DAY_PATTERN_DOUBLE_PEAK if reverse_sort else DAY_PATTERN_DOUBLE_VALLEY

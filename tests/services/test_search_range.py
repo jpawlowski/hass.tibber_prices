@@ -11,22 +11,15 @@ Also validates schema boundaries for all 4 services.
 
 from __future__ import annotations
 
-from datetime import datetime, timedelta
-from datetime import time as dt_time
+from datetime import datetime, time as dt_time, timedelta
 from zoneinfo import ZoneInfo
 
 import pytest
 import voluptuous as vol
 
-from custom_components.tibber_prices.services.find_cheapest_block import (
-    _COMMON_BLOCK_SCHEMA,
-)
-from custom_components.tibber_prices.services.find_cheapest_hours import (
-    _COMMON_HOURS_SCHEMA,
-)
-from custom_components.tibber_prices.services.helpers import (
-    resolve_search_range,
-)
+from custom_components.tibber_prices.services.find_cheapest_block import _COMMON_BLOCK_SCHEMA
+from custom_components.tibber_prices.services.find_cheapest_hours import _COMMON_HOURS_SCHEMA
+from custom_components.tibber_prices.services.helpers import resolve_search_range
 
 BERLIN = ZoneInfo("Europe/Berlin")
 

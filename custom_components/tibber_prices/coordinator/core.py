@@ -2,8 +2,8 @@
 
 from __future__ import annotations
 
-import logging
 from datetime import timedelta
+import logging
 from typing import TYPE_CHECKING, Any
 
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
@@ -24,16 +24,11 @@ from custom_components.tibber_prices.api import (
     TibberPricesApiClientError,
 )
 from custom_components.tibber_prices.const import DOMAIN
-from custom_components.tibber_prices.utils.price import (
-    find_price_data_for_interval,
-)
+from custom_components.tibber_prices.utils.price import find_price_data_for_interval
 from homeassistant.exceptions import ConfigEntryAuthFailed
 
 from . import helpers
-from .constants import (
-    STORAGE_VERSION,
-    UPDATE_INTERVAL,
-)
+from .constants import STORAGE_VERSION, UPDATE_INTERVAL
 from .data_transformation import TibberPricesDataTransformer
 from .listeners import TibberPricesListenerManager
 from .midnight_handler import TibberPricesMidnightHandler

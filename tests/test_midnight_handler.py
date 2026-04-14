@@ -12,9 +12,7 @@ from zoneinfo import ZoneInfo
 
 import pytest
 
-from custom_components.tibber_prices.coordinator.midnight_handler import (
-    TibberPricesMidnightHandler,
-)
+from custom_components.tibber_prices.coordinator.midnight_handler import TibberPricesMidnightHandler
 
 
 @pytest.mark.unit

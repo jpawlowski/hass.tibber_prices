@@ -21,9 +21,7 @@ from custom_components.tibber_prices.coordinator.period_handlers import (
     TibberPricesPeriodConfig,
     calculate_periods_with_relaxation,
 )
-from custom_components.tibber_prices.coordinator.time_service import (
-    TibberPricesTimeService,
-)
+from custom_components.tibber_prices.coordinator.time_service import TibberPricesTimeService
 from homeassistant.util import dt as dt_util
 
 

@@ -10,10 +10,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any
 
-from custom_components.tibber_prices.entity_utils import (
-    add_description_attributes,
-    add_icon_color_attribute,
-)
+from custom_components.tibber_prices.entity_utils import add_description_attributes, add_icon_color_attribute
 from custom_components.tibber_prices.sensor.types import (
     DailyStatPriceAttributes,
     DailyStatRatingAttributes,
@@ -32,9 +29,7 @@ from custom_components.tibber_prices.sensor.types import (
 )
 
 if TYPE_CHECKING:
-    from custom_components.tibber_prices.coordinator.core import (
-        TibberPricesDataUpdateCoordinator,
-    )
+    from custom_components.tibber_prices.coordinator.core import TibberPricesDataUpdateCoordinator
     from custom_components.tibber_prices.coordinator.time_service import TibberPricesTimeService
     from custom_components.tibber_prices.data import TibberPricesConfigEntry
     from homeassistant.core import HomeAssistant
@@ -74,7 +69,7 @@ __all__ = [
 ]
 
 
-def build_sensor_attributes(  # noqa: PLR0912
+def build_sensor_attributes(
     key: str,
     coordinator: TibberPricesDataUpdateCoordinator,
     native_value: Any,
@@ -228,7 +223,7 @@ def build_sensor_attributes(  # noqa: PLR0912
         return attributes or None
 
 
-def build_extra_state_attributes(  # noqa: PLR0913
+def build_extra_state_attributes(
     entity_key: str,
     translation_key: str | None,
     hass: HomeAssistant,

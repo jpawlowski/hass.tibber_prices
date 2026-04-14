@@ -37,12 +37,7 @@ from custom_components.tibber_prices.const import (
     get_translation,
 )
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.entity_registry import (
-    EntityRegistry,
-)
-from homeassistant.helpers.entity_registry import (
-    async_get as async_get_entity_registry,
-)
+from homeassistant.helpers.entity_registry import EntityRegistry, async_get as async_get_entity_registry
 
 from .formatters import get_level_translation
 from .helpers import get_entry_and_data
@@ -265,7 +260,7 @@ def _get_missing_cards_notification(language: str, missing_cards: list[str]) -> 
     return {"title": title, "message": message}
 
 
-async def handle_apexcharts_yaml(call: ServiceCall) -> dict[str, Any]:  # noqa: PLR0912, PLR0915, C901
+async def handle_apexcharts_yaml(call: ServiceCall) -> dict[str, Any]:  # noqa: C901
     """
     Return YAML snippet for ApexCharts card.
 

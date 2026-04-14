@@ -18,24 +18,16 @@ Architecture:
     Tests access internal components directly for fine-grained verification.
 """
 
-import json
 from datetime import UTC, datetime
+import json
 from unittest.mock import MagicMock
 
 import pytest
 
-from custom_components.tibber_prices.interval_pool.cache import (
-    TibberPricesIntervalPoolFetchGroupCache,
-)
-from custom_components.tibber_prices.interval_pool.garbage_collector import (
-    TibberPricesIntervalPoolGarbageCollector,
-)
-from custom_components.tibber_prices.interval_pool.index import (
-    TibberPricesIntervalPoolTimestampIndex,
-)
-from custom_components.tibber_prices.interval_pool.manager import (
-    TibberPricesIntervalPool,
-)
+from custom_components.tibber_prices.interval_pool.cache import TibberPricesIntervalPoolFetchGroupCache
+from custom_components.tibber_prices.interval_pool.garbage_collector import TibberPricesIntervalPoolGarbageCollector
+from custom_components.tibber_prices.interval_pool.index import TibberPricesIntervalPoolTimestampIndex
+from custom_components.tibber_prices.interval_pool.manager import TibberPricesIntervalPool
 
 
 @pytest.fixture

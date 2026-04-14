@@ -4,13 +4,8 @@ from datetime import UTC, datetime, timedelta
 
 import pytest
 
-from custom_components.tibber_prices.coordinator.time_service import (
-    TibberPricesTimeService,
-)
-from custom_components.tibber_prices.utils.average import (
-    calculate_leading_24h_mean,
-    calculate_trailing_24h_mean,
-)
+from custom_components.tibber_prices.coordinator.time_service import TibberPricesTimeService
+from custom_components.tibber_prices.utils.average import calculate_leading_24h_mean, calculate_trailing_24h_mean
 
 
 @pytest.fixture

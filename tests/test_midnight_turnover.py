@@ -8,15 +8,9 @@ from zoneinfo import ZoneInfo
 
 import pytest
 
-from custom_components.tibber_prices.coordinator.period_handlers.core import (
-    calculate_periods,
-)
-from custom_components.tibber_prices.coordinator.period_handlers.types import (
-    TibberPricesPeriodConfig,
-)
-from custom_components.tibber_prices.coordinator.time_service import (
-    TibberPricesTimeService,
-)
+from custom_components.tibber_prices.coordinator.period_handlers.core import calculate_periods
+from custom_components.tibber_prices.coordinator.period_handlers.types import TibberPricesPeriodConfig
+from custom_components.tibber_prices.coordinator.time_service import TibberPricesTimeService
 
 
 def create_price_interval(dt: datetime, price: float) -> dict:

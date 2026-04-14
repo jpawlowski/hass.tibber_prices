@@ -13,7 +13,7 @@ def add_alternate_average_attribute(
     cached_data: dict,
     base_key: str,
     *,
-    config_entry: TibberPricesConfigEntry,  # noqa: ARG001
+    config_entry: TibberPricesConfigEntry,
 ) -> None:
     """
     Add both average values (mean and median) as attributes.

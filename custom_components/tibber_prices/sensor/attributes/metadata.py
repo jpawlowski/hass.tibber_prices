@@ -7,9 +7,7 @@ from typing import TYPE_CHECKING, Any
 from custom_components.tibber_prices.utils.price import find_price_data_for_interval
 
 if TYPE_CHECKING:
-    from custom_components.tibber_prices.coordinator.core import (
-        TibberPricesDataUpdateCoordinator,
-    )
+    from custom_components.tibber_prices.coordinator.core import TibberPricesDataUpdateCoordinator
     from custom_components.tibber_prices.coordinator.time_service import TibberPricesTimeService
 
 

@@ -30,7 +30,7 @@ if TYPE_CHECKING:
     from custom_components.tibber_prices.sensor.calculators.window_24h import TibberPricesWindow24hCalculator
 
 
-def get_value_getter_mapping(  # noqa: PLR0913 - needs all calculators as parameters
+def get_value_getter_mapping(
     interval_calculator: TibberPricesIntervalCalculator,
     rolling_hour_calculator: TibberPricesRollingHourCalculator,
     daily_stat_calculator: TibberPricesDailyStatCalculator,

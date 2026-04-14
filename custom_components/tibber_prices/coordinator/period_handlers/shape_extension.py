@@ -20,8 +20,8 @@ created by this step.
 
 from __future__ import annotations
 
-import statistics
 from datetime import timedelta
+import statistics
 from typing import TYPE_CHECKING, Any
 
 from custom_components.tibber_prices.const import (
@@ -30,10 +30,7 @@ from custom_components.tibber_prices.const import (
     PRICE_LEVEL_VERY_CHEAP,
     PRICE_LEVEL_VERY_EXPENSIVE,
 )
-from custom_components.tibber_prices.utils.price import (
-    aggregate_period_levels,
-    aggregate_period_ratings,
-)
+from custom_components.tibber_prices.utils.price import aggregate_period_levels, aggregate_period_ratings
 
 from .period_statistics import (
     calculate_aggregated_rating_difference,
@@ -51,7 +48,7 @@ if TYPE_CHECKING:
 _INTERVAL_DURATION = timedelta(minutes=15)
 
 
-def extend_periods_for_shape(  # noqa: PLR0913 - Extension requires all context params
+def extend_periods_for_shape(
     periods: list[dict[str, Any]],
     all_prices: list[dict[str, Any]],
     price_context: dict[str, Any],
@@ -164,7 +161,7 @@ def _walk_contiguous(
     return additions
 
 
-def _extend_period_edges(  # noqa: PLR0913 - Period edge extension requires many args
+def _extend_period_edges(
     period: dict[str, Any],
     interval_index: dict[datetime, dict[str, Any]],
     *,
@@ -253,7 +250,7 @@ def _extend_period_edges(  # noqa: PLR0913 - Period edge extension requires many
     # ── recalculate volatility (coefficient of variation) ────────────────────
     prices_for_vol = [float(p["total"]) for p in all_period_intervals if "total" in p]
     cv_pct: float | None = None
-    if len(prices_for_vol) >= 2:  # noqa: PLR2004
+    if len(prices_for_vol) >= 2:
         mean_p = statistics.mean(prices_for_vol)
         if mean_p > 0:
             cv_pct = round(statistics.stdev(prices_for_vol) / mean_p * 100, 1)

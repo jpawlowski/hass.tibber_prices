@@ -15,9 +15,7 @@ from datetime import UTC, datetime, timedelta
 
 import pytest
 
-from custom_components.tibber_prices.coordinator.time_service import (
-    TibberPricesTimeService,
-)
+from custom_components.tibber_prices.coordinator.time_service import TibberPricesTimeService
 from custom_components.tibber_prices.utils.price import (
     aggregate_period_levels,
     aggregate_period_ratings,
@@ -348,7 +346,7 @@ def test_rating_level_none_difference() -> None:
         (0.1, 0.1, 0.1, 0.0, "NORMAL", "prices near zero: stable"),
     ],
 )
-def test_enrich_price_info_scenarios(  # noqa: PLR0913  # Many parameters needed for comprehensive test scenarios
+def test_enrich_price_info_scenarios(  # Many parameters needed for comprehensive test scenarios
     day_before_yesterday_price: float,
     yesterday_price: float,
     today_price: float,

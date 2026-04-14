@@ -29,14 +29,13 @@ Used by:
 
 from __future__ import annotations
 
-from datetime import datetime, timedelta
-from datetime import time as dt_time
+from datetime import datetime, time as dt_time, timedelta
 from typing import TYPE_CHECKING, Any
 
 from custom_components.tibber_prices.const import DOMAIN
 from custom_components.tibber_prices.coordinator.helpers import get_intervals_for_day_offsets
 from homeassistant.exceptions import ServiceValidationError
-from homeassistant.util import dt as dt_utils
+from homeassistant.util import dt as dt_util
 
 if TYPE_CHECKING:
     from zoneinfo import ZoneInfo
@@ -266,13 +265,13 @@ def localize_to_home_tz(dt_value: datetime, home_tz: ZoneInfo) -> datetime:
     2. Convert from HA timezone to home timezone
     """
     if dt_value.tzinfo is None:
-        dt_value = dt_utils.as_local(dt_value)
+        dt_value = dt_util.as_local(dt_value)
     return dt_value.astimezone(home_tz)
 
 
 def calculate_end_of_tomorrow(home_tz: ZoneInfo) -> datetime:
     """Calculate end of tomorrow in home timezone."""
-    now_home = dt_utils.now().astimezone(home_tz)
+    now_home = dt_util.now().astimezone(home_tz)
     tomorrow = (now_home + timedelta(days=1)).date()
     # End of tomorrow = midnight at start of day after tomorrow
     return now_home.replace(
@@ -295,9 +294,10 @@ def _resolve_time_with_day_offset(
     time_value: dt_time,
     day_offset: int,
     home_tz: ZoneInfo,
+    now: datetime,
 ) -> datetime:
     """Resolve a time-of-day + day offset to a full datetime in home timezone."""
-    now_home = dt_utils.now().astimezone(home_tz)
+    now_home = now.astimezone(home_tz)
     target_date = (now_home + timedelta(days=day_offset)).date()
     return datetime(
         year=target_date.year,
@@ -477,7 +477,7 @@ def resolve_search_range(
         search_start = localize_to_home_tz(call_data["search_start"], home_tz)
     elif "search_start_time" in call_data:
         day_offset = call_data.get("search_start_day_offset", 0)
-        search_start = _resolve_time_with_day_offset(call_data["search_start_time"], day_offset, home_tz)
+        search_start = _resolve_time_with_day_offset(call_data["search_start_time"], day_offset, home_tz, now)
     elif "search_start_offset_minutes" in call_data:
         search_start = now + timedelta(minutes=call_data["search_start_offset_minutes"])
         if include_current:
@@ -490,7 +490,7 @@ def resolve_search_range(
         search_end = localize_to_home_tz(call_data["search_end"], home_tz)
     elif "search_end_time" in call_data:
         day_offset = call_data.get("search_end_day_offset", 0)
-        search_end = _resolve_time_with_day_offset(call_data["search_end_time"], day_offset, home_tz)
+        search_end = _resolve_time_with_day_offset(call_data["search_end_time"], day_offset, home_tz, now)
     elif "search_end_offset_minutes" in call_data:
         search_end = now + timedelta(minutes=call_data["search_end_offset_minutes"])
     else:

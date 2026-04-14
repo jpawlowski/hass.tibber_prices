@@ -7,9 +7,7 @@ from typing import TYPE_CHECKING, Any
 
 import voluptuous as vol
 
-from custom_components.tibber_prices.config_flow_handlers.options_flow import (
-    TibberPricesOptionsFlowHandler,
-)
+from custom_components.tibber_prices.config_flow_handlers.options_flow import TibberPricesOptionsFlowHandler
 from custom_components.tibber_prices.config_flow_handlers.schemas import (
     get_reauth_confirm_schema,
     get_select_home_schema,
@@ -20,26 +18,11 @@ from custom_components.tibber_prices.config_flow_handlers.validators import (
     TibberPricesInvalidAuthError,
     validate_api_token,
 )
-from custom_components.tibber_prices.const import (
-    DOMAIN,
-    LOGGER,
-    get_default_options,
-    get_translation,
-)
-from homeassistant.config_entries import (
-    ConfigEntry,
-    ConfigFlow,
-    ConfigFlowResult,
-    OptionsFlow,
-)
+from custom_components.tibber_prices.const import DOMAIN, LOGGER, get_default_options, get_translation
+from homeassistant.config_entries import ConfigEntry, ConfigFlow, ConfigFlowResult, OptionsFlow
 from homeassistant.const import CONF_ACCESS_TOKEN
 from homeassistant.core import callback
-from homeassistant.helpers.selector import (
-    SelectOptionDict,
-    SelectSelector,
-    SelectSelectorConfig,
-    SelectSelectorMode,
-)
+from homeassistant.helpers.selector import SelectOptionDict, SelectSelector, SelectSelectorConfig, SelectSelectorMode
 
 if TYPE_CHECKING:
     from homeassistant.config_entries import ConfigSubentryFlow
@@ -65,7 +48,7 @@ class TibberPricesConfigFlowHandler(ConfigFlow, domain=DOMAIN):
     @callback
     def async_get_supported_subentry_types(
         cls,
-        config_entry: ConfigEntry,  # noqa: ARG003
+        config_entry: ConfigEntry,
     ) -> dict[str, type[ConfigSubentryFlow]]:
         """Return subentries supported by this integration."""
         # Temporarily disabled: Time-travel feature not yet fully implemented
@@ -85,7 +68,7 @@ class TibberPricesConfigFlowHandler(ConfigFlow, domain=DOMAIN):
         """Return True if match_dict matches this flow."""
         return bool(other_flow.get("domain") == DOMAIN)
 
-    async def async_step_reauth(self, entry_data: dict[str, Any]) -> ConfigFlowResult:  # noqa: ARG002
+    async def async_step_reauth(self, entry_data: dict[str, Any]) -> ConfigFlowResult:
         """Handle reauth flow when access token becomes invalid."""
         entry_id = self.context.get("entry_id")
         if entry_id:
@@ -295,7 +278,7 @@ class TibberPricesConfigFlowHandler(ConfigFlow, domain=DOMAIN):
             description_placeholders={"tibber_url": "https://developer.tibber.com"},
         )
 
-    async def async_step_select_home(self, user_input: dict | None = None) -> ConfigFlowResult:  # noqa: PLR0911
+    async def async_step_select_home(self, user_input: dict | None = None) -> ConfigFlowResult:
         """Handle home selection during initial setup."""
         homes = self._viewer.get("homes", []) if self._viewer else []
 

@@ -4,16 +4,16 @@ from __future__ import annotations
 
 import asyncio
 import base64
+from datetime import datetime, timedelta
 import logging
 import re
 import socket
-from datetime import datetime, timedelta
 from typing import TYPE_CHECKING, Any
 from zoneinfo import ZoneInfo
 
 import aiohttp
 
-from homeassistant.util import dt as dt_utils
+from homeassistant.util import dt as dt_util
 
 from .exceptions import (
     TibberPricesApiClientAuthenticationError,
@@ -21,12 +21,7 @@ from .exceptions import (
     TibberPricesApiClientError,
     TibberPricesApiClientPermissionError,
 )
-from .helpers import (
-    flatten_price_info,
-    prepare_headers,
-    verify_graphql_response,
-    verify_response_or_raise,
-)
+from .helpers import flatten_price_info, prepare_headers, verify_graphql_response, verify_response_or_raise
 from .queries import TibberPricesQueryType
 
 if TYPE_CHECKING:
@@ -163,9 +158,7 @@ class TibberPricesApiClient:
 
         """
         # Import here to avoid circular dependency (interval_pool imports TibberPricesApiClient)
-        from custom_components.tibber_prices.interval_pool import (  # noqa: PLC0415
-            get_price_intervals_for_range,
-        )
+        from custom_components.tibber_prices.interval_pool import get_price_intervals_for_range  # noqa: PLC0415
 
         price_info = await get_price_intervals_for_range(
             api_client=self,
@@ -581,7 +574,7 @@ class TibberPricesApiClient:
         """
         Calculate day before yesterday midnight in home's timezone.
 
-        CRITICAL: Uses REAL TIME (dt_utils.now()), NOT TimeService.now().
+        CRITICAL: Uses REAL TIME (dt_util.now()), NOT TimeService.now().
         This ensures API boundary calculations are based on actual current time,
         not simulated time from TimeService.
 
@@ -594,7 +587,7 @@ class TibberPricesApiClient:
 
         """
         # Get current REAL time (not TimeService)
-        now = dt_utils.now()
+        now = dt_util.now()
 
         # Convert to home's timezone or fallback to HA system timezone
         if home_timezone:
@@ -607,10 +600,10 @@ class TibberPricesApiClient:
                     home_timezone,
                     error,
                 )
-                now_in_home_tz = dt_utils.as_local(now)
+                now_in_home_tz = dt_util.as_local(now)
         else:
             # Fallback to HA system timezone
-            now_in_home_tz = dt_utils.as_local(now)
+            now_in_home_tz = dt_util.as_local(now)
 
         # Calculate day before yesterday midnight
         return (now_in_home_tz - timedelta(days=2)).replace(hour=0, minute=0, second=0, microsecond=0)
@@ -640,7 +633,7 @@ class TibberPricesApiClient:
             Timezone-aware datetime object.
 
         """
-        return dt_utils.parse_datetime(timestamp_str) or dt_utils.now()
+        return dt_util.parse_datetime(timestamp_str) or dt_util.now()
 
     def _calculate_cursor_for_home(self, home_timezone: str | None) -> str:
         """

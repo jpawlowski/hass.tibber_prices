@@ -2,8 +2,8 @@
 
 from __future__ import annotations
 
-import logging
 from datetime import date, datetime, timedelta
+import logging
 from typing import TYPE_CHECKING, Any
 
 from custom_components.tibber_prices.const import PRICE_LEVEL_MAPPING
@@ -11,11 +11,7 @@ from custom_components.tibber_prices.const import PRICE_LEVEL_MAPPING
 if TYPE_CHECKING:
     from custom_components.tibber_prices.coordinator.time_service import TibberPricesTimeService
 
-from .level_filtering import (
-    apply_level_filter,
-    check_interval_criteria,
-    compute_geometric_flex_bonus,
-)
+from .level_filtering import apply_level_filter, check_interval_criteria, compute_geometric_flex_bonus
 from .types import TibberPricesIntervalCriteria
 
 _LOGGER = logging.getLogger(__name__)
@@ -54,7 +50,7 @@ def calculate_reference_prices(intervals_by_day: dict[date, list[dict]], *, reve
     return ref_prices
 
 
-def build_periods(  # noqa: PLR0913, PLR0915, PLR0912 - Complex period building logic requires many arguments, statements, and branches
+def build_periods(
     all_prices: list[dict],
     price_context: dict[str, Any],
     *,
