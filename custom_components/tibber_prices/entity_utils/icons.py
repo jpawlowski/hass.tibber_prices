@@ -91,7 +91,7 @@ def get_trend_icon(key: str, value: Any) -> str | None:
     if key == "next_price_trend_change":
         return None  # Will be handled by sensor's icon property using attributes
 
-    if not key.startswith("price_trend_") and key != "current_price_trend":
+    if not key.startswith(("price_trend_", "price_outlook_", "price_trajectory_")) and key != "current_price_trend":
         return None
 
     if not isinstance(value, str):

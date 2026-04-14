@@ -65,10 +65,14 @@ def get_icon_color(
         return BINARY_SENSOR_COLOR_MAPPING[key].get(state_key)
 
     # Trend sensor colors (based on trend state)
-    if key.startswith("price_trend_") and isinstance(state_value, str):
+    if (
+        key.startswith(("price_trend_", "price_outlook_", "price_trajectory_")) or key == "current_price_trend"
+    ) and isinstance(state_value, str):
         trend_colors = {
+            "strongly_rising": "var(--error-color)",
             "rising": "var(--error-color)",  # Red/Orange for rising prices
             "falling": "var(--success-color)",  # Green for falling prices
+            "strongly_falling": "var(--success-color)",
             "stable": "var(--state-icon-color)",  # Default gray for stable
         }
         return trend_colors.get(state_value)
