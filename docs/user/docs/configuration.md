@@ -58,8 +58,46 @@ All steps have sensible defaults — you can click through without changes and f
 ### Step 2: Currency Display
 
 - **Base currency**: Shows prices as €/kWh, kr/kWh (e.g., 0.25 €/kWh)
-- **Subunit**: Shows prices as ct/kWh, øre/kWh (e.g., 25.00 ct/kWh)
+- **Subunit**: Shows prices as ct/kWh, øre/kWh (e.g., 25.3 ct/kWh)
 - Smart defaults: EUR → subunit (cents), NOK/SEK/DKK → base currency (kroner)
+
+:::caution Choose early
+Decide on your currency display mode **before** building automations or dashboard cards that rely on price sensor states or attributes. Switching later changes all price values (e.g., 25.34 ct → 0.2534 €), which will break numeric thresholds in your automations, template sensors, and conditional cards.
+
+**If you do switch later:**
+
+1. A **repair notification** (from this integration) appears **immediately** in your sidebar — it reminds you to update automations and dashboards.
+2. Home Assistant's Recorder will detect the unit mismatch and show a **"The unit has changed"** dialog — this may take a few minutes or until the next statistics run. Log warnings appear earlier. When it shows, choose **"Delete all old statistic data"** to start fresh. (Do not choose "Update the unit without converting" — that re-labels the old numbers with the new unit, making historic values factually wrong.)
+3. Update every **automation trigger and condition** that references a numeric price value.
+4. Update **dashboard cards** with hardcoded thresholds or unit labels.
+:::
+
+#### Price Precision and Rounding
+
+All prices are received from the Tibber API in base currency and processed without loss of precision. The sensor **state value** is stored with the following rounded precision:
+
+| Display Mode | Stored precision | Example |
+|---|---|---|
+| **Subunit** (ct, øre) | 2 decimal places | 25.34 ct/kWh |
+| **Base currency** (€, kr) | 4 decimal places | 0.2534 €/kWh |
+
+This applies to both **sensor states** and **attributes** (e.g., `energy_price`, `price_mean`, `price_min`, etc.).
+
+**Default display precision:** By default, HA shows fewer decimals than the stored value — enough for a quick glance. The integration sets these defaults per sensor type:
+
+| Sensor type | Subunit default | Base currency default |
+|---|---|---|
+| **Current / Next / Previous interval price** | 2 decimals (25.34 ct) | 4 decimals (0.2534 €) |
+| **All other price sensors** (averages, min/max, …) | 1 decimal (25.3 ct) | 2 decimals (0.25 €) |
+| **Energy Dashboard sensor** | — | 4 decimals (always) |
+
+You can increase the displayed precision per entity in the HA UI:
+
+1. Go to **Settings → Devices & Services → Entities**
+2. Select a price sensor → click the gear icon
+3. Change **Display precision** to your preference
+
+**Practical ceiling:** Subunit values (ct, øre) have exactly 2 decimal places stored — setting more than 2 will show trailing zeros. Base currency values have 4 decimal places stored — 3–4 decimals are meaningful.
 
 ### Step 3: Price Rating Thresholds
 
