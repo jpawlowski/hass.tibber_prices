@@ -903,7 +903,7 @@ class TibberPricesSensor(TibberPricesEntity, RestoreSensor):
         if self.entity_description.entity_category == EntityCategory.DIAGNOSTIC:
             try:
                 value = self.native_value
-            except KeyError, ValueError, TypeError:
+            except (KeyError, ValueError, TypeError):
                 # If we can't get the value, hide the sensor
                 return False
             else:

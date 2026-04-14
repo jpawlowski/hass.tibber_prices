@@ -47,7 +47,7 @@ def add_next_avg_attributes(  # noqa: PLR0913
     # Extract hours from sensor key (e.g., "next_avg_3h" -> 3)
     try:
         hours = int(key.rsplit("_", maxsplit=1)[-1].replace("h", ""))
-    except ValueError, AttributeError:
+    except (ValueError, AttributeError):
         return
 
     # Use TimeService to get the N-hour window starting from next interval
