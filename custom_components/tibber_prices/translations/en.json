@@ -1153,6 +1153,10 @@
     "entity_migration": {
       "title": "Tibber Prices: Action required after update ({home_name})",
       "description": "This update includes breaking changes that were applied automatically.\n\n**Renamed Entities ({count})**\n\nThe following entity keys were renamed. Your existing entity IDs and automations remain intact:\n\n{entity_list}\n\n**Duration Sensor Value Change**\n\nAll duration sensors (remaining time, starts in, period duration, trend change countdown) now report their state value in **minutes** instead of hours. The display unit in dashboards remains hours by default.\n\nIf you have automations using numeric comparisons on these sensors, update your thresholds:\n- Old: `state < 0.25` (15 minutes as hours)\n- New: `state < 15` (15 minutes)\n\nDismiss this notice after reviewing your automations."
+    },
+    "currency_display_mode_changed": {
+      "title": "Currency display unit changed for {home_name}",
+      "description": "You changed the currency display mode for **{home_name}**. All price sensor values and attributes now use the new unit (e.g. 25.34 ct → 0.2534 € or vice versa).\n\nHome Assistant’s Recorder will separately show a **“The unit has changed”** dialog for affected sensors — this may take a few minutes or until the next statistics run (log warnings appear earlier). When it appears, choose **Delete all old statistic data** to start fresh. Do not choose “Update the unit without converting”: that re-labels the old numbers without adjusting their values, making the historic data factually incorrect.\n\n**Review manually:**\n\n1. **Automations & Templates:** Update all automations and template sensors that use numeric price thresholds.\n2. **Dashboard Cards:** Update any cards with hardcoded thresholds or unit labels.\n\nDismiss this notice after reviewing your automations and dashboards."
     }
   },
   "exceptions": {

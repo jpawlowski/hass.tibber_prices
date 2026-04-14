@@ -14,6 +14,7 @@ import voluptuous as vol
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.const import CONF_ACCESS_TOKEN, Platform
 from homeassistant.exceptions import ConfigEntryAuthFailed
+from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.storage import Store
 from homeassistant.loader import async_get_loaded_integration
@@ -25,6 +26,7 @@ from .const import (
     CONF_PRICE_TREND_MIN_PRICE_CHANGE_STRONGLY,
     DATA_CHART_CONFIG,
     DATA_CHART_METADATA_CONFIG,
+    DATA_STATISTICS_REVIEW_REQUIRED,
     DISPLAY_MODE_SUBUNIT,
     DOMAIN,
     LOGGER,
@@ -212,6 +214,30 @@ def _get_access_token(hass: HomeAssistant, entry: ConfigEntry) -> str:
     raise ConfigEntryAuthFailed(msg)
 
 
+def _check_statistics_review_repair(hass: HomeAssistant, entry: TibberPricesConfigEntry) -> None:
+    """Re-create the statistics-review repair issue fresh on every setup when the flag is set.
+
+    Using delete + create (instead of get_or_create) resets dismissed_version, so the issue
+    reappears in the Repairs panel even if the user had dismissed it before a restart.
+    The flag is cleared from config_entry.data only when the user acknowledges the change
+    by re-saving the currency display settings in the options flow.
+    """
+    if not entry.data.get(DATA_STATISTICS_REVIEW_REQUIRED):
+        return
+    issue_id = f"currency_display_mode_changed_{entry.entry_id}"
+    ir.async_delete_issue(hass, DOMAIN, issue_id)
+    ir.async_create_issue(
+        hass,
+        DOMAIN,
+        issue_id,
+        is_fixable=False,
+        is_persistent=True,
+        severity=ir.IssueSeverity.WARNING,
+        translation_key="currency_display_mode_changed",
+        translation_placeholders={"home_name": entry.title},
+    )
+
+
 # https://developers.home-assistant.io/docs/config_entries_index/#setting-up-an-entry
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -225,6 +251,9 @@ async def async_setup_entry(
 
     # Check for entity migrations (renames, breaking changes) and create repairs
     check_entity_migrations(hass, entry)
+
+    # Re-create statistics review repair issue fresh (resets any previous dismiss)
+    _check_statistics_review_repair(hass, entry)
 
     # Preload translations to populate the cache
     await async_load_translations(hass, "en")

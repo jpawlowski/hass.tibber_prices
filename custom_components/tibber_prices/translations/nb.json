@@ -1153,6 +1153,10 @@
     "entity_migration": {
       "title": "Tibber Prices: Handling kreves etter oppdatering ({home_name})",
       "description": "Denne oppdateringen inkluderer endringer som ble brukt automatisk.\n\n**Omdøpte entiteter ({count})**\n\nFølgende entity-nøkler ble omdøpt. Dine eksisterende entity-ID-er og automatiseringer forblir intakte:\n\n{entity_list}\n\n**Endrede varighetssensorverdier**\n\nAlle varighetssensorer (gjenværende tid, starter om, periodevarighet, trendendrings-nedtelling) rapporterer nå tilstandsverdien i **minutter** i stedet for timer. Visningsenheten i dashboards forblir timer som standard.\n\nHvis du har automatiseringer med numeriske sammenligninger på disse sensorene, oppdater tersklene:\n- Gammelt: `state < 0.25` (15 minutter som timer)\n- Nytt: `state < 15` (15 minutter)\n\nAvvis dette varselet etter å ha gjennomgått automatiseringene dine."
+    },
+    "currency_display_mode_changed": {
+      "title": "Valutavisningsenhet endret for {home_name}",
+      "description": "Du endret valutavisningsmodusen for **{home_name}**. Alle prissensorverdier og -attributter bruker nå den nye enheten (f.eks. 25,34 øre → 0,2534 kr eller omvendt).\n\nHome Assistants Recorder viser separat en **„Enheten har endret seg“**-dialog for berørte sensorer — dette kan ta noen minutter eller til neste statistikkjøring (advarsler i loggen dukker opp tidligere). Når den vises, velg **Slett alle gamle statistikkdata** for en ren start. Ikke velg „Oppdater enheten uten konvertering“: det beholder de gamle tallene med ny enhet uten å justere verdiene, og gjør de historiske dataene faktisk feil.\n\n**Gjennomgå manuelt:**\n\n1. **Automatiseringer & maler:** Oppdater alle automatiseringer og malsensorer som bruker numeriske pristerskler.\n2. **Dashboard-kort:** Oppdater kort med hardkodede terskelverdier eller enhetsetiketter.\n\nAvvis dette varselet etter å ha gjennomgått automatiseringene og dashboardene dine."
     }
   },
   "exceptions": {

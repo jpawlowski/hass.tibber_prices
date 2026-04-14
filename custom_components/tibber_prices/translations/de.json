@@ -1153,6 +1153,10 @@
     "entity_migration": {
       "title": "Tibber Prices: Aktion nach Update erforderlich ({home_name})",
       "description": "Dieses Update enthält Breaking Changes, die automatisch angewendet wurden.\n\n**Umbenannte Entitäten ({count})**\n\nDie folgenden Entity-Keys wurden umbenannt. Deine bestehenden Entity-IDs und Automationen bleiben erhalten:\n\n{entity_list}\n\n**Geänderte Dauer-Sensorwerte**\n\nAlle Dauer-Sensoren (verbleibende Zeit, startet in, Periodendauer, Trendänderungs-Countdown) geben ihren Zustandswert jetzt in **Minuten** statt Stunden an. Die Anzeigeeinheit in Dashboards bleibt standardmäßig Stunden.\n\nWenn du Automationen mit numerischen Vergleichen auf diesen Sensoren hast, aktualisiere deine Schwellwerte:\n- Alt: `state < 0.25` (15 Minuten als Stunden)\n- Neu: `state < 15` (15 Minuten)\n\nSchließe diesen Hinweis, nachdem du deine Automationen überprüft hast."
+    },
+    "currency_display_mode_changed": {
+      "title": "Währungsanzeigeeinheit für {home_name} geändert",
+      "description": "Du hast den Währungsanzeigemodus für **{home_name}** geändert. Alle Preissensor-Werte und -Attribute verwenden jetzt die neue Einheit (z.B. 25,34 ct → 0,2534 € oder umgekehrt).\n\nDer Recorder von Home Assistant zeigt separat einen Dialog **„Die Einheit hat sich geändert“** für betroffene Sensoren — das kann einige Minuten dauern oder bis zum nächsten Statistik-Durchlauf (Warnungen im Log erscheinen früher). Wähle dann **Alle alten Statistikdaten löschen** für einen sauberen Neustart. Wähle nicht „Einheit aktualisieren ohne Konvertierung“: das benennt die alten Zahlen nur um, ohne die Werte anzupassen, und macht die historischen Daten inhaltlich falsch.\n\n**Manuell prüfen:**\n\n1. **Automationen & Templates:** Aktualisiere alle Automationen und Template-Sensoren mit numerischen Preis-Schwellwerten.\n2. **Dashboard-Karten:** Aktualisiere alle Karten mit fest codierten Schwellwerten oder Einheitenbezeichnungen.\n\nSchließe diesen Hinweis, nachdem du deine Automationen und Dashboards überprüft hast."
     }
   },
   "exceptions": {

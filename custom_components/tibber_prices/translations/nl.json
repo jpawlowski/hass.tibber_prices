@@ -1153,6 +1153,10 @@
     "entity_migration": {
       "title": "Tibber Prices: Actie vereist na update ({home_name})",
       "description": "Deze update bevat wijzigingen die automatisch zijn toegepast.\n\n**Hernoemde entiteiten ({count})**\n\nDe volgende entity-sleutels zijn hernoemd. Je bestaande entity-ID's en automatiseringen blijven intact:\n\n{entity_list}\n\n**Gewijzigde duur-sensorwaarden**\n\nAlle duur-sensoren (resterende tijd, start over, periodeduur, trendwijzigings-aftelling) rapporteren hun statuswaarde nu in **minuten** in plaats van uren. De weergave-eenheid in dashboards blijft standaard uren.\n\nAls je automatiseringen hebt met numerieke vergelijkingen op deze sensoren, werk dan je drempelwaarden bij:\n- Oud: `state < 0.25` (15 minuten als uren)\n- Nieuw: `state < 15` (15 minuten)\n\nSluit deze melding nadat je je automatiseringen hebt gecontroleerd."
+    },
+    "currency_display_mode_changed": {
+      "title": "Valutaweergave-eenheid gewijzigd voor {home_name}",
+      "description": "Je hebt de valutaweergavemodus voor **{home_name}** gewijzigd. Alle prijssensorwaarden en -attributen gebruiken nu de nieuwe eenheid (bijv. 25,34 ct → 0,2534 € of andersom).\n\nHome Assistant’s Recorder toont afzonderlijk een **„De eenheid is gewijzigd“**-dialoogvenster voor getroffen sensoren — dit kan enkele minuten duren of tot de volgende statistiekenrun (logwaarschuwingen verschijnen eerder). Kies dan **Alle oude statistiekgegevens verwijderen** voor een schone start. Kies niet „Eenheid bijwerken zonder conversie“: dat hernoemt de oude getallen zonder de waarden aan te passen, waardoor de historische gegevens inhoudelijk onjuist worden.\n\n**Handmatig controleren:**\n\n1. **Automatiseringen & templates:** Werk alle automatiseringen en template-sensoren bij die numerieke prijsdrempels gebruiken.\n2. **Dashboard-kaarten:** Werk kaarten bij met hardgecodeerde drempelwaarden of eenheidslabels.\n\nSluit deze melding nadat je je automatiseringen en dashboards hebt gecontroleerd."
     }
   },
   "exceptions": {

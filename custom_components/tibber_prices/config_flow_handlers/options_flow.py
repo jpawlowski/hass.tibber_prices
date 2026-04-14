@@ -2,8 +2,8 @@
 
 from __future__ import annotations
 
-import logging
 from copy import deepcopy
+import logging
 from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
@@ -52,6 +52,7 @@ from custom_components.tibber_prices.const import (
     CONF_BEST_PRICE_MAX_LEVEL_GAP_COUNT,
     CONF_BEST_PRICE_MIN_DISTANCE_FROM_AVG,
     CONF_BEST_PRICE_MIN_PERIOD_LENGTH,
+    CONF_CURRENCY_DISPLAY_MODE,
     CONF_MIN_PERIODS_BEST,
     CONF_MIN_PERIODS_PEAK,
     CONF_PEAK_PRICE_FLEX,
@@ -71,6 +72,7 @@ from custom_components.tibber_prices.const import (
     CONF_VOLATILITY_THRESHOLD_HIGH,
     CONF_VOLATILITY_THRESHOLD_MODERATE,
     CONF_VOLATILITY_THRESHOLD_VERY_HIGH,
+    DATA_STATISTICS_REVIEW_REQUIRED,
     DEFAULT_VOLATILITY_THRESHOLD_HIGH,
     DEFAULT_VOLATILITY_THRESHOLD_MODERATE,
     DEFAULT_VOLATILITY_THRESHOLD_VERY_HIGH,
@@ -82,7 +84,7 @@ from custom_components.tibber_prices.const import (
     get_display_unit_factor,
 )
 from homeassistant.config_entries import ConfigFlowResult, OptionsFlow
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import entity_registry as er, issue_registry as ir
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -501,10 +503,43 @@ class TibberPricesOptionsFlowHandler(OptionsFlow):
                 currency_code = tibber_data.coordinator.data.get("currency")
 
         if user_input is not None:
+            # Detect currency display mode change before saving
+            old_mode = self.config_entry.options.get(CONF_CURRENCY_DISPLAY_MODE)
+            new_mode = user_input.get(CONF_CURRENCY_DISPLAY_MODE)
+
             # Update options with new values
             self._options.update(user_input)
             # async_create_entry automatically handles change detection and listener triggering
             self._save_options_if_changed()
+
+            # Handle currency display mode change repair + persistent flag
+            issue_id = f"currency_display_mode_changed_{self.config_entry.entry_id}"
+            mode_changed = old_mode is not None and new_mode is not None and old_mode != new_mode
+
+            if mode_changed:
+                # Set persistent flag so repair issue reappears after dismiss + HA restart
+                self.hass.config_entries.async_update_entry(
+                    self.config_entry,
+                    data={**self.config_entry.data, DATA_STATISTICS_REVIEW_REQUIRED: True},
+                )
+                ir.async_create_issue(
+                    self.hass,
+                    DOMAIN,
+                    issue_id,
+                    is_fixable=False,
+                    is_persistent=True,
+                    severity=ir.IssueSeverity.WARNING,
+                    translation_key="currency_display_mode_changed",
+                    translation_placeholders={
+                        "home_name": self.config_entry.title,
+                    },
+                )
+            elif self.config_entry.data.get(DATA_STATISTICS_REVIEW_REQUIRED):
+                # User re-saved display settings with same mode = acknowledgement → clear flag
+                new_data = {k: v for k, v in self.config_entry.data.items() if k != DATA_STATISTICS_REVIEW_REQUIRED}
+                self.hass.config_entries.async_update_entry(self.config_entry, data=new_data)
+                ir.async_delete_issue(self.hass, DOMAIN, issue_id)
+
             # Return to menu for more changes
             return await self.async_step_init()
 
