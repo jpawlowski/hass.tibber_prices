@@ -4,13 +4,8 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from custom_components.tibber_prices.const import (
-    PRICE_RATING_MAPPING,
-    get_display_unit_factor,
-)
-from custom_components.tibber_prices.coordinator.helpers import (
-    get_intervals_for_day_offsets,
-)
+from custom_components.tibber_prices.const import PRICE_RATING_MAPPING, get_display_precision, get_display_unit_factor
+from custom_components.tibber_prices.coordinator.helpers import get_intervals_for_day_offsets
 from homeassistant.const import PERCENTAGE
 
 if TYPE_CHECKING:
@@ -30,12 +25,13 @@ def _add_energy_tax_from_interval(
 ) -> None:
     """Add energy_price and tax from a single interval dict."""
     factor = get_display_unit_factor(config_entry)
+    precision = get_display_precision(config_entry)
     energy = interval_data.get("energy")
     if energy is not None:
-        attributes["energy_price"] = round(float(energy) * factor, 2)
+        attributes["energy_price"] = round(float(energy) * factor, precision)
     tax = interval_data.get("tax")
     if tax is not None:
-        attributes["tax"] = round(float(tax) * factor, 2)
+        attributes["tax"] = round(float(tax) * factor, precision)
 
 
 def _add_energy_tax_averages_from_cache(
@@ -49,14 +45,15 @@ def _add_energy_tax_averages_from_cache(
         "last_energy_tax_averages", (None, None, None, None)
     )
     factor = get_display_unit_factor(config_entry)
+    precision = get_display_precision(config_entry)
     if energy_mean is not None:
-        attributes["energy_price_mean"] = round(float(energy_mean) * factor, 2)
+        attributes["energy_price_mean"] = round(float(energy_mean) * factor, precision)
     if energy_median is not None:
-        attributes["energy_price_median"] = round(float(energy_median) * factor, 2)
+        attributes["energy_price_median"] = round(float(energy_median) * factor, precision)
     if tax_mean is not None:
-        attributes["tax_mean"] = round(float(tax_mean) * factor, 2)
+        attributes["tax_mean"] = round(float(tax_mean) * factor, precision)
     if tax_median is not None:
-        attributes["tax_median"] = round(float(tax_median) * factor, 2)
+        attributes["tax_median"] = round(float(tax_median) * factor, precision)
 
 
 def _get_day_midnight_timestamp(key: str, *, time: TibberPricesTimeService) -> datetime:

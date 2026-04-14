@@ -16,12 +16,9 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from custom_components.tibber_prices.const import get_display_unit_factor
+from custom_components.tibber_prices.const import get_display_precision, get_display_unit_factor
 from custom_components.tibber_prices.utils.average import calculate_mean, calculate_median
-from custom_components.tibber_prices.utils.price import (
-    aggregate_price_levels,
-    aggregate_price_rating,
-)
+from custom_components.tibber_prices.utils.price import aggregate_price_levels, aggregate_price_rating
 
 if TYPE_CHECKING:
     from homeassistant.config_entries import ConfigEntry
@@ -51,7 +48,8 @@ def aggregate_average_data(
     median = calculate_median(prices)
     # Convert to display currency unit based on configuration
     factor = get_display_unit_factor(config_entry)
-    return round(mean * factor, 2), round(median * factor, 2) if median is not None else None
+    precision = get_display_precision(config_entry)
+    return round(mean * factor, precision), round(median * factor, precision) if median is not None else None
 
 
 def aggregate_level_data(window_data: list[dict]) -> str | None:

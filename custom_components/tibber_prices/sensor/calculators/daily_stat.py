@@ -9,12 +9,10 @@ from custom_components.tibber_prices.const import (
     CONF_PRICE_RATING_THRESHOLD_LOW,
     DEFAULT_PRICE_RATING_THRESHOLD_HIGH,
     DEFAULT_PRICE_RATING_THRESHOLD_LOW,
+    get_display_precision,
 )
 from custom_components.tibber_prices.entity_utils import get_price_value
-from custom_components.tibber_prices.sensor.helpers import (
-    aggregate_level_data,
-    aggregate_rating_data,
-)
+from custom_components.tibber_prices.sensor.helpers import aggregate_level_data, aggregate_rating_data
 from custom_components.tibber_prices.utils.average import calculate_median
 
 from .base import TibberPricesBaseCalculator
@@ -22,9 +20,7 @@ from .base import TibberPricesBaseCalculator
 if TYPE_CHECKING:
     from collections.abc import Callable
 
-    from custom_components.tibber_prices.coordinator import (
-        TibberPricesDataUpdateCoordinator,
-    )
+    from custom_components.tibber_prices.coordinator import TibberPricesDataUpdateCoordinator
 
 
 class TibberPricesDailyStatCalculator(TibberPricesBaseCalculator):
@@ -115,9 +111,10 @@ class TibberPricesDailyStatCalculator(TibberPricesBaseCalculator):
             # Compute and cache energy/tax averages for attribute builders
             self._cache_energy_tax_averages(price_intervals)
             # Convert to display currency units based on config
-            avg_result = round(get_price_value(value, config_entry=self.coordinator.config_entry), 2)
+            precision = get_display_precision(self.coordinator.config_entry)
+            avg_result = round(get_price_value(value, config_entry=self.coordinator.config_entry), precision)
             median_result = (
-                round(get_price_value(median, config_entry=self.coordinator.config_entry), 2)
+                round(get_price_value(median, config_entry=self.coordinator.config_entry), precision)
                 if median is not None
                 else None
             )
@@ -132,9 +129,10 @@ class TibberPricesDailyStatCalculator(TibberPricesBaseCalculator):
                 self._last_extreme_interval = pi["interval"]
                 break
 
-        # Return in configured display currency units with 2 decimals
+        # Return in configured display currency units
+        precision = get_display_precision(self.coordinator.config_entry)
         result = get_price_value(value, config_entry=self.coordinator.config_entry)
-        return round(result, 2)
+        return round(result, precision)
 
     def get_daily_aggregated_value(
         self,

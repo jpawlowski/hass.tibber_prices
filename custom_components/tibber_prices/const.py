@@ -9,12 +9,7 @@ from typing import TYPE_CHECKING, Any
 
 import aiofiles
 
-from homeassistant.const import (
-    CURRENCY_DOLLAR,
-    CURRENCY_EURO,
-    UnitOfPower,
-    UnitOfTime,
-)
+from homeassistant.const import CURRENCY_DOLLAR, CURRENCY_EURO, UnitOfPower, UnitOfTime
 
 if TYPE_CHECKING:
     from collections.abc import Sequence
@@ -28,6 +23,11 @@ LOGGER = logging.getLogger(__package__)
 # Data storage keys
 DATA_CHART_CONFIG = "chart_config"  # Key for chart export config in hass.data
 DATA_CHART_METADATA_CONFIG = "chart_metadata_config"  # Key for chart metadata config in hass.data
+
+# Config entry data flag: set when user switches currency display mode.
+# Triggers a fresh (un-dismissed) repair issue on every setup/reload until
+# the user explicitly re-saves the currency settings to acknowledge.
+DATA_STATISTICS_REVIEW_REQUIRED = "statistics_review_required"
 
 # Configuration keys
 CONF_EXTENDED_DESCRIPTIONS = "extended_descriptions"
@@ -462,12 +462,40 @@ def get_display_unit_factor(config_entry: ConfigEntry) -> int:
     Example:
         price_base = 0.2534  # Internal: 0.2534 €/kWh
         factor = get_display_unit_factor(config_entry)
-        display_value = round(price_base * factor, 2)
-        # → 25.34 ct/kWh (subunit) or 0.25 €/kWh (base)
+        precision = get_display_precision(config_entry)
+        display_value = round(price_base * factor, precision)
+        # → 25.34 ct/kWh (subunit, 2 decimals) or 0.2534 €/kWh (base, 4 decimals)
 
     """
     display_mode = config_entry.options.get(CONF_CURRENCY_DISPLAY_MODE, DISPLAY_MODE_SUBUNIT)
     return 100 if display_mode == DISPLAY_MODE_SUBUNIT else 1
+
+
+# Rounding precision constants for display currency
+DISPLAY_PRECISION_SUBUNIT = 2  # Decimal places for subunit currency (ct, øre)
+DISPLAY_PRECISION_BASE = 4  # Decimal places for base currency (€, kr)
+
+
+def get_display_precision(config_entry: ConfigEntry) -> int:
+    """
+    Get decimal precision for rounding prices in the configured display currency.
+
+    Subunit currencies (ct, øre) use 2 decimal places (e.g., 25.34 ct/kWh).
+    Base currencies (€, kr) use 4 decimal places (e.g., 0.2534 €/kWh).
+
+    This ensures sufficient precision for all currency modes:
+    - Subunit: 2 decimals (the sub-cent level is rarely meaningful)
+    - Base: 4 decimals (preserves full API precision for EUR/NOK/SEK prices)
+
+    Args:
+        config_entry: ConfigEntry with currency_display_mode option
+
+    Returns:
+        2 for subunit currency, 4 for base currency
+
+    """
+    display_mode = config_entry.options.get(CONF_CURRENCY_DISPLAY_MODE, DISPLAY_MODE_SUBUNIT)
+    return DISPLAY_PRECISION_SUBUNIT if display_mode == DISPLAY_MODE_SUBUNIT else DISPLAY_PRECISION_BASE
 
 
 def get_display_unit_string(config_entry: ConfigEntry, currency_code: str | None) -> str:

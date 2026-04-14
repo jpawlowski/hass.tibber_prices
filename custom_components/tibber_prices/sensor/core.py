@@ -2,54 +2,35 @@
 
 from __future__ import annotations
 
-from datetime import datetime  # noqa: TC003 - Used at runtime for _get_data_timestamp()
+from datetime import datetime
 from typing import TYPE_CHECKING, Any
 
-from custom_components.tibber_prices.binary_sensor.attributes import (
-    get_price_intervals_attributes,
-)
+from custom_components.tibber_prices.binary_sensor.attributes import get_price_intervals_attributes
 from custom_components.tibber_prices.const import (
     CONF_AVERAGE_SENSOR_DISPLAY,
-    CONF_CURRENCY_DISPLAY_MODE,
     CONF_PRICE_RATING_THRESHOLD_HIGH,
     CONF_PRICE_RATING_THRESHOLD_LOW,
     DEFAULT_AVERAGE_SENSOR_DISPLAY,
     DEFAULT_PRICE_RATING_THRESHOLD_HIGH,
     DEFAULT_PRICE_RATING_THRESHOLD_LOW,
-    DISPLAY_MODE_BASE,
     DOMAIN,
     format_price_unit_base,
+    get_display_precision,
     get_display_unit_factor,
     get_display_unit_string,
 )
-from custom_components.tibber_prices.coordinator import (
-    MINUTE_UPDATE_ENTITY_KEYS,
-    TIME_SENSITIVE_ENTITY_KEYS,
-)
-from custom_components.tibber_prices.coordinator.helpers import (
-    get_intervals_for_day_offsets,
-)
+from custom_components.tibber_prices.coordinator import MINUTE_UPDATE_ENTITY_KEYS, TIME_SENSITIVE_ENTITY_KEYS
+from custom_components.tibber_prices.coordinator.helpers import get_intervals_for_day_offsets
 from custom_components.tibber_prices.entity import TibberPricesEntity
 from custom_components.tibber_prices.entity_utils import (
     add_icon_color_attribute,
     find_rolling_hour_center_index,
     get_price_value,
 )
-from custom_components.tibber_prices.entity_utils.icons import (
-    TibberPricesIconContext,
-    get_dynamic_icon,
-)
-from custom_components.tibber_prices.utils.average import (
-    calculate_next_n_hours_mean,
-)
-from custom_components.tibber_prices.utils.price import (
-    calculate_volatility_level,
-)
-from homeassistant.components.sensor import (
-    RestoreSensor,
-    SensorDeviceClass,
-    SensorEntityDescription,
-)
+from custom_components.tibber_prices.entity_utils.icons import TibberPricesIconContext, get_dynamic_icon
+from custom_components.tibber_prices.utils.average import calculate_next_n_hours_mean
+from custom_components.tibber_prices.utils.price import calculate_volatility_level
+from homeassistant.components.sensor import RestoreSensor, SensorDeviceClass, SensorEntityDescription
 from homeassistant.const import EntityCategory
 from homeassistant.core import callback
 
@@ -70,11 +51,7 @@ from .calculators import (
     TibberPricesVolatilityCalculator,
     TibberPricesWindow24hCalculator,
 )
-from .chart_data import (
-    build_chart_data_attributes,
-    call_chartdata_service_async,
-    get_chart_data_state,
-)
+from .chart_data import build_chart_data_attributes, call_chartdata_service_async, get_chart_data_state
 from .chart_metadata import (
     build_chart_metadata_attributes,
     call_chartdata_service_for_metadata_async,
@@ -86,9 +63,7 @@ from .value_getters import get_value_getter_mapping
 if TYPE_CHECKING:
     from collections.abc import Callable
 
-    from custom_components.tibber_prices.coordinator import (
-        TibberPricesDataUpdateCoordinator,
-    )
+    from custom_components.tibber_prices.coordinator import TibberPricesDataUpdateCoordinator
     from custom_components.tibber_prices.coordinator.time_service import TibberPricesTimeService
 
 HOURS_IN_DAY = 24
@@ -426,6 +401,15 @@ class TibberPricesSensor(TibberPricesEntity, RestoreSensor):
         # Coordinator updates bring new API data — always write to ensure fresh state.
         # Reset _last_written_value so timer-based handlers also write next cycle.
         self._last_written_value = _SENTINEL
+
+        # Sync suggested display precision with entity registry. HA only updates
+        # this on entity add and registry entry changes, not on state writes. When
+        # the user switches currency display mode via options flow, we must push
+        # the new precision to the registry explicitly. The call is cheap (property
+        # read + dict comparison) and returns early when values already match.
+        if self.registry_entry:
+            self._update_suggested_precision()
+
         super()._handle_coordinator_update()
 
     def _get_value_getter(self) -> Callable | None:
@@ -581,9 +565,10 @@ class TibberPricesSensor(TibberPricesEntity, RestoreSensor):
                 self._last_extreme_interval = pi["interval"]
                 break
 
-        # Return in configured display currency units with 2 decimals
+        # Return in configured display currency units
+        precision = get_display_precision(self.coordinator.config_entry)
         result = get_price_value(value, config_entry=self.coordinator.config_entry)
-        return round(result, 2)
+        return round(result, precision)
 
     def _get_daily_aggregated_value(
         self,
@@ -659,9 +644,10 @@ class TibberPricesSensor(TibberPricesEntity, RestoreSensor):
         if value is None:
             return None
 
-        # Return in configured display currency units with 2 decimals
+        # Return in configured display currency units
+        precision = get_display_precision(self.coordinator.config_entry)
         result = get_price_value(value, config_entry=self.coordinator.config_entry)
-        return round(result, 2)
+        return round(result, precision)
 
     def _translate_rating_level(self, level: str) -> str:
         """Translate the rating level using custom translations, falling back to English or the raw value."""
@@ -710,6 +696,7 @@ class TibberPricesSensor(TibberPricesEntity, RestoreSensor):
 
         # Get display unit factor (100 for minor, 1 for major)
         factor = get_display_unit_factor(self.coordinator.config_entry)
+        precision = get_display_precision(self.coordinator.config_entry)
 
         # Get user preference for display (mean or median)
         display_pref = self.coordinator.config_entry.options.get(
@@ -717,14 +704,14 @@ class TibberPricesSensor(TibberPricesEntity, RestoreSensor):
         )
 
         # Store both values for attributes
-        self.cached_data[f"next_avg_{hours}h_mean"] = round(mean_price * factor, 2)
+        self.cached_data[f"next_avg_{hours}h_mean"] = round(mean_price * factor, precision)
         if median_price is not None:
-            self.cached_data[f"next_avg_{hours}h_median"] = round(median_price * factor, 2)
+            self.cached_data[f"next_avg_{hours}h_median"] = round(median_price * factor, precision)
 
         # Return the value chosen for state display
         if display_pref == "median" and median_price is not None:
-            return round(median_price * factor, 2)
-        return round(mean_price * factor, 2)  # "mean"
+            return round(median_price * factor, precision)
+        return round(mean_price * factor, precision)  # "mean"
 
     def _get_data_timestamp(self) -> datetime | None:
         """
@@ -916,7 +903,7 @@ class TibberPricesSensor(TibberPricesEntity, RestoreSensor):
         return True
 
     @property
-    def native_value(self) -> float | str | datetime | None:  # noqa: PLR0912
+    def native_value(self) -> float | str | datetime | None:
         """Return the native value of the sensor."""
         try:
             if not self.coordinator.data or not self._value_getter:
@@ -1043,34 +1030,19 @@ class TibberPricesSensor(TibberPricesEntity, RestoreSensor):
         key = self.entity_description.key
         value = self.native_value
 
-        # Icon mapping for trend directions (5-level scale)
-        trend_icons = {
-            "strongly_rising": "mdi:chevron-double-up",
-            "rising": "mdi:trending-up",
-            "stable": "mdi:trending-neutral",
-            "falling": "mdi:trending-down",
-            "strongly_falling": "mdi:chevron-double-down",
-        }
-
-        # Special handling for next_price_trend_change: Icon based on direction attribute
-        if key == "next_price_trend_change":
-            trend_change_attrs = self._trend_calculator.get_trend_change_attributes()
-            if trend_change_attrs:
-                direction = trend_change_attrs.get("direction")
-                if isinstance(direction, str):
-                    return trend_icons.get(direction, "mdi:help-circle-outline")
-            return "mdi:help-circle-outline"
-
-        # Special handling for current_price_trend: Icon based on current state value
-        if key == "current_price_trend" and isinstance(value, str):
-            return trend_icons.get(value, "mdi:help-circle-outline")
-
         # Create callback for period active state check (used by timing sensors)
         period_is_active_callback = None
         if key.startswith("best_price_"):
             period_is_active_callback = self._is_best_price_period_active
         elif key.startswith("peak_price_"):
             period_is_active_callback = self._is_peak_price_period_active
+
+        # For next_price_trend_change, pass direction from cached attributes via context
+        trend_change_direction = None
+        if key == "next_price_trend_change":
+            trend_change_attrs = self._trend_calculator.get_trend_change_attributes()
+            if trend_change_attrs:
+                trend_change_direction = trend_change_attrs.get("direction")
 
         # Use centralized icon logic with context
         icon = get_dynamic_icon(
@@ -1080,11 +1052,24 @@ class TibberPricesSensor(TibberPricesEntity, RestoreSensor):
                 coordinator_data=self.coordinator.data,
                 period_is_active_callback=period_is_active_callback,
                 time=self.coordinator.time,
+                trend_change_direction=trend_change_direction,
             ),
         )
 
         # Fall back to static icon from entity description
         return icon or self.entity_description.icon
+
+    # Interval price sensors that show individual quarter-hour prices.
+    # These get full data precision (subunit→2, base→4) as display default
+    # because users rely on exact values for automations and dashboards.
+    _INTERVAL_PRICE_KEYS = frozenset(
+        {
+            "current_interval_price",
+            "current_interval_price_base",
+            "next_interval_price",
+            "previous_interval_price",
+        }
+    )
 
     @property
     def suggested_display_precision(self) -> int | None:
@@ -1092,12 +1077,12 @@ class TibberPricesSensor(TibberPricesEntity, RestoreSensor):
         Return suggested display precision based on currency display mode.
 
         For MONETARY sensors:
-        - Current/Next Interval Price: Show exact price with higher precision
-          - Base currency (€/kr): 4 decimals (e.g., 0.1234 €)
-          - Subunit currency (ct/øre): 2 decimals (e.g., 12.34 ct)
-        - All other price sensors:
-          - Base currency (€/kr): 2 decimals (e.g., 0.12 €)
-          - Subunit currency (ct/øre): 1 decimal (e.g., 12.5 ct)
+        - Interval price sensors: Full precision (subunit→2, base→4)
+        - Energy Dashboard sensor (current_interval_price_base): Always 4
+        - All other price sensors: Reduced precision (subunit→1, base→2)
+
+        The actual state value retains full rounded precision (2 or 4 decimals),
+        so users can increase display precision in the HA UI to see more detail.
 
         For non-MONETARY sensors, use static value from entity description.
         """
@@ -1105,23 +1090,16 @@ class TibberPricesSensor(TibberPricesEntity, RestoreSensor):
         if self.entity_description.device_class != SensorDeviceClass.MONETARY:
             return self.entity_description.suggested_display_precision
 
-        # Check display mode configuration
-        display_mode = self.coordinator.config_entry.options.get(CONF_CURRENCY_DISPLAY_MODE, DISPLAY_MODE_BASE)
-
-        # Special case: Energy Dashboard sensor always shows base currency with 4 decimals
-        # regardless of display mode (it's always in base currency by design)
+        # Energy Dashboard sensor: always base currency, always 4 decimals
         if self.entity_description.key == "current_interval_price_base":
             return 4
 
-        # Special case: Current and Next interval price sensors get higher precision
-        # to show exact prices as received from API
-        if self.entity_description.key in ("current_interval_price", "next_interval_price"):
-            # Major: 4 decimals (0.1234 €), Minor: 2 decimals (12.34 ct)
-            return 4 if display_mode == DISPLAY_MODE_BASE else 2
+        # Interval price sensors: full data precision (subunit→2, base→4)
+        if self.entity_description.key in self._INTERVAL_PRICE_KEYS:
+            return get_display_precision(self.coordinator.config_entry)
 
-        # All other sensors: Standard precision
-        # Major: 2 decimals (0.12 €), Minor: 1 decimal (12.5 ct)
-        return 2 if display_mode == DISPLAY_MODE_BASE else 1
+        # All other MONETARY sensors: reduced precision (subunit→1, base→2)
+        return get_display_precision(self.coordinator.config_entry) // 2
 
     @property
     def extra_state_attributes(self) -> dict[str, Any] | None:

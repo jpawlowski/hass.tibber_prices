@@ -4,13 +4,11 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from custom_components.tibber_prices.const import get_display_unit_factor
+from custom_components.tibber_prices.const import get_display_precision, get_display_unit_factor
 from custom_components.tibber_prices.coordinator.helpers import get_intervals_for_day_offsets
 
 if TYPE_CHECKING:
-    from custom_components.tibber_prices.coordinator.core import (
-        TibberPricesDataUpdateCoordinator,
-    )
+    from custom_components.tibber_prices.coordinator.core import TibberPricesDataUpdateCoordinator
     from custom_components.tibber_prices.coordinator.time_service import TibberPricesTimeService
     from custom_components.tibber_prices.data import TibberPricesConfigEntry
 
@@ -20,7 +18,7 @@ from .helpers import add_alternate_average_attribute
 MAX_FORECAST_INTERVALS = 8  # Show up to 8 future intervals (2 hours with 15-min intervals)
 
 
-def add_next_avg_attributes(  # noqa: PLR0913
+def add_next_avg_attributes(
     attributes: dict,
     key: str,
     coordinator: TibberPricesDataUpdateCoordinator,
@@ -142,7 +140,8 @@ def get_future_prices(
             # Convert to display currency unit based on configuration
             price_major = float(price_data["total"])
             factor = get_display_unit_factor(config_entry)
-            price_display = round(price_major * factor, 2)
+            precision = get_display_precision(config_entry)
+            price_display = round(price_major * factor, precision)
 
             future_prices.append(
                 {

@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
+from custom_components.tibber_prices.const import get_display_precision
 from custom_components.tibber_prices.entity_utils import get_price_value
 
 from .base import TibberPricesBaseCalculator
@@ -52,9 +53,10 @@ class TibberPricesWindow24hCalculator(TibberPricesBaseCalculator):
             if value is None:
                 return None
             # Convert to display currency units based on config
-            mean_result = round(get_price_value(value, config_entry=self.coordinator.config_entry), 2)
+            precision = get_display_precision(self.coordinator.config_entry)
+            mean_result = round(get_price_value(value, config_entry=self.coordinator.config_entry), precision)
             median_result = (
-                round(get_price_value(median, config_entry=self.coordinator.config_entry), 2)
+                round(get_price_value(median, config_entry=self.coordinator.config_entry), precision)
                 if median is not None
                 else None
             )
@@ -65,6 +67,7 @@ class TibberPricesWindow24hCalculator(TibberPricesBaseCalculator):
         if value is None:
             return None
 
-        # Return in configured display currency units with 2 decimals
+        # Return in configured display currency units
+        precision = get_display_precision(self.coordinator.config_entry)
         result = get_price_value(value, config_entry=self.coordinator.config_entry)
-        return round(result, 2)
+        return round(result, precision)

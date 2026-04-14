@@ -35,6 +35,7 @@ class TibberPricesIconContext:
     has_future_periods_callback: Callable[[], bool] | None = None
     period_is_active_callback: Callable[[], bool] | None = None
     time: TibberPricesTimeService | None = None
+    trend_change_direction: str | None = None  # For next_price_trend_change icon lookup
 
 
 if TYPE_CHECKING:
@@ -74,7 +75,7 @@ def get_dynamic_icon(
 
     # Try various icon sources in order
     return (
-        get_trend_icon(key, value)
+        get_trend_icon(key, value, context=ctx)
         or get_timing_sensor_icon(key, value, period_is_active_callback=ctx.period_is_active_callback)
         or get_price_sensor_icon(key, ctx.coordinator_data, time=ctx.time)
         or get_level_sensor_icon(key, value)
@@ -84,12 +85,24 @@ def get_dynamic_icon(
     )
 
 
-def get_trend_icon(key: str, value: Any) -> str | None:
+# 5-level trend icons: strongly uses double arrows, normal uses single
+_TREND_ICONS = {
+    "strongly_rising": "mdi:chevron-double-up",
+    "rising": "mdi:trending-up",
+    "stable": "mdi:trending-neutral",
+    "falling": "mdi:trending-down",
+    "strongly_falling": "mdi:chevron-double-down",
+}
+
+
+def get_trend_icon(key: str, value: Any, *, context: TibberPricesIconContext | None = None) -> str | None:
     """Get icon for trend sensors using 5-level trend scale."""
-    # Handle next_price_trend_change TIMESTAMP sensor differently
-    # (icon based on attributes, not value which is a timestamp)
+    # next_price_trend_change is a TIMESTAMP sensor — icon comes from direction attribute
     if key == "next_price_trend_change":
-        return None  # Will be handled by sensor's icon property using attributes
+        direction = context.trend_change_direction if context else None
+        if isinstance(direction, str):
+            return _TREND_ICONS.get(direction, "mdi:help-circle-outline")
+        return "mdi:help-circle-outline"
 
     if not key.startswith(("price_trend_", "price_outlook_", "price_trajectory_")) and key != "current_price_trend":
         return None
@@ -97,15 +110,7 @@ def get_trend_icon(key: str, value: Any) -> str | None:
     if not isinstance(value, str):
         return None
 
-    # 5-level trend icons: strongly uses double arrows, normal uses single
-    trend_icons = {
-        "strongly_rising": "mdi:chevron-double-up",  # Strong upward movement
-        "rising": "mdi:trending-up",  # Normal upward trend
-        "stable": "mdi:trending-neutral",  # No significant change
-        "falling": "mdi:trending-down",  # Normal downward trend
-        "strongly_falling": "mdi:chevron-double-down",  # Strong downward movement
-    }
-    return trend_icons.get(value)
+    return _TREND_ICONS.get(value, "mdi:help-circle-outline")
 
 
 def get_timing_sensor_icon(

@@ -15,22 +15,18 @@ Caching strategy:
 
 from typing import TYPE_CHECKING, Any, ClassVar
 
-from custom_components.tibber_prices.const import get_display_unit_factor
+from custom_components.tibber_prices.const import get_display_precision, get_display_unit_factor
 from custom_components.tibber_prices.coordinator.helpers import get_intervals_for_day_offsets
+from custom_components.tibber_prices.entity_utils.colors import get_icon_color
 from custom_components.tibber_prices.utils.average import calculate_mean, calculate_next_n_hours_mean
-from custom_components.tibber_prices.utils.price import (
-    calculate_price_trend,
-    find_price_data_for_interval,
-)
+from custom_components.tibber_prices.utils.price import calculate_price_trend, find_price_data_for_interval
 
 from .base import TibberPricesBaseCalculator
 
 if TYPE_CHECKING:
     from datetime import datetime
 
-    from custom_components.tibber_prices.coordinator import (
-        TibberPricesDataUpdateCoordinator,
-    )
+    from custom_components.tibber_prices.coordinator import TibberPricesDataUpdateCoordinator
 
 # Constants
 MIN_HOURS_FOR_LATER_HALF = 1  # Minimum hours needed to calculate half-window averages (activates at 2h+)
@@ -62,7 +58,7 @@ class TibberPricesTrendCalculator(TibberPricesBaseCalculator):
         "strongly_rising": "rising",
     }
 
-    def __init__(self, coordinator: "TibberPricesDataUpdateCoordinator") -> None:
+    def __init__(self, coordinator: TibberPricesDataUpdateCoordinator) -> None:
         """Initialize trend calculator with caching state."""
         super().__init__(coordinator)
         # Per-sensor caches (for price_outlook_Xh and price_trajectory_Xh sensors)
@@ -168,18 +164,12 @@ class TibberPricesTrendCalculator(TibberPricesBaseCalculator):
             volatility_threshold_high=volatility_threshold_high,
         )
 
-        # Determine icon color based on trend state (5-level scale)
-        # Strongly rising/falling uses more intense colors
-        icon_color = {
-            "strongly_rising": "var(--error-color)",  # Red for strongly rising (very expensive)
-            "rising": "var(--warning-color)",  # Orange/Yellow for rising prices
-            "stable": "var(--state-icon-color)",  # Default gray for stable prices
-            "falling": "var(--success-color)",  # Green for falling prices (cheaper)
-            "strongly_falling": "var(--success-color)",  # Green for strongly falling (great deal)
-        }.get(trend_state, "var(--state-icon-color)")
+        # Determine icon color via centralized mapping (same as colors.py)
+        icon_color = get_icon_color(f"price_outlook_{hours}h", trend_state) or "var(--state-icon-color)"
 
         # Convert prices to display currency unit based on configuration
         factor = get_display_unit_factor(self.config_entry)
+        precision = get_display_precision(self.config_entry)
 
         # Store attributes in sensor-specific dictionary AND cache the trend value
         # Show effective thresholds (after volatility adjustment) so users can understand
@@ -188,7 +178,7 @@ class TibberPricesTrendCalculator(TibberPricesBaseCalculator):
             "timestamp": next_interval_start,
             "trend_value": trend_value,
             f"trend_{hours}h_%": round(diff_pct, 1),
-            f"next_{hours}h_avg": round(future_mean * factor, 2),
+            f"next_{hours}h_avg": round(future_mean * factor, precision),
             "interval_count": lookahead_intervals,
             "threshold_rising_%": round(threshold_rising * vol_factor, 1),
             "threshold_rising_strongly_%": round(threshold_strongly_rising * vol_factor, 1),
@@ -203,7 +193,7 @@ class TibberPricesTrendCalculator(TibberPricesBaseCalculator):
             # Get second half average for longer periods
             later_half_avg = self._calculate_later_half_average(hours, next_interval_start)
             if later_half_avg is not None:
-                self._trend_attributes[f"second_half_{hours}h_avg"] = round(later_half_avg * factor, 2)
+                self._trend_attributes[f"second_half_{hours}h_avg"] = round(later_half_avg * factor, precision)
 
                 # Calculate incremental change: how much does the later half differ from current?
                 # CRITICAL: Use abs() for negative prices and allow calculation for all non-zero prices
@@ -237,15 +227,17 @@ class TibberPricesTrendCalculator(TibberPricesBaseCalculator):
         # price direction BEFORE the current trend (binary: rising/falling),
         # not the trend classification. next_price_trend_change uses "from_direction"
         # for the current 5-level trend state.
+        current_trend_state = trend_info["current_trend_state"]
         self._current_trend_attributes = {
             "previous_direction": trend_info["from_direction"],
             "price_direction_duration_minutes": trend_info["trend_duration_minutes"],
             "price_direction_since": (
                 trend_info["trend_start_time"].isoformat() if trend_info["trend_start_time"] else None
             ),
+            "icon_color": get_icon_color("current_price_trend", current_trend_state),
         }
 
-        return trend_info["current_trend_state"]
+        return current_trend_state
 
     def get_next_trend_change_value(self) -> datetime | None:
         """
@@ -308,7 +300,7 @@ class TibberPricesTrendCalculator(TibberPricesBaseCalculator):
             Trend state: "rising" | "falling" | "stable", or None if unavailable
 
         """
-        if hours < 2:  # noqa: PLR2004
+        if hours < 2:
             return None
 
         if not self.has_data():
@@ -378,6 +370,7 @@ class TibberPricesTrendCalculator(TibberPricesBaseCalculator):
         )
 
         factor = get_display_unit_factor(self.config_entry)
+        precision = get_display_precision(self.config_entry)
         time_obj = self.coordinator.time
         total_intervals = time_obj.minutes_to_intervals(hours * 60)
         first_half_count = total_intervals // 2
@@ -387,8 +380,8 @@ class TibberPricesTrendCalculator(TibberPricesBaseCalculator):
             "timestamp": next_interval_start,
             "trend_value": trend_value,
             f"trajectory_{hours}h_%": round(diff_pct, 1),
-            f"first_half_{hours}h_avg": round(first_half_avg * factor, 2),
-            f"second_half_{hours}h_avg": round(second_half_avg * factor, 2),
+            f"first_half_{hours}h_avg": round(first_half_avg * factor, precision),
+            f"second_half_{hours}h_avg": round(second_half_avg * factor, precision),
             f"first_half_{hours}h_diff_from_current_%": round(
                 ((first_half_avg - current_interval_price) / abs(current_interval_price)) * 100, 1
             )
@@ -402,6 +395,7 @@ class TibberPricesTrendCalculator(TibberPricesBaseCalculator):
             "first_half_interval_count": first_half_count,
             "second_half_interval_count": second_half_count,
             "volatility_factor": vol_factor,
+            "icon_color": get_icon_color(f"price_trajectory_{hours}h", trajectory_state),
         }
 
         return trajectory_state
@@ -910,16 +904,17 @@ class TibberPricesTrendCalculator(TibberPricesBaseCalculator):
                         change_price = float(change_interval["total"])
                         minutes_until = time.minutes_until_rounded(change_time)
                         factor = get_display_unit_factor(self.config_entry)
+                        precision = get_display_precision(self.config_entry)
                         vf = first_change["vol_factor"]
 
                         self._trend_change_attributes = {
                             "direction": first_change["trend"],
                             "from_direction": current_trend_state,
                             "minutes_until_change": minutes_until,
-                            "price_now": round(float(current_interval["total"]) * factor, 2),
-                            "price_at_change": round(change_price * factor, 2),
+                            "price_now": round(float(current_interval["total"]) * factor, precision),
+                            "price_at_change": round(change_price * factor, precision),
                             "price_avg_after_change": (
-                                round(first_change["mean"] * factor, 2) if first_change["mean"] else None
+                                round(first_change["mean"] * factor, precision) if first_change["mean"] else None
                             ),
                             "trend_diff_%": round(first_change["diff"], 1),
                             "threshold_rising_%": round(thresholds["rising"] * vf, 1),

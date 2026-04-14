@@ -4,14 +4,12 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from custom_components.tibber_prices.const import get_display_unit_factor
+from custom_components.tibber_prices.const import get_display_precision, get_display_unit_factor
 
 from .base import TibberPricesBaseCalculator
 
 if TYPE_CHECKING:
-    from custom_components.tibber_prices.coordinator import (
-        TibberPricesDataUpdateCoordinator,
-    )
+    from custom_components.tibber_prices.coordinator import TibberPricesDataUpdateCoordinator
 
 
 class TibberPricesIntervalCalculator(TibberPricesBaseCalculator):
@@ -36,7 +34,7 @@ class TibberPricesIntervalCalculator(TibberPricesBaseCalculator):
         self._last_rating_level: str | None = None
         self._last_rating_difference: float | None = None
 
-    def get_interval_value(  # noqa: PLR0911
+    def get_interval_value(
         self,
         *,
         interval_offset: int,
@@ -74,7 +72,8 @@ class TibberPricesIntervalCalculator(TibberPricesBaseCalculator):
             if in_euro:
                 return price
             factor = get_display_unit_factor(self.config_entry)
-            return round(price * factor, 2)
+            precision = get_display_precision(self.config_entry)
+            return round(price * factor, precision)
 
         if value_type == "level":
             level = self.safe_get_from_interval(interval_data, "level")

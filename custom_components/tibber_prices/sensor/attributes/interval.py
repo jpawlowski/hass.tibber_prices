@@ -8,15 +8,14 @@ from typing import TYPE_CHECKING, Any
 from custom_components.tibber_prices.const import (
     PRICE_LEVEL_MAPPING,
     PRICE_RATING_MAPPING,
+    get_display_precision,
     get_display_unit_factor,
 )
 from custom_components.tibber_prices.entity_utils import add_icon_color_attribute
 from custom_components.tibber_prices.utils.price import find_price_data_for_interval
 
 if TYPE_CHECKING:
-    from custom_components.tibber_prices.coordinator.core import (
-        TibberPricesDataUpdateCoordinator,
-    )
+    from custom_components.tibber_prices.coordinator.core import TibberPricesDataUpdateCoordinator
     from custom_components.tibber_prices.coordinator.time_service import TibberPricesTimeService
     from custom_components.tibber_prices.data import TibberPricesConfigEntry
 
@@ -112,17 +111,18 @@ def _add_energy_tax_attributes(
         return
 
     factor = get_display_unit_factor(config_entry)
+    precision = get_display_precision(config_entry)
 
     energy = interval_data.get("energy")
     if energy is not None:
-        attributes["energy_price"] = round(float(energy) * factor, 2)
+        attributes["energy_price"] = round(float(energy) * factor, precision)
 
     tax = interval_data.get("tax")
     if tax is not None:
-        attributes["tax"] = round(float(tax) * factor, 2)
+        attributes["tax"] = round(float(tax) * factor, precision)
 
 
-def add_current_interval_price_attributes(  # noqa: PLR0913
+def add_current_interval_price_attributes(
     attributes: dict,
     key: str,
     coordinator: TibberPricesDataUpdateCoordinator,
@@ -198,7 +198,7 @@ def add_current_interval_price_attributes(  # noqa: PLR0913
     )
 
 
-def add_level_attributes_for_sensor(  # noqa: PLR0913
+def add_level_attributes_for_sensor(
     attributes: dict,
     key: str,
     interval_data: dict | None,
@@ -252,7 +252,7 @@ def add_price_level_attributes(attributes: dict, level: str) -> None:
     add_icon_color_attribute(attributes, key="price_level", state_value=level)
 
 
-def add_rating_attributes_for_sensor(  # noqa: PLR0913
+def add_rating_attributes_for_sensor(
     attributes: dict,
     key: str,
     interval_data: dict | None,

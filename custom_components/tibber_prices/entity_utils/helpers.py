@@ -14,7 +14,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from custom_components.tibber_prices.const import get_display_unit_factor
+from custom_components.tibber_prices.const import get_display_precision, get_display_unit_factor
 
 if TYPE_CHECKING:
     from datetime import datetime
@@ -55,7 +55,8 @@ def get_price_value(
     # New mode: use config_entry
     if config_entry is not None:
         factor = get_display_unit_factor(config_entry)
-        return round(price * factor, 2)
+        precision = get_display_precision(config_entry)
+        return round(price * factor, precision)
 
     # Fallback: default to subunit currency (backward compatibility)
     return round(price * 100, 2)
