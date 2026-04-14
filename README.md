@@ -128,32 +128,32 @@ The integration provides **100+ entities** across sensors, binary sensors, switc
 
 ```yaml
 automation:
-    - alias: "Start Dishwasher During Best Price Period"
-      trigger:
-          - platform: state
-            entity_id: binary_sensor.tibber_best_price_period
-            to: "on"
-      action:
-          - action: switch.turn_on
-            target:
-                entity_id: switch.dishwasher
+  - alias: "Start Dishwasher During Best Price Period"
+    trigger:
+      - platform: state
+        entity_id: binary_sensor.tibber_best_price_period
+        to: "on"
+    action:
+      - action: switch.turn_on
+        target:
+          entity_id: switch.dishwasher
 ```
 
 **Reduce heating when prices spike above average:**
 
 ```yaml
 automation:
-    - alias: "Reduce Heating During High Prices"
-      trigger:
-          - platform: numeric_state
-            entity_id: sensor.tibber_current_interval_price_rating
-            above: 20 # More than 20% above 24h average
-      action:
-          - action: climate.set_temperature
-            target:
-                entity_id: climate.living_room
-            data:
-                temperature: 19
+  - alias: "Reduce Heating During High Prices"
+    trigger:
+      - platform: numeric_state
+        entity_id: sensor.tibber_current_interval_price_rating
+        above: 20 # More than 20% above 24h average
+    action:
+      - action: climate.set_temperature
+        target:
+          entity_id: climate.living_room
+        data:
+          temperature: 19
 ```
 
 📖 **[More automations →](https://jpawlowski.github.io/hass.tibber_prices/user/automation-examples)** — EV charging, heat pump control, price notifications, and more

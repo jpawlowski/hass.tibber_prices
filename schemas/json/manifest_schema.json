@@ -84,15 +84,7 @@
         "description": "The integration type.\nhttps://developers.home-assistant.io/docs/creating_integration_manifest/#integration-type",
         "type": "string",
         "default": "hub",
-        "enum": [
-          "device",
-          "entity",
-          "hardware",
-          "helper",
-          "hub",
-          "service",
-          "system"
-        ]
+        "enum": ["device", "entity", "hardware", "helper", "hub", "service", "system"]
       },
       "config_flow": {
         "description": "Whether the integration is configurable from the UI.\nhttps://developers.home-assistant.io/docs/creating_integration_manifest/#config-flow",
@@ -375,14 +367,7 @@
       "iot_class": {
         "description": "The IoT class of the integration, describing how the integration connects to the device or service.\nhttps://developers.home-assistant.io/docs/creating_integration_manifest/#iot-class",
         "type": "string",
-        "enum": [
-          "assumed_state",
-          "cloud_polling",
-          "cloud_push",
-          "local_polling",
-          "local_push",
-          "calculated"
-        ]
+        "enum": ["assumed_state", "cloud_polling", "cloud_push", "local_polling", "local_push", "calculated"]
       },
       "single_config_entry": {
         "description": "Whether the integration only supports a single config entry.\nhttps://developers.home-assistant.io/docs/creating_integration_manifest/#single-config-entry-only",
@@ -395,14 +380,7 @@
       }
     },
     "additionalProperties": false,
-    "required": [
-      "domain",
-      "name",
-      "codeowners",
-      "documentation",
-      "issue_tracker",
-      "version"
-    ],
+    "required": ["domain", "name", "codeowners", "documentation", "issue_tracker", "version"],
     "dependencies": {
       "mqtt": {
         "anyOf": [

@@ -1,9 +1,20 @@
 {
   "default": true,
+  "MD004": false,
   "MD013": false,
-  "MD033": false,
+  "MD036": false,
   "MD041": false,
-  "no-inline-html": false,
-  "line-length": false,
-  "first-line-heading": false
+  "no-trailing-punctuation": false,
+  "no-inline-html": {
+    "allowed_elements": ["br", "details", "summary", "img", "a", "kbd"]
+  },
+  "code-block-style": {
+    "style": "fenced"
+  },
+  "emphasis-style": {
+    "style": "underscore"
+  },
+  "strong-style": {
+    "style": "asterisk"
+  }
 }

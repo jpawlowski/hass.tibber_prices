@@ -8,14 +8,14 @@ on:
     branches:
       - main
     paths-ignore:
-      - 'docs/**'
-      - '.github/workflows/docusaurus.yml'
+      - "docs/**"
+      - ".github/workflows/docusaurus.yml"
   pull_request:
     branches:
       - main
     paths-ignore:
-      - 'docs/**'
-      - '.github/workflows/docusaurus.yml'
+      - "docs/**"
+      - ".github/workflows/docusaurus.yml"
 
 permissions: {}
 

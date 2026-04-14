@@ -1,6 +1,6 @@
 {
   "name": "jpawlowski/hass.tibber_prices",
-  "image": "mcr.microsoft.com/devcontainers/python:3.14",
+  "image": "mcr.microsoft.com/devcontainers/base:debian",
   "postCreateCommand": "bash .devcontainer/setup-git.sh && scripts/setup/setup",
   "postStartCommand": "scripts/motd",
   "containerEnv": {
@@ -63,9 +63,7 @@
           "**/node_modules/**"
         ],
         "python.defaultInterpreterPath": "${workspaceFolder}/.venv/bin/python",
-        "python.analysis.extraPaths": [
-          "${workspaceFolder}/.venv/lib/python3.14/site-packages"
-        ],
+        "python.analysis.extraPaths": ["${workspaceFolder}/.venv/lib/python3.14/site-packages"],
         "python.terminal.activateEnvironment": true,
         "python.terminal.activateEnvInCurrentTerminal": true,
         "python.testing.pytestArgs": ["--no-cov"],
@@ -142,6 +140,8 @@
     },
     "ghcr.io/devcontainers-extra/features/apt-packages:1": {
       "packages": [
+        "autoconf",
+        "automake",
         "bat",
         "eza",
         "fd-find",
@@ -154,9 +154,12 @@
         "jo",
         "jq",
         "libpcap-dev",
+        "libssl-dev",
+        "libtool",
         "libturbojpeg0",
         "miller",
         "moreutils",
+        "pipx",
         "ripgrep",
         "shellcheck",
         "shfmt",

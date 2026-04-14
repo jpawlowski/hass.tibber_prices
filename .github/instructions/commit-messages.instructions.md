@@ -41,9 +41,9 @@ In that case:
 
 - Prefer chore(...) or refactor(...) instead of fix(...), and/or
 - Add an explicit trailer in the commit body:
-    - Release-Notes: skip
-    - User-Impact: none
-    - Released-Bug: no
+  - Release-Notes: skip
+  - User-Impact: none
+  - Released-Bug: no
 
 Any one of these trailers is enough.
 

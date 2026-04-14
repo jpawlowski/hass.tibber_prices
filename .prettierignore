@@ -11,6 +11,12 @@ __pycache__/
 env/
 venv/
 
-# Ignore compiled YAML or generated docs
-*.yaml
-*.yml
+# Ignore local HA dev instance config (not production code)
+config/
+
+# Ignore YAML schemas (structural files with specific formatting conventions)
+schemas/yaml/
+
+# Ignore Docusaurus documentation sites – they have their own toolchain
+# and Prettier reformats <details> blocks inside lists in a way that breaks MDX
+docs/

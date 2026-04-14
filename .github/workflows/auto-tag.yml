@@ -5,7 +5,7 @@ on:
     branches:
       - main
     paths:
-      - 'custom_components/tibber_prices/manifest.json'
+      - "custom_components/tibber_prices/manifest.json"
 
 permissions:
   contents: write
@@ -22,7 +22,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v6
         with:
-          fetch-depth: 0  # Need full history for git describe
+          fetch-depth: 0 # Need full history for git describe
 
       - name: Extract version from manifest.json
         id: manifest
