@@ -156,6 +156,15 @@ Price rank (percentile rank) = (number of intervals strictly cheaper than subjec
 
 The cheapest interval always returns 0% — you can use `state == 0` to detect the absolute cheapest moment.
 
+:::note 100% is never reached
+By design, **the most expensive interval of the day will never show 100%**. The formula counts how many intervals are *strictly cheaper* than the subject price. For the daily maximum, every other interval is cheaper — but the interval itself is not counted. With 96 quarter-hour intervals per day, the maximum value is 95 ÷ 96 × 100 = **99.0%**.
+
+This means:
+- `state == 0` → cheapest interval of the reference set ✅
+- `state == 100` → **never true** ❌
+- `state >= 99` → most expensive interval of the day ✅ (use this instead)
+:::
+
 ### Available Sensors
 
 **Current interval** (price of the active quarter-hour):
@@ -255,6 +264,23 @@ automation:
       action:
           - service: input_boolean.turn_off
             entity_id: input_boolean.ev_charge_tonight
+```
+
+</details>
+
+<details>
+<summary>Show YAML: Avoid running devices at the most expensive time of day</summary>
+
+```yaml
+automation:
+    - alias: "Pause non-essential devices at peak price"
+      trigger:
+          - platform: numeric_state
+            entity_id: sensor.<home_name>_current_price_rank_today
+            above: 99  # 100 is never reached — use >= 99 to catch the daily maximum
+      action:
+          - service: switch.turn_off
+            entity_id: switch.dishwasher
 ```
 
 </details>
