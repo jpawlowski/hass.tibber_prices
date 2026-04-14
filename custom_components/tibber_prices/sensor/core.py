@@ -10,17 +10,16 @@ from custom_components.tibber_prices.binary_sensor.attributes import (
 )
 from custom_components.tibber_prices.const import (
     CONF_AVERAGE_SENSOR_DISPLAY,
-    CONF_CURRENCY_DISPLAY_MODE,
     CONF_PRICE_RATING_THRESHOLD_HIGH,
     CONF_PRICE_RATING_THRESHOLD_LOW,
     DEFAULT_AVERAGE_SENSOR_DISPLAY,
     DEFAULT_PRICE_RATING_THRESHOLD_HIGH,
     DEFAULT_PRICE_RATING_THRESHOLD_LOW,
-    DISPLAY_MODE_BASE,
     DOMAIN,
     format_price_unit_base,
     get_display_unit_factor,
     get_display_unit_string,
+    get_price_round_decimals,
 )
 from custom_components.tibber_prices.coordinator import (
     MINUTE_UPDATE_ENTITY_KEYS,
@@ -581,9 +580,8 @@ class TibberPricesSensor(TibberPricesEntity, RestoreSensor):
                 self._last_extreme_interval = pi["interval"]
                 break
 
-        # Return in configured display currency units with 2 decimals
-        result = get_price_value(value, config_entry=self.coordinator.config_entry)
-        return round(result, 2)
+        # Return in configured display currency units with configured precision
+        return get_price_value(value, config_entry=self.coordinator.config_entry)
 
     def _get_daily_aggregated_value(
         self,
@@ -659,9 +657,8 @@ class TibberPricesSensor(TibberPricesEntity, RestoreSensor):
         if value is None:
             return None
 
-        # Return in configured display currency units with 2 decimals
-        result = get_price_value(value, config_entry=self.coordinator.config_entry)
-        return round(result, 2)
+        # Return in configured display currency units with configured precision
+        return get_price_value(value, config_entry=self.coordinator.config_entry)
 
     def _translate_rating_level(self, level: str) -> str:
         """Translate the rating level using custom translations, falling back to English or the raw value."""
@@ -710,6 +707,7 @@ class TibberPricesSensor(TibberPricesEntity, RestoreSensor):
 
         # Get display unit factor (100 for minor, 1 for major)
         factor = get_display_unit_factor(self.coordinator.config_entry)
+        decimals = get_price_round_decimals(self.coordinator.config_entry)
 
         # Get user preference for display (mean or median)
         display_pref = self.coordinator.config_entry.options.get(
@@ -717,14 +715,14 @@ class TibberPricesSensor(TibberPricesEntity, RestoreSensor):
         )
 
         # Store both values for attributes
-        self.cached_data[f"next_avg_{hours}h_mean"] = round(mean_price * factor, 2)
+        self.cached_data[f"next_avg_{hours}h_mean"] = round(mean_price * factor, decimals)
         if median_price is not None:
-            self.cached_data[f"next_avg_{hours}h_median"] = round(median_price * factor, 2)
+            self.cached_data[f"next_avg_{hours}h_median"] = round(median_price * factor, decimals)
 
         # Return the value chosen for state display
         if display_pref == "median" and median_price is not None:
-            return round(median_price * factor, 2)
-        return round(mean_price * factor, 2)  # "mean"
+            return round(median_price * factor, decimals)
+        return round(mean_price * factor, decimals)  # "mean"
 
     def _get_data_timestamp(self) -> datetime | None:
         """
@@ -1089,39 +1087,15 @@ class TibberPricesSensor(TibberPricesEntity, RestoreSensor):
     @property
     def suggested_display_precision(self) -> int | None:
         """
-        Return suggested display precision based on currency display mode.
+        Return suggested display precision.
 
-        For MONETARY sensors:
-        - Current/Next Interval Price: Show exact price with higher precision
-          - Base currency (€/kr): 4 decimals (e.g., 0.1234 €)
-          - Subunit currency (ct/øre): 2 decimals (e.g., 12.34 ct)
-        - All other price sensors:
-          - Base currency (€/kr): 2 decimals (e.g., 0.12 €)
-          - Subunit currency (ct/øre): 1 decimal (e.g., 12.5 ct)
-
-        For non-MONETARY sensors, use static value from entity description.
+        Monetary sensors follow the global user-configured rounding precision.
+        Non-monetary sensors keep their static precision from entity description.
         """
-        # Only apply dynamic precision to MONETARY sensors
         if self.entity_description.device_class != SensorDeviceClass.MONETARY:
             return self.entity_description.suggested_display_precision
 
-        # Check display mode configuration
-        display_mode = self.coordinator.config_entry.options.get(CONF_CURRENCY_DISPLAY_MODE, DISPLAY_MODE_BASE)
-
-        # Special case: Energy Dashboard sensor always shows base currency with 4 decimals
-        # regardless of display mode (it's always in base currency by design)
-        if self.entity_description.key == "current_interval_price_base":
-            return 4
-
-        # Special case: Current and Next interval price sensors get higher precision
-        # to show exact prices as received from API
-        if self.entity_description.key in ("current_interval_price", "next_interval_price"):
-            # Major: 4 decimals (0.1234 €), Minor: 2 decimals (12.34 ct)
-            return 4 if display_mode == DISPLAY_MODE_BASE else 2
-
-        # All other sensors: Standard precision
-        # Major: 2 decimals (0.12 €), Minor: 1 decimal (12.5 ct)
-        return 2 if display_mode == DISPLAY_MODE_BASE else 1
+        return get_price_round_decimals(self.coordinator.config_entry)
 
     @property
     def extra_state_attributes(self) -> dict[str, Any] | None:

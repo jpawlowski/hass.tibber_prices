@@ -630,6 +630,11 @@
       "long_description": "When this entity is enabled, its value overrides the 'Gap Tolerance' setting from the options flow for best price period calculations.",
       "usage_tips": "Increase to allow longer periods with occasional price spikes. Keep low for stricter continuous cheap periods."
     },
+    "price_round_decimals": {
+      "description": "Number of decimals used for monetary sensor state values.",
+      "long_description": "Applies globally to price-related sensor states (current/next/previous prices, daily min/max/average, and rolling/window averages).",
+      "usage_tips": "Set to 4 for base-currency precision (for example 0.2534)."
+    },
     "peak_price_flex_override": {
       "description": "Maximum below the daily maximum price that intervals can be and still qualify as 'peak price'. Recommended: -15 to -20 with relaxation enabled (default), or -25 to -35 without relaxation. Maximum: -50 (hard cap for reliable period detection). Note: Negative values indicate distance below maximum.",
       "long_description": "When this entity is enabled, its value overrides the 'Flexibility' setting from the options flow for peak price period calculations.",

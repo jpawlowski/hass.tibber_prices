@@ -32,6 +32,8 @@ class TibberPricesNumberEntityDescription(NumberEntityDescription):
     is_peak_price: bool = False
     # Default value from const.py
     default_value: float | int = 0
+    # If True, entity writes to flat config_entry.options instead of runtime override sections
+    store_in_options: bool = False
 
 
 # ============================================================================
@@ -131,6 +133,29 @@ BEST_PRICE_NUMBER_ENTITIES = (
         config_section="period_settings",
         is_peak_price=False,
         default_value=1,  # DEFAULT_BEST_PRICE_MAX_LEVEL_GAP_COUNT
+    ),
+)
+
+# ==========================================================================
+# DISPLAY SETTINGS OVERRIDES
+# ==========================================================================
+
+DISPLAY_NUMBER_ENTITIES = (
+    TibberPricesNumberEntityDescription(
+        key="price_round_decimals",
+        translation_key="price_round_decimals",
+        icon="mdi:decimal",
+        entity_category=EntityCategory.CONFIG,
+        entity_registry_enabled_default=True,
+        native_min_value=0,
+        native_max_value=6,
+        native_step=1,
+        mode=NumberMode.BOX,
+        config_key="price_round_decimals",
+        config_section="",
+        is_peak_price=False,
+        default_value=2,
+        store_in_options=True,
     ),
 )
 
@@ -235,4 +260,4 @@ PEAK_PRICE_NUMBER_ENTITIES = (
 )
 
 # All number entity descriptions combined
-NUMBER_ENTITY_DESCRIPTIONS = BEST_PRICE_NUMBER_ENTITIES + PEAK_PRICE_NUMBER_ENTITIES
+NUMBER_ENTITY_DESCRIPTIONS = BEST_PRICE_NUMBER_ENTITIES + PEAK_PRICE_NUMBER_ENTITIES + DISPLAY_NUMBER_ENTITIES

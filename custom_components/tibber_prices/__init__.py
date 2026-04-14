@@ -21,10 +21,12 @@ from homeassistant.loader import async_get_loaded_integration
 from .api import TibberPricesApiClient
 from .const import (
     CONF_CURRENCY_DISPLAY_MODE,
+    CONF_PRICE_ROUND_DECIMALS,
     CONF_PRICE_TREND_MIN_PRICE_CHANGE,
     CONF_PRICE_TREND_MIN_PRICE_CHANGE_STRONGLY,
     DATA_CHART_CONFIG,
     DATA_CHART_METADATA_CONFIG,
+    DEFAULT_PRICE_ROUND_DECIMALS,
     DISPLAY_MODE_SUBUNIT,
     DOMAIN,
     LOGGER,
@@ -144,6 +146,17 @@ async def _migrate_config_options(hass: HomeAssistant, entry: ConfigEntry) -> No
             "[%s] Migrated legacy config: Set currency_display_mode=%s (preserves pre-v1.1.0 behavior)",
             entry.title,
             DISPLAY_MODE_SUBUNIT,
+        )
+
+    # Migration: Ensure monetary sensor rounding precision option exists
+    if CONF_PRICE_ROUND_DECIMALS not in migrated:
+        migrated[CONF_PRICE_ROUND_DECIMALS] = DEFAULT_PRICE_ROUND_DECIMALS
+        migration_performed = True
+        LOGGER.info(
+            "[%s] Migrated legacy config: Set %s=%s",
+            entry.title,
+            CONF_PRICE_ROUND_DECIMALS,
+            DEFAULT_PRICE_ROUND_DECIMALS,
         )
 
     # Migration: Convert min_price_change from display currency (ct/øre) to base currency (EUR/NOK)

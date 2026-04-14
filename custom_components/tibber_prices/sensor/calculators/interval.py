@@ -4,7 +4,10 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from custom_components.tibber_prices.const import get_display_unit_factor
+from custom_components.tibber_prices.const import (
+    get_display_unit_factor,
+    get_price_round_decimals,
+)
 
 from .base import TibberPricesBaseCalculator
 
@@ -74,7 +77,8 @@ class TibberPricesIntervalCalculator(TibberPricesBaseCalculator):
             if in_euro:
                 return price
             factor = get_display_unit_factor(self.config_entry)
-            return round(price * factor, 2)
+            decimals = get_price_round_decimals(self.config_entry)
+            return round(price * factor, decimals)
 
         if value_type == "level":
             level = self.safe_get_from_interval(interval_data, "level")

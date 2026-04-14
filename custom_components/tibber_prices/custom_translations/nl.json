@@ -630,6 +630,11 @@
       "long_description": "Wanneer deze entiteit is ingeschakeld, overschrijft de waarde de 'Gap tolerantie'-instelling uit de opties-dialoog voor beste prijs-periodeberekeningen.",
       "usage_tips": "Verhoog dit voor apparaten met variabele belasting (bijv. warmtepompen) die korte duurdere intervallen kunnen tolereren. Stel in op 0 voor continu goedkope perioden."
     },
+    "price_round_decimals": {
+      "description": "Aantal decimalen voor monetaire sensorstatuswaarden.",
+      "long_description": "Wordt globaal toegepast op prijsgerelateerde sensorstatussen (huidig/volgend/vorig, dag min/max/gemiddelde en rolling/window-gemiddelden).",
+      "usage_tips": "Zet op 4 voor meer precisie in basisvaluta (bijvoorbeeld 0.2534)."
+    },
     "peak_price_flex_override": {
       "description": "Maximaal percentage onder de dagelijkse maximumprijs dat intervallen kunnen hebben en nog steeds als 'piekprijs' kwalificeren. Dezelfde aanbevelingen als voor beste prijs-flexibiliteit.",
       "long_description": "Wanneer deze entiteit is ingeschakeld, overschrijft de waarde de 'Flexibiliteit'-instelling uit de opties-dialoog voor piekprijs-periodeberekeningen.",

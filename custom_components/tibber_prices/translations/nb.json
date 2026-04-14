@@ -1101,6 +1101,9 @@
       "best_price_gap_count_override": {
         "name": "Beste pris: Gaptoleranse"
       },
+      "price_round_decimals": {
+        "name": "Pris: Desimaler"
+      },
       "peak_price_flex_override": {
         "name": "Topppris: Fleksibilitet"
       },
@@ -1208,7 +1211,7 @@
       "message": "array_fields kan kun brukes med output_format: array_of_arrays. Endre utdataformatet eller fjern array_fields."
     },
     "invalid_array_fields": {
-      "message": "Verdien {template} for array_fields er ugyldig. Feltnavn må omsluttes av krøllparenteser, f.eks. '{start_time}, {price_per_kwh}, {level}'."
+      "message": "Verdien '{template}' for array_fields er ugyldig. Feltnavn må omsluttes av krøllparenteser, f.eks. '{start_time}, {price_per_kwh}, {level}'."
     },
     "min_segment_exceeds_duration": {
       "message": "min_segment_duration ({min_segment_minutes} min) kan ikke overstige total varighet ({duration_minutes} min). Reduser min_segment_duration eller øk duration."

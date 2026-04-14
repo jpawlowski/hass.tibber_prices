@@ -323,6 +323,7 @@ def get_currency_name(currency_code: str | None) -> str:
 
 # Configuration key for currency display mode
 CONF_CURRENCY_DISPLAY_MODE = "currency_display_mode"
+CONF_PRICE_ROUND_DECIMALS = "price_round_decimals"
 
 # Display mode values
 DISPLAY_MODE_BASE = "base"  # Display in base currency units (€, kr)
@@ -340,6 +341,11 @@ DEFAULT_CURRENCY_DISPLAY = {
     "USD": DISPLAY_MODE_BASE,
     "GBP": DISPLAY_MODE_BASE,
 }
+
+# Display precision (applies to monetary sensor states)
+DEFAULT_PRICE_ROUND_DECIMALS = 2
+MIN_PRICE_ROUND_DECIMALS = 0
+MAX_PRICE_ROUND_DECIMALS = 6
 
 
 def get_default_currency_display(currency_code: str | None) -> str:
@@ -384,6 +390,7 @@ def get_default_options(currency_code: str | None) -> dict[str, Any]:
         CONF_EXTENDED_DESCRIPTIONS: DEFAULT_EXTENDED_DESCRIPTIONS,
         CONF_AVERAGE_SENSOR_DISPLAY: DEFAULT_AVERAGE_SENSOR_DISPLAY,
         CONF_CURRENCY_DISPLAY_MODE: get_default_currency_display(currency_code),
+        CONF_PRICE_ROUND_DECIMALS: DEFAULT_PRICE_ROUND_DECIMALS,
         CONF_VIRTUAL_TIME_OFFSET_DAYS: DEFAULT_VIRTUAL_TIME_OFFSET_DAYS,
         CONF_VIRTUAL_TIME_OFFSET_HOURS: DEFAULT_VIRTUAL_TIME_OFFSET_HOURS,
         CONF_VIRTUAL_TIME_OFFSET_MINUTES: DEFAULT_VIRTUAL_TIME_OFFSET_MINUTES,
@@ -468,6 +475,17 @@ def get_display_unit_factor(config_entry: ConfigEntry) -> int:
     """
     display_mode = config_entry.options.get(CONF_CURRENCY_DISPLAY_MODE, DISPLAY_MODE_SUBUNIT)
     return 100 if display_mode == DISPLAY_MODE_SUBUNIT else 1
+
+
+def get_price_round_decimals(config_entry: ConfigEntry) -> int:
+    """Get configured decimal precision for monetary sensor values."""
+    raw_value = config_entry.options.get(CONF_PRICE_ROUND_DECIMALS, DEFAULT_PRICE_ROUND_DECIMALS)
+    try:
+        value = int(raw_value)
+    except (TypeError, ValueError):
+        return DEFAULT_PRICE_ROUND_DECIMALS
+
+    return max(MIN_PRICE_ROUND_DECIMALS, min(MAX_PRICE_ROUND_DECIMALS, value))
 
 
 def get_display_unit_string(config_entry: ConfigEntry, currency_code: str | None) -> str:

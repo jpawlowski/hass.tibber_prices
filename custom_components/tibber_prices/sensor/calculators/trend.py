@@ -15,7 +15,10 @@ Caching strategy:
 
 from typing import TYPE_CHECKING, Any, ClassVar
 
-from custom_components.tibber_prices.const import get_display_unit_factor
+from custom_components.tibber_prices.const import (
+    get_display_unit_factor,
+    get_price_round_decimals,
+)
 from custom_components.tibber_prices.coordinator.helpers import get_intervals_for_day_offsets
 from custom_components.tibber_prices.utils.average import calculate_mean, calculate_next_n_hours_mean
 from custom_components.tibber_prices.utils.price import (
@@ -180,6 +183,7 @@ class TibberPricesTrendCalculator(TibberPricesBaseCalculator):
 
         # Convert prices to display currency unit based on configuration
         factor = get_display_unit_factor(self.config_entry)
+        decimals = get_price_round_decimals(self.config_entry)
 
         # Store attributes in sensor-specific dictionary AND cache the trend value
         # Show effective thresholds (after volatility adjustment) so users can understand
@@ -188,7 +192,7 @@ class TibberPricesTrendCalculator(TibberPricesBaseCalculator):
             "timestamp": next_interval_start,
             "trend_value": trend_value,
             f"trend_{hours}h_%": round(diff_pct, 1),
-            f"next_{hours}h_avg": round(future_mean * factor, 2),
+            f"next_{hours}h_avg": round(future_mean * factor, decimals),
             "interval_count": lookahead_intervals,
             "threshold_rising_%": round(threshold_rising * vol_factor, 1),
             "threshold_rising_strongly_%": round(threshold_strongly_rising * vol_factor, 1),
@@ -203,7 +207,7 @@ class TibberPricesTrendCalculator(TibberPricesBaseCalculator):
             # Get second half average for longer periods
             later_half_avg = self._calculate_later_half_average(hours, next_interval_start)
             if later_half_avg is not None:
-                self._trend_attributes[f"second_half_{hours}h_avg"] = round(later_half_avg * factor, 2)
+                self._trend_attributes[f"second_half_{hours}h_avg"] = round(later_half_avg * factor, decimals)
 
                 # Calculate incremental change: how much does the later half differ from current?
                 # CRITICAL: Use abs() for negative prices and allow calculation for all non-zero prices
@@ -378,6 +382,7 @@ class TibberPricesTrendCalculator(TibberPricesBaseCalculator):
         )
 
         factor = get_display_unit_factor(self.config_entry)
+        decimals = get_price_round_decimals(self.config_entry)
         time_obj = self.coordinator.time
         total_intervals = time_obj.minutes_to_intervals(hours * 60)
         first_half_count = total_intervals // 2
@@ -387,8 +392,8 @@ class TibberPricesTrendCalculator(TibberPricesBaseCalculator):
             "timestamp": next_interval_start,
             "trend_value": trend_value,
             f"trajectory_{hours}h_%": round(diff_pct, 1),
-            f"first_half_{hours}h_avg": round(first_half_avg * factor, 2),
-            f"second_half_{hours}h_avg": round(second_half_avg * factor, 2),
+            f"first_half_{hours}h_avg": round(first_half_avg * factor, decimals),
+            f"second_half_{hours}h_avg": round(second_half_avg * factor, decimals),
             f"first_half_{hours}h_diff_from_current_%": round(
                 ((first_half_avg - current_interval_price) / abs(current_interval_price)) * 100, 1
             )
@@ -910,16 +915,19 @@ class TibberPricesTrendCalculator(TibberPricesBaseCalculator):
                         change_price = float(change_interval["total"])
                         minutes_until = time.minutes_until_rounded(change_time)
                         factor = get_display_unit_factor(self.config_entry)
+                        decimals = get_price_round_decimals(self.config_entry)
                         vf = first_change["vol_factor"]
 
                         self._trend_change_attributes = {
                             "direction": first_change["trend"],
                             "from_direction": current_trend_state,
                             "minutes_until_change": minutes_until,
-                            "price_now": round(float(current_interval["total"]) * factor, 2),
-                            "price_at_change": round(change_price * factor, 2),
+                            "price_now": round(float(current_interval["total"]) * factor, decimals),
+                            "price_at_change": round(change_price * factor, decimals),
                             "price_avg_after_change": (
-                                round(first_change["mean"] * factor, 2) if first_change["mean"] else None
+                                round(first_change["mean"] * factor, decimals)
+                                if first_change["mean"]
+                                else None
                             ),
                             "trend_diff_%": round(first_change["diff"], 1),
                             "threshold_rising_%": round(thresholds["rising"] * vf, 1),

@@ -136,6 +136,11 @@ class TibberPricesConfigNumber(RestoreNumber, NumberEntity):
         """Handle entity which was added to Home Assistant."""
         await super().async_added_to_hass()
 
+        # Option-backed numbers use config entry as source of truth.
+        if self.entity_description.store_in_options:
+            self._attr_native_value = self._get_value_from_options()
+            return
+
         # Try to restore previous state
         last_number_data = await self.async_get_last_number_data()
         if last_number_data is not None and last_number_data.native_value is not None:
@@ -160,6 +165,10 @@ class TibberPricesConfigNumber(RestoreNumber, NumberEntity):
 
     async def async_will_remove_from_hass(self) -> None:
         """Handle entity removal from Home Assistant."""
+        if self.entity_description.store_in_options:
+            await super().async_will_remove_from_hass()
+            return
+
         # Remove override when entity is removed
         self.coordinator.remove_config_override(
             self.entity_description.config_key,
@@ -170,6 +179,14 @@ class TibberPricesConfigNumber(RestoreNumber, NumberEntity):
     def _get_value_from_options(self) -> float:
         """Get the current value from options flow or default."""
         options = self.coordinator.config_entry.options
+
+        if self.entity_description.store_in_options:
+            value = options.get(
+                self.entity_description.config_key,
+                self.entity_description.default_value,
+            )
+            return float(value)
+
         section = options.get(self.entity_description.config_section, {})
         value = section.get(
             self.entity_description.config_key,
@@ -179,6 +196,9 @@ class TibberPricesConfigNumber(RestoreNumber, NumberEntity):
 
     async def _sync_override_state(self) -> None:
         """Sync the override state with the coordinator based on entity enabled state."""
+        if self.entity_description.store_in_options:
+            return
+
         # Check if entity is enabled in registry
         if self.registry_entry is not None and not self.registry_entry.disabled:
             # Entity is enabled - register the override
@@ -198,6 +218,18 @@ class TibberPricesConfigNumber(RestoreNumber, NumberEntity):
     async def async_set_native_value(self, value: float) -> None:
         """Update the current value and trigger recalculation."""
         self._attr_native_value = value
+
+        if self.entity_description.store_in_options:
+            options = dict(self.coordinator.config_entry.options)
+            options[self.entity_description.config_key] = int(value)
+            self.hass.config_entries.async_update_entry(self.coordinator.config_entry, options=options)
+            self.async_write_ha_state()
+            _LOGGER.debug(
+                "Updated option-backed %s to %s",
+                self.entity_description.key,
+                int(value),
+            )
+            return
 
         # Update the coordinator's runtime override
         self.coordinator.set_config_override(

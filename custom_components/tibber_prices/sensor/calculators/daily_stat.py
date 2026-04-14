@@ -115,9 +115,9 @@ class TibberPricesDailyStatCalculator(TibberPricesBaseCalculator):
             # Compute and cache energy/tax averages for attribute builders
             self._cache_energy_tax_averages(price_intervals)
             # Convert to display currency units based on config
-            avg_result = round(get_price_value(value, config_entry=self.coordinator.config_entry), 2)
+            avg_result = get_price_value(value, config_entry=self.coordinator.config_entry)
             median_result = (
-                round(get_price_value(median, config_entry=self.coordinator.config_entry), 2)
+                get_price_value(median, config_entry=self.coordinator.config_entry)
                 if median is not None
                 else None
             )
@@ -132,9 +132,8 @@ class TibberPricesDailyStatCalculator(TibberPricesBaseCalculator):
                 self._last_extreme_interval = pi["interval"]
                 break
 
-        # Return in configured display currency units with 2 decimals
-        result = get_price_value(value, config_entry=self.coordinator.config_entry)
-        return round(result, 2)
+        # Return in configured display currency units with configured precision
+        return get_price_value(value, config_entry=self.coordinator.config_entry)
 
     def get_daily_aggregated_value(
         self,

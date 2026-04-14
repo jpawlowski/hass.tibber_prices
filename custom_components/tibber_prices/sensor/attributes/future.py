@@ -4,7 +4,10 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from custom_components.tibber_prices.const import get_display_unit_factor
+from custom_components.tibber_prices.const import (
+    get_display_unit_factor,
+    get_price_round_decimals,
+)
 from custom_components.tibber_prices.coordinator.helpers import get_intervals_for_day_offsets
 
 if TYPE_CHECKING:
@@ -142,7 +145,8 @@ def get_future_prices(
             # Convert to display currency unit based on configuration
             price_major = float(price_data["total"])
             factor = get_display_unit_factor(config_entry)
-            price_display = round(price_major * factor, 2)
+            decimals = get_price_round_decimals(config_entry)
+            price_display = round(price_major * factor, decimals)
 
             future_prices.append(
                 {

@@ -1101,6 +1101,9 @@
       "best_price_gap_count_override": {
         "name": "Best Price: Gap Tolerance"
       },
+      "price_round_decimals": {
+        "name": "Price: Decimal Places"
+      },
       "peak_price_flex_override": {
         "name": "Peak Price: Flexibility"
       },
@@ -1208,7 +1211,7 @@
       "message": "array_fields can only be used with output_format: array_of_arrays. Change the output format or remove array_fields."
     },
     "invalid_array_fields": {
-      "message": "The array_fields value {template} is invalid. Field names must be wrapped in curly braces, e.g. '{start_time}, {price_per_kwh}, {level}'."
+      "message": "The array_fields value '{template}' is invalid. Field names must be wrapped in curly braces, e.g. '{start_time}, {price_per_kwh}, {level}'."
     },
     "min_segment_exceeds_duration": {
       "message": "min_segment_duration ({min_segment_minutes} min) cannot exceed the total duration ({duration_minutes} min). Reduce min_segment_duration or increase duration."

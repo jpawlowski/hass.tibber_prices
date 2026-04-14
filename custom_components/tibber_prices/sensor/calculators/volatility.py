@@ -13,6 +13,7 @@ from custom_components.tibber_prices.const import (
     DEFAULT_VOLATILITY_THRESHOLD_MODERATE,
     DEFAULT_VOLATILITY_THRESHOLD_VERY_HIGH,
     get_display_unit_factor,
+    get_price_round_decimals,
 )
 from custom_components.tibber_prices.coordinator.helpers import get_intervals_for_day_offsets
 from custom_components.tibber_prices.entity_utils import add_icon_color_attribute, find_rolling_hour_center_index
@@ -103,6 +104,7 @@ class TibberPricesVolatilityCalculator(TibberPricesBaseCalculator):
 
         # Convert to display currency unit based on configuration
         factor = get_display_unit_factor(self.config_entry)
+        decimals = get_price_round_decimals(self.config_entry)
         spread_display = spread * factor
 
         # Calculate volatility level AND coefficient of variation
@@ -116,18 +118,18 @@ class TibberPricesVolatilityCalculator(TibberPricesBaseCalculator):
         attrs: dict[str, Any] = {
             "price_volatility": volatility.lower(),
             "price_coefficient_variation_%": round(cv, 2) if cv is not None else None,
-            "price_spread": round(spread_display, 2),
-            "price_min": round(price_min * factor, 2),
-            "price_max": round(price_max * factor, 2),
-            "price_mean": round(price_mean * factor, 2),
+            "price_spread": round(spread_display, decimals),
+            "price_min": round(price_min * factor, decimals),
+            "price_max": round(price_max * factor, decimals),
+            "price_mean": round(price_mean * factor, decimals),
         }
 
         # Add IQR attributes when enough data is available (stay in price_* group)
         if iqr_stats is not None:
-            attrs["price_median"] = round(iqr_stats["median"] * factor, 2)
-            attrs["price_q25"] = round(iqr_stats["q25"] * factor, 2)
-            attrs["price_q75"] = round(iqr_stats["q75"] * factor, 2)
-            attrs["price_typical_spread"] = round(iqr_stats["iqr"] * factor, 2)
+            attrs["price_median"] = round(iqr_stats["median"] * factor, decimals)
+            attrs["price_q25"] = round(iqr_stats["q25"] * factor, decimals)
+            attrs["price_q75"] = round(iqr_stats["q75"] * factor, decimals)
+            attrs["price_typical_spread"] = round(iqr_stats["iqr"] * factor, decimals)
             if iqr_stats["iqr_pct"] is not None:
                 attrs["price_typical_spread_%"] = round(iqr_stats["iqr_pct"], 2)
             attrs["price_spike_count"] = iqr_stats["outlier_count"]
@@ -208,15 +210,16 @@ class TibberPricesVolatilityCalculator(TibberPricesBaseCalculator):
 
         # Convert to display units for attribute storage
         factor = get_display_unit_factor(self.config_entry)
+        decimals = get_price_round_decimals(self.config_entry)
         price_attr_key = self._get_subject_price_attr_key(subject)
 
         self._last_percentile_rank_attributes = {
-            price_attr_key: round(subject_price * factor, 2),
+            price_attr_key: round(subject_price * factor, decimals),
             "prices_below_count": bisect.bisect_left(sorted(reference_prices), subject_price),
             "interval_count": len(reference_prices),
-            "reference_min": round(min(reference_prices) * factor, 2),
-            "reference_max": round(max(reference_prices) * factor, 2),
-            "reference_mean": round(calculate_mean(reference_prices) * factor, 2),
+            "reference_min": round(min(reference_prices) * factor, decimals),
+            "reference_max": round(max(reference_prices) * factor, decimals),
+            "reference_mean": round(calculate_mean(reference_prices) * factor, decimals),
         }
 
         return rank

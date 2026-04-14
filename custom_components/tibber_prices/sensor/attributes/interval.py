@@ -9,6 +9,7 @@ from custom_components.tibber_prices.const import (
     PRICE_LEVEL_MAPPING,
     PRICE_RATING_MAPPING,
     get_display_unit_factor,
+    get_price_round_decimals,
 )
 from custom_components.tibber_prices.entity_utils import add_icon_color_attribute
 from custom_components.tibber_prices.utils.price import find_price_data_for_interval
@@ -112,14 +113,15 @@ def _add_energy_tax_attributes(
         return
 
     factor = get_display_unit_factor(config_entry)
+    decimals = get_price_round_decimals(config_entry)
 
     energy = interval_data.get("energy")
     if energy is not None:
-        attributes["energy_price"] = round(float(energy) * factor, 2)
+        attributes["energy_price"] = round(float(energy) * factor, decimals)
 
     tax = interval_data.get("tax")
     if tax is not None:
-        attributes["tax"] = round(float(tax) * factor, 2)
+        attributes["tax"] = round(float(tax) * factor, decimals)
 
 
 def add_current_interval_price_attributes(  # noqa: PLR0913
