@@ -7,8 +7,8 @@
 
 [project]
 name = "tibber_prices"
-version = "0.0.0"          # Version is managed in manifest.json only
-requires-python = ">=3.14"
+version = "0.0.0"            # Version is managed in manifest.json only
+requires-python = ">=3.14.2"
 
 [tool.setuptools]
 packages = ["custom_components.tibber_prices"]
