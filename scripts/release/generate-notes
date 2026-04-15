@@ -781,11 +781,20 @@ CURRENT_TITLE=""
 CURRENT_URL=""
 
 if [ -z "$CI" ] && [ -z "$GITHUB_ACTIONS" ] && command -v gh >/dev/null 2>&1 && [ "$TO_TAG" != "HEAD" ]; then
-    # Check if TO_TAG is a valid tag and release exists
-    if git rev-parse "$TO_TAG" >/dev/null 2>&1 && gh release view "$TO_TAG" >/dev/null 2>&1; then
-        AUTO_UPDATE_AVAILABLE=true
-        CURRENT_TITLE=$(gh release view "$TO_TAG" --json name --jq '.name' 2>/dev/null || echo "$TO_TAG")
-        CURRENT_URL=$(gh release view "$TO_TAG" --json url --jq '.url' 2>/dev/null || echo "")
+    # Only check for release if the tag exists locally
+    if git rev-parse "$TO_TAG" >/dev/null 2>&1; then
+        # Check if gh is authenticated before querying the release
+        if ! gh auth status >/dev/null 2>&1; then
+            log_info "${YELLOW}Note: GitHub CLI is not authenticated — skipping auto-update check.${NC}"
+            log_info "${YELLOW}      Run 'gh auth login' to enable updating existing releases.${NC}"
+        elif gh release view "$TO_TAG" >/dev/null 2>&1; then
+            AUTO_UPDATE_AVAILABLE=true
+            CURRENT_TITLE=$(gh release view "$TO_TAG" --json name --jq '.name' 2>/dev/null || echo "$TO_TAG")
+            CURRENT_URL=$(gh release view "$TO_TAG" --json url --jq '.url' 2>/dev/null || echo "")
+        else
+            log_info "${YELLOW}Note: No GitHub release found for ${CYAN}${TO_TAG}${YELLOW}.${NC}"
+            log_info "${YELLOW}      Create one with: gh release create ${TO_TAG}${NC}"
+        fi
     fi
 fi
 
