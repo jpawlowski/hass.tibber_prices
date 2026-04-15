@@ -1012,6 +1012,52 @@
           "mixed": "Gemengd"
         }
       },
+      "current_price_phase": {
+        "name": "Huidige Prijsfase",
+        "state": {
+          "rising": "Stijgend",
+          "falling": "Dalend",
+          "flat": "Vlak"
+        }
+      },
+      "next_price_phase": {
+        "name": "Volgende Prijsfase",
+        "state": {
+          "rising": "Stijgend",
+          "falling": "Dalend",
+          "flat": "Vlak"
+        }
+      },
+      "current_price_phase_end_time": {
+        "name": "Current Phase End Time"
+      },
+      "current_price_phase_remaining_minutes": {
+        "name": "Current Phase Remaining"
+      },
+      "current_price_phase_duration": {
+        "name": "Current Phase Duration"
+      },
+      "current_price_phase_progress": {
+        "name": "Current Phase Progress"
+      },
+      "next_rising_phase_start_time": {
+        "name": "Next Rising Phase Start"
+      },
+      "next_falling_phase_start_time": {
+        "name": "Next Falling Phase Start"
+      },
+      "next_flat_phase_start_time": {
+        "name": "Next Flat Phase Start"
+      },
+      "next_rising_phase_in_minutes": {
+        "name": "Time to Next Rising Phase"
+      },
+      "next_falling_phase_in_minutes": {
+        "name": "Time to Next Falling Phase"
+      },
+      "next_flat_phase_in_minutes": {
+        "name": "Time to Next Flat Phase"
+      },
       "chart_data_export": {
         "name": "Grafiekdata Export",
         "state": {
@@ -1068,6 +1114,15 @@
       },
       "best_price_period": {
         "name": "Beste Prijs Periode"
+      },
+      "in_rising_price_phase": {
+        "name": "In Rising Price Phase"
+      },
+      "in_falling_price_phase": {
+        "name": "In Falling Price Phase"
+      },
+      "in_flat_price_phase": {
+        "name": "In Flat Price Phase"
       },
       "connection": {
         "name": "Tibber API Verbinding"
@@ -1156,7 +1211,7 @@
     },
     "currency_display_mode_changed": {
       "title": "Valutaweergave-eenheid gewijzigd voor {home_name}",
-      "description": "Je hebt de valutaweergavemodus voor **{home_name}** gewijzigd. Alle prijssensorwaarden en -attributen gebruiken nu de nieuwe eenheid (bijv. 25,34 ct → 0,2534 € of andersom).\n\nHome Assistant’s Recorder toont afzonderlijk een **„De eenheid is gewijzigd“**-dialoogvenster voor getroffen sensoren — dit kan enkele minuten duren of tot de volgende statistiekenrun (logwaarschuwingen verschijnen eerder). Kies dan **Alle oude statistiekgegevens verwijderen** voor een schone start. Kies niet „Eenheid bijwerken zonder conversie“: dat hernoemt de oude getallen zonder de waarden aan te passen, waardoor de historische gegevens inhoudelijk onjuist worden.\n\n**Handmatig controleren:**\n\n1. **Automatiseringen & templates:** Werk alle automatiseringen en template-sensoren bij die numerieke prijsdrempels gebruiken.\n2. **Dashboard-kaarten:** Werk kaarten bij met hardgecodeerde drempelwaarden of eenheidslabels.\n\nSluit deze melding nadat je je automatiseringen en dashboards hebt gecontroleerd."
+      "description": "Je hebt de valutaweergavemodus voor **{home_name}** gewijzigd. Alle prijssensorwaarden en -attributen gebruiken nu de nieuwe eenheid (bijv. 25,34 ct → 0,2534 € of andersom).\n\nHome Assistant’s Recorder toont afzonderlijk een **„De eenheid is gewijzigd“**-dialoogvenster voor getroffen sensoren — dit kan enkele minuten duren of tot de volgende statistiekenrun (logwaarschuwingen verschijnen eerder). Kies dan **Alle oude statistiekgegevens verwijderen** voor een schone start. Kies niet „Eenheid bijwerken zonder conversie“: dat hernoemt de oude getallen zonder de waarden aan te passen, waardoor de historische gegevens inhoudelijk onjuist worden.\n\n**Handmatig controleren:**\n\n1. **Automatiseringen & templates:** Werk alle automatiseringen en template-sensoren bij die numerieke prijsdrempels gebruiken.\n2. **Dashboard-kaarten:** Werk kaarten bij met hardgecodeerde drempelwaarden of eenheidslabels.\n\nZodra je je automatiseringen, dashboards en statistieken hebt gecontroleerd, ga naar **Instellingen → Integraties → Tibber → Configureren → Weergave-instellingen** en sla op (zonder wijzigingen indien gewenst). Dit is de enige manier om deze melding permanent te sluiten."
     }
   },
   "exceptions": {

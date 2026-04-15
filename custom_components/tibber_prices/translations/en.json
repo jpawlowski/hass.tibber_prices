@@ -1012,6 +1012,52 @@
           "mixed": "Mixed"
         }
       },
+      "current_price_phase": {
+        "name": "Current Price Phase",
+        "state": {
+          "rising": "Rising",
+          "falling": "Falling",
+          "flat": "Flat"
+        }
+      },
+      "next_price_phase": {
+        "name": "Next Price Phase",
+        "state": {
+          "rising": "Rising",
+          "falling": "Falling",
+          "flat": "Flat"
+        }
+      },
+      "current_price_phase_end_time": {
+        "name": "Current Phase End Time"
+      },
+      "current_price_phase_remaining_minutes": {
+        "name": "Current Phase Remaining"
+      },
+      "current_price_phase_duration": {
+        "name": "Current Phase Duration"
+      },
+      "current_price_phase_progress": {
+        "name": "Current Phase Progress"
+      },
+      "next_rising_phase_start_time": {
+        "name": "Next Rising Phase Start"
+      },
+      "next_falling_phase_start_time": {
+        "name": "Next Falling Phase Start"
+      },
+      "next_flat_phase_start_time": {
+        "name": "Next Flat Phase Start"
+      },
+      "next_rising_phase_in_minutes": {
+        "name": "Time to Next Rising Phase"
+      },
+      "next_falling_phase_in_minutes": {
+        "name": "Time to Next Falling Phase"
+      },
+      "next_flat_phase_in_minutes": {
+        "name": "Time to Next Flat Phase"
+      },
       "chart_data_export": {
         "name": "Chart Data Export",
         "state": {
@@ -1068,6 +1114,15 @@
       },
       "best_price_period": {
         "name": "Best Price Period"
+      },
+      "in_rising_price_phase": {
+        "name": "In Rising Price Phase"
+      },
+      "in_falling_price_phase": {
+        "name": "In Falling Price Phase"
+      },
+      "in_flat_price_phase": {
+        "name": "In Flat Price Phase"
       },
       "connection": {
         "name": "Tibber API Connection"
@@ -1156,7 +1211,7 @@
     },
     "currency_display_mode_changed": {
       "title": "Currency display unit changed for {home_name}",
-      "description": "You changed the currency display mode for **{home_name}**. All price sensor values and attributes now use the new unit (e.g. 25.34 ct → 0.2534 € or vice versa).\n\nHome Assistant’s Recorder will separately show a **“The unit has changed”** dialog for affected sensors — this may take a few minutes or until the next statistics run (log warnings appear earlier). When it appears, choose **Delete all old statistic data** to start fresh. Do not choose “Update the unit without converting”: that re-labels the old numbers without adjusting their values, making the historic data factually incorrect.\n\n**Review manually:**\n\n1. **Automations & Templates:** Update all automations and template sensors that use numeric price thresholds.\n2. **Dashboard Cards:** Update any cards with hardcoded thresholds or unit labels.\n\nDismiss this notice after reviewing your automations and dashboards."
+      "description": "You changed the currency display mode for **{home_name}**. All price sensor values and attributes now use the new unit (e.g. 25.34 ct → 0.2534 € or vice versa).\n\nHome Assistant’s Recorder will separately show a **“The unit has changed”** dialog for affected sensors — this may take a few minutes or until the next statistics run (log warnings appear earlier). When it appears, choose **Delete all old statistic data** to start fresh. Do not choose “Update the unit without converting”: that re-labels the old numbers without adjusting their values, making the historic data factually incorrect.\n\n**Review manually:**\n\n1. **Automations & Templates:** Update all automations and template sensors that use numeric price thresholds.\n2. **Dashboard Cards:** Update any cards with hardcoded thresholds or unit labels.\n\nOnce you have reviewed your automations, dashboards, and statistics, go to **Settings → Integrations → Tibber → Configure → Display Settings** and save (without any changes if you like). This is the only way to permanently close this notification."
     }
   },
   "exceptions": {

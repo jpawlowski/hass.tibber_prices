@@ -1012,6 +1012,52 @@
           "mixed": "Gemischt"
         }
       },
+      "current_price_phase": {
+        "name": "Aktuelle Preisphase",
+        "state": {
+          "rising": "Steigend",
+          "falling": "Fallend",
+          "flat": "Flach"
+        }
+      },
+      "next_price_phase": {
+        "name": "Nächste Preisphase",
+        "state": {
+          "rising": "Steigend",
+          "falling": "Fallend",
+          "flat": "Flach"
+        }
+      },
+      "current_price_phase_end_time": {
+        "name": "Current Phase End Time"
+      },
+      "current_price_phase_remaining_minutes": {
+        "name": "Current Phase Remaining"
+      },
+      "current_price_phase_duration": {
+        "name": "Current Phase Duration"
+      },
+      "current_price_phase_progress": {
+        "name": "Current Phase Progress"
+      },
+      "next_rising_phase_start_time": {
+        "name": "Next Rising Phase Start"
+      },
+      "next_falling_phase_start_time": {
+        "name": "Next Falling Phase Start"
+      },
+      "next_flat_phase_start_time": {
+        "name": "Next Flat Phase Start"
+      },
+      "next_rising_phase_in_minutes": {
+        "name": "Time to Next Rising Phase"
+      },
+      "next_falling_phase_in_minutes": {
+        "name": "Time to Next Falling Phase"
+      },
+      "next_flat_phase_in_minutes": {
+        "name": "Time to Next Flat Phase"
+      },
       "chart_data_export": {
         "name": "Diagramm-Datenexport",
         "state": {
@@ -1068,6 +1114,15 @@
       },
       "best_price_period": {
         "name": "Bestpreis-Zeitraum"
+      },
+      "in_rising_price_phase": {
+        "name": "In Rising Price Phase"
+      },
+      "in_falling_price_phase": {
+        "name": "In Falling Price Phase"
+      },
+      "in_flat_price_phase": {
+        "name": "In Flat Price Phase"
       },
       "connection": {
         "name": "Tibber-API-Verbindung"
@@ -1156,7 +1211,7 @@
     },
     "currency_display_mode_changed": {
       "title": "Währungsanzeigeeinheit für {home_name} geändert",
-      "description": "Du hast den Währungsanzeigemodus für **{home_name}** geändert. Alle Preissensor-Werte und -Attribute verwenden jetzt die neue Einheit (z.B. 25,34 ct → 0,2534 € oder umgekehrt).\n\nDer Recorder von Home Assistant zeigt separat einen Dialog **„Die Einheit hat sich geändert“** für betroffene Sensoren — das kann einige Minuten dauern oder bis zum nächsten Statistik-Durchlauf (Warnungen im Log erscheinen früher). Wähle dann **Alle alten Statistikdaten löschen** für einen sauberen Neustart. Wähle nicht „Einheit aktualisieren ohne Konvertierung“: das benennt die alten Zahlen nur um, ohne die Werte anzupassen, und macht die historischen Daten inhaltlich falsch.\n\n**Manuell prüfen:**\n\n1. **Automationen & Templates:** Aktualisiere alle Automationen und Template-Sensoren mit numerischen Preis-Schwellwerten.\n2. **Dashboard-Karten:** Aktualisiere alle Karten mit fest codierten Schwellwerten oder Einheitenbezeichnungen.\n\nSchließe diesen Hinweis, nachdem du deine Automationen und Dashboards überprüft hast."
+      "description": "Du hast den Währungsanzeigemodus für **{home_name}** geändert. Alle Preissensor-Werte und -Attribute verwenden jetzt die neue Einheit (z.B. 25,34 ct → 0,2534 € oder umgekehrt).\n\nDer Recorder von Home Assistant zeigt separat einen Dialog **„Die Einheit hat sich geändert“** für betroffene Sensoren — das kann einige Minuten dauern oder bis zum nächsten Statistik-Durchlauf (Warnungen im Log erscheinen früher). Wähle dann **Alle alten Statistikdaten löschen** für einen sauberen Neustart. Wähle nicht „Einheit aktualisieren ohne Konvertierung“: das benennt die alten Zahlen nur um, ohne die Werte anzupassen, und macht die historischen Daten inhaltlich falsch.\n\n**Manuell prüfen:**\n\n1. **Automationen & Templates:** Aktualisiere alle Automationen und Template-Sensoren mit numerischen Preis-Schwellwerten.\n2. **Dashboard-Karten:** Aktualisiere alle Karten mit fest codierten Schwellwerten oder Einheitenbezeichnungen.\n\nSobald du deine Automationen, Dashboards und Statistiken überprüft hast, gehe zu **Einstellungen → Integrationen → Tibber → Konfigurieren → Anzeigeeinstellungen** und speichere (auch ohne Änderungen). Nur so kannst du diese Meldung dauerhaft schließen."
     }
   },
   "exceptions": {

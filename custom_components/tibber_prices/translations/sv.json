@@ -1012,6 +1012,52 @@
           "mixed": "Blandad"
         }
       },
+      "current_price_phase": {
+        "name": "Aktuell Prisfas",
+        "state": {
+          "rising": "Stigande",
+          "falling": "Fallande",
+          "flat": "Flat"
+        }
+      },
+      "next_price_phase": {
+        "name": "Nästa Prisfas",
+        "state": {
+          "rising": "Stigande",
+          "falling": "Fallande",
+          "flat": "Flat"
+        }
+      },
+      "current_price_phase_end_time": {
+        "name": "Current Phase End Time"
+      },
+      "current_price_phase_remaining_minutes": {
+        "name": "Current Phase Remaining"
+      },
+      "current_price_phase_duration": {
+        "name": "Current Phase Duration"
+      },
+      "current_price_phase_progress": {
+        "name": "Current Phase Progress"
+      },
+      "next_rising_phase_start_time": {
+        "name": "Next Rising Phase Start"
+      },
+      "next_falling_phase_start_time": {
+        "name": "Next Falling Phase Start"
+      },
+      "next_flat_phase_start_time": {
+        "name": "Next Flat Phase Start"
+      },
+      "next_rising_phase_in_minutes": {
+        "name": "Time to Next Rising Phase"
+      },
+      "next_falling_phase_in_minutes": {
+        "name": "Time to Next Falling Phase"
+      },
+      "next_flat_phase_in_minutes": {
+        "name": "Time to Next Flat Phase"
+      },
       "chart_data_export": {
         "name": "Diagramdataexport",
         "state": {
@@ -1068,6 +1114,15 @@
       },
       "best_price_period": {
         "name": "Bästa Prisperiod"
+      },
+      "in_rising_price_phase": {
+        "name": "In Rising Price Phase"
+      },
+      "in_falling_price_phase": {
+        "name": "In Falling Price Phase"
+      },
+      "in_flat_price_phase": {
+        "name": "In Flat Price Phase"
       },
       "connection": {
         "name": "Tibber API-anslutning"
@@ -1156,7 +1211,7 @@
     },
     "currency_display_mode_changed": {
       "title": "Valutavisningsenhet ändrad för {home_name}",
-      "description": "Du ändrade valutavisningsläget för **{home_name}**. Alla prissensorvärden och -attribut använder nu den nya enheten (t.ex. 25,34 öre → 0,2534 kr eller tvärtom).\n\nHome Assistants Recorder visar separat en **„Enheten har ändrats“**-dialog för berörda sensorer — det kan ta några minuter eller till nästa statistikkörning (loggvarningar dyker upp tidigare). När den visas, välj **Ta bort alla gamla statistikdata** för en ren start. Välj inte „Uppdatera enheten utan konvertering“: det behåller de gamla talen med ny enhet utan att justera värdena, vilket gör historiska data faktiskt felaktiga.\n\n**Granska manuellt:**\n\n1. **Automatiseringar & mallar:** Uppdatera alla automatiseringar och mallsensorer som använder numeriska priströsklar.\n2. **Dashboard-kort:** Uppdatera kort med hårdkodade tröskelvärden eller enhetsetiketter.\n\nStäng detta meddelande efter att du har granskat dina automatiseringar och dashboards."
+      "description": "Du ändrade valutavisningsläget för **{home_name}**. Alla prissensorvärden och -attribut använder nu den nya enheten (t.ex. 25,34 öre → 0,2534 kr eller tvärtom).\n\nHome Assistants Recorder visar separat en **„Enheten har ändrats“**-dialog för berörda sensorer — det kan ta några minuter eller till nästa statistikkörning (loggvarningar dyker upp tidigare). När den visas, välj **Ta bort alla gamla statistikdata** för en ren start. Välj inte „Uppdatera enheten utan konvertering“: det behåller de gamla talen med ny enhet utan att justera värdena, vilket gör historiska data faktiskt felaktiga.\n\n**Granska manuellt:**\n\n1. **Automatiseringar & mallar:** Uppdatera alla automatiseringar och mallsensorer som använder numeriska priströsklar.\n2. **Dashboard-kort:** Uppdatera kort med hårdkodade tröskelvärden eller enhetsetiketter.\n\nNär du har granskat dina automatiseringar, instrumentpaneler och statistik, gå till **Inställningar → Integrationer → Tibber → Konfigurera → Visningsinställningar** och spara (utan ändringar om du vill). Det är det enda sättet att permanent stänga det här meddelandet."
     }
   },
   "exceptions": {

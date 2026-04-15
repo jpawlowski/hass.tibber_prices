@@ -1012,6 +1012,52 @@
           "mixed": "Blandet"
         }
       },
+      "current_price_phase": {
+        "name": "Gjeldende Prisfase",
+        "state": {
+          "rising": "Stigende",
+          "falling": "Fallende",
+          "flat": "Flat"
+        }
+      },
+      "next_price_phase": {
+        "name": "Neste Prisfase",
+        "state": {
+          "rising": "Stigende",
+          "falling": "Fallende",
+          "flat": "Flat"
+        }
+      },
+      "current_price_phase_end_time": {
+        "name": "Current Phase End Time"
+      },
+      "current_price_phase_remaining_minutes": {
+        "name": "Current Phase Remaining"
+      },
+      "current_price_phase_duration": {
+        "name": "Current Phase Duration"
+      },
+      "current_price_phase_progress": {
+        "name": "Current Phase Progress"
+      },
+      "next_rising_phase_start_time": {
+        "name": "Next Rising Phase Start"
+      },
+      "next_falling_phase_start_time": {
+        "name": "Next Falling Phase Start"
+      },
+      "next_flat_phase_start_time": {
+        "name": "Next Flat Phase Start"
+      },
+      "next_rising_phase_in_minutes": {
+        "name": "Time to Next Rising Phase"
+      },
+      "next_falling_phase_in_minutes": {
+        "name": "Time to Next Falling Phase"
+      },
+      "next_flat_phase_in_minutes": {
+        "name": "Time to Next Flat Phase"
+      },
       "chart_data_export": {
         "name": "Diagramdataeksport",
         "state": {
@@ -1068,6 +1114,15 @@
       },
       "best_price_period": {
         "name": "Lavpris-periode"
+      },
+      "in_rising_price_phase": {
+        "name": "In Rising Price Phase"
+      },
+      "in_falling_price_phase": {
+        "name": "In Falling Price Phase"
+      },
+      "in_flat_price_phase": {
+        "name": "In Flat Price Phase"
       },
       "connection": {
         "name": "Tibber API-tilkobling"
@@ -1156,7 +1211,7 @@
     },
     "currency_display_mode_changed": {
       "title": "Valutavisningsenhet endret for {home_name}",
-      "description": "Du endret valutavisningsmodusen for **{home_name}**. Alle prissensorverdier og -attributter bruker nå den nye enheten (f.eks. 25,34 øre → 0,2534 kr eller omvendt).\n\nHome Assistants Recorder viser separat en **„Enheten har endret seg“**-dialog for berørte sensorer — dette kan ta noen minutter eller til neste statistikkjøring (advarsler i loggen dukker opp tidligere). Når den vises, velg **Slett alle gamle statistikkdata** for en ren start. Ikke velg „Oppdater enheten uten konvertering“: det beholder de gamle tallene med ny enhet uten å justere verdiene, og gjør de historiske dataene faktisk feil.\n\n**Gjennomgå manuelt:**\n\n1. **Automatiseringer & maler:** Oppdater alle automatiseringer og malsensorer som bruker numeriske pristerskler.\n2. **Dashboard-kort:** Oppdater kort med hardkodede terskelverdier eller enhetsetiketter.\n\nAvvis dette varselet etter å ha gjennomgått automatiseringene og dashboardene dine."
+      "description": "Du endret valutavisningsmodusen for **{home_name}**. Alle prissensorverdier og -attributter bruker nå den nye enheten (f.eks. 25,34 øre → 0,2534 kr eller omvendt).\n\nHome Assistants Recorder viser separat en **„Enheten har endret seg“**-dialog for berørte sensorer — dette kan ta noen minutter eller til neste statistikkjøring (advarsler i loggen dukker opp tidligere). Når den vises, velg **Slett alle gamle statistikkdata** for en ren start. Ikke velg „Oppdater enheten uten konvertering“: det beholder de gamle tallene med ny enhet uten å justere verdiene, og gjør de historiske dataene faktisk feil.\n\n**Gjennomgå manuelt:**\n\n1. **Automatiseringer & maler:** Oppdater alle automatiseringer og malsensorer som bruker numeriske pristerskler.\n2. **Dashboard-kort:** Oppdater kort med hardkodede terskelverdier eller enhetsetiketter.\n\nNår du har gjennomgått automatiseringer, dashboards og statistikk, gå til **Innstillinger → Integrasjoner → Tibber → Konfigurer → Visningsinnstillinger** og lagre (uten endringer om ønskelig). Dette er den eneste måten å lukke denne meldingen permanent."
     }
   },
   "exceptions": {
