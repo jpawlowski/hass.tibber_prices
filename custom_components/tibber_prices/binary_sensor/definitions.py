@@ -19,6 +19,22 @@ ENTITY_DESCRIPTIONS = (
         translation_key="best_price_period",
         icon="mdi:clock-check",
     ),
+    # Price phase binary sensors — ON when current intra-day phase matches the type
+    BinarySensorEntityDescription(
+        key="in_rising_price_phase",
+        translation_key="in_rising_price_phase",
+        icon="mdi:trending-up",
+    ),
+    BinarySensorEntityDescription(
+        key="in_falling_price_phase",
+        translation_key="in_falling_price_phase",
+        icon="mdi:trending-down",
+    ),
+    BinarySensorEntityDescription(
+        key="in_flat_price_phase",
+        translation_key="in_flat_price_phase",
+        icon="mdi:trending-neutral",
+    ),
     BinarySensorEntityDescription(
         key="connection",
         translation_key="connection",

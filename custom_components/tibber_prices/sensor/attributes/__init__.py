@@ -39,7 +39,7 @@ from .daily_stat import add_statistics_attributes
 from .future import add_next_avg_attributes, get_future_prices
 from .interval import add_current_interval_price_attributes
 from .lifecycle import build_lifecycle_attributes
-from .metadata import get_day_pattern_attributes
+from .metadata import get_current_price_phase_attributes, get_day_pattern_attributes, get_next_price_phase_attributes
 from .timing import _is_timing_or_volatility_sensor
 from .trend import _add_cached_trend_attributes, _add_timing_or_volatility_attributes
 from .volatility import add_percentile_rank_attributes, add_volatility_type_attributes, get_prices_for_volatility
@@ -194,6 +194,16 @@ def build_sensor_attributes(
             day_attrs = get_day_pattern_attributes(coordinator, day)
             if day_attrs:
                 attributes.update(day_attrs)
+
+        elif key == "current_price_phase":
+            phase_attrs = get_current_price_phase_attributes(coordinator, time=time)
+            if phase_attrs:
+                attributes.update(phase_attrs)
+
+        elif key == "next_price_phase":
+            next_phase_attrs = get_next_price_phase_attributes(coordinator, time=time)
+            if next_phase_attrs:
+                attributes.update(next_phase_attrs)
 
         # For current_interval_price_level, add the original level as attribute
         if key == "current_interval_price_level" and cached_data.get("last_price_level") is not None:

@@ -25,6 +25,51 @@ if TYPE_CHECKING:
     from homeassistant.core import HomeAssistant
 
 
+def get_current_phase_type(coordinator_data: dict, *, time: TibberPricesTimeService) -> str | None:
+    """
+    Return the type of the currently active intra-day price phase.
+
+    Walks today's segments and returns the type ("rising", "falling", or "flat")
+    of the last segment whose start time is ≤ now.
+
+    Args:
+        coordinator_data: The coordinator's data dict.
+        time:             TibberPricesTimeService instance.
+
+    Returns:
+        Phase type string or None if no segment data is available.
+
+    """
+    if not coordinator_data:
+        return None
+
+    day_patterns = coordinator_data.get("dayPatterns")
+    if not day_patterns:
+        return None
+
+    today_data = day_patterns.get("today")
+    if not today_data:
+        return None
+
+    segments: list[dict] | None = today_data.get("segments")
+    if not segments:
+        return None
+
+    from homeassistant.util.dt import parse_datetime  # noqa: PLC0415
+
+    now = time.now()
+    current_type: str | None = None
+    for segment in segments:
+        seg_start_str: str | None = segment.get("start")
+        if not seg_start_str:
+            continue
+        seg_start = parse_datetime(seg_start_str)
+        if seg_start is not None and now >= seg_start:
+            current_type = segment.get("type")
+
+    return current_type
+
+
 def get_tomorrow_data_available_attributes(
     coordinator_data: dict,
     *,

@@ -501,6 +501,66 @@
       "long_description": "Klassifiserer i morgen (når data er tilgjengelig, typisk etter kl. 13) i et prismønster med samme algoritme som i dag. Attributtene valley_start/valley_end eller peak_start/peak_end gir knepunktstider.",
       "usage_tips": "Sett opp kveldsautomasjonar som leser morgendagens mønster og forhåndskonfigurerer varmepumpe, billader eller varmtvannsberedere. Kombiner med tomorrow_data_available-binærsensoren."
     },
+    "current_price_phase": {
+      "description": "Om strømprisene nå stiger, faller eller er stabile – innenfor dagens intra-dag prisform",
+      "long_description": "Viser retningen på prisbevegelsen nå ved å identifisere det aktive monotone segmentet i dagens priskurve. Dagens priser deles inn i fortløpende stigende, fallende eller flate strekninger (faser). Denne sensoren viser hvilken fase som er aktivt akkurat nå. Attributter inkluderer fasens start- og sluttid, prisområde (min/maks/gjennomsnitt), posisjon blant dagens faser (segment_index og segment_count) og den fullstendige listen over alle dagens faser (all_segments). Oppdateres hvert 15. minutt.",
+      "usage_tips": "Bruk i automasjonar: 'Hvis current_price_phase = fallende, vent med fleksible laster til prisene når bunnen'. Kombiner med Dagens Prismønster for å se både den overordnede dagformen og din nåværende posisjon i den. Sjekk segment_index og segment_count for å forstå hvor langt inn i bevegelsen du er. Bruk all_segments i maler eller dashbord for å vise hele dagsforløpet."
+    },
+    "next_price_phase": {
+      "description": "Den neste intra-dag prisfasen – hva som kommer etter den nåværende prisbevegelsen",
+      "long_description": "Viser det monotone prissegmentet som følger etter den for øyeblikket aktive fasen. Attributtet start viser nøyaktig når neste fase begynner, noe som gjør det enkelt å planlegge automasjonar. Når den nåværende fasen er den siste for dagen (f.eks. det siste kveldsfall), blir denne sensoren utilgjengelig. Attributter: start (når den begynner), end, prisområde (min/maks/gjennomsnitt), segment_index, segment_count. Oppdateres hvert 15. minutt.",
+      "usage_tips": "Bruk i automasjonar: 'Hvis next_price_phase = stigende og next_price_phase.start er innen 1 time, start vaskemaskin nå'. Eller kombiner med current_price_phase: 'Hvis current_price_phase = fallende og next_price_phase = flat, nærmer vi oss daglig lavpunkt – godt tidspunkt for fleksible laster'. Attributtet start er spesielt verdifullt: utløs automasjonar nøyaktig når neste fase begynner."
+    },
+    "current_price_phase_end_time": {
+      "description": "When the current intra-day price phase ends",
+      "long_description": "Shows the exact timestamp when the currently active rising, falling, or flat price phase will end and transition to the next phase.",
+      "usage_tips": "Use in automations to schedule tasks that must finish before prices change."
+    },
+    "current_price_phase_remaining_minutes": {
+      "description": "Minutes remaining in the current price phase",
+      "long_description": "Shows how many minutes are left in the current intra-day price phase. Updates every minute.",
+      "usage_tips": "Use in automations: 'If current_price_phase = falling and remaining < 30, start the dishwasher now'."
+    },
+    "current_price_phase_duration": {
+      "description": "Total duration of the current price phase",
+      "long_description": "Shows the total length of the currently active price phase in hours.",
+      "usage_tips": "Combine with remaining minutes to understand how far through the phase you are."
+    },
+    "current_price_phase_progress": {
+      "description": "How far through the current price phase we are",
+      "long_description": "Shows the percentage of the current intra-day price phase that has elapsed (0–100%). Updates every minute.",
+      "usage_tips": "Use in dashboard cards to display a visual progress bar for the current price phase."
+    },
+    "next_rising_phase_start_time": {
+      "description": "When the next rising price phase begins",
+      "long_description": "Shows the timestamp of the next upcoming rising price segment across today's remaining phases and tomorrow's phases.",
+      "usage_tips": "Use to schedule loads before prices start rising again."
+    },
+    "next_falling_phase_start_time": {
+      "description": "When the next falling price phase begins",
+      "long_description": "Shows the timestamp of the next upcoming falling price segment across today's remaining phases and tomorrow's phases.",
+      "usage_tips": "Use to delay flexible loads until the next price drop starts."
+    },
+    "next_flat_phase_start_time": {
+      "description": "When the next flat (stable) price phase begins",
+      "long_description": "Shows the timestamp of the next upcoming flat price segment across today's remaining phases and tomorrow's phases.",
+      "usage_tips": "Use for scheduling loads that need predictable costs over time."
+    },
+    "next_rising_phase_in_minutes": {
+      "description": "Minutes until the next rising price phase begins",
+      "long_description": "Shows how many minutes until the next rising price phase starts. Updates every minute.",
+      "usage_tips": "Use in countdown automations to alert before the next price rise."
+    },
+    "next_falling_phase_in_minutes": {
+      "description": "Minutes until the next falling price phase begins",
+      "long_description": "Shows how many minutes until the next falling price phase starts. Updates every minute.",
+      "usage_tips": "Use to time flexible loads: delay until the upcoming price drop."
+    },
+    "next_flat_phase_in_minutes": {
+      "description": "Minutes until the next flat (stable) price phase begins",
+      "long_description": "Shows how many minutes until the next flat price phase starts. Updates every minute.",
+      "usage_tips": "Use to anticipate price stabilisation after a volatile phase."
+    },
     "chart_data_export": {
       "description": "Dataeksport for dashboardintegrasjoner",
       "long_description": "Denne sensoren kaller get_chartdata-tjenesten med din konfigurerte YAML-konfigurasjon og eksponerer resultatet som entitetsattributter. Status viser 'ready' når data er tilgjengelig, 'error' ved feil, eller 'pending' før første kall. Perfekt for dashboardintegrasjoner som ApexCharts som trenger å lese prisdata fra entitetsattributter.",
@@ -582,6 +642,21 @@
       "description": "Om nåværende intervall er blant de billigste på dagen",
       "long_description": "Slår seg på når nåværende pris er i bunn 20% av dagens priser",
       "usage_tips": "Bruk dette til å kjøre høyforbruksapparater i de billigste intervallene"
+    },
+    "in_rising_price_phase": {
+      "description": "Whether prices are currently in a rising phase",
+      "long_description": "Turns ON when the current intra-day price phase is rising.",
+      "usage_tips": "Use in automations to delay or avoid running flexible loads during rising prices."
+    },
+    "in_falling_price_phase": {
+      "description": "Whether prices are currently in a falling phase",
+      "long_description": "Turns ON when the current intra-day price phase is falling.",
+      "usage_tips": "Use in automations to take advantage of falling prices for flexible loads."
+    },
+    "in_flat_price_phase": {
+      "description": "Whether prices are currently in a flat (stable) phase",
+      "long_description": "Turns ON when the current intra-day price phase is flat and prices are relatively stable.",
+      "usage_tips": "Use for loads that prefer price stability rather than the lowest price."
     },
     "connection": {
       "description": "Om tilkoblingen til Tibber API fungerer",

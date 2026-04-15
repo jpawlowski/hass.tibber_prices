@@ -1045,6 +1045,137 @@ DAY_PATTERN_SENSORS = (
         state_class=None,
         entity_registry_enabled_default=False,
     ),
+    SensorEntityDescription(
+        key="current_price_phase",
+        translation_key="current_price_phase",
+        icon="mdi:chart-timeline-variant",
+        device_class=SensorDeviceClass.ENUM,
+        options=["rising", "falling", "flat"],
+        state_class=None,
+        entity_registry_enabled_default=True,
+    ),
+    SensorEntityDescription(
+        key="next_price_phase",
+        translation_key="next_price_phase",
+        icon="mdi:chart-timeline-variant",
+        device_class=SensorDeviceClass.ENUM,
+        options=["rising", "falling", "flat"],
+        state_class=None,
+        entity_registry_enabled_default=True,
+    ),
+)
+
+# 8b. PRICE PHASE TIMING SENSORS (current phase duration/progress + next-phase-by-type)
+# ----------------------------------------------------------------------------
+#
+# When current phase is active:
+#   - end_time:           Timestamp when current phase ends
+#   - remaining_minutes:  Minutes until current phase ends
+#   - duration:           Total length of current phase (disabled by default)
+#   - progress:           Percentage of current phase completed (disabled by default)
+#
+# Next occurrence of a specific phase type (after current segment, today or tomorrow):
+#   - next_*_phase_start_time:  Timestamp when next rising/falling/flat phase starts
+#   - next_*_phase_in_minutes:  Minutes until that phase starts
+#
+# All return None/Unknown when no segment data is available.
+
+PRICE_PHASE_TIMING_SENSORS = (
+    SensorEntityDescription(
+        key="current_price_phase_end_time",
+        translation_key="current_price_phase_end_time",
+        icon="mdi:clock-end",
+        device_class=SensorDeviceClass.TIMESTAMP,
+        state_class=None,  # Timestamps: no statistics
+    ),
+    SensorEntityDescription(
+        key="current_price_phase_remaining_minutes",
+        translation_key="current_price_phase_remaining_minutes",
+        icon="mdi:timer-sand",
+        device_class=SensorDeviceClass.DURATION,
+        native_unit_of_measurement=UnitOfTime.MINUTES,
+        suggested_unit_of_measurement=UnitOfTime.HOURS,
+        state_class=None,  # Countdown timers excluded from statistics
+        suggested_display_precision=2,
+    ),
+    SensorEntityDescription(
+        key="current_price_phase_duration",
+        translation_key="current_price_phase_duration",
+        icon="mdi:timer",
+        device_class=SensorDeviceClass.DURATION,
+        native_unit_of_measurement=UnitOfTime.MINUTES,
+        suggested_unit_of_measurement=UnitOfTime.HOURS,
+        state_class=None,  # Duration not needed in long-term statistics
+        suggested_display_precision=2,
+        entity_registry_enabled_default=False,
+    ),
+    SensorEntityDescription(
+        key="current_price_phase_progress",
+        translation_key="current_price_phase_progress",
+        icon="mdi:percent",
+        native_unit_of_measurement=PERCENTAGE,
+        state_class=None,  # Progress counter: no statistics
+        suggested_display_precision=0,
+        entity_registry_enabled_default=False,
+    ),
+    # Next occurrence of each phase type (across remaining today + tomorrow)
+    SensorEntityDescription(
+        key="next_rising_phase_start_time",
+        translation_key="next_rising_phase_start_time",
+        icon="mdi:trending-up",
+        device_class=SensorDeviceClass.TIMESTAMP,
+        state_class=None,
+        entity_registry_enabled_default=False,
+    ),
+    SensorEntityDescription(
+        key="next_falling_phase_start_time",
+        translation_key="next_falling_phase_start_time",
+        icon="mdi:trending-down",
+        device_class=SensorDeviceClass.TIMESTAMP,
+        state_class=None,
+        entity_registry_enabled_default=False,
+    ),
+    SensorEntityDescription(
+        key="next_flat_phase_start_time",
+        translation_key="next_flat_phase_start_time",
+        icon="mdi:trending-neutral",
+        device_class=SensorDeviceClass.TIMESTAMP,
+        state_class=None,
+        entity_registry_enabled_default=False,
+    ),
+    SensorEntityDescription(
+        key="next_rising_phase_in_minutes",
+        translation_key="next_rising_phase_in_minutes",
+        icon="mdi:timer-outline",
+        device_class=SensorDeviceClass.DURATION,
+        native_unit_of_measurement=UnitOfTime.MINUTES,
+        suggested_unit_of_measurement=UnitOfTime.HOURS,
+        state_class=None,
+        suggested_display_precision=2,
+        entity_registry_enabled_default=False,
+    ),
+    SensorEntityDescription(
+        key="next_falling_phase_in_minutes",
+        translation_key="next_falling_phase_in_minutes",
+        icon="mdi:timer-outline",
+        device_class=SensorDeviceClass.DURATION,
+        native_unit_of_measurement=UnitOfTime.MINUTES,
+        suggested_unit_of_measurement=UnitOfTime.HOURS,
+        state_class=None,
+        suggested_display_precision=2,
+        entity_registry_enabled_default=False,
+    ),
+    SensorEntityDescription(
+        key="next_flat_phase_in_minutes",
+        translation_key="next_flat_phase_in_minutes",
+        icon="mdi:timer-outline",
+        device_class=SensorDeviceClass.DURATION,
+        native_unit_of_measurement=UnitOfTime.MINUTES,
+        suggested_unit_of_measurement=UnitOfTime.HOURS,
+        state_class=None,
+        suggested_display_precision=2,
+        entity_registry_enabled_default=False,
+    ),
 )
 
 # 9. DIAGNOSTIC SENSORS (data availability and metadata)
@@ -1239,5 +1370,6 @@ ENTITY_DESCRIPTIONS = (
     *BEST_PRICE_TIMING_SENSORS,
     *PEAK_PRICE_TIMING_SENSORS,
     *DAY_PATTERN_SENSORS,
+    *PRICE_PHASE_TIMING_SENSORS,
     *DIAGNOSTIC_SENSORS,
 )

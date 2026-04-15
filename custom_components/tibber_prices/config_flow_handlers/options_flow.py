@@ -72,7 +72,6 @@ from custom_components.tibber_prices.const import (
     CONF_VOLATILITY_THRESHOLD_HIGH,
     CONF_VOLATILITY_THRESHOLD_MODERATE,
     CONF_VOLATILITY_THRESHOLD_VERY_HIGH,
-    DATA_STATISTICS_REVIEW_REQUIRED,
     DEFAULT_VOLATILITY_THRESHOLD_HIGH,
     DEFAULT_VOLATILITY_THRESHOLD_MODERATE,
     DEFAULT_VOLATILITY_THRESHOLD_VERY_HIGH,
@@ -512,36 +511,24 @@ class TibberPricesOptionsFlowHandler(OptionsFlow):
             # async_create_entry automatically handles change detection and listener triggering
             self._save_options_if_changed()
 
-            # Handle currency display mode change repair + persistent flag
-            issue_id = f"currency_display_mode_changed_{self.config_entry.entry_id}"
-            mode_changed = old_mode is not None and new_mode is not None and old_mode != new_mode
-
-            if mode_changed:
-                # Set persistent flag so repair issue reappears after HA restart
-                self.hass.config_entries.async_update_entry(
-                    self.config_entry,
-                    data={**self.config_entry.data, DATA_STATISTICS_REVIEW_REQUIRED: True},
-                )
-                # delete + create resets dismissed_version, forcing the issue into view
-                # even if the user had dismissed a previous instance of this issue.
+            # Notify user of currency display mode change via Repairs
+            if old_mode is not None and new_mode is not None and old_mode != new_mode:
+                issue_id = f"currency_display_mode_changed_{self.config_entry.entry_id}"
+                # delete + create resets dismissed_version so the issue is always visible
+                # for a new mode change, even if a previous instance was dismissed.
                 ir.async_delete_issue(self.hass, DOMAIN, issue_id)
                 ir.async_create_issue(
                     self.hass,
                     DOMAIN,
                     issue_id,
                     is_fixable=False,
-                    is_persistent=True,
+                    is_persistent=False,
                     severity=ir.IssueSeverity.WARNING,
                     translation_key="currency_display_mode_changed",
                     translation_placeholders={
                         "home_name": self.config_entry.title,
                     },
                 )
-            elif self.config_entry.data.get(DATA_STATISTICS_REVIEW_REQUIRED):
-                # User re-saved display settings with same mode = acknowledgement → clear flag
-                new_data = {k: v for k, v in self.config_entry.data.items() if k != DATA_STATISTICS_REVIEW_REQUIRED}
-                self.hass.config_entries.async_update_entry(self.config_entry, data=new_data)
-                ir.async_delete_issue(self.hass, DOMAIN, issue_id)
 
             # Return to menu for more changes
             return await self.async_step_init()

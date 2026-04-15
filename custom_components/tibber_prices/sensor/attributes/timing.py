@@ -26,19 +26,29 @@ def _hours_to_minutes(state_value: Any) -> int | None:
 
 def _is_timing_or_volatility_sensor(key: str) -> bool:
     """Check if sensor is a timing or volatility sensor."""
-    return key.endswith("_volatility") or (
-        key.startswith(("best_price_", "peak_price_"))
-        and any(
-            suffix in key
-            for suffix in [
-                "end_time",
-                "remaining_minutes",
-                "progress",
-                "next_start_time",
-                "next_in_minutes",
-            ]
-        )
+    if key.endswith("_volatility"):
+        return True
+    # best/peak price timing sensors
+    if key.startswith(("best_price_", "peak_price_")) and any(
+        suffix in key for suffix in ["end_time", "remaining_minutes", "progress", "next_start_time", "next_in_minutes"]
+    ):
+        return True
+    # price phase timing sensors
+    _PHASE_TIMING_KEYS = frozenset(
+        {
+            "current_price_phase_end_time",
+            "current_price_phase_remaining_minutes",
+            "current_price_phase_duration",
+            "current_price_phase_progress",
+            "next_rising_phase_start_time",
+            "next_falling_phase_start_time",
+            "next_flat_phase_start_time",
+            "next_rising_phase_in_minutes",
+            "next_falling_phase_in_minutes",
+            "next_flat_phase_in_minutes",
+        }
     )
+    return key in _PHASE_TIMING_KEYS
 
 
 def add_period_timing_attributes(
@@ -63,7 +73,8 @@ def add_period_timing_attributes(
 
     """
     # Determine if this is a quarter-hour or 30-second update sensor
-    is_quarter_hour_sensor = key.endswith(("_end_time", "_next_start_time"))
+    # Includes *_start_time to catch next_[type]_phase_start_time keys
+    is_quarter_hour_sensor = key.endswith(("_end_time", "_next_start_time", "_start_time"))
 
     now = time.now()
 
@@ -86,9 +97,11 @@ def add_period_timing_attributes(
     if minute_value is not None:
         if key.endswith("period_duration"):
             attributes["period_duration_minutes"] = minute_value
+        elif "phase_duration" in key:
+            attributes["phase_duration_minutes"] = minute_value
         elif key.endswith("remaining_minutes"):
             attributes["remaining_minutes"] = minute_value
-        elif key.endswith("next_in_minutes"):
+        elif key.endswith("in_minutes"):
             attributes["next_in_minutes"] = minute_value
 
     # Add icon_color for dynamic styling

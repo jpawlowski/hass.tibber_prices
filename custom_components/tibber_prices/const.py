@@ -25,10 +25,6 @@ DATA_CHART_CONFIG = "chart_config"  # Key for chart export config in hass.data
 DATA_CHART_METADATA_CONFIG = "chart_metadata_config"  # Key for chart metadata config in hass.data
 
 # Config entry data flag: set when user switches currency display mode.
-# Triggers a fresh (un-dismissed) repair issue on every setup/reload until
-# the user explicitly re-saves the currency settings to acknowledge.
-DATA_STATISTICS_REVIEW_REQUIRED = "statistics_review_required"
-
 # Configuration keys
 CONF_EXTENDED_DESCRIPTIONS = "extended_descriptions"
 CONF_VIRTUAL_TIME_OFFSET_DAYS = (

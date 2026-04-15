@@ -501,6 +501,66 @@
       "long_description": "Classifies tomorrow (once data is available, typically after 13:00) into a price shape using the same algorithm as today. The valley_start / valley_end or peak_start / peak_end attributes give knee-point times for the primary extremum so you can pre-schedule loads the evening before.",
       "usage_tips": "Set up evening automations that read tomorrow's pattern and pre-configure heat pump schedules, car charging timers, or water heater settings for the following day. Pair with the tomorrow_data_available binary sensor to trigger the automation only when data is ready."
     },
+    "current_price_phase": {
+      "description": "Whether electricity prices are currently rising, falling, or flat within today's intra-day price shape",
+      "long_description": "Shows the direction of price movement at the current time by identifying which monotone segment of today's price curve you are in. Today's prices are split into consecutively rising, falling, or flat stretches (phases). This sensor tells you which phase is active right now. Attributes include the phase's start and end times, its price range (min/max/mean), its position among all phases of the day (segment_index and segment_count), and the full list of all today's phases (all_segments). Updates every 15 minutes.",
+      "usage_tips": "Use in automations: 'If current_price_phase = falling, delay flexible loads until prices bottom out'. Pair with the Today's Price Pattern sensor to see both the overall shape of the day and your current position in it. Check segment_index and segment_count to understand how far through the intra-day movement you are — e.g. if segment_index=0 and the phase is already falling, prices have been declining since midnight. Use all_segments in templates or dashboards to display the full day ahead."
+    },
+    "next_price_phase": {
+      "description": "The next intra-day price phase — what comes after the current price movement",
+      "long_description": "Shows the monotone price phase that will follow after the currently active phase ends. The start attribute tells you exactly when the next phase begins, making it easy to schedule automations. When the current phase is the last one of the day (e.g. the final evening fall), this sensor becomes unavailable. Attributes: start (when it begins), end, price range (min/max/mean), segment_index, segment_count. Updates every 15 minutes.",
+      "usage_tips": "Use in automations: 'If next_price_phase = rising and next_price_phase.start is within 1 hour, start the washing machine now'. Or combine with current_price_phase: 'If current_price_phase = falling and next_price_phase = flat, we are approaching the daily low — good time for flexible loads'. The start attribute is particularly valuable: trigger automations precisely when the next phase begins."
+    },
+    "current_price_phase_end_time": {
+      "description": "When the current intra-day price phase ends",
+      "long_description": "Shows the exact timestamp when the currently active rising, falling, or flat price phase will end and transition to the next phase. Becomes unavailable when no segment data is available. Updates at interval boundaries (every 15 minutes). Pair with current_price_phase to know both what phase you are in and when it ends.",
+      "usage_tips": "Use in automations to schedule tasks that must finish before prices change: 'Start washing machine if current_price_phase = falling and current_price_phase_end_time is more than 2 hours away'. Or to alert when a cheap phase is about to end."
+    },
+    "current_price_phase_remaining_minutes": {
+      "description": "Minutes remaining in the current price phase",
+      "long_description": "Shows how many minutes are left in the current intra-day price phase (rising, falling, or flat). Updates every minute for countdown precision. Returns 0 when no segment data is available. The remaining_minutes attribute mirrors the sensor value in integer minutes for simpler automation templates.",
+      "usage_tips": "Use in automations: 'If current_price_phase = falling and current_price_phase_remaining_minutes < 30, start the dishwasher now before prices level out'. Also useful for dashboard cards showing a countdown bar until the phase transition."
+    },
+    "current_price_phase_duration": {
+      "description": "Total duration of the current price phase",
+      "long_description": "Shows the total length of the currently active price phase in hours (expressed in minutes internally). Updates at interval boundaries. This tells you how long the current trend segment lasts in total — useful for understanding whether it is a brief fluctuation or an extended period of rising or falling prices.",
+      "usage_tips": "Combine with current_price_phase_remaining_minutes to estimate how far through the phase you are, or compare with current_price_phase_progress to understand the time profile of the current trend."
+    },
+    "current_price_phase_progress": {
+      "description": "How far through the current price phase we are",
+      "long_description": "Shows the percentage of the current intra-day price phase that has elapsed (0–100%). Updates every minute. A value near 0% means the phase just started; near 100% means it is about to end. Returns 0 when no segment data is available.",
+      "usage_tips": "Use in dashboard cards to display a visual progress bar for the current price phase. In automations: 'If current_price_phase = falling and current_price_phase_progress > 80, the cheapest prices are close — prepare flexible loads now'."
+    },
+    "next_rising_phase_start_time": {
+      "description": "When the next rising price phase begins",
+      "long_description": "Shows the timestamp of the next upcoming rising price segment across today's remaining phases and tomorrow's phases. Returns unavailable when no more rising phases exist in today's or tomorrow's data. Updates at interval boundaries (every 15 minutes).",
+      "usage_tips": "Use with in_falling_price_phase and next_rising_phase_start_time to schedule flexible loads: run them now while prices fall, and wrap up before the next rise starts. 'If in_falling_price_phase is ON and next_rising_phase_start_time is less than 1 hour away, start the washing machine immediately'."
+    },
+    "next_falling_phase_start_time": {
+      "description": "When the next falling price phase begins",
+      "long_description": "Shows the timestamp of the next upcoming falling price segment across today's remaining phases and tomorrow's phases. Returns unavailable when no more falling phases exist in today's or tomorrow's data. Updates at interval boundaries (every 15 minutes).",
+      "usage_tips": "Use to delay flexible loads until the next price drop starts. 'If next_falling_phase_start_time is within 2 hours, consider waiting before starting the dishwasher or heat pump'."
+    },
+    "next_flat_phase_start_time": {
+      "description": "When the next flat (stable) price phase begins",
+      "long_description": "Shows the timestamp of the next upcoming flat price segment (where prices show little variation) across today's remaining phases and tomorrow's phases. Returns unavailable when no more flat phases exist in the available data. Updates at interval boundaries (every 15 minutes).",
+      "usage_tips": "Flat phases indicate price stability — useful for scheduling loads that need a predictable cost over time. 'If next_flat_phase_start_time is within 30 minutes and current_price_phase = rising, the price peak is nearly over'."
+    },
+    "next_rising_phase_in_minutes": {
+      "description": "Minutes until the next rising price phase begins",
+      "long_description": "Shows how many minutes until the next rising price phase starts. Updates every minute. Returns unavailable if no more rising phases exist in today's or tomorrow's data. The next_in_minutes attribute mirrors the sensor value in integer minutes for automation templates.",
+      "usage_tips": "Use in countdown automations: 'Alert me 15 minutes before the next price rise so I can delay flexible loads'. Combine with in_falling_price_phase: if currently falling and a rise is imminent, act before prices start climbing."
+    },
+    "next_falling_phase_in_minutes": {
+      "description": "Minutes until the next falling price phase begins",
+      "long_description": "Shows how many minutes until the next falling price phase starts. Updates every minute. Returns unavailable if no more falling phases exist in today's or tomorrow's data. The next_in_minutes attribute mirrors the sensor value in integer minutes for automation templates.",
+      "usage_tips": "Use to time flexible loads optimally: 'If next_falling_phase_in_minutes < 60, delay the washing machine start to benefit from the upcoming price drop'."
+    },
+    "next_flat_phase_in_minutes": {
+      "description": "Minutes until the next flat (stable) price phase begins",
+      "long_description": "Shows how many minutes until the next flat price phase starts. Updates every minute. Returns unavailable if no more flat phases exist in today's or tomorrow's data. The next_in_minutes attribute mirrors the sensor value in integer minutes.",
+      "usage_tips": "Use to anticipate price stabilisation after a volatile phase. 'If next_flat_phase_in_minutes < 30 and current_price_phase = rising, the price peak will soon level off — consider delaying loads until then'."
+    },
     "chart_data_export": {
       "description": "Data export for dashboard integrations",
       "long_description": "This binary sensor calls the get_chartdata service with your configured YAML parameters and exposes the result as entity attributes. The state is 'on' when the service call succeeds and data is available, 'off' when the call fails or no configuration is set. Perfect for dashboard integrations like ApexCharts that need to read price data from entity attributes.",
@@ -582,6 +642,21 @@
       "description": "Whether the current interval is among the cheapest of the day",
       "long_description": "Turns on when the current price is in the bottom 20% of today's prices",
       "usage_tips": "Use this to run high-consumption appliances during the cheapest intervals"
+    },
+    "in_rising_price_phase": {
+      "description": "Whether prices are currently in a rising phase",
+      "long_description": "Turns ON when the current intra-day price phase is rising — i.e. prices have been moving upward since the last phase transition. Exactly one of in_rising_price_phase, in_falling_price_phase, and in_flat_price_phase is ON at any time. Becomes unavailable when no segment data is available.",
+      "usage_tips": "Use in automations to delay or avoid running flexible loads: 'If in_rising_price_phase is ON, postpone the dishwasher'. Pair with next_falling_phase_start_time to know when prices will start dropping again."
+    },
+    "in_falling_price_phase": {
+      "description": "Whether prices are currently in a falling phase",
+      "long_description": "Turns ON when the current intra-day price phase is falling — i.e. prices have been dropping since the last phase transition. This is often a good window to start flexible loads. Exactly one of in_rising_price_phase, in_falling_price_phase, and in_flat_price_phase is ON at any time.",
+      "usage_tips": "Use in automations to take advantage of falling prices: 'If in_falling_price_phase is ON and current_price_phase_remaining_minutes > 60, start the washing machine'. Combine with next_rising_phase_start_time to avoid starting a load that won't finish before prices rise."
+    },
+    "in_flat_price_phase": {
+      "description": "Whether prices are currently in a flat (stable) phase",
+      "long_description": "Turns ON when the current intra-day price phase is flat — i.e. prices are relatively stable with no significant rise or fall. Flat phases indicate predictable costs, making them suitable for loads with uncertain or variable duration. Exactly one of in_rising_price_phase, in_falling_price_phase, and in_flat_price_phase is ON at any time.",
+      "usage_tips": "Use for loads that are indifferent to price direction but prefer stability: heat pumps in steady-state mode, background charging, or water heater top-ups. Combine with current_price_phase_end_time to know how long the stable window lasts."
     },
     "connection": {
       "description": "Whether the connection to the Tibber API is working",

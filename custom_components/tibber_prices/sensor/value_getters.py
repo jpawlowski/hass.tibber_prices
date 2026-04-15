@@ -242,6 +242,29 @@ def get_value_getter_mapping(
         "day_pattern_yesterday": lambda: metadata_calculator.get_day_pattern_value("yesterday"),
         "day_pattern_today": lambda: metadata_calculator.get_day_pattern_value("today"),
         "day_pattern_tomorrow": lambda: metadata_calculator.get_day_pattern_value("tomorrow"),
+        "current_price_phase": lambda: metadata_calculator.get_current_price_phase_value(),
+        "next_price_phase": lambda: metadata_calculator.get_next_price_phase_value(),
+        # Price phase timing sensors (current phase duration/progress + next-phase-by-type)
+        "current_price_phase_end_time": lambda: metadata_calculator.get_price_phase_timing_value("end_time"),
+        "current_price_phase_remaining_minutes": lambda: metadata_calculator.get_price_phase_timing_value(
+            "remaining_minutes"
+        ),
+        "current_price_phase_duration": lambda: metadata_calculator.get_price_phase_timing_value("duration"),
+        "current_price_phase_progress": lambda: metadata_calculator.get_price_phase_timing_value("progress"),
+        "next_rising_phase_start_time": lambda: metadata_calculator.get_next_phase_of_type_value(
+            "rising", "start_time"
+        ),
+        "next_falling_phase_start_time": lambda: metadata_calculator.get_next_phase_of_type_value(
+            "falling", "start_time"
+        ),
+        "next_flat_phase_start_time": lambda: metadata_calculator.get_next_phase_of_type_value("flat", "start_time"),
+        "next_rising_phase_in_minutes": lambda: metadata_calculator.get_next_phase_of_type_value(
+            "rising", "in_minutes"
+        ),
+        "next_falling_phase_in_minutes": lambda: metadata_calculator.get_next_phase_of_type_value(
+            "falling", "in_minutes"
+        ),
+        "next_flat_phase_in_minutes": lambda: metadata_calculator.get_next_phase_of_type_value("flat", "in_minutes"),
         # Volatility sensors (via VolatilityCalculator)
         "today_volatility": lambda: volatility_calculator.get_volatility_value(volatility_type="today"),
         "tomorrow_volatility": lambda: volatility_calculator.get_volatility_value(volatility_type="tomorrow"),

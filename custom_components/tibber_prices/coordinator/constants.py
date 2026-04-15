@@ -88,11 +88,24 @@ TIME_SENSITIVE_ENTITY_KEYS = frozenset(
         # Binary sensors that check if current time is in a period
         "peak_price_period",
         "best_price_period",
+        # Binary sensors for current intra-day price phase
+        "in_rising_price_phase",
+        "in_falling_price_phase",
+        "in_flat_price_phase",
         # Best/Peak price timestamp sensors (periods only change at interval boundaries)
         "best_price_end_time",
         "best_price_next_start_time",
         "peak_price_end_time",
         "peak_price_next_start_time",
+        # Current price phase timing sensors (phase boundaries only change at interval boundaries)
+        "current_price_phase_end_time",
+        "current_price_phase_duration",
+        "next_rising_phase_start_time",
+        "next_falling_phase_start_time",
+        "next_flat_phase_start_time",
+        # Current/next price phase enum sensors
+        "current_price_phase",
+        "next_price_phase",
         # Price rank sensors (rank of current/next/previous interval within a day scope)
         "current_interval_price_rank_today",
         "current_interval_price_rank_tomorrow",
@@ -128,6 +141,13 @@ MINUTE_UPDATE_ENTITY_KEYS = frozenset(
         "peak_price_remaining_minutes",
         "peak_price_progress",
         "peak_price_next_in_minutes",
+        # Current price phase countdown/progress sensors (need minute updates)
+        "current_price_phase_remaining_minutes",
+        "current_price_phase_progress",
+        # Next-phase countdown sensors (need minute updates)
+        "next_rising_phase_in_minutes",
+        "next_falling_phase_in_minutes",
+        "next_flat_phase_in_minutes",
         # Trend change countdown sensor (needs minute updates)
         "next_price_trend_change_in",
     }

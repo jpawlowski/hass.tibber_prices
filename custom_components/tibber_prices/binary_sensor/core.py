@@ -17,6 +17,7 @@ from homeassistant.helpers.restore_state import RestoreEntity
 from .attributes import (
     build_async_extra_state_attributes,
     build_sync_extra_state_attributes,
+    get_current_phase_type,
     get_price_intervals_attributes,
     get_tomorrow_data_available_attributes,
 )
@@ -136,6 +137,9 @@ class TibberPricesBinarySensor(TibberPricesEntity, BinarySensorEntity, RestoreEn
         state_getters = {
             "peak_price_period": self._peak_price_state,
             "best_price_period": self._best_price_state,
+            "in_rising_price_phase": lambda: self._in_phase_state("rising"),
+            "in_falling_price_phase": lambda: self._in_phase_state("falling"),
+            "in_flat_price_phase": lambda: self._in_phase_state("flat"),
             "connection": lambda: get_connection_state(self.coordinator),
             "tomorrow_data_available": self._tomorrow_data_available_state,
             "has_ventilation_system": self._has_ventilation_system_state,
@@ -181,6 +185,15 @@ class TibberPricesBinarySensor(TibberPricesEntity, BinarySensorEntity, RestoreEn
             return False  # No period found = sensor is off
         time = self.coordinator.time
         return time.is_time_in_period(start, end)
+
+    def _in_phase_state(self, phase_type: str) -> bool | None:
+        """Return True if the current intra-day price phase matches phase_type."""
+        if not self.coordinator.data:
+            return None
+        current_type = get_current_phase_type(self.coordinator.data, time=self.coordinator.time)
+        if current_type is None:
+            return None
+        return current_type == phase_type
 
     def _tomorrow_data_available_state(self) -> bool | None:
         """Return True if tomorrow's data is fully available, False if not, None if unknown."""
