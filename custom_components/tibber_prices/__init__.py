@@ -215,17 +215,26 @@ def _get_access_token(hass: HomeAssistant, entry: ConfigEntry) -> str:
 
 
 def _check_statistics_review_repair(hass: HomeAssistant, entry: TibberPricesConfigEntry) -> None:
-    """Re-create the statistics-review repair issue fresh on every setup when the flag is set.
+    """Ensure the statistics-review repair issue is visible when the flag is set.
 
-    Using delete + create (instead of get_or_create) resets dismissed_version, so the issue
-    reappears in the Repairs panel even if the user had dismissed it before a restart.
-    The flag is cleared from config_entry.data only when the user acknowledges the change
-    by re-saving the currency display settings in the options flow.
+    Uses async_get_or_create so that a user-dismissed issue stays dismissed across restarts.
+    The flag is cleared automatically when the issue has been dismissed (detected on next setup),
+    or when the user re-saves the currency display settings in the options flow.
+    The options flow uses delete + create whenever the mode changes again, which forces the
+    issue back into view for the new change regardless of prior dismissal.
     """
     if not entry.data.get(DATA_STATISTICS_REVIEW_REQUIRED):
         return
     issue_id = f"currency_display_mode_changed_{entry.entry_id}"
-    ir.async_delete_issue(hass, DOMAIN, issue_id)
+
+    # If the issue was dismissed by the user, clear the flag and don't recreate it.
+    issue_registry = ir.async_get(hass)
+    existing = issue_registry.async_get_issue(DOMAIN, issue_id)
+    if existing is not None and existing.dismissed_version is not None:
+        new_data = {k: v for k, v in entry.data.items() if k != DATA_STATISTICS_REVIEW_REQUIRED}
+        hass.config_entries.async_update_entry(entry, data=new_data)
+        return
+
     ir.async_create_issue(
         hass,
         DOMAIN,
