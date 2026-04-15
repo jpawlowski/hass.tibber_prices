@@ -517,11 +517,14 @@ class TibberPricesOptionsFlowHandler(OptionsFlow):
             mode_changed = old_mode is not None and new_mode is not None and old_mode != new_mode
 
             if mode_changed:
-                # Set persistent flag so repair issue reappears after dismiss + HA restart
+                # Set persistent flag so repair issue reappears after HA restart
                 self.hass.config_entries.async_update_entry(
                     self.config_entry,
                     data={**self.config_entry.data, DATA_STATISTICS_REVIEW_REQUIRED: True},
                 )
+                # delete + create resets dismissed_version, forcing the issue into view
+                # even if the user had dismissed a previous instance of this issue.
+                ir.async_delete_issue(self.hass, DOMAIN, issue_id)
                 ir.async_create_issue(
                     self.hass,
                     DOMAIN,
