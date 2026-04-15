@@ -120,7 +120,7 @@ Rating thresholds can be adjusted in the options flow:
 2. Navigate to **Price Rating Thresholds**
 3. Adjust LOW/HIGH thresholds, hysteresis, and gap tolerance
 
-See [Configuration](configuration.md#step-3-price-rating-thresholds) for details.
+See [Price Rating Thresholds](config-price-rating.md) for details.
 
 ---
 
@@ -149,4 +149,4 @@ Level sensors show the **Tibber API's own price classification** with a 5-level 
 | <EntityRef id="today_price_level">Today's Price Level</EntityRef> | Calendar day (aggregated) |
 | <EntityRef id="tomorrow_price_level">Tomorrow's Price Level</EntityRef> | Calendar day (aggregated) |
 
-**Gap tolerance** smoothing is applied to prevent isolated level flickers (e.g., a single NORMAL between two CHEAPs → corrected to CHEAP). Configure in [options flow](configuration.md#step-4-price-level-gap-tolerance).
+**Gap tolerance** smoothing is applied to prevent isolated level flickers (e.g., a single NORMAL between two CHEAPs → corrected to CHEAP). Configure in [Price Level Gap Tolerance](config-price-level.md).

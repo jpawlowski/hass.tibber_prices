@@ -62,6 +62,7 @@ const sidebars: SidebarsConfig = {
         'sensors-ratings-levels',
         'sensors-volatility',
         'sensors-trends',
+        'sensors-price-phases',
         'sensors-timing',
         'sensors-energy-tax',
       ],

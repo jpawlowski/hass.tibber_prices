@@ -99,7 +99,7 @@ This means **all intervals meet your criteria** (very cheap day!):
   - **Base currency**: €/kWh, kr/kWh (stored at 4 decimal places, default display: 2 decimals, e.g., 0.25)
   - **Subunit**: ct/kWh, øre/kWh (stored at 2 decimal places, default display: 1 decimal, e.g., 25.3)
 - Smart defaults: EUR → subunit, NOK/SEK/DKK → base currency
-- You can increase the displayed decimals per entity in the HA UI (see [Currency Display](configuration.md#step-2-currency-display))
+- You can increase the displayed decimals per entity in the HA UI (see [Currency Display](config-currency.md))
 
 If you see unexpected units, check your configuration in the integration options.
 
