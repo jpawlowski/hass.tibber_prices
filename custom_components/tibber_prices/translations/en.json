@@ -1090,10 +1090,10 @@
         "name": "Next Price Rank (Today+Tomorrow)"
       },
       "previous_interval_price_rank_today": {
-        "name": "Last Price Rank (Today)"
+        "name": "Previous Price Rank (Today)"
       },
       "previous_interval_price_rank_today_tomorrow": {
-        "name": "Last Price Rank (Today+Tomorrow)"
+        "name": "Previous Price Rank (Today+Tomorrow)"
       },
       "current_hour_price_rank_today": {
         "name": "⌀ Hourly Price Current Rank (Today)"

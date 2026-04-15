@@ -1090,10 +1090,10 @@
         "name": "Nächster Preisrang (heute+morgen)"
       },
       "previous_interval_price_rank_today": {
-        "name": "Letzter Preisrang (heute)"
+        "name": "Vorheriger Preisrang (heute)"
       },
       "previous_interval_price_rank_today_tomorrow": {
-        "name": "Letzter Preisrang (heute+morgen)"
+        "name": "Vorheriger Preisrang (heute+morgen)"
       },
       "current_hour_price_rank_today": {
         "name": "⌀ Stündlicher Preisrang Aktuell (heute)"

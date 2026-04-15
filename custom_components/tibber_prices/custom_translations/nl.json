@@ -598,8 +598,8 @@
     },
     "previous_interval_price_rank_today": {
       "description": "Percentielrang van de vorige intervalprijs in de ranglijst van vandaag (0% = goedkoopste moment van vandaag)",
-      "long_description": "Toont de percentielrang van het zojuist afgelopen kwartier binnen de 96 slots van vandaag. Nuttig voor logging. Attributen: `previous_price`, `prices_below_count`, `interval_count`, `reference_min`, `reference_max`, `reference_mean`.",
-      "usage_tips": "Voor retrospectieve automatiseringen: 'Leg het prijsniveau van het vorige interval vast voor energierapporten'."
+      "long_description": "Toont de percentielrang van het zojuist afgelopen kwartier binnen de 96 slots van vandaag. Handig om te loggen hoe goedkoop of duur het vorige interval was. Attributen: `previous_price`, `prices_below_count`, `interval_count`, `reference_min`, `reference_max`, `reference_mean`.",
+      "usage_tips": "Nuttig voor retrospectieve automatiseringen of logging: 'Leg de kostencategorie van het vorige interval vast voor energierapporten'."
     },
     "previous_interval_price_rank_today_tomorrow": {
       "description": "Percentielrang van de vorige intervalprijs over vandaag+morgen samen (0% = goedkoopste van het twee-dagenvenster)",

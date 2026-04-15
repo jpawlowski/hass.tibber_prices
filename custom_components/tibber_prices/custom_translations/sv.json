@@ -598,8 +598,8 @@
     },
     "previous_interval_price_rank_today": {
       "description": "Percentilrang för föregående intervalls pris i dagens rangordning (0 % = billigaste tillfället idag)",
-      "long_description": "Visar percentilrangen för det nyligen avslutade kvartalet inom dagens 96 slotar. Användbart för loggning. Attribut: `previous_price`, `prices_below_count`, `interval_count`, `reference_min`, `reference_max`, `reference_mean`.",
-      "usage_tips": "För retrospektiva automatiseringar: 'Registrera prisnivån för det förra intervallet i energirapporter'."
+      "long_description": "Visar percentilrangen för det nyligen avslutade kvartalet inom dagens 96 slotar. Användbart för att logga hur billigt eller dyrt det föregående intervallet var. Attribut: `previous_price`, `prices_below_count`, `interval_count`, `reference_min`, `reference_max`, `reference_mean`.",
+      "usage_tips": "Användbart för retrospektiva automatiseringar eller loggning: 'Registrera kostnadsnivån för det föregående intervallet i energirapporter'."
     },
     "previous_interval_price_rank_today_tomorrow": {
       "description": "Percentilrang för föregående intervalls pris över idag+imorgon sammantaget (0 % = billigaste i tvådagarsperioden)",

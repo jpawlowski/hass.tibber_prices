@@ -186,8 +186,8 @@ This means:
 
 | Sensor                                                                                                                        | Reference Set                          | Enabled by Default |
 | ----------------------------------------------------------------------------------------------------------------------------- | -------------------------------------- | ------------------ |
-| <EntityRef id="previous_interval_price_rank_today">Last Price Rank (Today)</EntityRef>                                        | Today's 96 quarter-hour intervals      | ❌ No              |
-| <EntityRef id="previous_interval_price_rank_today_tomorrow">Last Price Rank (Today+Tomorrow)</EntityRef>                      | Combined pool (up to 192 intervals)    | ❌ No              |
+| <EntityRef id="previous_interval_price_rank_today">Previous Price Rank (Today)</EntityRef>                                    | Today's 96 quarter-hour intervals      | ❌ No              |
+| <EntityRef id="previous_interval_price_rank_today_tomorrow">Previous Price Rank (Today+Tomorrow)</EntityRef>                  | Combined pool (up to 192 intervals)    | ❌ No              |
 
 **Rolling hourly average** (5-interval window, ~1 hour):
 

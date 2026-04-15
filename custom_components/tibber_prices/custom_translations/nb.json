@@ -598,12 +598,12 @@
     },
     "previous_interval_price_rank_today": {
       "description": "Prosentilrang for forrige intervalls pris i dagens rangering (0 % = billigste øyeblikk i dag)",
-      "long_description": "Viser prosentilrangen for det nettopp avsluttede kvarter innenfor dagens 96 tidsluker. Nyttig for logging. Attributter: `previous_price`, `prices_below_count`, `interval_count`, `reference_min`, `reference_max`, `reference_mean`.",
-      "usage_tips": "For retrospektive automatiseringer: 'Registrer prisnivyå for forrige intervall i energirapporter'."
+      "long_description": "Viser prosentilrangen for det nettopp avsluttede kvarteret innenfor dagens 96 tidsluker. Nyttig for å logge hvor billig eller dyrt det forrige intervallet var. Attributter: `previous_price`, `prices_below_count`, `interval_count`, `reference_min`, `reference_max`, `reference_mean`.",
+      "usage_tips": "For retrospektive automatiseringer: 'Registrer prisnivået for forrige intervall i energirapporter'."
     },
     "previous_interval_price_rank_today_tomorrow": {
       "description": "Prosentilrang for forrige intervalls pris over i dag+i morgen samlet (0 % = billigste i to-dagers-vinduet)",
-      "long_description": "Viser prosentilrangen for det nettopp avsluttede kvarter innenfor det kombinerte i dag+i morgen-bassenget (opptil 192 tidsluker). Fæller tilbake til kun i dag. Attributter: `previous_price`, `prices_below_count`, `interval_count`, `reference_min`, `reference_max`, `reference_mean`.",
+      "long_description": "Viser prosentilrangen for det nettopp avsluttede kvarteret innenfor det kombinerte i dag+i morgen-bassenget (opptil 192 tidsluker). Faller tilbake til kun i dag når morgendagens data ikke er tilgjengelig. Attributter: `previous_price`, `prices_below_count`, `interval_count`, `reference_min`, `reference_max`, `reference_mean`.",
       "usage_tips": "For retrospektive sammenligninger over et to-dagers-vindu."
     },
     "current_hour_price_rank_today": {

@@ -598,8 +598,8 @@
     },
     "previous_interval_price_rank_today": {
       "description": "Where the previous interval's price sat in today's ranking (0% = cheapest moment of today)",
-      "long_description": "Shows the percentile rank of the just-ended quarter-hour interval's price within today's 96 slots. Useful for logging how cheap/expensive the last interval was. Attributes: `previous_price`, `prices_below_count`, `interval_count`, `reference_min`, `reference_max`, `reference_mean`.",
-      "usage_tips": "Useful for retrospective automations or logging: 'Record the cost tier of the last interval for energy reports'."
+      "long_description": "Shows the percentile rank of the just-ended quarter-hour interval's price within today's 96 slots. Useful for logging how cheap/expensive the previous interval was. Attributes: `previous_price`, `prices_below_count`, `interval_count`, `reference_min`, `reference_max`, `reference_mean`.",
+      "usage_tips": "Useful for retrospective automations or logging: 'Record the cost tier of the previous interval for energy reports'."
     },
     "previous_interval_price_rank_today_tomorrow": {
       "description": "Previous interval's percentile rank across today and tomorrow combined (0% = cheapest of the two-day window)",

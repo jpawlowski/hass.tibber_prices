@@ -597,12 +597,12 @@
       "usage_tips": "Weitester Vorausblick: 'Wenn next_interval_price_rank_today_tomorrow < 10, ist das nächste Intervall eines der günstigsten im Zweitages-Fenster'."
     },
     "previous_interval_price_rank_today": {
-      "description": "Perzentilrang des letzten Intervallpreises in der heutigen Rangliste (0 % = günstigster Moment heute)",
+      "description": "Perzentilrang des vorherigen Intervallpreises in der heutigen Rangliste (0 % = günstigster Moment heute)",
       "long_description": "Zeigt den Perzentilrang des gerade beendeten Viertelstunden-Intervalls innerhalb der 96 heutigen Slots. Nützlich für Protokollierung. Attribute: `previous_price`, `prices_below_count`, `interval_count`, `reference_min`, `reference_max`, `reference_mean`.",
-      "usage_tips": "Für retrospektive Automationen: 'Preisniveau des letzten Intervalls für Energieberichte aufzeichnen'."
+      "usage_tips": "Für retrospektive Automationen: 'Preisniveau des vorherigen Intervalls für Energieberichte aufzeichnen'."
     },
     "previous_interval_price_rank_today_tomorrow": {
-      "description": "Perzentilrang des letzten Intervallpreises über heute+morgen zusammen (0 % = günstigstes des Zweitages-Fensters)",
+      "description": "Perzentilrang des vorherigen Intervallpreises über heute+morgen zusammen (0 % = günstigstes des Zweitages-Fensters)",
       "long_description": "Zeigt den Perzentilrang des gerade beendeten Viertelstunden-Intervalls innerhalb des kombinierten heute+morgen-Pools (bis zu 192 Slots). Fällt auf nur heute zurück. Attribute: `previous_price`, `prices_below_count`, `interval_count`, `reference_min`, `reference_max`, `reference_mean`.",
       "usage_tips": "Für retrospektive Vergleiche über ein Zweitages-Fenster."
     },
