@@ -375,13 +375,8 @@ Then sections using ### (H3 headings):
 
 Skip any section that has no content.
 
-After the last section, ALWAYS end with this exact footer, no modifications:
-
----
-
-If this release saved you some money on your electricity bill, a coffee would be much appreciated! ☕
-
-[![Buy Me A Coffee](https://img.buymeacoffee.com/button-api/?text=Buy%20me%20a%20coffee&emoji=☕&slug=jpawlowski&button_colour=FFDD00&font_colour=000000&font_family=Cookie&outline_colour=000000&coffee_colour=ffffff)](https://www.buymeacoffee.com/jpawlowski)
+Do NOT add any footer or sign-off. End your response after the last content section.
+A footer is appended automatically after your response.
 
 ## TITLE SELECTION
 - Find the most user-impactful change: new sensors > bug fixes affecting data quality > reliability improvements > UI improvements > translations
@@ -464,6 +459,60 @@ End after the Buy Me A Coffee button. No meta-commentary, no explanations."
     }
 
     rm -f "$TEMP_PROMPT"
+}
+
+# ============================================================================
+# Canonical footer (appended by ensure_canonical_footer, backend-independent)
+# ============================================================================
+
+# Defined here so it is the single source of truth for all backends.
+# cliff.toml also contains this footer for direct git-cliff usage;
+# ensure_canonical_footer strips any existing variant before re-appending.
+CANONICAL_FOOTER='---
+
+If this release saved you some money on your electricity bill, a coffee would be much appreciated! ☕
+
+[![Buy Me A Coffee](https://img.buymeacoffee.com/button-api/?text=Buy%20me%20a%20coffee&emoji=☕&slug=jpawlowski&button_colour=FFDD00&font_colour=000000&font_family=Cookie&outline_colour=000000&coffee_colour=ffffff)](https://www.buymeacoffee.com/jpawlowski)'
+
+# Strip any existing BMAC footer block (AI/template variant) then append the
+# canonical footer defined above. Reads from stdin, writes to stdout.
+# This guarantees all backends produce an identical footer.
+ensure_canonical_footer() {
+    awk '
+        {
+            lines[NR] = $0
+        }
+        END {
+            # Find the last buymeacoffee occurrence
+            bmac_line = 0
+            for (i = NR; i >= 1; i--) {
+                if (lines[i] ~ /buymeacoffee\.com\/jpawlowski/) {
+                    bmac_line = i
+                    break
+                }
+            }
+
+            cut_at = NR
+
+            if (bmac_line > 0) {
+                # Walk back to find the nearest --- separator before the link
+                for (i = bmac_line - 1; i >= 1; i--) {
+                    if (lines[i] ~ /^---[[:space:]]*$/) {
+                        cut_at = i - 1  # Exclude the separator itself (footer provides its own)
+                        break
+                    }
+                }
+                # No --- found: cut at the buymeacoffee line itself
+                if (cut_at == NR) cut_at = bmac_line
+            }
+
+            # Trim trailing blank lines before the cut point
+            while (cut_at > 0 && lines[cut_at] ~ /^[[:space:]]*$/) cut_at--
+
+            for (i = 1; i <= cut_at; i++) print lines[i]
+        }
+    '
+    printf "\n%s\n" "$CANONICAL_FOOTER"
 }
 
 # Backend: git-cliff (template-based)
@@ -829,26 +878,26 @@ if [ "$AUTO_UPDATE_AVAILABLE" = "true" ]; then
     TEMP_NOTES=$(mktemp)
     case "$BACKEND" in
     copilot)
-        generate_with_copilot >"$TEMP_NOTES"
+        generate_with_copilot | ensure_canonical_footer >"$TEMP_NOTES"
         ;;
     git-cliff)
-        generate_with_gitcliff >"$TEMP_NOTES"
+        generate_with_gitcliff | ensure_canonical_footer >"$TEMP_NOTES"
         ;;
     manual)
-        generate_with_manual >"$TEMP_NOTES"
+        generate_with_manual | ensure_canonical_footer >"$TEMP_NOTES"
         ;;
     esac
 else
     # No auto-update, just output to stdout
     case "$BACKEND" in
     copilot)
-        generate_with_copilot
+        generate_with_copilot | ensure_canonical_footer
         ;;
     git-cliff)
-        generate_with_gitcliff
+        generate_with_gitcliff | ensure_canonical_footer
         ;;
     manual)
-        generate_with_manual
+        generate_with_manual | ensure_canonical_footer
         ;;
     esac
 
