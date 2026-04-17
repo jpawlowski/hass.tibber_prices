@@ -725,13 +725,20 @@ class TibberPricesIntervalPool:
         if intervals_to_touch:
             self._touch_intervals(intervals_to_touch, fetch_time_dt)
 
-        if not new_intervals:
-            if intervals_to_touch:
-                _LOGGER_DETAILS.debug(
-                    "All %d intervals already cached for home %s (touched only)",
-                    len(intervals),
-                    self._home_id,
-                )
+        # Run GC after touch even if no new intervals — touching creates dead
+        # intervals in old fetch groups that should be cleaned up promptly.
+        if intervals_to_touch and not new_intervals:
+            gc_changed_data = self._gc.run_gc()
+
+            _LOGGER_DETAILS.debug(
+                "All %d intervals already cached for home %s (touched only, GC ran: %s)",
+                len(intervals),
+                self._home_id,
+                gc_changed_data,
+            )
+
+            if (intervals_to_touch or gc_changed_data) and self._hass is not None and self._entry_id is not None:
+                self._schedule_debounced_save()
             return
 
         # Sort new intervals by startsAt
