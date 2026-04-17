@@ -18,6 +18,7 @@ from .attributes import (
     build_async_extra_state_attributes,
     build_sync_extra_state_attributes,
     get_current_phase_type,
+    get_phase_attributes,
     get_price_intervals_attributes,
     get_tomorrow_data_available_attributes,
 )
@@ -315,6 +316,9 @@ class TibberPricesBinarySensor(TibberPricesEntity, BinarySensorEntity, RestoreEn
             )
         if key == "tomorrow_data_available":
             return self._get_tomorrow_data_available_attributes()
+
+        if key in ("in_rising_price_phase", "in_falling_price_phase", "in_flat_price_phase"):
+            return get_phase_attributes(self.coordinator.data, time=self.coordinator.time)
 
         return None
 

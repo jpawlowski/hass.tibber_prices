@@ -149,80 +149,44 @@ class TibberPricesMetadataCalculator(TibberPricesBaseCalculator):
             "rising", "falling", or "flat", or None if data is unavailable.
 
         """
-        if not self.coordinator.data:
+        current_index, segments = self._find_current_segment()
+        if current_index is None or segments is None:
             return None
-
-        day_patterns = self.coordinator.data.get("dayPatterns")
-        if not day_patterns:
-            return None
-
-        today_data = day_patterns.get("today")
-        if not today_data:
-            return None
-
-        segments: list[dict] | None = today_data.get("segments")
-        if not segments:
-            return None
-
-        from homeassistant.util.dt import parse_datetime  # noqa: PLC0415
-
-        now = self.coordinator.time.now()
-        current_segment: dict | None = None
-        for segment in segments:
-            seg_start_str: str | None = segment.get("start")
-            if not seg_start_str:
-                continue
-            seg_start = parse_datetime(seg_start_str)
-            if seg_start is not None and now >= seg_start:
-                current_segment = segment
-
-        if current_segment is None:
-            return None
-
-        return current_segment.get("type")
+        return segments[current_index].get("type")
 
     def get_next_price_phase_value(self) -> str | None:
         """
         Get the next intra-day price phase (rising / falling / flat).
 
-        Finds the monotone segment in today's day-pattern that starts after
-        the current segment and returns its type string.
+        Finds the monotone segment that starts after the current segment.
+        If the current segment is the last of today, falls back to the first
+        segment of tomorrow (if available).
 
         Returns:
             "rising", "falling", or "flat", or None if no next segment exists.
 
         """
-        if not self.coordinator.data:
+        current_index, segments = self._find_current_segment()
+        if current_index is None or segments is None:
             return None
 
+        # Next segment in today
+        if current_index + 1 < len(segments):
+            return segments[current_index + 1].get("type")
+
+        # Fall back to tomorrow's first segment
+        if not self.coordinator.data:
+            return None
         day_patterns = self.coordinator.data.get("dayPatterns")
         if not day_patterns:
             return None
-
-        today_data = day_patterns.get("today")
-        if not today_data:
+        tomorrow_data = day_patterns.get("tomorrow")
+        if not tomorrow_data:
             return None
-
-        segments: list[dict] | None = today_data.get("segments")
-        if not segments:
+        tomorrow_segments: list[dict] = tomorrow_data.get("segments", [])
+        if not tomorrow_segments:
             return None
-
-        from homeassistant.util.dt import parse_datetime  # noqa: PLC0415
-
-        now = self.coordinator.time.now()
-        current_index: int | None = None
-        for i, segment in enumerate(segments):
-            seg_start_str: str | None = segment.get("start")
-            if not seg_start_str:
-                continue
-            seg_start = parse_datetime(seg_start_str)
-            if seg_start is not None and now >= seg_start:
-                current_index = i
-
-        if current_index is None or current_index + 1 >= len(segments):
-            return None
-
-        return segments[current_index + 1].get("type")
+        return tomorrow_segments[0].get("type")
 
     def _find_current_segment(self) -> tuple[int, list[dict]] | tuple[None, None]:
         """

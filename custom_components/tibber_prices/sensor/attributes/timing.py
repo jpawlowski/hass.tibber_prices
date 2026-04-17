@@ -12,6 +12,22 @@ if TYPE_CHECKING:
 # Timer #3 triggers every 30 seconds
 TIMER_30_SEC_BOUNDARY = 30
 
+# Phase timing sensor keys — allocated once at module level
+_PHASE_TIMING_KEYS = frozenset(
+    {
+        "current_price_phase_end_time",
+        "current_price_phase_remaining_minutes",
+        "current_price_phase_duration",
+        "current_price_phase_progress",
+        "next_rising_phase_start_time",
+        "next_falling_phase_start_time",
+        "next_flat_phase_start_time",
+        "next_rising_phase_in_minutes",
+        "next_falling_phase_in_minutes",
+        "next_flat_phase_in_minutes",
+    }
+)
+
 
 def _hours_to_minutes(state_value: Any) -> int | None:
     """Convert hour-based state back to rounded minutes for attributes."""
@@ -34,20 +50,6 @@ def _is_timing_or_volatility_sensor(key: str) -> bool:
     ):
         return True
     # price phase timing sensors
-    _PHASE_TIMING_KEYS = frozenset(
-        {
-            "current_price_phase_end_time",
-            "current_price_phase_remaining_minutes",
-            "current_price_phase_duration",
-            "current_price_phase_progress",
-            "next_rising_phase_start_time",
-            "next_falling_phase_start_time",
-            "next_flat_phase_start_time",
-            "next_rising_phase_in_minutes",
-            "next_falling_phase_in_minutes",
-            "next_flat_phase_in_minutes",
-        }
-    )
     return key in _PHASE_TIMING_KEYS
 
 

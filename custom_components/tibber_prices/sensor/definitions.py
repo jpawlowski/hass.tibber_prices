@@ -1045,6 +1045,12 @@ DAY_PATTERN_SENSORS = (
         state_class=None,
         entity_registry_enabled_default=False,
     ),
+)
+
+# 8b. PRICE PHASE SENSORS (current/next intra-day price phase classification)
+# ----------------------------------------------------------------------------
+
+PRICE_PHASE_SENSORS = (
     SensorEntityDescription(
         key="current_price_phase",
         translation_key="current_price_phase",
@@ -1065,7 +1071,7 @@ DAY_PATTERN_SENSORS = (
     ),
 )
 
-# 8b. PRICE PHASE TIMING SENSORS (current phase duration/progress + next-phase-by-type)
+# 8c. PRICE PHASE TIMING SENSORS (current phase duration/progress + next-phase-by-type)
 # ----------------------------------------------------------------------------
 #
 # When current phase is active:
@@ -1370,6 +1376,7 @@ ENTITY_DESCRIPTIONS = (
     *BEST_PRICE_TIMING_SENSORS,
     *PEAK_PRICE_TIMING_SENSORS,
     *DAY_PATTERN_SENSORS,
+    *PRICE_PHASE_SENSORS,
     *PRICE_PHASE_TIMING_SENSORS,
     *DIAGNOSTIC_SENSORS,
 )

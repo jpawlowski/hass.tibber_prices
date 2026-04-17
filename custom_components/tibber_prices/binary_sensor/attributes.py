@@ -7,6 +7,7 @@ from typing import TYPE_CHECKING
 from custom_components.tibber_prices.const import get_display_unit_factor
 from custom_components.tibber_prices.coordinator.helpers import get_intervals_for_day_offsets
 from custom_components.tibber_prices.entity_utils import add_icon_color_attribute
+from custom_components.tibber_prices.sensor.attributes.metadata import _find_current_segment_in_data
 
 # Constants for price display conversion
 _SUBUNIT_FACTOR = 100  # Conversion factor for subunit currency (ct/øre)
@@ -29,8 +30,7 @@ def get_current_phase_type(coordinator_data: dict, *, time: TibberPricesTimeServ
     """
     Return the type of the currently active intra-day price phase.
 
-    Walks today's segments and returns the type ("rising", "falling", or "flat")
-    of the last segment whose start time is ≤ now.
+    Delegates to the shared segment finder in sensor/attributes/metadata.py.
 
     Args:
         coordinator_data: The coordinator's data dict.
@@ -42,32 +42,39 @@ def get_current_phase_type(coordinator_data: dict, *, time: TibberPricesTimeServ
     """
     if not coordinator_data:
         return None
+    current_index, segments = _find_current_segment_in_data(coordinator_data, time=time)
+    if current_index is None or segments is None:
+        return None
+    return segments[current_index].get("type")
 
-    day_patterns = coordinator_data.get("dayPatterns")
-    if not day_patterns:
+
+def get_phase_attributes(coordinator_data: dict, *, time: TibberPricesTimeService) -> dict | None:
+    """
+    Build start/end attributes for in_*_price_phase binary sensors.
+
+    Args:
+        coordinator_data: The coordinator's data dict.
+        time:             TibberPricesTimeService instance.
+
+    Returns:
+        Dict with start and end timestamps, or None if unavailable.
+
+    """
+    if not coordinator_data:
+        return None
+    current_index, segments = _find_current_segment_in_data(coordinator_data, time=time)
+    if current_index is None or segments is None:
         return None
 
-    today_data = day_patterns.get("today")
-    if not today_data:
-        return None
+    segment = segments[current_index]
+    attrs: dict = {}
 
-    segments: list[dict] | None = today_data.get("segments")
-    if not segments:
-        return None
+    if start := segment.get("start"):
+        attrs["start"] = start
+    if end := segment.get("end"):
+        attrs["end"] = end
 
-    from homeassistant.util.dt import parse_datetime  # noqa: PLC0415
-
-    now = time.now()
-    current_type: str | None = None
-    for segment in segments:
-        seg_start_str: str | None = segment.get("start")
-        if not seg_start_str:
-            continue
-        seg_start = parse_datetime(seg_start_str)
-        if seg_start is not None and now >= seg_start:
-            current_type = segment.get("type")
-
-    return current_type
+    return attrs or None
 
 
 def get_tomorrow_data_available_attributes(
