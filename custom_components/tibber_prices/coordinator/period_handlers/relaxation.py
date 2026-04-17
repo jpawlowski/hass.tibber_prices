@@ -462,17 +462,16 @@ def _compute_day_effective_min(
     Uses IQR% as primary metric (robust to isolated price spikes) with CV as
     fallback when IQR% is undefined (near-zero or negative median prices).
 
-    This applies ONLY to BEST PRICE periods (reverse_sort=False). For PEAK PRICE
-    periods, full relaxation should run even on flat days because identifying the
-    genuinely most expensive window requires the complete filter evaluation.
-    (Design decision: if the user explicitly disabled relaxation, honour the
-    configured min_periods exactly regardless.)
+    This applies to both BEST PRICE and PEAK PRICE periods. On flat days,
+    forcing 2+ peaks via relaxation creates cross-day boundary artifacts
+    where overnight prices barely qualify as "peak" only because they are
+    the second-highest block relative to that day's maximum.
 
     Args:
         prices_by_day: Dict of date → list of price dicts
         min_periods: Configured minimum periods per day
         enable_relaxation: Whether relaxation is enabled
-        reverse_sort: True for peak price (no adaptation), False for best price
+        reverse_sort: True for peak price, False for best price
 
     Returns:
         Tuple of (dict of date → effective min_periods for that day, count of flat days detected)
@@ -482,8 +481,8 @@ def _compute_day_effective_min(
     flat_day_count = 0
 
     for day, day_prices in prices_by_day.items():
-        if not enable_relaxation or min_periods <= 1 or reverse_sort:
-            # Relaxation disabled, already 1, or peak price: no adaptation
+        if not enable_relaxation or min_periods <= 1:
+            # Relaxation disabled or already 1: no adaptation
             day_effective_min[day] = min_periods
             continue
 

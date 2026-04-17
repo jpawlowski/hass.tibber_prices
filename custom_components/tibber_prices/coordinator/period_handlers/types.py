@@ -43,6 +43,19 @@ CROSS_DAY_MAX_PRICE_DEVIATION = 0.15  # Stop if price deviates >15% from origina
 # A today period is "superseded" if tomorrow has a significantly better alternative
 SUPERSESSION_PRICE_IMPROVEMENT_PCT = 10.0  # Tomorrow must be at least 10% cheaper to supersede
 
+# Peak Price Quality: Minimum premium above daily average to qualify as genuine peak
+# A peak period whose mean price is barely above the daily average is likely a
+# cross-day artifact rather than a genuine high-price window.
+# Example: daily_avg=28ct, premium=10% → peak must average ≥ 30.8ct
+PEAK_MIN_PREMIUM_ABOVE_AVG_PCT = 10.0  # Peak mean must be ≥ 10% above daily average
+
+# Cross-Day Boundary Validation: overnight intervals must pass dual-day check
+# For peak periods, intervals between 00:00 and this hour must ALSO qualify
+# against the previous day's reference price. This prevents artifacts where
+# overnight prices (e.g., 30ct) become "peak" against tomorrow's lower max
+# but weren't peak against today's higher max.
+CROSS_DAY_OVERNIGHT_VALIDATION_HOUR = 6  # Validate 00:00-05:59 against previous day too
+
 # Log indentation levels for visual hierarchy
 INDENT_L0 = ""  # Top level (calculate_periods_with_relaxation)
 INDENT_L1 = "  "  # Per-day loop

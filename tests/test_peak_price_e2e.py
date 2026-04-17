@@ -148,7 +148,9 @@ class TestPeakPriceGenerationWorks:
 
         # Bug validation: periods found (not 0)
         assert len(periods) > 0, "Peak periods should generate after bug fix"
-        assert 2 <= len(periods) <= 5, f"Expected 2-5 periods, got {len(periods)}"
+        # On flat days (IQR% ≤ 15%), min_periods adapts to 1 + weak peak filter
+        # may remove marginal peaks, so 1-5 periods is acceptable
+        assert 1 <= len(periods) <= 5, f"Expected 1-5 periods, got {len(periods)}"
 
     def test_negative_flex_normalization_effect(self) -> None:
         """
@@ -188,7 +190,8 @@ class TestPeakPriceGenerationWorks:
         periods_pos = result_pos.get("periods", [])
 
         # With normalized positive flex, should find periods
-        assert len(periods_pos) >= 2, f"Should find periods with positive flex, got {len(periods_pos)}"
+        # Flat day adaptation may reduce min_periods to 1
+        assert len(periods_pos) >= 1, f"Should find periods with positive flex, got {len(periods_pos)}"
 
     def test_periods_contain_high_prices(self) -> None:
         """
@@ -270,8 +273,8 @@ class TestPeakPriceGenerationWorks:
 
         periods = result.get("periods", [])
 
-        # Should find periods via relaxation
-        assert len(periods) >= 2, "Relaxation should find periods"
+        # Should find periods via relaxation (flat day may adapt to 1 period)
+        assert len(periods) >= 1, "Relaxation should find periods"
 
         # Check if relaxation was used
         relaxation_meta = result.get("metadata", {}).get("relaxation", {})

@@ -1,15 +1,11 @@
 {
   "domain": "tibber_prices",
   "name": "Tibber Price Information & Ratings",
-  "codeowners": [
-    "@jpawlowski"
-  ],
+  "codeowners": ["@jpawlowski"],
   "config_flow": true,
   "documentation": "https://github.com/jpawlowski/hass.tibber_prices",
   "iot_class": "cloud_polling",
   "issue_tracker": "https://github.com/jpawlowski/hass.tibber_prices/issues",
-  "requirements": [
-    "aiofiles>=23.2.1"
-  ],
+  "requirements": ["aiofiles>=23.2.1"],
   "version": "0.31.0b3"
 }

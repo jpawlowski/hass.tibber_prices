@@ -20,6 +20,7 @@ from .period_building import (
     filter_periods_by_end_date,
     filter_periods_by_min_length,
     filter_superseded_periods,
+    filter_weak_peak_periods,
     split_intervals_by_day,
 )
 from .period_statistics import extract_period_summaries
@@ -269,6 +270,16 @@ def calculate_periods(
         time=time,
         reverse_sort=reverse_sort,
     )
+
+    # Step 10: Filter weak peak periods
+    # Peak periods whose mean price is barely above daily average are likely
+    # cross-day artifacts rather than genuine high-price windows
+    if reverse_sort:
+        period_summaries = filter_weak_peak_periods(
+            period_summaries,
+            avg_price_by_day,
+            time=time,
+        )
 
     return {
         "periods": period_summaries,  # Lightweight summaries only

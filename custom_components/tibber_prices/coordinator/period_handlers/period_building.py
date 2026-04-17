@@ -12,7 +12,7 @@ if TYPE_CHECKING:
     from custom_components.tibber_prices.coordinator.time_service import TibberPricesTimeService
 
 from .level_filtering import apply_level_filter, check_interval_criteria, compute_geometric_flex_bonus
-from .types import TibberPricesIntervalCriteria
+from .types import CROSS_DAY_OVERNIGHT_VALIDATION_HOUR, TibberPricesIntervalCriteria
 
 _LOGGER = logging.getLogger(__name__)
 _LOGGER_DETAILS = logging.getLogger(__name__ + ".details")
@@ -170,6 +170,23 @@ def build_periods(
 
         effective_criteria = criteria._replace(flex=criteria.flex + geo_bonus) if geo_bonus > 0 else criteria
         in_flex, meets_min_distance = check_interval_criteria(price_for_criteria, effective_criteria)
+
+        # Cross-day boundary validation for peak periods:
+        # Overnight intervals (00:00-05:59) must ALSO qualify against the previous
+        # day's reference price. Without this, prices like 30ct become "peak" against
+        # tomorrow's lower max (35ct) but weren't peak against today's higher max (39ct).
+        if reverse_sort and in_flex and starts_at.hour < CROSS_DAY_OVERNIGHT_VALIDATION_HOUR:
+            prev_day = date_key - timedelta(days=1)
+            prev_criteria = criteria_by_day.get(prev_day)
+            if prev_criteria is not None:
+                prev_effective = (
+                    prev_criteria._replace(flex=prev_criteria.flex + geo_bonus) if geo_bonus > 0 else prev_criteria
+                )
+                in_prev_flex, _ = check_interval_criteria(price_for_criteria, prev_effective)
+                if not in_prev_flex:
+                    # Fails against previous day → boundary artifact, treat as not in flex
+                    in_flex = False
+                    intervals_filtered_by_flex += 1
 
         # Track why intervals are filtered
         if not in_flex:
@@ -391,6 +408,86 @@ def _filter_superseded_today_periods(
     return kept
 
 
+def _filter_best_superseded_periods(
+    today_late: list[dict],
+    tomorrow_early: list[dict],
+    other: list[dict],
+    improvement_threshold: float,
+) -> list[dict]:
+    """Filter best-price today-late periods superseded by cheaper tomorrow alternatives."""
+    if not tomorrow_early:
+        return other + today_late + tomorrow_early
+
+    # Find the cheapest tomorrow early period
+    best_tomorrow = min(tomorrow_early, key=lambda p: p.get("price_mean", float("inf")))
+    best_tomorrow_price = best_tomorrow.get("price_mean")
+
+    if best_tomorrow_price is None:
+        return other + today_late + tomorrow_early
+
+    kept_today = _filter_superseded_today_periods(
+        today_late,
+        best_tomorrow,
+        best_tomorrow_price,
+        improvement_threshold,
+    )
+
+    return other + kept_today + tomorrow_early
+
+
+def _filter_peak_superseded_periods(
+    today_late: list[dict],
+    tomorrow_early: list[dict],
+    other: list[dict],
+    improvement_threshold: float,
+) -> list[dict]:
+    """
+    Filter peak-price tomorrow-early periods that are artifacts of day-boundary reclassification.
+
+    If today has a genuine late-night peak and tomorrow's early-morning "peak" is
+    significantly LOWER in price, the tomorrow period is a cross-day artifact:
+    the same overnight prices are classified differently because they sit near
+    a different day's maximum.
+
+    """
+    if not today_late or not tomorrow_early:
+        return other + today_late + tomorrow_early
+
+    # Find the strongest today late peak (highest mean price)
+    best_today_peak = max(today_late, key=lambda p: p.get("price_mean", 0))
+    best_today_price = best_today_peak.get("price_mean")
+
+    if best_today_price is None or best_today_price <= 0:
+        return other + today_late + tomorrow_early
+
+    kept_tomorrow: list[dict] = []
+    for tomorrow_period in tomorrow_early:
+        tomorrow_price = tomorrow_period.get("price_mean")
+
+        if tomorrow_price is None:
+            kept_tomorrow.append(tomorrow_period)
+            continue
+
+        # How much LOWER is tomorrow's peak vs today's peak? (as percentage)
+        price_drop_pct = ((best_today_price - tomorrow_price) / best_today_price * 100) if best_today_price > 0 else 0
+
+        if price_drop_pct >= improvement_threshold:
+            _LOGGER.info(
+                "Peak supersession: Tomorrow %s-%s (%.2f) is %.1f%% below today's peak %s-%s (%.2f) → filtered as artifact",
+                tomorrow_period["start"].strftime("%H:%M"),
+                tomorrow_period["end"].strftime("%H:%M"),
+                tomorrow_price,
+                price_drop_pct,
+                best_today_peak["start"].strftime("%H:%M"),
+                best_today_peak["end"].strftime("%H:%M"),
+                best_today_price,
+            )
+        else:
+            kept_tomorrow.append(tomorrow_period)
+
+    return other + today_late + kept_tomorrow
+
+
 def filter_superseded_periods(
     period_summaries: list[dict],
     *,
@@ -398,19 +495,18 @@ def filter_superseded_periods(
     reverse_sort: bool,
 ) -> list[dict]:
     """
-    Filter out late-night today periods that are superseded by better tomorrow periods.
+    Filter out cross-day periods that are artifacts of day-boundary price reclassification.
 
+    For BEST PRICE (reverse_sort=False):
     When tomorrow's data becomes available, some late-night periods that were found
     through relaxation may no longer make sense. If tomorrow has a significantly
-    better period in the early morning, the late-night today period is obsolete.
+    better (cheaper) period in the early morning, the late-night today period is obsolete.
 
-    Example:
-    - Today 23:30-00:00 at 0.70 kr (found via relaxation, was best available)
-    - Tomorrow 04:00-05:30 at 0.50 kr (much better alternative)
-    → The today period is superseded and should be filtered out
-
-    This only applies to best-price periods (reverse_sort=False).
-    Peak-price periods are not filtered this way.
+    For PEAK PRICE (reverse_sort=True):
+    Inverted logic: tomorrow's early-morning periods that are significantly LOWER
+    than today's late-night peak are cross-day artifacts. Overnight prices often
+    qualify as "peak" against tomorrow's (lower) daily max, but don't represent
+    genuine high-price windows when viewed across the day boundary.
 
     """
     from .types import (  # noqa: PLC0415
@@ -425,8 +521,7 @@ def filter_superseded_periods(
         reverse_sort,
     )
 
-    # Only filter for best-price periods
-    if reverse_sort or not period_summaries:
+    if not period_summaries:
         return period_summaries
 
     now = time.now()
@@ -449,31 +544,137 @@ def filter_superseded_periods(
         len(other),
     )
 
-    # If no tomorrow early periods, nothing to compare against
-    if not tomorrow_early:
-        _LOGGER.debug("No tomorrow early periods - skipping supersession check")
-        return period_summaries
+    if reverse_sort:
+        # PEAK: Filter tomorrow-early periods superseded by today-late peaks
+        result = _filter_peak_superseded_periods(
+            today_late,
+            tomorrow_early,
+            other,
+            SUPERSESSION_PRICE_IMPROVEMENT_PCT,
+        )
+    else:
+        # BEST: Filter today-late periods superseded by cheaper tomorrow alternatives
+        result = _filter_best_superseded_periods(
+            today_late,
+            tomorrow_early,
+            other,
+            SUPERSESSION_PRICE_IMPROVEMENT_PCT,
+        )
 
-    # Find the best tomorrow early period (lowest mean price)
-    best_tomorrow = min(tomorrow_early, key=lambda p: p.get("price_mean", float("inf")))
-    best_tomorrow_price = best_tomorrow.get("price_mean")
-
-    if best_tomorrow_price is None:
-        return period_summaries
-
-    # Filter superseded today periods
-    kept_today = _filter_superseded_today_periods(
-        today_late,
-        best_tomorrow,
-        best_tomorrow_price,
-        SUPERSESSION_PRICE_IMPROVEMENT_PCT,
-    )
-
-    # Reconstruct and sort by start time
-    result = other + kept_today + tomorrow_early
     result.sort(key=lambda p: p.get("start") or time.now())
-
     return result
+
+
+def filter_weak_peak_periods(
+    period_summaries: list[dict],
+    avg_prices: dict,
+    *,
+    time: TibberPricesTimeService,
+) -> list[dict]:
+    """
+    Filter peak periods whose mean price is barely above the daily average.
+
+    A genuine peak period should have prices meaningfully above the daily average.
+    Periods that are only marginally above average are typically cross-day artifacts
+    where overnight prices qualify as "peak" against a low daily maximum.
+
+    Safety: At least one period per day is always preserved (the one with the
+    highest premium above average). This prevents removing all peaks on flat days.
+
+    Only applies to peak periods. Best-price filtering is not needed because
+    cheap periods near the daily average are still useful for scheduling.
+
+    """
+    from .types import CROSS_DAY_OVERNIGHT_VALIDATION_HOUR, PEAK_MIN_PREMIUM_ABOVE_AVG_PCT  # noqa: PLC0415
+
+    if not period_summaries:
+        return period_summaries
+
+    # Calculate premium for each period and group by day
+    period_premiums: list[tuple[dict, float, date]] = []
+    for period in period_summaries:
+        period_mean = period.get("price_mean")
+        period_start = period.get("start")
+
+        if period_mean is None or period_start is None:
+            period_premiums.append((period, float("inf"), date.min))
+            continue
+
+        day_key = period_start.date()
+        daily_avg = avg_prices.get(day_key) or avg_prices.get(str(day_key))
+
+        if daily_avg is None or daily_avg <= 0:
+            period_premiums.append((period, float("inf"), day_key))
+            continue
+
+        # For overnight/morning periods (before 06:00), use the HIGHER of
+        # current day and previous day averages. This prevents overnight prices
+        # from appearing as "peaks" when tomorrow's average is lower due to
+        # midday valleys (e.g., solar surplus). A genuine peak must be high
+        # relative to BOTH days' price landscape.
+        effective_avg = daily_avg
+        if period_start.hour < CROSS_DAY_OVERNIGHT_VALIDATION_HOUR:
+            prev_day = day_key - timedelta(days=1)
+            prev_avg = avg_prices.get(prev_day) or avg_prices.get(str(prev_day))
+            if prev_avg is not None and prev_avg > daily_avg:
+                effective_avg = prev_avg
+                _LOGGER_DETAILS.debug(
+                    "%sWeak peak check: Period %s uses prev-day avg %.4f instead of %.4f (overnight cross-day)",
+                    INDENT_L0,
+                    period_start.strftime("%H:%M"),
+                    prev_avg,
+                    daily_avg,
+                )
+
+        premium_pct = ((period_mean - effective_avg) / effective_avg) * 100
+        period_premiums.append((period, premium_pct, day_key))
+
+    # Find the best (highest premium) period per day
+    best_per_day: dict[date, float] = {}
+    for _period, premium, day in period_premiums:
+        if day not in best_per_day or premium > best_per_day[day]:
+            best_per_day[day] = premium
+
+    # Filter: keep periods that pass threshold OR are the best for their day
+    kept: list[dict] = []
+    removed = 0
+    for period, premium, day in period_premiums:
+        is_best_for_day = premium >= best_per_day.get(day, float("-inf"))
+
+        if premium >= PEAK_MIN_PREMIUM_ABOVE_AVG_PCT:
+            kept.append(period)
+        elif is_best_for_day:
+            # Preserve at least one period per day even if below threshold
+            kept.append(period)
+            _LOGGER_DETAILS.debug(
+                "%sWeak peak preserved (best for day %s): premium=%.1f%% < threshold=%.1f%%",
+                INDENT_L0,
+                day,
+                premium,
+                PEAK_MIN_PREMIUM_ABOVE_AVG_PCT,
+            )
+        else:
+            period_start = period.get("start")
+            _LOGGER.info(
+                "Weak peak filtered: Period %s-%s mean=%.2f is only %.1f%% above daily avg (need ≥%.1f%%)",
+                period_start.strftime("%H:%M") if period_start else "?",
+                period["end"].strftime("%H:%M") if period.get("end") else "?",
+                period.get("price_mean", 0),
+                premium,
+                PEAK_MIN_PREMIUM_ABOVE_AVG_PCT,
+            )
+            removed += 1
+
+    if removed > 0:
+        _LOGGER.info(
+            "Weak peak filter: %d/%d periods kept (removed %d below %.0f%% premium threshold)",
+            len(kept),
+            len(period_summaries),
+            removed,
+            PEAK_MIN_PREMIUM_ABOVE_AVG_PCT,
+        )
+
+    return kept
 
 
 def _is_period_eligible_for_extension(
