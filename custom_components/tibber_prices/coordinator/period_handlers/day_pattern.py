@@ -172,7 +172,13 @@ def _detect_single_day_pattern(
     extrema = _find_significant_extrema(smoothed, min_amplitude=price_span * MIN_EXTREMUM_AMPLITUDE_RATIO)
 
     # ── classify pattern ────────────────────────────────────────────────────────
-    pattern, confidence = _classify_pattern(extrema, cv_pct, times)
+    pattern, confidence = _classify_pattern(
+        extrema,
+        cv_pct,
+        times,
+        start_price=smoothed[0],
+        end_price=smoothed[-1],
+    )
 
     # ── knee points + primary extreme time ─────────────────────────────────────
     extreme_time: datetime | None = None
@@ -208,6 +214,24 @@ def _detect_single_day_pattern(
         if max_extrema:
             primary = max(max_extrema, key=lambda e: e["price"])
             extreme_time = times[primary["idx"]] if primary["idx"] < len(times) else None
+        # The valley between the two peaks is the cheap zone for best-price periods.
+        # Compute knee points around the deepest minimum so that compute_geometric_flex_bonus
+        # can apply extra flex to intervals in this zone (same mechanism as VALLEY).
+        min_extrema_dp = [e for e in extrema if e["type"] == "min"]
+        if min_extrema_dp:
+            valley_extreme = min(min_extrema_dp, key=lambda e: e["price"])
+            lk, rk = _find_knee_points(smoothed, valley_extreme["idx"])
+            valley_start = times[lk] if lk is not None and lk < len(times) else None
+            valley_end = times[rk] if rk is not None and rk < len(times) else None
+        # The valley between the two peaks is the cheap zone for best-price periods.
+        # Compute knee points around the deepest minimum so that compute_geometric_flex_bonus
+        # can apply extra flex to intervals inside this zone (same mechanism as VALLEY).
+        min_extrema_dp = [e for e in extrema if e["type"] == "min"]
+        if min_extrema_dp:
+            valley_extreme = min(min_extrema_dp, key=lambda e: e["price"])
+            lk, rk = _find_knee_points(smoothed, valley_extreme["idx"])
+            valley_start = times[lk] if lk is not None and lk < len(times) else None
+            valley_end = times[rk] if rk is not None and rk < len(times) else None
 
     # ── intra-day segments ──────────────────────────────────────────────────────
     segments = _detect_segments(extrema, prices_raw, times)
@@ -278,24 +302,41 @@ def _find_significant_extrema(
         return []
 
     # ── raw local extrema (strict local min/max) ────────────────────────────────
+    # NOTE: We intentionally do NOT require the extremum to be below/above the
+    # day's start and end prices. That check was too restrictive for solar-
+    # influenced days (spring/summer) where overnight prices are as cheap as the
+    # midday valley, causing the midday dip to go undetected. The amplitude/
+    # prominence filter below is sufficient to suppress noise.
     candidates: list[dict[str, Any]] = []
     for i in range(1, n - 1):
         prev_p = smoothed[i - 1]
         cur_p = smoothed[i]
         next_p = smoothed[i + 1]
-        if cur_p <= prev_p and cur_p <= next_p and cur_p < smoothed[0] and cur_p < smoothed[-1]:
+        if cur_p <= prev_p and cur_p <= next_p:
             candidates.append({"idx": i, "type": "min", "price": cur_p})
-        elif cur_p >= prev_p and cur_p >= next_p and cur_p > smoothed[0] and cur_p > smoothed[-1]:
+        elif cur_p >= prev_p and cur_p >= next_p:
             candidates.append({"idx": i, "type": "max", "price": cur_p})
 
     if not candidates:
         return []
 
     # ── amplitude filter ────────────────────────────────────────────────────────
-    # For each candidate, compute prominence = distance to the nearest extremum
-    # of opposite type (or the global opposite extreme if none exist).
-    # We use a simpler heuristic: compare against the mean of its two flanking
-    # values in the smoothed series (one window radius on each side).
+    # For each candidate, measure prominence against the most representative
+    # reference price available.
+    #
+    # Problem with pure local-neighbourhood mean: a broad, flat-bottomed valley
+    # (e.g. a 5-hour cheap midday zone) pulls the neighbourhood mean down toward
+    # the valley price itself, making the prominence appear near-zero even though
+    # the valley is clearly significant on the full day.
+    #
+    # Solution: use max(local_mean, day_mean) for minima and min(local_mean,
+    # day_mean) for maxima.  This picks the reference that gives the LARGEST
+    # separation for genuine extrema:
+    #   - Deep/broad valley: local_mean ≈ valley price → day_mean wins (higher).
+    #   - Overnight plateau max: local_mean ≈ plateau price → day_mean wins (lower).
+    #   - Sharp isolated spike: local_mean already high → day_mean may be lower,
+    #     but the spike still has large prominence either way.
+    day_mean = sum(smoothed) / len(smoothed)
     significant: list[dict[str, Any]] = []
     for cand in candidates:
         idx = cand["idx"]
@@ -303,11 +344,12 @@ def _find_significant_extrema(
         lo = max(0, idx - hw)
         hi = min(n, idx + hw + 1)
         neighbourhood = smoothed[lo:hi]
+        local_mean = sum(neighbourhood) / len(neighbourhood)
         if cand["type"] == "min":
-            reference = sum(neighbourhood) / len(neighbourhood)
+            reference = max(local_mean, day_mean)  # broad valley: day_mean dominates
             prominence = reference - cand["price"]
         else:
-            reference = sum(neighbourhood) / len(neighbourhood)
+            reference = min(local_mean, day_mean)  # plateau max: day_mean dominates
             prominence = cand["price"] - reference
         if prominence >= min_amplitude * 0.8:  # slight tolerance on the threshold
             significant.append(cand)
@@ -348,14 +390,18 @@ def _classify_pattern(
     extrema: list[dict[str, Any]],
     cv_pct: float,
     times: list[datetime],
+    start_price: float = 0.0,
+    end_price: float = 0.0,
 ) -> tuple[str, float]:
     """
     Classify the day into a pattern string and confidence score (0-1).
 
     Args:
-        extrema: List of significant extrema (already deduplicated).
-        cv_pct:  Coefficient of variation for the day (%).
-        times:   Timestamps of all intervals (for position calculations).
+        extrema:     List of significant extrema (already deduplicated).
+        cv_pct:      Coefficient of variation for the day (%).
+        times:       Timestamps of all intervals (for position calculations).
+        start_price: Smoothed price of the first interval (day start).
+        end_price:   Smoothed price of the last interval (day end).
 
     Returns:
         (pattern_string, confidence_float)
@@ -401,8 +447,18 @@ def _classify_pattern(
     # ── two extrema ─────────────────────────────────────────────────────────────
     if n_extrema == 2:
         if types == ["max", "min"]:
+            # Check if max is above both endpoints → genuine interior peak
+            max_price = extrema[0]["price"]
+            if start_price > 0 and end_price > 0 and max_price > start_price and max_price > end_price:
+                return DAY_PATTERN_PEAK, 0.65
             return DAY_PATTERN_FALLING, 0.7
         if types == ["min", "max"]:
+            # Check if min is below both endpoints → genuine interior valley
+            # (avoids misclassifying as RISING a day that starts/ends expensive
+            # but has a cheap midday zone, e.g. spring solar duck-curve).
+            min_price = extrema[0]["price"]
+            if start_price > 0 and end_price > 0 and min_price < start_price and min_price < end_price:
+                return DAY_PATTERN_VALLEY, 0.65
             return DAY_PATTERN_RISING, 0.7
         if types == ["min", "min"]:
             return DAY_PATTERN_DOUBLE_VALLEY, 0.65

@@ -282,8 +282,10 @@ def compute_geometric_flex_bonus(
         zone_start = day_pattern.get("peak_start")
         zone_end = day_pattern.get("peak_end")
     else:
-        # Best price: expand inside VALLEY (V/U-shape) zone
-        if pattern != "valley":
+        # Best price: expand inside VALLEY zone.
+        # Also handles DOUBLE_PEAK (solar duck-curve: expensive morning/evening, cheap midday)
+        # where valley_start/valley_end mark the knee points around the midday minimum.
+        if pattern not in ("valley", "double_peak"):
             return 0.0
         zone_start = day_pattern.get("valley_start")
         zone_end = day_pattern.get("valley_end")

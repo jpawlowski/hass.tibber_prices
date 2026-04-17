@@ -27,6 +27,7 @@ from typing import TYPE_CHECKING, Any
 from custom_components.tibber_prices.const import (
     PRICE_LEVEL_CHEAP,
     PRICE_LEVEL_EXPENSIVE,
+    PRICE_LEVEL_MAPPING,
     PRICE_LEVEL_VERY_CHEAP,
     PRICE_LEVEL_VERY_EXPENSIVE,
 )
@@ -161,6 +162,67 @@ def _walk_contiguous(
     return additions
 
 
+def _fallback_blocked_by_majority(
+    intervals: list[dict[str, Any]],
+    primary_level: str,
+    fallback_level: str,
+) -> bool:
+    """Return ``True`` when fallback extension should be suppressed.
+
+    If *primary_level* intervals strictly outnumber *fallback_level* intervals
+    in the existing period, the period's character is predominantly primary.
+    Extending with *fallback_level* would dilute that character; the geometric
+    flex bonus of the core algorithm provides a better boundary in that case.
+
+    Args:
+        intervals: Existing period interval list.
+        primary_level: Preferred level (``VERY_CHEAP`` / ``VERY_EXPENSIVE``).
+        fallback_level: Extension candidate level (``CHEAP`` / ``EXPENSIVE``).
+
+    Returns:
+        ``True`` if fallback extension should be blocked.
+
+    """
+    primary_count = sum(1 for iv in intervals if iv.get("level") == primary_level)
+    fallback_count = sum(1 for iv in intervals if iv.get("level") == fallback_level)
+    return primary_count > fallback_count
+
+
+def _is_spike_adjacent(
+    beyond_iv: dict[str, Any] | None,
+    fallback_level: str,
+    reverse_sort: bool,
+) -> bool:
+    """Return ``True`` when the interval just outside the extension is a spike.
+
+    If the interval immediately beyond the last collected fallback extension is
+    "worse" than *fallback_level* (more expensive for best-price, cheaper for
+    peak-price), the extension intervals form a ramp leading into a spike and
+    should be discarded.
+
+    Args:
+        beyond_iv: Interval dict just outside the collected extension, or ``None``.
+        fallback_level: The level used for the fallback extension.
+        reverse_sort: ``True`` for peak-price, ``False`` for best-price.
+
+    Returns:
+        ``True`` if the extension should be dropped.
+
+    """
+    if beyond_iv is None:
+        return False
+    beyond_level = beyond_iv.get("level")
+    if beyond_level is None:
+        return False
+    fallback_value = PRICE_LEVEL_MAPPING.get(fallback_level, 0)
+    beyond_value = PRICE_LEVEL_MAPPING.get(beyond_level, 0)
+    if reverse_sort:
+        # Peak: "worse" means cheaper than the extension level
+        return beyond_value < fallback_value
+    # Best: "worse" means more expensive than the extension level
+    return beyond_value > fallback_value
+
+
 def _extend_period_edges(
     period: dict[str, Any],
     interval_index: dict[datetime, dict[str, Any]],
@@ -200,28 +262,55 @@ def _extend_period_edges(
     # ``end`` is the exclusive boundary: the last included interval starts at
     # ``end - _INTERVAL_DURATION``.
 
+    reverse_sort = primary_level == PRICE_LEVEL_VERY_EXPENSIVE
     backward_step = -_INTERVAL_DURATION
     forward_step = _INTERVAL_DURATION
+
+    # Collect original intervals early – needed for the majority gate below.
+    original_intervals = _collect_original_intervals(start, end, interval_index)
 
     # ── walk LEFT (earlier than period start) ─────────────────────────────────
     left_cursor = start - _INTERVAL_DURATION
     left_additions = _walk_contiguous(interval_index, left_cursor, backward_step, primary_level, max_intervals)
+    left_used_fallback = False
     if not left_additions:
-        # Fallback: no primary-level neighbours on this side → try fallback level
-        left_additions = _walk_contiguous(interval_index, left_cursor, backward_step, fallback_level, max_intervals)
+        # Fallback: only if the period interior is not predominantly primary_level.
+        # When primary_level (e.g. VERY_CHEAP) strictly outnumbers fallback_level
+        # (e.g. CHEAP) inside the period, adding fallback edges dilutes the
+        # period's character.  Rely on the geometric flex bonus instead.
+        if not _fallback_blocked_by_majority(original_intervals, primary_level, fallback_level):
+            left_additions = _walk_contiguous(interval_index, left_cursor, backward_step, fallback_level, max_intervals)
+            left_used_fallback = bool(left_additions)
+
+    # Look-beyond guard (fallback only): if the interval immediately outside the
+    # collected extensions is worse than fallback_level (e.g. a price spike just
+    # before a run of CHEAP intervals), those intervals form a ramp into the spike
+    # and should not be included.
+    if left_used_fallback:
+        one_beyond_left = start - _INTERVAL_DURATION * (len(left_additions) + 1)
+        if _is_spike_adjacent(interval_index.get(one_beyond_left), fallback_level, reverse_sort):
+            left_additions = []
 
     # ── walk RIGHT (later than period end) ────────────────────────────────────
     right_additions = _walk_contiguous(interval_index, end, forward_step, primary_level, max_intervals)
+    right_used_fallback = False
     if not right_additions:
-        # Fallback: no primary-level neighbours on this side → try fallback level
-        right_additions = _walk_contiguous(interval_index, end, forward_step, fallback_level, max_intervals)
+        # Fallback: same majority gate as left side.
+        if not _fallback_blocked_by_majority(original_intervals, primary_level, fallback_level):
+            right_additions = _walk_contiguous(interval_index, end, forward_step, fallback_level, max_intervals)
+            right_used_fallback = bool(right_additions)
+
+    # Look-beyond guard (fallback only).
+    if right_used_fallback:
+        one_beyond_right = end + _INTERVAL_DURATION * len(right_additions)
+        if _is_spike_adjacent(interval_index.get(one_beyond_right), fallback_level, reverse_sort):
+            right_additions = []
 
     total_added = len(left_additions) + len(right_additions)
     if total_added == 0:
         return period
 
     # ── rebuild full interval list for the extended period ────────────────────
-    original_intervals = _collect_original_intervals(start, end, interval_index)
     all_period_intervals = left_additions + original_intervals + right_additions
 
     # ── recalculate boundaries ────────────────────────────────────────────────
@@ -256,7 +345,6 @@ def _extend_period_edges(
             cv_pct = round(statistics.stdev(prices_for_vol) / mean_p * 100, 1)
 
     # ── assemble updated period dict (keep structural fields, update statistics) ─
-    reverse_sort = primary_level == PRICE_LEVEL_VERY_EXPENSIVE
     updated: dict[str, Any] = {
         **period,
         # Time fields

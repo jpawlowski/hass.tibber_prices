@@ -284,6 +284,7 @@ def _try_min_duration_fallback(
     existing_periods: list[dict],
     prices_by_day: dict[date, list[dict]],
     time: TibberPricesTimeService,
+    day_patterns_by_date: dict | None = None,
 ) -> tuple[dict[str, Any] | None, dict[str, Any]]:
     """
     Try reducing min_period_length to find periods when relaxation is exhausted.
@@ -303,6 +304,8 @@ def _try_min_duration_fallback(
         existing_periods: Periods found so far (from relaxation)
         prices_by_day: Price intervals grouped by day
         time: Time service instance
+        day_patterns_by_date: Optional dict mapping date → day pattern dict. Used for
+            geometric flex bonus in period detection.
 
     Returns:
         Tuple of (result dict with periods, metadata dict) or (None, empty metadata)
@@ -362,6 +365,8 @@ def _try_min_duration_fallback(
             threshold_volatility_very_high=config.threshold_volatility_very_high,
             level_filter=None,  # Disable level filter
             gap_count=config.gap_count,
+            extend_to_extreme=config.extend_to_extreme,
+            max_extension_intervals=config.max_extension_intervals,
         )
 
         # Try to find periods for days with zero periods
@@ -375,6 +380,7 @@ def _try_min_duration_fallback(
                     day_prices,
                     config=fallback_config,
                     time=time,
+                    day_patterns_by_date=day_patterns_by_date,
                 )
 
                 day_periods = day_result.get("periods", [])
@@ -813,6 +819,7 @@ def calculate_periods_with_relaxation(
                 existing_periods=all_periods,
                 prices_by_day=prices_by_day,
                 time=time,
+                day_patterns_by_date=day_patterns_by_date,
             )
 
             if fallback_result:
