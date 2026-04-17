@@ -978,8 +978,8 @@
         "state": {
           "valley": "Tal",
           "peak": "Gipfel",
-          "double_valley": "Doppeltal",
-          "double_peak": "Doppelgipfel",
+          "double_dip": "Doppelmulde",
+          "duck_curve": "Entenkurve",
           "flat": "Flach",
           "rising": "Steigend",
           "falling": "Fallend",
@@ -991,8 +991,8 @@
         "state": {
           "valley": "Tal",
           "peak": "Gipfel",
-          "double_valley": "Doppeltal",
-          "double_peak": "Doppelgipfel",
+          "double_dip": "Doppelmulde",
+          "duck_curve": "Entenkurve",
           "flat": "Flach",
           "rising": "Steigend",
           "falling": "Fallend",
@@ -1004,8 +1004,8 @@
         "state": {
           "valley": "Tal",
           "peak": "Gipfel",
-          "double_valley": "Doppeltal",
-          "double_peak": "Doppelgipfel",
+          "double_dip": "Doppelmulde",
+          "duck_curve": "Entenkurve",
           "flat": "Flach",
           "rising": "Steigend",
           "falling": "Fallend",

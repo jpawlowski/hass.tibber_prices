@@ -508,6 +508,11 @@ def _find_extension_intervals(
     criteria: Any,
     max_extension_time: datetime,
     interval_duration: timedelta,
+    *,
+    max_intervals: int = 0,
+    period_mean_price: float = 0.0,
+    max_price_deviation: float = 0.0,
+    reverse_sort: bool = False,
 ) -> list[dict]:
     """
     Find consecutive intervals after period_end that meet criteria.
@@ -516,6 +521,14 @@ def _find_extension_intervals(
     meet the flex and min_distance criteria. Stops at first failure
     or when reaching max_extension_time.
 
+    Additional guards:
+    - max_intervals: Hard cap on number of extension intervals (0 = unlimited)
+    - period_mean_price + max_price_deviation: Stop extending when the candidate
+      interval's price deviates too far from the original period's mean price.
+      For peak periods (reverse_sort=True): stops when price drops below
+      mean × (1 - deviation). For best periods: stops when price rises above
+      mean × (1 + deviation).
+
     """
     from .level_filtering import check_interval_criteria  # noqa: PLC0415
 
@@ -523,11 +536,26 @@ def _find_extension_intervals(
     check_time = period_end
 
     while check_time < max_extension_time:
+        # Hard cap on extension length
+        if max_intervals > 0 and len(extension_intervals) >= max_intervals:
+            break
+
         price_data = price_lookup.get(check_time.isoformat())
         if not price_data:
             break  # No more data
 
         price = float(price_data["total"])
+
+        # Price deviation gate: stop if price drifts too far from original period mean
+        if period_mean_price > 0 and max_price_deviation > 0:
+            if reverse_sort:
+                # Peak: stop if price drops below mean × (1 - deviation)
+                if price < period_mean_price * (1 - max_price_deviation):
+                    break
+            elif price > period_mean_price * (1 + max_price_deviation):
+                # Best: stop if price rises above mean × (1 + deviation)
+                break
+
         in_flex, meets_min_distance = check_interval_criteria(price, criteria)
 
         if not (in_flex and meets_min_distance):
@@ -625,6 +653,9 @@ def extend_periods_across_midnight(
     from .types import (  # noqa: PLC0415
         CROSS_DAY_LATE_PERIOD_START_HOUR,
         CROSS_DAY_MAX_EXTENSION_HOUR,
+        CROSS_DAY_MAX_EXTENSION_INTERVALS,
+        CROSS_DAY_MAX_PRICE_DEVIATION,
+        CROSS_DAY_PROPORTIONAL_EXTENSION_FACTOR,
         PERIOD_MAX_CV,
         TibberPricesIntervalCriteria,
     )
@@ -677,26 +708,40 @@ def extend_periods_across_midnight(
             reverse_sort=reverse_sort,
         )
 
-        # Find extension intervals
-        extension_intervals = _find_extension_intervals(
-            period["end"],
-            price_lookup,
-            criteria,
-            max_extension_time,
-            interval_duration,
-        )
-
-        if not extension_intervals:
-            extended_summaries.append(period)
-            continue
-
-        # Collect all prices for CV check
+        # Collect original prices once (reused for cap calculation, deviation gate, and CV check)
         original_prices = _collect_original_period_prices(
             period["start"],
             period["end"],
             price_lookup,
             interval_duration,
         )
+
+        # Calculate max extension intervals: min(hard cap, proportional cap)
+        original_interval_count = max(1, len(original_prices))
+        proportional_cap = int(original_interval_count * CROSS_DAY_PROPORTIONAL_EXTENSION_FACTOR)
+        max_intervals = min(CROSS_DAY_MAX_EXTENSION_INTERVALS, proportional_cap)
+
+        # Original period mean price for deviation gate
+        period_mean_price = sum(original_prices) / len(original_prices) if original_prices else 0.0
+
+        # Find extension intervals (with cap + price deviation gate)
+        extension_intervals = _find_extension_intervals(
+            period["end"],
+            price_lookup,
+            criteria,
+            max_extension_time,
+            interval_duration,
+            max_intervals=max_intervals,
+            period_mean_price=period_mean_price,
+            max_price_deviation=CROSS_DAY_MAX_PRICE_DEVIATION,
+            reverse_sort=reverse_sort,
+        )
+
+        if not extension_intervals:
+            extended_summaries.append(period)
+            continue
+
+        # CV check using already-collected original prices
         extension_prices = [float(p["total"]) for p in extension_intervals]
         combined_prices = original_prices + extension_prices
 
@@ -714,11 +759,12 @@ def extend_periods_across_midnight(
             )
 
             _LOGGER.info(
-                "Cross-day extension: Period %s-%s extended to %s (+%d intervals, CV=%.1f%%)",
+                "Cross-day extension: Period %s-%s extended to %s (+%d intervals, max=%d, CV=%.1f%%)",
                 period["start"].strftime("%H:%M"),
                 period["end"].strftime("%H:%M"),
                 extended_period["end"].strftime("%H:%M"),
                 len(extension_intervals),
+                max_intervals,
                 combined_cv,
             )
             extended_summaries.append(extended_period)

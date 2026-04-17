@@ -34,6 +34,9 @@ LOW_PRICE_QUALITY_BYPASS_THRESHOLD = 0.10  # EUR/NOK major unit (= 10 ct/øre)
 # we can extend it past midnight if prices remain favorable
 CROSS_DAY_LATE_PERIOD_START_HOUR = 20  # Consider periods starting at 20:00 or later for extension
 CROSS_DAY_MAX_EXTENSION_HOUR = 8  # Don't extend beyond 08:00 next day (covers typical night low)
+CROSS_DAY_MAX_EXTENSION_INTERVALS = 16  # Hard cap: max 4 hours of extension (16 × 15-minute intervals)
+CROSS_DAY_PROPORTIONAL_EXTENSION_FACTOR = 2.0  # Extension ≤ 2× original period length
+CROSS_DAY_MAX_PRICE_DEVIATION = 0.15  # Stop if price deviates >15% from original period mean
 
 # Cross-Day Supersession: When tomorrow data arrives, late-night periods that are
 # worse than early-morning tomorrow periods become obsolete
@@ -122,8 +125,8 @@ class TibberPricesIntervalCriteria(NamedTuple):
 
 DAY_PATTERN_VALLEY = "valley"  # Single price minimum (U/V-shape)
 DAY_PATTERN_PEAK = "peak"  # Single price maximum (Λ-shape)
-DAY_PATTERN_DOUBLE_VALLEY = "double_valley"  # Two minima, W-shape
-DAY_PATTERN_DOUBLE_PEAK = "double_peak"  # Two peaks,  M-shape
+DAY_PATTERN_DOUBLE_DIP = "double_dip"  # Two minima, W-shape
+DAY_PATTERN_DUCK_CURVE = "duck_curve"  # Two peaks with midday valley (solar duck curve)
 DAY_PATTERN_FLAT = "flat"  # No significant variation
 DAY_PATTERN_RISING = "rising"  # Persistently rising throughout the day
 DAY_PATTERN_FALLING = "falling"  # Persistently falling throughout the day
@@ -133,8 +136,8 @@ DAY_PATTERN_MIXED = "mixed"  # Multiple extrema with no clear pattern
 ALL_DAY_PATTERNS: list[str] = [
     DAY_PATTERN_VALLEY,
     DAY_PATTERN_PEAK,
-    DAY_PATTERN_DOUBLE_VALLEY,
-    DAY_PATTERN_DOUBLE_PEAK,
+    DAY_PATTERN_DOUBLE_DIP,
+    DAY_PATTERN_DUCK_CURVE,
     DAY_PATTERN_FLAT,
     DAY_PATTERN_RISING,
     DAY_PATTERN_FALLING,

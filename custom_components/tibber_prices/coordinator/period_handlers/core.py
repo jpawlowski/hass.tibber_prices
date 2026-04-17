@@ -183,7 +183,7 @@ def calculate_periods(
     )
 
     # Step 3.5: Segment forcing for W/M-shaped days (opt-in, default disabled)
-    # For days detected as W-shape (DOUBLE_VALLEY for best) or M-shape (DOUBLE_PEAK for peak),
+    # For days detected as W-shape (DOUBLE_DIP for best) or M-shape (DUCK_CURVE for peak),
     # ensures each price valley/peak segment has at least segment_min_periods periods.
     if config.segment_forcing and day_patterns_by_date:
         raw_periods = _apply_segment_forcing(
@@ -315,9 +315,9 @@ def _apply_segment_forcing(
     """
     Force at least segment_min_periods periods per segment for W/M-shaped days.
 
-    For DOUBLE_VALLEY days (best price): splits at the central price peak and
+    For DOUBLE_DIP days (best price): splits at the central price peak and
     ensures each valley side has the required number of periods.
-    For DOUBLE_PEAK days (peak price): splits at the central price valley and
+    For DUCK_CURVE days (peak price): splits at the central price valley and
     ensures each peak side has the required number of periods.
 
     Args:
@@ -335,12 +335,12 @@ def _apply_segment_forcing(
     import logging  # noqa: PLC0415
 
     from .period_building import build_periods  # noqa: PLC0415
-    from .types import DAY_PATTERN_DOUBLE_PEAK, DAY_PATTERN_DOUBLE_VALLEY, INDENT_L1, INDENT_L2  # noqa: PLC0415
+    from .types import DAY_PATTERN_DOUBLE_DIP, DAY_PATTERN_DUCK_CURVE, INDENT_L1, INDENT_L2  # noqa: PLC0415
 
     _LOGGER = logging.getLogger(__name__)
 
     reverse_sort = config.reverse_sort
-    target_pattern = DAY_PATTERN_DOUBLE_PEAK if reverse_sort else DAY_PATTERN_DOUBLE_VALLEY
+    target_pattern = DAY_PATTERN_DUCK_CURVE if reverse_sort else DAY_PATTERN_DOUBLE_DIP
     segment_min_periods = config.segment_min_periods
 
     merged_periods = list(periods)
@@ -362,8 +362,8 @@ def _apply_segment_forcing(
             continue
 
         # Find the central extremum in the middle 50% of the day
-        # DOUBLE_VALLEY → central peak = highest price between the two valleys
-        # DOUBLE_PEAK   → central valley = lowest price between the two peaks
+        # DOUBLE_DIP   → central peak = highest price between the two valleys
+        # DUCK_CURVE   → central valley = lowest price between the two peaks
         n = len(day_intervals)
         middle = day_intervals[n // 4 : 3 * n // 4]
         if not middle:

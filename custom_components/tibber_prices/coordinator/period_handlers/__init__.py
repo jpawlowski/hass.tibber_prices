@@ -34,8 +34,8 @@ from .shape_extension import extend_periods_for_shape
 # Re-export constants and types
 from .types import (
     ALL_DAY_PATTERNS,
-    DAY_PATTERN_DOUBLE_PEAK,
-    DAY_PATTERN_DOUBLE_VALLEY,
+    DAY_PATTERN_DOUBLE_DIP,
+    DAY_PATTERN_DUCK_CURVE,
     DAY_PATTERN_FALLING,
     DAY_PATTERN_FLAT,
     DAY_PATTERN_MIXED,
@@ -59,8 +59,8 @@ from .types import (
 
 __all__ = [
     "ALL_DAY_PATTERNS",
-    "DAY_PATTERN_DOUBLE_PEAK",
-    "DAY_PATTERN_DOUBLE_VALLEY",
+    "DAY_PATTERN_DOUBLE_DIP",
+    "DAY_PATTERN_DUCK_CURVE",
     "DAY_PATTERN_FALLING",
     "DAY_PATTERN_FLAT",
     "DAY_PATTERN_MIXED",

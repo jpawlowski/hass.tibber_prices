@@ -999,8 +999,8 @@ DAY_PATTERN_SENSORS = (
         options=[
             "valley",
             "peak",
-            "double_valley",
-            "double_peak",
+            "double_dip",
+            "duck_curve",
             "flat",
             "rising",
             "falling",
@@ -1017,8 +1017,8 @@ DAY_PATTERN_SENSORS = (
         options=[
             "valley",
             "peak",
-            "double_valley",
-            "double_peak",
+            "double_dip",
+            "duck_curve",
             "flat",
             "rising",
             "falling",
@@ -1035,8 +1035,8 @@ DAY_PATTERN_SENSORS = (
         options=[
             "valley",
             "peak",
-            "double_valley",
-            "double_peak",
+            "double_dip",
+            "duck_curve",
             "flat",
             "rising",
             "falling",

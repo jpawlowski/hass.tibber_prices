@@ -978,8 +978,8 @@
         "state": {
           "valley": "Dal",
           "peak": "Piek",
-          "double_valley": "Dubbel Dal",
-          "double_peak": "Dubbele Piek",
+          "double_dip": "Dubbele Dip",
+          "duck_curve": "Eendcurve",
           "flat": "Vlak",
           "rising": "Stijgend",
           "falling": "Dalend",
@@ -991,8 +991,8 @@
         "state": {
           "valley": "Dal",
           "peak": "Piek",
-          "double_valley": "Dubbel Dal",
-          "double_peak": "Dubbele Piek",
+          "double_dip": "Dubbele Dip",
+          "duck_curve": "Eendcurve",
           "flat": "Vlak",
           "rising": "Stijgend",
           "falling": "Dalend",
@@ -1004,8 +1004,8 @@
         "state": {
           "valley": "Dal",
           "peak": "Piek",
-          "double_valley": "Dubbel Dal",
-          "double_peak": "Dubbele Piek",
+          "double_dip": "Dubbele Dip",
+          "duck_curve": "Eendcurve",
           "flat": "Vlak",
           "rising": "Stijgend",
           "falling": "Dalend",

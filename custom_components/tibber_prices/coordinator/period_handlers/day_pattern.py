@@ -6,8 +6,8 @@ into a small set of patterns that are meaningful for switching decisions:
 
     VALLEY        - Single price minimum (U/V-shape, cheap middle)
     PEAK          - Single price maximum (Lambda-shape, expensive middle)
-    DOUBLE_VALLEY - Two minima separated by a peak   (W-shape)
-    DOUBLE_PEAK   - Two peaks separated by a valley  (M-shape)
+    DOUBLE_DIP    - Two minima separated by a peak   (W-shape)
+    DUCK_CURVE    - Two peaks with midday valley      (M-shape, solar duck curve)
     FLAT          - No significant variation (CV <= 10 %)
     RISING        - Monotonically / persistently rising
     FALLING       - Monotonically / persistently falling
@@ -63,8 +63,8 @@ _EDGE_ZONE = 0.25
 # Pattern string constants
 DAY_PATTERN_VALLEY = "valley"
 DAY_PATTERN_PEAK = "peak"
-DAY_PATTERN_DOUBLE_VALLEY = "double_valley"
-DAY_PATTERN_DOUBLE_PEAK = "double_peak"
+DAY_PATTERN_DOUBLE_DIP = "double_dip"
+DAY_PATTERN_DUCK_CURVE = "duck_curve"
 DAY_PATTERN_FLAT = "flat"
 DAY_PATTERN_RISING = "rising"
 DAY_PATTERN_FALLING = "falling"
@@ -202,14 +202,14 @@ def _detect_single_day_pattern(
         peak_start = times[lk] if lk is not None and lk < len(times) else None
         peak_end = times[rk] if rk is not None and rk < len(times) else None
 
-    elif pattern == DAY_PATTERN_DOUBLE_VALLEY and extrema:
+    elif pattern == DAY_PATTERN_DOUBLE_DIP and extrema:
         # Primary extreme = deeper of the two minima
         min_extrema = [e for e in extrema if e["type"] == "min"]
         if min_extrema:
             primary = min(min_extrema, key=lambda e: e["price"])
             extreme_time = times[primary["idx"]] if primary["idx"] < len(times) else None
 
-    elif pattern == DAY_PATTERN_DOUBLE_PEAK and extrema:
+    elif pattern == DAY_PATTERN_DUCK_CURVE and extrema:
         max_extrema = [e for e in extrema if e["type"] == "max"]
         if max_extrema:
             primary = max(max_extrema, key=lambda e: e["price"])
@@ -217,15 +217,6 @@ def _detect_single_day_pattern(
         # The valley between the two peaks is the cheap zone for best-price periods.
         # Compute knee points around the deepest minimum so that compute_geometric_flex_bonus
         # can apply extra flex to intervals in this zone (same mechanism as VALLEY).
-        min_extrema_dp = [e for e in extrema if e["type"] == "min"]
-        if min_extrema_dp:
-            valley_extreme = min(min_extrema_dp, key=lambda e: e["price"])
-            lk, rk = _find_knee_points(smoothed, valley_extreme["idx"])
-            valley_start = times[lk] if lk is not None and lk < len(times) else None
-            valley_end = times[rk] if rk is not None and rk < len(times) else None
-        # The valley between the two peaks is the cheap zone for best-price periods.
-        # Compute knee points around the deepest minimum so that compute_geometric_flex_bonus
-        # can apply extra flex to intervals inside this zone (same mechanism as VALLEY).
         min_extrema_dp = [e for e in extrema if e["type"] == "min"]
         if min_extrema_dp:
             valley_extreme = min(min_extrema_dp, key=lambda e: e["price"])
@@ -415,11 +406,20 @@ def _classify_pattern(
         confidence = max(0.5, 1.0 - cv_pct / FLAT_CV_THRESHOLD)
         return DAY_PATTERN_FLAT, confidence
 
-    # ── no significant extrema → monotone (rising or falling) ──────────────────
+    # ── no significant extrema → check for monotone trend ──────────────────────
     if not extrema:
-        # Cannot determine direction without access to underlying prices from here.
-        # The caller (_detect_single_day_pattern) handles the RISING/FALLING case
-        # before calling _classify_pattern when there are no extrema but prices exist.
+        # Without extrema, check if prices have a clear directional trend using
+        # the day's start/end price difference relative to span.
+        if start_price > 0 and end_price > 0 and n_times >= MIN_DAY_INTERVALS:
+            price_change = end_price - start_price
+            # Require at least 5% absolute change relative to the mean price to
+            # distinguish a genuine trend from flat-ish noise above FLAT_CV_THRESHOLD.
+            mean_price = (start_price + end_price) / 2
+            relative_change = abs(price_change) / mean_price if mean_price > 0 else 0
+            if relative_change > 0.05:
+                if price_change > 0:
+                    return DAY_PATTERN_RISING, min(0.65, 0.4 + relative_change)
+                return DAY_PATTERN_FALLING, min(0.65, 0.4 + relative_change)
         return DAY_PATTERN_MIXED, 0.4
 
     n_extrema = len(extrema)
@@ -461,18 +461,18 @@ def _classify_pattern(
                 return DAY_PATTERN_VALLEY, 0.65
             return DAY_PATTERN_RISING, 0.7
         if types == ["min", "min"]:
-            return DAY_PATTERN_DOUBLE_VALLEY, 0.65
+            return DAY_PATTERN_DOUBLE_DIP, 0.65
         if types == ["max", "max"]:
-            return DAY_PATTERN_DOUBLE_PEAK, 0.65
+            return DAY_PATTERN_DUCK_CURVE, 0.65
 
     # ── three extrema ────────────────────────────────────────────────────────────
     if n_extrema == 3:
         # min-max-min → W-shape
         if types == ["min", "max", "min"]:
-            return DAY_PATTERN_DOUBLE_VALLEY, 0.75
-        # max-min-max → M-shape
+            return DAY_PATTERN_DOUBLE_DIP, 0.75
+        # max-min-max → duck curve (solar midday valley between morning/evening peaks)
         if types == ["max", "min", "max"]:
-            return DAY_PATTERN_DOUBLE_PEAK, 0.75
+            return DAY_PATTERN_DUCK_CURVE, 0.75
         # min-max or max-min with trailing → RISING/FALLING with extra bump
         if types[0] == "min" and types[-1] == "max":
             return DAY_PATTERN_RISING, 0.55

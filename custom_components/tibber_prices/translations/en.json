@@ -264,7 +264,7 @@
               "best_price_extend_to_very_cheap": "When enabled, detected best price periods expand outward to absorb adjacent intervals with a 'Very cheap' price level. This widens low-price windows to better capture extremely cheap intervals at the edges of detected periods.",
               "best_price_max_extension_intervals": "Maximum number of additional intervals to absorb per side (left and right edge). Each interval is 15 minutes. Example: 4 intervals = up to 1 hour extension per edge. Default: 4",
               "best_price_geometric_flex": "Extra flex percentage applied to intervals that fall inside a detected price valley (V-shape). When a valley pattern is detected for the day, intervals within the valley zone get this additional tolerance, making the period detector more likely to include them. 0 = disabled. Default: 0",
-              "best_price_segment_forcing": "When enabled, days with a W-shaped price curve (two valleys separated by a central peak) split at the central peak. Period detection runs independently for each valley side, ensuring each valley has the required number of periods. This prevents both periods from clustering in the same valley. Requires the day pattern sensor to detect a 'double_valley' pattern.",
+              "best_price_segment_forcing": "When enabled, days with a W-shaped price curve (two valleys separated by a central peak) split at the central peak. Period detection runs independently for each valley side, ensuring each valley has the required number of periods. This prevents both periods from clustering in the same valley. Requires the day pattern sensor to detect a 'double_dip' pattern.",
               "best_price_segment_min_periods": "Minimum number of best price periods required per valley side when W-shape segment forcing is enabled. Each side must independently produce at least this many periods. Default: 1"
             }
           }
@@ -329,7 +329,7 @@
               "peak_price_extend_to_very_expensive": "When enabled, detected peak price periods expand outward to absorb adjacent intervals with a 'Very expensive' price level. This widens high-price windows to better capture extremely expensive intervals at the edges of detected periods.",
               "peak_price_max_extension_intervals": "Maximum number of additional intervals to absorb per side (left and right edge). Each interval is 15 minutes. Example: 4 intervals = up to 1 hour extension per edge. Default: 4",
               "peak_price_geometric_flex": "Extra flex percentage applied to intervals that fall inside a detected price peak (Λ-shape). When a peak pattern is detected for the day, intervals within the peak zone get this additional tolerance, making the period detector more likely to include them. 0 = disabled. Default: 0",
-              "peak_price_segment_forcing": "When enabled, days with an M-shaped price curve (two peaks separated by a central valley) split at the central valley. Period detection runs independently for each peak side, ensuring each peak has the required number of periods. This prevents both periods from clustering in the same peak. Requires the day pattern sensor to detect a 'double_peak' pattern.",
+              "peak_price_segment_forcing": "When enabled, days with an M-shaped price curve (two peaks separated by a central valley) split at the central valley. Period detection runs independently for each peak side, ensuring each peak has the required number of periods. This prevents both periods from clustering in the same peak. Requires the day pattern sensor to detect a 'duck_curve' pattern.",
               "peak_price_segment_min_periods": "Minimum number of peak price periods required per peak side when M-shape segment forcing is enabled. Each side must independently produce at least this many periods. Default: 1"
             }
           }
@@ -978,8 +978,8 @@
         "state": {
           "valley": "Valley",
           "peak": "Peak",
-          "double_valley": "Double Valley",
-          "double_peak": "Double Peak",
+          "double_dip": "Double Dip",
+          "duck_curve": "Duck Curve",
           "flat": "Flat",
           "rising": "Rising",
           "falling": "Falling",
@@ -991,8 +991,8 @@
         "state": {
           "valley": "Valley",
           "peak": "Peak",
-          "double_valley": "Double Valley",
-          "double_peak": "Double Peak",
+          "double_dip": "Double Dip",
+          "duck_curve": "Duck Curve",
           "flat": "Flat",
           "rising": "Rising",
           "falling": "Falling",
@@ -1004,8 +1004,8 @@
         "state": {
           "valley": "Valley",
           "peak": "Peak",
-          "double_valley": "Double Valley",
-          "double_peak": "Double Peak",
+          "double_dip": "Double Dip",
+          "duck_curve": "Duck Curve",
           "flat": "Flat",
           "rising": "Rising",
           "falling": "Falling",
