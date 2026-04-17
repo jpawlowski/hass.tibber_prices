@@ -268,8 +268,10 @@ class TibberPricesIntervalPoolFetcher:
         """
         Fetch missing intervals from API.
 
-        Makes one API call per missing range. Uses routing logic to select
-        the optimal endpoint (PRICE_INFO vs PRICE_INFO_RANGE).
+        Makes API calls per missing range, but skips redundant calls when a
+        previous fetch already returned intervals covering subsequent ranges.
+        This is common for the PRICE_INFO endpoint which returns ALL available
+        intervals (~384) regardless of the requested range.
 
         Args:
             api_client: TibberPricesApiClient instance for API calls.
@@ -290,9 +292,26 @@ class TibberPricesIntervalPoolFetcher:
         from custom_components.tibber_prices.interval_pool.routing import get_price_intervals_for_range  # noqa: PLC0415
 
         fetch_time_iso = dt_util.now().isoformat()
-        all_fetched_intervals = []
+        all_fetched_intervals: list[list[dict[str, Any]]] = []
+
+        # Collect startsAt values from all fetched intervals to detect overlap
+        fetched_starts_at: set[str] = set()
 
         for idx, (missing_start_iso, missing_end_iso) in enumerate(missing_ranges, start=1):
+            # Check if a previous fetch already covered this range
+            if fetched_starts_at and self._range_covered_by_fetched(
+                missing_start_iso, missing_end_iso, fetched_starts_at
+            ):
+                _LOGGER_DETAILS.debug(
+                    "Range %s to %s already covered by previous fetch for home %s, skipping API call (%d/%d)",
+                    missing_start_iso,
+                    missing_end_iso,
+                    self._home_id,
+                    idx,
+                    len(missing_ranges),
+                )
+                continue
+
             _LOGGER_DETAILS.debug(
                 "Fetching from Tibber API (%d/%d) for home %s: range %s to %s",
                 idx,
@@ -317,6 +336,10 @@ class TibberPricesIntervalPoolFetcher:
 
             all_fetched_intervals.append(fetched_intervals)
 
+            # Track which timestamps we've fetched for overlap detection
+            for interval in fetched_intervals:
+                fetched_starts_at.add(interval["startsAt"][:19])
+
             _LOGGER_DETAILS.debug(
                 "Received %d intervals from Tibber API for home %s",
                 len(fetched_intervals),
@@ -328,3 +351,30 @@ class TibberPricesIntervalPoolFetcher:
                 on_intervals_fetched(fetched_intervals, fetch_time_iso)
 
         return all_fetched_intervals
+
+    @staticmethod
+    def _range_covered_by_fetched(
+        start_iso: str,
+        end_iso: str,
+        fetched_starts_at: set[str],
+    ) -> bool:
+        """
+        Check if a missing range is already covered by previously fetched intervals.
+
+        A range is considered covered if at least one fetched interval falls within
+        [start, end). This is a conservative check — even partial overlap means the
+        API response likely included data for this range.
+
+        Args:
+            start_iso: Start of the missing range (ISO format).
+            end_iso: End of the missing range (ISO format).
+            fetched_starts_at: Set of normalized startsAt strings from previous fetches.
+
+        Returns:
+            True if the range is already covered.
+
+        """
+        start_normalized = start_iso[:19]
+        end_normalized = end_iso[:19]
+
+        return any(start_normalized <= ts < end_normalized for ts in fetched_starts_at)
