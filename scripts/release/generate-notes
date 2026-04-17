@@ -45,7 +45,7 @@ USE_AI="${USE_AI:-true}"
 GITHUB_REPO="${GITHUB_REPOSITORY:-jpawlowski/hass.tibber_prices}"
 RELEASE_NOTES_COMPACT_DIFF="${RELEASE_NOTES_COMPACT_DIFF:-true}"
 RELEASE_NOTES_DIFF_MAX_BYTES="${RELEASE_NOTES_DIFF_MAX_BYTES:-8000}"
-RELEASE_NOTES_CLIFF_FILTER_PATHS="${RELEASE_NOTES_CLIFF_FILTER_PATHS:-true}"
+RELEASE_NOTES_CLIFF_FILTER_PATHS="${RELEASE_NOTES_CLIFF_FILTER_PATHS:-false}"
 RELEASE_NOTES_CLIFF_SINGLE_RELEASE="${RELEASE_NOTES_CLIFF_SINGLE_RELEASE:-true}"
 RELEASE_NOTES_TRAILER_SKIP_FILTER="${RELEASE_NOTES_TRAILER_SKIP_FILTER:-true}"
 
@@ -546,8 +546,11 @@ EOF
 
     CLIFF_CMD=(git-cliff --config "$CLIFF_CONFIG")
 
-    # Restrict changelog to user-facing integration files by default.
-    # Toggle with: RELEASE_NOTES_CLIFF_FILTER_PATHS=false
+    # Restrict changelog to user-facing integration files.
+    # DISABLED by default: git-cliff ≤2.12.0 --include-path ignores the commit
+    # range and generates a full changelog instead of the requested tag range.
+    # The commit_parsers in cliff.toml already filter non-user-facing types/scopes.
+    # Toggle with: RELEASE_NOTES_CLIFF_FILTER_PATHS=true
     if is_truthy "$RELEASE_NOTES_CLIFF_FILTER_PATHS"; then
         CLIFF_CMD+=(--include-path "custom_components/tibber_prices/**")
     fi
