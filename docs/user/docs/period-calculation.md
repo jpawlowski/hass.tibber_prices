@@ -9,7 +9,7 @@ Learn how Best Price and Peak Price periods work, and how to configure them for 
 ## Table of Contents
 
 -   [Quick Start](#quick-start)
--   [How It Works](#how-it-works)
+-   [How It Works](#how-it-works) — Algorithm overview, all 7 phases explained
 -   [Configuration Guide](#configuration-guide)
 -   [Understanding Relaxation](#understanding-relaxation) → [Full Guide](period-relaxation.md)
 -   [Common Scenarios](#common-scenarios)
@@ -57,19 +57,31 @@ The integration sets different **initial defaults** because the features serve d
 
 ### Example Timeline
 
-<details>
-<summary>Show example: Timeline</summary>
+```mermaid
+gantt
+    title Typical Day — Best Price & Peak Price Periods
+    dateFormat HH:mm
+    axisFormat %H:%M
+    tickInterval 2hour
 
-```
-00:00 ████████████████ Best Price Period (cheap prices)
-04:00 ░░░░░░░░░░░░░░░░ Normal
-08:00 ████████████████ Peak Price Period (expensive prices)
-12:00 ░░░░░░░░░░░░░░░░ Normal
-16:00 ████████████████ Peak Price Period (expensive prices)
-20:00 ████████████████ Best Price Period (cheap prices)
-```
+    section Best Price
+    Cheap prices (00:00–04:00)     :active, 00:00, 04:00
 
-</details>
+    section Normal
+    Normal prices (04:00–08:00)    :        04:00, 08:00
+
+    section Peak Price
+    Expensive prices (08:00–12:00) :crit,   08:00, 12:00
+
+    section Normal
+    Normal prices (12:00–16:00)    :        12:00, 16:00
+
+    section Peak Price
+    Expensive prices (16:00–20:00) :crit,   16:00, 20:00
+
+    section Best Price
+    Cheap prices (20:00–00:00)     :active, 20:00, 24:00
+```
 
 ---
 
@@ -87,37 +99,107 @@ On a V-shaped day (prices drop sharply to a minimum, then rise again), the perio
 **For flexible loads** (e.g., heat pump, battery charging): you can easily ride the full cheap wave by combining the period sensor with the price level and trend sensors. See [V-Shaped Price Days in Automation Examples](./automation-examples.md#understanding-v-shaped-price-days).
 :::
 
+### Algorithm Overview
+
+The period calculation is a multi-phase pipeline. Each phase builds on the previous one, progressively refining the result:
+
 ```mermaid
 flowchart TD
-    A["96 intervals per day"] --> B{"① Flexibility<br/><small>Close to MIN/MAX?</small>"}
-    B -->|Yes| C{"② Distance<br/><small>Meaningfully different<br/>from average?</small>"}
-    B -->|No| X1["❌ excluded"]
-    C -->|Yes| D{"③ Duration<br/><small>≥ 60 min?</small>"}
-    C -->|No| X2["❌ excluded"]
-    D -->|Yes| E{"④ Level filter<br/><small>(optional)</small>"}
-    D -->|No| X3["❌ too short"]
-    E -->|Pass| F["⑤ Spike smoothing"]
-    E -->|Fail| X4["❌ filtered"]
-    F --> G["✅ Period found"]
+    A["📊 Raw price data<br/><small>yesterday + today + tomorrow<br/>(~288 intervals)</small>"]
+    A --> B["🔇 Phase 1: Spike Smoothing<br/><small>Neutralize isolated price outliers<br/>to prevent period fragmentation</small>"]
+    B --> C["📐 Phase 2: Day Pattern Detection<br/><small>Classify each day's shape<br/>(valley, peak, duck curve, flat…)</small>"]
+    C --> D["🔍 Phase 3: Period Detection<br/><small>Find continuous intervals matching<br/>flex + distance + level criteria</small>"]
+    D --> E["📏 Phase 4: Duration &amp; Quality<br/><small>Remove too-short periods,<br/>calculate statistics</small>"]
+    E --> F["🌙 Phase 5: Cross-Day Handling<br/><small>Extend across midnight,<br/>filter day-boundary artifacts</small>"]
+    F --> G{"Enough periods<br/>per day?"}
+    G -->|Yes| H["✅ Done"]
+    G -->|No| I["🔄 Phase 6: Relaxation<br/><small>Gradually loosen filters<br/>(+3% flex per step)</small>"]
+    I -->|retry| D
+    I -->|exhausted| J["⚠️ Phase 7: Fallback<br/><small>Reduce minimum duration<br/>(last resort)</small>"]
+    J --> H
 
     style A fill:#e6f7ff,stroke:#00b9e7,stroke-width:2px
-    style G fill:#e6fff5,stroke:#00c853,stroke-width:2px
+    style H fill:#e6fff5,stroke:#00c853,stroke-width:2px
+    style G fill:#fff8e1,stroke:#ffc107,stroke-width:2px
+```
+
+**Why this order?**
+
+| Phase | What it does | Why it's needed |
+|-------|-------------|-----------------|
+| **1. Spike Smoothing** | Replaces isolated price spikes with trend predictions | A single 15-minute spike would split a 4-hour cheap period into two short fragments |
+| **2. Day Patterns** | Classifies each day's price shape (valley, peak, duck curve, flat…) | Enables geometric flex bonuses — periods in a detected valley/peak zone get extra margin |
+| **3. Period Detection** | Scans all intervals through flex, distance, and level filters | Core logic: finds contiguous blocks where prices are close to the daily min (or max) |
+| **4. Duration & Quality** | Removes periods shorter than the configured minimum, calculates statistics | A 15-minute "period" isn't useful for running an appliance |
+| **5. Cross-Day Handling** | Extends late-evening periods across midnight, filters day-boundary artifacts | Without this, a cheap period at 23:00-00:00 can't continue into 00:00-02:00 even if prices stay low |
+| **6. Relaxation** | Loosens filters step by step (+3% flex) until enough periods are found | On some days, the configured flex isn't enough to find 2 periods — relaxation adapts automatically |
+| **7. Fallback** | Progressively reduces minimum duration (60→45→30 min) | Last resort for days where even full relaxation finds zero periods |
+
+The following sections explain each phase in detail.
+
+### Phase 1: Spike Smoothing (Preprocessing)
+
+Before any period detection begins, isolated price spikes are detected and smoothed. This prevents a single expensive 15-minute interval from splitting what should be one long cheap period into two short fragments.
+
+<details>
+<summary>Show example: Automatic Price Spike Smoothing</summary>
+
+```
+Original prices: 18, 19, 35, 20, 19 ct   ← 35 ct is an isolated outlier
+Smoothed:        18, 19, 19, 20, 19 ct   ← Spike replaced with trend prediction
+
+Result: Continuous period 00:00-01:15 instead of split periods
+```
+
+</details>
+
+**How it works:** The algorithm looks at 3 intervals before and after each price point, calculates an expected trend, and flags prices that deviate significantly. On flat days (low price variation), smoothing is more conservative; on volatile days, it's more aggressive. Daily minimum and maximum prices are never smoothed — they serve as reference points for period detection.
+
+**Important:**
+-   Original prices are always preserved in all statistics (min/max/avg show real values)
+-   Smoothing only affects which intervals are combined into periods
+-   The attribute `period_interval_smoothed_count` shows how many intervals were smoothed
+
+### Phase 2: Day Pattern Detection
+
+The integration classifies each day's price shape to optimize period detection for different market conditions:
+
+| Pattern | Shape | Description |
+|---------|-------|-------------|
+| `valley` | ∪ | Single cheap window (e.g., solar midday dip) |
+| `peak` | ∩ | Single expensive window (e.g., evening demand) |
+| `double_dip` | W | Two cheap windows (e.g., cheap morning + cheap midday) |
+| `duck_curve` | M | Two expensive peaks (e.g., morning + evening demand, named after the energy industry's [duck curve](https://en.wikipedia.org/wiki/Duck_curve)) |
+| `flat` | ─ | Little variation throughout the day |
+| `rising` | / | Prices climb steadily |
+| `falling` | \ | Prices drop steadily |
+
+**Why this matters:** On a detected valley day, the period detection gets a geometric flex bonus for intervals within the valley zone — making it easier to capture the full cheap window even if some intervals are slightly above the normal flex threshold. On flat days, the target number of periods is automatically reduced to 1 (see [Flat Day Detection](#fewer-periods-than-configured)).
+
+Day patterns are also exposed as dedicated sensors — see [Price Phases & Day Pattern](./sensors-price-phases.md) for details.
+
+### Phase 3: Period Detection (Core Logic)
+
+This is the heart of the algorithm. Each smoothed interval is tested against three filters. Only consecutive intervals that pass **all three** form a period:
+
+```mermaid
+flowchart TD
+    A["Each 15-min interval"] --> B{"① Flexibility<br/><small>Close to daily MIN/MAX?</small>"}
+    B -->|Yes| C{"② Distance<br/><small>Meaningfully different<br/>from daily average?</small>"}
+    B -->|No| X1["❌ excluded"]
+    C -->|Yes| D{"③ Level filter<br/><small>(optional, user-configured)</small>"}
+    C -->|No| X2["❌ excluded"]
+    D -->|Pass| E["✅ Add to current period"]
+    D -->|Fail| X3["❌ filtered"]
+
+    style A fill:#e6f7ff,stroke:#00b9e7,stroke-width:2px
+    style E fill:#e6fff5,stroke:#00c853,stroke-width:2px
     style X1 fill:#fff0f0,stroke:#ff5252,stroke-width:1px,color:#999
     style X2 fill:#fff0f0,stroke:#ff5252,stroke-width:1px,color:#999
     style X3 fill:#fff0f0,stroke:#ff5252,stroke-width:1px,color:#999
-    style X4 fill:#fff0f0,stroke:#ff5252,stroke-width:1px,color:#999
 ```
 
-Think of it like this:
-
-1. **Find potential windows** - Times close to the daily MIN (Best Price) or MAX (Peak Price)
-2. **Filter by quality** - Ensure they're meaningfully different from average
-3. **Check duration** - Must be long enough to be useful
-4. **Apply preferences** - Optional: only show stable prices, avoid mediocre times
-
-### Step-by-Step Process
-
-#### 1. Define the Search Range (Flexibility)
+#### ① Flexibility (Search Range)
 
 **Best Price:** How much MORE than the daily minimum can a price be?
 
@@ -145,9 +227,9 @@ Flexibility: -15% (default)
 
 </details>
 
-**Why flexibility?** Prices rarely stay at exactly MIN/MAX. Flexibility lets you capture realistic time windows.
+**Why flexibility?** Prices rarely stay at exactly MIN/MAX. Flexibility lets you capture realistic time windows. At high flex values (>20%), the distance filter is automatically scaled down to prevent conflicting constraints.
 
-#### 2. Ensure Quality (Distance from Average)
+#### ② Distance from Average (Quality Gate)
 
 Periods must be meaningfully different from the daily average:
 
@@ -166,9 +248,13 @@ Peak Price: Must be ≥ 31.5 ct/kWh (30 + 5%)
 
 **Why?** This prevents marking mediocre times as "best" just because they're slightly below average.
 
-#### 3. Check Duration
+#### ③ Level Filter (Optional)
 
-Periods must be long enough to be practical:
+You can optionally require intervals to have a specific Tibber price level (e.g., `CHEAP` or `EXPENSIVE`). With gap tolerance, a few "mediocre" intervals within an otherwise good period are allowed — preventing unnecessary splits.
+
+### Phase 4: Duration & Quality
+
+Consecutive intervals that passed all three filters are grouped into candidate periods. Short candidates are discarded:
 
 <details>
 <summary>Show example: Minimum Period Duration</summary>
@@ -176,62 +262,99 @@ Periods must be long enough to be practical:
 ```
 Default: 60 minutes minimum
 
-45-minute period → Discarded
+45-minute period → Discarded (too short to be useful)
 90-minute period → Kept ✓
 ```
 
 </details>
 
-#### 4. Apply Optional Filters
+For each surviving period, the integration calculates statistics: mean, median, min, max, price spread, coefficient of variation, and volatility classification. Periods with very heterogeneous prices (CV > 25%) are flagged as low quality.
 
-You can optionally require:
+### Phase 5: Cross-Day Handling
 
--   **Absolute quality** (level filter) - "Only show if prices are CHEAP/EXPENSIVE (not just below/above average)"
+Since the integration processes yesterday + today + tomorrow together, periods can naturally span midnight. This phase ensures correct behavior at day boundaries:
 
-#### 5. Automatic Price Spike Smoothing
+**Cross-midnight extension:**
+Late-evening periods (starting after 20:00) are extended into the next day if prices remain favorable. Three safety limits apply:
+- Maximum 4 hours of extension
+- Extension can't exceed 2× the original period length
+- Extension stops if prices deviate more than 15% from the original period's mean
 
-Isolated price spikes are automatically detected and smoothed to prevent unnecessary period fragmentation:
+**Day-boundary artifact filtering:**
+Each day has its own min/max/avg — so the same absolute price can qualify as "cheap" on one day but not the next. The integration catches misleading artifacts with several automatic checks:
+- **Peak periods** near midnight must qualify against **both** adjacent days' statistics
+- **Peak periods** must exceed the daily average by at least 10% (overnight periods use the higher average of both days)
+- Early-morning "peaks" that are significantly weaker than yesterday's late-evening peak are recognized as artifacts and filtered out
 
-<details>
-<summary>Show example: Automatic Price Spike Smoothing</summary>
+These checks run automatically — no configuration needed.
 
+### Phase 6: Relaxation (Adaptive)
+
+If the baseline detection didn't find enough periods per day, the integration gradually loosens filters:
+
+```mermaid
+flowchart LR
+    A["Baseline:<br/>flex 15%"] -->|"not enough"| B["Step 1:<br/>flex 18%"]
+    B -->|"not enough"| C["Step 2:<br/>flex 21%"]
+    C -->|"…"| D["Step N:<br/>flex up to 50%"]
+    D -->|"still not enough"| E["Level filter<br/>removed"]
+
+    style A fill:#e6f7ff,stroke:#00b9e7
+    style E fill:#fff8e1,stroke:#ffc107
 ```
-Original prices: 18, 19, 35, 20, 19 ct   ← 35 ct is an isolated outlier
-Smoothed:        18, 19, 19, 20, 19 ct   ← Spike replaced with trend prediction
 
-Result: Continuous period 00:00-01:15 instead of split periods
-```
+- Each step increases flex by 3% and retries period detection
+- Each day is evaluated independently — a day that already has enough periods is skipped
+- On **flat days** (price variation < 10%), the target is automatically reduced to 1 period
+- Hard limit: flex never exceeds 50%
+- The `relaxation_active` and `relaxation_level` attributes show if and how relaxation was applied
 
-</details>
+**See [Relaxation Guide](period-relaxation.md)** for a deep dive.
 
-**Important:**
--   Original prices are always preserved (min/max/avg show real values)
--   Smoothing only affects which intervals are combined into periods
--   The attribute `period_interval_smoothed_count` shows if smoothing was active
+### Phase 7: Fallback (Last Resort)
+
+If all relaxation steps are exhausted and some days still have **zero** periods:
+
+- Minimum duration is progressively reduced: 60 → 45 → 30 minutes
+- All other filters are maximally relaxed (50% flex, no distance or level filter)
+- Periods found this way are marked with `duration_fallback_active: true`
+
+This ensures that every day has at least one period, even under extreme market conditions.
 
 ### Visual Example
 
 **Timeline for a typical day:**
 
-<details>
-<summary>Show example: Timeline</summary>
-
-```
-Hour:  00  01  02  03  04  05  06  07  08  09  10  11  12  13  14  15  16  17  18  19  20  21  22  23
-Price: 18  19  20  28  29  30  35  34  33  32  30  28  25  24  26  28  30  32  31  22  21  20  19  18
-
 Daily MIN: 18 ct | Daily MAX: 35 ct | Daily AVG: 26 ct
 
-Best Price (15% flex = ≤20.7 ct):
-       ████████                                                                        ████████████████
-       00:00-03:00 (3h)                                                               19:00-24:00 (5h)
+| Hour | Price | Best Price threshold<br/>≤ 20.7 ct (15% flex) | Peak Price threshold<br/>≥ 29.75 ct (15% flex) |
+|------|------:|:---:|:---:|
+| 00:00 | **18 ct** | ✅ Best Price | |
+| 01:00 | **19 ct** | ✅ Best Price | |
+| 02:00 | **20 ct** | ✅ Best Price | |
+| 03:00 | 28 ct | | |
+| 04:00 | 29 ct | | |
+| 05:00 | 29 ct | | |
+| 06:00 | **35 ct** | | 🔴 Peak Price |
+| 07:00 | **34 ct** | | 🔴 Peak Price |
+| 08:00 | **33 ct** | | 🔴 Peak Price |
+| 09:00 | **32 ct** | | 🔴 Peak Price |
+| 10:00 | **30 ct** | | 🔴 Peak Price |
+| 11:00 | 28 ct | | |
+| 12:00 | 25 ct | | |
+| 13:00 | 24 ct | | |
+| 14:00 | 26 ct | | |
+| 15:00 | 28 ct | | |
+| 16:00 | 30 ct | | 🔴 Peak Price |
+| 17:00 | 32 ct | | 🔴 Peak Price |
+| 18:00 | 31 ct | | 🔴 Peak Price |
+| 19:00 | **22 ct** | | |
+| 20:00 | **20 ct** | ✅ Best Price | |
+| 21:00 | **19 ct** | ✅ Best Price | |
+| 22:00 | **19 ct** | ✅ Best Price | |
+| 23:00 | **18 ct** | ✅ Best Price | |
 
-Peak Price (-15% flex = ≥29.75 ct):
-                              ████████████████████████
-                              06:00-11:00 (5h)
-```
-
-</details>
+**Result:** Two Best Price periods (00:00–03:00 and 19:00–00:00) and two Peak Price periods (06:00–11:00 and 16:00–19:00).
 
 ---
 
@@ -446,7 +569,7 @@ best_price_max_level: cheap  # Only show objectively CHEAP periods
 
 ## Understanding Relaxation
 
-Sometimes strict filters find too few periods. **Relaxation automatically loosens filters** until a minimum number of periods is found — enabled by default.
+As described in [Phase 6](#phase-6-relaxation-adaptive), relaxation automatically loosens filters until a minimum number of periods is found — enabled by default.
 
 **Key benefits:**
 - Each day gets exactly the flexibility it needs (per-day independence)
@@ -512,19 +635,25 @@ automation:
 
 ### Fewer Periods Than Configured
 
-**Symptom:** You configured `min_periods_best: 2` but the sensor shows fewer periods on some days, and the attributes contain `flat_days_detected: 1` or `relaxation_incomplete: true`.
+**Symptom:** You configured `min_periods_best: 2` or `min_periods_peak: 2` but the sensor shows fewer periods on some days, and the attributes contain `flat_days_detected: 1` or `relaxation_incomplete: true`.
 
 **If `flat_days_detected` is present:**
 
-This is **expected behavior** on days with very uniform electricity prices. When prices vary by less than ~10% across the day (e.g. on sunny spring days with high solar generation), there is no meaningful second "cheap window" – all hours are equally cheap. The integration automatically reduces the target to 1 period for that day.
+This is **expected behavior** on days with very uniform electricity prices. When prices vary by less than ~10% across the day (e.g. on sunny spring days with high solar generation), there is no meaningful second "cheap window" or second "expensive peak" – all hours are equally priced. The integration automatically reduces the target to 1 period for that day. This applies to both Best Price and Peak Price periods.
 
 <details>
 <summary>Show YAML: Flat Day Detection</summary>
 
 ```yaml
+# Best Price example:
 min_periods_configured: 2
 period_count_today: 1
 flat_days_detected: 1    # Uniform prices today → 1 period is the right answer
+
+# Peak Price example:
+min_periods_configured: 2
+period_count_today: 1
+flat_days_detected: 1    # No distinct peaks today → 1 period is the right answer
 ```
 
 </details>
@@ -732,23 +861,11 @@ This is most common on very flat days (see above) or with very strict filter set
 
 ### Midnight Price Classification Changes
 
-**Symptom:** A Best Price period at 23:45 suddenly changes to Peak Price at 00:00 (or vice versa), even though the absolute price barely changed.
+**Symptom:** A Best Price period at 23:45 changes classification at 00:00 (or vice versa), even though the absolute price barely changed.
 
 **Why This Happens:**
 
-This is **mathematically correct behavior** caused by how electricity prices are set in the day-ahead market:
-
-**Market Timing:**
-- The EPEX SPOT Day-Ahead auction closes at **12:00 CET** each day
-- **All prices** for the next day (00:00-23:45) are set at this moment
-- Late-day intervals (23:45) are priced **~36 hours before delivery**
-- Early-day intervals (00:00) are priced **~12 hours before delivery**
-
-**Why Prices Jump at Midnight:**
-1. **Forecast Uncertainty:** Weather, demand, and renewable generation forecasts are more uncertain 36 hours ahead than 12 hours ahead
-2. **Risk Buffer:** Late-day prices include a risk premium for this uncertainty
-3. **Independent Days:** Each day has its own min/max/avg calculated from its 96 intervals
-4. **Relative Classification:** Periods are classified based on their **position within the day's price range**, not absolute prices
+Each day has its own price statistics (min, max, avg) calculated independently from its 96 intervals. Periods are classified based on their **position within the day's price range**, not absolute prices. This means the same absolute price can be "cheap" on one day and "average" on the next.
 
 **Example:**
 
@@ -764,50 +881,33 @@ Daily average: 20 ct/kWh
 # Day 2 (low volatility, narrow range)
 Price range: 17-21 ct/kWh (4 ct span)
 Daily average: 19 ct/kWh
-00:00: 18.6 ct/kWh → 2.1% below average → PEAK PRICE ❌
+00:00: 18.6 ct/kWh → 2.1% below average → NORMAL ❌
 
-# Observation: Absolute price barely changed (18.5 → 18.6 ct)
-# But relative position changed dramatically:
-# - Day 1: Near the bottom of the range
-# - Day 2: Near the middle/top of the range
+# Absolute price barely changed (18.5 → 18.6 ct)
+# But relative position changed because Day 2 has a different price range
 ```
 
 </details>
 
-**When This Occurs:**
-- **Low-volatility days:** When price span is narrow (< 5 ct/kWh)
-- **Stable weather:** Similar conditions across multiple days
-- **Market transitions:** Switching between high/low demand seasons
+**How the Integration Handles This:**
 
-**How to Detect:**
+The [cross-day handling](#phase-5-cross-day-handling) automatically prevents misleading period boundaries at midnight:
 
-Check the volatility sensors to understand if a period flip is meaningful:
+- **Peak periods** near midnight are validated against **both** adjacent days' statistics
+- **Peak periods** must exceed the daily average by at least 10%, with overnight periods checked against the higher average of both days
+- **Cross-day extensions** are capped in length and stop when prices deviate significantly
 
-<details>
-<summary>Show YAML: Daily Volatility Check</summary>
+These checks run automatically and require no configuration. They ensure that midnight period boundaries reflect genuine price differences, not just day-boundary artifacts.
 
-```yaml
-# Check daily volatility (available in integration)
-sensor.<home_name>_today_s_price_volatility: 8.2%     # Low volatility
-sensor.<home_name>_tomorrow_s_price_volatility: 7.9%  # Also low
+**Additional Strategies for Automations:**
 
-# Low volatility (< 15%) means:
-# - Small absolute price differences between periods
-# - Classification changes may not be economically significant
-# - Consider ignoring period classification on such days
-```
-
-</details>
-
-**Handling in Automations:**
-
-You can make your automations volatility-aware:
+For extra robustness, you can also make your automations aware of the price environment:
 
 <details>
 <summary>Show YAML: Volatility-Aware Automation</summary>
 
 ```yaml
-# Option 1: Only act on high-volatility days
+# Option 1: Only act on high-volatility days (meaningful price differences)
 automation:
   - alias: "Dishwasher - Best Price (High Volatility Only)"
     trigger:
@@ -822,7 +922,7 @@ automation:
       - service: switch.turn_on
         entity_id: switch.dishwasher
 
-# Option 2: Check absolute price, not just classification
+# Option 2: Use absolute price threshold instead of classification
 automation:
   - alias: "Heat Water - Cheap Enough"
     trigger:
@@ -836,49 +936,14 @@ automation:
     action:
       - service: switch.turn_on
         entity_id: switch.water_heater
-
-# Option 3: Use per-period day volatility (available on period sensors)
-automation:
-  - alias: "EV Charging - Volatility-Aware"
-    trigger:
-      - platform: state
-        entity_id: binary_sensor.<home_name>_best_price_period
-        to: "on"
-    condition:
-      # Check if the period's day has meaningful volatility
-      - condition: template
-        value_template: >
-          {{ state_attr('binary_sensor.<home_name>_best_price_period', 'day_volatility_%') | float(0) > 15 }}
-    action:
-      - service: switch.turn_on
-        entity_id: switch.ev_charger
 ```
 
 </details>
-
-**Available Per-Period Attributes:**
-
-Each period sensor exposes day volatility and price statistics:
-
-<details>
-<summary>Show YAML: Per-Period Volatility Attributes</summary>
-
-```yaml
-binary_sensor.<home_name>_best_price_period:
-  day_volatility_%: 8.2         # Volatility % of the period's day
-  day_price_min: 1800.0          # Minimum price of the day (ct/kWh)
-  day_price_max: 2200.0          # Maximum price of the day (ct/kWh)
-  day_price_span: 400.0          # Difference (max - min) in ct
-```
-
-</details>
-
-These attributes allow automations to check: "Is the classification meaningful on this particular day?"
 
 **Summary:**
-- ✅ **Expected behavior:** Periods are evaluated per-day, midnight is a natural boundary
-- ✅ **Market reality:** Late-day prices have more uncertainty than early-day prices
-- ✅ **Solution:** Use volatility sensors, absolute price thresholds, or per-period day volatility attributes
+- ✅ **Expected behavior:** Each day has independent price statistics — midnight is a natural boundary
+- ✅ **Automatic handling:** Cross-day quality checks prevent misleading period artifacts
+- ✅ **Extra safety:** Use volatility sensors or absolute price thresholds in automations for additional robustness
 
 ---
 

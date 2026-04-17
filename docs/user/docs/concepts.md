@@ -88,10 +88,12 @@ This helps you understand if current prices are exceptional or typical.
 
 ## V-Shaped and U-Shaped Price Days
 
-Some days show distinctive price curve shapes:
+Some days have a price curve with a clear dip in the middle:
 
 - **V-shaped**: Prices drop sharply, hit a brief minimum, then rise sharply again (common during short midday solar surplus)
 - **U-shaped**: Prices drop to a low level and stay there for an extended period before rising (common during nighttime or extended low-demand periods)
+
+Both shapes are reported as **`valley`** by the [Day Pattern sensor](sensors-price-phases.md#day-pattern-sensors) — V and U are informal descriptions of the same structural pattern. The width of the cheap window is reflected in the `valley_start` and `valley_end` attributes: a V-shaped day has these close together, a U-shaped day has them far apart.
 
 **Why this matters:** On these days, the Best Price Period may be short (1–2 hours, covering only the absolute minimum), but prices can remain favorable for 4–6 hours. By combining [trend sensors](sensors-trends.md) with [price levels](sensors-ratings-levels.md) in automations, you can ride the full cheap wave instead of only using the detected period.
 

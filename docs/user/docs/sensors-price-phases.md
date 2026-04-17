@@ -65,10 +65,10 @@ These sensors classify the **overall shape** of the day's price curve:
 
 | State | Shape | Description |
 |-------|-------|-------------|
-| `valley` | ∪ | Cheap in the middle of the day (typical summer midday solar effect) |
-| `peak` | ∩ | Expensive in the middle — cheap mornings and evenings |
-| `double_valley` | W | Two cheap windows — classic with cheap morning + cheap midday |
-| `double_peak` | M | Two expensive peaks — common on workdays with morning and evening demand |
+| `valley` | ∪ | Cheap in the middle of the day — covers both **V-shaped** (short, sharp dip) and **U-shaped** (extended cheap plateau) curves. Common during solar midday surplus or low-demand nights. |
+| `peak` | ∩ | Expensive in the middle — cheap mornings and evenings. Covers both sharp Λ-peaks and broad plateau shapes. |
+| `double_dip` | W | Two cheap windows — classic with cheap morning + cheap midday |
+| `duck_curve` | M | Two expensive peaks — common on workdays with morning and evening demand (named after the energy industry's [duck curve](https://en.wikipedia.org/wiki/Duck_curve)) |
 | `flat` | ─ | Little variation throughout the day |
 | `rising` | / | Prices climb steadily through the day |
 | `falling` | \ | Prices drop steadily through the day |
@@ -98,7 +98,7 @@ automation:
     condition:
       - condition: template
         value_template: >
-          {{ states('sensor.<home_name>_day_pattern_tomorrow') in ['valley', 'double_valley'] }}
+          {{ states('sensor.<home_name>_day_pattern_tomorrow') in ['valley', 'double_dip'] }}
       - condition: template
         value_template: >
           {{ is_state('binary_sensor.<home_name>_tomorrow_data_available', 'on') }}

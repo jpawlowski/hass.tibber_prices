@@ -105,8 +105,8 @@ Quick reference for terms used throughout the documentation.
 
 ## V
 
-**V-Shaped Day**
-: Day with a V- or U-shaped price curve where prices drop to very cheap levels for an extended period. The Best Price Period covers only the absolute minimum, but favorable conditions may last much longer. See [V-Shaped Days](concepts.md#v-shaped-and-u-shaped-price-days).
+**V-Shaped Day** (also: U-Shaped Day)
+: Informal term for a day where prices dip to a minimum in the middle and rise again on both sides. Both V-shaped (sharp, brief dip) and U-shaped (broad, extended plateau) days are classified as **`valley`** by the [Day Pattern sensor](sensors-price-phases.md#day-pattern-sensors). The Best Price Period covers only the absolute minimum, but favorable conditions may last much longer. See [V-Shaped Days](concepts.md#v-shaped-and-u-shaped-price-days).
 
 **Volatility**
 : Measure of price stability (LOW, MEDIUM, HIGH). High volatility = large price swings = good for timing optimization.
