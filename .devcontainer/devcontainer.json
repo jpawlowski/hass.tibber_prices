@@ -34,7 +34,8 @@
         "ms-python.vscode-pylance",
         "ms-vscode-remote.remote-containers",
         "redhat.vscode-yaml",
-        "ryanluker.vscode-coverage-gutters"
+        "ryanluker.vscode-coverage-gutters",
+        "MermaidChart.vscode-mermaid-chart"
       ],
       "settings": {
         "editor.tabSize": 4,
