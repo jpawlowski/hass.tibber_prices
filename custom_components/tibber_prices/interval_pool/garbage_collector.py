@@ -93,6 +93,19 @@ class TibberPricesIntervalPoolGarbageCollector:
                 empty_removed,
                 self._home_id,
             )
+        elif dead_count > 0:
+            # _cleanup_dead_intervals compacted group["intervals"] lists in-place,
+            # shifting the positions of surviving intervals. _remove_empty_groups
+            # only rebuilds the index when it removes completely-empty groups.
+            # If no groups became empty, the index still holds stale interval_index
+            # values that now point past the end of the compacted lists, causing
+            # an IndexError in _get_cached_intervals. Rebuild the index here to
+            # keep it consistent with the compacted groups.
+            self._index.rebuild(fetch_groups)
+            _LOGGER_DETAILS.debug(
+                "GC rebuilt index after dead interval cleanup for home %s",
+                self._home_id,
+            )
 
         # Phase 2: Count total intervals after cleanup
         total_intervals = self._cache.count_total_intervals()

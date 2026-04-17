@@ -251,6 +251,70 @@ class TestGarbageCollection:
         assert len(fetch_groups) == 1, "Empty fetch group should be removed"
         assert len(fetch_groups[0]["intervals"]) == 4
 
+    def test_gc_rebuilds_index_after_dead_interval_cleanup_no_empty_groups(
+        self,
+        pool: TibberPricesIntervalPool,
+    ) -> None:
+        """
+        Regression test for Issue #118 (IndexError for brand-new Tibber users).
+
+        Scenario: GC compacts a fetch group in-place (removes dead intervals at the
+        BEGINNING of the list), shifting surviving intervals to lower positions.
+        If no groups become completely empty, _remove_empty_groups does NOT rebuild
+        the index, leaving stale interval_index values that point past the end of
+        the compacted list → IndexError in _get_cached_intervals.
+
+        The fix: after dead interval cleanup without full group removal, explicitly
+        rebuild the index so surviving interval positions match the compacted list.
+        """
+        # Step 1: Add 5 intervals (hours 0-4) → group 0
+        # Index: h0→(0,0), h1→(0,1), h2→(0,2), h3→(0,3), h4→(0,4)
+        initial_intervals = [
+            {
+                "startsAt": datetime(2025, 11, 25, h, 0, 0, tzinfo=UTC).isoformat(),
+                "total": 10.0 + h,
+            }
+            for h in range(5)
+        ]
+        pool._add_intervals(initial_intervals, "2025-11-25T09:00:00+00:00")  # noqa: SLF001
+
+        assert pool._cache.count_total_intervals() == 5  # noqa: SLF001
+        assert pool._index.count() == 5  # noqa: SLF001
+
+        # Step 2: Re-fetch h0, h1 (touch) + add new h5 → group 1
+        # - h0, h1 become dead in group 0 (index moves them to group 1)
+        # - h5 is new → added to group 1
+        # - h2, h3, h4 survive in group 0 at positions 2, 3, 4 (stale after GC)
+        second_fetch = [
+            {
+                "startsAt": datetime(2025, 11, 25, h, 0, 0, tzinfo=UTC).isoformat(),
+                "total": 10.0 + h,
+            }
+            for h in [0, 1, 5]  # touch h0, h1; add new h5
+        ]
+        pool._add_intervals(second_fetch, "2025-11-25T09:15:00+00:00")  # noqa: SLF001
+
+        # GC ran (h5 was new): group 0 compacted from 5 → 3 intervals [h2, h3, h4]
+        # WITHOUT FIX: index has h2→(0,2), h3→(0,3), h4→(0,4) but group 0 only has 3 items
+        # WITH FIX:    index rebuilt → h2→(0,0), h3→(0,1), h4→(0,2)
+        assert pool._cache.count_total_intervals() == 6  # h0,h1,h5 in group1 + h2,h3,h4 in group0  # noqa: SLF001
+        assert pool._index.count() == 6  # noqa: SLF001
+
+        # Step 3: Read all 6 intervals via the index — must NOT raise IndexError
+        start_iso = datetime(2025, 11, 25, 0, 0, 0, tzinfo=UTC).isoformat()
+        end_iso = datetime(2025, 11, 25, 6, 0, 0, tzinfo=UTC).isoformat()
+
+        # This calls _get_cached_intervals which looks up each timestamp in the index
+        # and accesses the interval by fetch_group_index + interval_index.
+        # Stale interval_index values (pointing past end of compacted list) → IndexError.
+        result = pool._get_cached_intervals(start_iso, end_iso)  # noqa: SLF001
+
+        assert len(result) == 6, f"Expected 6 intervals, got {len(result)}"
+
+        # Verify correct values (spot-check h2, h3, h4 which were in the compacted group)
+        totals = {r["total"] for r in result}
+        assert totals == {10.0, 11.0, 12.0, 13.0, 14.0, 15.0}, f"Unexpected totals: {totals}"
+
 
 class TestSerialization:
     """Test serialization excludes dead intervals."""
