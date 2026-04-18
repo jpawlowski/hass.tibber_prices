@@ -21,6 +21,7 @@ from .types import (
     INDENT_L2,
     LOW_PRICE_QUALITY_BYPASS_THRESHOLD,
     PERIOD_MAX_CV,
+    RELAXATION_FLEX_INCREMENT,
     TibberPricesPeriodConfig,
 )
 
@@ -284,6 +285,7 @@ def _try_min_duration_fallback(
     existing_periods: list[dict],
     prices_by_day: dict[date, list[dict]],
     time: TibberPricesTimeService,
+    max_relaxation_attempts: int = 0,
     day_patterns_by_date: dict | None = None,
 ) -> tuple[dict[str, Any] | None, dict[str, Any]]:
     """
@@ -351,19 +353,32 @@ def _try_min_duration_fallback(
             current_min_duration,
         )
 
-        # Create modified config with shorter min_period_length
-        # Use maxed-out flex (50%) since we're in fallback mode
+        # Create modified config with shorter min_period_length.
+        # IMPORTANT: We deliberately do NOT max out flex/min_distance here.
+        # Going to MAX_FLEX_HARD_LIMIT (50%) and disabling min_distance + level filter
+        # made every interval qualify on flat-price days, producing phantom periods that
+        # don't represent any real "best/peak" structure. Instead we keep the relaxation's
+        # final flex (the highest the user accepted via max_relaxation_attempts) and
+        # only:
+        #   - drop the level filter (it was already dropped during the last relaxation step)
+        #   - halve min_distance_from_avg (instead of zeroing it) so genuinely flat days
+        #     still surface no period rather than a misleading one.
+        # The shorter min_period_length is what actually unlocks new candidates.
+        relaxation_final_flex = min(
+            abs(config.flex) + max(1, max_relaxation_attempts) * RELAXATION_FLEX_INCREMENT,
+            MAX_FLEX_HARD_LIMIT,
+        )
         fallback_config = TibberPricesPeriodConfig(
             reverse_sort=config.reverse_sort,
-            flex=MAX_FLEX_HARD_LIMIT,  # Max flex
-            min_distance_from_avg=0,  # Disable min_distance in fallback
+            flex=relaxation_final_flex,
+            min_distance_from_avg=config.min_distance_from_avg * 0.5,
             min_period_length=current_min_duration,
             threshold_low=config.threshold_low,
             threshold_high=config.threshold_high,
             threshold_volatility_moderate=config.threshold_volatility_moderate,
             threshold_volatility_high=config.threshold_volatility_high,
             threshold_volatility_very_high=config.threshold_volatility_very_high,
-            level_filter=None,  # Disable level filter
+            level_filter="any",  # Already effectively any after relaxation; keeps gap logic intact
             gap_count=config.gap_count,
             extend_to_extreme=config.extend_to_extreme,
             max_extension_intervals=config.max_extension_intervals,
@@ -548,16 +563,21 @@ def calculate_periods_with_relaxation(
     time_range: tuple[datetime, datetime] | None = None,
 ) -> dict[str, Any]:
     """
-    Calculate periods with optional per-day filter relaxation.
+    Calculate periods with optional global filter relaxation and per-day target tracking.
 
-    NEW: Each day gets its own independent relaxation loop. Today can be in Phase 1
-    while tomorrow is in Phase 3, ensuring each day finds enough periods.
+    Strategy: a single global relaxation loop iterates flex levels (3% steps from
+    the configured base flex up to MAX_FLEX_HARD_LIMIT). After every step we re-run
+    period detection across all available days and check, per day, how many quality
+    periods (CV ≤ PERIOD_MAX_CV) have accumulated. Days that already meet the target
+    (`min_periods`) are not re-processed; the loop exits as soon as **all** days meet
+    their target. Days with very flat prices automatically need only 1 period
+    (see `_compute_day_effective_min`).
 
-    If min_periods is not reached with normal filters, this function gradually
-    relaxes filters in multiple phases FOR EACH DAY SEPARATELY:
+    If after all flex levels some days still have ZERO periods, a last-resort
+    `min_period_length` fallback is attempted (see `_try_min_duration_fallback`).
 
     Phase 1: Increase flex threshold step-by-step (up to max_relaxation_attempts)
-    Phase 2: Disable level filter (set to "any")
+    Phase 2: Disable level filter (set to "any") in combination with each flex step
 
     Args:
         all_prices: All price data points
@@ -818,6 +838,7 @@ def calculate_periods_with_relaxation(
                 existing_periods=all_periods,
                 prices_by_day=prices_by_day,
                 time=time,
+                max_relaxation_attempts=max_relaxation_attempts,
                 day_patterns_by_date=day_patterns_by_date,
             )
 
@@ -915,7 +936,7 @@ def relax_all_prices(
     # Import here to avoid circular dependency
     from .core import calculate_periods  # noqa: PLC0415
 
-    flex_increment = 0.03  # 3% per step (hard-coded for reliability)
+    flex_increment = RELAXATION_FLEX_INCREMENT  # 3% per step (see types.py for rationale)
     base_flex = abs(config.flex)
     original_level_filter = config.level_filter
     existing_periods = list(baseline_periods)  # Start with baseline

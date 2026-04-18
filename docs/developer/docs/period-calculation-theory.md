@@ -501,6 +501,42 @@ All three thresholds are internal correctness guards, not user preferences:
 
 ---
 
+## Cross-Day Boundary Validation
+
+### Why Boundary Validation Exists
+
+Each calendar day has its own min, max, and average price. An interval near midnight is evaluated against the reference of the day it belongs to (`its own day` rule, see `period_building.py`). This is fair across day boundaries because price uncertainty differs between the last quarter of one day and the first quarter of the next. However, it introduces an artifact:
+
+- An interval can pass the flex/distance test against its own day **only because** the neighbouring day happens to have a more extreme reference (lower min for "best", higher max for "peak"). The interval is not actually a meaningful extreme — it is just sitting on a relative slope between two days.
+
+### Symmetric Dual-Day Check (Best _and_ Peak)
+
+Implementation: `period_building.py` → inside `build_periods()` interval loop.
+
+Intervals starting in `[00:00, CROSS_DAY_OVERNIGHT_VALIDATION_HOUR)` (default 06:00) must additionally pass the previous day's flex test:
+
+```python
+if in_flex and starts_at.hour < CROSS_DAY_OVERNIGHT_VALIDATION_HOUR:
+    prev_criteria = criteria_by_day.get(date_key - timedelta(days=1))
+    if prev_criteria is not None:
+        in_prev_flex, _ = check_interval_criteria(price_for_criteria, prev_criteria)
+        if not in_prev_flex:
+            in_flex = False  # boundary artifact, drop it
+```
+
+The check applies to **both** directions:
+
+- **Peak example:** Tomorrow's max=35 ct, today's max=39 ct, flex=15% → 30 ct passes against tomorrow (≤35 ct) but not against today (≤33.15 ct). It is dropped.
+- **Best example:** Today's min=5 ct, yesterday's min=4 ct, flex=50% → 7 ct passes against today (≤7.5 ct) but not against yesterday (≤6 ct). It is dropped.
+
+Without the symmetric check, both directions produced "false extremes" purely from inter-day reference shifts. The check adds at most one extra criteria evaluation per qualifying interval and only for the first ~6 hours of each day.
+
+### Hour Cutoff Choice
+
+`CROSS_DAY_OVERNIGHT_VALIDATION_HOUR = 6` (in `types.py`) covers the typical overnight low/high window. Beyond that, intra-day price dynamics dominate and the boundary artifact disappears naturally.
+
+---
+
 ## Relaxation Strategy
 
 ### Purpose
@@ -607,6 +643,44 @@ Day 2025-11-19:
 2. Flex=18% + level=cheap: Found 1 period
 3. Flex=18% + level=any: Found 2 periods → SUCCESS (stop)
 ```
+
+---
+
+## Last-Resort Min-Duration Fallback
+
+### When It Triggers
+
+After every flex level has been tried during relaxation, some days may still have **zero** periods (not just below target). For those days only, `_try_min_duration_fallback()` (`relaxation.py`) progressively shortens `min_period_length`:
+
+```text
+60 min → 45 min → 30 min   (MIN_DURATION_FALLBACK_MINIMUM)
+```
+
+A shorter minimum lets a 2-interval qualifying window (30 min) become a real period instead of being discarded.
+
+### What Stays Strict
+
+The fallback intentionally does **not** maximise every other knob. Earlier versions disabled the level filter, set `min_distance_from_avg = 0` and pinned flex at `MAX_FLEX_HARD_LIMIT (50%)`. The combination accepted essentially any interval and produced phantom periods on flat-price days where no real "best" or "peak" structure exists.
+
+The current behaviour is:
+
+| Knob | Fallback value | Why |
+|------|---------------|-----|
+| `flex` | `min(base_flex + max_relaxation_attempts × RELAXATION_FLEX_INCREMENT, MAX_FLEX_HARD_LIMIT)` | Same flex the user implicitly accepted via the relaxation cap |
+| `min_distance_from_avg` | `config.min_distance_from_avg × 0.5` | Halved, not zeroed — flat days still produce no period |
+| `level_filter` | `"any"` | Already effectively any after the last relaxation step |
+| `min_period_length` | progressively shortened | The actual lever that unlocks new candidates |
+
+### Marker Attributes
+
+Periods produced by the fallback get:
+
+- `duration_fallback_active: true`
+- `duration_fallback_min_length: <minutes>`
+- `relaxation_active: true`
+- `relaxation_level: "duration_fallback=<n>min"`
+
+Downstream consumers (binary sensors, diagnostics) can detect these and surface a less confident UI state if desired.
 
 ---
 
@@ -1358,4 +1432,5 @@ Low volatility (< 15%) means classification changes are less economically signif
 
 ## Changelog
 
+- **2026-04-17**: Documented symmetric cross-day boundary validation (best _and_ peak), smarter min-duration fallback (no longer maxes out flex/min_distance), and the new `RELAXATION_FLEX_INCREMENT` constant. Recorded that period merging now recombines `price_min`/`price_max`/`price_spread`/`price_mean` (weighted by interval count) instead of inheriting only from the older period.
 - **2025-11-19**: Initial documentation of Flex/Distance interaction and Relaxation strategy fixes

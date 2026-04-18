@@ -89,6 +89,20 @@ def merge_adjacent_periods(period1: dict, period2: dict) -> dict:
     The newer period's relaxation attributes override the older period's.
     Takes the earliest start time and latest end time.
 
+    Price statistics are recombined from both periods so the merged period
+    reflects the actual span (rather than only period1's stats):
+    - price_min: min(period1.price_min, period2.price_min)
+    - price_max: max(period1.price_max, period2.price_max)
+    - price_spread: max - min (recomputed)
+    - price_mean: weighted by period_interval_count when available, else
+      weighted by duration_minutes (kept simple - exact mean would require
+      raw interval prices that aren't carried in the period dict).
+
+    Note: price_median and price_coefficient_variation_% are intentionally NOT
+    recomputed because they cannot be derived from summary stats. They retain
+    period1's values; downstream consumers must treat them as approximate for
+    merged periods (the `merged_from` marker indicates this).
+
     Relaxation attributes from the newer period (period2) override those from period1:
     - relaxation_active
     - relaxation_level
@@ -102,7 +116,8 @@ def merge_adjacent_periods(period1: dict, period2: dict) -> dict:
         period2: Second period (newer relaxed period with higher flex)
 
     Returns:
-        Merged period dict with combined time span and newer period's attributes
+        Merged period dict with combined time span, recomputed price extremes,
+        and the newer period's relaxation attributes.
 
     """
     # Take earliest start and latest end
@@ -110,13 +125,46 @@ def merge_adjacent_periods(period1: dict, period2: dict) -> dict:
     merged_end = max(period1["end"], period2["end"])
     merged_duration = int((merged_end - merged_start).total_seconds() / 60)
 
-    # Start with period1 as base
+    # Start with period1 as base (keeps period_position, period_count_*, ratings, etc.)
     merged = period1.copy()
 
     # Update time boundaries
     merged["start"] = merged_start
     merged["end"] = merged_end
     merged["duration_minutes"] = merged_duration
+
+    # Recombine price extremes from both periods
+    p1_min = period1.get("price_min")
+    p2_min = period2.get("price_min")
+    p1_max = period1.get("price_max")
+    p2_max = period2.get("price_max")
+
+    if p1_min is not None and p2_min is not None:
+        merged["price_min"] = round(min(float(p1_min), float(p2_min)), 4)
+    if p1_max is not None and p2_max is not None:
+        merged["price_max"] = round(max(float(p1_max), float(p2_max)), 4)
+    if merged.get("price_min") is not None and merged.get("price_max") is not None:
+        merged["price_spread"] = round(float(merged["price_max"]) - float(merged["price_min"]), 4)
+
+    # Weighted mean: prefer interval count, fall back to duration
+    p1_mean = period1.get("price_mean")
+    p2_mean = period2.get("price_mean")
+    if p1_mean is not None and p2_mean is not None:
+        p1_weight = period1.get("period_interval_count") or period1.get("duration_minutes") or 1
+        p2_weight = period2.get("period_interval_count") or period2.get("duration_minutes") or 1
+        total_weight = p1_weight + p2_weight
+        if total_weight > 0:
+            merged["price_mean"] = round(
+                (float(p1_mean) * p1_weight + float(p2_mean) * p2_weight) / total_weight,
+                4,
+            )
+
+    # Combine interval count if both have it (overlaps will overcount slightly,
+    # which is acceptable for the weighted-mean use case above)
+    p1_iv = period1.get("period_interval_count")
+    p2_iv = period2.get("period_interval_count")
+    if p1_iv is not None and p2_iv is not None:
+        merged["period_interval_count"] = int(p1_iv) + int(p2_iv)
 
     # Override with period2's relaxation attributes (newer/higher flex wins)
     relaxation_attrs = [
@@ -132,7 +180,8 @@ def merge_adjacent_periods(period1: dict, period2: dict) -> dict:
         if attr in period2:
             merged[attr] = period2[attr]
 
-    # Mark as merged (for debugging)
+    # Mark as merged (for debugging) - downstream consumers can detect that
+    # price_median / price_coefficient_variation_% are approximate.
     merged["merged_from"] = {
         "period1_start": period1["start"].isoformat(),
         "period1_end": period1["end"].isoformat(),
@@ -141,7 +190,7 @@ def merge_adjacent_periods(period1: dict, period2: dict) -> dict:
     }
 
     _LOGGER_DETAILS.debug(
-        "%sMerged periods: %s-%s + %s-%s → %s-%s (duration: %d min)",
+        "%sMerged periods: %s-%s + %s-%s → %s-%s (duration: %d min, mean: %s)",
         INDENT_L2,
         period1["start"].strftime("%H:%M"),
         period1["end"].strftime("%H:%M"),
@@ -150,6 +199,7 @@ def merge_adjacent_periods(period1: dict, period2: dict) -> dict:
         merged_start.strftime("%H:%M"),
         merged_end.strftime("%H:%M"),
         merged_duration,
+        merged.get("price_mean"),
     )
 
     return merged

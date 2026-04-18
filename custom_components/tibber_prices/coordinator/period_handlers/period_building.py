@@ -50,6 +50,22 @@ def calculate_reference_prices(intervals_by_day: dict[date, list[dict]], *, reve
     return ref_prices
 
 
+def _trim_trailing_gaps(period: list[dict]) -> list[dict]:
+    """Remove trailing gap-tolerance intervals from a period.
+
+    Gap-tolerance intervals at the trailing edge of a period represent
+    the transition out of the period's price level (e.g., the first
+    NORMAL interval after a sequence of EXPENSIVE ones).  Keeping them
+    shifts the reported period end by up to gap_count intervals.
+    Interior gaps (surrounded by qualifying intervals on both sides)
+    are kept because they represent brief dips within an otherwise
+    continuous period.
+    """
+    while period and period[-1].get("is_level_gap", False):
+        period = period[:-1]
+    return period
+
+
 def build_periods(
     all_prices: list[dict],
     price_context: dict[str, Any],
@@ -171,11 +187,19 @@ def build_periods(
         effective_criteria = criteria._replace(flex=criteria.flex + geo_bonus) if geo_bonus > 0 else criteria
         in_flex, meets_min_distance = check_interval_criteria(price_for_criteria, effective_criteria)
 
-        # Cross-day boundary validation for peak periods:
+        # Cross-day boundary validation (symmetric for best AND peak periods):
         # Overnight intervals (00:00-05:59) must ALSO qualify against the previous
-        # day's reference price. Without this, prices like 30ct become "peak" against
-        # tomorrow's lower max (35ct) but weren't peak against today's higher max (39ct).
-        if reverse_sort and in_flex and starts_at.hour < CROSS_DAY_OVERNIGHT_VALIDATION_HOUR:
+        # day's reference price. This prevents day-boundary artifacts in BOTH directions:
+        #
+        # PEAK example: A 30ct interval becomes "peak" against tomorrow's lower max (35ct)
+        #   but wasn't peak against today's higher max (39ct).
+        # BEST example: An 8ct interval becomes "best" against today's lower min (5ct, flex
+        #   allows ≤7.5ct) but actually a 7ct interval qualifying today wouldn't have
+        #   qualified yesterday when min was 4ct (flex allows ≤6ct).
+        #
+        # In both cases the apparent "extreme" is just a relative shift between adjacent
+        # days, not a genuine outlier worth reporting.
+        if in_flex and starts_at.hour < CROSS_DAY_OVERNIGHT_VALIDATION_HOUR:
             prev_day = date_key - timedelta(days=1)
             prev_criteria = criteria_by_day.get(prev_day)
             if prev_criteria is not None:
@@ -227,14 +251,21 @@ def build_periods(
                 }
             )
         elif current_period:
-            # Criteria no longer met, end current period
-            periods.append(current_period)
+            # Criteria no longer met, end current period.
+            # Trim trailing gap-tolerance intervals: these sit at the boundary
+            # between the period's price level and the next, and would shift
+            # the period end by up to gap_count intervals.
+            current_period = _trim_trailing_gaps(current_period)
+            if current_period:
+                periods.append(current_period)
             current_period = []
             consecutive_gaps = 0  # Reset gap counter
 
     # Add final period if exists
     if current_period:
-        periods.append(current_period)
+        current_period = _trim_trailing_gaps(current_period)
+        if current_period:
+            periods.append(current_period)
 
     # Log detailed filter statistics
     if intervals_checked > 0:
@@ -690,6 +721,12 @@ def _is_period_eligible_for_extension(
     - Period ends on today (not yesterday or tomorrow)
     - Period ends late (after late_hour_threshold, e.g. 20:00)
 
+    Note: ``end`` is an *exclusive* boundary — the first moment after the last
+    interval.  A period whose last interval starts at 23:45 has ``end = 00:00``
+    the next calendar day.  We therefore derive the effective date/hour from
+    ``end − 1 minute`` so that such periods are correctly recognised as ending
+    "today, late in the evening".
+
     """
     period_end = period.get("end")
     period_start = period.get("start")
@@ -697,10 +734,13 @@ def _is_period_eligible_for_extension(
     if not period_end or not period_start:
         return False
 
-    if period_end.date() != today:
+    # Derive last-covered moment (exclusive end → inclusive last moment)
+    effective_end = period_end - timedelta(minutes=1)
+
+    if effective_end.date() != today:
         return False
 
-    return period_end.hour >= late_hour_threshold
+    return effective_end.hour >= late_hour_threshold
 
 
 def _find_extension_intervals(

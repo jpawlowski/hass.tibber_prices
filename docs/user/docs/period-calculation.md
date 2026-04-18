@@ -281,10 +281,10 @@ Late-evening periods (starting after 20:00) are extended into the next day if pr
 - Extension stops if prices deviate more than 15% from the original period's mean
 
 **Day-boundary artifact filtering:**
-Each day has its own min/max/avg — so the same absolute price can qualify as "cheap" on one day but not the next. The integration catches misleading artifacts with several automatic checks:
-- **Peak periods** near midnight must qualify against **both** adjacent days' statistics
-- **Peak periods** must exceed the daily average by at least 10% (overnight periods use the higher average of both days)
-- Early-morning "peaks" that are significantly weaker than yesterday's late-evening peak are recognized as artifacts and filtered out
+Each day has its own min/max/avg — so the same absolute price can qualify as "cheap" or "peak" on one day but not the next. The integration catches these misleading artifacts with several automatic checks:
+- **Both Best _and_ Peak periods** near midnight (00:00-05:59) must qualify against **both** adjacent days' reference prices. Without this, a 7 ct interval could become "best" only because today's minimum happens to be lower than yesterday's, or a 30 ct interval could become "peak" only because tomorrow's maximum happens to be lower than today's.
+- **Peak periods** must exceed the daily average by at least 10% (overnight periods use the higher average of both days).
+- Early-morning "peaks" that are significantly weaker than yesterday's late-evening peak are recognized as artifacts and filtered out.
 
 These checks run automatically — no configuration needed.
 
@@ -315,11 +315,13 @@ flowchart LR
 
 If all relaxation steps are exhausted and some days still have **zero** periods:
 
-- Minimum duration is progressively reduced: 60 → 45 → 30 minutes
-- All other filters are maximally relaxed (50% flex, no distance or level filter)
-- Periods found this way are marked with `duration_fallback_active: true`
+- Minimum duration is progressively reduced: 60 → 45 → 30 minutes (so a shorter price window is enough to qualify as a period).
+- The flex level reached during relaxation is kept (typically 45-48%) — it is **not** maxed out further.
+- The minimum-distance-from-average filter is halved (not disabled) so genuinely flat days still surface no period rather than a misleading one.
+- The price level filter is dropped (any level allowed).
+- Periods found this way are marked with `duration_fallback_active: true`.
 
-This ensures that every day has at least one period, even under extreme market conditions.
+This ensures that every day has at least one period under realistic market conditions, while still suppressing phantom periods on extremely flat days where no meaningful "best" or "peak" window exists.
 
 ### Visual Example
 
@@ -893,7 +895,7 @@ Daily average: 19 ct/kWh
 
 The [cross-day handling](#phase-5-cross-day-handling) automatically prevents misleading period boundaries at midnight:
 
-- **Peak periods** near midnight are validated against **both** adjacent days' statistics
+- **Best _and_ Peak periods** near midnight are validated against **both** adjacent days' statistics
 - **Peak periods** must exceed the daily average by at least 10%, with overnight periods checked against the higher average of both days
 - **Cross-day extensions** are capped in length and stop when prices deviate significantly
 
