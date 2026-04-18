@@ -28,14 +28,23 @@ from .helpers import (
     INTERVAL_MINUTES,
     PRICE_LEVEL_ORDER,
     VALID_SEARCH_SCOPES,
+    apply_must_finish_by,
     build_rating_lookup,
     build_response_interval,
     filter_intervals_by_price_level,
     get_entry_and_data,
     resolve_home_timezone,
     resolve_search_range,
+    restore_original_prices,
+    smooth_service_intervals,
     validate_power_profile_length,
     validate_price_level_range,
+    validate_search_params,
+)
+from .relaxation import (
+    MIN_RELAXED_DURATION_INTERVALS,
+    build_level_filter_steps,
+    calculate_max_duration_reduction_intervals,
 )
 
 if TYPE_CHECKING:
@@ -77,11 +86,15 @@ FIND_CHEAPEST_SCHEDULE_SERVICE_SCHEMA = vol.Schema(
         vol.Optional("search_end_day_offset", default=0): vol.All(vol.Coerce(int), vol.Range(min=-7, max=2)),
         vol.Optional("search_start_offset_minutes"): vol.All(vol.Coerce(int), vol.Range(min=-10080, max=10080)),
         vol.Optional("search_end_offset_minutes"): vol.All(vol.Coerce(int), vol.Range(min=-10080, max=10080)),
+        vol.Optional("must_finish_by"): cv.datetime,
         vol.Optional("search_scope"): vol.In(VALID_SEARCH_SCOPES),
         vol.Optional("max_price_level"): vol.In([lvl.lower() for lvl in PRICE_LEVEL_ORDER]),
         vol.Optional("min_price_level"): vol.In([lvl.lower() for lvl in PRICE_LEVEL_ORDER]),
         vol.Optional("include_comparison_details", default=False): cv.boolean,
         vol.Optional("use_base_unit", default=False): cv.boolean,
+        vol.Optional("smooth_outliers", default=True): cv.boolean,
+        vol.Optional("allow_relaxation", default=True): cv.boolean,
+        vol.Optional("duration_flexibility_minutes"): vol.All(vol.Coerce(int), vol.Range(min=0, max=120)),
     }
 )
 
@@ -209,6 +222,68 @@ def _find_cheapest_window_in_pool(
     return (best_start, best_start + duration_intervals)
 
 
+def _attempt_schedule(
+    price_info: list[dict[str, Any]],
+    *,
+    max_price_level: str | None,
+    min_price_level: str | None,
+    tasks: list[dict[str, Any]],
+    gap_intervals: int,
+    smooth_outliers: bool,
+) -> tuple[list[dict[str, Any]], list[str], list[dict[str, Any]]]:
+    """Attempt to schedule tasks with specific filter parameters.
+
+    Returns:
+        (assignments, unscheduled_names, filtered_price_info)
+
+    """
+    filtered = filter_intervals_by_price_level(price_info, min_price_level, max_price_level)
+
+    if smooth_outliers and filtered:
+        search_data = smooth_service_intervals(filtered)
+    else:
+        search_data = filtered
+
+    if not search_data:
+        return [], [t["name"] for t in tasks], filtered
+
+    # Greedy assignment: longest task first
+    tasks_sorted = sorted(tasks, key=lambda t: t["duration_intervals"], reverse=True)
+    available = [True] * len(search_data)
+    assignments: list[dict[str, Any]] = []
+    unscheduled: list[str] = []
+
+    for task in tasks_sorted:
+        dur_intervals = task["duration_intervals"]
+        window = _find_cheapest_window_in_pool(search_data, dur_intervals, available)
+
+        if window is None:
+            unscheduled.append(task["name"])
+            continue
+
+        start_idx, end_idx = window
+        task_intervals = search_data[start_idx:end_idx]
+
+        # Restore original prices for response
+        if smooth_outliers:
+            task_intervals = restore_original_prices(task_intervals)
+
+        # Mark task intervals + trailing gap as unavailable
+        gap_end = min(end_idx + gap_intervals, len(search_data))
+        for k in range(start_idx, gap_end):
+            available[k] = False
+
+        assignments.append(
+            {
+                "name": task["name"],
+                "task": task,
+                "intervals": task_intervals,
+            }
+        )
+
+    return assignments, unscheduled, filtered
+
+
 async def handle_find_cheapest_schedule(call: ServiceCall) -> ServiceResponse:
     """Handle find_cheapest_schedule service call."""
     service_label = "find_cheapest_schedule"
@@ -220,7 +295,9 @@ async def handle_find_cheapest_schedule(call: ServiceCall) -> ServiceResponse:
     max_price_level: str | None = call.data.get("max_price_level")
     min_price_level: str | None = call.data.get("min_price_level")
     include_comparison_details: bool = call.data.get("include_comparison_details", False)
-    level_filter_active = min_price_level is not None or max_price_level is not None
+    smooth_outliers: bool = call.data.get("smooth_outliers", True)
+    allow_relaxation: bool = call.data.get("allow_relaxation", True)
+    duration_flexibility_minutes: int | None = call.data.get("duration_flexibility_minutes")
 
     # Validate task names are unique (before any expensive operations)
     task_names = [t["name"] for t in tasks_raw]
@@ -251,8 +328,12 @@ async def handle_find_cheapest_schedule(call: ServiceCall) -> ServiceResponse:
 
     home_tz = ZoneInfo(home_timezone)
 
+    # Validate and handle must_finish_by
+    validate_search_params(call.data)
+    effective_data, must_finish_by_dt = apply_must_finish_by(call.data, home_tz)
+
     now = dt_util.now().astimezone(home_tz)
-    search_start, search_end = resolve_search_range(call.data, now, home_tz)
+    search_start, search_end = resolve_search_range(effective_data, now, home_tz)
 
     # Resolve task durations (round up to intervals)
     tasks: list[dict[str, Any]] = []
@@ -322,51 +403,112 @@ async def handle_find_cheapest_schedule(call: ServiceCall) -> ServiceResponse:
     unit_factor = 1 if use_base_unit else get_display_unit_factor(entry)
     price_unit = f"{currency}/kWh" if use_base_unit else get_display_unit_string(entry, currency)
 
-    # Apply optional level filter
-    filtered_price_info = filter_intervals_by_price_level(price_info, min_price_level, max_price_level)
+    # --- Attempt with original parameters ---
+    raw_assignments, unscheduled, filtered = _attempt_schedule(
+        price_info,
+        max_price_level=max_price_level,
+        min_price_level=min_price_level,
+        tasks=tasks,
+        gap_intervals=gap_intervals,
+        smooth_outliers=smooth_outliers,
+    )
+    all_scheduled = len(unscheduled) == 0
+    level_filter_active = min_price_level is not None or max_price_level is not None
 
-    if not filtered_price_info:
-        reason = _determine_schedule_reason(
-            all_tasks_scheduled=False,
-            assignments_count=0,
-            price_info=price_info,
-            filtered_price_info=filtered_price_info,
-            level_filter_active=level_filter_active,
-        )
-        return {
-            "home_id": home_id,
-            "search_start": search_start.isoformat(),
-            "search_end": search_end.isoformat(),
-            "currency": currency,
-            "price_unit": price_unit,
-            "all_tasks_scheduled": False,
-            "reason": reason,
-            "tasks": [],
-            "total_estimated_cost": None,
-        }
+    relaxation_applied = False
+    relaxation_steps = 0
 
-    # Greedy assignment: longest task first
-    tasks_sorted = sorted(tasks, key=lambda t: t["duration_intervals"], reverse=True)
-    available = [True] * len(filtered_price_info)
+    # --- Relaxation loop ---
+    if not all_scheduled and allow_relaxation:
+        step_num = 0
+        best_assignments = raw_assignments
+        best_unscheduled = unscheduled
+        best_filtered = filtered
+        best_step = 0
+
+        # Phase 1: Level filter relaxation
+        level_steps = build_level_filter_steps(max_price_level, min_price_level, reverse=False)
+        for lvl_max, lvl_min in level_steps:
+            step_num += 1
+            a, u, f = _attempt_schedule(
+                price_info,
+                max_price_level=lvl_max,
+                min_price_level=lvl_min,
+                tasks=tasks,
+                gap_intervals=gap_intervals,
+                smooth_outliers=smooth_outliers,
+            )
+            if len(a) > len(best_assignments):
+                best_assignments, best_unscheduled, best_filtered = a, u, f
+                best_step = step_num
+            if not u:
+                break
+
+        # Phase 2: Duration reduction (uniform across all tasks)
+        if best_unscheduled:
+            shortest_task = min(t["duration_intervals"] for t in tasks)
+            max_reduction = calculate_max_duration_reduction_intervals(shortest_task, duration_flexibility_minutes)
+            for reduction in range(1, max_reduction + 1):
+                # Build reduced-duration tasks
+                reduced = []
+                can_reduce = True
+                for t in tasks:
+                    new_dur = t["duration_intervals"] - reduction
+                    if new_dur < MIN_RELAXED_DURATION_INTERVALS:
+                        can_reduce = False
+                        break
+                    reduced.append(
+                        {
+                            **t,
+                            "duration_intervals": new_dur,
+                            "duration_minutes": new_dur * INTERVAL_MINUTES,
+                        }
+                    )
+                if not can_reduce:
+                    break
+                step_num += 1
+                a, u, f = _attempt_schedule(
+                    price_info,
+                    max_price_level=None,
+                    min_price_level=None,
+                    tasks=reduced,
+                    gap_intervals=gap_intervals,
+                    smooth_outliers=smooth_outliers,
+                )
+                if len(a) > len(best_assignments):
+                    best_assignments, best_unscheduled, best_filtered = a, u, f
+                    best_step = step_num
+                if not u:
+                    break
+
+        if best_step > 0 and len(best_assignments) > len(raw_assignments):
+            raw_assignments = best_assignments
+            unscheduled = best_unscheduled
+            filtered = best_filtered
+            relaxation_applied = True
+            relaxation_steps = best_step
+            all_scheduled = len(unscheduled) == 0
+            _LOGGER.info(
+                "%s: relaxation improved result at step %d (%d/%d tasks)",
+                service_label,
+                best_step,
+                len(raw_assignments),
+                len(tasks),
+            )
+        elif not unscheduled:
+            # All scheduled via relaxation at best_step
+            raw_assignments = best_assignments
+            unscheduled = best_unscheduled
+            filtered = best_filtered
+            relaxation_applied = True
+            relaxation_steps = best_step
+            all_scheduled = True
+
+    # --- Build full response assignments from raw ---
     assignments: list[dict[str, Any]] = []
-    unscheduled: list[str] = []
-
-    for task in tasks_sorted:
-        dur_intervals = task["duration_intervals"]
-        window = _find_cheapest_window_in_pool(filtered_price_info, dur_intervals, available)
-
-        if window is None:
-            _LOGGER.info("%s: no window found for task '%s'", service_label, task["name"])
-            unscheduled.append(task["name"])
-            continue
-
-        start_idx, end_idx = window
-        task_intervals = filtered_price_info[start_idx:end_idx]
-
-        # Mark task intervals + trailing gap as unavailable
-        gap_end = min(end_idx + gap_intervals, len(filtered_price_info))
-        for k in range(start_idx, gap_end):
-            available[k] = False
+    for raw in raw_assignments:
+        task_intervals = raw["intervals"]
+        task = raw["task"]
 
         stats = calculate_window_statistics(
             task_intervals,
@@ -381,7 +523,6 @@ async def handle_find_cheapest_schedule(call: ServiceCall) -> ServiceResponse:
         last_dt = datetime.fromisoformat(last_start) if isinstance(last_start, str) else last_start
         end_dt = last_dt + timedelta(minutes=INTERVAL_MINUTES)
 
-        # Build enriched interval list for this task
         task_response_intervals = [build_response_interval(iv, unit_factor, rating_lookup) for iv in task_intervals]
 
         assignments.append(
@@ -411,14 +552,15 @@ async def handle_find_cheapest_schedule(call: ServiceCall) -> ServiceResponse:
     ]
     total_estimated_cost = round(sum(total_cost_values), 4) if total_cost_values else None
 
-    all_scheduled = len(unscheduled) == 0
     reason = _determine_schedule_reason(
         all_tasks_scheduled=all_scheduled,
         assignments_count=len(assignments),
         price_info=price_info,
-        filtered_price_info=filtered_price_info,
+        filtered_price_info=filtered,
         level_filter_active=level_filter_active,
     )
+    if not all_scheduled and relaxation_applied and reason is not None:
+        reason = "relaxation_exhausted"
 
     _LOGGER.info(
         "%s: scheduled %d/%d tasks, total_cost=%s",
@@ -428,16 +570,27 @@ async def handle_find_cheapest_schedule(call: ServiceCall) -> ServiceResponse:
         total_estimated_cost,
     )
 
+    # Compute seconds_until_start and seconds_until_end for each scheduled task
+    for task_entry in assignments:
+        task_start_dt = datetime.fromisoformat(task_entry["start"])
+        task_entry["seconds_until_start"] = max(0, int((task_start_dt - now).total_seconds()))
+        task_end_dt = datetime.fromisoformat(task_entry["end"])
+        task_entry["seconds_until_end"] = max(0, int((task_end_dt - now).total_seconds()))
+
     result: dict[str, Any] = {
         "home_id": home_id,
         "search_start": search_start.isoformat(),
         "search_end": search_end.isoformat(),
+        "must_finish_by": must_finish_by_dt.isoformat() if must_finish_by_dt else None,
         "currency": currency,
         "price_unit": price_unit,
         "all_tasks_scheduled": all_scheduled,
         "reason": reason,
+        "relaxation_applied": relaxation_applied,
         "unscheduled_tasks": unscheduled or None,
         "tasks": assignments,
         "total_estimated_cost": total_estimated_cost,
     }
+    if relaxation_applied:
+        result["relaxation_steps"] = relaxation_steps
     return result

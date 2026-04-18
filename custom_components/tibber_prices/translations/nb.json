@@ -1289,6 +1289,9 @@
     },
     "tasks_exceed_search_window": {
       "message": "Total oppgavetid inkludert pauser ({total_minutes} min) overstiger søkevinduet ({window_minutes} min). Reduser oppgavevarighetene, senk gap_minutes, eller utvid søkeperioden."
+    },
+    "must_finish_by_conflicts_with_end": {
+      "message": "must_finish_by kan ikke kombineres med sluttgrenseparametere ({params}). Bruk must_finish_by alene — det setter søkeslutt til fristen automatisk."
     }
   },
   "services": {
@@ -1503,20 +1506,28 @@
       "description": "Finner det billigste sammenhengende tidsvinduet med en gitt varighet. Designet for apparatplanlegging: oppvaskmaskin, vaskemaskin, tørketrommel osv. Returnerer det billigste vinduet med start-/sluttider og prisstatistikk.",
       "sections": {
         "search_range": {
-          "name": "Soekeomraade",
-          "description": "Definer tidsvinduet for soeket."
+          "name": "Egendefinert søkeområde",
+          "description": "Definer presise start- og sluttider for søket. Overstyrer søkeomfanget når satt."
         },
         "time_alternatives": {
-          "name": "Alternative tidsalternativer",
-          "description": "Alternative maater aa definere soekeomraadet paa med tidspunkt og offsets."
+          "name": "Avanserte tidsalternativer",
+          "description": "Alternative måter å definere søkeområdet med klokkeslett og minuttforskyvninger."
         },
         "price_filter": {
-          "name": "Prisnivaae-filter",
-          "description": "Begrens soeket til intervaller innenfor det angitte prisnivaae-omraadet."
+          "name": "Prisnivåfilter",
+          "description": "Begrens søket til intervaller innenfor det angitte Tibber-prisnivåområdet."
+        },
+        "search_tuning": {
+          "name": "Finjustering av søkealgoritme",
+          "description": "Finjuster hvordan søket håndterer uteliggere, minimumskvalitetsgrenser og reserveoppførsel."
+        },
+        "cost_estimation": {
+          "name": "Kostnadsberegning",
+          "description": "Oppgi en effektprofil for å få nøyaktige energikostnadsestimater basert på faktisk forbruk."
         },
         "output": {
-          "name": "Utdata-alternativer",
-          "description": "Styr kostnadsestimat og sammenligningsutdata."
+          "name": "Utdataalternativer",
+          "description": "Kontroller utdataformat: sammenligningsdetaljer og valutaenhet."
         }
       },
       "fields": {
@@ -1535,6 +1546,10 @@
         "search_end": {
           "name": "Søkeslutt",
           "description": "Slutt av søkeområdet som eksakt dato og tid. Høyeste prioritet — overstyrer alle andre sluttalternativer. Standard er slutten av i morgen hvis ikke angitt."
+        },
+        "must_finish_by": {
+          "name": "Må være ferdig innen",
+          "description": "Frist: apparatet må være ferdig innen dette tidspunktet. Søkeområdet slutter ved denne fristen — tjenesten finner det billigste vinduet som fullføres før det. Kan ikke kombineres med Søkeslutt, Søkeslutt-tid eller Søkeslutt-offset."
         },
         "search_start_time": {
           "name": "Søkestart-klokkeslett",
@@ -1587,6 +1602,22 @@
         "power_profile": {
           "name": "Effektprofil",
           "description": "Variabelt effektforbruk i watt per 15-minuttersintervall. Naa satt, gjenspeiler estimated_total_cost faktisk forbruk i stedet for en fast 1 kW-last."
+        },
+        "smooth_outliers": {
+          "name": "Glatt utliggere",
+          "description": "Glatt prisutliggere før søk. Utligger-intervaller erstattes midlertidig med gjennomsnittet av naboene, slik at en enkelt topp eller bunn ikke dominerer resultatet. Svaret viser alltid de originale (uglattede) prisene. Standard: aktivert."
+        },
+        "min_distance_from_avg": {
+          "name": "Min. avstand fra gjennomsnitt",
+          "description": "Krev at resultatet avviker fra søkeområdets gjennomsnitt med minst denne prosenten. For billigst: resultatet må være minst X% under gjennomsnittet. For dyrest: minst X% over. Hvis betingelsen ikke oppfylles, returneres intet resultat (reason: selection_above/below_distance_threshold). La stå tom for å deaktivere."
+        },
+        "allow_relaxation": {
+          "name": "Tillat slakking",
+          "description": "Slakk filtre gradvis for å garantere et resultat. Faser: 1) Reduser/fjern avstandsterskel 2) Utvid prisnivåfiltre 3) Reduser varighet. Standard: aktivert."
+        },
+        "duration_flexibility_minutes": {
+          "name": "Varighetsfleksibilitet",
+          "description": "Maks minutter varigheten kan forkortes under slakking (0–120, steg 15). La stå tom for automatisk beregning (~20% av varigheten, maks 60 min)."
         }
       }
     },
@@ -1595,20 +1626,28 @@
       "description": "Finner det dyreste sammenhengende tidsvinduet med en gitt varighet. Nyttig for å identifisere topprisperioder som bør unngås. Returnerer det dyreste vinduet med start-/sluttider og prisstatistikk.",
       "sections": {
         "search_range": {
-          "name": "Soekeomraade",
-          "description": "Definer tidsvinduet for soeket."
+          "name": "Egendefinert søkeområde",
+          "description": "Definer presise start- og sluttider for søket. Overstyrer søkeomfanget når satt."
         },
         "time_alternatives": {
-          "name": "Alternative tidsalternativer",
-          "description": "Alternative maater aa definere soekeomraadet paa med tidspunkt og offsets."
+          "name": "Avanserte tidsalternativer",
+          "description": "Alternative måter å definere søkeområdet med klokkeslett og minuttforskyvninger."
         },
         "price_filter": {
-          "name": "Prisnivaae-filter",
-          "description": "Begrens soeket til intervaller innenfor det angitte prisnivaae-omraadet."
+          "name": "Prisnivåfilter",
+          "description": "Begrens søket til intervaller innenfor det angitte Tibber-prisnivåområdet."
+        },
+        "search_tuning": {
+          "name": "Finjustering av søkealgoritme",
+          "description": "Finjuster hvordan søket håndterer uteliggere, minimumskvalitetsgrenser og reserveoppførsel."
+        },
+        "cost_estimation": {
+          "name": "Kostnadsberegning",
+          "description": "Oppgi en effektprofil for å få nøyaktige energikostnadsestimater basert på faktisk forbruk."
         },
         "output": {
-          "name": "Utdata-alternativer",
-          "description": "Styr kostnadsestimat og sammenligningsutdata."
+          "name": "Utdataalternativer",
+          "description": "Kontroller utdataformat: sammenligningsdetaljer og valutaenhet."
         }
       },
       "fields": {
@@ -1627,6 +1666,10 @@
         "search_end": {
           "name": "Søkeslutt",
           "description": "Slutt av søkeområdet som eksakt dato og tid. Høyeste prioritet — overstyrer alle andre sluttalternativer. Standard er slutten av i morgen hvis ikke angitt."
+        },
+        "must_finish_by": {
+          "name": "Må være ferdig innen",
+          "description": "Frist: apparatet må være ferdig innen dette tidspunktet. Søkeområdet slutter ved denne fristen — tjenesten finner det dyreste vinduet som fullføres før den. Kan ikke kombineres med Søkeslutt, Søkeslutt-klokkeslett, Søkeslutt-forskyvning eller Søkeomfang."
         },
         "search_start_time": {
           "name": "Søkestart-klokkeslett",
@@ -1679,6 +1722,22 @@
         "power_profile": {
           "name": "Effektprofil",
           "description": "Variabelt effektforbruk i watt per 15-minuttersintervall. Naa satt, gjenspeiler estimated_total_cost faktisk forbruk i stedet for en fast 1 kW-last."
+        },
+        "smooth_outliers": {
+          "name": "Glatt utliggere",
+          "description": "Glatt prisutliggere før søk. Utligger-intervaller erstattes midlertidig med gjennomsnittet av naboene, slik at en enkelt topp eller bunn ikke dominerer resultatet. Svaret viser alltid de originale (uglattede) prisene. Standard: aktivert."
+        },
+        "min_distance_from_avg": {
+          "name": "Min. avstand fra gjennomsnitt",
+          "description": "Krev at resultatet avviker fra søkeområdets gjennomsnitt med minst denne prosenten. For billigst: resultatet må være minst X% under gjennomsnittet. For dyrest: minst X% over. Hvis betingelsen ikke oppfylles, returneres intet resultat (reason: selection_above/below_distance_threshold). La stå tom for å deaktivere."
+        },
+        "allow_relaxation": {
+          "name": "Tillat slakking",
+          "description": "Slakk filtre gradvis for å garantere et resultat. Faser: 1) Reduser/fjern avstandsterskel 2) Utvid prisnivåfiltre 3) Reduser varighet. Standard: aktivert."
+        },
+        "duration_flexibility_minutes": {
+          "name": "Varighetsfleksibilitet",
+          "description": "Maks minutter varigheten kan forkortes under slakking (0–120, steg 15). La stå tom for automatisk beregning (~20% av varigheten, maks 60 min)."
         }
       }
     },
@@ -1687,20 +1746,28 @@
       "description": "Finner de billigste intervallene for en gitt total varighet, ikke nødvendigvis sammenhengende. Designet for fleksible laster: batterilading, elbil, varmtvannsbereder. Returnerer en tidsplan med intervaller gruppert i sammenhengende segmenter.",
       "sections": {
         "search_range": {
-          "name": "Soekeomraade",
-          "description": "Definer tidsvinduet for soeket."
+          "name": "Egendefinert søkeområde",
+          "description": "Definer presise start- og sluttider for søket. Overstyrer søkeomfanget når satt."
         },
         "time_alternatives": {
-          "name": "Alternative tidsalternativer",
-          "description": "Alternative maater aa definere soekeomraadet paa med tidspunkt og offsets."
+          "name": "Avanserte tidsalternativer",
+          "description": "Alternative måter å definere søkeområdet med klokkeslett og minuttforskyvninger."
         },
         "price_filter": {
-          "name": "Prisnivaae-filter",
-          "description": "Begrens soeket til intervaller innenfor det angitte prisnivaae-omraadet."
+          "name": "Prisnivåfilter",
+          "description": "Begrens søket til intervaller innenfor det angitte Tibber-prisnivåområdet."
+        },
+        "search_tuning": {
+          "name": "Finjustering av søkealgoritme",
+          "description": "Finjuster hvordan søket håndterer uteliggere, minimumskvalitetsgrenser og reserveoppførsel."
+        },
+        "cost_estimation": {
+          "name": "Kostnadsberegning",
+          "description": "Oppgi en effektprofil for å få nøyaktige energikostnadsestimater basert på faktisk forbruk."
         },
         "output": {
-          "name": "Utdata-alternativer",
-          "description": "Styr kostnadsestimat og sammenligningsutdata."
+          "name": "Utdataalternativer",
+          "description": "Kontroller utdataformat: sammenligningsdetaljer og valutaenhet."
         }
       },
       "fields": {
@@ -1720,6 +1787,10 @@
           "name": "Søkeslutt",
           "description": "Slutt av søkeområdet som eksakt dato og tid. Høyeste prioritet — overstyrer alle andre sluttalternativer. Standard er slutten av i morgen hvis ikke angitt."
         },
+        "must_finish_by": {
+          "name": "Må være ferdig innen",
+          "description": "Frist: apparatet må være ferdig innen dette tidspunktet. Søkeområdet slutter ved denne fristen — tjenesten finner det billigste vinduet som fullføres før det. Kan ikke kombineres med Søkeslutt, Søkeslutt-tid eller Søkeslutt-offset."
+        },
         "search_start_time": {
           "name": "Søkestart-klokkeslett",
           "description": "Alternativ: Start søk fra dette klokkeslettet. Kombiner med dagsforskyvning. Ignoreres hvis Søkestart (dato/tid) er satt."
@@ -1775,6 +1846,22 @@
         "power_profile": {
           "name": "Effektprofil",
           "description": "Variabelt effektforbruk i watt per 15-minuttersintervall. Naa satt, gjenspeiler estimated_total_cost faktisk forbruk i stedet for en fast 1 kW-last."
+        },
+        "smooth_outliers": {
+          "name": "Glatt utliggere",
+          "description": "Glatt prisutliggere før søk. Utligger-intervaller erstattes midlertidig med gjennomsnittet av naboene, slik at en enkelt topp eller bunn ikke dominerer resultatet. Svaret viser alltid de originale (uglattede) prisene. Standard: aktivert."
+        },
+        "min_distance_from_avg": {
+          "name": "Min. avstand fra gjennomsnitt",
+          "description": "Krev at resultatet avviker fra søkeområdets gjennomsnitt med minst denne prosenten. For billigst: resultatet må være minst X% under gjennomsnittet. For dyrest: minst X% over. Hvis betingelsen ikke oppfylles, returneres intet resultat (reason: selection_above/below_distance_threshold). La stå tom for å deaktivere."
+        },
+        "allow_relaxation": {
+          "name": "Tillat slakking",
+          "description": "Slakk filtre gradvis for å garantere et resultat. Faser: 1) Reduser/fjern avstandsterskel 2) Utvid prisnivåfiltre 3) Reduser varighet. Standard: aktivert."
+        },
+        "duration_flexibility_minutes": {
+          "name": "Varighetsfleksibilitet",
+          "description": "Maks minutter varigheten kan forkortes under slakking (0–120, steg 15). La stå tom for automatisk beregning (~20% av varigheten, maks 60 min)."
         }
       }
     },
@@ -1783,20 +1870,28 @@
       "description": "Finner de dyreste intervallene for en gitt total varighet, ikke nødvendigvis sammenhengende. Nyttig for å identifisere topprisperioder som bør unngås. Returnerer en tidsplan med intervaller gruppert i sammenhengende segmenter.",
       "sections": {
         "search_range": {
-          "name": "Soekeomraade",
-          "description": "Definer tidsvinduet for soeket."
+          "name": "Egendefinert søkeområde",
+          "description": "Definer presise start- og sluttider for søket. Overstyrer søkeomfanget når satt."
         },
         "time_alternatives": {
-          "name": "Alternative tidsalternativer",
-          "description": "Alternative maater aa definere soekeomraadet paa med tidspunkt og offsets."
+          "name": "Avanserte tidsalternativer",
+          "description": "Alternative måter å definere søkeområdet med klokkeslett og minuttforskyvninger."
         },
         "price_filter": {
-          "name": "Prisnivaae-filter",
-          "description": "Begrens soeket til intervaller innenfor det angitte prisnivaae-omraadet."
+          "name": "Prisnivåfilter",
+          "description": "Begrens søket til intervaller innenfor det angitte Tibber-prisnivåområdet."
+        },
+        "search_tuning": {
+          "name": "Finjustering av søkealgoritme",
+          "description": "Finjuster hvordan søket håndterer uteliggere, minimumskvalitetsgrenser og reserveoppførsel."
+        },
+        "cost_estimation": {
+          "name": "Kostnadsberegning",
+          "description": "Oppgi en effektprofil for å få nøyaktige energikostnadsestimater basert på faktisk forbruk."
         },
         "output": {
-          "name": "Utdata-alternativer",
-          "description": "Styr kostnadsestimat og sammenligningsutdata."
+          "name": "Utdataalternativer",
+          "description": "Kontroller utdataformat: sammenligningsdetaljer og valutaenhet."
         }
       },
       "fields": {
@@ -1816,6 +1911,10 @@
           "name": "Søkeslutt",
           "description": "Slutt av søkeområdet som eksakt dato og tid. Høyeste prioritet — overstyrer alle andre sluttalternativer. Standard er slutten av i morgen hvis ikke angitt."
         },
+        "must_finish_by": {
+          "name": "Må være ferdig innen",
+          "description": "Frist: apparatet må være ferdig innen dette tidspunktet. Søkeområdet slutter ved denne fristen — tjenesten finner det dyreste vinduet som fullføres før den. Kan ikke kombineres med Søkeslutt, Søkeslutt-klokkeslett, Søkeslutt-forskyvning eller Søkeomfang."
+        },
         "search_start_time": {
           "name": "Søkestart-klokkeslett",
           "description": "Alternativ: Start søk fra dette klokkeslettet. Kombiner med dagsforskyvning. Ignoreres hvis Søkestart (dato/tid) er satt."
@@ -1871,6 +1970,22 @@
         "power_profile": {
           "name": "Effektprofil",
           "description": "Variabelt effektforbruk i watt per 15-minuttersintervall. Naa satt, gjenspeiler estimated_total_cost faktisk forbruk i stedet for en fast 1 kW-last."
+        },
+        "smooth_outliers": {
+          "name": "Glatt utliggere",
+          "description": "Glatt prisutliggere før søk. Utligger-intervaller erstattes midlertidig med gjennomsnittet av naboene, slik at en enkelt topp eller bunn ikke dominerer resultatet. Svaret viser alltid de originale (uglattede) prisene. Standard: aktivert."
+        },
+        "min_distance_from_avg": {
+          "name": "Min. avstand fra gjennomsnitt",
+          "description": "Krev at resultatet avviker fra søkeområdets gjennomsnitt med minst denne prosenten. For billigst: resultatet må være minst X% under gjennomsnittet. For dyrest: minst X% over. Hvis betingelsen ikke oppfylles, returneres intet resultat (reason: selection_above/below_distance_threshold). La stå tom for å deaktivere."
+        },
+        "allow_relaxation": {
+          "name": "Tillat slakking",
+          "description": "Slakk filtre gradvis for å garantere et resultat. Faser: 1) Reduser/fjern avstandsterskel 2) Utvid prisnivåfiltre 3) Reduser varighet. Standard: aktivert."
+        },
+        "duration_flexibility_minutes": {
+          "name": "Varighetsfleksibilitet",
+          "description": "Maks minutter varigheten kan forkortes under slakking (0–120, steg 15). La stå tom for automatisk beregning (~20% av varigheten, maks 60 min)."
         }
       }
     },
@@ -1878,25 +1993,25 @@
       "name": "Finn billigste tidsplan",
       "description": "Planlegger flere apparater optimalt uten tidsoverlapp. Hver oppgave tildeles det billigste tilgjengelige sammenhengende tidsvinduet.",
       "sections": {
-        "scheduling_options": {
-          "name": "Planleggingsalternativer",
-          "description": "Konfigurer oppgaver og pause mellom dem."
-        },
         "search_range": {
-          "name": "Soekeomraade",
-          "description": "Definer tidsvinduet for soeket."
+          "name": "Egendefinert søkeområde",
+          "description": "Definer presise start- og sluttider for søket. Overstyrer søkeomfanget når satt."
         },
         "time_alternatives": {
-          "name": "Alternative tidsalternativer",
-          "description": "Alternative maater aa definere soekeomraadet paa med tidspunkt og offsets."
+          "name": "Avanserte tidsalternativer",
+          "description": "Alternative måter å definere søkeområdet med klokkeslett og minuttforskyvninger."
         },
         "price_filter": {
-          "name": "Prisnivaae-filter",
-          "description": "Begrens soeket til intervaller innenfor det angitte prisnivaae-omraadet."
+          "name": "Prisnivåfilter",
+          "description": "Begrens søket til intervaller innenfor det angitte Tibber-prisnivåområdet."
+        },
+        "search_tuning": {
+          "name": "Finjustering av søkealgoritme",
+          "description": "Finjuster hvordan søket håndterer uteliggere, minimumskvalitetsgrenser og reserveoppførsel."
         },
         "output": {
-          "name": "Utdata-alternativer",
-          "description": "Styr kostnadsestimat og sammenligningsutdata."
+          "name": "Utdataalternativer",
+          "description": "Kontroller utdataformat: sammenligningsdetaljer og valutaenhet."
         }
       },
       "fields": {
@@ -1924,6 +2039,10 @@
           "name": "Søkeslutt",
           "description": "Slutt av søkeområdet som eksakt dato og tid. Høyeste prioritet — overstyrer alle andre sluttalternativer. Standard er slutten av i morgen hvis ikke angitt."
         },
+        "must_finish_by": {
+          "name": "Må være ferdig innen",
+          "description": "Frist: apparatet må være ferdig innen dette tidspunktet. Søkeområdet slutter ved denne fristen — tjenesten finner det billigste vinduet som fullføres før det. Kan ikke kombineres med Søkeslutt, Søkeslutt-tid eller Søkeslutt-offset."
+        },
         "search_start_time": {
           "name": "Søkestart-klokkeslett",
           "description": "Alternativ: Start søk fra dette klokkeslettet. Kombiner med dagsforskyvning. Ignoreres hvis Søkestart (dato/tid) er satt."
@@ -1948,10 +2067,6 @@
           "name": "Søkeslutt-forskyvning (minutter)",
           "description": "Alternativ: Stopp søk dette antall minutter fra nå. Positiv = fremtid (480 = om 8 timer), negativ = fortid (-60 = 1 time siden). Ignoreres hvis Søkeslutt eller Søkeslutt-klokkeslett er satt."
         },
-        "include_current_interval": {
-          "name": "Inkluder gjeldende intervall",
-          "description": "Inkluder det pågående 15-minutters intervallet i søket. Når aktivert (standard), starter søket ved begynnelsen av gjeldende intervall slik at det kan være en del av resultatet."
-        },
         "max_price_level": {
           "name": "Maksimalt prisnivaae",
           "description": "Ta bare med intervaller paa eller under dette Tibber-prisnivaeet. very_cheap = mest restriktivt, very_expensive = ingen begrensning."
@@ -1967,6 +2082,18 @@
         "use_base_unit": {
           "name": "Bruk basisvaluta",
           "description": "Tving priser i basisvaluta (EUR, NOK) i stedet for konfigurert visningsenhet (ct, øre). Nyttig for beregninger."
+        },
+        "smooth_outliers": {
+          "name": "Glatt utliggere",
+          "description": "Glatt prisutliggere før søk. Utligger-intervaller erstattes midlertidig med gjennomsnittet av naboene, slik at en enkelt topp eller bunn ikke dominerer resultatet. Svaret viser alltid de originale (uglattede) prisene. Standard: aktivert."
+        },
+        "allow_relaxation": {
+          "name": "Tillat slakking",
+          "description": "Slakk filtre gradvis for å garantere et resultat. Faser: 1) Reduser/fjern avstandsterskel 2) Utvid prisnivåfiltre 3) Reduser varighet. Standard: aktivert."
+        },
+        "duration_flexibility_minutes": {
+          "name": "Varighetsfleksibilitet",
+          "description": "Maks minutter varigheten kan forkortes under slakking (0–120, steg 15). La stå tom for automatisk beregning (~20% av varigheten, maks 60 min)."
         }
       }
     }

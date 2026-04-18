@@ -1289,6 +1289,9 @@
     },
     "tasks_exceed_search_window": {
       "message": "Total task time including gaps ({total_minutes} min) exceeds the search window ({window_minutes} min). Reduce task durations, lower gap_minutes, or extend the search range."
+    },
+    "must_finish_by_conflicts_with_end": {
+      "message": "must_finish_by cannot be combined with end-boundary parameters ({params}). Use must_finish_by alone — it sets the search end to the deadline automatically."
     }
   },
   "services": {
@@ -1503,20 +1506,28 @@
       "description": "Finds the cheapest contiguous time window of a given duration. Designed for appliance scheduling: dishwasher, washing machine, dryer, etc. Returns the single cheapest window with start/end times and price statistics. If no window is found, the response includes a stable reason code in the reason field (for example: no_data_in_range, no_intervals_matching_level_filter, insufficient_intervals_after_filter, insufficient_contiguous_window).",
       "sections": {
         "search_range": {
-          "name": "Search Range",
-          "description": "Define the time window to search within."
+          "name": "Custom Search Range",
+          "description": "Define precise start and end times for the search. Overrides Search Scope when set."
         },
         "time_alternatives": {
-          "name": "Alternative Time Range Options",
-          "description": "Alternative ways to define the search range using time-of-day and offsets."
+          "name": "Advanced Time Options",
+          "description": "Alternative ways to define the search range using time-of-day and minute offsets."
         },
         "price_filter": {
           "name": "Price Level Filter",
-          "description": "Restrict search to intervals within the specified price level range."
+          "description": "Restrict search to intervals within the specified Tibber price level range."
+        },
+        "search_tuning": {
+          "name": "Search Algorithm Tuning",
+          "description": "Fine-tune how the search handles outliers, minimum quality thresholds, and fallback behavior."
+        },
+        "cost_estimation": {
+          "name": "Cost Estimation",
+          "description": "Provide a power profile to get accurate energy cost estimates based on actual consumption."
         },
         "output": {
           "name": "Output Options",
-          "description": "Control cost estimation and comparison output."
+          "description": "Control output format: comparison details and currency unit."
         }
       },
       "fields": {
@@ -1535,6 +1546,10 @@
         "search_end": {
           "name": "Search End",
           "description": "End of the search range as exact date and time. Highest priority — overrides all other end options. Defaults to end of tomorrow if not specified."
+        },
+        "must_finish_by": {
+          "name": "Must Finish By",
+          "description": "Deadline: the appliance must be finished by this time. The search range ends at this deadline — the service finds the cheapest window that completes before it. Cannot be combined with Search End, Search End Time, or Search End Offset."
         },
         "search_start_time": {
           "name": "Search Start Time",
@@ -1587,6 +1602,22 @@
         "power_profile": {
           "name": "Power Profile",
           "description": "Variable power draw in watts per 15-minute interval. When set, estimated_total_cost reflects actual consumption instead of a flat 1 kW load. The profile is extended by repeating the last value if shorter than the window."
+        },
+        "smooth_outliers": {
+          "name": "Smooth Outliers",
+          "description": "Smooth price outliers before searching. Outlier intervals are temporarily replaced by the average of their neighbors, so a single spike or dip does not dominate the result. The response always shows the original (unsmoothed) prices. Default: enabled."
+        },
+        "min_distance_from_avg": {
+          "name": "Min. Distance from Average",
+          "description": "Require the found result to differ from the search-range average by at least this percentage. For cheapest: result must be at least X% below average. For most expensive: at least X% above. If the condition is not met, no result is returned (reason: selection_above/below_distance_threshold). Leave empty to disable."
+        },
+        "allow_relaxation": {
+          "name": "Allow relaxation",
+          "description": "Progressively relax filters to guarantee a result when possible. Phases: 1) Reduce/remove distance threshold 2) Expand level filters 3) Reduce duration. Default: enabled."
+        },
+        "duration_flexibility_minutes": {
+          "name": "Duration flexibility",
+          "description": "Maximum minutes the duration may be shortened during relaxation (0–120, step 15). Leave empty for automatic calculation (~20% of duration, max 60 min)."
         }
       }
     },
@@ -1595,20 +1626,28 @@
       "description": "Finds the most expensive contiguous time window of a given duration. Useful for identifying peak price periods to avoid. Returns the single most expensive window with start/end times and price statistics.",
       "sections": {
         "search_range": {
-          "name": "Search Range",
-          "description": "Define the time window to search within."
+          "name": "Custom Search Range",
+          "description": "Define precise start and end times for the search. Overrides Search Scope when set."
         },
         "time_alternatives": {
-          "name": "Alternative Time Range Options",
-          "description": "Alternative ways to define the search range using time-of-day and offsets."
+          "name": "Advanced Time Options",
+          "description": "Alternative ways to define the search range using time-of-day and minute offsets."
         },
         "price_filter": {
           "name": "Price Level Filter",
-          "description": "Restrict search to intervals within the specified price level range."
+          "description": "Restrict search to intervals within the specified Tibber price level range."
+        },
+        "search_tuning": {
+          "name": "Search Algorithm Tuning",
+          "description": "Fine-tune how the search handles outliers, minimum quality thresholds, and fallback behavior."
+        },
+        "cost_estimation": {
+          "name": "Cost Estimation",
+          "description": "Provide a power profile to get accurate energy cost estimates based on actual consumption."
         },
         "output": {
           "name": "Output Options",
-          "description": "Control cost estimation and comparison output."
+          "description": "Control output format: comparison details and currency unit."
         }
       },
       "fields": {
@@ -1627,6 +1666,10 @@
         "search_end": {
           "name": "Search End",
           "description": "End of the search range as exact date and time. Highest priority — overrides all other end options. Defaults to end of tomorrow if not specified."
+        },
+        "must_finish_by": {
+          "name": "Must Finish By",
+          "description": "Deadline: the appliance must be finished by this time. The search range ends at this deadline — the service finds the most expensive window that completes before it. Cannot be combined with Search End, Search End Time, Search End Offset, or Search Scope."
         },
         "search_start_time": {
           "name": "Search Start Time",
@@ -1679,6 +1722,22 @@
         "power_profile": {
           "name": "Power Profile",
           "description": "Variable power draw in watts per 15-minute interval. When set, estimated_total_cost reflects actual consumption instead of a flat 1 kW load. The profile is extended by repeating the last value if shorter than the window."
+        },
+        "smooth_outliers": {
+          "name": "Smooth Outliers",
+          "description": "Smooth price outliers before searching. Outlier intervals are temporarily replaced by the average of their neighbors, so a single spike or dip does not dominate the result. The response always shows the original (unsmoothed) prices. Default: enabled."
+        },
+        "min_distance_from_avg": {
+          "name": "Min. Distance from Average",
+          "description": "Require the found result to differ from the search-range average by at least this percentage. For cheapest: result must be at least X% below average. For most expensive: at least X% above. If the condition is not met, no result is returned (reason: selection_above/below_distance_threshold). Leave empty to disable."
+        },
+        "allow_relaxation": {
+          "name": "Allow relaxation",
+          "description": "Progressively relax filters to guarantee a result when possible. Phases: 1) Reduce/remove distance threshold 2) Expand level filters 3) Reduce duration. Default: enabled."
+        },
+        "duration_flexibility_minutes": {
+          "name": "Duration flexibility",
+          "description": "Maximum minutes the duration may be shortened during relaxation (0–120, step 15). Leave empty for automatic calculation (~20% of duration, max 60 min)."
         }
       }
     },
@@ -1687,20 +1746,28 @@
       "description": "Finds the cheapest intervals totaling a given duration, not necessarily contiguous. Designed for flexible loads: battery charging, EV, water heater. Returns a schedule of intervals grouped into contiguous segments. If no schedule is found, the response includes a stable reason code in the reason field (for example: no_data_in_range, no_intervals_matching_level_filter, insufficient_intervals_after_filter, insufficient_intervals_for_constraints).",
       "sections": {
         "search_range": {
-          "name": "Search Range",
-          "description": "Define the time window to search within."
+          "name": "Custom Search Range",
+          "description": "Define precise start and end times for the search. Overrides Search Scope when set."
         },
         "time_alternatives": {
-          "name": "Alternative Time Range Options",
-          "description": "Alternative ways to define the search range using time-of-day and offsets."
+          "name": "Advanced Time Options",
+          "description": "Alternative ways to define the search range using time-of-day and minute offsets."
         },
         "price_filter": {
           "name": "Price Level Filter",
-          "description": "Restrict search to intervals within the specified price level range."
+          "description": "Restrict search to intervals within the specified Tibber price level range."
+        },
+        "search_tuning": {
+          "name": "Search Algorithm Tuning",
+          "description": "Fine-tune how the search handles outliers, minimum quality thresholds, and fallback behavior."
+        },
+        "cost_estimation": {
+          "name": "Cost Estimation",
+          "description": "Provide a power profile to get accurate energy cost estimates based on actual consumption."
         },
         "output": {
           "name": "Output Options",
-          "description": "Control cost estimation and comparison output."
+          "description": "Control output format: comparison details and currency unit."
         }
       },
       "fields": {
@@ -1720,6 +1787,10 @@
           "name": "Search End",
           "description": "End of the search range as exact date and time. Highest priority — overrides all other end options. Defaults to end of tomorrow if not specified."
         },
+        "must_finish_by": {
+          "name": "Must Finish By",
+          "description": "Deadline: the appliance must be finished by this time. The search range ends at this deadline — the service finds the cheapest window that completes before it. Cannot be combined with Search End, Search End Time, or Search End Offset."
+        },
         "search_start_time": {
           "name": "Search Start Time",
           "description": "Alternative: start searching at this time of day. Combine with day offset. Ignored if Search Start (datetime) is set."
@@ -1775,6 +1846,22 @@
         "power_profile": {
           "name": "Power Profile",
           "description": "Variable power draw in watts per 15-minute interval. When set, estimated_total_cost reflects actual consumption instead of a flat 1 kW load. The profile is extended by repeating the last value if shorter than the window."
+        },
+        "smooth_outliers": {
+          "name": "Smooth Outliers",
+          "description": "Smooth price outliers before searching. Outlier intervals are temporarily replaced by the average of their neighbors, so a single spike or dip does not dominate the result. The response always shows the original (unsmoothed) prices. Default: enabled."
+        },
+        "min_distance_from_avg": {
+          "name": "Min. Distance from Average",
+          "description": "Require the found result to differ from the search-range average by at least this percentage. For cheapest: result must be at least X% below average. For most expensive: at least X% above. If the condition is not met, no result is returned (reason: selection_above/below_distance_threshold). Leave empty to disable."
+        },
+        "allow_relaxation": {
+          "name": "Allow relaxation",
+          "description": "Progressively relax filters to guarantee a result when possible. Phases: 1) Reduce/remove distance threshold 2) Expand level filters 3) Reduce duration. Default: enabled."
+        },
+        "duration_flexibility_minutes": {
+          "name": "Duration flexibility",
+          "description": "Maximum minutes the duration may be shortened during relaxation (0–120, step 15). Leave empty for automatic calculation (~20% of duration, max 60 min)."
         }
       }
     },
@@ -1783,20 +1870,28 @@
       "description": "Finds the most expensive intervals totaling a given duration, not necessarily contiguous. Useful for identifying peak price periods to avoid. Returns a schedule of intervals grouped into contiguous segments.",
       "sections": {
         "search_range": {
-          "name": "Search Range",
-          "description": "Define the time window to search within."
+          "name": "Custom Search Range",
+          "description": "Define precise start and end times for the search. Overrides Search Scope when set."
         },
         "time_alternatives": {
-          "name": "Alternative Time Range Options",
-          "description": "Alternative ways to define the search range using time-of-day and offsets."
+          "name": "Advanced Time Options",
+          "description": "Alternative ways to define the search range using time-of-day and minute offsets."
         },
         "price_filter": {
           "name": "Price Level Filter",
-          "description": "Restrict search to intervals within the specified price level range."
+          "description": "Restrict search to intervals within the specified Tibber price level range."
+        },
+        "search_tuning": {
+          "name": "Search Algorithm Tuning",
+          "description": "Fine-tune how the search handles outliers, minimum quality thresholds, and fallback behavior."
+        },
+        "cost_estimation": {
+          "name": "Cost Estimation",
+          "description": "Provide a power profile to get accurate energy cost estimates based on actual consumption."
         },
         "output": {
           "name": "Output Options",
-          "description": "Control cost estimation and comparison output."
+          "description": "Control output format: comparison details and currency unit."
         }
       },
       "fields": {
@@ -1816,6 +1911,10 @@
           "name": "Search End",
           "description": "End of the search range as exact date and time. Highest priority — overrides all other end options. Defaults to end of tomorrow if not specified."
         },
+        "must_finish_by": {
+          "name": "Must Finish By",
+          "description": "Deadline: the appliance must be finished by this time. The search range ends at this deadline — the service finds the most expensive window that completes before it. Cannot be combined with Search End, Search End Time, Search End Offset, or Search Scope."
+        },
         "search_start_time": {
           "name": "Search Start Time",
           "description": "Alternative: start searching at this time of day. Combine with day offset. Ignored if Search Start (datetime) is set."
@@ -1871,6 +1970,22 @@
         "power_profile": {
           "name": "Power Profile",
           "description": "Variable power draw in watts per 15-minute interval. When set, estimated_total_cost reflects actual consumption instead of a flat 1 kW load. The profile is extended by repeating the last value if shorter than the window."
+        },
+        "smooth_outliers": {
+          "name": "Smooth Outliers",
+          "description": "Smooth price outliers before searching. Outlier intervals are temporarily replaced by the average of their neighbors, so a single spike or dip does not dominate the result. The response always shows the original (unsmoothed) prices. Default: enabled."
+        },
+        "min_distance_from_avg": {
+          "name": "Min. Distance from Average",
+          "description": "Require the found result to differ from the search-range average by at least this percentage. For cheapest: result must be at least X% below average. For most expensive: at least X% above. If the condition is not met, no result is returned (reason: selection_above/below_distance_threshold). Leave empty to disable."
+        },
+        "allow_relaxation": {
+          "name": "Allow relaxation",
+          "description": "Progressively relax filters to guarantee a result when possible. Phases: 1) Reduce/remove distance threshold 2) Expand level filters 3) Reduce duration. Default: enabled."
+        },
+        "duration_flexibility_minutes": {
+          "name": "Duration flexibility",
+          "description": "Maximum minutes the duration may be shortened during relaxation (0–120, step 15). Leave empty for automatic calculation (~20% of duration, max 60 min)."
         }
       }
     },
@@ -1878,25 +1993,25 @@
       "name": "Find Cheapest Schedule",
       "description": "Schedules multiple appliances optimally without time overlap. Each task gets the cheapest available contiguous window; tasks are placed greedily in ascending cost order. Returns a per-task schedule with start/end times and price stats. If scheduling is incomplete, the response includes a stable reason code in the reason field (for example: no_data_in_range, no_intervals_matching_level_filter, insufficient_contiguous_window, insufficient_contiguous_window_for_some_tasks).",
       "sections": {
-        "scheduling_options": {
-          "name": "Scheduling Options",
-          "description": "Configure tasks and gap constraints between them."
-        },
         "search_range": {
-          "name": "Search Range",
-          "description": "Define the time window to search within."
+          "name": "Custom Search Range",
+          "description": "Define precise start and end times for the search. Overrides Search Scope when set."
         },
         "time_alternatives": {
-          "name": "Alternative Time Range Options",
-          "description": "Alternative ways to define the search range using time-of-day and offsets."
+          "name": "Advanced Time Options",
+          "description": "Alternative ways to define the search range using time-of-day and minute offsets."
         },
         "price_filter": {
           "name": "Price Level Filter",
-          "description": "Restrict search to intervals within the specified price level range."
+          "description": "Restrict search to intervals within the specified Tibber price level range."
+        },
+        "search_tuning": {
+          "name": "Search Algorithm Tuning",
+          "description": "Fine-tune how the search handles outliers, minimum quality thresholds, and fallback behavior."
         },
         "output": {
           "name": "Output Options",
-          "description": "Control output currency unit."
+          "description": "Control output format: comparison details and currency unit."
         }
       },
       "fields": {
@@ -1924,6 +2039,10 @@
           "name": "Search End",
           "description": "End of the search range as exact date and time. Highest priority — overrides all other end options. Defaults to end of tomorrow if not specified."
         },
+        "must_finish_by": {
+          "name": "Must Finish By",
+          "description": "Deadline: the appliance must be finished by this time. The search range ends at this deadline — the service finds the cheapest window that completes before it. Cannot be combined with Search End, Search End Time, or Search End Offset."
+        },
         "search_start_time": {
           "name": "Search Start Time",
           "description": "Alternative: start searching at this time of day. Combine with day offset. Ignored if Search Start (datetime) is set."
@@ -1948,10 +2067,6 @@
           "name": "Search End Offset (minutes)",
           "description": "Alternative: stop searching this many minutes from now. Positive = future, negative = past. Ignored if Search End or Search End Time is set."
         },
-        "include_current_interval": {
-          "name": "Include Current Interval",
-          "description": "Include the currently running 15-minute interval in the search."
-        },
         "max_price_level": {
           "name": "Maximum Price Level",
           "description": "Only consider intervals at or below this Tibber price level. very_cheap = most restrictive, very_expensive = no restriction."
@@ -1967,6 +2082,18 @@
         "use_base_unit": {
           "name": "Use Base Currency Unit",
           "description": "Force prices in base currency (EUR, NOK) instead of the configured display unit (ct, øre). Useful for calculations."
+        },
+        "smooth_outliers": {
+          "name": "Smooth Outliers",
+          "description": "Smooth price outliers before searching. Outlier intervals are temporarily replaced by the average of their neighbors, so a single spike or dip does not dominate the result. The response always shows the original (unsmoothed) prices. Default: enabled."
+        },
+        "allow_relaxation": {
+          "name": "Allow relaxation",
+          "description": "Progressively relax filters to guarantee a result when possible. Phases: 1) Reduce/remove distance threshold 2) Expand level filters 3) Reduce duration. Default: enabled."
+        },
+        "duration_flexibility_minutes": {
+          "name": "Duration flexibility",
+          "description": "Maximum minutes the duration may be shortened during relaxation (0–120, step 15). Leave empty for automatic calculation (~20% of duration, max 60 min)."
         }
       }
     },

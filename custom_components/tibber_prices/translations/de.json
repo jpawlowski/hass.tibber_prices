@@ -1289,6 +1289,9 @@
     },
     "tasks_exceed_search_window": {
       "message": "Die Gesamtdauer aller Aufgaben inklusive Pausen ({total_minutes} Min.) überschreitet das Suchfenster ({window_minutes} Min.). Reduziere die Aufgabendauern, verringere gap_minutes oder erweitere den Suchzeitraum."
+    },
+    "must_finish_by_conflicts_with_end": {
+      "message": "must_finish_by kann nicht mit Endgrenz-Parametern ({params}) kombiniert werden. Verwende must_finish_by allein — es setzt das Suchende automatisch auf die Deadline."
     }
   },
   "services": {
@@ -1503,20 +1506,28 @@
       "description": "Findet das günstigste zusammenhängende Zeitfenster einer bestimmten Dauer. Gedacht für Geräteplanung: Spülmaschine, Waschmaschine, Trockner usw. Gibt das günstigste Fenster mit Start-/Endzeiten und Preisstatistiken zurück.",
       "sections": {
         "search_range": {
-          "name": "Suchbereich",
-          "description": "Zeitfenster fuer die Suche festlegen."
+          "name": "Benutzerdefinierter Suchbereich",
+          "description": "Exakte Start- und Endzeiten für die Suche festlegen. Überschreibt den Suchbereich (Shortcut), wenn gesetzt."
         },
         "time_alternatives": {
-          "name": "Alternative Zeitbereich-Optionen",
-          "description": "Alternative Moeglichkeiten zum Festlegen des Suchbereichs ueber Tageszeit und Offsets."
+          "name": "Erweiterte Zeitoptionen",
+          "description": "Alternative Möglichkeiten zum Festlegen des Suchbereichs über Tageszeit und Minuten-Offsets."
         },
         "price_filter": {
           "name": "Preisstufen-Filter",
-          "description": "Suche auf Intervalle innerhalb des angegebenen Preisstufen-Bereichs einschraenken."
+          "description": "Suche auf Intervalle innerhalb des angegebenen Tibber-Preisstufen-Bereichs einschränken."
+        },
+        "search_tuning": {
+          "name": "Suchalgorithmus-Feinabstimmung",
+          "description": "Feinabstimmung wie die Suche Ausreißer, Mindestqualitätsschwellen und Fallback-Verhalten behandelt."
+        },
+        "cost_estimation": {
+          "name": "Kostenabschätzung",
+          "description": "Leistungsprofil angeben, um genaue Energiekostenschätzungen basierend auf dem tatsächlichen Verbrauch zu erhalten."
         },
         "output": {
           "name": "Ausgabeoptionen",
-          "description": "Kostenabschaetzung und Vergleichsausgabe steuern."
+          "description": "Ausgabeformat steuern: Vergleichsdetails und Währungseinheit."
         }
       },
       "fields": {
@@ -1535,6 +1546,10 @@
         "search_end": {
           "name": "Suchende",
           "description": "Ende des Suchbereichs als exaktes Datum und Uhrzeit. Höchste Priorität — überschreibt alle anderen Endoptionen. Standardmäßig Ende von morgen, wenn nicht angegeben."
+        },
+        "must_finish_by": {
+          "name": "Muss fertig sein bis",
+          "description": "Deadline: das Gerät muss bis zu diesem Zeitpunkt fertig sein. Der Suchbereich endet an dieser Deadline — der Service findet das günstigste Zeitfenster, das vorher endet. Kann nicht mit Suchende, Suchende-Uhrzeit oder Suchende-Offset kombiniert werden."
         },
         "search_start_time": {
           "name": "Suchbeginn-Uhrzeit",
@@ -1570,23 +1585,39 @@
         },
         "search_scope": {
           "name": "Suchbereich (Shortcut)",
-          "description": "Kurzwahl fuer haeufige Suchbereiche. Ueberschreibt alle anderen Zeitbereich-Optionen. today/tomorrow = ganzer Kalendertag, remaining_today = jetzt bis Mitternacht, next_24h/next_48h = rollierendes Fenster ab jetzt."
+          "description": "Kurzwahl für häufige Suchbereiche. Überschreibt alle anderen Zeitbereich-Optionen. today/tomorrow = ganzer Kalendertag, remaining_today = jetzt bis Mitternacht, next_24h/next_48h = rollierendes Fenster ab jetzt."
         },
         "max_price_level": {
           "name": "Maximale Preisstufe",
-          "description": "Nur Intervalle bis zu dieser Tibber-Preisstufe beruecksichtigen. very_cheap = restriktivste, very_expensive = keine Einschraenkung."
+          "description": "Nur Intervalle bis zu dieser Tibber-Preisstufe berücksichtigen. very_cheap = restriktivste, very_expensive = keine Einschränkung."
         },
         "min_price_level": {
           "name": "Minimale Preisstufe",
-          "description": "Nur Intervalle ab dieser Tibber-Preisstufe beruecksichtigen. Nuetzlich fuer find_most_expensive, um wirklich teure Intervalle zu fokussieren."
+          "description": "Nur Intervalle ab dieser Tibber-Preisstufe berücksichtigen. Nützlich für find_most_expensive, um wirklich teure Intervalle zu fokussieren."
         },
         "include_comparison_details": {
           "name": "Vergleichsdetails einschliessen",
-          "description": "Das price_comparison-Ergebnis um zusaetzliche Felder ergaenzen: comparison_price_min, comparison_price_max und (nur Block) comparison_window_end."
+          "description": "Das price_comparison-Ergebnis um zusätzliche Felder ergänzen: comparison_price_min, comparison_price_max und (nur Block) comparison_window_end."
         },
         "power_profile": {
           "name": "Leistungsprofil",
-          "description": "Variable Leistungsaufnahme in Watt pro 15-Minuten-Intervall. Wenn gesetzt, gibt estimated_total_cost den tatsaechlichen Verbrauch statt einer festen 1-kW-Last an."
+          "description": "Variable Leistungsaufnahme in Watt pro 15-Minuten-Intervall. Wenn gesetzt, gibt estimated_total_cost den tatsächlichen Verbrauch statt einer festen 1-kW-Last an."
+        },
+        "smooth_outliers": {
+          "name": "Ausreißer glätten",
+          "description": "Preisausreißer vor der Suche glätten. Ausreißer-Intervalle werden vorübergehend durch den Durchschnitt ihrer Nachbarn ersetzt, sodass ein einzelner Ausschlag das Ergebnis nicht dominiert. Die Antwort zeigt immer die Original-Preise (ungeglättet). Standard: aktiviert."
+        },
+        "min_distance_from_avg": {
+          "name": "Min. Abstand vom Durchschnitt",
+          "description": "Ergebnis muss mindestens um diesen Prozentsatz vom Suchbereichs-Durchschnitt abweichen. Für günstigste: Ergebnis muss mindestens X% unter dem Durchschnitt liegen. Für teuerste: mindestens X% darüber. Wird die Bedingung nicht erfüllt, wird kein Ergebnis zurückgegeben (reason: selection_above/below_distance_threshold). Leer lassen zum Deaktivieren."
+        },
+        "allow_relaxation": {
+          "name": "Lockerung erlauben",
+          "description": "Filter schrittweise lockern, um ein Ergebnis zu garantieren. Phasen: 1) Abstandsschwelle reduzieren/entfernen 2) Preislevel-Filter erweitern 3) Dauer reduzieren. Standard: aktiviert."
+        },
+        "duration_flexibility_minutes": {
+          "name": "Dauer-Flexibilität",
+          "description": "Maximale Minuten, um die die Dauer bei der Lockerung verkürzt werden darf (0–120, Schritt 15). Leer lassen für automatische Berechnung (~20% der Dauer, max. 60 Min.)."
         }
       }
     },
@@ -1595,20 +1626,28 @@
       "description": "Findet das teuerste zusammenhängende Zeitfenster einer bestimmten Dauer. Nützlich zur Erkennung von Spitzenpreiszeiträumen, die vermieden werden sollten. Gibt das teuerste Fenster mit Start-/Endzeiten und Preisstatistiken zurück.",
       "sections": {
         "search_range": {
-          "name": "Suchbereich",
-          "description": "Zeitfenster fuer die Suche festlegen."
+          "name": "Benutzerdefinierter Suchbereich",
+          "description": "Exakte Start- und Endzeiten für die Suche festlegen. Überschreibt den Suchbereich (Shortcut), wenn gesetzt."
         },
         "time_alternatives": {
-          "name": "Alternative Zeitbereich-Optionen",
-          "description": "Alternative Moeglichkeiten zum Festlegen des Suchbereichs ueber Tageszeit und Offsets."
+          "name": "Erweiterte Zeitoptionen",
+          "description": "Alternative Möglichkeiten zum Festlegen des Suchbereichs über Tageszeit und Minuten-Offsets."
         },
         "price_filter": {
           "name": "Preisstufen-Filter",
-          "description": "Suche auf Intervalle innerhalb des angegebenen Preisstufen-Bereichs einschraenken."
+          "description": "Suche auf Intervalle innerhalb des angegebenen Tibber-Preisstufen-Bereichs einschränken."
+        },
+        "search_tuning": {
+          "name": "Suchalgorithmus-Feinabstimmung",
+          "description": "Feinabstimmung wie die Suche Ausreißer, Mindestqualitätsschwellen und Fallback-Verhalten behandelt."
+        },
+        "cost_estimation": {
+          "name": "Kostenabschätzung",
+          "description": "Leistungsprofil angeben, um genaue Energiekostenschätzungen basierend auf dem tatsächlichen Verbrauch zu erhalten."
         },
         "output": {
           "name": "Ausgabeoptionen",
-          "description": "Kostenabschaetzung und Vergleichsausgabe steuern."
+          "description": "Ausgabeformat steuern: Vergleichsdetails und Währungseinheit."
         }
       },
       "fields": {
@@ -1627,6 +1666,10 @@
         "search_end": {
           "name": "Suchende",
           "description": "Ende des Suchbereichs als exaktes Datum und Uhrzeit. Höchste Priorität — überschreibt alle anderen Endoptionen. Standardmäßig Ende von morgen, wenn nicht angegeben."
+        },
+        "must_finish_by": {
+          "name": "Muss fertig sein bis",
+          "description": "Deadline: das Gerät muss bis zu diesem Zeitpunkt fertig sein. Der Suchbereich endet an dieser Deadline — der Service findet das teuerste Zeitfenster, das vorher endet. Kann nicht mit Suchende, Suchende-Uhrzeit, Suchende-Versatz oder Suchbereich (Shortcut) kombiniert werden."
         },
         "search_start_time": {
           "name": "Suchbeginn-Uhrzeit",
@@ -1662,23 +1705,39 @@
         },
         "search_scope": {
           "name": "Suchbereich (Shortcut)",
-          "description": "Kurzwahl fuer haeufige Suchbereiche. Ueberschreibt alle anderen Zeitbereich-Optionen. today/tomorrow = ganzer Kalendertag, remaining_today = jetzt bis Mitternacht, next_24h/next_48h = rollierendes Fenster ab jetzt."
+          "description": "Kurzwahl für häufige Suchbereiche. Überschreibt alle anderen Zeitbereich-Optionen. today/tomorrow = ganzer Kalendertag, remaining_today = jetzt bis Mitternacht, next_24h/next_48h = rollierendes Fenster ab jetzt."
         },
         "max_price_level": {
           "name": "Maximale Preisstufe",
-          "description": "Nur Intervalle bis zu dieser Tibber-Preisstufe beruecksichtigen. very_cheap = restriktivste, very_expensive = keine Einschraenkung."
+          "description": "Nur Intervalle bis zu dieser Tibber-Preisstufe berücksichtigen. very_cheap = restriktivste, very_expensive = keine Einschränkung."
         },
         "min_price_level": {
           "name": "Minimale Preisstufe",
-          "description": "Nur Intervalle ab dieser Tibber-Preisstufe beruecksichtigen. Nuetzlich fuer find_most_expensive, um wirklich teure Intervalle zu fokussieren."
+          "description": "Nur Intervalle ab dieser Tibber-Preisstufe berücksichtigen. Nützlich für find_most_expensive, um wirklich teure Intervalle zu fokussieren."
         },
         "include_comparison_details": {
           "name": "Vergleichsdetails einschliessen",
-          "description": "Das price_comparison-Ergebnis um zusaetzliche Felder ergaenzen: comparison_price_min, comparison_price_max und (nur Block) comparison_window_end."
+          "description": "Das price_comparison-Ergebnis um zusätzliche Felder ergänzen: comparison_price_min, comparison_price_max und (nur Block) comparison_window_end."
         },
         "power_profile": {
           "name": "Leistungsprofil",
-          "description": "Variable Leistungsaufnahme in Watt pro 15-Minuten-Intervall. Wenn gesetzt, gibt estimated_total_cost den tatsaechlichen Verbrauch statt einer festen 1-kW-Last an."
+          "description": "Variable Leistungsaufnahme in Watt pro 15-Minuten-Intervall. Wenn gesetzt, gibt estimated_total_cost den tatsächlichen Verbrauch statt einer festen 1-kW-Last an."
+        },
+        "smooth_outliers": {
+          "name": "Ausreißer glätten",
+          "description": "Preisausreißer vor der Suche glätten. Ausreißer-Intervalle werden vorübergehend durch den Durchschnitt ihrer Nachbarn ersetzt, sodass ein einzelner Ausschlag das Ergebnis nicht dominiert. Die Antwort zeigt immer die Original-Preise (ungeglättet). Standard: aktiviert."
+        },
+        "min_distance_from_avg": {
+          "name": "Min. Abstand vom Durchschnitt",
+          "description": "Ergebnis muss mindestens um diesen Prozentsatz vom Suchbereichs-Durchschnitt abweichen. Für günstigste: Ergebnis muss mindestens X% unter dem Durchschnitt liegen. Für teuerste: mindestens X% darüber. Wird die Bedingung nicht erfüllt, wird kein Ergebnis zurückgegeben (reason: selection_above/below_distance_threshold). Leer lassen zum Deaktivieren."
+        },
+        "allow_relaxation": {
+          "name": "Lockerung erlauben",
+          "description": "Filter schrittweise lockern, um ein Ergebnis zu garantieren. Phasen: 1) Abstandsschwelle reduzieren/entfernen 2) Preislevel-Filter erweitern 3) Dauer reduzieren. Standard: aktiviert."
+        },
+        "duration_flexibility_minutes": {
+          "name": "Dauer-Flexibilität",
+          "description": "Maximale Minuten, um die die Dauer bei der Lockerung verkürzt werden darf (0–120, Schritt 15). Leer lassen für automatische Berechnung (~20% der Dauer, max. 60 Min.)."
         }
       }
     },
@@ -1687,20 +1746,28 @@
       "description": "Findet die günstigsten Intervalle für eine bestimmte Gesamtdauer, nicht unbedingt zusammenhängend. Gedacht für flexible Lasten: Batterieladung, E-Auto, Warmwasserspeicher. Gibt einen Zeitplan mit Intervallen gruppiert in zusammenhängende Segmente zurück.",
       "sections": {
         "search_range": {
-          "name": "Suchbereich",
-          "description": "Zeitfenster fuer die Suche festlegen."
+          "name": "Benutzerdefinierter Suchbereich",
+          "description": "Exakte Start- und Endzeiten für die Suche festlegen. Überschreibt den Suchbereich (Shortcut), wenn gesetzt."
         },
         "time_alternatives": {
-          "name": "Alternative Zeitbereich-Optionen",
-          "description": "Alternative Moeglichkeiten zum Festlegen des Suchbereichs ueber Tageszeit und Offsets."
+          "name": "Erweiterte Zeitoptionen",
+          "description": "Alternative Möglichkeiten zum Festlegen des Suchbereichs über Tageszeit und Minuten-Offsets."
         },
         "price_filter": {
           "name": "Preisstufen-Filter",
-          "description": "Suche auf Intervalle innerhalb des angegebenen Preisstufen-Bereichs einschraenken."
+          "description": "Suche auf Intervalle innerhalb des angegebenen Tibber-Preisstufen-Bereichs einschränken."
+        },
+        "search_tuning": {
+          "name": "Suchalgorithmus-Feinabstimmung",
+          "description": "Feinabstimmung wie die Suche Ausreißer, Mindestqualitätsschwellen und Fallback-Verhalten behandelt."
+        },
+        "cost_estimation": {
+          "name": "Kostenabschätzung",
+          "description": "Leistungsprofil angeben, um genaue Energiekostenschätzungen basierend auf dem tatsächlichen Verbrauch zu erhalten."
         },
         "output": {
           "name": "Ausgabeoptionen",
-          "description": "Kostenabschaetzung und Vergleichsausgabe steuern."
+          "description": "Ausgabeformat steuern: Vergleichsdetails und Währungseinheit."
         }
       },
       "fields": {
@@ -1720,6 +1787,10 @@
           "name": "Suchende",
           "description": "Ende des Suchbereichs als exaktes Datum und Uhrzeit. Höchste Priorität — überschreibt alle anderen Endoptionen. Standardmäßig Ende von morgen, wenn nicht angegeben."
         },
+        "must_finish_by": {
+          "name": "Muss fertig sein bis",
+          "description": "Deadline: das Gerät muss bis zu diesem Zeitpunkt fertig sein. Der Suchbereich endet an dieser Deadline — der Service findet das günstigste Zeitfenster, das vorher endet. Kann nicht mit Suchende, Suchende-Uhrzeit oder Suchende-Offset kombiniert werden."
+        },
         "search_start_time": {
           "name": "Suchbeginn-Uhrzeit",
           "description": "Alternative: Suche ab dieser Uhrzeit starten. Mit Tages-Versatz kombinieren. Wird ignoriert, wenn Suchbeginn (Datum/Uhrzeit) gesetzt ist."
@@ -1758,23 +1829,39 @@
         },
         "search_scope": {
           "name": "Suchbereich (Shortcut)",
-          "description": "Kurzwahl fuer haeufige Suchbereiche. Ueberschreibt alle anderen Zeitbereich-Optionen. today/tomorrow = ganzer Kalendertag, remaining_today = jetzt bis Mitternacht, next_24h/next_48h = rollierendes Fenster ab jetzt."
+          "description": "Kurzwahl für häufige Suchbereiche. Überschreibt alle anderen Zeitbereich-Optionen. today/tomorrow = ganzer Kalendertag, remaining_today = jetzt bis Mitternacht, next_24h/next_48h = rollierendes Fenster ab jetzt."
         },
         "max_price_level": {
           "name": "Maximale Preisstufe",
-          "description": "Nur Intervalle bis zu dieser Tibber-Preisstufe beruecksichtigen. very_cheap = restriktivste, very_expensive = keine Einschraenkung."
+          "description": "Nur Intervalle bis zu dieser Tibber-Preisstufe berücksichtigen. very_cheap = restriktivste, very_expensive = keine Einschränkung."
         },
         "min_price_level": {
           "name": "Minimale Preisstufe",
-          "description": "Nur Intervalle ab dieser Tibber-Preisstufe beruecksichtigen. Nuetzlich fuer find_most_expensive, um wirklich teure Intervalle zu fokussieren."
+          "description": "Nur Intervalle ab dieser Tibber-Preisstufe berücksichtigen. Nützlich für find_most_expensive, um wirklich teure Intervalle zu fokussieren."
         },
         "include_comparison_details": {
           "name": "Vergleichsdetails einschliessen",
-          "description": "Das price_comparison-Ergebnis um zusaetzliche Felder ergaenzen: comparison_price_min, comparison_price_max und (nur Block) comparison_window_end."
+          "description": "Das price_comparison-Ergebnis um zusätzliche Felder ergänzen: comparison_price_min, comparison_price_max und (nur Block) comparison_window_end."
         },
         "power_profile": {
           "name": "Leistungsprofil",
-          "description": "Variable Leistungsaufnahme in Watt pro 15-Minuten-Intervall. Wenn gesetzt, gibt estimated_total_cost den tatsaechlichen Verbrauch statt einer festen 1-kW-Last an."
+          "description": "Variable Leistungsaufnahme in Watt pro 15-Minuten-Intervall. Wenn gesetzt, gibt estimated_total_cost den tatsächlichen Verbrauch statt einer festen 1-kW-Last an."
+        },
+        "smooth_outliers": {
+          "name": "Ausreißer glätten",
+          "description": "Preisausreißer vor der Suche glätten. Ausreißer-Intervalle werden vorübergehend durch den Durchschnitt ihrer Nachbarn ersetzt, sodass ein einzelner Ausschlag das Ergebnis nicht dominiert. Die Antwort zeigt immer die Original-Preise (ungeglättet). Standard: aktiviert."
+        },
+        "min_distance_from_avg": {
+          "name": "Min. Abstand vom Durchschnitt",
+          "description": "Ergebnis muss mindestens um diesen Prozentsatz vom Suchbereichs-Durchschnitt abweichen. Für günstigste: Ergebnis muss mindestens X% unter dem Durchschnitt liegen. Für teuerste: mindestens X% darüber. Wird die Bedingung nicht erfüllt, wird kein Ergebnis zurückgegeben (reason: selection_above/below_distance_threshold). Leer lassen zum Deaktivieren."
+        },
+        "allow_relaxation": {
+          "name": "Lockerung erlauben",
+          "description": "Filter schrittweise lockern, um ein Ergebnis zu garantieren. Phasen: 1) Abstandsschwelle reduzieren/entfernen 2) Preislevel-Filter erweitern 3) Dauer reduzieren. Standard: aktiviert."
+        },
+        "duration_flexibility_minutes": {
+          "name": "Dauer-Flexibilität",
+          "description": "Maximale Minuten, um die die Dauer bei der Lockerung verkürzt werden darf (0–120, Schritt 15). Leer lassen für automatische Berechnung (~20% der Dauer, max. 60 Min.)."
         }
       }
     },
@@ -1783,20 +1870,28 @@
       "description": "Findet die teuersten Intervalle für eine bestimmte Gesamtdauer, nicht unbedingt zusammenhängend. Nützlich zur Erkennung von Spitzenpreiszeiträumen, die vermieden werden sollten. Gibt einen Zeitplan mit Intervallen gruppiert in zusammenhängende Segmente zurück.",
       "sections": {
         "search_range": {
-          "name": "Suchbereich",
-          "description": "Zeitfenster fuer die Suche festlegen."
+          "name": "Benutzerdefinierter Suchbereich",
+          "description": "Exakte Start- und Endzeiten für die Suche festlegen. Überschreibt den Suchbereich (Shortcut), wenn gesetzt."
         },
         "time_alternatives": {
-          "name": "Alternative Zeitbereich-Optionen",
-          "description": "Alternative Moeglichkeiten zum Festlegen des Suchbereichs ueber Tageszeit und Offsets."
+          "name": "Erweiterte Zeitoptionen",
+          "description": "Alternative Möglichkeiten zum Festlegen des Suchbereichs über Tageszeit und Minuten-Offsets."
         },
         "price_filter": {
           "name": "Preisstufen-Filter",
-          "description": "Suche auf Intervalle innerhalb des angegebenen Preisstufen-Bereichs einschraenken."
+          "description": "Suche auf Intervalle innerhalb des angegebenen Tibber-Preisstufen-Bereichs einschränken."
+        },
+        "search_tuning": {
+          "name": "Suchalgorithmus-Feinabstimmung",
+          "description": "Feinabstimmung wie die Suche Ausreißer, Mindestqualitätsschwellen und Fallback-Verhalten behandelt."
+        },
+        "cost_estimation": {
+          "name": "Kostenabschätzung",
+          "description": "Leistungsprofil angeben, um genaue Energiekostenschätzungen basierend auf dem tatsächlichen Verbrauch zu erhalten."
         },
         "output": {
           "name": "Ausgabeoptionen",
-          "description": "Kostenabschaetzung und Vergleichsausgabe steuern."
+          "description": "Ausgabeformat steuern: Vergleichsdetails und Währungseinheit."
         }
       },
       "fields": {
@@ -1816,6 +1911,10 @@
           "name": "Suchende",
           "description": "Ende des Suchbereichs als exaktes Datum und Uhrzeit. Höchste Priorität — überschreibt alle anderen Endoptionen. Standardmäßig Ende von morgen, wenn nicht angegeben."
         },
+        "must_finish_by": {
+          "name": "Muss fertig sein bis",
+          "description": "Deadline: das Gerät muss bis zu diesem Zeitpunkt fertig sein. Der Suchbereich endet an dieser Deadline — der Service findet das teuerste Zeitfenster, das vorher endet. Kann nicht mit Suchende, Suchende-Uhrzeit, Suchende-Versatz oder Suchbereich (Shortcut) kombiniert werden."
+        },
         "search_start_time": {
           "name": "Suchbeginn-Uhrzeit",
           "description": "Alternative: Suche ab dieser Uhrzeit starten. Mit Tages-Versatz kombinieren. Wird ignoriert, wenn Suchbeginn (Datum/Uhrzeit) gesetzt ist."
@@ -1854,49 +1953,65 @@
         },
         "search_scope": {
           "name": "Suchbereich (Shortcut)",
-          "description": "Kurzwahl fuer haeufige Suchbereiche. Ueberschreibt alle anderen Zeitbereich-Optionen. today/tomorrow = ganzer Kalendertag, remaining_today = jetzt bis Mitternacht, next_24h/next_48h = rollierendes Fenster ab jetzt."
+          "description": "Kurzwahl für häufige Suchbereiche. Überschreibt alle anderen Zeitbereich-Optionen. today/tomorrow = ganzer Kalendertag, remaining_today = jetzt bis Mitternacht, next_24h/next_48h = rollierendes Fenster ab jetzt."
         },
         "max_price_level": {
           "name": "Maximale Preisstufe",
-          "description": "Nur Intervalle bis zu dieser Tibber-Preisstufe beruecksichtigen. very_cheap = restriktivste, very_expensive = keine Einschraenkung."
+          "description": "Nur Intervalle bis zu dieser Tibber-Preisstufe berücksichtigen. very_cheap = restriktivste, very_expensive = keine Einschränkung."
         },
         "min_price_level": {
           "name": "Minimale Preisstufe",
-          "description": "Nur Intervalle ab dieser Tibber-Preisstufe beruecksichtigen. Nuetzlich fuer find_most_expensive, um wirklich teure Intervalle zu fokussieren."
+          "description": "Nur Intervalle ab dieser Tibber-Preisstufe berücksichtigen. Nützlich für find_most_expensive, um wirklich teure Intervalle zu fokussieren."
         },
         "include_comparison_details": {
           "name": "Vergleichsdetails einschliessen",
-          "description": "Das price_comparison-Ergebnis um zusaetzliche Felder ergaenzen: comparison_price_min, comparison_price_max und (nur Block) comparison_window_end."
+          "description": "Das price_comparison-Ergebnis um zusätzliche Felder ergänzen: comparison_price_min, comparison_price_max und (nur Block) comparison_window_end."
         },
         "power_profile": {
           "name": "Leistungsprofil",
-          "description": "Variable Leistungsaufnahme in Watt pro 15-Minuten-Intervall. Wenn gesetzt, gibt estimated_total_cost den tatsaechlichen Verbrauch statt einer festen 1-kW-Last an."
+          "description": "Variable Leistungsaufnahme in Watt pro 15-Minuten-Intervall. Wenn gesetzt, gibt estimated_total_cost den tatsächlichen Verbrauch statt einer festen 1-kW-Last an."
+        },
+        "smooth_outliers": {
+          "name": "Ausreißer glätten",
+          "description": "Preisausreißer vor der Suche glätten. Ausreißer-Intervalle werden vorübergehend durch den Durchschnitt ihrer Nachbarn ersetzt, sodass ein einzelner Ausschlag das Ergebnis nicht dominiert. Die Antwort zeigt immer die Original-Preise (ungeglättet). Standard: aktiviert."
+        },
+        "min_distance_from_avg": {
+          "name": "Min. Abstand vom Durchschnitt",
+          "description": "Ergebnis muss mindestens um diesen Prozentsatz vom Suchbereichs-Durchschnitt abweichen. Für günstigste: Ergebnis muss mindestens X% unter dem Durchschnitt liegen. Für teuerste: mindestens X% darüber. Wird die Bedingung nicht erfüllt, wird kein Ergebnis zurückgegeben (reason: selection_above/below_distance_threshold). Leer lassen zum Deaktivieren."
+        },
+        "allow_relaxation": {
+          "name": "Lockerung erlauben",
+          "description": "Filter schrittweise lockern, um ein Ergebnis zu garantieren. Phasen: 1) Abstandsschwelle reduzieren/entfernen 2) Preislevel-Filter erweitern 3) Dauer reduzieren. Standard: aktiviert."
+        },
+        "duration_flexibility_minutes": {
+          "name": "Dauer-Flexibilität",
+          "description": "Maximale Minuten, um die die Dauer bei der Lockerung verkürzt werden darf (0–120, Schritt 15). Leer lassen für automatische Berechnung (~20% der Dauer, max. 60 Min.)."
         }
       }
     },
     "find_cheapest_schedule": {
-      "name": "Guenstigstes Programm planen",
-      "description": "Plant mehrere Geraete optimal ohne Zeitueberschneidung. Jede Aufgabe erhaelt das guenstigste verfuegbare zusammenhaengende Zeitfenster.",
+      "name": "Günstigstes Programm planen",
+      "description": "Plant mehrere Geräte optimal ohne Zeitüberschneidung. Jede Aufgabe erhält das günstigste verfügbare zusammenhängende Zeitfenster.",
       "sections": {
-        "scheduling_options": {
-          "name": "Planungsoptionen",
-          "description": "Aufgaben und Puffer zwischen den Geraeteaufzeiten konfigurieren."
-        },
         "search_range": {
-          "name": "Suchbereich",
-          "description": "Zeitfenster fuer die Suche festlegen."
+          "name": "Benutzerdefinierter Suchbereich",
+          "description": "Exakte Start- und Endzeiten für die Suche festlegen. Überschreibt den Suchbereich (Shortcut), wenn gesetzt."
         },
         "time_alternatives": {
-          "name": "Alternative Zeitbereich-Optionen",
-          "description": "Alternative Moeglichkeiten zum Festlegen des Suchbereichs ueber Tageszeit und Offsets."
+          "name": "Erweiterte Zeitoptionen",
+          "description": "Alternative Möglichkeiten zum Festlegen des Suchbereichs über Tageszeit und Minuten-Offsets."
         },
         "price_filter": {
           "name": "Preisstufen-Filter",
-          "description": "Suche auf Intervalle innerhalb des angegebenen Preisstufen-Bereichs einschraenken."
+          "description": "Suche auf Intervalle innerhalb des angegebenen Tibber-Preisstufen-Bereichs einschränken."
+        },
+        "search_tuning": {
+          "name": "Suchalgorithmus-Feinabstimmung",
+          "description": "Feinabstimmung wie die Suche Ausreißer, Mindestqualitätsschwellen und Fallback-Verhalten behandelt."
         },
         "output": {
           "name": "Ausgabeoptionen",
-          "description": "Kostenabschaetzung und Vergleichsausgabe steuern."
+          "description": "Ausgabeformat steuern: Vergleichsdetails und Währungseinheit."
         }
       },
       "fields": {
@@ -1906,7 +2021,7 @@
         },
         "tasks": {
           "name": "Aufgaben",
-          "description": "Liste der zu planenden Aufgaben. Jede Aufgabe benoetigt name (Text) und duration (hh:mm:ss). Optional: power_profile (Watt pro 15-min-Intervall). Maximal 4 Aufgaben."
+          "description": "Liste der zu planenden Aufgaben. Jede Aufgabe benötigt name (Text) und duration (hh:mm:ss). Optional: power_profile (Watt pro 15-min-Intervall). Maximal 4 Aufgaben."
         },
         "gap_minutes": {
           "name": "Pause zwischen Aufgaben (Minuten)",
@@ -1914,7 +2029,7 @@
         },
         "search_scope": {
           "name": "Suchbereich (Shortcut)",
-          "description": "Kurzwahl fuer haeufige Suchbereiche. Ueberschreibt alle anderen Zeitbereich-Optionen. today/tomorrow = ganzer Kalendertag, remaining_today = jetzt bis Mitternacht, next_24h/next_48h = rollierendes Fenster ab jetzt."
+          "description": "Kurzwahl für häufige Suchbereiche. Überschreibt alle anderen Zeitbereich-Optionen. today/tomorrow = ganzer Kalendertag, remaining_today = jetzt bis Mitternacht, next_24h/next_48h = rollierendes Fenster ab jetzt."
         },
         "search_start": {
           "name": "Suchbeginn",
@@ -1923,6 +2038,10 @@
         "search_end": {
           "name": "Suchende",
           "description": "Ende des Suchbereichs als exaktes Datum und Uhrzeit. Höchste Priorität — überschreibt alle anderen Endoptionen. Standardmäßig Ende von morgen, wenn nicht angegeben."
+        },
+        "must_finish_by": {
+          "name": "Muss fertig sein bis",
+          "description": "Deadline: das Gerät muss bis zu diesem Zeitpunkt fertig sein. Der Suchbereich endet an dieser Deadline — der Service findet das günstigste Zeitfenster, das vorher endet. Kann nicht mit Suchende, Suchende-Uhrzeit oder Suchende-Offset kombiniert werden."
         },
         "search_start_time": {
           "name": "Suchbeginn-Uhrzeit",
@@ -1948,25 +2067,33 @@
           "name": "Suchende-Versatz (Minuten)",
           "description": "Alternative: Suche endet in dieser Anzahl Minuten ab jetzt. Positiv = Zukunft (480 = in 8 Stunden), negativ = Vergangenheit (-60 = vor 1 Stunde). Wird ignoriert, wenn Suchende oder Suchende-Uhrzeit gesetzt ist."
         },
-        "include_current_interval": {
-          "name": "Aktuelles Intervall einbeziehen",
-          "description": "Das aktuell laufende 15-Minuten-Intervall in die Suche einbeziehen. Wenn aktiviert (Standard), beginnt die Suche am Anfang des aktuellen Intervalls, sodass es Teil des Ergebnisses sein kann."
-        },
         "max_price_level": {
           "name": "Maximale Preisstufe",
-          "description": "Nur Intervalle bis zu dieser Tibber-Preisstufe beruecksichtigen. very_cheap = restriktivste, very_expensive = keine Einschraenkung."
+          "description": "Nur Intervalle bis zu dieser Tibber-Preisstufe berücksichtigen. very_cheap = restriktivste, very_expensive = keine Einschränkung."
         },
         "min_price_level": {
           "name": "Minimale Preisstufe",
-          "description": "Nur Intervalle ab dieser Tibber-Preisstufe beruecksichtigen. Nuetzlich fuer find_most_expensive, um wirklich teure Intervalle zu fokussieren."
+          "description": "Nur Intervalle ab dieser Tibber-Preisstufe berücksichtigen. Nützlich für find_most_expensive, um wirklich teure Intervalle zu fokussieren."
         },
         "include_comparison_details": {
           "name": "Vergleichsdetails einbeziehen",
-          "description": "Fuegt pro Aufgabe zusaetzliche price_comparison-Details hinzu (comparison_price_min, comparison_price_max, comparison_window_end), um das gefundene Zeitfenster mit dem gegenteiligen Extremfenster gleicher Dauer zu vergleichen."
+          "description": "Fügt pro Aufgabe zusätzliche price_comparison-Details hinzu (comparison_price_min, comparison_price_max, comparison_window_end), um das gefundene Zeitfenster mit dem gegenteiligen Extremfenster gleicher Dauer zu vergleichen."
         },
         "use_base_unit": {
           "name": "Basiswährung verwenden",
           "description": "Preise in Basiswährung (EUR, NOK) statt der konfigurierten Anzeigeeinheit (ct, øre) erzwingen. Nützlich für Berechnungen."
+        },
+        "smooth_outliers": {
+          "name": "Ausreißer glätten",
+          "description": "Preisausreißer vor der Suche glätten. Ausreißer-Intervalle werden vorübergehend durch den Durchschnitt ihrer Nachbarn ersetzt, sodass ein einzelner Ausschlag das Ergebnis nicht dominiert. Die Antwort zeigt immer die Original-Preise (ungeglättet). Standard: aktiviert."
+        },
+        "allow_relaxation": {
+          "name": "Lockerung erlauben",
+          "description": "Filter schrittweise lockern, um ein Ergebnis zu garantieren. Phasen: 1) Abstandsschwelle reduzieren/entfernen 2) Preislevel-Filter erweitern 3) Dauer reduzieren. Standard: aktiviert."
+        },
+        "duration_flexibility_minutes": {
+          "name": "Dauer-Flexibilität",
+          "description": "Maximale Minuten, um die die Dauer bei der Lockerung verkürzt werden darf (0–120, Schritt 15). Leer lassen für automatische Berechnung (~20% der Dauer, max. 60 Min.)."
         }
       }
     }
@@ -2075,8 +2202,8 @@
         "today": "Heute",
         "tomorrow": "Morgen",
         "remaining_today": "Rest heute",
-        "next_24h": "Naechste 24 Stunden",
-        "next_48h": "Naechste 48 Stunden"
+        "next_24h": "Nächste 24 Stunden",
+        "next_48h": "Nächste 48 Stunden"
       }
     }
   }

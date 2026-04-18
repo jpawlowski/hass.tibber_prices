@@ -14,6 +14,8 @@ from datetime import datetime, timedelta
 import statistics
 from typing import Any
 
+from custom_components.tibber_prices.utils.price import calculate_coefficient_of_variation
+
 
 def find_cheapest_contiguous_window(
     intervals: list[dict[str, Any]],
@@ -287,6 +289,7 @@ def calculate_window_statistics(
             "price_min": None,
             "price_max": None,
             "price_spread": None,
+            "coefficient_of_variation": None,
             "estimated_total_cost": None,
         }
         if power_profile is not None:
@@ -301,6 +304,10 @@ def calculate_window_statistics(
     spread = round(price_max - price_min, round_decimals)
 
     hours_per_interval = interval_minutes / 60
+
+    # Calculate coefficient of variation (CV) as quality indicator
+    cv = calculate_coefficient_of_variation(prices)
+    cv_rounded = round(cv, round_decimals) if cv is not None else None
 
     if power_profile is not None:
         # Extend profile to cover all intervals by repeating the last value
@@ -317,6 +324,7 @@ def calculate_window_statistics(
             "price_min": price_min,
             "price_max": price_max,
             "price_spread": spread,
+            "coefficient_of_variation": cv_rounded,
             "estimated_total_cost": estimated_cost,
             "estimated_load_kwh": estimated_load_kwh,
         }
@@ -331,6 +339,7 @@ def calculate_window_statistics(
         "price_min": price_min,
         "price_max": price_max,
         "price_spread": spread,
+        "coefficient_of_variation": cv_rounded,
         "estimated_total_cost": estimated_cost,
     }
 

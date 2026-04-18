@@ -11,7 +11,7 @@ from __future__ import annotations
 from datetime import datetime, timedelta
 import logging
 import math
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 import voluptuous as vol
 
@@ -25,14 +25,25 @@ from .helpers import (
     INTERVAL_MINUTES,
     PRICE_LEVEL_ORDER,
     VALID_SEARCH_SCOPES,
+    apply_must_finish_by,
     build_rating_lookup,
     build_response_interval,
+    calculate_search_range_avg,
+    check_min_distance_from_avg,
     filter_intervals_by_price_level,
     get_entry_and_data,
     resolve_home_timezone,
     resolve_search_range,
+    restore_original_prices,
+    smooth_service_intervals,
     validate_power_profile_length,
     validate_price_level_range,
+    validate_search_params,
+)
+from .relaxation import (
+    MIN_RELAXED_DURATION_INTERVALS,
+    calculate_max_duration_reduction_intervals,
+    generate_relaxation_steps,
 )
 
 if TYPE_CHECKING:
@@ -72,6 +83,11 @@ _COMMON_HOURS_SCHEMA = {
     ),
     vol.Optional("include_current_interval", default=True): cv.boolean,
     vol.Optional("use_base_unit", default=False): cv.boolean,
+    vol.Optional("smooth_outliers", default=True): cv.boolean,
+    vol.Optional("min_distance_from_avg"): vol.All(vol.Coerce(float), vol.Range(min=0.1, max=50.0)),
+    vol.Optional("allow_relaxation", default=True): cv.boolean,
+    vol.Optional("duration_flexibility_minutes"): vol.All(vol.Coerce(int), vol.Range(min=0, max=120)),
+    vol.Optional("must_finish_by"): cv.datetime,
 }
 
 FIND_CHEAPEST_HOURS_SERVICE_SCHEMA = vol.Schema(_COMMON_HOURS_SCHEMA)
@@ -92,6 +108,56 @@ def _determine_no_intervals_reason(
     if len(filtered_price_info) < total_intervals:
         return "insufficient_intervals_after_filter"
     return "insufficient_intervals_for_constraints"
+
+
+def _attempt_find_hours(
+    price_info: list[dict],
+    *,
+    max_price_level: str | None,
+    min_price_level: str | None,
+    total_intervals: int,
+    min_segment_intervals: int,
+    smooth_outliers: bool,
+    min_distance_from_avg: float | None,
+    reverse: bool,
+) -> tuple[dict | None, str]:
+    """Attempt to find hours with specific filter parameters.
+
+    Returns:
+        (result_dict, "") on success or (None, reason_code) on failure.
+
+    """
+    level_filter_active = min_price_level is not None or max_price_level is not None
+    filtered = filter_intervals_by_price_level(price_info, min_price_level, max_price_level)
+
+    if smooth_outliers and filtered:
+        search_data = smooth_service_intervals(filtered)
+    else:
+        search_data = filtered
+
+    result = find_cheapest_n_intervals(search_data, total_intervals, min_segment_intervals, reverse=reverse)
+
+    if result is None:
+        return None, _determine_no_intervals_reason(
+            price_info, filtered, total_intervals, level_filter_active=level_filter_active
+        )
+
+    # Restore original prices (smoothing only affects scoring)
+    if smooth_outliers:
+        result["intervals"] = restore_original_prices(result["intervals"])
+        for seg in result["segments"]:
+            seg["intervals"] = restore_original_prices(seg["intervals"])
+
+    # Check distance constraint
+    if min_distance_from_avg is not None:
+        range_avg = calculate_search_range_avg(price_info)
+        window_mean = sum(iv["total"] for iv in result["intervals"]) / len(result["intervals"])
+        if range_avg is not None and not check_min_distance_from_avg(
+            window_mean, range_avg, min_distance_from_avg, reverse=reverse
+        ):
+            return None, "selection_above_distance_threshold" if not reverse else "selection_below_distance_threshold"
+
+    return result, ""
 
 
 def _build_found_response(
@@ -217,7 +283,10 @@ async def _handle_find_hours(
     min_price_level: str | None = call.data.get("min_price_level")
     include_comparison_details: bool = call.data.get("include_comparison_details", False)
     power_profile: list[int] | None = call.data.get("power_profile")
-    level_filter_active = min_price_level is not None or max_price_level is not None
+    smooth_outliers: bool = call.data.get("smooth_outliers", True)
+    min_distance_from_avg: float | None = call.data.get("min_distance_from_avg")
+    allow_relaxation: bool = call.data.get("allow_relaxation", True)
+    duration_flexibility_minutes: int | None = call.data.get("duration_flexibility_minutes")
 
     total_minutes_requested = int(duration_td.total_seconds() / 60)
     min_segment_minutes_requested = int(min_segment_td.total_seconds() / 60) if min_segment_td else INTERVAL_MINUTES
@@ -243,9 +312,13 @@ async def _handle_find_hours(
 
     home_tz = ZoneInfo(home_timezone)
 
+    # Handle must_finish_by: convert deadline to search_end
+    validate_search_params(call.data)
+    effective_data, must_finish_by_dt = apply_must_finish_by(call.data, home_tz)
+
     # Resolve search range (priority: explicit datetime > time+offset > minutes offset > default)
     now = dt_util.now().astimezone(home_tz)
-    search_start, search_end = resolve_search_range(call.data, now, home_tz)
+    search_start, search_end = resolve_search_range(effective_data, now, home_tz)
 
     total_intervals = total_minutes // INTERVAL_MINUTES
     min_segment_intervals = min_segment_minutes // INTERVAL_MINUTES
@@ -296,47 +369,97 @@ async def _handle_find_hours(
     unit_factor = 1 if use_base_unit else get_display_unit_factor(entry)
     price_unit = f"{currency}/kWh" if use_base_unit else get_display_unit_string(entry, currency)
 
-    # Apply optional price level filter (P5)
-    filtered_price_info = filter_intervals_by_price_level(price_info, min_price_level, max_price_level)
+    # --- Attempt with original parameters ---
+    effective_total = total_intervals
+    result, reason = _attempt_find_hours(
+        price_info,
+        max_price_level=max_price_level,
+        min_price_level=min_price_level,
+        total_intervals=effective_total,
+        min_segment_intervals=min_segment_intervals,
+        smooth_outliers=smooth_outliers,
+        min_distance_from_avg=min_distance_from_avg,
+        reverse=reverse,
+    )
 
-    # Find cheapest/most expensive intervals
-    result = find_cheapest_n_intervals(filtered_price_info, total_intervals, min_segment_intervals, reverse=reverse)
+    relaxation_applied = False
+    relaxation_steps = 0
+
+    # --- Relaxation loop ---
+    if result is None and allow_relaxation:
+        max_reduction = calculate_max_duration_reduction_intervals(total_intervals, duration_flexibility_minutes)
+        min_dur = max(MIN_RELAXED_DURATION_INTERVALS, min_segment_intervals)
+        steps = generate_relaxation_steps(
+            min_distance_from_avg=min_distance_from_avg,
+            max_price_level=max_price_level,
+            min_price_level=min_price_level,
+            total_intervals=total_intervals,
+            min_duration_intervals=min_dur,
+            max_duration_reduction_intervals=max_reduction,
+            reverse=reverse,
+        )
+        for step in steps:
+            effective_total = total_intervals - step.duration_reduction
+            result, reason = _attempt_find_hours(
+                price_info,
+                max_price_level=step.max_price_level,
+                min_price_level=step.min_price_level,
+                total_intervals=effective_total,
+                min_segment_intervals=min_segment_intervals,
+                smooth_outliers=smooth_outliers,
+                min_distance_from_avg=step.min_distance_from_avg,
+                reverse=reverse,
+            )
+            if result is not None:
+                relaxation_applied = True
+                relaxation_steps = step.step_number
+                _LOGGER.info(
+                    "%s: relaxation succeeded at step %d (phase=%s, intervals=%d)",
+                    service_label,
+                    step.step_number,
+                    step.phase,
+                    effective_total,
+                )
+                break
+        else:
+            reason = "relaxation_exhausted"
+
+    effective_total_minutes = effective_total * INTERVAL_MINUTES
 
     if result is None:
-        reason = _determine_no_intervals_reason(
-            price_info,
-            filtered_price_info,
-            total_intervals,
-            level_filter_active=level_filter_active,
-        )
         _LOGGER.info(
-            "%s: no interval selection found (reason=%s, need %d, have %d after level filter)",
+            "%s: no interval selection found (reason=%s, need %d, have %d in range)",
             service_label,
             reason,
-            total_intervals,
-            len(filtered_price_info),
+            effective_total,
+            len(price_info),
         )
-        return {
+        response: dict[str, Any] = {
             "home_id": home_id,
             "search_start": search_start.isoformat(),
             "search_end": search_end.isoformat(),
+            "must_finish_by": must_finish_by_dt.isoformat() if must_finish_by_dt else None,
             "total_minutes_requested": total_minutes_requested,
-            "total_minutes": total_minutes,
+            "total_minutes": effective_total_minutes,
             "min_segment_minutes_requested": min_segment_minutes_requested,
             "min_segment_minutes": min_segment_minutes,
             "currency": currency,
             "price_unit": price_unit,
             "intervals_found": False,
             "reason": reason,
+            "relaxation_applied": relaxation_applied,
             "schedule": None,
         }
+        if relaxation_applied:
+            response["relaxation_steps"] = relaxation_steps
+        return response
 
     # Find opposite-direction selection for price comparison (from full unfiltered list)
     comparison_result = find_cheapest_n_intervals(
-        price_info, total_intervals, min_segment_intervals, reverse=not reverse
+        price_info, effective_total, min_segment_intervals, reverse=not reverse
     )
 
-    return _build_found_response(
+    found_response = _build_found_response(
         result=result,
         comparison_result=comparison_result,
         reverse=reverse,
@@ -344,7 +467,7 @@ async def _handle_find_hours(
         search_start=search_start,
         search_end=search_end,
         total_minutes_requested=total_minutes_requested,
-        total_minutes=total_minutes,
+        total_minutes=effective_total_minutes,
         min_segment_minutes_requested=min_segment_minutes_requested,
         min_segment_minutes=min_segment_minutes,
         currency=currency,
@@ -355,6 +478,22 @@ async def _handle_find_hours(
         include_comparison_details=include_comparison_details,
         power_profile=power_profile,
     )
+    found_response["relaxation_applied"] = relaxation_applied
+    found_response["must_finish_by"] = must_finish_by_dt.isoformat() if must_finish_by_dt else None
+    if relaxation_applied:
+        found_response["relaxation_steps"] = relaxation_steps
+
+    # Add seconds_until_start (time until first segment starts)
+    schedule = found_response.get("schedule")
+    if schedule and schedule.get("segments"):
+        first_seg_start = schedule["segments"][0]["start"]
+        first_seg_dt = datetime.fromisoformat(first_seg_start)
+        schedule["seconds_until_start"] = max(0, int((first_seg_dt - now).total_seconds()))
+        last_seg_end = schedule["segments"][-1]["end"]
+        last_seg_end_dt = datetime.fromisoformat(last_seg_end)
+        schedule["seconds_until_end"] = max(0, int((last_seg_end_dt - now).total_seconds()))
+
+    return found_response
 
 
 async def handle_find_cheapest_hours(call: ServiceCall) -> ServiceResponse:

@@ -221,6 +221,7 @@ async def test_block_handler_returns_level_filter_reason(monkeypatch: pytest.Mon
             "duration": timedelta(hours=1),
             "max_price_level": "very_cheap",
             "use_base_unit": True,
+            "allow_relaxation": False,
         },
     )
     response = cast("dict[str, Any]", await handle_find_cheapest_block(cast("ServiceCall", call)))
@@ -251,6 +252,7 @@ async def test_hours_handler_returns_insufficient_intervals_reason(monkeypatch: 
         data={
             "duration": timedelta(hours=1),  # needs 4 intervals
             "use_base_unit": True,
+            "allow_relaxation": False,
         },
     )
     response = cast("dict[str, Any]", await handle_find_cheapest_hours(cast("ServiceCall", call)))

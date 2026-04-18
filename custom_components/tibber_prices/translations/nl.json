@@ -1289,6 +1289,9 @@
     },
     "tasks_exceed_search_window": {
       "message": "De totale taaktijd inclusief pauzes ({total_minutes} min) overschrijdt het zoekvenster ({window_minutes} min). Verklein de taakduur, verlaag gap_minutes of vergroot het zoekbereik."
+    },
+    "must_finish_by_conflicts_with_end": {
+      "message": "must_finish_by kan niet worden gecombineerd met eindgrensparameters ({params}). Gebruik must_finish_by alleen — het stelt het zoekeinde automatisch in op de deadline."
     }
   },
   "services": {
@@ -1503,20 +1506,28 @@
       "description": "Vindt het goedkoopste aaneengesloten tijdvenster van een bepaalde duur. Ontworpen voor apparaatplanning: vaatwasser, wasmachine, droger enz. Retourneert het goedkoopste venster met start-/eindtijden en prijsstatistieken.",
       "sections": {
         "search_range": {
-          "name": "Zoekbereik",
-          "description": "Definieer het tijdvenster voor het zoeken."
+          "name": "Aangepast zoekbereik",
+          "description": "Definieer precieze start- en eindtijden voor het zoeken. Overschrijft het zoekbereik wanneer ingesteld."
         },
         "time_alternatives": {
-          "name": "Alternatieve tijdbereiksopties",
-          "description": "Alternatieve manieren om het zoekbereik te definieren via tijdstip en offsets."
+          "name": "Geavanceerde tijdopties",
+          "description": "Alternatieve manieren om het zoekbereik te definiëren met tijdstip en minuutverschuivingen."
         },
         "price_filter": {
-          "name": "Prijsniveau-filter",
-          "description": "Beperk het zoeken tot intervallen binnen het opgegeven prijsniveaubereik."
+          "name": "Prijsniveaufilter",
+          "description": "Beperk het zoeken tot intervallen binnen het opgegeven Tibber-prijsniveaubereik."
+        },
+        "search_tuning": {
+          "name": "Zoekalgoritme-fijnafstelling",
+          "description": "Verfijn hoe het zoeken omgaat met uitschieters, minimale kwaliteitsdrempels en terugvalgedrag."
+        },
+        "cost_estimation": {
+          "name": "Kostenraming",
+          "description": "Geef een vermogensprofiel op voor nauwkeurige energiekostenramingen op basis van werkelijk verbruik."
         },
         "output": {
           "name": "Uitvoeropties",
-          "description": "Stuur kostnadsraming en vergelijkingsuitvoer."
+          "description": "Uitvoerformaat regelen: vergelijkingsdetails en valuta-eenheid."
         }
       },
       "fields": {
@@ -1535,6 +1546,10 @@
         "search_end": {
           "name": "Zoekeinde",
           "description": "Einde van het zoekbereik als exacte datum en tijd. Hoogste prioriteit — overschrijft alle andere eindopties. Standaard is einde van morgen als niet opgegeven."
+        },
+        "must_finish_by": {
+          "name": "Moet klaar zijn voor",
+          "description": "Deadline: het apparaat moet voor dit tijdstip klaar zijn. Het zoekbereik eindigt bij deze deadline — de service vindt het goedkoopste venster dat ervoor eindigt. Kan niet worden gecombineerd met Zoek einde, Zoek eindtijd of Zoek einde offset."
         },
         "search_start_time": {
           "name": "Zoekstart-tijd",
@@ -1587,6 +1602,22 @@
         "power_profile": {
           "name": "Vermogensprofiel",
           "description": "Variabel vermogensverbruik in watt per 15-minuten-interval. Indien ingesteld, weerspiegelt estimated_total_cost het werkelijke verbruik."
+        },
+        "smooth_outliers": {
+          "name": "Uitschieters gladstrijken",
+          "description": "Prijsuitschieters gladstrijken vóór het zoeken. Uitschieters worden tijdelijk vervangen door het gemiddelde van hun buren, zodat een enkele piek of dip het resultaat niet domineert. Het antwoord toont altijd de originele (onafgevlakte) prijzen. Standaard: ingeschakeld."
+        },
+        "min_distance_from_avg": {
+          "name": "Min. afstand van gemiddelde",
+          "description": "Vereis dat het gevonden resultaat minstens dit percentage afwijkt van het gemiddelde van het zoekbereik. Voor goedkoopst: resultaat moet minstens X% onder het gemiddelde liggen. Voor duurste: minstens X% erboven. Als niet voldaan, wordt geen resultaat teruggegeven (reason: selection_above/below_distance_threshold). Leeg laten om te deactiveren."
+        },
+        "allow_relaxation": {
+          "name": "Versoepeling toestaan",
+          "description": "Filters geleidelijk versoepelen om een resultaat te garanderen. Fasen: 1) Afstandsdrempel verlagen/verwijderen 2) Prijsniveaufilters uitbreiden 3) Duur verkorten. Standaard: ingeschakeld."
+        },
+        "duration_flexibility_minutes": {
+          "name": "Duurflexibiliteit",
+          "description": "Maximale minuten waarmee de duur mag worden verkort bij versoepeling (0–120, stap 15). Leeg laten voor automatische berekening (~20% van de duur, max 60 min)."
         }
       }
     },
@@ -1595,20 +1626,28 @@
       "description": "Vindt het duurste aaneengesloten tijdvenster van een bepaalde duur. Nuttig voor het identificeren van piekprijsperioden die vermeden moeten worden. Retourneert het duurste venster met start-/eindtijden en prijsstatistieken.",
       "sections": {
         "search_range": {
-          "name": "Zoekbereik",
-          "description": "Definieer het tijdvenster voor het zoeken."
+          "name": "Aangepast zoekbereik",
+          "description": "Definieer precieze start- en eindtijden voor het zoeken. Overschrijft het zoekbereik wanneer ingesteld."
         },
         "time_alternatives": {
-          "name": "Alternatieve tijdbereiksopties",
-          "description": "Alternatieve manieren om het zoekbereik te definieren via tijdstip en offsets."
+          "name": "Geavanceerde tijdopties",
+          "description": "Alternatieve manieren om het zoekbereik te definiëren met tijdstip en minuutverschuivingen."
         },
         "price_filter": {
-          "name": "Prijsniveau-filter",
-          "description": "Beperk het zoeken tot intervallen binnen het opgegeven prijsniveaubereik."
+          "name": "Prijsniveaufilter",
+          "description": "Beperk het zoeken tot intervallen binnen het opgegeven Tibber-prijsniveaubereik."
+        },
+        "search_tuning": {
+          "name": "Zoekalgoritme-fijnafstelling",
+          "description": "Verfijn hoe het zoeken omgaat met uitschieters, minimale kwaliteitsdrempels en terugvalgedrag."
+        },
+        "cost_estimation": {
+          "name": "Kostenraming",
+          "description": "Geef een vermogensprofiel op voor nauwkeurige energiekostenramingen op basis van werkelijk verbruik."
         },
         "output": {
           "name": "Uitvoeropties",
-          "description": "Stuur kostnadsraming en vergelijkingsuitvoer."
+          "description": "Uitvoerformaat regelen: vergelijkingsdetails en valuta-eenheid."
         }
       },
       "fields": {
@@ -1627,6 +1666,10 @@
         "search_end": {
           "name": "Zoekeinde",
           "description": "Einde van het zoekbereik als exacte datum en tijd. Hoogste prioriteit — overschrijft alle andere eindopties. Standaard is einde van morgen als niet opgegeven."
+        },
+        "must_finish_by": {
+          "name": "Moet klaar zijn voor",
+          "description": "Deadline: het apparaat moet voor dit tijdstip klaar zijn. Het zoekbereik eindigt bij deze deadline — de service vindt het duurste venster dat ervoor eindigt. Kan niet gecombineerd worden met Zoekeinde, Zoekeinde-tijdstip, Zoekeinde-verschuiving of Zoekbereik."
         },
         "search_start_time": {
           "name": "Zoekstart-tijd",
@@ -1679,6 +1722,22 @@
         "power_profile": {
           "name": "Vermogensprofiel",
           "description": "Variabel vermogensverbruik in watt per 15-minuten-interval. Indien ingesteld, weerspiegelt estimated_total_cost het werkelijke verbruik."
+        },
+        "smooth_outliers": {
+          "name": "Uitschieters gladstrijken",
+          "description": "Prijsuitschieters gladstrijken vóór het zoeken. Uitschieters worden tijdelijk vervangen door het gemiddelde van hun buren, zodat een enkele piek of dip het resultaat niet domineert. Het antwoord toont altijd de originele (onafgevlakte) prijzen. Standaard: ingeschakeld."
+        },
+        "min_distance_from_avg": {
+          "name": "Min. afstand van gemiddelde",
+          "description": "Vereis dat het gevonden resultaat minstens dit percentage afwijkt van het gemiddelde van het zoekbereik. Voor goedkoopst: resultaat moet minstens X% onder het gemiddelde liggen. Voor duurste: minstens X% erboven. Als niet voldaan, wordt geen resultaat teruggegeven (reason: selection_above/below_distance_threshold). Leeg laten om te deactiveren."
+        },
+        "allow_relaxation": {
+          "name": "Versoepeling toestaan",
+          "description": "Filters geleidelijk versoepelen om een resultaat te garanderen. Fasen: 1) Afstandsdrempel verlagen/verwijderen 2) Prijsniveaufilters uitbreiden 3) Duur verkorten. Standaard: ingeschakeld."
+        },
+        "duration_flexibility_minutes": {
+          "name": "Duurflexibiliteit",
+          "description": "Maximale minuten waarmee de duur mag worden verkort bij versoepeling (0–120, stap 15). Leeg laten voor automatische berekening (~20% van de duur, max 60 min)."
         }
       }
     },
@@ -1687,20 +1746,28 @@
       "description": "Vindt de goedkoopste intervallen voor een bepaalde totale duur, niet noodzakelijk aaneengesloten. Ontworpen voor flexibele belastingen: batterijladen, elektrisch voertuig, warmwaterboiler. Retourneert een schema van intervallen gegroepeerd in aaneengesloten segmenten.",
       "sections": {
         "search_range": {
-          "name": "Zoekbereik",
-          "description": "Definieer het tijdvenster voor het zoeken."
+          "name": "Aangepast zoekbereik",
+          "description": "Definieer precieze start- en eindtijden voor het zoeken. Overschrijft het zoekbereik wanneer ingesteld."
         },
         "time_alternatives": {
-          "name": "Alternatieve tijdbereiksopties",
-          "description": "Alternatieve manieren om het zoekbereik te definieren via tijdstip en offsets."
+          "name": "Geavanceerde tijdopties",
+          "description": "Alternatieve manieren om het zoekbereik te definiëren met tijdstip en minuutverschuivingen."
         },
         "price_filter": {
-          "name": "Prijsniveau-filter",
-          "description": "Beperk het zoeken tot intervallen binnen het opgegeven prijsniveaubereik."
+          "name": "Prijsniveaufilter",
+          "description": "Beperk het zoeken tot intervallen binnen het opgegeven Tibber-prijsniveaubereik."
+        },
+        "search_tuning": {
+          "name": "Zoekalgoritme-fijnafstelling",
+          "description": "Verfijn hoe het zoeken omgaat met uitschieters, minimale kwaliteitsdrempels en terugvalgedrag."
+        },
+        "cost_estimation": {
+          "name": "Kostenraming",
+          "description": "Geef een vermogensprofiel op voor nauwkeurige energiekostenramingen op basis van werkelijk verbruik."
         },
         "output": {
           "name": "Uitvoeropties",
-          "description": "Stuur kostnadsraming en vergelijkingsuitvoer."
+          "description": "Uitvoerformaat regelen: vergelijkingsdetails en valuta-eenheid."
         }
       },
       "fields": {
@@ -1720,6 +1787,10 @@
           "name": "Zoekeinde",
           "description": "Einde van het zoekbereik als exacte datum en tijd. Hoogste prioriteit — overschrijft alle andere eindopties. Standaard is einde van morgen als niet opgegeven."
         },
+        "must_finish_by": {
+          "name": "Moet klaar zijn voor",
+          "description": "Deadline: het apparaat moet voor dit tijdstip klaar zijn. Het zoekbereik eindigt bij deze deadline — de service vindt het goedkoopste venster dat ervoor eindigt. Kan niet worden gecombineerd met Zoek einde, Zoek eindtijd of Zoek einde offset."
+        },
         "search_start_time": {
           "name": "Zoekstart-tijd",
           "description": "Alternatief: Start zoeken vanaf dit tijdstip. Combineer met dagoffset. Wordt genegeerd als Zoekstart (datum/tijd) is ingesteld."
@@ -1775,6 +1846,22 @@
         "power_profile": {
           "name": "Vermogensprofiel",
           "description": "Variabel vermogensverbruik in watt per 15-minuten-interval. Indien ingesteld, weerspiegelt estimated_total_cost het werkelijke verbruik."
+        },
+        "smooth_outliers": {
+          "name": "Uitschieters gladstrijken",
+          "description": "Prijsuitschieters gladstrijken vóór het zoeken. Uitschieters worden tijdelijk vervangen door het gemiddelde van hun buren, zodat een enkele piek of dip het resultaat niet domineert. Het antwoord toont altijd de originele (onafgevlakte) prijzen. Standaard: ingeschakeld."
+        },
+        "min_distance_from_avg": {
+          "name": "Min. afstand van gemiddelde",
+          "description": "Vereis dat het gevonden resultaat minstens dit percentage afwijkt van het gemiddelde van het zoekbereik. Voor goedkoopst: resultaat moet minstens X% onder het gemiddelde liggen. Voor duurste: minstens X% erboven. Als niet voldaan, wordt geen resultaat teruggegeven (reason: selection_above/below_distance_threshold). Leeg laten om te deactiveren."
+        },
+        "allow_relaxation": {
+          "name": "Versoepeling toestaan",
+          "description": "Filters geleidelijk versoepelen om een resultaat te garanderen. Fasen: 1) Afstandsdrempel verlagen/verwijderen 2) Prijsniveaufilters uitbreiden 3) Duur verkorten. Standaard: ingeschakeld."
+        },
+        "duration_flexibility_minutes": {
+          "name": "Duurflexibiliteit",
+          "description": "Maximale minuten waarmee de duur mag worden verkort bij versoepeling (0–120, stap 15). Leeg laten voor automatische berekening (~20% van de duur, max 60 min)."
         }
       }
     },
@@ -1783,20 +1870,28 @@
       "description": "Vindt de duurste intervallen voor een bepaalde totale duur, niet noodzakelijk aaneengesloten. Nuttig voor het identificeren van piekprijsperioden die vermeden moeten worden. Retourneert een schema van intervallen gegroepeerd in aaneengesloten segmenten.",
       "sections": {
         "search_range": {
-          "name": "Zoekbereik",
-          "description": "Definieer het tijdvenster voor het zoeken."
+          "name": "Aangepast zoekbereik",
+          "description": "Definieer precieze start- en eindtijden voor het zoeken. Overschrijft het zoekbereik wanneer ingesteld."
         },
         "time_alternatives": {
-          "name": "Alternatieve tijdbereiksopties",
-          "description": "Alternatieve manieren om het zoekbereik te definieren via tijdstip en offsets."
+          "name": "Geavanceerde tijdopties",
+          "description": "Alternatieve manieren om het zoekbereik te definiëren met tijdstip en minuutverschuivingen."
         },
         "price_filter": {
-          "name": "Prijsniveau-filter",
-          "description": "Beperk het zoeken tot intervallen binnen het opgegeven prijsniveaubereik."
+          "name": "Prijsniveaufilter",
+          "description": "Beperk het zoeken tot intervallen binnen het opgegeven Tibber-prijsniveaubereik."
+        },
+        "search_tuning": {
+          "name": "Zoekalgoritme-fijnafstelling",
+          "description": "Verfijn hoe het zoeken omgaat met uitschieters, minimale kwaliteitsdrempels en terugvalgedrag."
+        },
+        "cost_estimation": {
+          "name": "Kostenraming",
+          "description": "Geef een vermogensprofiel op voor nauwkeurige energiekostenramingen op basis van werkelijk verbruik."
         },
         "output": {
           "name": "Uitvoeropties",
-          "description": "Stuur kostnadsraming en vergelijkingsuitvoer."
+          "description": "Uitvoerformaat regelen: vergelijkingsdetails en valuta-eenheid."
         }
       },
       "fields": {
@@ -1816,6 +1911,10 @@
           "name": "Zoekeinde",
           "description": "Einde van het zoekbereik als exacte datum en tijd. Hoogste prioriteit — overschrijft alle andere eindopties. Standaard is einde van morgen als niet opgegeven."
         },
+        "must_finish_by": {
+          "name": "Moet klaar zijn voor",
+          "description": "Deadline: het apparaat moet voor dit tijdstip klaar zijn. Het zoekbereik eindigt bij deze deadline — de service vindt het duurste venster dat ervoor eindigt. Kan niet gecombineerd worden met Zoekeinde, Zoekeinde-tijdstip, Zoekeinde-verschuiving of Zoekbereik."
+        },
         "search_start_time": {
           "name": "Zoekstart-tijd",
           "description": "Alternatief: Start zoeken vanaf dit tijdstip. Combineer met dagoffset. Wordt genegeerd als Zoekstart (datum/tijd) is ingesteld."
@@ -1871,6 +1970,22 @@
         "power_profile": {
           "name": "Vermogensprofiel",
           "description": "Variabel vermogensverbruik in watt per 15-minuten-interval. Indien ingesteld, weerspiegelt estimated_total_cost het werkelijke verbruik."
+        },
+        "smooth_outliers": {
+          "name": "Uitschieters gladstrijken",
+          "description": "Prijsuitschieters gladstrijken vóór het zoeken. Uitschieters worden tijdelijk vervangen door het gemiddelde van hun buren, zodat een enkele piek of dip het resultaat niet domineert. Het antwoord toont altijd de originele (onafgevlakte) prijzen. Standaard: ingeschakeld."
+        },
+        "min_distance_from_avg": {
+          "name": "Min. afstand van gemiddelde",
+          "description": "Vereis dat het gevonden resultaat minstens dit percentage afwijkt van het gemiddelde van het zoekbereik. Voor goedkoopst: resultaat moet minstens X% onder het gemiddelde liggen. Voor duurste: minstens X% erboven. Als niet voldaan, wordt geen resultaat teruggegeven (reason: selection_above/below_distance_threshold). Leeg laten om te deactiveren."
+        },
+        "allow_relaxation": {
+          "name": "Versoepeling toestaan",
+          "description": "Filters geleidelijk versoepelen om een resultaat te garanderen. Fasen: 1) Afstandsdrempel verlagen/verwijderen 2) Prijsniveaufilters uitbreiden 3) Duur verkorten. Standaard: ingeschakeld."
+        },
+        "duration_flexibility_minutes": {
+          "name": "Duurflexibiliteit",
+          "description": "Maximale minuten waarmee de duur mag worden verkort bij versoepeling (0–120, stap 15). Leeg laten voor automatische berekening (~20% van de duur, max 60 min)."
         }
       }
     },
@@ -1878,25 +1993,25 @@
       "name": "Goedkoopste schema vinden",
       "description": "Plant meerdere apparaten optimaal zonder tijdoverlap. Elke taak krijgt het goedkoopste beschikbare aaneengesloten tijdvenster.",
       "sections": {
-        "scheduling_options": {
-          "name": "Planningsopties",
-          "description": "Configureer taken en tussenpozen."
-        },
         "search_range": {
-          "name": "Zoekbereik",
-          "description": "Definieer het tijdvenster voor het zoeken."
+          "name": "Aangepast zoekbereik",
+          "description": "Definieer precieze start- en eindtijden voor het zoeken. Overschrijft het zoekbereik wanneer ingesteld."
         },
         "time_alternatives": {
-          "name": "Alternatieve tijdbereiksopties",
-          "description": "Alternatieve manieren om het zoekbereik te definieren via tijdstip en offsets."
+          "name": "Geavanceerde tijdopties",
+          "description": "Alternatieve manieren om het zoekbereik te definiëren met tijdstip en minuutverschuivingen."
         },
         "price_filter": {
-          "name": "Prijsniveau-filter",
-          "description": "Beperk het zoeken tot intervallen binnen het opgegeven prijsniveaubereik."
+          "name": "Prijsniveaufilter",
+          "description": "Beperk het zoeken tot intervallen binnen het opgegeven Tibber-prijsniveaubereik."
+        },
+        "search_tuning": {
+          "name": "Zoekalgoritme-fijnafstelling",
+          "description": "Verfijn hoe het zoeken omgaat met uitschieters, minimale kwaliteitsdrempels en terugvalgedrag."
         },
         "output": {
           "name": "Uitvoeropties",
-          "description": "Stuur kostnadsraming en vergelijkingsuitvoer."
+          "description": "Uitvoerformaat regelen: vergelijkingsdetails en valuta-eenheid."
         }
       },
       "fields": {
@@ -1924,6 +2039,10 @@
           "name": "Zoekeinde",
           "description": "Einde van het zoekbereik als exacte datum en tijd. Hoogste prioriteit — overschrijft alle andere eindopties. Standaard is einde van morgen als niet opgegeven."
         },
+        "must_finish_by": {
+          "name": "Moet klaar zijn voor",
+          "description": "Deadline: het apparaat moet voor dit tijdstip klaar zijn. Het zoekbereik eindigt bij deze deadline — de service vindt het goedkoopste venster dat ervoor eindigt. Kan niet worden gecombineerd met Zoek einde, Zoek eindtijd of Zoek einde offset."
+        },
         "search_start_time": {
           "name": "Zoekstart-tijd",
           "description": "Alternatief: Start zoeken vanaf dit tijdstip. Combineer met dagoffset. Wordt genegeerd als Zoekstart (datum/tijd) is ingesteld."
@@ -1948,10 +2067,6 @@
           "name": "Zoekeinde-offset (minuten)",
           "description": "Alternatief: Stop met zoeken over dit aantal minuten vanaf nu. Positief = toekomst (480 = over 8 uur), negatief = verleden (-60 = 1 uur geleden). Wordt genegeerd als Zoekeinde of Zoekeinde-tijd is ingesteld."
         },
-        "include_current_interval": {
-          "name": "Huidig interval opnemen",
-          "description": "Het huidige lopende 15-minuten interval opnemen in de zoekopdracht. Indien ingeschakeld (standaard), begint de zoekopdracht aan het begin van het huidige interval zodat het deel kan uitmaken van het resultaat."
-        },
         "max_price_level": {
           "name": "Maximaal prijsniveau",
           "description": "Overweeg alleen intervallen op of onder dit Tibber-prijsniveau. very_cheap = meest restrictief, very_expensive = geen beperking."
@@ -1967,6 +2082,18 @@
         "use_base_unit": {
           "name": "Basisvaluta gebruiken",
           "description": "Forceer prijzen in basisvaluta (EUR, NOK) in plaats van de geconfigureerde weergave-eenheid (ct, øre). Handig voor berekeningen."
+        },
+        "smooth_outliers": {
+          "name": "Uitschieters gladstrijken",
+          "description": "Prijsuitschieters gladstrijken vóór het zoeken. Uitschieters worden tijdelijk vervangen door het gemiddelde van hun buren, zodat een enkele piek of dip het resultaat niet domineert. Het antwoord toont altijd de originele (onafgevlakte) prijzen. Standaard: ingeschakeld."
+        },
+        "allow_relaxation": {
+          "name": "Versoepeling toestaan",
+          "description": "Filters geleidelijk versoepelen om een resultaat te garanderen. Fasen: 1) Afstandsdrempel verlagen/verwijderen 2) Prijsniveaufilters uitbreiden 3) Duur verkorten. Standaard: ingeschakeld."
+        },
+        "duration_flexibility_minutes": {
+          "name": "Duurflexibiliteit",
+          "description": "Maximale minuten waarmee de duur mag worden verkort bij versoepeling (0–120, stap 15). Leeg laten voor automatische berekening (~20% van de duur, max 60 min)."
         }
       }
     }

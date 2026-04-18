@@ -11,7 +11,7 @@ from __future__ import annotations
 from datetime import datetime, timedelta
 import logging
 import math
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 import voluptuous as vol
 
@@ -28,14 +28,25 @@ from .helpers import (
     INTERVAL_MINUTES,
     PRICE_LEVEL_ORDER,
     VALID_SEARCH_SCOPES,
+    apply_must_finish_by,
     build_rating_lookup,
     build_response_interval,
+    calculate_search_range_avg,
+    check_min_distance_from_avg,
     filter_intervals_by_price_level,
     get_entry_and_data,
     resolve_home_timezone,
     resolve_search_range,
+    restore_original_prices,
+    smooth_service_intervals,
     validate_power_profile_length,
     validate_price_level_range,
+    validate_search_params,
+)
+from .relaxation import (
+    MIN_RELAXED_DURATION_INTERVALS,
+    calculate_max_duration_reduction_intervals,
+    generate_relaxation_steps,
 )
 
 if TYPE_CHECKING:
@@ -71,6 +82,11 @@ _COMMON_BLOCK_SCHEMA = {
     ),
     vol.Optional("include_current_interval", default=True): cv.boolean,
     vol.Optional("use_base_unit", default=False): cv.boolean,
+    vol.Optional("smooth_outliers", default=True): cv.boolean,
+    vol.Optional("min_distance_from_avg"): vol.All(vol.Coerce(float), vol.Range(min=0.1, max=50.0)),
+    vol.Optional("allow_relaxation", default=True): cv.boolean,
+    vol.Optional("duration_flexibility_minutes"): vol.All(vol.Coerce(int), vol.Range(min=0, max=120)),
+    vol.Optional("must_finish_by"): cv.datetime,
 }
 
 FIND_CHEAPEST_BLOCK_SERVICE_SCHEMA = vol.Schema(_COMMON_BLOCK_SCHEMA)
@@ -139,6 +155,53 @@ def _determine_no_window_reason(
     return "insufficient_contiguous_window"
 
 
+def _attempt_find_block(
+    price_info: list[dict],
+    *,
+    max_price_level: str | None,
+    min_price_level: str | None,
+    duration_intervals: int,
+    smooth_outliers: bool,
+    min_distance_from_avg: float | None,
+    reverse: bool,
+) -> tuple[dict | None, str]:
+    """Attempt to find a block with specific filter parameters.
+
+    Returns:
+        (result_dict, "") on success or (None, reason_code) on failure.
+
+    """
+    level_filter_active = min_price_level is not None or max_price_level is not None
+    filtered = filter_intervals_by_price_level(price_info, min_price_level, max_price_level)
+
+    if smooth_outliers and filtered:
+        search_data = smooth_service_intervals(filtered)
+    else:
+        search_data = filtered
+
+    result = find_cheapest_contiguous_window(search_data, duration_intervals, reverse=reverse)
+
+    if result is None:
+        return None, _determine_no_window_reason(
+            price_info, filtered, duration_intervals, level_filter_active=level_filter_active
+        )
+
+    # Restore original prices (smoothing only affects window selection)
+    if smooth_outliers:
+        result["intervals"] = restore_original_prices(result["intervals"])
+
+    # Check distance constraint
+    if min_distance_from_avg is not None:
+        range_avg = calculate_search_range_avg(price_info)
+        window_mean = sum(iv["total"] for iv in result["intervals"]) / len(result["intervals"])
+        if range_avg is not None and not check_min_distance_from_avg(
+            window_mean, range_avg, min_distance_from_avg, reverse=reverse
+        ):
+            return None, "window_above_distance_threshold" if not reverse else "window_below_distance_threshold"
+
+    return result, ""
+
+
 async def _handle_find_block(
     call: ServiceCall,
     *,
@@ -159,7 +222,10 @@ async def _handle_find_block(
     min_price_level: str | None = call.data.get("min_price_level")
     include_comparison_details: bool = call.data.get("include_comparison_details", False)
     power_profile: list[int] | None = call.data.get("power_profile")
-    level_filter_active = min_price_level is not None or max_price_level is not None
+    smooth_outliers: bool = call.data.get("smooth_outliers", True)
+    min_distance_from_avg: float | None = call.data.get("min_distance_from_avg")
+    allow_relaxation: bool = call.data.get("allow_relaxation", True)
+    duration_flexibility_minutes: int | None = call.data.get("duration_flexibility_minutes")
 
     duration_minutes_requested = int(duration_td.total_seconds() / 60)
     # Round up to nearest quarter-hour interval
@@ -182,9 +248,13 @@ async def _handle_find_block(
 
     home_tz = ZoneInfo(home_timezone)
 
+    # Handle must_finish_by: convert deadline to search_end
+    validate_search_params(call.data)
+    effective_data, must_finish_by_dt = apply_must_finish_by(call.data, home_tz)
+
     # Resolve search range (priority: explicit datetime > time+offset > minutes offset > default)
     now = dt_util.now().astimezone(home_tz)
-    search_start, search_end = resolve_search_range(call.data, now, home_tz)
+    search_start, search_end = resolve_search_range(effective_data, now, home_tz)
 
     duration_intervals = duration_minutes // INTERVAL_MINUTES
 
@@ -224,41 +294,90 @@ async def _handle_find_block(
     unit_factor = 1 if use_base_unit else get_display_unit_factor(entry)
     price_unit = f"{currency}/kWh" if use_base_unit else get_display_unit_string(entry, currency)
 
-    # Apply optional price level filter (P5)
-    filtered_price_info = filter_intervals_by_price_level(price_info, min_price_level, max_price_level)
+    # --- Attempt with original parameters ---
+    effective_duration = duration_intervals
+    result, reason = _attempt_find_block(
+        price_info,
+        max_price_level=max_price_level,
+        min_price_level=min_price_level,
+        duration_intervals=effective_duration,
+        smooth_outliers=smooth_outliers,
+        min_distance_from_avg=min_distance_from_avg,
+        reverse=reverse,
+    )
 
-    # Find cheapest/most expensive window
-    result = find_cheapest_contiguous_window(filtered_price_info, duration_intervals, reverse=reverse)
+    relaxation_applied = False
+    relaxation_steps = 0
+
+    # --- Relaxation loop ---
+    if result is None and allow_relaxation:
+        max_reduction = calculate_max_duration_reduction_intervals(duration_intervals, duration_flexibility_minutes)
+        steps = generate_relaxation_steps(
+            min_distance_from_avg=min_distance_from_avg,
+            max_price_level=max_price_level,
+            min_price_level=min_price_level,
+            total_intervals=duration_intervals,
+            min_duration_intervals=MIN_RELAXED_DURATION_INTERVALS,
+            max_duration_reduction_intervals=max_reduction,
+            reverse=reverse,
+        )
+        for step in steps:
+            effective_duration = duration_intervals - step.duration_reduction
+            result, reason = _attempt_find_block(
+                price_info,
+                max_price_level=step.max_price_level,
+                min_price_level=step.min_price_level,
+                duration_intervals=effective_duration,
+                smooth_outliers=smooth_outliers,
+                min_distance_from_avg=step.min_distance_from_avg,
+                reverse=reverse,
+            )
+            if result is not None:
+                relaxation_applied = True
+                relaxation_steps = step.step_number
+                effective_duration_minutes = effective_duration * INTERVAL_MINUTES
+                _LOGGER.info(
+                    "%s: relaxation succeeded at step %d (phase=%s, duration=%dmin)",
+                    service_label,
+                    step.step_number,
+                    step.phase,
+                    effective_duration_minutes,
+                )
+                break
+        else:
+            reason = "relaxation_exhausted"
 
     if result is None:
-        reason = _determine_no_window_reason(
-            price_info,
-            filtered_price_info,
-            duration_intervals,
-            level_filter_active=level_filter_active,
-        )
         _LOGGER.info(
-            "%s: no window found (reason=%s, need %d intervals, have %d after level filter)",
+            "%s: no window found (reason=%s, need %d intervals, have %d in range)",
             service_label,
             reason,
-            duration_intervals,
-            len(filtered_price_info),
+            effective_duration,
+            len(price_info),
         )
-        return {
+        response: dict[str, Any] = {
             "home_id": home_id,
             "search_start": search_start.isoformat(),
             "search_end": search_end.isoformat(),
+            "must_finish_by": must_finish_by_dt.isoformat() if must_finish_by_dt else None,
             "duration_minutes_requested": duration_minutes_requested,
-            "duration_minutes": duration_minutes,
+            "duration_minutes": effective_duration * INTERVAL_MINUTES,
             "currency": currency,
             "price_unit": price_unit,
             "window_found": False,
             "reason": reason,
+            "relaxation_applied": relaxation_applied,
             "window": None,
         }
+        if relaxation_applied:
+            response["relaxation_steps"] = relaxation_steps
+        return response
+
+    # Effective duration may differ from original if relaxation reduced it
+    effective_duration_minutes = effective_duration * INTERVAL_MINUTES
 
     # Find the opposite-direction window for price comparison (from full unfiltered list)
-    comparison_result = find_cheapest_contiguous_window(price_info, duration_intervals, reverse=not reverse)
+    comparison_result = find_cheapest_contiguous_window(price_info, effective_duration, reverse=not reverse)
 
     # Calculate statistics and build response
     stats = calculate_window_statistics(
@@ -280,27 +399,42 @@ async def _handle_find_block(
     else:
         end_time = last_start + timedelta(minutes=INTERVAL_MINUTES)
 
+    # Calculate seconds until window start for scheduling convenience
+    window_start_str = (
+        result["intervals"][0]["startsAt"]
+        if isinstance(result["intervals"][0]["startsAt"], str)
+        else result["intervals"][0]["startsAt"].isoformat()
+    )
+    window_start_dt = datetime.fromisoformat(window_start_str)
+    seconds_until_start = max(0, int((window_start_dt - now).total_seconds()))
+    end_time_dt = end_time if isinstance(end_time, datetime) else datetime.fromisoformat(end_time)
+    seconds_until_end = max(0, int((end_time_dt - now).total_seconds()))
+
     response = {
         "home_id": home_id,
         "search_start": search_start.isoformat(),
         "search_end": search_end.isoformat(),
+        "must_finish_by": must_finish_by_dt.isoformat() if must_finish_by_dt else None,
         "duration_minutes_requested": duration_minutes_requested,
-        "duration_minutes": duration_minutes,
+        "duration_minutes": effective_duration_minutes,
         "currency": currency,
         "price_unit": price_unit,
         "window_found": True,
+        "relaxation_applied": relaxation_applied,
         "window": {
-            "start": result["intervals"][0]["startsAt"]
-            if isinstance(result["intervals"][0]["startsAt"], str)
-            else result["intervals"][0]["startsAt"].isoformat(),
+            "start": window_start_str,
             "end": end_time.isoformat() if hasattr(end_time, "isoformat") else end_time,
-            "duration_minutes": duration_minutes,
+            "seconds_until_start": seconds_until_start,
+            "seconds_until_end": seconds_until_end,
+            "duration_minutes": effective_duration_minutes,
             "interval_count": len(result["intervals"]),
             **stats,
             "intervals": response_intervals,
         },
         "price_comparison": price_comparison or None,
     }
+    if relaxation_applied:
+        response["relaxation_steps"] = relaxation_steps
 
     _LOGGER.info(
         "%s: found window at %s, mean=%.4f %s",

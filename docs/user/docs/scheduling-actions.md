@@ -137,8 +137,16 @@ These parameters are available across all scheduling actions:
 | `include_current_interval` | Include the currently running 15-minute interval in the search? | `true` |
 | `min_price_level` | Only consider intervals at or above this Tibber level | — |
 | `max_price_level` | Only consider intervals at or below this Tibber level | — |
+| `smooth_outliers` | Smooth price outliers before searching (see [below](#outlier-smoothing)) | `true` |
+| `min_distance_from_avg` | Require result to differ from average by X% (see [below](#minimum-distance-from-average)) | — |
+| `allow_relaxation` | Progressively loosen filters to guarantee a result (see [below](#relaxation)) | `true` |
+| `duration_flexibility_minutes` | Max minutes the duration may be shortened during relaxation (see [below](#relaxation)) | Auto |
 | `power_profile` | Watt values per 15-min interval for accurate cost estimates | — |
 | `use_base_unit` | Use base currency (EUR, NOK) instead of subunit (ct, øre) | `false` |
+
+:::note `min_distance_from_avg` availability
+`min_distance_from_avg` is available in `find_cheapest_block`, `find_most_expensive_block`, `find_cheapest_hours`, and `find_most_expensive_hours`. It is **not** available in `find_cheapest_schedule` (multi-task semantics make a single threshold ambiguous).
+:::
 
 ### Price Level Filtering
 
@@ -185,6 +193,131 @@ The service then calculates `estimated_total_cost` using the actual power draw p
 
 :::info Duration and profile must match
 The number of entries in `power_profile` must exactly match the number of 15-minute intervals in `duration`. A 2-hour duration needs 8 entries.
+:::
+
+### Outlier Smoothing
+
+Enabled by default. A single extreme price spike (or dip) can pull the "cheapest" window away from a genuinely good period. With `smooth_outliers: true`, outlier intervals are temporarily replaced by the average of their neighbors before the search runs. **The response always shows original (unsmoothed) prices** — smoothing only affects _which_ window is selected.
+
+Set `smooth_outliers: false` to disable:
+
+```yaml
+service: tibber_prices.find_cheapest_block
+data:
+  duration: "02:00:00"
+  search_scope: next_24h
+  smooth_outliers: false
+```
+
+### Minimum Distance from Average
+
+Opt-in quality gate. Ensures the found result is meaningfully different from the search-range average — not just "the cheapest, but still close to average".
+
+- **For cheapest:** the result must be at least X% _below_ the average.
+- **For most expensive:** the result must be at least X% _above_ the average.
+
+If the condition is not met, **no result is returned** and the `reason` field explains why (`window_above_distance_threshold` for blocks, `selection_above_distance_threshold` for hours — or `..._below_...` for most expensive).
+
+```yaml
+# Only return a result if it's at least 10% cheaper than average
+service: tibber_prices.find_cheapest_block
+data:
+  duration: "02:00:00"
+  search_scope: today
+  min_distance_from_avg: 10.0
+```
+
+:::tip When to use `min_distance_from_avg`
+On days with flat prices (all intervals nearly the same), the "cheapest" window may only be marginally cheaper than any other. Use `min_distance_from_avg` to avoid scheduling an appliance for negligible savings — and instead run it whenever convenient.
+:::
+
+### Coefficient of Variation
+
+All scheduling action responses include a `coefficient_of_variation` field in their statistics. This measures the relative price spread within the found window (standard deviation ÷ mean, as a ratio). A low value (e.g., 0.05) means prices are very uniform; a high value (e.g., 0.30) means prices vary significantly within the window.
+
+You can use this in automations to decide whether the found window is "good enough":
+
+```yaml
+# Only start if prices within the window are reasonably uniform
+condition: template
+value_template: >
+  {{ action_response.window.coefficient_of_variation < 0.15 }}
+```
+
+### Relaxation
+
+Enabled by default. Relaxation ensures you **always get a result**, even when your filters are too strict for the available price data. Without relaxation, a tight `max_price_level` or `min_distance_from_avg` could return nothing — leaving your automation without a plan. With relaxation, the service progressively loosens constraints until a window is found.
+
+**How it works:**
+
+Relaxation proceeds in three phases, stopping as soon as a result is found:
+
+1. **Distance relaxation** — Halves `min_distance_from_avg`, then removes it entirely
+2. **Level filter relaxation** — Gradually widens the allowed price level range (e.g., `very_cheap` → `cheap` → `normal` → any)
+3. **Duration reduction** — Shortens the duration by one interval (15 min) per step, down to a minimum of 30 minutes
+
+Each phase tries the least invasive change first. If phase 1 produces a result, phases 2 and 3 are never attempted.
+
+:::tip When does relaxation activate?
+Relaxation only activates when the original parameters return no result. If your filters already find a window, relaxation does nothing — there is zero overhead.
+:::
+
+**Parameters:**
+
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `allow_relaxation` | boolean | `true` | Enable progressive filter relaxation. Set to `false` for strict mode (fail if nothing matches). |
+| `duration_flexibility_minutes` | number | Auto | Maximum minutes the duration may be shortened (0–120, in 15-min steps). If omitted, calculated automatically based on the requested duration. |
+
+```yaml
+# Opt out of relaxation (strict mode)
+service: tibber_prices.find_cheapest_block
+data:
+  duration: "02:00:00"
+  search_scope: next_24h
+  allow_relaxation: false
+```
+
+```yaml
+# Allow up to 30 min shorter than requested
+service: tibber_prices.find_cheapest_block
+data:
+  duration: "02:00:00"
+  search_scope: next_24h
+  duration_flexibility_minutes: 30
+```
+
+**Response metadata:**
+
+When relaxation is applied, the response includes extra fields:
+
+| Field | Description |
+|-------|-------------|
+| `relaxation_applied` | `true` if filters were relaxed to find the result, `false` if original parameters succeeded |
+| `relaxation_steps` | Number of relaxation steps applied (only present when `relaxation_applied` is `true`) |
+| `duration_minutes` | Effective duration (may be shorter than `duration_minutes_requested` if duration was reduced) |
+
+If all relaxation steps are exhausted without finding a result, the response still indicates failure with `reason: "relaxation_exhausted"`.
+
+```yaml
+# Check if relaxation was needed in your automation
+- if: "{{ result.window_found and not result.relaxation_applied }}"
+  then:
+    - service: notify.mobile_app
+      data:
+        message: "Found optimal window at original settings"
+- if: "{{ result.window_found and result.relaxation_applied }}"
+  then:
+    - service: notify.mobile_app
+      data:
+        message: >
+          Found window after {{ result.relaxation_steps }} relaxation steps.
+          Effective duration: {{ result.duration_minutes }} min
+          (requested: {{ result.duration_minutes_requested }} min)
+```
+
+:::note Schedule service differences
+For `find_cheapest_schedule`, relaxation works slightly differently: phase 1 (distance) is skipped because the schedule service does not support `min_distance_from_avg`. Level filter relaxation and duration reduction apply to all tasks uniformly.
 :::
 
 ---
@@ -285,6 +418,9 @@ response_variable: result
 | `window.estimated_total_cost` | Estimated cost (assumes 1 kW unless `power_profile` provided) |
 | `price_comparison` | How this window compares to the most expensive alternative |
 | `price_comparison.price_difference` | How much cheaper this window is vs. the most expensive option |
+| `relaxation_applied` | `true` if [relaxation](#relaxation) was needed to find the result |
+| `relaxation_steps` | Number of relaxation steps applied (only when `relaxation_applied` is `true`) |
+| `duration_minutes` | Effective duration — may differ from `duration_minutes_requested` after relaxation |
 
 ### Use in Automations
 
@@ -432,6 +568,9 @@ response_variable: result
 | `schedule.segment_count` | How many separate contiguous runs the schedule has |
 | `schedule.segments[]` | Each continuous "on" period with its own start/end and price stats |
 | `schedule.intervals[]` | All selected intervals in chronological order |
+| `relaxation_applied` | `true` if [relaxation](#relaxation) was needed to find the result |
+| `relaxation_steps` | Number of relaxation steps applied (only when `relaxation_applied` is `true`) |
+| `total_minutes` | Effective total duration — may differ from `total_minutes_requested` after relaxation |
 
 ---
 
@@ -568,6 +707,8 @@ response_variable: result
 | `tasks[]` | Each task with its assigned time window and price statistics |
 | `tasks[].start` / `tasks[].end` | When to start and stop each appliance |
 | `total_estimated_cost` | Combined cost across all tasks |
+| `relaxation_applied` | `true` if [relaxation](#relaxation) was needed to schedule all tasks |
+| `relaxation_steps` | Number of relaxation steps applied (only when `relaxation_applied` is `true`) |
 
 ### Why Not Just Call find_cheapest_block Multiple Times?
 
@@ -785,4 +926,18 @@ If no intervals match your criteria (e.g., the search range is too short, all in
 - `find_cheapest_hours`: `"intervals_found": false, "schedule": null`
 - `find_cheapest_schedule`: `"all_tasks_scheduled": false, "unscheduled_tasks": ["task_name"]`
 
-Always check these fields in your automations before using the results.
+The `reason` field contains a stable machine-readable code you can use in automations:
+
+| Reason Code | Meaning |
+|-------------|---------|
+| `no_data_in_range` | No price data available for the search range |
+| `no_intervals_matching_level_filter` | Level filter excluded all intervals |
+| `insufficient_intervals_after_filter` | Not enough intervals left after filtering |
+| `insufficient_intervals_for_constraints` | Enough intervals, but constraints (min segment) can't be met |
+| `window_above_distance_threshold` | Block found, but not far enough below average (`min_distance_from_avg`) |
+| `window_below_distance_threshold` | Most expensive block found, but not far enough above average |
+| `selection_above_distance_threshold` | Hours found, but not far enough below average (`min_distance_from_avg`) |
+| `selection_below_distance_threshold` | Most expensive hours found, but not far enough above average |
+| `relaxation_exhausted` | All relaxation steps tried, still no result (only when `allow_relaxation: true`) |
+
+Always check the failure fields in your automations before using the results.

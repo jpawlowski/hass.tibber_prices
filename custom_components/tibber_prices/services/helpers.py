@@ -11,6 +11,7 @@ Functions:
     localize_to_home_tz: Localize datetime to Tibber home timezone
     calculate_end_of_tomorrow: Calculate end of tomorrow in home timezone
     floor_to_quarter_hour: Floor datetime to quarter-hour boundary
+    apply_must_finish_by: Convert must_finish_by deadline to search_end
     resolve_search_range: Resolve search start/end from various input formats
     filter_intervals_by_price_level: Filter intervals by Tibber price level
     VALID_SEARCH_SCOPES: Set of valid search_scope shorthand values
@@ -46,6 +47,10 @@ if TYPE_CHECKING:
 # Interval duration in minutes (quarter-hourly resolution)
 INTERVAL_MINUTES = 15
 
+# Default flexibility percentage for outlier smoothing in services
+# Matches the period system default (15%) for consistency
+DEFAULT_SERVICE_SMOOTHING_FLEX = 15.0
+
 # Valid scopes for the search_scope shorthand parameter
 VALID_SEARCH_SCOPES = frozenset({"today", "tomorrow", "remaining_today", "next_24h", "next_48h"})
 
@@ -65,6 +70,7 @@ _EXPLICIT_RANGE_PARAMS = frozenset(
         "search_end_offset_minutes",
         "search_start_day_offset",
         "search_end_day_offset",
+        "must_finish_by",
     }
 )
 
@@ -94,6 +100,17 @@ def validate_search_params(call_data: dict[str, Any]) -> None:
                 translation_placeholders={"params": ", ".join(sorted(conflicting))},
             )
 
+    # must_finish_by conflicts with all end-boundary parameters
+    if "must_finish_by" in call_data:
+        end_conflicts = {"search_end", "search_end_time", "search_end_offset_minutes"}
+        conflicting_end = [p for p in end_conflicts if p in call_data]
+        if conflicting_end:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="must_finish_by_conflicts_with_end",
+                translation_placeholders={"params": ", ".join(sorted(conflicting_end))},
+            )
+
     # search_start and search_start_time are mutually exclusive start-time specifications
     if "search_start" in call_data and "search_start_time" in call_data:
         raise ServiceValidationError(
@@ -121,6 +138,36 @@ def validate_search_params(call_data: dict[str, Any]) -> None:
             translation_key="day_offset_requires_time",
             translation_placeholders={"offset_param": "search_end_day_offset", "time_param": "search_end_time"},
         )
+
+
+def apply_must_finish_by(
+    call_data: dict[str, Any],
+    home_tz: ZoneInfo,
+) -> tuple[dict[str, Any], datetime | None]:
+    """Convert must_finish_by deadline to search_end.
+
+    When must_finish_by is set, search_end is set to must_finish_by directly.
+    The interval pool uses exclusive end_time (intervals with startsAt < end_time),
+    so the latest found window/schedule naturally ends at search_end.
+
+    Args:
+        call_data: Service call data dict.
+        home_tz: Home timezone for datetime localization.
+
+    Returns:
+        Tuple of (possibly modified call_data, localized must_finish_by datetime or None).
+        If must_finish_by is absent, returns the original call_data unchanged.
+
+    """
+    if "must_finish_by" not in call_data:
+        return call_data, None
+
+    must_finish_by = localize_to_home_tz(call_data["must_finish_by"], home_tz)
+
+    modified = dict(call_data)
+    modified["search_end"] = must_finish_by
+    del modified["must_finish_by"]
+    return modified, must_finish_by
 
 
 def validate_price_level_range(
@@ -507,3 +554,108 @@ def resolve_search_range(
         )
 
     return search_start, search_end
+
+
+def smooth_service_intervals(
+    intervals: list[dict[str, Any]],
+) -> list[dict[str, Any]]:
+    """
+    Apply outlier smoothing to price intervals for service window finding.
+
+    Reuses the period system's outlier filtering with a fixed flexibility
+    percentage. Smoothed intervals are used for window FINDING only —
+    original prices should be restored for response reporting.
+
+    Args:
+        intervals: Price intervals to smooth.
+
+    Returns:
+        New list of intervals with spike prices smoothed.
+        Smoothed intervals have '_original_total' preserving the real price.
+
+    """
+    from custom_components.tibber_prices.coordinator.period_handlers.outlier_filtering import (  # noqa: PLC0415
+        filter_price_outliers,
+    )
+
+    return filter_price_outliers(intervals, DEFAULT_SERVICE_SMOOTHING_FLEX, 0)
+
+
+def restore_original_prices(intervals: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    """
+    Restore original prices on intervals that were smoothed.
+
+    After using smoothed intervals for window finding, call this to get
+    intervals with true prices for response reporting.
+
+    Args:
+        intervals: Intervals possibly containing '_original_total' from smoothing.
+
+    Returns:
+        New list of intervals with original prices restored and smoothing
+        metadata removed.
+
+    """
+    result = []
+    for iv in intervals:
+        if "_original_total" in iv:
+            restored = {k: v for k, v in iv.items() if k not in ("_smoothed", "_original_total")}
+            restored["total"] = iv["_original_total"]
+            result.append(restored)
+        else:
+            result.append(iv)
+    return result
+
+
+def calculate_search_range_avg(intervals: list[dict[str, Any]]) -> float | None:
+    """
+    Calculate average price across all intervals in the search range.
+
+    Used as reference for min_distance_from_avg validation.
+
+    Args:
+        intervals: All price intervals in the search range (unfiltered).
+
+    Returns:
+        Average price in base currency unit, or None if no intervals.
+
+    """
+    if not intervals:
+        return None
+    return sum(iv["total"] for iv in intervals) / len(intervals)
+
+
+def check_min_distance_from_avg(
+    window_mean_base: float,
+    range_avg: float,
+    min_distance_pct: float,
+    *,
+    reverse: bool,
+) -> bool:
+    """
+    Check if window mean price meets the minimum distance from range average.
+
+    For cheapest searches: window mean must be at least X% BELOW range average.
+    For most expensive searches: window mean must be at least X% ABOVE range average.
+
+    Args:
+        window_mean_base: Window mean price in BASE currency (not display unit).
+        range_avg: Search range average price in BASE currency.
+        min_distance_pct: Required distance as percentage (e.g. 5.0 = 5%).
+        reverse: True for most-expensive searches.
+
+    Returns:
+        True if the window passes the distance check.
+
+    """
+    if range_avg == 0:
+        return True  # Cannot calculate percentage difference from zero
+
+    distance_ratio = min_distance_pct / 100
+    if reverse:
+        # Most expensive: window mean must be >= avg * (1 + distance)
+        threshold = range_avg * (1 + distance_ratio)
+        return window_mean_base >= threshold
+    # Cheapest: window mean must be <= avg * (1 - distance)
+    threshold = range_avg * (1 - distance_ratio)
+    return window_mean_base <= threshold
