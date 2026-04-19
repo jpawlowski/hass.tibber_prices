@@ -2027,6 +2027,10 @@
           "name": "Paus mellan uppgifter (minuter)",
           "description": "Minsta paus i minuter mellan paa varandra foeoljande schemalagda uppgifter. Avrundas uppaat till 15 minuter. Standard: 0 (ingen paus)."
         },
+        "sequential": {
+          "name": "Sekventiell ordning",
+          "description": "Schemalägg uppgifter i den ordning de står i uppgiftslistan. Varje uppgift startar efter att den föregående är klar (plus paus). Använd detta för beroende apparater som tvättmaskin → torktumlare. Standard: inaktiverad (uppgifter sorteras efter varaktighet för optimal fördelning)."
+        },
         "search_scope": {
           "name": "Soekumfaang (genvaeg)",
           "description": "Genvaeg foer vanliga soekomraaden. Aasidosaetter alla andra tidsalternativ. today/tomorrow = hela kalenderdagen, remaining_today = nu till midnatt, next_24h/next_48h = rullande foenster fraen nu."

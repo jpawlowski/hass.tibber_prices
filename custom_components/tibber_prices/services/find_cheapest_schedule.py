@@ -92,6 +92,7 @@ FIND_CHEAPEST_SCHEDULE_SERVICE_SCHEMA = vol.Schema(
         vol.Optional("min_price_level"): vol.In([lvl.lower() for lvl in PRICE_LEVEL_ORDER]),
         vol.Optional("include_comparison_details", default=False): cv.boolean,
         vol.Optional("use_base_unit", default=False): cv.boolean,
+        vol.Optional("sequential", default=False): cv.boolean,
         vol.Optional("smooth_outliers", default=True): cv.boolean,
         vol.Optional("allow_relaxation", default=True): cv.boolean,
         vol.Optional("duration_flexibility_minutes"): vol.All(vol.Coerce(int), vol.Range(min=0, max=120)),
@@ -230,8 +231,13 @@ def _attempt_schedule(
     tasks: list[dict[str, Any]],
     gap_intervals: int,
     smooth_outliers: bool,
+    sequential: bool = False,
 ) -> tuple[list[dict[str, Any]], list[str], list[dict[str, Any]]]:
     """Attempt to schedule tasks with specific filter parameters.
+
+    When sequential=True, tasks are placed in declaration order and each task's
+    search window begins after the previous task's end + gap.  When False
+    (default), tasks are sorted longest-first for optimal greedy packing.
 
     Returns:
         (assignments, unscheduled_names, filtered_price_info)
@@ -247,18 +253,38 @@ def _attempt_schedule(
     if not search_data:
         return [], [t["name"] for t in tasks], filtered
 
-    # Greedy assignment: longest task first
-    tasks_sorted = sorted(tasks, key=lambda t: t["duration_intervals"], reverse=True)
+    # Task ordering: declaration order when sequential, longest-first otherwise
+    tasks_ordered = list(tasks) if sequential else sorted(tasks, key=lambda t: t["duration_intervals"], reverse=True)
+
     available = [True] * len(search_data)
     assignments: list[dict[str, Any]] = []
     unscheduled: list[str] = []
 
-    for task in tasks_sorted:
+    # In sequential mode, track the earliest allowed start index for the next task
+    sequential_min_idx = 0
+    sequential_chain_broken = False
+
+    for task in tasks_ordered:
         dur_intervals = task["duration_intervals"]
+
+        # In sequential mode, if the chain is broken (previous task failed),
+        # all remaining tasks are also unscheduled
+        if sequential and sequential_chain_broken:
+            unscheduled.append(task["name"])
+            continue
+
+        # In sequential mode, restrict search to intervals at or after the
+        # minimum start index by marking earlier slots as unavailable
+        if sequential and sequential_min_idx > 0:
+            for k in range(min(sequential_min_idx, len(search_data))):
+                available[k] = False
+
         window = _find_cheapest_window_in_pool(search_data, dur_intervals, available)
 
         if window is None:
             unscheduled.append(task["name"])
+            if sequential:
+                sequential_chain_broken = True
             continue
 
         start_idx, end_idx = window
@@ -272,6 +298,10 @@ def _attempt_schedule(
         gap_end = min(end_idx + gap_intervals, len(search_data))
         for k in range(start_idx, gap_end):
             available[k] = False
+
+        # In sequential mode, advance the minimum start for the next task
+        if sequential:
+            sequential_min_idx = gap_end
 
         assignments.append(
             {
@@ -297,6 +327,7 @@ async def handle_find_cheapest_schedule(call: ServiceCall) -> ServiceResponse:
     include_comparison_details: bool = call.data.get("include_comparison_details", False)
     smooth_outliers: bool = call.data.get("smooth_outliers", True)
     allow_relaxation: bool = call.data.get("allow_relaxation", True)
+    sequential: bool = call.data.get("sequential", False)
     duration_flexibility_minutes: int | None = call.data.get("duration_flexibility_minutes")
 
     # Validate task names are unique (before any expensive operations)
@@ -372,10 +403,11 @@ async def handle_find_cheapest_schedule(call: ServiceCall) -> ServiceResponse:
         )
 
     _LOGGER.info(
-        "%s called: %d tasks, gap=%dmin, range=%s to %s",
+        "%s called: %d tasks, gap=%dmin, sequential=%s, range=%s to %s",
         service_label,
         len(tasks),
         gap_minutes,
+        sequential,
         search_start,
         search_end,
     )
@@ -411,6 +443,7 @@ async def handle_find_cheapest_schedule(call: ServiceCall) -> ServiceResponse:
         tasks=tasks,
         gap_intervals=gap_intervals,
         smooth_outliers=smooth_outliers,
+        sequential=sequential,
     )
     all_scheduled = len(unscheduled) == 0
     level_filter_active = min_price_level is not None or max_price_level is not None
@@ -437,6 +470,7 @@ async def handle_find_cheapest_schedule(call: ServiceCall) -> ServiceResponse:
                 tasks=tasks,
                 gap_intervals=gap_intervals,
                 smooth_outliers=smooth_outliers,
+                sequential=sequential,
             )
             if len(a) > len(best_assignments):
                 best_assignments, best_unscheduled, best_filtered = a, u, f
@@ -474,6 +508,7 @@ async def handle_find_cheapest_schedule(call: ServiceCall) -> ServiceResponse:
                     tasks=reduced,
                     gap_intervals=gap_intervals,
                     smooth_outliers=smooth_outliers,
+                    sequential=sequential,
                 )
                 if len(a) > len(best_assignments):
                     best_assignments, best_unscheduled, best_filtered = a, u, f
@@ -584,6 +619,7 @@ async def handle_find_cheapest_schedule(call: ServiceCall) -> ServiceResponse:
         "must_finish_by": must_finish_by_dt.isoformat() if must_finish_by_dt else None,
         "currency": currency,
         "price_unit": price_unit,
+        "sequential": sequential,
         "all_tasks_scheduled": all_scheduled,
         "reason": reason,
         "relaxation_applied": relaxation_applied,

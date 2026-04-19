@@ -2027,6 +2027,10 @@
           "name": "Pause zwischen Aufgaben (Minuten)",
           "description": "Mindestpause in Minuten zwischen aufeinanderfolgenden Aufgaben. Wird auf 15 Minuten aufgerundet. Standard: 0 (keine Pause)."
         },
+        "sequential": {
+          "name": "Sequenzielle Reihenfolge",
+          "description": "Aufgaben in der Reihenfolge planen, in der sie in der Aufgabenliste stehen. Jede Aufgabe startet nach dem Ende der vorherigen (plus Pause). Nutze dies für abhängige Geräte wie Waschmaschine → Trockner. Standard: deaktiviert (Aufgaben werden nach Dauer sortiert für optimale Verteilung)."
+        },
         "search_scope": {
           "name": "Suchbereich (Shortcut)",
           "description": "Kurzwahl für häufige Suchbereiche. Überschreibt alle anderen Zeitbereich-Optionen. today/tomorrow = ganzer Kalendertag, remaining_today = jetzt bis Mitternacht, next_24h/next_48h = rollierendes Fenster ab jetzt."

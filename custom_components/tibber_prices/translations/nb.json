@@ -2027,6 +2027,10 @@
           "name": "Pause mellom oppgaver (minutter)",
           "description": "Minimum pause i minutter mellom paafoeglende planlagte oppgaver. Avrundes opp til 15 minutter. Standard: 0 (ingen pause)."
         },
+        "sequential": {
+          "name": "Sekvensiell rekkefølge",
+          "description": "Planlegg oppgaver i rekkefølgen de står i oppgavelisten. Hver oppgave starter etter at den forrige er ferdig (pluss pause). Bruk dette for avhengige apparater som vaskemaskin → tørketrommel. Standard: deaktivert (oppgaver sorteres etter varighet for optimal fordeling)."
+        },
         "search_scope": {
           "name": "Soekeomfang (snarvei)",
           "description": "Snarvei for vanlige soekeomraader. Overstyrer alle andre tidsalternativer. today/tomorrow = hele kalenderdagen, remaining_today = naa til midnatt, next_24h/next_48h = rullende vindu fra naa."

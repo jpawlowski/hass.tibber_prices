@@ -2027,6 +2027,10 @@
           "name": "Gap Between Tasks (minutes)",
           "description": "Minimum gap in minutes between consecutive scheduled tasks. Rounded up to 15 minutes. Default: 0 (no gap)."
         },
+        "sequential": {
+          "name": "Sequential Ordering",
+          "description": "Schedule tasks in the order they appear in the task list. Each task starts after the previous one ends (plus gap). Use this for dependent appliances like washing machine → dryer. Default: disabled (tasks are sorted by duration for optimal packing)."
+        },
         "search_scope": {
           "name": "Search Scope",
           "description": "Shorthand for common search ranges. Overrides all other time range options. today / tomorrow = full calendar day, remaining_today = now until midnight, next_24h / next_48h = rolling window from now."

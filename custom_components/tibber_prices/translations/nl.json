@@ -2027,6 +2027,10 @@
           "name": "Tussenpose tussen taken (minuten)",
           "description": "Minimale tussenpose in minuten tussen opeenvolgende ingeplande taken. Afgerond omhoog tot 15 minuten. Standaard: 0 (geen tussenpose)."
         },
+        "sequential": {
+          "name": "Sequentiële volgorde",
+          "description": "Plan taken in de volgorde waarin ze in de takenlijst staan. Elke taak start na het einde van de vorige (plus tussenpose). Gebruik dit voor afhankelijke apparaten zoals wasmachine → droger. Standaard: uitgeschakeld (taken worden gesorteerd op duur voor optimale verdeling)."
+        },
         "search_scope": {
           "name": "Zoekbereik (snelkoppeling)",
           "description": "Snelkoppeling voor veelgebruikte zoekbereiken. Overschrijft alle andere tijdopties. today/tomorrow = volledige kalenderdag, remaining_today = nu tot middernacht, next_24h/next_48h = rolling venster vanaf nu."

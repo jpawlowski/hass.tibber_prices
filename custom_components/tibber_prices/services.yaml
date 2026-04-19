@@ -973,6 +973,11 @@ find_cheapest_schedule:
           max: 120
           unit_of_measurement: min
           mode: box
+    sequential:
+      required: false
+      default: false
+      selector:
+        boolean:
     search_scope:
       required: false
       selector:
