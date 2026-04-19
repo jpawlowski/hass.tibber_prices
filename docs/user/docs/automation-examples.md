@@ -270,13 +270,13 @@ automation:
 **Why `find_cheapest_schedule` instead of separate `find_cheapest_block` calls?**
 If you call `find_cheapest_block` separately for each appliance, they might both pick the **same** cheap window. `find_cheapest_schedule` reserves each slot exclusively — the dryer gets the next-cheapest window after the dishwasher claims its slot, with a 15-minute gap between them.
 
-:::caution `find_cheapest_schedule` does NOT guarantee order
-The scheduler optimizes purely for price — the dryer might be scheduled **before** the dishwasher if that results in lower total cost. This is fine for independent appliances, but problematic for sequential workflows (e.g., washing machine → dryer). See the next example for that.
+:::tip `sequential: true` for ordered workflows
+By default, `find_cheapest_schedule` optimizes purely for price — the dryer might be scheduled **before** the dishwasher. This is fine for independent appliances. For sequential workflows (e.g., washing machine → dryer), add `sequential: true` — see the next example.
 :::
 
 ### Washing Machine → Dryer: Sequential Scheduling
 
-When the dryer **must** run after the washing machine, you need guaranteed order. Since `find_cheapest_schedule` doesn't guarantee task ordering, use **two sequential `find_cheapest_block` calls** instead:
+When the dryer **must** run after the washing machine, use `sequential: true` to guarantee declaration-order scheduling. The scheduler places each task after the previous one finishes (plus gap).
 
 **Prerequisite:** Create `input_datetime.washing_machine_start` and `input_datetime.dryer_start` helpers.
 
@@ -291,59 +291,53 @@ automation:
           - platform: time
             at: "21:00:00"
       action:
-          # Step 1: Find cheapest window for washing machine
-          - service: tibber_prices.find_cheapest_block
+          - service: tibber_prices.find_cheapest_schedule
             data:
-                duration: "01:30:00"
+                sequential: true
+                gap_minutes: 15
                 search_start_time: "22:00:00"
-                search_end_time: "07:00:00"
+                search_end_time: "08:00:00"
                 search_end_day_offset: 1
-            response_variable: washer_result
+                tasks:
+                    # Order matters! Washer runs first, dryer after.
+                    - name: washing_machine
+                      duration: "01:30:00"
+                    - name: dryer
+                      duration: "01:00:00"
+            response_variable: schedule
 
-          - if: "{{ washer_result.window_found }}"
+          - if: "{{ schedule.all_tasks_scheduled }}"
             then:
                 - service: input_datetime.set_datetime
                   target:
                       entity_id: input_datetime.washing_machine_start
                   data:
-                      datetime: "{{ washer_result.window.start }}"
-
-                # Step 2: Find cheapest window for dryer AFTER washer finishes
-                # Add 15 min gap for transferring laundry
-                - service: tibber_prices.find_cheapest_block
+                      datetime: "{{ schedule.tasks[0].start }}"
+                - service: input_datetime.set_datetime
+                  target:
+                      entity_id: input_datetime.dryer_start
                   data:
-                      duration: "01:00:00"
-                      search_start: "{{ washer_result.window.end }}"
-                      search_start_offset: "00:15:00"
-                      search_end_time: "08:00:00"
-                      search_end_day_offset: 1
-                  response_variable: dryer_result
-
-                - if: "{{ dryer_result.window_found }}"
-                  then:
-                      - service: input_datetime.set_datetime
-                        target:
-                            entity_id: input_datetime.dryer_start
-                        data:
-                            datetime: "{{ dryer_result.window.start }}"
-                      - service: notify.mobile_app
-                        data:
-                            title: "🧺 Laundry Planned"
-                            message: >
-                                Washing: {{ washer_result.window.start | as_datetime
-                                | as_local | as_timestamp
-                                | timestamp_custom('%H:%M') }}–{{ washer_result.window.end
-                                | as_datetime | as_local | as_timestamp
-                                | timestamp_custom('%H:%M') }}
-                                ({{ washer_result.window.price_mean | round(1) }}
-                                {{ washer_result.price_unit }})
-                                Dryer: {{ dryer_result.window.start | as_datetime
-                                | as_local | as_timestamp
-                                | timestamp_custom('%H:%M') }}–{{ dryer_result.window.end
-                                | as_datetime | as_local | as_timestamp
-                                | timestamp_custom('%H:%M') }}
-                                ({{ dryer_result.window.price_mean | round(1) }}
-                                {{ dryer_result.price_unit }})
+                      datetime: "{{ schedule.tasks[1].start }}"
+                - service: notify.mobile_app
+                  data:
+                      title: "🧺 Laundry Planned"
+                      message: >
+                          Washing: {{ schedule.tasks[0].start | as_datetime
+                          | as_local | as_timestamp
+                          | timestamp_custom('%H:%M') }}–{{ schedule.tasks[0].end
+                          | as_datetime | as_local | as_timestamp
+                          | timestamp_custom('%H:%M') }}
+                          ({{ schedule.tasks[0].price_mean | round(1) }}
+                          {{ schedule.price_unit }})
+                          Dryer: {{ schedule.tasks[1].start | as_datetime
+                          | as_local | as_timestamp
+                          | timestamp_custom('%H:%M') }}–{{ schedule.tasks[1].end
+                          | as_datetime | as_local | as_timestamp
+                          | timestamp_custom('%H:%M') }}
+                          ({{ schedule.tasks[1].price_mean | round(1) }}
+                          {{ schedule.price_unit }})
+                          Total: {{ schedule.total_estimated_cost | round(2) }}
+                          {{ schedule.price_unit }}
 
     # Execution automations
     - alias: "Washing Machine - Start at Planned Time"
@@ -1135,7 +1129,7 @@ automation:
 | Scenario | Best approach | Why |
 |----------|--------------|-----|
 | Dishwasher tonight | `find_cheapest_block` | Fixed 2h runtime, needs exact start time |
-| Washer → dryer (must be sequential) | 2× `find_cheapest_block` | Second call uses first result's end time as start |
+| Washer → dryer (must be sequential) | `find_cheapest_schedule` | `sequential: true` + `gap_minutes` for guaranteed order |
 | Dishwasher + dryer (independent) | `find_cheapest_schedule` | Multiple appliances, prevent overlap |
 | EV charging by morning | `find_cheapest_hours` | Flexible, can split into segments |
 | Heat pump all day | Sensors (rating_level) | Continuous, adjusts every 15 min |
@@ -1164,7 +1158,7 @@ automation:
 | One appliance, must run uninterrupted | `find_cheapest_block` | `duration` |
 | One appliance, can pause/resume | `find_cheapest_hours` | `duration`, `min_segment_duration` |
 | Multiple independent appliances, no overlap | `find_cheapest_schedule` | `tasks`, `gap_minutes` |
-| Sequential chain (A must finish before B) | 2× `find_cheapest_block` | Use A's end as B's `search_start` |
+| Sequential chain (A must finish before B) | `find_cheapest_schedule` | `sequential: true`, `gap_minutes` |
 | Find the worst time (avoid it) | `find_most_expensive_block` | `duration` |
 
 **→ [Scheduling Actions — Full Guide](scheduling-actions.md)** for all parameters, response formats, and advanced options (power profiles, relaxation, outlier smoothing).

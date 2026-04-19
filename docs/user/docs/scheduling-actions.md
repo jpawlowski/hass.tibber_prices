@@ -33,7 +33,7 @@ flowchart TD
 - **Dishwasher, washing machine, dryer** → `find_cheapest_block` (must run X hours straight)
 - **EV charging, battery, pool pump** → `find_cheapest_hours` (total runtime matters, not continuity)
 - **Multiple independent appliances** → `find_cheapest_schedule` (prevents overlap + manages gaps)
-- **Sequential chain (A must finish before B)** → 2× `find_cheapest_block` (use A's end as B's search start)
+- **Sequential chain (A must finish before B)** → `find_cheapest_schedule` with `sequential: true` (guaranteed order + gap)
 - **"When should I NOT run this?"** → `find_most_expensive_block` or `find_most_expensive_hours`
 
 ---
@@ -598,11 +598,20 @@ Schedules **multiple appliances** within the same search range, ensuring they do
 
 ### How It Works
 
+**Default mode** (optimizes for price):
+
 1. Tasks are sorted by duration (longest first — harder to place)
 2. The longest task claims the cheapest contiguous block
 3. Those intervals are marked as **unavailable**
 4. The next task finds the cheapest block in the **remaining** intervals
 5. Optional gap between tasks ensures a pause (e.g., for shared plumbing or circuit recovery)
+
+**Sequential mode** (`sequential: true` — guarantees order):
+
+1. Tasks are placed in **declaration order** (the order you list them)
+2. Each task's search window starts after the previous task ends (+ gap)
+3. Price optimization still applies **within** each task's available window
+4. If a task can't be placed, all subsequent tasks are also unscheduled (the chain breaks)
 
 ### Basic Example
 
@@ -730,8 +739,8 @@ response_variable: result
 
 If you call `find_cheapest_block` separately for each appliance, they might all find the **same** cheap time window. `find_cheapest_schedule` solves this by tracking which intervals are already claimed — each appliance gets its own non-overlapping slot.
 
-:::caution No ordering guarantee
-`find_cheapest_schedule` optimizes purely for **price** — it does not guarantee task order. The dryer could be scheduled before the washing machine if that's cheaper. For sequential workflows (washing machine → dryer), use **two sequential `find_cheapest_block` calls** where the second call starts after the first result ends. See [Automation Examples — Sequential Scheduling](automation-examples.md#washing-machine--dryer-sequential-scheduling) for a complete example.
+:::tip Sequential ordering
+By default, `find_cheapest_schedule` optimizes purely for **price** — it does not guarantee task order. The dryer could be scheduled before the washing machine if that's cheaper. For sequential workflows (washing machine → dryer), add `sequential: true` to guarantee declaration-order scheduling. See [Automation Examples — Sequential Scheduling](automation-examples.md#washing-machine--dryer-sequential-scheduling) for a complete example.
 :::
 
 ### Gap Minutes
@@ -815,7 +824,7 @@ All examples below use `input_datetime` helpers to store planned start times. Th
 Schedule dishwasher + washing machine to run overnight at cheapest prices, with a 15-minute gap between them. These appliances are **independent** — either can run first.
 
 :::tip Sequential appliances (e.g., washer → dryer)?
-If one appliance **must** finish before another starts, don't use `find_cheapest_schedule` — it doesn't guarantee order. Use **two sequential `find_cheapest_block` calls** instead. See [Automation Examples — Sequential Scheduling](automation-examples.md#washing-machine--dryer-sequential-scheduling).
+If one appliance **must** finish before another starts, add `sequential: true` to your `find_cheapest_schedule` call — this guarantees tasks run in the order you list them. See [Automation Examples — Sequential Scheduling](automation-examples.md#washing-machine--dryer-sequential-scheduling).
 :::
 
 **Prerequisites:** Create `input_datetime.dishwasher_start` and `input_datetime.washing_machine_start` helpers.
