@@ -1,38 +1,540 @@
 # Automation Examples
 
-> **Tip:** For dashboard examples with dynamic icons and colors, see the **[Dynamic Icons Guide](dynamic-icons.md)** and **[Dynamic Icon Colors Guide](icon-colors.md)**.
+This guide shows you how to **practically use** all the features of the Tibber Prices integration — sensors, binary sensors, and scheduling actions — for real-world energy optimization.
 
-## Table of Contents
-
--   [Price-Based Automations](#price-based-automations)
--   [Volatility-Aware Automations](#volatility-aware-automations)
--   [Best Hour Detection](#best-hour-detection)
--   [Scheduling Actions](#scheduling-actions)
--   [Charts & Visualizations](#charts--visualizations)
-
----
-
-> **Important Note:** The following examples are intended as templates to illustrate the logic. They are **not** suitable for direct copy & paste without adaptation.
->
-> Please make sure you:
-> 1.  Replace the **Entity IDs** (e.g., `sensor.<home_name>_...`, `switch.pool_pump`) with the IDs of your own devices and sensors.
-> 2.  Adapt the logic to your specific devices (e.g., heat pump, EV, water boiler).
->
-> These examples provide a good starting point but must be tailored to your individual Home Assistant setup.
->
 :::tip Entity ID tip
 `<home_name>` is a placeholder for your Tibber home display name in Home Assistant. Entity IDs are derived from the displayed name (localized), so the exact slug may differ. **Can't find a sensor?** Use the **[Entity Reference (All Languages)](sensor-reference.md)** to search by name in your language.
 :::
 
-## Price-Based Automations
+:::caution Adapt before using
+Replace all **Entity IDs** (e.g., `sensor.<home_name>_...`, `switch.dishwasher`) with IDs from your own setup. Adjust thresholds, temperatures, and device names to match your devices.
+:::
 
-### Understanding V-Shaped Price Days
+---
 
-Some days have a **V-shaped** or **U-shaped** price curve: prices drop to very cheap levels (often rated VERY_CHEAP) for an extended period, then rise again. This is common during sunny midday hours (solar surplus) or low-demand nights.
+## Two Approaches to Energy Optimization
 
-**The challenge:** The Best Price Period might only cover 1–2 hours (the absolute cheapest window), but prices could remain favorable for 4–6 hours. If you only rely on the Best Price Period binary sensor, you miss out on the surrounding cheap hours.
+The integration provides **two complementary ways** to save on electricity. Understanding when to use which is key:
 
-**The solution:** Combine multiple sensors to ride the full cheap wave:
+```mermaid
+flowchart TD
+    Q["What kind of device?"] -->|"Fixed runtime<br/>(dishwasher, dryer)"| A["🗓️ Scheduling Actions<br/>find_cheapest_block / schedule"]
+    Q -->|"Flexible runtime<br/>(EV, pool pump)"| B["🗓️ Scheduling Actions<br/>find_cheapest_hours"]
+    Q -->|"Continuous / modulating<br/>(heat pump, battery)"| C["📊 Sensor-Based<br/>React in real time"]
+    Q -->|"Multiple appliances<br/>shared circuit"| D["🗓️ Scheduling Actions<br/>find_cheapest_schedule"]
+
+    A --> E["Plan once → execute on time"]
+    B --> E
+    D --> E
+    C --> F["Adjust continuously<br/>as prices change"]
+
+    style A fill:#e6f7ff,stroke:#00b9e7
+    style B fill:#e6f7ff,stroke:#00b9e7
+    style D fill:#e6f7ff,stroke:#00b9e7
+    style C fill:#e6fff5,stroke:#00c853
+```
+
+### Scheduling Actions vs. Sensor-Based Automations
+
+| | Scheduling Actions (`find_*`) | Sensor-Based (binary sensors + trends) |
+|--|-------------------------------|---------------------------------------|
+| **How it works** | Call action once → get exact start/end times | React when sensor state changes |
+| **Best for** | Appliances with fixed runtime, precise planning | Continuous or modulating devices |
+| **Typical devices** | Dishwasher, washing machine, dryer, EV | Heat pump, home battery, water heater |
+| **Planning horizon** | Up to 48h ahead, with full cost estimate | Real-time, reacts as prices evolve |
+| **Complexity** | Simple: one action call, clear result | Flexible: combine multiple sensors |
+| **Multi-appliance** | Built-in overlap prevention | Manual coordination required |
+| **HA restart** | Schedule survives via `input_datetime` pattern | Sensors auto-recover, no state lost |
+
+:::tip Rule of thumb
+**"I need to start my device at an exact time"** → Use a scheduling action.
+**"I need my device to react as prices change throughout the day"** → Use sensors.
+**"I want both"** → Combine them (see [Advanced Combinations](#combining-sensors-and-actions)).
+:::
+
+---
+
+## Appliance Scheduling with Actions
+
+Use scheduling actions when you know **how long** a device needs to run and want the integration to find the **cheapest window** for it.
+
+### The Restart-Safe Pattern
+
+All action-based automations in this guide use `input_datetime` helpers to store the planned start time. This ensures the schedule **survives HA restarts** — unlike `delay` which is lost when HA restarts.
+
+**Setup:** Create an `input_datetime` helper per appliance in **Settings → Devices & Services → Helpers → Create Helper → Date and/or time** (choose "Date and time").
+
+```mermaid
+sequenceDiagram
+    participant T as ⏰ Time Trigger
+    participant A as 📋 Planning Automation
+    participant S as ⚡ Scheduling Action
+    participant H as 💾 input_datetime Helper
+    participant X as ▶️ Execution Automation
+
+    T->>A: 20:00 — "Plan tonight"
+    A->>S: find_cheapest_block (2h, 22:00–06:00)
+    S-->>A: Best window: 02:00–04:00
+    A->>H: Store start time: 02:00
+    Note over H: Survives HA restart ✓
+    H->>X: 02:00 — time trigger fires
+    X->>X: Start appliance<br/>(Home Connect / smart plug)
+```
+
+### Dishwasher: Find Cheapest 2-Hour Window Tonight
+
+The classic use case. Every evening at 20:00, the automation plans when to start the dishwasher overnight.
+
+**Prerequisite:** Create an `input_datetime` helper named `input_datetime.dishwasher_start` (type: Date and time).
+
+<details>
+<summary>Show YAML: Dishwasher — Plan + Execute (2 automations)</summary>
+
+```yaml
+# Automation 1: Plan the cheapest time (runs every evening)
+automation:
+    - alias: "Dishwasher - Plan Cheapest Start Time"
+      description: "Every evening, find the cheapest 2h window overnight and store the start time"
+      trigger:
+          - platform: time
+            at: "20:00:00"
+      action:
+          - service: tibber_prices.find_cheapest_block
+            data:
+                duration: "02:00:00"
+                search_start_time: "22:00:00"
+                search_end_time: "06:00:00"
+                search_end_day_offset: 1
+            response_variable: result
+          - if: "{{ result.window_found }}"
+            then:
+                - service: input_datetime.set_datetime
+                  target:
+                      entity_id: input_datetime.dishwasher_start
+                  data:
+                      datetime: "{{ result.window.start }}"
+                - service: notify.mobile_app
+                  data:
+                      title: "🍽️ Dishwasher Planned"
+                      message: >
+                          Start at {{ result.window.start | as_datetime | as_local
+                          | as_timestamp | timestamp_custom('%H:%M') }}.
+                          Avg price: {{ result.window.price_mean | round(1) }}
+                          {{ result.price_unit }}.
+                          {% if result.relaxation_applied | default(false) %}
+                          (Filters were relaxed to find a window.)
+                          {% endif %}
+            else:
+                - service: notify.mobile_app
+                  data:
+                      title: "🍽️ Dishwasher"
+                      message: "No cheap window found tonight. Consider running manually."
+
+    # Automation 2: Execute at the planned time
+    - alias: "Dishwasher - Start at Planned Time"
+      trigger:
+          - platform: time
+            at: input_datetime.dishwasher_start
+      action:
+          # ════════════════════════════════════════════
+          # Option A: Smart appliance (Home Connect)
+          # Calculate the delay and let the appliance handle timing.
+          # Prerequisite: "Remote Start" must be enabled on the appliance.
+          # ════════════════════════════════════════════
+
+          ## --- Official Home Connect integration ---
+          # - service: home_connect.start_selected_program
+          #   target:
+          #       device_id: <your_dishwasher_device_id>
+          #   data:
+          #       b_s_h_common_option_start_in_relative: 0
+
+          ## --- Home Connect Alt integration ---
+          # - service: home_connect_alt.start_program
+          #   target:
+          #       entity_id: switch.<your_dishwasher>
+          #   data:
+          #       program: Dishcare.Dishwasher.Program.Eco50
+          #       options:
+          #           - key: BSH.Common.Option.StartInRelative
+          #             value: 0
+
+          # ════════════════════════════════════════════
+          # Option B: Simple smart plug
+          # For appliances without network connectivity.
+          # ════════════════════════════════════════════
+          - service: switch.turn_on
+            target:
+                entity_id: switch.dishwasher_smart_plug
+```
+
+</details>
+
+**How it works:**
+
+1. At 20:00, calls `find_cheapest_block` to find the cheapest contiguous 2h window between 22:00 and 06:00
+2. Stores the start time in an `input_datetime` helper (survives HA restarts)
+3. A second automation triggers at the stored time and starts the appliance
+4. If relaxation was needed (tight filters), the notification mentions it
+
+:::tip Home Connect: The modern way
+If you have a **Bosch/Siemens appliance with Home Connect**, you don't need a smart plug at all. Enable "Remote Start" on the appliance, then use one of the Home Connect integrations to start the selected program directly:
+
+- **[Official Home Connect](https://www.home-assistant.io/integrations/home_connect/)**: `home_connect.start_selected_program` with `b_s_h_common_option_start_in_relative: 0` (start immediately)
+- **[Home Connect Alt](https://github.com/ekutner/home-connect-hass)** (HACS): `home_connect_alt.start_program` with `BSH.Common.Option.StartInRelative: 0`
+
+You can also calculate a delayed start in seconds: `{{ ((result.window.start | as_datetime - now()).total_seconds()) | int }}` — but using `input_datetime` with immediate start at the planned time is simpler and more reliable.
+:::
+
+### Two Independent Appliances: No Overlap, Each at Its Cheapest
+
+When running multiple **independent** appliances overnight (e.g., dishwasher + dryer that don't depend on each other), `find_cheapest_schedule` ensures they don't overlap and each gets its own cheapest slot.
+
+**Prerequisite:** Create `input_datetime.dishwasher_start` and `input_datetime.dryer_start` helpers.
+
+<details>
+<summary>Show YAML: Multi-Appliance Overnight Schedule</summary>
+
+```yaml
+automation:
+    - alias: "Kitchen + Laundry - Plan Overnight Schedule"
+      description: "Schedule dishwasher + dryer overnight without overlap"
+      trigger:
+          - platform: time
+            at: "21:00:00"
+      action:
+          - service: tibber_prices.find_cheapest_schedule
+            data:
+                tasks:
+                    - name: dishwasher
+                      duration: "02:00:00"
+                    - name: dryer
+                      duration: "01:00:00"
+                gap_minutes: 15
+                search_start_time: "22:00:00"
+                search_end_time: "07:00:00"
+                search_end_day_offset: 1
+            response_variable: schedule
+          - if: "{{ schedule.all_tasks_scheduled }}"
+            then:
+                - service: input_datetime.set_datetime
+                  target:
+                      entity_id: input_datetime.dishwasher_start
+                  data:
+                      datetime: >
+                          {{ schedule.tasks | selectattr('name', 'eq', 'dishwasher')
+                          | map(attribute='start') | first }}
+                - service: input_datetime.set_datetime
+                  target:
+                      entity_id: input_datetime.dryer_start
+                  data:
+                      datetime: >
+                          {{ schedule.tasks | selectattr('name', 'eq', 'dryer')
+                          | map(attribute='start') | first }}
+                - service: notify.mobile_app
+                  data:
+                      title: "🧺 Appliances Planned"
+                      message: >
+                          Dishwasher: {{ (schedule.tasks | selectattr('name', 'eq', 'dishwasher')
+                          | map(attribute='start') | first) | as_datetime | as_local
+                          | as_timestamp | timestamp_custom('%H:%M') }}
+                          Dryer: {{ (schedule.tasks | selectattr('name', 'eq', 'dryer')
+                          | map(attribute='start') | first) | as_datetime | as_local
+                          | as_timestamp | timestamp_custom('%H:%M') }}
+                          Total cost: ~{{ schedule.total_estimated_cost | round(1) }}
+                          {{ schedule.currency }}
+
+    # Execution automations (one per appliance)
+    - alias: "Dishwasher - Start at Planned Time"
+      trigger:
+          - platform: time
+            at: input_datetime.dishwasher_start
+      action:
+          # Use Home Connect or smart plug — see dishwasher example above
+          - service: switch.turn_on
+            target:
+                entity_id: switch.dishwasher_smart_plug
+
+    - alias: "Dryer - Start at Planned Time"
+      trigger:
+          - platform: time
+            at: input_datetime.dryer_start
+      action:
+          - service: switch.turn_on
+            target:
+                entity_id: switch.dryer_smart_plug
+```
+
+</details>
+
+**Why `find_cheapest_schedule` instead of separate `find_cheapest_block` calls?**
+If you call `find_cheapest_block` separately for each appliance, they might both pick the **same** cheap window. `find_cheapest_schedule` reserves each slot exclusively — the dryer gets the next-cheapest window after the dishwasher claims its slot, with a 15-minute gap between them.
+
+:::caution `find_cheapest_schedule` does NOT guarantee order
+The scheduler optimizes purely for price — the dryer might be scheduled **before** the dishwasher if that results in lower total cost. This is fine for independent appliances, but problematic for sequential workflows (e.g., washing machine → dryer). See the next example for that.
+:::
+
+### Washing Machine → Dryer: Sequential Scheduling
+
+When the dryer **must** run after the washing machine, you need guaranteed order. Since `find_cheapest_schedule` doesn't guarantee task ordering, use **two sequential `find_cheapest_block` calls** instead:
+
+**Prerequisite:** Create `input_datetime.washing_machine_start` and `input_datetime.dryer_start` helpers.
+
+<details>
+<summary>Show YAML: Sequential Washer → Dryer</summary>
+
+```yaml
+automation:
+    - alias: "Laundry - Plan Sequential Wash + Dry"
+      description: "Washing machine first, then dryer — guaranteed order"
+      trigger:
+          - platform: time
+            at: "21:00:00"
+      action:
+          # Step 1: Find cheapest window for washing machine
+          - service: tibber_prices.find_cheapest_block
+            data:
+                duration: "01:30:00"
+                search_start_time: "22:00:00"
+                search_end_time: "07:00:00"
+                search_end_day_offset: 1
+            response_variable: washer_result
+
+          - if: "{{ washer_result.window_found }}"
+            then:
+                - service: input_datetime.set_datetime
+                  target:
+                      entity_id: input_datetime.washing_machine_start
+                  data:
+                      datetime: "{{ washer_result.window.start }}"
+
+                # Step 2: Find cheapest window for dryer AFTER washer finishes
+                # Add 15 min gap for transferring laundry
+                - service: tibber_prices.find_cheapest_block
+                  data:
+                      duration: "01:00:00"
+                      search_start: "{{ washer_result.window.end }}"
+                      search_start_offset: "00:15:00"
+                      search_end_time: "08:00:00"
+                      search_end_day_offset: 1
+                  response_variable: dryer_result
+
+                - if: "{{ dryer_result.window_found }}"
+                  then:
+                      - service: input_datetime.set_datetime
+                        target:
+                            entity_id: input_datetime.dryer_start
+                        data:
+                            datetime: "{{ dryer_result.window.start }}"
+                      - service: notify.mobile_app
+                        data:
+                            title: "🧺 Laundry Planned"
+                            message: >
+                                Washing: {{ washer_result.window.start | as_datetime
+                                | as_local | as_timestamp
+                                | timestamp_custom('%H:%M') }}–{{ washer_result.window.end
+                                | as_datetime | as_local | as_timestamp
+                                | timestamp_custom('%H:%M') }}
+                                ({{ washer_result.window.price_mean | round(1) }}
+                                {{ washer_result.price_unit }})
+                                Dryer: {{ dryer_result.window.start | as_datetime
+                                | as_local | as_timestamp
+                                | timestamp_custom('%H:%M') }}–{{ dryer_result.window.end
+                                | as_datetime | as_local | as_timestamp
+                                | timestamp_custom('%H:%M') }}
+                                ({{ dryer_result.window.price_mean | round(1) }}
+                                {{ dryer_result.price_unit }})
+
+    # Execution automations
+    - alias: "Washing Machine - Start at Planned Time"
+      trigger:
+          - platform: time
+            at: input_datetime.washing_machine_start
+      action:
+          # Home Connect or smart plug (see dishwasher example above)
+          - service: switch.turn_on
+            target:
+                entity_id: switch.washing_machine_smart_plug
+
+    - alias: "Dryer - Start at Planned Time"
+      trigger:
+          - platform: time
+            at: input_datetime.dryer_start
+      action:
+          - service: switch.turn_on
+            target:
+                entity_id: switch.dryer_smart_plug
+```
+
+</details>
+
+**How it works:**
+
+1. First `find_cheapest_block` finds the cheapest 1.5h window for the washing machine
+2. Second `find_cheapest_block` uses the washer's **end time + 15 min gap** as its search start — guaranteeing the dryer runs after the washer
+3. The 15-minute gap gives you time to transfer laundry (adjust or remove as needed)
+
+:::tip Alternative: Home Connect "Finish In Relative"
+With Home Connect, you can use `b_s_h_common_option_finish_in_relative` (official) or `BSH.Common.Option.FinishInRelative` (Alt) to set a target finish time. This lets the appliance decide when to start within its own program duration — useful for washing machines that support "finish by" scheduling.
+:::
+
+### EV Charging: Cheapest 4 Hours Overnight
+
+For EV charging, you usually don't need one contiguous block — the charger can pause and resume. `find_cheapest_hours` picks the cheapest individual intervals.
+
+**Prerequisite:** Create `input_datetime.ev_charge_start` helper. For multi-segment charging, see the note below.
+
+<details>
+<summary>Show YAML: EV Charging — Cheapest 4 Hours</summary>
+
+```yaml
+automation:
+    - alias: "EV - Plan Cheapest Charging Overnight"
+      trigger:
+          - platform: time
+            at: "18:00:00"
+      condition:
+          - condition: numeric_state
+            entity_id: sensor.ev_battery_level
+            below: 80
+      action:
+          - service: tibber_prices.find_cheapest_hours
+            data:
+                duration: "04:00:00"
+                min_segment_duration: "00:30:00"
+                search_start_time: "18:00:00"
+                search_end_time: "07:00:00"
+                search_end_day_offset: 1
+            response_variable: result
+          - if: "{{ result.intervals_found }}"
+            then:
+                # Store start of first segment as charging start
+                - service: input_datetime.set_datetime
+                  target:
+                      entity_id: input_datetime.ev_charge_start
+                  data:
+                      datetime: "{{ result.schedule.segments[0].start }}"
+                - service: notify.mobile_app
+                  data:
+                      title: "🔌 EV Charging Planned"
+                      message: >
+                          {{ result.schedule.segment_count }} charging sessions:
+                          {% for seg in result.schedule.segments %}
+                          • {{ seg.start | as_datetime | as_local | as_timestamp
+                          | timestamp_custom('%H:%M') }}–{{ seg.end | as_datetime | as_local
+                          | as_timestamp | timestamp_custom('%H:%M') }}
+                          ({{ seg.price_mean | round(1) }} {{ result.price_unit }})
+                          {% endfor %}
+                          Savings vs. peak: {{ result.price_comparison.price_difference
+                          | round(1) }} {{ result.price_unit }}
+```
+
+</details>
+
+:::tip Simple alternative for EV charging
+If your EV charger can't pause/resume or you prefer simplicity, use `find_cheapest_block` instead — it finds one contiguous window, just like the dishwasher example above.
+:::
+
+### Peak Price Warning: Know When NOT to Run Appliances
+
+Get a morning warning about the most expensive period today:
+
+<details>
+<summary>Show YAML: Peak Price Warning</summary>
+
+```yaml
+automation:
+    - alias: "Peak Price - Morning Warning"
+      trigger:
+          - platform: time
+            at: "07:00:00"
+      action:
+          - service: tibber_prices.find_most_expensive_block
+            data:
+                duration: "02:00:00"
+                search_scope: today
+            response_variable: peak
+          - if: "{{ peak.window_found }}"
+            then:
+                - service: notify.mobile_app
+                  data:
+                      title: "⚡ Expensive Period Today"
+                      message: >
+                          Avoid heavy loads between
+                          {{ peak.window.start | as_datetime | as_local
+                          | as_timestamp | timestamp_custom('%H:%M') }}
+                          and {{ peak.window.end | as_datetime | as_local
+                          | as_timestamp | timestamp_custom('%H:%M') }}.
+                          Average price: {{ peak.window.price_mean | round(1) }}
+                          {{ peak.price_unit }}
+```
+
+</details>
+
+---
+
+## Real-Time Optimization with Sensors
+
+Use sensors for devices that run **continuously** and can **modulate** their power draw — like heat pumps that adjust target temperature, or home batteries that switch between charging and discharging.
+
+### Heat Pump: Temperature Based on Price Level
+
+The simplest real-time approach: adjust the heat pump target temperature based on the current price rating.
+
+<details>
+<summary>Show YAML: Heat Pump — Price-Based Temperature</summary>
+
+```yaml
+automation:
+    - alias: "Heat Pump - Adjust Temperature by Price"
+      description: "Higher target when cheap, lower when expensive"
+      mode: restart
+      trigger:
+          # Triggers every 15 minutes when price updates
+          - platform: state
+            entity_id: sensor.<home_name>_current_electricity_price
+      action:
+          - variables:
+              level: >
+                  {{ state_attr('sensor.<home_name>_current_electricity_price',
+                  'rating_level') }}
+          - choose:
+                - conditions: "{{ level in ['VERY_CHEAP'] }}"
+                  sequence:
+                      - service: climate.set_temperature
+                        target:
+                            entity_id: climate.heat_pump
+                        data:
+                            temperature: 23
+                - conditions: "{{ level in ['CHEAP'] }}"
+                  sequence:
+                      - service: climate.set_temperature
+                        target:
+                            entity_id: climate.heat_pump
+                        data:
+                            temperature: 22
+                - conditions: "{{ level in ['EXPENSIVE', 'VERY_EXPENSIVE'] }}"
+                  sequence:
+                      - service: climate.set_temperature
+                        target:
+                            entity_id: climate.heat_pump
+                        data:
+                            temperature: 19
+            default:
+                - service: climate.set_temperature
+                  target:
+                      entity_id: climate.heat_pump
+                  data:
+                      temperature: 20.5
+```
+
+</details>
+
+### Heat Pump: Smart Boost with Trend Awareness
+
+A more sophisticated approach: combine the best price period with trend sensors to **boost during the full cheap window**, not just the detected period.
+
+**Why?** On [V-shaped price days](concepts.md#v-shaped-and-u-shaped-price-days), the Best Price Period may cover only 1–2 hours, but prices remain favorable for 4–6 hours. By checking the price level and trend, you can extend the boost.
 
 ```mermaid
 gantt
@@ -51,216 +553,383 @@ gantt
     section Detected
     Best Price Period   :crit,    bp, 10:00, 2h
 
-    section Your Goal
-    Run while cheap + trend OK :active, goal, 08:00, 6h
+    section This Automation
+    Boost while cheap + trend OK :active, goal, 08:00, 6h
 ```
 
-> **Key insight:** The Best Price Period covers only the absolute minimum (2h). By combining the period sensor with price level and trend, you can extend device runtime to the full 6h cheap window.
-
-### Use Case: Ride the Full Cheap Wave
-
-This automation starts a flexible load when the best price period begins, but keeps it running as long as prices remain favorable — even after the period ends.
-
 <details>
-<summary>Show YAML: Ride the Full Cheap Wave</summary>
+<summary>Show YAML: Heat Pump — Extended Cheap Window Boost</summary>
 
 ```yaml
 automation:
-    - alias: "Heat Pump - Extended Cheap Period"
-      description: "Run heat pump during the full cheap price window, not just best-price period"
+    - alias: "Heat Pump - Boost During Full Cheap Window"
+      description: "Run heat pump boost during cheap period, even beyond the detected best price period"
       mode: restart
-
       trigger:
           # Start: Best price period begins
           - platform: state
             entity_id: binary_sensor.<home_name>_best_price_period
             to: "on"
-            id: best_price_on
-          # Re-evaluate: Every 15 minutes while running
+          # Re-evaluate: Every 15 minutes when price updates
           - platform: state
             entity_id: sensor.<home_name>_current_electricity_price
-            id: price_update
-
       condition:
-          # Continue running while EITHER condition is true:
+          # Continue while EITHER is true:
           - condition: or
             conditions:
-                # Path 1: We're in a best price period
+                # Path 1: Inside a best price period
                 - condition: state
                   entity_id: binary_sensor.<home_name>_best_price_period
                   state: "on"
-                # Path 2: Price is still cheap AND trend is not rising
+                # Path 2: Price is still cheap AND trend is stable or falling
                 - condition: and
                   conditions:
                       - condition: template
                         value_template: >
-                            {% set level = state_attr('sensor.<home_name>_current_electricity_price', 'rating_level') %}
-                            {{ level in ['VERY_CHEAP', 'CHEAP'] }}
+                            {{ state_attr('sensor.<home_name>_current_electricity_price',
+                            'rating_level') in ['VERY_CHEAP', 'CHEAP'] }}
                       - condition: template
                         value_template: >
-                            {% set trend = state_attr('sensor.<home_name>_current_price_trend', 'trend_value') | int(0) %}
-                            {{ trend <= 0 }}
-
+                            {{ state_attr('sensor.<home_name>_price_outlook_1h',
+                            'trend_value') | int(0) <= 0 }}
       action:
           - service: climate.set_temperature
             target:
                 entity_id: climate.heat_pump
             data:
                 temperature: 22
-```
 
-</details>
-
-**How it works:**
-
-1. Starts when the best price period triggers
-2. On each price update, rechecks conditions
-3. Keeps running while prices are CHEAP or VERY_CHEAP **and** the trend is not rising
-4. Stops when either prices climb above CHEAP or the trend turns to rising
-
-### Use Case: Pre-Emptive Start Before Best Price
-
-Use the trend to start slightly before the cheapest period — useful for appliances with warm-up time:
-
-<details>
-<summary>Show YAML: Pre-Emptive Start</summary>
-
-```yaml
-automation:
-    - alias: "Water Heater - Pre-Heat Before Cheapest"
+    - alias: "Heat Pump - Return to Normal"
+      description: "Reset heat pump when cheap window ends"
       trigger:
           - platform: state
             entity_id: sensor.<home_name>_current_electricity_price
       condition:
-          # Conditions: Prices are falling AND we're approaching cheap levels
+          # Only reset when NOT in cheap conditions
           - condition: template
             value_template: >
-                {% set trend_value = state_attr('sensor.<home_name>_price_outlook_3h', 'trend_value') | int(0) %}
-                {% set level = state_attr('sensor.<home_name>_current_electricity_price', 'rating_level') %}
-                {{ trend_value <= -1 and level in ['CHEAP', 'NORMAL'] }}
-          # AND: The next 3 hours will be cheaper on average
+                {{ not is_state('binary_sensor.<home_name>_best_price_period', 'on')
+                and state_attr('sensor.<home_name>_current_electricity_price',
+                'rating_level') not in ['VERY_CHEAP', 'CHEAP'] }}
+      action:
+          - service: climate.set_temperature
+            target:
+                entity_id: climate.heat_pump
+            data:
+                temperature: 20.5
+```
+
+</details>
+
+:::tip Why "rising" means "act now"
+A common misconception: **"rising" does NOT mean "too late"**. The Price Outlook sensors compare your current price to the future average. `rising` means your current price is **lower** than the future average — so now is actually a good time to consume. See [Trend Sensors](sensors-trends.md#how-to-use-trend-sensors-for-decisions) for details.
+:::
+
+### Home Battery: Charge Cheap, Discharge Expensive
+
+Use the best price period for charging and the peak price period for discharging:
+
+<details>
+<summary>Show YAML: Home Battery — Charge/Discharge Cycle</summary>
+
+```yaml
+automation:
+    - alias: "Battery - Charge During Best Price"
+      trigger:
+          - platform: state
+            entity_id: binary_sensor.<home_name>_best_price_period
+            to: "on"
+      condition:
+          # Only if volatility makes it worthwhile
           - condition: template
             value_template: >
-                {% set current = states('sensor.<home_name>_current_electricity_price') | float %}
-                {% set future_avg = state_attr('sensor.<home_name>_price_outlook_3h', 'next_3h_avg') | float %}
-                {{ future_avg < current }}
+                {{ state_attr('binary_sensor.<home_name>_best_price_period',
+                'volatility') != 'low' }}
+          - condition: numeric_state
+            entity_id: sensor.home_battery_soc
+            below: 90
+      action:
+          - service: switch.turn_on
+            target:
+                entity_id: switch.battery_grid_charging
+
+    - alias: "Battery - Discharge During Peak Price"
+      trigger:
+          - platform: state
+            entity_id: binary_sensor.<home_name>_peak_price_period
+            to: "on"
+      condition:
+          - condition: numeric_state
+            entity_id: sensor.home_battery_soc
+            above: 20
+      action:
+          - service: switch.turn_on
+            target:
+                entity_id: switch.battery_grid_discharge
+
+    - alias: "Battery - Stop Charge/Discharge Outside Periods"
+      trigger:
+          - platform: state
+            entity_id: binary_sensor.<home_name>_best_price_period
+            to: "off"
+          - platform: state
+            entity_id: binary_sensor.<home_name>_peak_price_period
+            to: "off"
+      action:
+          - service: switch.turn_off
+            target:
+                entity_id:
+                    - switch.battery_grid_charging
+                    - switch.battery_grid_discharge
+```
+
+</details>
+
+### Water Heater: Pre-Heat Before the Cheapest Window Ends
+
+Heat your water tank during the cheap window so it's ready when prices rise:
+
+<details>
+<summary>Show YAML: Water Heater — Pre-Heat During Cheap Prices</summary>
+
+```yaml
+automation:
+    - alias: "Water Heater - Boost During Best Price"
+      trigger:
+          - platform: state
+            entity_id: binary_sensor.<home_name>_best_price_period
+            to: "on"
       action:
           - service: water_heater.set_temperature
             target:
                 entity_id: water_heater.boiler
             data:
                 temperature: 60
+
+    - alias: "Water Heater - Return to Eco After Period"
+      trigger:
+          - platform: state
+            entity_id: binary_sensor.<home_name>_best_price_period
+            to: "off"
+      action:
+          - service: water_heater.set_temperature
+            target:
+                entity_id: water_heater.boiler
+            data:
+                temperature: 45
 ```
 
 </details>
 
-### Use Case: Protect Against Rising Prices
+---
 
-Stop or reduce consumption when prices are climbing:
+## Combining Sensors and Actions
+
+The most powerful automations combine **planning with actions** and **real-time awareness with sensors**. Here are patterns for when you need both.
+
+### Volatility-Aware Appliance Scheduling
+
+Only schedule an appliance at a specific cheap time if price variations are meaningful. On days with flat prices, just run whenever convenient.
 
 <details>
-<summary>Show YAML: Protect Against Rising Prices</summary>
+<summary>Show YAML: Volatility-Aware Dishwasher Scheduling</summary>
 
 ```yaml
 automation:
-    - alias: "EV Charger - Stop When Prices Rising"
+    - alias: "Dishwasher - Smart Scheduling with Volatility Check"
       trigger:
-          - platform: template
-            value_template: >
-                {{ state_attr('sensor.<home_name>_current_price_trend', 'trend_value') | int(0) >= 1 }}
+          - platform: time
+            at: "20:00:00"
       condition:
-          # Only stop if price is already above typical level
-          - condition: template
-            value_template: >
-                {% set level = state_attr('sensor.<home_name>_current_electricity_price', 'rating_level') %}
-                {{ level in ['NORMAL', 'EXPENSIVE', 'VERY_EXPENSIVE'] }}
+          - condition: state
+            entity_id: switch.dishwasher_smart_plug
+            state: "off"
+      action:
+          - variables:
+              volatility: >
+                  {{ state_attr('sensor.<home_name>_today_s_price_volatility',
+                  'price_volatility') }}
+          - choose:
+                # Meaningful price variation → find the cheapest window
+                - conditions: "{{ volatility != 'low' }}"
+                  sequence:
+                      - service: tibber_prices.find_cheapest_block
+                        data:
+                            duration: "02:00:00"
+                            search_start_time: "22:00:00"
+                            search_end_time: "06:00:00"
+                            search_end_day_offset: 1
+                        response_variable: result
+                      - if: "{{ result.window_found }}"
+                        then:
+                            - service: input_datetime.set_datetime
+                              target:
+                                  entity_id: input_datetime.dishwasher_start
+                              data:
+                                  datetime: "{{ result.window.start }}"
+                            - service: notify.mobile_app
+                              data:
+                                  message: >
+                                      Dishwasher planned for
+                                      {{ result.window.start | as_datetime | as_local
+                                      | as_timestamp | timestamp_custom('%H:%M') }}
+                                      (saving ~{{ result.price_comparison.price_difference
+                                      | round(1) }} {{ result.price_unit }} vs. worst time).
+            # Low volatility → prices are flat, just start at 22:00
+            default:
+                - service: input_datetime.set_datetime
+                  target:
+                      entity_id: input_datetime.dishwasher_start
+                  data:
+                      datetime: "{{ today_at('22:00') }}"
+                - service: notify.mobile_app
+                  data:
+                      message: >
+                          Prices are flat today — dishwasher starting at 22:00
+                          (scheduling wouldn't save much).
+```
+
+</details>
+
+### EV Charging: Action-Planned with Sensor Fallback
+
+Plan overnight charging with `find_cheapest_hours`. If the plan fails or the EV arrives home late, fall back to sensor-based charging during any best price period.
+
+<details>
+<summary>Show YAML: EV Charging — Planned + Fallback</summary>
+
+```yaml
+automation:
+    # Primary: Plan optimal charging when arriving home
+    - alias: "EV - Plan Charging on Arrival"
+      trigger:
+          - platform: state
+            entity_id: device_tracker.ev
+            to: "home"
+      condition:
+          - condition: numeric_state
+            entity_id: sensor.ev_battery_level
+            below: 80
+      action:
+          - service: tibber_prices.find_cheapest_hours
+            data:
+                duration: "04:00:00"
+                min_segment_duration: "00:30:00"
+                search_start_offset_minutes: 0
+                search_end_time: "07:00:00"
+                search_end_day_offset: 1
+            response_variable: plan
+          - if: "{{ plan.intervals_found }}"
+            then:
+                # Store first segment start for the charger control automation
+                - service: input_datetime.set_datetime
+                  target:
+                      entity_id: input_datetime.ev_charge_start
+                  data:
+                      datetime: "{{ plan.schedule.segments[0].start }}"
+                - service: input_boolean.turn_on
+                  target:
+                      entity_id: input_boolean.ev_charging_planned
+
+    # Fallback: Charge during any best price period if no plan exists
+    - alias: "EV - Fallback Charging During Best Price"
+      trigger:
+          - platform: state
+            entity_id: binary_sensor.<home_name>_best_price_period
+            to: "on"
+      condition:
+          - condition: state
+            entity_id: input_boolean.ev_charging_planned
+            state: "off"
+          - condition: numeric_state
+            entity_id: sensor.ev_battery_level
+            below: 80
+          - condition: state
+            entity_id: device_tracker.ev
+            state: "home"
+      action:
+          - service: switch.turn_on
+            target:
+                entity_id: switch.ev_charger
+
+    - alias: "EV - Stop Fallback Charging"
+      trigger:
+          - platform: state
+            entity_id: binary_sensor.<home_name>_best_price_period
+            to: "off"
+      condition:
+          - condition: state
+            entity_id: input_boolean.ev_charging_planned
+            state: "off"
       action:
           - service: switch.turn_off
             target:
                 entity_id: switch.ev_charger
-          - service: notify.mobile_app
-            data:
-                message: >
-                    EV charging paused — prices are {{ states('sensor.<home_name>_current_price_trend') }}
-                    and currently at {{ states('sensor.<home_name>_current_electricity_price') }}
-                    {{ state_attr('sensor.<home_name>_current_electricity_price', 'unit_of_measurement') }}.
-                    Next trend change in ~{{ state_attr('sensor.<home_name>_next_price_trend_change', 'minutes_until_change') }} minutes.
 ```
 
 </details>
 
-### Use Case: Multi-Window Trend Strategy for Flexible Loads
+### Multi-Window Trend Strategy for Continuous Devices
 
-Combine short-term and long-term trend sensors for smarter decisions. This example manages a heat pump boost:
+Combine short-term and long-term outlook sensors for nuanced decisions. Useful for heat pumps and other devices where you want to decide: **boost now, wait for cheaper prices, or reduce consumption?**
 
-- If **both** windows say `rising` → prices only go up from here, boost now
-- If short-term is `falling` but long-term is `rising` → brief dip coming, wait for it then boost
-- If **both** say `falling` → prices are dropping, definitely wait
-- If long-term says `falling` → cheaper hours ahead, no rush
+| Short-term (1h) | Long-term (6h) | Interpretation | Action |
+|---|---|---|---|
+| `rising` | `rising` | Prices only go up from here | **Boost now** — this is the cheapest it gets |
+| `falling` | `rising` | Brief dip coming, then up | **Wait** — a dip is imminent |
+| any | `falling` | Cheaper hours ahead | **Reduce** — save energy for later |
+| `stable` | `stable` | Flat prices, no urgency | **Normal** — no benefit to shifting |
 
 <details>
 <summary>Show YAML: Multi-Window Trend Strategy</summary>
 
 ```yaml
 automation:
-    - alias: "Heat Pump - Smart Boost Using Multi-Window Trends"
+    - alias: "Heat Pump - Multi-Window Trend Boost"
       description: >
-          Combines 1h (short-term) and 6h (long-term) trend windows.
           Rising = current price is LOWER than future average = act now.
           Falling = current price is HIGHER than future average = wait.
+      mode: restart
       trigger:
           - platform: state
             entity_id: sensor.<home_name>_price_outlook_1h
           - platform: state
             entity_id: sensor.<home_name>_price_outlook_6h
       condition:
-          # Only consider if best price period is NOT active
-          # (if it IS active, a separate automation handles it)
+          # Skip if best price period is active (separate automation handles that)
           - condition: state
             entity_id: binary_sensor.<home_name>_best_price_period
             state: "off"
       action:
+          - variables:
+              t1: "{{ state_attr('sensor.<home_name>_price_outlook_1h', 'trend_value') | int(0) }}"
+              t6: "{{ state_attr('sensor.<home_name>_price_outlook_6h', 'trend_value') | int(0) }}"
           - choose:
-                # Case 1: Both rising → prices only go up, boost NOW
-                - conditions:
-                      - condition: template
-                        value_template: >
-                            {% set t1 = state_attr('sensor.<home_name>_price_outlook_1h', 'trend_value') | int(0) %}
-                            {% set t6 = state_attr('sensor.<home_name>_price_outlook_6h', 'trend_value') | int(0) %}
-                            {{ t1 >= 1 and t6 >= 1 }}
+                # Both rising → prices only go up, boost NOW
+                - conditions: "{{ t1 >= 1 and t6 >= 1 }}"
                   sequence:
                       - service: climate.set_temperature
                         target:
                             entity_id: climate.heat_pump
                         data:
                             temperature: 22
-                # Case 2: 1h falling + 6h rising → brief dip, wait then act
-                - conditions:
-                      - condition: template
-                        value_template: >
-                            {% set t1 = state_attr('sensor.<home_name>_price_outlook_1h', 'trend_value') | int(0) %}
-                            {% set t6 = state_attr('sensor.<home_name>_price_outlook_6h', 'trend_value') | int(0) %}
-                            {{ t1 <= -1 and t6 >= 1 }}
+                # Short-term falling + long-term rising → brief dip, wait
+                - conditions: "{{ t1 <= -1 and t6 >= 1 }}"
                   sequence:
-                      # Short-term dip — wait for it to bottom out
                       - service: climate.set_temperature
                         target:
                             entity_id: climate.heat_pump
                         data:
                             temperature: 20
-                # Case 3: 6h falling → cheaper hours ahead, reduce now
-                - conditions:
-                      - condition: template
-                        value_template: >
-                            {% set t6 = state_attr('sensor.<home_name>_price_outlook_6h', 'trend_value') | int(0) %}
-                            {{ t6 <= -1 }}
+                # Long-term falling → cheaper hours ahead, reduce
+                - conditions: "{{ t6 <= -1 }}"
                   sequence:
                       - service: climate.set_temperature
                         target:
                             entity_id: climate.heat_pump
                         data:
                             temperature: 19
-            # Default: stable on both → maintain normal operation
+            # Stable on both → maintain normal
             default:
                 - service: climate.set_temperature
                   target:
@@ -271,104 +940,38 @@ automation:
 
 </details>
 
-:::tip Why "rising" means "act now"
-A common misconception: **"rising" does NOT mean "too late"**. It means your current price is **lower** than the future average — so right now is actually a good time. See [How to Use Trend Sensors for Decisions](sensors-trends.md#how-to-use-trend-sensors-for-decisions) in the sensor documentation for details.
-:::
-
-### Sensor Combination Quick Reference
-
-| What You Want | Sensors to Combine |
-|---|---|
-| **"Is it cheap right now?"** | `rating_level` attribute (VERY_CHEAP, CHEAP) |
-| **"Will prices go up or down?"** | <EntityRef id="current_price_trend" noStrong>`current_price_trend`</EntityRef> state |
-| **"When will the trend change?"** | <EntityRef id="next_price_trend_change" noStrong>`next_price_trend_change`</EntityRef> state |
-| **"How cheap will it get?"** | `next_Nh_avg` attribute on trend sensors |
-| **"Is the price drop meaningful?"** | <EntityRef id="today_volatility" noStrong>`today_s_price_volatility`</EntityRef> |
-| **"Ride the full cheap wave"** | `rating_level` + `current_price_trend` + `best_price_period` |
-
 ---
 
 ## Volatility-Aware Automations
 
-These examples show how to create robust automations that only act when price differences are meaningful, avoiding unnecessary actions on days with flat prices.
+On days with **flat prices**, the "cheapest" and "most expensive" hours may differ by fractions of a cent. These patterns help you **avoid unnecessary actions** when price variations don't matter.
 
-### Use Case: Only Act on Meaningful Price Variations
-
-On days with low price variation, the difference between "cheap" and "expensive" periods can be just a fraction of a cent. This automation charges a home battery only when the volatility is high enough to result in actual savings.
-
-**Best Practice:** Instead of checking a numeric percentage, this automation checks the sensor's classified state. This makes the automation simpler and respects the volatility thresholds you have configured centrally in the integration's options.
+### Best Practice: Check Volatility Before Acting
 
 <details>
-<summary>Show YAML: Meaningful Price Variations</summary>
-
-```yaml
-automation:
-    - alias: "Home Battery - Charge During Best Price (Moderate+ Volatility)"
-      description: "Charge home battery during Best Price periods, but only on days with meaningful price differences"
-      trigger:
-          - platform: state
-            entity_id: binary_sensor.<home_name>_best_price_period
-            to: "on"
-      condition:
-          # Best Practice: Check the classified volatility level.
-          # This ensures the automation respects the thresholds you set in the config options.
-          # We use the 'price_volatility' attribute for a language-independent check.
-          # 'low' means minimal savings, so we only run if it's NOT low.
-          - condition: template
-            value_template: >
-                {{ state_attr('sensor.<home_name>_today_s_price_volatility', 'price_volatility') != 'low' }}
-          # Only charge if battery has capacity
-          - condition: numeric_state
-            entity_id: sensor.home_battery_level
-            below: 90
-      action:
-          - service: switch.turn_on
-            target:
-                entity_id: switch.home_battery_charge
-          - service: notify.mobile_app
-            data:
-                message: >
-                  Home battery charging started. Price: {{ states('sensor.<home_name>_current_electricity_price') }} {{ state_attr('sensor.<home_name>_current_electricity_price', 'unit_of_measurement') }}.
-                  Today's volatility is {{ state_attr('sensor.<home_name>_today_s_price_volatility', 'price_volatility') }}.
-
-```
-
-</details>
-
-**Why this works:**
-
--   The automation only runs if volatility is `moderate`, `high`, or `very_high`.
--   If you adjust your volatility thresholds in the future, this automation adapts automatically without any changes.
--   It uses the `price_volatility` attribute, ensuring it works correctly regardless of your Home Assistant's display language.
-
-### Use Case: Combined Volatility and Absolute Price Check
-
-This is the most robust approach. It trusts the "Best Price" classification on volatile days but adds a backup absolute price check for low-volatility days. This handles situations where prices are globally low, even if the daily variation is minimal.
-
-<details>
-<summary>Show YAML: Volatility and Absolute Price Check</summary>
+<summary>Show YAML: EV Charging — Volatility + Absolute Price Check</summary>
 
 ```yaml
 automation:
     - alias: "EV Charging - Smart Strategy"
-      description: "Charge EV using volatility-aware logic"
+      description: "Trust best price classification on volatile days, use absolute price on flat days"
       trigger:
           - platform: state
             entity_id: binary_sensor.<home_name>_best_price_period
             to: "on"
       condition:
-          # Check battery level
           - condition: numeric_state
             entity_id: sensor.ev_battery_level
             below: 80
-          # Strategy: Moderate+ volatility OR the price is genuinely cheap
+          # Strategy: Meaningful volatility OR genuinely cheap price
           - condition: or
             conditions:
-                # Path 1: Volatility is not 'low', so we trust the 'Best Price' period classification.
+                # Volatile day → trust the Best Price detection
                 - condition: template
                   value_template: >
-                      {{ state_attr('sensor.<home_name>_today_s_price_volatility', 'price_volatility') != 'low' }}
-                # Path 2: Volatility is low, but we charge anyway if the price is below an absolute cheapness threshold.
+                      {{ state_attr('sensor.<home_name>_today_s_price_volatility',
+                      'price_volatility') != 'low' }}
+                # Flat day → charge if price is below absolute threshold
                 - condition: numeric_state
                   entity_id: sensor.<home_name>_current_electricity_price
                   below: 0.18
@@ -376,114 +979,130 @@ automation:
           - service: switch.turn_on
             target:
                 entity_id: switch.ev_charger
-          - service: notify.mobile_app
-            data:
-                message: >
-                    EV charging started. Price: {{ states('sensor.<home_name>_current_electricity_price') }} {{ state_attr('sensor.<home_name>_current_electricity_price', 'unit_of_measurement') }}.
-                    Today's volatility is {{ state_attr('sensor.<home_name>_today_s_price_volatility', 'price_volatility') }}.
 ```
 
 </details>
 
 **Why this works:**
 
--   On days with meaningful price swings, it charges during any `Best Price` period.
--   On days with flat prices, it still charges if the price drops below your personal "cheap enough" threshold (e.g., 0.18 €/kWh or 18 ct/kWh).
--   This gracefully handles midnight period flips, as the absolute price check will likely remain true if prices stay low.
+- On **volatile days**: Charges during detected best price periods (meaningful savings)
+- On **flat days**: Charges whenever price drops below your personal threshold (e.g., 18 ct/kWh) — no point optimizing for 0.5 ct difference
+- The `price_volatility` attribute is language-independent (values: `low`, `moderate`, `high`, `very_high`)
 
-### Use Case: Using the Period's Own Volatility Attribute
+:::tip Simplest volatility check
+You can also check the `volatility` attribute directly on the `best_price_period` binary sensor. This is especially useful for periods that span across midnight:
 
-For maximum simplicity, you can use the attributes of the `best_price_period` sensor itself. It contains the volatility classification for the day the period belongs to. This is especially useful for periods that span across midnight.
+```yaml
+condition:
+    - condition: template
+      value_template: >
+          {{ state_attr('binary_sensor.<home_name>_best_price_period',
+          'volatility') != 'low' }}
+```
+:::
+
+### Using `min_distance_from_avg` in Scheduling Actions
+
+The scheduling actions have a **built-in volatility check**: the `min_distance_from_avg` parameter. It ensures the found window is meaningfully cheaper (or more expensive) than average:
 
 <details>
-<summary>Show YAML: Period Volatility Attribute</summary>
+<summary>Show YAML: Scheduling with Minimum Distance</summary>
 
 ```yaml
 automation:
-    - alias: "Heat Pump - Smart Heating Using Period's Volatility"
+    - alias: "Dishwasher - Only Schedule If Meaningful Savings"
       trigger:
-          - platform: state
-            entity_id: binary_sensor.<home_name>_best_price_period
-            to: "on"
-      condition:
-          # Best Practice: Check if the period's own volatility attribute is not 'low'.
-          # This correctly handles periods that start today but end tomorrow.
-          - condition: template
-            value_template: >
-                {{ state_attr('binary_sensor.<home_name>_best_price_period', 'volatility') != 'low' }}
+          - platform: time
+            at: "20:00:00"
       action:
-          - service: climate.set_temperature
-            target:
-                entity_id: climate.heat_pump
+          - service: tibber_prices.find_cheapest_block
             data:
-                temperature: 22 # Boost temperature during cheap period
+                duration: "02:00:00"
+                search_start_time: "22:00:00"
+                search_end_time: "06:00:00"
+                search_end_day_offset: 1
+                min_distance_from_avg: 10.0
+            response_variable: result
+          - if: "{{ result.window_found }}"
+            then:
+                - service: input_datetime.set_datetime
+                  target:
+                      entity_id: input_datetime.dishwasher_start
+                  data:
+                      datetime: "{{ result.window.start }}"
+            else:
+                # Prices are too flat — no meaningful savings
+                # Just set a convenient default time
+                - service: input_datetime.set_datetime
+                  target:
+                      entity_id: input_datetime.dishwasher_start
+                  data:
+                      datetime: "{{ today_at('22:00') + timedelta(days=0) }}"
 ```
 
 </details>
-
-**Why this works:**
-
--   Each detected period has its own `volatility` attribute (`low`, `moderate`, etc.).
--   This is the simplest way to check for meaningful savings for that specific period.
--   The attribute name on the binary sensor is `volatility` (lowercase) and its value is also lowercase.
--   It also contains other useful attributes like `price_mean`, `price_spread`, and the `price_coefficient_variation_%` for that period.
 
 ---
 
-## Best Hour Detection
+## Notification Patterns
 
-### Use Case: Find the Best Time to Run an Appliance
+### Daily Scheduling Summary
 
-Use future average sensors to determine the cheapest upcoming window for a timed appliance (e.g., dishwasher with 2-hour ECO program):
+Send one notification with the full picture for the next day:
 
 <details>
-<summary>Show YAML: Best Time for an Appliance</summary>
+<summary>Show YAML: Daily Summary Notification</summary>
 
 ```yaml
 automation:
-    - alias: "Dishwasher - Schedule for Cheapest 2h Window"
+    - alias: "Daily Price Summary"
       trigger:
-          # Check when tomorrow's data arrives (typically 13:00-14:00)
-          - platform: state
-            entity_id: sensor.<home_name>_price_tomorrow
-            attribute: price_mean
-      condition:
-          # Only if tomorrow data is available
-          - condition: template
-            value_template: >
-                {{ state_attr('sensor.<home_name>_price_tomorrow', 'price_mean') is not none }}
+          - platform: time
+            at: "18:00:00"
       action:
-          # Compare different future windows to find cheapest start
-          - variables:
-              next_2h: "{{ state_attr('sensor.<home_name>_price_outlook_2h', 'next_2h_avg') | float(999) }}"
-              next_4h: "{{ state_attr('sensor.<home_name>_price_outlook_4h', 'next_4h_avg') | float(999) }}"
-              daily_avg: "{{ state_attr('sensor.<home_name>_price_today', 'price_median') | float(999) }}"
+          # Find cheapest and most expensive windows
+          - service: tibber_prices.find_cheapest_block
+            data:
+                duration: "02:00:00"
+                search_scope: remaining_today
+            response_variable: cheap
+          - service: tibber_prices.find_most_expensive_block
+            data:
+                duration: "02:00:00"
+                search_scope: remaining_today
+            response_variable: expensive
           - service: notify.mobile_app
             data:
-                title: "Dishwasher Scheduling"
+                title: "⚡ Tonight's Price Summary"
                 message: >
-                    Next 2h avg: {{ next_2h }} ct/kWh
-                    Next 4h avg: {{ next_4h }} ct/kWh
-                    Today's typical: {{ daily_avg }} ct/kWh
-                    {% if next_2h < daily_avg * 0.8 %}
-                    → Now is a great time to start!
-                    {% else %}
-                    → Consider waiting for a cheaper window.
+                    {% if cheap.window_found %}
+                    Cheapest 2h: {{ cheap.window.start | as_datetime | as_local
+                    | as_timestamp | timestamp_custom('%H:%M') }}–{{ cheap.window.end
+                    | as_datetime | as_local | as_timestamp | timestamp_custom('%H:%M') }}
+                    ({{ cheap.window.price_mean | round(1) }} {{ cheap.price_unit }})
+                    {% endif %}
+                    {% if expensive.window_found %}
+                    Most expensive 2h: {{ expensive.window.start | as_datetime | as_local
+                    | as_timestamp | timestamp_custom('%H:%M') }}–{{ expensive.window.end
+                    | as_datetime | as_local | as_timestamp | timestamp_custom('%H:%M') }}
+                    ({{ expensive.window.price_mean | round(1) }} {{ expensive.price_unit }})
+                    {% endif %}
+                    {% if cheap.window_found and expensive.window_found %}
+                    Price spread: {{ (expensive.window.price_mean - cheap.window.price_mean)
+                    | round(1) }} {{ cheap.price_unit }}
                     {% endif %}
 ```
 
 </details>
 
-### Use Case: Notify When Cheapest Window Starts
-
-Get a push notification when the best price period begins:
+### Notify When Best Price Period Starts
 
 <details>
 <summary>Show YAML: Cheap Window Notification</summary>
 
 ```yaml
 automation:
-    - alias: "Notify - Cheap Window Started"
+    - alias: "Notify - Best Price Period Started"
       trigger:
           - platform: state
             entity_id: binary_sensor.<home_name>_best_price_period
@@ -494,20 +1113,61 @@ automation:
                 title: "⚡ Cheap Electricity Now!"
                 message: >
                     Best price period started.
-                    Current price: {{ states('sensor.<home_name>_current_electricity_price') }}
-                    {{ state_attr('sensor.<home_name>_current_electricity_price', 'unit_of_measurement') }}.
-                    Duration: {{ state_attr('binary_sensor.<home_name>_best_price_period', 'duration_minutes') }} minutes.
-                    Average period price: {{ state_attr('binary_sensor.<home_name>_best_price_period', 'price_mean') }}
-                    {{ state_attr('sensor.<home_name>_current_electricity_price', 'unit_of_measurement') }}.
+                    Price: {{ states('sensor.<home_name>_current_electricity_price') }}
+                    {{ state_attr('sensor.<home_name>_current_electricity_price',
+                    'unit_of_measurement') }}.
+                    Duration: {{ state_attr('binary_sensor.<home_name>_best_price_period',
+                    'duration_minutes') }} min.
+                    Period avg: {{ state_attr('binary_sensor.<home_name>_best_price_period',
+                    'price_mean') }}
+                    {{ state_attr('sensor.<home_name>_current_electricity_price',
+                    'unit_of_measurement') }}.
 ```
 
 </details>
 
 ---
 
-## Scheduling Actions
+## Quick Reference
 
-> **Looking for scheduling actions?** The **[Scheduling Actions Guide](scheduling-actions.md)** covers `find_cheapest_block`, `find_cheapest_hours`, `find_cheapest_schedule`, and their "most expensive" counterparts — ideal for automations that need to find optimal time windows dynamically (e.g., EV charging, heat pump scheduling, appliance timing).
+### When to Use Which Approach
+
+| Scenario | Best approach | Why |
+|----------|--------------|-----|
+| Dishwasher tonight | `find_cheapest_block` | Fixed 2h runtime, needs exact start time |
+| Washer → dryer (must be sequential) | 2× `find_cheapest_block` | Second call uses first result's end time as start |
+| Dishwasher + dryer (independent) | `find_cheapest_schedule` | Multiple appliances, prevent overlap |
+| EV charging by morning | `find_cheapest_hours` | Flexible, can split into segments |
+| Heat pump all day | Sensors (rating_level) | Continuous, adjusts every 15 min |
+| Home battery | Sensors (best/peak period) | Reacts to detected cheap/expensive windows |
+| Water heater boost | Sensors (best_price_period) | Simple on/off during cheap period |
+| "Should I start the dryer now?" | `find_cheapest_block` with `remaining_today` | Ad-hoc: "Is there a cheaper time left today?" |
+| Pool pump 4h daily | `find_cheapest_hours` | Flexible, doesn't need continuity |
+| Seasonal heat pump tuning | Runtime override entities | Adjust flex/thresholds via automation |
+
+### Sensor Combination Quick Reference
+
+| What You Want | What to Check |
+|---|---|
+| **"Is it cheap right now?"** | `rating_level` attribute on price sensor (`VERY_CHEAP`, `CHEAP`) |
+| **"Am I in a cheap/expensive period?"** | `binary_sensor.<home_name>_best_price_period` / `peak_price_period` state |
+| **"Will prices go up or down?"** | Price Outlook sensor state (`rising`, `falling`, `stable`) |
+| **"Is the price variation meaningful?"** | `price_volatility` attribute on volatility sensor (or `volatility` on period sensor) |
+| **"When is the next cheap window?"** | `find_cheapest_block` with `search_scope: remaining_today` |
+| **"Find the cheapest time for my 2h appliance"** | `find_cheapest_block` with `duration: "02:00:00"` |
+| **"When should I NOT run my appliance?"** | `find_most_expensive_block` |
+
+### Scheduling Actions — Choosing the Right One
+
+| Your Situation | Action | Key Parameter |
+|----------------|--------|---------------|
+| One appliance, must run uninterrupted | `find_cheapest_block` | `duration` |
+| One appliance, can pause/resume | `find_cheapest_hours` | `duration`, `min_segment_duration` |
+| Multiple independent appliances, no overlap | `find_cheapest_schedule` | `tasks`, `gap_minutes` |
+| Sequential chain (A must finish before B) | 2× `find_cheapest_block` | Use A's end as B's `search_start` |
+| Find the worst time (avoid it) | `find_most_expensive_block` | `duration` |
+
+**→ [Scheduling Actions — Full Guide](scheduling-actions.md)** for all parameters, response formats, and advanced options (power profiles, relaxation, outlier smoothing).
 
 ---
 

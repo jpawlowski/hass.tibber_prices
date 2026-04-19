@@ -32,7 +32,8 @@ flowchart TD
 
 - **Dishwasher, washing machine, dryer** → `find_cheapest_block` (must run X hours straight)
 - **EV charging, battery, pool pump** → `find_cheapest_hours` (total runtime matters, not continuity)
-- **Multiple appliances sharing a circuit** → `find_cheapest_schedule` (prevents overlap + manages gaps)
+- **Multiple independent appliances** → `find_cheapest_schedule` (prevents overlap + manages gaps)
+- **Sequential chain (A must finish before B)** → 2× `find_cheapest_block` (use A's end as B's search start)
 - **"When should I NOT run this?"** → `find_most_expensive_block` or `find_most_expensive_hours`
 
 ---
@@ -424,12 +425,15 @@ response_variable: result
 
 ### Use in Automations
 
+**Prerequisite:** Create an `input_datetime.dishwasher_start` helper (type: Date and time) in **Settings → Helpers**.
+
 <details>
-<summary>Show YAML: Dishwasher Automation</summary>
+<summary>Show YAML: Dishwasher Automation (Plan + Execute)</summary>
 
 ```yaml
 automation:
-  - alias: "Start dishwasher at cheapest time"
+  # Step 1: Plan the cheapest start time every evening
+  - alias: "Dishwasher - Plan Cheapest Start"
     trigger:
       - platform: time
         at: "20:00:00"
@@ -443,18 +447,30 @@ automation:
         response_variable: result
       - if: "{{ result.window_found }}"
         then:
-          - service: automation.turn_on
+          - service: input_datetime.set_datetime
             target:
-              entity_id: automation.run_dishwasher
-          - delay:
-              hours: "{{ ((result.window.start | as_datetime - now()) .total_seconds() / 3600) | int }}"
-              minutes: "{{ (((result.window.start | as_datetime - now()).total_seconds() % 3600) / 60) | int }}"
-          - service: switch.turn_on
-            target:
-              entity_id: switch.dishwasher_smart_plug
+              entity_id: input_datetime.dishwasher_start
+            data:
+              datetime: "{{ result.window.start }}"
+
+  # Step 2: Start the dishwasher at the stored time (survives HA restarts)
+  - alias: "Dishwasher - Start at Planned Time"
+    trigger:
+      - platform: time
+        at: input_datetime.dishwasher_start
+    action:
+      # Option A: Smart appliance via Home Connect (see tip below)
+      # Option B: Smart plug
+      - service: switch.turn_on
+        target:
+          entity_id: switch.dishwasher_smart_plug
 ```
 
 </details>
+
+:::tip Home Connect instead of smart plugs
+If you have a **Bosch/Siemens appliance with Home Connect**, you can start the program directly instead of using a smart plug. See [Automation Examples — Home Connect tip](automation-examples.md#dishwasher-find-cheapest-2-hour-window-tonight) for exact service call syntax for both the official and alternative integration.
+:::
 
 ---
 
@@ -714,6 +730,10 @@ response_variable: result
 
 If you call `find_cheapest_block` separately for each appliance, they might all find the **same** cheap time window. `find_cheapest_schedule` solves this by tracking which intervals are already claimed — each appliance gets its own non-overlapping slot.
 
+:::caution No ordering guarantee
+`find_cheapest_schedule` optimizes purely for **price** — it does not guarantee task order. The dryer could be scheduled before the washing machine if that's cheaper. For sequential workflows (washing machine → dryer), use **two sequential `find_cheapest_block` calls** where the second call starts after the first result ends. See [Automation Examples — Sequential Scheduling](automation-examples.md#washing-machine--dryer-sequential-scheduling) for a complete example.
+:::
+
 ### Gap Minutes
 
 Use `gap_minutes` to add a mandatory pause between appliances:
@@ -784,16 +804,29 @@ response_variable: peak
 
 ## Practical Examples
 
+:::tip Restart-safe automations
+All examples below use `input_datetime` helpers to store planned start times. This ensures your schedule **survives HA restarts** — unlike `delay` or `wait_for_trigger` which are lost on restart.
+
+**Setup:** Create an `input_datetime` helper per appliance in **Settings → Devices & Services → Helpers → Create Helper → Date and/or time** (choose "Date and time").
+:::
+
 ### Overnight Appliance Scheduling
 
-Schedule dishwasher + washing machine to run overnight at cheapest prices, with a 15-minute gap between them:
+Schedule dishwasher + washing machine to run overnight at cheapest prices, with a 15-minute gap between them. These appliances are **independent** — either can run first.
+
+:::tip Sequential appliances (e.g., washer → dryer)?
+If one appliance **must** finish before another starts, don't use `find_cheapest_schedule` — it doesn't guarantee order. Use **two sequential `find_cheapest_block` calls** instead. See [Automation Examples — Sequential Scheduling](automation-examples.md#washing-machine--dryer-sequential-scheduling).
+:::
+
+**Prerequisites:** Create `input_datetime.dishwasher_start` and `input_datetime.washing_machine_start` helpers.
 
 <details>
-<summary>Show YAML: Overnight Appliance Scheduling</summary>
+<summary>Show YAML: Overnight Appliance Scheduling (Plan + Execute)</summary>
 
 ```yaml
 automation:
-  - alias: "Schedule overnight appliances"
+  # Planning automation — runs every evening
+  - alias: "Laundry - Plan Overnight Schedule"
     trigger:
       - platform: time
         at: "21:00:00"
@@ -812,25 +845,67 @@ automation:
         response_variable: schedule
       - if: "{{ schedule.all_tasks_scheduled }}"
         then:
+          # Store start times in helpers (survives HA restarts)
+          - service: input_datetime.set_datetime
+            target:
+              entity_id: input_datetime.dishwasher_start
+            data:
+              datetime: >
+                {{ schedule.tasks | selectattr('name', 'eq', 'dishwasher')
+                | map(attribute='start') | first }}
+          - service: input_datetime.set_datetime
+            target:
+              entity_id: input_datetime.washing_machine_start
+            data:
+              datetime: >
+                {{ schedule.tasks | selectattr('name', 'eq', 'washing_machine')
+                | map(attribute='start') | first }}
           - service: notify.mobile_app
             data:
-              title: "Appliance Schedule Ready"
+              title: "🧺 Laundry Planned"
               message: >
-                Dishwasher: {{ schedule.tasks[0].start | as_datetime | as_local }}
-                Washing machine: {{ schedule.tasks[1].start | as_datetime | as_local }}
-                Total cost: {{ schedule.total_estimated_cost | round(2) }} ct
+                Dishwasher: {{ (schedule.tasks | selectattr('name', 'eq', 'dishwasher')
+                | map(attribute='start') | first) | as_datetime | as_local
+                | as_timestamp | timestamp_custom('%H:%M') }}
+                Washing machine: {{ (schedule.tasks | selectattr('name', 'eq', 'washing_machine')
+                | map(attribute='start') | first) | as_datetime | as_local
+                | as_timestamp | timestamp_custom('%H:%M') }}
+                Total cost: ~{{ schedule.total_estimated_cost | round(1) }}
+                {{ schedule.currency }}
+
+  # Execution automations — trigger at stored times
+  - alias: "Dishwasher - Start at Planned Time"
+    trigger:
+      - platform: time
+        at: input_datetime.dishwasher_start
+    action:
+      # Use Home Connect or smart plug — see automation-examples.md
+      - service: switch.turn_on
+        target:
+          entity_id: switch.dishwasher_smart_plug
+
+  - alias: "Washing Machine - Start at Planned Time"
+    trigger:
+      - platform: time
+        at: input_datetime.washing_machine_start
+    action:
+      - service: switch.turn_on
+        target:
+          entity_id: switch.washing_machine_smart_plug
 ```
 
 </details>
 
 ### EV Charging During Cheapest 4 Hours
 
+**Prerequisite:** Create `input_datetime.ev_charge_start` helper.
+
 <details>
 <summary>Show YAML: EV Charging in Cheapest 4 Hours</summary>
 
 ```yaml
 automation:
-  - alias: "Smart EV charging"
+  - alias: "EV - Plan Cheapest Charging"
     trigger:
       - platform: time
         at: "18:00:00"
@@ -849,17 +924,33 @@ automation:
         response_variable: charging
       - if: "{{ charging.intervals_found }}"
         then:
+          # Store first segment start time
+          - service: input_datetime.set_datetime
+            target:
+              entity_id: input_datetime.ev_charge_start
+            data:
+              datetime: "{{ charging.schedule.segments[0].start }}"
           - service: notify.mobile_app
             data:
-              title: "EV Charging Plan"
+              title: "🔌 EV Charging Planned"
               message: >
-                {{ charging.schedule.segment_count }} charging sessions planned.
-                Average price: {{ charging.schedule.price_mean | round(1) }} ct/kWh
-                Savings vs. peak: {{ charging.price_comparison.price_difference | round(1) }} ct/kWh
-
+                {{ charging.schedule.segment_count }} sessions:
+                {% for seg in charging.schedule.segments %}
+                • {{ seg.start | as_datetime | as_local
+                | as_timestamp | timestamp_custom('%H:%M') }}–{{ seg.end
+                | as_datetime | as_local | as_timestamp
+                | timestamp_custom('%H:%M') }}
+                ({{ seg.price_mean | round(1) }} {{ charging.price_unit }})
+                {% endfor %}
+                Savings vs. peak: {{ charging.price_comparison.price_difference
+                | round(1) }} {{ charging.price_unit }}
 ```
 
 </details>
+
+:::tip Simpler alternative for EV charging
+If your charger can't pause/resume, use `find_cheapest_block` instead for one contiguous window. See the [Automation Examples](automation-examples.md#ev-charging-cheapest-4-hours-overnight) for a complete example.
+:::
 
 ### Peak Price Warning
 
@@ -868,10 +959,10 @@ automation:
 
 ```yaml
 automation:
-  - alias: "Peak price warning"
+  - alias: "Peak Price - Morning Warning"
     trigger:
       - platform: time
-        at: "08:00:00"
+        at: "07:00:00"
     action:
       - service: tibber_prices.find_most_expensive_block
         data:
@@ -884,10 +975,13 @@ automation:
             data:
               title: "⚡ Expensive Period Today"
               message: >
-                Avoid high-power appliances between
-                {{ peak.window.start | as_datetime | as_local }}
-                and {{ peak.window.end | as_datetime | as_local }}.
-                Average price: {{ peak.window.price_mean | round(1) }} ct/kWh
+                Avoid heavy loads between
+                {{ peak.window.start | as_datetime | as_local
+                | as_timestamp | timestamp_custom('%H:%M') }}
+                and {{ peak.window.end | as_datetime | as_local
+                | as_timestamp | timestamp_custom('%H:%M') }}.
+                Average price: {{ peak.window.price_mean | round(1) }}
+                {{ peak.price_unit }}
 ```
 
 </details>
