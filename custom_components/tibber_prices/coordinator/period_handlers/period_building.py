@@ -541,8 +541,8 @@ def filter_superseded_periods(
 
     """
     from .types import (  # noqa: PLC0415
-        CROSS_DAY_LATE_PERIOD_START_HOUR,
-        CROSS_DAY_MAX_EXTENSION_HOUR,
+        CROSS_DAY_EARLY_MORNING_HOUR,
+        CROSS_DAY_SUPERSESSION_START_HOUR,
         SUPERSESSION_PRICE_IMPROVEMENT_PCT,
     )
 
@@ -564,8 +564,8 @@ def filter_superseded_periods(
         period_summaries,
         today,
         tomorrow,
-        CROSS_DAY_LATE_PERIOD_START_HOUR,
-        CROSS_DAY_MAX_EXTENSION_HOUR,
+        CROSS_DAY_SUPERSESSION_START_HOUR,
+        CROSS_DAY_EARLY_MORNING_HOUR,
     )
 
     _LOGGER.debug(
@@ -708,113 +708,31 @@ def filter_weak_peak_periods(
     return kept
 
 
-def _is_period_eligible_for_extension(
-    period: dict,
-    today: date,
-    late_hour_threshold: int,
-) -> bool:
+def _gap_spans_midnight(a_end: datetime, b_start: datetime) -> bool:
     """
-    Check if a period is eligible for cross-day extension.
+    Check if the gap between two periods spans a midnight boundary.
 
-    Eligibility criteria:
-    - Period has valid start and end times
-    - Period ends on today (not yesterday or tomorrow)
-    - Period ends late (after late_hour_threshold, e.g. 20:00)
+    Uses the last covered moment of period A (end - 1 minute, since end is
+    exclusive) to determine the calendar day.  Returns True when A's last
+    interval is on a different (earlier) date than B's first interval.
 
-    Note: ``end`` is an *exclusive* boundary — the first moment after the last
-    interval.  A period whose last interval starts at 23:45 has ``end = 00:00``
-    the next calendar day.  We therefore derive the effective date/hour from
-    ``end − 1 minute`` so that such periods are correctly recognised as ending
-    "today, late in the evening".
+    Examples:
+      A ends 00:00 (last interval 23:45 same day), B starts 00:15 → True
+      A ends 23:30, B starts 00:00 next day → True
+      A ends 21:30, B starts 22:00 same day → False
 
     """
-    period_end = period.get("end")
-    period_start = period.get("start")
-
-    if not period_end or not period_start:
-        return False
-
-    # Derive last-covered moment (exclusive end → inclusive last moment)
-    effective_end = period_end - timedelta(minutes=1)
-
-    if effective_end.date() != today:
-        return False
-
-    return effective_end.hour >= late_hour_threshold
+    a_last_moment = a_end - timedelta(minutes=1)
+    return a_last_moment.date() < b_start.date()
 
 
-def _find_extension_intervals(
-    period_end: datetime,
-    price_lookup: dict[str, dict],
-    criteria: Any,
-    max_extension_time: datetime,
-    interval_duration: timedelta,
-    *,
-    max_intervals: int = 0,
-    period_mean_price: float = 0.0,
-    max_price_deviation: float = 0.0,
-    reverse_sort: bool = False,
-) -> list[dict]:
-    """
-    Find consecutive intervals after period_end that meet criteria.
-
-    Iterates forward from period_end, adding intervals while they
-    meet the flex and min_distance criteria. Stops at first failure
-    or when reaching max_extension_time.
-
-    Additional guards:
-    - max_intervals: Hard cap on number of extension intervals (0 = unlimited)
-    - period_mean_price + max_price_deviation: Stop extending when the candidate
-      interval's price deviates too far from the original period's mean price.
-      For peak periods (reverse_sort=True): stops when price drops below
-      mean × (1 - deviation). For best periods: stops when price rises above
-      mean × (1 + deviation).
-
-    """
-    from .level_filtering import check_interval_criteria  # noqa: PLC0415
-
-    extension_intervals: list[dict] = []
-    check_time = period_end
-
-    while check_time < max_extension_time:
-        # Hard cap on extension length
-        if max_intervals > 0 and len(extension_intervals) >= max_intervals:
-            break
-
-        price_data = price_lookup.get(check_time.isoformat())
-        if not price_data:
-            break  # No more data
-
-        price = float(price_data["total"])
-
-        # Price deviation gate: stop if price drifts too far from original period mean
-        if period_mean_price > 0 and max_price_deviation > 0:
-            if reverse_sort:
-                # Peak: stop if price drops below mean × (1 - deviation)
-                if price < period_mean_price * (1 - max_price_deviation):
-                    break
-            elif price > period_mean_price * (1 + max_price_deviation):
-                # Best: stop if price rises above mean × (1 + deviation)
-                break
-
-        in_flex, meets_min_distance = check_interval_criteria(price, criteria)
-
-        if not (in_flex and meets_min_distance):
-            break  # Criteria no longer met
-
-        extension_intervals.append(price_data)
-        check_time = check_time + interval_duration
-
-    return extension_intervals
-
-
-def _collect_original_period_prices(
+def _collect_period_prices(
     period_start: datetime,
     period_end: datetime,
     price_lookup: dict[str, dict],
     interval_duration: timedelta,
 ) -> list[float]:
-    """Collect prices from original period for CV calculation."""
+    """Collect prices within a time range from the price lookup."""
     prices: list[float] = []
     current = period_start
     while current < period_end:
@@ -825,33 +743,29 @@ def _collect_original_period_prices(
     return prices
 
 
-def _build_extended_period(
-    period: dict,
-    extension_intervals: list[dict],
+def _build_bridged_period(
+    period_a: dict,
+    period_b: dict,
     combined_prices: list[float],
     combined_cv: float,
-    interval_duration: timedelta,
+    gap_intervals: int,
 ) -> dict:
-    """Create extended period dict with updated statistics."""
-    period_start = period["start"]
-    period_end = period["end"]
-    new_end = period_end + (interval_duration * len(extension_intervals))
+    """Create a merged period dict from two bridged periods with updated statistics."""
+    bridged = period_a.copy()
+    bridged["end"] = period_b["end"]
+    bridged["duration_minutes"] = int((period_b["end"] - period_a["start"]).total_seconds() / 60)
+    bridged["period_interval_count"] = len(combined_prices)
+    bridged["cross_day_bridged"] = True
+    bridged["cross_day_bridge_gap_intervals"] = gap_intervals
 
-    extended = period.copy()
-    extended["end"] = new_end
-    extended["duration_minutes"] = int((new_end - period_start).total_seconds() / 60)
-    extended["period_interval_count"] = len(combined_prices)
-    extended["cross_day_extended"] = True
-    extended["cross_day_extension_intervals"] = len(extension_intervals)
+    # Recalculate price statistics for the combined period
+    bridged["price_min"] = min(combined_prices)
+    bridged["price_max"] = max(combined_prices)
+    bridged["price_mean"] = sum(combined_prices) / len(combined_prices)
+    bridged["price_spread"] = bridged["price_max"] - bridged["price_min"]
+    bridged["price_coefficient_variation_%"] = round(combined_cv, 1)
 
-    # Recalculate price statistics
-    extended["price_min"] = min(combined_prices)
-    extended["price_max"] = max(combined_prices)
-    extended["price_mean"] = sum(combined_prices) / len(combined_prices)
-    extended["price_spread"] = extended["price_max"] - extended["price_min"]
-    extended["price_coefficient_variation_%"] = round(combined_cv, 1)
-
-    return extended
+    return bridged
 
 
 def extend_periods_across_midnight(
@@ -863,20 +777,24 @@ def extend_periods_across_midnight(
     reverse_sort: bool,
 ) -> list[dict]:
     """
-    Extend late-night periods across midnight if favorable prices continue.
+    Bridge periods across midnight when separated by a small gap.
 
-    When a period ends close to midnight and tomorrow's data shows continued
-    favorable prices, extend the period into the next day. This prevents
-    artificial period breaks at midnight when it's actually better to continue.
+    When two independently qualifying periods exist on either side of midnight,
+    separated only by a few non-qualifying intervals (typically caused by per-day
+    reference price changes at the day boundary), merge them into a single period.
 
-    Example: Best price period 22:00-23:45 today could extend to 04:00 tomorrow
-    if prices remain low overnight.
+    Key principle: requires evidence on BOTH sides of midnight.
+    A period ending at 21:30 will NOT be bridged — it ended because prices
+    changed, not because of midnight.  Only genuine midnight-split periods
+    (where favorable conditions continue on both sides) are merged.
+
+    Example: Best price period 22:00-23:45 today + period 00:15-03:00 tomorrow
+    → Bridged into 22:00-03:00 (if gap ≤ 4 intervals and CV passes).
 
     Rules:
-    - Only extends periods ending after CROSS_DAY_LATE_PERIOD_START_HOUR (20:00)
-    - Won't extend beyond CROSS_DAY_MAX_EXTENSION_HOUR (08:00) next day
-    - Extension must pass same flex criteria as original period
-    - Quality Gate (CV check) applies to extended period
+    - Requires periods on BOTH sides of the midnight boundary
+    - Gap between periods must be ≤ CROSS_DAY_MAX_BRIDGE_GAP_INTERVALS (4 = 1 hour)
+    - Quality Gate (CV check) applies to the merged period
 
     Args:
         period_summaries: List of period summary dicts (already processed)
@@ -886,22 +804,14 @@ def extend_periods_across_midnight(
         reverse_sort: True for peak price, False for best price
 
     Returns:
-        Updated list of period summaries with extensions applied
+        Updated list of period summaries with bridges applied
 
     """
     from custom_components.tibber_prices.utils.price import calculate_coefficient_of_variation  # noqa: PLC0415
 
-    from .types import (  # noqa: PLC0415
-        CROSS_DAY_LATE_PERIOD_START_HOUR,
-        CROSS_DAY_MAX_EXTENSION_HOUR,
-        CROSS_DAY_MAX_EXTENSION_INTERVALS,
-        CROSS_DAY_MAX_PRICE_DEVIATION,
-        CROSS_DAY_PROPORTIONAL_EXTENSION_FACTOR,
-        PERIOD_MAX_CV,
-        TibberPricesIntervalCriteria,
-    )
+    from .types import CROSS_DAY_MAX_BRIDGE_GAP_INTERVALS, PERIOD_MAX_CV  # noqa: PLC0415
 
-    if not period_summaries or not all_prices:
+    if not period_summaries or len(period_summaries) < 2 or not all_prices:
         return period_summaries
 
     # Build price lookup by timestamp
@@ -911,114 +821,77 @@ def extend_periods_across_midnight(
         if interval_time:
             price_lookup[interval_time.isoformat()] = price_data
 
-    ref_prices = price_context.get("ref_prices", {})
-    avg_prices = price_context.get("avg_prices", {})
-    flex = price_context.get("flex", 0.15)
-    min_distance = price_context.get("min_distance_from_avg", 0)
-
     now = time.now()
-    today = now.date()
-    tomorrow = today + timedelta(days=1)
     interval_duration = time.get_interval_duration()
 
-    # Max extension time (e.g., 08:00 tomorrow)
-    max_extension_time = time.start_of_local_day(now) + timedelta(days=1, hours=CROSS_DAY_MAX_EXTENSION_HOUR)
+    # Sort periods by start time for pairwise comparison
+    sorted_periods = sorted(period_summaries, key=lambda p: p.get("start") or now)
 
-    extended_summaries = []
+    result: list[dict] = []
+    skip_indices: set[int] = set()
 
-    for period in period_summaries:
-        # Check eligibility for extension
-        if not _is_period_eligible_for_extension(period, today, CROSS_DAY_LATE_PERIOD_START_HOUR):
-            extended_summaries.append(period)
+    for i, period_a in enumerate(sorted_periods):
+        if i in skip_indices:
             continue
 
-        # Get tomorrow's reference prices
-        tomorrow_ref = ref_prices.get(tomorrow) or ref_prices.get(str(tomorrow))
-        tomorrow_avg = avg_prices.get(tomorrow) or avg_prices.get(str(tomorrow))
+        # Try to bridge with the next period
+        if i + 1 < len(sorted_periods):
+            period_b = sorted_periods[i + 1]
+            a_end = period_a.get("end")
+            b_start = period_b.get("start")
 
-        if tomorrow_ref is None or tomorrow_avg is None:
-            extended_summaries.append(period)
-            continue
+            if (
+                a_end and b_start and _gap_spans_midnight(a_end, b_start) and b_start >= a_end  # No overlap
+            ):
+                gap = b_start - a_end
+                gap_intervals = int(gap.total_seconds() / interval_duration.total_seconds())
 
-        # Set up criteria for extension check
-        criteria = TibberPricesIntervalCriteria(
-            ref_price=tomorrow_ref,
-            avg_price=tomorrow_avg,
-            flex=flex,
-            min_distance_from_avg=min_distance,
-            reverse_sort=reverse_sort,
-        )
+                if gap_intervals <= CROSS_DAY_MAX_BRIDGE_GAP_INTERVALS:
+                    # Collect all prices from A.start through B.end (including gap)
+                    combined_prices = _collect_period_prices(
+                        period_a["start"],
+                        period_b["end"],
+                        price_lookup,
+                        interval_duration,
+                    )
 
-        # Collect original prices once (reused for cap calculation, deviation gate, and CV check)
-        original_prices = _collect_original_period_prices(
-            period["start"],
-            period["end"],
-            price_lookup,
-            interval_duration,
-        )
+                    if combined_prices:
+                        combined_cv = calculate_coefficient_of_variation(combined_prices)
 
-        # Calculate max extension intervals: min(hard cap, proportional cap)
-        original_interval_count = max(1, len(original_prices))
-        proportional_cap = int(original_interval_count * CROSS_DAY_PROPORTIONAL_EXTENSION_FACTOR)
-        max_intervals = min(CROSS_DAY_MAX_EXTENSION_INTERVALS, proportional_cap)
+                        if combined_cv is not None and combined_cv <= PERIOD_MAX_CV:
+                            bridged = _build_bridged_period(
+                                period_a,
+                                period_b,
+                                combined_prices,
+                                combined_cv,
+                                gap_intervals,
+                            )
+                            _LOGGER.info(
+                                "Cross-day bridge: Merged %s-%s + %s-%s → %s-%s (gap=%d intervals, CV=%.1f%%)",
+                                period_a["start"].strftime("%H:%M"),
+                                period_a["end"].strftime("%H:%M"),
+                                period_b["start"].strftime("%H:%M"),
+                                period_b["end"].strftime("%H:%M"),
+                                bridged["start"].strftime("%H:%M"),
+                                bridged["end"].strftime("%H:%M"),
+                                gap_intervals,
+                                combined_cv,
+                            )
+                            result.append(bridged)
+                            skip_indices.add(i + 1)
+                            continue
 
-        # Original period mean price for deviation gate
-        period_mean_price = sum(original_prices) / len(original_prices) if original_prices else 0.0
+                        _LOGGER_DETAILS.debug(
+                            "%sCross-day bridge rejected %s-%s + %s-%s: CV=%.1f%% > %.1f%%",
+                            INDENT_L0,
+                            period_a["start"].strftime("%H:%M"),
+                            period_a["end"].strftime("%H:%M"),
+                            period_b["start"].strftime("%H:%M"),
+                            period_b["end"].strftime("%H:%M"),
+                            combined_cv or 0,
+                            PERIOD_MAX_CV,
+                        )
 
-        # Find extension intervals (with cap + price deviation gate)
-        extension_intervals = _find_extension_intervals(
-            period["end"],
-            price_lookup,
-            criteria,
-            max_extension_time,
-            interval_duration,
-            max_intervals=max_intervals,
-            period_mean_price=period_mean_price,
-            max_price_deviation=CROSS_DAY_MAX_PRICE_DEVIATION,
-            reverse_sort=reverse_sort,
-        )
+        result.append(period_a)
 
-        if not extension_intervals:
-            extended_summaries.append(period)
-            continue
-
-        # CV check using already-collected original prices
-        extension_prices = [float(p["total"]) for p in extension_intervals]
-        combined_prices = original_prices + extension_prices
-
-        # Quality Gate: Check CV of extended period
-        combined_cv = calculate_coefficient_of_variation(combined_prices)
-
-        if combined_cv is not None and combined_cv <= PERIOD_MAX_CV:
-            # Extension passes quality gate
-            extended_period = _build_extended_period(
-                period,
-                extension_intervals,
-                combined_prices,
-                combined_cv,
-                interval_duration,
-            )
-
-            _LOGGER.info(
-                "Cross-day extension: Period %s-%s extended to %s (+%d intervals, max=%d, CV=%.1f%%)",
-                period["start"].strftime("%H:%M"),
-                period["end"].strftime("%H:%M"),
-                extended_period["end"].strftime("%H:%M"),
-                len(extension_intervals),
-                max_intervals,
-                combined_cv,
-            )
-            extended_summaries.append(extended_period)
-        else:
-            # Extension would exceed quality gate
-            _LOGGER_DETAILS.debug(
-                "%sCross-day extension rejected for period %s-%s: CV=%.1f%% > %.1f%%",
-                INDENT_L0,
-                period["start"].strftime("%H:%M"),
-                period["end"].strftime("%H:%M"),
-                combined_cv or 0,
-                PERIOD_MAX_CV,
-            )
-            extended_summaries.append(period)
-
-    return extended_summaries
+    return result

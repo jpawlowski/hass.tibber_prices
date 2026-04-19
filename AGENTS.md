@@ -720,9 +720,7 @@ FLEX_HIGH_THRESHOLD_RELAXATION = 0.30     # WARNING at 30% base flex
 
 - Periods can **cross midnight** (day boundaries) naturally
 - Reference price locked to **period start day** for consistency across the entire period
-- Pattern: "Uses reference price from start day of the period for consistency" (same as period statistics)
-- Example: Period starting 23:45 on Day 1 continues into Day 2 using Day 1's daily_min as reference
-- This prevents artificial splits at midnight when prices remain favorable across the boundary
+- **Cross-day bridging**: Merges midnight-split periods (requires evidence on BOTH sides, gap ≤1h, CV ≤25%). See `docs/developer/docs/period-calculation-theory.md` → "Cross-Midnight Bridging" for details.
 
 **Default Configuration Values** (`const.py`):
 

@@ -251,9 +251,11 @@ def calculate_periods(
             time=time,
         )
 
-    # Step 8: Cross-day extension for late-night periods
-    # If a best-price period ends near midnight and tomorrow has continued low prices,
-    # extend the period across midnight to give users the full cheap window
+    # Step 8: Cross-day bridging for midnight-split periods
+    # If two periods exist on both sides of midnight separated by a small gap
+    # (artifact of per-day reference price changes), merge them into one period.
+    # Requires evidence on BOTH sides — periods ending well before midnight
+    # are NOT extended because they ended naturally.
     period_summaries = extend_periods_across_midnight(
         period_summaries,
         all_prices_sorted,

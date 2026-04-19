@@ -29,18 +29,20 @@ PERIOD_MAX_CV = 25.0  # 25% max coefficient of variation within a period
 # Value: 10 ct / 100 = 0.10 EUR/NOK
 LOW_PRICE_QUALITY_BYPASS_THRESHOLD = 0.10  # EUR/NOK major unit (= 10 ct/øre)
 
-# Cross-Day Extension: Time window constants
-# When a period ends late in the day and tomorrow data is available,
-# we can extend it past midnight if prices remain favorable
-CROSS_DAY_LATE_PERIOD_START_HOUR = 20  # Consider periods starting at 20:00 or later for extension
-CROSS_DAY_MAX_EXTENSION_HOUR = 8  # Don't extend beyond 08:00 next day (covers typical night low)
-CROSS_DAY_MAX_EXTENSION_INTERVALS = 16  # Hard cap: max 4 hours of extension (16 × 15-minute intervals)
-CROSS_DAY_PROPORTIONAL_EXTENSION_FACTOR = 2.0  # Extension ≤ 2× original period length
-CROSS_DAY_MAX_PRICE_DEVIATION = 0.15  # Stop if price deviates >15% from original period mean
+# Cross-Day Bridging: Merge periods separated by the midnight boundary
+# When two independently qualifying periods exist on both sides of midnight,
+# separated only by a small gap (artifact of per-day reference price changes),
+# merge them into a single period.
+# Key principle: requires periods on BOTH sides — a period ending at 21:30
+# will not be bridged because it ended naturally, not due to midnight.
+CROSS_DAY_MAX_BRIDGE_GAP_INTERVALS = 4  # Max gap: 4 intervals (1 hour) to bridge across midnight
+CROSS_DAY_EARLY_MORNING_HOUR = 8  # Don't extend beyond 08:00 next day (covers typical night low)
 
 # Cross-Day Supersession: When tomorrow data arrives, late-night periods that are
-# worse than early-morning tomorrow periods become obsolete
-# A today period is "superseded" if tomorrow has a significantly better alternative
+# worse than early-morning tomorrow periods become obsolete.
+# A today period is "superseded" if tomorrow has a significantly better alternative.
+# Uses START hour (not end hour) because we want to catch periods starting late evening.
+CROSS_DAY_SUPERSESSION_START_HOUR = 20  # Periods starting at 20:00+ can be superseded by tomorrow
 SUPERSESSION_PRICE_IMPROVEMENT_PCT = 10.0  # Tomorrow must be at least 10% cheaper to supersede
 
 # Peak Price Quality: Minimum premium above daily average to qualify as genuine peak

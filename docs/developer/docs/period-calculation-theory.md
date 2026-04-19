@@ -535,6 +535,24 @@ Without the symmetric check, both directions produced "false extremes" purely fr
 
 `CROSS_DAY_OVERNIGHT_VALIDATION_HOUR = 6` (in `types.py`) covers the typical overnight low/high window. Beyond that, intra-day price dynamics dominate and the boundary artifact disappears naturally.
 
+### Cross-Midnight Bridging
+
+Separate from boundary *validation* (which filters artifacts), cross-midnight *bridging* merges periods that were split by the day boundary.
+
+**Problem:** Per-day reference prices change at midnight. Two intervals — one at 23:45 and one at 00:15 — are evaluated against different daily minimums/maximums. Even if prices are nearly identical, one may qualify and the other may not, splitting what should be a single period into two fragments.
+
+**Solution:** After period detection completes, the integration checks for pairs of periods where:
+
+1. **Both sides have evidence:** One period ends near midnight, the other starts shortly after midnight
+2. **Gap is small:** At most `CROSS_DAY_MAX_BRIDGE_GAP_INTERVALS` intervals (4 = 1 hour) separate the two periods
+3. **Quality passes:** The merged period's coefficient of variation must stay ≤ `PERIOD_MAX_CV` (25%)
+
+When all conditions are met, the two periods are merged into one. The merged period inherits the start of the earlier period and the end of the later period, with recalculated statistics.
+
+**Key design principle:** Bridging requires qualifying periods on **both** sides of midnight. A period that ends at 21:30 will *not* be bridged — it ended because prices changed, not because of midnight. Only genuine midnight-split periods (where favorable conditions exist on both sides of the boundary) are merged.
+
+**Implementation:** `period_building.py` → `extend_periods_across_midnight()` (function name kept for backwards compatibility, but algorithm is now bidirectional bridging). Helper functions: `_gap_spans_midnight()`, `_collect_period_prices()`, `_build_bridged_period()`.
+
 ---
 
 ## Relaxation Strategy

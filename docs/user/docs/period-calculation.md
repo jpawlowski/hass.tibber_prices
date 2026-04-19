@@ -110,7 +110,7 @@ flowchart TD
     B --> C["📐 Phase 2: Day Pattern Detection<br/><small>Classify each day's shape<br/>(valley, peak, duck curve, flat…)</small>"]
     C --> D["🔍 Phase 3: Period Detection<br/><small>Find continuous intervals matching<br/>flex + distance + level criteria</small>"]
     D --> E["📏 Phase 4: Duration &amp; Quality<br/><small>Remove too-short periods,<br/>calculate statistics</small>"]
-    E --> F["🌙 Phase 5: Cross-Day Handling<br/><small>Extend across midnight,<br/>filter day-boundary artifacts</small>"]
+    E --> F["🌙 Phase 5: Cross-Day Handling<br/><small>Bridge midnight-split periods,<br/>filter day-boundary artifacts</small>"]
     F --> G{"Enough periods<br/>per day?"}
     G -->|Yes| H["✅ Done"]
     G -->|No| I["🔄 Phase 6: Relaxation<br/><small>Gradually loosen filters<br/>(+3% flex per step)</small>"]
@@ -131,7 +131,7 @@ flowchart TD
 | **2. Day Patterns** | Classifies each day's price shape (valley, peak, duck curve, flat…) | Enables geometric flex bonuses — periods in a detected valley/peak zone get extra margin |
 | **3. Period Detection** | Scans all intervals through flex, distance, and level filters | Core logic: finds contiguous blocks where prices are close to the daily min (or max) |
 | **4. Duration & Quality** | Removes periods shorter than the configured minimum, calculates statistics | A 15-minute "period" isn't useful for running an appliance |
-| **5. Cross-Day Handling** | Extends late-evening periods across midnight, filters day-boundary artifacts | Without this, a cheap period at 23:00-00:00 can't continue into 00:00-02:00 even if prices stay low |
+| **5. Cross-Day Handling** | Bridges midnight-split periods, filters day-boundary artifacts | Without this, a cheap period split by midnight into two fragments can't be recognized as one continuous period |
 | **6. Relaxation** | Loosens filters step by step (+3% flex) until enough periods are found | On some days, the configured flex isn't enough to find 2 periods — relaxation adapts automatically |
 | **7. Fallback** | Progressively reduces minimum duration (60→45→30 min) | Last resort for days where even full relaxation finds zero periods |
 
@@ -274,11 +274,12 @@ For each surviving period, the integration calculates statistics: mean, median, 
 
 Since the integration processes yesterday + today + tomorrow together, periods can naturally span midnight. This phase ensures correct behavior at day boundaries:
 
-**Cross-midnight extension:**
-Late-evening periods (starting after 20:00) are extended into the next day if prices remain favorable. Three safety limits apply:
-- Maximum 4 hours of extension
-- Extension can't exceed 2× the original period length
-- Extension stops if prices deviate more than 15% from the original period's mean
+**Cross-midnight bridging:**
+When two independently qualifying periods exist on **both sides** of midnight — separated only by a small gap (max 1 hour) caused by the per-day reference price change at the day boundary — they are merged into a single period. This requires evidence on both sides: a period ending at 21:30 will **not** be bridged, because it ended naturally (prices changed), not because of midnight. Only genuine midnight-split periods are merged.
+
+Safety limits:
+- Maximum gap of 4 intervals (1 hour) between the two periods
+- The merged period must pass the CV quality gate (≤ 25% coefficient of variation)
 
 **Day-boundary artifact filtering:**
 Each day has its own min/max/avg — so the same absolute price can qualify as "cheap" or "peak" on one day but not the next. The integration catches these misleading artifacts with several automatic checks:
@@ -897,7 +898,7 @@ The [cross-day handling](#phase-5-cross-day-handling) automatically prevents mis
 
 - **Best _and_ Peak periods** near midnight are validated against **both** adjacent days' statistics
 - **Peak periods** must exceed the daily average by at least 10%, with overnight periods checked against the higher average of both days
-- **Cross-day extensions** are capped in length and stop when prices deviate significantly
+- **Cross-midnight bridging** merges periods split by midnight only when qualifying periods exist on **both** sides (gap ≤ 1 hour, CV quality gate applies)
 
 These checks run automatically and require no configuration. They ensure that midnight period boundaries reflect genuine price differences, not just day-boundary artifacts.
 
@@ -944,7 +945,7 @@ automation:
 
 **Summary:**
 - ✅ **Expected behavior:** Each day has independent price statistics — midnight is a natural boundary
-- ✅ **Automatic handling:** Cross-day quality checks prevent misleading period artifacts
+- ✅ **Automatic handling:** Cross-day bridging and quality checks prevent misleading period artifacts
 - ✅ **Extra safety:** Use volatility sensors or absolute price thresholds in automations for additional robustness
 
 ---
