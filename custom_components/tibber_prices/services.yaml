@@ -64,7 +64,6 @@ get_apexcharts_yaml:
         boolean:
     highlight_peak_price:
       required: false
-      default: false
       example: false
       selector:
         boolean:
@@ -139,7 +138,6 @@ get_chartdata:
       fields:
         subunit_currency:
           required: false
-          default: false
           example: true
           selector:
             boolean:
@@ -163,12 +161,10 @@ get_chartdata:
               translation_key: insert_nulls
         connect_segments:
           required: false
-          default: false
           selector:
             boolean:
         add_trailing_null:
           required: false
-          default: false
           selector:
             boolean:
     format:
@@ -204,29 +200,24 @@ get_chartdata:
       fields:
         include_level:
           required: false
-          default: false
           example: true
           selector:
             boolean:
         include_rating_level:
           required: false
-          default: false
           example: true
           selector:
             boolean:
         include_average:
           required: false
-          default: false
           selector:
             boolean:
         include_energy:
           required: false
-          default: false
           selector:
             boolean:
         include_tax:
           required: false
-          default: false
           selector:
             boolean:
         start_time_field:
@@ -441,12 +432,10 @@ find_cheapest_block:
       fields:
         include_comparison_details:
           required: false
-          default: false
           selector:
             boolean:
         use_base_unit:
           required: false
-          default: false
           selector:
             boolean:
 
@@ -611,12 +600,10 @@ find_most_expensive_block:
       fields:
         include_comparison_details:
           required: false
-          default: false
           selector:
             boolean:
         use_base_unit:
           required: false
-          default: false
           selector:
             boolean:
 
@@ -785,12 +772,10 @@ find_cheapest_hours:
       fields:
         include_comparison_details:
           required: false
-          default: false
           selector:
             boolean:
         use_base_unit:
           required: false
-          default: false
           selector:
             boolean:
 
@@ -959,12 +944,10 @@ find_most_expensive_hours:
       fields:
         include_comparison_details:
           required: false
-          default: false
           selector:
             boolean:
         use_base_unit:
           required: false
-          default: false
           selector:
             boolean:
 
@@ -1118,12 +1101,10 @@ find_cheapest_schedule:
       fields:
         include_comparison_details:
           required: false
-          default: false
           selector:
             boolean:
         use_base_unit:
           required: false
-          default: false
           selector:
             boolean:
 
