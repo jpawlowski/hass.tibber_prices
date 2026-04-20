@@ -127,8 +127,8 @@ explanations of each sensor's purpose, attributes, and automation examples.
 
 | Entity ID suffix | 🇬🇧 English | 🇩🇪 Deutsch | 🇳🇴 Norsk | 🇳🇱 Nederlands | 🇸🇪 Svenska | Default |
 |---|---|---|---|---|---|---|
-| <span id="ref-current_price_trend" class="entity-anchor" data-refs="automation-examples#sensor-combination-quick-reference"></span>`current_price_trend` | Current Price Trend | Aktueller Preistrend | Nåværende pristrend | Huidige Prijstrend | Aktuell pristrend | ✅ |
-| <span id="ref-next_price_trend_change" class="entity-anchor" data-refs="automation-examples#sensor-combination-quick-reference"></span>`next_price_trend_change` | Next Price Trend Change | Nächste Trendänderung | Neste trendendring | Volgende Prijstrend Wijziging | Nästa pristrendändring | ✅ |
+| <span id="ref-current_price_trend" class="entity-anchor"></span>`current_price_trend` | Current Price Trend | Aktueller Preistrend | Nåværende pristrend | Huidige Prijstrend | Aktuell pristrend | ✅ |
+| <span id="ref-next_price_trend_change" class="entity-anchor"></span>`next_price_trend_change` | Next Price Trend Change | Nächste Trendänderung | Neste trendendring | Volgende Prijstrend Wijziging | Nästa pristrendändring | ✅ |
 | <span id="ref-next_price_trend_change_in" class="entity-anchor"></span>`next_price_trend_change_in` | Next Price Trend Change In | Nächste Trendänderung in | Neste trendendring om | Volgende Prijstrend Wijziging over | Nästa pristrendändring om | ✅ |
 | <span id="ref-price_outlook_1h" class="entity-anchor"></span>`price_outlook_1h` | Price Outlook (1h) | Preisausblick (1h) | Prisutblikk (1t) | Prijsvooruitzicht (1u) | Prisöversikt (1h) | ✅ |
 | <span id="ref-price_outlook_2h" class="entity-anchor"></span>`price_outlook_2h` | Price Outlook (2h) | Preisausblick (2h) | Prisutblikk (2t) | Prijsvooruitzicht (2u) | Prisöversikt (2h) | ✅ |
@@ -151,7 +151,7 @@ explanations of each sensor's purpose, attributes, and automation examples.
 
 | Entity ID suffix | 🇬🇧 English | 🇩🇪 Deutsch | 🇳🇴 Norsk | 🇳🇱 Nederlands | 🇸🇪 Svenska | Default |
 |---|---|---|---|---|---|---|
-| <span id="ref-today_volatility" class="entity-anchor" data-refs="automation-examples#sensor-combination-quick-reference,sensors-volatility#available-volatility-sensors"></span>`today_volatility` | Today's Price Volatility | Volatilität heute | Volatilitet i dag | Vandaag Prijsvolatiliteit | Dagens prisvolatilitet | ✅ |
+| <span id="ref-today_volatility" class="entity-anchor" data-refs="sensors-volatility#available-volatility-sensors"></span>`today_volatility` | Today's Price Volatility | Volatilität heute | Volatilitet i dag | Vandaag Prijsvolatiliteit | Dagens prisvolatilitet | ✅ |
 | <span id="ref-tomorrow_volatility" class="entity-anchor" data-refs="sensors-volatility#available-volatility-sensors"></span>`tomorrow_volatility` | Tomorrow's Price Volatility | Volatilität morgen | Volatilitet i morgen | Morgen Prijsvolatiliteit | Morgondagens prisvolatilitet | ❌ |
 | <span id="ref-next_24h_volatility" class="entity-anchor"></span>`next_24h_volatility` | Next 24h Price Volatility | Volatilität der nächsten 24h | Volatilitet neste 24t | Komende 24u Prijsvolatiliteit | Nästa 24h prisvolatilitet | ❌ |
 | <span id="ref-today_tomorrow_volatility" class="entity-anchor" data-refs="sensors-volatility#available-volatility-sensors"></span>`today_tomorrow_volatility` | Today+Tomorrow Price Volatility | Volatilität heute+morgen | Volatilitet i dag+i morgen | Vandaag+Morgen Prijsvolatiliteit | Idag+Imorgon prisvolatilitet | ❌ |

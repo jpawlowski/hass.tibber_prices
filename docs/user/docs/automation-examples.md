@@ -85,16 +85,25 @@ sequenceDiagram
 
 The classic use case. Every evening at 20:00, the automation plans when to start the dishwasher overnight.
 
+:::info Blueprint available
+These blueprints are **automatically installed** with the integration. Find them under **Settings → Automations → Blueprints**. You can also import them manually:
+
+| Variant | Import |
+|---------|--------|
+| **Smart Plug** | [![Import](https://my.home-assistant.io/badges/blueprint_import.svg)](https://my.home-assistant.io/redirect/blueprint_import/?blueprint_url=https%3A%2F%2Fgithub.com%2Fjpawlowski%2Fhass.tibber_prices%2Fblob%2Fmain%2Fcustom_components%2Ftibber_prices%2Fblueprints%2Fautomation%2Ftibber_prices%2Fdishwasher.yaml) |
+| **Home Connect** | [![Import](https://my.home-assistant.io/badges/blueprint_import.svg)](https://my.home-assistant.io/redirect/blueprint_import/?blueprint_url=https%3A%2F%2Fgithub.com%2Fjpawlowski%2Fhass.tibber_prices%2Fblob%2Fmain%2Fcustom_components%2Ftibber_prices%2Fblueprints%2Fautomation%2Ftibber_prices%2Fdishwasher_home_connect.yaml) |
+| **Home Connect Alt** | [![Import](https://my.home-assistant.io/badges/blueprint_import.svg)](https://my.home-assistant.io/redirect/blueprint_import/?blueprint_url=https%3A%2F%2Fgithub.com%2Fjpawlowski%2Fhass.tibber_prices%2Fblob%2Fmain%2Fcustom_components%2Ftibber_prices%2Fblueprints%2Fautomation%2Ftibber_prices%2Fdishwasher_home_connect_alt.yaml) |
+:::
+
 **Prerequisite:** Create an `input_datetime` helper named `input_datetime.dishwasher_start` (type: Date and time).
 
 <details>
 <summary>Show YAML: Dishwasher — Plan + Execute (2 automations)</summary>
 
 ```yaml
-# Automation 1: Plan the cheapest time (runs every evening)
 automation:
+    # Automation 1: Plan the cheapest time (runs every evening)
     - alias: "Dishwasher - Plan Cheapest Start Time"
-      description: "Every evening, find the cheapest 2h window overnight and store the start time"
       trigger:
           - platform: time
             at: "20:00:00"
@@ -121,14 +130,6 @@ automation:
                           | as_timestamp | timestamp_custom('%H:%M') }}.
                           Avg price: {{ result.window.price_mean | round(1) }}
                           {{ result.price_unit }}.
-                          {% if result.relaxation_applied | default(false) %}
-                          (Filters were relaxed to find a window.)
-                          {% endif %}
-            else:
-                - service: notify.mobile_app
-                  data:
-                      title: "🍽️ Dishwasher"
-                      message: "No cheap window found tonight. Consider running manually."
 
     # Automation 2: Execute at the planned time
     - alias: "Dishwasher - Start at Planned Time"
@@ -136,33 +137,6 @@ automation:
           - platform: time
             at: input_datetime.dishwasher_start
       action:
-          # ════════════════════════════════════════════
-          # Option A: Smart appliance (Home Connect)
-          # Calculate the delay and let the appliance handle timing.
-          # Prerequisite: "Remote Start" must be enabled on the appliance.
-          # ════════════════════════════════════════════
-
-          ## --- Official Home Connect integration ---
-          # - service: home_connect.start_selected_program
-          #   target:
-          #       device_id: <your_dishwasher_device_id>
-          #   data:
-          #       b_s_h_common_option_start_in_relative: 0
-
-          ## --- Home Connect Alt integration ---
-          # - service: home_connect_alt.start_program
-          #   target:
-          #       entity_id: switch.<your_dishwasher>
-          #   data:
-          #       program: Dishcare.Dishwasher.Program.Eco50
-          #       options:
-          #           - key: BSH.Common.Option.StartInRelative
-          #             value: 0
-
-          # ════════════════════════════════════════════
-          # Option B: Simple smart plug
-          # For appliances without network connectivity.
-          # ════════════════════════════════════════════
           - service: switch.turn_on
             target:
                 entity_id: switch.dishwasher_smart_plug
@@ -175,16 +149,46 @@ automation:
 1. At 20:00, calls `find_cheapest_block` to find the cheapest contiguous 2h window between 22:00 and 06:00
 2. Stores the start time in an `input_datetime` helper (survives HA restarts)
 3. A second automation triggers at the stored time and starts the appliance
-4. If relaxation was needed (tight filters), the notification mentions it
 
-:::tip Home Connect: The modern way
-If you have a **Bosch/Siemens appliance with Home Connect**, you don't need a smart plug at all. Enable "Remote Start" on the appliance, then use one of the Home Connect integrations to start the selected program directly:
-
-- **[Official Home Connect](https://www.home-assistant.io/integrations/home_connect/)**: `home_connect.start_selected_program` with `b_s_h_common_option_start_in_relative: 0` (start immediately)
-- **[Home Connect Alt](https://github.com/ekutner/home-connect-hass)** (HACS): `home_connect_alt.start_program` with `BSH.Common.Option.StartInRelative: 0`
-
-You can also calculate a delayed start in seconds: `{{ ((result.window.start | as_datetime - now()).total_seconds()) | int }}` — but using `input_datetime` with immediate start at the planned time is simpler and more reliable.
+:::tip Home Connect appliances
+For **Bosch/Siemens** appliances with Home Connect, use the dedicated **Home Connect blueprints** above instead — they handle `StartInRelative` / `FinishInRelative` automatically. You can also import a blueprint and use **"Take Control"** in the automation editor to customize it.
 :::
+
+### Washing Machine: Cheapest Window Overnight
+
+Same pattern as the dishwasher — change the `duration` to match your program (ECO 40-60 ~1:30h, Cotton 60°C ~2:00h) and swap the entity IDs.
+
+:::info Blueprint available
+These blueprints are **automatically installed** with the integration. Find them under **Settings → Automations → Blueprints**. You can also import them manually:
+
+| Variant | Import |
+|---------|--------|
+| **Smart Plug** | [![Import](https://my.home-assistant.io/badges/blueprint_import.svg)](https://my.home-assistant.io/redirect/blueprint_import/?blueprint_url=https%3A%2F%2Fgithub.com%2Fjpawlowski%2Fhass.tibber_prices%2Fblob%2Fmain%2Fcustom_components%2Ftibber_prices%2Fblueprints%2Fautomation%2Ftibber_prices%2Fwashing_machine.yaml) |
+| **Home Connect** | [![Import](https://my.home-assistant.io/badges/blueprint_import.svg)](https://my.home-assistant.io/redirect/blueprint_import/?blueprint_url=https%3A%2F%2Fgithub.com%2Fjpawlowski%2Fhass.tibber_prices%2Fblob%2Fmain%2Fcustom_components%2Ftibber_prices%2Fblueprints%2Fautomation%2Ftibber_prices%2Fwashing_machine_home_connect.yaml) |
+| **Home Connect Alt** | [![Import](https://my.home-assistant.io/badges/blueprint_import.svg)](https://my.home-assistant.io/redirect/blueprint_import/?blueprint_url=https%3A%2F%2Fgithub.com%2Fjpawlowski%2Fhass.tibber_prices%2Fblob%2Fmain%2Fcustom_components%2Ftibber_prices%2Fblueprints%2Fautomation%2Ftibber_prices%2Fwashing_machine_home_connect_alt.yaml) |
+:::
+
+**Prerequisite:** Create an `input_datetime` helper named `input_datetime.washing_machine_start` (type: Date and time).
+
+The YAML is identical to the [dishwasher example above](#dishwasher-find-cheapest-2-hour-window-tonight) — just adjust `duration`, helper name, and switch entity. Use the blueprints above for a one-click setup, including Home Connect support.
+
+### Dryer: Cheapest Window Overnight
+
+Same pattern again — dryer programs are typically shorter (45 min–1:15h depending on load and program).
+
+:::info Blueprint available
+These blueprints are **automatically installed** with the integration. Find them under **Settings → Automations → Blueprints**. You can also import them manually:
+
+| Variant | Import |
+|---------|--------|
+| **Smart Plug** | [![Import](https://my.home-assistant.io/badges/blueprint_import.svg)](https://my.home-assistant.io/redirect/blueprint_import/?blueprint_url=https%3A%2F%2Fgithub.com%2Fjpawlowski%2Fhass.tibber_prices%2Fblob%2Fmain%2Fcustom_components%2Ftibber_prices%2Fblueprints%2Fautomation%2Ftibber_prices%2Fdryer.yaml) |
+| **Home Connect** | [![Import](https://my.home-assistant.io/badges/blueprint_import.svg)](https://my.home-assistant.io/redirect/blueprint_import/?blueprint_url=https%3A%2F%2Fgithub.com%2Fjpawlowski%2Fhass.tibber_prices%2Fblob%2Fmain%2Fcustom_components%2Ftibber_prices%2Fblueprints%2Fautomation%2Ftibber_prices%2Fdryer_home_connect.yaml) |
+| **Home Connect Alt** | [![Import](https://my.home-assistant.io/badges/blueprint_import.svg)](https://my.home-assistant.io/redirect/blueprint_import/?blueprint_url=https%3A%2F%2Fgithub.com%2Fjpawlowski%2Fhass.tibber_prices%2Fblob%2Fmain%2Fcustom_components%2Ftibber_prices%2Fblueprints%2Fautomation%2Ftibber_prices%2Fdryer_home_connect_alt.yaml) |
+:::
+
+**Prerequisite:** Create an `input_datetime` helper named `input_datetime.dryer_start` (type: Date and time).
+
+The YAML is identical to the [dishwasher example above](#dishwasher-find-cheapest-2-hour-window-tonight) — just change `duration` to `"01:00:00"`, helper name, and switch entity.
 
 ### Two Independent Appliances: No Overlap, Each at Its Cheapest
 
@@ -250,7 +254,7 @@ automation:
           - platform: time
             at: input_datetime.dishwasher_start
       action:
-          # Use Home Connect or smart plug — see dishwasher example above
+          # For Home Connect, use the dedicated blueprints instead
           - service: switch.turn_on
             target:
                 entity_id: switch.dishwasher_smart_plug
@@ -345,7 +349,7 @@ automation:
           - platform: time
             at: input_datetime.washing_machine_start
       action:
-          # Home Connect or smart plug (see dishwasher example above)
+          # For Home Connect, use the dedicated blueprints instead
           - service: switch.turn_on
             target:
                 entity_id: switch.washing_machine_smart_plug
@@ -355,6 +359,7 @@ automation:
           - platform: time
             at: input_datetime.dryer_start
       action:
+          # For Home Connect, use the dedicated blueprints instead
           - service: switch.turn_on
             target:
                 entity_id: switch.dryer_smart_plug
@@ -364,17 +369,93 @@ automation:
 
 **How it works:**
 
-1. First `find_cheapest_block` finds the cheapest 1.5h window for the washing machine
-2. Second `find_cheapest_block` uses the washer's **end time + 15 min gap** as its search start — guaranteeing the dryer runs after the washer
+1. With `sequential: true`, the scheduler places the washing machine first at its cheapest window
+2. The dryer's search window starts **after the washer ends + 15 min gap** — guaranteed order
 3. The 15-minute gap gives you time to transfer laundry (adjust or remove as needed)
 
-:::tip Alternative: Home Connect "Finish In Relative"
-With Home Connect, you can use `b_s_h_common_option_finish_in_relative` (official) or `BSH.Common.Option.FinishInRelative` (Alt) to set a target finish time. This lets the appliance decide when to start within its own program duration — useful for washing machines that support "finish by" scheduling.
+### Laundry Day Pipeline: Multiple Loads with Price Optimization
+
+When you have a full laundry day (2–3 loads that each need washing and drying), managing the timing manually is tedious. The **Laundry Day Pipeline** blueprint automates the entire process:
+
+```mermaid
+sequenceDiagram
+    participant U as 👤 You
+    participant B as 🤖 Blueprint
+    participant T as ⚡ Tibber Prices
+    participant W as 👕 Washer
+    participant D as 🌀 Dryer
+
+    U->>B: Turn on "Laundry Day" toggle
+    B->>T: find_cheapest_block (wash 1)
+    T-->>B: Best window: 08:15–09:45
+    B->>W: Start wash 1
+    Note over W: Washing... (90 min)
+    B-->>U: 📱 "Wash 1 done! Transfer to dryer"
+    U->>U: Transfer laundry
+    B->>T: find_cheapest_block (dry 1)
+    T-->>B: Best window: 10:15–11:15
+    B->>D: Start dryer 1
+    Note over D,W: Pipeline: dryer runs while...
+    B->>T: find_cheapest_block (wash 2)
+    T-->>B: Best window: 10:15–11:45
+    B->>W: Start wash 2
+    Note over W: Washing... (90 min)
+    B-->>U: 📱 "Wash 2 done! Transfer"
+```
+
+**What the blueprint handles:**
+
+- **Price optimization**: Each cycle is scheduled at the cheapest available window
+- **Pipeline mode** (optional): Next wash starts while the dryer runs, cutting total time significantly
+- **Transfer reminders**: Notifications when each wash finishes
+- **Automatic completion**: Toggle turns off when all loads are done
+- **Cancellation**: Turn off the toggle at any time to stop the pipeline
+
+**What you need:**
+
+| Helper | Type | Settings |
+|--------|------|----------|
+| `input_boolean.laundry_day` | Toggle | Starts/stops laundry day |
+| `input_number.laundry_loads` | Number | Min: 1, Max: 5, Step: 1 |
+
+**Choose your variant and import:**
+
+The blueprint comes in three variants depending on how you control your appliances. Pick the one that matches your setup:
+
+| Variant | Control Method | Import |
+|---------|---------------|--------|
+| **Smart Plug** | Smart plug switches (any brand) | [![Import](https://my.home-assistant.io/badges/blueprint_import.svg)](https://my.home-assistant.io/redirect/blueprint_import/?blueprint_url=https%3A%2F%2Fgithub.com%2Fjpawlowski%2Fhass.tibber_prices%2Fblob%2Fmain%2Fcustom_components%2Ftibber_prices%2Fblueprints%2Fautomation%2Ftibber_prices%2Flaundry_day_pipeline.yaml) |
+| **Home Connect** | HA Core Home Connect integration | [![Import](https://my.home-assistant.io/badges/blueprint_import.svg)](https://my.home-assistant.io/redirect/blueprint_import/?blueprint_url=https%3A%2F%2Fgithub.com%2Fjpawlowski%2Fhass.tibber_prices%2Fblob%2Fmain%2Fcustom_components%2Ftibber_prices%2Fblueprints%2Fautomation%2Ftibber_prices%2Flaundry_day_pipeline_home_connect.yaml) |
+| **Home Connect Alt** | [HC Alt HACS integration](https://github.com/ekutner/home-connect-hass) | [![Import](https://my.home-assistant.io/badges/blueprint_import.svg)](https://my.home-assistant.io/redirect/blueprint_import/?blueprint_url=https%3A%2F%2Fgithub.com%2Fjpawlowski%2Fhass.tibber_prices%2Fblob%2Fmain%2Fcustom_components%2Ftibber_prices%2Fblueprints%2Fautomation%2Ftibber_prices%2Flaundry_day_pipeline_home_connect_alt.yaml) |
+
+**After importing:**
+
+1. Create the two helpers (`input_boolean` + `input_number`)
+2. Create an automation from the blueprint
+3. Configure your appliances, program durations, and deadline
+4. On laundry day: set the load count, turn on the toggle, and let the blueprint handle the rest
+
+:::info Pipeline mode vs. sequential
+**Without pipeline** (default): Each wash + dry cycle completes fully before the next one starts. Safe for all setups.
+
+**With pipeline**: The next wash starts immediately after the dryer begins. This overlaps washer and dryer operation, saving roughly one dryer cycle per load. Only enable this when your **wash duration ≥ dryer duration** — otherwise the dryer from the previous load might still be running when the next dryer needs to start.
+
+**Example with 3 loads** (wash 90 min, dry 60 min, 15 min transfer):
+- Sequential: ~8h 45min
+- Pipeline: ~6h 15min — saves 2.5 hours!
+:::
+
+:::caution About program durations
+The blueprint uses **estimated durations** (not real-time appliance feedback). Set your durations based on typical program times and add a small buffer (~5 min). If your actual program finishes earlier or later, the timing will drift slightly — this is acceptable for price optimization purposes.
 :::
 
 ### EV Charging: Cheapest 4 Hours Overnight
 
 For EV charging, you usually don't need one contiguous block — the charger can pause and resume. `find_cheapest_hours` picks the cheapest individual intervals.
+
+:::info Blueprint available
+This blueprint is **automatically installed** with the integration. You can also import it manually: [![Import](https://my.home-assistant.io/badges/blueprint_import.svg)](https://my.home-assistant.io/redirect/blueprint_import/?blueprint_url=https%3A%2F%2Fgithub.com%2Fjpawlowski%2Fhass.tibber_prices%2Fblob%2Fmain%2Fcustom_components%2Ftibber_prices%2Fblueprints%2Fautomation%2Ftibber_prices%2Fev_charging.yaml)
+:::
 
 **Prerequisite:** Create `input_datetime.ev_charge_start` helper. For multi-segment charging, see the note below.
 
@@ -475,6 +556,10 @@ Use sensors for devices that run **continuously** and can **modulate** their pow
 
 The simplest real-time approach: adjust the heat pump target temperature based on the current price rating.
 
+:::info Blueprint available
+This blueprint is **automatically installed** with the integration. You can also import it manually: [![Import](https://my.home-assistant.io/badges/blueprint_import.svg)](https://my.home-assistant.io/redirect/blueprint_import/?blueprint_url=https%3A%2F%2Fgithub.com%2Fjpawlowski%2Fhass.tibber_prices%2Fblob%2Fmain%2Fcustom_components%2Ftibber_prices%2Fblueprints%2Fautomation%2Ftibber_prices%2Fheat_pump_price_level.yaml)
+:::
+
 <details>
 <summary>Show YAML: Heat Pump — Price-Based Temperature</summary>
 
@@ -527,6 +612,10 @@ automation:
 ### Heat Pump: Smart Boost with Trend Awareness
 
 A more sophisticated approach: combine the best price period with trend sensors to **boost during the full cheap window**, not just the detected period.
+
+:::info Blueprint available
+This blueprint is **automatically installed** with the integration. You can also import it manually: [![Import](https://my.home-assistant.io/badges/blueprint_import.svg)](https://my.home-assistant.io/redirect/blueprint_import/?blueprint_url=https%3A%2F%2Fgithub.com%2Fjpawlowski%2Fhass.tibber_prices%2Fblob%2Fmain%2Fcustom_components%2Ftibber_prices%2Fblueprints%2Fautomation%2Ftibber_prices%2Fheat_pump_smart_boost.yaml)
+:::
 
 **Why?** On [V-shaped price days](concepts.md#v-shaped-and-u-shaped-price-days), the Best Price Period may cover only 1–2 hours, but prices remain favorable for 4–6 hours. By checking the price level and trend, you can extend the boost.
 
@@ -623,6 +712,10 @@ A common misconception: **"rising" does NOT mean "too late"**. The Price Outlook
 
 Use the best price period for charging and the peak price period for discharging:
 
+:::info Blueprint available
+This blueprint is **automatically installed** with the integration. You can also import it manually: [![Import](https://my.home-assistant.io/badges/blueprint_import.svg)](https://my.home-assistant.io/redirect/blueprint_import/?blueprint_url=https%3A%2F%2Fgithub.com%2Fjpawlowski%2Fhass.tibber_prices%2Fblob%2Fmain%2Fcustom_components%2Ftibber_prices%2Fblueprints%2Fautomation%2Ftibber_prices%2Fhome_battery.yaml)
+:::
+
 <details>
 <summary>Show YAML: Home Battery — Charge/Discharge Cycle</summary>
 
@@ -682,6 +775,10 @@ automation:
 ### Water Heater: Pre-Heat Before the Cheapest Window Ends
 
 Heat your water tank during the cheap window so it's ready when prices rise:
+
+:::info Blueprint available
+This blueprint is **automatically installed** with the integration. You can also import it manually: [![Import](https://my.home-assistant.io/badges/blueprint_import.svg)](https://my.home-assistant.io/redirect/blueprint_import/?blueprint_url=https%3A%2F%2Fgithub.com%2Fjpawlowski%2Fhass.tibber_prices%2Fblob%2Fmain%2Fcustom_components%2Ftibber_prices%2Fblueprints%2Fautomation%2Ftibber_prices%2Fwater_heater.yaml)
+:::
 
 <details>
 <summary>Show YAML: Water Heater — Pre-Heat During Cheap Prices</summary>
