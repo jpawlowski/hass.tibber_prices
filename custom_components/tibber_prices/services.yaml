@@ -1113,6 +1113,354 @@ find_cheapest_schedule:
           selector:
             boolean:
 
+plan_charging:
+  fields:
+    entry_id:
+      required: false
+      example: "1234567890abcdef"
+      selector:
+        config_entry:
+          integration: tibber_prices
+    battery:
+      collapsed: false
+      fields:
+        max_charge_power_w:
+          required: true
+          example: 11000
+          selector:
+            number:
+              min: 1
+              max: 100000
+              step: 100
+              unit_of_measurement: "W"
+              mode: box
+        battery_capacity_kwh:
+          required: false
+          example: 50.0
+          selector:
+            number:
+              min: 0.1
+              max: 1000
+              step: 0.1
+              unit_of_measurement: "kWh"
+              mode: box
+        current_soc_percent:
+          required: false
+          example: 20
+          selector:
+            number:
+              min: 0
+              max: 100
+              step: 0.1
+              unit_of_measurement: "%"
+              mode: box
+        current_soc_kwh:
+          required: false
+          example: 10.0
+          selector:
+            number:
+              min: 0
+              max: 1000
+              step: 0.1
+              unit_of_measurement: "kWh"
+              mode: box
+        target_soc_percent:
+          required: false
+          example: 80
+          selector:
+            number:
+              min: 0
+              max: 100
+              step: 0.1
+              unit_of_measurement: "%"
+              mode: box
+        target_soc_kwh:
+          required: false
+          example: 40.0
+          selector:
+            number:
+              min: 0
+              max: 1000
+              step: 0.1
+              unit_of_measurement: "kWh"
+              mode: box
+        charging_efficiency:
+          required: false
+          default: 1.0
+          selector:
+            number:
+              min: 0.5
+              max: 1.0
+              step: 0.01
+              mode: box
+    charging:
+      collapsed: true
+      fields:
+        min_charge_power_w:
+          required: false
+          example: 1400
+          selector:
+            number:
+              min: 1
+              max: 100000
+              step: 100
+              unit_of_measurement: "W"
+              mode: box
+        charge_power_steps_w:
+          required: false
+          example: [1380, 4140, 11000]
+          selector:
+            object:
+        grid_import_limit_w:
+          required: false
+          example: 16000
+          selector:
+            number:
+              min: 1
+              max: 100000
+              step: 100
+              unit_of_measurement: "W"
+              mode: box
+        min_charge_duration_minutes:
+          required: false
+          example: 30
+          selector:
+            number:
+              min: 15
+              max: 240
+              step: 15
+              unit_of_measurement: "min"
+              mode: box
+        max_cycles_per_day:
+          required: false
+          example: 2
+          selector:
+            number:
+              min: 1
+              max: 20
+              step: 1
+              mode: box
+    search_scope:
+      required: false
+      selector:
+        select:
+          options:
+            - today
+            - tomorrow
+            - remaining_today
+            - next_24h
+            - next_48h
+          translation_key: search_scope
+    include_current_interval:
+      required: false
+      default: true
+      selector:
+        boolean:
+    search_range:
+      collapsed: true
+      fields:
+        search_start:
+          required: false
+          example: "2026-04-11T06:00:00+02:00"
+          selector:
+            datetime:
+        search_end:
+          required: false
+          example: "2026-04-12T00:00:00+02:00"
+          selector:
+            datetime:
+        must_finish_by:
+          required: false
+          example: "2026-04-12T07:00:00+02:00"
+          selector:
+            datetime:
+    deadline:
+      collapsed: true
+      fields:
+        must_reach_soc_percent:
+          required: false
+          example: 50
+          selector:
+            number:
+              min: 0
+              max: 100
+              step: 0.1
+              unit_of_measurement: "%"
+              mode: box
+        must_reach_soc_kwh:
+          required: false
+          example: 25.0
+          selector:
+            number:
+              min: 0
+              max: 1000
+              step: 0.1
+              unit_of_measurement: "kWh"
+              mode: box
+        must_reach_by:
+          required: false
+          example: "2026-04-11T17:00:00+02:00"
+          selector:
+            datetime:
+        must_reach_by_event:
+          required: false
+          selector:
+            select:
+              options:
+                - midnight
+                - next_peak_period
+                - next_best_period_end
+              translation_key: charging_deadline_event
+    time_alternatives:
+      collapsed: true
+      fields:
+        search_start_time:
+          required: false
+          example: "06:00:00"
+          selector:
+            time:
+        search_start_day_offset:
+          required: false
+          default: 0
+          selector:
+            number:
+              min: -7
+              max: 2
+              mode: box
+        search_end_time:
+          required: false
+          example: "23:00:00"
+          selector:
+            time:
+        search_end_day_offset:
+          required: false
+          default: 0
+          selector:
+            number:
+              min: -7
+              max: 2
+              mode: box
+        search_start_offset_minutes:
+          required: false
+          example: 60
+          selector:
+            number:
+              min: -10080
+              max: 10080
+              unit_of_measurement: min
+              mode: box
+        search_end_offset_minutes:
+          required: false
+          example: 480
+          selector:
+            number:
+              min: -10080
+              max: 10080
+              unit_of_measurement: min
+              mode: box
+    price_filter:
+      collapsed: true
+      fields:
+        max_price_level:
+          required: false
+          selector:
+            select:
+              options:
+                - very_cheap
+                - cheap
+                - normal
+                - expensive
+                - very_expensive
+              translation_key: level_filter
+        min_price_level:
+          required: false
+          selector:
+            select:
+              options:
+                - very_cheap
+                - cheap
+                - normal
+                - expensive
+                - very_expensive
+              translation_key: level_filter
+    search_tuning:
+      collapsed: true
+      fields:
+        smooth_outliers:
+          required: false
+          default: true
+          selector:
+            boolean:
+        min_distance_from_avg:
+          required: false
+          selector:
+            number:
+              min: 0.1
+              max: 50.0
+              step: 0.1
+              unit_of_measurement: "%"
+              mode: box
+        allow_relaxation:
+          required: false
+          default: true
+          selector:
+            boolean:
+        duration_flexibility_minutes:
+          required: false
+          selector:
+            number:
+              min: 0
+              max: 120
+              step: 15
+              unit_of_measurement: "min"
+              mode: box
+    economics:
+      collapsed: true
+      fields:
+        discharging_efficiency:
+          required: false
+          default: 1.0
+          selector:
+            number:
+              min: 0.5
+              max: 1.0
+              step: 0.01
+              mode: box
+        expected_discharge_price:
+          required: false
+          example: 0.28
+          selector:
+            number:
+              min: 0
+              max: 100000
+              step: 0.0001
+              mode: box
+        reserve_for_discharge:
+          required: false
+          default: false
+          selector:
+            boolean:
+        max_cost_per_kwh:
+          required: false
+          example: 0.18
+          selector:
+            number:
+              min: 0
+              max: 100000
+              step: 0.0001
+              mode: box
+    output:
+      collapsed: true
+      fields:
+        include_comparison_details:
+          required: false
+          selector:
+            boolean:
+        use_base_unit:
+          required: false
+          selector:
+            boolean:
+
 debug_clear_tomorrow:
   fields:
     entry_id:

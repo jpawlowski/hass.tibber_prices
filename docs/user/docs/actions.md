@@ -41,8 +41,10 @@ Find the cheapest (or most expensive) time windows for your appliances. Ideal fo
 | [`find_cheapest_schedule`](scheduling-actions.md#find-cheapest-schedule) | Multiple appliances, no overlap | Dishwasher + washing machine overnight |
 | [`find_most_expensive_block`](scheduling-actions.md#find-most-expensive-block) | Most expensive contiguous window | Peak avoidance, battery discharge |
 | [`find_most_expensive_hours`](scheduling-actions.md#find-most-expensive-hours) | Most expensive N hours | Demand response, consumption shifting |
+| [`plan_charging`](plan-charging-action.md) | Battery/EV schedule from SoC + power | Home battery, EV, deadline-aware charging |
 
 **→ [Scheduling Actions — Full Guide](scheduling-actions.md)** with parameters, response formats, decision flowchart, and automation examples.
+**→ [Plan Charging Action — Guide](plan-charging-action.md)** for battery/EV charging scheduled from SoC and power (not duration).
 
 ### Chart & Visualization Actions
 

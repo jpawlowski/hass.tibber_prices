@@ -1237,7 +1237,7 @@
       "message": "Het eindtijdstip ({search_end}) moet na het starttijdstip ({search_start}) liggen. Controleer je tijdparameters en eventuele day-offsets."
     },
     "price_fetch_failed": {
-      "message": "Kon prijsgegevens niet ophalen bij de Tibber API. Probeer het later opnieuw."
+      "message": "Unable to fetch price data for the requested search range."
     },
     "invalid_search_scope": {
       "message": "Ongeldig zoekbereik. Geldige waarden zijn: today, tomorrow, remaining_today, next_24h, next_48h."
@@ -1307,6 +1307,51 @@
     },
     "entity_value_conversion_failed": {
       "message": "Kan waarde '{raw_value}' van '{entity_id}' ({attribute}) niet converteren naar {expected_type}. Controleer of de entiteit een compatibele waarde biedt."
+    },
+    "capacity_required_for_percent": {
+      "message": "battery_capacity_kwh is required when current or target SoC is provided as a percentage."
+    },
+    "ambiguous_soc_input": {
+      "message": "The field {field} was provided both as percent and as kWh. Use only one representation."
+    },
+    "already_at_target": {
+      "message": "Current state of charge is already at or above the target. No charging schedule is needed."
+    },
+    "target_exceeds_capacity": {
+      "message": "Target SoC ({target_soc_kwh} kWh) exceeds battery capacity ({capacity_kwh} kWh)."
+    },
+    "energy_unreachable": {
+      "message": "The requested charging target cannot be reached within the available search window and charging constraints."
+    },
+    "missing_current_soc": {
+      "message": "Provide either current_soc_percent or current_soc_kwh."
+    },
+    "missing_target_soc": {
+      "message": "Provide either target_soc_percent or target_soc_kwh."
+    },
+    "missing_deadline_for_must_reach": {
+      "message": "Provide must_reach_by or must_reach_by_event when using must_reach_soc_percent or must_reach_soc_kwh."
+    },
+    "missing_must_reach_soc": {
+      "message": "Provide must_reach_soc_percent or must_reach_soc_kwh when using a must_reach deadline."
+    },
+    "invalid_must_reach_soc": {
+      "message": "The minimum state of charge by deadline must be between current and target state of charge."
+    },
+    "power_strategy_conflict": {
+      "message": "Use either min_charge_power_w or charge_power_steps_w, not both at the same time."
+    },
+    "grid_limit_too_low": {
+      "message": "grid_import_limit_w is lower than the minimum required charging power."
+    },
+    "deadline_conflict": {
+      "message": "Use either must_reach_by or must_reach_by_event, not both at the same time."
+    },
+    "deadline_event_not_available": {
+      "message": "The selected deadline event is not available in the current coordinator data."
+    },
+    "deadline_outside_search_range": {
+      "message": "The resolved deadline must be inside the selected search range."
     }
   },
   "services": {
@@ -2115,6 +2160,210 @@
           "description": "Maximale minuten waarmee de duur mag worden verkort bij versoepeling (0–120, stap 15). Leeg laten voor automatische berekening (~20% van de duur, max 60 min)."
         }
       }
+    },
+    "plan_charging": {
+      "name": "Plan Charging",
+      "description": "Creates a lowest-cost charging schedule from battery parameters instead of a fixed duration. Supports fixed, continuous, or stepped charging power, optional deadline-aware minimum SoC planning, and economic filtering for later discharge use cases. Returns a per-interval charging plan with power, energy, SoC progression, segment grouping, total cost, and profitability details. If no schedule is found, the response includes a stable reason code in the reason field (for example: already_at_target, no_data_in_range, no_intervals_matching_level_filter, no_intervals_after_economic_filter, energy_unreachable, energy_unreachable_by_deadline, selection_above_distance_threshold).",
+      "sections": {
+        "battery": {
+          "name": "Battery Parameters",
+          "description": "Describe the battery: usable capacity, current and target SoC, and charging efficiency. You can provide SoC in percent (requires capacity) or directly in kWh."
+        },
+        "charging": {
+          "name": "Charging Strategy",
+          "description": "Configure variable-power charging behavior, grid limits, and minimum run-time constraints."
+        },
+        "deadline": {
+          "name": "Deadline Planning",
+          "description": "Require a minimum state of charge by a specific moment (for example before a peak period). Set both the Minimum SoC by Deadline and when it must be reached — either as an absolute time (Must Reach By) or from a known event (Deadline Event)."
+        },
+        "search_range": {
+          "name": "Custom Search Range",
+          "description": "Define precise start and end times for the search. Overrides Search Scope when set."
+        },
+        "time_alternatives": {
+          "name": "Advanced Time Options",
+          "description": "Alternative ways to define the search range using time-of-day and minute offsets."
+        },
+        "price_filter": {
+          "name": "Price Level Filter",
+          "description": "Restrict search to intervals within the specified Tibber price level range."
+        },
+        "search_tuning": {
+          "name": "Search Algorithm Tuning",
+          "description": "Fine-tune how the search handles outliers, minimum quality thresholds, and fallback behavior."
+        },
+        "economics": {
+          "name": "Economic Filters",
+          "description": "Filter charging intervals by maximum cost or expected later discharge value."
+        },
+        "output": {
+          "name": "Output Options",
+          "description": "Control output format: comparison details and currency unit."
+        }
+      },
+      "fields": {
+        "entry_id": {
+          "name": "Entry ID",
+          "description": "The config entry ID for the Tibber integration."
+        },
+        "max_charge_power_w": {
+          "name": "Maximum Charge Power",
+          "description": "Maximum charging power in watts. This defines the upper bound for fixed, continuous, or stepped charging schedules."
+        },
+        "battery_capacity_kwh": {
+          "name": "Battery Capacity",
+          "description": "Usable battery capacity in kWh. Required when current or target SoC is provided as a percentage."
+        },
+        "current_soc_percent": {
+          "name": "Current SoC (%)",
+          "description": "Current battery state of charge in percent. Cannot be combined with Current SoC (kWh)."
+        },
+        "current_soc_kwh": {
+          "name": "Current SoC (kWh)",
+          "description": "Current battery state of charge in kWh. Cannot be combined with Current SoC (%)."
+        },
+        "target_soc_percent": {
+          "name": "Target SoC (%)",
+          "description": "Desired battery state of charge in percent. Cannot be combined with Target SoC (kWh)."
+        },
+        "target_soc_kwh": {
+          "name": "Target SoC (kWh)",
+          "description": "Desired battery state of charge in kWh. Cannot be combined with Target SoC (%)."
+        },
+        "charging_efficiency": {
+          "name": "Charging Efficiency",
+          "description": "Fraction of grid energy that is stored in the battery. Example: 0.92 means 8% charging losses."
+        },
+        "search_scope": {
+          "name": "Search Scope",
+          "description": "Shorthand for common search ranges. Overrides all other time range options. today / tomorrow = full calendar day, remaining_today = now until midnight, next_24h / next_48h = rolling window from now."
+        },
+        "include_current_interval": {
+          "name": "Include Current Interval",
+          "description": "Include the currently running 15-minute interval in the search. When enabled, charging may begin in the current interval if it is part of the cheapest result."
+        },
+        "search_start": {
+          "name": "Search Start",
+          "description": "Start of the search range as exact date and time. Highest priority — overrides all other start options. Defaults to now if not specified."
+        },
+        "search_end": {
+          "name": "Search End",
+          "description": "End of the search range as exact date and time. Highest priority — overrides all other end options. Defaults to end of tomorrow if not specified."
+        },
+        "must_finish_by": {
+          "name": "Must Finish By",
+          "description": "Deadline: charging must be finished by this time. The search range ends at this deadline — the service finds the cheapest intervals that complete before it. Cannot be combined with Search End, Search End Time, or Search End Offset."
+        },
+        "search_start_time": {
+          "name": "Search Start Time",
+          "description": "Alternative: start searching at this time of day. Combine with day offset. Ignored if Search Start (datetime) is set."
+        },
+        "search_start_day_offset": {
+          "name": "Search Start Day Offset",
+          "description": "Day offset for Search Start Time. -7 to 2: -1 = yesterday, 0 = today, 1 = tomorrow. Only used with Search Start Time."
+        },
+        "search_end_time": {
+          "name": "Search End Time",
+          "description": "Alternative: stop searching at this time of day. Combine with day offset. Ignored if Search End (datetime) is set."
+        },
+        "search_end_day_offset": {
+          "name": "Search End Day Offset",
+          "description": "Day offset for Search End Time. -7 to 2: -1 = yesterday, 0 = today, 1 = tomorrow. Only used with Search End Time."
+        },
+        "search_start_offset_minutes": {
+          "name": "Search Start Offset (minutes)",
+          "description": "Alternative: start searching this many minutes from now. Positive = future, negative = past. Ignored if Search Start or Search Start Time is set."
+        },
+        "search_end_offset_minutes": {
+          "name": "Search End Offset (minutes)",
+          "description": "Alternative: stop searching this many minutes from now. Positive = future, negative = past. Ignored if Search End or Search End Time is set."
+        },
+        "max_price_level": {
+          "name": "Maximum Price Level",
+          "description": "Only consider intervals at or below this Tibber price level. very_cheap = most restrictive, very_expensive = no restriction."
+        },
+        "min_price_level": {
+          "name": "Minimum Price Level",
+          "description": "Only consider intervals at or above this Tibber price level. Useful to exclude unrealistically cheap negative-price-only windows from mixed searches."
+        },
+        "include_comparison_details": {
+          "name": "Include Comparison Details",
+          "description": "Enrich the price_comparison result with additional fields: comparison_price_min and comparison_price_max."
+        },
+        "use_base_unit": {
+          "name": "Use Base Currency Unit",
+          "description": "Force prices in base currency (EUR, NOK) instead of the configured display unit (ct, øre). Useful for calculations."
+        },
+        "smooth_outliers": {
+          "name": "Smooth Outliers",
+          "description": "Smooth price outliers before searching. Outlier intervals are temporarily replaced by the average of their neighbors, so a single spike or dip does not dominate the result. The response always shows the original (unsmoothed) prices. Default: enabled."
+        },
+        "min_distance_from_avg": {
+          "name": "Min. Distance from Average",
+          "description": "Require the selected charging intervals to be at least this percentage below the average price of the full search range. Leave empty to disable."
+        },
+        "allow_relaxation": {
+          "name": "Allow relaxation",
+          "description": "Progressively relax filters to guarantee a result when possible. Phases: 1) Reduce/remove distance threshold 2) Expand level filters 3) Reduce duration. Default: enabled."
+        },
+        "duration_flexibility_minutes": {
+          "name": "Duration flexibility",
+          "description": "Maximum minutes the automatically calculated charging duration may be shortened during relaxation (0–120, step 15). Leave empty for automatic calculation."
+        },
+        "must_reach_soc_percent": {
+          "name": "Minimum SoC by Deadline (%)",
+          "description": "Minimum battery state of charge that must be reached by the deadline. Cannot be combined with Minimum SoC by Deadline (kWh)."
+        },
+        "must_reach_soc_kwh": {
+          "name": "Minimum SoC by Deadline (kWh)",
+          "description": "Minimum battery state of charge that must be reached by the deadline. Cannot be combined with Minimum SoC by Deadline (%)."
+        },
+        "min_charge_power_w": {
+          "name": "Minimum Charge Power",
+          "description": "Enable continuous charging mode. The planner may reduce the last interval down to this minimum power instead of always using the maximum."
+        },
+        "charge_power_steps_w": {
+          "name": "Charge Power Steps",
+          "description": "Enable stepped charging mode. Provide the allowed power steps in watts as a list, for example [1380, 4140, 11000]. The planner picks the smallest step that still covers the remaining energy in the final interval. Mutually exclusive with Minimum Charge Power."
+        },
+        "grid_import_limit_w": {
+          "name": "Grid Import Limit",
+          "description": "Upper limit for charging power drawn from the grid in watts. Useful when the charger must share available power with other loads."
+        },
+        "must_reach_by": {
+          "name": "Must Reach By",
+          "description": "Absolute deadline for must_reach_soc_*. The planner first guarantees the minimum SoC before this moment, then continues with the remaining target if possible."
+        },
+        "must_reach_by_event": {
+          "name": "Deadline Event",
+          "description": "Alternative deadline derived from coordinator data. Use this instead of Must Reach By to plan around midnight, the next peak period, or the next best-price period end."
+        },
+        "discharging_efficiency": {
+          "name": "Discharging Efficiency",
+          "description": "Fraction of stored battery energy that is still usable when later discharged. Used for profitability calculations."
+        },
+        "expected_discharge_price": {
+          "name": "Expected Discharge Price",
+          "description": "Expected value of each discharged kWh. Intervals above the break-even price can be filtered when Reserve For Discharge is enabled."
+        },
+        "reserve_for_discharge": {
+          "name": "Reserve For Discharge",
+          "description": "Keep only intervals that are economically sensible for a later discharge based on expected discharge price and round-trip efficiency."
+        },
+        "max_cost_per_kwh": {
+          "name": "Maximum Charge Price",
+          "description": "Discard candidate intervals above this price per kWh before scheduling. Uses the selected price unit."
+        },
+        "min_charge_duration_minutes": {
+          "name": "Minimum Charge Duration",
+          "description": "Merge short isolated intervals into longer charging blocks where possible. Useful for chargers that should avoid very short runs."
+        },
+        "max_cycles_per_day": {
+          "name": "Maximum Charge Cycles Per Day",
+          "description": "Limit how many separate charging segments may be used per day. The planner keeps the cheapest segments within this limit."
+        }
+      }
     }
   },
   "selector": {
@@ -2223,6 +2472,13 @@
         "remaining_today": "Rest van vandaag",
         "next_24h": "Komende 24 uur",
         "next_48h": "Komende 48 uur"
+      }
+    },
+    "charging_deadline_event": {
+      "options": {
+        "midnight": "Midnight",
+        "next_peak_period": "Next Peak Period",
+        "next_best_period_end": "End of Next Best-Price Period"
       }
     }
   }

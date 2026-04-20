@@ -53,6 +53,7 @@ from .find_most_expensive_hours import (
 from .get_apexcharts_yaml import APEXCHARTS_SERVICE_SCHEMA, APEXCHARTS_YAML_SERVICE_NAME, handle_apexcharts_yaml
 from .get_chartdata import CHARTDATA_SERVICE_NAME, CHARTDATA_SERVICE_SCHEMA, handle_chartdata
 from .get_price import GET_PRICE_SERVICE_NAME, GET_PRICE_SERVICE_SCHEMA, handle_get_price
+from .plan_charging import PLAN_CHARGING_SERVICE_NAME, PLAN_CHARGING_SERVICE_SCHEMA, handle_plan_charging
 from .refresh_user_data import (
     REFRESH_USER_DATA_SERVICE_NAME,
     REFRESH_USER_DATA_SERVICE_SCHEMA,
@@ -127,6 +128,13 @@ def async_setup_services(hass: HomeAssistant) -> None:
         FIND_MOST_EXPENSIVE_HOURS_SERVICE_NAME,
         handle_find_most_expensive_hours,
         schema=FIND_MOST_EXPENSIVE_HOURS_SERVICE_SCHEMA,
+        supports_response=SupportsResponse.ONLY,
+    )
+    hass.services.async_register(
+        DOMAIN,
+        PLAN_CHARGING_SERVICE_NAME,
+        handle_plan_charging,
+        schema=PLAN_CHARGING_SERVICE_SCHEMA,
         supports_response=SupportsResponse.ONLY,
     )
     hass.services.async_register(

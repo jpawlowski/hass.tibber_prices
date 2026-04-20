@@ -97,7 +97,7 @@ const sidebars: SidebarsConfig = {
       type: 'category',
       label: '⚡ Actions',
       link: { type: 'doc', id: 'actions' },
-      items: ['actions', 'scheduling-actions', 'chart-actions', 'data-actions'],
+      items: ['actions', 'scheduling-actions', 'plan-charging-action', 'chart-actions', 'data-actions'],
       collapsible: true,
       collapsed: false,
     },

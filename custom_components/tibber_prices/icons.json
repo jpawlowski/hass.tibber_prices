@@ -74,6 +74,20 @@
         "search_tuning": "mdi:cog-outline",
         "output": "mdi:tune-variant"
       }
+    },
+    "plan_charging": {
+      "service": "mdi:battery-charging",
+      "sections": {
+        "battery": "mdi:battery",
+        "charging": "mdi:ev-station",
+        "search_range": "mdi:calendar-search",
+        "deadline": "mdi:calendar-clock",
+        "time_alternatives": "mdi:clock-time-eight-outline",
+        "price_filter": "mdi:filter-variant",
+        "search_tuning": "mdi:cog-outline",
+        "economics": "mdi:cash-multiple",
+        "output": "mdi:tune-variant"
+      }
     }
   }
 }
