@@ -49,6 +49,8 @@ filterwarnings = [
     "error",
     # Ignore specific warnings from third-party libraries as needed
     # "ignore:.*custom_components.* is using deprecated.*:DeprecationWarning",
+    # AsyncMock cleanup noise when mixing sync/async mocks
+    "ignore::pytest.PytestUnraisableExceptionWarning",
 ]
 
 [tool.coverage.run]

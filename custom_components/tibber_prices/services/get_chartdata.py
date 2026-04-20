@@ -52,6 +52,7 @@ from custom_components.tibber_prices.const import (
 from custom_components.tibber_prices.coordinator.helpers import get_intervals_for_day_offsets
 from homeassistant.exceptions import ServiceValidationError
 
+from .entity_resolver import or_entity_ref, resolve_entity_references
 from .formatters import aggregate_to_hourly, get_period_data, normalize_level_filter, normalize_rating_level_filter
 from .helpers import get_entry_and_data, has_tomorrow_data
 
@@ -260,6 +261,11 @@ CHARTDATA_SERVICE_NAME: Final = "get_chartdata"
 ATTR_DAY: Final = "day"
 ATTR_ENTRY_ID: Final = "entry_id"
 
+# Parameter types for entity reference resolution
+_CHARTDATA_ENTITY_PARAMS: dict[str, type] = {
+    "round_decimals": int,
+}
+
 # Service schema
 CHARTDATA_SERVICE_SCHEMA: Final = vol.Schema(
     {
@@ -269,7 +275,7 @@ CHARTDATA_SERVICE_SCHEMA: Final = vol.Schema(
         vol.Optional("output_format", default="array_of_objects"): vol.In(["array_of_objects", "array_of_arrays"]),
         vol.Optional("array_fields"): str,
         vol.Optional("subunit_currency", default=False): bool,
-        vol.Optional("round_decimals"): vol.All(vol.Coerce(int), vol.Range(min=0, max=10)),
+        vol.Optional("round_decimals"): or_entity_ref(vol.All(vol.Coerce(int), vol.Range(min=0, max=10))),
         vol.Optional("include_level", default=False): bool,
         vol.Optional("include_rating_level", default=False): bool,
         vol.Optional("include_average", default=False): bool,
@@ -339,12 +345,16 @@ async def handle_chartdata(call: ServiceCall) -> dict[str, Any]:  # noqa: C901
 
     """
     hass = call.hass
-    entry_id: str = call.data.get(ATTR_ENTRY_ID, "")
+
+    # Resolve entity references
+    data, resolved_refs = resolve_entity_references(hass, call.data, _CHARTDATA_ENTITY_PARAMS)
+
+    entry_id: str = data.get(ATTR_ENTRY_ID, "")
 
     # Get coordinator to check data availability
     _, coordinator, _ = get_entry_and_data(hass, entry_id)
 
-    days_raw = call.data.get(ATTR_DAY)
+    days_raw = data.get(ATTR_DAY)
     # If no day specified, use rolling 2-day window:
     # - If tomorrow data available: today + tomorrow
     # - If tomorrow data NOT available: yesterday + today
@@ -356,32 +366,32 @@ async def handle_chartdata(call: ServiceCall) -> dict[str, Any]:  # noqa: C901
     else:
         days = days_raw
 
-    start_time_field = call.data.get("start_time_field", "start_time")
-    end_time_field = call.data.get("end_time_field", "end_time")
-    price_field = call.data.get("price_field", "price_per_kwh")
-    level_field = call.data.get("level_field", "level")
-    rating_level_field = call.data.get("rating_level_field", "rating_level")
-    average_field = call.data.get("average_field", "average")
-    energy_field = call.data.get("energy_field", "energy_price")
-    tax_field = call.data.get("tax_field", "tax")
-    data_key = call.data.get("data_key", "data")
-    resolution = call.data.get("resolution", "interval")
-    output_format = call.data.get("output_format", "array_of_objects")
-    subunit_currency = call.data.get("subunit_currency", False)
-    metadata = call.data.get("metadata", "include")
-    round_decimals = call.data.get("round_decimals")
-    include_level = call.data.get("include_level", False)
-    include_rating_level = call.data.get("include_rating_level", False)
-    include_average = call.data.get("include_average", False)
-    include_energy = call.data.get("include_energy", False)
-    include_tax = call.data.get("include_tax", False)
-    insert_nulls = call.data.get("insert_nulls", "none")
-    connect_segments = call.data.get("connect_segments", False)
-    add_trailing_null = call.data.get("add_trailing_null", False)
-    period_filter = call.data.get("period_filter")
+    start_time_field = data.get("start_time_field", "start_time")
+    end_time_field = data.get("end_time_field", "end_time")
+    price_field = data.get("price_field", "price_per_kwh")
+    level_field = data.get("level_field", "level")
+    rating_level_field = data.get("rating_level_field", "rating_level")
+    average_field = data.get("average_field", "average")
+    energy_field = data.get("energy_field", "energy_price")
+    tax_field = data.get("tax_field", "tax")
+    data_key = data.get("data_key", "data")
+    resolution = data.get("resolution", "interval")
+    output_format = data.get("output_format", "array_of_objects")
+    subunit_currency = data.get("subunit_currency", False)
+    metadata = data.get("metadata", "include")
+    round_decimals = data.get("round_decimals")
+    include_level = data.get("include_level", False)
+    include_rating_level = data.get("include_rating_level", False)
+    include_average = data.get("include_average", False)
+    include_energy = data.get("include_energy", False)
+    include_tax = data.get("include_tax", False)
+    insert_nulls = data.get("insert_nulls", "none")
+    connect_segments = data.get("connect_segments", False)
+    add_trailing_null = data.get("add_trailing_null", False)
+    period_filter = data.get("period_filter")
     # Filter values are already normalized to uppercase by schema validators
-    level_filter = call.data.get("level_filter")
-    rating_level_filter = call.data.get("rating_level_filter")
+    level_filter = data.get("level_filter")
+    rating_level_filter = data.get("rating_level_filter")
 
     # --- Parameter dependency validation ---
 
@@ -424,7 +434,7 @@ async def handle_chartdata(call: ServiceCall) -> dict[str, Any]:  # noqa: C901
         )
 
     # array_fields is only meaningful with array_of_arrays format
-    if call.data.get("array_fields") and output_format != "array_of_arrays":
+    if data.get("array_fields") and output_format != "array_of_arrays":
         raise ServiceValidationError(
             translation_domain=DOMAIN,
             translation_key="array_fields_requires_array_format",
@@ -464,12 +474,15 @@ async def handle_chartdata(call: ServiceCall) -> dict[str, Any]:  # noqa: C901
             subunit_currency=subunit_currency,
         )
 
-        return {"metadata": metadata}
+        result_meta: dict[str, Any] = {"metadata": metadata}
+        if resolved_refs:
+            result_meta["_resolved"] = resolved_refs
+        return result_meta
 
     # Filter values are already normalized to uppercase by schema validators
 
     # If array_fields is specified, implicitly enable fields that are used
-    array_fields_template = call.data.get("array_fields")
+    array_fields_template = data.get("array_fields")
     if array_fields_template and output_format == "array_of_arrays":
         if level_field in array_fields_template:
             include_level = True
@@ -1024,7 +1037,7 @@ async def handle_chartdata(call: ServiceCall) -> dict[str, Any]:  # noqa: C901
 
     # Convert to array of arrays format if requested
     if output_format == "array_of_arrays":
-        array_fields_template = call.data.get("array_fields")
+        array_fields_template = data.get("array_fields")
 
         # Default: nur timestamp und price
         if not array_fields_template:
@@ -1070,6 +1083,8 @@ async def handle_chartdata(call: ServiceCall) -> dict[str, Any]:  # noqa: C901
             )
             if metadata_obj:
                 result["metadata"] = metadata_obj  # type: ignore[index]
+        if resolved_refs:
+            result["_resolved"] = resolved_refs  # type: ignore[index]
         return result
 
     # Calculate metadata (before adding trailing null)
@@ -1096,5 +1111,8 @@ async def handle_chartdata(call: ServiceCall) -> dict[str, Any]:  # noqa: C901
             if field in last_item:
                 null_point[field] = None
         chart_data.append(null_point)
+
+    if resolved_refs:
+        result["_resolved"] = resolved_refs  # type: ignore[index]
 
     return result

@@ -1292,6 +1292,21 @@
     },
     "must_finish_by_conflicts_with_end": {
       "message": "must_finish_by kan ikke kombineres med sluttgrenseparametere ({params}). Bruk must_finish_by alene — det setter søkeslutt til fristen automatisk."
+    },
+    "invalid_entity_reference": {
+      "message": "'{reference}' er ikke en gyldig entitetsreferanse. Bruk formatet 'domain.entity_id' eller 'domain.entity_id@attributt'."
+    },
+    "entity_not_found": {
+      "message": "Entitet '{entity_id}' ble ikke funnet. Kontroller at entiteten finnes og er tilgjengelig."
+    },
+    "entity_attribute_not_found": {
+      "message": "Entitet '{entity_id}' har ikke attributtet '{attribute}'."
+    },
+    "entity_state_unavailable": {
+      "message": "Entitet '{entity_id}' har tilstanden '{state}'. Entiteten må ha en gyldig tilstandsverdi."
+    },
+    "entity_value_conversion_failed": {
+      "message": "Kan ikke konvertere verdi '{raw_value}' fra '{entity_id}' ({attribute}) til {expected_type}. Kontroller at entiteten gir en kompatibel verdi."
     }
   },
   "services": {

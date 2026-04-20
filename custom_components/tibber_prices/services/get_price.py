@@ -12,6 +12,7 @@ Functions:
 
 from __future__ import annotations
 
+from datetime import datetime
 import logging
 from typing import TYPE_CHECKING
 from zoneinfo import ZoneInfo
@@ -23,22 +24,26 @@ from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.util import dt as dt_util
 
+from .entity_resolver import or_entity_ref, resolve_entity_references
 from .helpers import get_entry_and_data
 
 if TYPE_CHECKING:
-    from datetime import datetime
-
     from homeassistant.core import HomeAssistant, ServiceCall, ServiceResponse
 
 _LOGGER = logging.getLogger(__name__)
 
 GET_PRICE_SERVICE_NAME = "get_price"
 
+_PRICE_ENTITY_PARAMS: dict[str, type] = {
+    "start_time": datetime,
+    "end_time": datetime,
+}
+
 GET_PRICE_SERVICE_SCHEMA = vol.Schema(
     {
         vol.Optional("entry_id", default=""): cv.string,
-        vol.Required("start_time"): cv.datetime,
-        vol.Required("end_time"): cv.datetime,
+        vol.Required("start_time"): or_entity_ref(cv.datetime),
+        vol.Required("end_time"): or_entity_ref(cv.datetime),
     }
 )
 
@@ -70,9 +75,13 @@ async def handle_get_price(call: ServiceCall) -> ServiceResponse:
 
     """
     hass: HomeAssistant = call.hass
-    entry_id: str = call.data.get("entry_id", "")
-    start_time: datetime = call.data["start_time"]
-    end_time: datetime = call.data["end_time"]
+
+    # Resolve entity references
+    data, resolved_refs = resolve_entity_references(hass, call.data, _PRICE_ENTITY_PARAMS)
+
+    entry_id: str = data.get("entry_id", "")
+    start_time: datetime = data["start_time"]
+    end_time: datetime = data["end_time"]
 
     # Validate and get entry data
     entry, coordinator, _data = get_entry_and_data(hass, entry_id)
@@ -177,5 +186,8 @@ async def handle_get_price(call: ServiceCall) -> ServiceResponse:
             "get_price service completed: fetched %d intervals",
             len(price_info),
         )
+
+        if resolved_refs:
+            response["_resolved"] = resolved_refs
 
         return response

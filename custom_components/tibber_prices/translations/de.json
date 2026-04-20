@@ -1292,6 +1292,21 @@
     },
     "must_finish_by_conflicts_with_end": {
       "message": "must_finish_by kann nicht mit Endgrenz-Parametern ({params}) kombiniert werden. Verwende must_finish_by allein — es setzt das Suchende automatisch auf die Deadline."
+    },
+    "invalid_entity_reference": {
+      "message": "'{reference}' ist keine gültige Entity-Referenz. Verwende das Format 'domain.entity_id' oder 'domain.entity_id@attribut'."
+    },
+    "entity_not_found": {
+      "message": "Entity '{entity_id}' nicht gefunden. Überprüfe, ob die Entity existiert und verfügbar ist."
+    },
+    "entity_attribute_not_found": {
+      "message": "Entity '{entity_id}' hat kein Attribut '{attribute}'."
+    },
+    "entity_state_unavailable": {
+      "message": "Entity '{entity_id}' hat den Status '{state}'. Die Entity muss einen gültigen Statuswert haben."
+    },
+    "entity_value_conversion_failed": {
+      "message": "Wert '{raw_value}' von '{entity_id}' ({attribute}) kann nicht in {expected_type} konvertiert werden. Überprüfe, ob die Entity einen kompatiblen Wert liefert."
     }
   },
   "services": {

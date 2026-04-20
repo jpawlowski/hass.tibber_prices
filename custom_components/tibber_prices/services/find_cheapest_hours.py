@@ -8,7 +8,7 @@ Intervals need not be contiguous — designed for flexible loads
 
 from __future__ import annotations
 
-from datetime import datetime, timedelta
+from datetime import datetime, time as dt_time, timedelta
 import logging
 import math
 from typing import TYPE_CHECKING, Any
@@ -21,6 +21,7 @@ from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.util import dt as dt_util
 
+from .entity_resolver import or_entity_ref, resolve_entity_references
 from .helpers import (
     INTERVAL_MINUTES,
     PRICE_LEVEL_ORDER,
@@ -55,23 +56,46 @@ _LOGGER = logging.getLogger(__name__)
 
 FIND_CHEAPEST_HOURS_SERVICE_NAME = "find_cheapest_hours"
 
+# Parameter types for entity reference resolution
+_HOURS_ENTITY_PARAMS: dict[str, type] = {
+    "duration": timedelta,
+    "min_segment_duration": timedelta,
+    "search_start": datetime,
+    "search_end": datetime,
+    "search_start_time": dt_time,
+    "search_end_time": dt_time,
+    "search_start_day_offset": int,
+    "search_end_day_offset": int,
+    "search_start_offset_minutes": int,
+    "search_end_offset_minutes": int,
+    "min_distance_from_avg": float,
+    "duration_flexibility_minutes": int,
+    "must_finish_by": datetime,
+}
+
 _COMMON_HOURS_SCHEMA = {
     vol.Optional("entry_id", default=""): cv.string,
-    vol.Required("duration"): vol.All(
-        cv.positive_time_period,
-        vol.Range(min=timedelta(minutes=1), max=timedelta(hours=24)),
+    vol.Required("duration"): or_entity_ref(
+        vol.All(cv.positive_time_period, vol.Range(min=timedelta(minutes=1), max=timedelta(hours=24))),
     ),
-    vol.Optional("search_start"): cv.datetime,
-    vol.Optional("search_end"): cv.datetime,
-    vol.Optional("search_start_time"): cv.time,
-    vol.Optional("search_start_day_offset", default=0): vol.All(vol.Coerce(int), vol.Range(min=-7, max=2)),
-    vol.Optional("search_end_time"): cv.time,
-    vol.Optional("search_end_day_offset", default=0): vol.All(vol.Coerce(int), vol.Range(min=-7, max=2)),
-    vol.Optional("search_start_offset_minutes"): vol.All(vol.Coerce(int), vol.Range(min=-10080, max=10080)),
-    vol.Optional("search_end_offset_minutes"): vol.All(vol.Coerce(int), vol.Range(min=-10080, max=10080)),
-    vol.Optional("min_segment_duration"): vol.All(
-        cv.positive_time_period,
-        vol.Range(min=timedelta(minutes=1), max=timedelta(hours=4)),
+    vol.Optional("search_start"): or_entity_ref(cv.datetime),
+    vol.Optional("search_end"): or_entity_ref(cv.datetime),
+    vol.Optional("search_start_time"): or_entity_ref(cv.time),
+    vol.Optional("search_start_day_offset", default=0): or_entity_ref(
+        vol.All(vol.Coerce(int), vol.Range(min=-7, max=2)),
+    ),
+    vol.Optional("search_end_time"): or_entity_ref(cv.time),
+    vol.Optional("search_end_day_offset", default=0): or_entity_ref(
+        vol.All(vol.Coerce(int), vol.Range(min=-7, max=2)),
+    ),
+    vol.Optional("search_start_offset_minutes"): or_entity_ref(
+        vol.All(vol.Coerce(int), vol.Range(min=-10080, max=10080)),
+    ),
+    vol.Optional("search_end_offset_minutes"): or_entity_ref(
+        vol.All(vol.Coerce(int), vol.Range(min=-10080, max=10080)),
+    ),
+    vol.Optional("min_segment_duration"): or_entity_ref(
+        vol.All(cv.positive_time_period, vol.Range(min=timedelta(minutes=1), max=timedelta(hours=4))),
     ),
     vol.Optional("search_scope"): vol.In(VALID_SEARCH_SCOPES),
     vol.Optional("max_price_level"): vol.In([lvl.lower() for lvl in PRICE_LEVEL_ORDER]),
@@ -84,10 +108,14 @@ _COMMON_HOURS_SCHEMA = {
     vol.Optional("include_current_interval", default=True): cv.boolean,
     vol.Optional("use_base_unit", default=False): cv.boolean,
     vol.Optional("smooth_outliers", default=True): cv.boolean,
-    vol.Optional("min_distance_from_avg"): vol.All(vol.Coerce(float), vol.Range(min=0.1, max=50.0)),
+    vol.Optional("min_distance_from_avg"): or_entity_ref(
+        vol.All(vol.Coerce(float), vol.Range(min=0.1, max=50.0)),
+    ),
     vol.Optional("allow_relaxation", default=True): cv.boolean,
-    vol.Optional("duration_flexibility_minutes"): vol.All(vol.Coerce(int), vol.Range(min=0, max=120)),
-    vol.Optional("must_finish_by"): cv.datetime,
+    vol.Optional("duration_flexibility_minutes"): or_entity_ref(
+        vol.All(vol.Coerce(int), vol.Range(min=0, max=120)),
+    ),
+    vol.Optional("must_finish_by"): or_entity_ref(cv.datetime),
 }
 
 FIND_CHEAPEST_HOURS_SERVICE_SCHEMA = vol.Schema(_COMMON_HOURS_SCHEMA)
@@ -275,18 +303,22 @@ async def _handle_find_hours(
     """
     service_label = "find_most_expensive_hours" if reverse else "find_cheapest_hours"
     hass: HomeAssistant = call.hass
-    entry_id: str = call.data.get("entry_id", "")
-    duration_td: timedelta = call.data["duration"]
-    min_segment_td: timedelta | None = call.data.get("min_segment_duration")
-    use_base_unit: bool = call.data.get("use_base_unit", False)
-    max_price_level: str | None = call.data.get("max_price_level")
-    min_price_level: str | None = call.data.get("min_price_level")
-    include_comparison_details: bool = call.data.get("include_comparison_details", False)
-    power_profile: list[int] | None = call.data.get("power_profile")
-    smooth_outliers: bool = call.data.get("smooth_outliers", True)
-    min_distance_from_avg: float | None = call.data.get("min_distance_from_avg")
-    allow_relaxation: bool = call.data.get("allow_relaxation", True)
-    duration_flexibility_minutes: int | None = call.data.get("duration_flexibility_minutes")
+
+    # Resolve entity references
+    data, resolved_refs = resolve_entity_references(hass, call.data, _HOURS_ENTITY_PARAMS)
+
+    entry_id: str = data.get("entry_id", "")
+    duration_td: timedelta = data["duration"]
+    min_segment_td: timedelta | None = data.get("min_segment_duration")
+    use_base_unit: bool = data.get("use_base_unit", False)
+    max_price_level: str | None = data.get("max_price_level")
+    min_price_level: str | None = data.get("min_price_level")
+    include_comparison_details: bool = data.get("include_comparison_details", False)
+    power_profile: list[int] | None = data.get("power_profile")
+    smooth_outliers: bool = data.get("smooth_outliers", True)
+    min_distance_from_avg: float | None = data.get("min_distance_from_avg")
+    allow_relaxation: bool = data.get("allow_relaxation", True)
+    duration_flexibility_minutes: int | None = data.get("duration_flexibility_minutes")
 
     total_minutes_requested = int(duration_td.total_seconds() / 60)
     min_segment_minutes_requested = int(min_segment_td.total_seconds() / 60) if min_segment_td else INTERVAL_MINUTES
@@ -313,8 +345,8 @@ async def _handle_find_hours(
     home_tz = ZoneInfo(home_timezone)
 
     # Handle must_finish_by: convert deadline to search_end
-    validate_search_params(call.data)
-    effective_data, must_finish_by_dt = apply_must_finish_by(call.data, home_tz)
+    validate_search_params(data)
+    effective_data, must_finish_by_dt = apply_must_finish_by(data, home_tz)
 
     # Resolve search range (priority: explicit datetime > time+offset > minutes offset > default)
     now = dt_util.now().astimezone(home_tz)
@@ -452,6 +484,8 @@ async def _handle_find_hours(
         }
         if relaxation_applied:
             response["relaxation_steps"] = relaxation_steps
+        if resolved_refs:
+            response["_resolved"] = resolved_refs
         return response
 
     # Find opposite-direction selection for price comparison (from full unfiltered list)
@@ -492,6 +526,9 @@ async def _handle_find_hours(
         last_seg_end = schedule["segments"][-1]["end"]
         last_seg_end_dt = datetime.fromisoformat(last_seg_end)
         schedule["seconds_until_end"] = max(0, int((last_seg_end_dt - now).total_seconds()))
+
+    if resolved_refs:
+        found_response["_resolved"] = resolved_refs
 
     return found_response
 

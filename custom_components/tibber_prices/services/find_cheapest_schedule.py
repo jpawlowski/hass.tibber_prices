@@ -8,7 +8,7 @@ each task claims the cheapest available contiguous window in the remaining pool.
 
 from __future__ import annotations
 
-from datetime import datetime, timedelta
+from datetime import datetime, time as dt_time, timedelta
 import logging
 import math
 from typing import TYPE_CHECKING, Any
@@ -24,6 +24,7 @@ from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.util import dt as dt_util
 
+from .entity_resolver import or_entity_ref, resolve_entity_references, resolve_task_entity_references
 from .helpers import (
     INTERVAL_MINUTES,
     PRICE_LEVEL_ORDER,
@@ -56,12 +57,26 @@ _LOGGER = logging.getLogger(__name__)
 
 FIND_CHEAPEST_SCHEDULE_SERVICE_NAME = "find_cheapest_schedule"
 
+# Parameter types for entity reference resolution
+_SCHEDULE_ENTITY_PARAMS: dict[str, type] = {
+    "gap_minutes": int,
+    "search_start": datetime,
+    "search_end": datetime,
+    "search_start_time": dt_time,
+    "search_end_time": dt_time,
+    "search_start_day_offset": int,
+    "search_end_day_offset": int,
+    "search_start_offset_minutes": int,
+    "search_end_offset_minutes": int,
+    "must_finish_by": datetime,
+    "duration_flexibility_minutes": int,
+}
+
 _TASK_SCHEMA = vol.Schema(
     {
         vol.Required("name"): cv.string,
-        vol.Required("duration"): vol.All(
-            cv.positive_time_period,
-            vol.Range(min=timedelta(minutes=1), max=timedelta(hours=12)),
+        vol.Required("duration"): or_entity_ref(
+            vol.All(cv.positive_time_period, vol.Range(min=timedelta(minutes=1), max=timedelta(hours=12))),
         ),
         vol.Optional("power_profile"): vol.All(
             [vol.All(vol.Coerce(int), vol.Range(min=1, max=100000))],
@@ -77,16 +92,26 @@ FIND_CHEAPEST_SCHEDULE_SERVICE_SCHEMA = vol.Schema(
             [_TASK_SCHEMA],
             vol.Length(min=1, max=4),
         ),
-        vol.Optional("gap_minutes", default=0): vol.All(vol.Coerce(int), vol.Range(min=0, max=120)),
-        vol.Optional("search_start"): cv.datetime,
-        vol.Optional("search_end"): cv.datetime,
-        vol.Optional("search_start_time"): cv.time,
-        vol.Optional("search_start_day_offset", default=0): vol.All(vol.Coerce(int), vol.Range(min=-7, max=2)),
-        vol.Optional("search_end_time"): cv.time,
-        vol.Optional("search_end_day_offset", default=0): vol.All(vol.Coerce(int), vol.Range(min=-7, max=2)),
-        vol.Optional("search_start_offset_minutes"): vol.All(vol.Coerce(int), vol.Range(min=-10080, max=10080)),
-        vol.Optional("search_end_offset_minutes"): vol.All(vol.Coerce(int), vol.Range(min=-10080, max=10080)),
-        vol.Optional("must_finish_by"): cv.datetime,
+        vol.Optional("gap_minutes", default=0): or_entity_ref(
+            vol.All(vol.Coerce(int), vol.Range(min=0, max=120)),
+        ),
+        vol.Optional("search_start"): or_entity_ref(cv.datetime),
+        vol.Optional("search_end"): or_entity_ref(cv.datetime),
+        vol.Optional("search_start_time"): or_entity_ref(cv.time),
+        vol.Optional("search_start_day_offset", default=0): or_entity_ref(
+            vol.All(vol.Coerce(int), vol.Range(min=-7, max=2)),
+        ),
+        vol.Optional("search_end_time"): or_entity_ref(cv.time),
+        vol.Optional("search_end_day_offset", default=0): or_entity_ref(
+            vol.All(vol.Coerce(int), vol.Range(min=-7, max=2)),
+        ),
+        vol.Optional("search_start_offset_minutes"): or_entity_ref(
+            vol.All(vol.Coerce(int), vol.Range(min=-10080, max=10080)),
+        ),
+        vol.Optional("search_end_offset_minutes"): or_entity_ref(
+            vol.All(vol.Coerce(int), vol.Range(min=-10080, max=10080)),
+        ),
+        vol.Optional("must_finish_by"): or_entity_ref(cv.datetime),
         vol.Optional("search_scope"): vol.In(VALID_SEARCH_SCOPES),
         vol.Optional("max_price_level"): vol.In([lvl.lower() for lvl in PRICE_LEVEL_ORDER]),
         vol.Optional("min_price_level"): vol.In([lvl.lower() for lvl in PRICE_LEVEL_ORDER]),
@@ -95,7 +120,9 @@ FIND_CHEAPEST_SCHEDULE_SERVICE_SCHEMA = vol.Schema(
         vol.Optional("sequential", default=False): cv.boolean,
         vol.Optional("smooth_outliers", default=True): cv.boolean,
         vol.Optional("allow_relaxation", default=True): cv.boolean,
-        vol.Optional("duration_flexibility_minutes"): vol.All(vol.Coerce(int), vol.Range(min=0, max=120)),
+        vol.Optional("duration_flexibility_minutes"): or_entity_ref(
+            vol.All(vol.Coerce(int), vol.Range(min=0, max=120)),
+        ),
     }
 )
 
@@ -314,21 +341,42 @@ def _attempt_schedule(
     return assignments, unscheduled, filtered
 
 
+def _resolve_schedule_entity_refs(
+    hass: HomeAssistant,
+    call_data: dict[str, Any] | Any,
+) -> tuple[dict[str, Any], dict[str, dict[str, str | None]]]:
+    """Resolve entity references in schedule service call data (top-level + tasks)."""
+    data_dict, resolved_refs = resolve_entity_references(hass, call_data, _SCHEDULE_ENTITY_PARAMS)
+
+    tasks_raw: list[dict[str, Any]] = data_dict["tasks"]
+    resolved_tasks, task_resolved_refs = resolve_task_entity_references(hass, tasks_raw)
+    if resolved_tasks:
+        data_dict["tasks"] = resolved_tasks
+    if task_resolved_refs:
+        resolved_refs.update(task_resolved_refs)
+
+    return data_dict, resolved_refs
+
+
 async def handle_find_cheapest_schedule(call: ServiceCall) -> ServiceResponse:
     """Handle find_cheapest_schedule service call."""
     service_label = "find_cheapest_schedule"
     hass: HomeAssistant = call.hass
-    entry_id: str = call.data.get("entry_id", "")
-    tasks_raw: list[dict[str, Any]] = call.data["tasks"]
-    gap_minutes: int = call.data.get("gap_minutes", 0)
-    use_base_unit: bool = call.data.get("use_base_unit", False)
-    max_price_level: str | None = call.data.get("max_price_level")
-    min_price_level: str | None = call.data.get("min_price_level")
-    include_comparison_details: bool = call.data.get("include_comparison_details", False)
-    smooth_outliers: bool = call.data.get("smooth_outliers", True)
-    allow_relaxation: bool = call.data.get("allow_relaxation", True)
-    sequential: bool = call.data.get("sequential", False)
-    duration_flexibility_minutes: int | None = call.data.get("duration_flexibility_minutes")
+
+    # Resolve entity references (top-level params + task durations)
+    data_dict, resolved_refs = _resolve_schedule_entity_refs(hass, call.data)
+
+    tasks_raw: list[dict[str, Any]] = data_dict["tasks"]
+    entry_id: str = data_dict.get("entry_id", "")
+    gap_minutes: int = data_dict.get("gap_minutes", 0)
+    use_base_unit: bool = data_dict.get("use_base_unit", False)
+    max_price_level: str | None = data_dict.get("max_price_level")
+    min_price_level: str | None = data_dict.get("min_price_level")
+    include_comparison_details: bool = data_dict.get("include_comparison_details", False)
+    smooth_outliers: bool = data_dict.get("smooth_outliers", True)
+    allow_relaxation: bool = data_dict.get("allow_relaxation", True)
+    sequential: bool = data_dict.get("sequential", False)
+    duration_flexibility_minutes: int | None = data_dict.get("duration_flexibility_minutes")
 
     # Validate task names are unique (before any expensive operations)
     task_names = [t["name"] for t in tasks_raw]
@@ -360,8 +408,8 @@ async def handle_find_cheapest_schedule(call: ServiceCall) -> ServiceResponse:
     home_tz = ZoneInfo(home_timezone)
 
     # Validate and handle must_finish_by
-    validate_search_params(call.data)
-    effective_data, must_finish_by_dt = apply_must_finish_by(call.data, home_tz)
+    validate_search_params(data_dict)
+    effective_data, must_finish_by_dt = apply_must_finish_by(data_dict, home_tz)
 
     now = dt_util.now().astimezone(home_tz)
     search_start, search_end = resolve_search_range(effective_data, now, home_tz)
@@ -629,4 +677,6 @@ async def handle_find_cheapest_schedule(call: ServiceCall) -> ServiceResponse:
     }
     if relaxation_applied:
         result["relaxation_steps"] = relaxation_steps
+    if resolved_refs:
+        result["_resolved"] = resolved_refs
     return result

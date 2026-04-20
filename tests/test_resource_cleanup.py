@@ -295,6 +295,7 @@ class TestStorageCleanup:
         # Create mocks
         hass = AsyncMock()
         hass.async_add_executor_job = AsyncMock()
+        hass.config_entries.async_entries = MagicMock(return_value=[])
         config_entry = MagicMock()
         config_entry.entry_id = "test_entry_123"
 

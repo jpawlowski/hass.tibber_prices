@@ -1292,6 +1292,21 @@
     },
     "must_finish_by_conflicts_with_end": {
       "message": "must_finish_by kan niet worden gecombineerd met eindgrensparameters ({params}). Gebruik must_finish_by alleen — het stelt het zoekeinde automatisch in op de deadline."
+    },
+    "invalid_entity_reference": {
+      "message": "'{reference}' is geen geldige entiteitsreferentie. Gebruik het formaat 'domain.entity_id' of 'domain.entity_id@attribuut'."
+    },
+    "entity_not_found": {
+      "message": "Entiteit '{entity_id}' niet gevonden. Controleer of de entiteit bestaat en beschikbaar is."
+    },
+    "entity_attribute_not_found": {
+      "message": "Entiteit '{entity_id}' heeft geen attribuut '{attribute}'."
+    },
+    "entity_state_unavailable": {
+      "message": "Entiteit '{entity_id}' heeft status '{state}'. De entiteit moet een geldige statuswaarde hebben."
+    },
+    "entity_value_conversion_failed": {
+      "message": "Kan waarde '{raw_value}' van '{entity_id}' ({attribute}) niet converteren naar {expected_type}. Controleer of de entiteit een compatibele waarde biedt."
     }
   },
   "services": {

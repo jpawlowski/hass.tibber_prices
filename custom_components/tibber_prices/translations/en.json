@@ -1292,6 +1292,21 @@
     },
     "must_finish_by_conflicts_with_end": {
       "message": "must_finish_by cannot be combined with end-boundary parameters ({params}). Use must_finish_by alone — it sets the search end to the deadline automatically."
+    },
+    "invalid_entity_reference": {
+      "message": "'{reference}' is not a valid entity reference. Use the format 'domain.entity_id' or 'domain.entity_id@attribute'."
+    },
+    "entity_not_found": {
+      "message": "Entity '{entity_id}' not found. Verify the entity exists and is available."
+    },
+    "entity_attribute_not_found": {
+      "message": "Entity '{entity_id}' does not have attribute '{attribute}'."
+    },
+    "entity_state_unavailable": {
+      "message": "Entity '{entity_id}' state is '{state}'. The entity must have a valid state value."
+    },
+    "entity_value_conversion_failed": {
+      "message": "Cannot convert value '{raw_value}' from '{entity_id}' ({attribute}) to {expected_type}. Verify the entity provides a compatible value."
     }
   },
   "services": {
