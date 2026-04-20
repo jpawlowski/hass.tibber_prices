@@ -1,0 +1,390 @@
+blueprint:
+  name: "Tibber Prices: Home Battery — Charge Cheap, Discharge Expensive"
+  description: >
+    **Companion blueprint for
+    [Tibber Prices](https://my.home-assistant.io/redirect/hacs_repository/?owner=jpawlowski&repository=hass.tibber_prices&category=integration)
+    (HACS integration)** · Blueprint v1.0.0
+
+    Optimize your home battery by charging from the grid during cheap
+    prices and discharging during expensive periods.
+
+    **What it does:**
+
+    - **Best Price Period ON** → Charge from grid (if SOC below threshold)
+
+    - **Peak Price Period ON** → Discharge to grid (if SOC above threshold)
+
+    - **Both OFF** → Stop grid charging/discharging (solar-only mode)
+
+    - Optional: Volatility check — skip charging on flat-price days
+
+    **Prerequisites:**
+
+    - [Tibber Prices integration](https://my.home-assistant.io/redirect/hacs_repository/?owner=jpawlowski&repository=hass.tibber_prices&category=integration) installed via HACS
+
+    - Switch entities for grid charging and grid discharge
+
+    - Optional: Battery SOC sensor for threshold logic
+  domain: automation
+  author: jpawlowski
+  homeassistant:
+    min_version: "2024.6.0"
+  source_url: https://github.com/jpawlowski/hass.tibber_prices/blob/main/custom_components/tibber_prices/blueprints/automation/tibber_prices/home_battery.yaml
+  input:
+    sensors:
+      name: Tibber Prices Sensors
+      icon: mdi:chart-timeline-variant-shimmer
+      description: Select the period sensors from Tibber Prices.
+      input:
+        best_price_sensor:
+          name: Best Price Period Sensor
+          description: >
+            `binary_sensor.<home>_best_price_period` — triggers
+            charging.
+          selector:
+            entity:
+              filter:
+                domain: binary_sensor
+                integration: tibber_prices
+        peak_price_sensor:
+          name: Peak Price Period Sensor
+          description: >
+            `binary_sensor.<home>_peak_price_period` — triggers
+            discharging.
+          selector:
+            entity:
+              filter:
+                domain: binary_sensor
+                integration: tibber_prices
+
+    battery:
+      name: Battery
+      icon: mdi:battery-charging-60
+      description: Configure your battery switches and thresholds.
+      input:
+        charge_switch:
+          name: Grid Charging Switch
+          description: >
+            Switch that enables charging from the grid.
+          selector:
+            entity:
+              filter:
+                domain: switch
+        discharge_switch:
+          name: Grid Discharge Switch
+          description: >
+            Switch that enables discharging to grid / home.
+          selector:
+            entity:
+              filter:
+                domain: switch
+        soc_sensor:
+          name: Battery SOC Sensor (optional)
+          description: >
+            State of Charge sensor (0–100%). Leave empty to skip
+            SOC checks.
+          default: ""
+          selector:
+            entity:
+              filter:
+                domain: sensor
+                device_class: battery
+        charge_max_soc:
+          name: Max SOC for Charging
+          description: >
+            Only charge from grid if SOC is below this level.
+          default: 90
+          selector:
+            number:
+              min: 50
+              max: 100
+              step: 5
+              unit_of_measurement: "%"
+        discharge_min_soc:
+          name: Min SOC for Discharging
+          description: >
+            Only discharge if SOC is above this level.
+          default: 20
+          selector:
+            number:
+              min: 5
+              max: 50
+              step: 5
+              unit_of_measurement: "%"
+        check_volatility:
+          name: Skip Charging on Flat-Price Days
+          description: >
+            When enabled, grid charging is skipped when volatility
+            is "low" (charging from grid wouldn't save much money).
+          default: true
+          selector:
+            boolean:
+
+    runtime_overrides:
+      name: Runtime Overrides
+      icon: mdi:tune-vertical
+      collapsed: true
+      description: >
+        Optionally connect helpers to override settings from your
+        dashboard at runtime. When a helper is connected and has
+        a valid value, it takes priority over the fixed default.
+        Leave empty to always use the fixed defaults.
+      input:
+        charge_max_soc_override:
+          name: "Override: Max SOC for Charging"
+          description: >
+            `input_number` helper to adjust the charge threshold
+            from your dashboard (e.g., before travel or bad weather).
+            **Create in Settings → Helpers → Number**
+            (min: 50, max: 100, step: 5, unit: %).
+          default: ""
+          selector:
+            entity:
+              filter:
+                domain: input_number
+        discharge_min_soc_override:
+          name: "Override: Min SOC for Discharging"
+          description: >
+            `input_number` helper to adjust the discharge threshold
+            from your dashboard.
+            **Create in Settings → Helpers → Number**
+            (min: 5, max: 50, step: 5, unit: %).
+          default: ""
+          selector:
+            entity:
+              filter:
+                domain: input_number
+
+    notifications:
+      name: Notifications
+      icon: mdi:bell-outline
+      collapsed: true
+      description: >
+        Optional mobile notifications for charge/discharge events.
+      input:
+        notify_service:
+          name: Notification Service
+          description: >
+            One or more notify services, comma-separated
+            (e.g., `notify.mobile_app_yourphone` or
+            `notify.mobile_app_phone, notify.mobile_app_tablet`).
+            Leave empty to disable all notifications.
+          default: ""
+          selector:
+            text:
+
+mode: restart
+
+triggers:
+  - trigger: state
+    entity_id: !input best_price_sensor
+    to: "on"
+    id: charge_start
+  - trigger: state
+    entity_id: !input best_price_sensor
+    to: "off"
+    id: charge_end
+  - trigger: state
+    entity_id: !input peak_price_sensor
+    to: "on"
+    id: discharge_start
+  - trigger: state
+    entity_id: !input peak_price_sensor
+    to: "off"
+    id: discharge_end
+
+variables:
+  _blueprint_variant: "home_battery"
+  best_price_sensor: !input best_price_sensor
+  peak_price_sensor: !input peak_price_sensor
+  charge_switch: !input charge_switch
+  discharge_switch: !input discharge_switch
+  soc_sensor: !input soc_sensor
+  _charge_max_soc_default: !input charge_max_soc
+  _charge_max_soc_override: !input charge_max_soc_override
+  charge_max_soc: >
+    {% set o = _charge_max_soc_override %}
+    {% if o and states(o) not in ['unknown', 'unavailable'] %}
+      {{ states(o) | int(_charge_max_soc_default) }}
+    {% else %}
+      {{ _charge_max_soc_default }}
+    {% endif %}
+  _discharge_min_soc_default: !input discharge_min_soc
+  _discharge_min_soc_override: !input discharge_min_soc_override
+  discharge_min_soc: >
+    {% set o = _discharge_min_soc_override %}
+    {% if o and states(o) not in ['unknown', 'unavailable'] %}
+      {{ states(o) | int(_discharge_min_soc_default) }}
+    {% else %}
+      {{ _discharge_min_soc_default }}
+    {% endif %}
+  check_volatility: !input check_volatility
+  notify_service: !input notify_service
+
+actions:
+  # Check: Tibber Prices integration installed?
+  - variables:
+      _tp_entities: "{{ integration_entities('tibber_prices') | list }}"
+  - if:
+      - condition: template
+        value_template: "{{ _tp_entities | length == 0 }}"
+    then:
+      - stop: "Tibber Prices integration not found"
+
+  # ════════════════════════════════════════════════════════
+  # CHARGE / DISCHARGE / STOP
+  # ════════════════════════════════════════════════════════
+  - choose:
+      # ── CHARGE during Best Price Period ──
+      - conditions:
+          - condition: trigger
+            id: charge_start
+        sequence:
+          # Volatility check
+          - if:
+              - condition: template
+                value_template: >
+                  {{ check_volatility
+                     and state_attr(best_price_sensor, 'volatility')
+                        | default('normal') == 'low' }}
+            then:
+              - if:
+                  - condition: template
+                    value_template: "{{ notify_service | length > 0 }}"
+                then:
+                  - repeat:
+                      for_each: "{{ notify_service.split(',') | map('trim') | reject('eq', '') | list }}"
+                      sequence:
+                        - action: "{{ repeat.item }}"
+                          data:
+                            title: "🔋 Battery — Skipped (Low Volatility)"
+                            message: >
+                              Prices are flat today. Grid charging skipped
+                              (savings would be minimal).
+              - stop: "Low volatility — skipping grid charge"
+          # SOC check
+          - if:
+              - condition: template
+                value_template: >
+                  {{ soc_sensor | length > 0
+                     and states(soc_sensor) | int(0) >= charge_max_soc | int }}
+            then:
+              - if:
+                  - condition: template
+                    value_template: "{{ notify_service | length > 0 }}"
+                then:
+                  - repeat:
+                      for_each: "{{ notify_service.split(',') | map('trim') | reject('eq', '') | list }}"
+                      sequence:
+                        - action: "{{ repeat.item }}"
+                          data:
+                            title: "🔋 Battery — Already Charged"
+                            message: >
+                              SOC at {{ states(soc_sensor) }}% (max:
+                              {{ charge_max_soc }}%). Skipping.
+              - stop: "SOC above charge threshold"
+          # Start charging
+          - action: switch.turn_on
+            target:
+              entity_id: "{{ charge_switch }}"
+          - if:
+              - condition: template
+                value_template: "{{ notify_service | length > 0 }}"
+            then:
+              - repeat:
+                  for_each: "{{ notify_service.split(',') | map('trim') | reject('eq', '') | list }}"
+                  sequence:
+                    - action: "{{ repeat.item }}"
+                      data:
+                        title: "🔋 Battery — Grid Charging"
+                        message: >
+                          Best price period started. Charging from grid.
+                          {% if soc_sensor | length > 0 %}
+                          SOC: {{ states(soc_sensor) }}%.
+                          {% endif %}
+
+      # ── DISCHARGE during Peak Price Period ──
+      - conditions:
+          - condition: trigger
+            id: discharge_start
+        sequence:
+          # SOC check
+          - if:
+              - condition: template
+                value_template: >
+                  {{ soc_sensor | length > 0
+                     and states(soc_sensor) | int(0) <= discharge_min_soc | int }}
+            then:
+              - if:
+                  - condition: template
+                    value_template: "{{ notify_service | length > 0 }}"
+                then:
+                  - repeat:
+                      for_each: "{{ notify_service.split(',') | map('trim') | reject('eq', '') | list }}"
+                      sequence:
+                        - action: "{{ repeat.item }}"
+                          data:
+                            title: "🔋 Battery — Too Low to Discharge"
+                            message: >
+                              SOC at {{ states(soc_sensor) }}% (min:
+                              {{ discharge_min_soc }}%). Skipping.
+              - stop: "SOC below discharge threshold"
+          # Start discharging
+          - action: switch.turn_on
+            target:
+              entity_id: "{{ discharge_switch }}"
+          - if:
+              - condition: template
+                value_template: "{{ notify_service | length > 0 }}"
+            then:
+              - repeat:
+                  for_each: "{{ notify_service.split(',') | map('trim') | reject('eq', '') | list }}"
+                  sequence:
+                    - action: "{{ repeat.item }}"
+                      data:
+                        title: "🔋 Battery — Discharging"
+                        message: >
+                          Peak price period started. Discharging battery.
+                          {% if soc_sensor | length > 0 %}
+                          SOC: {{ states(soc_sensor) }}%.
+                          {% endif %}
+
+      # ── STOP charging when best price ends ──
+      - conditions:
+          - condition: trigger
+            id: charge_end
+        sequence:
+          - action: switch.turn_off
+            target:
+              entity_id: "{{ charge_switch }}"
+          - if:
+              - condition: template
+                value_template: "{{ notify_service | length > 0 }}"
+            then:
+              - repeat:
+                  for_each: "{{ notify_service.split(',') | map('trim') | reject('eq', '') | list }}"
+                  sequence:
+                    - action: "{{ repeat.item }}"
+                      data:
+                        title: "🔋 Battery — Charge Stopped"
+                        message: Best price period ended. Grid charging off.
+
+      # ── STOP discharging when peak price ends ──
+      - conditions:
+          - condition: trigger
+            id: discharge_end
+        sequence:
+          - action: switch.turn_off
+            target:
+              entity_id: "{{ discharge_switch }}"
+          - if:
+              - condition: template
+                value_template: "{{ notify_service | length > 0 }}"
+            then:
+              - repeat:
+                  for_each: "{{ notify_service.split(',') | map('trim') | reject('eq', '') | list }}"
+                  sequence:
+                    - action: "{{ repeat.item }}"
+                      data:
+                        title: "🔋 Battery — Discharge Stopped"
+                        message: Peak price period ended. Grid discharge off.

@@ -1,0 +1,588 @@
+blueprint:
+  name: "Tibber Prices: Laundry Day Pipeline (Smart Plug)"
+  description: >
+    **Companion blueprint for
+    [Tibber Prices](https://my.home-assistant.io/redirect/hacs_repository/?owner=jpawlowski&repository=hass.tibber_prices&category=integration)
+    (HACS integration)** · Blueprint v1.0.0
+
+    Schedule multiple wash + dry cycles at the cheapest electricity prices
+    using smart plug switches.
+    Open your
+    [Tibber Prices configuration](https://my.home-assistant.io/redirect/integration/?domain=tibber_prices)
+    to verify the integration is installed and set up.
+
+    **What it does:**
+
+    - Plans 1–5 wash + dry cycles with automatic price optimization
+
+    - Finds the cheapest time windows for each appliance cycle
+
+    - Sends mobile notifications for laundry transfer reminders
+
+    - Optional pipeline mode: next wash starts while dryer runs
+
+    **Prerequisites:**
+
+    - [Tibber Prices integration](https://my.home-assistant.io/redirect/hacs_repository/?owner=jpawlowski&repository=hass.tibber_prices&category=integration) installed via HACS
+
+    - Two helpers (created in Settings → Helpers):
+      - Toggle (`input_boolean`) — starts laundry day when turned on
+      - Number (`input_number`, min 1, max 5, step 1) — how many loads
+
+    - Smart plug switches for washer and dryer
+
+    **How it works:**
+
+    ```
+    Load 1: [══ Wash 1 ══] → transfer → [══ Dry 1 ══]
+    Load 2:          (pipeline)          [══ Wash 2 ══] → transfer → [══ Dry 2 ══]
+    ```
+
+    1. Turn on the toggle to start laundry day
+
+    2. Each wash + dry cycle is planned at the cheapest available price
+
+    3. You receive notifications when it's time to transfer laundry
+
+    4. The toggle turns off automatically when all loads are done
+
+    **Pipeline mode** (optional): When your wash cycle takes longer than
+    your dry cycle, the next wash can start while the dryer is still
+    running. This significantly reduces total laundry time.
+
+    **Other variants:**
+    [Home Connect](https://github.com/jpawlowski/hass.tibber_prices/blob/main/custom_components/tibber_prices/blueprints/automation/tibber_prices/laundry_day_pipeline_home_connect.yaml)
+    ·
+    [Home Connect Alt](https://github.com/jpawlowski/hass.tibber_prices/blob/main/custom_components/tibber_prices/blueprints/automation/tibber_prices/laundry_day_pipeline_home_connect_alt.yaml)
+  domain: automation
+  author: jpawlowski
+  homeassistant:
+    min_version: "2024.6.0"
+  source_url: https://github.com/jpawlowski/hass.tibber_prices/blob/main/custom_components/tibber_prices/blueprints/automation/tibber_prices/laundry_day_pipeline.yaml
+  input:
+    appliances:
+      name: Appliances
+      icon: mdi:washing-machine
+      description: Configure your washing machine and dryer.
+      input:
+        washer_switch:
+          name: Washing Machine Switch
+          description: Smart plug controlling the washing machine.
+          selector:
+            entity:
+              filter:
+                domain: switch
+        include_dryer:
+          name: Include Dryer
+          description: >
+            Enable to schedule dryer cycles after each wash.
+            Disable if you hang laundry to dry.
+          default: true
+          selector:
+            boolean:
+        dryer_switch:
+          name: Dryer Switch
+          description: >
+            Smart plug controlling the dryer.
+            Only used when "Include Dryer" is enabled.
+          selector:
+            entity:
+              filter:
+                domain: switch
+
+    durations:
+      name: Program Durations
+      icon: mdi:timer-outline
+      description: >
+        Set typical program durations for your appliances.
+        Include a small buffer (~5 min) for cycle-to-cycle variation.
+      input:
+        washer_duration:
+          name: Wash Cycle Duration
+          description: >
+            Typical wash program duration in minutes.
+            ECO 40-60 ≈ 90 min, Cotton 60°C ≈ 120 min, Quick ≈ 45 min.
+          default: 95
+          selector:
+            number:
+              min: 15
+              max: 240
+              step: 5
+              unit_of_measurement: min
+              mode: slider
+        dryer_duration:
+          name: Dry Cycle Duration
+          description: >
+            Typical dry program duration in minutes.
+            Cotton Dry ≈ 60 min, Extra Dry ≈ 75 min, Gentle ≈ 90 min.
+          default: 65
+          selector:
+            number:
+              min: 15
+              max: 180
+              step: 5
+              unit_of_measurement: min
+              mode: slider
+        transfer_time:
+          name: Transfer Time
+          description: >
+            Minutes to transfer laundry from washer to dryer.
+            You'll get a notification when it's time.
+          default: 15
+          selector:
+            number:
+              min: 5
+              max: 60
+              step: 5
+              unit_of_measurement: min
+              mode: slider
+
+    schedule:
+      name: Schedule
+      icon: mdi:calendar-clock
+      description: Configure the trigger, load count, and deadline.
+      input:
+        trigger_entity:
+          name: Laundry Day Toggle
+          description: >
+            An `input_boolean` helper that starts laundry day when turned on.
+            Create in Settings → Helpers → Toggle.
+          selector:
+            entity:
+              filter:
+                domain: input_boolean
+        loads_entity:
+          name: Number of Loads
+          description: >
+            An `input_number` helper (1–5) for how many wash cycles to run.
+            Create in Settings → Helpers → Number (min: 1, max: 5, step: 1).
+          selector:
+            entity:
+              filter:
+                domain: input_number
+        deadline_time:
+          name: Must Finish By
+          description: >
+            All laundry must be finished by this time today.
+            The scheduler only looks for cheap windows before this deadline.
+          default: "22:00:00"
+          selector:
+            time:
+
+    advanced:
+      name: Advanced
+      icon: mdi:cog
+      collapsed: true
+      description: Pipeline mode and fine-tuning options.
+      input:
+        pipeline_mode:
+          name: Pipeline Mode
+          description: >
+            When enabled, the next wash starts immediately after the dryer
+            begins — without waiting for the dryer to finish. This creates
+            a pipeline where washer and dryer overlap, cutting total time
+            by roughly one dry cycle per load.
+
+            **Only safe when wash duration ≥ dryer duration.**
+            If your dryer takes longer than your washer, leave this off.
+          default: false
+          selector:
+            boolean:
+
+    runtime_overrides:
+      name: Runtime Overrides
+      icon: mdi:tune-vertical
+      collapsed: true
+      description: >
+        Optionally connect helpers to override durations from your
+        dashboard at runtime. When a helper is connected and has
+        a valid value, it takes priority over the fixed default.
+        Leave empty to always use the fixed defaults.
+      input:
+        washer_duration_override:
+          name: "Override: Wash Cycle Duration"
+          description: >
+            `input_number` helper to change the wash duration from
+            your dashboard (e.g., ECO vs. Quick program).
+            **Create in Settings → Helpers → Number**
+            (min: 15, max: 240, step: 5, unit: min).
+          default: ""
+          selector:
+            entity:
+              filter:
+                domain: input_number
+        dryer_duration_override:
+          name: "Override: Dry Cycle Duration"
+          description: >
+            `input_number` helper to change the dry duration from
+            your dashboard.
+            **Create in Settings → Helpers → Number**
+            (min: 15, max: 180, step: 5, unit: min).
+          default: ""
+          selector:
+            entity:
+              filter:
+                domain: input_number
+
+    notifications:
+      name: Notifications
+      icon: mdi:bell-outline
+      collapsed: true
+      description: Optional mobile notifications for transfer reminders and progress.
+      input:
+        notify_service:
+          name: Notification Service
+          description: >
+            One or more notify services, comma-separated
+            (e.g., `notify.mobile_app_yourphone` or
+            `notify.mobile_app_phone, notify.mobile_app_tablet`).
+            Leave empty to disable all notifications.
+          default: ""
+          selector:
+            text:
+
+# Only one laundry day at a time
+mode: single
+max_exceeded: warning
+
+triggers:
+  - trigger: state
+    entity_id: !input trigger_entity
+    to: "on"
+
+# Expose inputs as template variables
+variables:
+  # Blueprint versioning — for compatibility checks
+  _blueprint_variant: "smart_plug"
+  # Input variables
+  washer_switch: !input washer_switch
+  dryer_switch: !input dryer_switch
+  include_dryer: !input include_dryer
+  _washer_duration_default: !input washer_duration
+  _washer_duration_override: !input washer_duration_override
+  washer_duration: >
+    {% set o = _washer_duration_override %}
+    {% if o and states(o) not in ['unknown', 'unavailable'] %}
+      {{ states(o) | int(_washer_duration_default) }}
+    {% else %}
+      {{ _washer_duration_default }}
+    {% endif %}
+  _dryer_duration_default: !input dryer_duration
+  _dryer_duration_override: !input dryer_duration_override
+  dryer_duration: >
+    {% set o = _dryer_duration_override %}
+    {% if o and states(o) not in ['unknown', 'unavailable'] %}
+      {{ states(o) | int(_dryer_duration_default) }}
+    {% else %}
+      {{ _dryer_duration_default }}
+    {% endif %}
+  transfer_time: !input transfer_time
+  loads_entity: !input loads_entity
+  deadline_time: !input deadline_time
+  pipeline_mode: !input pipeline_mode
+  notify_service: !input notify_service
+  total_loads: "{{ states(loads_entity) | int(1) }}"
+  trigger_entity: !input trigger_entity
+
+actions:
+  # Check: Tibber Prices integration installed?
+  - variables:
+      _tp_entities: "{{ integration_entities('tibber_prices') | list }}"
+  # Check: Integration installed?
+  - if:
+      - condition: template
+        value_template: "{{ _tp_entities | length == 0 }}"
+    then:
+      - if:
+          - condition: template
+            value_template: "{{ notify_service | length > 0 }}"
+        then:
+          - repeat:
+              for_each: "{{ notify_service.split(',') | map('trim') | reject('eq', '') | list }}"
+              sequence:
+                - action: "{{ repeat.item }}"
+                  data:
+                    title: "🧺 Laundry Day — Setup Required"
+                    message: >
+                      The Tibber Prices integration is not installed or not
+                      configured. Install it via HACS and set up your Tibber
+                      account before using this blueprint.
+      - action: input_boolean.turn_off
+        target:
+          entity_id: "{{ trigger_entity }}"
+      - stop: "Tibber Prices integration not found"
+
+  # ════════════════════════════════════════════════════════
+  # VALIDATION
+  # ════════════════════════════════════════════════════════
+  - if:
+      - condition: template
+        value_template: "{{ total_loads < 1 or total_loads > 5 }}"
+    then:
+      - if:
+          - condition: template
+            value_template: "{{ notify_service | length > 0 }}"
+        then:
+          - repeat:
+              for_each: "{{ notify_service.split(',') | map('trim') | reject('eq', '') | list }}"
+              sequence:
+                - action: "{{ repeat.item }}"
+                  data:
+                    title: "🧺 Laundry Day"
+                    message: >
+                      Invalid number of loads: {{ total_loads }}.
+                      Set {{ loads_entity }} between 1 and 5.
+      - action: input_boolean.turn_off
+        target:
+          entity_id: "{{ trigger_entity }}"
+      - stop: "Invalid load count"
+
+  # ════════════════════════════════════════════════════════
+  # START NOTIFICATION
+  # ════════════════════════════════════════════════════════
+  - if:
+      - condition: template
+        value_template: "{{ notify_service | length > 0 }}"
+    then:
+      - repeat:
+          for_each: "{{ notify_service.split(',') | map('trim') | reject('eq', '') | list }}"
+          sequence:
+            - action: "{{ repeat.item }}"
+              data:
+                title: "🧺 Laundry Day Started"
+                message: >
+                  Planning {{ total_loads }}
+                  load{{ 's' if total_loads | int > 1 else '' }}
+                  (wash {{ washer_duration }} min
+                  {{ '+ dry ' ~ dryer_duration ~ ' min' if include_dryer else '' }}).
+                  Must finish by {{ deadline_time[:5] }}.
+
+  # ════════════════════════════════════════════════════════
+  # MAIN PIPELINE LOOP
+  # ════════════════════════════════════════════════════════
+  - repeat:
+      count: "{{ total_loads }}"
+      sequence:
+        # Check if user cancelled (turned off the toggle)
+        - if:
+            - condition: template
+              value_template: "{{ is_state(trigger_entity, 'off') }}"
+          then:
+            - if:
+                - condition: template
+                  value_template: "{{ notify_service | length > 0 }}"
+              then:
+                - repeat:
+                    for_each: "{{ notify_service.split(',') | map('trim') | reject('eq', '') | list }}"
+                    sequence:
+                      - action: "{{ repeat.item }}"
+                        data:
+                          title: "🧺 Laundry Day Cancelled"
+                          message: >
+                            Stopped after {{ repeat.index - 1 }}
+                            of {{ total_loads }} loads.
+            - stop: "Cancelled by user"
+
+        # ── PLAN WASH ──────────────────────────────────
+        - action: tibber_prices.find_cheapest_block
+          data:
+            duration: >
+              {{ '%02d:%02d:00' | format(
+                (washer_duration | int) // 60,
+                (washer_duration | int) % 60) }}
+            must_finish_by: >
+              {{ today_at(deadline_time).isoformat() }}
+          response_variable: wash_result
+
+        - if:
+            - condition: template
+              value_template: "{{ not wash_result.window_found }}"
+          then:
+            - if:
+                - condition: template
+                  value_template: "{{ notify_service | length > 0 }}"
+              then:
+                - repeat:
+                    for_each: "{{ notify_service.split(',') | map('trim') | reject('eq', '') | list }}"
+                    sequence:
+                      - action: "{{ repeat.item }}"
+                        data:
+                          title: "🧺 Laundry Day — Problem"
+                          message: >
+                            No cheap window found for wash {{ repeat.index }}/{{ total_loads }}.
+                            {{ wash_result.reason | default('Not enough time before deadline?') }}
+            - action: input_boolean.turn_off
+              target:
+                entity_id: "{{ trigger_entity }}"
+            - stop: "No wash window found"
+
+        # ── WAIT UNTIL WASH START ──────────────────────
+        - delay:
+            seconds: >
+              {{ max(0,
+                ((wash_result.window.start | as_datetime) - now())
+                .total_seconds() | int) }}
+
+        # ── START WASH ─────────────────────────────────
+        - action: switch.turn_on
+          target:
+            entity_id: "{{ washer_switch }}"
+
+        - if:
+            - condition: template
+              value_template: "{{ notify_service | length > 0 }}"
+          then:
+            - repeat:
+                for_each: "{{ notify_service.split(',') | map('trim') | reject('eq', '') | list }}"
+                sequence:
+                  - action: "{{ repeat.item }}"
+                    data:
+                      title: >
+                        👕 Wash {{ repeat.index }}/{{ total_loads }} Started
+                      message: >
+                        Running until
+                        ~{{ (now() + timedelta(minutes=washer_duration | int))
+                        | as_timestamp | timestamp_custom('%H:%M') }}.
+                        Price: {{ wash_result.window.price_mean | round(1) }}
+                        {{ wash_result.price_unit }}/kWh avg.
+                        {% if wash_result.relaxation_applied | default(false) %}
+                        (Filters relaxed to find window.)
+                        {% endif %}
+
+        # ── WAIT FOR WASH TO COMPLETE ──────────────────
+        - delay:
+            minutes: "{{ washer_duration }}"
+
+        # ── WASH DONE ─────────────────────────────────
+        - if:
+            - condition: template
+              value_template: "{{ notify_service | length > 0 }}"
+          then:
+            - repeat:
+                for_each: "{{ notify_service.split(',') | map('trim') | reject('eq', '') | list }}"
+                sequence:
+                  - action: "{{ repeat.item }}"
+                    data:
+                      title: >
+                        ✅ Wash {{ repeat.index }}/{{ total_loads }} Done!
+                      message: >
+                        {% if include_dryer %}
+                        Transfer laundry to the dryer!
+                        {% endif %}
+                        {% if repeat.index | int < total_loads | int %}
+                        {% if include_dryer %}Then load{% else %}Load{% endif %}
+                        the washer for load {{ repeat.index + 1 }}.
+                        {% endif %}
+
+        # ── DRYER (if enabled) ─────────────────────────
+        - if:
+            - condition: template
+              value_template: "{{ include_dryer }}"
+          then:
+            # Wait for transfer
+            - delay:
+                minutes: "{{ transfer_time }}"
+
+            # Plan dryer
+            - action: tibber_prices.find_cheapest_block
+              data:
+                duration: >
+                  {{ '%02d:%02d:00' | format(
+                    (dryer_duration | int) // 60,
+                    (dryer_duration | int) % 60) }}
+                must_finish_by: >
+                  {{ today_at(deadline_time).isoformat() }}
+              response_variable: dry_result
+
+            - if:
+                - condition: template
+                  value_template: "{{ not dry_result.window_found }}"
+              then:
+                - if:
+                    - condition: template
+                      value_template: "{{ notify_service | length > 0 }}"
+                  then:
+                    - repeat:
+                        for_each: "{{ notify_service.split(',') | map('trim') | reject('eq', '') | list }}"
+                        sequence:
+                          - action: "{{ repeat.item }}"
+                            data:
+                              title: "⚠️ Dryer {{ repeat.index }} — No Window"
+                              message: >
+                                No cheap window found for dryer {{ repeat.index }}.
+                                Consider running the dryer manually.
+                                {{ dry_result.reason | default('') }}
+                # Don't abort — continue with next wash cycle
+
+            - if:
+                - condition: template
+                  value_template: >
+                    {{ dry_result.window_found | default(false) }}
+              then:
+                # Wait until dryer start
+                - delay:
+                    seconds: >
+                      {{ max(0,
+                        ((dry_result.window.start | as_datetime) - now())
+                        .total_seconds() | int) }}
+
+                # START DRYER
+                - action: switch.turn_on
+                  target:
+                    entity_id: "{{ dryer_switch }}"
+
+                - if:
+                    - condition: template
+                      value_template: "{{ notify_service | length > 0 }}"
+                  then:
+                    - repeat:
+                        for_each: "{{ notify_service.split(',') | map('trim') | reject('eq', '') | list }}"
+                        sequence:
+                          - action: "{{ repeat.item }}"
+                            data:
+                              title: >
+                                🌀 Dryer {{ repeat.index }}/{{ total_loads }}
+                                Started
+                              message: >
+                                Running until
+                                ~{{ (now() + timedelta(minutes=dryer_duration | int))
+                                | as_timestamp | timestamp_custom('%H:%M') }}.
+                                {% if pipeline_mode
+                                  and repeat.index | int < total_loads | int %}
+                                Next wash will be planned now —
+                                dryer runs in parallel.
+                                {% endif %}
+
+                # Wait for dryer to finish
+                # UNLESS pipeline mode AND more loads to come
+                - if:
+                    - condition: template
+                      value_template: >
+                        {{ not (pipeline_mode
+                          and repeat.index | int < total_loads | int) }}
+                  then:
+                    - delay:
+                        minutes: "{{ dryer_duration }}"
+
+  # ════════════════════════════════════════════════════════
+  # ALL DONE
+  # ════════════════════════════════════════════════════════
+  - if:
+      - condition: template
+        value_template: "{{ notify_service | length > 0 }}"
+    then:
+      - repeat:
+          for_each: "{{ notify_service.split(',') | map('trim') | reject('eq', '') | list }}"
+          sequence:
+            - action: "{{ repeat.item }}"
+              data:
+                title: "🎉 Laundry Day Complete!"
+                message: >
+                  All {{ total_loads }}
+                  load{{ 's' if total_loads | int > 1 else '' }}
+                  washed{{ ' and dried' if include_dryer else '' }}.
+                  Time to fold! 🧺
+
+  - action: input_boolean.turn_off
+    target:
+      entity_id: "{{ trigger_entity }}"

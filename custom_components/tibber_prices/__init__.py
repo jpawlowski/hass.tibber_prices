@@ -7,6 +7,8 @@ https://github.com/jpawlowski/hass.tibber_prices
 
 from __future__ import annotations
 
+from pathlib import Path
+import shutil
 from typing import TYPE_CHECKING, Any
 
 import voluptuous as vol
@@ -93,6 +95,53 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
+def _install_blueprints(config_dir: str) -> None:
+    """Copy bundled blueprints to the HA config blueprints directory.
+
+    Always overwrites existing files so blueprints stay in sync with the
+    integration version.  Removes orphan files that are no longer shipped.
+    Handles both automation and script blueprint domains.
+    """
+    for bp_domain in ("automation", "script"):
+        src = Path(__file__).parent / "blueprints" / bp_domain
+        dst = Path(config_dir) / "blueprints" / bp_domain / DOMAIN
+
+        if not src.is_dir():
+            LOGGER.debug("No bundled %s blueprints directory found, skipping", bp_domain)
+            continue
+
+        dst.mkdir(parents=True, exist_ok=True)
+
+        shipped: set[str] = set()
+        for src_file in src.rglob("*.yaml"):
+            rel = src_file.relative_to(src)
+            # Only copy files from the tibber_prices sub-folder
+            if rel.parts[0] != DOMAIN:
+                continue
+            dest_file = Path(config_dir) / "blueprints" / bp_domain / rel
+            dest_file.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copy2(src_file, dest_file)
+            shipped.add(rel.parts[-1])
+
+        # Remove orphan blueprints no longer shipped with the integration
+        if dst.is_dir():
+            for existing in dst.glob("*.yaml"):
+                if existing.name not in shipped:
+                    existing.unlink()
+                    LOGGER.info("Removed orphan %s blueprint %s", bp_domain, existing.name)
+
+        LOGGER.debug("Installed %d bundled %s blueprints to %s", len(shipped), bp_domain, dst)
+
+
+def _remove_blueprints(config_dir: str) -> None:
+    """Remove all integration-managed blueprints from the config directory."""
+    for bp_domain in ("automation", "script"):
+        bp_dir = Path(config_dir) / "blueprints" / bp_domain / DOMAIN
+        if bp_dir.is_dir():
+            shutil.rmtree(bp_dir)
+            LOGGER.info("Removed bundled %s blueprints directory %s", bp_domain, bp_dir)
+
+
 async def async_setup(hass: HomeAssistant, config: dict[str, Any]) -> bool:
     """Set up the Tibber Prices component from configuration.yaml."""
     # Store chart export configuration in hass.data for sensor access
@@ -119,6 +168,9 @@ async def async_setup(hass: HomeAssistant, config: dict[str, Any]) -> bool:
     else:
         LOGGER.debug("No chart_metadata configuration found in configuration.yaml")
         hass.data[DOMAIN][DATA_CHART_METADATA_CONFIG] = {}
+
+    # Install/update bundled blueprints
+    await hass.async_add_executor_job(_install_blueprints, hass.config.config_dir)
 
     return True
 
@@ -365,6 +417,11 @@ async def async_remove_entry(
     # Remove interval pool storage
     await async_remove_pool_storage(hass, entry.entry_id)
     LOGGER.debug(f"[tibber_prices] async_remove_entry removed interval pool storage for entry_id={entry.entry_id}")
+
+    # Remove bundled blueprints if this was the last config entry
+    remaining = [e for e in hass.config_entries.async_entries(DOMAIN) if e.entry_id != entry.entry_id]
+    if not remaining:
+        await hass.async_add_executor_job(_remove_blueprints, hass.config.config_dir)
 
 
 async def async_reload_entry(

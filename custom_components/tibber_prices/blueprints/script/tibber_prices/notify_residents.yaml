@@ -1,0 +1,507 @@
+blueprint:
+  name: "Tibber Prices: Notify Residents"
+  description: >
+    **Companion script blueprint for
+    [Tibber Prices](https://my.home-assistant.io/redirect/hacs_repository/?owner=jpawlowski&repository=hass.tibber_prices&category=integration)
+    appliance blueprints** · Blueprint v2.0.0
+
+
+    Advanced notification dispatcher that replaces the simple
+    "Quick Notification" in any Tibber Prices appliance blueprint.
+
+
+    **Features:**
+
+    - Up to **10 residents** — just pick a person, devices are
+      discovered automatically
+
+    - **Auto-discovery** — finds all Mobile App notify services
+      from the person's device trackers and notifies every device
+
+    - **Presence filtering** — only notify people who are home
+
+    - **iOS and Android** platform-specific options (interruption
+      level, notification channel, priority)
+
+    - **Notify service override** — for Telegram, groups, or any
+      non-mobile-app service
+
+    - Notifications **grouped by appliance** with smart tag
+      replacement (new events replace old ones)
+
+
+    **How to use:**
+
+    1. Create a new script from this blueprint
+
+    2. Add your residents — just select their person entity
+
+    3. In any Tibber Prices appliance blueprint, select this script
+       as **Notification Script (Advanced)**
+
+    4. Done! The appliance blueprint passes all context automatically
+
+
+    **Auto-discovery explained:** For each person, the script reads
+    the assigned device trackers (e.g., `device_tracker.alice_iphone`)
+    and derives the matching `notify.mobile_app_*` service
+    automatically. All devices of a person get notified — no manual
+    service configuration needed.
+
+
+    **Override:** If a person should receive notifications via
+    Telegram, a group, or a custom service instead of (or in addition
+    to) their mobile devices, set the optional "Notify Service
+    Override" field. When set, only the override service is used.
+
+
+    **Taking control:** Click "Take control" in the script editor
+    for full YAML access. The 10-slot limit no longer applies.
+  domain: script
+  author: jpawlowski
+  homeassistant:
+    min_version: 2024.6.0
+
+  input:
+    presence_settings:
+      name: Presence Settings
+      icon: mdi:home-account
+      description: >
+        Control whether notifications are filtered by who is home.
+      input:
+        filter_by_presence:
+          name: Only notify people who are home
+          description: >
+            When enabled, only residents whose person entity shows
+            `home` will receive the notification.
+            Disabled = everyone gets notified regardless of location.
+          default: true
+          selector:
+            boolean:
+
+    resident_1:
+      name: "Resident 1"
+      icon: mdi:account
+      description: >
+        First notification recipient. Select the person entity —
+        their mobile devices are discovered automatically.
+      input:
+        resident_1_person:
+          name: "Resident 1 — Person"
+          description: >
+            Person entity (e.g., `person.alice`).
+            Leave empty to skip this slot.
+          default: ""
+          selector:
+            entity:
+              filter:
+                domain: person
+        resident_1_override:
+          name: "Resident 1 — Notify Service Override"
+          description: >
+            Optional: a specific notify service to use instead of
+            auto-discovered mobile devices (e.g.,
+            `notify.telegram_alice` or `notify.family_group`).
+            When set, auto-discovery is skipped for this resident.
+          default: ""
+          selector:
+            text:
+
+    resident_2:
+      name: "Resident 2"
+      icon: mdi:account
+      collapsed: true
+      description: "Second notification recipient."
+      input:
+        resident_2_person:
+          name: "Resident 2 — Person"
+          default: ""
+          selector:
+            entity:
+              filter:
+                domain: person
+        resident_2_override:
+          name: "Resident 2 — Notify Service Override"
+          default: ""
+          selector:
+            text:
+
+    resident_3:
+      name: "Resident 3"
+      icon: mdi:account
+      collapsed: true
+      description: "Third notification recipient."
+      input:
+        resident_3_person:
+          name: "Resident 3 — Person"
+          default: ""
+          selector:
+            entity:
+              filter:
+                domain: person
+        resident_3_override:
+          name: "Resident 3 — Notify Service Override"
+          default: ""
+          selector:
+            text:
+
+    resident_4:
+      name: "Resident 4"
+      icon: mdi:account
+      collapsed: true
+      description: "Fourth notification recipient."
+      input:
+        resident_4_person:
+          name: "Resident 4 — Person"
+          default: ""
+          selector:
+            entity:
+              filter:
+                domain: person
+        resident_4_override:
+          name: "Resident 4 — Notify Service Override"
+          default: ""
+          selector:
+            text:
+
+    resident_5:
+      name: "Resident 5"
+      icon: mdi:account
+      collapsed: true
+      description: "Fifth notification recipient."
+      input:
+        resident_5_person:
+          name: "Resident 5 — Person"
+          default: ""
+          selector:
+            entity:
+              filter:
+                domain: person
+        resident_5_override:
+          name: "Resident 5 — Notify Service Override"
+          default: ""
+          selector:
+            text:
+
+    resident_6:
+      name: "Resident 6"
+      icon: mdi:account
+      collapsed: true
+      description: "Sixth notification recipient."
+      input:
+        resident_6_person:
+          name: "Resident 6 — Person"
+          default: ""
+          selector:
+            entity:
+              filter:
+                domain: person
+        resident_6_override:
+          name: "Resident 6 — Notify Service Override"
+          default: ""
+          selector:
+            text:
+
+    resident_7:
+      name: "Resident 7"
+      icon: mdi:account
+      collapsed: true
+      description: "Seventh notification recipient."
+      input:
+        resident_7_person:
+          name: "Resident 7 — Person"
+          default: ""
+          selector:
+            entity:
+              filter:
+                domain: person
+        resident_7_override:
+          name: "Resident 7 — Notify Service Override"
+          default: ""
+          selector:
+            text:
+
+    resident_8:
+      name: "Resident 8"
+      icon: mdi:account
+      collapsed: true
+      description: "Eighth notification recipient."
+      input:
+        resident_8_person:
+          name: "Resident 8 — Person"
+          default: ""
+          selector:
+            entity:
+              filter:
+                domain: person
+        resident_8_override:
+          name: "Resident 8 — Notify Service Override"
+          default: ""
+          selector:
+            text:
+
+    resident_9:
+      name: "Resident 9"
+      icon: mdi:account
+      collapsed: true
+      description: "Ninth notification recipient."
+      input:
+        resident_9_person:
+          name: "Resident 9 — Person"
+          default: ""
+          selector:
+            entity:
+              filter:
+                domain: person
+        resident_9_override:
+          name: "Resident 9 — Notify Service Override"
+          default: ""
+          selector:
+            text:
+
+    resident_10:
+      name: "Resident 10"
+      icon: mdi:account
+      collapsed: true
+      description: "Tenth notification recipient."
+      input:
+        resident_10_person:
+          name: "Resident 10 — Person"
+          default: ""
+          selector:
+            entity:
+              filter:
+                domain: person
+        resident_10_override:
+          name: "Resident 10 — Notify Service Override"
+          default: ""
+          selector:
+            text:
+
+# ════════════════════════════════════════════════════════════
+# Script fields — received from the appliance blueprint
+# via script.turn_on → data → variables
+# ════════════════════════════════════════════════════════════
+fields:
+  event_type:
+    name: Event Type
+    description: >
+      What happened. Values: setup_required, not_ready, no_program,
+      no_window, planned, started, prepare_washer, timeout,
+      invalid_loads, wash_planned, wash_done, dryer_planned,
+      dryer_skipped, cancelled, complete.
+    required: true
+    example: planned
+    selector:
+      text:
+  appliance:
+    name: Appliance
+    description: >
+      Which appliance sent this. Values: dishwasher,
+      washing_machine, dryer, laundry_pipeline.
+    required: true
+    example: dishwasher
+    selector:
+      text:
+  title:
+    name: Title
+    description: Default notification title (with emoji).
+    required: true
+    example: "🍽️ Dishwasher — Planned!"
+    selector:
+      text:
+  message:
+    name: Message
+    description: Default notification message body.
+    required: true
+    example: "Starts at 02:15 (in 3.2 h). Duration: ~120 min."
+    selector:
+      text:
+  start_time:
+    name: Start Time
+    description: >
+      ISO start time (planned/wash_planned/dryer_planned events).
+    example: "2025-01-15T02:15:00"
+    selector:
+      text:
+  duration_minutes:
+    name: Duration (minutes)
+    description: >
+      Program duration in minutes (planned/no_window events).
+    example: "120"
+    selector:
+      text:
+  price_mean:
+    name: Average Price
+    description: >
+      Mean price in the selected window (planned events).
+    example: "18.5"
+    selector:
+      text:
+  price_unit:
+    name: Price Unit
+    description: >
+      Currency unit (planned events), e.g., "ct/kWh" or "øre/kWh".
+    example: "ct/kWh"
+    selector:
+      text:
+  selected_program:
+    name: Selected Program
+    description: >
+      Appliance program name (planned events, Home Connect Alt only).
+    example: "Dishcare.Dishwasher.Program.Eco50"
+    selector:
+      text:
+  using_fallback_duration:
+    name: Using Fallback Duration
+    description: >
+      "True" if the duration is a fallback estimate (planned events).
+    example: "False"
+    selector:
+      text:
+  deadline:
+    name: Deadline
+    description: >
+      The deadline that was exceeded (no_window events).
+    example: "2025-01-15T08:00:00"
+    selector:
+      text:
+  load_index:
+    name: Load Index
+    description: >
+      Current load number (pipeline events).
+    example: "2"
+    selector:
+      text:
+  total_loads:
+    name: Total Loads
+    description: >
+      Total number of loads planned (pipeline events).
+    example: "3"
+    selector:
+      text:
+
+# ════════════════════════════════════════════════════════════
+# Variables — map blueprint inputs to template variables
+# ════════════════════════════════════════════════════════════
+variables:
+  filter_by_presence: !input filter_by_presence
+
+  r1_person: !input resident_1_person
+  r1_override: !input resident_1_override
+  r2_person: !input resident_2_person
+  r2_override: !input resident_2_override
+  r3_person: !input resident_3_person
+  r3_override: !input resident_3_override
+  r4_person: !input resident_4_person
+  r4_override: !input resident_4_override
+  r5_person: !input resident_5_person
+  r5_override: !input resident_5_override
+  r6_person: !input resident_6_person
+  r6_override: !input resident_6_override
+  r7_person: !input resident_7_person
+  r7_override: !input resident_7_override
+  r8_person: !input resident_8_person
+  r8_override: !input resident_8_override
+  r9_person: !input resident_9_person
+  r9_override: !input resident_9_override
+  r10_person: !input resident_10_person
+  r10_override: !input resident_10_override
+
+  # Build a flat list of {service, person} notification targets.
+  # For each resident with a person entity set:
+  #   - If an override service is configured → use that
+  #   - Otherwise → auto-discover mobile_app notify services
+  #     from the person's device_trackers attribute
+  notify_targets: >
+    {% set slots = [
+      {'person': r1_person,  'override': r1_override},
+      {'person': r2_person,  'override': r2_override},
+      {'person': r3_person,  'override': r3_override},
+      {'person': r4_person,  'override': r4_override},
+      {'person': r5_person,  'override': r5_override},
+      {'person': r6_person,  'override': r6_override},
+      {'person': r7_person,  'override': r7_override},
+      {'person': r8_person,  'override': r8_override},
+      {'person': r9_person,  'override': r9_override},
+      {'person': r10_person, 'override': r10_override},
+    ] %}
+    {% set ns = namespace(targets=[]) %}
+    {% for slot in slots if slot.person != '' %}
+      {% set override = slot.override | default('') %}
+      {% if override | length > 0 %}
+        {% set ns.targets = ns.targets
+           + [{'service': override, 'person': slot.person}] %}
+      {% else %}
+        {% set trackers = state_attr(slot.person,
+           'device_trackers') or [] %}
+        {% for t in trackers %}
+          {% set dev_name = t.split('.')[1] %}
+          {% if services.notify is defined
+             and 'mobile_app_' ~ dev_name in services.notify %}
+            {% set ns.targets = ns.targets
+               + [{'service': 'notify.mobile_app_' ~ dev_name,
+                   'person': slot.person}] %}
+          {% endif %}
+        {% endfor %}
+      {% endif %}
+    {% endfor %}
+    {{ ns.targets }}
+
+  # Events that bypass presence filtering (always notify everyone)
+  critical_events:
+    - complete
+    - cancelled
+    - timeout
+
+icon: mdi:bell-ring
+mode: parallel
+max: 10
+
+sequence:
+  - repeat:
+      for_each: "{{ notify_targets }}"
+      sequence:
+        # ── Presence check ──────────────────────────────
+        - condition: template
+          value_template: >
+            {% set person_id = repeat.item.person %}
+            {% if not filter_by_presence %}
+              true
+            {% elif event_type in critical_events %}
+              true
+            {% else %}
+              {{ states(person_id) == 'home' }}
+            {% endif %}
+
+        # ── Send notification ───────────────────────────
+        - action: "{{ repeat.item.service }}"
+          data:
+            title: "{{ title }}"
+            message: "{{ message }}"
+            data:
+              # iOS — interruption level
+              push:
+                interruption-level: >
+                  {% if event_type in ['planned', 'wash_planned',
+                  'dryer_planned', 'complete'] %}
+                    time-sensitive
+                  {% else %}
+                    active
+                  {% endif %}
+
+              # Android — channel and priority
+              channel: tibber_prices
+              importance: >
+                {% if event_type in ['planned', 'wash_planned',
+                'dryer_planned', 'complete'] %}
+                  high
+                {% else %}
+                  default
+                {% endif %}
+              ttl: 0
+              priority: high
+
+              # Group & replace — new events replace old ones
+              group: "tibber_{{ appliance }}"
+              tag: "tibber_{{ appliance }}_{{ event_type }}"

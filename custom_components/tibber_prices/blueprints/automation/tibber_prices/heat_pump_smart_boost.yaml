@@ -1,0 +1,282 @@
+blueprint:
+  name: "Tibber Prices: Heat Pump — Smart Boost with Trend Awareness"
+  description: >
+    **Companion blueprint for
+    [Tibber Prices](https://my.home-assistant.io/redirect/hacs_repository/?owner=jpawlowski&repository=hass.tibber_prices&category=integration)
+    (HACS integration)** · Blueprint v1.0.0
+
+    Advanced heat pump optimization that extends the boost window
+    beyond the detected Best Price Period using trend sensors.
+
+    **Why?** On V-shaped price days, the Best Price Period may cover
+    only 1–2 hours, but prices remain favorable for 4–6 hours. By
+    checking the price level AND the trend, you can safely boost
+    during the entire cheap valley.
+
+    **Logic:**
+
+    - **Boost** when EITHER: (a) inside a Best Price Period, OR
+      (b) price is CHEAP/VERY_CHEAP AND trend is stable/falling
+
+    - **Return to normal** when NEITHER condition is true
+
+    **Prerequisites:**
+
+    - [Tibber Prices integration](https://my.home-assistant.io/redirect/hacs_repository/?owner=jpawlowski&repository=hass.tibber_prices&category=integration) installed via HACS
+
+    - A `climate.*` entity for your heat pump
+
+    **See also:**
+    [Heat Pump Price Level](https://github.com/jpawlowski/hass.tibber_prices/blob/main/custom_components/tibber_prices/blueprints/automation/tibber_prices/heat_pump_price_level.yaml)
+    — simpler variant that adjusts to 5 different temperatures per
+    price level without trend awareness.
+  domain: automation
+  author: jpawlowski
+  homeassistant:
+    min_version: "2024.6.0"
+  source_url: https://github.com/jpawlowski/hass.tibber_prices/blob/main/custom_components/tibber_prices/blueprints/automation/tibber_prices/heat_pump_smart_boost.yaml
+  input:
+    devices:
+      name: Devices
+      icon: mdi:heat-pump-outline
+      description: >
+        Select your heat pump and the Tibber Prices sensors.
+      input:
+        period_sensor:
+          name: Best Price Period Sensor
+          description: >
+            The `binary_sensor.<home>_best_price_period` from
+            Tibber Prices.
+          selector:
+            entity:
+              filter:
+                domain: binary_sensor
+                integration: tibber_prices
+        price_sensor:
+          name: Current Price Sensor
+          description: >
+            The `sensor.<home>_current_electricity_price` from
+            Tibber Prices. Must have `rating_level` attribute.
+          selector:
+            entity:
+              filter:
+                domain: sensor
+                integration: tibber_prices
+        trend_sensor:
+          name: Price Outlook Sensor (1h)
+          description: >
+            The `sensor.<home>_price_outlook_1h` from Tibber Prices.
+            Must have `trend_value` attribute. `rising` means current
+            price is LOWER than the future average — so it's actually
+            a good time to boost.
+          selector:
+            entity:
+              filter:
+                domain: sensor
+                integration: tibber_prices
+        heat_pump_entity:
+          name: Heat Pump
+          description: Your heat pump climate entity.
+          selector:
+            entity:
+              filter:
+                domain: climate
+
+    temperatures:
+      name: Temperatures
+      icon: mdi:thermometer
+      description: Boost and normal target temperatures.
+      input:
+        boost_temperature:
+          name: Boost Temperature
+          description: Target during the extended cheap window.
+          default: 22.0
+          selector:
+            number:
+              min: 15
+              max: 30
+              step: 0.5
+              unit_of_measurement: °C
+        normal_temperature:
+          name: Normal Temperature
+          description: Target when no cheap conditions apply.
+          default: 20.5
+          selector:
+            number:
+              min: 15
+              max: 30
+              step: 0.5
+              unit_of_measurement: °C
+
+    runtime_overrides:
+      name: Runtime Overrides
+      icon: mdi:tune-vertical
+      collapsed: true
+      description: >
+        Optionally connect helpers to override settings from your
+        dashboard at runtime. When a helper is connected and has
+        a valid value, it takes priority over the fixed default.
+        Leave empty to always use the fixed defaults.
+      input:
+        boost_temperature_override:
+          name: "Override: Boost Temperature"
+          description: >
+            `input_number` helper to change the boost temperature
+            from your dashboard.
+            **Create in Settings → Helpers → Number**
+            (min: 15, max: 30, step: 0.5, unit: °C).
+          default: ""
+          selector:
+            entity:
+              filter:
+                domain: input_number
+        normal_temperature_override:
+          name: "Override: Normal Temperature"
+          description: >
+            `input_number` helper to change the normal temperature
+            from your dashboard.
+            **Create in Settings → Helpers → Number**
+            (min: 15, max: 30, step: 0.5, unit: °C).
+          default: ""
+          selector:
+            entity:
+              filter:
+                domain: input_number
+
+    notifications:
+      name: Notifications
+      icon: mdi:bell-outline
+      collapsed: true
+      description: >
+        Optional mobile notifications for boost start/stop events.
+      input:
+        notify_service:
+          name: Notification Service
+          description: >
+            One or more notify services, comma-separated
+            (e.g., `notify.mobile_app_yourphone` or
+            `notify.mobile_app_phone, notify.mobile_app_tablet`).
+            Leave empty to disable all notifications.
+          default: ""
+          selector:
+            text:
+
+mode: restart
+
+triggers:
+  # Best price period starts/stops
+  - trigger: state
+    entity_id: !input period_sensor
+    to: "on"
+    id: period_start
+  - trigger: state
+    entity_id: !input period_sensor
+    to: "off"
+    id: period_end
+  # Price updates every 15 minutes
+  - trigger: state
+    entity_id: !input price_sensor
+    id: price_update
+
+variables:
+  _blueprint_variant: "heat_pump_smart_boost"
+  period_sensor: !input period_sensor
+  price_sensor: !input price_sensor
+  trend_sensor: !input trend_sensor
+  heat_pump_entity: !input heat_pump_entity
+  _boost_temp_default: !input boost_temperature
+  _boost_temp_override: !input boost_temperature_override
+  boost_temperature: >
+    {% set o = _boost_temp_override %}
+    {% if o and states(o) not in ['unknown', 'unavailable'] %}
+      {{ states(o) | float(_boost_temp_default) }}
+    {% else %}
+      {{ _boost_temp_default }}
+    {% endif %}
+  _normal_temp_default: !input normal_temperature
+  _normal_temp_override: !input normal_temperature_override
+  normal_temperature: >
+    {% set o = _normal_temp_override %}
+    {% if o and states(o) not in ['unknown', 'unavailable'] %}
+      {{ states(o) | float(_normal_temp_default) }}
+    {% else %}
+      {{ _normal_temp_default }}
+    {% endif %}
+  notify_service: !input notify_service
+
+actions:
+  # Check: Tibber Prices integration installed?
+  - variables:
+      _tp_entities: "{{ integration_entities('tibber_prices') | list }}"
+  - if:
+      - condition: template
+        value_template: "{{ _tp_entities | length == 0 }}"
+    then:
+      - stop: "Tibber Prices integration not found"
+
+  # ════════════════════════════════════════════════════════
+  # EVALUATE BOOST CONDITIONS
+  # ════════════════════════════════════════════════════════
+  - variables:
+      in_period: >
+        {{ is_state(period_sensor, 'on') }}
+      is_cheap: >
+        {{ state_attr(price_sensor, 'rating_level')
+           | default('NORMAL') in ['VERY_CHEAP', 'CHEAP'] }}
+      trend_ok: >
+        {{ state_attr(trend_sensor, 'trend_value')
+           | int(0) <= 0 }}
+      should_boost: >
+        {{ in_period or (is_cheap and trend_ok) }}
+
+  - choose:
+      # ── BOOST ──
+      - conditions:
+          - condition: template
+            value_template: "{{ should_boost }}"
+        sequence:
+          - action: climate.set_temperature
+            target:
+              entity_id: "{{ heat_pump_entity }}"
+            data:
+              temperature: "{{ boost_temperature | float }}"
+          - if:
+              - condition: template
+                value_template: >
+                  {{ notify_service | length > 0
+                     and trigger.id == 'period_start' }}
+            then:
+              - repeat:
+                  for_each: "{{ notify_service.split(',') | map('trim') | reject('eq', '') | list }}"
+                  sequence:
+                    - action: "{{ repeat.item }}"
+                      data:
+                        title: "🌡️ Heat Pump — Boost Active"
+                        message: >
+                          {% if in_period %}Best price period started.
+                          {% else %}Price is cheap and trend is favorable.
+                          {% endif %}
+                          Target set to {{ boost_temperature }}°C.
+
+    # ── RETURN TO NORMAL ──
+    default:
+      - action: climate.set_temperature
+        target:
+          entity_id: "{{ heat_pump_entity }}"
+        data:
+          temperature: "{{ normal_temperature | float }}"
+      - if:
+          - condition: template
+            value_template: >
+              {{ notify_service | length > 0
+                 and trigger.id == 'period_end' }}
+        then:
+          - repeat:
+              for_each: "{{ notify_service.split(',') | map('trim') | reject('eq', '') | list }}"
+              sequence:
+                - action: "{{ repeat.item }}"
+                  data:
+                    title: "🌡️ Heat Pump — Normal Mode"
+                    message: >
+                      Cheap window ended. Target back to
+                      {{ normal_temperature }}°C.

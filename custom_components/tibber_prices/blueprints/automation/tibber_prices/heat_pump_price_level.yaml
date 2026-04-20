@@ -1,0 +1,235 @@
+blueprint:
+  name: "Tibber Prices: Heat Pump — Temperature by Price Level"
+  description: >
+    **Companion blueprint for
+    [Tibber Prices](https://my.home-assistant.io/redirect/hacs_repository/?owner=jpawlowski&repository=hass.tibber_prices&category=integration)
+    (HACS integration)** · Blueprint v1.0.0
+
+    Adjust your heat pump target temperature based on the current
+    electricity price rating. Higher target when cheap, lower when
+    expensive — the simplest real-time heat pump optimization.
+
+    **What it does:**
+
+    - Reacts every 15 minutes when the price sensor updates
+
+    - Sets one of 5 target temperatures based on `rating_level`
+      (VERY_CHEAP, CHEAP, NORMAL, EXPENSIVE, VERY_EXPENSIVE)
+
+    - No helpers needed — pure sensor-based
+
+    **Prerequisites:**
+
+    - [Tibber Prices integration](https://my.home-assistant.io/redirect/hacs_repository/?owner=jpawlowski&repository=hass.tibber_prices&category=integration) installed via HACS
+
+    - A `climate.*` entity for your heat pump
+
+    **See also:**
+    [Heat Pump Smart Boost](https://github.com/jpawlowski/hass.tibber_prices/blob/main/custom_components/tibber_prices/blueprints/automation/tibber_prices/heat_pump_smart_boost.yaml)
+    — a more advanced variant that extends boost during V-shaped
+    price valleys using trend awareness.
+  domain: automation
+  author: jpawlowski
+  homeassistant:
+    min_version: "2024.6.0"
+  source_url: https://github.com/jpawlowski/hass.tibber_prices/blob/main/custom_components/tibber_prices/blueprints/automation/tibber_prices/heat_pump_price_level.yaml
+  input:
+    devices:
+      name: Devices
+      icon: mdi:heat-pump-outline
+      description: Select your heat pump and the Tibber Prices sensor.
+      input:
+        price_sensor:
+          name: Current Price Sensor
+          description: >
+            The `sensor.<home>_current_electricity_price` from
+            Tibber Prices. Must have `rating_level` attribute.
+          selector:
+            entity:
+              filter:
+                domain: sensor
+                integration: tibber_prices
+        heat_pump_entity:
+          name: Heat Pump
+          description: Your heat pump climate entity.
+          selector:
+            entity:
+              filter:
+                domain: climate
+
+    temperatures:
+      name: Target Temperatures
+      icon: mdi:thermometer
+      description: >
+        Set the target temperature for each price level.
+        Temperatures are in °C.
+      input:
+        temp_very_cheap:
+          name: VERY_CHEAP Temperature
+          description: Maximum comfort when prices are very low.
+          default: 23.0
+          selector:
+            number:
+              min: 15
+              max: 30
+              step: 0.5
+              unit_of_measurement: °C
+        temp_cheap:
+          name: CHEAP Temperature
+          description: Slightly above normal for moderate savings.
+          default: 22.0
+          selector:
+            number:
+              min: 15
+              max: 30
+              step: 0.5
+              unit_of_measurement: °C
+        temp_normal:
+          name: NORMAL Temperature
+          description: Baseline comfort temperature for average prices.
+          default: 20.5
+          selector:
+            number:
+              min: 15
+              max: 30
+              step: 0.5
+              unit_of_measurement: °C
+        temp_expensive:
+          name: EXPENSIVE Temperature
+          description: Reduced temperature to save during high prices.
+          default: 19.0
+          selector:
+            number:
+              min: 15
+              max: 30
+              step: 0.5
+              unit_of_measurement: °C
+        temp_very_expensive:
+          name: VERY_EXPENSIVE Temperature
+          description: Minimum to save energy during peak prices.
+          default: 18.0
+          selector:
+            number:
+              min: 15
+              max: 30
+              step: 0.5
+              unit_of_measurement: °C
+
+    runtime_overrides:
+      name: Runtime Overrides
+      icon: mdi:tune-vertical
+      collapsed: true
+      description: >
+        Optionally connect a helper to shift all target temperatures
+        at once (e.g., +2°C comfort boost in winter, −1°C in summer).
+        Leave empty to always use the fixed defaults.
+      input:
+        temperature_offset_override:
+          name: "Override: Temperature Offset"
+          description: >
+            `input_number` helper to shift ALL target temperatures
+            up or down from your dashboard.
+            **Create in Settings → Helpers → Number**
+            (min: −5, max: 5, step: 0.5, unit: °C).
+          default: ""
+          selector:
+            entity:
+              filter:
+                domain: input_number
+
+    notifications:
+      name: Notifications
+      icon: mdi:bell-outline
+      collapsed: true
+      description: >
+        Optional mobile notifications for temperature adjustments.
+      input:
+        notify_service:
+          name: Notification Service
+          description: >
+            One or more notify services, comma-separated
+            (e.g., `notify.mobile_app_yourphone` or
+            `notify.mobile_app_phone, notify.mobile_app_tablet`).
+            Leave empty to disable all notifications.
+          default: ""
+          selector:
+            text:
+
+mode: restart
+
+triggers:
+  - trigger: state
+    entity_id: !input price_sensor
+
+variables:
+  _blueprint_variant: "heat_pump_price_level"
+  price_sensor: !input price_sensor
+  heat_pump_entity: !input heat_pump_entity
+  _temp_vc: !input temp_very_cheap
+  _temp_c: !input temp_cheap
+  _temp_n: !input temp_normal
+  _temp_e: !input temp_expensive
+  _temp_ve: !input temp_very_expensive
+  _temp_offset_override: !input temperature_offset_override
+  _temp_offset: >
+    {% set o = _temp_offset_override %}
+    {% if o and states(o) not in ['unknown', 'unavailable'] %}
+      {{ states(o) | float(0) }}
+    {% else %}
+      0
+    {% endif %}
+  temp_very_cheap: "{{ (_temp_vc | float) + (_temp_offset | float) }}"
+  temp_cheap: "{{ (_temp_c | float) + (_temp_offset | float) }}"
+  temp_normal: "{{ (_temp_n | float) + (_temp_offset | float) }}"
+  temp_expensive: "{{ (_temp_e | float) + (_temp_offset | float) }}"
+  temp_very_expensive: "{{ (_temp_ve | float) + (_temp_offset | float) }}"
+  notify_service: !input notify_service
+  level: >
+    {{ state_attr(price_sensor, 'rating_level') | default('NORMAL') }}
+
+actions:
+  # Check: Tibber Prices integration installed?
+  - variables:
+      _tp_entities: "{{ integration_entities('tibber_prices') | list }}"
+  - if:
+      - condition: template
+        value_template: "{{ _tp_entities | length == 0 }}"
+    then:
+      - stop: "Tibber Prices integration not found"
+
+  # ════════════════════════════════════════════════════════
+  # SET TEMPERATURE BASED ON PRICE LEVEL
+  # ════════════════════════════════════════════════════════
+  - variables:
+      target_temp: >
+        {% if level == 'VERY_CHEAP' %}
+          {{ temp_very_cheap }}
+        {% elif level == 'CHEAP' %}
+          {{ temp_cheap }}
+        {% elif level == 'EXPENSIVE' %}
+          {{ temp_expensive }}
+        {% elif level == 'VERY_EXPENSIVE' %}
+          {{ temp_very_expensive }}
+        {% else %}
+          {{ temp_normal }}
+        {% endif %}
+
+  - action: climate.set_temperature
+    target:
+      entity_id: "{{ heat_pump_entity }}"
+    data:
+      temperature: "{{ target_temp | float }}"
+
+  - if:
+      - condition: template
+        value_template: "{{ notify_service | length > 0 }}"
+    then:
+      - repeat:
+          for_each: "{{ notify_service.split(',') | map('trim') | reject('eq', '') | list }}"
+          sequence:
+            - action: "{{ repeat.item }}"
+              data:
+                title: "🌡️ Heat Pump Adjusted"
+                message: >
+                  Price level: {{ level }}. Target temperature set to
+                  {{ target_temp }}°C.

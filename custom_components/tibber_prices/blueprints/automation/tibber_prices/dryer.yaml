@@ -1,0 +1,261 @@
+blueprint:
+  name: "Tibber Prices: Dryer (Smart Plug)"
+  description: >
+    **Companion blueprint for
+    [Tibber Prices](https://my.home-assistant.io/redirect/hacs_repository/?owner=jpawlowski&repository=hass.tibber_prices&category=integration)
+    (HACS integration)** · Blueprint v1.0.0
+
+    Automatically run your dryer at the cheapest electricity price
+    overnight using a smart plug.
+
+    **Prerequisites:**
+
+    - [Tibber Prices integration](https://my.home-assistant.io/redirect/hacs_repository/?owner=jpawlowski&repository=hass.tibber_prices&category=integration) installed via HACS
+
+    - One helper: Date & Time (`input_datetime`) — stores the planned start time
+
+    - Smart plug switch for the dryer
+
+    **Tip:** For multiple wash + dry cycles, use the
+    [Laundry Day Pipeline](https://github.com/jpawlowski/hass.tibber_prices/blob/main/custom_components/tibber_prices/blueprints/automation/tibber_prices/laundry_day_pipeline.yaml)
+    blueprint instead.
+
+    **Other variants:**
+    [Home Connect](https://github.com/jpawlowski/hass.tibber_prices/blob/main/custom_components/tibber_prices/blueprints/automation/tibber_prices/dryer_home_connect.yaml)
+    ·
+    [Home Connect Alt](https://github.com/jpawlowski/hass.tibber_prices/blob/main/custom_components/tibber_prices/blueprints/automation/tibber_prices/dryer_home_connect_alt.yaml)
+  domain: automation
+  author: jpawlowski
+  homeassistant:
+    min_version: "2024.6.0"
+  source_url: https://github.com/jpawlowski/hass.tibber_prices/blob/main/custom_components/tibber_prices/blueprints/automation/tibber_prices/dryer.yaml
+  input:
+    appliance:
+      name: Appliance
+      icon: mdi:tumble-dryer
+      description: Select the smart plug that controls your dryer.
+      input:
+        appliance_switch:
+          name: Dryer Smart Plug
+          description: The switch entity controlling the dryer.
+          selector:
+            entity:
+              filter:
+                domain: switch
+
+    schedule:
+      name: Schedule
+      icon: mdi:calendar-clock
+      description: Configure when to plan and the search window.
+      input:
+        plan_time:
+          name: Planning Time
+          description: >
+            When to search for the cheapest window each day.
+            Typically in the evening after loading the dryer.
+          default: "20:00:00"
+          selector:
+            time:
+        start_helper:
+          name: Start Time Helper
+          description: >
+            An `input_datetime` helper (type: Date and Time) that stores
+            the planned start time. Create in Settings → Helpers.
+          selector:
+            entity:
+              filter:
+                domain: input_datetime
+        duration:
+          name: Program Duration
+          description: >
+            Typical dry program duration in minutes.
+            Cotton Dry ≈ 60 min, Extra Dry ≈ 75 min, Gentle ≈ 90 min.
+          default: 65
+          selector:
+            number:
+              min: 15
+              max: 180
+              step: 5
+              unit_of_measurement: min
+              mode: slider
+        search_start:
+          name: Search Window Start
+          description: >
+            Earliest time the dryer may start.
+            Typically late evening.
+          default: "22:00:00"
+          selector:
+            time:
+        search_end:
+          name: Search Window End
+          description: >
+            Latest time the dryer must finish by.
+            The program must complete before this time.
+          default: "06:00:00"
+          selector:
+            time:
+
+    runtime_overrides:
+      name: Runtime Overrides
+      icon: mdi:tune-vertical
+      collapsed: true
+      description: >
+        Optionally connect helpers to override settings from your
+        dashboard at runtime. When a helper is connected and has
+        a valid value, it takes priority over the fixed default.
+        Leave empty to always use the fixed defaults.
+      input:
+        duration_override:
+          name: "Override: Program Duration"
+          description: >
+            `input_number` helper to change the duration from your
+            dashboard without reconfiguring the blueprint.
+            **Create in Settings → Helpers → Number** with the same
+            min/max as the Duration slider above.
+          default: ""
+          selector:
+            entity:
+              filter:
+                domain: input_number
+
+    notifications:
+      name: Notifications
+      icon: mdi:bell-outline
+      collapsed: true
+      description: >
+        Optional mobile notifications for planning and start events.
+      input:
+        notify_service:
+          name: Notification Service
+          description: >
+            One or more notify services, comma-separated
+            (e.g., `notify.mobile_app_yourphone` or
+            `notify.mobile_app_phone, notify.mobile_app_tablet`).
+            Leave empty to disable all notifications.
+          default: ""
+          selector:
+            text:
+
+mode: single
+max_exceeded: silent
+
+triggers:
+  - trigger: time
+    at: !input plan_time
+    id: plan
+  - trigger: time
+    at: !input start_helper
+    id: execute
+
+variables:
+  _blueprint_variant: "smart_plug"
+  appliance_switch: !input appliance_switch
+  start_helper: !input start_helper
+  _duration_default: !input duration
+  _duration_override: !input duration_override
+  duration: >
+    {% set o = _duration_override %}
+    {% if o and states(o) not in ['unknown', 'unavailable'] %}
+      {{ states(o) | int(_duration_default) }}
+    {% else %}
+      {{ _duration_default }}
+    {% endif %}
+  search_start: !input search_start
+  search_end: !input search_end
+  notify_service: !input notify_service
+
+actions:
+  - variables:
+      _tp_entities: "{{ integration_entities('tibber_prices') | list }}"
+  - if:
+      - condition: template
+        value_template: "{{ _tp_entities | length == 0 }}"
+    then:
+      - if:
+          - condition: template
+            value_template: "{{ notify_service | length > 0 }}"
+        then:
+          - repeat:
+              for_each: "{{ notify_service.split(',') | map('trim') | reject('eq', '') | list }}"
+              sequence:
+                - action: "{{ repeat.item }}"
+                  data:
+                    title: "🌀 Dryer — Setup Required"
+                    message: >
+                      The Tibber Prices integration is not installed.
+      - stop: "Tibber Prices integration not found"
+
+  - choose:
+      - conditions:
+          - condition: trigger
+            id: plan
+        sequence:
+          - action: tibber_prices.find_cheapest_block
+            data:
+              duration: >
+                {{ '%02d:%02d:00' | format(
+                  (duration | int) // 60,
+                  (duration | int) % 60) }}
+              search_start_time: "{{ search_start }}"
+              search_end_time: "{{ search_end }}"
+              search_end_day_offset: 1
+            response_variable: result
+
+          - if:
+              - condition: template
+                value_template: "{{ result.window_found }}"
+            then:
+              - action: input_datetime.set_datetime
+                target:
+                  entity_id: "{{ start_helper }}"
+                data:
+                  datetime: "{{ result.window.start }}"
+              - if:
+                  - condition: template
+                    value_template: "{{ notify_service | length > 0 }}"
+                then:
+                  - repeat:
+                      for_each: "{{ notify_service.split(',') | map('trim') | reject('eq', '') | list }}"
+                      sequence:
+                        - action: "{{ repeat.item }}"
+                          data:
+                            title: "🌀 Dryer Planned"
+                            message: >
+                              Start at {{ result.window.start | as_datetime
+                              | as_local | as_timestamp
+                              | timestamp_custom('%H:%M') }}.
+                              Avg price: {{ result.window.price_mean | round(1) }}
+                              {{ result.price_unit }}/kWh.
+            else:
+              - if:
+                  - condition: template
+                    value_template: "{{ notify_service | length > 0 }}"
+                then:
+                  - repeat:
+                      for_each: "{{ notify_service.split(',') | map('trim') | reject('eq', '') | list }}"
+                      sequence:
+                        - action: "{{ repeat.item }}"
+                          data:
+                            title: "🌀 Dryer"
+                            message: No cheap window found. Consider running manually.
+
+      - conditions:
+          - condition: trigger
+            id: execute
+        sequence:
+          - action: switch.turn_on
+            target:
+              entity_id: "{{ appliance_switch }}"
+          - if:
+              - condition: template
+                value_template: "{{ notify_service | length > 0 }}"
+            then:
+              - repeat:
+                  for_each: "{{ notify_service.split(',') | map('trim') | reject('eq', '') | list }}"
+                  sequence:
+                    - action: "{{ repeat.item }}"
+                      data:
+                        title: "🌀 Dryer Started"
+                        message: >
+                          Smart plug turned on. Program should finish in
+                          ~{{ duration }} minutes.

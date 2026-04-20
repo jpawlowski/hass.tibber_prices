@@ -1,0 +1,301 @@
+blueprint:
+  name: "Tibber Prices: EV Charging — Cheapest Hours Overnight"
+  description: >
+    **Companion blueprint for
+    [Tibber Prices](https://my.home-assistant.io/redirect/hacs_repository/?owner=jpawlowski&repository=hass.tibber_prices&category=integration)
+    (HACS integration)** · Blueprint v1.0.0
+
+    Automatically charge your electric vehicle during the cheapest hours
+    overnight. Uses `find_cheapest_hours` to select the cheapest
+    individual 15-minute intervals — the charger may pause and resume
+    between segments.
+
+    **What it does:**
+
+    - Finds the cheapest intervals within a configurable search window
+
+    - Stores the first segment's start time in a helper
+
+    - Turns the charger on/off based on an interval schedule
+
+    - Optional: Skips planning if battery is already above a threshold
+
+    **Prerequisites:**
+
+    - [Tibber Prices integration](https://my.home-assistant.io/redirect/hacs_repository/?owner=jpawlowski&repository=hass.tibber_prices&category=integration) installed via HACS
+
+    - One helper: Date & Time (`input_datetime`) for the charge start
+
+    - A smart plug or charger switch entity
+
+    **Alternative:** If your charger can't pause/resume, use
+    `find_cheapest_block` instead (see the Dishwasher Smart Plug
+    blueprint for a contiguous-window example).
+  domain: automation
+  author: jpawlowski
+  homeassistant:
+    min_version: "2024.6.0"
+  source_url: https://github.com/jpawlowski/hass.tibber_prices/blob/main/custom_components/tibber_prices/blueprints/automation/tibber_prices/ev_charging.yaml
+  input:
+    vehicle:
+      name: Vehicle / Charger
+      icon: mdi:ev-station
+      description: Configure your EV charger switch and optional battery sensor.
+      input:
+        charger_switch:
+          name: Charger Switch
+          description: >
+            The switch entity that controls your EV charger
+            (smart plug or charger integration).
+          selector:
+            entity:
+              filter:
+                domain: switch
+        battery_sensor:
+          name: Battery Level Sensor (optional)
+          description: >
+            If provided, charging is only planned when the battery
+            is below the threshold. Leave empty to always plan.
+          default: ""
+          selector:
+            entity:
+              filter:
+                domain: sensor
+                device_class: battery
+        battery_threshold:
+          name: Battery Threshold
+          description: >
+            Only plan charging if battery level is below this
+            percentage. Ignored if no battery sensor is selected.
+          default: 80
+          selector:
+            number:
+              min: 10
+              max: 100
+              step: 5
+              unit_of_measurement: "%"
+
+    schedule:
+      name: Schedule
+      icon: mdi:calendar-clock
+      description: Configure charging times and the overnight search window.
+      input:
+        plan_time:
+          name: Planning Time
+          description: >
+            When to search for the cheapest hours each day.
+            Should be before the search window starts.
+          default: "18:00:00"
+          selector:
+            time:
+        charge_duration:
+          name: Total Charging Duration
+          description: >
+            How many hours of cheap charging to find.
+          default: "04:00:00"
+          selector:
+            time:
+        min_segment:
+          name: Minimum Segment Duration
+          description: >
+            Shortest uninterrupted charging segment. Prevents
+            very short on/off cycles that stress the charger.
+          default: "00:30:00"
+          selector:
+            time:
+        search_start:
+          name: Search Window Start
+          description: >
+            Earliest time charging may begin.
+          default: "18:00:00"
+          selector:
+            time:
+        search_end:
+          name: Search Window End
+          description: >
+            Latest time charging must finish by.
+            The vehicle should be ready by this time.
+          default: "07:00:00"
+          selector:
+            time:
+
+    runtime_overrides:
+      name: Runtime Overrides
+      icon: mdi:tune-vertical
+      collapsed: true
+      description: >
+        Optionally connect helpers to override settings from your
+        dashboard at runtime. When a helper is connected and has
+        a valid value, it takes priority over the fixed default.
+        Leave empty to always use the fixed defaults.
+      input:
+        charge_duration_override:
+          name: "Override: Charging Duration"
+          description: >
+            `input_number` helper to change the charging duration
+            (in hours) from your dashboard. Useful when daily
+            charging needs vary.
+            **Create in Settings → Helpers → Number**
+            (min: 0.5, max: 12, step: 0.5, unit: h).
+          default: ""
+          selector:
+            entity:
+              filter:
+                domain: input_number
+
+    notifications:
+      name: Notifications
+      icon: mdi:bell-outline
+      collapsed: true
+      description: >
+        Optional mobile notifications for charging schedule
+        and start/stop events.
+      input:
+        notify_service:
+          name: Notification Service
+          description: >
+            One or more notify services, comma-separated
+            (e.g., `notify.mobile_app_yourphone` or
+            `notify.mobile_app_phone, notify.mobile_app_tablet`).
+            Leave empty to disable all notifications.
+          default: ""
+          selector:
+            text:
+
+mode: single
+max_exceeded: silent
+
+triggers:
+  - trigger: time
+    at: !input plan_time
+    id: plan
+
+variables:
+  _blueprint_variant: "ev_charging"
+  charger_switch: !input charger_switch
+  battery_sensor: !input battery_sensor
+  battery_threshold: !input battery_threshold
+  _charge_duration_default: !input charge_duration
+  _charge_duration_override: !input charge_duration_override
+  charge_duration: >
+    {% set o = _charge_duration_override %}
+    {% if o and states(o) not in ['unknown', 'unavailable'] %}
+      {% set hours = states(o) | float(4) %}
+      {{ '%02d:%02d:00' | format(hours | int, ((hours % 1) * 60) | int) }}
+    {% else %}
+      {{ _charge_duration_default }}
+    {% endif %}
+  min_segment: !input min_segment
+  search_start: !input search_start
+  search_end: !input search_end
+  notify_service: !input notify_service
+
+actions:
+  # Check: Tibber Prices integration installed?
+  - variables:
+      _tp_entities: "{{ integration_entities('tibber_prices') | list }}"
+  - if:
+      - condition: template
+        value_template: "{{ _tp_entities | length == 0 }}"
+    then:
+      - if:
+          - condition: template
+            value_template: "{{ notify_service | length > 0 }}"
+        then:
+          - repeat:
+              for_each: "{{ notify_service.split(',') | map('trim') | reject('eq', '') | list }}"
+              sequence:
+                - action: "{{ repeat.item }}"
+                  data:
+                    title: "🔌 EV Charging — Setup Required"
+                    message: The Tibber Prices integration is not installed.
+      - stop: "Tibber Prices integration not found"
+
+  # ════════════════════════════════════════════════════════
+  # BATTERY CHECK
+  # ════════════════════════════════════════════════════════
+  - if:
+      - condition: template
+        value_template: >
+          {{ battery_sensor | length > 0
+             and states(battery_sensor) | int(0) >= battery_threshold | int }}
+    then:
+      - if:
+          - condition: template
+            value_template: "{{ notify_service | length > 0 }}"
+        then:
+          - repeat:
+              for_each: "{{ notify_service.split(',') | map('trim') | reject('eq', '') | list }}"
+              sequence:
+                - action: "{{ repeat.item }}"
+                  data:
+                    title: "🔌 EV Charging Skipped"
+                    message: >
+                      Battery at {{ states(battery_sensor) }}% (threshold:
+                      {{ battery_threshold }}%). No charging needed.
+      - stop: "Battery above threshold"
+
+  # ════════════════════════════════════════════════════════
+  # FIND CHEAPEST HOURS
+  # ════════════════════════════════════════════════════════
+  - action: tibber_prices.find_cheapest_hours
+    data:
+      duration: "{{ charge_duration }}"
+      min_segment_duration: "{{ min_segment }}"
+      search_start_time: "{{ search_start }}"
+      search_end_time: "{{ search_end }}"
+      search_end_day_offset: 1
+    response_variable: result
+
+  - if:
+      - condition: template
+        value_template: "{{ result.intervals_found }}"
+    then:
+      - if:
+          - condition: template
+            value_template: "{{ notify_service | length > 0 }}"
+        then:
+          - repeat:
+              for_each: "{{ notify_service.split(',') | map('trim') | reject('eq', '') | list }}"
+              sequence:
+                - action: "{{ repeat.item }}"
+                  data:
+                    title: "🔌 EV Charging Planned"
+                    message: >
+                      {{ result.schedule.segment_count }} charging sessions:
+                      {% for seg in result.schedule.segments %}
+                      • {{ seg.start | as_datetime | as_local | as_timestamp
+                      | timestamp_custom('%H:%M') }}–{{ seg.end | as_datetime
+                      | as_local | as_timestamp | timestamp_custom('%H:%M') }}
+                      ({{ seg.price_mean | round(1) }} {{ result.price_unit }})
+                      {% endfor %}
+
+      # Turn on/off charger for each segment
+      - repeat:
+          for_each: "{{ result.schedule.segments }}"
+          sequence:
+            - delay: >
+                {{ ((repeat.item.start | as_datetime | as_local
+                | as_timestamp) - (now() | as_timestamp)) | int }}
+            - action: switch.turn_on
+              target:
+                entity_id: "{{ charger_switch }}"
+            - delay: >
+                {{ ((repeat.item.end | as_datetime | as_local
+                | as_timestamp) - (repeat.item.start | as_datetime
+                | as_local | as_timestamp)) | int }}
+            - action: switch.turn_off
+              target:
+                entity_id: "{{ charger_switch }}"
+    else:
+      - if:
+          - condition: template
+            value_template: "{{ notify_service | length > 0 }}"
+        then:
+          - repeat:
+              for_each: "{{ notify_service.split(',') | map('trim') | reject('eq', '') | list }}"
+              sequence:
+                - action: "{{ repeat.item }}"
+                  data:
+                    title: "🔌 EV Charging"
+                    message: No cheap intervals found in the search window.

@@ -1,0 +1,1179 @@
+blueprint:
+  name: "Tibber Prices: Laundry Day Pipeline (Home Connect Alt)"
+  description: >
+    **Companion blueprint for
+    [Tibber Prices](https://my.home-assistant.io/redirect/hacs_repository/?owner=jpawlowski&repository=hass.tibber_prices&category=integration)
+    (HACS integration)** · Blueprint v2.0.0
+
+    **Device-driven** laundry pipeline — schedule multiple wash + dry
+    cycles at the cheapest electricity prices using **Home Connect Alt**
+    ([HACS integration by ekutner](https://my.home-assistant.io/redirect/hacs_repository/?owner=ekutner&repository=home-connect-hass&category=integration)).
+
+    **How it works:**
+
+    1. Turn on the Laundry Day toggle
+
+    2. You get a notification to prepare the washer
+
+    3. Select your program, close the door, enable Remote Start
+
+    4. The blueprint reads program + duration from the device
+
+    5. Finds the cheapest window and tells the machine via
+       `FinishInRelative` — the appliance manages the countdown
+
+    6. Waits for the washer to report "Finished" (live monitoring)
+
+    7. Notifies you to transfer laundry to the dryer
+
+    8. Repeats for each load until all cycles are complete
+
+    **Key improvements over v1:**
+
+    - Programs are selected **on the device**, not hardcoded
+
+    - Duration is read **from the device**, not configured manually
+
+    - Completion detection via **operation state**, not fixed timers
+
+    - Transfer detection via **door + Remote Start** sensors
+
+    - Survives HA restarts (appliance manages countdown)
+
+    **Pipeline mode** (optional): The next wash starts while the dryer
+    is still running, cutting total time significantly.
+
+    **Prerequisites:**
+
+    - [Tibber Prices integration](https://my.home-assistant.io/redirect/hacs_repository/?owner=jpawlowski&repository=hass.tibber_prices&category=integration) installed via HACS
+
+    - [Home Connect Alt](https://my.home-assistant.io/redirect/hacs_repository/?owner=ekutner&repository=home-connect-hass&category=integration) integration configured
+
+    - Remote Start enabled on your appliances
+
+    - Two helpers (created in Settings → Helpers):
+      - Toggle (`input_boolean`) — starts laundry day when turned on
+      - Number (`input_number`, min 1, max 5, step 1) — how many loads
+
+    **Other variants:**
+    [Smart Plug](https://github.com/jpawlowski/hass.tibber_prices/blob/main/custom_components/tibber_prices/blueprints/automation/tibber_prices/laundry_day_pipeline.yaml)
+    ·
+    [Home Connect](https://github.com/jpawlowski/hass.tibber_prices/blob/main/custom_components/tibber_prices/blueprints/automation/tibber_prices/laundry_day_pipeline_home_connect.yaml)
+  domain: automation
+  author: jpawlowski
+  homeassistant:
+    min_version: "2024.11.0"
+  source_url: https://github.com/jpawlowski/hass.tibber_prices/blob/main/custom_components/tibber_prices/blueprints/automation/tibber_prices/laundry_day_pipeline_home_connect_alt.yaml
+  input:
+    washer:
+      name: Washing Machine
+      icon: mdi:washing-machine
+      description: >
+        Select your washing machine entities from Home Connect Alt.
+      input:
+        washer_program_entity:
+          name: Selected Program Entity
+          description: >
+            The program selector entity of your washing machine
+            (e.g., `select.bosch_washer_programs`).
+            The currently selected program is read from here.
+          selector:
+            entity:
+              filter:
+                integration: home_connect_alt
+                domain: select
+        washer_door_sensor:
+          name: Door Sensor
+          description: >
+            The door sensor of your washing machine.
+          selector:
+            entity:
+              filter:
+                integration: home_connect_alt
+                domain: binary_sensor
+                device_class: door
+        washer_remote_start_sensor:
+          name: Remote Control Sensor
+          description: >
+            The "Remote Control Active" binary sensor.
+          selector:
+            entity:
+              filter:
+                integration: home_connect_alt
+                domain: binary_sensor
+        washer_estimated_duration_entity:
+          name: Estimated Program Duration
+          description: >
+            The "Estimated Total Program Time" sensor.
+            If unavailable, the fallback duration is used.
+          selector:
+            entity:
+              filter:
+                integration: home_connect_alt
+                domain: sensor
+        washer_operation_state_entity:
+          name: Operation State
+          description: >
+            The "Operation State" sensor.
+            Used to detect when the wash cycle finishes.
+          selector:
+            entity:
+              filter:
+                integration: home_connect_alt
+                domain: sensor
+
+    dryer:
+      name: Dryer
+      icon: mdi:tumble-dryer
+      description: >
+        Select your dryer entities. Disable "Include Dryer" if you
+        hang laundry to dry.
+      input:
+        include_dryer:
+          name: Include Dryer
+          description: >
+            Enable to schedule dryer cycles after each wash.
+            Disable if you hang laundry to dry.
+          default: true
+          selector:
+            boolean:
+        dryer_program_entity:
+          name: Selected Program Entity
+          description: >
+            The program selector entity of your dryer
+            (e.g., `select.bosch_dryer_programs`).
+            Only used when "Include Dryer" is enabled.
+          default: ""
+          selector:
+            entity:
+              filter:
+                integration: home_connect_alt
+                domain: select
+        dryer_door_sensor:
+          name: Door Sensor
+          description: >
+            The door sensor of your dryer.
+            Only used when "Include Dryer" is enabled.
+          default: ""
+          selector:
+            entity:
+              filter:
+                integration: home_connect_alt
+                domain: binary_sensor
+                device_class: door
+        dryer_remote_start_sensor:
+          name: Remote Control Sensor
+          description: >
+            The "Remote Control Active" binary sensor of the dryer.
+            Only used when "Include Dryer" is enabled.
+          default: ""
+          selector:
+            entity:
+              filter:
+                integration: home_connect_alt
+                domain: binary_sensor
+        dryer_estimated_duration_entity:
+          name: Estimated Program Duration
+          description: >
+            The "Estimated Total Program Time" sensor of the dryer.
+            Only used when "Include Dryer" is enabled.
+          default: ""
+          selector:
+            entity:
+              filter:
+                integration: home_connect_alt
+                domain: sensor
+        dryer_operation_state_entity:
+          name: Operation State
+          description: >
+            The "Operation State" sensor of the dryer.
+            Only used when "Include Dryer" is enabled.
+          default: ""
+          selector:
+            entity:
+              filter:
+                integration: home_connect_alt
+                domain: sensor
+
+    schedule:
+      name: Schedule
+      icon: mdi:calendar-clock
+      description: >
+        Configure the trigger, load count, and deadline.
+      input:
+        trigger_entity:
+          name: Laundry Day Toggle
+          description: >
+            An `input_boolean` helper that starts laundry day when
+            turned on. Create in Settings → Helpers → Toggle.
+          selector:
+            entity:
+              filter:
+                domain: input_boolean
+        loads_entity:
+          name: Number of Loads
+          description: >
+            An `input_number` helper (1–5) for how many wash cycles
+            to run. Create in Settings → Helpers → Number
+            (min: 1, max: 5, step: 1).
+          selector:
+            entity:
+              filter:
+                domain: input_number
+        must_finish_by:
+          name: Must Finish By
+          description: >
+            Each cycle must be finished by this time.
+            If this time has already passed today, the deadline
+            automatically moves to tomorrow (overnight mode).
+          default: "22:00:00"
+          selector:
+            time:
+        duration_fallback_washer:
+          name: Washer Fallback Duration (minutes)
+          description: >
+            Used **only** if the washing machine doesn't report
+            estimated duration. Normally read from the device.
+          default: 95
+          selector:
+            number:
+              min: 15
+              max: 240
+              step: 5
+              unit_of_measurement: min
+              mode: slider
+        duration_fallback_dryer:
+          name: Dryer Fallback Duration (minutes)
+          description: >
+            Used **only** if the dryer doesn't report estimated
+            duration. Normally read from the device.
+          default: 65
+          selector:
+            number:
+              min: 15
+              max: 180
+              step: 5
+              unit_of_measurement: min
+              mode: slider
+
+    advanced:
+      name: Advanced
+      icon: mdi:cog
+      collapsed: true
+      description: Pipeline mode and fine-tuning options.
+      input:
+        pipeline_mode:
+          name: Pipeline Mode
+          description: >
+            When enabled, the next wash starts immediately after the
+            dryer begins — without waiting for the dryer to finish.
+            This creates a pipeline where washer and dryer overlap.
+
+            **Only safe when wash duration ≥ dryer duration.**
+          default: false
+          selector:
+            boolean:
+
+    notifications:
+      name: Notifications
+      icon: mdi:bell-outline
+      collapsed: true
+      description: >
+        Optional notifications for transfer reminders and progress.
+        Use **simple mode** (service) or an **advanced script** for
+        multi-target, presence-aware notifications.
+      input:
+        notify_service:
+          name: Quick Notification (Simple)
+          description: >
+            One or more notify services, comma-separated
+            (e.g., `notify.mobile_app_yourphone` or
+            `notify.mobile_app_phone, notify.mobile_app_tablet`).
+            Ignored when the advanced script is set.
+          default: ""
+          selector:
+            text:
+        notification_script:
+          name: Notification Script (Advanced)
+          description: >
+            A `script.*` entity for advanced notifications
+            (multiple recipients, presence filtering, iOS/Android).
+            When set, replaces the simple notification.
+            Receives structured variables (event_type, appliance,
+            title, message, and context data).
+          default: ""
+          selector:
+            entity:
+              filter:
+                domain: script
+
+mode: single
+max_exceeded: warning
+
+triggers:
+  - trigger: state
+    entity_id: !input trigger_entity
+    to: "on"
+
+variables:
+  _blueprint_variant: "home_connect_alt"
+  washer_program_entity: !input washer_program_entity
+  washer_door_sensor: !input washer_door_sensor
+  washer_remote_start_sensor: !input washer_remote_start_sensor
+  washer_estimated_duration_entity: !input washer_estimated_duration_entity
+  washer_operation_state_entity: !input washer_operation_state_entity
+  include_dryer: !input include_dryer
+  dryer_program_entity: !input dryer_program_entity
+  dryer_door_sensor: !input dryer_door_sensor
+  dryer_remote_start_sensor: !input dryer_remote_start_sensor
+  dryer_estimated_duration_entity: !input dryer_estimated_duration_entity
+  dryer_operation_state_entity: !input dryer_operation_state_entity
+  trigger_entity: !input trigger_entity
+  loads_entity: !input loads_entity
+  must_finish_by_time: !input must_finish_by
+  duration_fallback_washer: !input duration_fallback_washer
+  duration_fallback_dryer: !input duration_fallback_dryer
+  pipeline_mode: !input pipeline_mode
+  notify_service: !input notify_service
+  notification_script: !input notification_script
+  total_loads: "{{ states(loads_entity) | int(1) }}"
+
+actions:
+  # ════════════════════════════════════════════════════════
+  # PREFLIGHT CHECKS
+  # ════════════════════════════════════════════════════════
+  - variables:
+      _tp_entities: "{{ integration_entities('tibber_prices') | list }}"
+  - if:
+      - condition: template
+        value_template: "{{ _tp_entities | length == 0 }}"
+    then:
+      - variables:
+          _n_title: "🧺 Laundry Day — Setup Required"
+          _n_message: >
+            Install the Tibber Prices integration via HACS and
+            configure your Tibber account.
+      - choose:
+          - conditions:
+              - condition: template
+                value_template: "{{ notification_script | length > 0 }}"
+            sequence:
+              - action: script.turn_on
+                target:
+                  entity_id: "{{ notification_script }}"
+                data:
+                  variables:
+                    event_type: setup_required
+                    appliance: laundry_pipeline
+                    title: "{{ _n_title }}"
+                    message: "{{ _n_message }}"
+          - conditions:
+              - condition: template
+                value_template: "{{ notify_service | length > 0 }}"
+            sequence:
+              - repeat:
+                  for_each: "{{ notify_service.split(',') | map('trim') | reject('eq', '') | list }}"
+                  sequence:
+                    - action: "{{ repeat.item }}"
+                      data:
+                        title: "{{ _n_title }}"
+                        message: "{{ _n_message }}"
+      - action: input_boolean.turn_off
+        target:
+          entity_id: "{{ trigger_entity }}"
+      - stop: "Tibber Prices integration not found"
+
+  - if:
+      - condition: template
+        value_template: "{{ total_loads < 1 or total_loads > 5 }}"
+    then:
+      - variables:
+          _n_title: "🧺 Laundry Day — Invalid Config"
+          _n_message: >
+            Loads: {{ total_loads }}.
+            Set {{ loads_entity }} to 1–5.
+      - choose:
+          - conditions:
+              - condition: template
+                value_template: "{{ notification_script | length > 0 }}"
+            sequence:
+              - action: script.turn_on
+                target:
+                  entity_id: "{{ notification_script }}"
+                data:
+                  variables:
+                    event_type: notification
+                    appliance: laundry_pipeline
+                    title: "{{ _n_title }}"
+                    message: "{{ _n_message }}"
+          - conditions:
+              - condition: template
+                value_template: "{{ notify_service | length > 0 }}"
+            sequence:
+              - repeat:
+                  for_each: "{{ notify_service.split(',') | map('trim') | reject('eq', '') | list }}"
+                  sequence:
+                    - action: "{{ repeat.item }}"
+                      data:
+                        title: "{{ _n_title }}"
+                        message: "{{ _n_message }}"
+      - action: input_boolean.turn_off
+        target:
+          entity_id: "{{ trigger_entity }}"
+      - stop: "Invalid load count"
+
+  # ════════════════════════════════════════════════════════
+  # START NOTIFICATION
+  # ════════════════════════════════════════════════════════
+  - variables:
+      _n_title: "🧺 Laundry Day Started"
+      _n_message: >
+        {{ total_loads }}
+        load{{ 's' if total_loads | int > 1 else '' }}
+        {{ '(wash + dry)' if include_dryer else '(wash only)' }}
+        · Deadline
+        {{ must_finish_by_time[:5] if must_finish_by_time | length >= 5
+          else must_finish_by_time }}.
+        👕 Prepare load 1: program → close door → Remote Start.
+  - choose:
+      - conditions:
+          - condition: template
+            value_template: "{{ notification_script | length > 0 }}"
+        sequence:
+          - action: script.turn_on
+            target:
+              entity_id: "{{ notification_script }}"
+            data:
+              variables:
+                event_type: started
+                appliance: laundry_pipeline
+                title: "{{ _n_title }}"
+                message: "{{ _n_message }}"
+                load_index: "{{ repeat.index }}"
+                total_loads: "{{ total_loads }}"
+      - conditions:
+          - condition: template
+            value_template: "{{ notify_service | length > 0 }}"
+        sequence:
+          - repeat:
+              for_each: "{{ notify_service.split(',') | map('trim') | reject('eq', '') | list }}"
+              sequence:
+                - action: "{{ repeat.item }}"
+                  data:
+                    title: "{{ _n_title }}"
+                    message: "{{ _n_message }}"
+
+  # ════════════════════════════════════════════════════════
+  # MAIN PIPELINE LOOP
+  # ════════════════════════════════════════════════════════
+  - repeat:
+      count: "{{ total_loads }}"
+      sequence:
+        # ── CHECK CANCELLATION ──────────────────────────
+        - if:
+            - condition: template
+              value_template: "{{ is_state(trigger_entity, 'off') }}"
+          then:
+            - variables:
+                _n_title: "🧺 Laundry Day Cancelled"
+                _n_message: >
+                  Stopped after {{ repeat.index - 1 }}
+                  of {{ total_loads }} loads.
+            - choose:
+                - conditions:
+                    - condition: template
+                      value_template: "{{ notification_script | length > 0 }}"
+                  sequence:
+                    - action: script.turn_on
+                      target:
+                        entity_id: "{{ notification_script }}"
+                      data:
+                        variables:
+                          event_type: cancelled
+                          appliance: laundry_pipeline
+                          title: "{{ _n_title }}"
+                          message: "{{ _n_message }}"
+                          load_index: "{{ repeat.index }}"
+                          total_loads: "{{ total_loads }}"
+                - conditions:
+                    - condition: template
+                      value_template: "{{ notify_service | length > 0 }}"
+                  sequence:
+                    - repeat:
+                        for_each: "{{ notify_service.split(',') | map('trim') | reject('eq', '') | list }}"
+                        sequence:
+                          - action: "{{ repeat.item }}"
+                            data:
+                              title: "{{ _n_title }}"
+                              message: "{{ _n_message }}"
+            - stop: "Cancelled by user"
+
+        # ── WAIT FOR WASHER READINESS ──────────────────
+        - if:
+            - condition: template
+              value_template: >
+                {{ not (is_state(washer_door_sensor, 'off')
+                   and is_state(washer_remote_start_sensor, 'on')) }}
+          then:
+            - if:
+                - condition: template
+                  value_template: "{{ repeat.index > 1 }}"
+              then:
+                - variables:
+                    _n_title: >
+                      👕 Washer — Load {{ repeat.index }}/{{ total_loads }}
+                    _n_message: >
+                      Program → close door → Remote Start.
+                - choose:
+                    - conditions:
+                        - condition: template
+                          value_template: "{{ notification_script | length > 0 }}"
+                      sequence:
+                        - action: script.turn_on
+                          target:
+                            entity_id: "{{ notification_script }}"
+                          data:
+                            variables:
+                              event_type: prepare_washer
+                              appliance: laundry_pipeline
+                              title: "{{ _n_title }}"
+                              message: "{{ _n_message }}"
+                              load_index: "{{ repeat.index }}"
+                              total_loads: "{{ total_loads }}"
+                    - conditions:
+                        - condition: template
+                          value_template: "{{ notify_service | length > 0 }}"
+                      sequence:
+                        - repeat:
+                            for_each: "{{ notify_service.split(',') | map('trim') | reject('eq', '') | list }}"
+                            sequence:
+                              - action: "{{ repeat.item }}"
+                                data:
+                                  title: "{{ _n_title }}"
+                                  message: "{{ _n_message }}"
+            - wait_for_trigger:
+                - trigger: template
+                  value_template: >
+                    {{ is_state(washer_door_sensor, 'off')
+                       and is_state(washer_remote_start_sensor, 'on') }}
+              timeout:
+                hours: 4
+              continue_on_timeout: true
+            - if:
+                - condition: template
+                  value_template: "{{ wait.trigger is none }}"
+              then:
+                - variables:
+                    _n_title: "⚠️ Load {{ repeat.index }} — Washer Timeout"
+                    _n_message: >
+                      Not ready after 4 h. Pipeline stopped.
+                - choose:
+                    - conditions:
+                        - condition: template
+                          value_template: "{{ notification_script | length > 0 }}"
+                      sequence:
+                        - action: script.turn_on
+                          target:
+                            entity_id: "{{ notification_script }}"
+                          data:
+                            variables:
+                              event_type: timeout
+                              appliance: laundry_pipeline
+                              title: "{{ _n_title }}"
+                              message: "{{ _n_message }}"
+                              load_index: "{{ repeat.index }}"
+                              total_loads: "{{ total_loads }}"
+                    - conditions:
+                        - condition: template
+                          value_template: "{{ notify_service | length > 0 }}"
+                      sequence:
+                        - repeat:
+                            for_each: "{{ notify_service.split(',') | map('trim') | reject('eq', '') | list }}"
+                            sequence:
+                              - action: "{{ repeat.item }}"
+                                data:
+                                  title: "{{ _n_title }}"
+                                  message: "{{ _n_message }}"
+                - action: input_boolean.turn_off
+                  target:
+                    entity_id: "{{ trigger_entity }}"
+                - stop: "Washer readiness timeout"
+
+        # ── READ WASHER DATA ───────────────────────────
+        - variables:
+            washer_program: "{{ states(washer_program_entity) }}"
+            _raw_washer_duration: "{{ states(washer_estimated_duration_entity) }}"
+            washer_duration: >
+              {% set raw = states(washer_estimated_duration_entity) %}
+              {% if raw not in ['unknown', 'unavailable', 'None', '']
+                 and ':' in raw %}
+                {% set parts = raw.split(':') %}
+                {{ (parts[0] | int(0)) * 60 + (parts[1] | int(0)) }}
+              {% elif raw not in ['unknown', 'unavailable', 'None', '']
+                 and raw | int(0) > 0 %}
+                {{ raw | int }}
+              {% else %}
+                {{ duration_fallback_washer }}
+              {% endif %}
+            deadline: >
+              {% set dl = today_at(must_finish_by_time) %}
+              {% if dl <= now() %}
+                {{ (dl + timedelta(days=1)).isoformat() }}
+              {% else %}
+                {{ dl.isoformat() }}
+              {% endif %}
+
+        # Validate program
+        - if:
+            - condition: template
+              value_template: >
+                {{ washer_program in ['unknown', 'unavailable', 'None', ''] }}
+          then:
+            - variables:
+                _n_title: "👕 Load {{ repeat.index }} — No Program"
+                _n_message: >
+                  Select a program, close the door, and enable
+                  Remote Start.
+            - choose:
+                - conditions:
+                    - condition: template
+                      value_template: "{{ notification_script | length > 0 }}"
+                  sequence:
+                    - action: script.turn_on
+                      target:
+                        entity_id: "{{ notification_script }}"
+                      data:
+                        variables:
+                          event_type: no_program
+                          appliance: laundry_pipeline
+                          title: "{{ _n_title }}"
+                          message: "{{ _n_message }}"
+                          load_index: "{{ repeat.index }}"
+                          total_loads: "{{ total_loads }}"
+                - conditions:
+                    - condition: template
+                      value_template: "{{ notify_service | length > 0 }}"
+                  sequence:
+                    - repeat:
+                        for_each: "{{ notify_service.split(',') | map('trim') | reject('eq', '') | list }}"
+                        sequence:
+                          - action: "{{ repeat.item }}"
+                            data:
+                              title: "{{ _n_title }}"
+                              message: "{{ _n_message }}"
+            - action: input_boolean.turn_off
+              target:
+                entity_id: "{{ trigger_entity }}"
+            - stop: "No washer program selected"
+
+        # ── FIND CHEAPEST WASH WINDOW ──────────────────
+        - action: tibber_prices.find_cheapest_block
+          data:
+            duration: >
+              {{ '%02d:%02d:00' | format(
+                (washer_duration | int) // 60,
+                (washer_duration | int) % 60) }}
+            must_finish_by: "{{ deadline }}"
+          response_variable: wash_result
+
+        - if:
+            - condition: template
+              value_template: "{{ not wash_result.window_found }}"
+          then:
+            - variables:
+                _n_title: "👕 Wash {{ repeat.index }}/{{ total_loads }} — No Cheap Slot"
+                _n_message: >
+                  No cheap slot before
+                  {{ deadline | as_datetime | as_local
+                    | as_timestamp | timestamp_custom('%H:%M') }}
+                  for {{ washer_duration }} min.
+            - choose:
+                - conditions:
+                    - condition: template
+                      value_template: "{{ notification_script | length > 0 }}"
+                  sequence:
+                    - action: script.turn_on
+                      target:
+                        entity_id: "{{ notification_script }}"
+                      data:
+                        variables:
+                          event_type: no_window
+                          appliance: laundry_pipeline
+                          title: "{{ _n_title }}"
+                          message: "{{ _n_message }}"
+                          deadline: "{{ deadline }}"
+                          duration_minutes: "{{ washer_duration | int }}"
+                          load_index: "{{ repeat.index }}"
+                          total_loads: "{{ total_loads }}"
+                - conditions:
+                    - condition: template
+                      value_template: "{{ notify_service | length > 0 }}"
+                  sequence:
+                    - repeat:
+                        for_each: "{{ notify_service.split(',') | map('trim') | reject('eq', '') | list }}"
+                        sequence:
+                          - action: "{{ repeat.item }}"
+                            data:
+                              title: "{{ _n_title }}"
+                              message: "{{ _n_message }}"
+            - action: input_boolean.turn_off
+              target:
+                entity_id: "{{ trigger_entity }}"
+            - stop: "No wash window found"
+
+        # ── START WASHER ───────────────────────────────
+        - variables:
+            _wash_window_start: "{{ wash_result.window.start | as_datetime }}"
+            wash_finish_in_relative: >
+              {% set window_end = _wash_window_start + timedelta(minutes=washer_duration | int) %}
+              {% set seconds_until_end = ((window_end - now()).total_seconds()) | int %}
+              {{ [washer_duration | int * 60, seconds_until_end] | max }}
+
+        - action: home_connect_alt.start_program
+          target:
+            entity_id: "{{ washer_program_entity }}"
+          data:
+            program: "{{ washer_program }}"
+            options:
+              - key: BSH.Common.Option.FinishInRelative
+                value: "{{ wash_finish_in_relative }}"
+
+        - variables:
+            _n_title: >
+              👕 Wash {{ repeat.index }}/{{ total_loads }} — Planned!
+            _n_message: >
+              {{ washer_program }}
+              {% set delay = wash_finish_in_relative | int - (washer_duration | int * 60) %}
+              {% if delay > 60 %}
+              · ⏰ ~{{ _wash_window_start | as_local
+                | as_timestamp | timestamp_custom('%H:%M') }}
+              (in {{ (delay / 3600) | round(1) }} h)
+              {% else %}
+              · ▶️ Starting now!
+              {% endif %}
+              · ~{{ washer_duration }} min
+              · {{ wash_result.window.price_mean | round(1) }} {{ wash_result.price_unit }}/kWh
+        - choose:
+            - conditions:
+                - condition: template
+                  value_template: "{{ notification_script | length > 0 }}"
+              sequence:
+                - action: script.turn_on
+                  target:
+                    entity_id: "{{ notification_script }}"
+                  data:
+                    variables:
+                      event_type: wash_planned
+                      appliance: laundry_pipeline
+                      title: "{{ _n_title }}"
+                      message: "{{ _n_message }}"
+                      start_time: "{{ _wash_window_start | as_local | as_timestamp | timestamp_custom('%Y-%m-%dT%H:%M:%S') }}"
+                      duration_minutes: "{{ washer_duration | int }}"
+                      price_mean: "{{ wash_result.window.price_mean | round(1) }}"
+                      price_unit: "{{ wash_result.price_unit }}"
+                      load_index: "{{ repeat.index }}"
+                      total_loads: "{{ total_loads }}"
+            - conditions:
+                - condition: template
+                  value_template: "{{ notify_service | length > 0 }}"
+              sequence:
+                - repeat:
+                    for_each: "{{ notify_service.split(',') | map('trim') | reject('eq', '') | list }}"
+                    sequence:
+                      - action: "{{ repeat.item }}"
+                        data:
+                          title: "{{ _n_title }}"
+                          message: "{{ _n_message }}"
+
+        # ── WAIT FOR WASHER TO FINISH ──────────────────
+        - wait_for_trigger:
+            - trigger: template
+              value_template: >
+                {% set op = states(washer_operation_state_entity) %}
+                {{ 'Finished' in op
+                   or is_state(trigger_entity, 'off') }}
+          timeout:
+            seconds: "{{ wash_finish_in_relative | int + 1800 }}"
+          continue_on_timeout: true
+
+        # Check: cancelled?
+        - if:
+            - condition: template
+              value_template: "{{ is_state(trigger_entity, 'off') }}"
+          then:
+            - variables:
+                _n_title: "🧺 Laundry Day Cancelled"
+                _n_message: >
+                  Stopped during wash {{ repeat.index }}
+                  of {{ total_loads }}.
+            - choose:
+                - conditions:
+                    - condition: template
+                      value_template: "{{ notification_script | length > 0 }}"
+                  sequence:
+                    - action: script.turn_on
+                      target:
+                        entity_id: "{{ notification_script }}"
+                      data:
+                        variables:
+                          event_type: cancelled
+                          appliance: laundry_pipeline
+                          title: "{{ _n_title }}"
+                          message: "{{ _n_message }}"
+                          load_index: "{{ repeat.index }}"
+                          total_loads: "{{ total_loads }}"
+                - conditions:
+                    - condition: template
+                      value_template: "{{ notify_service | length > 0 }}"
+                  sequence:
+                    - repeat:
+                        for_each: "{{ notify_service.split(',') | map('trim') | reject('eq', '') | list }}"
+                        sequence:
+                          - action: "{{ repeat.item }}"
+                            data:
+                              title: "{{ _n_title }}"
+                              message: "{{ _n_message }}"
+            - stop: "Cancelled by user"
+
+        # Check: timeout?
+        - if:
+            - condition: template
+              value_template: "{{ wait.trigger is none }}"
+          then:
+            - variables:
+                _n_title: "⚠️ Wash {{ repeat.index }} — Timeout"
+                _n_message: >
+                  Didn't finish in time. Check appliance.
+                  Pipeline continues.
+            - choose:
+                - conditions:
+                    - condition: template
+                      value_template: "{{ notification_script | length > 0 }}"
+                  sequence:
+                    - action: script.turn_on
+                      target:
+                        entity_id: "{{ notification_script }}"
+                      data:
+                        variables:
+                          event_type: timeout
+                          appliance: laundry_pipeline
+                          title: "{{ _n_title }}"
+                          message: "{{ _n_message }}"
+                          load_index: "{{ repeat.index }}"
+                          total_loads: "{{ total_loads }}"
+                - conditions:
+                    - condition: template
+                      value_template: "{{ notify_service | length > 0 }}"
+                  sequence:
+                    - repeat:
+                        for_each: "{{ notify_service.split(',') | map('trim') | reject('eq', '') | list }}"
+                        sequence:
+                          - action: "{{ repeat.item }}"
+                            data:
+                              title: "{{ _n_title }}"
+                              message: "{{ _n_message }}"
+
+        # ── WASH DONE ──────────────────────────────────
+        - variables:
+            _n_title: >
+              ✅ Wash {{ repeat.index }}/{{ total_loads }} Done!
+            _n_message: >
+              {% if include_dryer %}
+              🌀 Transfer to dryer: program → close door
+              → Remote Start.
+              {% endif %}
+              {% if repeat.index | int < total_loads | int and not include_dryer %}
+              👕 Prepare load {{ repeat.index + 1 }}: program →
+              close door → Remote Start.
+              {% endif %}
+        - choose:
+            - conditions:
+                - condition: template
+                  value_template: "{{ notification_script | length > 0 }}"
+              sequence:
+                - action: script.turn_on
+                  target:
+                    entity_id: "{{ notification_script }}"
+                  data:
+                    variables:
+                      event_type: wash_done
+                      appliance: laundry_pipeline
+                      title: "{{ _n_title }}"
+                      message: "{{ _n_message }}"
+                      load_index: "{{ repeat.index }}"
+                      total_loads: "{{ total_loads }}"
+            - conditions:
+                - condition: template
+                  value_template: "{{ notify_service | length > 0 }}"
+              sequence:
+                - repeat:
+                    for_each: "{{ notify_service.split(',') | map('trim') | reject('eq', '') | list }}"
+                    sequence:
+                      - action: "{{ repeat.item }}"
+                        data:
+                          title: "{{ _n_title }}"
+                          message: "{{ _n_message }}"
+
+        # ── DRYER (if enabled) ─────────────────────────
+        - if:
+            - condition: template
+              value_template: "{{ include_dryer }}"
+          then:
+            # Wait for dryer readiness
+            - if:
+                - condition: template
+                  value_template: >
+                    {{ not (is_state(dryer_door_sensor, 'off')
+                       and is_state(dryer_remote_start_sensor, 'on')) }}
+              then:
+                - wait_for_trigger:
+                    - trigger: template
+                      value_template: >
+                        {{ is_state(dryer_door_sensor, 'off')
+                           and is_state(dryer_remote_start_sensor, 'on') }}
+                  timeout:
+                    hours: 2
+                  continue_on_timeout: true
+                - if:
+                    - condition: template
+                      value_template: "{{ wait.trigger is none }}"
+                  then:
+                    - variables:
+                        _n_title: "⚠️ Dryer {{ repeat.index }} — Skipped"
+                        _n_message: >
+                          Not ready after 2 h. Dry manually.
+                    - choose:
+                        - conditions:
+                            - condition: template
+                              value_template: "{{ notification_script | length > 0 }}"
+                          sequence:
+                            - action: script.turn_on
+                              target:
+                                entity_id: "{{ notification_script }}"
+                              data:
+                                variables:
+                                  event_type: dryer_skipped
+                                  appliance: laundry_pipeline
+                                  title: "{{ _n_title }}"
+                                  message: "{{ _n_message }}"
+                                  load_index: "{{ repeat.index }}"
+                                  total_loads: "{{ total_loads }}"
+                        - conditions:
+                            - condition: template
+                              value_template: "{{ notify_service | length > 0 }}"
+                          sequence:
+                            - repeat:
+                                for_each: "{{ notify_service.split(',') | map('trim') | reject('eq', '') | list }}"
+                                sequence:
+                                  - action: "{{ repeat.item }}"
+                                    data:
+                                      title: "{{ _n_title }}"
+                                      message: "{{ _n_message }}"
+
+            - if:
+                - condition: template
+                  value_template: >
+                    {{ is_state(dryer_door_sensor, 'off')
+                       and is_state(dryer_remote_start_sensor, 'on') }}
+              then:
+                # Read dryer data
+                - variables:
+                    dryer_program: "{{ states(dryer_program_entity) }}"
+                    _raw_dryer_duration: "{{ states(dryer_estimated_duration_entity) }}"
+                    dryer_duration: >
+                      {% set raw = states(dryer_estimated_duration_entity) %}
+                      {% if raw not in ['unknown', 'unavailable', 'None', '']
+                         and ':' in raw %}
+                        {% set parts = raw.split(':') %}
+                        {{ (parts[0] | int(0)) * 60 + (parts[1] | int(0)) }}
+                      {% elif raw not in ['unknown', 'unavailable', 'None', '']
+                         and raw | int(0) > 0 %}
+                        {{ raw | int }}
+                      {% else %}
+                        {{ duration_fallback_dryer }}
+                      {% endif %}
+
+                # Find cheapest dryer window
+                - action: tibber_prices.find_cheapest_block
+                  data:
+                    duration: >
+                      {{ '%02d:%02d:00' | format(
+                        (dryer_duration | int) // 60,
+                        (dryer_duration | int) % 60) }}
+                    must_finish_by: "{{ deadline }}"
+                  response_variable: dry_result
+
+                - if:
+                    - condition: template
+                      value_template: "{{ not dry_result.window_found }}"
+                  then:
+                    - variables:
+                        _n_title: "🌀 Dryer {{ repeat.index }} — No Cheap Slot"
+                        _n_message: >
+                          No cheap slot found. Run dryer manually.
+                    - choose:
+                        - conditions:
+                            - condition: template
+                              value_template: "{{ notification_script | length > 0 }}"
+                          sequence:
+                            - action: script.turn_on
+                              target:
+                                entity_id: "{{ notification_script }}"
+                              data:
+                                variables:
+                                  event_type: no_window
+                                  appliance: laundry_pipeline
+                                  title: "{{ _n_title }}"
+                                  message: "{{ _n_message }}"
+                                  deadline: "{{ deadline }}"
+                                  duration_minutes: "{{ dryer_duration | int }}"
+                                  load_index: "{{ repeat.index }}"
+                                  total_loads: "{{ total_loads }}"
+                        - conditions:
+                            - condition: template
+                              value_template: "{{ notify_service | length > 0 }}"
+                          sequence:
+                            - repeat:
+                                for_each: "{{ notify_service.split(',') | map('trim') | reject('eq', '') | list }}"
+                                sequence:
+                                  - action: "{{ repeat.item }}"
+                                    data:
+                                      title: "{{ _n_title }}"
+                                      message: "{{ _n_message }}"
+
+                - if:
+                    - condition: template
+                      value_template: >
+                        {{ dry_result.window_found | default(false) }}
+                  then:
+                    # Start dryer
+                    - variables:
+                        _dry_window_start: "{{ dry_result.window.start | as_datetime }}"
+                        dry_finish_in_relative: >
+                          {% set window_end = _dry_window_start + timedelta(minutes=dryer_duration | int) %}
+                          {% set seconds_until_end = ((window_end - now()).total_seconds()) | int %}
+                          {{ [dryer_duration | int * 60, seconds_until_end] | max }}
+
+                    - action: home_connect_alt.start_program
+                      target:
+                        entity_id: "{{ dryer_program_entity }}"
+                      data:
+                        program: "{{ dryer_program }}"
+                        options:
+                          - key: BSH.Common.Option.FinishInRelative
+                            value: "{{ dry_finish_in_relative }}"
+
+                    - variables:
+                        _n_title: >
+                          🌀 Dryer {{ repeat.index }}/{{ total_loads }} — Planned!
+                        _n_message: >
+                          {{ dryer_program }}
+                          {% set delay = dry_finish_in_relative | int - (dryer_duration | int * 60) %}
+                          {% if delay > 60 %}
+                          · ⏰ ~{{ _dry_window_start | as_local
+                            | as_timestamp | timestamp_custom('%H:%M') }}
+                          (in {{ (delay / 3600) | round(1) }} h)
+                          {% else %}
+                          · ▶️ Starting now!
+                          {% endif %}
+                          · ~{{ dryer_duration }} min
+                          {% if pipeline_mode
+                            and repeat.index | int < total_loads | int %}
+                          · Next wash planned now — dryer runs in parallel
+                          {% endif %}
+                    - choose:
+                        - conditions:
+                            - condition: template
+                              value_template: "{{ notification_script | length > 0 }}"
+                          sequence:
+                            - action: script.turn_on
+                              target:
+                                entity_id: "{{ notification_script }}"
+                              data:
+                                variables:
+                                  event_type: dryer_planned
+                                  appliance: laundry_pipeline
+                                  title: "{{ _n_title }}"
+                                  message: "{{ _n_message }}"
+                                  start_time: "{{ _dry_window_start | as_local | as_timestamp | timestamp_custom('%Y-%m-%dT%H:%M:%S') }}"
+                                  duration_minutes: "{{ dryer_duration | int }}"
+                                  price_mean: "{{ dry_result.window.price_mean | round(1) }}"
+                                  price_unit: "{{ dry_result.price_unit }}"
+                                  load_index: "{{ repeat.index }}"
+                                  total_loads: "{{ total_loads }}"
+                        - conditions:
+                            - condition: template
+                              value_template: "{{ notify_service | length > 0 }}"
+                          sequence:
+                            - repeat:
+                                for_each: "{{ notify_service.split(',') | map('trim') | reject('eq', '') | list }}"
+                                sequence:
+                                  - action: "{{ repeat.item }}"
+                                    data:
+                                      title: "{{ _n_title }}"
+                                      message: "{{ _n_message }}"
+
+                    # Wait for dryer to finish
+                    # UNLESS pipeline mode AND more loads to come
+                    - if:
+                        - condition: template
+                          value_template: >
+                            {{ not (pipeline_mode
+                              and repeat.index | int < total_loads | int) }}
+                      then:
+                        - wait_for_trigger:
+                            - trigger: template
+                              value_template: >
+                                {% set op = states(dryer_operation_state_entity) %}
+                                {{ 'Finished' in op
+                                   or is_state(trigger_entity, 'off') }}
+                          timeout:
+                            seconds: "{{ dry_finish_in_relative | int + 1800 }}"
+                          continue_on_timeout: true
+                        - if:
+                            - condition: template
+                              value_template: "{{ is_state(trigger_entity, 'off') }}"
+                          then:
+                            - stop: "Cancelled by user"
+
+  # ════════════════════════════════════════════════════════
+  # ALL DONE
+  # ════════════════════════════════════════════════════════
+  - variables:
+      _n_title: "🎉 Laundry Day Complete!"
+      _n_message: >
+        All {{ total_loads }}
+        load{{ 's' if total_loads | int > 1 else '' }}
+        washed{{ ' and dried' if include_dryer else '' }}.
+        Time to fold! 🧺
+  - choose:
+      - conditions:
+          - condition: template
+            value_template: "{{ notification_script | length > 0 }}"
+        sequence:
+          - action: script.turn_on
+            target:
+              entity_id: "{{ notification_script }}"
+            data:
+              variables:
+                event_type: complete
+                appliance: laundry_pipeline
+                title: "{{ _n_title }}"
+                message: "{{ _n_message }}"
+                load_index: "{{ repeat.index }}"
+                total_loads: "{{ total_loads }}"
+      - conditions:
+          - condition: template
+            value_template: "{{ notify_service | length > 0 }}"
+        sequence:
+          - repeat:
+              for_each: "{{ notify_service.split(',') | map('trim') | reject('eq', '') | list }}"
+              sequence:
+                - action: "{{ repeat.item }}"
+                  data:
+                    title: "{{ _n_title }}"
+                    message: "{{ _n_message }}"
+
+  - action: input_boolean.turn_off
+    target:
+      entity_id: "{{ trigger_entity }}"

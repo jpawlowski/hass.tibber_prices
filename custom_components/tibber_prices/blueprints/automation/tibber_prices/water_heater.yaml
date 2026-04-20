@@ -1,0 +1,233 @@
+blueprint:
+  name: "Tibber Prices: Water Heater — Boost During Cheap Prices"
+  description: >
+    **Companion blueprint for
+    [Tibber Prices](https://my.home-assistant.io/redirect/hacs_repository/?owner=jpawlowski&repository=hass.tibber_prices&category=integration)
+    (HACS integration)** · Blueprint v1.0.0
+
+    Automatically boost your water heater during the cheapest price
+    periods and return to eco temperature when prices rise.
+
+    **What it does:**
+
+    - Raises the water heater temperature during the Best Price Period
+
+    - Lowers it back to eco when the period ends
+
+    - Real-time reaction — no planning or helpers needed
+
+    **Prerequisites:**
+
+    - [Tibber Prices integration](https://my.home-assistant.io/redirect/hacs_repository/?owner=jpawlowski&repository=hass.tibber_prices&category=integration) installed via HACS
+
+    - A `water_heater` entity (or `climate` entity for heat-pump boilers)
+  domain: automation
+  author: jpawlowski
+  homeassistant:
+    min_version: "2024.6.0"
+  source_url: https://github.com/jpawlowski/hass.tibber_prices/blob/main/custom_components/tibber_prices/blueprints/automation/tibber_prices/water_heater.yaml
+  input:
+    devices:
+      name: Devices
+      icon: mdi:water-boiler
+      description: Select your water heater and the Tibber Prices period sensor.
+      input:
+        period_sensor:
+          name: Best Price Period Sensor
+          description: >
+            The `binary_sensor.<home>_best_price_period` from Tibber Prices.
+          selector:
+            entity:
+              filter:
+                domain: binary_sensor
+                integration: tibber_prices
+        water_heater_entity:
+          name: Water Heater
+          description: >
+            Your water heater entity. Works with `water_heater.*`
+            or `climate.*` (for heat-pump water heaters).
+          selector:
+            entity:
+              filter:
+                domain:
+                  - water_heater
+                  - climate
+
+    temperatures:
+      name: Temperatures
+      icon: mdi:thermometer
+      description: Configure boost and eco temperatures.
+      input:
+        boost_temperature:
+          name: Boost Temperature
+          description: Target temperature during cheap prices.
+          default: 60
+          selector:
+            number:
+              min: 40
+              max: 80
+              step: 1
+              unit_of_measurement: °C
+        eco_temperature:
+          name: Eco Temperature
+          description: Target temperature outside cheap periods.
+          default: 45
+          selector:
+            number:
+              min: 30
+              max: 60
+              step: 1
+              unit_of_measurement: °C
+
+    runtime_overrides:
+      name: Runtime Overrides
+      icon: mdi:tune-vertical
+      collapsed: true
+      description: >
+        Optionally connect helpers to override settings from your
+        dashboard at runtime. When a helper is connected and has
+        a valid value, it takes priority over the fixed default.
+        Leave empty to always use the fixed defaults.
+      input:
+        boost_temperature_override:
+          name: "Override: Boost Temperature"
+          description: >
+            `input_number` helper to change the boost temperature
+            from your dashboard.
+            **Create in Settings → Helpers → Number**
+            (min: 40, max: 80, step: 1, unit: °C).
+          default: ""
+          selector:
+            entity:
+              filter:
+                domain: input_number
+        eco_temperature_override:
+          name: "Override: Eco Temperature"
+          description: >
+            `input_number` helper to change the eco temperature
+            from your dashboard.
+            **Create in Settings → Helpers → Number**
+            (min: 30, max: 60, step: 1, unit: °C).
+          default: ""
+          selector:
+            entity:
+              filter:
+                domain: input_number
+
+    notifications:
+      name: Notifications
+      icon: mdi:bell-outline
+      collapsed: true
+      description: >
+        Optional mobile notifications for temperature changes.
+      input:
+        notify_service:
+          name: Notification Service
+          description: >
+            One or more notify services, comma-separated
+            (e.g., `notify.mobile_app_yourphone` or
+            `notify.mobile_app_phone, notify.mobile_app_tablet`).
+            Leave empty to disable all notifications.
+          default: ""
+          selector:
+            text:
+
+mode: restart
+
+triggers:
+  - trigger: state
+    entity_id: !input period_sensor
+    to: "on"
+    id: period_start
+  - trigger: state
+    entity_id: !input period_sensor
+    to: "off"
+    id: period_end
+
+variables:
+  _blueprint_variant: "water_heater"
+  water_heater_entity: !input water_heater_entity
+  _boost_temp_default: !input boost_temperature
+  _boost_temp_override: !input boost_temperature_override
+  boost_temperature: >
+    {% set o = _boost_temp_override %}
+    {% if o and states(o) not in ['unknown', 'unavailable'] %}
+      {{ states(o) | float(_boost_temp_default) }}
+    {% else %}
+      {{ _boost_temp_default }}
+    {% endif %}
+  _eco_temp_default: !input eco_temperature
+  _eco_temp_override: !input eco_temperature_override
+  eco_temperature: >
+    {% set o = _eco_temp_override %}
+    {% if o and states(o) not in ['unknown', 'unavailable'] %}
+      {{ states(o) | float(_eco_temp_default) }}
+    {% else %}
+      {{ _eco_temp_default }}
+    {% endif %}
+  notify_service: !input notify_service
+
+actions:
+  # Check: Tibber Prices integration installed?
+  - variables:
+      _tp_entities: "{{ integration_entities('tibber_prices') | list }}"
+  - if:
+      - condition: template
+        value_template: "{{ _tp_entities | length == 0 }}"
+    then:
+      - stop: "Tibber Prices integration not found"
+
+  # ════════════════════════════════════════════════════════
+  # BOOST / ECO
+  # ════════════════════════════════════════════════════════
+  - choose:
+      - conditions:
+          - condition: trigger
+            id: period_start
+        sequence:
+          # Determine the correct service based on domain
+          - variables:
+              target_domain: "{{ water_heater_entity.split('.')[0] }}"
+          - action: "{{ target_domain }}.set_temperature"
+            target:
+              entity_id: "{{ water_heater_entity }}"
+            data:
+              temperature: "{{ boost_temperature }}"
+          - if:
+              - condition: template
+                value_template: "{{ notify_service | length > 0 }}"
+            then:
+              - repeat:
+                  for_each: "{{ notify_service.split(',') | map('trim') | reject('eq', '') | list }}"
+                  sequence:
+                    - action: "{{ repeat.item }}"
+                      data:
+                        title: "🔥 Water Heater — Boost Active"
+                        message: >
+                          Target raised to {{ boost_temperature }}°C during
+                          the best price period.
+
+      - conditions:
+          - condition: trigger
+            id: period_end
+        sequence:
+          - variables:
+              target_domain: "{{ water_heater_entity.split('.')[0] }}"
+          - action: "{{ target_domain }}.set_temperature"
+            target:
+              entity_id: "{{ water_heater_entity }}"
+            data:
+              temperature: "{{ eco_temperature }}"
+          - if:
+              - condition: template
+                value_template: "{{ notify_service | length > 0 }}"
+            then:
+              - repeat:
+                  for_each: "{{ notify_service.split(',') | map('trim') | reject('eq', '') | list }}"
+                  sequence:
+                    - action: "{{ repeat.item }}"
+                      data:
+                        title: "🔥 Water Heater — Back to Eco"
+                        message: >
+                          Best price period ended. Target back to
+                          {{ eco_temperature }}°C.

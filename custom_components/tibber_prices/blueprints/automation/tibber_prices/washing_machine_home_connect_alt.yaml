@@ -1,0 +1,513 @@
+blueprint:
+  name: "Tibber Prices: Washing Machine (Home Connect Alt)"
+  description: >
+    **Companion blueprint for
+    [Tibber Prices](https://my.home-assistant.io/redirect/hacs_repository/?owner=jpawlowski&repository=hass.tibber_prices&category=integration)
+    (HACS integration)** · Blueprint v2.0.0
+
+    **Device-driven** washing machine automation with electricity price
+    optimization using **Home Connect Alt**
+    ([HACS integration by ekutner](https://my.home-assistant.io/redirect/hacs_repository/?owner=ekutner&repository=home-connect-hass&category=integration)).
+
+    **How it works:**
+
+    1. Select your program on the washing machine
+
+    2. Close the door and enable Remote Start
+
+    3. The blueprint reads the program and estimated duration from the
+       device automatically
+
+    4. Finds the cheapest electricity window before your deadline
+
+    5. Tells the washing machine when to finish via `FinishInRelative`
+
+    6. The machine calculates when to start and manages the countdown
+       internally — no HA timers
+
+    **Important:** Washing machines use `FinishInRelative` (not
+    `StartInRelative` like dishwashers). The appliance receives the
+    deadline and calculates the optimal start time itself.
+
+    **No scheduling needed** — the machine handles the delayed start
+    itself. No `input_datetime` helpers required. Survives HA restarts
+    because the countdown runs on the appliance.
+
+    **Prerequisites:**
+
+    - [Tibber Prices integration](https://my.home-assistant.io/redirect/hacs_repository/?owner=jpawlowski&repository=hass.tibber_prices&category=integration) installed via HACS
+
+    - [Home Connect Alt](https://my.home-assistant.io/redirect/hacs_repository/?owner=ekutner&repository=home-connect-hass&category=integration) integration configured
+
+    - **Remote Start** enabled on the washing machine
+
+    **Tip:** For multiple wash + dry cycles, use the
+    [Laundry Day Pipeline](https://github.com/jpawlowski/hass.tibber_prices/blob/main/custom_components/tibber_prices/blueprints/automation/tibber_prices/laundry_day_pipeline_home_connect_alt.yaml)
+    blueprint instead.
+
+    **Other variants:**
+    [Smart Plug](https://github.com/jpawlowski/hass.tibber_prices/blob/main/custom_components/tibber_prices/blueprints/automation/tibber_prices/washing_machine.yaml)
+    ·
+    [Home Connect](https://github.com/jpawlowski/hass.tibber_prices/blob/main/custom_components/tibber_prices/blueprints/automation/tibber_prices/washing_machine_home_connect.yaml)
+  domain: automation
+  author: jpawlowski
+  homeassistant:
+    min_version: "2024.11.0"
+  source_url: https://github.com/jpawlowski/hass.tibber_prices/blob/main/custom_components/tibber_prices/blueprints/automation/tibber_prices/washing_machine_home_connect_alt.yaml
+  input:
+    appliance:
+      name: Appliance Entities
+      icon: mdi:washing-machine
+      description: >
+        Select your Home Connect Alt washing machine entities.
+        All entities belong to the same appliance device.
+      input:
+        program_entity:
+          name: Program Select Entity
+          description: >
+            The **Programs** select entity of your washing machine
+            (e.g., `select.washer_programs`).
+            Used to read the selected program and as target for starting.
+          selector:
+            entity:
+              filter:
+                integration: home_connect_alt
+                domain: select
+        door_sensor:
+          name: Door Sensor
+          description: >
+            The door sensor of your washing machine
+            (e.g., `binary_sensor.washer_door`).
+          selector:
+            entity:
+              filter:
+                integration: home_connect_alt
+                domain: binary_sensor
+                device_class: door
+        remote_start_sensor:
+          name: Remote Control Sensor
+          description: >
+            The "Remote Control Active" binary sensor
+            (e.g., `binary_sensor.washer_remote_control_active`).
+            Must be **on** for the automation to proceed.
+          selector:
+            entity:
+              filter:
+                integration: home_connect_alt
+                domain: binary_sensor
+        estimated_duration_entity:
+          name: Estimated Program Duration
+          description: >
+            The "Estimated Total Program Time" sensor
+            (e.g., `sensor.washer_estimated_total_program_time`).
+            Shows the expected duration in `H:MM` format.
+            If unavailable, the fallback duration is used instead.
+          selector:
+            entity:
+              filter:
+                integration: home_connect_alt
+                domain: sensor
+        operation_state_entity:
+          name: Operation State
+          description: >
+            The "Operation State" sensor
+            (e.g., `sensor.washer_operation_state`).
+            Used to verify the machine is ready before planning.
+          selector:
+            entity:
+              filter:
+                integration: home_connect_alt
+                domain: sensor
+
+    schedule:
+      name: Schedule
+      icon: mdi:calendar-clock
+      description: >
+        Configure the deadline and fallback duration.
+      input:
+        must_finish_by:
+          name: Must Finish By
+          description: >
+            The program must be finished by this time.
+            If this time has already passed today, the deadline
+            automatically moves to tomorrow (overnight mode).
+          default: "06:00:00"
+          selector:
+            time:
+        duration_fallback:
+          name: Fallback Duration (minutes)
+          description: >
+            Used **only** if the device doesn't report the estimated
+            duration (e.g., program not yet fully selected on the
+            appliance). Normally the duration is read automatically.
+
+            ECO 40-60 ≈ 90 min, Cotton 60°C ≈ 120 min, Quick ≈ 45 min.
+          default: 95
+          selector:
+            number:
+              min: 15
+              max: 240
+              step: 5
+              unit_of_measurement: min
+              mode: slider
+
+    notifications:
+      name: Notifications
+      icon: mdi:bell-outline
+      collapsed: true
+      description: >
+        Optional notifications. Use **simple mode** (just a service)
+        or point to an **advanced script** for multi-target,
+        presence-aware, and platform-specific notifications.
+      input:
+        notify_service:
+          name: Quick Notification (Simple)
+          description: >
+            One or more notify services, comma-separated
+            (e.g., `notify.mobile_app_yourphone` or
+            `notify.mobile_app_phone, notify.mobile_app_tablet`).
+            Ignored when the advanced script is set.
+          default: ""
+          selector:
+            text:
+        notification_script:
+          name: Notification Script (Advanced)
+          description: >
+            A `script.*` entity for advanced notifications
+            (multiple recipients, presence filtering, iOS/Android).
+            When set, replaces the simple notification.
+            Receives structured variables (event_type, appliance,
+            title, message, and context data).
+          default: ""
+          selector:
+            entity:
+              filter:
+                domain: script
+        title_setup_required:
+          name: "Title: Setup Required"
+          default: "👕 Washing Machine — Setup Required"
+          selector:
+            text:
+        title_not_ready:
+          name: "Title: Not Ready"
+          default: "👕 Washing Machine — Not Ready"
+          selector:
+            text:
+        title_no_program:
+          name: "Title: No Program"
+          default: "👕 Washing Machine — No Program"
+          selector:
+            text:
+        title_no_cheap_slot:
+          name: "Title: No Cheap Slot"
+          default: "👕 Washing Machine — No Cheap Slot"
+          selector:
+            text:
+        title_planned:
+          name: "Title: Planned"
+          default: "👕 Washing Machine — Planned!"
+          selector:
+            text:
+
+mode: single
+max_exceeded: silent
+
+triggers:
+  - trigger: state
+    entity_id: !input door_sensor
+    to: "off"
+  - trigger: state
+    entity_id: !input remote_start_sensor
+    to: "on"
+
+conditions:
+  - condition: state
+    entity_id: !input door_sensor
+    state: "off"
+  - condition: state
+    entity_id: !input remote_start_sensor
+    state: "on"
+
+variables:
+  _blueprint_variant: "home_connect_alt"
+  program_entity: !input program_entity
+  door_sensor: !input door_sensor
+  remote_start_sensor: !input remote_start_sensor
+  estimated_duration_entity: !input estimated_duration_entity
+  operation_state_entity: !input operation_state_entity
+  must_finish_by_time: !input must_finish_by
+  duration_fallback: !input duration_fallback
+  notify_service: !input notify_service
+  notification_script: !input notification_script
+  title_setup_required: !input title_setup_required
+  title_not_ready: !input title_not_ready
+  title_no_program: !input title_no_program
+  title_no_cheap_slot: !input title_no_cheap_slot
+  title_planned: !input title_planned
+
+actions:
+  # ════════════════════════════════════════════════════════
+  # PREFLIGHT CHECKS
+  # ════════════════════════════════════════════════════════
+  - variables:
+      _tp_entities: "{{ integration_entities('tibber_prices') | list }}"
+  - if:
+      - condition: template
+        value_template: "{{ _tp_entities | length == 0 }}"
+    then:
+      - variables:
+          _n_title: "{{ title_setup_required }}"
+          _n_message: >
+            Install the Tibber Prices integration via HACS and
+            configure your Tibber account.
+      - choose:
+          - conditions:
+              - condition: template
+                value_template: "{{ notification_script | length > 0 }}"
+            sequence:
+              - action: script.turn_on
+                target:
+                  entity_id: "{{ notification_script }}"
+                data:
+                  variables:
+                    event_type: setup_required
+                    appliance: washing_machine
+                    title: "{{ _n_title }}"
+                    message: "{{ _n_message }}"
+          - conditions:
+              - condition: template
+                value_template: "{{ notify_service | length > 0 }}"
+            sequence:
+              - repeat:
+                  for_each: "{{ notify_service.split(',') | map('trim') | reject('eq', '') | list }}"
+                  sequence:
+                    - action: "{{ repeat.item }}"
+                      data:
+                        title: "{{ _n_title }}"
+                        message: "{{ _n_message }}"
+      - stop: "Tibber Prices integration not found"
+
+  - if:
+      - condition: template
+        value_template: >
+          {% set op = states(operation_state_entity) %}
+          {{ op not in ['unknown', 'unavailable']
+             and 'Ready' not in op
+             and 'Inactive' not in op }}
+    then:
+      - variables:
+          _n_title: "{{ title_not_ready }}"
+          _n_message: >
+            State: {{ states(operation_state_entity) }}.
+            Ensure it's idle with Remote Start enabled.
+      - choose:
+          - conditions:
+              - condition: template
+                value_template: "{{ notification_script | length > 0 }}"
+            sequence:
+              - action: script.turn_on
+                target:
+                  entity_id: "{{ notification_script }}"
+                data:
+                  variables:
+                    event_type: not_ready
+                    appliance: washing_machine
+                    title: "{{ _n_title }}"
+                    message: "{{ _n_message }}"
+          - conditions:
+              - condition: template
+                value_template: "{{ notify_service | length > 0 }}"
+            sequence:
+              - repeat:
+                  for_each: "{{ notify_service.split(',') | map('trim') | reject('eq', '') | list }}"
+                  sequence:
+                    - action: "{{ repeat.item }}"
+                      data:
+                        title: "{{ _n_title }}"
+                        message: "{{ _n_message }}"
+      - stop: "Machine not ready"
+
+  # ════════════════════════════════════════════════════════
+  # READ DEVICE DATA
+  # ════════════════════════════════════════════════════════
+  - variables:
+      selected_program: "{{ states(program_entity) }}"
+      _raw_duration: "{{ states(estimated_duration_entity) }}"
+      duration: >
+        {% set raw = states(estimated_duration_entity) %}
+        {% if raw not in ['unknown', 'unavailable', 'None', '']
+           and ':' in raw %}
+          {% set parts = raw.split(':') %}
+          {{ (parts[0] | int(0)) * 60 + (parts[1] | int(0)) }}
+        {% else %}
+          {{ duration_fallback }}
+        {% endif %}
+      deadline: >
+        {% set dl = today_at(must_finish_by_time) %}
+        {% if dl <= now() %}
+          {{ (dl + timedelta(days=1)).isoformat() }}
+        {% else %}
+          {{ dl.isoformat() }}
+        {% endif %}
+
+  - if:
+      - condition: template
+        value_template: >
+          {{ selected_program in ['unknown', 'unavailable', 'None', ''] }}
+    then:
+      - variables:
+          _n_title: "{{ title_no_program }}"
+          _n_message: >
+            Select a program, close the door, and enable
+            Remote Start.
+      - choose:
+          - conditions:
+              - condition: template
+                value_template: "{{ notification_script | length > 0 }}"
+            sequence:
+              - action: script.turn_on
+                target:
+                  entity_id: "{{ notification_script }}"
+                data:
+                  variables:
+                    event_type: no_program
+                    appliance: washing_machine
+                    title: "{{ _n_title }}"
+                    message: "{{ _n_message }}"
+          - conditions:
+              - condition: template
+                value_template: "{{ notify_service | length > 0 }}"
+            sequence:
+              - repeat:
+                  for_each: "{{ notify_service.split(',') | map('trim') | reject('eq', '') | list }}"
+                  sequence:
+                    - action: "{{ repeat.item }}"
+                      data:
+                        title: "{{ _n_title }}"
+                        message: "{{ _n_message }}"
+      - stop: "No program selected"
+
+  # ════════════════════════════════════════════════════════
+  # FIND CHEAPEST WINDOW
+  # ════════════════════════════════════════════════════════
+  - action: tibber_prices.find_cheapest_block
+    data:
+      duration: >
+        {{ '%02d:%02d:00' | format(
+          (duration | int) // 60,
+          (duration | int) % 60) }}
+      must_finish_by: "{{ deadline }}"
+    response_variable: result
+
+  - if:
+      - condition: template
+        value_template: "{{ not result.window_found }}"
+    then:
+      - variables:
+          _n_title: "{{ title_no_cheap_slot }}"
+          _n_message: >
+            No cheap slot before
+            {{ deadline | as_datetime | as_local
+              | as_timestamp | timestamp_custom('%H:%M') }}
+            for {{ duration }} min.
+            Run manually or extend the deadline.
+      - choose:
+          - conditions:
+              - condition: template
+                value_template: "{{ notification_script | length > 0 }}"
+            sequence:
+              - action: script.turn_on
+                target:
+                  entity_id: "{{ notification_script }}"
+                data:
+                  variables:
+                    event_type: no_window
+                    appliance: washing_machine
+                    title: "{{ _n_title }}"
+                    message: "{{ _n_message }}"
+                    deadline: "{{ deadline }}"
+                    duration_minutes: "{{ duration | int }}"
+          - conditions:
+              - condition: template
+                value_template: "{{ notify_service | length > 0 }}"
+            sequence:
+              - repeat:
+                  for_each: "{{ notify_service.split(',') | map('trim') | reject('eq', '') | list }}"
+                  sequence:
+                    - action: "{{ repeat.item }}"
+                      data:
+                        title: "{{ _n_title }}"
+                        message: "{{ _n_message }}"
+      - stop: "No cheap window found"
+
+  # ════════════════════════════════════════════════════════
+  # START WITH DELAY (device manages countdown)
+  # ════════════════════════════════════════════════════════
+  - variables:
+      _window_start: "{{ result.window.start | as_datetime }}"
+      # Washing machines use FinishInRelative
+      # (seconds from now until program must be finished)
+      _window_end: >
+        {{ (_window_start + timedelta(minutes=duration | int)).isoformat() }}
+      finish_in_relative: >
+        {% set window_end = _window_start + timedelta(minutes=duration | int) %}
+        {% set seconds_until_end = ((window_end - now()).total_seconds()) | int %}
+        {{ [duration | int * 60, seconds_until_end] | max }}
+
+  - action: home_connect_alt.start_program
+    target:
+      entity_id: "{{ program_entity }}"
+    data:
+      program: "{{ selected_program }}"
+      options:
+        - key: BSH.Common.Option.FinishInRelative
+          value: "{{ finish_in_relative }}"
+
+  - variables:
+      _n_title: "{{ title_planned }}"
+      _n_message: >
+        {{ selected_program.split('.')[-1] }}
+        {% set delay = finish_in_relative | int - (duration | int * 60) %}
+        {% if delay > 0 %}
+        · ⏰ ~{{ _window_start | as_local
+          | as_timestamp | timestamp_custom('%H:%M') }}
+        (in {{ (delay / 3600) | round(1) }} h)
+        {% else %}
+        · ▶️ Starting now!
+        {% endif %}
+        · ~{{ duration }} min
+        · {{ result.window.price_mean | round(1) }} {{ result.price_unit }}/kWh
+        {% if _raw_duration in ['unknown', 'unavailable', 'None', ''] %}
+        · ⚠️ Duration estimated
+        {% endif %}
+  - choose:
+      - conditions:
+          - condition: template
+            value_template: "{{ notification_script | length > 0 }}"
+        sequence:
+          - action: script.turn_on
+            target:
+              entity_id: "{{ notification_script }}"
+            data:
+              variables:
+                event_type: planned
+                appliance: washing_machine
+                title: "{{ _n_title }}"
+                message: "{{ _n_message }}"
+                start_time: "{{ _window_start | as_local | as_timestamp | timestamp_custom('%Y-%m-%dT%H:%M:%S') }}"
+                duration_minutes: "{{ duration | int }}"
+                price_mean: "{{ result.window.price_mean | round(1) }}"
+                price_unit: "{{ result.price_unit }}"
+                selected_program: "{{ selected_program }}"
+                using_fallback_duration: "{{ _raw_duration in ['unknown', 'unavailable', 'None', ''] }}"
+      - conditions:
+          - condition: template
+            value_template: "{{ notify_service | length > 0 }}"
+        sequence:
+          - repeat:
+              for_each: "{{ notify_service.split(',') | map('trim') | reject('eq', '') | list }}"
+              sequence:
+                - action: "{{ repeat.item }}"
+                  data:
+                    title: "{{ _n_title }}"
+                    message: "{{ _n_message }}"
