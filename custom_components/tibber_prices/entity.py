@@ -5,7 +5,7 @@ from __future__ import annotations
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import ATTRIBUTION, DOMAIN, get_home_type_translation, get_translation
+from .const import ATTRIBUTION, DOMAIN, INTEGRATION_VERSION, get_home_type_translation, get_translation
 from .coordinator import TibberPricesDataUpdateCoordinator
 
 
@@ -41,6 +41,7 @@ class TibberPricesEntity(CoordinatorEntity[TibberPricesDataUpdateCoordinator]):
             manufacturer="Tibber",
             model=translated_model,
             serial_number=home_id or None,
+            sw_version=INTEGRATION_VERSION,
             configuration_url="https://developer.tibber.com/explorer",
         )
 

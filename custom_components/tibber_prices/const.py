@@ -20,6 +20,9 @@ if TYPE_CHECKING:
 DOMAIN = "tibber_prices"
 LOGGER = logging.getLogger(__package__)
 
+# Integration version from manifest.json (used for DeviceInfo sw_version)
+INTEGRATION_VERSION: str = json.loads((Path(__file__).parent / "manifest.json").read_text(encoding="utf-8"))["version"]
+
 # Data storage keys
 DATA_CHART_CONFIG = "chart_config"  # Key for chart export config in hass.data
 DATA_CHART_METADATA_CONFIG = "chart_metadata_config"  # Key for chart metadata config in hass.data
