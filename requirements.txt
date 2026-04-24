@@ -1,7 +1,7 @@
 # Project/dev tooling – NO Home Assistant here
 colorlog>=6.10.1,<6.11.0
 pre-commit>=4.6.0,<4.7.0
-ruff>=0.15.11,<0.16.0
+ruff>=0.15.12,<0.16.0
 zlib_ng>=1.0.0,<1.1.0
 isal>=1.8.0,<1.9.0
 pytest>=9.0.3
