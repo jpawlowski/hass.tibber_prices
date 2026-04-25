@@ -206,8 +206,10 @@ def build_period_summary_dict(
             day_span = day_max - day_min
             day_avg = avg_prices.get(period_start_date, sum(day_prices) / len(day_prices))
 
-            # Calculate volatility percentage (span / avg * 100)
-            day_volatility_pct = round((day_span / day_avg * 100), 1) if day_avg > 0 else 0.0
+            # Calculate volatility percentage relative to the day's absolute average.
+            # Negative-average days remain meaningful, while true zero-average days
+            # cannot produce a truthful percentage and therefore return None.
+            day_volatility_pct = round((day_span / abs(day_avg) * 100), 1) if day_avg != 0 else None
 
             # Convert to minor units (ct/øre) for consistency with other price attributes
             summary["day_volatility_%"] = day_volatility_pct

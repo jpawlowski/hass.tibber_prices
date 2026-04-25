@@ -74,6 +74,54 @@ class TibberPricesPeriodCalculator:
         section = self.config_entry.options.get(config_section, {})
         return section.get(config_key, default)
 
+    def _normalize_float_option(
+        self,
+        value: Any,
+        default: float,
+        *,
+        option_name: str,
+        absolute: bool = False,
+        divisor: float = 1.0,
+    ) -> float:
+        """Normalize numeric config values and fall back cleanly on invalid input."""
+        try:
+            normalized = float(value)
+        except TypeError, ValueError:
+            self._log("warning", "Invalid numeric option %s=%r, using default %s", option_name, value, default)
+            normalized = float(default)
+
+        if absolute:
+            normalized = abs(normalized)
+
+        return normalized / divisor
+
+    def _normalize_int_option(
+        self,
+        value: Any,
+        default: int,
+        *,
+        option_name: str,
+        minimum: int | None = None,
+    ) -> int:
+        """Normalize integer config values and fall back cleanly on invalid input."""
+        try:
+            normalized = int(value)
+        except TypeError, ValueError:
+            self._log("warning", "Invalid integer option %s=%r, using default %s", option_name, value, default)
+            return default
+
+        if minimum is not None and normalized < minimum:
+            self._log(
+                "warning",
+                "Out-of-range integer option %s=%r, using default %s",
+                option_name,
+                value,
+                default,
+            )
+            return default
+
+        return normalized
+
     def _log(self, level: str, message: str, *args: object, **kwargs: object) -> None:
         """Log with calculator-specific prefix."""
         prefixed_message = f"{self._log_prefix} {message}"
@@ -88,12 +136,12 @@ class TibberPricesPeriodCalculator:
         self._last_periods_hash = None
         self._log("debug", "Period config cache and calculation cache invalidated")
 
-    def _compute_periods_hash(self, price_info: dict[str, Any]) -> str:
+    def _compute_periods_hash(self, price_info: list[dict[str, Any]]) -> str:
         """
         Compute hash of price data and config for period calculation caching.
 
         Only includes data that affects period calculation:
-        - All interval timestamps and enriched rating levels (yesterday/today/tomorrow)
+        - Today/tomorrow interval content (timestamps, totals, levels, ratings, differences)
         - Period calculation config (flex, min_distance, min_period_length)
         - Level filter overrides
 
@@ -101,20 +149,42 @@ class TibberPricesPeriodCalculator:
             Hash string for cache key comparison.
 
         """
-        # Get today and tomorrow intervals for hash calculation
-        # CRITICAL: Only today+tomorrow needed in hash because:
-        # 1. Mitternacht: "today" startsAt changes → cache invalidates
-        # 2. Tomorrow arrival: "tomorrow" startsAt changes from None → cache invalidates
-        # 3. Yesterday/day-before-yesterday are static (rating_levels don't change retroactively)
-        # 4. Using first startsAt as representative (changes → entire day changed)
+        # Get today and tomorrow intervals for hash calculation.
+        # Hash full interval signatures instead of only the first startsAt so we also
+        # invalidate when prices or enriched levels change within the same calendar day.
         coordinator_data = {"priceInfo": price_info}
         today_intervals = get_intervals_for_day_offsets(coordinator_data, [0])
         tomorrow_intervals = get_intervals_for_day_offsets(coordinator_data, [1])
 
-        # Use first startsAt of each day as representative for entire day's data
-        # If day is empty, use None (detects data availability changes)
-        today_start = today_intervals[0].get("startsAt") if today_intervals else None
-        tomorrow_start = tomorrow_intervals[0].get("startsAt") if tomorrow_intervals else None
+        def _build_interval_signature(intervals: list[dict[str, Any]]) -> tuple[tuple[Any, Any, Any, Any, Any], ...]:
+            signature: list[tuple[Any, Any, Any, Any, Any]] = []
+
+            for interval in intervals:
+                starts_at = interval.get("startsAt")
+                starts_at_key = (
+                    starts_at.isoformat() if starts_at is not None and hasattr(starts_at, "isoformat") else starts_at
+                )
+
+                total = interval.get("total")
+                total_key = round(float(total), 6) if total is not None else None
+
+                difference = interval.get("difference")
+                difference_key = round(float(difference), 6) if difference is not None else None
+
+                signature.append(
+                    (
+                        starts_at_key,
+                        total_key,
+                        interval.get("level"),
+                        interval.get("rating_level"),
+                        difference_key,
+                    )
+                )
+
+            return tuple(signature)
+
+        today_signature = _build_interval_signature(today_intervals)
+        tomorrow_signature = _build_interval_signature(tomorrow_intervals)
 
         # Get period configs (both best and peak)
         best_config = self.get_period_config(reverse_sort=False)
@@ -128,8 +198,8 @@ class TibberPricesPeriodCalculator:
 
         # Compute hash from all relevant data
         hash_data = (
-            today_start,  # Representative for today's data (changes at midnight)
-            tomorrow_start,  # Representative for tomorrow's data (changes when data arrives)
+            today_signature,
+            tomorrow_signature,
             tuple(best_config.items()),
             tuple(peak_config.items()),
             best_level_filter,
@@ -195,32 +265,51 @@ class TibberPricesPeriodCalculator:
                 _const.DEFAULT_BEST_PRICE_MIN_PERIOD_LENGTH,
             )
 
-        # Convert flex from percentage to decimal (e.g., 5 -> 0.05)
-        # CRITICAL: Normalize to absolute value for internal calculations
-        # User-facing values use sign convention:
-        # - Best price: positive (e.g., +15% above minimum)
-        # - Peak price: negative (e.g., -20% below maximum)
-        # Internal calculations always use positive values with reverse_sort flag
-        try:
-            flex = abs(float(flex)) / 100  # Always positive internally
-        except TypeError, ValueError:
-            flex = (
-                abs(_const.DEFAULT_BEST_PRICE_FLEX) / 100
-                if not reverse_sort
-                else abs(_const.DEFAULT_PEAK_PRICE_FLEX) / 100
-            )
+        default_flex = _const.DEFAULT_PEAK_PRICE_FLEX if reverse_sort else _const.DEFAULT_BEST_PRICE_FLEX
+        default_min_distance = (
+            _const.DEFAULT_PEAK_PRICE_MIN_DISTANCE_FROM_AVG
+            if reverse_sort
+            else _const.DEFAULT_BEST_PRICE_MIN_DISTANCE_FROM_AVG
+        )
+        default_min_period_length = (
+            _const.DEFAULT_PEAK_PRICE_MIN_PERIOD_LENGTH if reverse_sort else _const.DEFAULT_BEST_PRICE_MIN_PERIOD_LENGTH
+        )
 
-        # CRITICAL: Normalize min_distance_from_avg to absolute value
-        # User-facing values use sign convention:
-        # - Best price: negative (e.g., -5% below average)
-        # - Peak price: positive (e.g., +5% above average)
-        # Internal calculations always use positive values with reverse_sort flag
-        min_distance_from_avg_normalized = abs(float(min_distance_from_avg))
+        # Convert flex from percentage to decimal (e.g., 5 -> 0.05)
+        # and normalize sign conventions to positive internal values.
+        flex = self._normalize_float_option(
+            flex,
+            default_flex,
+            option_name=_const.CONF_PEAK_PRICE_FLEX if reverse_sort else _const.CONF_BEST_PRICE_FLEX,
+            absolute=True,
+            divisor=100,
+        )
+
+        # CRITICAL: Normalize min_distance_from_avg to absolute value.
+        min_distance_from_avg_normalized = self._normalize_float_option(
+            min_distance_from_avg,
+            default_min_distance,
+            option_name=(
+                _const.CONF_PEAK_PRICE_MIN_DISTANCE_FROM_AVG
+                if reverse_sort
+                else _const.CONF_BEST_PRICE_MIN_DISTANCE_FROM_AVG
+            ),
+            absolute=True,
+        )
 
         config = {
             "flex": flex,
             "min_distance_from_avg": min_distance_from_avg_normalized,
-            "min_period_length": int(min_period_length),
+            "min_period_length": self._normalize_int_option(
+                min_period_length,
+                default_min_period_length,
+                option_name=(
+                    _const.CONF_PEAK_PRICE_MIN_PERIOD_LENGTH
+                    if reverse_sort
+                    else _const.CONF_BEST_PRICE_MIN_PERIOD_LENGTH
+                ),
+                minimum=1,
+            ),
         }
 
         # Extension settings (stored in 'extension_settings' nested section)
@@ -232,12 +321,15 @@ class TibberPricesPeriodCalculator:
                     _const.DEFAULT_PEAK_PRICE_EXTEND_TO_VERY_EXPENSIVE,
                 )
             )
-            max_extension_intervals = int(
+            max_extension_intervals = self._normalize_int_option(
                 self._get_option(
                     _const.CONF_PEAK_PRICE_MAX_EXTENSION_INTERVALS,
                     "extension_settings",
                     _const.DEFAULT_PEAK_PRICE_MAX_EXTENSION_INTERVALS,
-                )
+                ),
+                _const.DEFAULT_PEAK_PRICE_MAX_EXTENSION_INTERVALS,
+                option_name=_const.CONF_PEAK_PRICE_MAX_EXTENSION_INTERVALS,
+                minimum=0,
             )
         else:
             extend_to_extreme = bool(
@@ -247,12 +339,15 @@ class TibberPricesPeriodCalculator:
                     _const.DEFAULT_BEST_PRICE_EXTEND_TO_VERY_CHEAP,
                 )
             )
-            max_extension_intervals = int(
+            max_extension_intervals = self._normalize_int_option(
                 self._get_option(
                     _const.CONF_BEST_PRICE_MAX_EXTENSION_INTERVALS,
                     "extension_settings",
                     _const.DEFAULT_BEST_PRICE_MAX_EXTENSION_INTERVALS,
-                )
+                ),
+                _const.DEFAULT_BEST_PRICE_MAX_EXTENSION_INTERVALS,
+                option_name=_const.CONF_BEST_PRICE_MAX_EXTENSION_INTERVALS,
+                minimum=0,
             )
 
         config["extend_to_extreme"] = extend_to_extreme
@@ -260,20 +355,26 @@ class TibberPricesPeriodCalculator:
 
         # Geometric flex bonus (intervals inside valley/peak zone get extra flex)
         if reverse_sort:
-            geometric_flex_pct = int(
+            geometric_flex_pct = self._normalize_int_option(
                 self._get_option(
                     _const.CONF_PEAK_PRICE_GEOMETRIC_FLEX,
                     "extension_settings",
                     _const.DEFAULT_PEAK_PRICE_GEOMETRIC_FLEX,
-                )
+                ),
+                _const.DEFAULT_PEAK_PRICE_GEOMETRIC_FLEX,
+                option_name=_const.CONF_PEAK_PRICE_GEOMETRIC_FLEX,
+                minimum=0,
             )
         else:
-            geometric_flex_pct = int(
+            geometric_flex_pct = self._normalize_int_option(
                 self._get_option(
                     _const.CONF_BEST_PRICE_GEOMETRIC_FLEX,
                     "extension_settings",
                     _const.DEFAULT_BEST_PRICE_GEOMETRIC_FLEX,
-                )
+                ),
+                _const.DEFAULT_BEST_PRICE_GEOMETRIC_FLEX,
+                option_name=_const.CONF_BEST_PRICE_GEOMETRIC_FLEX,
+                minimum=0,
             )
         config["geometric_extra_flex"] = geometric_flex_pct / 100
 
@@ -286,12 +387,15 @@ class TibberPricesPeriodCalculator:
                     _const.DEFAULT_PEAK_PRICE_SEGMENT_FORCING,
                 )
             )
-            segment_min_periods = int(
+            segment_min_periods = self._normalize_int_option(
                 self._get_option(
                     _const.CONF_PEAK_PRICE_SEGMENT_MIN_PERIODS,
                     "extension_settings",
                     _const.DEFAULT_PEAK_PRICE_SEGMENT_MIN_PERIODS,
-                )
+                ),
+                _const.DEFAULT_PEAK_PRICE_SEGMENT_MIN_PERIODS,
+                option_name=_const.CONF_PEAK_PRICE_SEGMENT_MIN_PERIODS,
+                minimum=1,
             )
         else:
             segment_forcing = bool(
@@ -301,12 +405,15 @@ class TibberPricesPeriodCalculator:
                     _const.DEFAULT_BEST_PRICE_SEGMENT_FORCING,
                 )
             )
-            segment_min_periods = int(
+            segment_min_periods = self._normalize_int_option(
                 self._get_option(
                     _const.CONF_BEST_PRICE_SEGMENT_MIN_PERIODS,
                     "extension_settings",
                     _const.DEFAULT_BEST_PRICE_SEGMENT_MIN_PERIODS,
-                )
+                ),
+                _const.DEFAULT_BEST_PRICE_SEGMENT_MIN_PERIODS,
+                option_name=_const.CONF_BEST_PRICE_SEGMENT_MIN_PERIODS,
+                minimum=1,
             )
         config["segment_forcing"] = segment_forcing
         config["segment_min_periods"] = segment_min_periods
@@ -318,7 +425,7 @@ class TibberPricesPeriodCalculator:
 
     def should_show_periods(
         self,
-        price_info: dict[str, Any],
+        price_info: list[dict[str, Any]],
         *,
         reverse_sort: bool,
         level_override: str | None = None,
@@ -327,7 +434,7 @@ class TibberPricesPeriodCalculator:
         Check if periods should be shown based on level filter only.
 
         Args:
-            price_info: Price information dict with today/yesterday/tomorrow data
+            price_info: Flat list of price intervals (yesterday/today/tomorrow)
             reverse_sort: If False (best_price), checks max_level filter.
                          If True (peak_price), checks min_level filter.
             level_override: Optional override for level filter ("any" to disable)
@@ -486,16 +593,27 @@ class TibberPricesPeriodCalculator:
 
         # Normal check failed - try splitting at gap clusters as fallback
         # Get minimum period length from config (convert minutes to intervals)
-        period_settings = self.config_entry.options.get("period_settings", {})
         if reverse_sort:
-            min_period_minutes = period_settings.get(
-                _const.CONF_PEAK_PRICE_MIN_PERIOD_LENGTH,
+            min_period_minutes = self._normalize_int_option(
+                self._get_option(
+                    _const.CONF_PEAK_PRICE_MIN_PERIOD_LENGTH,
+                    "period_settings",
+                    _const.DEFAULT_PEAK_PRICE_MIN_PERIOD_LENGTH,
+                ),
                 _const.DEFAULT_PEAK_PRICE_MIN_PERIOD_LENGTH,
+                option_name=_const.CONF_PEAK_PRICE_MIN_PERIOD_LENGTH,
+                minimum=1,
             )
         else:
-            min_period_minutes = period_settings.get(
-                _const.CONF_BEST_PRICE_MIN_PERIOD_LENGTH,
+            min_period_minutes = self._normalize_int_option(
+                self._get_option(
+                    _const.CONF_BEST_PRICE_MIN_PERIOD_LENGTH,
+                    "period_settings",
+                    _const.DEFAULT_BEST_PRICE_MIN_PERIOD_LENGTH,
+                ),
                 _const.DEFAULT_BEST_PRICE_MIN_PERIOD_LENGTH,
+                option_name=_const.CONF_BEST_PRICE_MIN_PERIOD_LENGTH,
+                minimum=1,
             )
 
         min_period_intervals = self.time.minutes_to_intervals(min_period_minutes)
@@ -590,7 +708,7 @@ class TibberPricesPeriodCalculator:
 
     def check_level_filter(
         self,
-        price_info: dict[str, Any],
+        price_info: list[dict[str, Any]],
         *,
         reverse_sort: bool,
         override: str | None = None,
@@ -602,7 +720,7 @@ class TibberPricesPeriodCalculator:
         to deviate by one level step (e.g., CHEAP allows NORMAL, but not EXPENSIVE).
 
         Args:
-            price_info: Price information dict with today data
+            price_info: Flat list of price intervals used for today's level check
             reverse_sort: If False (best_price), checks max_level (upper bound filter).
                          If True (peak_price), checks min_level (lower bound filter).
             override: Optional override value (e.g., "any" to disable filter)
@@ -644,16 +762,27 @@ class TibberPricesPeriodCalculator:
             return True  # If no data, don't filter
 
         # Get gap tolerance configuration
-        period_settings = self.config_entry.options.get("period_settings", {})
         if reverse_sort:
-            max_gap_count = period_settings.get(
-                _const.CONF_PEAK_PRICE_MAX_LEVEL_GAP_COUNT,
+            max_gap_count = self._normalize_int_option(
+                self._get_option(
+                    _const.CONF_PEAK_PRICE_MAX_LEVEL_GAP_COUNT,
+                    "period_settings",
+                    _const.DEFAULT_PEAK_PRICE_MAX_LEVEL_GAP_COUNT,
+                ),
                 _const.DEFAULT_PEAK_PRICE_MAX_LEVEL_GAP_COUNT,
+                option_name=_const.CONF_PEAK_PRICE_MAX_LEVEL_GAP_COUNT,
+                minimum=0,
             )
         else:
-            max_gap_count = period_settings.get(
-                _const.CONF_BEST_PRICE_MAX_LEVEL_GAP_COUNT,
+            max_gap_count = self._normalize_int_option(
+                self._get_option(
+                    _const.CONF_BEST_PRICE_MAX_LEVEL_GAP_COUNT,
+                    "period_settings",
+                    _const.DEFAULT_BEST_PRICE_MAX_LEVEL_GAP_COUNT,
+                ),
                 _const.DEFAULT_BEST_PRICE_MAX_LEVEL_GAP_COUNT,
+                option_name=_const.CONF_BEST_PRICE_MAX_LEVEL_GAP_COUNT,
+                minimum=0,
             )
 
         # Note: level_config is lowercase from selector, but _const.PRICE_LEVEL_MAPPING uses uppercase
@@ -683,7 +812,7 @@ class TibberPricesPeriodCalculator:
 
     def calculate_periods_for_price_info(
         self,
-        price_info: dict[str, Any],
+        price_info: list[dict[str, Any]],
         day_patterns: dict[str, Any] | None = None,
     ) -> dict[str, Any]:
         """
@@ -724,28 +853,48 @@ class TibberPricesPeriodCalculator:
 
         # Get rating thresholds from config (flat in options, not in sections)
         # CRITICAL: Price rating thresholds are stored FLAT in options (no sections)
-        threshold_low = self.config_entry.options.get(
-            _const.CONF_PRICE_RATING_THRESHOLD_LOW,
+        threshold_low = self._normalize_float_option(
+            self.config_entry.options.get(
+                _const.CONF_PRICE_RATING_THRESHOLD_LOW,
+                _const.DEFAULT_PRICE_RATING_THRESHOLD_LOW,
+            ),
             _const.DEFAULT_PRICE_RATING_THRESHOLD_LOW,
+            option_name=_const.CONF_PRICE_RATING_THRESHOLD_LOW,
         )
-        threshold_high = self.config_entry.options.get(
-            _const.CONF_PRICE_RATING_THRESHOLD_HIGH,
+        threshold_high = self._normalize_float_option(
+            self.config_entry.options.get(
+                _const.CONF_PRICE_RATING_THRESHOLD_HIGH,
+                _const.DEFAULT_PRICE_RATING_THRESHOLD_HIGH,
+            ),
             _const.DEFAULT_PRICE_RATING_THRESHOLD_HIGH,
+            option_name=_const.CONF_PRICE_RATING_THRESHOLD_HIGH,
         )
 
         # Get volatility thresholds from config (flat in options, not in sections)
         # CRITICAL: Volatility thresholds are stored FLAT in options (no sections)
-        threshold_volatility_moderate = self.config_entry.options.get(
-            _const.CONF_VOLATILITY_THRESHOLD_MODERATE,
+        threshold_volatility_moderate = self._normalize_float_option(
+            self.config_entry.options.get(
+                _const.CONF_VOLATILITY_THRESHOLD_MODERATE,
+                _const.DEFAULT_VOLATILITY_THRESHOLD_MODERATE,
+            ),
             _const.DEFAULT_VOLATILITY_THRESHOLD_MODERATE,
+            option_name=_const.CONF_VOLATILITY_THRESHOLD_MODERATE,
         )
-        threshold_volatility_high = self.config_entry.options.get(
-            _const.CONF_VOLATILITY_THRESHOLD_HIGH,
+        threshold_volatility_high = self._normalize_float_option(
+            self.config_entry.options.get(
+                _const.CONF_VOLATILITY_THRESHOLD_HIGH,
+                _const.DEFAULT_VOLATILITY_THRESHOLD_HIGH,
+            ),
             _const.DEFAULT_VOLATILITY_THRESHOLD_HIGH,
+            option_name=_const.CONF_VOLATILITY_THRESHOLD_HIGH,
         )
-        threshold_volatility_very_high = self.config_entry.options.get(
-            _const.CONF_VOLATILITY_THRESHOLD_VERY_HIGH,
+        threshold_volatility_very_high = self._normalize_float_option(
+            self.config_entry.options.get(
+                _const.CONF_VOLATILITY_THRESHOLD_VERY_HIGH,
+                _const.DEFAULT_VOLATILITY_THRESHOLD_VERY_HIGH,
+            ),
             _const.DEFAULT_VOLATILITY_THRESHOLD_VERY_HIGH,
+            option_name=_const.CONF_VOLATILITY_THRESHOLD_VERY_HIGH,
         )
 
         # Get relaxation configuration for best price
@@ -764,15 +913,25 @@ class TibberPricesPeriodCalculator:
             show_best_price = bool(all_prices)
         else:
             show_best_price = self.should_show_periods(price_info, reverse_sort=False) if all_prices else False
-        min_periods_best = self._get_option(
-            _const.CONF_MIN_PERIODS_BEST,
-            "relaxation_and_target_periods",
+        min_periods_best = self._normalize_int_option(
+            self._get_option(
+                _const.CONF_MIN_PERIODS_BEST,
+                "relaxation_and_target_periods",
+                _const.DEFAULT_MIN_PERIODS_BEST,
+            ),
             _const.DEFAULT_MIN_PERIODS_BEST,
+            option_name=_const.CONF_MIN_PERIODS_BEST,
+            minimum=1,
         )
-        relaxation_attempts_best = self._get_option(
-            _const.CONF_RELAXATION_ATTEMPTS_BEST,
-            "relaxation_and_target_periods",
+        relaxation_attempts_best = self._normalize_int_option(
+            self._get_option(
+                _const.CONF_RELAXATION_ATTEMPTS_BEST,
+                "relaxation_and_target_periods",
+                _const.DEFAULT_RELAXATION_ATTEMPTS_BEST,
+            ),
             _const.DEFAULT_RELAXATION_ATTEMPTS_BEST,
+            option_name=_const.CONF_RELAXATION_ATTEMPTS_BEST,
+            minimum=1,
         )
 
         # Calculate best price periods (or return empty if filtered)
@@ -785,10 +944,15 @@ class TibberPricesPeriodCalculator:
                 "period_settings",
                 _const.DEFAULT_BEST_PRICE_MAX_LEVEL,
             )
-            gap_count_best = self._get_option(
-                _const.CONF_BEST_PRICE_MAX_LEVEL_GAP_COUNT,
-                "period_settings",
+            gap_count_best = self._normalize_int_option(
+                self._get_option(
+                    _const.CONF_BEST_PRICE_MAX_LEVEL_GAP_COUNT,
+                    "period_settings",
+                    _const.DEFAULT_BEST_PRICE_MAX_LEVEL_GAP_COUNT,
+                ),
                 _const.DEFAULT_BEST_PRICE_MAX_LEVEL_GAP_COUNT,
+                option_name=_const.CONF_BEST_PRICE_MAX_LEVEL_GAP_COUNT,
+                minimum=0,
             )
             best_period_config = TibberPricesPeriodConfig(
                 reverse_sort=False,
@@ -851,15 +1015,25 @@ class TibberPricesPeriodCalculator:
             show_peak_price = bool(all_prices)
         else:
             show_peak_price = self.should_show_periods(price_info, reverse_sort=True) if all_prices else False
-        min_periods_peak = self._get_option(
-            _const.CONF_MIN_PERIODS_PEAK,
-            "relaxation_and_target_periods",
+        min_periods_peak = self._normalize_int_option(
+            self._get_option(
+                _const.CONF_MIN_PERIODS_PEAK,
+                "relaxation_and_target_periods",
+                _const.DEFAULT_MIN_PERIODS_PEAK,
+            ),
             _const.DEFAULT_MIN_PERIODS_PEAK,
+            option_name=_const.CONF_MIN_PERIODS_PEAK,
+            minimum=1,
         )
-        relaxation_attempts_peak = self._get_option(
-            _const.CONF_RELAXATION_ATTEMPTS_PEAK,
-            "relaxation_and_target_periods",
+        relaxation_attempts_peak = self._normalize_int_option(
+            self._get_option(
+                _const.CONF_RELAXATION_ATTEMPTS_PEAK,
+                "relaxation_and_target_periods",
+                _const.DEFAULT_RELAXATION_ATTEMPTS_PEAK,
+            ),
             _const.DEFAULT_RELAXATION_ATTEMPTS_PEAK,
+            option_name=_const.CONF_RELAXATION_ATTEMPTS_PEAK,
+            minimum=1,
         )
 
         # Calculate peak price periods (or return empty if filtered)
@@ -872,10 +1046,15 @@ class TibberPricesPeriodCalculator:
                 "period_settings",
                 _const.DEFAULT_PEAK_PRICE_MIN_LEVEL,
             )
-            gap_count_peak = self._get_option(
-                _const.CONF_PEAK_PRICE_MAX_LEVEL_GAP_COUNT,
-                "period_settings",
+            gap_count_peak = self._normalize_int_option(
+                self._get_option(
+                    _const.CONF_PEAK_PRICE_MAX_LEVEL_GAP_COUNT,
+                    "period_settings",
+                    _const.DEFAULT_PEAK_PRICE_MAX_LEVEL_GAP_COUNT,
+                ),
                 _const.DEFAULT_PEAK_PRICE_MAX_LEVEL_GAP_COUNT,
+                option_name=_const.CONF_PEAK_PRICE_MAX_LEVEL_GAP_COUNT,
+                minimum=0,
             )
             peak_period_config = TibberPricesPeriodConfig(
                 reverse_sort=True,

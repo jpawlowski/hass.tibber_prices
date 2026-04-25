@@ -28,7 +28,7 @@ class TibberPricesDataTransformer:
         self,
         config_entry: ConfigEntry,
         log_prefix: str,
-        calculate_periods_fn: Callable[[dict[str, Any], dict[str, Any] | None], dict[str, Any]],
+        calculate_periods_fn: Callable[[list[dict[str, Any]], dict[str, Any] | None], dict[str, Any]],
         time: TibberPricesTimeService,
     ) -> None:
         """Initialize the data transformer."""

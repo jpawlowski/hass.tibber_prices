@@ -283,6 +283,7 @@ def _try_min_duration_fallback(
     *,
     config: TibberPricesPeriodConfig,
     existing_periods: list[dict],
+    all_prices: list[dict],
     prices_by_day: dict[date, list[dict]],
     time: TibberPricesTimeService,
     max_relaxation_attempts: int = 0,
@@ -438,6 +439,9 @@ def _try_min_duration_fallback(
         merged_periods, _new_count = resolve_period_overlaps(
             existing_periods,
             fallback_periods,
+            all_prices=all_prices,
+            config=config,
+            time=time,
         )
         recalculate_period_metadata(merged_periods, time=time)
 
@@ -836,6 +840,7 @@ def calculate_periods_with_relaxation(
             fallback_result, fallback_metadata = _try_min_duration_fallback(
                 config=config,
                 existing_periods=all_periods,
+                all_prices=all_prices,
                 prices_by_day=prices_by_day,
                 time=time,
                 max_relaxation_attempts=max_relaxation_attempts,
@@ -1018,6 +1023,9 @@ def relax_all_prices(
         combined, standalone_count = resolve_period_overlaps(
             existing_periods=existing_periods,
             new_relaxed_periods=new_periods,
+            all_prices=all_prices,
+            config=config,
+            time=time,
         )
 
         # Count periods per day with QUALITY GATE check

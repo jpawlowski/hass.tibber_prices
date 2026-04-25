@@ -283,6 +283,22 @@ def add_price_attributes(attributes: dict, current_period: dict, factor: int) ->
         attributes["volatility"] = current_period["volatility"]  # Volatility is not a price, keep as-is
 
 
+def add_day_statistics_attributes(attributes: dict, current_period: dict) -> None:
+    """Add per-day context attributes for the current/next period.
+
+    Day price range fields are already stored in minor currency units (ct/ore)
+    by the period summary builder and therefore must not be converted again here.
+    """
+    if "day_volatility_%" in current_period:
+        attributes["day_volatility_%"] = current_period["day_volatility_%"]
+    if "day_price_min" in current_period:
+        attributes["day_price_min"] = current_period["day_price_min"]
+    if "day_price_max" in current_period:
+        attributes["day_price_max"] = current_period["day_price_max"]
+    if "day_price_span" in current_period:
+        attributes["day_price_span"] = current_period["day_price_span"]
+
+
 def add_comparison_attributes(attributes: dict, current_period: dict, factor: int) -> None:
     """
     Add price comparison attributes (priority 4).
@@ -473,12 +489,13 @@ def build_final_attributes_simple(
     2. Core decision attributes (level, rating_level, rating_difference_%)
     3. Price statistics (price_mean, price_median, price_min, price_max, price_spread, volatility)
     4. Price differences (period_price_diff_from_daily_min, period_price_diff_from_daily_min_%)
-    5. Detail information (period_interval_count, period_position, period_count_total, period_count_remaining)
-    6. Relaxation information (relaxation_active, relaxation_level, relaxation_threshold_original_%,
+     5. Day context (day_volatility_%, day_price_min, day_price_max, day_price_span)
+     6. Detail information (period_interval_count, period_position, period_count_total, period_count_remaining)
+     7. Relaxation information (relaxation_active, relaxation_level, relaxation_threshold_original_%,
        relaxation_threshold_applied_%) - only if current period was relaxed
-    7. Calculation summary (min_periods_configured, flat_days_detected,
+     8. Calculation summary (min_periods_configured, flat_days_detected,
        relaxation_incomplete) - diagnostic info about the overall calculation
-    8. Meta information (periods list)
+     9. Meta information (periods list)
 
     Args:
         current_period: The current or next period (already complete from coordinator)
@@ -514,20 +531,23 @@ def build_final_attributes_simple(
         # 4. Price differences (converted to display units)
         add_comparison_attributes(attributes, current_period, factor)
 
-        # 5. Detail information
+        # 5. Day context attributes (already in minor units)
+        add_day_statistics_attributes(attributes, current_period)
+
+        # 6. Detail information
         add_detail_attributes(attributes, current_period)
 
-        # 5.5 Per-day period counts (how many cheap/peak periods per day)
+        # 6.5 Per-day period counts (how many cheap/peak periods per day)
         add_period_count_attributes(attributes, period_summaries, time)
 
-        # 6. Relaxation information (only if current period was relaxed)
+        # 7. Relaxation information (only if current period was relaxed)
         add_relaxation_attributes(attributes, current_period)
 
-        # 7. Calculation summary (diagnostic: min_periods_configured, flat_days_detected, etc.)
+        # 8. Calculation summary (diagnostic: min_periods_configured, flat_days_detected, etc.)
         if period_metadata:
             add_calculation_summary_attributes(attributes, period_metadata)
 
-        # 8. Meta information (periods array - prices converted to display units)
+        # 9. Meta information (periods array - prices converted to display units)
         attributes["periods"] = _convert_periods_to_display_units(period_summaries, factor)
 
         return attributes
