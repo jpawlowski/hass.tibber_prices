@@ -47,6 +47,7 @@ if TYPE_CHECKING:
     from .types import TibberPricesThresholdConfig
 
 _INTERVAL_DURATION = timedelta(minutes=15)
+NEGATIVE_CORE_DISABLE_EXTENSION_INTERVALS = 1
 
 
 def extend_periods_for_shape(
@@ -269,6 +270,12 @@ def _extend_period_edges(
     # Collect original intervals early – needed for the majority gate below.
     original_intervals = _collect_original_intervals(start, end, interval_index)
 
+    # Negative-price best-price periods use dedicated core/shoulder handling earlier
+    # in the pipeline. Do not widen them again here just because adjacent intervals
+    # are labelled VERY_CHEAP/CHEAP.
+    if not reverse_sort and _contains_negative_core(original_intervals):
+        return period
+
     # ── walk LEFT (earlier than period start) ─────────────────────────────────
     left_cursor = start - _INTERVAL_DURATION
     left_additions = _walk_contiguous(interval_index, left_cursor, backward_step, primary_level, max_intervals)
@@ -401,3 +408,18 @@ def _collect_original_intervals(
             result.append(iv)
         cursor += _INTERVAL_DURATION
     return result
+
+
+def _contains_negative_core(intervals: list[dict[str, Any]]) -> bool:
+    """Return True when the period contains at least one negative/zero-price interval."""
+    negative_run = 0
+
+    for interval in intervals:
+        if float(interval.get("total", 0.0)) <= 0:
+            negative_run += 1
+            if negative_run >= NEGATIVE_CORE_DISABLE_EXTENSION_INTERVALS:
+                return True
+        else:
+            negative_run = 0
+
+    return False

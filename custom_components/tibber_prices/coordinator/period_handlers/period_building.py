@@ -6,7 +6,7 @@ from datetime import date, datetime, timedelta
 import logging
 from typing import TYPE_CHECKING, Any
 
-from custom_components.tibber_prices.const import PRICE_LEVEL_MAPPING
+from custom_components.tibber_prices.const import PRICE_LEVEL_CHEAP, PRICE_LEVEL_MAPPING, PRICE_LEVEL_VERY_CHEAP
 
 if TYPE_CHECKING:
     from custom_components.tibber_prices.coordinator.time_service import TibberPricesTimeService
@@ -19,6 +19,7 @@ _LOGGER_DETAILS = logging.getLogger(__name__ + ".details")
 
 # Module-local log indentation (each module starts at level 0)
 INDENT_L0 = ""  # Entry point / main function
+NEGATIVE_CORE_NO_SHOULDER_INTERVALS = 8  # 2 hours at 15-min resolution
 
 
 def split_intervals_by_day(
@@ -64,6 +65,182 @@ def _trim_trailing_gaps(period: list[dict]) -> list[dict]:
     while period and period[-1].get("is_level_gap", False):
         period = period[:-1]
     return period
+
+
+def _build_period_interval(price_data: dict, *, time: TibberPricesTimeService) -> dict | None:
+    """Build the internal interval representation used by raw periods."""
+    starts_at = time.get_interval_time(price_data)
+    if starts_at is None:
+        return None
+
+    price_original = float(price_data.get("_original_price", price_data["total"]))
+    return {
+        "interval_hour": starts_at.hour,
+        "interval_minute": starts_at.minute,
+        "interval_time": f"{starts_at.hour:02d}:{starts_at.minute:02d}",
+        "price": price_original,
+        "interval_start": starts_at,
+        "smoothing_was_impactful": False,
+        "is_level_gap": False,
+        "geometric_bonus_applied": False,
+    }
+
+
+def _get_longest_negative_core_length(period: list[dict]) -> int:
+    """Return the longest contiguous run of intervals with price <= 0."""
+    longest = 0
+    current = 0
+
+    for interval in period:
+        if float(interval.get("price", 0.0)) <= 0:
+            current += 1
+            longest = max(longest, current)
+        else:
+            current = 0
+
+    return longest
+
+
+def _collect_contiguous_best_price_side(
+    interval_index: dict[datetime, dict],
+    start_cursor: datetime,
+    step: timedelta,
+    *,
+    max_intervals: int,
+    time: TibberPricesTimeService,
+) -> list[dict]:
+    """Collect directly adjacent favourable intervals on one side of a negative core."""
+    for target_level in (PRICE_LEVEL_VERY_CHEAP, PRICE_LEVEL_CHEAP):
+        additions: list[dict] = []
+        cursor = start_cursor
+
+        for _ in range(max_intervals):
+            price_data = interval_index.get(cursor)
+            if price_data is None or price_data.get("level") != target_level:
+                break
+
+            period_interval = _build_period_interval(price_data, time=time)
+            if period_interval is None:
+                break
+
+            additions.append(period_interval)
+            cursor += step
+
+        if additions:
+            if step < timedelta(0):
+                additions.reverse()
+            return additions
+
+    return []
+
+
+def _select_nearest_extensions(
+    left_candidates: list[dict],
+    right_candidates: list[dict],
+    *,
+    max_total_additions: int,
+) -> tuple[list[dict], list[dict]]:
+    """Select the nearest left/right additions until the target length is reached."""
+    left_nearest = list(reversed(left_candidates))
+    right_nearest = right_candidates.copy()
+    selected_left_nearest: list[dict] = []
+    selected_right: list[dict] = []
+    prefer_left = bool(left_nearest)
+
+    while max_total_additions > 0 and (left_nearest or right_nearest):
+        if prefer_left and left_nearest:
+            selected_left_nearest.append(left_nearest.pop(0))
+            max_total_additions -= 1
+        elif not prefer_left and right_nearest:
+            selected_right.append(right_nearest.pop(0))
+            max_total_additions -= 1
+        elif left_nearest:
+            selected_left_nearest.append(left_nearest.pop(0))
+            max_total_additions -= 1
+        elif right_nearest:
+            selected_right.append(right_nearest.pop(0))
+            max_total_additions -= 1
+
+        prefer_left = not prefer_left
+
+    return list(reversed(selected_left_nearest)), selected_right
+
+
+def extend_negative_core_periods_for_min_length(
+    periods: list[list[dict]],
+    all_prices: list[dict],
+    min_period_length: int,
+    *,
+    time: TibberPricesTimeService,
+) -> list[list[dict]]:
+    """Locally extend short negative best-price cores into directly adjacent cheap shoulders.
+
+    This rescue step is intentionally narrow:
+    - only periods that already contain a negative/zero core are considered
+    - only periods shorter than the configured minimum length are extended
+    - only directly adjacent VERY_CHEAP/CHEAP intervals may be added
+    - multi-hour negative blocks stay untouched to preserve a strict negative-only period
+    """
+    if not periods:
+        return periods
+
+    min_intervals = time.minutes_to_intervals(min_period_length)
+    if min_intervals <= 0:
+        return periods
+
+    interval_index: dict[datetime, dict] = {}
+    for price_data in all_prices:
+        starts_at = time.get_interval_time(price_data)
+        if starts_at is not None:
+            interval_index[starts_at] = price_data
+
+    interval_duration = time.get_interval_duration()
+    extended_periods: list[list[dict]] = []
+
+    for period in periods:
+        negative_core_length = _get_longest_negative_core_length(period)
+        if (
+            negative_core_length == 0
+            or negative_core_length >= NEGATIVE_CORE_NO_SHOULDER_INTERVALS
+            or len(period) >= min_intervals
+        ):
+            extended_periods.append(period)
+            continue
+
+        period_start = period[0].get("interval_start")
+        period_end = period[-1].get("interval_start")
+        if period_start is None or period_end is None:
+            extended_periods.append(period)
+            continue
+
+        needed_intervals = min_intervals - len(period)
+        left_candidates = _collect_contiguous_best_price_side(
+            interval_index,
+            period_start - interval_duration,
+            -interval_duration,
+            max_intervals=needed_intervals,
+            time=time,
+        )
+        right_candidates = _collect_contiguous_best_price_side(
+            interval_index,
+            period_end + interval_duration,
+            interval_duration,
+            max_intervals=needed_intervals,
+            time=time,
+        )
+
+        selected_left, selected_right = _select_nearest_extensions(
+            left_candidates,
+            right_candidates,
+            max_total_additions=needed_intervals,
+        )
+
+        if selected_left or selected_right:
+            extended_periods.append([*selected_left, *period, *selected_right])
+        else:
+            extended_periods.append(period)
+
+    return extended_periods
 
 
 def build_periods(
@@ -144,7 +321,6 @@ def build_periods(
         )
         for day in ref_prices
     }
-
     for price_data in all_prices:
         starts_at = time.get_interval_time(price_data)
         if starts_at is None:
@@ -173,9 +349,16 @@ def build_periods(
         # Check flex and minimum distance criteria (using smoothed price and interval's own day reference)
         criteria = criteria_by_day[ref_date]
 
-        # Compute geometric flex bonus if pattern-aware expansion is enabled
+        # Compute geometric flex bonus if pattern-aware expansion is enabled.
+        # Best-price days with a negative daily minimum are handled by the dedicated
+        # negative-core logic; applying a day-wide geometric valley bonus there would
+        # reintroduce broad positive shoulders around a negative core.
         geo_bonus = 0.0
-        if geometric_extra_flex > 0 and day_patterns_by_date is not None:
+        if (
+            geometric_extra_flex > 0
+            and day_patterns_by_date is not None
+            and not (not reverse_sort and criteria.ref_price < 0)
+        ):
             day_pattern_for_date = day_patterns_by_date.get(ref_date)
             geo_bonus = compute_geometric_flex_bonus(
                 starts_at,

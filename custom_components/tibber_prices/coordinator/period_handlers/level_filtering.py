@@ -132,6 +132,17 @@ def check_interval_criteria(
         Tuple of (in_flex, meets_min_distance)
 
     """
+    # ============================================================
+    # FAST PATH: Negative/zero prices always qualify as best price
+    # ============================================================
+    # When price ≤ 0 the consumer is paid or gets free electricity.
+    # This is unconditionally the cheapest possible outcome regardless
+    # of daily average, flex setting, or level filter.
+    # Bypasses both flex AND min_distance: a negative price is always
+    # maximally "far below average" in the economically meaningful sense.
+    if not criteria.reverse_sort and price <= 0:
+        return True, True
+
     # Normalize inputs to absolute values for consistent calculation
     flex_abs = abs(criteria.flex)
     min_distance_abs = abs(criteria.min_distance_from_avg)
@@ -143,22 +154,19 @@ def check_interval_criteria(
     # - Peak price (reverse_sort=True): daily MAXIMUM
     # - Best price (reverse_sort=False): daily MINIMUM
     #
+    # Standard formula (positive daily minimum):
     # Flex base = max(price_span, abs(ref_price)):
     # - On V-shape days (tiny minimum, large span): span wins → meaningful flex band
     # - On flat days (large minimum, small span): ref_price wins → same as before
     #
-    # WHY NOT plain ref_price * flex: When daily_min is a single low outlier
-    # (e.g., min=1 ct, avg=19 ct), the flex band collapses to near-zero
-    # (1 ct * 15% = 0.15 ct) and no period of sufficient length can be found.
-    #
-    # WHY NOT plain span * flex: On flat days (e.g., min=30 ct, span=3 ct),
-    # this makes the band much narrower than before, breaking existing behaviour.
-    #
-    # Examples with flex=15%:
-    # - V-shape: min=1 ct, avg=19 ct → span=18 ct → flex_base=18 → threshold=1+2.7=3.7 ct  (spans fixed)
-    # - Flat:    min=30 ct, avg=33 ct → span=3 ct  → flex_base=30 → threshold=30+4.5=34.5 ct (unchanged)
-    # - Normal:  min=10 ct, avg=20 ct → span=10 ct → flex_base=10 → threshold=10+1.5=11.5 ct (unchanged)
+    # Examples with flex=15% (positive minimum):
+    # - V-shape: min=1 ct, avg=19 ct → span=18 ct → flex_base=18 → threshold=1+2.7=3.7 ct
+    # - Flat:    min=30 ct, avg=33 ct → span=3 ct  → flex_base=30 → threshold=30+4.5=34.5 ct
+    # - Normal:  min=10 ct, avg=20 ct → span=10 ct → flex_base=10 → threshold=10+1.5=11.5 ct
 
+    # Positive shoulders around a short negative core are handled later in the
+    # raw-period pipeline, where adjacency can be evaluated locally. Keeping the
+    # interval filter day-agnostic avoids creating a global halo across the whole day.
     price_span = abs(criteria.avg_price - criteria.ref_price)
     flex_base = max(price_span, abs(criteria.ref_price))
 

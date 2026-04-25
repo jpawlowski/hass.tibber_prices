@@ -16,6 +16,7 @@ from .period_building import (
     add_interval_ends,
     build_periods,
     calculate_reference_prices,
+    extend_negative_core_periods_for_min_length,
     extend_periods_across_midnight,
     filter_periods_by_end_date,
     filter_periods_by_min_length,
@@ -199,6 +200,17 @@ def calculate_periods(
             "%sAfter segment_forcing: %d periods total",
             INDENT_L0,
             len(raw_periods),
+        )
+
+    # Step 3.75: Rescue short negative best-price cores before min-length filtering.
+    # This keeps <= 0 prices as the hard core and only adds directly adjacent cheap
+    # shoulders when needed to reach the configured minimum length.
+    if not reverse_sort:
+        raw_periods = extend_negative_core_periods_for_min_length(
+            raw_periods,
+            all_prices_sorted,
+            min_period_length,
+            time=time,
         )
 
     # Step 4: Filter by minimum length

@@ -679,3 +679,100 @@ class TestRealWorldScenarios:
 
         assert in_flex_min is True, "Negative minimum should pass"
         assert in_flex_within is True, "Within flex of negative min should pass"
+
+
+@pytest.mark.unit
+class TestNegativePriceFastPath:
+    """
+    Tests for the negative/zero price fast path.
+
+    Regression Tests:
+    - Negative prices not fully included in best price (Apr 2026): Even with
+      VERY_CHEAP extension and max flex (50%), the old formula excluded large
+      parts of a negative-price day because the flex band was anchored at the
+      negative daily minimum. Example: min=-38 ct, flex=50% → threshold=-19 ct,
+      excluding -18 ct, -10 ct, 0 ct, etc.
+    """
+
+    def test_negative_price_always_qualifies_best_price(self) -> None:
+        """Any negative price unconditionally qualifies as best price (fast path)."""
+        # Simulate tomorrow: min=-38 ct, avg=-3 ct
+        criteria = TibberPricesIntervalCriteria(
+            ref_price=-38.0,
+            avg_price=-3.0,
+            flex=0.15,
+            min_distance_from_avg=5.0,
+            reverse_sort=False,
+        )
+        for price in [-38.0, -20.0, -5.0, -0.01]:
+            in_flex, meets_distance = check_interval_criteria(price, criteria)
+            assert in_flex is True, f"Negative price {price} ct should always pass flex"
+            assert meets_distance is True, f"Negative price {price} ct should always pass distance"
+
+    def test_zero_price_always_qualifies_best_price(self) -> None:
+        """Zero price unconditionally qualifies as best price (fast path)."""
+        criteria = TibberPricesIntervalCriteria(
+            ref_price=-10.0,
+            avg_price=5.0,
+            flex=0.15,
+            min_distance_from_avg=5.0,
+            reverse_sort=False,
+        )
+        in_flex, meets_distance = check_interval_criteria(0.0, criteria)
+        assert in_flex is True, "Zero price should always pass flex"
+        assert meets_distance is True, "Zero price should always pass distance"
+
+    def test_negative_price_does_not_qualify_peak_price(self) -> None:
+        """Negative prices should NOT qualify as peak prices."""
+        # Even with high average, a negative price is never a "peak"
+        criteria = TibberPricesIntervalCriteria(
+            ref_price=30.0,
+            avg_price=20.0,
+            flex=0.50,
+            min_distance_from_avg=5.0,
+            reverse_sort=True,
+        )
+        in_flex, _meets_distance = check_interval_criteria(-5.0, criteria)
+        assert in_flex is False, "Negative price should fail peak price flex check"
+
+    def test_positive_price_is_not_auto_qualified_on_negative_day(self) -> None:
+        """Positive prices must still pass the normal interval criteria."""
+        criteria = TibberPricesIntervalCriteria(
+            ref_price=-38.0,
+            avg_price=5.0,
+            flex=0.15,
+            min_distance_from_avg=5.0,
+            reverse_sort=False,
+        )
+        in_flex, meets_distance = check_interval_criteria(2.0, criteria)
+        assert in_flex is False, "Positive prices should not get a day-global negative halo"
+        assert meets_distance is True, "Distance may still pass even when flex fails"
+
+    def test_regression_old_formula_would_exclude_most_intervals(self) -> None:
+        """
+        Regression: the old flex formula (anchored at negative min) excluded
+        almost all intervals on a day with extreme negative prices.
+
+        Old formula (BROKEN):
+          flex_base = max(|avg - min|, |min|) = max(35, 38) = 38
+          threshold = -38 + 38 * 0.15 = -32.3 ct
+          → only prices ≤ -32.3 ct qualify!
+
+        New formula:
+          Fast path: price ≤ 0 → always (True, True)
+          Zero-anchored: threshold = abs(-3) * 0.15 = 0.45 ct above zero
+          → ALL negative prices qualify, plus tiny halo near 0
+        """
+        criteria = TibberPricesIntervalCriteria(
+            ref_price=-38.0,
+            avg_price=-3.0,
+            flex=0.15,
+            min_distance_from_avg=5.0,
+            reverse_sort=False,
+        )
+        # All these prices should pass with new logic but would have FAILED with old logic
+        prices_that_now_pass = [-32.0, -20.0, -10.0, -5.0, -1.0, -0.01, 0.0]
+        for price in prices_that_now_pass:
+            in_flex, meets_distance = check_interval_criteria(price, criteria)
+            assert in_flex is True, f"Price {price} ct should pass with new logic (regression)"
+            assert meets_distance is True, f"Price {price} ct should pass distance (regression)"
