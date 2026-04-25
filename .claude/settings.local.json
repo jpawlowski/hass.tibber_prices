@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(./scripts/lint-check)",
+      "Bash(./scripts/type-check)",
+      "Bash(./scripts/test tests/services/test_plan_charging.py tests/services/test_energy_calculator.py tests/services/test_power_scheduler.py)",
+      "Bash(./scripts/test)",
+      "Bash(./scripts/check)"
+    ]
+  }
+}
