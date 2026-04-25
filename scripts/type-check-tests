@@ -1,0 +1,34 @@
+#!/bin/bash
+
+# script/type-check-tests: Run optional Pyright checks for test files
+#
+# Runs Pyright on tests without changing the main repository type-check scope.
+# Defaults to the full tests/ tree, but accepts optional file or folder targets.
+#
+# Usage:
+#   ./scripts/type-check-tests
+#   ./scripts/type-check-tests tests/test_period_overlap.py tests/test_periods_hash.py
+
+set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+cd "$SCRIPT_DIR/.."
+
+# shellcheck source=scripts/.lib/output.sh
+source "$SCRIPT_DIR/.lib/output.sh"
+
+if [[ -z ${VIRTUAL_ENV:-} ]]; then
+    # shellcheck source=/dev/null
+    source "$HOME/.venv/bin/activate"
+fi
+
+targets=("$@")
+if [[ ${#targets[@]} -eq 0 ]]; then
+    targets=("tests")
+fi
+
+log_header "Running type checking tools for test files"
+
+pyright "${targets[@]}"
+
+log_success "Test type checking completed"

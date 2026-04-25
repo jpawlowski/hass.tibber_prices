@@ -1,15 +1,17 @@
 #!/bin/bash
 
-# script/check-all: Run full checks for Python and non-Python files
+# script/check-all: Run full checks for Python/non-Python files, optionally incl. test Pyright
 #
 # Runs project checks and validates formatting/lint state for common
-# non-Python files.
+# non-Python files. Optionally includes Pyright checks for tests.
 #
 # Usage:
 #   ./scripts/check-all
+#   ./scripts/check-all --with-test-types
 #
 # Examples:
 #   ./scripts/check-all
+#   ./scripts/check-all --with-test-types
 
 set -euo pipefail
 
@@ -18,6 +20,21 @@ cd "$SCRIPT_DIR/.."
 
 # shellcheck source=scripts/.lib/output.sh
 source "$SCRIPT_DIR/.lib/output.sh"
+
+run_test_type_check=false
+
+for arg in "$@"; do
+    case "$arg" in
+    --with-test-types)
+        run_test_type_check=true
+        ;;
+    *)
+        log_error "Unknown argument: $arg"
+        log_info "Usage: ./scripts/check-all [--with-test-types]"
+        exit 1
+        ;;
+    esac
+done
 
 collect_shell_files() {
     local files=()
@@ -39,6 +56,11 @@ collect_shell_files() {
 
 log_header "Running Python checks"
 "$SCRIPT_DIR/check"
+
+if [[ $run_test_type_check == true ]]; then
+    log_header "Running Pyright checks for tests"
+    "$SCRIPT_DIR/type-check-tests"
+fi
 
 log_header "Checking JSON/JSONC/Markdown with Prettier"
 npx --yes prettier --check "**/*.{json,jsonc,md,yml,yaml}"

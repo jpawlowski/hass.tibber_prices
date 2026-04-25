@@ -202,7 +202,7 @@ class TestConfigEntryCleanup:
         coordinator._listener_manager = object.__new__(TibberPricesListenerManager)  # noqa: SLF001
         coordinator._data_transformer = object.__new__(TibberPricesDataTransformer)  # noqa: SLF001
         coordinator._period_calculator = object.__new__(TibberPricesPeriodCalculator)  # noqa: SLF001
-        coordinator._lifecycle_callbacks = []  # noqa: SLF001
+        setattr(coordinator, "_lifecycle_callbacks", [])
 
         # Manually call the registration that happens in __init__
         # This tests the pattern: entry.async_on_unload(entry.add_update_listener(...))
@@ -249,7 +249,7 @@ class TestCacheInvalidation:
 
         # Create calculator with cached data
         calculator = object.__new__(TibberPricesPeriodCalculator)
-        calculator._config_cache = {"some": "data"}  # noqa: SLF001
+        calculator._config_cache = {"best": {"some": "data"}}  # noqa: SLF001
         calculator._config_cache_valid = True  # noqa: SLF001
         calculator._cached_periods = {"cached": "periods"}  # noqa: SLF001
         calculator._last_periods_hash = "some_hash"  # noqa: SLF001

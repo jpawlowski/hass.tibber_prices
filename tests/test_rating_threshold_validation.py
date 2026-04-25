@@ -280,6 +280,7 @@ def test_hysteresis_sequence_simulation() -> None:
         rating = calculate_rating_level(
             diff, threshold_low, threshold_high, previous_rating=previous, hysteresis=hysteresis
         )
+        assert rating is not None
         results_with.append(rating)
         previous = rating
     assert results_with == expected_with_hysteresis

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from datetime import UTC, datetime, timedelta
+from zoneinfo import ZoneInfo
 
 from custom_components.tibber_prices.services.charging.deadline_solver import resolve_deadline
 from custom_components.tibber_prices.services.charging.power_scheduler import build_power_schedule
@@ -53,6 +54,7 @@ def test_stepped_mode_uses_smallest_sufficient_step() -> None:
 def test_resolve_deadline_next_peak_period() -> None:
     """Deadline helper should resolve the next future peak period start."""
     now = datetime(2026, 1, 1, 0, 0, tzinfo=UTC)
+    home_tz = ZoneInfo("UTC")
     coordinator_data = {
         "pricePeriods": {
             "peak_price": {
@@ -69,7 +71,7 @@ def test_resolve_deadline_next_peak_period() -> None:
     deadline, source = resolve_deadline(
         coordinator_data=coordinator_data,
         now=now,
-        home_tz=UTC,
+        home_tz=home_tz,
         must_reach_by_event="next_peak_period",
     )
 

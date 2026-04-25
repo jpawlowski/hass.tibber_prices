@@ -47,12 +47,15 @@ def _create_intervals(start: datetime, count: int) -> list[dict]:
     return [_create_test_interval(start + timedelta(minutes=15 * i)) for i in range(count)]
 
 
+def _create_pool(api_client: MagicMock) -> TibberPricesIntervalPool:
+    """Create an interval pool using the current constructor signature."""
+    return TibberPricesIntervalPool(home_id="home123", api=api_client)
+
+
 @pytest.mark.asyncio
 @pytest.mark.unit
 async def test_no_cache_single_api_call() -> None:
     """Test: Empty cache → 1 API call for entire range."""
-    pool = TibberPricesIntervalPool(home_id="home123")
-
     # Mock API client
     api_client = MagicMock(
         spec=[
@@ -63,6 +66,7 @@ async def test_no_cache_single_api_call() -> None:
             "_calculate_day_before_yesterday_midnight",
         ]
     )
+    pool = _create_pool(api_client)
     start = dt_util.now().replace(hour=10, minute=0, second=0, microsecond=0)
     end = start + timedelta(hours=2)  # 8 intervals
 
@@ -80,19 +84,17 @@ async def test_no_cache_single_api_call() -> None:
     user_data = {"timeZone": "Europe/Berlin"}
 
     # Act
-    result = await pool.get_intervals(api_client, user_data, start, end)
+    intervals, _api_called = await pool.get_intervals(api_client, user_data, start, end)
 
     # Assert: Exactly 1 API call
     assert api_client.async_get_price_info_for_range.call_count == 1
-    assert len(result) == 8
+    assert len(intervals) == 8
 
 
 @pytest.mark.asyncio
 @pytest.mark.unit
 async def test_full_cache_zero_api_calls() -> None:
     """Test: Fully cached range → 0 API calls."""
-    pool = TibberPricesIntervalPool(home_id="home123")
-
     # Mock API client
     api_client = MagicMock(
         spec=[
@@ -103,6 +105,7 @@ async def test_full_cache_zero_api_calls() -> None:
             "_calculate_day_before_yesterday_midnight",
         ]
     )
+    pool = _create_pool(api_client)
     start = dt_util.now().replace(hour=10, minute=0, second=0, microsecond=0)
     end = start + timedelta(hours=2)  # 8 intervals
 
@@ -123,19 +126,17 @@ async def test_full_cache_zero_api_calls() -> None:
     assert api_client.async_get_price_info_for_range.call_count == 1
 
     # Second call: should use cache
-    result = await pool.get_intervals(api_client, user_data, start, end)
+    intervals, _api_called = await pool.get_intervals(api_client, user_data, start, end)
 
     # Assert: Still only 1 API call (from first request)
     assert api_client.async_get_price_info_for_range.call_count == 1
-    assert len(result) == 8
+    assert len(intervals) == 8
 
 
 @pytest.mark.asyncio
 @pytest.mark.unit
 async def test_single_gap_single_api_call() -> None:
     """Test: One gap in cache → 1 API call for that gap only."""
-    pool = TibberPricesIntervalPool(home_id="home123")
-
     # Mock API client
     api_client = MagicMock(
         spec=[
@@ -146,6 +147,7 @@ async def test_single_gap_single_api_call() -> None:
             "_calculate_day_before_yesterday_midnight",
         ]
     )
+    pool = _create_pool(api_client)
     start = dt_util.now().replace(hour=10, minute=0, second=0, microsecond=0)
     end = start + timedelta(hours=3)  # 12 intervals total
 
@@ -175,19 +177,17 @@ async def test_single_gap_single_api_call() -> None:
     gap_intervals = _create_intervals(start + timedelta(hours=1), 4)
     api_client.async_get_price_info_for_range = AsyncMock(return_value=gap_intervals)
 
-    result = await pool.get_intervals(api_client, user_data, start, end)
+    intervals, _api_called = await pool.get_intervals(api_client, user_data, start, end)
 
     # Assert: Exactly 1 additional API call (for the gap)
     assert api_client.async_get_price_info_for_range.call_count == call_count_before + 1
-    assert len(result) == 12  # All intervals now available
+    assert len(intervals) == 12  # All intervals now available
 
 
 @pytest.mark.asyncio
 @pytest.mark.unit
 async def test_multiple_gaps_multiple_api_calls() -> None:
     """Test: Multiple gaps → one API call per continuous gap."""
-    pool = TibberPricesIntervalPool(home_id="home123")
-
     # Mock API client
     api_client = MagicMock(
         spec=[
@@ -198,6 +198,7 @@ async def test_multiple_gaps_multiple_api_calls() -> None:
             "_calculate_day_before_yesterday_midnight",
         ]
     )
+    pool = _create_pool(api_client)
     start = dt_util.now().replace(hour=10, minute=0, second=0, microsecond=0)
     end = start + timedelta(hours=4)  # 16 intervals total
 
@@ -247,19 +248,17 @@ async def test_multiple_gaps_multiple_api_calls() -> None:
 
     api_client.async_get_price_info_for_range = AsyncMock(side_effect=mock_fetch)
 
-    result = await pool.get_intervals(api_client, user_data, start, end)
+    intervals, _api_called = await pool.get_intervals(api_client, user_data, start, end)
 
     # Assert: Exactly 3 additional API calls (one per gap)
     assert api_client.async_get_price_info_for_range.call_count == call_count_before + 3
-    assert len(result) == 16  # All intervals now available
+    assert len(intervals) == 16  # All intervals now available
 
 
 @pytest.mark.asyncio
 @pytest.mark.unit
 async def test_partial_overlap_minimal_fetch() -> None:
     """Test: Overlapping request → fetch only new intervals."""
-    pool = TibberPricesIntervalPool(home_id="home123")
-
     # Mock API client
     api_client = MagicMock(
         spec=[
@@ -270,6 +269,7 @@ async def test_partial_overlap_minimal_fetch() -> None:
             "_calculate_day_before_yesterday_midnight",
         ]
     )
+    pool = _create_pool(api_client)
     start = dt_util.now().replace(hour=10, minute=0, second=0, microsecond=0)
 
     user_data = {"timeZone": "Europe/Berlin"}
@@ -285,7 +285,7 @@ async def test_partial_overlap_minimal_fetch() -> None:
     batch2 = _create_intervals(start + timedelta(hours=2), 4)  # Only new ones
     api_client.async_get_price_info_for_range = AsyncMock(return_value=batch2)
 
-    result = await pool.get_intervals(
+    intervals, _api_called = await pool.get_intervals(
         api_client,
         user_data,
         start + timedelta(hours=1),
@@ -294,15 +294,13 @@ async def test_partial_overlap_minimal_fetch() -> None:
 
     # Assert: 1 additional API call (for 12:00-13:00 only)
     assert api_client.async_get_price_info_for_range.call_count == 2
-    assert len(result) == 8  # 11:00-13:00
+    assert len(intervals) == 8  # 11:00-13:00
 
 
 @pytest.mark.asyncio
 @pytest.mark.unit
 async def test_detect_missing_ranges_optimization() -> None:
     """Test: Gap detection returns minimal set of ranges (tested via API behavior)."""
-    pool = TibberPricesIntervalPool(home_id="home123")
-
     # Mock API client that tracks calls
     api_client = MagicMock(
         spec=[
@@ -313,6 +311,7 @@ async def test_detect_missing_ranges_optimization() -> None:
             "_calculate_day_before_yesterday_midnight",
         ]
     )
+    pool = _create_pool(api_client)
 
     start = dt_util.now().replace(hour=10, minute=0, second=0, microsecond=0)
     end = start + timedelta(hours=4)
@@ -334,13 +333,17 @@ async def test_detect_missing_ranges_optimization() -> None:
     # Manually add to cache (simulate previous fetches)
     # Note: Accessing private _cache for test setup
     # Single-home architecture: directly populate internal structures
-    pool._fetch_groups = [  # noqa: SLF001
-        {
-            "intervals": cached,
-            "fetch_time": dt_util.now().isoformat(),
-        }
-    ]
-    pool._timestamp_index = {interval["startsAt"]: idx for idx, interval in enumerate(cached)}  # noqa: SLF001
+    cache = pool._cache  # noqa: SLF001
+    index = pool._index  # noqa: SLF001
+    cache.set_fetch_groups(
+        [
+            {
+                "intervals": cached,
+                "fetched_at": dt_util.now(),
+            }
+        ]
+    )
+    index.rebuild(cache.get_fetch_groups())
 
     # Mock responses for the 3 expected gaps
     gap1 = _create_intervals(start + timedelta(minutes=30), 2)  # 10:30-11:00
@@ -362,10 +365,10 @@ async def test_detect_missing_ranges_optimization() -> None:
     api_client.async_get_price_info_for_range = AsyncMock(side_effect=mock_fetch)
 
     # Request entire range - should detect exactly 3 gaps
-    result = await pool.get_intervals(api_client, user_data, start, end)
+    intervals, _api_called = await pool.get_intervals(api_client, user_data, start, end)
 
     # Assert: Exactly 3 API calls (one per gap)
     assert api_client.async_get_price_info_for_range.call_count == 3
 
     # Verify all intervals are now available
-    assert len(result) == 16  # 2 + 2 + 2 + 2 + 1 + 7 = 16 intervals
+    assert len(intervals) == 16  # 2 + 2 + 2 + 2 + 1 + 7 = 16 intervals

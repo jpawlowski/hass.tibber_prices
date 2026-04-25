@@ -541,6 +541,9 @@ class TestPriceComparison:
         cheap_stats = calculate_window_statistics(cheapest["intervals"])
         expensive_stats = calculate_window_statistics(most_expensive["intervals"])
 
+        assert cheap_stats["price_mean"] is not None
+        assert expensive_stats["price_mean"] is not None
+
         spread_cheap_to_exp = expensive_stats["price_mean"] - cheap_stats["price_mean"]
         spread_exp_to_cheap = cheap_stats["price_mean"] - expensive_stats["price_mean"]
 
@@ -582,6 +585,9 @@ class TestPriceComparison:
         cheap_stats = calculate_window_statistics(cheapest["intervals"])
         expensive_stats = calculate_window_statistics(most_expensive["intervals"])
 
+        assert cheap_stats["price_mean"] is not None
+        assert expensive_stats["price_mean"] is not None
+
         spread = expensive_stats["price_mean"] - cheap_stats["price_mean"]
         assert abs(spread) < 0.0001
 
@@ -597,6 +603,9 @@ class TestPriceComparison:
 
         cheap_stats = calculate_window_statistics(cheapest["intervals"])
         expensive_stats = calculate_window_statistics(most_expensive["intervals"])
+
+        assert cheap_stats["price_mean"] is not None
+        assert expensive_stats["price_mean"] is not None
 
         spread = expensive_stats["price_mean"] - cheap_stats["price_mean"]
         assert abs(spread) < 0.0001
