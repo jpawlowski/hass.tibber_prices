@@ -129,7 +129,7 @@
     "ghcr.io/flexwie/devcontainer-features/op:1": {
       "version": "latest"
     },
-    "ghcr.io/devcontainers/features/node:1": {
+    "ghcr.io/devcontainers/features/node:2": {
       "version": "24"
     },
     "ghcr.io/devcontainers/features/rust:1": {
