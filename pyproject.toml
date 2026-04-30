@@ -290,4 +290,4 @@ property-decorators = ["propcache.api.cached_property"]
 keep-runtime-typing = true
 
 [project.optional-dependencies]
-test = ["pytest-homeassistant-custom-component>=0.13.325"]
+test = ["pytest-homeassistant-custom-component>=0.13.326"]
