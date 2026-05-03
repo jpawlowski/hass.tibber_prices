@@ -40,6 +40,28 @@ def create_price_intervals(day_offset: int = 0) -> list[dict]:
     return intervals
 
 
+def create_level_gap_intervals() -> list[dict]:
+    """Create a small interval sequence where level smoothing changes the display level."""
+    base_time = dt_util.now().replace(hour=12, minute=0, second=0, microsecond=0)
+    levels = ["CHEAP", "CHEAP", "CHEAP", "NORMAL", "CHEAP", "CHEAP"]
+    totals = [0.10, 0.101, 0.102, 0.18, 0.103, 0.104]
+
+    intervals: list[dict] = []
+    for index, (level, total) in enumerate(zip(levels, totals, strict=True)):
+        interval_time = base_time + timedelta(minutes=index * 15)
+        intervals.append(
+            {
+                "startsAt": interval_time,
+                "total": total,
+                "energy": round(total - 0.02, 4),
+                "tax": 0.02,
+                "level": level,
+            }
+        )
+
+    return intervals
+
+
 @pytest.mark.unit
 def test_transformation_cache_invalidation_on_new_timestamp() -> None:
     """
@@ -222,3 +244,46 @@ def test_cache_preserved_when_neither_timestamp_nor_config_changed() -> None:
 
     # Verify period calculation was only called ONCE (during first transform)
     assert mock_period_calc.calculate_periods_for_price_info.call_count == 1
+
+
+@pytest.mark.unit
+def test_transform_data_uses_raw_levels_for_period_calculation() -> None:
+    """Period calculation must see raw Tibber levels even when priceInfo is smoothed."""
+    config_entry = Mock()
+    config_entry.entry_id = "test_entry"
+    config_entry.data = {"home_id": "home_123"}
+    config_entry.options = {
+        "price_level_gap_tolerance": 1,
+        "price_rating_gap_tolerance": 0,
+    }
+
+    time_service = TibberPricesTimeService()
+    current_time = datetime(2025, 11, 22, 13, 15, 0, tzinfo=ZoneInfo("Europe/Oslo"))
+    captured_levels: list[str] = []
+
+    def _capture_period_levels(price_info: list[dict], _day_patterns: dict | None = None) -> dict[str, list]:
+        captured_levels.extend(interval["level"] for interval in price_info)
+        assert all("_original_level" not in interval for interval in price_info)
+        return {"best_price": [], "peak_price": []}
+
+    transformer = TibberPricesDataTransformer(
+        config_entry=config_entry,
+        log_prefix="[Test]",
+        calculate_periods_fn=_capture_period_levels,
+        time=time_service,
+    )
+
+    result = transformer.transform_data(
+        {
+            "timestamp": current_time,
+            "home_id": "home_123",
+            "price_info": create_level_gap_intervals(),
+            "currency": "EUR",
+        }
+    )
+
+    smoothed_levels = [interval["level"] for interval in result["priceInfo"]]
+
+    assert smoothed_levels == ["CHEAP", "CHEAP", "CHEAP", "CHEAP", "CHEAP", "CHEAP"]
+    assert captured_levels == ["CHEAP", "CHEAP", "CHEAP", "NORMAL", "CHEAP", "CHEAP"]
+    assert all("_original_level" not in interval for interval in result["priceInfo"])

@@ -570,8 +570,10 @@ def calculate_periods_with_relaxation(
     Calculate periods with optional global filter relaxation and per-day target tracking.
 
     Strategy: a single global relaxation loop iterates flex levels (3% steps from
-    the configured base flex up to MAX_FLEX_HARD_LIMIT). After every step we re-run
-    period detection across all available days and check, per day, how many quality
+    the configured base flex up to MAX_FLEX_HARD_LIMIT). At each flex level we
+    first re-run period detection with the configured level filter still intact.
+    Only if that is still insufficient do we retry the same flex with
+    `level_filter="any"`. After every attempt we check, per day, how many quality
     periods (CV ≤ PERIOD_MAX_CV) have accumulated. Days that already meet the target
     (`min_periods`) are not re-processed; the loop exits as soon as **all** days meet
     their target. Days with very flat prices automatically need only 1 period
@@ -580,8 +582,10 @@ def calculate_periods_with_relaxation(
     If after all flex levels some days still have ZERO periods, a last-resort
     `min_period_length` fallback is attempted (see `_try_min_duration_fallback`).
 
-    Phase 1: Increase flex threshold step-by-step (up to max_relaxation_attempts)
-    Phase 2: Disable level filter (set to "any") in combination with each flex step
+    Phase 1: Increase flex threshold step-by-step while preserving the configured
+             level filter.
+    Phase 2: Retry the same flex with `level_filter="any"` when a concrete level
+             filter is configured.
 
     Args:
         all_prices: All price data points
@@ -861,10 +865,12 @@ def calculate_periods_with_relaxation(
                         days_meeting_requirement += 1
 
     elif enable_relaxation:
+        filter_combination_count = 2 if config.level_filter not in (None, "any") else 1
         _LOGGER_DETAILS.debug(
-            "%sAll %d days met target with baseline - no relaxation needed",
+            "%sRelaxation strategy: 3%% fixed flex increment per step (%d flex levels x %d filter combinations)",
             INDENT_L1,
             total_days,
+            filter_combination_count,
         )
 
     # Sort periods by start time
@@ -917,10 +923,11 @@ def relax_all_prices(
     """
     Relax filters for all prices until min_periods per day is reached.
 
-    Strategy: Try increasing flex by 3% increments, then relax level filter.
-    Processes all prices together (yesterday+today+tomorrow), allowing periods
-    to cross midnight boundaries. Returns when ALL days have min_periods
-    (or max attempts exhausted).
+    Strategy: Try increasing flex by 3% increments while keeping the configured
+    level filter. For each flex level, optionally retry with `level_filter="any"`
+    when a concrete level filter is configured. Processes all prices together
+    (yesterday+today+tomorrow), allowing periods to cross midnight boundaries.
+    Returns when ALL days have min_periods (or max attempts exhausted).
 
     Args:
         all_prices: All price intervals (yesterday+today+tomorrow).
@@ -947,6 +954,10 @@ def relax_all_prices(
     existing_periods = list(baseline_periods)  # Start with baseline
     phases_used = []
 
+    filter_variants: list[tuple[str | None, str | None]] = [(None, original_level_filter)]
+    if original_level_filter not in (None, "any"):
+        filter_variants.append(("any", "any"))
+
     # Get available days from prices for checking
     prices_by_day = group_prices_by_day(all_prices, time=time)
     total_days = len(prices_by_day)
@@ -964,98 +975,103 @@ def relax_all_prices(
             )
             break
 
-        phase_label = f"flex={current_flex * 100:.1f}%"
+        for level_override, applied_level_filter in filter_variants:
+            phase_label = f"flex={current_flex * 100:.1f}%"
+            phase_label_full = phase_label
+            if applied_level_filter is not None:
+                phase_label_full = f"{phase_label} +level_{applied_level_filter}"
 
-        # Skip this flex level if callback says not to show it
-        if not should_show_callback(phase_label):
-            continue
+            # The callback expects a level override (e.g. None or "any"), not a flex label.
+            if not should_show_callback(level_override):
+                continue
 
-        # Try current flex with level="any" (in relaxation mode)
-        if original_level_filter != "any":
+            if level_override == "any" and original_level_filter not in (None, "any"):
+                _LOGGER_DETAILS.debug(
+                    "%s    Flex=%.1f%%: OVERRIDING level_filter: %s → ANY",
+                    INDENT_L2,
+                    current_flex * 100,
+                    original_level_filter,
+                )
+
+            # NOTE: config.flex is already normalized to positive by get_period_config()
+            relaxed_config = config._replace(
+                flex=current_flex,  # Already positive from normalization
+                level_filter=applied_level_filter,
+            )
+
             _LOGGER_DETAILS.debug(
-                "%s    Flex=%.1f%%: OVERRIDING level_filter: %s → ANY",
+                "%s    Trying %s: config has %d intervals (all days together), level_filter=%s",
                 INDENT_L2,
-                current_flex * 100,
-                original_level_filter,
-            )
-
-        # NOTE: config.flex is already normalized to positive by get_period_config()
-        relaxed_config = config._replace(
-            flex=current_flex,  # Already positive from normalization
-            level_filter="any",
-        )
-
-        phase_label_full = f"flex={current_flex * 100:.1f}% +level_any"
-        _LOGGER_DETAILS.debug(
-            "%s    Trying %s: config has %d intervals (all days together), level_filter=%s",
-            INDENT_L2,
-            phase_label_full,
-            len(all_prices),
-            relaxed_config.level_filter,
-        )
-
-        # Process ALL prices together (allows midnight crossing)
-        result = calculate_periods(
-            all_prices,
-            config=relaxed_config,
-            time=time,
-            day_patterns_by_date=day_patterns_by_date,
-        )
-        new_periods = result["periods"]
-
-        _LOGGER_DETAILS.debug(
-            "%s    %s: calculate_periods returned %d periods",
-            INDENT_L2,
-            phase_label_full,
-            len(new_periods),
-        )
-
-        # Mark newly found periods with relaxation metadata BEFORE merging
-        mark_periods_with_relaxation(
-            new_periods,
-            relaxation_level=phase_label_full,
-            original_threshold=base_flex,
-            applied_threshold=current_flex,
-            reverse_sort=config.reverse_sort,
-        )
-
-        # Resolve overlaps between existing and new periods
-        combined, standalone_count = resolve_period_overlaps(
-            existing_periods=existing_periods,
-            new_relaxed_periods=new_periods,
-            all_prices=all_prices,
-            config=config,
-            time=time,
-        )
-
-        # Count periods per day with QUALITY GATE check
-        # Only periods with CV <= PERIOD_MAX_CV count towards min_periods requirement
-        days_meeting_requirement, quality_period_count = _count_quality_periods(
-            combined, all_prices, prices_by_day, min_periods, time=time
-        )
-
-        total_periods = len(combined)
-        _LOGGER_DETAILS.debug(
-            "%s    %s: found %d periods total, %d/%d days meet requirement",
-            INDENT_L2,
-            phase_label_full,
-            total_periods,
-            days_meeting_requirement,
-            total_days,
-        )
-
-        existing_periods = combined
-        phases_used.append(phase_label_full)
-
-        # Check if ALL days reached target
-        if days_meeting_requirement >= total_days:
-            _LOGGER.info(
-                "Success with %s - all %d days have %d+ periods (%d total)",
                 phase_label_full,
-                total_days,
-                min_periods,
-                total_periods,
+                len(all_prices),
+                relaxed_config.level_filter,
             )
+
+            # Process ALL prices together (allows midnight crossing)
+            result = calculate_periods(
+                all_prices,
+                config=relaxed_config,
+                time=time,
+                day_patterns_by_date=day_patterns_by_date,
+            )
+            new_periods = result["periods"]
+
+            _LOGGER_DETAILS.debug(
+                "%s    %s: calculate_periods returned %d periods",
+                INDENT_L2,
+                phase_label_full,
+                len(new_periods),
+            )
+
+            # Mark newly found periods with relaxation metadata BEFORE merging
+            mark_periods_with_relaxation(
+                new_periods,
+                relaxation_level=phase_label_full,
+                original_threshold=base_flex,
+                applied_threshold=current_flex,
+                reverse_sort=config.reverse_sort,
+            )
+
+            # Resolve overlaps between existing and new periods
+            combined, standalone_count = resolve_period_overlaps(
+                existing_periods=existing_periods,
+                new_relaxed_periods=new_periods,
+                all_prices=all_prices,
+                config=config,
+                time=time,
+            )
+
+            # Count periods per day with QUALITY GATE check
+            # Only periods with CV <= PERIOD_MAX_CV count towards min_periods requirement
+            days_meeting_requirement, quality_period_count = _count_quality_periods(
+                combined, all_prices, prices_by_day, min_periods, time=time
+            )
+
+            total_periods = len(combined)
+            _LOGGER_DETAILS.debug(
+                "%s    %s: found %d periods total, %d/%d days meet requirement",
+                INDENT_L2,
+                phase_label_full,
+                total_periods,
+                days_meeting_requirement,
+                total_days,
+            )
+
+            existing_periods = combined
+            phases_used.append(phase_label_full)
+
+            # Check if ALL days reached target
+            if days_meeting_requirement >= total_days:
+                _LOGGER.info(
+                    "Success with %s - all %d days have %d+ periods (%d total)",
+                    phase_label_full,
+                    total_days,
+                    min_periods,
+                    total_periods,
+                )
+                break
+
+        if days_meeting_requirement >= total_days:
             break
 
     # Build final result

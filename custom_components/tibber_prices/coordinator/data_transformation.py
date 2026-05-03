@@ -21,6 +21,24 @@ if TYPE_CHECKING:
 _LOGGER = logging.getLogger(__name__)
 
 
+def _build_period_calculation_intervals(enriched_intervals: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    """Return enriched intervals with raw Tibber levels restored for period logic."""
+    period_intervals = copy.deepcopy(enriched_intervals)
+
+    for interval in period_intervals:
+        original_level = interval.pop("_original_level", None)
+        if original_level is not None:
+            interval["level"] = original_level
+
+    return period_intervals
+
+
+def _strip_internal_enrichment_fields(enriched_intervals: list[dict[str, Any]]) -> None:
+    """Remove internal enrichment helpers before exposing priceInfo."""
+    for interval in enriched_intervals:
+        interval.pop("_original_level", None)
+
+
 class TibberPricesDataTransformer:
     """Handles data transformation, enrichment, and period calculations."""
 
@@ -264,6 +282,9 @@ class TibberPricesDataTransformer:
             time=self.time,
         )
 
+        period_intervals = _build_period_calculation_intervals(enriched_intervals)
+        _strip_internal_enrichment_fields(enriched_intervals)
+
         # Store enriched intervals directly as priceInfo (flat list)
         transformed_data = {
             "home_id": home_id,
@@ -281,7 +302,7 @@ class TibberPricesDataTransformer:
         # Calculate periods (best price and peak price)
         if "priceInfo" in transformed_data:
             transformed_data["pricePeriods"] = self._calculate_periods_fn(
-                transformed_data["priceInfo"], transformed_data.get("dayPatterns")
+                period_intervals, transformed_data.get("dayPatterns")
             )
 
         # Cache the transformed data

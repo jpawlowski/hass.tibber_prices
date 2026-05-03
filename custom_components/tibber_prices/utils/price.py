@@ -979,6 +979,10 @@ def enrich_price_info_with_differences(
     # Apply level gap tolerance as post-processing step
     # This smooths out isolated price level changes from Tibber's API
     if level_gap_tolerance > 0:
+        for interval in all_intervals:
+            level = interval.get("level")
+            if level is not None:
+                interval.setdefault("_original_level", level)
         _apply_level_gap_tolerance(all_intervals, level_gap_tolerance)
 
     return all_intervals
