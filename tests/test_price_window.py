@@ -170,6 +170,87 @@ class TestFindCheapestContiguousWindow:
         selected_prices = [iv["total"] for iv in result["intervals"]]
         assert selected_prices == [5.0, 3.0, 2.0, 8.0]
 
+    def test_gap_breaks_contiguous_window(self) -> None:
+        """A real time gap prevents windows from spanning across it."""
+        intervals = _make_intervals([1.0, 2.0, 3.0, 4.0], gap_after={1})
+        assert find_cheapest_contiguous_window(intervals, 3) is None
+
+
+# =============================================================================
+# find_cheapest_contiguous_window — power_profile weighted scoring
+# =============================================================================
+
+
+class TestFindCheapestContiguousWindowWithPowerProfile:
+    """Tests for power-profile-weighted window selection."""
+
+    def test_profile_changes_selection(self) -> None:
+        """Front-loaded profile prefers placing cheap intervals at high-wattage positions."""
+        # Prices: [10, 10, 5, 5, 10]
+        # Without profile: windows 1 and 2 both sum to 20; first tie wins (index 1, prices [10,5,5])
+        # Profile [3000, 500, 500] — first interval costs 6× more per unit:
+        #   Window 0: 10*3000+10*500+5*500  = 37500
+        #   Window 1: 10*3000+ 5*500+5*500  = 35000
+        #   Window 2:  5*3000+ 5*500+10*500 = 22500  ← cheapest weighted
+        prices = [10.0, 10.0, 5.0, 5.0, 10.0]
+        intervals = _make_intervals(prices)
+
+        result_no_profile = find_cheapest_contiguous_window(intervals, 3)
+        assert result_no_profile is not None
+        assert result_no_profile["intervals"][0]["total"] == 10.0  # index 1
+
+        result_profile = find_cheapest_contiguous_window(intervals, 3, power_profile=[3000, 500, 500])
+        assert result_profile is not None
+        assert result_profile["intervals"][0]["total"] == 5.0  # index 2
+
+    def test_profile_no_effect_with_uniform_weights(self) -> None:
+        """A uniform profile produces the same selection as no profile."""
+        prices = [20.0, 15.0, 5.0, 3.0, 4.0, 18.0, 25.0]
+        intervals = _make_intervals(prices)
+
+        result_no_profile = find_cheapest_contiguous_window(intervals, 3)
+        result_uniform = find_cheapest_contiguous_window(intervals, 3, power_profile=[1000, 1000, 1000])
+
+        assert result_no_profile is not None
+        assert result_uniform is not None
+        assert result_no_profile["intervals"][0]["startsAt"] == result_uniform["intervals"][0]["startsAt"]
+
+    def test_profile_reverse_most_expensive(self) -> None:
+        """Profile-weighted most-expensive selection places high-watt phases on peak prices."""
+        # Prices: [5, 10, 20, 10, 5]
+        # Profile [3000, 500]: front-load is 6× heavier
+        #   Window 0: 5*3000+10*500 = 20000
+        #   Window 1: 10*3000+20*500 = 40000
+        #   Window 2: 20*3000+10*500 = 65000  ← most expensive weighted
+        #   Window 3: 10*3000+ 5*500 = 32500
+        prices = [5.0, 10.0, 20.0, 10.0, 5.0]
+        intervals = _make_intervals(prices)
+
+        result = find_cheapest_contiguous_window(intervals, 2, reverse=True, power_profile=[3000, 500])
+        assert result is not None
+        assert result["intervals"][0]["total"] == 20.0  # window starts at index 2
+
+    def test_profile_longer_than_duration_uses_first_n(self) -> None:
+        """A profile longer than duration only uses the first duration_intervals values."""
+        # Profile [3000, 500, 500, 999, 999] — only first 3 used for a 3-interval window
+        # Should be identical to profile [3000, 500, 500]
+        prices = [10.0, 10.0, 5.0, 5.0, 10.0]
+        intervals = _make_intervals(prices)
+
+        result_exact = find_cheapest_contiguous_window(intervals, 3, power_profile=[3000, 500, 500])
+        result_longer = find_cheapest_contiguous_window(intervals, 3, power_profile=[3000, 500, 500, 9999, 9999])
+
+        assert result_exact is not None
+        assert result_longer is not None
+        assert result_exact["intervals"][0]["startsAt"] == result_longer["intervals"][0]["startsAt"]
+
+    def test_profile_gap_still_prevents_spanning(self) -> None:
+        """Profile weighting does not override the temporal-gap check."""
+        # Very cheap interval at index 2 is separated by a gap — cannot be included
+        intervals = _make_intervals([10.0, 10.0, 1.0, 10.0], gap_after={1})
+        # Only two contiguous segments of 2 intervals each; 3-interval window impossible
+        assert find_cheapest_contiguous_window(intervals, 3, power_profile=[3000, 500, 500]) is None
+
 
 # =============================================================================
 # find_cheapest_n_intervals
@@ -279,6 +360,11 @@ class TestFindCheapestNIntervals:
         result = find_cheapest_n_intervals(intervals, 3)
         assert result is not None
         assert len(result["intervals"]) == 3
+
+    def test_min_segment_impossible_returns_none(self) -> None:
+        """Return None instead of partial results when min segment cannot be met."""
+        intervals = _make_intervals([1.0, 2.0, 3.0, 4.0], gap_after={0, 1, 2})
+        assert find_cheapest_n_intervals(intervals, 2, min_segment_intervals=2) is None
 
 
 # =============================================================================

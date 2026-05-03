@@ -1669,7 +1669,7 @@
         },
         "power_profile": {
           "name": "Leistungsprofil",
-          "description": "Variable Leistungsaufnahme in Watt pro 15-Minuten-Intervall. Wenn gesetzt, gibt estimated_total_cost den tatsächlichen Verbrauch statt einer festen 1-kW-Last an."
+          "description": "Variable Leistungsaufnahme in Watt pro 15-Minuten-Intervall. Beeinflusst die Fensterauswahl (Phasen mit hoher Leistung landen auf den günstigsten bzw. teuersten Intervallen) und die Kostenberechnung (estimated_total_cost nutzt den tatsächlichen Verbrauch statt einer festen 1-kW-Last)."
         },
         "smooth_outliers": {
           "name": "Ausreißer glätten",
@@ -1789,7 +1789,7 @@
         },
         "power_profile": {
           "name": "Leistungsprofil",
-          "description": "Variable Leistungsaufnahme in Watt pro 15-Minuten-Intervall. Wenn gesetzt, gibt estimated_total_cost den tatsächlichen Verbrauch statt einer festen 1-kW-Last an."
+          "description": "Variable Leistungsaufnahme in Watt pro 15-Minuten-Intervall. Beeinflusst die Fensterauswahl (Phasen mit hoher Leistung landen auf den günstigsten bzw. teuersten Intervallen) und die Kostenberechnung (estimated_total_cost nutzt den tatsächlichen Verbrauch statt einer festen 1-kW-Last)."
         },
         "smooth_outliers": {
           "name": "Ausreißer glätten",
@@ -1913,7 +1913,7 @@
         },
         "power_profile": {
           "name": "Leistungsprofil",
-          "description": "Variable Leistungsaufnahme in Watt pro 15-Minuten-Intervall. Wenn gesetzt, gibt estimated_total_cost den tatsächlichen Verbrauch statt einer festen 1-kW-Last an."
+          "description": "Variable Leistungsaufnahme in Watt pro 15-Minuten-Intervall. Beeinflusst nur die Kostenberechnung (estimated_total_cost nutzt den tatsächlichen Verbrauch statt einer festen 1-kW-Last). Profilgewichtete Auswahl gilt nicht für nicht-zusammenhängende Intervalle."
         },
         "smooth_outliers": {
           "name": "Ausreißer glätten",
@@ -2037,7 +2037,7 @@
         },
         "power_profile": {
           "name": "Leistungsprofil",
-          "description": "Variable Leistungsaufnahme in Watt pro 15-Minuten-Intervall. Wenn gesetzt, gibt estimated_total_cost den tatsächlichen Verbrauch statt einer festen 1-kW-Last an."
+          "description": "Variable Leistungsaufnahme in Watt pro 15-Minuten-Intervall. Beeinflusst nur die Kostenberechnung (estimated_total_cost nutzt den tatsächlichen Verbrauch statt einer festen 1-kW-Last). Profilgewichtete Auswahl gilt nicht für nicht-zusammenhängende Intervalle."
         },
         "smooth_outliers": {
           "name": "Ausreißer glätten",
@@ -2138,6 +2138,10 @@
         "search_end_offset_minutes": {
           "name": "Suchende-Versatz (Minuten)",
           "description": "Alternative: Suche endet in dieser Anzahl Minuten ab jetzt. Positiv = Zukunft (480 = in 8 Stunden), negativ = Vergangenheit (-60 = vor 1 Stunde). Wird ignoriert, wenn Suchende oder Suchende-Uhrzeit gesetzt ist."
+        },
+        "include_current_interval": {
+          "name": "Aktuelles Intervall einbeziehen",
+          "description": "Das aktuell laufende 15-Minuten-Intervall in die Suche einbeziehen. Wenn aktiviert, starten rollierende Suchbereiche wie remaining_today und next_24h am Beginn des aktuellen Intervalls, sodass es ausgewählt werden kann."
         },
         "max_price_level": {
           "name": "Maximale Preisstufe",

@@ -22,18 +22,24 @@ def find_cheapest_contiguous_window(
     duration_intervals: int,
     *,
     reverse: bool = False,
+    power_profile: list[int] | None = None,
 ) -> dict[str, Any] | None:
     """
     Find the cheapest (or most expensive) contiguous window of exactly N intervals.
 
-    Uses a sliding window algorithm (O(n)) to find the window with the
-    lowest (or highest) average price.
+    Uses a sliding window algorithm (O(n)) when no power profile is given.
+    With a power profile, uses O(n\u00d7k) direct scoring so that the window with the
+    lowest weighted cost (\u03a3 price[i] \u00d7 watt[i]) is selected instead of lowest
+    average price. This ensures high-wattage phases of the cycle land on cheap intervals.
 
     Args:
         intervals: Sorted list of price interval dicts with 'startsAt' and 'total' keys.
             Must be pre-sorted by startsAt in ascending order.
         duration_intervals: Number of consecutive intervals required.
         reverse: If True, find the most expensive window instead of cheapest.
+        power_profile: Optional watt value per interval. Only the first
+            duration_intervals values are used (profile may be longer). When
+            provided, scoring uses \u03a3 price[i] \u00d7 watt[i] instead of \u03a3 price[i].
 
     Returns:
         Dict with window details (start, end, intervals, statistics),
@@ -44,20 +50,47 @@ def find_cheapest_contiguous_window(
     if n == 0 or duration_intervals <= 0 or n < duration_intervals:
         return None
 
-    # Calculate initial window sum
-    window_sum = sum(intervals[i]["total"] for i in range(duration_intervals))
-    best_sum = window_sum
-    best_start = 0
+    best_intervals: list[dict[str, Any]] | None = None
+    best_sum: float | None = None
 
-    # Slide the window
-    for i in range(1, n - duration_intervals + 1):
-        window_sum += intervals[i + duration_intervals - 1]["total"]
-        window_sum -= intervals[i - 1]["total"]
-        if (window_sum > best_sum) if reverse else (window_sum < best_sum):
-            best_sum = window_sum
-            best_start = i
+    # Price-level filtering can create gaps in time. Search each truly contiguous
+    # run independently so the returned window always matches real timestamps.
+    for segment in group_intervals_into_segments(intervals):
+        segment_intervals = segment["intervals"]
+        if len(segment_intervals) < duration_intervals:
+            continue
 
-    best_intervals = intervals[best_start : best_start + duration_intervals]
+        if power_profile:
+            # With a power profile the weights rotate with each window position,
+            # so a simple O(1) sliding update is not possible. Recompute each score
+            # directly. Only the first duration_intervals weights are used.
+            segment_best_sum: float = sum(
+                segment_intervals[k]["total"] * power_profile[k] for k in range(duration_intervals)
+            )
+            segment_best_start = 0
+            for i in range(1, len(segment_intervals) - duration_intervals + 1):
+                score = sum(segment_intervals[i + k]["total"] * power_profile[k] for k in range(duration_intervals))
+                if (score > segment_best_sum) if reverse else (score < segment_best_sum):
+                    segment_best_sum = score
+                    segment_best_start = i
+        else:
+            window_sum = sum(segment_intervals[i]["total"] for i in range(duration_intervals))
+            segment_best_sum = window_sum
+            segment_best_start = 0
+            for i in range(1, len(segment_intervals) - duration_intervals + 1):
+                window_sum += segment_intervals[i + duration_intervals - 1]["total"]
+                window_sum -= segment_intervals[i - 1]["total"]
+                if (window_sum > segment_best_sum) if reverse else (window_sum < segment_best_sum):
+                    segment_best_sum = window_sum
+                    segment_best_start = i
+
+        if best_sum is None or ((segment_best_sum > best_sum) if reverse else (segment_best_sum < best_sum)):
+            best_sum = segment_best_sum
+            best_intervals = segment_intervals[segment_best_start : segment_best_start + duration_intervals]
+
+    if best_intervals is None:
+        return None
+
     return {
         "start": best_intervals[0]["startsAt"],
         "end_interval_start": best_intervals[-1]["startsAt"],
@@ -123,85 +156,99 @@ def _find_with_min_segment(
     """
     Find cheapest/most expensive N intervals with minimum segment length constraint.
 
-    Iteratively picks intervals, discards segments that are too
-    short, and replaces them with next-best alternatives.
-
-    Converges in at most `count` iterations (worst case: every replacement
-    creates a new short segment that gets discarded).
+    Uses dynamic programming to find an exact selection of `count` intervals
+    where every contiguous run has at least `min_segment` intervals. Real time
+    gaps break segments even if the filtered list remains index-contiguous.
     """
     n = len(intervals)
 
-    # Build index lookup: interval original index → position
-    # Price-sorted indices for picking cheapest/most expensive available
-    price_order = sorted(range(n), key=lambda i: intervals[i]["total"], reverse=reverse)
+    contiguous_with_prev = [False] * n
+    for i in range(1, n):
+        prev_start = _parse_timestamp(intervals[i - 1]["startsAt"])
+        curr_start = _parse_timestamp(intervals[i]["startsAt"])
+        contiguous_with_prev[i] = curr_start - prev_start == timedelta(minutes=15)
 
-    selected: set[int] = set()
-    excluded: set[int] = set()
+    def is_better(new_cost: float, old_cost: float | None) -> bool:
+        if old_cost is None:
+            return True
+        return new_cost > old_cost if reverse else new_cost < old_cost
 
-    # Initial pick: cheapest 'count' intervals
-    picked = 0
-    for idx in price_order:
-        if picked >= count:
-            break
-        if idx not in excluded:
-            selected.add(idx)
-            picked += 1
+    current_states: dict[tuple[int, int], float] = {(0, 0): 0.0}
+    backpointers: list[dict[tuple[int, int], tuple[tuple[int, int], bool]]] = [{} for _ in range(n + 1)]
 
-    if len(selected) < count:
+    for idx, interval in enumerate(intervals, start=1):
+        next_states: dict[tuple[int, int], float] = {}
+        next_back: dict[tuple[int, int], tuple[tuple[int, int], bool]] = {}
+        interval_cost = float(interval["total"])
+
+        for prev_state, prev_cost in current_states.items():
+            selected_count, run_len = prev_state
+            effective_run_len = run_len
+
+            if idx > 1 and not contiguous_with_prev[idx - 1] and run_len != 0:
+                if run_len < min_segment:
+                    continue
+                effective_run_len = 0
+
+            if effective_run_len in (0, min_segment):
+                skip_state = (selected_count, 0)
+                if is_better(prev_cost, next_states.get(skip_state)):
+                    next_states[skip_state] = prev_cost
+                    next_back[skip_state] = (prev_state, False)
+
+            if selected_count >= count:
+                continue
+
+            if effective_run_len == 0:
+                new_run_len = 1
+            elif effective_run_len < min_segment:
+                new_run_len = effective_run_len + 1
+            else:
+                new_run_len = min_segment
+
+            take_state = (selected_count + 1, new_run_len)
+            take_cost = prev_cost + interval_cost
+            if is_better(take_cost, next_states.get(take_state)):
+                next_states[take_state] = take_cost
+                next_back[take_state] = (prev_state, True)
+
+        current_states = next_states
+        backpointers[idx] = next_back
+
+    best_state: tuple[int, int] | None = None
+    best_cost: float | None = None
+    for state, cost in current_states.items():
+        selected_count, run_len = state
+        if selected_count != count or run_len not in (0, min_segment):
+            continue
+        if is_better(cost, best_cost):
+            best_state = state
+            best_cost = cost
+
+    if best_state is None:
         return None
 
-    # Iterative refinement: discard short segments, replace with next-cheapest
-    max_iterations = count + 1  # Safety bound
-    for _ in range(max_iterations):
-        sorted_selected = sorted(selected)
-        segments = _group_indices_into_segments(sorted_selected)
+    selected_indices: list[int] = []
+    state = best_state
+    for idx in range(n, 0, -1):
+        prev_state, took_interval = backpointers[idx][state]
+        if took_interval:
+            selected_indices.append(idx - 1)
+        state = prev_state
 
-        short_segments = [seg for seg in segments if len(seg) < min_segment]
-        if not short_segments:
-            break  # All segments meet minimum length
-
-        # Exclude all indices in short segments
-        for seg in short_segments:
-            for idx in seg:
-                selected.discard(idx)
-                excluded.add(idx)
-
-        # Refill from price order
-        needed = count - len(selected)
-        for idx in price_order:
-            if needed <= 0:
-                break
-            if idx not in selected and idx not in excluded:
-                selected.add(idx)
-                needed -= 1
-
-        if len(selected) < count:
-            # Not enough intervals available after exclusions
-            # Return best effort with what we have
-            break
-
-    sorted_selected = sorted(selected)
-    result_intervals = [intervals[i] for i in sorted_selected]
+    selected_indices.reverse()
+    result_intervals = [intervals[i] for i in selected_indices]
     segments = group_intervals_into_segments(result_intervals)
+
+    if len(result_intervals) != count:
+        return None
+    if any(seg["interval_count"] < min_segment for seg in segments):
+        return None
 
     return {
         "intervals": result_intervals,
         "segments": segments,
     }
-
-
-def _group_indices_into_segments(indices: list[int]) -> list[list[int]]:
-    """Group sorted integer indices into contiguous runs."""
-    if not indices:
-        return []
-
-    segments: list[list[int]] = [[indices[0]]]
-    for i in range(1, len(indices)):
-        if indices[i] == indices[i - 1] + 1:
-            segments[-1].append(indices[i])
-        else:
-            segments.append([indices[i]])
-    return segments
 
 
 def group_intervals_into_segments(

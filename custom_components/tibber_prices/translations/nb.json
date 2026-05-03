@@ -1669,7 +1669,7 @@
         },
         "power_profile": {
           "name": "Effektprofil",
-          "description": "Variabelt effektforbruk i watt per 15-minuttersintervall. Naa satt, gjenspeiler estimated_total_cost faktisk forbruk i stedet for en fast 1 kW-last."
+          "description": "Variabelt effektforbruk i watt per 15-minuttersintervall. Påvirker valg av tidsvindu (faser med høyt forbruk legges til de billigste/dyreste intervallene) og kostnadsrapportering (estimated_total_cost bruker faktisk forbruk i stedet for en fast 1 kW-last)."
         },
         "smooth_outliers": {
           "name": "Glatt utliggere",
@@ -1789,7 +1789,7 @@
         },
         "power_profile": {
           "name": "Effektprofil",
-          "description": "Variabelt effektforbruk i watt per 15-minuttersintervall. Naa satt, gjenspeiler estimated_total_cost faktisk forbruk i stedet for en fast 1 kW-last."
+          "description": "Variabelt effektforbruk i watt per 15-minuttersintervall. Påvirker valg av tidsvindu (faser med høyt forbruk legges til de billigste/dyreste intervallene) og kostnadsrapportering (estimated_total_cost bruker faktisk forbruk i stedet for en fast 1 kW-last)."
         },
         "smooth_outliers": {
           "name": "Glatt utliggere",
@@ -1913,7 +1913,7 @@
         },
         "power_profile": {
           "name": "Effektprofil",
-          "description": "Variabelt effektforbruk i watt per 15-minuttersintervall. Naa satt, gjenspeiler estimated_total_cost faktisk forbruk i stedet for en fast 1 kW-last."
+          "description": "Variabelt effektforbruk i watt per 15-minuttersintervall. Påvirker kun kostnadsrapportering (estimated_total_cost bruker faktisk forbruk i stedet for en fast 1 kW-last). Profilveiet utvalg gjelder ikke for ikke-sammenhengende intervaller."
         },
         "smooth_outliers": {
           "name": "Glatt utliggere",
@@ -2037,7 +2037,7 @@
         },
         "power_profile": {
           "name": "Effektprofil",
-          "description": "Variabelt effektforbruk i watt per 15-minuttersintervall. Naa satt, gjenspeiler estimated_total_cost faktisk forbruk i stedet for en fast 1 kW-last."
+          "description": "Variabelt effektforbruk i watt per 15-minuttersintervall. Påvirker kun kostnadsrapportering (estimated_total_cost bruker faktisk forbruk i stedet for en fast 1 kW-last). Profilveiet utvalg gjelder ikke for ikke-sammenhengende intervaller."
         },
         "smooth_outliers": {
           "name": "Glatt utliggere",
@@ -2138,6 +2138,10 @@
         "search_end_offset_minutes": {
           "name": "Søkeslutt-forskyvning (minutter)",
           "description": "Alternativ: Stopp søk dette antall minutter fra nå. Positiv = fremtid (480 = om 8 timer), negativ = fortid (-60 = 1 time siden). Ignoreres hvis Søkeslutt eller Søkeslutt-klokkeslett er satt."
+        },
+        "include_current_interval": {
+          "name": "Ta med gjeldende intervall",
+          "description": "Ta med det pågående 15-minuttersintervallet i søket. Når dette er aktivert, starter rullerende søkeområder som remaining_today og next_24h ved starten av gjeldende intervall slik at det kan velges."
         },
         "max_price_level": {
           "name": "Maksimalt prisnivaae",

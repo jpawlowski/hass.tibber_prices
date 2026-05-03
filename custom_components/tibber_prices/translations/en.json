@@ -1669,7 +1669,7 @@
         },
         "power_profile": {
           "name": "Power Profile",
-          "description": "Variable power draw in watts per 15-minute interval. When set, estimated_total_cost reflects actual consumption instead of a flat 1 kW load. The profile is extended by repeating the last value if shorter than the window."
+          "description": "Variable power draw in watts per 15-minute interval. Affects window selection (high-wattage phases land on cheapest/most expensive intervals) and cost reporting (estimated_total_cost uses actual consumption instead of flat 1 kW)."
         },
         "smooth_outliers": {
           "name": "Smooth Outliers",
@@ -1789,7 +1789,7 @@
         },
         "power_profile": {
           "name": "Power Profile",
-          "description": "Variable power draw in watts per 15-minute interval. When set, estimated_total_cost reflects actual consumption instead of a flat 1 kW load. The profile is extended by repeating the last value if shorter than the window."
+          "description": "Variable power draw in watts per 15-minute interval. Affects window selection (high-wattage phases land on cheapest/most expensive intervals) and cost reporting (estimated_total_cost uses actual consumption instead of flat 1 kW)."
         },
         "smooth_outliers": {
           "name": "Smooth Outliers",
@@ -1913,7 +1913,7 @@
         },
         "power_profile": {
           "name": "Power Profile",
-          "description": "Variable power draw in watts per 15-minute interval. When set, estimated_total_cost reflects actual consumption instead of a flat 1 kW load. The profile is extended by repeating the last value if shorter than the window."
+          "description": "Variable power draw in watts per 15-minute interval. Affects cost reporting only (estimated_total_cost uses actual consumption instead of flat 1 kW). Profile-weighted selection is not applied to non-contiguous interval picks."
         },
         "smooth_outliers": {
           "name": "Smooth Outliers",
@@ -2037,7 +2037,7 @@
         },
         "power_profile": {
           "name": "Power Profile",
-          "description": "Variable power draw in watts per 15-minute interval. When set, estimated_total_cost reflects actual consumption instead of a flat 1 kW load. The profile is extended by repeating the last value if shorter than the window."
+          "description": "Variable power draw in watts per 15-minute interval. Affects cost reporting only (estimated_total_cost uses actual consumption instead of flat 1 kW). Profile-weighted selection is not applied to non-contiguous interval picks."
         },
         "smooth_outliers": {
           "name": "Smooth Outliers",
@@ -2059,7 +2059,7 @@
     },
     "find_cheapest_schedule": {
       "name": "Find Cheapest Schedule",
-      "description": "Schedules multiple appliances optimally without time overlap. Each task gets the cheapest available contiguous window; tasks are placed greedily in ascending cost order. Returns a per-task schedule with start/end times and price stats. If scheduling is incomplete, the response includes a stable reason code in the reason field (for example: no_data_in_range, no_intervals_matching_level_filter, insufficient_contiguous_window, insufficient_contiguous_window_for_some_tasks).",
+      "description": "Schedules multiple appliances optimally without time overlap. Each task gets the cheapest available contiguous window; tasks are placed longest-first for efficient packing unless sequential ordering is enabled. Returns a per-task schedule with start/end times and price stats. If scheduling is incomplete, the response includes a stable reason code in the reason field (for example: no_data_in_range, no_intervals_matching_level_filter, insufficient_contiguous_window, insufficient_contiguous_window_for_some_tasks).",
       "sections": {
         "search_range": {
           "name": "Custom Search Range",
@@ -2138,6 +2138,10 @@
         "search_end_offset_minutes": {
           "name": "Search End Offset (minutes)",
           "description": "Alternative: stop searching this many minutes from now. Positive = future, negative = past. Ignored if Search End or Search End Time is set."
+        },
+        "include_current_interval": {
+          "name": "Include Current Interval",
+          "description": "Include the currently running 15-minute interval in the search. When enabled, rolling scopes like remaining_today and next_24h start at the beginning of the current interval so it can be selected."
         },
         "max_price_level": {
           "name": "Maximum Price Level",

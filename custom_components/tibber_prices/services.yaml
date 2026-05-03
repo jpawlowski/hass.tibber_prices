@@ -1011,6 +1011,11 @@ find_cheapest_schedule:
             - next_24h
             - next_48h
           translation_key: search_scope
+    include_current_interval:
+      required: false
+      default: true
+      selector:
+        boolean:
     search_range:
       collapsed: true
       fields:

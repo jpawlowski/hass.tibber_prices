@@ -12,6 +12,7 @@ Also validates schema boundaries for all 4 services.
 from __future__ import annotations
 
 from datetime import datetime, time as dt_time, timedelta
+from typing import Any, cast
 from zoneinfo import ZoneInfo
 
 import pytest
@@ -148,6 +149,29 @@ class TestResolveSearchRangeNegativeOffsetMinutes:
         assert start.day == 10
         assert start.hour == 23
 
+    def test_search_scope_excludes_current_interval_when_disabled(self) -> None:
+        """Relative search scopes honor include_current_interval=false."""
+        now = datetime(2026, 4, 11, 14, 37, tzinfo=BERLIN)
+        call_data = {
+            "search_scope": "next_24h",
+            "include_current_interval": False,
+        }
+        start, end = resolve_search_range(call_data, now, BERLIN)
+        assert start == now
+        assert end == now + timedelta(hours=24)
+
+    def test_search_scope_includes_current_interval_when_enabled(self) -> None:
+        """Relative search scopes include the current quarter when enabled."""
+        now = datetime(2026, 4, 11, 14, 37, tzinfo=BERLIN)
+        call_data = {
+            "search_scope": "next_24h",
+            "include_current_interval": True,
+        }
+        start, end = resolve_search_range(call_data, now, BERLIN)
+        assert start.hour == 14
+        assert start.minute == 30
+        assert end == now + timedelta(hours=24)
+
 
 # =============================================================================
 # Schema validation: day_offset boundaries
@@ -160,12 +184,12 @@ class TestSchemaValidation:
     def _validate_block_schema(self, data: dict) -> dict:
         """Validate data through block schema."""
         schema = vol.Schema(_COMMON_BLOCK_SCHEMA)
-        return schema(data)
+        return cast("dict[str, Any]", schema(data))
 
     def _validate_hours_schema(self, data: dict) -> dict:
         """Validate data through hours schema."""
         schema = vol.Schema(_COMMON_HOURS_SCHEMA)
-        return schema(data)
+        return cast("dict[str, Any]", schema(data))
 
     def test_block_schema_accepts_negative_day_offset(self) -> None:
         """Block schema allows negative day offsets."""

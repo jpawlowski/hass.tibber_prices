@@ -357,7 +357,13 @@ def _resolve_time_with_day_offset(
     )
 
 
-def _resolve_scope(scope: str, now: datetime, _home_tz: ZoneInfo) -> tuple[datetime, datetime]:
+def _resolve_scope(
+    scope: str,
+    now: datetime,
+    _home_tz: ZoneInfo,
+    *,
+    include_current: bool,
+) -> tuple[datetime, datetime]:
     """
     Convert a search_scope shorthand into explicit start/end datetimes.
 
@@ -374,16 +380,18 @@ def _resolve_scope(scope: str, now: datetime, _home_tz: ZoneInfo) -> tuple[datet
     tomorrow_start = today_start + timedelta(days=1)
     day_after_start = today_start + timedelta(days=2)
 
+    rolling_start = floor_to_quarter_hour(now) if include_current else now
+
     if scope == "today":
         return today_start, tomorrow_start
     if scope == "tomorrow":
         return tomorrow_start, day_after_start
     if scope == "remaining_today":
-        return floor_to_quarter_hour(now), tomorrow_start
+        return rolling_start, tomorrow_start
     if scope == "next_24h":
-        return floor_to_quarter_hour(now), now + timedelta(hours=24)
+        return rolling_start, now + timedelta(hours=24)
     if scope == "next_48h":
-        return floor_to_quarter_hour(now), now + timedelta(hours=48)
+        return rolling_start, now + timedelta(hours=48)
 
     raise ServiceValidationError(
         translation_domain=DOMAIN,
@@ -517,7 +525,7 @@ def resolve_search_range(
 
     # Priority 0: search_scope shorthand
     if "search_scope" in call_data:
-        return _resolve_scope(call_data["search_scope"], now, home_tz)
+        return _resolve_scope(call_data["search_scope"], now, home_tz, include_current=include_current)
 
     # --- Resolve start ---
     if "search_start" in call_data:

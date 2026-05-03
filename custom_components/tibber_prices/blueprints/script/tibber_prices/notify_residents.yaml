@@ -3,7 +3,7 @@ blueprint:
   description: >
     **Companion script blueprint for
     [Tibber Prices](https://my.home-assistant.io/redirect/hacs_repository/?owner=jpawlowski&repository=hass.tibber_prices&category=integration)
-    appliance blueprints** · Blueprint v2.0.0
+    appliance blueprints** · Blueprint v1.0.0
 
 
     Advanced notification dispatcher that replaces the simple

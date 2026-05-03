@@ -1669,7 +1669,7 @@
         },
         "power_profile": {
           "name": "Vermogensprofiel",
-          "description": "Variabel vermogensverbruik in watt per 15-minuten-interval. Indien ingesteld, weerspiegelt estimated_total_cost het werkelijke verbruik."
+          "description": "Variabel vermogensverbruik in watt per 15-minuten-interval. Beïnvloedt vensterselectie (fasen met hoog vermogen worden op de goedkoopste/duurste intervallen geplaatst) en kostenrapportage (estimated_total_cost gebruikt werkelijk verbruik in plaats van een vaste 1 kW-last)."
         },
         "smooth_outliers": {
           "name": "Uitschieters gladstrijken",
@@ -1789,7 +1789,7 @@
         },
         "power_profile": {
           "name": "Vermogensprofiel",
-          "description": "Variabel vermogensverbruik in watt per 15-minuten-interval. Indien ingesteld, weerspiegelt estimated_total_cost het werkelijke verbruik."
+          "description": "Variabel vermogensverbruik in watt per 15-minuten-interval. Beïnvloedt vensterselectie (fasen met hoog vermogen worden op de goedkoopste/duurste intervallen geplaatst) en kostenrapportage (estimated_total_cost gebruikt werkelijk verbruik in plaats van een vaste 1 kW-last)."
         },
         "smooth_outliers": {
           "name": "Uitschieters gladstrijken",
@@ -1913,7 +1913,7 @@
         },
         "power_profile": {
           "name": "Vermogensprofiel",
-          "description": "Variabel vermogensverbruik in watt per 15-minuten-interval. Indien ingesteld, weerspiegelt estimated_total_cost het werkelijke verbruik."
+          "description": "Variabel vermogensverbruik in watt per 15-minuten-interval. Beïnvloedt alleen de kostenrapportage (estimated_total_cost gebruikt werkelijk verbruik in plaats van een vaste 1 kW-last). Profielgewogen selectie geldt niet voor niet-aaneengesloten intervallen."
         },
         "smooth_outliers": {
           "name": "Uitschieters gladstrijken",
@@ -2037,7 +2037,7 @@
         },
         "power_profile": {
           "name": "Vermogensprofiel",
-          "description": "Variabel vermogensverbruik in watt per 15-minuten-interval. Indien ingesteld, weerspiegelt estimated_total_cost het werkelijke verbruik."
+          "description": "Variabel vermogensverbruik in watt per 15-minuten-interval. Beïnvloedt alleen de kostenrapportage (estimated_total_cost gebruikt werkelijk verbruik in plaats van een vaste 1 kW-last). Profielgewogen selectie geldt niet voor niet-aaneengesloten intervallen."
         },
         "smooth_outliers": {
           "name": "Uitschieters gladstrijken",
@@ -2138,6 +2138,10 @@
         "search_end_offset_minutes": {
           "name": "Zoekeinde-offset (minuten)",
           "description": "Alternatief: Stop met zoeken over dit aantal minuten vanaf nu. Positief = toekomst (480 = over 8 uur), negatief = verleden (-60 = 1 uur geleden). Wordt genegeerd als Zoekeinde of Zoekeinde-tijd is ingesteld."
+        },
+        "include_current_interval": {
+          "name": "Huidig interval opnemen",
+          "description": "Neem het momenteel lopende interval van 15 minuten mee in de zoekopdracht. Wanneer ingeschakeld, starten rollende scopes zoals remaining_today en next_24h aan het begin van het huidige interval zodat het gekozen kan worden."
         },
         "max_price_level": {
           "name": "Maximaal prijsniveau",

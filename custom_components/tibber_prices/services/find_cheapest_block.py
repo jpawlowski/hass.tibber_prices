@@ -191,6 +191,7 @@ def _attempt_find_block(
     duration_intervals: int,
     smooth_outliers: bool,
     min_distance_from_avg: float | None,
+    power_profile: list[int] | None,
     reverse: bool,
 ) -> tuple[dict | None, str]:
     """Attempt to find a block with specific filter parameters.
@@ -207,7 +208,9 @@ def _attempt_find_block(
     else:
         search_data = filtered
 
-    result = find_cheapest_contiguous_window(search_data, duration_intervals, reverse=reverse)
+    result = find_cheapest_contiguous_window(
+        search_data, duration_intervals, reverse=reverse, power_profile=power_profile
+    )
 
     if result is None:
         return None, _determine_no_window_reason(
@@ -335,6 +338,7 @@ async def _handle_find_block(
         duration_intervals=effective_duration,
         smooth_outliers=smooth_outliers,
         min_distance_from_avg=min_distance_from_avg,
+        power_profile=power_profile,
         reverse=reverse,
     )
 
@@ -362,6 +366,7 @@ async def _handle_find_block(
                 duration_intervals=effective_duration,
                 smooth_outliers=smooth_outliers,
                 min_distance_from_avg=step.min_distance_from_avg,
+                power_profile=power_profile,
                 reverse=reverse,
             )
             if result is not None:
@@ -411,7 +416,9 @@ async def _handle_find_block(
     effective_duration_minutes = effective_duration * INTERVAL_MINUTES
 
     # Find the opposite-direction window for price comparison (from full unfiltered list)
-    comparison_result = find_cheapest_contiguous_window(price_info, effective_duration, reverse=not reverse)
+    comparison_result = find_cheapest_contiguous_window(
+        price_info, effective_duration, reverse=not reverse, power_profile=power_profile
+    )
 
     # Calculate statistics and build response
     stats = calculate_window_statistics(

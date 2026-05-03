@@ -135,18 +135,24 @@ These parameters are available across all scheduling actions:
 | Parameter | Description | Default |
 |-----------|-------------|---------|
 | `entry_id` | Config entry ID. Auto-selects if you only have one home. | Auto |
-| `include_current_interval` | Include the currently running 15-minute interval in the search? | `true` |
+| `include_current_interval` | Include the currently running 15-minute interval in the search? Only applies to `remaining_today`, `next_24h`, `next_48h`, and default (no scope) — has no effect for `today` or `tomorrow` (those always cover the full calendar day). | `true` |
 | `min_price_level` | Only consider intervals at or above this Tibber level | — |
 | `max_price_level` | Only consider intervals at or below this Tibber level | — |
 | `smooth_outliers` | Smooth price outliers before searching (see [below](#outlier-smoothing)) | `true` |
 | `min_distance_from_avg` | Require result to differ from average by X% (see [below](#minimum-distance-from-average)) | — |
 | `allow_relaxation` | Progressively loosen filters to guarantee a result (see [below](#relaxation)) | `true` |
 | `duration_flexibility_minutes` | Max minutes the duration may be shortened during relaxation (see [below](#relaxation)) | Auto |
-| `power_profile` | Watt values per 15-min interval for accurate cost estimates | — |
+| `power_profile` | Watt values per 15-min interval. Affects **window selection** for block/schedule services and cost reporting for all services (see note below). | — |
 | `use_base_unit` | Use base currency (EUR, NOK) instead of subunit (ct, øre) | `false` |
 
 :::note `min_distance_from_avg` availability
 `min_distance_from_avg` is available in `find_cheapest_block`, `find_most_expensive_block`, `find_cheapest_hours`, and `find_most_expensive_hours`. It is **not** available in `find_cheapest_schedule` (multi-task semantics make a single threshold ambiguous).
+:::
+
+:::note `power_profile` selection impact
+For `find_cheapest_block`, `find_most_expensive_block`, and `find_cheapest_schedule`, the profile controls **which window is selected**: each candidate is scored by weighted cost (Σ price × watt per interval) so high-wattage phases land on the cheapest (or most expensive) intervals.
+
+For `find_cheapest_hours` and `find_most_expensive_hours`, the profile only affects cost reporting — non-contiguous interval picks make profile-weighted selection semantically undefined.
 :::
 
 ### Price Level Filtering
@@ -169,7 +175,12 @@ data:
 
 ### Power Profile
 
-By default, cost estimates assume a constant 1 kW load. If your appliance has variable power draw, provide a power profile — **one watt value per 15-minute interval**:
+By default, cost estimates assume a constant 1 kW load. If your appliance has variable power draw, provide a power profile — **one watt value per 15-minute interval**.
+
+When a power profile is present it affects **both selection and reporting**:
+
+- **Selection** — instead of lowest average price, each candidate window is scored by weighted cost (Σ price × watt per interval). High-wattage phases of the cycle are placed on the cheapest intervals.
+- **Reporting** — `estimated_total_cost` and `estimated_load_kwh` reflect the actual variable power draw.
 
 <details>
 <summary>Show YAML: Power Profile</summary>
@@ -189,8 +200,6 @@ data:
 ```
 
   </details>
-
-The service then calculates `estimated_total_cost` using the actual power draw per interval instead of flat 1 kW, and adds `estimated_load_kwh` (total energy consumed) to the response.
 
 :::info Duration and profile must match
 The number of entries in `power_profile` must exactly match the number of 15-minute intervals in `duration`. A 2-hour duration needs 8 entries.
@@ -731,6 +740,7 @@ response_variable: result
 | `unscheduled_tasks` | List of task names that couldn't be placed (or `null` if all succeeded) |
 | `tasks[]` | Each task with its assigned time window and price statistics |
 | `tasks[].start` / `tasks[].end` | When to start and stop each appliance |
+| `tasks[].price_comparison` | Optional per-task comparison against the opposite extreme window when `include_comparison_details` is `true` |
 | `total_estimated_cost` | Combined cost across all tasks |
 | `relaxation_applied` | `true` if [relaxation](#relaxation) was needed to schedule all tasks |
 | `relaxation_steps` | Number of relaxation steps applied (only when `relaxation_applied` is `true`) |
@@ -740,7 +750,7 @@ response_variable: result
 If you call `find_cheapest_block` separately for each appliance, they might all find the **same** cheap time window. `find_cheapest_schedule` solves this by tracking which intervals are already claimed — each appliance gets its own non-overlapping slot.
 
 :::tip Sequential ordering
-By default, `find_cheapest_schedule` optimizes purely for **price** — it does not guarantee task order. The dryer could be scheduled before the washing machine if that's cheaper. For sequential workflows (washing machine → dryer), add `sequential: true` to guarantee declaration-order scheduling. See [Automation Examples — Sequential Scheduling](automation-examples.md#washing-machine--dryer-sequential-scheduling) for a complete example.
+By default, `find_cheapest_schedule` does not guarantee task order. In non-sequential mode, tasks are packed longest-first and each task then gets the cheapest slot that still fits, so the dryer may be scheduled before the washing machine. For sequential workflows (washing machine → dryer), add `sequential: true` to guarantee declaration-order scheduling. See [Automation Examples — Sequential Scheduling](automation-examples.md#washing-machine--dryer-sequential-scheduling) for a complete example.
 :::
 
 ### Gap Minutes
@@ -1005,7 +1015,7 @@ All durations are rounded **up** to the nearest 15 minutes because Tibber price 
 
 ### Comparison Details
 
-Add `include_comparison_details: true` to `find_cheapest_block` or `find_cheapest_hours` to get extra fields in the comparison:
+Add `include_comparison_details: true` to `find_cheapest_block`, `find_cheapest_hours`, or `find_cheapest_schedule` to get extra fields in the comparison:
 
 <details>
 <summary>Show YAML: Comparison Details</summary>
@@ -1019,7 +1029,7 @@ data:
 
 </details>
 
-This adds `comparison_price_min`, `comparison_price_max`, and `comparison_window_end` to the `price_comparison` object.
+This adds `comparison_price_min`, `comparison_price_max`, and `comparison_window_end` to the `price_comparison` object. For `find_cheapest_schedule`, these details are added to each task's `price_comparison` object.
 
 ### Response When No Window Found
 
@@ -1041,6 +1051,8 @@ The `reason` field contains a stable machine-readable code you can use in automa
 | `window_below_distance_threshold` | Most expensive block found, but not far enough above average |
 | `selection_above_distance_threshold` | Hours found, but not far enough below average (`min_distance_from_avg`) |
 | `selection_below_distance_threshold` | Most expensive hours found, but not far enough above average |
+| `insufficient_contiguous_window` | No valid contiguous block could be built from the remaining intervals |
+| `insufficient_contiguous_window_for_some_tasks` | Schedule found slots for some tasks, but not all of them |
 | `relaxation_exhausted` | All relaxation steps tried, still no result (only when `allow_relaxation: true`) |
 
 Always check the failure fields in your automations before using the results.

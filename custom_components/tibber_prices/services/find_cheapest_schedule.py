@@ -113,6 +113,7 @@ FIND_CHEAPEST_SCHEDULE_SERVICE_SCHEMA = vol.Schema(
         ),
         vol.Optional("must_finish_by"): or_entity_ref(cv.datetime),
         vol.Optional("search_scope"): vol.In(VALID_SEARCH_SCOPES),
+        vol.Optional("include_current_interval", default=True): cv.boolean,
         vol.Optional("max_price_level"): vol.In([lvl.lower() for lvl in PRICE_LEVEL_ORDER]),
         vol.Optional("min_price_level"): vol.In([lvl.lower() for lvl in PRICE_LEVEL_ORDER]),
         vol.Optional("include_comparison_details", default=False): cv.boolean,
@@ -133,10 +134,13 @@ def _compute_task_price_comparison(
     unit_factor: int,
     *,
     include_details: bool,
+    power_profile: list[int] | None = None,
 ) -> dict[str, float | str | None] | None:
     """Compute per-task comparison against most expensive window of same duration."""
     duration_intervals = len(task_intervals)
-    comparison_result = find_cheapest_contiguous_window(full_price_info, duration_intervals, reverse=True)
+    comparison_result = find_cheapest_contiguous_window(
+        full_price_info, duration_intervals, reverse=True, power_profile=power_profile
+    )
     if comparison_result is None:
         return None
 
@@ -196,6 +200,8 @@ def _find_cheapest_window_in_pool(
     pool: list[dict[str, Any]],
     duration_intervals: int,
     available: list[bool],
+    *,
+    power_profile: list[int] | None = None,
 ) -> tuple[int, int] | None:
     """
     Find the cheapest contiguous window of `duration_intervals` in available pool slots.
@@ -204,6 +210,9 @@ def _find_cheapest_window_in_pool(
         pool: Full sorted interval list.
         duration_intervals: Required contiguous count.
         available: Boolean mask, same length as pool. True = still available.
+        power_profile: Optional watt value per interval for weighted scoring.
+            Only the first duration_intervals values are used. When provided,
+            scoring uses \u03a3 price[i] \u00d7 watt[i] instead of \u03a3 price[i].
 
     Returns:
         (start_index, end_index_exclusive) of the best window, or None if not found.
@@ -235,7 +244,10 @@ def _find_cheapest_window_in_pool(
             j += 1
 
         if len(block) == duration_intervals:
-            window_sum = sum(iv["total"] for iv in block)
+            if power_profile:
+                window_sum = sum(block[k]["total"] * power_profile[k] for k in range(len(block)))
+            else:
+                window_sum = sum(iv["total"] for iv in block)
             if best_sum is None or window_sum < best_sum:
                 best_sum = window_sum
                 best_start = i
@@ -306,7 +318,9 @@ def _attempt_schedule(
             for k in range(min(sequential_min_idx, len(search_data))):
                 available[k] = False
 
-        window = _find_cheapest_window_in_pool(search_data, dur_intervals, available)
+        window = _find_cheapest_window_in_pool(
+            search_data, dur_intervals, available, power_profile=task.get("power_profile")
+        )
 
         if window is None:
             unscheduled.append(task["name"])
@@ -622,6 +636,7 @@ async def handle_find_cheapest_schedule(call: ServiceCall) -> ServiceResponse:
                     price_info,
                     unit_factor,
                     include_details=include_comparison_details,
+                    power_profile=task.get("power_profile"),
                 ),
             }
         )

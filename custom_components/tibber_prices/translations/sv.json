@@ -1669,7 +1669,7 @@
         },
         "power_profile": {
           "name": "Effektprofil",
-          "description": "Variabel effektfoerbruekning i watt per 15-minutersintervall. Om instaellt, aaterspeglar estimated_total_cost faktisk foerbruekning istaellet foer en fast 1 kW-last."
+          "description": "Variabel effektförbrukning i watt per 15-minutersintervall. Påverkar fönsterurval (faser med hög effekt placeras på billigaste/dyraste intervallen) och kostnadsrapportering (estimated_total_cost använder faktisk förbrukning istället för en fast 1 kW-last)."
         },
         "smooth_outliers": {
           "name": "Jämna utliggare",
@@ -1789,7 +1789,7 @@
         },
         "power_profile": {
           "name": "Effektprofil",
-          "description": "Variabel effektfoerbruekning i watt per 15-minutersintervall. Om instaellt, aaterspeglar estimated_total_cost faktisk foerbruekning istaellet foer en fast 1 kW-last."
+          "description": "Variabel effektförbrukning i watt per 15-minutersintervall. Påverkar fönsterurval (faser med hög effekt placeras på billigaste/dyraste intervallen) och kostnadsrapportering (estimated_total_cost använder faktisk förbrukning istället för en fast 1 kW-last)."
         },
         "smooth_outliers": {
           "name": "Jämna utliggare",
@@ -1913,7 +1913,7 @@
         },
         "power_profile": {
           "name": "Effektprofil",
-          "description": "Variabel effektfoerbruekning i watt per 15-minutersintervall. Om instaellt, aaterspeglar estimated_total_cost faktisk foerbruekning istaellet foer en fast 1 kW-last."
+          "description": "Variabel effektförbrukning i watt per 15-minutersintervall. Påverkar bara kostnadsrapportering (estimated_total_cost använder faktisk förbrukning istället för en fast 1 kW-last). Profilvägt urval tillämpas inte för icke-sammanhängande intervaller."
         },
         "smooth_outliers": {
           "name": "Jämna utliggare",
@@ -2037,7 +2037,7 @@
         },
         "power_profile": {
           "name": "Effektprofil",
-          "description": "Variabel effektfoerbruekning i watt per 15-minutersintervall. Om instaellt, aaterspeglar estimated_total_cost faktisk foerbruekning istaellet foer en fast 1 kW-last."
+          "description": "Variabel effektförbrukning i watt per 15-minutersintervall. Påverkar bara kostnadsrapportering (estimated_total_cost använder faktisk förbrukning istället för en fast 1 kW-last). Profilvägt urval tillämpas inte för icke-sammanhängande intervaller."
         },
         "smooth_outliers": {
           "name": "Jämna utliggare",
@@ -2138,6 +2138,10 @@
         "search_end_offset_minutes": {
           "name": "Sökslut-förskjutning (minuter)",
           "description": "Alternativ: Sluta söka detta antal minuter från nu. Positivt = framtid (480 = om 8 timmar), negativt = förflutet (-60 = 1 timme sedan). Ignoreras om Sökslut eller Sökslut-klockslag är satt."
+        },
+        "include_current_interval": {
+          "name": "Inkludera aktuellt intervall",
+          "description": "Inkludera det pågående 15-minutersintervallet i sökningen. När detta är aktiverat börjar rullande sökomfång som remaining_today och next_24h vid början av det aktuella intervallet så att det kan väljas."
         },
         "max_price_level": {
           "name": "Maximal prisnivaae",

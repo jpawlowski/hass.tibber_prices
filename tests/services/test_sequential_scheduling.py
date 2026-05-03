@@ -71,6 +71,18 @@ class TestSequentialSchema:
         )
         assert result["sequential"] is False
 
+    def test_schema_defaults_include_current_interval_true(self) -> None:
+        """Schedule schema should expose include_current_interval like other actions."""
+        result = cast(
+            "dict[str, Any]",
+            FIND_CHEAPEST_SCHEDULE_SERVICE_SCHEMA(
+                {
+                    "tasks": [{"name": "dishwasher", "duration": timedelta(hours=1)}],
+                }
+            ),
+        )
+        assert result["include_current_interval"] is True
+
 
 class TestSequentialOrdering:
     """Sequential mode preserves declaration order and chains search windows."""
