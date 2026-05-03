@@ -169,8 +169,8 @@ async def async_setup(hass: HomeAssistant, config: dict[str, Any]) -> bool:
         LOGGER.debug("No chart_metadata configuration found in configuration.yaml")
         hass.data[DOMAIN][DATA_CHART_METADATA_CONFIG] = {}
 
-    # Install/update bundled blueprints
-    await hass.async_add_executor_job(_install_blueprints, hass.config.config_dir)
+    # Blueprints are kept in the repo but not distributed yet.
+    # await hass.async_add_executor_job(_install_blueprints, hass.config.config_dir)
 
     return True
 
@@ -418,10 +418,10 @@ async def async_remove_entry(
     await async_remove_pool_storage(hass, entry.entry_id)
     LOGGER.debug(f"[tibber_prices] async_remove_entry removed interval pool storage for entry_id={entry.entry_id}")
 
-    # Remove bundled blueprints if this was the last config entry
-    remaining = [e for e in hass.config_entries.async_entries(DOMAIN) if e.entry_id != entry.entry_id]
-    if not remaining:
-        await hass.async_add_executor_job(_remove_blueprints, hass.config.config_dir)
+    # Blueprints are kept in the repo but not distributed yet.
+    # remaining = [e for e in hass.config_entries.async_entries(DOMAIN) if e.entry_id != entry.entry_id]
+    # if not remaining:
+    #     await hass.async_add_executor_job(_remove_blueprints, hass.config.config_dir)
 
 
 async def async_reload_entry(
