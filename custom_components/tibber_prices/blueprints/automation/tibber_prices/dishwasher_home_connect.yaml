@@ -3,7 +3,7 @@ blueprint:
   description: >
     **Companion blueprint for
     [Tibber Prices](https://my.home-assistant.io/redirect/hacs_repository/?owner=jpawlowski&repository=hass.tibber_prices&category=integration)
-    (HACS integration)** · Blueprint v2.0.0
+    (HACS integration)** · Blueprint v1.0.0
 
     **Device-driven** dishwasher automation with electricity price
     optimization using the **Home Connect** integration (HA Core).
@@ -71,10 +71,10 @@ blueprint:
                 domain: binary_sensor
                 device_class: door
         remote_start_sensor:
-          name: Remote Control Sensor
+          name: Remote Start Sensor
           description: >
-            The "Remote Control Active" binary sensor
-            (e.g., `binary_sensor.dishwasher_remote_control`).
+            The "Remote Control Start Allowed" binary sensor
+            (e.g., `binary_sensor.dishwasher_remote_start`).
             Must be **on** for the automation to proceed.
           selector:
             entity:

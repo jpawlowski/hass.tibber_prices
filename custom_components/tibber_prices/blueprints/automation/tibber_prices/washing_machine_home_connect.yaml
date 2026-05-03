@@ -3,7 +3,7 @@ blueprint:
   description: >
     **Companion blueprint for
     [Tibber Prices](https://my.home-assistant.io/redirect/hacs_repository/?owner=jpawlowski&repository=hass.tibber_prices&category=integration)
-    (HACS integration)** · Blueprint v2.0.0
+    (HACS integration)** · Blueprint v1.0.0
 
     **Device-driven** washing machine automation with electricity price
     optimization using the **Home Connect** integration (HA Core).
@@ -79,9 +79,9 @@ blueprint:
                 domain: binary_sensor
                 device_class: door
         remote_start_sensor:
-          name: Remote Control Sensor
+          name: Remote Start Sensor
           description: >
-            The "Remote Control Active" binary sensor.
+            The "Remote Control Start Allowed" binary sensor.
             Must be **on** for the automation to proceed.
           selector:
             entity:

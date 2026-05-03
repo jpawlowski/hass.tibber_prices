@@ -3,7 +3,7 @@ blueprint:
   description: >
     **Companion blueprint for
     [Tibber Prices](https://my.home-assistant.io/redirect/hacs_repository/?owner=jpawlowski&repository=hass.tibber_prices&category=integration)
-    (HACS integration)** · Blueprint v2.0.0
+    (HACS integration)** · Blueprint v1.0.0
 
     **Device-driven** laundry pipeline — schedule multiple wash + dry
     cycles at the cheapest electricity prices using the **Home Connect**
@@ -89,9 +89,9 @@ blueprint:
                 domain: binary_sensor
                 device_class: door
         washer_remote_start_sensor:
-          name: Remote Control Sensor
+          name: Remote Start Sensor
           description: >
-            The "Remote Control Active" binary sensor.
+            The "Remote Control Start Allowed" binary sensor.
           selector:
             entity:
               filter:
@@ -156,9 +156,9 @@ blueprint:
                 domain: binary_sensor
                 device_class: door
         dryer_remote_start_sensor:
-          name: Remote Control Sensor
+          name: Remote Start Sensor
           description: >
-            The "Remote Control Active" binary sensor of the dryer.
+            The "Remote Control Start Allowed" binary sensor of the dryer.
             Only used when "Include Dryer" is enabled.
           default: ""
           selector:
