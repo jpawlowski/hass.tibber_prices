@@ -3,7 +3,7 @@ blueprint:
   description: >
     **Companion blueprint for
     [Tibber Prices](https://my.home-assistant.io/redirect/hacs_repository/?owner=jpawlowski&repository=hass.tibber_prices&category=integration)
-    (HACS integration)** · Blueprint v2.0.0
+    (HACS integration)** · Blueprint v1.0.0
 
     **Device-driven** laundry pipeline — schedule multiple wash + dry
     cycles at the cheapest electricity prices using **Home Connect Alt**
@@ -93,9 +93,9 @@ blueprint:
                 domain: binary_sensor
                 device_class: door
         washer_remote_start_sensor:
-          name: Remote Control Sensor
+          name: Remote Start Sensor
           description: >
-            The "Remote Control Active" binary sensor.
+            The "Remote Control Start Allowed" binary sensor.
           selector:
             entity:
               filter:
@@ -162,9 +162,9 @@ blueprint:
                 domain: binary_sensor
                 device_class: door
         dryer_remote_start_sensor:
-          name: Remote Control Sensor
+          name: Remote Start Sensor
           description: >
-            The "Remote Control Active" binary sensor of the dryer.
+            The "Remote Control Start Allowed" binary sensor of the dryer.
             Only used when "Include Dryer" is enabled.
           default: ""
           selector:
@@ -730,13 +730,12 @@ actions:
               {{ [washer_duration | int * 60, seconds_until_end] | max }}
 
         - action: home_connect_alt.start_program
-          target:
-            entity_id: "{{ washer_program_entity }}"
           data:
-            program: "{{ washer_program }}"
+            device_id: "{{ device_id(washer_program_entity) }}"
+            program_key: "{{ washer_program }}"
             options:
               - key: BSH.Common.Option.FinishInRelative
-                value: "{{ wash_finish_in_relative }}"
+                value: "{{ wash_finish_in_relative | int }}"
 
         - variables:
             _n_title: >
@@ -1055,13 +1054,12 @@ actions:
                           {{ [dryer_duration | int * 60, seconds_until_end] | max }}
 
                     - action: home_connect_alt.start_program
-                      target:
-                        entity_id: "{{ dryer_program_entity }}"
                       data:
-                        program: "{{ dryer_program }}"
+                        device_id: "{{ device_id(dryer_program_entity) }}"
+                        program_key: "{{ dryer_program }}"
                         options:
                           - key: BSH.Common.Option.FinishInRelative
-                            value: "{{ dry_finish_in_relative }}"
+                            value: "{{ dry_finish_in_relative | int }}"
 
                     - variables:
                         _n_title: >

@@ -3,7 +3,7 @@ blueprint:
   description: >
     **Companion blueprint for
     [Tibber Prices](https://my.home-assistant.io/redirect/hacs_repository/?owner=jpawlowski&repository=hass.tibber_prices&category=integration)
-    (HACS integration)** · Blueprint v2.0.0
+    (HACS integration)** · Blueprint v1.0.0
 
     **Device-driven** washing machine automation with electricity price
     optimization using **Home Connect Alt**
@@ -85,10 +85,10 @@ blueprint:
                 domain: binary_sensor
                 device_class: door
         remote_start_sensor:
-          name: Remote Control Sensor
+          name: Remote Start Sensor
           description: >
-            The "Remote Control Active" binary sensor
-            (e.g., `binary_sensor.washer_remote_control_active`).
+            The "Remote Control Start Allowed" binary sensor
+            (e.g., `binary_sensor.washer_bsh_common_status_remotecontrolstartallowed`).
             Must be **on** for the automation to proceed.
           selector:
             entity:
@@ -453,15 +453,15 @@ actions:
         {% set window_end = _window_start + timedelta(minutes=duration | int) %}
         {% set seconds_until_end = ((window_end - now()).total_seconds()) | int %}
         {{ [duration | int * 60, seconds_until_end] | max }}
+      _device_id: "{{ device_id(program_entity) }}"
 
   - action: home_connect_alt.start_program
-    target:
-      entity_id: "{{ program_entity }}"
     data:
-      program: "{{ selected_program }}"
+      device_id: "{{ _device_id }}"
+      program_key: "{{ selected_program }}"
       options:
         - key: BSH.Common.Option.FinishInRelative
-          value: "{{ finish_in_relative }}"
+          value: "{{ finish_in_relative | int }}"
 
   - variables:
       _n_title: "{{ title_planned }}"
