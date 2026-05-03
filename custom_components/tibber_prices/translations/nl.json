@@ -29,7 +29,7 @@
         "data": {
           "home_id": "Huis"
         },
-        "title": "Kies een Huis",
+        "title": "Kies een huis",
         "submit": "Huis selecteren"
       },
       "finish": {
@@ -194,6 +194,17 @@
           "price_rating_gap_tolerance": "Maximaal aantal opeenvolgende intervallen dat 'gladgestreken' kan worden als ze afwijken van omringende beoordelingen. Kleine geïsoleerde beoordelingswijzigingen worden samengevoegd met het dominante naburige blok. Dit zorgt voor stabiliteit bij automatiseringen door te voorkomen dat korte beoordelingspieken onnodige acties activeren. Voorbeeld: 1 betekent dat een enkel 'normaal'-interval omringd door 'hoog'-intervallen gecorrigeerd wordt naar 'hoog'. Stel in op 0 om uit te schakelen. Standaard: 1"
         },
         "submit": "↩ Opslaan & Terug"
+      },
+      "price_level": {
+        "title": "🏷️ Prijsniveau-instellingen",
+        "description": "**Configureer stabilisatie voor Tibbers prijsniveau-classificatie (zeer goedkoop/goedkoop/normaal/duur/zeer duur).**\n\nTibbers API levert een prijsniveau-veld voor elk interval. Deze instelling egaliseer korte fluctuaties om instabiliteit in automatiseringen te voorkomen.{entity_warning}",
+        "data": {
+          "price_level_gap_tolerance": "Gap-tolerantie"
+        },
+        "data_description": {
+          "price_level_gap_tolerance": "Maximaal aantal opeenvolgende intervallen dat 'afgevlakt' kan worden als ze afwijken van omringende prijsniveaus. Kleine geïsoleerde niveauwijzigingen worden samengevoegd met het dominante aangrenzende blok. Voorbeeld: 1 betekent dat een enkel 'normaal'-interval omringd door 'goedkoop'-intervallen wordt gecorrigeerd naar 'goedkoop'. Stel in op 0 om uit te schakelen. Standaard: 1"
+        },
+        "submit": "↩ Opslaan & terug"
       },
       "best_price": {
         "title": "💚 Beste Prijs Periode Instellingen",
@@ -375,17 +386,6 @@
           "confirm_reset": "Ja, reset alles naar standaardwaarden"
         },
         "submit": "Nu Resetten"
-      },
-      "price_level": {
-        "title": "🏷️ Prijsniveau-instellingen",
-        "description": "**Configureer stabilisatie voor Tibbers prijsniveau-classificatie (zeer goedkoop/goedkoop/normaal/duur/zeer duur).**\n\nTibbers API levert een prijsniveau-veld voor elk interval. Deze instelling egaliseer korte fluctuaties om instabiliteit in automatiseringen te voorkomen.{entity_warning}",
-        "data": {
-          "price_level_gap_tolerance": "Gap-tolerantie"
-        },
-        "data_description": {
-          "price_level_gap_tolerance": "Maximaal aantal opeenvolgende intervallen dat 'afgevlakt' kan worden als ze afwijken van omringende prijsniveaus. Kleine geïsoleerde niveauwijzigingen worden samengevoegd met het dominante aangrenzende blok. Voorbeeld: 1 betekent dat een enkel 'normaal'-interval omringd door 'goedkoop'-intervallen wordt gecorrigeerd naar 'goedkoop'. Stel in op 0 om uit te schakelen. Standaard: 1"
-        },
-        "submit": "↩ Opslaan & terug"
       }
     },
     "error": {
@@ -1389,17 +1389,21 @@
           "name": "Niveautype",
           "description": "Selecteer welke prijsniveauclassificatie gevisualiseerd moet worden: 'rating_level' (laag/normaal/hoog op basis van jouw geconfigureerde drempelwaarden) of 'level' (Tibber API-niveaus: zeer goedkoop/goedkoop/normaal/duur/zeer duur)."
         },
+        "resolution": {
+          "name": "Resolutie",
+          "description": "Tijdresolutie voor de grafiekdata. 'interval' (standaard): Originele 15-minutenintervallen (96 punten per dag). 'hourly': Geaggregeerde uurwaarden met een rollend 60-minutenvenster (24 punten per dag) voor een overzichtelijkere grafiek."
+        },
+        "price_source": {
+          "name": "Prijsbron",
+          "description": "Welke prijscomponent als hoofdprijs gebruikt wordt. 'total' (standaard): Totaalprijs incl. energie, belastingen en kosten. 'energy': Alleen de ruwe spot-/energieprijs (exclusief belastingen en kosten). 'tax': Alleen belastingen en kosten."
+        },
         "highlight_best_price": {
           "name": "Beste prijsperiodes markeren",
-          "description": "Voeg een halfdo0rzichtige groene overlay toe om de beste prijsperiodes in de grafiek te markeren. Dit maakt het gemakkelijk om visueel de optimale tijden voor energieverbruik te identificeren."
+          "description": "Voeg een halfdoorzichtige groene overlay toe om de beste prijsperiodes in de grafiek te markeren. Dit maakt het gemakkelijk om visueel de optimale tijden voor energieverbruik te identificeren."
         },
         "highlight_peak_price": {
           "name": "Piekprijsperiodes markeren",
           "description": "Voeg een halfdoorzichtige rode overlay toe om de piekprijsperiodes in de grafiek te markeren. Dit maakt het gemakkelijk om visueel de tijden te identificeren wanneer energie het duurst is."
-        },
-        "resolution": {
-          "name": "Resolutie",
-          "description": "Tijdresolutie voor de grafiekdata. 'interval' (standaard): Originele 15-minutenintervallen (96 punten per dag). 'hourly': Geaggregeerde uurwaarden met een rollend 60-minutenvenster (24 punten per dag) voor een overzichtelijkere grafiek."
         }
       }
     },
@@ -1449,6 +1453,10 @@
           "name": "Resolutie",
           "description": "Tijdsresolutie voor de geretourneerde gegevens. Opties: 'interval' (standaard, 15-minuten intervallen, 96 datapunten per dag), 'hourly' (uurgemiddelden, 24 datapunten per dag)."
         },
+        "price_source": {
+          "name": "Prijsbron",
+          "description": "Welke prijscomponent als hoofdprijs gebruikt wordt. 'total' (standaard): Totaalprijs incl. energie, belastingen en kosten. 'energy': Alleen de ruwe spot-/energieprijs (exclusief belastingen en kosten). 'tax': Alleen belastingen en kosten."
+        },
         "output_format": {
           "name": "Uitvoerformaat",
           "description": "Uitvoerformaat voor de geretourneerde gegevens. Opties: 'array_of_objects' (standaard, array van objecten met aanpasbare veldnamen), 'array_of_arrays' (array van [tijdstempel, prijs]-arrays met afsluitend null-punt voor stepline-grafieken)."
@@ -1464,6 +1472,10 @@
         "round_decimals": {
           "name": "Decimalen afronden",
           "description": "Aantal decimalen om prijzen op af te ronden (0-10). Indien niet opgegeven, wordt de standaardprecisie gebruikt (4 decimalen voor basisvaluta, 2 voor subeenheid valuta)."
+        },
+        "data_key": {
+          "name": "Gegevenssleutel",
+          "description": "Aangepaste naam voor de gegevenssleutel op het hoogste niveau in het antwoord. Standaard is 'data' als niet opgegeven."
         },
         "include_level": {
           "name": "Prijsniveau opnemen",
@@ -1544,10 +1556,6 @@
         "metadata": {
           "name": "Metadata",
           "description": "Beheer metadata-opname in het antwoord. 'include' (standaard): Retourneert zowel grafiekdata als metadata met prijsstatistieken, valuta-info, Y-as suggesties en tijdsbereik. 'only': Retourneert alleen metadata zonder grafiekdata te verwerken (snel, handig voor dynamische Y-as configuratie). 'none': Retourneert alleen grafiekdata zonder metadata."
-        },
-        "data_key": {
-          "name": "Gegevenssleutel",
-          "description": "Aangepaste naam voor de gegevenssleutel op het hoogste niveau in het antwoord. Standaard is 'data' als niet opgegeven."
         }
       }
     },
@@ -2364,6 +2372,16 @@
           "description": "Limit how many separate charging segments may be used per day. The planner keeps the cheapest segments within this limit."
         }
       }
+    },
+    "debug_clear_tomorrow": {
+      "name": "Debug: Morgengegevens wissen",
+      "description": "DEBUG/TESTEN: Verwijdert de prijsgegevens voor morgen uit de interval-poolcache. Gebruik dit om de vernieuwingscyclus voor morgengegevens te testen zonder op de volgende dag te wachten. Na het aanroepen van deze service toont de lifecycle-sensor 'searching_tomorrow' (na 13:00) en haalt de volgende Timer #1-cyclus nieuwe gegevens op via de API.",
+      "fields": {
+        "entry_id": {
+          "name": "Item-ID",
+          "description": "Optionele config-item-ID. Als die niet is opgegeven, wordt het eerste beschikbare item gebruikt."
+        }
+      }
     }
   },
   "selector": {
@@ -2426,6 +2444,13 @@
       "options": {
         "best_price": "Beste Prijs Periodes",
         "peak_price": "Piekprijs Periodes"
+      }
+    },
+    "price_source": {
+      "options": {
+        "total": "Totaal (incl. belastingen & kosten)",
+        "energy": "Alleen energieprijs",
+        "tax": "Alleen belastingen & kosten"
       }
     },
     "metadata": {

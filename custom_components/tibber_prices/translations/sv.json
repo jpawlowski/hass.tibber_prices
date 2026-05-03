@@ -195,6 +195,17 @@
         },
         "submit": "↩ Spara & tillbaka"
       },
+      "price_level": {
+        "title": "🏷️ Prisnivå-inställningar",
+        "description": "**Konfigurera stabilisering för Tibbers prisnivå-klassificering (mycket billig/billig/normal/dyr/mycket dyr).**\n\nTibbers API tillhandahåller ett prisnivå-fält för varje intervall. Denna inställning jämnar ut korta fluktuationer för att förhindra instabilitet i automatiseringar.{entity_warning}",
+        "data": {
+          "price_level_gap_tolerance": "Gap-tolerans"
+        },
+        "data_description": {
+          "price_level_gap_tolerance": "Maximalt antal på varandra följande intervaller som kan 'jämnas ut' om de avviker från omgivande prisnivåer. Små isolerade nivåförändringar sammanfogas med det dominerande grannblocket. Exempel: 1 betyder att ett enstaka 'normal'-intervall omgivet av 'billig'-intervaller korrigeras till 'billig'. Sätt till 0 för att inaktivera. Standard: 1"
+        },
+        "submit": "↩ Spara & tillbaka"
+      },
       "best_price": {
         "title": "💚 Bästa Prisperiod-inställningar",
         "description": "**Konfigurera inställningar för binärsensorn Bästa Prisperiod. Denna sensor är aktiv under perioder med lägsta elpriserna.**{entity_warning}{override_warning}\n\n---",
@@ -375,17 +386,6 @@
           "confirm_reset": "Ja, återställ allt till standard"
         },
         "submit": "Återställ nu"
-      },
-      "price_level": {
-        "title": "🏷️ Prisnivå-inställningar",
-        "description": "**Konfigurera stabilisering för Tibbers prisnivå-klassificering (mycket billig/billig/normal/dyr/mycket dyr).**\n\nTibbers API tillhandahåller ett prisnivå-fält för varje intervall. Denna inställning jämnar ut korta fluktuationer för att förhindra instabilitet i automatiseringar.{entity_warning}",
-        "data": {
-          "price_level_gap_tolerance": "Gap-tolerans"
-        },
-        "data_description": {
-          "price_level_gap_tolerance": "Maximalt antal på varandra följande intervaller som kan 'jämnas ut' om de avviker från omgivande prisnivåer. Små isolerade nivåförändringar sammanfogas med det dominerande grannblocket. Exempel: 1 betyder att ett enstaka 'normal'-intervall omgivet av 'billig'-intervaller korrigeras till 'billig'. Sätt till 0 för att inaktivera. Standard: 1"
-        },
-        "submit": "↩ Spara & tillbaka"
       }
     },
     "error": {
@@ -1389,6 +1389,14 @@
           "name": "Nivåtyp",
           "description": "Välj vilken prisnivåklassificering som ska visualiseras: 'rating_level' (låg/normal/hög baserat på dina konfigurerade tröskelvärden) eller 'level' (Tibber API-nivåer: mycket billigt/billigt/normalt/dyrt/mycket dyrt)."
         },
+        "resolution": {
+          "name": "Upplösning",
+          "description": "Tidsupplösning för diagramdata. 'interval' (standard): Ursprungliga 15-minutersintervall (96 punkter per dag). 'hourly': Aggregerade timvärden med ett rullande 60-minutersfönster (24 punkter per dag) för ett renare och mindre rörigt diagram."
+        },
+        "price_source": {
+          "name": "Priskälla",
+          "description": "Vilken priskomponent som används som huvudpris. 'total' (standard): Totalpris inkl. energi, skatter och avgifter. 'energy': Enbart rå spot-/energipris (exkl. skatter och avgifter). 'tax': Enbart skatter och avgifter."
+        },
         "highlight_best_price": {
           "name": "Markera bästa prisperioder",
           "description": "Lägg till ett halvtransparent grönt överlag för att markera de bästa prisperioderna i diagrammet. Detta gör det enkelt att visuellt identifiera de optimala tiderna för energiförbrukning."
@@ -1396,10 +1404,6 @@
         "highlight_peak_price": {
           "name": "Markera högsta prisperioder",
           "description": "Lägg till ett halvtransparent rött överlag för att markera de högsta prisperioderna i diagrammet. Detta gör det enkelt att visuellt identifiera tiderna när energi är som dyrast."
-        },
-        "resolution": {
-          "name": "Upplösning",
-          "description": "Tidsupplösning för diagramdata. 'interval' (standard): Ursprungliga 15-minutersintervall (96 punkter per dag). 'hourly': Aggregerade timvärden med ett rullande 60-minutersfönster (24 punkter per dag) för ett renare och mindre rörigt diagram."
         }
       }
     },
@@ -1448,6 +1452,10 @@
         "resolution": {
           "name": "Upplösning",
           "description": "Tidsupplösning för returnerad data. Alternativ: 'interval' (standard, 15-minutersintervall, 96 punkter per dag), 'hourly' (timmedelvärden, 24 punkter per dag)."
+        },
+        "price_source": {
+          "name": "Priskälla",
+          "description": "Vilken priskomponent som används som huvudpris. 'total' (standard): Totalpris inkl. energi, skatter och avgifter. 'energy': Enbart rå spot-/energipris (exkl. skatter och avgifter). 'tax': Enbart skatter och avgifter."
         },
         "output_format": {
           "name": "Utdataformat",
@@ -2364,6 +2372,16 @@
           "description": "Limit how many separate charging segments may be used per day. The planner keeps the cheapest segments within this limit."
         }
       }
+    },
+    "debug_clear_tomorrow": {
+      "name": "Debug: Rensa morgondagens data",
+      "description": "DEBUG/TEST: Tar bort morgondagens prisdata från interval pool-cachen. Använd detta för att testa uppdateringscykeln för morgondagens data utan att vänta till nästa dag. Efter att tjänsten har anropats visar livscykelsensorn 'searching_tomorrow' (efter 13:00) och nästa Timer #1-cykel hämtar nya data från API:et.",
+      "fields": {
+        "entry_id": {
+          "name": "Entry-ID",
+          "description": "Valfritt config entry-ID. Om det inte anges används den första tillgängliga posten."
+        }
+      }
     }
   },
   "selector": {
@@ -2426,6 +2444,13 @@
       "options": {
         "best_price": "Bästa prisperioder",
         "peak_price": "Topprisperioder"
+      }
+    },
+    "price_source": {
+      "options": {
+        "total": "Totalt (inkl. skatter & avgifter)",
+        "energy": "Enbart energipris",
+        "tax": "Enbart skatter & avgifter"
       }
     },
     "metadata": {

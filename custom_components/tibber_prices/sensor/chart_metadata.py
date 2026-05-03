@@ -138,6 +138,14 @@ def build_chart_metadata_attributes(
         if "max" in yaxis_suggested:
             attributes["yaxis_max"] = yaxis_suggested["max"]
 
+        # Add per-source yaxis bounds (for energy/tax price_source in charts)
+        for source in ("energy", "tax"):
+            yaxis_extra = metadata.get(f"yaxis_suggested_{source}", {})
+            if "min" in yaxis_extra:
+                attributes[f"yaxis_min_{source}"] = yaxis_extra["min"]
+            if "max" in yaxis_extra:
+                attributes[f"yaxis_max_{source}"] = yaxis_extra["max"]
+
         # Add currency info (useful for labeling)
         if "currency" in metadata:
             attributes["currency"] = metadata["currency"]

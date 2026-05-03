@@ -279,6 +279,7 @@ CHARTDATA_SERVICE_SCHEMA: Final = vol.Schema(
         vol.Optional("include_level", default=False): bool,
         vol.Optional("include_rating_level", default=False): bool,
         vol.Optional("include_average", default=False): bool,
+        vol.Optional("price_source", default="total"): vol.In(["total", "energy", "tax"]),
         vol.Optional("include_energy", default=False): bool,
         vol.Optional("include_tax", default=False): bool,
         vol.Optional("level_filter"): vol.All(
@@ -380,6 +381,7 @@ async def handle_chartdata(call: ServiceCall) -> dict[str, Any]:  # noqa: C901
     subunit_currency = data.get("subunit_currency", False)
     metadata = data.get("metadata", "include")
     round_decimals = data.get("round_decimals")
+    price_source = data.get("price_source", "total")
     include_level = data.get("include_level", False)
     include_rating_level = data.get("include_rating_level", False)
     include_average = data.get("include_average", False)
@@ -453,7 +455,7 @@ async def handle_chartdata(call: ServiceCall) -> dict[str, Any]:  # noqa: C901
         chart_data_for_meta = []
         for interval in all_intervals:
             start_time = interval.get("startsAt")
-            price = interval.get("total")
+            price = interval.get(price_source)
             if start_time is not None and price is not None:
                 # Convert price to requested currency
                 converted_price = round(price * 100, 2) if subunit_currency else round(price, 4)
@@ -473,6 +475,33 @@ async def handle_chartdata(call: ServiceCall) -> dict[str, Any]:  # noqa: C901
             resolution=resolution,
             subunit_currency=subunit_currency,
         )
+
+        # Always add yaxis bounds for energy and tax sources so the chart_metadata
+        # sensor can expose them regardless of which price_source was requested.
+        # This lets get_apexcharts_yaml pick the right axis when price_source != "total".
+        def _yaxis_for_source(source: str) -> dict[str, float] | None:
+            prices = [
+                (round(float(iv[source]) * 100, 2) if subunit_currency else round(float(iv[source]), 4))
+                for iv in all_intervals
+                if iv.get(source) is not None
+            ]
+            if not prices:
+                return None
+            data_range = max(prices) - min(prices)
+            padding_below = data_range * 0.08
+            padding_above = data_range * 0.15
+            if data_range == 0:
+                padding_below = abs(prices[0]) * 0.08 or (0.8 if subunit_currency else 0.008)
+                padding_above = abs(prices[0]) * 0.15 or (1.5 if subunit_currency else 0.015)
+            if subunit_currency:
+                return {"min": round(min(prices) - padding_below, 1), "max": round(max(prices) + padding_above, 1)}
+            return {"min": round(min(prices) - padding_below, 2), "max": round(max(prices) + padding_above, 2)}
+
+        for extra_source in ("energy", "tax"):
+            if extra_source != price_source:
+                yaxis_extra = _yaxis_for_source(extra_source)
+                if yaxis_extra:
+                    metadata[f"yaxis_suggested_{extra_source}"] = yaxis_extra
 
         result_meta: dict[str, Any] = {"metadata": metadata}
         if resolved_refs:
@@ -601,7 +630,7 @@ async def handle_chartdata(call: ServiceCall) -> dict[str, Any]:  # noqa: C901
 
         # Calculate average if requested
         if include_average:
-            prices = [p["total"] for p in day_intervals if p.get("total") is not None]
+            prices = [p[price_source] for p in day_intervals if p.get(price_source) is not None]
             if prices:
                 avg = sum(prices) / len(prices)
                 # Apply same transformations as to regular prices
@@ -652,7 +681,7 @@ async def handle_chartdata(call: ServiceCall) -> dict[str, Any]:  # noqa: C901
                     # No data for this timestamp - skip entirely
                     continue
 
-                price = interval.get("total")
+                price = interval.get(price_source)
                 if price is None:
                     continue
 
@@ -704,7 +733,7 @@ async def handle_chartdata(call: ServiceCall) -> dict[str, Any]:  # noqa: C901
 
             for interval in all_prices:
                 start_time = interval.get("startsAt")
-                price = interval.get("total")
+                price = interval.get(price_source)
 
                 if start_time is None or price is None:
                     continue
@@ -760,8 +789,8 @@ async def handle_chartdata(call: ServiceCall) -> dict[str, Any]:  # noqa: C901
                 next_interval = all_prices[i + 1]
 
                 start_time = interval.get("startsAt")
-                price = interval.get("total")
-                next_price = next_interval.get("total")
+                price = interval.get(price_source)
+                next_price = next_interval.get(price_source)
                 next_start_time = next_interval.get("startsAt")
 
                 if start_time is None or price is None:
@@ -770,7 +799,7 @@ async def handle_chartdata(call: ServiceCall) -> dict[str, Any]:  # noqa: C901
                 interval_value = interval.get(filter_field)
                 next_value = next_interval.get(filter_field)
                 prev_value = all_prices[i - 1].get(filter_field) if i > 0 else None
-                prev_price = all_prices[i - 1].get("total") if i > 0 else None
+                prev_price = all_prices[i - 1].get(price_source) if i > 0 else None
 
                 # Check if current interval matches filter
                 if interval_value in filter_values:  # type: ignore[operator]
@@ -921,7 +950,7 @@ async def handle_chartdata(call: ServiceCall) -> dict[str, Any]:  # noqa: C901
             if all_prices:
                 last_interval = all_prices[-1]
                 last_start_time = last_interval.get("startsAt")
-                last_price = last_interval.get("total")
+                last_price = last_interval.get(price_source)
                 last_value = last_interval.get(filter_field)
 
                 if last_start_time and last_price is not None and last_value in filter_values:  # type: ignore[operator]
@@ -975,7 +1004,7 @@ async def handle_chartdata(call: ServiceCall) -> dict[str, Any]:  # noqa: C901
             # Mode 'none' (default): Only return matching intervals, no NULL insertion
             for interval in all_prices:
                 start_time = interval.get("startsAt")
-                price = interval.get("total")
+                price = interval.get(price_source)
 
                 if start_time is not None and price is not None:
                     # Apply period filter if specified

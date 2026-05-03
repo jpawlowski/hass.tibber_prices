@@ -56,6 +56,17 @@ get_apexcharts_yaml:
             - interval
             - hourly
           translation_key: resolution
+    price_source:
+      required: false
+      default: total
+      example: energy
+      selector:
+        select:
+          options:
+            - total
+            - energy
+            - tax
+          translation_key: price_source
     highlight_best_price:
       required: false
       default: true
@@ -100,6 +111,17 @@ get_chartdata:
                 - interval
                 - hourly
               translation_key: resolution
+        price_source:
+          required: false
+          default: total
+          example: energy
+          selector:
+            select:
+              options:
+                - total
+                - energy
+                - tax
+              translation_key: price_source
     filters:
       collapsed: true
       fields:

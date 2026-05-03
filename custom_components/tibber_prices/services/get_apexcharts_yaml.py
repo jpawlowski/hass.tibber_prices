@@ -57,6 +57,7 @@ APEXCHARTS_SERVICE_SCHEMA = vol.Schema(
         vol.Optional("day"): vol.In(["yesterday", "today", "tomorrow", "rolling_window", "rolling_window_autozoom"]),
         vol.Optional("level_type", default="rating_level"): vol.In(["rating_level", "level"]),
         vol.Optional("resolution", default="interval"): vol.In(["interval", "hourly"]),
+        vol.Optional("price_source", default="total"): vol.In(["total", "energy", "tax"]),
         vol.Optional("highlight_best_price", default=True): cv.boolean,
         vol.Optional("highlight_peak_price", default=False): cv.boolean,
     }
@@ -288,6 +289,7 @@ async def handle_apexcharts_yaml(call: ServiceCall) -> dict[str, Any]:  # noqa: 
     day = call.data.get("day")  # Can be None (rolling window mode)
     level_type = call.data.get("level_type", "rating_level")
     resolution = call.data.get("resolution", "interval")
+    price_source = call.data.get("price_source", "total")
     highlight_best_price = call.data.get("highlight_best_price", True)
     highlight_peak_price = call.data.get("highlight_peak_price", False)
 
@@ -366,7 +368,7 @@ async def handle_apexcharts_yaml(call: ServiceCall) -> dict[str, Any]:  # noqa: 
             f"return_response: true, "
             f"service_data: {{ entry_id: '{entry_id}', {day_param}"
             f"period_filter: 'best_price', resolution: '{resolution}', "
-            f"output_format: 'array_of_arrays', insert_nulls: 'segments', subunit_currency: {subunit_param} }} }}); "
+            f"output_format: 'array_of_arrays', insert_nulls: 'segments', subunit_currency: {subunit_param}, price_source: '{price_source}' }} }}); "
             f"const originalData = response.response.data; "
             f"return originalData.map((point, i) => {{ "
             f"const result = [point[0], point[1] === null ? null : 1]; "
@@ -410,7 +412,7 @@ async def handle_apexcharts_yaml(call: ServiceCall) -> dict[str, Any]:  # noqa: 
             f"return_response: true, "
             f"service_data: {{ entry_id: '{entry_id}', {day_param}"
             f"period_filter: 'peak_price', resolution: '{resolution}', "
-            f"output_format: 'array_of_arrays', insert_nulls: 'segments', subunit_currency: {subunit_param} }} }}); "
+            f"output_format: 'array_of_arrays', insert_nulls: 'segments', subunit_currency: {subunit_param}, price_source: '{price_source}' }} }}); "
             f"const originalData = response.response.data; "
             f"return originalData.map((point, i) => {{ "
             f"const result = [point[0], point[1] === null ? null : 1]; "
@@ -472,7 +474,7 @@ async def handle_apexcharts_yaml(call: ServiceCall) -> dict[str, Any]:  # noqa: 
                 f"return_response: true, "
                 f"service_data: {{ entry_id: '{entry_id}', {day_param}{filter_param}, resolution: '{resolution}', "
                 f"output_format: 'array_of_arrays', insert_nulls: 'segments', subunit_currency: {subunit_param}, "
-                f"connect_segments: true }} }}); "
+                f"price_source: '{price_source}', connect_segments: true }} }}); "
                 f"return response.response.data;"
             )
         else:
@@ -485,7 +487,7 @@ async def handle_apexcharts_yaml(call: ServiceCall) -> dict[str, Any]:  # noqa: 
                 f"return_response: true, "
                 f"service_data: {{ entry_id: '{entry_id}', {day_param}{filter_param}, resolution: '{resolution}', "
                 f"output_format: 'array_of_arrays', insert_nulls: 'segments', subunit_currency: {subunit_param}, "
-                f"connect_segments: true }} }}); "
+                f"price_source: '{price_source}', connect_segments: true }} }}); "
                 f"return response.response.data;"
             )
         # Configure show options based on level_type and level_key
@@ -820,10 +822,12 @@ async def handle_apexcharts_yaml(call: ServiceCall) -> dict[str, Any]:  # noqa: 
                 variables_dict = {"v_graph_span": template_graph_span}
                 if use_sensor_metadata:
                     # Add dynamic metadata variables from sensor
+                    # Use price-source-specific yaxis attrs when not using 'total'
+                    yaxis_attr_suffix = f"_{price_source}" if price_source != "total" else ""
                     variables_dict.update(
                         {
-                            "v_yaxis_min": f"states['{chart_metadata_sensor}'].attributes.yaxis_min",
-                            "v_yaxis_max": f"states['{chart_metadata_sensor}'].attributes.yaxis_max",
+                            "v_yaxis_min": f"states['{chart_metadata_sensor}'].attributes.yaxis_min{yaxis_attr_suffix}",
+                            "v_yaxis_max": f"states['{chart_metadata_sensor}'].attributes.yaxis_max{yaxis_attr_suffix}",
                         }
                     )
 
@@ -985,10 +989,12 @@ async def handle_apexcharts_yaml(call: ServiceCall) -> dict[str, Any]:  # noqa: 
             variables_dict = {"v_offset": template_value}
             if use_sensor_metadata:
                 # Add dynamic metadata variables from sensor
+                # Use price-source-specific yaxis attrs when not using 'total'
+                yaxis_attr_suffix = f"_{price_source}" if price_source != "total" else ""
                 variables_dict.update(
                     {
-                        "v_yaxis_min": f"states['{chart_metadata_sensor}'].attributes.yaxis_min",
-                        "v_yaxis_max": f"states['{chart_metadata_sensor}'].attributes.yaxis_max",
+                        "v_yaxis_min": f"states['{chart_metadata_sensor}'].attributes.yaxis_min{yaxis_attr_suffix}",
+                        "v_yaxis_max": f"states['{chart_metadata_sensor}'].attributes.yaxis_max{yaxis_attr_suffix}",
                     }
                 )
 

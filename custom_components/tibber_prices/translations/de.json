@@ -195,6 +195,17 @@
         },
         "submit": "↩ Speichern & Zurück"
       },
+      "price_level": {
+        "title": "🏷️ Preisniveau-Einstellungen (von Tibber API)",
+        "description": "**Konfiguriere die Stabilisierung für Tibbers Preisniveau-Klassifizierung (sehr günstig/günstig/normal/teuer/sehr teuer).**\n\nTibbers API liefert ein Preisniveau-Feld für jedes Intervall. Diese Einstellung glättet kurze Schwankungen, um Instabilität in Automatisierungen zu verhindern.{entity_warning}",
+        "data": {
+          "price_level_gap_tolerance": "Gap-Toleranz"
+        },
+        "data_description": {
+          "price_level_gap_tolerance": "Maximale Anzahl aufeinanderfolgender Intervalle, die 'geglättet' werden können, wenn sie von umgebenden Preisniveaus abweichen. Kleine isolierte Niveauänderungen werden mit dem dominanten Nachbarblock zusammengeführt. Beispiel: 1 bedeutet, dass ein einzelnes 'normal'-Intervall, umgeben von 'günstig'-Intervallen, zu 'günstig' korrigiert wird. Auf 0 setzen zum Deaktivieren. Standard: 1"
+        },
+        "submit": "↩ Speichern & Zurück"
+      },
       "best_price": {
         "title": "💚 Bestpreis-Zeitraum Einstellungen",
         "description": "**Konfiguration für den Bestpreis-Zeitraum mit den niedrigsten Strompreisen.**{entity_warning}{override_warning}\n\n---",
@@ -375,17 +386,6 @@
           "confirm_reset": "Ja, alles auf Werkseinstellungen zurücksetzen"
         },
         "submit": "Jetzt zurücksetzen"
-      },
-      "price_level": {
-        "title": "🏷️ Preisniveau-Einstellungen (von Tibber API)",
-        "description": "**Konfiguriere die Stabilisierung für Tibbers Preisniveau-Klassifizierung (sehr günstig/günstig/normal/teuer/sehr teuer).**\n\nTibbers API liefert ein Preisniveau-Feld für jedes Intervall. Diese Einstellung glättet kurze Schwankungen, um Instabilität in Automatisierungen zu verhindern.{entity_warning}",
-        "data": {
-          "price_level_gap_tolerance": "Gap-Toleranz"
-        },
-        "data_description": {
-          "price_level_gap_tolerance": "Maximale Anzahl aufeinanderfolgender Intervalle, die 'geglättet' werden können, wenn sie von umgebenden Preisniveaus abweichen. Kleine isolierte Niveauänderungen werden mit dem dominanten Nachbarblock zusammengeführt. Beispiel: 1 bedeutet, dass ein einzelnes 'normal'-Intervall, umgeben von 'günstig'-Intervallen, zu 'günstig' korrigiert wird. Auf 0 setzen zum Deaktivieren. Standard: 1"
-        },
-        "submit": "↩ Speichern & Zurück"
       }
     },
     "error": {
@@ -395,11 +395,11 @@
       "cannot_connect": "Verbindung fehlgeschlagen",
       "invalid_access_token": "Ungültiges Zugriffstoken",
       "different_home": "Der Zugriffstoken ist nicht gültig für die Home ID, für die diese Integration konfiguriert ist.",
+      "invalid_period_length": "Die Periodenlänge muss mindestens 15 Minuten betragen (Vielfache von 15).",
       "invalid_flex": "Flexibilitätsprozentsatz muss zwischen -50% und +50% liegen",
       "invalid_best_price_distance": "Distanzprozentsatz muss zwischen -50% und 0% liegen (negativ = unter Durchschnitt)",
       "invalid_peak_price_distance": "Distanzprozentsatz muss zwischen 0% und 50% liegen (positiv = über Durchschnitt)",
       "invalid_min_periods": "Mindestanzahl der Zeiträume muss zwischen 1 und 10 liegen",
-      "invalid_period_length": "Die Periodenlänge muss mindestens 15 Minuten betragen (Vielfache von 15).",
       "invalid_gap_count": "Lückentoleranz muss zwischen 0 und 8 liegen",
       "invalid_relaxation_attempts": "Lockerungsversuche müssen zwischen 1 und 12 liegen",
       "invalid_price_rating_low": "Untere Preis-Bewertungsschwelle muss zwischen -50% und -5% liegen",
@@ -1389,6 +1389,14 @@
           "name": "Stufen-Typ",
           "description": "Wähle, welche Preisstufen-Klassifizierung visualisiert werden soll: 'rating_level' (niedrig/normal/hoch basierend auf deinen konfigurierten Schwellenwerten) oder 'level' (Tibber-API-Stufen: sehr günstig/günstig/normal/teuer/sehr teuer)."
         },
+        "resolution": {
+          "name": "Auflösung",
+          "description": "Zeitauflösung für die Diagrammdaten. 'interval' (Standard): Originale 15-Minuten-Intervalle (96 Punkte pro Tag). 'hourly': Aggregierte Stundenwerte mit einem rollierenden 60-Minuten-Fenster (24 Punkte pro Tag) für ein übersichtlicheres Diagramm."
+        },
+        "price_source": {
+          "name": "Preisquelle",
+          "description": "Welche Preiskomponente als Hauptpreis verwendet werden soll. 'total' (Standard): Gesamtpreis inkl. Energie, Steuern und Gebühren. 'energy': Nur der reine Spot-/Energiepreis (ohne Steuern und Gebühren). 'tax': Nur Steuer- und Gebührenanteil."
+        },
         "highlight_best_price": {
           "name": "Bestpreis-Zeiträume hervorheben",
           "description": "Füge eine halbtransparente grüne Überlagerung hinzu, um die Bestpreis-Zeiträume im Diagramm hervorzuheben. Dies erleichtert die visuelle Identifizierung der optimalen Zeiten für den Energieverbrauch."
@@ -1396,10 +1404,6 @@
         "highlight_peak_price": {
           "name": "Spitzenpreis-Zeiträume hervorheben",
           "description": "Füge eine halbtransparente rote Überlagerung hinzu, um die Spitzenpreis-Zeiträume im Diagramm hervorzuheben. Dies erleichtert die visuelle Identifizierung der Zeiten, in denen Energie am teuersten ist."
-        },
-        "resolution": {
-          "name": "Auflösung",
-          "description": "Zeitauflösung für die Diagrammdaten. 'interval' (Standard): Originale 15-Minuten-Intervalle (96 Punkte pro Tag). 'hourly': Aggregierte Stundenwerte mit einem rollierenden 60-Minuten-Fenster (24 Punkte pro Tag) für ein übersichtlicheres Diagramm."
         }
       }
     },
@@ -1449,6 +1453,10 @@
           "name": "Auflösung",
           "description": "Zeitauflösung für die zurückgegebenen Daten. Optionen: 'interval' (Standard, 15-Minuten-Intervalle, 96 Datenpunkte pro Tag), 'hourly' (stündliche Durchschnitte, 24 Datenpunkte pro Tag)."
         },
+        "price_source": {
+          "name": "Preisquelle",
+          "description": "Welche Preiskomponente als Hauptpreis verwendet werden soll. 'total' (Standard): Gesamtpreis inkl. Energie, Steuern und Gebühren. 'energy': Nur der reine Spot-/Energiepreis (ohne Steuern und Gebühren). 'tax': Nur Steuer- und Gebührenanteil."
+        },
         "output_format": {
           "name": "Ausgabeformat",
           "description": "Ausgabeformat für die zurückgegebenen Daten. Optionen: 'array_of_objects' (Standard, Array von Objekten mit anpassbaren Feldnamen), 'array_of_arrays' (Array von [Zeitstempel, Preis]-Arrays mit abschließendem Null-Punkt für Stepline-Charts)."
@@ -1464,6 +1472,10 @@
         "round_decimals": {
           "name": "Dezimalstellen runden",
           "description": "Anzahl der Dezimalstellen, auf die Preise gerundet werden sollen (0-10). Falls nicht angegeben, wird die Standardgenauigkeit verwendet (4 Dezimalstellen für Basiswährung, 2 für Unterwährungseinheit)."
+        },
+        "data_key": {
+          "name": "Daten-Schlüssel",
+          "description": "Benutzerdefinierter Name für den obersten Datenschlüssel in der Antwort. Standard ist 'data', falls nicht angegeben."
         },
         "include_level": {
           "name": "Preisniveau einschließen",
@@ -1544,10 +1556,6 @@
         "metadata": {
           "name": "Metadaten",
           "description": "Steuerung der Metadaten-Einbindung in der Antwort. 'include' (Standard): Gibt Chart-Daten und Metadaten mit Preisstatistiken, Währungsinformationen, Y-Achsen-Vorschlägen und Zeitbereich zurück. 'only': Gibt nur Metadaten zurück ohne Chart-Daten zu verarbeiten (schnell, nützlich für dynamische Y-Achsen-Konfiguration). 'none': Gibt nur Chart-Daten ohne Metadaten zurück."
-        },
-        "data_key": {
-          "name": "Daten-Schlüssel",
-          "description": "Benutzerdefinierter Name für den obersten Datenschlüssel in der Antwort. Standard ist 'data', falls nicht angegeben."
         }
       }
     },
@@ -2364,6 +2372,16 @@
           "description": "Limit how many separate charging segments may be used per day. The planner keeps the cheapest segments within this limit."
         }
       }
+    },
+    "debug_clear_tomorrow": {
+      "name": "Debug: Morgendaten löschen",
+      "description": "DEBUG/TESTING: Entfernt die Preisdaten für morgen aus dem Interval-Pool-Cache. Verwende dies, um den Aktualisierungszyklus für Morgendaten zu testen, ohne auf den nächsten Tag zu warten. Nach dem Aufruf dieses Dienstes zeigt der Lifecycle-Sensor 'searching_tomorrow' (nach 13:00 Uhr) an und der nächste Timer-#1-Zyklus lädt neue Daten von der API.",
+      "fields": {
+        "entry_id": {
+          "name": "Eintrag-ID",
+          "description": "Optionale Konfigurationseintrag-ID. Wenn sie nicht angegeben ist, wird der erste verfügbare Eintrag verwendet."
+        }
+      }
     }
   },
   "selector": {
@@ -2426,6 +2444,13 @@
       "options": {
         "best_price": "Bestpreis-Zeiträume",
         "peak_price": "Spitzenpreis-Zeiträume"
+      }
+    },
+    "price_source": {
+      "options": {
+        "total": "Gesamt (inkl. Steuern & Gebühren)",
+        "energy": "Nur Energiepreis",
+        "tax": "Nur Steuern & Gebühren"
       }
     },
     "metadata": {

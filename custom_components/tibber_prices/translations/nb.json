@@ -195,6 +195,17 @@
         },
         "submit": "↩ Lagre & tilbake"
       },
+      "price_level": {
+        "title": "🏷️ Prisnivå-innstillinger",
+        "description": "**Konfigurer stabilisering for Tibbers prisnivå-klassifisering (veldig billig/billig/normal/dyr/veldig dyr).**\n\nTibbers API gir et prisnivå-felt for hvert intervall. Denne innstillingen jevner ut korte svingninger for å forhindre ustabilitet i automatiseringer.{entity_warning}",
+        "data": {
+          "price_level_gap_tolerance": "Gap-toleranse"
+        },
+        "data_description": {
+          "price_level_gap_tolerance": "Maksimalt antall påfølgende intervaller som kan 'jevnes ut' hvis de avviker fra omkringliggende prisnivåer. Små isolerte nivåendringer slås sammen med den dominerende nabogruppen. Eksempel: 1 betyr at et enkelt 'normal'-intervall omgitt av 'billig'-intervaller korrigeres til 'billig'. Sett til 0 for å deaktivere. Standard: 1"
+        },
+        "submit": "↩ Lagre & tilbake"
+      },
       "best_price": {
         "title": "💚 Beste Prisperiode Innstillinger",
         "description": "**Konfigurer innstillinger for Beste Prisperiode binærsensor. Denne sensoren er aktiv i perioder med de laveste strømprisene.**{entity_warning}{override_warning}\n\n---",
@@ -375,17 +386,6 @@
           "confirm_reset": "Ja, tilbakestill alt til standard"
         },
         "submit": "Tilbakestill nå"
-      },
-      "price_level": {
-        "title": "🏷️ Prisnivå-innstillinger",
-        "description": "**Konfigurer stabilisering for Tibbers prisnivå-klassifisering (veldig billig/billig/normal/dyr/veldig dyr).**\n\nTibbers API gir et prisnivå-felt for hvert intervall. Denne innstillingen jevner ut korte svingninger for å forhindre ustabilitet i automatiseringer.{entity_warning}",
-        "data": {
-          "price_level_gap_tolerance": "Gap-toleranse"
-        },
-        "data_description": {
-          "price_level_gap_tolerance": "Maksimalt antall påfølgende intervaller som kan 'jevnes ut' hvis de avviker fra omkringliggende prisnivåer. Små isolerte nivåendringer slås sammen med den dominerende nabogruppen. Eksempel: 1 betyr at et enkelt 'normal'-intervall omgitt av 'billig'-intervaller korrigeres til 'billig'. Sett til 0 for å deaktivere. Standard: 1"
-        },
-        "submit": "↩ Lagre & tilbake"
       }
     },
     "error": {
@@ -395,11 +395,11 @@
       "cannot_connect": "Kunne ikke koble til",
       "invalid_access_token": "Ugyldig tilgangstoken",
       "different_home": "Tilgangstokenet er ikke gyldig for hjem-ID-en denne integrasjonen er konfigurert for.",
+      "invalid_period_length": "Periodelengden må være minst 15 minutter (multipler av 15).",
       "invalid_flex": "Fleksibilitetsprosent må være mellom -50% og +50%",
       "invalid_best_price_distance": "Avstandsprosent må være mellom -50% og 0% (negativ = under gjennomsnitt)",
       "invalid_peak_price_distance": "Avstandsprosent må være mellom 0% og 50% (positiv = over gjennomsnitt)",
       "invalid_min_periods": "Minimumsantall perioder må være mellom 1 og 10",
-      "invalid_period_length": "Periodelengden må være minst 15 minutter (multipler av 15).",
       "invalid_gap_count": "Gaptoleranse må være mellom 0 og 8",
       "invalid_relaxation_attempts": "Lempingsforsøk må være mellom 1 og 12",
       "invalid_price_rating_low": "Lav prisvurderingsgrense må være mellom -50% og -5%",
@@ -1389,6 +1389,14 @@
           "name": "Nivåtype",
           "description": "Velg hvilken prisnivåklassifisering som skal visualiseres: 'rating_level' (lav/normal/høy basert på dine konfigurerte terskelverdier) eller 'level' (Tibber API-nivåer: veldig billig/billig/normal/dyr/veldig dyr)."
         },
+        "resolution": {
+          "name": "Oppløsning",
+          "description": "Tidsoppløsning for diagramdata. 'interval' (standard): Opprinnelige 15-minutters intervaller (96 punkter per dag). 'hourly': Aggregerte timeverdier med et rullende 60-minutters vindu (24 punkter per dag) for et ryddigere og mindre rotete diagram."
+        },
+        "price_source": {
+          "name": "Priskilde",
+          "description": "Hvilken priskomponent som skal brukes som hovedpris. 'total' (standard): Totalpris inkl. energi, skatter og avgifter. 'energy': Kun rå spot-/energipris (uten skatter og avgifter). 'tax': Kun skatter og avgifter."
+        },
         "highlight_best_price": {
           "name": "Fremhev beste prisperioder",
           "description": "Legg til et halvgjennomsiktig grønt overlegg for å fremheve de beste prisperiodene i diagrammet. Dette gjør det enkelt å visuelt identifisere de optimale tidene for energiforbruk."
@@ -1396,10 +1404,6 @@
         "highlight_peak_price": {
           "name": "Fremhev høyeste prisperioder",
           "description": "Legg til et halvgjennomsiktig rødt overlegg for å fremheve de høyeste prisperiodene i diagrammet. Dette gjør det enkelt å visuelt identifisere tidene når energi er dyrest."
-        },
-        "resolution": {
-          "name": "Oppløsning",
-          "description": "Tidsoppløsning for diagramdata. 'interval' (standard): Opprinnelige 15-minutters intervaller (96 punkter per dag). 'hourly': Aggregerte timeverdier med et rullende 60-minutters vindu (24 punkter per dag) for et ryddigere og mindre rotete diagram."
         }
       }
     },
@@ -1449,6 +1453,10 @@
           "name": "Oppløsning",
           "description": "Tidsoppløsning for de returnerte dataene. Alternativer: 'interval' (standard, 15-minutters intervaller, 96 datapunkter per dag), 'hourly' (timegjennomsnitt, 24 datapunkter per dag)."
         },
+        "price_source": {
+          "name": "Priskilde",
+          "description": "Hvilken priskomponent som skal brukes som hovedpris. 'total' (standard): Totalpris inkl. energi, skatter og avgifter. 'energy': Kun rå spot-/energipris (uten skatter og avgifter). 'tax': Kun skatter og avgifter."
+        },
         "output_format": {
           "name": "Utdataformat",
           "description": "Utdataformat for de returnerte dataene. Alternativer: 'array_of_objects' (standard, array av objekter med tilpassbare feltnavn), 'array_of_arrays' (array av [tidsstempel, pris]-arrays med avsluttende null-punkt for stepline-diagrammer)."
@@ -1464,6 +1472,10 @@
         "round_decimals": {
           "name": "Rund desimaler",
           "description": "Antall desimalplasser å runde priser til (0-10). Hvis ikke angitt, brukes standard presisjon (4 desimaler for basisvaluta, 2 for underenhet valuta)."
+        },
+        "data_key": {
+          "name": "Datanøkkel",
+          "description": "Tilpasset navn for datanøkkelen på toppnivå i svaret. Standard er 'data' hvis ikke angitt."
         },
         "include_level": {
           "name": "Inkluder prisnivå",
@@ -1544,10 +1556,6 @@
         "metadata": {
           "name": "Metadata",
           "description": "Kontroller metadata-inkludering i svaret. 'include' (standard): Returnerer både diagramdata og metadata med prisstatistikk, valutainformasjon, Y-akse forslag og tidsperiode. 'only': Returnerer bare metadata uten å behandle diagramdata (raskt, nyttig for dynamisk Y-akse konfigurasjon). 'none': Returnerer bare diagramdata uten metadata."
-        },
-        "data_key": {
-          "name": "Datanøkkel",
-          "description": "Tilpasset navn for datanøkkelen på toppnivå i svaret. Standard er 'data' hvis ikke angitt."
         }
       }
     },
@@ -2364,6 +2372,16 @@
           "description": "Limit how many separate charging segments may be used per day. The planner keeps the cheapest segments within this limit."
         }
       }
+    },
+    "debug_clear_tomorrow": {
+      "name": "Debug: Tøm morgendata",
+      "description": "DEBUG/TESTING: Fjerner morgendagens prisdata fra interval pool-cachen. Bruk dette for å teste oppdateringssyklusen for morgendata uten å vente til neste dag. Etter at denne tjenesten er kalt, vil lifecycle-sensoren vise 'searching_tomorrow' (etter kl. 13:00), og neste Timer #1-syklus vil hente nye data fra API-et.",
+      "fields": {
+        "entry_id": {
+          "name": "Oppførings-ID",
+          "description": "Valgfri konfigurasjonsoppførings-ID. Hvis den ikke er angitt, brukes den første tilgjengelige oppføringen."
+        }
+      }
     }
   },
   "selector": {
@@ -2426,6 +2444,13 @@
       "options": {
         "best_price": "Beste prisperioder",
         "peak_price": "Topp prisperioder"
+      }
+    },
+    "price_source": {
+      "options": {
+        "total": "Totalt (inkl. skatter og avgifter)",
+        "energy": "Kun energipris",
+        "tax": "Kun skatter og avgifter"
       }
     },
     "metadata": {
