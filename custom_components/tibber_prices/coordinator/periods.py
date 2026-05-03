@@ -907,8 +907,9 @@ class TibberPricesPeriodCalculator:
         )
 
         # Check if best price periods should be shown
-        # If relaxation is enabled, always calculate (relaxation will try "any" filter)
-        # If relaxation is disabled, apply level filter check
+        # If relaxation is enabled, always calculate (relaxation tries configured level filter
+        # first, then falls back to "any" per flex step if still insufficient)
+        # If relaxation is disabled, apply level filter check upfront
         if enable_relaxation_best:
             show_best_price = bool(all_prices)
         else:
@@ -1009,8 +1010,9 @@ class TibberPricesPeriodCalculator:
         )
 
         # Check if peak price periods should be shown
-        # If relaxation is enabled, always calculate (relaxation will try "any" filter)
-        # If relaxation is disabled, apply level filter check
+        # If relaxation is enabled, always calculate (relaxation tries configured level filter
+        # first, then falls back to "any" per flex step if still insufficient)
+        # If relaxation is disabled, apply level filter check upfront
         if enable_relaxation_peak:
             show_peak_price = bool(all_prices)
         else:
