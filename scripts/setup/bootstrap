@@ -46,6 +46,11 @@ fi
 # shellcheck source=/dev/null
 source "$HOME/.venv/bin/activate"
 
+# Allow pre-release versions of homeassistant in this dev environment.
+# phac pins an exact HA version (sometimes a beta/rc), and HA_VERSION may
+# intentionally be set to a pre-release for testing purposes.
+export UV_PRERELEASE=allow
+
 log_header "Installing project dependencies"
 uv pip install --requirement requirements.txt
 

@@ -44,3 +44,8 @@ updates:
     ignore:
       # Dependabot should not update Home Assistant as that should match the homeassistant key in hacs.json
       - dependency-name: "homeassistant"
+      # Each phac version pins exactly one HA version (1:1 mapping), so it must be
+      # updated manually together with HA_VERSION in scripts/setup/bootstrap
+      - dependency-name: "pytest-homeassistant-custom-component"
+      # pytest version is pinned by phac; updating it independently causes conflicts
+      - dependency-name: "pytest"
