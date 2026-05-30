@@ -383,6 +383,7 @@ response_variable: result
 
 ```json
 {
+  "success": true,
   "home_id": "abc-123",
   "search_start": "2026-04-11T14:00:00+02:00",
   "search_end": "2026-04-12T14:00:00+02:00",
@@ -534,6 +535,7 @@ response_variable: result
 
 ```json
 {
+  "success": true,
   "home_id": "abc-123",
   "search_start": "2026-04-11T14:00:00+02:00",
   "search_end": "2026-04-12T14:00:00+02:00",
@@ -679,6 +681,7 @@ response_variable: result
 
 ```json
 {
+  "success": true,
   "home_id": "abc-123",
   "search_start": "2026-04-11T22:00:00+02:00",
   "search_end": "2026-04-12T07:00:00+02:00",
@@ -1047,7 +1050,8 @@ The `reason` field contains a stable machine-readable code you can use in automa
 
 | Reason Code | Meaning |
 |-------------|---------|
-| `no_data_in_range` | No price data available for the search range |
+| `price_data_unavailable` | The Tibber API was temporarily unavailable for an uncached range (see [Distinguishing an outage from "no data yet"](#distinguishing-an-outage-from-no-data-yet)) |
+| `no_data_in_range` | No price data available for the search range (e.g., tomorrow's prices not published yet) |
 | `no_intervals_matching_level_filter` | Level filter excluded all intervals |
 | `insufficient_intervals_after_filter` | Not enough intervals left after filtering |
 | `insufficient_intervals_for_constraints` | Enough intervals, but constraints (min segment) can't be met |
@@ -1060,3 +1064,18 @@ The `reason` field contains a stable machine-readable code you can use in automa
 | `relaxation_exhausted` | All relaxation steps tried, still no result (only when `allow_relaxation: true`) |
 
 Always check the failure fields in your automations before using the results.
+
+### Distinguishing an outage from "no data yet"
+
+Every response carries a top-level `success` flag so automations can react correctly **without inspecting the data fields**:
+
+| Situation | `success` | `reason` | What it means |
+|-----------|-----------|----------|---------------|
+| Result found | `true` | — | Use the schedule/window. |
+| No match for your criteria | `true` | `no_data_in_range`, `no_intervals_matching_level_filter`, … | **Not an error.** The request worked; there is simply no result. A common case: tomorrow's prices are usually published by Tibber around 13:00 local time, but the day-ahead auction can be delayed — sometimes the data only arrives later in the afternoon or evening. A search covering tomorrow returns `no_data_in_range` until then. Retry later. |
+| Tibber API unavailable | `false` | `price_data_unavailable` | A temporary API outage prevented the fetch on an uncached range. Existing sensors keep working from cache; retry later. |
+
+:::tip Key distinction
+`success: true` means **the request itself worked** — even if no window was found (e.g., tomorrow's prices aren't out yet). `success: false` with `reason: "price_data_unavailable"` means **the API call failed** — treat it as a transient error and retry. These service calls never impair your sensors: a failed fetch for an uncached range leaves cached sensor data untouched.
+:::
+

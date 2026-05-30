@@ -131,6 +131,7 @@ The response contains the following top-level keys:
 
 | Key | Description |
 |-----|-------------|
+| `success` | `true` when the request itself worked (even if no schedule was produced); `false` only on a Tibber API outage (`reason: "price_data_unavailable"`). |
 | `intervals_found` | `true` when a schedule was produced. |
 | `battery` | Normalized SoC / capacity / efficiency / `achieved_soc_kwh` (what you actually reach with the returned schedule). |
 | `charging` | Mode, total duration, total energy, total cost, and the `schedule` block. |
@@ -157,8 +158,9 @@ When no schedule is found, `reason` contains one of:
 
 | Code | Meaning |
 |------|---------|
+| `price_data_unavailable` | The Tibber API was temporarily unavailable for an uncached range. This is the **only** case where `success` is `false` — treat it as a transient error and retry later. Your sensors keep running from cache. |
 | `already_at_target` | Current SoC is already at or above target — no charging needed. |
-| `no_data_in_range` | The search range has no price data. |
+| `no_data_in_range` | The search range has no price data. Often **not an error**: tomorrow's prices are usually published by Tibber around 13:00 local time, but the day-ahead auction can be delayed — sometimes the data only arrives later in the afternoon or evening. A range covering tomorrow returns this until then (with `success: true`). Retry later. |
 | `no_intervals_matching_level_filter` | `min_price_level` / `max_price_level` filtered everything out. |
 | `no_intervals_after_economic_filter` | `max_cost_per_kwh` or `reserve_for_discharge` filtered everything out. |
 | `energy_unreachable` | The energy needed cannot be charged within the available intervals + power limits. |
