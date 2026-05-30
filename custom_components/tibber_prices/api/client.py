@@ -51,6 +51,19 @@ class TibberPricesApiClient:
         self._max_retries = 5
         self._retry_delay = 2  # Base retry delay in seconds
 
+        # Empty-data responses are usually permanent (no data for the requested
+        # range), but during a Tibber outage the API can return empty data
+        # transiently before recovering. Retry a small number of times with backoff
+        # so a brief blip is smoothed out within a single update cycle.
+        #
+        # NOTE: This is NOT the mechanism that bridges multi-hour outages. Long
+        # outages are absorbed by the IntervalPool cache fallback (see
+        # interval_pool/manager.py): as long as cached intervals cover the current
+        # interval, the integration keeps serving cached prices and retries on the
+        # NEXT update cycle. That bridge is unbounded in time, so this in-request
+        # retry count must stay small to avoid blocking the event loop.
+        self._max_empty_data_retries = 2
+
         # Timeout configuration - more granular control
         self._connect_timeout = 10  # Connection timeout in seconds
         self._request_timeout = 25  # Total request timeout in seconds
@@ -834,9 +847,17 @@ class TibberPricesApiClient:
         """Handle retry logic for API-specific errors."""
         error_msg = str(error)
 
-        # Non-retryable: Invalid queries, bad requests, empty data
-        # Empty data means API has no data for the requested range - retrying won't help
-        if "Invalid GraphQL query" in error_msg or "Bad request" in error_msg or "Empty data received" in error_msg:
+        # Non-retryable: Invalid queries and bad requests are permanent client errors.
+        if "Invalid GraphQL query" in error_msg or "Bad request" in error_msg:
+            return False, 0
+
+        # Empty data is usually permanent (API has no data for the requested range),
+        # but can be returned transiently during a Tibber outage. Retry a limited
+        # number of times with exponential backoff before giving up.
+        if "Empty data received" in error_msg:
+            if retry < self._max_empty_data_retries:
+                delay = min(self._retry_delay * (2**retry), 30)
+                return True, delay
             return False, 0
 
         # Rate limits - only retry if server explicitly says so

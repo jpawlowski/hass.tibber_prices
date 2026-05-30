@@ -219,9 +219,13 @@ def _check_price_info_empty(data: dict) -> bool:
         and len(subscription["priceInfo"]["today"]) > 0
     )
 
-    # Only require today's data - yesterday is optional
-    # If subscription exists but no today data, that's a structural problem
-    is_empty = not has_today
+    # Consider the response valid if EITHER today's intervals OR the priceInfoRange
+    # edges are present. Some markets/accounts (e.g. NL hourly accounts) return an
+    # empty priceInfo(QUARTER_HOURLY).today while priceInfoRange still delivers the
+    # full set of intervals. Requiring today's data alone would wrongly classify
+    # such a complete response as "empty" and block setup. priceInfoRange is the
+    # authoritative source the interval pool uses, so its presence means we have data.
+    is_empty = not has_today and not has_yesterday
 
     _LOGGER_DETAILS.debug(
         "Price info check - priceInfoRange: %s, today: %s, is_empty: %s",
