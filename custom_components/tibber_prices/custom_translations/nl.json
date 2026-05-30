@@ -512,54 +512,54 @@
       "usage_tips": "Gebruik in automations: 'Als next_price_phase = stijgend en next_price_phase.start binnen 1 uur is, start de wasmachine nu'. Of combineer met current_price_phase: 'Als current_price_phase = dalend en next_price_phase = vlak, naderen we het dagdieptepunt – goed moment voor flexibele lasten'. Het attribuut start is bijzonder waardevol: activeer automations precies wanneer de volgende fase begint."
     },
     "current_price_phase_end_time": {
-      "description": "When the current intra-day price phase ends",
-      "long_description": "Shows the exact timestamp when the currently active rising, falling, or flat price phase will end and transition to the next phase.",
-      "usage_tips": "Use in automations to schedule tasks that must finish before prices change."
+      "description": "Wanneer de huidige prijsfase eindigt",
+      "long_description": "Toont de exacte tijdstempel waarop de momenteel actieve stijgende, dalende of vlakke prijsfase eindigt en overgaat naar de volgende fase. Wordt niet beschikbaar als er geen segmentgegevens zijn. Werkt bij op intervalgrenzen (elke 15 minuten). Combineer met current_price_phase om zowel te weten in welke fase je zit als wanneer die eindigt.",
+      "usage_tips": "Gebruik in automatiseringen om taken te plannen die klaar moeten zijn voordat de prijzen veranderen: 'Start de wasmachine als current_price_phase = falling en current_price_phase_end_time meer dan 2 uur weg is'. Of om te waarschuwen wanneer een goedkope fase bijna voorbij is."
     },
     "current_price_phase_remaining_minutes": {
-      "description": "Minutes remaining in the current price phase",
-      "long_description": "Shows how many minutes are left in the current intra-day price phase. Updates every minute.",
-      "usage_tips": "Use in automations: 'If current_price_phase = falling and remaining < 30, start the dishwasher now'."
+      "description": "Resterende minuten in de huidige prijsfase",
+      "long_description": "Toont hoeveel minuten er nog over zijn in de huidige prijsfase (stijgend, dalend of vlak). Werkt elke minuut bij voor nauwkeurige aftelling. Geeft 0 terug als er geen segmentgegevens zijn. Het attribuut remaining_minutes weerspiegelt de sensorwaarde in hele minuten voor eenvoudigere automatiseringssjablonen.",
+      "usage_tips": "Gebruik in automatiseringen: 'Als current_price_phase = falling en current_price_phase_remaining_minutes < 30, start nu de vaatwasser voordat de prijzen afvlakken'. Ook handig voor dashboardkaarten met een afteltbalk tot de faseovergang."
     },
     "current_price_phase_duration": {
-      "description": "Total duration of the current price phase",
-      "long_description": "Shows the total length of the currently active price phase in hours.",
-      "usage_tips": "Combine with remaining minutes to understand how far through the phase you are."
+      "description": "Totale duur van de huidige prijsfase",
+      "long_description": "Toont de totale lengte van de momenteel actieve prijsfase in uren (intern uitgedrukt in minuten). Werkt bij op intervalgrenzen. Dit vertelt je hoe lang het huidige trendsegment in totaal duurt — handig om te begrijpen of het een korte schommeling is of een langere periode van stijgende of dalende prijzen.",
+      "usage_tips": "Combineer met current_price_phase_remaining_minutes om in te schatten hoe ver je in de fase bent, of vergelijk met current_price_phase_progress om het tijdsprofiel van de huidige trend te begrijpen."
     },
     "current_price_phase_progress": {
-      "description": "How far through the current price phase we are",
-      "long_description": "Shows the percentage of the current intra-day price phase that has elapsed (0–100%). Updates every minute.",
-      "usage_tips": "Use in dashboard cards to display a visual progress bar for the current price phase."
+      "description": "Hoe ver de huidige prijsfase gevorderd is",
+      "long_description": "Toont het percentage van de huidige prijsfase dat al verstreken is (0–100%). Werkt elke minuut bij. Een waarde rond 0% betekent dat de fase net is begonnen; rond 100% betekent dat die bijna eindigt. Geeft 0 terug als er geen segmentgegevens zijn.",
+      "usage_tips": "Gebruik in dashboardkaarten om een visuele voortgangsbalk voor de huidige prijsfase te tonen. In automatiseringen: 'Als current_price_phase = falling en current_price_phase_progress > 80, zijn de goedkoopste prijzen dichtbij — maak nu flexibele verbruikers klaar'."
     },
     "next_rising_phase_start_time": {
-      "description": "When the next rising price phase begins",
-      "long_description": "Shows the timestamp of the next upcoming rising price segment across today's remaining phases and tomorrow's phases.",
-      "usage_tips": "Use to schedule loads before prices start rising again."
+      "description": "Wanneer de volgende stijgende prijsfase begint",
+      "long_description": "Toont de tijdstempel van het volgende komende stijgende prijssegment over de resterende fasen van vandaag en de fasen van morgen. Geeft niet-beschikbaar terug als er geen stijgende fasen meer zijn in de gegevens van vandaag of morgen. Werkt bij op intervalgrenzen (elke 15 minuten).",
+      "usage_tips": "Gebruik in_falling_price_phase en next_rising_phase_start_time om flexibele verbruikers te plannen: laat ze nu draaien terwijl de prijzen dalen en rond af voordat de volgende stijging begint. 'Als in_falling_price_phase ON is en next_rising_phase_start_time minder dan 1 uur weg is, start de wasmachine direct'."
     },
     "next_falling_phase_start_time": {
-      "description": "When the next falling price phase begins",
-      "long_description": "Shows the timestamp of the next upcoming falling price segment across today's remaining phases and tomorrow's phases.",
-      "usage_tips": "Use to delay flexible loads until the next price drop starts."
+      "description": "Wanneer de volgende dalende prijsfase begint",
+      "long_description": "Toont de tijdstempel van het volgende komende dalende prijssegment over de resterende fasen van vandaag en de fasen van morgen. Geeft niet-beschikbaar terug als er geen dalende fasen meer zijn in de gegevens van vandaag of morgen. Werkt bij op intervalgrenzen (elke 15 minuten).",
+      "usage_tips": "Gebruik het om flexibele verbruikers uit te stellen tot de volgende prijsdaling begint. 'Als next_falling_phase_start_time binnen 2 uur is, overweeg dan te wachten voordat je de vaatwasser of warmtepomp start'."
     },
     "next_flat_phase_start_time": {
-      "description": "When the next flat (stable) price phase begins",
-      "long_description": "Shows the timestamp of the next upcoming flat price segment across today's remaining phases and tomorrow's phases.",
-      "usage_tips": "Use for scheduling loads that need predictable costs over time."
+      "description": "Wanneer de volgende vlakke (stabiele) prijsfase begint",
+      "long_description": "Toont de tijdstempel van het volgende komende vlakke prijssegment (waar de prijzen weinig variatie tonen) over de resterende fasen van vandaag en de fasen van morgen. Geeft niet-beschikbaar terug als er geen vlakke fasen meer zijn in de beschikbare gegevens. Werkt bij op intervalgrenzen (elke 15 minuten).",
+      "usage_tips": "Vlakke fasen wijzen op prijsstabiliteit — handig voor het plannen van verbruikers die in de tijd voorspelbare kosten nodig hebben. 'Als next_flat_phase_start_time binnen 30 minuten is en current_price_phase = rising, is de prijspiek bijna voorbij'."
     },
     "next_rising_phase_in_minutes": {
-      "description": "Minutes until the next rising price phase begins",
-      "long_description": "Shows how many minutes until the next rising price phase starts. Updates every minute.",
-      "usage_tips": "Use in countdown automations to alert before the next price rise."
+      "description": "Minuten tot de volgende stijgende prijsfase begint",
+      "long_description": "Toont hoeveel minuten tot de volgende stijgende prijsfase begint. Werkt elke minuut bij. Geeft niet-beschikbaar terug als er geen stijgende fasen meer zijn in de gegevens van vandaag of morgen. Het attribuut next_in_minutes weerspiegelt de sensorwaarde in hele minuten voor automatiseringssjablonen.",
+      "usage_tips": "Gebruik in aftelautomatiseringen: 'Waarschuw me 15 minuten voor de volgende prijsstijging zodat ik flexibele verbruikers kan uitstellen'. Combineer met in_falling_price_phase: als de prijzen nu dalen en een stijging ophanden is, handel dan voordat de prijzen beginnen te klimmen."
     },
     "next_falling_phase_in_minutes": {
-      "description": "Minutes until the next falling price phase begins",
-      "long_description": "Shows how many minutes until the next falling price phase starts. Updates every minute.",
-      "usage_tips": "Use to time flexible loads: delay until the upcoming price drop."
+      "description": "Minuten tot de volgende dalende prijsfase begint",
+      "long_description": "Toont hoeveel minuten tot de volgende dalende prijsfase begint. Werkt elke minuut bij. Geeft niet-beschikbaar terug als er geen dalende fasen meer zijn in de gegevens van vandaag of morgen. Het attribuut next_in_minutes weerspiegelt de sensorwaarde in hele minuten voor automatiseringssjablonen.",
+      "usage_tips": "Gebruik het om flexibele verbruikers optimaal te timen: 'Als next_falling_phase_in_minutes < 60, stel de start van de wasmachine uit om te profiteren van de komende prijsdaling'."
     },
     "next_flat_phase_in_minutes": {
-      "description": "Minutes until the next flat (stable) price phase begins",
-      "long_description": "Shows how many minutes until the next flat price phase starts. Updates every minute.",
-      "usage_tips": "Use to anticipate price stabilisation after a volatile phase."
+      "description": "Minuten tot de volgende vlakke (stabiele) prijsfase begint",
+      "long_description": "Toont hoeveel minuten tot de volgende vlakke prijsfase begint. Werkt elke minuut bij. Geeft niet-beschikbaar terug als er geen vlakke fasen meer zijn in de gegevens van vandaag of morgen. Het attribuut next_in_minutes weerspiegelt de sensorwaarde in hele minuten.",
+      "usage_tips": "Gebruik het om prijsstabilisatie na een volatiele fase te anticiperen. 'Als next_flat_phase_in_minutes < 30 en current_price_phase = rising, zal de prijspiek binnenkort afvlakken — overweeg verbruikers tot dan uit te stellen'."
     },
     "chart_data_export": {
       "description": "Data-export voor dashboard-integraties",
@@ -644,19 +644,19 @@
       "usage_tips": "Gebruik dit om apparaten met hoog verbruik te laten draaien tijdens de goedkoopste intervallen"
     },
     "in_rising_price_phase": {
-      "description": "Whether prices are currently in a rising phase",
-      "long_description": "Turns ON when the current intra-day price phase is rising.",
-      "usage_tips": "Use in automations to delay or avoid running flexible loads during rising prices."
+      "description": "Of de prijzen zich momenteel in een stijgende fase bevinden",
+      "long_description": "Gaat AAN wanneer de huidige prijsfase stijgend is — d.w.z. de prijzen stijgen sinds de laatste faseovergang. Precies één van in_rising_price_phase, in_falling_price_phase en in_flat_price_phase is op elk moment AAN. Wordt niet beschikbaar als er geen segmentgegevens zijn.",
+      "usage_tips": "Gebruik in automatiseringen om flexibele verbruikers uit te stellen of te vermijden: 'Als in_rising_price_phase AAN is, stel de vaatwasser uit'. Combineer met next_falling_phase_start_time om te weten wanneer de prijzen weer beginnen te dalen."
     },
     "in_falling_price_phase": {
-      "description": "Whether prices are currently in a falling phase",
-      "long_description": "Turns ON when the current intra-day price phase is falling.",
-      "usage_tips": "Use in automations to take advantage of falling prices for flexible loads."
+      "description": "Of de prijzen zich momenteel in een dalende fase bevinden",
+      "long_description": "Gaat AAN wanneer de huidige prijsfase dalend is — d.w.z. de prijzen dalen sinds de laatste faseovergang. Dit is vaak een goed moment om flexibele verbruikers te starten. Precies één van in_rising_price_phase, in_falling_price_phase en in_flat_price_phase is op elk moment AAN.",
+      "usage_tips": "Gebruik in automatiseringen om dalende prijzen te benutten: 'Als in_falling_price_phase AAN is en current_price_phase_remaining_minutes > 60, start de wasmachine'. Combineer met next_rising_phase_start_time om te voorkomen dat je een verbruiker start die niet klaar is voordat de prijzen stijgen."
     },
     "in_flat_price_phase": {
-      "description": "Whether prices are currently in a flat (stable) phase",
-      "long_description": "Turns ON when the current intra-day price phase is flat and prices are relatively stable.",
-      "usage_tips": "Use for loads that prefer price stability rather than the lowest price."
+      "description": "Of de prijzen zich momenteel in een vlakke (stabiele) fase bevinden",
+      "long_description": "Gaat AAN wanneer de huidige prijsfase vlak is — d.w.z. de prijzen zijn relatief stabiel zonder noemenswaardige stijging of daling. Vlakke fasen betekenen voorspelbare kosten en zijn geschikt voor verbruikers met een onzekere of variabele duur. Precies één van in_rising_price_phase, in_falling_price_phase en in_flat_price_phase is op elk moment AAN.",
+      "usage_tips": "Gebruik het voor verbruikers die onverschillig zijn voor de prijsrichting maar stabiliteit verkiezen: warmtepompen in stabiele modus, achtergrondladen of het bijverwarmen van de boiler. Combineer met current_price_phase_end_time om te weten hoe lang het stabiele venster duurt."
     },
     "connection": {
       "description": "Of de verbinding met de Tibber API werkt",

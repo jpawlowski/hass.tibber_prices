@@ -274,32 +274,32 @@
     },
     "price_trajectory_3h": {
       "description": "Preisverlauf innerhalb des nächsten 3-Stunden-Fensters",
-      "long_description": "Compares the average of the first 1.5 hours with the average of the second 1.5 hours within the next 3-hour window. 'rising' = prices are climbing over the 3h window; 'falling' = prices are dropping. Reveals the direction of price movement independent of the current price level. Rising/falling at ±3%, strongly at ±9% (configurable, volatility-adaptive).",
+      "long_description": "Vergleicht den Durchschnitt der ersten 1,5 Stunden mit dem Durchschnitt der zweiten 1,5 Stunden innerhalb des nächsten 3-Stunden-Fensters. 'rising' = die Preise steigen über das 3-Stunden-Fenster; 'falling' = die Preise fallen. Zeigt die Richtung der Preisbewegung unabhängig vom aktuellen Preisniveau. Steigend/fallend bei ±3 %, stark bei ±9 % (konfigurierbar, volatilitätsabhängig).",
       "usage_tips": "Appliance timing: 'outlook: strongly_falling + trajectory: rising' = you're at or past the minimum, the window average is low but prices are already recovering — start now."
     },
     "price_trajectory_4h": {
       "description": "Preisverlauf innerhalb des nächsten 4-Stunden-Fensters",
-      "long_description": "Compares the average of the first 2 hours with the average of the second 2 hours within the next 4-hour window. 'rising' = prices are climbing over the 4h window; 'falling' = prices are dropping. Complementary to price_outlook_4h: outlook answers 'is NOW cheap vs the window average?', trajectory answers 'are prices rising or falling within the window?'. Rising/falling at ±3%, strongly at ±9% (configurable, volatility-adaptive).",
+      "long_description": "Vergleicht den Durchschnitt der ersten 2 Stunden mit dem Durchschnitt der zweiten 2 Stunden innerhalb des nächsten 4-Stunden-Fensters. 'rising' = die Preise steigen über das 4-Stunden-Fenster; 'falling' = die Preise fallen. Ergänzend zu price_outlook_4h: outlook beantwortet 'ist JETZT günstig gegenüber dem Fensterdurchschnitt?', trajectory beantwortet 'steigen oder fallen die Preise innerhalb des Fensters?'. Steigend/fallend bei ±3 %, stark bei ±9 % (konfigurierbar, volatilitätsabhängig).",
       "usage_tips": "Heat pump charging: 'rising' = first half window is cheaper, charge now before prices climb. 'falling' = second half window is cheaper, wait if you can. Combine with outlook: if both rising, very strong signal to act now."
     },
     "price_trajectory_5h": {
       "description": "Preisverlauf innerhalb des nächsten 5-Stunden-Fensters",
-      "long_description": "Compares the average of the first 2.5 hours with the average of the second 2.5 hours within the next 5-hour window. 'rising' = prices are climbing over the 5h window; 'falling' = prices are dropping. Rising/falling at ±3%, strongly at ±9% (configurable, volatility-adaptive).",
+      "long_description": "Vergleicht den Durchschnitt der ersten 2,5 Stunden mit dem Durchschnitt der zweiten 2,5 Stunden innerhalb des nächsten 5-Stunden-Fensters. 'rising' = die Preise steigen über das 5-Stunden-Fenster; 'falling' = die Preise fallen. Steigend/fallend bei ±3 %, stark bei ±9 % (konfigurierbar, volatilitätsabhängig).",
       "usage_tips": "Eco/long cycles: 'outlook: rising + trajectory: rising' = clear signal to start now. 'outlook: falling + trajectory: rising' = you're near the bottom, good time to start before costs climb."
     },
     "price_trajectory_6h": {
       "description": "Preisverlauf innerhalb des nächsten 6-Stunden-Fensters",
-      "long_description": "Compares the average of the first 3 hours with the average of the second 3 hours within the next 6-hour window. 'rising' = prices are climbing over the 6h window; 'falling' = prices are dropping. Rising/falling at ±3%, strongly at ±9% (configurable, volatility-adaptive).",
+      "long_description": "Vergleicht den Durchschnitt der ersten 3 Stunden mit dem Durchschnitt der zweiten 3 Stunden innerhalb des nächsten 6-Stunden-Fensters. 'rising' = die Preise steigen über das 6-Stunden-Fenster; 'falling' = die Preise fallen. Steigend/fallend bei ±3 %, stark bei ±9 % (konfigurierbar, volatilitätsabhängig).",
       "usage_tips": "Evening/overnight planning: 'falling' at evening peak = overnight will be cheaper, postpone. 'rising' in the morning = current morning prices are the day's low — good time for high consumption."
     },
     "price_trajectory_8h": {
       "description": "Preisverlauf innerhalb des nächsten 8-Stunden-Fensters",
-      "long_description": "Compares the average of the first 4 hours with the average of the second 4 hours within the next 8-hour window. 'rising' = prices are climbing over the 8h window; 'falling' = prices are dropping. Rising/falling at ±3%, strongly at ±9% (configurable, volatility-adaptive).",
+      "long_description": "Vergleicht den Durchschnitt der ersten 4 Stunden mit dem Durchschnitt der zweiten 4 Stunden innerhalb des nächsten 8-Stunden-Fensters. 'rising' = die Preise steigen über das 8-Stunden-Fenster; 'falling' = die Preise fallen. Steigend/fallend bei ±3 %, stark bei ±9 % (konfigurierbar, volatilitätsabhängig).",
       "usage_tips": "Overnight charging: 'rising' during evening = first half of night is cheapest, start charging earlier. 'falling' = second half of night will be cheapest, delay start."
     },
     "price_trajectory_12h": {
       "description": "Preisverlauf innerhalb des nächsten 12-Stunden-Fensters",
-      "long_description": "Compares the average of the first 6 hours with the average of the second 6 hours within the next 12-hour window. 'rising' = prices are climbing over the 12h window; 'falling' = prices are dropping. Rising/falling at ±3%, strongly at ±9% (configurable, volatility-adaptive).",
+      "long_description": "Vergleicht den Durchschnitt der ersten 6 Stunden mit dem Durchschnitt der zweiten 6 Stunden innerhalb des nächsten 12-Stunden-Fensters. 'rising' = die Preise steigen über das 12-Stunden-Fenster; 'falling' = die Preise fallen. Steigend/fallend bei ±3 %, stark bei ±9 % (konfigurierbar, volatilitätsabhängig).",
       "usage_tips": "Day-ahead planning: 'rising' at midnight = first half of day is cheaper, schedule morning loads. 'falling' = prices drop in the second part of the day, afternoon/evening scheduling is better."
     },
     "current_price_trend": {
@@ -512,54 +512,54 @@
       "usage_tips": "Nutzen in Automationen: 'Wenn next_price_phase = steigend und next_price_phase.start in weniger als 1 Stunde, Waschmaschine jetzt starten'. Oder kombiniere mit current_price_phase: 'Wenn current_price_phase = fallend und next_price_phase = flach, nähern wir uns dem Tagestiefpunkt – guter Zeitpunkt für flexible Lasten'. Das Attribut start ist besonders wertvoll: Automationen können exakt dann ausgelöst werden, wenn die nächste Phase beginnt."
     },
     "current_price_phase_end_time": {
-      "description": "When the current intra-day price phase ends",
-      "long_description": "Shows the exact timestamp when the currently active rising, falling, or flat price phase will end and transition to the next phase.",
-      "usage_tips": "Use in automations to schedule tasks that must finish before prices change."
+      "description": "Wann die aktuelle Preisphase endet",
+      "long_description": "Zeigt den genauen Zeitstempel, wann die aktuell aktive steigende, fallende oder flache Preisphase endet und in die nächste Phase übergeht. Wird nicht verfügbar, wenn keine Segmentdaten vorliegen. Aktualisiert sich an Intervallgrenzen (alle 15 Minuten). Kombiniere mit current_price_phase, um sowohl die aktuelle Phase als auch deren Ende zu kennen.",
+      "usage_tips": "Nutze es in Automationen, um Aufgaben zu planen, die vor einer Preisänderung abgeschlossen sein müssen: 'Starte die Waschmaschine, wenn current_price_phase = falling und current_price_phase_end_time mehr als 2 Stunden entfernt ist'. Oder um zu warnen, wenn eine günstige Phase bald endet."
     },
     "current_price_phase_remaining_minutes": {
-      "description": "Minutes remaining in the current price phase",
-      "long_description": "Shows how many minutes are left in the current intra-day price phase. Updates every minute.",
-      "usage_tips": "Use in automations: 'If current_price_phase = falling and remaining < 30, start the dishwasher now'."
+      "description": "Verbleibende Minuten in der aktuellen Preisphase",
+      "long_description": "Zeigt, wie viele Minuten in der aktuellen Preisphase (steigend, fallend oder flach) noch übrig sind. Aktualisiert sich jede Minute für präzise Countdowns. Gibt 0 zurück, wenn keine Segmentdaten vorliegen. Das Attribut remaining_minutes spiegelt den Sensorwert in ganzen Minuten für einfachere Automations-Templates wider.",
+      "usage_tips": "Nutze es in Automationen: 'Wenn current_price_phase = falling und current_price_phase_remaining_minutes < 30, starte jetzt den Geschirrspüler, bevor sich die Preise stabilisieren'. Auch nützlich für Dashboard-Karten mit einem Countdown-Balken bis zum Phasenwechsel."
     },
     "current_price_phase_duration": {
-      "description": "Total duration of the current price phase",
-      "long_description": "Shows the total length of the currently active price phase in hours.",
-      "usage_tips": "Combine with remaining minutes to understand how far through the phase you are."
+      "description": "Gesamtdauer der aktuellen Preisphase",
+      "long_description": "Zeigt die Gesamtlänge der aktuell aktiven Preisphase in Stunden (intern in Minuten ausgedrückt). Aktualisiert sich an Intervallgrenzen. Das zeigt dir, wie lange das aktuelle Trendsegment insgesamt dauert — nützlich, um zu verstehen, ob es eine kurze Schwankung oder eine längere Phase steigender oder fallender Preise ist.",
+      "usage_tips": "Kombiniere mit current_price_phase_remaining_minutes, um abzuschätzen, wie weit du in der Phase bist, oder vergleiche mit current_price_phase_progress, um das Zeitprofil des aktuellen Trends zu verstehen."
     },
     "current_price_phase_progress": {
-      "description": "How far through the current price phase we are",
-      "long_description": "Shows the percentage of the current intra-day price phase that has elapsed (0–100%). Updates every minute.",
-      "usage_tips": "Use in dashboard cards to display a visual progress bar for the current price phase."
+      "description": "Wie weit die aktuelle Preisphase fortgeschritten ist",
+      "long_description": "Zeigt den Prozentsatz der aktuellen Preisphase, der bereits verstrichen ist (0–100 %). Aktualisiert sich jede Minute. Ein Wert nahe 0 % bedeutet, dass die Phase gerade begonnen hat; nahe 100 % bedeutet, dass sie bald endet. Gibt 0 zurück, wenn keine Segmentdaten vorliegen.",
+      "usage_tips": "Nutze es in Dashboard-Karten, um einen visuellen Fortschrittsbalken für die aktuelle Preisphase anzuzeigen. In Automationen: 'Wenn current_price_phase = falling und current_price_phase_progress > 80, sind die günstigsten Preise nah — bereite jetzt flexible Verbraucher vor'."
     },
     "next_rising_phase_start_time": {
-      "description": "When the next rising price phase begins",
-      "long_description": "Shows the timestamp of the next upcoming rising price segment across today's remaining phases and tomorrow's phases.",
-      "usage_tips": "Use to schedule loads before prices start rising again."
+      "description": "Wann die nächste steigende Preisphase beginnt",
+      "long_description": "Zeigt den Zeitstempel des nächsten anstehenden steigenden Preissegments über die verbleibenden Phasen von heute und die Phasen von morgen. Gibt 'nicht verfügbar' zurück, wenn in den Daten von heute oder morgen keine steigenden Phasen mehr existieren. Aktualisiert sich an Intervallgrenzen (alle 15 Minuten).",
+      "usage_tips": "Nutze in_falling_price_phase und next_rising_phase_start_time, um flexible Verbraucher zu planen: Lass sie jetzt laufen, solange die Preise fallen, und beende sie vor dem nächsten Anstieg. 'Wenn in_falling_price_phase ON ist und next_rising_phase_start_time weniger als 1 Stunde entfernt ist, starte die Waschmaschine sofort'."
     },
     "next_falling_phase_start_time": {
-      "description": "When the next falling price phase begins",
-      "long_description": "Shows the timestamp of the next upcoming falling price segment across today's remaining phases and tomorrow's phases.",
-      "usage_tips": "Use to delay flexible loads until the next price drop starts."
+      "description": "Wann die nächste fallende Preisphase beginnt",
+      "long_description": "Zeigt den Zeitstempel des nächsten anstehenden fallenden Preissegments über die verbleibenden Phasen von heute und die Phasen von morgen. Gibt 'nicht verfügbar' zurück, wenn in den Daten von heute oder morgen keine fallenden Phasen mehr existieren. Aktualisiert sich an Intervallgrenzen (alle 15 Minuten).",
+      "usage_tips": "Nutze es, um flexible Verbraucher bis zum nächsten Preisrückgang zu verzögern. 'Wenn next_falling_phase_start_time innerhalb von 2 Stunden liegt, warte ggf., bevor du den Geschirrspüler oder die Wärmepumpe startest'."
     },
     "next_flat_phase_start_time": {
-      "description": "When the next flat (stable) price phase begins",
-      "long_description": "Shows the timestamp of the next upcoming flat price segment across today's remaining phases and tomorrow's phases.",
-      "usage_tips": "Use for scheduling loads that need predictable costs over time."
+      "description": "Wann die nächste flache (stabile) Preisphase beginnt",
+      "long_description": "Zeigt den Zeitstempel des nächsten anstehenden flachen Preissegments (in dem die Preise kaum variieren) über die verbleibenden Phasen von heute und die Phasen von morgen. Gibt 'nicht verfügbar' zurück, wenn in den verfügbaren Daten keine flachen Phasen mehr existieren. Aktualisiert sich an Intervallgrenzen (alle 15 Minuten).",
+      "usage_tips": "Flache Phasen deuten auf Preisstabilität hin — nützlich, um Verbraucher mit über die Zeit vorhersehbaren Kosten zu planen. 'Wenn next_flat_phase_start_time innerhalb von 30 Minuten liegt und current_price_phase = rising, ist die Preisspitze fast vorbei'."
     },
     "next_rising_phase_in_minutes": {
-      "description": "Minutes until the next rising price phase begins",
-      "long_description": "Shows how many minutes until the next rising price phase starts. Updates every minute.",
-      "usage_tips": "Use in countdown automations to alert before the next price rise."
+      "description": "Minuten bis die nächste steigende Preisphase beginnt",
+      "long_description": "Zeigt, wie viele Minuten bis zum Beginn der nächsten steigenden Preisphase verbleiben. Aktualisiert sich jede Minute. Gibt 'nicht verfügbar' zurück, wenn in den Daten von heute oder morgen keine steigenden Phasen mehr existieren. Das Attribut next_in_minutes spiegelt den Sensorwert in ganzen Minuten für Automations-Templates wider.",
+      "usage_tips": "Nutze es in Countdown-Automationen: 'Benachrichtige mich 15 Minuten vor dem nächsten Preisanstieg, damit ich flexible Verbraucher verzögern kann'. Kombiniere mit in_falling_price_phase: Wenn die Preise gerade fallen und ein Anstieg bevorsteht, handle, bevor die Preise zu klettern beginnen."
     },
     "next_falling_phase_in_minutes": {
-      "description": "Minutes until the next falling price phase begins",
-      "long_description": "Shows how many minutes until the next falling price phase starts. Updates every minute.",
-      "usage_tips": "Use to time flexible loads: delay until the upcoming price drop."
+      "description": "Minuten bis die nächste fallende Preisphase beginnt",
+      "long_description": "Zeigt, wie viele Minuten bis zum Beginn der nächsten fallenden Preisphase verbleiben. Aktualisiert sich jede Minute. Gibt 'nicht verfügbar' zurück, wenn in den Daten von heute oder morgen keine fallenden Phasen mehr existieren. Das Attribut next_in_minutes spiegelt den Sensorwert in ganzen Minuten für Automations-Templates wider.",
+      "usage_tips": "Nutze es, um flexible Verbraucher optimal zu timen: 'Wenn next_falling_phase_in_minutes < 60, verzögere den Start der Waschmaschine, um vom kommenden Preisrückgang zu profitieren'."
     },
     "next_flat_phase_in_minutes": {
-      "description": "Minutes until the next flat (stable) price phase begins",
-      "long_description": "Shows how many minutes until the next flat price phase starts. Updates every minute.",
-      "usage_tips": "Use to anticipate price stabilisation after a volatile phase."
+      "description": "Minuten bis die nächste flache (stabile) Preisphase beginnt",
+      "long_description": "Zeigt, wie viele Minuten bis zum Beginn der nächsten flachen Preisphase verbleiben. Aktualisiert sich jede Minute. Gibt 'nicht verfügbar' zurück, wenn in den Daten von heute oder morgen keine flachen Phasen mehr existieren. Das Attribut next_in_minutes spiegelt den Sensorwert in ganzen Minuten wider.",
+      "usage_tips": "Nutze es, um eine Preisstabilisierung nach einer volatilen Phase vorauszusehen. 'Wenn next_flat_phase_in_minutes < 30 und current_price_phase = rising, wird die Preisspitze bald abflachen — erwäge, Verbraucher bis dahin zu verzögern'."
     },
     "chart_data_export": {
       "description": "Datenexport für Dashboard-Integrationen",
@@ -644,19 +644,19 @@
       "usage_tips": "Nutze dies, um Geräte mit hohem Verbrauch während der günstigsten Intervalle zu betreiben"
     },
     "in_rising_price_phase": {
-      "description": "Whether prices are currently in a rising phase",
-      "long_description": "Turns ON when the current intra-day price phase is rising.",
-      "usage_tips": "Use in automations to delay or avoid running flexible loads during rising prices."
+      "description": "Ob die Preise aktuell in einer steigenden Phase sind",
+      "long_description": "Schaltet auf ON, wenn die aktuelle Preisphase steigend ist — d. h. die Preise steigen seit dem letzten Phasenwechsel. Genau eines von in_rising_price_phase, in_falling_price_phase und in_flat_price_phase ist zu jedem Zeitpunkt ON. Wird nicht verfügbar, wenn keine Segmentdaten vorliegen.",
+      "usage_tips": "Nutze es in Automationen, um flexible Verbraucher zu verzögern oder zu vermeiden: 'Wenn in_rising_price_phase ON ist, verschiebe den Geschirrspüler'. Kombiniere mit next_falling_phase_start_time, um zu wissen, wann die Preise wieder zu fallen beginnen."
     },
     "in_falling_price_phase": {
-      "description": "Whether prices are currently in a falling phase",
-      "long_description": "Turns ON when the current intra-day price phase is falling.",
-      "usage_tips": "Use in automations to take advantage of falling prices for flexible loads."
+      "description": "Ob die Preise aktuell in einer fallenden Phase sind",
+      "long_description": "Schaltet auf ON, wenn die aktuelle Preisphase fallend ist — d. h. die Preise fallen seit dem letzten Phasenwechsel. Das ist oft ein gutes Zeitfenster, um flexible Verbraucher zu starten. Genau eines von in_rising_price_phase, in_falling_price_phase und in_flat_price_phase ist zu jedem Zeitpunkt ON.",
+      "usage_tips": "Nutze es in Automationen, um fallende Preise auszunutzen: 'Wenn in_falling_price_phase ON ist und current_price_phase_remaining_minutes > 60, starte die Waschmaschine'. Kombiniere mit next_rising_phase_start_time, um keinen Verbraucher zu starten, der vor dem Preisanstieg nicht fertig wird."
     },
     "in_flat_price_phase": {
-      "description": "Whether prices are currently in a flat (stable) phase",
-      "long_description": "Turns ON when the current intra-day price phase is flat and prices are relatively stable.",
-      "usage_tips": "Use for loads that prefer price stability rather than the lowest price."
+      "description": "Ob die Preise aktuell in einer flachen (stabilen) Phase sind",
+      "long_description": "Schaltet auf ON, wenn die aktuelle Preisphase flach ist — d. h. die Preise sind relativ stabil ohne nennenswerten Anstieg oder Rückgang. Flache Phasen bedeuten vorhersehbare Kosten und eignen sich für Verbraucher mit unsicherer oder variabler Dauer. Genau eines von in_rising_price_phase, in_falling_price_phase und in_flat_price_phase ist zu jedem Zeitpunkt ON.",
+      "usage_tips": "Nutze es für Verbraucher, denen die Preisrichtung egal ist, die aber Stabilität bevorzugen: Wärmepumpen im stationären Betrieb, Hintergrundladen oder Nachheizen des Warmwasserspeichers. Kombiniere mit current_price_phase_end_time, um zu wissen, wie lange das stabile Fenster anhält."
     },
     "connection": {
       "description": "Ob die Verbindung zur Tibber API funktioniert",

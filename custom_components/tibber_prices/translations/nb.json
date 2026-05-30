@@ -1029,34 +1029,34 @@
         }
       },
       "current_price_phase_end_time": {
-        "name": "Current Phase End Time"
+        "name": "Gjeldende fase sluttid"
       },
       "current_price_phase_remaining_minutes": {
-        "name": "Current Phase Remaining"
+        "name": "Gjeldende fase gjenværende"
       },
       "current_price_phase_duration": {
-        "name": "Current Phase Duration"
+        "name": "Gjeldende fase varighet"
       },
       "current_price_phase_progress": {
-        "name": "Current Phase Progress"
+        "name": "Gjeldende fase fremgang"
       },
       "next_rising_phase_start_time": {
-        "name": "Next Rising Phase Start"
+        "name": "Neste stigende fase start"
       },
       "next_falling_phase_start_time": {
-        "name": "Next Falling Phase Start"
+        "name": "Neste fallende fase start"
       },
       "next_flat_phase_start_time": {
-        "name": "Next Flat Phase Start"
+        "name": "Neste flate fase start"
       },
       "next_rising_phase_in_minutes": {
-        "name": "Time to Next Rising Phase"
+        "name": "Tid til neste stigende fase"
       },
       "next_falling_phase_in_minutes": {
-        "name": "Time to Next Falling Phase"
+        "name": "Tid til neste fallende fase"
       },
       "next_flat_phase_in_minutes": {
-        "name": "Time to Next Flat Phase"
+        "name": "Tid til neste flate fase"
       },
       "chart_data_export": {
         "name": "Diagramdataeksport",
@@ -1116,13 +1116,13 @@
         "name": "Lavpris-periode"
       },
       "in_rising_price_phase": {
-        "name": "In Rising Price Phase"
+        "name": "I stigende prisfase"
       },
       "in_falling_price_phase": {
-        "name": "In Falling Price Phase"
+        "name": "I fallende prisfase"
       },
       "in_flat_price_phase": {
-        "name": "In Flat Price Phase"
+        "name": "I flat prisfase"
       },
       "connection": {
         "name": "Tibber API-tilkobling"
@@ -1237,7 +1237,7 @@
       "message": "Sluttidspunktet ({search_end}) må være etter starttidspunktet ({search_start}). Sjekk tid-parameterne og eventuelle day-offsets."
     },
     "price_fetch_failed": {
-      "message": "Unable to fetch price data for the requested search range."
+      "message": "Kunne ikke hente prisdata for det forespurte søkeområdet."
     },
     "invalid_search_scope": {
       "message": "Ugyldig søkeområde. Gyldige verdier er: today, tomorrow, remaining_today, next_24h, next_48h."
@@ -1309,49 +1309,49 @@
       "message": "Kan ikke konvertere verdi '{raw_value}' fra '{entity_id}' ({attribute}) til {expected_type}. Kontroller at entiteten gir en kompatibel verdi."
     },
     "capacity_required_for_percent": {
-      "message": "battery_capacity_kwh is required when current or target SoC is provided as a percentage."
+      "message": "battery_capacity_kwh er påkrevd når nåværende eller mål-SoC oppgis i prosent."
     },
     "ambiguous_soc_input": {
-      "message": "The field {field} was provided both as percent and as kWh. Use only one representation."
+      "message": "Feltet {field} ble oppgitt både i prosent og i kWh. Bruk kun én representasjon."
     },
     "already_at_target": {
-      "message": "Current state of charge is already at or above the target. No charging schedule is needed."
+      "message": "Nåværende ladetilstand er allerede på eller over målet. Ingen ladeplan er nødvendig."
     },
     "target_exceeds_capacity": {
-      "message": "Target SoC ({target_soc_kwh} kWh) exceeds battery capacity ({capacity_kwh} kWh)."
+      "message": "Mål-SoC ({target_soc_kwh} kWh) overstiger batterikapasiteten ({capacity_kwh} kWh)."
     },
     "energy_unreachable": {
-      "message": "The requested charging target cannot be reached within the available search window and charging constraints."
+      "message": "Det forespurte ladenmålet kan ikke nås innenfor det tilgjengelige søkevinduet og ladebegrensningene."
     },
     "missing_current_soc": {
-      "message": "Provide either current_soc_percent or current_soc_kwh."
+      "message": "Oppgi enten current_soc_percent eller current_soc_kwh."
     },
     "missing_target_soc": {
-      "message": "Provide either target_soc_percent or target_soc_kwh."
+      "message": "Oppgi enten target_soc_percent eller target_soc_kwh."
     },
     "missing_deadline_for_must_reach": {
-      "message": "Provide must_reach_by or must_reach_by_event when using must_reach_soc_percent or must_reach_soc_kwh."
+      "message": "Oppgi must_reach_by eller must_reach_by_event når du bruker must_reach_soc_percent eller must_reach_soc_kwh."
     },
     "missing_must_reach_soc": {
-      "message": "Provide must_reach_soc_percent or must_reach_soc_kwh when using a must_reach deadline."
+      "message": "Oppgi must_reach_soc_percent eller must_reach_soc_kwh når du bruker en must_reach-frist."
     },
     "invalid_must_reach_soc": {
-      "message": "The minimum state of charge by deadline must be between current and target state of charge."
+      "message": "Minimums ladetilstand innen frist må være mellom nåværende og mål-ladetilstand."
     },
     "power_strategy_conflict": {
-      "message": "Use either min_charge_power_w or charge_power_steps_w, not both at the same time."
+      "message": "Bruk enten min_charge_power_w eller charge_power_steps_w, ikke begge samtidig."
     },
     "grid_limit_too_low": {
-      "message": "grid_import_limit_w is lower than the minimum required charging power."
+      "message": "grid_import_limit_w er lavere enn den minimalt påkrevde ladeeffekten."
     },
     "deadline_conflict": {
-      "message": "Use either must_reach_by or must_reach_by_event, not both at the same time."
+      "message": "Bruk enten must_reach_by eller must_reach_by_event, ikke begge samtidig."
     },
     "deadline_event_not_available": {
-      "message": "The selected deadline event is not available in the current coordinator data."
+      "message": "Den valgte fristhendelsen er ikke tilgjengelig i de gjeldende koordinatordataene."
     },
     "deadline_outside_search_range": {
-      "message": "The resolved deadline must be inside the selected search range."
+      "message": "Den oppløste fristen må være innenfor det valgte søkeområdet."
     }
   },
   "services": {
@@ -1570,7 +1570,7 @@
       }
     },
     "find_cheapest_block": {
-      "name": "Finn billigste blokk",
+      "name": "Finn billigste blokk (Eksperimentell)",
       "description": "Finner det billigste sammenhengende tidsvinduet med en gitt varighet. Designet for apparatplanlegging: oppvaskmaskin, vaskemaskin, tørketrommel osv. Returnerer det billigste vinduet med start-/sluttider og prisstatistikk.",
       "sections": {
         "search_range": {
@@ -1690,7 +1690,7 @@
       }
     },
     "find_most_expensive_block": {
-      "name": "Finn dyreste blokk",
+      "name": "Finn dyreste blokk (Eksperimentell)",
       "description": "Finner det dyreste sammenhengende tidsvinduet med en gitt varighet. Nyttig for å identifisere topprisperioder som bør unngås. Returnerer det dyreste vinduet med start-/sluttider og prisstatistikk.",
       "sections": {
         "search_range": {
@@ -1810,7 +1810,7 @@
       }
     },
     "find_cheapest_hours": {
-      "name": "Finn billigste timer",
+      "name": "Finn billigste timer (Eksperimentell)",
       "description": "Finner de billigste intervallene for en gitt total varighet, ikke nødvendigvis sammenhengende. Designet for fleksible laster: batterilading, elbil, varmtvannsbereder. Returnerer en tidsplan med intervaller gruppert i sammenhengende segmenter.",
       "sections": {
         "search_range": {
@@ -1934,7 +1934,7 @@
       }
     },
     "find_most_expensive_hours": {
-      "name": "Finn dyreste timer",
+      "name": "Finn dyreste timer (Eksperimentell)",
       "description": "Finner de dyreste intervallene for en gitt total varighet, ikke nødvendigvis sammenhengende. Nyttig for å identifisere topprisperioder som bør unngås. Returnerer en tidsplan med intervaller gruppert i sammenhengende segmenter.",
       "sections": {
         "search_range": {
@@ -2058,7 +2058,7 @@
       }
     },
     "find_cheapest_schedule": {
-      "name": "Finn billigste tidsplan",
+      "name": "Finn billigste tidsplan (Eksperimentell)",
       "description": "Planlegger flere apparater optimalt uten tidsoverlapp. Hver oppgave tildeles det billigste tilgjengelige sammenhengende tidsvinduet.",
       "sections": {
         "search_range": {
@@ -2174,206 +2174,206 @@
       }
     },
     "plan_charging": {
-      "name": "Plan Charging",
-      "description": "Creates a lowest-cost charging schedule from battery parameters instead of a fixed duration. Supports fixed, continuous, or stepped charging power, optional deadline-aware minimum SoC planning, and economic filtering for later discharge use cases. Returns a per-interval charging plan with power, energy, SoC progression, segment grouping, total cost, and profitability details. If no schedule is found, the response includes a stable reason code in the reason field (for example: already_at_target, no_data_in_range, no_intervals_matching_level_filter, no_intervals_after_economic_filter, energy_unreachable, energy_unreachable_by_deadline, selection_above_distance_threshold).",
+      "name": "Planlegg lading (eksperimentell)",
+      "description": "Lager en lavkost-ladeplan ut fra batteriparametere i stedet for en fast varighet. Støtter fast, kontinuerlig eller trinnvis ladeeffekt, valgfri planlegging med minimums-SoC innen en frist, og økonomisk filtrering for senere utladingsscenarier. Returnerer en ladeplan per intervall med effekt, energi, SoC-utvikling, segmentgruppering, totalkostnad og lønnsomhetsdetaljer. Hvis ingen plan finnes, inneholder svaret en stabil årsakskode i feltet «reason» (for eksempel: already_at_target, no_data_in_range, no_intervals_matching_level_filter, no_intervals_after_economic_filter, energy_unreachable, energy_unreachable_by_deadline, selection_above_distance_threshold).",
       "sections": {
         "battery": {
-          "name": "Battery Parameters",
-          "description": "Describe the battery: usable capacity, current and target SoC, and charging efficiency. You can provide SoC in percent (requires capacity) or directly in kWh."
+          "name": "Batteriparametere",
+          "description": "Beskriv batteriet: brukbar kapasitet, nåværende og ønsket SoC, og ladeeffektivitet. Du kan oppgi SoC i prosent (krever kapasitet) eller direkte i kWh."
         },
         "charging": {
-          "name": "Charging Strategy",
-          "description": "Configure variable-power charging behavior, grid limits, and minimum run-time constraints."
+          "name": "Ladestrategi",
+          "description": "Konfigurer lading med variabel effekt, nettgrenser og minimums kjøretidsbegrensninger."
         },
         "deadline": {
-          "name": "Deadline Planning",
-          "description": "Require a minimum state of charge by a specific moment (for example before a peak period). Set both the Minimum SoC by Deadline and when it must be reached — either as an absolute time (Must Reach By) or from a known event (Deadline Event)."
+          "name": "Fristplanlegging",
+          "description": "Krev en minimums ladetilstand innen et bestemt tidspunkt (for eksempel før en topprisperiode). Sett både Minimums-SoC innen frist og når den må nås – enten som et absolutt tidspunkt (Må nås innen) eller fra en kjent hendelse (Fristhendelse)."
         },
         "search_range": {
-          "name": "Custom Search Range",
-          "description": "Define precise start and end times for the search. Overrides Search Scope when set."
+          "name": "Egendefinert søkeområde",
+          "description": "Definer presise start- og sluttidspunkt for søket. Overstyrer Søkeomfang når det er satt."
         },
         "time_alternatives": {
-          "name": "Advanced Time Options",
-          "description": "Alternative ways to define the search range using time-of-day and minute offsets."
+          "name": "Avanserte tidsalternativer",
+          "description": "Alternative måter å definere søkeområdet på ved hjelp av tid på døgnet og minuttforskyvninger."
         },
         "price_filter": {
-          "name": "Price Level Filter",
-          "description": "Restrict search to intervals within the specified Tibber price level range."
+          "name": "Prisnivåfilter",
+          "description": "Begrens søket til intervaller innenfor det angitte Tibber-prisnivået."
         },
         "search_tuning": {
-          "name": "Search Algorithm Tuning",
-          "description": "Fine-tune how the search handles outliers, minimum quality thresholds, and fallback behavior."
+          "name": "Finjustering av søkealgoritme",
+          "description": "Finjuster hvordan søket håndterer avvik, minimums kvalitetsterskler og reserveatferd."
         },
         "economics": {
-          "name": "Economic Filters",
-          "description": "Filter charging intervals by maximum cost or expected later discharge value."
+          "name": "Økonomiske filtre",
+          "description": "Filtrer ladeintervaller etter maksimal kostnad eller forventet senere utladingsverdi."
         },
         "output": {
-          "name": "Output Options",
-          "description": "Control output format: comparison details and currency unit."
+          "name": "Utdataalternativer",
+          "description": "Styr utdataformatet: sammenligningsdetaljer og valutaenhet."
         }
       },
       "fields": {
         "entry_id": {
-          "name": "Entry ID",
-          "description": "The config entry ID for the Tibber integration."
+          "name": "Oppførings-ID",
+          "description": "Konfigurasjonsoppførings-ID-en for Tibber-integrasjonen."
         },
         "max_charge_power_w": {
-          "name": "Maximum Charge Power",
-          "description": "Maximum charging power in watts. This defines the upper bound for fixed, continuous, or stepped charging schedules."
+          "name": "Maksimal ladeeffekt",
+          "description": "Maksimal ladeeffekt i watt. Dette definerer øvre grense for fast, kontinuerlig eller trinnvis lading."
         },
         "battery_capacity_kwh": {
-          "name": "Battery Capacity",
-          "description": "Usable battery capacity in kWh. Required when current or target SoC is provided as a percentage."
+          "name": "Batterikapasitet",
+          "description": "Brukbar batterikapasitet i kWh. Påkrevd når nåværende eller mål-SoC oppgis i prosent."
         },
         "current_soc_percent": {
-          "name": "Current SoC (%)",
-          "description": "Current battery state of charge in percent. Cannot be combined with Current SoC (kWh)."
+          "name": "Nåværende SoC (%)",
+          "description": "Nåværende ladetilstand for batteriet i prosent. Kan ikke kombineres med Nåværende SoC (kWh)."
         },
         "current_soc_kwh": {
-          "name": "Current SoC (kWh)",
-          "description": "Current battery state of charge in kWh. Cannot be combined with Current SoC (%)."
+          "name": "Nåværende SoC (kWh)",
+          "description": "Nåværende ladetilstand for batteriet i kWh. Kan ikke kombineres med Nåværende SoC (%)."
         },
         "target_soc_percent": {
-          "name": "Target SoC (%)",
-          "description": "Desired battery state of charge in percent. Cannot be combined with Target SoC (kWh)."
+          "name": "Mål-SoC (%)",
+          "description": "Ønsket ladetilstand for batteriet i prosent. Kan ikke kombineres med Mål-SoC (kWh)."
         },
         "target_soc_kwh": {
-          "name": "Target SoC (kWh)",
-          "description": "Desired battery state of charge in kWh. Cannot be combined with Target SoC (%)."
+          "name": "Mål-SoC (kWh)",
+          "description": "Ønsket ladetilstand for batteriet i kWh. Kan ikke kombineres med Mål-SoC (%)."
         },
         "charging_efficiency": {
-          "name": "Charging Efficiency",
-          "description": "Fraction of grid energy that is stored in the battery. Example: 0.92 means 8% charging losses."
+          "name": "Ladeeffektivitet",
+          "description": "Andelen nettenergi som lagres i batteriet. Eksempel: 0,92 betyr 8 % ladetap."
         },
         "search_scope": {
-          "name": "Search Scope",
-          "description": "Shorthand for common search ranges. Overrides all other time range options. today / tomorrow = full calendar day, remaining_today = now until midnight, next_24h / next_48h = rolling window from now."
+          "name": "Søkeomfang",
+          "description": "Snarvei for vanlige søkeområder. Overstyrer alle andre tidsområdealternativer. today / tomorrow = hele kalenderdagen, remaining_today = nå til midnatt, next_24h / next_48h = rullerende vindu fra nå."
         },
         "include_current_interval": {
-          "name": "Include Current Interval",
-          "description": "Include the currently running 15-minute interval in the search. When enabled, charging may begin in the current interval if it is part of the cheapest result."
+          "name": "Inkluder gjeldende intervall",
+          "description": "Inkluder det 15-minutters intervallet som kjører nå i søket. Når aktivert, kan lading begynne i gjeldende intervall hvis det er en del av det billigste resultatet."
         },
         "search_start": {
-          "name": "Search Start",
-          "description": "Start of the search range as exact date and time. Highest priority — overrides all other start options. Defaults to now if not specified."
+          "name": "Søkestart",
+          "description": "Start på søkeområdet som nøyaktig dato og tid. Høyest prioritet – overstyrer alle andre startalternativer. Standard er nå hvis ikke angitt."
         },
         "search_end": {
-          "name": "Search End",
-          "description": "End of the search range as exact date and time. Highest priority — overrides all other end options. Defaults to end of tomorrow if not specified."
+          "name": "Søkeslutt",
+          "description": "Slutt på søkeområdet som nøyaktig dato og tid. Høyest prioritet – overstyrer alle andre sluttalternativer. Standard er slutten av morgendagen hvis ikke angitt."
         },
         "must_finish_by": {
-          "name": "Must Finish By",
-          "description": "Deadline: charging must be finished by this time. The search range ends at this deadline — the service finds the cheapest intervals that complete before it. Cannot be combined with Search End, Search End Time, or Search End Offset."
+          "name": "Må fullføres innen",
+          "description": "Frist: lading må være fullført innen dette tidspunktet. Søkeområdet slutter ved denne fristen – tjenesten finner de billigste intervallene som fullfører før den. Kan ikke kombineres med Søkeslutt, Søkesluttid eller Søkesluttforskyvning."
         },
         "search_start_time": {
-          "name": "Search Start Time",
-          "description": "Alternative: start searching at this time of day. Combine with day offset. Ignored if Search Start (datetime) is set."
+          "name": "Søkestarttidspunkt",
+          "description": "Alternativ: start søk på dette tidspunktet på døgnet. Kombiner med dagforskyvning. Ignoreres hvis Søkestart (dato/tid) er satt."
         },
         "search_start_day_offset": {
-          "name": "Search Start Day Offset",
-          "description": "Day offset for Search Start Time. -7 to 2: -1 = yesterday, 0 = today, 1 = tomorrow. Only used with Search Start Time."
+          "name": "Dagforskyvning for søkestart",
+          "description": "Dagforskyvning for søkestarttidspunktet. -7 til 2: -1 = i går, 0 = i dag, 1 = i morgen. Brukes kun med Søkestarttidspunkt."
         },
         "search_end_time": {
-          "name": "Search End Time",
-          "description": "Alternative: stop searching at this time of day. Combine with day offset. Ignored if Search End (datetime) is set."
+          "name": "Søkesluttidspunkt",
+          "description": "Alternativ: stopp søk på dette tidspunktet på døgnet. Kombiner med dagforskyvning. Ignoreres hvis Søkeslutt (dato/tid) er satt."
         },
         "search_end_day_offset": {
-          "name": "Search End Day Offset",
-          "description": "Day offset for Search End Time. -7 to 2: -1 = yesterday, 0 = today, 1 = tomorrow. Only used with Search End Time."
+          "name": "Dagforskyvning for søkeslutt",
+          "description": "Dagforskyvning for søkesluttidspunktet. -7 til 2: -1 = i går, 0 = i dag, 1 = i morgen. Brukes kun med Søkesluttidspunkt."
         },
         "search_start_offset_minutes": {
-          "name": "Search Start Offset (minutes)",
-          "description": "Alternative: start searching this many minutes from now. Positive = future, negative = past. Ignored if Search Start or Search Start Time is set."
+          "name": "Søkestartforskyvning (minutter)",
+          "description": "Alternativ: start søk så mange minutter fra nå. Positiv = fremtid, negativ = fortid. Ignoreres hvis Søkestart eller Søkestarttidspunkt er satt."
         },
         "search_end_offset_minutes": {
-          "name": "Search End Offset (minutes)",
-          "description": "Alternative: stop searching this many minutes from now. Positive = future, negative = past. Ignored if Search End or Search End Time is set."
+          "name": "Søkesluttforskyvning (minutter)",
+          "description": "Alternativ: stopp søk så mange minutter fra nå. Positiv = fremtid, negativ = fortid. Ignoreres hvis Søkeslutt eller Søkesluttidspunkt er satt."
         },
         "max_price_level": {
-          "name": "Maximum Price Level",
-          "description": "Only consider intervals at or below this Tibber price level. very_cheap = most restrictive, very_expensive = no restriction."
+          "name": "Maksimalt prisnivå",
+          "description": "Vurder kun intervaller på eller under dette Tibber-prisnivået. very_cheap = mest restriktiv, very_expensive = ingen begrensning."
         },
         "min_price_level": {
-          "name": "Minimum Price Level",
-          "description": "Only consider intervals at or above this Tibber price level. Useful to exclude unrealistically cheap negative-price-only windows from mixed searches."
+          "name": "Minimum prisnivå",
+          "description": "Vurder kun intervaller på eller over dette Tibber-prisnivået. Nyttig for å utelukke urealistisk billige vinduer med kun negative priser fra blandede søk."
         },
         "include_comparison_details": {
-          "name": "Include Comparison Details",
-          "description": "Enrich the price_comparison result with additional fields: comparison_price_min and comparison_price_max."
+          "name": "Inkluder sammenligningsdetaljer",
+          "description": "Berik price_comparison-resultatet med flere felt: comparison_price_min og comparison_price_max."
         },
         "use_base_unit": {
-          "name": "Use Base Currency Unit",
-          "description": "Force prices in base currency (EUR, NOK) instead of the configured display unit (ct, øre). Useful for calculations."
+          "name": "Bruk basisvalutaenhet",
+          "description": "Tving priser i basisvaluta (EUR, NOK) i stedet for den konfigurerte visningsenheten (ct, øre). Nyttig for beregninger."
         },
         "smooth_outliers": {
-          "name": "Smooth Outliers",
-          "description": "Smooth price outliers before searching. Outlier intervals are temporarily replaced by the average of their neighbors, so a single spike or dip does not dominate the result. The response always shows the original (unsmoothed) prices. Default: enabled."
+          "name": "Jevn ut avvik",
+          "description": "Jevn ut prisavvik før søk. Avviksintervaller erstattes midlertidig med gjennomsnittet av naboene sine, slik at en enkelt topp eller bunn ikke dominerer resultatet. Svaret viser alltid de opprinnelige (ujevnede) prisene. Standard: aktivert."
         },
         "min_distance_from_avg": {
-          "name": "Min. Distance from Average",
-          "description": "Require the selected charging intervals to be at least this percentage below the average price of the full search range. Leave empty to disable."
+          "name": "Min. avstand fra gjennomsnitt",
+          "description": "Krev at de valgte ladeintervallene ligger minst denne prosenten under gjennomsnittsprisen for hele søkeområdet. La stå tom for å deaktivere."
         },
         "allow_relaxation": {
-          "name": "Allow relaxation",
-          "description": "Progressively relax filters to guarantee a result when possible. Phases: 1) Reduce/remove distance threshold 2) Expand level filters 3) Reduce duration. Default: enabled."
+          "name": "Tillat oppmykning",
+          "description": "Myk gradvis opp filtre for å garantere et resultat når det er mulig. Faser: 1) Reduser/fjern avstandsterskel 2) Utvid nivåfiltre 3) Reduser varighet. Standard: aktivert."
         },
         "duration_flexibility_minutes": {
-          "name": "Duration flexibility",
-          "description": "Maximum minutes the automatically calculated charging duration may be shortened during relaxation (0–120, step 15). Leave empty for automatic calculation."
+          "name": "Varighetsfleksibilitet",
+          "description": "Maksimalt antall minutter den automatisk beregnede ladevarigheten kan forkortes under oppmykning (0–120, steg 15). La stå tom for automatisk beregning."
         },
         "must_reach_soc_percent": {
-          "name": "Minimum SoC by Deadline (%)",
-          "description": "Minimum battery state of charge that must be reached by the deadline. Cannot be combined with Minimum SoC by Deadline (kWh)."
+          "name": "Minimums-SoC innen frist (%)",
+          "description": "Minimums ladetilstand for batteriet som må nås innen fristen. Kan ikke kombineres med Minimums-SoC innen frist (kWh)."
         },
         "must_reach_soc_kwh": {
-          "name": "Minimum SoC by Deadline (kWh)",
-          "description": "Minimum battery state of charge that must be reached by the deadline. Cannot be combined with Minimum SoC by Deadline (%)."
+          "name": "Minimums-SoC innen frist (kWh)",
+          "description": "Minimums ladetilstand for batteriet som må nås innen fristen. Kan ikke kombineres med Minimums-SoC innen frist (%)."
         },
         "min_charge_power_w": {
-          "name": "Minimum Charge Power",
-          "description": "Enable continuous charging mode. The planner may reduce the last interval down to this minimum power instead of always using the maximum."
+          "name": "Minimum ladeeffekt",
+          "description": "Aktiver kontinuerlig lademodus. Planleggeren kan redusere det siste intervallet ned til denne minimumseffekten i stedet for alltid å bruke maksimum."
         },
         "charge_power_steps_w": {
-          "name": "Charge Power Steps",
-          "description": "Enable stepped charging mode. Provide the allowed power steps in watts as a list, for example [1380, 4140, 11000]. The planner picks the smallest step that still covers the remaining energy in the final interval. Mutually exclusive with Minimum Charge Power."
+          "name": "Ladeeffekttrinn",
+          "description": "Aktiver trinnvis lademodus. Oppgi de tillatte effekttrinnene i watt som en liste, for eksempel [1380, 4140, 11000]. Planleggeren velger det minste trinnet som fortsatt dekker gjenværende energi i det siste intervallet. Gjensidig utelukkende med Minimum ladeeffekt."
         },
         "grid_import_limit_w": {
-          "name": "Grid Import Limit",
-          "description": "Upper limit for charging power drawn from the grid in watts. Useful when the charger must share available power with other loads."
+          "name": "Nettimportgrense",
+          "description": "Øvre grense for ladeeffekt hentet fra nettet i watt. Nyttig når laderen må dele tilgjengelig effekt med andre laster."
         },
         "must_reach_by": {
-          "name": "Must Reach By",
-          "description": "Absolute deadline for must_reach_soc_*. The planner first guarantees the minimum SoC before this moment, then continues with the remaining target if possible."
+          "name": "Må nås innen",
+          "description": "Absolutt frist for must_reach_soc_*. Planleggeren garanterer først minimums-SoC før dette tidspunktet, og fortsetter deretter med det gjenværende målet hvis mulig."
         },
         "must_reach_by_event": {
-          "name": "Deadline Event",
-          "description": "Alternative deadline derived from coordinator data. Use this instead of Must Reach By to plan around midnight, the next peak period, or the next best-price period end."
+          "name": "Fristhendelse",
+          "description": "Alternativ frist avledet fra koordinatordata. Bruk dette i stedet for Må nås innen for å planlegge rundt midnatt, neste topprisperiode eller slutten av neste bestprisperiode."
         },
         "discharging_efficiency": {
-          "name": "Discharging Efficiency",
-          "description": "Fraction of stored battery energy that is still usable when later discharged. Used for profitability calculations."
+          "name": "Utladingseffektivitet",
+          "description": "Andelen lagret batterienergi som fortsatt er brukbar ved senere utlading. Brukes til lønnsomhetsberegninger."
         },
         "expected_discharge_price": {
-          "name": "Expected Discharge Price",
-          "description": "Expected value of each discharged kWh. Intervals above the break-even price can be filtered when Reserve For Discharge is enabled."
+          "name": "Forventet utladingspris",
+          "description": "Forventet verdi av hver utladede kWh. Intervaller over balansprisen kan filtreres når Reserver for utlading er aktivert."
         },
         "reserve_for_discharge": {
-          "name": "Reserve For Discharge",
-          "description": "Keep only intervals that are economically sensible for a later discharge based on expected discharge price and round-trip efficiency."
+          "name": "Reserver for utlading",
+          "description": "Behold kun intervaller som er økonomisk fornuftige for en senere utlading basert på forventet utladingspris og rundturseffektivitet."
         },
         "max_cost_per_kwh": {
-          "name": "Maximum Charge Price",
-          "description": "Discard candidate intervals above this price per kWh before scheduling. Uses the selected price unit."
+          "name": "Maksimal ladepris",
+          "description": "Forkast kandidatintervaller over denne prisen per kWh før planlegging. Bruker den valgte prisenheten."
         },
         "min_charge_duration_minutes": {
-          "name": "Minimum Charge Duration",
-          "description": "Merge short isolated intervals into longer charging blocks where possible. Useful for chargers that should avoid very short runs."
+          "name": "Minimum ladevarighet",
+          "description": "Slå sammen korte isolerte intervaller til lengre ladeblokker der det er mulig. Nyttig for ladere som bør unngå svært korte kjøringer."
         },
         "max_cycles_per_day": {
-          "name": "Maximum Charge Cycles Per Day",
-          "description": "Limit how many separate charging segments may be used per day. The planner keeps the cheapest segments within this limit."
+          "name": "Maksimalt antall ladesykluser per dag",
+          "description": "Begrens hvor mange separate ladesegmenter som kan brukes per dag. Planleggeren beholder de billigste segmentene innenfor denne grensen."
         }
       }
     },
@@ -2505,9 +2505,9 @@
     },
     "charging_deadline_event": {
       "options": {
-        "midnight": "Midnight",
-        "next_peak_period": "Next Peak Period",
-        "next_best_period_end": "End of Next Best-Price Period"
+        "midnight": "Midnatt",
+        "next_peak_period": "Neste topprisperiode",
+        "next_best_period_end": "Slutten på neste bestprisperiode"
       }
     }
   }

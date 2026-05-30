@@ -512,54 +512,54 @@
       "usage_tips": "Använd i automationer: 'Om next_price_phase = stigande och next_price_phase.start är inom 1 timme, starta tvättmaskinen nu'. Eller kombinera med current_price_phase: 'Om current_price_phase = fallande och next_price_phase = flat, närmar vi oss dagens lågpunkt – bra tid för flexibla laster'. Attributet start är särskilt värdefull: utlös automationer precis när nästa fas börjar."
     },
     "current_price_phase_end_time": {
-      "description": "When the current intra-day price phase ends",
-      "long_description": "Shows the exact timestamp when the currently active rising, falling, or flat price phase will end and transition to the next phase.",
-      "usage_tips": "Use in automations to schedule tasks that must finish before prices change."
+      "description": "När den aktuella prisfasen slutar",
+      "long_description": "Visar den exakta tidsstämpeln för när den aktiva stigande, fallande eller flata prisfasen slutar och övergår till nästa fas. Blir otillgänglig när det inte finns segmentdata. Uppdateras vid intervallgränser (var 15:e minut). Kombinera med current_price_phase för att veta både vilken fas du är i och när den slutar.",
+      "usage_tips": "Använd i automationer för att schemalägga uppgifter som måste vara klara innan priserna ändras: 'Starta tvättmaskinen om current_price_phase = falling och current_price_phase_end_time är mer än 2 timmar bort'. Eller för att varna när en billig fas snart är slut."
     },
     "current_price_phase_remaining_minutes": {
-      "description": "Minutes remaining in the current price phase",
-      "long_description": "Shows how many minutes are left in the current intra-day price phase. Updates every minute.",
-      "usage_tips": "Use in automations: 'If current_price_phase = falling and remaining < 30, start the dishwasher now'."
+      "description": "Återstående minuter i den aktuella prisfasen",
+      "long_description": "Visar hur många minuter som är kvar av den aktuella prisfasen (stigande, fallande eller flat). Uppdateras varje minut för exakt nedräkning. Returnerar 0 när det inte finns segmentdata. Attributet remaining_minutes speglar sensorvärdet i hela minuter för enklare automationsmallar.",
+      "usage_tips": "Använd i automationer: 'Om current_price_phase = falling och current_price_phase_remaining_minutes < 30, starta diskmaskinen nu innan priserna planar ut'. Även användbart för instrumentpanelskort som visar en nedräkningsstapel till fasövergången."
     },
     "current_price_phase_duration": {
-      "description": "Total duration of the current price phase",
-      "long_description": "Shows the total length of the currently active price phase in hours.",
-      "usage_tips": "Combine with remaining minutes to understand how far through the phase you are."
+      "description": "Total varaktighet för den aktuella prisfasen",
+      "long_description": "Visar den totala längden på den aktiva prisfasen i timmar (uttryckt internt i minuter). Uppdateras vid intervallgränser. Detta talar om hur länge det aktuella trendsegmentet varar totalt — användbart för att förstå om det är en kort fluktuation eller en längre period av stigande eller fallande priser.",
+      "usage_tips": "Kombinera med current_price_phase_remaining_minutes för att uppskatta hur långt du har kommit i fasen, eller jämför med current_price_phase_progress för att förstå tidsprofilen för den aktuella trenden."
     },
     "current_price_phase_progress": {
-      "description": "How far through the current price phase we are",
-      "long_description": "Shows the percentage of the current intra-day price phase that has elapsed (0–100%). Updates every minute.",
-      "usage_tips": "Use in dashboard cards to display a visual progress bar for the current price phase."
+      "description": "Hur långt den aktuella prisfasen har kommit",
+      "long_description": "Visar hur stor andel av den aktuella prisfasen som har förflutit (0–100 %). Uppdateras varje minut. Ett värde nära 0 % betyder att fasen just har börjat; nära 100 % betyder att den snart slutar. Returnerar 0 när det inte finns segmentdata.",
+      "usage_tips": "Använd i instrumentpanelskort för att visa en visuell förloppsindikator för den aktuella prisfasen. I automationer: 'Om current_price_phase = falling och current_price_phase_progress > 80, är de billigaste priserna nära — förbered flexibla laster nu'."
     },
     "next_rising_phase_start_time": {
-      "description": "When the next rising price phase begins",
-      "long_description": "Shows the timestamp of the next upcoming rising price segment across today's remaining phases and tomorrow's phases.",
-      "usage_tips": "Use to schedule loads before prices start rising again."
+      "description": "När nästa stigande prisfas börjar",
+      "long_description": "Visar tidsstämpeln för nästa kommande stigande prissegment över dagens återstående faser och morgondagens faser. Returnerar otillgänglig när det inte finns fler stigande faser i dagens eller morgondagens data. Uppdateras vid intervallgränser (var 15:e minut).",
+      "usage_tips": "Använd in_falling_price_phase och next_rising_phase_start_time för att schemalägga flexibla laster: kör dem nu medan priserna faller och avsluta innan nästa uppgång börjar. 'Om in_falling_price_phase är ON och next_rising_phase_start_time är mindre än 1 timme bort, starta tvättmaskinen omedelbart'."
     },
     "next_falling_phase_start_time": {
-      "description": "When the next falling price phase begins",
-      "long_description": "Shows the timestamp of the next upcoming falling price segment across today's remaining phases and tomorrow's phases.",
-      "usage_tips": "Use to delay flexible loads until the next price drop starts."
+      "description": "När nästa fallande prisfas börjar",
+      "long_description": "Visar tidsstämpeln för nästa kommande fallande prissegment över dagens återstående faser och morgondagens faser. Returnerar otillgänglig när det inte finns fler fallande faser i dagens eller morgondagens data. Uppdateras vid intervallgränser (var 15:e minut).",
+      "usage_tips": "Använd det för att skjuta upp flexibla laster tills nästa prisfall börjar. 'Om next_falling_phase_start_time är inom 2 timmar, överväg att vänta innan du startar diskmaskinen eller värmepumpen'."
     },
     "next_flat_phase_start_time": {
-      "description": "When the next flat (stable) price phase begins",
-      "long_description": "Shows the timestamp of the next upcoming flat price segment across today's remaining phases and tomorrow's phases.",
-      "usage_tips": "Use for scheduling loads that need predictable costs over time."
+      "description": "När nästa flata (stabila) prisfas börjar",
+      "long_description": "Visar tidsstämpeln för nästa kommande flata prissegment (där priserna varierar lite) över dagens återstående faser och morgondagens faser. Returnerar otillgänglig när det inte finns fler flata faser i tillgängliga data. Uppdateras vid intervallgränser (var 15:e minut).",
+      "usage_tips": "Flata faser indikerar prisstabilitet — användbart för att schemalägga laster som behöver en förutsägbar kostnad över tid. 'Om next_flat_phase_start_time är inom 30 minuter och current_price_phase = rising, är pristoppen nästan över'."
     },
     "next_rising_phase_in_minutes": {
-      "description": "Minutes until the next rising price phase begins",
-      "long_description": "Shows how many minutes until the next rising price phase starts. Updates every minute.",
-      "usage_tips": "Use in countdown automations to alert before the next price rise."
+      "description": "Minuter tills nästa stigande prisfas börjar",
+      "long_description": "Visar hur många minuter tills nästa stigande prisfas börjar. Uppdateras varje minut. Returnerar otillgänglig om det inte finns fler stigande faser i dagens eller morgondagens data. Attributet next_in_minutes speglar sensorvärdet i hela minuter för automationsmallar.",
+      "usage_tips": "Använd i nedräkningsautomationer: 'Meddela mig 15 minuter före nästa prisuppgång så att jag kan skjuta upp flexibla laster'. Kombinera med in_falling_price_phase: om priserna faller nu och en uppgång är nära förestående, agera innan priserna börjar klättra."
     },
     "next_falling_phase_in_minutes": {
-      "description": "Minutes until the next falling price phase begins",
-      "long_description": "Shows how many minutes until the next falling price phase starts. Updates every minute.",
-      "usage_tips": "Use to time flexible loads: delay until the upcoming price drop."
+      "description": "Minuter tills nästa fallande prisfas börjar",
+      "long_description": "Visar hur många minuter tills nästa fallande prisfas börjar. Uppdateras varje minut. Returnerar otillgänglig om det inte finns fler fallande faser i dagens eller morgondagens data. Attributet next_in_minutes speglar sensorvärdet i hela minuter för automationsmallar.",
+      "usage_tips": "Använd det för att tajma flexibla laster optimalt: 'Om next_falling_phase_in_minutes < 60, skjut upp starten av tvättmaskinen för att dra nytta av det kommande prisfallet'."
     },
     "next_flat_phase_in_minutes": {
-      "description": "Minutes until the next flat (stable) price phase begins",
-      "long_description": "Shows how many minutes until the next flat price phase starts. Updates every minute.",
-      "usage_tips": "Use to anticipate price stabilisation after a volatile phase."
+      "description": "Minuter tills nästa flata (stabila) prisfas börjar",
+      "long_description": "Visar hur många minuter tills nästa flata prisfas börjar. Uppdateras varje minut. Returnerar otillgänglig om det inte finns fler flata faser i dagens eller morgondagens data. Attributet next_in_minutes speglar sensorvärdet i hela minuter.",
+      "usage_tips": "Använd det för att förutse prisstabilisering efter en volatil fas. 'Om next_flat_phase_in_minutes < 30 och current_price_phase = rising, kommer pristoppen snart att plana ut — överväg att skjuta upp laster till dess'."
     },
     "chart_data_export": {
       "description": "Dataexport för dashboard-integrationer",
@@ -644,19 +644,19 @@
       "usage_tips": "Använd detta för att köra högkonsumtionsapparater under de billigaste intervallerna"
     },
     "in_rising_price_phase": {
-      "description": "Whether prices are currently in a rising phase",
-      "long_description": "Turns ON when the current intra-day price phase is rising.",
-      "usage_tips": "Use in automations to delay or avoid running flexible loads during rising prices."
+      "description": "Om priserna för närvarande är i en stigande fas",
+      "long_description": "Slås PÅ när den aktuella prisfasen är stigande — dvs. priserna har stigit sedan den senaste fasövergången. Exakt en av in_rising_price_phase, in_falling_price_phase och in_flat_price_phase är PÅ vid varje tidpunkt. Blir otillgänglig när det inte finns segmentdata.",
+      "usage_tips": "Använd i automationer för att skjuta upp eller undvika att köra flexibla laster: 'Om in_rising_price_phase är PÅ, skjut upp diskmaskinen'. Kombinera med next_falling_phase_start_time för att veta när priserna börjar falla igen."
     },
     "in_falling_price_phase": {
-      "description": "Whether prices are currently in a falling phase",
-      "long_description": "Turns ON when the current intra-day price phase is falling.",
-      "usage_tips": "Use in automations to take advantage of falling prices for flexible loads."
+      "description": "Om priserna för närvarande är i en fallande fas",
+      "long_description": "Slås PÅ när den aktuella prisfasen är fallande — dvs. priserna har fallit sedan den senaste fasövergången. Detta är ofta ett bra tidsfönster för att starta flexibla laster. Exakt en av in_rising_price_phase, in_falling_price_phase och in_flat_price_phase är PÅ vid varje tidpunkt.",
+      "usage_tips": "Använd i automationer för att utnyttja fallande priser: 'Om in_falling_price_phase är PÅ och current_price_phase_remaining_minutes > 60, starta tvättmaskinen'. Kombinera med next_rising_phase_start_time för att undvika att starta en last som inte hinner bli klar innan priserna stiger."
     },
     "in_flat_price_phase": {
-      "description": "Whether prices are currently in a flat (stable) phase",
-      "long_description": "Turns ON when the current intra-day price phase is flat and prices are relatively stable.",
-      "usage_tips": "Use for loads that prefer price stability rather than the lowest price."
+      "description": "Om priserna för närvarande är i en flat (stabil) fas",
+      "long_description": "Slås PÅ när den aktuella prisfasen är flat — dvs. priserna är relativt stabila utan betydande uppgång eller nedgång. Flata faser innebär förutsägbara kostnader och passar för laster med osäker eller variabel varaktighet. Exakt en av in_rising_price_phase, in_falling_price_phase och in_flat_price_phase är PÅ vid varje tidpunkt.",
+      "usage_tips": "Använd det för laster som är likgiltiga för prisriktningen men föredrar stabilitet: värmepumpar i stabilt läge, bakgrundsladdning eller påfyllning av varmvattenberedaren. Kombinera med current_price_phase_end_time för att veta hur länge det stabila fönstret varar."
     },
     "connection": {
       "description": "Om anslutningen till Tibber API fungerar",

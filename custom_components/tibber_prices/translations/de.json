@@ -35,7 +35,7 @@
       "finish": {
         "description": "Wähle ein Zuhause, um Preisinformationen und Bewertungen abzurufen.",
         "data": {
-          "home_id": "Home ID"
+          "home_id": "Zuhause-ID"
         },
         "title": "Wähle ein Zuhause",
         "submit": "Zuhause auswählen"
@@ -375,7 +375,7 @@
         "submit": "↩ Speichern & Zurück"
       },
       "chart_data_export": {
-        "title": "📊 Chart Data Export Sensor",
+        "title": "📊 Chart-Daten-Export-Sensor",
         "description": "Der Chart Data Export Sensor stellt Preisdaten als Sensor-Attribute zur Verfügung.\n\n⚠️ **Hinweis:** Dieser Sensor ist ein Legacy-Feature für Kompatibilität mit älteren Tools.\n\n**Für neue Setups empfohlen:** Nutze den `tibber_prices.get_chartdata` **Service direkt** - er ist flexibler, effizienter und der moderne Home Assistant-Ansatz.\n\n**Wann dieser Sensor sinnvoll ist:**\n\n✅ Dein Dashboard-Tool kann **nur** Attribute lesen (keine Service-Aufrufe)\n✅ Du brauchst statische Daten, die automatisch aktualisiert werden\n❌ **Nicht für Automationen:** Nutze dort direkt `tibber_prices.get_chartdata` - flexibler und effizienter!\n\n---\n\n{sensor_status_info}",
         "submit": "↩ Ok & Zurück"
       },
@@ -1029,34 +1029,34 @@
         }
       },
       "current_price_phase_end_time": {
-        "name": "Current Phase End Time"
+        "name": "Aktuelle Phase Endzeit"
       },
       "current_price_phase_remaining_minutes": {
-        "name": "Current Phase Remaining"
+        "name": "Aktuelle Phase verbleibend"
       },
       "current_price_phase_duration": {
-        "name": "Current Phase Duration"
+        "name": "Aktuelle Phase Dauer"
       },
       "current_price_phase_progress": {
-        "name": "Current Phase Progress"
+        "name": "Aktuelle Phase Fortschritt"
       },
       "next_rising_phase_start_time": {
-        "name": "Next Rising Phase Start"
+        "name": "Nächste steigende Phase Start"
       },
       "next_falling_phase_start_time": {
-        "name": "Next Falling Phase Start"
+        "name": "Nächste fallende Phase Start"
       },
       "next_flat_phase_start_time": {
-        "name": "Next Flat Phase Start"
+        "name": "Nächste flache Phase Start"
       },
       "next_rising_phase_in_minutes": {
-        "name": "Time to Next Rising Phase"
+        "name": "Zeit bis nächste steigende Phase"
       },
       "next_falling_phase_in_minutes": {
-        "name": "Time to Next Falling Phase"
+        "name": "Zeit bis nächste fallende Phase"
       },
       "next_flat_phase_in_minutes": {
-        "name": "Time to Next Flat Phase"
+        "name": "Zeit bis nächste flache Phase"
       },
       "chart_data_export": {
         "name": "Diagramm-Datenexport",
@@ -1116,13 +1116,13 @@
         "name": "Bestpreis-Zeitraum"
       },
       "in_rising_price_phase": {
-        "name": "In Rising Price Phase"
+        "name": "In steigender Preisphase"
       },
       "in_falling_price_phase": {
-        "name": "In Falling Price Phase"
+        "name": "In fallender Preisphase"
       },
       "in_flat_price_phase": {
-        "name": "In Flat Price Phase"
+        "name": "In flacher Preisphase"
       },
       "connection": {
         "name": "Tibber-API-Verbindung"
@@ -1237,7 +1237,7 @@
       "message": "Der Endzeitpunkt ({search_end}) muss nach dem Startzeitpunkt ({search_start}) liegen. Überprüfe die Zeit-Parameter und eventuelle Day-Offsets."
     },
     "price_fetch_failed": {
-      "message": "Unable to fetch price data for the requested search range."
+      "message": "Preisdaten für den angeforderten Suchbereich konnten nicht abgerufen werden."
     },
     "invalid_search_scope": {
       "message": "Ungültiger Suchbereich. Gültige Werte sind: today, tomorrow, remaining_today, next_24h, next_48h."
@@ -1309,49 +1309,49 @@
       "message": "Wert '{raw_value}' von '{entity_id}' ({attribute}) kann nicht in {expected_type} konvertiert werden. Überprüfe, ob die Entity einen kompatiblen Wert liefert."
     },
     "capacity_required_for_percent": {
-      "message": "battery_capacity_kwh is required when current or target SoC is provided as a percentage."
+      "message": "battery_capacity_kwh ist erforderlich, wenn der aktuelle oder Ziel-SoC in Prozent angegeben wird."
     },
     "ambiguous_soc_input": {
-      "message": "The field {field} was provided both as percent and as kWh. Use only one representation."
+      "message": "Das Feld {field} wurde sowohl in Prozent als auch in kWh angegeben. Verwende nur eine Darstellung."
     },
     "already_at_target": {
-      "message": "Current state of charge is already at or above the target. No charging schedule is needed."
+      "message": "Der aktuelle Ladezustand liegt bereits auf oder über dem Ziel. Es ist kein Ladeplan erforderlich."
     },
     "target_exceeds_capacity": {
-      "message": "Target SoC ({target_soc_kwh} kWh) exceeds battery capacity ({capacity_kwh} kWh)."
+      "message": "Der Ziel-SoC ({target_soc_kwh} kWh) übersteigt die Batteriekapazität ({capacity_kwh} kWh)."
     },
     "energy_unreachable": {
-      "message": "The requested charging target cannot be reached within the available search window and charging constraints."
+      "message": "Das angeforderte Ladeziel kann innerhalb des verfügbaren Suchfensters und der Ladebeschränkungen nicht erreicht werden."
     },
     "missing_current_soc": {
-      "message": "Provide either current_soc_percent or current_soc_kwh."
+      "message": "Gib entweder current_soc_percent oder current_soc_kwh an."
     },
     "missing_target_soc": {
-      "message": "Provide either target_soc_percent or target_soc_kwh."
+      "message": "Gib entweder target_soc_percent oder target_soc_kwh an."
     },
     "missing_deadline_for_must_reach": {
-      "message": "Provide must_reach_by or must_reach_by_event when using must_reach_soc_percent or must_reach_soc_kwh."
+      "message": "Gib must_reach_by oder must_reach_by_event an, wenn du must_reach_soc_percent oder must_reach_soc_kwh verwendest."
     },
     "missing_must_reach_soc": {
-      "message": "Provide must_reach_soc_percent or must_reach_soc_kwh when using a must_reach deadline."
+      "message": "Gib must_reach_soc_percent oder must_reach_soc_kwh an, wenn du einen must_reach-Stichtag verwendest."
     },
     "invalid_must_reach_soc": {
-      "message": "The minimum state of charge by deadline must be between current and target state of charge."
+      "message": "Der Mindestladezustand bis zum Stichtag muss zwischen dem aktuellen und dem Ziel-Ladezustand liegen."
     },
     "power_strategy_conflict": {
-      "message": "Use either min_charge_power_w or charge_power_steps_w, not both at the same time."
+      "message": "Verwende entweder min_charge_power_w oder charge_power_steps_w, nicht beide gleichzeitig."
     },
     "grid_limit_too_low": {
-      "message": "grid_import_limit_w is lower than the minimum required charging power."
+      "message": "grid_import_limit_w ist niedriger als die minimal erforderliche Ladeleistung."
     },
     "deadline_conflict": {
-      "message": "Use either must_reach_by or must_reach_by_event, not both at the same time."
+      "message": "Verwende entweder must_reach_by oder must_reach_by_event, nicht beide gleichzeitig."
     },
     "deadline_event_not_available": {
-      "message": "The selected deadline event is not available in the current coordinator data."
+      "message": "Das ausgewählte Stichtagsereignis ist in den aktuellen Koordinatordaten nicht verfügbar."
     },
     "deadline_outside_search_range": {
-      "message": "The resolved deadline must be inside the selected search range."
+      "message": "Der aufgelöste Stichtag muss innerhalb des ausgewählten Suchbereichs liegen."
     }
   },
   "services": {
@@ -1570,7 +1570,7 @@
       }
     },
     "find_cheapest_block": {
-      "name": "Günstigsten Block finden",
+      "name": "Günstigsten Block finden (Experimentell)",
       "description": "Findet das günstigste zusammenhängende Zeitfenster einer bestimmten Dauer. Gedacht für Geräteplanung: Spülmaschine, Waschmaschine, Trockner usw. Gibt das günstigste Fenster mit Start-/Endzeiten und Preisstatistiken zurück.",
       "sections": {
         "search_range": {
@@ -1690,7 +1690,7 @@
       }
     },
     "find_most_expensive_block": {
-      "name": "Teuersten Block finden",
+      "name": "Teuersten Block finden (Experimentell)",
       "description": "Findet das teuerste zusammenhängende Zeitfenster einer bestimmten Dauer. Nützlich zur Erkennung von Spitzenpreiszeiträumen, die vermieden werden sollten. Gibt das teuerste Fenster mit Start-/Endzeiten und Preisstatistiken zurück.",
       "sections": {
         "search_range": {
@@ -1810,7 +1810,7 @@
       }
     },
     "find_cheapest_hours": {
-      "name": "Günstigste Stunden finden",
+      "name": "Günstigste Stunden finden (Experimentell)",
       "description": "Findet die günstigsten Intervalle für eine bestimmte Gesamtdauer, nicht unbedingt zusammenhängend. Gedacht für flexible Lasten: Batterieladung, E-Auto, Warmwasserspeicher. Gibt einen Zeitplan mit Intervallen gruppiert in zusammenhängende Segmente zurück.",
       "sections": {
         "search_range": {
@@ -1934,7 +1934,7 @@
       }
     },
     "find_most_expensive_hours": {
-      "name": "Teuerste Stunden finden",
+      "name": "Teuerste Stunden finden (Experimentell)",
       "description": "Findet die teuersten Intervalle für eine bestimmte Gesamtdauer, nicht unbedingt zusammenhängend. Nützlich zur Erkennung von Spitzenpreiszeiträumen, die vermieden werden sollten. Gibt einen Zeitplan mit Intervallen gruppiert in zusammenhängende Segmente zurück.",
       "sections": {
         "search_range": {
@@ -2058,7 +2058,7 @@
       }
     },
     "find_cheapest_schedule": {
-      "name": "Günstigstes Programm planen",
+      "name": "Günstigstes Programm planen (Experimentell)",
       "description": "Plant mehrere Geräte optimal ohne Zeitüberschneidung. Jede Aufgabe erhält das günstigste verfügbare zusammenhängende Zeitfenster.",
       "sections": {
         "search_range": {
@@ -2174,206 +2174,206 @@
       }
     },
     "plan_charging": {
-      "name": "Plan Charging",
-      "description": "Creates a lowest-cost charging schedule from battery parameters instead of a fixed duration. Supports fixed, continuous, or stepped charging power, optional deadline-aware minimum SoC planning, and economic filtering for later discharge use cases. Returns a per-interval charging plan with power, energy, SoC progression, segment grouping, total cost, and profitability details. If no schedule is found, the response includes a stable reason code in the reason field (for example: already_at_target, no_data_in_range, no_intervals_matching_level_filter, no_intervals_after_economic_filter, energy_unreachable, energy_unreachable_by_deadline, selection_above_distance_threshold).",
+      "name": "Laden planen (experimentell)",
+      "description": "Erstellt einen kostenoptimierten Ladeplan aus Batterieparametern statt einer festen Dauer. Unterstützt festes, kontinuierliches oder gestuftes Laden, optionale Mindest-SoC-Planung mit Stichtag sowie wirtschaftliche Filterung für spätere Entlade-Szenarien. Gibt einen Ladeplan pro Intervall zurück – mit Leistung, Energie, SoC-Verlauf, Segmentgruppierung, Gesamtkosten und Wirtschaftlichkeitsdetails. Wird kein Plan gefunden, enthält die Antwort einen stabilen Ursachencode im Feld „reason“ (zum Beispiel: already_at_target, no_data_in_range, no_intervals_matching_level_filter, no_intervals_after_economic_filter, energy_unreachable, energy_unreachable_by_deadline, selection_above_distance_threshold).",
       "sections": {
         "battery": {
-          "name": "Battery Parameters",
-          "description": "Describe the battery: usable capacity, current and target SoC, and charging efficiency. You can provide SoC in percent (requires capacity) or directly in kWh."
+          "name": "Batterieparameter",
+          "description": "Beschreibe die Batterie: nutzbare Kapazität, aktueller und gewünschter SoC sowie Ladewirkungsgrad. Du kannst den SoC in Prozent (erfordert Kapazität) oder direkt in kWh angeben."
         },
         "charging": {
-          "name": "Charging Strategy",
-          "description": "Configure variable-power charging behavior, grid limits, and minimum run-time constraints."
+          "name": "Ladestrategie",
+          "description": "Konfiguriere das Laden mit variabler Leistung, Netzgrenzen und Mindestlaufzeit-Vorgaben."
         },
         "deadline": {
-          "name": "Deadline Planning",
-          "description": "Require a minimum state of charge by a specific moment (for example before a peak period). Set both the Minimum SoC by Deadline and when it must be reached — either as an absolute time (Must Reach By) or from a known event (Deadline Event)."
+          "name": "Stichtagsplanung",
+          "description": "Verlange einen Mindestladezustand bis zu einem bestimmten Zeitpunkt (zum Beispiel vor einer Hochpreisphase). Lege sowohl den Mindest-SoC bis Stichtag als auch den Zeitpunkt fest – entweder als absolute Zeit (Erreichen bis) oder über ein bekanntes Ereignis (Stichtagsereignis)."
         },
         "search_range": {
-          "name": "Custom Search Range",
-          "description": "Define precise start and end times for the search. Overrides Search Scope when set."
+          "name": "Eigener Suchbereich",
+          "description": "Lege präzise Start- und Endzeiten für die Suche fest. Überschreibt den Suchumfang, wenn gesetzt."
         },
         "time_alternatives": {
-          "name": "Advanced Time Options",
-          "description": "Alternative ways to define the search range using time-of-day and minute offsets."
+          "name": "Erweiterte Zeitoptionen",
+          "description": "Alternative Möglichkeiten, den Suchbereich über Tageszeit und Minutenversätze festzulegen."
         },
         "price_filter": {
-          "name": "Price Level Filter",
-          "description": "Restrict search to intervals within the specified Tibber price level range."
+          "name": "Preisniveau-Filter",
+          "description": "Beschränke die Suche auf Intervalle innerhalb des angegebenen Tibber-Preisniveaus."
         },
         "search_tuning": {
-          "name": "Search Algorithm Tuning",
-          "description": "Fine-tune how the search handles outliers, minimum quality thresholds, and fallback behavior."
+          "name": "Suchalgorithmus-Feinabstimmung",
+          "description": "Stelle fein ein, wie die Suche mit Ausreißern, Mindestqualitäts-Schwellen und Rückfallverhalten umgeht."
         },
         "economics": {
-          "name": "Economic Filters",
-          "description": "Filter charging intervals by maximum cost or expected later discharge value."
+          "name": "Wirtschaftliche Filter",
+          "description": "Filtere Ladeintervalle nach maximalen Kosten oder erwartetem späteren Entladewert."
         },
         "output": {
-          "name": "Output Options",
-          "description": "Control output format: comparison details and currency unit."
+          "name": "Ausgabeoptionen",
+          "description": "Steuere das Ausgabeformat: Vergleichsdetails und Währungseinheit."
         }
       },
       "fields": {
         "entry_id": {
-          "name": "Entry ID",
-          "description": "The config entry ID for the Tibber integration."
+          "name": "Eintrags-ID",
+          "description": "Die Konfigurationseintrags-ID der Tibber-Integration."
         },
         "max_charge_power_w": {
-          "name": "Maximum Charge Power",
-          "description": "Maximum charging power in watts. This defines the upper bound for fixed, continuous, or stepped charging schedules."
+          "name": "Maximale Ladeleistung",
+          "description": "Maximale Ladeleistung in Watt. Sie definiert die Obergrenze für festes, kontinuierliches oder gestuftes Laden."
         },
         "battery_capacity_kwh": {
-          "name": "Battery Capacity",
-          "description": "Usable battery capacity in kWh. Required when current or target SoC is provided as a percentage."
+          "name": "Batteriekapazität",
+          "description": "Nutzbare Batteriekapazität in kWh. Erforderlich, wenn aktueller oder Ziel-SoC in Prozent angegeben wird."
         },
         "current_soc_percent": {
-          "name": "Current SoC (%)",
-          "description": "Current battery state of charge in percent. Cannot be combined with Current SoC (kWh)."
+          "name": "Aktueller SoC (%)",
+          "description": "Aktueller Ladezustand der Batterie in Prozent. Kann nicht mit Aktueller SoC (kWh) kombiniert werden."
         },
         "current_soc_kwh": {
-          "name": "Current SoC (kWh)",
-          "description": "Current battery state of charge in kWh. Cannot be combined with Current SoC (%)."
+          "name": "Aktueller SoC (kWh)",
+          "description": "Aktueller Ladezustand der Batterie in kWh. Kann nicht mit Aktueller SoC (%) kombiniert werden."
         },
         "target_soc_percent": {
-          "name": "Target SoC (%)",
-          "description": "Desired battery state of charge in percent. Cannot be combined with Target SoC (kWh)."
+          "name": "Ziel-SoC (%)",
+          "description": "Gewünschter Ladezustand der Batterie in Prozent. Kann nicht mit Ziel-SoC (kWh) kombiniert werden."
         },
         "target_soc_kwh": {
-          "name": "Target SoC (kWh)",
-          "description": "Desired battery state of charge in kWh. Cannot be combined with Target SoC (%)."
+          "name": "Ziel-SoC (kWh)",
+          "description": "Gewünschter Ladezustand der Batterie in kWh. Kann nicht mit Ziel-SoC (%) kombiniert werden."
         },
         "charging_efficiency": {
-          "name": "Charging Efficiency",
-          "description": "Fraction of grid energy that is stored in the battery. Example: 0.92 means 8% charging losses."
+          "name": "Ladewirkungsgrad",
+          "description": "Anteil der Netzenergie, der in der Batterie gespeichert wird. Beispiel: 0,92 bedeutet 8 % Ladeverluste."
         },
         "search_scope": {
-          "name": "Search Scope",
-          "description": "Shorthand for common search ranges. Overrides all other time range options. today / tomorrow = full calendar day, remaining_today = now until midnight, next_24h / next_48h = rolling window from now."
+          "name": "Suchumfang",
+          "description": "Kurzform für gängige Suchbereiche. Überschreibt alle anderen Zeitbereichsoptionen. today / tomorrow = ganzer Kalendertag, remaining_today = jetzt bis Mitternacht, next_24h / next_48h = gleitendes Fenster ab jetzt."
         },
         "include_current_interval": {
-          "name": "Include Current Interval",
-          "description": "Include the currently running 15-minute interval in the search. When enabled, charging may begin in the current interval if it is part of the cheapest result."
+          "name": "Aktuelles Intervall einbeziehen",
+          "description": "Bezieht das aktuell laufende 15-Minuten-Intervall in die Suche ein. Wenn aktiviert, kann das Laden im aktuellen Intervall beginnen, sofern es Teil des günstigsten Ergebnisses ist."
         },
         "search_start": {
-          "name": "Search Start",
-          "description": "Start of the search range as exact date and time. Highest priority — overrides all other start options. Defaults to now if not specified."
+          "name": "Suchbeginn",
+          "description": "Beginn des Suchbereichs als genaues Datum und Uhrzeit. Höchste Priorität – überschreibt alle anderen Startoptionen. Standard ist jetzt, falls nicht angegeben."
         },
         "search_end": {
-          "name": "Search End",
-          "description": "End of the search range as exact date and time. Highest priority — overrides all other end options. Defaults to end of tomorrow if not specified."
+          "name": "Suchende",
+          "description": "Ende des Suchbereichs als genaues Datum und Uhrzeit. Höchste Priorität – überschreibt alle anderen Endoptionen. Standard ist Ende morgen, falls nicht angegeben."
         },
         "must_finish_by": {
-          "name": "Must Finish By",
-          "description": "Deadline: charging must be finished by this time. The search range ends at this deadline — the service finds the cheapest intervals that complete before it. Cannot be combined with Search End, Search End Time, or Search End Offset."
+          "name": "Fertig spätestens bis",
+          "description": "Stichtag: Das Laden muss bis zu diesem Zeitpunkt abgeschlossen sein. Der Suchbereich endet an diesem Stichtag – der Dienst findet die günstigsten Intervalle, die vorher abschließen. Kann nicht mit Suchende, Suchende-Uhrzeit oder Suchende-Versatz kombiniert werden."
         },
         "search_start_time": {
-          "name": "Search Start Time",
-          "description": "Alternative: start searching at this time of day. Combine with day offset. Ignored if Search Start (datetime) is set."
+          "name": "Suchbeginn-Uhrzeit",
+          "description": "Alternative: Beginne die Suche zu dieser Tageszeit. Mit Tagesversatz kombinieren. Wird ignoriert, wenn Suchbeginn (Datum/Zeit) gesetzt ist."
         },
         "search_start_day_offset": {
-          "name": "Search Start Day Offset",
-          "description": "Day offset for Search Start Time. -7 to 2: -1 = yesterday, 0 = today, 1 = tomorrow. Only used with Search Start Time."
+          "name": "Suchbeginn-Tagesversatz",
+          "description": "Tagesversatz für die Suchbeginn-Uhrzeit. -7 bis 2: -1 = gestern, 0 = heute, 1 = morgen. Nur mit Suchbeginn-Uhrzeit verwendet."
         },
         "search_end_time": {
-          "name": "Search End Time",
-          "description": "Alternative: stop searching at this time of day. Combine with day offset. Ignored if Search End (datetime) is set."
+          "name": "Suchende-Uhrzeit",
+          "description": "Alternative: Beende die Suche zu dieser Tageszeit. Mit Tagesversatz kombinieren. Wird ignoriert, wenn Suchende (Datum/Zeit) gesetzt ist."
         },
         "search_end_day_offset": {
-          "name": "Search End Day Offset",
-          "description": "Day offset for Search End Time. -7 to 2: -1 = yesterday, 0 = today, 1 = tomorrow. Only used with Search End Time."
+          "name": "Suchende-Tagesversatz",
+          "description": "Tagesversatz für die Suchende-Uhrzeit. -7 bis 2: -1 = gestern, 0 = heute, 1 = morgen. Nur mit Suchende-Uhrzeit verwendet."
         },
         "search_start_offset_minutes": {
-          "name": "Search Start Offset (minutes)",
-          "description": "Alternative: start searching this many minutes from now. Positive = future, negative = past. Ignored if Search Start or Search Start Time is set."
+          "name": "Suchbeginn-Versatz (Minuten)",
+          "description": "Alternative: Beginne die Suche so viele Minuten ab jetzt. Positiv = Zukunft, negativ = Vergangenheit. Wird ignoriert, wenn Suchbeginn oder Suchbeginn-Uhrzeit gesetzt ist."
         },
         "search_end_offset_minutes": {
-          "name": "Search End Offset (minutes)",
-          "description": "Alternative: stop searching this many minutes from now. Positive = future, negative = past. Ignored if Search End or Search End Time is set."
+          "name": "Suchende-Versatz (Minuten)",
+          "description": "Alternative: Beende die Suche so viele Minuten ab jetzt. Positiv = Zukunft, negativ = Vergangenheit. Wird ignoriert, wenn Suchende oder Suchende-Uhrzeit gesetzt ist."
         },
         "max_price_level": {
-          "name": "Maximum Price Level",
-          "description": "Only consider intervals at or below this Tibber price level. very_cheap = most restrictive, very_expensive = no restriction."
+          "name": "Maximales Preisniveau",
+          "description": "Berücksichtige nur Intervalle bei oder unter diesem Tibber-Preisniveau. very_cheap = am restriktivsten, very_expensive = keine Einschränkung."
         },
         "min_price_level": {
-          "name": "Minimum Price Level",
-          "description": "Only consider intervals at or above this Tibber price level. Useful to exclude unrealistically cheap negative-price-only windows from mixed searches."
+          "name": "Minimales Preisniveau",
+          "description": "Berücksichtige nur Intervalle bei oder über diesem Tibber-Preisniveau. Nützlich, um unrealistisch günstige Fenster mit ausschließlich negativen Preisen aus gemischten Suchen auszuschließen."
         },
         "include_comparison_details": {
-          "name": "Include Comparison Details",
-          "description": "Enrich the price_comparison result with additional fields: comparison_price_min and comparison_price_max."
+          "name": "Vergleichsdetails einbeziehen",
+          "description": "Reichert das Ergebnis price_comparison um zusätzliche Felder an: comparison_price_min und comparison_price_max."
         },
         "use_base_unit": {
-          "name": "Use Base Currency Unit",
-          "description": "Force prices in base currency (EUR, NOK) instead of the configured display unit (ct, øre). Useful for calculations."
+          "name": "Basiswährungseinheit verwenden",
+          "description": "Erzwingt Preise in der Basiswährung (EUR, NOK) statt in der konfigurierten Anzeigeeinheit (ct, øre). Nützlich für Berechnungen."
         },
         "smooth_outliers": {
-          "name": "Smooth Outliers",
-          "description": "Smooth price outliers before searching. Outlier intervals are temporarily replaced by the average of their neighbors, so a single spike or dip does not dominate the result. The response always shows the original (unsmoothed) prices. Default: enabled."
+          "name": "Ausreißer glätten",
+          "description": "Glättet Preisausreißer vor der Suche. Ausreißer-Intervalle werden vorübergehend durch den Durchschnitt ihrer Nachbarn ersetzt, sodass eine einzelne Spitze oder ein Tief das Ergebnis nicht dominiert. Die Antwort zeigt immer die ursprünglichen (ungeglätteten) Preise. Standard: aktiviert."
         },
         "min_distance_from_avg": {
-          "name": "Min. Distance from Average",
-          "description": "Require the selected charging intervals to be at least this percentage below the average price of the full search range. Leave empty to disable."
+          "name": "Mindestabstand zum Durchschnitt",
+          "description": "Verlange, dass die ausgewählten Ladeintervalle mindestens diesen Prozentsatz unter dem Durchschnittspreis des gesamten Suchbereichs liegen. Leer lassen zum Deaktivieren."
         },
         "allow_relaxation": {
-          "name": "Allow relaxation",
-          "description": "Progressively relax filters to guarantee a result when possible. Phases: 1) Reduce/remove distance threshold 2) Expand level filters 3) Reduce duration. Default: enabled."
+          "name": "Lockerung zulassen",
+          "description": "Lockert die Filter schrittweise, um – wenn möglich – ein Ergebnis zu garantieren. Phasen: 1) Abstandsschwelle reduzieren/entfernen 2) Preisniveau-Filter erweitern 3) Dauer verkürzen. Standard: aktiviert."
         },
         "duration_flexibility_minutes": {
-          "name": "Duration flexibility",
-          "description": "Maximum minutes the automatically calculated charging duration may be shortened during relaxation (0–120, step 15). Leave empty for automatic calculation."
+          "name": "Dauer-Flexibilität",
+          "description": "Maximale Minuten, um die die automatisch berechnete Ladedauer während der Lockerung verkürzt werden darf (0–120, Schritt 15). Leer lassen für automatische Berechnung."
         },
         "must_reach_soc_percent": {
-          "name": "Minimum SoC by Deadline (%)",
-          "description": "Minimum battery state of charge that must be reached by the deadline. Cannot be combined with Minimum SoC by Deadline (kWh)."
+          "name": "Mindest-SoC bis Stichtag (%)",
+          "description": "Mindestladezustand der Batterie, der bis zum Stichtag erreicht werden muss. Kann nicht mit Mindest-SoC bis Stichtag (kWh) kombiniert werden."
         },
         "must_reach_soc_kwh": {
-          "name": "Minimum SoC by Deadline (kWh)",
-          "description": "Minimum battery state of charge that must be reached by the deadline. Cannot be combined with Minimum SoC by Deadline (%)."
+          "name": "Mindest-SoC bis Stichtag (kWh)",
+          "description": "Mindestladezustand der Batterie, der bis zum Stichtag erreicht werden muss. Kann nicht mit Mindest-SoC bis Stichtag (%) kombiniert werden."
         },
         "min_charge_power_w": {
-          "name": "Minimum Charge Power",
-          "description": "Enable continuous charging mode. The planner may reduce the last interval down to this minimum power instead of always using the maximum."
+          "name": "Minimale Ladeleistung",
+          "description": "Aktiviert den kontinuierlichen Lademodus. Der Planer darf das letzte Intervall bis zu dieser Mindestleistung reduzieren, statt immer die maximale Leistung zu nutzen."
         },
         "charge_power_steps_w": {
-          "name": "Charge Power Steps",
-          "description": "Enable stepped charging mode. Provide the allowed power steps in watts as a list, for example [1380, 4140, 11000]. The planner picks the smallest step that still covers the remaining energy in the final interval. Mutually exclusive with Minimum Charge Power."
+          "name": "Ladeleistungsstufen",
+          "description": "Aktiviert den gestuften Lademodus. Gib die erlaubten Leistungsstufen in Watt als Liste an, zum Beispiel [1380, 4140, 11000]. Der Planer wählt die kleinste Stufe, die die verbleibende Energie im letzten Intervall noch deckt. Schließt sich mit Minimale Ladeleistung gegenseitig aus."
         },
         "grid_import_limit_w": {
-          "name": "Grid Import Limit",
-          "description": "Upper limit for charging power drawn from the grid in watts. Useful when the charger must share available power with other loads."
+          "name": "Netzbezugsgrenze",
+          "description": "Obergrenze für die aus dem Netz bezogene Ladeleistung in Watt. Nützlich, wenn der Lader die verfügbare Leistung mit anderen Verbrauchern teilen muss."
         },
         "must_reach_by": {
-          "name": "Must Reach By",
-          "description": "Absolute deadline for must_reach_soc_*. The planner first guarantees the minimum SoC before this moment, then continues with the remaining target if possible."
+          "name": "Erreichen bis",
+          "description": "Absoluter Stichtag für must_reach_soc_*. Der Planer garantiert zuerst den Mindest-SoC vor diesem Zeitpunkt und fährt dann – wenn möglich – mit dem verbleibenden Ziel fort."
         },
         "must_reach_by_event": {
-          "name": "Deadline Event",
-          "description": "Alternative deadline derived from coordinator data. Use this instead of Must Reach By to plan around midnight, the next peak period, or the next best-price period end."
+          "name": "Stichtagsereignis",
+          "description": "Alternativer Stichtag, abgeleitet aus Koordinatordaten. Verwende dies statt Erreichen bis, um um Mitternacht, die nächste Hochpreisphase oder das Ende der nächsten Bestpreisphase herum zu planen."
         },
         "discharging_efficiency": {
-          "name": "Discharging Efficiency",
-          "description": "Fraction of stored battery energy that is still usable when later discharged. Used for profitability calculations."
+          "name": "Entladewirkungsgrad",
+          "description": "Anteil der gespeicherten Batterieenergie, der beim späteren Entladen noch nutzbar ist. Wird für Wirtschaftlichkeitsberechnungen verwendet."
         },
         "expected_discharge_price": {
-          "name": "Expected Discharge Price",
-          "description": "Expected value of each discharged kWh. Intervals above the break-even price can be filtered when Reserve For Discharge is enabled."
+          "name": "Erwarteter Entladepreis",
+          "description": "Erwarteter Wert jeder entladenen kWh. Intervalle über dem Break-even-Preis können gefiltert werden, wenn Für Entladung reservieren aktiviert ist."
         },
         "reserve_for_discharge": {
-          "name": "Reserve For Discharge",
-          "description": "Keep only intervals that are economically sensible for a later discharge based on expected discharge price and round-trip efficiency."
+          "name": "Für Entladung reservieren",
+          "description": "Behält nur Intervalle, die für eine spätere Entladung wirtschaftlich sinnvoll sind – basierend auf erwartetem Entladepreis und Roundtrip-Wirkungsgrad."
         },
         "max_cost_per_kwh": {
-          "name": "Maximum Charge Price",
-          "description": "Discard candidate intervals above this price per kWh before scheduling. Uses the selected price unit."
+          "name": "Maximaler Ladepreis",
+          "description": "Verwirft Kandidaten-Intervalle über diesem Preis pro kWh vor der Planung. Verwendet die gewählte Preiseinheit."
         },
         "min_charge_duration_minutes": {
-          "name": "Minimum Charge Duration",
-          "description": "Merge short isolated intervals into longer charging blocks where possible. Useful for chargers that should avoid very short runs."
+          "name": "Minimale Ladedauer",
+          "description": "Führt kurze isolierte Intervalle nach Möglichkeit zu längeren Ladeblöcken zusammen. Nützlich für Lader, die sehr kurze Läufe vermeiden sollten."
         },
         "max_cycles_per_day": {
-          "name": "Maximum Charge Cycles Per Day",
-          "description": "Limit how many separate charging segments may be used per day. The planner keeps the cheapest segments within this limit."
+          "name": "Maximale Ladezyklen pro Tag",
+          "description": "Begrenzt, wie viele separate Ladesegmente pro Tag genutzt werden dürfen. Der Planer behält die günstigsten Segmente innerhalb dieser Grenze."
         }
       }
     },
@@ -2505,9 +2505,9 @@
     },
     "charging_deadline_event": {
       "options": {
-        "midnight": "Midnight",
-        "next_peak_period": "Next Peak Period",
-        "next_best_period_end": "End of Next Best-Price Period"
+        "midnight": "Mitternacht",
+        "next_peak_period": "Nächste Hochpreisphase",
+        "next_best_period_end": "Ende der nächsten Bestpreisphase"
       }
     }
   }

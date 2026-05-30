@@ -1570,7 +1570,7 @@
       }
     },
     "find_cheapest_block": {
-      "name": "Find Cheapest Block",
+      "name": "Find Cheapest Block (Experimental)",
       "description": "Finds the cheapest contiguous time window of a given duration. Designed for appliance scheduling: dishwasher, washing machine, dryer, etc. Returns the single cheapest window with start/end times and price statistics. If no window is found, the response includes a stable reason code in the reason field (for example: no_data_in_range, no_intervals_matching_level_filter, insufficient_intervals_after_filter, insufficient_contiguous_window).",
       "sections": {
         "search_range": {
@@ -1690,7 +1690,7 @@
       }
     },
     "find_most_expensive_block": {
-      "name": "Find Most Expensive Block",
+      "name": "Find Most Expensive Block (Experimental)",
       "description": "Finds the most expensive contiguous time window of a given duration. Useful for identifying peak price periods to avoid. Returns the single most expensive window with start/end times and price statistics.",
       "sections": {
         "search_range": {
@@ -1810,7 +1810,7 @@
       }
     },
     "find_cheapest_hours": {
-      "name": "Find Cheapest Hours",
+      "name": "Find Cheapest Hours (Experimental)",
       "description": "Finds the cheapest intervals totaling a given duration, not necessarily contiguous. Designed for flexible loads: battery charging, EV, water heater. Returns a schedule of intervals grouped into contiguous segments. If no schedule is found, the response includes a stable reason code in the reason field (for example: no_data_in_range, no_intervals_matching_level_filter, insufficient_intervals_after_filter, insufficient_intervals_for_constraints).",
       "sections": {
         "search_range": {
@@ -1934,7 +1934,7 @@
       }
     },
     "find_most_expensive_hours": {
-      "name": "Find Most Expensive Hours",
+      "name": "Find Most Expensive Hours (Experimental)",
       "description": "Finds the most expensive intervals totaling a given duration, not necessarily contiguous. Useful for identifying peak price periods to avoid. Returns a schedule of intervals grouped into contiguous segments.",
       "sections": {
         "search_range": {
@@ -2058,7 +2058,7 @@
       }
     },
     "find_cheapest_schedule": {
-      "name": "Find Cheapest Schedule",
+      "name": "Find Cheapest Schedule (Experimental)",
       "description": "Schedules multiple appliances optimally without time overlap. Each task gets the cheapest available contiguous window; tasks are placed longest-first for efficient packing unless sequential ordering is enabled. Returns a per-task schedule with start/end times and price stats. If scheduling is incomplete, the response includes a stable reason code in the reason field (for example: no_data_in_range, no_intervals_matching_level_filter, insufficient_contiguous_window, insufficient_contiguous_window_for_some_tasks).",
       "sections": {
         "search_range": {
@@ -2174,7 +2174,7 @@
       }
     },
     "plan_charging": {
-      "name": "Plan Charging",
+      "name": "Plan Charging (Experimental)",
       "description": "Creates a lowest-cost charging schedule from battery parameters instead of a fixed duration. Supports fixed, continuous, or stepped charging power, optional deadline-aware minimum SoC planning, and economic filtering for later discharge use cases. Returns a per-interval charging plan with power, energy, SoC progression, segment grouping, total cost, and profitability details. If no schedule is found, the response includes a stable reason code in the reason field (for example: already_at_target, no_data_in_range, no_intervals_matching_level_filter, no_intervals_after_economic_filter, energy_unreachable, energy_unreachable_by_deadline, selection_above_distance_threshold).",
       "sections": {
         "battery": {
