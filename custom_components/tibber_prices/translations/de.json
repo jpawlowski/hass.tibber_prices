@@ -1201,6 +1201,10 @@
       "title": "API-Ratenlimit erreicht für {home_name}",
       "description": "Die Tibber-API hat diese Integration nach {error_count} aufeinanderfolgenden Fehlern ratenlimitiert. Das bedeutet, dass Anfragen zu häufig gestellt werden.\n\nDie Integration wird automatisch mit zunehmenden Verzögerungen erneut versuchen. Dieses Problem löst sich, sobald das Ratenlimit abläuft.\n\nFalls dies mehrere Stunden anhält, überprüfe:\n- Ob mehrere Home Assistant Instanzen denselben API-Token verwenden\n- Ob andere Anwendungen deinen Tibber-API-Token stark nutzen\n- Die Update-Frequenz reduzieren, falls du sie angepasst hast"
     },
+    "api_outage": {
+      "title": "Tibber-API nicht erreichbar für {home_name}",
+      "description": "Seit {since} wurden keine aktuellen Preisdaten mehr von Tibber empfangen. Die Integration verwendet weiterhin lokal zwischengespeicherte Preise, sofern verfügbar, sodass deine Sensoren möglicherweise weiterarbeiten - sie können aber unverfügbar werden, wenn der Ausfall andauert (z. B. könnten die Preise für morgen fehlen).\n\nUrsache ist meist ein vorübergehender Tibber-Ausfall oder ein Netzwerkproblem. Die Integration versucht es bei jedem Update-Zyklus automatisch erneut und löst dieses Problem, sobald wieder frische Daten eintreffen.\n\nFalls dies anhält, überprüfe den Tibber-Dienststatus, deine Internetverbindung und ob dein API-Token noch gültig ist (ggf. neu anmelden)."
+    },
     "home_not_found": {
       "title": "Zuhause {home_name} nicht im Tibber-Konto gefunden",
       "description": "Das in dieser Integration konfigurierte Zuhause (Eintrag-ID: {entry_id}) ist nicht mehr in deinem Tibber-Konto verfügbar. Dies passiert normalerweise, wenn:\n- Das Zuhause aus deinem Tibber-Konto gelöscht wurde\n- Das Zuhause zu einem anderen Tibber-Konto verschoben wurde\n- Der Zugriff auf dieses Zuhause widerrufen wurde\n\nBitte entferne diesen Integrationseintrag und füge ihn erneut hinzu, falls das Zuhause weiterhin überwacht werden soll. Um diesen Eintrag zu entfernen, gehe zu Einstellungen → Geräte & Dienste → Tibber Prices und lösche die Konfiguration {home_name}."

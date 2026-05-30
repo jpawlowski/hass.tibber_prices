@@ -1201,6 +1201,10 @@
       "title": "API rate limit exceeded for {home_name}",
       "description": "The Tibber API has rate-limited this integration after {error_count} consecutive errors. This means requests are being made too frequently.\n\nThe integration will automatically retry with increasing delays. This issue will resolve once the rate limit expires.\n\nIf this persists for several hours, consider:\n- Checking if multiple Home Assistant instances are using the same API token\n- Verifying no other applications are heavily using your Tibber API token\n- Reducing the update frequency if you've customized it"
     },
+    "api_outage": {
+      "title": "Tibber API unavailable for {home_name}",
+      "description": "No fresh price data has been received from Tibber since {since}. The integration keeps using locally cached prices where available, so your sensors may continue to work, but they can become unavailable if the outage continues (for example, tomorrow's prices may be missing).\n\nThis is usually caused by a temporary Tibber outage or a network problem. The integration retries automatically on every update cycle and clears this issue as soon as fresh data arrives.\n\nIf this persists, check the Tibber service status, your internet connection, and that your API token is still valid (re-authenticate if prompted)."
+    },
     "home_not_found": {
       "title": "Home {home_name} not found in Tibber account",
       "description": "The home configured in this integration (entry ID: {entry_id}) is no longer available in your Tibber account. This typically happens when:\n- The home was deleted from your Tibber account\n- The home was moved to a different Tibber account\n- Access to this home was revoked\n\nPlease remove this integration entry and re-add it if the home should still be monitored. To remove this entry, go to Settings → Devices & Services → Tibber Prices and delete the {home_name} configuration."

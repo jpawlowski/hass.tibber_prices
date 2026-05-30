@@ -246,6 +246,11 @@ class TibberPricesDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         self._is_fetching: bool = False  # Flag to track active API fetch (read by lifecycle sensor)
         self._last_coordinator_update: datetime | None = None  # When Timer #1 last ran (_async_update_data)
 
+        # Degraded-mode tracking (cache fallback during API outage).
+        # True when the last update served cached data because the API fetch failed
+        # but cached data still covered the current interval. Exposed via connection sensor.
+        self._using_cached_fallback: bool = False
+
         # Runtime config overrides from config entities (number/switch)
         # Structure: {"section_name": {"config_key": value, ...}, ...}
         # When set, these override the corresponding options from config_entry.options
@@ -259,6 +264,16 @@ class TibberPricesDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         """Log with coordinator-specific prefix."""
         prefixed_message = f"{self._log_prefix} {message}"
         getattr(_LOGGER, level)(prefixed_message, *args, **kwargs)
+
+    @property
+    def using_cached_fallback(self) -> bool:
+        """Return True if the last update served cached data due to an API failure."""
+        return self._using_cached_fallback
+
+    @property
+    def last_successful_update(self) -> datetime | None:
+        """Return when price data was last successfully fetched from the API."""
+        return self._last_price_update
 
     async def _handle_options_update(self, _hass: HomeAssistant, _config_entry: ConfigEntry) -> None:
         """Handle options update by invalidating config caches and re-transforming data."""
@@ -774,6 +789,11 @@ class TibberPricesDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             # Track rate limit errors for repair system
             await self._track_rate_limit_error(err)
 
+            # Track the API outage for the time-based outage repair.
+            # This branch means the IntervalPool could NOT serve cached data either
+            # (no fallback possible), so this is a genuine, user-impacting failure.
+            await self._repair_manager.track_api_failure(current_time)
+
             # Handle API error - will re-raise as ConfigEntryAuthFailed or UpdateFailed
             # Note: With IntervalPool, there's no local cache fallback here.
             # The Pool has its own persistence for offline recovery.
@@ -829,6 +849,18 @@ class TibberPricesDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 
         # 3. Clear rate limit tracking on successful API call
         await self._repair_manager.clear_rate_limit_tracking()
+
+        # 4. Update degraded-mode flag and outage tracking.
+        # The IntervalPool flags itself as degraded when it served cached data because
+        # a fetch failed. In that case the outage is still ongoing (we just cushioned
+        # it with cache), so we keep tracking it for the time-based outage repair.
+        # Only a genuine fresh fetch clears the outage.
+        degraded = self.interval_pool.last_fetch_degraded
+        self._using_cached_fallback = degraded
+        if degraded:
+            await self._repair_manager.track_api_failure(current_time)
+        else:
+            await self._repair_manager.clear_api_failure_tracking()
 
     async def load_cache(self) -> None:
         """Load cached user data from storage (price data is in IntervalPool)."""

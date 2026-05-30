@@ -50,6 +50,8 @@ class TibberPricesBinarySensor(TibberPricesEntity, BinarySensorEntity, RestoreEn
             # Frequently Changing Diagnostics
             "icon_color",
             "data_status",
+            # Connection diagnostics (time-bound, not useful in long-term history)
+            "last_successful_update",
             # Static/Rarely Changing
             "level_value",
             "rating_value",
@@ -317,10 +319,27 @@ class TibberPricesBinarySensor(TibberPricesEntity, BinarySensorEntity, RestoreEn
         if key == "tomorrow_data_available":
             return self._get_tomorrow_data_available_attributes()
 
+        if key == "connection":
+            return self._get_connection_attributes()
+
         if key in ("in_rising_price_phase", "in_falling_price_phase", "in_flat_price_phase"):
             return get_phase_attributes(self.coordinator.data, time=self.coordinator.time)
 
         return None
+
+    def _get_connection_attributes(self) -> dict | None:
+        """
+        Build attributes for the connection sensor.
+
+        Distinguishes a healthy connection from degraded cache-fallback operation,
+        so users can tell when the integration is running on locally cached data
+        during a temporary Tibber API outage.
+        """
+        last_update = self.coordinator.last_successful_update
+        return {
+            "using_cached_data": self.coordinator.using_cached_fallback,
+            "last_successful_update": last_update.isoformat() if last_update else None,
+        }
 
     @callback
     def _handle_coordinator_update(self) -> None:

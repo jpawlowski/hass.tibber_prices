@@ -1201,6 +1201,10 @@
       "title": "API rate limiet overschreden voor {home_name}",
       "description": "De Tibber API heeft deze integratie beperkt na {error_count} opeenvolgende fouten. Dit betekent dat verzoeken te frequent worden gedaan.\n\nDe integratie zal automatisch opnieuw proberen met toenemende vertragingen. Dit probleem lost zich op zodra de rate limiet verloopt.\n\nAls dit meerdere uren aanhoudt, overweeg dan:\n- Te controleren of meerdere Home Assistant instanties hetzelfde API-token gebruiken\n- Te verifiëren dat geen andere applicaties intensief je Tibber API-token gebruiken\n- De update frequentie te verlagen als je deze hebt aangepast"
     },
+    "api_outage": {
+      "title": "Tibber API niet beschikbaar voor {home_name}",
+      "description": "Sinds {since} zijn er geen verse prijsgegevens meer van Tibber ontvangen. De integratie blijft lokaal gecachete prijzen gebruiken waar beschikbaar, dus je sensoren kunnen blijven werken - maar ze kunnen onbeschikbaar worden als de storing aanhoudt (de prijzen van morgen kunnen bijvoorbeeld ontbreken).\n\nDit wordt meestal veroorzaakt door een tijdelijke Tibber-storing of een netwerkprobleem. De integratie probeert bij elke updatecyclus automatisch opnieuw en lost dit probleem op zodra er weer verse gegevens binnenkomen.\n\nAls dit aanhoudt, controleer de Tibber servicestatus, je internetverbinding en of je API-token nog geldig is (authenticeer opnieuw indien gevraagd)."
+    },
     "home_not_found": {
       "title": "Huis {home_name} niet gevonden in Tibber-account",
       "description": "Het huis geconfigureerd in deze integratie (entry ID: {entry_id}) is niet langer beschikbaar in je Tibber-account. Dit gebeurt meestal wanneer:\n- Het huis is verwijderd uit je Tibber-account\n- Het huis is verplaatst naar een ander Tibber-account\n- Toegang tot dit huis is ingetrokken\n\nVerwijder dit integratie-item en voeg het opnieuw toe als het huis nog steeds gemonitord moet worden. Om dit item te verwijderen, ga naar Instellingen → Apparaten & Services → Tibber Prices en verwijder de {home_name} configuratie."

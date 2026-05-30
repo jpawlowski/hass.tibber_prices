@@ -1201,6 +1201,10 @@
       "title": "API-hastighetsgräns överskriden för {home_name}",
       "description": "Tibber API har hastighetsbegränsat denna integration efter {error_count} konsekutiva fel. Detta betyder att förfrågningar görs för ofta.\n\nIntegrationen kommer automatiskt att försöka igen med ökande fördröjningar. Detta problem löser sig när hastighetsgränsen löper ut.\n\nOm detta kvarstår i flera timmar, överväg:\n- Kontrollera om flera Home Assistant-instanser använder samma API-token\n- Verifiera att inga andra applikationer använder din Tibber API-token kraftigt\n- Minska uppdateringsfrekvensen om du har anpassat den"
     },
+    "api_outage": {
+      "title": "Tibber API otillgänglig för {home_name}",
+      "description": "Inga färska prisdata har tagits emot från Tibber sedan {since}. Integrationen fortsätter att använda lokalt cachade priser där det är möjligt, så dina sensorer kan fortsätta fungera - men de kan bli otillgängliga om avbrottet fortsätter (till exempel kan morgondagens priser saknas).\n\nDetta orsakas vanligtvis av ett tillfälligt Tibber-avbrott eller ett nätverksproblem. Integrationen försöker automatiskt igen vid varje uppdateringscykel och rensar detta problem så snart färska data anländer.\n\nOm detta kvarstår, kontrollera Tibbers tjänststatus, din internetanslutning och att din API-token fortfarande är giltig (autentisera igen om du uppmanas)."
+    },
     "home_not_found": {
       "title": "Hem {home_name} hittades inte i Tibber-konto",
       "description": "Hemmet som konfigurerats i denna integration (post-ID: {entry_id}) är inte längre tillgängligt i ditt Tibber-konto. Detta händer vanligtvis när:\n- Hemmet togs bort från ditt Tibber-konto\n- Hemmet flyttades till ett annat Tibber-konto\n- Åtkomst till detta hem återkallades\n\nTa bort denna integrationspost och lägg till den igen om hemmet fortfarande ska övervakas. För att ta bort denna post, gå till Inställningar → Enheter & Tjänster → Tibber-priser och radera {home_name}-konfigurationen."
