@@ -10,7 +10,7 @@ from typing import TYPE_CHECKING, Any
 from zoneinfo import ZoneInfo
 
 from custom_components.tibber_prices.api.exceptions import (
-    TibberPricesApiClientCommunicationError,
+    TibberPricesApiClientAuthenticationError,
     TibberPricesApiClientError,
 )
 from homeassistant.util import dt as dt_util
@@ -118,6 +118,13 @@ class TibberPricesIntervalPool:
         self._save_debounce_task: asyncio.Task | None = None
         self._save_lock = asyncio.Lock()
 
+        # Degraded-mode tracking (cache fallback during API outage).
+        # When a fetch fails but cached data still covers the current interval,
+        # the pool keeps serving cached data and flags itself as degraded so the
+        # coordinator can expose this on the connection sensor. Reset on success.
+        self._last_fetch_degraded = False
+        self._last_fetch_error: str | None = None
+
         # DST fall-back extra intervals.
         # On DST fall-back nights (e.g. last Sunday October in EU), wall-clock
         # 02:00-02:45 occurs twice: once in CEST (+02:00) and once in CET (+01:00).
@@ -127,12 +134,24 @@ class TibberPricesIntervalPool:
         # Structure: {"2026-10-25T02:00:00": [{"startsAt": "...+01:00", ...}], ...}
         self._dst_extras: dict[str, list[dict[str, Any]]] = {}
 
+    @property
+    def last_fetch_degraded(self) -> bool:
+        """Return True if the most recent API fetch fell back to cached data."""
+        return self._last_fetch_degraded
+
+    @property
+    def last_fetch_error(self) -> str | None:
+        """Return the error message of the most recent degraded fetch, if any."""
+        return self._last_fetch_error
+
     async def get_intervals(
         self,
         api_client: TibberPricesApiClient,
         user_data: dict[str, Any],
         start_time: datetime,
         end_time: datetime,
+        *,
+        track_degraded: bool = True,
     ) -> tuple[list[dict[str, Any]], bool]:
         """
         Get price intervals for time range (cached + fetch missing).
@@ -152,6 +171,14 @@ class TibberPricesIntervalPool:
             user_data: User data dict containing home metadata.
             start_time: Start of range (inclusive, timezone-aware).
             end_time: End of range (exclusive, timezone-aware).
+            track_degraded: When True (default), API failures update the pool's
+                degraded-state flags (last_fetch_degraded/last_fetch_error) which
+                govern sensor availability, and the cache-fallback path is used to
+                keep sensors alive. This is the SENSOR path (get_sensor_data).
+                When False, the call is a SERVICE request: it must never touch
+                sensor-health state. Any API error is propagated unchanged so the
+                service handler can return a structured "data unavailable" response
+                without impairing sensors.
 
         Returns:
             Tuple of (intervals, api_called):
@@ -203,6 +230,7 @@ class TibberPricesIntervalPool:
 
         # Fetch missing ranges from API
         api_fetch_failed = False
+        fallback_intervals: list[dict[str, Any]] | None = None
         if missing_ranges:
             fetch_time_iso = dt_util.now().isoformat()
 
@@ -214,25 +242,71 @@ class TibberPricesIntervalPool:
                     missing_ranges=missing_ranges,
                     on_intervals_fetched=lambda intervals, _: self._add_intervals(intervals, fetch_time_iso),
                 )
-            except TibberPricesApiClientCommunicationError as err:
-                if cached_intervals:
-                    # Transient API error (e.g. 503) but we have cached data - use it as
-                    # fallback so the coordinator can finish initializing. The next regular
-                    # update cycle will retry the API automatically.
+            except TibberPricesApiClientAuthenticationError:
+                # Authentication errors must always propagate so the coordinator can
+                # trigger the reauth flow. Cached data is never a valid fallback here -
+                # the user must provide a new token.
+                raise
+            except TibberPricesApiClientError as err:
+                # Any other API error (transient communication failure like 503/timeout,
+                # rate limiting, or an "empty data" response during a Tibber outage).
+                if not track_degraded:
+                    # Service request: never mutate sensor-health degraded state and never
+                    # silently serve a partial cache. Propagate so the service handler can
+                    # return a structured "data unavailable" response. Sensor availability
+                    # is governed solely by the regular coordinator update (get_sensor_data).
+                    raise
+                #
+                # Resilience strategy: As long as the cache still covers the CURRENT
+                # interval, keep serving locally cached data so the integration keeps
+                # working benevolently through temporary outages. The next regular update
+                # cycle will retry the API automatically.
+                #
+                # Re-read the cache because the fetcher may have partially cached some
+                # ranges before failing.
+                available_intervals = self._get_cached_intervals(start_time_iso, end_time_iso)
+                if self._covers_current_interval(available_intervals):
                     _LOGGER.warning(
-                        "API temporarily unavailable for home %s (%s) - using %d cached intervals as fallback",
+                        "Tibber API temporarily unavailable for home %s (%s) - continuing with "
+                        "%d cached intervals that still cover the current interval. "
+                        "Will retry on next update cycle",
                         self._home_id,
                         err,
-                        len(cached_intervals),
+                        len(available_intervals),
                     )
                     api_fetch_failed = True
+                    fallback_intervals = available_intervals
+                    # Flag degraded mode so the coordinator/connection sensor can surface it.
+                    self._last_fetch_degraded = True
+                    self._last_fetch_error = str(err)
                 else:
-                    # No cached data at all - re-raise so the caller can decide
+                    # No cached data for the current interval - we cannot serve valid
+                    # prices. Re-raise so the caller can mark the entry as not-ready
+                    # (fresh setup) or raise UpdateFailed (running integration).
+                    _LOGGER.error(
+                        "Tibber API unavailable for home %s (%s) and no cached data covers the "
+                        "current interval - cannot provide price data",
+                        self._home_id,
+                        err,
+                    )
                     raise
+            else:
+                # Fetch succeeded - clear any previous degraded state (sensor path only).
+                # Service requests (track_degraded=False) must not clear a real sensor
+                # degradation, otherwise a successful service fetch could mask it.
+                if track_degraded:
+                    self._last_fetch_degraded = False
+                    self._last_fetch_error = None
 
-        # After caching all API responses, read from cache again to get final result
-        # This ensures we return exactly what user requested, filtering out extra intervals
-        final_result = self._get_cached_intervals(start_time_iso, end_time_iso)
+        # After caching all API responses, read from cache again to get final result.
+        # This ensures we return exactly what user requested, filtering out extra intervals.
+        # When we fell back to cache during an outage, reuse the already-read intervals
+        # instead of querying the cache a second time.
+        final_result = (
+            fallback_intervals
+            if fallback_intervals is not None
+            else self._get_cached_intervals(start_time_iso, end_time_iso)
+        )
 
         # Track if API was called (True if any missing ranges were attempted)
         # If fetch failed but we fell back to cache, treat as "no API call succeeded"
@@ -550,6 +624,58 @@ class TibberPricesIntervalPool:
                 return home.get("timeZone")
 
         return None
+
+    def _covers_current_interval(self, intervals: list[dict[str, Any]]) -> bool:
+        """
+        Return True if the cached intervals cover the current moment.
+
+        This is the resilience threshold used during Tibber API outages: as long
+        as we still have a price interval for "now", the integration can keep
+        serving sensors from locally cached data instead of failing to load.
+        Only when the current interval is missing do we treat the cache as
+        unusable and let the caller raise (alarm).
+
+        Args:
+            intervals: Cached interval dicts (each with a "startsAt" field).
+
+        Returns:
+            True if an interval covering the current time exists, False otherwise.
+
+        """
+        if not intervals:
+            return False
+
+        now = self._time_service.now() if self._time_service else dt_util.now()
+
+        # Collect interval start datetimes (startsAt may be ISO string or datetime)
+        starts: list[datetime] = []
+        for interval in intervals:
+            starts_at = interval.get("startsAt")
+            if starts_at is None:
+                continue
+            start_dt = starts_at if isinstance(starts_at, datetime) else dt_util.parse_datetime(starts_at)
+            if start_dt is not None:
+                starts.append(start_dt)
+
+        if not starts:
+            return False
+
+        starts.sort()
+
+        # An interval covers "now" if start <= now < start + length. The length is
+        # derived from the gap to the next interval, capped at one hour so a large
+        # gap (missing data) cannot falsely report coverage. This handles both
+        # quarter-hourly (15 min) and hourly (60 min) resolutions.
+        max_length = timedelta(minutes=INTERVAL_HOURLY)
+        for index, start_dt in enumerate(starts):
+            if index + 1 < len(starts):
+                length = min(starts[index + 1] - start_dt, max_length)
+            else:
+                length = max_length
+            if start_dt <= now < start_dt + length:
+                return True
+
+        return False
 
     def _get_cached_intervals(
         self,

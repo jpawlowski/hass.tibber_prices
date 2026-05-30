@@ -25,7 +25,7 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.util import dt as dt_util
 
 from .entity_resolver import or_entity_ref, resolve_entity_references
-from .helpers import get_entry_and_data
+from .helpers import async_fetch_service_intervals, get_entry_and_data
 
 if TYPE_CHECKING:
     from homeassistant.core import HomeAssistant, ServiceCall, ServiceResponse
@@ -150,44 +150,54 @@ async def handle_get_price(call: ServiceCall) -> ServiceResponse:
         end_time,
     )
 
-    try:
-        # Get interval pool from entry runtime_data (one pool per config entry)
-        pool = entry.runtime_data.interval_pool
+    # Get interval pool from entry runtime_data (one pool per config entry)
+    pool = entry.runtime_data.interval_pool
 
-        # Call the interval pool to get intervals (with intelligent caching)
-        # Single-home architecture: pool knows its home_id, no parameter needed
-        price_info, _api_called = await pool.get_intervals(
-            api_client=api_client,
-            user_data=user_data,
-            start_time=start_time,
-            end_time=end_time,
-        )
-        # Note: We ignore api_called flag here - service always returns requested data
-        # regardless of whether it came from cache or was fetched fresh from API
+    # Resilient fetch: never impairs sensors, returns empty result on API failure
+    # instead of raising. Single-home architecture: pool knows its home_id.
+    price_info, fetch_ok = await async_fetch_service_intervals(
+        pool,
+        api_client=api_client,
+        user_data=user_data,
+        start_time=start_time,
+        end_time=end_time,
+        service_label="get_price",
+    )
 
-    except Exception as error:
-        _LOGGER.exception("Error fetching price data")
-        raise ServiceValidationError(
-            translation_domain=DOMAIN,
-            translation_key="price_fetch_failed",
-        ) from error
-
-    else:
-        # Add metadata to response
+    if not fetch_ok:
+        # Price data could not be fetched (API outage on an uncached range). Return a
+        # well-formed empty response with success=False so automations can detect this
+        # without inspecting the data fields.
         response = {
+            "success": False,
+            "reason": "price_data_unavailable",
             "home_id": home_id,
             "start_time": start_time.isoformat(),
             "end_time": end_time.isoformat(),
-            "interval_count": len(price_info),
-            "price_info": price_info,
+            "interval_count": 0,
+            "price_info": [],
         }
-
-        _LOGGER.info(
-            "get_price service completed: fetched %d intervals",
-            len(price_info),
-        )
-
         if resolved_refs:
             response["_resolved"] = resolved_refs
-
+        _LOGGER.info("get_price service completed: price data unavailable")
         return response
+
+    # Add metadata to response
+    response = {
+        "success": True,
+        "home_id": home_id,
+        "start_time": start_time.isoformat(),
+        "end_time": end_time.isoformat(),
+        "interval_count": len(price_info),
+        "price_info": price_info,
+    }
+
+    _LOGGER.info(
+        "get_price service completed: fetched %d intervals",
+        len(price_info),
+    )
+
+    if resolved_refs:
+        response["_resolved"] = resolved_refs
+
+    return response

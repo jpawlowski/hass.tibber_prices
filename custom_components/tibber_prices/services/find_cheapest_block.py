@@ -30,6 +30,7 @@ from .helpers import (
     PRICE_LEVEL_ORDER,
     VALID_SEARCH_SCOPES,
     apply_must_finish_by,
+    async_fetch_service_intervals,
     build_rating_lookup,
     build_response_interval,
     calculate_search_range_avg,
@@ -310,24 +311,41 @@ async def _handle_find_block(
     user_data = coordinator._cached_user_data  # noqa: SLF001
     pool = entry.runtime_data.interval_pool
 
-    try:
-        price_info, _api_called = await pool.get_intervals(
-            api_client=api_client,
-            user_data=user_data,
-            start_time=search_start,
-            end_time=search_end,
-        )
-    except Exception as error:
-        _LOGGER.exception("Error fetching price data for %s", service_label)
-        raise ServiceValidationError(
-            translation_domain=DOMAIN,
-            translation_key="price_fetch_failed",
-        ) from error
+    price_info, fetch_ok = await async_fetch_service_intervals(
+        pool,
+        api_client=api_client,
+        user_data=user_data,
+        start_time=search_start,
+        end_time=search_end,
+        service_label=service_label,
+    )
 
     # Determine currency and unit
     currency = entry.data.get("currency", "EUR")
     unit_factor = 1 if use_base_unit else get_display_unit_factor(entry)
     price_unit = f"{currency}/kWh" if use_base_unit else get_display_unit_string(entry, currency)
+
+    if not fetch_ok:
+        # Price data unavailable (API outage on uncached range). Return a well-formed
+        # empty response with success=False so automations can detect this directly.
+        unavailable: dict[str, Any] = {
+            "success": False,
+            "reason": "price_data_unavailable",
+            "home_id": home_id,
+            "search_start": search_start.isoformat(),
+            "search_end": search_end.isoformat(),
+            "must_finish_by": must_finish_by_dt.isoformat() if must_finish_by_dt else None,
+            "duration_minutes_requested": duration_minutes_requested,
+            "duration_minutes": duration_minutes_requested,
+            "currency": currency,
+            "price_unit": price_unit,
+            "window_found": False,
+            "relaxation_applied": False,
+            "window": None,
+        }
+        if resolved_refs:
+            unavailable["_resolved"] = resolved_refs
+        return unavailable
 
     # --- Attempt with original parameters ---
     effective_duration = duration_intervals
@@ -393,6 +411,7 @@ async def _handle_find_block(
             len(price_info),
         )
         response: dict[str, Any] = {
+            "success": True,
             "home_id": home_id,
             "search_start": search_start.isoformat(),
             "search_end": search_end.isoformat(),
@@ -452,6 +471,7 @@ async def _handle_find_block(
     seconds_until_end = max(0, int((end_time_dt - now).total_seconds()))
 
     response = {
+        "success": True,
         "home_id": home_id,
         "search_start": search_start.isoformat(),
         "search_end": search_end.isoformat(),

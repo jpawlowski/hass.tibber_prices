@@ -31,8 +31,13 @@ Used by:
 from __future__ import annotations
 
 from datetime import datetime, time as dt_time, timedelta
+import logging
 from typing import TYPE_CHECKING, Any
 
+from custom_components.tibber_prices.api.exceptions import (
+    TibberPricesApiClientAuthenticationError,
+    TibberPricesApiClientError,
+)
 from custom_components.tibber_prices.const import DOMAIN
 from custom_components.tibber_prices.coordinator.helpers import get_intervals_for_day_offsets
 from homeassistant.exceptions import ServiceValidationError
@@ -42,7 +47,10 @@ if TYPE_CHECKING:
     from zoneinfo import ZoneInfo
 
     from custom_components.tibber_prices.coordinator import TibberPricesDataUpdateCoordinator
+    from custom_components.tibber_prices.interval_pool import TibberPricesIntervalPool
     from homeassistant.core import HomeAssistant
+
+_LOGGER = logging.getLogger(__name__)
 
 # Interval duration in minutes (quarter-hourly resolution)
 INTERVAL_MINUTES = 15
@@ -257,6 +265,69 @@ def get_entry_and_data(hass: HomeAssistant, entry_id: str) -> tuple[Any, Any, di
     coordinator = entry.runtime_data.coordinator
     data = coordinator.data or {}
     return entry, coordinator, data
+
+
+async def async_fetch_service_intervals(
+    pool: TibberPricesIntervalPool,
+    *,
+    api_client: Any,
+    user_data: dict[str, Any] | None,
+    start_time: datetime,
+    end_time: datetime,
+    service_label: str,
+) -> tuple[list[dict[str, Any]], bool]:
+    """
+    Fetch price intervals for a service request resiliently.
+
+    Shared, resilient wrapper around the interval pool used by every price-query
+    service. It guarantees two things the raw pool call does not:
+
+    1. Sensor isolation: passes track_degraded=False so a service request can never
+       flip the pool's degraded-state flags (which govern sensor availability). A
+       failing or succeeding service fetch therefore has zero effect on sensor health.
+    2. Graceful failure: on a transient API/data error the helper returns
+       ([], False) instead of raising, so the service can still return a well-formed
+       response (possibly with empty contents) for automations to consume.
+
+    Authentication errors are re-raised unchanged so the coordinator can trigger the
+    reauth flow.
+
+    Args:
+        pool: The config entry's interval pool.
+        api_client: TibberPricesApiClient instance.
+        user_data: Cached user data dict (may be None during early setup).
+        start_time: Start of range (inclusive, timezone-aware).
+        end_time: End of range (exclusive, timezone-aware).
+        service_label: Human-readable service name for logging.
+
+    Returns:
+        Tuple of (intervals, fetch_ok):
+        - intervals: Price intervals for the range. Empty list on failure.
+        - fetch_ok: True if the data was available, False if an API error
+          prevented fetching the requested (uncached) range.
+
+    Raises:
+        TibberPricesApiClientAuthenticationError: If authentication failed.
+
+    """
+    try:
+        intervals, _api_called = await pool.get_intervals(
+            api_client=api_client,
+            user_data=user_data or {},
+            start_time=start_time,
+            end_time=end_time,
+            track_degraded=False,
+        )
+    except TibberPricesApiClientAuthenticationError:
+        raise
+    except TibberPricesApiClientError as err:
+        _LOGGER.warning(
+            "%s: price data unavailable (%s) - returning empty result so sensors stay unaffected",
+            service_label,
+            err,
+        )
+        return [], False
+    return intervals, True
 
 
 def has_tomorrow_data(coordinator: TibberPricesDataUpdateCoordinator) -> bool:

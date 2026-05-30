@@ -39,6 +39,7 @@ from .helpers import (
     PRICE_LEVEL_ORDER,
     VALID_SEARCH_SCOPES,
     apply_must_finish_by,
+    async_fetch_service_intervals,
     build_rating_lookup,
     build_response_interval,
     calculate_search_range_avg,
@@ -660,6 +661,7 @@ async def handle_plan_charging(call: ServiceCall) -> ServiceResponse:
         currency = entry.data.get("currency", "EUR")
         price_unit = f"{currency}/kWh" if use_base_unit else get_display_unit_string(entry, currency)
         response: dict[str, Any] = {
+            "success": True,
             "home_id": entry.data.get("home_id", ""),
             "intervals_found": False,
             "reason": "already_at_target",
@@ -742,19 +744,45 @@ async def handle_plan_charging(call: ServiceCall) -> ServiceResponse:
     api_client = coordinator.api
     user_data = coordinator._cached_user_data  # noqa: SLF001
     pool = entry.runtime_data.interval_pool
-    try:
-        price_info, _api_called = await pool.get_intervals(
-            api_client=api_client,
-            user_data=user_data,
-            start_time=search_start,
-            end_time=search_end,
-        )
-    except Exception as error:
-        _LOGGER.exception("Error fetching price data for %s", PLAN_CHARGING_SERVICE_NAME)
-        raise ServiceValidationError(
-            translation_domain=DOMAIN,
-            translation_key="price_fetch_failed",
-        ) from error
+    price_info, fetch_ok = await async_fetch_service_intervals(
+        pool,
+        api_client=api_client,
+        user_data=user_data,
+        start_time=search_start,
+        end_time=search_end,
+        service_label=PLAN_CHARGING_SERVICE_NAME,
+    )
+
+    if not fetch_ok:
+        # Price data unavailable (API outage on uncached range). Return a well-formed
+        # empty response with success=False so automations can detect this directly.
+        unavailable: dict[str, Any] = {
+            "success": False,
+            "reason": "price_data_unavailable",
+            "home_id": home_id,
+            "search_start": search_start.isoformat(),
+            "search_end": search_end.isoformat(),
+            "must_finish_by": must_finish_by_dt.isoformat() if must_finish_by_dt else None,
+            "intervals_found": False,
+            "battery": _build_battery_info(
+                current_soc_kwh=current_soc_kwh,
+                target_soc_kwh=target_soc_kwh,
+                capacity_kwh=capacity_kwh,
+                requested_energy_needed_kwh=requested_energy_needed_grid_kwh,
+                charging_efficiency=charging_efficiency,
+                achieved_soc_kwh=current_soc_kwh,
+                must_reach_soc_kwh=must_reach_soc_kwh,
+            ),
+            "charging": None,
+            "deadline": {"must_reach_by": deadline.isoformat(), "source": deadline_source} if deadline else None,
+            "economics": None,
+            "currency": currency,
+            "price_unit": price_unit,
+            "relaxation_applied": False,
+        }
+        if resolved_refs:
+            unavailable["_resolved"] = resolved_refs
+        return unavailable
 
     plan_ctx = _PlanContext(
         price_info=price_info,
@@ -824,6 +852,7 @@ async def handle_plan_charging(call: ServiceCall) -> ServiceResponse:
 
     if planning_result is None:
         response: dict[str, Any] = {
+            "success": True,
             "home_id": home_id,
             "search_start": search_start.isoformat(),
             "search_end": search_end.isoformat(),
@@ -930,6 +959,7 @@ async def handle_plan_charging(call: ServiceCall) -> ServiceResponse:
             )
 
     response: dict[str, Any] = {
+        "success": True,
         "home_id": home_id,
         "search_start": search_start.isoformat(),
         "search_end": search_end.isoformat(),
