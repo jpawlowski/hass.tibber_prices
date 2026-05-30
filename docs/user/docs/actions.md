@@ -32,6 +32,10 @@ If you have configured more than one Tibber home, each home has its own config e
 
 ### Scheduling Actions
 
+:::warning Experimental
+The scheduling actions and `plan_charging` are **experimental** and still undergoing testing. Their parameters and response formats may change in future releases. Use them with care and [report issues](https://github.com/jpawlowski/hass.tibber_prices/issues).
+:::
+
 Find the cheapest (or most expensive) time windows for your appliances. Ideal for automating when to run devices based on real price data.
 
 | Action | Description | Best For |

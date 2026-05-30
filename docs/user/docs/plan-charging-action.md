@@ -2,6 +2,10 @@
 
 The `plan_charging` action turns **battery parameters** into a complete **cost-minimized charging schedule**. Instead of manually computing energy, duration, and power, you describe the battery (capacity, current SoC, target SoC, max power) and the action returns a per-interval plan with SoC progression, cost totals, and segment grouping.
 
+:::warning Experimental
+The `plan_charging` action is **experimental** and still undergoing testing. Its parameters, response format, and behavior may change in future releases. Use it in automations with care, and please [report any issues](https://github.com/jpawlowski/hass.tibber_prices/issues).
+:::
+
 :::tip When to use this
 If you already know the duration in minutes and just need the cheapest time window, use [`find_cheapest_hours`](scheduling-actions.md#find-cheapest-hours) or [`find_cheapest_block`](scheduling-actions.md#find-cheapest-block). Use `plan_charging` when you know your battery/EV parameters and want the integration to compute the duration, account for charging losses, and produce a SoC progression.
 :::

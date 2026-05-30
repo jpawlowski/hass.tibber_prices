@@ -68,6 +68,7 @@ response_variable: chart_data
 | `day`            | Days to include: yesterday, today, tomorrow | `["today", "tomorrow"]` |
 | `output_format`  | `array_of_objects` or `array_of_arrays`     | `array_of_objects`      |
 | `resolution`     | `interval` (15-min) or `hourly`             | `interval`              |
+| `price_source`   | Primary price series: `total`, `energy`, or `tax` | `total`           |
 | `subunit_currency` | Override display mode: `true` for subunit (ct/øre), `false` for base (€/kr) | Integration setting |
 | `round_decimals` | Decimal places (0-10)                       | 2 (subunit) or 4 (base) |
 
@@ -134,6 +135,39 @@ data:
 **Complete Documentation:**
 
 For detailed parameter descriptions, open **Developer Tools → Actions** and select `tibber_prices.get_chartdata`. The inline documentation is stored in `services.yaml` because actions are backed by services.
+
+### Price Source (`price_source`)
+
+By default, charts use the **total** price (energy + taxes + fees) as the main price series. With `price_source` you can switch the **primary** value to a single component instead:
+
+| Value | Main price series |
+|-------|-------------------|
+| `total` (default) | Full price including energy, taxes, and fees |
+| `energy` | Raw spot/energy price only (excluding taxes and fees) |
+| `tax` | Tax and fee component only |
+
+<details>
+<summary>Show YAML: Chart based on the raw energy price</summary>
+
+```yaml
+service: tibber_prices.get_chartdata
+data:
+    entry_id: YOUR_CONFIG_ENTRY_ID
+    day: ["today", "tomorrow"]
+    price_source: energy # main price = spot price only
+response_variable: chart_data
+```
+
+</details>
+
+:::tip `price_source` vs. `include_energy` / `include_tax`
+These solve different problems:
+
+- **`price_source`** changes *which* component becomes the **main** price value (one series).
+- **`include_energy` / `include_tax`** (see below) keep the total price as main value but **add extra fields** so you can show energy and tax **alongside** the total in the same chart.
+:::
+
+This parameter also applies to [`get_apexcharts_yaml`](#tibber_pricesget_apexcharts_yaml).
 
 ### Energy & Tax Fields
 
@@ -290,6 +324,10 @@ card:
 
 - **`rating_level`** (default): 3 series (LOW, NORMAL, HIGH) - based on your personal thresholds
 - **`level`**: 5 series (VERY_CHEAP, CHEAP, NORMAL, EXPENSIVE, VERY_EXPENSIVE) - absolute price ranges
+
+**Price Source Option:**
+
+Like `get_chartdata`, this action accepts a `price_source` parameter (`total`, `energy`, or `tax`) to choose which price component the generated chart plots. Defaults to `total`. See [Price Source](#price-source-price_source) above for details.
 
 **Best Price Period Highlights:**
 

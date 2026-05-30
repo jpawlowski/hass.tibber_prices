@@ -2,6 +2,10 @@
 
 Find the cheapest (or most expensive) time windows for your appliances — automatically. These actions analyze real Tibber price data and return optimal scheduling recommendations.
 
+:::warning Experimental
+The scheduling actions (`find_cheapest_block`, `find_cheapest_hours`, `find_cheapest_schedule`, `find_most_expensive_block`, `find_most_expensive_hours`) are **experimental** and still undergoing testing. Their parameters, response formats, and behavior may change in future releases. Use them in automations with care, and please [report any issues](https://github.com/jpawlowski/hass.tibber_prices/issues).
+:::
+
 :::tip Entity ID tip
 `<home_name>` is a placeholder for your Tibber home display name in Home Assistant. Entity IDs are derived from the displayed name (localized), so the exact slug may differ. **Can't find a sensor?** Use the **[Entity Reference (All Languages)](sensor-reference.md)** to search by name in your language.
 :::

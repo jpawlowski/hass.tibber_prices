@@ -97,7 +97,7 @@ Both shapes are reported as **`valley`** by the [Day Pattern sensor](sensors-pri
 
 **Why this matters:** On these days, the Best Price Period may be short (1–2 hours, covering only the absolute minimum), but prices can remain favorable for 4–6 hours. By combining [trend sensors](sensors-trends.md) with [price levels](sensors-ratings-levels.md) in automations, you can ride the full cheap wave instead of only using the detected period.
 
-See [Automation Examples → V-Shaped Days](automation-examples.md#understanding-v-shaped-price-days) for practical patterns.
+See [Automation Examples → Heat Pump Smart Boost](automation-examples.md#heat-pump-smart-boost-with-trend-awareness) for practical patterns.
 
 ## Multi-Home Support
 

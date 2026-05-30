@@ -96,7 +96,7 @@ A Best Price Period is the **cheapest contiguous block** of time — a stretch o
 
 On a V-shaped day (prices drop sharply to a minimum, then rise again), the period therefore starts **at** the low point, not before it — because the intervals leading up to the minimum did not yet meet the price criteria. Only the intervals near the bottom of the V qualify as a coherent cheap block.
 
-**For flexible loads** (e.g., heat pump, battery charging): you can easily ride the full cheap wave by combining the period sensor with the price level and trend sensors. See [V-Shaped Price Days in Automation Examples](./automation-examples.md#understanding-v-shaped-price-days).
+**For flexible loads** (e.g., heat pump, battery charging): you can easily ride the full cheap wave by combining the period sensor with the price level and trend sensors. See [Heat Pump Smart Boost in Automation Examples](./automation-examples.md#heat-pump-smart-boost-with-trend-awareness).
 :::
 
 ### Algorithm Overview
@@ -586,7 +586,7 @@ As described in [Phase 6](#phase-6-relaxation-adaptive), relaxation automaticall
 ## Common Scenarios
 
 :::tip V-shaped price days
-On days with a sharp price dip (e.g. solar midday surplus), the Best Price Period covers only the absolute minimum. The surrounding cheap hours are intentional — the integration shows you the cheapest contiguous block, not a fixed-length window centered on the minimum. To run a device during the full cheap window, see [Understanding V-Shaped Price Days](./automation-examples.md#understanding-v-shaped-price-days) in the Automation Examples.
+On days with a sharp price dip (e.g. solar midday surplus), the Best Price Period covers only the absolute minimum. The surrounding cheap hours are intentional — the integration shows you the cheapest contiguous block, not a fixed-length window centered on the minimum. To run a device during the full cheap window, see [Heat Pump Smart Boost](./automation-examples.md#heat-pump-smart-boost-with-trend-awareness) in the Automation Examples.
 :::
 
 ### Scenario 1: Simple Best Price (Default)
