@@ -267,8 +267,11 @@ async def _handle_find_block(
     # Round up to nearest quarter-hour interval
     duration_minutes = math.ceil(duration_minutes_requested / INTERVAL_MINUTES) * INTERVAL_MINUTES
 
-    entry, coordinator, data = get_entry_and_data(hass, entry_id)
-    rating_lookup = build_rating_lookup(data)
+    # Note: rebind to coordinator_data — `data` (the resolved service call
+    # data) is still needed below for validate_search_params() and
+    # apply_must_finish_by(), which read search-range parameters from it.
+    entry, coordinator, coordinator_data = get_entry_and_data(hass, entry_id)
+    rating_lookup = build_rating_lookup(coordinator_data)
 
     home_id = entry.data.get("home_id")
     if not home_id:
