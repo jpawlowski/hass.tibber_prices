@@ -5,4 +5,4 @@ ruff>=0.15.15,<0.16.0
 zlib_ng>=1.0.0,<1.1.0
 isal>=1.8.0,<1.9.0
 # Must match HA_VERSION in scripts/setup/bootstrap exactly (1:1 mapping)
-pytest-homeassistant-custom-component==0.13.322
+pytest-homeassistant-custom-component==0.13.325
