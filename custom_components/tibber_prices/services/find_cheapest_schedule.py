@@ -406,8 +406,8 @@ async def handle_find_cheapest_schedule(call: ServiceCall) -> ServiceResponse:
     # Round gap up to nearest quarter interval
     gap_intervals = math.ceil(gap_minutes / INTERVAL_MINUTES) if gap_minutes > 0 else 0
 
-    entry, coordinator, data = get_entry_and_data(hass, entry_id)
-    rating_lookup = build_rating_lookup(data)
+    entry, coordinator, coordinator_data = get_entry_and_data(hass, entry_id)
+    rating_lookup = build_rating_lookup(coordinator_data)
 
     home_id = entry.data.get("home_id")
     if not home_id:
