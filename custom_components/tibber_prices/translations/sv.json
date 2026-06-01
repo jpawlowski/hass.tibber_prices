@@ -1271,7 +1271,7 @@
       "message": "array_fields kan bara användas med output_format: array_of_arrays. Ändra utdataformatet eller ta bort array_fields."
     },
     "invalid_array_fields": {
-      "message": "Värdet {template} för array_fields är ogiltigt. Fältnamn måste omges av klammerparenteser, t.ex. '{start_time}, {price_per_kwh}, {level}'."
+      "message": "Värdet {template} för array_fields är ogiltigt. Fältnamn måste omges av klammerparenteser, t.ex. {start_time}, {price_per_kwh}, {level}."
     },
     "min_segment_exceeds_duration": {
       "message": "min_segment_duration ({min_segment_minutes} min) får inte överstiga den totala varaktigheten ({duration_minutes} min). Minska min_segment_duration eller öka duration."
@@ -1298,19 +1298,19 @@
       "message": "must_finish_by kan inte kombineras med slutgränsparametrar ({params}). Använd must_finish_by ensamt — det sätter sökslutet till deadline automatiskt."
     },
     "invalid_entity_reference": {
-      "message": "'{reference}' är inte en giltig entitetsreferens. Använd formatet 'domain.entity_id' eller 'domain.entity_id@attribut'."
+      "message": "{reference} är inte en giltig entitetsreferens. Använd formatet 'domain.entity_id' eller 'domain.entity_id@attribut'."
     },
     "entity_not_found": {
-      "message": "Entitet '{entity_id}' hittades inte. Kontrollera att entiteten finns och är tillgänglig."
+      "message": "Entitet {entity_id} hittades inte. Kontrollera att entiteten finns och är tillgänglig."
     },
     "entity_attribute_not_found": {
       "message": "Entitet {entity_id} har inte attributet {attribute}."
     },
     "entity_state_unavailable": {
-      "message": "Entitet '{entity_id}' har tillståndet '{state}'. Entiteten måste ha ett giltigt tillståndsvärde."
+      "message": "Entitet {entity_id} har tillståndet {state}. Entiteten måste ha ett giltigt tillståndsvärde."
     },
     "entity_value_conversion_failed": {
-      "message": "Kan inte konvertera värdet '{raw_value}' från '{entity_id}' ({attribute}) till {expected_type}. Kontrollera att entiteten ger ett kompatibelt värde."
+      "message": "Kan inte konvertera värdet {raw_value} från {entity_id} ({attribute}) till {expected_type}. Kontrollera att entiteten ger ett kompatibelt värde."
     },
     "capacity_required_for_percent": {
       "message": "battery_capacity_kwh krävs när nuvarande eller mål-SoC anges i procent."

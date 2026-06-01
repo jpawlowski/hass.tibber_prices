@@ -1271,7 +1271,7 @@
       "message": "array_fields kann nur mit output_format: array_of_arrays verwendet werden. Ändere das Ausgabeformat oder entferne array_fields."
     },
     "invalid_array_fields": {
-      "message": "Der Wert {template} für array_fields ist ungültig. Feldnamen müssen in geschweifte Klammern eingeschlossen sein, z.B. '{start_time}, {price_per_kwh}, {level}'."
+      "message": "Der Wert {template} für array_fields ist ungültig. Feldnamen müssen in geschweifte Klammern eingeschlossen sein, z.B. {start_time}, {price_per_kwh}, {level}."
     },
     "min_segment_exceeds_duration": {
       "message": "min_segment_duration ({min_segment_minutes} Min.) darf die Gesamtdauer ({duration_minutes} Min.) nicht überschreiten. Reduziere min_segment_duration oder erhöhe duration."
@@ -1298,19 +1298,19 @@
       "message": "must_finish_by kann nicht mit Endgrenz-Parametern ({params}) kombiniert werden. Verwende must_finish_by allein — es setzt das Suchende automatisch auf die Deadline."
     },
     "invalid_entity_reference": {
-      "message": "'{reference}' ist keine gültige Entity-Referenz. Verwende das Format 'domain.entity_id' oder 'domain.entity_id@attribut'."
+      "message": "{reference} ist keine gültige Entity-Referenz. Verwende das Format 'domain.entity_id' oder 'domain.entity_id@attribut'."
     },
     "entity_not_found": {
-      "message": "Entity '{entity_id}' nicht gefunden. Überprüfe, ob die Entity existiert und verfügbar ist."
+      "message": "Entity {entity_id} nicht gefunden. Überprüfe, ob die Entity existiert und verfügbar ist."
     },
     "entity_attribute_not_found": {
       "message": "Entity {entity_id} hat kein Attribut {attribute}."
     },
     "entity_state_unavailable": {
-      "message": "Entity '{entity_id}' hat den Status '{state}'. Die Entity muss einen gültigen Statuswert haben."
+      "message": "Entity {entity_id} hat den Status {state}. Die Entity muss einen gültigen Statuswert haben."
     },
     "entity_value_conversion_failed": {
-      "message": "Wert '{raw_value}' von '{entity_id}' ({attribute}) kann nicht in {expected_type} konvertiert werden. Überprüfe, ob die Entity einen kompatiblen Wert liefert."
+      "message": "Wert {raw_value} von {entity_id} ({attribute}) kann nicht in {expected_type} konvertiert werden. Überprüfe, ob die Entity einen kompatiblen Wert liefert."
     },
     "capacity_required_for_percent": {
       "message": "battery_capacity_kwh ist erforderlich, wenn der aktuelle oder Ziel-SoC in Prozent angegeben wird."

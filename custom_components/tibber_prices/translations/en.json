@@ -1271,7 +1271,7 @@
       "message": "array_fields can only be used with output_format: array_of_arrays. Change the output format or remove array_fields."
     },
     "invalid_array_fields": {
-      "message": "The array_fields value {template} is invalid. Field names must be wrapped in curly braces, e.g. '{start_time}, {price_per_kwh}, {level}'."
+      "message": "The array_fields value {template} is invalid. Field names must be wrapped in curly braces, e.g. {start_time}, {price_per_kwh}, {level}."
     },
     "min_segment_exceeds_duration": {
       "message": "min_segment_duration ({min_segment_minutes} min) cannot exceed the total duration ({duration_minutes} min). Reduce min_segment_duration or increase duration."
@@ -1298,19 +1298,19 @@
       "message": "must_finish_by cannot be combined with end-boundary parameters ({params}). Use must_finish_by alone — it sets the search end to the deadline automatically."
     },
     "invalid_entity_reference": {
-      "message": "'{reference}' is not a valid entity reference. Use the format 'domain.entity_id' or 'domain.entity_id@attribute'."
+      "message": "{reference} is not a valid entity reference. Use the format 'domain.entity_id' or 'domain.entity_id@attribute'."
     },
     "entity_not_found": {
-      "message": "Entity '{entity_id}' not found. Verify the entity exists and is available."
+      "message": "Entity {entity_id} not found. Verify the entity exists and is available."
     },
     "entity_attribute_not_found": {
       "message": "Entity {entity_id} does not have attribute {attribute}."
     },
     "entity_state_unavailable": {
-      "message": "Entity '{entity_id}' state is '{state}'. The entity must have a valid state value."
+      "message": "Entity {entity_id} state is {state}. The entity must have a valid state value."
     },
     "entity_value_conversion_failed": {
-      "message": "Cannot convert value '{raw_value}' from '{entity_id}' ({attribute}) to {expected_type}. Verify the entity provides a compatible value."
+      "message": "Cannot convert value {raw_value} from {entity_id} ({attribute}) to {expected_type}. Verify the entity provides a compatible value."
     },
     "capacity_required_for_percent": {
       "message": "battery_capacity_kwh is required when current or target SoC is provided as a percentage."

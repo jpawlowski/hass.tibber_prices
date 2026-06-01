@@ -1271,7 +1271,7 @@
       "message": "array_fields kan alleen gebruikt worden met output_format: array_of_arrays. Wijzig het uitvoerformaat of verwijder array_fields."
     },
     "invalid_array_fields": {
-      "message": "De waarde {template} voor array_fields is ongeldig. Veldnamen moeten tussen accolades staan, bijv. '{start_time}, {price_per_kwh}, {level}'."
+      "message": "De waarde {template} voor array_fields is ongeldig. Veldnamen moeten tussen accolades staan, bijv. {start_time}, {price_per_kwh}, {level}."
     },
     "min_segment_exceeds_duration": {
       "message": "min_segment_duration ({min_segment_minutes} min) mag de totale duur ({duration_minutes} min) niet overschrijden. Verklein min_segment_duration of vergroot duration."
@@ -1298,19 +1298,19 @@
       "message": "must_finish_by kan niet worden gecombineerd met eindgrensparameters ({params}). Gebruik must_finish_by alleen — het stelt het zoekeinde automatisch in op de deadline."
     },
     "invalid_entity_reference": {
-      "message": "'{reference}' is geen geldige entiteitsreferentie. Gebruik het formaat 'domain.entity_id' of 'domain.entity_id@attribuut'."
+      "message": "{reference} is geen geldige entiteitsreferentie. Gebruik het formaat 'domain.entity_id' of 'domain.entity_id@attribuut'."
     },
     "entity_not_found": {
-      "message": "Entiteit '{entity_id}' niet gevonden. Controleer of de entiteit bestaat en beschikbaar is."
+      "message": "Entiteit {entity_id} niet gevonden. Controleer of de entiteit bestaat en beschikbaar is."
     },
     "entity_attribute_not_found": {
       "message": "Entiteit {entity_id} heeft geen attribuut {attribute}."
     },
     "entity_state_unavailable": {
-      "message": "Entiteit '{entity_id}' heeft status '{state}'. De entiteit moet een geldige statuswaarde hebben."
+      "message": "Entiteit {entity_id} heeft status {state}. De entiteit moet een geldige statuswaarde hebben."
     },
     "entity_value_conversion_failed": {
-      "message": "Kan waarde '{raw_value}' van '{entity_id}' ({attribute}) niet converteren naar {expected_type}. Controleer of de entiteit een compatibele waarde biedt."
+      "message": "Kan waarde {raw_value} van {entity_id} ({attribute}) niet converteren naar {expected_type}. Controleer of de entiteit een compatibele waarde biedt."
     },
     "capacity_required_for_percent": {
       "message": "battery_capacity_kwh is vereist wanneer huidige of doel-SoC in procenten wordt opgegeven."
