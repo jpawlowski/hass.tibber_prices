@@ -297,3 +297,107 @@ async def test_schedule_handler_adds_per_task_comparison_details(monkeypatch: py
     assert "comparison_price_min" in comparison
     assert "comparison_price_max" in comparison
     assert "comparison_window_end" in comparison
+
+
+@pytest.mark.asyncio
+async def test_block_handler_preserves_service_search_data(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Block handler must pass resolved call data (not coordinator data) into search helpers."""
+    intervals = _make_intervals([10.0, 11.0, 12.0, 13.0])
+    fake_tuple = _build_fake_entry_and_coordinator(intervals)
+    deadline = datetime(2026, 1, 1, 8, 0, tzinfo=UTC)
+    fixed_start = datetime(2026, 1, 1, 0, 0, tzinfo=UTC)
+
+    monkeypatch.setattr(block_module, "get_entry_and_data", lambda _hass, _entry_id: fake_tuple)
+    monkeypatch.setattr(block_module, "resolve_home_timezone", lambda _coord, _home_id: "UTC")
+
+    def _validate_search_params(call_data: dict[str, Any]) -> None:
+        assert call_data["must_finish_by"] == deadline
+        assert call_data["include_current_interval"] is False
+
+    def _apply_must_finish_by(call_data: dict[str, Any], _home_tz: Any) -> tuple[dict[str, Any], datetime]:
+        assert call_data["must_finish_by"] == deadline
+        modified = dict(call_data)
+        modified["search_end"] = deadline
+        modified.pop("must_finish_by", None)
+        return modified, deadline
+
+    def _resolve_search_range(call_data: dict[str, Any], _now: datetime, _home_tz: Any) -> tuple[datetime, datetime]:
+        assert call_data["include_current_interval"] is False
+        assert call_data["search_end"] == deadline
+        return fixed_start, deadline
+
+    async def _fetch_intervals(*_args: Any, **_kwargs: Any) -> tuple[list[dict[str, Any]], bool]:
+        return [], False
+
+    monkeypatch.setattr(block_module, "validate_search_params", _validate_search_params)
+    monkeypatch.setattr(block_module, "apply_must_finish_by", _apply_must_finish_by)
+    monkeypatch.setattr(block_module, "resolve_search_range", _resolve_search_range)
+    monkeypatch.setattr(block_module, "async_fetch_service_intervals", _fetch_intervals)
+
+    call = SimpleNamespace(
+        hass=object(),
+        data={
+            "duration": timedelta(hours=1),
+            "use_base_unit": True,
+            "must_finish_by": deadline,
+            "include_current_interval": False,
+        },
+    )
+
+    response = cast("dict[str, Any]", await handle_find_cheapest_block(cast("ServiceCall", call)))
+    assert response["success"] is False
+    assert response["search_start"] == fixed_start.isoformat()
+    assert response["search_end"] == deadline.isoformat()
+    assert response["must_finish_by"] == deadline.isoformat()
+
+
+@pytest.mark.asyncio
+async def test_hours_handler_preserves_service_search_data(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Hours handler must pass resolved call data (not coordinator data) into search helpers."""
+    intervals = _make_intervals([10.0, 11.0, 12.0, 13.0])
+    fake_tuple = _build_fake_entry_and_coordinator(intervals)
+    deadline = datetime(2026, 1, 1, 8, 0, tzinfo=UTC)
+    fixed_start = datetime(2026, 1, 1, 0, 0, tzinfo=UTC)
+
+    monkeypatch.setattr(hours_module, "get_entry_and_data", lambda _hass, _entry_id: fake_tuple)
+    monkeypatch.setattr(hours_module, "resolve_home_timezone", lambda _coord, _home_id: "UTC")
+
+    def _validate_search_params(call_data: dict[str, Any]) -> None:
+        assert call_data["must_finish_by"] == deadline
+        assert call_data["include_current_interval"] is False
+
+    def _apply_must_finish_by(call_data: dict[str, Any], _home_tz: Any) -> tuple[dict[str, Any], datetime]:
+        assert call_data["must_finish_by"] == deadline
+        modified = dict(call_data)
+        modified["search_end"] = deadline
+        modified.pop("must_finish_by", None)
+        return modified, deadline
+
+    def _resolve_search_range(call_data: dict[str, Any], _now: datetime, _home_tz: Any) -> tuple[datetime, datetime]:
+        assert call_data["include_current_interval"] is False
+        assert call_data["search_end"] == deadline
+        return fixed_start, deadline
+
+    async def _fetch_intervals(*_args: Any, **_kwargs: Any) -> tuple[list[dict[str, Any]], bool]:
+        return [], False
+
+    monkeypatch.setattr(hours_module, "validate_search_params", _validate_search_params)
+    monkeypatch.setattr(hours_module, "apply_must_finish_by", _apply_must_finish_by)
+    monkeypatch.setattr(hours_module, "resolve_search_range", _resolve_search_range)
+    monkeypatch.setattr(hours_module, "async_fetch_service_intervals", _fetch_intervals)
+
+    call = SimpleNamespace(
+        hass=object(),
+        data={
+            "duration": timedelta(hours=1),
+            "use_base_unit": True,
+            "must_finish_by": deadline,
+            "include_current_interval": False,
+        },
+    )
+
+    response = cast("dict[str, Any]", await handle_find_cheapest_hours(cast("ServiceCall", call)))
+    assert response["success"] is False
+    assert response["search_start"] == fixed_start.isoformat()
+    assert response["search_end"] == deadline.isoformat()
+    assert response["must_finish_by"] == deadline.isoformat()
