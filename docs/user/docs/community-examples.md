@@ -12,7 +12,7 @@ This page collects **real-world examples** contributed by the community — temp
 
 ## Country-Specific Price Calculations
 
-The Tibber API provides the raw spot price (`energy_price` attribute) and tax/fee component (`tax` attribute) on every price sensor. Since the exact composition of `tax` varies by country, you can use these attributes to build **your own** country-specific calculations with Home Assistant templates.
+The Tibber API provides the raw spot price (`energy_price` attribute, in ct/kWh) and tax/fee component (`tax` attribute) on every price sensor. Since the exact composition of `tax` varies by country, you can use these attributes to build **your own** country-specific calculations with Home Assistant templates.
 
 :::tip Why templates instead of built-in calculations?
 Tax rates and energy fees change regularly (often annually). Using `input_number` helpers in Home Assistant keeps your calculations up-to-date with a simple UI adjustment — no integration update needed.
@@ -34,11 +34,11 @@ In the Netherlands, the electricity price paid to consumers includes:
 
 | Component | Dutch Name | Typical Value (2025) |
 |-----------|-----------|---------------------|
-| Spot price | Inkoopprijs | Variable (= `energy_price` attribute) |
+| Spot price | Inkoopprijs | Variable in ct/kWh (= `energy_price` attribute, divide by 100 for €/kWh) |
 | Energy tax | Energiebelasting | ~0.0916 €/kWh (excl. VAT) |
-| VAT | BTW | 21% |
 | Purchase fee | Inkoopvergoeding | ~0.0205 €/kWh |
-| Sales fee | Verkoopvergoeding | ~0.0205 €/kWh |
+| Sales fee | Verkoopvergoeding | ~-0.0205 €/kWh |
+| VAT | BTW | 21% |
 
 :::warning Rates change annually
 The values above are examples. Check [Rijksoverheid.nl](https://www.rijksoverheid.nl/onderwerpen/belastingplan/energiebelasting) for current energy tax rates and your energy contract for purchase/sales fees.
@@ -57,9 +57,13 @@ Create `input_number` helpers in Home Assistant for each fee component. This way
 | Helper | Entity ID | Min | Max | Step | Unit | Example Value |
 |--------|-----------|-----|-----|------|------|---------------|
 | Energiebelasting | `input_number.energiebelasting` | 0 | 1 | 0.0001 | €/kWh | 0.0916 |
-| BTW percentage | `input_number.btw_percentage` | 0 | 100 | 0.01 | % | 21 |
 | Inkoopvergoeding | `input_number.inkoopvergoeding` | 0 | 1 | 0.0001 | €/kWh | 0.0205 |
-| Verkoopvergoeding | `input_number.verkoopvergoeding` | 0 | 1 | 0.0001 | €/kWh | 0.0205 |
+| Verkoopvergoeding | `input_number.verkoopvergoeding` | -1 | 1 | 0.0001 | €/kWh | -0.0205 |
+| BTW percentage | `input_number.btw_percentage` | 0 | 100 | 0.01 | % | 21 |
+
+:::note Signed fee input
+`input_number.verkoopvergoeding` is a signed value in this example, so negative values are allowed. Enter all fee components excluding VAT.
+:::
 
 <details>
 <summary>Show YAML: Input Number Helpers</summary>
@@ -75,13 +79,6 @@ input_number:
         step: 0.0001
         unit_of_measurement: "€/kWh"
         icon: mdi:lightning-bolt
-    btw_percentage:
-        name: BTW Percentage
-        min: 0
-        max: 100
-        step: 0.01
-        unit_of_measurement: "%"
-        icon: mdi:percent
     inkoopvergoeding:
         name: Inkoopvergoeding
         min: 0
@@ -91,11 +88,18 @@ input_number:
         icon: mdi:cash-minus
     verkoopvergoeding:
         name: Verkoopvergoeding
-        min: 0
+        min: -1
         max: 1
         step: 0.0001
         unit_of_measurement: "€/kWh"
         icon: mdi:cash-plus
+    btw_percentage:
+        name: BTW Percentage
+        min: 0
+        max: 100
+        step: 0.01
+        unit_of_measurement: "%"
+        icon: mdi:percent
 ```
 
 </details>
@@ -112,19 +116,21 @@ template:
     - sensor:
           # Feed-in compensation WITH saldering (current rules, until 2027)
           # With saldering, you effectively earn the full consumer price
-          # minus the purchase fee, plus the sales fee.
+          # plus purchase and sales fee components (use negative verkoopvergoeding
+          # to offset inkoopvergoeding when your contract defines it that way).
           - name: "Solar Feed-In Price (with Saldering)"
             unique_id: solar_feed_in_saldering
             unit_of_measurement: "€/kWh"
             device_class: monetary
             state: >
-                {% set energy = state_attr('sensor.<home_name>_current_electricity_price', 'energy_price') %}
+                {% set energy_ct = state_attr('sensor.<home_name>_current_electricity_price', 'energy_price') | float %}
                 {% set eb = states('input_number.energiebelasting') | float %}
-                {% set btw = states('input_number.btw_percentage') | float / 100 %}
                 {% set inkoop = states('input_number.inkoopvergoeding') | float %}
                 {% set verkoop = states('input_number.verkoopvergoeding') | float %}
-                {% if energy is not none %}
-                  {{ ((energy + eb) * (1 + btw) - inkoop + verkoop) | round(4) }}
+                {% set btw = states('input_number.btw_percentage') | float / 100 %}
+                {% if energy_ct is not none %}
+                  {% set energy = energy_ct / 100 %}
+                  {{ ((energy + eb + inkoop + verkoop) * (1 + btw)) | round(4) }}
                 {% else %}
                   unavailable
                 {% endif %}
@@ -132,17 +138,19 @@ template:
 
           # Feed-in compensation WITHOUT saldering (after 2027)
           # Without saldering, you only earn the raw spot price
-          # minus the purchase fee, plus the sales fee.
+          # plus purchase and sales fee components.
           - name: "Solar Feed-In Price (without Saldering)"
             unique_id: solar_feed_in_no_saldering
             unit_of_measurement: "€/kWh"
             device_class: monetary
             state: >
-                {% set energy = state_attr('sensor.<home_name>_current_electricity_price', 'energy_price') %}
+                {% set energy_ct = state_attr('sensor.<home_name>_current_electricity_price', 'energy_price') | float %}
                 {% set inkoop = states('input_number.inkoopvergoeding') | float %}
                 {% set verkoop = states('input_number.verkoopvergoeding') | float %}
-                {% if energy is not none %}
-                  {{ (energy - inkoop + verkoop) | round(4) }}
+                {% set btw = states('input_number.btw_percentage') | float / 100 %}
+                {% if energy_ct is not none %}
+                  {% set energy = energy_ct / 100 %}
+                  {{ ((energy + inkoop + verkoop) * (1 + btw)) | round(4) }}
                 {% else %}
                   unavailable
                 {% endif %}
@@ -199,7 +207,7 @@ entities:
     - type: attribute
       entity: sensor.<home_name>_current_electricity_price
       attribute: energy_price
-      name: "Spot Price (energy)"
+      name: "Spot Price (energy, ct/kWh)"
       icon: mdi:transmission-tower
     - entity: sensor.solar_feed_in_price_with_saldering
       name: "Feed-In with Saldering"
@@ -221,7 +229,7 @@ In Germany, the electricity price includes numerous components bundled into `tax
 
 | Component | German Name | Description |
 |-----------|-----------|-------------|
-| Spot price | Börsenstrompreis | Variable (= `energy_price` attribute) |
+| Spot price | Börsenstrompreis | Variable in ct/kWh (= `energy_price` attribute, divide by 100 for €/kWh) |
 | Grid fees | Netzentgelte | Varies by grid operator |
 | Electricity tax | Stromsteuer | Fixed per kWh |
 | Concession fee | Konzessionsabgabe | Varies by municipality |
@@ -242,9 +250,10 @@ template:
             unique_id: spot_price_share
             unit_of_measurement: "%"
             state: >
-                {% set energy = state_attr('sensor.<home_name>_current_electricity_price', 'energy_price') %}
+                {% set energy_ct = state_attr('sensor.<home_name>_current_electricity_price', 'energy_price') %}
                 {% set total = states('sensor.<home_name>_current_electricity_price') | float %}
-                {% if energy is not none and total > 0 %}
+                {% if energy_ct is not none and total > 0 %}
+                  {% set energy = energy_ct / 100 %}
                   {{ ((energy / total) * 100) | round(1) }}
                 {% else %}
                   unavailable
@@ -258,7 +267,7 @@ template:
 
 ## 🇳🇴 Norway / 🇸🇪 Sweden: Grid & Tax Components
 
-Norway and Sweden have their own fee structures, but the same pattern applies — use `input_number` helpers for the fixed/semi-fixed components and `energy_price` for the spot price.
+Norway and Sweden have their own fee structures, but the same pattern applies — use `input_number` helpers for the fixed/semi-fixed components and `energy_price` (ct/kWh, divide by 100 for €/kWh) for the spot price.
 
 **Contributions welcome!** If you have working template examples for Norway or Sweden, please share them in a [GitHub Discussion](https://github.com/jpawlowski/hass.tibber_prices/discussions).
 
