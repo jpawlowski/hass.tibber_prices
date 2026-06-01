@@ -1460,7 +1460,7 @@ plan_charging:
             number:
               min: 0
               max: 100000
-              step: 0.0001
+              step: any
               mode: box
         reserve_for_discharge:
           required: false
@@ -1474,7 +1474,7 @@ plan_charging:
             number:
               min: 0
               max: 100000
-              step: 0.0001
+              step: any
               mode: box
     output:
       collapsed: true

@@ -1304,7 +1304,7 @@
       "message": "Entitet '{entity_id}' hittades inte. Kontrollera att entiteten finns och är tillgänglig."
     },
     "entity_attribute_not_found": {
-      "message": "Entitet '{entity_id}' har inte attributet '{attribute}'."
+      "message": "Entitet {entity_id} har inte attributet {attribute}."
     },
     "entity_state_unavailable": {
       "message": "Entitet '{entity_id}' har tillståndet '{state}'. Entiteten måste ha ett giltigt tillståndsvärde."

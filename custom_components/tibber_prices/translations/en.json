@@ -1304,7 +1304,7 @@
       "message": "Entity '{entity_id}' not found. Verify the entity exists and is available."
     },
     "entity_attribute_not_found": {
-      "message": "Entity '{entity_id}' does not have attribute '{attribute}'."
+      "message": "Entity {entity_id} does not have attribute {attribute}."
     },
     "entity_state_unavailable": {
       "message": "Entity '{entity_id}' state is '{state}'. The entity must have a valid state value."

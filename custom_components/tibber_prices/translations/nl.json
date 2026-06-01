@@ -1304,7 +1304,7 @@
       "message": "Entiteit '{entity_id}' niet gevonden. Controleer of de entiteit bestaat en beschikbaar is."
     },
     "entity_attribute_not_found": {
-      "message": "Entiteit '{entity_id}' heeft geen attribuut '{attribute}'."
+      "message": "Entiteit {entity_id} heeft geen attribuut {attribute}."
     },
     "entity_state_unavailable": {
       "message": "Entiteit '{entity_id}' heeft status '{state}'. De entiteit moet een geldige statuswaarde hebben."
