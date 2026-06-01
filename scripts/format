@@ -25,6 +25,7 @@ if [[ -z ${VIRTUAL_ENV:-} ]]; then
 fi
 
 log_header "Running Ruff format"
+export UV_PRERELEASE=allow
 uv run --active ruff format .
 
 # Clean up any accidental package installation from uv run

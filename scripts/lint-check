@@ -25,6 +25,7 @@ if [[ -z ${VIRTUAL_ENV:-} ]]; then
 fi
 
 log_header "Checking code format"
+export UV_PRERELEASE=allow
 uv run --active ruff format . --check
 
 log_header "Checking code with Ruff"

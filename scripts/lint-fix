@@ -25,6 +25,7 @@ if [[ -z ${VIRTUAL_ENV:-} ]]; then
 fi
 
 log_header "Running Ruff check with auto-fix"
+export UV_PRERELEASE=allow
 uv run --active ruff check . --fix
 
 # Clean up any accidental package installation from uv run
