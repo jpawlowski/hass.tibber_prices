@@ -381,7 +381,7 @@ automation:
 
 ## 🇳🇴 Norway / 🇸🇪 Sweden: Grid & Tax Components
 
-Norway and Sweden have their own fee structures, but the same pattern applies — use `input_number` helpers for the fixed/semi-fixed components and `energy_price` (ct/kWh, divide by 100 for €/kWh) for the spot price.
+Norway and Sweden have their own fee structures, but the same pattern applies — use `input_number` helpers for the fixed/semi-fixed components and `energy_price` for the spot price (unit depends on your display mode).
 
 **Contributions welcome!** If you have working template examples for Norway or Sweden, please share them in a [GitHub Discussion](https://github.com/jpawlowski/hass.tibber_prices/discussions).
 
