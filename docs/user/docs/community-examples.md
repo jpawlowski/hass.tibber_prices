@@ -12,7 +12,16 @@ This page collects **real-world examples** contributed by the community — temp
 
 ## Country-Specific Price Calculations
 
-The Tibber API provides the raw spot price (`energy_price` attribute, in ct/kWh) and tax/fee component (`tax` attribute) on every price sensor. Since the exact composition of `tax` varies by country, you can use these attributes to build **your own** country-specific calculations with Home Assistant templates.
+The Tibber API provides the raw spot price (`energy_price` attribute) and tax/fee component (`tax` attribute) on every price sensor. Their unit follows your integration's **Currency Display Mode**:
+
+- Subunit mode: `ct/kWh` (default for EUR, including NL)
+- Base mode: `€/kWh`
+
+Since the exact composition of `tax` varies by country, you can use these attributes to build **your own** country-specific calculations with Home Assistant templates.
+
+:::tip Keep templates unit-safe
+For long-term stable templates, normalize values to `€/kWh` inside your template (recommended below). If you use Subunit mode, you can alternatively use the dedicated **Current Electricity Price (Energy Dashboard)** sensor (`current_interval_price_base`), which provides base-currency values for Energy Dashboard use cases. In Base mode, this extra sensor is not exposed because `current_interval_price` already provides base-currency values.
+:::
 
 :::tip Why templates instead of built-in calculations?
 Tax rates and energy fees change regularly (often annually). Using `input_number` helpers in Home Assistant keeps your calculations up-to-date with a simple UI adjustment — no integration update needed.
@@ -34,7 +43,7 @@ In the Netherlands, the electricity price paid to consumers includes:
 
 | Component | Dutch Name | Typical Value (2025) |
 |-----------|-----------|---------------------|
-| Spot price | Inkoopprijs | Variable in ct/kWh (= `energy_price` attribute, divide by 100 for €/kWh) |
+| Spot price | Inkoopprijs | Variable (`energy_price` attribute; unit depends on display mode) |
 | Energy tax | Energiebelasting | ~0.0916 €/kWh (excl. VAT) |
 | Purchase fee | Inkoopvergoeding | ~0.0205 €/kWh |
 | Sales fee | Verkoopvergoeding | ~-0.0205 €/kWh |
@@ -123,13 +132,18 @@ template:
             unit_of_measurement: "€/kWh"
             device_class: monetary
             state: >
-                {% set energy_ct = state_attr('sensor.<home_name>_current_electricity_price', 'energy_price') | float %}
+                {# Option A: current display-mode sensor (default) #}
+                {# Option B: in Subunit mode, switch to current_interval_price_base for base-currency workflows #}
+                {% set price_entity = 'sensor.<home_name>_current_electricity_price' %}
+                {% set energy_raw = state_attr(price_entity, 'energy_price') %}
+                {% set price_unit = state_attr(price_entity, 'unit_of_measurement') %}
+                {% set unit_factor = 100 if price_unit == 'ct/kWh' else 1 %}
                 {% set eb = states('input_number.energiebelasting') | float %}
                 {% set inkoop = states('input_number.inkoopvergoeding') | float %}
                 {% set verkoop = states('input_number.verkoopvergoeding') | float %}
                 {% set btw = states('input_number.btw_percentage') | float / 100 %}
-                {% if energy_ct is not none %}
-                  {% set energy = energy_ct / 100 %}
+                {% if energy_raw is not none %}
+                  {% set energy = (energy_raw | float) / unit_factor %}
                   {{ ((energy + eb + inkoop + verkoop) * (1 + btw)) | round(4) }}
                 {% else %}
                   unavailable
@@ -144,12 +158,17 @@ template:
             unit_of_measurement: "€/kWh"
             device_class: monetary
             state: >
-                {% set energy_ct = state_attr('sensor.<home_name>_current_electricity_price', 'energy_price') | float %}
+                {# Option A: current display-mode sensor (default) #}
+                {# Option B: in Subunit mode, switch to current_interval_price_base for base-currency workflows #}
+                {% set price_entity = 'sensor.<home_name>_current_electricity_price' %}
+                {% set energy_raw = state_attr(price_entity, 'energy_price') %}
+                {% set price_unit = state_attr(price_entity, 'unit_of_measurement') %}
+                {% set unit_factor = 100 if price_unit == 'ct/kWh' else 1 %}
                 {% set inkoop = states('input_number.inkoopvergoeding') | float %}
                 {% set verkoop = states('input_number.verkoopvergoeding') | float %}
                 {% set btw = states('input_number.btw_percentage') | float / 100 %}
-                {% if energy_ct is not none %}
-                  {% set energy = energy_ct / 100 %}
+                {% if energy_raw is not none %}
+                  {% set energy = (energy_raw | float) / unit_factor %}
                   {{ ((energy + inkoop + verkoop) * (1 + btw)) | round(4) }}
                 {% else %}
                   unavailable
@@ -194,6 +213,10 @@ automation:
 ### Preparing for the End of Saldering
 
 To understand the financial impact of the saldering phase-out, you can create a dashboard comparing both scenarios side by side:
+
+:::note Unit label reminder
+The label `ct/kWh` below is a manual display label. If your integration uses Base currency mode, update this label to `€/kWh` so it matches your active display mode.
+:::
 
 <details>
 <summary>Show YAML: Preparing for the End of Saldering</summary>
