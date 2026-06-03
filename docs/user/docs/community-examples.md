@@ -244,44 +244,135 @@ entities:
 
 ---
 
-## 🇩🇪 Germany: Price Composition
+## 🇩🇪 Germany: Feed-In Compensation
 
 ### Background
 
-In Germany, the electricity price includes numerous components bundled into `tax`:
+In Germany, private households usually get a **fixed feed-in compensation** (Einspeisevergütung) for exported PV energy, while consumption uses the dynamic end-user price from your tariff.
 
-| Component | German Name | Description |
-|-----------|-----------|-------------|
-| Spot price | Börsenstrompreis | Variable in ct/kWh (= `energy_price` attribute, divide by 100 for €/kWh) |
-| Grid fees | Netzentgelte | Varies by grid operator |
-| Electricity tax | Stromsteuer | Fixed per kWh |
-| Concession fee | Konzessionsabgabe | Varies by municipality |
-| Surcharges | Umlagen (§19, Offshore, KWKG) | Various regulatory surcharges |
-| VAT | Mehrwertsteuer | 19% |
+That means the practical question is often:
 
-### Template: Spot Price Share
+- consume/store energy locally now, or
+- export now at your fixed feed-in rate
 
-A simple template sensor showing what percentage of your total price is the actual energy cost:
+### Step 1: Create Input Number Helper for Feed-In Compensation
+
+Create one helper for your current contractual feed-in rate in `€/kWh`.
+
+**Settings → Devices & Services → Helpers → Create Helper → Number**
+
+| Helper | Entity ID | Min | Max | Step | Unit | Example Value |
+|--------|-----------|-----|-----|------|------|---------------|
+| Einspeisevergütung | `input_number.einspeiseverguetung` | 0 | 1 | 0.0001 | €/kWh | 0.0778 |
+
+:::note Keep this value up to date
+Use the exact value from your contract or network operator statement. Typical values differ by commissioning date and plant setup (partial vs full feed-in).
+:::
 
 <details>
-<summary>Show YAML: Spot Price Share</summary>
+<summary>Show YAML: Input Number Helper</summary>
+
+```yaml
+input_number:
+    einspeiseverguetung:
+        name: Einspeisevergütung
+        min: 0
+        max: 1
+        step: 0.0001
+        unit_of_measurement: "€/kWh"
+        icon: mdi:transmission-tower-export
+```
+
+</details>
+
+### Step 2: Template Sensors for Feed-In Decision Support
+
+These sensors normalize your current price to `€/kWh`, compare it with your fixed feed-in compensation, and expose a clean binary signal for automations.
+
+:::note Display-mode safe
+`current_electricity_price` can be in `ct/kWh` or `€/kWh` depending on display mode. The template below normalizes automatically to `€/kWh`.
+:::
+
+<details>
+<summary>Show YAML: Feed-In Decision Sensors</summary>
 
 ```yaml
 template:
     - sensor:
-          - name: "Spot Price Share"
-            unique_id: spot_price_share
-            unit_of_measurement: "%"
+          - name: "Current Electricity Price (EUR normalized)"
+            unique_id: current_electricity_price_eur_normalized
+            unit_of_measurement: "€/kWh"
+            device_class: monetary
             state: >
-                {% set energy_ct = state_attr('sensor.<home_name>_current_electricity_price', 'energy_price') %}
-                {% set total = states('sensor.<home_name>_current_electricity_price') | float %}
-                {% if energy_ct is not none and total > 0 %}
-                  {% set energy = energy_ct / 100 %}
-                  {{ ((energy / total) * 100) | round(1) }}
+                {% set price_entity = 'sensor.<home_name>_current_electricity_price' %}
+                {% set total_raw = states(price_entity) | float(none) %}
+                {% set price_unit = state_attr(price_entity, 'unit_of_measurement') %}
+                {% set unit_factor = 100 if price_unit == 'ct/kWh' else 1 %}
+                {% if total_raw is not none %}
+                  {{ (total_raw / unit_factor) | round(4) }}
                 {% else %}
                   unavailable
                 {% endif %}
-            icon: mdi:chart-pie
+            icon: mdi:currency-eur
+
+          - name: "Self-Consumption Advantage"
+            unique_id: self_consumption_advantage
+            unit_of_measurement: "€/kWh"
+            device_class: monetary
+            state: >
+                {% set import_price = states('sensor.current_electricity_price_eur_normalized') | float(none) %}
+                {% set feed_in = states('input_number.einspeiseverguetung') | float(none) %}
+                {% if import_price is not none and feed_in is not none %}
+                  {{ (import_price - feed_in) | round(4) }}
+                {% else %}
+                  unavailable
+                {% endif %}
+            icon: mdi:scale-balance
+
+    - binary_sensor:
+          - name: "Prefer Self-Consumption"
+            unique_id: prefer_self_consumption
+            state: >
+                {% set advantage = states('sensor.self_consumption_advantage') | float(none) %}
+                {{ advantage is not none and advantage > 0 }}
+            icon: mdi:home-lightning-bolt
+```
+
+</details>
+
+### Step 3: Use in Automations
+
+Use the binary sensor to switch behavior between export-oriented and self-consumption-oriented operation.
+
+<details>
+<summary>Show YAML: Example Automation (Battery Charging Strategy)</summary>
+
+```yaml
+automation:
+    - alias: "Battery: Prefer self-consumption when import price is higher than feed-in"
+      trigger:
+          - platform: state
+            entity_id: binary_sensor.prefer_self_consumption
+      action:
+          - choose:
+                - conditions:
+                      - condition: state
+                        entity_id: binary_sensor.prefer_self_consumption
+                        state: "on"
+                  sequence:
+                      # Example: keep energy locally (charge battery / reduce export)
+                      - service: switch.turn_on
+                        target:
+                            entity_id: switch.battery_charging
+                - conditions:
+                      - condition: state
+                        entity_id: binary_sensor.prefer_self_consumption
+                        state: "off"
+                  sequence:
+                      # Example: allow more export to grid
+                      - service: switch.turn_off
+                        target:
+                            entity_id: switch.battery_charging
 ```
 
 </details>
