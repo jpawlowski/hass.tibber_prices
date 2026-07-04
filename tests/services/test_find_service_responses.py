@@ -5,6 +5,7 @@ from __future__ import annotations
 from datetime import UTC, datetime, timedelta
 from types import SimpleNamespace
 from typing import TYPE_CHECKING, Any, cast
+from zoneinfo import ZoneInfo
 
 if TYPE_CHECKING:
     from homeassistant.core import ServiceCall
@@ -349,6 +350,103 @@ async def test_block_handler_preserves_service_search_data(monkeypatch: pytest.M
     assert response["search_start"] == fixed_start.isoformat()
     assert response["search_end"] == deadline.isoformat()
     assert response["must_finish_by"] == deadline.isoformat()
+
+
+class _FakeRangeFilteringPool:
+    """Fake interval pool that honors start_time/end_time like the real pool.
+
+    Unlike `_FakePool`, this filters the static interval list by the
+    requested [start_time, end_time) range, so tests using it will fail if a
+    service handler resolves the wrong search range (regression guard for
+    GH issue #168).
+    """
+
+    def __init__(self, intervals: list[dict]) -> None:
+        """Store the full static interval list."""
+        self._intervals = intervals
+
+    async def get_intervals(
+        self, *, start_time: datetime, end_time: datetime, **_kwargs: object
+    ) -> tuple[list[dict], bool]:
+        """Return only intervals within [start_time, end_time)."""
+        filtered = [iv for iv in self._intervals if start_time <= datetime.fromisoformat(iv["startsAt"]) < end_time]
+        return filtered, False
+
+
+@pytest.mark.asyncio
+async def test_block_handler_must_finish_by_end_to_end_regression(monkeypatch: pytest.MonkeyPatch) -> None:
+    """GH #168 regression: must_finish_by must actually constrain the found window.
+
+    Uses the real `apply_must_finish_by` and `resolve_search_range` (no mocking)
+    plus a range-filtering fake pool, reproducing the exact bug reported: a
+    naive `must_finish_by` datetime combined with `search_start_day_offset: 0`
+    used to be silently ignored, letting the found window run past the deadline.
+    """
+    # Use UTC as the home timezone: HA's test environment default timezone
+    # (dt_util.DEFAULT_TIME_ZONE) is also UTC, so the naive `must_finish_by`
+    # datetime below localizes 1:1 without an additional offset shift. This
+    # keeps the test focused on the search-range regression rather than
+    # timezone-conversion arithmetic.
+    home_tz = ZoneInfo("UTC")
+    day_start = datetime(2026, 6, 29, 0, 0, tzinfo=home_tz)
+
+    # Full day of quarter-hour intervals: expensive by default, very cheap in
+    # the afternoon (12:00-16:00) and moderately cheap in the morning
+    # (08:00-12:00). Without the deadline, the cheapest 4h block is the
+    # afternoon one (which ends after the 12:00 deadline).
+    prices = [50.0] * 96
+    for i in range(32, 48):  # 08:00-12:00
+        prices[i] = 20.0
+    for i in range(48, 64):  # 12:00-16:00
+        prices[i] = 10.0
+    intervals = _make_intervals(prices, start=day_start)
+
+    pool = _FakeRangeFilteringPool(intervals)
+    entry = SimpleNamespace(
+        data={"home_id": "home_1", "currency": "EUR"},
+        options={},
+        runtime_data=SimpleNamespace(interval_pool=pool),
+    )
+    coordinator = SimpleNamespace(
+        api=object(),
+        _cached_user_data={"viewer": {"homes": [{"id": "home_1", "timeZone": "UTC"}]}},
+    )
+    coordinator_data = {"priceInfo": intervals}
+
+    monkeypatch.setattr(
+        block_module, "get_entry_and_data", lambda _hass, _entry_id: (entry, coordinator, coordinator_data)
+    )
+
+    # Fix "now" so the default search_start (no search_start_time given) is deterministic.
+    fixed_now = datetime(2026, 6, 28, 22, 0, tzinfo=UTC)
+    monkeypatch.setattr(block_module.dt_util, "now", lambda *_a, **_k: fixed_now)
+
+    # Matches what voluptuous' cv.datetime produces for the naive string
+    # "2026-06-29 12:00:00" reported in GH #168 (no tzinfo attached yet).
+    call = SimpleNamespace(
+        hass=object(),
+        data={
+            "duration": timedelta(hours=4),
+            "search_start_day_offset": 0,
+            "must_finish_by": datetime(2026, 6, 29, 12, 0),
+            "smooth_outliers": False,
+            "allow_relaxation": False,
+            "use_base_unit": True,
+        },
+    )
+    response = cast("dict[str, Any]", await handle_find_cheapest_block(cast("ServiceCall", call)))
+
+    deadline = datetime(2026, 6, 29, 12, 0, tzinfo=home_tz)
+    assert response["must_finish_by"] == deadline.isoformat()
+    assert response["search_end"] == deadline.isoformat()
+    assert response["window_found"] is True
+
+    window = cast("dict[str, Any]", response["window"])
+    window_end = datetime.fromisoformat(window["end"])
+    assert window_end <= deadline
+    # The morning block (08:00-12:00, price 20.0) must be selected, not the
+    # cheaper afternoon block that would violate the deadline.
+    assert window["price_mean"] == 20.0
 
 
 @pytest.mark.asyncio
