@@ -571,7 +571,13 @@ async def handle_find_cheapest_schedule(call: ServiceCall) -> ServiceResponse:
                 break
 
         # Phase 2: Duration reduction (uniform across all tasks)
-        if best_unscheduled:
+        # Skipped when any task has a power_profile: it's a fixed per-interval
+        # watt array matching that task's original duration, and reducing
+        # duration_intervals here without shrinking the profile would silently
+        # truncate it (dropping trailing phases of the appliance cycle) when
+        # used for weighted window selection and cost estimation.
+        any_task_has_power_profile = any(t.get("power_profile") for t in tasks)
+        if best_unscheduled and not any_task_has_power_profile:
             shortest_task = min(t["duration_intervals"] for t in tasks)
             max_reduction = calculate_max_duration_reduction_intervals(shortest_task, duration_flexibility_minutes)
             for reduction in range(1, max_reduction + 1):

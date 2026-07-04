@@ -352,6 +352,53 @@ async def test_block_handler_preserves_service_search_data(monkeypatch: pytest.M
     assert response["must_finish_by"] == deadline.isoformat()
 
 
+@pytest.mark.asyncio
+async def test_block_handler_power_profile_blocks_duration_relaxation(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Regression: a power_profile must disable relaxation's duration-reduction phase.
+
+    power_profile is a fixed per-interval watt array matching the *original*
+    requested duration. If relaxation reduced the duration to fit a shorter
+    pool, the profile would be silently truncated from the front (dropping
+    trailing appliance-cycle phases) and used to weight/report a window that
+    doesn't match the user's declared profile. Only 3 intervals are available
+    here for a 4-interval (1h) request — without the fix, relaxation's
+    duration phase would find and accept a 3-interval window using a
+    truncated profile; with the fix, duration reduction is skipped and
+    relaxation exhausts instead.
+    """
+    intervals = _make_intervals([10.0, 10.0, 10.0])  # only 3 available, need 4
+    fake_tuple = _build_fake_entry_and_coordinator(intervals)
+
+    monkeypatch.setattr(block_module, "get_entry_and_data", lambda _hass, _entry_id: fake_tuple)
+    monkeypatch.setattr(block_module, "resolve_home_timezone", lambda _coord, _home_id: "UTC")
+    monkeypatch.setattr(
+        block_module,
+        "resolve_search_range",
+        lambda _call_data, _now, _home_tz: (
+            datetime(2026, 1, 1, 0, 0, tzinfo=UTC),
+            datetime(2026, 1, 1, 1, 0, tzinfo=UTC),
+        ),
+    )
+
+    call = SimpleNamespace(
+        hass=object(),
+        data={
+            "duration": timedelta(hours=1),  # 4 intervals required
+            "power_profile": [100, 200, 300, 400],
+            "use_base_unit": True,
+            "allow_relaxation": True,
+            "smooth_outliers": False,
+        },
+    )
+
+    response = cast("dict[str, Any]", await handle_find_cheapest_block(cast("ServiceCall", call)))
+
+    assert response["window_found"] is False
+    assert response["reason"] == "relaxation_exhausted"
+    # Duration must never be silently reduced below the original request.
+    assert response["duration_minutes"] == 60
+
+
 class _FakeRangeFilteringPool:
     """Fake interval pool that honors start_time/end_time like the real pool.
 

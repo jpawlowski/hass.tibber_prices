@@ -443,7 +443,18 @@ async def _handle_find_hours(
 
     # --- Relaxation loop ---
     if result is None and allow_relaxation:
-        max_reduction = calculate_max_duration_reduction_intervals(total_intervals, duration_flexibility_minutes)
+        # A power_profile is a fixed per-interval watt array matching the original
+        # requested duration. Reducing the interval count during relaxation would
+        # silently truncate it (dropping trailing phases of the appliance cycle)
+        # when building the weighted cost estimate, so duration reduction is
+        # disabled whenever a power_profile is supplied. Distance and
+        # level-filter relaxation remain available since they don't change the
+        # interval count.
+        max_reduction = (
+            0
+            if power_profile
+            else calculate_max_duration_reduction_intervals(total_intervals, duration_flexibility_minutes)
+        )
         min_dur = max(MIN_RELAXED_DURATION_INTERVALS, min_segment_intervals)
         steps = generate_relaxation_steps(
             min_distance_from_avg=min_distance_from_avg,

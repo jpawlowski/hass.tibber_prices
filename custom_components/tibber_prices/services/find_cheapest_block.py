@@ -368,7 +368,17 @@ async def _handle_find_block(
 
     # --- Relaxation loop ---
     if result is None and allow_relaxation:
-        max_reduction = calculate_max_duration_reduction_intervals(duration_intervals, duration_flexibility_minutes)
+        # A power_profile is a fixed per-interval watt array matching the original
+        # requested duration. Reducing duration during relaxation would silently
+        # truncate it (dropping trailing phases of the appliance cycle) and
+        # invalidate the weighted window selection, so duration reduction is
+        # disabled whenever a power_profile is supplied. Distance and level-filter
+        # relaxation remain available since they don't affect interval count.
+        max_reduction = (
+            0
+            if power_profile
+            else calculate_max_duration_reduction_intervals(duration_intervals, duration_flexibility_minutes)
+        )
         steps = generate_relaxation_steps(
             min_distance_from_avg=min_distance_from_avg,
             max_price_level=max_price_level,
