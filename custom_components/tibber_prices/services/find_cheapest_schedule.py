@@ -229,6 +229,7 @@ def _find_cheapest_window_in_pool(
         # and all intervals are contiguous in time (no gaps)
         block: list[dict[str, Any]] = []
         j = i
+        stopped_at_gap = False
         while j < n and len(block) < duration_intervals:
             if not available[j]:
                 break
@@ -239,7 +240,10 @@ def _find_cheapest_window_in_pool(
                 prev_dt = datetime.fromisoformat(prev_start) if isinstance(prev_start, str) else prev_start
                 curr_dt = datetime.fromisoformat(curr_start) if isinstance(curr_start, str) else curr_start
                 if curr_dt - prev_dt != timedelta(minutes=INTERVAL_MINUTES):
-                    # Gap in time — can't extend this block, skip to j+1
+                    # Gap in time — can't extend this block, but slot j itself
+                    # (already confirmed available above) is a fresh, untried
+                    # candidate window start and must not be skipped.
+                    stopped_at_gap = True
                     break
             block.append(pool[j])
             j += 1
@@ -253,8 +257,15 @@ def _find_cheapest_window_in_pool(
                 best_sum = window_sum
                 best_start = i
             i += 1
+        elif stopped_at_gap:
+            # Retry starting exactly at the gap position (index j), not j+1 —
+            # j is available and untested as a window start. Regression guard:
+            # previously this jumped to j+1, silently skipping a valid
+            # (sometimes cheaper) candidate window right after a time gap
+            # caused by price-level filtering or missing data.
+            i = j
         else:
-            # Skip past the blocking unavailable/non-contiguous slot
+            # Skip past the blocking unavailable slot (or end of pool)
             i = j + 1
 
     if best_start == -1:
