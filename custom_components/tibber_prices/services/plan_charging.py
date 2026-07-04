@@ -576,12 +576,23 @@ def _attempt_plan(
     if schedule["unallocated_grid_energy_kwh"] > 1e-6:
         return None, "energy_unreachable"
 
+    # Deadline-critical intervals (selected to satisfy must_reach_soc by the deadline) must
+    # never be dropped by segment-constraint trimming, or deadline_met could silently become
+    # False even though the overall energy target is still satisfied.
+    protected_starts = (
+        frozenset(interval["startsAt"] for interval in schedule["pre_deadline"]["intervals"])
+        if "pre_deadline" in schedule
+        else None
+    )
+
     schedule, warnings = apply_segment_constraints(
         schedule,
         candidates,
         charging_efficiency=ctx.charging_efficiency,
         min_charge_duration_minutes=ctx.min_charge_duration_minutes,
         max_cycles_per_day=ctx.max_cycles_per_day,
+        target_grid_energy_kwh=effective_energy_needed_grid_kwh,
+        protected_starts=protected_starts,
         interval_minutes=INTERVAL_MINUTES,
     )
     scheduled_intervals = build_soc_progression_from_schedule(

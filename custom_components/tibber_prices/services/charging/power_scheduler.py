@@ -218,6 +218,245 @@ def _add_interval_if_available(
     return True
 
 
+def _constraints_satisfied(
+    intervals: list[dict[str, Any]],
+    *,
+    max_cycles_per_day: int | None,
+    min_charge_duration_minutes: int | None,
+    interval_minutes: int,
+) -> bool:
+    """Check whether current interval selection satisfies active constraints."""
+    grouped_segments = group_intervals_into_segments(intervals)
+
+    if max_cycles_per_day and len(grouped_segments) > max_cycles_per_day:
+        return False
+
+    if min_charge_duration_minutes:
+        required_intervals = max(1, math.ceil(min_charge_duration_minutes / interval_minutes))
+        if any(segment["interval_count"] < required_intervals for segment in grouped_segments):
+            return False
+
+    return True
+
+
+def _extend_for_min_duration(
+    selected_map: dict[str, dict[str, Any]],
+    *,
+    candidate_map: dict[str, dict[str, Any]],
+    candidates_sorted: list[dict[str, Any]],
+    candidate_index: dict[str, int],
+    minimum_power_w: int,
+    charging_efficiency: float,
+    interval_minutes: int,
+    min_charge_duration_minutes: int,
+    warnings: list[str],
+) -> None:
+    """Extend short segments by adding contiguous neighbor intervals."""
+    required_intervals = max(1, math.ceil(min_charge_duration_minutes / interval_minutes))
+    progress = True
+
+    while progress:
+        progress = False
+        selected_intervals = sorted(selected_map.values(), key=_interval_start)
+        segments = group_intervals_into_segments(selected_intervals)
+
+        for segment in segments:
+            if segment["interval_count"] >= required_intervals:
+                continue
+
+            while segment["interval_count"] < required_intervals:
+                first = segment["intervals"][0]["startsAt"]
+                last = segment["intervals"][-1]["startsAt"]
+                first_index = candidate_index[first]
+                last_index = candidate_index[last]
+
+                prev_interval = candidates_sorted[first_index - 1] if first_index > 0 else None
+                next_interval = candidates_sorted[last_index + 1] if last_index + 1 < len(candidates_sorted) else None
+
+                options: list[dict[str, Any]] = []
+                if (
+                    prev_interval is not None
+                    and _interval_start(candidate_map[first]) - _interval_start(prev_interval)
+                    == timedelta(minutes=interval_minutes)
+                    and prev_interval["startsAt"] not in selected_map
+                ):
+                    options.append(prev_interval)
+
+                if (
+                    next_interval is not None
+                    and _interval_start(next_interval) - _interval_start(candidate_map[last])
+                    == timedelta(minutes=interval_minutes)
+                    and next_interval["startsAt"] not in selected_map
+                ):
+                    options.append(next_interval)
+
+                if not options:
+                    warnings.append("min_charge_duration_unreachable")
+                    break
+
+                cheapest = min(options, key=lambda interval: (_sort_price(interval), _interval_start(interval)))
+                added = _add_interval_if_available(
+                    selected_map,
+                    candidate_map,
+                    cheapest["startsAt"],
+                    power_w=minimum_power_w,
+                    charging_efficiency=charging_efficiency,
+                    interval_minutes=interval_minutes,
+                )
+                if not added:
+                    break
+
+                progress = True
+                selected_intervals = sorted(selected_map.values(), key=_interval_start)
+                segment = next(
+                    seg
+                    for seg in group_intervals_into_segments(selected_intervals)
+                    if first in {iv["startsAt"] for iv in seg["intervals"]}
+                )
+
+
+def _merge_for_max_cycles(
+    selected_map: dict[str, dict[str, Any]],
+    *,
+    candidate_map: dict[str, dict[str, Any]],
+    candidates_sorted: list[dict[str, Any]],
+    candidate_index: dict[str, int],
+    minimum_power_w: int,
+    charging_efficiency: float,
+    interval_minutes: int,
+    max_cycles_per_day: int,
+    warnings: list[str],
+) -> None:
+    """Bridge cheapest gaps until the cycle limit is satisfied."""
+    while True:
+        selected_intervals = sorted(selected_map.values(), key=_interval_start)
+        segments = group_intervals_into_segments(selected_intervals)
+        if len(segments) <= max_cycles_per_day:
+            break
+
+        best_gap: tuple[float, list[dict[str, Any]]] | None = None
+        for left, right in pairwise(segments):
+            left_end_index = candidate_index[left["intervals"][-1]["startsAt"]]
+            right_start_index = candidate_index[right["intervals"][0]["startsAt"]]
+            gap = candidates_sorted[left_end_index + 1 : right_start_index]
+
+            if not gap:
+                continue
+            if any(interval["startsAt"] in selected_map for interval in gap):
+                continue
+            if any(
+                _interval_start(gap[index + 1]) - _interval_start(gap[index]) != timedelta(minutes=interval_minutes)
+                for index in range(len(gap) - 1)
+            ):
+                continue
+
+            penalty = sum(_sort_price(interval) for interval in gap)
+            if best_gap is None or penalty < best_gap[0]:
+                best_gap = (penalty, gap)
+
+        if best_gap is None:
+            warnings.append("max_cycles_unreachable")
+            break
+
+        for interval in best_gap[1]:
+            _add_interval_if_available(
+                selected_map,
+                candidate_map,
+                interval["startsAt"],
+                power_w=minimum_power_w,
+                charging_efficiency=charging_efficiency,
+                interval_minutes=interval_minutes,
+            )
+
+
+def _collect_removable_edge_indices(
+    selected_intervals: list[dict[str, Any]],
+    *,
+    total_grid_energy: float,
+    target_grid_energy_kwh: float,
+    max_cycles_per_day: int | None,
+    min_charge_duration_minutes: int | None,
+    interval_minutes: int,
+    protected_starts: frozenset[str] | None,
+) -> list[int]:
+    """Return edge interval indices that can be removed while keeping constraints valid."""
+    removable_indices: list[int] = []
+    segments = group_intervals_into_segments(selected_intervals)
+
+    for segment in segments:
+        first_start = segment["intervals"][0]["startsAt"]
+        last_start = segment["intervals"][-1]["startsAt"]
+
+        for edge_start in (first_start, last_start):
+            if protected_starts is not None and edge_start in protected_starts:
+                continue
+
+            edge_index = next(
+                (index for index, interval in enumerate(selected_intervals) if interval["startsAt"] == edge_start),
+                None,
+            )
+            if edge_index is None or edge_index in removable_indices:
+                continue
+
+            candidate = selected_intervals[edge_index]
+            new_total = total_grid_energy - float(candidate["grid_energy_kwh"])
+            if new_total + _INTERVAL_TOLERANCE < target_grid_energy_kwh:
+                continue
+
+            new_selection = selected_intervals[:edge_index] + selected_intervals[edge_index + 1 :]
+            if not new_selection:
+                continue
+            if not _constraints_satisfied(
+                new_selection,
+                max_cycles_per_day=max_cycles_per_day,
+                min_charge_duration_minutes=min_charge_duration_minutes,
+                interval_minutes=interval_minutes,
+            ):
+                continue
+
+            removable_indices.append(edge_index)
+
+    return removable_indices
+
+
+def _trim_to_target_energy(
+    selected_map: dict[str, dict[str, Any]],
+    *,
+    target_grid_energy_kwh: float,
+    max_cycles_per_day: int | None,
+    min_charge_duration_minutes: int | None,
+    interval_minutes: int,
+    protected_starts: frozenset[str] | None = None,
+) -> dict[str, dict[str, Any]]:
+    """Trim excess energy from selection by removing expensive edge intervals first.
+
+    Intervals whose ``startsAt`` is listed in ``protected_starts`` (for example, intervals
+    required to satisfy a ``must_reach_by`` deadline) are never removed, even if that means
+    the target energy cannot be fully reached through trimming alone.
+    """
+    selected_intervals = sorted(selected_map.values(), key=_interval_start)
+    total_grid_energy = sum(float(interval["grid_energy_kwh"]) for interval in selected_intervals)
+
+    while selected_intervals and total_grid_energy > target_grid_energy_kwh + _INTERVAL_TOLERANCE:
+        removable_indices = _collect_removable_edge_indices(
+            selected_intervals,
+            total_grid_energy=total_grid_energy,
+            target_grid_energy_kwh=target_grid_energy_kwh,
+            max_cycles_per_day=max_cycles_per_day,
+            min_charge_duration_minutes=min_charge_duration_minutes,
+            interval_minutes=interval_minutes,
+            protected_starts=protected_starts,
+        )
+        if not removable_indices:
+            break
+
+        best_index = max(removable_indices, key=lambda index: _sort_price(selected_intervals[index]))
+        total_grid_energy -= float(selected_intervals[best_index]["grid_energy_kwh"])
+        del selected_intervals[best_index]
+
+    return {interval["startsAt"]: interval for interval in selected_intervals}
+
+
 def apply_segment_constraints(
     schedule: dict[str, Any],
     candidate_intervals: list[dict[str, Any]],
@@ -225,9 +464,15 @@ def apply_segment_constraints(
     charging_efficiency: float,
     min_charge_duration_minutes: int | None = None,
     max_cycles_per_day: int | None = None,
+    target_grid_energy_kwh: float | None = None,
+    protected_starts: frozenset[str] | None = None,
     interval_minutes: int = 15,
 ) -> tuple[dict[str, Any], list[str]]:
-    """Extend/bridge selected intervals to satisfy segment duration and cycle constraints."""
+    """Extend/bridge selected intervals to satisfy segment duration and cycle constraints.
+
+    ``protected_starts`` marks intervals (by ``startsAt``) that must never be removed while
+    trimming to ``target_grid_energy_kwh``, e.g. intervals required to meet a deadline.
+    """
     warnings: list[str] = []
     selected_map = {interval["startsAt"]: dict(interval) for interval in schedule["intervals"]}
     candidate_map = {interval["startsAt"]: interval for interval in candidate_intervals}
@@ -236,103 +481,40 @@ def apply_segment_constraints(
     minimum_power_w = int(schedule["minimum_power_w"])
 
     if min_charge_duration_minutes:
-        required_intervals = max(1, math.ceil(min_charge_duration_minutes / interval_minutes))
-        progress = True
-        while progress:
-            progress = False
-            selected_intervals = sorted(selected_map.values(), key=_interval_start)
-            segments = group_intervals_into_segments(selected_intervals)
-            for segment in segments:
-                if segment["interval_count"] >= required_intervals:
-                    continue
-                while segment["interval_count"] < required_intervals:
-                    first = segment["intervals"][0]["startsAt"]
-                    last = segment["intervals"][-1]["startsAt"]
-                    first_index = candidate_index[first]
-                    last_index = candidate_index[last]
-
-                    prev_interval = candidates_sorted[first_index - 1] if first_index > 0 else None
-                    next_interval = (
-                        candidates_sorted[last_index + 1] if last_index + 1 < len(candidates_sorted) else None
-                    )
-
-                    prev_contiguous = False
-                    next_contiguous = False
-                    if prev_interval is not None:
-                        prev_contiguous = _interval_start(candidate_map[first]) - _interval_start(
-                            prev_interval
-                        ) == timedelta(minutes=interval_minutes)
-                    if next_interval is not None:
-                        next_contiguous = _interval_start(next_interval) - _interval_start(
-                            candidate_map[last]
-                        ) == timedelta(minutes=interval_minutes)
-
-                    options: list[dict[str, Any]] = []
-                    if prev_interval is not None and prev_contiguous and prev_interval["startsAt"] not in selected_map:
-                        options.append(prev_interval)
-                    if next_interval is not None and next_contiguous and next_interval["startsAt"] not in selected_map:
-                        options.append(next_interval)
-                    if not options:
-                        warnings.append("min_charge_duration_unreachable")
-                        break
-
-                    cheapest = min(options, key=lambda interval: (_sort_price(interval), _interval_start(interval)))
-                    added = _add_interval_if_available(
-                        selected_map,
-                        candidate_map,
-                        cheapest["startsAt"],
-                        power_w=minimum_power_w,
-                        charging_efficiency=charging_efficiency,
-                        interval_minutes=interval_minutes,
-                    )
-                    if not added:
-                        break
-                    progress = True
-                    selected_intervals = sorted(selected_map.values(), key=_interval_start)
-                    segment = next(
-                        seg
-                        for seg in group_intervals_into_segments(selected_intervals)
-                        if first in {iv["startsAt"] for iv in seg["intervals"]}
-                    )
+        _extend_for_min_duration(
+            selected_map,
+            candidate_map=candidate_map,
+            candidates_sorted=candidates_sorted,
+            candidate_index=candidate_index,
+            minimum_power_w=minimum_power_w,
+            charging_efficiency=charging_efficiency,
+            interval_minutes=interval_minutes,
+            min_charge_duration_minutes=min_charge_duration_minutes,
+            warnings=warnings,
+        )
 
     if max_cycles_per_day:
-        while True:
-            selected_intervals = sorted(selected_map.values(), key=_interval_start)
-            segments = group_intervals_into_segments(selected_intervals)
-            if len(segments) <= max_cycles_per_day:
-                break
+        _merge_for_max_cycles(
+            selected_map,
+            candidate_map=candidate_map,
+            candidates_sorted=candidates_sorted,
+            candidate_index=candidate_index,
+            minimum_power_w=minimum_power_w,
+            charging_efficiency=charging_efficiency,
+            interval_minutes=interval_minutes,
+            max_cycles_per_day=max_cycles_per_day,
+            warnings=warnings,
+        )
 
-            best_gap: tuple[float, list[dict[str, Any]]] | None = None
-            for left, right in pairwise(segments):
-                left_end_index = candidate_index[left["intervals"][-1]["startsAt"]]
-                right_start_index = candidate_index[right["intervals"][0]["startsAt"]]
-                gap = candidates_sorted[left_end_index + 1 : right_start_index]
-                if not gap:
-                    continue
-                if any(interval["startsAt"] in selected_map for interval in gap):
-                    continue
-                if any(
-                    _interval_start(gap[index + 1]) - _interval_start(gap[index]) != timedelta(minutes=interval_minutes)
-                    for index in range(len(gap) - 1)
-                ):
-                    continue
-                penalty = sum(_sort_price(interval) for interval in gap)
-                if best_gap is None or penalty < best_gap[0]:
-                    best_gap = (penalty, gap)
-
-            if best_gap is None:
-                warnings.append("max_cycles_unreachable")
-                break
-
-            for interval in best_gap[1]:
-                _add_interval_if_available(
-                    selected_map,
-                    candidate_map,
-                    interval["startsAt"],
-                    power_w=minimum_power_w,
-                    charging_efficiency=charging_efficiency,
-                    interval_minutes=interval_minutes,
-                )
+    if target_grid_energy_kwh is not None:
+        selected_map = _trim_to_target_energy(
+            selected_map,
+            target_grid_energy_kwh=target_grid_energy_kwh,
+            max_cycles_per_day=max_cycles_per_day,
+            min_charge_duration_minutes=min_charge_duration_minutes,
+            interval_minutes=interval_minutes,
+            protected_starts=protected_starts,
+        )
 
     selected_intervals = sorted(selected_map.values(), key=_interval_start)
     segments = group_intervals_into_segments(selected_intervals)

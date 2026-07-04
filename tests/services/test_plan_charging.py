@@ -204,6 +204,60 @@ async def test_plan_charging_can_meet_deadline_before_peak_period(monkeypatch: p
 
 
 @pytest.mark.asyncio
+async def test_plan_charging_max_cycles_does_not_break_deadline(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Cycle merging/trimming must never discard intervals required to meet a deadline.
+
+    Regression test for a bug where ``apply_segment_constraints`` could remove the
+    deadline-critical interval while trimming excess energy added by cycle bridging,
+    silently turning ``deadline_met`` false even though the overall target was reached.
+    """
+    intervals = _make_intervals([0.80, 0.95, 0.95, 0.05])
+    fake_tuple = _build_fake_entry_and_coordinator(intervals)
+
+    monkeypatch.setattr(charging_module, "get_entry_and_data", lambda _hass, _entry_id: fake_tuple)
+    monkeypatch.setattr(charging_module, "resolve_home_timezone", lambda _coord, _home_id: "UTC")
+    monkeypatch.setattr(
+        charging_module,
+        "resolve_search_range",
+        lambda _call_data, _now, _home_tz: (
+            datetime(2026, 1, 1, 0, 0, tzinfo=UTC),
+            datetime(2026, 1, 1, 1, 0, tzinfo=UTC),
+        ),
+    )
+    monkeypatch.setattr(charging_module, "get_display_unit_factor", lambda _entry: 1)
+    monkeypatch.setattr(charging_module, "get_display_unit_string", lambda _entry, _currency: "EUR/kWh")
+    monkeypatch.setattr(charging_module.dt_util, "now", lambda: datetime(2026, 1, 1, 0, 0, tzinfo=UTC))
+
+    call = SimpleNamespace(
+        hass=object(),
+        data={
+            "battery_capacity_kwh": 10.0,
+            "current_soc_percent": 20.0,
+            "target_soc_percent": 40.0,
+            "must_reach_soc_percent": 30.0,
+            "must_reach_by": datetime(2026, 1, 1, 0, 15, tzinfo=UTC),
+            "max_charge_power_w": 4000,
+            "max_cycles_per_day": 1,
+            "charging_efficiency": 1.0,
+            "use_base_unit": True,
+            "allow_relaxation": False,
+        },
+    )
+
+    response = cast("dict[str, Any]", await handle_plan_charging(cast("ServiceCall", call)))
+
+    assert response["intervals_found"] is True
+    assert response["charging"]["schedule"]["segment_count"] == 1
+    assert response["deadline"]["deadline_met"] is True
+    assert response["deadline"]["achieved_soc_kwh"] == 3.0
+    assert response["battery"]["target_met"] is True
+    assert response["battery"]["achieved_soc_kwh"] == 4.0
+
+    scheduled = cast("list[dict[str, Any]]", response["charging"]["schedule"]["intervals"])
+    assert scheduled[0]["price"] == 0.8  # the deadline-critical interval must survive trimming
+
+
+@pytest.mark.asyncio
 async def test_plan_charging_can_filter_by_profitability(monkeypatch: pytest.MonkeyPatch) -> None:
     """Economic filtering should keep only profitable intervals when reserve_for_discharge is enabled."""
     intervals = _make_intervals([0.05, 0.08, 0.12, 0.15])
@@ -292,7 +346,7 @@ async def test_plan_charging_respects_min_charge_duration(monkeypatch: pytest.Mo
 
 @pytest.mark.asyncio
 async def test_plan_charging_respects_max_cycles_per_day(monkeypatch: pytest.MonkeyPatch) -> None:
-    """Multiple cheap isolated intervals should be bridged to satisfy max cycle limits."""
+    """Cycle merging must not overcharge beyond the requested target energy."""
     intervals = _make_intervals([0.10, 0.80, 0.11, 0.90, 0.12, 0.95, 0.50, 0.60])
     fake_tuple = _build_fake_entry_and_coordinator(intervals)
 
@@ -327,7 +381,10 @@ async def test_plan_charging_respects_max_cycles_per_day(monkeypatch: pytest.Mon
 
     assert response["intervals_found"] is True
     assert response["charging"]["schedule"]["segment_count"] == 1
+    assert response["charging"]["total_energy_kwh"] == 3.0
+    assert response["battery"]["achieved_soc_kwh"] == 5.0
+    assert response["battery"]["target_met"] is True
 
     scheduled = cast("list[dict[str, Any]]", response["charging"]["schedule"]["intervals"])
-    assert [interval["price"] for interval in scheduled[:5]] == [0.1, 0.8, 0.11, 0.9, 0.12]
+    assert [interval["price"] for interval in scheduled] == [0.1, 0.8, 0.11]
     assert response["warnings"] is None
