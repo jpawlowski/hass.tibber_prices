@@ -717,6 +717,15 @@ def check_min_distance_from_avg(
     For cheapest searches: window mean must be at least X% BELOW range average.
     For most expensive searches: window mean must be at least X% ABOVE range average.
 
+    CRITICAL: Uses abs(range_avg) to scale the distance so the direction of the
+    threshold shift is always correct, even when range_avg is negative (Tibber
+    prices can go negative during grid oversupply). Multiplying a negative
+    range_avg directly by (1 ± ratio) flips the intended direction (e.g. avg *
+    1.05 makes a negative average MORE negative, i.e. cheaper, which is the
+    wrong direction for a "most expensive" threshold). This mirrors the
+    abs()-based normalization already used for the period system's
+    min_distance_from_avg handling (see coordinator/period_handlers/level_filtering.py).
+
     Args:
         window_mean_base: Window mean price in BASE currency (not display unit).
         range_avg: Search range average price in BASE currency.
@@ -731,10 +740,11 @@ def check_min_distance_from_avg(
         return True  # Cannot calculate percentage difference from zero
 
     distance_ratio = min_distance_pct / 100
+    distance_amount = abs(range_avg) * distance_ratio
     if reverse:
-        # Most expensive: window mean must be >= avg * (1 + distance)
-        threshold = range_avg * (1 + distance_ratio)
+        # Most expensive: window mean must be >= avg + distance
+        threshold = range_avg + distance_amount
         return window_mean_base >= threshold
-    # Cheapest: window mean must be <= avg * (1 - distance)
-    threshold = range_avg * (1 - distance_ratio)
+    # Cheapest: window mean must be <= avg - distance
+    threshold = range_avg - distance_amount
     return window_mean_base <= threshold
