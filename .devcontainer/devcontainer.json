@@ -35,7 +35,9 @@
         "ms-vscode-remote.remote-containers",
         "redhat.vscode-yaml",
         "ryanluker.vscode-coverage-gutters",
-        "MermaidChart.vscode-mermaid-chart"
+        "MermaidChart.vscode-mermaid-chart",
+        "Anthropic.claude-code",
+        "openai.chatgpt"
       ],
       "settings": {
         "editor.tabSize": 4,
