@@ -435,30 +435,53 @@ ${DIFF_CONTEXT}
 Output ONLY the release notes. Start directly with the # title.
 End after the Buy Me A Coffee button. No meta-commentary, no explanations."
 
-    # Save prompt to temp file for copilot
-    TEMP_PROMPT=$(mktemp)
-    echo "$PROMPT" >"$TEMP_PROMPT"
-
     # Use Claude Sonnet for better user-focused, plain-language release notes.
     # Haiku tends to echo technical commit language; Sonnet better translates to user benefits.
     # Can override with: COPILOT_MODEL=claude-haiku-4.5 ./scripts/release/generate-notes
     COPILOT_MODEL="${COPILOT_MODEL:-claude-sonnet-4.6}"
 
-    # Call copilot CLI (it will handle authentication interactively)
-    copilot --model "$COPILOT_MODEL" <"$TEMP_PROMPT" || {
+    # Call copilot CLI (it will handle authentication interactively).
+    # Flags matter here (recent copilot CLI versions, e.g. 1.0.68+):
+    # The prompt is piped into stdin (a real pipe, not a `<file` redirect and
+    #   not the -p argument). Two prior approaches were tried and broke:
+    #   - `-p "$PROMPT"` puts the whole prompt on the command line, which
+    #     blows past the OS argv/environ size limit (ARG_MAX) on releases
+    #     with many commits, failing with "Argument list too long".
+    #   - `<"$TEMP_PROMPT"` (file redirect) gave copilot a seekable regular
+    #     file as stdin; it was observed to sometimes respond "No prompt
+    #     provided..." yet still exit 0 for that same input in a real
+    #     terminal, silently producing empty release notes. A shell pipe
+    #     presents stdin as a FIFO, matching what "via standard in" in
+    #     copilot's own help text expects, and has no size limit.
+    # --available-tools (no value) disables all tools — this task only needs
+    #   plain text generation from the embedded context, and without this the
+    #   agent may attempt tool calls that silently stall/no-op in
+    #   non-interactive mode, producing empty output (least-privilege, avoids
+    #   needing --allow-all-tools).
+    # --silent suppresses the post-response stats block (Changes/AI
+    #   Credits/Tokens/Resume) that newer versions print to stdout, which
+    #   would otherwise leak into the generated release notes.
+    # --no-custom-instructions skips loading this repo's AGENTS.md, which is
+    #   unrelated to release-note writing style and would just burn tokens.
+    # --no-color keeps the captured output free of ANSI escape codes.
+    COPILOT_OUTPUT=$(printf '%s' "$PROMPT" | copilot --model "$COPILOT_MODEL" --available-tools --silent --no-custom-instructions --no-color) || true
+
+    # Treat empty/whitespace-only output as a failure too: copilot has been
+    # observed to exit 0 while producing no content (e.g. when it could not
+    # obtain a prompt), which previously slipped past the "||" failure check.
+    if [[ -z "${COPILOT_OUTPUT//[[:space:]]/}" ]]; then
         echo ""
-        log_info "${YELLOW}Warning: GitHub Copilot CLI failed or was not authenticated${NC}"
+        log_info "${YELLOW}Warning: GitHub Copilot CLI failed, was not authenticated, or returned no output${NC}"
         log_info "${YELLOW}Falling back to git-cliff${NC}"
-        rm -f "$TEMP_PROMPT"
         if command -v git-cliff >/dev/null 2>&1; then
             generate_with_gitcliff
         else
             generate_with_manual
         fi
         return
-    }
+    fi
 
-    rm -f "$TEMP_PROMPT"
+    printf "%s\n" "$COPILOT_OUTPUT"
 }
 
 # ============================================================================
