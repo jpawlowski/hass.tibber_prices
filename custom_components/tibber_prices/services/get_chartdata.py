@@ -24,6 +24,7 @@ from __future__ import annotations
 from datetime import datetime, timedelta
 import math
 import re
+import statistics
 from typing import TYPE_CHECKING, Any, Final
 
 import voluptuous as vol
@@ -174,7 +175,12 @@ def _calculate_metadata(
         min_val = min(data)
         max_val = max(data)
         mean_val = sum(data) / len(data)
-        median_val = sorted(data)[len(data) // 2]
+        # CRITICAL: statistics.median() averages the two middle values for
+        # even-length data (the common case: a full day is always an even
+        # number of 15min/hourly intervals). A naive sorted(data)[len//2]
+        # would instead return the upper-middle value, silently overstating
+        # the median for every "combined"/per-day stat block.
+        median_val = statistics.median(data)
 
         # Calculate mean_position and median_position (0-1 scale)
         price_range = max_val - min_val
