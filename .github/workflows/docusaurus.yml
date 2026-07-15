@@ -44,7 +44,7 @@ jobs:
             echo "Stable tag or branch: ${GITHUB_REF}"
           fi
 
-      - uses: actions/setup-node@v6
+      - uses: actions/setup-node@v7
         with:
           node-version: 24
           cache: "npm"
