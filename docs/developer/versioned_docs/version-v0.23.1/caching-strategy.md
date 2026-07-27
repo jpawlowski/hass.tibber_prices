@@ -123,7 +123,7 @@ description = get_translation("binary_sensor.best_price_period.description", "en
 ```python
 {
     "best": {"flex": 0.15, "min_distance_from_avg": 5.0, "min_period_length": 60},
-    "peak": {"flex": 0.15, "min_distance_from_avg": 5.0, "min_period_length": 60}
+    "peak": {"flex": 0.15, "min_distance_from_avg": 5.0, "min_period_length": 60},
 }
 ```
 
@@ -178,11 +178,11 @@ description = get_translation("binary_sensor.best_price_period.description", "en
 
 ```python
 hash_data = (
-    today_signature,           # (startsAt, rating_level) for each interval
+    today_signature,  # (startsAt, rating_level) for each interval
     tuple(best_config.items()),  # Best price config
     tuple(peak_config.items()),  # Peak price config
-    best_level_filter,         # Level filter overrides
-    peak_level_filter
+    best_level_filter,  # Level filter overrides
+    peak_level_filter,
 )
 ```
 

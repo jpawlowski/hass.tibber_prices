@@ -45,8 +45,7 @@ import tracemalloc
 tracemalloc.start()
 # Run your code
 current, peak = tracemalloc.get_traced_memory()
-_LOGGER.info("Memory: current=%.2fMB peak=%.2fMB",
-             current / 1024**2, peak / 1024**2)
+_LOGGER.info("Memory: current=%.2fMB peak=%.2fMB", current / 1024**2, peak / 1024**2)
 tracemalloc.stop()
 ```
 
@@ -77,6 +76,7 @@ data = await store.async_load()
 ```python
 # Already implemented in const.py
 _TRANSLATION_CACHE: dict[str, dict] = {}
+
 
 def get_translation(path: str, language: str) -> dict:
     cache_key = f"{path}_{language}"
@@ -139,10 +139,7 @@ user_data = await fetch_user_data()
 price_data = await fetch_price_data()
 
 # ✅ Concurrent (fast)
-user_data, price_data = await asyncio.gather(
-    fetch_user_data(),
-    fetch_price_data()
-)
+user_data, price_data = await asyncio.gather(fetch_user_data(), fetch_price_data())
 ```
 
 **2. Don't block event loop:**
@@ -174,6 +171,7 @@ class Coordinator:
 
 ```python
 import weakref
+
 
 class Manager:
     def __init__(self):
@@ -216,8 +214,7 @@ results = (x for x in items if condition(x))
 **Monitor API usage:**
 
 ```python
-_LOGGER.debug("API call: %s (cache_age=%s)",
-              endpoint, cache_age)
+_LOGGER.debug("API call: %s (cache_age=%s)", endpoint, cache_age)
 ```
 
 ### Smart Updates
@@ -243,13 +240,13 @@ async def _async_update_data(self) -> dict:
 
 ```python
 # ❌ MEASUREMENT for prices (stores every change)
-state_class=SensorStateClass.MEASUREMENT  # ~35K records/year
+state_class = SensorStateClass.MEASUREMENT  # ~35K records/year
 
 # ✅ None for prices (no long-term stats)
-state_class=None  # Only current state
+state_class = None  # Only current state
 
 # ✅ TOTAL for counters only
-state_class=SensorStateClass.TOTAL  # For cumulative values
+state_class = SensorStateClass.TOTAL  # For cumulative values
 ```
 
 ### Attribute Size
@@ -260,7 +257,7 @@ state_class=SensorStateClass.TOTAL  # For cumulative values
 # ❌ Large nested structures (KB per update)
 attributes = {
     "all_intervals": [...],  # 384 intervals
-    "full_history": [...],   # Days of data
+    "full_history": [...],  # Days of data
 }
 
 # ✅ Essential data only (bytes per update)
@@ -278,6 +275,7 @@ attributes = {
 ```python
 import pytest
 import time
+
 
 @pytest.mark.benchmark
 def test_period_calculation_performance(coordinator):

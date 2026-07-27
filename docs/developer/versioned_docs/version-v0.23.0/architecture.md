@@ -263,20 +263,16 @@ All quarter-hourly price intervals get augmented via `utils/price.py`:
 
 ```python
 # Original from Tibber API
-{
-  "startsAt": "2025-11-03T14:00:00+01:00",
-  "total": 0.2534,
-  "level": "NORMAL"
-}
+{"startsAt": "2025-11-03T14:00:00+01:00", "total": 0.2534, "level": "NORMAL"}
 
 # After enrichment (utils/price.py)
 {
-  "startsAt": "2025-11-03T14:00:00+01:00",
-  "total": 0.2534,
-  "level": "NORMAL",
-  "trailing_avg_24h": 0.2312,    # ← Added: 24h trailing average
-  "difference": 9.6,              # ← Added: % diff from trailing avg
-  "rating_level": "NORMAL"        # ← Added: LOW/NORMAL/HIGH based on thresholds
+    "startsAt": "2025-11-03T14:00:00+01:00",
+    "total": 0.2534,
+    "level": "NORMAL",
+    "trailing_avg_24h": 0.2312,  # ← Added: 24h trailing average
+    "difference": 9.6,  # ← Added: % diff from trailing avg
+    "rating_level": "NORMAL",  # ← Added: LOW/NORMAL/HIGH based on thresholds
 }
 ```
 
