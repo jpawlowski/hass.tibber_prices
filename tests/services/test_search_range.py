@@ -150,14 +150,17 @@ class TestResolveSearchRangeNegativeOffsetMinutes:
         assert start.hour == 23
 
     def test_search_scope_excludes_current_interval_when_disabled(self) -> None:
-        """Relative search scopes honor include_current_interval=false."""
+        """Relative search scopes ceil to next quarter boundary when include_current_interval=False."""
         now = datetime(2026, 4, 11, 14, 37, tzinfo=BERLIN)
         call_data = {
             "search_scope": "next_24h",
             "include_current_interval": False,
         }
         start, end = resolve_search_range(call_data, now, BERLIN)
-        assert start == now
+        # 14:37 is not on a quarter boundary → should ceil to 14:45
+        assert start.hour == 14
+        assert start.minute == 45
+        assert start.second == 0
         assert end == now + timedelta(hours=24)
 
     def test_search_scope_includes_current_interval_when_enabled(self) -> None:
@@ -171,6 +174,54 @@ class TestResolveSearchRangeNegativeOffsetMinutes:
         assert start.hour == 14
         assert start.minute == 30
         assert end == now + timedelta(hours=24)
+
+    def test_exclude_current_interval_with_sub_second_now(self) -> None:
+        """Regression: microseconds in now caused no intervals to be returned.
+
+        When include_current_interval=False and now has sub-second precision
+        (e.g. 14:47:00.167996), the search_start must be ceiled to the next
+        quarter boundary (15:00) so it aligns with actual interval timestamps
+        in the pool index. Previously, raw now was used, which matched no
+        cached interval and returned no data.
+        """
+        # Reproduce the exact scenario from the bug report: 14:47:00.167996+02:00
+        now = datetime(2026, 7, 27, 14, 47, 0, 167996, tzinfo=ZoneInfo("Europe/Berlin"))
+        call_data = {
+            "search_scope": "next_24h",
+            "include_current_interval": False,
+        }
+        start, end = resolve_search_range(call_data, now, ZoneInfo("Europe/Berlin"))
+        # 14:47:00.167996 → floor → 14:45 + 15min → 15:00
+        assert start.hour == 15
+        assert start.minute == 0
+        assert start.second == 0
+        assert start.microsecond == 0
+
+    def test_exclude_current_interval_already_on_boundary(self) -> None:
+        """When now is exactly on a quarter boundary and include_current_interval=False,
+        the start is advanced to the NEXT boundary (the interval that hasn't started yet).
+        """
+        # 14:45:00 exactly → the 14:45 interval is currently in progress
+        # → exclude it → ceil to 15:00
+        now = datetime(2026, 4, 11, 14, 45, 0, tzinfo=BERLIN)
+        call_data = {
+            "search_scope": "next_24h",
+            "include_current_interval": False,
+        }
+        start, end = resolve_search_range(call_data, now, BERLIN)
+        # 14:45:00 is exactly on a boundary → but the 14:45 interval is "current"
+        # The correct behaviour: include_current=False should start at 15:00
+        assert start.hour == 15
+        assert start.minute == 0
+
+    def test_exclude_current_default_no_scope_ceils_to_next_quarter(self) -> None:
+        """Default path (no scope) with include_current_interval=False also ceils."""
+        now = datetime(2026, 4, 11, 14, 47, 30, tzinfo=BERLIN)
+        call_data = {"include_current_interval": False}
+        start, _end = resolve_search_range(call_data, now, BERLIN)
+        assert start.hour == 15
+        assert start.minute == 0
+        assert start.second == 0
 
 
 # =============================================================================

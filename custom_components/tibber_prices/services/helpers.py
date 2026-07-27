@@ -408,6 +408,22 @@ def floor_to_quarter_hour(dt_value: datetime) -> datetime:
     return dt_value.replace(minute=(dt_value.minute // INTERVAL_MINUTES) * INTERVAL_MINUTES, second=0, microsecond=0)
 
 
+def ceil_to_next_quarter_hour(dt_value: datetime) -> datetime:
+    """Return the start of the next quarter-hour interval after dt_value.
+
+    Always advances past the interval that contains dt_value, even when
+    dt_value falls exactly on a boundary (in which case that interval is
+    considered "current" and is skipped).
+
+    This is used when include_current_interval=False to align the search start
+    with the first interval boundary in the pool index that has not yet started.
+    Without this, a raw ``now`` timestamp like ``14:47:00.167996`` would not
+    match any cached key (which are always on :00/:15/:30/:45) and would return
+    no intervals.
+    """
+    return floor_to_quarter_hour(dt_value) + timedelta(minutes=INTERVAL_MINUTES)
+
+
 def _resolve_time_with_day_offset(
     time_value: dt_time,
     day_offset: int,
@@ -451,7 +467,7 @@ def _resolve_scope(
     tomorrow_start = today_start + timedelta(days=1)
     day_after_start = today_start + timedelta(days=2)
 
-    rolling_start = floor_to_quarter_hour(now) if include_current else now
+    rolling_start = floor_to_quarter_hour(now) if include_current else ceil_to_next_quarter_hour(now)
 
     if scope == "today":
         return today_start, tomorrow_start
@@ -608,8 +624,10 @@ def resolve_search_range(
         search_start = now + timedelta(minutes=call_data["search_start_offset_minutes"])
         if include_current:
             search_start = floor_to_quarter_hour(search_start)
+        else:
+            search_start = ceil_to_next_quarter_hour(search_start)
     else:
-        search_start = floor_to_quarter_hour(now) if include_current else now
+        search_start = floor_to_quarter_hour(now) if include_current else ceil_to_next_quarter_hour(now)
 
     # --- Resolve end ---
     if "search_end" in call_data:
