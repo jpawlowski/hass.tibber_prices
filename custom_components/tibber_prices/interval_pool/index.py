@@ -144,6 +144,31 @@ class TibberPricesIntervalPoolTimestampIndex:
             len(self._index),
         )
 
+    def keys_in_range(self, start_timestamp: str, end_timestamp: str) -> list[str]:
+        """
+        Return the indexed timestamps inside a range, in chronological order.
+
+        Keys are naive local timestamps in a fixed-width format, so lexicographic
+        order is chronological order and a plain string comparison selects the range.
+
+        Selecting what is actually indexed - rather than generating the timestamps a
+        range is expected to contain and looking each one up - is what makes lookups
+        independent of interval length. Ranges spanning the 2025-10-01 hourly to
+        quarter-hourly switch, ranges whose bounds sit off the interval grid, and
+        caches with gaps all work without the caller knowing the resolution.
+
+        Args:
+            start_timestamp: ISO timestamp string, inclusive (will be normalized).
+            end_timestamp: ISO timestamp string, exclusive (will be normalized).
+
+        Returns:
+            Sorted list of normalized timestamps within the range. Empty if none.
+
+        """
+        start_key = self._normalize_timestamp(start_timestamp)
+        end_key = self._normalize_timestamp(end_timestamp)
+        return sorted(key for key in self._index if start_key <= key < end_key)
+
     def get_raw_index(self) -> dict[str, dict[str, int]]:
         """Get raw index dict (for serialization)."""
         return self._index

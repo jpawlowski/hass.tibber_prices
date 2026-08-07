@@ -28,9 +28,9 @@ if TYPE_CHECKING:
 _LOGGER = logging.getLogger(__name__)
 _LOGGER_DETAILS = logging.getLogger(__name__ + ".details")
 
-# Interval lengths in minutes
+# Longest interval length in minutes, used as the upper bound when deriving an
+# interval's length from the gap to its successor.
 INTERVAL_HOURLY = 60
-INTERVAL_QUARTER_HOURLY = 15
 
 # Debounce delay for auto-save (seconds)
 DEBOUNCE_DELAY_SECONDS = 3.0
@@ -702,7 +702,18 @@ class TibberPricesIntervalPool:
         """
         Get cached intervals for time range using timestamp index.
 
-        Uses timestamp_index for O(1) lookups per timestamp.
+        Selects the indexed timestamps that fall inside the range, rather than
+        generating the timestamps the range is expected to contain and looking each
+        one up. The generating approach had to know the interval length, so it broke
+        on anything that did not match its assumptions: a start even seconds off the
+        interval grid produced timestamps that matched no key at all and silently
+        returned nothing, which is how an off-grid search start turned into an empty
+        result for the caller (see resolve_search_range).
+
+        Index keys are naive local timestamps, so a range spanning a DST transition
+        selects correctly even though its bounds carry different UTC offsets (e.g.
+        +01:00 CET to +02:00 CEST). Comparing the aware datetimes would end the range
+        an hour early on spring-forward days.
 
         IMPORTANT: Returns shallow copies of interval dicts to prevent external
         mutations (e.g., by parse_all_timestamps()) from affecting cached data.
@@ -717,56 +728,25 @@ class TibberPricesIntervalPool:
             Sorted by startsAt timestamp. Each dict is a shallow copy.
 
         """
-        # Parse query range once
-        start_time_dt = datetime.fromisoformat(start_time_iso)
-        end_time_dt = datetime.fromisoformat(end_time_iso)
-
-        # CRITICAL: Use NAIVE local timestamps for iteration.
-        #
-        # Index keys are naive local timestamps (timezone stripped via [:19]).
-        # When start and end span a DST transition, they have different UTC offsets
-        # (e.g., start=+01:00 CET, end=+02:00 CEST). Using fixed-offset datetimes
-        # from fromisoformat() causes the loop to compare UTC values for the end
-        # boundary, ending 1 hour early on spring-forward days (or 1 hour late on
-        # fall-back days).
-        #
-        # By iterating in naive local time, we match the index key format exactly
-        # and the end boundary comparison works correctly regardless of DST.
-        current_naive = start_time_dt.replace(tzinfo=None)
-        end_naive = end_time_dt.replace(tzinfo=None)
-
-        # Use index to find intervals: iterate through expected timestamps
-        result = []
-
-        # Determine interval step (15 min post-2025-10-01, 60 min pre)
-        resolution_change_naive = datetime(2025, 10, 1)
-        interval_minutes = INTERVAL_QUARTER_HOURLY if current_naive >= resolution_change_naive else INTERVAL_HOURLY
-
+        result: list[dict[str, Any]] = []
         fetch_groups = self._cache.get_fetch_groups()
-        while current_naive < end_naive:
-            # Check if this timestamp exists in index (O(1) lookup)
-            current_dt_key = current_naive.isoformat()[:19]
-            location = self._index.get(current_dt_key)
 
-            if location is not None:
-                fetch_group = fetch_groups[location["fetch_group_index"]]
-                interval = fetch_group["intervals"][location["interval_index"]]
-                # CRITICAL: Return shallow copy to prevent external mutations
-                # (e.g., parse_all_timestamps() converts startsAt to datetime in-place)
-                result.append(dict(interval))
+        for timestamp_key in self._index.keys_in_range(start_time_iso, end_time_iso):
+            location = self._index.get(timestamp_key)
+            if location is None:  # pragma: no cover - keys come from the index itself
+                continue
 
-                # Also yield DST fall-back extras for this naive timestamp.
-                # On fall-back day, 02:xx occurs in both CEST and CET; the CET
-                # version was stored in _dst_extras instead of being discarded.
-                if current_dt_key in self._dst_extras:
-                    result.extend(dict(extra) for extra in self._dst_extras[current_dt_key])
+            fetch_group = fetch_groups[location["fetch_group_index"]]
+            interval = fetch_group["intervals"][location["interval_index"]]
+            # CRITICAL: Return shallow copy to prevent external mutations
+            # (e.g., parse_all_timestamps() converts startsAt to datetime in-place)
+            result.append(dict(interval))
 
-            # Move to next expected interval
-            current_naive += timedelta(minutes=interval_minutes)
-
-            # Handle resolution change boundary
-            if interval_minutes == INTERVAL_HOURLY and current_naive >= resolution_change_naive:
-                interval_minutes = INTERVAL_QUARTER_HOURLY
+            # Also yield DST fall-back extras for this naive timestamp.
+            # On fall-back day, 02:xx occurs in both CEST and CET; the CET
+            # version was stored in _dst_extras instead of being discarded.
+            if timestamp_key in self._dst_extras:
+                result.extend(dict(extra) for extra in self._dst_extras[timestamp_key])
 
         _LOGGER_DETAILS.debug(
             "Retrieved %d intervals from cache for home %s (range %s to %s)",

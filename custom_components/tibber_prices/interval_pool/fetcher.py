@@ -30,8 +30,7 @@ INTERVAL_QUARTER_HOURLY = 15
 MIN_GAP_HOURLY = 3600  # 1 hour
 MIN_GAP_QUARTER_HOURLY = 900  # 15 minutes
 
-# Tolerance for time comparisons (±1 second for floating point/timezone issues)
-TIME_TOLERANCE_SECONDS = 1
+# Tolerance for time comparisons (±1 minute for floating point/timezone issues)
 TIME_TOLERANCE_MINUTES = 1
 
 
@@ -123,15 +122,24 @@ class TibberPricesIntervalPoolFetcher:
         first_cached_dt = datetime.fromisoformat(sorted_intervals[0]["startsAt"])
         resolution_change_dt = RESOLUTION_CHANGE_DATETIME.replace(tzinfo=first_cached_dt.tzinfo)
 
-        # Check gap before first cached interval
+        # Check gap before first cached interval.
+        #
+        # The gap must span at least one whole interval to be worth fetching, the
+        # same rule the trailing gap uses. A shorter gap means the range simply
+        # starts partway into an interval - a start of 14:47 sits 13 minutes before
+        # the 15:00 interval, yet no interval begins in between. Reporting that as
+        # missing would request a range the API cannot fill, so the gap would survive
+        # every fetch and the same range would be requested again on every call.
+        min_leading_gap_seconds = MIN_GAP_QUARTER_HOURLY if first_cached_dt >= resolution_change_dt else MIN_GAP_HOURLY
         time_diff_before_first = (first_cached_dt - start_time_dt).total_seconds()
-        if time_diff_before_first > TIME_TOLERANCE_SECONDS:
+        if time_diff_before_first >= min_leading_gap_seconds:
             missing_ranges.append((start_time_iso, sorted_intervals[0]["startsAt"]))
             _LOGGER_DETAILS.debug(
-                "Missing range before first cached interval: %s to %s (%.1f seconds)",
+                "Missing range before first cached interval: %s to %s (%.1f seconds, need >= %d)",
                 start_time_iso,
                 sorted_intervals[0]["startsAt"],
                 time_diff_before_first,
+                min_leading_gap_seconds,
             )
 
         # Check gaps between consecutive cached intervals
