@@ -702,10 +702,10 @@ Example: daily_min=10 ct, daily_avg=20 ct, flex=50%, min_distance=5%
 **Key Constants** (defined in `coordinator/period_handlers/core.py`):
 
 ```python
-MAX_SAFE_FLEX = 0.50                      # 50% absolute maximum
-MAX_OUTLIER_FLEX = 0.25                   # 25% for stable outlier detection
+MAX_SAFE_FLEX = 0.50  # 50% absolute maximum
+MAX_OUTLIER_FLEX = 0.25  # 25% for stable outlier detection
 FLEX_WARNING_THRESHOLD_RELAXATION = 0.25  # INFO warning at 25% base flex
-FLEX_HIGH_THRESHOLD_RELAXATION = 0.30     # WARNING at 30% base flex
+FLEX_HIGH_THRESHOLD_RELAXATION = 0.30  # WARNING at 30% base flex
 ```
 
 **Relaxation Strategy** (`coordinator/period_handlers/relaxation.py`):
@@ -725,10 +725,10 @@ FLEX_HIGH_THRESHOLD_RELAXATION = 0.30     # WARNING at 30% base flex
 **Default Configuration Values** (`const.py`):
 
 ```python
-DEFAULT_BEST_PRICE_FLEX = 15              # 15% base - optimal for relaxation mode
-DEFAULT_PEAK_PRICE_FLEX = -20             # 20% base (negative for peak detection)
-DEFAULT_RELAXATION_ATTEMPTS_BEST = 11     # 11 steps: 15% → 48% (3% increment per step)
-DEFAULT_RELAXATION_ATTEMPTS_PEAK = 11     # 11 steps: 20% → 50% (3% increment per step)
+DEFAULT_BEST_PRICE_FLEX = 15  # 15% base - optimal for relaxation mode
+DEFAULT_PEAK_PRICE_FLEX = -20  # 20% base (negative for peak detection)
+DEFAULT_RELAXATION_ATTEMPTS_BEST = 11  # 11 steps: 15% → 48% (3% increment per step)
+DEFAULT_RELAXATION_ATTEMPTS_PEAK = 11  # 11 steps: 20% → 50% (3% increment per step)
 ```
 
 The relaxation increment is **hard-coded at 3% per step** in `relaxation.py` for reliability and predictability. This prevents configuration issues with high base flex values while still allowing sufficient escalation to the 50% hard maximum.
@@ -1297,11 +1297,13 @@ If you see errors from one tool, understand which tool should fix them:
 def process_data(time: TimeService | None) -> None:
     result = time.now()  # Error: 'None' has no attribute 'now'
 
+
 # ✅ GOOD - Guard against None
 def process_data(time: TimeService | None) -> None:
     if time is None:
         return
     result = time.now()  # OK - type narrowed to TimeService
+
 
 # ✅ BETTER - Make it required if always provided
 def process_data(time: TimeService) -> None:
@@ -1318,6 +1320,7 @@ if TYPE_CHECKING:
 
     # Custom callback type that accepts TimeService
     TimeServiceCallback = Callable[[TimeService], None]
+
 
 # Use in class definition
 class ListenerManager:
@@ -1360,9 +1363,11 @@ if (interval_time := time.get_interval_time(price)) is not None:
 def get_timestamp() -> str:
     return datetime.now()  # Error: incompatible return type
 
+
 # ✅ GOOD - Match return type to actual return value
 def get_timestamp() -> datetime:
     return datetime.now()  # OK
+
 
 # ✅ ALSO GOOD - Convert if signature requires string
 def get_timestamp() -> str:
@@ -1623,7 +1628,9 @@ If you create a helper class that is ONLY used within a single module file:
 # ✅ CORRECT - Private class with underscore prefix
 class _InternalHelper:
     """Helper class used only within this module."""
+
     pass
+
 
 # Usage: Only in the same file, never imported elsewhere
 result = _InternalHelper().process()
@@ -1641,6 +1648,7 @@ result = _InternalHelper().process()
 # In coordinator/price_data_manager.py
 class _ApiRetryStateMachine:
     """Internal state machine for retry logic. Never used outside this file."""
+
     def __init__(self, max_retries: int) -> None:
         self._attempts = 0
         self._max_retries = max_retries
@@ -1733,12 +1741,12 @@ Use consistent indentation to show logical structure (DEBUG level only):
 
 ```python
 # Define indentation constants at module level
-INDENT_L0 = ""          # Top-level (0 spaces)
-INDENT_L1 = "  "        # Level 1 (2 spaces)
-INDENT_L2 = "    "      # Level 2 (4 spaces)
-INDENT_L3 = "      "    # Level 3 (6 spaces)
+INDENT_L0 = ""  # Top-level (0 spaces)
+INDENT_L1 = "  "  # Level 1 (2 spaces)
+INDENT_L2 = "    "  # Level 2 (4 spaces)
+INDENT_L3 = "      "  # Level 3 (6 spaces)
 INDENT_L4 = "        "  # Level 4 (8 spaces)
-INDENT_L5 = "          "# Level 5 (10 spaces)
+INDENT_L5 = "          "  # Level 5 (10 spaces)
 
 # Usage example showing logic hierarchy
 _LOGGER.debug("%sCalculating periods for day %s", INDENT_L0, day_date)
@@ -1769,9 +1777,12 @@ _LOGGER.debug(
     "%s  Base flex: %.1f%%\n"
     "%s  Strategy: 4 flex levels × 4 filter combinations",
     INDENT_L0,
-    INDENT_L0, "ENABLED" if enable_relaxation else "DISABLED",
-    INDENT_L0, min_periods,
-    INDENT_L0, base_flex,
+    INDENT_L0,
+    "ENABLED" if enable_relaxation else "DISABLED",
+    INDENT_L0,
+    min_periods,
+    INDENT_L0,
+    base_flex,
     INDENT_L0,
 )
 ```
@@ -1955,7 +1966,7 @@ message = "Hello world"
 html = '<div class="container">content</div>'
 
 # ❌ Inconsistent quote usage
-name = 'tibber_prices'  # Ruff will change to double quotes
+name = "tibber_prices"  # Ruff will change to double quotes
 ```
 
 **Trailing Commas:**
@@ -1968,6 +1979,7 @@ SENSOR_TYPES = [
     "max_price",  # ← Trailing comma
 ]
 
+
 # ✅ Also for function arguments
 def calculate_average(
     prices: list[dict],
@@ -1976,11 +1988,12 @@ def calculate_average(
 ) -> float:
     pass
 
+
 # ❌ Missing trailing comma
 SENSOR_TYPES = [
     "current_interval_price",
     "min_price",
-    "max_price"  # Ruff will add trailing comma
+    "max_price",  # Ruff will add trailing comma
 ]
 ```
 
@@ -1991,6 +2004,7 @@ SENSOR_TYPES = [
 def get_price() -> float:
     """Return current electricity price."""
     return 0.25
+
 
 # ✅ Multi-line docstrings: summary line, blank, details
 def calculate_average(prices: list[dict]) -> float:
@@ -2004,9 +2018,10 @@ def calculate_average(prices: list[dict]) -> float:
     """
     return sum(p["total"] for p in prices) / len(prices)
 
+
 # ❌ Single quotes or missing docstrings on public functions
 def get_price() -> float:
-    '''Return price'''  # Ruff will change to double quotes
+    """Return price"""  # Ruff will change to double quotes
 ```
 
 **Line Breaking:**
@@ -2020,20 +2035,11 @@ result = some_function(
 )
 
 # ✅ Break long conditions
-if (
-    price > threshold
-    and time_of_day == "peak"
-    and day_of_week in ["Monday", "Friday"]
-):
+if price > threshold and time_of_day == "peak" and day_of_week in ["Monday", "Friday"]:
     do_something()
 
 # ✅ Chain methods with line breaks
-df = (
-    data_frame
-    .filter(lambda x: x > 0)
-    .sort_values()
-    .reset_index()
-)
+df = data_frame.filter(lambda x: x > 0).sort_values().reset_index()
 ```
 
 **Type Annotations:**
@@ -2044,14 +2050,19 @@ def get_current_interval_price(coordinator: DataUpdateCoordinator) -> float:
     """Get current price from coordinator."""
     return coordinator.data["priceInfo"][0]["total"]
 
+
 # ✅ Use modern type syntax (Python 3.13)
 def process_prices(prices: list[dict[str, Any]]) -> dict[str, float]:
     pass
 
+
 # ❌ Avoid old-style typing (List, Dict from typing module)
 from typing import List, Dict
+
+
 def process_prices(prices: List[Dict[str, Any]]) -> Dict[str, float]:  # Use list, dict instead
     pass
+
 
 # ✅ Optional parameters
 def fetch_data(home_id: str, max_retries: int = 3) -> dict | None:
@@ -2084,11 +2095,7 @@ prices = [interval["total"] for interval in data]
 price_map = {interval["startsAt"]: interval["total"] for interval in data}
 
 # ✅ Break long comprehensions
-prices = [
-    interval["total"]
-    for interval in data
-    if interval["total"] is not None
-]
+prices = [interval["total"] for interval in data if interval["total"] is not None]
 
 # ❌ Don't use comprehensions for complex logic
 result = [  # Use regular loop instead
@@ -2128,40 +2135,34 @@ Attributes should follow a **logical priority order** to make the most important
 ```python
 attributes = {
     # 1. Time information (when does this apply?)
-    "timestamp": ...,          # ALWAYS FIRST: Reference time for state/attributes validity
+    "timestamp": ...,  # ALWAYS FIRST: Reference time for state/attributes validity
     "start": ...,
     "end": ...,
     "duration_minutes": ...,
-
     # 2. Core decision attributes (what should I do?)
-    "level": ...,              # Price level (VERY_CHEAP, CHEAP, NORMAL, etc.)
-    "rating_level": ...,       # Price rating (LOW, NORMAL, HIGH)
-
+    "level": ...,  # Price level (VERY_CHEAP, CHEAP, NORMAL, etc.)
+    "rating_level": ...,  # Price rating (LOW, NORMAL, HIGH)
     # 3. Price statistics (how much does it cost?)
     "price_mean": ...,
     "price_median": ...,
     "price_min": ...,
     "price_max": ...,
-
     # 4. Price differences (optional - how does it compare?)
     "price_diff_from_daily_min": ...,
     "price_diff_from_daily_min_%": ...,
-
     # 5. Detail information (additional context)
     "hour": ...,
     "minute": ...,
     "time": ...,
     "period_position": ...,
     "interval_count": ...,
-
     # 6. Meta information (technical details)
-    "pricePeriods": [...],          # Nested structures last
+    "pricePeriods": [...],  # Nested structures last
     "priceInfo": [...],
-
     # 7. Extended descriptions (always last)
-    "description": "...",      # Short description from custom_translations (always shown)
-    "long_description": "...", # Detailed explanation from custom_translations (shown when CONF_EXTENDED_DESCRIPTIONS enabled)
-    "usage_tips": "...",       # Usage examples from custom_translations (shown when CONF_EXTENDED_DESCRIPTIONS enabled)
+    "description": "...",  # Short description from custom_translations (always shown)
+    "long_description": "...",  # Detailed explanation from custom_translations (shown when CONF_EXTENDED_DESCRIPTIONS enabled)
+    "usage_tips": "...",  # Usage examples from custom_translations (shown when CONF_EXTENDED_DESCRIPTIONS enabled)
 }
 ```
 
@@ -2228,6 +2229,7 @@ def _get_sensor_attributes(self) -> dict | None:
     """Get sensor-specific attributes."""
     # Direct implementation returns dict
     return build_sensor_attributes(...)
+
 
 # binary_sensor/core.py
 def _get_sensor_attributes(self) -> dict | None:
@@ -2346,7 +2348,7 @@ This ensures timestamp is always the first key in the attribute dict, regardless
     "price_mean": 18.5,
     "price_median": 18.3,
     "interval_count": 4,
-    "intervals": [...]
+    "intervals": [...],
 }
 
 # ❌ Bad: Random order makes it hard to scan
@@ -2356,7 +2358,7 @@ This ensures timestamp is always the first key in the attribute dict, regardless
     "rating_level": "LOW",
     "start": "2025-11-08T14:00:00+01:00",
     "price_mean": 18.5,
-    "end": "2025-11-08T15:00:00+01:00"
+    "end": "2025-11-08T15:00:00+01:00",
 }
 ```
 

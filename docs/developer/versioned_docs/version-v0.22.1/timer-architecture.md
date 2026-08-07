@@ -187,9 +187,8 @@ async def _handle_minute_refresh(self, now: datetime) -> None:
 class TibberPricesSensor(CoordinatorEntity):
     async def async_added_to_hass(self):
         # Register this entity's update callback
-        self._remove_listener = self.coordinator.async_add_time_sensitive_listener(
-            self._handle_coordinator_update
-        )
+        self._remove_listener = self.coordinator.async_add_time_sensitive_listener(self._handle_coordinator_update)
+
 
 # Coordinator maintains list of listeners
 class ListenerManager:
@@ -390,8 +389,8 @@ _LOGGER.setLevel(logging.DEBUG)
 
 # Watch for these log messages:
 "Fetching data from API (reason: tomorrow_check)"  # API call
-"Using cached data (no update needed)"             # Fast path
-"Midnight turnover detected (Timer #1)"            # Turnover
+"Using cached data (no update needed)"  # Fast path
+"Midnight turnover detected (Timer #1)"  # Turnover
 ```
 
 ### Check Timer #2 (Quarter-Hour)
@@ -399,7 +398,8 @@ _LOGGER.setLevel(logging.DEBUG)
 ```python
 # Watch coordinator logs:
 "Updated 60 time-sensitive entities at quarter-hour boundary"  # Normal
-"Midnight turnover detected (Timer #2)"                        # Turnover
+
+"Midnight turnover detected (Timer #2)"  # Turnover
 ```
 
 ### Check Timer #3 (Minute)

@@ -216,7 +216,7 @@ These patterns were analyzed and classified as **not critical**:
 coordinator.data = {
     "user_data": {...},
     "priceInfo": [...],  # Flat list of all enriched intervals
-    "currency": "EUR"  # Top-level for easy access
+    "currency": "EUR",  # Top-level for easy access
 }
 ```
 

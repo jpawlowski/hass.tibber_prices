@@ -61,7 +61,9 @@ If a helper class is ONLY used within a single module file, prefix it with under
 # ✅ Private class - used only in this file
 class _InternalHelper:
     """Helper used only within this module."""
+
     pass
+
 
 # ❌ Wrong - no prefix but used across modules
 class DataFetcher:  # Should be TibberPricesDataFetcher

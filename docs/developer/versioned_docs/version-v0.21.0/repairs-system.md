@@ -69,11 +69,7 @@ API requests are being throttled, causing stale data. Updates may be delayed unt
 
 ```python
 # In error handler
-is_rate_limit = (
-    "429" in error_str
-    or "rate limit" in error_str
-    or "too many requests" in error_str
-)
+is_rate_limit = "429" in error_str or "rate limit" in error_str or "too many requests" in error_str
 if is_rate_limit:
     await self._repair_manager.track_rate_limit_error()
 
@@ -295,6 +291,7 @@ async def check_new_condition(self, *, param: bool) -> None:
     elif not should_warn and self._new_repair_active:
         await self._clear_new_repair()
 
+
 async def _create_new_repair(self) -> None:
     """Create new repair issue."""
     _LOGGER.warning("New issue detected - creating repair")
@@ -311,6 +308,7 @@ async def _create_new_repair(self) -> None:
         },
     )
     self._new_repair_active = True
+
 
 async def _clear_new_repair(self) -> None:
     """Clear new repair issue."""

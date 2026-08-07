@@ -49,7 +49,8 @@ fi
 # --- Find matching phac version via PyPI ---
 log_step "Querying PyPI for matching pytest-homeassistant-custom-component version..."
 
-NEW_PHAC_VERSION=$(python3 - "$NEW_HA_VERSION" <<'PYEOF'
+NEW_PHAC_VERSION=$(
+    python3 - "$NEW_HA_VERSION" <<'PYEOF'
 import json, sys, urllib.request
 
 target_ha = sys.argv[1]

@@ -1336,8 +1336,8 @@ for price_data in all_prices:
     ref_date = date_key
 
     criteria = TibberPricesIntervalCriteria(
-        ref_price=ref_prices[ref_date],      # Interval's day
-        avg_price=avg_prices[ref_date],      # Interval's day
+        ref_price=ref_prices[ref_date],  # Interval's day
+        avg_price=avg_prices[ref_date],  # Interval's day
         flex=flex,
         min_distance_from_avg=min_distance_from_avg,
         reverse_sort=reverse_sort,

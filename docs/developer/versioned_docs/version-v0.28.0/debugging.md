@@ -119,7 +119,7 @@ def test_something(coordinator):
 
 ```python
 def test_periods(hass, coordinator):
-    periods = coordinator.data.get('best_price_periods', [])
+    periods = coordinator.data.get("best_price_periods", [])
     for period in periods:
         print(f"Period: {period['start']} to {period['end']}")
         print(f"  Intervals: {len(period['intervals'])}")
@@ -147,15 +147,14 @@ grep "tibber_prices" config/home-assistant.log
 
 ```python
 # In Developer Tools > Template
-{{ states.sensor.tibber_home_current_interval_price.last_updated }}
+{{states.sensor.tibber_home_current_interval_price.last_updated}}
 ```
 
 **Debug in code:**
 
 ```python
 # Add logging in sensor/core.py
-_LOGGER.debug("Updating sensor %s: old=%s new=%s",
-              self.entity_id, self._attr_native_value, new_value)
+_LOGGER.debug("Updating sensor %s: old=%s new=%s", self.entity_id, self._attr_native_value, new_value)
 ```
 
 ### Period Calculation Wrong
@@ -164,8 +163,7 @@ _LOGGER.debug("Updating sensor %s: old=%s new=%s",
 
 ```python
 # coordinator/period_handlers/period_building.py
-_LOGGER.debug("Candidate intervals: %s",
-              [(i['startsAt'], i['total']) for i in candidates])
+_LOGGER.debug("Candidate intervals: %s", [(i["startsAt"], i["total"]) for i in candidates])
 ```
 
 **Check filter statistics:**
@@ -217,6 +215,7 @@ Add to coordinator code:
 
 ```python
 import debugpy
+
 debugpy.listen(5678)
 _LOGGER.info("Waiting for debugger attach on port 5678")
 debugpy.wait_for_client()
@@ -236,6 +235,7 @@ Add breakpoint:
 
 ```python
 from IPython import embed
+
 embed()  # Drops into interactive shell
 ```
 
