@@ -265,6 +265,7 @@ class TibberPricesDataTransformer:
                     "peak_price": [],
                 },
                 "currency": currency,
+                "referenceTime": current_time,
             }
 
         # Enrich price info dynamically with calculated differences and rating levels
@@ -285,11 +286,15 @@ class TibberPricesDataTransformer:
         period_intervals = _build_period_calculation_intervals(enriched_intervals)
         _strip_internal_enrichment_fields(enriched_intervals)
 
-        # Store enriched intervals directly as priceInfo (flat list)
+        # Store enriched intervals directly as priceInfo (flat list).
+        # referenceTime carries this coordinator's notion of "now" (shifted for
+        # time-travel subentries) so day-offset filtering downstream resolves
+        # against the same clock - see coordinator/helpers.py.
         transformed_data = {
             "home_id": home_id,
             "priceInfo": enriched_intervals,
             "currency": currency,
+            "referenceTime": current_time,
         }
 
         # Detect day patterns (yesterday / today / tomorrow)

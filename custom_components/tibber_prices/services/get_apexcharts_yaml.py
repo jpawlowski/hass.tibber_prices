@@ -147,7 +147,7 @@ def _build_entity_map(
     patterns = pattern_map.get((level_type, day), [])
 
     for entity in entity_registry.entities.values():
-        if entity.config_entry_id != entry_id or entity.domain != "sensor":
+        if entity.config_entry_id != entry_id or entity.config_subentry_id is not None or entity.domain != "sensor":
             continue
 
         # Match entity against patterns using unique_id (contains entry_id_key)
@@ -171,6 +171,7 @@ def _get_current_price_entity(entity_registry: EntityRegistry, entry_id: str) ->
             entity.entity_id
             for entity in entity_registry.entities.values()
             if entity.config_entry_id == entry_id
+            and entity.config_subentry_id is None
             and entity.unique_id
             and entity.unique_id.endswith("_current_interval_price")
         ),
@@ -686,6 +687,7 @@ async def handle_apexcharts_yaml(call: ServiceCall) -> dict[str, Any]:  # noqa: 
                 entity.entity_id
                 for entity in entity_registry.entities.values()
                 if entity.config_entry_id == entry_id
+                and entity.config_subentry_id is None
                 and entity.unique_id
                 and entity.unique_id.endswith("_tomorrow_data_available")
             ),
@@ -743,6 +745,7 @@ async def handle_apexcharts_yaml(call: ServiceCall) -> dict[str, Any]:  # noqa: 
                         entity.entity_id
                         for entity in entity_registry.entities.values()
                         if entity.config_entry_id == entry_id
+                        and entity.config_subentry_id is None
                         and entity.unique_id
                         and entity.unique_id.endswith("_current_interval_price")
                     ),
@@ -761,6 +764,7 @@ async def handle_apexcharts_yaml(call: ServiceCall) -> dict[str, Any]:  # noqa: 
                         entity.entity_id
                         for entity in entity_registry.entities.values()
                         if entity.config_entry_id == entry_id
+                        and entity.config_subentry_id is None
                         and entity.unique_id
                         and entity.unique_id.endswith("_chart_metadata")
                     ),
@@ -928,6 +932,7 @@ async def handle_apexcharts_yaml(call: ServiceCall) -> dict[str, Any]:  # noqa: 
                     entity.entity_id
                     for entity in entity_registry.entities.values()
                     if entity.config_entry_id == entry_id
+                    and entity.config_subentry_id is None
                     and entity.unique_id
                     and entity.unique_id.endswith("_chart_metadata")
                 ),

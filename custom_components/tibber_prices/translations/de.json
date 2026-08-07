@@ -88,7 +88,7 @@
     "override_field_label_relaxation_attempts_peak": "Lockerungsversuche"
   },
   "config_subentries": {
-    "home": {
+    "time_travel": {
       "entry_type": "Zeitreise-Ansicht",
       "initiate_flow": {
         "user": "Zeitreise-Ansicht erstellen"
@@ -96,13 +96,6 @@
       "title": "Zeitreise-Ansicht erstellen",
       "step": {
         "user": {
-          "title": "Konfigurationseintrag auswählen",
-          "description": "Wähle den Konfigurationseintrag aus, für den du eine Zeitreise-Ansicht erstellen möchtest.\n\n**Zeitreise-Ansichten** ermöglichen es dir, historische Preisdaten so anzuzeigen, als wären sie die aktuellen Daten. Dies ist nützlich zum Testen von Automatisierungen oder zur Analyse vergangener Preismuster.",
-          "data": {
-            "parent_entry_id": "Konfigurationseintrag"
-          }
-        },
-        "time_offset": {
           "title": "Zeitversatz konfigurieren",
           "description": "Konfiguriere, wie weit zurück in der Zeit diese Ansicht reisen soll.\n\n**Empfohlen:** Verwende **≥2 Tage** Versatz, um Konflikte mit \"yesterday\"-Entitäten zu vermeiden, die ebenfalls historische Daten bereitstellen.\n\n**Beispiele:**\n• **-7 Tage**: Zeigt Preise von vor 7 Tagen\n• **-2 Tage, 3 Stunden**: Zeigt Preise von vor 2 Tagen und 3 Stunden\n• **-14 Tage**: Zeigt Preise von vor 2 Wochen",
           "data": {
@@ -114,7 +107,7 @@
             "time_offset": "Optionale Feinabstimmung: Füge Stunden und/oder Minuten zum Tagesversatz hinzu. Die Zeit wird automatisch subtrahiert (weiter zurück reisen). Hinweis: Sekunden werden ignoriert - nur minutengenaue Präzision wird unterstützt."
           }
         },
-        "init": {
+        "reconfigure": {
           "title": "Zeitversatz neu konfigurieren",
           "description": "Aktualisiere den Zeitversatz für diese Zeitreise-Ansicht.",
           "data": {
@@ -132,8 +125,7 @@
       },
       "abort": {
         "already_configured": "**Eine Zeitreise-Ansicht mit diesem exakten Zeitversatz existiert bereits.**\n\nBitte wähle einen anderen Versatz.",
-        "no_main_entries": "Keine Hauptkonfigurationseinträge gefunden. Füge zuerst ein Tibber-Zuhause hinzu.",
-        "parent_entry_not_found": "Ausgewählter Konfigurationseintrag nicht gefunden."
+        "reconfigure_successful": "Zeitreise-Ansicht aktualisiert."
       }
     }
   },

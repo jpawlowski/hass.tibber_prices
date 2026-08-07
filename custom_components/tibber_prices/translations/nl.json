@@ -88,7 +88,7 @@
     "override_field_label_relaxation_attempts_peak": "Ontspanningspogingen"
   },
   "config_subentries": {
-    "home": {
+    "time_travel": {
       "entry_type": "Tijdreisweergave",
       "initiate_flow": {
         "user": "Tijdreisweergave Aanmaken"
@@ -96,13 +96,6 @@
       "title": "Tijdreisweergave Aanmaken",
       "step": {
         "user": {
-          "title": "Selecteer Configuratie-Item",
-          "description": "Selecteer het configuratie-item waarvoor je een tijdreisweergave wilt aanmaken.\n\n**Tijdreisweergaven** laten je historische prijsgegevens zien alsof het de huidige tijd is. Dit is handig voor het testen van automatiseringen of het analyseren van prijspatronen uit het verleden.",
-          "data": {
-            "parent_entry_id": "Configuratie-Item"
-          }
-        },
-        "time_offset": {
           "title": "Configureer Tijdverschuiving",
           "description": "Configureer hoe ver terug in de tijd deze weergave moet reizen.\n\n**Aanbevolen:** Gebruik **≥2 dagen** verschuiving om conflicten met \"gisteren\"-entiteiten te voorkomen die ook historische gegevens bieden.\n\n**Voorbeelden:**\n• **-7 dagen**: Bekijk prijzen van 7 dagen geleden\n• **-2 dagen, 3 uur**: Bekijk prijzen van 2 dagen en 3 uur geleden\n• **-14 dagen**: Bekijk prijzen van 2 weken geleden",
           "data": {
@@ -114,7 +107,7 @@
             "time_offset": "Optionele fijnafstemming: Voeg uren en/of minuten toe aan de dagverschuiving. De tijd wordt automatisch afgetrokken (verder terug reizen). Let op: Seconden worden genegeerd - alleen precisie op minuutniveau wordt ondersteund."
           }
         },
-        "init": {
+        "reconfigure": {
           "title": "Tijdverschuiving Opnieuw Configureren",
           "description": "Werk de tijdverschuiving voor deze tijdreisweergave bij.",
           "data": {
@@ -132,8 +125,7 @@
       },
       "abort": {
         "already_configured": "**Een tijdreisweergave met exact deze tijdverschuiving bestaat al.**\n\nKies een andere verschuiving.",
-        "no_main_entries": "Geen hoofdconfiguratie-items gevonden. Voeg eerst een Tibber-huis toe.",
-        "parent_entry_not_found": "Geselecteerd configuratie-item niet gevonden."
+        "reconfigure_successful": "Tijdreis-weergave bijgewerkt."
       }
     }
   },

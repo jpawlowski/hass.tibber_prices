@@ -36,7 +36,7 @@ from .const import (
     async_load_translations,
 )
 from .coordinator import STORAGE_VERSION, TibberPricesDataUpdateCoordinator
-from .data import TibberPricesData
+from .data import TibberPricesData, TibberPricesSubentryData
 from .interval_pool import (
     TibberPricesIntervalPool,
     async_load_pool_state,
@@ -45,8 +45,10 @@ from .interval_pool import (
 )
 from .migrations import check_entity_migrations
 from .services import async_setup_services
+from .time_travel import iter_time_travel_subentries, subentry_storage_id
 
 if TYPE_CHECKING:
+    from homeassistant.config_entries import ConfigSubentry
     from homeassistant.core import HomeAssistant
 
     from .data import TibberPricesConfigEntry
@@ -308,37 +310,7 @@ async def async_setup_entry(
         msg = f"[{entry.title}] Config entry missing home_id (required for interval pool)"
         raise ConfigEntryAuthFailed(msg)
 
-    # Create or load interval pool for this config entry (single-home architecture)
-    pool_state = await async_load_pool_state(hass, entry.entry_id)
-    if pool_state:
-        interval_pool = TibberPricesIntervalPool.from_dict(
-            pool_state,
-            api=api_client,
-            hass=hass,
-            entry_id=entry.entry_id,
-        )
-        if interval_pool is None:
-            # Old multi-home format or corrupted → create new pool
-            LOGGER.info(
-                "[%s] Interval pool storage invalid/corrupted, creating new pool (will rebuild from API)",
-                entry.title,
-            )
-            interval_pool = TibberPricesIntervalPool(
-                home_id=home_id,
-                api=api_client,
-                hass=hass,
-                entry_id=entry.entry_id,
-            )
-        else:
-            LOGGER.debug("[%s] Interval pool restored from storage (auto-save enabled)", entry.title)
-    else:
-        interval_pool = TibberPricesIntervalPool(
-            home_id=home_id,
-            api=api_client,
-            hass=hass,
-            entry_id=entry.entry_id,
-        )
-        LOGGER.debug("[%s] Created new interval pool (auto-save enabled)", entry.title)
+    interval_pool = await _async_create_interval_pool(hass, entry, api_client, home_id)
 
     coordinator = TibberPricesDataUpdateCoordinator(
         hass=hass,
@@ -352,11 +324,16 @@ async def async_setup_entry(
     # This prevents sensors from being marked as "unavailable" on first setup
     await coordinator.load_cache()
 
+    # Time-travel views: one coordinator + pool per subentry, each on its own
+    # shifted clock (see time_travel.py).
+    subentry_data = await _async_setup_subentries(hass, entry, api_client, home_id)
+
     entry.runtime_data = TibberPricesData(
         client=api_client,
         integration=integration,
         coordinator=coordinator,
         interval_pool=interval_pool,
+        subentries=subentry_data,
     )
 
     # https://developers.home-assistant.io/docs/integration_fetching_data#coordinated-single-api-poll-for-data-for-all-entities
@@ -367,9 +344,151 @@ async def async_setup_entry(
     else:
         await coordinator.async_refresh()
 
+    # Subentry coordinators must never block setup of the live entry: a view of a
+    # date Tibber has no data for is a broken view, not a broken integration.
+    for view in subentry_data.values():
+        await view.coordinator.async_refresh()
+
+    # Reload when subentries are added, removed or reconfigured - each one owns a
+    # coordinator and a set of entities that are wired up during setup.
+    entry.async_on_unload(entry.add_update_listener(_async_handle_subentry_change))
+
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
+
+
+async def _async_create_interval_pool(
+    hass: HomeAssistant,
+    entry: TibberPricesConfigEntry,
+    api_client: TibberPricesApiClient,
+    home_id: str,
+    subentry: ConfigSubentry | None = None,
+) -> TibberPricesIntervalPool:
+    """
+    Create or restore the interval pool for a coordinator.
+
+    Each coordinator gets its own pool with its own storage: the live entry keeps
+    the plain entry ID, every time-travel view gets a suffixed one. Sharing a pool
+    is not an option because the pool's garbage collector protects the window
+    around *its* notion of today - a shared pool would have the live coordinator
+    evicting the historical window and vice versa.
+
+    Args:
+        hass: HomeAssistant instance.
+        entry: The config entry the pool belongs to.
+        api_client: API client used for fetching intervals.
+        home_id: Tibber home ID.
+        subentry: Time-travel subentry, or None for the live pool.
+
+    Returns:
+        A ready-to-use interval pool.
+
+    """
+    storage_id = subentry_storage_id(entry.entry_id, subentry)
+    label = f"{entry.title} / {subentry.title}" if subentry is not None else entry.title
+
+    pool_state = await async_load_pool_state(hass, storage_id)
+    if pool_state:
+        restored = TibberPricesIntervalPool.from_dict(
+            pool_state,
+            api=api_client,
+            hass=hass,
+            entry_id=storage_id,
+        )
+        if restored is not None:
+            LOGGER.debug("[%s] Interval pool restored from storage (auto-save enabled)", label)
+            return restored
+
+        # Old multi-home format or corrupted → create new pool
+        LOGGER.info(
+            "[%s] Interval pool storage invalid/corrupted, creating new pool (will rebuild from API)",
+            label,
+        )
+    else:
+        LOGGER.debug("[%s] Created new interval pool (auto-save enabled)", label)
+
+    return TibberPricesIntervalPool(
+        home_id=home_id,
+        api=api_client,
+        hass=hass,
+        entry_id=storage_id,
+    )
+
+
+async def _async_setup_subentries(
+    hass: HomeAssistant,
+    entry: TibberPricesConfigEntry,
+    api_client: TibberPricesApiClient,
+    home_id: str,
+) -> dict[str, TibberPricesSubentryData]:
+    """
+    Build a coordinator and interval pool for every time-travel subentry.
+
+    Returns:
+        Mapping of subentry ID to its runtime data, empty if the entry has no
+        time-travel views.
+
+    """
+    views: dict[str, TibberPricesSubentryData] = {}
+
+    for subentry in iter_time_travel_subentries(entry):
+        pool = await _async_create_interval_pool(hass, entry, api_client, home_id, subentry)
+        coordinator = TibberPricesDataUpdateCoordinator(
+            hass=hass,
+            config_entry=entry,
+            api_client=api_client,
+            interval_pool=pool,
+            subentry=subentry,
+        )
+        await coordinator.load_cache()
+
+        views[subentry.subentry_id] = TibberPricesSubentryData(
+            subentry=subentry,
+            coordinator=coordinator,
+            interval_pool=pool,
+        )
+        LOGGER.debug(
+            "[%s] Time-travel view '%s' set up with offset %s",
+            entry.title,
+            subentry.title,
+            coordinator.time_offset,
+        )
+
+    return views
+
+
+async def _async_handle_subentry_change(
+    hass: HomeAssistant,
+    entry: TibberPricesConfigEntry,
+) -> None:
+    """
+    Reload the entry when its time-travel subentries changed.
+
+    Adding, removing or reconfiguring a subentry changes which coordinators and
+    entities must exist, which can only be applied by a full setup. Plain options
+    updates are handled in-place by the coordinator and must not reload, so this
+    compares the current subentry configuration against what was set up.
+    """
+    if entry.runtime_data is None:
+        return
+
+    current = {subentry.subentry_id: dict(subentry.data) for subentry in iter_time_travel_subentries(entry)}
+    active = {subentry_id: dict(view.subentry.data) for subentry_id, view in entry.runtime_data.subentries.items()}
+
+    if current == active:
+        return
+
+    # Drop storage of views that are gone, otherwise their pool and cache stores
+    # would linger until the whole config entry is removed.
+    for subentry_id in active.keys() - current.keys():
+        view = entry.runtime_data.subentries[subentry_id]
+        await Store(hass, STORAGE_VERSION, f"{DOMAIN}.{entry.entry_id}.{subentry_id}").async_remove()
+        await async_remove_pool_storage(hass, subentry_storage_id(entry.entry_id, view.subentry))
+        LOGGER.debug("[%s] Removed storage of deleted time-travel view %s", entry.title, subentry_id)
+
+    LOGGER.debug("[%s] Time-travel subentries changed, reloading entry", entry.title)
+    hass.config_entries.async_schedule_reload(entry.entry_id)
 
 
 async def async_unload_entry(
@@ -386,10 +505,23 @@ async def async_unload_entry(
         # Shutdown interval pool (cancels background tasks)
         await entry.runtime_data.interval_pool.async_shutdown()
 
+    # Same for every time-travel view (own pool, own storage)
+    if entry.runtime_data is not None:
+        for subentry_id, view in entry.runtime_data.subentries.items():
+            await async_save_pool_state(
+                hass,
+                subentry_storage_id(entry.entry_id, view.subentry),
+                view.interval_pool.to_dict(),
+            )
+            await view.interval_pool.async_shutdown()
+            LOGGER.debug("[%s] Time-travel view %s pool state saved on unload", entry.title, subentry_id)
+
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
     if unload_ok and entry.runtime_data is not None:
         await entry.runtime_data.coordinator.async_shutdown()
+        for view in entry.runtime_data.subentries.values():
+            await view.coordinator.async_shutdown()
 
     # Unregister services if this was the last config entry
     if not hass.config_entries.async_entries(DOMAIN):
@@ -417,6 +549,13 @@ async def async_remove_entry(
     # Remove interval pool storage
     await async_remove_pool_storage(hass, entry.entry_id)
     LOGGER.debug(f"[tibber_prices] async_remove_entry removed interval pool storage for entry_id={entry.entry_id}")
+
+    # Each time-travel view has its own cache store and interval pool storage
+    for subentry in iter_time_travel_subentries(entry):
+        storage_id = subentry_storage_id(entry.entry_id, subentry)
+        await Store(hass, STORAGE_VERSION, f"{DOMAIN}.{entry.entry_id}.{subentry.subentry_id}").async_remove()
+        await async_remove_pool_storage(hass, storage_id)
+        LOGGER.debug("[tibber_prices] async_remove_entry removed storage for time-travel view %s", storage_id)
 
     # Blueprints are kept in the repo but not distributed yet.
     # remaining = [e for e in hass.config_entries.async_entries(DOMAIN) if e.entry_id != entry.entry_id]

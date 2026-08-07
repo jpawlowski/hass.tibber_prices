@@ -134,6 +134,23 @@ class TibberPricesIntervalPool:
         # Structure: {"2026-10-25T02:00:00": [{"startsAt": "...+01:00", ...}], ...}
         self._dst_extras: dict[str, list[dict[str, Any]]] = {}
 
+    def set_time_service(self, time_service: TibberPricesTimeService | None) -> None:
+        """
+        Replace the TimeService this pool works against.
+
+        The coordinator hands in a fresh instance each update cycle. A time-travel
+        coordinator's instance is offset into the past, which shifts both the fetch
+        window in get_sensor_data() and the GC-protected range in the fetch group
+        cache - without this the pool would keep protecting the live 4-day window
+        and garbage-collect the historical data it just fetched.
+
+        Args:
+            time_service: TimeService to use, or None to fall back to real time.
+
+        """
+        self._time_service = time_service
+        self._cache.set_time_service(time_service)
+
     @property
     def last_fetch_degraded(self) -> bool:
         """Return True if the most recent API fetch fell back to cached data."""

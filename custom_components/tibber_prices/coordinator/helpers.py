@@ -9,6 +9,8 @@ from typing import TYPE_CHECKING, Any
 from homeassistant.util import dt as dt_util
 
 if TYPE_CHECKING:
+    from datetime import datetime
+
     from .time_service import TibberPricesTimeService
 
 _LOGGER = logging.getLogger(__name__)
@@ -17,6 +19,8 @@ _LOGGER = logging.getLogger(__name__)
 def get_intervals_for_day_offsets(
     coordinator_data: dict[str, Any] | None,
     offsets: list[int],
+    *,
+    reference_time: datetime | None = None,
 ) -> list[dict[str, Any]]:
     """
     Get intervals for specific day offsets from coordinator data.
@@ -29,11 +33,19 @@ def get_intervals_for_day_offsets(
     - Single pass through intervals with date caching
     - Only processes requested offsets
 
+    Time-travel: "today" is not necessarily the real today. The reference date is
+    taken from `reference_time`, falling back to the `referenceTime` key that the
+    data transformer writes into coordinator data, and only then to real time. A
+    time-travel subentry therefore resolves offsets against its shifted clock
+    without every caller having to thread a TimeService through.
+
     Args:
         coordinator_data: Coordinator data dict (typically coordinator.data).
         offsets: List of day offsets relative to today (e.g., [0, 1] for today and tomorrow).
                  Range: -374 to +1 (allows historical comparisons up to one year + one week).
                  0 = today, -1 = yesterday, +1 = tomorrow, -7 = one week ago, etc.
+        reference_time: Explicit reference for "today". Overrides the value carried
+                 in coordinator_data.
 
     Returns:
         List of intervals matching the requested day offsets, in chronological order.
@@ -65,9 +77,10 @@ def get_intervals_for_day_offsets(
     if not all_intervals:
         return []
 
-    # Get current local date for comparison (no TimeService needed - use dt_util directly)
-    now_local = dt_util.now()
-    today_date = now_local.date()
+    # Resolve the reference date: explicit argument > value carried in the data
+    # (set by the transformer, shifted for time-travel subentries) > real time.
+    reference = reference_time or coordinator_data.get("referenceTime") or dt_util.now()
+    today_date = dt_util.as_local(reference).date()
 
     # Build set of target dates based on requested offsets
     target_dates = set()
@@ -107,6 +120,8 @@ def get_intervals_for_day_offsets(
 
 def needs_tomorrow_data(
     cached_price_data: dict[str, Any] | None,
+    *,
+    reference_time: datetime | None = None,
 ) -> bool:
     """
     Check if tomorrow data is missing or invalid in cached price data.
@@ -117,10 +132,11 @@ def needs_tomorrow_data(
     in cache.py, so we only need to handle the current format here.
 
     Uses get_intervals_for_day_offsets() to automatically determine tomorrow
-    based on current date. No explicit date parameter needed.
+    based on current date.
 
     Args:
         cached_price_data: Cached price data in single-home structure
+        reference_time: Reference for "today" - shifted for time-travel subentries.
 
     Returns:
         True if tomorrow's data is missing, False otherwise
@@ -132,7 +148,7 @@ def needs_tomorrow_data(
     # Single-home format: {"price_info": [...], "home_id": "xxx"}
     # Use helper to get tomorrow's intervals (offset +1 from current date)
     coordinator_data = {"priceInfo": cached_price_data.get("price_info", [])}
-    tomorrow_intervals = get_intervals_for_day_offsets(coordinator_data, [1])
+    tomorrow_intervals = get_intervals_for_day_offsets(coordinator_data, [1], reference_time=reference_time)
 
     # If no intervals for tomorrow found, we need tomorrow data
     return len(tomorrow_intervals) == 0

@@ -43,7 +43,14 @@ OUTAGE_REPAIR_DELAY = timedelta(hours=2)
 class TibberPricesRepairManager:
     """Manage repair issues for Tibber Prices integration."""
 
-    def __init__(self, hass: HomeAssistant, entry_id: str, home_name: str) -> None:
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        entry_id: str,
+        home_name: str,
+        *,
+        enabled: bool = True,
+    ) -> None:
         """
         Initialize repair manager.
 
@@ -51,11 +58,17 @@ class TibberPricesRepairManager:
             hass: Home Assistant instance
             entry_id: Config entry ID for this home
             home_name: Display name of the home (for user-friendly messages)
+            enabled: When False every method is a no-op. Time-travel subentries
+                share their parent's entry_id, so letting them manage repairs
+                would mean two coordinators creating and clearing the same
+                issue IDs. Their data problems are the live entry's problems -
+                the live coordinator reports them.
 
         """
         self._hass = hass
         self._entry_id = entry_id
         self._home_name = home_name
+        self._enabled = enabled
 
         # Track consecutive rate limit errors
         self._rate_limit_error_count = 0
@@ -90,6 +103,8 @@ class TibberPricesRepairManager:
             current_time: Current local datetime for hour check
 
         """
+        if not self._enabled:
+            return
         should_warn = current_time.hour >= TOMORROW_DATA_WARNING_HOUR and not has_tomorrow_data
 
         if should_warn and not self._tomorrow_data_repair_active:
@@ -104,6 +119,8 @@ class TibberPricesRepairManager:
         Increments rate limit error counter and creates repair issue
         if threshold (3 consecutive errors) is reached.
         """
+        if not self._enabled:
+            return
         self._rate_limit_error_count += 1
 
         if self._rate_limit_error_count >= RATE_LIMIT_WARNING_THRESHOLD and not self._rate_limit_repair_active:
@@ -115,6 +132,8 @@ class TibberPricesRepairManager:
 
         Resets counter and clears any active repair issue.
         """
+        if not self._enabled:
+            return
         self._rate_limit_error_count = min(self._rate_limit_error_count, 0)
 
         if self._rate_limit_repair_active:
@@ -135,6 +154,8 @@ class TibberPricesRepairManager:
             current_time: Current time of this update cycle.
 
         """
+        if not self._enabled:
+            return
         if self._outage_since is None:
             self._outage_since = current_time
 
@@ -150,6 +171,8 @@ class TibberPricesRepairManager:
         only when fresh data was actually received (NOT when serving cached data as
         a fallback, which still counts as an ongoing outage).
         """
+        if not self._enabled:
+            return
         self._outage_since = None
 
         if self._outage_repair_active:
@@ -162,6 +185,8 @@ class TibberPricesRepairManager:
         This indicates the home was deleted from the user's Tibber account
         but the config entry still exists in Home Assistant.
         """
+        if not self._enabled:
+            return
         if self._home_not_found_repair_active:
             return
 
@@ -186,6 +211,8 @@ class TibberPricesRepairManager:
 
     async def clear_home_not_found_repair(self) -> None:
         """Clear home not found repair (home is available again or entry removed)."""
+        if not self._enabled:
+            return
         if not self._home_not_found_repair_active:
             return
 
@@ -204,6 +231,8 @@ class TibberPricesRepairManager:
 
         Called during coordinator shutdown or entry removal.
         """
+        if not self._enabled:
+            return
         if self._tomorrow_data_repair_active:
             await self._clear_tomorrow_data_repair()
         if self._rate_limit_repair_active:

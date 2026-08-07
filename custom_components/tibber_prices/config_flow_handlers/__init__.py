@@ -30,7 +30,6 @@ from custom_components.tibber_prices.config_flow_handlers.schemas import (
     get_price_trend_schema,
     get_reauth_confirm_schema,
     get_select_home_schema,
-    get_subentry_init_schema,
     get_user_schema,
     get_volatility_schema,
 )
@@ -56,7 +55,6 @@ __all__ = [
     "get_price_trend_schema",
     "get_reauth_confirm_schema",
     "get_select_home_schema",
-    "get_subentry_init_schema",
     "get_user_schema",
     "get_volatility_schema",
     "validate_api_token",

@@ -164,7 +164,7 @@ def check_relevant_entities_enabled(
 
     for entity in entity_registry.entities.values():
         # Check if entity belongs to our integration and config entry
-        if entity.config_entry_id != entry_id:
+        if entity.config_entry_id != entry_id or entity.config_subentry_id is not None:
             continue
         if entity.platform != DOMAIN:
             continue
@@ -242,7 +242,7 @@ def check_chart_data_export_enabled(
 
     for entity in entity_registry.entities.values():
         # Check if entity belongs to our integration and config entry
-        if entity.config_entry_id != entry_id:
+        if entity.config_entry_id != entry_id or entity.config_subentry_id is not None:
             continue
         if entity.platform != DOMAIN:
             continue

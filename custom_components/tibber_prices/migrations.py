@@ -101,12 +101,18 @@ def _auto_migrate_entity_keys(
 
     """
     migrated: list[tuple[str, str, str]] = []
-    prefix = f"{entry.entry_id}_"
 
-    # Get all entities for this config entry
+    # Get all entities for this config entry (including its time-travel views)
     entry_entities = er.async_entries_for_config_entry(ent_reg, entry.entry_id)
 
     for entity_entry in entry_entities:
+        # Entities of a time-travel view carry the subentry in their unique_id
+        # (see device.entity_unique_id) - strip that too, so key renames reach
+        # the views as well and not just the live entities.
+        prefix = f"{entry.entry_id}_"
+        if entity_entry.config_subentry_id:
+            prefix = f"{prefix}{entity_entry.config_subentry_id}_"
+
         if not entity_entry.unique_id.startswith(prefix):
             continue
 

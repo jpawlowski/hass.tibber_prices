@@ -16,11 +16,11 @@ from custom_components.tibber_prices import const as _const
 if TYPE_CHECKING:
     from collections.abc import Callable
 
-    from custom_components.tibber_prices.coordinator.time_service import TibberPricesTimeService
     from homeassistant.config_entries import ConfigEntry
 
 from .helpers import get_intervals_for_day_offsets
 from .period_handlers import TibberPricesPeriodConfig, calculate_periods_with_relaxation
+from .time_service import TibberPricesTimeService
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -37,7 +37,9 @@ class TibberPricesPeriodCalculator:
         """Initialize the period calculator."""
         self.config_entry = config_entry
         self._log_prefix = log_prefix
-        self.time: TibberPricesTimeService  # Set by coordinator before first use
+        # Replaced by the coordinator with a fresh (possibly time-shifted) service
+        # each update cycle; the default keeps the calculator usable standalone.
+        self.time: TibberPricesTimeService = TibberPricesTimeService()
         self._config_cache: dict[str, dict[str, Any]] | None = None
         self._config_cache_valid = False
         self._get_config_override = get_config_override_fn
@@ -152,7 +154,9 @@ class TibberPricesPeriodCalculator:
         # Get today and tomorrow intervals for hash calculation.
         # Hash full interval signatures instead of only the first startsAt so we also
         # invalidate when prices or enriched levels change within the same calendar day.
-        coordinator_data = {"priceInfo": price_info}
+        # referenceTime keeps day-offset filtering on this calculator's clock
+        # (shifted for time-travel subentries).
+        coordinator_data = {"priceInfo": price_info, "referenceTime": self.time.now()}
         today_intervals = get_intervals_for_day_offsets(coordinator_data, [0])
         tomorrow_intervals = get_intervals_for_day_offsets(coordinator_data, [1])
 
@@ -755,7 +759,9 @@ class TibberPricesPeriodCalculator:
 
         # Get today's intervals from flat list
         # Build minimal coordinator_data structure for get_intervals_for_day_offsets
-        coordinator_data = {"priceInfo": price_info}
+        # referenceTime keeps day-offset filtering on this calculator's clock
+        # (shifted for time-travel subentries).
+        coordinator_data = {"priceInfo": price_info, "referenceTime": self.time.now()}
         today_intervals = get_intervals_for_day_offsets(coordinator_data, [0])
 
         if not today_intervals:
@@ -835,7 +841,9 @@ class TibberPricesPeriodCalculator:
         # Get all intervals at once (day before yesterday + yesterday + today + tomorrow)
         # CRITICAL: 4 days ensure stable historical period calculations
         # (periods calculated today for yesterday match periods calculated yesterday)
-        coordinator_data = {"priceInfo": price_info}
+        # referenceTime keeps day-offset filtering on this calculator's clock
+        # (shifted for time-travel subentries).
+        coordinator_data = {"priceInfo": price_info, "referenceTime": self.time.now()}
         all_prices = get_intervals_for_day_offsets(coordinator_data, [-2, -1, 0, 1])
 
         # Convert day_patterns (keyed by "yesterday"/"today"/"tomorrow") to date-keyed dict

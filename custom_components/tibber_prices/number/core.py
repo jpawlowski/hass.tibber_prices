@@ -12,12 +12,13 @@ import logging
 from typing import TYPE_CHECKING, Any
 
 from custom_components.tibber_prices.const import get_translation
-from custom_components.tibber_prices.device import build_device_info
+from custom_components.tibber_prices.device import build_device_info, entity_unique_id
 from homeassistant.components.number import NumberEntity, RestoreNumber
 from homeassistant.core import callback
 
 if TYPE_CHECKING:
     from custom_components.tibber_prices.coordinator import TibberPricesDataUpdateCoordinator
+    from homeassistant.config_entries import ConfigSubentry
 
     from .definitions import TibberPricesNumberEntityDescription
 
@@ -58,14 +59,18 @@ class TibberPricesConfigNumber(RestoreNumber, NumberEntity):
         self,
         coordinator: TibberPricesDataUpdateCoordinator,
         entity_description: TibberPricesNumberEntityDescription,
+        subentry: ConfigSubentry | None = None,
     ) -> None:
         """Initialize the config number entity."""
         self.coordinator = coordinator
         self.entity_description = entity_description
+        self.subentry = subentry
 
         # Set unique ID
-        self._attr_unique_id = (
-            f"{coordinator.config_entry.unique_id or coordinator.config_entry.entry_id}_{entity_description.key}"
+        self._attr_unique_id = entity_unique_id(
+            coordinator.config_entry.unique_id or coordinator.config_entry.entry_id,
+            entity_description.key,
+            subentry,
         )
 
         # Initialize with None - will be set in async_added_to_hass
@@ -76,7 +81,7 @@ class TibberPricesConfigNumber(RestoreNumber, NumberEntity):
 
     def _setup_device_info(self) -> None:
         """Set up device information (shared across all platforms - see device.py)."""
-        self._attr_device_info = build_device_info(self.coordinator)
+        self._attr_device_info = build_device_info(self.coordinator, self.subentry)
 
     async def async_added_to_hass(self) -> None:
         """Handle entity which was added to Home Assistant."""

@@ -25,13 +25,13 @@ from .definitions import ENTITY_DESCRIPTIONS
 if TYPE_CHECKING:
     from custom_components.tibber_prices.data import TibberPricesConfigEntry
     from homeassistant.core import HomeAssistant
-    from homeassistant.helpers.entity_platform import AddEntitiesCallback
+    from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 
 async def async_setup_entry(
     _hass: HomeAssistant,
     entry: TibberPricesConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Tibber Prices sensor based on a config entry."""
     coordinator = entry.runtime_data.coordinator
@@ -55,3 +55,19 @@ async def async_setup_entry(
         )
         for entity_description in entities_to_create
     )
+
+    # One set of sensors per time-travel view, each on its own coordinator and
+    # its own device. config_subentry_id is what files that device under the
+    # subentry instead of the config entry.
+    for subentry_id, view in entry.runtime_data.subentries.items():
+        async_add_entities(
+            (
+                TibberPricesSensor(
+                    coordinator=view.coordinator,
+                    entity_description=entity_description,
+                    subentry=view.subentry,
+                )
+                for entity_description in entities_to_create
+            ),
+            config_subentry_id=subentry_id,
+        )

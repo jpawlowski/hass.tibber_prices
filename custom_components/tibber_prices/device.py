@@ -81,6 +81,28 @@ def device_identifier(
     return f"{base}_{subentry.subentry_id}"
 
 
+def entity_unique_id(base: str, key: str, subentry: ConfigSubentry | None = None) -> str:
+    """
+    Compose an entity unique ID, scoped to a subentry when there is one.
+
+    Platforms differ in what they use as base (entry ID vs. the entry's unique
+    ID); this only inserts the subentry scope, so unique IDs of existing
+    entities stay byte-identical as long as no subentry is involved.
+
+    Args:
+        base: Platform-specific prefix, usually the config entry ID.
+        key: Entity description key.
+        subentry: Time-travel subentry, or None for the live entry.
+
+    Returns:
+        Collision-free unique ID.
+
+    """
+    if subentry is not None:
+        base = f"{base}_{subentry.subentry_id}"
+    return f"{base}_{key}"
+
+
 def build_device_info(
     coordinator: TibberPricesDataUpdateCoordinator,
     subentry: ConfigSubentry | None = None,

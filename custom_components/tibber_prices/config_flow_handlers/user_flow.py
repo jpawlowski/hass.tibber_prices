@@ -13,12 +13,14 @@ from custom_components.tibber_prices.config_flow_handlers.schemas import (
     get_select_home_schema,
     get_user_schema,
 )
+from custom_components.tibber_prices.config_flow_handlers.subentry_flow import TibberPricesSubentryFlowHandler
 from custom_components.tibber_prices.config_flow_handlers.validators import (
     TibberPricesCannotConnectError,
     TibberPricesInvalidAuthError,
     validate_api_token,
 )
 from custom_components.tibber_prices.const import DOMAIN, LOGGER, get_default_options, get_translation
+from custom_components.tibber_prices.time_travel import SUBENTRY_TYPE_TIME_TRAVEL
 from homeassistant.config_entries import ConfigEntry, ConfigFlow, ConfigFlowResult, OptionsFlow
 from homeassistant.const import CONF_ACCESS_TOKEN
 from homeassistant.core import callback
@@ -51,18 +53,11 @@ class TibberPricesConfigFlowHandler(ConfigFlow, domain=DOMAIN):
         config_entry: ConfigEntry,
     ) -> dict[str, type[ConfigSubentryFlow]]:
         """Return subentries supported by this integration."""
-        # Temporarily disabled: Time-travel feature not yet fully implemented.
-        # A subentry without its own entities triggers the "Devices that don't
-        # belong to a sub-entry" warning (home-assistant/core#147570).
-        #
-        # The device side is prepared: device.build_device_info(coordinator, subentry)
-        # already yields a separate device per subentry, matching the HA 2026.8
-        # device registry model (one device -> one config entry + at most one
-        # subentry). What is still missing is the coordinator producing
-        # time-shifted data and the platforms creating entities per subentry via
-        # async_add_entities(..., config_subentry_id=subentry.subentry_id).
-        # See planning/time-travel-feature-plan.md
-        return {}
+        # A time-travel view needs a home to travel through - entries without a
+        # home_id (should not exist, but setup guards against it too) get none.
+        if not config_entry.data.get("home_id"):
+            return {}
+        return {SUBENTRY_TYPE_TIME_TRAVEL: TibberPricesSubentryFlowHandler}
 
     @staticmethod
     @callback

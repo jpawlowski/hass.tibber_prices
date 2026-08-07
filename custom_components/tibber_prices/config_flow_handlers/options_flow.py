@@ -277,6 +277,7 @@ class TibberPricesOptionsFlowHandler(OptionsFlow):
                 if (
                     entity_entry.domain == domain
                     and entity_entry.config_entry_id == self.config_entry.entry_id
+                    and entity_entry.config_subentry_id is None
                     and entity_entry.unique_id
                     and entity_entry.unique_id.endswith(entity_key)
                     and not entity_entry.disabled

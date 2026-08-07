@@ -68,6 +68,18 @@ async def async_get_config_entry_diagnostics(
         "config": {
             "options": dict(entry.options),
         },
+        "time_travel_views": [
+            {
+                "subentry_id": subentry_id,
+                "title": view.subentry.title,
+                "offset": str(view.coordinator.time_offset),
+                "reference_time": view.coordinator.time.now().isoformat(),
+                "last_update_success": view.coordinator.last_update_success,
+                "interval_count": len((view.coordinator.data or {}).get("priceInfo", [])),
+                "last_exception": str(view.coordinator.last_exception) if view.coordinator.last_exception else None,
+            }
+            for subentry_id, view in entry.runtime_data.subentries.items()
+        ],
         "cache_status": {
             "user_data_cached": coordinator._cached_user_data is not None,  # noqa: SLF001
             "has_price_data": coordinator.data is not None and "priceInfo" in (coordinator.data or {}),

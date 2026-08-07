@@ -88,7 +88,7 @@
     "override_field_label_relaxation_attempts_peak": "Avslappningsförsök"
   },
   "config_subentries": {
-    "home": {
+    "time_travel": {
       "entry_type": "Tidsresevy",
       "initiate_flow": {
         "user": "Skapa tidsresevy"
@@ -96,13 +96,6 @@
       "title": "Skapa tidsresevy",
       "step": {
         "user": {
-          "title": "Välj konfigurationspost",
-          "description": "Välj den konfigurationspost som du vill skapa en tidsresevy för.\n\n**Tidsresevyer** låter dig se historisk prisdata som om det vore nuvarande tid. Detta är användbart för att testa automationer eller analysera tidigare prismönster.",
-          "data": {
-            "parent_entry_id": "Konfigurationspost"
-          }
-        },
-        "time_offset": {
           "title": "Konfigurera tidsförskjutning",
           "description": "Konfigurera hur långt tillbaka i tiden denna vy ska resa.\n\n**Rekommenderat:** Använd **≥2 dagar** förskjutning för att undvika konflikter med \"igår\"-entiteter som också tillhandahåller historisk data.\n\n**Exempel:**\n• **-7 dagar**: Visa priser från 7 dagar sedan\n• **-2 dagar, 3 timmar**: Visa priser från 2 dagar och 3 timmar sedan\n• **-14 dagar**: Visa priser från 2 veckor sedan",
           "data": {
@@ -114,7 +107,7 @@
             "time_offset": "Valfri finjustering: Lägg till timmar och/eller minuter till dagförskjutningen. Tiden subtraheras automatiskt (resa tillbaka längre). Obs: Sekunder ignoreras - endast minutnoggrannhet stöds."
           }
         },
-        "init": {
+        "reconfigure": {
           "title": "Konfigurera om tidsförskjutning",
           "description": "Uppdatera tidsförskjutningen för denna tidsresevy.",
           "data": {
@@ -132,8 +125,7 @@
       },
       "abort": {
         "already_configured": "**En tidsresevy med exakt denna tidsförskjutning finns redan.**\n\nVälj en annan förskjutning.",
-        "no_main_entries": "Inga huvudkonfigurationsposter hittades. Lägg till ett Tibber-hem först.",
-        "parent_entry_not_found": "Vald konfigurationspost hittades inte."
+        "reconfigure_successful": "Tidsresevy uppdaterad."
       }
     }
   },

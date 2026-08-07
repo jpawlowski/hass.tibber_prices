@@ -12,128 +12,49 @@ from custom_components.tibber_prices.const import (
     CONF_VIRTUAL_TIME_OFFSET_MINUTES,
     DOMAIN,
 )
-from homeassistant.config_entries import ConfigSubentryFlow, SubentryFlowResult
+from custom_components.tibber_prices.time_travel import MAX_OFFSET_DAYS
+from homeassistant.config_entries import ConfigEntry, ConfigSubentryFlow, SubentryFlowResult
 from homeassistant.helpers.selector import (
     DurationSelector,
     DurationSelectorConfig,
     NumberSelector,
     NumberSelectorConfig,
     NumberSelectorMode,
-    SelectOptionDict,
-    SelectSelector,
-    SelectSelectorConfig,
-    SelectSelectorMode,
 )
+
+# Form key of the hours/minutes duration input (not persisted as-is: it is
+# normalized into the CONF_VIRTUAL_TIME_OFFSET_* keys before storing).
+CONF_TIME_OFFSET = "time_offset"
 
 
 class TibberPricesSubentryFlowHandler(ConfigSubentryFlow):
-    """Handle subentry flows for tibber_prices (time-travel views)."""
+    """
+    Handle subentry flows for tibber_prices (time-travel views).
 
-    def __init__(self) -> None:
-        """Initialize the subentry flow handler."""
-        super().__init__()
-        self._selected_parent_entry_id: str | None = None
+    The flow is already scoped to a config entry - `self._get_entry()` returns
+    the home the view belongs to, so there is nothing to pick: both the creation
+    step and the reconfigure step only ask for the time offset.
+    """
 
     async def async_step_user(self, user_input: dict[str, Any] | None = None) -> SubentryFlowResult:
-        """Step 1: Select which config entry should get a time-travel subentry."""
+        """Create a time-travel view for this config entry."""
+        parent_entry = self._get_entry()
         errors: dict[str, str] = {}
 
         if user_input is not None:
-            self._selected_parent_entry_id = user_input["parent_entry_id"]
-            return await self.async_step_time_offset()
+            offset_days, offset_hours, offset_minutes = _normalize_offset(user_input)
 
-        # Get all main config entries (not subentries)
-        # Subentries have "_hist_" in their unique_id
-        main_entries = [
-            entry
-            for entry in self.hass.config_entries.async_entries(DOMAIN)
-            if entry.unique_id and "_hist_" not in entry.unique_id
-        ]
-
-        if not main_entries:
-            return self.async_abort(reason="no_main_entries")
-
-        # Build options for entry selection
-        entry_options = [
-            SelectOptionDict(
-                value=entry.entry_id,
-                label=f"{entry.title} ({entry.data.get('user_login', 'N/A')})",
-            )
-            for entry in main_entries
-        ]
-
-        return self.async_show_form(
-            step_id="user",
-            data_schema=vol.Schema(
-                {
-                    vol.Required("parent_entry_id"): SelectSelector(
-                        SelectSelectorConfig(
-                            options=entry_options,
-                            mode=SelectSelectorMode.DROPDOWN,
-                        )
-                    ),
-                }
-            ),
-            description_placeholders={},
-            errors=errors,
-        )
-
-    async def async_step_time_offset(self, user_input: dict[str, Any] | None = None) -> SubentryFlowResult:
-        """Step 2: Configure time offset for the time-travel view."""
-        errors: dict[str, str] = {}
-
-        if user_input is not None:
-            # Extract values (convert days to int to avoid float from slider)
-            offset_days = int(user_input.get(CONF_VIRTUAL_TIME_OFFSET_DAYS, 0))
-
-            # DurationSelector returns dict with 'hours', 'minutes', and 'seconds' keys
-            # We normalize to minute precision (ignore seconds)
-            time_offset = user_input.get("time_offset", {})
-            offset_hours = -abs(int(time_offset.get("hours", 0)))  # Always negative for historical data
-            offset_minutes = -abs(int(time_offset.get("minutes", 0)))  # Always negative for historical data
-            # Note: Seconds are ignored - we only support minute-level precision
-
-            # Validate that at least one offset is negative (historical data only)
-            if offset_days >= 0 and offset_hours >= 0 and offset_minutes >= 0:
+            if not _has_offset(offset_days, offset_hours, offset_minutes):
                 errors["base"] = "no_time_offset"
+            else:
+                unique_id = self._build_unique_id(parent_entry, offset_days, offset_hours, offset_minutes)
+                if any(subentry.unique_id == unique_id for subentry in parent_entry.subentries.values()):
+                    return self.async_abort(reason="already_configured")
 
-            if not errors:
-                # Get parent entry
-                if not self._selected_parent_entry_id:
-                    return self.async_abort(reason="parent_entry_not_found")
-
-                parent_entry = self.hass.config_entries.async_get_entry(self._selected_parent_entry_id)
-                if not parent_entry:
-                    return self.async_abort(reason="parent_entry_not_found")
-
-                # Get home data from parent entry
-                home_id = parent_entry.data.get("home_id")
-                home_data = parent_entry.data.get("home_data", {})
-                user_login = parent_entry.data.get("user_login", "N/A")
-
-                # Build unique_id with time offset signature
-                offset_str = f"d{offset_days}h{offset_hours}m{offset_minutes}"
-                user_id = parent_entry.unique_id.split("_")[0] if parent_entry.unique_id else home_id
-                unique_id = f"{user_id}_{home_id}_hist_{offset_str}"
-
-                # Check if this exact time offset already exists
-                for entry in self.hass.config_entries.async_entries(DOMAIN):
-                    if entry.unique_id == unique_id:
-                        return self.async_abort(reason="already_configured")
-
-                # No duplicate found - create the entry
                 offset_desc = self._format_offset_description(offset_days, offset_hours, offset_minutes)
-                subentry_title = f"{parent_entry.title} ({offset_desc})"
-
-                # Note: Subentries inherit options from parent entry automatically
-                # Options parameter is not supported by ConfigSubentryFlow.async_create_entry()
-
                 return self.async_create_entry(
-                    title=subentry_title,
+                    title=f"{_base_title(parent_entry)} ({offset_desc})",
                     data={
-                        "home_id": home_id,
-                        "home_data": home_data,
-                        "user_login": user_login,
                         CONF_VIRTUAL_TIME_OFFSET_DAYS: offset_days,
                         CONF_VIRTUAL_TIME_OFFSET_HOURS: offset_hours,
                         CONF_VIRTUAL_TIME_OFFSET_MINUTES: offset_minutes,
@@ -144,28 +65,61 @@ class TibberPricesSubentryFlowHandler(ConfigSubentryFlow):
                 )
 
         return self.async_show_form(
-            step_id="time_offset",
-            data_schema=vol.Schema(
-                {
-                    vol.Required(CONF_VIRTUAL_TIME_OFFSET_DAYS, default=0): NumberSelector(
-                        NumberSelectorConfig(
-                            mode=NumberSelectorMode.SLIDER,
-                            min=-374,
-                            max=0,
-                            step=1,
-                        )
-                    ),
-                    vol.Optional("time_offset", default={"hours": 0, "minutes": 0}): DurationSelector(
-                        DurationSelectorConfig(
-                            allow_negative=False,  # We handle sign automatically
-                            enable_day=False,  # Days are handled by the slider above
-                        )
-                    ),
-                }
-            ),
-            description_placeholders={},
+            step_id="user",
+            data_schema=_offset_schema(),
             errors=errors,
         )
+
+    async def async_step_reconfigure(self, user_input: dict[str, Any] | None = None) -> SubentryFlowResult:
+        """Update the time offset of an existing time-travel view."""
+        parent_entry = self._get_entry()
+        subentry = self._get_reconfigure_subentry()
+        errors: dict[str, str] = {}
+
+        if user_input is not None:
+            offset_days, offset_hours, offset_minutes = _normalize_offset(user_input)
+
+            if not _has_offset(offset_days, offset_hours, offset_minutes):
+                errors["base"] = "no_time_offset"
+            else:
+                unique_id = self._build_unique_id(parent_entry, offset_days, offset_hours, offset_minutes)
+                clashes = any(
+                    other.unique_id == unique_id and other.subentry_id != subentry.subentry_id
+                    for other in parent_entry.subentries.values()
+                )
+                if clashes:
+                    return self.async_abort(reason="already_configured")
+
+                offset_desc = self._format_offset_description(offset_days, offset_hours, offset_minutes)
+                # Store the normalized offset, not the raw form input - the form
+                # carries a duration dict that the coordinator cannot read.
+                return self.async_update_and_abort(
+                    parent_entry,
+                    subentry,
+                    unique_id=unique_id,
+                    title=f"{_base_title(parent_entry)} ({offset_desc})",
+                    data_updates={
+                        CONF_VIRTUAL_TIME_OFFSET_DAYS: offset_days,
+                        CONF_VIRTUAL_TIME_OFFSET_HOURS: offset_hours,
+                        CONF_VIRTUAL_TIME_OFFSET_MINUTES: offset_minutes,
+                    },
+                )
+
+        return self.async_show_form(
+            step_id="reconfigure",
+            data_schema=_offset_schema(
+                days=int(subentry.data.get(CONF_VIRTUAL_TIME_OFFSET_DAYS, 0)),
+                hours=int(subentry.data.get(CONF_VIRTUAL_TIME_OFFSET_HOURS, 0)),
+                minutes=int(subentry.data.get(CONF_VIRTUAL_TIME_OFFSET_MINUTES, 0)),
+            ),
+            errors=errors,
+        )
+
+    def _build_unique_id(self, parent_entry: ConfigEntry, days: int, hours: int, minutes: int) -> str:
+        """Build a unique ID identifying this home plus offset combination."""
+        home_id = parent_entry.data.get("home_id", "")
+        user_id = parent_entry.unique_id.split("_")[0] if parent_entry.unique_id else home_id
+        return f"{user_id}_{home_id}_hist_d{days}h{hours}m{minutes}"
 
     def _format_offset_description(self, days: int, hours: int, minutes: int) -> str:
         """
@@ -231,79 +185,55 @@ class TibberPricesSubentryFlowHandler(ConfigSubentryFlow):
         # Join parts with space and apply "ago" template
         return time_units["ago"].format(parts=" ".join(parts))
 
-    async def async_step_init(self, user_input: dict | None = None) -> SubentryFlowResult:
-        """Manage the options for an existing subentry (time-travel settings)."""
-        subentry = self._get_reconfigure_subentry()
-        errors: dict[str, str] = {}
 
-        if user_input is not None:
-            # Extract values (convert days to int to avoid float from slider)
-            offset_days = int(user_input.get(CONF_VIRTUAL_TIME_OFFSET_DAYS, 0))
-
-            # DurationSelector returns dict with 'hours', 'minutes', and 'seconds' keys
-            # We normalize to minute precision (ignore seconds)
-            time_offset = user_input.get("time_offset", {})
-            offset_hours = -abs(int(time_offset.get("hours", 0)))  # Always negative for historical data
-            offset_minutes = -abs(int(time_offset.get("minutes", 0)))  # Always negative for historical data
-            # Note: Seconds are ignored - we only support minute-level precision
-
-            # Validate that at least one offset is negative (historical data only)
-            if offset_days >= 0 and offset_hours >= 0 and offset_minutes >= 0:
-                errors["base"] = "no_time_offset"
-            else:
-                # Get parent entry to extract home_id and user_id
-                parent_entry = self._get_entry()
-                home_id = parent_entry.data.get("home_id")
-
-                # Build new unique_id with updated offset signature
-                offset_str = f"d{offset_days}h{offset_hours}m{offset_minutes}"
-                user_id = parent_entry.unique_id.split("_")[0] if parent_entry.unique_id else home_id
-                new_unique_id = f"{user_id}_{home_id}_hist_{offset_str}"
-
-                # Generate new title with updated offset description
-                offset_desc = self._format_offset_description(offset_days, offset_hours, offset_minutes)
-                # Extract parent title (remove old offset description in parentheses)
-                parent_title = parent_entry.title.split(" (")[0] if " (" in parent_entry.title else parent_entry.title
-                new_title = f"{parent_title} ({offset_desc})"
-
-                return self.async_update_and_abort(
-                    parent_entry,
-                    subentry,
-                    unique_id=new_unique_id,
-                    title=new_title,
-                    data_updates=user_input,
+def _offset_schema(days: int = 0, hours: int = 0, minutes: int = 0) -> vol.Schema:
+    """Build the offset form, pre-filled with the given (negative) offset."""
+    return vol.Schema(
+        {
+            vol.Required(CONF_VIRTUAL_TIME_OFFSET_DAYS, default=days): NumberSelector(
+                NumberSelectorConfig(
+                    mode=NumberSelectorMode.SLIDER,
+                    min=-MAX_OFFSET_DAYS,
+                    max=0,
+                    step=1,
                 )
-
-        offset_days = subentry.data.get(CONF_VIRTUAL_TIME_OFFSET_DAYS, 0)
-        offset_hours = subentry.data.get(CONF_VIRTUAL_TIME_OFFSET_HOURS, 0)
-        offset_minutes = subentry.data.get(CONF_VIRTUAL_TIME_OFFSET_MINUTES, 0)
-
-        # Prepare time offset dict for DurationSelector (always positive, we negate on save)
-        time_offset_dict = {"hours": 0, "minutes": 0}  # Default to zeros
-        if offset_hours != 0:
-            time_offset_dict["hours"] = abs(offset_hours)
-        if offset_minutes != 0:
-            time_offset_dict["minutes"] = abs(offset_minutes)
-
-        return self.async_show_form(
-            step_id="init",
-            data_schema=vol.Schema(
-                {
-                    vol.Required(CONF_VIRTUAL_TIME_OFFSET_DAYS, default=offset_days): NumberSelector(
-                        NumberSelectorConfig(
-                            mode=NumberSelectorMode.SLIDER,
-                            min=-374,
-                            max=0,
-                            step=1,
-                        )
-                    ),
-                    vol.Optional("time_offset", default=time_offset_dict): DurationSelector(
-                        DurationSelectorConfig(
-                            allow_negative=False,  # We handle sign automatically
-                            enable_day=False,  # Days are handled by the slider above
-                        )
-                    ),
-                }
             ),
-            errors=errors,
-        )
+            # DurationSelector cannot express negative values, so it always shows
+            # the magnitude and the sign is applied on save.
+            vol.Optional(
+                CONF_TIME_OFFSET,
+                default={"hours": abs(hours), "minutes": abs(minutes)},
+            ): DurationSelector(
+                DurationSelectorConfig(
+                    allow_negative=False,
+                    enable_day=False,  # Days are handled by the slider above
+                )
+            ),
+        }
+    )
+
+
+def _normalize_offset(user_input: dict[str, Any]) -> tuple[int, int, int]:
+    """
+    Normalize form input into a (days, hours, minutes) triple of negative values.
+
+    Only historical data exists, so every component is forced negative. Seconds
+    from the duration selector are ignored - the integration works on 15-minute
+    intervals and minute precision is already more than enough.
+    """
+    time_offset = user_input.get(CONF_TIME_OFFSET) or {}
+    return (
+        -abs(int(user_input.get(CONF_VIRTUAL_TIME_OFFSET_DAYS, 0))),
+        -abs(int(time_offset.get("hours", 0))),
+        -abs(int(time_offset.get("minutes", 0))),
+    )
+
+
+def _has_offset(days: int, hours: int, minutes: int) -> bool:
+    """Return True if the offset actually travels back in time."""
+    return bool(days or hours or minutes)
+
+
+def _base_title(parent_entry: ConfigEntry) -> str:
+    """Return the parent entry title without any trailing "(...)" suffix."""
+    return parent_entry.title.split(" (")[0] if " (" in parent_entry.title else parent_entry.title

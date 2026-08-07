@@ -73,6 +73,7 @@ class TibberPricesPriceDataManager:
 
     def __init__(
         self,
+        *,
         api: TibberPricesApiClient,
         store: Any,
         log_prefix: str,
@@ -80,6 +81,7 @@ class TibberPricesPriceDataManager:
         time: TibberPricesTimeService,
         home_id: str,
         interval_pool: TibberPricesIntervalPool,
+        historical: bool = False,
     ) -> None:
         """
         Initialize the price data manager.
@@ -92,6 +94,9 @@ class TibberPricesPriceDataManager:
             time: TimeService for time operations.
             home_id: Home ID this manager is responsible for.
             interval_pool: IntervalPool for price data (handles actual fetching).
+            historical: True for a time-travel view. Its whole window lies in the
+                past, so the "wait until 13:00 for tomorrow" throttling does not
+                apply - that data was published long ago.
 
         """
         self.api = api
@@ -101,6 +106,7 @@ class TibberPricesPriceDataManager:
         self.time: TibberPricesTimeService = time
         self.home_id = home_id
         self._interval_pool = interval_pool
+        self._historical = historical
 
         # Cached data (user data only - price data is in IntervalPool)
         self._cached_user_data: dict[str, Any] | None = None
@@ -143,6 +149,11 @@ class TibberPricesPriceDataManager:
             True if tomorrow data should be requested, False otherwise.
 
         """
+        # Time-travel views look at days that are fully published already, so the
+        # 13:00 throttling would only stall them for the shifted morning hours.
+        if self._historical:
+            return True
+
         now = self.time.now()
         now_local = self.time.as_local(now)
         current_hour = now_local.hour

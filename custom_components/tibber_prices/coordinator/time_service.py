@@ -105,7 +105,12 @@ class TibberPricesTimeService:
         midnight = time_service.get_local_midnight()
     """
 
-    def __init__(self, reference_time: datetime | None = None) -> None:
+    def __init__(
+        self,
+        reference_time: datetime | None = None,
+        *,
+        offset: timedelta | None = None,
+    ) -> None:
         """
         Initialize TimeService with reference time.
 
@@ -113,9 +118,28 @@ class TibberPricesTimeService:
             reference_time: Optional fixed time for this context.
                           If None, uses actual current time.
                           For time-travel: pass simulated time here.
+            offset: Optional offset added to the reference time. Used by
+                   time-travel subentries, which shift the clock by a fixed
+                   (negative) amount while time keeps advancing normally: a
+                   new instance is created per update cycle, so each cycle
+                   sees "real now + offset".
 
         """
-        self._reference_time = reference_time or dt_util.now()
+        self._offset = offset or timedelta()
+        base = reference_time or dt_util.now()
+        # Only touch the base when there is something to shift, so a live service
+        # keeps the reference object it was handed.
+        self._reference_time = base + self._offset if self._offset else base
+
+    @property
+    def offset(self) -> timedelta:
+        """Return the time-travel offset applied to this service (zero for live data)."""
+        return self._offset
+
+    @property
+    def is_time_travel(self) -> bool:
+        """Return True if this service represents a shifted (historical) clock."""
+        return bool(self._offset)
 
     # =========================================================================
     # Low-Level API: Direct dt_util wrappers

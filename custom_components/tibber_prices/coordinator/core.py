@@ -13,7 +13,7 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 if TYPE_CHECKING:
     from datetime import date, datetime
 
-    from homeassistant.config_entries import ConfigEntry
+    from homeassistant.config_entries import ConfigEntry, ConfigSubentry
 
     from .listeners import TimeServiceCallback
 
@@ -24,6 +24,7 @@ from custom_components.tibber_prices.api import (
     TibberPricesApiClientError,
 )
 from custom_components.tibber_prices.const import DOMAIN
+from custom_components.tibber_prices.time_travel import get_time_travel_offset
 from custom_components.tibber_prices.utils.price import find_price_data_for_interval
 from homeassistant.exceptions import ConfigEntryAuthFailed
 
@@ -156,8 +157,21 @@ class TibberPricesDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         config_entry: ConfigEntry,
         api_client: TibberPricesApiClient,
         interval_pool: Any,  # TibberPricesIntervalPool - Any to avoid circular import
+        subentry: ConfigSubentry | None = None,
     ) -> None:
-        """Initialize the coordinator."""
+        """
+        Initialize the coordinator.
+
+        Args:
+            hass: HomeAssistant instance.
+            config_entry: The config entry this coordinator belongs to.
+            api_client: API client (token handling done in __init__.py).
+            interval_pool: IntervalPool serving this coordinator's price data.
+            subentry: Optional time-travel subentry. When given, the coordinator
+                runs on a clock shifted by the subentry's configured offset, and
+                keeps its own storage separate from the live coordinator's.
+
+        """
         super().__init__(
             hass,
             _LOGGER,
@@ -166,6 +180,8 @@ class TibberPricesDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         )
 
         self.config_entry = config_entry
+        self.subentry = subentry
+        self._time_offset = get_time_travel_offset(subentry)
 
         # Get home_id from config entry
         self._home_id = config_entry.data.get("home_id", "")
@@ -175,24 +191,25 @@ class TibberPricesDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         # Use the API client from runtime_data (created in __init__.py with proper TOKEN handling)
         self.api = api_client
 
-        # Use the shared interval pool (one per config entry/Tibber account)
+        # Use the interval pool serving this coordinator. Time-travel subentries get
+        # their own pool so their historical window is not garbage-collected by the
+        # live coordinator's protected range (and vice versa).
         self.interval_pool = interval_pool
 
-        # Storage for persistence
+        # Storage for persistence - scoped per subentry so views don't share caches
         storage_key = f"{DOMAIN}.{config_entry.entry_id}"
+        if subentry is not None:
+            storage_key = f"{storage_key}.{subentry.subentry_id}"
         self._store = Store(hass, STORAGE_VERSION, storage_key)
 
         # Log prefix for identifying this coordinator instance
-        self._log_prefix = f"[{config_entry.title}]"
+        title = f"{config_entry.title} / {subentry.title}" if subentry is not None else config_entry.title
+        self._log_prefix = f"[{title}]"
 
-        # Note: In the new architecture, all coordinators (parent + subentries) fetch their own data
-        # No distinction between "main" and "sub" coordinators anymore
-
-        # Initialize time service (single source of truth for all time operations)
-        self.time = TibberPricesTimeService()
-
-        # Set time on API client (needed for rate limiting)
-        self.api.time = self.time
+        # Initialize time service (single source of truth for all time operations).
+        # Always create through _create_time_service() so the time-travel offset is
+        # applied consistently everywhere.
+        self.time = self._create_time_service()
 
         # Initialize helper modules
         self._listener_manager = TibberPricesListenerManager(hass, self._log_prefix)
@@ -205,6 +222,7 @@ class TibberPricesDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             time=self.time,
             home_id=self._home_id,
             interval_pool=self.interval_pool,
+            historical=self.is_time_travel,
         )
         # Create period calculator BEFORE data transformer (transformer needs it in lambda)
         self._period_calculator = TibberPricesPeriodCalculator(
@@ -222,7 +240,11 @@ class TibberPricesDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             hass=hass,
             entry_id=config_entry.entry_id,
             home_name=config_entry.title,
+            enabled=not self.is_time_travel,
         )
+
+        # Push the initial TimeService into every helper (API rate limiting, pool, ...)
+        self._propagate_time_service(self.time)
 
         # Register options update listener to invalidate config caches
         config_entry.async_on_unload(config_entry.add_update_listener(self._handle_options_update))
@@ -264,6 +286,51 @@ class TibberPricesDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         """Log with coordinator-specific prefix."""
         prefixed_message = f"{self._log_prefix} {message}"
         getattr(_LOGGER, level)(prefixed_message, *args, **kwargs)
+
+    def _create_time_service(self) -> TibberPricesTimeService:
+        """
+        Create a TimeService for a fresh update cycle.
+
+        Every timer creates its own instance so "now" stays constant within a
+        cycle. Routing all of them through here is what makes a time-travel
+        subentry's clock stay shifted while still advancing in real time.
+        """
+        return TibberPricesTimeService(offset=self._time_offset)
+
+    def _propagate_time_service(self, time_service: TibberPricesTimeService) -> None:
+        """
+        Hand a fresh TimeService to every helper that needs "now".
+
+        For time-travel coordinators the IntervalPool is included: its fetch
+        window and its GC-protected range must follow the shifted clock,
+        otherwise it would fetch live data and evict the historical window. The
+        live coordinator leaves the pool on real time, which is what it already
+        did before subentries existed.
+
+        The API client is deliberately excluded for views: it is SHARED with the
+        live coordinator and all sibling views, and it uses its TimeService only
+        to space out requests. A shifted clock there would make the elapsed time
+        since the last request come out days negative and stall the client for
+        just as long. Rate limiting must run on real time - the live coordinator
+        keeps it supplied.
+        """
+        self._price_data_manager.time = time_service
+        self._data_transformer.time = time_service
+        self._period_calculator.time = time_service
+        if self.is_time_travel:
+            self.interval_pool.set_time_service(time_service)
+        else:
+            self.api.time = time_service
+
+    @property
+    def is_time_travel(self) -> bool:
+        """Return True if this coordinator serves a shifted (historical) clock."""
+        return bool(self._time_offset)
+
+    @property
+    def time_offset(self) -> timedelta:
+        """Return the configured time-travel offset (zero for live data)."""
+        return self._time_offset
 
     @property
     def using_cached_fallback(self) -> bool:
@@ -480,7 +547,7 @@ class TibberPricesDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         # Each timer has its own TimeService instance - no shared state between timers
         # This timer updates 30+ time-sensitive entities at quarter-hour boundaries
         # (Timer #3 handles timing entities separately - no overlap)
-        time_service = TibberPricesTimeService()
+        time_service = self._create_time_service()
         now = time_service.now()
 
         # Update shared coordinator time (used by Timer #1 and other operations)
@@ -488,10 +555,7 @@ class TibberPricesDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         self.time = time_service
 
         # Update helper modules with fresh TimeService instance
-        self.api.time = time_service
-        self._price_data_manager.time = time_service
-        self._data_transformer.time = time_service
-        self._period_calculator.time = time_service
+        self._propagate_time_service(time_service)
 
         self._log("debug", "[Timer #2] Quarter-hour refresh triggered at %s", now.isoformat())
 
@@ -532,7 +596,7 @@ class TibberPricesDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         # Timer #2 updates 30+ time-sensitive entities (prices, levels, timestamps)
         # Timer #3 updates 6 timing entities (remaining_minutes, progress, next_in_minutes)
         # NO overlap - entities are registered with either Timer #2 OR Timer #3, never both
-        time_service = TibberPricesTimeService()
+        time_service = self._create_time_service()
 
         # Only log at debug level to avoid log spam (this runs every 30 seconds)
         self._log("debug", "[Timer #3] 30-second refresh for timing sensors")
@@ -639,7 +703,7 @@ class TibberPricesDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         self.async_update_listeners()
 
         # Create TimeService with fresh reference time for time-sensitive entity updates
-        time_service = TibberPricesTimeService()
+        time_service = self._create_time_service()
         self._async_update_time_sensitive_listeners(time_service)
 
         return True
@@ -682,7 +746,7 @@ class TibberPricesDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         self._last_coordinator_update = self.time.now()
 
         # Create TimeService with fresh reference time for this update cycle
-        self.time = TibberPricesTimeService()
+        self.time = self._create_time_service()
         current_time = self.time.now()
 
         # Transition lifecycle state from "fresh" to "cached" if enough time passed
@@ -695,10 +759,7 @@ class TibberPricesDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             self._lifecycle_state = "cached"
 
         # Update helper modules with fresh TimeService instance
-        self.api.time = self.time
-        self._price_data_manager.time = self.time
-        self._data_transformer.time = self.time
-        self._period_calculator.time = self.time
+        self._propagate_time_service(self.time)
 
         # Load cache if not already loaded (user data only, price data is in Pool)
         if self._cached_user_data is None:
@@ -724,7 +785,7 @@ class TibberPricesDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             # But time-sensitive listeners (like best_price_period, peak_price_period)
             # won't be notified unless we explicitly call their update method.
             # This ensures ALL entities see the updated periods after midnight turnover.
-            time_service = TibberPricesTimeService()
+            time_service = self._create_time_service()
             self._async_update_time_sensitive_listeners(time_service)
 
             # Return current data (enriched after rotation) to trigger entity updates
@@ -811,6 +872,7 @@ class TibberPricesDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                     {
                         "home_id": self._home_id,
                         "entry_id": self.config_entry.entry_id,
+                        "subentry_id": self.subentry.subentry_id if self.subentry else None,
                         "interval_count": len(result["priceInfo"]),
                     },
                 )
@@ -885,7 +947,10 @@ class TibberPricesDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         # Check self.data (from Pool) instead of _cached_price_data
         if not self.data or "priceInfo" not in self.data:
             return True
-        return helpers.needs_tomorrow_data({"price_info": self.data["priceInfo"]})
+        return helpers.needs_tomorrow_data(
+            {"price_info": self.data["priceInfo"]},
+            reference_time=self.time.now(),
+        )
 
     def _has_valid_tomorrow_data(self) -> bool:
         """Check if we have valid tomorrow data (inverse of _needs_tomorrow_data)."""

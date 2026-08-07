@@ -210,6 +210,8 @@ def test_all_platforms_share_one_device() -> None:
     switch = TibberPricesConfigSwitch.__new__(TibberPricesConfigSwitch)
     number.coordinator = coordinator
     switch.coordinator = coordinator
+    number.subentry = None
+    switch.subentry = None
     number._setup_device_info()  # noqa: SLF001
     switch._setup_device_info()  # noqa: SLF001
 

@@ -88,7 +88,7 @@
     "override_field_label_relaxation_attempts_peak": "Relaxation Attempts"
   },
   "config_subentries": {
-    "home": {
+    "time_travel": {
       "entry_type": "Time-Travel View",
       "initiate_flow": {
         "user": "Create Time-Travel View"
@@ -96,13 +96,6 @@
       "title": "Create Time-Travel View",
       "step": {
         "user": {
-          "title": "Select Configuration Entry",
-          "description": "Select the configuration entry for which you want to create a time-travel view.\n\n**Time-travel views** allow you to see historical price data as if it were the current time. This is useful for testing automations or analyzing past price patterns.",
-          "data": {
-            "parent_entry_id": "Configuration Entry"
-          }
-        },
-        "time_offset": {
           "title": "Configure Time Offset",
           "description": "Configure how far back in time this view should travel.\n\n**Recommended:** Use **≥2 days** offset to avoid conflicts with \"yesterday\" entities that also provide historical data.\n\n**Examples:**\n• **-7 days**: View prices from 7 days ago\n• **-2 days, 3 hours**: View prices from 2 days and 3 hours ago\n• **-14 days**: View prices from 2 weeks ago",
           "data": {
@@ -114,7 +107,7 @@
             "time_offset": "Optional fine-tuning: Add hours and/or minutes to the day offset. The time will be automatically subtracted (travel back further). Note: Seconds are ignored - only minute-level precision is supported."
           }
         },
-        "init": {
+        "reconfigure": {
           "title": "Reconfigure Time Offset",
           "description": "Update the time offset for this time-travel view.",
           "data": {
@@ -132,8 +125,7 @@
       },
       "abort": {
         "already_configured": "**A time-travel view with this exact time offset already exists.**\n\nPlease choose a different offset.",
-        "no_main_entries": "No main configuration entries found. Please add a Tibber home first.",
-        "parent_entry_not_found": "Selected configuration entry not found."
+        "reconfigure_successful": "Time-travel view updated."
       }
     }
   },

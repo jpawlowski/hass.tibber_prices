@@ -52,9 +52,6 @@ from custom_components.tibber_prices.const import (
     CONF_PRICE_TREND_THRESHOLD_STRONGLY_RISING,
     CONF_RELAXATION_ATTEMPTS_BEST,
     CONF_RELAXATION_ATTEMPTS_PEAK,
-    CONF_VIRTUAL_TIME_OFFSET_DAYS,
-    CONF_VIRTUAL_TIME_OFFSET_HOURS,
-    CONF_VIRTUAL_TIME_OFFSET_MINUTES,
     CONF_VOLATILITY_THRESHOLD_HIGH,
     CONF_VOLATILITY_THRESHOLD_MODERATE,
     CONF_VOLATILITY_THRESHOLD_VERY_HIGH,
@@ -98,9 +95,6 @@ from custom_components.tibber_prices.const import (
     DEFAULT_PRICE_TREND_THRESHOLD_STRONGLY_RISING,
     DEFAULT_RELAXATION_ATTEMPTS_BEST,
     DEFAULT_RELAXATION_ATTEMPTS_PEAK,
-    DEFAULT_VIRTUAL_TIME_OFFSET_DAYS,
-    DEFAULT_VIRTUAL_TIME_OFFSET_HOURS,
-    DEFAULT_VIRTUAL_TIME_OFFSET_MINUTES,
     DEFAULT_VOLATILITY_THRESHOLD_HIGH,
     DEFAULT_VOLATILITY_THRESHOLD_MODERATE,
     DEFAULT_VOLATILITY_THRESHOLD_VERY_HIGH,
@@ -355,57 +349,6 @@ def get_select_home_schema(home_options: list[SelectOptionDict]) -> vol.Schema:
                     mode=SelectSelectorMode.DROPDOWN,
                 )
             )
-        }
-    )
-
-
-def get_subentry_init_schema(
-    *,
-    extended_descriptions: bool = DEFAULT_EXTENDED_DESCRIPTIONS,
-    offset_days: int = DEFAULT_VIRTUAL_TIME_OFFSET_DAYS,
-    offset_hours: int = DEFAULT_VIRTUAL_TIME_OFFSET_HOURS,
-    offset_minutes: int = DEFAULT_VIRTUAL_TIME_OFFSET_MINUTES,
-) -> vol.Schema:
-    """Return schema for subentry init step (includes time-travel settings)."""
-    return vol.Schema(
-        {
-            vol.Optional(
-                CONF_EXTENDED_DESCRIPTIONS,
-                default=extended_descriptions,
-            ): BooleanSelector(),
-            vol.Optional(
-                CONF_VIRTUAL_TIME_OFFSET_DAYS,
-                default=offset_days,
-            ): NumberSelector(
-                NumberSelectorConfig(
-                    mode=NumberSelectorMode.BOX,
-                    min=-365,  # Max 1 year back
-                    max=0,  # Only past days allowed
-                    step=1,
-                )
-            ),
-            vol.Optional(
-                CONF_VIRTUAL_TIME_OFFSET_HOURS,
-                default=offset_hours,
-            ): NumberSelector(
-                NumberSelectorConfig(
-                    mode=NumberSelectorMode.BOX,
-                    min=-23,
-                    max=23,
-                    step=1,
-                )
-            ),
-            vol.Optional(
-                CONF_VIRTUAL_TIME_OFFSET_MINUTES,
-                default=offset_minutes,
-            ): NumberSelector(
-                NumberSelectorConfig(
-                    mode=NumberSelectorMode.BOX,
-                    min=-59,
-                    max=59,
-                    step=1,
-                )
-            ),
         }
     )
 

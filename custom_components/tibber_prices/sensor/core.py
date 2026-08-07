@@ -21,6 +21,7 @@ from custom_components.tibber_prices.const import (
 )
 from custom_components.tibber_prices.coordinator import MINUTE_UPDATE_ENTITY_KEYS, TIME_SENSITIVE_ENTITY_KEYS
 from custom_components.tibber_prices.coordinator.helpers import get_intervals_for_day_offsets
+from custom_components.tibber_prices.device import entity_unique_id
 from custom_components.tibber_prices.entity import TibberPricesEntity
 from custom_components.tibber_prices.entity_utils import (
     add_icon_color_attribute,
@@ -65,6 +66,7 @@ if TYPE_CHECKING:
 
     from custom_components.tibber_prices.coordinator import TibberPricesDataUpdateCoordinator
     from custom_components.tibber_prices.coordinator.time_service import TibberPricesTimeService
+    from homeassistant.config_entries import ConfigSubentry
 
 HOURS_IN_DAY = 24
 LAST_HOUR_OF_DAY = 23
@@ -172,11 +174,12 @@ class TibberPricesSensor(TibberPricesEntity, RestoreSensor):
         self,
         coordinator: TibberPricesDataUpdateCoordinator,
         entity_description: SensorEntityDescription,
+        subentry: ConfigSubentry | None = None,
     ) -> None:
         """Initialize the sensor class."""
-        super().__init__(coordinator)
+        super().__init__(coordinator, subentry)
         self.entity_description = entity_description
-        self._attr_unique_id = f"{coordinator.config_entry.entry_id}_{entity_description.key}"
+        self._attr_unique_id = entity_unique_id(coordinator.config_entry.entry_id, entity_description.key, subentry)
         self._attr_has_entity_name = True
         # Cached data for attributes (e.g., median values)
         self.cached_data: dict[str, Any] = {}

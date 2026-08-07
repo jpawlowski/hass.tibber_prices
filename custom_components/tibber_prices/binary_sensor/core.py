@@ -7,6 +7,7 @@ from typing import TYPE_CHECKING
 from custom_components.tibber_prices.coordinator import TIME_SENSITIVE_ENTITY_KEYS
 from custom_components.tibber_prices.coordinator.core import get_connection_state
 from custom_components.tibber_prices.coordinator.helpers import get_intervals_for_day_offsets
+from custom_components.tibber_prices.device import entity_unique_id
 from custom_components.tibber_prices.entity import TibberPricesEntity
 from custom_components.tibber_prices.entity_utils import get_binary_sensor_icon
 from homeassistant.components.binary_sensor import BinarySensorEntity, BinarySensorEntityDescription
@@ -28,6 +29,7 @@ if TYPE_CHECKING:
 
     from custom_components.tibber_prices.coordinator import TibberPricesDataUpdateCoordinator
     from custom_components.tibber_prices.coordinator.time_service import TibberPricesTimeService
+    from homeassistant.config_entries import ConfigSubentry
 
 
 # Sentinel for _last_written_state: forces first write after init or coordinator update
@@ -80,11 +82,12 @@ class TibberPricesBinarySensor(TibberPricesEntity, BinarySensorEntity, RestoreEn
         self,
         coordinator: TibberPricesDataUpdateCoordinator,
         entity_description: BinarySensorEntityDescription,
+        subentry: ConfigSubentry | None = None,
     ) -> None:
         """Initialize the binary_sensor class."""
-        super().__init__(coordinator)
+        super().__init__(coordinator, subentry)
         self.entity_description = entity_description
-        self._attr_unique_id = f"{coordinator.config_entry.entry_id}_{entity_description.key}"
+        self._attr_unique_id = entity_unique_id(coordinator.config_entry.entry_id, entity_description.key, subentry)
         self._state_getter: Callable | None = self._get_value_getter()
         self._time_sensitive_remove_listener: Callable | None = None
         # State change detection for call-avoidance optimization (see sensor/core.py for rationale)

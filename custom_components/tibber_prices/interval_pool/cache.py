@@ -49,6 +49,18 @@ class TibberPricesIntervalPoolFetchGroupCache:
         self._protected_range_cache: tuple[str, str] | None = None
         self._protected_range_cache_date: str | None = None
 
+    def set_time_service(self, time_service: TibberPricesTimeService | None) -> None:
+        """
+        Replace the TimeService and drop the cached protected range.
+
+        The protected range is derived from "today", so a changed clock (a
+        time-travel view being set up, or simply the next update cycle) must not
+        keep serving the range computed for the previous one.
+        """
+        self._time_service = time_service
+        self._protected_range_cache = None
+        self._protected_range_cache_date = None
+
     def add_fetch_group(
         self,
         intervals: list[dict[str, Any]],

@@ -88,7 +88,7 @@
     "override_field_label_relaxation_attempts_peak": "Avslapningsforsøk"
   },
   "config_subentries": {
-    "home": {
+    "time_travel": {
       "entry_type": "Tidsreisevisning",
       "initiate_flow": {
         "user": "Opprett tidsreisevisning"
@@ -96,13 +96,6 @@
       "title": "Opprett tidsreisevisning",
       "step": {
         "user": {
-          "title": "Velg konfigurasjonsoppføring",
-          "description": "Velg konfigurasjonsoppføringen du vil opprette en tidsreisevisning for.\n\n**Tidsreisevisninger** lar deg se historiske prisdata som om det var nåværende tid. Dette er nyttig for å teste automatiseringer eller analysere tidligere prismønstre.",
-          "data": {
-            "parent_entry_id": "Konfigurasjonsoppføring"
-          }
-        },
-        "time_offset": {
           "title": "Konfigurer tidsforskyvning",
           "description": "Konfigurer hvor langt tilbake i tid denne visningen skal reise.\n\n**Anbefalt:** Bruk **≥2 dager** forskyvning for å unngå konflikter med \"yesterday\"-entiteter som også gir historiske data.\n\n**Eksempler:**\n• **-7 dager**: Vis priser fra 7 dager siden\n• **-2 dager, 3 timer**: Vis priser fra 2 dager og 3 timer siden\n• **-14 dager**: Vis priser fra 2 uker siden",
           "data": {
@@ -114,7 +107,7 @@
             "time_offset": "Valgfri finjustering: Legg til timer og/eller minutter til dagesforskyvningen. Tiden trekkes automatisk fra (reis lenger tilbake). Merk: Sekunder ignoreres - kun minuttbasert presisjon støttes."
           }
         },
-        "init": {
+        "reconfigure": {
           "title": "Konfigurer tidsforskyvning på nytt",
           "description": "Oppdater tidsforskyvningen for denne tidsreisevisningen.",
           "data": {
@@ -132,8 +125,7 @@
       },
       "abort": {
         "already_configured": "**En tidsreisevisning med denne eksakte tidsforskyvningen eksisterer allerede.**\n\nVelg en annen forskyvning.",
-        "no_main_entries": "Ingen hovedkonfigurasjonsoppføringer funnet. Legg til et Tibber-hjem først.",
-        "parent_entry_not_found": "Valgt konfigurasjonsoppføring ikke funnet."
+        "reconfigure_successful": "Tidsreisevisning oppdatert."
       }
     }
   },
