@@ -72,6 +72,9 @@ exclude_lines = [
 required-version = ">=0.15.1"
 target-version = "py314"
 line-length = 120
+# Versioned Docusaurus doc snapshots are frozen historical content and must
+# never be reformatted; only lint currently maintained documentation.
+extend-exclude = ["docs/*/versioned_docs"]
 
 [tool.ruff.lint]
 select = [
