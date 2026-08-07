@@ -158,6 +158,13 @@ def apply_must_finish_by(
     The interval pool uses exclusive end_time (intervals with startsAt < end_time),
     so the latest found window/schedule naturally ends at search_end.
 
+    The deadline is floored onto the quarter-hour grid first. This is what makes it
+    a genuine upper bound: an off-grid deadline such as 07:05 would otherwise admit
+    the 07:00 interval, whose window runs to 07:15 and overshoots by 10 minutes.
+    Flooring is applied here rather than to search_end in general, because a plain
+    search_end is a range bound (partial overlap is fine) while must_finish_by is a
+    promise the result must not break.
+
     Args:
         call_data: Service call data dict.
         home_tz: Home timezone for datetime localization.
@@ -173,7 +180,7 @@ def apply_must_finish_by(
     must_finish_by = localize_to_home_tz(call_data["must_finish_by"], home_tz)
 
     modified = dict(call_data)
-    modified["search_end"] = must_finish_by
+    modified["search_end"] = floor_to_quarter_hour(must_finish_by)
     del modified["must_finish_by"]
     return modified, must_finish_by
 
@@ -422,18 +429,30 @@ def floor_to_quarter_hour(dt_value: datetime) -> datetime:
     return dt_value.replace(minute=(dt_value.minute // INTERVAL_MINUTES) * INTERVAL_MINUTES, second=0, microsecond=0)
 
 
+def ceil_to_quarter_hour(dt_value: datetime) -> datetime:
+    """Round dt_value up to a quarter-hour boundary, leaving boundaries untouched.
+
+    Use for a point in time the caller named explicitly (an absolute datetime, a
+    time-of-day, or an offset from now). A named point that already sits on a
+    boundary starts an interval rather than interrupting one, so it is kept as-is;
+    anything in between advances to the next boundary.
+    """
+    floored = floor_to_quarter_hour(dt_value)
+    return floored if floored == dt_value else floored + timedelta(minutes=INTERVAL_MINUTES)
+
+
 def ceil_to_next_quarter_hour(dt_value: datetime) -> datetime:
     """Return the start of the next quarter-hour interval after dt_value.
 
     Always advances past the interval that contains dt_value, even when
-    dt_value falls exactly on a boundary (in which case that interval is
-    considered "current" and is skipped).
+    dt_value falls exactly on a boundary. Use for ``now`` itself: the interval
+    containing the present moment is running, and one that starts exactly now is
+    the current interval too - both are skipped by include_current_interval=False.
 
-    This is used when include_current_interval=False to align the search start
-    with the first interval boundary in the pool index that has not yet started.
-    Without this, a raw ``now`` timestamp like ``14:47:00.167996`` would not
-    match any cached key (which are always on :00/:15/:30/:45) and would return
-    no intervals.
+    Aligning matters beyond semantics. The pool resolves a range by stepping from
+    the start in quarter-hour increments and looking each timestamp up verbatim in
+    an index keyed on :00/:15/:30/:45, so a raw ``now`` like ``14:47:00.167996``
+    matches nothing at all and yields no intervals.
     """
     return floor_to_quarter_hour(dt_value) + timedelta(minutes=INTERVAL_MINUTES)
 
@@ -474,7 +493,9 @@ def _resolve_scope(
         home_tz: Home timezone for date calculations
 
     Returns:
-        Tuple of (start, end) datetimes in home timezone
+        Tuple of (start, end) datetimes in home timezone, both on the quarter-hour
+        grid. Day boundaries are aligned already; the rolling next_24h/next_48h ends
+        are ceiled to cover the whole interval the horizon falls inside.
 
     """
     today_start = now.replace(hour=0, minute=0, second=0, microsecond=0)
@@ -490,9 +511,9 @@ def _resolve_scope(
     if scope == "remaining_today":
         return rolling_start, tomorrow_start
     if scope == "next_24h":
-        return rolling_start, now + timedelta(hours=24)
+        return rolling_start, ceil_to_quarter_hour(now + timedelta(hours=24))
     if scope == "next_48h":
-        return rolling_start, now + timedelta(hours=48)
+        return rolling_start, ceil_to_quarter_hour(now + timedelta(hours=48))
 
     raise ServiceValidationError(
         translation_domain=DOMAIN,
@@ -619,6 +640,14 @@ def resolve_search_range(
     3. Minutes offset (search_start_offset_minutes / search_end_offset_minutes)
     4. Default (now for start, end of tomorrow for end)
 
+    Whichever branch applies, both boundaries are snapped onto the quarter-hour grid
+    the interval pool is indexed by. The start must be aligned for correctness - the
+    pool steps from it in quarter-hour increments and looks each timestamp up
+    verbatim, so an off-grid start matches nothing and yields no data at all. It
+    rounds in the direction include_current_interval asks for. The end rounds up,
+    which is a no-op in terms of intervals searched and merely reports the range that
+    was really covered.
+
     Calls validate_search_params() first to check for conflicting combinations.
     """
     validate_search_params(call_data)
@@ -629,42 +658,52 @@ def resolve_search_range(
         return _resolve_scope(call_data["search_scope"], now, home_tz, include_current=include_current)
 
     # --- Resolve start ---
+    # Every branch snaps to the grid. The `now` default is the only one that must
+    # also skip an interval starting exactly at the reference point, so it is the
+    # only user of ceil_to_next_quarter_hour; a start the caller named is not
+    # "current" just because it happens to sit on a boundary.
     if "search_start" in call_data:
-        search_start = localize_to_home_tz(call_data["search_start"], home_tz)
+        raw_start = localize_to_home_tz(call_data["search_start"], home_tz)
+        search_start = floor_to_quarter_hour(raw_start) if include_current else ceil_to_quarter_hour(raw_start)
     elif "search_start_time" in call_data:
         day_offset = call_data.get("search_start_day_offset", 0)
-        search_start = _resolve_time_with_day_offset(call_data["search_start_time"], day_offset, home_tz, now)
+        raw_start = _resolve_time_with_day_offset(call_data["search_start_time"], day_offset, home_tz, now)
+        search_start = floor_to_quarter_hour(raw_start) if include_current else ceil_to_quarter_hour(raw_start)
     elif "search_start_offset_minutes" in call_data:
-        search_start = now + timedelta(minutes=call_data["search_start_offset_minutes"])
-        if include_current:
-            search_start = floor_to_quarter_hour(search_start)
-        else:
-            search_start = ceil_to_next_quarter_hour(search_start)
+        raw_start = now + timedelta(minutes=call_data["search_start_offset_minutes"])
+        search_start = floor_to_quarter_hour(raw_start) if include_current else ceil_to_quarter_hour(raw_start)
     else:
+        raw_start = now
         search_start = floor_to_quarter_hour(now) if include_current else ceil_to_next_quarter_hour(now)
 
     # --- Resolve end ---
     if "search_end" in call_data:
-        search_end = localize_to_home_tz(call_data["search_end"], home_tz)
+        raw_end = localize_to_home_tz(call_data["search_end"], home_tz)
     elif "search_end_time" in call_data:
         day_offset = call_data.get("search_end_day_offset", 0)
-        search_end = _resolve_time_with_day_offset(call_data["search_end_time"], day_offset, home_tz, now)
+        raw_end = _resolve_time_with_day_offset(call_data["search_end_time"], day_offset, home_tz, now)
     elif "search_end_offset_minutes" in call_data:
-        search_end = now + timedelta(minutes=call_data["search_end_offset_minutes"])
+        raw_end = now + timedelta(minutes=call_data["search_end_offset_minutes"])
     else:
-        search_end = calculate_end_of_tomorrow(home_tz)
+        raw_end = calculate_end_of_tomorrow(home_tz)
 
-    if search_end <= search_start:
+    # Validate on the values the caller actually asked for. Snapping can still shrink
+    # a range below one interval, and that is "no window fits", not a bad request.
+    if raw_end <= raw_start:
         raise ServiceValidationError(
             translation_domain=DOMAIN,
             translation_key="end_before_start",
             translation_placeholders={
-                "search_start": search_start.strftime("%Y-%m-%d %H:%M %z"),
-                "search_end": search_end.strftime("%Y-%m-%d %H:%M %z"),
+                "search_start": raw_start.strftime("%Y-%m-%d %H:%M %z"),
+                "search_end": raw_end.strftime("%Y-%m-%d %H:%M %z"),
             },
         )
 
-    return search_start, search_end
+    # The end rounds up: the pool takes startsAt < end, so an off-grid end already
+    # admits the interval it falls inside. Ceiling changes nothing about which
+    # intervals are searched, it just reports the range that was actually covered.
+    # Deadlines are the exception and are floored in apply_must_finish_by().
+    return search_start, ceil_to_quarter_hour(raw_end)
 
 
 def smooth_service_intervals(

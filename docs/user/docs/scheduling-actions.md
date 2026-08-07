@@ -130,6 +130,17 @@ If you omit all range parameters, the search covers **now until the end of tomor
 `search_scope` cannot be combined with explicit range parameters (`search_start`, `search_end`, etc.). Use one approach or the other.
 :::
 
+### Interval alignment
+
+Prices exist as fixed 15-minute intervals starting at :00, :15, :30 and :45. Search boundaries you provide are snapped onto that grid, so the range reported back to you may differ slightly from what you passed in.
+
+- **The start rounds according to `include_current_interval`.** With the default `true`, a start of `14:47` becomes `14:45` — the interval you are currently inside counts. With `false` it becomes `15:00`, skipping the partially elapsed interval. A start that already sits on a boundary is left alone.
+- **The end rounds up to the enclosing boundary.** An end of `20:03` becomes `20:15`, because the 20:00–20:15 interval overlaps the time you asked for and was always searched. This is only a change in reporting; the same intervals are considered either way. It also means the familiar `23:59` end still covers the last interval of the day.
+
+`must_finish_by` is the deliberate exception. It is a promise rather than a range bound, so it rounds **down**: with `must_finish_by: "07:05"` nothing is scheduled into the 07:00–07:15 interval, since that interval would not finish until 07:15. The result is guaranteed to be complete by the deadline.
+
+One edge worth knowing: if a range snaps shut — say `14:47 → 14:50` with `include_current_interval: false`, where the start moves to `15:00` and passes the end — no complete interval fits, and the action reports `no_data_in_range` rather than raising an error.
+
 ---
 
 ## Common Parameters
@@ -139,7 +150,7 @@ These parameters are available across all scheduling actions:
 | Parameter | Description | Default |
 |-----------|-------------|---------|
 | `entry_id` | Config entry ID. Auto-selects if you only have one home. | Auto |
-| `include_current_interval` | Include the currently running 15-minute interval in the search? Only applies to `remaining_today`, `next_24h`, `next_48h`, and default (no scope) — has no effect for `today` or `tomorrow` (those always cover the full calendar day). | `true` |
+| `include_current_interval` | Include the partially elapsed 15-minute interval at the start of the search? Applies wherever you specify a start: `remaining_today`, `next_24h`, `next_48h`, the default (no scope), `search_start`, `search_start_time`, and `search_start_offset_minutes`. Has no effect for `today` or `tomorrow` (those always cover the full calendar day). See [Interval alignment](#interval-alignment). | `true` |
 | `min_price_level` | Only consider intervals at or above this Tibber level | — |
 | `max_price_level` | Only consider intervals at or below this Tibber level | — |
 | `smooth_outliers` | Smooth price outliers before searching (see [below](#outlier-smoothing)) | `true` |

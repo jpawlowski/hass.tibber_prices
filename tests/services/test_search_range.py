@@ -20,7 +20,12 @@ import voluptuous as vol
 
 from custom_components.tibber_prices.services.find_cheapest_block import _COMMON_BLOCK_SCHEMA
 from custom_components.tibber_prices.services.find_cheapest_hours import _COMMON_HOURS_SCHEMA
-from custom_components.tibber_prices.services.helpers import resolve_search_range
+from custom_components.tibber_prices.services.helpers import (
+    apply_must_finish_by,
+    ceil_to_quarter_hour,
+    resolve_search_range,
+)
+from homeassistant.exceptions import ServiceValidationError
 
 BERLIN = ZoneInfo("Europe/Berlin")
 
@@ -58,8 +63,9 @@ class TestResolveSearchRangeNegativeDayOffset:
         start, end = resolve_search_range(call_data, now, BERLIN)
         assert start.day == 10
         assert start.hour == 0
-        assert end.day == 10
-        assert end.hour == 23
+        # 23:59 ceils onto the grid; the exclusive end still covers exactly the
+        # 23:45 interval of the 10th and nothing of the 11th.
+        assert end == datetime(2026, 4, 11, 0, 0, tzinfo=BERLIN)
 
     def test_negative_7_day_offset(self) -> None:
         """Start 7 days ago."""
@@ -72,7 +78,8 @@ class TestResolveSearchRangeNegativeDayOffset:
         }
         start, end = resolve_search_range(call_data, now, BERLIN)
         assert start.day == 4
-        assert end.day == 4
+        # Exclusive end ceiled onto midnight, still covering only the 4th
+        assert end == datetime(2026, 4, 5, 0, 0, tzinfo=BERLIN)
 
     def test_cross_day_range_past_to_today(self) -> None:
         """Start yesterday, end today."""
@@ -161,7 +168,8 @@ class TestResolveSearchRangeNegativeOffsetMinutes:
         assert start.hour == 14
         assert start.minute == 45
         assert start.second == 0
-        assert end == now + timedelta(hours=24)
+        # The rolling horizon is ceiled onto the grid (same intervals as before)
+        assert end == ceil_to_quarter_hour(now + timedelta(hours=24))
 
     def test_search_scope_includes_current_interval_when_enabled(self) -> None:
         """Relative search scopes include the current quarter when enabled."""
@@ -173,7 +181,7 @@ class TestResolveSearchRangeNegativeOffsetMinutes:
         start, end = resolve_search_range(call_data, now, BERLIN)
         assert start.hour == 14
         assert start.minute == 30
-        assert end == now + timedelta(hours=24)
+        assert end == ceil_to_quarter_hour(now + timedelta(hours=24))
 
     def test_exclude_current_interval_with_sub_second_now(self) -> None:
         """Regression: microseconds in now caused no intervals to be returned.
@@ -251,6 +259,157 @@ class TestResolveSearchRangeNegativeOffsetMinutes:
         start, end = resolve_search_range(call_data, now, BERLIN)
         assert start == end
         assert start == datetime(2026, 4, 12, 0, 0, tzinfo=BERLIN)
+
+
+# =============================================================================
+# Quarter-hour grid alignment of explicitly requested boundaries
+# =============================================================================
+
+
+class TestExplicitBoundaryGridAlignment:
+    """Explicitly requested start/end datetimes must land on the interval grid.
+
+    The pool indexes intervals by :00/:15/:30/:45 keys and looks each stepped
+    timestamp up verbatim, so an off-grid boundary silently matches nothing.
+    """
+
+    def test_explicit_start_floors_onto_grid(self) -> None:
+        """An off-grid search_start includes the interval it falls inside."""
+        now = datetime(2026, 4, 11, 8, 0, tzinfo=BERLIN)
+        call_data = {
+            "search_start": datetime(2026, 4, 11, 14, 47, tzinfo=BERLIN),
+            "search_end": datetime(2026, 4, 11, 20, 0, tzinfo=BERLIN),
+        }
+        start, _end = resolve_search_range(call_data, now, BERLIN)
+        assert start == datetime(2026, 4, 11, 14, 45, tzinfo=BERLIN)
+
+    def test_explicit_start_ceils_when_current_excluded(self) -> None:
+        """include_current_interval=False skips the partially elapsed interval."""
+        now = datetime(2026, 4, 11, 8, 0, tzinfo=BERLIN)
+        call_data = {
+            "search_start": datetime(2026, 4, 11, 14, 47, tzinfo=BERLIN),
+            "search_end": datetime(2026, 4, 11, 20, 0, tzinfo=BERLIN),
+            "include_current_interval": False,
+        }
+        start, _end = resolve_search_range(call_data, now, BERLIN)
+        assert start == datetime(2026, 4, 11, 15, 0, tzinfo=BERLIN)
+
+    def test_explicit_start_on_boundary_is_kept_when_current_excluded(self) -> None:
+        """A named start already on the grid begins an interval, so it is not skipped.
+
+        This is where an explicit boundary differs from `now`: nothing is mid-flight
+        at a point the caller chose, so there is no current interval to exclude.
+        """
+        now = datetime(2026, 4, 11, 8, 0, tzinfo=BERLIN)
+        call_data = {
+            "search_start": datetime(2026, 4, 11, 15, 0, tzinfo=BERLIN),
+            "search_end": datetime(2026, 4, 11, 20, 0, tzinfo=BERLIN),
+            "include_current_interval": False,
+        }
+        start, _end = resolve_search_range(call_data, now, BERLIN)
+        assert start == datetime(2026, 4, 11, 15, 0, tzinfo=BERLIN)
+
+    def test_start_time_of_day_floors_onto_grid(self) -> None:
+        """search_start_time with off-grid minutes aligns the same way."""
+        now = datetime(2026, 4, 11, 8, 0, tzinfo=BERLIN)
+        call_data = {
+            "search_start_time": dt_time(14, 47),
+            "search_end_time": dt_time(20, 0),
+        }
+        start, _end = resolve_search_range(call_data, now, BERLIN)
+        assert start == datetime(2026, 4, 11, 14, 45, tzinfo=BERLIN)
+
+    def test_explicit_end_ceils_without_changing_what_is_searched(self) -> None:
+        """An off-grid range end is ceiled, reporting the interval it already covered.
+
+        The pool takes startsAt < end, so 14:47 always admitted the 14:45 interval.
+        Ceiling makes the reported range say so instead of implying a 14:47 cutoff.
+        """
+        now = datetime(2026, 4, 11, 8, 0, tzinfo=BERLIN)
+        call_data = {
+            "search_start": datetime(2026, 4, 11, 10, 0, tzinfo=BERLIN),
+            "search_end": datetime(2026, 4, 11, 14, 47, tzinfo=BERLIN),
+        }
+        _start, end = resolve_search_range(call_data, now, BERLIN)
+        assert end == datetime(2026, 4, 11, 15, 0, tzinfo=BERLIN)
+
+    def test_end_of_day_idiom_keeps_the_final_interval(self) -> None:
+        """The common `23:59` end must still cover the 23:45 interval."""
+        now = datetime(2026, 4, 11, 8, 0, tzinfo=BERLIN)
+        call_data = {
+            "search_start_time": dt_time(10, 0),
+            "search_end_time": dt_time(23, 59),
+        }
+        _start, end = resolve_search_range(call_data, now, BERLIN)
+        # Ceiling to midnight keeps startsAt < end true for the 23:45 interval
+        assert end == datetime(2026, 4, 12, 0, 0, tzinfo=BERLIN)
+
+    def test_must_finish_by_deadline_is_never_overshot(self) -> None:
+        """An off-grid must_finish_by deadline must bound the result, not leak past it.
+
+        Regression: 07:05 used to become search_end=07:05, and since the pool takes
+        startsAt < end that admitted the 07:00 interval, whose window runs to 07:15 -
+        ten minutes past a deadline the caller stated as hard.
+        """
+        now = datetime(2026, 4, 11, 4, 0, tzinfo=BERLIN)
+        call_data = {
+            "search_start": datetime(2026, 4, 11, 5, 0, tzinfo=BERLIN),
+            "must_finish_by": datetime(2026, 4, 11, 7, 5, tzinfo=BERLIN),
+        }
+        effective, deadline = apply_must_finish_by(call_data, BERLIN)
+        _start, end = resolve_search_range(effective, now, BERLIN)
+        assert deadline == datetime(2026, 4, 11, 7, 5, tzinfo=BERLIN)
+        # Last admitted interval starts 06:45 and ends 07:00, inside the deadline
+        assert end == datetime(2026, 4, 11, 7, 0, tzinfo=BERLIN)
+        assert end <= deadline
+
+    def test_must_finish_by_on_boundary_is_unchanged(self) -> None:
+        """A deadline already on the grid keeps its full final interval."""
+        now = datetime(2026, 4, 11, 4, 0, tzinfo=BERLIN)
+        call_data = {
+            "search_start": datetime(2026, 4, 11, 5, 0, tzinfo=BERLIN),
+            "must_finish_by": datetime(2026, 4, 11, 7, 0, tzinfo=BERLIN),
+        }
+        effective, deadline = apply_must_finish_by(call_data, BERLIN)
+        _start, end = resolve_search_range(effective, now, BERLIN)
+        assert end == deadline == datetime(2026, 4, 11, 7, 0, tzinfo=BERLIN)
+
+    def test_aligned_boundaries_are_left_untouched(self) -> None:
+        """A request already on the grid passes through unchanged."""
+        now = datetime(2026, 4, 11, 8, 0, tzinfo=BERLIN)
+        call_data = {
+            "search_start": datetime(2026, 4, 11, 10, 15, tzinfo=BERLIN),
+            "search_end": datetime(2026, 4, 11, 14, 30, tzinfo=BERLIN),
+        }
+        start, end = resolve_search_range(call_data, now, BERLIN)
+        assert start == datetime(2026, 4, 11, 10, 15, tzinfo=BERLIN)
+        assert end == datetime(2026, 4, 11, 14, 30, tzinfo=BERLIN)
+
+    def test_range_collapsing_to_nothing_does_not_raise(self) -> None:
+        """A range that snaps shut is "no window fits", not an invalid request.
+
+        Validation runs on the requested values, so 14:47-14:50 is accepted; excluding
+        the current interval then pushes the start onto the end, leaving an empty
+        range that services report as no data.
+        """
+        now = datetime(2026, 4, 11, 8, 0, tzinfo=BERLIN)
+        call_data = {
+            "search_start": datetime(2026, 4, 11, 14, 47, tzinfo=BERLIN),
+            "search_end": datetime(2026, 4, 11, 14, 50, tzinfo=BERLIN),
+            "include_current_interval": False,
+        }
+        start, end = resolve_search_range(call_data, now, BERLIN)
+        assert start == end == datetime(2026, 4, 11, 15, 0, tzinfo=BERLIN)
+
+    def test_inverted_range_still_raises(self) -> None:
+        """A genuinely backwards request remains a validation error."""
+        now = datetime(2026, 4, 11, 8, 0, tzinfo=BERLIN)
+        call_data = {
+            "search_start": datetime(2026, 4, 11, 16, 0, tzinfo=BERLIN),
+            "search_end": datetime(2026, 4, 11, 14, 0, tzinfo=BERLIN),
+        }
+        with pytest.raises(ServiceValidationError):
+            resolve_search_range(call_data, now, BERLIN)
 
 
 # =============================================================================
