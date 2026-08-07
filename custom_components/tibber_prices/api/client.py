@@ -727,34 +727,37 @@ class TibberPricesApiClient:
             ) from error
 
         except socket.gaierror as error:
-            self._handle_dns_error(error)
-            raise  # Ensure type checker knows this path always raises
+            reason = self._describe_dns_error(error)
+            _LOGGER.exception(reason)
+            raise TibberPricesApiClientCommunicationError(
+                TibberPricesApiClientCommunicationError.CONNECTION_ERROR.format(exception=str(error))
+            ) from error
 
         except OSError as error:
-            self._handle_network_error(error)
-            raise  # Ensure type checker knows this path always raises
+            reason = self._describe_network_error(error)
+            _LOGGER.exception(reason)
+            raise TibberPricesApiClientCommunicationError(
+                TibberPricesApiClientCommunicationError.CONNECTION_ERROR.format(exception=str(error))
+            ) from error
 
-    def _handle_dns_error(self, error: socket.gaierror) -> None:
-        """Handle DNS resolution errors with IPv4/IPv6 dual stack considerations."""
+    @staticmethod
+    def _describe_dns_error(error: socket.gaierror) -> str:
+        """Describe DNS resolution errors with IPv4/IPv6 dual stack considerations."""
         error_msg = str(error)
 
         if "Name or service not known" in error_msg:
-            _LOGGER.exception("DNS resolution failed - domain name not found")
-        elif "Temporary failure in name resolution" in error_msg:
-            _LOGGER.exception("DNS resolution temporarily failed - network or DNS server issue")
-        elif "Address family for hostname not supported" in error_msg:
-            _LOGGER.exception("DNS resolution failed - IPv4/IPv6 address family not supported")
-        elif "No address associated with hostname" in error_msg:
-            _LOGGER.exception("DNS resolution failed - no IPv4/IPv6 addresses found")
-        else:
-            _LOGGER.exception("DNS resolution failed - check internet connection: %s", error_msg)
+            return "DNS resolution failed - domain name not found"
+        if "Temporary failure in name resolution" in error_msg:
+            return "DNS resolution temporarily failed - network or DNS server issue"
+        if "Address family for hostname not supported" in error_msg:
+            return "DNS resolution failed - IPv4/IPv6 address family not supported"
+        if "No address associated with hostname" in error_msg:
+            return "DNS resolution failed - no IPv4/IPv6 addresses found"
+        return f"DNS resolution failed - check internet connection: {error_msg}"
 
-        raise TibberPricesApiClientCommunicationError(
-            TibberPricesApiClientCommunicationError.CONNECTION_ERROR.format(exception=str(error))
-        ) from error
-
-    def _handle_network_error(self, error: OSError) -> None:
-        """Handle network-level errors with IPv4/IPv6 dual stack considerations."""
+    @staticmethod
+    def _describe_network_error(error: OSError) -> str:
+        """Describe network-level errors with IPv4/IPv6 dual stack considerations."""
         error_msg = str(error)
         errno = getattr(error, "errno", None)
 
@@ -765,27 +768,22 @@ class TibberPricesApiClient:
         errno_connection_timeout = 110  # ETIMEDOUT
 
         if errno == errno_network_unreachable:
-            _LOGGER.exception("Network unreachable - check internet connection or IPv4/IPv6 routing")
-        elif errno == errno_host_unreachable:
-            _LOGGER.exception("Host unreachable - routing issue or IPv4/IPv6 connectivity problem")
-        elif errno == errno_connection_refused:
-            _LOGGER.exception("Connection refused - server not accepting connections")
-        elif errno == errno_connection_timeout:
-            _LOGGER.exception("Connection timed out - network latency or server overload")
-        elif "Address family not supported" in error_msg:
-            _LOGGER.exception("Address family not supported - IPv4/IPv6 configuration issue")
-        elif "Protocol not available" in error_msg:
-            _LOGGER.exception("Protocol not available - IPv4/IPv6 stack configuration issue")
-        elif "Network is down" in error_msg:
-            _LOGGER.exception("Network interface is down - check network adapter")
-        elif "Permission denied" in error_msg:
-            _LOGGER.exception("Network permission denied - firewall or security restriction")
-        else:
-            _LOGGER.exception("Network error - internet may be down: %s", error_msg)
-
-        raise TibberPricesApiClientCommunicationError(
-            TibberPricesApiClientCommunicationError.CONNECTION_ERROR.format(exception=str(error))
-        ) from error
+            return "Network unreachable - check internet connection or IPv4/IPv6 routing"
+        if errno == errno_host_unreachable:
+            return "Host unreachable - routing issue or IPv4/IPv6 connectivity problem"
+        if errno == errno_connection_refused:
+            return "Connection refused - server not accepting connections"
+        if errno == errno_connection_timeout:
+            return "Connection timed out - network latency or server overload"
+        if "Address family not supported" in error_msg:
+            return "Address family not supported - IPv4/IPv6 configuration issue"
+        if "Protocol not available" in error_msg:
+            return "Protocol not available - IPv4/IPv6 stack configuration issue"
+        if "Network is down" in error_msg:
+            return "Network interface is down - check network adapter"
+        if "Permission denied" in error_msg:
+            return "Network permission denied - firewall or security restriction"
+        return f"Network error - internet may be down: {error_msg}"
 
     async def _handle_request(
         self,

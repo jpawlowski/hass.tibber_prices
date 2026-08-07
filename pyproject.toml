@@ -275,6 +275,7 @@ split-on-trailing-comma = false
 "tests/*" = [
     "S101",    # assert is fine in tests
     "PLR2004", # Magic values are fine in tests
+    "PLR0917", # Parametrized tests and fixture builders legitimately take many positional args
     "D",       # Docstrings not required in tests
     "PTH",     # Use pathlib - temporary exemption for tests
 ]

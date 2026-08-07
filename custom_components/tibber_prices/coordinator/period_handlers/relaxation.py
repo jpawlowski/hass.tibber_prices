@@ -909,13 +909,13 @@ def calculate_periods_with_relaxation(
 
 
 def relax_all_prices(
+    *,
     all_prices: list[dict],
     config: TibberPricesPeriodConfig,
     min_periods: int,
     max_relaxation_attempts: int,
     should_show_callback: Callable[[str | None], bool],
     baseline_periods: list[dict],
-    *,
     time: TibberPricesTimeService,
     config_entry: Any,  # ConfigEntry type
     day_patterns_by_date: dict | None = None,

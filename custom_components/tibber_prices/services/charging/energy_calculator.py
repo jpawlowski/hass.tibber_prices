@@ -82,6 +82,7 @@ def calculate_duration_intervals(
 
 def build_soc_progression(
     intervals: list[dict[str, Any]],
+    *,
     power_w: int,
     start_soc_kwh: float,
     capacity_kwh: float | None,
