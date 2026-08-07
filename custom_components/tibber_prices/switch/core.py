@@ -11,10 +11,10 @@ from __future__ import annotations
 import logging
 from typing import TYPE_CHECKING, Any
 
-from custom_components.tibber_prices.const import DOMAIN, get_home_type_translation, get_translation
+from custom_components.tibber_prices.const import get_translation
+from custom_components.tibber_prices.device import build_device_info
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.core import callback
-from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.restore_state import RestoreEntity
 
 if TYPE_CHECKING:
@@ -71,56 +71,8 @@ class TibberPricesConfigSwitch(RestoreEntity, SwitchEntity):
         self._setup_device_info()
 
     def _setup_device_info(self) -> None:
-        """Set up device information."""
-        home_name, home_id, home_type = self._get_device_info()
-        language = self.coordinator.hass.config.language or "en"
-        translated_model = get_home_type_translation(home_type, language) if home_type else "Unknown"
-
-        self._attr_device_info = DeviceInfo(
-            entry_type=DeviceEntryType.SERVICE,
-            identifiers={
-                (
-                    DOMAIN,
-                    self.coordinator.config_entry.unique_id or self.coordinator.config_entry.entry_id,
-                )
-            },
-            name=home_name,
-            manufacturer="Tibber",
-            model=translated_model,
-            serial_number=home_id or None,
-            configuration_url="https://developer.tibber.com/explorer",
-        )
-
-    def _get_device_info(self) -> tuple[str, str | None, str | None]:
-        """Get device name, ID and type."""
-        user_profile = self.coordinator.get_user_profile()
-        is_subentry = bool(self.coordinator.config_entry.data.get("home_id"))
-        home_id = self.coordinator.config_entry.unique_id
-        home_type = None
-
-        if is_subentry:
-            home_data = self.coordinator.config_entry.data.get("home_data", {})
-            home_id = self.coordinator.config_entry.data.get("home_id")
-            address = home_data.get("address", {})
-            address1 = address.get("address1", "")
-            city = address.get("city", "")
-            app_nickname = home_data.get("appNickname", "")
-            home_type = home_data.get("type", "")
-
-            if app_nickname and app_nickname.strip():
-                home_name = app_nickname.strip()
-            elif address1:
-                home_name = address1
-                if city:
-                    home_name = f"{home_name}, {city}"
-            else:
-                home_name = f"Tibber Home {home_id[:8]}" if home_id else "Tibber Home"
-        elif user_profile:
-            home_name = user_profile.get("name") or "Tibber Home"
-        else:
-            home_name = "Tibber Home"
-
-        return home_name, home_id, home_type
+        """Set up device information (shared across all platforms - see device.py)."""
+        self._attr_device_info = build_device_info(self.coordinator)
 
     async def async_added_to_hass(self) -> None:
         """Handle entity which was added to Home Assistant."""

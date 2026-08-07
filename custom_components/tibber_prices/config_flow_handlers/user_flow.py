@@ -51,11 +51,17 @@ class TibberPricesConfigFlowHandler(ConfigFlow, domain=DOMAIN):
         config_entry: ConfigEntry,
     ) -> dict[str, type[ConfigSubentryFlow]]:
         """Return subentries supported by this integration."""
-        # Temporarily disabled: Time-travel feature not yet fully implemented
-        # When enabled, this causes "Devices that don't belong to a sub-entry" warning
-        # because subentries don't have their own entities yet.
-        # See: https://github.com/home-assistant/core/issues/147570
-        # Will be re-enabled when time-travel functionality is implemented
+        # Temporarily disabled: Time-travel feature not yet fully implemented.
+        # A subentry without its own entities triggers the "Devices that don't
+        # belong to a sub-entry" warning (home-assistant/core#147570).
+        #
+        # The device side is prepared: device.build_device_info(coordinator, subentry)
+        # already yields a separate device per subentry, matching the HA 2026.8
+        # device registry model (one device -> one config entry + at most one
+        # subentry). What is still missing is the coordinator producing
+        # time-shifted data and the platforms creating entities per subentry via
+        # async_add_entities(..., config_subentry_id=subentry.subentry_id).
+        # See planning/time-travel-feature-plan.md
         return {}
 
     @staticmethod
