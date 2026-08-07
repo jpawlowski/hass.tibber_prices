@@ -449,10 +449,12 @@ async def _async_setup_subentries(
             interval_pool=pool,
         )
         LOGGER.debug(
-            "[%s] Time-travel view '%s' set up with offset %s",
+            "[%s] Time-travel view '%s' set up: %s, headless=%s, showing %s",
             entry.title,
             subentry.title,
-            coordinator.time_offset,
+            coordinator.time_shift.describe(),
+            coordinator.headless,
+            coordinator.time.now().isoformat(),
         )
 
     return views

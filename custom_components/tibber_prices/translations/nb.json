@@ -96,32 +96,56 @@
       "title": "Opprett tidsreisevisning",
       "step": {
         "user": {
-          "title": "Konfigurer tidsforskyvning",
-          "description": "Konfigurer hvor langt tilbake i tid denne visningen skal reise.\n\n**Anbefalt:** Bruk **≥2 dager** forskyvning for å unngå konflikter med \"yesterday\"-entiteter som også gir historiske data.\n\n**Eksempler:**\n• **-7 dager**: Vis priser fra 7 dager siden\n• **-2 dager, 3 timer**: Vis priser fra 2 dager og 3 timer siden\n• **-14 dager**: Vis priser fra 2 uker siden",
+          "title": "Velg forskyvningsmodus",
+          "description": "Hvordan skal denne tidsreisevisningen velge datoen sin?\n\n**Et antall dager tilbake** forskyver med et fast antall dager.\n\n**Samme dato i et tidligere år** sammenligner like dager på tvers av år.",
+          "data": {
+            "virtual_time_offset_mode": "Forskyvningsmodus"
+          }
+        },
+        "offset": {
+          "title": "Sett opp tidsreisevisning",
+          "description": "Velg hvor langt tilbake visningen skal gå og hvordan den skal oppføre seg.\n\nKvartersvise priser finnes fra {earliest_date}, så akkurat nå er maksimalt **{max_days} dager** mulig (**{max_years} år** i årsmodus).\n\n**Anbefalt:** minst 2 dager, slik at visningen ikke overlapper «i går»-entitetene til sanntidsenheten.",
           "data": {
             "virtual_time_offset_days": "Dager tilbake",
-            "time_offset": "Ekstra tidsforskyvning"
+            "virtual_time_offset_years": "År tilbake",
+            "time_offset": "Ekstra klokkeforskyvning",
+            "realistic_tomorrow": "Vis morgendagens priser først fra publisering",
+            "tomorrow_arrival_hour": "Publiseringstime",
+            "headless": "Hodeløs (kun diagnosesensorer)"
           },
           "data_description": {
-            "virtual_time_offset_days": "Hvor mange dager å reise tilbake i tid. Glidebryter-område: 0 til 374 dager (≈1 år). Anbefalt: ≥2 dager for å unngå konflikter med \"yesterday\"-entiteter.",
-            "time_offset": "Valgfri finjustering: Legg til timer og/eller minutter til dagesforskyvningen. Tiden trekkes automatisk fra (reis lenger tilbake). Merk: Sekunder ignoreres - kun minuttbasert presisjon støttes."
+            "virtual_time_offset_days": "Hvor mange dager det reises tilbake. Nå begrenset til {max_days} dager av tilgjengelige kvartersdata.",
+            "virtual_time_offset_years": "Hvor mange år tilbake, til samme måned og dag. 29. februar er visningen utilgjengelig i år uten skuddår, framfor å vise en nærliggende dato.",
+            "time_offset": "Valgfri finjustering i timer og minutter, i tillegg til forskyvningen over. Sekunder ignoreres.",
+            "realistic_tomorrow": "Gjenskaper det opprinnelige døgnet: morgendagens priser holdes skjult til visningens egen klokke når publiseringstimen.",
+            "tomorrow_arrival_hour": "Timen da morgendagens priser dukker opp. Tibber publiserer dem rundt 13:00 lokal tid.",
+            "headless": "Oppretter ingen prisentiteter for denne visningen. Dataene hentes likevel og er tilgjengelige via tjenestene og diagrammene."
           }
         },
         "reconfigure": {
-          "title": "Konfigurer tidsforskyvning på nytt",
-          "description": "Oppdater tidsforskyvningen for denne tidsreisevisningen.",
+          "title": "Konfigurer tidsreisevisning på nytt",
+          "description": "Endre forskyvningen og oppførselen til denne visningen. Forskyvningsmodusen beholdes.",
           "data": {
             "virtual_time_offset_days": "Dager tilbake",
-            "time_offset": "Ekstra tidsforskyvning"
+            "virtual_time_offset_years": "År tilbake",
+            "time_offset": "Ekstra klokkeforskyvning",
+            "realistic_tomorrow": "Vis morgendagens priser først fra publisering",
+            "tomorrow_arrival_hour": "Publiseringstime",
+            "headless": "Hodeløs (kun diagnosesensorer)"
           },
           "data_description": {
-            "virtual_time_offset_days": "Hvor mange dager å reise tilbake i tid. Glidebryter-område: 0 til 374 dager (≈1 år). Anbefalt: ≥2 dager for å unngå konflikter med \"yesterday\"-entiteter.",
-            "time_offset": "Valgfri finjustering: Legg til timer og/eller minutter til dagesforskyvningen. Tiden trekkes automatisk fra (reis lenger tilbake). Merk: Sekunder ignoreres - kun minuttbasert presisjon støttes."
+            "virtual_time_offset_days": "Hvor mange dager det reises tilbake. Nå begrenset til {max_days} dager av tilgjengelige kvartersdata.",
+            "virtual_time_offset_years": "Hvor mange år tilbake, til samme måned og dag. 29. februar er visningen utilgjengelig i år uten skuddår, framfor å vise en nærliggende dato.",
+            "time_offset": "Valgfri finjustering i timer og minutter, i tillegg til forskyvningen over. Sekunder ignoreres.",
+            "realistic_tomorrow": "Gjenskaper det opprinnelige døgnet: morgendagens priser holdes skjult til visningens egen klokke når publiseringstimen.",
+            "tomorrow_arrival_hour": "Timen da morgendagens priser dukker opp. Tibber publiserer dem rundt 13:00 lokal tid.",
+            "headless": "Oppretter ingen prisentiteter for denne visningen. Dataene hentes likevel og er tilgjengelige via tjenestene og diagrammene."
           }
         }
       },
       "error": {
-        "no_time_offset": "Minst én tidsforskyvningsverdi må være negativ (kun historiske data)."
+        "no_time_offset": "Minst én tidsforskyvningsverdi må være negativ (kun historiske data).",
+        "before_quarter_hourly": "**Ingen kvartersvise priser for den datoen.**\n\nTibber gikk over til kvartersvise priser {earliest_date}; visningen ville ikke hatt noe å vise. Velg en mindre forskyvning."
       },
       "abort": {
         "already_configured": "**En tidsreisevisning med denne eksakte tidsforskyvningen eksisterer allerede.**\n\nVelg en annen forskyvning.",
@@ -1098,6 +1122,33 @@
       },
       "next_hour_price_rank_today_tomorrow": {
         "name": "⌀ Timesprisrang neste (i dag+i morgen)"
+      },
+      "entry_mode": {
+        "name": "Datamodus",
+        "state": {
+          "live": "Sanntid",
+          "time_travel_days": "Tidsreise (dager)",
+          "time_travel_yearly": "Tidsreise (årlig)"
+        }
+      },
+      "time_travel_reference_time": {
+        "name": "Vist tidspunkt"
+      },
+      "time_travel_days_offset": {
+        "name": "Tidsreiseforskyvning i dager"
+      },
+      "time_travel_years_offset": {
+        "name": "Tidsreiseforskyvning i år"
+      },
+      "time_travel_time_offset": {
+        "name": "Tidsreise-klokkeforskyvning"
+      },
+      "headless_mode": {
+        "name": "Hodeløs modus",
+        "state": {
+          "on": "På",
+          "off": "Av"
+        }
       }
     },
     "binary_sensor": {
@@ -2504,6 +2555,12 @@
         "midnight": "Midnatt",
         "next_peak_period": "Neste topprisperiode",
         "next_best_period_end": "Slutten på neste bestprisperiode"
+      }
+    },
+    "offset_mode": {
+      "options": {
+        "days": "Et antall dager tilbake",
+        "yearly": "Samme dato i et tidligere år"
       }
     }
   }

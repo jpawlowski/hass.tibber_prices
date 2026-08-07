@@ -205,3 +205,70 @@ async def test_removed_view_purges_its_storage() -> None:
     store.async_remove.assert_awaited_once()
     remove_pool.assert_awaited_once_with(hass, "entry123_01JAAA")
     hass.config_entries.async_schedule_reload.assert_called_once_with("entry123")
+
+
+@pytest.mark.unit
+async def test_headless_view_gets_diagnostic_sensors_only() -> None:
+    """
+    Test a headless view creates no price entities.
+
+    Scenario: One normal and one headless view, both set up on the sensor
+        platform.
+    Expected: The headless view only receives diagnostic sensors. Its data is
+        still fetched - the point is to avoid dozens of price entities per
+        comparison view, not to stop collecting.
+    """
+    from custom_components.tibber_prices.sensor import async_setup_entry  # noqa: PLC0415
+    from homeassistant.const import EntityCategory  # noqa: PLC0415
+
+    entry = Mock()
+    entry.options = {}
+    entry.runtime_data = Mock(
+        coordinator=Mock(headless=False),
+        subentries={
+            "01JNORMAL": Mock(subentry=Mock(), coordinator=Mock(headless=False)),
+            "01JHEADLESS": Mock(subentry=Mock(), coordinator=Mock(headless=True)),
+        },
+    )
+
+    added: dict[str | None, list] = {}
+
+    def _add(entities, **kwargs) -> None:
+        added.setdefault(kwargs.get("config_subentry_id"), []).extend(entities)
+
+    await async_setup_entry(Mock(), entry, _add)
+
+    headless = added["01JHEADLESS"]
+    normal = added["01JNORMAL"]
+
+    assert headless, "a headless view must still expose its diagnostic sensors"
+    assert len(headless) < len(normal)
+    assert all(e.entity_description.entity_category == EntityCategory.DIAGNOSTIC for e in headless)
+
+
+@pytest.mark.unit
+async def test_headless_view_gets_no_binary_sensors() -> None:
+    """
+    Test headless views are skipped entirely on the non-sensor platforms.
+
+    Scenario: A headless view set up on the binary sensor platform.
+    Expected: Nothing is added for it - binary sensors carry no diagnostics that
+        would justify the clutter.
+    """
+    from custom_components.tibber_prices.binary_sensor import async_setup_entry  # noqa: PLC0415
+
+    entry = Mock()
+    entry.runtime_data = Mock(
+        coordinator=Mock(headless=False),
+        subentries={"01JHEADLESS": Mock(subentry=Mock(), coordinator=Mock(headless=True))},
+    )
+
+    added: dict[str | None, list] = {}
+
+    def _add(entities, **kwargs) -> None:
+        added.setdefault(kwargs.get("config_subentry_id"), []).extend(entities)
+
+    await async_setup_entry(Mock(), entry, _add)
+
+    assert "01JHEADLESS" not in added
+    assert added[None], "the live entry still gets its binary sensors"

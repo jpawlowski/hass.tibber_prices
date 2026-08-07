@@ -35,6 +35,11 @@ CONF_VIRTUAL_TIME_OFFSET_DAYS = (
 )
 CONF_VIRTUAL_TIME_OFFSET_HOURS = "virtual_time_offset_hours"  # Time-travel: hours offset (-23 to +23)
 CONF_VIRTUAL_TIME_OFFSET_MINUTES = "virtual_time_offset_minutes"  # Time-travel: minutes offset (-59 to +59)
+CONF_VIRTUAL_TIME_OFFSET_MODE = "virtual_time_offset_mode"  # Time-travel: "days" or "yearly"
+CONF_VIRTUAL_TIME_OFFSET_YEARS = "virtual_time_offset_years"  # Time-travel: years offset (yearly mode)
+CONF_HEADLESS = "headless"  # Time-travel: create diagnostic sensors only, no price entities
+CONF_REALISTIC_TOMORROW = "realistic_tomorrow"  # Time-travel: withhold tomorrow until arrival hour
+CONF_TOMORROW_ARRIVAL_HOUR = "tomorrow_arrival_hour"  # Time-travel: hour tomorrow's prices appear
 CONF_BEST_PRICE_FLEX = "best_price_flex"
 CONF_PEAK_PRICE_FLEX = "peak_price_flex"
 CONF_BEST_PRICE_MIN_DISTANCE_FROM_AVG = "best_price_min_distance_from_avg"
@@ -86,6 +91,10 @@ DEFAULT_EXTENDED_DESCRIPTIONS = False
 DEFAULT_VIRTUAL_TIME_OFFSET_DAYS = 0  # No time offset (live mode)
 DEFAULT_VIRTUAL_TIME_OFFSET_HOURS = 0
 DEFAULT_VIRTUAL_TIME_OFFSET_MINUTES = 0
+DEFAULT_VIRTUAL_TIME_OFFSET_YEARS = -1  # Yearly mode: same date one year ago
+DEFAULT_HEADLESS = False  # Time-travel views expose their full entity set by default
+DEFAULT_REALISTIC_TOMORROW = True  # Reproduce "tomorrow arrives at 13:00" in historical views
+DEFAULT_TOMORROW_ARRIVAL_HOUR = 13  # Tibber publishes tomorrow's prices around 13:00 local time
 DEFAULT_BEST_PRICE_FLEX = 15  # 15% base flexibility - optimal for relaxation mode (default enabled)
 # Peak price flexibility is set to -20% (20% base flexibility - optimal for relaxation mode).
 # This is intentionally more flexible than best price (15%) because peak price periods can be more variable,

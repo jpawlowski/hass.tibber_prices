@@ -42,6 +42,10 @@ async def async_setup_entry(
     # its own device. config_subentry_id is what files that device under the
     # subentry instead of the config entry.
     for subentry_id, view in entry.runtime_data.subentries.items():
+        # Headless views expose diagnostic sensors only (see sensor/__init__.py).
+        if view.coordinator.headless:
+            continue
+
         async_add_entities(
             (
                 TibberPricesConfigNumber(

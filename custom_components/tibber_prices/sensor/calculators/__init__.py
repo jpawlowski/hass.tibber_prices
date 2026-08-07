@@ -16,6 +16,7 @@ from .interval import TibberPricesIntervalCalculator
 from .lifecycle import TibberPricesLifecycleCalculator
 from .metadata import TibberPricesMetadataCalculator
 from .rolling_hour import TibberPricesRollingHourCalculator
+from .time_travel import TibberPricesTimeTravelCalculator
 from .timing import TibberPricesTimingCalculator
 from .trend import TibberPricesTrendCalculator
 from .volatility import TibberPricesVolatilityCalculator
@@ -28,6 +29,7 @@ __all__ = [
     "TibberPricesLifecycleCalculator",
     "TibberPricesMetadataCalculator",
     "TibberPricesRollingHourCalculator",
+    "TibberPricesTimeTravelCalculator",
     "TibberPricesTimingCalculator",
     "TibberPricesTrendCalculator",
     "TibberPricesVolatilityCalculator",

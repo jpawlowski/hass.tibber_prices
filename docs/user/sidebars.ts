@@ -89,7 +89,7 @@ const sidebars: SidebarsConfig = {
       type: 'category',
       label: '🤖 Automations & Usage',
       link: { type: 'doc', id: 'automation-examples' },
-      items: ['automation-examples'],
+      items: ['automation-examples', 'time-travel'],
       collapsible: true,
       collapsed: false,
     },

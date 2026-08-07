@@ -18,6 +18,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 from custom_components.tibber_prices.const import CONF_CURRENCY_DISPLAY_MODE, DISPLAY_MODE_BASE
+from homeassistant.const import EntityCategory
 
 from .core import TibberPricesSensor
 from .definitions import ENTITY_DESCRIPTIONS
@@ -60,6 +61,19 @@ async def async_setup_entry(
     # its own device. config_subentry_id is what files that device under the
     # subentry instead of the config entry.
     for subentry_id, view in entry.runtime_data.subentries.items():
+        # A headless view keeps its diagnostic sensors - they are what makes its
+        # configuration visible - but drops the price sensors. Its data is still
+        # fetched and stays reachable through the services.
+        view_descriptions = (
+            [
+                entity_description
+                for entity_description in entities_to_create
+                if entity_description.entity_category == EntityCategory.DIAGNOSTIC
+            ]
+            if view.coordinator.headless
+            else entities_to_create
+        )
+
         async_add_entities(
             (
                 TibberPricesSensor(
@@ -67,7 +81,7 @@ async def async_setup_entry(
                     entity_description=entity_description,
                     subentry=view.subentry,
                 )
-                for entity_description in entities_to_create
+                for entity_description in view_descriptions
             ),
             config_subentry_id=subentry_id,
         )

@@ -96,32 +96,56 @@
       "title": "Skapa tidsresevy",
       "step": {
         "user": {
-          "title": "Konfigurera tidsförskjutning",
-          "description": "Konfigurera hur långt tillbaka i tiden denna vy ska resa.\n\n**Rekommenderat:** Använd **≥2 dagar** förskjutning för att undvika konflikter med \"igår\"-entiteter som också tillhandahåller historisk data.\n\n**Exempel:**\n• **-7 dagar**: Visa priser från 7 dagar sedan\n• **-2 dagar, 3 timmar**: Visa priser från 2 dagar och 3 timmar sedan\n• **-14 dagar**: Visa priser från 2 veckor sedan",
+          "title": "Välj förskjutningsläge",
+          "description": "Hur ska den här tidsresevyn välja sitt datum?\n\n**Ett antal dagar tillbaka** förskjuter med ett fast antal dagar.\n\n**Samma datum ett tidigare år** jämför likvärdiga dagar mellan år.",
+          "data": {
+            "virtual_time_offset_mode": "Förskjutningsläge"
+          }
+        },
+        "offset": {
+          "title": "Konfigurera tidsresevy",
+          "description": "Välj hur långt tillbaka vyn ska gå och hur den ska bete sig.\n\nKvartspriser finns från {earliest_date}, så just nu är högst **{max_days} dagar** möjligt (**{max_years} år** i årsläge).\n\n**Rekommenderat:** minst 2 dagar, så att vyn inte överlappar live-enhetens \"igår\"-entiteter.",
           "data": {
             "virtual_time_offset_days": "Dagar tillbaka",
-            "time_offset": "Extra tidsförskjutning"
+            "virtual_time_offset_years": "År tillbaka",
+            "time_offset": "Ytterligare tidsförskjutning",
+            "realistic_tomorrow": "Visa morgondagens priser först vid publicering",
+            "tomorrow_arrival_hour": "Publiceringstimme",
+            "headless": "Headless (endast diagnostiska sensorer)"
           },
           "data_description": {
-            "virtual_time_offset_days": "Hur många dagar ska man resa tillbaka i tiden. Skjutreglage: 0 till 374 dagar (≈1 år). Rekommenderat: ≥2 dagar för att undvika konflikter med \"igår\"-entiteter.",
-            "time_offset": "Valfri finjustering: Lägg till timmar och/eller minuter till dagförskjutningen. Tiden subtraheras automatiskt (resa tillbaka längre). Obs: Sekunder ignoreras - endast minutnoggrannhet stöds."
+            "virtual_time_offset_days": "Hur många dagar det reses tillbaka. Nu begränsat till {max_days} dagar av tillgängliga kvartsdata.",
+            "virtual_time_offset_years": "Hur många år tillbaka, till samma månad och dag. Den 29 februari är vyn otillgänglig under icke-skottår i stället för att visa ett närliggande datum.",
+            "time_offset": "Valfri finjustering i timmar och minuter, utöver förskjutningen ovan. Sekunder ignoreras.",
+            "realistic_tomorrow": "Återskapar det ursprungliga dygnet: morgondagens priser förblir dolda tills vyns egen klocka når publiceringstimmen.",
+            "tomorrow_arrival_hour": "Timmen då morgondagens priser dyker upp. Tibber publicerar dem omkring 13:00 lokal tid.",
+            "headless": "Skapar inga prisentiteter för vyn. Data hämtas ändå och är tillgängliga via tjänsterna och diagrammen."
           }
         },
         "reconfigure": {
-          "title": "Konfigurera om tidsförskjutning",
-          "description": "Uppdatera tidsförskjutningen för denna tidsresevy.",
+          "title": "Konfigurera om tidsresevy",
+          "description": "Ändra vyns förskjutning och beteende. Förskjutningsläget behålls.",
           "data": {
             "virtual_time_offset_days": "Dagar tillbaka",
-            "time_offset": "Extra tidsförskjutning"
+            "virtual_time_offset_years": "År tillbaka",
+            "time_offset": "Ytterligare tidsförskjutning",
+            "realistic_tomorrow": "Visa morgondagens priser först vid publicering",
+            "tomorrow_arrival_hour": "Publiceringstimme",
+            "headless": "Headless (endast diagnostiska sensorer)"
           },
           "data_description": {
-            "virtual_time_offset_days": "Hur många dagar ska man resa tillbaka i tiden. Skjutreglage: 0 till 374 dagar (≈1 år). Rekommenderat: ≥2 dagar för att undvika konflikter med \"igår\"-entiteter.",
-            "time_offset": "Valfri finjustering: Lägg till timmar och/eller minuter till dagförskjutningen. Tiden subtraheras automatiskt (resa tillbaka längre). Obs: Sekunder ignoreras - endast minutnoggrannhet stöds."
+            "virtual_time_offset_days": "Hur många dagar det reses tillbaka. Nu begränsat till {max_days} dagar av tillgängliga kvartsdata.",
+            "virtual_time_offset_years": "Hur många år tillbaka, till samma månad och dag. Den 29 februari är vyn otillgänglig under icke-skottår i stället för att visa ett närliggande datum.",
+            "time_offset": "Valfri finjustering i timmar och minuter, utöver förskjutningen ovan. Sekunder ignoreras.",
+            "realistic_tomorrow": "Återskapar det ursprungliga dygnet: morgondagens priser förblir dolda tills vyns egen klocka når publiceringstimmen.",
+            "tomorrow_arrival_hour": "Timmen då morgondagens priser dyker upp. Tibber publicerar dem omkring 13:00 lokal tid.",
+            "headless": "Skapar inga prisentiteter för vyn. Data hämtas ändå och är tillgängliga via tjänsterna och diagrammen."
           }
         }
       },
       "error": {
-        "no_time_offset": "Minst ett tidsförskjutningsvärde måste vara negativt (endast historisk data)."
+        "no_time_offset": "Minst ett tidsförskjutningsvärde måste vara negativt (endast historisk data).",
+        "before_quarter_hourly": "**Inga kvartspriser för det datumet.**\n\nTibber gick över till kvartspriser {earliest_date}; vyn skulle inte ha något att visa. Välj en mindre förskjutning."
       },
       "abort": {
         "already_configured": "**En tidsresevy med exakt denna tidsförskjutning finns redan.**\n\nVälj en annan förskjutning.",
@@ -1098,6 +1122,33 @@
       },
       "next_hour_price_rank_today_tomorrow": {
         "name": "⌀ Timprisrang nästa (idag+imorgon)"
+      },
+      "entry_mode": {
+        "name": "Dataläge",
+        "state": {
+          "live": "Live",
+          "time_travel_days": "Tidsresa (dagar)",
+          "time_travel_yearly": "Tidsresa (årlig)"
+        }
+      },
+      "time_travel_reference_time": {
+        "name": "Visad tid"
+      },
+      "time_travel_days_offset": {
+        "name": "Tidsreseförskjutning i dagar"
+      },
+      "time_travel_years_offset": {
+        "name": "Tidsreseförskjutning i år"
+      },
+      "time_travel_time_offset": {
+        "name": "Tidsresa-klockförskjutning"
+      },
+      "headless_mode": {
+        "name": "Headless-läge",
+        "state": {
+          "on": "På",
+          "off": "Av"
+        }
       }
     },
     "binary_sensor": {
@@ -2504,6 +2555,12 @@
         "midnight": "Midnatt",
         "next_peak_period": "Nästa topprisperiod",
         "next_best_period_end": "Slutet på nästa bästprisperiod"
+      }
+    },
+    "offset_mode": {
+      "options": {
+        "days": "Ett antal dagar tillbaka",
+        "yearly": "Samma datum ett tidigare år"
       }
     }
   }

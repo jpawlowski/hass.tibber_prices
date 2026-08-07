@@ -96,32 +96,56 @@
       "title": "Tijdreisweergave Aanmaken",
       "step": {
         "user": {
-          "title": "Configureer Tijdverschuiving",
-          "description": "Configureer hoe ver terug in de tijd deze weergave moet reizen.\n\n**Aanbevolen:** Gebruik **≥2 dagen** verschuiving om conflicten met \"gisteren\"-entiteiten te voorkomen die ook historische gegevens bieden.\n\n**Voorbeelden:**\n• **-7 dagen**: Bekijk prijzen van 7 dagen geleden\n• **-2 dagen, 3 uur**: Bekijk prijzen van 2 dagen en 3 uur geleden\n• **-14 dagen**: Bekijk prijzen van 2 weken geleden",
+          "title": "Kies verschuivingsmodus",
+          "description": "Hoe moet deze tijdreis-weergave haar datum bepalen?\n\n**Een aantal dagen geleden** verschuift met een vast aantal dagen.\n\n**Dezelfde datum in een eerder jaar** vergelijkt gelijkwaardige dagen over jaren heen.",
           "data": {
-            "virtual_time_offset_days": "Dagen Terug",
-            "time_offset": "Extra Tijdverschuiving"
+            "virtual_time_offset_mode": "Verschuivingsmodus"
+          }
+        },
+        "offset": {
+          "title": "Tijdreis-weergave instellen",
+          "description": "Bepaal hoe ver deze weergave teruggaat en hoe zij zich gedraagt.\n\nKwartierprijzen bestaan vanaf {earliest_date}, dus momenteel is maximaal **{max_days} dagen** mogelijk (**{max_years} jaar** in jaarmodus).\n\n**Aanbevolen:** minstens 2 dagen, zodat de weergave niet overlapt met de \"gisteren\"-entiteiten van het live-apparaat.",
+          "data": {
+            "virtual_time_offset_days": "Dagen terug",
+            "virtual_time_offset_years": "Jaren terug",
+            "time_offset": "Extra tijdverschuiving",
+            "realistic_tomorrow": "Prijzen van morgen pas tonen vanaf publicatie",
+            "tomorrow_arrival_hour": "Publicatie-uur",
+            "headless": "Headless (alleen diagnostische sensoren)"
           },
           "data_description": {
-            "virtual_time_offset_days": "Hoeveel dagen terug in de tijd reizen. Schuifbereik: 0 tot 374 dagen (≈1 jaar). Aanbevolen: ≥2 dagen om conflicten met \"gisteren\"-entiteiten te voorkomen.",
-            "time_offset": "Optionele fijnafstemming: Voeg uren en/of minuten toe aan de dagverschuiving. De tijd wordt automatisch afgetrokken (verder terug reizen). Let op: Seconden worden genegeerd - alleen precisie op minuutniveau wordt ondersteund."
+            "virtual_time_offset_days": "Hoeveel dagen terug wordt gereisd. Nu beperkt tot {max_days} dagen door de beschikbare kwartierdata.",
+            "virtual_time_offset_years": "Hoeveel jaren terug, op dezelfde maand en dag. Op 29 februari is de weergave in niet-schrikkeljaren onbeschikbaar in plaats van een nabije datum te tonen.",
+            "time_offset": "Optionele fijnafstelling in uren en minuten, bovenop de verschuiving hierboven. Seconden worden genegeerd.",
+            "realistic_tomorrow": "Bootst het oorspronkelijke dagverloop na: de prijzen van morgen blijven verborgen tot de klok van de weergave het publicatie-uur bereikt.",
+            "tomorrow_arrival_hour": "Het uur waarop de prijzen van morgen verschijnen. Tibber publiceert ze rond 13:00 lokale tijd.",
+            "headless": "Maakt geen prijsentiteiten aan voor deze weergave. De gegevens worden wel opgehaald en blijven beschikbaar via de services en grafieken."
           }
         },
         "reconfigure": {
-          "title": "Tijdverschuiving Opnieuw Configureren",
-          "description": "Werk de tijdverschuiving voor deze tijdreisweergave bij.",
+          "title": "Tijdreis-weergave opnieuw instellen",
+          "description": "Pas de verschuiving en het gedrag van deze weergave aan. De verschuivingsmodus blijft ongewijzigd.",
           "data": {
-            "virtual_time_offset_days": "Dagen Terug",
-            "time_offset": "Extra Tijdverschuiving"
+            "virtual_time_offset_days": "Dagen terug",
+            "virtual_time_offset_years": "Jaren terug",
+            "time_offset": "Extra tijdverschuiving",
+            "realistic_tomorrow": "Prijzen van morgen pas tonen vanaf publicatie",
+            "tomorrow_arrival_hour": "Publicatie-uur",
+            "headless": "Headless (alleen diagnostische sensoren)"
           },
           "data_description": {
-            "virtual_time_offset_days": "Hoeveel dagen terug in de tijd reizen. Schuifbereik: 0 tot 374 dagen (≈1 jaar). Aanbevolen: ≥2 dagen om conflicten met \"gisteren\"-entiteiten te voorkomen.",
-            "time_offset": "Optionele fijnafstemming: Voeg uren en/of minuten toe aan de dagverschuiving. De tijd wordt automatisch afgetrokken (verder terug reizen). Let op: Seconden worden genegeerd - alleen precisie op minuutniveau wordt ondersteund."
+            "virtual_time_offset_days": "Hoeveel dagen terug wordt gereisd. Nu beperkt tot {max_days} dagen door de beschikbare kwartierdata.",
+            "virtual_time_offset_years": "Hoeveel jaren terug, op dezelfde maand en dag. Op 29 februari is de weergave in niet-schrikkeljaren onbeschikbaar in plaats van een nabije datum te tonen.",
+            "time_offset": "Optionele fijnafstelling in uren en minuten, bovenop de verschuiving hierboven. Seconden worden genegeerd.",
+            "realistic_tomorrow": "Bootst het oorspronkelijke dagverloop na: de prijzen van morgen blijven verborgen tot de klok van de weergave het publicatie-uur bereikt.",
+            "tomorrow_arrival_hour": "Het uur waarop de prijzen van morgen verschijnen. Tibber publiceert ze rond 13:00 lokale tijd.",
+            "headless": "Maakt geen prijsentiteiten aan voor deze weergave. De gegevens worden wel opgehaald en blijven beschikbaar via de services en grafieken."
           }
         }
       },
       "error": {
-        "no_time_offset": "Minimaal één tijdverschuivingswaarde moet negatief zijn (alleen historische gegevens)."
+        "no_time_offset": "Minimaal één tijdverschuivingswaarde moet negatief zijn (alleen historische gegevens).",
+        "before_quarter_hourly": "**Geen kwartierprijzen voor die datum.**\n\nTibber schakelde op {earliest_date} over op kwartierprijzen; deze weergave zou niets kunnen tonen. Kies een kleinere verschuiving."
       },
       "abort": {
         "already_configured": "**Een tijdreisweergave met exact deze tijdverschuiving bestaat al.**\n\nKies een andere verschuiving.",
@@ -1098,6 +1122,33 @@
       },
       "next_hour_price_rank_today_tomorrow": {
         "name": "⌀ Uurlijkse prijsrang volgende (vandaag+morgen)"
+      },
+      "entry_mode": {
+        "name": "Gegevensmodus",
+        "state": {
+          "live": "Live",
+          "time_travel_days": "Tijdreis (dagen)",
+          "time_travel_yearly": "Tijdreis (jaarlijks)"
+        }
+      },
+      "time_travel_reference_time": {
+        "name": "Getoonde tijd"
+      },
+      "time_travel_days_offset": {
+        "name": "Tijdreisverschuiving in dagen"
+      },
+      "time_travel_years_offset": {
+        "name": "Tijdreisverschuiving in jaren"
+      },
+      "time_travel_time_offset": {
+        "name": "Tijdreis-tijdverschuiving"
+      },
+      "headless_mode": {
+        "name": "Headless-modus",
+        "state": {
+          "on": "Aan",
+          "off": "Uit"
+        }
       }
     },
     "binary_sensor": {
@@ -2504,6 +2555,12 @@
         "midnight": "Middernacht",
         "next_peak_period": "Volgende piekperiode",
         "next_best_period_end": "Einde van de volgende beste-prijsperiode"
+      }
+    },
+    "offset_mode": {
+      "options": {
+        "days": "Een aantal dagen geleden",
+        "yearly": "Dezelfde datum in een eerder jaar"
       }
     }
   }

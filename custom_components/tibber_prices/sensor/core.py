@@ -47,6 +47,7 @@ from .calculators import (
     TibberPricesLifecycleCalculator,
     TibberPricesMetadataCalculator,
     TibberPricesRollingHourCalculator,
+    TibberPricesTimeTravelCalculator,
     TibberPricesTimingCalculator,
     TibberPricesTrendCalculator,
     TibberPricesVolatilityCalculator,
@@ -193,6 +194,7 @@ class TibberPricesSensor(TibberPricesEntity, RestoreSensor):
         self._timing_calculator = TibberPricesTimingCalculator(coordinator)
         self._trend_calculator = TibberPricesTrendCalculator(coordinator)
         self._lifecycle_calculator = TibberPricesLifecycleCalculator(coordinator)
+        self._time_travel_calculator = TibberPricesTimeTravelCalculator(coordinator)
         self._value_getter: Callable | None = self._get_value_getter()
         self._time_sensitive_remove_listener: Callable | None = None
         self._minute_update_remove_listener: Callable | None = None
@@ -428,6 +430,7 @@ class TibberPricesSensor(TibberPricesEntity, RestoreSensor):
             volatility_calculator=self._volatility_calculator,
             metadata_calculator=self._metadata_calculator,
             lifecycle_calculator=self._lifecycle_calculator,
+            time_travel_calculator=self._time_travel_calculator,
             get_next_avg_n_hours_value=self._get_next_avg_n_hours_value,
             get_data_timestamp=self._get_data_timestamp,
             get_chart_data_export_value=self._get_chart_data_export_value,

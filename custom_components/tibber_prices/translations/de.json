@@ -96,32 +96,56 @@
       "title": "Zeitreise-Ansicht erstellen",
       "step": {
         "user": {
-          "title": "Zeitversatz konfigurieren",
-          "description": "Konfiguriere, wie weit zurück in der Zeit diese Ansicht reisen soll.\n\n**Empfohlen:** Verwende **≥2 Tage** Versatz, um Konflikte mit \"yesterday\"-Entitäten zu vermeiden, die ebenfalls historische Daten bereitstellen.\n\n**Beispiele:**\n• **-7 Tage**: Zeigt Preise von vor 7 Tagen\n• **-2 Tage, 3 Stunden**: Zeigt Preise von vor 2 Tagen und 3 Stunden\n• **-14 Tage**: Zeigt Preise von vor 2 Wochen",
+          "title": "Versatzmodus wählen",
+          "description": "Wie soll diese Zeitreise-Ansicht ihr Datum bestimmen?\n\n**Eine Anzahl Tage zurück** verschiebt um eine feste Anzahl Tage – praktisch, um Automationen an einem kürzlich vergangenen Tag zu proben.\n\n**Dasselbe Datum in einem früheren Jahr** vergleicht Gleiches mit Gleichem über Jahre hinweg (z. B. letztes Weihnachten).",
+          "data": {
+            "virtual_time_offset_mode": "Versatzmodus"
+          }
+        },
+        "offset": {
+          "title": "Zeitreise-Ansicht konfigurieren",
+          "description": "Lege fest, wie weit diese Ansicht zurückreist und wie sie sich verhält.\n\nViertelstündliche Preise gibt es ab {earliest_date}, derzeit sind also höchstens **{max_days} Tage** möglich (**{max_years} Jahr(e)** im Jahresmodus).\n\n**Empfehlung:** mindestens 2 Tage, damit sich die Ansicht nicht mit den „Gestern\"-Entitäten des Live-Geräts überschneidet.",
           "data": {
             "virtual_time_offset_days": "Tage zurück",
-            "time_offset": "Zusätzlicher Zeitversatz"
+            "virtual_time_offset_years": "Jahre zurück",
+            "time_offset": "Zusätzlicher Uhrzeitversatz",
+            "realistic_tomorrow": "Preise für morgen erst ab Veröffentlichung zeigen",
+            "tomorrow_arrival_hour": "Veröffentlichungsstunde",
+            "headless": "Headless (nur Diagnose-Sensoren)"
           },
           "data_description": {
-            "virtual_time_offset_days": "Wie viele Tage in die Vergangenheit reisen. Slider-Bereich: 0 bis 374 Tage (≈1 Jahr). Empfohlen: ≥2 Tage, um Konflikte mit \"yesterday\"-Entitäten zu vermeiden.",
-            "time_offset": "Optionale Feinabstimmung: Füge Stunden und/oder Minuten zum Tagesversatz hinzu. Die Zeit wird automatisch subtrahiert (weiter zurück reisen). Hinweis: Sekunden werden ignoriert - nur minutengenaue Präzision wird unterstützt."
+            "virtual_time_offset_days": "Wie viele Tage zurückgereist wird. Aktuell auf {max_days} Tage begrenzt, weil Tibber nicht mehr viertelstündliche Daten hat.",
+            "virtual_time_offset_years": "Wie viele Jahre zurückgereist wird, auf denselben Monat und Tag. Am 29. Februar ist die Ansicht in Nicht-Schaltjahren nicht verfügbar, statt ein benachbartes Datum zu zeigen.",
+            "time_offset": "Optionale Feinjustierung in Stunden und Minuten, zusätzlich zum Versatz oben abgezogen. Sekunden werden ignoriert.",
+            "realistic_tomorrow": "Bildet den ursprünglichen Tagesverlauf nach: Die Preise für morgen bleiben verborgen, bis die Uhr der Ansicht die Veröffentlichungsstunde erreicht. Ausschalten, um immer den vollen historischen Bereich zu zeigen.",
+            "tomorrow_arrival_hour": "Die Stunde, ab der die Preise für morgen erscheinen. Tibber veröffentlicht sie gegen 13:00 Ortszeit.",
+            "headless": "Erzeugt keine Preis-Entitäten für diese Ansicht. Die Daten werden trotzdem abgerufen und bleiben über die Dienste und Diagramme verfügbar – sinnvoll für Vergleichsansichten, die sonst Dutzende Entitäten anlegen würden."
           }
         },
         "reconfigure": {
-          "title": "Zeitversatz neu konfigurieren",
-          "description": "Aktualisiere den Zeitversatz für diese Zeitreise-Ansicht.",
+          "title": "Zeitreise-Ansicht neu konfigurieren",
+          "description": "Versatz und Verhalten dieser Ansicht ändern. Der Versatzmodus bleibt bestehen – lege eine zweite Ansicht an, um einen anderen Modus zu vergleichen.",
           "data": {
             "virtual_time_offset_days": "Tage zurück",
-            "time_offset": "Zusätzlicher Zeitversatz"
+            "virtual_time_offset_years": "Jahre zurück",
+            "time_offset": "Zusätzlicher Uhrzeitversatz",
+            "realistic_tomorrow": "Preise für morgen erst ab Veröffentlichung zeigen",
+            "tomorrow_arrival_hour": "Veröffentlichungsstunde",
+            "headless": "Headless (nur Diagnose-Sensoren)"
           },
           "data_description": {
-            "virtual_time_offset_days": "Wie viele Tage in die Vergangenheit reisen. Slider-Bereich: 0 bis 374 Tage (≈1 Jahr). Empfohlen: ≥2 Tage, um Konflikte mit \"yesterday\"-Entitäten zu vermeiden.",
-            "time_offset": "Optionale Feinabstimmung: Füge Stunden und/oder Minuten zum Tagesversatz hinzu. Die Zeit wird automatisch subtrahiert (weiter zurück reisen). Hinweis: Sekunden werden ignoriert - nur minutengenaue Präzision wird unterstützt."
+            "virtual_time_offset_days": "Wie viele Tage zurückgereist wird. Aktuell auf {max_days} Tage begrenzt, weil Tibber nicht mehr viertelstündliche Daten hat.",
+            "virtual_time_offset_years": "Wie viele Jahre zurückgereist wird, auf denselben Monat und Tag. Am 29. Februar ist die Ansicht in Nicht-Schaltjahren nicht verfügbar, statt ein benachbartes Datum zu zeigen.",
+            "time_offset": "Optionale Feinjustierung in Stunden und Minuten, zusätzlich zum Versatz oben abgezogen. Sekunden werden ignoriert.",
+            "realistic_tomorrow": "Bildet den ursprünglichen Tagesverlauf nach: Die Preise für morgen bleiben verborgen, bis die Uhr der Ansicht die Veröffentlichungsstunde erreicht. Ausschalten, um immer den vollen historischen Bereich zu zeigen.",
+            "tomorrow_arrival_hour": "Die Stunde, ab der die Preise für morgen erscheinen. Tibber veröffentlicht sie gegen 13:00 Ortszeit.",
+            "headless": "Erzeugt keine Preis-Entitäten für diese Ansicht. Die Daten werden trotzdem abgerufen und bleiben über die Dienste und Diagramme verfügbar – sinnvoll für Vergleichsansichten, die sonst Dutzende Entitäten anlegen würden."
           }
         }
       },
       "error": {
-        "no_time_offset": "Mindestens ein Zeitversatzwert muss negativ sein (nur historische Daten)."
+        "no_time_offset": "Mindestens ein Zeitversatzwert muss negativ sein (nur historische Daten).",
+        "before_quarter_hourly": "**Für dieses Datum gibt es keine viertelstündlichen Preisdaten.**\n\nTibber hat am {earliest_date} auf viertelstündliche Preise umgestellt; diese Ansicht hätte nichts anzuzeigen. Bitte einen kleineren Versatz wählen."
       },
       "abort": {
         "already_configured": "**Eine Zeitreise-Ansicht mit diesem exakten Zeitversatz existiert bereits.**\n\nBitte wähle einen anderen Versatz.",
@@ -1098,6 +1122,33 @@
       },
       "next_hour_price_rank_today_tomorrow": {
         "name": "⌀ Stündlicher Preisrang Nächste (heute+morgen)"
+      },
+      "entry_mode": {
+        "name": "Datenmodus",
+        "state": {
+          "live": "Live",
+          "time_travel_days": "Zeitreise (Tage)",
+          "time_travel_yearly": "Zeitreise (jährlich)"
+        }
+      },
+      "time_travel_reference_time": {
+        "name": "Angezeigte Zeit"
+      },
+      "time_travel_days_offset": {
+        "name": "Zeitreise-Versatz in Tagen"
+      },
+      "time_travel_years_offset": {
+        "name": "Zeitreise-Versatz in Jahren"
+      },
+      "time_travel_time_offset": {
+        "name": "Zeitreise-Uhrzeitversatz"
+      },
+      "headless_mode": {
+        "name": "Headless-Modus",
+        "state": {
+          "on": "Ein",
+          "off": "Aus"
+        }
       }
     },
     "binary_sensor": {
@@ -2504,6 +2555,12 @@
         "midnight": "Mitternacht",
         "next_peak_period": "Nächste Hochpreisphase",
         "next_best_period_end": "Ende der nächsten Bestpreisphase"
+      }
+    },
+    "offset_mode": {
+      "options": {
+        "days": "Eine Anzahl Tage zurück",
+        "yearly": "Dasselbe Datum in einem früheren Jahr"
       }
     }
   }

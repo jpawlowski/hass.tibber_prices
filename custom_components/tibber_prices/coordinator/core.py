@@ -24,9 +24,18 @@ from custom_components.tibber_prices.api import (
     TibberPricesApiClientError,
 )
 from custom_components.tibber_prices.const import DOMAIN
-from custom_components.tibber_prices.time_travel import get_time_travel_offset
+from custom_components.tibber_prices.time_travel import (
+    QUARTER_HOURLY_SINCE,
+    TimeShift,
+    get_time_shift,
+    is_headless,
+    tomorrow_arrival_hour,
+    uses_realistic_tomorrow,
+)
 from custom_components.tibber_prices.utils.price import find_price_data_for_interval
 from homeassistant.exceptions import ConfigEntryAuthFailed
+from homeassistant.helpers.update_coordinator import UpdateFailed
+from homeassistant.util import dt as dt_util
 
 from . import helpers
 from .constants import STORAGE_VERSION, UPDATE_INTERVAL
@@ -181,7 +190,10 @@ class TibberPricesDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 
         self.config_entry = config_entry
         self.subentry = subentry
-        self._time_offset = get_time_travel_offset(subentry)
+        self._time_shift = get_time_shift(subentry)
+        self._headless = is_headless(subentry)
+        self._withhold_tomorrow = uses_realistic_tomorrow(subentry) and not self._time_shift.is_live
+        self._tomorrow_arrival_hour = tomorrow_arrival_hour(subentry)
 
         # Get home_id from config entry
         self._home_id = config_entry.data.get("home_id", "")
@@ -293,9 +305,18 @@ class TibberPricesDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 
         Every timer creates its own instance so "now" stays constant within a
         cycle. Routing all of them through here is what makes a time-travel
-        subentry's clock stay shifted while still advancing in real time.
+        subentry's clock stay shifted while still advancing in real time - and
+        it is where yearly mode gets re-resolved, since its distance to the
+        target date is not a constant.
+
+        When the shift cannot be resolved (29 February with a non-leap target
+        year), the service falls back to real time; `_check_time_travel_coverage`
+        turns that update into a failure so entities go unavailable rather than
+        silently showing live prices.
         """
-        return TibberPricesTimeService(offset=self._time_offset)
+        real_now = dt_util.now()
+        shifted = self._time_shift.resolve(real_now)
+        return TibberPricesTimeService(reference_time=shifted or real_now)
 
     def _propagate_time_service(self, time_service: TibberPricesTimeService) -> None:
         """
@@ -325,12 +346,50 @@ class TibberPricesDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     @property
     def is_time_travel(self) -> bool:
         """Return True if this coordinator serves a shifted (historical) clock."""
-        return bool(self._time_offset)
+        return not self._time_shift.is_live
 
     @property
-    def time_offset(self) -> timedelta:
-        """Return the configured time-travel offset (zero for live data)."""
-        return self._time_offset
+    def time_shift(self) -> TimeShift:
+        """Return the configured time-travel shift (a live shift for the live entry)."""
+        return self._time_shift
+
+    @property
+    def headless(self) -> bool:
+        """Return True if this view exposes diagnostic sensors only."""
+        return self._headless
+
+    def _check_time_travel_coverage(self) -> None:
+        """
+        Fail the update when the view points at a date without usable data.
+
+        Two cases, both of which must surface as unavailable entities rather
+        than as plausible-looking wrong prices:
+
+        - The shifted date does not exist (29 February, non-leap target year).
+        - The shifted window predates Tibber's switch to quarter-hourly prices,
+          whose hourly data this integration cannot interpret.
+
+        Raises:
+            UpdateFailed: If the view has no usable data for its current date.
+
+        """
+        if not self.is_time_travel:
+            return
+
+        real_now = dt_util.now()
+        if self._time_shift.resolve(real_now) is None:
+            msg = (
+                f"No {real_now:%d %B} in the target year - this time-travel view is "
+                f"unavailable today and will resume tomorrow"
+            )
+            raise UpdateFailed(msg)
+
+        if not self._time_shift.has_data_coverage(real_now):
+            msg = (
+                f"Time-travel target {self.time.now():%Y-%m-%d} predates Tibber's switch to "
+                f"quarter-hourly prices on {QUARTER_HOURLY_SINCE:%Y-%m-%d} - no usable data"
+            )
+            raise UpdateFailed(msg)
 
     @property
     def using_cached_fallback(self) -> bool:
@@ -749,6 +808,10 @@ class TibberPricesDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         self.time = self._create_time_service()
         current_time = self.time.now()
 
+        # A time-travel view pointing at a date without usable data must go
+        # unavailable before anything is fetched or transformed.
+        self._check_time_travel_coverage()
+
         # Transition lifecycle state from "fresh" to "cached" if enough time passed
         # (5 minutes threshold defined in lifecycle calculator)
         # Note: This updates _lifecycle_state for diagnostics only.
@@ -977,7 +1040,64 @@ class TibberPricesDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         """Transform raw data for main entry (aggregated view of all homes)."""
         # Delegate complete transformation to DataTransformer (enrichment + periods)
         # DataTransformer handles its own caching internally
-        return self._data_transformer.transform_data(raw_data)
+        return self._data_transformer.transform_data(self._apply_tomorrow_realism(raw_data))
+
+    def _apply_tomorrow_realism(self, raw_data: dict[str, Any]) -> dict[str, Any]:
+        """
+        Withhold a time-travel view's "tomorrow" until its shifted arrival hour.
+
+        Historical data is complete: the API happily returns the day after the
+        view's today, at any hour. That breaks the main reason to use a view -
+        rehearsing automations that depend on "tomorrow's prices arrive around
+        13:00". With realism enabled the view hides those intervals until its own
+        clock passes the configured hour, so the day plays out as it originally
+        did.
+
+        Live entries and views with realism turned off pass through untouched.
+
+        Args:
+            raw_data: Single-home raw data with a "price_info" interval list.
+
+        Returns:
+            The same structure, possibly with tomorrow's intervals removed.
+
+        """
+        if not self._withhold_tomorrow:
+            return raw_data
+
+        price_info = raw_data.get("price_info")
+        if not price_info:
+            return raw_data
+
+        now_local = self.time.as_local(self.time.now())
+        if now_local.hour >= self._tomorrow_arrival_hour:
+            return raw_data
+
+        tomorrow_start = self.time.get_local_midnight(1)
+        kept = [
+            interval
+            for interval in price_info
+            if not self._starts_at_or_after(interval.get("startsAt"), tomorrow_start)
+        ]
+
+        if len(kept) != len(price_info):
+            self._log(
+                "debug",
+                "Realistic tomorrow: withholding %d interval(s) until %02d:00 (view time %s)",
+                len(price_info) - len(kept),
+                self._tomorrow_arrival_hour,
+                now_local.isoformat(),
+            )
+
+        return {**raw_data, "price_info": kept}
+
+    def _starts_at_or_after(self, starts_at: Any, boundary: datetime) -> bool:
+        """Return True if an interval's start is at or after the boundary."""
+        if isinstance(starts_at, str):
+            starts_at = self.time.parse_datetime(starts_at)
+        if starts_at is None:
+            return False
+        return self.time.as_local(starts_at) >= boundary
 
     # --- Methods expected by sensors and services ---
 

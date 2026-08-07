@@ -96,32 +96,56 @@
       "title": "Create Time-Travel View",
       "step": {
         "user": {
-          "title": "Configure Time Offset",
-          "description": "Configure how far back in time this view should travel.\n\n**Recommended:** Use **≥2 days** offset to avoid conflicts with \"yesterday\" entities that also provide historical data.\n\n**Examples:**\n• **-7 days**: View prices from 7 days ago\n• **-2 days, 3 hours**: View prices from 2 days and 3 hours ago\n• **-14 days**: View prices from 2 weeks ago",
+          "title": "Choose Offset Mode",
+          "description": "How should this time-travel view pick its date?\n\n**A number of days ago** shifts by a fixed number of days — useful for rehearsing automations against a recent day.\n\n**The same date in an earlier year** compares like-for-like across years (e.g. last Christmas).",
+          "data": {
+            "virtual_time_offset_mode": "Offset Mode"
+          }
+        },
+        "offset": {
+          "title": "Configure Time-Travel View",
+          "description": "Choose how far back this view should travel and how it should behave.\n\nQuarter-hourly prices start on {earliest_date}, so at the moment you can go back at most **{max_days} days** (**{max_years} year(s)** in yearly mode).\n\n**Recommended:** at least 2 days, so the view does not overlap the \"yesterday\" entities of the live device.",
           "data": {
             "virtual_time_offset_days": "Days Back",
-            "time_offset": "Additional Time Offset"
+            "virtual_time_offset_years": "Years Back",
+            "time_offset": "Additional Time Offset",
+            "realistic_tomorrow": "Withhold tomorrow's prices until they were published",
+            "tomorrow_arrival_hour": "Arrival Hour",
+            "headless": "Headless (diagnostic sensors only)"
           },
           "data_description": {
-            "virtual_time_offset_days": "How many days to travel back in time. Slider range: 0 to 374 days (≈1 year). Recommended: ≥2 days to avoid conflicts with \"yesterday\" entities.",
-            "time_offset": "Optional fine-tuning: Add hours and/or minutes to the day offset. The time will be automatically subtracted (travel back further). Note: Seconds are ignored - only minute-level precision is supported."
+            "virtual_time_offset_days": "How many days to travel back. Currently limited to {max_days} days by the amount of quarter-hourly data Tibber has.",
+            "virtual_time_offset_years": "How many years to travel back, landing on the same month and day. On 29 February the view is unavailable in non-leap target years rather than showing a nearby date.",
+            "time_offset": "Optional fine-tuning in hours and minutes, subtracted on top of the offset above. Seconds are ignored.",
+            "realistic_tomorrow": "Reproduces the original day: tomorrow's prices stay hidden until the view's own clock reaches the arrival hour. Turn off to always show the full historical range.",
+            "tomorrow_arrival_hour": "The hour at which tomorrow's prices appear. Tibber publishes them around 13:00 local time.",
+            "headless": "Creates no price entities for this view. The data is still fetched and remains available through the services and charts — useful for comparison views that would otherwise add dozens of entities."
           }
         },
         "reconfigure": {
-          "title": "Reconfigure Time Offset",
-          "description": "Update the time offset for this time-travel view.",
+          "title": "Reconfigure Time-Travel View",
+          "description": "Update this view's offset and behaviour. The offset mode stays as configured — create a second view to compare a different mode.",
           "data": {
             "virtual_time_offset_days": "Days Back",
-            "time_offset": "Additional Time Offset"
+            "virtual_time_offset_years": "Years Back",
+            "time_offset": "Additional Time Offset",
+            "realistic_tomorrow": "Withhold tomorrow's prices until they were published",
+            "tomorrow_arrival_hour": "Arrival Hour",
+            "headless": "Headless (diagnostic sensors only)"
           },
           "data_description": {
-            "virtual_time_offset_days": "How many days to travel back in time. Slider range: 0 to 374 days (≈1 year). Recommended: ≥2 days to avoid conflicts with \"yesterday\" entities.",
-            "time_offset": "Optional fine-tuning: Add hours and/or minutes to the day offset. The time will be automatically subtracted (travel back further). Note: Seconds are ignored - only minute-level precision is supported."
+            "virtual_time_offset_days": "How many days to travel back. Currently limited to {max_days} days by the amount of quarter-hourly data Tibber has.",
+            "virtual_time_offset_years": "How many years to travel back, landing on the same month and day. On 29 February the view is unavailable in non-leap target years rather than showing a nearby date.",
+            "time_offset": "Optional fine-tuning in hours and minutes, subtracted on top of the offset above. Seconds are ignored.",
+            "realistic_tomorrow": "Reproduces the original day: tomorrow's prices stay hidden until the view's own clock reaches the arrival hour. Turn off to always show the full historical range.",
+            "tomorrow_arrival_hour": "The hour at which tomorrow's prices appear. Tibber publishes them around 13:00 local time.",
+            "headless": "Creates no price entities for this view. The data is still fetched and remains available through the services and charts — useful for comparison views that would otherwise add dozens of entities."
           }
         }
       },
       "error": {
-        "no_time_offset": "At least one time offset value must be negative (historical data only)."
+        "no_time_offset": "At least one time offset value must be negative (historical data only).",
+        "before_quarter_hourly": "**No quarter-hourly price data for that date.**\n\nTibber switched to quarter-hourly prices on {earliest_date}; this view would have nothing to show. Choose a smaller offset."
       },
       "abort": {
         "already_configured": "**A time-travel view with this exact time offset already exists.**\n\nPlease choose a different offset.",
@@ -1098,6 +1122,33 @@
       },
       "next_hour_price_rank_today_tomorrow": {
         "name": "⌀ Hourly Price Next Rank (Today+Tomorrow)"
+      },
+      "entry_mode": {
+        "name": "Data Mode",
+        "state": {
+          "live": "Live",
+          "time_travel_days": "Time-travel (days)",
+          "time_travel_yearly": "Time-travel (yearly)"
+        }
+      },
+      "time_travel_reference_time": {
+        "name": "Shown Time"
+      },
+      "time_travel_days_offset": {
+        "name": "Time-travel Days Offset"
+      },
+      "time_travel_years_offset": {
+        "name": "Time-travel Years Offset"
+      },
+      "time_travel_time_offset": {
+        "name": "Time-travel Time Offset"
+      },
+      "headless_mode": {
+        "name": "Headless Mode",
+        "state": {
+          "on": "On",
+          "off": "Off"
+        }
       }
     },
     "binary_sensor": {
@@ -2504,6 +2555,12 @@
         "midnight": "Midnight",
         "next_peak_period": "Next Peak Period",
         "next_best_period_end": "End of Next Best-Price Period"
+      }
+    },
+    "offset_mode": {
+      "options": {
+        "days": "A number of days ago",
+        "yearly": "The same date in an earlier year"
       }
     }
   }

@@ -24,6 +24,7 @@ if TYPE_CHECKING:
     from custom_components.tibber_prices.sensor.calculators.lifecycle import TibberPricesLifecycleCalculator
     from custom_components.tibber_prices.sensor.calculators.metadata import TibberPricesMetadataCalculator
     from custom_components.tibber_prices.sensor.calculators.rolling_hour import TibberPricesRollingHourCalculator
+    from custom_components.tibber_prices.sensor.calculators.time_travel import TibberPricesTimeTravelCalculator
     from custom_components.tibber_prices.sensor.calculators.timing import TibberPricesTimingCalculator
     from custom_components.tibber_prices.sensor.calculators.trend import TibberPricesTrendCalculator
     from custom_components.tibber_prices.sensor.calculators.volatility import TibberPricesVolatilityCalculator
@@ -31,6 +32,7 @@ if TYPE_CHECKING:
 
 
 def get_value_getter_mapping(
+    *,
     interval_calculator: TibberPricesIntervalCalculator,
     rolling_hour_calculator: TibberPricesRollingHourCalculator,
     daily_stat_calculator: TibberPricesDailyStatCalculator,
@@ -40,6 +42,7 @@ def get_value_getter_mapping(
     volatility_calculator: TibberPricesVolatilityCalculator,
     metadata_calculator: TibberPricesMetadataCalculator,
     lifecycle_calculator: TibberPricesLifecycleCalculator,
+    time_travel_calculator: TibberPricesTimeTravelCalculator,
     get_next_avg_n_hours_value: Callable[[int], float | None],
     get_data_timestamp: Callable[[], datetime | None],
     get_chart_data_export_value: Callable[[], str | None],
@@ -61,6 +64,7 @@ def get_value_getter_mapping(
         volatility_calculator: Calculator for price volatility analysis
         metadata_calculator: Calculator for home/metering metadata
         lifecycle_calculator: Calculator for data lifecycle tracking
+        time_travel_calculator: Calculator for time-travel mode and offsets
         get_next_avg_n_hours_value: Method for next N-hour average forecasts
         get_data_timestamp: Method for data timestamp sensor
         get_chart_data_export_value: Method for chart data export sensor
@@ -361,4 +365,12 @@ def get_value_getter_mapping(
         "chart_data_export": get_chart_data_export_value,
         # Chart metadata sensor
         "chart_metadata": get_chart_metadata_value,
+        # Time-travel sensors - present on live devices too, where they report
+        # "live" and no offsets (see calculators/time_travel.py)
+        "entry_mode": time_travel_calculator.get_entry_mode,
+        "time_travel_reference_time": time_travel_calculator.get_reference_time,
+        "time_travel_days_offset": time_travel_calculator.get_days_offset,
+        "time_travel_years_offset": time_travel_calculator.get_years_offset,
+        "time_travel_time_offset": time_travel_calculator.get_time_offset,
+        "headless_mode": time_travel_calculator.get_headless_mode,
     }

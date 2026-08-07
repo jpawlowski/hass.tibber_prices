@@ -124,6 +124,10 @@ TIME_SENSITIVE_ENTITY_KEYS = frozenset(
         # - 13:00: searching_tomorrow (when tomorrow data search begins)
         # Uses state-change filter in _handle_time_sensitive_update() to prevent recorder spam
         "data_lifecycle_status",
+        # The moment a device is showing. On a time-travel view this is the only
+        # way to see its clock advance, so it must track interval boundaries
+        # rather than waiting for the next API poll.
+        "time_travel_reference_time",
     }
 )
 

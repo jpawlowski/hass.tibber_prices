@@ -1353,6 +1353,65 @@ DIAGNOSTIC_SENSORS = (
     ),
 )
 
+# 10. TIME-TRAVEL SENSORS (what a device is actually showing)
+# ----------------------------------------------------------------------------
+# Present on every device, live or historical: on a live device they report
+# "live" / None, which is exactly the answer someone comparing two devices in a
+# chart needs. All opt-in - they are configuration echoes, not measurements.
+
+TIME_TRAVEL_SENSORS = (
+    SensorEntityDescription(
+        key="entry_mode",
+        translation_key="entry_mode",
+        icon="mdi:clock-outline",
+        device_class=SensorDeviceClass.ENUM,
+        options=["live", "time_travel_days", "time_travel_yearly"],
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+    ),
+    SensorEntityDescription(
+        key="time_travel_reference_time",
+        translation_key="time_travel_reference_time",
+        icon="mdi:calendar-clock",
+        device_class=SensorDeviceClass.TIMESTAMP,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+    ),
+    SensorEntityDescription(
+        key="time_travel_days_offset",
+        translation_key="time_travel_days_offset",
+        icon="mdi:calendar-minus",
+        native_unit_of_measurement=UnitOfTime.DAYS,
+        state_class=None,  # Configuration echo: no statistics
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+    ),
+    SensorEntityDescription(
+        key="time_travel_years_offset",
+        translation_key="time_travel_years_offset",
+        icon="mdi:calendar-minus",
+        state_class=None,  # Configuration echo: no statistics
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+    ),
+    SensorEntityDescription(
+        key="time_travel_time_offset",
+        translation_key="time_travel_time_offset",
+        icon="mdi:clock-minus",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+    ),
+    SensorEntityDescription(
+        key="headless_mode",
+        translation_key="headless_mode",
+        icon="mdi:eye-off-outline",
+        device_class=SensorDeviceClass.ENUM,
+        options=["on", "off"],
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+    ),
+)
+
 # ----------------------------------------------------------------------------
 # COMBINED SENSOR DEFINITIONS
 # ----------------------------------------------------------------------------
@@ -1379,4 +1438,5 @@ ENTITY_DESCRIPTIONS = (
     *PRICE_PHASE_SENSORS,
     *PRICE_PHASE_TIMING_SENSORS,
     *DIAGNOSTIC_SENSORS,
+    *TIME_TRAVEL_SENSORS,
 )
