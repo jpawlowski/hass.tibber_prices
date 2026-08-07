@@ -122,7 +122,14 @@ async def test_no_views_means_no_extra_coordinators(stub_setup: tuple[Mock, Mock
 
 
 def _entry_with_runtime(subentries: dict[str, Mock]) -> Mock:
-    """Build an entry whose runtime data matches its current subentries."""
+    """
+    Build an entry whose runtime data matches its current subentries.
+
+    The runtime snapshot is a copy, mirroring production: Home Assistant mutates
+    ConfigSubentry in place on reconfigure, so a test that hands out fresh mock
+    objects instead would not notice a listener comparing against a live
+    reference - which is exactly how that bug slipped through once.
+    """
     entry = _make_entry(subentries)
     entry.runtime_data = Mock(
         subentries={
@@ -130,6 +137,7 @@ def _entry_with_runtime(subentries: dict[str, Mock]) -> Mock:
                 subentry=subentry,
                 coordinator=Mock(),
                 interval_pool=Mock(),
+                config=dict(subentry.data),
             )
             for subentry_id, subentry in subentries.items()
         }
@@ -182,7 +190,8 @@ async def test_changed_offset_reloads_and_drops_the_cache() -> None:
         stretch of history, so the old window is dead weight.
     """
     entry = _entry_with_runtime({"01JAAA": _make_subentry("01JAAA", -7)})
-    entry.subentries = {"01JAAA": _make_subentry("01JAAA", -21)}
+    # In place, as async_update_subentry() does - not a replacement object.
+    entry.subentries["01JAAA"].data[CONF_VIRTUAL_TIME_OFFSET_DAYS] = -21
     hass = Mock()
 
     store = Mock(async_remove=AsyncMock())
@@ -207,7 +216,8 @@ async def test_presentation_change_keeps_the_cache() -> None:
         needs exactly the same intervals, and refetching them would be waste.
     """
     entry = _entry_with_runtime({"01JAAA": _make_subentry("01JAAA", -7)})
-    entry.subentries = {"01JAAA": _make_subentry("01JAAA", -7, headless=True)}
+    # In place, as async_update_subentry() does - not a replacement object.
+    entry.subentries["01JAAA"].data[CONF_HEADLESS] = True
     hass = Mock()
 
     store = Mock(async_remove=AsyncMock())

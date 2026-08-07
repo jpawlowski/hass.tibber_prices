@@ -452,6 +452,7 @@ async def _async_setup_subentries(
             subentry=subentry,
             coordinator=coordinator,
             interval_pool=pool,
+            config=dict(subentry.data),
         )
         LOGGER.debug(
             "[%s] Time-travel view '%s' set up: %s, headless=%s, showing %s",
@@ -481,7 +482,7 @@ async def _async_handle_subentry_change(
         return
 
     current = {subentry.subentry_id: dict(subentry.data) for subentry in iter_time_travel_subentries(entry)}
-    active = {subentry_id: dict(view.subentry.data) for subentry_id, view in entry.runtime_data.subentries.items()}
+    active = {subentry_id: view.config for subentry_id, view in entry.runtime_data.subentries.items()}
 
     if current == active:
         return

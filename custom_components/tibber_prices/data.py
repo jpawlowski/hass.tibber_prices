@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
     from homeassistant.config_entries import ConfigEntry, ConfigSubentry
@@ -21,6 +21,11 @@ class TibberPricesSubentryData:
     subentry: ConfigSubentry
     coordinator: TibberPricesDataUpdateCoordinator
     interval_pool: TibberPricesIntervalPool
+    # Copy of subentry.data as it was when this view was set up. Home Assistant
+    # mutates ConfigSubentry in place on reconfigure, so `subentry.data` already
+    # shows the new values by the time the update listener runs - comparing
+    # against it would never detect a change.
+    config: dict[str, Any] = field(default_factory=dict)
 
 
 @dataclass
