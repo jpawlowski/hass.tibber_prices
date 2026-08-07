@@ -2,7 +2,11 @@
 
 from __future__ import annotations
 
-from custom_components.tibber_prices.services.helpers import check_min_distance_from_avg
+from datetime import datetime, timedelta
+from unittest.mock import AsyncMock, MagicMock
+from zoneinfo import ZoneInfo
+
+from custom_components.tibber_prices.services.helpers import async_fetch_service_intervals, check_min_distance_from_avg
 
 
 class TestCheckMinDistanceFromAvgPositiveAverage:
@@ -69,3 +73,50 @@ class TestCheckMinDistanceFromAvgEdgeCases:
         """A zero average makes percentage distance undefined; always pass."""
         assert check_min_distance_from_avg(5.0, 0.0, 5.0, reverse=False) is True
         assert check_min_distance_from_avg(-5.0, 0.0, 5.0, reverse=True) is True
+
+
+class TestAsyncFetchServiceIntervalsEmptyRange:
+    """A degenerate (empty) search range must not reach the interval pool.
+
+    The pool raises on start >= end, which services translate into
+    "price_data_unavailable" - a misleading API-outage signal. An empty range is
+    simply "no intervals", so it is short-circuited to a successful empty result.
+    """
+
+    async def test_empty_range_returns_success_with_no_intervals(self) -> None:
+        """start == end short-circuits to ([], True) without calling the pool."""
+        pool = MagicMock()
+        pool.get_intervals = AsyncMock()
+        moment = datetime(2026, 4, 12, 0, 0, tzinfo=ZoneInfo("Europe/Berlin"))
+
+        intervals, fetch_ok = await async_fetch_service_intervals(
+            pool,
+            api_client=MagicMock(),
+            user_data={"homes": []},
+            start_time=moment,
+            end_time=moment,
+            service_label="test",
+        )
+
+        assert intervals == []
+        assert fetch_ok is True
+        pool.get_intervals.assert_not_called()
+
+    async def test_inverted_range_returns_success_with_no_intervals(self) -> None:
+        """start > end is treated the same way as start == end."""
+        pool = MagicMock()
+        pool.get_intervals = AsyncMock()
+        start = datetime(2026, 4, 12, 1, 0, tzinfo=ZoneInfo("Europe/Berlin"))
+
+        intervals, fetch_ok = await async_fetch_service_intervals(
+            pool,
+            api_client=MagicMock(),
+            user_data={"homes": []},
+            start_time=start,
+            end_time=start - timedelta(hours=1),
+            service_label="test",
+        )
+
+        assert intervals == []
+        assert fetch_ok is True
+        pool.get_intervals.assert_not_called()
