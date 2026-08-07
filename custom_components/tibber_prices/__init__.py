@@ -25,6 +25,11 @@ from .const import (
     CONF_CURRENCY_DISPLAY_MODE,
     CONF_PRICE_TREND_MIN_PRICE_CHANGE,
     CONF_PRICE_TREND_MIN_PRICE_CHANGE_STRONGLY,
+    CONF_VIRTUAL_TIME_OFFSET_DAYS,
+    CONF_VIRTUAL_TIME_OFFSET_HOURS,
+    CONF_VIRTUAL_TIME_OFFSET_MINUTES,
+    CONF_VIRTUAL_TIME_OFFSET_MODE,
+    CONF_VIRTUAL_TIME_OFFSET_YEARS,
     DATA_CHART_CONFIG,
     DATA_CHART_METADATA_CONFIG,
     DISPLAY_MODE_SUBUNIT,
@@ -483,14 +488,42 @@ async def _async_handle_subentry_change(
 
     # Drop storage of views that are gone, otherwise their pool and cache stores
     # would linger until the whole config entry is removed.
-    for subentry_id in active.keys() - current.keys():
+    stale = set(active.keys() - current.keys())
+
+    # A view whose offset moved now points at a different stretch of history.
+    # Its cached window is not wrong - the pool is keyed by timestamp - but it is
+    # dead weight the garbage collector would have to work through, and a
+    # reconfigure is meant to be a fresh start.
+    stale.update(
+        subentry_id
+        for subentry_id in active.keys() & current.keys()
+        if _offset_signature(active[subentry_id]) != _offset_signature(current[subentry_id])
+    )
+
+    for subentry_id in stale:
         view = entry.runtime_data.subentries[subentry_id]
         await Store(hass, STORAGE_VERSION, f"{DOMAIN}.{entry.entry_id}.{subentry_id}").async_remove()
         await async_remove_pool_storage(hass, subentry_storage_id(entry.entry_id, view.subentry))
-        LOGGER.debug("[%s] Removed storage of deleted time-travel view %s", entry.title, subentry_id)
+        LOGGER.debug("[%s] Dropped cached data of time-travel view %s", entry.title, subentry_id)
 
     LOGGER.debug("[%s] Time-travel subentries changed, reloading entry", entry.title)
     hass.config_entries.async_schedule_reload(entry.entry_id)
+
+
+def _offset_signature(data: dict[str, Any]) -> tuple[Any, ...]:
+    """
+    Return the part of a view's configuration that decides which data it needs.
+
+    Toggling headless or tomorrow realism changes how the view presents its data,
+    not which data it holds - those must not throw the cache away.
+    """
+    return (
+        data.get(CONF_VIRTUAL_TIME_OFFSET_MODE),
+        data.get(CONF_VIRTUAL_TIME_OFFSET_DAYS),
+        data.get(CONF_VIRTUAL_TIME_OFFSET_YEARS),
+        data.get(CONF_VIRTUAL_TIME_OFFSET_HOURS),
+        data.get(CONF_VIRTUAL_TIME_OFFSET_MINUTES),
+    )
 
 
 async def async_unload_entry(
@@ -498,11 +531,22 @@ async def async_unload_entry(
     entry: TibberPricesConfigEntry,
 ) -> bool:
     """Unload a config entry."""
+    # An entry being disabled is not the same as a reload or a restart: it may
+    # stay off for weeks, and whatever is cached now would be stale on the way
+    # back in. Home Assistant sets disabled_by before unloading, which is what
+    # lets us tell the two apart. Reload/restart keep the cache - that is what
+    # the persistent store exists for.
+    being_disabled = entry.disabled_by is not None
+
     # Save interval pool state before unloading
     if entry.runtime_data is not None and entry.runtime_data.interval_pool is not None:
-        pool_state = entry.runtime_data.interval_pool.to_dict()
-        await async_save_pool_state(hass, entry.entry_id, pool_state)
-        LOGGER.debug("[%s] Interval pool state saved on unload", entry.title)
+        if being_disabled:
+            await async_remove_pool_storage(hass, entry.entry_id)
+            LOGGER.debug("[%s] Entry disabled, interval pool storage dropped", entry.title)
+        else:
+            pool_state = entry.runtime_data.interval_pool.to_dict()
+            await async_save_pool_state(hass, entry.entry_id, pool_state)
+            LOGGER.debug("[%s] Interval pool state saved on unload", entry.title)
 
         # Shutdown interval pool (cancels background tasks)
         await entry.runtime_data.interval_pool.async_shutdown()
@@ -510,13 +554,13 @@ async def async_unload_entry(
     # Same for every time-travel view (own pool, own storage)
     if entry.runtime_data is not None:
         for subentry_id, view in entry.runtime_data.subentries.items():
-            await async_save_pool_state(
-                hass,
-                subentry_storage_id(entry.entry_id, view.subentry),
-                view.interval_pool.to_dict(),
-            )
+            storage_id = subentry_storage_id(entry.entry_id, view.subentry)
+            if being_disabled:
+                await async_remove_pool_storage(hass, storage_id)
+            else:
+                await async_save_pool_state(hass, storage_id, view.interval_pool.to_dict())
+                LOGGER.debug("[%s] Time-travel view %s pool state saved on unload", entry.title, subentry_id)
             await view.interval_pool.async_shutdown()
-            LOGGER.debug("[%s] Time-travel view %s pool state saved on unload", entry.title, subentry_id)
 
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
@@ -524,6 +568,13 @@ async def async_unload_entry(
         await entry.runtime_data.coordinator.async_shutdown()
         for view in entry.runtime_data.subentries.values():
             await view.coordinator.async_shutdown()
+
+        # After shutdown, not before: async_shutdown() writes the cache one last
+        # time, so clearing first would just be undone.
+        if being_disabled:
+            await entry.runtime_data.coordinator.clear_cache()
+            for view in entry.runtime_data.subentries.values():
+                await view.coordinator.clear_cache()
 
     # Unregister services if this was the last config entry
     if not hass.config_entries.async_entries(DOMAIN):

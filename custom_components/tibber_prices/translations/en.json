@@ -104,7 +104,7 @@
         },
         "offset": {
           "title": "Configure Time-Travel View",
-          "description": "Choose how far back this view should travel and how it should behave.\n\nQuarter-hourly prices start on {earliest_date}, so at the moment you can go back at most **{max_days} days** (**{max_years} year(s)** in yearly mode).\n\n**Recommended:** at least 2 days, so the view does not overlap the \"yesterday\" entities of the live device.",
+          "description": "Choose how far back this view should travel and how it should behave.\n\nQuarter-hourly prices start on {earliest_date}, so at the moment you can go back at most **{max_days} days** (**{max_years} year(s)** in yearly mode).\n\n**Recommended:** at least 2 days, so the view does not overlap the \"yesterday\" entities of the live device.\n\n**Retention:** Tibber's history is not unlimited. Beyond about {retention_days} days a view may find nothing to show and its entities stay unavailable.",
           "data": {
             "virtual_time_offset_days": "Days Back",
             "virtual_time_offset_years": "Years Back",
@@ -124,7 +124,7 @@
         },
         "reconfigure": {
           "title": "Reconfigure Time-Travel View",
-          "description": "Update this view's offset and behaviour. The offset mode stays as configured — create a second view to compare a different mode.",
+          "description": "Update this view's offset and behaviour. The offset mode stays as configured — create a second view to compare a different mode.\n\n**Currently showing:** {preview}\n\n**Retention:** Tibber's history is not unlimited. Beyond about {retention_days} days a view may find nothing to show and its entities stay unavailable.",
           "data": {
             "virtual_time_offset_days": "Days Back",
             "virtual_time_offset_years": "Years Back",

@@ -104,7 +104,7 @@
         },
         "offset": {
           "title": "Konfigurera tidsresevy",
-          "description": "Välj hur långt tillbaka vyn ska gå och hur den ska bete sig.\n\nKvartspriser finns från {earliest_date}, så just nu är högst **{max_days} dagar** möjligt (**{max_years} år** i årsläge).\n\n**Rekommenderat:** minst 2 dagar, så att vyn inte överlappar live-enhetens \"igår\"-entiteter.",
+          "description": "Välj hur långt tillbaka vyn ska gå och hur den ska bete sig.\n\nKvartspriser finns från {earliest_date}, så just nu är högst **{max_days} dagar** möjligt (**{max_years} år** i årsläge).\n\n**Rekommenderat:** minst 2 dagar, så att vyn inte överlappar live-enhetens \"igår\"-entiteter.\n\n**Lagringstid:** Tibbers historik är inte obegränsad. Bortom ungefär {retention_days} dagar kan en vy inte hitta något och dess entiteter förblir otillgängliga.",
           "data": {
             "virtual_time_offset_days": "Dagar tillbaka",
             "virtual_time_offset_years": "År tillbaka",
@@ -124,7 +124,7 @@
         },
         "reconfigure": {
           "title": "Konfigurera om tidsresevy",
-          "description": "Ändra vyns förskjutning och beteende. Förskjutningsläget behålls.",
+          "description": "Ändra vyns förskjutning och beteende. Förskjutningsläget behålls.\n\n**Visar nu:** {preview}\n\n**Lagringstid:** Tibbers historik är inte obegränsad. Bortom ungefär {retention_days} dagar kan en vy inte hitta något och dess entiteter förblir otillgängliga.",
           "data": {
             "virtual_time_offset_days": "Dagar tillbaka",
             "virtual_time_offset_years": "År tillbaka",

@@ -104,7 +104,7 @@
         },
         "offset": {
           "title": "Tijdreis-weergave instellen",
-          "description": "Bepaal hoe ver deze weergave teruggaat en hoe zij zich gedraagt.\n\nKwartierprijzen bestaan vanaf {earliest_date}, dus momenteel is maximaal **{max_days} dagen** mogelijk (**{max_years} jaar** in jaarmodus).\n\n**Aanbevolen:** minstens 2 dagen, zodat de weergave niet overlapt met de \"gisteren\"-entiteiten van het live-apparaat.",
+          "description": "Bepaal hoe ver deze weergave teruggaat en hoe zij zich gedraagt.\n\nKwartierprijzen bestaan vanaf {earliest_date}, dus momenteel is maximaal **{max_days} dagen** mogelijk (**{max_years} jaar** in jaarmodus).\n\n**Aanbevolen:** minstens 2 dagen, zodat de weergave niet overlapt met de \"gisteren\"-entiteiten van het live-apparaat.\n\n**Bewaartermijn:** Tibbers historie is niet onbeperkt. Voorbij ongeveer {retention_days} dagen vindt een weergave mogelijk niets en blijven haar entiteiten onbeschikbaar.",
           "data": {
             "virtual_time_offset_days": "Dagen terug",
             "virtual_time_offset_years": "Jaren terug",
@@ -124,7 +124,7 @@
         },
         "reconfigure": {
           "title": "Tijdreis-weergave opnieuw instellen",
-          "description": "Pas de verschuiving en het gedrag van deze weergave aan. De verschuivingsmodus blijft ongewijzigd.",
+          "description": "Pas de verschuiving en het gedrag van deze weergave aan. De verschuivingsmodus blijft ongewijzigd.\n\n**Toont nu:** {preview}\n\n**Bewaartermijn:** Tibbers historie is niet onbeperkt. Voorbij ongeveer {retention_days} dagen vindt een weergave mogelijk niets en blijven haar entiteiten onbeschikbaar.",
           "data": {
             "virtual_time_offset_days": "Dagen terug",
             "virtual_time_offset_years": "Jaren terug",

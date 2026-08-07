@@ -60,6 +60,7 @@ Most Tibber integrations give you a single price sensor. This one gives you a **
 - **Daily & rolling statistics** — Min, max, average, median for today, tomorrow, trailing 24h, and leading 24h
 - **Energy & tax breakdown** — See spot price vs. tax components as sensor attributes
 - **Multi-currency support** — EUR, NOK, SEK, DKK, USD, GBP with configurable base/subunit display (€ vs ct, kr vs øre)
+- **Time-travel views** — Add a second device showing the same home as it was 7 days ago, or on the same date last year. Its clock runs at normal speed, so you can rehearse an automation against a day you already know the outcome of — including the moment tomorrow's prices originally appeared ([guide](https://jpawlowski.github.io/hass.tibber_prices/user/time-travel))
 
 ### 🛡️ Built for Reliability
 

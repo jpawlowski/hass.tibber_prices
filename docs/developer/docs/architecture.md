@@ -359,6 +359,7 @@ Sensors organized by **calculation method** (refactored Nov 2025):
 
 - **[Timer Architecture](./timer-architecture.md)** - Timer system, scheduling, coordination (3 independent timers)
 - **[Caching Strategy](./caching-strategy.md)** - Detailed cache behavior, invalidation, debugging
+- **[Time-Travel Architecture](./time-travel-architecture.md)** - How historical views shift the clock without a second code path
 - **[Setup Guide](./setup.md)** - Development environment setup
 - **[Testing Guide](./testing.md)** - How to test changes
 - **[Release Management](./release-management.md)** - Release workflow and versioning

@@ -104,7 +104,7 @@
         },
         "offset": {
           "title": "Sett opp tidsreisevisning",
-          "description": "Velg hvor langt tilbake visningen skal gå og hvordan den skal oppføre seg.\n\nKvartersvise priser finnes fra {earliest_date}, så akkurat nå er maksimalt **{max_days} dager** mulig (**{max_years} år** i årsmodus).\n\n**Anbefalt:** minst 2 dager, slik at visningen ikke overlapper «i går»-entitetene til sanntidsenheten.",
+          "description": "Velg hvor langt tilbake visningen skal gå og hvordan den skal oppføre seg.\n\nKvartersvise priser finnes fra {earliest_date}, så akkurat nå er maksimalt **{max_days} dager** mulig (**{max_years} år** i årsmodus).\n\n**Anbefalt:** minst 2 dager, slik at visningen ikke overlapper «i går»-entitetene til sanntidsenheten.\n\n**Lagringstid:** Tibbers historikk er ikke ubegrenset. Utover omtrent {retention_days} dager kan en visning ikke finne noe, og entitetene forblir utilgjengelige.",
           "data": {
             "virtual_time_offset_days": "Dager tilbake",
             "virtual_time_offset_years": "År tilbake",
@@ -124,7 +124,7 @@
         },
         "reconfigure": {
           "title": "Konfigurer tidsreisevisning på nytt",
-          "description": "Endre forskyvningen og oppførselen til denne visningen. Forskyvningsmodusen beholdes.",
+          "description": "Endre forskyvningen og oppførselen til denne visningen. Forskyvningsmodusen beholdes.\n\n**Viser nå:** {preview}\n\n**Lagringstid:** Tibbers historikk er ikke ubegrenset. Utover omtrent {retention_days} dager kan en visning ikke finne noe, og entitetene forblir utilgjengelige.",
           "data": {
             "virtual_time_offset_days": "Dager tilbake",
             "virtual_time_offset_years": "År tilbake",

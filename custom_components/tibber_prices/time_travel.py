@@ -79,6 +79,11 @@ MAX_OFFSET_DAYS = 374
 # Yearly mode never goes further back than this many years.
 MAX_OFFSET_YEARS = 5
 
+# Beyond this many days Tibber's historical retention becomes uncertain. Not a
+# hard limit - the API may well answer - but far enough back that a view can
+# quietly end up empty, so the config flow says so.
+RETENTION_WARNING_DAYS = 90
+
 # A view needs the two days before its reference date for trailing averages, so
 # the reference must sit at least this far after the resolution change.
 _TRAILING_DAYS_NEEDED = 2

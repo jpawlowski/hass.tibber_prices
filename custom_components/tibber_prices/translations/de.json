@@ -104,7 +104,7 @@
         },
         "offset": {
           "title": "Zeitreise-Ansicht konfigurieren",
-          "description": "Lege fest, wie weit diese Ansicht zurückreist und wie sie sich verhält.\n\nViertelstündliche Preise gibt es ab {earliest_date}, derzeit sind also höchstens **{max_days} Tage** möglich (**{max_years} Jahr(e)** im Jahresmodus).\n\n**Empfehlung:** mindestens 2 Tage, damit sich die Ansicht nicht mit den „Gestern\"-Entitäten des Live-Geräts überschneidet.",
+          "description": "Lege fest, wie weit diese Ansicht zurückreist und wie sie sich verhält.\n\nViertelstündliche Preise gibt es ab {earliest_date}, derzeit sind also höchstens **{max_days} Tage** möglich (**{max_years} Jahr(e)** im Jahresmodus).\n\n**Empfehlung:** mindestens 2 Tage, damit sich die Ansicht nicht mit den „Gestern\"-Entitäten des Live-Geräts überschneidet.\n\n**Verfügbarkeit:** Tibbers Historie ist nicht unbegrenzt. Jenseits von etwa {retention_days} Tagen findet eine Ansicht möglicherweise nichts und ihre Entitäten bleiben nicht verfügbar.",
           "data": {
             "virtual_time_offset_days": "Tage zurück",
             "virtual_time_offset_years": "Jahre zurück",
@@ -124,7 +124,7 @@
         },
         "reconfigure": {
           "title": "Zeitreise-Ansicht neu konfigurieren",
-          "description": "Versatz und Verhalten dieser Ansicht ändern. Der Versatzmodus bleibt bestehen – lege eine zweite Ansicht an, um einen anderen Modus zu vergleichen.",
+          "description": "Versatz und Verhalten dieser Ansicht ändern. Der Versatzmodus bleibt bestehen – lege eine zweite Ansicht an, um einen anderen Modus zu vergleichen.\n\n**Zeigt derzeit:** {preview}\n\n**Verfügbarkeit:** Tibbers Historie ist nicht unbegrenzt. Jenseits von etwa {retention_days} Tagen findet eine Ansicht möglicherweise nichts und ihre Entitäten bleiben nicht verfügbar.",
           "data": {
             "virtual_time_offset_days": "Tage zurück",
             "virtual_time_offset_years": "Jahre zurück",

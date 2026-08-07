@@ -15,6 +15,7 @@ import pytest
 
 from custom_components.tibber_prices import _async_handle_subentry_change, _async_setup_subentries
 from custom_components.tibber_prices.const import (
+    CONF_HEADLESS,
     CONF_VIRTUAL_TIME_OFFSET_DAYS,
     CONF_VIRTUAL_TIME_OFFSET_HOURS,
     CONF_VIRTUAL_TIME_OFFSET_MINUTES,
@@ -28,7 +29,13 @@ if TYPE_CHECKING:
 MODULE = "custom_components.tibber_prices"
 
 
-def _make_subentry(subentry_id: str, days: int, subentry_type: str = SUBENTRY_TYPE_TIME_TRAVEL) -> Mock:
+def _make_subentry(
+    subentry_id: str,
+    days: int,
+    subentry_type: str = SUBENTRY_TYPE_TIME_TRAVEL,
+    *,
+    headless: bool = False,
+) -> Mock:
     """Build a config subentry mock."""
     subentry = Mock()
     subentry.subentry_id = subentry_id
@@ -38,6 +45,7 @@ def _make_subentry(subentry_id: str, days: int, subentry_type: str = SUBENTRY_TY
         CONF_VIRTUAL_TIME_OFFSET_DAYS: days,
         CONF_VIRTUAL_TIME_OFFSET_HOURS: 0,
         CONF_VIRTUAL_TIME_OFFSET_MINUTES: 0,
+        CONF_HEADLESS: headless,
     }
     return subentry
 
@@ -165,19 +173,52 @@ async def test_added_view_triggers_reload() -> None:
 
 
 @pytest.mark.unit
-async def test_reconfigured_view_triggers_reload() -> None:
+async def test_changed_offset_reloads_and_drops_the_cache() -> None:
     """
-    Test changing a view's offset reloads the entry.
+    Test moving a view's offset reloads it and throws its cached window away.
 
     Scenario: Same subentry ID, different day offset than what was set up.
-    Expected: Reload, so the coordinator picks up the new clock offset.
+    Expected: Reload plus a storage purge - the view now points at a different
+        stretch of history, so the old window is dead weight.
     """
     entry = _entry_with_runtime({"01JAAA": _make_subentry("01JAAA", -7)})
     entry.subentries = {"01JAAA": _make_subentry("01JAAA", -21)}
     hass = Mock()
 
-    await _async_handle_subentry_change(hass, entry)
+    store = Mock(async_remove=AsyncMock())
+    with (
+        patch(f"{MODULE}.Store", return_value=store),
+        patch(f"{MODULE}.async_remove_pool_storage", new_callable=AsyncMock) as remove_pool,
+    ):
+        await _async_handle_subentry_change(hass, entry)
 
+    store.async_remove.assert_awaited_once()
+    remove_pool.assert_awaited_once_with(hass, "entry123_01JAAA")
+    hass.config_entries.async_schedule_reload.assert_called_once_with("entry123")
+
+
+@pytest.mark.unit
+async def test_presentation_change_keeps_the_cache() -> None:
+    """
+    Test toggling headless reloads without discarding data.
+
+    Scenario: Same offset, headless flipped on.
+    Expected: A reload (the entity set changes) but no purge - the view still
+        needs exactly the same intervals, and refetching them would be waste.
+    """
+    entry = _entry_with_runtime({"01JAAA": _make_subentry("01JAAA", -7)})
+    entry.subentries = {"01JAAA": _make_subentry("01JAAA", -7, headless=True)}
+    hass = Mock()
+
+    store = Mock(async_remove=AsyncMock())
+    with (
+        patch(f"{MODULE}.Store", return_value=store),
+        patch(f"{MODULE}.async_remove_pool_storage", new_callable=AsyncMock) as remove_pool,
+    ):
+        await _async_handle_subentry_change(hass, entry)
+
+    store.async_remove.assert_not_awaited()
+    remove_pool.assert_not_awaited()
     hass.config_entries.async_schedule_reload.assert_called_once_with("entry123")
 
 
@@ -272,3 +313,80 @@ async def test_headless_view_gets_no_binary_sensors() -> None:
 
     assert "01JHEADLESS" not in added
     assert added[None], "the live entry still gets its binary sensors"
+
+
+@pytest.mark.unit
+async def test_disabling_the_entry_drops_caches() -> None:
+    """
+    Test disabling an entry throws its cached data away.
+
+    Scenario: Home Assistant unloads the entry with disabled_by set.
+    Expected: Pool storage removed and every coordinator's cache cleared. A
+        disabled entry may stay off for weeks; whatever is cached now would be
+        stale on the way back in.
+    """
+    from custom_components.tibber_prices import async_unload_entry  # noqa: PLC0415
+
+    entry = _make_entry({})
+    entry.disabled_by = "user"
+    view_coordinator = Mock(async_shutdown=AsyncMock(), clear_cache=AsyncMock())
+    entry.runtime_data = Mock(
+        coordinator=Mock(async_shutdown=AsyncMock(), clear_cache=AsyncMock()),
+        interval_pool=Mock(async_shutdown=AsyncMock()),
+        subentries={
+            "01JAAA": TibberPricesSubentryData(
+                subentry=_make_subentry("01JAAA", -7),
+                coordinator=view_coordinator,
+                interval_pool=Mock(async_shutdown=AsyncMock()),
+            )
+        },
+    )
+
+    hass = Mock()
+    hass.config_entries.async_unload_platforms = AsyncMock(return_value=True)
+    hass.config_entries.async_entries = Mock(return_value=[entry])
+
+    with (
+        patch(f"{MODULE}.async_remove_pool_storage", new_callable=AsyncMock) as remove_pool,
+        patch(f"{MODULE}.async_save_pool_state", new_callable=AsyncMock) as save_pool,
+    ):
+        assert await async_unload_entry(hass, entry) is True
+
+    assert save_pool.await_count == 0
+    assert {call.args[1] for call in remove_pool.await_args_list} == {"entry123", "entry123_01JAAA"}
+    entry.runtime_data.coordinator.clear_cache.assert_awaited_once()
+    view_coordinator.clear_cache.assert_awaited_once()
+
+
+@pytest.mark.unit
+async def test_reload_keeps_caches() -> None:
+    """
+    Test a plain reload preserves the cached data.
+
+    Scenario: The entry is unloaded without being disabled (reload, restart).
+    Expected: Pool state saved, nothing cleared - surviving restarts is the
+        whole point of the persistent store.
+    """
+    from custom_components.tibber_prices import async_unload_entry  # noqa: PLC0415
+
+    entry = _make_entry({})
+    entry.disabled_by = None
+    entry.runtime_data = Mock(
+        coordinator=Mock(async_shutdown=AsyncMock(), clear_cache=AsyncMock()),
+        interval_pool=Mock(async_shutdown=AsyncMock()),
+        subentries={},
+    )
+
+    hass = Mock()
+    hass.config_entries.async_unload_platforms = AsyncMock(return_value=True)
+    hass.config_entries.async_entries = Mock(return_value=[entry])
+
+    with (
+        patch(f"{MODULE}.async_remove_pool_storage", new_callable=AsyncMock) as remove_pool,
+        patch(f"{MODULE}.async_save_pool_state", new_callable=AsyncMock) as save_pool,
+    ):
+        assert await async_unload_entry(hass, entry) is True
+
+    save_pool.assert_awaited_once()
+    remove_pool.assert_not_awaited()
+    entry.runtime_data.coordinator.clear_cache.assert_not_awaited()

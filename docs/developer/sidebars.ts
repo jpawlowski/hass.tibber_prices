@@ -19,7 +19,7 @@ const sidebars: SidebarsConfig = {
       type: 'category',
       label: '🏗️ Architecture',
       link: { type: 'doc', id: 'architecture' },
-      items: ['architecture', 'timer-architecture', 'caching-strategy', 'api-reference'],
+      items: ['architecture', 'timer-architecture', 'caching-strategy', 'time-travel-architecture', 'api-reference'],
       collapsible: true,
       collapsed: false,
     },

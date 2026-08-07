@@ -24,6 +24,7 @@ from custom_components.tibber_prices.time_travel import (
     MODE_DAYS,
     MODE_YEARLY,
     QUARTER_HOURLY_SINCE,
+    RETENTION_WARNING_DAYS,
     build_time_shift,
     max_selectable_days,
     max_selectable_years,
@@ -44,6 +45,8 @@ from homeassistant.helpers.selector import (
 from homeassistant.util import dt as dt_util
 
 if TYPE_CHECKING:
+    from datetime import datetime
+
     from homeassistant.config_entries import ConfigEntry
 
 # Form key of the hours/minutes duration input (not persisted as-is: it is
@@ -167,7 +170,7 @@ class TibberPricesSubentryFlowHandler(ConfigSubentryFlow):
             step_id="reconfigure",
             data_schema=self._offset_schema(subentry.data),
             errors=errors,
-            description_placeholders=self._placeholders(),
+            description_placeholders=self._placeholders(subentry.data),
         )
 
     def _validate(self, offsets: _Offsets) -> dict[str, str]:
@@ -268,14 +271,36 @@ class TibberPricesSubentryFlowHandler(ConfigSubentryFlow):
             }
         )
 
-    def _placeholders(self) -> dict[str, str]:
-        """Provide context for the form description."""
-        today = dt_util.now().date()
+    def _placeholders(self, current: Any = None) -> dict[str, str]:
+        """Provide context for the form description, including a live preview."""
+        real_now = dt_util.now()
         return {
             "earliest_date": QUARTER_HOURLY_SINCE.isoformat(),
-            "max_days": str(max_selectable_days(today)),
-            "max_years": str(max_selectable_years(today)),
+            "max_days": str(max_selectable_days(real_now.date())),
+            "max_years": str(max_selectable_years(real_now.date())),
+            "retention_days": str(RETENTION_WARNING_DAYS),
+            "preview": self._preview(real_now, current),
         }
+
+    def _preview(self, real_now: datetime, current: Any) -> str:
+        """
+        Render "real time -> shown time" for the currently stored offset.
+
+        Shows what the view would report right now, which is far easier to sanity
+        check than a slider position. Empty for a view being created, since there
+        is no offset yet.
+        """
+        if not current:
+            return ""
+
+        shift = build_time_shift(current)
+        if shift.is_live:
+            return ""
+
+        shifted = shift.resolve(real_now)
+        if shifted is None:
+            return f"{real_now:%Y-%m-%d %H:%M} -> unavailable (no such date in the target year)"
+        return f"{real_now:%Y-%m-%d %H:%M} -> {shifted:%Y-%m-%d %H:%M}"
 
     def _build_unique_id(self, parent_entry: ConfigEntry, offsets: _Offsets) -> str:
         """Build a unique ID identifying this home plus offset combination."""

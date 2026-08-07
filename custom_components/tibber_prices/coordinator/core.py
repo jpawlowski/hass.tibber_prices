@@ -1005,6 +1005,28 @@ class TibberPricesDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         """Store cache data (user metadata only, price data is in IntervalPool)."""
         await self._price_data_manager.store_cache(self._midnight_handler.last_check_time)
 
+    async def clear_cache(self) -> None:
+        """
+        Drop every cached artefact, in memory and on disk.
+
+        Used when a coordinator's premise changes rather than just its data: a
+        time-travel view whose offset was reconfigured, or an entry being
+        disabled. A plain reload or a Home Assistant restart must NOT call this -
+        keeping the cache across those is the whole point of the persistent
+        store.
+        """
+        self._log("info", "Clearing cache (reconfiguration or entry disabled)")
+
+        self._cached_user_data = None
+        self._last_user_update = None
+        self._last_price_update = None
+        self.data = {}
+        self._data_transformer.invalidate_cache()
+        self._data_transformer.invalidate_config_cache()
+        self._period_calculator.invalidate_config_cache()
+
+        await self._store.async_remove()
+
     def _needs_tomorrow_data(self) -> bool:
         """Check if tomorrow data is missing or invalid."""
         # Check self.data (from Pool) instead of _cached_price_data
