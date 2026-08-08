@@ -51,7 +51,7 @@ from .const import DOMAIN, INTEGRATION_VERSION, get_home_type_translation
 if TYPE_CHECKING:
     from collections.abc import Mapping
 
-    from homeassistant.config_entries import ConfigSubentry
+    from homeassistant.config_entries import ConfigEntry, ConfigSubentry
 
     from .coordinator import TibberPricesDataUpdateCoordinator
 
@@ -156,6 +156,29 @@ def build_device_info(
         sw_version=INTEGRATION_VERSION,
         configuration_url=CONFIGURATION_URL,
     )
+
+
+def home_display_name(config_entry: ConfigEntry) -> str:
+    """
+    Return the name a home's device carries, from the config entry alone.
+
+    Same source as :func:`build_device_info`, reachable without a coordinator so the
+    subentry config flow can name a view after the home rather than after the config
+    entry title. Those two differ whenever the home has an app nickname: the entry
+    title is the address, while the device shows the nickname. A view named from the
+    entry title therefore did not match the home device it belongs to.
+
+    Args:
+        config_entry: The home's config entry.
+
+    Returns:
+        The home's display name. Falls back to the entry title for an entry that is
+        not a home - which cannot own views, so this is defensive only.
+
+    """
+    if config_entry.data.get("home_id"):
+        return _home_entry_identity(config_entry.data)[0]
+    return config_entry.title
 
 
 def resolve_home_identity(

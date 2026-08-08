@@ -715,3 +715,82 @@ def test_flow_clears_the_inactive_mode_offset() -> None:
     )
 
     assert (offsets.days, offsets.years) == (0, -1)
+
+
+# ---------------------------------------------------------------------------
+# View naming
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.unit
+def test_view_title_is_built_on_the_home_device_name() -> None:
+    """
+    Test a view is named after the home as its device shows it, not after the entry.
+
+    Scenario: A home with an app nickname. Home Assistant titles the config entry by
+        address, while the home's device carries the nickname.
+    Expected: The view's title starts with the nickname, so it reads as the same home
+        as the device sitting next to it in the integration page - it used to start
+        with the address and looked like a different home.
+    """
+    from unittest.mock import MagicMock  # noqa: PLC0415
+
+    from custom_components.tibber_prices.config_flow_handlers.subentry_flow import (  # noqa: PLC0415
+        TibberPricesSubentryFlowHandler,
+    )
+    from custom_components.tibber_prices.device import build_device_info  # noqa: PLC0415
+
+    entry_data = {
+        "home_id": "home-1",
+        "home_data": {
+            "appNickname": "Pählstraße",
+            "address": {"address1": "Pählstraße 6B", "city": "München"},
+            "type": "APARTMENT",
+        },
+    }
+    parent_entry = MagicMock()
+    parent_entry.title = "Pählstraße 6B, München"
+    parent_entry.data = entry_data
+
+    coordinator = Mock()
+    coordinator.config_entry.data = entry_data
+    coordinator.config_entry.unique_id = "home-1"
+    coordinator.hass.config.language = "en"
+
+    handler = TibberPricesSubentryFlowHandler()
+    handler.hass = MagicMock()
+    handler.hass.config.language = "en"
+    handler.hass.data = {}
+
+    title = handler._build_title(  # noqa: SLF001
+        parent_entry,
+        {
+            CONF_VIRTUAL_TIME_OFFSET_MODE: MODE_DAYS,
+            CONF_VIRTUAL_TIME_OFFSET_DAYS: -6,
+            CONF_HEADLESS: True,
+        },
+    )
+    home_device_name = build_device_info(coordinator).get("name")
+
+    assert home_device_name == "Pählstraße"
+    assert title.startswith("Pählstraße ("), title
+    assert not title.startswith("Pählstraße 6B"), "view still named after the entry title"
+    assert title.endswith("[headless]")
+
+
+@pytest.mark.unit
+def test_view_title_keeps_a_parenthesis_in_the_home_name() -> None:
+    """
+    Test an app nickname containing "(...)" survives into the view title.
+
+    Scenario: A home nicknamed "Haus (Ferien)".
+    Expected: The whole nickname is kept. The old builder stripped everything from
+        the first " (" onwards to trim a suffix off the entry title, which cut such
+        a nickname down to "Haus".
+    """
+    from custom_components.tibber_prices.device import home_display_name  # noqa: PLC0415
+
+    parent_entry = Mock()
+    parent_entry.data = {"home_id": "home-1", "home_data": {"appNickname": "Haus (Ferien)"}}
+
+    assert home_display_name(parent_entry) == "Haus (Ferien)"

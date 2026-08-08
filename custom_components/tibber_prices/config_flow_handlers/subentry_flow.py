@@ -20,6 +20,7 @@ from custom_components.tibber_prices.const import (
     DEFAULT_TOMORROW_ARRIVAL_HOUR,
     DOMAIN,
 )
+from custom_components.tibber_prices.device import home_display_name
 from custom_components.tibber_prices.time_travel import (
     MODE_DAYS,
     MODE_YEARLY,
@@ -428,5 +429,15 @@ def _build_data(offsets: _Offsets, mode: str, user_input: dict[str, Any]) -> dic
 
 
 def _base_title(parent_entry: ConfigEntry) -> str:
-    """Return the parent entry title without any trailing "(...)" suffix."""
-    return parent_entry.title.split(" (")[0] if " (" in parent_entry.title else parent_entry.title
+    """Return the name to build a view's title on: the home's, as its device shows it.
+
+    Deliberately not the config entry title. The two diverge as soon as the home has
+    an app nickname - the entry is titled by address, the device by nickname - and a
+    view built on the entry title then read as a different home than the one it
+    belongs to, sitting right next to it in the integration page.
+
+    No suffix is stripped here either. That used to guard against a title already
+    carrying a "(...)" part, but it would just as happily cut an app nickname like
+    "Haus (Ferien)" down to "Haus".
+    """
+    return home_display_name(parent_entry)

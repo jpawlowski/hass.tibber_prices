@@ -43,7 +43,7 @@ Yearly mode only appears once a full year of quarter-hourly price data exists (s
 
 **Headless** (off by default) — see [Headless views](#headless-views).
 
-The view's name is derived from the home and the offset, e.g. `My House (7 days ago)`. You can rename the device afterwards; the integration will not overwrite a name you set yourself.
+The view's name is the home's own device name plus the offset, e.g. `My House (7 days ago)` — so a view reads as the same home as the device it sits next to, even when the config entry is titled differently (Home Assistant titles it by address, while the device shows your Tibber app nickname). You can rename the device afterwards; the integration will not overwrite a name you set yourself.
 
 ## Tomorrow realism
 
