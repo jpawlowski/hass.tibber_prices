@@ -1404,7 +1404,7 @@
       "message": "Okänd enhet. Välj en Tibber Prices-enhet - en tidsresevy, eller hemmet självt för livedata."
     },
     "view_entry_mismatch": {
-      "message": "Den valda vyn tillhör '{view_home}', men post-ID:t anger '{entry_home}'. Välj en vy av '{entry_home}', eller töm post-ID:t - vyn anger redan sitt hem."
+      "message": "Den valda vyn tillhör ”{view_home}”, men post-ID:t anger ”{entry_home}”. Välj en vy av ”{entry_home}”, eller töm post-ID:t - vyn anger redan sitt hem."
     },
     "view_not_loaded": {
       "message": "Den tidsresevyn är inte konfigurerad just nu. Den kan ha tagits bort, eller så laddar integrationen fortfarande."

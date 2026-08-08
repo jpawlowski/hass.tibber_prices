@@ -1404,7 +1404,7 @@
       "message": "Onbekend apparaat. Kies een Tibber Prices-apparaat - een tijdreisweergave, of het huis zelf voor live gegevens."
     },
     "view_entry_mismatch": {
-      "message": "De gekozen weergave hoort bij '{view_home}', maar de item-ID noemt '{entry_home}'. Kies een weergave van '{entry_home}', of maak de item-ID leeg - de weergave benoemt zijn huis al."
+      "message": "De gekozen weergave hoort bij “{view_home}”, maar de item-ID noemt “{entry_home}”. Kies een weergave van “{entry_home}”, of maak de item-ID leeg - de weergave benoemt zijn huis al."
     },
     "view_not_loaded": {
       "message": "Die tijdreisweergave is momenteel niet ingesteld. Mogelijk is hij verwijderd, of de integratie is nog aan het laden."
