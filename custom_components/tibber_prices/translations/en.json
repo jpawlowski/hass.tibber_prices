@@ -1404,7 +1404,7 @@
       "message": "Unknown device. Select a Tibber Prices device - a time-travel view, or the home itself for live data."
     },
     "view_entry_mismatch": {
-      "message": "The selected view belongs to a different home than the given entry ID. Pass only one of them."
+      "message": "The selected view belongs to '{view_home}', but the entry ID names '{entry_home}'. Pick a view of '{entry_home}', or clear the entry ID - the view already identifies its home."
     },
     "view_not_loaded": {
       "message": "That time-travel view is not currently set up. It may have been removed, or the integration is still loading."

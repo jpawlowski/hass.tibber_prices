@@ -1404,7 +1404,7 @@
       "message": "Ukjent enhet. Velg en Tibber Prices-enhet - en tidsreisevisning, eller hjemmet selv for direktedata."
     },
     "view_entry_mismatch": {
-      "message": "Den valgte visningen tilhører et annet hjem enn den oppgitte oppførings-ID-en. Oppgi bare én av dem."
+      "message": "Den valgte visningen tilhører '{view_home}', men oppførings-ID-en oppgir '{entry_home}'. Velg en visning av '{entry_home}', eller tøm oppførings-ID-en - visningen angir allerede hjemmet sitt."
     },
     "view_not_loaded": {
       "message": "Denne tidsreisevisningen er ikke satt opp for øyeblikket. Den kan ha blitt fjernet, eller integrasjonen laster fortsatt."

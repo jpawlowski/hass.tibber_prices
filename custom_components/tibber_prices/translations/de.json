@@ -1404,7 +1404,7 @@
       "message": "Unbekanntes Gerät. Wähle ein Tibber-Prices-Gerät - eine Zeitreise-Ansicht oder das Zuhause selbst für Live-Daten."
     },
     "view_entry_mismatch": {
-      "message": "Die gewählte Ansicht gehört zu einem anderen Zuhause als die angegebene Entry-ID. Gib nur eines von beiden an."
+      "message": "Die gewählte Ansicht gehört zu '{view_home}', die Eintrag-ID nennt aber '{entry_home}'. Wähle eine Ansicht von '{entry_home}', oder leere die Eintrag-ID - die Ansicht benennt ihr Zuhause bereits."
     },
     "view_not_loaded": {
       "message": "Diese Zeitreise-Ansicht ist derzeit nicht eingerichtet. Sie wurde möglicherweise entfernt, oder die Integration lädt noch."

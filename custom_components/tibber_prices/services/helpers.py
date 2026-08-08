@@ -308,6 +308,16 @@ def _resolve_entry(hass: HomeAssistant, entry_id: str) -> Any:
     return entry
 
 
+def _entry_title(hass: HomeAssistant, entry_id: str) -> str:
+    """Return an entry's display title, falling back to its raw ID.
+
+    Used for error messages only, so an ID that resolves to nothing must not raise -
+    naming it verbatim is still more useful to the reader than omitting it.
+    """
+    entry = next((e for e in hass.config_entries.async_entries(DOMAIN) if e.entry_id == entry_id), None)
+    return entry.title if entry is not None else entry_id
+
+
 def _resolve_view_device(hass: HomeAssistant, device_id: str) -> tuple[str, str | None]:
     """
     Map a device ID to the (entry_id, subentry_id) it stands for.
@@ -373,9 +383,18 @@ def resolve_service_target(
 
     view_entry_id, subentry_id = _resolve_view_device(hass, view_device_id)
     if entry_id and entry_id != view_entry_id:
+        # Reachable straight from the UI, not just hand-written YAML: a device selector
+        # can only be filtered by integration and model, never by the config entry
+        # picked in another field, so with several homes the view picker lists every
+        # home's views. Name both sides - "they disagree" alone leaves the caller
+        # guessing which of the two fields they got wrong.
         raise ServiceValidationError(
             translation_domain=DOMAIN,
             translation_key="view_entry_mismatch",
+            translation_placeholders={
+                "entry_home": _entry_title(hass, entry_id),
+                "view_home": _entry_title(hass, view_entry_id),
+            },
         )
 
     entry = _resolve_entry(hass, view_entry_id)

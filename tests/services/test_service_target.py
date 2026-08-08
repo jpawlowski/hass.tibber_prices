@@ -181,6 +181,24 @@ class TestTargetingErrors:
         with pytest.raises(ServiceValidationError):
             _resolve(_hass(entry), entry_id="entry_other", view="device_view")
 
+    def test_mismatch_error_names_both_homes(self) -> None:
+        """The message must say which two homes collide.
+
+        A device selector cannot be filtered by the config entry chosen in another
+        field, so with several homes the picker lists every home's views and this is
+        reachable straight from the UI. "They disagree" alone would leave the caller
+        guessing which of the two fields is the wrong one.
+        """
+        entry = _entry({"sub_1": _view()})
+
+        with pytest.raises(ServiceValidationError) as raised:
+            _resolve(_hass(entry), entry_id="entry_other", view="device_view")
+
+        placeholders = raised.value.translation_placeholders or {}
+        assert placeholders["view_home"] == "My House"
+        # Unknown IDs fall back to the raw value rather than dropping the detail
+        assert placeholders["entry_home"] == "entry_other"
+
     def test_view_that_is_not_set_up_is_rejected(self) -> None:
         """A device can outlive its view - the removed view has no data to answer with."""
         entry = _entry(views={})

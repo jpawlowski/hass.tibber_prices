@@ -84,7 +84,13 @@ Relative ranges (`next_24h`, `remaining_today`, `search_start_offset_minutes`, a
 
 The picker lists only your time-travel views — the home itself is already what the `entry_id` field selects. Leave `view_id` empty for live data.
 
-**You do not need `entry_id` as well.** A view belongs to exactly one home, so picking the view already says which home. Setting both is fine as long as they agree — handy when you had already selected a home before adding the view. Setting both to *different* homes is rejected with an error rather than resolved in favour of one of them, since either choice would answer for a home you did not ask about.
+**You do not need `entry_id` as well.** A view belongs to exactly one home, so picking the view already says which home. Setting both is fine as long as they agree — handy when you had already selected a home before adding the view.
+
+:::caution With several homes, the view picker lists them all
+Home Assistant can only filter a device picker by integration, not by whatever you chose in another field. So if you have more than one home, the `view_id` dropdown shows the views of *every* home — including ones that do not match the `entry_id` above it.
+
+Picking a mismatched pair is rejected with an error naming both homes, rather than resolved in favour of one of them; either choice would silently answer for a home you did not ask about. The fix is either to pick a view of the home in `entry_id`, or simply to clear `entry_id` — the view already identifies its home.
+:::
 
 The parameter is available on `get_price`, `get_chartdata`, `get_apexcharts_yaml`, `find_cheapest_block`, `find_most_expensive_block`, `find_cheapest_hours`, `find_most_expensive_hours`, `find_cheapest_schedule` and `plan_charging`. Account-level actions (`refresh_user_data`) have no use for it.
 
