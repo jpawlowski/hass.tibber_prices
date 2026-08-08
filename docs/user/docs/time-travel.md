@@ -84,6 +84,8 @@ Relative ranges (`next_24h`, `remaining_today`, `search_start_offset_minutes`, a
 
 The picker lists only your time-travel views — the home itself is already what the `entry_id` field selects. Leave `view_id` empty for live data.
 
+**You do not need `entry_id` as well.** A view belongs to exactly one home, so picking the view already says which home. Setting both is fine as long as they agree — handy when you had already selected a home before adding the view. Setting both to *different* homes is rejected with an error rather than resolved in favour of one of them, since either choice would answer for a home you did not ask about.
+
 The parameter is available on `get_price`, `get_chartdata`, `get_apexcharts_yaml`, `find_cheapest_block`, `find_most_expensive_block`, `find_cheapest_hours`, `find_most_expensive_hours`, `find_cheapest_schedule` and `plan_charging`. Account-level actions (`refresh_user_data`) have no use for it.
 
 ## Knowing what you are looking at

@@ -140,6 +140,20 @@ class TestTargetingAView:
 
         assert target.entry is entry
 
+    def test_matching_entry_id_alongside_a_view_is_accepted(self) -> None:
+        """Naming the home the view belongs to is redundant, not a conflict.
+
+        With several homes a caller has usually already set entry_id before picking a
+        view; making them clear it again would be busywork for a call that says the
+        same thing twice.
+        """
+        view = _view()
+        entry = _entry({"sub_1": view})
+
+        target = _resolve(_hass(entry), entry_id="entry_1", view="device_view")
+
+        assert target.coordinator is view.coordinator
+
     def test_label_names_both_home_and_view(self) -> None:
         """Logs and errors identify which view answered."""
         entry = _entry({"sub_1": _view()})

@@ -34,7 +34,7 @@ Every price-reading action also accepts an optional **`view_id`** parameter. Pas
 
 This is what lets you rehearse an automation against a day whose prices you already know: point the same action at a `-7 days` view and `next_24h` means last week's next 24 hours.
 
-Leave `view_id` empty for live data. See [Using a view from an action](time-travel.md#using-a-view-from-an-action) for details.
+Leave `view_id` empty for live data. When you do pick a view, `entry_id` is redundant — the view already identifies its home — but harmless as long as the two agree. See [Using a view from an action](time-travel.md#using-a-view-from-an-action) for details.
 
 ## All Actions at a Glance
 
