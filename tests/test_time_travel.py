@@ -12,7 +12,7 @@ from __future__ import annotations
 
 from datetime import UTC, date, datetime, timedelta
 from typing import Any
-from unittest.mock import Mock
+from unittest.mock import Mock, patch
 from zoneinfo import ZoneInfo
 
 import pytest
@@ -776,6 +776,78 @@ def test_view_title_is_built_on_the_home_device_name() -> None:
     assert title.startswith("Pählstraße ("), title
     assert not title.startswith("Pählstraße 6B"), "view still named after the entry title"
     assert title.endswith("[headless]")
+
+
+# ---------------------------------------------------------------------------
+# Midnight rollover under a shifted clock
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.unit
+def test_create_time_service_resolves_against_the_shifted_clock() -> None:
+    """
+    Test the coordinator's per-cycle clock is the shifted one, not the real one.
+
+    Scenario: A view with a -3h fine-tuning offset, real time just after real
+        midnight (00:30).
+    Expected: `_create_time_service()` returns a clock that is still on the
+        previous shifted day - it has not caught up to its own midnight yet,
+        because the -3h offset delays that by three hours. This is the exact
+        link between `dt_util.now()` and the "now" that midnight-turnover
+        detection acts on; get it wrong and a view rotates its data at the
+        real clock's midnight instead of its own.
+    """
+    from custom_components.tibber_prices.coordinator.core import TibberPricesDataUpdateCoordinator  # noqa: PLC0415
+
+    coordinator = Mock(spec=TibberPricesDataUpdateCoordinator)
+    coordinator._time_shift = TimeShift(days=-7, hours=-3)  # noqa: SLF001
+
+    real_now = datetime(2026, 8, 23, 0, 30, tzinfo=UTC)
+    with patch("custom_components.tibber_prices.coordinator.core.dt_util.now", return_value=real_now):
+        time_service = TibberPricesDataUpdateCoordinator._create_time_service(coordinator)  # noqa: SLF001
+
+    assert time_service.now() == datetime(2026, 8, 15, 21, 30, tzinfo=UTC)
+
+
+@pytest.mark.unit
+def test_view_midnight_arrives_late_when_shifted_by_hours() -> None:
+    """
+    Test a view's own midnight turnover follows its shifted clock, not the real one.
+
+    Scenario: A view fine-tuned -3h. Real midnight passes (23 Aug 23:59:59 ->
+        00:00:00), but because of the -3h offset the shifted calendar day does
+        not roll over until real time reaches 03:00.
+    Expected: No turnover is detected at real midnight, nor at 02:59 - only once
+        real time reaches 03:00, three hours after the real day changed. A
+        coordinator that mistakenly drove this off `dt_util.now()` directly
+        would rotate the view's data three hours too early.
+    """
+    from custom_components.tibber_prices.coordinator.core import TibberPricesDataUpdateCoordinator  # noqa: PLC0415
+    from custom_components.tibber_prices.coordinator.midnight_handler import (  # noqa: PLC0415
+        TibberPricesMidnightHandler,
+    )
+
+    coordinator = Mock(spec=TibberPricesDataUpdateCoordinator)
+    coordinator._time_shift = TimeShift(days=-7, hours=-3)  # noqa: SLF001
+    coordinator._midnight_handler = TibberPricesMidnightHandler()  # noqa: SLF001
+
+    create_time_service = TibberPricesDataUpdateCoordinator._create_time_service.__get__(coordinator)  # noqa: SLF001
+    check_turnover_needed = TibberPricesDataUpdateCoordinator._check_midnight_turnover_needed.__get__(coordinator)  # noqa: SLF001
+
+    def _turnover_needed_at(real_time: datetime) -> bool:
+        with patch("custom_components.tibber_prices.coordinator.core.dt_util.now", return_value=real_time):
+            shifted_now = create_time_service().now()
+        return check_turnover_needed(shifted_now)
+
+    # Initialize the evening before, well clear of any boundary.
+    assert _turnover_needed_at(datetime(2026, 8, 22, 20, 0, tzinfo=UTC)) is False
+
+    # Real midnight passes - the view's own day has not turned over yet.
+    assert _turnover_needed_at(datetime(2026, 8, 23, 0, 0, tzinfo=UTC)) is False
+    assert _turnover_needed_at(datetime(2026, 8, 23, 2, 59, tzinfo=UTC)) is False
+
+    # Three hours after real midnight, the shifted date finally rolls over.
+    assert _turnover_needed_at(datetime(2026, 8, 23, 3, 0, tzinfo=UTC)) is True
 
 
 @pytest.mark.unit
