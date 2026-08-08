@@ -18,6 +18,7 @@ import yaml
 
 from custom_components.tibber_prices.const import DOMAIN, INTEGRATION_VERSION
 from custom_components.tibber_prices.device import (
+    LIVE_MODEL_ID,
     VIEW_MODEL_ID,
     build_device_info,
     device_identifier,
@@ -173,13 +174,13 @@ def test_subentry_gets_its_own_device() -> None:
 
 
 @pytest.mark.unit
-def test_only_view_devices_carry_the_view_model_id() -> None:
-    """Test model_id marks a device as a view, and only a view.
+def test_model_id_states_which_timeline_a_device_shows() -> None:
+    """Test model_id distinguishes a view from the home it belongs to.
 
     Scenario: Same coordinator, once without and once with a subentry.
-    Expected: The view carries VIEW_MODEL_ID, the home carries none.
+    Expected: The view reads VIEW_MODEL_ID, the home reads LIVE_MODEL_ID.
 
-    This is what the `view` device selector in services.yaml filters on - `model` is
+    This is what the `view_id` device selector in services.yaml filters on - `model` is
     the home type and identical for both, so it cannot tell them apart. If the marker
     stopped being set, the picker would silently offer nothing to choose.
     """
@@ -194,7 +195,22 @@ def test_only_view_devices_carry_the_view_model_id() -> None:
     view = build_device_info(coordinator, _make_subentry())
 
     assert view.get("model_id") == VIEW_MODEL_ID
-    assert home.get("model_id") is None
+    assert home.get("model_id") == LIVE_MODEL_ID
+    assert view.get("model_id") != home.get("model_id")
+
+
+@pytest.mark.unit
+def test_model_ids_read_as_labels_not_slugs() -> None:
+    """Test both markers are presentable, since the device page shows them.
+
+    They double as a selector filter key, which invites writing them as slugs - but
+    that filter is the only reason they are untranslated, not a reason to make them
+    look internal.
+    """
+    for marker in (LIVE_MODEL_ID, VIEW_MODEL_ID):
+        assert marker == marker.strip()
+        assert "_" not in marker, f"{marker!r} reads as a slug"
+        assert marker[0].isupper(), f"{marker!r} is not capitalised"
 
 
 @pytest.mark.unit

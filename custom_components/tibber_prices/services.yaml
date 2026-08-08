@@ -12,7 +12,7 @@ get_price:
         device:
           filter:
             - integration: tibber_prices
-              model_id: time_travel_view
+              model_id: Time-Travel View
     start_time:
       required: true
       example: "2025-11-01T00:00:00+01:00"
@@ -37,7 +37,7 @@ get_apexcharts_yaml:
         device:
           filter:
             - integration: tibber_prices
-              model_id: time_travel_view
+              model_id: Time-Travel View
     day:
       required: false
       example: today
@@ -108,7 +108,7 @@ get_chartdata:
             device:
               filter:
                 - integration: tibber_prices
-                  model_id: time_travel_view
+                  model_id: Time-Travel View
     selection:
       collapsed: true
       fields:
@@ -328,7 +328,7 @@ find_cheapest_block:
         device:
           filter:
             - integration: tibber_prices
-              model_id: time_travel_view
+              model_id: Time-Travel View
     duration:
       required: true
       selector:
@@ -503,7 +503,7 @@ find_most_expensive_block:
         device:
           filter:
             - integration: tibber_prices
-              model_id: time_travel_view
+              model_id: Time-Travel View
     duration:
       required: true
       selector:
@@ -678,7 +678,7 @@ find_cheapest_hours:
         device:
           filter:
             - integration: tibber_prices
-              model_id: time_travel_view
+              model_id: Time-Travel View
     duration:
       required: true
       selector:
@@ -857,7 +857,7 @@ find_most_expensive_hours:
         device:
           filter:
             - integration: tibber_prices
-              model_id: time_travel_view
+              model_id: Time-Travel View
     duration:
       required: true
       selector:
@@ -1036,7 +1036,7 @@ find_cheapest_schedule:
         device:
           filter:
             - integration: tibber_prices
-              model_id: time_travel_view
+              model_id: Time-Travel View
     tasks:
       required: true
       example: '[{"name": "dishwasher", "duration": "02:00:00"}, {"name": "washing_machine", "duration": "01:30:00"}]'
@@ -1210,7 +1210,7 @@ plan_charging:
         device:
           filter:
             - integration: tibber_prices
-              model_id: time_travel_view
+              model_id: Time-Travel View
     battery:
       collapsed: false
       fields:

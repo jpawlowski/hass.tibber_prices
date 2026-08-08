@@ -96,7 +96,9 @@ The parameter is available on `get_price`, `get_chartdata`, `get_apexcharts_yaml
 
 ## Knowing what you are looking at
 
-Every device — live or a view — carries diagnostic sensors describing what it is showing. They are disabled by default; enable them under **Settings → Devices & Services → Tibber Prices → Entities**.
+At a glance, each device page states its timeline under **Model ID**: `Live` for a home, `Time-Travel View` for a view. That one stays in English on purpose — the `view_id` picker filters on it, and a picker's filter cannot follow your language.
+
+For the details, every device — live or a view — carries diagnostic sensors describing what it is showing, in your language and with the exact offset. They are disabled by default; enable them under **Settings → Devices & Services → Tibber Prices → Entities**.
 
 | Sensor | Shows |
 |---|---|

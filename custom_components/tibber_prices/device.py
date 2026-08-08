@@ -55,11 +55,17 @@ CONFIGURATION_URL = "https://developer.tibber.com/explorer"
 DEFAULT_HOME_NAME = "Tibber Home"
 UNKNOWN_MODEL = "Unknown"
 
-# Marks a device as a time-travel view rather than a home. `model` already carries the
-# home type and is identical for both, so this is what tells them apart in the device
-# registry - and it is the only device attribute a device selector can filter on, which
-# is how services.yaml offers views without also listing every home device.
-VIEW_MODEL_ID = "time_travel_view"
+# Which timeline a device shows. `model` carries the home type and is the same for a
+# home and its views, so this is what tells them apart - both on the device page and to
+# the `view_id` device selector in services.yaml, which filters on it to offer views
+# without also listing every home device.
+#
+# These are shown to the user on the device page, so they read as labels rather than as
+# the slug a filter key invites. They must stay untranslated: a selector filter is
+# static configuration and cannot follow the user's language. The Data Mode diagnostic
+# sensor reports the same distinction in translated form.
+LIVE_MODEL_ID = "Live"
+VIEW_MODEL_ID = "Time-Travel View"
 
 
 def device_identifier(
@@ -140,7 +146,7 @@ def build_device_info(
         name=home_name,
         manufacturer=MANUFACTURER,
         model=model,
-        model_id=VIEW_MODEL_ID if subentry is not None else None,
+        model_id=VIEW_MODEL_ID if subentry is not None else LIVE_MODEL_ID,
         serial_number=home_id or None,
         sw_version=INTEGRATION_VERSION,
         configuration_url=CONFIGURATION_URL,
