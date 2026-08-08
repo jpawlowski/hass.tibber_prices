@@ -16,10 +16,12 @@ from unittest.mock import Mock
 import pytest
 import yaml
 
-from custom_components.tibber_prices.const import DOMAIN, INTEGRATION_VERSION
+from custom_components.tibber_prices.const import CONF_HEADLESS, DOMAIN, INTEGRATION_VERSION
 from custom_components.tibber_prices.device import (
+    HEADLESS_VIEW_MODEL_ID,
     LIVE_MODEL_ID,
     VIEW_MODEL_ID,
+    VIEW_MODEL_IDS,
     build_device_info,
     device_identifier,
     resolve_home_identity,
@@ -49,11 +51,21 @@ def _make_coordinator(
     return coordinator
 
 
-def _make_subentry(subentry_id: str = "01JSUBENTRY", title: str = "My House (7 days ago)") -> Mock:
-    """Build a config subentry mock."""
+def _make_subentry(
+    subentry_id: str = "01JSUBENTRY",
+    title: str = "My House (7 days ago)",
+    *,
+    headless: bool = False,
+) -> Mock:
+    """Build a config subentry mock.
+
+    `data` must be a real dict: device.py reads the headless flag out of it, and a
+    Mock would answer every lookup with a truthy Mock.
+    """
     subentry = Mock()
     subentry.subentry_id = subentry_id
     subentry.title = title
+    subentry.data = {CONF_HEADLESS: headless}
     return subentry
 
 
@@ -193,10 +205,14 @@ def test_model_id_states_which_timeline_a_device_shows() -> None:
 
     home = build_device_info(coordinator)
     view = build_device_info(coordinator, _make_subentry())
+    headless = build_device_info(coordinator, _make_subentry(headless=True))
 
-    assert view.get("model_id") == VIEW_MODEL_ID
     assert home.get("model_id") == LIVE_MODEL_ID
-    assert view.get("model_id") != home.get("model_id")
+    assert view.get("model_id") == VIEW_MODEL_ID
+    # A headless view is a different kind of device: diagnostics only, so nothing
+    # that reads entities can work against it.
+    assert headless.get("model_id") == HEADLESS_VIEW_MODEL_ID
+    assert len({home["model_id"], view["model_id"], headless["model_id"]}) == 3
 
 
 @pytest.mark.unit
@@ -207,18 +223,20 @@ def test_model_ids_read_as_labels_not_slugs() -> None:
     that filter is the only reason they are untranslated, not a reason to make them
     look internal.
     """
-    for marker in (LIVE_MODEL_ID, VIEW_MODEL_ID):
+    for marker in (LIVE_MODEL_ID, *VIEW_MODEL_IDS):
         assert marker == marker.strip()
         assert "_" not in marker, f"{marker!r} reads as a slug"
         assert marker[0].isupper(), f"{marker!r} is not capitalised"
 
 
 @pytest.mark.unit
-def test_services_yaml_view_selector_filters_on_the_view_marker() -> None:
-    """Test the shipped selector filters on exactly the marker the code sets.
+def test_services_yaml_view_selector_offers_every_kind_of_view() -> None:
+    """Test the shipped selector filters on exactly the markers the code sets.
 
     The two live in different files and different languages; a typo in either would
-    only surface as an empty picker at runtime.
+    only surface as an empty picker at runtime. Comparing against the whole set also
+    catches a new view kind whose marker nobody added to the selector - it would
+    silently drop those views out of the picker while everything still looked fine.
     """
     services = yaml.safe_load(
         (Path(__file__).parent.parent / "custom_components/tibber_prices/services.yaml").read_text(encoding="utf-8")
@@ -236,8 +254,11 @@ def test_services_yaml_view_selector_filters_on_the_view_marker() -> None:
     selectors = [field["selector"]["device"] for service in services.values() for field in view_fields(service)]
 
     assert selectors, "no action offers a view selector"
+    expected = [{"integration": DOMAIN, "model_id": model_id} for model_id in VIEW_MODEL_IDS]
     for selector in selectors:
-        assert selector["filter"] == [{"integration": DOMAIN, "model_id": VIEW_MODEL_ID}]
+        # A list of filters is OR-ed by the picker (same shape core's lcn uses to
+        # offer several models), so every view kind has to appear as its own entry.
+        assert selector["filter"] == expected
 
 
 @pytest.mark.unit

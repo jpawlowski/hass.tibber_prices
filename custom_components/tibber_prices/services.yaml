@@ -13,6 +13,8 @@ get_price:
           filter:
             - integration: tibber_prices
               model_id: Time-Travel View
+            - integration: tibber_prices
+              model_id: Time-Travel View [headless]
     start_time:
       required: true
       example: "2025-11-01T00:00:00+01:00"
@@ -38,6 +40,8 @@ get_apexcharts_yaml:
           filter:
             - integration: tibber_prices
               model_id: Time-Travel View
+            - integration: tibber_prices
+              model_id: Time-Travel View [headless]
     day:
       required: false
       example: today
@@ -109,6 +113,8 @@ get_chartdata:
               filter:
                 - integration: tibber_prices
                   model_id: Time-Travel View
+                - integration: tibber_prices
+                  model_id: Time-Travel View [headless]
     selection:
       collapsed: true
       fields:
@@ -329,6 +335,8 @@ find_cheapest_block:
           filter:
             - integration: tibber_prices
               model_id: Time-Travel View
+            - integration: tibber_prices
+              model_id: Time-Travel View [headless]
     duration:
       required: true
       selector:
@@ -504,6 +512,8 @@ find_most_expensive_block:
           filter:
             - integration: tibber_prices
               model_id: Time-Travel View
+            - integration: tibber_prices
+              model_id: Time-Travel View [headless]
     duration:
       required: true
       selector:
@@ -679,6 +689,8 @@ find_cheapest_hours:
           filter:
             - integration: tibber_prices
               model_id: Time-Travel View
+            - integration: tibber_prices
+              model_id: Time-Travel View [headless]
     duration:
       required: true
       selector:
@@ -858,6 +870,8 @@ find_most_expensive_hours:
           filter:
             - integration: tibber_prices
               model_id: Time-Travel View
+            - integration: tibber_prices
+              model_id: Time-Travel View [headless]
     duration:
       required: true
       selector:
@@ -1037,6 +1051,8 @@ find_cheapest_schedule:
           filter:
             - integration: tibber_prices
               model_id: Time-Travel View
+            - integration: tibber_prices
+              model_id: Time-Travel View [headless]
     tasks:
       required: true
       example: '[{"name": "dishwasher", "duration": "02:00:00"}, {"name": "washing_machine", "duration": "01:30:00"}]'
@@ -1211,6 +1227,8 @@ plan_charging:
           filter:
             - integration: tibber_prices
               model_id: Time-Travel View
+            - integration: tibber_prices
+              model_id: Time-Travel View [headless]
     battery:
       collapsed: false
       fields:
