@@ -144,7 +144,7 @@
         }
       },
       "error": {
-        "no_time_offset": "At least one time offset value must be negative (historical data only).",
+        "no_time_offset": "A view with no offset would show exactly what the live device already shows. Choose how far back it should travel, or add a time offset.",
         "before_quarter_hourly": "**No quarter-hourly price data for that date.**\n\nTibber switched to quarter-hourly prices on {earliest_date}; this view would have nothing to show. Choose a smaller offset."
       },
       "abort": {

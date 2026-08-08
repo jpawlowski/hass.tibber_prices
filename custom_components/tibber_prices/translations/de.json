@@ -144,7 +144,7 @@
         }
       },
       "error": {
-        "no_time_offset": "Mindestens ein Zeitversatzwert muss negativ sein (nur historische Daten).",
+        "no_time_offset": "Eine Ansicht ohne Versatz würde genau das zeigen, was das Live-Gerät schon zeigt. Wähle, wie weit sie zurückreisen soll, oder ergänze einen Zeitversatz.",
         "before_quarter_hourly": "**Für dieses Datum gibt es keine viertelstündlichen Preisdaten.**\n\nTibber hat am {earliest_date} auf viertelstündliche Preise umgestellt; diese Ansicht hätte nichts anzuzeigen. Bitte einen kleineren Versatz wählen."
       },
       "abort": {

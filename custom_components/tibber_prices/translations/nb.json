@@ -144,7 +144,7 @@
         }
       },
       "error": {
-        "no_time_offset": "Minst én tidsforskyvningsverdi må være negativ (kun historiske data).",
+        "no_time_offset": "En visning uten forskyvning ville vist nøyaktig det samme som live-enheten allerede viser. Velg hvor langt tilbake den skal reise, eller legg til en tidsforskyvning.",
         "before_quarter_hourly": "**Ingen kvartersvise priser for den datoen.**\n\nTibber gikk over til kvartersvise priser {earliest_date}; visningen ville ikke hatt noe å vise. Velg en mindre forskyvning."
       },
       "abort": {

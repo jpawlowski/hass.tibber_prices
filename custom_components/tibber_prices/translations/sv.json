@@ -144,7 +144,7 @@
         }
       },
       "error": {
-        "no_time_offset": "Minst ett tidsförskjutningsvärde måste vara negativt (endast historisk data).",
+        "no_time_offset": "En vy utan förskjutning visar exakt det som live-enheten redan visar. Välj hur långt tillbaka den ska resa, eller lägg till en tidsförskjutning.",
         "before_quarter_hourly": "**Inga kvartspriser för det datumet.**\n\nTibber gick över till kvartspriser {earliest_date}; vyn skulle inte ha något att visa. Välj en mindre förskjutning."
       },
       "abort": {

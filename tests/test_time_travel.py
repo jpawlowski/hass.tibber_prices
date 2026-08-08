@@ -610,6 +610,72 @@ def test_flow_rejects_useless_offsets() -> None:
 
 
 @pytest.mark.unit
+@pytest.mark.parametrize(
+    ("label", "user_input", "mode"),
+    [
+        ("no duration field at all", {CONF_VIRTUAL_TIME_OFFSET_DAYS: 0}, MODE_DAYS),
+        (
+            "duration filled with zeros",
+            {CONF_VIRTUAL_TIME_OFFSET_DAYS: 0, "time_offset": {"hours": 0, "minutes": 0}},
+            MODE_DAYS,
+        ),
+        (
+            "zeros including seconds",
+            {CONF_VIRTUAL_TIME_OFFSET_DAYS: 0, "time_offset": {"hours": 0, "minutes": 0, "seconds": 0}},
+            MODE_DAYS,
+        ),
+        # Seconds are dropped - the integration works in 15-minute intervals - so a
+        # sub-minute offset leaves the clock exactly where it was.
+        ("seconds only", {CONF_VIRTUAL_TIME_OFFSET_DAYS: 0, "time_offset": {"seconds": 30}}, MODE_DAYS),
+        ("yearly with no year offset", {CONF_VIRTUAL_TIME_OFFSET_YEARS: 0}, MODE_YEARLY),
+    ],
+)
+def test_flow_rejects_every_shape_of_zero_offset(label: str, user_input: dict, mode: str) -> None:
+    """
+    Test a view that would duplicate the live device is refused however it is expressed.
+
+    Scenario: The several ways a form can come back describing no shift at all.
+    Expected: All rejected. Such a view would carry its own device, entities and
+        interval pool while showing exactly what the live device shows.
+    """
+    from custom_components.tibber_prices.config_flow_handlers.subentry_flow import (  # noqa: PLC0415
+        TibberPricesSubentryFlowHandler,
+        _normalize_offset,
+    )
+
+    handler = TibberPricesSubentryFlowHandler()
+
+    assert handler._validate(_normalize_offset(user_input, mode)) == {"base": "no_time_offset"}, label  # noqa: SLF001
+
+
+@pytest.mark.unit
+@pytest.mark.parametrize(
+    ("label", "user_input", "mode"),
+    [
+        # A same-day view shifted by hours is a real view, not a live duplicate.
+        ("today, two hours back", {CONF_VIRTUAL_TIME_OFFSET_DAYS: 0, "time_offset": {"hours": 2}}, MODE_DAYS),
+        ("today, 30 minutes back", {CONF_VIRTUAL_TIME_OFFSET_DAYS: 0, "time_offset": {"minutes": 30}}, MODE_DAYS),
+        ("a week back", {CONF_VIRTUAL_TIME_OFFSET_DAYS: -7}, MODE_DAYS),
+    ],
+)
+def test_flow_accepts_offsets_that_move_the_clock(label: str, user_input: dict, mode: str) -> None:
+    """
+    Test the zero-offset guard does not swallow legitimate small offsets.
+
+    Scenario: Offsets that shift the clock without moving the date.
+    Expected: Accepted - only a shift of exactly nothing is refused.
+    """
+    from custom_components.tibber_prices.config_flow_handlers.subentry_flow import (  # noqa: PLC0415
+        TibberPricesSubentryFlowHandler,
+        _normalize_offset,
+    )
+
+    handler = TibberPricesSubentryFlowHandler()
+
+    assert handler._validate(_normalize_offset(user_input, mode)) == {}, label  # noqa: SLF001
+
+
+@pytest.mark.unit
 def test_flow_normalizes_offset_input() -> None:
     """
     Test the subentry form input is stored as negative components.

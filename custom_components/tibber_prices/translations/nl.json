@@ -144,7 +144,7 @@
         }
       },
       "error": {
-        "no_time_offset": "Minimaal één tijdverschuivingswaarde moet negatief zijn (alleen historische gegevens).",
+        "no_time_offset": "Een weergave zonder verschuiving toont precies wat het live-apparaat al toont. Kies hoe ver terug hij moet reizen, of voeg een tijdverschuiving toe.",
         "before_quarter_hourly": "**Geen kwartierprijzen voor die datum.**\n\nTibber schakelde op {earliest_date} over op kwartierprijzen; deze weergave zou niets kunnen tonen. Kies een kleinere verschuiving."
       },
       "abort": {
