@@ -1399,6 +1399,18 @@
     },
     "deadline_outside_search_range": {
       "message": "De afgeleide deadline moet binnen het geselecteerde zoekbereik liggen."
+    },
+    "invalid_view_device": {
+      "message": "Onbekend apparaat. Kies een Tibber Prices-apparaat - een tijdreisweergave, of het huis zelf voor live gegevens."
+    },
+    "view_entry_mismatch": {
+      "message": "De gekozen weergave hoort bij een ander huis dan de opgegeven item-ID. Geef er slechts één op."
+    },
+    "view_not_loaded": {
+      "message": "Die tijdreisweergave is momenteel niet ingesteld. Mogelijk is hij verwijderd, of de integratie is nog aan het laden."
+    },
+    "headless_view_has_no_entities": {
+      "message": "Een headless weergave heeft geen prijs-entiteiten waarnaar een grafiekkaart kan verwijzen. Gebruik de actie get_chartdata, die de gegevens van de weergave direct teruggeeft."
     }
   },
   "services": {
@@ -1409,6 +1421,10 @@
         "entry_id": {
           "name": "Item-ID",
           "description": "De configuratie entry ID voor de Tibber integratie."
+        },
+        "view": {
+          "name": "Tijdreisweergave",
+          "description": "Antwoord voor een tijdreisweergave van dit huis in plaats van live, met de eigen klok en prijsgegevens van de weergave. Kies het apparaat van de weergave; het apparaat van het huis zelf betekent live."
         },
         "start_time": {
           "name": "Starttijd",
@@ -1427,6 +1443,10 @@
         "entry_id": {
           "name": "Invoer-ID",
           "description": "Het configuratie-invoer-ID voor de Tibber-integratie."
+        },
+        "view": {
+          "name": "Tijdreisweergave",
+          "description": "Antwoord voor een tijdreisweergave van dit huis in plaats van live, met de eigen klok en prijsgegevens van de weergave. Kies het apparaat van de weergave; het apparaat van het huis zelf betekent live."
         },
         "day": {
           "name": "Dag",
@@ -1491,6 +1511,10 @@
         "entry_id": {
           "name": "Item-ID",
           "description": "De config-item-ID voor de Tibber-integratie."
+        },
+        "view": {
+          "name": "Tijdreisweergave",
+          "description": "Antwoord voor een tijdreisweergave van dit huis in plaats van live, met de eigen klok en prijsgegevens van de weergave. Kies het apparaat van de weergave; het apparaat van het huis zelf betekent live."
         },
         "day": {
           "name": "Dag",
@@ -1650,6 +1674,10 @@
           "name": "Item-ID",
           "description": "De config-item-ID voor de Tibber-integratie."
         },
+        "view": {
+          "name": "Tijdreisweergave",
+          "description": "Antwoord voor een tijdreisweergave van dit huis in plaats van live, met de eigen klok en prijsgegevens van de weergave. Kies het apparaat van de weergave; het apparaat van het huis zelf betekent live."
+        },
         "duration": {
           "name": "Duur",
           "description": "Lengte van het gewenste aaneengesloten venster. Automatisch afgerond naar het volgende kwartier. Maximum: 12 uur."
@@ -1770,6 +1798,10 @@
           "name": "Item-ID",
           "description": "De config-item-ID voor de Tibber-integratie."
         },
+        "view": {
+          "name": "Tijdreisweergave",
+          "description": "Antwoord voor een tijdreisweergave van dit huis in plaats van live, met de eigen klok en prijsgegevens van de weergave. Kies het apparaat van de weergave; het apparaat van het huis zelf betekent live."
+        },
         "duration": {
           "name": "Duur",
           "description": "Lengte van het gewenste aaneengesloten venster. Automatisch afgerond naar het volgende kwartier. Maximum: 12 uur."
@@ -1889,6 +1921,10 @@
         "entry_id": {
           "name": "Item-ID",
           "description": "De config-item-ID voor de Tibber-integratie."
+        },
+        "view": {
+          "name": "Tijdreisweergave",
+          "description": "Antwoord voor een tijdreisweergave van dit huis in plaats van live, met de eigen klok en prijsgegevens van de weergave. Kies het apparaat van de weergave; het apparaat van het huis zelf betekent live."
         },
         "duration": {
           "name": "Duur",
@@ -2014,6 +2050,10 @@
           "name": "Item-ID",
           "description": "De config-item-ID voor de Tibber-integratie."
         },
+        "view": {
+          "name": "Tijdreisweergave",
+          "description": "Antwoord voor een tijdreisweergave van dit huis in plaats van live, met de eigen klok en prijsgegevens van de weergave. Kies het apparaat van de weergave; het apparaat van het huis zelf betekent live."
+        },
         "duration": {
           "name": "Duur",
           "description": "Te vinden dure totale tijd. Automatisch afgerond naar het volgende kwartier. Maximum: 24 uur."
@@ -2133,6 +2173,10 @@
         "entry_id": {
           "name": "Item-ID",
           "description": "De config-item-ID voor de Tibber-integratie."
+        },
+        "view": {
+          "name": "Tijdreisweergave",
+          "description": "Antwoord voor een tijdreisweergave van dit huis in plaats van live, met de eigen klok en prijsgegevens van de weergave. Kies het apparaat van de weergave; het apparaat van het huis zelf betekent live."
         },
         "tasks": {
           "name": "Taken",
@@ -2265,6 +2309,10 @@
         "entry_id": {
           "name": "Item-ID",
           "description": "De configuratie-item-ID voor de Tibber-integratie."
+        },
+        "view": {
+          "name": "Tijdreisweergave",
+          "description": "Antwoord voor een tijdreisweergave van dit huis in plaats van live, met de eigen klok en prijsgegevens van de weergave. Kies het apparaat van de weergave; het apparaat van het huis zelf betekent live."
         },
         "max_charge_power_w": {
           "name": "Maximaal laadvermogen",

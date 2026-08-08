@@ -25,7 +25,7 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.util import dt as dt_util
 
 from .entity_resolver import or_entity_ref, resolve_entity_references
-from .helpers import async_fetch_service_intervals, get_entry_and_data
+from .helpers import async_fetch_service_intervals, resolve_service_target
 
 if TYPE_CHECKING:
     from homeassistant.core import HomeAssistant, ServiceCall, ServiceResponse
@@ -42,6 +42,7 @@ _PRICE_ENTITY_PARAMS: dict[str, type] = {
 GET_PRICE_SERVICE_SCHEMA = vol.Schema(
     {
         vol.Optional("entry_id", default=""): cv.string,
+        vol.Optional("view", default=""): cv.string,
         vol.Required("start_time"): or_entity_ref(cv.datetime),
         vol.Required("end_time"): or_entity_ref(cv.datetime),
     }
@@ -80,11 +81,14 @@ async def handle_get_price(call: ServiceCall) -> ServiceResponse:
     data, resolved_refs = resolve_entity_references(hass, call.data, _PRICE_ENTITY_PARAMS)
 
     entry_id: str = data.get("entry_id", "")
+    view_device_id: str = data.get("view", "")
     start_time: datetime = data["start_time"]
     end_time: datetime = data["end_time"]
 
     # Validate and get entry data
-    entry, coordinator, _data = get_entry_and_data(hass, entry_id)
+    target = resolve_service_target(hass, entry_id, view_device_id)
+    entry = target.entry
+    coordinator = target.coordinator
 
     # Get home_id from entry
     home_id = entry.data.get("home_id")
@@ -151,7 +155,7 @@ async def handle_get_price(call: ServiceCall) -> ServiceResponse:
     )
 
     # Get interval pool from entry runtime_data (one pool per config entry)
-    pool = entry.runtime_data.interval_pool
+    pool = target.interval_pool
 
     # Resilient fetch: never impairs sensors, returns empty result on API failure
     # instead of raising. Single-home architecture: pool knows its home_id.

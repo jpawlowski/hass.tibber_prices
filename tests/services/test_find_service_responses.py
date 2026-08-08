@@ -30,6 +30,7 @@ from custom_components.tibber_prices.services.find_cheapest_schedule import (
     _compute_task_price_comparison,
     _determine_schedule_reason,
 )
+from custom_components.tibber_prices.services.helpers import ServiceTarget
 
 
 def _make_intervals(prices: list[float], start: datetime | None = None) -> list[dict]:
@@ -184,8 +185,8 @@ class _FakePool:
         return self._intervals, False
 
 
-def _build_fake_entry_and_coordinator(intervals: list[dict]) -> tuple[SimpleNamespace, SimpleNamespace, dict]:
-    """Build a minimal entry/coordinator/data tuple used by service handlers."""
+def _build_fake_entry_and_coordinator(intervals: list[dict]) -> ServiceTarget:
+    """Build a minimal ServiceTarget (live, real clock) used by service handlers."""
     pool = _FakePool(intervals)
     entry = SimpleNamespace(
         data={"home_id": "home_1", "currency": "EUR"},
@@ -194,18 +195,20 @@ def _build_fake_entry_and_coordinator(intervals: list[dict]) -> tuple[SimpleName
     coordinator = SimpleNamespace(
         api=object(),
         _cached_user_data={"viewer": {"homes": [{"id": "home_1", "timeZone": "UTC"}]}},
+        time=SimpleNamespace(now=lambda: datetime(2026, 1, 1, 0, 0, tzinfo=UTC)),
+        headless=False,
     )
     data = {"priceInfo": intervals}
-    return entry, coordinator, data
+    return ServiceTarget(entry=entry, subentry=None, coordinator=coordinator, interval_pool=pool, data=data)
 
 
 @pytest.mark.asyncio
 async def test_block_handler_returns_level_filter_reason(monkeypatch: pytest.MonkeyPatch) -> None:
     """Block handler should return reason when level filter eliminates all intervals."""
     intervals = _make_intervals([10.0, 11.0, 12.0, 13.0])
-    fake_tuple = _build_fake_entry_and_coordinator(intervals)
+    fake_target = _build_fake_entry_and_coordinator(intervals)
 
-    monkeypatch.setattr(block_module, "get_entry_and_data", lambda _hass, _entry_id: fake_tuple)
+    monkeypatch.setattr(block_module, "resolve_service_target", lambda _hass, _entry_id, _view="": fake_target)
     monkeypatch.setattr(block_module, "resolve_home_timezone", lambda _coord, _home_id: "UTC")
     monkeypatch.setattr(
         block_module,
@@ -235,9 +238,9 @@ async def test_block_handler_returns_level_filter_reason(monkeypatch: pytest.Mon
 async def test_hours_handler_returns_insufficient_intervals_reason(monkeypatch: pytest.MonkeyPatch) -> None:
     """Hours handler should return insufficient_intervals_after_filter when pool is too short."""
     intervals = _make_intervals([10.0, 11.0, 12.0])  # 3 intervals only
-    fake_tuple = _build_fake_entry_and_coordinator(intervals)
+    fake_target = _build_fake_entry_and_coordinator(intervals)
 
-    monkeypatch.setattr(hours_module, "get_entry_and_data", lambda _hass, _entry_id: fake_tuple)
+    monkeypatch.setattr(hours_module, "resolve_service_target", lambda _hass, _entry_id, _view="": fake_target)
     monkeypatch.setattr(hours_module, "resolve_home_timezone", lambda _coord, _home_id: "UTC")
     monkeypatch.setattr(
         hours_module,
@@ -266,9 +269,9 @@ async def test_hours_handler_returns_insufficient_intervals_reason(monkeypatch: 
 async def test_schedule_handler_adds_per_task_comparison_details(monkeypatch: pytest.MonkeyPatch) -> None:
     """Schedule handler should include per-task comparison details when requested."""
     intervals = _make_intervals([5.0, 6.0, 50.0, 60.0])
-    fake_tuple = _build_fake_entry_and_coordinator(intervals)
+    fake_target = _build_fake_entry_and_coordinator(intervals)
 
-    monkeypatch.setattr(schedule_module, "get_entry_and_data", lambda _hass, _entry_id: fake_tuple)
+    monkeypatch.setattr(schedule_module, "resolve_service_target", lambda _hass, _entry_id, _view="": fake_target)
     monkeypatch.setattr(schedule_module, "resolve_home_timezone", lambda _coord, _home_id: "UTC")
     monkeypatch.setattr(
         schedule_module,
@@ -304,11 +307,11 @@ async def test_schedule_handler_adds_per_task_comparison_details(monkeypatch: py
 async def test_block_handler_preserves_service_search_data(monkeypatch: pytest.MonkeyPatch) -> None:
     """Block handler must pass resolved call data (not coordinator data) into search helpers."""
     intervals = _make_intervals([10.0, 11.0, 12.0, 13.0])
-    fake_tuple = _build_fake_entry_and_coordinator(intervals)
+    fake_target = _build_fake_entry_and_coordinator(intervals)
     deadline = datetime(2026, 1, 1, 8, 0, tzinfo=UTC)
     fixed_start = datetime(2026, 1, 1, 0, 0, tzinfo=UTC)
 
-    monkeypatch.setattr(block_module, "get_entry_and_data", lambda _hass, _entry_id: fake_tuple)
+    monkeypatch.setattr(block_module, "resolve_service_target", lambda _hass, _entry_id, _view="": fake_target)
     monkeypatch.setattr(block_module, "resolve_home_timezone", lambda _coord, _home_id: "UTC")
 
     def _validate_search_params(call_data: dict[str, Any]) -> None:
@@ -367,9 +370,9 @@ async def test_block_handler_power_profile_blocks_duration_relaxation(monkeypatc
     relaxation exhausts instead.
     """
     intervals = _make_intervals([10.0, 10.0, 10.0])  # only 3 available, need 4
-    fake_tuple = _build_fake_entry_and_coordinator(intervals)
+    fake_target = _build_fake_entry_and_coordinator(intervals)
 
-    monkeypatch.setattr(block_module, "get_entry_and_data", lambda _hass, _entry_id: fake_tuple)
+    monkeypatch.setattr(block_module, "resolve_service_target", lambda _hass, _entry_id, _view="": fake_target)
     monkeypatch.setattr(block_module, "resolve_home_timezone", lambda _coord, _home_id: "UTC")
     monkeypatch.setattr(
         block_module,
@@ -454,19 +457,20 @@ async def test_block_handler_must_finish_by_end_to_end_regression(monkeypatch: p
         options={},
         runtime_data=SimpleNamespace(interval_pool=pool),
     )
+    # Fix "now" so the default search_start (no search_start_time given) is deterministic.
+    fixed_now = datetime(2026, 6, 28, 22, 0, tzinfo=UTC)
     coordinator = SimpleNamespace(
         api=object(),
         _cached_user_data={"viewer": {"homes": [{"id": "home_1", "timeZone": "UTC"}]}},
+        time=SimpleNamespace(now=lambda: fixed_now),
+        headless=False,
     )
     coordinator_data = {"priceInfo": intervals}
 
-    monkeypatch.setattr(
-        block_module, "get_entry_and_data", lambda _hass, _entry_id: (entry, coordinator, coordinator_data)
+    target = ServiceTarget(
+        entry=entry, subentry=None, coordinator=coordinator, interval_pool=pool, data=coordinator_data
     )
-
-    # Fix "now" so the default search_start (no search_start_time given) is deterministic.
-    fixed_now = datetime(2026, 6, 28, 22, 0, tzinfo=UTC)
-    monkeypatch.setattr(block_module.dt_util, "now", lambda *_a, **_k: fixed_now)
+    monkeypatch.setattr(block_module, "resolve_service_target", lambda _hass, _entry_id, _view="": target)
 
     # Matches what voluptuous' cv.datetime produces for the naive string
     # "2026-06-29 12:00:00" reported in GH #168 (no tzinfo attached yet).
@@ -500,11 +504,11 @@ async def test_block_handler_must_finish_by_end_to_end_regression(monkeypatch: p
 async def test_hours_handler_preserves_service_search_data(monkeypatch: pytest.MonkeyPatch) -> None:
     """Hours handler must pass resolved call data (not coordinator data) into search helpers."""
     intervals = _make_intervals([10.0, 11.0, 12.0, 13.0])
-    fake_tuple = _build_fake_entry_and_coordinator(intervals)
+    fake_target = _build_fake_entry_and_coordinator(intervals)
     deadline = datetime(2026, 1, 1, 8, 0, tzinfo=UTC)
     fixed_start = datetime(2026, 1, 1, 0, 0, tzinfo=UTC)
 
-    monkeypatch.setattr(hours_module, "get_entry_and_data", lambda _hass, _entry_id: fake_tuple)
+    monkeypatch.setattr(hours_module, "resolve_service_target", lambda _hass, _entry_id, _view="": fake_target)
     monkeypatch.setattr(hours_module, "resolve_home_timezone", lambda _coord, _home_id: "UTC")
 
     def _validate_search_params(call_data: dict[str, Any]) -> None:

@@ -17,7 +17,6 @@ from custom_components.tibber_prices.utils.price_window import (
 )
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import config_validation as cv
-from homeassistant.util import dt as dt_util
 
 from .charging import (
     apply_segment_constraints,
@@ -45,9 +44,9 @@ from .helpers import (
     calculate_search_range_avg,
     check_min_distance_from_avg,
     filter_intervals_by_price_level,
-    get_entry_and_data,
     resolve_home_timezone,
     resolve_search_range,
+    resolve_service_target,
     validate_price_level_range,
     validate_search_params,
 )
@@ -100,6 +99,7 @@ _CHARGING_ENTITY_PARAMS: dict[str, type] = {
 PLAN_CHARGING_SERVICE_SCHEMA = vol.Schema(
     {
         vol.Optional("entry_id", default=""): cv.string,
+        vol.Optional("view", default=""): cv.string,
         vol.Optional("battery_capacity_kwh"): or_entity_ref(
             vol.All(vol.Coerce(float), vol.Range(min=0.1, max=1000.0)),
         ),
@@ -647,6 +647,7 @@ async def handle_plan_charging(call: ServiceCall) -> ServiceResponse:
     must_reach_soc_kwh = float(must_reach_soc_value) if must_reach_soc_value is not None else None
 
     entry_id = data.get("entry_id", "")
+    view_device_id = data.get("view", "")
     max_charge_power_w = int(data["max_charge_power_w"])
     min_charge_power_w = int(data["min_charge_power_w"]) if "min_charge_power_w" in data else None
     charge_power_steps_w = [int(step) for step in data.get("charge_power_steps_w", [])] or None
@@ -668,7 +669,7 @@ async def handle_plan_charging(call: ServiceCall) -> ServiceResponse:
     max_cycles_per_day = int(data["max_cycles_per_day"]) if "max_cycles_per_day" in data else None
 
     if current_soc_kwh >= target_soc_kwh - 1e-6:
-        entry, _coordinator, _coordinator_data = get_entry_and_data(hass, entry_id)
+        entry = resolve_service_target(hass, entry_id, view_device_id).entry
         currency = entry.data.get("currency", "EUR")
         price_unit = f"{currency}/kWh" if use_base_unit else get_display_unit_string(entry, currency)
         response: dict[str, Any] = {
@@ -695,7 +696,10 @@ async def handle_plan_charging(call: ServiceCall) -> ServiceResponse:
 
     requested_energy_needed_grid_kwh = calculate_energy_needed(current_soc_kwh, target_soc_kwh, charging_efficiency)
 
-    entry, coordinator, coordinator_data = get_entry_and_data(hass, entry_id)
+    target = resolve_service_target(hass, entry_id, view_device_id)
+    entry = target.entry
+    coordinator = target.coordinator
+    coordinator_data = target.data
     rating_lookup = build_rating_lookup(coordinator_data)
     home_id = entry.data.get("home_id")
     if not home_id:
@@ -711,7 +715,7 @@ async def handle_plan_charging(call: ServiceCall) -> ServiceResponse:
 
     home_tz: ZoneInfo = ZoneInfo(home_timezone)
     effective_data, must_finish_by_dt = apply_must_finish_by(data, home_tz)
-    now = dt_util.now().astimezone(home_tz)
+    now = target.now(home_tz)
     search_start, search_end = resolve_search_range(effective_data, now, home_tz)
 
     currency = entry.data.get("currency", "EUR")
@@ -754,7 +758,7 @@ async def handle_plan_charging(call: ServiceCall) -> ServiceResponse:
 
     api_client = coordinator.api
     user_data = coordinator._cached_user_data  # noqa: SLF001
-    pool = entry.runtime_data.interval_pool
+    pool = target.interval_pool
     price_info, fetch_ok = await async_fetch_service_intervals(
         pool,
         api_client=api_client,

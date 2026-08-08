@@ -28,6 +28,14 @@ The ID looks like a long alphanumeric string, for example `01JKPC7AB3EF4GH5IJ6KL
 If you have configured more than one Tibber home, each home has its own config entry ID. Repeat the steps above for each integration card to get the individual IDs.
 :::
 
+## Asking a Time-Travel View Instead
+
+Every price-reading action also accepts an optional **`view`** parameter. Pass the device of a [time-travel view](time-travel.md) and the action answers as that view — on the view's clock, from the view's cached prices — instead of live. It renders as a device picker in the UI.
+
+This is what lets you rehearse an automation against a day whose prices you already know: point the same action at a `-7 days` view and `next_24h` means last week's next 24 hours.
+
+Omitting `view`, or selecting the home's own device, gives live data. See [Using a view from an action](time-travel.md#using-a-view-from-an-action) for details.
+
 ## All Actions at a Glance
 
 ### Scheduling Actions

@@ -55,7 +55,7 @@ from homeassistant.exceptions import ServiceValidationError
 
 from .entity_resolver import or_entity_ref, resolve_entity_references
 from .formatters import aggregate_to_hourly, get_period_data, normalize_level_filter, normalize_rating_level_filter
-from .helpers import get_entry_and_data, has_tomorrow_data
+from .helpers import has_tomorrow_data, resolve_service_target
 
 if TYPE_CHECKING:
     from homeassistant.core import ServiceCall
@@ -266,6 +266,7 @@ def _calculate_metadata(
 CHARTDATA_SERVICE_NAME: Final = "get_chartdata"
 ATTR_DAY: Final = "day"
 ATTR_ENTRY_ID: Final = "entry_id"
+ATTR_VIEW: Final = "view"
 
 # Parameter types for entity reference resolution
 _CHARTDATA_ENTITY_PARAMS: dict[str, type] = {
@@ -276,6 +277,7 @@ _CHARTDATA_ENTITY_PARAMS: dict[str, type] = {
 CHARTDATA_SERVICE_SCHEMA: Final = vol.Schema(
     {
         vol.Optional(ATTR_ENTRY_ID, default=""): str,
+        vol.Optional("view", default=""): str,
         vol.Optional(ATTR_DAY): vol.All(vol.Coerce(list), [vol.In(["yesterday", "today", "tomorrow"])]),
         vol.Optional("resolution", default="interval"): vol.In(["interval", "hourly"]),
         vol.Optional("output_format", default="array_of_objects"): vol.In(["array_of_objects", "array_of_arrays"]),
@@ -357,9 +359,11 @@ async def handle_chartdata(call: ServiceCall) -> dict[str, Any]:  # noqa: C901
     data, resolved_refs = resolve_entity_references(hass, call.data, _CHARTDATA_ENTITY_PARAMS)
 
     entry_id: str = data.get(ATTR_ENTRY_ID, "")
+    view_device_id: str = data.get(ATTR_VIEW, "")
 
     # Get coordinator to check data availability
-    _, coordinator, _ = get_entry_and_data(hass, entry_id)
+    target = resolve_service_target(hass, entry_id, view_device_id)
+    coordinator = target.coordinator
 
     days_raw = data.get(ATTR_DAY)
     # If no day specified, use rolling 2-day window:

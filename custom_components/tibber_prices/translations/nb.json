@@ -1399,6 +1399,18 @@
     },
     "deadline_outside_search_range": {
       "message": "Den oppløste fristen må være innenfor det valgte søkeområdet."
+    },
+    "invalid_view_device": {
+      "message": "Ukjent enhet. Velg en Tibber Prices-enhet - en tidsreisevisning, eller hjemmet selv for direktedata."
+    },
+    "view_entry_mismatch": {
+      "message": "Den valgte visningen tilhører et annet hjem enn den oppgitte oppførings-ID-en. Oppgi bare én av dem."
+    },
+    "view_not_loaded": {
+      "message": "Denne tidsreisevisningen er ikke satt opp for øyeblikket. Den kan ha blitt fjernet, eller integrasjonen laster fortsatt."
+    },
+    "headless_view_has_no_entities": {
+      "message": "En hodeløs visning har ingen prisentiteter som et diagramkort kan referere til. Bruk handlingen get_chartdata, som returnerer visningens data direkte."
     }
   },
   "services": {
@@ -1409,6 +1421,10 @@
         "entry_id": {
           "name": "Oppførings-ID",
           "description": "Konfigurasjonsoppførings-IDen for Tibber-integrasjonen."
+        },
+        "view": {
+          "name": "Tidsreisevisning",
+          "description": "Svar for en tidsreisevisning av dette hjemmet i stedet for direkte, med visningens egen klokke og prisdata. Velg visningens enhet; hjemmets egen enhet betyr direkte."
         },
         "start_time": {
           "name": "Starttid",
@@ -1427,6 +1443,10 @@
         "entry_id": {
           "name": "Oppførings-ID",
           "description": "Konfigureringsoppførings-IDen for Tibber-integrasjonen."
+        },
+        "view": {
+          "name": "Tidsreisevisning",
+          "description": "Svar for en tidsreisevisning av dette hjemmet i stedet for direkte, med visningens egen klokke og prisdata. Velg visningens enhet; hjemmets egen enhet betyr direkte."
         },
         "day": {
           "name": "Dag",
@@ -1491,6 +1511,10 @@
         "entry_id": {
           "name": "Oppførings-ID",
           "description": "Konfig-oppførings-ID for Tibber-integrasjonen."
+        },
+        "view": {
+          "name": "Tidsreisevisning",
+          "description": "Svar for en tidsreisevisning av dette hjemmet i stedet for direkte, med visningens egen klokke og prisdata. Velg visningens enhet; hjemmets egen enhet betyr direkte."
         },
         "day": {
           "name": "Dag",
@@ -1650,6 +1674,10 @@
           "name": "Oppførings-ID",
           "description": "Konfig-oppførings-ID for Tibber-integrasjonen."
         },
+        "view": {
+          "name": "Tidsreisevisning",
+          "description": "Svar for en tidsreisevisning av dette hjemmet i stedet for direkte, med visningens egen klokke og prisdata. Velg visningens enhet; hjemmets egen enhet betyr direkte."
+        },
         "duration": {
           "name": "Varighet",
           "description": "Lengden på det ønskede sammenhengende vinduet. Rundes automatisk opp til nærmeste kvarter. Maksimum: 12 timer."
@@ -1770,6 +1798,10 @@
           "name": "Oppførings-ID",
           "description": "Konfig-oppførings-ID for Tibber-integrasjonen."
         },
+        "view": {
+          "name": "Tidsreisevisning",
+          "description": "Svar for en tidsreisevisning av dette hjemmet i stedet for direkte, med visningens egen klokke og prisdata. Velg visningens enhet; hjemmets egen enhet betyr direkte."
+        },
         "duration": {
           "name": "Varighet",
           "description": "Lengden på det ønskede sammenhengende vinduet. Rundes automatisk opp til nærmeste kvarter. Maksimum: 12 timer."
@@ -1889,6 +1921,10 @@
         "entry_id": {
           "name": "Oppførings-ID",
           "description": "Konfig-oppførings-ID for Tibber-integrasjonen."
+        },
+        "view": {
+          "name": "Tidsreisevisning",
+          "description": "Svar for en tidsreisevisning av dette hjemmet i stedet for direkte, med visningens egen klokke og prisdata. Velg visningens enhet; hjemmets egen enhet betyr direkte."
         },
         "duration": {
           "name": "Varighet",
@@ -2014,6 +2050,10 @@
           "name": "Oppførings-ID",
           "description": "Konfig-oppførings-ID for Tibber-integrasjonen."
         },
+        "view": {
+          "name": "Tidsreisevisning",
+          "description": "Svar for en tidsreisevisning av dette hjemmet i stedet for direkte, med visningens egen klokke og prisdata. Velg visningens enhet; hjemmets egen enhet betyr direkte."
+        },
         "duration": {
           "name": "Varighet",
           "description": "Dyr total tid som skal finnes. Rundes automatisk opp til nærmeste kvarter. Maksimum: 24 timer."
@@ -2133,6 +2173,10 @@
         "entry_id": {
           "name": "Oppførings-ID",
           "description": "Konfig-oppførings-ID for Tibber-integrasjonen."
+        },
+        "view": {
+          "name": "Tidsreisevisning",
+          "description": "Svar for en tidsreisevisning av dette hjemmet i stedet for direkte, med visningens egen klokke og prisdata. Velg visningens enhet; hjemmets egen enhet betyr direkte."
         },
         "tasks": {
           "name": "Oppgaver",
@@ -2265,6 +2309,10 @@
         "entry_id": {
           "name": "Oppførings-ID",
           "description": "Konfigurasjonsoppførings-ID-en for Tibber-integrasjonen."
+        },
+        "view": {
+          "name": "Tidsreisevisning",
+          "description": "Svar for en tidsreisevisning av dette hjemmet i stedet for direkte, med visningens egen klokke og prisdata. Velg visningens enhet; hjemmets egen enhet betyr direkte."
         },
         "max_charge_power_w": {
           "name": "Maksimal ladeeffekt",

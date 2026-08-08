@@ -12,6 +12,7 @@ if TYPE_CHECKING:
 import pytest
 
 from custom_components.tibber_prices.services import plan_charging as charging_module
+from custom_components.tibber_prices.services.helpers import ServiceTarget
 from custom_components.tibber_prices.services.plan_charging import handle_plan_charging
 from homeassistant.exceptions import ServiceValidationError
 
@@ -43,8 +44,8 @@ def _build_fake_entry_and_coordinator(
     intervals: list[dict[str, Any]],
     *,
     price_periods: dict[str, Any] | None = None,
-) -> tuple[SimpleNamespace, SimpleNamespace, dict]:
-    """Build a minimal entry/coordinator/data tuple used by service handlers."""
+) -> ServiceTarget:
+    """Build a minimal ServiceTarget (live, real clock) used by service handlers."""
     pool = _FakePool(intervals)
     entry = SimpleNamespace(
         data={"home_id": "home_1", "currency": "EUR"},
@@ -53,18 +54,20 @@ def _build_fake_entry_and_coordinator(
     coordinator = SimpleNamespace(
         api=object(),
         _cached_user_data={"viewer": {"homes": [{"id": "home_1", "timeZone": "UTC"}]}},
+        time=SimpleNamespace(now=lambda: datetime(2026, 1, 1, 0, 0, tzinfo=UTC)),
+        headless=False,
     )
     data = {"priceInfo": intervals, "pricePeriods": price_periods or {}}
-    return entry, coordinator, data
+    return ServiceTarget(entry=entry, subentry=None, coordinator=coordinator, interval_pool=pool, data=data)
 
 
 @pytest.mark.asyncio
 async def test_plan_charging_returns_schedule_with_soc_progression(monkeypatch: pytest.MonkeyPatch) -> None:
     """Service should calculate duration and return cheapest intervals with SoC progression."""
     intervals = _make_intervals([0.50, 0.10, 0.11, 0.60, 0.12])
-    fake_tuple = _build_fake_entry_and_coordinator(intervals)
+    fake_target = _build_fake_entry_and_coordinator(intervals)
 
-    monkeypatch.setattr(charging_module, "get_entry_and_data", lambda _hass, _entry_id: fake_tuple)
+    monkeypatch.setattr(charging_module, "resolve_service_target", lambda _hass, _entry_id, _view="": fake_target)
     monkeypatch.setattr(charging_module, "resolve_home_timezone", lambda _coord, _home_id: "UTC")
     monkeypatch.setattr(
         charging_module,
@@ -76,7 +79,6 @@ async def test_plan_charging_returns_schedule_with_soc_progression(monkeypatch: 
     )
     monkeypatch.setattr(charging_module, "get_display_unit_factor", lambda _entry: 1)
     monkeypatch.setattr(charging_module, "get_display_unit_string", lambda _entry, _currency: "EUR/kWh")
-    monkeypatch.setattr(charging_module.dt_util, "now", lambda: datetime(2026, 1, 1, 0, 0, tzinfo=UTC))
 
     call = SimpleNamespace(
         hass=object(),
@@ -111,9 +113,9 @@ async def test_plan_charging_returns_schedule_with_soc_progression(monkeypatch: 
 async def test_plan_charging_returns_already_at_target(monkeypatch: pytest.MonkeyPatch) -> None:
     """Service should return a stable reason when no charging is needed."""
     intervals = _make_intervals([0.10, 0.12, 0.14])
-    fake_tuple = _build_fake_entry_and_coordinator(intervals)
+    fake_target = _build_fake_entry_and_coordinator(intervals)
 
-    monkeypatch.setattr(charging_module, "get_entry_and_data", lambda _hass, _entry_id: fake_tuple)
+    monkeypatch.setattr(charging_module, "resolve_service_target", lambda _hass, _entry_id, _view="": fake_target)
     monkeypatch.setattr(charging_module, "get_display_unit_string", lambda _entry, _currency: "EUR/kWh")
 
     call = SimpleNamespace(
@@ -164,9 +166,9 @@ async def test_plan_charging_can_meet_deadline_before_peak_period(monkeypatch: p
             ]
         }
     }
-    fake_tuple = _build_fake_entry_and_coordinator(intervals, price_periods=price_periods)
+    fake_target = _build_fake_entry_and_coordinator(intervals, price_periods=price_periods)
 
-    monkeypatch.setattr(charging_module, "get_entry_and_data", lambda _hass, _entry_id: fake_tuple)
+    monkeypatch.setattr(charging_module, "resolve_service_target", lambda _hass, _entry_id, _view="": fake_target)
     monkeypatch.setattr(charging_module, "resolve_home_timezone", lambda _coord, _home_id: "UTC")
     monkeypatch.setattr(
         charging_module,
@@ -178,7 +180,6 @@ async def test_plan_charging_can_meet_deadline_before_peak_period(monkeypatch: p
     )
     monkeypatch.setattr(charging_module, "get_display_unit_factor", lambda _entry: 1)
     monkeypatch.setattr(charging_module, "get_display_unit_string", lambda _entry, _currency: "EUR/kWh")
-    monkeypatch.setattr(charging_module.dt_util, "now", lambda: datetime(2026, 1, 1, 0, 0, tzinfo=UTC))
 
     call = SimpleNamespace(
         hass=object(),
@@ -212,9 +213,9 @@ async def test_plan_charging_max_cycles_does_not_break_deadline(monkeypatch: pyt
     silently turning ``deadline_met`` false even though the overall target was reached.
     """
     intervals = _make_intervals([0.80, 0.95, 0.95, 0.05])
-    fake_tuple = _build_fake_entry_and_coordinator(intervals)
+    fake_target = _build_fake_entry_and_coordinator(intervals)
 
-    monkeypatch.setattr(charging_module, "get_entry_and_data", lambda _hass, _entry_id: fake_tuple)
+    monkeypatch.setattr(charging_module, "resolve_service_target", lambda _hass, _entry_id, _view="": fake_target)
     monkeypatch.setattr(charging_module, "resolve_home_timezone", lambda _coord, _home_id: "UTC")
     monkeypatch.setattr(
         charging_module,
@@ -226,7 +227,6 @@ async def test_plan_charging_max_cycles_does_not_break_deadline(monkeypatch: pyt
     )
     monkeypatch.setattr(charging_module, "get_display_unit_factor", lambda _entry: 1)
     monkeypatch.setattr(charging_module, "get_display_unit_string", lambda _entry, _currency: "EUR/kWh")
-    monkeypatch.setattr(charging_module.dt_util, "now", lambda: datetime(2026, 1, 1, 0, 0, tzinfo=UTC))
 
     call = SimpleNamespace(
         hass=object(),
@@ -261,9 +261,9 @@ async def test_plan_charging_max_cycles_does_not_break_deadline(monkeypatch: pyt
 async def test_plan_charging_can_filter_by_profitability(monkeypatch: pytest.MonkeyPatch) -> None:
     """Economic filtering should keep only profitable intervals when reserve_for_discharge is enabled."""
     intervals = _make_intervals([0.05, 0.08, 0.12, 0.15])
-    fake_tuple = _build_fake_entry_and_coordinator(intervals)
+    fake_target = _build_fake_entry_and_coordinator(intervals)
 
-    monkeypatch.setattr(charging_module, "get_entry_and_data", lambda _hass, _entry_id: fake_tuple)
+    monkeypatch.setattr(charging_module, "resolve_service_target", lambda _hass, _entry_id, _view="": fake_target)
     monkeypatch.setattr(charging_module, "resolve_home_timezone", lambda _coord, _home_id: "UTC")
     monkeypatch.setattr(
         charging_module,
@@ -304,9 +304,9 @@ async def test_plan_charging_can_filter_by_profitability(monkeypatch: pytest.Mon
 async def test_plan_charging_respects_min_charge_duration(monkeypatch: pytest.MonkeyPatch) -> None:
     """A single cheap interval should be extended to satisfy minimum charge duration."""
     intervals = _make_intervals([0.50, 0.10, 0.20, 0.70])
-    fake_tuple = _build_fake_entry_and_coordinator(intervals)
+    fake_target = _build_fake_entry_and_coordinator(intervals)
 
-    monkeypatch.setattr(charging_module, "get_entry_and_data", lambda _hass, _entry_id: fake_tuple)
+    monkeypatch.setattr(charging_module, "resolve_service_target", lambda _hass, _entry_id, _view="": fake_target)
     monkeypatch.setattr(charging_module, "resolve_home_timezone", lambda _coord, _home_id: "UTC")
     monkeypatch.setattr(
         charging_module,
@@ -348,9 +348,9 @@ async def test_plan_charging_respects_min_charge_duration(monkeypatch: pytest.Mo
 async def test_plan_charging_respects_max_cycles_per_day(monkeypatch: pytest.MonkeyPatch) -> None:
     """Cycle merging must not overcharge beyond the requested target energy."""
     intervals = _make_intervals([0.10, 0.80, 0.11, 0.90, 0.12, 0.95, 0.50, 0.60])
-    fake_tuple = _build_fake_entry_and_coordinator(intervals)
+    fake_target = _build_fake_entry_and_coordinator(intervals)
 
-    monkeypatch.setattr(charging_module, "get_entry_and_data", lambda _hass, _entry_id: fake_tuple)
+    monkeypatch.setattr(charging_module, "resolve_service_target", lambda _hass, _entry_id, _view="": fake_target)
     monkeypatch.setattr(charging_module, "resolve_home_timezone", lambda _coord, _home_id: "UTC")
     monkeypatch.setattr(
         charging_module,

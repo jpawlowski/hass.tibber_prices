@@ -1399,6 +1399,18 @@
     },
     "deadline_outside_search_range": {
       "message": "Der aufgelöste Stichtag muss innerhalb des ausgewählten Suchbereichs liegen."
+    },
+    "invalid_view_device": {
+      "message": "Unbekanntes Gerät. Wähle ein Tibber-Prices-Gerät - eine Zeitreise-Ansicht oder das Zuhause selbst für Live-Daten."
+    },
+    "view_entry_mismatch": {
+      "message": "Die gewählte Ansicht gehört zu einem anderen Zuhause als die angegebene Entry-ID. Gib nur eines von beiden an."
+    },
+    "view_not_loaded": {
+      "message": "Diese Zeitreise-Ansicht ist derzeit nicht eingerichtet. Sie wurde möglicherweise entfernt, oder die Integration lädt noch."
+    },
+    "headless_view_has_no_entities": {
+      "message": "Eine Headless-Ansicht hat keine Preis-Entitäten, die eine Diagrammkarte referenzieren könnte. Nutze die Aktion get_chartdata, die die Daten der Ansicht direkt zurückgibt."
     }
   },
   "services": {
@@ -1409,6 +1421,10 @@
         "entry_id": {
           "name": "Eintrag-ID",
           "description": "Die Konfigurations-Eintrag-ID für die Tibber-Integration."
+        },
+        "view": {
+          "name": "Zeitreise-Ansicht",
+          "description": "Statt live für eine Zeitreise-Ansicht dieses Zuhauses antworten, mit deren eigener Uhr und Preisdaten. Wähle das Gerät der Ansicht; das Gerät des Zuhauses bedeutet live."
         },
         "start_time": {
           "name": "Startzeit",
@@ -1427,6 +1443,10 @@
         "entry_id": {
           "name": "Eintrags-ID",
           "description": "Die Konfigurationseintrags-ID für die Tibber-Integration."
+        },
+        "view": {
+          "name": "Zeitreise-Ansicht",
+          "description": "Statt live für eine Zeitreise-Ansicht dieses Zuhauses antworten, mit deren eigener Uhr und Preisdaten. Wähle das Gerät der Ansicht; das Gerät des Zuhauses bedeutet live."
         },
         "day": {
           "name": "Tag",
@@ -1491,6 +1511,10 @@
         "entry_id": {
           "name": "Eintrag-ID",
           "description": "Die Konfigurationseintrag-ID für die Tibber-Integration."
+        },
+        "view": {
+          "name": "Zeitreise-Ansicht",
+          "description": "Statt live für eine Zeitreise-Ansicht dieses Zuhauses antworten, mit deren eigener Uhr und Preisdaten. Wähle das Gerät der Ansicht; das Gerät des Zuhauses bedeutet live."
         },
         "day": {
           "name": "Tag",
@@ -1650,6 +1674,10 @@
           "name": "Eintrag-ID",
           "description": "Die Konfigurationseintrag-ID für die Tibber-Integration."
         },
+        "view": {
+          "name": "Zeitreise-Ansicht",
+          "description": "Statt live für eine Zeitreise-Ansicht dieses Zuhauses antworten, mit deren eigener Uhr und Preisdaten. Wähle das Gerät der Ansicht; das Gerät des Zuhauses bedeutet live."
+        },
         "duration": {
           "name": "Dauer",
           "description": "Länge des gewünschten zusammenhängenden Fensters. Wird automatisch auf die nächste Viertelstunde aufgerundet. Maximum: 12 Stunden."
@@ -1770,6 +1798,10 @@
           "name": "Eintrag-ID",
           "description": "Die Konfigurationseintrag-ID für die Tibber-Integration."
         },
+        "view": {
+          "name": "Zeitreise-Ansicht",
+          "description": "Statt live für eine Zeitreise-Ansicht dieses Zuhauses antworten, mit deren eigener Uhr und Preisdaten. Wähle das Gerät der Ansicht; das Gerät des Zuhauses bedeutet live."
+        },
         "duration": {
           "name": "Dauer",
           "description": "Länge des gewünschten zusammenhängenden Fensters. Wird automatisch auf die nächste Viertelstunde aufgerundet. Maximum: 12 Stunden."
@@ -1889,6 +1921,10 @@
         "entry_id": {
           "name": "Eintrag-ID",
           "description": "Die Konfigurationseintrag-ID für die Tibber-Integration."
+        },
+        "view": {
+          "name": "Zeitreise-Ansicht",
+          "description": "Statt live für eine Zeitreise-Ansicht dieses Zuhauses antworten, mit deren eigener Uhr und Preisdaten. Wähle das Gerät der Ansicht; das Gerät des Zuhauses bedeutet live."
         },
         "duration": {
           "name": "Dauer",
@@ -2014,6 +2050,10 @@
           "name": "Eintrag-ID",
           "description": "Die Konfigurationseintrag-ID für die Tibber-Integration."
         },
+        "view": {
+          "name": "Zeitreise-Ansicht",
+          "description": "Statt live für eine Zeitreise-Ansicht dieses Zuhauses antworten, mit deren eigener Uhr und Preisdaten. Wähle das Gerät der Ansicht; das Gerät des Zuhauses bedeutet live."
+        },
         "duration": {
           "name": "Dauer",
           "description": "Zu findende teure Gesamtzeit. Wird automatisch auf die nächste Viertelstunde aufgerundet. Maximum: 24 Stunden."
@@ -2133,6 +2173,10 @@
         "entry_id": {
           "name": "Eintrag-ID",
           "description": "Die Konfigurationseintrag-ID für die Tibber-Integration."
+        },
+        "view": {
+          "name": "Zeitreise-Ansicht",
+          "description": "Statt live für eine Zeitreise-Ansicht dieses Zuhauses antworten, mit deren eigener Uhr und Preisdaten. Wähle das Gerät der Ansicht; das Gerät des Zuhauses bedeutet live."
         },
         "tasks": {
           "name": "Aufgaben",
@@ -2265,6 +2309,10 @@
         "entry_id": {
           "name": "Eintrags-ID",
           "description": "Die Konfigurationseintrags-ID der Tibber-Integration."
+        },
+        "view": {
+          "name": "Zeitreise-Ansicht",
+          "description": "Statt live für eine Zeitreise-Ansicht dieses Zuhauses antworten, mit deren eigener Uhr und Preisdaten. Wähle das Gerät der Ansicht; das Gerät des Zuhauses bedeutet live."
         },
         "max_charge_power_w": {
           "name": "Maximale Ladeleistung",

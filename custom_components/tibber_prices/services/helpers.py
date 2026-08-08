@@ -5,6 +5,8 @@ This module provides common helper functions used across multiple service handle
 such as entry validation, data extraction, timezone resolution, and search range handling.
 
 Functions:
+    resolve_service_target: Resolve what a call operates on - a home or one of its
+        time-travel views - bundling its clock, interval pool and coordinator data
     get_entry_and_data: Validate config entry and extract coordinator data
     has_tomorrow_data: Check if tomorrow's price data is available
     resolve_home_timezone: Extract home timezone from coordinator
@@ -30,6 +32,7 @@ Used by:
 
 from __future__ import annotations
 
+from dataclasses import dataclass
 from datetime import datetime, time as dt_time, timedelta
 import logging
 from typing import TYPE_CHECKING, Any
@@ -41,6 +44,7 @@ from custom_components.tibber_prices.api.exceptions import (
 from custom_components.tibber_prices.const import DOMAIN
 from custom_components.tibber_prices.coordinator.helpers import get_intervals_for_day_offsets
 from homeassistant.exceptions import ServiceValidationError
+from homeassistant.helpers import device_registry as dr
 from homeassistant.util import dt as dt_util
 
 if TYPE_CHECKING:
@@ -236,24 +240,56 @@ def validate_power_profile_length(
         )
 
 
-def get_entry_and_data(hass: HomeAssistant, entry_id: str) -> tuple[Any, Any, dict]:
+@dataclass(frozen=True)
+class ServiceTarget:
+    """What a service call operates on: a home, or one time-travel view of it.
+
+    A time-travel view runs its own coordinator on a shifted clock and keeps its own
+    interval pool (see data.TibberPricesSubentryData). Everything a service needs to
+    answer against a view rather than live differs: the clock that defines "now", the
+    pool the prices come from, and the coordinator data the periods were built from.
+    Bundling them means a service reads its inputs from one place and cannot
+    accidentally mix a view's clock with the live pool.
     """
-    Validate entry and extract coordinator and data.
 
-    If entry_id is empty, auto-selects the single config entry for this domain.
-    Raises an error if there are zero or multiple entries and no entry_id is given.
+    entry: Any
+    """The config entry. Always the home's entry, never the view."""
 
-    Args:
-        hass: Home Assistant instance
-        entry_id: Config entry ID to validate (empty string to auto-select)
+    subentry: Any | None
+    """The targeted view's subentry, or None when targeting the home itself."""
 
-    Returns:
-        Tuple of (entry, coordinator, data)
+    coordinator: Any
+    interval_pool: TibberPricesIntervalPool
+    data: dict
 
-    Raises:
-        ServiceValidationError: If entry cannot be resolved
+    @property
+    def is_view(self) -> bool:
+        """Return True when this call targets a time-travel view."""
+        return self.subentry is not None
 
-    """
+    @property
+    def time(self) -> Any:
+        """Return the TimeService defining "now" for this target.
+
+        For a view this trails real time by the view's offset, which is what makes a
+        relative search range ("next 24h") mean the view's next 24 hours.
+        """
+        return self.coordinator.time
+
+    def now(self, home_tz: ZoneInfo) -> datetime:
+        """Return the current moment for this target, in the home timezone."""
+        return self.time.now().astimezone(home_tz)
+
+    @property
+    def label(self) -> str:
+        """Return a short human-readable name for logs and error messages."""
+        if self.subentry is None:
+            return self.entry.title
+        return f"{self.entry.title} / {self.subentry.title}"
+
+
+def _resolve_entry(hass: HomeAssistant, entry_id: str) -> Any:
+    """Resolve a config entry by ID, auto-selecting when there is exactly one."""
     if not entry_id:
         entries = hass.config_entries.async_entries(DOMAIN)
         if len(entries) == 1:
@@ -269,9 +305,127 @@ def get_entry_and_data(hass: HomeAssistant, entry_id: str) -> tuple[Any, Any, di
         )
     if not entry or not hasattr(entry, "runtime_data") or not entry.runtime_data:
         raise ServiceValidationError(translation_domain=DOMAIN, translation_key="invalid_entry_id")
+    return entry
+
+
+def _resolve_view_device(hass: HomeAssistant, device_id: str) -> tuple[str, str | None]:
+    """
+    Map a device ID to the (entry_id, subentry_id) it stands for.
+
+    Views are addressed by their device because that is what a user sees and picks;
+    subentry IDs are internal. Home Assistant 2026.8 scopes a device to exactly one
+    config entry and at most one subentry, so the device carries both directly.
+
+    The device picker also offers the home's own device. That one has no subentry and
+    resolves to a None subentry - selecting it simply means "live", which is what the
+    user picking it would expect, rather than an error about it not being a view.
+
+    Raises:
+        ServiceValidationError: If the device is unknown to Home Assistant.
+
+    """
+    device = dr.async_get(hass).async_get(device_id)
+    if device is None:
+        raise ServiceValidationError(translation_domain=DOMAIN, translation_key="invalid_view_device")
+    return device.config_entry_id, device.config_subentry_id
+
+
+def resolve_service_target(
+    hass: HomeAssistant,
+    entry_id: str,
+    view_device_id: str = "",
+) -> ServiceTarget:
+    """
+    Resolve what a service call operates on.
+
+    Without view_device_id this is the home itself, selected by entry_id (or the only
+    entry, when there is just one). With it, the call is answered against that
+    time-travel view: its clock, its interval pool, its coordinator data.
+
+    The view's device determines the entry as well, so a caller that picks a view does
+    not have to also pass the matching entry_id. Passing a mismatched pair is rejected
+    rather than silently resolved in favour of one of them.
+
+    Args:
+        hass: Home Assistant instance.
+        entry_id: Config entry ID (empty string to auto-select the single entry).
+        view_device_id: Device ID of a time-travel view, or empty for the home.
+
+    Returns:
+        The resolved ServiceTarget.
+
+    Raises:
+        ServiceValidationError: If the entry or view cannot be resolved, if the two
+            disagree, or if the view is not currently set up.
+
+    """
+    if not view_device_id:
+        entry = _resolve_entry(hass, entry_id)
+        coordinator = entry.runtime_data.coordinator
+        return ServiceTarget(
+            entry=entry,
+            subentry=None,
+            coordinator=coordinator,
+            interval_pool=entry.runtime_data.interval_pool,
+            data=coordinator.data or {},
+        )
+
+    view_entry_id, subentry_id = _resolve_view_device(hass, view_device_id)
+    if entry_id and entry_id != view_entry_id:
+        raise ServiceValidationError(
+            translation_domain=DOMAIN,
+            translation_key="view_entry_mismatch",
+        )
+
+    entry = _resolve_entry(hass, view_entry_id)
+    if subentry_id is None:
+        # The home's own device - the live data of that entry.
+        coordinator = entry.runtime_data.coordinator
+        return ServiceTarget(
+            entry=entry,
+            subentry=None,
+            coordinator=coordinator,
+            interval_pool=entry.runtime_data.interval_pool,
+            data=coordinator.data or {},
+        )
+
+    view = entry.runtime_data.subentries.get(subentry_id)
+    if view is None:
+        # The device exists but the view is not running - it was removed, or the
+        # entry has not finished setting its views up.
+        raise ServiceValidationError(translation_domain=DOMAIN, translation_key="view_not_loaded")
+
+    return ServiceTarget(
+        entry=entry,
+        subentry=view.subentry,
+        coordinator=view.coordinator,
+        interval_pool=view.interval_pool,
+        data=view.coordinator.data or {},
+    )
+
+
+def get_entry_and_data(hass: HomeAssistant, entry_id: str) -> tuple[Any, Any, dict]:
+    """
+    Validate entry and extract coordinator and data.
+
+    Kept for callers that are inherently entry-level (refreshing account data,
+    clearing a cache) and can never address a view. Anything that reads prices
+    should use resolve_service_target() so it can answer for a view too.
+
+    Args:
+        hass: Home Assistant instance
+        entry_id: Config entry ID to validate (empty string to auto-select)
+
+    Returns:
+        Tuple of (entry, coordinator, data)
+
+    Raises:
+        ServiceValidationError: If entry cannot be resolved
+
+    """
+    entry = _resolve_entry(hass, entry_id)
     coordinator = entry.runtime_data.coordinator
-    data = coordinator.data or {}
-    return entry, coordinator, data
+    return entry, coordinator, coordinator.data or {}
 
 
 async def async_fetch_service_intervals(
@@ -408,9 +562,16 @@ def localize_to_home_tz(dt_value: datetime, home_tz: ZoneInfo) -> datetime:
     return dt_value.astimezone(home_tz)
 
 
-def calculate_end_of_tomorrow(home_tz: ZoneInfo) -> datetime:
-    """Calculate end of tomorrow in home timezone."""
-    now_home = dt_util.now().astimezone(home_tz)
+def calculate_end_of_tomorrow(home_tz: ZoneInfo, now: datetime | None = None) -> datetime:
+    """Calculate end of tomorrow in home timezone.
+
+    Args:
+        home_tz: Home timezone.
+        now: The moment to count "tomorrow" from. Pass a time-travel view's clock to
+            get the view's tomorrow; defaults to real time for entry-level callers.
+
+    """
+    now_home = (now or dt_util.now()).astimezone(home_tz)
     tomorrow = (now_home + timedelta(days=1)).date()
     # End of tomorrow = midnight at start of day after tomorrow
     return now_home.replace(
@@ -685,7 +846,7 @@ def resolve_search_range(
     elif "search_end_offset_minutes" in call_data:
         raw_end = now + timedelta(minutes=call_data["search_end_offset_minutes"])
     else:
-        raw_end = calculate_end_of_tomorrow(home_tz)
+        raw_end = calculate_end_of_tomorrow(home_tz, now)
 
     # Validate on the values the caller actually asked for. Snapping can still shrink
     # a range below one interval, and that is "no window fits", not a bad request.

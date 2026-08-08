@@ -22,7 +22,6 @@ from custom_components.tibber_prices.utils.price_window import (
 )
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import config_validation as cv
-from homeassistant.util import dt as dt_util
 
 from .entity_resolver import or_entity_ref, resolve_entity_references, resolve_task_entity_references
 from .helpers import (
@@ -34,9 +33,9 @@ from .helpers import (
     build_rating_lookup,
     build_response_interval,
     filter_intervals_by_price_level,
-    get_entry_and_data,
     resolve_home_timezone,
     resolve_search_range,
+    resolve_service_target,
     restore_original_prices,
     smooth_service_intervals,
     validate_power_profile_length,
@@ -89,6 +88,7 @@ _TASK_SCHEMA = vol.Schema(
 FIND_CHEAPEST_SCHEDULE_SERVICE_SCHEMA = vol.Schema(
     {
         vol.Optional("entry_id", default=""): cv.string,
+        vol.Optional("view", default=""): cv.string,
         vol.Required("tasks"): vol.All(
             [_TASK_SCHEMA],
             vol.Length(min=1, max=4),
@@ -394,6 +394,7 @@ async def handle_find_cheapest_schedule(call: ServiceCall) -> ServiceResponse:
 
     tasks_raw: list[dict[str, Any]] = data_dict["tasks"]
     entry_id: str = data_dict.get("entry_id", "")
+    view_device_id: str = data_dict.get("view", "")
     gap_minutes: int = data_dict.get("gap_minutes", 0)
     use_base_unit: bool = data_dict.get("use_base_unit", False)
     max_price_level: str | None = data_dict.get("max_price_level")
@@ -417,7 +418,10 @@ async def handle_find_cheapest_schedule(call: ServiceCall) -> ServiceResponse:
     # Round gap up to nearest quarter interval
     gap_intervals = math.ceil(gap_minutes / INTERVAL_MINUTES) if gap_minutes > 0 else 0
 
-    entry, coordinator, coordinator_data = get_entry_and_data(hass, entry_id)
+    target = resolve_service_target(hass, entry_id, view_device_id)
+    entry = target.entry
+    coordinator = target.coordinator
+    coordinator_data = target.data
     rating_lookup = build_rating_lookup(coordinator_data)
 
     home_id = entry.data.get("home_id")
@@ -437,7 +441,7 @@ async def handle_find_cheapest_schedule(call: ServiceCall) -> ServiceResponse:
     validate_search_params(data_dict)
     effective_data, must_finish_by_dt = apply_must_finish_by(data_dict, home_tz)
 
-    now = dt_util.now().astimezone(home_tz)
+    now = target.now(home_tz)
     search_start, search_end = resolve_search_range(effective_data, now, home_tz)
 
     # Resolve task durations (round up to intervals)
@@ -489,7 +493,7 @@ async def handle_find_cheapest_schedule(call: ServiceCall) -> ServiceResponse:
     # Fetch intervals
     api_client = coordinator.api
     user_data = coordinator._cached_user_data  # noqa: SLF001
-    pool = entry.runtime_data.interval_pool
+    pool = target.interval_pool
 
     price_info, fetch_ok = await async_fetch_service_intervals(
         pool,

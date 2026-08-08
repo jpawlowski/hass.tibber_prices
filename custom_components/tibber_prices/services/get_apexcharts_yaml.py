@@ -25,6 +25,7 @@ import voluptuous as vol
 from custom_components.tibber_prices.const import (
     CONF_CURRENCY_DISPLAY_MODE,
     DISPLAY_MODE_SUBUNIT,
+    DOMAIN,
     PRICE_LEVEL_CHEAP,
     PRICE_LEVEL_EXPENSIVE,
     PRICE_LEVEL_NORMAL,
@@ -36,11 +37,12 @@ from custom_components.tibber_prices.const import (
     get_display_unit_string,
     get_translation,
 )
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_registry import EntityRegistry, async_get as async_get_entity_registry
 
 from .formatters import get_level_translation
-from .helpers import get_entry_and_data
+from .helpers import resolve_service_target
 
 if TYPE_CHECKING:
     from homeassistant.core import ServiceCall
@@ -54,6 +56,7 @@ ATTR_ENTRY_ID: Final = "entry_id"
 APEXCHARTS_SERVICE_SCHEMA = vol.Schema(
     {
         vol.Optional(ATTR_ENTRY_ID, default=""): cv.string,
+        vol.Optional("view", default=""): cv.string,
         vol.Optional("day"): vol.In(["yesterday", "today", "tomorrow", "rolling_window", "rolling_window_autozoom"]),
         vol.Optional("level_type", default="rating_level"): vol.In(["rating_level", "level"]),
         vol.Optional("resolution", default="interval"): vol.In(["interval", "hourly"]),
@@ -69,6 +72,7 @@ def _build_entity_map(
     entry_id: str,
     level_type: str,
     day: str,
+    subentry_id: str | None = None,
 ) -> dict[str, str]:
     """
     Build entity mapping for price levels based on day.
@@ -147,7 +151,7 @@ def _build_entity_map(
     patterns = pattern_map.get((level_type, day), [])
 
     for entity in entity_registry.entities.values():
-        if entity.config_entry_id != entry_id or entity.config_subentry_id is not None or entity.domain != "sensor":
+        if entity.config_entry_id != entry_id or entity.config_subentry_id != subentry_id or entity.domain != "sensor":
             continue
 
         # Match entity against patterns using unique_id (contains entry_id_key)
@@ -162,21 +166,6 @@ def _build_entity_map(
                     break
 
     return entity_map
-
-
-def _get_current_price_entity(entity_registry: EntityRegistry, entry_id: str) -> str | None:
-    """Get current interval price entity for header display."""
-    return next(
-        (
-            entity.entity_id
-            for entity in entity_registry.entities.values()
-            if entity.config_entry_id == entry_id
-            and entity.config_subentry_id is None
-            and entity.unique_id
-            and entity.unique_id.endswith("_current_interval_price")
-        ),
-        None,
-    )
 
 
 def _check_custom_cards_installed(hass: Any) -> dict[str, bool]:
@@ -286,6 +275,7 @@ async def handle_apexcharts_yaml(call: ServiceCall) -> dict[str, Any]:  # noqa: 
     """
     hass = call.hass
     entry_id_input: str = call.data.get(ATTR_ENTRY_ID, "")
+    view_device_id: str = call.data.get("view", "")
 
     day = call.data.get("day")  # Can be None (rolling window mode)
     level_type = call.data.get("level_type", "rating_level")
@@ -298,8 +288,21 @@ async def handle_apexcharts_yaml(call: ServiceCall) -> dict[str, Any]:  # noqa: 
     user_language = hass.config.language or "en"
 
     # Get coordinator to access price data (for currency) and config entry for display settings
-    config_entry, coordinator, _ = get_entry_and_data(hass, entry_id_input)
+    target = resolve_service_target(hass, entry_id_input, view_device_id)
+    config_entry = target.entry
+    coordinator = target.coordinator
+    subentry_id: str | None = target.subentry.subentry_id if target.subentry else None
     entry_id: str = config_entry.entry_id
+
+    # A generated card references its data by entity ID. A headless view has no price
+    # entities to reference, so there is nothing this action could emit for it - point
+    # at get_chartdata, which returns the series directly, instead of producing a card
+    # whose every series is empty.
+    if target.coordinator.headless:
+        raise ServiceValidationError(
+            translation_domain=DOMAIN,
+            translation_key="headless_view_has_no_entities",
+        )
     # Get currency from coordinator data
     currency = coordinator.data.get("currency", "EUR")
 
@@ -317,7 +320,7 @@ async def handle_apexcharts_yaml(call: ServiceCall) -> dict[str, Any]:  # noqa: 
 
     # Build entity mapping based on level_type and day for clickable states
     # When day is None, use "today" as fallback for entity mapping
-    entity_map = _build_entity_map(entity_registry, entry_id, level_type, day or "today")
+    entity_map = _build_entity_map(entity_registry, entry_id, level_type, day or "today", subentry_id)
 
     if level_type == "rating_level":
         series_levels = [
@@ -687,7 +690,7 @@ async def handle_apexcharts_yaml(call: ServiceCall) -> dict[str, Any]:  # noqa: 
                 entity.entity_id
                 for entity in entity_registry.entities.values()
                 if entity.config_entry_id == entry_id
-                and entity.config_subentry_id is None
+                and entity.config_subentry_id == subentry_id
                 and entity.unique_id
                 and entity.unique_id.endswith("_tomorrow_data_available")
             ),
@@ -745,7 +748,7 @@ async def handle_apexcharts_yaml(call: ServiceCall) -> dict[str, Any]:  # noqa: 
                         entity.entity_id
                         for entity in entity_registry.entities.values()
                         if entity.config_entry_id == entry_id
-                        and entity.config_subentry_id is None
+                        and entity.config_subentry_id == subentry_id
                         and entity.unique_id
                         and entity.unique_id.endswith("_current_interval_price")
                     ),
@@ -764,7 +767,7 @@ async def handle_apexcharts_yaml(call: ServiceCall) -> dict[str, Any]:  # noqa: 
                         entity.entity_id
                         for entity in entity_registry.entities.values()
                         if entity.config_entry_id == entry_id
-                        and entity.config_subentry_id is None
+                        and entity.config_subentry_id == subentry_id
                         and entity.unique_id
                         and entity.unique_id.endswith("_chart_metadata")
                     ),
@@ -932,7 +935,7 @@ async def handle_apexcharts_yaml(call: ServiceCall) -> dict[str, Any]:  # noqa: 
                     entity.entity_id
                     for entity in entity_registry.entities.values()
                     if entity.config_entry_id == entry_id
-                    and entity.config_subentry_id is None
+                    and entity.config_subentry_id == subentry_id
                     and entity.unique_id
                     and entity.unique_id.endswith("_chart_metadata")
                 ),

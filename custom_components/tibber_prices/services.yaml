@@ -6,6 +6,11 @@ get_price:
       selector:
         config_entry:
           integration: tibber_prices
+    view:
+      required: false
+      selector:
+        device:
+          integration: tibber_prices
     start_time:
       required: true
       example: "2025-11-01T00:00:00+01:00"
@@ -23,6 +28,11 @@ get_apexcharts_yaml:
       example: "1234567890abcdef"
       selector:
         config_entry:
+          integration: tibber_prices
+    view:
+      required: false
+      selector:
+        device:
           integration: tibber_prices
     day:
       required: false
@@ -87,6 +97,11 @@ get_chartdata:
           example: "1234567890abcdef"
           selector:
             config_entry:
+              integration: tibber_prices
+        view:
+          required: false
+          selector:
+            device:
               integration: tibber_prices
     selection:
       collapsed: true
@@ -301,6 +316,11 @@ find_cheapest_block:
       selector:
         config_entry:
           integration: tibber_prices
+    view:
+      required: false
+      selector:
+        device:
+          integration: tibber_prices
     duration:
       required: true
       selector:
@@ -469,6 +489,11 @@ find_most_expensive_block:
       selector:
         config_entry:
           integration: tibber_prices
+    view:
+      required: false
+      selector:
+        device:
+          integration: tibber_prices
     duration:
       required: true
       selector:
@@ -636,6 +661,11 @@ find_cheapest_hours:
       example: "1234567890abcdef"
       selector:
         config_entry:
+          integration: tibber_prices
+    view:
+      required: false
+      selector:
+        device:
           integration: tibber_prices
     duration:
       required: true
@@ -809,6 +839,11 @@ find_most_expensive_hours:
       selector:
         config_entry:
           integration: tibber_prices
+    view:
+      required: false
+      selector:
+        device:
+          integration: tibber_prices
     duration:
       required: true
       selector:
@@ -981,6 +1016,11 @@ find_cheapest_schedule:
       selector:
         config_entry:
           integration: tibber_prices
+    view:
+      required: false
+      selector:
+        device:
+          integration: tibber_prices
     tasks:
       required: true
       example: '[{"name": "dishwasher", "duration": "02:00:00"}, {"name": "washing_machine", "duration": "01:30:00"}]'
@@ -1147,6 +1187,11 @@ plan_charging:
       example: "1234567890abcdef"
       selector:
         config_entry:
+          integration: tibber_prices
+    view:
+      required: false
+      selector:
+        device:
           integration: tibber_prices
     battery:
       collapsed: false

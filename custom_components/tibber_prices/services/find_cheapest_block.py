@@ -22,7 +22,6 @@ from custom_components.tibber_prices.utils.price_window import (
 )
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import config_validation as cv
-from homeassistant.util import dt as dt_util
 
 from .entity_resolver import or_entity_ref, resolve_entity_references
 from .helpers import (
@@ -36,9 +35,9 @@ from .helpers import (
     calculate_search_range_avg,
     check_min_distance_from_avg,
     filter_intervals_by_price_level,
-    get_entry_and_data,
     resolve_home_timezone,
     resolve_search_range,
+    resolve_service_target,
     restore_original_prices,
     smooth_service_intervals,
     validate_power_profile_length,
@@ -78,6 +77,7 @@ COMMON_BLOCK_ENTITY_PARAMS: dict[str, type] = {
 
 _COMMON_BLOCK_SCHEMA = {
     vol.Optional("entry_id", default=""): cv.string,
+    vol.Optional("view", default=""): cv.string,
     vol.Required("duration"): or_entity_ref(
         vol.All(cv.positive_time_period, vol.Range(min=timedelta(minutes=1), max=timedelta(hours=12))),
     ),
@@ -252,6 +252,7 @@ async def _handle_find_block(
     data, resolved_refs = resolve_entity_references(hass, call.data, COMMON_BLOCK_ENTITY_PARAMS)
 
     entry_id: str = data.get("entry_id", "")
+    view_device_id: str = data.get("view", "")
     duration_td: timedelta = data["duration"]
     use_base_unit: bool = data.get("use_base_unit", False)
     max_price_level: str | None = data.get("max_price_level")
@@ -270,7 +271,10 @@ async def _handle_find_block(
     # Note: rebind to coordinator_data — `data` (the resolved service call
     # data) is still needed below for validate_search_params() and
     # apply_must_finish_by(), which read search-range parameters from it.
-    entry, coordinator, coordinator_data = get_entry_and_data(hass, entry_id)
+    target = resolve_service_target(hass, entry_id, view_device_id)
+    entry = target.entry
+    coordinator = target.coordinator
+    coordinator_data = target.data
     rating_lookup = build_rating_lookup(coordinator_data)
 
     home_id = entry.data.get("home_id")
@@ -292,7 +296,7 @@ async def _handle_find_block(
     effective_data, must_finish_by_dt = apply_must_finish_by(data, home_tz)
 
     # Resolve search range (priority: explicit datetime > time+offset > minutes offset > default)
-    now = dt_util.now().astimezone(home_tz)
+    now = target.now(home_tz)
     search_start, search_end = resolve_search_range(effective_data, now, home_tz)
 
     duration_intervals = duration_minutes // INTERVAL_MINUTES
@@ -312,7 +316,7 @@ async def _handle_find_block(
     # Fetch intervals via pool
     api_client = coordinator.api
     user_data = coordinator._cached_user_data  # noqa: SLF001
-    pool = entry.runtime_data.interval_pool
+    pool = target.interval_pool
 
     price_info, fetch_ok = await async_fetch_service_intervals(
         pool,
