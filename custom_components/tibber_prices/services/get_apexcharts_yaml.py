@@ -56,7 +56,7 @@ ATTR_ENTRY_ID: Final = "entry_id"
 APEXCHARTS_SERVICE_SCHEMA = vol.Schema(
     {
         vol.Optional(ATTR_ENTRY_ID, default=""): cv.string,
-        vol.Optional("view", default=""): cv.string,
+        vol.Optional("view_id", default=""): cv.string,
         vol.Optional("day"): vol.In(["yesterday", "today", "tomorrow", "rolling_window", "rolling_window_autozoom"]),
         vol.Optional("level_type", default="rating_level"): vol.In(["rating_level", "level"]),
         vol.Optional("resolution", default="interval"): vol.In(["interval", "hourly"]),
@@ -275,7 +275,7 @@ async def handle_apexcharts_yaml(call: ServiceCall) -> dict[str, Any]:  # noqa: 
     """
     hass = call.hass
     entry_id_input: str = call.data.get(ATTR_ENTRY_ID, "")
-    view_device_id: str = call.data.get("view", "")
+    view_device_id: str = call.data.get("view_id", "")
 
     day = call.data.get("day")  # Can be None (rolling window mode)
     level_type = call.data.get("level_type", "rating_level")

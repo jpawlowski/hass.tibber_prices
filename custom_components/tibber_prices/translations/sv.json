@@ -1422,9 +1422,9 @@
           "name": "Entry-ID",
           "description": "Config entry-ID för Tibber-integrationen."
         },
-        "view": {
+        "view_id": {
           "name": "Tidsresevy",
-          "description": "Svara för en tidsresevy av detta hem i stället för live, med vyns egen klocka och prisdata. Välj vyns enhet; hemmets egen enhet betyder live."
+          "description": "Svara för en tidsresevy av detta hem i stället för live, med vyns egen klocka och prisdata. Lämna tomt för livedata."
         },
         "start_time": {
           "name": "Starttid",
@@ -1444,9 +1444,9 @@
           "name": "Entry-ID",
           "description": "Config entry-ID för Tibber-integrationen."
         },
-        "view": {
+        "view_id": {
           "name": "Tidsresevy",
-          "description": "Svara för en tidsresevy av detta hem i stället för live, med vyns egen klocka och prisdata. Välj vyns enhet; hemmets egen enhet betyder live."
+          "description": "Svara för en tidsresevy av detta hem i stället för live, med vyns egen klocka och prisdata. Lämna tomt för livedata."
         },
         "day": {
           "name": "Dag",
@@ -1512,9 +1512,9 @@
           "name": "Entry-ID",
           "description": "Config entry-ID för Tibber-integrationen."
         },
-        "view": {
+        "view_id": {
           "name": "Tidsresevy",
-          "description": "Svara för en tidsresevy av detta hem i stället för live, med vyns egen klocka och prisdata. Välj vyns enhet; hemmets egen enhet betyder live."
+          "description": "Svara för en tidsresevy av detta hem i stället för live, med vyns egen klocka och prisdata. Lämna tomt för livedata."
         },
         "day": {
           "name": "Dag",
@@ -1674,9 +1674,9 @@
           "name": "Entry-ID",
           "description": "Config entry-ID för Tibber-integrationen."
         },
-        "view": {
+        "view_id": {
           "name": "Tidsresevy",
-          "description": "Svara för en tidsresevy av detta hem i stället för live, med vyns egen klocka och prisdata. Välj vyns enhet; hemmets egen enhet betyder live."
+          "description": "Svara för en tidsresevy av detta hem i stället för live, med vyns egen klocka och prisdata. Lämna tomt för livedata."
         },
         "duration": {
           "name": "Varaktighet",
@@ -1798,9 +1798,9 @@
           "name": "Entry-ID",
           "description": "Config entry-ID för Tibber-integrationen."
         },
-        "view": {
+        "view_id": {
           "name": "Tidsresevy",
-          "description": "Svara för en tidsresevy av detta hem i stället för live, med vyns egen klocka och prisdata. Välj vyns enhet; hemmets egen enhet betyder live."
+          "description": "Svara för en tidsresevy av detta hem i stället för live, med vyns egen klocka och prisdata. Lämna tomt för livedata."
         },
         "duration": {
           "name": "Varaktighet",
@@ -1922,9 +1922,9 @@
           "name": "Entry-ID",
           "description": "Config entry-ID för Tibber-integrationen."
         },
-        "view": {
+        "view_id": {
           "name": "Tidsresevy",
-          "description": "Svara för en tidsresevy av detta hem i stället för live, med vyns egen klocka och prisdata. Välj vyns enhet; hemmets egen enhet betyder live."
+          "description": "Svara för en tidsresevy av detta hem i stället för live, med vyns egen klocka och prisdata. Lämna tomt för livedata."
         },
         "duration": {
           "name": "Varaktighet",
@@ -2050,9 +2050,9 @@
           "name": "Entry-ID",
           "description": "Config entry-ID för Tibber-integrationen."
         },
-        "view": {
+        "view_id": {
           "name": "Tidsresevy",
-          "description": "Svara för en tidsresevy av detta hem i stället för live, med vyns egen klocka och prisdata. Välj vyns enhet; hemmets egen enhet betyder live."
+          "description": "Svara för en tidsresevy av detta hem i stället för live, med vyns egen klocka och prisdata. Lämna tomt för livedata."
         },
         "duration": {
           "name": "Varaktighet",
@@ -2174,9 +2174,9 @@
           "name": "Entry-ID",
           "description": "Config entry-ID för Tibber-integrationen."
         },
-        "view": {
+        "view_id": {
           "name": "Tidsresevy",
-          "description": "Svara för en tidsresevy av detta hem i stället för live, med vyns egen klocka och prisdata. Välj vyns enhet; hemmets egen enhet betyder live."
+          "description": "Svara för en tidsresevy av detta hem i stället för live, med vyns egen klocka och prisdata. Lämna tomt för livedata."
         },
         "tasks": {
           "name": "Uppgifter",
@@ -2310,9 +2310,9 @@
           "name": "Post-ID",
           "description": "Konfigurationspost-ID för Tibber-integrationen."
         },
-        "view": {
+        "view_id": {
           "name": "Tidsresevy",
-          "description": "Svara för en tidsresevy av detta hem i stället för live, med vyns egen klocka och prisdata. Välj vyns enhet; hemmets egen enhet betyder live."
+          "description": "Svara för en tidsresevy av detta hem i stället för live, med vyns egen klocka och prisdata. Lämna tomt för livedata."
         },
         "max_charge_power_w": {
           "name": "Maximal laddeffekt",

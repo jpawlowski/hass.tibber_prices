@@ -99,7 +99,7 @@ _CHARGING_ENTITY_PARAMS: dict[str, type] = {
 PLAN_CHARGING_SERVICE_SCHEMA = vol.Schema(
     {
         vol.Optional("entry_id", default=""): cv.string,
-        vol.Optional("view", default=""): cv.string,
+        vol.Optional("view_id", default=""): cv.string,
         vol.Optional("battery_capacity_kwh"): or_entity_ref(
             vol.All(vol.Coerce(float), vol.Range(min=0.1, max=1000.0)),
         ),
@@ -647,7 +647,7 @@ async def handle_plan_charging(call: ServiceCall) -> ServiceResponse:
     must_reach_soc_kwh = float(must_reach_soc_value) if must_reach_soc_value is not None else None
 
     entry_id = data.get("entry_id", "")
-    view_device_id = data.get("view", "")
+    view_device_id = data.get("view_id", "")
     max_charge_power_w = int(data["max_charge_power_w"])
     min_charge_power_w = int(data["min_charge_power_w"]) if "min_charge_power_w" in data else None
     charge_power_steps_w = [int(step) for step in data.get("charge_power_steps_w", [])] or None

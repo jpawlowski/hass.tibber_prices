@@ -77,7 +77,7 @@ COMMON_BLOCK_ENTITY_PARAMS: dict[str, type] = {
 
 _COMMON_BLOCK_SCHEMA = {
     vol.Optional("entry_id", default=""): cv.string,
-    vol.Optional("view", default=""): cv.string,
+    vol.Optional("view_id", default=""): cv.string,
     vol.Required("duration"): or_entity_ref(
         vol.All(cv.positive_time_period, vol.Range(min=timedelta(minutes=1), max=timedelta(hours=12))),
     ),
@@ -252,7 +252,7 @@ async def _handle_find_block(
     data, resolved_refs = resolve_entity_references(hass, call.data, COMMON_BLOCK_ENTITY_PARAMS)
 
     entry_id: str = data.get("entry_id", "")
-    view_device_id: str = data.get("view", "")
+    view_device_id: str = data.get("view_id", "")
     duration_td: timedelta = data["duration"]
     use_base_unit: bool = data.get("use_base_unit", False)
     max_price_level: str | None = data.get("max_price_level")

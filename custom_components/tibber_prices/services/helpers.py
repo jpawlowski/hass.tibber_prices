@@ -316,9 +316,10 @@ def _resolve_view_device(hass: HomeAssistant, device_id: str) -> tuple[str, str 
     subentry IDs are internal. Home Assistant 2026.8 scopes a device to exactly one
     config entry and at most one subentry, so the device carries both directly.
 
-    The device picker also offers the home's own device. That one has no subentry and
-    resolves to a None subentry - selecting it simply means "live", which is what the
-    user picking it would expect, rather than an error about it not being a view.
+    The picker in services.yaml is filtered to view devices, so a home device only
+    arrives here from hand-written YAML. It has no subentry and resolves to a None
+    subentry, i.e. that entry's live data - the sensible reading of naming the home,
+    and not worth rejecting.
 
     Raises:
         ServiceValidationError: If the device is unknown to Home Assistant.

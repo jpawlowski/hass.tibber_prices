@@ -1422,9 +1422,9 @@
           "name": "Item-ID",
           "description": "De configuratie entry ID voor de Tibber integratie."
         },
-        "view": {
+        "view_id": {
           "name": "Tijdreisweergave",
-          "description": "Antwoord voor een tijdreisweergave van dit huis in plaats van live, met de eigen klok en prijsgegevens van de weergave. Kies het apparaat van de weergave; het apparaat van het huis zelf betekent live."
+          "description": "Antwoord voor een tijdreisweergave van dit huis in plaats van live, met de eigen klok en prijsgegevens van de weergave. Laat leeg voor live gegevens."
         },
         "start_time": {
           "name": "Starttijd",
@@ -1444,9 +1444,9 @@
           "name": "Invoer-ID",
           "description": "Het configuratie-invoer-ID voor de Tibber-integratie."
         },
-        "view": {
+        "view_id": {
           "name": "Tijdreisweergave",
-          "description": "Antwoord voor een tijdreisweergave van dit huis in plaats van live, met de eigen klok en prijsgegevens van de weergave. Kies het apparaat van de weergave; het apparaat van het huis zelf betekent live."
+          "description": "Antwoord voor een tijdreisweergave van dit huis in plaats van live, met de eigen klok en prijsgegevens van de weergave. Laat leeg voor live gegevens."
         },
         "day": {
           "name": "Dag",
@@ -1512,9 +1512,9 @@
           "name": "Item-ID",
           "description": "De config-item-ID voor de Tibber-integratie."
         },
-        "view": {
+        "view_id": {
           "name": "Tijdreisweergave",
-          "description": "Antwoord voor een tijdreisweergave van dit huis in plaats van live, met de eigen klok en prijsgegevens van de weergave. Kies het apparaat van de weergave; het apparaat van het huis zelf betekent live."
+          "description": "Antwoord voor een tijdreisweergave van dit huis in plaats van live, met de eigen klok en prijsgegevens van de weergave. Laat leeg voor live gegevens."
         },
         "day": {
           "name": "Dag",
@@ -1674,9 +1674,9 @@
           "name": "Item-ID",
           "description": "De config-item-ID voor de Tibber-integratie."
         },
-        "view": {
+        "view_id": {
           "name": "Tijdreisweergave",
-          "description": "Antwoord voor een tijdreisweergave van dit huis in plaats van live, met de eigen klok en prijsgegevens van de weergave. Kies het apparaat van de weergave; het apparaat van het huis zelf betekent live."
+          "description": "Antwoord voor een tijdreisweergave van dit huis in plaats van live, met de eigen klok en prijsgegevens van de weergave. Laat leeg voor live gegevens."
         },
         "duration": {
           "name": "Duur",
@@ -1798,9 +1798,9 @@
           "name": "Item-ID",
           "description": "De config-item-ID voor de Tibber-integratie."
         },
-        "view": {
+        "view_id": {
           "name": "Tijdreisweergave",
-          "description": "Antwoord voor een tijdreisweergave van dit huis in plaats van live, met de eigen klok en prijsgegevens van de weergave. Kies het apparaat van de weergave; het apparaat van het huis zelf betekent live."
+          "description": "Antwoord voor een tijdreisweergave van dit huis in plaats van live, met de eigen klok en prijsgegevens van de weergave. Laat leeg voor live gegevens."
         },
         "duration": {
           "name": "Duur",
@@ -1922,9 +1922,9 @@
           "name": "Item-ID",
           "description": "De config-item-ID voor de Tibber-integratie."
         },
-        "view": {
+        "view_id": {
           "name": "Tijdreisweergave",
-          "description": "Antwoord voor een tijdreisweergave van dit huis in plaats van live, met de eigen klok en prijsgegevens van de weergave. Kies het apparaat van de weergave; het apparaat van het huis zelf betekent live."
+          "description": "Antwoord voor een tijdreisweergave van dit huis in plaats van live, met de eigen klok en prijsgegevens van de weergave. Laat leeg voor live gegevens."
         },
         "duration": {
           "name": "Duur",
@@ -2050,9 +2050,9 @@
           "name": "Item-ID",
           "description": "De config-item-ID voor de Tibber-integratie."
         },
-        "view": {
+        "view_id": {
           "name": "Tijdreisweergave",
-          "description": "Antwoord voor een tijdreisweergave van dit huis in plaats van live, met de eigen klok en prijsgegevens van de weergave. Kies het apparaat van de weergave; het apparaat van het huis zelf betekent live."
+          "description": "Antwoord voor een tijdreisweergave van dit huis in plaats van live, met de eigen klok en prijsgegevens van de weergave. Laat leeg voor live gegevens."
         },
         "duration": {
           "name": "Duur",
@@ -2174,9 +2174,9 @@
           "name": "Item-ID",
           "description": "De config-item-ID voor de Tibber-integratie."
         },
-        "view": {
+        "view_id": {
           "name": "Tijdreisweergave",
-          "description": "Antwoord voor een tijdreisweergave van dit huis in plaats van live, met de eigen klok en prijsgegevens van de weergave. Kies het apparaat van de weergave; het apparaat van het huis zelf betekent live."
+          "description": "Antwoord voor een tijdreisweergave van dit huis in plaats van live, met de eigen klok en prijsgegevens van de weergave. Laat leeg voor live gegevens."
         },
         "tasks": {
           "name": "Taken",
@@ -2310,9 +2310,9 @@
           "name": "Item-ID",
           "description": "De configuratie-item-ID voor de Tibber-integratie."
         },
-        "view": {
+        "view_id": {
           "name": "Tijdreisweergave",
-          "description": "Antwoord voor een tijdreisweergave van dit huis in plaats van live, met de eigen klok en prijsgegevens van de weergave. Kies het apparaat van de weergave; het apparaat van het huis zelf betekent live."
+          "description": "Antwoord voor een tijdreisweergave van dit huis in plaats van live, met de eigen klok en prijsgegevens van de weergave. Laat leeg voor live gegevens."
         },
         "max_charge_power_w": {
           "name": "Maximaal laadvermogen",

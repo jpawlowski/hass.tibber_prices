@@ -60,18 +60,18 @@ Turn it off if you want the full historical range at all times — for a compari
 
 A view normally creates the full set of entities — the same 100+ sensors the live device has. Three comparison views therefore add several hundred entities.
 
-A **headless** view creates only its diagnostic sensors. It still fetches and caches its data, and that data stays reachable through the [actions](actions.md) — point any of them at the view with the `view` parameter (see [Using a view from an action](#using-a-view-from-an-action)). `get_chartdata` returns the view's series directly, so a headless view works fine as a chart source while keeping the entity list manageable. Their name carries a `[headless]` marker.
+A **headless** view creates only its diagnostic sensors. It still fetches and caches its data, and that data stays reachable through the [actions](actions.md) — point any of them at the view with the `view_id` parameter (see [Using a view from an action](#using-a-view-from-an-action)). `get_chartdata` returns the view's series directly, so a headless view works fine as a chart source while keeping the entity list manageable. Their name carries a `[headless]` marker.
 
 `get_apexcharts_yaml` is the one exception: the card it generates references its data by entity ID, and a headless view has none. Use `get_chartdata` for those, or make the view non-headless if you want a generated card.
 
 ## Using a view from an action
 
-Every price-reading action takes a **`view`** parameter. Pass a view's device and the action answers as that view: its clock decides what "now" means, and its own cached prices are used.
+Every price-reading action takes a **`view_id`** parameter. Pass a view's device and the action answers as that view: its clock decides what "now" means, and its own cached prices are used.
 
 ```yaml
 action: tibber_prices.find_cheapest_block
 data:
-  view: 0a1b2c3d4e5f...        # the view's device
+  view_id: 0a1b2c3d4e5f...     # the view's device
   search_scope: next_24h
   duration:
     hours: 1
@@ -82,7 +82,7 @@ With a `-7 days` view this searches *last week's* next 24 hours. That is the who
 
 Relative ranges (`next_24h`, `remaining_today`, `search_start_offset_minutes`, and the default range) all follow the view's clock. Absolute ranges (`search_start`, `search_start_time`) are taken literally, so you can also point a view at a specific historical window.
 
-Leaving `view` out, or selecting the home's own device, gives the live data as before.
+The picker lists only your time-travel views — the home itself is already what the `entry_id` field selects. Leave `view_id` empty for live data.
 
 The parameter is available on `get_price`, `get_chartdata`, `get_apexcharts_yaml`, `find_cheapest_block`, `find_most_expensive_block`, `find_cheapest_hours`, `find_most_expensive_hours`, `find_cheapest_schedule` and `plan_charging`. Account-level actions (`refresh_user_data`) have no use for it.
 

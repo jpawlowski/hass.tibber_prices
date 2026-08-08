@@ -30,11 +30,11 @@ If you have configured more than one Tibber home, each home has its own config e
 
 ## Asking a Time-Travel View Instead
 
-Every price-reading action also accepts an optional **`view`** parameter. Pass the device of a [time-travel view](time-travel.md) and the action answers as that view — on the view's clock, from the view's cached prices — instead of live. It renders as a device picker in the UI.
+Every price-reading action also accepts an optional **`view_id`** parameter. Pass the device of a [time-travel view](time-travel.md) and the action answers as that view — on the view's clock, from the view's cached prices — instead of live. It renders as a device picker listing only your views; the home itself is what `entry_id` above selects.
 
 This is what lets you rehearse an automation against a day whose prices you already know: point the same action at a `-7 days` view and `next_24h` means last week's next 24 hours.
 
-Omitting `view`, or selecting the home's own device, gives live data. See [Using a view from an action](time-travel.md#using-a-view-from-an-action) for details.
+Leave `view_id` empty for live data. See [Using a view from an action](time-travel.md#using-a-view-from-an-action) for details.
 
 ## All Actions at a Glance
 

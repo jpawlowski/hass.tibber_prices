@@ -1422,9 +1422,9 @@
           "name": "Oppførings-ID",
           "description": "Konfigurasjonsoppførings-IDen for Tibber-integrasjonen."
         },
-        "view": {
+        "view_id": {
           "name": "Tidsreisevisning",
-          "description": "Svar for en tidsreisevisning av dette hjemmet i stedet for direkte, med visningens egen klokke og prisdata. Velg visningens enhet; hjemmets egen enhet betyr direkte."
+          "description": "Svar for en tidsreisevisning av dette hjemmet i stedet for direkte, med visningens egen klokke og prisdata. La stå tomt for direktedata."
         },
         "start_time": {
           "name": "Starttid",
@@ -1444,9 +1444,9 @@
           "name": "Oppførings-ID",
           "description": "Konfigureringsoppførings-IDen for Tibber-integrasjonen."
         },
-        "view": {
+        "view_id": {
           "name": "Tidsreisevisning",
-          "description": "Svar for en tidsreisevisning av dette hjemmet i stedet for direkte, med visningens egen klokke og prisdata. Velg visningens enhet; hjemmets egen enhet betyr direkte."
+          "description": "Svar for en tidsreisevisning av dette hjemmet i stedet for direkte, med visningens egen klokke og prisdata. La stå tomt for direktedata."
         },
         "day": {
           "name": "Dag",
@@ -1512,9 +1512,9 @@
           "name": "Oppførings-ID",
           "description": "Konfig-oppførings-ID for Tibber-integrasjonen."
         },
-        "view": {
+        "view_id": {
           "name": "Tidsreisevisning",
-          "description": "Svar for en tidsreisevisning av dette hjemmet i stedet for direkte, med visningens egen klokke og prisdata. Velg visningens enhet; hjemmets egen enhet betyr direkte."
+          "description": "Svar for en tidsreisevisning av dette hjemmet i stedet for direkte, med visningens egen klokke og prisdata. La stå tomt for direktedata."
         },
         "day": {
           "name": "Dag",
@@ -1674,9 +1674,9 @@
           "name": "Oppførings-ID",
           "description": "Konfig-oppførings-ID for Tibber-integrasjonen."
         },
-        "view": {
+        "view_id": {
           "name": "Tidsreisevisning",
-          "description": "Svar for en tidsreisevisning av dette hjemmet i stedet for direkte, med visningens egen klokke og prisdata. Velg visningens enhet; hjemmets egen enhet betyr direkte."
+          "description": "Svar for en tidsreisevisning av dette hjemmet i stedet for direkte, med visningens egen klokke og prisdata. La stå tomt for direktedata."
         },
         "duration": {
           "name": "Varighet",
@@ -1798,9 +1798,9 @@
           "name": "Oppførings-ID",
           "description": "Konfig-oppførings-ID for Tibber-integrasjonen."
         },
-        "view": {
+        "view_id": {
           "name": "Tidsreisevisning",
-          "description": "Svar for en tidsreisevisning av dette hjemmet i stedet for direkte, med visningens egen klokke og prisdata. Velg visningens enhet; hjemmets egen enhet betyr direkte."
+          "description": "Svar for en tidsreisevisning av dette hjemmet i stedet for direkte, med visningens egen klokke og prisdata. La stå tomt for direktedata."
         },
         "duration": {
           "name": "Varighet",
@@ -1922,9 +1922,9 @@
           "name": "Oppførings-ID",
           "description": "Konfig-oppførings-ID for Tibber-integrasjonen."
         },
-        "view": {
+        "view_id": {
           "name": "Tidsreisevisning",
-          "description": "Svar for en tidsreisevisning av dette hjemmet i stedet for direkte, med visningens egen klokke og prisdata. Velg visningens enhet; hjemmets egen enhet betyr direkte."
+          "description": "Svar for en tidsreisevisning av dette hjemmet i stedet for direkte, med visningens egen klokke og prisdata. La stå tomt for direktedata."
         },
         "duration": {
           "name": "Varighet",
@@ -2050,9 +2050,9 @@
           "name": "Oppførings-ID",
           "description": "Konfig-oppførings-ID for Tibber-integrasjonen."
         },
-        "view": {
+        "view_id": {
           "name": "Tidsreisevisning",
-          "description": "Svar for en tidsreisevisning av dette hjemmet i stedet for direkte, med visningens egen klokke og prisdata. Velg visningens enhet; hjemmets egen enhet betyr direkte."
+          "description": "Svar for en tidsreisevisning av dette hjemmet i stedet for direkte, med visningens egen klokke og prisdata. La stå tomt for direktedata."
         },
         "duration": {
           "name": "Varighet",
@@ -2174,9 +2174,9 @@
           "name": "Oppførings-ID",
           "description": "Konfig-oppførings-ID for Tibber-integrasjonen."
         },
-        "view": {
+        "view_id": {
           "name": "Tidsreisevisning",
-          "description": "Svar for en tidsreisevisning av dette hjemmet i stedet for direkte, med visningens egen klokke og prisdata. Velg visningens enhet; hjemmets egen enhet betyr direkte."
+          "description": "Svar for en tidsreisevisning av dette hjemmet i stedet for direkte, med visningens egen klokke og prisdata. La stå tomt for direktedata."
         },
         "tasks": {
           "name": "Oppgaver",
@@ -2310,9 +2310,9 @@
           "name": "Oppførings-ID",
           "description": "Konfigurasjonsoppførings-ID-en for Tibber-integrasjonen."
         },
-        "view": {
+        "view_id": {
           "name": "Tidsreisevisning",
-          "description": "Svar for en tidsreisevisning av dette hjemmet i stedet for direkte, med visningens egen klokke og prisdata. Velg visningens enhet; hjemmets egen enhet betyr direkte."
+          "description": "Svar for en tidsreisevisning av dette hjemmet i stedet for direkte, med visningens egen klokke og prisdata. La stå tomt for direktedata."
         },
         "max_charge_power_w": {
           "name": "Maksimal ladeeffekt",

@@ -266,7 +266,7 @@ def _calculate_metadata(
 CHARTDATA_SERVICE_NAME: Final = "get_chartdata"
 ATTR_DAY: Final = "day"
 ATTR_ENTRY_ID: Final = "entry_id"
-ATTR_VIEW: Final = "view"
+ATTR_VIEW: Final = "view_id"
 
 # Parameter types for entity reference resolution
 _CHARTDATA_ENTITY_PARAMS: dict[str, type] = {
@@ -277,7 +277,7 @@ _CHARTDATA_ENTITY_PARAMS: dict[str, type] = {
 CHARTDATA_SERVICE_SCHEMA: Final = vol.Schema(
     {
         vol.Optional(ATTR_ENTRY_ID, default=""): str,
-        vol.Optional("view", default=""): str,
+        vol.Optional("view_id", default=""): str,
         vol.Optional(ATTR_DAY): vol.All(vol.Coerce(list), [vol.In(["yesterday", "today", "tomorrow"])]),
         vol.Optional("resolution", default="interval"): vol.In(["interval", "hourly"]),
         vol.Optional("output_format", default="array_of_objects"): vol.In(["array_of_objects", "array_of_arrays"]),

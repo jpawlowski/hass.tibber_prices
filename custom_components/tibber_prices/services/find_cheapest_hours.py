@@ -75,7 +75,7 @@ _HOURS_ENTITY_PARAMS: dict[str, type] = {
 
 _COMMON_HOURS_SCHEMA = {
     vol.Optional("entry_id", default=""): cv.string,
-    vol.Optional("view", default=""): cv.string,
+    vol.Optional("view_id", default=""): cv.string,
     vol.Required("duration"): or_entity_ref(
         vol.All(cv.positive_time_period, vol.Range(min=timedelta(minutes=1), max=timedelta(hours=24))),
     ),
@@ -310,7 +310,7 @@ async def _handle_find_hours(
     data, resolved_refs = resolve_entity_references(hass, call.data, _HOURS_ENTITY_PARAMS)
 
     entry_id: str = data.get("entry_id", "")
-    view_device_id: str = data.get("view", "")
+    view_device_id: str = data.get("view_id", "")
     duration_td: timedelta = data["duration"]
     min_segment_td: timedelta | None = data.get("min_segment_duration")
     use_base_unit: bool = data.get("use_base_unit", False)

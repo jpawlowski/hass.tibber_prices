@@ -88,7 +88,7 @@ _TASK_SCHEMA = vol.Schema(
 FIND_CHEAPEST_SCHEDULE_SERVICE_SCHEMA = vol.Schema(
     {
         vol.Optional("entry_id", default=""): cv.string,
-        vol.Optional("view", default=""): cv.string,
+        vol.Optional("view_id", default=""): cv.string,
         vol.Required("tasks"): vol.All(
             [_TASK_SCHEMA],
             vol.Length(min=1, max=4),
@@ -394,7 +394,7 @@ async def handle_find_cheapest_schedule(call: ServiceCall) -> ServiceResponse:
 
     tasks_raw: list[dict[str, Any]] = data_dict["tasks"]
     entry_id: str = data_dict.get("entry_id", "")
-    view_device_id: str = data_dict.get("view", "")
+    view_device_id: str = data_dict.get("view_id", "")
     gap_minutes: int = data_dict.get("gap_minutes", 0)
     use_base_unit: bool = data_dict.get("use_base_unit", False)
     max_price_level: str | None = data_dict.get("max_price_level")

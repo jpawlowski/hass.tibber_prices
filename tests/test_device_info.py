@@ -9,13 +9,20 @@ identifiers scoped per entry.
 
 from __future__ import annotations
 
+from pathlib import Path
 from typing import Any
 from unittest.mock import Mock
 
 import pytest
+import yaml
 
 from custom_components.tibber_prices.const import DOMAIN, INTEGRATION_VERSION
-from custom_components.tibber_prices.device import build_device_info, device_identifier, resolve_home_identity
+from custom_components.tibber_prices.device import (
+    VIEW_MODEL_ID,
+    build_device_info,
+    device_identifier,
+    resolve_home_identity,
+)
 
 HOME_ID = "c70dcbe5-4485-4821-933d-a8a86452737b"
 
@@ -163,6 +170,58 @@ def test_subentry_gets_its_own_device() -> None:
     # Everything else stays inherited from the parent home
     assert child.get("serial_number") == parent.get("serial_number")
     assert child.get("model") == parent.get("model")
+
+
+@pytest.mark.unit
+def test_only_view_devices_carry_the_view_model_id() -> None:
+    """Test model_id marks a device as a view, and only a view.
+
+    Scenario: Same coordinator, once without and once with a subentry.
+    Expected: The view carries VIEW_MODEL_ID, the home carries none.
+
+    This is what the `view` device selector in services.yaml filters on - `model` is
+    the home type and identical for both, so it cannot tell them apart. If the marker
+    stopped being set, the picker would silently offer nothing to choose.
+    """
+    coordinator = _make_coordinator(
+        entry_data={
+            "home_id": HOME_ID,
+            "home_data": {"appNickname": "My House", "type": "HOUSE"},
+        }
+    )
+
+    home = build_device_info(coordinator)
+    view = build_device_info(coordinator, _make_subentry())
+
+    assert view.get("model_id") == VIEW_MODEL_ID
+    assert home.get("model_id") is None
+
+
+@pytest.mark.unit
+def test_services_yaml_view_selector_filters_on_the_view_marker() -> None:
+    """Test the shipped selector filters on exactly the marker the code sets.
+
+    The two live in different files and different languages; a typo in either would
+    only surface as an empty picker at runtime.
+    """
+    services = yaml.safe_load(
+        (Path(__file__).parent.parent / "custom_components/tibber_prices/services.yaml").read_text(encoding="utf-8")
+    )
+
+    def view_fields(node: dict) -> list[dict]:
+        found = []
+        for key, value in (node.get("fields") or {}).items():
+            if isinstance(value, dict) and "fields" in value:
+                found.extend(view_fields(value))
+            elif key == "view_id":
+                found.append(value)
+        return found
+
+    selectors = [field["selector"]["device"] for service in services.values() for field in view_fields(service)]
+
+    assert selectors, "no action offers a view selector"
+    for selector in selectors:
+        assert selector["filter"] == [{"integration": DOMAIN, "model_id": VIEW_MODEL_ID}]
 
 
 @pytest.mark.unit

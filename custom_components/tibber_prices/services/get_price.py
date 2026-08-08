@@ -42,7 +42,7 @@ _PRICE_ENTITY_PARAMS: dict[str, type] = {
 GET_PRICE_SERVICE_SCHEMA = vol.Schema(
     {
         vol.Optional("entry_id", default=""): cv.string,
-        vol.Optional("view", default=""): cv.string,
+        vol.Optional("view_id", default=""): cv.string,
         vol.Required("start_time"): or_entity_ref(cv.datetime),
         vol.Required("end_time"): or_entity_ref(cv.datetime),
     }
@@ -81,7 +81,7 @@ async def handle_get_price(call: ServiceCall) -> ServiceResponse:
     data, resolved_refs = resolve_entity_references(hass, call.data, _PRICE_ENTITY_PARAMS)
 
     entry_id: str = data.get("entry_id", "")
-    view_device_id: str = data.get("view", "")
+    view_device_id: str = data.get("view_id", "")
     start_time: datetime = data["start_time"]
     end_time: datetime = data["end_time"]
 

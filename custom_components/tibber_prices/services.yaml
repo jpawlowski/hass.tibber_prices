@@ -6,11 +6,13 @@ get_price:
       selector:
         config_entry:
           integration: tibber_prices
-    view:
+    view_id:
       required: false
       selector:
         device:
-          integration: tibber_prices
+          filter:
+            - integration: tibber_prices
+              model_id: time_travel_view
     start_time:
       required: true
       example: "2025-11-01T00:00:00+01:00"
@@ -29,11 +31,13 @@ get_apexcharts_yaml:
       selector:
         config_entry:
           integration: tibber_prices
-    view:
+    view_id:
       required: false
       selector:
         device:
-          integration: tibber_prices
+          filter:
+            - integration: tibber_prices
+              model_id: time_travel_view
     day:
       required: false
       example: today
@@ -98,11 +102,13 @@ get_chartdata:
           selector:
             config_entry:
               integration: tibber_prices
-        view:
+        view_id:
           required: false
           selector:
             device:
-              integration: tibber_prices
+              filter:
+                - integration: tibber_prices
+                  model_id: time_travel_view
     selection:
       collapsed: true
       fields:
@@ -316,11 +322,13 @@ find_cheapest_block:
       selector:
         config_entry:
           integration: tibber_prices
-    view:
+    view_id:
       required: false
       selector:
         device:
-          integration: tibber_prices
+          filter:
+            - integration: tibber_prices
+              model_id: time_travel_view
     duration:
       required: true
       selector:
@@ -489,11 +497,13 @@ find_most_expensive_block:
       selector:
         config_entry:
           integration: tibber_prices
-    view:
+    view_id:
       required: false
       selector:
         device:
-          integration: tibber_prices
+          filter:
+            - integration: tibber_prices
+              model_id: time_travel_view
     duration:
       required: true
       selector:
@@ -662,11 +672,13 @@ find_cheapest_hours:
       selector:
         config_entry:
           integration: tibber_prices
-    view:
+    view_id:
       required: false
       selector:
         device:
-          integration: tibber_prices
+          filter:
+            - integration: tibber_prices
+              model_id: time_travel_view
     duration:
       required: true
       selector:
@@ -839,11 +851,13 @@ find_most_expensive_hours:
       selector:
         config_entry:
           integration: tibber_prices
-    view:
+    view_id:
       required: false
       selector:
         device:
-          integration: tibber_prices
+          filter:
+            - integration: tibber_prices
+              model_id: time_travel_view
     duration:
       required: true
       selector:
@@ -1016,11 +1030,13 @@ find_cheapest_schedule:
       selector:
         config_entry:
           integration: tibber_prices
-    view:
+    view_id:
       required: false
       selector:
         device:
-          integration: tibber_prices
+          filter:
+            - integration: tibber_prices
+              model_id: time_travel_view
     tasks:
       required: true
       example: '[{"name": "dishwasher", "duration": "02:00:00"}, {"name": "washing_machine", "duration": "01:30:00"}]'
@@ -1188,11 +1204,13 @@ plan_charging:
       selector:
         config_entry:
           integration: tibber_prices
-    view:
+    view_id:
       required: false
       selector:
         device:
-          integration: tibber_prices
+          filter:
+            - integration: tibber_prices
+              model_id: time_travel_view
     battery:
       collapsed: false
       fields:

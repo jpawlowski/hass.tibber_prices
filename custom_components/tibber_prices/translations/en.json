@@ -1422,9 +1422,9 @@
           "name": "Entry ID",
           "description": "The config entry ID for the Tibber integration."
         },
-        "view": {
+        "view_id": {
           "name": "Time-travel view",
-          "description": "Answer for a time-travel view of this home instead of live, using the view's own clock and price data. Pick the view's device; picking the home's own device means live."
+          "description": "Answer for a time-travel view of this home instead of live, using the view's own clock and price data. Leave empty for live data."
         },
         "start_time": {
           "name": "Start Time",
@@ -1444,9 +1444,9 @@
           "name": "Entry ID",
           "description": "The config entry ID for the Tibber integration."
         },
-        "view": {
+        "view_id": {
           "name": "Time-travel view",
-          "description": "Answer for a time-travel view of this home instead of live, using the view's own clock and price data. Pick the view's device; picking the home's own device means live."
+          "description": "Answer for a time-travel view of this home instead of live, using the view's own clock and price data. Leave empty for live data."
         },
         "day": {
           "name": "Day",
@@ -1512,9 +1512,9 @@
           "name": "Entry ID",
           "description": "The config entry ID for the Tibber integration."
         },
-        "view": {
+        "view_id": {
           "name": "Time-travel view",
-          "description": "Answer for a time-travel view of this home instead of live, using the view's own clock and price data. Pick the view's device; picking the home's own device means live."
+          "description": "Answer for a time-travel view of this home instead of live, using the view's own clock and price data. Leave empty for live data."
         },
         "day": {
           "name": "Day",
@@ -1674,9 +1674,9 @@
           "name": "Entry ID",
           "description": "The config entry ID for the Tibber integration."
         },
-        "view": {
+        "view_id": {
           "name": "Time-travel view",
-          "description": "Answer for a time-travel view of this home instead of live, using the view's own clock and price data. Pick the view's device; picking the home's own device means live."
+          "description": "Answer for a time-travel view of this home instead of live, using the view's own clock and price data. Leave empty for live data."
         },
         "duration": {
           "name": "Duration",
@@ -1798,9 +1798,9 @@
           "name": "Entry ID",
           "description": "The config entry ID for the Tibber integration."
         },
-        "view": {
+        "view_id": {
           "name": "Time-travel view",
-          "description": "Answer for a time-travel view of this home instead of live, using the view's own clock and price data. Pick the view's device; picking the home's own device means live."
+          "description": "Answer for a time-travel view of this home instead of live, using the view's own clock and price data. Leave empty for live data."
         },
         "duration": {
           "name": "Duration",
@@ -1922,9 +1922,9 @@
           "name": "Entry ID",
           "description": "The config entry ID for the Tibber integration."
         },
-        "view": {
+        "view_id": {
           "name": "Time-travel view",
-          "description": "Answer for a time-travel view of this home instead of live, using the view's own clock and price data. Pick the view's device; picking the home's own device means live."
+          "description": "Answer for a time-travel view of this home instead of live, using the view's own clock and price data. Leave empty for live data."
         },
         "duration": {
           "name": "Duration",
@@ -2050,9 +2050,9 @@
           "name": "Entry ID",
           "description": "The config entry ID for the Tibber integration."
         },
-        "view": {
+        "view_id": {
           "name": "Time-travel view",
-          "description": "Answer for a time-travel view of this home instead of live, using the view's own clock and price data. Pick the view's device; picking the home's own device means live."
+          "description": "Answer for a time-travel view of this home instead of live, using the view's own clock and price data. Leave empty for live data."
         },
         "duration": {
           "name": "Duration",
@@ -2174,9 +2174,9 @@
           "name": "Entry ID",
           "description": "The config entry ID for the Tibber integration."
         },
-        "view": {
+        "view_id": {
           "name": "Time-travel view",
-          "description": "Answer for a time-travel view of this home instead of live, using the view's own clock and price data. Pick the view's device; picking the home's own device means live."
+          "description": "Answer for a time-travel view of this home instead of live, using the view's own clock and price data. Leave empty for live data."
         },
         "tasks": {
           "name": "Tasks",
@@ -2310,9 +2310,9 @@
           "name": "Entry ID",
           "description": "The config entry ID for the Tibber integration."
         },
-        "view": {
+        "view_id": {
           "name": "Time-travel view",
-          "description": "Answer for a time-travel view of this home instead of live, using the view's own clock and price data. Pick the view's device; picking the home's own device means live."
+          "description": "Answer for a time-travel view of this home instead of live, using the view's own clock and price data. Leave empty for live data."
         },
         "max_charge_power_w": {
           "name": "Maximum Charge Power",

@@ -55,6 +55,12 @@ CONFIGURATION_URL = "https://developer.tibber.com/explorer"
 DEFAULT_HOME_NAME = "Tibber Home"
 UNKNOWN_MODEL = "Unknown"
 
+# Marks a device as a time-travel view rather than a home. `model` already carries the
+# home type and is identical for both, so this is what tells them apart in the device
+# registry - and it is the only device attribute a device selector can filter on, which
+# is how services.yaml offers views without also listing every home device.
+VIEW_MODEL_ID = "time_travel_view"
+
 
 def device_identifier(
     coordinator: TibberPricesDataUpdateCoordinator,
@@ -134,6 +140,7 @@ def build_device_info(
         name=home_name,
         manufacturer=MANUFACTURER,
         model=model,
+        model_id=VIEW_MODEL_ID if subentry is not None else None,
         serial_number=home_id or None,
         sw_version=INTEGRATION_VERSION,
         configuration_url=CONFIGURATION_URL,
