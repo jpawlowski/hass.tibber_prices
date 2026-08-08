@@ -31,6 +31,11 @@ sub-entry"::
 
     async_add_entities(entities, config_subentry_id=subentry.subentry_id)
 
+That heading is not a fault report on its own: Home Assistant renders it for
+every entry that owns devices *and* has subentries, so the parent entry's home
+device belongs there and always will. Only a *view* device showing up under it
+points at a missing ``config_subentry_id``.
+
 Entity ``unique_id``s of subentry entities must likewise be scoped with
 :func:`device_identifier`, or they collide with the parent entry's entities.
 """
