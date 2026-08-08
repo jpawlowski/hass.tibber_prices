@@ -1404,10 +1404,10 @@
       "message": "Unbekanntes Gerät. Wähle ein Tibber-Prices-Gerät - eine Zeitreise-Ansicht oder das Zuhause selbst für Live-Daten."
     },
     "view_entry_mismatch": {
-      "message": "Die gewählte Ansicht gehört zu „{view_home}“, die Eintrag-ID nennt aber „{entry_home}“. Wähle eine Ansicht von „{entry_home}“, oder leere die Eintrag-ID - die Ansicht benennt ihr Zuhause bereits."
+      "message": "Die gewählte Ansicht gehört zu „{view_home}“, die Eintrag-ID nennt aber „{entry_home}“. Wähle eine Ansicht von „{entry_home}“, oder leere die Eintrag-ID - das Zuhause ergibt sich schon aus der Ansicht."
     },
     "view_not_loaded": {
-      "message": "Diese Zeitreise-Ansicht ist derzeit nicht eingerichtet. Sie wurde möglicherweise entfernt, oder die Integration lädt noch."
+      "message": "Diese Zeitreise-Ansicht ist derzeit nicht eingerichtet. Möglicherweise wurde sie entfernt, oder die Integration lädt noch."
     },
     "headless_view_has_no_entities": {
       "message": "Eine Headless-Ansicht hat keine Preis-Entitäten, die eine Diagrammkarte referenzieren könnte. Nutze die Aktion get_chartdata, die die Daten der Ansicht direkt zurückgibt."
@@ -2316,7 +2316,7 @@
         },
         "max_charge_power_w": {
           "name": "Maximale Ladeleistung",
-          "description": "Maximale Ladeleistung in Watt. Sie definiert die Obergrenze für festes, kontinuierliches oder gestuftes Laden."
+          "description": "Maximale Ladeleistung in Watt. Der Wert definiert die Obergrenze für festes, kontinuierliches oder gestuftes Laden."
         },
         "battery_capacity_kwh": {
           "name": "Batteriekapazität",
