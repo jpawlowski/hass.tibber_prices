@@ -83,6 +83,10 @@ jobs:
           echo "::notice::Explicitly dispatching release.yml for $TAG (tag push via GITHUB_TOKEN does not auto-trigger workflows)"
           gh workflow run release.yml --ref "$TAG" -f tag="$TAG"
 
+          # Same guard applies to docusaurus.yml (its `push: tags` trigger would not fire
+          # either), and that workflow creates the versioned docs snapshot for the tag.
+          gh workflow run docusaurus.yml --ref "$TAG"
+
       - name: Summary
         run: |
           if [ "${{ steps.tag_check.outputs.exists }}" = "true" ]; then
