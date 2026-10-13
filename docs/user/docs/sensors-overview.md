@@ -115,7 +115,7 @@ See the **[Chart Examples Guide](chart-examples.md)** for practical examples!
 **Entity ID:** `sensor.<home_name>_chart_data_export`
 **Default State:** Disabled (must be manually enabled)
 
-> **⚠️ Legacy Feature**: Other integrations and cards should no longer read price data from entity attributes. Use the **`tibber_prices.get_chartdata`** action instead: it returns data on demand, offers more flexibility and avoids keeping a large list in the state machine that is rewritten every 15 minutes. This sensor stays available for consumers that can only read sensor attributes, for example [tibber-graph](#use-with-tibber-graph). If you use such a project, consider asking its author to support the action.
+> **⚠️ Legacy Feature**: Other integrations and cards should no longer read price data from entity attributes. Use the **`tibber_prices.get_chartdata`** action instead: it returns data on demand, offers more flexibility and avoids keeping a large list in the state machine that is rewritten every 15 minutes. This sensor stays available for consumers that can only read sensor attributes, for example [tibber-graph](chart-third-party.md). If you use such a project, consider asking its author to support the action.
 
 This diagnostic sensor provides cached chart-friendly price data that can be consumed by chart cards (ApexCharts, custom cards, etc.).
 
@@ -166,19 +166,16 @@ type: custom:apexcharts-card
 series:
     - entity: sensor.<home_name>_chart_data_export
       data_generator: |
-          return entity.attributes.data;
+          return entity.attributes.data.map((i) => [new Date(i.start_time).getTime(), i.price_per_kwh]);
 ```
 
 </details>
 
-#### Use with tibber-graph
+<span id="use-with-tibber-graph"></span>
 
-[tibber-graph](https://github.com/stefanes/tibber-graph) can render prices from any sensor that exposes a list of `start_time` and `price_per_kwh` in its attributes. This sensor already uses exactly that format, so no template sensor is needed and no extra API calls are made:
+#### Use with third-party cards and integrations
 
-1. Enable `sensor.<home_name>_chart_data_export` (**Settings → Devices & Services → Tibber Prices → your home → Entities**, then show disabled entities).
-2. In tibber-graph, use that entity as the price sensor, for example `price_entity_id: sensor.<home_name>_chart_data_export` in the `create_graph` or `set_data_source` action.
-
-Leave `subunit_currency` at its default (`false`) so prices stay in the base currency per kWh (for example EUR/kWh), which is what tibber-graph expects.
+Projects like [tibber-graph](https://github.com/stefanes/tibber-graph) can read this sensor directly, with no template sensor and no extra API calls. See **[Third-Party Cards & Integrations](chart-third-party.md)** for setup, format options and a list of known projects.
 
 **Migration Path:**
 

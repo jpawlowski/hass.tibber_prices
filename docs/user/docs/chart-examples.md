@@ -4,6 +4,8 @@ This guide showcases the different chart configurations available through the `t
 
 > **Quick Start:** Call the action with your desired parameters, copy the generated YAML, and paste it into your Lovelace dashboard!
 
+> **Using another card or integration?** See **[Third-Party Cards & Integrations](chart-third-party.md)**.
+
 :::tip Entity ID tip
 `<home_name>` is a placeholder for your Tibber home display name in Home Assistant. Entity IDs are derived from the displayed name (localized), so the exact slug may differ. **Can't find a sensor?** Use the **[Entity Reference (All Languages)](sensor-reference.md)** to search by name in your language.
 :::
