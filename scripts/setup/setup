@@ -2,7 +2,7 @@
 
 # script/setup: Setup script used by DevContainers to prepare the project
 #
-# Installs optional development tools (pyright, GitHub Copilot CLI, git-cliff)
+# Installs optional development tools (pyright, Claude Code CLI, GitHub Copilot CLI, git-cliff)
 # and configures the environment. Called automatically by DevContainer postStartCommand.
 #
 # Usage:
@@ -25,6 +25,15 @@ if command -v npm >/dev/null 2>&1 && ! command -v pyright >/dev/null 2>&1; then
     npm install -g pyright 2>/dev/null || {
         log_warning "pyright installation failed (optional)"
         log_info "You can install it manually: ${BOLD}npm install -g pyright${NC}"
+    }
+fi
+
+# Install optional release note backend: Claude Code CLI (AI-powered, preferred)
+if command -v npm >/dev/null 2>&1 && ! command -v claude >/dev/null 2>&1; then
+    log_header "Installing Claude Code CLI for AI-powered release notes"
+    npm install -g @anthropic-ai/claude-code 2>/dev/null || {
+        log_warning "Claude Code CLI installation failed (optional)"
+        log_info "You can install it manually: ${BOLD}npm install -g @anthropic-ai/claude-code${NC}"
     }
 fi
 

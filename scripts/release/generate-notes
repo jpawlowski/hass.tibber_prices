@@ -3,7 +3,8 @@
 # script/generate-notes: Generate release notes from conventional commits
 #
 # Parses conventional commits between git tags and generates formatted release
-# notes. Supports multiple backends: GitHub Copilot CLI (AI), git-cliff
+# notes. Supports multiple backends: Claude Code CLI (AI, preferred), GitHub Copilot
+# CLI (AI), git-cliff
 # (template), or manual grep/awk parsing. Can auto-update existing GitHub releases.
 #
 # Usage:
@@ -229,6 +230,12 @@ detect_backend() {
         return
     fi
 
+    # Check for Claude Code CLI (AI-powered, preferred: Copilot premium requests cost more)
+    if command -v claude >/dev/null 2>&1; then
+        echo "claude"
+        return
+    fi
+
     # Check for GitHub Copilot CLI (AI-powered, best quality)
     if command -v copilot >/dev/null 2>&1; then
         echo "copilot"
@@ -249,10 +256,16 @@ BACKEND=$(detect_backend)
 log_info "${GREEN}Using backend: ${BACKEND}${NC}"
 log_info ""
 
-# Backend: GitHub Copilot CLI (AI-powered)
-generate_with_copilot() {
-    log_info "${BLUE}==> Generating with GitHub Copilot CLI (AI-powered)${NC}"
-    log_info "${YELLOW}Note: This will use one premium request from your monthly quota${NC}"
+# Backend: AI CLI (Claude Code or GitHub Copilot CLI)
+# Usage: generate_with_ai claude|copilot
+generate_with_ai() {
+    local ai_cli="$1"
+    if [[ $ai_cli == claude ]]; then
+        log_info "${BLUE}==> Generating with Claude Code CLI (AI-powered)${NC}"
+    else
+        log_info "${BLUE}==> Generating with GitHub Copilot CLI (AI-powered)${NC}"
+        log_info "${YELLOW}Note: This will use one premium request from your monthly quota${NC}"
+    fi
     log_info ""
 
     # Get filtered commit log for the range with file statistics (oldest -> newest).
@@ -437,8 +450,10 @@ End after the Buy Me A Coffee button. No meta-commentary, no explanations."
 
     # Use Claude Sonnet for better user-focused, plain-language release notes.
     # Haiku tends to echo technical commit language; Sonnet better translates to user benefits.
-    # Can override with: COPILOT_MODEL=claude-haiku-4.5 ./scripts/release/generate-notes
-    COPILOT_MODEL="${COPILOT_MODEL:-claude-sonnet}"
+    # Can override with: COPILOT_MODEL=claude-haiku-4.5 (copilot) or CLAUDE_MODEL=haiku (claude)
+    # The claude CLI accepts the alias "sonnet", which always points at the newest Sonnet.
+    COPILOT_MODEL="${COPILOT_MODEL:-claude-sonnet-5.5}"
+    CLAUDE_MODEL="${CLAUDE_MODEL:-sonnet}"
 
     # Call copilot CLI (it will handle authentication interactively).
     # Flags matter here (recent copilot CLI versions, e.g. 1.0.68+):
@@ -464,14 +479,21 @@ End after the Buy Me A Coffee button. No meta-commentary, no explanations."
     # --no-custom-instructions skips loading this repo's AGENTS.md, which is
     #   unrelated to release-note writing style and would just burn tokens.
     # --no-color keeps the captured output free of ANSI escape codes.
-    COPILOT_OUTPUT=$(printf '%s' "$PROMPT" | copilot --model "$COPILOT_MODEL" --available-tools --silent --no-custom-instructions --no-color) || true
+    # Claude Code: -p prints and exits; --tools "" disables all tools, the
+    #   --setting-sources "" / --no-session-persistence / --disable-slash-commands
+    #   flags keep this repo's AGENTS.md, skills and hooks out of the run.
+    if [[ $ai_cli == claude ]]; then
+        AI_OUTPUT=$(printf '%s' "$PROMPT" | claude -p --model "$CLAUDE_MODEL" --tools "" --setting-sources "" --no-session-persistence --disable-slash-commands) || true
+    else
+        AI_OUTPUT=$(printf '%s' "$PROMPT" | copilot --model "$COPILOT_MODEL" --available-tools --silent --no-custom-instructions --no-color) || true
+    fi
 
     # Treat empty/whitespace-only output as a failure too: copilot has been
     # observed to exit 0 while producing no content (e.g. when it could not
     # obtain a prompt), which previously slipped past the "||" failure check.
-    if [[ -z "${COPILOT_OUTPUT//[[:space:]]/}" ]]; then
+    if [[ -z "${AI_OUTPUT//[[:space:]]/}" ]]; then
         echo ""
-        log_info "${YELLOW}Warning: GitHub Copilot CLI failed, was not authenticated, or returned no output${NC}"
+        log_info "${YELLOW}Warning: ${ai_cli} CLI failed, was not authenticated, or returned no output${NC}"
         log_info "${YELLOW}Falling back to git-cliff${NC}"
         if command -v git-cliff >/dev/null 2>&1; then
             generate_with_gitcliff
@@ -481,7 +503,7 @@ End after the Buy Me A Coffee button. No meta-commentary, no explanations."
         return
     fi
 
-    printf "%s\n" "$COPILOT_OUTPUT"
+    printf "%s\n" "$AI_OUTPUT"
 }
 
 # ============================================================================
@@ -879,6 +901,13 @@ fi
 
 # Validate backend availability
 case "$BACKEND" in
+claude)
+    if ! command -v claude >/dev/null 2>&1; then
+        echo -e "${RED}Error: Claude Code CLI not found${NC}" >&2
+        echo "Install: npm install -g @anthropic-ai/claude-code" >&2
+        exit 1
+    fi
+    ;;
 copilot)
     if ! command -v copilot >/dev/null 2>&1; then
         echo -e "${RED}Error: GitHub Copilot CLI not found${NC}" >&2
@@ -900,8 +929,8 @@ esac
 if [ "$AUTO_UPDATE_AVAILABLE" = "true" ]; then
     TEMP_NOTES=$(mktemp)
     case "$BACKEND" in
-    copilot)
-        generate_with_copilot | ensure_canonical_footer >"$TEMP_NOTES"
+    claude | copilot)
+        generate_with_ai "$BACKEND" | ensure_canonical_footer >"$TEMP_NOTES"
         ;;
     git-cliff)
         generate_with_gitcliff | ensure_canonical_footer >"$TEMP_NOTES"
@@ -913,8 +942,8 @@ if [ "$AUTO_UPDATE_AVAILABLE" = "true" ]; then
 else
     # No auto-update, just output to stdout
     case "$BACKEND" in
-    copilot)
-        generate_with_copilot | ensure_canonical_footer
+    claude | copilot)
+        generate_with_ai "$BACKEND" | ensure_canonical_footer
         ;;
     git-cliff)
         generate_with_gitcliff | ensure_canonical_footer
