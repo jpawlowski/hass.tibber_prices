@@ -85,19 +85,22 @@ def build_chart_data_attributes(
     chart_data_response: dict | None,
     chart_data_last_update: datetime | None,
     chart_data_error: str | None,
+    currency: str | None = None,
 ) -> dict[str, object] | None:
     """
     Return chart data from last service call as attributes with metadata.
 
-    Attribute order: timestamp, error (if any), service data (at the end).
+    Attribute order: timestamp, error (if any), currency (if known), service data (at the end).
 
     Args:
         chart_data_response: Last service response
         chart_data_last_update: Timestamp of last update
         chart_data_error: Error message if service call failed
+        currency: ISO currency code of the home (e.g. "EUR"). Exposed so consumers that read
+            sensor attributes (such as tibber-graph) do not have to guess the currency.
 
     Returns:
-        Dict with timestamp, optional error, and service response data.
+        Dict with timestamp, optional error, optional currency, and service response data.
 
     """
     # Build base attributes with metadata FIRST
@@ -108,6 +111,9 @@ def build_chart_data_attributes(
     # Add error message if service call failed
     if chart_data_error:
         attributes["error"] = chart_data_error
+
+    if currency:
+        attributes["currency"] = currency
 
     if not chart_data_response:
         # No data - only metadata (timestamp, error)

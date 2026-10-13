@@ -115,13 +115,13 @@ See the **[Chart Examples Guide](chart-examples.md)** for practical examples!
 **Entity ID:** `sensor.<home_name>_chart_data_export`
 **Default State:** Disabled (must be manually enabled)
 
-> **⚠️ Legacy Feature**: This sensor is maintained for backward compatibility. For new integrations, use the **`tibber_prices.get_chartdata`** action instead, which offers more flexibility and better performance.
+> **⚠️ Legacy Feature**: Other integrations and cards should no longer read price data from entity attributes. Use the **`tibber_prices.get_chartdata`** action instead: it returns data on demand, offers more flexibility and avoids keeping a large list in the state machine that is rewritten every 15 minutes. This sensor stays available for consumers that can only read sensor attributes, for example [tibber-graph](#use-with-tibber-graph). If you use such a project, consider asking its author to support the action.
 
 This diagnostic sensor provides cached chart-friendly price data that can be consumed by chart cards (ApexCharts, custom cards, etc.).
 
 **Key Features:**
 
--   **Configurable via Options Flow**: Service parameters can be configured through the integration's options menu (Step 7 of 7)
+-   **Configurable via `configuration.yaml`**: Action parameters are set in the optional `chart_export` block (see below). Without it, sensible defaults apply
 -   **Automatic Updates**: Data refreshes on coordinator updates (every 15 minutes)
 -   **Attribute-Based Output**: Chart data is stored in sensor attributes for easy access
 -   **State Indicator**: Shows `pending` (before first call), `ready` (data available), or `error` (service call failed)
@@ -138,21 +138,22 @@ The sensor exposes chart data with metadata in attributes:
 
 -   **`timestamp`**: When the data was last fetched
 -   **`error`**: Error message if service call failed
+-   **`currency`**: Currency code of your home (for example `EUR`)
 -   **`data`** (or custom name): Array of price data points in configured format
 
 **Configuration:**
 
-To configure the sensor's output format:
+The sensor works without any configuration: it exports today and tomorrow (or yesterday and today while tomorrow's prices are not published yet) as `data`, with `start_time` and `price_per_kwh` per quarter-hour interval. To change the output, add a `chart_export` block to your `configuration.yaml` and restart Home Assistant:
 
-1. Go to **Settings → Devices & Services → Tibber Prices**
-2. Click **Configure** on your Tibber home
-3. Navigate through the options wizard to **Step 7: Chart Data Export Settings**
-4. Configure output format, filters, field names, and other options
-5. Save and restart Home Assistant
+```yaml
+tibber_prices:
+    chart_export:
+        day: [today, tomorrow]
+        resolution: hourly
+        data_key: prices
+```
 
-**Available Settings:**
-
-See the `tibber_prices.get_chartdata` action documentation for a complete list of available parameters. All action parameters can be configured through the options flow.
+See the `tibber_prices.get_chartdata` action documentation for the available parameters.
 
 **Example Usage:**
 
@@ -170,9 +171,18 @@ series:
 
 </details>
 
+#### Use with tibber-graph
+
+[tibber-graph](https://github.com/stefanes/tibber-graph) can render prices from any sensor that exposes a list of `start_time` and `price_per_kwh` in its attributes. This sensor already uses exactly that format, so no template sensor is needed and no extra API calls are made:
+
+1. Enable `sensor.<home_name>_chart_data_export` (**Settings → Devices & Services → Tibber Prices → your home → Entities**, then show disabled entities).
+2. In tibber-graph, use that entity as the price sensor, for example `price_entity_id: sensor.<home_name>_chart_data_export` in the `create_graph` or `set_data_source` action.
+
+Leave `subunit_currency` at its default (`false`) so prices stay in the base currency per kWh (for example EUR/kWh), which is what tibber-graph expects.
+
 **Migration Path:**
 
-If you're currently using this sensor, consider migrating to the action:
+If you're currently using this sensor and the consumer can call actions, consider migrating to the action:
 
 <details>
 <summary>Show YAML: Chart Data Export</summary>

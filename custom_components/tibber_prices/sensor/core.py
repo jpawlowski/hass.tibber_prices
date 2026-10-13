@@ -1238,6 +1238,7 @@ class TibberPricesSensor(TibberPricesEntity, RestoreSensor):
             chart_data_response=self._chart_data_response,
             chart_data_last_update=self._chart_data_last_update,
             chart_data_error=self._chart_data_error,
+            currency=(self.coordinator.data or {}).get("currency"),
         )
 
     def _get_chart_metadata_value(self) -> str | None:

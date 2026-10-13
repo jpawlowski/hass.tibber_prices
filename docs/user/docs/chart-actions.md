@@ -362,7 +362,7 @@ If you're still using the `sensor.<home_name>_chart_data_export` sensor, conside
 
 **Migration Steps:**
 
-1. Note your current sensor configuration (Step 7 in Options Flow)
+1. Note your current sensor configuration (the `chart_export` block in `configuration.yaml`)
 2. Create automation/script that calls `tibber_prices.get_chartdata` with the same parameters
 3. Test the new approach
 4. Disable the old sensor when satisfied
