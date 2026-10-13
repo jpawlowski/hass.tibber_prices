@@ -154,6 +154,10 @@ jobs:
             echo "No version snapshot changes to commit"
           else
             git commit -m "docs: add version snapshot $TAG_VERSION and cleanup old versions [skip ci]"
+            # The tag may be behind main by now (commits landed after the release was cut),
+            # so replay the snapshot commit on top of the current main before pushing.
+            git fetch origin main
+            git rebase origin/main
             git push origin HEAD:main
             echo "Version snapshots committed and pushed to main"
           fi
