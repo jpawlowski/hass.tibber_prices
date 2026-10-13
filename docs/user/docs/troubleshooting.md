@@ -28,6 +28,16 @@ Tomorrow's electricity prices are typically published by Tibber between **13:00 
 
 The integration automatically polls more frequently in the afternoon to detect when tomorrow's data becomes available. No manual action is needed.
 
+### Timing Sensors Show "Unknown" During an Active Period
+
+If **Best Price Start** / **Best Price Starts In** (`best_price_next_start_time`, `best_price_next_in_minutes`) or the Peak Price equivalents show "Unknown" while a period is running, this is expected.
+
+While a period is active, these sensors point to the *next* period after the current one. If none exists yet, there is no value to show. This is common when tomorrow's prices are not published yet (see above), because the active period may be the last one found for today. Once tomorrow's prices arrive and a further period is found, the sensors update on their own.
+
+The same applies to Peak Price: if no further peak period is left today, its timing sensors stay "Unknown" until one appears.
+
+If the sensors stay "Unknown" even though tomorrow's prices are available and a later period is expected, see [What to Include in Bug Reports](#what-to-include-in-bug-reports).
+
 ### Wrong Currency or Price Units
 
 If prices show in the wrong currency or wrong unit (EUR vs ct):

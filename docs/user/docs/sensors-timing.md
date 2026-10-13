@@ -35,6 +35,10 @@ For each period type (Best Price and Peak Price):
 | <EntityRef id="best_price_next_start_time" also="peak_price_next_start_time">Next Start Time</EntityRef> | When next-next period starts | When next period starts |
 | <EntityRef id="best_price_next_in_minutes" also="peak_price_next_in_minutes">Next In Minutes</EntityRef> | Minutes to next-next period | Minutes to next period |
 
+:::note "Unknown" during an active period is normal
+While a period is active, **Next Start Time** and **Next In Minutes** look for the period *after* the current one. If no further period exists (for example, because tomorrow's prices are not published yet), there is nothing to show and both sensors report "Unknown". The same applies to the Peak Price counterparts. They fill in automatically once a further period is found. See [Troubleshooting](troubleshooting.md#timing-sensors-show-unknown-during-an-active-period).
+:::
+
 ## Usage Examples
 
 ### Show Countdown to Next Cheap Window
