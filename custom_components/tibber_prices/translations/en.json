@@ -1458,7 +1458,7 @@
         },
         "resolution": {
           "name": "Resolution",
-          "description": "Time resolution for the chart data. 'interval' (default): Original 15-minute intervals (96 points per day). 'hourly': Aggregated hourly values using a rolling 60-minute window (24 points per day) for a cleaner, less cluttered chart."
+          "description": "Time resolution for the chart data. 'interval' (default): Original 15-minute intervals (96 points per day). 'hourly': Average per clock hour, :00–:59 (24 points per day), for a cleaner, less cluttered chart."
         },
         "price_source": {
           "name": "Price Source",
@@ -1522,7 +1522,7 @@
         },
         "resolution": {
           "name": "Resolution",
-          "description": "Time resolution for the returned data. Options: 'interval' (default, 15-minute intervals, 96 points per day), 'hourly' (hourly averages, 24 points per day)."
+          "description": "Time resolution for the returned data. Options: 'interval' (default, 15-minute intervals, 96 points per day), 'hourly' (average per clock hour, :00–:59, 24 points per day)."
         },
         "price_source": {
           "name": "Price Source",

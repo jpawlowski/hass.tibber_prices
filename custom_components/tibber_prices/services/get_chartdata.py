@@ -52,6 +52,7 @@ from custom_components.tibber_prices.const import (
 )
 from custom_components.tibber_prices.coordinator.helpers import get_intervals_for_day_offsets
 from homeassistant.exceptions import ServiceValidationError
+from homeassistant.util import dt as dt_util
 
 from .entity_resolver import or_entity_ref, resolve_entity_references
 from .formatters import aggregate_to_hourly, get_period_data, normalize_level_filter, normalize_rating_level_filter
@@ -618,8 +619,7 @@ async def handle_chartdata(call: ServiceCall) -> dict[str, Any]:  # noqa: C901
         day_offset_map = {"yesterday": -1, "today": 0, "tomorrow": 1}
         offsets = [day_offset_map[day] for day in days]
         day_intervals = get_intervals_for_day_offsets(coordinator.data, offsets)
-        all_timestamps = {interval["startsAt"] for interval in day_intervals if interval.get("startsAt")}
-        all_timestamps = sorted(all_timestamps)
+        all_timestamps = _unique_timestamps(day_intervals)
 
     # Calculate average if requested (per day for average_field)
     # Also build a mapping from date -> day_key for later lookup
@@ -665,7 +665,7 @@ async def handle_chartdata(call: ServiceCall) -> dict[str, Any]:  # noqa: C901
             threshold_high=threshold_high,
         )
         # Also update all_timestamps for insert_nulls='all' mode
-        all_timestamps = sorted({interval["startsAt"] for interval in all_prices if interval.get("startsAt")})
+        all_timestamps = _unique_timestamps(all_prices)
 
     # Helper to get day key from interval timestamp for average lookup
     def _get_day_key_for_interval(interval_start: Any) -> str | None:
@@ -681,11 +681,14 @@ async def handle_chartdata(call: ServiceCall) -> dict[str, Any]:  # noqa: C901
         if insert_nulls == "all" and (level_filter or rating_level_filter):
             # Mode 'all': Insert NULL for all timestamps where filter doesn't match
             # Build a map of timestamp -> interval for quick lookup
-            interval_map = {interval.get("startsAt"): interval for interval in all_prices if interval.get("startsAt")}
+            # (keyed in UTC: the two 02:00 hours of the DST fall-back are equal as local times)
+            interval_map = {
+                dt_util.as_utc(interval["startsAt"]): interval for interval in all_prices if interval.get("startsAt")
+            }
 
             # Process all timestamps, filling gaps with NULL
             for start_time in all_timestamps:
-                interval = interval_map.get(start_time)
+                interval = interval_map.get(dt_util.as_utc(start_time))
 
                 if interval is None:
                     # No data for this timestamp - skip entirely
@@ -1155,3 +1158,16 @@ async def handle_chartdata(call: ServiceCall) -> dict[str, Any]:  # noqa: C901
         result["_resolved"] = resolved_refs  # type: ignore[index]
 
     return result
+
+
+def _unique_timestamps(intervals: list[dict]) -> list[datetime]:
+    """
+    Return the distinct interval starts in time order.
+
+    Deduplicated and sorted in UTC: local datetimes in one zone compare without their
+    DST fold, so a set would merge the two 02:00 hours of the fall-back day.
+    """
+    starts = {
+        dt_util.as_utc(interval["startsAt"]): interval["startsAt"] for interval in intervals if interval.get("startsAt")
+    }
+    return [starts[key] for key in sorted(starts)]

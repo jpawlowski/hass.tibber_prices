@@ -1458,7 +1458,7 @@
         },
         "resolution": {
           "name": "Auflösung",
-          "description": "Zeitauflösung für die Diagrammdaten. 'interval' (Standard): Originale 15-Minuten-Intervalle (96 Punkte pro Tag). 'hourly': Aggregierte Stundenwerte mit einem rollierenden 60-Minuten-Fenster (24 Punkte pro Tag) für ein übersichtlicheres Diagramm."
+          "description": "Zeitauflösung für die Diagrammdaten. 'interval' (Standard): Originale 15-Minuten-Intervalle (96 Punkte pro Tag). 'hourly': Durchschnitt je Uhrstunde, :00–:59 (24 Punkte pro Tag), für ein übersichtlicheres Diagramm."
         },
         "price_source": {
           "name": "Preisquelle",
@@ -1522,7 +1522,7 @@
         },
         "resolution": {
           "name": "Auflösung",
-          "description": "Zeitauflösung für die zurückgegebenen Daten. Optionen: 'interval' (Standard, 15-Minuten-Intervalle, 96 Datenpunkte pro Tag), 'hourly' (stündliche Durchschnitte, 24 Datenpunkte pro Tag)."
+          "description": "Zeitauflösung für die zurückgegebenen Daten. Optionen: 'interval' (Standard, 15-Minuten-Intervalle, 96 Datenpunkte pro Tag), 'hourly' (Durchschnitt je Uhrstunde, :00–:59, 24 Datenpunkte pro Tag)."
         },
         "price_source": {
           "name": "Preisquelle",

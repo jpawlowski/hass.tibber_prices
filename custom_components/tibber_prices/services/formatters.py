@@ -8,7 +8,7 @@ and period data extraction.
 Functions:
     normalize_level_filter: Convert level filter values to uppercase
     normalize_rating_level_filter: Convert rating level filter values to uppercase
-    aggregate_hourly_exact: Aggregate 15-minute intervals to exact hourly averages
+    aggregate_to_hourly: Aggregate 15-minute intervals to clock hours (charts)
     get_period_data: Extract period summary data instead of interval data
     get_level_translation: Get translated name for price level or rating level
 
@@ -32,7 +32,12 @@ from custom_components.tibber_prices.const import (
 )
 from custom_components.tibber_prices.coordinator.helpers import get_intervals_for_day_offsets
 from custom_components.tibber_prices.sensor.helpers import aggregate_level_data, aggregate_rating_data
-from custom_components.tibber_prices.utils.average import calculate_mean, calculate_median
+from custom_components.tibber_prices.utils.average import (
+    calculate_mean,
+    calculate_median,
+    clock_hour_key,
+    clock_hour_start,
+)
 
 
 def normalize_level_filter(value: list[str] | None) -> list[str] | None:
@@ -56,18 +61,19 @@ def aggregate_to_hourly(
     threshold_high: float = DEFAULT_PRICE_RATING_THRESHOLD_HIGH,
 ) -> list[dict]:
     """
-    Aggregate 15-minute intervals to hourly using rolling 5-interval window.
+    Aggregate 15-minute intervals to clock hours (:00-:59).
 
     Preserves original field names (startsAt, total, level, rating_level) so the
     aggregated data can be processed by the same code path as interval data.
 
-    Uses the same methodology as sensor rolling hour calculations:
-    - 5-interval window: 2 before + center + 2 after (60 minutes total)
-    - Center interval is at :00 of each hour
+    Each data point covers exactly the intervals of its clock hour (normally 4), because
+    charts draw it as a step from :00 to :59. A centered rolling window, as used by the
+    rolling hour sensors, would shift every step by half an hour.
     - Respects user's CONF_AVERAGE_SENSOR_DISPLAY setting (mean vs median)
+    - Hours at the edges of the data use the intervals that are available
 
     Example for 10:00 data point:
-    - Window includes: 09:30, 09:45, 10:00, 10:15, 10:30
+    - Window includes: 10:00, 10:15, 10:30, 10:45
 
     Args:
         intervals: List of 15-minute price intervals with startsAt, total, level, rating_level
@@ -82,234 +88,39 @@ def aggregate_to_hourly(
     if not intervals:
         return []
 
-    # Get user's average display preference (mean or median)
+    # Respect the user's average display preference (mean or median)
     average_display = coordinator.config_entry.options.get(CONF_AVERAGE_SENSOR_DISPLAY, DEFAULT_AVERAGE_SENSOR_DISPLAY)
-    use_median = average_display == "median"
+    aggregate = calculate_median if average_display == "median" else calculate_mean
+
+    # Group priced intervals by their clock hour (dicts keep chronological order). The key
+    # is UTC so the repeated hour at the DST fall-back stays two hours; the value keeps the
+    # local start for output.
+    hours: dict[datetime, tuple[datetime, list[dict]]] = {}
+    for interval in intervals:
+        interval_start = interval.get("startsAt")
+        if interval_start and interval.get("total") is not None:
+            _, hour_intervals = hours.setdefault(clock_hour_key(interval_start), (clock_hour_start(interval_start), []))
+            hour_intervals.append(interval)
 
     hourly_data = []
+    for start_time, hour_intervals in hours.values():
+        # Build data point with original field names
+        data_point: dict[str, Any] = {
+            "startsAt": start_time,
+            "total": aggregate([interval["total"] for interval in hour_intervals]),
+        }
 
-    # Iterate through all intervals, only process those at :00
-    for i, interval in enumerate(intervals):
-        start_time = interval.get("startsAt")
+        for field in ("energy", "tax"):
+            values = [interval[field] for interval in hour_intervals if interval.get(field) is not None]
+            if values:
+                data_point[field] = aggregate(values)
 
-        if not start_time:
-            continue
+        if aggregated_level := aggregate_level_data(hour_intervals):
+            data_point["level"] = aggregated_level.upper()
+        if aggregated_rating := aggregate_rating_data(hour_intervals, threshold_low, threshold_high):
+            data_point["rating_level"] = aggregated_rating.upper()
 
-        # Check if this is the start of an hour (:00)
-        if start_time.minute != 0:
-            continue
-
-        # Collect 5-interval rolling window: -2, -1, 0, +1, +2
-        window_prices: list[float] = []
-        window_energy_prices: list[float] = []
-        window_tax_prices: list[float] = []
-        window_intervals: list[dict] = []
-
-        for offset in range(-2, 3):  # -2, -1, 0, +1, +2
-            target_idx = i + offset
-            if 0 <= target_idx < len(intervals):
-                target_interval = intervals[target_idx]
-                price = target_interval.get("total")
-                if price is not None:
-                    window_prices.append(price)
-                    window_intervals.append(target_interval)
-                    energy = target_interval.get("energy")
-                    tax = target_interval.get("tax")
-                    if energy is not None:
-                        window_energy_prices.append(energy)
-                    if tax is not None:
-                        window_tax_prices.append(tax)
-
-        # Calculate aggregated price based on user preference
-        if window_prices:
-            aggregated_price = calculate_median(window_prices) if use_median else calculate_mean(window_prices)
-
-            if aggregated_price is None:
-                continue
-
-            # Build data point with original field names
-            data_point: dict[str, Any] = {
-                "startsAt": start_time,
-                "total": aggregated_price,
-            }
-
-            # Add aggregated energy and tax prices
-            if window_energy_prices:
-                aggregated_energy = (
-                    calculate_median(window_energy_prices) if use_median else calculate_mean(window_energy_prices)
-                )
-                if aggregated_energy is not None:
-                    data_point["energy"] = aggregated_energy
-            if window_tax_prices:
-                aggregated_tax = (
-                    calculate_median(window_tax_prices) if use_median else calculate_mean(window_tax_prices)
-                )
-                if aggregated_tax is not None:
-                    data_point["tax"] = aggregated_tax
-
-            # Add aggregated level
-            if window_intervals:
-                aggregated_level = aggregate_level_data(window_intervals)
-                if aggregated_level:
-                    data_point["level"] = aggregated_level.upper()
-
-            # Add aggregated rating_level
-            if window_intervals:
-                aggregated_rating = aggregate_rating_data(window_intervals, threshold_low, threshold_high)
-                if aggregated_rating:
-                    data_point["rating_level"] = aggregated_rating.upper()
-
-            hourly_data.append(data_point)
-
-    return hourly_data
-
-
-def aggregate_hourly_exact(
-    intervals: list[dict],
-    start_time_field: str,
-    price_field: str,
-    *,
-    coordinator: Any,
-    use_subunit_currency: bool = False,
-    round_decimals: int | None = None,
-    include_level: bool = False,
-    include_rating_level: bool = False,
-    level_filter: list[str] | None = None,
-    rating_level_filter: list[str] | None = None,
-    include_average: bool = False,
-    level_field: str = "level",
-    rating_level_field: str = "rating_level",
-    average_field: str = "average",
-    day_average: float | None = None,
-    threshold_low: float = DEFAULT_PRICE_RATING_THRESHOLD_LOW,
-    threshold_high: float = DEFAULT_PRICE_RATING_THRESHOLD_HIGH,
-    period_timestamps: set[str] | None = None,
-) -> list[dict]:
-    """
-    Aggregate 15-minute intervals to exact hourly averages.
-
-    Each hour uses exactly 4 intervals (00:00, 00:15, 00:30, 00:45).
-    Returns data points at the start of each hour.
-
-    Args:
-        intervals: List of 15-minute price intervals
-        start_time_field: Custom name for start time field
-        price_field: Custom name for price field
-        coordinator: Data update coordinator instance (required)
-        use_subunit_currency: Convert to subunit currency units (cents/øre)
-        round_decimals: Optional decimal rounding
-        include_level: Include aggregated level field
-        include_rating_level: Include aggregated rating_level field
-        level_filter: Filter intervals by level values
-        rating_level_filter: Filter intervals by rating_level values
-        include_average: Include day average in output
-        level_field: Custom name for level field
-        rating_level_field: Custom name for rating_level field
-        average_field: Custom name for average field
-        day_average: Day average value to include
-        threshold_low: Rating level threshold (low/normal boundary)
-        threshold_high: Rating level threshold (normal/high boundary)
-        period_timestamps: Set of timestamps to filter by (period filter)
-
-    Returns:
-        List of hourly data points with aggregated values
-
-    """
-    if not intervals:
-        return []
-
-    hourly_data = []
-    i = 0
-
-    while i < len(intervals):
-        interval = intervals[i]
-        start_time_str = interval.get("startsAt")
-
-        if not start_time_str:
-            i += 1
-            continue
-
-        # Get timestamp (already datetime in local timezone)
-        time = coordinator.time
-        start_time = start_time_str  # Already datetime object
-        if not start_time:
-            i += 1
-            continue
-
-        # Check if this is the start of an hour (:00)
-        if start_time.minute != 0:
-            i += 1
-            continue
-
-        # Collect intervals for this hour (with optional filtering)
-        intervals_per_hour = time.minutes_to_intervals(60)
-        hour_intervals = []
-        hour_interval_data = []  # Complete interval data for aggregation functions
-        for j in range(intervals_per_hour):
-            if i + j < len(intervals):
-                interval = intervals[i + j]
-
-                # Apply period filter if specified (check startsAt timestamp)
-                if period_timestamps is not None:
-                    interval_start = interval.get("startsAt")
-                    if interval_start and interval_start not in period_timestamps:
-                        continue
-
-                # Apply level filter if specified
-                if level_filter is not None and "level" in interval and interval["level"] not in level_filter:
-                    continue
-
-                # Apply rating_level filter if specified
-                if (
-                    rating_level_filter is not None
-                    and "rating_level" in interval
-                    and interval["rating_level"] not in rating_level_filter
-                ):
-                    continue
-
-                price = interval.get("total")
-                if price is not None:
-                    hour_intervals.append(price)
-                    hour_interval_data.append(interval)
-
-        # Calculate average if we have data
-        if hour_intervals:
-            avg_price = sum(hour_intervals) / len(hour_intervals)
-
-            # Convert to subunit currency (cents/øre) if requested
-            avg_price = round(avg_price * 100, 2) if use_subunit_currency else round(avg_price, 4)
-
-            # Apply custom rounding if specified
-            if round_decimals is not None:
-                avg_price = round(avg_price, round_decimals)
-
-            data_point = {
-                start_time_field: start_time_str.isoformat()
-                if hasattr(start_time_str, "isoformat")
-                else start_time_str,
-                price_field: avg_price,
-            }
-
-            # Add aggregated level using same logic as sensors
-            if include_level and hour_interval_data:
-                aggregated_level = aggregate_level_data(hour_interval_data)
-                if aggregated_level:
-                    data_point[level_field] = aggregated_level.upper()  # Convert back to uppercase
-
-            # Add aggregated rating_level using same logic as sensors
-            if include_rating_level and hour_interval_data:
-                aggregated_rating = aggregate_rating_data(hour_interval_data, threshold_low, threshold_high)
-                if aggregated_rating:
-                    data_point[rating_level_field] = aggregated_rating.upper()  # Convert back to uppercase
-
-            # Add average if requested
-            if include_average and day_average is not None:
-                data_point[average_field] = day_average
-
-            hourly_data.append(data_point)
-
-        # Move to next hour (skip intervals_per_hour)
-        i += time.minutes_to_intervals(60)
+        hourly_data.append(data_point)
 
     return hourly_data
 

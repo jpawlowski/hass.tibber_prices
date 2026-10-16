@@ -6,6 +6,7 @@ from datetime import datetime, timedelta
 from typing import TYPE_CHECKING
 
 from custom_components.tibber_prices.coordinator.helpers import get_intervals_for_day_offsets
+from homeassistant.util import dt as dt_util
 
 if TYPE_CHECKING:
     from custom_components.tibber_prices.coordinator.time_service import TibberPricesTimeService
@@ -54,6 +55,38 @@ def calculate_mean(prices: list[float]) -> float:
         raise ValueError(msg)
 
     return sum(prices) / len(prices)
+
+
+def clock_hour_start(moment: datetime) -> datetime:
+    """
+    Return the start (:00) of the clock hour containing `moment`.
+
+    Single definition of "clock hour" for hourly chart points and the clock_hour_*
+    sensor attributes, so both always agree on which intervals belong to an hour.
+    """
+    return moment.replace(minute=0, second=0, microsecond=0)
+
+
+def clock_hour_key(moment: datetime) -> datetime:
+    """
+    Return the clock hour containing `moment` as a unique UTC datetime.
+
+    Use this to group or compare clock hours. Local datetimes in the same zone compare
+    without their DST fold, so on the fall-back day the two 02:00 hours would be equal;
+    in UTC they stay two distinct hours.
+    """
+    return dt_util.as_utc(clock_hour_start(moment))
+
+
+def clock_hour_bounds(moment: datetime, hour_offset: int = 0) -> tuple[datetime, datetime]:
+    """
+    Return start and end of the clock hour `hour_offset` hours after the one containing `moment`.
+
+    Steps in UTC, so across a DST change the result is the next real hour (the repeated
+    02:00 at the fall-back is its own hour), and returns local times.
+    """
+    start = dt_util.as_utc(clock_hour_start(moment)) + timedelta(hours=hour_offset)
+    return dt_util.as_local(start), dt_util.as_local(start + timedelta(hours=1))
 
 
 def calculate_trailing_24h_mean(

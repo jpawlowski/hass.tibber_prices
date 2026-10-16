@@ -18,7 +18,7 @@ Actions for generating chart data and ApexCharts configurations from your Tibber
 -   **Time Range Selection**: Filter by day (yesterday, today, tomorrow)
 -   **Price Filtering**: Filter by price level or rating
 -   **Period Support**: Return best/peak price period summaries instead of intervals
--   **Resolution Control**: Interval (15-minute) or hourly aggregation
+-   **Resolution Control**: Interval (15-minute) or hourly averages per clock hour (:00–:59)
 -   **Customizable Field Names**: Rename output fields to match your chart library
 -   **Currency Control**: Override integration default - use base (€/kWh, kr/kWh) or subunit (ct/kWh, øre/kWh)
 
@@ -67,7 +67,7 @@ response_variable: chart_data
 | `entry_id`       | Config entry ID (optional — auto-selects if only one home) | Auto |
 | `day`            | Days to include: yesterday, today, tomorrow | `["today", "tomorrow"]` |
 | `output_format`  | `array_of_objects` or `array_of_arrays`     | `array_of_objects`      |
-| `resolution`     | `interval` (15-min) or `hourly`             | `interval`              |
+| `resolution`     | `interval` (15-min) or `hourly` (clock hour) | `interval`              |
 | `price_source`   | Primary price series: `total`, `energy`, or `tax` | `total`           |
 | `subunit_currency` | Override display mode: `true` for subunit (ct/øre), `false` for base (€/kr) | Integration setting |
 | `round_decimals` | Decimal places (0-10)                       | 2 (subunit) or 4 (base) |

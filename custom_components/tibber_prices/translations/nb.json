@@ -1458,7 +1458,7 @@
         },
         "resolution": {
           "name": "Oppløsning",
-          "description": "Tidsoppløsning for diagramdata. 'interval' (standard): Opprinnelige 15-minutters intervaller (96 punkter per dag). 'hourly': Aggregerte timeverdier med et rullende 60-minutters vindu (24 punkter per dag) for et ryddigere og mindre rotete diagram."
+          "description": "Tidsoppløsning for diagramdata. 'interval' (standard): Opprinnelige 15-minutters intervaller (96 punkter per dag). 'hourly': Gjennomsnitt per klokketime, :00–:59 (24 punkter per dag), for et ryddigere og mindre rotete diagram."
         },
         "price_source": {
           "name": "Priskilde",
@@ -1522,7 +1522,7 @@
         },
         "resolution": {
           "name": "Oppløsning",
-          "description": "Tidsoppløsning for de returnerte dataene. Alternativer: 'interval' (standard, 15-minutters intervaller, 96 datapunkter per dag), 'hourly' (timegjennomsnitt, 24 datapunkter per dag)."
+          "description": "Tidsoppløsning for de returnerte dataene. Alternativer: 'interval' (standard, 15-minutters intervaller, 96 datapunkter per dag), 'hourly' (gjennomsnitt per klokketime, :00–:59, 24 datapunkter per dag)."
         },
         "price_source": {
           "name": "Priskilde",
