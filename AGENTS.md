@@ -4,7 +4,7 @@ This is a **Home Assistant custom component** for Tibber electricity price data,
 
 ## Documentation Metadata
 
-- **Last Major Update**: 2025-01-21
+- **Last Major Update**: 2026-10-16 (Rolling hour routing via ROLLING_HOUR_SENSOR_WINDOWS, removed core.py `_get_rolling_hour_value`, added utils/trend.py; 2026-10-13: rolling hour vs clock hour)
 - **Last Architecture Review**: 2025-01-21 (Phase 1: Added TypedDict documentation system, improved BaseCalculator with 8 helper methods. Phase 2: Documented Import Architecture - Hybrid Pattern (Trend/Volatility build own attributes), verified no circular dependencies, confirmed optimal TYPE_CHECKING usage across all 8 calculators.)
 - **Last Code Example Cleanup**: 2025-11-18 (Removed redundant implementation details from AGENTS.md, added guidelines for when to include code examples)
 - **Documentation Status**: ✅ Current (verified against codebase)
@@ -416,11 +416,12 @@ After successful refactoring:
   - **Core Entity** (`sensor/core.py`): 1,268 lines managing 80+ sensor types
     - Instantiates all calculators in `__init__`
     - Delegates value calculations to appropriate calculator
-    - Uses unified handler methods: `_get_interval_value()`, `_get_rolling_hour_value()`, `_get_daily_stat_value()`, `_get_24h_window_value()`
+    - Uses unified handler methods: `_get_interval_value()`, `_get_daily_stat_value()`, `_get_24h_window_value()`; rolling hour sensors go straight to `TibberPricesRollingHourCalculator.get_rolling_hour_value()` (routed in `sensor/value_getters.py`)
     - Handler mapping dictionary routes entity keys to value getters
   - **Architecture Benefits**: 42% line reduction in core.py (2,170 → 1,268 lines), clear separation of concerns, improved testability, reusable components
   - **See "Common Tasks" section** for detailed patterns and examples
 - **Quarter-hour precision**: Entities update on 00/15/30/45-minute boundaries via `schedule_quarter_hour_refresh()` in `coordinator/listeners.py`, not just on data fetch intervals. Uses `async_track_utc_time_change(minute=[0, 15, 30, 45], second=0)` for absolute-time scheduling. Smart boundary tolerance (±2 seconds) in `sensor/helpers.py` → `round_to_nearest_quarter_hour()` handles HA scheduling jitter: if HA triggers at 14:59:58 → rounds to 15:00:00 (next interval), if HA restarts at 14:59:30 → stays at 14:45:00 (current interval). This ensures current price sensors update without waiting for the next API poll, while preventing premature data display during normal operation.
+- **"Hour" means two different windows, on purpose**: Rolling hour sensors (`current_hour_*`, `next_hour_*`) use a centered 5-interval window (2 before + center + 2 after = 75 min, via `get_rolling_hour_window()` in `entity_utils/helpers.py`), so their state moves smoothly every 15 minutes instead of jumping at each full hour. Charts (`aggregate_to_hourly()` in `services/formatters.py`, used by `get_chartdata`/`get_apexcharts_yaml` with `resolution: hourly`) group by **clock hour** (:00–:59), because a chart draws each hour as a step from :00 to :59 and a centered window would shift every step. No option switches between them: the rolling sensors additionally expose `window_start`/`window_end` and `clock_hour_start`/`clock_hour_end`/`clock_hour_price_mean`/`clock_hour_price_median`, so users who want the clock hour read the attribute. Don't "unify" the two.
 - **Currency handling**: Multi-currency support with base/sub units (e.g., EUR/ct, NOK/øre) via `get_currency_info()` and `format_price_unit_*()` in `const.py`.
 - **Intelligent caching strategy**: Minimizes API calls while ensuring data freshness:
   - User data cached for 24h (rarely changes)
@@ -475,8 +476,9 @@ custom_components/tibber_prices/
 ├── api.py                # GraphQL client with retry/error handling
 ├── utils/                # Pure data transformation utilities
 │   ├── __init__.py       #   Package exports
-│   ├── average.py        #   Trailing/leading average utilities
-│   └── price.py          #   Price enrichment, level/rating calculations
+│   ├── average.py        #   Trailing/leading average utilities, clock hour helpers
+│   ├── price.py          #   Price enrichment, level/rating calculations
+│   └── trend.py          #   Price trend line (Theil-Sen, centered) and confirmed trend timeline
 ├── services/             # Custom services package
 │   ├── __init__.py       #   Service registration
 │   ├── chartdata.py      #   Chart data export service
@@ -2427,7 +2429,7 @@ After the sensor.py refactoring (completed Nov 2025), sensors are organized by *
 
 1. **Determine calculation pattern** - Choose which group your sensor belongs to:
    - **Interval-based**: Uses time offset from current interval (e.g., current/next/previous)
-   - **Rolling hour**: Aggregates 5-interval window (2 before + center + 2 after)
+   - **Rolling hour**: Aggregates 5-interval window (2 before + center + 2 after; not a clock hour, see "Hour means two different windows")
    - **Daily statistics**: Min/max/avg within calendar day boundaries
    - **24h windows**: Trailing/leading from current interval
    - **Future forecast**: N-hour windows starting from next interval
@@ -2447,7 +2449,7 @@ After the sensor.py refactoring (completed Nov 2025), sensors are organized by *
 
 3. **Add handler mapping** in `sensor/core.py` → `_get_value_getter()` method:
    - For interval-based: Use `_get_interval_value(interval_offset, value_type)`
-   - For rolling hour: Use `_get_rolling_hour_value(hour_offset, value_type)`
+   - For rolling hour: Add the key with its `(hour_offset, value_type)` to `ROLLING_HOUR_SENSOR_WINDOWS` in `sensor/definitions.py` — `value_getters.py` (value) and `attributes/interval.py` (window attributes) both read it
    - For daily stats: Use `_get_daily_stat_value(day, stat_func)`
    - For 24h windows: Use `_get_24h_window_value(stat_func)`
    - For others: Implement specific handler if needed
@@ -2469,9 +2471,9 @@ The refactoring consolidated duplicate logic into unified methods in `sensor/cor
   - Handles: All interval-based sensors (current/next/previous)
   - Returns: Price (float), level (str), or rating (str) based on value_type
 
-- **`_get_rolling_hour_value(hour_offset, value_type)`**
-  - Replaces: `_get_rolling_hour_average_value()`, `_get_rolling_hour_level_value()`, `_get_rolling_hour_rating_value()`
-  - Handles: All 5-interval rolling hour windows
+- **Rolling hour** (no core.py method): `TibberPricesRollingHourCalculator.get_rolling_hour_value(hour_offset, value_type)` in `sensor/calculators/rolling_hour.py`
+  - Handles: All 5-interval rolling hour windows (window from `get_rolling_hour_window()` in `entity_utils/helpers.py`)
+  - Routing: `ROLLING_HOUR_SENSOR_WINDOWS` in `sensor/definitions.py`
   - Returns: Aggregated value (average price, aggregated level/rating)
 
 - **`_get_daily_stat_value(day, stat_func)`**

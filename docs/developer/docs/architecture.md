@@ -296,7 +296,7 @@ Sensors organized by **calculation method** (refactored Nov 2025):
 **Unified Handler Methods** (`sensor/core.py`):
 
 - `_get_interval_value(offset, type)` - current/next/previous intervals
-- `_get_rolling_hour_value(offset, type)` - 5-interval rolling windows
+- Rolling hour sensors: `TibberPricesRollingHourCalculator.get_rolling_hour_value(offset, type)` - 5-interval rolling windows, routed via `ROLLING_HOUR_SENSOR_WINDOWS` in `sensor/definitions.py`
 - `_get_daily_stat_value(day, stat_func)` - calendar day min/max/avg
 - `_get_24h_window_value(stat_func)` - trailing/leading statistics
 
