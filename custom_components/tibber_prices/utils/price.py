@@ -1271,14 +1271,25 @@ def _calculate_lookahead_volatility_factor(
         if "total" in interval and interval["total"] is not None
     ]
 
-    if not lookahead_prices:
-        # No valid prices - use default factor
+    return calculate_volatility_factor(lookahead_prices, volatility_threshold_moderate, volatility_threshold_high)
+
+
+def calculate_volatility_factor(
+    prices: list[float],
+    volatility_threshold_moderate: float,
+    volatility_threshold_high: float,
+) -> float:
+    """
+    Map the volatility of `prices` to the trend threshold multiplier (0.6 / 1.0 / 1.4).
+
+    Uses the same coefficient of variation as the volatility sensors, so volatility is
+    interpreted the same way across the integration. 1.0 for an empty list.
+    """
+    if not prices:
         return 1.0
 
-    # Use the same volatility calculation as volatility sensors (coefficient of variation)
-    # This ensures consistent interpretation of volatility across the integration
     volatility_level = calculate_volatility_level(
-        prices=lookahead_prices,
+        prices=prices,
         threshold_moderate=volatility_threshold_moderate,
         threshold_high=volatility_threshold_high,
         # Note: We don't use VERY_HIGH threshold here, only LOW/MODERATE/HIGH matter for factor
@@ -1373,40 +1384,71 @@ def calculate_price_trend(
 
     # Apply volatility adjustment if enabled and data available
     volatility_factor = 1.0
-    effective_rising = threshold_rising
-    effective_falling = threshold_falling
-    effective_strongly_rising = threshold_strongly_rising
-    effective_strongly_falling = threshold_strongly_falling
-
     if volatility_adjustment and lookahead_intervals and all_intervals:
         volatility_factor = _calculate_lookahead_volatility_factor(
             all_intervals, lookahead_intervals, volatility_threshold_moderate, volatility_threshold_high
         )
-        effective_rising = threshold_rising * volatility_factor
-        effective_falling = threshold_falling * volatility_factor
-        effective_strongly_rising = threshold_strongly_rising * volatility_factor
-        effective_strongly_falling = threshold_strongly_falling * volatility_factor
 
     # Calculate percentage difference from current to future
     # CRITICAL: Use abs() for negative prices to get correct percentage direction
     # Example: current=-10, future=-5 → diff=5, pct=5/abs(-10)*100=+50% (correctly shows rising)
     diff_pct = ((future_average - current_interval_price) / abs(current_interval_price)) * 100
 
-    # Calculate absolute price difference (for noise floor check)
-    abs_diff = abs(future_average - current_interval_price)
+    trend = classify_price_trend(
+        diff_pct,
+        abs(future_average - current_interval_price),
+        volatility_factor=volatility_factor,
+        threshold_rising=threshold_rising,
+        threshold_falling=threshold_falling,
+        threshold_strongly_rising=threshold_strongly_rising,
+        threshold_strongly_falling=threshold_strongly_falling,
+        min_abs_diff=min_abs_diff,
+        min_abs_diff_strongly=min_abs_diff_strongly,
+    )
+    return trend, diff_pct, PRICE_TREND_MAPPING[trend], volatility_factor
 
-    # Determine trend based on effective thresholds (5-level scale)
+
+def classify_price_trend(
+    diff_pct: float,
+    abs_diff: float,
+    *,
+    volatility_factor: float = 1.0,
+    threshold_rising: float = 3.0,
+    threshold_falling: float = -3.0,
+    threshold_strongly_rising: float = 9.0,
+    threshold_strongly_falling: float = -9.0,
+    min_abs_diff: float = 0.0,
+    min_abs_diff_strongly: float = 0.0,
+) -> str:
+    """
+    Classify a price change into the 5-level trend scale.
+
+    Shared by the price outlook (level comparison) and the price trend (trend line), so
+    both use the same thresholds, volatility adjustment and noise floor.
+
+    Args:
+        diff_pct: Price change in percent
+        abs_diff: Absolute price change (base currency), for the noise floor
+        volatility_factor: Multiplier applied to all percentage thresholds
+        threshold_rising: Base threshold for rising (%, positive)
+        threshold_falling: Base threshold for falling (%, negative)
+        threshold_strongly_rising: Threshold for strongly rising (%, positive)
+        threshold_strongly_falling: Threshold for strongly falling (%, negative)
+        min_abs_diff: Minimum absolute change for rising/falling (0 = disabled)
+        min_abs_diff_strongly: Minimum absolute change for strongly rising/falling (0 = disabled)
+
+    Returns:
+        PRICE_TREND_* constant
+
+    """
     # Both percentage AND absolute minimum conditions must be met.
     # This prevents tiny absolute changes (e.g., 0.15 ct at 5 ct/kWh) from triggering trends.
-    if diff_pct >= effective_strongly_rising and abs_diff >= min_abs_diff_strongly:
-        trend = PRICE_TREND_STRONGLY_RISING
-    elif diff_pct >= effective_rising and abs_diff >= min_abs_diff:
-        trend = PRICE_TREND_RISING
-    elif diff_pct <= effective_strongly_falling and abs_diff >= min_abs_diff_strongly:
-        trend = PRICE_TREND_STRONGLY_FALLING
-    elif diff_pct <= effective_falling and abs_diff >= min_abs_diff:
-        trend = PRICE_TREND_FALLING
-    else:
-        trend = PRICE_TREND_STABLE
-
-    return trend, diff_pct, PRICE_TREND_MAPPING[trend], volatility_factor
+    if diff_pct >= threshold_strongly_rising * volatility_factor and abs_diff >= min_abs_diff_strongly:
+        return PRICE_TREND_STRONGLY_RISING
+    if diff_pct >= threshold_rising * volatility_factor and abs_diff >= min_abs_diff:
+        return PRICE_TREND_RISING
+    if diff_pct <= threshold_strongly_falling * volatility_factor and abs_diff >= min_abs_diff_strongly:
+        return PRICE_TREND_STRONGLY_FALLING
+    if diff_pct <= threshold_falling * volatility_factor and abs_diff >= min_abs_diff:
+        return PRICE_TREND_FALLING
+    return PRICE_TREND_STABLE

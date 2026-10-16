@@ -4,10 +4,11 @@
 `<home_name>` is a placeholder for your Tibber home display name in Home Assistant. Entity IDs are derived from the displayed name (localized), so the exact slug may differ. **Can't find a sensor?** Use the **[Entity Reference (All Languages)](sensor-reference.md)** to search by name in your language.
 :::
 
-Trend sensors help you understand **whether to act now or wait**. The integration provides two complementary families:
+Trend sensors help you understand **whether to act now or wait**. The integration provides these families:
 
 - **Price Outlook Sensors (1h–12h):** Compare current price vs. future window average — "Is now cheaper than the next Nh on average?"
 - **Price Trajectory Sensors (2h–12h):** Compare first half vs. second half of the window — "Are prices rising or falling *within* the window?"
+- **[Current Price Trend](#current-price-trend)** with **Next Price Trend Change:** The direction prices are moving in right now, and when it changes — "Are prices going up or down at the moment?"
 
 ---
 
@@ -127,19 +128,30 @@ These sensors compare the **first half** of the future window against the **seco
 
 **Entity ID:** `sensor.<home_name>_current_price_trend`
 
-This sensor shows the **currently active trend direction** based on a 3-hour future outlook with volatility-adaptive thresholds.
+This sensor shows **in which direction prices are moving right now**. It fits a trend line through the prices from **1.5 hours ago to 1.5 hours ahead** and reads its slope at the current interval.
 
-Unlike the simple trend sensors that always compare current price vs future average, the current price trend represents the **ongoing trend** — it remains stable between updates and only changes when the underlying price direction actually shifts.
+How it differs from the outlook sensors:
 
-**States:** Same 5-level scale as simple trends.
+| | Current Price Trend | Price Outlook |
+|---|---|---|
+| **Question** | "Are prices going up or down right now?" | "Is now cheaper than the coming hours?" |
+| **Calculation** | Slope of a trend line centered on now | Current price vs. average of the next N hours |
+| **Single outlier interval** | Ignored (robust Theil-Sen line) | Flips the result |
+| **At a price minimum** | Turns from falling to rising | May still say `strongly_falling` |
+
+The line is centered on now on purpose: a fitted line describes the slope in the middle of its window. A window that started at now would report the direction 1.5 hours later, for example "rising" while prices still fall toward a minimum.
+
+A new direction only counts once it holds for 3 intervals (configurable: 2–6). Because of that, the state, [Next Price Trend Change](#next-price-trend-change) and the attributes below always describe the same timeline.
+
+**States:** Same 5-level scale as the outlook sensors. Thresholds (default ±3 % / ±9 %, volatility-adaptive, with a minimum absolute change) apply to the change along the trend line over 1.5 hours, relative to the average price level.
 
 **Key attributes:**
 
 | Attribute | Description | Example |
 |-----------|-------------|---------|
-| `previous_direction` | Price direction before the current trend started | `falling` |
-| `price_direction_duration_minutes` | How long prices have been moving in this direction | `45` |
-| `price_direction_since` | Timestamp when prices started moving in this direction | `2025-11-08T14:00:00+01:00` |
+| `previous_direction` | Direction before the current one (`rising`, `stable` or `falling`) | `falling` |
+| `price_direction_duration_minutes` | How long the current direction has held | `45` |
+| `price_direction_since` | When the current direction started | `2025-11-08T14:00:00+01:00` |
 
 ---
 
@@ -147,7 +159,7 @@ Unlike the simple trend sensors that always compare current price vs future aver
 
 **Entity ID:** `sensor.<home_name>_next_price_trend_change`
 
-This sensor predicts **when the current trend will change** by scanning future intervals. It requires 3 consecutive intervals (configurable: 2–6) confirming the new trend before reporting a change (hysteresis), which prevents false alarms from short-lived price spikes.
+This sensor tells you **when the current trend changes direction next**. It reads the same trend timeline as Current Price Trend: a change needs 3 consecutive intervals (configurable: 2–6) in the new direction and is dated to the first of them, so short-lived price spikes never trigger it.
 
 **Important:** Only **direction changes** count as trend changes. The five states are grouped into three directions:
 
@@ -169,49 +181,44 @@ A change from `rising` to `strongly_rising` (same direction) is **not** reported
 | `from_direction` | Current trend (will change FROM) | `falling` |
 | `minutes_until_change` | Minutes until trend changes | `90` |
 | `price_at_change` | Price at the change point | `13.8` |
-| `price_avg_after_change` | Average price after change | `18.1` |
+| `price_avg_after_change` | Average price of the 3 hours after the change | `18.1` |
 | `threshold_rising_%` | Active rising threshold after volatility adjustment | `3.0` |
 | `threshold_rising_strongly_%` | Active strongly-rising threshold after volatility adjustment | `4.8` |
 | `threshold_falling_%` | Active falling threshold after volatility adjustment | `-3.0` |
 | `threshold_falling_strongly_%` | Active strongly-falling threshold after volatility adjustment | `-4.8` |
 | `volatility_factor` | Applied multiplier (0.6 = low, 1.0 = moderate, 1.4 = high volatility) | `0.8` |
 
-:::info How the detection works — 3-hour lookahead mean
-At each future 15-minute interval, the sensor does a single comparison:
+:::info How the detection works — one trend timeline
+For every interval from 24 hours back to the end of the known prices, the integration fits a trend line through 1.5 hours on either side and classifies its direction. Then it groups those directions into a timeline:
 
-> **interval price** vs. **average price of the following 3 hours**
+1. A new direction starts once **3 consecutive intervals** agree on it (shorter deviations are outliers).
+2. **Current Price Trend** is the direction at the current interval.
+3. **Next Price Trend Change** is the start of the next direction.
+4. `price_direction_since` is the start of the current direction.
 
-If that 3-hour-ahead average has moved in the opposite direction from the current trend, the interval counts as a "candidate" for a trend change. Once 3 consecutive candidates are found (hysteresis), the sensor reports the first one as the change timestamp.
-
-**Why a 3-hour average and not the next price?**
-A single future price is noisy — one cheap or expensive interval doesn't mean the trend has reversed. Averaging the next 3 hours smooths out spikes and gives a stable signal about where prices are broadly heading.
+Because all three come from the same timeline, the state switches exactly where the change was announced.
 :::
 
-:::caution On V-shaped price days — expect an early signal
-On days with a sharp V-shaped curve (price drops steeply to a minimum, then rises steeply), this sensor typically fires **30–60 minutes before the exact price minimum**.
-
-**Why?** When the price is still falling toward the bottom, the 3-hour lookahead window already reaches across the minimum and starts including the rising prices on the other side. As soon as those rising prices pull the 3-hour average above the current falling price, the sensor detects "trend changing to rising" — even though the cheapest interval is still 2–4 steps ahead.
-
-**Timeline example — V-shaped day:**
+:::note Timing on V-shaped price days
+The trend line is centered on each interval, so a change lands close to the actual turning point. Example from a V-shaped day (minimum at 13:45):
 
 ```
-Time    Price    3h-ahead avg    Signal
-13:00   24 ct    18 ct           falling (avg still below current)
-13:15   20 ct    17 ct           falling
-13:30   16 ct    17 ct           ← avg crosses above current → RISING signal ✓
-13:45   13 ct    18 ct           (actual minimum — sensor already fired earlier)
-14:00   16 ct    20 ct
-14:15   21 ct    22 ct
+Time    Price    Current Price Trend
+13:00   16 ct    strongly_falling
+13:15   15 ct    strongly_falling
+13:30   14 ct    falling
+13:45   13 ct    strongly_rising   ← minimum: the trend turns here
+14:00   15 ct    strongly_rising
 ```
 
-**What to use instead if you need the exact minimum:**
-Compare with the [Best Price Period](sensors-timing.md) start time — it finds the actual cheapest window, not the first moment the direction looks like it's changing.
+Because the line smooths over 3 hours, the start of a steep move can show up to about 30 minutes early, and the end of one (prices level off) about 30–45 minutes late.
 
 | Goal | Use |
 |------|-----|
-| "When will prices broadly start rising?" | **Next Price Trend Change** (may fire early) |
-| "When is the cheapest interval / window to run my appliance?" | **Best Price Period** (`best_price_period`, `best_price_next_start_time`) |
-| "Am I at the minimum right now?" | **Outlook `falling` + Trajectory `rising`** combination |
+| "Are prices going up or down right now?" | **Current Price Trend** |
+| "When will the direction change?" | **Next Price Trend Change** |
+| "Is now cheaper than the next hours?" | **Price Outlook** (`price_outlook_3h`, …) |
+| "When is the cheapest window to run my appliance?" | **Best Price Period** (`best_price_period`, `best_price_next_start_time`) |
 :::
 
 ---
@@ -253,13 +260,13 @@ action:
 ## How to Use Trend Sensors for Decisions
 
 :::danger Common Misconception — Don't "Wait for Stable"!
-A natural intuition is to treat trend states like a stock ticker:
+This applies to the **outlook sensors**. A natural intuition is to treat their states like a stock ticker:
 
 - ❌ "It's **falling** → I'll wait until it reaches **stable** (the bottom)"
 - ❌ "It's **rising** → too late, I missed the best price"
 - ❌ "It's **stable** → now is the perfect time to act!"
 
-**This is wrong.** Trend sensors don't show a trajectory — they show a **comparison** between your current price and future prices. The correct interpretation is the opposite:
+**This is wrong.** Outlook sensors don't show a direction — they show a **comparison** between your current price and future prices. The correct interpretation is the opposite (for the direction itself, use [Current Price Trend](#current-price-trend)):
 
 | State | What the Sensor Calculates | ✅ Correct Action |
 |-------|---------------------------|-------------------|
