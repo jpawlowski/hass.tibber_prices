@@ -593,6 +593,10 @@ PRICE_LEVEL_MAPPING = {
     PRICE_LEVEL_VERY_EXPENSIVE: 2,
 }
 
+# Level groups: "cheap" and "expensive" in the everyday sense (both strengths)
+CHEAP_PRICE_LEVELS = frozenset({PRICE_LEVEL_VERY_CHEAP, PRICE_LEVEL_CHEAP})
+EXPENSIVE_PRICE_LEVELS = frozenset({PRICE_LEVEL_EXPENSIVE, PRICE_LEVEL_VERY_EXPENSIVE})
+
 # Mapping for comparing price ratings (used for sorting)
 PRICE_RATING_MAPPING = {
     PRICE_RATING_LOW: -1,

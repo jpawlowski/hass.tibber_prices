@@ -6,13 +6,19 @@ from datetime import timedelta
 from typing import TYPE_CHECKING, Any
 
 from custom_components.tibber_prices.const import (
+    CHEAP_PRICE_LEVELS,
+    EXPENSIVE_PRICE_LEVELS,
     PRICE_LEVEL_MAPPING,
     PRICE_RATING_MAPPING,
     get_display_precision,
     get_display_unit_factor,
 )
-from custom_components.tibber_prices.entity_utils import add_icon_color_attribute
-from custom_components.tibber_prices.utils.price import find_price_data_for_interval
+from custom_components.tibber_prices.coordinator.helpers import get_intervals_for_day_offsets
+from custom_components.tibber_prices.entity_utils import add_icon_color_attribute, get_rolling_hour_window
+from custom_components.tibber_prices.sensor.definitions import ROLLING_HOUR_SENSOR_WINDOWS
+from custom_components.tibber_prices.sensor.helpers import aggregate_average_data
+from custom_components.tibber_prices.utils.average import clock_hour_bounds, clock_hour_key
+from custom_components.tibber_prices.utils.price import find_level_run_times, find_price_data_for_interval
 
 if TYPE_CHECKING:
     from custom_components.tibber_prices.coordinator.core import TibberPricesDataUpdateCoordinator
@@ -89,6 +95,77 @@ def _get_interval_data_for_attributes(
     return None
 
 
+ROLLING_HOUR_OFFSETS = {key: hour_offset for key, (hour_offset, _) in ROLLING_HOUR_SENSOR_WINDOWS.items()}
+
+
+def _add_rolling_window_attributes(
+    attributes: dict,
+    all_prices: list[dict],
+    hour_offset: int,
+    *,
+    time: TibberPricesTimeService,
+) -> None:
+    """
+    Add window_start/window_end: the span a rolling hour value is calculated from.
+
+    The rolling hour is centered on the current interval (2 before + current + 2 after),
+    not the clock hour, so users need to see which 75 minutes it covers.
+
+    Args:
+        attributes: Dictionary to add attributes to
+        all_prices: Price intervals in chronological order (yesterday, today, tomorrow)
+        hour_offset: 0 (current hour), 1 (next hour)
+        time: TibberPricesTimeService instance (required)
+
+    """
+    window = get_rolling_hour_window(all_prices, time.now(), hour_offset, time=time)
+    if not window:
+        return
+    first, last = time.get_interval_time(window[0]), time.get_interval_time(window[-1])
+    if first is None or last is None:
+        return
+    attributes["window_start"] = first.isoformat()
+    attributes["window_end"] = (last + time.get_interval_duration()).isoformat()
+
+
+def _add_clock_hour_attributes(
+    attributes: dict,
+    all_prices: list[dict],
+    hour_offset: int,
+    *,
+    time: TibberPricesTimeService,
+    config_entry: TibberPricesConfigEntry,
+) -> None:
+    """
+    Add the average of the clock hour (:00-:59), like the Tibber app shows it.
+
+    The sensor state stays the rolling hour (smoother, no jump at the full hour); these
+    attributes give automations the clock hour value without an extra entity.
+
+    Args:
+        attributes: Dictionary to add attributes to
+        all_prices: Price intervals (yesterday, today, tomorrow)
+        hour_offset: 0 (clock hour containing now), 1 (next clock hour)
+        time: TibberPricesTimeService instance (required)
+        config_entry: Config entry for display unit and precision
+
+    """
+    hour_start, hour_end = clock_hour_bounds(time.get_current_interval_start(), hour_offset)
+    target = clock_hour_key(hour_start)
+    hour_intervals = [
+        interval
+        for interval in all_prices
+        if (starts_at := time.get_interval_time(interval)) is not None and clock_hour_key(starts_at) == target
+    ]
+    mean, median = aggregate_average_data(hour_intervals, config_entry)
+    if mean is None:
+        return
+    attributes["clock_hour_start"] = hour_start.isoformat()
+    attributes["clock_hour_end"] = hour_end.isoformat()
+    attributes["clock_hour_price_mean"] = mean
+    attributes["clock_hour_price_median"] = median
+
+
 def _add_energy_tax_attributes(
     attributes: dict,
     interval_data: dict | None,
@@ -148,6 +225,15 @@ def add_current_interval_price_attributes(
     # Get interval data and handle timestamp overrides
     interval_data = _get_interval_data_for_attributes(key, coordinator, attributes, time=time)
 
+    # Rolling hour sensors: the exact time span their value covers
+    hour_offset = ROLLING_HOUR_OFFSETS.get(key)
+    if hour_offset is not None:
+        all_prices = get_intervals_for_day_offsets(coordinator.data, [-1, 0, 1])
+        _add_rolling_window_attributes(attributes, all_prices, hour_offset, time=time)
+        if key in ("current_hour_average_price", "next_hour_average_price"):
+            # The clock hour (:00-:59) alongside, for those who want both
+            _add_clock_hour_attributes(attributes, all_prices, hour_offset, time=time, config_entry=config_entry)
+
     # Add icon_color for price sensors (based on their price level)
     if key in [
         "current_interval_price",
@@ -169,11 +255,10 @@ def add_current_interval_price_attributes(
             add_icon_color_attribute(attributes, key="price_level", state_value=level)
 
         # Add alternate average attribute for rolling hour average price sensors
-        base_key = "rolling_hour_0" if key == "current_hour_average_price" else "rolling_hour_1"
         add_alternate_average_attribute(
             attributes,
             cached_data,
-            base_key,
+            f"rolling_hour_{ROLLING_HOUR_OFFSETS[key]}",
             config_entry=config_entry,
         )
 
@@ -233,6 +318,39 @@ def add_level_attributes_for_sensor(
         current_interval_data = get_current_interval_data(coordinator, time=time)
         if current_interval_data and "level" in current_interval_data:
             add_price_level_attributes(attributes, current_interval_data["level"])
+            _add_level_run_attributes(attributes, coordinator, current_interval_data, time=time)
+
+
+def _add_level_run_attributes(
+    attributes: dict,
+    coordinator: TibberPricesDataUpdateCoordinator,
+    current_interval_data: dict,
+    *,
+    time: TibberPricesTimeService,
+) -> None:
+    """
+    Add how long prices stay cheap/expensive and when the next such stretch starts.
+
+    Complements the best/peak price periods: those can end while prices are still
+    cheap, or start after prices already turned cheap.
+
+    Args:
+        attributes: Dictionary to add attributes to
+        coordinator: The data update coordinator
+        current_interval_data: Price data of the current interval
+        time: TibberPricesTimeService instance (required)
+
+    """
+    current_start = time.get_interval_time(current_interval_data)
+    if current_start is None:
+        return
+    intervals = get_intervals_for_day_offsets(coordinator.data, [-1, 0, 1])
+    runs = find_level_run_times(
+        intervals, current_start, {"cheap": CHEAP_PRICE_LEVELS, "expensive": EXPENSIVE_PRICE_LEVELS}, time=time
+    )
+    for prefix, (until, next_start) in runs.items():
+        attributes[f"{prefix}_until"] = until.isoformat() if until else None
+        attributes[f"next_{prefix}_start"] = next_start.isoformat() if next_start else None
 
 
 def add_price_level_attributes(attributes: dict, level: str) -> None:

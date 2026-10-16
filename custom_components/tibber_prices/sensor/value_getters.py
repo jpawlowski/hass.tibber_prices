@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, cast
 
+from custom_components.tibber_prices.sensor.definitions import ROLLING_HOUR_SENSOR_WINDOWS
 from custom_components.tibber_prices.utils.average import (
     calculate_current_leading_max,
     calculate_current_leading_mean,
@@ -110,25 +111,14 @@ def get_value_getter_mapping(
         # ================================================================
         # ROLLING HOUR SENSORS (5-interval windows) - via RollingHourCalculator
         # ================================================================
-        "current_hour_price_level": lambda: rolling_hour_calculator.get_rolling_hour_value(
-            hour_offset=0, value_type="level"
-        ),
-        "next_hour_price_level": lambda: rolling_hour_calculator.get_rolling_hour_value(
-            hour_offset=1, value_type="level"
-        ),
-        # Rolling hour average (5 intervals: 2 before + current + 2 after)
-        "current_hour_average_price": lambda: rolling_hour_calculator.get_rolling_hour_value(
-            hour_offset=0, value_type="price"
-        ),
-        "next_hour_average_price": lambda: rolling_hour_calculator.get_rolling_hour_value(
-            hour_offset=1, value_type="price"
-        ),
-        "current_hour_price_rating": lambda: rolling_hour_calculator.get_rolling_hour_value(
-            hour_offset=0, value_type="rating"
-        ),
-        "next_hour_price_rating": lambda: rolling_hour_calculator.get_rolling_hour_value(
-            hour_offset=1, value_type="rating"
-        ),
+        **{
+            key: (
+                lambda hour_offset=hour_offset, value_type=value_type: rolling_hour_calculator.get_rolling_hour_value(
+                    hour_offset=hour_offset, value_type=value_type
+                )
+            )
+            for key, (hour_offset, value_type) in ROLLING_HOUR_SENSOR_WINDOWS.items()
+        },
         # ================================================================
         # DAILY STATISTICS SENSORS - via DailyStatCalculator
         # ================================================================

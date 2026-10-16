@@ -23,11 +23,7 @@ from custom_components.tibber_prices.coordinator import MINUTE_UPDATE_ENTITY_KEY
 from custom_components.tibber_prices.coordinator.helpers import get_intervals_for_day_offsets
 from custom_components.tibber_prices.device import entity_unique_id
 from custom_components.tibber_prices.entity import TibberPricesEntity
-from custom_components.tibber_prices.entity_utils import (
-    add_icon_color_attribute,
-    find_rolling_hour_center_index,
-    get_price_value,
-)
+from custom_components.tibber_prices.entity_utils import add_icon_color_attribute, get_price_value
 from custom_components.tibber_prices.entity_utils.icons import TibberPricesIconContext, get_dynamic_icon
 from custom_components.tibber_prices.utils.average import calculate_next_n_hours_mean
 from custom_components.tibber_prices.utils.price import calculate_volatility_level
@@ -156,6 +152,14 @@ class TibberPricesSensor(TibberPricesEntity, RestoreSensor):
             "last_turnover",
             "last_error",
             "error",
+            "cheap_until",  # Current price level: forward-looking, derivable from price data
+            "next_cheap_start",
+            "expensive_until",
+            "next_expensive_start",
+            "window_start",  # Rolling hour sensors: derivable from timestamp
+            "window_end",
+            "clock_hour_start",
+            "clock_hour_end",
             # Relaxation Details
             "relaxation_level",
             "relaxation_threshold_original_%",
@@ -445,68 +449,6 @@ class TibberPricesSensor(TibberPricesEntity, RestoreSensor):
     # ========================================================================
     # UNIFIED INTERVAL VALUE METHODS (NEW)
     # ========================================================================
-
-    # ========================================================================
-    # ROLLING HOUR METHODS (unified)
-    # ========================================================================
-
-    def _get_rolling_hour_value(
-        self,
-        *,
-        hour_offset: int = 0,
-        value_type: str = "price",
-    ) -> str | float | None:
-        """
-        Unified method to get aggregated values from 5-interval rolling window.
-
-        Window: 2 before + center + 2 after = 5 intervals (60 minutes total).
-
-        Args:
-            hour_offset: 0 (current hour), 1 (next hour), etc.
-            value_type: "price" | "level" | "rating"
-
-        Returns:
-            Aggregated value based on type:
-            - "price": float (average price in subunit currency units)
-            - "level": str (aggregated level: "very_cheap", "cheap", etc.)
-            - "rating": str (aggregated rating: "low", "normal", "high")
-
-        """
-        if not self.coordinator.data:
-            return None
-
-        # Get all available price data (yesterday, today, tomorrow) via helper
-        all_prices = get_intervals_for_day_offsets(self.coordinator.data, [-1, 0, 1])
-
-        if not all_prices:
-            return None
-
-        # Find center index for the rolling window
-        time = self.coordinator.time
-        now = time.now()
-        center_idx = find_rolling_hour_center_index(all_prices, now, hour_offset, time=time)
-        if center_idx is None:
-            return None
-
-        # Collect data from 5-interval window (-2, -1, 0, +1, +2)
-        window_data = []
-        for offset in range(-2, 3):
-            idx = center_idx + offset
-            if 0 <= idx < len(all_prices):
-                window_data.append(all_prices[idx])
-
-        if not window_data:
-            return None
-
-        result = self._rolling_hour_calculator.aggregate_window_data(window_data, value_type)
-        # For price type, aggregate_window_data returns (avg, median)
-        if isinstance(result, tuple):
-            avg, median = result
-            # Cache median for attributes
-            if median is not None:
-                self.cached_data[f"{self.entity_description.key}_median"] = median
-            return avg
-        return result
 
     # ========================================================================
     # INTERVAL-BASED VALUE METHODS

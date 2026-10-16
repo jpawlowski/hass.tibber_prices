@@ -20,7 +20,7 @@ from __future__ import annotations
 
 from .attributes import add_description_attributes, async_add_description_attributes
 from .colors import add_icon_color_attribute, get_icon_color
-from .helpers import find_rolling_hour_center_index, get_price_value
+from .helpers import get_price_value, get_rolling_hour_window
 from .icons import (
     get_binary_sensor_icon,
     get_dynamic_icon,
@@ -36,7 +36,6 @@ __all__ = [
     "add_description_attributes",
     "add_icon_color_attribute",
     "async_add_description_attributes",
-    "find_rolling_hour_center_index",
     "get_binary_sensor_icon",
     "get_dynamic_icon",
     "get_icon_color",
@@ -45,6 +44,7 @@ __all__ = [
     "get_price_sensor_icon",
     "get_price_value",
     "get_rating_sensor_icon",
+    "get_rolling_hour_window",
     "get_trend_icon",
     "get_volatility_sensor_icon",
 ]

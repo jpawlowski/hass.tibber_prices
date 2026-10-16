@@ -33,6 +33,7 @@ from custom_components.tibber_prices.const import (
     VOLATILITY_VERY_HIGH,
 )
 from custom_components.tibber_prices.coordinator.helpers import get_intervals_for_day_offsets
+from homeassistant.util import dt as dt_util
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -1025,6 +1026,69 @@ def find_price_data_for_interval(
             return price_data
 
     return None
+
+
+def find_level_run_times(
+    intervals: list[dict],
+    current_start: datetime,
+    level_groups: dict[str, frozenset[str]],
+    *,
+    time: TibberPricesTimeService,
+) -> dict[str, tuple[datetime | None, datetime | None]]:
+    """
+    Find when a run of intervals within a level group ends, and when the next one starts.
+
+    A run is a sequence of directly consecutive intervals whose (gap-smoothed) price level
+    is in a group, e.g. CHEAP or VERY_CHEAP. Used to tell users how long prices stay cheap,
+    independently of the best price period, which can be shorter or longer.
+
+    Args:
+        intervals: Enriched price intervals (any order)
+        current_start: Start of the current interval
+        level_groups: Groups to evaluate by name, e.g. {"cheap": CHEAP_PRICE_LEVELS}
+        time: TibberPricesTimeService instance (required)
+
+    Returns:
+        Per group name (until, next_start):
+        until: End of the run that contains the current interval. None if the current
+            interval is not in the group, or if the run reaches the end of the available
+            data or a gap in it: then its real end is not known yet.
+        next_start: Start of the next run after the current interval (and after the
+            current run, if any), None if there is none in the available data.
+
+    """
+    duration = time.get_interval_duration()
+    # Sort and compare in UTC: local times in the same zone ignore the DST fold, so the
+    # repeated hour at the fall-back would interleave with the first one
+    timeline = sorted(
+        (
+            (dt_util.as_utc(starts_at), starts_at, interval.get("level"))
+            for interval in intervals
+            if (starts_at := time.get_interval_time(interval)) is not None
+        ),
+        key=lambda entry: entry[0],
+    )
+    current_utc = dt_util.as_utc(current_start)
+    start_index = next((i for i, entry in enumerate(timeline) if entry[0] >= current_utc), len(timeline))
+
+    def follows(index: int) -> bool:
+        """Whether the interval after `index` exists and starts right where it ends."""
+        return index + 1 < len(timeline) and timeline[index + 1][0] - timeline[index][0] == duration
+
+    results: dict[str, tuple[datetime | None, datetime | None]] = {}
+    for name, levels in level_groups.items():
+        index = start_index
+        until = None
+        if index < len(timeline) and timeline[index][0] == current_utc and timeline[index][2] in levels:
+            while follows(index) and timeline[index + 1][2] in levels:
+                index += 1
+            # Only a level change inside known data is a real end
+            if follows(index):
+                until = dt_util.as_local(timeline[index][0] + duration)
+            index += 1
+        next_start = next((local for _, local, level in timeline[index:] if level in levels), None)
+        results[name] = (until, next_start)
+    return results
 
 
 def aggregate_price_levels(levels: list[str]) -> str:

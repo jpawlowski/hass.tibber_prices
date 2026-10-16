@@ -16,7 +16,7 @@ from custom_components.tibber_prices.const import (
     get_display_unit_factor,
 )
 from custom_components.tibber_prices.coordinator.helpers import get_intervals_for_day_offsets
-from custom_components.tibber_prices.entity_utils import add_icon_color_attribute, find_rolling_hour_center_index
+from custom_components.tibber_prices.entity_utils import add_icon_color_attribute, get_rolling_hour_window
 from custom_components.tibber_prices.sensor.attributes import add_volatility_type_attributes, get_prices_for_volatility
 from custom_components.tibber_prices.utils.average import calculate_mean
 from custom_components.tibber_prices.utils.price import (
@@ -278,19 +278,11 @@ class TibberPricesVolatilityCalculator(TibberPricesBaseCalculator):
             return None
 
         time = self.coordinator.time
-        now = time.now()
-        center_idx = find_rolling_hour_center_index(all_prices, now, hour_offset, time=time)
-        if center_idx is None:
-            return None
-
-        window: list[float] = []
-        for offset in range(-2, 3):
-            idx = center_idx + offset
-            if 0 <= idx < len(all_prices):
-                raw = all_prices[idx].get("total")
-                if raw is not None:
-                    window.append(float(raw))
-
+        window = [
+            float(interval["total"])
+            for interval in get_rolling_hour_window(all_prices, time.now(), hour_offset, time=time)
+            if interval.get("total") is not None
+        ]
         return calculate_mean(window) if window else None
 
     def get_percentile_rank_attributes(self) -> dict[str, Any]:

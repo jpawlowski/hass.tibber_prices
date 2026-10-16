@@ -51,8 +51,8 @@ explanations of each sensor's purpose, attributes, and automation examples.
 
 | Entity ID suffix | 🇬🇧 English | 🇩🇪 Deutsch | 🇳🇴 Norsk | 🇳🇱 Nederlands | 🇸🇪 Svenska | Default |
 |---|---|---|---|---|---|---|
-| <span id="ref-current_hour_average_price" class="entity-anchor" data-refs="sensors-average#available-average-sensors"></span>`current_hour_average_price` | ⌀ Hourly Price Current | ⌀ Stunden-Preis aktuell | ⌀ Timepris nåværende | ⌀ Uurprijs Huidig | ⌀ Timpris aktuell | ✅ |
-| <span id="ref-next_hour_average_price" class="entity-anchor" data-refs="sensors-average#available-average-sensors"></span>`next_hour_average_price` | ⌀ Hourly Price Next | ⌀ Stunden-Preis nächste Stunde | ⌀ Timepris neste | ⌀ Uurprijs Volgend | ⌀ Timpris nästa | ✅ |
+| <span id="ref-current_hour_average_price" class="entity-anchor" data-refs="sensors-average#available-average-sensors,sensors-average#rolling-hour-not-clock-hour"></span>`current_hour_average_price` | ⌀ Hourly Price Current | ⌀ Stunden-Preis aktuell | ⌀ Timepris nåværende | ⌀ Uurprijs Huidig | ⌀ Timpris aktuell | ✅ |
+| <span id="ref-next_hour_average_price" class="entity-anchor" data-refs="sensors-average#available-average-sensors,sensors-average#rolling-hour-not-clock-hour"></span>`next_hour_average_price` | ⌀ Hourly Price Next | ⌀ Stunden-Preis nächste Stunde | ⌀ Timepris neste | ⌀ Uurprijs Volgend | ⌀ Timpris nästa | ✅ |
 
 ### Daily Statistics
 
@@ -83,7 +83,7 @@ explanations of each sensor's purpose, attributes, and automation examples.
 
 | Entity ID suffix | 🇬🇧 English | 🇩🇪 Deutsch | 🇳🇴 Norsk | 🇳🇱 Nederlands | 🇸🇪 Svenska | Default |
 |---|---|---|---|---|---|---|
-| <span id="ref-next_avg_1h" class="entity-anchor"></span>`next_avg_1h` | ⌀ Price Next 1h | ⌀ Preis nächste 1h | ⌀ Pris neste 1t | ⌀ Prijs Komende 1u | ⌀ Pris nästa 1h | ✅ |
+| <span id="ref-next_avg_1h" class="entity-anchor" data-refs="sensors-average#rolling-hour-not-clock-hour"></span>`next_avg_1h` | ⌀ Price Next 1h | ⌀ Preis nächste 1h | ⌀ Pris neste 1t | ⌀ Prijs Komende 1u | ⌀ Pris nästa 1h | ✅ |
 | <span id="ref-next_avg_2h" class="entity-anchor"></span>`next_avg_2h` | ⌀ Price Next 2h | ⌀ Preis nächste 2h | ⌀ Pris neste 2t | ⌀ Prijs Komende 2u | ⌀ Pris nästa 2h | ✅ |
 | <span id="ref-next_avg_3h" class="entity-anchor"></span>`next_avg_3h` | ⌀ Price Next 3h | ⌀ Preis nächste 3h | ⌀ Pris neste 3t | ⌀ Prijs Komende 3u | ⌀ Pris nästa 3h | ✅ |
 | <span id="ref-next_avg_4h" class="entity-anchor"></span>`next_avg_4h` | ⌀ Price Next 4h | ⌀ Preis nächste 4h | ⌀ Pris neste 4t | ⌀ Prijs Komende 4u | ⌀ Pris nästa 4h | ✅ |

@@ -18,6 +18,46 @@ The integration provides several sensors that calculate average electricity pric
 | <EntityRef id="next_hour_average_price">Next Hour Average</EntityRef> | Smoothed price around next hour | 5 intervals (~75 min) |
 | **Next N Hours Average** (`next_avg_1h`–`next_avg_12h`) | Future price forecast | 1h, 2h, 3h, 4h, 5h, 6h, 8h, 12h |
 
+## Rolling Hour, Not Clock Hour
+
+The Tibber app shows hourly prices for **clock hours** (13:00–13:59). The hourly sensors of this integration don't. Since prices come in 15-minute intervals, a fixed clock hour would mix intervals you've already lived through with ones still ahead, and its value would jump at every full hour. Instead, the hourly averages **move along with the 15-minute intervals**.
+
+Three sensors cover "the hour", each with a different window. Example at **13:20** (current interval 13:15–13:30):
+
+```
+                        12:45  13:00  13:15  13:30  13:45  14:00  14:15  14:30  14:45  15:00
+                                        ▲ now (13:20)
+⌀ Hourly Price Current    ├──────────────────────────────────┤                                  12:45–14:00
+⌀ Price Next 1h                                ├───────────────────────────┤                    13:30–14:30
+⌀ Hourly Price Next                                   ├──────────────────────────────────┤      13:45–15:00
+```
+
+| Sensor | Window | Looks back? | Best for |
+|--------|--------|-------------|----------|
+| <EntityRef id="current_hour_average_price">⌀ Hourly Price Current</EntityRef> | 2 intervals before + current + 2 after (75 min), centered on now | ✅ 30 min | A smoothed "price right now" that ignores single-interval spikes |
+| <EntityRef id="next_avg_1h">⌀ Price Next 1h</EntityRef> | The 4 intervals after the current one (60 min) | ❌ | "What will the next hour cost?" for decisions starting now |
+| <EntityRef id="next_hour_average_price">⌀ Hourly Price Next</EntityRef> | Same as ⌀ Hourly Price Current, one hour later (75 min) | ❌ | "What will the price be around one hour from now?" |
+
+The level and rating sensors for the current and next hour (**Current Hour Price Level**, **Next Hour Price Rating**, …) use the same windows as the matching average sensors.
+
+**Prefer clock hours?** ⌀ Hourly Price Current and ⌀ Hourly Price Next also carry the average of the clock hour, like the Tibber app shows it: `clock_hour_price_mean`, `clock_hour_price_median`, `clock_hour_start` and `clock_hour_end`. At 13:20, ⌀ Hourly Price Current reports 13:00–14:00 there, ⌀ Hourly Price Next 14:00–15:00. The sensor state stays the rolling hour: it moves smoothly instead of jumping at every full hour.
+
+Charts are different: with `resolution: hourly`, the chart actions always use clock hours, because a chart draws each hour as a step from :00 to :59.
+
+**See the exact window:** ⌀ Hourly Price Current, ⌀ Hourly Price Next and the matching level and rating sensors have the attributes `window_start` and `window_end`. Use them to show the span on your dashboard:
+
+<details>
+<summary>Show YAML: Display the rolling hour window</summary>
+
+```yaml
+type: markdown
+content: >
+    Average {{ as_timestamp(state_attr('sensor.<home_name>_hourly_price_current', 'window_start')) | timestamp_custom('%H:%M') }}–{{ as_timestamp(state_attr('sensor.<home_name>_hourly_price_current', 'window_end')) | timestamp_custom('%H:%M') }}:
+    {{ states('sensor.<home_name>_hourly_price_current') }} {{ state_attr('sensor.<home_name>_hourly_price_current', 'unit_of_measurement') }}
+```
+
+</details>
+
 ## Configurable Display: Median vs Mean
 
 All average sensors support **two different calculation methods** for the state value:

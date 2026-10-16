@@ -15,6 +15,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 from custom_components.tibber_prices.const import get_display_precision, get_display_unit_factor
+from homeassistant.util import dt as dt_util
 
 if TYPE_CHECKING:
     from datetime import datetime
@@ -62,7 +63,7 @@ def get_price_value(
     return round(price * 100, 2)
 
 
-def find_rolling_hour_center_index(
+def _find_rolling_hour_center_index(
     all_prices: list[dict],
     current_time: datetime,
     hour_offset: int,
@@ -84,7 +85,9 @@ def find_rolling_hour_center_index(
     """
     # Round to nearest interval boundary to handle edge cases where HA schedules
     # us slightly before the boundary (e.g., 14:59:59.999 → 15:00:00)
-    target_time = time.round_to_nearest_quarter(current_time)
+    # Compare in UTC: local times ignore the DST fold, so the repeated 02:15 at the
+    # fall-back would match the first one
+    target_time = dt_util.as_utc(time.round_to_nearest_quarter(current_time))
     current_idx = None
 
     for idx, price_data in enumerate(all_prices):
@@ -93,7 +96,7 @@ def find_rolling_hour_center_index(
             continue
 
         # Exact match after rounding
-        if starts_at == target_time:
+        if dt_util.as_utc(starts_at) == target_time:
             current_idx = idx
             break
 
@@ -101,3 +104,35 @@ def find_rolling_hour_center_index(
         return None
 
     return current_idx + (hour_offset * 4)
+
+
+def get_rolling_hour_window(
+    all_prices: list[dict],
+    current_time: datetime,
+    hour_offset: int,
+    *,
+    time: TibberPricesTimeService,
+) -> list[dict]:
+    """
+    Return the intervals of a rolling hour window.
+
+    The window is centered on the current interval (shifted by `hour_offset` hours):
+    2 intervals before + center + 2 after = 5 intervals (75 minutes). It is the single
+    source for both the rolling hour values and their window_start/window_end attributes.
+
+    Args:
+        all_prices: Price intervals in chronological order (yesterday, today, tomorrow)
+        current_time: Current datetime
+        hour_offset: 0 (current hour), 1 (next hour), etc.
+        time: TibberPricesTimeService instance (required)
+
+    Returns:
+        Intervals of the window (fewer than 5 at the edges of the data), empty if the
+        current interval or the shifted center is not in the data (e.g. the next hour
+        before tomorrow's prices are published).
+
+    """
+    center_idx = _find_rolling_hour_center_index(all_prices, current_time, hour_offset, time=time)
+    if center_idx is None or not 0 <= center_idx < len(all_prices):
+        return []
+    return [all_prices[idx] for idx in range(center_idx - 2, center_idx + 3) if 0 <= idx < len(all_prices)]

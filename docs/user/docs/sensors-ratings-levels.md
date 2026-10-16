@@ -150,3 +150,46 @@ Level sensors show the **Tibber API's own price classification** with a 5-level 
 | <EntityRef id="tomorrow_price_level">Tomorrow's Price Level</EntityRef> | Calendar day (aggregated) |
 
 **Gap tolerance** smoothing is applied to prevent isolated level flickers (e.g., a single NORMAL between two CHEAPs → corrected to CHEAP). Configure in [Price Level Gap Tolerance](config-price-level.md).
+
+### How Long Does It Stay Cheap?
+
+The **Current Price Level** sensor (`current_interval_price_level`) tells you how long the current cheap or expensive stretch lasts, and when the next one starts. A stretch is a run of intervals with **CHEAP or VERY_CHEAP** (or **EXPENSIVE or VERY_EXPENSIVE**), after gap tolerance smoothing.
+
+| Attribute | Description | Example |
+|-----------|-------------|---------|
+| `cheap_until` | End of the current cheap stretch; `null` if the price isn't cheap right now, or if the end isn't known yet (see below) | `2026-10-14T05:30:00+02:00` |
+| `next_cheap_start` | Start of the next cheap stretch after the current one | `2026-10-13T20:15:00+02:00` |
+| `expensive_until` | End of the current expensive stretch; `null` if the price isn't expensive right now, or if the end isn't known yet | `null` |
+| `next_expensive_start` | Start of the next expensive stretch after the current one | `2026-10-14T07:00:00+02:00` |
+
+These complement the [best and peak price periods](period-calculation.md), which are calculated differently and can be shorter or longer. Typical cases:
+
+- The best price period ends at 04:15, but prices stay cheap until 05:30 (`cheap_until`): no need to rush.
+- Prices turn cheap at 20:15 (`next_cheap_start`), an hour before the best price period starts.
+
+All values only cover the prices that are already known (today, and tomorrow from the early afternoon). If a stretch lasts until the last known price, its end isn't known yet, so `cheap_until` stays `null` even though the price is cheap. Example: at 22:00, before tomorrow's prices are published, a cheap stretch running into the night has no `cheap_until`. Check the sensor state to tell "not cheap" from "cheap, end unknown".
+
+<details>
+<summary>Show YAML: Notify when prices stay cheap after the best price period</summary>
+
+```yaml
+automation:
+    - alias: "Cheap prices continue after best price period"
+      trigger:
+          - platform: state
+            entity_id: binary_sensor.<home_name>_best_price_period
+            to: "off"
+      condition:
+          - condition: state
+            entity_id: sensor.<home_name>_current_price_level
+            state: ["cheap", "very_cheap"]
+      action:
+          - service: notify.mobile_app_phone
+            data:
+                message: >
+                    {% set until = state_attr('sensor.<home_name>_current_price_level', 'cheap_until') %}
+                    Best price period is over, but prices stay cheap
+                    {{ 'until ' ~ (as_timestamp(until) | timestamp_custom('%H:%M')) if until else 'for now (end not known yet)' }}.
+```
+
+</details>

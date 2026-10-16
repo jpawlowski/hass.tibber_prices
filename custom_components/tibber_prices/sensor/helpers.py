@@ -9,7 +9,7 @@ This module contains helper functions specific to the sensor platform:
 For shared helper functions (used by both sensor and binary_sensor platforms),
 see entity_utils/helpers.py:
 - get_price_value: Price unit conversion
-- find_rolling_hour_center_index: Rolling hour window calculations
+- get_rolling_hour_window: Rolling hour window (5 intervals, centered)
 """
 
 from __future__ import annotations

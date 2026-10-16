@@ -18,7 +18,7 @@ from custom_components.tibber_prices.const import (
     VOLATILITY_ICON_MAPPING,
 )
 from custom_components.tibber_prices.coordinator.helpers import get_intervals_for_day_offsets
-from custom_components.tibber_prices.entity_utils.helpers import find_rolling_hour_center_index
+from custom_components.tibber_prices.entity_utils.helpers import get_rolling_hour_window
 from custom_components.tibber_prices.sensor.helpers import aggregate_level_data
 from custom_components.tibber_prices.utils.price import find_price_data_for_interval
 
@@ -375,20 +375,8 @@ def get_rolling_hour_price_level_for_icon(
     if not all_prices:
         return None
 
-    # Find center index using the same helper function as the sensor platform
-    now = time.now()
-    center_idx = find_rolling_hour_center_index(all_prices, now, hour_offset, time=time)
-
-    if center_idx is None:
-        return None
-
-    # Collect data from 5-interval window (-2, -1, 0, +1, +2) - same as sensor platform
-    window_data = []
-    for offset in range(-2, 3):
-        idx = center_idx + offset
-        if 0 <= idx < len(all_prices):
-            window_data.append(all_prices[idx])
-
+    # Same 5-interval window as the sensor platform
+    window_data = get_rolling_hour_window(all_prices, time.now(), hour_offset, time=time)
     if not window_data:
         return None
 

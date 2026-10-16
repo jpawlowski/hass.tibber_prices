@@ -150,7 +150,18 @@ INTERVAL_RATING_SENSORS = (
 # 2. ROLLING HOUR SENSORS (5-interval window: 2 before + center + 2 after)
 # ----------------------------------------------------------------------------
 # All aggregate data from rolling 5-interval window around a specific hour
-# Shared handler: _get_rolling_hour_value(hour_offset, value_type)
+# Shared handler: TibberPricesRollingHourCalculator.get_rolling_hour_value(hour_offset, value_type)
+
+# Hour offset and value type per rolling hour sensor: the single source for the value
+# (value_getters.py) and the window attributes (attributes/interval.py)
+ROLLING_HOUR_SENSOR_WINDOWS: dict[str, tuple[int, str]] = {
+    "current_hour_average_price": (0, "price"),
+    "current_hour_price_level": (0, "level"),
+    "current_hour_price_rating": (0, "rating"),
+    "next_hour_average_price": (1, "price"),
+    "next_hour_price_level": (1, "level"),
+    "next_hour_price_rating": (1, "rating"),
+}
 
 ROLLING_HOUR_PRICE_SENSORS = (
     SensorEntityDescription(

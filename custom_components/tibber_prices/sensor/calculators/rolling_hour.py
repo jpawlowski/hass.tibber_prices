@@ -9,7 +9,7 @@ from custom_components.tibber_prices.const import (
     DEFAULT_PRICE_RATING_THRESHOLD_LOW,
 )
 from custom_components.tibber_prices.coordinator.helpers import get_intervals_for_day_offsets
-from custom_components.tibber_prices.entity_utils import find_rolling_hour_center_index
+from custom_components.tibber_prices.entity_utils import get_rolling_hour_window
 from custom_components.tibber_prices.sensor.helpers import (
     aggregate_average_data,
     aggregate_level_data,
@@ -23,7 +23,7 @@ class TibberPricesRollingHourCalculator(TibberPricesBaseCalculator):
     """
     Calculator for rolling hour values (5-interval windows).
 
-    Handles sensors that aggregate data from a 5-interval window (60 minutes):
+    Handles sensors that aggregate data from a 5-interval window (75 minutes):
     2 intervals before + center interval + 2 intervals after.
     """
 
@@ -36,7 +36,7 @@ class TibberPricesRollingHourCalculator(TibberPricesBaseCalculator):
         """
         Unified method to get aggregated values from 5-interval rolling window.
 
-        Window: 2 before + center + 2 after = 5 intervals (60 minutes total).
+        Window: 2 before + center + 2 after = 5 intervals (75 minutes total).
 
         Args:
             hour_offset: 0 (current hour), 1 (next hour), etc.
@@ -58,20 +58,9 @@ class TibberPricesRollingHourCalculator(TibberPricesBaseCalculator):
         if not all_prices:
             return None
 
-        # Find center index for the rolling window
+        # 5-interval window (-2, -1, 0, +1, +2) around the current interval
         time = self.coordinator.time
-        now = time.now()
-        center_idx = find_rolling_hour_center_index(all_prices, now, hour_offset, time=time)
-        if center_idx is None:
-            return None
-
-        # Collect data from 5-interval window (-2, -1, 0, +1, +2)
-        window_data = []
-        for offset in range(-2, 3):
-            idx = center_idx + offset
-            if 0 <= idx < len(all_prices):
-                window_data.append(all_prices[idx])
-
+        window_data = get_rolling_hour_window(all_prices, time.now(), hour_offset, time=time)
         if not window_data:
             return None
 
