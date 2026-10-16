@@ -102,7 +102,10 @@ Or manually: **Settings** → **Devices & Services** → **+ Add Integration** �
 
 The integration provides **100+ entities** across sensors, binary sensors, switches, and number entities. Here are the highlights — all key sensors are **enabled by default**:
 
-<img src="https://raw.githubusercontent.com/jpawlowski/hass.tibber_prices/main/docs/user/static/img/entities-overview.jpg" width="400" alt="Entity list showing dynamic icons for different price states">
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/jpawlowski/hass.tibber_prices/main/docs/user/static/img/dashboard-overview-dark.jpg">
+  <img src="https://raw.githubusercontent.com/jpawlowski/hass.tibber_prices/main/docs/user/static/img/dashboard-overview.jpg" width="800" alt="Dashboard with price verdict, current price and trend, 48-hour price chart and today's statistics">
+</picture>
 
 | Category                | Highlights                                                                    | Count |
 | ----------------------- | ----------------------------------------------------------------------------- | ----- |
@@ -163,7 +166,10 @@ automation:
 
 Generate beautiful price charts with a single action call — dynamic Y-axis, color-coded price levels, and multiple chart modes included.
 
-<img src="https://raw.githubusercontent.com/jpawlowski/hass.tibber_prices/main/docs/user/static/img/charts/rolling-window.jpg" width="600" alt="Dynamic 48h rolling window chart with color-coded price levels">
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/jpawlowski/hass.tibber_prices/main/docs/user/static/img/charts/two-days-dark.jpg">
+  <img src="https://raw.githubusercontent.com/jpawlowski/hass.tibber_prices/main/docs/user/static/img/charts/two-days.jpg" width="600" alt="48-hour price chart colored by price level, with best price periods highlighted">
+</picture>
 
 📖 **[Chart examples & setup →](https://jpawlowski.github.io/hass.tibber_prices/user/chart-examples)** | **[Actions reference →](https://jpawlowski.github.io/hass.tibber_prices/user/actions)**
 

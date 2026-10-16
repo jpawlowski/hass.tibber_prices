@@ -1,0 +1,118 @@
+#!/usr/bin/env python3
+"""Render the demo dashboard template into a Home Assistant YAML dashboard.
+
+Resolves the placeholders described at the top of dashboard.template.yaml:
+entities via the entity registry of the demo config entry (by translation_key, so it
+works whatever language HA runs in), labels via labels/<lang>.json.
+
+Usage: ./scripts/docs/demo/render-dashboard [--entry-title "Winterfell Castle 1"] [--lang en]
+"""
+
+from __future__ import annotations
+
+import argparse
+import json
+from pathlib import Path
+import re
+import sys
+from typing import cast
+
+import yaml
+
+ROOT = Path(__file__).resolve().parents[3]
+DEMO_DIR = Path(__file__).resolve().parent
+LABELS = Path(__file__).resolve().parent / "labels"
+INLINE = re.compile(r"\[\[(entity|label):([a-z0-9_]+)\]\]")
+
+
+class Resolver:
+    """Replace entity and label placeholders, and expand chart cards."""
+
+    def __init__(self, entities: dict[str, str], labels: dict[str, str]) -> None:
+        """Keep the entity IDs by translation key and the labels by key."""
+        self.entities = entities
+        self.labels = labels
+
+    def lookup(self, kind: str, key: str) -> str:
+        """Return the entity ID or label for a placeholder key, or exit if unknown."""
+        table = self.entities if kind == "entity" else self.labels
+        if key not in table:
+            sys.exit(f"Unknown {kind} placeholder {key!r}")
+        return table[key]
+
+    def string(self, value: str) -> str:
+        """Resolve a whole-string placeholder or the inline ones inside a string."""
+        if m := INLINE.fullmatch(f"[[{value}]]"):
+            return self.lookup(m.group(1), m.group(2))
+        return INLINE.sub(lambda m: self.lookup(m.group(1), m.group(2)), value)
+
+    def resolve(self, node):
+        """Resolve placeholders anywhere in a parsed YAML node."""
+        if isinstance(node, dict):
+            if "$chart" in node:
+                return self.chart(node)
+            return {key: self.resolve(value) for key, value in node.items()}
+        if isinstance(node, list):
+            return [self.resolve(value) for value in node]
+        if isinstance(node, str):
+            return self.string(node)
+        return node
+
+    def chart(self, node: dict) -> dict:
+        """Insert a generated chart card, optionally without its title."""
+        path = DEMO_DIR / "charts" / f"{node['$chart']}.yaml"
+        if not path.exists():
+            return {"type": "markdown", "content": f"Chart `{node['$chart']}` not generated yet (see README)."}
+        card = cast("dict", yaml.safe_load(path.read_text()))
+        if node.get("hide_title"):
+            # Rolling modes wrap the ApexCharts card in a config-template-card
+            inner = card.get("card", card)
+            inner.setdefault("header", {})["show"] = False
+        # Custom cards default to half a section; charts should use its full width
+        card["grid_options"] = {"columns": "full"}
+        if "visibility" in node:
+            card["visibility"] = self.resolve(node["visibility"])
+        return card
+
+
+def find_entry_id(storage: Path, title: str) -> str:
+    """Return the config entry ID of the home titled `title`."""
+    entries = json.loads((storage / "core.config_entries").read_text())["data"]["entries"]
+    for entry in entries:
+        if entry["domain"] == "tibber_prices" and entry["title"] == title:
+            return entry["entry_id"]
+    sys.exit(f"No tibber_prices config entry titled {title!r} found")
+
+
+def entity_map(storage: Path, entry_id: str) -> dict[str, str]:
+    """Map translation keys to entity IDs for one config entry."""
+    registry = json.loads((storage / "core.entity_registry").read_text())["data"]["entities"]
+    return {
+        e["translation_key"]: e["entity_id"]
+        for e in registry
+        if e["config_entry_id"] == entry_id and e.get("translation_key") and not e.get("disabled_by")
+    }
+
+
+def main() -> None:
+    """Render the template for the given entry and language."""
+    parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
+    parser.add_argument("--entry-title", default="Winterfell Castle 1")
+    parser.add_argument("--lang", default="en", help="Language of the dashboard labels")
+    parser.add_argument("--config", type=Path, default=ROOT / "config")
+    parser.add_argument("--out", type=Path, default=ROOT / "config" / "dashboards" / "tibber-demo.yaml")
+    args = parser.parse_args()
+
+    storage = args.config / ".storage"
+    entities = entity_map(storage, find_entry_id(storage, args.entry_title))
+    labels = json.loads((LABELS / f"{args.lang}.json").read_text())
+    template = yaml.safe_load((DEMO_DIR / "dashboard.template.yaml").read_text())
+
+    dashboard = Resolver(entities, labels).resolve(template)
+    args.out.parent.mkdir(parents=True, exist_ok=True)
+    args.out.write_text(yaml.safe_dump(dashboard, sort_keys=False, allow_unicode=True, width=1000))
+    sys.stdout.write(f"Wrote {args.out}\n")
+
+
+if __name__ == "__main__":
+    main()

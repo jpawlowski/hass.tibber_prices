@@ -20,168 +20,198 @@ Every example below contains `entry_id: YOUR_CONFIG_ENTRY_ID`. This value identi
 
 ## Overview
 
-The integration can generate 4 different chart modes, each optimized for specific use cases:
+The integration generates four chart modes. Think of them as **zoom levels**: instead of zooming in by hand, pick the view that fits the question you have.
 
-| Mode | Description | Best For | Dependencies |
-|------|-------------|----------|--------------|
-| **Today** | Static 24h view of today's prices | Quick daily overview | ApexCharts Card |
-| **Tomorrow** | Static 24h view of tomorrow's prices | Planning tomorrow | ApexCharts Card |
-| **Rolling Window** | Dynamic 48h view (today+tomorrow or yesterday+today) | Always-current overview | ApexCharts + Config Template Card |
-| **Rolling Window Auto-Zoom** | Dynamic view that zooms in as day progresses | Real-time focus on remaining day | ApexCharts + Config Template Card |
+| Mode | `day` value | Shows | Best for | Dependencies |
+|------|-------------|-------|----------|--------------|
+| **Outlook** | `rolling_window_autozoom` | 2 hours back + everything ahead | Default view: what's coming? | ApexCharts + Config Template Card |
+| **Today** | `today` | Today, 00:00–23:59 | Reviewing the whole day | ApexCharts Card |
+| **Tomorrow** | `tomorrow` | Tomorrow, 00:00–23:59 | Planning tomorrow (once prices are published) | ApexCharts Card |
+| **2 days** | `rolling_window` (or omit `day`) | 48 hours | The big picture | ApexCharts + Config Template Card |
 
-**Screenshots available for:**
-- ✅ Today (static) - Representative of all fixed day views
-- ✅ Rolling Window - Shows dynamic Y-axis scaling
-- ✅ Rolling Window Auto-Zoom - Shows progressive zoom effect
+Add `resolution: hourly` to any mode for one value per clock hour (:00–:59) instead of 15-minute intervals.
+
+All examples use `level_type: level`, so the chart colors match the price level sensors (VERY_CHEAP … VERY_EXPENSIVE). The action's default is `rating_level`; see **[Level type options](#comparison-level-type-options)** below.
 
 ## All Chart Modes
 
-### 1. Today's Prices (Static)
+### 1. Outlook (auto-zoom)
 
-**When to use:** Simple daily price overview, no dynamic updates needed.
-
-**Dependencies:** ApexCharts Card only
-
-**Generate:**
-<details>
-<summary>Show YAML: Today's Prices (Static)</summary>
-
-```yaml
-service: tibber_prices.get_apexcharts_yaml
-data:
-    entry_id: YOUR_CONFIG_ENTRY_ID
-    day: today
-    level_type: rating_level
-    highlight_best_price: true
-```
-
-</details>
-
-**Screenshot:**
-
-![Today's Prices - Static 24h View](/img/charts/today.jpg)
-
-**Key Features:**
-- ✅ Color-coded price levels (LOW, NORMAL, HIGH)
-- ✅ Best price period highlights (vertical bands)
-- ✅ Static 24-hour view (00:00 - 23:59)
-- ✅ Works with ApexCharts Card alone
-
-**Note:** Tomorrow view (`day: tomorrow`) works identically to Today view, just showing tomorrow's data. All fixed day views (yesterday/today/tomorrow) use the same visualization approach.
-
----
-
-### 2. Rolling 48h Window (Dynamic)
-
-**When to use:** Always-current view that automatically switches between yesterday+today and today+tomorrow.
+**When to use:** As your default chart. It hides the past and stays focused on what's coming.
 
 **Dependencies:** ApexCharts Card + Config Template Card
 
 **Generate:**
 <details>
-<summary>Show YAML: Rolling 48h Window</summary>
-
-```yaml
-service: tibber_prices.get_apexcharts_yaml
-data:
-    entry_id: YOUR_CONFIG_ENTRY_ID
-    # Omit 'day' for rolling window
-    level_type: rating_level
-    highlight_best_price: true
-```
-
-  </details>
-
-**Screenshot:**
-
-![Rolling 48h Window with Dynamic Y-Axis Scaling](/img/charts/rolling-window.jpg)
-
-**Key Features:**
-- ✅ **Dynamic Y-axis scaling** via `chart_metadata` sensor
-- ✅ Automatic data selection: today+tomorrow (when available) or yesterday+today
-- ✅ Always shows 48 hours of data
-- ✅ Updates automatically when tomorrow's data arrives
-- ✅ Color gradients for visual appeal
-
-**How it works:**
-- Before ~13:00: Shows yesterday + today
-- After ~13:00: Shows today + tomorrow
-- Y-axis automatically adjusts to data range for optimal visualization
-
----
-
-### 3. Rolling Window Auto-Zoom (Dynamic)
-
-**When to use:** Real-time focus on remaining day - progressively zooms in as day advances.
-
-**Dependencies:** ApexCharts Card + Config Template Card
-
-**Generate:**
-<details>
-<summary>Show YAML: Rolling Auto-Zoom</summary>
+<summary>Show YAML: Outlook (auto-zoom)</summary>
 
 ```yaml
 service: tibber_prices.get_apexcharts_yaml
 data:
     entry_id: YOUR_CONFIG_ENTRY_ID
     day: rolling_window_autozoom
-    level_type: rating_level
+    level_type: level
     highlight_best_price: true
+    highlight_peak_price: true
 ```
 
-  </details>
+</details>
 
 **Screenshot:**
 
-![Rolling Window Auto-Zoom - Progressive Zoom Effect](/img/charts/rolling-window-autozoom.jpg)
+![Outlook: auto-zoom chart showing the coming hours](/img/charts/outlook.jpg#gh-light-mode-only)
+![Outlook: auto-zoom chart showing the coming hours](/img/charts/outlook-dark.jpg#gh-dark-mode-only)
 
-**Key Features:**
-- ✅ **Progressive zoom:** Graph span decreases every 15 minutes
-- ✅ **Dynamic Y-axis scaling** via `chart_metadata` sensor
-- ✅ Always shows: 2 hours lookback + remaining time until midnight
-- ✅ Perfect for real-time price monitoring
-- ✅ Example: At 18:00, shows 16:00 → 00:00 (8h window)
+**Key features:**
+- ✅ **Progressive zoom:** the window shrinks every 15 minutes, so the coming hours always fill the chart
+- ✅ 2 hours lookback for context, then everything ahead
+- ✅ Includes tomorrow automatically once its prices are published
+- ✅ **Dynamic Y-axis scaling** via the `chart_metadata` sensor
+- ✅ Peak price periods available via the legend (hidden until you click **▲ Peak Price Period**)
 
-**How it works:**
-- 00:00: Shows full 48h window (same as rolling window)
-- 06:00: Shows 04:00 → midnight (20h window)
-- 12:00: Shows 10:00 → midnight (14h window)
-- 18:00: Shows 16:00 → midnight (8h window)
-- 23:45: Shows 21:45 → midnight (2.25h window)
+**How it works** (before tomorrow's prices arrive):
+- 06:00: shows 04:00 → midnight (20 h)
+- 12:00: shows 10:00 → midnight (14 h)
+- 18:00: shows 16:00 → midnight (8 h)
+- Once tomorrow's prices are available, the window extends through tomorrow.
 
-This creates a "zooming in" effect that focuses on the most relevant remaining time.
+---
+
+### 2. Today
+
+**When to use:** Looking at the whole day at once, including the hours already behind you.
+
+**Dependencies:** ApexCharts Card only
+
+**Generate:**
+<details>
+<summary>Show YAML: Today</summary>
+
+```yaml
+service: tibber_prices.get_apexcharts_yaml
+data:
+    entry_id: YOUR_CONFIG_ENTRY_ID
+    day: today
+    level_type: level
+    highlight_best_price: true
+    highlight_peak_price: true
+```
+
+</details>
+
+**Screenshot:**
+
+![Today: static 24-hour chart colored by price level](/img/charts/day-today.jpg#gh-light-mode-only)
+![Today: static 24-hour chart colored by price level](/img/charts/day-today-dark.jpg#gh-dark-mode-only)
+
+**Key features:**
+- ✅ Static 24-hour view (00:00–23:59)
+- ✅ Best price periods as shaded bands
+- ✅ Peak price periods available via the legend (hidden until you click **▲ Peak Price Period**)
+- ✅ Works with ApexCharts Card alone
+
+---
+
+### 3. Tomorrow
+
+**When to use:** Planning tomorrow. Tibber usually publishes tomorrow's prices in the early afternoon; before that, this chart is empty.
+
+**Dependencies:** ApexCharts Card only
+
+**Generate:**
+<details>
+<summary>Show YAML: Tomorrow</summary>
+
+```yaml
+service: tibber_prices.get_apexcharts_yaml
+data:
+    entry_id: YOUR_CONFIG_ENTRY_ID
+    day: tomorrow
+    level_type: level
+    highlight_best_price: true
+    highlight_peak_price: true
+```
+
+</details>
+
+![Tomorrow: 24-hour chart for the next day colored by price level](/img/charts/day-tomorrow.jpg#gh-light-mode-only)
+![Tomorrow: 24-hour chart for the next day colored by price level](/img/charts/day-tomorrow-dark.jpg#gh-dark-mode-only)
+
+Looks like **Today**, with tomorrow's data. `day: yesterday` works the same way.
+
+:::tip Hide the chart until the data is there
+Wrap the card in a `visibility` condition on the **Tomorrow's Data Available** binary sensor (`tomorrow_data_available`), so the dashboard doesn't show an empty chart in the morning.
+:::
+
+---
+
+### 4. 2 days
+
+**When to use:** The big picture across two days.
+
+**Dependencies:** ApexCharts Card + Config Template Card
+
+**Generate:**
+<details>
+<summary>Show YAML: 2 days</summary>
+
+```yaml
+service: tibber_prices.get_apexcharts_yaml
+data:
+    entry_id: YOUR_CONFIG_ENTRY_ID
+    day: rolling_window
+    level_type: level
+    highlight_best_price: true
+    highlight_peak_price: true
+```
+
+</details>
+
+**Screenshot:**
+
+![2 days: rolling 48-hour chart colored by price level](/img/charts/two-days.jpg#gh-light-mode-only)
+![2 days: rolling 48-hour chart colored by price level](/img/charts/two-days-dark.jpg#gh-dark-mode-only)
+
+**Key features:**
+- ✅ Always 48 hours: yesterday + today before tomorrow's prices arrive, today + tomorrow after
+- ✅ Switches automatically when tomorrow's prices arrive (usually early afternoon)
+- ✅ Peak price periods available via the legend (hidden by default)
+- ✅ **Dynamic Y-axis scaling** via the `chart_metadata` sensor
 
 ---
 
 ## Comparison: Level Type Options
 
-### Rating Level (3 series)
+`level_type` decides how the chart is colored.
 
-Based on **your personal price thresholds** (configured in Options Flow):
+### Level (5 series), recommended
 
-- **LOW** (Green): Below your "cheap" threshold
-- **NORMAL** (Blue): Between thresholds
-- **HIGH** (Red): Above your "expensive" threshold
+The **price level that Tibber assigns** to every interval, the same value the price level sensors show:
 
-**Best for:** Personal decision-making based on your budget
+- **VERY_CHEAP** (green) and **CHEAP** (dark green)
+- **NORMAL** (yellow)
+- **EXPENSIVE** (orange) and **VERY_EXPENSIVE** (red)
 
-### Level (5 series)
+**Best for:** Dashboards that also show the price level. Chart and sensors then never disagree.
 
-Based on **absolute price ranges** (calculated from daily min/max):
+### Rating level (3 series), the action's default
 
-- **VERY_CHEAP** (Dark Green): Bottom 20%
-- **CHEAP** (Light Green): 20-40%
-- **NORMAL** (Blue): 40-60%
-- **EXPENSIVE** (Orange): 60-80%
-- **VERY_EXPENSIVE** (Red): Top 20%
+The integration's own **rating relative to the trailing 24-hour average**, using your thresholds (default ±10 %, see **[Price Rating](config-price-rating.md)**):
 
-**Best for:** Objective price distribution visualization
+- **LOW** (green): below the average by more than the low threshold
+- **NORMAL** (yellow): in between
+- **HIGH** (red): above the average by more than the high threshold
+
+**Best for:** A simpler three-color view tuned to your own thresholds.
+
+![The same 48 hours colored by rating level (3 series)](/img/charts/rolling-window.jpg#gh-light-mode-only)
+![The same 48 hours colored by rating level (3 series)](/img/charts/rolling-window-dark.jpg#gh-dark-mode-only)
 
 ---
 
 ## Dynamic Y-Axis Scaling
 
-Rolling window modes (2 & 3) automatically integrate with the `chart_metadata` sensor for optimal visualization:
+The **Outlook** and **2 days** modes automatically use the `chart_metadata` sensor for optimal scaling:
 
 **Without chart_metadata sensor (disabled):**
 <details>
@@ -219,7 +249,7 @@ Rolling window modes (2 & 3) automatically integrate with the `chart_metadata` s
 - ✅ The `sensor.<home_name>_chart_metadata` must be **enabled** (it's enabled by default!)
 - ✅ That's it! The generated YAML automatically uses the sensor for dynamic scaling
 
-**Important:** Do NOT disable the `chart_metadata` sensor if you want optimal Y-axis scaling in rolling window modes!
+**Important:** Do NOT disable the `chart_metadata` sensor if you want optimal Y-axis scaling in the **Outlook** and **2 days** modes!
 
 **Note:** Fixed day views (`today`, `tomorrow`) use ApexCharts' built-in auto-scaling and don't require the metadata sensor.
 
@@ -256,6 +286,14 @@ Price
 
 ---
 
+## Peak Price Period Highlights
+
+With `highlight_peak_price: true`, the chart gets a legend with **▼ Best Price Period** and **▲ Peak Price Period**. Peak price periods start **hidden**; click the legend entry to show them as red bands. This keeps the default view calm while the information stays one click away.
+
+The examples above enable it for **Today**, **Tomorrow** and **2 days**. For **Outlook** it's usually not worth it: the coming hours are short enough to read directly.
+
+---
+
 ## Prerequisites
 
 ### Required for All Modes
@@ -271,11 +309,11 @@ Price
 
 </details>
 
-### Required for Rolling Window Modes Only
+### Required for Outlook and 2 days
 
 - **[Config Template Card](https://github.com/iantrich/config-template-card)**: Enables dynamic configuration
 <details>
-<summary>Show shell command: Rolling Window Prerequisite</summary>
+<summary>Show shell command: Config Template Card</summary>
 
   ```bash
   # Install via HACS
@@ -284,7 +322,7 @@ Price
 
 </details>
 
-**Note:** Fixed day views (`today`, `tomorrow`) work with ApexCharts Card alone!
+**Note:** **Today** and **Tomorrow** work with ApexCharts Card alone.
 
 ---
 
@@ -300,9 +338,11 @@ Edit the `colors` array in the generated YAML:
 ```yaml
 apex_config:
     colors:
-        - "#00FF00"  # Change LOW/VERY_CHEAP color
-        - "#0000FF"  # Change NORMAL color
-        - "#FF0000"  # Change HIGH/VERY_EXPENSIVE color
+        - "#2ecc71"  # VERY_CHEAP (rating_level: LOW)
+        - "#27ae60"  # CHEAP
+        - "#f1c40f"  # NORMAL
+        - "#e67e22"  # EXPENSIVE
+        - "#e74c3c"  # VERY_EXPENSIVE (rating_level: HIGH)
 ```
 
 </details>
@@ -323,6 +363,45 @@ header:
 apex_config:
     chart:
         height: 400  # Adjust height in pixels
+```
+
+</details>
+
+### Switching Between Modes with Tabs
+
+Instead of placing several charts below each other, put them into tabs. **[TabDeck Card](https://github.com/tempus2016/tabdeck-card)** (HACS) supports per-tab visibility, so the **Tomorrow** tab only appears once tomorrow's prices exist:
+
+<details>
+<summary>Show YAML: Chart Modes as Tabs</summary>
+
+```yaml
+type: custom:tabdeck-card
+# Build a tab when it's opened, drop it when it's left. Without this, the peak price
+# overlay shows up although it should start hidden (ApexCharts hides it only once,
+# right after the chart's first data load).
+lazy: true
+unmount_hidden: true
+tabs:
+    - name: Outlook
+      icon: mdi:chart-timeline-variant-shimmer
+      card:
+          # ... generated YAML for day: rolling_window_autozoom
+    - name: Today
+      icon: mdi:calendar-today
+      card:
+          # ... generated YAML for day: today
+    - name: Tomorrow
+      icon: mdi:calendar-arrow-right
+      visibility:
+          - condition: state
+            entity: binary_sensor.<home_name>_tomorrow_s_data_available
+            state: "on"
+      card:
+          # ... generated YAML for day: tomorrow
+    - name: 2 days
+      icon: mdi:calendar-range
+      card:
+          # ... generated YAML for day: rolling_window
 ```
 
 </details>
@@ -352,23 +431,3 @@ cards:
 - **[Chart Actions Guide](chart-actions.md)**: Complete documentation of `get_apexcharts_yaml` parameters
 - **[Chart Metadata Sensor](sensors-overview.md#chart-metadata)**: Learn about dynamic Y-axis scaling
 - **[Period Calculation Guide](period-calculation.md)**: Configure best price period detection
-
----
-
-## Screenshots
-
-### Gallery
-
-1. **Today View (Static)** - Representative of all fixed day views (yesterday/today/tomorrow)
-
-   ![Today View](/img/charts/today.jpg)
-
-2. **Rolling Window (Dynamic)** - Shows dynamic Y-axis scaling and 48h window
-
-   ![Rolling Window](/img/charts/rolling-window.jpg)
-
-3. **Rolling Window Auto-Zoom (Dynamic)** - Shows progressive zoom effect
-
-   ![Rolling Window Auto-Zoom](/img/charts/rolling-window-autozoom.jpg)
-
-**Note:** Tomorrow view is visually identical to Today view (same chart type, just different data).

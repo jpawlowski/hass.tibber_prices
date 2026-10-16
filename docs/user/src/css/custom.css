@@ -833,3 +833,9 @@ h1, h2, h3, h4, h5, h6 {
   border-color: var(--ifm-color-danger);
   color: #fff;
 }
+
+/* GitHub-style themed images: ![alt](/img/x.jpg#gh-light-mode-only) + ![alt](/img/x-dark.jpg#gh-dark-mode-only) */
+[data-theme='light'] img[src$='#gh-dark-mode-only'],
+[data-theme='dark'] img[src$='#gh-light-mode-only'] {
+  display: none;
+}
