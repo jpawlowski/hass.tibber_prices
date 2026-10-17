@@ -4,7 +4,7 @@ This is a **Home Assistant custom component** for Tibber electricity price data,
 
 ## Documentation Metadata
 
-- **Last Major Update**: 2026-10-16 (Rolling hour routing via ROLLING_HOUR_SENSOR_WINDOWS, removed core.py `_get_rolling_hour_value`, added utils/trend.py; 2026-10-13: rolling hour vs clock hour)
+- **Last Major Update**: 2026-10-17 (Repairs: `repairs.py` fix flows, notices confirmable via `fix_flow`, runtime issues cleared on start, config entry minor version migration; allowed `frontend/` in the integration root; 2026-10-16: rolling hour routing via ROLLING_HOUR_SENSOR_WINDOWS, removed core.py `_get_rolling_hour_value`, added utils/trend.py; 2026-10-13: rolling hour vs clock hour)
 - **Last Architecture Review**: 2025-01-21 (Phase 1: Added TypedDict documentation system, improved BaseCalculator with 8 helper methods. Phase 2: Documented Import Architecture - Hybrid Pattern (Trend/Volatility build own attributes), verified no circular dependencies, confirmed optimal TYPE_CHECKING usage across all 8 calculators.)
 - **Last Code Example Cleanup**: 2025-11-18 (Removed redundant implementation details from AGENTS.md, added guidelines for when to include code examples)
 - **Documentation Status**: ✅ Current (verified against codebase)
@@ -306,9 +306,10 @@ After successful refactoring:
 **✅ ALLOWED in root:**
 
 - Platform modules: `__init__.py`, `sensor.py` (deprecated, now `sensor/`), `binary_sensor.py` (deprecated, now `binary_sensor/`), future platforms
-- Core integration files: `const.py`, `manifest.json`, `services.yaml`, `diagnostics.py`, `data.py`, `migrations.py`
+- Core integration files: `const.py`, `manifest.json`, `services.yaml`, `diagnostics.py`, `data.py`, `migrations.py`, `repairs.py` (HA's repairs platform: fix flows of the repair issues)
 - Translation directories: `translations/`, `custom_translations/`
 - Brand images: `brand/` (icon.png, dark_icon.png, logo.png, dark_logo.png + `@2x` variants) — served via HA brands proxy API (HA ≥ 2026.4), silently ignored on older versions
+- Frontend: `frontend/` — the bundled dashboard cards (`tibber-prices-cards.js`, plain JavaScript web components, no build step), served as a static path and loaded into every frontend via `add_extra_js_url` by its `__init__.py` (no dashboard resource for users to add)
 
 **❌ PROHIBITED in root:**
 
@@ -519,6 +520,7 @@ custom_components/tibber_prices/
 │   └── attributes.py     #   Attribute builders
 ├── entity.py             # Base TibberPricesEntity class
 ├── migrations.py         # Entity migration & breaking change repairs
+├── repairs.py            # Fix flows of repair issues (remove a home that's gone, confirm notices)
 ├── entity_utils/         # Shared entity helpers (both platforms)
 │   ├── __init__.py       #   Package exports
 │   ├── icons.py          #   Icon mapping logic
@@ -1554,7 +1556,9 @@ When renaming entity keys or changing sensor value units/semantics across releas
 - **Auto-migration** (`migrations.py`): Add old→new mapping to `ENTITY_KEY_RENAMES` dict. The `check_entity_migrations()` callback (called in `async_setup_entry` after `_migrate_config_options`) auto-updates `unique_id` in the entity registry while preserving `entity_id`, history, and user customizations.
 - **Repair issues**: After migration, a persistent repair (`is_persistent=True`) is created via `ir.async_create_issue()` informing users about breaking changes. Users must dismiss manually after reviewing automations.
 - **Partial migration handling**: If new entity already exists (e.g., user added manually), the old entity is removed instead of migrated.
-- **Separation of concerns**: `migrations.py` handles one-time upgrade migrations. `coordinator/repairs.py` handles runtime repairs (API issues, missing data). `__init__.py _migrate_config_options()` handles config option format changes.
+- **Separation of concerns**: `migrations.py` handles one-time upgrade migrations (incl. config entry version bumps via `async_migrate_entry_version`, called from `__init__.py async_migrate_entry`; bump `MINOR_VERSION` in `config_flow_handlers/user_flow.py` so only existing entries see an upgrade notice). `coordinator/repairs.py` handles runtime repairs (API issues, missing data). `repairs.py` holds the fix flows. `__init__.py _migrate_config_options()` handles config option format changes.
+- **Notices must be confirmable, never only ignorable**: an issue that only informs (breaking change, unit change) is created with `is_fixable=True` and listed in `migrations.NOTICES`; `repairs.py` answers it with HA's `ConfirmRepairFlow`, and confirming deletes it. An ignored issue would stay in the registry for good. Its translation has `title` plus `fix_flow.step.confirm` (title, description) and **no** issue-level `description`: HA allows exactly one of the two. On setup (`_tidy_notices`), ignored notices of an entry are deleted and open ones stored as not fixable by an older version become fixable (else they'd show their bare key).
+- **Runtime issues are cleared on start**: `TibberPricesRepairManager` deletes its `RUNTIME_ISSUES` for the entry when created, so an issue ignored before a restart neither lingers nor hides the same problem later; what's still wrong is reported again. A new runtime issue type goes into `RUNTIME_ISSUES`.
 - **Duration sensor pattern**: Use `native_unit_of_measurement=UnitOfTime.MINUTES` + `suggested_unit_of_measurement=UnitOfTime.HOURS` — HA auto-converts for display, state value stays in minutes for intuitive automations (`state < 15` instead of `state < 0.25`).
 
 ## Code Quality Rules
