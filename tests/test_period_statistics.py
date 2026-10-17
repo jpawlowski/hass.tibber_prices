@@ -66,9 +66,9 @@ class TestPeriodSummaryDayVolatility:
         )
 
         assert summary["day_volatility_%"] == 400.0
-        assert summary["day_price_min"] == -30.0
-        assert summary["day_price_max"] == 10.0
-        assert summary["day_price_span"] == 40.0
+        assert summary["day_price_min"] == -0.3
+        assert summary["day_price_max"] == 0.1
+        assert summary["day_price_span"] == 0.4
 
     def test_day_volatility_is_none_when_day_average_is_zero(self) -> None:
         """Zero-average days should avoid reporting a misleading 0% volatility."""
@@ -89,6 +89,6 @@ class TestPeriodSummaryDayVolatility:
         )
 
         assert summary["day_volatility_%"] is None
-        assert summary["day_price_min"] == -20.0
-        assert summary["day_price_max"] == 20.0
-        assert summary["day_price_span"] == 40.0
+        assert summary["day_price_min"] == -0.2
+        assert summary["day_price_max"] == 0.2
+        assert summary["day_price_span"] == 0.4

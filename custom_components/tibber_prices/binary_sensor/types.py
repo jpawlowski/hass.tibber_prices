@@ -103,9 +103,9 @@ class PeriodSummary(TypedDict, total=False):
 
     # Day context (priority 5)
     day_volatility_pct: float | None  # Volatility of the period's day (%), None for zero-average days
-    day_price_min: float  # Daily minimum price in minor currency (ct/ore)
-    day_price_max: float  # Daily maximum price in minor currency (ct/ore)
-    day_price_span: float  # Daily price span in minor currency (ct/ore)
+    day_price_min: float  # Daily minimum price in display unit (same as price_mean)
+    day_price_max: float  # Daily maximum price in display unit
+    day_price_span: float  # Daily price span in display unit
 
     # Detail information (priority 6)
     period_interval_count: int  # Number of intervals in period
@@ -161,9 +161,9 @@ class PeriodAttributes(BaseAttributes, total=False):
 
     # Day context (priority 5)
     day_volatility_pct: float | None  # Volatility of the period's day (%), None for zero-average days
-    day_price_min: float  # Daily minimum price in minor currency (ct/ore)
-    day_price_max: float  # Daily maximum price in minor currency (ct/ore)
-    day_price_span: float  # Daily price span in minor currency (ct/ore)
+    day_price_min: float  # Daily minimum price in display unit (same as price_mean)
+    day_price_max: float  # Daily maximum price in display unit
+    day_price_span: float  # Daily price span in display unit
 
     # Detail information (priority 6)
     period_interval_count: int  # Number of intervals in current/next period

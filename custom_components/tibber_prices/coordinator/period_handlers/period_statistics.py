@@ -211,11 +211,11 @@ def build_period_summary_dict(
             # cannot produce a truthful percentage and therefore return None.
             day_volatility_pct = round((day_span / abs(day_avg) * 100), 1) if day_avg != 0 else None
 
-            # Convert to minor units (ct/øre) for consistency with other price attributes
+            # Base currency like the other price fields; the attribute layer converts to the display unit
             summary["day_volatility_%"] = day_volatility_pct
-            summary["day_price_min"] = round(day_min * 100, 2)
-            summary["day_price_max"] = round(day_max * 100, 2)
-            summary["day_price_span"] = round(day_span * 100, 2)
+            summary["day_price_min"] = round(day_min, 4)
+            summary["day_price_max"] = round(day_max, 4)
+            summary["day_price_span"] = round(day_span, 4)
 
     return summary
 

@@ -254,6 +254,10 @@ def add_decision_attributes(attributes: dict, current_period: dict) -> None:
         attributes["rating_difference_%"] = current_period["rating_difference_%"]
 
 
+# Day context prices of a period (base currency in the period summary)
+_DAY_PRICE_FIELDS = ("day_price_min", "day_price_max", "day_price_span")
+
+
 def add_price_attributes(attributes: dict, current_period: dict, factor: int) -> None:
     """
     Add price statistics attributes (priority 3).
@@ -283,20 +287,18 @@ def add_price_attributes(attributes: dict, current_period: dict, factor: int) ->
         attributes["volatility"] = current_period["volatility"]  # Volatility is not a price, keep as-is
 
 
-def add_day_statistics_attributes(attributes: dict, current_period: dict) -> None:
+def add_day_statistics_attributes(attributes: dict, current_period: dict, factor: int) -> None:
     """Add per-day context attributes for the current/next period.
 
-    Day price range fields are already stored in minor currency units (ct/ore)
-    by the period summary builder and therefore must not be converted again here.
+    Day price range fields are stored in base currency like the period's own prices and
+    converted to the same display unit, so price_mean and day_price_min compare directly.
     """
+    precision = _SUBUNIT_PRECISION if factor == _SUBUNIT_FACTOR else _BASE_PRECISION
     if "day_volatility_%" in current_period:
         attributes["day_volatility_%"] = current_period["day_volatility_%"]
-    if "day_price_min" in current_period:
-        attributes["day_price_min"] = current_period["day_price_min"]
-    if "day_price_max" in current_period:
-        attributes["day_price_max"] = current_period["day_price_max"]
-    if "day_price_span" in current_period:
-        attributes["day_price_span"] = current_period["day_price_span"]
+    for field in _DAY_PRICE_FIELDS:
+        if field in current_period:
+            attributes[field] = round(current_period[field] * factor, precision)
 
 
 def add_comparison_attributes(attributes: dict, current_period: dict, factor: int) -> None:
@@ -447,7 +449,7 @@ def _convert_periods_to_display_units(period_summaries: list[dict], factor: int)
         converted = period.copy()
 
         # Convert all price fields
-        price_fields = ["price_mean", "price_median", "price_min", "price_max", "price_spread"]
+        price_fields = ["price_mean", "price_median", "price_min", "price_max", "price_spread", *_DAY_PRICE_FIELDS]
         for field in price_fields:
             if field in converted:
                 converted[field] = round(converted[field] * factor, precision)
@@ -531,8 +533,8 @@ def build_final_attributes_simple(
         # 4. Price differences (converted to display units)
         add_comparison_attributes(attributes, current_period, factor)
 
-        # 5. Day context attributes (already in minor units)
-        add_day_statistics_attributes(attributes, current_period)
+        # 5. Day context attributes (converted to display units)
+        add_day_statistics_attributes(attributes, current_period, factor)
 
         # 6. Detail information
         add_detail_attributes(attributes, current_period)

@@ -7,7 +7,7 @@ from unittest.mock import Mock
 import pytest
 
 from custom_components.tibber_prices.binary_sensor.attributes import build_final_attributes_simple
-from custom_components.tibber_prices.const import CONF_CURRENCY_DISPLAY_MODE, DISPLAY_MODE_BASE
+from custom_components.tibber_prices.const import CONF_CURRENCY_DISPLAY_MODE, DISPLAY_MODE_BASE, DISPLAY_MODE_SUBUNIT
 from custom_components.tibber_prices.coordinator.time_service import TibberPricesTimeService
 from homeassistant.util import dt as dt_util
 
@@ -39,9 +39,9 @@ def test_build_final_attributes_exposes_day_statistics_on_current_period() -> No
         "period_price_diff_from_daily_min": 0.2,
         "period_price_diff_from_daily_min_%": 200.0,
         "day_volatility_%": 400.0,
-        "day_price_min": -30.0,
-        "day_price_max": 10.0,
-        "day_price_span": 40.0,
+        "day_price_min": -0.3,
+        "day_price_max": 0.1,
+        "day_price_span": 0.4,
         "period_interval_count": 4,
         "period_position": 1,
         "period_count_total": 1,
@@ -60,12 +60,19 @@ def test_build_final_attributes_exposes_day_statistics_on_current_period() -> No
     assert attributes["price_mean"] == -0.1
     assert attributes["period_price_diff_from_daily_min"] == 0.2
     assert attributes["day_volatility_%"] == 400.0
-    assert attributes["day_price_min"] == -30.0
-    assert attributes["day_price_max"] == 10.0
-    assert attributes["day_price_span"] == 40.0
+    # Same unit as price_mean (base currency here), so the two compare directly
+    assert attributes["day_price_min"] == -0.3
+    assert attributes["day_price_max"] == 0.1
+    assert attributes["day_price_span"] == 0.4
 
     nested_period = attributes["periods"][0]
     assert nested_period["day_volatility_%"] == 400.0
-    assert nested_period["day_price_min"] == -30.0
-    assert nested_period["day_price_max"] == 10.0
-    assert nested_period["day_price_span"] == 40.0
+    assert nested_period["day_price_min"] == -0.3
+    assert nested_period["day_price_max"] == 0.1
+    assert nested_period["day_price_span"] == 0.4
+
+    # Subunit display: every price, day context included, in ct/øre
+    config_entry.options = {CONF_CURRENCY_DISPLAY_MODE: DISPLAY_MODE_SUBUNIT}
+    attributes = build_final_attributes_simple(current_period, [current_period], time=time, config_entry=config_entry)
+    assert (attributes["price_min"], attributes["day_price_min"], attributes["day_price_span"]) == (-30.0, -30.0, 40.0)
+    assert attributes["periods"][0]["day_price_max"] == 10.0
