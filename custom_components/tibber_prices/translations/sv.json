@@ -1228,14 +1228,6 @@
     }
   },
   "issues": {
-    "new_homes_available": {
-      "title": "Nya Tibber-hem upptäckta",
-      "description": "Vi upptäckte {count} nytt/nya hem på ditt Tibber-konto: {homes}. Du kan lägga till dem i Home Assistant genom Tibber-integrationskonfigurationen."
-    },
-    "homes_removed": {
-      "title": "Tibber-hem borttagna",
-      "description": "Vi upptäckte att {count} hem har tagits bort från ditt Tibber-konto: {homes}. Granska din Tibber-integrationskonfiguration."
-    },
     "tomorrow_data_missing": {
       "title": "Morgondagens prisdata saknas för {home_name}",
       "description": "Morgondagens elprisdata är fortfarande otillgänglig efter {warning_hour}:00. Detta är ovanligt, eftersom Tibber vanligtvis publicerar morgondagens priser på eftermiddagen (runt 13:00-14:00 CET).\n\nMöjliga orsaker:\n- Tibber har ännu inte publicerat morgondagens priser\n- Tillfälliga API-problem\n- Din elleverantör har inte skickat priser till Tibber\n\nDetta problem löser sig automatiskt när morgondagens data blir tillgänglig. Om detta kvarstår efter 20:00, kontrollera Tibber-appen eller kontakta Tibber support."
@@ -1250,15 +1242,47 @@
     },
     "home_not_found": {
       "title": "Hem {home_name} hittades inte i Tibber-konto",
-      "description": "Hemmet som konfigurerats i denna integration (post-ID: {entry_id}) är inte längre tillgängligt i ditt Tibber-konto. Detta händer vanligtvis när:\n- Hemmet togs bort från ditt Tibber-konto\n- Hemmet flyttades till ett annat Tibber-konto\n- Åtkomst till detta hem återkallades\n\nTa bort denna integrationspost och lägg till den igen om hemmet fortfarande ska övervakas. För att ta bort denna post, gå till Inställningar → Enheter & Tjänster → Tibber-priser och radera {home_name}-konfigurationen."
+      "fix_flow": {
+        "step": {
+          "confirm": {
+            "title": "Ta bort {home_name}?",
+            "description": "Hemmet som är konfigurerat i den här integrationen (post-ID: {entry_id}) är inte längre tillgängligt i ditt Tibber-konto. Det händer oftast när:\n- hemmet har tagits bort från ditt Tibber-konto\n- hemmet har flyttats till ett annat Tibber-konto\n- åtkomsten till hemmet har dragits tillbaka\n\nBekräftar du tas posten {home_name} bort från Home Assistant, med dess enheter och entiteter (den inspelade historiken finns kvar). Lägg till hemmet igen om det fortfarande ska övervakas. Kommer det tillbaka till ditt konto (t.ex. för att åtkomsten återställts) försvinner det här meddelandet av sig självt."
+          }
+        }
+      }
     },
     "entity_migration": {
       "title": "Tibber Prices: Åtgärd krävs efter uppdatering ({home_name})",
-      "description": "Denna uppdatering innehåller ändringar som tillämpades automatiskt.\n\n**Omdöpta entiteter ({count})**\n\nFöljande entity-nycklar döptes om automatiskt. Dina befintliga entity-ID:n och automatiseringar förblir intakta:\n\n{entity_list}\n\n**Ändrade varaktighetssensorvärden**\n\nAlla varaktighetssensorer (återstående tid, startar om, periodvaraktighet, trendändrings-nedräkning) rapporterar nu sitt tillståndsvärde i **minuter** istället för timmar. Visningsenheten i dashboards förblir timmar som standard.\n\nOm du har automatiseringar med numeriska jämförelser på dessa sensorer, uppdatera dina tröskelvärden:\n- Gammalt: `state < 0.25` (15 minuter som timmar)\n- Nytt: `state < 15` (15 minuter)\n\nStäng detta meddelande efter att du har granskat dina automatiseringar."
+      "fix_flow": {
+        "step": {
+          "confirm": {
+            "title": "Ändringar efter uppdateringen",
+            "description": "**{home_name}:** Denna uppdatering innehåller ändringar som tillämpades automatiskt.\n\n**Omdöpta entiteter ({count})**\n\nFöljande entity-nycklar döptes om automatiskt. Dina befintliga entity-ID:n och automatiseringar förblir intakta:\n\n{entity_list}\n\n**Ändrade varaktighetssensorvärden**\n\nAlla varaktighetssensorer (återstående tid, startar om, periodvaraktighet, trendändrings-nedräkning) rapporterar nu sitt tillståndsvärde i **minuter** istället för timmar. Visningsenheten i dashboards förblir timmar som standard.\n\nOm du har automatiseringar med numeriska jämförelser på dessa sensorer, uppdatera dina tröskelvärden:\n- Gammalt: `state < 0.25` (15 minuter som timmar)\n- Nytt: `state < 15` (15 minuter)\n\nBekräfta detta meddelande efter att du har granskat dina automatiseringar: det tas då bort för gott."
+          }
+        }
+      }
     },
     "currency_display_mode_changed": {
       "title": "Valutavisningsenhet ändrad för {home_name}",
-      "description": "Du ändrade valutavisningsläget för **{home_name}**. Alla prissensorvärden och -attribut använder nu den nya enheten (t.ex. 25,34 öre → 0,2534 kr eller tvärtom).\n\nHome Assistants Recorder visar separat en **„Enheten har ändrats“**-dialog för berörda sensorer — det kan ta några minuter eller till nästa statistikkörning (loggvarningar dyker upp tidigare). När den visas, välj **Ta bort alla gamla statistikdata** för en ren start. Välj inte „Uppdatera enheten utan konvertering“: det behåller de gamla talen med ny enhet utan att justera värdena, vilket gör historiska data faktiskt felaktiga.\n\n**Granska manuellt:**\n\n1. **Automatiseringar & mallar:** Uppdatera alla automatiseringar och mallsensorer som använder numeriska priströsklar.\n2. **Dashboard-kort:** Uppdatera kort med hårdkodade tröskelvärden eller enhetsetiketter.\n\nStäng det här meddelandet när du har granskat dina automatiseringar, instrumentpaneler och statistik."
+      "fix_flow": {
+        "step": {
+          "confirm": {
+            "title": "Visningsenhet ändrad",
+            "description": "Du ändrade valutavisningsläget för **{home_name}**. Alla prissensorvärden och -attribut använder nu den nya enheten (t.ex. 25,34 öre → 0,2534 kr eller tvärtom).\n\nHome Assistants Recorder visar separat en **„Enheten har ändrats“**-dialog för berörda sensorer — det kan ta några minuter eller till nästa statistikkörning (loggvarningar dyker upp tidigare). När den visas, välj **Ta bort alla gamla statistikdata** för en ren start. Välj inte „Uppdatera enheten utan konvertering“: det behåller de gamla talen med ny enhet utan att justera värdena, vilket gör historiska data faktiskt felaktiga.\n\n**Granska manuellt:**\n\n1. **Automatiseringar & mallar:** Uppdatera alla automatiseringar och mallsensorer som använder numeriska priströsklar.\n2. **Dashboard-kort:** Uppdatera kort med hårdkodade tröskelvärden eller enhetsetiketter.\n\nBekräfta det här meddelandet när du har granskat dina automatiseringar, instrumentpaneler och statistik: det tas då bort för gott."
+          }
+        }
+      }
+    },
+    "period_day_price_unit": {
+      "title": "Tibber Prices: periodernas prisspann nu i din visningsenhet ({home_name})",
+      "fix_flow": {
+        "step": {
+          "confirm": {
+            "title": "Prisspann: ny enhet",
+            "description": "Sensorerna för perioder med bästa pris och topppris för **{home_name}** anger nu dagens prisspann (`day_price_min`, `day_price_max`, `day_price_span`) i samma enhet som `price_mean`, din visningsenhet. Eftersom priserna för detta hem visas i huvudvalutan står det nu t.ex. **0,10** i stället för **10** (tidigare öre/cent).\n\nUppdatera automationer och mallar som jämför dessa attribut med fasta tal och bekräfta sedan detta meddelande: det tas då bort för gott."
+          }
+        }
+      }
     }
   },
   "exceptions": {

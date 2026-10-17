@@ -40,6 +40,10 @@ RATE_LIMIT_WARNING_THRESHOLD = 3  # Warn after 3 consecutive rate limit errors
 OUTAGE_REPAIR_DELAY = timedelta(hours=2)
 
 
+# The issues this manager reports while running, each as "<key>_<entry_id>"
+RUNTIME_ISSUES = ("tomorrow_data_missing", "rate_limit_exceeded", "api_outage", "home_not_found")
+
+
 class TibberPricesRepairManager:
     """Manage repair issues for Tibber Prices integration."""
 
@@ -82,6 +86,13 @@ class TibberPricesRepairManager:
         self._rate_limit_repair_active = False
         self._home_not_found_repair_active = False
         self._outage_repair_active = False
+
+        # A fresh start: what an earlier run reported no longer holds (what's still wrong is
+        # reported again). Above all, one ignored back then would stay in the registry for good,
+        # and keep the same problem hidden when it comes back
+        if enabled:
+            for key in RUNTIME_ISSUES:
+                ir.async_delete_issue(hass, DOMAIN, f"{key}_{entry_id}")
 
     async def check_tomorrow_data_availability(
         self,
@@ -199,6 +210,7 @@ class TibberPricesRepairManager:
             self._hass,
             DOMAIN,
             f"home_not_found_{self._entry_id}",
+            # Its fix (repairs.py) removes the home's entry, as the notice suggests
             is_fixable=True,
             severity=ir.IssueSeverity.ERROR,
             translation_key="home_not_found",
@@ -206,6 +218,7 @@ class TibberPricesRepairManager:
                 "home_name": self._home_name,
                 "entry_id": self._entry_id,
             },
+            data={"entry_id": self._entry_id},
         )
         self._home_not_found_repair_active = True
 

@@ -26,7 +26,7 @@ Switching the display mode later changes **all** price sensor state values (e.g.
 
 **If you do switch later:**
 
-1. A **repair notification** from this integration appears immediately in your sidebar — it reminds you to update automations and dashboards.
+1. A **repair notification** from this integration appears immediately in your sidebar — it reminds you to update automations and dashboards. Open it and confirm once you're done: it's then removed for good (ignoring would only hide it).
 2. HA's Recorder detects the unit mismatch and shows a **"The unit has changed"** dialog (may take a few minutes or until the next statistics run). Choose **"Delete all old statistic data"** to start fresh. Do _not_ choose "Update the unit without converting" — that re-labels old numbers with the new unit, making historical values factually wrong.
 3. Update every **automation trigger and condition** with a numeric price value.
 4. Update **dashboard cards** with hardcoded thresholds or unit labels.

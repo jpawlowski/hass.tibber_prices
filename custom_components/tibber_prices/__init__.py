@@ -49,7 +49,7 @@ from .interval_pool import (
     async_remove_pool_storage,
     async_save_pool_state,
 )
-from .migrations import check_entity_migrations
+from .migrations import async_migrate_entry_version, check_entity_migrations
 from .services import async_setup_services
 from .time_travel import iter_time_travel_subentries, subentry_storage_id
 
@@ -183,6 +183,11 @@ async def async_setup(hass: HomeAssistant, config: dict[str, Any]) -> bool:
     # await hass.async_add_executor_job(_install_blueprints, hass.config.config_dir)
 
     return True
+
+
+async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Migrate a config entry from an older version (see migrations.py)."""
+    return async_migrate_entry_version(hass, entry)
 
 
 async def _migrate_config_options(hass: HomeAssistant, entry: ConfigEntry) -> None:

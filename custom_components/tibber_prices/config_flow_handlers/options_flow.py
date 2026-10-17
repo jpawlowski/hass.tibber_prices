@@ -522,7 +522,7 @@ class TibberPricesOptionsFlowHandler(OptionsFlow):
                     self.hass,
                     DOMAIN,
                     issue_id,
-                    is_fixable=False,
+                    is_fixable=True,  # A notice to confirm (see migrations.NOTICES)
                     is_persistent=False,
                     severity=ir.IssueSeverity.WARNING,
                     translation_key="currency_display_mode_changed",

@@ -1228,14 +1228,6 @@
     }
   },
   "issues": {
-    "new_homes_available": {
-      "title": "Neue Tibber-Häuser erkannt",
-      "description": "Wir haben {count} neue(s) Zuhause in deinem Tibber-Konto erkannt: {homes}. Du kannst diese über die Tibber-Integration in Home Assistant hinzufügen."
-    },
-    "homes_removed": {
-      "title": "Tibber-Häuser entfernt",
-      "description": "Wir haben erkannt, dass {count} Zuhause aus deinem Tibber-Konto entfernt wurde(n): {homes}. Bitte überprüfe deine Tibber-Integrationskonfiguration."
-    },
     "tomorrow_data_missing": {
       "title": "Preisdaten für morgen fehlen für {home_name}",
       "description": "Die Strompreisdaten für morgen sind nach {warning_hour}:00 Uhr immer noch nicht verfügbar. Das ist ungewöhnlich, da Tibber normalerweise die Preise für morgen am Nachmittag veröffentlicht (ca. 13:00-14:00 Uhr MEZ).\n\nMögliche Ursachen:\n- Tibber hat die Preise für morgen noch nicht veröffentlicht\n- Temporäre API-Probleme\n- Dein Stromanbieter hat die Preise noch nicht an Tibber übermittelt\n\nDieses Problem löst sich automatisch, sobald die Daten für morgen verfügbar sind. Falls dies nach 20:00 Uhr weiterhin besteht, prüfe bitte die Tibber-App oder kontaktiere den Tibber-Support."
@@ -1250,15 +1242,47 @@
     },
     "home_not_found": {
       "title": "Zuhause {home_name} nicht im Tibber-Konto gefunden",
-      "description": "Das in dieser Integration konfigurierte Zuhause (Eintrag-ID: {entry_id}) ist nicht mehr in deinem Tibber-Konto verfügbar. Dies passiert normalerweise, wenn:\n- Das Zuhause aus deinem Tibber-Konto gelöscht wurde\n- Das Zuhause zu einem anderen Tibber-Konto verschoben wurde\n- Der Zugriff auf dieses Zuhause widerrufen wurde\n\nBitte entferne diesen Integrationseintrag und füge ihn erneut hinzu, falls das Zuhause weiterhin überwacht werden soll. Um diesen Eintrag zu entfernen, gehe zu Einstellungen → Geräte & Dienste → Tibber Prices und lösche die Konfiguration {home_name}."
+      "fix_flow": {
+        "step": {
+          "confirm": {
+            "title": "{home_name} entfernen?",
+            "description": "Das in dieser Integration eingerichtete Zuhause (Eintrags-ID: {entry_id}) ist in deinem Tibber-Konto nicht mehr verfügbar. Das passiert meist, wenn:\n- das Zuhause aus deinem Tibber-Konto gelöscht wurde\n- das Zuhause in ein anderes Tibber-Konto verschoben wurde\n- der Zugriff auf dieses Zuhause entzogen wurde\n\nBestätigst du, wird der Eintrag {home_name} aus Home Assistant entfernt, mit seinen Geräten und Entitäten (der aufgezeichnete Verlauf bleibt). Füge das Zuhause neu hinzu, wenn es weiter überwacht werden soll. Kommt es in dein Konto zurück (z. B. weil der Zugriff wiederhergestellt wurde), verschwindet dieser Hinweis von selbst."
+          }
+        }
+      }
     },
     "entity_migration": {
       "title": "Tibber Prices: Aktion nach Update erforderlich ({home_name})",
-      "description": "Dieses Update enthält Breaking Changes, die automatisch angewendet wurden.\n\n**Umbenannte Entitäten ({count})**\n\nDie folgenden Entity-Keys wurden umbenannt. Deine bestehenden Entity-IDs und Automationen bleiben erhalten:\n\n{entity_list}\n\n**Geänderte Dauer-Sensorwerte**\n\nAlle Dauer-Sensoren (verbleibende Zeit, startet in, Periodendauer, Trendänderungs-Countdown) geben ihren Zustandswert jetzt in **Minuten** statt Stunden an. Die Anzeigeeinheit in Dashboards bleibt standardmäßig Stunden.\n\nWenn du Automationen mit numerischen Vergleichen auf diesen Sensoren hast, aktualisiere deine Schwellwerte:\n- Alt: `state < 0.25` (15 Minuten als Stunden)\n- Neu: `state < 15` (15 Minuten)\n\nSchließe diesen Hinweis, nachdem du deine Automationen überprüft hast."
+      "fix_flow": {
+        "step": {
+          "confirm": {
+            "title": "Änderungen nach dem Update",
+            "description": "**{home_name}:** Dieses Update enthält Breaking Changes, die automatisch angewendet wurden.\n\n**Umbenannte Entitäten ({count})**\n\nDie folgenden Entity-Keys wurden umbenannt. Deine bestehenden Entity-IDs und Automationen bleiben erhalten:\n\n{entity_list}\n\n**Geänderte Dauer-Sensorwerte**\n\nAlle Dauer-Sensoren (verbleibende Zeit, startet in, Periodendauer, Trendänderungs-Countdown) geben ihren Zustandswert jetzt in **Minuten** statt Stunden an. Die Anzeigeeinheit in Dashboards bleibt standardmäßig Stunden.\n\nWenn du Automationen mit numerischen Vergleichen auf diesen Sensoren hast, aktualisiere deine Schwellwerte:\n- Alt: `state < 0.25` (15 Minuten als Stunden)\n- Neu: `state < 15` (15 Minuten)\n\nBestätige diesen Hinweis, nachdem du deine Automationen überprüft hast: Er wird dann endgültig entfernt."
+          }
+        }
+      }
     },
     "currency_display_mode_changed": {
       "title": "Währungsanzeigeeinheit für {home_name} geändert",
-      "description": "Du hast den Währungsanzeigemodus für **{home_name}** geändert. Alle Preissensor-Werte und -Attribute verwenden jetzt die neue Einheit (z.B. 25,34 ct → 0,2534 € oder umgekehrt).\n\nDer Recorder von Home Assistant zeigt separat einen Dialog **„Die Einheit hat sich geändert“** für betroffene Sensoren — das kann einige Minuten dauern oder bis zum nächsten Statistik-Durchlauf (Warnungen im Log erscheinen früher). Wähle dann **Alle alten Statistikdaten löschen** für einen sauberen Neustart. Wähle nicht „Einheit aktualisieren ohne Konvertierung“: das benennt die alten Zahlen nur um, ohne die Werte anzupassen, und macht die historischen Daten inhaltlich falsch.\n\n**Manuell prüfen:**\n\n1. **Automationen & Templates:** Aktualisiere alle Automationen und Template-Sensoren mit numerischen Preis-Schwellwerten.\n2. **Dashboard-Karten:** Aktualisiere alle Karten mit fest codierten Schwellwerten oder Einheitenbezeichnungen.\n\nSchließe diese Meldung, sobald du deine Automationen, Dashboards und Statistiken überprüft hast."
+      "fix_flow": {
+        "step": {
+          "confirm": {
+            "title": "Anzeigeeinheit geändert",
+            "description": "Du hast den Währungsanzeigemodus für **{home_name}** geändert. Alle Preissensor-Werte und -Attribute verwenden jetzt die neue Einheit (z.B. 25,34 ct → 0,2534 € oder umgekehrt).\n\nDer Recorder von Home Assistant zeigt separat einen Dialog **„Die Einheit hat sich geändert“** für betroffene Sensoren — das kann einige Minuten dauern oder bis zum nächsten Statistik-Durchlauf (Warnungen im Log erscheinen früher). Wähle dann **Alle alten Statistikdaten löschen** für einen sauberen Neustart. Wähle nicht „Einheit aktualisieren ohne Konvertierung“: das benennt die alten Zahlen nur um, ohne die Werte anzupassen, und macht die historischen Daten inhaltlich falsch.\n\n**Manuell prüfen:**\n\n1. **Automationen & Templates:** Aktualisiere alle Automationen und Template-Sensoren mit numerischen Preis-Schwellwerten.\n2. **Dashboard-Karten:** Aktualisiere alle Karten mit fest codierten Schwellwerten oder Einheitenbezeichnungen.\n\nBestätige diese Meldung, sobald du deine Automationen, Dashboards und Statistiken überprüft hast: Sie wird dann endgültig entfernt."
+          }
+        }
+      }
+    },
+    "period_day_price_unit": {
+      "title": "Tibber Prices: Preisspanne der Zeiträume jetzt in deiner Anzeigeeinheit ({home_name})",
+      "fix_flow": {
+        "step": {
+          "confirm": {
+            "title": "Preisspanne: neue Einheit",
+            "description": "Die Sensoren für Bestpreis- und Spitzenpreis-Zeiträume von **{home_name}** geben die Preisspanne des Tages (`day_price_min`, `day_price_max`, `day_price_span`) jetzt in derselben Einheit wie `price_mean` an, deiner Anzeigeeinheit. Da die Preise für dieses Zuhause in der Hauptwährung angezeigt werden, stehen dort jetzt z. B. **0,10** statt **10** (vorher ct/øre).\n\nPasse Automationen und Templates an, die diese Attribute mit festen Zahlen vergleichen, und bestätige danach diesen Hinweis: Er wird dann endgültig entfernt."
+          }
+        }
+      }
     }
   },
   "exceptions": {

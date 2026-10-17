@@ -34,7 +34,9 @@ class TibberPricesConfigFlowHandler(ConfigFlow, domain=DOMAIN):
     """Config flow for tibber_prices."""
 
     VERSION = 1
-    MINOR_VERSION = 0
+    # 1.1: the day's price range of a period (day_price_*) is in the display unit, no longer
+    # always in ct/øre (see migrations.async_migrate_entry_version)
+    MINOR_VERSION = 1
 
     def __init__(self) -> None:
         """Initialize the config flow."""

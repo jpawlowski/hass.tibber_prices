@@ -19,13 +19,19 @@ from typing import TYPE_CHECKING
 from homeassistant.core import callback
 from homeassistant.helpers import entity_registry as er, issue_registry as ir
 
-from .const import DOMAIN
+from .const import CONF_CURRENCY_DISPLAY_MODE, DISPLAY_MODE_BASE, DOMAIN
 
 if TYPE_CHECKING:
     from homeassistant.config_entries import ConfigEntry
     from homeassistant.core import HomeAssistant
 
 _LOGGER = logging.getLogger(__name__)
+
+# A notice (only to read and confirm) is "fixable": HA then offers to confirm it instead of only
+# to ignore it, and deletes it once confirmed (with no repairs platform, HA's own confirm flow
+# shows the fix_flow text). Ignored, it would stay in the registry for good
+NOTICES: frozenset[str] = frozenset({"entity_migration", "period_day_price_unit", "currency_display_mode_changed"})
+
 
 # ============================================================================
 # ENTITY KEY RENAMES
@@ -50,6 +56,7 @@ def check_entity_migrations(
     informational repairs about breaking changes.
     """
     ent_reg = er.async_get(hass)
+    _tidy_notices(hass, entry)
 
     # Auto-migrate renamed entity keys
     migrated = _auto_migrate_entity_keys(ent_reg, entry)
@@ -72,7 +79,7 @@ def check_entity_migrations(
             hass,
             DOMAIN,
             issue_id,
-            is_fixable=False,
+            is_fixable=True,  # A notice to confirm (see NOTICES)
             is_persistent=True,
             severity=ir.IssueSeverity.WARNING,
             translation_key="entity_migration",
@@ -150,3 +157,65 @@ def _auto_migrate_entity_keys(
         migrated.append((entity_key, new_key, entity_entry.entity_id))
 
     return migrated
+
+
+@callback
+def async_migrate_entry_version(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """
+    Bring a config entry from an older version to the current one (VERSION 1, MINOR_VERSION 1).
+
+    1.0 -> 1.1: day_price_min, day_price_max and day_price_span of the best/peak price periods
+    are in the display unit like price_mean, no longer always in ct/øre. That changes their
+    values only where prices show in the base currency (€, kr): those homes get a notice to
+    review automations and templates. New entries start at 1.1 and never see it.
+    """
+    if entry.version > 1:
+        # A newer version of the integration was installed before: can't go back
+        return False
+    if entry.minor_version < 1:
+        if entry.options.get(CONF_CURRENCY_DISPLAY_MODE) == DISPLAY_MODE_BASE:
+            ir.async_create_issue(
+                hass,
+                DOMAIN,
+                f"period_day_price_unit_{entry.entry_id}",
+                is_fixable=True,  # A notice to confirm (see NOTICES)
+                is_persistent=True,
+                severity=ir.IssueSeverity.WARNING,
+                translation_key="period_day_price_unit",
+                translation_placeholders={"home_name": entry.title},
+                learn_more_url="https://github.com/jpawlowski/hass.tibber_prices/releases",
+            )
+        _LOGGER.info("[%s] Migrated config entry to version 1.1", entry.title)
+        hass.config_entries.async_update_entry(entry, minor_version=1)
+    return True
+
+
+@callback
+def _tidy_notices(hass: HomeAssistant, entry: ConfigEntry) -> None:
+    """
+    Bring this entry's stored notices up to date.
+
+    - Ignored ones are deleted: an ignored issue stays in the registry, hidden, for good, and a
+      notice has nothing left to say.
+    - Open ones created as not fixable (by an older version) become fixable: their text now
+      lives in fix_flow only, which HA shows for a fixable issue alone; otherwise the notice
+      would show its bare key, and could only be ignored.
+    """
+    registry = ir.async_get(hass)
+    for (domain, issue_id), issue in list(registry.issues.items()):
+        if domain != DOMAIN or issue.translation_key not in NOTICES or not issue_id.endswith(entry.entry_id):
+            continue
+        if issue.dismissed_version is not None:
+            ir.async_delete_issue(hass, DOMAIN, issue_id)
+        elif issue.active and not issue.is_fixable:
+            ir.async_create_issue(
+                hass,
+                DOMAIN,
+                issue_id,
+                is_fixable=True,
+                is_persistent=issue.is_persistent,
+                severity=issue.severity or ir.IssueSeverity.WARNING,
+                translation_key=issue.translation_key,
+                translation_placeholders=issue.translation_placeholders,
+                learn_more_url=issue.learn_more_url,
+            )
