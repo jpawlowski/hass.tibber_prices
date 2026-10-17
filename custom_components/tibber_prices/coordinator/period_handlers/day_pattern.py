@@ -586,7 +586,8 @@ def _detect_segments(
     Each segment is a dict with:
         type        - "rising" | "falling" | "flat"
         start       - tz-aware datetime of first interval
-        end         - tz-aware datetime of last interval
+        end         - start of the interval where the next segment takes over (segments share
+                      that boundary interval); for the last segment, the end of the data
         price_min   - min price in segment (EUR/NOK/SEK)
         price_max   - max price in segment
         price_mean  - mean price in segment
@@ -620,10 +621,15 @@ def _detect_segments(
         else:
             seg_type = SEGMENT_TYPE_FALLING
 
+        end = times[hi] if hi < len(times) else None
+        # Nothing takes over after the last segment: it lasts to the end of its last interval
+        # (midnight for a full day), not to that interval's start
+        if end is not None and hi == n - 1 and times[hi - 1] is not None:
+            end += end - times[hi - 1]
         seg: dict[str, Any] = {
             "type": seg_type,
             "start": times[lo].isoformat() if lo < len(times) and times[lo] is not None else None,
-            "end": times[hi].isoformat() if hi < len(times) and times[hi] is not None else None,
+            "end": end.isoformat() if end is not None else None,
             "price_min": round(min(seg_prices), 4),
             "price_max": round(max(seg_prices), 4),
             "price_mean": round(sum(seg_prices) / len(seg_prices), 4),

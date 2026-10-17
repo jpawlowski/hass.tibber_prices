@@ -180,7 +180,9 @@ class SegmentDict(TypedDict):
 
     type: str  # "rising" | "falling" | "flat"
     start: str | None  # ISO datetime of first interval in segment
-    end: str | None  # ISO datetime of last interval in segment
+    # ISO datetime where the next segment takes over (the start of the boundary interval both
+    # share); for the last segment the end of the data, e.g. midnight of the next day
+    end: str | None
     price_min: float  # Minimum price in segment
     price_max: float  # Maximum price in segment
     price_mean: float  # Mean price in segment
