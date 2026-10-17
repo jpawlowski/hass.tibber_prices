@@ -41,7 +41,7 @@ log_header "Formatting Python files"
 "$SCRIPT_DIR/format"
 
 log_header "Formatting JSON/JSONC/Markdown with Prettier"
-npx --yes prettier --write "**/*.{json,jsonc,md,yml,yaml}"
+npx --yes prettier --write "**/*.{json,jsonc,md,yml,yaml}" "custom_components/**/*.js"
 
 log_header "Formatting shell scripts with shfmt"
 mapfile -d '' -t shell_files < <(collect_shell_files)

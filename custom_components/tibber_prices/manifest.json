@@ -5,6 +5,10 @@
     "@jpawlowski"
   ],
   "config_flow": true,
+  "dependencies": [
+    "frontend",
+    "http"
+  ],
   "documentation": "https://github.com/jpawlowski/hass.tibber_prices",
   "iot_class": "cloud_polling",
   "issue_tracker": "https://github.com/jpawlowski/hass.tibber_prices/issues",

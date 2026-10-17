@@ -63,7 +63,7 @@ if [[ $run_test_type_check == true ]]; then
 fi
 
 log_header "Checking JSON/JSONC/Markdown with Prettier"
-npx --yes prettier --check "**/*.{json,jsonc,md,yml,yaml}"
+npx --yes prettier --check "**/*.{json,jsonc,md,yml,yaml}" "custom_components/**/*.js"
 
 log_header "Checking shell formatting with shfmt"
 mapfile -d '' -t shell_files < <(collect_shell_files)

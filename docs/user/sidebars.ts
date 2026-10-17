@@ -81,7 +81,7 @@ const sidebars: SidebarsConfig = {
       type: 'category',
       label: '🎨 Dashboards & Charts',
       link: { type: 'doc', id: 'dashboard-examples' },
-      items: ['dynamic-icons', 'icon-colors', 'dashboard-examples', 'chart-examples', 'chart-third-party'],
+      items: ['dashboard-cards', 'dynamic-icons', 'icon-colors', 'dashboard-examples', 'chart-examples', 'chart-third-party'],
       collapsible: true,
       collapsed: false,
     },

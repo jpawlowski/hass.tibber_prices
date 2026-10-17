@@ -42,6 +42,7 @@ from .const import (
 )
 from .coordinator import STORAGE_VERSION, TibberPricesDataUpdateCoordinator
 from .data import TibberPricesData, TibberPricesSubentryData
+from .frontend import async_register_frontend
 from .interval_pool import (
     TibberPricesIntervalPool,
     async_load_pool_state,
@@ -154,6 +155,8 @@ async def async_setup(hass: HomeAssistant, config: dict[str, Any]) -> bool:
     # Store chart export configuration in hass.data for sensor access
     if DOMAIN not in hass.data:
         hass.data[DOMAIN] = {}
+
+    await async_register_frontend(hass)
 
     # Extract chart_export config if present
     domain_config = config.get(DOMAIN, {})
