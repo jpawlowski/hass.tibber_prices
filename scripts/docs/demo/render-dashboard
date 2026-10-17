@@ -1,117 +1,133 @@
 #!/usr/bin/env python3
-"""Render the demo dashboard template into a Home Assistant YAML dashboard.
+"""Create or update the demo dashboards in the dev instance.
 
-Resolves the placeholders described at the top of dashboard.template.yaml:
-entities via the entity registry of the demo config entry (by translation_key, so it
-works whatever language HA runs in), labels via labels/<lang>.json.
+"tibber-demo" comes from the get_dashboard_yaml action: it is what users get, so demo,
+screenshots and the action never drift apart. "tibber-cards" shows the integration's own cards
+one view each (cards.yaml next to this script), for the Dashboard Cards page. Both are regular
+UI dashboards (stored in .storage), created on the first run.
 
-Usage: ./scripts/docs/demo/render-dashboard [--entry-title "Winterfell Castle 1"] [--lang en]
+Usage: ./scripts/docs/demo/render-dashboard [--entry-title "Winterfell Castle 1"] [--lang de] [--url http://localhost:8123]
 """
 
 from __future__ import annotations
 
 import argparse
-import json
+import asyncio
+import itertools
+import os
 from pathlib import Path
-import re
 import sys
-from typing import cast
+from typing import Any
 
+import aiohttp
 import yaml
 
 ROOT = Path(__file__).resolve().parents[3]
-DEMO_DIR = Path(__file__).resolve().parent
-LABELS = Path(__file__).resolve().parent / "labels"
-INLINE = re.compile(r"\[\[(entity|label):([a-z0-9_]+)\]\]")
+DASHBOARD = {"url_path": "tibber-demo", "title": "Tibber Demo", "icon": "mdi:flash", "show_in_sidebar": True}
+CARDS_DASHBOARD = {"url_path": "tibber-cards", "title": "Tibber Cards", "icon": "mdi:cards", "show_in_sidebar": True}
+CARDS_TEMPLATE = Path(__file__).resolve().parent / "cards.yaml"
 
 
-class Resolver:
-    """Replace entity and label placeholders, and expand chart cards."""
+class HomeAssistant:
+    """Minimal websocket client: authenticate, then send commands one at a time."""
 
-    def __init__(self, entities: dict[str, str], labels: dict[str, str]) -> None:
-        """Keep the entity IDs by translation key and the labels by key."""
-        self.entities = entities
-        self.labels = labels
+    def __init__(self, ws: aiohttp.ClientWebSocketResponse) -> None:
+        """Keep the authenticated websocket."""
+        self.ws = ws
+        self.ids = itertools.count(1)
 
-    def lookup(self, kind: str, key: str) -> str:
-        """Return the entity ID or label for a placeholder key, or exit if unknown."""
-        table = self.entities if kind == "entity" else self.labels
-        if key not in table:
-            sys.exit(f"Unknown {kind} placeholder {key!r}")
-        return table[key]
-
-    def string(self, value: str) -> str:
-        """Resolve a whole-string placeholder or the inline ones inside a string."""
-        if m := INLINE.fullmatch(f"[[{value}]]"):
-            return self.lookup(m.group(1), m.group(2))
-        return INLINE.sub(lambda m: self.lookup(m.group(1), m.group(2)), value)
-
-    def resolve(self, node):
-        """Resolve placeholders anywhere in a parsed YAML node."""
-        if isinstance(node, dict):
-            if "$chart" in node:
-                return self.chart(node)
-            return {key: self.resolve(value) for key, value in node.items()}
-        if isinstance(node, list):
-            return [self.resolve(value) for value in node]
-        if isinstance(node, str):
-            return self.string(node)
-        return node
-
-    def chart(self, node: dict) -> dict:
-        """Insert a generated chart card, optionally without its title."""
-        path = DEMO_DIR / "charts" / f"{node['$chart']}.yaml"
-        if not path.exists():
-            return {"type": "markdown", "content": f"Chart `{node['$chart']}` not generated yet (see README)."}
-        card = cast("dict", yaml.safe_load(path.read_text()))
-        if node.get("hide_title"):
-            # Rolling modes wrap the ApexCharts card in a config-template-card
-            inner = card.get("card", card)
-            inner.setdefault("header", {})["show"] = False
-        # Custom cards default to half a section; charts should use its full width
-        card["grid_options"] = {"columns": "full"}
-        if "visibility" in node:
-            card["visibility"] = self.resolve(node["visibility"])
-        return card
+    async def command(self, message_type: str, **data: Any) -> Any:
+        """Send a command and return its result, or exit with HA's error."""
+        await self.ws.send_json({"id": next(self.ids), "type": message_type, **data})
+        reply = await self.ws.receive_json()
+        if not reply.get("success"):
+            sys.exit(f"{message_type} failed: {reply.get('error')}")
+        return reply["result"]
 
 
-def find_entry_id(storage: Path, title: str) -> str:
-    """Return the config entry ID of the home titled `title`."""
-    entries = json.loads((storage / "core.config_entries").read_text())["data"]["entries"]
-    for entry in entries:
-        if entry["domain"] == "tibber_prices" and entry["title"] == title:
-            return entry["entry_id"]
-    sys.exit(f"No tibber_prices config entry titled {title!r} found")
+async def authenticate(ws: aiohttp.ClientWebSocketResponse, token: str) -> HomeAssistant:
+    """Authenticate on the websocket API with a long-lived access token."""
+    await ws.receive_json()  # auth_required
+    await ws.send_json({"type": "auth", "access_token": token})
+    if (await ws.receive_json()).get("type") != "auth_ok":
+        sys.exit("Authentication failed, check config/.ha_token or HA_TOKEN")
+    return HomeAssistant(ws)
 
 
-def entity_map(storage: Path, entry_id: str) -> dict[str, str]:
-    """Map translation keys to entity IDs for one config entry."""
-    registry = json.loads((storage / "core.entity_registry").read_text())["data"]["entities"]
-    return {
-        e["translation_key"]: e["entity_id"]
-        for e in registry
-        if e["config_entry_id"] == entry_id and e.get("translation_key") and not e.get("disabled_by")
-    }
+async def render(url: str, token: str, entry_title: str, language: str | None) -> None:
+    """Generate the views for the demo home and save them as the demo dashboard."""
+    async with aiohttp.ClientSession() as session, session.ws_connect(f"{url}/api/websocket") as ws:
+        ha = await authenticate(ws, token)
+        entries = await ha.command("config_entries/get", domain="tibber_prices")
+        entry_id = next((e["entry_id"] for e in entries if e["title"] == entry_title), None)
+        if entry_id is None:
+            sys.exit(f"No tibber_prices config entry titled {entry_title!r} found")
+
+        result = await ha.command(
+            "call_service",
+            domain="tibber_prices",
+            service="get_dashboard_yaml",
+            service_data={"entry_id": entry_id, **({"language": language} if language else {})},
+            return_response=True,
+        )
+        response = result["response"]
+        for key in ("missing_entities", "missing_cards"):
+            if key in response:
+                sys.stderr.write(f"Warning: {key}: {response[key]}\n")
+
+        await save(ha, DASHBOARD, response["views"])
+        # The home's own entities (not a time-travel view's), by translation key
+        registry = await ha.command("config/entity_registry/list")
+        home = {
+            e["translation_key"]: e
+            for e in registry
+            if e["config_entry_id"] == entry_id
+            and not e.get("config_subentry_id")
+            and e.get("translation_key")
+            and not e.get("disabled_by")
+        }
+        views = resolve(yaml.safe_load(CARDS_TEMPLATE.read_text(encoding="utf-8"))["views"], home)
+        await save(ha, CARDS_DASHBOARD, views)
+    for dashboard in (DASHBOARD, CARDS_DASHBOARD):
+        sys.stdout.write(f"Saved {url}/{dashboard['url_path']}\n")
+
+
+async def save(ha: HomeAssistant, dashboard: dict[str, Any], views: list[Any]) -> None:
+    """Save the views as the dashboard, creating it on the first run."""
+    dashboards = await ha.command("lovelace/dashboards/list")
+    if not any(d["url_path"] == dashboard["url_path"] for d in dashboards):
+        await ha.command("lovelace/dashboards/create", mode="storage", require_admin=False, **dashboard)
+    config = {"title": dashboard["title"], "views": views}
+    await ha.command("lovelace/config/save", url_path=dashboard["url_path"], config=config)
+
+
+def resolve(node: Any, home: dict[str, dict[str, Any]]) -> Any:
+    """Replace "entity:<key>" and "device:<key>" with the home's entity ID or device ID."""
+    if isinstance(node, dict):
+        return {key: resolve(value, home) for key, value in node.items()}
+    if isinstance(node, list):
+        return [resolve(value, home) for value in node]
+    if isinstance(node, str) and node.startswith(("entity:", "device:")):
+        kind, key = node.split(":", 1)
+        if key not in home:
+            sys.exit(f"cards.yaml: the demo home has no enabled entity {key!r}")
+        return home[key]["entity_id" if kind == "entity" else "device_id"]
+    return node
 
 
 def main() -> None:
-    """Render the template for the given entry and language."""
+    """Read the token and render the dashboard."""
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("--entry-title", default="Winterfell Castle 1")
-    parser.add_argument("--lang", default="en", help="Language of the dashboard labels")
-    parser.add_argument("--config", type=Path, default=ROOT / "config")
-    parser.add_argument("--out", type=Path, default=ROOT / "config" / "dashboards" / "tibber-demo.yaml")
+    parser.add_argument("--lang", help="Language of the labels (default: the system language of HA)")
+    parser.add_argument("--url", default=os.environ.get("HA_URL", "http://localhost:8123"))
     args = parser.parse_args()
 
-    storage = args.config / ".storage"
-    entities = entity_map(storage, find_entry_id(storage, args.entry_title))
-    labels = json.loads((LABELS / f"{args.lang}.json").read_text())
-    template = yaml.safe_load((DEMO_DIR / "dashboard.template.yaml").read_text())
-
-    dashboard = Resolver(entities, labels).resolve(template)
-    args.out.parent.mkdir(parents=True, exist_ok=True)
-    args.out.write_text(yaml.safe_dump(dashboard, sort_keys=False, allow_unicode=True, width=1000))
-    sys.stdout.write(f"Wrote {args.out}\n")
+    token_file = ROOT / "config" / ".ha_token"
+    token = os.environ.get("HA_TOKEN") or (token_file.read_text().strip() if token_file.exists() else "")
+    if not token:
+        sys.exit("No access token: store one in config/.ha_token or export HA_TOKEN")
+    asyncio.run(render(args.url.rstrip("/"), token, args.entry_title, args.lang))
 
 
 if __name__ == "__main__":

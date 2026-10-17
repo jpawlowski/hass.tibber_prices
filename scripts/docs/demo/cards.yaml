@@ -1,0 +1,99 @@
+# The integration's own cards, one view each, for the screenshots of the Dashboard Cards page
+# (docs/user/docs/dashboard-cards.md). Saved as the UI dashboard "tibber-cards" by
+# render-dashboard, next to the dashboard from the get_dashboard_yaml action.
+#
+# The current price with two decimals, as most users see it (the demo sensor's own setting may
+# differ).
+#
+# Placeholders, resolved by render-dashboard for the demo home (not a time-travel view):
+#   "device:<translation_key>"   the home's device (the one of that entity)
+#   "entity:<translation_key>"   the home's entity
+views:
+  # The forecast card with every section, as wide as a dashboard with two columns gets
+  - title: Forecast
+    path: forecast
+    icon: mdi:weather-partly-cloudy
+    type: sections
+    max_columns: 2
+    sections:
+      - type: grid
+        column_span: 2
+        cards:
+          - type: custom:tibber-prices-forecast-card
+            device_id: "device:current_interval_price"
+            # Every section, the current price with two decimals (reused by the window below)
+            <<: &forecast
+              show: [now, hours, day_parts, days]
+              now: { now_decimals: 2 }
+              hours: { now_decimals: 2 }
+              day_parts: { now_decimals: 2 }
+              days: { now_decimals: 2 }
+  # The now card's three styles side by side; the tile among Home Assistant's own tiles
+  - title: Now
+    path: now
+    icon: mdi:progress-clock
+    type: sections
+    max_columns: 3
+    sections:
+      - type: grid
+        cards:
+          - type: custom:tibber-prices-now-card
+            device_id: "device:current_interval_price"
+            style: tile
+            now_decimals: 2
+            grid_options: { columns: full }
+          - type: tile
+            entity: "entity:best_price_period"
+          - type: tile
+            entity: "entity:peak_price_period"
+          - type: tile
+            entity: "entity:tomorrow_data_available"
+      - type: grid
+        cards:
+          - type: custom:tibber-prices-now-card
+            device_id: "device:current_interval_price"
+            style: gauge
+            now_decimals: 2
+            grid_options: { columns: full, rows: 5 }
+      - type: grid
+        cards:
+          - type: custom:tibber-prices-now-card
+            device_id: "device:current_interval_price"
+            style: clock
+            now_decimals: 2
+            grid_options: { columns: full, rows: 5 }
+  # The now card opening the forecast card in a window
+  - title: Window
+    path: window
+    icon: mdi:open-in-new
+    type: sections
+    max_columns: 2
+    sections:
+      - type: grid
+        cards:
+          - type: custom:tibber-prices-now-card
+            device_id: "device:current_interval_price"
+            style: tile
+            now_decimals: 2
+            tap_opens: forecast
+            forecast: *forecast
+  # The tile feature below a tile and inline next to its name
+  - title: Feature
+    path: feature
+    icon: mdi:view-agenda-outline
+    type: sections
+    max_columns: 2
+    sections:
+      - type: grid
+        cards:
+          - type: tile
+            entity: "entity:current_interval_price"
+            features_position: bottom
+            features:
+              - type: custom:tibber-prices-outlook-feature
+          - type: tile
+            entity: "entity:current_interval_price"
+            features_position: inline
+            features:
+              - type: custom:tibber-prices-outlook-feature
+            grid_options: { columns: full }

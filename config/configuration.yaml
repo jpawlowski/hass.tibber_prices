@@ -11,16 +11,6 @@ homeassistant:
   # English entity names so documentation screenshots match the English docs
   language: en
 
-# Demo dashboard for documentation screenshots, see scripts/docs/demo/README.md
-lovelace:
-  dashboards:
-    tibber-demo:
-      mode: yaml
-      title: Tibber Demo
-      icon: mdi:flash
-      show_in_sidebar: true
-      filename: dashboards/tibber-demo.yaml
-
 # Debugging integration
 # https://www.home-assistant.io/integrations/debugpy/
 debugpy:

@@ -14,42 +14,117 @@ from __future__ import annotations
 import json
 import os
 from pathlib import Path
+import re
 import sys
-from typing import NamedTuple
+from typing import Any, NamedTuple
 
-from playwright.sync_api import Page, sync_playwright
+from playwright.sync_api import Page, WebSocketRoute, sync_playwright
 
 ROOT = Path(__file__).resolve().parents[3]
 BASE = os.environ.get("HA_URL", "http://localhost:8123")
 DASHBOARD = "tibber-demo"
+CARDS = "tibber-cards"  # The integration's own cards (cards.yaml), for the Dashboard Cards page
 
 
 class Shot(NamedTuple):
     """One screenshot: where to look, how wide, what to capture."""
 
-    view: str  # view path in the demo dashboard
+    view: str  # view path in the dashboard
     width: int  # viewport width in CSS pixels
-    target: str  # "content" = all sections of the view, "chart" = the visible ApexCharts card
+    # "content" = all sections of the view, "chart" = the visible ApexCharts card, "element" =
+    # the first element matching `selector` (after clicking `click`, e.g. a dialog it opens)
+    target: str
     tab: tuple[int, str] | None = None  # (nth tabdeck-card in the view, tab name) to click first
+    dashboard: str = DASHBOARD
+    selector: str = ""
+    click: str = ""
 
 
 SHOTS: dict[str, Shot] = {
-    "overview": Shot("overview", 1400, "content", (0, "Now")),
-    "overview-hour": Shot("overview", 1400, "content", (0, "Current hour")),
-    "overview-next-hour": Shot("overview", 1400, "content", (0, "In 1 hour")),
-    "overview-mobile": Shot("overview", 400, "content", (0, "Now")),
-    "details": Shot("details", 1200, "content"),
-    # Chart tabs on the overview (second tabdeck-card), at desktop width
-    "chart-outlook": Shot("overview", 1400, "chart", (1, "Outlook")),
-    "chart-today": Shot("overview", 1400, "chart", (1, "Today")),
-    "chart-tomorrow": Shot("overview", 1400, "chart", (1, "Tomorrow")),
-    "chart-two-days": Shot("overview", 1400, "chart", (1, "2 days")),
+    "overview": Shot("tibber-prices", 1400, "content"),
+    "overview-mobile": Shot("tibber-prices", 400, "content"),
+    # Chart tabs on the overview (its tabdeck-card), at desktop width
+    "chart-outlook": Shot("tibber-prices", 1400, "chart", (0, "Outlook")),
+    "chart-today": Shot("tibber-prices", 1400, "chart", (0, "Today")),
+    "chart-tomorrow": Shot("tibber-prices", 1400, "chart", (0, "Tomorrow")),
+    "chart-two-days": Shot("tibber-prices", 1400, "chart", (0, "2 days")),
+    # Dashboard Cards page
+    "card-forecast": Shot("forecast", 1400, "element", dashboard=CARDS, selector="tibber-prices-forecast-card"),
+    "card-forecast-mobile": Shot("forecast", 400, "element", dashboard=CARDS, selector="tibber-prices-forecast-card"),
+    "card-forecast-details": Shot(
+        "forecast",
+        1400,
+        "element",
+        dashboard=CARDS,
+        selector="tibber-prices-forecast-card dialog",
+        click="tibber-prices-forecast-card .strip.hours .col.current",
+    ),
+    "card-now": Shot("now", 1400, "content", dashboard=CARDS),
+    "card-now-window": Shot(
+        "window",
+        1400,
+        "element",
+        dashboard=CARDS,
+        selector="tibber-prices-now-card dialog",
+        click="tibber-prices-now-card .now-block",
+    ),
+    "card-feature": Shot("feature", 1000, "content", dashboard=CARDS),
 }
 
 
 def token() -> str:
     """Return the HA access token from HA_TOKEN or config/.ha_token."""
     return os.environ.get("HA_TOKEN") or (ROOT / "config" / ".ha_token").read_text().strip()
+
+
+def english(page: Page) -> None:
+    """
+    Show the frontend in English, whatever the token user's profile says.
+
+    The docs are English; the cards follow the profile language, which HA keeps in the user's
+    frontend data. Only this browser sees it changed (the profile itself is left alone).
+    """
+    asked: set[int] = set()
+
+    def as_english(value: Any) -> dict[str, Any]:
+        return {**(value or {}), "language": "en", "number_format": "language"}
+
+    def items(data: Any) -> list[dict[str, Any]]:
+        """The messages in a frame (HA may send several as one list)."""
+        return data if isinstance(data, list) else [data]
+
+    def handle(ws: WebSocketRoute) -> None:
+        server = ws.connect_to_server()
+
+        def from_page(message: str | bytes) -> None:
+            # Only the few frames that ask for it are read; the rest pass untouched
+            if isinstance(message, str) and '"language"' in message:
+                for item in items(json.loads(message)):
+                    if item.get("key") == "language" and str(item.get("type", "")).startswith("frontend/"):
+                        asked.add(item["id"])
+            server.send(message)
+
+        def from_server(message: str | bytes) -> None:
+            if isinstance(message, str) and asked and '"value"' in message:
+                data = json.loads(message)
+                changed = False
+                for item in items(data):
+                    if item.get("id") not in asked:
+                        continue
+                    if item.get("type") == "result" and isinstance(item.get("result"), dict):
+                        item["result"]["value"] = as_english(item["result"].get("value"))
+                        changed = True
+                    elif item.get("type") == "event" and isinstance(item.get("event"), dict):
+                        item["event"]["value"] = as_english(item["event"].get("value"))
+                        changed = True
+                if changed:
+                    message = json.dumps(data)
+            ws.send(message)
+
+        ws.on_message(from_page)
+        server.on_message(from_server)
+
+    page.route_web_socket(re.compile(r"/api/websocket$"), handle)
 
 
 def capture(page: Page, shot: Shot, path: str) -> None:
@@ -62,6 +137,12 @@ def capture(page: Page, shot: Shot, path: str) -> None:
             return
         tab.click()
         page.wait_for_timeout(4000)
+    if shot.target == "element":
+        if shot.click:
+            page.locator(shot.click).first.click()
+            page.wait_for_timeout(1500)
+        page.locator(shot.selector).first.screenshot(path=path)
+        return
     if shot.target == "chart" and deck:
         charts = deck.locator("config-template-card:visible, apexcharts-card:visible")
         if not charts.count():
@@ -107,7 +188,8 @@ def main() -> None:
                 )
                 ctx.add_init_script(f"localStorage.setItem('hassTokens', {json.dumps(auth)});")
                 page = ctx.new_page()
-                page.goto(f"{BASE}/{DASHBOARD}/{shot.view}")
+                english(page)
+                page.goto(f"{BASE}/{shot.dashboard}/{shot.view}")
                 page.wait_for_selector("hui-sections-view", timeout=30000)
                 page.wait_for_timeout(6000)  # let ApexCharts render
                 capture(page, shot, str(out / f"{name}-{scheme}.png"))
