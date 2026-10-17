@@ -16,6 +16,25 @@
       }
     }
   },
+  "dashboard": {
+    "overview": "Strompreise",
+    "missing_card": "Diese Karte braucht {card} aus HACS.",
+    "today": "Heute",
+    "tomorrow": "Morgen",
+    "connection_lost": "Keine Verbindung zu Tibber. Angezeigt werden die zuletzt bekannten Preise.",
+    "two_days": "2 Tage",
+    "outlook": "Ausblick",
+    "resolution_15min": "15 min",
+    "resolution_hourly": "1 h",
+    "notification": {
+      "title": "Tibber Prices: Dashboard-Ansichten unvollständig",
+      "intro": "Du hast gerade Dashboard-Ansichten mit der Aktion „Dashboard-YAML abrufen“ erzeugt. Einige Teile konnten nicht aufgenommen werden:",
+      "cards": "**Fehlende Custom Cards** – Charts zeigen stattdessen einen Hinweis, Tab-Gruppen nur ihren ersten Tab:\n{cards}\n\nInstalliere sie aus HACS, lade den Browser neu, **erzeuge das YAML dann neu** und ersetze die eingefügten Ansichten.",
+      "entities": "**Deaktivierte Sensoren** – die Karten dazu wurden weggelassen:\n{entities}\n\n[Öffne die Tibber-Prices-Integration](https://my.home-assistant.io/redirect/integration/?domain=tibber_prices), aktiviere die Sensoren und **erzeuge das YAML dann neu**.",
+      "removed": "**Entfernte Sensoren** – die Karten, die sie zeigen, wurden weggelassen:\n{entities}\n\n[Lade die Tibber-Prices-Integration neu](https://my.home-assistant.io/redirect/integration/?domain=tibber_prices), um sie zurückzuholen, und **erzeuge das YAML danach neu**.",
+      "optional": "**Optionale Sensoren** – nichts wurde weggelassen, aber die Charts skalieren mit ihnen besser:\n{entities}\n\nAktiviere sie bei Bedarf in der [Tibber-Prices-Integration](https://my.home-assistant.io/redirect/integration/?domain=tibber_prices); die Charts nutzen sie dann, ohne dass du das YAML neu erzeugen musst."
+    }
+  },
   "sensor": {
     "current_interval_price": {
       "description": "Der aktuelle Strompreis pro kWh",

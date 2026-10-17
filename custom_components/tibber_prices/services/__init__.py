@@ -4,6 +4,7 @@ Service handlers for Tibber Prices integration.
 This package provides service endpoints for external integrations and data export:
 - Chart data export (get_chartdata)
 - ApexCharts YAML generation (get_apexcharts_yaml)
+- Dashboard views as a starting point (get_dashboard_yaml)
 - User data refresh (refresh_user_data)
 - Debug: Clear tomorrow data (debug_clear_tomorrow) - DevContainer only
 
@@ -52,6 +53,7 @@ from .find_most_expensive_hours import (
 )
 from .get_apexcharts_yaml import APEXCHARTS_SERVICE_SCHEMA, APEXCHARTS_YAML_SERVICE_NAME, handle_apexcharts_yaml
 from .get_chartdata import CHARTDATA_SERVICE_NAME, CHARTDATA_SERVICE_SCHEMA, handle_chartdata
+from .get_dashboard_yaml import DASHBOARD_SERVICE_SCHEMA, DASHBOARD_YAML_SERVICE_NAME, handle_dashboard_yaml
 from .get_price import GET_PRICE_SERVICE_NAME, GET_PRICE_SERVICE_SCHEMA, handle_get_price
 from .plan_charging import PLAN_CHARGING_SERVICE_NAME, PLAN_CHARGING_SERVICE_SCHEMA, handle_plan_charging
 from .refresh_user_data import (
@@ -79,6 +81,13 @@ def async_setup_services(hass: HomeAssistant) -> None:
         APEXCHARTS_YAML_SERVICE_NAME,
         handle_apexcharts_yaml,
         schema=APEXCHARTS_SERVICE_SCHEMA,
+        supports_response=SupportsResponse.ONLY,
+    )
+    hass.services.async_register(
+        DOMAIN,
+        DASHBOARD_YAML_SERVICE_NAME,
+        handle_dashboard_yaml,
+        schema=DASHBOARD_SERVICE_SCHEMA,
         supports_response=SupportsResponse.ONLY,
     )
     hass.services.async_register(

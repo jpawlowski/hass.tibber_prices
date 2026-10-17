@@ -996,7 +996,7 @@
           "peak": "Topp",
           "double_dip": "Dubbel dipp",
           "duck_curve": "Ankkurva",
-          "flat": "Flat",
+          "flat": "Platt",
           "rising": "Stigande",
           "falling": "Fallande",
           "mixed": "Blandad"
@@ -1009,7 +1009,7 @@
           "peak": "Topp",
           "double_dip": "Dubbel dipp",
           "duck_curve": "Ankkurva",
-          "flat": "Flat",
+          "flat": "Platt",
           "rising": "Stigande",
           "falling": "Fallande",
           "mixed": "Blandad"
@@ -1022,7 +1022,7 @@
           "peak": "Topp",
           "double_dip": "Dubbel dipp",
           "duck_curve": "Ankkurva",
-          "flat": "Flat",
+          "flat": "Platt",
           "rising": "Stigande",
           "falling": "Fallande",
           "mixed": "Blandad"
@@ -1033,7 +1033,7 @@
         "state": {
           "rising": "Stigande",
           "falling": "Fallande",
-          "flat": "Flat"
+          "flat": "Platt"
         }
       },
       "next_price_phase": {
@@ -1041,7 +1041,7 @@
         "state": {
           "rising": "Stigande",
           "falling": "Fallande",
-          "flat": "Flat"
+          "flat": "Platt"
         }
       },
       "current_price_phase_end_time": {
@@ -1165,7 +1165,7 @@
         "name": "I fallande prisfas"
       },
       "in_flat_price_phase": {
-        "name": "I flat prisfas"
+        "name": "I platt prisfas"
       },
       "connection": {
         "name": "Tibber API-anslutning"
@@ -1471,6 +1471,32 @@
         "highlight_peak_price": {
           "name": "Markera högsta prisperioder",
           "description": "Lägg till ett halvtransparent rött överlag för att markera de högsta prisperioderna i diagrammet. Detta gör det enkelt att visuellt identifiera tiderna när energi är som dyrast."
+        },
+        "language": {
+          "name": "Språk",
+          "description": "Språk för etiketterna som skrivs in i YAML. Standard: systemspråket (Inställningar → System → Allmänt). Tillstånd översätts ändå av frontend för var och en som tittar."
+        }
+      }
+    },
+    "get_dashboard_yaml": {
+      "name": "Hämta dashboard-YAML",
+      "description": "Ger en dashboardvy för ett hem som en startpunkt: prisbedömningen för nu, diagram och dagens förlopp med tider på dygnet, idag och imorgon. Kopiera svaret under `views:` till råkonfigurationsredigeraren för en av dina dashboards och anpassa det sedan. Inget skrivs till någon dashboard, och senare uppdateringar ändrar inte kopian. Använder ApexCharts Card, Config Template Card och TabDeck Card från HACS; utan dem visar svaret en hint i stället för diagrammen och bara den första fliken i varje flikgrupp.",
+      "fields": {
+        "entry_id": {
+          "name": "Entry-ID",
+          "description": "Config entry-ID för Tibber-integrationen."
+        },
+        "view_id": {
+          "name": "Tidsresevy",
+          "description": "Visa en tidsresevy av det här hemmet i stället för livepriser. Lämna tomt för livedata."
+        },
+        "charts": {
+          "name": "Diagram",
+          "description": "Vilka diagram diagramflikarna erbjuder. Standard: alla fyra (Framåt, Idag, Imorgon, 2 dagar). Med ett diagram blir det inga flikar; utan diagram utelämnas diagramdelen."
+        },
+        "chart_resolutions": {
+          "name": "Diagramupplösningar",
+          "description": "15-minutersintervall, timmedel per klocktimme eller båda. Med båda (standard) har varje diagram en växel mellan dem."
         },
         "language": {
           "name": "Språk",
@@ -2613,6 +2639,14 @@
       "options": {
         "days": "Ett antal dagar tillbaka",
         "yearly": "Samma datum ett tidigare år"
+      }
+    },
+    "dashboard_charts": {
+      "options": {
+        "outlook": "Framåt",
+        "today": "Idag",
+        "tomorrow": "Imorgon",
+        "two_days": "2 dagar"
       }
     }
   }

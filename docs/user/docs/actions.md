@@ -66,6 +66,7 @@ Generate chart-ready data and ApexCharts configurations for your dashboards.
 |--------|-------------|
 | [`get_chartdata`](chart-actions.md#tibber_pricesget_chartdata) | Price data in chart-friendly formats (arrays, filtering, rolling windows) |
 | [`get_apexcharts_yaml`](chart-actions.md#tibber_pricesget_apexcharts_yaml) | Auto-generated ApexCharts card configuration with color-coded price levels |
+| [`get_dashboard_yaml`](dashboard-examples.md#complete-dashboard-as-a-starting-point) | A complete dashboard view (verdict, charts, course of the day) to paste into your dashboard |
 
 **→ [Chart & Visualization Actions — Full Guide](chart-actions.md)** with parameters, examples, rolling window modes, and migration guide.
 

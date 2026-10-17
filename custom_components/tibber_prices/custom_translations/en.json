@@ -16,6 +16,25 @@
       }
     }
   },
+  "dashboard": {
+    "overview": "Electricity prices",
+    "missing_card": "This card needs {card} from HACS.",
+    "today": "Today",
+    "tomorrow": "Tomorrow",
+    "connection_lost": "No connection to Tibber. Showing the last known prices.",
+    "two_days": "2 days",
+    "outlook": "Outlook",
+    "resolution_15min": "15 min",
+    "resolution_hourly": "1 h",
+    "notification": {
+      "title": "Tibber Prices: dashboard views incomplete",
+      "intro": "You just generated dashboard views with the Get dashboard YAML action. Some parts could not be included:",
+      "cards": "**Missing custom cards** – charts show a hint instead, tab groups only their first tab:\n{cards}\n\nInstall them from HACS, reload the browser, then **generate the YAML again** and replace the views you pasted.",
+      "entities": "**Disabled sensors** – the cards showing them were left out:\n{entities}\n\n[Open the Tibber Prices integration](https://my.home-assistant.io/redirect/integration/?domain=tibber_prices), enable the sensors, then **generate the YAML again**.",
+      "removed": "**Removed sensors** – the cards showing them were left out:\n{entities}\n\n[Reload the Tibber Prices integration](https://my.home-assistant.io/redirect/integration/?domain=tibber_prices) to bring them back, then **generate the YAML again**.",
+      "optional": "**Optional sensors** – nothing was left out, but the charts scale better with them:\n{entities}\n\nEnable them in the [Tibber Prices integration](https://my.home-assistant.io/redirect/integration/?domain=tibber_prices) if you like; the charts pick them up without generating the YAML again."
+    }
+  },
   "sensor": {
     "current_interval_price": {
       "description": "The current electricity price per kWh",

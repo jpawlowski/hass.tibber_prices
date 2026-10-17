@@ -1478,6 +1478,32 @@
         }
       }
     },
+    "get_dashboard_yaml": {
+      "name": "Dashboard-YAML ophalen",
+      "description": "Geeft een dashboardweergave voor één woning als startpunt: het prijsadvies voor nu, grafieken en het dagverloop met dagdelen, vandaag en morgen. Kopieer het antwoord onder `views:` naar de ruwe configuratie-editor van een van je dashboards en pas het daarna aan. Er wordt niets naar een dashboard geschreven, en latere updates veranderen je kopie niet. Gebruikt ApexCharts Card, Config Template Card en TabDeck Card uit HACS; zonder deze toont het antwoord een hint in plaats van de grafieken en alleen het eerste tabblad van elke tabgroep.",
+      "fields": {
+        "entry_id": {
+          "name": "Invoer-ID",
+          "description": "Het configuratie-invoer-ID voor de Tibber-integratie."
+        },
+        "view_id": {
+          "name": "Tijdreisweergave",
+          "description": "Toon een tijdreisweergave van deze woning in plaats van live prijzen. Laat leeg voor live gegevens."
+        },
+        "charts": {
+          "name": "Grafieken",
+          "description": "Welke grafieken de grafiektabbladen bieden. Standaard: alle vier (Vooruitblik, Vandaag, Morgen, 2 dagen). Met één grafiek zijn er geen tabbladen; zonder grafiek vervalt het grafiekgedeelte."
+        },
+        "chart_resolutions": {
+          "name": "Grafiekresoluties",
+          "description": "Kwartierintervallen, uurgemiddelden per klokuur of beide. Met beide (standaard) heeft elke grafiek een schakelaar ertussen."
+        },
+        "language": {
+          "name": "Taal",
+          "description": "Taal van de labels die in de YAML worden geschreven. Standaard: de systeemtaal (Instellingen → Systeem → Algemeen). Statussen vertaalt de frontend sowieso voor iedereen die kijkt."
+        }
+      }
+    },
     "get_chartdata": {
       "name": "Grafiekdata Ophalen",
       "description": "Geeft prijsgegevens terug in een eenvoudig grafiekvriendelijk formaat compatibel met de Tibber Core-integratie outputstructuur. Perfect voor gebruik met populaire grafiekkaarten zoals ha-price-timeline-card, ApexCharts Card, Plotly Graph Card, Mini Graph Card of de ingebouwde History Graph Card. Veldnamen en gegevensstructuur kunnen worden aangepast aan de vereisten van je grafiek.",
@@ -2613,6 +2639,14 @@
       "options": {
         "days": "Een aantal dagen geleden",
         "yearly": "Dezelfde datum in een eerder jaar"
+      }
+    },
+    "dashboard_charts": {
+      "options": {
+        "outlook": "Vooruitblik",
+        "today": "Vandaag",
+        "tomorrow": "Morgen",
+        "two_days": "2 dagen"
       }
     }
   }

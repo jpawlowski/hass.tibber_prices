@@ -16,6 +16,25 @@
       }
     }
   },
+  "dashboard": {
+    "overview": "Strømpriser",
+    "missing_card": "Dette kortet trenger {card} fra HACS.",
+    "today": "I dag",
+    "tomorrow": "I morgen",
+    "connection_lost": "Ingen tilkobling til Tibber. Viser sist kjente priser.",
+    "two_days": "2 dager",
+    "outlook": "Fremover",
+    "resolution_15min": "15 min",
+    "resolution_hourly": "1 t",
+    "notification": {
+      "title": "Tibber Prices: dashbordvisninger ufullstendige",
+      "intro": "Du har nettopp laget dashbordvisninger med handlingen «Hent dashbord-YAML». Noen deler kunne ikke tas med:",
+      "cards": "**Manglende tilpassede kort** – diagrammer viser et hint i stedet, fanegrupper bare den første fanen:\n{cards}\n\nInstaller dem fra HACS, last nettleseren på nytt, **generer så YAML på nytt** og erstatt visningene du limte inn.",
+      "entities": "**Deaktiverte sensorer** – kortene som viser dem ble utelatt:\n{entities}\n\n[Åpne Tibber Prices-integrasjonen](https://my.home-assistant.io/redirect/integration/?domain=tibber_prices), aktiver sensorene og **generer så YAML på nytt**.",
+      "removed": "**Fjernede sensorer** – kortene som viser dem, ble utelatt:\n{entities}\n\n[Last inn Tibber Prices-integrasjonen på nytt](https://my.home-assistant.io/redirect/integration/?domain=tibber_prices) for å få dem tilbake, og **generer YAML-en på nytt** etterpå.",
+      "optional": "**Valgfrie sensorer** – ingenting ble utelatt, men diagrammene skaleres bedre med dem:\n{entities}\n\nAktiver dem i [Tibber Prices-integrasjonen](https://my.home-assistant.io/redirect/integration/?domain=tibber_prices) om du vil; diagrammene bruker dem da uten at du må generere YAML-en på nytt."
+    }
+  },
   "sensor": {
     "current_interval_price": {
       "description": "Den nåværende elektrisitetsprisen per kWh",

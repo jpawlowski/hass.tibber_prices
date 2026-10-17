@@ -1478,6 +1478,32 @@
         }
       }
     },
+    "get_dashboard_yaml": {
+      "name": "Hent dashbord-YAML",
+      "description": "Gir en dashbordvisning for ett hjem som et utgangspunkt: prisvurderingen for nå, diagrammer og dagsforløpet med tider på døgnet, i dag og i morgen. Kopier svaret under `views:` inn i rå konfigurasjonsredigering for et av dashbordene dine, og tilpass det deretter. Ingenting skrives til noe dashbord, og senere oppdateringer endrer ikke kopien. Bruker ApexCharts Card, Config Template Card og TabDeck Card fra HACS; uten dem viser svaret et hint i stedet for diagrammene og bare den første fanen i hver fanegruppe.",
+      "fields": {
+        "entry_id": {
+          "name": "Oppførings-ID",
+          "description": "Konfigureringsoppførings-IDen for Tibber-integrasjonen."
+        },
+        "view_id": {
+          "name": "Tidsreisevisning",
+          "description": "Vis en tidsreisevisning av dette hjemmet i stedet for live-priser. La stå tomt for live-data."
+        },
+        "charts": {
+          "name": "Diagrammer",
+          "description": "Hvilke diagrammer diagramfanene tilbyr. Standard: alle fire (Fremover, I dag, I morgen, 2 dager). Med ett diagram blir det ingen faner; uten diagram utelates diagramdelen."
+        },
+        "chart_resolutions": {
+          "name": "Diagramoppløsninger",
+          "description": "15-minuttersintervaller, timesnitt per klokketime eller begge. Med begge (standard) har hvert diagram en bryter mellom dem."
+        },
+        "language": {
+          "name": "Språk",
+          "description": "Språket for etikettene som skrives inn i YAML. Standard: systemspråket (Innstillinger → System → Generelt). Tilstander oversettes uansett av frontend for hver som ser på."
+        }
+      }
+    },
     "get_chartdata": {
       "name": "Hent diagramdata",
       "description": "Returnerer prisdata i et enkelt diagramvennlig format kompatibelt med Tibber Core-integrasjonens utdatastruktur. Perfekt for bruk med populære diagramkort som ha-price-timeline-card, ApexCharts Card, Plotly Graph Card, Mini Graph Card eller den innebygde History Graph Card. Feltnavn og datastruktur kan tilpasses for å matche diagrammets krav.",
@@ -2613,6 +2639,14 @@
       "options": {
         "days": "Et antall dager tilbake",
         "yearly": "Samme dato i et tidligere år"
+      }
+    },
+    "dashboard_charts": {
+      "options": {
+        "outlook": "Fremover",
+        "today": "I dag",
+        "tomorrow": "I morgen",
+        "two_days": "2 dager"
       }
     }
   }

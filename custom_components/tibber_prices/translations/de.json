@@ -1478,6 +1478,32 @@
         }
       }
     },
+    "get_dashboard_yaml": {
+      "name": "Dashboard-YAML abrufen",
+      "description": "Liefert eine Dashboard-Ansicht für ein Zuhause als Startpunkt: die Preisempfehlung für jetzt, Charts und den Tagesverlauf mit Tageszeiten, heute und morgen. Kopiere die Antwort unter `views:` in den Rohkonfigurations-Editor eines deiner Dashboards und passe sie dann an. Es wird in kein Dashboard geschrieben, und spätere Updates ändern deine Kopie nicht. Nutzt ApexCharts Card, Config Template Card und TabDeck Card aus HACS; fehlen sie, zeigt die Antwort an Stelle der Charts einen Hinweis und von jeder Tab-Gruppe nur den ersten Tab.",
+      "fields": {
+        "entry_id": {
+          "name": "Eintrags-ID",
+          "description": "Die Konfigurationseintrags-ID für die Tibber-Integration."
+        },
+        "view_id": {
+          "name": "Zeitreise-Ansicht",
+          "description": "Zeigt eine Zeitreise-Ansicht dieses Zuhauses statt der Live-Preise. Leer lassen für Live-Daten."
+        },
+        "charts": {
+          "name": "Charts",
+          "description": "Welche Charts die Chart-Tabs anbieten. Standard: alle vier (Ausblick, Heute, Morgen, 2 Tage). Mit einem Chart gibt es keine Tabs, ohne Chart entfällt der Chart-Bereich."
+        },
+        "chart_resolutions": {
+          "name": "Chart-Auflösungen",
+          "description": "15-Minuten-Intervalle, Stundenmittel pro Uhrstunde oder beides. Mit beidem (Standard) hat jeder Chart einen Umschalter."
+        },
+        "language": {
+          "name": "Sprache",
+          "description": "Sprache der Beschriftungen, die ins YAML geschrieben werden. Standard: die Systemsprache (Einstellungen → System → Allgemein). Zustände übersetzt das Frontend ohnehin für alle, die das Dashboard ansehen."
+        }
+      }
+    },
     "get_chartdata": {
       "name": "Diagrammdaten abrufen",
       "description": "Gibt Preisdaten in einem einfachen, diagrammfreundlichen Format kompatibel mit der Tibber Core Integration zurück. Perfekt für beliebte Diagramm-Karten wie ha-price-timeline-card, ApexCharts Card, Plotly Graph Card, Mini Graph Card oder die eingebaute History Graph Card. Feldnamen und Datenstruktur können an die Anforderungen deines Diagramms angepasst werden.",
@@ -2613,6 +2639,14 @@
       "options": {
         "days": "Eine Anzahl Tage zurück",
         "yearly": "Dasselbe Datum in einem früheren Jahr"
+      }
+    },
+    "dashboard_charts": {
+      "options": {
+        "outlook": "Ausblick",
+        "today": "Heute",
+        "tomorrow": "Morgen",
+        "two_days": "2 Tage"
       }
     }
   }

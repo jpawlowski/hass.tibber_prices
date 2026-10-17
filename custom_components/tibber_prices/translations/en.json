@@ -1478,6 +1478,32 @@
         }
       }
     },
+    "get_dashboard_yaml": {
+      "name": "Get dashboard YAML",
+      "description": "Returns a dashboard view for one home as a starting point: the price verdict for now, charts, and the course of the day with its parts, today and tomorrow. Copy the response under `views:` into the raw configuration editor of one of your dashboards, then adapt it. Nothing is written to any dashboard, and later updates don't change the copy. Uses ApexCharts Card, Config Template Card and TabDeck Card from HACS; without them, the response shows a hint in place of the charts and the first tab of each tab group.",
+      "fields": {
+        "entry_id": {
+          "name": "Entry ID",
+          "description": "The config entry ID for the Tibber integration."
+        },
+        "view_id": {
+          "name": "Time-travel view",
+          "description": "Show a time-travel view of this home instead of live prices. Leave empty for live data."
+        },
+        "charts": {
+          "name": "Charts",
+          "description": "Which charts the chart tabs offer. Default: all four (Outlook, Today, Tomorrow, 2 days). With one chart there are no tabs; with none, the chart section is left out."
+        },
+        "chart_resolutions": {
+          "name": "Chart resolutions",
+          "description": "15-minute intervals, hourly averages per clock hour, or both. With both (default), each chart has a switch between them."
+        },
+        "language": {
+          "name": "Language",
+          "description": "Language of the labels written into the YAML. Default: the system language (Settings → System → General). States are translated by the frontend for each viewer anyway."
+        }
+      }
+    },
     "get_chartdata": {
       "name": "Get Chart Data",
       "description": "Returns price data in a simple chart-friendly format compatible with the Tibber Core integration output structure. Perfect for use with popular chart cards like ha-price-timeline-card, ApexCharts Card, Plotly Graph Card, Mini Graph Card, or the built-in History Graph Card. Field names and data structure can be customized to match your specific chart requirements.",
@@ -2613,6 +2639,14 @@
       "options": {
         "days": "A number of days ago",
         "yearly": "The same date in an earlier year"
+      }
+    },
+    "dashboard_charts": {
+      "options": {
+        "outlook": "Outlook",
+        "today": "Today",
+        "tomorrow": "Tomorrow",
+        "two_days": "2 days"
       }
     }
   }

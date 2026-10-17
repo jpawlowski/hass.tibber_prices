@@ -107,6 +107,62 @@ get_apexcharts_yaml:
             - nb
             - nl
             - sv
+get_dashboard_yaml:
+  fields:
+    entry_id:
+      required: false
+      example: "1234567890abcdef"
+      selector:
+        config_entry:
+          integration: tibber_prices
+    view_id:
+      required: false
+      selector:
+        device:
+          filter:
+            - integration: tibber_prices
+              model_id: Time-Travel View
+            - integration: tibber_prices
+              model_id: Time-Travel View [headless]
+    charts:
+      required: false
+      default:
+        - outlook
+        - today
+        - tomorrow
+        - two_days
+      selector:
+        select:
+          multiple: true
+          options:
+            - outlook
+            - today
+            - tomorrow
+            - two_days
+          translation_key: dashboard_charts
+    chart_resolutions:
+      required: false
+      default:
+        - interval
+        - hourly
+      selector:
+        select:
+          multiple: true
+          options:
+            - interval
+            - hourly
+          translation_key: resolution
+    language:
+      required: false
+      example: de
+      selector:
+        language:
+          languages:
+            - de
+            - en
+            - nb
+            - nl
+            - sv
 get_chartdata:
   fields:
     general:

@@ -16,6 +16,25 @@
       }
     }
   },
+  "dashboard": {
+    "overview": "Elpriser",
+    "missing_card": "Det här kortet behöver {card} från HACS.",
+    "today": "Idag",
+    "tomorrow": "Imorgon",
+    "connection_lost": "Ingen anslutning till Tibber. Visar senast kända priser.",
+    "two_days": "2 dagar",
+    "outlook": "Framåt",
+    "resolution_15min": "15 min",
+    "resolution_hourly": "1 h",
+    "notification": {
+      "title": "Tibber Prices: dashboardvyer ofullständiga",
+      "intro": "Du har just skapat dashboardvyer med åtgärden ”Hämta dashboard-YAML”. Vissa delar kunde inte tas med:",
+      "cards": "**Saknade anpassade kort** – diagram visar en hint i stället, flikgrupper bara sin första flik:\n{cards}\n\nInstallera dem från HACS, ladda om webbläsaren, **generera sedan YAML igen** och ersätt vyerna du klistrade in.",
+      "entities": "**Inaktiverade sensorer** – korten som visar dem utelämnades:\n{entities}\n\n[Öppna Tibber Prices-integrationen](https://my.home-assistant.io/redirect/integration/?domain=tibber_prices), aktivera sensorerna och **generera sedan YAML igen**.",
+      "removed": "**Borttagna sensorer** – korten som visar dem utelämnades:\n{entities}\n\n[Ladda om Tibber Prices-integrationen](https://my.home-assistant.io/redirect/integration/?domain=tibber_prices) för att få tillbaka dem och **generera YAML-koden igen** efteråt.",
+      "optional": "**Valfria sensorer** – inget utelämnades, men diagrammen skalas bättre med dem:\n{entities}\n\nAktivera dem i [Tibber Prices-integrationen](https://my.home-assistant.io/redirect/integration/?domain=tibber_prices) om du vill; diagrammen använder dem då utan att du behöver generera YAML-koden igen."
+    }
+  },
   "sensor": {
     "current_interval_price": {
       "description": "Det nuvarande elpriset per kWh",
@@ -488,12 +507,12 @@
     },
     "day_pattern_yesterday": {
       "description": "Detekterat prismönster för gårdagens elpriser",
-      "long_description": "Klassificerar igår i ett prismönster: Dal (billigt på mitten), Topp (dyrt på mitten), Dubbeldal (W-form, två billiga perioder), Dubbeltopp (M-form, två dyra toppar), Flat (liten variation), Stigande, Fallande eller Blandad. Konfidensen och CV-attributen visar hur tillförlitligt mönstret detekterades.",
+      "long_description": "Klassificerar igår i ett prismönster: Dal (billigt på mitten), Topp (dyrt på mitten), Dubbeldal (W-form, två billiga perioder), Dubbeltopp (M-form, två dyra toppar), Platt (liten variation), Stigande, Fallande eller Blandad. Konfidensen och CV-attributen visar hur tillförlitligt mönstret detekterades.",
       "usage_tips": "Använd gårdagens mönster för att förfina automationer: ett Dalmönster upprepas ofta nästa dag och tyder på att du bör förplanera billiga middagstimmar."
     },
     "day_pattern_today": {
       "description": "Detekterat prismönster för dagens elpriser",
-      "long_description": "Klassificerar idag i ett prismönster: Dal (billigt på middagen), Topp (dyrt på middagen), Dubbeldal (W-form), Dubbeltopp (M-form), Flat, Stigande, Fallande eller Blandad. Attributen inkluderar konfidenspoäng (0–1), variationskoefficient, knäpunkttider och dagsegment.",
+      "long_description": "Klassificerar idag i ett prismönster: Dal (billigt på middagen), Topp (dyrt på middagen), Dubbeldal (W-form), Dubbeltopp (M-form), Platt, Stigande, Fallande eller Blandad. Attributen inkluderar konfidenspoäng (0–1), variationskoefficient, knäpunkttider och dagsegment.",
       "usage_tips": "Använd dagens mönster för att flytta förbrukning. Daldag: kör diskmaskinen, tvättmaskinen eller ladda elbilen på middagen. Toppdag: kör apparater tidigt på morgonen eller sent på kvällen. Använd valley_start och valley_end för precisa automationer."
     },
     "day_pattern_tomorrow": {
@@ -509,7 +528,7 @@
     "next_price_phase": {
       "description": "Nästa intra-dag prisfas – vad som kommer efter den aktuella prisbevegelsen",
       "long_description": "Visar det monotona prissegment som följer efter den för närvarande aktiva fasen. Attributet start visar exakt när nästa fas börjar, vilket gör det enkelt att schemalägga automationer. När den aktuella fasen är den sista för dagen (t.ex. den sista kvällsminskningen), blir denna sensor otillgänglig. Attribut: start (när den börjar), end, prisintervall (min/max/medel), segment_index, segment_count. Uppdateras var 15:e minut.",
-      "usage_tips": "Använd i automationer: 'Om next_price_phase = stigande och next_price_phase.start är inom 1 timme, starta tvättmaskinen nu'. Eller kombinera med current_price_phase: 'Om current_price_phase = fallande och next_price_phase = flat, närmar vi oss dagens lågpunkt – bra tid för flexibla laster'. Attributet start är särskilt värdefull: utlös automationer precis när nästa fas börjar."
+      "usage_tips": "Använd i automationer: 'Om next_price_phase = stigande och next_price_phase.start är inom 1 timme, starta tvättmaskinen nu'. Eller kombinera med current_price_phase: 'Om current_price_phase = fallande och next_price_phase = platt, närmar vi oss dagens lågpunkt – bra tid för flexibla laster'. Attributet start är särskilt värdefull: utlös automationer precis när nästa fas börjar."
     },
     "current_price_phase_end_time": {
       "description": "När den aktuella prisfasen slutar",
@@ -518,7 +537,7 @@
     },
     "current_price_phase_remaining_minutes": {
       "description": "Återstående minuter i den aktuella prisfasen",
-      "long_description": "Visar hur många minuter som är kvar av den aktuella prisfasen (stigande, fallande eller flat). Uppdateras varje minut för exakt nedräkning. Returnerar 0 när det inte finns segmentdata. Attributet remaining_minutes speglar sensorvärdet i hela minuter för enklare automationsmallar.",
+      "long_description": "Visar hur många minuter som är kvar av den aktuella prisfasen (stigande, fallande eller platt). Uppdateras varje minut för exakt nedräkning. Returnerar 0 när det inte finns segmentdata. Attributet remaining_minutes speglar sensorvärdet i hela minuter för enklare automationsmallar.",
       "usage_tips": "Använd i automationer: 'Om current_price_phase = falling och current_price_phase_remaining_minutes < 30, starta diskmaskinen nu innan priserna planar ut'. Även användbart för instrumentpanelskort som visar en nedräkningsstapel till fasövergången."
     },
     "current_price_phase_duration": {
@@ -544,7 +563,7 @@
     "next_flat_phase_start_time": {
       "description": "När nästa flata (stabila) prisfas börjar",
       "long_description": "Visar tidsstämpeln för nästa kommande flata prissegment (där priserna varierar lite) över dagens återstående faser och morgondagens faser. Returnerar otillgänglig när det inte finns fler flata faser i tillgängliga data. Uppdateras vid intervallgränser (var 15:e minut).",
-      "usage_tips": "Flata faser indikerar prisstabilitet — användbart för att schemalägga laster som behöver en förutsägbar kostnad över tid. 'Om next_flat_phase_start_time är inom 30 minuter och current_price_phase = rising, är pristoppen nästan över'."
+      "usage_tips": "Platta faser indikerar prisstabilitet — användbart för att schemalägga laster som behöver en förutsägbar kostnad över tid. 'Om next_flat_phase_start_time är inom 30 minuter och current_price_phase = rising, är pristoppen nästan över'."
     },
     "next_rising_phase_in_minutes": {
       "description": "Minuter tills nästa stigande prisfas börjar",
@@ -654,8 +673,8 @@
       "usage_tips": "Använd i automationer för att utnyttja fallande priser: 'Om in_falling_price_phase är PÅ och current_price_phase_remaining_minutes > 60, starta tvättmaskinen'. Kombinera med next_rising_phase_start_time för att undvika att starta en last som inte hinner bli klar innan priserna stiger."
     },
     "in_flat_price_phase": {
-      "description": "Om priserna för närvarande är i en flat (stabil) fas",
-      "long_description": "Slås PÅ när den aktuella prisfasen är flat — dvs. priserna är relativt stabila utan betydande uppgång eller nedgång. Flata faser innebär förutsägbara kostnader och passar för laster med osäker eller variabel varaktighet. Exakt en av in_rising_price_phase, in_falling_price_phase och in_flat_price_phase är PÅ vid varje tidpunkt.",
+      "description": "Om priserna för närvarande är i en platt (stabil) fas",
+      "long_description": "Slås PÅ när den aktuella prisfasen är platt — dvs. priserna är relativt stabila utan betydande uppgång eller nedgång. Platta faser innebär förutsägbara kostnader och passar för laster med osäker eller variabel varaktighet. Exakt en av in_rising_price_phase, in_falling_price_phase och in_flat_price_phase är PÅ vid varje tidpunkt.",
       "usage_tips": "Använd det för laster som är likgiltiga för prisriktningen men föredrar stabilitet: värmepumpar i stabilt läge, bakgrundsladdning eller påfyllning av varmvattenberedaren. Kombinera med current_price_phase_end_time för att veta hur länge det stabila fönstret varar."
     },
     "connection": {

@@ -1,0 +1,132 @@
+# Dashboard views returned by the get_dashboard_yaml action, a starting point users paste into
+# their own dashboard. Also the demo dashboard behind the documentation screenshots
+# (scripts/docs/demo).
+#
+# Placeholders, resolved by services/get_dashboard_yaml.py:
+#   "entity:<translation_key>"   whole string -> entity_id of the home (language independent)
+#   "device:<translation_key>"   whole string -> device_id of that entity (the integration's own
+#                                cards are set up by the home, like in the visual editor)
+#   "label:<key>"                whole string -> custom_translations/<lang>.json "dashboard.<key>"
+#   [[entity:<key>]] [[label:<key>]]   same, inline inside longer strings (templates)
+#   {"$chart": <name>, "hide_title": true}   card from get_apexcharts_yaml (names in CHARTS)
+# A card whose entity is disabled or missing is left out.
+#
+# Naming rule: a name only says what its heading does not already say.
+views:
+  - title: "label:overview"
+    path: tibber-prices
+    icon: mdi:flash
+    type: sections
+    max_columns: 2
+    sections:
+      # Two columns of about equal height first, the charts below them over the full width. In
+      # one column (phones): now, the days, the coming hours, the charts.
+      #
+      # Question 1 + 2: should I use electricity now, and when is the next cheap window? The now
+      # card answers both without a tap: the price on today's scale, its level, the trend, and
+      # below it what to make of it (a period running, cheap until, the next best price). Below
+      # it today and tomorrow at a glance: a forecast card with the days only. Its legend and
+      # unit are left to the card beside it (a legend explains all forecast cards on the tab)
+      - type: grid
+        cards:
+          - type: markdown
+            text_only: true
+            visibility: [{ condition: state, entity: "entity:connection", state: "off" }]
+            content: <ha-alert alert-type="error">[[label:connection_lost]]</ha-alert>
+          - type: custom:tibber-prices-now-card
+            device_id: "device:current_interval_price"
+            style: gauge
+            price_unit: auto
+            average: mean
+            appearance: auto
+            now_decimals: entity
+            tap_opens: details
+            grid_options: { columns: full, rows: 4 }
+          - type: custom:tibber-prices-forecast-card
+            device_id: "device:current_interval_price"
+            price_unit: auto
+            average: mean
+            layout: detailed
+            appearance: auto
+            show: [days]
+            days:
+              shown: both
+              tomorrow_pending: placeholder
+              now_decimals: entity
+            hide_legend: true
+            hide_unit: true
+      # The course of the day, shaped like a weather forecast: the coming clock hours and the
+      # parts of the day from the one running now (night crosses midnight), with level color and
+      # average price; best/peak price periods underlined. Tap any of them for its details. The
+      # cards ship with the integration (frontend/tibber-prices-cards.js), so they are always there
+      - type: grid
+        cards:
+          - type: custom:tibber-prices-forecast-card
+            device_id: "device:current_interval_price"
+            price_unit: auto
+            average: mean
+            layout: detailed
+            appearance: auto
+            show: [hours, day_parts]
+            hours:
+              now_decimals: entity
+            day_parts:
+              now_decimals: entity
+            action_button_position: bottom
+      # Question 3 in detail: the price curve. Four zoom levels as tabs instead of
+      # manual zooming. "Outlook" (auto-zoom) is the default: it hides the past and stays
+      # forward-looking. Charts use the price level, so their colors match the verdict above.
+      # Each zoom level offers 15-minute intervals or hourly averages.
+      - type: grid
+        column_span: 2
+        cards:
+          - type: custom:tabdeck-card
+            # Build a tab when it is opened and drop it when it is left: ApexCharts hides the peak
+            # price overlay (hidden_by_default) only once, right after the chart's first data load
+            lazy: true
+            unmount_hidden: true
+            tabs:
+              - name: "label:outlook"
+                icon: mdi:chart-timeline-variant-shimmer
+                card:
+                  # 15 min / 1 h switch, remembered per browser (no helper) under one key for all zoom
+                  # levels. TabDeck reads the stored tab only on page load, so after a reload every
+                  # chart opens in the resolution chosen last; a switch doesn't reach the other charts live.
+                  # The same for every zoom level (the anchor), only the charts differ
+                  <<: &resolution_switch
+                    type: custom:tabdeck-card
+                    style: pill
+                    position: bottom
+                    align: end
+                    remember: browser
+                    storage_key: tibber_prices_chart_resolution
+                    lazy: true
+                    unmount_hidden: true
+                    # Cancel the second 8px content padding: keeps the chart close to the zoom tabs
+                    styles: { margin-top: -8px }
+                  tabs:
+                    - { name: "label:resolution_15min", card: { "$chart": outlook, "hide_title": true } }
+                    - { name: "label:resolution_hourly", card: { "$chart": outlook_hourly, "hide_title": true } }
+              - name: "label:today"
+                icon: mdi:calendar-today
+                card:
+                  <<: *resolution_switch
+                  tabs:
+                    - { name: "label:resolution_15min", card: { "$chart": today, "hide_title": true } }
+                    - { name: "label:resolution_hourly", card: { "$chart": today_hourly, "hide_title": true } }
+              # Only once tomorrow's prices exist: no empty chart, no layout jump when switching tabs
+              - name: "label:tomorrow"
+                icon: mdi:calendar-arrow-right
+                visibility: [{ condition: state, entity: "entity:tomorrow_data_available", state: "on" }]
+                card:
+                  <<: *resolution_switch
+                  tabs:
+                    - { name: "label:resolution_15min", card: { "$chart": tomorrow, "hide_title": true } }
+                    - { name: "label:resolution_hourly", card: { "$chart": tomorrow_hourly, "hide_title": true } }
+              - name: "label:two_days"
+                icon: mdi:calendar-range
+                card:
+                  <<: *resolution_switch
+                  tabs:
+                    - { name: "label:resolution_15min", card: { "$chart": two_days, "hide_title": true } }
+                    - { name: "label:resolution_hourly", card: { "$chart": two_days_hourly, "hide_title": true } }
